@@ -2,6 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import { calendarDateOf, daysInMonth, type Calendar } from '../time/julianDay';
+import { SUN_LAYERS } from '../data/sunImages';
 import { YEAR_CALENDARS } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
 import { parseViewState, serializeViewState } from './url';
@@ -56,6 +57,7 @@ describe('parseViewState', () => {
       look: DEFAULT_LOOK,
       figures: 'famous',
       years: 'western',
+      sunLayer: 'visible',
     } satisfies ViewState);
   });
 
@@ -102,6 +104,13 @@ describe('parseViewState', () => {
     expect(state.focus).toBe('moon');
     expect(serializeViewState(state)).toContain('&focus=moon');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
+  });
+
+  it('reads the channel the Sun is shown in, writing it only when not visible light', () => {
+    const { state } = parseViewState('sun=171', NOW);
+    expect(state.sunLayer).toBe('171');
+    expect(serializeViewState(state)).toContain('&sun=171');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('sun=');
   });
 
   it('reads the calendar the years are counted in, writing it only when not western', () => {
@@ -151,6 +160,7 @@ describe('parseViewState', () => {
     ['look=0,10', 'look', 'expected 3'],
     ['figures=some', 'figures', 'unknown figures'],
     ['years=mayan', 'years', 'unknown years'],
+    ['sun=xray', 'sun', 'unknown sun'],
     ['sel=lunar', 'sel', 'expected kind:date'],
     ['sel=lunar:yesterday', 'sel', 'expected a date'],
     ['sel=annular:2025-01-01', 'sel', 'unknown eclipse kind'],
@@ -211,6 +221,7 @@ describe('parseViewState', () => {
             'look',
             'figures',
             'years',
+            'sun',
             'x',
           ),
           fc.string(),
@@ -282,6 +293,7 @@ describe('serializeViewState', () => {
     }),
     figures: fc.constantFrom(...FIGURES),
     years: fc.constantFrom(...YEAR_CALENDARS),
+    sunLayer: fc.constantFrom(...SUN_LAYERS),
   });
 
   it('round-trips every view state through a link', () => {

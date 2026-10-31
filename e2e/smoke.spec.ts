@@ -733,3 +733,27 @@ test('Ptolemy’s eclipse of 721 BCE is listed on 29 Thoth in year 27 of Nabonas
   await year.press('Enter');
   await expect(page).toHaveURL(/t=-0746-/);
 });
+
+test('close to the Sun, SDO’s images show it in six kinds of light', async ({ page }) => {
+  // Seen from Earth's side on 8 May 2024: the antisolar direction in the Sun's frame.
+  await page.goto('./?t=2024-05-08T12:00&focus=sun&cam=-17.2,-134.2,4');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  // A small frame shows at once; the sharp one follows.
+  await expect(globe).toHaveAttribute('data-sun-image', 'large', { timeout: 30_000 });
+  await expect(globe).toHaveAttribute('data-sun-layer', 'visible');
+  await expect(globe).toHaveAttribute('data-sun-facing', '1.000');
+  await expect(page.getByTestId('sun-caption')).toContainText('08 May 2024');
+  await expect(page.getByTestId('sun-caption')).toContainText('NASA/SDO');
+
+  await page.getByRole('button', { name: '171 Å' }).click();
+  await expect(page).toHaveURL(/sun=171/);
+  await expect(globe).toHaveAttribute('data-sun-layer', '171', { timeout: 30_000 });
+  await expect(page.getByTestId('sun-caption')).toContainText('600,000 °C');
+
+  // Around Earth, the Sun is a plain disc again and the switch goes away.
+  await page.goto('./?t=2024-05-08T12:00&sun=171');
+  await globeRendered(page);
+  await expect(page.getByRole('group', { name: 'Light' })).toBeHidden();
+  await expect(globe).toHaveAttribute('data-sun-image', 'none');
+});

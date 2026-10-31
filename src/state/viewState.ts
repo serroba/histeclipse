@@ -3,6 +3,7 @@
  * See `url.ts` for the query-string format.
  */
 
+import type { SunLayer } from '../data/sunImages';
 import type { YearCalendar } from '../time/calendars';
 import {
   calendarDateOf,
@@ -92,6 +93,8 @@ export interface ViewState {
   readonly figures: Figures;
   /** The calendar the year bar counts in. */
   readonly years: YearCalendar;
+  /** The channel of light the Sun is shown in, close up. */
+  readonly sunLayer: SunLayer;
 }
 
 // In the focused body's radii. For Earth, ~5 times the Sun's distance (23,455 Earth radii), so
@@ -145,5 +148,6 @@ export function defaultViewState(now: Date): ViewState {
     look: DEFAULT_LOOK,
     figures: 'famous',
     years: 'western',
+    sunLayer: 'visible',
   };
 }
