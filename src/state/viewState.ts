@@ -63,7 +63,8 @@ export const CAMERA_DISTANCE_RANGE = { min: 1.1, max: 50 } as const;
 export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'terminator']);
 export const DEFAULT_CAMERA: GlobeCamera = {
   target: { latitude: 20, longitude: 0 },
-  distance: 3,
+  // With a 40° field of view on the narrower side, the whole globe fits with a margin.
+  distance: 4.5,
 };
 
 /** The calendar historians use for a date: Julian before 1582-10-15, Gregorian from then on. */

@@ -1,14 +1,17 @@
 import './style.css';
 
-import { astronomicalYear, formatYear } from './time/year';
+import { startApp } from './app';
+import { errorMessage } from './util/errors';
 
-const app = document.querySelector<HTMLDivElement>('#app');
-if (app === null) {
+const root = document.querySelector<HTMLElement>('#app');
+if (root === null) {
   throw new Error('Missing #app root element');
 }
 
-const heading = document.createElement('h1');
-heading.textContent = 'histeclipse';
-const subtitle = document.createElement('p');
-subtitle.textContent = `Eclipses from ${formatYear(astronomicalYear(-1999))} to ${formatYear(astronomicalYear(3000))}. Coming soon.`;
-app.replaceChildren(heading, subtitle);
+startApp(root).catch((error: unknown) => {
+  const message = document.createElement('p');
+  message.className = 'fatal';
+  message.textContent = `Something went wrong while loading: ${errorMessage(error)}`;
+  root.replaceChildren(message);
+  console.error(error);
+});
