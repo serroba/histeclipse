@@ -1,11 +1,11 @@
-import json
 import shutil
 from typing import TYPE_CHECKING
 
 import pytest
 
 from histeclipse_pipeline import cli
-from kernels import MODERN
+from tests.json_values import read_json
+from tests.kernels import MODERN
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -19,7 +19,7 @@ def test_lunar_catalog_end_to_end(
     monkeypatch.setattr(cli, "year_start_jd", starts.__getitem__)
     kernels = tmp_path / "kernels"
     kernels.mkdir()
-    shutil.copy(MODERN, kernels)
+    _ = shutil.copy(MODERN, kernels)
 
     exit_code = cli.main(
         [
@@ -37,8 +37,9 @@ def test_lunar_catalog_end_to_end(
 
     assert exit_code == 0
     assert "wrote 2 lunar eclipses in 1 files" in capsys.readouterr().out
-    chunk = json.loads((tmp_path / "out" / "2000.json").read_text())
-    assert [record["kind"] for record in chunk] == ["total", "total"]
+    chunk = read_json(tmp_path / "out" / "2000.json")
+    assert isinstance(chunk, list)
+    assert [record["kind"] for record in chunk if isinstance(record, dict)] == ["total", "total"]
 
 
 def test_reports_missing_kernels(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -50,7 +51,7 @@ def test_reports_missing_kernels(tmp_path: Path, capsys: pytest.CaptureFixture[s
 def test_reports_kernels_that_do_not_cover_the_range(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    shutil.copy(MODERN, tmp_path)
+    _ = shutil.copy(MODERN, tmp_path)
     exit_code = cli.main(
         [
             "lunar-catalog",
@@ -73,3 +74,17 @@ def test_reports_kernels_that_do_not_cover_the_range(
 )
 def test_year_start_uses_the_calendar_in_force(year: int, jd: float) -> None:
     assert cli.year_start_jd(year) == jd
+
+
+def test_defaults_apply_when_options_are_omitted(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seen: list[int] = []
+
+    def record(year: int) -> float:
+        seen.append(year)
+        return 0.0
+
+    monkeypatch.setattr(cli, "year_start_jd", record)
+    _ = cli.main(["lunar-catalog", "--kernels", str(tmp_path), "--out", str(tmp_path)])
+    assert seen == [cli.DEFAULT_START_YEAR, cli.DEFAULT_END_YEAR + 1]

@@ -13,17 +13,19 @@ covers it, so searches run straight across the split.
 import itertools
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, BinaryIO, Protocol, Self
+from typing import TYPE_CHECKING, Self
 
 import numpy as np
 from jplephem.daf import DAF
 from jplephem.excerpter import RemoteFile, write_excerpt
-from jplephem.spk import SPK
+from jplephem.spk import SPK, BaseSegment, Segment, Type9Segment
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
     from pathlib import Path
     from types import TracebackType
+
+    from jplephem.daf import ReadableFile
 
 DE441_URL = "https://ssd.jpl.nasa.gov/ftp/eph/planets/bsp/de441.bsp"
 
@@ -36,25 +38,6 @@ TARGETS = frozenset({3, 10, 301, 399})
 type FloatArray = np.typing.NDArray[np.float64]
 
 
-class SpkSegment(Protocol):
-    """The parts of a `jplephem.spk.Segment` this module relies on."""
-
-    center: int
-    target: int
-    start_jd: float
-    end_jd: float
-
-    def compute(self, tdb: FloatArray, tdb2: FloatArray) -> FloatArray:
-        """Position in km at the given TDB Julian Days."""
-        ...
-
-    def compute_and_differentiate(
-        self, tdb: FloatArray, tdb2: FloatArray
-    ) -> tuple[FloatArray, FloatArray]:
-        """Position in km and velocity in km/day."""
-        ...
-
-
 @dataclass(frozen=True, slots=True)
 class Kernel:
     """An excerpt file that is valid for Julian Days in ``[start_jd, end_jd)``."""
@@ -64,7 +47,7 @@ class Kernel:
     end_jd: float
 
 
-def excerpt(source: BinaryIO, directory: Path, start_jd: float, end_jd: float) -> list[Kernel]:
+def excerpt(source: ReadableFile, directory: Path, start_jd: float, end_jd: float) -> list[Kernel]:
     """Write excerpts of ``source`` covering ``[start_jd, end_jd)`` into ``directory``.
 
     Produces one file for each side of the DE441 split that the range touches.
@@ -111,7 +94,7 @@ class RoutedSegment:
 
     center: int
     target: int
-    pieces: tuple[SpkSegment, ...]
+    pieces: tuple[Segment, ...]
 
     @property
     def start_jd(self) -> float:
@@ -179,9 +162,9 @@ class Ephemeris:
         try:
             for path in paths:
                 self._spks.append(SPK.open(str(path)))
-            grouped: defaultdict[tuple[int, int], list[SpkSegment]] = defaultdict(list)
+            grouped: defaultdict[tuple[int, int], list[Segment]] = defaultdict(list)
             for spk in self._spks:
-                for segment in spk.segments:
+                for segment in map(require_chebyshev, spk.segments):
                     grouped[segment.center, segment.target].append(segment)
             self.segments: Sequence[RoutedSegment] = [
                 RoutedSegment(center, target, _contiguous(pieces))
@@ -228,7 +211,15 @@ class Ephemeris:
         return min(segment.end_jd for segment in self.segments)
 
 
-def _contiguous(pieces: list[SpkSegment]) -> tuple[SpkSegment, ...]:
+def require_chebyshev(segment: Segment | Type9Segment | BaseSegment) -> Segment:
+    """Accept only Chebyshev position segments, the kind DE441 uses for every body."""
+    if not isinstance(segment, Segment):
+        msg = f"Unsupported SPK segment type {segment.data_type} for target {segment.target}"
+        raise TypeError(msg)
+    return segment
+
+
+def _contiguous(pieces: list[Segment]) -> tuple[Segment, ...]:
     ordered = tuple(sorted(pieces, key=lambda piece: piece.start_jd))
     for before, after in itertools.pairwise(ordered):
         if before.end_jd != after.start_jd:

@@ -27,6 +27,16 @@ def year_start_jd(year: int) -> float:
     return julian_day(CalendarDate(year, 1, 1.0, calendar))
 
 
+class Arguments(argparse.Namespace):
+    """Parsed arguments, typed for the checkers. Runtime defaults live on each argument."""
+
+    command: str = ""
+    kernels: Path = DEFAULT_KERNELS
+    start_year: int = DEFAULT_START_YEAR
+    end_year: int = DEFAULT_END_YEAR
+    out: Path | None = None
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Parse arguments and run the chosen command."""
     parser = argparse.ArgumentParser(prog="histeclipse-pipeline", description=__doc__)
@@ -34,14 +44,16 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     fetch = commands.add_parser("fetch-ephemeris", help="download DE441 excerpts from JPL")
     lunar = commands.add_parser("lunar-catalog", help="compute lunar eclipses and write JSON")
-    lunar.add_argument("--out", type=Path, required=True, help="output directory")
+    _ = lunar.add_argument("--out", type=Path, required=True, help="output directory")
     for command in (fetch, lunar):
-        command.add_argument("--kernels", type=Path, default=DEFAULT_KERNELS)
-        command.add_argument("--start-year", type=int, default=DEFAULT_START_YEAR)
-        command.add_argument("--end-year", type=int, default=DEFAULT_END_YEAR)
+        # Explicit defaults matter: sub-parsers copy every attribute, None included, onto the
+        # namespace, so the class-level defaults on `Arguments` alone would be overwritten.
+        _ = command.add_argument("--kernels", type=Path, default=DEFAULT_KERNELS)
+        _ = command.add_argument("--start-year", type=int, default=DEFAULT_START_YEAR)
+        _ = command.add_argument("--end-year", type=int, default=DEFAULT_END_YEAR)
 
-    args = parser.parse_args(argv)
-    kernels: Path = args.kernels
+    args = parser.parse_args(argv, namespace=Arguments())
+    kernels = args.kernels
     start_jd = year_start_jd(args.start_year)
     end_jd = year_start_jd(args.end_year + 1)
 
@@ -61,6 +73,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         except ValueError as error:
             print(f"Kernels in {kernels} do not cover the range: {error}", file=sys.stderr)  # noqa: T201
             return 1
+    if args.out is None:  # pragma: no cover - argparse already requires --out here
+        parser.error("--out is required")
     index = write_lunar_catalog(eclipses, args.out, args.start_year, args.end_year)
     total = sum(chunk["count"] for chunk in index["chunks"])
     print(f"wrote {total} lunar eclipses in {len(index['chunks'])} files to {args.out}")  # noqa: T201

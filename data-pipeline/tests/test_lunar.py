@@ -16,7 +16,7 @@ from histeclipse_pipeline.lunar import (
     LunarEclipseKind,
     find_lunar_eclipses,
 )
-from kernels import ANCIENT, BEFORE_SPLIT, MODERN
+from tests.kernels import ANCIENT, BEFORE_SPLIT, MODERN
 
 SECONDS_PER_DAY = 86_400
 
@@ -123,4 +123,4 @@ def test_excludes_eclipses_outside_the_requested_range() -> None:
 
 def test_rejects_search_without_enough_ephemeris_margin() -> None:
     with Ephemeris([MODERN]) as ephemeris, pytest.raises(ValueError, match="at least"):
-        find_lunar_eclipses(ephemeris, ephemeris.start_jd, ephemeris.end_jd)
+        _ = find_lunar_eclipses(ephemeris, ephemeris.start_jd, ephemeris.end_jd)
