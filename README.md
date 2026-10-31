@@ -28,3 +28,7 @@ pnpm check        # everything CI runs: format, lint, typecheck, tests + coverag
 - PRs merge by squash only, after the `CI OK` check passes and the branch is up to date with `main`.
 - Dependencies are pinned to exact versions. pnpm refuses package versions younger than 7 days (`minimumReleaseAge`), and Dependabot uses the same cooldown.
 - GitHub Actions are pinned to commit SHAs and audited with [zizmor](https://github.com/zizmorcore/zizmor).
+
+## License
+
+[MIT](LICENSE)
