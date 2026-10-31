@@ -12,7 +12,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      // main.ts is DOM bootstrap; it gets covered by browser end-to-end tests instead.
+      // main.ts is DOM bootstrap; the Playwright suite in e2e/ covers it in a real browser.
       exclude: ['src/**/*.test.ts', 'src/main.ts'],
       thresholds: {
         statements: 95,

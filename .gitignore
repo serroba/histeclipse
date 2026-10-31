@@ -13,3 +13,5 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 .hypothesis/
+test-results/
+playwright-report/

@@ -1,0 +1,64 @@
+name: Live smoke test
+
+# Runs the e2e suite against the public site: after every deploy (called from deploy.yml),
+# daily to catch problems between releases, and on demand.
+on:
+  workflow_call:
+    inputs:
+      expected-version:
+        description: Commit SHA the live site must be serving before tests run
+        type: string
+        required: false
+        default: ''
+  workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * *'
+
+permissions:
+  contents: read
+
+# Never cancel: a post-deploy verification must report its result.
+concurrency:
+  group: live-smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Smoke test live site
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BASE_URL: https://serroba.github.io/histeclipse/
+      EXPECTED_VERSION: ${{ inputs.expected-version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Wait until the new release is publicly served
+        if: env.EXPECTED_VERSION != ''
+        run: |
+          for _ in $(seq 1 60); do
+            if curl -fsS "$BASE_URL" | grep -q "content=\"$EXPECTED_VERSION\""; then
+              echo "Live site is serving $EXPECTED_VERSION"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::$BASE_URL did not serve $EXPECTED_VERSION within 10 minutes"
+          exit 1
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report-live
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
