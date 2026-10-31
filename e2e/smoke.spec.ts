@@ -624,3 +624,60 @@ test('tapping the globe picks where to stand, and the sky faces the eclipse from
   expect(Math.abs((altitude ?? 0) - sunAltitude)).toBeLessThan(1);
   await expect(page.getByTestId('sky-eclipse')).toBeVisible();
 });
+
+/** The middle of the space the panels leave free, at `x` (by default the middle). */
+async function freeSpot(page: Page, x?: number): Promise<{ x: number; y: number }> {
+  const top = (await page.locator('.hud').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  const bottom = (await page.locator('.bottom').boundingBox()) ?? { y: 0 };
+  const viewport = page.viewportSize() ?? { width: 0, height: 0 };
+  const narrow = viewport.width <= 600;
+  const from = narrow ? top.y + top.height : 0;
+  // On wide screens the date panel sits at the left, so aim between it and the right edge.
+  const left = narrow ? 0 : top.x + top.width;
+  return { x: x ?? (left + viewport.width) / 2, y: (from + bottom.y) / 2 };
+}
+
+test('tapping the sky hides the panels, and tapping again brings them back', async ({ page }) => {
+  await page.goto(BABYLON_NIGHT_3000_BCE);
+  await skyRendered(page);
+  const hud = page.locator('.hud');
+  const bottom = page.locator('.bottom');
+  const spot = await freeSpot(page);
+
+  await page.mouse.click(spot.x, spot.y);
+  await expect(hud).toBeHidden();
+  await expect(bottom).toBeHidden();
+  await expect(page.locator('#app')).toHaveAttribute('data-panels', 'hidden');
+
+  // Dragging still turns the sky and leaves the panels as they are.
+  await page.mouse.move(spot.x, spot.y);
+  await page.mouse.down();
+  await page.mouse.move(spot.x + 120, spot.y, { steps: 6 });
+  await page.mouse.up();
+  await expect(hud).toBeHidden();
+
+  await page.mouse.click(spot.x, spot.y);
+  await expect(hud).toBeVisible();
+  await expect(bottom).toBeVisible();
+
+  // A tap on the panel itself does not hide it.
+  await page.locator('.hud h1').click();
+  await expect(hud).toBeVisible();
+});
+
+test('tapping empty space beside the globe toggles the panels', async ({ page }) => {
+  await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
+  await globeRendered(page);
+  const spot = await freeSpot(page, 8);
+  await page.mouse.click(spot.x, spot.y);
+  await expect(page.locator('.hud')).toBeHidden();
+  await expect(page.locator('.bottom')).toBeHidden();
+  // Tapping Earth itself still picks a place, and does not toggle anything.
+  const globe = await page.getByTestId('globe').boundingBox();
+  if (globe === null) throw new Error('globe has no size');
+  await page.mouse.click(globe.x + globe.width / 2, globe.y + globe.height / 2);
+  await expect(page).toHaveURL(/loc=/);
+  await expect(page.locator('.hud')).toBeHidden();
+  await page.mouse.click(spot.x, spot.y);
+  await expect(page.locator('.hud')).toBeVisible();
+});
