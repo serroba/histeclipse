@@ -35,7 +35,7 @@ Each merge to `main` builds the site with its commit SHA stamped into a `<meta n
 cd data-pipeline
 uv sync
 uv run ruff format . && uv run ruff check .   # format + lint (all ruff rules)
-uv run mypy                                   # strict type checking
+uv run mypy && uv run basedpyright            # two strict type checkers (see typings/README.md)
 uv run pytest                                 # tests + property tests, 95% coverage gate
 
 # Generate data (downloads ~600 MB of DE441 excerpts once, into data-pipeline/.cache/)

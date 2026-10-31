@@ -1,4 +1,3 @@
-import json
 from typing import TYPE_CHECKING
 
 import pytest
@@ -10,6 +9,7 @@ from histeclipse_pipeline.catalog import (
     write_lunar_catalog,
 )
 from histeclipse_pipeline.lunar import DELTA_T_MODEL, LunarEclipse, LunarEclipseKind
+from tests.json_values import json_round_trip, read_json
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -71,14 +71,13 @@ def test_writes_index_and_century_chunks(tmp_path: Path) -> None:
     assert counts[2000] == 1
     assert sum(counts.values()) == 2
 
-    assert json.loads((tmp_path / "index.json").read_text()) == json.loads(json.dumps(index))
-    ancient = json.loads((tmp_path / "-700.json").read_text())
-    assert ancient == [json.loads(json.dumps(to_record(ECLIPSE_621_BCE)))]
-    assert json.loads((tmp_path / "-600.json").read_text()) == []
+    assert read_json(tmp_path / "index.json") == json_round_trip(index)
+    assert read_json(tmp_path / "-700.json") == [json_round_trip(to_record(ECLIPSE_621_BCE))]
+    assert read_json(tmp_path / "-600.json") == []
 
 
 def test_chunk_files_hold_one_record_per_line(tmp_path: Path) -> None:
-    write_lunar_catalog([ECLIPSE_2025, eclipse(2_460_926.258_98)], tmp_path, 2025, 2025)
+    _ = write_lunar_catalog([ECLIPSE_2025, eclipse(2_460_926.258_98)], tmp_path, 2025, 2025)
     lines = (tmp_path / "2000.json").read_text().splitlines()
     assert lines[0] == "["
     assert lines[-1] == "]"
@@ -92,9 +91,9 @@ def test_partial_centuries_get_their_whole_chunk(tmp_path: Path) -> None:
 
 def test_rejects_eclipses_outside_the_range(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="outside the range"):
-        write_lunar_catalog([ECLIPSE_621_BCE], tmp_path, 2000, 2099)
+        _ = write_lunar_catalog([ECLIPSE_621_BCE], tmp_path, 2000, 2099)
 
 
 def test_rejects_empty_range(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="Empty year range"):
-        write_lunar_catalog([], tmp_path, 2001, 2000)
+        _ = write_lunar_catalog([], tmp_path, 2001, 2000)

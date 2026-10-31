@@ -2,14 +2,17 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
+from jplephem.daf import DAF
+from jplephem.spk import BaseSegment
 
 from histeclipse_pipeline.ephemeris import (
     DE441_SPLIT_JD,
     TARGETS,
     Ephemeris,
     excerpt,
+    require_chebyshev,
 )
-from kernels import AFTER_SPLIT, ANCIENT, BEFORE_SPLIT, MODERN
+from tests.kernels import AFTER_SPLIT, ANCIENT, BEFORE_SPLIT, MODERN
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -56,17 +59,17 @@ def test_accepts_the_last_covered_instant(across_split: Ephemeris) -> None:
 @pytest.mark.parametrize("jd", [2_440_373.0, 2_440_656.0])
 def test_rejects_dates_outside_coverage(across_split: Ephemeris, jd: float) -> None:
     with pytest.raises(ValueError, match="outside ephemeris coverage"):
-        across_split.segment(3, 301).compute(jd)
+        _ = across_split.segment(3, 301).compute(jd)
 
 
 def test_unknown_segment(across_split: Ephemeris) -> None:
     with pytest.raises(KeyError, match="No segment for target 5"):
-        across_split.segment(0, 5)
+        _ = across_split.segment(0, 5)
 
 
 def test_rejects_kernels_with_a_gap_between_them() -> None:
     with pytest.raises(ValueError, match="gap or overlap"):
-        Ephemeris([ANCIENT, MODERN])
+        _ = Ephemeris([ANCIENT, MODERN])
 
 
 def test_excerpt_writes_a_loadable_subset(tmp_path: Path) -> None:
@@ -83,9 +86,17 @@ def test_excerpt_writes_a_loadable_subset(tmp_path: Path) -> None:
 
 def test_excerpt_needs_data_for_both_sides_of_the_split(tmp_path: Path) -> None:
     with BEFORE_SPLIT.open("rb") as source, pytest.raises(ValueError, match="one segment per"):
-        excerpt(source, tmp_path, 2_440_400.5, 2_440_450.5)
+        _ = excerpt(source, tmp_path, 2_440_400.5, 2_440_450.5)
 
 
 def test_excerpt_rejects_empty_range(tmp_path: Path) -> None:
     with AFTER_SPLIT.open("rb") as source, pytest.raises(ValueError, match="Empty range"):
-        excerpt(source, tmp_path, 2_440_500.5, 2_440_500.5)
+        _ = excerpt(source, tmp_path, 2_440_500.5, 2_440_500.5)
+
+
+def test_rejects_segment_types_other_than_chebyshev() -> None:
+    with MODERN.open("rb") as file:
+        # Descriptor: start/end seconds, target, center, frame, data type 9, start/end index.
+        segment = BaseSegment(DAF(file), b"", (0.0, 1.0, 301, 3, 1, 9, 1, 2))
+        with pytest.raises(TypeError, match="Unsupported SPK segment type 9 for target 301"):
+            _ = require_chebyshev(segment)

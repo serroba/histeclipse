@@ -76,10 +76,10 @@ def find_lunar_eclipses(
     )
     if len(codes) == 0:
         return []
-    keep = (times.tt >= start_jd_tt) & (times.tt < end_jd_tt)
+    keep = (_array(times.tt) >= start_jd_tt) & (_array(times.tt) < end_jd_tt)
     times, codes = times[keep], codes[keep]
 
-    whole, fraction = times.whole, times.tdb_fraction
+    whole, fraction = _array(times.whole), _array(times.tdb_fraction)
     earth = ephemeris.segment(3, 399)
     moon_km = ephemeris.segment(3, 301).compute(whole, fraction) - earth.compute(whole, fraction)
     sun_km = (
@@ -87,24 +87,39 @@ def find_lunar_eclipses(
         - ephemeris.segment(0, 3).compute(whole, fraction)
         - earth.compute(whole, fraction)
     )
-    gammas = _gamma(moon_km, sun_km)
     sublunar = wgs84.subpoint_of(build_position(moon_km / AU_KM, center=399, t=times))
 
-    umbral = details["umbral_magnitude"][keep]
-    penumbral = details["penumbral_magnitude"][keep]
+    kinds = [_KINDS[eclipselib.LUNAR_ECLIPSES[code]] for code in map(int, codes)]
+    jds = _floats(times.tt)
+    umbral = _floats(details["umbral_magnitude"][keep])
+    penumbral = _floats(details["penumbral_magnitude"][keep])
+    gammas = _floats(_gamma(moon_km, sun_km))
+    delta_ts = _floats(times.delta_t)
+    latitudes = _floats(sublunar.latitude.degrees)
+    longitudes = _floats(sublunar.longitude.degrees)
     return [
         LunarEclipse(
-            greatest_jd_tt=float(times.tt[index]),
-            kind=_KINDS[eclipselib.LUNAR_ECLIPSES[int(codes[index])]],
-            umbral_magnitude=float(umbral[index]),
-            penumbral_magnitude=float(penumbral[index]),
-            gamma=float(gammas[index]),
-            delta_t_seconds=float(times.delta_t[index]),
-            sublunar_latitude=float(sublunar.latitude.degrees[index]),
-            sublunar_longitude=float(sublunar.longitude.degrees[index]),
+            greatest_jd_tt=jds[index],
+            kind=kind,
+            umbral_magnitude=umbral[index],
+            penumbral_magnitude=penumbral[index],
+            gamma=gammas[index],
+            delta_t_seconds=delta_ts[index],
+            sublunar_latitude=latitudes[index],
+            sublunar_longitude=longitudes[index],
         )
-        for index in range(len(codes))
+        for index, kind in enumerate(kinds)
     ]
+
+
+def _floats(value: float | np.typing.NDArray[np.float64]) -> list[float]:
+    """Plain Python floats from a Skyfield or numpy value, so downstream code is fully typed."""
+    return list(map(float, _array(value)))
+
+
+def _array(value: float | np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64]:
+    """Skyfield returns a float for a single time and an array for many; always use an array."""
+    return np.atleast_1d(np.asarray(value, dtype=np.float64))
 
 
 def _gamma(
@@ -115,9 +130,10 @@ def _gamma(
     Positive when the Moon passes north of the axis, measured toward the celestial north pole.
     """
     axis = -sun_km / np.linalg.norm(sun_km, axis=0)
-    along = np.sum(moon_km * axis, axis=0)
-    offset = moon_km - along * axis
-    sign = np.where(offset[2] >= 0, 1.0, -1.0)
-    return np.asarray(
-        sign * np.linalg.norm(offset, axis=0) / EARTH_EQUATORIAL_RADIUS_KM, dtype=np.float64
-    )
+    offset = moon_km - np.sum(moon_km * axis, axis=0) * axis
+    northward = np.sum(offset * _CELESTIAL_NORTH, axis=0)
+    distance = np.linalg.norm(offset, axis=0) / EARTH_EQUATORIAL_RADIUS_KM
+    return np.asarray(np.where(northward >= 0, distance, -distance), dtype=np.float64)
+
+
+_CELESTIAL_NORTH = np.array([[0.0], [0.0], [1.0]], dtype=np.float64)

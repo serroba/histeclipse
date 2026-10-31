@@ -13,6 +13,7 @@ histeclipse-pipeline = "histeclipse_pipeline.cli:main"
 
 [dependency-groups]
 dev = [
+    "basedpyright>=1.40.2",
     "hypothesis>=6.170.9",
     "mypy>=2.4.0",
     "pytest>=9.1.1",
@@ -56,6 +57,9 @@ warn_unreachable = true
 disallow_any_explicit = true
 disallow_any_decorated = false  # hypothesis/pytest decorators are typed loosely
 extra_checks = true
+# Skyfield and jplephem are untyped; typings/ holds stubs for exactly the parts we use.
+mypy_path = "typings"
+disallow_any_unimported = true
 enable_error_code = [
   "deprecated",
   "exhaustive-match",
@@ -70,11 +74,6 @@ enable_error_code = [
   "unused-awaitable",
 ]
 
-[[tool.mypy.overrides]]
-# Skyfield and jplephem ship without type information; ephemeris.SpkSegment types the parts we use.
-module = ["skyfield.*", "jplephem.*"]
-ignore_missing_imports = true
-
 [tool.pytest.ini_options]
 addopts = [
   "--strict-config",
@@ -87,3 +86,11 @@ addopts = [
 testpaths = ["tests"]
 xfail_strict = true
 filterwarnings = ["error"]
+
+[tool.basedpyright]
+# Strictest mode: every check on, including reportAny and reportUnknown*, so untyped values
+# from third-party libraries cannot leak into our code unnoticed.
+typeCheckingMode = "all"
+pythonVersion = "3.14"
+include = ["src", "tests"]
+stubPath = "typings"

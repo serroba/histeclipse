@@ -135,4 +135,4 @@ def _write_json(path: Path, value: CatalogIndex | Sequence[LunarEclipseRecord]) 
         text = dump(value)
     else:
         text = "[\n" + ",\n".join(dump(record) for record in value) + "\n]" if value else "[]"
-    path.write_text(text + "\n")
+    _ = path.write_text(text + "\n")

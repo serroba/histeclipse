@@ -84,24 +84,24 @@ def test_is_leap_year(year: int, calendar: Calendar, *, expected: bool) -> None:
 )
 def test_rejects_invalid_dates(month: int, day: float) -> None:
     with pytest.raises(ValueError, match="must be in"):
-        CalendarDate(2001, month, day, G)
+        _ = CalendarDate(2001, month, day, G)
 
 
 def test_accepts_february_29_in_leap_years_only() -> None:
     assert CalendarDate(1900, 2, 29.0, J).day == 29.0
     with pytest.raises(ValueError, match="Day must be in"):
-        CalendarDate(1900, 2, 29.0, G)
+        _ = CalendarDate(1900, 2, 29.0, G)
 
 
 def test_rejects_dates_before_jd_zero() -> None:
     with pytest.raises(ValueError, match="before Julian Day 0"):
-        julian_day(CalendarDate(-4713, 12, 31.0, J))
+        _ = julian_day(CalendarDate(-4713, 12, 31.0, J))
 
 
 @pytest.mark.parametrize("jd", [-0.5, math.nan, math.inf])
 def test_calendar_date_rejects_out_of_range(jd: float) -> None:
     with pytest.raises(ValueError, match="finite and non-negative"):
-        calendar_date(jd, J)
+        _ = calendar_date(jd, J)
 
 
 # Day numbers covering roughly 4700 BCE to 3800 CE, the range the pipeline will need and more.

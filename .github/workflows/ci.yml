@@ -59,7 +59,7 @@ jobs:
           retention-days: 14
 
   pipeline:
-    name: Data pipeline (ruff, mypy, pytest)
+    name: Data pipeline (ruff, mypy, basedpyright, pytest)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -74,6 +74,7 @@ jobs:
       - run: uv run --locked ruff format --check .
       - run: uv run --locked ruff check --output-format=github .
       - run: uv run --locked mypy
+      - run: uv run --locked basedpyright
       - run: uv run --locked pytest
 
   workflows:
