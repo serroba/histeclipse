@@ -96,6 +96,7 @@ describe('parseViewState', () => {
     ['loc=1,2,3', 'loc', 'expected 2'],
     ['loc=1,', 'loc', 'is not a number'],
     ['cam=0,0,0.5', 'cam', 'distance must be between'],
+    ['cam=0,0,200000', 'cam', 'distance must be between'],
     ['layers=lunar,clouds', 'layers', 'unknown layer'],
     ['sel=lunar', 'sel', 'expected kind:date'],
     ['sel=lunar:yesterday', 'sel', 'expected a date'],

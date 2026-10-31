@@ -5,6 +5,8 @@
  * modules it calls.
  */
 
+import { loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
+import { earthFixedToJ2000, sunPositionJ2000 } from './astro/precession';
 import { subsolarPoint } from './astro/sun';
 import { greatestEclipseUT } from './data/catalog';
 import {
@@ -129,9 +131,22 @@ export async function startApp(root: HTMLElement): Promise<void> {
     createGlobe(globeContainer, {
       camera: store.get().camera,
       textureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
+      moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
     }),
   ]);
   const sync = createUrlSync(browserUrlWriter(window.location, window.history));
+
+  // The Moon's theory is a separate chunk; until it arrives the space view shows only the Sun.
+  let moonEphemeris: MoonEphemeris | null = null;
+  loadMoonEphemeris().then(
+    (ephemeris) => {
+      moonEphemeris = ephemeris;
+      showTime(store.get());
+    },
+    (error: unknown) => {
+      notify(`Could not load the Moon's orbit: ${errorMessage(error)}`);
+    },
+  );
 
   // The famous list is a convenience: if it fails to load, everything else still works.
   loadFamousEclipses(`${base}data/famous-eclipses.json`, (url) => fetch(url)).then(
@@ -306,6 +321,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     const sun = subsolarPoint(universal, terrestrial);
     globe.setSunDirection(geoToVector(sun));
+    globe.setSpace({
+      earthFixedToJ2000: earthFixedToJ2000(universal, terrestrial),
+      sunKm: sunPositionJ2000(terrestrial),
+      moonKm: moonEphemeris?.position(terrestrial) ?? null,
+    });
     root.dataset['subsolar'] = `${sun.latitude.toFixed(3)},${sun.longitude.toFixed(3)}`;
     dateText.textContent = formatDate(state.time);
     timeText.textContent = formatTimeOfDay(state.time);

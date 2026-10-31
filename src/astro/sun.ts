@@ -87,6 +87,19 @@ export function sunPosition(jdTT: JulianDay): EquatorialPosition {
   };
 }
 
+/** Earth–Sun distance in astronomical units (Meeus eq. 25.5). */
+export function sunDistance(jdTT: JulianDay): number {
+  const t = centuries(jdTT);
+  const meanAnomaly = (357.52911 + 35_999.05029 * t - 0.0001537 * t * t) * RADIANS;
+  const eccentricity = 0.016708634 - 0.000042037 * t - 0.0000001267 * t * t;
+  const equationOfCenter =
+    (1.914602 - 0.004817 * t - 0.000014 * t * t) * Math.sin(meanAnomaly) +
+    (0.019993 - 0.000101 * t) * Math.sin(2 * meanAnomaly) +
+    0.000289 * Math.sin(3 * meanAnomaly);
+  const trueAnomaly = meanAnomaly + equationOfCenter * RADIANS;
+  return (1.000001018 * (1 - eccentricity ** 2)) / (1 + eccentricity * Math.cos(trueAnomaly));
+}
+
 /** Greenwich mean sidereal time in degrees, from UT (Meeus eq. 12.4). */
 export function greenwichMeanSiderealTime(jdUT: JulianDay): number {
   const t = centuries(jdUT);

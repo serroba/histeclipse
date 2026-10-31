@@ -28,3 +28,24 @@ declare module 'astronomia/data/elpMppDe' {
   const data: ElpData;
   export default data;
 }
+
+declare module 'astronomia/coord' {
+  export class Equatorial {
+    constructor(ra: number, dec: number);
+    ra: number;
+    dec: number;
+  }
+}
+
+declare module 'astronomia/precess' {
+  import type { Equatorial } from 'astronomia/coord';
+
+  /** Rigorous precession (Meeus ch. 21) between Julian epochs, with proper motion in radians/yr. */
+  export function position(
+    eqFrom: Equatorial,
+    epochFrom: number,
+    epochTo: number,
+    mα: number,
+    mδ: number,
+  ): Equatorial;
+}
