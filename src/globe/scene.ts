@@ -26,6 +26,10 @@ import {
   SpriteMaterial,
   SRGBColorSpace,
   TextureLoader,
+  CustomBlending,
+  OneFactor,
+  ZeroFactor,
+  type Texture,
   Vector2,
   Vector3,
   Vector4,
@@ -63,12 +67,14 @@ import {
   mergeMarkers,
   MOON_RADIUS_EARTH_RADII,
   sceneFromKm,
+  toScene,
   sceneRotation,
   SUN_RADIUS_EARTH_RADII,
   type CameraPose,
   type ScreenMarker,
 } from './spaceFrame';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
+import { SOLAR_NORTH_POLE_J2000 } from './sunImage';
 import {
   OCCULTATION,
   SOLAR_COMMON,
@@ -124,6 +130,16 @@ export interface SpaceBodies {
   readonly moonKm: readonly [number, number, number] | null;
 }
 
+/** An SDO frame for the Sun: the limb at `diskRadius` of the width, north up, west right. */
+export interface SunImageRequest {
+  readonly key: string;
+  readonly small: string;
+  readonly large: string;
+  /** Multiplies the image's colours: a warm white for the grey visible-light frame. */
+  readonly tint: readonly [number, number, number];
+  readonly diskRadius: number;
+}
+
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
   setSunDirection(direction: Vector3Tuple): void;
@@ -152,6 +168,11 @@ export interface Globe {
   onEmptyTap(listener: () => void): () => void;
   /** Called when someone taps a place on Earth while looking at it: where to stand. */
   onPlacePick(listener: (place: GeoPoint) => void): () => void;
+  /**
+   * Dress the Sun in an SDO image: a small frame at once, then the sharp one. Null returns it to
+   * a plain disc.
+   */
+  setSunImage(image: SunImageRequest | null): void;
   /** Pin the chosen place on the globe; null removes the pin. */
   setLocation(place: GeoPoint | null): void;
   /**
@@ -308,6 +329,76 @@ const MOON_FRAGMENT = /* glsl */ `
     float sunlight = sunlightAt(vWorldPosition, sunPosition, sunRadius, vec3(0.0), earthRadius);
     vec3 copper = vec3(0.55, 0.16, 0.06) * 0.22 * pow(1.0 - sunlight, 3.0);
     gl_FragColor = vec4(albedo * facing * (sunlight + copper), 1.0);
+    #include <colorspace_fragment>
+  }
+`;
+
+const SUN_VERTEX = /* glsl */ `
+  #include <common>
+  #include <logdepthbuf_pars_vertex>
+  varying vec3 vNormal;
+  void main() {
+    vNormal = normal;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    #include <logdepthbuf_vertex>
+  }
+`;
+
+// The side facing Earth wears SDO's image, as an orthographic view from Earth (sunImage.ts is
+// the tested reference); the far side, which no one saw that day, is a plain dim tint.
+const SUN_FRAGMENT = /* glsl */ `
+  #include <logdepthbuf_pars_fragment>
+  uniform sampler2D map;
+  uniform float hasMap;
+  uniform vec3 toEarth;
+  uniform vec3 north;
+  uniform float diskRadius;
+  uniform vec3 tint;
+  varying vec3 vNormal;
+
+  void main() {
+    #include <logdepthbuf_fragment>
+    vec3 plain = vec3(1.0, 0.96, 0.86);
+    vec3 n = normalize(vNormal);
+    vec3 up = normalize(north - dot(north, toEarth) * toEarth);
+    vec3 right = cross(-toEarth, up);
+    vec2 uv = vec2(0.5 + diskRadius * dot(n, right), 0.5 + diskRadius * dot(n, up));
+    vec3 seen = texture2D(map, uv).rgb * tint;
+    vec3 unseen = vec3(0.02, 0.015, 0.01);
+    vec3 imaged = mix(unseen, seen, smoothstep(-0.02, 0.03, dot(n, toEarth)));
+    gl_FragColor = vec4(mix(plain, imaged, hasMap), 1.0);
+    #include <colorspace_fragment>
+  }
+`;
+
+const CORONA_VERTEX = /* glsl */ `
+  #include <common>
+  #include <logdepthbuf_pars_vertex>
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    #include <logdepthbuf_vertex>
+  }
+`;
+
+// What the image shows beyond the limb (the corona, prominences), on a plane across the line of
+// sight. It is only right seen from near Earth's side, so it fades as the camera swings away.
+const CORONA_FRAGMENT = /* glsl */ `
+  #include <logdepthbuf_pars_fragment>
+  uniform sampler2D map;
+  uniform float diskRadius;
+  uniform float opacity;
+  uniform vec3 tint;
+  varying vec2 vUv;
+
+  void main() {
+    #include <logdepthbuf_fragment>
+    float r = length(vUv - 0.5);
+    if (r < diskRadius * 0.995) discard;
+    // Fade out before the frame's square edge.
+    float edge = 1.0 - smoothstep(0.38, 0.49, r);
+    gl_FragColor = vec4(texture2D(map, vUv).rgb * tint * opacity * edge, 1.0);
     #include <colorspace_fragment>
   }
 `;
@@ -470,10 +561,49 @@ export async function createGlobe(
   moon.visible = false;
   scene.add(moon);
 
+  const sunUniforms = {
+    map: { value: null as Texture | null },
+    hasMap: { value: 0 },
+    toEarth: { value: new Vector3(1, 0, 0) },
+    north: { value: new Vector3(0, 1, 0) },
+    diskRadius: { value: 0.4 },
+    tint: { value: new Vector3(1, 1, 1) },
+  };
   const sun = new Mesh(
     new SphereGeometry(SUN_RADIUS_EARTH_RADII, 128, 64),
-    new MeshBasicMaterial({ color: new Color(1, 0.96, 0.86) }),
+    new ShaderMaterial({
+      uniforms: sunUniforms,
+      vertexShader: SUN_VERTEX,
+      fragmentShader: SUN_FRAGMENT,
+    }),
   );
+  const coronaUniforms = {
+    map: sunUniforms.map,
+    diskRadius: sunUniforms.diskRadius,
+    tint: sunUniforms.tint,
+    opacity: { value: 0 },
+  };
+  const corona = new Mesh(
+    new PlaneGeometry(1, 1),
+    new ShaderMaterial({
+      uniforms: coronaUniforms,
+      vertexShader: CORONA_VERTEX,
+      fragmentShader: CORONA_FRAGMENT,
+      // Add light without touching the canvas's alpha, which lets the page's sky show through.
+      blending: CustomBlending,
+      blendSrc: OneFactor,
+      blendDst: OneFactor,
+      blendSrcAlpha: ZeroFactor,
+      blendDstAlpha: OneFactor,
+      transparent: true,
+      depthWrite: false,
+    }),
+  );
+  corona.visible = false;
+  scene.add(corona);
+  // Frames of the Sun already loaded, by URL, and the one asked for last.
+  const sunTextures = new Map<string, Texture>();
+  let sunImageWanted: SunImageRequest | null = null;
   const glow = new Sprite(
     new SpriteMaterial({
       map: glowTexture(),
@@ -576,6 +706,44 @@ export async function createGlobe(
     }
     if (body === 'sun') return { position: sun.position, rotation: sunFrame };
     return { position: new Vector3(), rotation: new Quaternion() };
+  }
+
+  /** Stand the corona's plane across the line from Earth, north up, sized to the frame. */
+  function placeCorona(): void {
+    const toEarth = sunUniforms.toEarth.value;
+    const north = sunUniforms.north.value;
+    const up = north.clone().addScaledVector(toEarth, -north.dot(toEarth)).normalize();
+    const right = new Vector3().crossVectors(toEarth.clone().negate(), up);
+    corona.quaternion.setFromRotationMatrix(new Matrix4().makeBasis(right, up, toEarth));
+    corona.position.copy(sun.position);
+    // The limb is diskRadius of the frame's width.
+    const width = SUN_RADIUS_EARTH_RADII / sunUniforms.diskRadius.value;
+    corona.scale.set(width, width, 1);
+  }
+
+  /** Close to the Sun its glow would wash out the image; the corona shows from Earth's side. */
+  function shadeSun(): void {
+    const imaged = sunUniforms.hasMap.value > 0 && sun.visible;
+    const toCamera = camera.position.clone().sub(sun.position);
+    const radii = toCamera.length() / SUN_RADIUS_EARTH_RADII;
+    glow.material.opacity = imaged ? Math.min(1, Math.max(0, (radii - 12) / 40)) : 1;
+    const facing = toCamera.normalize().dot(sunUniforms.toEarth.value);
+    // 1 when the camera looks at the Sun from Earth's side, as SDO did; −1 from behind.
+    container.dataset['sunFacing'] = facing.toFixed(3);
+    const opacity = imaged ? Math.min(1, Math.max(0, (facing - 0.75) / 0.2)) : 0;
+    coronaUniforms.opacity.value = opacity;
+    corona.visible = opacity > 0;
+  }
+
+  function loadSunTexture(url: string): Promise<Texture> {
+    const cached = sunTextures.get(url);
+    if (cached !== undefined) return Promise.resolve(cached);
+    return new TextureLoader().loadAsync(url).then((texture) => {
+      texture.colorSpace = SRGBColorSpace;
+      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      sunTextures.set(url, texture);
+      return texture;
+    });
   }
 
   function bodyReady(body: Body): boolean {
@@ -774,6 +942,7 @@ export async function createGlobe(
     if (controls.enabled) controls.update();
     if (needsRender) {
       needsRender = false;
+      shadeSun();
       renderer.render(scene, camera);
       placeMarkers();
       container.dataset['rendered'] = 'true';
@@ -885,6 +1054,11 @@ export async function createGlobe(
       sun.position.set(...sceneFromKm(apply(toEarthFixed, bodies.sunKm)));
       sun.visible = true;
       sunPosition.copy(sun.position);
+      // The image's frame: toward Earth, and the Sun's rotation axis, in scene axes.
+      sunUniforms.toEarth.value.copy(sun.position).negate().normalize();
+      // sunFrame turns J2000 vectors written in scene axes, like every position here.
+      sunUniforms.north.value.set(...toScene(SOLAR_NORTH_POLE_J2000)).applyQuaternion(sunFrame);
+      placeCorona();
       if (bodies.moonKm === null) {
         moon.visible = false;
       } else {
@@ -997,6 +1171,42 @@ export async function createGlobe(
     onEmptyTap(listener) {
       emptyTapListeners.add(listener);
       return () => emptyTapListeners.delete(listener);
+    },
+    setSunImage(image) {
+      sunImageWanted = image;
+      if (image === null) {
+        sunUniforms.hasMap.value = 0;
+        container.dataset['sunImage'] = 'none';
+        needsRender = true;
+        return;
+      }
+      const show = (url: string, size: string): void => {
+        // A later request (another channel) wins over a slow one.
+        if (sunImageWanted !== image) return;
+        sunUniforms.map.value = sunTextures.get(url) ?? null;
+        sunUniforms.hasMap.value = 1;
+        sunUniforms.tint.value.set(...image.tint);
+        sunUniforms.diskRadius.value = image.diskRadius;
+        placeCorona();
+        container.dataset['sunImage'] = size;
+        container.dataset['sunLayer'] = image.key;
+        needsRender = true;
+      };
+      if (sunTextures.has(image.large)) {
+        show(image.large, 'large');
+        return;
+      }
+      loadSunTexture(image.small)
+        .then(() => {
+          show(image.small, 'small');
+          return loadSunTexture(image.large);
+        })
+        .then(() => {
+          show(image.large, 'large');
+        })
+        .catch(() => {
+          if (sunImageWanted === image) container.dataset['sunImage'] = 'error';
+        });
     },
     onPlacePick(listener) {
       placeListeners.add(listener);

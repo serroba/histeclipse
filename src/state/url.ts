@@ -15,6 +15,8 @@
  *   or `none`.
  * - `years` is the calendar the year bar counts in: `western` (absent), `hebrew`, `islamic`,
  *   `egyptian` or `roman`. It changes how years are listed, not the moment in `t`.
+ * - `sun` is the channel of light the Sun is drawn in, close up: `visible` (absent),
+ *   `magnetogram`, `304`, `171`, `193` or `131`.
  * - `loc` (observer), `sel` (selected eclipse), `view` (an attached viewpoint; absent means
  *   free) and `focus` are optional; everything else is always written out, so a link keeps its meaning
  *   even if defaults change later.
@@ -24,6 +26,7 @@
  */
 
 import { calendarDate, calendarDateOf, julianDay, type Calendar } from '../time/julianDay';
+import { SUN_LAYERS, type SunLayer } from '../data/sunImages';
 import { YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
 import { errorMessage } from '../util/errors';
@@ -108,6 +111,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     look: read('look', parseLook, defaults.look),
     figures: read('figures', parseFigures, defaults.figures),
     years: read('years', parseYears, defaults.years),
+    sunLayer: read('sun', parseSunLayer, defaults.sunLayer),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -133,6 +137,7 @@ export function serializeViewState(state: ViewState): string {
   }
   if (state.figures !== 'famous') params.set('figures', state.figures);
   if (state.years !== 'western') params.set('years', state.years);
+  if (state.sunLayer !== 'visible') params.set('sun', state.sunLayer);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
@@ -143,6 +148,10 @@ function parseMode(raw: string): Mode {
 
 function parseFigures(raw: string): Figures {
   return oneOf(raw, FIGURES, 'figures');
+}
+
+function parseSunLayer(raw: string): SunLayer {
+  return oneOf(raw, SUN_LAYERS, 'sun');
 }
 
 function parseYears(raw: string): YearCalendar {
