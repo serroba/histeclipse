@@ -11,6 +11,17 @@ updates:
         dependency-type: development
         update-types: [minor, patch]
 
+  - package-ecosystem: uv
+    directory: /data-pipeline
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      dev-dependencies:
+        dependency-type: development
+        update-types: [minor, patch]
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

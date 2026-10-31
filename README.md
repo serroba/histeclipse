@@ -22,11 +22,23 @@ pnpm check        # everything CI runs: format, lint, typecheck, tests + coverag
 | `pnpm typecheck`    | `tsc -b` with `strict` plus every additional strictness flag     |
 | `pnpm format:check` | Prettier                                                         |
 
+## Data pipeline
+
+`data-pipeline/` is a Python project that generates the static data files offline. It never runs on the site. It requires [uv](https://docs.astral.sh/uv/).
+
+```sh
+cd data-pipeline
+uv sync
+uv run ruff format . && uv run ruff check .   # format + lint (all ruff rules)
+uv run mypy                                   # strict type checking
+uv run pytest                                 # tests + property tests, 95% coverage gate
+```
+
 ## Contributing
 
 - `main` is protected. Every change goes through a small, focused pull request.
 - PRs merge by squash only, after the `CI OK` check passes and the branch is up to date with `main`.
-- Dependencies are pinned to exact versions. pnpm refuses package versions younger than 7 days (`minimumReleaseAge`), and Dependabot uses the same cooldown.
+- Dependencies are pinned to exact versions. pnpm refuses package versions younger than 7 days (`minimumReleaseAge`), and uv excludes releases newer than 7 days (`exclude-newer`), and Dependabot uses the same cooldown.
 - GitHub Actions are pinned to commit SHAs and audited with [zizmor](https://github.com/zizmorcore/zizmor).
 
 ## License
