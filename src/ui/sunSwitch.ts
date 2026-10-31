@@ -50,8 +50,9 @@ export function createSunSwitch(onSelect: (layer: SunLayer) => void): SunSwitch 
       const day = new Date(shown.observed).toUTCString().slice(5, 16);
       about.textContent =
         `${shown.description} SDO image of ${day}: the Sun's surface changes daily, ` +
-        'so on the date shown it looked different. SDO sees the side facing Earth; the far ' +
-        `side is left dark. Credit: ${credit}.`;
+        'so on the date shown it looked different. SDO sees the side facing Earth; the side ' +
+        "it couldn't see is shown as a plain, featureless surface, because its details that " +
+        `day are unknown. Credit: ${credit}.`;
     },
   };
 }

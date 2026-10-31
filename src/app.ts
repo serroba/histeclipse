@@ -523,6 +523,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       // Visible light comes as grey; the Sun's own light is a warm white.
       tint: image.key === 'visible' ? [1, 0.93, 0.8] : [1, 1, 1],
       diskRadius: sunImages.diskRadius,
+      // HMI's continuum darkens toward the limb like the Sun seen by eye.
+      limbDarkening: image.key === 'visible' ? 0.6 : 0,
     });
   }
 
