@@ -225,7 +225,7 @@ describe('view state helpers', () => {
     expect(momentJulianDay(moment)).toBe(2_451_545);
   });
 
-  it('defaults to lunar eclipses and the day/night line', () => {
-    expect([...DEFAULT_LAYERS]).toEqual(['lunar', 'terminator']);
+  it('defaults to both eclipse layers and the day/night line', () => {
+    expect([...DEFAULT_LAYERS]).toEqual(['lunar', 'solar', 'terminator']);
   });
 });

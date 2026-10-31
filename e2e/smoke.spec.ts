@@ -76,7 +76,7 @@ test('rewrites a shared link into its full, explicit form', async ({ page }) => 
   await page.goto(SHARED_LINK);
   await globeRendered(page);
   await expect(page).toHaveURL(
-    /\?v=1&mode=globe&t=-0620-04-22T07:20Z&cal=julian&loc=32\.5422,44\.4209&cam=30\.0000,40\.0000,3\.00&layers=lunar,terminator&sel=lunar:-0620-04-22$/,
+    /\?v=1&mode=globe&t=-0620-04-22T07:20Z&cal=julian&loc=32\.5422,44\.4209&cam=30\.0000,40\.0000,3\.00&layers=lunar,solar,terminator&sel=lunar:-0620-04-22$/,
   );
 });
 
@@ -193,18 +193,58 @@ test("stepping and typing years lists that year's eclipses", async ({ page }) =>
 });
 
 test('controls are large enough to tap and stay on screen', async ({ page }) => {
-  await page.goto('./?t=2025-01-01T00:00');
+  await page.goto('./?t=2024-01-01T00:00');
   await globeRendered(page);
-  await expect(page.getByRole('button', { name: /14 Mar/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /8 Apr/ })).toBeVisible();
   const viewport = page.viewportSize();
   if (viewport === null) throw new Error('no viewport');
-  for (const control of await page.locator('.timeline button, .timeline input').all()) {
+  await page.getByRole('button', { name: /8 Apr/ }).click();
+  for (const control of await page
+    .locator('.timeline button, .timeline input, .scrubber button, .scrubber input')
+    .all()) {
     const box = await control.boundingBox();
     if (box === null) throw new Error('control without a box');
     expect(box.height).toBeGreaterThanOrEqual(44);
     expect(box.width).toBeGreaterThanOrEqual(44);
     expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
   }
+});
+
+test('picking a solar eclipse draws its path and the Moon’s shadow', async ({ page }) => {
+  await page.goto('./?t=2024-01-01T00:00&loc=32.7767,-96.797');
+  await globeRendered(page);
+  await page.getByRole('button', { name: /8 Apr\s*Total solar/ }).click();
+
+  await expect(page).toHaveURL(/t=2024-04-08T18:17Z/);
+  await expect(page).toHaveURL(/sel=solar:2024-04-08/);
+  const globe = page.getByTestId('globe');
+  await expect(globe).toHaveAttribute('data-solar-path', 'on');
+  await expect(globe).toHaveAttribute('data-solar-shadow', 'on');
+  await expect(page.getByRole('heading', { name: 'Total solar eclipse' })).toBeVisible();
+  await expect(page.locator('.eclipse-observer')).toContainText('a total eclipse');
+});
+
+test('the scrubber moves through the eclipse and back into the link', async ({ page }) => {
+  await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
+  await globeRendered(page);
+  const slider = page.getByRole('slider', { name: 'Time relative to greatest eclipse' });
+  await expect(slider).toHaveValue('0');
+  await slider.fill('25');
+  await expect(page).toHaveURL(/t=2024-04-08T18:42Z/);
+  await expect(page.locator('.hud-time')).toHaveText('18:42 UT');
+  // Far from greatest eclipse the shadow has left Earth's day side, but the path stays.
+  await slider.fill('-180');
+  await expect(page).toHaveURL(/t=2024-04-08T15:17Z/);
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-solar-path', 'on');
+});
+
+test('play animates the eclipse forward in time', async ({ page }) => {
+  await page.goto('./?t=2024-04-08T18:00&sel=solar:2024-04-08');
+  await globeRendered(page);
+  await page.getByRole('button', { name: 'Play' }).click();
+  await expect(page).not.toHaveURL(/t=2024-04-08T18:00Z/);
+  await page.getByRole('button', { name: 'Pause' }).click();
+  await expect(page.getByRole('button', { name: 'Play' })).toBeVisible();
 });
 
 test('page fits the viewport without horizontal scroll', async ({ page }) => {

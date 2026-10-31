@@ -4,7 +4,8 @@
  */
 
 import type { LunarEclipse } from '../data/lunarCatalog';
-import { describeLunarEclipse, eclipseMoment } from '../eclipses/lunar';
+import type { SolarEclipse } from '../data/solarCatalog';
+import { eclipseMoment, isSolar } from '../eclipses/describe';
 import { astronomicalYear, formatYear, type AstronomicalYear } from '../time/year';
 import { parseYearInput } from '../time/yearInput';
 import { errorMessage } from '../util/errors';
@@ -25,10 +26,17 @@ const SHORT_MONTHS = [
   'Dec',
 ];
 
+export type Eclipse = LunarEclipse | SolarEclipse;
+
+export type YearEclipses =
+  | { readonly status: 'loading' }
+  | { readonly status: 'ready'; readonly eclipses: readonly Eclipse[] }
+  | { readonly status: 'error'; readonly message: string };
+
 export interface TimelineView {
   readonly year: AstronomicalYear;
-  readonly eclipses: readonly LunarEclipse[] | 'loading' | { readonly error: string };
-  readonly selected: LunarEclipse | undefined;
+  readonly eclipses: YearEclipses;
+  readonly selected: Eclipse | undefined;
 }
 
 export interface Timeline {
@@ -38,7 +46,7 @@ export interface Timeline {
 
 export function createTimeline(handlers: {
   onYear(year: AstronomicalYear): void;
-  onSelect(eclipse: LunarEclipse): void;
+  onSelect(eclipse: Eclipse): void;
 }): Timeline {
   const input = element('input', {
     id: 'year-input',
@@ -66,7 +74,7 @@ export function createTimeline(handlers: {
     input,
     hint,
   );
-  const list = element('ul', { class: 'eclipse-list', 'aria-label': 'Lunar eclipses this year' });
+  const list = element('ul', { class: 'eclipse-list', 'aria-label': 'Eclipses this year' });
   const root = element(
     'nav',
     { class: 'timeline', 'aria-label': 'Year and eclipses' },
@@ -100,30 +108,30 @@ export function createTimeline(handlers: {
       year = view.year;
       if (document.activeElement !== input) input.value = formatYear(view.year);
       hint.textContent = 'Type a year like 621 BCE or 2025';
-      if (view.eclipses === 'loading') {
+      const listing = view.eclipses;
+      if (listing.status === 'loading') {
         list.replaceChildren(element('li', { class: 'eclipse-empty' }, 'Loading…'));
         return;
       }
-      if ('error' in view.eclipses) {
-        list.replaceChildren(element('li', { class: 'eclipse-empty' }, view.eclipses.error));
+      if (listing.status === 'error') {
+        list.replaceChildren(element('li', { class: 'eclipse-empty' }, listing.message));
         return;
       }
-      if (view.eclipses.length === 0) {
-        list.replaceChildren(
-          element('li', { class: 'eclipse-empty' }, 'No lunar eclipses this year'),
-        );
+      if (listing.eclipses.length === 0) {
+        list.replaceChildren(element('li', { class: 'eclipse-empty' }, 'No eclipses this year'));
         return;
       }
       list.replaceChildren(
-        ...view.eclipses.map((eclipse) => {
+        ...listing.eclipses.map((eclipse) => {
           const { date } = eclipseMoment(eclipse);
           const month = SHORT_MONTHS[date.month - 1] ?? '';
-          const kind = describeLunarEclipse(eclipse).title.split(' ')[0] ?? '';
+          const body = isSolar(eclipse) ? 'solar' : 'lunar';
+          const kind = `${eclipse.kind[0]?.toUpperCase() ?? ''}${eclipse.kind.slice(1)} ${body}`;
           const chip = element(
             'button',
             {
               type: 'button',
-              class: `eclipse-chip kind-${eclipse.kind}`,
+              class: `eclipse-chip body-${body} kind-${eclipse.kind}`,
               'aria-pressed': String(eclipse === view.selected),
             },
             element('span', { class: 'eclipse-dot', 'aria-hidden': 'true' }),
