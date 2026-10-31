@@ -137,6 +137,76 @@ test('explains parts of a link it could not use', async ({ page }) => {
   await expect(page.getByRole('status')).toContainText('Ignored t="yesterday"');
 });
 
+test('picking an eclipse jumps to it and puts it in the link', async ({ page }) => {
+  await page.goto('./?t=-620-01-01T12:00');
+  await globeRendered(page);
+  await page.getByRole('button', { name: /22 Apr/ }).click();
+
+  await expect(page).toHaveURL(/t=-0620-04-22T02:08Z/);
+  await expect(page).toHaveURL(/sel=lunar:-0620-04-22/);
+  await expect(page.getByRole('button', { name: /22 Apr/ })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByRole('heading', { name: 'Partial lunar eclipse' })).toBeVisible();
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-lunar-overlay', 'on');
+});
+
+test('a link to an eclipse restores it, with visibility from the chosen place', async ({
+  page,
+}) => {
+  await page.goto('./?t=-620-04-22T02:08&sel=lunar:-0620-04-22&loc=32.5422,44.4209');
+  await globeRendered(page);
+  await expect(page.getByRole('heading', { name: 'Partial lunar eclipse' })).toBeVisible();
+  await expect(page.locator('.eclipse-observer')).toHaveText(
+    '32.5°N 44.4°E: The Moon was above the horizon here.',
+  );
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-lunar-overlay', 'on');
+});
+
+test('hiding the lunar layer hides the overlay but keeps the selection', async ({ page }) => {
+  await page.goto('./?t=-620-04-22T02:08&sel=lunar:-0620-04-22&layers=terminator');
+  await globeRendered(page);
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-lunar-overlay', 'off');
+  await expect(page).toHaveURL(/sel=lunar:-0620-04-22/);
+});
+
+test("stepping and typing years lists that year's eclipses", async ({ page }) => {
+  await page.goto('./?t=2024-03-14T12:00');
+  await globeRendered(page);
+  await page.getByRole('button', { name: 'Next year' }).click();
+  await expect(page.getByLabel('Year', { exact: true })).toHaveValue('2025 CE');
+  await expect(page).toHaveURL(/t=2025-03-14T12:00Z/);
+  await expect(page.getByRole('button', { name: /14 Mar\s*Total/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /7 Sep\s*Total/ })).toBeVisible();
+
+  const year = page.getByLabel('Year', { exact: true });
+  await year.fill('587 BCE');
+  await year.press('Enter');
+  await expect(page).toHaveURL(/t=-0586-03-14T12:00Z&cal=julian/);
+  await expect(year).toHaveValue('587 BCE');
+
+  await year.fill('someday');
+  await year.press('Enter');
+  await expect(year).toHaveAttribute('aria-invalid', 'true');
+  await expect(page).toHaveURL(/t=-0586-03-14T12:00Z/);
+});
+
+test('controls are large enough to tap and stay on screen', async ({ page }) => {
+  await page.goto('./?t=2025-01-01T00:00');
+  await globeRendered(page);
+  await expect(page.getByRole('button', { name: /14 Mar/ })).toBeVisible();
+  const viewport = page.viewportSize();
+  if (viewport === null) throw new Error('no viewport');
+  for (const control of await page.locator('.timeline button, .timeline input').all()) {
+    const box = await control.boundingBox();
+    if (box === null) throw new Error('control without a box');
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+  }
+});
+
 test('page fits the viewport without horizontal scroll', async ({ page }) => {
   await page.goto('./');
   const overflow = await page.evaluate(

@@ -10,6 +10,7 @@ import {
   BackSide,
   Mesh,
   PerspectiveCamera,
+  Quaternion,
   Scene,
   ShaderMaterial,
   SphereGeometry,
@@ -20,14 +21,28 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-import { CAMERA_DISTANCE_RANGE, type GlobeCamera } from '../state/viewState';
-import { cameraFromPosition, cameraPosition, type Vector3Tuple } from './geo';
+import { CAMERA_DISTANCE_RANGE, type GeoPoint, type GlobeCamera } from '../state/viewState';
+import { cameraFromPosition, cameraPosition, geoToVector, type Vector3Tuple } from './geo';
 
 const NARROW_SIDE_FOV_DEGREES = 40;
+const FLIGHT_MS = 900;
+
+/** Where an eclipsed Moon was overhead, nominally and at ±1σ of ΔT. */
+export interface LunarOverlay {
+  readonly sublunar: Vector3Tuple;
+  readonly west: Vector3Tuple;
+  readonly east: Vector3Tuple;
+}
 
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
   setSunDirection(direction: Vector3Tuple): void;
+  /** Shade where the eclipsed Moon was above the horizon; null hides the overlay. */
+  setLunarOverlay(overlay: LunarOverlay | null): void;
+  /** Pixels covered by panels at the bottom; the globe is centred in the space above them. */
+  setBottomInset(pixels: number): void;
+  /** Turn the globe smoothly so `target` faces the camera, keeping the distance. */
+  flyTo(target: GeoPoint): void;
   setCamera(camera: GlobeCamera): void;
   /** Called while the user moves the camera. Returns an unsubscribe function. */
   onCameraChange(listener: (camera: GlobeCamera) => void): () => void;
@@ -51,8 +66,37 @@ const EARTH_VERTEX = /* glsl */ `
 const EARTH_FRAGMENT = /* glsl */ `
   uniform sampler2D dayMap;
   uniform vec3 sunDirection;
+  uniform float lunarActive;
+  uniform vec3 moonCenter;
+  uniform vec3 moonWest;
+  uniform vec3 moonEast;
   varying vec2 vUv;
   varying vec3 vNormal;
+
+  // Copper, the colour of a totally eclipsed Moon.
+  const vec3 ECLIPSE_TINT = vec3(1.0, 0.42, 0.22);
+
+  // The map stays readable: where the eclipsed Moon was up, the ground is shown as if lit by
+  // a copper Moon; the uncertain band is hatched; a ring marks where it stood overhead.
+  vec3 lunarLayer(vec3 color, vec3 surface, vec3 normal) {
+    float upCenter = step(0.0, dot(normal, moonCenter));
+    float upWest = step(0.0, dot(normal, moonWest));
+    float upEast = step(0.0, dot(normal, moonEast));
+    float certain = upWest * upEast * upCenter;
+    float uncertain = max(max(upWest, upEast), upCenter) - certain;
+    vec3 moonlit = surface * vec3(0.62, 0.42, 0.34) + ECLIPSE_TINT * 0.035;
+    vec3 tinted = mix(color, max(color, moonlit), certain);
+    float hatch = step(0.55, fract((gl_FragCoord.x + gl_FragCoord.y) / 10.0));
+    tinted = mix(tinted, max(color, moonlit * 0.8), uncertain * hatch);
+    float edge = 1.0 - smoothstep(0.0, 0.004, abs(dot(normal, moonCenter)));
+    tinted += ECLIPSE_TINT * edge * 0.35;
+    float angle = dot(normal, moonCenter);
+    float ring = smoothstep(0.99925, 0.9994, angle) * (1.0 - smoothstep(0.99955, 0.9997, angle));
+    float dot_ = smoothstep(0.99985, 0.99992, angle);
+    tinted = mix(tinted, vec3(1.0, 0.72, 0.52), max(ring, dot_));
+    return mix(color, tinted, lunarActive);
+  }
+
   void main() {
     vec3 normal = normalize(vNormal);
     float sunAltitude = dot(normal, sunDirection);
@@ -63,6 +107,7 @@ const EARTH_FRAGMENT = /* glsl */ `
     vec3 color = mix(night, lit, daylight);
     float terminator = exp(-pow(sunAltitude / 0.05, 2.0));
     color += vec3(1.0, 0.5, 0.18) * terminator * 0.12;
+    color = lunarLayer(color, surface, normal);
     gl_FragColor = vec4(color, 1.0);
     #include <colorspace_fragment>
   }
@@ -110,10 +155,21 @@ export async function createGlobe(
   texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
   const sunDirection = new Vector3(1, 0, 0);
+  const lunarActive = { value: 0 };
+  const moonCenter = new Vector3(1, 0, 0);
+  const moonWest = new Vector3(1, 0, 0);
+  const moonEast = new Vector3(1, 0, 0);
   const earth = new Mesh(
     new SphereGeometry(1, 128, 64),
     new ShaderMaterial({
-      uniforms: { dayMap: { value: texture }, sunDirection: { value: sunDirection } },
+      uniforms: {
+        dayMap: { value: texture },
+        sunDirection: { value: sunDirection },
+        lunarActive: lunarActive,
+        moonCenter: { value: moonCenter },
+        moonWest: { value: moonWest },
+        moonEast: { value: moonEast },
+      },
       vertexShader: EARTH_VERTEX,
       fragmentShader: EARTH_FRAGMENT,
     }),
@@ -144,6 +200,8 @@ export async function createGlobe(
   const listeners = new Set<(camera: GlobeCamera) => void>();
   let needsRender = true;
   let frame = 0;
+  // Rotation along the sphere (a slerp), which also handles flying to the opposite side.
+  let flight: { from: Vector3; rotation: Quaternion; start: number } | null = null;
 
   function placeCamera(state: GlobeCamera): void {
     camera.position.set(...cameraPosition(state));
@@ -152,8 +210,12 @@ export async function createGlobe(
     needsRender = true;
   }
 
+  let bottomInset = 0;
+
   function resize(): void {
     const { clientWidth, clientHeight } = container;
+    // Shift the projection up by half the covered strip, so the globe sits centred above it.
+    camera.setViewOffset(clientWidth, clientHeight, 0, bottomInset / 2, clientWidth, clientHeight);
     renderer.setSize(clientWidth, clientHeight, false);
     camera.aspect = clientWidth / Math.max(clientHeight, 1);
     // Fix the field of view on the narrower side, so a camera distance frames the globe the
@@ -167,13 +229,26 @@ export async function createGlobe(
     needsRender = true;
   }
 
+  // Grabbing the globe cancels an automatic flight.
+  controls.addEventListener('start', () => {
+    flight = null;
+  });
+
   controls.addEventListener('change', () => {
     needsRender = true;
     const state = cameraFromPosition([camera.position.x, camera.position.y, camera.position.z]);
     for (const listener of listeners) listener(state);
   });
 
-  function loop(): void {
+  function loop(now: number): void {
+    if (flight !== null) {
+      const progress = Math.min(1, (now - flight.start) / FLIGHT_MS);
+      const eased = 1 - (1 - progress) ** 3;
+      const distance = camera.position.length();
+      const step = new Quaternion().slerp(flight.rotation, eased);
+      camera.position.copy(flight.from).applyQuaternion(step).setLength(distance);
+      if (progress === 1) flight = null;
+    }
     // update() keeps damping going after the pointer is released; it reports movement via 'change'.
     controls.update();
     if (needsRender) {
@@ -188,13 +263,37 @@ export async function createGlobe(
   observer.observe(container);
   resize();
   placeCamera(options.camera);
-  loop();
+  loop(performance.now());
 
   return {
     canvas: renderer.domElement,
     setSunDirection([x, y, z]) {
       sunDirection.set(x, y, z).normalize();
       needsRender = true;
+    },
+    setBottomInset(pixels) {
+      if (pixels === bottomInset) return;
+      bottomInset = pixels;
+      resize();
+    },
+    setLunarOverlay(overlay) {
+      lunarActive.value = overlay === null ? 0 : 1;
+      if (overlay !== null) {
+        moonCenter.set(...overlay.sublunar).normalize();
+        moonWest.set(...overlay.west).normalize();
+        moonEast.set(...overlay.east).normalize();
+      }
+      container.dataset['lunarOverlay'] = overlay === null ? 'off' : 'on';
+      needsRender = true;
+    },
+    flyTo(target) {
+      const from = camera.position.clone().normalize();
+      const to = new Vector3(...geoToVector(target)).normalize();
+      flight = {
+        from,
+        rotation: new Quaternion().setFromUnitVectors(from, to),
+        start: performance.now(),
+      };
     },
     setCamera: placeCamera,
     onCameraChange(listener) {

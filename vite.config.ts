@@ -16,7 +16,7 @@ export default defineConfig({
       include: ['src/**/*.ts'],
       // Browser/WebGL glue: the Playwright suite in e2e/ covers it in a real browser. Keep
       // these files thin and put logic in unit-tested modules.
-      exclude: ['src/**/*.test.ts', 'src/main.ts', 'src/app.ts', 'src/globe/scene.ts'],
+      exclude: ['src/**/*.test.ts', 'src/main.ts', 'src/app.ts', 'src/globe/scene.ts', 'src/ui/**'],
       thresholds: {
         statements: 95,
         branches: 95,
