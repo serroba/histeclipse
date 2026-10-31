@@ -37,7 +37,13 @@ uv sync
 uv run ruff format . && uv run ruff check .   # format + lint (all ruff rules)
 uv run mypy                                   # strict type checking
 uv run pytest                                 # tests + property tests, 95% coverage gate
+
+# Generate data (downloads ~600 MB of DE441 excerpts once, into data-pipeline/.cache/)
+uv run histeclipse-pipeline fetch-ephemeris
+uv run histeclipse-pipeline lunar-catalog --out ../public/data/lunar
 ```
+
+Positions come from [JPL DE441](https://ssd.jpl.nasa.gov/planets/eph_export.html), via [Skyfield](https://rhodesmill.org/skyfield/). Results are checked against NASA's _Five Millennium Canon_ (Espenak & Meeus). Skyfield's ΔT model is the Morrison–Stephenson–Hohenkerk–Zawilski spline, and every catalog records which model it used.
 
 ## Contributing
 

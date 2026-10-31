@@ -15,3 +15,6 @@ __pycache__/
 .hypothesis/
 test-results/
 playwright-report/
+
+# Downloaded ephemeris excerpts (hundreds of MB)
+.cache/
