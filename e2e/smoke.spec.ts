@@ -182,6 +182,31 @@ test('the Moon-up region follows time and shows only during the eclipse', async 
   await expect(globe).toHaveAttribute('data-lunar-overlay', 'off');
 });
 
+test('a lunar eclipse shows the Moon crossing Earth’s shadow', async ({ page }) => {
+  await page.goto('./?t=2025-03-14T06:59&sel=lunar:2025-03-14');
+  await globeRendered(page);
+  const moon = page.getByRole('img', { name: /Moon entirely inside Earth’s umbra/ });
+  await expect(moon).toBeVisible();
+  await expect(moon).toHaveAttribute('data-phase', 'total');
+
+  const slider = page.getByRole('slider', { name: 'Time relative to greatest eclipse' });
+  await slider.fill('-50');
+  await expect(page.getByRole('img', { name: /Moon partly inside/ })).toHaveAttribute(
+    'data-phase',
+    'partial',
+  );
+  // Open the background, scrub, and it stays open.
+  await page.getByText('More about this eclipse').click();
+  await slider.fill('-40');
+  await expect(page.locator('.eclipse-more')).toHaveAttribute('open', '');
+});
+
+test('solar eclipses have no Moon-in-shadow view', async ({ page }) => {
+  await page.goto('./?t=2024-04-08T18:30&sel=solar:2024-04-08');
+  await globeRendered(page);
+  await expect(page.locator('.moon-view')).toHaveCount(0);
+});
+
 test('the eclipse card keeps background one tap away', async ({ page }) => {
   await page.goto('./?t=2024-04-08T18:30&sel=solar:2024-04-08');
   await globeRendered(page);

@@ -596,3 +596,72 @@ body {
     font-size: 13px;
   }
 }
+
+/* The Moon in Earth's shadow, beside a lunar eclipse's details. */
+.eclipse-head {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.eclipse-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.moon-view {
+  flex: none;
+  width: 128px;
+  height: 128px;
+  border-radius: 12px;
+  background: radial-gradient(circle, #0b1226 0%, #050812 75%);
+}
+
+.moon-view-penumbra {
+  fill: rgb(150 170 210 / 0.06);
+  stroke: rgb(150 170 210 / 0.35);
+  stroke-width: 0.012;
+  stroke-dasharray: 0.05 0.04;
+}
+
+.moon-view-umbra {
+  fill: rgb(150 170 210 / 0.1);
+  stroke: rgb(150 170 210 / 0.55);
+  stroke-width: 0.014;
+}
+
+.moon-view-path {
+  stroke: rgb(255 255 255 / 0.25);
+  stroke-width: 0.01;
+  stroke-dasharray: 0.04 0.05;
+}
+
+.moon-view-moon {
+  fill: #ddd8cb;
+}
+
+.moon-view-moon-penumbra {
+  fill: rgb(0 0 0 / 0.22);
+}
+
+.moon-view-moon-umbra {
+  fill: #2a1610;
+  opacity: 0.94;
+}
+
+.moon-view.is-total .moon-view-moon-umbra {
+  fill: #a8492a;
+  opacity: 0.92;
+}
+
+.moon-view-label {
+  fill: var(--ink-muted);
+  font-size: 0.16px;
+}
+
+@media (max-width: 600px) {
+  .moon-view {
+    width: 96px;
+    height: 96px;
+  }
+}

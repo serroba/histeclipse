@@ -11,11 +11,12 @@
 import type { LunarEclipse } from '../data/lunarCatalog';
 
 const U = 0.0059;
-const MOON_RADIUS = 0.2725;
-const PENUMBRA = 1.2848 + U;
-const UMBRA = 0.7403 - U;
+/** Radii in Earth radii at the Moon's distance. */
+export const MOON_RADIUS = 0.2725;
+export const PENUMBRA = 1.2848 + U;
+export const UMBRA = 0.7403 - U;
 /** Earth radii per hour: the Moon's mean motion relative to Earth's shadow. */
-const RELATIVE_SPEED = 0.5458;
+export const RELATIVE_SPEED = 0.5458;
 
 export type LunarPhase = 'none' | 'penumbral' | 'partial' | 'total';
 
