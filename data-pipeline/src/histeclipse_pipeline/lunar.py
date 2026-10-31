@@ -10,16 +10,13 @@ from skyfield.api import load, wgs84
 from skyfield.constants import AU_KM
 from skyfield.positionlib import build_position
 
+from histeclipse_pipeline.arrays import as_array, as_floats
+
 if TYPE_CHECKING:
     from histeclipse_pipeline.ephemeris import Ephemeris
 
 # Earth's equatorial radius in km (IERS 2010), the unit NASA uses for gamma.
 EARTH_EQUATORIAL_RADIUS_KM = 6378.1366
-
-DELTA_T_MODEL = (
-    "Skyfield: Morrison, Stephenson, Hohenkerk & Zawilski (2021) splines for 720 BCE-2015 CE; "
-    "Stephenson, Morrison & Hohenkerk (2016) long-term parabola outside that range"
-)
 
 # Skyfield samples up to one search step (5 days) outside the requested window.
 SEARCH_MARGIN_DAYS = 6.0
@@ -76,10 +73,10 @@ def find_lunar_eclipses(
     )
     if len(codes) == 0:
         return []
-    keep = (_array(times.tt) >= start_jd_tt) & (_array(times.tt) < end_jd_tt)
+    keep = (as_array(times.tt) >= start_jd_tt) & (as_array(times.tt) < end_jd_tt)
     times, codes = times[keep], codes[keep]
 
-    whole, fraction = _array(times.whole), _array(times.tdb_fraction)
+    whole, fraction = as_array(times.whole), as_array(times.tdb_fraction)
     earth = ephemeris.segment(3, 399)
     moon_km = ephemeris.segment(3, 301).compute(whole, fraction) - earth.compute(whole, fraction)
     sun_km = (
@@ -90,13 +87,13 @@ def find_lunar_eclipses(
     sublunar = wgs84.subpoint_of(build_position(moon_km / AU_KM, center=399, t=times))
 
     kinds = [_KINDS[eclipselib.LUNAR_ECLIPSES[code]] for code in map(int, codes)]
-    jds = _floats(times.tt)
-    umbral = _floats(details["umbral_magnitude"][keep])
-    penumbral = _floats(details["penumbral_magnitude"][keep])
-    gammas = _floats(_gamma(moon_km, sun_km))
-    delta_ts = _floats(times.delta_t)
-    latitudes = _floats(sublunar.latitude.degrees)
-    longitudes = _floats(sublunar.longitude.degrees)
+    jds = as_floats(times.tt)
+    umbral = as_floats(details["umbral_magnitude"][keep])
+    penumbral = as_floats(details["penumbral_magnitude"][keep])
+    gammas = as_floats(_gamma(moon_km, sun_km))
+    delta_ts = as_floats(times.delta_t)
+    latitudes = as_floats(sublunar.latitude.degrees)
+    longitudes = as_floats(sublunar.longitude.degrees)
     return [
         LunarEclipse(
             greatest_jd_tt=jds[index],
@@ -110,16 +107,6 @@ def find_lunar_eclipses(
         )
         for index, kind in enumerate(kinds)
     ]
-
-
-def _floats(value: float | np.typing.NDArray[np.float64]) -> list[float]:
-    """Plain Python floats from a Skyfield or numpy value, so downstream code is fully typed."""
-    return list(map(float, _array(value)))
-
-
-def _array(value: float | np.typing.NDArray[np.float64]) -> np.typing.NDArray[np.float64]:
-    """Skyfield returns a float for a single time and an array for many; always use an array."""
-    return np.atleast_1d(np.asarray(value, dtype=np.float64))
 
 
 def _gamma(

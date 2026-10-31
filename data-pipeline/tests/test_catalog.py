@@ -8,7 +8,8 @@ from histeclipse_pipeline.catalog import (
     to_record,
     write_lunar_catalog,
 )
-from histeclipse_pipeline.lunar import DELTA_T_MODEL, LunarEclipse, LunarEclipseKind
+from histeclipse_pipeline.delta_t import DELTA_T_MODEL
+from histeclipse_pipeline.lunar import LunarEclipse, LunarEclipseKind
 from tests.json_values import json_round_trip, read_json
 
 if TYPE_CHECKING:
