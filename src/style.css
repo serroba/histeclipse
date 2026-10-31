@@ -150,6 +150,13 @@ body {
   color: var(--ink-muted);
 }
 
+.sky-eclipse {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
 .notices {
   position: absolute;
   top: 16px;
@@ -523,7 +530,8 @@ body {
 }
 
 .view-switch[hidden],
-.sky-caption[hidden] {
+.sky-caption[hidden],
+.sky-eclipse[hidden] {
   display: none;
 }
 

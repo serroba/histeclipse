@@ -25,15 +25,29 @@ import {
   SphereGeometry,
   Sprite,
   SpriteMaterial,
+  SRGBColorSpace,
+  TextureLoader,
   Vector3,
   WebGLRenderer,
 } from 'three';
 
-import type { Matrix3, Vector3 as Vec3 } from '../astro/matrix';
+import { apply, type Matrix3, type Vector3 as Vec3 } from '../astro/matrix';
 import { starDirection } from '../astro/stars';
 import type { Constellation, Sky } from '../data/sky';
 import type { Figures, SkyLook } from '../state/viewState';
 import type { JulianDay } from '../time/julianDay';
+import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
+import {
+  angularRadius,
+  EARTH_RADIUS_KM,
+  eclipsedLimit,
+  illuminatedFraction,
+  MOON_RADIUS_KM,
+  moonSunlight,
+  SUN_RADIUS_KM,
+  sunVisible,
+  topocentric,
+} from './bodies';
 import { apparentDirection, apparentMagnitude, horizontal, limitingMagnitude } from './horizon';
 import {
   COMPASS,
@@ -50,8 +64,12 @@ export interface SkyMoment {
   /** J2000 → horizon frame (x east, y north, z up) for the observer at this moment. */
   readonly horizon: Matrix3;
   readonly jdTT: JulianDay;
-  /** The Sun's direction or position, J2000 equatorial. */
+  /** The Sun's position from Earth's centre, km, J2000 equatorial. */
   readonly sun: Vec3;
+  /** The Moon's position from Earth's centre, km, J2000; null until its theory has loaded. */
+  readonly moon: Vec3 | null;
+  /** The observer's position from Earth's centre, km, J2000. */
+  readonly observer: Vec3;
 }
 
 export interface SkyScene {
@@ -59,12 +77,17 @@ export interface SkyScene {
   setMoment(moment: SkyMoment): void;
   setLook(look: SkyLook): void;
   setFigures(figures: Figures): void;
+  /** Pixels covered by panels at the top and bottom; the view is centred between them. */
+  setInsets(top: number, bottom: number): void;
   /** Called with the rounded look as the observer drags or zooms. */
   onLookChange(listener: (look: SkyLook) => void): () => void;
 }
 
 const STAR_RADIUS = 100;
 const SUN_DISTANCE = 80;
+// The Moon sits in front of the Sun, so it is drawn nearer; only its angular size matters.
+const MOON_DISTANCE = 70;
+const EARTH_SHADOW_RADIUS_KM = EARTH_RADIUS_KM * EARTH_SHADOW_ENLARGEMENT;
 const SUN_ANGULAR_RADIUS = (0.2666 * Math.PI) / 180;
 /** The proper-motion positions only need recomputing after this many days. */
 const MOTION_STEP_DAYS = 365.25;
@@ -134,11 +157,13 @@ const DOME_VERTEX = /* glsl */ `
 const SKY_FRAGMENT = /* glsl */ `
   uniform vec3 sunDirection;
   uniform float sunAltitude;
+  uniform float sunlight;
   varying vec3 vDirection;
 
   void main() {
     vec3 direction = normalize(vDirection);
-    float day = smoothstep(-18.0, 8.0, sunAltitude);
+    // An eclipse dims the day: little until most of the Sun is covered, then fast.
+    float day = smoothstep(-18.0, 8.0, sunAltitude) * pow(sunlight, 0.4);
     vec3 night = vec3(0.006, 0.009, 0.02);
     vec3 zenith = mix(night, vec3(0.16, 0.33, 0.68), day);
     vec3 horizon = mix(vec3(0.014, 0.018, 0.032), vec3(0.62, 0.74, 0.9), day);
@@ -147,23 +172,84 @@ const SKY_FRAGMENT = /* glsl */ `
     float toSun = max(dot(direction, sunDirection), 0.0);
     float twilight = smoothstep(-14.0, -2.0, sunAltitude) * (1.0 - smoothstep(4.0, 14.0, sunAltitude));
     color += vec3(0.95, 0.45, 0.18) * twilight * pow(toSun, 6.0) * (1.0 - up) * 0.9;
-    color += vec3(1.0, 0.95, 0.85) * pow(toSun, 400.0) * 0.6 * step(-1.0, sunAltitude);
+    color += vec3(1.0, 0.95, 0.85) * pow(toSun, 400.0) * 0.6 * step(-1.0, sunAltitude) * sunlight;
+    // In totality, sunset colours all around the horizon: beyond the shadow it is still day.
+    float totality = (1.0 - smoothstep(0.0, 0.02, sunlight)) * step(-1.0, sunAltitude);
+    color += vec3(0.85, 0.42, 0.16) * totality * pow(1.0 - up, 8.0) * 0.5;
     gl_FragColor = vec4(color, 1.0);
   }
 `;
 
 const GROUND_FRAGMENT = /* glsl */ `
   uniform float sunAltitude;
+  uniform float sunlight;
   varying vec3 vDirection;
 
   void main() {
     vec3 direction = normalize(vDirection);
     if (direction.y > 0.0) discard;
-    float day = smoothstep(-12.0, 8.0, sunAltitude);
+    float day = smoothstep(-12.0, 8.0, sunAltitude) * pow(sunlight, 0.4);
     vec3 color = mix(vec3(0.008, 0.009, 0.011), vec3(0.17, 0.15, 0.11), day);
     // A little haze along the horizon line, so the edge reads as distance.
     color += vec3(0.04, 0.05, 0.07) * (0.3 + day) * exp(direction.y * 60.0);
     gl_FragColor = vec4(color, 1.0);
+  }
+`;
+
+const MOON_VERTEX = /* glsl */ `
+  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vWorld;
+  void main() {
+    vUv = uv;
+    vNormal = normalize(mat3(modelMatrix) * normal);
+    vec4 world = modelMatrix * vec4(position, 1.0);
+    vWorld = world.xyz;
+    gl_Position = projectionMatrix * viewMatrix * world;
+  }
+`;
+
+// Sunlit where the surface faces the Sun, copper-dark where Earth's shadow falls on it (Earth
+// shadow is drawn from the true geometry, in km). The night side is faint earthshine at night,
+// and over the Sun's disc it is black: that is the Moon's silhouette in a solar eclipse.
+const MOON_FRAGMENT = /* glsl */ `
+  uniform sampler2D map;
+  uniform vec3 sunDirection;
+  uniform vec3 moonCentre;
+  uniform vec3 moonKm;
+  uniform float kmPerUnit;
+  uniform vec3 antiSun;
+  uniform float umbraSlope;
+  uniform float penumbraSlope;
+  uniform float earthRadius;
+  uniform float sunAngularRadius;
+  uniform float night;
+  varying vec2 vUv;
+  varying vec3 vNormal;
+  varying vec3 vWorld;
+
+  void main() {
+    vec3 normal = normalize(vNormal);
+    vec3 albedo = texture2D(map, vUv).rgb;
+    float lit = smoothstep(-0.02, 0.06, dot(normal, sunDirection));
+
+    // This point of the Moon in km from Earth's centre, and where it sits in Earth's shadow.
+    vec3 point = moonKm + (vWorld - moonCentre) * kmPerUnit;
+    float along = dot(point, antiSun);
+    float across = length(point - along * antiSun);
+    float umbra = earthRadius - along * umbraSlope;
+    float penumbra = earthRadius + along * penumbraSlope;
+    float light = along > 0.0 ? smoothstep(umbra, penumbra, across) : 1.0;
+    // Red light bent through Earth's atmosphere still reaches the umbra.
+    vec3 sunlit = albedo * mix(vec3(0.5, 0.17, 0.07), vec3(1.0), light);
+
+    vec3 view = normalize(vWorld);
+    // Only where it covers the bright disc: elsewhere the dark side is lost in the glare.
+    float toSun = atan(length(cross(view, sunDirection)), dot(view, sunDirection));
+    float nearSun = 1.0 - smoothstep(sunAngularRadius * 0.98, sunAngularRadius * 1.04, toSun);
+    vec3 dark = albedo * 0.02 * night;
+    float alpha = max(lit, max(nearSun, night * 0.9));
+    gl_FragColor = vec4(mix(dark, sunlit * 1.15, lit), alpha);
   }
 `;
 
@@ -174,7 +260,7 @@ function toScene([east, north, up]: Vec3): [number, number, number] {
 
 export function createSkyScene(
   container: HTMLElement,
-  options: { sky: Sky; look: SkyLook; figures: Figures },
+  options: { sky: Sky; look: SkyLook; figures: Figures; moonTextureUrl: string },
 ): SkyScene {
   const { sky } = options;
   const count = sky.stars.hr.length;
@@ -191,10 +277,11 @@ export function createSkyScene(
 
   const sunDirection = { value: new Vector3(0, -1, 0) };
   const sunAltitude = { value: -90 };
+  const sunlight = { value: 1 };
   const dome = new Mesh(
     new SphereGeometry(500, 64, 32),
     new ShaderMaterial({
-      uniforms: { sunDirection, sunAltitude },
+      uniforms: { sunDirection, sunAltitude, sunlight },
       vertexShader: DOME_VERTEX,
       fragmentShader: SKY_FRAGMENT,
       side: BackSide,
@@ -271,11 +358,59 @@ export function createSkyScene(
   );
   sunGlow.scale.setScalar(sunRadius * 14);
   sunGlow.renderOrder = 3;
+  // The corona: only seen when the Moon hides the whole bright disc.
+  const corona = new Sprite(
+    new SpriteMaterial({
+      map: coronaTexture(),
+      blending: AdditiveBlending,
+      depthTest: false,
+      depthWrite: false,
+      transparent: true,
+    }),
+  );
+  corona.scale.setScalar(sunRadius * 9);
+  corona.renderOrder = 3;
+  corona.visible = false;
+
+  const moonTexture = new TextureLoader().load(options.moonTextureUrl, () => {
+    needsRender = true;
+  });
+  moonTexture.colorSpace = SRGBColorSpace;
+  const moonUniforms = {
+    map: { value: moonTexture },
+    sunDirection,
+    moonCentre: { value: new Vector3() },
+    moonKm: { value: new Vector3() },
+    kmPerUnit: { value: 1 },
+    antiSun: { value: new Vector3() },
+    umbraSlope: { value: 0 },
+    penumbraSlope: { value: 0 },
+    earthRadius: { value: EARTH_SHADOW_RADIUS_KM },
+    sunAngularRadius: { value: SUN_ANGULAR_RADIUS },
+    night: { value: 1 },
+  };
+  // As on the globe: turn the map's longitude 0 (at +X) to +Z, which lookAt() aims at us.
+  const moonGeometry = new SphereGeometry(1, 48, 24);
+  moonGeometry.rotateY(-Math.PI / 2);
+  const moon = new Mesh(
+    moonGeometry,
+    new ShaderMaterial({
+      uniforms: moonUniforms,
+      vertexShader: MOON_VERTEX,
+      fragmentShader: MOON_FRAGMENT,
+      depthTest: false,
+      depthWrite: false,
+      // Drawn after the Sun and its glow, which it covers in an eclipse.
+      transparent: true,
+    }),
+  );
+  moon.renderOrder = 3.5;
+  moon.visible = false;
 
   const ground = new Mesh(
     new SphereGeometry(50, 64, 32),
     new ShaderMaterial({
-      uniforms: { sunAltitude },
+      uniforms: { sunAltitude, sunlight },
       vertexShader: DOME_VERTEX,
       fragmentShader: GROUND_FRAGMENT,
       side: BackSide,
@@ -287,7 +422,7 @@ export function createSkyScene(
     }),
   );
   ground.renderOrder = 4;
-  scene.add(dome, stars, lines, sun, sunGlow, ground);
+  scene.add(dome, stars, lines, sun, sunGlow, corona, moon, ground);
 
   // Labels: the compass along the horizon, and the names of the figures drawn.
   const compassLabels = COMPASS.map(([name, azimuth]) => {
@@ -312,6 +447,7 @@ export function createSkyScene(
   let shown: readonly Constellation[] = [];
   let segments: [number, number][] = [];
   let visible = false;
+  let insets = { top: 0, bottom: 0 };
   let needsRender = true;
   let frame = 0;
   // J2000 directions after proper motion, recomputed when time has moved far enough.
@@ -403,6 +539,16 @@ export function createSkyScene(
       camera.aspect >= 1
         ? look.fov
         : (2 * Math.atan(Math.tan(half) / camera.aspect) * 180) / Math.PI;
+    // Shift the picture so what we look at sits in the middle of the space the panels leave.
+    const height = Math.max(clientHeight, 1);
+    camera.setViewOffset(
+      clientWidth,
+      height,
+      0,
+      -(insets.top - insets.bottom) / 2,
+      clientWidth,
+      height,
+    );
     camera.updateProjectionMatrix();
     needsRender = true;
   }
@@ -425,6 +571,45 @@ export function createSkyScene(
       // Names of figures low in the haze or below the horizon are left out.
       placeLabel(label, position, label.dataset['shown'] === 'true' && position.y > 40 * 0.03);
     }
+  }
+
+  function placeMoon(
+    horizon: Matrix3,
+    sunJ2000: Vec3,
+    moonJ2000: Vec3 | null,
+    sunHere: Vec3,
+    moonHere: Vec3 | null,
+    sunHigh: number,
+  ): void {
+    if (moonJ2000 === null || moonHere === null) {
+      moon.visible = false;
+      return;
+    }
+    const seen = apparentDirection(horizon, unit(moonHere));
+    const high = horizontal(seen).altitude;
+    moon.visible = high > -1;
+    const [mx, my, mz] = toScene(seen);
+    const radius = MOON_DISTANCE * Math.tan(angularRadius(MOON_RADIUS_KM, moonHere));
+    moon.position.set(mx, my, mz).multiplyScalar(MOON_DISTANCE);
+    moon.scale.setScalar(radius);
+    // The near side faces us (the map's longitude 0 is the mesh's +Z), north toward the pole.
+    moon.up.set(...toScene(apply(horizon, [0, 0, 1])));
+    moon.lookAt(0, 0, 0);
+
+    // Earth's shadow, in the scene's axes but in km: the horizon frame is a turn of J2000.
+    const inScene = (vector: Vec3): Vector3 => new Vector3(...toScene(apply(horizon, vector)));
+    const sunDistance = Math.hypot(...sunJ2000);
+    moonUniforms.moonCentre.value.copy(moon.position);
+    moonUniforms.moonKm.value.copy(inScene(moonJ2000));
+    moonUniforms.kmPerUnit.value = MOON_RADIUS_KM / radius;
+    moonUniforms.antiSun.value.copy(inScene(unit(sunJ2000))).negate();
+    moonUniforms.umbraSlope.value = (SUN_RADIUS_KM - EARTH_SHADOW_RADIUS_KM) / sunDistance;
+    moonUniforms.penumbraSlope.value = (SUN_RADIUS_KM + EARTH_SHADOW_RADIUS_KM) / sunDistance;
+    moonUniforms.night.value = 1 - Math.min(1, Math.max(0, (sunHigh + 12) / 12));
+
+    container.dataset['moonAltitude'] = high.toFixed(2);
+    container.dataset['moonPhase'] = illuminatedFraction(moonHere, sunHere).toFixed(3);
+    container.dataset['moonSunlight'] = moonSunlight(moonJ2000, sunJ2000).toFixed(3);
   }
 
   function loop(): void {
@@ -501,16 +686,15 @@ export function createSkyScene(
         cancelAnimationFrame(frame);
       }
     },
-    setMoment({ horizon, jdTT, sun: sunJ2000 }) {
+    setMoment({ horizon, jdTT, sun: sunJ2000, moon: moonJ2000, observer }) {
       updateMotion(jdTT);
-      const sunLength = Math.hypot(...sunJ2000);
-      const sunSeen = apparentDirection(horizon, [
-        sunJ2000[0] / sunLength,
-        sunJ2000[1] / sunLength,
-        sunJ2000[2] / sunLength,
-      ]);
+      const sunHere = topocentric(sunJ2000, observer);
+      const sunSeen = apparentDirection(horizon, unit(sunHere));
       const sunHigh = horizontal(sunSeen).altitude;
-      const limit = limitingMagnitude(sunHigh);
+      const moonHere = moonJ2000 === null ? null : topocentric(moonJ2000, observer);
+      // How much of the Sun the Moon leaves, if the Sun is up to be seen.
+      const sunShare = moonHere === null || sunHigh < -1 ? 1 : sunVisible(sunHere, moonHere);
+      const limit = eclipsedLimit(limitingMagnitude(sunHigh), sunShare);
       let seen = 0;
       for (let index = 0; index < count; index++) {
         const direction = apparentDirection(horizon, [
@@ -535,7 +719,13 @@ export function createSkyScene(
       sun.position.set(sx, sy, sz).multiplyScalar(SUN_DISTANCE);
       sunGlow.position.copy(sun.position);
       sun.visible = sunHigh > -1;
-      sunGlow.visible = sun.visible;
+      sunGlow.visible = sun.visible && sunShare > 0;
+      sunGlow.material.opacity = Math.min(1, sunShare * 4);
+      sunlight.value = sunShare;
+      corona.position.copy(sun.position);
+      corona.visible = sun.visible && sunShare < 0.002;
+      placeMoon(horizon, sunJ2000, moonJ2000, sunHere, moonHere, sunHigh);
+      container.dataset['sunVisible'] = sunShare.toFixed(4);
       starUniforms.limit.value = limit;
       // Figures stay faintly visible by day, as a guide to where things are.
       lineOpacity.value = 0.12 + 0.28 * (1 - Math.min(1, Math.max(0, (sunHigh + 18) / 18)));
@@ -559,6 +749,11 @@ export function createSkyScene(
       if (next === figures) return;
       figures = next;
       rebuildFigures();
+    },
+    setInsets(top, bottom) {
+      if (top === insets.top && bottom === insets.bottom) return;
+      insets = { top, bottom };
+      resize();
     },
     onLookChange(listener) {
       listeners.add(listener);
@@ -593,6 +788,31 @@ function glowTexture(): CanvasTexture {
     gradient.addColorStop(1, 'rgba(255, 200, 120, 0)');
     context.fillStyle = gradient;
     context.fillRect(0, 0, 128, 128);
+  }
+  return new CanvasTexture(canvas);
+}
+
+function unit(vector: Vec3): Vec3 {
+  const length = Math.hypot(...vector);
+  return [vector[0] / length, vector[1] / length, vector[2] / length];
+}
+
+/** The corona: pearly streamers fading over a few solar radii. */
+function coronaTexture(): CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const context = canvas.getContext('2d');
+  if (context !== null) {
+    const gradient = context.createRadialGradient(128, 128, 0, 128, 128, 128);
+    // The sprite is 4.5 solar radii across each way: the Moon's edge is at 0.22.
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+    gradient.addColorStop(0.22, 'rgba(240, 244, 255, 0.95)');
+    gradient.addColorStop(0.32, 'rgba(210, 222, 255, 0.4)');
+    gradient.addColorStop(0.6, 'rgba(180, 200, 255, 0.08)');
+    gradient.addColorStop(1, 'rgba(160, 180, 255, 0)');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 256, 256);
   }
   return new CanvasTexture(canvas);
 }

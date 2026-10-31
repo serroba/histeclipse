@@ -40,8 +40,12 @@ import {
   type GeoPoint,
   type ViewState,
 } from './state/viewState';
-import { skyCaption } from './sky/caption';
-import { horizonMatrix } from './sky/horizon';
+import { eclipseNote, skyCaption } from './sky/caption';
+import { moonSunlight, observerPosition, sunVisible, topocentric } from './sky/bodies';
+import { horizonMatrix, horizontalOf } from './sky/horizon';
+import { LOWEST_LOOK, roundLook } from './sky/look';
+import { longTermEarthFixedToJ2000 } from './astro/longTermPrecession';
+import type { Vector3 } from './astro/matrix';
 import type { SkyScene } from './sky/skyScene';
 import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
@@ -52,12 +56,15 @@ import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
 import { createFamousPanel } from './ui/famousPanel';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
+import { createAimSwitch, type AimTarget } from './ui/aimSwitch';
 import { createFigureSwitch } from './ui/figureSwitch';
 import { createViewSwitch } from './ui/viewSwitch';
 import { createTimeline, type Eclipse, type YearEclipses } from './ui/timeline';
 import { errorMessage } from './util/errors';
 
 const MINUTES_PER_DAY = 1440;
+/** Field of view (degrees) when turning to the Sun or Moon: close enough to see the disc. */
+const AIM_FOV = 12;
 
 export async function startApp(root: HTMLElement): Promise<void> {
   const base = import.meta.env.BASE_URL;
@@ -76,8 +83,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   const viewSwitch = createViewSwitch((choice) => {
     if (choice === 'sky') {
-      // Stand where the link says, or else on the spot in the middle of the globe.
-      store.set((state) => ({ ...state, mode: 'sky', location: observerOf(state) }));
+      // Stand where the link says, or else on the spot in the middle of the globe; during an
+      // eclipse, face it.
+      store.set((state) => {
+        const next: ViewState = { ...state, mode: 'sky', location: observerOf(state) };
+        const selected = selectedEclipse(state);
+        if (selected === undefined) return next;
+        const look = aimAt(next, isSolar(selected) ? 'sun' : 'moon');
+        return look === null || look.altitude <= -1 ? next : { ...next, look };
+      });
     } else {
       store.set((state) => ({ ...state, mode: 'globe', view: choice }));
     }
@@ -85,9 +99,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const figureSwitch = createFigureSwitch((figures) => {
     store.set((state) => ({ ...state, figures }));
   });
+  const aimSwitch = createAimSwitch((target) => {
+    store.set((state) => {
+      const look = aimAt(state, target);
+      return look === null ? state : { ...state, look };
+    });
+  });
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
   const skyContainer = element('div', { class: 'sky', 'data-testid': 'sky', hidden: '' });
   const skyText = element('p', { class: 'sky-caption' });
+  const skyEclipse = element('p', { class: 'sky-eclipse', 'data-testid': 'sky-eclipse' });
   const dateText = element('time', { class: 'hud-date' });
   const timeText = element('span', { class: 'hud-time' });
   const detailText = element('p', { class: 'hud-detail' });
@@ -124,8 +145,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       detailText,
       famousPanel.button,
       viewSwitch.root,
+      aimSwitch.root,
       figureSwitch.root,
       skyText,
+      skyEclipse,
       element(
         'p',
         { class: 'credits' },
@@ -168,6 +191,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       moonEphemeris = ephemeris;
       showTime(store.get());
       viewSwitch.render(store.get().mode, store.get().view, true);
+      showSky(store.get());
     },
     (error: unknown) => {
       notify(`Could not load the Moon's orbit: ${errorMessage(error)}`);
@@ -363,6 +387,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The sky view, its code and its 9,000 stars load the first time someone opens it.
   let skyScene: SkyScene | null = null;
   let skyLoading = false;
+  let panelInsets = { top: 0, bottom: 0 };
   function openSky(): void {
     if (skyScene !== null || skyLoading) return;
     skyLoading = true;
@@ -376,7 +401,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
           sky,
           look: state.look,
           figures: state.figures,
+          moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
         });
+        skyScene.setInsets(panelInsets.top, panelInsets.bottom);
         skyScene.onLookChange((look) => {
           store.set((current) => ({ ...current, look }));
         });
@@ -394,36 +421,83 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return state.focus === 'earth' ? state.camera.target : DEFAULT_CAMERA.target;
   }
 
-  function showSky(state: ViewState): void {
-    const inSky = state.mode === 'sky';
-    globeContainer.hidden = inSky;
-    skyText.hidden = !inSky;
-    figureSwitch.render(state.figures, inSky);
-    if (!inSky) {
-      skyScene?.setVisible(false);
-      return;
-    }
-    openSky();
+  /** Where the Sun or Moon stands, from Earth's centre and from the observer, in km. */
+  function bodiesSeen(state: ViewState) {
     const place = observerOf(state);
     const jdUT = momentJulianDay(state.time);
     let jdTT;
     try {
       jdTT = deltaT.terrestrialTime(jdUT);
     } catch {
-      return; // showTime has already said so and moved to today.
+      return null; // showTime has already said so and moved to today.
     }
+    return {
+      place,
+      jdUT,
+      jdTT,
+      observer: observerPosition(place, longTermEarthFixedToJ2000(jdUT, jdTT)),
+      sun: sunPositionJ2000(jdTT),
+      moon: moonEphemeris?.position(jdTT) ?? null,
+    };
+  }
+
+  /** A look facing the Sun or the Moon from where the observer stands, or null if unknown. */
+  function aimAt(state: ViewState, target: AimTarget): ViewState['look'] | null {
+    const seen = bodiesSeen(state);
+    if (seen === null) return null;
+    const body: Vector3 | null = target === 'sun' ? seen.sun : seen.moon;
+    if (body === null) return null;
+    const horizon = horizonMatrix(seen.place, seen.jdUT, seen.jdTT);
+    const { azimuth, altitude } = horizontalOf(horizon, topocentric(body, seen.observer));
+    return roundLook({
+      azimuth,
+      altitude: Math.max(LOWEST_LOOK, altitude),
+      fov: Math.min(state.look.fov, AIM_FOV),
+    });
+  }
+
+  function showSky(state: ViewState): void {
+    const inSky = state.mode === 'sky';
+    globeContainer.hidden = inSky;
+    skyText.hidden = !inSky;
+    skyEclipse.hidden = true;
+    figureSwitch.render(state.figures, inSky);
+    aimSwitch.render(inSky, moonEphemeris !== null);
+    if (!inSky) {
+      skyScene?.setVisible(false);
+      return;
+    }
+    openSky();
+    const seen = bodiesSeen(state);
+    if (seen === null) return;
+    const { place, jdUT, jdTT } = seen;
     skyText.textContent = skyCaption({
       place,
       azimuth: state.look.azimuth,
       uncertaintySeconds: deltaT.uncertaintySeconds(jdUT),
     });
+    const horizon = horizonMatrix(place, jdUT, jdTT);
+    const sunHere = topocentric(seen.sun, seen.observer);
+    const moonHere = seen.moon === null ? null : topocentric(seen.moon, seen.observer);
+    skyEclipse.textContent =
+      seen.moon === null || moonHere === null
+        ? ''
+        : eclipseNote({
+            sunVisible: sunVisible(sunHere, moonHere),
+            sunAltitude: horizontalOf(horizon, sunHere).altitude,
+            moonSunlight: moonSunlight(seen.moon, seen.sun),
+            moonAltitude: horizontalOf(horizon, moonHere).altitude,
+          });
+    skyEclipse.hidden = skyEclipse.textContent === '';
     if (skyScene === null) return;
     skyScene.setLook(state.look);
     skyScene.setFigures(state.figures);
     skyScene.setMoment({
-      horizon: horizonMatrix(place, jdUT, jdTT),
+      horizon,
       jdTT,
-      sun: sunPositionJ2000(jdTT),
+      sun: seen.sun,
+      moon: seen.moon,
+      observer: seen.observer,
     });
     skyScene.setVisible(true);
   }
@@ -442,6 +516,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       if (state.mode === 'sky' || previous?.mode === 'sky' || previous === null) showSky(state);
     }
     if (previous !== null && state.focus !== previous.focus) globe.setFocus(state.focus);
+    if (state.location !== previous?.location) globe.setLocation(state.location);
     if (state.view !== previous?.view) globe.setViewpoint(state.view);
     if (state.view !== previous?.view || state.mode !== previous.mode) {
       viewSwitch.render(state.mode, state.view, moonEphemeris !== null);
@@ -473,10 +548,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   if (top !== null && bottom !== null) {
     const update = (): void => {
       const narrow = window.innerWidth <= 600;
-      globe.setInsets(
-        narrow ? top.getBoundingClientRect().bottom : 0,
-        bottom.getBoundingClientRect().height,
-      );
+      panelInsets = {
+        top: narrow ? top.getBoundingClientRect().bottom : 0,
+        bottom: bottom.getBoundingClientRect().height,
+      };
+      globe.setInsets(panelInsets.top, panelInsets.bottom);
+      skyScene?.setInsets(panelInsets.top, panelInsets.bottom);
     };
     const observer = new ResizeObserver(update);
     observer.observe(top);
@@ -486,10 +563,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
   globe.onBodyClick((focus) => {
     store.set((state) => ({ ...state, focus, view: 'free' }));
   });
+  globe.onPlacePick((place) => {
+    const location = { latitude: round(place.latitude, 4), longitude: round(place.longitude, 4) };
+    store.set((state) => ({ ...state, location }));
+  });
   globe.onCameraChange((camera) => {
     store.set((state) => ({ ...state, camera }));
   });
   window.addEventListener('pagehide', () => {
     sync.flush();
   });
+}
+
+function round(value: number, digits: number): number {
+  const scale = 10 ** digits;
+  return Math.round(value * scale) / scale;
 }
