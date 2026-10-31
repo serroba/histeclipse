@@ -1,3 +1,4 @@
+import math
 import shutil
 from typing import TYPE_CHECKING
 
@@ -5,7 +6,8 @@ import pytest
 
 from histeclipse_pipeline import cli
 from histeclipse_pipeline.delta_t import epoch_year_jd
-from histeclipse_pipeline.vectors import sample_times, sun_vectors, write_vectors
+from histeclipse_pipeline.ephemeris import Ephemeris
+from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
 from tests.json_values import read_json
 from tests.kernels import ANCIENT, MODERN
 
@@ -72,3 +74,49 @@ def test_cli_reports_uncovered_range(tmp_path: Path, capsys: pytest.CaptureFixtu
     args = ["sun-vectors", "--kernels", str(tmp_path), "--out", str(tmp_path / "x.json")]
     assert cli.main([*args, "--count", "3"]) == 1
     assert "do not cover the range" in capsys.readouterr().err
+
+
+def test_moon_vectors_are_geocentric_and_at_lunar_distance() -> None:
+    with Ephemeris([MODERN]) as ephemeris:
+        [vector] = moon_vectors(ephemeris, [EQUINOX_2025])
+    distance = math.hypot(vector["x"], vector["y"], vector["z"])
+    assert 356_000 < distance < 407_000
+
+
+def test_cli_writes_moon_vectors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def one_time(_start: int, _end: int, _count: int, _seed: int) -> list[float]:
+        return [EQUINOX_2025]
+
+    monkeypatch.setattr(cli, "sample_times", one_time)
+    _ = shutil.copy(MODERN, tmp_path)
+    out = tmp_path / "moon.json"
+    assert cli.main(["moon-vectors", "--kernels", str(tmp_path), "--out", str(out)]) == 0
+    assert "wrote 1 Moon vectors" in capsys.readouterr().out
+
+
+def test_cli_moon_vectors_report_missing_or_uncovered_kernels(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    args = ["moon-vectors", "--kernels", str(tmp_path), "--out", str(tmp_path / "m.json")]
+    assert cli.main(args) == 1
+    assert "run fetch-ephemeris first" in capsys.readouterr().err
+    _ = shutil.copy(MODERN, tmp_path)
+    assert cli.main([*args, "--count", "3"]) == 1
+    assert "do not cover the range" in capsys.readouterr().err
+
+
+def test_cli_moon_vectors_take_a_seed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    seeds: list[int] = []
+
+    def record(_start: int, _end: int, _count: int, seed: int) -> list[float]:
+        seeds.append(seed)
+        return [EQUINOX_2025]
+
+    monkeypatch.setattr(cli, "sample_times", record)
+    _ = shutil.copy(MODERN, tmp_path)
+    args = ["moon-vectors", "--kernels", str(tmp_path), "--out", str(tmp_path / "m.json")]
+    assert cli.main([*args, "--seed", "7"]) == 0
+    assert cli.main(args) == 0
+    assert seeds == [7, cli.MOON_VECTOR_SEED]

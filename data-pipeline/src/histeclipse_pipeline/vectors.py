@@ -18,6 +18,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from pathlib import Path
 
+    from histeclipse_pipeline.ephemeris import Ephemeris
+
 
 class SunVector(TypedDict):
     """The Sun as seen from Earth's center at one instant. Mirrors the web app's tests."""
@@ -65,7 +67,29 @@ def sun_vectors(kernel_paths: Sequence[Path], jds_ut: Sequence[float]) -> list[S
     return vectors
 
 
-def write_vectors(vectors: Sequence[SunVector], path: Path, description: str) -> None:
+class MoonVector(TypedDict):
+    """The Moon's geometric geocentric position in ICRF (J2000 equator), km. Mirrors web tests."""
+
+    jdTT: float
+    x: float
+    y: float
+    z: float
+
+
+def moon_vectors(ephemeris: Ephemeris, jds_tt: Sequence[float]) -> list[MoonVector]:
+    """Geocentric Moon at each TT Julian Day (TDB and TT differ by under 2 ms)."""
+    earth = ephemeris.segment(3, 399)
+    moon = ephemeris.segment(3, 301)
+    vectors: list[MoonVector] = []
+    for jd in jds_tt:
+        x, y, z = as_floats(moon.compute(jd) - earth.compute(jd))
+        vectors.append({"jdTT": round(jd, 6), "x": round(x, 3), "y": round(y, 3), "z": round(z, 3)})
+    return vectors
+
+
+def write_vectors(
+    vectors: Sequence[SunVector] | Sequence[MoonVector], path: Path, description: str
+) -> None:
     """Write vectors as readable JSON, one per line."""
     lines = ",\n".join(f"    {json.dumps(vector)}" for vector in vectors)
     body = f'{{\n  "description": {json.dumps(description)},\n  "vectors": [\n{lines}\n  ]\n}}\n'
