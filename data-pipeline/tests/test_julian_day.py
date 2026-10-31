@@ -1,4 +1,5 @@
 import math
+from pathlib import Path
 
 import pytest
 from hypothesis import given
@@ -13,31 +14,39 @@ from histeclipse_pipeline.julian_day import (
     is_leap_year,
     julian_day,
 )
+from tests.json_values import read_json
 
 J = Calendar.JULIAN
 G = Calendar.GREGORIAN
 
-# Reference values from Meeus, Astronomical Algorithms (2nd ed.), chapter 7.
-MEEUS_EXAMPLES = [
-    (CalendarDate(2000, 1, 1.5, G), 2_451_545.0),
-    (CalendarDate(1999, 1, 1.0, G), 2_451_179.5),
-    (CalendarDate(1987, 1, 27.0, G), 2_446_822.5),
-    (CalendarDate(1987, 6, 19.5, G), 2_446_966.0),
-    (CalendarDate(1988, 1, 27.0, G), 2_447_187.5),
-    (CalendarDate(1988, 6, 19.5, G), 2_447_332.0),
-    (CalendarDate(1900, 1, 1.0, G), 2_415_020.5),
-    (CalendarDate(1600, 1, 1.0, G), 2_305_447.5),
-    (CalendarDate(1600, 12, 31.0, G), 2_305_812.5),
-    (CalendarDate(837, 4, 10.3, J), 2_026_871.8),
-    (CalendarDate(-123, 12, 31.0, J), 1_676_496.5),
-    (CalendarDate(-122, 1, 1.0, J), 1_676_497.5),
-    (CalendarDate(-1000, 7, 12.5, J), 1_356_001.0),
-    (CalendarDate(-1000, 2, 29.0, J), 1_355_866.5),
-    (CalendarDate(-1001, 8, 17.9, J), 1_355_671.4),
-    (CalendarDate(-4712, 1, 1.5, J), 0.0),
-    (CalendarDate(1957, 10, 4.81, G), 2_436_116.31),
-    (CalendarDate(333, 1, 27.5, J), 1_842_713.0),
-]
+# Meeus reference values, shared with the web app's tests so both implementations agree.
+VECTORS_PATH = Path(__file__).parents[2] / "test-vectors" / "julian-day.json"
+
+
+def load_meeus_examples() -> list[tuple[CalendarDate, float]]:
+    document = read_json(VECTORS_PATH)
+    assert isinstance(document, dict)
+    vectors = document["vectors"]
+    assert isinstance(vectors, list)
+    examples: list[tuple[CalendarDate, float]] = []
+    for vector in vectors:
+        assert isinstance(vector, dict)
+        year, month, day = vector["year"], vector["month"], vector["day"]
+        calendar, jd = vector["calendar"], vector["jd"]
+        assert isinstance(year, int)
+        assert isinstance(month, int)
+        assert isinstance(day, int | float)
+        assert isinstance(calendar, str)
+        assert isinstance(jd, int | float)
+        examples.append((CalendarDate(year, month, float(day), Calendar(calendar)), float(jd)))
+    return examples
+
+
+MEEUS_EXAMPLES = load_meeus_examples()
+
+
+def test_shared_vectors_are_loaded() -> None:
+    assert len(MEEUS_EXAMPLES) == 18
 
 
 @pytest.mark.parametrize(("date", "expected"), MEEUS_EXAMPLES)
