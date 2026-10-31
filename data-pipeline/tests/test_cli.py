@@ -5,7 +5,7 @@ import pytest
 
 from histeclipse_pipeline import cli
 from tests.json_values import read_json
-from tests.kernels import MODERN
+from tests.kernels import MODERN, TOTAL_2024
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -89,3 +89,28 @@ def test_defaults_apply_when_options_are_omitted(
     _ = shutil.copy(MODERN, tmp_path)
     _ = cli.main(["lunar-catalog", "--kernels", str(tmp_path), "--out", str(tmp_path)])
     assert seen == [cli.DEFAULT_START_YEAR, cli.DEFAULT_END_YEAR + 1]
+
+
+def test_solar_catalog_end_to_end(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # The fixture covers 2024 March 29 - April 18; search inside it instead of whole years.
+    starts = {2024: 2_460_405.5, 2025: 2_460_412.5}
+    monkeypatch.setattr(cli, "year_start_jd", starts.__getitem__)
+    kernels = tmp_path / "kernels"
+    kernels.mkdir()
+    _ = shutil.copy(TOTAL_2024, kernels)
+    args = ["solar-catalog", "--kernels", str(kernels), "--out", str(tmp_path / "out")]
+    assert cli.main([*args, "--start-year", "2024", "--end-year", "2024"]) == 0
+    assert "wrote 1 solar eclipses in 1 files" in capsys.readouterr().out
+
+
+def test_solar_catalog_reports_missing_or_insufficient_kernels(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    args = ["solar-catalog", "--kernels", str(tmp_path), "--out", str(tmp_path / "out")]
+    assert cli.main(args) == 1
+    assert "run fetch-ephemeris first" in capsys.readouterr().err
+    _ = shutil.copy(TOTAL_2024, tmp_path)
+    assert cli.main([*args, "--start-year", "2024", "--end-year", "2024"]) == 1
+    assert "do not cover the range" in capsys.readouterr().err

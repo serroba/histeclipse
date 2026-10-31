@@ -6,10 +6,13 @@ from histeclipse_pipeline.catalog import (
     SCHEMA_VERSION,
     astronomical_year,
     to_record,
+    to_solar_record,
     write_lunar_catalog,
+    write_solar_catalog,
 )
 from histeclipse_pipeline.delta_t import DELTA_T_MODEL
 from histeclipse_pipeline.lunar import LunarEclipse, LunarEclipseKind
+from histeclipse_pipeline.solar import BesselianElements, SolarEclipse, SolarEclipseKind
 from tests.json_values import json_round_trip, read_json
 
 if TYPE_CHECKING:
@@ -98,3 +101,37 @@ def test_rejects_eclipses_outside_the_range(tmp_path: Path) -> None:
 def test_rejects_empty_range(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="Empty year range"):
         _ = write_lunar_catalog([], tmp_path, 2001, 2000)
+
+
+def test_solar_records_round_elements_and_use_json_names(tmp_path: Path) -> None:
+    elements = BesselianElements(
+        t0_jd_tt=2_460_409.25,
+        delta_t=69.2,
+        x=(-0.318249217, 0.51171161, 0.0000326, -0.0000084),
+        y=(0.2197640, 0.2709589, -0.0000595, -0.0000047),
+        d=(7.58620021, 0.014844, -0.000002, 0.0),
+        mu=(89.30209, 15.00408, 0.0, 0.0),
+        l1=(0.535814, 0.0000618, -0.0000128, 0.0),
+        l2=(-0.010272, 0.0000615, -0.0000127, 0.0),
+        tan_f1=0.00466831,
+        tan_f2=0.00464501,
+    )
+    eclipse = SolarEclipse(
+        greatest_jd_tt=2_460_409.2628403,
+        kind=SolarEclipseKind.TOTAL,
+        gamma=0.34312,
+        magnitude=1.05653,
+        delta_t_seconds=69.2,
+        greatest_latitude=25.2913,
+        greatest_longitude=-104.1487,
+        elements=elements,
+    )
+    record = to_solar_record(eclipse)
+    assert record["kind"] == "total"
+    assert record["greatest"] == (25.29, -104.15)
+    assert record["elements"]["x"][0] == -0.31824922
+    assert record["elements"]["t0"] == 2_460_409.25
+
+    index = write_solar_catalog([eclipse], tmp_path, 2024, 2024)
+    assert index["kind"] == "solar"
+    assert read_json(tmp_path / "2000.json") == [json_round_trip(record)]

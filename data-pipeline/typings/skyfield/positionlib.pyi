@@ -1,11 +1,17 @@
+from typing import Literal
+
 import numpy as np
 import numpy.typing as npt
 from skyfield.timelib import Time
+from skyfield.units import Angle, Distance
 from skyfield.vectorlib import VectorFunction
 
 class ICRF:
     center: int | None
     t: Time | None
+    def radec(
+        self, epoch: Time | Literal["date"] | None = None
+    ) -> tuple[Angle, Angle, Distance]: ...
 
 class Barycentric(ICRF):
     def observe(self, body: VectorFunction) -> Astrometric: ...

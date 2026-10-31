@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from histeclipse_pipeline.lunar import LunarEclipse
+    from histeclipse_pipeline.solar import SolarEclipse
 
 SCHEMA_VERSION = 1
 EPHEMERIS = "JPL DE441"
@@ -38,6 +39,32 @@ class LunarEclipseRecord(TypedDict):
     gamma: float
     deltaT: float
     sublunar: tuple[float, float]
+
+
+class BesselianRecord(TypedDict):
+    """Besselian elements as written to JSON: cubics in hours from ``t0`` (JD, TT)."""
+
+    t0: float
+    x: list[float]
+    y: list[float]
+    d: list[float]
+    mu: list[float]
+    l1: list[float]
+    l2: list[float]
+    tanF1: float
+    tanF2: float
+
+
+class SolarEclipseRecord(TypedDict):
+    """One solar eclipse as written to JSON. Mirrors the web app's runtime schema."""
+
+    jdTT: float
+    kind: str
+    gamma: float
+    magnitude: float
+    deltaT: float
+    greatest: tuple[float, float]
+    elements: BesselianRecord
 
 
 class ChunkEntry(TypedDict):
@@ -89,7 +116,55 @@ def to_record(eclipse: LunarEclipse) -> LunarEclipseRecord:
 def write_lunar_catalog(
     eclipses: Iterable[LunarEclipse], out: Path, start_year: int, end_year: int
 ) -> CatalogIndex:
-    """Write chunked JSON for eclipses in astronomical years ``start_year..end_year``.
+    """Write chunked JSON for lunar eclipses in astronomical years ``start_year..end_year``."""
+    items = ((eclipse.greatest_jd_tt, to_record(eclipse)) for eclipse in eclipses)
+    return _write_chunked(items, out, start_year, end_year, "lunar")
+
+
+def to_solar_record(eclipse: SolarEclipse) -> SolarEclipseRecord:
+    """Round values to what the precision of the data justifies and use JSON key names.
+
+    Coefficients keep 8 decimals of an Earth radius (6 cm) and 7 of a degree, far below
+    anything ΔT or the ephemeris can resolve, so rounding never shows on the map.
+    """
+    elements = eclipse.elements
+
+    def coefficients(values: tuple[float, ...], digits: int) -> list[float]:
+        return [round(value, digits) for value in values]
+
+    return {
+        "jdTT": round(eclipse.greatest_jd_tt, 6),
+        "kind": eclipse.kind.value,
+        "gamma": round(eclipse.gamma, 4),
+        "magnitude": round(eclipse.magnitude, 4),
+        "deltaT": round(eclipse.delta_t_seconds),
+        "greatest": (round(eclipse.greatest_latitude, 2), round(eclipse.greatest_longitude, 2)),
+        "elements": {
+            "t0": round(elements.t0_jd_tt, 7),
+            "x": coefficients(elements.x, 8),
+            "y": coefficients(elements.y, 8),
+            "d": coefficients(elements.d, 7),
+            "mu": coefficients(elements.mu, 6),
+            "l1": coefficients(elements.l1, 8),
+            "l2": coefficients(elements.l2, 8),
+            "tanF1": round(elements.tan_f1, 9),
+            "tanF2": round(elements.tan_f2, 9),
+        },
+    }
+
+
+def write_solar_catalog(
+    eclipses: Iterable[SolarEclipse], out: Path, start_year: int, end_year: int
+) -> CatalogIndex:
+    """Write chunked JSON for solar eclipses in astronomical years ``start_year..end_year``."""
+    items = ((eclipse.greatest_jd_tt, to_solar_record(eclipse)) for eclipse in eclipses)
+    return _write_chunked(items, out, start_year, end_year, "solar")
+
+
+def _write_chunked[Record](
+    items: Iterable[tuple[float, Record]], out: Path, start_year: int, end_year: int, kind: str
+) -> CatalogIndex:
+    """Write records to century files plus ``index.json``.
 
     Every century the range touches gets a chunk file, even if it has no eclipses, so the
     web app can tell "no eclipses" apart from "not covered".
@@ -97,13 +172,13 @@ def write_lunar_catalog(
     if start_year > end_year:
         msg = f"Empty year range {start_year}..{end_year}"
         raise ValueError(msg)
-    chunks: defaultdict[int, list[LunarEclipseRecord]] = defaultdict(list)
-    for eclipse in sorted(eclipses, key=lambda e: e.greatest_jd_tt):
-        year = astronomical_year(eclipse.greatest_jd_tt)
+    chunks: defaultdict[int, list[Record]] = defaultdict(list)
+    for jd_tt, record in sorted(items, key=lambda item: item[0]):
+        year = astronomical_year(jd_tt)
         if not start_year <= year <= end_year:
-            msg = f"Eclipse at JD {eclipse.greatest_jd_tt} (year {year}) is outside the range"
+            msg = f"Eclipse at JD {jd_tt} (year {year}) is outside the range"
             raise ValueError(msg)
-        chunks[year // YEARS_PER_CHUNK * YEARS_PER_CHUNK].append(to_record(eclipse))
+        chunks[year // YEARS_PER_CHUNK * YEARS_PER_CHUNK].append(record)
 
     out.mkdir(parents=True, exist_ok=True)
     entries: list[ChunkEntry] = []
@@ -111,12 +186,12 @@ def write_lunar_catalog(
     for chunk_start in range(first_chunk, end_year + 1, YEARS_PER_CHUNK):
         records = chunks.get(chunk_start, [])
         name = f"{chunk_start}.json"
-        _write_json(out / name, records)
+        _write_records(out / name, records)
         entries.append({"startYear": chunk_start, "file": name, "count": len(records)})
 
     index: CatalogIndex = {
         "schemaVersion": SCHEMA_VERSION,
-        "kind": "lunar",
+        "kind": kind,
         "ephemeris": EPHEMERIS,
         "deltaTModel": DELTA_T_MODEL,
         "startYear": start_year,
@@ -124,17 +199,16 @@ def write_lunar_catalog(
         "yearsPerChunk": YEARS_PER_CHUNK,
         "chunks": entries,
     }
-    _write_json(out / "index.json", index)
+    _ = (out / "index.json").write_text(_dump(index) + "\n")
     return index
 
 
-def _write_json(path: Path, value: CatalogIndex | Sequence[LunarEclipseRecord]) -> None:
-    # Compact separators keep files small. One record per line keeps regeneration diffs readable.
-    def dump(item: object) -> str:
-        return json.dumps(item, separators=(",", ":"), allow_nan=False)
+def _dump(item: object) -> str:
+    # Compact separators keep files small.
+    return json.dumps(item, separators=(",", ":"), allow_nan=False)
 
-    if isinstance(value, dict):
-        text = dump(value)
-    else:
-        text = "[\n" + ",\n".join(dump(record) for record in value) + "\n]" if value else "[]"
+
+def _write_records(path: Path, records: Sequence[object]) -> None:
+    # One record per line keeps regeneration diffs readable.
+    text = "[\n" + ",\n".join(_dump(record) for record in records) + "\n]" if records else "[]"
     _ = path.write_text(text + "\n")
