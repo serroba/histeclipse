@@ -1,10 +1,11 @@
 /**
- * The space view's frame. The scene is inertial: the J2000 equator, in Earth radii, with the
- * axes mapped to three.js the same way the globe maps Earth-fixed coordinates (`geo.ts`):
- * x stays, the pole (z) becomes +Y, and y becomes −Z.
+ * The space view's frame. The scene is Earth-fixed and in Earth radii, with the axes mapped to
+ * three.js as the globe maps them (`geo.ts`): x stays, the pole (z) becomes +Y, and y becomes
+ * −Z. The Moon and Sun are carried in from J2000 by Earth's rotation at each moment.
  */
 
 import { multiply, transpose, type Matrix3, type Vector3 } from '../astro/matrix';
+import type { Viewpoint } from '../state/viewState';
 
 export const EARTH_RADIUS_KM = 6378.137;
 export const MOON_RADIUS_EARTH_RADII = 1737.4 / EARTH_RADIUS_KM;
@@ -89,4 +90,82 @@ export function mergeMarkers(
 function joinNames(names: readonly string[]): string {
   const last = names.at(-1) ?? '';
   return names.length < 2 ? last : `${names.slice(0, -1).join(', ')} and ${last}`;
+}
+
+/** Where the camera is, what it looks at, and its field of view on the narrower side. */
+export interface CameraPose {
+  readonly eye: Vector3;
+  readonly target: Vector3;
+  readonly fovDegrees: number;
+}
+
+/** Share of the view's narrower side the looked-at body fills in an attached viewpoint. */
+const FRAMED_SHARE = 0.4;
+/**
+ * How far out from the surface the camera stands, in body radii: just outside Earth's drawn
+ * atmosphere. Next to the 60 Earth radii to the Moon, the offset does not change what is seen.
+ */
+const STANDING_HEIGHT = 1.05;
+
+/**
+ * The camera for a viewpoint attached to the bodies, given the Moon's scene position (Earth
+ * radii, Earth at the origin). Positions are true; only the lens narrows, like binoculars.
+ */
+export function attachedPose(viewpoint: Exclude<Viewpoint, 'free'>, moon: Vector3): CameraPose {
+  const distance = Math.hypot(...moon);
+  const toMoon = moon.map((value) => value / distance) as unknown as Vector3;
+  if (viewpoint === 'moon-from-earth') {
+    const eye = scale(toMoon, STANDING_HEIGHT);
+    return {
+      eye,
+      target: moon,
+      fovDegrees: framingFov(MOON_RADIUS_EARTH_RADII, distance - STANDING_HEIGHT),
+    };
+  }
+  const height = MOON_RADIUS_EARTH_RADII * STANDING_HEIGHT;
+  return {
+    eye: scale(toMoon, distance - height),
+    target: [0, 0, 0],
+    fovDegrees: framingFov(1, distance - height),
+  };
+}
+
+function framingFov(radius: number, distance: number): number {
+  return (2 * Math.asin(radius / distance) * 180) / Math.PI / FRAMED_SHARE;
+}
+
+function scale([x, y, z]: Vector3, factor: number): Vector3 {
+  return [x * factor, y * factor, z * factor];
+}
+
+/**
+ * A step `t` (0 to 1) along a flight between poses. The eye swings around Earth's centre with
+ * its distance changing geometrically, so a flight from the ground to the Moon spends as long
+ * on the first Earth radius as on the last fifty. The lens changes geometrically too.
+ */
+export function blendPose(from: CameraPose, to: CameraPose, t: number): CameraPose {
+  const fromRadius = Math.hypot(...from.eye);
+  const toRadius = Math.hypot(...to.eye);
+  const radius = fromRadius * (toRadius / fromRadius) ** t;
+  const direction = slerp(scale(from.eye, 1 / fromRadius), scale(to.eye, 1 / toRadius), t);
+  const lerp = (a: number, b: number): number => a + (b - a) * t;
+  return {
+    eye: scale(direction, radius),
+    target: [
+      lerp(from.target[0], to.target[0]),
+      lerp(from.target[1], to.target[1]),
+      lerp(from.target[2], to.target[2]),
+    ],
+    fovDegrees: from.fovDegrees * (to.fovDegrees / from.fovDegrees) ** t,
+  };
+}
+
+/** Spherical interpolation between unit vectors; falls back to a straight blend when parallel. */
+function slerp(a: Vector3, b: Vector3, t: number): Vector3 {
+  const cosine = Math.min(1, Math.max(-1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]));
+  const angle = Math.acos(cosine);
+  const sine = Math.sin(angle);
+  const [wa, wb] =
+    sine < 1e-6 ? [1 - t, t] : [Math.sin((1 - t) * angle) / sine, Math.sin(t * angle) / sine];
+  return [wa * a[0] + wb * b[0], wa * a[1] + wb * b[1], wa * a[2] + wb * b[2]];
 }

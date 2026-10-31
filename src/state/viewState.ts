@@ -19,6 +19,13 @@ export type Mode = (typeof MODES)[number];
 export const LAYERS = ['lunar', 'solar', 'terminator', 'places'] as const;
 export type Layer = (typeof LAYERS)[number];
 
+/**
+ * How the camera is placed: orbiting Earth freely, or attached to the bodies (standing on Earth
+ * looking at the Moon, or on the Moon looking at Earth) and following them through time.
+ */
+export const VIEWPOINTS = ['free', 'moon-from-earth', 'earth-from-moon'] as const;
+export type Viewpoint = (typeof VIEWPOINTS)[number];
+
 export const ECLIPSE_KINDS = ['lunar', 'solar'] as const;
 export type EclipseKind = (typeof ECLIPSE_KINDS)[number];
 
@@ -55,6 +62,7 @@ export interface ViewState {
   readonly time: Moment;
   readonly location: GeoPoint | null;
   readonly camera: GlobeCamera;
+  readonly view: Viewpoint;
   readonly layers: ReadonlySet<Layer>;
   readonly selection: Selection | null;
 }
@@ -98,6 +106,7 @@ export function defaultViewState(now: Date): ViewState {
     time: momentFromDate(now),
     location: null,
     camera: DEFAULT_CAMERA,
+    view: 'free',
     layers: DEFAULT_LAYERS,
     selection: null,
   };

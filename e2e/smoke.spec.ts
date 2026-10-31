@@ -380,6 +380,34 @@ test('far out, the view stays put among the stars while Earth turns', async ({ p
   await expect(page).toHaveURL(/cam=-?0\.00\d\d,-15\.0[3-5]\d\d,60000\.00/);
 });
 
+test('one click stands on Earth facing the Moon, and one click returns', async ({ page }) => {
+  await page.goto('./?t=2025-11-05T12:00&cam=20,0,4.5');
+  await globeRendered(page);
+  const views = page.getByRole('group', { name: 'Viewpoint' });
+  const moonFromEarth = views.getByRole('button', { name: 'Moon from Earth' });
+  // Enabled once the Moon's orbit has loaded.
+  await expect(moonFromEarth).toBeEnabled();
+  await moonFromEarth.click();
+  await expect(moonFromEarth).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-view', 'moon-from-earth');
+  await expect(page).toHaveURL(/&view=moon-from-earth&/);
+  // The orbiting camera is kept, so going back lands where it was.
+  await expect(page).toHaveURL(/cam=20\.0000,0\.0000,4\.50/);
+  await views.getByRole('button', { name: 'Globe' }).click();
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-view', 'free');
+  await expect(page).not.toHaveURL(/view=/);
+});
+
+test('a link can stand on the Moon looking at Earth', async ({ page }) => {
+  await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08&view=earth-from-moon');
+  await globeRendered(page);
+  await expect(
+    page.getByRole('group', { name: 'Viewpoint' }).getByRole('button', { name: 'Earth from Moon' }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-view', 'earth-from-moon');
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-solar-shadow', 'on');
+});
+
 test('page fits the viewport without horizontal scroll', async ({ page }) => {
   await page.goto('./');
   const overflow = await page.evaluate(

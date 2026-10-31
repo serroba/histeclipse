@@ -35,7 +35,12 @@ import {
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import { apply, multiply, transpose, type Matrix3 } from '../astro/matrix';
-import { CAMERA_DISTANCE_RANGE, type GeoPoint, type GlobeCamera } from '../state/viewState';
+import {
+  CAMERA_DISTANCE_RANGE,
+  type GeoPoint,
+  type GlobeCamera,
+  type Viewpoint,
+} from '../state/viewState';
 import type { BesselianElements } from '../data/solarCatalog';
 import {
   ELEMENTS_HALF_SPAN_HOURS,
@@ -45,17 +50,22 @@ import {
 import { cameraFromPosition, cameraPosition, geoToVector, type Vector3Tuple } from './geo';
 import {
   apparentRadiusPixels,
+  attachedPose,
+  blendPose,
   mergeMarkers,
   MOON_RADIUS_EARTH_RADII,
   sceneFromKm,
   sceneRotation,
   SUN_RADIUS_EARTH_RADII,
+  type CameraPose,
   type ScreenMarker,
 } from './spaceFrame';
 import { SOLAR_COMMON, SOLAR_PATH_FRAGMENT, SOLAR_PATH_LAYER, SOLAR_SHADOW } from './solarShaders';
 
 const NARROW_SIDE_FOV_DEGREES = 40;
 const FLIGHT_MS = 900;
+/** Flights between viewpoints cross up to 60 Earth radii: quick, but long enough to follow. */
+const VIEW_FLIGHT_MS = 1600;
 /** Beyond this distance (Earth radii) the view holds still in space and Earth turns in it. */
 const INERTIAL_VIEW_DISTANCE = 20;
 /** Bodies smaller than this on screen (radius, pixels) get a marker ring. */
@@ -104,6 +114,11 @@ export interface Globe {
    * keeps its place among the stars as time moves, so Earth spins and the Moon orbits in view.
    */
   setSpace(bodies: SpaceBodies): void;
+  /**
+   * Fly to a viewpoint. Attached viewpoints follow the bodies as time moves and wait for the
+   * Moon's position if it has not loaded yet; 'free' returns to the last orbiting camera.
+   */
+  setViewpoint(viewpoint: Viewpoint): void;
   /** Pixels covered by panels at the top and bottom; the globe is centred between them. */
   setInsets(top: number, bottom: number): void;
   /** Turn the globe smoothly so `target` faces the camera, keeping the distance. */
@@ -375,6 +390,8 @@ export async function createGlobe(
   let flight: { from: Vector3; rotation: Quaternion; start: number } | null = null;
 
   function placeCamera(state: GlobeCamera): void {
+    freeCamera = state;
+    if (viewpoint !== 'free') return;
     camera.position.set(...cameraPosition(state));
     camera.lookAt(0, 0, 0);
     controls.update();
@@ -382,6 +399,57 @@ export async function createGlobe(
   }
 
   let insets = { top: 0, bottom: 0 };
+  // Field of view on the narrower side; attached viewpoints narrow it to frame a body.
+  let narrowFov = NARROW_SIDE_FOV_DEGREES;
+  let viewpoint: Viewpoint = 'free';
+  let pendingViewpoint: Viewpoint | null = null;
+  // A flight between viewpoints runs from a fixed pose to a live one, as the bodies keep moving.
+  let viewFlight: { from: CameraPose; start: number } | null = null;
+  // Where the camera orbited before an attached viewpoint, to return there.
+  let freeCamera: GlobeCamera = options.camera;
+  container.dataset['view'] = viewpoint;
+  const lookTarget = new Vector3();
+
+  function currentPose(): CameraPose {
+    return {
+      eye: [camera.position.x, camera.position.y, camera.position.z],
+      target: [lookTarget.x, lookTarget.y, lookTarget.z],
+      fovDegrees: narrowFov,
+    };
+  }
+
+  function livePose(): CameraPose {
+    if (viewpoint === 'free') {
+      return {
+        eye: cameraPosition(freeCamera),
+        target: [0, 0, 0],
+        fovDegrees: NARROW_SIDE_FOV_DEGREES,
+      };
+    }
+    return attachedPose(viewpoint, [moon.position.x, moon.position.y, moon.position.z]);
+  }
+
+  function applyPose(pose: CameraPose): void {
+    camera.position.set(...pose.eye);
+    lookTarget.set(...pose.target);
+    camera.lookAt(lookTarget);
+    narrowFov = pose.fovDegrees;
+    applyFov();
+    needsRender = true;
+  }
+
+  function startViewFlight(next: Viewpoint): void {
+    const from = currentPose();
+    if (viewpoint === 'free') {
+      freeCamera = cameraFromPosition([camera.position.x, camera.position.y, camera.position.z]);
+    }
+    viewpoint = next;
+    flight = null;
+    viewFlight = { from, start: performance.now() };
+    // Orbiting resumes once a flight back to the free view lands.
+    controls.enabled = false;
+    container.dataset['view'] = next;
+  }
 
   function resize(): void {
     const { clientWidth, clientHeight } = container;
@@ -392,10 +460,14 @@ export async function createGlobe(
     camera.aspect = clientWidth / Math.max(clientHeight, 1);
     // Fix the field of view on the narrower side, so a camera distance frames the globe the
     // same way on a portrait phone as on a landscape laptop (and shared links look alike).
-    const halfAngle = (NARROW_SIDE_FOV_DEGREES / 2) * (Math.PI / 180);
+    applyFov();
+  }
+
+  function applyFov(): void {
+    const halfAngle = (narrowFov / 2) * (Math.PI / 180);
     camera.fov =
       camera.aspect >= 1
-        ? NARROW_SIDE_FOV_DEGREES
+        ? narrowFov
         : (2 * Math.atan(Math.tan(halfAngle) / camera.aspect) * 180) / Math.PI;
     camera.updateProjectionMatrix();
     needsRender = true;
@@ -413,7 +485,16 @@ export async function createGlobe(
   });
 
   function loop(now: number): void {
-    if (flight !== null) {
+    if (viewFlight !== null) {
+      const progress = Math.min(1, (now - viewFlight.start) / VIEW_FLIGHT_MS);
+      // Ease in and out: a gentle start and landing, fast through the long middle.
+      const eased = progress < 0.5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
+      applyPose(blendPose(viewFlight.from, livePose(), eased));
+      if (progress === 1) {
+        viewFlight = null;
+        if (viewpoint === 'free') controls.enabled = true;
+      }
+    } else if (flight !== null) {
       const progress = Math.min(1, (now - flight.start) / FLIGHT_MS);
       const eased = 1 - (1 - progress) ** 3;
       const distance = camera.position.length();
@@ -424,7 +505,7 @@ export async function createGlobe(
     // Wheel steps scale the distance; take bigger steps far out so the Sun is a few spins away.
     controls.zoomSpeed = camera.position.length() < 10 ? 0.8 : 2.5;
     // update() keeps damping going after the pointer is released; it reports movement via 'change'.
-    controls.update();
+    if (controls.enabled) controls.update();
     if (needsRender) {
       needsRender = false;
       renderer.render(scene, camera);
@@ -513,6 +594,8 @@ export async function createGlobe(
       // since the last moment (old Earth-fixed -> J2000 -> new Earth-fixed).
       if (
         earthFixedToJ2000 !== null &&
+        viewpoint === 'free' &&
+        viewFlight === null &&
         camera.position.length() > INERTIAL_VIEW_DISTANCE &&
         flight === null
       ) {
@@ -543,6 +626,13 @@ export async function createGlobe(
         sunlight.target.position.copy(moon.position);
       }
       container.dataset['space'] = moon.visible ? 'moon' : 'sun';
+      if (pendingViewpoint !== null && moon.visible) {
+        startViewFlight(pendingViewpoint);
+        pendingViewpoint = null;
+      } else if (viewpoint !== 'free' && viewFlight === null) {
+        // Attached viewpoints ride along with the bodies.
+        applyPose(livePose());
+      }
       needsRender = true;
     },
     setInsets(top, bottom) {
@@ -617,7 +707,18 @@ export async function createGlobe(
       container.dataset['lunarOverlay'] = overlay === null ? 'off' : 'on';
       needsRender = true;
     },
+    setViewpoint(next) {
+      if (next === 'free') pendingViewpoint = null;
+      if (next === viewpoint) return;
+      if (next !== 'free' && !moon.visible) {
+        pendingViewpoint = next;
+        return;
+      }
+      startViewFlight(next);
+    },
     flyTo(target) {
+      // Attached viewpoints are placed by the bodies, not by places on the ground.
+      if (viewpoint !== 'free') return;
       const from = camera.position.clone().normalize();
       const to = new Vector3(...geoToVector(target)).normalize();
       flight = {

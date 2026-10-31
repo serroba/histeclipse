@@ -8,6 +8,7 @@ import {
   DEFAULT_CAMERA,
   DEFAULT_LAYERS,
   LAYERS,
+  VIEWPOINTS,
   defaultCalendarFor,
   defaultViewState,
   momentFromDate,
@@ -20,7 +21,7 @@ const NOW = new Date(Date.UTC(2026, 9, 31, 18, 45, 30));
 
 const BABYLON_ECLIPSE =
   'v=1&mode=globe&t=-0620-04-22T07:20Z&cal=julian&loc=32.5422,44.4209' +
-  '&cam=30.0000,40.0000,3.00&layers=lunar,terminator&sel=lunar:-0620-04-22';
+  '&cam=30.0000,40.0000,3.00&view=moon-from-earth&layers=lunar,terminator&sel=lunar:-0620-04-22';
 
 const date = (year: number, month: number, day: number, calendar: Calendar) =>
   calendarDateOf(astronomicalYear(year), month, day, calendar);
@@ -44,6 +45,7 @@ describe('parseViewState', () => {
       time: { date: date(-620, 4, 22, 'julian'), minuteOfDay: 7 * 60 + 20 },
       location: { latitude: 32.5422, longitude: 44.4209 },
       camera: { target: { latitude: 30, longitude: 40 }, distance: 3 },
+      view: 'moon-from-earth',
       layers: new Set(['lunar', 'terminator']),
       selection: { kind: 'lunar', date: date(-620, 4, 22, 'julian') },
     } satisfies ViewState);
@@ -81,6 +83,12 @@ describe('parseViewState', () => {
     expect(parseViewState('loc=10,-180', NOW).state.location?.longitude).toBe(180);
   });
 
+  it('leaves the free view out of links, so older links read the same', () => {
+    const { state } = parseViewState('', NOW);
+    expect(state.view).toBe('free');
+    expect(serializeViewState(state)).not.toContain('view=');
+  });
+
   it('reads an empty layer list as no layers', () => {
     expect(parseViewState('layers=', NOW).state.layers).toEqual(new Set());
   });
@@ -98,6 +106,7 @@ describe('parseViewState', () => {
     ['cam=0,0,0.5', 'cam', 'distance must be between'],
     ['cam=0,0,200000', 'cam', 'distance must be between'],
     ['layers=lunar,clouds', 'layers', 'unknown layer'],
+    ['view=sideways', 'view', 'unknown view'],
     ['sel=lunar', 'sel', 'expected kind:date'],
     ['sel=lunar:yesterday', 'sel', 'expected a date'],
     ['sel=annular:2025-01-01', 'sel', 'unknown eclipse kind'],
@@ -200,8 +209,9 @@ describe('serializeViewState', () => {
     ),
     camera: fc.record({
       target: fc.record({ latitude: rounded(-90, 90, 4), longitude: rounded(-179.9999, 180, 4) }),
-      distance: rounded(1.1, 50, 2),
+      distance: rounded(1.1, 120_000, 2),
     }),
+    view: fc.constantFrom(...VIEWPOINTS),
     layers: fc.subarray([...LAYERS]).map((layers) => new Set<Layer>(layers)),
     selection: fc.option(
       fc.record({ kind: fc.constantFrom('lunar' as const, 'solar' as const), date: calendarDay }),

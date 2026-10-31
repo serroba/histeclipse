@@ -2,13 +2,14 @@
  * The query-string format for shareable links.
  *
  *   ?v=1&mode=globe&t=-0620-04-22T07:20Z&cal=julian&loc=32.5422,44.4209
- *     &cam=20.0000,0.0000,3.00&layers=lunar,terminator&sel=lunar:-0620-04-22
+ *     &cam=20.0000,0.0000,3.00&view=moon-from-earth&layers=lunar,terminator&sel=lunar:-0620-04-22
  *
  * - `t` is Universal Time with ISO-8601 astronomical years (−0620 is 621 BCE).
  * - `cal` is the calendar `t` is written in. When missing, it is the one in use at the
  *   time: Julian before 1582-10-15, Gregorian after. `sel` dates always use that rule.
- * - `loc` (observer) and `sel` (selected eclipse) are optional; everything else is
- *   always written out, so a link keeps its meaning even if defaults change later.
+ * - `loc` (observer), `sel` (selected eclipse) and `view` (an attached viewpoint; absent means
+ *   free) are optional; everything else is always written out, so a link keeps its meaning
+ *   even if defaults change later.
  *
  * Parsing never throws. Bad values fall back to defaults and produce a warning the UI can
  * show, so a mangled link still opens something sensible.
@@ -22,6 +23,7 @@ import {
   ECLIPSE_KINDS,
   LAYERS,
   MODES,
+  VIEWPOINTS,
   defaultCalendarFor,
   defaultViewState,
   type EclipseKind,
@@ -31,6 +33,7 @@ import {
   type Mode,
   type Moment,
   type Selection,
+  type Viewpoint,
   type ViewState,
 } from './viewState';
 
@@ -82,6 +85,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     time: read('t', (raw) => parseMoment(raw, calendar), defaults.time),
     location: read<GeoPoint | null>('loc', parseGeoPoint, defaults.location),
     camera: read('cam', parseCamera, defaults.camera),
+    view: read('view', parseViewpoint, defaults.view),
     layers: read('layers', parseLayers, defaults.layers),
     selection: read<Selection | null>('sel', parseSelection, defaults.selection),
   };
@@ -99,6 +103,8 @@ export function serializeViewState(state: ViewState): string {
   params.set('cal', state.time.date.calendar);
   if (state.location !== null) params.set('loc', formatGeoPoint(state.location));
   params.set('cam', formatCamera(state.camera));
+  // The default free view is left out, so links from before viewpoints existed read the same.
+  if (state.view !== 'free') params.set('view', state.view);
   params.set('layers', LAYERS.filter((layer) => state.layers.has(layer)).join(','));
   if (state.selection !== null) params.set('sel', formatSelection(state.selection));
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
@@ -107,6 +113,10 @@ export function serializeViewState(state: ViewState): string {
 
 function parseMode(raw: string): Mode {
   return oneOf(raw, MODES, 'mode');
+}
+
+function parseViewpoint(raw: string): Viewpoint {
+  return oneOf(raw, VIEWPOINTS, 'view');
 }
 
 function parseCalendar(raw: string): Calendar {
