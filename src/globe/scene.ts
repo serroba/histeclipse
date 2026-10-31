@@ -137,7 +137,10 @@ export interface Globe {
    * body that has not loaded yet (the Moon, briefly) is flown to once it has.
    */
   setFocus(body: Body): void;
-  /** Called when someone clicks a body other than the one in focus. */
+  /**
+   * Called when someone clicks a body other than the one in focus, or grabs an attached
+   * viewpoint (which hands over to orbiting the body it looks at).
+   */
   onBodyClick(listener: (body: Body) => void): () => void;
   /**
    * Fly to a viewpoint. Attached viewpoints follow the bodies as time moves and wait for the
@@ -491,6 +494,15 @@ export async function createGlobe(
   renderer.domElement.addEventListener('pointerdown', (event) => {
     press = { x: event.clientX, y: event.clientY };
   });
+  // Dragging or zooming an attached viewpoint releases it: the camera flies to orbit the body
+  // it was looking at, from the observer's side, so the bodies can be turned again.
+  renderer.domElement.addEventListener('pointermove', (event) => {
+    if (press === null) return;
+    if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > CLICK_SLOP_PIXELS) {
+      releaseViewpoint();
+    }
+  });
+  renderer.domElement.addEventListener('wheel', releaseViewpoint, { passive: true });
   renderer.domElement.addEventListener('pointerup', (event) => {
     if (press === null) return;
     const moved = Math.hypot(event.clientX - press.x, event.clientY - press.y);
@@ -509,6 +521,14 @@ export async function createGlobe(
     const body = (Object.keys(bodyMeshes) as Body[]).find((key) => bodyMeshes[key] === hit?.object);
     if (body !== undefined) requestBody(body);
   });
+
+  function releaseViewpoint(): void {
+    // Also mid-flight: a grab on the way in is a change of mind.
+    if (viewpoint === 'free') return;
+    const body: Body = viewpoint === 'moon-from-earth' ? 'moon' : 'earth';
+    flyToFocus(body);
+    for (const listener of bodyClickListeners) listener(body);
+  }
 
   function requestBody(body: Body): void {
     if (body === focus && viewpoint === 'free') return;
@@ -626,6 +646,28 @@ export async function createGlobe(
     narrowFov = pose.fovDegrees;
     applyFov();
     needsRender = true;
+  }
+
+  /** Centre on a body and fly there, arriving on the side facing the camera. */
+  function flyToFocus(body: Body): void {
+    const from = currentPose();
+    // Arrive on the side facing the camera, a few radii out.
+    const { position, rotation } = bodyFrame(body);
+    const toward = camera.position.clone().sub(position).applyQuaternion(rotation.clone().invert());
+    focus = body;
+    pendingFocus = !bodyReady(body);
+    focusCamera = {
+      target: cameraFromPosition([toward.x, toward.y, toward.z]).target,
+      distance: body === 'earth' ? DEFAULT_CAMERA.distance : FOCUS_DISTANCE,
+    };
+    container.dataset['focus'] = body;
+    viewpoint = 'free';
+    container.dataset['view'] = 'free';
+    pendingViewpoint = null;
+    flight = null;
+    controls.enabled = false;
+    if (pendingFocus) return;
+    viewFlight = { from, start: performance.now() };
   }
 
   function startViewFlight(next: Viewpoint): void {
@@ -912,27 +954,7 @@ export async function createGlobe(
     },
     setFocus(body) {
       if (body === focus && viewpoint === 'free') return;
-      const from = currentPose();
-      // Arrive on the side facing the camera, a few radii out.
-      const { position, rotation } = bodyFrame(body);
-      const toward = camera.position
-        .clone()
-        .sub(position)
-        .applyQuaternion(rotation.clone().invert());
-      focus = body;
-      pendingFocus = !bodyReady(body);
-      focusCamera = {
-        target: cameraFromPosition([toward.x, toward.y, toward.z]).target,
-        distance: body === 'earth' ? DEFAULT_CAMERA.distance : FOCUS_DISTANCE,
-      };
-      container.dataset['focus'] = body;
-      viewpoint = 'free';
-      container.dataset['view'] = 'free';
-      pendingViewpoint = null;
-      flight = null;
-      controls.enabled = false;
-      if (pendingFocus) return;
-      viewFlight = { from, start: performance.now() };
+      flyToFocus(body);
     },
     onBodyClick(listener) {
       bodyClickListeners.add(listener);
