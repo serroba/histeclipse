@@ -14,6 +14,7 @@
 import type { ElpData } from 'astronomia/elp';
 
 import type { JulianDay } from '../time/julianDay';
+import { elementAt } from '../util/arrays';
 import { secularCorrectionAt, type SecularCorrection } from './secularFit';
 
 const J2000 = 2_451_545;
@@ -35,9 +36,13 @@ export interface MoonEphemeris {
 
 /** ELP/MPP02 data with the mean longitude corrected by `correction`. */
 export function correctedData(data: ElpData, correction: SecularCorrection): ElpData {
-  const [t2, t3, t4] = correction;
-  const offsets = [0, 0, t2, t3, t4];
-  return { ...data, W1: data.W1.map((value, power) => value + (offsets[power] ?? 0) * ARCSECOND) };
+  // W1's constant and linear terms stay; the T², T³ and T⁴ terms get the correction.
+  return {
+    ...data,
+    W1: data.W1.map((value, power) =>
+      power < 2 ? value : value + elementAt(correction, power - 2) * ARCSECOND,
+    ),
+  };
 }
 
 export function eclipticToEquatorial(x: number, y: number, z: number): EquatorialVector {
