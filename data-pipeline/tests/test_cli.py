@@ -86,5 +86,6 @@ def test_defaults_apply_when_options_are_omitted(
         return 0.0
 
     monkeypatch.setattr(cli, "year_start_jd", record)
+    _ = shutil.copy(MODERN, tmp_path)
     _ = cli.main(["lunar-catalog", "--kernels", str(tmp_path), "--out", str(tmp_path)])
     assert seen == [cli.DEFAULT_START_YEAR, cli.DEFAULT_END_YEAR + 1]

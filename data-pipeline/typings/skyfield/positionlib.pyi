@@ -1,10 +1,19 @@
 import numpy as np
 import numpy.typing as npt
 from skyfield.timelib import Time
+from skyfield.vectorlib import VectorFunction
 
 class ICRF:
     center: int | None
     t: Time | None
+
+class Barycentric(ICRF):
+    def observe(self, body: VectorFunction) -> Astrometric: ...
+
+class Astrometric(ICRF):
+    def apparent(self, deflectors: tuple[int, ...] = ...) -> Apparent: ...
+
+class Apparent(ICRF): ...
 
 def build_position(
     position_au: npt.NDArray[np.float64],

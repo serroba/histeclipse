@@ -1,0 +1,1605 @@
+{
+  "description": "Apparent geocentric Sun from JPL DE441 via Skyfield (histeclipse-pipeline sun-vectors): subsolar point in degrees and sidereal time in hours at UT1 Julian Days, with TT from Skyfield's Delta T model. Reference values for the web app's analytic formulas.",
+  "vectors": [
+    {
+      "jdUT": 260453.715029,
+      "jdTT": 260454.987159,
+      "subsolarLatitude": -23.582083,
+      "subsolarLongitude": 106.752627,
+      "gmstHours": 11.720853803,
+      "gastHours": 11.721103636
+    },
+    {
+      "jdUT": 273439.764858,
+      "jdTT": 273441.021458,
+      "subsolarLatitude": 21.305583,
+      "subsolarLongitude": 85.861021,
+      "gmstHours": 2.226856656,
+      "gastHours": 2.227142133
+    },
+    {
+      "jdUT": 286289.315348,
+      "jdTT": 286290.556675,
+      "subsolarLatitude": -1.726543,
+      "subsolarLongitude": -112.881704,
+      "gmstHours": 19.779380078,
+      "gastHours": 19.779585687
+    },
+    {
+      "jdUT": 299262.514667,
+      "jdTT": 299263.740669,
+      "subsolarLatitude": 4.407912,
+      "subsolarLongitude": 174.442164,
+      "gmstHours": 13.02876024,
+      "gastHours": 13.028827158
+    },
+    {
+      "jdUT": 311832.318712,
+      "jdTT": 311833.529955,
+      "subsolarLatitude": 8.165325,
+      "subsolarLongitude": -113.029799,
+      "gmstHours": 18.284547415,
+      "gastHours": 18.284397878
+    },
+    {
+      "jdUT": 324722.495743,
+      "jdTT": 324723.691943,
+      "subsolarLatitude": -24.070087,
+      "subsolarLongitude": -175.643838,
+      "gmstHours": 5.543631854,
+      "gastHours": 5.543367171
+    },
+    {
+      "jdUT": 337706.484055,
+      "jdTT": 337707.665199,
+      "subsolarLatitude": 23.604974,
+      "subsolarLongitude": -174.451582,
+      "gmstHours": 18.437794611,
+      "gastHours": 18.437538045
+    },
+    {
+      "jdUT": 350536.411558,
+      "jdTT": 350537.577917,
+      "subsolarLatitude": 12.589491,
+      "subsolarLongitude": -146.259851,
+      "gmstHours": 19.749236565,
+      "gastHours": 19.749108414
+    },
+    {
+      "jdUT": 363465.327182,
+      "jdTT": 363466.478735,
+      "subsolarLatitude": -21.815425,
+      "subsolarLongitude": -112.848932,
+      "gmstHours": 3.280071834,
+      "gastHours": 3.280101313
+    },
+    {
+      "jdUT": 376225.528749,
+      "jdTT": 376226.665783,
+      "subsolarLatitude": -24.067728,
+      "subsolarLongitude": 172.781699,
+      "gmstHours": 6.587400219,
+      "gastHours": 6.587603764
+    },
+    {
+      "jdUT": 389138.357764,
+      "jdTT": 389139.480198,
+      "subsolarLatitude": 13.810571,
+      "subsolarLongitude": -131.402401,
+      "gmstHours": 10.982571082,
+      "gastHours": 10.982825681
+    },
+    {
+      "jdUT": 401998.223316,
+      "jdTT": 401999.331305,
+      "subsolarLatitude": 22.535234,
+      "subsolarLongitude": -79.892914,
+      "gmstHours": 12.77444487,
+      "gastHours": 12.774687176
+    },
+    {
+      "jdUT": 414838.14219,
+      "jdTT": 414839.235848,
+      "subsolarLatitude": 5.288171,
+      "subsolarLongitude": -50.025125,
+      "gmstHours": 14.535345253,
+      "gastHours": 14.535440166
+    },
+    {
+      "jdUT": 427624.271306,
+      "jdTT": 427625.350785,
+      "subsolarLatitude": 4.223285,
+      "subsolarLongitude": -96.662126,
+      "gmstHours": 17.807547397,
+      "gastHours": 17.807445582
+    },
+    {
+      "jdUT": 440343.961603,
+      "jdTT": 440345.027069,
+      "subsolarLatitude": 23.163635,
+      "subsolarLongitude": 13.894313,
+      "gmstHours": 6.182411064,
+      "gastHours": 6.182163389
+    },
+    {
+      "jdUT": 453326.681615,
+      "jdTT": 453327.732871,
+      "subsolarLatitude": -19.33613,
+      "subsolarLongitude": 119.856908,
+      "gmstHours": 12.554050371,
+      "gastHours": 12.553800413
+    },
+    {
+      "jdUT": 465989.128438,
+      "jdTT": 465990.165928,
+      "subsolarLatitude": -1.710443,
+      "subsolarLongitude": -46.055468,
+      "gmstHours": 15.324103489,
+      "gastHours": 15.323970826
+    },
+    {
+      "jdUT": 479092.900646,
+      "jdTT": 479093.923985,
+      "subsolarLatitude": 15.689792,
+      "subsolarLongitude": 37.428145,
+      "gmstHours": 6.902794111,
+      "gastHours": 6.902808563
+    },
+    {
+      "jdUT": 491805.103598,
+      "jdTT": 491806.1133,
+      "subsolarLatitude": 22.212562,
+      "subsolarLongitude": -40.171121,
+      "gmstHours": 7.089402785,
+      "gastHours": 7.089587087
+    },
+    {
+      "jdUT": 504784.480409,
+      "jdTT": 504785.476283,
+      "subsolarLatitude": -23.949462,
+      "subsolarLongitude": -170.640395,
+      "gmstHours": 5.004574639,
+      "gastHours": 5.004842258
+    },
+    {
+      "jdUT": 517583.35148,
+      "jdTT": 517584.33381,
+      "subsolarLatitude": -23.645995,
+      "subsolarLongitude": -122.715287,
+      "gmstHours": 2.920985948,
+      "gastHours": 2.921228118
+    },
+    {
+      "jdUT": 530427.393639,
+      "jdTT": 530428.362471,
+      "subsolarLatitude": -8.41419,
+      "subsolarLongitude": -138.062381,
+      "gmstHours": 7.911710435,
+      "gastHours": 7.911810661
+    },
+    {
+      "jdUT": 543102.35727,
+      "jdTT": 543103.312873,
+      "subsolarLatitude": -18.735528,
+      "subsolarLongitude": -129.15055,
+      "gmstHours": 23.907653188,
+      "gastHours": 23.907499178
+    },
+    {
+      "jdUT": 555963.577316,
+      "jdTT": 555964.519587,
+      "subsolarLatitude": -18.375426,
+      "subsolarLongitude": 157.398602,
+      "gmstHours": 10.296414338,
+      "gastHours": 10.296182806
+    },
+    {
+      "jdUT": 569075.513615,
+      "jdTT": 569076.442391,
+      "subsolarLatitude": -23.996348,
+      "subsolarLongitude": 178.172937,
+      "gmstHours": 6.349759736,
+      "gastHours": 6.349485914
+    },
+    {
+      "jdUT": 581903.206775,
+      "jdTT": 581904.122443,
+      "subsolarLatitude": -16.286771,
+      "subsolarLongitude": -69.314807,
+      "gmstHours": 1.890242426,
+      "gastHours": 1.89006445
+    },
+    {
+      "jdUT": 594704.0494,
+      "jdTT": 594704.952079,
+      "subsolarLatitude": -10.576888,
+      "subsolarLongitude": -13.586715,
+      "gmstHours": 23.25352532,
+      "gastHours": 23.253525571
+    },
+    {
+      "jdUT": 607621.181385,
+      "jdTT": 607622.071051,
+      "subsolarLatitude": 23.526556,
+      "subsolarLongitude": -65.689034,
+      "gmstHours": 11.202821418,
+      "gastHours": 11.202979677
+    },
+    {
+      "jdUT": 620289.976897,
+      "jdTT": 620290.853891,
+      "subsolarLatitude": -3.514165,
+      "subsolarLongitude": 10.67823,
+      "gmstHours": 22.758609832,
+      "gastHours": 22.758891593
+    },
+    {
+      "jdUT": 632976.579124,
+      "jdTT": 632977.44352,
+      "subsolarLatitude": -23.334298,
+      "subsolarLongitude": 152.747886,
+      "gmstHours": 6.84565708,
+      "gastHours": 6.845856086
+    },
+    {
+      "jdUT": 645919.090467,
+      "jdTT": 645919.942103,
+      "subsolarLatitude": 18.30195,
+      "subsolarLongitude": -35.603071,
+      "gmstHours": 5.567216041,
+      "gastHours": 5.567266722
+    },
+    {
+      "jdUT": 658844.445401,
+      "jdTT": 658845.28439,
+      "subsolarLatitude": -4.50094,
+      "subsolarLongitude": -160.953557,
+      "gmstHours": 23.407623626,
+      "gastHours": 23.407526952
+    },
+    {
+      "jdUT": 671593.785541,
+      "jdTT": 671594.612146,
+      "subsolarLatitude": 9.412381,
+      "subsolarLongitude": 78.234456,
+      "gmstHours": 5.327086318,
+      "gastHours": 5.326856811
+    },
+    {
+      "jdUT": 684500.264972,
+      "jdTT": 684501.079134,
+      "subsolarLatitude": -23.534499,
+      "subsolarLongitude": -91.680461,
+      "gmstHours": 0.915122979,
+      "gastHours": 0.914864147
+    },
+    {
+      "jdUT": 697499.316061,
+      "jdTT": 697500.117786,
+      "subsolarLatitude": 18.310541,
+      "subsolarLongitude": -112.603759,
+      "gmstHours": 16.305821523,
+      "gastHours": 16.305632285
+    },
+    {
+      "jdUT": 710282.528231,
+      "jdTT": 710283.317819,
+      "subsolarLatitude": 18.386652,
+      "subsolarLongitude": 170.987729,
+      "gmstHours": 21.379744381,
+      "gastHours": 21.379743693
+    },
+    {
+      "jdUT": 723082.505792,
+      "jdTT": 723083.283319,
+      "subsolarLatitude": 13.269371,
+      "subsolarLongitude": 179.121847,
+      "gmstHours": 21.924707435,
+      "gastHours": 21.924899486
+    },
+    {
+      "jdUT": 735726.994331,
+      "jdTT": 735727.760033,
+      "subsolarLatitude": 4.384771,
+      "subsolarLongitude": 2.163512,
+      "gmstHours": 0.515986395,
+      "gastHours": 0.516257847
+    },
+    {
+      "jdUT": 748823.504684,
+      "jdTT": 748824.258236,
+      "subsolarLatitude": -14.894157,
+      "subsolarLongitude": -176.71262,
+      "gmstHours": 9.333080395,
+      "gastHours": 9.333348188
+    },
+    {
+      "jdUT": 761542.927398,
+      "jdTT": 761543.669241,
+      "subsolarLatitude": -23.377351,
+      "subsolarLongitude": 27.218589,
+      "gmstHours": 15.268491392,
+      "gastHours": 15.268568989
+    },
+    {
+      "jdUT": 774410.49163,
+      "jdTT": 774411.22172,
+      "subsolarLatitude": -7.955325,
+      "subsolarLongitude": -173.334732,
+      "gmstHours": 10.334670061,
+      "gastHours": 10.334591103
+    },
+    {
+      "jdUT": 787248.091733,
+      "jdTT": 787248.81019,
+      "subsolarLatitude": 12.330587,
+      "subsolarLongitude": -34.966895,
+      "gmstHours": 4.292819927,
+      "gastHours": 4.292563054
+    },
+    {
+      "jdUT": 800162.459449,
+      "jdTT": 800163.166298,
+      "subsolarLatitude": 8.221703,
+      "subsolarLongitude": -164.735857,
+      "gmstHours": 21.718077919,
+      "gastHours": 21.717811466
+    },
+    {
+      "jdUT": 812976.773131,
+      "jdTT": 812977.468555,
+      "subsolarLatitude": -4.331704,
+      "subsolarLongitude": 80.721785,
+      "gmstHours": 7.272005272,
+      "gastHours": 7.271803672
+    },
+    {
+      "jdUT": 825683.539074,
+      "jdTT": 825684.22326,
+      "subsolarLatitude": 21.859829,
+      "subsolarLongitude": 166.30699,
+      "gmstHours": 20.613251417,
+      "gastHours": 20.613289926
+    },
+    {
+      "jdUT": 838671.966103,
+      "jdTT": 838672.638896,
+      "subsolarLatitude": -15.258819,
+      "subsolarLongitude": 17.201039,
+      "gmstHours": 20.328462349,
+      "gastHours": 20.328652698
+    },
+    {
+      "jdUT": 851607.075164,
+      "jdTT": 851607.736706,
+      "subsolarLatitude": 23.092009,
+      "subsolarLongitude": -27.254831,
+      "gmstHours": 8.908935192,
+      "gastHours": 8.909205979
+    },
+    {
+      "jdUT": 864398.503709,
+      "jdTT": 864399.154217,
+      "subsolarLatitude": 21.981896,
+      "subsolarLongitude": 178.976104,
+      "gmstHours": 19.715801673,
+      "gastHours": 19.716070912
+    },
+    {
+      "jdUT": 877204.836704,
+      "jdTT": 877205.476258,
+      "subsolarLatitude": 16.565451,
+      "subsolarLongitude": 59.837054,
+      "gmstHours": 5.208842061,
+      "gastHours": 5.208970761
+    },
+    {
+      "jdUT": 890206.331395,
+      "jdTT": 890206.959922,
+      "subsolarLatitude": -2.614378,
+      "subsolarLongitude": -117.004642,
+      "gmstHours": 7.406628005,
+      "gastHours": 7.406603518
+    },
+    {
+      "jdUT": 902812.351175,
+      "jdTT": 902812.969102,
+      "subsolarLatitude": 1.552927,
+      "subsolarLongitude": -126.801886,
+      "gmstHours": 20.219994717,
+      "gastHours": 20.219761827
+    },
+    {
+      "jdUT": 915717.369897,
+      "jdTT": 915717.977066,
+      "subsolarLatitude": -20.747154,
+      "subsolarLongitude": -128.371327,
+      "gmstHours": 4.655129538,
+      "gastHours": 4.654868283
+    },
+    {
+      "jdUT": 928748.253516,
+      "jdTT": 928748.849917,
+      "subsolarLatitude": 0.052903,
+      "subsolarLongitude": -91.896375,
+      "gmstHours": 18.118348573,
+      "gastHours": 18.118115604
+    },
+    {
+      "jdUT": 941431.288809,
+      "jdTT": 941431.874821,
+      "subsolarLatitude": 23.578841,
+      "subsolarLongitude": -105.976811,
+      "gmstHours": 12.364711189,
+      "gastHours": 12.364676551
+    },
+    {
+      "jdUT": 954291.599864,
+      "jdTT": 954292.175434,
+      "subsolarLatitude": 9.525377,
+      "subsolarLongitude": 144.605889,
+      "gmstHours": 0.878100234,
+      "gastHours": 0.878271729
+    },
+    {
+      "jdUT": 966958.008109,
+      "jdTT": 966958.573487,
+      "subsolarLatitude": 15.735589,
+      "subsolarLongitude": -5.338489,
+      "gmstHours": 2.982774856,
+      "gastHours": 2.983027667
+    },
+    {
+      "jdUT": 979876.828967,
+      "jdTT": 979877.384042,
+      "subsolarLatitude": 2.302079,
+      "subsolarLongitude": 61.151858,
+      "gmstHours": 7.576113981,
+      "gastHours": 7.576361888
+    },
+    {
+      "jdUT": 992688.127503,
+      "jdTT": 992688.672453,
+      "subsolarLatitude": -8.968434,
+      "subsolarLongitude": -47.697222,
+      "gmstHours": 16.568471441,
+      "gastHours": 16.568553176
+    },
+    {
+      "jdUT": 1005505.05069,
+      "jdTT": 1005505.585605,
+      "subsolarLatitude": -19.818769,
+      "subsolarLongitude": -19.501891,
+      "gmstHours": 16.922069486,
+      "gastHours": 16.921953199
+    },
+    {
+      "jdUT": 1018590.487485,
+      "jdTT": 1018591.012249,
+      "subsolarLatitude": 3.166968,
+      "subsolarLongitude": -175.861672,
+      "gmstHours": 23.246220494,
+      "gastHours": 23.246023891
+    },
+    {
+      "jdUT": 1031503.11015,
+      "jdTT": 1031503.624992,
+      "subsolarLatitude": -19.887637,
+      "subsolarLongitude": -34.806612,
+      "gmstHours": 22.675676919,
+      "gastHours": 22.675421387
+    },
+    {
+      "jdUT": 1044063.104436,
+      "jdTT": 1044063.609718,
+      "subsolarLatitude": 23.455921,
+      "subsolarLongitude": -39.603773,
+      "gmstHours": 7.852915199,
+      "gastHours": 7.852718243
+    },
+    {
+      "jdUT": 1057098.90172,
+      "jdTT": 1057099.397172,
+      "subsolarLatitude": -11.264469,
+      "subsolarLongitude": 39.786611,
+      "gmstHours": 19.567000709,
+      "gastHours": 19.566969688
+    },
+    {
+      "jdUT": 1069889.49547,
+      "jdTT": 1069889.981372,
+      "subsolarLatitude": -8.700414,
+      "subsolarLongitude": -174.468395,
+      "gmstHours": 10.284035097,
+      "gastHours": 10.284202473
+    },
+    {
+      "jdUT": 1082740.055171,
+      "jdTT": 1082740.53157,
+      "subsolarLatitude": 15.805915,
+      "subsolarLongitude": -22.160184,
+      "gmstHours": 4.124220562,
+      "gastHours": 4.1244712
+    },
+    {
+      "jdUT": 1095493.826039,
+      "jdTT": 1095494.293099,
+      "subsolarLatitude": 5.617074,
+      "subsolarLongitude": 62.732748,
+      "gmstHours": 20.672472119,
+      "gastHours": 20.672710509
+    },
+    {
+      "jdUT": 1108579.707632,
+      "jdTT": 1108580.165205,
+      "subsolarLatitude": -17.176238,
+      "subsolarLongitude": 110.230774,
+      "gmstHours": 13.701041466,
+      "gastHours": 13.701228072
+    },
+    {
+      "jdUT": 1121331.265526,
+      "jdTT": 1121331.713948,
+      "subsolarLatitude": -23.386584,
+      "subsolarLongitude": -92.425717,
+      "gmstHours": 0.992513852,
+      "gastHours": 0.99249162
+    },
+    {
+      "jdUT": 1134115.435558,
+      "jdTT": 1134115.874897,
+      "subsolarLatitude": -23.322675,
+      "subsolarLongitude": -153.590436,
+      "gmstHours": 5.118219584,
+      "gastHours": 5.118015572
+    },
+    {
+      "jdUT": 1146966.191165,
+      "jdTT": 1146966.621466,
+      "subsolarLatitude": -4.717546,
+      "subsolarLongitude": -65.837437,
+      "gmstHours": 3.673050629,
+      "gastHours": 3.672777909
+    },
+    {
+      "jdUT": 1159980.214074,
+      "jdTT": 1159980.635318,
+      "subsolarLatitude": -12.905644,
+      "subsolarLongitude": -79.390853,
+      "gmstHours": 19.371416858,
+      "gastHours": 19.371154296
+    },
+    {
+      "jdUT": 1172847.44468,
+      "jdTT": 1172847.857053,
+      "subsolarLatitude": -20.861684,
+      "subsolarLongitude": -155.592686,
+      "gmstHours": 6.408809877,
+      "gastHours": 6.4087332
+    },
+    {
+      "jdUT": 1185532.468522,
+      "jdTT": 1185532.87219,
+      "subsolarLatitude": -7.347681,
+      "subsolarLongitude": -170.724443,
+      "gmstHours": 0.511110132,
+      "gastHours": 0.511224393
+    },
+    {
+      "jdUT": 1198383.791194,
+      "jdTT": 1198384.186082,
+      "subsolarLatitude": -23.839247,
+      "subsolarLongitude": 76.634141,
+      "gmstHours": 12.712798956,
+      "gastHours": 12.713058106
+    },
+    {
+      "jdUT": 1211270.067669,
+      "jdTT": 1211270.453799,
+      "subsolarLatitude": 3.512869,
+      "subsolarLongitude": -23.566976,
+      "gmstHours": 2.102583386,
+      "gastHours": 2.102845266
+    },
+    {
+      "jdUT": 1223984.087699,
+      "jdTT": 1223984.465239,
+      "subsolarLatitude": -20.289004,
+      "subsolarLongitude": -26.996668,
+      "gmstHours": 22.01874299,
+      "gastHours": 22.018896377
+    },
+    {
+      "jdUT": 1237009.829272,
+      "jdTT": 1237010.198072,
+      "subsolarLatitude": 1.536117,
+      "subsolarLongitude": 60.495286,
+      "gmstHours": 7.735107254,
+      "gastHours": 7.735102044
+    },
+    {
+      "jdUT": 1249747.283756,
+      "jdTT": 1249747.644072,
+      "subsolarLatitude": 17.950296,
+      "subsolarLongitude": -101.391096,
+      "gmstHours": 15.618039676,
+      "gastHours": 15.617858102
+    },
+    {
+      "jdUT": 1262585.043482,
+      "jdTT": 1262585.395317,
+      "subsolarLatitude": -1.812324,
+      "subsolarLongitude": -17.158629,
+      "gmstHours": 13.417837628,
+      "gastHours": 13.417555586
+    },
+    {
+      "jdUT": 1275579.179639,
+      "jdTT": 1275579.522968,
+      "subsolarLatitude": 13.062653,
+      "subsolarLongitude": -66.233007,
+      "gmstHours": 6.527427648,
+      "gastHours": 6.527159731
+    },
+    {
+      "jdUT": 1288260.631292,
+      "jdTT": 1288260.966402,
+      "subsolarLatitude": -21.520163,
+      "subsolarLongitude": 136.85637,
+      "gmstHours": 10.662511408,
+      "gastHours": 10.662463571
+    },
+    {
+      "jdUT": 1301056.178968,
+      "jdTT": 1301056.505873,
+      "subsolarLatitude": -18.873243,
+      "subsolarLongitude": -59.708686,
+      "gmstHours": 0.599378869,
+      "gastHours": 0.599547817
+    },
+    {
+      "jdUT": 1313893.087964,
+      "jdTT": 1313893.406733,
+      "subsolarLatitude": -0.376906,
+      "subsolarLongitude": -29.745185,
+      "gmstHours": 1.925787457,
+      "gastHours": 1.926061894
+    },
+    {
+      "jdUT": 1326653.156442,
+      "jdTT": 1326653.467223,
+      "subsolarLatitude": -9.323801,
+      "subsolarLongitude": -52.291353,
+      "gmstHours": 2.03058036,
+      "gastHours": 2.030859514
+    },
+    {
+      "jdUT": 1339726.463926,
+      "jdTT": 1339726.766633,
+      "subsolarLatitude": -23.513811,
+      "subsolarLongitude": -166.588509,
+      "gmstHours": 4.454377262,
+      "gastHours": 4.454544976
+    },
+    {
+      "jdUT": 1352551.32031,
+      "jdTT": 1352551.615212,
+      "subsolarLatitude": -19.859246,
+      "subsolarLongitude": -110.801771,
+      "gmstHours": 3.726131436,
+      "gastHours": 3.726141359
+    },
+    {
+      "jdUT": 1365346.739155,
+      "jdTT": 1365347.026388,
+      "subsolarLatitude": -16.714846,
+      "subsolarLongitude": 98.685139,
+      "gmstHours": 14.56261015,
+      "gastHours": 14.562435941
+    },
+    {
+      "jdUT": 1378216.48762,
+      "jdTT": 1378216.767266,
+      "subsolarLatitude": 14.421856,
+      "subsolarLongitude": -177.257595,
+      "gmstHours": 14.194159672,
+      "gastHours": 14.193855457
+    },
+    {
+      "jdUT": 1391050.465471,
+      "jdTT": 1391050.737683,
+      "subsolarLatitude": 23.746847,
+      "subsolarLongitude": -168.835723,
+      "gmstHours": 16.980501409,
+      "gastHours": 16.980263539
+    },
+    {
+      "jdUT": 1404054.247357,
+      "jdTT": 1404054.512179,
+      "subsolarLatitude": -18.949154,
+      "subsolarLongitude": -84.449852,
+      "gmstHours": 2.22148759,
+      "gastHours": 2.221393241
+    },
+    {
+      "jdUT": 1416659.067396,
+      "jdTT": 1416659.325196,
+      "subsolarLatitude": 18.940933,
+      "subsolarLongitude": -23.548201,
+      "gmstHours": 10.162450272,
+      "gastHours": 10.16259953
+    },
+    {
+      "jdUT": 1429587.488331,
+      "jdTT": 1429587.739079,
+      "subsolarLatitude": -23.766646,
+      "subsolarLongitude": -174.164634,
+      "gmstHours": 5.788659155,
+      "gastHours": 5.788921098
+    },
+    {
+      "jdUT": 1442443.019532,
+      "jdTT": 1442443.263426,
+      "subsolarLatitude": -6.317453,
+      "subsolarLongitude": -3.625868,
+      "gmstHours": 23.27168548,
+      "gastHours": 23.271979775
+    },
+    {
+      "jdUT": 1455404.078718,
+      "jdTT": 1455404.315867,
+      "subsolarLatitude": 9.720858,
+      "subsolarLongitude": -28.285376,
+      "gmstHours": 12.360579426,
+      "gastHours": 12.360785487
+    },
+    {
+      "jdUT": 1468243.587144,
+      "jdTT": 1468243.817746,
+      "subsolarLatitude": -12.200621,
+      "subsolarLongitude": 145.721138,
+      "gmstHours": 4.244182054,
+      "gastHours": 4.244175766
+    },
+    {
+      "jdUT": 1480998.476229,
+      "jdTT": 1480998.700391,
+      "subsolarLatitude": -1.056938,
+      "subsolarLongitude": -173.146184,
+      "gmstHours": 23.703276115,
+      "gastHours": 23.703088646
+    },
+    {
+      "jdUT": 1493972.13178,
+      "jdTT": 1493972.349458,
+      "subsolarLatitude": 5.266461,
+      "subsolarLongitude": -46.905952,
+      "gmstHours": 3.932637455,
+      "gastHours": 3.932363588
+    },
+    {
+      "jdUT": 1506790.604941,
+      "jdTT": 1506790.816287,
+      "subsolarLatitude": 17.033897,
+      "subsolarLongitude": 140.278999,
+      "gmstHours": 17.587672535,
+      "gastHours": 17.587388312
+    },
+    {
+      "jdUT": 1519448.936565,
+      "jdTT": 1519449.141733,
+      "subsolarLatitude": -22.985655,
+      "subsolarLongitude": 25.665574,
+      "gmstHours": 17.3229601,
+      "gastHours": 17.322898723
+    },
+    {
+      "jdUT": 1532514.078345,
+      "jdTT": 1532514.27722,
+      "subsolarLatitude": -7.588693,
+      "subsolarLongitude": -30.881648,
+      "gmstHours": 15.233388636,
+      "gastHours": 15.233433448
+    },
+    {
+      "jdUT": 1545061.59743,
+      "jdTT": 1545061.790348,
+      "subsolarLatitude": -11.654508,
+      "subsolarLongitude": 149.251163,
+      "gmstHours": 12.186270965,
+      "gastHours": 12.186561461
+    },
+    {
+      "jdUT": 1558123.383931,
+      "jdTT": 1558123.570741,
+      "subsolarLatitude": -20.872001,
+      "subsolarLongitude": -140.182966,
+      "gmstHours": 1.34955098,
+      "gastHours": 1.349816564
+    },
+    {
+      "jdUT": 1571004.476497,
+      "jdTT": 1571004.657384,
+      "subsolarLatitude": -7.769475,
+      "subsolarLongitude": -167.846088,
+      "gmstHours": 9.9850287,
+      "gastHours": 9.985251528
+    },
+    {
+      "jdUT": 1583752.144722,
+      "jdTT": 1583752.319849,
+      "subsolarLatitude": -19.294788,
+      "subsolarLongitude": -47.776675,
+      "gmstHours": 23.669045056,
+      "gastHours": 23.669075524
+    },
+    {
+      "jdUT": 1596575.58421,
+      "jdTT": 1596575.75365,
+      "subsolarLatitude": -6.205271,
+      "subsolarLongitude": 153.054389,
+      "gmstHours": 12.84229284,
+      "gastHours": 12.842130748
+    },
+    {
+      "jdUT": 1609608.686521,
+      "jdTT": 1609608.850299,
+      "subsolarLatitude": -17.386957,
+      "subsolarLongitude": 109.915399,
+      "gmstHours": 7.700218591,
+      "gastHours": 7.69993508
+    },
+    {
+      "jdUT": 1622455.570661,
+      "jdTT": 1622455.728976,
+      "subsolarLatitude": -21.830439,
+      "subsolarLongitude": 158.02173,
+      "gmstHours": 9.085655231,
+      "gastHours": 9.085402494
+    },
+    {
+      "jdUT": 1635256.177347,
+      "jdTT": 1635256.330343,
+      "subsolarLatitude": -18.042357,
+      "subsolarLongitude": -59.410436,
+      "gmstHours": 0.771335075,
+      "gastHours": 0.771219798
+    },
+    {
+      "jdUT": 1647969.771602,
+      "jdTT": 1647969.919442,
+      "subsolarLatitude": -20.107234,
+      "subsolarLongitude": 79.823009,
+      "gmstHours": 10.441106121,
+      "gastHours": 10.441181353
+    },
+    {
+      "jdUT": 1660664.553286,
+      "jdTT": 1660664.69611,
+      "subsolarLatitude": 11.771342,
+      "subsolarLongitude": 161.0796,
+      "gmstHours": 23.373034254,
+      "gastHours": 23.373313353
+    },
+    {
+      "jdUT": 1673584.476918,
+      "jdTT": 1673584.614776,
+      "subsolarLatitude": -22.577872,
+      "subsolarLongitude": -168.801284,
+      "gmstHours": 6.505726869,
+      "gastHours": 6.506022899
+    },
+    {
+      "jdUT": 1686515.268143,
+      "jdTT": 1686515.401178,
+      "subsolarLatitude": 22.351268,
+      "subsolarLongitude": -98.18132,
+      "gmstHours": 11.17475418,
+      "gastHours": 11.174929706
+    },
+    {
+      "jdUT": 1699214.827221,
+      "jdTT": 1699214.955663,
+      "subsolarLatitude": -3.832976,
+      "subsolarLongitude": 65.051973,
+      "gmstHours": 19.078068862,
+      "gastHours": 19.078057119
+    },
+    {
+      "jdUT": 1712298.481132,
+      "jdTT": 1712298.60498,
+      "subsolarLatitude": -22.785367,
+      "subsolarLongitude": -170.563676,
+      "gmstHours": 6.496157782,
+      "gastHours": 6.496028066
+    },
+    {
+      "jdUT": 1725021.94663,
+      "jdTT": 1725022.066133,
+      "subsolarLatitude": -16.312151,
+      "subsolarLongitude": 15.962491,
+      "gmstHours": 13.724437143,
+      "gastHours": 13.724132281
+    },
+    {
+      "jdUT": 1737881.997415,
+      "jdTT": 1737882.112636,
+      "subsolarLatitude": -19.87296,
+      "subsolarLongitude": 4.907592,
+      "gmstHours": 19.974597154,
+      "gastHours": 19.974362804
+    },
+    {
+      "jdUT": 1750569.294884,
+      "jdTT": 1750569.405979,
+      "subsolarLatitude": -9.553085,
+      "subsolarLongitude": -109.339878,
+      "gmstHours": 20.793606973,
+      "gastHours": 20.793508412
+    },
+    {
+      "jdUT": 1763410.40722,
+      "jdTT": 1763410.514224,
+      "subsolarLatitude": -23.493703,
+      "subsolarLongitude": -146.730796,
+      "gmstHours": 3.276557123,
+      "gastHours": 3.276671395
+    },
+    {
+      "jdUT": 1776468.350347,
+      "jdTT": 1776468.453267,
+      "subsolarLatitude": 3.52825,
+      "subsolarLongitude": -127.283682,
+      "gmstHours": 19.946413458,
+      "gastHours": 19.946648133
+    },
+    {
+      "jdUT": 1789442.775851,
+      "jdTT": 1789442.874778,
+      "subsolarLatitude": 1.292643,
+      "subsolarLongitude": 82.364591,
+      "gmstHours": 18.705413714,
+      "gastHours": 18.705702369
+    },
+    {
+      "jdUT": 1801979.102072,
+      "jdTT": 1801979.197189,
+      "subsolarLatitude": 21.085224,
+      "subsolarLongitude": -36.014745,
+      "gmstHours": 10.294189385,
+      "gastHours": 10.294376891
+    },
+    {
+      "jdUT": 1815084.582025,
+      "jdTT": 1815084.673197,
+      "subsolarLatitude": 22.817821,
+      "subsolarLongitude": 149.170225,
+      "gmstHours": 18.971525489,
+      "gastHours": 18.971572739
+    },
+    {
+      "jdUT": 1827731.533924,
+      "jdTT": 1827731.621314,
+      "subsolarLatitude": -19.895542,
+      "subsolarLongitude": 171.626131,
+      "gmstHours": 8.845775406,
+      "gastHours": 8.845626584
+    },
+    {
+      "jdUT": 1840713.876954,
+      "jdTT": 1840713.960476,
+      "subsolarLatitude": 16.542947,
+      "subsolarLongitude": 45.123947,
+      "gmstHours": 6.145680179,
+      "gastHours": 6.14543045
+    },
+    {
+      "jdUT": 1853607.75123,
+      "jdTT": 1853607.830911,
+      "subsolarLatitude": -21.31866,
+      "subsolarLongitude": 87.295794,
+      "gmstHours": 10.382204266,
+      "gastHours": 10.381915954
+    },
+    {
+      "jdUT": 1866528.529021,
+      "jdTT": 1866528.604843,
+      "subsolarLatitude": 8.744932,
+      "subsolarLongitude": 169.509769,
+      "gmstHours": 14.070936884,
+      "gastHours": 14.070757202
+    },
+    {
+      "jdUT": 1879269.63696,
+      "jdTT": 1879269.708958,
+      "subsolarLatitude": -7.546947,
+      "subsolarLongitude": 134.221742,
+      "gmstHours": 13.877166463,
+      "gastHours": 13.877230204
+    },
+    {
+      "jdUT": 1892103.725238,
+      "jdTT": 1892103.793374,
+      "subsolarLatitude": 11.648672,
+      "subsolarLongitude": 98.283507,
+      "gmstHours": 19.321254624,
+      "gastHours": 19.321463378
+    },
+    {
+      "jdUT": 1904774.498788,
+      "jdTT": 1904774.563117,
+      "subsolarLatitude": -23.363756,
+      "subsolarLongitude": -178.055143,
+      "gmstHours": 6.480490265,
+      "gastHours": 6.480780099
+    },
+    {
+      "jdUT": 1917678.553891,
+      "jdTT": 1917678.614363,
+      "subsolarLatitude": 14.230455,
+      "subsolarLongitude": 159.536102,
+      "gmstHours": 15.725873723,
+      "gastHours": 15.726051175
+    },
+    {
+      "jdUT": 1930623.089627,
+      "jdTT": 1930623.146267,
+      "subsolarLatitude": -5.361418,
+      "subsolarLongitude": -35.107896,
+      "gmstHours": 15.166444774,
+      "gastHours": 15.166484569
+    },
+    {
+      "jdUT": 1943537.281427,
+      "jdTT": 1943537.334295,
+      "subsolarLatitude": -12.975687,
+      "subsolarLongitude": -97.173486,
+      "gmstHours": 4.358658317,
+      "gastHours": 4.358558769
+    },
+    {
+      "jdUT": 1956449.263985,
+      "jdTT": 1956449.31315,
+      "subsolarLatitude": 23.614864,
+      "subsolarLongitude": -95.330139,
+      "gmstHours": 12.383914928,
+      "gastHours": 12.383659909
+    },
+    {
+      "jdUT": 1969128.320761,
+      "jdTT": 1969128.366369,
+      "subsolarLatitude": -4.065366,
+      "subsolarLongitude": -112.628117,
+      "gmstHours": 6.884887323,
+      "gastHours": 6.884622347
+    },
+    {
+      "jdUT": 1982057.845507,
+      "jdTT": 1982057.887586,
+      "subsolarLatitude": 17.789966,
+      "subsolarLongitude": 56.620452,
+      "gmstHours": 5.075359358,
+      "gastHours": 5.075219937
+    },
+    {
+      "jdUT": 1994690.320584,
+      "jdTT": 1994690.359324,
+      "subsolarLatitude": -5.985863,
+      "subsolarLongitude": -112.209542,
+      "gmstHours": 6.554706658,
+      "gastHours": 6.554810328
+    },
+    {
+      "jdUT": 2007568.607983,
+      "jdTT": 2007568.643446,
+      "subsolarLatitude": 22.91327,
+      "subsolarLongitude": 140.171859,
+      "gmstHours": 19.682053683,
+      "gastHours": 19.682280565
+    },
+    {
+      "jdUT": 2020547.947937,
+      "jdTT": 2020547.980242,
+      "subsolarLatitude": -23.591256,
+      "subsolarLongitude": 18.973438,
+      "gmstHours": 16.710893513,
+      "gastHours": 16.711176502
+    },
+    {
+      "jdUT": 2033529.234952,
+      "jdTT": 2033529.264259,
+      "subsolarLatitude": 22.877768,
+      "subsolarLongitude": -84.057184,
+      "gmstHours": 12.597130307,
+      "gastHours": 12.597384464
+    },
+    {
+      "jdUT": 2046345.36542,
+      "jdTT": 2046345.391939,
+      "subsolarLatitude": 16.424518,
+      "subsolarLongitude": -130.578782,
+      "gmstHours": 17.873820425,
+      "gastHours": 17.873931689
+    },
+    {
+      "jdUT": 2059056.048304,
+      "jdTT": 2059056.072245,
+      "subsolarLatitude": 21.340583,
+      "subsolarLongitude": -18.669049,
+      "gmstHours": 5.479596135,
+      "gastHours": 5.479440757
+    },
+    {
+      "jdUT": 2071748.846079,
+      "jdTT": 2071748.867642,
+      "subsolarLatitude": -8.879858,
+      "subsolarLongitude": 59.011207,
+      "gmstHours": 18.667505881,
+      "gastHours": 18.667239938
+    },
+    {
+      "jdUT": 2084808.137689,
+      "jdTT": 2084808.157029,
+      "subsolarLatitude": -21.537708,
+      "subsolarLongitude": -52.054917,
+      "gmstHours": 19.789722277,
+      "gastHours": 19.789419612
+    },
+    {
+      "jdUT": 2097751.534377,
+      "jdTT": 2097751.551746,
+      "subsolarLatitude": 16.766272,
+      "subsolarLongitude": 166.422342,
+      "gmstHours": 15.818367986,
+      "gastHours": 15.81816015
+    },
+    {
+      "jdUT": 2110542.36582,
+      "jdTT": 2110542.381457,
+      "subsolarLatitude": 18.678677,
+      "subsolarLongitude": -133.003877,
+      "gmstHours": 12.25612161,
+      "gastHours": 12.256113089
+    },
+    {
+      "jdUT": 2123436.531215,
+      "jdTT": 2123436.545298,
+      "subsolarLatitude": 8.084829,
+      "subsolarLongitude": 168.497635,
+      "gmstHours": 23.498780183,
+      "gastHours": 23.498981208
+    },
+    {
+      "jdUT": 2136060.466614,
+      "jdTT": 2136060.479342,
+      "subsolarLatitude": 2.371725,
+      "subsolarLongitude": -166.523029,
+      "gmstHours": 11.464774184,
+      "gastHours": 11.465059596
+    },
+    {
+      "jdUT": 2148945.311626,
+      "jdTT": 2148945.323117,
+      "subsolarLatitude": 22.869028,
+      "subsolarLongitude": -111.509037,
+      "gmstHours": 14.405812563,
+      "gastHours": 14.406039307
+    },
+    {
+      "jdUT": 2161935.944398,
+      "jdTT": 2161935.954769,
+      "subsolarLatitude": -17.996935,
+      "subsolarLongitude": 23.727182,
+      "gmstHours": 19.204382593,
+      "gastHours": 19.204493768
+    },
+    {
+      "jdUT": 2174677.025222,
+      "jdTT": 2174677.034598,
+      "subsolarLatitude": -23.484201,
+      "subsolarLongitude": -9.542669,
+      "gmstHours": 18.358215896,
+      "gastHours": 18.358090921
+    },
+    {
+      "jdUT": 2187405.200168,
+      "jdTT": 2187405.208628,
+      "subsolarLatitude": -11.552416,
+      "subsolarLongitude": -75.848642,
+      "gmstHours": 18.922926327,
+      "gastHours": 18.922634024
+    },
+    {
+      "jdUT": 2200184.73942,
+      "jdTT": 2200184.747018,
+      "subsolarLatitude": -10.131392,
+      "subsolarLongitude": 90.144534,
+      "gmstHours": 7.606113752,
+      "gastHours": 7.605827567
+    },
+    {
+      "jdUT": 2213064.464094,
+      "jdTT": 2213064.470865,
+      "subsolarLatitude": -19.370981,
+      "subsolarLongitude": -163.714657,
+      "gmstHours": 7.322610841,
+      "gastHours": 7.322503143
+    },
+    {
+      "jdUT": 2226195.825971,
+      "jdTT": 2226195.831929,
+      "subsolarLatitude": -22.540326,
+      "subsolarLongitude": 64.485324,
+      "gmstHours": 14.867026122,
+      "gastHours": 14.867027245
+    },
+    {
+      "jdUT": 2238736.792573,
+      "jdTT": 2238736.797773,
+      "subsolarLatitude": 17.2524,
+      "subsolarLongitude": 73.587914,
+      "gmstHours": 22.130074501,
+      "gastHours": 22.130290058
+    },
+    {
+      "jdUT": 2251690.822524,
+      "jdTT": 2251690.826948,
+      "subsolarLatitude": -12.56966,
+      "subsolarLongitude": 59.991751,
+      "gmstHours": 10.055848384,
+      "gastHours": 10.056117037
+    },
+    {
+      "jdUT": 2264539.306823,
+      "jdTT": 2264539.310473,
+      "subsolarLatitude": -23.202867,
+      "subsolarLongitude": -109.495794,
+      "gmstHours": 1.950559744,
+      "gastHours": 1.950792585
+    },
+    {
+      "jdUT": 2277537.301176,
+      "jdTT": 2277537.304031,
+      "subsolarLatitude": 18.017688,
+      "subsolarLongitude": -107.076109,
+      "gmstHours": 15.910867795,
+      "gastHours": 15.910988453
+    },
+    {
+      "jdUT": 2290112.075037,
+      "jdTT": 2290112.077137,
+      "subsolarLatitude": -22.66968,
+      "subsolarLongitude": -25.419439,
+      "gmstHours": 20.769635601,
+      "gastHours": 20.769490299
+    },
+    {
+      "jdUT": 2303135.051835,
+      "jdTT": 2303135.053216,
+      "subsolarLatitude": 8.266442,
+      "subsolarLongitude": -18.776028,
+      "gmstHours": 11.950234589,
+      "gastHours": 11.949985572
+    },
+    {
+      "jdUT": 2315914.568263,
+      "jdTT": 2315914.569051,
+      "subsolarLatitude": 9.686394,
+      "subsolarLongitude": 155.612123,
+      "gmstHours": 0.084210471,
+      "gastHours": 0.083949638
+    },
+    {
+      "jdUT": 2328751.933321,
+      "jdTT": 2328751.933691,
+      "subsolarLatitude": -10.781912,
+      "subsolarLongitude": 20.203885,
+      "gmstHours": 12.38652865,
+      "gastHours": 12.386347139
+    },
+    {
+      "jdUT": 2341606.25069,
+      "jdTT": 2341606.250856,
+      "subsolarLatitude": -23.120931,
+      "subsolarLongitude": -89.327019,
+      "gmstHours": 0.658270481,
+      "gastHours": 0.6583124
+    },
+    {
+      "jdUT": 2354377.724286,
+      "jdTT": 2354377.724443,
+      "subsolarLatitude": -23.447268,
+      "subsolarLongitude": 98.667795,
+      "gmstHours": 11.235811597,
+      "gastHours": 11.236034101
+    },
+    {
+      "jdUT": 2367525.787851,
+      "jdTT": 2367525.788091,
+      "subsolarLatitude": -23.428545,
+      "subsolarLongitude": 75.679739,
+      "gmstHours": 12.718278111,
+      "gastHours": 12.718561174
+    },
+    {
+      "jdUT": 2380234.321002,
+      "jdTT": 2380234.321195,
+      "subsolarLatitude": -4.498208,
+      "subsolarLongitude": -118.402766,
+      "gmstHours": 20.589335799,
+      "gastHours": 20.589568142
+    },
+    {
+      "jdUT": 2393165.610579,
+      "jdTT": 2393165.610668,
+      "subsolarLatitude": -7.58619,
+      "subsolarLongitude": 143.34993,
+      "gmstHours": 13.251923544,
+      "gastHours": 13.252057031
+    },
+    {
+      "jdUT": 2405774.207604,
+      "jdTT": 2405774.207592,
+      "subsolarLatitude": 5.968968,
+      "subsolarLongitude": -75.277899,
+      "gmstHours": 16.089180471,
+      "gastHours": 16.089056832
+    },
+    {
+      "jdUT": 2418753.808925,
+      "jdTT": 2418753.809057,
+      "subsolarLatitude": 0.713178,
+      "subsolarLongitude": 70.525067,
+      "gmstHours": 19.408186583,
+      "gastHours": 19.407938721
+    },
+    {
+      "jdUT": 2431568.581111,
+      "jdTT": 2431568.581425,
+      "subsolarLatitude": 12.362217,
+      "subsolarLongitude": 150.404112,
+      "gmstHours": 15.997063507,
+      "gastHours": 15.996762456
+    },
+    {
+      "jdUT": 2444379.272957,
+      "jdTT": 2444379.273546,
+      "subsolarLatitude": 19.916454,
+      "subsolarLongitude": -99.155179,
+      "gmstHours": 10.389678284,
+      "gastHours": 10.389491198
+    },
+    {
+      "jdUT": 2457320.954578,
+      "jdTT": 2457320.955365,
+      "subsolarLatitude": -12.064906,
+      "subsolarLongitude": 12.382449,
+      "gmstHours": 13.144204558,
+      "gastHours": 13.144176663
+    },
+    {
+      "jdUT": 2470196.401573,
+      "jdTT": 2470196.402403,
+      "subsolarLatitude": -19.046712,
+      "subsolarLongitude": -141.544678,
+      "gmstHours": 5.915458168,
+      "gastHours": 5.915664041
+    },
+    {
+      "jdUT": 2482820.344994,
+      "jdTT": 2482820.345992,
+      "subsolarLatitude": 12.962877,
+      "subsolarLongitude": -123.212692,
+      "gmstHours": 18.074684718,
+      "gastHours": 18.075000208
+    },
+    {
+      "jdUT": 2495786.783262,
+      "jdTT": 2495786.784583,
+      "subsolarLatitude": -11.966917,
+      "subsolarLongitude": 81.47462,
+      "gmstHours": 16.615512439,
+      "gastHours": 16.615782858
+    },
+    {
+      "jdUT": 2508558.624212,
+      "jdTT": 2508558.625996,
+      "subsolarLatitude": -15.799179,
+      "subsolarLongitude": 138.708271,
+      "gmstHours": 12.033765846,
+      "gastHours": 12.033863356
+    },
+    {
+      "jdUT": 2521669.671022,
+      "jdTT": 2521669.673428,
+      "subsolarLatitude": -23.150397,
+      "subsolarLongitude": 118.917678,
+      "gmstHours": 10.681808552,
+      "gastHours": 10.681758118
+    },
+    {
+      "jdUT": 2534196.106645,
+      "jdTT": 2534196.109781,
+      "subsolarLatitude": 10.455334,
+      "subsolarLongitude": -38.468767,
+      "gmstHours": 4.246685828,
+      "gastHours": 4.246397824
+    },
+    {
+      "jdUT": 2547224.531992,
+      "jdTT": 2547224.536024,
+      "subsolarLatitude": -23.34555,
+      "subsolarLongitude": 167.443866,
+      "gmstHours": 6.550583519,
+      "gastHours": 6.550284992
+    },
+    {
+      "jdUT": 2560178.040666,
+      "jdTT": 2560178.045724,
+      "subsolarLatitude": 22.597418,
+      "subsolarLongitude": -14.847521,
+      "gmstHours": 5.931592576,
+      "gastHours": 5.931359635
+    },
+    {
+      "jdUT": 2572882.926611,
+      "jdTT": 2572882.932803,
+      "subsolarLatitude": -0.537638,
+      "subsolarLongitude": 28.304602,
+      "gmstHours": 22.030153042,
+      "gastHours": 22.030153066
+    },
+    {
+      "jdUT": 2585839.600652,
+      "jdTT": 2585839.608126,
+      "subsolarLatitude": 5.512284,
+      "subsolarLongitude": 143.285499,
+      "gmstHours": 1.587971035,
+      "gastHours": 1.588147761
+    },
+    {
+      "jdUT": 2598479.16458,
+      "jdTT": 2598479.173426,
+      "subsolarLatitude": 10.608535,
+      "subsolarLongitude": -59.327307,
+      "gmstHours": 5.665842993,
+      "gastHours": 5.666116227
+    },
+    {
+      "jdUT": 2611515.940806,
+      "jdTT": 2611515.951187,
+      "subsolarLatitude": -23.29231,
+      "subsolarLongitude": 21.250387,
+      "gmstHours": 16.939631103,
+      "gastHours": 16.939898246
+    },
+    {
+      "jdUT": 2624422.984161,
+      "jdTT": 2624422.996179,
+      "subsolarLatitude": 14.468168,
+      "subsolarLongitude": 5.144386,
+      "gmstHours": 2.099781304,
+      "gastHours": 2.099899908
+    },
+    {
+      "jdUT": 2636995.957819,
+      "jdTT": 2636995.97154,
+      "subsolarLatitude": -3.118406,
+      "subsolarLongitude": 12.709959,
+      "gmstHours": 11.635549343,
+      "gastHours": 11.635420974
+    },
+    {
+      "jdUT": 2649988.356973,
+      "jdTT": 2649988.372563,
+      "subsolarLatitude": 13.966617,
+      "subsolarLongitude": -129.010873,
+      "gmstHours": 10.943601573,
+      "gastHours": 10.94334565
+    },
+    {
+      "jdUT": 2662927.729477,
+      "jdTT": 2662927.747036,
+      "subsolarLatitude": -2.962017,
+      "subsolarLongitude": 94.968451,
+      "gmstHours": 6.127699358,
+      "gastHours": 6.127398719
+    },
+    {
+      "jdUT": 2675675.891905,
+      "jdTT": 2675675.911504,
+      "subsolarLatitude": 10.2651,
+      "subsolarLongitude": 39.625241,
+      "gmstHours": 7.705594743,
+      "gastHours": 7.705403384
+    },
+    {
+      "jdUT": 2688682.498949,
+      "jdTT": 2688682.52073,
+      "subsolarLatitude": 6.392254,
+      "subsolarLongitude": -179.008765,
+      "gmstHours": 12.936623072,
+      "gastHours": 12.936546714
+    },
+    {
+      "jdUT": 2701238.13341,
+      "jdTT": 2701238.157389,
+      "subsolarLatitude": 11.841627,
+      "subsolarLongitude": -46.947189,
+      "gmstHours": 13.19232978,
+      "gastHours": 13.192550454
+    },
+    {
+      "jdUT": 2714333.86328,
+      "jdTT": 2714333.889646,
+      "subsolarLatitude": 23.091448,
+      "subsolarLongitude": 50.522081,
+      "gmstHours": 3.227445842,
+      "gastHours": 3.227731791
+    },
+    {
+      "jdUT": 2727014.212972,
+      "jdTT": 2727014.241736,
+      "subsolarLatitude": -0.92719,
+      "subsolarLongitude": -74.809518,
+      "gmstHours": 4.843746658,
+      "gastHours": 4.844004058
+    },
+    {
+      "jdUT": 2739873.278153,
+      "jdTT": 2739873.309434,
+      "subsolarLatitude": 22.114025,
+      "subsolarLongitude": -100.279292,
+      "gmstHours": 11.37514316,
+      "gastHours": 11.375245333
+    },
+    {
+      "jdUT": 2752715.321341,
+      "jdTT": 2752715.35522,
+      "subsolarLatitude": 18.215065,
+      "subsolarLongitude": -113.617155,
+      "gmstHours": 16.260202313,
+      "gastHours": 16.260140859
+    },
+    {
+      "jdUT": 2765439.083311,
+      "jdTT": 2765439.119856,
+      "subsolarLatitude": 21.957478,
+      "subsolarLongitude": -30.152246,
+      "gmstHours": 6.623806595,
+      "gastHours": 6.623536037
+    },
+    {
+      "jdUT": 2778367.793171,
+      "jdTT": 2778367.832517,
+      "subsolarLatitude": -11.654156,
+      "subsolarLongitude": 70.52768,
+      "gmstHours": 9.203858951,
+      "gastHours": 9.203541668
+    },
+    {
+      "jdUT": 2791228.235381,
+      "jdTT": 2791228.277608,
+      "subsolarLatitude": -22.105278,
+      "subsolarLongitude": -83.563299,
+      "gmstHours": 0.874458431,
+      "gastHours": 0.874273902
+    },
+    {
+      "jdUT": 2804044.972062,
+      "jdTT": 2804045.017252,
+      "subsolarLatitude": -14.133315,
+      "subsolarLongitude": 13.135931,
+      "gmstHours": 20.740485202,
+      "gastHours": 20.740504278
+    },
+    {
+      "jdUT": 2816976.567534,
+      "jdTT": 2816976.615807,
+      "subsolarLatitude": 22.155629,
+      "subsolarLongitude": 157.5908,
+      "gmstHours": 20.764851517,
+      "gastHours": 20.765036615
+    }
+  ]
+}
