@@ -47,6 +47,7 @@ import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
 import { createFamousPanel } from './ui/famousPanel';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
+import { createViewSwitch } from './ui/viewSwitch';
 import { createTimeline, type Eclipse, type YearEclipses } from './ui/timeline';
 import { errorMessage } from './util/errors';
 
@@ -67,6 +68,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     void goToFamous(entry);
   });
 
+  const viewSwitch = createViewSwitch((view) => {
+    store.set((state) => ({ ...state, view }));
+  });
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
   const dateText = element('time', { class: 'hud-date' });
   const timeText = element('span', { class: 'hud-time' });
@@ -102,6 +106,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
       famousPanel.button,
+      viewSwitch.root,
       element(
         'p',
         { class: 'credits' },
@@ -142,6 +147,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     (ephemeris) => {
       moonEphemeris = ephemeris;
       showTime(store.get());
+      viewSwitch.render(store.get().view, true);
     },
     (error: unknown) => {
       notify(`Could not load the Moon's orbit: ${errorMessage(error)}`);
@@ -336,6 +342,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function render(state: ViewState, previous: ViewState | null): void {
     if (state.time !== previous?.time) showTime(state);
+    if (state.view !== previous?.view) {
+      globe.setViewpoint(state.view);
+      viewSwitch.render(state.view, moonEphemeris !== null);
+    }
     if (state.time.date.year !== previous?.time.date.year) loadYear(state);
     if (
       state.selection !== previous?.selection ||
