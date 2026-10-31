@@ -9,6 +9,10 @@
  *   time: Julian before 1582-10-15, Gregorian after. `sel` dates always use that rule.
  * - `cam` is relative to the body in `focus` (absent means Earth): a point on its surface and
  *   a distance in its radii.
+ * - `look` is where the observer at `loc` faces in the sky view: azimuth from north through
+ *   east, altitude, and field of view, in degrees. It is written whenever `mode=sky`.
+ * - `figures` picks the constellation figures the sky view draws: `famous` (absent), `all`
+ *   or `none`.
  * - `loc` (observer), `sel` (selected eclipse), `view` (an attached viewpoint; absent means
  *   free) and `focus` are optional; everything else is always written out, so a link keeps its meaning
  *   even if defaults change later.
@@ -22,6 +26,9 @@ import { astronomicalYear } from '../time/year';
 import { errorMessage } from '../util/errors';
 import {
   CAMERA_DISTANCE_RANGE,
+  DEFAULT_LOOK,
+  FIGURES,
+  SKY_FOV_RANGE,
   ECLIPSE_KINDS,
   LAYERS,
   BODIES,
@@ -31,12 +38,14 @@ import {
   defaultViewState,
   type Body,
   type EclipseKind,
+  type Figures,
   type GeoPoint,
   type GlobeCamera,
   type Layer,
   type Mode,
   type Moment,
   type Selection,
+  type SkyLook,
   type Viewpoint,
   type ViewState,
 } from './viewState';
@@ -93,6 +102,8 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     focus: read('focus', parseFocus, defaults.focus),
     layers: read('layers', parseLayers, defaults.layers),
     selection: read<Selection | null>('sel', parseSelection, defaults.selection),
+    look: read('look', parseLook, defaults.look),
+    figures: read('figures', parseFigures, defaults.figures),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -113,12 +124,42 @@ export function serializeViewState(state: ViewState): string {
   if (state.focus !== 'earth') params.set('focus', state.focus);
   params.set('layers', LAYERS.filter((layer) => state.layers.has(layer)).join(','));
   if (state.selection !== null) params.set('sel', formatSelection(state.selection));
+  if (state.mode === 'sky' || !sameLook(state.look, DEFAULT_LOOK)) {
+    params.set('look', formatLook(state.look));
+  }
+  if (state.figures !== 'famous') params.set('figures', state.figures);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
 
 function parseMode(raw: string): Mode {
   return oneOf(raw, MODES, 'mode');
+}
+
+function parseFigures(raw: string): Figures {
+  return oneOf(raw, FIGURES, 'figures');
+}
+
+function parseLook(raw: string): SkyLook {
+  const [azimuth, altitude, fov] = numbers(raw, 3);
+  if (altitude < -90 || altitude > 90) throw new Error('altitude must be between -90 and 90');
+  const { min, max } = SKY_FOV_RANGE;
+  if (fov < min || fov > max) {
+    throw new Error(`field of view must be between ${String(min)} and ${String(max)} degrees`);
+  }
+  return {
+    azimuth: azimuth >= 0 && azimuth < 360 ? azimuth : ((azimuth % 360) + 360) % 360,
+    altitude,
+    fov,
+  };
+}
+
+function sameLook(a: SkyLook, b: SkyLook): boolean {
+  return a.azimuth === b.azimuth && a.altitude === b.altitude && a.fov === b.fov;
+}
+
+function formatLook({ azimuth, altitude, fov }: SkyLook): string {
+  return `${fixed(azimuth, 1)},${fixed(altitude, 1)},${fixed(fov, 1)}`;
 }
 
 function parseViewpoint(raw: string): Viewpoint {

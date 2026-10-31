@@ -30,6 +30,10 @@ export type Viewpoint = (typeof VIEWPOINTS)[number];
 export const BODIES = ['earth', 'moon', 'sun'] as const;
 export type Body = (typeof BODIES)[number];
 
+/** Which constellation figures the sky view draws: the best-known ones, all 88, or none. */
+export const FIGURES = ['famous', 'all', 'none'] as const;
+export type Figures = (typeof FIGURES)[number];
+
 export const ECLIPSE_KINDS = ['lunar', 'solar'] as const;
 export type EclipseKind = (typeof ECLIPSE_KINDS)[number];
 
@@ -58,6 +62,16 @@ export interface GlobeCamera {
   readonly distance: number;
 }
 
+/** Where an observer on the ground looks, in the sky view. */
+export interface SkyLook {
+  /** Degrees from north through east, 0 to 360 (exclusive). */
+  readonly azimuth: number;
+  /** Degrees above the horizon, −90 to 90. */
+  readonly altitude: number;
+  /** Field of view on the narrower side of the screen, in degrees. */
+  readonly fov: number;
+}
+
 export interface Selection {
   readonly kind: EclipseKind;
   /** Day of greatest eclipse, as a whole calendar day. */
@@ -73,6 +87,8 @@ export interface ViewState {
   readonly focus: Body;
   readonly layers: ReadonlySet<Layer>;
   readonly selection: Selection | null;
+  readonly look: SkyLook;
+  readonly figures: Figures;
 }
 
 // In the focused body's radii. For Earth, ~5 times the Sun's distance (23,455 Earth radii), so
@@ -84,6 +100,10 @@ export const DEFAULT_CAMERA: GlobeCamera = {
   // With a 40° field of view on the narrower side, the whole globe fits with a margin.
   distance: 4.5,
 };
+
+export const SKY_FOV_RANGE = { min: 5, max: 120 } as const;
+/** Facing south, a third of the way up: where the ecliptic runs, seen from the north. */
+export const DEFAULT_LOOK: SkyLook = { azimuth: 180, altitude: 30, fov: 90 };
 
 /** The calendar historians use for a date: Julian before 1582-10-15, Gregorian from then on. */
 export function defaultCalendarFor(year: number, month: number, day: number): Calendar {
@@ -119,5 +139,7 @@ export function defaultViewState(now: Date): ViewState {
     focus: 'earth',
     layers: DEFAULT_LAYERS,
     selection: null,
+    look: DEFAULT_LOOK,
+    figures: 'famous',
   };
 }
