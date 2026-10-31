@@ -148,6 +148,8 @@ export interface Globe {
    * viewpoint (which hands over to orbiting the body it looks at).
    */
   onBodyClick(listener: (body: Body) => void): () => void;
+  /** Called when someone taps empty space, away from every body. */
+  onEmptyTap(listener: () => void): () => void;
   /** Called when someone taps a place on Earth while looking at it: where to stand. */
   onPlacePick(listener: (place: GeoPoint) => void): () => void;
   /** Pin the chosen place on the globe; null removes the pin. */
@@ -501,6 +503,7 @@ export async function createGlobe(
   const bodyMeshes: Record<Body, Mesh> = { earth, moon, sun };
   const bodyClickListeners = new Set<(body: Body) => void>();
   const placeListeners = new Set<(place: GeoPoint) => void>();
+  const emptyTapListeners = new Set<() => void>();
   for (const [body, marker] of Object.entries(markers)) {
     marker.addEventListener('click', () => {
       requestBody(body as Body);
@@ -545,7 +548,12 @@ export async function createGlobe(
       for (const listener of placeListeners) listener(place);
       return;
     }
-    if (body !== undefined) requestBody(body);
+    if (body !== undefined) {
+      requestBody(body);
+      return;
+    }
+    // Markers are HTML on top of the canvas, so a tap here missed them too.
+    for (const listener of emptyTapListeners) listener();
   });
 
   function releaseViewpoint(): void {
@@ -985,6 +993,10 @@ export async function createGlobe(
     onBodyClick(listener) {
       bodyClickListeners.add(listener);
       return () => bodyClickListeners.delete(listener);
+    },
+    onEmptyTap(listener) {
+      emptyTapListeners.add(listener);
+      return () => emptyTapListeners.delete(listener);
     },
     onPlacePick(listener) {
       placeListeners.add(listener);

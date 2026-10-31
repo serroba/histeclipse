@@ -79,6 +79,8 @@ export interface SkyScene {
   setFigures(figures: Figures): void;
   /** Pixels covered by panels at the top and bottom; the view is centred between them. */
   setInsets(top: number, bottom: number): void;
+  /** Called when someone taps the sky (a press that barely moves). */
+  onTap(listener: () => void): () => void;
   /** Called with the rounded look as the observer drags or zooms. */
   onLookChange(listener: (look: SkyLook) => void): () => void;
 }
@@ -92,6 +94,8 @@ const SUN_ANGULAR_RADIUS = (0.2666 * Math.PI) / 180;
 /** The proper-motion positions only need recomputing after this many days. */
 const MOTION_STEP_DAYS = 365.25;
 const DRAG_SLOP_PIXELS = 3;
+/** A press that moves less than this (pixels) in all is a tap, not a drag. */
+const TAP_SLOP_PIXELS = 6;
 
 const STAR_VERTEX = /* glsl */ `
   attribute float magnitude;
@@ -624,6 +628,9 @@ export function createSkyScene(
   // Dragging turns the view; a wheel or a pinch zooms. Touch and mouse share pointer events.
   const pointers = new Map<number, { x: number; y: number }>();
   let pinch: number | null = null;
+  // A single press that has not moved far yet: a tap if it ends here.
+  let tap: { id: number; x: number; y: number } | null = null;
+  const tapListeners = new Set<() => void>();
   function setLookFromInput(next: SkyLook): void {
     look = next;
     applyLook();
@@ -634,11 +641,15 @@ export function createSkyScene(
     renderer.domElement.setPointerCapture(event.pointerId);
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     pinch = null;
+    tap = pointers.size === 1 ? { id: event.pointerId, x: event.clientX, y: event.clientY } : null;
   });
   renderer.domElement.addEventListener('pointermove', (event) => {
     const last = pointers.get(event.pointerId);
     if (last === undefined) return;
     const current = { x: event.clientX, y: event.clientY };
+    if (tap !== null && Math.hypot(current.x - tap.x, current.y - tap.y) > TAP_SLOP_PIXELS) {
+      tap = null;
+    }
     if (pointers.size === 2) {
       pointers.set(event.pointerId, current);
       const [a, b] = [...pointers.values()];
@@ -658,8 +669,16 @@ export function createSkyScene(
     pointers.delete(event.pointerId);
     pinch = null;
   };
-  renderer.domElement.addEventListener('pointerup', release);
-  renderer.domElement.addEventListener('pointercancel', release);
+  renderer.domElement.addEventListener('pointerup', (event) => {
+    release(event);
+    if (tap?.id !== event.pointerId) return;
+    tap = null;
+    for (const listener of tapListeners) listener();
+  });
+  renderer.domElement.addEventListener('pointercancel', (event) => {
+    release(event);
+    tap = null;
+  });
   renderer.domElement.addEventListener(
     'wheel',
     (event) => {
@@ -754,6 +773,10 @@ export function createSkyScene(
       if (top === insets.top && bottom === insets.bottom) return;
       insets = { top, bottom };
       resize();
+    },
+    onTap(listener) {
+      tapListeners.add(listener);
+      return () => tapListeners.delete(listener);
     },
     onLookChange(listener) {
       listeners.add(listener);

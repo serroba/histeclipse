@@ -166,6 +166,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     famousPanel.dialog,
   );
 
+  // A tap on open sky or empty space hides the panels for a clear view; another brings them back.
+  function togglePanels(): void {
+    const hidden = root.dataset['panels'] !== 'hidden';
+    root.dataset['panels'] = hidden ? 'hidden' : 'shown';
+  }
+
   function notify(message: string): void {
     notices.append(element('li', {}, message));
   }
@@ -404,6 +410,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
         });
         skyScene.setInsets(panelInsets.top, panelInsets.bottom);
+        skyScene.onTap(togglePanels);
         skyScene.onLookChange((look) => {
           store.set((current) => ({ ...current, look }));
         });
@@ -563,6 +570,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   globe.onBodyClick((focus) => {
     store.set((state) => ({ ...state, focus, view: 'free' }));
   });
+  globe.onEmptyTap(togglePanels);
   globe.onPlacePick((place) => {
     const location = { latitude: round(place.latitude, 4), longitude: round(place.longitude, 4) };
     store.set((state) => ({ ...state, location }));
