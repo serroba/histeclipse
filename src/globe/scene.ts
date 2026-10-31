@@ -10,12 +10,10 @@ import {
   BackSide,
   CanvasTexture,
   Color,
-  DirectionalLight,
   LinearFilter,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
-  MeshStandardMaterial,
   OrthographicCamera,
   PerspectiveCamera,
   PlaneGeometry,
@@ -64,7 +62,14 @@ import {
   type CameraPose,
   type ScreenMarker,
 } from './spaceFrame';
-import { SOLAR_COMMON, SOLAR_PATH_FRAGMENT, SOLAR_PATH_LAYER, SOLAR_SHADOW } from './solarShaders';
+import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
+import {
+  OCCULTATION,
+  SOLAR_COMMON,
+  SOLAR_PATH_FRAGMENT,
+  SOLAR_PATH_LAYER,
+  SOLAR_SHADOW,
+} from './solarShaders';
 
 const NARROW_SIDE_FOV_DEGREES = 40;
 const FLIGHT_MS = 900;
@@ -182,7 +187,13 @@ const EARTH_FRAGMENT = /* glsl */ `
   ${SOLAR_COMMON}
   ${SOLAR_SHADOW}
   ${SOLAR_PATH_LAYER}
+  ${OCCULTATION}
   uniform sampler2D dayMap;
+  // The Moon and Sun in the scene, for the Moon's shadow at any moment.
+  uniform vec3 moonPosition;
+  uniform float moonRadius;
+  uniform vec3 sunPosition;
+  uniform float sunRadius;
   uniform vec3 sunDirection;
   uniform float lunarActive;
   uniform vec3 moonCenter;
@@ -230,8 +241,58 @@ const EARTH_FRAGMENT = /* glsl */ `
     float latitude = asin(clamp(normal.y, -1.0, 1.0));
     float longitude = atan(-normal.z, normal.x);
     color = solarPathLayer(color, vUv);
+    // A selected solar eclipse draws its shadow from the catalog's Besselian elements, which
+    // match its path exactly; otherwise the Moon's shadow comes straight from the geometry.
+    if (solarActive < 0.5 && moonRadius > 0.0) {
+      // On the unit sphere, the surface point is its normal.
+      float sunlight = sunlightAt(normal, sunPosition, sunRadius, moonPosition, moonRadius);
+      float perceived = 1.0 - 0.9 * pow(1.0 - sunlight, 0.6);
+      vec3 shaded = max(color * pow(perceived, 2.2), night);
+      color = mix(shaded, night, step(sunlight, 0.0));
+    }
     color = solarShadowLayer(color, night, latitude, longitude);
     gl_FragColor = vec4(color, 1.0);
+    #include <colorspace_fragment>
+  }
+`;
+
+const MOON_VERTEX = /* glsl */ `
+  #include <common>
+  #include <logdepthbuf_pars_vertex>
+  varying vec2 vUv;
+  varying vec3 vWorldPosition;
+  varying vec3 vWorldNormal;
+  void main() {
+    vUv = uv;
+    vec4 world = modelMatrix * vec4(position, 1.0);
+    vWorldPosition = world.xyz;
+    vWorldNormal = normalize(mat3(modelMatrix) * normal);
+    gl_Position = projectionMatrix * viewMatrix * world;
+    #include <logdepthbuf_vertex>
+  }
+`;
+
+// The Moon lit by the Sun, darkened by Earth's shadow where Earth covers part or all of the
+// Sun (Earth at the scene's origin). In the umbra, sunlight bent through Earth's atmosphere
+// still reaches the Moon and turns it copper; its brightness here is chosen to be visible.
+const MOON_FRAGMENT = /* glsl */ `
+  #include <logdepthbuf_pars_fragment>
+  ${OCCULTATION}
+  uniform sampler2D map;
+  uniform vec3 sunPosition;
+  uniform float sunRadius;
+  uniform float earthRadius;
+  varying vec2 vUv;
+  varying vec3 vWorldPosition;
+  varying vec3 vWorldNormal;
+
+  void main() {
+    #include <logdepthbuf_fragment>
+    vec3 albedo = texture2D(map, vUv).rgb;
+    float facing = max(dot(normalize(vWorldNormal), normalize(sunPosition - vWorldPosition)), 0.0);
+    float sunlight = sunlightAt(vWorldPosition, sunPosition, sunRadius, vec3(0.0), earthRadius);
+    vec3 copper = vec3(0.55, 0.16, 0.06) * 0.22 * pow(1.0 - sunlight, 3.0);
+    gl_FragColor = vec4(albedo * facing * (sunlight + copper), 1.0);
     #include <colorspace_fragment>
   }
 `;
@@ -293,6 +354,9 @@ export async function createGlobe(
   texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
   const sunDirection = new Vector3(1, 0, 0);
+  // Shared by the Earth and Moon shaders; set with the bodies each moment.
+  const moonPosition = new Vector3();
+  const sunPosition = new Vector3(1e5, 0, 0);
   const lunarActive = { value: 0 };
   const moonCenter = new Vector3(1, 0, 0);
   const moonWest = new Vector3(1, 0, 0);
@@ -338,6 +402,10 @@ export async function createGlobe(
         shadowCones: { value: new Vector4() },
         solarPath: { value: pathTarget.texture },
         solarPathActive: { value: 0 },
+        moonPosition: { value: moonPosition },
+        moonRadius: { value: 0 },
+        sunPosition: { value: sunPosition },
+        sunRadius: { value: SUN_RADIUS_EARTH_RADII },
       },
       vertexShader: EARTH_VERTEX,
       fragmentShader: EARTH_FRAGMENT,
@@ -363,10 +431,21 @@ export async function createGlobe(
   moonTexture.colorSpace = SRGBColorSpace;
   const moonGeometry = new SphereGeometry(MOON_RADIUS_EARTH_RADII, 64, 32);
   moonGeometry.rotateY(-Math.PI / 2);
-  const moon = new Mesh(moonGeometry, new MeshStandardMaterial({ map: moonTexture, roughness: 1 }));
+  const moon = new Mesh(
+    moonGeometry,
+    new ShaderMaterial({
+      uniforms: {
+        map: { value: moonTexture },
+        sunPosition: { value: sunPosition },
+        sunRadius: { value: SUN_RADIUS_EARTH_RADII },
+        earthRadius: { value: EARTH_SHADOW_ENLARGEMENT },
+      },
+      vertexShader: MOON_VERTEX,
+      fragmentShader: MOON_FRAGMENT,
+    }),
+  );
   moon.visible = false;
-  const sunlight = new DirectionalLight(0xffffff, 3);
-  scene.add(moon, sunlight, sunlight.target);
+  scene.add(moon);
 
   const sun = new Mesh(
     new SphereGeometry(SUN_RADIUS_EARTH_RADII, 128, 64),
@@ -729,14 +808,15 @@ export async function createGlobe(
       sunFrame.setFromRotationMatrix(new Matrix4().set(...r0, 0, ...r1, 0, ...r2, 0, 0, 0, 0, 1));
       sun.position.set(...sceneFromKm(apply(toEarthFixed, bodies.sunKm)));
       sun.visible = true;
-      sunlight.position.copy(sun.position);
+      sunPosition.copy(sun.position);
       if (bodies.moonKm === null) {
         moon.visible = false;
       } else {
         moon.position.set(...sceneFromKm(apply(toEarthFixed, bodies.moonKm)));
         moon.lookAt(0, 0, 0);
         moon.visible = true;
-        sunlight.target.position.copy(moon.position);
+        moonPosition.copy(moon.position);
+        earth.material.uniforms['moonRadius'] = { value: MOON_RADIUS_EARTH_RADII };
       }
       container.dataset['space'] = moon.visible ? 'moon' : 'sun';
       if (relative !== null) {

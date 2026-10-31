@@ -136,3 +136,34 @@ export const SOLAR_PATH_LAYER = /* glsl */ `
     return mix(color, painted, solarPathActive);
   }
 `;
+
+/**
+ * The share of the Sun's disc a point sees past a dark sphere: the GLSL twin of
+ * `astro/occultation.ts`, which is the tested reference.
+ */
+export const OCCULTATION = /* glsl */ `
+  float visibleFraction(float source, float occluder, float separation) {
+    if (separation >= source + occluder) return 1.0;
+    if (separation <= occluder - source) return 0.0;
+    if (separation <= source - occluder) return 1.0 - (occluder * occluder) / (source * source);
+    float d = separation;
+    float alpha = acos(clamp((d * d + source * source - occluder * occluder) / (2.0 * d * source), -1.0, 1.0));
+    float beta = acos(clamp((d * d + occluder * occluder - source * source) / (2.0 * d * occluder), -1.0, 1.0));
+    float lens = source * source * (alpha - sin(2.0 * alpha) / 2.0)
+      + occluder * occluder * (beta - sin(2.0 * beta) / 2.0);
+    return 1.0 - lens / (3.14159265 * source * source);
+  }
+
+  float sunlightAt(vec3 point, vec3 sun, float sunRadius, vec3 occluder, float occluderRadius) {
+    vec3 toSun = sun - point;
+    vec3 toOccluder = occluder - point;
+    float occluderDistance = length(toOccluder);
+    if (occluderDistance <= occluderRadius || dot(toSun, toOccluder) <= 0.0) return 1.0;
+    float separation = atan(length(cross(toSun, toOccluder)), dot(toSun, toOccluder));
+    return visibleFraction(
+      asin(min(1.0, sunRadius / length(toSun))),
+      asin(occluderRadius / occluderDistance),
+      separation
+    );
+  }
+`;
