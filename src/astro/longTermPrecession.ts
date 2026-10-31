@@ -7,7 +7,8 @@
  *
  * Coefficients and the matrix construction follow ERFA (`eraLtpecl`, `eraLtpequ`, `eraLtp`,
  * `eraEors`): Copyright (C) 2013-2023, NumFOCUS Foundation, BSD 3-Clause licence, derived with
- * permission from the IAU SOFA library. This is a port of ERFA, not SOFA itself.
+ * permission from the IAU SOFA library. This is a port of ERFA, not SOFA itself. ERFA's full
+ * licence, which covers these coefficients and algorithms, is in licenses/ERFA.txt.
  *
  * Sidereal time comes from the Earth Rotation Angle, which is linear in UT1 by definition, and
  * the equation of the origins, which follows from the precession itself. Polynomials for sidereal
