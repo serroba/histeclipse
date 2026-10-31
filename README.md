@@ -59,6 +59,8 @@ Positions come from [JPL DE441](https://ssd.jpl.nasa.gov/planets/eph_export.html
 - Planetary positions: [JPL DE441](https://ssd.jpl.nasa.gov/planets/eph_export.html) (NASA/JPL), via [Skyfield](https://rhodesmill.org/skyfield/).
 - Eclipse validation: NASA _Five Millennium Canon_ (Espenak & Meeus).
 - Long-term precession: Vondrák, Capitaine & Wallace (2011), A&A 534, A22, ported from [ERFA](https://github.com/liberfa/erfa) (BSD 3-Clause, © NumFOCUS Foundation; derived from the IAU [SOFA](http://www.iausofa.org) library; full licence in [`licenses/ERFA.txt`](licenses/ERFA.txt)).
+- Stars: Yale _Bright Star Catalogue_, 5th revised ed. (Hoffleit & Warren 1991), distributed by NASA's Astronomical Data Center; J2000 positions, proper motions, parallaxes and radial velocities for 9,096 naked-eye stars.
+- Constellation figures and names: [d3-celestial](https://github.com/ofrohn/d3-celestial) by Olaf Frohn (BSD 3-Clause, full licence in [`licenses/d3-celestial.txt`](licenses/d3-celestial.txt)), after the IAU's constellation charts.
 - Earth imagery: [NASA Blue Marble Next Generation](https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/) (April 2004, topography and bathymetry), downscaled to 2048 × 1024. It shows today's coastlines and ice. The night side is deliberately a plain dark tint, because modern city lights would be anachronistic.
 
 ## License
