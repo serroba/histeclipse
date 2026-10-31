@@ -95,8 +95,9 @@ export async function createGlobe(
   options: { readonly camera: GlobeCamera; readonly textureUrl: string },
 ): Promise<Globe> {
   // preserveDrawingBuffer lets the page (and tests) read the rendered image back.
-  // Transparent, so the page's space gradient shows behind the globe.
-  const renderer = new WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  // Transparent, so the page's space gradient shows behind the globe. No preserveDrawingBuffer:
+  // it forces a buffer copy every frame, which stalls slow and mobile GPUs.
+  const renderer = new WebGLRenderer({ antialias: true, alpha: true });
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.append(renderer.domElement);

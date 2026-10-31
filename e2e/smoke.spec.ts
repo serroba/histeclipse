@@ -46,24 +46,10 @@ test('loads the globe without errors or failed requests', async ({ page }) => {
 test('draws the Earth, not an empty canvas', async ({ page }) => {
   await page.goto('./');
   await globeRendered(page);
-  const litFraction = await page.evaluate(() => {
-    const canvas = document.querySelector('canvas');
-    if (canvas === null) return 0;
-    const copy = document.createElement('canvas');
-    copy.width = 64;
-    copy.height = 64;
-    const context = copy.getContext('2d');
-    if (context === null) return 0;
-    context.drawImage(canvas, 0, 0, 64, 64);
-    const { data } = context.getImageData(0, 0, 64, 64);
-    let lit = 0;
-    for (let index = 0; index < data.length; index += 4) {
-      if ((data[index] ?? 0) + (data[index + 1] ?? 0) + (data[index + 2] ?? 0) > 60) lit += 1;
-    }
-    return lit / (64 * 64);
-  });
-  // The globe fills a good part of the view; the sunlit side must show up as bright pixels.
-  expect(litFraction).toBeGreaterThan(0.05);
+  // A screenshot captures what is on screen without reading the WebGL buffer back. An empty
+  // dark canvas compresses to a few KB of PNG; a textured, lit globe to hundreds of KB.
+  const png = await page.locator('canvas').screenshot();
+  expect(png.byteLength).toBeGreaterThan(60_000);
 });
 
 test('a shared link reproduces the view it describes', async ({ page }) => {
