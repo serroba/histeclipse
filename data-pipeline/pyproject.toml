@@ -4,7 +4,12 @@ version = "0.0.0"
 description = "Offline generator for histeclipse's static astronomical data files"
 license = "MIT"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "skyfield>=1.55",
+]
+
+[project.scripts]
+histeclipse-pipeline = "histeclipse_pipeline.cli:main"
 
 [dependency-groups]
 dev = [
@@ -64,6 +69,11 @@ enable_error_code = [
   "unimported-reveal",
   "unused-awaitable",
 ]
+
+[[tool.mypy.overrides]]
+# Skyfield and jplephem ship without type information; ephemeris.SpkSegment types the parts we use.
+module = ["skyfield.*", "jplephem.*"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 addopts = [
