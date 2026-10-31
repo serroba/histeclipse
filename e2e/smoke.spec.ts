@@ -95,6 +95,33 @@ test('dragging the globe updates the camera in the URL', async ({ page }) => {
   await expect(page).toHaveURL(/cam=-?\d+\.\d{4},-?\d+\.\d{4},3\.00/);
 });
 
+test('dragging an attached view, even while an eclipse plays, hands over to orbiting', async ({
+  page,
+}) => {
+  await page.goto('./?t=2025-03-14T05:00&sel=lunar:2025-03-14&view=moon-from-earth');
+  await globeRendered(page);
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-space', 'moon');
+  await page.getByRole('button', { name: 'Play' }).click();
+  const box = await page.getByTestId('globe').boundingBox();
+  if (box === null) throw new Error('globe has no size');
+  const center = { x: box.x + box.width / 2, y: box.y + box.height / 3 };
+  const drag = async (): Promise<void> => {
+    await page.mouse.move(center.x, center.y);
+    await page.mouse.down();
+    await page.mouse.move(center.x - 150, center.y + 40, { steps: 10 });
+    await page.mouse.up();
+  };
+  // The first drag releases the view and flies to the Moon it was looking at.
+  await drag();
+  await expect(page).toHaveURL(/focus=moon/);
+  await expect(page).not.toHaveURL(/view=/);
+  await expect(page).toHaveURL(/cam=-?\d+\.\d{4},-?\d+\.\d{4},4\.00/);
+  const landed = new URL(page.url()).searchParams.get('cam');
+  // Once there, dragging turns the Moon while time keeps moving.
+  await drag();
+  await expect.poll(() => new URL(page.url()).searchParams.get('cam')).not.toBe(landed);
+});
+
 test('a one-finger swipe rotates the globe on touch screens', async ({ page, context }, info) => {
   test.skip(info.project.name !== 'mobile', 'touch gestures are tested on the phone profile');
   await page.goto('./?cam=0,0,3');
