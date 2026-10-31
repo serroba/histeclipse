@@ -18,6 +18,7 @@ from histeclipse_pipeline.sky import (
     write_sky_file,
 )
 from histeclipse_pipeline.solar import find_solar_eclipses
+from histeclipse_pipeline.solar_images import fetch_images
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
 
 if TYPE_CHECKING:
@@ -152,6 +153,12 @@ def sky(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {len(stars)} stars to {args.out}")
 
 
+def sun_images(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Render the SDO layers into ``public/textures/sun`` and write their manifest."""
+    result = fetch_images(args.out)
+    return _say(f"wrote {len(result['layers'])} layers of the Sun to {args.out}")
+
+
 COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     # name: (handler, help, --out help or None when the command takes no --out)
     "fetch-ephemeris": (fetch_ephemeris, "download DE441 excerpts from JPL", None),
@@ -165,6 +172,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "sun-vectors": (sun, "write Sun reference values for web tests", "output JSON file"),
     "moon-vectors": (moon, "write Moon reference values for web tests", "output JSON file"),
     "sky": (sky, "write stars and constellation figures for the sky view", "output JSON file"),
+    "sun-images": (
+        sun_images,
+        "download SDO images of the Sun for the space view",
+        "the web app's public directory",
+    ),
 }
 
 

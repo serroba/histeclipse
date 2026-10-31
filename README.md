@@ -62,6 +62,7 @@ Positions come from [JPL DE441](https://ssd.jpl.nasa.gov/planets/eph_export.html
 - Stars: Yale _Bright Star Catalogue_, 5th revised ed. (Hoffleit & Warren 1991), distributed by NASA's Astronomical Data Center; J2000 positions, proper motions, parallaxes and radial velocities for 9,096 naked-eye stars.
 - Constellation figures and names: [d3-celestial](https://github.com/ofrohn/d3-celestial) by Olaf Frohn (BSD 3-Clause, full licence in [`licenses/d3-celestial.txt`](licenses/d3-celestial.txt)), after the IAU's constellation charts.
 - Earth imagery: [NASA Blue Marble Next Generation](https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/) (April 2004, topography and bathymetry), downscaled to 2048 × 1024. It shows today's coastlines and ice. The night side is deliberately a plain dark tint, because modern city lights would be anachronistic.
+- Sun imagery: NASA's [Solar Dynamics Observatory](https://sdo.gsfc.nasa.gov/) (courtesy of NASA/SDO and the AIA and HMI science teams), rendered through [Helioviewer](https://helioviewer.org/) (NASA/ESA). Six channels from 8 May 2024 around 12:00 UT, at solar maximum: visible light and the magnetic field from HMI, and 304, 171, 193 and 131 Å from AIA. They show the Sun of that day. Its surface on any other date, and certainly in antiquity, was different and is unknown.
 
 ## License
 
