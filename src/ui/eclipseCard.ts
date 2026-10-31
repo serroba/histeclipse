@@ -9,6 +9,7 @@ import {
   eclipseMoment,
   isSolar,
 } from '../eclipses/describe';
+import { lunarPhaseAt, type LunarPhase } from '../eclipses/lunarPhases';
 import { solarOutlook, type LocalPhase } from '../eclipses/solar';
 import { longitudeUncertainty, moonVisibility } from '../eclipses/visibility';
 import type { GeoPoint } from '../state/viewState';
@@ -22,6 +23,7 @@ export interface EclipseCard {
     uncertaintySeconds: number,
     observer: GeoPoint | null,
     famous?: FamousEclipse,
+    offsetMinutes?: number,
   ): void;
 }
 
@@ -52,10 +54,18 @@ export function uncertaintyText(uncertaintySeconds: number, shiftDegrees: number
   return `ΔT is uncertain by ±${formatDuration(uncertaintySeconds)}, which moves this ±${shiftDegrees.toFixed(1)}° east or west (hatched band).`;
 }
 
+const LUNAR_PHASE_NOW: Record<LunarPhase, string> = {
+  none: 'Not now: the Moon is outside Earth’s shadow at this time. Move the time slider into the eclipse.',
+  penumbral: 'Now: penumbral phase, a faint dimming that is hard to notice.',
+  partial: 'Now: partial phase, Earth’s dark shadow takes a bite out of the Moon.',
+  total: 'Now: totality, the whole Moon is in Earth’s shadow and glows coppery red.',
+};
+
 function lunarLines(
   eclipse: LunarEclipse,
   uncertaintySeconds: number,
   observer: GeoPoint | null,
+  offsetMinutes: number,
 ): HTMLElement[] {
   const { title, depth } = describeLunarEclipse(eclipse);
   const moment = eclipseMoment(eclipse);
@@ -70,10 +80,11 @@ function lunarLines(
       {},
       `Greatest eclipse ${formatDate(moment)}, ${formatTimeOfDay(moment)}. Moon overhead at ${formatPoint(sublunar)}.`,
     ),
+    element('p', { class: 'eclipse-phase' }, LUNAR_PHASE_NOW[lunarPhaseAt(eclipse, offsetMinutes)]),
     element(
       'p',
       { class: 'eclipse-uncertainty' },
-      `Shaded: where the Moon was up. ${uncertaintyText(uncertaintySeconds, shift)}`,
+      `In a lunar eclipse Earth’s shadow falls on the Moon, so the ground doesn’t darken. Copper: where the Moon is above the horizon now, so people could watch it. ${uncertaintyText(uncertaintySeconds, shift)}`,
     ),
   ];
   if (observer !== null) {
@@ -157,17 +168,30 @@ export function createEclipseCard(): EclipseCard {
   const root = element('section', { class: 'eclipse-card', 'aria-live': 'polite', hidden: '' });
   return {
     root,
-    render(eclipse, uncertaintySeconds, observer, famous) {
+    render(eclipse, uncertaintySeconds, observer, famous, offsetMinutes = 0) {
       if (eclipse === undefined) {
         root.hidden = true;
         root.replaceChildren();
         return;
       }
+      const lines = isSolar(eclipse)
+        ? solarLines(eclipse, uncertaintySeconds, observer)
+        : lunarLines(eclipse, uncertaintySeconds, observer, offsetMinutes);
+      // Essentials stay in view; background and how to read the map fold away, which keeps the
+      // globe visible on phones.
+      const background = lines.filter((line) => line.classList.contains('eclipse-uncertainty'));
+      const essentials = lines.filter((line) => !background.includes(line));
+      const famousBackground = famous === undefined ? [] : famousLines(famous).slice(1);
       root.replaceChildren(
-        ...(famous === undefined ? [] : famousLines(famous)),
-        ...(isSolar(eclipse)
-          ? solarLines(eclipse, uncertaintySeconds, observer)
-          : lunarLines(eclipse, uncertaintySeconds, observer)),
+        ...(famous === undefined ? [] : famousLines(famous).slice(0, 1)),
+        ...essentials,
+        element(
+          'details',
+          { class: 'eclipse-more' },
+          element('summary', {}, 'More about this eclipse'),
+          ...famousBackground,
+          ...background,
+        ),
       );
       root.hidden = false;
     },

@@ -45,6 +45,8 @@ export interface LunarOverlay {
   readonly sublunar: Vector3Tuple;
   readonly west: Vector3Tuple;
   readonly east: Vector3Tuple;
+  /** 0 to 1: fainter during the barely visible penumbral phase. */
+  readonly strength: number;
 }
 
 /** A solar eclipse's path: its elements, the ΔT to draw it for, and ΔT's uncertainty. */
@@ -63,8 +65,8 @@ export interface Globe {
   setSolarShadow(shadow: ShadowGeometry | null): void;
   /** Shade where the eclipsed Moon was above the horizon; null hides the overlay. */
   setLunarOverlay(overlay: LunarOverlay | null): void;
-  /** Pixels covered by panels at the bottom; the globe is centred in the space above them. */
-  setBottomInset(pixels: number): void;
+  /** Pixels covered by panels at the top and bottom; the globe is centred between them. */
+  setInsets(top: number, bottom: number): void;
   /** Turn the globe smoothly so `target` faces the camera, keeping the distance. */
   flyTo(target: GeoPoint): void;
   setCamera(camera: GlobeCamera): void;
@@ -147,7 +149,7 @@ const EARTH_FRAGMENT = /* glsl */ `
     float latitude = asin(clamp(normal.y, -1.0, 1.0));
     float longitude = atan(-normal.z, normal.x);
     color = solarPathLayer(color, vUv);
-    color = solarShadowLayer(color, latitude, longitude);
+    color = solarShadowLayer(color, night, latitude, longitude);
     gl_FragColor = vec4(color, 1.0);
     #include <colorspace_fragment>
   }
@@ -281,12 +283,13 @@ export async function createGlobe(
     needsRender = true;
   }
 
-  let bottomInset = 0;
+  let insets = { top: 0, bottom: 0 };
 
   function resize(): void {
     const { clientWidth, clientHeight } = container;
-    // Shift the projection up by half the covered strip, so the globe sits centred above it.
-    camera.setViewOffset(clientWidth, clientHeight, 0, bottomInset / 2, clientWidth, clientHeight);
+    // Shift the projection so the globe sits centred in the space the panels leave free.
+    const shift = (insets.bottom - insets.top) / 2;
+    camera.setViewOffset(clientWidth, clientHeight, 0, shift, clientWidth, clientHeight);
     renderer.setSize(clientWidth, clientHeight, false);
     camera.aspect = clientWidth / Math.max(clientHeight, 1);
     // Fix the field of view on the narrower side, so a camera distance frames the globe the
@@ -342,9 +345,9 @@ export async function createGlobe(
       sunDirection.set(x, y, z).normalize();
       needsRender = true;
     },
-    setBottomInset(pixels) {
-      if (pixels === bottomInset) return;
-      bottomInset = pixels;
+    setInsets(top, bottom) {
+      if (top === insets.top && bottom === insets.bottom) return;
+      insets = { top, bottom };
       resize();
     },
     setSolarPath(path) {
@@ -405,7 +408,7 @@ export async function createGlobe(
       needsRender = true;
     },
     setLunarOverlay(overlay) {
-      lunarActive.value = overlay === null ? 0 : 1;
+      lunarActive.value = overlay === null ? 0 : overlay.strength;
       if (overlay !== null) {
         moonCenter.set(...overlay.sublunar).normalize();
         moonWest.set(...overlay.west).normalize();

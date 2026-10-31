@@ -30,20 +30,24 @@ export const SOLAR_SHADOW = /* glsl */ `
   uniform vec4 shadowAxis;   // x, y, d (radians), mu (radians, ΔT applied)
   uniform vec4 shadowCones;  // l1, l2, tan f1, tan f2
 
-  vec3 solarShadowLayer(vec3 color, float latitude, float longitude) {
+  // The Moon's shadow uses the night side's own palette, so it reads as "night in daytime":
+  // the umbra is fully night-dark, and the penumbra deepens toward it as more of the Sun is
+  // covered.
+  vec3 solarShadowLayer(vec3 color, vec3 night, float latitude, float longitude) {
     vec3 observer = observerInPlane(latitude, longitude, shadowAxis.z, shadowAxis.w);
     if (observer.z <= 0.0) return color;
     float penumbra = shadowCones.x - observer.z * shadowCones.z;
     float umbra = shadowCones.y - observer.z * shadowCones.w;
     float axisDistance = length(shadowAxis.xy - observer.xy);
     float magnitude = clamp((penumbra - axisDistance) / (penumbra + umbra), 0.0, 1.0);
-    // Daylight fades roughly with the covered area; keep some light so the map stays readable.
-    vec3 shaded = color * (1.0 - 0.8 * pow(magnitude, 1.3));
-    // A faint ring at the penumbra's edge shows where the partial eclipse is happening now.
-    float edgeRing = smoothstep(0.0, 0.01, magnitude) * (1.0 - smoothstep(0.01, 0.04, magnitude));
-    shaded += vec3(0.62, 0.78, 1.0) * edgeRing * 0.18;
-    float core = 1.0 - smoothstep(abs(umbra) * 0.85, abs(umbra), axisDistance);
-    shaded = mix(shaded, color * 0.05, core);
+    // Exaggerated on purpose, so the shadow reads as night in daytime. The brightness is
+    // chosen perceptually and then linearised (gamma 2.2): the output is sRGB-encoded, so a
+    // linear dimming that looks dark on paper looks faint on screen.
+    float perceived = 1.0 - 0.9 * pow(magnitude, 0.6);
+    vec3 shaded = max(color * pow(perceived, 2.2), night);
+    // The umbra itself is full night.
+    float core = 1.0 - smoothstep(abs(umbra) * 0.6, abs(umbra) * 1.15, axisDistance);
+    shaded = mix(shaded, night, core);
     return mix(color, shaded, solarActive);
   }
 `;
@@ -122,7 +126,7 @@ export const SOLAR_PATH_LAYER = /* glsl */ `
     float uncertain = possible - certain;
     float hatch = step(0.55, fract((gl_FragCoord.x - gl_FragCoord.y) / 10.0));
     vec3 tint = vec3(0.98, 0.83, 0.42);
-    vec3 painted = mix(color, color * 0.6 + tint * 0.3, certain * 0.75);
+    vec3 painted = mix(color, color * 0.75 + tint * 0.25, certain * 0.6);
     painted = mix(painted, color * 0.75 + tint * 0.22, uncertain * hatch * 0.85);
     // The limits of the partial eclipse: a thin, dashed, pale-blue line, so it can't be mistaken
     // for the path of totality.

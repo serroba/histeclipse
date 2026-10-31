@@ -569,3 +569,30 @@ body {
 .famous-item.body-solar .eclipse-dot {
   background: radial-gradient(circle at 65% 45%, #14182a 46%, #f7c95a 48%);
 }
+
+.eclipse-more {
+  margin-top: 6px;
+}
+
+.eclipse-more summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .hud {
+    padding: 10px 12px;
+  }
+
+  .famous-open {
+    min-height: 44px;
+    margin-top: 6px;
+  }
+
+  .eclipse-card {
+    font-size: 13px;
+  }
+}
