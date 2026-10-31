@@ -23,7 +23,8 @@ export default defineConfig({
     webServer: {
       command: 'pnpm build && pnpm preview --port 4173 --strictPort',
       url: localBaseURL,
-      reuseExistingServer: !isCI,
+      // Never reuse a server that is already running: it may be serving an older build.
+      reuseExistingServer: false,
     },
   }),
 });
