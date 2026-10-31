@@ -3,7 +3,15 @@ import { describe, expect, it } from 'vitest';
 import type { LunarEclipse } from '../data/lunarCatalog';
 import { calendarDateOf, julianDayNumber } from '../time/julianDay';
 import { astronomicalYear } from '../time/year';
-import { describeLunarEclipse, eclipseMoment, eclipseSelection, findSelected } from './lunar';
+import {
+  describeLunarEclipse,
+  describeSolarEclipse,
+  eclipseMoment,
+  eclipseSelection,
+  findSelected,
+  isSolar,
+} from './describe';
+import type { SolarEclipse } from '../data/solarCatalog';
 
 const day = (year: number, month: number, date: number, calendar: 'julian' | 'gregorian') =>
   calendarDateOf(astronomicalYear(year), month, date, calendar);
@@ -98,5 +106,43 @@ describe('describeLunarEclipse', () => {
     ],
   ])('describes %#', (input, title, depth) => {
     expect(describeLunarEclipse(input)).toEqual({ title, depth });
+  });
+});
+
+describe('solar eclipses', () => {
+  const total: SolarEclipse = {
+    jdTT: julianDayNumber(2_460_409.262_84),
+    kind: 'total',
+    gamma: 0.3431,
+    magnitude: 1.0565,
+    deltaT: 69,
+    greatest: [25.29, -104.15],
+    elements: {
+      t0: julianDayNumber(2_460_409.25),
+      x: [-0.318249],
+      y: [0.219764],
+      d: [7.5862],
+      mu: [89.591217],
+      l1: [0.535814],
+      l2: [-0.010272],
+      tanF1: 0.0046683,
+      tanF2: 0.004645,
+    },
+  };
+
+  it('describes kind and magnitude', () => {
+    expect(describeSolarEclipse(total)).toEqual({
+      title: 'Total solar eclipse',
+      depth: 'magnitude 1.056 at greatest eclipse',
+    });
+  });
+
+  it('is told apart from lunar eclipses and selected as solar', () => {
+    expect(isSolar(total)).toBe(true);
+    expect(isSolar(MARCH_2025)).toBe(false);
+    expect(eclipseSelection(total)).toEqual({ kind: 'solar', date: day(2024, 4, 8, 'gregorian') });
+    expect(
+      findSelected([MARCH_2025, total], { kind: 'solar', date: day(2024, 4, 8, 'gregorian') }),
+    ).toBe(total);
   });
 });

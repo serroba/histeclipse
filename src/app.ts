@@ -1,13 +1,22 @@
 /**
- * Wires the view state (from the URL) to the globe, the timeline and the eclipse card.
+ * Wires the view state (from the URL) to the globe, the timeline, the scrubber and the card.
  *
  * Browser-only glue, covered by the Playwright suite. Logic worth unit testing lives in the
  * modules it calls.
  */
 
 import { subsolarPoint } from './astro/sun';
-import { LunarCatalog, greatestEclipseUT, type LunarEclipse } from './data/lunarCatalog';
-import { eclipseMoment, eclipseSelection, findSelected } from './eclipses/lunar';
+import { greatestEclipseUT } from './data/catalog';
+import { LunarCatalog } from './data/lunarCatalog';
+import { SolarCatalog, type SolarEclipse } from './data/solarCatalog';
+import {
+  eclipseMoment,
+  eclipseSelection,
+  findSelected,
+  isSolar,
+  momentAt,
+} from './eclipses/describe';
+import { shadowAt } from './eclipses/solar';
 import { longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { geoToVector } from './globe/geo';
 import { createGlobe } from './globe/scene';
@@ -17,18 +26,26 @@ import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import { defaultViewState, momentJulianDay, type ViewState } from './state/viewState';
 import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
+import { julianDayNumber } from './time/julianDay';
 import type { AstronomicalYear } from './time/year';
 import { moveToYear } from './time/yearInput';
 import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
-import { createTimeline } from './ui/timeline';
+import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
+import { createTimeline, type Eclipse, type YearEclipses } from './ui/timeline';
 import { errorMessage } from './util/errors';
+
+const MINUTES_PER_DAY = 1440;
 
 export async function startApp(root: HTMLElement): Promise<void> {
   const base = import.meta.env.BASE_URL;
   const now = new Date();
   const parsed = parseViewState(window.location.search, now);
   const store = createStore<ViewState>(parsed.state);
+
+  // Picking an eclipse also turns the globe toward it; opening a shared link does not,
+  // because the link already says where the camera should be.
+  let flyToSelection = false;
 
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
   const dateText = element('time', { class: 'hud-date' });
@@ -41,8 +58,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => ({ ...state, time: moveToYear(state.time, year), selection: null }));
     },
     onSelect(eclipse) {
-      // Picking an eclipse also turns the globe toward it; opening a shared link does not,
-      // because the link already says where the camera should be.
       flyToSelection = true;
       store.set((state) => ({
         ...state,
@@ -51,6 +66,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }));
     },
   });
+  const scrubber = createScrubber((offsetMinutes) => {
+    const selected = selectedEclipse(store.get());
+    if (selected === undefined) return;
+    const jd = greatestEclipseUT(selected) + offsetMinutes / MINUTES_PER_DAY;
+    store.set((state) => ({ ...state, time: momentAt(julianDayNumber(jd)) }));
+  });
+
   root.replaceChildren(
     globeContainer,
     element(
@@ -72,7 +94,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ),
     ),
     notices,
-    element('div', { class: 'bottom' }, card.root, timeline.root),
+    element('div', { class: 'bottom' }, card.root, scrubber.root, timeline.root),
   );
 
   function notify(message: string): void {
@@ -80,10 +102,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
   parsed.warnings.forEach(notify);
 
-  let flyToSelection = false;
-  const [deltaT, catalog, globe] = await Promise.all([
+  const [deltaT, lunarCatalog, solarCatalog, globe] = await Promise.all([
     DeltaT.load(`${base}data/delta-t.json`, (url) => fetch(url)),
     LunarCatalog.load(`${base}data/lunar/`, (url) => fetch(url)),
+    SolarCatalog.load(`${base}data/solar/`, (url) => fetch(url)),
     createGlobe(globeContainer, {
       camera: store.get().camera,
       textureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
@@ -94,60 +116,106 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // Eclipses of the year on screen. Loads are tagged with their year so a slow response for a
   // year the user already left is ignored.
   let shownYear: AstronomicalYear | null = null;
-  let eclipses: readonly LunarEclipse[] | 'loading' | { readonly error: string } = 'loading';
+  let listing: YearEclipses = { status: 'loading' };
+  let pathShownFor: SolarEclipse | null = null;
 
-  function selectedEclipse(state: ViewState): LunarEclipse | undefined {
-    return Array.isArray(eclipses) ? findSelected(eclipses, state.selection) : undefined;
+  function selectedEclipse(state: ViewState): Eclipse | undefined {
+    return listing.status === 'ready' ? findSelected(listing.eclipses, state.selection) : undefined;
   }
 
-  function renderEclipses(state: ViewState): void {
+  function renderShadowAndScrubber(state: ViewState): void {
     const selected = selectedEclipse(state);
-    timeline.render({ year: state.time.date.year, eclipses, selected });
-    const showOverlay = selected !== undefined && state.layers.has('lunar');
-    if (selected === undefined || !showOverlay) {
-      globe.setLunarOverlay(null);
-      card.render(undefined, 0, state.location);
+    if (selected === undefined) {
+      globe.setSolarShadow(null);
+      scrubber.render(null);
       return;
     }
-    const uncertainty = deltaT.uncertaintySeconds(greatestEclipseUT(selected));
-    const [latitude, longitude] = selected.sublunar;
-    const sublunar = { latitude, longitude };
-    if (flyToSelection) {
-      flyToSelection = false;
-      globe.flyTo(sublunar);
-    }
-    const shift = longitudeUncertainty(uncertainty);
-    globe.setLunarOverlay({
-      sublunar: geoToVector(sublunar),
-      west: geoToVector(shiftLongitude(sublunar, -shift)),
-      east: geoToVector(shiftLongitude(sublunar, shift)),
+    const universal = momentJulianDay(state.time);
+    const offset = Math.round((universal - greatestEclipseUT(selected)) * MINUTES_PER_DAY);
+    scrubber.render({
+      offsetMinutes: Math.max(-SCRUB_RANGE_MINUTES, Math.min(SCRUB_RANGE_MINUTES, offset)),
+      timeLabel: formatTimeOfDay(state.time),
     });
+    const showShadow = isSolar(selected) && state.layers.has('solar');
+    globe.setSolarShadow(
+      showShadow
+        ? shadowAt(
+            selected.elements,
+            julianDayNumber(universal + selected.deltaT / 86_400),
+            selected.deltaT,
+          )
+        : null,
+    );
+  }
+
+  function renderSelection(state: ViewState): void {
+    const selected = selectedEclipse(state);
+    timeline.render({ year: state.time.date.year, eclipses: listing, selected });
+    const uncertainty =
+      selected === undefined ? 0 : deltaT.uncertaintySeconds(greatestEclipseUT(selected));
+
+    if (selected !== undefined && !isSolar(selected) && state.layers.has('lunar')) {
+      const [latitude, longitude] = selected.sublunar;
+      const sublunar = { latitude, longitude };
+      const shift = longitudeUncertainty(uncertainty);
+      globe.setLunarOverlay({
+        sublunar: geoToVector(sublunar),
+        west: geoToVector(shiftLongitude(sublunar, -shift)),
+        east: geoToVector(shiftLongitude(sublunar, shift)),
+      });
+    } else {
+      globe.setLunarOverlay(null);
+    }
+
+    const solarPath =
+      selected !== undefined && isSolar(selected) && state.layers.has('solar') ? selected : null;
+    if (solarPath !== pathShownFor) {
+      pathShownFor = solarPath;
+      globe.setSolarPath(
+        solarPath === null
+          ? null
+          : {
+              elements: solarPath.elements,
+              deltaTSeconds: solarPath.deltaT,
+              uncertaintySeconds: uncertainty,
+            },
+      );
+    }
+
+    if (selected !== undefined && flyToSelection) {
+      flyToSelection = false;
+      const [latitude, longitude] = isSolar(selected) ? selected.greatest : selected.sublunar;
+      globe.flyTo({ latitude, longitude });
+    }
     card.render(selected, uncertainty, state.location);
+    renderShadowAndScrubber(state);
   }
 
   function loadYear(state: ViewState): void {
     const year = state.time.date.year;
     if (year === shownYear) return;
     shownYear = year;
-    if (!catalog.covers(year)) {
-      eclipses = {
-        error: `Eclipses are catalogued from ${String(catalog.index.startYear)} to ${String(catalog.index.endYear)}`,
+    if (!lunarCatalog.covers(year) || !solarCatalog.covers(year)) {
+      listing = {
+        status: 'error',
+        message: `Eclipses are catalogued from ${String(lunarCatalog.index.startYear)} to ${String(lunarCatalog.index.endYear)}`,
       };
-      renderEclipses(state);
+      renderSelection(state);
       return;
     }
-    eclipses = 'loading';
-    renderEclipses(state);
-    catalog.eclipsesInYear(year).then(
-      (found) => {
+    listing = { status: 'loading' };
+    renderSelection(state);
+    Promise.all([lunarCatalog.eclipsesInYear(year), solarCatalog.eclipsesInYear(year)]).then(
+      ([lunar, solar]) => {
         if (shownYear !== year) return;
-        eclipses = found;
-        renderEclipses(store.get());
+        const eclipses: Eclipse[] = [...lunar, ...solar].sort((a, b) => a.jdTT - b.jdTT);
+        listing = { status: 'ready', eclipses };
+        renderSelection(store.get());
       },
       (error: unknown) => {
         if (shownYear !== year) return;
-        eclipses = { error: `Could not load eclipses: ${errorMessage(error)}` };
-        renderEclipses(store.get());
+        listing = { status: 'error', message: `Could not load eclipses: ${errorMessage(error)}` };
+        renderSelection(store.get());
       },
     );
   }
@@ -180,7 +248,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.layers !== previous.layers ||
       state.location !== previous.location
     ) {
-      renderEclipses(state);
+      renderSelection(state);
+    } else if (state.time !== previous.time) {
+      renderShadowAndScrubber(state);
     }
     sync.update(state);
   }

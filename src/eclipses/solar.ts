@@ -155,3 +155,28 @@ export function maximumEclipseAt(
     circumstances: at(seconds),
   };
 }
+
+export interface SolarOutlook {
+  /** Deepest eclipse at the place for the catalog's ΔT; null if none. */
+  readonly nominal: MaximumEclipse | null;
+  /** Phases seen at maximum for ΔT − σ, ΔT and ΔT + σ: more than one means ΔT decides. */
+  readonly phases: readonly LocalPhase[];
+}
+
+/** What `place` saw, allowing for ΔT uncertainty of ±`uncertaintySeconds`. */
+export function solarOutlook(
+  elements: BesselianElements,
+  deltaTSeconds: number,
+  uncertaintySeconds: number,
+  place: GeoPoint,
+): SolarOutlook {
+  const phaseFor = (seconds: number): LocalPhase =>
+    maximumEclipseAt(elements, seconds, place)?.circumstances.phase ?? 'none';
+  const nominal = maximumEclipseAt(elements, deltaTSeconds, place);
+  const phases = new Set<LocalPhase>([
+    phaseFor(deltaTSeconds - uncertaintySeconds),
+    nominal?.circumstances.phase ?? 'none',
+    phaseFor(deltaTSeconds + uncertaintySeconds),
+  ]);
+  return { nominal, phases: [...phases] };
+}

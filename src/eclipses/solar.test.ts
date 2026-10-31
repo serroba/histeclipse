@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { SolarEclipse } from '../data/solarCatalog';
 import { julianDayNumber } from '../time/julianDay';
-import { localCircumstances, maximumEclipseAt, shadowAt } from './solar';
+import { localCircumstances, maximumEclipseAt, shadowAt, solarOutlook } from './solar';
 
 // The 21st century's solar eclipses, as the site serves them (the schema itself is tested with
 // the catalog loader; here the records are used as data).
@@ -139,6 +139,29 @@ describe('shadowAt', () => {
       phase: 'none',
       magnitude: 0,
       sunUp: false,
+    });
+  });
+});
+
+describe('solarOutlook', () => {
+  it('is certain when ΔT is well known', () => {
+    const outlook = solarOutlook(APRIL_2024.elements, APRIL_2024.deltaT, 3, DALLAS);
+    expect(outlook.phases).toEqual(['total']);
+    expect(outlook.nominal?.circumstances.phase).toBe('total');
+  });
+
+  it('flags a place near the path edge as uncertain when ΔT is uncertain', () => {
+    // Just inside NASA's southern limit; a ±10 min ΔT error moves the path 2.5° east or west.
+    const nearEdge = { latitude: 29.98, longitude: -98.002 };
+    const outlook = solarOutlook(APRIL_2024.elements, APRIL_2024.deltaT, 600, nearEdge);
+    expect(outlook.phases).toContain('total');
+    expect(outlook.phases.length).toBeGreaterThan(1);
+  });
+
+  it('reports no eclipse at all where the shadow never reaches', () => {
+    expect(solarOutlook(APRIL_2024.elements, APRIL_2024.deltaT, 3, SYDNEY)).toEqual({
+      nominal: null,
+      phases: ['none'],
     });
   });
 });

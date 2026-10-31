@@ -60,7 +60,7 @@ export interface ViewState {
 }
 
 export const CAMERA_DISTANCE_RANGE = { min: 1.1, max: 50 } as const;
-export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'terminator']);
+export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'solar', 'terminator']);
 export const DEFAULT_CAMERA: GlobeCamera = {
   target: { latitude: 20, longitude: 0 },
   // With a 40° field of view on the narrower side, the whole globe fits with a margin.
