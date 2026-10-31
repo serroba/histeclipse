@@ -64,14 +64,27 @@ body {
   position: absolute;
   top: 0;
   left: 0;
+  /* A finger-sized target centred on the body; tapping it flies there. */
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
   font-size: 0.75rem;
   color: var(--ink-muted);
   white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.space-marker:hover span {
+  color: var(--ink);
 }
 
 .space-marker::before {
   content: '';
   position: absolute;
+  top: 50%;
+  left: 50%;
   width: calc(var(--radius, 3px) * 2 + 8px);
   height: calc(var(--radius, 3px) * 2 + 8px);
   border: 1px solid rgb(150 180 255 / 0.55);
@@ -89,8 +102,8 @@ body {
 
 .space-marker span {
   position: absolute;
-  left: calc(var(--radius, 3px) + 8px);
-  top: calc(var(--radius, 3px) * -1 - 4px);
+  left: calc(50% + var(--radius, 3px) + 8px);
+  top: calc(50% - var(--radius, 3px) - 4px);
 }
 
 .space-marker[hidden] {

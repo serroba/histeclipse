@@ -12,6 +12,7 @@ import {
   Color,
   DirectionalLight,
   LinearFilter,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
@@ -19,6 +20,7 @@ import {
   PerspectiveCamera,
   PlaneGeometry,
   Quaternion,
+  Raycaster,
   Scene,
   ShaderMaterial,
   SphereGeometry,
@@ -37,6 +39,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { apply, multiply, transpose, type Matrix3 } from '../astro/matrix';
 import {
   CAMERA_DISTANCE_RANGE,
+  DEFAULT_CAMERA,
+  type Body,
   type GeoPoint,
   type GlobeCamera,
   type Viewpoint,
@@ -66,6 +70,15 @@ const NARROW_SIDE_FOV_DEGREES = 40;
 const FLIGHT_MS = 900;
 /** Flights between viewpoints cross up to 60 Earth radii: quick, but long enough to follow. */
 const VIEW_FLIGHT_MS = 1600;
+/** Arriving at a body, the camera stops this many of its radii from the centre. */
+const FOCUS_DISTANCE = 4;
+/** A press that moves less than this (pixels) is a click on a body, not a drag. */
+const CLICK_SLOP_PIXELS = 6;
+const BODY_RADIUS: Record<Body, number> = {
+  earth: 1,
+  moon: MOON_RADIUS_EARTH_RADII,
+  sun: SUN_RADIUS_EARTH_RADII,
+};
 /** Beyond this distance (Earth radii) the view holds still in space and Earth turns in it. */
 const INERTIAL_VIEW_DISTANCE = 20;
 /** Bodies smaller than this on screen (radius, pixels) get a marker ring. */
@@ -115,6 +128,13 @@ export interface Globe {
    */
   setSpace(bodies: SpaceBodies): void;
   /**
+   * Centre the camera on a body and fly there; it then orbits and zooms around that body. A
+   * body that has not loaded yet (the Moon, briefly) is flown to once it has.
+   */
+  setFocus(body: Body): void;
+  /** Called when someone clicks a body other than the one in focus. */
+  onBodyClick(listener: (body: Body) => void): () => void;
+  /**
    * Fly to a viewpoint. Attached viewpoints follow the bodies as time moves and wait for the
    * Moon's position if it has not loaded yet; 'free' returns to the last orbiting camera.
    */
@@ -124,7 +144,7 @@ export interface Globe {
   /** Turn the globe smoothly so `target` faces the camera, keeping the distance. */
   flyTo(target: GeoPoint): void;
   setCamera(camera: GlobeCamera): void;
-  /** Called while the user moves the camera. Returns an unsubscribe function. */
+  /** Called while the user moves the camera, relative to the body in focus. Returns an unsubscribe function. */
   onCameraChange(listener: (camera: GlobeCamera) => void): () => void;
   readonly canvas: HTMLCanvasElement;
   dispose(): void;
@@ -249,6 +269,7 @@ export async function createGlobe(
     readonly camera: GlobeCamera;
     readonly textureUrl: string;
     readonly moonTextureUrl: string;
+    readonly focus: Body;
   },
 ): Promise<Globe> {
   // preserveDrawingBuffer lets the page (and tests) read the rendered image back.
@@ -348,7 +369,7 @@ export async function createGlobe(
   scene.add(moon, sunlight, sunlight.target);
 
   const sun = new Mesh(
-    new SphereGeometry(SUN_RADIUS_EARTH_RADII, 48, 24),
+    new SphereGeometry(SUN_RADIUS_EARTH_RADII, 128, 64),
     new MeshBasicMaterial({ color: new Color(1, 0.96, 0.86) }),
   );
   const glow = new Sprite(
@@ -373,6 +394,95 @@ export async function createGlobe(
     sun: spaceMarker(markerLayer, 'Sun', 'sun'),
   };
   let earthFixedToJ2000: Matrix3 | null = null;
+  // The Sun's frame is J2000, so a camera orbiting the Sun does not spin with Earth.
+  const sunFrame = new Quaternion();
+  // The Moon's map has longitude 0 at the mesh's +Z (see above); geoToVector puts it at +X.
+  const moonMapTurn = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2);
+  const bodyMeshes: Record<Body, Mesh> = { earth, moon, sun };
+  const bodyClickListeners = new Set<(body: Body) => void>();
+  for (const [body, marker] of Object.entries(markers)) {
+    marker.addEventListener('click', () => {
+      requestBody(body as Body);
+    });
+  }
+
+  // A click (a press that barely moves) on a body asks to fly to it.
+  const raycaster = new Raycaster();
+  let press: { x: number; y: number } | null = null;
+  renderer.domElement.addEventListener('pointerdown', (event) => {
+    press = { x: event.clientX, y: event.clientY };
+  });
+  renderer.domElement.addEventListener('pointerup', (event) => {
+    if (press === null) return;
+    const moved = Math.hypot(event.clientX - press.x, event.clientY - press.y);
+    press = null;
+    if (moved > CLICK_SLOP_PIXELS) return;
+    const bounds = renderer.domElement.getBoundingClientRect();
+    raycaster.setFromCamera(
+      new Vector2(
+        ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
+        -((event.clientY - bounds.top) / bounds.height) * 2 + 1,
+      ),
+      camera,
+    );
+    const visible = Object.values(bodyMeshes).filter((mesh) => mesh.visible);
+    const hit = raycaster.intersectObjects(visible, false)[0];
+    const body = (Object.keys(bodyMeshes) as Body[]).find((key) => bodyMeshes[key] === hit?.object);
+    if (body !== undefined) requestBody(body);
+  });
+
+  function requestBody(body: Body): void {
+    if (body === focus && viewpoint === 'free') return;
+    for (const listener of bodyClickListeners) listener(body);
+  }
+
+  /** Where a body is and how its surface coordinates turn into the scene's axes. */
+  function bodyFrame(body: Body): { position: Vector3; rotation: Quaternion } {
+    if (body === 'moon') {
+      return { position: moon.position, rotation: moon.quaternion.clone().multiply(moonMapTurn) };
+    }
+    if (body === 'sun') return { position: sun.position, rotation: sunFrame };
+    return { position: new Vector3(), rotation: new Quaternion() };
+  }
+
+  function bodyReady(body: Body): boolean {
+    return body === 'earth' || bodyMeshes[body].visible;
+  }
+
+  /** The camera relative to the body in focus. */
+  function relativeCamera(): GlobeCamera {
+    const { position, rotation } = bodyFrame(focus);
+    const local = camera.position
+      .clone()
+      .sub(position)
+      .applyQuaternion(rotation.clone().invert())
+      .divideScalar(BODY_RADIUS[focus]);
+    return cameraFromPosition([local.x, local.y, local.z]);
+  }
+
+  function focusPose(body: Body, state: GlobeCamera): CameraPose {
+    const { position, rotation } = bodyFrame(body);
+    const eye = new Vector3(
+      ...cameraPosition({ ...state, distance: state.distance * BODY_RADIUS[body] }),
+    )
+      .applyQuaternion(rotation)
+      .add(position);
+    return {
+      eye: [eye.x, eye.y, eye.z],
+      target: [position.x, position.y, position.z],
+      fovDegrees: NARROW_SIDE_FOV_DEGREES,
+    };
+  }
+
+  /** Hand the camera to the orbit controls, centred on the body in focus. */
+  function orbitFocus(): void {
+    const radius = BODY_RADIUS[focus];
+    controls.target.copy(bodyFrame(focus).position);
+    controls.minDistance = CAMERA_DISTANCE_RANGE.min * radius;
+    controls.maxDistance = Math.min(CAMERA_DISTANCE_RANGE.max * radius, CAMERA_DISTANCE_RANGE.max);
+    controls.enabled = true;
+    controls.update();
+  }
 
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enablePan = false;
@@ -390,12 +500,15 @@ export async function createGlobe(
   let flight: { from: Vector3; rotation: Quaternion; start: number } | null = null;
 
   function placeCamera(state: GlobeCamera): void {
-    freeCamera = state;
+    focusCamera = state;
     if (viewpoint !== 'free') return;
-    camera.position.set(...cameraPosition(state));
-    camera.lookAt(0, 0, 0);
-    controls.update();
-    needsRender = true;
+    if (!bodyReady(focus)) {
+      // Hold the usual view of Earth until the body arrives.
+      applyPose(focusPose('earth', DEFAULT_CAMERA));
+      return;
+    }
+    applyPose(focusPose(focus, state));
+    orbitFocus();
   }
 
   let insets = { top: 0, bottom: 0 };
@@ -405,9 +518,13 @@ export async function createGlobe(
   let pendingViewpoint: Viewpoint | null = null;
   // A flight between viewpoints runs from a fixed pose to a live one, as the bodies keep moving.
   let viewFlight: { from: CameraPose; start: number } | null = null;
-  // Where the camera orbited before an attached viewpoint, to return there.
-  let freeCamera: GlobeCamera = options.camera;
+  let focus: Body = options.focus;
+  // A focus asked for before its body loaded; the camera is placed there once it has.
+  let pendingFocus = !bodyReady(focus);
+  // Where the camera orbits, relative to the body in focus; kept while a viewpoint is attached.
+  let focusCamera: GlobeCamera = options.camera;
   container.dataset['view'] = viewpoint;
+  container.dataset['focus'] = focus;
   const lookTarget = new Vector3();
 
   function currentPose(): CameraPose {
@@ -419,13 +536,7 @@ export async function createGlobe(
   }
 
   function livePose(): CameraPose {
-    if (viewpoint === 'free') {
-      return {
-        eye: cameraPosition(freeCamera),
-        target: [0, 0, 0],
-        fovDegrees: NARROW_SIDE_FOV_DEGREES,
-      };
-    }
+    if (viewpoint === 'free') return focusPose(focus, focusCamera);
     return attachedPose(viewpoint, [moon.position.x, moon.position.y, moon.position.z]);
   }
 
@@ -440,9 +551,7 @@ export async function createGlobe(
 
   function startViewFlight(next: Viewpoint): void {
     const from = currentPose();
-    if (viewpoint === 'free') {
-      freeCamera = cameraFromPosition([camera.position.x, camera.position.y, camera.position.z]);
-    }
+    if (viewpoint === 'free' && viewFlight === null) focusCamera = relativeCamera();
     viewpoint = next;
     flight = null;
     viewFlight = { from, start: performance.now() };
@@ -480,7 +589,7 @@ export async function createGlobe(
 
   controls.addEventListener('change', () => {
     needsRender = true;
-    const state = cameraFromPosition([camera.position.x, camera.position.y, camera.position.z]);
+    const state = relativeCamera();
     for (const listener of listeners) listener(state);
   });
 
@@ -492,7 +601,8 @@ export async function createGlobe(
       applyPose(blendPose(viewFlight.from, livePose(), eased));
       if (progress === 1) {
         viewFlight = null;
-        if (viewpoint === 'free') controls.enabled = true;
+        // Orbit controls report the landing, which puts the camera in the link.
+        if (viewpoint === 'free') orbitFocus();
       }
     } else if (flight !== null) {
       const progress = Math.min(1, (now - flight.start) / FLIGHT_MS);
@@ -503,7 +613,8 @@ export async function createGlobe(
       if (progress === 1) flight = null;
     }
     // Wheel steps scale the distance; take bigger steps far out so the Sun is a few spins away.
-    controls.zoomSpeed = camera.position.length() < 10 ? 0.8 : 2.5;
+    controls.zoomSpeed =
+      camera.position.distanceTo(controls.target) < 10 * BODY_RADIUS[focus] ? 0.8 : 2.5;
     // update() keeps damping going after the pointer is released; it reports movement via 'change'.
     if (controls.enabled) controls.update();
     if (needsRender) {
@@ -519,7 +630,6 @@ export async function createGlobe(
   function placeMarkers(): void {
     const width = container.clientWidth;
     const height = container.clientHeight;
-    const cameraDistance = camera.position.length();
     const bodies = [
       { marker: markers.earth, mesh: earth, radius: 1, shown: true, name: 'Earth' },
       {
@@ -541,13 +651,9 @@ export async function createGlobe(
     for (const { marker, mesh, radius, shown, name } of bodies) {
       projected.copy(mesh.position).project(camera);
       const distance = camera.position.distanceTo(mesh.position);
-      // Labels appear once the camera leaves Earth's neighbourhood, and only for bodies in front.
+      // Only bodies in front of the camera get a marker.
       const visible =
-        shown &&
-        cameraDistance > 4 &&
-        projected.z < 1 &&
-        Math.abs(projected.x) < 1.2 &&
-        Math.abs(projected.y) < 1.2;
+        shown && projected.z < 1 && Math.abs(projected.x) < 1.2 && Math.abs(projected.y) < 1.2;
       marker.hidden = !visible;
       if (!visible) continue;
       const pixels = apparentRadiusPixels({
@@ -594,6 +700,7 @@ export async function createGlobe(
       // since the last moment (old Earth-fixed -> J2000 -> new Earth-fixed).
       if (
         earthFixedToJ2000 !== null &&
+        focus === 'earth' &&
         viewpoint === 'free' &&
         viewFlight === null &&
         camera.position.length() > INERTIAL_VIEW_DISTANCE &&
@@ -612,8 +719,14 @@ export async function createGlobe(
         // app while it is still rendering this moment, and the stale camera would win.
         camera.lookAt(0, 0, 0);
       }
+      // A camera orbiting the Moon or Sun keeps its place relative to it as the bodies move.
+      const riding =
+        focus !== 'earth' && viewpoint === 'free' && viewFlight === null && !pendingFocus;
+      const relative = riding ? relativeCamera() : null;
       earthFixedToJ2000 = bodies.earthFixedToJ2000;
       const toEarthFixed = transpose(bodies.earthFixedToJ2000);
+      const [r0, r1, r2] = sceneRotation(toEarthFixed);
+      sunFrame.setFromRotationMatrix(new Matrix4().set(...r0, 0, ...r1, 0, ...r2, 0, 0, 0, 0, 1));
       sun.position.set(...sceneFromKm(apply(toEarthFixed, bodies.sunKm)));
       sun.visible = true;
       sunlight.position.copy(sun.position);
@@ -626,6 +739,16 @@ export async function createGlobe(
         sunlight.target.position.copy(moon.position);
       }
       container.dataset['space'] = moon.visible ? 'moon' : 'sun';
+      if (relative !== null) {
+        // The next frame's controls.update() reports the move (see the inertial view above).
+        applyPose(focusPose(focus, relative));
+        controls.target.copy(bodyFrame(focus).position);
+      }
+      if (pendingFocus && bodyReady(focus)) {
+        // A link that centres on the Moon: go straight there, as the link describes.
+        pendingFocus = false;
+        if (viewpoint === 'free') placeCamera(focusCamera);
+      }
       if (pendingViewpoint !== null && moon.visible) {
         startViewFlight(pendingViewpoint);
         pendingViewpoint = null;
@@ -707,6 +830,34 @@ export async function createGlobe(
       container.dataset['lunarOverlay'] = overlay === null ? 'off' : 'on';
       needsRender = true;
     },
+    setFocus(body) {
+      if (body === focus && viewpoint === 'free') return;
+      const from = currentPose();
+      // Arrive on the side facing the camera, a few radii out.
+      const { position, rotation } = bodyFrame(body);
+      const toward = camera.position
+        .clone()
+        .sub(position)
+        .applyQuaternion(rotation.clone().invert());
+      focus = body;
+      pendingFocus = !bodyReady(body);
+      focusCamera = {
+        target: cameraFromPosition([toward.x, toward.y, toward.z]).target,
+        distance: body === 'earth' ? DEFAULT_CAMERA.distance : FOCUS_DISTANCE,
+      };
+      container.dataset['focus'] = body;
+      viewpoint = 'free';
+      container.dataset['view'] = 'free';
+      pendingViewpoint = null;
+      flight = null;
+      controls.enabled = false;
+      if (pendingFocus) return;
+      viewFlight = { from, start: performance.now() };
+    },
+    onBodyClick(listener) {
+      bodyClickListeners.add(listener);
+      return () => bodyClickListeners.delete(listener);
+    },
     setViewpoint(next) {
       if (next === 'free') pendingViewpoint = null;
       if (next === viewpoint) return;
@@ -718,7 +869,7 @@ export async function createGlobe(
     },
     flyTo(target) {
       // Attached viewpoints are placed by the bodies, not by places on the ground.
-      if (viewpoint !== 'free') return;
+      if (viewpoint !== 'free' || focus !== 'earth') return;
       const from = camera.position.clone().normalize();
       const to = new Vector3(...geoToVector(target)).normalize();
       flight = {

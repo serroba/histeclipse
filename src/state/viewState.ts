@@ -26,6 +26,10 @@ export type Layer = (typeof LAYERS)[number];
 export const VIEWPOINTS = ['free', 'moon-from-earth', 'earth-from-moon'] as const;
 export type Viewpoint = (typeof VIEWPOINTS)[number];
 
+/** The bodies the camera can centre on and orbit. */
+export const BODIES = ['earth', 'moon', 'sun'] as const;
+export type Body = (typeof BODIES)[number];
+
 export const ECLIPSE_KINDS = ['lunar', 'solar'] as const;
 export type EclipseKind = (typeof ECLIPSE_KINDS)[number];
 
@@ -44,10 +48,13 @@ export interface Moment {
   readonly minuteOfDay: number;
 }
 
+/**
+ * The orbiting camera, relative to the body in focus: the point on its surface under the camera
+ * (on the Moon in selenographic coordinates; on the Sun in J2000 right ascension and
+ * declination) and the distance from its centre in its own radii.
+ */
 export interface GlobeCamera {
-  /** The point on Earth the camera looks at. */
   readonly target: GeoPoint;
-  /** Distance from Earth's center, in Earth radii. */
   readonly distance: number;
 }
 
@@ -63,11 +70,13 @@ export interface ViewState {
   readonly location: GeoPoint | null;
   readonly camera: GlobeCamera;
   readonly view: Viewpoint;
+  readonly focus: Body;
   readonly layers: ReadonlySet<Layer>;
   readonly selection: Selection | null;
 }
 
-// Out to ~5 times the Sun's distance (23,455 Earth radii), so Earth, Moon and Sun fit in view.
+// In the focused body's radii. For Earth, ~5 times the Sun's distance (23,455 Earth radii), so
+// Earth, Moon and Sun fit in view; the scene caps other bodies at the same reach.
 export const CAMERA_DISTANCE_RANGE = { min: 1.1, max: 120_000 } as const;
 export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'solar', 'terminator']);
 export const DEFAULT_CAMERA: GlobeCamera = {
@@ -107,6 +116,7 @@ export function defaultViewState(now: Date): ViewState {
     location: null,
     camera: DEFAULT_CAMERA,
     view: 'free',
+    focus: 'earth',
     layers: DEFAULT_LAYERS,
     selection: null,
   };
