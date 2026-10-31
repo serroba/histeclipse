@@ -10,11 +10,13 @@ import {
   isSolar,
 } from '../eclipses/describe';
 import { lunarPhaseAt, type LunarPhase } from '../eclipses/lunarPhases';
+import { moonInShadow } from '../eclipses/moonInShadow';
 import { solarOutlook, type LocalPhase } from '../eclipses/solar';
 import { longitudeUncertainty, moonVisibility } from '../eclipses/visibility';
 import type { GeoPoint } from '../state/viewState';
 import { formatDate, formatDuration, formatTimeOfDay } from '../time/format';
 import { element } from './dom';
+import { createMoonView } from './moonView';
 
 export interface EclipseCard {
   readonly root: HTMLElement;
@@ -166,6 +168,8 @@ function famousLines(famous: FamousEclipse): HTMLElement[] {
 
 export function createEclipseCard(): EclipseCard {
   const root = element('section', { class: 'eclipse-card', 'aria-live': 'polite', hidden: '' });
+  // Reused across renders, so scrubbing time moves the Moon smoothly instead of rebuilding it.
+  const moonView = createMoonView();
   return {
     root,
     render(eclipse, uncertaintySeconds, observer, famous, offsetMinutes = 0) {
@@ -182,16 +186,26 @@ export function createEclipseCard(): EclipseCard {
       const background = lines.filter((line) => line.classList.contains('eclipse-uncertainty'));
       const essentials = lines.filter((line) => !background.includes(line));
       const famousBackground = famous === undefined ? [] : famousLines(famous).slice(1);
-      root.replaceChildren(
+      // The card is rebuilt as time changes; keep "More about this eclipse" open if it was.
+      const wasOpen = root.querySelector('details')?.open ?? false;
+      const more = element(
+        'details',
+        { class: 'eclipse-more' },
+        element('summary', {}, 'More about this eclipse'),
+        ...famousBackground,
+        ...background,
+      );
+      more.open = wasOpen;
+      const text = element(
+        'div',
+        { class: 'eclipse-text' },
         ...(famous === undefined ? [] : famousLines(famous).slice(0, 1)),
         ...essentials,
-        element(
-          'details',
-          { class: 'eclipse-more' },
-          element('summary', {}, 'More about this eclipse'),
-          ...famousBackground,
-          ...background,
-        ),
+      );
+      moonView.render(isSolar(eclipse) ? null : moonInShadow(eclipse, offsetMinutes));
+      root.replaceChildren(
+        isSolar(eclipse) ? text : element('div', { class: 'eclipse-head' }, text, moonView.root),
+        more,
       );
       root.hidden = false;
     },
