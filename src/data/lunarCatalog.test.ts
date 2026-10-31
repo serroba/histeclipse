@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { calendarDateOf, julianDay } from '../time/julianDay';
 import { astronomicalYear } from '../time/year';
 import { CatalogError, LunarCatalog, yearOf, type Fetch } from './lunarCatalog';
 
@@ -82,7 +83,36 @@ describe('LunarCatalog', () => {
       catalog.eclipsesInYear(astronomicalYear(2025)),
     ]);
     await catalog.eclipsesInYear(astronomicalYear(2099));
-    expect(fetchJson.calls).toEqual([`${BASE}index.json`, `${BASE}2000.json`]);
+    // 2099 also reads 2100: an eclipse early on 1 January 2100 TT may fall in 2099 UT.
+    expect(fetchJson.calls).toEqual([`${BASE}index.json`, `${BASE}2000.json`, `${BASE}2100.json`]);
+  });
+
+  it('assigns eclipses to years by UT, reading the next century when needed', async () => {
+    // An eclipse at -3800 January 1, 06:00 TT. With ΔT of 29 h it happened on
+    // 31 December -3801 in UT, so it belongs to -3801 although it is filed under -3800.
+    const jdTT = julianDay(calendarDateOf(astronomicalYear(-3800), 1, 1.25, 'julian'));
+    const record = {
+      jdTT,
+      kind: 'partial',
+      umbralMagnitude: 0.5,
+      penumbralMagnitude: 1.5,
+      gamma: 0.7,
+      deltaT: 104_400,
+      sublunar: [0, 0],
+    };
+    const fetchJson = fakeFetch(new Map([[`${BASE}-3800.json`, Response.json([record])]]));
+    const catalog = await LunarCatalog.load(BASE, fetchJson);
+    const late = await catalog.eclipsesInYear(astronomicalYear(-3801));
+    expect(late.map((eclipse) => eclipse.jdTT)).toContain(jdTT);
+    const early = await catalog.eclipsesInYear(astronomicalYear(-3800));
+    expect(early.map((eclipse) => eclipse.jdTT)).not.toContain(jdTT);
+  });
+
+  it('reads only one file for the last year of the catalog', async () => {
+    const fetchJson = fakeFetch();
+    const catalog = await LunarCatalog.load(BASE, fetchJson);
+    await catalog.eclipsesInYear(astronomicalYear(3000));
+    expect(fetchJson.calls).toEqual([`${BASE}index.json`, `${BASE}3000.json`]);
   });
 
   it('rejects years outside the catalog', async () => {

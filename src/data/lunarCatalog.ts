@@ -67,6 +67,11 @@ export function yearOf(jd: JulianDay): AstronomicalYear {
   return calendarDate(jd, historicalCalendar(jd)).year;
 }
 
+/** Greatest eclipse in Universal Time, using the ΔT the catalog computed it with. */
+export function greatestEclipseUT(eclipse: LunarEclipse): JulianDay {
+  return julianDayNumber(eclipse.jdTT - eclipse.deltaT / 86_400);
+}
+
 export class LunarCatalog {
   readonly index: LunarCatalogIndex;
   readonly #baseUrl: string;
@@ -89,20 +94,28 @@ export class LunarCatalog {
     return year >= this.index.startYear && year <= this.index.endYear;
   }
 
-  /** Every lunar eclipse whose greatest eclipse falls in `year`, in time order. */
+  /**
+   * Every lunar eclipse whose greatest eclipse falls in `year` in Universal Time, in time order.
+   *
+   * Files are grouped by year in TT, which runs ahead of UT by ΔT (over a day in 4000 BCE).
+   * An eclipse early on 1 January TT can belong to the previous year in UT, so the following
+   * year's file is read as well when it is a different one.
+   */
   async eclipsesInYear(year: AstronomicalYear): Promise<readonly LunarEclipse[]> {
     if (!this.covers(year)) {
       throw new RangeError(
         `${formatYear(year)} is outside the catalog (${String(this.index.startYear)} to ${String(this.index.endYear)})`,
       );
     }
-    const chunk = await this.#chunk(year);
-    return chunk.filter((eclipse) => yearOf(eclipse.jdTT) === year);
+    const size = this.index.yearsPerChunk;
+    const starts = new Set(
+      [year, Math.min(year + 1, this.index.endYear)].map((y) => Math.floor(y / size) * size),
+    );
+    const chunks = await Promise.all([...starts].map((start) => this.#chunk(start)));
+    return chunks.flat().filter((eclipse) => yearOf(greatestEclipseUT(eclipse)) === year);
   }
 
-  #chunk(year: AstronomicalYear): Promise<readonly LunarEclipse[]> {
-    const size = this.index.yearsPerChunk;
-    const startYear = Math.floor(year / size) * size;
+  #chunk(startYear: number): Promise<readonly LunarEclipse[]> {
     let pending = this.#chunks.get(startYear);
     if (pending === undefined) {
       const entry = this.index.chunks.find((chunk) => chunk.startYear === startYear);
