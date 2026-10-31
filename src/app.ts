@@ -50,7 +50,8 @@ import type { SkyScene } from './sky/skyScene';
 import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
 import { julianDayNumber } from './time/julianDay';
-import type { AstronomicalYear } from './time/year';
+import { formatInCalendar, yearContaining, yearSpan } from './time/calendars';
+import { astronomicalYear, formatYear, type AstronomicalYear } from './time/year';
 import { moveToYear } from './time/yearInput';
 import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
@@ -116,7 +117,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const card = createEclipseCard();
   const timeline = createTimeline({
     onYear(year) {
-      store.set((state) => ({ ...state, time: moveToYear(state.time, year), selection: null }));
+      store.set((state) => ({ ...state, time: timeInYear(state, year), selection: null }));
+    },
+    onCalendar(years) {
+      store.set((state) => ({ ...state, years }));
     },
     onSelect(eclipse) {
       flyToSelection = true;
@@ -245,9 +249,29 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }));
   }
 
+  /** The year on the bar: in the calendar picked, holding the moment shown. */
+  function barYear(state: ViewState): number {
+    return state.years === 'western'
+      ? state.time.date.year
+      : yearContaining(state.years, momentJulianDay(state.time));
+  }
+
+  /**
+   * The same point in another year of the bar's calendar: the same date for western years, and
+   * the same number of days into the year for the others.
+   */
+  function timeInYear(state: ViewState, year: number): ViewState['time'] {
+    if (state.years === 'western') return moveToYear(state.time, astronomicalYear(year));
+    const now = momentJulianDay(state.time);
+    const from = yearSpan(state.years, barYear(state));
+    const to = yearSpan(state.years, year);
+    const into = Math.min(now - from.start, to.end - to.start - 1 / MINUTES_PER_DAY);
+    return momentAt(julianDayNumber(to.start + into));
+  }
+
   // Eclipses of the year on screen. Loads are tagged with their year so a slow response for a
   // year the user already left is ignored.
-  let shownYear: AstronomicalYear | null = null;
+  let shownYear: string | null = null;
   let listing: YearEclipses = { status: 'loading' };
   let pathShownFor: SolarEclipse | null = null;
 
@@ -308,7 +332,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function renderSelection(state: ViewState): void {
     const selected = selectedEclipse(state);
-    timeline.render({ year: state.time.date.year, eclipses: listing, selected });
+    timeline.render({ year: barYear(state), calendar: state.years, eclipses: listing, selected });
     const uncertainty =
       selected === undefined ? 0 : deltaT.uncertaintySeconds(greatestEclipseUT(selected));
 
@@ -336,29 +360,62 @@ export async function startApp(root: HTMLElement): Promise<void> {
     renderMoment(state);
   }
 
+  /** The western years a year of the bar spans: one, or two for a year starting mid-way. */
+  function westernYearsOf(state: ViewState, year: number): readonly AstronomicalYear[] | null {
+    if (state.years === 'western') return [astronomicalYear(year)];
+    try {
+      const { start, end } = yearSpan(state.years, year);
+      const first = yearContaining('western', start);
+      const last = yearContaining('western', julianDayNumber(end - 1 / MINUTES_PER_DAY));
+      return Array.from({ length: last - first + 1 }, (_, index) =>
+        astronomicalYear(first + index),
+      );
+    } catch {
+      return null; // Before the start of the Julian Day count.
+    }
+  }
+
   function loadYear(state: ViewState): void {
-    const year = state.time.date.year;
-    if (year === shownYear) return;
-    shownYear = year;
-    if (!lunarCatalog.covers(year) || !solarCatalog.covers(year)) {
+    const year = barYear(state);
+    const key = `${state.years}:${String(year)}`;
+    if (key === shownYear) return;
+    shownYear = key;
+    const westernYears = westernYearsOf(state, year);
+    const covered = (westernYears ?? []).every(
+      (each) => lunarCatalog.covers(each) && solarCatalog.covers(each),
+    );
+    if (westernYears === null || !covered) {
       listing = {
         status: 'error',
-        message: `Eclipses are catalogued from ${String(lunarCatalog.index.startYear)} to ${String(lunarCatalog.index.endYear)}`,
+        message: `Eclipses are catalogued from ${formatYear(astronomicalYear(lunarCatalog.index.startYear))} to ${formatYear(astronomicalYear(lunarCatalog.index.endYear))}`,
       };
       renderSelection(state);
       return;
     }
+    const span = state.years === 'western' ? null : yearSpan(state.years, year);
     listing = { status: 'loading' };
     renderSelection(state);
-    Promise.all([lunarCatalog.eclipsesInYear(year), solarCatalog.eclipsesInYear(year)]).then(
-      ([lunar, solar]) => {
-        if (shownYear !== year) return;
-        const eclipses: Eclipse[] = [...lunar, ...solar].sort((a, b) => a.jdTT - b.jdTT);
+    Promise.all(
+      westernYears.flatMap((each) => [
+        lunarCatalog.eclipsesInYear(each),
+        solarCatalog.eclipsesInYear(each),
+      ]),
+    ).then(
+      (chunks) => {
+        if (shownYear !== key) return;
+        const eclipses: Eclipse[] = chunks
+          .flat()
+          .filter((eclipse) => {
+            if (span === null) return true;
+            const when = greatestEclipseUT(eclipse);
+            return when >= span.start && when < span.end;
+          })
+          .sort((a, b) => a.jdTT - b.jdTT);
         listing = { status: 'ready', eclipses };
         renderSelection(store.get());
       },
       (error: unknown) => {
-        if (shownYear !== year) return;
+        if (shownYear !== key) return;
         listing = { status: 'error', message: `Could not load eclipses: ${errorMessage(error)}` };
         renderSelection(store.get());
       },
@@ -387,7 +444,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     timeText.textContent = formatTimeOfDay(state.time);
     const seconds = deltaT.seconds(universal);
     const uncertainty = deltaT.uncertaintySeconds(universal);
-    detailText.textContent = `${formatCalendar(state.time)} · ΔT ${formatDuration(seconds)} ± ${formatDuration(uncertainty)}`;
+    // In another calendar, the same day written its way too (by day, from midnight).
+    const other = state.years === 'western' ? '' : ` · ${formatInCalendar(state.years, universal)}`;
+    detailText.textContent = `${formatCalendar(state.time)}${other} · ΔT ${formatDuration(seconds)} ± ${formatDuration(uncertainty)}`;
   }
 
   // The sky view, its code and its 9,000 stars load the first time someone opens it.
@@ -510,7 +569,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function render(state: ViewState, previous: ViewState | null): void {
-    if (state.time !== previous?.time) showTime(state);
+    if (state.time !== previous?.time || state.years !== previous.years) showTime(state);
     if (
       state.mode !== previous?.mode ||
       state.time !== previous.time ||
@@ -528,7 +587,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (state.view !== previous?.view || state.mode !== previous.mode) {
       viewSwitch.render(state.mode, state.view, moonEphemeris !== null);
     }
-    if (state.time.date.year !== previous?.time.date.year) loadYear(state);
+    if (state.years !== previous?.years || barYear(state) !== barYear(previous)) {
+      loadYear(state);
+    }
     if (
       state.selection !== previous?.selection ||
       state.layers !== previous.layers ||

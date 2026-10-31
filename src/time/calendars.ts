@@ -39,8 +39,8 @@ export const CALENDAR_INFO: Readonly<Record<YearCalendar, YearCalendarInfo>> = {
   western: { name: 'Julian / Gregorian', era: '' },
   hebrew: { name: 'Hebrew', era: 'AM' },
   islamic: { name: 'Islamic', era: 'AH' },
-  egyptian: { name: 'Egyptian (Nabonassar)', era: 'Nab.' },
-  roman: { name: 'Roman (from the founding)', era: 'AUC' },
+  egyptian: { name: 'Egyptian', era: 'Nab.' },
+  roman: { name: 'Roman', era: 'AUC' },
 };
 
 /** The days of one calendar year: from midnight starting its first day to the next year's. */
@@ -318,3 +318,14 @@ const MONTH_NAMES = [
   'November',
   'December',
 ];
+
+/** Day and month only, for a list within one year: "11 Shevat", "29 Thoth", "23 Jan". */
+export function shortDate(calendar: YearCalendar, jd: JulianDay): string {
+  if (calendar === 'western' || calendar === 'roman') {
+    const date = calendarDate(jd, historicalCalendar(jd));
+    return `${String(Math.floor(date.day))} ${MONTH_NAMES[date.month - 1]?.slice(0, 3) ?? ''}`;
+  }
+  const date = otherDate(calendar, jd);
+  if (calendar === 'egyptian' && date.month === 13) return `extra day ${String(date.day)}`;
+  return `${String(date.day)} ${date.monthName}`;
+}

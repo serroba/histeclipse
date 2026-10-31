@@ -13,6 +13,8 @@
  *   east, altitude, and field of view, in degrees. It is written whenever `mode=sky`.
  * - `figures` picks the constellation figures the sky view draws: `famous` (absent), `all`
  *   or `none`.
+ * - `years` is the calendar the year bar counts in: `western` (absent), `hebrew`, `islamic`,
+ *   `egyptian` or `roman`. It changes how years are listed, not the moment in `t`.
  * - `loc` (observer), `sel` (selected eclipse), `view` (an attached viewpoint; absent means
  *   free) and `focus` are optional; everything else is always written out, so a link keeps its meaning
  *   even if defaults change later.
@@ -22,6 +24,7 @@
  */
 
 import { calendarDate, calendarDateOf, julianDay, type Calendar } from '../time/julianDay';
+import { YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
 import { errorMessage } from '../util/errors';
 import {
@@ -104,6 +107,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     selection: read<Selection | null>('sel', parseSelection, defaults.selection),
     look: read('look', parseLook, defaults.look),
     figures: read('figures', parseFigures, defaults.figures),
+    years: read('years', parseYears, defaults.years),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -128,6 +132,7 @@ export function serializeViewState(state: ViewState): string {
     params.set('look', formatLook(state.look));
   }
   if (state.figures !== 'famous') params.set('figures', state.figures);
+  if (state.years !== 'western') params.set('years', state.years);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
@@ -138,6 +143,10 @@ function parseMode(raw: string): Mode {
 
 function parseFigures(raw: string): Figures {
   return oneOf(raw, FIGURES, 'figures');
+}
+
+function parseYears(raw: string): YearCalendar {
+  return oneOf(raw, YEAR_CALENDARS, 'years');
 }
 
 function parseLook(raw: string): SkyLook {

@@ -694,3 +694,42 @@ test('tapping empty space beside the globe toggles the panels', async ({ page })
   await page.mouse.click(spot.x, spot.y);
   await expect(page.locator('.hud')).toBeVisible();
 });
+
+test('years can be counted in the Hebrew calendar, and the link keeps it', async ({ page }) => {
+  await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
+  await globeRendered(page);
+  const year = page.getByLabel('Year', { exact: true });
+  const era = page.getByLabel('Era', { exact: true });
+  await era.selectOption('hebrew');
+  await expect(page).toHaveURL(/years=hebrew/);
+  await expect(year).toHaveValue('5784');
+  await expect(page.locator('.hud-detail')).toContainText('29 Adar II 5784 AM');
+  // 5784 ran from September 2023 to October 2024: it holds the annular eclipse of October 2023
+  // and the total one of April 2024, listed by their Hebrew dates.
+  await expect(page.getByRole('button', { name: /29 Tishri\s*Annular solar/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /29 Adar II\s*Total solar/ })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Next year' }).click();
+  await expect(year).toHaveValue('5785');
+  await expect(page).toHaveURL(/t=2025-/);
+
+  await era.selectOption('CE');
+  await expect(page).not.toHaveURL(/years=/);
+  await expect(year).toHaveValue('2025');
+});
+
+test('Ptolemy’s eclipse of 721 BCE is listed on 29 Thoth in year 27 of Nabonassar', async ({
+  page,
+}) => {
+  await page.goto('./?t=-720-03-19T12:00&years=egyptian');
+  await globeRendered(page);
+  await expect(page.getByLabel('Year', { exact: true })).toHaveValue('27');
+  await expect(page.getByLabel('Era', { exact: true })).toHaveValue('egyptian');
+  await expect(page.getByRole('button', { name: /29 Thoth\s*Total lunar/ })).toBeVisible();
+
+  // Typing a year jumps to it, in the same calendar.
+  const year = page.getByLabel('Year', { exact: true });
+  await year.fill('1');
+  await year.press('Enter');
+  await expect(page).toHaveURL(/t=-0746-/);
+});
