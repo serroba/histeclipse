@@ -11,7 +11,7 @@ from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.solar import find_solar_eclipses
-from histeclipse_pipeline.vectors import sample_times, sun_vectors, write_vectors
+from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -28,6 +28,13 @@ SUN_VECTOR_DESCRIPTION = (
     "Skyfield's Delta T model. Reference values for the web app's analytic formulas."
 )
 
+MOON_VECTOR_SEED = 2027
+MOON_VECTOR_DESCRIPTION = (
+    "Geometric geocentric Moon from JPL DE441 (histeclipse-pipeline moon-vectors): ICRF "
+    "(J2000 equator) position in km at TT Julian Days. Reference values for the web app's "
+    "lunar ephemeris."
+)
+
 # Extra ephemeris coverage on both sides, so searches near the range ends have data.
 EPHEMERIS_PADDING_DAYS = 30.0
 
@@ -42,6 +49,7 @@ class Arguments(argparse.Namespace):
     # argparse requires --out for every command that reads it.
     out: Path = Path()
     count: int = SUN_VECTOR_COUNT
+    seed: int | None = None
 
 
 def year_start_jd(year: int) -> float:
@@ -104,6 +112,22 @@ def sun(args: Arguments) -> int:
     return _say(f"wrote {len(vectors)} Sun vectors to {args.out}")
 
 
+def moon(args: Arguments) -> int:
+    """Write Moon reference vectors for the web app's tests."""
+    paths = sorted(args.kernels.glob("*.bsp"))
+    if not paths:
+        return _fail(f"No kernels in {args.kernels}; run fetch-ephemeris first")
+    seed = MOON_VECTOR_SEED if args.seed is None else args.seed
+    times = sample_times(args.start_year, args.end_year, args.count, seed)
+    with Ephemeris(paths) as ephemeris:
+        try:
+            vectors = moon_vectors(ephemeris, times)
+        except ValueError as error:
+            return _fail(f"Kernels in {args.kernels} do not cover the range: {error}")
+    write_vectors(vectors, args.out, MOON_VECTOR_DESCRIPTION)
+    return _say(f"wrote {len(vectors)} Moon vectors to {args.out}")
+
+
 def fetch_ephemeris(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Download the DE441 excerpts the other commands read."""
     padding = EPHEMERIS_PADDING_DAYS
@@ -124,6 +148,7 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     ),
     "delta-t": (delta_t, "write the ΔT table the web app uses", "output JSON file"),
     "sun-vectors": (sun, "write Sun reference values for web tests", "output JSON file"),
+    "moon-vectors": (moon, "write Moon reference values for web tests", "output JSON file"),
 }
 
 
@@ -140,8 +165,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         _ = command.add_argument("--kernels", type=Path, default=DEFAULT_KERNELS)
         _ = command.add_argument("--start-year", type=int, default=DEFAULT_START_YEAR)
         _ = command.add_argument("--end-year", type=int, default=DEFAULT_END_YEAR)
-        if name == "sun-vectors":
+        if name in {"sun-vectors", "moon-vectors"}:
             _ = command.add_argument("--count", type=int, default=SUN_VECTOR_COUNT)
+            _ = command.add_argument(
+                "--seed", type=int, default=None, help="sampling seed (an independent check set)"
+            )
 
     args = parser.parse_args(argv, namespace=Arguments())
     handler = COMMANDS[args.command][0]
