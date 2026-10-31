@@ -3,6 +3,7 @@
  * See `url.ts` for the query-string format.
  */
 
+import type { YearCalendar } from '../time/calendars';
 import {
   calendarDateOf,
   julianDay,
@@ -89,6 +90,8 @@ export interface ViewState {
   readonly selection: Selection | null;
   readonly look: SkyLook;
   readonly figures: Figures;
+  /** The calendar the year bar counts in. */
+  readonly years: YearCalendar;
 }
 
 // In the focused body's radii. For Earth, ~5 times the Sun's distance (23,455 Earth radii), so
@@ -141,5 +144,6 @@ export function defaultViewState(now: Date): ViewState {
     selection: null,
     look: DEFAULT_LOOK,
     figures: 'famous',
+    years: 'western',
   };
 }

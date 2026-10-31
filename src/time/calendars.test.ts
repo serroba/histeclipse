@@ -7,6 +7,7 @@ import {
   isHebrewLeapYear,
   isIslamicLeapYear,
   otherDate,
+  shortDate,
   YEAR_CALENDARS,
   yearContaining,
   yearSpan,
@@ -138,5 +139,17 @@ describe('every calendar', () => {
       expect(yearContaining(calendar, jd(end - 0.25))).toBe(year);
       expect(yearContaining(calendar, end)).toBe(year + 1);
     }
+  });
+});
+
+describe('shortDate', () => {
+  it('gives the day and month in each calendar', () => {
+    const passover = on(2024, 4, 23, 'gregorian');
+    expect(shortDate('hebrew', passover)).toBe('15 Nisan');
+    expect(shortDate('western', passover)).toBe('23 Apr');
+    expect(shortDate('roman', passover)).toBe('23 Apr');
+    expect(shortDate('egyptian', on(-720, 3, 19, 'julian'))).toBe('29 Thoth');
+    expect(shortDate('egyptian', jd(yearSpan('egyptian', 27).end - 1))).toBe('extra day 5');
+    expect(shortDate('islamic', on(622, 7, 16, 'julian'))).toBe('1 Muharram');
   });
 });

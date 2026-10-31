@@ -5,28 +5,15 @@
 
 import type { LunarEclipse } from '../data/lunarCatalog';
 import type { SolarEclipse } from '../data/solarCatalog';
-import { eclipseMoment, isSolar } from '../eclipses/describe';
-import { astronomicalYear, toHistoricalYear, type AstronomicalYear, type Era } from '../time/year';
+import { isSolar } from '../eclipses/describe';
+import { greatestEclipseUT } from '../data/catalog';
+import { CALENDAR_INFO, shortDate, YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
+import { astronomicalYear, toHistoricalYear } from '../time/year';
 import { parseYearNumber } from '../time/yearInput';
 import { errorMessage } from '../util/errors';
 import { element } from './dom';
 
-const SHORT_MONTHS = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
-const HINT = 'Type a year as a number, and pick BCE or CE beside it';
+const HINT = 'Type a year as a number, and pick its era or calendar beside it';
 
 export type Eclipse = LunarEclipse | SolarEclipse;
 
@@ -36,7 +23,9 @@ export type YearEclipses =
   | { readonly status: 'error'; readonly message: string };
 
 export interface TimelineView {
-  readonly year: AstronomicalYear;
+  /** The year in `calendar`; western years are astronomical (0 is 1 BCE). */
+  readonly year: number;
+  readonly calendar: YearCalendar;
   readonly eclipses: YearEclipses;
   readonly selected: Eclipse | undefined;
 }
@@ -47,7 +36,10 @@ export interface Timeline {
 }
 
 export function createTimeline(handlers: {
-  onYear(year: AstronomicalYear): void;
+  /** A year in the calendar shown. */
+  onYear(year: number): void;
+  /** Count years in another calendar, keeping the moment. */
+  onCalendar(calendar: YearCalendar): void;
   onSelect(eclipse: Eclipse): void;
 }): Timeline {
   // Digits only (a numeric keypad on phones); the era is picked beside it.
@@ -63,11 +55,23 @@ export function createTimeline(handlers: {
     spellcheck: 'false',
     'aria-describedby': 'year-hint',
   });
+  // One list for the era: BCE and CE, or another calendar's own count.
   const era = element(
     'select',
     { class: 'era-select', 'aria-label': 'Era' },
     element('option', { value: 'BCE' }, 'BCE'),
     element('option', { value: 'CE' }, 'CE'),
+    element(
+      'optgroup',
+      { label: 'Other calendars' },
+      ...YEAR_CALENDARS.filter((calendar) => calendar !== 'western').map((calendar) =>
+        element(
+          'option',
+          { value: calendar },
+          `${CALENDAR_INFO[calendar].era} · ${CALENDAR_INFO[calendar].name}`,
+        ),
+      ),
+    ),
   );
   const hint = element('span', { id: 'year-hint', class: 'visually-hidden' }, HINT);
   const previous = element(
@@ -92,12 +96,13 @@ export function createTimeline(handlers: {
     list,
   );
 
-  let year = astronomicalYear(2000);
+  let year = 2000;
+  let calendar: YearCalendar = 'western';
   previous.addEventListener('click', () => {
-    handlers.onYear(astronomicalYear(year - 1));
+    handlers.onYear(year - 1);
   });
   next.addEventListener('click', () => {
-    handlers.onYear(astronomicalYear(year + 1));
+    handlers.onYear(year + 1);
   });
   // Anything but digits never makes it into the box, pasted or typed.
   input.addEventListener('input', () => {
@@ -106,6 +111,7 @@ export function createTimeline(handlers: {
   });
   function submit(): void {
     try {
+      // Other calendars count from 1 with no era to pick, like CE.
       const typed = parseYearNumber(input.value, era.value === 'BCE' ? 'BCE' : 'CE');
       input.removeAttribute('aria-invalid');
       input.blur();
@@ -119,16 +125,32 @@ export function createTimeline(handlers: {
     event.preventDefault();
     submit();
   });
-  // Switching the era keeps the number: 587 CE becomes 587 BCE.
-  era.addEventListener('change', submit);
+  era.addEventListener('change', () => {
+    const picked = era.value;
+    const other = YEAR_CALENDARS.find((option) => option !== 'western' && option === picked);
+    if (other !== undefined) {
+      handlers.onCalendar(other);
+    } else if (calendar !== 'western') {
+      handlers.onCalendar('western');
+    } else {
+      // Switching BCE and CE keeps the number: 587 CE becomes 587 BCE.
+      submit();
+    }
+  });
 
   return {
     root,
     render(view) {
       year = view.year;
-      const shown = toHistoricalYear(view.year);
-      if (document.activeElement !== input) input.value = String(shown.year);
-      era.value = shown.era satisfies Era;
+      calendar = view.calendar;
+      if (calendar === 'western') {
+        const shown = toHistoricalYear(astronomicalYear(view.year));
+        if (document.activeElement !== input) input.value = String(shown.year);
+        era.value = shown.era;
+      } else {
+        if (document.activeElement !== input) input.value = String(view.year);
+        era.value = calendar;
+      }
       hint.textContent = HINT;
       const listing = view.eclipses;
       if (listing.status === 'loading') {
@@ -145,8 +167,6 @@ export function createTimeline(handlers: {
       }
       list.replaceChildren(
         ...listing.eclipses.map((eclipse) => {
-          const { date } = eclipseMoment(eclipse);
-          const month = SHORT_MONTHS[date.month - 1] ?? '';
           const body = isSolar(eclipse) ? 'solar' : 'lunar';
           const kind = `${eclipse.kind[0]?.toUpperCase() ?? ''}${eclipse.kind.slice(1)} ${body}`;
           const chip = element(
@@ -157,7 +177,11 @@ export function createTimeline(handlers: {
               'aria-pressed': String(eclipse === view.selected),
             },
             element('span', { class: 'eclipse-dot', 'aria-hidden': 'true' }),
-            element('span', { class: 'eclipse-date' }, `${String(Math.floor(date.day))} ${month}`),
+            element(
+              'span',
+              { class: 'eclipse-date' },
+              shortDate(view.calendar, greatestEclipseUT(eclipse)),
+            ),
             element('span', { class: 'eclipse-kind' }, kind),
           );
           chip.addEventListener('click', () => {

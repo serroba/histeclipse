@@ -2,6 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import { calendarDateOf, daysInMonth, type Calendar } from '../time/julianDay';
+import { YEAR_CALENDARS } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
 import { parseViewState, serializeViewState } from './url';
 import {
@@ -54,6 +55,7 @@ describe('parseViewState', () => {
       selection: { kind: 'lunar', date: date(-620, 4, 22, 'julian') },
       look: DEFAULT_LOOK,
       figures: 'famous',
+      years: 'western',
     } satisfies ViewState);
   });
 
@@ -102,6 +104,13 @@ describe('parseViewState', () => {
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
   });
 
+  it('reads the calendar the years are counted in, writing it only when not western', () => {
+    const { state } = parseViewState('years=hebrew', NOW);
+    expect(state.years).toBe('hebrew');
+    expect(serializeViewState(state)).toContain('&years=hebrew');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('years=');
+  });
+
   it('reads where the sky view looks, and writes it whenever the sky is shown', () => {
     const { state } = parseViewState('mode=sky&look=370,-12.5,45&figures=all', NOW);
     expect(state.look).toEqual({ azimuth: 10, altitude: -12.5, fov: 45 });
@@ -141,6 +150,7 @@ describe('parseViewState', () => {
     ['look=0,10,200', 'look', 'field of view must be between'],
     ['look=0,10', 'look', 'expected 3'],
     ['figures=some', 'figures', 'unknown figures'],
+    ['years=mayan', 'years', 'unknown years'],
     ['sel=lunar', 'sel', 'expected kind:date'],
     ['sel=lunar:yesterday', 'sel', 'expected a date'],
     ['sel=annular:2025-01-01', 'sel', 'unknown eclipse kind'],
@@ -200,6 +210,7 @@ describe('parseViewState', () => {
             'sel',
             'look',
             'figures',
+            'years',
             'x',
           ),
           fc.string(),
@@ -270,6 +281,7 @@ describe('serializeViewState', () => {
       fov: rounded(5, 120, 1),
     }),
     figures: fc.constantFrom(...FIGURES),
+    years: fc.constantFrom(...YEAR_CALENDARS),
   });
 
   it('round-trips every view state through a link', () => {
