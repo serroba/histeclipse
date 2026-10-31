@@ -8,8 +8,13 @@
 import {
   AdditiveBlending,
   BackSide,
+  CanvasTexture,
+  Color,
+  DirectionalLight,
   LinearFilter,
   Mesh,
+  MeshBasicMaterial,
+  MeshStandardMaterial,
   OrthographicCamera,
   PerspectiveCamera,
   PlaneGeometry,
@@ -17,6 +22,8 @@ import {
   Scene,
   ShaderMaterial,
   SphereGeometry,
+  Sprite,
+  SpriteMaterial,
   SRGBColorSpace,
   TextureLoader,
   Vector2,
@@ -27,6 +34,7 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+import { apply, multiply, transpose, type Matrix3 } from '../astro/matrix';
 import { CAMERA_DISTANCE_RANGE, type GeoPoint, type GlobeCamera } from '../state/viewState';
 import type { BesselianElements } from '../data/solarCatalog';
 import {
@@ -35,10 +43,27 @@ import {
   type ShadowGeometry,
 } from '../eclipses/solar';
 import { cameraFromPosition, cameraPosition, geoToVector, type Vector3Tuple } from './geo';
+import {
+  apparentRadiusPixels,
+  mergeMarkers,
+  MOON_RADIUS_EARTH_RADII,
+  sceneFromKm,
+  sceneRotation,
+  SUN_RADIUS_EARTH_RADII,
+  type ScreenMarker,
+} from './spaceFrame';
 import { SOLAR_COMMON, SOLAR_PATH_FRAGMENT, SOLAR_PATH_LAYER, SOLAR_SHADOW } from './solarShaders';
 
 const NARROW_SIDE_FOV_DEGREES = 40;
 const FLIGHT_MS = 900;
+/** Beyond this distance (Earth radii) the view holds still in space and Earth turns in it. */
+const INERTIAL_VIEW_DISTANCE = 20;
+/** Bodies smaller than this on screen (radius, pixels) get a marker ring. */
+const MARKER_RADIUS_PIXELS = 3;
+/** Bodies larger than this on screen (radius, pixels) are plain to see and go unlabelled. */
+const LABEL_MAX_RADIUS_PIXELS = 60;
+/** Markers closer than this on screen (pixels) are shown as one. */
+const MERGE_PIXELS = 40;
 
 /** Where an eclipsed Moon was overhead, nominally and at ±1σ of ΔT. */
 export interface LunarOverlay {
@@ -56,6 +81,15 @@ export interface SolarPath {
   readonly uncertaintySeconds: number;
 }
 
+/** Where the Moon and Sun are at the current moment, from Earth's centre. */
+export interface SpaceBodies {
+  /** Rotation from Earth-fixed axes to J2000 equatorial axes. */
+  readonly earthFixedToJ2000: Matrix3;
+  /** Geocentric J2000 positions in km; the Moon is null until its ephemeris loads. */
+  readonly sunKm: readonly [number, number, number];
+  readonly moonKm: readonly [number, number, number] | null;
+}
+
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
   setSunDirection(direction: Vector3Tuple): void;
@@ -65,6 +99,11 @@ export interface Globe {
   setSolarShadow(shadow: ShadowGeometry | null): void;
   /** Shade where the eclipsed Moon was above the horizon; null hides the overlay. */
   setLunarOverlay(overlay: LunarOverlay | null): void;
+  /**
+   * Place the Moon and Sun at their true sizes and distances. When the camera is far out, it
+   * keeps its place among the stars as time moves, so Earth spins and the Moon orbits in view.
+   */
+  setSpace(bodies: SpaceBodies): void;
   /** Pixels covered by panels at the top and bottom; the globe is centred between them. */
   setInsets(top: number, bottom: number): void;
   /** Turn the globe smoothly so `target` faces the camera, keeping the distance. */
@@ -76,19 +115,21 @@ export interface Globe {
   dispose(): void;
 }
 
+// Custom shaders include three.js's logarithmic-depth chunks: the scene spans from metres above
+// the ground to beyond the Sun, which a linear depth buffer cannot resolve.
 const EARTH_VERTEX = /* glsl */ `
+  #include <common>
+  #include <logdepthbuf_pars_vertex>
   varying vec2 vUv;
   varying vec3 vNormal;
   void main() {
     vUv = uv;
     vNormal = normal;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    #include <logdepthbuf_vertex>
   }
 `;
 
-// Day side lit by the Sun, a twilight band down to about −6° (civil twilight), a dim blue night
-// side (no city lights: they would be anachronistic for most of history), and a faint warm glow
-// along the terminator.
 // A full-screen quad: position is already in clip space.
 const PATH_VERTEX = /* glsl */ `
   varying vec2 vUv;
@@ -98,7 +139,11 @@ const PATH_VERTEX = /* glsl */ `
   }
 `;
 
+// Day side lit by the Sun, a twilight band down to about −6° (civil twilight), a dim blue night
+// side (no city lights: they would be anachronistic for most of history), and a faint warm glow
+// along the terminator.
 const EARTH_FRAGMENT = /* glsl */ `
+  #include <logdepthbuf_pars_fragment>
   ${SOLAR_COMMON}
   ${SOLAR_SHADOW}
   ${SOLAR_PATH_LAYER}
@@ -136,6 +181,7 @@ const EARTH_FRAGMENT = /* glsl */ `
   }
 
   void main() {
+    #include <logdepthbuf_fragment>
     vec3 normal = normalize(vNormal);
     float sunAltitude = dot(normal, sunDirection);
     vec3 surface = texture2D(dayMap, vUv).rgb;
@@ -156,20 +202,25 @@ const EARTH_FRAGMENT = /* glsl */ `
 `;
 
 const ATMOSPHERE_VERTEX = /* glsl */ `
+  #include <common>
+  #include <logdepthbuf_pars_vertex>
   varying vec3 vViewNormal;
   varying vec3 vWorldNormal;
   void main() {
     vViewNormal = normalize(normalMatrix * normal);
     vWorldNormal = normal;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    #include <logdepthbuf_vertex>
   }
 `;
 
 const ATMOSPHERE_FRAGMENT = /* glsl */ `
+  #include <logdepthbuf_pars_fragment>
   uniform vec3 sunDirection;
   varying vec3 vViewNormal;
   varying vec3 vWorldNormal;
   void main() {
+    #include <logdepthbuf_fragment>
     float rim = pow(clamp(0.92 + dot(vViewNormal, vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 4.0);
     float sunlit = smoothstep(-0.35, 0.35, dot(normalize(vWorldNormal), sunDirection));
     vec3 color = vec3(0.3, 0.55, 1.0) * rim * (0.08 + 0.62 * sunlit);
@@ -179,18 +230,27 @@ const ATMOSPHERE_FRAGMENT = /* glsl */ `
 
 export async function createGlobe(
   container: HTMLElement,
-  options: { readonly camera: GlobeCamera; readonly textureUrl: string },
+  options: {
+    readonly camera: GlobeCamera;
+    readonly textureUrl: string;
+    readonly moonTextureUrl: string;
+  },
 ): Promise<Globe> {
   // preserveDrawingBuffer lets the page (and tests) read the rendered image back.
   // Transparent, so the page's space gradient shows behind the globe. No preserveDrawingBuffer:
   // it forces a buffer copy every frame, which stalls slow and mobile GPUs.
-  const renderer = new WebGLRenderer({ antialias: true, alpha: true });
+  const renderer = new WebGLRenderer({
+    antialias: true,
+    alpha: true,
+    logarithmicDepthBuffer: true,
+  });
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.append(renderer.domElement);
 
   const scene = new Scene();
-  const camera = new PerspectiveCamera(35, 1, 0.01, 200);
+  // With a logarithmic depth buffer one camera spans metres above the ground to past the Sun.
+  const camera = new PerspectiveCamera(35, 1, 1e-4, 1e6);
 
   const texture = await new TextureLoader().loadAsync(options.textureUrl);
   texture.colorSpace = SRGBColorSpace;
@@ -261,6 +321,44 @@ export async function createGlobe(
   );
   scene.add(earth, atmosphere);
 
+  // The Moon, tidally locked: turn the map's longitude 0 (at +X) to +Z, which lookAt() aims at
+  // Earth. Libration (a few degrees of wobble) is left out.
+  const moonTexture = await new TextureLoader().loadAsync(options.moonTextureUrl);
+  moonTexture.colorSpace = SRGBColorSpace;
+  const moonGeometry = new SphereGeometry(MOON_RADIUS_EARTH_RADII, 64, 32);
+  moonGeometry.rotateY(-Math.PI / 2);
+  const moon = new Mesh(moonGeometry, new MeshStandardMaterial({ map: moonTexture, roughness: 1 }));
+  moon.visible = false;
+  const sunlight = new DirectionalLight(0xffffff, 3);
+  scene.add(moon, sunlight, sunlight.target);
+
+  const sun = new Mesh(
+    new SphereGeometry(SUN_RADIUS_EARTH_RADII, 48, 24),
+    new MeshBasicMaterial({ color: new Color(1, 0.96, 0.86) }),
+  );
+  const glow = new Sprite(
+    new SpriteMaterial({
+      map: glowTexture(),
+      blending: AdditiveBlending,
+      depthWrite: false,
+      transparent: true,
+    }),
+  );
+  glow.scale.setScalar(SUN_RADIUS_EARTH_RADII * 8);
+  sun.add(glow);
+  sun.visible = false;
+  scene.add(sun);
+
+  const markerLayer = document.createElement('div');
+  markerLayer.className = 'space-markers';
+  container.append(markerLayer);
+  const markers = {
+    earth: spaceMarker(markerLayer, 'Earth', 'earth'),
+    moon: spaceMarker(markerLayer, 'Moon', 'moon'),
+    sun: spaceMarker(markerLayer, 'Sun', 'sun'),
+  };
+  let earthFixedToJ2000: Matrix3 | null = null;
+
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enablePan = false;
   controls.enableDamping = true;
@@ -323,14 +421,79 @@ export async function createGlobe(
       camera.position.copy(flight.from).applyQuaternion(step).setLength(distance);
       if (progress === 1) flight = null;
     }
+    // Wheel steps scale the distance; take bigger steps far out so the Sun is a few spins away.
+    controls.zoomSpeed = camera.position.length() < 10 ? 0.8 : 2.5;
     // update() keeps damping going after the pointer is released; it reports movement via 'change'.
     controls.update();
     if (needsRender) {
       needsRender = false;
       renderer.render(scene, camera);
+      placeMarkers();
       container.dataset['rendered'] = 'true';
     }
     frame = requestAnimationFrame(loop);
+  }
+
+  const projected = new Vector3();
+  function placeMarkers(): void {
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    const cameraDistance = camera.position.length();
+    const bodies = [
+      { marker: markers.earth, mesh: earth, radius: 1, shown: true, name: 'Earth' },
+      {
+        marker: markers.moon,
+        mesh: moon,
+        radius: MOON_RADIUS_EARTH_RADII,
+        shown: moon.visible,
+        name: 'Moon',
+      },
+      {
+        marker: markers.sun,
+        mesh: sun,
+        radius: SUN_RADIUS_EARTH_RADII,
+        shown: sun.visible,
+        name: 'Sun',
+      },
+    ];
+    const onScreen: (ScreenMarker & { readonly marker: HTMLElement })[] = [];
+    for (const { marker, mesh, radius, shown, name } of bodies) {
+      projected.copy(mesh.position).project(camera);
+      const distance = camera.position.distanceTo(mesh.position);
+      // Labels appear once the camera leaves Earth's neighbourhood, and only for bodies in front.
+      const visible =
+        shown &&
+        cameraDistance > 4 &&
+        projected.z < 1 &&
+        Math.abs(projected.x) < 1.2 &&
+        Math.abs(projected.y) < 1.2;
+      marker.hidden = !visible;
+      if (!visible) continue;
+      const pixels = apparentRadiusPixels({
+        radius,
+        distance,
+        verticalFovDegrees: camera.fov,
+        viewportHeight: height,
+      });
+      // A body that fills much of the view needs no label.
+      if (pixels > LABEL_MAX_RADIUS_PIXELS) {
+        marker.hidden = true;
+        continue;
+      }
+      marker.classList.toggle('is-tiny', pixels < MARKER_RADIUS_PIXELS);
+      marker.style.setProperty('--radius', `${String(Math.max(pixels, MARKER_RADIUS_PIXELS))}px`);
+      const x = ((projected.x + 1) / 2) * width;
+      const y = ((1 - projected.y) / 2) * height;
+      marker.style.transform = `translate(${String(x)}px, ${String(y)}px)`;
+      onScreen.push({ marker, name, x, y });
+    }
+    // From far out bodies line up on screen: one marker for them reads better than several.
+    const labels = mergeMarkers(onScreen, MERGE_PIXELS);
+    for (const { marker, name } of onScreen) {
+      const label = labels.get(name) ?? null;
+      marker.hidden = label === null;
+      if (label !== null) setLabel(marker, label);
+    }
   }
 
   const observer = new ResizeObserver(resize);
@@ -343,6 +506,43 @@ export async function createGlobe(
     canvas: renderer.domElement,
     setSunDirection([x, y, z]) {
       sunDirection.set(x, y, z).normalize();
+      needsRender = true;
+    },
+    setSpace(bodies) {
+      // Keep a far camera still among the stars: carry it along by the rotation Earth made
+      // since the last moment (old Earth-fixed -> J2000 -> new Earth-fixed).
+      if (
+        earthFixedToJ2000 !== null &&
+        camera.position.length() > INERTIAL_VIEW_DISTANCE &&
+        flight === null
+      ) {
+        const [row0, row1, row2] = sceneRotation(
+          multiply(transpose(bodies.earthFixedToJ2000), earthFixedToJ2000),
+        );
+        const { x, y, z } = camera.position;
+        camera.position.set(
+          row0[0] * x + row0[1] * y + row0[2] * z,
+          row1[0] * x + row1[1] * y + row1[2] * z,
+          row2[0] * x + row2[1] * y + row2[2] * z,
+        );
+        // The next frame's controls.update() reports the move. Reporting it here would reach the
+        // app while it is still rendering this moment, and the stale camera would win.
+        camera.lookAt(0, 0, 0);
+      }
+      earthFixedToJ2000 = bodies.earthFixedToJ2000;
+      const toEarthFixed = transpose(bodies.earthFixedToJ2000);
+      sun.position.set(...sceneFromKm(apply(toEarthFixed, bodies.sunKm)));
+      sun.visible = true;
+      sunlight.position.copy(sun.position);
+      if (bodies.moonKm === null) {
+        moon.visible = false;
+      } else {
+        moon.position.set(...sceneFromKm(apply(toEarthFixed, bodies.moonKm)));
+        moon.lookAt(0, 0, 0);
+        moon.visible = true;
+        sunlight.target.position.copy(moon.position);
+      }
+      container.dataset['space'] = moon.visible ? 'moon' : 'sun';
       needsRender = true;
     },
     setInsets(top, bottom) {
@@ -439,7 +639,52 @@ export async function createGlobe(
       pathTarget.dispose();
       pathMaterial.dispose();
       texture.dispose();
+      moonTexture.dispose();
+      markerLayer.remove();
       renderer.domElement.remove();
     },
   };
+}
+
+/** A soft radial glow for the Sun, drawn once into a small canvas. */
+function glowTexture(): CanvasTexture {
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext('2d');
+  if (context !== null) {
+    const gradient = context.createRadialGradient(
+      size / 2,
+      size / 2,
+      0,
+      size / 2,
+      size / 2,
+      size / 2,
+    );
+    gradient.addColorStop(0, 'rgba(255, 244, 214, 1)');
+    gradient.addColorStop(0.15, 'rgba(255, 220, 150, 0.6)');
+    gradient.addColorStop(1, 'rgba(255, 200, 120, 0)');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, size, size);
+  }
+  return new CanvasTexture(canvas);
+}
+
+function setLabel(marker: HTMLElement, name: string): void {
+  const label = marker.querySelector('span');
+  if (label !== null && label.textContent !== name) label.textContent = name;
+}
+
+/** A ring and name marking where a body is; sized to the body, never smaller than a dot. */
+function spaceMarker(layer: HTMLElement, name: string, body: string): HTMLElement {
+  const marker = document.createElement('div');
+  marker.className = `space-marker is-${body}`;
+  marker.dataset['body'] = body;
+  marker.hidden = true;
+  const label = document.createElement('span');
+  label.textContent = name;
+  marker.append(label);
+  layer.append(marker);
+  return marker;
 }

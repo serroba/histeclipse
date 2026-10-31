@@ -351,6 +351,35 @@ test('famous eclipse rows are large enough to tap', async ({ page }) => {
   }
 });
 
+test('zooming out shows the Moon and Sun at their true places, labelled', async ({ page }) => {
+  // 8 April 2024, mid-eclipse, seen from 150 Earth radii off to the side: the Moon is a dot
+  // 60 radii towards the Sun, too small to see without its marker.
+  await page.goto('./?t=2024-04-08T18:17&cam=0,-5,150');
+  await globeRendered(page);
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-space', 'moon');
+  const earth = page.locator('.space-marker[data-body="earth"]');
+  const moon = page.locator('.space-marker[data-body="moon"]');
+  await expect(earth).toHaveText('Earth');
+  await expect(moon).toHaveText('Moon');
+  await expect(moon).toHaveClass(/is-tiny/);
+  // From beyond the Sun, all three line up behind one marker.
+  await page.goto('./?t=2024-04-08T18:17&cam=-7.6,85,60000');
+  await globeRendered(page);
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-space', 'moon');
+  await expect(earth).toHaveText('Earth, Moon and Sun');
+  await expect(moon).toBeHidden();
+});
+
+test('far out, the view stays put among the stars while Earth turns', async ({ page }) => {
+  await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08&cam=0,0,60000');
+  await globeRendered(page);
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-space', 'moon');
+  await page.getByRole('slider', { name: 'Time relative to greatest eclipse' }).fill('60');
+  await expect(page).toHaveURL(/t=2024-04-08T19:17Z/);
+  // An hour later Earth has turned 15.04° east, so the camera sits 15.04° further west.
+  await expect(page).toHaveURL(/cam=-?0\.00\d\d,-15\.0[3-5]\d\d,60000\.00/);
+});
+
 test('page fits the viewport without horizontal scroll', async ({ page }) => {
   await page.goto('./');
   const overflow = await page.evaluate(

@@ -59,7 +59,8 @@ export interface ViewState {
   readonly selection: Selection | null;
 }
 
-export const CAMERA_DISTANCE_RANGE = { min: 1.1, max: 50 } as const;
+// Out to ~5 times the Sun's distance (23,455 Earth radii), so Earth, Moon and Sun fit in view.
+export const CAMERA_DISTANCE_RANGE = { min: 1.1, max: 120_000 } as const;
 export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'solar', 'terminator']);
 export const DEFAULT_CAMERA: GlobeCamera = {
   target: { latitude: 20, longitude: 0 },
