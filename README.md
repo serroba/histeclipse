@@ -41,6 +41,8 @@ uv run pytest                                 # tests + property tests, 95% cove
 # Generate data (downloads ~600 MB of DE441 excerpts once, into data-pipeline/.cache/)
 uv run histeclipse-pipeline fetch-ephemeris
 uv run histeclipse-pipeline lunar-catalog --out ../public/data/lunar
+uv run histeclipse-pipeline solar-catalog --out ../public/data/solar   # with Besselian elements
+uv run histeclipse-pipeline delta-t --out ../public/data/delta-t.json
 ```
 
 Positions come from [JPL DE441](https://ssd.jpl.nasa.gov/planets/eph_export.html), via [Skyfield](https://rhodesmill.org/skyfield/). Results are checked against NASA's _Five Millennium Canon_ (Espenak & Meeus). Skyfield's ΔT model is the Morrison–Stephenson–Hohenkerk–Zawilski spline, and every catalog records which model it used.
