@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.catalog import write_lunar_catalog
+from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
@@ -44,8 +45,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     fetch = commands.add_parser("fetch-ephemeris", help="download DE441 excerpts from JPL")
     lunar = commands.add_parser("lunar-catalog", help="compute lunar eclipses and write JSON")
+    delta_t = commands.add_parser("delta-t", help="write the ΔT table the web app uses")
+    _ = delta_t.add_argument("--out", type=Path, required=True, help="output JSON file")
     _ = lunar.add_argument("--out", type=Path, required=True, help="output directory")
-    for command in (fetch, lunar):
+    for command in (fetch, lunar, delta_t):
         # Explicit defaults matter: sub-parsers copy every attribute, None included, onto the
         # namespace, so the class-level defaults on `Arguments` alone would be overwritten.
         _ = command.add_argument("--kernels", type=Path, default=DEFAULT_KERNELS)
@@ -56,6 +59,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     kernels = args.kernels
     start_jd = year_start_jd(args.start_year)
     end_jd = year_start_jd(args.end_year + 1)
+
+    if args.command == "delta-t":
+        if args.out is None:  # pragma: no cover - argparse already requires --out here
+            parser.error("--out is required")
+        # One extra year each side: samples sit at epoch years, which do not line up exactly
+        # with the calendar years the catalogs cover.
+        first, last = args.start_year - 1, args.end_year + 1
+        write_delta_t_table(delta_t_table(first, last), args.out)
+        print(f"wrote ΔT for {first}..{last} to {args.out}")  # noqa: T201
+        return 0
 
     if args.command == "fetch-ephemeris":  # pragma: no cover - needs network access
         padding = EPHEMERIS_PADDING_DAYS

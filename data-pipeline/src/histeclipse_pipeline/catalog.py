@@ -14,12 +14,14 @@ import json
 from collections import defaultdict
 from typing import TYPE_CHECKING, TypedDict
 
+from histeclipse_pipeline.delta_t import DELTA_T_MODEL
 from histeclipse_pipeline.julian_day import GREGORIAN_REFORM_JD, Calendar, calendar_date
-from histeclipse_pipeline.lunar import DELTA_T_MODEL, LunarEclipse
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
     from pathlib import Path
+
+    from histeclipse_pipeline.lunar import LunarEclipse
 
 SCHEMA_VERSION = 1
 EPHEMERIS = "JPL DE441"
