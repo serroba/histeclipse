@@ -7,6 +7,8 @@ import { parseViewState, serializeViewState } from './url';
 import {
   DEFAULT_CAMERA,
   DEFAULT_LAYERS,
+  DEFAULT_LOOK,
+  FIGURES,
   BODIES,
   LAYERS,
   VIEWPOINTS,
@@ -50,6 +52,8 @@ describe('parseViewState', () => {
       focus: 'earth',
       layers: new Set(['lunar', 'terminator']),
       selection: { kind: 'lunar', date: date(-620, 4, 22, 'julian') },
+      look: DEFAULT_LOOK,
+      figures: 'famous',
     } satisfies ViewState);
   });
 
@@ -98,6 +102,22 @@ describe('parseViewState', () => {
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
   });
 
+  it('reads where the sky view looks, and writes it whenever the sky is shown', () => {
+    const { state } = parseViewState('mode=sky&look=370,-12.5,45&figures=all', NOW);
+    expect(state.look).toEqual({ azimuth: 10, altitude: -12.5, fov: 45 });
+    expect(state.figures).toBe('all');
+    const link = serializeViewState(state);
+    expect(link).toContain('&look=10.0,-12.5,45.0');
+    expect(link).toContain('&figures=all');
+    // The globe with the default look and figures leaves both out.
+    const globe = serializeViewState(parseViewState('', NOW).state);
+    expect(globe).not.toContain('look=');
+    expect(globe).not.toContain('figures=');
+    expect(serializeViewState({ ...parseViewState('', NOW).state, mode: 'sky' })).toContain(
+      '&look=180.0,30.0,90.0',
+    );
+  });
+
   it('reads an empty layer list as no layers', () => {
     expect(parseViewState('layers=', NOW).state.layers).toEqual(new Set());
   });
@@ -117,6 +137,10 @@ describe('parseViewState', () => {
     ['layers=lunar,clouds', 'layers', 'unknown layer'],
     ['view=sideways', 'view', 'unknown view'],
     ['focus=mars', 'focus', 'unknown focus'],
+    ['look=0,95,60', 'look', 'altitude must be between'],
+    ['look=0,10,200', 'look', 'field of view must be between'],
+    ['look=0,10', 'look', 'expected 3'],
+    ['figures=some', 'figures', 'unknown figures'],
     ['sel=lunar', 'sel', 'expected kind:date'],
     ['sel=lunar:yesterday', 'sel', 'expected a date'],
     ['sel=annular:2025-01-01', 'sel', 'unknown eclipse kind'],
@@ -165,7 +189,19 @@ describe('parseViewState', () => {
     fc.assert(
       fc.property(
         fc.dictionary(
-          fc.constantFrom('v', 'mode', 't', 'cal', 'loc', 'cam', 'layers', 'sel', 'x'),
+          fc.constantFrom(
+            'v',
+            'mode',
+            't',
+            'cal',
+            'loc',
+            'cam',
+            'layers',
+            'sel',
+            'look',
+            'figures',
+            'x',
+          ),
           fc.string(),
         ),
         (entries) => {
@@ -228,6 +264,12 @@ describe('serializeViewState', () => {
       fc.record({ kind: fc.constantFrom('lunar' as const, 'solar' as const), date: calendarDay }),
       { nil: null },
     ),
+    look: fc.record({
+      azimuth: rounded(0, 359.9, 1),
+      altitude: rounded(-90, 90, 1),
+      fov: rounded(5, 120, 1),
+    }),
+    figures: fc.constantFrom(...FIGURES),
   });
 
   it('round-trips every view state through a link', () => {

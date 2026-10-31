@@ -143,7 +143,8 @@ body {
   font-weight: 500;
 }
 
-.hud-detail {
+.hud-detail,
+.sky-caption {
   margin: 4px 0 0;
   font-size: 13px;
   color: var(--ink-muted);
@@ -521,6 +522,75 @@ body {
   cursor: progress;
 }
 
+.view-switch[hidden],
+.sky-caption[hidden] {
+  display: none;
+}
+
+.switch-label {
+  align-self: center;
+  margin-right: 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.sky {
+  position: absolute;
+  inset: 0;
+  background: #02040a;
+  cursor: grab;
+  touch-action: none;
+}
+
+.sky:active {
+  cursor: grabbing;
+}
+
+.sky[hidden] {
+  display: none;
+}
+
+.sky canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.sky-labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sky-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: -0.6em 0 0 -1em;
+  white-space: nowrap;
+}
+
+.sky-label[hidden] {
+  display: none;
+}
+
+.sky-label.is-compass {
+  color: rgb(232 236 245 / 0.75);
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 0 4px #000;
+}
+
+/* Hints, not headlines: faint, so the stars stay the point. */
+.sky-label.is-constellation {
+  color: rgb(150 180 255 / 0.7);
+  font-size: 12px;
+  font-style: italic;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 3px #000;
+}
+
 .famous-dialog {
   width: min(440px, 100%);
   max-height: min(80vh, 760px);
@@ -750,6 +820,12 @@ body {
 }
 
 @media (max-width: 600px) {
+  /* Four views on one row, so the panel leaves the screen to the globe and the sky. */
+  .view-switch button {
+    padding: 0 9px;
+    font-size: 12px;
+  }
+
   .moon-view {
     width: 96px;
     height: 96px;

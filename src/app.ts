@@ -6,6 +6,7 @@
  */
 
 import { loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
+import { loadSky } from './data/sky';
 import { earthFixedToJ2000, sunPositionJ2000 } from './astro/precession';
 import { subsolarPoint } from './astro/sun';
 import { greatestEclipseUT } from './data/catalog';
@@ -33,11 +34,15 @@ import { createStore } from './state/store';
 import { parseViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import {
+  DEFAULT_CAMERA,
   defaultViewState,
   momentJulianDay,
   type GeoPoint,
   type ViewState,
 } from './state/viewState';
+import { skyCaption } from './sky/caption';
+import { horizonMatrix } from './sky/horizon';
+import type { SkyScene } from './sky/skyScene';
 import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
 import { julianDayNumber } from './time/julianDay';
@@ -47,6 +52,7 @@ import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
 import { createFamousPanel } from './ui/famousPanel';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
+import { createFigureSwitch } from './ui/figureSwitch';
 import { createViewSwitch } from './ui/viewSwitch';
 import { createTimeline, type Eclipse, type YearEclipses } from './ui/timeline';
 import { errorMessage } from './util/errors';
@@ -68,10 +74,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
     void goToFamous(entry);
   });
 
-  const viewSwitch = createViewSwitch((view) => {
-    store.set((state) => ({ ...state, view }));
+  const viewSwitch = createViewSwitch((choice) => {
+    if (choice === 'sky') {
+      // Stand where the link says, or else on the spot in the middle of the globe.
+      store.set((state) => ({ ...state, mode: 'sky', location: observerOf(state) }));
+    } else {
+      store.set((state) => ({ ...state, mode: 'globe', view: choice }));
+    }
+  });
+  const figureSwitch = createFigureSwitch((figures) => {
+    store.set((state) => ({ ...state, figures }));
   });
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
+  const skyContainer = element('div', { class: 'sky', 'data-testid': 'sky', hidden: '' });
+  const skyText = element('p', { class: 'sky-caption' });
   const dateText = element('time', { class: 'hud-date' });
   const timeText = element('span', { class: 'hud-time' });
   const detailText = element('p', { class: 'hud-detail' });
@@ -99,6 +115,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   root.replaceChildren(
     globeContainer,
+    skyContainer,
     element(
       'header',
       { class: 'hud' },
@@ -107,6 +124,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       detailText,
       famousPanel.button,
       viewSwitch.root,
+      figureSwitch.root,
+      skyText,
       element(
         'p',
         { class: 'credits' },
@@ -148,7 +167,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     (ephemeris) => {
       moonEphemeris = ephemeris;
       showTime(store.get());
-      viewSwitch.render(store.get().view, true);
+      viewSwitch.render(store.get().mode, store.get().view, true);
     },
     (error: unknown) => {
       notify(`Could not load the Moon's orbit: ${errorMessage(error)}`);
@@ -341,12 +360,91 @@ export async function startApp(root: HTMLElement): Promise<void> {
     detailText.textContent = `${formatCalendar(state.time)} · ΔT ${formatDuration(seconds)} ± ${formatDuration(uncertainty)}`;
   }
 
+  // The sky view, its code and its 9,000 stars load the first time someone opens it.
+  let skyScene: SkyScene | null = null;
+  let skyLoading = false;
+  function openSky(): void {
+    if (skyScene !== null || skyLoading) return;
+    skyLoading = true;
+    Promise.all([
+      import('./sky/skyScene'),
+      loadSky(`${base}data/sky.json`, (url) => fetch(url)),
+    ]).then(
+      ([{ createSkyScene }, sky]) => {
+        const state = store.get();
+        skyScene = createSkyScene(skyContainer, {
+          sky,
+          look: state.look,
+          figures: state.figures,
+        });
+        skyScene.onLookChange((look) => {
+          store.set((current) => ({ ...current, look }));
+        });
+        showSky(state);
+      },
+      (error: unknown) => {
+        skyLoading = false;
+        notify(`Could not load the stars: ${errorMessage(error)}`);
+      },
+    );
+  }
+
+  function observerOf(state: ViewState): GeoPoint {
+    if (state.location !== null) return state.location;
+    return state.focus === 'earth' ? state.camera.target : DEFAULT_CAMERA.target;
+  }
+
+  function showSky(state: ViewState): void {
+    const inSky = state.mode === 'sky';
+    globeContainer.hidden = inSky;
+    skyText.hidden = !inSky;
+    figureSwitch.render(state.figures, inSky);
+    if (!inSky) {
+      skyScene?.setVisible(false);
+      return;
+    }
+    openSky();
+    const place = observerOf(state);
+    const jdUT = momentJulianDay(state.time);
+    let jdTT;
+    try {
+      jdTT = deltaT.terrestrialTime(jdUT);
+    } catch {
+      return; // showTime has already said so and moved to today.
+    }
+    skyText.textContent = skyCaption({
+      place,
+      azimuth: state.look.azimuth,
+      uncertaintySeconds: deltaT.uncertaintySeconds(jdUT),
+    });
+    if (skyScene === null) return;
+    skyScene.setLook(state.look);
+    skyScene.setFigures(state.figures);
+    skyScene.setMoment({
+      horizon: horizonMatrix(place, jdUT, jdTT),
+      jdTT,
+      sun: sunPositionJ2000(jdTT),
+    });
+    skyScene.setVisible(true);
+  }
+
   function render(state: ViewState, previous: ViewState | null): void {
     if (state.time !== previous?.time) showTime(state);
+    if (
+      state.mode !== previous?.mode ||
+      state.time !== previous.time ||
+      state.location !== previous.location ||
+      state.look !== previous.look ||
+      state.figures !== previous.figures ||
+      state.focus !== previous.focus ||
+      state.camera !== previous.camera
+    ) {
+      if (state.mode === 'sky' || previous?.mode === 'sky' || previous === null) showSky(state);
+    }
     if (previous !== null && state.focus !== previous.focus) globe.setFocus(state.focus);
-    if (state.view !== previous?.view) {
-      globe.setViewpoint(state.view);
-      viewSwitch.render(state.view, moonEphemeris !== null);
+    if (state.view !== previous?.view) globe.setViewpoint(state.view);
+    if (state.view !== previous?.view || state.mode !== previous.mode) {
+      viewSwitch.render(state.mode, state.view, moonEphemeris !== null);
     }
     if (state.time.date.year !== previous?.time.date.year) loadYear(state);
     if (

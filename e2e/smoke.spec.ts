@@ -495,3 +495,74 @@ test('serves the expected release', async ({ page }) => {
     expectedVersion,
   );
 });
+
+const BABYLON_NIGHT_3000_BCE = './?mode=sky&t=-2999-03-20T19:00&loc=32.5422,44.4209';
+
+async function skyRendered(page: Page): Promise<void> {
+  await expect(page.getByTestId('sky')).toHaveAttribute('data-rendered', 'true');
+}
+
+test('the Sky button stands you where the globe is looking, and back again', async ({ page }) => {
+  const problems = collectProblems(page);
+  await page.goto('./?t=2025-03-20T19:00Z&cam=32.5,44.4,3');
+  await globeRendered(page);
+  await page.getByRole('button', { name: 'Sky' }).click();
+  await skyRendered(page);
+  await expect(page.getByTestId('globe')).toBeHidden();
+  await expect(page).toHaveURL(/mode=sky/);
+  await expect(page).toHaveURL(/loc=32\.5000,44\.4000/);
+  await expect(page).toHaveURL(/look=180\.0,30\.0,90\.0/);
+  await expect(page.getByText('Standing at 32.50° N, 44.40° E, facing S.')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Orbit' }).click();
+  await expect(page.getByTestId('sky')).toBeHidden();
+  await expect(page.getByTestId('globe')).toBeVisible();
+  await expect(page).toHaveURL(/mode=globe/);
+  expect(problems).toEqual([]);
+});
+
+test('a night in 3000 BCE is full of stars, and the Sun hides them by day', async ({ page }) => {
+  await page.goto(BABYLON_NIGHT_3000_BCE);
+  await skyRendered(page);
+  const sky = page.getByTestId('sky');
+  await expect(sky).toHaveAttribute('data-sun-altitude', /^-\d\d/);
+  const seen = Number(await sky.getAttribute('data-stars-seen'));
+  expect(seen).toBeGreaterThan(2000);
+  // The Southern Cross's neighbours stood over Babylon then; the hint names them.
+  await expect(page.getByText('Centaurus', { exact: true })).toBeVisible();
+  // ΔT is uncertain by about half an hour then, and the page says what that means.
+  await expect(page.getByText(/the sky may be turned up to ±7\.\d°/)).toBeVisible();
+
+  await page.goto('./?mode=sky&t=2025-03-20T09:00&loc=32.5422,44.4209');
+  await skyRendered(page);
+  await expect(sky).toHaveAttribute('data-stars-seen', '0');
+});
+
+test('dragging and zooming the sky turn the view, and the link follows', async ({ page }) => {
+  await page.goto(BABYLON_NIGHT_3000_BCE);
+  await skyRendered(page);
+  const box = await page.getByTestId('sky').boundingBox();
+  if (box === null) throw new Error('sky has no size');
+  const center = { x: box.x + box.width / 2, y: box.y + (box.height * 2) / 3 };
+  await page.mouse.move(center.x, center.y);
+  await page.mouse.down();
+  await page.mouse.move(center.x + 200, center.y, { steps: 8 });
+  await page.mouse.up();
+  // Dragging the sky to the right turns the view from south toward east.
+  await expect(page).toHaveURL(/look=1[0-7]\d\.\d,30\.0,90\.0/);
+  await page.mouse.wheel(0, -400);
+  await expect(page).toHaveURL(/look=1[0-7]\d\.\d,30\.0,[1-8]\d\.\d/);
+});
+
+test('the constellation switch draws all 88 figures, and the link keeps it', async ({ page }) => {
+  await page.goto(`${BABYLON_NIGHT_3000_BCE}&look=0,30,90`);
+  await skyRendered(page);
+  // Draco, Thuban's constellation, is not among the famous figures shown by default.
+  await expect(page.getByText('Draco', { exact: true })).toBeHidden();
+  await page.getByRole('button', { name: 'All 88' }).click();
+  await expect(page).toHaveURL(/figures=all/);
+  await expect(page.getByText('Draco', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'None' }).click();
+  await expect(page).toHaveURL(/figures=none/);
+  await expect(page.locator('.sky-label.is-constellation:visible')).toHaveCount(0);
+});
