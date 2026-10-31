@@ -10,6 +10,13 @@ from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
+from histeclipse_pipeline.sky import (
+    constellations,
+    fetch_sources,
+    parse_bright_star_catalogue,
+    sky_file,
+    write_sky_file,
+)
 from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
 
@@ -137,6 +144,14 @@ def fetch_ephemeris(args: Arguments) -> int:  # pragma: no cover - needs network
     return 0
 
 
+def sky(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Download the star catalogue and constellation figures and write ``sky.json``."""
+    lines, names, figures = fetch_sources()
+    stars = parse_bright_star_catalogue(lines)
+    write_sky_file(sky_file(stars, constellations(names, figures, stars)), args.out)
+    return _say(f"wrote {len(stars)} stars to {args.out}")
+
+
 COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     # name: (handler, help, --out help or None when the command takes no --out)
     "fetch-ephemeris": (fetch_ephemeris, "download DE441 excerpts from JPL", None),
@@ -149,6 +164,7 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "delta-t": (delta_t, "write the ΔT table the web app uses", "output JSON file"),
     "sun-vectors": (sun, "write Sun reference values for web tests", "output JSON file"),
     "moon-vectors": (moon, "write Moon reference values for web tests", "output JSON file"),
+    "sky": (sky, "write stars and constellation figures for the sky view", "output JSON file"),
 }
 
 
