@@ -480,12 +480,23 @@ body {
 
   .year-form {
     flex: 1;
+    min-width: 0;
+  }
+
+  .step {
+    flex: none;
   }
 
   .year-input {
     flex: 1;
     width: auto;
+    min-width: 4.5em;
+  }
+
+  .era-select {
     min-width: 0;
+    max-width: 9.5em;
+    text-overflow: ellipsis;
   }
 }
 
