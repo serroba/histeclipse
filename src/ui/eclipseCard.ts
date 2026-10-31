@@ -1,5 +1,6 @@
 /** Details of the selected eclipse: what, when, where, how sure, and what a chosen place saw. */
 
+import type { FamousEclipse } from '../data/famousEclipses';
 import type { LunarEclipse } from '../data/lunarCatalog';
 import type { SolarEclipse } from '../data/solarCatalog';
 import {
@@ -20,6 +21,7 @@ export interface EclipseCard {
     eclipse: LunarEclipse | SolarEclipse | undefined,
     uncertaintySeconds: number,
     observer: GeoPoint | null,
+    famous?: FamousEclipse,
   ): void;
 }
 
@@ -139,17 +141,30 @@ function solarLines(
   return lines;
 }
 
+/** The historical context of a famous eclipse: why it is known, and from where. */
+function famousLines(famous: FamousEclipse): HTMLElement[] {
+  return [
+    element('p', { class: 'famous-card-title' }, famous.title),
+    element('p', { class: 'famous-card-summary' }, famous.summary),
+    element('p', { class: 'famous-card-source' }, `Source: ${famous.source}`),
+    ...(famous.debateNote === undefined
+      ? []
+      : [element('p', { class: 'famous-card-debate' }, `Debated: ${famous.debateNote}`)]),
+  ];
+}
+
 export function createEclipseCard(): EclipseCard {
   const root = element('section', { class: 'eclipse-card', 'aria-live': 'polite', hidden: '' });
   return {
     root,
-    render(eclipse, uncertaintySeconds, observer) {
+    render(eclipse, uncertaintySeconds, observer, famous) {
       if (eclipse === undefined) {
         root.hidden = true;
         root.replaceChildren();
         return;
       }
       root.replaceChildren(
+        ...(famous === undefined ? [] : famousLines(famous)),
         ...(isSolar(eclipse)
           ? solarLines(eclipse, uncertaintySeconds, observer)
           : lunarLines(eclipse, uncertaintySeconds, observer)),

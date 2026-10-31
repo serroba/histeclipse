@@ -415,3 +415,157 @@ body {
     font-size: 12px;
   }
 }
+
+/* Famous eclipses: a button in the date panel opening a sheet. */
+.famous-open {
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 0 14px;
+  border: 1px solid rgb(247 201 90 / 0.45);
+  border-radius: 22px;
+  background: rgb(247 201 90 / 0.1);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.famous-dialog {
+  width: min(440px, 100%);
+  max-height: min(80vh, 760px);
+  margin: auto 16px auto auto;
+  padding: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  background: rgb(10 16 32 / 0.94);
+  color: var(--ink);
+  overscroll-behavior: contain;
+}
+
+.famous-dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.famous-header {
+  position: sticky;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 12px 6px 18px;
+  background: rgb(10 16 32 / 0.98);
+}
+
+.famous-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.famous-close {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.famous-intro {
+  margin: 0 18px 8px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.famous-list {
+  margin: 0;
+  padding: 0 8px 12px;
+  list-style: none;
+}
+
+.famous-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.famous-item:hover {
+  background: rgb(255 255 255 / 0.05);
+}
+
+.famous-item .eclipse-dot {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ff6b38;
+}
+
+.famous-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.famous-title {
+  font-size: 15px;
+}
+
+.famous-meta {
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.famous-debated {
+  padding: 0 6px;
+  border: 1px solid rgb(255 183 94 / 0.5);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 12px;
+}
+
+.famous-card-title {
+  font-weight: 600;
+  color: #f7c95a;
+}
+
+.famous-card-summary {
+  color: var(--ink);
+}
+
+.famous-card-source,
+.famous-card-debate {
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.famous-card-debate {
+  color: var(--accent);
+}
+
+@media (max-width: 600px) {
+  .famous-dialog {
+    width: 100%;
+    max-width: none;
+    max-height: 82vh;
+    margin: auto 0 0;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+.famous-item.body-solar .eclipse-dot {
+  background: radial-gradient(circle at 65% 45%, #14182a 46%, #f7c95a 48%);
+}
