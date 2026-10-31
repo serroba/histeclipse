@@ -164,6 +164,34 @@ test('a link to an eclipse restores it, with visibility from the chosen place', 
   await expect(page.getByTestId('globe')).toHaveAttribute('data-lunar-overlay', 'on');
 });
 
+test('the Moon-up region follows time and shows only during the eclipse', async ({ page }) => {
+  await page.goto('./?t=-620-04-22T02:08&sel=lunar:-0620-04-22');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  await expect(globe).toHaveAttribute('data-lunar-overlay', 'on');
+  await expect(page.locator('.eclipse-phase')).toContainText('partial phase');
+
+  const slider = page.getByRole('slider', { name: 'Time relative to greatest eclipse' });
+  await slider.fill('80');
+  await expect(page.locator('.eclipse-phase')).toContainText('penumbral phase');
+  await expect(globe).toHaveAttribute('data-lunar-overlay', 'on');
+
+  // Three hours after greatest eclipse the Moon has left Earth's shadow.
+  await slider.fill('180');
+  await expect(page.locator('.eclipse-phase')).toContainText('Not now');
+  await expect(globe).toHaveAttribute('data-lunar-overlay', 'off');
+});
+
+test('the eclipse card keeps background one tap away', async ({ page }) => {
+  await page.goto('./?t=2024-04-08T18:30&sel=solar:2024-04-08');
+  await globeRendered(page);
+  const more = page.getByText('More about this eclipse');
+  await expect(more).toBeVisible();
+  await expect(page.locator('.famous-card-summary')).toBeHidden();
+  await more.click();
+  await expect(page.locator('.famous-card-summary')).toBeVisible();
+});
+
 test('hiding the lunar layer hides the overlay but keeps the selection', async ({ page }) => {
   await page.goto('./?t=-620-04-22T02:08&sel=lunar:-0620-04-22&layers=terminator');
   await globeRendered(page);

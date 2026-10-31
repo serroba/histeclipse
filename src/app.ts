@@ -22,6 +22,7 @@ import {
   isSolar,
   momentAt,
 } from './eclipses/describe';
+import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarPhases';
 import { shadowAt } from './eclipses/solar';
 import { longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { geoToVector } from './globe/geo';
@@ -183,19 +184,24 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return listing.status === 'ready' ? findSelected(listing.eclipses, state.selection) : undefined;
   }
 
-  function renderShadowAndScrubber(state: ViewState): void {
+  /** Everything that changes with the moment shown: scrubber, shadow, Moon-up region, card. */
+  function renderMoment(state: ViewState): void {
     const selected = selectedEclipse(state);
     if (selected === undefined) {
       globe.setSolarShadow(null);
+      globe.setLunarOverlay(null);
       scrubber.render(null);
+      card.render(undefined, 0, state.location);
       return;
     }
     const universal = momentJulianDay(state.time);
     const offset = Math.round((universal - greatestEclipseUT(selected)) * MINUTES_PER_DAY);
+    const uncertainty = deltaT.uncertaintySeconds(greatestEclipseUT(selected));
     scrubber.render({
       offsetMinutes: Math.max(-SCRUB_RANGE_MINUTES, Math.min(SCRUB_RANGE_MINUTES, offset)),
       timeLabel: formatTimeOfDay(state.time),
     });
+
     const showShadow = isSolar(selected) && state.layers.has('solar');
     globe.setSolarShadow(
       showShadow
@@ -206,6 +212,27 @@ export async function startApp(root: HTMLElement): Promise<void> {
           )
         : null,
     );
+
+    // Where the eclipsed Moon is up now: the point under the Moon drifts west as Earth turns,
+    // and the region only shows while the eclipse is actually happening.
+    const phase = isSolar(selected) ? 'none' : lunarPhaseAt(selected, offset);
+    if (!isSolar(selected) && phase !== 'none' && state.layers.has('lunar')) {
+      const [latitude, longitude] = selected.sublunar;
+      const now = shiftLongitude(
+        { latitude, longitude },
+        -(offset / 60) * SUBLUNAR_DRIFT_DEGREES_PER_HOUR,
+      );
+      const shift = longitudeUncertainty(uncertainty);
+      globe.setLunarOverlay({
+        sublunar: geoToVector(now),
+        west: geoToVector(shiftLongitude(now, -shift)),
+        east: geoToVector(shiftLongitude(now, shift)),
+        strength: phase === 'penumbral' ? 0.5 : 1,
+      });
+    } else {
+      globe.setLunarOverlay(null);
+    }
+    card.render(selected, uncertainty, state.location, famousFor(famous, state.selection), offset);
   }
 
   function renderSelection(state: ViewState): void {
@@ -213,19 +240,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     timeline.render({ year: state.time.date.year, eclipses: listing, selected });
     const uncertainty =
       selected === undefined ? 0 : deltaT.uncertaintySeconds(greatestEclipseUT(selected));
-
-    if (selected !== undefined && !isSolar(selected) && state.layers.has('lunar')) {
-      const [latitude, longitude] = selected.sublunar;
-      const sublunar = { latitude, longitude };
-      const shift = longitudeUncertainty(uncertainty);
-      globe.setLunarOverlay({
-        sublunar: geoToVector(sublunar),
-        west: geoToVector(shiftLongitude(sublunar, -shift)),
-        east: geoToVector(shiftLongitude(sublunar, shift)),
-      });
-    } else {
-      globe.setLunarOverlay(null);
-    }
 
     const solarPath =
       selected !== undefined && isSolar(selected) && state.layers.has('solar') ? selected : null;
@@ -248,8 +262,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.flyTo(flyTarget ?? { latitude, longitude });
       flyTarget = null;
     }
-    card.render(selected, uncertainty, state.location, famousFor(famous, state.selection));
-    renderShadowAndScrubber(state);
+    renderMoment(state);
   }
 
   function loadYear(state: ViewState): void {
@@ -311,7 +324,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ) {
       renderSelection(state);
     } else if (state.time !== previous.time) {
-      renderShadowAndScrubber(state);
+      renderMoment(state);
     }
     sync.update(state);
   }
@@ -323,12 +336,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // Write the canonical, fully explicit URL straight away so it can be shared as is.
   sync.flush();
 
-  // Keep the globe centred in the space the bottom panels leave free.
+  // Keep the globe centred in the space the panels leave free. On wide screens the date panel
+  // sits beside the globe, so only the bottom panels count.
+  const top = root.querySelector('.hud');
   const bottom = root.querySelector('.bottom');
-  if (bottom !== null) {
-    new ResizeObserver(() => {
-      globe.setBottomInset(bottom.getBoundingClientRect().height);
-    }).observe(bottom);
+  if (top !== null && bottom !== null) {
+    const update = (): void => {
+      const narrow = window.innerWidth <= 600;
+      globe.setInsets(
+        narrow ? top.getBoundingClientRect().bottom : 0,
+        bottom.getBoundingClientRect().height,
+      );
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(top);
+    observer.observe(bottom);
   }
 
   globe.onCameraChange((camera) => {
