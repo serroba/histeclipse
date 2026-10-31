@@ -7,8 +7,10 @@
  * - `t` is Universal Time with ISO-8601 astronomical years (−0620 is 621 BCE).
  * - `cal` is the calendar `t` is written in. When missing, it is the one in use at the
  *   time: Julian before 1582-10-15, Gregorian after. `sel` dates always use that rule.
- * - `loc` (observer), `sel` (selected eclipse) and `view` (an attached viewpoint; absent means
- *   free) are optional; everything else is always written out, so a link keeps its meaning
+ * - `cam` is relative to the body in `focus` (absent means Earth): a point on its surface and
+ *   a distance in its radii.
+ * - `loc` (observer), `sel` (selected eclipse), `view` (an attached viewpoint; absent means
+ *   free) and `focus` are optional; everything else is always written out, so a link keeps its meaning
  *   even if defaults change later.
  *
  * Parsing never throws. Bad values fall back to defaults and produce a warning the UI can
@@ -22,10 +24,12 @@ import {
   CAMERA_DISTANCE_RANGE,
   ECLIPSE_KINDS,
   LAYERS,
+  BODIES,
   MODES,
   VIEWPOINTS,
   defaultCalendarFor,
   defaultViewState,
+  type Body,
   type EclipseKind,
   type GeoPoint,
   type GlobeCamera,
@@ -86,6 +90,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     location: read<GeoPoint | null>('loc', parseGeoPoint, defaults.location),
     camera: read('cam', parseCamera, defaults.camera),
     view: read('view', parseViewpoint, defaults.view),
+    focus: read('focus', parseFocus, defaults.focus),
     layers: read('layers', parseLayers, defaults.layers),
     selection: read<Selection | null>('sel', parseSelection, defaults.selection),
   };
@@ -105,6 +110,7 @@ export function serializeViewState(state: ViewState): string {
   params.set('cam', formatCamera(state.camera));
   // The default free view is left out, so links from before viewpoints existed read the same.
   if (state.view !== 'free') params.set('view', state.view);
+  if (state.focus !== 'earth') params.set('focus', state.focus);
   params.set('layers', LAYERS.filter((layer) => state.layers.has(layer)).join(','));
   if (state.selection !== null) params.set('sel', formatSelection(state.selection));
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
@@ -117,6 +123,10 @@ function parseMode(raw: string): Mode {
 
 function parseViewpoint(raw: string): Viewpoint {
   return oneOf(raw, VIEWPOINTS, 'view');
+}
+
+function parseFocus(raw: string): Body {
+  return oneOf(raw, BODIES, 'focus');
 }
 
 function parseCalendar(raw: string): Calendar {

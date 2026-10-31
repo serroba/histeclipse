@@ -7,6 +7,7 @@ import { parseViewState, serializeViewState } from './url';
 import {
   DEFAULT_CAMERA,
   DEFAULT_LAYERS,
+  BODIES,
   LAYERS,
   VIEWPOINTS,
   defaultCalendarFor,
@@ -46,6 +47,7 @@ describe('parseViewState', () => {
       location: { latitude: 32.5422, longitude: 44.4209 },
       camera: { target: { latitude: 30, longitude: 40 }, distance: 3 },
       view: 'moon-from-earth',
+      focus: 'earth',
       layers: new Set(['lunar', 'terminator']),
       selection: { kind: 'lunar', date: date(-620, 4, 22, 'julian') },
     } satisfies ViewState);
@@ -89,6 +91,13 @@ describe('parseViewState', () => {
     expect(serializeViewState(state)).not.toContain('view=');
   });
 
+  it('reads a camera centred on the Moon, and leaves Earth focus out of links', () => {
+    const { state } = parseViewState('focus=moon&cam=10,-20,4', NOW);
+    expect(state.focus).toBe('moon');
+    expect(serializeViewState(state)).toContain('&focus=moon');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
+  });
+
   it('reads an empty layer list as no layers', () => {
     expect(parseViewState('layers=', NOW).state.layers).toEqual(new Set());
   });
@@ -107,6 +116,7 @@ describe('parseViewState', () => {
     ['cam=0,0,200000', 'cam', 'distance must be between'],
     ['layers=lunar,clouds', 'layers', 'unknown layer'],
     ['view=sideways', 'view', 'unknown view'],
+    ['focus=mars', 'focus', 'unknown focus'],
     ['sel=lunar', 'sel', 'expected kind:date'],
     ['sel=lunar:yesterday', 'sel', 'expected a date'],
     ['sel=annular:2025-01-01', 'sel', 'unknown eclipse kind'],
@@ -212,6 +222,7 @@ describe('serializeViewState', () => {
       distance: rounded(1.1, 120_000, 2),
     }),
     view: fc.constantFrom(...VIEWPOINTS),
+    focus: fc.constantFrom(...BODIES),
     layers: fc.subarray([...LAYERS]).map((layers) => new Set<Layer>(layers)),
     selection: fc.option(
       fc.record({ kind: fc.constantFrom('lunar' as const, 'solar' as const), date: calendarDay }),

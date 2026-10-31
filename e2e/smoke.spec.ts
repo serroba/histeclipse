@@ -393,7 +393,7 @@ test('one click stands on Earth facing the Moon, and one click returns', async (
   await expect(page).toHaveURL(/&view=moon-from-earth&/);
   // The orbiting camera is kept, so going back lands where it was.
   await expect(page).toHaveURL(/cam=20\.0000,0\.0000,4\.50/);
-  await views.getByRole('button', { name: 'Globe' }).click();
+  await views.getByRole('button', { name: 'Orbit' }).click();
   await expect(page.getByTestId('globe')).toHaveAttribute('data-view', 'free');
   await expect(page).not.toHaveURL(/view=/);
 });
@@ -406,6 +406,36 @@ test('a link can stand on the Moon looking at Earth', async ({ page }) => {
   ).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('globe')).toHaveAttribute('data-view', 'earth-from-moon');
   await expect(page.getByTestId('globe')).toHaveAttribute('data-solar-shadow', 'on');
+});
+
+test('clicking the Moon flies to it, and the camera then orbits and zooms around it', async ({
+  page,
+}) => {
+  await page.goto('./?t=2024-04-08T18:17&cam=0,-5,150');
+  await globeRendered(page);
+  await page.locator('.space-marker[data-body="moon"]').click();
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-focus', 'moon');
+  // Lands four Moon radii out, and the link says so.
+  await expect(page).toHaveURL(/cam=-?\d+\.\d{4},-?\d+\.\d{4},4\.00&focus=moon/);
+  // Zooming now moves towards the Moon.
+  const canvas = page.getByTestId('globe').locator('canvas');
+  await canvas.hover();
+  await page.mouse.wheel(0, -400);
+  await expect(page).not.toHaveURL(/,4\.00&focus=moon/);
+  await expect(page).toHaveURL(/,[123]\.\d\d&focus=moon/);
+});
+
+test('a link centred on the Moon opens there, and Earth is one click back', async ({ page }) => {
+  // Over the far side, so Earth lies ahead, beyond the Moon.
+  await page.goto('./?t=2025-11-05T12:00&cam=0,180,3&focus=moon');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  await expect(globe).toHaveAttribute('data-focus', 'moon');
+  await expect(globe).toHaveAttribute('data-space', 'moon');
+  await expect(page).toHaveURL(/cam=-?0\.0000,180\.0000,3\.00&focus=moon/);
+  await page.locator('.space-marker[data-body="earth"]').click();
+  await expect(globe).toHaveAttribute('data-focus', 'earth');
+  await expect(page).not.toHaveURL(/focus=/);
 });
 
 test('page fits the viewport without horizontal scroll', async ({ page }) => {

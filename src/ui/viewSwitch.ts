@@ -1,4 +1,4 @@
-/** One-click viewpoints: orbit the globe, stand on Earth facing the Moon, or the reverse. */
+/** One-click viewpoints: orbit the body in focus, stand on Earth facing the Moon, or the reverse. */
 
 import type { Viewpoint } from '../state/viewState';
 import { element } from './dom';
@@ -9,7 +9,7 @@ export interface ViewSwitch {
 }
 
 const LABELS: readonly (readonly [Viewpoint, string])[] = [
-  ['free', 'Globe'],
+  ['free', 'Orbit'],
   ['moon-from-earth', 'Moon from Earth'],
   ['earth-from-moon', 'Earth from Moon'],
 ];

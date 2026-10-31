@@ -137,6 +137,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       camera: store.get().camera,
       textureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
       moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
+      focus: store.get().focus,
     }),
   ]);
   const sync = createUrlSync(browserUrlWriter(window.location, window.history));
@@ -342,6 +343,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function render(state: ViewState, previous: ViewState | null): void {
     if (state.time !== previous?.time) showTime(state);
+    if (previous !== null && state.focus !== previous.focus) globe.setFocus(state.focus);
     if (state.view !== previous?.view) {
       globe.setViewpoint(state.view);
       viewSwitch.render(state.view, moonEphemeris !== null);
@@ -383,6 +385,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     observer.observe(bottom);
   }
 
+  globe.onBodyClick((focus) => {
+    store.set((state) => ({ ...state, focus, view: 'free' }));
+  });
   globe.onCameraChange((camera) => {
     store.set((state) => ({ ...state, camera }));
   });
