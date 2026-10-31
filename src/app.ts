@@ -7,6 +7,12 @@
 
 import { subsolarPoint } from './astro/sun';
 import { greatestEclipseUT } from './data/catalog';
+import {
+  famousDate,
+  famousFor,
+  loadFamousEclipses,
+  type FamousEclipse,
+} from './data/famousEclipses';
 import { LunarCatalog } from './data/lunarCatalog';
 import { SolarCatalog, type SolarEclipse } from './data/solarCatalog';
 import {
@@ -23,7 +29,12 @@ import { createGlobe } from './globe/scene';
 import { createStore } from './state/store';
 import { parseViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
-import { defaultViewState, momentJulianDay, type ViewState } from './state/viewState';
+import {
+  defaultViewState,
+  momentJulianDay,
+  type GeoPoint,
+  type ViewState,
+} from './state/viewState';
 import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
 import { julianDayNumber } from './time/julianDay';
@@ -31,6 +42,7 @@ import type { AstronomicalYear } from './time/year';
 import { moveToYear } from './time/yearInput';
 import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
+import { createFamousPanel } from './ui/famousPanel';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createTimeline, type Eclipse, type YearEclipses } from './ui/timeline';
 import { errorMessage } from './util/errors';
@@ -43,9 +55,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const parsed = parseViewState(window.location.search, now);
   const store = createStore<ViewState>(parsed.state);
 
-  // Picking an eclipse also turns the globe toward it; opening a shared link does not,
-  // because the link already says where the camera should be.
+  // Picking an eclipse also turns the globe toward it (or toward a famous eclipse's place);
+  // opening a shared link does not, because the link already says where the camera should be.
   let flyToSelection = false;
+  let flyTarget: GeoPoint | null = null;
+  let famous: readonly FamousEclipse[] = [];
+  const famousPanel = createFamousPanel((entry) => {
+    void goToFamous(entry);
+  });
 
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
   const dateText = element('time', { class: 'hud-date' });
@@ -81,6 +98,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       element('h1', {}, 'histeclipse'),
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
+      famousPanel.button,
       element(
         'p',
         { class: 'credits' },
@@ -95,6 +113,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ),
     notices,
     element('div', { class: 'bottom' }, card.root, scrubber.root, timeline.root),
+    famousPanel.dialog,
   );
 
   function notify(message: string): void {
@@ -112,6 +131,47 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }),
   ]);
   const sync = createUrlSync(browserUrlWriter(window.location, window.history));
+
+  // The famous list is a convenience: if it fails to load, everything else still works.
+  loadFamousEclipses(`${base}data/famous-eclipses.json`, (url) => fetch(url)).then(
+    (entries) => {
+      famous = entries;
+      famousPanel.setEclipses(entries);
+      renderSelection(store.get());
+    },
+    (error: unknown) => {
+      famousPanel.button.hidden = true;
+      notify(`Could not load the famous eclipses: ${errorMessage(error)}`);
+    },
+  );
+
+  async function goToFamous(entry: FamousEclipse): Promise<void> {
+    const date = famousDate(entry);
+    const catalog = entry.kind === 'solar' ? solarCatalog : lunarCatalog;
+    let eclipses: readonly Eclipse[];
+    try {
+      eclipses = await catalog.eclipsesInYear(date.year);
+    } catch (error) {
+      notify(`Could not load ${entry.title}: ${errorMessage(error)}`);
+      return;
+    }
+    const match = findSelected(eclipses, { kind: entry.kind, date });
+    if (match === undefined) {
+      notify(`${entry.title} is not in the catalog.`);
+      return;
+    }
+    flyToSelection = true;
+    flyTarget = entry.place ?? null;
+    store.set((state) => ({
+      ...state,
+      time: eclipseMoment(match),
+      selection: eclipseSelection(match),
+      location:
+        entry.place === undefined
+          ? state.location
+          : { latitude: entry.place.latitude, longitude: entry.place.longitude },
+    }));
+  }
 
   // Eclipses of the year on screen. Loads are tagged with their year so a slow response for a
   // year the user already left is ignored.
@@ -185,9 +245,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (selected !== undefined && flyToSelection) {
       flyToSelection = false;
       const [latitude, longitude] = isSolar(selected) ? selected.greatest : selected.sublunar;
-      globe.flyTo({ latitude, longitude });
+      globe.flyTo(flyTarget ?? { latitude, longitude });
+      flyTarget = null;
     }
-    card.render(selected, uncertainty, state.location);
+    card.render(selected, uncertainty, state.location, famousFor(famous, state.selection));
     renderShadowAndScrubber(state);
   }
 

@@ -1,0 +1,289 @@
+{
+  "schemaVersion": 1,
+  "note": "Curated, hand-written list. Dates are greatest eclipse in Universal Time, astronomical years (-762 = 763 BCE), in the calendar in use at the time (Julian before 1582-10-15). Every entry is checked against the computed catalogs by src/data/famousEclipses.test.ts: the eclipse must exist on that date, and where a place is given, it must see what 'seen' says for the catalog's ΔT and its uncertainty. Dates are UT, so they can differ by a day from local dates in the sources.",
+  "eclipses": [
+    {
+      "id": "ugarit-1223-bce",
+      "kind": "solar",
+      "date": "-1222-03-05",
+      "title": "The Ugarit eclipse",
+      "summary": "A clay tablet from the city of Ugarit on the Syrian coast describes the day the Sun was put to shame. It is one of the oldest records proposed to describe a solar eclipse.",
+      "source": "Tablet KTU 1.78; date proposed by de Jong & van Soldt (1989)",
+      "debated": true,
+      "debateNote": "Both the reading of the tablet and the date are disputed; 1375 BCE May 3 has also been proposed. With this site's ΔT model, Ugarit sees about 94% of the Sun covered, not totality, even allowing for ΔT's uncertainty.",
+      "place": {
+        "name": "Ugarit",
+        "latitude": 35.6017,
+        "longitude": 35.7822
+      },
+      "seen": "partial"
+    },
+    {
+      "id": "assyria-763-bce",
+      "kind": "solar",
+      "date": "-762-06-15",
+      "title": "The Assyrian eclipse",
+      "summary": "The Assyrian eponym list notes a solar eclipse in the month Simanu in the year of the official Bur-Sagale. Matching it to this eclipse anchors Assyrian chronology, and through it much of ancient Near Eastern history.",
+      "source": "Assyrian Eponym Chronicle",
+      "debated": false,
+      "place": {
+        "name": "Nineveh",
+        "latitude": 36.3594,
+        "longitude": 43.1529
+      },
+      "seen": "partial"
+    },
+    {
+      "id": "chunqiu-709-bce",
+      "kind": "solar",
+      "date": "-708-07-17",
+      "title": "The total eclipse in the Spring and Autumn Annals",
+      "summary": "The Chunqiu, the chronicle of the state of Lu, records a solar eclipse in the third year of Duke Huan and says it was total, one of the earliest records of a total eclipse. Whether totality reached the capital depends on ΔT within its uncertainty, which is why records like this one help historians and astronomers pin down ΔT.",
+      "source": "Chunqiu (Spring and Autumn Annals), Duke Huan year 3",
+      "debated": false,
+      "place": {
+        "name": "Qufu (capital of Lu)",
+        "latitude": 35.5967,
+        "longitude": 116.9911
+      },
+      "seen": "uncertain"
+    },
+    {
+      "id": "babylon-621-bce",
+      "kind": "lunar",
+      "date": "-620-04-22",
+      "title": "The Babylonian eclipse of Nabopolassar's fifth year",
+      "summary": "Ptolemy's Almagest quotes Babylonian observations of a lunar eclipse in the fifth year of King Nabopolassar. Because Ptolemy also gives the reign, this record helps tie Babylonian regnal years to absolute dates.",
+      "source": "Ptolemy, Almagest V.14",
+      "debated": false,
+      "place": {
+        "name": "Babylon",
+        "latitude": 32.5422,
+        "longitude": 44.4209
+      },
+      "seen": "visible"
+    },
+    {
+      "id": "thales-585-bce",
+      "kind": "solar",
+      "date": "-584-05-28",
+      "title": "The eclipse of Thales",
+      "summary": "Herodotus writes that day turned to night during a battle between the Lydians and the Medes, ending a six-year war, and that Thales of Miletus had foretold it. With this site's ΔT model, the path of totality crosses Asia Minor from the Aegean to northern Syria; where the battle took place is not known.",
+      "source": "Herodotus, Histories 1.74",
+      "debated": true,
+      "debateNote": "This is the usual identification, but the battle's place and year are uncertain, and whether Thales could have predicted it is doubted."
+    },
+    {
+      "id": "cambyses-523-bce",
+      "kind": "lunar",
+      "date": "-522-07-16",
+      "title": "The lunar eclipse of Cambyses' seventh year",
+      "summary": "Ptolemy cites a Babylonian observation of a lunar eclipse in the seventh year of the Persian king Cambyses; a cuneiform tablet from the same year also records it.",
+      "source": "Ptolemy, Almagest V.14; tablet Strm. Kambys. 400",
+      "debated": false,
+      "place": {
+        "name": "Babylon",
+        "latitude": 32.5422,
+        "longitude": 44.4209
+      },
+      "seen": "visible"
+    },
+    {
+      "id": "syracuse-413-bce",
+      "kind": "lunar",
+      "date": "-412-08-27",
+      "title": "The eclipse at Syracuse",
+      "summary": "Thucydides tells how a lunar eclipse made the Athenian commander Nicias delay his army's retreat from Syracuse, with disastrous consequences.",
+      "source": "Thucydides, History of the Peloponnesian War 7.50",
+      "debated": false,
+      "place": {
+        "name": "Syracuse",
+        "latitude": 37.0755,
+        "longitude": 15.2866
+      },
+      "seen": "visible"
+    },
+    {
+      "id": "gaugamela-331-bce",
+      "kind": "lunar",
+      "date": "-330-09-20",
+      "title": "The eclipse before Gaugamela",
+      "summary": "A total lunar eclipse eleven days before Alexander the Great defeated Darius III at Gaugamela; ancient historians and Babylonian astronomical diaries both mention it.",
+      "source": "Arrian, Anabasis 3.7; Plutarch, Alexander 31; Babylonian astronomical diaries",
+      "debated": false,
+      "place": {
+        "name": "Gaugamela",
+        "latitude": 36.57,
+        "longitude": 43.44
+      },
+      "seen": "visible"
+    },
+    {
+      "id": "herod-4-bce",
+      "kind": "lunar",
+      "date": "-3-03-13",
+      "title": "The lunar eclipse before Herod's death",
+      "summary": "Josephus mentions a lunar eclipse shortly before the death of Herod the Great. This partial eclipse is the traditional identification.",
+      "source": "Josephus, Antiquities of the Jews 17.6.4",
+      "debated": true,
+      "debateNote": "Several eclipses have been proposed, notably the total lunar eclipse of 1 BCE January 10; the choice shifts the date of Herod's death.",
+      "place": {
+        "name": "Jerusalem",
+        "latitude": 31.7683,
+        "longitude": 35.2137
+      },
+      "seen": "visible"
+    },
+    {
+      "id": "herod-1-bce",
+      "kind": "lunar",
+      "date": "0-01-09",
+      "title": "The alternative eclipse for Herod's death",
+      "summary": "A total lunar eclipse on the night of 9–10 January 1 BCE (Jerusalem time), proposed as an alternative to 4 BCE for the eclipse Josephus mentions before Herod's death.",
+      "source": "Josephus, Antiquities of the Jews 17.6.4",
+      "debated": true,
+      "debateNote": "One of several proposals; see also 4 BCE March 13.",
+      "place": {
+        "name": "Jerusalem",
+        "latitude": 31.7683,
+        "longitude": 35.2137
+      },
+      "seen": "visible"
+    },
+    {
+      "id": "columbus-1504",
+      "kind": "lunar",
+      "date": "1504-03-01",
+      "title": "Columbus's eclipse",
+      "summary": "Stranded on Jamaica, Christopher Columbus used an almanac's prediction of this total lunar eclipse, on the evening of 29 February 1504 local time, to persuade the local Taíno people to keep supplying his crew.",
+      "source": "Ferdinand Columbus, The Life of the Admiral; Regiomontanus's Ephemerides",
+      "debated": false,
+      "place": {
+        "name": "St. Ann's Bay, Jamaica",
+        "latitude": 18.4359,
+        "longitude": -77.2006
+      },
+      "seen": "visible"
+    },
+    {
+      "id": "halley-1715",
+      "kind": "solar",
+      "date": "1715-05-03",
+      "title": "Halley's eclipse",
+      "summary": "Edmond Halley published a map predicting the path of this total eclipse across England and asked observers to report what they saw, an early example of crowd-sourced science.",
+      "source": "Halley's broadsheet map (1715)",
+      "debated": false,
+      "place": {
+        "name": "London",
+        "latitude": 51.5074,
+        "longitude": -0.1278
+      },
+      "seen": "total"
+    },
+    {
+      "id": "helium-1868",
+      "kind": "solar",
+      "date": "1868-08-18",
+      "title": "The eclipse that revealed helium",
+      "summary": "Observing this total eclipse from India, Jules Janssen saw a bright yellow line in the solar spectrum that turned out to belong to a new element, helium.",
+      "source": "Janssen (1868); Lockyer (1868)",
+      "debated": false,
+      "place": {
+        "name": "Guntur, India",
+        "latitude": 16.3067,
+        "longitude": 80.4365
+      },
+      "seen": "total"
+    },
+    {
+      "id": "eddington-1919",
+      "kind": "solar",
+      "date": "1919-05-29",
+      "title": "Eddington's eclipse",
+      "summary": "Expeditions to Príncipe and Sobral measured how the Sun's gravity bent starlight during this total eclipse, the first test of Einstein's general relativity.",
+      "source": "Dyson, Eddington & Davidson (1920)",
+      "debated": false,
+      "place": {
+        "name": "Príncipe",
+        "latitude": 1.6139,
+        "longitude": 7.4057
+      },
+      "seen": "total"
+    },
+    {
+      "id": "europe-1999",
+      "kind": "solar",
+      "date": "1999-08-11",
+      "title": "The last total eclipse of the millennium",
+      "summary": "A total eclipse crossed Europe from Cornwall to Romania and on to India, watched by hundreds of millions.",
+      "source": "NASA Five Millennium Canon",
+      "debated": false,
+      "place": {
+        "name": "Munich",
+        "latitude": 48.1351,
+        "longitude": 11.582
+      },
+      "seen": "total"
+    },
+    {
+      "id": "america-2017",
+      "kind": "solar",
+      "date": "2017-08-21",
+      "title": "The Great American Eclipse",
+      "summary": "The first total eclipse to cross the contiguous United States from coast to coast since 1918.",
+      "source": "NASA Five Millennium Canon",
+      "debated": false,
+      "place": {
+        "name": "Carbondale, Illinois",
+        "latitude": 37.7273,
+        "longitude": -89.2168
+      },
+      "seen": "total"
+    },
+    {
+      "id": "north-america-2024",
+      "kind": "solar",
+      "date": "2024-04-08",
+      "title": "The 2024 North American eclipse",
+      "summary": "A total eclipse from Mexico's Pacific coast across Texas, the Great Lakes and Newfoundland.",
+      "source": "NASA Five Millennium Canon",
+      "debated": false,
+      "place": {
+        "name": "Dallas",
+        "latitude": 32.7767,
+        "longitude": -96.797
+      },
+      "seen": "total"
+    },
+    {
+      "id": "europe-2026",
+      "kind": "solar",
+      "date": "2026-08-12",
+      "title": "The 2026 eclipse over Iceland and Spain",
+      "summary": "The first total eclipse visible from mainland Europe since 1999, crossing Greenland, Iceland and northern Spain near sunset.",
+      "source": "NASA Five Millennium Canon",
+      "debated": false,
+      "place": {
+        "name": "Reykjavík",
+        "latitude": 64.1466,
+        "longitude": -21.9426
+      },
+      "seen": "total"
+    },
+    {
+      "id": "luxor-2027",
+      "kind": "solar",
+      "date": "2027-08-02",
+      "title": "The great Egyptian eclipse",
+      "summary": "One of the longest total eclipses of the century, with more than six minutes of totality near Luxor.",
+      "source": "NASA Five Millennium Canon",
+      "debated": false,
+      "place": {
+        "name": "Luxor",
+        "latitude": 25.6872,
+        "longitude": 32.6396
+      },
+      "seen": "total"
+    }
+  ]
+}

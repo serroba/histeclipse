@@ -247,6 +247,57 @@ test('play animates the eclipse forward in time', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Play' })).toBeVisible();
 });
 
+test('famous eclipses: pick one and land on it with its history', async ({ page }) => {
+  await page.goto('./?t=2024-01-01T00:00');
+  await globeRendered(page);
+  await page.getByRole('button', { name: 'Famous eclipses' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Famous eclipses' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: /The eclipse at Syracuse/ }).click();
+
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/sel=lunar:-0412-08-27/);
+  await expect(page).toHaveURL(/loc=37\.0755,15\.2866/);
+  await expect(page.locator('.famous-card-title')).toHaveText('The eclipse at Syracuse');
+  await expect(page.locator('.famous-card-source')).toContainText('Thucydides');
+  await expect(page.locator('.eclipse-observer')).toContainText('The Moon was above the horizon');
+});
+
+test('famous eclipses: debated entries say so, and the list closes', async ({ page }) => {
+  await page.goto('./');
+  await globeRendered(page);
+  await page.getByRole('button', { name: 'Famous eclipses' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Famous eclipses' });
+  await expect(
+    dialog.getByRole('button', { name: /The eclipse of Thales.*debated/ }),
+  ).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await page.getByRole('button', { name: 'Famous eclipses' }).click();
+  await dialog.getByRole('button', { name: 'Close' }).click();
+  await expect(dialog).toBeHidden();
+});
+
+test('a link to a famous eclipse shows its history', async ({ page }) => {
+  await page.goto('./?t=-584-05-28T14:26&sel=solar:-0584-05-28');
+  await globeRendered(page);
+  await expect(page.locator('.famous-card-title')).toHaveText('The eclipse of Thales');
+  await expect(page.locator('.famous-card-debate')).toContainText('Debated');
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-solar-path', 'on');
+});
+
+test('famous eclipse rows are large enough to tap', async ({ page }) => {
+  await page.goto('./');
+  await globeRendered(page);
+  await page.getByRole('button', { name: 'Famous eclipses' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Famous eclipses' });
+  for (const control of await dialog.getByRole('button').all()) {
+    const box = await control.boundingBox();
+    if (box === null) continue;
+    expect(box.height).toBeGreaterThanOrEqual(44);
+  }
+});
+
 test('page fits the viewport without horizontal scroll', async ({ page }) => {
   await page.goto('./');
   const overflow = await page.evaluate(
