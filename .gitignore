@@ -4,3 +4,12 @@ coverage/
 *.tsbuildinfo
 .DS_Store
 .vite/
+
+# Python
+.venv/
+__pycache__/
+.coverage
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/

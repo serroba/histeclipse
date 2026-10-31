@@ -1,0 +1,79 @@
+[project]
+name = "histeclipse-pipeline"
+version = "0.0.0"
+description = "Offline generator for histeclipse's static astronomical data files"
+license = "MIT"
+requires-python = ">=3.14"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.170.9",
+    "mypy>=2.4.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.10,<0.11"]
+build-backend = "uv_build"
+
+[tool.uv]
+# Supply-chain hardening, matching pnpm's minimumReleaseAge on the web side.
+exclude-newer = "7 days"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "COM812",  # conflicts with the formatter
+  "CPY001",  # copyright is covered by the repository LICENSE
+  "D203",    # incompatible with D211
+  "D213",    # incompatible with D212
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "S101",    # assert is how pytest works
+  "D",       # test names document themselves
+  "PLR2004", # literal expected values are the point of a test
+]
+
+[tool.mypy]
+strict = true
+python_version = "3.14"
+files = ["src", "tests"]
+warn_unreachable = true
+disallow_any_explicit = true
+disallow_any_decorated = false  # hypothesis/pytest decorators are typed loosely
+extra_checks = true
+enable_error_code = [
+  "deprecated",
+  "exhaustive-match",
+  "explicit-override",
+  "ignore-without-code",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+]
+
+[tool.pytest.ini_options]
+addopts = [
+  "--strict-config",
+  "--strict-markers",
+  "--cov=histeclipse_pipeline",
+  "--cov-branch",
+  "--cov-report=term-missing",
+  "--cov-fail-under=95",
+]
+testpaths = ["tests"]
+xfail_strict = true
+filterwarnings = ["error"]
