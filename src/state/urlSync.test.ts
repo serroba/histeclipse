@@ -16,16 +16,31 @@ describe('createUrlSync', () => {
     vi.useRealTimers();
   });
 
-  it('writes only the last state after a quiet period', () => {
+  it('writes the latest state once the interval has passed', () => {
     const writes: string[] = [];
     const sync = createUrlSync({ replace: (query) => writes.push(query) }, 100);
     sync.update(base);
     vi.advanceTimersByTime(50);
     sync.update(sky);
-    vi.advanceTimersByTime(99);
+    vi.advanceTimersByTime(49);
     expect(writes).toEqual([]);
     vi.advanceTimersByTime(1);
     expect(writes).toEqual([serializeViewState(sky)]);
+  });
+
+  it('keeps writing during continuous changes instead of waiting for them to stop', () => {
+    const writes: string[] = [];
+    const sync = createUrlSync({ replace: (query) => writes.push(query) }, 100);
+    // A globe gliding after a flick: a change every 20 ms for two seconds.
+    for (let step = 0; step < 100; step += 1) {
+      const longitude = step / 10;
+      sync.update({ ...base, camera: { ...base.camera, target: { latitude: 0, longitude } } });
+      vi.advanceTimersByTime(20);
+    }
+    expect(writes.length).toBeGreaterThanOrEqual(19);
+    expect(writes.length).toBeLessThanOrEqual(21);
+    vi.runAllTimers();
+    expect(writes.at(-1)).toContain('cam=0.0000,9.9000,');
   });
 
   it('skips writes that would not change the URL', () => {

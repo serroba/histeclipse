@@ -1,7 +1,12 @@
 /**
  * Keeps the address bar describing the current view, so it can be copied and shared at any
- * moment. Uses `replaceState` (not `pushState`) so exploring doesn't flood the back button,
- * and debounces writes so dragging the globe doesn't rewrite the URL every frame.
+ * moment. Uses `replaceState` (not `pushState`) so exploring doesn't flood the back button.
+ *
+ * Writes are throttled, not debounced: the URL updates at most once per `intervalMs` while the
+ * view keeps changing, and the final state is always written. A debounce would starve during
+ * long continuous motion (a globe gliding after a flick on a slow device fires changes every
+ * frame for many seconds). The interval also keeps us under Safari's limit of 100
+ * `replaceState` calls per 30 seconds.
  */
 
 import { serializeViewState } from './url';
@@ -12,14 +17,14 @@ export interface UrlWriter {
 }
 
 export interface UrlSync {
-  /** Schedule writing `state`; only the last state within the delay is written. */
+  /** Schedule writing `state`; within an interval only the latest state is written. */
   update(state: ViewState): void;
   /** Write any pending state now. */
   flush(): void;
   dispose(): void;
 }
 
-export function createUrlSync(writer: UrlWriter, delayMs = 250): UrlSync {
+export function createUrlSync(writer: UrlWriter, intervalMs = 500): UrlSync {
   let pending: ViewState | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let written = '';
@@ -39,8 +44,8 @@ export function createUrlSync(writer: UrlWriter, delayMs = 250): UrlSync {
   return {
     update(state) {
       pending = state;
-      if (timer !== null) clearTimeout(timer);
-      timer = setTimeout(flush, delayMs);
+      // Keep an existing timer: later updates just replace what it will write.
+      timer ??= setTimeout(flush, intervalMs);
     },
     flush,
     dispose() {
