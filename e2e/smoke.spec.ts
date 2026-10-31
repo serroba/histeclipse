@@ -566,3 +566,61 @@ test('the constellation switch draws all 88 figures, and the link keeps it', asy
   await expect(page).toHaveURL(/figures=none/);
   await expect(page.locator('.sky-label.is-constellation:visible')).toHaveCount(0);
 });
+
+test('from the central line in 2024 the Moon hides the whole Sun; farther north it does not', async ({
+  page,
+}) => {
+  await page.goto('./?mode=sky&t=2024-04-08T18:17&loc=25.29,-104.14');
+  await skyRendered(page);
+  const sky = page.getByTestId('sky');
+  await expect(sky).toHaveAttribute('data-sun-visible', '0.0000');
+  await expect(page.getByTestId('sky-eclipse')).toHaveText(
+    'Totality: the Moon hides the whole Sun.',
+  );
+  // In the middle of the day, the brightest stars come out.
+  expect(Number(await sky.getAttribute('data-stars-seen'))).toBeGreaterThan(0);
+
+  await page.goto('./?mode=sky&t=2024-04-08T18:17&loc=32,-100');
+  await skyRendered(page);
+  await expect(page.getByTestId('sky-eclipse')).toHaveText(/The Moon covers \d\d% of the Sun\./);
+  await expect(sky).toHaveAttribute('data-stars-seen', '0');
+});
+
+test('the Moon turns red in the umbra during a lunar eclipse', async ({ page }) => {
+  await page.goto('./?mode=sky&t=2022-11-08T10:59&loc=40.7,-74');
+  await skyRendered(page);
+  await expect(page.getByTestId('sky')).toHaveAttribute('data-moon-sunlight', '0.000');
+  await expect(page.getByTestId('sky-eclipse')).toContainText('darkest shadow');
+  await page.getByRole('button', { name: 'Moon', exact: true }).click();
+  // Setting in the west at dawn, as New Yorkers saw it.
+  await expect(page).toHaveURL(/look=2\d\d\.\d,[0-9]\.\d,/);
+});
+
+test('tapping the globe picks where to stand, and the sky faces the eclipse from there', async ({
+  page,
+}) => {
+  await page.goto('./?t=2024-04-08T18:17&cam=25.29,-104.14,4.5&sel=solar:2024-04-08');
+  await globeRendered(page);
+  const box = await page.getByTestId('globe').boundingBox();
+  if (box === null) throw new Error('globe has no size');
+  // The globe sits in the middle of the space the panels leave (on phones, below the header).
+  const top = await page.evaluate(() =>
+    window.innerWidth <= 600
+      ? (document.querySelector('.hud')?.getBoundingClientRect().bottom ?? 0)
+      : 0,
+  );
+  const bottom = (await page.locator('.bottom').boundingBox())?.height ?? 0;
+  await page.mouse.click(box.x + box.width / 2, box.y + (top + box.height - bottom) / 2);
+  // Close to where the camera looks, in the path of totality.
+  await expect(page).toHaveURL(/loc=2[0-9]\.\d{4},-10[0-9]\.\d{4}/);
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-location', /\d/);
+
+  await page.getByRole('button', { name: 'Sky', exact: true }).click();
+  await skyRendered(page);
+  const sky = page.getByTestId('sky');
+  // Facing the Sun: the look's altitude matches the Sun's.
+  const sunAltitude = Number(await sky.getAttribute('data-sun-altitude'));
+  const [, altitude] = ((await sky.getAttribute('data-look')) ?? '').split(',').map(Number);
+  expect(Math.abs((altitude ?? 0) - sunAltitude)).toBeLessThan(1);
+  await expect(page.getByTestId('sky-eclipse')).toBeVisible();
+});

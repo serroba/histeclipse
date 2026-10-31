@@ -49,7 +49,13 @@ import {
   SIDEREAL_DEGREES_PER_SECOND,
   type ShadowGeometry,
 } from '../eclipses/solar';
-import { cameraFromPosition, cameraPosition, geoToVector, type Vector3Tuple } from './geo';
+import {
+  cameraFromPosition,
+  cameraPosition,
+  geoToVector,
+  vectorToGeo,
+  type Vector3Tuple,
+} from './geo';
 import {
   apparentRadiusPixels,
   attachedPose,
@@ -142,6 +148,10 @@ export interface Globe {
    * viewpoint (which hands over to orbiting the body it looks at).
    */
   onBodyClick(listener: (body: Body) => void): () => void;
+  /** Called when someone taps a place on Earth while looking at it: where to stand. */
+  onPlacePick(listener: (place: GeoPoint) => void): () => void;
+  /** Pin the chosen place on the globe; null removes the pin. */
+  setLocation(place: GeoPoint | null): void;
   /**
    * Fly to a viewpoint. Attached viewpoints follow the bodies as time moves and wait for the
    * Moon's position if it has not loaded yet; 'free' returns to the last orbiting camera.
@@ -428,6 +438,14 @@ export async function createGlobe(
   );
   scene.add(earth, atmosphere);
 
+  // The chosen place: a small pin standing on the ground.
+  const pin = new Mesh(
+    new SphereGeometry(0.012, 16, 8),
+    new MeshBasicMaterial({ color: new Color(1, 0.72, 0.3) }),
+  );
+  pin.visible = false;
+  earth.add(pin);
+
   // The Moon, tidally locked: turn the map's longitude 0 (at +X) to +Z, which lookAt() aims at
   // Earth. Libration (a few degrees of wobble) is left out.
   const moonTexture = await new TextureLoader().loadAsync(options.moonTextureUrl);
@@ -482,6 +500,7 @@ export async function createGlobe(
   const moonMapTurn = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2);
   const bodyMeshes: Record<Body, Mesh> = { earth, moon, sun };
   const bodyClickListeners = new Set<(body: Body) => void>();
+  const placeListeners = new Set<(place: GeoPoint) => void>();
   for (const [body, marker] of Object.entries(markers)) {
     marker.addEventListener('click', () => {
       requestBody(body as Body);
@@ -519,6 +538,13 @@ export async function createGlobe(
     const visible = Object.values(bodyMeshes).filter((mesh) => mesh.visible);
     const hit = raycaster.intersectObjects(visible, false)[0];
     const body = (Object.keys(bodyMeshes) as Body[]).find((key) => bodyMeshes[key] === hit?.object);
+    if (body === 'earth' && hit !== undefined && focus === 'earth' && viewpoint === 'free') {
+      // On the Earth already in view, a tap picks the place to stand.
+      const { x, y, z } = earth.worldToLocal(hit.point.clone());
+      const place = vectorToGeo([x, y, z]);
+      for (const listener of placeListeners) listener(place);
+      return;
+    }
     if (body !== undefined) requestBody(body);
   });
 
@@ -959,6 +985,17 @@ export async function createGlobe(
     onBodyClick(listener) {
       bodyClickListeners.add(listener);
       return () => bodyClickListeners.delete(listener);
+    },
+    onPlacePick(listener) {
+      placeListeners.add(listener);
+      return () => placeListeners.delete(listener);
+    },
+    setLocation(place) {
+      pin.visible = place !== null;
+      if (place !== null) pin.position.set(...geoToVector(place, 1.004));
+      container.dataset['location'] =
+        place === null ? '' : `${place.latitude.toFixed(2)},${place.longitude.toFixed(2)}`;
+      needsRender = true;
     },
     setViewpoint(next) {
       if (next === 'free') pendingViewpoint = null;

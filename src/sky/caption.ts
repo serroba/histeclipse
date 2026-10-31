@@ -30,3 +30,28 @@ export function skyCaption(options: {
     `the sky may be turned up to ±${turn.toFixed(1)}°.`
   );
 }
+
+/**
+ * What an eclipse looks like from here, if one is under way and in sight: how much of the Sun
+ * the Moon covers, or whether Earth's shadow is on the Moon. Empty otherwise.
+ */
+export function eclipseNote(options: {
+  /** Share of the Sun's disc still visible, and the Sun's altitude in degrees. */
+  readonly sunVisible: number;
+  readonly sunAltitude: number;
+  /** Sunlight reaching the middle of the Moon past Earth, and the Moon's altitude. */
+  readonly moonSunlight: number;
+  readonly moonAltitude: number;
+}): string {
+  if (options.sunAltitude > -1 && options.sunVisible < 1) {
+    if (options.sunVisible === 0) return 'Totality: the Moon hides the whole Sun.';
+    const covered = Math.min(99, Math.max(1, Math.round((1 - options.sunVisible) * 100)));
+    return `The Moon covers ${String(covered)}% of the Sun.`;
+  }
+  if (options.moonAltitude > -1 && options.moonSunlight < 1) {
+    return options.moonSunlight === 0
+      ? 'The Moon is inside Earth’s darkest shadow, lit only red by sunsets around the world.'
+      : 'Earth’s shadow is falling on the Moon.';
+  }
+  return '';
+}
