@@ -4,6 +4,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # @types/node tracks the Node.js major in .nvmrc; bump both together by hand.
+      - dependency-name: '@types/node'
+        update-types: [version-update:semver-major]
     cooldown:
       default-days: 7
     groups:

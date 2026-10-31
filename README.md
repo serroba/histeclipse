@@ -14,13 +14,18 @@ pnpm dev          # local dev server
 pnpm check        # everything CI runs: format, lint, typecheck, tests + coverage, build
 ```
 
-| Command             | What it does                                                     |
-| ------------------- | ---------------------------------------------------------------- |
-| `pnpm test`         | Unit and property-based tests (Vitest + fast-check)              |
-| `pnpm coverage`     | Tests with coverage thresholds enforced (95%)                    |
-| `pnpm lint`         | ESLint with typescript-eslint `strictTypeChecked`, zero warnings |
-| `pnpm typecheck`    | `tsc -b` with `strict` plus every additional strictness flag     |
-| `pnpm format:check` | Prettier                                                         |
+| Command             | What it does                                                               |
+| ------------------- | -------------------------------------------------------------------------- |
+| `pnpm test`         | Unit and property-based tests (Vitest + fast-check)                        |
+| `pnpm coverage`     | Tests with coverage thresholds enforced (95%)                              |
+| `pnpm test:e2e`     | Playwright smoke tests (desktop + mobile) against a local production build |
+| `pnpm lint`         | ESLint with typescript-eslint `strictTypeChecked`, zero warnings           |
+| `pnpm typecheck`    | `tsc -b` with `strict` plus every additional strictness flag               |
+| `pnpm format:check` | Prettier                                                                   |
+
+## Deployment
+
+Each merge to `main` builds the site with its commit SHA stamped into a `<meta name="histeclipse-version">` tag and deploys it to GitHub Pages. The same Playwright suite then runs against **https://serroba.github.io/histeclipse/**, but only after the public URL is serving that exact commit. The live check also runs daily and can be started by hand (_Actions → Live smoke test_).
 
 ## Data pipeline
 
