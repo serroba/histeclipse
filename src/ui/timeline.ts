@@ -6,8 +6,8 @@
 import type { LunarEclipse } from '../data/lunarCatalog';
 import type { SolarEclipse } from '../data/solarCatalog';
 import { eclipseMoment, isSolar } from '../eclipses/describe';
-import { astronomicalYear, formatYear, type AstronomicalYear } from '../time/year';
-import { parseYearInput } from '../time/yearInput';
+import { astronomicalYear, toHistoricalYear, type AstronomicalYear, type Era } from '../time/year';
+import { parseYearNumber } from '../time/yearInput';
 import { errorMessage } from '../util/errors';
 import { element } from './dom';
 
@@ -25,6 +25,8 @@ const SHORT_MONTHS = [
   'Nov',
   'Dec',
 ];
+
+const HINT = 'Type a year as a number, and pick BCE or CE beside it';
 
 export type Eclipse = LunarEclipse | SolarEclipse;
 
@@ -48,19 +50,26 @@ export function createTimeline(handlers: {
   onYear(year: AstronomicalYear): void;
   onSelect(eclipse: Eclipse): void;
 }): Timeline {
+  // Digits only (a numeric keypad on phones); the era is picked beside it.
   const input = element('input', {
     id: 'year-input',
     class: 'year-input',
+    type: 'text',
+    inputmode: 'numeric',
+    pattern: '[0-9]*',
+    maxlength: '5',
     autocomplete: 'off',
     enterkeyhint: 'go',
     spellcheck: 'false',
     'aria-describedby': 'year-hint',
   });
-  const hint = element(
-    'span',
-    { id: 'year-hint', class: 'visually-hidden' },
-    'Type a year like 621 BCE or 2025',
+  const era = element(
+    'select',
+    { class: 'era-select', 'aria-label': 'Era' },
+    element('option', { value: 'BCE' }, 'BCE'),
+    element('option', { value: 'CE' }, 'CE'),
   );
+  const hint = element('span', { id: 'year-hint', class: 'visually-hidden' }, HINT);
   const previous = element(
     'button',
     { type: 'button', class: 'step', 'aria-label': 'Previous year' },
@@ -72,6 +81,7 @@ export function createTimeline(handlers: {
     { class: 'year-form' },
     element('label', { for: 'year-input', class: 'visually-hidden' }, 'Year'),
     input,
+    era,
     hint,
   );
   const list = element('ul', { class: 'eclipse-list', 'aria-label': 'Eclipses this year' });
@@ -89,10 +99,14 @@ export function createTimeline(handlers: {
   next.addEventListener('click', () => {
     handlers.onYear(astronomicalYear(year + 1));
   });
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
+  // Anything but digits never makes it into the box, pasted or typed.
+  input.addEventListener('input', () => {
+    const digits = input.value.replaceAll(/\D/g, '').slice(0, 5);
+    if (digits !== input.value) input.value = digits;
+  });
+  function submit(): void {
     try {
-      const typed = parseYearInput(input.value);
+      const typed = parseYearNumber(input.value, era.value === 'BCE' ? 'BCE' : 'CE');
       input.removeAttribute('aria-invalid');
       input.blur();
       handlers.onYear(typed);
@@ -100,14 +114,22 @@ export function createTimeline(handlers: {
       input.setAttribute('aria-invalid', 'true');
       hint.textContent = errorMessage(error);
     }
+  }
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    submit();
   });
+  // Switching the era keeps the number: 587 CE becomes 587 BCE.
+  era.addEventListener('change', submit);
 
   return {
     root,
     render(view) {
       year = view.year;
-      if (document.activeElement !== input) input.value = formatYear(view.year);
-      hint.textContent = 'Type a year like 621 BCE or 2025';
+      const shown = toHistoricalYear(view.year);
+      if (document.activeElement !== input) input.value = String(shown.year);
+      era.value = shown.era satisfies Era;
+      hint.textContent = HINT;
       const listing = view.eclipses;
       if (listing.status === 'loading') {
         list.replaceChildren(element('li', { class: 'eclipse-empty' }, 'Loading…'));

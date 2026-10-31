@@ -3,35 +3,18 @@
 import type { Moment } from '../state/viewState';
 import { defaultCalendarFor } from '../state/viewState';
 import { calendarDateOf, daysInMonth } from './julianDay';
-import { astronomicalYear, toAstronomicalYear, type AstronomicalYear } from './year';
-
-const PATTERN = /^(?:(ad|ce)\s*)?(-?\d{1,5})\s*(bce|bc|b\.c\.(?:e\.)?|ce|ad|a\.d\.|c\.e\.)?$/i;
+import { toAstronomicalYear, type AstronomicalYear, type Era } from './year';
 
 /**
- * Accepts "621 BCE", "621 BC", "AD 2025", "2025 CE", "2025", and astronomical "-620".
- * A bare positive number is CE; a minus sign means astronomical numbering (−620 = 621 BCE).
+ * The year typed in the year box: digits only, counted from 1 in the era picked beside it.
+ * There is no year 0: 1 BCE is followed by 1 CE.
  */
-export function parseYearInput(text: string): AstronomicalYear {
-  const match = PATTERN.exec(text.trim().replaceAll(/\s+/g, ' '));
-  if (match === null) throw new RangeError(`Not a year: ${JSON.stringify(text)}`);
-  const [, prefix, digits = '', suffix] = match;
-  const value = Number(digits);
-  const era = suffix?.toLowerCase().replaceAll('.', '');
-  const isBce = era === 'bce' || era === 'bc';
-  if (value < 0) {
-    if (prefix !== undefined || era !== undefined) {
-      throw new RangeError('Use either a minus sign or an era, not both');
-    }
-    return astronomicalYear(value);
-  }
-  if (isBce && prefix !== undefined) throw new RangeError('A year cannot be both AD and BC');
-  if (value === 0) {
-    if (isBce || prefix !== undefined || era !== undefined) {
-      throw new RangeError('There is no year 0 BCE or 0 CE; 1 BCE is followed by 1 CE');
-    }
-    return astronomicalYear(0);
-  }
-  return toAstronomicalYear({ year: value, era: isBce ? 'BCE' : 'CE' });
+export function parseYearNumber(text: string, era: Era): AstronomicalYear {
+  const digits = text.trim();
+  if (!/^\d{1,5}$/.test(digits)) throw new RangeError('Type the year as a number, like 587');
+  const year = Number(digits);
+  if (year === 0) throw new RangeError('There is no year 0: 1 BCE is followed by 1 CE');
+  return toAstronomicalYear({ year, era });
 }
 
 /**

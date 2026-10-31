@@ -2,33 +2,26 @@ import { describe, expect, it } from 'vitest';
 
 import { calendarDateOf } from './julianDay';
 import { astronomicalYear } from './year';
-import { moveToYear, parseYearInput } from './yearInput';
+import { moveToYear, parseYearNumber } from './yearInput';
 
-describe('parseYearInput', () => {
+describe('parseYearNumber', () => {
   it.each([
-    ['621 BCE', -620],
-    ['621 bc', -620],
-    ['621BCE', -620],
-    ['621 B.C.', -620],
-    ['621 B.C.E.', -620],
-    ['1 BCE', 0],
-    ['-620', -620],
-    ['0', 0],
-    ['2025', 2025],
-    ['2025 CE', 2025],
-    ['AD 2025', 2025],
-    ['2025 A.D.', 2025],
-    ['  587   BCE ', -586],
-  ])('reads %s as %i', (text, year) => {
-    expect(parseYearInput(text)).toBe(year);
+    ['621', 'BCE', -620],
+    ['1', 'BCE', 0],
+    ['1', 'CE', 1],
+    ['2025', 'CE', 2025],
+    [' 587 ', 'BCE', -586],
+  ] as const)('reads %s %s as %i', (text, era, year) => {
+    expect(parseYearNumber(text, era)).toBe(year);
   });
 
-  it.each(['', 'soon', '621 BCE BCE', '-620 BCE', 'AD 5 BC', '0 BCE', 'AD 0', '12.5'])(
-    'rejects %s',
-    (text) => {
-      expect(() => parseYearInput(text)).toThrow(RangeError);
-    },
-  );
+  it.each(['', 'soon', '-620', '621 BCE', '12.5', '123456'])('rejects %s', (text) => {
+    expect(() => parseYearNumber(text, 'CE')).toThrow('Type the year as a number');
+  });
+
+  it('rejects year 0, which neither era has', () => {
+    expect(() => parseYearNumber('0', 'BCE')).toThrow('There is no year 0');
+  });
 });
 
 describe('moveToYear', () => {
