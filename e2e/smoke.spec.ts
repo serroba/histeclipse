@@ -254,22 +254,33 @@ test('hiding the lunar layer hides the overlay but keeps the selection', async (
 test("stepping and typing years lists that year's eclipses", async ({ page }) => {
   await page.goto('./?t=2024-03-14T12:00');
   await globeRendered(page);
+  const year = page.getByLabel('Year', { exact: true });
+  const era = page.getByLabel('Era', { exact: true });
   await page.getByRole('button', { name: 'Next year' }).click();
-  await expect(page.getByLabel('Year', { exact: true })).toHaveValue('2025 CE');
+  await expect(year).toHaveValue('2025');
+  await expect(era).toHaveValue('CE');
   await expect(page).toHaveURL(/t=2025-03-14T12:00Z/);
   await expect(page.getByRole('button', { name: /14 Mar\s*Total/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /7 Sep\s*Total/ })).toBeVisible();
 
-  const year = page.getByLabel('Year', { exact: true });
-  await year.fill('587 BCE');
-  await year.press('Enter');
+  // Picking the era keeps the number: 2025 CE becomes 2025 BCE.
+  await year.fill('587');
+  await era.selectOption('BCE');
   await expect(page).toHaveURL(/t=-0586-03-14T12:00Z&cal=julian/);
-  await expect(year).toHaveValue('587 BCE');
+  await expect(year).toHaveValue('587');
+  await expect(era).toHaveValue('BCE');
 
-  await year.fill('someday');
+  // Only digits get into the box.
+  await year.fill('');
+  await year.pressSequentially('6a-2x1');
+  await expect(year).toHaveValue('621');
+  await year.press('Enter');
+  await expect(page).toHaveURL(/t=-0620-03-14T12:00Z/);
+
+  await year.fill('0');
   await year.press('Enter');
   await expect(year).toHaveAttribute('aria-invalid', 'true');
-  await expect(page).toHaveURL(/t=-0586-03-14T12:00Z/);
+  await expect(page).toHaveURL(/t=-0620-03-14T12:00Z/);
 });
 
 test('controls are large enough to tap and stay on screen', async ({ page }) => {
@@ -280,7 +291,9 @@ test('controls are large enough to tap and stay on screen', async ({ page }) => 
   if (viewport === null) throw new Error('no viewport');
   await page.getByRole('button', { name: /8 Apr/ }).click();
   for (const control of await page
-    .locator('.timeline button, .timeline input, .scrubber button, .scrubber input')
+    .locator(
+      '.timeline button, .timeline input, .timeline select, .scrubber button, .scrubber input',
+    )
     .all()) {
     const box = await control.boundingBox();
     if (box === null) throw new Error('control without a box');
