@@ -7,6 +7,12 @@ from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
 from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
+from histeclipse_pipeline.empires import (
+    fetch_cliopatria,
+    merge_unchanged,
+    parse_polities,
+    write_empires,
+)
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
@@ -153,6 +159,13 @@ def sky(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {len(stars)} stars to {args.out}")
 
 
+def empires(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Download Cliopatria and write simplified borders, one file per century."""
+    polities = merge_unchanged(parse_polities(fetch_cliopatria()))
+    count = write_empires(polities, args.out)
+    return _say(f"wrote {len(polities)} polity rows in {count} century files to {args.out}")
+
+
 def sun_images(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Render the SDO layers into ``public/textures/sun`` and write their manifest."""
     result = fetch_images(args.out)
@@ -172,6 +185,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "sun-vectors": (sun, "write Sun reference values for web tests", "output JSON file"),
     "moon-vectors": (moon, "write Moon reference values for web tests", "output JSON file"),
     "sky": (sky, "write stars and constellation figures for the sky view", "output JSON file"),
+    "empires": (
+        empires,
+        "write simplified borders of past states, one file per century",
+        "output directory",
+    ),
     "sun-images": (
         sun_images,
         "download SDO images of the Sun for the space view",
