@@ -1,0 +1,131 @@
+{
+  "description": "Calendar date <-> Julian Day reference values from Meeus, Astronomical Algorithms (2nd ed.), chapter 7. Years use astronomical numbering (1 BCE = 0). Shared by the Python pipeline and the web app tests.",
+  "vectors": [
+    {
+      "year": 2000,
+      "month": 1,
+      "day": 1.5,
+      "calendar": "gregorian",
+      "jd": 2451545.0
+    },
+    {
+      "year": 1999,
+      "month": 1,
+      "day": 1.0,
+      "calendar": "gregorian",
+      "jd": 2451179.5
+    },
+    {
+      "year": 1987,
+      "month": 1,
+      "day": 27.0,
+      "calendar": "gregorian",
+      "jd": 2446822.5
+    },
+    {
+      "year": 1987,
+      "month": 6,
+      "day": 19.5,
+      "calendar": "gregorian",
+      "jd": 2446966.0
+    },
+    {
+      "year": 1988,
+      "month": 1,
+      "day": 27.0,
+      "calendar": "gregorian",
+      "jd": 2447187.5
+    },
+    {
+      "year": 1988,
+      "month": 6,
+      "day": 19.5,
+      "calendar": "gregorian",
+      "jd": 2447332.0
+    },
+    {
+      "year": 1900,
+      "month": 1,
+      "day": 1.0,
+      "calendar": "gregorian",
+      "jd": 2415020.5
+    },
+    {
+      "year": 1600,
+      "month": 1,
+      "day": 1.0,
+      "calendar": "gregorian",
+      "jd": 2305447.5
+    },
+    {
+      "year": 1600,
+      "month": 12,
+      "day": 31.0,
+      "calendar": "gregorian",
+      "jd": 2305812.5
+    },
+    {
+      "year": 837,
+      "month": 4,
+      "day": 10.3,
+      "calendar": "julian",
+      "jd": 2026871.8
+    },
+    {
+      "year": -123,
+      "month": 12,
+      "day": 31.0,
+      "calendar": "julian",
+      "jd": 1676496.5
+    },
+    {
+      "year": -122,
+      "month": 1,
+      "day": 1.0,
+      "calendar": "julian",
+      "jd": 1676497.5
+    },
+    {
+      "year": -1000,
+      "month": 7,
+      "day": 12.5,
+      "calendar": "julian",
+      "jd": 1356001.0
+    },
+    {
+      "year": -1000,
+      "month": 2,
+      "day": 29.0,
+      "calendar": "julian",
+      "jd": 1355866.5
+    },
+    {
+      "year": -1001,
+      "month": 8,
+      "day": 17.9,
+      "calendar": "julian",
+      "jd": 1355671.4
+    },
+    {
+      "year": -4712,
+      "month": 1,
+      "day": 1.5,
+      "calendar": "julian",
+      "jd": 0.0
+    },
+    {
+      "year": 1957,
+      "month": 10,
+      "day": 4.81,
+      "calendar": "gregorian",
+      "jd": 2436116.31
+    },
+    {
+      "year": 333,
+      "month": 1,
+      "day": 27.5,
+      "calendar": "julian",
+      "jd": 1842713.0
+    }
+  ]
+}
