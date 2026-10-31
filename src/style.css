@@ -151,6 +151,47 @@ body {
   color: var(--ink-muted);
 }
 
+.hud-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+}
+
+.hud-actions {
+  margin-top: 8px;
+}
+
+.hud-actions .famous-open,
+.hud-actions .layer-switch {
+  margin-top: 0;
+}
+
+.empire-labels {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.empire-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-shadow:
+    0 0 3px rgb(0 0 0 / 0.9),
+    0 1px 2px rgb(0 0 0 / 0.8);
+  white-space: nowrap;
+}
+
+.empire-label[hidden],
+.empire-credit[hidden] {
+  display: none;
+}
+
 .sun-caption {
   max-width: 34em;
   margin: 4px 0 0;

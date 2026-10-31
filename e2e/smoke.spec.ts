@@ -757,3 +757,30 @@ test('close to the Sun, SDO’s images show it in six kinds of light', async ({ 
   await expect(page.getByRole('group', { name: 'Light' })).toBeHidden();
   await expect(globe).toHaveAttribute('data-sun-image', 'none');
 });
+
+test('the empires layer draws the states of the year shown, and the link keeps it', async ({
+  page,
+}) => {
+  await page.goto('./?t=-586-07-29T12:00&cam=33,40,3');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  const empires = page.getByRole('button', { name: 'Empires' });
+  await expect(empires).toHaveAttribute('aria-pressed', 'false');
+  await expect(globe).not.toHaveAttribute('data-empires', /\d/);
+
+  await empires.click();
+  await expect(page).toHaveURL(/layers=[a-z,]*empires/);
+  await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
+  await expect(page.locator('.empire-label', { hasText: /^Neo-Babylonian Empire$/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Cliopatria' })).toBeVisible();
+
+  // Fifty years later, Persia holds the Near East.
+  const year = page.getByLabel('Year', { exact: true });
+  await year.fill('500');
+  await year.press('Enter');
+  await expect(page.locator('.empire-label', { hasText: /^Achaemenid Empire$/ })).toBeVisible();
+
+  await empires.click();
+  await expect(globe).toHaveAttribute('data-empires', 'off');
+  await expect(page.getByRole('link', { name: 'Cliopatria' })).toBeHidden();
+});
