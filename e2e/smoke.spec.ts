@@ -1181,3 +1181,22 @@ test('deep time narrows to the ice ages, in thousands of years', async ({ page }
   await expect(page.getByTestId('ice-note')).toBeHidden();
   expect(problems).toEqual([]);
 });
+
+test('deep time outlines a second reconstruction’s continents', async ({ page }) => {
+  const problems = collectProblems(page);
+  await page.goto('./?ma=252');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  const toggle = page.getByRole('button', { name: 'Plates' });
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(page).toHaveURL(/layers=[^&]*plates/);
+  await expect(globe).toHaveAttribute('data-plates', /plates\/250\.png .*plates\/255\.png$/);
+  await expect(page.getByTestId('plates-note')).toContainText('Cao et al. 2024');
+  // Lined up with the surface map in longitude, and the bar says by how much.
+  await expect(page.getByTestId('plates-note')).toContainText('Turned 2° west');
+  await toggle.click();
+  await expect(globe).toHaveAttribute('data-plates', 'off');
+  await expect(page.getByTestId('plates-note')).toBeHidden();
+  expect(problems).toEqual([]);
+});

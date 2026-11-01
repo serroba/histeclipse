@@ -116,6 +116,7 @@ import { framesAround, loadPaleoDemIndex, oldestMa, type PaleoDemIndex } from '.
 import { loadPaleoTempIndex, type PaleoTempIndex } from './data/paleoTemp';
 import { loadSeaLevel, type SeaLevelIndex } from './data/seaLevel';
 import { iceFramesInMa, loadIceSheets, oldestIceKa, type IceSheetIndex } from './data/iceSheets';
+import { loadPlateMasks, type PlateMaskIndex, plateText } from './data/plateMasks';
 import { loadShelf, type ShelfIndex } from './data/shelf';
 import { coastlineAt } from './deepTime/coastline';
 import {
@@ -269,6 +270,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     onExit() {
       stopPlay();
       store.set((state) => ({ ...state, ma: null }));
+    },
+    onPlates(on) {
+      store.set((state) => {
+        const layers = new Set(state.layers);
+        if (on) layers.add('plates');
+        else layers.delete('plates');
+        return { ...state, layers };
+      });
     },
     onSeaLevel(on) {
       store.set((state) => {
@@ -937,6 +946,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let seaLevelIndex: SeaLevelIndex | null = null;
   let shelfLoading: Promise<ShelfIndex> | null = null;
   let shelfIndex: ShelfIndex | null = null;
+  let platesLoading: Promise<PlateMaskIndex> | null = null;
+  let platesIndex: PlateMaskIndex | null = null;
   let iceLoading: Promise<IceSheetIndex> | null = null;
   let iceIndex: IceSheetIndex | null = null;
   let oldest: number = MA_RANGE.max;
@@ -956,6 +967,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setTemperature(null);
       globe.setShelf(null);
       globe.setIce(null);
+      globe.setPlates(null);
       return;
     }
     const period = periodAt(ma);
@@ -971,6 +983,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ice: showIce(state, ma),
       temperature: temperatureView(state, ma),
       seaLevel: seaLevelView(state),
+      ...showPlates(state, ma),
     });
     // The temperature maps are 5 million years apart: none on the ice-age scale.
     showTemperature(ice ? { ...state, layers: withoutTemperature(state.layers) } : state, ma);
@@ -1042,6 +1055,44 @@ export async function startApp(root: HTMLElement): Promise<void> {
       );
     }
     return shelfIndex;
+  }
+
+  /** A second reconstruction's continents, outlined, while the layer is on. */
+  function showPlates(
+    state: ViewState,
+    ma: number,
+  ): { readonly plates: boolean; readonly platesText: string | null } {
+    if (!state.layers.has('plates')) {
+      globe.setPlates(null);
+      return { plates: false, platesText: null };
+    }
+    if (platesIndex === null) {
+      if (platesLoading === null) {
+        platesLoading = loadPlateMasks(`${base}data/plates/index.json`, fetchJson);
+        platesLoading.then(
+          (index) => {
+            platesIndex = index;
+            showDeepTime(store.get());
+          },
+          (error: unknown) => {
+            platesLoading = null;
+            notify(`Could not load the continent outlines: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return { plates: true, platesText: null };
+    }
+    const { younger, older, mix } = framesAround(platesIndex.frames, ma);
+    globe.setPlates({
+      younger: `${base}data/plates/${younger.file}`,
+      older: `${base}data/plates/${older.file}`,
+      mix,
+      columns: platesIndex.columns,
+      rows: platesIndex.rows,
+      turnYounger: younger.turn ?? 0,
+      turnOlder: older.turn ?? 0,
+    });
+    return { plates: true, platesText: plateText(mix < 0.5 ? younger : older) };
   }
 
   /** On the ice-age scale, the ice sheets of the moment, where the maps reach. */

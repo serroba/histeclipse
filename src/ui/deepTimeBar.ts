@@ -142,6 +142,9 @@ export interface DeepTimeView {
   /** All 540 million years, or the ice ages; `oldest` is the span's start either way. */
   readonly scale: DeepScale;
   readonly temperature: TemperatureView;
+  /** Whether a second reconstruction's continents are outlined, and what to say of them. */
+  readonly plates: boolean;
+  readonly platesText: string | null;
   /** The ice-age coastline; null on the 540 Myr scale. */
   readonly coastline: CoastlineView | null;
   /** Whether ice is drawn at the moment shown, and how far back the ice maps reach (ka). */
@@ -162,6 +165,7 @@ export function createDeepTimeBar(handlers: {
   onExit(): void;
   onTemperature(on: boolean): void;
   onSeaLevel(on: boolean): void;
+  onPlates(on: boolean): void;
   onScale(scale: DeepScale): void;
   onCoast(coast: CoastSource): void;
   onTemperatureModel(model: TemperatureModel): void;
@@ -235,6 +239,19 @@ export function createDeepTimeBar(handlers: {
   const when = element('strong', { class: 'deep-when', 'data-testid': 'deep-when' });
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
   const exit = element('button', { type: 'button', class: 'deep-exit' }, 'Back to history');
+  const platesButton = element(
+    'button',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false' },
+    'Plates',
+  );
+  const platesWords = element('span', {});
+  const platesNote = element(
+    'p',
+    { class: 'deep-note', hidden: '', 'data-testid': 'plates-note' },
+    element('span', { class: 'plates-swatch', 'aria-hidden': 'true' }),
+    ' ',
+    platesWords,
+  );
   const seaLevelButton = element(
     'button',
     { type: 'button', class: 'deep-layer', 'aria-pressed': 'false' },
@@ -305,11 +322,13 @@ export function createDeepTimeBar(handlers: {
       scaleSwitch,
       seaLevelButton,
       temperatureButton,
+      platesButton,
       exit,
     ),
     iceNote,
     seaLevel.legend,
     legend,
+    platesNote,
     milestones.root,
     factsPanel,
   );
@@ -348,6 +367,9 @@ export function createDeepTimeBar(handlers: {
   });
   exit.addEventListener('click', () => {
     handlers.onExit();
+  });
+  platesButton.addEventListener('click', () => {
+    handlers.onPlates(!(current?.plates ?? false));
   });
   seaLevelButton.addEventListener('click', () => {
     handlers.onSeaLevel(!(current?.seaLevel.on ?? false));
@@ -406,6 +428,9 @@ export function createDeepTimeBar(handlers: {
       );
       milestones.render(view.ma, view.oldest);
       seaLevelButton.setAttribute('aria-pressed', String(view.seaLevel.on));
+      platesButton.setAttribute('aria-pressed', String(view.plates));
+      platesNote.hidden = !view.plates;
+      platesWords.textContent = view.platesText ?? 'Loading the continent outlines…';
       seaLevel.render(
         view.seaLevel.on ? view.seaLevel.index : null,
         view.ma * 1000,
