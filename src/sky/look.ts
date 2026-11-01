@@ -37,16 +37,24 @@ export function roundLook({ azimuth, altitude, fov }: SkyLook): SkyLook {
 }
 
 /** The constellations whose figures and names are drawn. */
-export function shownConstellations(
-  constellations: readonly Constellation[],
+/** What drawing a figure needs: its rank (1 = best known) and its runs of star indices. */
+export type Figure = Pick<Constellation, 'name'> & {
+  readonly rank: number;
+  readonly lines: readonly (readonly number[])[];
+  /** The name in the culture's own script, if any. */
+  readonly native?: string;
+};
+
+export function shownConstellations<F extends Figure>(
+  constellations: readonly F[],
   figures: Figures,
-): readonly Constellation[] {
+): readonly F[] {
   if (figures === 'none') return [];
   return figures === 'all' ? constellations : constellations.filter(({ rank }) => rank === 1);
 }
 
 /** A figure's runs of stars as pairs of star indices, one pair per line segment. */
-export function figureSegments(constellations: readonly Constellation[]): [number, number][] {
+export function figureSegments(constellations: readonly Figure[]): [number, number][] {
   const segments: [number, number][] = [];
   for (const { lines } of constellations) {
     for (const run of lines) {

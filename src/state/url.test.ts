@@ -2,6 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import { calendarDateOf, daysInMonth, type Calendar } from '../time/julianDay';
+import { SKY_CULTURES } from '../data/skyCultures';
 import { SUN_LAYERS } from '../data/sunImages';
 import { YEAR_CALENDARS } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
@@ -58,6 +59,7 @@ describe('parseViewState', () => {
       figures: 'famous',
       years: 'western',
       sunLayer: 'visible',
+      culture: 'modern',
     } satisfies ViewState);
   });
 
@@ -104,6 +106,13 @@ describe('parseViewState', () => {
     expect(state.focus).toBe('moon');
     expect(serializeViewState(state)).toContain('&focus=moon');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
+  });
+
+  it('reads whose constellations the sky draws, writing it only when not modern', () => {
+    const { state } = parseViewState('culture=babylonian_mulapin', NOW);
+    expect(state.culture).toBe('babylonian_mulapin');
+    expect(serializeViewState(state)).toContain('&culture=babylonian_mulapin');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('culture=');
   });
 
   it('reads the channel the Sun is shown in, writing it only when not visible light', () => {
@@ -161,6 +170,7 @@ describe('parseViewState', () => {
     ['figures=some', 'figures', 'unknown figures'],
     ['years=mayan', 'years', 'unknown years'],
     ['sun=xray', 'sun', 'unknown sun'],
+    ['culture=martian', 'culture', 'unknown culture'],
     ['sel=lunar', 'sel', 'expected kind:date'],
     ['sel=lunar:yesterday', 'sel', 'expected a date'],
     ['sel=annular:2025-01-01', 'sel', 'unknown eclipse kind'],
@@ -222,6 +232,7 @@ describe('parseViewState', () => {
             'figures',
             'years',
             'sun',
+            'culture',
             'x',
           ),
           fc.string(),
@@ -294,6 +305,7 @@ describe('serializeViewState', () => {
     figures: fc.constantFrom(...FIGURES),
     years: fc.constantFrom(...YEAR_CALENDARS),
     sunLayer: fc.constantFrom(...SUN_LAYERS),
+    culture: fc.constantFrom(...SKY_CULTURES),
   });
 
   it('round-trips every view state through a link', () => {

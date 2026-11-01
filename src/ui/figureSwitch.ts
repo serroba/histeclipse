@@ -5,7 +5,7 @@ import { element } from './dom';
 
 export interface FigureSwitch {
   readonly root: HTMLElement;
-  render(figures: Figures, visible: boolean): void;
+  render(figures: Figures, visible: boolean, modern?: boolean): void;
 }
 
 const LABELS: Readonly<Record<Figures, string>> = {
@@ -30,10 +30,12 @@ export function createFigureSwitch(onSelect: (figures: Figures) => void): Figure
   );
   return {
     root,
-    render(figures, visible) {
+    render(figures, visible, modern = true) {
       root.hidden = !visible;
       for (const [option, button] of buttons) {
         button.setAttribute('aria-pressed', String(option === figures));
+        // Only the modern sky has exactly 88.
+        if (option === 'all') button.textContent = modern ? LABELS.all : 'All';
       }
     },
   };

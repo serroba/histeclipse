@@ -33,7 +33,7 @@ import {
 
 import { apply, type Matrix3, type Vector3 as Vec3 } from '../astro/matrix';
 import { starDirection } from '../astro/stars';
-import type { Constellation, Sky } from '../data/sky';
+import type { Sky } from '../data/sky';
 import type { Figures, SkyLook } from '../state/viewState';
 import type { JulianDay } from '../time/julianDay';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
@@ -54,6 +54,7 @@ import {
   dragLook,
   figureSegments,
   lookDirection,
+  type Figure,
   roundLook,
   shownConstellations,
   zoomLook,
@@ -77,6 +78,8 @@ export interface SkyScene {
   setMoment(moment: SkyMoment): void;
   setLook(look: SkyLook): void;
   setFigures(figures: Figures): void;
+  /** Draw another culture's figures; null returns to the modern constellations. */
+  setCulture(figures: readonly Figure[] | null): void;
   /** Pixels covered by panels at the top and bottom; the view is centred between them. */
   setInsets(top: number, bottom: number): void;
   /** Called when someone taps the sky (a press that barely moves). */
@@ -434,21 +437,41 @@ export function createSkyScene(
     const position = new Vector3(...toScene(lookDirectionAt(azimuth, 0))).multiplyScalar(40);
     return { label, position };
   });
-  const nameLabels = new Map(
-    sky.constellations.map((figure, index) => [
-      // Serpens is named twice under one id, so key by position in the list.
-      index,
-      {
-        figure,
-        label: skyLabel(labelLayer, figure.name, 'is-constellation'),
-        position: new Vector3(),
-      },
-    ]),
-  );
+  // The figures in use: the modern constellations, or another culture's.
+  let catalogue: readonly Figure[] = sky.constellations;
+  let nameLabels = makeNameLabels();
+  let namesBySize = bySize();
+  function bySize(): { label: HTMLElement; position: Vector3 }[] {
+    return [...nameLabels.values()].sort(
+      (a, b) => b.figure.lines.flat().length - a.figure.lines.flat().length,
+    );
+  }
+  function makeNameLabels(): Map<
+    number,
+    { figure: Figure; label: HTMLElement; position: Vector3 }
+  > {
+    return new Map(
+      catalogue.map((figure, index) => [
+        // Serpens is named twice under one id, so key by position in the list.
+        index,
+        {
+          figure,
+          label: skyLabel(
+            labelLayer,
+            figure.native === undefined || figure.native === ''
+              ? figure.name
+              : `${figure.name} · ${figure.native}`,
+            'is-constellation',
+          ),
+          position: new Vector3(),
+        },
+      ]),
+    );
+  }
 
   let look = options.look;
   let figures = options.figures;
-  let shown: readonly Constellation[] = [];
+  let shown: readonly Figure[] = [];
   let segments: [number, number][] = [];
   let visible = false;
   let insets = { top: 0, bottom: 0 };
@@ -480,7 +503,7 @@ export function createSkyScene(
   }
 
   function rebuildFigures(): void {
-    shown = shownConstellations(sky.constellations, figures);
+    shown = shownConstellations(catalogue, figures);
     segments = figureSegments(shown);
     lineGeometry.setAttribute(
       'position',
@@ -571,9 +594,18 @@ export function createSkyScene(
 
   function placeLabels(): void {
     for (const { label, position } of compassLabels) placeLabel(label, position, true);
-    for (const { label, position } of nameLabels.values()) {
+    // Bigger figures are named first; a name that would overlap one already placed is left out.
+    const placed: DOMRect[] = [];
+    for (const { label, position } of namesBySize) {
       // Names of figures low in the haze or below the horizon are left out.
       placeLabel(label, position, label.dataset['shown'] === 'true' && position.y > 40 * 0.03);
+      if (label.hidden !== false) continue;
+      const box = label.getBoundingClientRect();
+      if (placed.some((other) => overlaps(box, other))) {
+        label.hidden = true;
+      } else {
+        placed.push(box);
+      }
     }
   }
 
@@ -769,6 +801,15 @@ export function createSkyScene(
       figures = next;
       rebuildFigures();
     },
+    setCulture(next) {
+      const wanted = next ?? sky.constellations;
+      if (wanted === catalogue) return;
+      catalogue = wanted;
+      for (const { label } of nameLabels.values()) label.remove();
+      nameLabels = makeNameLabels();
+      namesBySize = bySize();
+      rebuildFigures();
+    },
     setInsets(top, bottom) {
       if (top === insets.top && bottom === insets.bottom) return;
       insets = { top, bottom };
@@ -787,6 +828,10 @@ export function createSkyScene(
 
 function lookDirectionAt(azimuth: number, altitude: number): Vec3 {
   return lookDirection({ azimuth, altitude, fov: 60 });
+}
+
+function overlaps(a: DOMRect, b: DOMRect): boolean {
+  return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 }
 
 function skyLabel(layer: HTMLElement, text: string, kind: string): HTMLElement {

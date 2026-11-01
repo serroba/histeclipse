@@ -784,3 +784,29 @@ test('the empires layer draws the states of the year shown, and the link keeps i
   await expect(globe).toHaveAttribute('data-empires', 'off');
   await expect(page.getByRole('link', { name: 'Cliopatria' })).toBeHidden();
 });
+
+test('the sky can be drawn as other cultures saw it, credited, and the link keeps it', async ({
+  page,
+}) => {
+  await page.goto('./?mode=sky&t=-586-01-15T20:00&loc=32.54,44.42&look=200,45,100');
+  await skyRendered(page);
+  const culture = page.getByLabel('Sky culture');
+  await expect(culture).toHaveValue('modern');
+  await culture.selectOption('babylonian_mulapin');
+  await expect(page).toHaveURL(/culture=babylonian_mulapin/);
+  // Names in English and in cuneiform, from the unmodified Stellarium file.
+  await expect(
+    page.locator('.sky-label.is-constellation:visible', { hasText: ' · ' }).first(),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'All', exact: true })).toBeVisible();
+  await page.getByText('About these figures').click();
+  await expect(page.getByTestId('culture-caption')).toContainText('CC BY-ND 4.0');
+  await expect(page.getByRole('link', { name: 'authors and sources' })).toHaveAttribute(
+    'href',
+    /skycultures\/babylonian_mulapin\/description\.md$/,
+  );
+
+  await culture.selectOption('modern');
+  await expect(page).not.toHaveURL(/culture=/);
+  await expect(page.getByRole('button', { name: 'All 88' })).toBeVisible();
+});
