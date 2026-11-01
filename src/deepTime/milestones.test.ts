@@ -49,8 +49,8 @@ describe('nextMilestone', () => {
     expect(permian && nextMilestone(anchorMa(permian), -1)?.id).toBe('first-dinosaurs');
   });
 
-  it('moves on from a milestone the view rounded to a tenth', () => {
-    // The end-Permian anchor, 251.978 Ma, is kept as 252.0.
+  it('moves on from a milestone a link rounded to a tenth', () => {
+    // The end-Permian anchor, 251.978 Ma, written as 252.0.
     expect(nextMilestone(252, -1)?.id).toBe('first-dinosaurs');
     for (const milestone of MILESTONES) {
       const shown = Math.round(anchorMa(milestone) * 10) / 10;

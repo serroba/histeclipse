@@ -141,6 +141,11 @@ export const DEFAULT_CAMERA: GlobeCamera = {
 /** How far back deep time reaches, millions of years: the oldest elevation map. */
 export const MA_RANGE = { min: 0, max: 540 } as const;
 
+/** Deep-time moments are kept to a thousand years, fine enough for the ice ages. */
+export function roundMa(ma: number): number {
+  return Math.round(ma * 1000) / 1000;
+}
+
 export const SKY_FOV_RANGE = { min: 5, max: 120 } as const;
 /** Facing south, a third of the way up: where the ecliptic runs, seen from the north. */
 export const DEFAULT_LOOK: SkyLook = { azimuth: 180, altitude: 30, fov: 90 };

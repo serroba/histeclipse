@@ -34,6 +34,9 @@ export const PERIODS: readonly Period[] = [
   { name: 'Tonian', era: 'Neoproterozoic', base: 1000, uncertainty: 0 },
 ];
 
+/** Below this, moments read in years: the scale of the ice ages. */
+const ICE_AGE_WORDS_MA = 3;
+
 export const PERIOD_SOURCE =
   'International Chronostratigraphic Chart v2026/06, International Commission on Stratigraphy';
 
@@ -42,9 +45,13 @@ export function periodAt(ma: number): Period | null {
   return PERIODS.find((period) => ma <= period.base) ?? null;
 }
 
-/** "250 million years ago", "1.5 million years ago", or "Today". */
+/**
+ * "250 million years ago", "252.5 million years ago", or, within the ice ages, in years:
+ * "21,000 years ago", "2,581,000 years ago"; or "Today".
+ */
 export function formatMa(ma: number): string {
   if (ma === 0) return 'Today';
+  if (ma < ICE_AGE_WORDS_MA) return `${Math.round(ma * 1e6).toLocaleString('en')} years ago`;
   const amount = Number.isInteger(ma) ? String(ma) : ma.toFixed(1);
   return `${amount} million years ago`;
 }

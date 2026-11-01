@@ -22,6 +22,10 @@ describe('geological periods', () => {
   it('write ages in words', () => {
     expect(formatMa(0)).toBe('Today');
     expect(formatMa(250)).toBe('250 million years ago');
-    expect(formatMa(1.5)).toBe('1.5 million years ago');
+    expect(formatMa(1.5)).toBe('1,500,000 years ago');
+    expect(formatMa(0.021)).toBe('21,000 years ago');
+    expect(formatMa(2.999)).toBe('2,999,000 years ago');
+    expect(formatMa(3)).toBe('3 million years ago');
+    expect(formatMa(252.5)).toBe('252.5 million years ago');
   });
 });

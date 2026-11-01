@@ -37,6 +37,7 @@ import {
   DEFAULT_CAMERA,
   defaultViewState,
   MA_RANGE,
+  roundMa,
   momentJulianDay,
   type GeoPoint,
   type ViewState,
@@ -234,7 +235,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const deepBar = createDeepTimeBar({
     onMa(ma) {
       stopPlay();
-      store.set((state) => ({ ...state, ma: Math.round(ma * 10) / 10 }));
+      store.set((state) => ({ ...state, ma: roundMa(ma) }));
     },
     onPlay(play) {
       if (play) startPlay();
@@ -1034,7 +1035,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       stopPlay();
       return;
     }
-    const next = Math.max(0, Math.round((ma - PLAY_MA_PER_SECOND * seconds) * 10) / 10);
+    const next = Math.max(0, roundMa(ma - PLAY_MA_PER_SECOND * seconds));
     store.set((state) => ({ ...state, ma: next }));
     if (next <= 0) {
       stopPlay();

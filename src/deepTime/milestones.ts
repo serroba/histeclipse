@@ -484,8 +484,8 @@ export function milestonesNear(ma: number, reach: number): readonly Milestone[] 
 }
 
 /**
- * The view keeps a moment to a tenth of a million years, so a milestone this close to `ma` is
- * the one the view stands on, not the next.
+ * A milestone this close to `ma` is the one the view stands on, not the next: a link rounded
+ * to a tenth of a million years (as older links were) still lands on it.
  */
 export const STANDING_MA = 0.05;
 
