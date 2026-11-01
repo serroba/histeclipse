@@ -34,7 +34,16 @@ export const VIEWPOINTS = ['free', 'moon-from-earth', 'earth-from-moon'] as cons
 export type Viewpoint = (typeof VIEWPOINTS)[number];
 
 /** The bodies the camera can centre on and orbit. */
-export const BODIES = ['earth', 'moon', 'sun'] as const;
+export const BODIES = [
+  'earth',
+  'moon',
+  'sun',
+  'mercury',
+  'venus',
+  'mars',
+  'jupiter',
+  'saturn',
+] as const;
 export type Body = (typeof BODIES)[number];
 
 /** Which constellation figures the sky view draws: the best-known ones, all 88, or none. */
@@ -108,9 +117,9 @@ export interface ViewState {
   readonly seenIn: string | null;
 }
 
-// In the focused body's radii. For Earth, ~5 times the Sun's distance (23,455 Earth radii), so
-// Earth, Moon and Sun fit in view; the scene caps other bodies at the same reach.
-export const CAMERA_DISTANCE_RANGE = { min: 1.1, max: 120_000 } as const;
+// In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
+// so Saturn (up to ~11 AU away) fits in view; the scene caps other bodies at the same reach.
+export const CAMERA_DISTANCE_RANGE = { min: 1.1, max: 300_000 } as const;
 export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'solar', 'terminator']);
 export const DEFAULT_CAMERA: GlobeCamera = {
   target: { latitude: 20, longitude: 0 },

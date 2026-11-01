@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { apply, rotationZ, type Vector3 } from '../astro/matrix';
 import { geoToVector } from './geo';
 import {
+  hiddenBehind,
   apparentRadiusPixels,
   attachedPose,
   blendPose,
@@ -149,5 +150,22 @@ describe('blendPose', () => {
   it('copes with eyes in the same direction', () => {
     const near = { ...from, eye: [2, 0, 0] as Vector3 };
     expect(blendPose(near, from, 0.5).eye[0]).toBeCloseTo(Math.SQRT2 * 2, 9);
+  });
+});
+
+describe('bodies hidden behind others', () => {
+  it('are those whose centre a nearer disc covers', () => {
+    const hidden = hiddenBehind(
+      [
+        { name: 'Jupiter', x: 100, y: 100, distance: 50, radius: 200 },
+        { name: 'Saturn', x: 150, y: 120, distance: 400_000, radius: 0.5 },
+        { name: 'Sun', x: 900, y: 100, distance: 300_000, radius: 4 },
+        { name: 'Mars', x: 110, y: 100, distance: 10, radius: 0.1 },
+        // Behind the Sun's dot, but the dot is too small to hide anything.
+        { name: 'Venus', x: 901, y: 101, distance: 400_000, radius: 0.2 },
+      ],
+      10,
+    );
+    expect([...hidden]).toEqual(['Saturn']);
   });
 });

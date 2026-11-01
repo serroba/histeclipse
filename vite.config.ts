@@ -23,6 +23,7 @@ export default defineConfig({
         'src/globe/scene.ts',
         'src/globe/solarShaders.ts',
         'src/globe/empireCanvas.ts',
+        'src/globe/planetMeshes.ts',
         'src/sky/skyScene.ts',
         'src/ui/**',
       ],
