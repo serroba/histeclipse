@@ -483,10 +483,15 @@ export function milestonesNear(ma: number, reach: number): readonly Milestone[] 
   );
 }
 
+/**
+ * The view keeps a moment to a tenth of a million years, so a milestone this close to `ma` is
+ * the one the view stands on, not the next.
+ */
+export const STANDING_MA = 0.05;
+
 /** The next milestone towards the present (direction −1) or the past (+1) from `ma`. */
 export function nextMilestone(ma: number, direction: 1 | -1): Milestone | null {
-  // A hair's tolerance, so a milestone the view already stands on is not "next".
   return direction < 0
-    ? (MILESTONES.find((milestone) => anchorMa(milestone) < ma - 1e-6) ?? null)
-    : (MILESTONES.findLast((milestone) => anchorMa(milestone) > ma + 1e-6) ?? null);
+    ? (MILESTONES.find((milestone) => anchorMa(milestone) < ma - STANDING_MA) ?? null)
+    : (MILESTONES.findLast((milestone) => anchorMa(milestone) > ma + STANDING_MA) ?? null);
 }
