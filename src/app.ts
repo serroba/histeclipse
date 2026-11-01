@@ -76,6 +76,13 @@ import {
   type EmpireCentury,
   type EmpireIndex,
 } from './data/empires';
+import {
+  loadOhmCentury,
+  loadOhmIndex,
+  ohmIn,
+  type OhmCentury,
+  type OhmIndex,
+} from './data/ohmBorders';
 import { createCultureSwitch } from './ui/cultureSwitch';
 import {
   CULTURE_INFO,
@@ -140,14 +147,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const figureSwitch = createFigureSwitch((figures) => {
     store.set((state) => ({ ...state, figures }));
   });
-  const layerSwitch = createLayerSwitch((on) => {
-    store.set((state) => {
-      const layers = new Set(state.layers);
-      if (on) layers.add('empires');
-      else layers.delete('empires');
-      return { ...state, layers };
-    });
-  });
+  const layerSwitch = createLayerSwitch(
+    (on) => {
+      store.set((state) => {
+        const layers = new Set(state.layers);
+        if (on) layers.add('empires');
+        else layers.delete('empires');
+        return { ...state, layers };
+      });
+    },
+    (borders) => {
+      store.set((state) => ({ ...state, borders }));
+    },
+  );
   const empireCredit = element(
     'span',
     { class: 'empire-credit', hidden: '' },
@@ -160,6 +172,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ' (Seshat, ',
     element('a', { href: 'https://creativecommons.org/licenses/by/4.0/' }, 'CC BY 4.0'),
     ', simplified)',
+  );
+  const ohmCredit = element(
+    'span',
+    { class: 'empire-credit', hidden: '' },
+    ' · Borders: © ',
+    element('a', { href: 'https://www.openhistoricalmap.org/copyright' }, 'OpenHistoricalMap'),
+    ' contributors (CC0, simplified)',
   );
   const sunSwitch = createSunSwitch((sunLayer) => {
     store.set((state) => ({ ...state, sunLayer }));
@@ -230,6 +249,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ),
         ' · Positions: JPL DE441',
         empireCredit,
+        ohmCredit,
       ),
     ),
     notices,
@@ -559,43 +579,74 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let empireIndex: Promise<EmpireIndex> | null = null;
   const empireCenturies = new Map<number, Promise<EmpireCentury>>();
   let empiresShown: string | null = null;
+  const ohmCenturies = new Map<number, Promise<OhmCentury>>();
+  let ohmIndex: Promise<OhmIndex> | null = null;
+
+  /** One century file, loaded once and kept; a failed load is retried next time. */
+  function centuryFile<T>(
+    cache: Map<number, Promise<T>>,
+    century: number,
+    load: () => Promise<T>,
+  ): Promise<T> {
+    let file = cache.get(century);
+    if (file === undefined) {
+      file = load();
+      file.catch(() => cache.delete(century));
+      cache.set(century, file);
+    }
+    return file;
+  }
+
   function showEmpires(state: ViewState): void {
     const on = state.layers.has('empires');
-    layerSwitch.render(on, state.mode === 'globe');
-    empireCredit.hidden = !on;
+    layerSwitch.render(on, state.mode === 'globe', state.borders);
+    const source = state.borders;
+    empireCredit.hidden = !on || source === 'ohm';
+    ohmCredit.hidden = !on || source === 'cliopatria';
     const year = state.time.date.year;
-    const key = on ? String(year) : null;
+    const key = on ? `${source}:${String(year)}` : null;
     if (key === empiresShown) return;
     empiresShown = key;
     if (!on) {
       globe.setEmpires(null);
       return;
     }
-    empireIndex ??= loadEmpireIndex(`${base}data/empires/index.json`, (url) => fetch(url));
-    empireIndex
-      .then((index) => {
-        const century = centuryFor(index, year);
-        if (century === null) return null;
-        let file = empireCenturies.get(century);
-        if (file === undefined) {
-          file = loadEmpireCentury(`${base}data/empires/${String(century)}.json`, (url) =>
-            fetch(url),
-          );
-          empireCenturies.set(century, file);
-        }
-        return file;
-      })
-      .then(
-        (file) => {
-          // The year may have moved on while the file loaded.
-          if (empiresShown !== key) return;
-          globe.setEmpires(file === null ? [] : territoriesIn(file, year));
-        },
-        (error: unknown) => {
-          empiresShown = null;
-          notify(`Could not load the borders of past states: ${errorMessage(error)}`);
-        },
-      );
+    const fetchJson = (url: string): Promise<Response> => fetch(url);
+    empireIndex ??= loadEmpireIndex(`${base}data/empires/index.json`, fetchJson);
+    ohmIndex ??= loadOhmIndex(`${base}data/ohm/index.json`, fetchJson);
+    const territories =
+      source === 'ohm'
+        ? Promise.resolve([])
+        : empireIndex.then(async (index) => {
+            const century = centuryFor(index, year);
+            if (century === null) return [];
+            const file = await centuryFile(empireCenturies, century, () =>
+              loadEmpireCentury(`${base}data/empires/${String(century)}.json`, fetchJson),
+            );
+            return territoriesIn(file, year);
+          });
+    const ohm =
+      source === 'cliopatria'
+        ? Promise.resolve(null)
+        : ohmIndex.then(async (index) => {
+            const century = Math.floor(year / 100) * 100;
+            if (!index.centuries.includes(century)) return { borders: [], labels: [] };
+            const file = await centuryFile(ohmCenturies, century, () =>
+              loadOhmCentury(`${base}data/ohm/${String(century)}.json`, fetchJson),
+            );
+            return ohmIn(file, year);
+          });
+    Promise.all([territories, ohm]).then(
+      ([drawn, lines]) => {
+        // The year or source may have moved on while the files loaded.
+        if (empiresShown !== key) return;
+        globe.setEmpires({ territories: drawn, ohm: lines });
+      },
+      (error: unknown) => {
+        empiresShown = null;
+        notify(`Could not load the borders of past states: ${errorMessage(error)}`);
+      },
+    );
   }
 
   // SDO's images of the Sun load the first time someone looks at it close up.
@@ -843,6 +894,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (
       state.layers !== previous?.layers ||
       state.mode !== previous.mode ||
+      state.borders !== previous.borders ||
       state.time.date.year !== previous.time.date.year
     ) {
       showEmpires(state);

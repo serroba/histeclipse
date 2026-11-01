@@ -891,3 +891,27 @@ test('picking a culture puts you where its sky-watchers stood', async ({ page })
   await page.getByLabel('Sky culture').selectOption('babylonian_mulapin');
   await expect(page.locator('.sky-caption')).toContainText('Standing in Babylon');
 });
+
+test('past borders can come from Cliopatria, OpenHistoricalMap, or both to compare', async ({
+  page,
+}) => {
+  await page.goto('./?t=1500-06-01T12:00&cam=5,20,2.6&layers=lunar,solar,terminator,empires');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  const source = page.getByLabel('Borders from');
+  await expect(source).toHaveValue('cliopatria');
+  await expect(globe).toHaveAttribute('data-ohm-borders', 'off');
+
+  await source.selectOption('both');
+  await expect(page).toHaveURL(/borders=both/);
+  await expect(globe).toHaveAttribute('data-ohm-borders', /^[1-9]\d*$/);
+  await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
+  await expect(page.getByRole('link', { name: 'OpenHistoricalMap' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Cliopatria' })).toBeVisible();
+
+  await source.selectOption('ohm');
+  await expect(globe).toHaveAttribute('data-empires', '0');
+  await expect(page.getByRole('link', { name: 'Cliopatria' })).toBeHidden();
+  // OpenHistoricalMap has kingdoms Cliopatria lacks, such as Mutapa.
+  await expect(page.locator('.empire-label.is-ohm', { hasText: /Mutapa/ }).first()).toBeAttached();
+});

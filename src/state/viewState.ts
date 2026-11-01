@@ -19,6 +19,10 @@ import { astronomicalYear } from '../time/year';
 export const MODES = ['globe', 'sky'] as const;
 export type Mode = (typeof MODES)[number];
 
+/** Whose borders of past states the empires layer shows. */
+export const BORDER_SOURCES = ['cliopatria', 'ohm', 'both'] as const;
+export type BorderSource = (typeof BORDER_SOURCES)[number];
+
 export const LAYERS = ['lunar', 'solar', 'terminator', 'places', 'empires'] as const;
 export type Layer = (typeof LAYERS)[number];
 
@@ -98,6 +102,8 @@ export interface ViewState {
   readonly sunLayer: SunLayer;
   /** Whose constellations the sky view draws. */
   readonly culture: SkyCulture;
+  /** Whose borders the empires layer draws. */
+  readonly borders: BorderSource;
 }
 
 // In the focused body's radii. For Earth, ~5 times the Sun's distance (23,455 Earth radii), so
@@ -153,5 +159,6 @@ export function defaultViewState(now: Date): ViewState {
     years: 'western',
     sunLayer: 'visible',
     culture: 'modern',
+    borders: 'cliopatria',
   };
 }
