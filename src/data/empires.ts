@@ -6,6 +6,7 @@
 
 import * as v from 'valibot';
 
+import { elementAt } from '../util/arrays';
 import { getJson, type Fetch } from './fetchJson';
 
 const year = v.pipe(v.number(), v.integer());
@@ -74,7 +75,10 @@ export function territoriesIn(century: EmpireCentury, year: number): Territory[]
       rings: rings.map((ring) => {
         const points: [number, number][] = [];
         for (let index = 0; index + 1 < ring.length; index += 2) {
-          points.push([(ring[index] ?? 0) / century.scale, (ring[index + 1] ?? 0) / century.scale]);
+          points.push([
+            elementAt(ring, index) / century.scale,
+            elementAt(ring, index + 1) / century.scale,
+          ]);
         }
         return points;
       }),
@@ -105,7 +109,7 @@ export function unwrapRing(ring: readonly (readonly [number, number])[]): [numbe
 export function ringArea(ring: readonly (readonly [number, number])[]): number {
   let total = 0;
   ring.forEach(([x1, y1], index) => {
-    const [x2, y2] = ring[(index + 1) % ring.length] ?? [x1, y1];
+    const [x2, y2] = elementAt(ring, (index + 1) % ring.length);
     total += x1 * y2 - x2 * y1;
   });
   return Math.abs(total) / 2;
@@ -132,7 +136,7 @@ export function labelPoint(territory: Territory): {
   let lat = 0;
   let twiceArea = 0;
   points.forEach(([x1, y1], index) => {
-    const [x2, y2] = points[(index + 1) % points.length] ?? [x1, y1];
+    const [x2, y2] = elementAt(points, (index + 1) % points.length);
     const cross = x1 * y2 - x2 * y1;
     twiceArea += cross;
     lon += (x1 + x2) * cross;
@@ -153,7 +157,7 @@ export function labelPoint(territory: Territory): {
 export function territoryHue(name: string): number {
   let hash = 2166136261;
   for (const char of name) {
-    hash ^= char.codePointAt(0) ?? 0;
+    hash ^= char.charCodeAt(0);
     hash = Math.imul(hash, 16777619) >>> 0;
   }
   return hash % 360;

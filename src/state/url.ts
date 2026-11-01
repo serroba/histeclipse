@@ -17,6 +17,8 @@
  *   `egyptian` or `roman`. It changes how years are listed, not the moment in `t`.
  * - `sun` is the channel of light the Sun is drawn in, close up: `visible` (absent),
  *   `magnetogram`, `304`, `171`, `193` or `131`.
+ * - `culture` is whose constellations the sky view draws: `modern` (absent) or a sky culture
+ *   such as `babylonian_mulapin` or `chinese`.
  * - `loc` (observer), `sel` (selected eclipse), `view` (an attached viewpoint; absent means
  *   free) and `focus` are optional; everything else is always written out, so a link keeps its meaning
  *   even if defaults change later.
@@ -26,6 +28,7 @@
  */
 
 import { calendarDate, calendarDateOf, julianDay, type Calendar } from '../time/julianDay';
+import { SKY_CULTURES, type SkyCulture } from '../data/skyCultures';
 import { SUN_LAYERS, type SunLayer } from '../data/sunImages';
 import { YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
@@ -112,6 +115,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     figures: read('figures', parseFigures, defaults.figures),
     years: read('years', parseYears, defaults.years),
     sunLayer: read('sun', parseSunLayer, defaults.sunLayer),
+    culture: read('culture', parseCulture, defaults.culture),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -138,6 +142,7 @@ export function serializeViewState(state: ViewState): string {
   if (state.figures !== 'famous') params.set('figures', state.figures);
   if (state.years !== 'western') params.set('years', state.years);
   if (state.sunLayer !== 'visible') params.set('sun', state.sunLayer);
+  if (state.culture !== 'modern') params.set('culture', state.culture);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
@@ -148,6 +153,10 @@ function parseMode(raw: string): Mode {
 
 function parseFigures(raw: string): Figures {
   return oneOf(raw, FIGURES, 'figures');
+}
+
+function parseCulture(raw: string): SkyCulture {
+  return oneOf(raw, SKY_CULTURES, 'culture');
 }
 
 function parseSunLayer(raw: string): SunLayer {

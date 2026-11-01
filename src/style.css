@@ -192,6 +192,50 @@ body {
   display: none;
 }
 
+.culture-switch {
+  margin-top: 8px;
+  pointer-events: auto;
+}
+
+.culture-switch[hidden] {
+  display: none;
+}
+
+.culture-select {
+  min-height: 44px;
+  margin-left: 8px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.05);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.culture-select option {
+  background: #10162a;
+}
+
+.culture-caption {
+  max-width: 34em;
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ink-muted);
+}
+
+.culture-details summary {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.culture-caption a {
+  color: inherit;
+}
+
 .sun-caption {
   max-width: 34em;
   margin: 4px 0 0;

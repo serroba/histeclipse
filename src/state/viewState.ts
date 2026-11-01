@@ -3,6 +3,7 @@
  * See `url.ts` for the query-string format.
  */
 
+import type { SkyCulture } from '../data/skyCultures';
 import type { SunLayer } from '../data/sunImages';
 import type { YearCalendar } from '../time/calendars';
 import {
@@ -95,6 +96,8 @@ export interface ViewState {
   readonly years: YearCalendar;
   /** The channel of light the Sun is shown in, close up. */
   readonly sunLayer: SunLayer;
+  /** Whose constellations the sky view draws. */
+  readonly culture: SkyCulture;
 }
 
 // In the focused body's radii. For Earth, ~5 times the Sun's distance (23,455 Earth radii), so
@@ -149,5 +152,6 @@ export function defaultViewState(now: Date): ViewState {
     figures: 'famous',
     years: 'western',
     sunLayer: 'visible',
+    culture: 'modern',
   };
 }

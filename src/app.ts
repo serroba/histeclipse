@@ -68,6 +68,15 @@ import {
   type EmpireCentury,
   type EmpireIndex,
 } from './data/empires';
+import { createCultureSwitch } from './ui/cultureSwitch';
+import {
+  cultureFigures,
+  loadCultureIndex,
+  loadHipStars,
+  withFigureStars,
+  type SkyCulture,
+} from './data/skyCultures';
+import type { Figure } from './sky/look';
 import { loadSunImages, type SunImages } from './data/sunImages';
 import { createFigureSwitch } from './ui/figureSwitch';
 import { createViewSwitch } from './ui/viewSwitch';
@@ -107,6 +116,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     } else {
       store.set((state) => ({ ...state, mode: 'globe', view: choice }));
     }
+  });
+  const cultureSwitch = createCultureSwitch(base, (culture) => {
+    store.set((state) => ({ ...state, culture }));
   });
   const figureSwitch = createFigureSwitch((figures) => {
     store.set((state) => ({ ...state, figures }));
@@ -186,6 +198,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       viewSwitch.root,
       aimSwitch.root,
       figureSwitch.root,
+      cultureSwitch.root,
       sunSwitch.root,
       skyText,
       skyEclipse,
@@ -496,9 +509,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     Promise.all([
       import('./sky/skyScene'),
       loadSky(`${base}data/sky.json`, (url) => fetch(url)),
+      loadHipStars(`${base}data/hip-stars.json`, (url) => fetch(url)),
     ]).then(
-      ([{ createSkyScene }, sky]) => {
+      ([{ createSkyScene }, plainSky, hipStars]) => {
         const state = store.get();
+        // Other cultures' figures use a few faint stars beyond the catalogue; add them.
+        const { sky, index } = withFigureStars(plainSky, hipStars);
+        hipIndex = index;
         skyScene = createSkyScene(skyContainer, {
           sky,
           look: state.look,
@@ -602,6 +619,42 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
   }
 
+  // Each culture's figures load the first time someone picks it.
+  let hipIndex: ReadonlyMap<number, number> | null = null;
+  const cultureFiles = new Map<SkyCulture, Promise<readonly Figure[]>>();
+  function showCulture(state: ViewState): void {
+    cultureSwitch.render(state.culture, state.mode === 'sky');
+    if (skyScene === null || hipIndex === null) return;
+    const culture = state.culture;
+    if (culture === 'modern') {
+      skyScene.setCulture(null);
+      return;
+    }
+    const index = hipIndex;
+    let figures = cultureFiles.get(culture);
+    if (figures === undefined) {
+      const request = loadCultureIndex(`${base}skycultures/${culture}/index.json`, (url) =>
+        fetch(url),
+      ).then((file) => cultureFigures(culture, file, index));
+      // A failure is reported once per request, however many renders were waiting on it.
+      request.catch((error: unknown) => {
+        if (cultureFiles.get(culture) !== request) return;
+        cultureFiles.delete(culture);
+        notify(`Could not load the ${culture} sky: ${errorMessage(error)}`);
+      });
+      cultureFiles.set(culture, request);
+      figures = request;
+    }
+    figures.then(
+      (loaded) => {
+        if (store.get().culture === culture) skyScene?.setCulture(loaded);
+      },
+      () => {
+        // Reported above.
+      },
+    );
+  }
+
   function observerOf(state: ViewState): GeoPoint {
     if (state.location !== null) return state.location;
     return state.focus === 'earth' ? state.camera.target : DEFAULT_CAMERA.target;
@@ -647,7 +700,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globeContainer.hidden = inSky;
     skyText.hidden = !inSky;
     skyEclipse.hidden = true;
-    figureSwitch.render(state.figures, inSky);
+    figureSwitch.render(state.figures, inSky, state.culture === 'modern');
+    cultureSwitch.render(state.culture, inSky);
     aimSwitch.render(inSky, moonEphemeris !== null);
     if (!inSky) {
       skyScene?.setVisible(false);
@@ -678,6 +732,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (skyScene === null) return;
     skyScene.setLook(state.look);
     skyScene.setFigures(state.figures);
+    showCulture(state);
     skyScene.setMoment({
       horizon,
       jdTT,
@@ -696,6 +751,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.location !== previous.location ||
       state.look !== previous.look ||
       state.figures !== previous.figures ||
+      state.culture !== previous.culture ||
       state.focus !== previous.focus ||
       state.camera !== previous.camera
     ) {
