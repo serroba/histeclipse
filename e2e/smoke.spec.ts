@@ -984,6 +984,14 @@ test('deep time shows Pangaea 250 million years ago, steps, plays and returns', 
   // No day and night, and no Sun or Moon: their places today say nothing about then.
   await expect(globe).toHaveAttribute('data-light', 'even');
   await expect(moon).toBeHidden();
+  // Poles, field, tilt and day, folded away until asked for.
+  const facts = page.getByTestId('deep-facts');
+  await expect(facts.getByText('Magnetic field', { exact: true })).toBeHidden();
+  await facts.getByText('Poles, magnetic field, tilt and day').click();
+  await expect(facts.locator('dd').nth(0)).toContainText('spin axis then');
+  await expect(facts.locator('dd').nth(1)).toContainText('Reversing often');
+  await expect(facts.locator('dd').nth(2)).toContainText('22.1° and 24.5°');
+  await expect(facts.locator('dd').nth(3)).toContainText('23.5 h 70 Ma');
   await expect(page.getByRole('link', { name: 'PALEOMAP PaleoDEMs' })).toBeVisible();
   // The year bar gives way to the deep-time bar.
   await expect(page.getByLabel('Year', { exact: true })).toBeHidden();

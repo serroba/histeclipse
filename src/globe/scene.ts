@@ -10,6 +10,8 @@ import {
   BackSide,
   CanvasTexture,
   Color,
+  CylinderGeometry,
+  Group,
   LinearFilter,
   Matrix4,
   Mesh,
@@ -729,6 +731,29 @@ export async function createGlobe(
     }),
   );
   scene.add(earth, atmosphere);
+
+  // Deep time: Earth's spin axis, its ends marked as the poles of the time shown. The maps
+  // put the poles of their time at the top and bottom, so the axis is the globe's own.
+  const spinAxis = new Group();
+  spinAxis.add(
+    new Mesh(
+      new CylinderGeometry(0.004, 0.004, 2.6, 8),
+      new MeshBasicMaterial({ color: new Color(0.85, 0.9, 1), transparent: true, opacity: 0.7 }),
+    ),
+  );
+  for (const [text, y] of [
+    ['North pole then', 1.42],
+    ['South pole then', -1.42],
+  ] as const) {
+    const label = new Sprite(
+      new SpriteMaterial({ map: labelTexture(text), transparent: true, depthWrite: false }),
+    );
+    label.scale.set(0.9, 0.9 / 4, 1);
+    label.position.set(0, y, 0);
+    spinAxis.add(label);
+  }
+  spinAxis.visible = false;
+  scene.add(spinAxis);
 
   // The chosen place: a small pin standing on the ground.
   const pin = new Mesh(
@@ -1536,6 +1561,7 @@ export async function createGlobe(
       deepTimeWanted = surface;
       deepTime = surface !== null;
       evenLight.value = deepTime ? 1 : 0;
+      spinAxis.visible = deepTime;
       container.dataset['light'] = deepTime ? 'even' : 'sun';
       needsRender = true;
       const uniforms = earth.material.uniforms;
@@ -1692,6 +1718,26 @@ function quietSun(texture: Texture | undefined, image: SunImageRequest): Vector3
 }
 
 /** A soft radial glow for the Sun, drawn once into a small canvas. */
+/** A short label on a transparent canvas, four times as wide as it is tall. */
+function labelTexture(text: string): CanvasTexture {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 128;
+  const context = canvas.getContext('2d');
+  if (context !== null) {
+    context.font = '600 44px system-ui, sans-serif';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    context.shadowBlur = 8;
+    context.fillStyle = 'rgba(225, 235, 255, 0.95)';
+    context.fillText(text, canvas.width / 2, canvas.height / 2);
+  }
+  const texture = new CanvasTexture(canvas);
+  texture.colorSpace = SRGBColorSpace;
+  return texture;
+}
+
 function glowTexture(): CanvasTexture {
   const size = 128;
   const canvas = document.createElement('canvas');
