@@ -1361,6 +1361,15 @@ body {
   margin: 0 0 4px;
 }
 
+.plates-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  background: #ff6bd6;
+  vertical-align: middle;
+}
+
 .deep-coast {
   min-height: 32px;
   border: 1px solid var(--panel-border);

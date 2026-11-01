@@ -37,6 +37,8 @@ export const LAYERS = [
   // Deep time only: the surface coloured by temperature, and sea level through time.
   'temperature',
   'sealevel',
+  // Deep time: a second reconstruction's continents, outlined.
+  'plates',
 ] as const;
 export type Layer = (typeof LAYERS)[number];
 

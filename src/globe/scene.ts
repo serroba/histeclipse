@@ -216,6 +216,19 @@ export interface IceSurface {
   readonly metresPerStep: number;
 }
 
+/** A second reconstruction's continents: two masks either side of the moment, blended. */
+export interface PlateSurface {
+  readonly younger: string;
+  readonly older: string;
+  /** 0 shows `younger`, 1 `older`. */
+  readonly mix: number;
+  readonly columns: number;
+  readonly rows: number;
+  /** How far each mask is turned east about the axis, degrees, to line up with the surface. */
+  readonly turnYounger: number;
+  readonly turnOlder: number;
+}
+
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
   setSunDirection(direction: Vector3Tuple): void;
@@ -265,6 +278,8 @@ export interface Globe {
   setShelf(surface: ShelfSurface | null): void;
   /** Draw ice sheets over the surface; null draws none. */
   setIce(surface: IceSurface | null): void;
+  /** Outline a second reconstruction's continents; null draws none. */
+  setPlates(surface: PlateSurface | null): void;
   /** Pin the chosen place on the globe; null removes the pin. */
   setLocation(place: GeoPoint | null): void;
   /**
@@ -340,6 +355,12 @@ const EARTH_FRAGMENT = /* glsl */ `
   uniform float iceActive;
   uniform vec2 iceGrid;
   uniform float iceStep;
+  uniform sampler2D plateYounger;
+  uniform sampler2D plateOlder;
+  uniform float plateMix;
+  uniform float plateActive;
+  uniform vec2 plateGrid;
+  uniform vec2 plateTurn;
   uniform vec2 paleoGrid;
   uniform float seaDepth;
   uniform float landHeight;
@@ -505,7 +526,18 @@ const EARTH_FRAGMENT = /* glsl */ `
       vec3 ice = mix(srgb(vec3(0.78, 0.87, 0.95)), srgb(vec3(0.97, 0.98, 1.0)), smoothstep(0.0, 2000.0, thickness));
       color = mix(color, ice, covered);
     }
-    return color * clamp(mix(1.0, shade, 0.7), 0.45, 1.35);
+    color *= clamp(mix(1.0, shade, 0.7), 0.45, 1.35);
+    if (plateActive > 0.5) {
+      // A second reconstruction's continents as a thin magenta line, a pixel or two wide at any
+      // zoom, where its mask crosses one half.
+      // Each mask turned east by its own amount: sampled that far west.
+      vec2 atYounger = (vec2(fract(uv.x - plateTurn.x / 360.0), uv.y) * (plateGrid - 1.0) + 0.5) / plateGrid;
+      vec2 atOlder = (vec2(fract(uv.x - plateTurn.y / 360.0), uv.y) * (plateGrid - 1.0) + 0.5) / plateGrid;
+      float inside = mix(texture2D(plateYounger, atYounger).r, texture2D(plateOlder, atOlder).r, plateMix);
+      float edge = 1.0 - smoothstep(0.0, 1.5 * max(fwidth(inside), 1e-4), abs(inside - 0.5));
+      color = mix(color, srgb(vec3(1.0, 0.42, 0.84)), edge * 0.9);
+    }
+    return color;
   }
 
   // Past states and empires, painted on a map in the ground texture's layout. Each keeps its
@@ -828,6 +860,12 @@ export async function createGlobe(
         iceActive: { value: 0 },
         iceGrid: { value: new Vector2(1441, 721) },
         iceStep: { value: 16 },
+        plateYounger: { value: null as Texture | null },
+        plateOlder: { value: null as Texture | null },
+        plateMix: { value: 0 },
+        plateActive: { value: 0 },
+        plateGrid: { value: new Vector2(1441, 721) },
+        plateTurn: { value: new Vector2(0, 0) },
         evenLight,
         paleoGrid: { value: new Vector2(361, 181) },
         seaDepth: { value: 11_000 },
@@ -989,6 +1027,7 @@ export async function createGlobe(
   let deepTime = false;
   let temperatureWanted: TemperatureSurface | null = null;
   let iceWanted: IceSurface | null = null;
+  let platesWanted: PlateSurface | null = null;
   function hiddenInDeepTime(): Object3D[] {
     return [sun, corona, moon, ...Object.values(planets.meshes)];
   }
@@ -1802,6 +1841,34 @@ export async function createGlobe(
           uniforms['iceStep'] = { value: surface.metresPerStep };
           uniforms['iceActive'] = { value: 1 };
           container.dataset['ice'] = `${surface.younger} ${surface.older}`;
+          needsRender = true;
+        },
+        () => {
+          paleoTextures.delete(surface.younger);
+          paleoTextures.delete(surface.older);
+        },
+      );
+    },
+    setPlates(surface) {
+      platesWanted = surface;
+      const uniforms = earth.material.uniforms;
+      if (surface === null) {
+        uniforms['plateActive'] = { value: 0 };
+        container.dataset['plates'] = 'off';
+        needsRender = true;
+        return;
+      }
+      Promise.all([paleoTexture(surface.younger), paleoTexture(surface.older)]).then(
+        ([younger, older]) => {
+          // A later request (the slider kept moving) wins.
+          if (platesWanted !== surface) return;
+          uniforms['plateYounger'] = { value: younger };
+          uniforms['plateOlder'] = { value: older };
+          uniforms['plateMix'] = { value: surface.mix };
+          uniforms['plateGrid'] = { value: new Vector2(surface.columns, surface.rows) };
+          uniforms['plateTurn'] = { value: new Vector2(surface.turnYounger, surface.turnOlder) };
+          uniforms['plateActive'] = { value: 1 };
+          container.dataset['plates'] = `${surface.younger} ${surface.older}`;
           needsRender = true;
         },
         () => {
