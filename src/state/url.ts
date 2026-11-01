@@ -46,6 +46,7 @@ import {
   type BorderSource,
   FIGURES,
   MA_RANGE,
+  roundMa,
   SKY_FOV_RANGE,
   ECLIPSE_KINDS,
   LAYERS,
@@ -182,12 +183,12 @@ function parseMa(raw: string): number {
       `must be between ${String(MA_RANGE.min)} and ${String(MA_RANGE.max)} million years ago`,
     );
   }
-  return Math.round(ma * 10) / 10;
+  return roundMa(ma);
 }
 
-/** Millions of years to a tenth, without trailing zeros: 250, 252.5. */
+/** Millions of years to a thousandth (a thousand years), without trailing zeros: 250, 0.021. */
 function formatMa(ma: number): string {
-  return String(Math.round(ma * 10) / 10);
+  return String(roundMa(ma));
 }
 
 /** A state's name: any text, trimmed, of a sensible length. Whether it exists depends on the year. */

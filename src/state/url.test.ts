@@ -112,10 +112,11 @@ describe('parseViewState', () => {
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
   });
 
-  it('reads deep time in millions of years, to a tenth, writing it only when set', () => {
-    const { state } = parseViewState('ma=252.46', NOW);
-    expect(state.ma).toBe(252.5);
-    expect(serializeViewState(state)).toContain('&ma=252.5');
+  it('reads deep time in millions of years, to a thousand years, writing it only when set', () => {
+    expect(serializeViewState(parseViewState('ma=0.0214', NOW).state)).toContain('&ma=0.021');
+    const { state } = parseViewState('ma=252.4567', NOW);
+    expect(state.ma).toBe(252.457);
+    expect(serializeViewState(state)).toContain('&ma=252.457');
     expect(serializeViewState(parseViewState('ma=0', NOW).state)).toContain('&ma=0');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('ma=');
   });
