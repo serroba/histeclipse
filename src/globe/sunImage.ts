@@ -8,6 +8,7 @@
  */
 
 import { directionFromRaDec, type Vector3 } from '../astro/matrix';
+import { valueAt } from '../util/arrays';
 
 const RADIANS = Math.PI / 180;
 
@@ -87,16 +88,20 @@ export function discAverage(
   limbDarkeningCoefficient = 0,
 ): readonly [r: number, g: number, b: number] {
   const limit = diskRadius * 0.97 * width;
-  const sum = [0, 0, 0];
+  let r = 0;
+  let g = 0;
+  let b = 0;
   let count = 0;
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       if (Math.hypot(x + 0.5 - width / 2, y + 0.5 - height / 2) > limit) continue;
       const i = 4 * (y * width + x);
-      for (let c = 0; c < 3; c++) sum[c] = (sum[c] ?? 0) + linearFromSrgb(pixels[i + c] ?? 0);
+      r += linearFromSrgb(valueAt(pixels, i));
+      g += linearFromSrgb(valueAt(pixels, i + 1));
+      b += linearFromSrgb(valueAt(pixels, i + 2));
       count++;
     }
   }
   const scale = 1 / Math.max(1, count) / (1 - limbDarkeningCoefficient / 3);
-  return [(sum[0] ?? 0) * scale, (sum[1] ?? 0) * scale, (sum[2] ?? 0) * scale];
+  return [r * scale, g * scale, b * scale];
 }

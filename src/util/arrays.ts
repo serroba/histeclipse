@@ -5,3 +5,12 @@ export function elementAt<T>(array: readonly T[], index: number): T {
   }
   return array[index] as T;
 }
+
+/** `array[index]` for typed arrays and other array-likes, with the same check. */
+export function valueAt(array: ArrayLike<number>, index: number): number {
+  const value = array[index];
+  if (value === undefined) {
+    throw new RangeError(`Index ${String(index)} is outside 0..${String(array.length - 1)}`);
+  }
+  return value;
+}

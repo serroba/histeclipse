@@ -7,6 +7,7 @@
 
 import * as v from 'valibot';
 
+import { elementAt } from '../util/arrays';
 import { getJson, type Fetch } from './fetchJson';
 import type { Sky } from './sky';
 
@@ -150,7 +151,7 @@ export function withFigureStars(sky: Sky, hip: HipStars): { sky: Sky; index: Map
   };
   const index = new Map<number, number>();
   hip.hip.forEach((number, row) => {
-    const hr = hip.hr[row] ?? null;
+    const hr = elementAt(hip.hr, row);
     const known = hr === null ? undefined : byHr.get(hr);
     if (known !== undefined) {
       index.set(number, known);
@@ -159,13 +160,13 @@ export function withFigureStars(sky: Sky, hip: HipStars): { sky: Sky; index: Map
     index.set(number, stars.hr.length);
     // Not in the Bright Star Catalogue: no HR number, so it is filed as 0.
     stars.hr.push(0);
-    stars.ra.push(hip.ra[row] ?? 0);
-    stars.dec.push(hip.dec[row] ?? 0);
-    stars.pmRa.push(hip.pmRa[row] ?? 0);
-    stars.pmDec.push(hip.pmDec[row] ?? 0);
-    stars.parallax.push(hip.parallax[row] ?? null);
+    stars.ra.push(elementAt(hip.ra, row));
+    stars.dec.push(elementAt(hip.dec, row));
+    stars.pmRa.push(elementAt(hip.pmRa, row));
+    stars.pmDec.push(elementAt(hip.pmDec, row));
+    stars.parallax.push(elementAt(hip.parallax, row));
     stars.radialVelocity.push(null);
-    stars.vmag.push(hip.vmag[row] ?? 99);
+    stars.vmag.push(elementAt(hip.vmag, row));
     stars.bv.push(null);
   });
   return { sky: { ...sky, stars }, index };
