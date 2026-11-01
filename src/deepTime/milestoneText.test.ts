@@ -8,6 +8,8 @@ describe('formatRange', () => {
     expect(formatRange(50.6, 52.8)).toBe('50.6–52.8 Ma');
     expect(formatRange(201.2, 201.6)).toBe('201.2–201.6 Ma');
     expect(formatRange(330, 330)).toBe('330 Ma');
+    expect(formatRange(4350, 4510)).toBe('4,350–4,510 Ma');
+    expect(formatRange(4567.14, 4567.46)).toBe('4,567.14–4,567.46 Ma');
   });
 
   it('gives the last million years in years', () => {

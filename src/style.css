@@ -1210,6 +1210,10 @@ body {
   transform: translateX(-1px);
 }
 
+.milestone-cosmos {
+  --mark: #7fd6d0;
+}
+
 .milestone-life {
   --mark: #7fcf9a;
 }

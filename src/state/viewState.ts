@@ -23,8 +23,11 @@ export type Mode = (typeof MODES)[number];
 
 /** Whose borders of past states the empires layer shows. */
 export const BORDER_SOURCES = ['cliopatria', 'ohm', 'both'] as const;
-/** Deep time's span: all 540 million years, or the ice ages of the last 2.6 million. */
-export const DEEP_SCALES = ['all', 'ice'] as const;
+/**
+ * Deep time's span: the 540 million years the elevation maps cover, the ice ages of the last
+ * 2.6 million, or all of Earth's 4.6 billion.
+ */
+export const DEEP_SCALES = ['all', 'ice', 'eons'] as const;
 export type DeepScale = (typeof DEEP_SCALES)[number];
 export type BorderSource = (typeof BORDER_SOURCES)[number];
 
@@ -152,7 +155,9 @@ export const DEFAULT_CAMERA: GlobeCamera = {
 };
 
 /** How far back deep time reaches, millions of years: the oldest elevation map. */
-export const MA_RANGE = { min: 0, max: 540 } as const;
+/** Deep time reaches back to the oldest solids of the Solar System (Connelly et al. 2012). */
+export const EARTH_AGE_MA = 4568;
+export const MA_RANGE = { min: 0, max: EARTH_AGE_MA } as const;
 
 /** The ice-age scale: the Quaternary, 2.58 million years, rounded up to whole hundred thousands. */
 export const ICE_AGES_MA = 2.6;

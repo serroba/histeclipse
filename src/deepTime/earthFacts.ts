@@ -21,7 +21,13 @@ function measured(measurement: DayMeasurement): string {
   return `${hours(measurement)} ${String(measurement.ma)} Ma, from ${measurement.evidence} (${measurement.source})`;
 }
 
+/** Before this, the reversal record is too sparse to say what the field was doing. */
+const SPARSE_FIELD_MA = 540;
+
 function field(ma: number): string {
+  if (ma > SPARSE_FIELD_MA) {
+    return 'Too far back to say which way it pointed: the record is sparse. A magnetic field existed by 3.45–3.4 billion years ago (Tarduno et al. 2010); one recorded in 4.2-billion-year-old zircons (Tarduno et al. 2015) has been questioned (Weiss et al. 2018).';
+  }
   const { polarity, interval, landRecord } = fieldAt(ma);
   const state = {
     normal: 'Normal polarity, as today: a compass would point north.',
@@ -45,6 +51,10 @@ function day(ma: number): string {
   return `Measured ${measured(younger)}, and ${measured(older)}.`;
 }
 
+/** The Precambrian tilt is argued over. */
+const PRECAMBRIAN_TILT =
+  'A much larger tilt has been proposed for these times (Williams 1993) and argued to be unlikely (Néron de Surgy & Laskar 1997). Today: ';
+
 export function earthFacts(ma: number): readonly EarthFact[] {
   return [
     {
@@ -54,7 +64,7 @@ export function earthFacts(ma: number): readonly EarthFact[] {
     { label: 'Magnetic field', text: field(ma) },
     {
       label: 'Tilt',
-      text: `Between ${String(TILT.min)}° and ${String(TILT.max)}°, cycling every ${(TILT.periodYears / 1000).toFixed(0)},000 years today (faster then, with the Moon nearer); ${String(TILT.today)}° now. Too quick to show here. The Moon keeps it from swinging further (${TILT.source}).`,
+      text: `${ma > SPARSE_FIELD_MA ? PRECAMBRIAN_TILT : ''}Between ${String(TILT.min)}° and ${String(TILT.max)}°, cycling every ${(TILT.periodYears / 1000).toFixed(0)},000 years today (faster then, with the Moon nearer); ${String(TILT.today)}° now. Too quick to show here. The Moon keeps it from swinging further (${TILT.source}).`,
     },
     { label: 'Day', text: day(ma) },
   ];

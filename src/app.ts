@@ -36,10 +36,11 @@ import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import {
   DEFAULT_CAMERA,
   defaultViewState,
+  type DeepScale,
+  EARTH_AGE_MA,
   ICE_AGES_MA,
   LAST_GLACIAL_MAXIMUM_MA,
   type Layer,
-  MA_RANGE,
   roundMa,
   momentJulianDay,
   type GeoPoint,
@@ -111,7 +112,7 @@ import {
   type DeepTimeView,
   type TemperatureView,
 } from './ui/deepTimeBar';
-import { formatMa, periodAt } from './deepTime/periods';
+import { formatMa, periodAt, periodWords } from './deepTime/periods';
 import { framesAround, loadPaleoDemIndex, oldestMa, type PaleoDemIndex } from './data/paleoDem';
 import { loadPaleoTempIndex, type PaleoTempIndex } from './data/paleoTemp';
 import { loadSeaLevel, type SeaLevelIndex } from './data/seaLevel';
@@ -142,6 +143,10 @@ const PLANETS_SHOWN_BEYOND = 1000;
 const PLAY_MA_PER_SECOND = 20;
 /** On the ice-age scale: 50,000 years a second, 2.6 million years in under a minute. */
 const ICE_PLAY_MA_PER_SECOND = 0.05;
+/** Over all of Earth's history: 100 million years a second, 4.6 billion in under a minute. */
+const EONS_PLAY_MA_PER_SECOND = 100;
+/** The elevation maps reach back this far (their index says for certain once loaded). */
+const MAPS_REACH_MA = 540;
 /** Where deep time opens: Pangaea, at the start of the Triassic. */
 const DEEP_TIME_START_MA = 250;
 
@@ -292,13 +297,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     onScale(deepScale) {
       stopPlay();
-      store.set((state) => ({
-        ...state,
-        deepScale,
-        // From further back than the ice ages, open them at the last glacial maximum.
-        ma:
-          deepScale === 'ice' && (state.ma ?? 0) > ICE_AGES_MA ? LAST_GLACIAL_MAXIMUM_MA : state.ma,
-      }));
+      store.set((state) => {
+        const ma = state.ma ?? 0;
+        return {
+          ...state,
+          deepScale,
+          // From further back than the ice ages, open them at the last glacial maximum; from
+          // before the elevation maps, the 540 Myr scale opens at their oldest.
+          ma:
+            deepScale === 'ice' && ma > ICE_AGES_MA
+              ? LAST_GLACIAL_MAXIMUM_MA
+              : deepScale === 'all' && ma > oldest
+                ? oldest
+                : state.ma,
+        };
+      });
     },
     onTemperatureModel(temperatureModel) {
       store.set((state) => ({ ...state, temperatureModel }));
@@ -950,7 +963,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let platesIndex: PlateMaskIndex | null = null;
   let iceLoading: Promise<IceSheetIndex> | null = null;
   let iceIndex: IceSheetIndex | null = null;
-  let oldest: number = MA_RANGE.max;
+  // How far back the elevation maps reach, until their index says.
+  let oldest = MAPS_REACH_MA;
   let playing = false;
   let playFrame = 0;
   let lastTick = 0;
@@ -963,6 +977,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (ma === null) {
       stopPlay();
       deepBar.render(null);
+      globe.setUncharted(false);
       globe.setDeepTime(null);
       globe.setTemperature(null);
       globe.setShelf(null);
@@ -972,25 +987,39 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     const period = periodAt(ma);
     showDeepTimeText(ma);
-    const ice = state.deepScale === 'ice';
+    // A link to before the elevation maps opens on the scale that reaches it.
+    const scale = state.deepScale === 'all' && ma > oldest ? 'eons' : state.deepScale;
+    const ice = scale === 'ice';
+    // Before the elevation maps reach, the globe is left blank rather than given a map.
+    const uncharted = ma > oldest;
+    globe.setUncharted(uncharted);
     deepBar.render({
       ma,
-      oldest: ice ? ICE_AGES_MA : oldest,
+      oldest: spanOf(scale),
+      mapsReach: oldest,
       period,
       playing,
-      scale: state.deepScale,
+      scale,
       coastline: showCoastline(state, ma),
       ice: showIce(state, ma),
       temperature: temperatureView(state, ma),
       seaLevel: seaLevelView(state),
       ...showPlates(state, ma),
     });
-    // The temperature maps are 5 million years apart: none on the ice-age scale.
-    showTemperature(ice ? { ...state, layers: withoutTemperature(state.layers) } : state, ma);
+    // The temperature maps are 5 million years apart, and stop where the elevation maps do: none
+    // on the ice-age scale or before them.
+    showTemperature(
+      ice || uncharted ? { ...state, layers: withoutTemperature(state.layers) } : state,
+      ma,
+    );
     paleoIndex ??= loadPaleoDemIndex(`${base}data/paleodem/index.json`, fetchJson);
     paleoIndex.then(
       (index) => {
-        oldest = oldestMa(index);
+        if (oldestMa(index) !== oldest) {
+          oldest = oldestMa(index);
+          showDeepTime(store.get());
+          return;
+        }
         if (store.get().ma !== ma) return;
         // On the ice-age scale, today's map: the next is 5 million years back.
         const { younger, older, mix } = framesAround(index.frames, ice ? 0 : ma);
@@ -1009,6 +1038,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
         notify(`Could not load Earth's past surface: ${errorMessage(error)}`);
       },
     );
+  }
+
+  /** How far back each scale's time line reaches, Ma. */
+  function spanOf(scale: DeepScale): number {
+    if (scale === 'ice') return ICE_AGES_MA;
+    return scale === 'eons' ? EARTH_AGE_MA : oldest;
   }
 
   function withoutTemperature(layers: ReadonlySet<Layer>): ReadonlySet<Layer> {
@@ -1246,8 +1281,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const period = periodAt(ma);
     dateText.textContent = formatMa(ma);
     timeText.textContent = '';
-    detailText.textContent =
-      period === null ? 'Deep time' : `${period.name} period · ${period.era} era`;
+    detailText.textContent = period === null ? 'Deep time' : periodWords(period);
   }
 
   /** Play towards the present; from today, start again at the oldest map. */
@@ -1255,7 +1289,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (playing) return;
     playing = true;
     if ((store.get().ma ?? 0) <= 0) {
-      store.set((state) => ({ ...state, ma: state.deepScale === 'ice' ? ICE_AGES_MA : oldest }));
+      store.set((state) => ({ ...state, ma: spanOf(state.deepScale) }));
     }
     lastTick = performance.now();
     playFrame = requestAnimationFrame(tick);
@@ -1270,7 +1304,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       stopPlay();
       return;
     }
-    const speed = store.get().deepScale === 'ice' ? ICE_PLAY_MA_PER_SECOND : PLAY_MA_PER_SECOND;
+    const scale = store.get().deepScale;
+    const speed =
+      scale === 'ice'
+        ? ICE_PLAY_MA_PER_SECOND
+        : scale === 'eons'
+          ? EONS_PLAY_MA_PER_SECOND
+          : PLAY_MA_PER_SECOND;
     const next = Math.max(0, roundMa(ma - speed * seconds));
     store.set((state) => ({ ...state, ma: next }));
     if (next <= 0) {

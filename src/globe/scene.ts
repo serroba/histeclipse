@@ -280,6 +280,8 @@ export interface Globe {
   setIce(surface: IceSurface | null): void;
   /** Outline a second reconstruction's continents; null draws none. */
   setPlates(surface: PlateSurface | null): void;
+  /** Before the elevation maps reach: a plain globe with a faint grid, not a made-up map. */
+  setUncharted(uncharted: boolean): void;
   /** Pin the chosen place on the globe; null removes the pin. */
   setLocation(place: GeoPoint | null): void;
   /**
@@ -361,6 +363,7 @@ const EARTH_FRAGMENT = /* glsl */ `
   uniform float plateActive;
   uniform vec2 plateGrid;
   uniform vec2 plateTurn;
+  uniform float uncharted;
   uniform vec2 paleoGrid;
   uniform float seaDepth;
   uniform float landHeight;
@@ -467,7 +470,18 @@ const EARTH_FRAGMENT = /* glsl */ `
     return texture2D(map, at).r * 255.0 * iceStep;
   }
 
+  // No map before the elevation maps reach: a plain globe, with a graticule every 30 degrees so
+  // it still reads as a sphere turning.
+  vec3 unchartedSurface(vec2 uv) {
+    vec2 degrees = vec2(uv.x * 360.0, uv.y * 180.0);
+    vec2 toLine = abs(fract(degrees / 30.0 + 0.5) - 0.5) * 30.0;
+    vec2 width = fwidth(degrees) * 0.8;
+    float line = 1.0 - min(smoothstep(0.0, width.x, toLine.x), smoothstep(0.0, width.y, toLine.y));
+    return mix(srgb(vec3(0.20, 0.25, 0.33)), srgb(vec3(0.42, 0.50, 0.62)), line * 0.6);
+  }
+
   vec3 paleoSurface(vec2 uv) {
+    if (uncharted > 0.5) return unchartedSurface(uv);
     float height = paleoHeight(uv);
     // Where the coast runs comes from heights averaged over about half a degree (a tent of
     // nine samples): some source grids draw coasts in 0.5–1° steps, and this rounds them off.
@@ -866,6 +880,7 @@ export async function createGlobe(
         plateActive: { value: 0 },
         plateGrid: { value: new Vector2(1441, 721) },
         plateTurn: { value: new Vector2(0, 0) },
+        uncharted: { value: 0 },
         evenLight,
         paleoGrid: { value: new Vector2(361, 181) },
         seaDepth: { value: 11_000 },
@@ -1876,6 +1891,11 @@ export async function createGlobe(
           paleoTextures.delete(surface.older);
         },
       );
+    },
+    setUncharted(blank) {
+      earth.material.uniforms['uncharted'] = { value: blank ? 1 : 0 };
+      container.dataset['uncharted'] = String(blank);
+      needsRender = true;
     },
     setEmpires(layer) {
       const uniforms = earth.material.uniforms;

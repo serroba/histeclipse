@@ -6,7 +6,7 @@
 
 import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
-import { formatMa, type Period } from '../deepTime/periods';
+import { formatMa, type Period, periodShort } from '../deepTime/periods';
 import type { SeaLevelIndex } from '../data/seaLevel';
 import { COAST_SOURCES, type CoastSource } from '../deepTime/coastline';
 import {
@@ -22,6 +22,8 @@ import { createSeaLevelChart } from './seaLevelChart';
 /** Each step button moves by one elevation map, or on the ice-age scale by 5,000 years. */
 export const STEP_MA = 5;
 export const ICE_STEP_MA = 0.005;
+/** Over all of Earth's history, a step is 50 million years. */
+export const EONS_STEP_MA = 50;
 
 const COAST_LABELS: Readonly<Record<CoastSource, string>> = {
   'bintanja-2008': 'Bintanja & van de Wal 2008',
@@ -139,8 +141,10 @@ export interface DeepTimeView {
   readonly oldest: number;
   readonly period: Period | null;
   readonly playing: boolean;
-  /** All 540 million years, or the ice ages; `oldest` is the span's start either way. */
+  /** The span shown; `oldest` is its start. */
   readonly scale: DeepScale;
+  /** How far back the elevation maps reach, Ma; before it the globe is blank. */
+  readonly mapsReach: number;
   readonly temperature: TemperatureView;
   /** Whether a second reconstruction's continents are outlined, and what to say of them. */
   readonly plates: boolean;
@@ -205,11 +209,22 @@ export function createDeepTimeBar(handlers: {
     { type: 'button', class: 'deep-scale-option', 'aria-pressed': 'false' },
     'Ice ages',
   );
+  const scaleEons = element(
+    'button',
+    { type: 'button', class: 'deep-scale-option', 'aria-pressed': 'false' },
+    '4.6 Gyr',
+  );
   const scaleSwitch = element(
     'span',
     { class: 'deep-scale', role: 'group', 'aria-label': 'Time span' },
-    scaleAll,
     scaleIce,
+    scaleAll,
+    scaleEons,
+  );
+  const unchartedNote = element(
+    'p',
+    { class: 'deep-note', hidden: '', 'data-testid': 'uncharted-note' },
+    'No map: before 540 million years ago the continents’ positions are too uncertain to draw here, so the globe is left blank. The milestones tell what was happening.',
   );
   const coastText = element('span', { 'data-testid': 'coastline' });
   const iceLine = element('p', { 'data-testid': 'ice-sheets' });
@@ -326,6 +341,7 @@ export function createDeepTimeBar(handlers: {
       exit,
     ),
     iceNote,
+    unchartedNote,
     seaLevel.legend,
     legend,
     platesNote,
@@ -338,7 +354,8 @@ export function createDeepTimeBar(handlers: {
   let marksSpan = 0;
   // Slider units per million years, and the step, for the scale shown.
   const unit = (): number => (current?.scale === 'ice' ? 1000 : 1);
-  const step = (): number => (current?.scale === 'ice' ? ICE_STEP_MA : STEP_MA);
+  const step = (): number =>
+    current?.scale === 'ice' ? ICE_STEP_MA : current?.scale === 'eons' ? EONS_STEP_MA : STEP_MA;
   slider.addEventListener('input', () => {
     handlers.onMa(-Number(slider.value) / unit());
   });
@@ -357,6 +374,9 @@ export function createDeepTimeBar(handlers: {
   modelPicker.addEventListener('change', () => {
     const model = TEMPERATURE_MODELS.find((option) => option === modelPicker.value);
     if (model !== undefined) handlers.onTemperatureModel(model);
+  });
+  scaleEons.addEventListener('click', () => {
+    handlers.onScale('eons');
   });
   coastPicker.addEventListener('change', () => {
     const source = COAST_SOURCES.find((option) => option === coastPicker.value);
@@ -401,8 +421,11 @@ export function createDeepTimeBar(handlers: {
       }
       const ice = view.scale === 'ice';
       const perMa = ice ? 1000 : 1;
-      scaleAll.setAttribute('aria-pressed', String(!ice));
+      scaleAll.setAttribute('aria-pressed', String(view.scale === 'all'));
       scaleIce.setAttribute('aria-pressed', String(ice));
+      scaleEons.setAttribute('aria-pressed', String(view.scale === 'eons'));
+      const uncharted = view.ma > view.mapsReach;
+      unchartedNote.hidden = !uncharted;
       iceNote.hidden = !ice;
       iceLine.textContent = iceText(view.ice);
       if (view.coastline !== null) {
@@ -412,14 +435,16 @@ export function createDeepTimeBar(handlers: {
       slider.min = String(-view.oldest * perMa);
       slider.setAttribute('aria-label', ice ? 'Thousands of years ago' : 'Millions of years ago');
       if (document.activeElement !== slider) slider.value = String(-view.ma * perMa);
-      const stepWords = ice ? '5,000 years' : `${String(STEP_MA)} million years`;
+      const stepWords = ice
+        ? '5,000 years'
+        : `${String(view.scale === 'eons' ? EONS_STEP_MA : STEP_MA)} million years`;
       older.setAttribute('aria-label', `${stepWords} earlier`);
       younger.setAttribute('aria-label', `${stepWords} later`);
       // The temperature maps are 5 million years apart: nothing to show between ice ages.
-      temperatureButton.disabled = ice;
+      temperatureButton.disabled = ice || uncharted;
       slider.setAttribute('aria-valuetext', formatMa(view.ma));
       when.textContent = formatMa(view.ma);
-      period.textContent = view.period === null ? '' : `${view.period.name} · ${view.period.era}`;
+      period.textContent = view.period === null ? '' : periodShort(view.period);
       facts.replaceChildren(
         ...earthFacts(view.ma).flatMap(({ label, text }) => [
           element('dt', {}, label),

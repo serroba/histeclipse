@@ -232,7 +232,7 @@ describe('parseViewState', () => {
     ['culture=martian', 'culture', 'unknown culture'],
     ['borders=guesswork', 'borders', 'unknown borders'],
     ['seen=%20', 'seen', 'name of a past state'],
-    ['ma=600', 'ma', 'between 0 and 540'],
+    ['ma=5000', 'ma', 'between 0 and 4568'],
     ['ma=old', 'ma', 'not a number'],
     ['sel=lunar', 'sel', 'expected kind:date'],
     ['sel=lunar:yesterday', 'sel', 'expected a date'],
@@ -379,7 +379,7 @@ describe('serializeViewState', () => {
     ),
     // Kept to a thousand years.
     ma: fc.option(
-      fc.integer({ min: 0, max: 540_000 }).map((thousands) => thousands / 1000),
+      fc.integer({ min: 0, max: 4_568_000 }).map((thousands) => thousands / 1000),
       { nil: null },
     ),
     deepScale: fc.constantFrom(...DEEP_SCALES),

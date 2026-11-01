@@ -1200,3 +1200,39 @@ test('deep time outlines a second reconstruction’s continents', async ({ page 
   await expect(page.getByTestId('plates-note')).toBeHidden();
   expect(problems).toEqual([]);
 });
+
+test('deep time reaches back 4.6 billion years, leaving the globe blank before the maps', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await page.goto('./?ma=250');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  await page.getByRole('button', { name: '4.6 Gyr' }).click();
+  await expect(page).toHaveURL(/scale=eons/);
+  await expect(page.getByTestId('uncharted-note')).toBeHidden();
+
+  // Before the elevation maps reach, no made-up map: a blank globe, and the bar says why.
+  await page.goto('./?ma=3000&scale=eons');
+  await globeRendered(page);
+  await expect(page.locator('.hud-date')).toHaveText('3,000 million years ago');
+  await expect(page.locator('.hud-detail')).toHaveText('Mesoarchean era · Archean eon');
+  await expect(globe).toHaveAttribute('data-uncharted', 'true');
+  await expect(page.getByTestId('uncharted-note')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Temperature' })).toBeDisabled();
+
+  // Milestones reach back too: the next older is the Late Heavy Bombardment's oldest view.
+  await page.getByRole('button', { name: 'Earlier milestone' }).click();
+  await expect(page).toHaveURL(/&ma=4200(&|$)/);
+  const milestones = page.getByTestId('deep-milestones');
+  await milestones.locator('summary').click();
+  await expect(milestones.locator('[data-milestone="late-heavy-bombardment"]')).toContainText(
+    'Boehnke & Harrison 2016',
+  );
+
+  // Back to the 540 Myr scale: it opens at the elevation maps' oldest.
+  await page.getByRole('button', { name: '540 Myr' }).click();
+  await expect(page).toHaveURL(/&ma=540(&|$)/);
+  await expect(globe).toHaveAttribute('data-uncharted', 'false');
+  expect(problems).toEqual([]);
+});

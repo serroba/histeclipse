@@ -13,6 +13,11 @@ export interface Period {
   readonly uncertainty: number;
   /** True where the chart marks the age as approximate (~). */
   readonly approximate?: boolean;
+  /**
+   * The Archean has no periods, only eras, and the Hadean no divisions: there `name` is an era
+   * (and `era` its eon) or an eon (and `era` empty).
+   */
+  readonly rank?: 'era' | 'eon';
 }
 
 /** Youngest first. */
@@ -32,7 +37,38 @@ export const PERIODS: readonly Period[] = [
   { name: 'Ediacaran', era: 'Neoproterozoic', base: 635, uncertainty: 0, approximate: true },
   { name: 'Cryogenian', era: 'Neoproterozoic', base: 720, uncertainty: 0, approximate: true },
   { name: 'Tonian', era: 'Neoproterozoic', base: 1000, uncertainty: 0 },
+  { name: 'Stenian', era: 'Mesoproterozoic', base: 1200, uncertainty: 0 },
+  { name: 'Ectasian', era: 'Mesoproterozoic', base: 1400, uncertainty: 0 },
+  { name: 'Calymmian', era: 'Mesoproterozoic', base: 1600, uncertainty: 0 },
+  { name: 'Statherian', era: 'Paleoproterozoic', base: 1800, uncertainty: 0 },
+  { name: 'Orosirian', era: 'Paleoproterozoic', base: 2050, uncertainty: 0 },
+  { name: 'Rhyacian', era: 'Paleoproterozoic', base: 2300, uncertainty: 0 },
+  { name: 'Siderian', era: 'Paleoproterozoic', base: 2500, uncertainty: 0 },
+  { name: 'Neoarchean', era: 'Archean', base: 2800, uncertainty: 0, rank: 'era' },
+  { name: 'Mesoarchean', era: 'Archean', base: 3200, uncertainty: 0, rank: 'era' },
+  { name: 'Paleoarchean', era: 'Archean', base: 3600, uncertainty: 0, rank: 'era' },
+  { name: 'Eoarchean', era: 'Archean', base: 4031, uncertainty: 3, rank: 'era' },
+  { name: 'Hadean', era: '', base: 4567, uncertainty: 0, rank: 'eon' },
 ];
+
+/** "Triassic period · Mesozoic era", "Neoarchean era · Archean eon", or "Hadean eon". */
+export function periodWords(period: Period): string {
+  switch (period.rank) {
+    case 'eon':
+      return `${period.name} eon`;
+    case 'era':
+      return `${period.name} era · ${period.era} eon`;
+    case undefined:
+      return `${period.name} period · ${period.era} era`;
+    default:
+      return period.name;
+  }
+}
+
+/** The short form for the bar: "Triassic · Mesozoic", "Neoarchean · Archean", "Hadean". */
+export function periodShort(period: Period): string {
+  return period.era === '' ? period.name : `${period.name} · ${period.era}`;
+}
 
 /** Below this, moments read in years: the scale of the ice ages. */
 const ICE_AGE_WORDS_MA = 3;
@@ -52,6 +88,6 @@ export function periodAt(ma: number): Period | null {
 export function formatMa(ma: number): string {
   if (ma === 0) return 'Today';
   if (ma < ICE_AGE_WORDS_MA) return `${Math.round(ma * 1e6).toLocaleString('en')} years ago`;
-  const amount = Number.isInteger(ma) ? String(ma) : ma.toFixed(1);
+  const amount = Number.isInteger(ma) ? ma.toLocaleString('en') : ma.toFixed(1);
   return `${amount} million years ago`;
 }
