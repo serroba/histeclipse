@@ -284,7 +284,8 @@ test("stepping and typing years lists that year's eclipses", async ({ page }) =>
 });
 
 test('controls are large enough to tap and stay on screen', async ({ page }) => {
-  await page.goto('./?t=2024-01-01T00:00');
+  // With the empires layer on, so the "Seen from" row is measured too.
+  await page.goto('./?t=2024-01-01T00:00&layers=lunar,solar,terminator,empires');
   await globeRendered(page);
   await expect(page.getByRole('button', { name: /8 Apr/ })).toBeVisible();
   const viewport = page.viewportSize();
