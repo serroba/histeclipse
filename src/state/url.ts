@@ -21,6 +21,8 @@
  *   (absent), `ohm` (OpenHistoricalMap) or `both`.
  * - `seen` names a past state, as Cliopatria names it (`Neo-Babylonian Empire`): the year bar
  *   marks which eclipses could be seen from its territory. Absent means anywhere.
+ * - `ma` switches the globe to deep time: Earth's surface that many million years ago (0 to
+ *   540, to a tenth). Absent means historical time, given by `t`.
  * - `culture` is whose constellations the sky view draws: `modern` (absent) or a sky culture
  *   such as `babylonian_mulapin` or `chinese`.
  * - `loc` (observer), `sel` (selected eclipse), `view` (an attached viewpoint; absent means
@@ -43,6 +45,7 @@ import {
   DEFAULT_LOOK,
   type BorderSource,
   FIGURES,
+  MA_RANGE,
   SKY_FOV_RANGE,
   ECLIPSE_KINDS,
   LAYERS,
@@ -124,6 +127,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     culture: read('culture', parseCulture, defaults.culture),
     borders: read('borders', parseBorders, defaults.borders),
     seenIn: read<string | null>('seen', parseSeenIn, defaults.seenIn),
+    ma: read<number | null>('ma', parseMa, defaults.ma),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -153,6 +157,7 @@ export function serializeViewState(state: ViewState): string {
   if (state.culture !== 'modern') params.set('culture', state.culture);
   if (state.borders !== 'cliopatria') params.set('borders', state.borders);
   if (state.seenIn !== null) params.set('seen', state.seenIn);
+  if (state.ma !== null) params.set('ma', formatMa(state.ma));
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
@@ -167,6 +172,22 @@ function parseFigures(raw: string): Figures {
 
 function parseBorders(raw: string): BorderSource {
   return oneOf(raw, BORDER_SOURCES, 'borders');
+}
+
+function parseMa(raw: string): number {
+  const ma = Number(raw);
+  if (raw.trim() === '' || !Number.isFinite(ma)) throw new Error('is not a number');
+  if (ma < MA_RANGE.min || ma > MA_RANGE.max) {
+    throw new Error(
+      `must be between ${String(MA_RANGE.min)} and ${String(MA_RANGE.max)} million years ago`,
+    );
+  }
+  return Math.round(ma * 10) / 10;
+}
+
+/** Millions of years to a tenth, without trailing zeros: 250, 252.5. */
+function formatMa(ma: number): string {
+  return String(Math.round(ma * 10) / 10);
 }
 
 /** A state's name: any text, trimmed, of a sensible length. Whether it exists depends on the year. */

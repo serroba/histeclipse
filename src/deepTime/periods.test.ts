@@ -1,0 +1,27 @@
+import { describe, expect, it } from 'vitest';
+
+import { formatMa, PERIODS, periodAt } from './periods';
+
+describe('geological periods', () => {
+  it('run youngest to oldest without gaps', () => {
+    const bases = PERIODS.map(({ base }) => base);
+    expect(bases).toEqual([...bases].sort((a, b) => a - b));
+  });
+
+  it('name the period of a moment in deep time', () => {
+    expect(periodAt(0)?.name).toBe('Quaternary');
+    expect(periodAt(66)?.name).toBe('Paleogene');
+    expect(periodAt(65.9)?.name).toBe('Paleogene');
+    expect(periodAt(66.1)?.name).toBe('Cretaceous');
+    // Pangaea at 250 Ma: the Triassic had just begun (251.902 Ma).
+    expect(periodAt(250)).toMatchObject({ name: 'Triassic', era: 'Mesozoic' });
+    expect(periodAt(540)?.name).toBe('Ediacaran');
+    expect(periodAt(2000)).toBeNull();
+  });
+
+  it('write ages in words', () => {
+    expect(formatMa(0)).toBe('Today');
+    expect(formatMa(250)).toBe('250 million years ago');
+    expect(formatMa(1.5)).toBe('1.5 million years ago');
+  });
+});

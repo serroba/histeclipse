@@ -165,6 +165,18 @@ export interface EmpireLayer {
   readonly ohm: OhmYear | null;
 }
 
+/** Two elevation maps (URLs of greyscale images, see `data/paleoDem.ts`) and the blend between. */
+export interface DeepTimeSurface {
+  readonly younger: string;
+  readonly older: string;
+  /** 0 shows `younger`, 1 `older`. */
+  readonly mix: number;
+  readonly columns: number;
+  readonly rows: number;
+  readonly seaDepth: number;
+  readonly landHeight: number;
+}
+
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
   setSunDirection(direction: Vector3Tuple): void;
@@ -203,6 +215,11 @@ export interface Globe {
    * the layer.
    */
   setEmpires(layer: EmpireLayer | null): void;
+  /**
+   * Deep time: draw Earth's surface from two elevation maps blended by `mix` instead of
+   * today's imagery; null returns to today's Earth.
+   */
+  setDeepTime(surface: DeepTimeSurface | null): void;
   /** Pin the chosen place on the globe; null removes the pin. */
   setLocation(place: GeoPoint | null): void;
   /**
@@ -255,6 +272,14 @@ const EARTH_FRAGMENT = /* glsl */ `
   ${SOLAR_PATH_LAYER}
   ${OCCULTATION}
   uniform sampler2D dayMap;
+  // Deep time: two elevation maps (bytes 0–127 sea floor, 128–255 land) and the blend between.
+  uniform sampler2D paleoYounger;
+  uniform sampler2D paleoOlder;
+  uniform float paleoMix;
+  uniform float paleoActive;
+  uniform vec2 paleoGrid;
+  uniform float seaDepth;
+  uniform float landHeight;
   uniform sampler2D empiresMap;
   uniform float empiresActive;
   // The Moon and Sun in the scene, for the Moon's shadow at any moment.
@@ -294,6 +319,38 @@ const EARTH_FRAGMENT = /* glsl */ `
     return mix(color, tinted, lunarActive);
   }
 
+  // The elevation maps are node-registered (the first and last columns are both 180°), so a
+  // texture coordinate is moved half a pixel to land on the nodes.
+  float paleoElevation(sampler2D map, vec2 uv) {
+    vec2 at = (uv * (paleoGrid - 1.0) + 0.5) / paleoGrid;
+    float byte = texture2D(map, at).r * 255.0;
+    return byte >= 127.5
+      ? max(byte - 128.0, 0.0) / 127.0 * landHeight
+      : -max(127.0 - byte, 0.0) / 127.0 * seaDepth;
+  }
+
+  vec3 srgb(vec3 c) { return pow(c, vec3(2.2)); }
+
+  // Hypsometric colours: deep blue sea floor to pale shallows; green lowlands, ochre uplands,
+  // brown mountains, white peaks. No ice or vegetation: the maps give only height.
+  vec3 paleoSurface(vec2 uv) {
+    float younger = paleoElevation(paleoYounger, uv);
+    float older = paleoElevation(paleoOlder, uv);
+    float height = mix(younger, older, paleoMix);
+    if (height < 0.0) {
+      float depth = clamp(-height / 6000.0, 0.0, 1.0);
+      vec3 shelf = mix(srgb(vec3(0.36, 0.64, 0.78)), srgb(vec3(0.13, 0.34, 0.58)), smoothstep(0.0, 0.08, depth));
+      return mix(shelf, srgb(vec3(0.04, 0.12, 0.30)), smoothstep(0.08, 1.0, depth));
+    }
+    vec3 low = srgb(vec3(0.33, 0.50, 0.26));
+    vec3 upland = srgb(vec3(0.66, 0.60, 0.40));
+    vec3 mountain = srgb(vec3(0.52, 0.40, 0.29));
+    vec3 peak = srgb(vec3(0.92, 0.92, 0.90));
+    vec3 color = mix(low, upland, smoothstep(0.0, 1200.0, height));
+    color = mix(color, mountain, smoothstep(1200.0, 2800.0, height));
+    return mix(color, peak, smoothstep(3500.0, 5000.0, height));
+  }
+
   // Past states and empires, painted on a map in the ground texture's layout. Each keeps its
   // colour by night too, a little dimmer, so borders read on both sides.
   vec3 empiresLayer(vec3 color, float daylight) {
@@ -306,7 +363,7 @@ const EARTH_FRAGMENT = /* glsl */ `
     #include <logdepthbuf_fragment>
     vec3 normal = normalize(vNormal);
     float sunAltitude = dot(normal, sunDirection);
-    vec3 surface = texture2D(dayMap, vUv).rgb;
+    vec3 surface = paleoActive > 0.5 ? paleoSurface(vUv) : texture2D(dayMap, vUv).rgb;
     float daylight = smoothstep(-0.105, 0.035, sunAltitude);
     vec3 lit = surface * (0.45 + 0.75 * clamp(sunAltitude, 0.0, 1.0));
     vec3 night = surface * vec3(0.035, 0.05, 0.09) + vec3(0.004, 0.008, 0.02);
@@ -585,6 +642,13 @@ export async function createGlobe(
     new ShaderMaterial({
       uniforms: {
         dayMap: { value: texture },
+        paleoYounger: { value: null as Texture | null },
+        paleoOlder: { value: null as Texture | null },
+        paleoMix: { value: 0 },
+        paleoActive: { value: 0 },
+        paleoGrid: { value: new Vector2(361, 181) },
+        seaDepth: { value: 11_000 },
+        landHeight: { value: 6_500 },
         empiresMap: { value: empiresTexture },
         empiresActive: { value: 0 },
         sunDirection: { value: sunDirection },
@@ -711,6 +775,24 @@ export async function createGlobe(
   sun.visible = false;
   scene.add(sun);
   const planets = createPlanetMeshes(scene);
+
+  // Deep time's elevation maps, loaded once each. They hold data, not colour: no colour space,
+  // and linear filtering so the coast falls between the sea's last byte and the land's first.
+  const paleoTextures = new Map<string, Promise<Texture>>();
+  let deepTimeWanted: DeepTimeSurface | null = null;
+  function paleoTexture(url: string): Promise<Texture> {
+    let pending = paleoTextures.get(url);
+    if (pending === undefined) {
+      pending = new TextureLoader().loadAsync(url).then((loaded) => {
+        loaded.minFilter = LinearFilter;
+        loaded.magFilter = LinearFilter;
+        loaded.generateMipmaps = false;
+        return loaded;
+      });
+      paleoTextures.set(url, pending);
+    }
+    return pending;
+  }
 
   const markerLayer = document.createElement('div');
   markerLayer.className = 'space-markers';
@@ -1392,6 +1474,36 @@ export async function createGlobe(
         .catch(() => {
           if (sunImageWanted === image) container.dataset['sunImage'] = 'error';
         });
+    },
+    setDeepTime(surface) {
+      deepTimeWanted = surface;
+      const uniforms = earth.material.uniforms;
+      if (surface === null) {
+        uniforms['paleoActive'] = { value: 0 };
+        container.dataset['deepTime'] = 'off';
+        needsRender = true;
+        return;
+      }
+      Promise.all([paleoTexture(surface.younger), paleoTexture(surface.older)]).then(
+        ([younger, older]) => {
+          // A later request (the slider kept moving) wins.
+          if (deepTimeWanted !== surface) return;
+          uniforms['paleoYounger'] = { value: younger };
+          uniforms['paleoOlder'] = { value: older };
+          uniforms['paleoMix'] = { value: surface.mix };
+          uniforms['paleoGrid'] = { value: new Vector2(surface.columns, surface.rows) };
+          uniforms['seaDepth'] = { value: surface.seaDepth };
+          uniforms['landHeight'] = { value: surface.landHeight };
+          uniforms['paleoActive'] = { value: 1 };
+          container.dataset['deepTime'] = `${surface.younger} ${surface.older}`;
+          needsRender = true;
+        },
+        () => {
+          // Leave the last map shown; the next move tries again.
+          paleoTextures.delete(surface.younger);
+          paleoTextures.delete(surface.older);
+        },
+      );
     },
     setEmpires(layer) {
       const uniforms = earth.material.uniforms;
