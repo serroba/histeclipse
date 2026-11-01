@@ -4,3 +4,4 @@ pnpm-lock.yaml
 test-results/
 playwright-report/
 public/data/
+public/skycultures/
