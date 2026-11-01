@@ -47,6 +47,7 @@ import {
   PLANETS,
   saturnRingTilt,
   type PlanetEphemeris,
+  type PlanetName,
 } from './astro/planets';
 import type { SkyPlanet } from './sky/skyScene';
 import { moonSunlight, observerPosition, sunVisible, topocentric } from './sky/bodies';
@@ -106,6 +107,8 @@ import { errorMessage } from './util/errors';
 const MINUTES_PER_DAY = 1440;
 /** Field of view (degrees) when turning to the Sun or Moon: close enough to see the disc. */
 const AIM_FOV = 12;
+/** Earth radii (or the focused body's): beyond this the space view loads the planets. */
+const PLANETS_SHOWN_BEYOND = 1000;
 
 export async function startApp(root: HTMLElement): Promise<void> {
   const base = import.meta.env.BASE_URL;
@@ -556,6 +559,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       earthFixedToJ2000: earthFixedToJ2000(universal, terrestrial),
       sunKm: sunPositionJ2000(terrestrial),
       moonKm: moonEphemeris?.position(terrestrial) ?? null,
+      planetsKm: planetPositions(terrestrial),
     });
     root.dataset['subsolar'] = `${sun.latitude.toFixed(3)},${sun.longitude.toFixed(3)}`;
     dateText.textContent = formatDate(state.time);
@@ -578,10 +582,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       import('./sky/skyScene'),
       loadSky(`${base}data/sky.json`, (url) => fetch(url)),
       loadHipStars(`${base}data/hip-stars.json`, (url) => fetch(url)),
-      loadPlanetEphemeris(),
+      loadPlanets(),
     ]).then(
-      ([{ createSkyScene }, plainSky, hipStars, planetTheory]) => {
-        planets = planetTheory;
+      ([{ createSkyScene }, plainSky, hipStars]) => {
         const state = store.get();
         // Other cultures' figures use a few faint stars beyond the catalogue; add them.
         const { sky, index } = withFigureStars(plainSky, hipStars);
@@ -874,8 +877,36 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
   }
 
-  // The planets' theory loads with the sky view.
+  // The planets' theory loads with the sky view, or when the space view zooms out far enough to
+  // show them, or centres on one.
   let planets: PlanetEphemeris | null = null;
+  let planetsLoading: Promise<PlanetEphemeris> | null = null;
+  function loadPlanets(): Promise<PlanetEphemeris> {
+    planetsLoading ??= loadPlanetEphemeris().then((theory) => {
+      planets = theory;
+      showTime(store.get());
+      return theory;
+    });
+    return planetsLoading;
+  }
+
+  /** Whether the space view is far enough out, or close to a planet, to need them. */
+  function wantPlanets(state: ViewState): boolean {
+    if (state.mode !== 'globe') return false;
+    return state.focus !== 'earth' && state.focus !== 'moon'
+      ? true
+      : state.camera.distance > PLANETS_SHOWN_BEYOND;
+  }
+
+  function planetPositions(
+    jdTT: JulianDay,
+  ): Readonly<Record<PlanetName, readonly [number, number, number]>> | null {
+    if (planets === null) return null;
+    const theory = planets;
+    return Object.fromEntries(
+      PLANETS.map((planet) => [planet, theory.position(planet, jdTT)]),
+    ) as Record<PlanetName, readonly [number, number, number]>;
+  }
   const KM_PER_AU = 149_597_870.7;
   // Planets from Earth's centre for the moment last shown: turning the view or moving the
   // observer reuses them rather than summing the series again.
@@ -1055,6 +1086,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function render(state: ViewState, previous: ViewState | null): void {
+    // Asked once: a failed load is reported once rather than on every move of the camera.
+    if (planetsLoading === null && wantPlanets(state)) {
+      loadPlanets().catch((error: unknown) => {
+        notify(`Could not load the planets' orbits: ${errorMessage(error)}`);
+      });
+    }
     if (state.time !== previous?.time || state.years !== previous.years) showTime(state);
     if (
       state.mode !== previous?.mode ||

@@ -92,6 +92,36 @@ function joinNames(names: readonly string[]): string {
   return names.length < 2 ? last : `${names.slice(0, -1).join(', ')} and ${last}`;
 }
 
+/** A body on screen: where, how far from the camera, and its radius in pixels. */
+export interface ScreenDisc {
+  readonly name: string;
+  readonly x: number;
+  readonly y: number;
+  readonly distance: number;
+  readonly radius: number;
+}
+
+/**
+ * Names of bodies hidden behind another: a nearer body whose disc on screen, at least
+ * `minRadius` pixels across, covers their centre. From Jupiter, Saturn can sit right behind
+ * it; its marker should not float on top. A dot-sized disc hides nothing, so a far-off body
+ * lined up behind it stays findable.
+ */
+export function hiddenBehind(discs: readonly ScreenDisc[], minRadius: number): ReadonlySet<string> {
+  const hidden = new Set<string>();
+  for (const far of discs) {
+    const covered = discs.some(
+      (near) =>
+        near !== far &&
+        near.radius >= minRadius &&
+        near.distance < far.distance &&
+        Math.hypot(near.x - far.x, near.y - far.y) < near.radius,
+    );
+    if (covered) hidden.add(far.name);
+  }
+  return hidden;
+}
+
 /** Where the camera is, what it looks at, and its field of view on the narrower side. */
 export interface CameraPose {
   readonly eye: Vector3;

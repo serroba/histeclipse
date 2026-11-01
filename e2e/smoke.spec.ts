@@ -403,11 +403,13 @@ test('zooming out shows the Moon and Sun at their true places, labelled', async 
   await expect(earth).toHaveText('Earth');
   await expect(moon).toHaveText('Moon');
   await expect(moon).toHaveClass(/is-tiny/);
-  // From beyond the Sun, all three line up behind one marker.
+  // From beyond the Sun, all three line up behind one marker (with Mercury, that day, close
+  // to the Sun in the sky).
   await page.goto('./?t=2024-04-08T18:17&cam=-7.6,85,60000');
   await globeRendered(page);
   await expect(page.getByTestId('globe')).toHaveAttribute('data-space', 'moon');
-  await expect(earth).toHaveText('Earth, Moon and Sun');
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-planets', 'on');
+  await expect(earth).toHaveText('Earth, Moon, Sun and Mercury');
   await expect(moon).toBeHidden();
 });
 
@@ -938,4 +940,28 @@ test('picking a state marks the eclipses seen from it, and steps through them', 
   await seen.selectOption('Anywhere');
   await expect(page).not.toHaveURL(/seen=/);
   await expect(page.locator('.eclipse-seen')).toHaveCount(0);
+});
+
+test('far out, the planets appear, and clicking one flies to it', async ({ page }) => {
+  const problems = collectProblems(page);
+  // Two and a half AU out, over the north side of the Solar System.
+  await page.goto('./?t=2020-12-21T18:00&cam=60,0,60000');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  await expect(globe).toHaveAttribute('data-planets', 'on');
+  const mars = page.locator('.space-marker[data-body="mars"]');
+  await expect(mars).toBeVisible();
+  await mars.click();
+  await expect(globe).toHaveAttribute('data-focus', 'mars');
+  await expect(page).toHaveURL(/cam=-?\d+\.\d{4},-?\d+\.\d{4},4\.00&focus=mars/);
+  expect(problems).toEqual([]);
+});
+
+test('a link can centre on Saturn, rings and all', async ({ page }) => {
+  await page.goto('./?t=2020-12-21T18:00&focus=saturn&cam=25,120,4');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  await expect(globe).toHaveAttribute('data-planets', 'on');
+  await expect(globe).toHaveAttribute('data-focus', 'saturn');
+  await expect(page).toHaveURL(/focus=saturn/);
 });

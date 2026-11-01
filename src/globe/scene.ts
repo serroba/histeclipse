@@ -64,6 +64,7 @@ import {
   apparentRadiusPixels,
   attachedPose,
   blendPose,
+  hiddenBehind,
   mergeMarkers,
   MOON_RADIUS_EARTH_RADII,
   sceneFromKm,
@@ -71,11 +72,15 @@ import {
   sceneRotation,
   SUN_RADIUS_EARTH_RADII,
   type CameraPose,
+  type ScreenDisc,
   type ScreenMarker,
 } from './spaceFrame';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { discAverage, SOLAR_NORTH_POLE_J2000 } from './sunImage';
 import { labelPoint, type Territory } from '../data/empires';
+import { PLANETS, type PlanetName } from '../astro/planets';
+import { PLANET_NAMES, planetRadius } from './planetLook';
+import { createPlanetMeshes } from './planetMeshes';
 import type { OhmYear } from '../data/ohmBorders';
 import { createEmpireCanvas, paintBorders, paintTerritories } from './empireCanvas';
 import {
@@ -98,6 +103,11 @@ const BODY_RADIUS: Record<Body, number> = {
   earth: 1,
   moon: MOON_RADIUS_EARTH_RADII,
   sun: SUN_RADIUS_EARTH_RADII,
+  mercury: planetRadius('mercury'),
+  venus: planetRadius('venus'),
+  mars: planetRadius('mars'),
+  jupiter: planetRadius('jupiter'),
+  saturn: planetRadius('saturn'),
 };
 /** Beyond this distance (Earth radii) the view holds still in space and Earth turns in it. */
 const INERTIAL_VIEW_DISTANCE = 20;
@@ -105,6 +115,8 @@ const INERTIAL_VIEW_DISTANCE = 20;
 const MARKER_RADIUS_PIXELS = 3;
 /** Bodies larger than this on screen (radius, pixels) are plain to see and go unlabelled. */
 const LABEL_MAX_RADIUS_PIXELS = 60;
+/** Discs at least this large on screen (radius, pixels) hide the markers of planets behind. */
+const OCCLUDING_RADIUS_PIXELS = 10;
 /** Markers closer than this on screen (pixels) are shown as one. */
 const MERGE_PIXELS = 40;
 
@@ -131,6 +143,8 @@ export interface SpaceBodies {
   /** Geocentric J2000 positions in km; the Moon is null until its ephemeris loads. */
   readonly sunKm: readonly [number, number, number];
   readonly moonKm: readonly [number, number, number] | null;
+  /** Geocentric J2000 positions of the planets in km; null until their theory loads. */
+  readonly planetsKm: Readonly<Record<PlanetName, readonly [number, number, number]>> | null;
 }
 
 /** An SDO frame for the Sun: the limb at `diskRadius` of the width, north up, west right. */
@@ -696,6 +710,7 @@ export async function createGlobe(
   sun.add(glow);
   sun.visible = false;
   scene.add(sun);
+  const planets = createPlanetMeshes(scene);
 
   const markerLayer = document.createElement('div');
   markerLayer.className = 'space-markers';
@@ -715,13 +730,18 @@ export async function createGlobe(
     earth: spaceMarker(markerLayer, 'Earth', 'earth'),
     moon: spaceMarker(markerLayer, 'Moon', 'moon'),
     sun: spaceMarker(markerLayer, 'Sun', 'sun'),
+    mercury: spaceMarker(markerLayer, PLANET_NAMES.mercury, 'mercury'),
+    venus: spaceMarker(markerLayer, PLANET_NAMES.venus, 'venus'),
+    mars: spaceMarker(markerLayer, PLANET_NAMES.mars, 'mars'),
+    jupiter: spaceMarker(markerLayer, PLANET_NAMES.jupiter, 'jupiter'),
+    saturn: spaceMarker(markerLayer, PLANET_NAMES.saturn, 'saturn'),
   };
   let earthFixedToJ2000: Matrix3 | null = null;
   // The Sun's frame is J2000, so a camera orbiting the Sun does not spin with Earth.
   const sunFrame = new Quaternion();
   // The Moon's map has longitude 0 at the mesh's +Z (see above); geoToVector puts it at +X.
   const moonMapTurn = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2);
-  const bodyMeshes: Record<Body, Mesh> = { earth, moon, sun };
+  const bodyMeshes: Record<Body, Mesh> = { earth, moon, sun, ...planets.meshes };
   const bodyClickListeners = new Set<(body: Body) => void>();
   const placeListeners = new Set<(place: GeoPoint) => void>();
   const emptyTapListeners = new Set<() => void>();
@@ -796,6 +816,8 @@ export async function createGlobe(
       return { position: moon.position, rotation: moon.quaternion.clone().multiply(moonMapTurn) };
     }
     if (body === 'sun') return { position: sun.position, rotation: sunFrame };
+    // Planets, like the Sun, are orbited in J2000 axes, so the camera does not spin with Earth.
+    if (body !== 'earth') return { position: bodyMeshes[body].position, rotation: sunFrame };
     return { position: new Vector3(), rotation: new Quaternion() };
   }
 
@@ -1094,8 +1116,16 @@ export async function createGlobe(
         shown: sun.visible,
         name: 'Sun',
       },
+      ...PLANETS.map((planet) => ({
+        marker: markers[planet],
+        mesh: bodyMeshes[planet],
+        radius: planetRadius(planet),
+        shown: bodyMeshes[planet].visible,
+        name: PLANET_NAMES[planet],
+      })),
     ];
     const onScreen: (ScreenMarker & { readonly marker: HTMLElement })[] = [];
+    const discs: ScreenDisc[] = [];
     for (const { marker, mesh, radius, shown, name } of bodies) {
       projected.copy(mesh.position).project(camera);
       const distance = camera.position.distanceTo(mesh.position);
@@ -1110,6 +1140,9 @@ export async function createGlobe(
         verticalFovDegrees: camera.fov,
         viewportHeight: height,
       });
+      const x = ((projected.x + 1) / 2) * width;
+      const y = ((1 - projected.y) / 2) * height;
+      discs.push({ name, x, y, distance, radius: pixels });
       // A body that fills much of the view needs no label.
       if (pixels > LABEL_MAX_RADIUS_PIXELS) {
         marker.hidden = true;
@@ -1117,13 +1150,20 @@ export async function createGlobe(
       }
       marker.classList.toggle('is-tiny', pixels < MARKER_RADIUS_PIXELS);
       marker.style.setProperty('--radius', `${String(Math.max(pixels, MARKER_RADIUS_PIXELS))}px`);
-      const x = ((projected.x + 1) / 2) * width;
-      const y = ((1 - projected.y) / 2) * height;
       marker.style.transform = `translate(${String(x)}px, ${String(y)}px)`;
       onScreen.push({ marker, name, x, y });
     }
-    // From far out bodies line up on screen: one marker for them reads better than several.
-    const labels = mergeMarkers(onScreen, MERGE_PIXELS);
+    // Planets behind a nearer body's disc get no marker. Earth, Moon and Sun always keep
+    // theirs: they are how you click your way back. From far out bodies line up on screen,
+    // and one marker for them reads better than several.
+    const planetNames = new Set<string>(Object.values(PLANET_NAMES));
+    const behind = new Set(
+      [...hiddenBehind(discs, OCCLUDING_RADIUS_PIXELS)].filter((name) => planetNames.has(name)),
+    );
+    const labels = mergeMarkers(
+      onScreen.filter(({ name }) => !behind.has(name)),
+      MERGE_PIXELS,
+    );
     for (const { marker, name } of onScreen) {
       const label = labels.get(name) ?? null;
       marker.hidden = label === null;
@@ -1192,6 +1232,20 @@ export async function createGlobe(
         moonPosition.copy(moon.position);
         earth.material.uniforms['moonRadius'] = { value: MOON_RADIUS_EARTH_RADII };
       }
+      const planetsKm = bodies.planetsKm;
+      planets.place(
+        planetsKm === null
+          ? null
+          : (Object.fromEntries(
+              PLANETS.map((planet) => [
+                planet,
+                new Vector3(...sceneFromKm(apply(toEarthFixed, planetsKm[planet]))),
+              ]),
+            ) as Record<PlanetName, Vector3>),
+        sun.position,
+        sunFrame,
+      );
+      container.dataset['planets'] = planetsKm === null ? 'off' : 'on';
       container.dataset['space'] = moon.visible ? 'moon' : 'sun';
       if (relative !== null) {
         // The next frame's controls.update() reports the move (see the inertial view above).
