@@ -68,10 +68,13 @@ CULTURES: dict[str, dict[str, str]] = {
 
 
 def referenced_stars(index: Json) -> set[int]:
-    """Hipparcos numbers a culture's figures use; clusters and Gaia stars are left out."""
+    """Hipparcos numbers a culture's figures and asterisms use; clusters and Gaia stars aside."""
     stars: set[int] = set()
-    constellations = cast("list[dict[str, Json]]", cast("dict[str, Json]", index)["constellations"])
-    for constellation in constellations:
+    culture = cast("dict[str, Json]", index)
+    figures = cast("list[dict[str, Json]]", culture.get("constellations", [])) + cast(
+        "list[dict[str, Json]]", culture.get("asterisms", [])
+    )
+    for constellation in figures:
         for run in cast("list[list[Json]]", constellation.get("lines", [])):
             # Hipparcos numbers stop below 120,000; bigger numbers are Gaia sources.
             stars.update(star for star in run if isinstance(star, int) and 0 < star < 200_000)  # noqa: PLR2004
@@ -120,8 +123,14 @@ def _star(row: dict[str, str]) -> HipStar | None:
     hip = _number(row.get("hip_number", ""))
     ra, dec = _number(row.get("ra_deg", "")), _number(row.get("dec_deg", ""))
     vmag = _number(row.get("vmag", ""))
-    if hip is None or ra is None or dec is None or vmag is None:
+    if hip is None or vmag is None:
         return None
+    if ra is None or dec is None:
+        # Some double stars have no astrometric solution; the table still gives a position.
+        rough_ra, rough_dec = _number(row.get("ra", "")), _number(row.get("dec", ""))
+        if rough_ra is None or rough_dec is None:
+            return None
+        return HipStar(int(hip), rough_ra % 360, rough_dec, 0.0, 0.0, None, vmag)
     pm_ra = _number(row.get("pm_ra", "")) or 0.0
     pm_dec = _number(row.get("pm_dec", "")) or 0.0
     # Catalogue positions are for J1991.25; move them on to J2000 along the proper motion.
@@ -206,7 +215,15 @@ def _download(url: str) -> bytes:  # pragma: no cover - needs network access
 
 
 def fetch_skycultures(public: Path) -> tuple[int, int]:  # pragma: no cover - needs network
-    """Copy the cultures unchanged and write the stars they use; return both counts."""
+    """Copy the cultures unchanged and write the stars they use; return both counts.
+
+    The stars are matched against ``<public>/data/sky.json``, which the ``sky`` command writes;
+    run that first.
+    """
+    sky_path = public / "data" / "sky.json"
+    if not sky_path.exists():
+        msg = f"{sky_path} is missing: run the sky command first"
+        raise FileNotFoundError(msg)
     wanted: set[int] = set()
     for culture, files in CULTURES.items():
         folder = public / "skycultures" / culture
@@ -218,7 +235,11 @@ def fetch_skycultures(public: Path) -> tuple[int, int]:  # pragma: no cover - ne
                 wanted |= referenced_stars(parse_json(data))
     table = verified(_download(HIPPARCOS_URL), HIPPARCOS_SHA256, "Hipparcos")
     stars = parse_hipparcos(gzip.decompress(table).decode("latin-1").splitlines())
-    sky = parse_json((public / "data" / "sky.json").read_bytes())
+    sky = parse_json(sky_path.read_bytes())
+    absent = sorted(wanted - stars.keys())
+    if absent:
+        msg = f"Hipparcos has no position for stars the figures use: {absent}"
+        raise ValueError(msg)
     result = hip_stars_file(stars, wanted, match_catalogue(stars, sky))
     path = public / "data" / "hip-stars.json"
     _ = path.write_text(json.dumps(result, separators=(",", ":"), allow_nan=False) + "\n")

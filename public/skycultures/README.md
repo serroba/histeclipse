@@ -18,4 +18,4 @@ Each culture keeps its own licence and authors, stated in its `description.md`:
 | `indian` | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
 | `arabic_al-sufi` | [CC BY-ND 4.0](https://creativecommons.org/licenses/by-nd/4.0/) |
 
-These licences apply to these folders only; the rest of histeclipse is MIT.
+These licences apply to these folders only. The histeclipse code is MIT; other third-party data and code keep their own licences, listed in the main README.
