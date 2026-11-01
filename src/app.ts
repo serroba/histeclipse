@@ -218,6 +218,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ma: DEEP_TIME_START_MA,
         mode: 'globe',
         view: 'free',
+        // The Sun, Moon and planets are left out of deep time, so the view centres on Earth.
+        focus: 'earth',
         selection: null,
       }));
     } else {

@@ -14,6 +14,7 @@ import {
   Matrix4,
   Mesh,
   MeshBasicMaterial,
+  type Object3D,
   OrthographicCamera,
   PerspectiveCamera,
   PlaneGeometry,
@@ -277,6 +278,7 @@ const EARTH_FRAGMENT = /* glsl */ `
   uniform sampler2D paleoOlder;
   uniform float paleoMix;
   uniform float paleoActive;
+  uniform float evenLight;
   uniform vec2 paleoGrid;
   uniform float seaDepth;
   uniform float landHeight;
@@ -385,6 +387,10 @@ const EARTH_FRAGMENT = /* glsl */ `
       color = mix(shaded, night, step(sunlight, 0.0));
     }
     color = solarShadowLayer(color, night, latitude, longitude);
+    // Deep time: no one can say what hour it was, and days were shorter, so there is no night
+    // side. A soft light from the viewer keeps the globe round.
+    float facing = max(dot(normal, normalize(cameraPosition)), 0.0);
+    color = mix(color, surface * (0.6 + 0.45 * facing), evenLight);
     gl_FragColor = vec4(color, 1.0);
     #include <colorspace_fragment>
   }
@@ -560,12 +566,14 @@ const ATMOSPHERE_VERTEX = /* glsl */ `
 const ATMOSPHERE_FRAGMENT = /* glsl */ `
   #include <logdepthbuf_pars_fragment>
   uniform vec3 sunDirection;
+  uniform float evenLight;
   varying vec3 vViewNormal;
   varying vec3 vWorldNormal;
   void main() {
     #include <logdepthbuf_fragment>
     float rim = pow(clamp(0.92 + dot(vViewNormal, vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 4.0);
     float sunlit = smoothstep(-0.35, 0.35, dot(normalize(vWorldNormal), sunDirection));
+    sunlit = mix(sunlit, 0.75, evenLight);
     vec3 color = vec3(0.3, 0.55, 1.0) * rim * (0.08 + 0.62 * sunlit);
     gl_FragColor = vec4(color, 1.0);
   }
@@ -601,6 +609,8 @@ export async function createGlobe(
   texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
   const sunDirection = new Vector3(1, 0, 0);
+  // 1 in deep time: the globe lit evenly, with no day and night.
+  const evenLight = { value: 0 };
   // Shared by the Earth and Moon shaders; set with the bodies each moment.
   const moonPosition = new Vector3();
   const sunPosition = new Vector3(1e5, 0, 0);
@@ -646,6 +656,7 @@ export async function createGlobe(
         paleoOlder: { value: null as Texture | null },
         paleoMix: { value: 0 },
         paleoActive: { value: 0 },
+        evenLight,
         paleoGrid: { value: new Vector2(361, 181) },
         seaDepth: { value: 11_000 },
         landHeight: { value: 6_500 },
@@ -673,7 +684,7 @@ export async function createGlobe(
   const atmosphere = new Mesh(
     new SphereGeometry(1.04, 96, 48),
     new ShaderMaterial({
-      uniforms: { sunDirection: { value: sunDirection } },
+      uniforms: { sunDirection: { value: sunDirection }, evenLight },
       vertexShader: ATMOSPHERE_VERTEX,
       fragmentShader: ATMOSPHERE_FRAGMENT,
       side: BackSide,
@@ -780,6 +791,10 @@ export async function createGlobe(
   // and linear filtering so the coast falls between the sea's last byte and the land's first.
   const paleoTextures = new Map<string, Promise<Texture>>();
   let deepTimeWanted: DeepTimeSurface | null = null;
+  let deepTime = false;
+  function hiddenInDeepTime(): Object3D[] {
+    return [sun, corona, moon, ...Object.values(planets.meshes)];
+  }
   function paleoTexture(url: string): Promise<Texture> {
     let pending = paleoTextures.get(url);
     if (pending === undefined) {
@@ -861,7 +876,9 @@ export async function createGlobe(
       ),
       camera,
     );
-    const visible = Object.values(bodyMeshes).filter((mesh) => mesh.visible);
+    const visible = Object.values(bodyMeshes).filter(
+      (mesh) => mesh.visible && !(deepTime && mesh !== earth),
+    );
     const hit = raycaster.intersectObjects(visible, false)[0];
     const body = (Object.keys(bodyMeshes) as Body[]).find((key) => bodyMeshes[key] === hit?.object);
     if (body === 'earth' && hit !== undefined && focus === 'earth' && viewpoint === 'free') {
@@ -1138,8 +1155,13 @@ export async function createGlobe(
     if (needsRender) {
       needsRender = false;
       shadeSun();
+      // In deep time the Sun, Moon and planets are where they are today, which says nothing
+      // about then: they are left out, markers too.
+      const hidden = deepTime ? hiddenInDeepTime().filter((object) => object.visible) : [];
+      for (const object of hidden) object.visible = false;
       renderer.render(scene, camera);
       placeMarkers();
+      for (const object of hidden) object.visible = true;
       placeEmpireLabels();
       container.dataset['rendered'] = 'true';
     }
@@ -1477,6 +1499,10 @@ export async function createGlobe(
     },
     setDeepTime(surface) {
       deepTimeWanted = surface;
+      deepTime = surface !== null;
+      evenLight.value = deepTime ? 1 : 0;
+      container.dataset['light'] = deepTime ? 'even' : 'sun';
+      needsRender = true;
       const uniforms = earth.material.uniforms;
       if (surface === null) {
         uniforms['paleoActive'] = { value: 0 };
