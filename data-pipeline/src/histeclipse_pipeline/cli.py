@@ -18,6 +18,7 @@ from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.icesheets import fetch_icesheets
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
+from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table, write_table
 from histeclipse_pipeline.ohm import fetch_ohm
 from histeclipse_pipeline.paleodem import fetch_paleodem
 from histeclipse_pipeline.paleotemp import fetch_paleotemp
@@ -248,6 +249,32 @@ def paleotemp(args: Arguments) -> int:  # pragma: no cover - needs network acces
     return _say(f"wrote {count} temperature images to {args.out}")
 
 
+#: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
+#: with a margin each side for the months that straddle the ends.
+BABYLON_YEARS = (-749, 101)
+CHINESE_YEARS = (-720, 2100)
+
+
+def calendars(args: Arguments) -> int:  # pragma: no cover - needs the full DE441 excerpts
+    """Write the Babylonian and Chinese month tables computed from DE441."""
+    paths = sorted(args.kernels.glob("*.bsp"))
+    if not paths:
+        return _fail(f"No kernels in {args.kernels}; run fetch-ephemeris first")
+    with Ephemeris(paths) as ephemeris:
+        babylon = babylonian_table(
+            ephemeris, year_start_jd(BABYLON_YEARS[0]), year_start_jd(BABYLON_YEARS[1])
+        )
+        first, last = CHINESE_YEARS
+        # From the November before the first year to the March after the last.
+        chinese = chinese_year_table(
+            ephemeris, year_start_jd(first) - 61, year_start_jd(last + 1) + 59, first
+        )
+    write_table(babylon, args.out / "babylon.json")
+    write_table(chinese, args.out / "chinese.json")
+    months, years = len(babylon["lengths"]) + 1, len(chinese["years"])
+    return _say(f"wrote {months} Babylonian months and {years} Chinese years to {args.out}")
+
+
 def sun_images(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Render the SDO layers into ``public/textures/sun`` and write their manifest."""
     result = fetch_images(args.out)
@@ -320,6 +347,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "paleotemp": (
         paleotemp,
         "write surface temperature maps for 100 steps since 540 Ma (Scotese 2022)",
+        "output directory",
+    ),
+    "calendars": (
+        calendars,
+        "write Babylonian first-crescent months and Chinese months computed from DE441",
         "output directory",
     ),
     "sun-images": (

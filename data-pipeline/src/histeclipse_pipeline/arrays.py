@@ -13,3 +13,8 @@ def as_array(value: float | FloatArray) -> FloatArray:
 def as_floats(value: float | FloatArray) -> list[float]:
     """Plain Python floats from a Skyfield or numpy value, so downstream code is fully typed."""
     return list(map(float, as_array(value)))
+
+
+def as_ints(value: np.typing.NDArray[np.int64]) -> list[int]:
+    """Plain Python ints from a numpy integer array of any shape, flattened."""
+    return list(map(int, np.ravel(value)))
