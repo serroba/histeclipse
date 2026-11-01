@@ -9,6 +9,11 @@ import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period } from '../deepTime/periods';
 import type { SeaLevelIndex } from '../data/seaLevel';
 import { COAST_SOURCES, type CoastSource } from '../deepTime/coastline';
+import {
+  TEMPERATURE_MODEL_LABELS,
+  TEMPERATURE_MODELS,
+  type TemperatureModel,
+} from '../deepTime/temperatureModels';
 import type { DeepScale } from '../state/viewState';
 import { element } from './dom';
 import { createMilestonePanel } from './milestonePanel';
@@ -23,11 +28,22 @@ const COAST_LABELS: Readonly<Record<CoastSource, string>> = {
   'spratt-2016': 'Spratt & Lisiecki 2016',
 };
 
-export interface TemperatureView {
-  readonly on: boolean;
-  /** Global mean then and today, °C; null while the maps load. */
+/** One model's global mean at the moment shown and today, °C; `mean` null beyond its reach. */
+export interface TemperatureReading {
+  readonly model: TemperatureModel;
   readonly mean: number | null;
   readonly today: number | null;
+  /** How far back its maps reach, Ma. */
+  readonly reach: number;
+}
+
+export interface TemperatureView {
+  readonly on: boolean;
+  /** The model asked for, and the one colouring the globe (null while the maps load). */
+  readonly wanted: TemperatureModel;
+  readonly shown: TemperatureModel | null;
+  /** Every model loaded so far, in a fixed order. */
+  readonly readings: readonly TemperatureReading[];
   /** What the site says about the map shown, if anything. */
   readonly note: string | null;
 }
@@ -55,10 +71,31 @@ export function legendGradient(stops: readonly (readonly [number, string])[]): s
   return `linear-gradient(to right, ${placed.join(', ')})`;
 }
 
+/** "Global mean: Scotese 2022 32.9 °C (today 14.6 °C) · CESM, Li et al. 2023 25.5 °C …". */
 export function temperatureText(view: TemperatureView): string {
-  if (view.mean === null) return 'Loading temperature maps…';
-  const today = view.today === null ? '' : ` (today ${view.today.toFixed(1)} °C)`;
-  return `Global mean ${view.mean.toFixed(1)} °C${today}`;
+  if (view.readings.length === 0) return 'Loading temperature maps…';
+  const each = view.readings.map(({ model, mean, today, reach }) => {
+    const label = TEMPERATURE_MODEL_LABELS[model];
+    if (mean === null) return `${label} — covers the last ${String(reach)} million years`;
+    const now = today === null ? '' : ` (today ${today.toFixed(1)} °C)`;
+    return `${label} ${mean.toFixed(1)} °C${now}`;
+  });
+  return `Global mean: ${each.join(' · ')}`;
+}
+
+/** Which model colours the globe, any stand-in, and the coarse model's limits. */
+export function temperatureMapText(view: TemperatureView): string {
+  if (view.shown === null) return '';
+  const shown = TEMPERATURE_MODEL_LABELS[view.shown];
+  const stand =
+    view.shown === view.wanted
+      ? ''
+      : ` ${TEMPERATURE_MODEL_LABELS[view.wanted]} does not reach this far.`;
+  const limits =
+    view.shown === 'cesm'
+      ? ' Its grid is about 3.75° and its geography its own, so its warm and cold patches do not follow these coasts exactly.'
+      : ' A HadCM3L climate model adjusted to rock and isotope records.';
+  return `The globe shows ${shown}.${stand}${limits}`;
 }
 
 /** On the ice-age scale: the sea level the coastlines follow, and whose. */
@@ -127,6 +164,7 @@ export function createDeepTimeBar(handlers: {
   onSeaLevel(on: boolean): void;
   onScale(scale: DeepScale): void;
   onCoast(coast: CoastSource): void;
+  onTemperatureModel(model: TemperatureModel): void;
 }): DeepTimeBar {
   const play = element(
     'button',
@@ -216,6 +254,14 @@ export function createDeepTimeBar(handlers: {
   legendScale.style.background = legendGradient(TEMPERATURE_STOPS);
   const legendMean = element('span', { 'data-testid': 'temperature-mean' });
   const legendNote = element('p', { class: 'temperature-note', hidden: '' });
+  const legendMap = element('span', { 'data-testid': 'temperature-map' });
+  const modelPicker = element(
+    'select',
+    { class: 'deep-coast', 'aria-label': 'Temperature model' },
+    ...TEMPERATURE_MODELS.map((model) =>
+      element('option', { value: model }, TEMPERATURE_MODEL_LABELS[model]),
+    ),
+  );
   const legend = element(
     'div',
     { class: 'temperature-legend', hidden: '' },
@@ -226,12 +272,8 @@ export function createDeepTimeBar(handlers: {
       legendScale,
       element('span', {}, '45 °C'),
     ),
-    element(
-      'p',
-      {},
-      legendMean,
-      ' · Scotese 2022, HadCM3L climate model adjusted to rock and isotope records',
-    ),
+    element('p', {}, legendMean),
+    element('p', {}, legendMap, ' ', element('label', {}, 'Colour by ', modelPicker)),
     legendNote,
   );
   // Poles, field, tilt and day: folded away, so the bar stays small on a phone.
@@ -292,6 +334,10 @@ export function createDeepTimeBar(handlers: {
   });
   scaleIce.addEventListener('click', () => {
     handlers.onScale('ice');
+  });
+  modelPicker.addEventListener('change', () => {
+    const model = TEMPERATURE_MODELS.find((option) => option === modelPicker.value);
+    if (model !== undefined) handlers.onTemperatureModel(model);
   });
   coastPicker.addEventListener('change', () => {
     const source = COAST_SOURCES.find((option) => option === coastPicker.value);
@@ -369,6 +415,8 @@ export function createDeepTimeBar(handlers: {
       temperatureButton.setAttribute('aria-pressed', String(temperature.on));
       legend.hidden = !temperature.on;
       legendMean.textContent = temperatureText(temperature);
+      legendMap.textContent = temperatureMapText(temperature);
+      modelPicker.value = temperature.wanted;
       legendNote.hidden = temperature.note === null;
       legendNote.textContent = temperature.note ?? '';
       play.textContent = view.playing ? '❚❚' : '▶';

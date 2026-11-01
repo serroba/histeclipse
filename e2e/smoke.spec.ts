@@ -1071,9 +1071,23 @@ test('deep time colours the globe by temperature, with the global mean and its c
     /paleotemp\/245\.png .*paleotemp\/250\.png$/,
   );
   // The hothouse after the end-Permian extinction, against today's world.
+  // Both models' global means, side by side: they part by seven degrees here.
   await expect(page.getByTestId('temperature-mean')).toHaveText(
-    'Global mean 32.9 °C (today 14.6 °C)',
+    'Global mean: Scotese 2022 32.9 °C (today 14.6 °C) · CESM, Li et al. 2023 25.5 °C (today 13.2 °C)',
   );
+  // Colour by the second model instead.
+  await page.getByLabel('Temperature model').selectOption('cesm');
+  await expect(page).toHaveURL(/temp=cesm/);
+  await expect(globe).toHaveAttribute('data-temperature', /cesm\/240\.png .*cesm\/250\.png$/);
+  await expect(page.getByTestId('temperature-map')).toContainText('about 3.75°');
+  // Beyond its reach Scotese's maps stand in, and the bar says so.
+  await page.getByRole('button', { name: '5 million years earlier' }).click();
+  await expect(globe).toHaveAttribute(
+    'data-temperature',
+    /paleotemp\/250\.png .*paleotemp\/255\.png$/,
+  );
+  await expect(page.getByTestId('temperature-map')).toContainText('does not reach this far');
+  await page.getByLabel('Temperature model').selectOption('scotese');
   await expect(page.locator('.temperature-note')).toBeHidden();
 
   // The 65 Ma map stands out, and the site says so.

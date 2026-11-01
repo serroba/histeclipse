@@ -2,6 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import { COAST_SOURCES } from '../deepTime/coastline';
+import { TEMPERATURE_MODELS } from '../deepTime/temperatureModels';
 
 import { calendarDateOf, daysInMonth, type Calendar } from '../time/julianDay';
 import { SKY_CULTURES } from '../data/skyCultures';
@@ -69,6 +70,7 @@ describe('parseViewState', () => {
       ma: null,
       deepScale: 'all',
       coast: 'bintanja-2008',
+      temperatureModel: 'scotese',
     } satisfies ViewState);
   });
 
@@ -115,6 +117,12 @@ describe('parseViewState', () => {
     expect(state.focus).toBe('moon');
     expect(serializeViewState(state)).toContain('&focus=moon');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
+  });
+
+  it('reads whose temperature maps colour the globe, writing it only when not the default', () => {
+    expect(parseViewState('temp=cesm', NOW).state.temperatureModel).toBe('cesm');
+    expect(serializeViewState(parseViewState('temp=cesm', NOW).state)).toContain('&temp=cesm');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('temp=');
   });
 
   it('reads whose sea level the coastlines follow, writing it only when not the default', () => {
@@ -376,6 +384,7 @@ describe('serializeViewState', () => {
     ),
     deepScale: fc.constantFrom(...DEEP_SCALES),
     coast: fc.constantFrom(...COAST_SOURCES),
+    temperatureModel: fc.constantFrom(...TEMPERATURE_MODELS),
   });
 
   it('round-trips every view state through a link', () => {
