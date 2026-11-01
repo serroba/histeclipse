@@ -49,3 +49,60 @@ declare module 'astronomia/precess' {
     mδ: number,
   ): Equatorial;
 }
+
+declare module 'astronomia/planetposition' {
+  /** VSOP87 series for one planet (Bretagnon & Francou 1988). */
+  export interface VsopData {
+    readonly name: string;
+    readonly type?: string;
+    readonly L: unknown;
+    readonly B: unknown;
+    readonly R: unknown;
+  }
+
+  export class Planet {
+    constructor(data: VsopData);
+    /**
+     * Heliocentric position, dynamical ecliptic and equinox of J2000: longitude and latitude
+     * in radians, range in AU. Checked against astronomia 4.2.0's src/planetposition.js.
+     */
+    position2000(jde: number): { lon: number; lat: number; range: number };
+  }
+}
+
+declare module 'astronomia/data/vsop87Bmercury' {
+  import type { VsopData } from 'astronomia/planetposition';
+
+  const data: VsopData;
+  export default data;
+}
+declare module 'astronomia/data/vsop87Bvenus' {
+  import type { VsopData } from 'astronomia/planetposition';
+
+  const data: VsopData;
+  export default data;
+}
+declare module 'astronomia/data/vsop87Bearth' {
+  import type { VsopData } from 'astronomia/planetposition';
+
+  const data: VsopData;
+  export default data;
+}
+declare module 'astronomia/data/vsop87Bmars' {
+  import type { VsopData } from 'astronomia/planetposition';
+
+  const data: VsopData;
+  export default data;
+}
+declare module 'astronomia/data/vsop87Bjupiter' {
+  import type { VsopData } from 'astronomia/planetposition';
+
+  const data: VsopData;
+  export default data;
+}
+declare module 'astronomia/data/vsop87Bsaturn' {
+  import type { VsopData } from 'astronomia/planetposition';
+
+  const data: VsopData;
+  export default data;
+}

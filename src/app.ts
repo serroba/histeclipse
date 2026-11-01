@@ -40,7 +40,15 @@ import {
   type GeoPoint,
   type ViewState,
 } from './state/viewState';
-import { eclipseNote, skyCaption } from './sky/caption';
+import { eclipseNote, planetNote, skyCaption } from './sky/caption';
+import {
+  loadPlanetEphemeris,
+  planetMagnitude,
+  PLANETS,
+  saturnRingTilt,
+  type PlanetEphemeris,
+} from './astro/planets';
+import type { SkyPlanet } from './sky/skyScene';
 import { moonSunlight, observerPosition, sunVisible, topocentric } from './sky/bodies';
 import { horizonMatrix, horizontalOf } from './sky/horizon';
 import { LOWEST_LOOK, roundLook } from './sky/look';
@@ -49,7 +57,7 @@ import type { Vector3 } from './astro/matrix';
 import type { SkyScene } from './sky/skyScene';
 import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
-import { julianDayNumber } from './time/julianDay';
+import { julianDayNumber, type JulianDay } from './time/julianDay';
 import { formatInCalendar, yearContaining, yearSpan } from './time/calendars';
 import { astronomicalYear, formatYear, type AstronomicalYear } from './time/year';
 import { moveToYear } from './time/yearInput';
@@ -510,8 +518,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       import('./sky/skyScene'),
       loadSky(`${base}data/sky.json`, (url) => fetch(url)),
       loadHipStars(`${base}data/hip-stars.json`, (url) => fetch(url)),
+      loadPlanetEphemeris(),
     ]).then(
-      ([{ createSkyScene }, plainSky, hipStars]) => {
+      ([{ createSkyScene }, plainSky, hipStars, planetTheory]) => {
+        planets = planetTheory;
         const state = store.get();
         // Other cultures' figures use a few faint stars beyond the catalogue; add them.
         const { sky, index } = withFigureStars(plainSky, hipStars);
@@ -619,6 +629,35 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
   }
 
+  // The planets' theory loads with the sky view.
+  let planets: PlanetEphemeris | null = null;
+  const KM_PER_AU = 149_597_870.7;
+  function planetsSeen(jdTT: JulianDay, sun: Vector3, observer: Vector3): SkyPlanet[] {
+    if (planets === null) return [];
+    const theory = planets;
+    return PLANETS.map((planet) => {
+      const fromEarth = theory.apparent(planet, jdTT);
+      const [x, y, z] = fromEarth;
+      const [sx, sy, sz] = [sun[0] - x, sun[1] - y, sun[2] - z];
+      const delta = Math.hypot(x, y, z);
+      const r = Math.hypot(sx, sy, sz);
+      // Phase angle: at the planet, between the Sun and Earth.
+      const cosine = -(sx * x + sy * y + sz * z) / (r * delta);
+      const phase = (Math.acos(Math.max(-1, Math.min(1, cosine))) * 180) / Math.PI;
+      return {
+        name: `${planet[0]?.toUpperCase() ?? ''}${planet.slice(1)}`,
+        direction: topocentric(fromEarth, observer),
+        magnitude: planetMagnitude(
+          planet,
+          r / KM_PER_AU,
+          delta / KM_PER_AU,
+          phase,
+          planet === 'saturn' ? saturnRingTilt(fromEarth) : 0,
+        ),
+      };
+    });
+  }
+
   // Each culture's figures load the first time someone picks it.
   let hipIndex: ReadonlyMap<number, number> | null = null;
   const cultureFiles = new Map<SkyCulture, Promise<readonly Figure[]>>();
@@ -711,11 +750,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const seen = bodiesSeen(state);
     if (seen === null) return;
     const { place, jdUT, jdTT } = seen;
-    skyText.textContent = skyCaption({
-      place,
-      azimuth: state.look.azimuth,
-      uncertaintySeconds: deltaT.uncertaintySeconds(jdUT),
-    });
+    const planetCaveat = planetNote(state.time.date.year);
+    skyText.textContent = [
+      skyCaption({
+        place,
+        azimuth: state.look.azimuth,
+        uncertaintySeconds: deltaT.uncertaintySeconds(jdUT),
+      }),
+      planetCaveat,
+    ]
+      .filter((part) => part !== '')
+      .join(' ');
     const horizon = horizonMatrix(place, jdUT, jdTT);
     const sunHere = topocentric(seen.sun, seen.observer);
     const moonHere = seen.moon === null ? null : topocentric(seen.moon, seen.observer);
@@ -739,6 +784,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       sun: seen.sun,
       moon: seen.moon,
       observer: seen.observer,
+      planets: planetsSeen(jdTT, seen.sun, seen.observer),
     });
     skyScene.setVisible(true);
   }

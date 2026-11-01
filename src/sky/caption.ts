@@ -2,6 +2,7 @@
 
 import type { GeoPoint } from '../state/viewState';
 import { formatDuration } from '../time/format';
+import { PLANETS, planetUncertainty } from '../astro/planets';
 import { compassPoint } from './look';
 
 /** Degrees the sky turns per second of clock time (a sidereal day is 86,164 s). */
@@ -54,4 +55,20 @@ export function eclipseNote(options: {
       : 'Earth’s shadow is falling on the Moon.';
   }
   return '';
+}
+
+/**
+ * A word on how far to trust the planets' places in a given year: silent while every planet is
+ * within half an arcminute of DE441, otherwise the error budget of those that drift.
+ */
+export function planetNote(year: number): string {
+  const loose = PLANETS.map((planet) => [planet, planetUncertainty(planet, year)] as const).filter(
+    ([, arcminutes]) => arcminutes > 0.5,
+  );
+  if (loose.length === 0) return '';
+  const parts = loose.map(
+    ([planet, arcminutes]) =>
+      `${planet[0]?.toUpperCase() ?? ''}${planet.slice(1)} ±${String(arcminutes)}′`,
+  );
+  return `This far back, planet positions are good to ${parts.join(', ')}.`;
 }

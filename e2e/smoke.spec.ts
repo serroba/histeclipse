@@ -810,3 +810,52 @@ test('the sky can be drawn as other cultures saw it, credited, and the link keep
   await expect(page).not.toHaveURL(/culture=/);
   await expect(page.getByRole('button', { name: 'All 88' })).toBeVisible();
 });
+
+/** The planets as the sky view reports them: altitude, azimuth, magnitude and visibility. */
+async function planetsIn(
+  page: Page,
+): Promise<Map<string, { alt: number; az: number; seen: boolean }>> {
+  const report = (await page.getByTestId('sky').getAttribute('data-planets')) ?? '';
+  return new Map(
+    report
+      .split(' ')
+      .filter((entry) => entry !== '')
+      .map((entry) => {
+        const [name = '', alt = '0', az = '0', , seen = ''] = entry.split(':');
+        return [name, { alt: Number(alt), az: Number(az), seen: seen === 'seen' }] as const;
+      }),
+  );
+}
+
+test('Jupiter and Saturn meet low in the south-west in the great conjunction of December 2020', async ({
+  page,
+}) => {
+  await page.goto('./?mode=sky&t=2020-12-21T17:00&loc=51.5,-0.12&look=208,14,24');
+  await skyRendered(page);
+  await expect(page.getByTestId('sky')).toHaveAttribute('data-planets', /Saturn/);
+  const planets = await planetsIn(page);
+  const jupiter = planets.get('Jupiter');
+  const saturn = planets.get('Saturn');
+  if (jupiter === undefined || saturn === undefined) throw new Error('planets missing');
+  expect(jupiter.seen && saturn.seen).toBe(true);
+  // Seen from London after sunset: about 9° up in the south-west, a tenth of a degree apart.
+  expect(jupiter.alt).toBeGreaterThan(5);
+  expect(jupiter.alt).toBeLessThan(13);
+  expect(jupiter.az).toBeGreaterThan(210);
+  expect(jupiter.az).toBeLessThan(230);
+  const apart = Math.hypot(
+    (jupiter.az - saturn.az) * Math.cos((jupiter.alt * Math.PI) / 180),
+    jupiter.alt - saturn.alt,
+  );
+  expect(apart).toBeLessThan(0.15);
+  await expect(page.locator('.sky-label.is-planet:visible')).toHaveText(['Jupiter & Saturn']);
+});
+
+test('far back in time, the sky says how far the planets can be trusted', async ({ page }) => {
+  await page.goto('./?mode=sky&t=-2499-03-20T19:00&loc=32.5422,44.4209');
+  await skyRendered(page);
+  await expect(page.locator('.sky-caption')).toContainText('Jupiter ±3′, Saturn ±6′');
+  await page.goto('./?mode=sky&t=-586-03-20T19:00&loc=32.5422,44.4209');
+  await skyRendered(page);
+  await expect(page.locator('.sky-caption')).not.toContainText('planet positions');
+});
