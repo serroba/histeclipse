@@ -970,14 +970,20 @@ test('deep time shows Pangaea 250 million years ago, steps, plays and returns', 
   page,
 }) => {
   const problems = collectProblems(page);
-  await page.goto('./?t=2024-06-21T12:00&cam=0,20,3');
+  // Far enough out to see the Moon, which deep time leaves out.
+  await page.goto('./?t=2024-06-21T12:00&cam=0,20,400');
   await globeRendered(page);
   const globe = page.getByTestId('globe');
+  const moon = page.locator('.space-marker[data-body="moon"]');
+  await expect(moon).toBeVisible();
   await page.getByRole('button', { name: 'Deep time' }).click();
   await expect(page).toHaveURL(/&ma=250(&|$)/);
   await expect(page.locator('.hud-date')).toHaveText('250 million years ago');
   await expect(page.getByTestId('deep-period')).toHaveText('Triassic · Mesozoic');
   await expect(globe).toHaveAttribute('data-deep-time', /245\.png .*250\.png$/);
+  // No day and night, and no Sun or Moon: their places today say nothing about then.
+  await expect(globe).toHaveAttribute('data-light', 'even');
+  await expect(moon).toBeHidden();
   await expect(page.getByRole('link', { name: 'PALEOMAP PaleoDEMs' })).toBeVisible();
   // The year bar gives way to the deep-time bar.
   await expect(page.getByLabel('Year', { exact: true })).toBeHidden();
@@ -997,6 +1003,8 @@ test('deep time shows Pangaea 250 million years ago, steps, plays and returns', 
   await page.getByRole('button', { name: 'Back to history' }).click();
   await expect(page).not.toHaveURL(/ma=/);
   await expect(globe).toHaveAttribute('data-deep-time', 'off');
+  await expect(globe).toHaveAttribute('data-light', 'sun');
+  await expect(moon).toBeVisible();
   await expect(page.getByLabel('Year', { exact: true })).toBeVisible();
   expect(problems).toEqual([]);
 });
