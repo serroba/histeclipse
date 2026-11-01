@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
+from histeclipse_pipeline.cesm import fetch_cesm
 from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
 from histeclipse_pipeline.empires import (
     fetch_cliopatria,
@@ -217,6 +218,12 @@ def paleodem(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} elevation images to {args.out}")
 
 
+def cesm(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write a second model's surface temperature every 10 Myr since 250 Ma (CESM)."""
+    count = fetch_cesm(args.out)
+    return _say(f"wrote {count} CESM temperature images to {args.out}")
+
+
 def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write ice-sheet thickness every 2,500 years over the last 80,000 (PaleoMIST 1.0)."""
     count = fetch_icesheets(args.out)
@@ -288,6 +295,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "paleodem": (
         paleodem,
         "write Earth's elevation for each 5 Myr step since 540 Ma (PALEOMAP PaleoDEMs)",
+        "output directory",
+    ),
+    "cesm": (
+        cesm,
+        "write a second model's surface temperature every 10 Myr since 250 Ma (CESM)",
         "output directory",
     ),
     "icesheets": (
