@@ -1,0 +1,100 @@
+[project]
+name = "histeclipse-plates"
+version = "0.0.0"
+description = "Continent outlines through 1.8 billion years for histeclipse, reconstructed with pyGPlates"
+license = "MIT"
+# pyGPlates 1.0 has wheels up to Python 3.13, hence this separate project.
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "numpy>=2",
+    "pillow>=11",
+    # GPL-2: run here to make the masks, not distributed with the site.
+    "pygplates==1.0.0",
+]
+
+[project.scripts]
+histeclipse-plates = "histeclipse_plates.masks:main"
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.40.2",
+    "hypothesis>=6.170.9",
+    "mypy>=2.4.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.10,<0.14"]
+build-backend = "uv_build"
+
+[tool.uv]
+# Supply-chain hardening, matching the main pipeline.
+exclude-newer = "7 days"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "COM812",  # conflicts with the formatter
+  "CPY001",  # copyright is covered by the repository LICENSE
+  "D203",    # incompatible with D211
+  "D213",    # incompatible with D212
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "S101",    # assert is how pytest works
+  "D",       # test names document themselves
+  "PLR2004", # literal expected values are the point of a test
+]
+
+[tool.mypy]
+strict = true
+python_version = "3.13"
+files = ["src", "tests"]
+warn_unreachable = true
+disallow_any_explicit = true
+disallow_any_decorated = false  # hypothesis/pytest decorators are typed loosely
+extra_checks = true
+# pyGPlates is untyped; typings/ holds a stub for exactly the parts we use.
+mypy_path = "typings"
+disallow_any_unimported = true
+enable_error_code = [
+  "deprecated",
+  "exhaustive-match",
+  "explicit-override",
+  "ignore-without-code",
+  "possibly-undefined",
+  "redundant-expr",
+  "redundant-self",
+  "truthy-bool",
+  "truthy-iterable",
+  "unimported-reveal",
+  "unused-awaitable",
+]
+
+[tool.pytest.ini_options]
+addopts = [
+  "--strict-config",
+  "--strict-markers",
+  "--cov=histeclipse_plates",
+  "--cov-branch",
+  "--cov-report=term-missing",
+  "--cov-fail-under=95",
+]
+testpaths = ["tests"]
+xfail_strict = true
+filterwarnings = ["error"]
+
+[tool.basedpyright]
+# Strictest mode: every check on, including reportAny and reportUnknown*, so untyped values
+# from third-party libraries cannot leak into our code unnoticed.
+typeCheckingMode = "all"
+pythonVersion = "3.13"
+include = ["src", "tests"]
+stubPath = "typings"
