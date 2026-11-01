@@ -633,18 +633,24 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const index = hipIndex;
     let figures = cultureFiles.get(culture);
     if (figures === undefined) {
-      figures = loadCultureIndex(`${base}skycultures/${culture}/index.json`, (url) =>
+      const request = loadCultureIndex(`${base}skycultures/${culture}/index.json`, (url) =>
         fetch(url),
       ).then((file) => cultureFigures(culture, file, index));
-      cultureFiles.set(culture, figures);
+      // A failure is reported once per request, however many renders were waiting on it.
+      request.catch((error: unknown) => {
+        if (cultureFiles.get(culture) !== request) return;
+        cultureFiles.delete(culture);
+        notify(`Could not load the ${culture} sky: ${errorMessage(error)}`);
+      });
+      cultureFiles.set(culture, request);
+      figures = request;
     }
     figures.then(
       (loaded) => {
         if (store.get().culture === culture) skyScene?.setCulture(loaded);
       },
-      (error: unknown) => {
-        cultureFiles.delete(culture);
-        notify(`Could not load the ${culture} sky: ${errorMessage(error)}`);
+      () => {
+        // Reported above.
       },
     );
   }

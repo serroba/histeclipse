@@ -581,32 +581,48 @@ export function createSkyScene(
   }
 
   const projected = new Vector3();
-  function placeLabel(label: HTMLElement, position: Vector3, show: boolean): void {
+  function placeLabel(
+    label: HTMLElement,
+    position: Vector3,
+    show: boolean,
+    width: number,
+    height: number,
+  ): void {
     projected.copy(position).project(camera);
     const onScreen =
       show && projected.z < 1 && Math.abs(projected.x) < 1.1 && Math.abs(projected.y) < 1.1;
     label.hidden = !onScreen;
     if (!onScreen) return;
-    const x = ((projected.x + 1) / 2) * container.clientWidth;
-    const y = ((1 - projected.y) / 2) * container.clientHeight;
+    const x = ((projected.x + 1) / 2) * width;
+    const y = ((1 - projected.y) / 2) * height;
     label.style.transform = `translate(${String(x)}px, ${String(y)}px)`;
   }
 
   function placeLabels(): void {
-    for (const { label, position } of compassLabels) placeLabel(label, position, true);
-    // Bigger figures are named first; a name that would overlap one already placed is left out.
-    const placed: DOMRect[] = [];
+    // Writes, then one read pass, then writes: the browser lays the page out once a frame.
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    for (const { label, position } of compassLabels) {
+      placeLabel(label, position, true, width, height);
+    }
     for (const { label, position } of namesBySize) {
       // Names of figures low in the haze or below the horizon are left out.
-      placeLabel(label, position, label.dataset['shown'] === 'true' && position.y > 40 * 0.03);
-      if (label.hidden !== false) continue;
-      const box = label.getBoundingClientRect();
+      const show = label.dataset['shown'] === 'true' && position.y > 40 * 0.03;
+      placeLabel(label, position, show, width, height);
+    }
+    const candidates = namesBySize.filter(({ label }) => label.hidden === false);
+    const boxes = candidates.map(({ label }) => label.getBoundingClientRect());
+    // Bigger figures are named first; a name that would overlap one already placed is left out.
+    const placed: DOMRect[] = [];
+    candidates.forEach(({ label }, index) => {
+      const box = boxes[index];
+      if (box === undefined) return;
       if (placed.some((other) => overlaps(box, other))) {
         label.hidden = true;
       } else {
         placed.push(box);
       }
-    }
+    });
   }
 
   function placeMoon(
