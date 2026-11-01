@@ -14,6 +14,7 @@ from histeclipse_pipeline.empires import (
     write_empires,
 )
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
+from histeclipse_pipeline.icesheets import fetch_icesheets
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.ohm import fetch_ohm
@@ -216,6 +217,12 @@ def paleodem(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} elevation images to {args.out}")
 
 
+def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write ice-sheet thickness every 2,500 years over the last 80,000 (PaleoMIST 1.0)."""
+    count = fetch_icesheets(args.out)
+    return _say(f"wrote {count} ice-sheet images to {args.out}")
+
+
 def shelf(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write today's coasts and shelves, for coastlines at past sea levels."""
     size = fetch_shelf(args.out)
@@ -281,6 +288,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "paleodem": (
         paleodem,
         "write Earth's elevation for each 5 Myr step since 540 Ma (PALEOMAP PaleoDEMs)",
+        "output directory",
+    ),
+    "icesheets": (
+        icesheets,
+        "write ice-sheet thickness every 2,500 years since 80 ka (PaleoMIST 1.0)",
         "output directory",
     ),
     "shelf": (
