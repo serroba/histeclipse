@@ -326,31 +326,54 @@ const EARTH_FRAGMENT = /* glsl */ `
   float paleoElevation(sampler2D map, vec2 uv) {
     vec2 at = (uv * (paleoGrid - 1.0) + 0.5) / paleoGrid;
     float byte = texture2D(map, at).r * 255.0;
+    // Sea level falls between bytes 127 and 128, so blended bytes cross it smoothly there.
     return byte >= 127.5
-      ? max(byte - 128.0, 0.0) / 127.0 * landHeight
-      : -max(127.0 - byte, 0.0) / 127.0 * seaDepth;
+      ? (byte - 127.5) / 127.5 * landHeight
+      : -(127.5 - byte) / 127.5 * seaDepth;
   }
 
   vec3 srgb(vec3 c) { return pow(c, vec3(2.2)); }
 
+  const float PI = 3.141592653589793;
+  const float EARTH_RADIUS_M = 6371000.0;
+
+  float paleoHeight(vec2 uv) {
+    return mix(paleoElevation(paleoYounger, uv), paleoElevation(paleoOlder, uv), paleoMix);
+  }
+
   // Hypsometric colours: deep blue sea floor to pale shallows; green lowlands, ochre uplands,
   // brown mountains, white peaks. No ice or vegetation: the maps give only height.
+  vec3 seaColour(float height) {
+    float depth = clamp(-height / 6000.0, 0.0, 1.0);
+    vec3 shelf = mix(srgb(vec3(0.36, 0.64, 0.78)), srgb(vec3(0.13, 0.34, 0.58)), smoothstep(0.0, 0.08, depth));
+    return mix(shelf, srgb(vec3(0.04, 0.12, 0.30)), smoothstep(0.08, 1.0, depth));
+  }
+
+  vec3 landColour(float height) {
+    vec3 color = mix(srgb(vec3(0.33, 0.50, 0.26)), srgb(vec3(0.66, 0.60, 0.40)), smoothstep(0.0, 1200.0, height));
+    color = mix(color, srgb(vec3(0.52, 0.40, 0.29)), smoothstep(1200.0, 2800.0, height));
+    return mix(color, srgb(vec3(0.92, 0.92, 0.90)), smoothstep(3500.0, 5000.0, height));
+  }
+
   vec3 paleoSurface(vec2 uv) {
-    float younger = paleoElevation(paleoYounger, uv);
-    float older = paleoElevation(paleoOlder, uv);
-    float height = mix(younger, older, paleoMix);
-    if (height < 0.0) {
-      float depth = clamp(-height / 6000.0, 0.0, 1.0);
-      vec3 shelf = mix(srgb(vec3(0.36, 0.64, 0.78)), srgb(vec3(0.13, 0.34, 0.58)), smoothstep(0.0, 0.08, depth));
-      return mix(shelf, srgb(vec3(0.04, 0.12, 0.30)), smoothstep(0.08, 1.0, depth));
-    }
-    vec3 low = srgb(vec3(0.33, 0.50, 0.26));
-    vec3 upland = srgb(vec3(0.66, 0.60, 0.40));
-    vec3 mountain = srgb(vec3(0.52, 0.40, 0.29));
-    vec3 peak = srgb(vec3(0.92, 0.92, 0.90));
-    vec3 color = mix(low, upland, smoothstep(0.0, 1200.0, height));
-    color = mix(color, mountain, smoothstep(1200.0, 2800.0, height));
-    return mix(color, peak, smoothstep(3500.0, 5000.0, height));
+    float height = paleoHeight(uv);
+    // The coast blends over about a screen pixel of height, so it is smooth at any zoom.
+    float blur = max(fwidth(height), 1.0);
+    vec3 color = mix(seaColour(height), landColour(height), smoothstep(-blur, blur, height));
+    // Hill shading, lit from the north-west as maps are: slopes from the neighbouring nodes,
+    // ten times steeper than they are so ranges show from orbit.
+    vec2 step_ = 1.0 / (paleoGrid - 1.0);
+    float east = paleoHeight(uv + vec2(step_.x, 0.0)) - paleoHeight(uv - vec2(step_.x, 0.0));
+    float north = paleoHeight(uv + vec2(0.0, step_.y)) - paleoHeight(uv - vec2(0.0, step_.y));
+    // Two nodes apart, in metres: rows span half a circumference, columns a whole one,
+    // narrowing with latitude.
+    float latitude = (uv.y - 0.5) * PI;
+    float southNorth = 2.0 * PI * EARTH_RADIUS_M * step_.y;
+    float westEast = 2.0 * 2.0 * PI * EARTH_RADIUS_M * step_.x * max(cos(latitude), 0.05);
+    vec3 normal = normalize(vec3(-10.0 * east / westEast, -10.0 * north / southNorth, 1.0));
+    vec3 light = normalize(vec3(-1.0, 1.0, 1.4));
+    float shade = dot(normal, light) / light.z;
+    return color * clamp(mix(1.0, shade, 0.7), 0.45, 1.35);
   }
 
   // Past states and empires, painted on a map in the ground texture's layout. Each keeps its
