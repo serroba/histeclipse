@@ -8,6 +8,7 @@ import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period } from '../deepTime/periods';
 import type { SeaLevelIndex } from '../data/seaLevel';
+import { COAST_SOURCES, type CoastSource } from '../deepTime/coastline';
 import type { DeepScale } from '../state/viewState';
 import { element } from './dom';
 import { createMilestonePanel } from './milestonePanel';
@@ -16,6 +17,11 @@ import { createSeaLevelChart } from './seaLevelChart';
 /** Each step button moves by one elevation map, or on the ice-age scale by 5,000 years. */
 export const STEP_MA = 5;
 export const ICE_STEP_MA = 0.005;
+
+const COAST_LABELS: Readonly<Record<CoastSource, string>> = {
+  'bintanja-2008': 'Bintanja & van de Wal 2008',
+  'spratt-2016': 'Spratt & Lisiecki 2016',
+};
 
 export interface TemperatureView {
   readonly on: boolean;
@@ -55,6 +61,29 @@ export function temperatureText(view: TemperatureView): string {
   return `Global mean ${view.mean.toFixed(1)} °C${today}`;
 }
 
+/** On the ice-age scale: the sea level the coastlines follow, and whose. */
+export interface CoastlineView {
+  readonly coast: CoastSource;
+  /** Metres from today's; null while the reconstructions load. */
+  readonly seaLevel: number | null;
+  readonly label: string | null;
+  /** The source asked for, when it does not reach and another stands in. */
+  readonly instead: string | null;
+}
+
+/** "Coastline at −121 m (Bintanja & van de Wal 2008)", with any stand-in said. */
+export function coastlineText(view: CoastlineView): string {
+  if (view.seaLevel === null || view.label === null) return 'Coastline: loading sea level…';
+  const metres = Math.round(view.seaLevel);
+  const level =
+    metres === 0 ? 'today’s sea level' : `${metres > 0 ? '+' : '−'}${String(Math.abs(metres))} m`;
+  const stand =
+    view.instead === null
+      ? ''
+      : ` ${view.instead} does not reach this far; ${view.label} stands in.`;
+  return `Coastline at ${level}, following ${view.label}.${stand}`;
+}
+
 export interface DeepTimeView {
   readonly ma: number;
   /** The oldest moment the maps reach, Ma. */
@@ -64,6 +93,8 @@ export interface DeepTimeView {
   /** All 540 million years, or the ice ages; `oldest` is the span's start either way. */
   readonly scale: DeepScale;
   readonly temperature: TemperatureView;
+  /** The ice-age coastline; null on the 540 Myr scale. */
+  readonly coastline: CoastlineView | null;
   /** Sea level: off, on while the reconstructions load (null), or on with them. */
   readonly seaLevel:
     { readonly on: false } | { readonly on: true; readonly index: SeaLevelIndex | null };
@@ -81,6 +112,7 @@ export function createDeepTimeBar(handlers: {
   onTemperature(on: boolean): void;
   onSeaLevel(on: boolean): void;
   onScale(scale: DeepScale): void;
+  onCoast(coast: CoastSource): void;
 }): DeepTimeBar {
   const play = element(
     'button',
@@ -123,10 +155,28 @@ export function createDeepTimeBar(handlers: {
     scaleAll,
     scaleIce,
   );
+  const coastText = element('span', { 'data-testid': 'coastline' });
+  const coastPicker = element(
+    'select',
+    { class: 'deep-coast', 'aria-label': 'Coastline follows' },
+    ...COAST_SOURCES.map((source) => element('option', { value: source }, COAST_LABELS[source])),
+  );
   const iceNote = element(
-    'p',
+    'div',
     { class: 'deep-note', hidden: '', 'data-testid': 'ice-note' },
-    'The last 2.6 million years. The globe shows today’s surface: the elevation and temperature maps come only every 5 million years. Turn on sea level for the glacial cycles.',
+    element(
+      'p',
+      {},
+      'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time; bared shelf is sandy. Ice sheets are not drawn yet, nor the small moves of the continents, and the temperature maps are 5 million years apart.',
+    ),
+    element(
+      'p',
+      {},
+      coastText,
+      ' ',
+      element('label', {}, 'Follow ', coastPicker),
+      ' Each source is measured from its own present day.',
+    ),
   );
   const when = element('strong', { class: 'deep-when', 'data-testid': 'deep-when' });
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
@@ -227,6 +277,10 @@ export function createDeepTimeBar(handlers: {
   scaleIce.addEventListener('click', () => {
     handlers.onScale('ice');
   });
+  coastPicker.addEventListener('change', () => {
+    const source = COAST_SOURCES.find((option) => option === coastPicker.value);
+    if (source !== undefined) handlers.onCoast(source);
+  });
   play.addEventListener('click', () => {
     handlers.onPlay(!(current?.playing ?? false));
   });
@@ -266,6 +320,10 @@ export function createDeepTimeBar(handlers: {
       scaleAll.setAttribute('aria-pressed', String(!ice));
       scaleIce.setAttribute('aria-pressed', String(ice));
       iceNote.hidden = !ice;
+      if (view.coastline !== null) {
+        coastText.textContent = coastlineText(view.coastline);
+        coastPicker.value = view.coastline.coast;
+      }
       slider.min = String(-view.oldest * perMa);
       slider.setAttribute('aria-label', ice ? 'Thousands of years ago' : 'Millions of years ago');
       if (document.activeElement !== slider) slider.value = String(-view.ma * perMa);

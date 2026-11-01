@@ -193,6 +193,18 @@ export interface TemperatureSurface {
   readonly warmest: number;
 }
 
+/** On the ice-age scale: today's coasts and shelves, cut at the sea level of the moment. */
+export interface ShelfSurface {
+  readonly url: string;
+  readonly columns: number;
+  readonly rows: number;
+  /** Metres that bytes 0 and 255 stand for, from today's sea level. */
+  readonly lowest: number;
+  readonly highest: number;
+  /** The sea level to cut at, metres from today's. */
+  readonly seaLevel: number;
+}
+
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
   setSunDirection(direction: Vector3Tuple): void;
@@ -238,6 +250,8 @@ export interface Globe {
   setDeepTime(surface: DeepTimeSurface | null): void;
   /** Colour the deep-time surface by temperature; null shows relief alone. */
   setTemperature(surface: TemperatureSurface | null): void;
+  /** Draw coastlines at a past sea level from today's shelves; null uses the elevation maps'. */
+  setShelf(surface: ShelfSurface | null): void;
   /** Pin the chosen place on the globe; null removes the pin. */
   setLocation(place: GeoPoint | null): void;
   /**
@@ -302,6 +316,11 @@ const EARTH_FRAGMENT = /* glsl */ `
   uniform float tempActive;
   uniform vec2 tempGrid;
   uniform vec2 tempRange;
+  uniform sampler2D shelfMap;
+  uniform float shelfActive;
+  uniform vec2 shelfGrid;
+  uniform vec2 shelfRange;
+  uniform float seaLevel;
   uniform vec2 paleoGrid;
   uniform float seaDepth;
   uniform float landHeight;
@@ -419,6 +438,20 @@ const EARTH_FRAGMENT = /* glsl */ `
     // The coast blends over about a screen pixel, so it is smooth at any zoom.
     float blur = max(fwidth(coast), 1.0);
     vec3 color = mix(seaColour(min(height, -1.0)), landColour(max(height, 0.0)), smoothstep(-blur, blur, coast));
+    if (shelfActive > 0.5) {
+      // Ice ages: today's land and sea floor, cut at the sea level of the moment. Within the
+      // shelf map's band (-200 to +55 m) its finer 0.1° heights decide; beyond, the map's.
+      vec2 at = (uv * (shelfGrid - 1.0) + 0.5) / shelfGrid;
+      float shelf = mix(shelfRange.x, shelfRange.y, texture2D(shelfMap, at).r);
+      float inBand = step(shelfRange.x + 0.5, shelf) * step(shelf, shelfRange.y - 0.5);
+      coast = mix(height, shelf, inBand) - seaLevel;
+      blur = max(fwidth(coast), 1.0);
+      // Shelf below today's sea level, laid bare: land, in a sandier tint so it stands out.
+      float bared = (1.0 - step(0.0, shelf)) * inBand;
+      vec3 land = mix(landColour(max(height, 0.0)), srgb(vec3(0.72, 0.68, 0.46)), bared);
+      float depth = min(mix(height, shelf, inBand) - seaLevel, -1.0);
+      color = mix(seaColour(depth), land, smoothstep(-blur, blur, coast));
+    }
     // Hill shading, lit from the north-west as maps are: slopes from the neighbouring nodes,
     // ten times steeper than they are so ranges show from orbit.
     vec2 step_ = 1.0 / (paleoGrid - 1.0);
@@ -751,6 +784,11 @@ export async function createGlobe(
         tempActive: { value: 0 },
         tempGrid: { value: new Vector2(361, 181) },
         tempRange: { value: new Vector2(-60, 60) },
+        shelfMap: { value: null as Texture | null },
+        shelfActive: { value: 0 },
+        shelfGrid: { value: new Vector2(3601, 1801) },
+        shelfRange: { value: new Vector2(-200, 55) },
+        seaLevel: { value: 0 },
         evenLight,
         paleoGrid: { value: new Vector2(361, 181) },
         seaDepth: { value: 11_000 },
@@ -1678,6 +1716,31 @@ export async function createGlobe(
           paleoTextures.delete(surface.older);
         },
       );
+    },
+    setShelf(surface) {
+      const uniforms = earth.material.uniforms;
+      if (surface === null) {
+        uniforms['shelfActive'] = { value: 0 };
+        container.dataset['shelf'] = 'off';
+        needsRender = true;
+        return;
+      }
+      uniforms['seaLevel'] = { value: surface.seaLevel };
+      container.dataset['seaLevel'] = surface.seaLevel.toFixed(1);
+      paleoTexture(surface.url).then(
+        (map) => {
+          uniforms['shelfMap'] = { value: map };
+          uniforms['shelfGrid'] = { value: new Vector2(surface.columns, surface.rows) };
+          uniforms['shelfRange'] = { value: new Vector2(surface.lowest, surface.highest) };
+          uniforms['shelfActive'] = { value: 1 };
+          container.dataset['shelf'] = surface.url;
+          needsRender = true;
+        },
+        () => {
+          paleoTextures.delete(surface.url);
+        },
+      );
+      needsRender = true;
     },
     setEmpires(layer) {
       const uniforms = earth.material.uniforms;
