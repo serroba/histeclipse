@@ -72,7 +72,8 @@ export function shadowAt(
   return shadowAtHours(elements, hours, deltaTSeconds);
 }
 
-function shadowAtHours(
+/** The shadow's geometry `hours` from t0, with no check on the span. */
+export function shadowAtHours(
   elements: BesselianElements,
   hours: number,
   deltaTSeconds: number,
