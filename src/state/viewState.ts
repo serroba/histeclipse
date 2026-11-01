@@ -18,7 +18,7 @@ import { astronomicalYear } from '../time/year';
 export const MODES = ['globe', 'sky'] as const;
 export type Mode = (typeof MODES)[number];
 
-export const LAYERS = ['lunar', 'solar', 'terminator', 'places'] as const;
+export const LAYERS = ['lunar', 'solar', 'terminator', 'places', 'empires'] as const;
 export type Layer = (typeof LAYERS)[number];
 
 /**

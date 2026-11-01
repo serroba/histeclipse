@@ -22,6 +22,7 @@ export default defineConfig({
         'src/app.ts',
         'src/globe/scene.ts',
         'src/globe/solarShaders.ts',
+        'src/globe/empireCanvas.ts',
         'src/sky/skyScene.ts',
         'src/ui/**',
       ],

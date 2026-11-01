@@ -59,6 +59,15 @@ import { createFamousPanel } from './ui/famousPanel';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createAimSwitch, type AimTarget } from './ui/aimSwitch';
 import { createSunSwitch } from './ui/sunSwitch';
+import { createLayerSwitch } from './ui/layerSwitch';
+import {
+  centuryFor,
+  loadEmpireCentury,
+  loadEmpireIndex,
+  territoriesIn,
+  type EmpireCentury,
+  type EmpireIndex,
+} from './data/empires';
 import { loadSunImages, type SunImages } from './data/sunImages';
 import { createFigureSwitch } from './ui/figureSwitch';
 import { createViewSwitch } from './ui/viewSwitch';
@@ -102,6 +111,27 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const figureSwitch = createFigureSwitch((figures) => {
     store.set((state) => ({ ...state, figures }));
   });
+  const layerSwitch = createLayerSwitch((on) => {
+    store.set((state) => {
+      const layers = new Set(state.layers);
+      if (on) layers.add('empires');
+      else layers.delete('empires');
+      return { ...state, layers };
+    });
+  });
+  const empireCredit = element(
+    'span',
+    { class: 'empire-credit', hidden: '' },
+    ' · Borders: ',
+    element(
+      'a',
+      { href: 'https://github.com/Seshat-Global-History-Databank/cliopatria' },
+      'Cliopatria',
+    ),
+    ' (Seshat, ',
+    element('a', { href: 'https://creativecommons.org/licenses/by/4.0/' }, 'CC BY 4.0'),
+    ', simplified)',
+  );
   const sunSwitch = createSunSwitch((sunLayer) => {
     store.set((state) => ({ ...state, sunLayer }));
   });
@@ -152,7 +182,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       element('h1', {}, 'histeclipse'),
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
-      famousPanel.button,
+      element('div', { class: 'hud-actions' }, famousPanel.button, layerSwitch.root),
       viewSwitch.root,
       aimSwitch.root,
       figureSwitch.root,
@@ -169,6 +199,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           'NASA Blue Marble',
         ),
         ' · Positions: JPL DE441',
+        empireCredit,
       ),
     ),
     notices,
@@ -488,6 +519,49 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
   }
 
+  // Borders of past states load a century at a time, the first time the layer is on.
+  let empireIndex: Promise<EmpireIndex> | null = null;
+  const empireCenturies = new Map<number, Promise<EmpireCentury>>();
+  let empiresShown: string | null = null;
+  function showEmpires(state: ViewState): void {
+    const on = state.layers.has('empires');
+    layerSwitch.render(on, state.mode === 'globe');
+    empireCredit.hidden = !on;
+    const year = state.time.date.year;
+    const key = on ? String(year) : null;
+    if (key === empiresShown) return;
+    empiresShown = key;
+    if (!on) {
+      globe.setEmpires(null);
+      return;
+    }
+    empireIndex ??= loadEmpireIndex(`${base}data/empires/index.json`, (url) => fetch(url));
+    empireIndex
+      .then((index) => {
+        const century = centuryFor(index, year);
+        if (century === null) return null;
+        let file = empireCenturies.get(century);
+        if (file === undefined) {
+          file = loadEmpireCentury(`${base}data/empires/${String(century)}.json`, (url) =>
+            fetch(url),
+          );
+          empireCenturies.set(century, file);
+        }
+        return file;
+      })
+      .then(
+        (file) => {
+          // The year may have moved on while the file loaded.
+          if (empiresShown !== key) return;
+          globe.setEmpires(file === null ? [] : territoriesIn(file, year));
+        },
+        (error: unknown) => {
+          empiresShown = null;
+          notify(`Could not load the borders of past states: ${errorMessage(error)}`);
+        },
+      );
+  }
+
   // SDO's images of the Sun load the first time someone looks at it close up.
   let sunImages: SunImages | null = null;
   let sunImagesLoading = false;
@@ -634,6 +708,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.sunLayer !== previous.sunLayer
     ) {
       showSun(state);
+    }
+    if (
+      state.layers !== previous?.layers ||
+      state.mode !== previous.mode ||
+      state.time.date.year !== previous.time.date.year
+    ) {
+      showEmpires(state);
     }
     if (state.location !== previous?.location) globe.setLocation(state.location);
     if (state.view !== previous?.view) globe.setViewpoint(state.view);

@@ -75,6 +75,8 @@ import {
 } from './spaceFrame';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { discAverage, SOLAR_NORTH_POLE_J2000 } from './sunImage';
+import { labelPoint, type Territory } from '../data/empires';
+import { createEmpireCanvas, paintTerritories } from './empireCanvas';
 import {
   OCCULTATION,
   SOLAR_COMMON,
@@ -175,6 +177,11 @@ export interface Globe {
    * a plain disc.
    */
   setSunImage(image: SunImageRequest | null): void;
+  /**
+   * Lay past states and empires over the ground, with the names of the largest; null hides
+   * the layer.
+   */
+  setEmpires(territories: readonly Territory[] | null): void;
   /** Pin the chosen place on the globe; null removes the pin. */
   setLocation(place: GeoPoint | null): void;
   /**
@@ -227,6 +234,8 @@ const EARTH_FRAGMENT = /* glsl */ `
   ${SOLAR_PATH_LAYER}
   ${OCCULTATION}
   uniform sampler2D dayMap;
+  uniform sampler2D empiresMap;
+  uniform float empiresActive;
   // The Moon and Sun in the scene, for the Moon's shadow at any moment.
   uniform vec3 moonPosition;
   uniform float moonRadius;
@@ -264,6 +273,14 @@ const EARTH_FRAGMENT = /* glsl */ `
     return mix(color, tinted, lunarActive);
   }
 
+  // Past states and empires, painted on a map in the ground texture's layout. Each keeps its
+  // colour by night too, a little dimmer, so borders read on both sides.
+  vec3 empiresLayer(vec3 color, float daylight) {
+    vec4 painted = texture2D(empiresMap, vUv);
+    vec3 tinted = mix(color, painted.rgb * (0.45 + 0.55 * daylight), painted.a * 0.85);
+    return mix(color, tinted, empiresActive);
+  }
+
   void main() {
     #include <logdepthbuf_fragment>
     vec3 normal = normalize(vNormal);
@@ -275,6 +292,7 @@ const EARTH_FRAGMENT = /* glsl */ `
     vec3 color = mix(night, lit, daylight);
     float terminator = exp(-pow(sunAltitude / 0.05, 2.0));
     color += vec3(1.0, 0.5, 0.18) * terminator * 0.12;
+    color = empiresLayer(color, daylight);
     color = lunarLayer(color, surface, normal);
     float latitude = asin(clamp(normal.y, -1.0, 1.0));
     float longitude = atan(-normal.z, normal.x);
@@ -538,11 +556,16 @@ export async function createGlobe(
   pathScene.add(new Mesh(new PlaneGeometry(2, 2), pathMaterial));
   const pathCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
+  const empiresCanvas = createEmpireCanvas();
+  const empiresTexture = new CanvasTexture(empiresCanvas);
+  empiresTexture.colorSpace = SRGBColorSpace;
   const earth = new Mesh(
     new SphereGeometry(1, 128, 64),
     new ShaderMaterial({
       uniforms: {
         dayMap: { value: texture },
+        empiresMap: { value: empiresTexture },
+        empiresActive: { value: 0 },
         sunDirection: { value: sunDirection },
         lunarActive: lunarActive,
         moonCenter: { value: moonCenter },
@@ -670,6 +693,17 @@ export async function createGlobe(
   const markerLayer = document.createElement('div');
   markerLayer.className = 'space-markers';
   container.append(markerLayer);
+  // Names of the largest territories shown, placed on the globe each frame.
+  const empireLabelLayer = document.createElement('div');
+  empireLabelLayer.className = 'empire-labels';
+  container.append(empireLabelLayer);
+  let empireLabels: {
+    element: HTMLElement;
+    position: Vector3;
+    /** Approximate size on screen, pixels, for keeping names apart. */
+    width: number;
+    height: number;
+  }[] = [];
   const markers = {
     earth: spaceMarker(markerLayer, 'Earth', 'earth'),
     moon: spaceMarker(markerLayer, 'Moon', 'moon'),
@@ -995,9 +1029,42 @@ export async function createGlobe(
       shadeSun();
       renderer.render(scene, camera);
       placeMarkers();
+      placeEmpireLabels();
       container.dataset['rendered'] = 'true';
     }
     frame = requestAnimationFrame(loop);
+  }
+
+  function placeEmpireLabels(): void {
+    const eye = camera.position.clone().normalize();
+    // Only names on the near side of Earth, and only while it fills enough of the view.
+    const near = focus === 'earth' && camera.position.length() < 12;
+    // Labels come largest first; a smaller state's name gives way where it would overlap.
+    const placed: { x: number; y: number; w: number; h: number }[] = [];
+    for (const { element, position, width, height } of empireLabels) {
+      projected.copy(position).project(camera);
+      const shown =
+        near && position.dot(eye) > 0.25 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1;
+      const x = ((projected.x + 1) / 2) * container.clientWidth;
+      const centre = ((1 - projected.y) / 2) * container.clientHeight;
+      // Where it would overlap, a name may move a line up or down before it gives way.
+      const y = [0, -1, 1, -2, 2]
+        .map((step) => centre + step * height)
+        .find((candidate) => {
+          const box = { x: x - width / 2, y: candidate - height / 2, w: width, h: height };
+          return placed.every(
+            (other) =>
+              box.x > other.x + other.w ||
+              other.x > box.x + box.w ||
+              box.y > other.y + other.h ||
+              other.y > box.y + box.h,
+          );
+        });
+      element.hidden = !shown || y === undefined;
+      if (y === undefined || element.hidden) continue;
+      placed.push({ x: x - width / 2, y: y - height / 2, w: width, h: height });
+      element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(-50%, -50%)`;
+    }
   }
 
   const projected = new Vector3();
@@ -1264,6 +1331,45 @@ export async function createGlobe(
         .catch(() => {
           if (sunImageWanted === image) container.dataset['sunImage'] = 'error';
         });
+    },
+    setEmpires(territories) {
+      const uniforms = earth.material.uniforms;
+      uniforms['empiresActive'] = { value: territories === null ? 0 : 1 };
+      empireLabelLayer.replaceChildren();
+      empireLabels = [];
+      if (territories !== null) {
+        paintTerritories(empiresCanvas, territories);
+        empiresTexture.needsUpdate = true;
+        // Name the 30 largest, in proportion to their size.
+        const ranked = territories
+          .map((territory) => ({ territory, label: labelPoint(territory) }))
+          .sort((a, b) => b.label.area - a.label.area)
+          .slice(0, 30);
+        empireLabels = ranked.map(({ territory, label }) => {
+          const element = document.createElement('span');
+          element.className = 'empire-label';
+          element.textContent = territory.name;
+          const size = Math.round(10 + Math.min(6, Math.sqrt(label.area) / 4));
+          element.style.fontSize = `${String(size)}px`;
+          // Laid out once, unseen, so its real size is known for keeping names apart.
+          element.style.visibility = 'hidden';
+          empireLabelLayer.append(element);
+          return {
+            element,
+            position: new Vector3(...geoToVector(label, 1.01)),
+            width: 0,
+            height: 0,
+          };
+        });
+        for (const entry of empireLabels) {
+          entry.width = entry.element.offsetWidth;
+          entry.height = entry.element.offsetHeight;
+          entry.element.hidden = true;
+          entry.element.style.visibility = '';
+        }
+      }
+      container.dataset['empires'] = territories === null ? 'off' : String(territories.length);
+      needsRender = true;
     },
     onPlacePick(listener) {
       placeListeners.add(listener);
