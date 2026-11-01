@@ -1086,3 +1086,38 @@ test('deep time colours the globe by temperature, with the global mean and its c
   await expect(page.locator('.temperature-legend')).toBeHidden();
   expect(problems).toEqual([]);
 });
+
+test('deep time charts sea level by four reconstructions, side by side', async ({ page }) => {
+  const problems = collectProblems(page);
+  await page.goto('./?ma=250');
+  await globeRendered(page);
+  const toggle = page.getByRole('button', { name: 'Sea level' });
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(page).toHaveURL(/layers=[^&]*sealevel/);
+  await expect(page.locator('.sea-line')).toHaveCount(4);
+  const legend = page.getByTestId('sea-legend');
+  await expect(legend.locator('[data-series="van-der-meer-2022"]')).toContainText(
+    '+100 m (+90 to +110)',
+  );
+  // The Cenozoic curve does not reach 250 Ma, and says so.
+  await expect(legend.locator('[data-series="miller-2020"]')).toContainText(
+    '— covers 980 ka to 65 Ma',
+  );
+  await expect(legend.getByRole('link', { name: 'van der Meer et al. 2022' })).toHaveAttribute(
+    'href',
+    'https://doi.org/10.1016/j.gr.2022.07.014',
+  );
+
+  // A click on the chart goes to that moment: the right-hand quarter is the last 135 Myr.
+  const chart = page.locator('.sea-chart');
+  const box = await chart.boundingBox();
+  if (box === null) throw new Error('no chart');
+  await chart.click({ position: { x: box.width * 0.75, y: box.height / 2 } });
+  await expect.poll(() => Number(new URL(page.url()).searchParams.get('ma'))).toBeLessThan(160);
+  expect(Number(new URL(page.url()).searchParams.get('ma'))).toBeGreaterThan(110);
+
+  await toggle.click();
+  await expect(legend).toBeHidden();
+  expect(problems).toEqual([]);
+});

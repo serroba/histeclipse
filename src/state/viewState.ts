@@ -29,8 +29,9 @@ export const LAYERS = [
   'terminator',
   'places',
   'empires',
-  // Deep time only: the surface coloured by temperature.
+  // Deep time only: the surface coloured by temperature, and sea level through time.
   'temperature',
+  'sealevel',
 ] as const;
 export type Layer = (typeof LAYERS)[number];
 
