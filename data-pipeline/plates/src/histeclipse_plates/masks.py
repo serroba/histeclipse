@@ -4,7 +4,8 @@ Cao et al. (2024), *Earth's tectonic and plate boundary evolution over 1.8 billi
 Geoscience Frontiers 15, 101922; model on Zenodo (doi:10.5281/zenodo.13628813, CC BY 4.0). Its
 present-day continent outlines are carried back along its rotations, in its paleomagnetic
 reference frame (the same kind as PALEOMAP's, so latitudes mean the same on both), and each
-time's continents are drawn as a mask on a 0.25° grid: 255 inside a continent, 0 outside.
+time's continents are drawn as a mask on a 0.25° grid: 255 inside a continent, 0 outside, with
+the hairline gaps between neighbouring outlines sealed.
 
 Only continental crust that survives today can be carried back, so the further back, the less
 there is: about 41% of the surface today, 12% at 1,800 Ma.
@@ -68,6 +69,26 @@ def mask(inside: Callable[[float, float], bool], rows: int = ROWS, columns: int 
     return out
 
 
+def _grow(inside: npt.NDArray[np.bool_]) -> npt.NDArray[np.bool_]:
+    """Grow by one node each way: east and west wrapping round, north and south not."""
+    grown = inside.copy()
+    grown |= np.roll(inside, 1, axis=1) | np.roll(inside, -1, axis=1)
+    grown[1:] |= inside[:-1]
+    grown[:-1] |= inside[1:]
+    return grown
+
+
+def sealed(drawn: Mask) -> Mask:
+    """Seal hairline gaps between neighbouring continents: grow by a node, then shrink back.
+
+    Adjacent outlines in the model leave slivers a node wide between them, which would show as
+    lines across a continent; real coasts and straits wider than a node are kept.
+    """
+    inside = drawn > 0
+    closed = ~_grow(~_grow(inside))
+    return np.where(closed, 255, 0).astype(np.uint8)
+
+
 def continent_share(drawn: Mask) -> float:
     """Share of the surface inside a continent, each row weighted by its area (cos latitude)."""
     weights = np.cos(np.radians(np.linspace(90, -90, len(drawn))))
@@ -111,7 +132,7 @@ def write_masks(
     rows, columns = grid
     frames: list[Json] = []
     for ma in ages:
-        drawn = mask(reconstructed_inside(continents, rotation, float(ma)), rows, columns)
+        drawn = sealed(mask(reconstructed_inside(continents, rotation, float(ma)), rows, columns))
         _ = (folder / f"{ma}.png").write_bytes(to_png(drawn))
         frames.append(
             {"ma": ma, "file": f"{ma}.png", "continents": round(continent_share(drawn), 3)}

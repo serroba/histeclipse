@@ -17,6 +17,7 @@ from histeclipse_plates.masks import (
     continent_share,
     mask,
     reconstructed_inside,
+    sealed,
     verified,
     write_masks,
 )
@@ -51,6 +52,22 @@ def test_draws_a_mask_node_by_node() -> None:
     assert drawn[1, 6] == 255
     assert drawn[3, 6] == 0
     assert drawn[1, 2] == 0
+
+
+def test_seals_hairline_gaps_but_keeps_wide_straits() -> None:
+    drawn = np.zeros((9, 20), dtype=np.uint8)
+    drawn[2:7, 2:8] = 255
+    drawn[2:7, 9:13] = 255  # a gap one node wide at column 8: sealed
+    drawn[2:7, 16:19] = 255  # a strait three nodes wide (columns 13 to 15): kept
+    out = sealed(drawn)
+    assert out[4, 8] == 255
+    assert out[4, 14] == 0
+    assert out[0, 5] == 0  # the sea beyond is left alone
+    # East and west wrap round: a gap across 180° is sealed too.
+    edges = np.zeros((5, 10), dtype=np.uint8)
+    edges[:, :4] = 255
+    edges[:, 5:] = 255
+    assert sealed(edges)[2, 4] == 255
 
 
 def test_weights_continents_by_area() -> None:
