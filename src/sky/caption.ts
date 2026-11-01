@@ -19,11 +19,17 @@ export function formatPlace({ latitude, longitude }: GeoPoint): string {
 
 export function skyCaption(options: {
   readonly place: GeoPoint;
+  /** A name for the place, such as "Babylon", when there is one. */
+  readonly placeName?: string | null;
   readonly azimuth: number;
   /** One-sigma uncertainty of ΔT at this moment, in seconds. */
   readonly uncertaintySeconds: number;
 }): string {
-  const where = `Standing at ${formatPlace(options.place)}, facing ${compassPoint(options.azimuth)}.`;
+  const at =
+    options.placeName === undefined || options.placeName === null
+      ? `at ${formatPlace(options.place)}`
+      : `in ${options.placeName} (${formatPlace(options.place)})`;
+  const where = `Standing ${at}, facing ${compassPoint(options.azimuth)}.`;
   if (options.uncertaintySeconds < NOTICEABLE_SECONDS) return where;
   const turn = options.uncertaintySeconds * DEGREES_PER_SECOND;
   return (

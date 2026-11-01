@@ -28,6 +28,12 @@ export interface CultureInfo {
   /** When and where the figures come from, briefly. */
   readonly about: string;
   readonly licence: string;
+  /** Where its sky-watchers stood: picking the culture puts the observer there. */
+  readonly place: {
+    readonly name: string;
+    readonly latitude: number;
+    readonly longitude: number;
+  } | null;
 }
 
 export const CULTURE_INFO: Readonly<Record<SkyCulture, CultureInfo>> = {
@@ -35,41 +41,49 @@ export const CULTURE_INFO: Readonly<Record<SkyCulture, CultureInfo>> = {
     label: 'Modern (IAU)',
     about: 'The 88 constellations astronomers use today.',
     licence: '',
+    place: null,
   },
   babylonian_mulapin: {
     label: 'Babylonian (MUL.APIN)',
     about: 'Mesopotamian star list known from tablets of the 7th century BCE, with older roots.',
     licence: 'CC BY-ND 4.0',
+    place: { name: 'Babylon', latitude: 32.5422, longitude: 44.4209 },
   },
   babylonian_seleucid: {
     label: 'Babylonian (Seleucid)',
     about: 'Late Babylonian figures of the Seleucid era, 3rd–1st century BCE.',
     licence: 'CC BY-ND 4.0',
+    place: { name: 'Uruk', latitude: 31.3243, longitude: 45.6369 },
   },
   egyptian: {
     label: 'Egyptian',
     about: 'Ancient Egyptian figures after J. A. Belmonte’s map of the Egyptian firmament.',
     licence: 'GNU GPL v2',
+    place: { name: 'Thebes', latitude: 25.7188, longitude: 32.6573 },
   },
   greek_almagest: {
     label: 'Greek (Almagest)',
     about: 'The 48 constellations of Ptolemy’s Almagest, 2nd century CE.',
     licence: 'CC BY-ND 4.0',
+    place: { name: 'Alexandria', latitude: 31.2001, longitude: 29.9187 },
   },
   chinese: {
     label: 'Chinese',
     about: 'Traditional Chinese star officials and the 28 lunar mansions.',
     licence: 'CC BY-SA 4.0',
+    place: { name: 'Luoyang', latitude: 34.6197, longitude: 112.454 },
   },
   indian: {
     label: 'Indian',
     about: 'Vedic and later Indian figures, including the nakshatras.',
     licence: 'CC BY-SA 4.0',
+    place: { name: 'Ujjain', latitude: 23.1793, longitude: 75.7849 },
   },
   'arabic_al-sufi': {
     label: 'Arabic (al-Sufi)',
     about: 'Al-Sufi’s Book of Fixed Stars, Persia, 10th century CE.',
     licence: 'CC BY-ND 4.0',
+    place: { name: 'Isfahan', latitude: 32.6539, longitude: 51.666 },
   },
 };
 
