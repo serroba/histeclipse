@@ -396,6 +396,7 @@ body {
 
 .timeline {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   width: min(760px, 100%);
@@ -541,6 +542,85 @@ body {
   font-size: 14px;
 }
 
+/* Seen from a past state: a second row of the bar. */
+.seen-controls {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 14px;
+}
+
+.seen-controls[hidden] {
+  display: none;
+}
+
+.seen-label {
+  padding: 0 4px 0 8px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.seen-select {
+  flex: 0 1 18em;
+  min-width: 0;
+  height: 44px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.05);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.seen-select option {
+  background: #10162a;
+  color: var(--ink);
+}
+
+.seen-step {
+  flex: none;
+}
+
+.seen-step:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.seen-status {
+  flex: none;
+  overflow: hidden;
+  color: var(--ink-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.eclipse-seen {
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgb(120 220 160 / 0.16);
+  color: #9fe6bd;
+  font-size: 12px;
+}
+
+.seen-maybe .eclipse-seen {
+  background: rgb(255 200 90 / 0.16);
+  color: #ffd27a;
+}
+
+.seen-not {
+  opacity: 0.5;
+}
+
+.seen-not .eclipse-seen {
+  background: transparent;
+  color: var(--ink-muted);
+}
+
 .eclipse-card {
   width: min(760px, 100%);
   max-height: 34vh;
@@ -592,6 +672,7 @@ body {
 @media (max-width: 600px) {
   .timeline {
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
     gap: 6px;
   }

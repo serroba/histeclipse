@@ -104,6 +104,8 @@ export interface ViewState {
   readonly culture: SkyCulture;
   /** Whose borders the empires layer draws. */
   readonly borders: BorderSource;
+  /** A past state (by its name in Cliopatria) whose eclipses the year bar picks out, if any. */
+  readonly seenIn: string | null;
 }
 
 // In the focused body's radii. For Earth, ~5 times the Sun's distance (23,455 Earth radii), so
@@ -160,5 +162,6 @@ export function defaultViewState(now: Date): ViewState {
     sunLayer: 'visible',
     culture: 'modern',
     borders: 'cliopatria',
+    seenIn: null,
   };
 }

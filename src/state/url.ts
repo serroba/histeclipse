@@ -19,6 +19,8 @@
  *   `magnetogram`, `304`, `171`, `193` or `131`.
  * - `borders` is whose borders of past states the empires layer draws: `cliopatria`
  *   (absent), `ohm` (OpenHistoricalMap) or `both`.
+ * - `seen` names a past state, as Cliopatria names it (`Neo-Babylonian Empire`): the year bar
+ *   marks which eclipses could be seen from its territory. Absent means anywhere.
  * - `culture` is whose constellations the sky view draws: `modern` (absent) or a sky culture
  *   such as `babylonian_mulapin` or `chinese`.
  * - `loc` (observer), `sel` (selected eclipse), `view` (an attached viewpoint; absent means
@@ -121,6 +123,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     sunLayer: read('sun', parseSunLayer, defaults.sunLayer),
     culture: read('culture', parseCulture, defaults.culture),
     borders: read('borders', parseBorders, defaults.borders),
+    seenIn: read<string | null>('seen', parseSeenIn, defaults.seenIn),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -149,6 +152,7 @@ export function serializeViewState(state: ViewState): string {
   if (state.sunLayer !== 'visible') params.set('sun', state.sunLayer);
   if (state.culture !== 'modern') params.set('culture', state.culture);
   if (state.borders !== 'cliopatria') params.set('borders', state.borders);
+  if (state.seenIn !== null) params.set('seen', state.seenIn);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
@@ -163,6 +167,13 @@ function parseFigures(raw: string): Figures {
 
 function parseBorders(raw: string): BorderSource {
   return oneOf(raw, BORDER_SOURCES, 'borders');
+}
+
+/** A state's name: any text, trimmed, of a sensible length. Whether it exists depends on the year. */
+function parseSeenIn(raw: string): string {
+  const name = raw.trim();
+  if (name.length === 0 || name.length > 120) throw new Error('expected the name of a past state');
+  return name;
 }
 
 function parseCulture(raw: string): SkyCulture {
