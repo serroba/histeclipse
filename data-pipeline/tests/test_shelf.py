@@ -12,8 +12,10 @@ from histeclipse_pipeline.shelf import (
     LOWEST,
     ROWS,
     encode,
+    open_ocean,
     read_grid,
     to_png,
+    without_inland_basins,
     write_shelf,
 )
 
@@ -54,7 +56,7 @@ def test_packs_a_metre_a_byte_within_the_band() -> None:
 
 
 def test_writes_the_image_and_its_index(tmp_path: Path) -> None:
-    heights = np.full((ROWS, COLUMNS), -1000.0)
+    heights = np.full((ROWS, COLUMNS), -4000.0)
     heights[:900] = 10.0
     assert write_shelf(heights, tmp_path) == len(to_png(heights))
     with Image.open(tmp_path / "today.png") as image:
@@ -63,3 +65,18 @@ def test_writes_the_image_and_its_index(tmp_path: Path) -> None:
         assert image.getpixel((0, ROWS - 1)) == 0
     index = json.loads((tmp_path / "index.json").read_text())  # pyright: ignore[reportAny]
     assert (index["lowest"], index["highest"], index["file"]) == (LOWEST, HIGHEST, "today.png")
+
+
+def test_traces_the_open_ocean_from_the_deep_and_lifts_inland_basins() -> None:
+    heights = np.full((7, 12), 100.0)
+    heights[:, 0:3] = -4000.0  # deep ocean along the west edge...
+    heights[2:5, 3:5] = -40.0  # ...and a shelf joined to it
+    heights[2:5, 8:10] = -28.0  # a basin below sea level, cut off by land (the Caspian)
+    heights[3, 11] = -50.0  # joined to the deep ocean across the 180° meridian
+    ocean = open_ocean(heights)
+    assert ocean[3, 4]
+    assert not ocean[3, 8]
+    assert ocean[3, 11]
+    lifted = without_inland_basins(heights)
+    assert lifted[3, 8] == HIGHEST
+    assert lifted[3, 4] == -40.0
