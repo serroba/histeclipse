@@ -12,6 +12,7 @@ import {
   DEFAULT_LAYERS,
   DEFAULT_LOOK,
   BORDER_SOURCES,
+  DEEP_SCALES,
   FIGURES,
   BODIES,
   LAYERS,
@@ -64,6 +65,7 @@ describe('parseViewState', () => {
       borders: 'cliopatria',
       seenIn: null,
       ma: null,
+      deepScale: 'all',
     } satisfies ViewState);
   });
 
@@ -110,6 +112,14 @@ describe('parseViewState', () => {
     expect(state.focus).toBe('moon');
     expect(serializeViewState(state)).toContain('&focus=moon');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
+  });
+
+  it('reads the ice-age scale, writing it only when it is not the whole span', () => {
+    expect(parseViewState('ma=0.021&scale=ice', NOW).state.deepScale).toBe('ice');
+    expect(serializeViewState(parseViewState('ma=0.021&scale=ice', NOW).state)).toContain(
+      '&scale=ice',
+    );
+    expect(serializeViewState(parseViewState('ma=250', NOW).state)).not.toContain('scale=');
   });
 
   it('reads deep time in millions of years, to a thousand years, writing it only when set', () => {
@@ -345,10 +355,12 @@ describe('serializeViewState', () => {
       fc.string({ minLength: 1, maxLength: 120 }).filter((name) => name.trim() === name),
       { nil: null },
     ),
+    // Kept to a thousand years.
     ma: fc.option(
-      fc.integer({ min: 0, max: 5400 }).map((tenths) => tenths / 10),
+      fc.integer({ min: 0, max: 540_000 }).map((thousands) => thousands / 1000),
       { nil: null },
     ),
+    deepScale: fc.constantFrom(...DEEP_SCALES),
   });
 
   it('round-trips every view state through a link', () => {

@@ -489,9 +489,13 @@ export function milestonesNear(ma: number, reach: number): readonly Milestone[] 
  */
 export const STANDING_MA = 0.05;
 
-/** The next milestone towards the present (direction −1) or the past (+1) from `ma`. */
-export function nextMilestone(ma: number, direction: 1 | -1): Milestone | null {
+/**
+ * The next milestone towards the present (direction −1) or the past (+1) from `ma`, among
+ * those no older than `oldest` (the span the bar shows).
+ */
+export function nextMilestone(ma: number, direction: 1 | -1, oldest = Infinity): Milestone | null {
+  const shown = MILESTONES.filter((milestone) => anchorMa(milestone) <= oldest);
   return direction < 0
-    ? (MILESTONES.find((milestone) => anchorMa(milestone) < ma - STANDING_MA) ?? null)
-    : (MILESTONES.findLast((milestone) => anchorMa(milestone) > ma + STANDING_MA) ?? null);
+    ? (shown.find((milestone) => anchorMa(milestone) < ma - STANDING_MA) ?? null)
+    : (shown.findLast((milestone) => anchorMa(milestone) > ma + STANDING_MA) ?? null);
 }

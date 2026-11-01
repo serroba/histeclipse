@@ -8,12 +8,14 @@ import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period } from '../deepTime/periods';
 import type { SeaLevelIndex } from '../data/seaLevel';
+import type { DeepScale } from '../state/viewState';
 import { element } from './dom';
 import { createMilestonePanel } from './milestonePanel';
 import { createSeaLevelChart } from './seaLevelChart';
 
-/** Each step button moves by one elevation map. */
+/** Each step button moves by one elevation map, or on the ice-age scale by 5,000 years. */
 export const STEP_MA = 5;
+export const ICE_STEP_MA = 0.005;
 
 export interface TemperatureView {
   readonly on: boolean;
@@ -59,6 +61,8 @@ export interface DeepTimeView {
   readonly oldest: number;
   readonly period: Period | null;
   readonly playing: boolean;
+  /** All 540 million years, or the ice ages; `oldest` is the span's start either way. */
+  readonly scale: DeepScale;
   readonly temperature: TemperatureView;
   /** Sea level: off, on while the reconstructions load (null), or on with them. */
   readonly seaLevel:
@@ -76,6 +80,7 @@ export function createDeepTimeBar(handlers: {
   onExit(): void;
   onTemperature(on: boolean): void;
   onSeaLevel(on: boolean): void;
+  onScale(scale: DeepScale): void;
 }): DeepTimeBar {
   const play = element(
     'button',
@@ -92,7 +97,8 @@ export function createDeepTimeBar(handlers: {
     { type: 'button', class: 'step', 'aria-label': `${String(STEP_MA)} million years later` },
     '›',
   );
-  // The slider's value is −Ma, so dragging right moves towards the present.
+  // The slider's value is minus the time ago, so dragging right moves towards the present: in
+  // millions of years, or thousands on the ice-age scale.
   const slider = element('input', {
     type: 'range',
     class: 'deep-slider',
@@ -101,6 +107,27 @@ export function createDeepTimeBar(handlers: {
     step: '1',
     'aria-label': 'Millions of years ago',
   });
+  const scaleAll = element(
+    'button',
+    { type: 'button', class: 'deep-scale-option', 'aria-pressed': 'true' },
+    '540 Myr',
+  );
+  const scaleIce = element(
+    'button',
+    { type: 'button', class: 'deep-scale-option', 'aria-pressed': 'false' },
+    'Ice ages',
+  );
+  const scaleSwitch = element(
+    'span',
+    { class: 'deep-scale', role: 'group', 'aria-label': 'Time span' },
+    scaleAll,
+    scaleIce,
+  );
+  const iceNote = element(
+    'p',
+    { class: 'deep-note', hidden: '', 'data-testid': 'ice-note' },
+    'The last 2.6 million years. The globe shows today’s surface: the elevation and temperature maps come only every 5 million years. Turn on sea level for the glacial cycles.',
+  );
   const when = element('strong', { class: 'deep-when', 'data-testid': 'deep-when' });
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
   const exit = element('button', { type: 'button', class: 'deep-exit' }, 'Back to history');
@@ -167,10 +194,12 @@ export function createDeepTimeBar(handlers: {
       when,
       ' ',
       period,
+      scaleSwitch,
       seaLevelButton,
       temperatureButton,
       exit,
     ),
+    iceNote,
     seaLevel.legend,
     legend,
     milestones.root,
@@ -180,14 +209,23 @@ export function createDeepTimeBar(handlers: {
   let current: DeepTimeView | null = null;
   // The span the ticks were placed for.
   let marksSpan = 0;
+  // Slider units per million years, and the step, for the scale shown.
+  const unit = (): number => (current?.scale === 'ice' ? 1000 : 1);
+  const step = (): number => (current?.scale === 'ice' ? ICE_STEP_MA : STEP_MA);
   slider.addEventListener('input', () => {
-    handlers.onMa(-Number(slider.value));
+    handlers.onMa(-Number(slider.value) / unit());
   });
   older.addEventListener('click', () => {
-    if (current !== null) handlers.onMa(Math.min(current.oldest, current.ma + STEP_MA));
+    if (current !== null) handlers.onMa(Math.min(current.oldest, current.ma + step()));
   });
   younger.addEventListener('click', () => {
-    if (current !== null) handlers.onMa(Math.max(0, current.ma - STEP_MA));
+    if (current !== null) handlers.onMa(Math.max(0, current.ma - step()));
+  });
+  scaleAll.addEventListener('click', () => {
+    handlers.onScale('all');
+  });
+  scaleIce.addEventListener('click', () => {
+    handlers.onScale('ice');
   });
   play.addEventListener('click', () => {
     handlers.onPlay(!(current?.playing ?? false));
@@ -223,8 +261,19 @@ export function createDeepTimeBar(handlers: {
           ),
         );
       }
-      slider.min = String(-view.oldest);
-      if (document.activeElement !== slider) slider.value = String(-view.ma);
+      const ice = view.scale === 'ice';
+      const perMa = ice ? 1000 : 1;
+      scaleAll.setAttribute('aria-pressed', String(!ice));
+      scaleIce.setAttribute('aria-pressed', String(ice));
+      iceNote.hidden = !ice;
+      slider.min = String(-view.oldest * perMa);
+      slider.setAttribute('aria-label', ice ? 'Thousands of years ago' : 'Millions of years ago');
+      if (document.activeElement !== slider) slider.value = String(-view.ma * perMa);
+      const stepWords = ice ? '5,000 years' : `${String(STEP_MA)} million years`;
+      older.setAttribute('aria-label', `${stepWords} earlier`);
+      younger.setAttribute('aria-label', `${stepWords} later`);
+      // The temperature maps are 5 million years apart: nothing to show between ice ages.
+      temperatureButton.disabled = ice;
       slider.setAttribute('aria-valuetext', formatMa(view.ma));
       when.textContent = formatMa(view.ma);
       period.textContent = view.period === null ? '' : `${view.period.name} · ${view.period.era}`;
@@ -234,7 +283,7 @@ export function createDeepTimeBar(handlers: {
           element('dd', {}, text),
         ]),
       );
-      milestones.render(view.ma);
+      milestones.render(view.ma, view.oldest);
       seaLevelButton.setAttribute('aria-pressed', String(view.seaLevel.on));
       seaLevel.render(
         view.seaLevel.on ? view.seaLevel.index : null,
