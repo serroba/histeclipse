@@ -224,7 +224,7 @@ export function createDeepTimeBar(handlers: {
   const unchartedNote = element(
     'p',
     { class: 'deep-note', hidden: '', 'data-testid': 'uncharted-note' },
-    'No map: before 540 million years ago the continents’ positions are too uncertain to draw here, so the globe is left blank. The milestones tell what was happening.',
+    'No map: before 540 million years ago the continents’ positions are too uncertain to draw here, so the globe is left blank. The Plates layer fills in one reconstruction’s continents back to 1,800 million years; the milestones tell what was happening.',
   );
   const coastText = element('span', { 'data-testid': 'coastline' });
   const iceLine = element('p', { 'data-testid': 'ice-sheets' });

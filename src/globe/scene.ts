@@ -480,8 +480,23 @@ const EARTH_FRAGMENT = /* glsl */ `
     return mix(srgb(vec3(0.20, 0.25, 0.33)), srgb(vec3(0.42, 0.50, 0.62)), line * 0.6);
   }
 
+  // A second reconstruction's continents as a thin magenta line, a pixel or two wide at any
+  // zoom, where its mask crosses one half. On the blank globe, before the elevation maps reach,
+  // they are filled in too: the only continents drawn there.
+  vec3 withPlates(vec3 color, vec2 uv, float filled) {
+    if (plateActive < 0.5) return color;
+    // Each mask turned east by its own amount: sampled that far west.
+    vec2 atYounger = (vec2(fract(uv.x - plateTurn.x / 360.0), uv.y) * (plateGrid - 1.0) + 0.5) / plateGrid;
+    vec2 atOlder = (vec2(fract(uv.x - plateTurn.y / 360.0), uv.y) * (plateGrid - 1.0) + 0.5) / plateGrid;
+    float inside = mix(texture2D(plateYounger, atYounger).r, texture2D(plateOlder, atOlder).r, plateMix);
+    float blur = 1.5 * max(fwidth(inside), 1e-4);
+    color = mix(color, srgb(vec3(0.55, 0.45, 0.58)), filled * 0.55 * smoothstep(0.5 - blur, 0.5 + blur, inside));
+    float edge = 1.0 - smoothstep(0.0, blur, abs(inside - 0.5));
+    return mix(color, srgb(vec3(1.0, 0.42, 0.84)), edge * 0.9);
+  }
+
   vec3 paleoSurface(vec2 uv) {
-    if (uncharted > 0.5) return unchartedSurface(uv);
+    if (uncharted > 0.5) return withPlates(unchartedSurface(uv), uv, 1.0);
     float height = paleoHeight(uv);
     // Where the coast runs comes from heights averaged over about half a degree (a tent of
     // nine samples): some source grids draw coasts in 0.5–1° steps, and this rounds them off.
@@ -541,17 +556,7 @@ const EARTH_FRAGMENT = /* glsl */ `
       color = mix(color, ice, covered);
     }
     color *= clamp(mix(1.0, shade, 0.7), 0.45, 1.35);
-    if (plateActive > 0.5) {
-      // A second reconstruction's continents as a thin magenta line, a pixel or two wide at any
-      // zoom, where its mask crosses one half.
-      // Each mask turned east by its own amount: sampled that far west.
-      vec2 atYounger = (vec2(fract(uv.x - plateTurn.x / 360.0), uv.y) * (plateGrid - 1.0) + 0.5) / plateGrid;
-      vec2 atOlder = (vec2(fract(uv.x - plateTurn.y / 360.0), uv.y) * (plateGrid - 1.0) + 0.5) / plateGrid;
-      float inside = mix(texture2D(plateYounger, atYounger).r, texture2D(plateOlder, atOlder).r, plateMix);
-      float edge = 1.0 - smoothstep(0.0, 1.5 * max(fwidth(inside), 1e-4), abs(inside - 0.5));
-      color = mix(color, srgb(vec3(1.0, 0.42, 0.84)), edge * 0.9);
-    }
-    return color;
+    return withPlates(color, uv, 0.0);
   }
 
   // Past states and empires, painted on a map in the ground texture's layout. Each keeps its

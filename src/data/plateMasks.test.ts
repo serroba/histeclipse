@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import index from '../../public/data/plates/index.json';
 import type { Fetch } from './fetchJson';
 import { framesAround } from './paleoDem';
-import { loadPlateMasks, plateText } from './plateMasks';
+import { loadPlateMasks, platesBeyondText, plateText } from './plateMasks';
 
 const serve =
   (body: unknown): Fetch =>
@@ -38,6 +38,12 @@ describe('the continent masks', () => {
     const old = loaded.frames.find(({ ma }) => ma === 1000);
     expect(old?.turn).toBeUndefined();
     expect(old && plateText(old)).toContain('No surface map reaches this far');
+  });
+
+  it('say how far back they reach, beyond the oldest', () => {
+    expect(platesBeyondText(1800)).toBe(
+      'The continent outlines (Cao et al. 2024) reach back 1,800 million years; none are drawn before.',
+    );
   });
 
   it('reject frames out of order', async () => {

@@ -53,6 +53,11 @@ export async function loadPlateMasks(url: string, fetchJson: Fetch): Promise<Pla
 export type PlateFrame = PlateMaskIndex['frames'][number];
 
 /** What the bar says about the outlines at a frame: how they were lined up, and how well. */
+/** Beyond the oldest mask: nothing is outlined, and the bar says how far the masks reach. */
+export function platesBeyondText(reachMa: number): string {
+  return `The continent outlines (Cao et al. 2024) reach back ${reachMa.toLocaleString('en')} million years; none are drawn before.`;
+}
+
 export function plateText(frame: PlateFrame): string {
   const credit =
     'Outlined: the continents in a second reconstruction, Cao et al. 2024 (CC BY 4.0).';
