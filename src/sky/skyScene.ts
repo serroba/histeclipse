@@ -38,6 +38,7 @@ import type { Figures, SkyLook } from '../state/viewState';
 import type { JulianDay } from '../time/julianDay';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import {
+  angleBetween,
   angularRadius,
   EARTH_RADIUS_KM,
   eclipsedLimit,
@@ -48,7 +49,13 @@ import {
   sunVisible,
   topocentric,
 } from './bodies';
-import { apparentDirection, apparentMagnitude, horizontal, limitingMagnitude } from './horizon';
+import {
+  aberrate,
+  apparentDirection,
+  apparentMagnitude,
+  horizontal,
+  limitingMagnitude,
+} from './horizon';
 import {
   COMPASS,
   dragLook,
@@ -73,6 +80,8 @@ export interface SkyMoment {
   readonly observer: Vec3;
   /** The planets as seen from the observer; empty until their theory has loaded. */
   readonly planets: readonly SkyPlanet[];
+  /** Earth's velocity, km/s, J2000: everything in the sky is shifted by annual aberration. */
+  readonly velocity: Vec3;
 }
 
 export interface SkyPlanet {
@@ -526,6 +535,8 @@ export function createSkyScene(
   let shown: readonly Figure[] = [];
   let segments: [number, number][] = [];
   let visible = false;
+  // Earth's velocity at the moment shown, for annual aberration.
+  let motion: Vec3 = [0, 0, 0];
   let insets = { top: 0, bottom: 0 };
   let needsRender = true;
   let frame = 0;
@@ -711,7 +722,7 @@ export function createSkyScene(
       moon.visible = false;
       return;
     }
-    const seen = apparentDirection(horizon, unit(moonHere));
+    const seen = apparentDirection(horizon, aberrate(moonHere, motion));
     const high = horizontal(seen).altitude;
     moon.visible = high > -1;
     const [mx, my, mz] = toScene(seen);
@@ -738,8 +749,17 @@ export function createSkyScene(
     container.dataset['moonSunlight'] = moonSunlight(moonJ2000, sunJ2000).toFixed(3);
   }
 
-  function placePlanets(horizon: Matrix3, planets: readonly SkyPlanet[], limit: number): void {
+  function placePlanets(
+    horizon: Matrix3,
+    planets: readonly SkyPlanet[],
+    limit: number,
+    sunHere: Vec3 | null,
+    moonHere: Vec3 | null,
+  ): void {
     const report: string[] = [];
+    // A planet behind the Moon's or the Sun's disc is hidden, point and name.
+    const covers = (body: Vec3 | null, radiusKm: number, direction: Vec3): boolean =>
+      body !== null && angleBetween(body, direction) < angularRadius(radiusKm, body);
     PLANET_NAMES.forEach((name, index) => {
       const planet = planets.find((entry) => entry.name === name);
       const entry = planetLabels[index];
@@ -749,13 +769,17 @@ export function createSkyScene(
         entry.shown = false;
         return;
       }
-      const seen = apparentDirection(horizon, unit(planet.direction));
+      const seen = apparentDirection(horizon, aberrate(planet.direction, motion));
       const [x, y, z] = toScene(seen);
       const radius = STAR_RADIUS * 0.99;
       planetPositions.set([x * radius, y * radius, z * radius], index * 3);
-      planetMagnitudes[index] = planet.magnitude;
+      const hidden =
+        covers(moonHere, MOON_RADIUS_KM, planet.direction) ||
+        covers(sunHere, SUN_RADIUS_KM, planet.direction);
+      planetMagnitudes[index] = hidden ? 99 : planet.magnitude;
       const { altitude, azimuth } = horizontal(seen);
-      entry.shown = altitude > 0 && apparentMagnitude(planet.magnitude, altitude) < limit;
+      entry.shown =
+        !hidden && altitude > 0 && apparentMagnitude(planet.magnitude, altitude) < limit;
       entry.position.set(x, y, z).multiplyScalar(40);
       report.push(
         [
@@ -763,7 +787,7 @@ export function createSkyScene(
           altitude.toFixed(2),
           azimuth.toFixed(2),
           planet.magnitude.toFixed(1),
-          entry.shown ? 'seen' : 'unseen',
+          hidden ? 'covered' : entry.shown ? 'seen' : 'unseen',
         ].join(':'),
       );
     });
@@ -861,10 +885,11 @@ export function createSkyScene(
         cancelAnimationFrame(frame);
       }
     },
-    setMoment({ horizon, jdTT, sun: sunJ2000, moon: moonJ2000, observer, planets }) {
+    setMoment({ horizon, jdTT, sun: sunJ2000, moon: moonJ2000, observer, planets, velocity }) {
       updateMotion(jdTT);
+      motion = velocity;
       const sunHere = topocentric(sunJ2000, observer);
-      const sunSeen = apparentDirection(horizon, unit(sunHere));
+      const sunSeen = apparentDirection(horizon, aberrate(sunHere, motion));
       const sunHigh = horizontal(sunSeen).altitude;
       const moonHere = moonJ2000 === null ? null : topocentric(moonJ2000, observer);
       // How much of the Sun the Moon leaves, if the Sun is up to be seen.
@@ -872,11 +897,17 @@ export function createSkyScene(
       const limit = eclipsedLimit(limitingMagnitude(sunHigh), sunShare);
       let seen = 0;
       for (let index = 0; index < count; index++) {
-        const direction = apparentDirection(horizon, [
-          starJ2000[index * 3] ?? 0,
-          starJ2000[index * 3 + 1] ?? 0,
-          starJ2000[index * 3 + 2] ?? 0,
-        ]);
+        const direction = apparentDirection(
+          horizon,
+          aberrate(
+            [
+              starJ2000[index * 3] ?? 0,
+              starJ2000[index * 3 + 1] ?? 0,
+              starJ2000[index * 3 + 2] ?? 0,
+            ],
+            motion,
+          ),
+        );
         const [x, y, z] = toScene(direction);
         starPositions[index * 3] = x * STAR_RADIUS;
         starPositions[index * 3 + 1] = y * STAR_RADIUS;
@@ -906,7 +937,7 @@ export function createSkyScene(
       lineOpacity.value = 0.12 + 0.28 * (1 - Math.min(1, Math.max(0, (sunHigh + 18) / 18)));
       container.dataset['sunAltitude'] = sunHigh.toFixed(2);
       container.dataset['starsSeen'] = String(seen);
-      placePlanets(horizon, planets, limit);
+      placePlanets(horizon, planets, limit, sunHigh > -1 ? sunHere : null, moonHere);
       needsRender = true;
     },
     setLook(next) {

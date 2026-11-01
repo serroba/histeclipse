@@ -7,8 +7,11 @@ import venus from 'astronomia/data/vsop87Bvenus';
 import { Planet } from 'astronomia/planetposition';
 import { describe, expect, it } from 'vitest';
 
+import apparentReference from '../../test-vectors/planets-apparent.json';
 import reference from '../../test-vectors/planets.json';
+import { aberrate, earthVelocity } from '../sky/horizon';
 import { julianDayNumber } from '../time/julianDay';
+import { sunPositionJ2000 } from './precession';
 import {
   createPlanetEphemeris,
   loadPlanetEphemeris,
@@ -102,4 +105,23 @@ describe('saturnRingTilt', () => {
     expect(tilt(2_459_205.5)).toBeGreaterThan(19);
     expect(tilt(2_459_205.5)).toBeLessThan(23);
   });
+});
+
+describe('apparent places against DE441 with light time and aberration (1900–2100)', () => {
+  const ARCSECOND = Math.PI / 180 / 3600;
+  const sunAt = (jd: number) => sunPositionJ2000(julianDayNumber(jd));
+
+  for (const planet of PLANETS) {
+    it(`puts ${planet} within 2″ of JPL's apparent direction`, () => {
+      let without = 0;
+      for (const { jdTT, x, y, z } of apparentReference.planets[planet]) {
+        const jd = julianDayNumber(jdTT);
+        const seen = aberrate(ephemeris.apparent(planet, jd), earthVelocity(sunAt, jdTT));
+        expect(apart(seen, [x, y, z]) / ARCSECOND).toBeLessThan(2);
+        without = Math.max(without, apart(ephemeris.apparent(planet, jd), [x, y, z]) / ARCSECOND);
+      }
+      // Without aberration the same comparison is off by up to ~20″: the test exercises it.
+      expect(without).toBeGreaterThan(10);
+    });
+  }
 });

@@ -121,3 +121,42 @@ export function apparentDirection(horizon: Matrix3, j2000: Vector3): Vector3 {
   const scale = Math.cos(altitude) / across;
   return [east * scale, north * scale, Math.sin(altitude)];
 }
+
+/** Light's speed, km/s. */
+const LIGHT_KM_S = 299_792.458;
+
+/**
+ * Earth's velocity (km/s, J2000) at a moment, from the Sun's geocentric position a little
+ * before and after: Earth moves opposite to how the Sun appears to move. The Sun's own drift
+ * around the Solar System's barycentre (~13 m/s) is far below what aberration could show.
+ */
+export function earthVelocity(sunAt: (jdTT: number) => Vector3, jdTT: number): Vector3 {
+  const step = 0.1;
+  const [ax, ay, az] = sunAt(jdTT - step);
+  const [bx, by, bz] = sunAt(jdTT + step);
+  const seconds = 2 * step * 86_400;
+  return [-(bx - ax) / seconds, -(by - ay) / seconds, -(bz - az) / seconds];
+}
+
+/**
+ * Annual aberration: a direction as an observer moving at `velocity` (km/s) sees it, shifted
+ * toward the direction of motion by up to about 20.5″. Relativistic form, exact at this speed.
+ */
+export function aberrate(direction: Vector3, velocity: Vector3): Vector3 {
+  const length = Math.hypot(...direction);
+  const [ux, uy, uz] = [direction[0] / length, direction[1] / length, direction[2] / length];
+  const [bx, by, bz] = [
+    velocity[0] / LIGHT_KM_S,
+    velocity[1] / LIGHT_KM_S,
+    velocity[2] / LIGHT_KM_S,
+  ];
+  const beta2 = bx * bx + by * by + bz * bz;
+  const gammaInverse = Math.sqrt(1 - beta2);
+  const along = ux * bx + uy * by + uz * bz;
+  const scale = 1 + along / (1 + gammaInverse);
+  const x = gammaInverse * ux + scale * bx;
+  const y = gammaInverse * uy + scale * by;
+  const z = gammaInverse * uz + scale * bz;
+  const norm = Math.hypot(x, y, z);
+  return [x / norm, y / norm, z / norm];
+}

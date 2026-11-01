@@ -50,7 +50,7 @@ import {
 } from './astro/planets';
 import type { SkyPlanet } from './sky/skyScene';
 import { moonSunlight, observerPosition, sunVisible, topocentric } from './sky/bodies';
-import { horizonMatrix, horizontalOf } from './sky/horizon';
+import { earthVelocity, horizonMatrix, horizontalOf } from './sky/horizon';
 import { LOWEST_LOOK, roundLook } from './sky/look';
 import { longTermEarthFixedToJ2000 } from './astro/longTermPrecession';
 import type { Vector3 } from './astro/matrix';
@@ -89,6 +89,7 @@ import { loadSunImages, type SunImages } from './data/sunImages';
 import { createFigureSwitch } from './ui/figureSwitch';
 import { createViewSwitch } from './ui/viewSwitch';
 import { createTimeline, type Eclipse, type YearEclipses } from './ui/timeline';
+import { elementAt } from './util/arrays';
 import { errorMessage } from './util/errors';
 
 const MINUTES_PER_DAY = 1440;
@@ -632,11 +633,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The planets' theory loads with the sky view.
   let planets: PlanetEphemeris | null = null;
   const KM_PER_AU = 149_597_870.7;
+  // Planets from Earth's centre for the moment last shown: turning the view or moving the
+  // observer reuses them rather than summing the series again.
+  let planetCache: { jdTT: number; fromEarth: readonly Vector3[] } | null = null;
   function planetsSeen(jdTT: JulianDay, sun: Vector3, observer: Vector3): SkyPlanet[] {
     if (planets === null) return [];
     const theory = planets;
-    return PLANETS.map((planet) => {
-      const fromEarth = theory.apparent(planet, jdTT);
+    if (planetCache?.jdTT !== jdTT) {
+      planetCache = { jdTT, fromEarth: PLANETS.map((planet) => theory.apparent(planet, jdTT)) };
+    }
+    const cached = planetCache.fromEarth;
+    return PLANETS.map((planet, index) => {
+      const fromEarth = elementAt(cached, index);
       const [x, y, z] = fromEarth;
       const [sx, sy, sz] = [sun[0] - x, sun[1] - y, sun[2] - z];
       const delta = Math.hypot(x, y, z);
@@ -785,6 +793,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       moon: seen.moon,
       observer: seen.observer,
       planets: planetsSeen(jdTT, seen.sun, seen.observer),
+      velocity: earthVelocity((jd) => sunPositionJ2000(julianDayNumber(jd)), jdTT),
     });
     skyScene.setVisible(true);
   }

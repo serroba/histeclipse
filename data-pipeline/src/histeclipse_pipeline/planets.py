@@ -43,7 +43,22 @@ GEOCENTRIC = "500@399"
 HELIOCENTRIC = "500@10"
 
 
-def horizons_url(command: str, jds_tt: list[float], center: str = GEOCENTRIC) -> str:
+#: Corrections Horizons applies: none (geometric), or light time and aberration (apparent).
+GEOMETRIC = "NONE"
+APPARENT = "LT+S"
+PLANET_APPARENT_SEED = 5521
+PLANET_APPARENT_DESCRIPTION = (
+    "Astrometric geocentric directions of planet barycentres with light time and stellar"
+    " aberration (Horizons VEC_CORR LT+S), ICRF, km, from JPL Horizons (DE441)."
+)
+
+
+def horizons_url(
+    command: str,
+    jds_tt: list[float],
+    center: str = GEOCENTRIC,
+    corrections: str = GEOMETRIC,
+) -> str:
     """Build a Horizons query for geometric geocentric vectors at the given TT Julian Days."""
     query = urllib.parse.urlencode(
         {
@@ -55,7 +70,7 @@ def horizons_url(command: str, jds_tt: list[float], center: str = GEOCENTRIC) ->
             "REF_SYSTEM": "'ICRF'",
             "VEC_TABLE": "'1'",
             "OUT_UNITS": "'KM-S'",
-            "VEC_CORR": "'NONE'",
+            "VEC_CORR": f"'{corrections}'",
             "CSV_FORMAT": "'YES'",
             "TIME_TYPE": "'TT'",
             # Without this, small Julian Days are read as Modified Julian Days.
@@ -91,14 +106,14 @@ def write_planet_vectors(
 
 
 def fetch_planet_vectors(  # pragma: no cover - needs network access
-    jds_tt: list[float], center: str = GEOCENTRIC
+    jds_tt: list[float], center: str = GEOCENTRIC, corrections: str = GEOMETRIC
 ) -> dict[str, list[PlanetVector]]:
     """Ask Horizons for every planet at every time, a batch at a time."""
     vectors: dict[str, list[PlanetVector]] = {}
     for planet, command in PLANETS.items():
         rows: list[PlanetVector] = []
         for start in range(0, len(jds_tt), BATCH):
-            url = horizons_url(command, jds_tt[start : start + BATCH], center)
+            url = horizons_url(command, jds_tt[start : start + BATCH], center, corrections)
             with urllib.request.urlopen(url, timeout=120) as response:  # noqa: S310  # pyright: ignore[reportAny]
                 body: object = response.read()  # pyright: ignore[reportAny]
             if not isinstance(body, bytes):

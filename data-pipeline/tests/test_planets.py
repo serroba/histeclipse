@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from histeclipse_pipeline.planets import (
+    APPARENT,
     HELIOCENTRIC,
     PLANETS,
     horizons_url,
@@ -58,6 +59,11 @@ def test_asks_for_geometric_icrf_vectors_at_julian_days() -> None:
 def test_can_ask_from_the_suns_centre() -> None:
     url = horizons_url("6", [2451545.0], HELIOCENTRIC)
     assert urllib.parse.parse_qs(urllib.parse.urlparse(url).query)["CENTER"] == ["'500@10'"]
+
+
+def test_can_ask_for_light_time_and_aberration() -> None:
+    url = horizons_url("2", [2451545.0], corrections=APPARENT)
+    assert urllib.parse.parse_qs(urllib.parse.urlparse(url).query)["VEC_CORR"] == ["'LT+S'"]
 
 
 def test_covers_the_naked_eye_planets() -> None:

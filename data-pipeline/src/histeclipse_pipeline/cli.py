@@ -17,6 +17,9 @@ from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.planets import (
+    APPARENT,
+    PLANET_APPARENT_DESCRIPTION,
+    PLANET_APPARENT_SEED,
     PLANET_VECTOR_SEED,
     fetch_planet_vectors,
     write_planet_vectors,
@@ -181,6 +184,15 @@ def planet_vectors(args: Arguments) -> int:  # pragma: no cover - needs network 
     return _say(f"wrote {len(times)} positions of {len(vectors)} planets to {args.out}")
 
 
+def planet_apparent_vectors(args: Arguments) -> int:  # pragma: no cover - needs network
+    """Write DE441 planet directions with light time and aberration, for web tests."""
+    seed = PLANET_APPARENT_SEED if args.seed is None else args.seed
+    times = sample_times(args.start_year, args.end_year, args.count, seed)
+    vectors = fetch_planet_vectors(times, corrections=APPARENT)
+    write_planet_vectors(vectors, args.out, PLANET_APPARENT_DESCRIPTION)
+    return _say(f"wrote {len(times)} apparent positions of {len(vectors)} planets")
+
+
 def skycultures(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Copy Stellarium's sky cultures unchanged, and write the Hipparcos stars they use."""
     cultures, stars = fetch_skycultures(args.out)
@@ -216,6 +228,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write DE441 planet positions from JPL Horizons for web tests",
         "output JSON file",
     ),
+    "planet-apparent-vectors": (
+        planet_apparent_vectors,
+        "write DE441 planet directions with light time and aberration for web tests",
+        "output JSON file",
+    ),
     "skycultures": (
         skycultures,
         "copy other cultures' constellations and the stars they use",
@@ -242,7 +259,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         _ = command.add_argument("--kernels", type=Path, default=DEFAULT_KERNELS)
         _ = command.add_argument("--start-year", type=int, default=DEFAULT_START_YEAR)
         _ = command.add_argument("--end-year", type=int, default=DEFAULT_END_YEAR)
-        if name in {"sun-vectors", "moon-vectors", "planet-vectors"}:
+        if name in {"sun-vectors", "moon-vectors", "planet-vectors", "planet-apparent-vectors"}:
             _ = command.add_argument("--count", type=int, default=SUN_VECTOR_COUNT)
             _ = command.add_argument(
                 "--seed", type=int, default=None, help="sampling seed (an independent check set)"

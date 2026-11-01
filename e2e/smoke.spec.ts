@@ -859,3 +859,21 @@ test('far back in time, the sky says how far the planets can be trusted', async 
   await skyRendered(page);
   await expect(page.locator('.sky-caption')).not.toContainText('planet positions');
 });
+
+test('the Moon hides Mars from Berlin in the occultation of 8 December 2022', async ({ page }) => {
+  // Mars disappeared behind the full Moon at about 05:00 UT and came back at about 05:56.
+  await page.goto('./?mode=sky&t=2022-12-08T05:28&loc=52.52,13.4&look=290,20,30');
+  await skyRendered(page);
+  await expect(page.getByTestId('sky')).toHaveAttribute(
+    'data-planets',
+    /Mars:[\d.-]+:[\d.-]+:[\d.-]+:covered/,
+  );
+  await expect(page.locator('.sky-label.is-planet', { hasText: 'Mars' })).toBeHidden();
+
+  await page.goto('./?mode=sky&t=2022-12-08T04:30&loc=52.52,13.4&look=290,20,30');
+  await skyRendered(page);
+  await expect(page.getByTestId('sky')).toHaveAttribute(
+    'data-planets',
+    /Mars:[\d.-]+:[\d.-]+:[\d.-]+:seen/,
+  );
+});
