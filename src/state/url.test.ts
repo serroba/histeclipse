@@ -11,6 +11,7 @@ import {
   DEFAULT_CAMERA,
   DEFAULT_LAYERS,
   DEFAULT_LOOK,
+  BORDER_SOURCES,
   FIGURES,
   BODIES,
   LAYERS,
@@ -60,6 +61,7 @@ describe('parseViewState', () => {
       years: 'western',
       sunLayer: 'visible',
       culture: 'modern',
+      borders: 'cliopatria',
     } satisfies ViewState);
   });
 
@@ -106,6 +108,13 @@ describe('parseViewState', () => {
     expect(state.focus).toBe('moon');
     expect(serializeViewState(state)).toContain('&focus=moon');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
+  });
+
+  it('reads whose borders the empires layer draws, writing it only when not Cliopatria', () => {
+    const { state } = parseViewState('borders=both', NOW);
+    expect(state.borders).toBe('both');
+    expect(serializeViewState(state)).toContain('&borders=both');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('borders=');
   });
 
   it('reads whose constellations the sky draws, writing it only when not modern', () => {
@@ -171,6 +180,7 @@ describe('parseViewState', () => {
     ['years=mayan', 'years', 'unknown years'],
     ['sun=xray', 'sun', 'unknown sun'],
     ['culture=martian', 'culture', 'unknown culture'],
+    ['borders=guesswork', 'borders', 'unknown borders'],
     ['sel=lunar', 'sel', 'expected kind:date'],
     ['sel=lunar:yesterday', 'sel', 'expected a date'],
     ['sel=annular:2025-01-01', 'sel', 'unknown eclipse kind'],
@@ -233,6 +243,7 @@ describe('parseViewState', () => {
             'years',
             'sun',
             'culture',
+            'borders',
             'x',
           ),
           fc.string(),
@@ -306,6 +317,7 @@ describe('serializeViewState', () => {
     years: fc.constantFrom(...YEAR_CALENDARS),
     sunLayer: fc.constantFrom(...SUN_LAYERS),
     culture: fc.constantFrom(...SKY_CULTURES),
+    borders: fc.constantFrom(...BORDER_SOURCES),
   });
 
   it('round-trips every view state through a link', () => {

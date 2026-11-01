@@ -76,7 +76,8 @@ import {
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { discAverage, SOLAR_NORTH_POLE_J2000 } from './sunImage';
 import { labelPoint, type Territory } from '../data/empires';
-import { createEmpireCanvas, paintTerritories } from './empireCanvas';
+import type { OhmYear } from '../data/ohmBorders';
+import { createEmpireCanvas, paintBorders, paintTerritories } from './empireCanvas';
 import {
   OCCULTATION,
   SOLAR_COMMON,
@@ -144,6 +145,12 @@ export interface SunImageRequest {
   readonly limbDarkening: number;
 }
 
+/** Past states to draw: Cliopatria's filled territories, OpenHistoricalMap's border lines, or both. */
+export interface EmpireLayer {
+  readonly territories: readonly Territory[];
+  readonly ohm: OhmYear | null;
+}
+
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
   setSunDirection(direction: Vector3Tuple): void;
@@ -181,7 +188,7 @@ export interface Globe {
    * Lay past states and empires over the ground, with the names of the largest; null hides
    * the layer.
    */
-  setEmpires(territories: readonly Territory[] | null): void;
+  setEmpires(layer: EmpireLayer | null): void;
   /** Pin the chosen place on the globe; null removes the pin. */
   setLocation(place: GeoPoint | null): void;
   /**
@@ -1332,31 +1339,44 @@ export async function createGlobe(
           if (sunImageWanted === image) container.dataset['sunImage'] = 'error';
         });
     },
-    setEmpires(territories) {
+    setEmpires(layer) {
       const uniforms = earth.material.uniforms;
-      uniforms['empiresActive'] = { value: territories === null ? 0 : 1 };
+      uniforms['empiresActive'] = { value: layer === null ? 0 : 1 };
       empireLabelLayer.replaceChildren();
       empireLabels = [];
-      if (territories !== null) {
-        paintTerritories(empiresCanvas, territories);
+      if (layer !== null) {
+        paintTerritories(empiresCanvas, layer.territories);
+        if (layer.ohm !== null) paintBorders(empiresCanvas, layer.ohm.borders);
         empiresTexture.needsUpdate = true;
-        // Name the 30 largest, in proportion to their size.
-        const ranked = territories
+        // Names of the larger states first; as the camera comes closer, more fit between them.
+        const ranked = layer.territories
           .map((territory) => ({ territory, label: labelPoint(territory) }))
           .sort((a, b) => b.label.area - a.label.area)
-          .slice(0, 30);
-        empireLabels = ranked.map(({ territory, label }) => {
+          .slice(0, 80)
+          .map(({ territory, label }) => ({
+            name: territory.name,
+            point: label,
+            size: Math.round(10 + Math.min(6, Math.sqrt(label.area) / 4)),
+            kind: 'empire-label',
+          }));
+        // OpenHistoricalMap's names, set apart in italics, after Cliopatria's.
+        const ohmNames = (layer.ohm?.labels ?? []).slice(0, 120).map((label) => ({
+          name: label.name,
+          point: label,
+          size: 11,
+          kind: 'empire-label is-ohm',
+        }));
+        empireLabels = [...ranked, ...ohmNames].map(({ name, point, size, kind }) => {
           const element = document.createElement('span');
-          element.className = 'empire-label';
-          element.textContent = territory.name;
-          const size = Math.round(10 + Math.min(6, Math.sqrt(label.area) / 4));
+          element.className = kind;
+          element.textContent = name;
           element.style.fontSize = `${String(size)}px`;
           // Laid out once, unseen, so its real size is known for keeping names apart.
           element.style.visibility = 'hidden';
           empireLabelLayer.append(element);
           return {
             element,
-            position: new Vector3(...geoToVector(label, 1.01)),
+            position: new Vector3(...geoToVector(point, 1.01)),
             width: 0,
             height: 0,
           };
@@ -1368,7 +1388,9 @@ export async function createGlobe(
           entry.element.style.visibility = '';
         }
       }
-      container.dataset['empires'] = territories === null ? 'off' : String(territories.length);
+      container.dataset['empires'] = layer === null ? 'off' : String(layer.territories.length);
+      container.dataset['ohmBorders'] =
+        layer?.ohm === null || layer === null ? 'off' : String(layer.ohm.borders.length);
       needsRender = true;
     },
     onPlacePick(listener) {

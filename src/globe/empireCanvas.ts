@@ -49,3 +49,33 @@ export function paintTerritories(
     }
   }
 }
+
+/**
+ * Draws border lines over what is already painted: OpenHistoricalMap's view, in white, so
+ * where it differs from the coloured areas shows at a glance.
+ */
+export function paintBorders(
+  canvas: HTMLCanvasElement,
+  borders: readonly (readonly (readonly [number, number])[])[],
+): void {
+  const context = canvas.getContext('2d');
+  if (context === null) return;
+  const { width, height } = canvas;
+  context.lineJoin = 'round';
+  context.lineCap = 'round';
+  context.lineWidth = 2.5;
+  context.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+  for (const line of borders) {
+    const points = unwrapRing(line);
+    for (const offset of [-360, 0, 360]) {
+      context.beginPath();
+      points.forEach(([lon, lat], index) => {
+        const x = ((lon + offset + 180) / 360) * width;
+        const y = ((90 - lat) / 180) * height;
+        if (index === 0) context.moveTo(x, y);
+        else context.lineTo(x, y);
+      });
+      context.stroke();
+    }
+  }
+}
