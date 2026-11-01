@@ -1311,6 +1311,52 @@ body {
   color: var(--ink-muted);
 }
 
+/* 540 Myr | Ice ages: one segmented control, the chosen span lit. */
+.deep-scale {
+  display: inline-flex;
+  margin-left: auto;
+  border: 1px solid var(--panel-border);
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.deep-scale-option {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.deep-scale-option[aria-pressed='true'] {
+  background: rgb(127 207 154 / 0.18);
+  color: var(--ink);
+}
+
+/* With the span switch taking the free space, the layer buttons sit beside it. */
+.deep-scale + .deep-layer {
+  margin-left: 0;
+}
+
+.deep-layer:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.deep-note {
+  margin: 0;
+  padding: 0 8px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.deep-note[hidden] {
+  display: none;
+}
+
 .deep-layer {
   min-height: 44px;
   margin-left: auto;

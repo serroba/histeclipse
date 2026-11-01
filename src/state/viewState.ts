@@ -21,6 +21,9 @@ export type Mode = (typeof MODES)[number];
 
 /** Whose borders of past states the empires layer shows. */
 export const BORDER_SOURCES = ['cliopatria', 'ohm', 'both'] as const;
+/** Deep time's span: all 540 million years, or the ice ages of the last 2.6 million. */
+export const DEEP_SCALES = ['all', 'ice'] as const;
+export type DeepScale = (typeof DEEP_SCALES)[number];
 export type BorderSource = (typeof BORDER_SOURCES)[number];
 
 export const LAYERS = [
@@ -126,6 +129,8 @@ export interface ViewState {
   readonly seenIn: string | null;
   /** Deep time: millions of years ago the globe shows Earth's surface for; null for history. */
   readonly ma: number | null;
+  /** Which span the deep-time bar runs over. */
+  readonly deepScale: DeepScale;
 }
 
 // In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
@@ -140,6 +145,11 @@ export const DEFAULT_CAMERA: GlobeCamera = {
 
 /** How far back deep time reaches, millions of years: the oldest elevation map. */
 export const MA_RANGE = { min: 0, max: 540 } as const;
+
+/** The ice-age scale: the Quaternary, 2.58 million years, rounded up to whole hundred thousands. */
+export const ICE_AGES_MA = 2.6;
+/** Where the ice-age scale opens from further back: the last glacial maximum. */
+export const LAST_GLACIAL_MAXIMUM_MA = 0.021;
 
 /** Deep-time moments are kept to a thousand years, fine enough for the ice ages. */
 export function roundMa(ma: number): number {
@@ -192,5 +202,6 @@ export function defaultViewState(now: Date): ViewState {
     borders: 'cliopatria',
     seenIn: null,
     ma: null,
+    deepScale: 'all',
   };
 }

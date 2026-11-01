@@ -36,6 +36,9 @@ import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import {
   DEFAULT_CAMERA,
   defaultViewState,
+  ICE_AGES_MA,
+  LAST_GLACIAL_MAXIMUM_MA,
+  type Layer,
   MA_RANGE,
   roundMa,
   momentJulianDay,
@@ -118,6 +121,8 @@ const AIM_FOV = 12;
 const PLANETS_SHOWN_BEYOND = 1000;
 /** Deep time plays at this many million years per second: 540 Myr in about half a minute. */
 const PLAY_MA_PER_SECOND = 20;
+/** On the ice-age scale: 50,000 years a second, 2.6 million years in under a minute. */
+const ICE_PLAY_MA_PER_SECOND = 0.05;
 /** Where deep time opens: Pangaea, at the start of the Triassic. */
 const DEEP_TIME_START_MA = 250;
 
@@ -252,6 +257,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
         else layers.delete('sealevel');
         return { ...state, layers };
       });
+    },
+    onScale(deepScale) {
+      stopPlay();
+      store.set((state) => ({
+        ...state,
+        deepScale,
+        // From further back than the ice ages, open them at the last glacial maximum.
+        ma:
+          deepScale === 'ice' && (state.ma ?? 0) > ICE_AGES_MA ? LAST_GLACIAL_MAXIMUM_MA : state.ma,
+      }));
     },
     onTemperature(on) {
       store.set((state) => {
@@ -910,21 +925,25 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     const period = periodAt(ma);
     showDeepTimeText(ma);
+    const ice = state.deepScale === 'ice';
     deepBar.render({
       ma,
-      oldest,
+      oldest: ice ? ICE_AGES_MA : oldest,
       period,
       playing,
+      scale: state.deepScale,
       temperature: temperatureView(state, ma),
       seaLevel: seaLevelView(state),
     });
-    showTemperature(state, ma);
+    // The temperature maps are 5 million years apart: none on the ice-age scale.
+    showTemperature(ice ? { ...state, layers: withoutTemperature(state.layers) } : state, ma);
     paleoIndex ??= loadPaleoDemIndex(`${base}data/paleodem/index.json`, fetchJson);
     paleoIndex.then(
       (index) => {
         oldest = oldestMa(index);
         if (store.get().ma !== ma) return;
-        const { younger, older, mix } = framesAround(index.frames, ma);
+        // On the ice-age scale, today's map: the next is 5 million years back.
+        const { younger, older, mix } = framesAround(index.frames, ice ? 0 : ma);
         globe.setDeepTime({
           younger: `${base}data/paleodem/${younger.file}`,
           older: `${base}data/paleodem/${older.file}`,
@@ -940,6 +959,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
         notify(`Could not load Earth's past surface: ${errorMessage(error)}`);
       },
     );
+  }
+
+  function withoutTemperature(layers: ReadonlySet<Layer>): ReadonlySet<Layer> {
+    const kept = new Set(layers);
+    kept.delete('temperature');
+    return kept;
   }
 
   function seaLevelView(state: ViewState): DeepTimeView['seaLevel'] {
@@ -1021,7 +1046,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function startPlay(): void {
     if (playing) return;
     playing = true;
-    if ((store.get().ma ?? 0) <= 0) store.set((state) => ({ ...state, ma: oldest }));
+    if ((store.get().ma ?? 0) <= 0) {
+      store.set((state) => ({ ...state, ma: state.deepScale === 'ice' ? ICE_AGES_MA : oldest }));
+    }
     lastTick = performance.now();
     playFrame = requestAnimationFrame(tick);
     showDeepTime(store.get());
@@ -1035,7 +1062,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       stopPlay();
       return;
     }
-    const next = Math.max(0, roundMa(ma - PLAY_MA_PER_SECOND * seconds));
+    const speed = store.get().deepScale === 'ice' ? ICE_PLAY_MA_PER_SECOND : PLAY_MA_PER_SECOND;
+    const next = Math.max(0, roundMa(ma - speed * seconds));
     store.set((state) => ({ ...state, ma: next }));
     if (next <= 0) {
       stopPlay();
@@ -1355,7 +1383,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.ma !== previous?.ma ||
       state.time !== previous.time ||
       state.years !== previous.years ||
-      state.layers !== previous.layers
+      state.layers !== previous.layers ||
+      state.deepScale !== previous.deepScale
     ) {
       showDeepTime(state);
     }

@@ -9,12 +9,13 @@ import { basisNote, formatRange } from '../deepTime/milestoneText';
 import { anchorMa, type Milestone, milestonesNear, nextMilestone } from '../deepTime/milestones';
 import { element } from './dom';
 
-/** A milestone counts as near the moment shown within this many million years. */
-export const NEAR_MA = 2.5;
+/** A milestone counts as near the moment shown within this share of the span shown. */
+export const NEAR_SHARE = 2.5 / 540;
 
 export interface MilestonePanel {
   readonly root: HTMLElement;
-  render(ma: number): void;
+  /** `oldest` is the span the bar shows, Ma; nearness scales with it. */
+  render(ma: number, oldest: number): void;
 }
 
 function card(milestone: Milestone): HTMLElement {
@@ -69,22 +70,24 @@ export function createMilestonePanel(handlers: { onMa(ma: number): void }): Mile
   const root = element('div', { class: 'deep-milestone-row' }, earlier, panel, later);
 
   let ma = 0;
+  let oldest = Infinity;
   earlier.addEventListener('click', () => {
-    const milestone = nextMilestone(ma, 1);
+    const milestone = nextMilestone(ma, 1, oldest);
     if (milestone !== null) handlers.onMa(anchorMa(milestone));
   });
   later.addEventListener('click', () => {
-    const milestone = nextMilestone(ma, -1);
+    const milestone = nextMilestone(ma, -1, oldest);
     if (milestone !== null) handlers.onMa(anchorMa(milestone));
   });
 
   return {
     root,
-    render(now) {
+    render(now, span) {
       ma = now;
-      earlier.disabled = nextMilestone(ma, 1) === null;
-      later.disabled = nextMilestone(ma, -1) === null;
-      const near = milestonesNear(ma, NEAR_MA);
+      oldest = span;
+      earlier.disabled = nextMilestone(ma, 1, oldest) === null;
+      later.disabled = nextMilestone(ma, -1, oldest) === null;
+      const near = milestonesNear(ma, NEAR_SHARE * oldest);
       summary.textContent =
         near.length === 0
           ? 'Milestones: none near here'

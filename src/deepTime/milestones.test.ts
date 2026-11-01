@@ -66,6 +66,13 @@ describe('nextMilestone', () => {
     }
   });
 
+  it('stays within the span shown', () => {
+    // On the ice-age scale, the Isthmus of Panama (2.8 Ma) is out of reach.
+    expect(nextMilestone(0.4, 1)?.id).toBe('panama-isthmus');
+    expect(nextMilestone(0.4, 1, 2.6)).toBeNull();
+    expect(nextMilestone(0.1, 1, 2.6)?.id).toBe('homo-sapiens');
+  });
+
   it('always moves the way it is asked', () => {
     fc.assert(
       fc.property(fc.double({ min: 0, max: 540, noNaN: true }), (ma) => {

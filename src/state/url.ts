@@ -45,6 +45,8 @@ import {
   DEFAULT_LOOK,
   type BorderSource,
   FIGURES,
+  DEEP_SCALES,
+  type DeepScale,
   MA_RANGE,
   roundMa,
   SKY_FOV_RANGE,
@@ -129,6 +131,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     borders: read('borders', parseBorders, defaults.borders),
     seenIn: read<string | null>('seen', parseSeenIn, defaults.seenIn),
     ma: read<number | null>('ma', parseMa, defaults.ma),
+    deepScale: read('scale', parseDeepScale, defaults.deepScale),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -159,6 +162,7 @@ export function serializeViewState(state: ViewState): string {
   if (state.borders !== 'cliopatria') params.set('borders', state.borders);
   if (state.seenIn !== null) params.set('seen', state.seenIn);
   if (state.ma !== null) params.set('ma', formatMa(state.ma));
+  if (state.deepScale !== 'all') params.set('scale', state.deepScale);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
@@ -169,6 +173,10 @@ function parseMode(raw: string): Mode {
 
 function parseFigures(raw: string): Figures {
   return oneOf(raw, FIGURES, 'figures');
+}
+
+function parseDeepScale(raw: string): DeepScale {
+  return oneOf(raw, DEEP_SCALES, 'scale');
 }
 
 function parseBorders(raw: string): BorderSource {

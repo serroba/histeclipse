@@ -1121,3 +1121,29 @@ test('deep time charts sea level by four reconstructions, side by side', async (
   await expect(legend).toBeHidden();
   expect(problems).toEqual([]);
 });
+
+test('deep time narrows to the ice ages, in thousands of years', async ({ page }) => {
+  const problems = collectProblems(page);
+  await page.goto('./?ma=250&layers=sealevel');
+  await globeRendered(page);
+  await page.getByRole('button', { name: 'Ice ages' }).click();
+  // From further back, the ice ages open at the last glacial maximum.
+  await expect(page).toHaveURL(/&ma=0\.021&scale=ice/);
+  await expect(page.locator('.hud-date')).toHaveText('21,000 years ago');
+  await expect(page.getByTestId('ice-note')).toBeVisible();
+  await expect(page.getByLabel('Thousands of years ago')).toHaveValue('-21');
+  await expect(page.getByRole('button', { name: 'Temperature' })).toBeDisabled();
+  // Both ice-age reconstructions read the glacial maximum.
+  const legend = page.getByTestId('sea-legend');
+  await expect(legend.locator('[data-series="bintanja-2008"]')).toContainText('−123 m');
+  await expect(legend.locator('[data-series="spratt-2016"]')).toContainText('−119 m (−134 to −91)');
+
+  await page.getByRole('button', { name: '5,000 years earlier' }).click();
+  await expect(page).toHaveURL(/&ma=0\.026(&|$)/);
+
+  await page.getByRole('button', { name: '540 Myr' }).click();
+  await expect(page).not.toHaveURL(/scale=/);
+  await expect(page.getByLabel('Millions of years ago')).toBeVisible();
+  await expect(page.getByTestId('ice-note')).toBeHidden();
+  expect(problems).toEqual([]);
+});
