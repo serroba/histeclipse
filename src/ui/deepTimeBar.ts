@@ -5,8 +5,10 @@
  */
 
 import { earthFacts } from '../deepTime/earthFacts';
+import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period } from '../deepTime/periods';
 import { element } from './dom';
+import { createMilestonePanel } from './milestonePanel';
 
 /** Each step button moves by one elevation map. */
 export const STEP_MA = 5;
@@ -64,15 +66,26 @@ export function createDeepTimeBar(handlers: {
     element('summary', {}, 'Poles, magnetic field, tilt and day'),
     facts,
   );
+  // A tick on the track for each milestone, placed when the time line's span is known.
+  const marks = element('div', { class: 'deep-marks', 'aria-hidden': 'true' });
+  const track = element('div', { class: 'deep-track' }, slider, marks);
+  const milestones = createMilestonePanel({
+    onMa(ma) {
+      handlers.onMa(ma);
+    },
+  });
   const root = element(
     'nav',
     { class: 'deep-time', 'aria-label': 'Deep time', hidden: '' },
-    element('div', { class: 'deep-controls' }, play, older, slider, younger),
+    element('div', { class: 'deep-controls' }, play, older, track, younger),
     element('p', { class: 'deep-label' }, when, ' ', period, exit),
+    milestones.root,
     factsPanel,
   );
 
   let current: DeepTimeView | null = null;
+  // The span the ticks were placed for.
+  let marksSpan = 0;
   slider.addEventListener('input', () => {
     handlers.onMa(-Number(slider.value));
   });
@@ -95,6 +108,21 @@ export function createDeepTimeBar(handlers: {
       current = view;
       root.hidden = view === null;
       if (view === null) return;
+      if (marksSpan !== view.oldest) {
+        marksSpan = view.oldest;
+        marks.replaceChildren(
+          ...MILESTONES.filter((milestone) => anchorMa(milestone) <= view.oldest).map(
+            (milestone) => {
+              const mark = element('span', {
+                class: `deep-mark milestone-${milestone.kind}`,
+                title: milestone.title,
+              });
+              mark.style.left = `${String((1 - anchorMa(milestone) / view.oldest) * 100)}%`;
+              return mark;
+            },
+          ),
+        );
+      }
       slider.min = String(-view.oldest);
       if (document.activeElement !== slider) slider.value = String(-view.ma);
       slider.setAttribute('aria-valuetext', formatMa(view.ma));
@@ -106,6 +134,7 @@ export function createDeepTimeBar(handlers: {
           element('dd', {}, text),
         ]),
       );
+      milestones.render(view.ma);
       play.textContent = view.playing ? '❚❚' : '▶';
       play.setAttribute('aria-label', view.playing ? 'Pause' : 'Play');
     },

@@ -1016,3 +1016,37 @@ test('deep time shows Pangaea 250 million years ago, steps, plays and returns', 
   await expect(page.getByLabel('Year', { exact: true })).toBeVisible();
   expect(problems).toEqual([]);
 });
+
+test('deep time steps through milestones and shows each estimate with its source', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await page.goto('./?ma=250');
+  await globeRendered(page);
+  const milestones = page.getByTestId('deep-milestones');
+  // The end-Permian extinction is within reach of 250 Ma.
+  await expect(milestones.locator('summary')).toContainText('End-Permian mass extinction');
+
+  await page.getByRole('button', { name: 'Later milestone' }).click();
+  await expect(page).toHaveURL(/&ma=245(&|$)/);
+  await expect(milestones.locator('summary')).toContainText('First dinosaurs');
+
+  await milestones.locator('summary').click();
+  const dinosaurs = milestones.locator('[data-milestone="first-dinosaurs"]');
+  await expect(dinosaurs).toContainText('Oldest undisputed, Ischigualasto');
+  await expect(dinosaurs).toContainText('Possible older dinosaur, Nyasasaurus');
+  await expect(dinosaurs).toContainText('as quoted by a later paper');
+  await expect(dinosaurs.getByRole('link', { name: /Martínez et al\. 2011/ })).toHaveAttribute(
+    'href',
+    'https://doi.org/10.1126/science.1198467',
+  );
+
+  await page.getByRole('button', { name: 'Earlier milestone' }).click();
+  await expect(page).toHaveURL(/&ma=252(&|$)/);
+  await expect(milestones.locator('[data-milestone="end-permian-extinction"]')).toContainText(
+    'Burgess, Bowring & Shen 2014',
+  );
+  // The slider carries a tick for every milestone.
+  await expect(page.locator('.deep-mark')).toHaveCount(17);
+  expect(problems).toEqual([]);
+});
