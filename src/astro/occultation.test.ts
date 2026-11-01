@@ -25,6 +25,27 @@ describe('visibleFraction', () => {
     );
   });
 
+  it('covers the source when equal discs are a denormal apart', () => {
+    // Found by fast-check (seed -656965297): 2·d·r underflowed and the cosines became 0/0.
+    expect(visibleFraction(0.1000000000000002, 0.1000000000000002, 5e-324)).toBe(0);
+  });
+
+  it('stays a number where the discs barely touch', () => {
+    for (const [source, occluder] of [
+      [0.1, 0.30000000000000004],
+      [1.9, 0.1],
+      [0.7, 0.7000000000000001],
+    ] as const) {
+      const outer = (source + occluder) * (1 - Number.EPSILON);
+      const inner = Math.abs(source - occluder) * (1 + Number.EPSILON);
+      for (const separation of [outer, inner]) {
+        const fraction = visibleFraction(source, occluder, separation);
+        expect(fraction).toBeGreaterThanOrEqual(-1e-12);
+        expect(fraction).toBeLessThanOrEqual(1 + 1e-12);
+      }
+    }
+  });
+
   it('stays in [0, 1] and grows as the discs part', () => {
     fc.assert(
       fc.property(
