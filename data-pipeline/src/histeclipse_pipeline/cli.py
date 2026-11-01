@@ -23,6 +23,7 @@ from histeclipse_pipeline.sky import (
     sky_file,
     write_sky_file,
 )
+from histeclipse_pipeline.skycultures import fetch_skycultures
 from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.solar_images import fetch_images
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
@@ -166,6 +167,12 @@ def empires(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {len(polities)} polity rows in {count} century files to {args.out}")
 
 
+def skycultures(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Copy Stellarium's sky cultures unchanged, and write the Hipparcos stars they use."""
+    cultures, stars = fetch_skycultures(args.out)
+    return _say(f"copied {cultures} sky cultures and wrote {stars} stars under {args.out}")
+
+
 def sun_images(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Render the SDO layers into ``public/textures/sun`` and write their manifest."""
     result = fetch_images(args.out)
@@ -189,6 +196,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         empires,
         "write simplified borders of past states, one file per century",
         "output directory",
+    ),
+    "skycultures": (
+        skycultures,
+        "copy other cultures' constellations and the stars they use",
+        "the web app's public directory",
     ),
     "sun-images": (
         sun_images,
