@@ -36,6 +36,7 @@ import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import {
   DEFAULT_CAMERA,
   defaultViewState,
+  MA_RANGE,
   momentJulianDay,
   type GeoPoint,
   type ViewState,
@@ -100,6 +101,9 @@ import type { Figure } from './sky/look';
 import { loadSunImages, type SunImages } from './data/sunImages';
 import { createFigureSwitch } from './ui/figureSwitch';
 import { createViewSwitch } from './ui/viewSwitch';
+import { createDeepTimeBar } from './ui/deepTimeBar';
+import { formatMa, periodAt } from './deepTime/periods';
+import { framesAround, loadPaleoDemIndex, oldestMa, type PaleoDemIndex } from './data/paleoDem';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
 import { elementAt } from './util/arrays';
 import { errorMessage } from './util/errors';
@@ -109,6 +113,10 @@ const MINUTES_PER_DAY = 1440;
 const AIM_FOV = 12;
 /** Earth radii (or the focused body's): beyond this the space view loads the planets. */
 const PLANETS_SHOWN_BEYOND = 1000;
+/** Deep time plays at this many million years per second: 540 Myr in about half a minute. */
+const PLAY_MA_PER_SECOND = 20;
+/** Where deep time opens: Pangaea, at the start of the Triassic. */
+const DEEP_TIME_START_MA = 250;
 
 export async function startApp(root: HTMLElement): Promise<void> {
   const base = import.meta.env.BASE_URL;
@@ -130,7 +138,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       // Stand where the link says, or else on the spot in the middle of the globe; during an
       // eclipse, face it.
       store.set((state) => {
-        const next: ViewState = { ...state, mode: 'sky', location: observerOf(state) };
+        // The sky is drawn for historical time: leaving for it leaves deep time too.
+        const next: ViewState = { ...state, mode: 'sky', location: observerOf(state), ma: null };
         const selected = selectedEclipse(state);
         if (selected === undefined) return next;
         const look = aimAt(next, isSolar(selected) ? 'sun' : 'moon');
@@ -186,6 +195,50 @@ export async function startApp(root: HTMLElement): Promise<void> {
     element('a', { href: 'https://www.openhistoricalmap.org/copyright' }, 'OpenHistoricalMap'),
     ' contributors (CC0, simplified)',
   );
+  const paleoCredit = element(
+    'span',
+    { class: 'empire-credit', hidden: '' },
+    ' · Surface: ',
+    element('a', { href: 'https://doi.org/10.5281/zenodo.5460860' }, 'PALEOMAP PaleoDEMs'),
+    ' (Scotese & Wright 2018, ',
+    element('a', { href: 'https://creativecommons.org/licenses/by/4.0/' }, 'CC BY 4.0'),
+    ', repacked) · Periods: ',
+    element('a', { href: 'https://stratigraphy.org/chart' }, 'ICS chart v2026/06'),
+  );
+  const deepButton = element(
+    'button',
+    { type: 'button', class: 'deep-open', 'aria-pressed': 'false' },
+    'Deep time',
+  );
+  deepButton.addEventListener('click', () => {
+    if (store.get().ma === null) {
+      // Deep time shows the whole Earth: the globe, with no eclipse picked.
+      store.set((state) => ({
+        ...state,
+        ma: DEEP_TIME_START_MA,
+        mode: 'globe',
+        view: 'free',
+        selection: null,
+      }));
+    } else {
+      stopPlay();
+      store.set((state) => ({ ...state, ma: null }));
+    }
+  });
+  const deepBar = createDeepTimeBar({
+    onMa(ma) {
+      stopPlay();
+      store.set((state) => ({ ...state, ma: Math.round(ma * 10) / 10 }));
+    },
+    onPlay(play) {
+      if (play) startPlay();
+      else stopPlay();
+    },
+    onExit() {
+      stopPlay();
+      store.set((state) => ({ ...state, ma: null }));
+    },
+  });
   const sunSwitch = createSunSwitch((sunLayer) => {
     store.set((state) => ({ ...state, sunLayer }));
   });
@@ -241,6 +294,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     store.set((state) => ({ ...state, time: momentAt(julianDayNumber(jd)) }));
   });
 
+  const bottom = element(
+    'div',
+    { class: 'bottom', 'data-deep': 'off' },
+    card.root,
+    scrubber.root,
+    timeline.root,
+    deepBar.root,
+  );
   root.replaceChildren(
     globeContainer,
     skyContainer,
@@ -250,7 +311,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       element('h1', {}, 'histeclipse'),
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
-      element('div', { class: 'hud-actions' }, famousPanel.button, layerSwitch.root),
+      element('div', { class: 'hud-actions' }, famousPanel.button, deepButton, layerSwitch.root),
       viewSwitch.root,
       aimSwitch.root,
       figureSwitch.root,
@@ -270,10 +331,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ' · Positions: JPL DE441',
         empireCredit,
         ohmCredit,
+        paleoCredit,
       ),
     ),
     notices,
-    element('div', { class: 'bottom' }, card.root, scrubber.root, timeline.root),
+    bottom,
     famousPanel.dialog,
   );
 
@@ -562,6 +624,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       planetsKm: planetPositions(terrestrial),
     });
     root.dataset['subsolar'] = `${sun.latitude.toFixed(3)},${sun.longitude.toFixed(3)}`;
+    if (state.ma !== null) {
+      showDeepTimeText(state.ma);
+      return;
+    }
     dateText.textContent = formatDate(state.time);
     timeText.textContent = formatTimeOfDay(state.time);
     const seconds = deltaT.seconds(universal);
@@ -794,8 +860,96 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
   }
 
+  // Deep time: Earth's surface from the elevation maps, which load a few at a time as needed.
+  let paleoIndex: Promise<PaleoDemIndex> | null = null;
+  let oldest: number = MA_RANGE.max;
+  let playing = false;
+  let playFrame = 0;
+  let lastTick = 0;
+
+  function showDeepTime(state: ViewState): void {
+    const { ma } = state;
+    deepButton.setAttribute('aria-pressed', String(ma !== null));
+    bottom.dataset['deep'] = ma === null ? 'off' : 'on';
+    paleoCredit.hidden = ma === null;
+    if (ma === null) {
+      stopPlay();
+      deepBar.render(null);
+      globe.setDeepTime(null);
+      return;
+    }
+    const period = periodAt(ma);
+    showDeepTimeText(ma);
+    deepBar.render({ ma, oldest, period, playing });
+    paleoIndex ??= loadPaleoDemIndex(`${base}data/paleodem/index.json`, fetchJson);
+    paleoIndex.then(
+      (index) => {
+        oldest = oldestMa(index);
+        if (store.get().ma !== ma) return;
+        const { younger, older, mix } = framesAround(index, ma);
+        globe.setDeepTime({
+          younger: `${base}data/paleodem/${younger.file}`,
+          older: `${base}data/paleodem/${older.file}`,
+          mix,
+          columns: index.columns,
+          rows: index.rows,
+          seaDepth: index.seaDepth,
+          landHeight: index.landHeight,
+        });
+      },
+      (error: unknown) => {
+        paleoIndex = null;
+        notify(`Could not load Earth's past surface: ${errorMessage(error)}`);
+      },
+    );
+  }
+
+  /** The header in deep time: how long ago, and the period by the ICS chart. */
+  function showDeepTimeText(ma: number): void {
+    const period = periodAt(ma);
+    dateText.textContent = formatMa(ma);
+    timeText.textContent = '';
+    detailText.textContent =
+      period === null ? 'Deep time' : `${period.name} period · ${period.era} era`;
+  }
+
+  /** Play towards the present; from today, start again at the oldest map. */
+  function startPlay(): void {
+    if (playing) return;
+    playing = true;
+    if ((store.get().ma ?? 0) <= 0) store.set((state) => ({ ...state, ma: oldest }));
+    lastTick = performance.now();
+    playFrame = requestAnimationFrame(tick);
+    showDeepTime(store.get());
+  }
+
+  function tick(now: number): void {
+    const seconds = Math.min((now - lastTick) / 1000, 0.25);
+    lastTick = now;
+    const ma = store.get().ma;
+    if (ma === null) {
+      stopPlay();
+      return;
+    }
+    const next = Math.max(0, Math.round((ma - PLAY_MA_PER_SECOND * seconds) * 10) / 10);
+    store.set((state) => ({ ...state, ma: next }));
+    if (next <= 0) {
+      stopPlay();
+      return;
+    }
+    playFrame = requestAnimationFrame(tick);
+  }
+
+  function stopPlay(): void {
+    if (!playing) return;
+    playing = false;
+    cancelAnimationFrame(playFrame);
+    showDeepTime(store.get());
+  }
+
   function showEmpires(state: ViewState): void {
-    const on = state.layers.has('empires');
+    // Past states belong to historical time, not deep time.
+    const on = state.layers.has('empires') && state.ma === null;
     layerSwitch.render(on, state.mode === 'globe', state.borders);
     const source = state.borders;
     empireCredit.hidden = !on || source === 'ohm';
@@ -1094,6 +1248,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     if (state.time !== previous?.time || state.years !== previous.years) showTime(state);
     if (
+      state.ma !== previous?.ma ||
+      state.time !== previous.time ||
+      state.years !== previous.years
+    ) {
+      showDeepTime(state);
+    }
+    if (
       state.mode !== previous?.mode ||
       state.time !== previous.time ||
       state.location !== previous.location ||
@@ -1117,6 +1278,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.layers !== previous?.layers ||
       state.mode !== previous.mode ||
       state.borders !== previous.borders ||
+      state.ma !== previous.ma ||
       state.time.date.year !== previous.time.date.year
     ) {
       showEmpires(state);
@@ -1152,8 +1314,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // Keep the globe centred in the space the panels leave free. On wide screens the date panel
   // sits beside the globe, so only the bottom panels count.
   const top = root.querySelector('.hud');
-  const bottom = root.querySelector('.bottom');
-  if (top !== null && bottom !== null) {
+  if (top !== null) {
     const update = (): void => {
       const narrow = window.innerWidth <= 600;
       panelInsets = {

@@ -115,6 +115,8 @@ export interface ViewState {
   readonly borders: BorderSource;
   /** A past state (by its name in Cliopatria) whose eclipses the year bar picks out, if any. */
   readonly seenIn: string | null;
+  /** Deep time: millions of years ago the globe shows Earth's surface for; null for history. */
+  readonly ma: number | null;
 }
 
 // In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
@@ -126,6 +128,9 @@ export const DEFAULT_CAMERA: GlobeCamera = {
   // With a 40° field of view on the narrower side, the whole globe fits with a margin.
   distance: 4.5,
 };
+
+/** How far back deep time reaches, millions of years: the oldest elevation map. */
+export const MA_RANGE = { min: 0, max: 540 } as const;
 
 export const SKY_FOV_RANGE = { min: 5, max: 120 } as const;
 /** Facing south, a third of the way up: where the ecliptic runs, seen from the north. */
@@ -172,5 +177,6 @@ export function defaultViewState(now: Date): ViewState {
     culture: 'modern',
     borders: 'cliopatria',
     seenIn: null,
+    ma: null,
   };
 }

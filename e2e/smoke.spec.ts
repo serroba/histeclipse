@@ -965,3 +965,38 @@ test('a link can centre on Saturn, rings and all', async ({ page }) => {
   await expect(globe).toHaveAttribute('data-focus', 'saturn');
   await expect(page).toHaveURL(/focus=saturn/);
 });
+
+test('deep time shows Pangaea 250 million years ago, steps, plays and returns', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await page.goto('./?t=2024-06-21T12:00&cam=0,20,3');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  await page.getByRole('button', { name: 'Deep time' }).click();
+  await expect(page).toHaveURL(/&ma=250(&|$)/);
+  await expect(page.locator('.hud-date')).toHaveText('250 million years ago');
+  await expect(page.getByTestId('deep-period')).toHaveText('Triassic · Mesozoic');
+  await expect(globe).toHaveAttribute('data-deep-time', /245\.png .*250\.png$/);
+  await expect(page.getByRole('link', { name: 'PALEOMAP PaleoDEMs' })).toBeVisible();
+  // The year bar gives way to the deep-time bar.
+  await expect(page.getByLabel('Year', { exact: true })).toBeHidden();
+
+  // Five million years earlier is before the end-Permian extinction (251.902 Ma).
+  await page.getByRole('button', { name: '5 million years earlier' }).click();
+  await expect(page).toHaveURL(/&ma=255(&|$)/);
+  await expect(page.getByTestId('deep-period')).toHaveText('Permian · Paleozoic');
+
+  // Playing runs towards the present.
+  await page.getByRole('button', { name: 'Play' }).click();
+  await expect(page).not.toHaveURL(/&ma=255(&|$)/);
+  await page.getByRole('button', { name: 'Pause' }).click();
+  const ma = Number(new URL(page.url()).searchParams.get('ma'));
+  expect(ma).toBeLessThan(255);
+
+  await page.getByRole('button', { name: 'Back to history' }).click();
+  await expect(page).not.toHaveURL(/ma=/);
+  await expect(globe).toHaveAttribute('data-deep-time', 'off');
+  await expect(page.getByLabel('Year', { exact: true })).toBeVisible();
+  expect(problems).toEqual([]);
+});

@@ -182,6 +182,7 @@ body {
 }
 
 .hud-actions .famous-open,
+.hud-actions .deep-open,
 .hud-actions .layer-switch {
   margin-top: 0;
 }
@@ -1127,5 +1128,104 @@ body {
   .moon-view {
     width: 96px;
     height: 96px;
+  }
+}
+
+/* Deep time: a button beside Famous eclipses, and a bar that takes the year bar's place. */
+.deep-open {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgb(120 200 150 / 0.45);
+  border-radius: 22px;
+  background: rgb(120 200 150 / 0.08);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.deep-open[aria-pressed='true'] {
+  border-color: rgb(120 200 150 / 0.9);
+  background: rgb(120 200 150 / 0.22);
+}
+
+.bottom[data-deep='on'] > :not(.deep-time) {
+  display: none;
+}
+
+.deep-time {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: min(760px, 100%);
+  padding: 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+}
+
+.deep-time[hidden] {
+  display: none;
+}
+
+.deep-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.deep-slider {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  accent-color: #7fcf9a;
+  cursor: pointer;
+}
+
+.deep-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0;
+  padding: 0 8px;
+  font-size: 14px;
+}
+
+.deep-period {
+  color: var(--ink-muted);
+}
+
+.deep-exit {
+  min-height: 44px;
+  margin-left: auto;
+  padding: 0 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 22px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* On phones the header's first row holds Famous eclipses, Deep time and the layers: the group's
+   name stays for screen readers, and the buttons tighten up. */
+@media (max-width: 600px) {
+  .hud-actions .layer-switch .switch-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .hud-actions .famous-open,
+  .hud-actions .deep-open,
+  .hud-actions .layer-switch button {
+    padding: 0 10px;
   }
 }

@@ -63,6 +63,7 @@ describe('parseViewState', () => {
       culture: 'modern',
       borders: 'cliopatria',
       seenIn: null,
+      ma: null,
     } satisfies ViewState);
   });
 
@@ -109,6 +110,14 @@ describe('parseViewState', () => {
     expect(state.focus).toBe('moon');
     expect(serializeViewState(state)).toContain('&focus=moon');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
+  });
+
+  it('reads deep time in millions of years, to a tenth, writing it only when set', () => {
+    const { state } = parseViewState('ma=252.46', NOW);
+    expect(state.ma).toBe(252.5);
+    expect(serializeViewState(state)).toContain('&ma=252.5');
+    expect(serializeViewState(parseViewState('ma=0', NOW).state)).toContain('&ma=0');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('ma=');
   });
 
   it('reads which state’s eclipses to pick out, writing it only when there is one', () => {
@@ -190,6 +199,8 @@ describe('parseViewState', () => {
     ['culture=martian', 'culture', 'unknown culture'],
     ['borders=guesswork', 'borders', 'unknown borders'],
     ['seen=%20', 'seen', 'name of a past state'],
+    ['ma=600', 'ma', 'between 0 and 540'],
+    ['ma=old', 'ma', 'not a number'],
     ['sel=lunar', 'sel', 'expected kind:date'],
     ['sel=lunar:yesterday', 'sel', 'expected a date'],
     ['sel=annular:2025-01-01', 'sel', 'unknown eclipse kind'],
@@ -254,6 +265,7 @@ describe('parseViewState', () => {
             'culture',
             'borders',
             'seen',
+            'ma',
             'x',
           ),
           fc.string(),
@@ -330,6 +342,10 @@ describe('serializeViewState', () => {
     borders: fc.constantFrom(...BORDER_SOURCES),
     seenIn: fc.option(
       fc.string({ minLength: 1, maxLength: 120 }).filter((name) => name.trim() === name),
+      { nil: null },
+    ),
+    ma: fc.option(
+      fc.integer({ min: 0, max: 5400 }).map((tenths) => tenths / 10),
       { nil: null },
     ),
   });
