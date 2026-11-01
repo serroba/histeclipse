@@ -1053,3 +1053,36 @@ test('deep time steps through milestones and shows each estimate with its source
   await expect(page.locator('.deep-mark')).toHaveCount(17);
   expect(problems).toEqual([]);
 });
+
+test('deep time colours the globe by temperature, with the global mean and its caveats', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await page.goto('./?ma=250');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  const toggle = page.getByRole('button', { name: 'Temperature' });
+  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  await expect(page).toHaveURL(/layers=[^&]*temperature/);
+  await expect(globe).toHaveAttribute(
+    'data-temperature',
+    /paleotemp\/245\.png .*paleotemp\/250\.png$/,
+  );
+  // The hothouse after the end-Permian extinction, against today's world.
+  await expect(page.getByTestId('temperature-mean')).toHaveText(
+    'Global mean 32.9 °C (today 14.6 °C)',
+  );
+  await expect(page.locator('.temperature-note')).toBeHidden();
+
+  // The 65 Ma map stands out, and the site says so.
+  await page.goto('./?ma=65&layers=temperature');
+  await globeRendered(page);
+  await expect(page.locator('.temperature-note')).toContainText('does not say why');
+
+  await page.getByRole('button', { name: 'Temperature' }).click();
+  await expect(globe).toHaveAttribute('data-temperature', 'off');
+  await expect(page.locator('.temperature-legend')).toBeHidden();
+  expect(problems).toEqual([]);
+});

@@ -52,13 +52,13 @@ export function oldestMa(index: PaleoDemIndex): number {
 
 /**
  * The two maps either side of `ma` and how far between them it lies: 0 shows `younger`, 1
- * `older`. Outside the maps' span the nearest one is shown alone.
+ * `older`. Outside the maps' span the nearest one is shown alone. `frames` run from the
+ * present back, as every deep-time index does.
  */
-export function framesAround(
-  index: PaleoDemIndex,
+export function framesAround<F extends { readonly ma: number }>(
+  frames: readonly F[],
   ma: number,
-): { readonly younger: PaleoFrame; readonly older: PaleoFrame; readonly mix: number } {
-  const { frames } = index;
+): { readonly younger: F; readonly older: F; readonly mix: number } {
   const first = elementAt(frames, 0);
   if (ma <= first.ma) return { younger: first, older: first, mix: 0 };
   for (let position = 1; position < frames.length; position += 1) {

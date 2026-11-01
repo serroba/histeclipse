@@ -23,7 +23,15 @@ export type Mode = (typeof MODES)[number];
 export const BORDER_SOURCES = ['cliopatria', 'ohm', 'both'] as const;
 export type BorderSource = (typeof BORDER_SOURCES)[number];
 
-export const LAYERS = ['lunar', 'solar', 'terminator', 'places', 'empires'] as const;
+export const LAYERS = [
+  'lunar',
+  'solar',
+  'terminator',
+  'places',
+  'empires',
+  // Deep time only: the surface coloured by temperature.
+  'temperature',
+] as const;
 export type Layer = (typeof LAYERS)[number];
 
 /**

@@ -180,6 +180,19 @@ export interface DeepTimeSurface {
   readonly landHeight: number;
 }
 
+/** Surface temperature in deep time: two maps either side of the moment, blended. */
+export interface TemperatureSurface {
+  readonly younger: string;
+  readonly older: string;
+  /** 0 shows `younger`, 1 `older`. */
+  readonly mix: number;
+  readonly columns: number;
+  readonly rows: number;
+  /** °C that bytes 0 and 255 stand for. */
+  readonly coldest: number;
+  readonly warmest: number;
+}
+
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
   setSunDirection(direction: Vector3Tuple): void;
@@ -223,6 +236,8 @@ export interface Globe {
    * today's imagery; null returns to today's Earth.
    */
   setDeepTime(surface: DeepTimeSurface | null): void;
+  /** Colour the deep-time surface by temperature; null shows relief alone. */
+  setTemperature(surface: TemperatureSurface | null): void;
   /** Pin the chosen place on the globe; null removes the pin. */
   setLocation(place: GeoPoint | null): void;
   /**
@@ -281,6 +296,12 @@ const EARTH_FRAGMENT = /* glsl */ `
   uniform float paleoMix;
   uniform float paleoActive;
   uniform float evenLight;
+  uniform sampler2D tempYounger;
+  uniform sampler2D tempOlder;
+  uniform float tempMix;
+  uniform float tempActive;
+  uniform vec2 tempGrid;
+  uniform vec2 tempRange;
   uniform vec2 paleoGrid;
   uniform float seaDepth;
   uniform float landHeight;
@@ -357,6 +378,30 @@ const EARTH_FRAGMENT = /* glsl */ `
     return mix(color, srgb(vec3(0.92, 0.92, 0.90)), smoothstep(3500.0, 5000.0, height));
   }
 
+  // Node-registered like the elevation maps, so the same half-pixel shift applies.
+  float paleoTemperatureFrom(sampler2D map, vec2 uv) {
+    vec2 at = (uv * (tempGrid - 1.0) + 0.5) / tempGrid;
+    return mix(tempRange.x, tempRange.y, texture2D(map, at).r);
+  }
+
+  float paleoTemperature(vec2 uv) {
+    return mix(paleoTemperatureFrom(tempYounger, uv), paleoTemperatureFrom(tempOlder, uv), tempMix);
+  }
+
+  // A diverging scale, blue through pale yellow to red (ColorBrewer RdYlBu), °C. The legend in
+  // the deep-time bar draws the same stops.
+  vec3 temperatureColour(float celsius) {
+    vec3 c = srgb(vec3(0.192, 0.212, 0.584));
+    c = mix(c, srgb(vec3(0.271, 0.459, 0.706)), smoothstep(-40.0, -20.0, celsius));
+    c = mix(c, srgb(vec3(0.569, 0.749, 0.859)), smoothstep(-20.0, -5.0, celsius));
+    c = mix(c, srgb(vec3(0.878, 0.953, 0.973)), smoothstep(-5.0, 5.0, celsius));
+    c = mix(c, srgb(vec3(0.996, 0.878, 0.565)), smoothstep(5.0, 15.0, celsius));
+    c = mix(c, srgb(vec3(0.992, 0.682, 0.380)), smoothstep(15.0, 22.0, celsius));
+    c = mix(c, srgb(vec3(0.957, 0.427, 0.263)), smoothstep(22.0, 28.0, celsius));
+    c = mix(c, srgb(vec3(0.843, 0.188, 0.153)), smoothstep(28.0, 35.0, celsius));
+    return mix(c, srgb(vec3(0.647, 0.0, 0.149)), smoothstep(35.0, 45.0, celsius));
+  }
+
   vec3 paleoSurface(vec2 uv) {
     float height = paleoHeight(uv);
     // Where the coast runs comes from heights averaged over about half a degree (a tent of
@@ -387,6 +432,13 @@ const EARTH_FRAGMENT = /* glsl */ `
     vec3 normal = normalize(vec3(-10.0 * east / westEast, -10.0 * north / southNorth, 1.0));
     vec3 light = normalize(vec3(-1.0, 1.0, 1.4));
     float shade = dot(normal, light) / light.z;
+    if (tempActive > 0.5) {
+      // Temperature over the relief: the sea darker and the coast drawn as a thin dark line,
+      // so the continents still read where land and sea are the same temperature.
+      float sea = 1.0 - smoothstep(-blur, blur, coast);
+      float shore = 1.0 - smoothstep(blur, 3.0 * blur, abs(coast));
+      color = temperatureColour(paleoTemperature(uv)) * (1.0 - 0.3 * sea) * (1.0 - 0.55 * shore);
+    }
     return color * clamp(mix(1.0, shade, 0.7), 0.45, 1.35);
   }
 
@@ -693,6 +745,12 @@ export async function createGlobe(
         paleoOlder: { value: null as Texture | null },
         paleoMix: { value: 0 },
         paleoActive: { value: 0 },
+        tempYounger: { value: null as Texture | null },
+        tempOlder: { value: null as Texture | null },
+        tempMix: { value: 0 },
+        tempActive: { value: 0 },
+        tempGrid: { value: new Vector2(361, 181) },
+        tempRange: { value: new Vector2(-60, 60) },
         evenLight,
         paleoGrid: { value: new Vector2(361, 181) },
         seaDepth: { value: 11_000 },
@@ -852,6 +910,7 @@ export async function createGlobe(
   const paleoTextures = new Map<string, Promise<Texture>>();
   let deepTimeWanted: DeepTimeSurface | null = null;
   let deepTime = false;
+  let temperatureWanted: TemperatureSurface | null = null;
   function hiddenInDeepTime(): Object3D[] {
     return [sun, corona, moon, ...Object.values(planets.meshes)];
   }
@@ -1587,6 +1646,34 @@ export async function createGlobe(
         },
         () => {
           // Leave the last map shown; the next move tries again.
+          paleoTextures.delete(surface.younger);
+          paleoTextures.delete(surface.older);
+        },
+      );
+    },
+    setTemperature(surface) {
+      temperatureWanted = surface;
+      const uniforms = earth.material.uniforms;
+      if (surface === null) {
+        uniforms['tempActive'] = { value: 0 };
+        container.dataset['temperature'] = 'off';
+        needsRender = true;
+        return;
+      }
+      Promise.all([paleoTexture(surface.younger), paleoTexture(surface.older)]).then(
+        ([younger, older]) => {
+          // A later request (the slider kept moving) wins.
+          if (temperatureWanted !== surface) return;
+          uniforms['tempYounger'] = { value: younger };
+          uniforms['tempOlder'] = { value: older };
+          uniforms['tempMix'] = { value: surface.mix };
+          uniforms['tempGrid'] = { value: new Vector2(surface.columns, surface.rows) };
+          uniforms['tempRange'] = { value: new Vector2(surface.coldest, surface.warmest) };
+          uniforms['tempActive'] = { value: 1 };
+          container.dataset['temperature'] = `${surface.younger} ${surface.older}`;
+          needsRender = true;
+        },
+        () => {
           paleoTextures.delete(surface.younger);
           paleoTextures.delete(surface.older);
         },
