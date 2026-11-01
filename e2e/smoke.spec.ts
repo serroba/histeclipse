@@ -1046,6 +1046,9 @@ test('deep time steps through milestones and shows each estimate with its source
   await expect(milestones.locator('[data-milestone="end-permian-extinction"]')).toContainText(
     'Burgess, Bowring & Shen 2014',
   );
+  // From a milestone the view rounded to a tenth, the next is the next one, not the same.
+  await page.getByRole('button', { name: 'Later milestone' }).click();
+  await expect(page).toHaveURL(/&ma=245(&|$)/);
   // The slider carries a tick for every milestone.
   await expect(page.locator('.deep-mark')).toHaveCount(17);
   expect(problems).toEqual([]);

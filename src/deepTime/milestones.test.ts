@@ -1,7 +1,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
-import { anchorMa, MILESTONES, milestonesNear, nextMilestone } from './milestones';
+import { anchorMa, MILESTONES, milestonesNear, nextMilestone, STANDING_MA } from './milestones';
 
 describe('MILESTONES', () => {
   it('runs oldest first, each with sound estimates', () => {
@@ -47,6 +47,23 @@ describe('nextMilestone', () => {
     // Standing on one, the next is the one after.
     const permian = nextMilestone(250, 1);
     expect(permian && nextMilestone(anchorMa(permian), -1)?.id).toBe('first-dinosaurs');
+  });
+
+  it('moves on from a milestone the view rounded to a tenth', () => {
+    // The end-Permian anchor, 251.978 Ma, is kept as 252.0.
+    expect(nextMilestone(252, -1)?.id).toBe('first-dinosaurs');
+    for (const milestone of MILESTONES) {
+      const shown = Math.round(anchorMa(milestone) * 10) / 10;
+      expect(nextMilestone(shown, -1)?.id).not.toBe(milestone.id);
+      expect(nextMilestone(shown, 1)?.id).not.toBe(milestone.id);
+    }
+  });
+
+  it('keeps milestones further apart than the view can tell', () => {
+    const anchors = MILESTONES.map(anchorMa);
+    for (let index = 1; index < anchors.length; index += 1) {
+      expect((anchors[index - 1] ?? 0) - (anchors[index] ?? 0)).toBeGreaterThan(2 * STANDING_MA);
+    }
   });
 
   it('always moves the way it is asked', () => {
