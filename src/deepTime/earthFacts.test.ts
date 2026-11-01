@@ -28,6 +28,16 @@ describe('earthFacts', () => {
     expect(fact(50, 'Magnetic field')).toContain('cannot be known');
   });
 
+  it('says how little is known before 540 Ma', () => {
+    expect(fact(2000, 'Magnetic field')).toMatch(
+      /^Too far back.*Tarduno et al\. 2010.*Weiss et al\. 2018/,
+    );
+    expect(fact(2000, 'Tilt')).toMatch(
+      /^A much larger tilt has been proposed.*Néron de Surgy & Laskar 1997\)\. Today: Between 22\.1°/,
+    );
+    expect(fact(100, 'Tilt')).toMatch(/^Between/);
+  });
+
   it('gives the measured day, or the measurements either side', () => {
     expect(fact(0, 'Day')).toBe('24.0 h today.');
     expect(fact(30, 'Day')).toMatch(/^Measured 24\.0 h today, and 23\.5 h 70 Ma/);

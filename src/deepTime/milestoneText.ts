@@ -9,7 +9,7 @@ export function formatRange(min: number, max: number): string {
     return min === max ? `${years(min)} years ago` : `${years(min)}–${years(max)} years ago`;
   }
   // Up to three decimals, as precise as the source; no trailing zeros.
-  const ma = (value: number): string => String(Number(value.toFixed(3)));
+  const ma = (value: number): string => value.toLocaleString('en', { maximumFractionDigits: 3 });
   return min === max ? `${ma(min)} Ma` : `${ma(min)}–${ma(max)} Ma`;
 }
 

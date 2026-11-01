@@ -1,6 +1,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
+import { EARTH_AGE_MA } from '../state/viewState';
 import { anchorMa, MILESTONES, milestonesNear, nextMilestone, STANDING_MA } from './milestones';
 
 describe('MILESTONES', () => {
@@ -13,7 +14,7 @@ describe('MILESTONES', () => {
       for (const { min, max, url } of estimates) {
         expect(min).toBeLessThanOrEqual(max);
         expect(min).toBeGreaterThanOrEqual(0);
-        expect(max).toBeLessThanOrEqual(540);
+        expect(max).toBeLessThanOrEqual(EARTH_AGE_MA);
         expect(url).toMatch(/^https:\/\//);
       }
     }
@@ -42,7 +43,8 @@ describe('nextMilestone', () => {
   it('steps towards the present and the past', () => {
     expect(nextMilestone(250, -1)?.id).toBe('first-dinosaurs');
     expect(nextMilestone(250, 1)?.id).toBe('end-permian-extinction');
-    expect(nextMilestone(540, 1)).toBeNull();
+    expect(nextMilestone(540, 1)?.id).toBe('ediacaran-biota');
+    expect(nextMilestone(540, 1, 540)).toBeNull();
     expect(nextMilestone(0.1, -1)).toBeNull();
     // Standing on one, the next is the one after.
     const permian = nextMilestone(250, 1);
