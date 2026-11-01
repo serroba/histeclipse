@@ -117,7 +117,12 @@ import { framesAround, loadPaleoDemIndex, oldestMa, type PaleoDemIndex } from '.
 import { loadPaleoTempIndex, type PaleoTempIndex } from './data/paleoTemp';
 import { loadSeaLevel, type SeaLevelIndex } from './data/seaLevel';
 import { iceFramesInMa, loadIceSheets, oldestIceKa, type IceSheetIndex } from './data/iceSheets';
-import { loadPlateMasks, type PlateMaskIndex, plateText } from './data/plateMasks';
+import {
+  loadPlateMasks,
+  type PlateMaskIndex,
+  platesBeyondText,
+  plateText,
+} from './data/plateMasks';
 import { loadShelf, type ShelfIndex } from './data/shelf';
 import { coastlineAt } from './deepTime/coastline';
 import {
@@ -1116,6 +1121,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
         );
       }
       return { plates: true, platesText: null };
+    }
+    const reach = platesIndex.frames.at(-1)?.ma ?? 0;
+    if (ma > reach) {
+      globe.setPlates(null);
+      return { plates: true, platesText: platesBeyondText(reach) };
     }
     const { younger, older, mix } = framesAround(platesIndex.frames, ma);
     globe.setPlates({

@@ -1252,6 +1252,17 @@ test('deep time reaches back 4.6 billion years, leaving the globe blank before t
   );
 
   // Back to the 540 Myr scale: it opens at the elevation maps' oldest.
+  // The Plates layer fills in one reconstruction's continents where the masks reach, 1.8 Gyr.
+  await page.goto('./?ma=1500&scale=eons&layers=plates');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute('data-uncharted', 'true');
+  await expect(globe).toHaveAttribute('data-plates', /plates\/1495\.png .*plates\/1500\.png$/);
+  await expect(page.getByTestId('plates-note')).toContainText('No surface map reaches this far');
+  await page.goto('./?ma=3000&scale=eons&layers=plates');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute('data-plates', 'off');
+  await expect(page.getByTestId('plates-note')).toContainText('reach back 1,800 million years');
+
   await page.getByRole('button', { name: '540 Myr' }).click();
   await expect(page).toHaveURL(/&ma=540(&|$)/);
   await expect(globe).toHaveAttribute('data-uncharted', 'false');
