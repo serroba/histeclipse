@@ -10,6 +10,11 @@ one metre a step, from 200 m below today's sea level (byte 0, and everything dee
 above (byte 255, and everything higher). In the ice ages sea level fell by up to about 130 m and
 rose a few metres above today's.
 
+Land below today's sea level that the ocean does not reach (the Caspian lowland, the Dead Sea,
+the Qattara Depression) is not sea floor that a falling sea lays bare, so it is written as
+"above the band" and the elevation map decides there, as it does today. The open ocean is
+everything below sea level joined to the deep sea, in 0.1° steps.
+
 The grid is node-registered: 3601 columns from 180° W to 180° E (both edges, the same meridian)
 and 1801 rows from 90° N to 90° S, like the PaleoDEMs.
 """
@@ -63,6 +68,36 @@ def read_grid(text: str) -> Heights:
     return heights
 
 
+#: Sea floor this deep is open ocean, from which connected sea floor is traced. Deeper than the
+#: Caspian's floor (about -1,000 m) and the Black Sea's (-2,200 m), which the elevation map
+#: draws as it is; the Mediterranean reaches -5 km.
+DEEP_SEA = -3000
+
+
+def open_ocean(heights: Heights) -> npt.NDArray[np.bool_]:
+    """Find sea floor joined to the deep sea, through neighbours below sea level.
+
+    Grown from the deep a step at a time; east and west wrap round, the poles do not.
+    """
+    below = heights < 0
+    ocean = heights < DEEP_SEA
+    while True:
+        grown = ocean.copy()
+        grown |= np.roll(ocean, 1, axis=1) | np.roll(ocean, -1, axis=1)
+        grown[1:] |= ocean[:-1]
+        grown[:-1] |= ocean[1:]
+        grown &= below
+        if np.array_equal(grown, ocean):
+            return ocean
+        ocean = grown
+
+
+def without_inland_basins(heights: Heights) -> Heights:
+    """Lift land below sea level that the ocean does not reach out of the encoded band."""
+    inland = (heights < 0) & ~open_ocean(heights)
+    return np.where(inland, float(HIGHEST), heights)
+
+
 def encode(heights: Heights) -> npt.NDArray[np.uint8]:
     """One metre a byte, from LOWEST (0) to HIGHEST (255), clamped at both ends."""
     return np.round(np.clip(heights, LOWEST, HIGHEST) - LOWEST).astype(np.uint8)
@@ -78,7 +113,7 @@ def to_png(heights: Heights) -> bytes:
 def write_shelf(heights: Heights, folder: Path) -> int:
     """Write ``today.png`` and ``index.json``; return the image's size in bytes."""
     folder.mkdir(parents=True, exist_ok=True)
-    image = to_png(heights)
+    image = to_png(without_inland_basins(heights))
     _ = (folder / "today.png").write_bytes(image)
     index: dict[str, Json] = {
         "schemaVersion": 1,
