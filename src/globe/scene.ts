@@ -74,7 +74,7 @@ import {
   type ScreenMarker,
 } from './spaceFrame';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
-import { SOLAR_NORTH_POLE_J2000 } from './sunImage';
+import { discAverage, SOLAR_NORTH_POLE_J2000 } from './sunImage';
 import {
   OCCULTATION,
   SOLAR_COMMON,
@@ -138,6 +138,8 @@ export interface SunImageRequest {
   /** Multiplies the image's colours: a warm white for the grey visible-light frame. */
   readonly tint: readonly [number, number, number];
   readonly diskRadius: number;
+  /** How much the frame darkens toward the limb (u in 1 − u(1 − μ)); 0 if it does not. */
+  readonly limbDarkening: number;
 }
 
 export interface Globe {
@@ -337,15 +339,21 @@ const SUN_VERTEX = /* glsl */ `
   #include <common>
   #include <logdepthbuf_pars_vertex>
   varying vec3 vNormal;
+  varying vec3 vWorldPosition;
   void main() {
     vNormal = normal;
+    vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     #include <logdepthbuf_vertex>
   }
 `;
 
 // The side facing Earth wears SDO's image, as an orthographic view from Earth (sunImage.ts is
-// the tested reference); the far side, which no one saw that day, is a plain dim tint.
+// the tested reference). The side no one saw that day is a plain surface at the image's average
+// colour, with a faint mottle so it reads as a surface. Toward the image's limb its pixels are
+// squeezed, so seen from the side they smear; there the image fades into the plain surface.
+// Visible light darkens toward the limb as the camera sees it, so the disc looks round from
+// any side.
 const SUN_FRAGMENT = /* glsl */ `
   #include <logdepthbuf_pars_fragment>
   uniform sampler2D map;
@@ -354,18 +362,55 @@ const SUN_FRAGMENT = /* glsl */ `
   uniform vec3 north;
   uniform float diskRadius;
   uniform vec3 tint;
+  uniform vec3 quiet;
+  uniform float limbDarkening;
   varying vec3 vNormal;
+  varying vec3 vWorldPosition;
+
+  float hash(vec3 p) {
+    p = fract(p * 0.3183099 + 0.1);
+    p *= 17.0;
+    return fract(p.x * p.y * p.z * (p.x + p.y + p.z));
+  }
+
+  float valueNoise(vec3 p) {
+    vec3 i = floor(p);
+    vec3 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(
+      mix(mix(hash(i), hash(i + vec3(1.0, 0.0, 0.0)), f.x),
+          mix(hash(i + vec3(0.0, 1.0, 0.0)), hash(i + vec3(1.0, 1.0, 0.0)), f.x), f.y),
+      mix(mix(hash(i + vec3(0.0, 0.0, 1.0)), hash(i + vec3(1.0, 0.0, 1.0)), f.x),
+          mix(hash(i + vec3(0.0, 1.0, 1.0)), hash(i + vec3(1.0, 1.0, 1.0)), f.x), f.y),
+      f.z);
+  }
+
+  float darkening(float mu) {
+    return 1.0 - limbDarkening * (1.0 - clamp(mu, 0.0, 1.0));
+  }
 
   void main() {
     #include <logdepthbuf_fragment>
     vec3 plain = vec3(1.0, 0.96, 0.86);
     vec3 n = normalize(vNormal);
+    float towardEarth = dot(n, toEarth);
+    float towardCamera = dot(n, normalize(cameraPosition - vWorldPosition));
     vec3 up = normalize(north - dot(north, toEarth) * toEarth);
     vec3 right = cross(-toEarth, up);
     vec2 uv = vec2(0.5 + diskRadius * dot(n, right), 0.5 + diskRadius * dot(n, up));
-    vec3 seen = texture2D(map, uv).rgb * tint;
-    vec3 unseen = vec3(0.02, 0.015, 0.01);
-    vec3 imaged = mix(unseen, seen, smoothstep(-0.02, 0.03, dot(n, toEarth)));
+    // Take out the limb darkening SDO saw and put in the camera's.
+    vec3 seen = texture2D(map, uv).rgb * tint * darkening(towardCamera) / darkening(towardEarth);
+    float mottle = 0.55 * valueNoise(n * 90.0) + 0.3 * valueNoise(n * 31.0)
+      + 0.15 * valueNoise(n * 9.0);
+    vec3 unseen = quiet * darkening(towardCamera) * (0.9 + 0.2 * mottle);
+    // The image where it is not squeezed: well inside its limb, or where the camera looks from
+    // about Earth's side and sees it squeezed just as SDO did.
+    float squeeze = towardEarth / max(towardCamera, 1e-3);
+    float trusted = max(
+      smoothstep(0.05, 0.45, towardEarth),
+      smoothstep(0.6, 0.95, squeeze) * smoothstep(0.0, 0.03, towardEarth)
+    );
+    vec3 imaged = mix(unseen, seen, trusted);
     gl_FragColor = vec4(mix(plain, imaged, hasMap), 1.0);
     #include <colorspace_fragment>
   }
@@ -568,6 +613,9 @@ export async function createGlobe(
     north: { value: new Vector3(0, 1, 0) },
     diskRadius: { value: 0.4 },
     tint: { value: new Vector3(1, 1, 1) },
+    // The far side's colour, in linear light, and visible light's limb-darkening coefficient.
+    quiet: { value: new Vector3(1, 0.96, 0.86) },
+    limbDarkening: { value: 0 },
   };
   const sun = new Mesh(
     new SphereGeometry(SUN_RADIUS_EARTH_RADII, 128, 64),
@@ -603,6 +651,8 @@ export async function createGlobe(
   scene.add(corona);
   // Frames of the Sun already loaded, by URL, and the one asked for last.
   const sunTextures = new Map<string, Texture>();
+  // Each channel's average disc colour, from its small frame.
+  const sunQuiet = new Map<string, Vector3>();
   let sunImageWanted: SunImageRequest | null = null;
   const glow = new Sprite(
     new SpriteMaterial({
@@ -1187,6 +1237,13 @@ export async function createGlobe(
         sunUniforms.hasMap.value = 1;
         sunUniforms.tint.value.set(...image.tint);
         sunUniforms.diskRadius.value = image.diskRadius;
+        sunUniforms.limbDarkening.value = image.limbDarkening;
+        let quiet = sunQuiet.get(image.key);
+        if (quiet === undefined) {
+          quiet = new Vector3(...quietSun(sunTextures.get(url), image));
+          sunQuiet.set(image.key, quiet);
+        }
+        sunUniforms.quiet.value.copy(quiet);
         placeCorona();
         container.dataset['sunImage'] = size;
         container.dataset['sunLayer'] = image.key;
@@ -1257,6 +1314,26 @@ export async function createGlobe(
       renderer.domElement.remove();
     },
   };
+}
+
+/**
+ * The far side's colour for an SDO frame, in linear light: the disc's average, tinted, at the
+ * level of the disc's centre. A warm white if the frame cannot be read.
+ */
+function quietSun(texture: Texture | undefined, image: SunImageRequest): Vector3Tuple {
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  const source: unknown = texture?.image;
+  if (context === null || !(source instanceof HTMLImageElement || source instanceof ImageBitmap)) {
+    return [1, 0.96, 0.86];
+  }
+  context.drawImage(source, 0, 0, size, size);
+  const { data } = context.getImageData(0, 0, size, size);
+  const [r, g, b] = discAverage(data, size, size, image.diskRadius, image.limbDarkening);
+  return [r * image.tint[0], g * image.tint[1], b * image.tint[2]];
 }
 
 /** A soft radial glow for the Sun, drawn once into a small canvas. */

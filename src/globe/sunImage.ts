@@ -2,7 +2,7 @@
  * Wrapping a full-disk image of the Sun onto a sphere. The image shows the hemisphere that faces
  * Earth, solar north up and solar west to the right (as the sky looks from Earth), so a point on
  * the Sun's surface lands where an orthographic view from Earth puts it. The far side was not
- * seen and gets no image.
+ * seen and gets no image: it is drawn as a plain surface at the image's average colour.
  *
  * The shader in `scene.ts` does the same in GLSL; this is the tested reference.
  */
@@ -57,4 +57,46 @@ export function sunImageUv(
 /** Heliographic latitude of the centre of the disc seen from Earth (B₀), degrees. */
 export function diskCentreLatitude(toEarth: Vector3, north: Vector3): number {
   return Math.asin(dot(unit(toEarth), unit(north))) / RADIANS;
+}
+
+/**
+ * Brightness across the disc of a limb-darkened Sun, relative to its centre: I = 1 − u(1 − μ),
+ * with μ the cosine between the surface normal and the line of sight. u ≈ 0.6 in visible light.
+ */
+export function limbDarkening(mu: number, coefficient: number): number {
+  return 1 - coefficient * (1 - Math.max(0, mu));
+}
+
+/** sRGB-encoded 0..255 to linear light 0..1, as the GPU decodes an sRGB texture. */
+function linearFromSrgb(value: number): number {
+  const c = value / 255;
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+}
+
+/**
+ * The average colour of the disc in an RGBA image (rows top down, sRGB), in linear light: the
+ * quiet Sun's typical level in that channel. Only pixels well inside the limb count, so the dark
+ * sky and the corona beyond do not. A limb-darkened disc averages 1 − u/3 of its centre, so
+ * with a `limbDarkening` coefficient u the result is scaled back up to the centre's level.
+ */
+export function discAverage(
+  pixels: ArrayLike<number>,
+  width: number,
+  height: number,
+  diskRadius: number,
+  limbDarkeningCoefficient = 0,
+): readonly [r: number, g: number, b: number] {
+  const limit = diskRadius * 0.97 * width;
+  const sum = [0, 0, 0];
+  let count = 0;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (Math.hypot(x + 0.5 - width / 2, y + 0.5 - height / 2) > limit) continue;
+      const i = 4 * (y * width + x);
+      for (let c = 0; c < 3; c++) sum[c] = (sum[c] ?? 0) + linearFromSrgb(pixels[i + c] ?? 0);
+      count++;
+    }
+  }
+  const scale = 1 / Math.max(1, count) / (1 - limbDarkeningCoefficient / 3);
+  return [(sum[0] ?? 0) * scale, (sum[1] ?? 0) * scale, (sum[2] ?? 0) * scale];
 }
