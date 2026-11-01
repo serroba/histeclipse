@@ -21,12 +21,15 @@ describe('the deep-time elevation maps', () => {
 
   it('blend the two maps either side of a moment', async () => {
     const loaded = await loadPaleoDemIndex('/x', serve(index));
-    const between = framesAround(loaded, 252);
+    const between = framesAround(loaded.frames, 252);
     expect([between.younger.ma, between.older.ma]).toEqual([250, 255]);
     expect(between.mix).toBeCloseTo(0.4, 12);
-    expect(framesAround(loaded, 250)).toMatchObject({ mix: 1 });
-    expect(framesAround(loaded, 0)).toMatchObject({ younger: { ma: 0 }, mix: 0 });
-    expect(framesAround(loaded, 600)).toMatchObject({ younger: { ma: 540 }, older: { ma: 540 } });
+    expect(framesAround(loaded.frames, 250)).toMatchObject({ mix: 1 });
+    expect(framesAround(loaded.frames, 0)).toMatchObject({ younger: { ma: 0 }, mix: 0 });
+    expect(framesAround(loaded.frames, 600)).toMatchObject({
+      younger: { ma: 540 },
+      older: { ma: 540 },
+    });
   });
 
   it('reject an index whose maps are out of order', async () => {

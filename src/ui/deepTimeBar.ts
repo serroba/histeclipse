@@ -13,12 +13,51 @@ import { createMilestonePanel } from './milestonePanel';
 /** Each step button moves by one elevation map. */
 export const STEP_MA = 5;
 
+export interface TemperatureView {
+  readonly on: boolean;
+  /** Global mean then and today, °C; null while the maps load. */
+  readonly mean: number | null;
+  readonly today: number | null;
+  /** What the site says about the map shown, if anything. */
+  readonly note: string | null;
+}
+
+/** The legend's stops, °C, matching the globe's shader. */
+export const TEMPERATURE_STOPS: readonly (readonly [number, string])[] = [
+  [-40, '#313695'],
+  [-20, '#4575b4'],
+  [-5, '#91bfdb'],
+  [5, '#e0f3f8'],
+  [15, '#fee090'],
+  [22, '#fdae61'],
+  [28, '#f46d43'],
+  [35, '#d73027'],
+  [45, '#a50026'],
+];
+
+/** A CSS gradient through the stops, placed by temperature. */
+export function legendGradient(stops: readonly (readonly [number, string])[]): string {
+  const first = stops[0]?.[0] ?? 0;
+  const last = stops.at(-1)?.[0] ?? 1;
+  const placed = stops.map(
+    ([celsius, colour]) => `${colour} ${((100 * (celsius - first)) / (last - first)).toFixed(1)}%`,
+  );
+  return `linear-gradient(to right, ${placed.join(', ')})`;
+}
+
+export function temperatureText(view: TemperatureView): string {
+  if (view.mean === null) return 'Loading temperature maps…';
+  const today = view.today === null ? '' : ` (today ${view.today.toFixed(1)} °C)`;
+  return `Global mean ${view.mean.toFixed(1)} °C${today}`;
+}
+
 export interface DeepTimeView {
   readonly ma: number;
   /** The oldest moment the maps reach, Ma. */
   readonly oldest: number;
   readonly period: Period | null;
   readonly playing: boolean;
+  readonly temperature: TemperatureView;
 }
 
 export interface DeepTimeBar {
@@ -30,6 +69,7 @@ export function createDeepTimeBar(handlers: {
   onMa(ma: number): void;
   onPlay(playing: boolean): void;
   onExit(): void;
+  onTemperature(on: boolean): void;
 }): DeepTimeBar {
   const play = element(
     'button',
@@ -58,6 +98,33 @@ export function createDeepTimeBar(handlers: {
   const when = element('strong', { class: 'deep-when', 'data-testid': 'deep-when' });
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
   const exit = element('button', { type: 'button', class: 'deep-exit' }, 'Back to history');
+  const temperatureButton = element(
+    'button',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false' },
+    'Temperature',
+  );
+  const legendScale = element('span', { class: 'temperature-scale', 'aria-hidden': 'true' });
+  legendScale.style.background = legendGradient(TEMPERATURE_STOPS);
+  const legendMean = element('span', { 'data-testid': 'temperature-mean' });
+  const legendNote = element('p', { class: 'temperature-note', hidden: '' });
+  const legend = element(
+    'div',
+    { class: 'temperature-legend', hidden: '' },
+    element(
+      'div',
+      { class: 'temperature-scale-row' },
+      element('span', {}, '−40 °C'),
+      legendScale,
+      element('span', {}, '45 °C'),
+    ),
+    element(
+      'p',
+      {},
+      legendMean,
+      ' · Scotese 2022, HadCM3L climate model adjusted to rock and isotope records',
+    ),
+    legendNote,
+  );
   // Poles, field, tilt and day: folded away, so the bar stays small on a phone.
   const facts = element('dl', { class: 'deep-facts-list' });
   const factsPanel = element(
@@ -78,7 +145,8 @@ export function createDeepTimeBar(handlers: {
     'nav',
     { class: 'deep-time', 'aria-label': 'Deep time', hidden: '' },
     element('div', { class: 'deep-controls' }, play, older, track, younger),
-    element('p', { class: 'deep-label' }, when, ' ', period, exit),
+    element('p', { class: 'deep-label' }, when, ' ', period, temperatureButton, exit),
+    legend,
     milestones.root,
     factsPanel,
   );
@@ -100,6 +168,9 @@ export function createDeepTimeBar(handlers: {
   });
   exit.addEventListener('click', () => {
     handlers.onExit();
+  });
+  temperatureButton.addEventListener('click', () => {
+    handlers.onTemperature(!(current?.temperature.on ?? false));
   });
 
   return {
@@ -135,6 +206,12 @@ export function createDeepTimeBar(handlers: {
         ]),
       );
       milestones.render(view.ma);
+      const { temperature } = view;
+      temperatureButton.setAttribute('aria-pressed', String(temperature.on));
+      legend.hidden = !temperature.on;
+      legendMean.textContent = temperatureText(temperature);
+      legendNote.hidden = temperature.note === null;
+      legendNote.textContent = temperature.note ?? '';
       play.textContent = view.playing ? '❚❚' : '▶';
       play.setAttribute('aria-label', view.playing ? 'Pause' : 'Play');
     },

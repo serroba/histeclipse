@@ -101,9 +101,10 @@ import type { Figure } from './sky/look';
 import { loadSunImages, type SunImages } from './data/sunImages';
 import { createFigureSwitch } from './ui/figureSwitch';
 import { createViewSwitch } from './ui/viewSwitch';
-import { createDeepTimeBar } from './ui/deepTimeBar';
+import { createDeepTimeBar, type TemperatureView } from './ui/deepTimeBar';
 import { formatMa, periodAt } from './deepTime/periods';
 import { framesAround, loadPaleoDemIndex, oldestMa, type PaleoDemIndex } from './data/paleoDem';
+import { loadPaleoTempIndex, type PaleoTempIndex } from './data/paleoTemp';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
 import { elementAt } from './util/arrays';
 import { errorMessage } from './util/errors';
@@ -202,7 +203,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     element('a', { href: 'https://doi.org/10.5281/zenodo.5460860' }, 'PALEOMAP PaleoDEMs'),
     ' (Scotese & Wright 2018, ',
     element('a', { href: 'https://creativecommons.org/licenses/by/4.0/' }, 'CC BY 4.0'),
-    ', repacked) · Periods: ',
+    ', repacked) · Temperature: ',
+    element('a', { href: 'https://doi.org/10.5281/zenodo.5718392' }, 'Scotese 2022'),
+    ' (CC BY 4.0) · Periods: ',
     element('a', { href: 'https://stratigraphy.org/chart' }, 'ICS chart v2026/06'),
   );
   const deepButton = element(
@@ -239,6 +242,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     onExit() {
       stopPlay();
       store.set((state) => ({ ...state, ma: null }));
+    },
+    onTemperature(on) {
+      store.set((state) => {
+        const layers = new Set(state.layers);
+        if (on) layers.add('temperature');
+        else layers.delete('temperature');
+        return { ...state, layers };
+      });
     },
   });
   const sunSwitch = createSunSwitch((sunLayer) => {
@@ -864,6 +875,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   // Deep time: Earth's surface from the elevation maps, which load a few at a time as needed.
   let paleoIndex: Promise<PaleoDemIndex> | null = null;
+  // The temperature maps load the first time the layer is asked for; `tempIndex` once they have.
+  let tempLoading: Promise<PaleoTempIndex> | null = null;
+  let tempIndex: PaleoTempIndex | null = null;
   let oldest: number = MA_RANGE.max;
   let playing = false;
   let playFrame = 0;
@@ -878,17 +892,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
       stopPlay();
       deepBar.render(null);
       globe.setDeepTime(null);
+      globe.setTemperature(null);
       return;
     }
     const period = periodAt(ma);
     showDeepTimeText(ma);
-    deepBar.render({ ma, oldest, period, playing });
+    deepBar.render({ ma, oldest, period, playing, temperature: temperatureView(state, ma) });
+    showTemperature(state, ma);
     paleoIndex ??= loadPaleoDemIndex(`${base}data/paleodem/index.json`, fetchJson);
     paleoIndex.then(
       (index) => {
         oldest = oldestMa(index);
         if (store.get().ma !== ma) return;
-        const { younger, older, mix } = framesAround(index, ma);
+        const { younger, older, mix } = framesAround(index.frames, ma);
         globe.setDeepTime({
           younger: `${base}data/paleodem/${younger.file}`,
           older: `${base}data/paleodem/${older.file}`,
@@ -904,6 +920,54 @@ export async function startApp(root: HTMLElement): Promise<void> {
         notify(`Could not load Earth's past surface: ${errorMessage(error)}`);
       },
     );
+  }
+
+  /** What the bar says about temperature: off, loading, or the global mean then and now. */
+  function temperatureView(state: ViewState, ma: number): TemperatureView {
+    if (!state.layers.has('temperature')) return { on: false, mean: null, today: null, note: null };
+    if (tempIndex === null) return { on: true, mean: null, today: null, note: null };
+    const { younger, older, mix } = framesAround(tempIndex.frames, ma);
+    // The note of the map nearer the moment, if it has one.
+    const nearer = mix < 0.5 ? younger : older;
+    return {
+      on: true,
+      mean: younger.mean + (older.mean - younger.mean) * mix,
+      today: tempIndex.frames[0]?.mean ?? null,
+      note: nearer.note ?? null,
+    };
+  }
+
+  function showTemperature(state: ViewState, ma: number): void {
+    if (!state.layers.has('temperature')) {
+      globe.setTemperature(null);
+      return;
+    }
+    if (tempIndex === null) {
+      // Asked once; the moment shown when they arrive is drawn then.
+      if (tempLoading !== null) return;
+      tempLoading = loadPaleoTempIndex(`${base}data/paleotemp/index.json`, fetchJson);
+      tempLoading.then(
+        (index) => {
+          tempIndex = index;
+          showDeepTime(store.get());
+        },
+        (error: unknown) => {
+          tempLoading = null;
+          notify(`Could not load the temperature maps: ${errorMessage(error)}`);
+        },
+      );
+      return;
+    }
+    const { younger, older, mix } = framesAround(tempIndex.frames, ma);
+    globe.setTemperature({
+      younger: `${base}data/paleotemp/${younger.file}`,
+      older: `${base}data/paleotemp/${older.file}`,
+      mix,
+      columns: tempIndex.columns,
+      rows: tempIndex.rows,
+      coldest: tempIndex.coldest,
+      warmest: tempIndex.warmest,
+    });
   }
 
   /** The header in deep time: how long ago, and the period by the ICS chart. */
@@ -1252,7 +1316,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (
       state.ma !== previous?.ma ||
       state.time !== previous.time ||
-      state.years !== previous.years
+      state.years !== previous.years ||
+      state.layers !== previous.layers
     ) {
       showDeepTime(state);
     }

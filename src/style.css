@@ -1310,6 +1310,61 @@ body {
   color: var(--ink-muted);
 }
 
+.deep-layer {
+  min-height: 44px;
+  margin-left: auto;
+  padding: 0 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 22px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.deep-layer[aria-pressed='true'] {
+  border-color: #f4a261;
+  color: var(--ink);
+}
+
+/* With the layer button taking the free space, Back to history sits beside it. */
+.deep-layer + .deep-exit {
+  margin-left: 0;
+}
+
+.temperature-legend {
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.temperature-legend[hidden] {
+  display: none;
+}
+
+.temperature-legend p {
+  margin: 4px 0 0;
+  color: var(--ink-muted);
+}
+
+.temperature-scale-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.temperature-scale {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+}
+
+.temperature-note {
+  font-style: italic;
+}
+
 .deep-exit {
   min-height: 44px;
   margin-left: auto;
