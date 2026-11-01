@@ -1176,12 +1176,124 @@ body {
   gap: 4px;
 }
 
-.deep-slider {
+.deep-track {
+  position: relative;
   flex: 1;
+  min-width: 0;
+}
+
+.deep-slider {
+  width: 100%;
   min-width: 0;
   height: 44px;
   accent-color: #7fcf9a;
   cursor: pointer;
+}
+
+/* Milestone ticks under the slider's track, inset by about the thumb's radius. */
+.deep-marks {
+  position: absolute;
+  right: 9px;
+  bottom: 6px;
+  left: 9px;
+  height: 7px;
+  pointer-events: none;
+}
+
+.deep-mark {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  border-radius: 1px;
+  background: var(--mark, #c9d4e6);
+  transform: translateX(-1px);
+}
+
+.milestone-life {
+  --mark: #7fcf9a;
+}
+
+.milestone-extinction {
+  --mark: #e07a6a;
+}
+
+.milestone-continents {
+  --mark: #d9b46a;
+}
+
+.milestone-climate {
+  --mark: #8fc3ea;
+}
+
+.milestone-humans {
+  --mark: #c9a3e6;
+}
+
+.deep-milestone-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.deep-milestones {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.deep-milestones summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  overflow: hidden;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+
+.deep-milestones.is-empty summary {
+  color: var(--ink-muted);
+}
+
+/* Open, the cards scroll inside the bar rather than pushing it over the globe. */
+.milestone-cards {
+  display: grid;
+  gap: 10px;
+  max-height: 32vh;
+  margin-bottom: 6px;
+  overflow-y: auto;
+}
+
+.milestone {
+  padding-left: 10px;
+  border-left: 3px solid var(--mark);
+  line-height: 1.4;
+}
+
+.milestone h3 {
+  margin: 0 0 2px;
+  font-size: 14px;
+}
+
+.milestone p {
+  margin: 0 0 4px;
+  color: var(--ink-muted);
+}
+
+.milestone-note {
+  font-style: italic;
+}
+
+.milestone-estimates {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.milestone-estimates a {
+  color: var(--ink);
+}
+
+.milestone-basis {
+  color: var(--ink-muted);
 }
 
 .deep-label {
