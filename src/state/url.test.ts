@@ -1,6 +1,8 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
+import { COAST_SOURCES } from '../deepTime/coastline';
+
 import { calendarDateOf, daysInMonth, type Calendar } from '../time/julianDay';
 import { SKY_CULTURES } from '../data/skyCultures';
 import { SUN_LAYERS } from '../data/sunImages';
@@ -66,6 +68,7 @@ describe('parseViewState', () => {
       seenIn: null,
       ma: null,
       deepScale: 'all',
+      coast: 'bintanja-2008',
     } satisfies ViewState);
   });
 
@@ -112,6 +115,17 @@ describe('parseViewState', () => {
     expect(state.focus).toBe('moon');
     expect(serializeViewState(state)).toContain('&focus=moon');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
+  });
+
+  it('reads whose sea level the coastlines follow, writing it only when not the default', () => {
+    expect(parseViewState('coast=spratt-2016', NOW).state.coast).toBe('spratt-2016');
+    expect(serializeViewState(parseViewState('coast=spratt-2016', NOW).state)).toContain(
+      '&coast=spratt-2016',
+    );
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('coast=');
+    expect(parseViewState('coast=haq', NOW).warnings).toEqual([
+      'Ignored coast="haq": unknown coast; expected one of bintanja-2008, spratt-2016',
+    ]);
   });
 
   it('reads the ice-age scale, writing it only when it is not the whole span', () => {
@@ -361,6 +375,7 @@ describe('serializeViewState', () => {
       { nil: null },
     ),
     deepScale: fc.constantFrom(...DEEP_SCALES),
+    coast: fc.constantFrom(...COAST_SOURCES),
   });
 
   it('round-trips every view state through a link', () => {

@@ -105,11 +105,18 @@ import type { Figure } from './sky/look';
 import { loadSunImages, type SunImages } from './data/sunImages';
 import { createFigureSwitch } from './ui/figureSwitch';
 import { createViewSwitch } from './ui/viewSwitch';
-import { createDeepTimeBar, type DeepTimeView, type TemperatureView } from './ui/deepTimeBar';
+import {
+  type CoastlineView,
+  createDeepTimeBar,
+  type DeepTimeView,
+  type TemperatureView,
+} from './ui/deepTimeBar';
 import { formatMa, periodAt } from './deepTime/periods';
 import { framesAround, loadPaleoDemIndex, oldestMa, type PaleoDemIndex } from './data/paleoDem';
 import { loadPaleoTempIndex, type PaleoTempIndex } from './data/paleoTemp';
 import { loadSeaLevel, type SeaLevelIndex } from './data/seaLevel';
+import { loadShelf, type ShelfIndex } from './data/shelf';
+import { coastlineAt } from './deepTime/coastline';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
 import { elementAt } from './util/arrays';
 import { errorMessage } from './util/errors';
@@ -257,6 +264,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
         else layers.delete('sealevel');
         return { ...state, layers };
       });
+    },
+    onCoast(coast) {
+      store.set((state) => ({ ...state, coast }));
     },
     onScale(deepScale) {
       stopPlay();
@@ -906,6 +916,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // Sea level, likewise: asked for once, drawn when it arrives.
   let seaLevelLoading: Promise<SeaLevelIndex> | null = null;
   let seaLevelIndex: SeaLevelIndex | null = null;
+  let shelfLoading: Promise<ShelfIndex> | null = null;
+  let shelfIndex: ShelfIndex | null = null;
   let oldest: number = MA_RANGE.max;
   let playing = false;
   let playFrame = 0;
@@ -921,6 +933,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       deepBar.render(null);
       globe.setDeepTime(null);
       globe.setTemperature(null);
+      globe.setShelf(null);
       return;
     }
     const period = periodAt(ma);
@@ -932,6 +945,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       period,
       playing,
       scale: state.deepScale,
+      coastline: showCoastline(state, ma),
       temperature: temperatureView(state, ma),
       seaLevel: seaLevelView(state),
     });
@@ -967,8 +981,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return kept;
   }
 
-  function seaLevelView(state: ViewState): DeepTimeView['seaLevel'] {
-    if (!state.layers.has('sealevel')) return { on: false };
+  /** The sea-level reconstructions, asked for once; null until they arrive. */
+  function seaLevels(): SeaLevelIndex | null {
     if (seaLevelIndex === null && seaLevelLoading === null) {
       seaLevelLoading = loadSeaLevel(`${base}data/sealevel/index.json`, fetchJson);
       seaLevelLoading.then(
@@ -982,7 +996,58 @@ export async function startApp(root: HTMLElement): Promise<void> {
         },
       );
     }
-    return { on: true, index: seaLevelIndex };
+    return seaLevelIndex;
+  }
+
+  function seaLevelView(state: ViewState): DeepTimeView['seaLevel'] {
+    return state.layers.has('sealevel') ? { on: true, index: seaLevels() } : { on: false };
+  }
+
+  /** Today's shelves, asked for once; null until they arrive. */
+  function shelves(): ShelfIndex | null {
+    if (shelfIndex === null && shelfLoading === null) {
+      shelfLoading = loadShelf(`${base}data/shelf/index.json`, fetchJson);
+      shelfLoading.then(
+        (index) => {
+          shelfIndex = index;
+          showDeepTime(store.get());
+        },
+        (error: unknown) => {
+          shelfLoading = null;
+          notify(`Could not load today's coasts and shelves: ${errorMessage(error)}`);
+        },
+      );
+    }
+    return shelfIndex;
+  }
+
+  /** On the ice-age scale, coastlines at the sea level of the moment, by the source chosen. */
+  function showCoastline(state: ViewState, ma: number): CoastlineView | null {
+    if (state.deepScale !== 'ice') {
+      globe.setShelf(null);
+      return null;
+    }
+    const levels = seaLevels();
+    const coastline = levels === null ? null : coastlineAt(levels, state.coast, ma * 1000);
+    const shelf = shelves();
+    globe.setShelf(
+      coastline === null || shelf === null
+        ? null
+        : {
+            url: `${base}data/shelf/${shelf.file}`,
+            columns: shelf.columns,
+            rows: shelf.rows,
+            lowest: shelf.lowest,
+            highest: shelf.highest,
+            seaLevel: coastline.seaLevel,
+          },
+    );
+    return {
+      coast: state.coast,
+      seaLevel: coastline?.seaLevel ?? null,
+      label: coastline?.series.label ?? null,
+      instead: coastline?.instead?.label ?? null,
+    };
   }
 
   /** What the bar says about temperature: off, loading, or the global mean then and now. */
@@ -1384,7 +1449,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.time !== previous.time ||
       state.years !== previous.years ||
       state.layers !== previous.layers ||
-      state.deepScale !== previous.deepScale
+      state.deepScale !== previous.deepScale ||
+      state.coast !== previous.coast
     ) {
       showDeepTime(state);
     }

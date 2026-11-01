@@ -36,6 +36,7 @@
 import { calendarDate, calendarDateOf, julianDay, type Calendar } from '../time/julianDay';
 import { SKY_CULTURES, type SkyCulture } from '../data/skyCultures';
 import { SUN_LAYERS, type SunLayer } from '../data/sunImages';
+import { COAST_SOURCES, type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
 import { YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
 import { errorMessage } from '../util/errors';
@@ -132,6 +133,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     seenIn: read<string | null>('seen', parseSeenIn, defaults.seenIn),
     ma: read<number | null>('ma', parseMa, defaults.ma),
     deepScale: read('scale', parseDeepScale, defaults.deepScale),
+    coast: read('coast', parseCoast, defaults.coast),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -163,6 +165,7 @@ export function serializeViewState(state: ViewState): string {
   if (state.seenIn !== null) params.set('seen', state.seenIn);
   if (state.ma !== null) params.set('ma', formatMa(state.ma));
   if (state.deepScale !== 'all') params.set('scale', state.deepScale);
+  if (state.coast !== DEFAULT_COAST) params.set('coast', state.coast);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
@@ -173,6 +176,10 @@ function parseMode(raw: string): Mode {
 
 function parseFigures(raw: string): Figures {
   return oneOf(raw, FIGURES, 'figures');
+}
+
+function parseCoast(raw: string): CoastSource {
+  return oneOf(raw, COAST_SOURCES, 'coast');
 }
 
 function parseDeepScale(raw: string): DeepScale {

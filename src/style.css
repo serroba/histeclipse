@@ -1357,6 +1357,19 @@ body {
   display: none;
 }
 
+.deep-note p {
+  margin: 0 0 4px;
+}
+
+.deep-coast {
+  min-height: 32px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgb(10 16 32 / 0.9);
+  color: var(--ink);
+  font: inherit;
+}
+
 .deep-layer {
   min-height: 44px;
   margin-left: auto;
