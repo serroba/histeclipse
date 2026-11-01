@@ -7,8 +7,10 @@
 import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period } from '../deepTime/periods';
+import type { SeaLevelIndex } from '../data/seaLevel';
 import { element } from './dom';
 import { createMilestonePanel } from './milestonePanel';
+import { createSeaLevelChart } from './seaLevelChart';
 
 /** Each step button moves by one elevation map. */
 export const STEP_MA = 5;
@@ -58,6 +60,9 @@ export interface DeepTimeView {
   readonly period: Period | null;
   readonly playing: boolean;
   readonly temperature: TemperatureView;
+  /** Sea level: off, on while the reconstructions load (null), or on with them. */
+  readonly seaLevel:
+    { readonly on: false } | { readonly on: true; readonly index: SeaLevelIndex | null };
 }
 
 export interface DeepTimeBar {
@@ -70,6 +75,7 @@ export function createDeepTimeBar(handlers: {
   onPlay(playing: boolean): void;
   onExit(): void;
   onTemperature(on: boolean): void;
+  onSeaLevel(on: boolean): void;
 }): DeepTimeBar {
   const play = element(
     'button',
@@ -98,6 +104,16 @@ export function createDeepTimeBar(handlers: {
   const when = element('strong', { class: 'deep-when', 'data-testid': 'deep-when' });
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
   const exit = element('button', { type: 'button', class: 'deep-exit' }, 'Back to history');
+  const seaLevelButton = element(
+    'button',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false' },
+    'Sea level',
+  );
+  const seaLevel = createSeaLevelChart({
+    onKa(ka) {
+      handlers.onMa(ka / 1000);
+    },
+  });
   const temperatureButton = element(
     'button',
     { type: 'button', class: 'deep-layer', 'aria-pressed': 'false' },
@@ -135,7 +151,7 @@ export function createDeepTimeBar(handlers: {
   );
   // A tick on the track for each milestone, placed when the time line's span is known.
   const marks = element('div', { class: 'deep-marks', 'aria-hidden': 'true' });
-  const track = element('div', { class: 'deep-track' }, slider, marks);
+  const track = element('div', { class: 'deep-track' }, seaLevel.chart, slider, marks);
   const milestones = createMilestonePanel({
     onMa(ma) {
       handlers.onMa(ma);
@@ -145,7 +161,17 @@ export function createDeepTimeBar(handlers: {
     'nav',
     { class: 'deep-time', 'aria-label': 'Deep time', hidden: '' },
     element('div', { class: 'deep-controls' }, play, older, track, younger),
-    element('p', { class: 'deep-label' }, when, ' ', period, temperatureButton, exit),
+    element(
+      'p',
+      { class: 'deep-label' },
+      when,
+      ' ',
+      period,
+      seaLevelButton,
+      temperatureButton,
+      exit,
+    ),
+    seaLevel.legend,
     legend,
     milestones.root,
     factsPanel,
@@ -168,6 +194,9 @@ export function createDeepTimeBar(handlers: {
   });
   exit.addEventListener('click', () => {
     handlers.onExit();
+  });
+  seaLevelButton.addEventListener('click', () => {
+    handlers.onSeaLevel(!(current?.seaLevel.on ?? false));
   });
   temperatureButton.addEventListener('click', () => {
     handlers.onTemperature(!(current?.temperature.on ?? false));
@@ -206,6 +235,12 @@ export function createDeepTimeBar(handlers: {
         ]),
       );
       milestones.render(view.ma);
+      seaLevelButton.setAttribute('aria-pressed', String(view.seaLevel.on));
+      seaLevel.render(
+        view.seaLevel.on ? view.seaLevel.index : null,
+        view.ma * 1000,
+        view.oldest * 1000,
+      );
       const { temperature } = view;
       temperatureButton.setAttribute('aria-pressed', String(temperature.on));
       legend.hidden = !temperature.on;

@@ -1172,7 +1172,8 @@ body {
 
 .deep-controls {
   display: flex;
-  align-items: center;
+  /* With sea level shown the track is taller; the buttons stay level with the slider. */
+  align-items: flex-end;
   gap: 4px;
 }
 
@@ -1331,6 +1332,116 @@ body {
 /* With the layer button taking the free space, Back to history sits beside it. */
 .deep-layer + .deep-exit {
   margin-left: 0;
+}
+
+/* Sea level above the slider: the same width, inset like the slider's thumb, so a point on
+   the chart sits over its moment. */
+.sea-chart-box {
+  position: relative;
+  padding: 0 9px;
+}
+
+.sea-chart-box[hidden] {
+  display: none;
+}
+
+.sea-chart {
+  display: block;
+  width: 100%;
+  height: 72px;
+  cursor: crosshair;
+}
+
+.sea-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.sea-band {
+  opacity: 0.2;
+}
+
+.sea-today {
+  stroke: var(--ink-muted);
+  stroke-dasharray: 4 4;
+  opacity: 0.6;
+  vector-effect: non-scaling-stroke;
+}
+
+.sea-cursor {
+  stroke: var(--ink);
+  stroke-width: 1;
+  opacity: 0.8;
+  vector-effect: non-scaling-stroke;
+}
+
+.sea-tip {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgb(10 16 32 / 0.94);
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  /* Narrow enough to stay over the chart on a phone; long readings wrap. */
+  width: max-content;
+  max-width: min(320px, 70vw);
+  pointer-events: none;
+  transform: translate(-50%, -100%);
+}
+
+.sea-tip strong {
+  color: var(--ink);
+}
+
+.sea-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 0 8px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  list-style: none;
+}
+
+.sea-legend[hidden] {
+  display: none;
+}
+
+.sea-legend-title {
+  color: var(--ink);
+}
+
+.sea-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sea-legend a {
+  color: var(--ink-muted);
+}
+
+.sea-swatch {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.sea-value {
+  color: var(--ink);
+}
+
+@media (max-width: 600px) {
+  .sea-chart {
+    height: 56px;
+  }
 }
 
 .temperature-legend {

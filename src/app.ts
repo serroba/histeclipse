@@ -101,10 +101,11 @@ import type { Figure } from './sky/look';
 import { loadSunImages, type SunImages } from './data/sunImages';
 import { createFigureSwitch } from './ui/figureSwitch';
 import { createViewSwitch } from './ui/viewSwitch';
-import { createDeepTimeBar, type TemperatureView } from './ui/deepTimeBar';
+import { createDeepTimeBar, type DeepTimeView, type TemperatureView } from './ui/deepTimeBar';
 import { formatMa, periodAt } from './deepTime/periods';
 import { framesAround, loadPaleoDemIndex, oldestMa, type PaleoDemIndex } from './data/paleoDem';
 import { loadPaleoTempIndex, type PaleoTempIndex } from './data/paleoTemp';
+import { loadSeaLevel, type SeaLevelIndex } from './data/seaLevel';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
 import { elementAt } from './util/arrays';
 import { errorMessage } from './util/errors';
@@ -242,6 +243,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     onExit() {
       stopPlay();
       store.set((state) => ({ ...state, ma: null }));
+    },
+    onSeaLevel(on) {
+      store.set((state) => {
+        const layers = new Set(state.layers);
+        if (on) layers.add('sealevel');
+        else layers.delete('sealevel');
+        return { ...state, layers };
+      });
     },
     onTemperature(on) {
       store.set((state) => {
@@ -878,6 +887,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The temperature maps load the first time the layer is asked for; `tempIndex` once they have.
   let tempLoading: Promise<PaleoTempIndex> | null = null;
   let tempIndex: PaleoTempIndex | null = null;
+  // Sea level, likewise: asked for once, drawn when it arrives.
+  let seaLevelLoading: Promise<SeaLevelIndex> | null = null;
+  let seaLevelIndex: SeaLevelIndex | null = null;
   let oldest: number = MA_RANGE.max;
   let playing = false;
   let playFrame = 0;
@@ -897,7 +909,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     const period = periodAt(ma);
     showDeepTimeText(ma);
-    deepBar.render({ ma, oldest, period, playing, temperature: temperatureView(state, ma) });
+    deepBar.render({
+      ma,
+      oldest,
+      period,
+      playing,
+      temperature: temperatureView(state, ma),
+      seaLevel: seaLevelView(state),
+    });
     showTemperature(state, ma);
     paleoIndex ??= loadPaleoDemIndex(`${base}data/paleodem/index.json`, fetchJson);
     paleoIndex.then(
@@ -920,6 +939,24 @@ export async function startApp(root: HTMLElement): Promise<void> {
         notify(`Could not load Earth's past surface: ${errorMessage(error)}`);
       },
     );
+  }
+
+  function seaLevelView(state: ViewState): DeepTimeView['seaLevel'] {
+    if (!state.layers.has('sealevel')) return { on: false };
+    if (seaLevelIndex === null && seaLevelLoading === null) {
+      seaLevelLoading = loadSeaLevel(`${base}data/sealevel/index.json`, fetchJson);
+      seaLevelLoading.then(
+        (index) => {
+          seaLevelIndex = index;
+          showDeepTime(store.get());
+        },
+        (error: unknown) => {
+          seaLevelLoading = null;
+          notify(`Could not load the sea-level reconstructions: ${errorMessage(error)}`);
+        },
+      );
+    }
+    return { on: true, index: seaLevelIndex };
   }
 
   /** What the bar says about temperature: off, loading, or the global mean then and now. */
