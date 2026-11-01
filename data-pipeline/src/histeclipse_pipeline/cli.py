@@ -18,6 +18,7 @@ from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.ohm import fetch_ohm
 from histeclipse_pipeline.paleodem import fetch_paleodem
+from histeclipse_pipeline.paleotemp import fetch_paleotemp
 from histeclipse_pipeline.planets import (
     APPARENT,
     PLANET_APPARENT_DESCRIPTION,
@@ -213,6 +214,12 @@ def paleodem(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} elevation images to {args.out}")
 
 
+def paleotemp(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write surface temperature maps for 100 steps since 540 Ma as small images."""
+    count = fetch_paleotemp(args.out)
+    return _say(f"wrote {count} temperature images to {args.out}")
+
+
 def sun_images(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Render the SDO layers into ``public/textures/sun`` and write their manifest."""
     result = fetch_images(args.out)
@@ -260,6 +267,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "paleodem": (
         paleodem,
         "write Earth's elevation for each 5 Myr step since 540 Ma (PALEOMAP PaleoDEMs)",
+        "output directory",
+    ),
+    "paleotemp": (
+        paleotemp,
+        "write surface temperature maps for 100 steps since 540 Ma (Scotese 2022)",
         "output directory",
     ),
     "sun-images": (
