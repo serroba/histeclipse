@@ -78,6 +78,7 @@ import {
 } from './data/empires';
 import { createCultureSwitch } from './ui/cultureSwitch';
 import {
+  CULTURE_INFO,
   cultureFigures,
   loadCultureIndex,
   loadHipStars,
@@ -127,7 +128,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
   });
   const cultureSwitch = createCultureSwitch(base, (culture) => {
-    store.set((state) => ({ ...state, culture }));
+    // See the sky from where that culture watched it; the date stays as it is.
+    const place = CULTURE_INFO[culture].place;
+    store.set((state) => ({
+      ...state,
+      culture,
+      location:
+        place === null ? state.location : { latitude: place.latitude, longitude: place.longitude },
+    }));
   });
   const figureSwitch = createFigureSwitch((figures) => {
     store.set((state) => ({ ...state, figures }));
@@ -702,6 +710,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
   }
 
+  /** The name of a culture's observing site, if the observer stands right there. */
+  function namedPlace(place: GeoPoint): string | null {
+    const site = Object.values(CULTURE_INFO).find(
+      (info) =>
+        info.place !== null &&
+        Math.abs(info.place.latitude - place.latitude) < 0.01 &&
+        Math.abs(info.place.longitude - place.longitude) < 0.01,
+    );
+    return site?.place?.name ?? null;
+  }
+
   function observerOf(state: ViewState): GeoPoint {
     if (state.location !== null) return state.location;
     return state.focus === 'earth' ? state.camera.target : DEFAULT_CAMERA.target;
@@ -762,6 +781,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     skyText.textContent = [
       skyCaption({
         place,
+        placeName: namedPlace(place),
         azimuth: state.look.azimuth,
         uncertaintySeconds: deltaT.uncertaintySeconds(jdUT),
       }),

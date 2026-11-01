@@ -877,3 +877,17 @@ test('the Moon hides Mars from Berlin in the occultation of 8 December 2022', as
     /Mars:[\d.-]+:[\d.-]+:[\d.-]+:seen/,
   );
 });
+
+test('picking a culture puts you where its sky-watchers stood', async ({ page }) => {
+  await page.goto('./?mode=sky&t=-586-01-15T20:00&loc=51.5,-0.12&look=180,40,90');
+  await skyRendered(page);
+  await page.getByLabel('Sky culture').selectOption('chinese');
+  await expect(page).toHaveURL(/loc=34\.6197,112\.4540/);
+  await expect(page.locator('.sky-caption')).toContainText(
+    'Standing in Luoyang (34.62° N, 112.45° E)',
+  );
+  // The date stays where it was.
+  await expect(page).toHaveURL(/t=-0586-01-15T20:00Z/);
+  await page.getByLabel('Sky culture').selectOption('babylonian_mulapin');
+  await expect(page.locator('.sky-caption')).toContainText('Standing in Babylon');
+});

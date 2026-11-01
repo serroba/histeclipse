@@ -86,10 +86,20 @@ describe('CULTURE_INFO', () => {
     }
   });
 
-  it('names every culture and gives a licence for each copied one', () => {
+  it('names every culture, with a licence and an observing site for each copied one', () => {
     for (const culture of SKY_CULTURES) {
-      expect(CULTURE_INFO[culture].label).not.toBe('');
-      if (culture !== 'modern') expect(CULTURE_INFO[culture].licence).not.toBe('');
+      const info = CULTURE_INFO[culture];
+      expect(info.label).not.toBe('');
+      if (culture === 'modern') continue;
+      expect(info.licence).not.toBe('');
+      expect(info.place?.name).toBeTruthy();
+      expect(Math.abs(info.place?.latitude ?? 99)).toBeLessThan(60);
     }
+    // Babylonian astronomy is seen from Babylon.
+    expect(CULTURE_INFO.babylonian_mulapin.place).toEqual({
+      name: 'Babylon',
+      latitude: 32.5422,
+      longitude: 44.4209,
+    });
   });
 });

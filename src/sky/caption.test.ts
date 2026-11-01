@@ -5,6 +5,12 @@ import { eclipseNote, formatPlace, planetNote, skyCaption } from './caption';
 const BABYLON = { latitude: 32.5422, longitude: 44.4209 };
 
 describe('skyCaption', () => {
+  it('names the place when it has a name', () => {
+    expect(
+      skyCaption({ place: BABYLON, placeName: 'Babylon', azimuth: 270, uncertaintySeconds: 2 }),
+    ).toBe('Standing in Babylon (32.54° N, 44.42° E), facing W.');
+  });
+
   it('says where the observer stands and faces', () => {
     expect(skyCaption({ place: BABYLON, azimuth: 180, uncertaintySeconds: 2 })).toBe(
       'Standing at 32.54° N, 44.42° E, facing S.',
