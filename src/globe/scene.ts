@@ -357,9 +357,21 @@ const EARTH_FRAGMENT = /* glsl */ `
 
   vec3 paleoSurface(vec2 uv) {
     float height = paleoHeight(uv);
-    // The coast blends over about a screen pixel of height, so it is smooth at any zoom.
-    float blur = max(fwidth(height), 1.0);
-    vec3 color = mix(seaColour(height), landColour(height), smoothstep(-blur, blur, height));
+    // Where the coast runs comes from heights averaged over about half a degree (a tent of
+    // nine samples): some source grids draw coasts in 0.5–1° steps, and this rounds them off.
+    // Colours and shading keep the full detail.
+    vec2 reach = 2.5 / (paleoGrid - 1.0);
+    float coast = 0.0;
+    for (int i = -1; i <= 1; i++) {
+      for (int j = -1; j <= 1; j++) {
+        float weight = (2.0 - abs(float(i))) * (2.0 - abs(float(j)));
+        coast += weight * paleoHeight(uv + vec2(float(i), float(j)) * reach);
+      }
+    }
+    coast = mix(height, coast / 16.0, 0.85);
+    // The coast blends over about a screen pixel, so it is smooth at any zoom.
+    float blur = max(fwidth(coast), 1.0);
+    vec3 color = mix(seaColour(min(height, -1.0)), landColour(max(height, 0.0)), smoothstep(-blur, blur, coast));
     // Hill shading, lit from the north-west as maps are: slopes from the neighbouring nodes,
     // ten times steeper than they are so ranges show from orbit.
     vec2 step_ = 1.0 / (paleoGrid - 1.0);
