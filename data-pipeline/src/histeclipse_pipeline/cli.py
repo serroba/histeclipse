@@ -27,6 +27,7 @@ from histeclipse_pipeline.planets import (
     fetch_planet_vectors,
     write_planet_vectors,
 )
+from histeclipse_pipeline.sealevel import fetch_sealevel
 from histeclipse_pipeline.sky import (
     constellations,
     fetch_sources,
@@ -214,6 +215,12 @@ def paleodem(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} elevation images to {args.out}")
 
 
+def sealevel(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write four reconstructions of global sea level, side by side."""
+    points = fetch_sealevel(args.out)
+    return _say(f"wrote {points} sea-level points to {args.out}")
+
+
 def paleotemp(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write surface temperature maps for 100 steps since 540 Ma as small images."""
     count = fetch_paleotemp(args.out)
@@ -267,6 +274,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "paleodem": (
         paleodem,
         "write Earth's elevation for each 5 Myr step since 540 Ma (PALEOMAP PaleoDEMs)",
+        "output directory",
+    ),
+    "sealevel": (
+        sealevel,
+        "write global sea level through time from four reconstructions",
         "output directory",
     ),
     "paleotemp": (

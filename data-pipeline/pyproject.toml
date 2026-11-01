@@ -7,6 +7,7 @@ requires-python = ">=3.14"
 dependencies = [
     "h5py>=3.12",
     "numpy>=2",
+    "openpyxl>=3.1",
     "pillow>=11",
     "skyfield>=1.55",
 ]
@@ -22,6 +23,7 @@ dev = [
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "ruff>=0.17.2",
+    "types-openpyxl>=3.1.5.20261017",
 ]
 
 [build-system]
