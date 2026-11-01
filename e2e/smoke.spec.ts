@@ -1145,12 +1145,21 @@ test('deep time narrows to the ice ages, in thousands of years', async ({ page }
   await expect(page.getByTestId('coastline')).toHaveText(
     'Coastline at −121 m, following Bintanja & van de Wal 2008.',
   );
+  // The ice sheets of the glacial maximum, blended between the 20,000 and 22,500-year maps.
+  await expect(globe).toHaveAttribute('data-ice', /icesheets\/20000\.png .*icesheets\/22500\.png$/);
+  await expect(page.getByTestId('ice-sheets')).toContainText('PaleoMIST 1.0');
   await page.getByLabel('Coastline follows').selectOption('spratt-2016');
   await expect(page).toHaveURL(/coast=spratt-2016/);
   await expect(page.getByTestId('coastline')).toContainText('−128 m, following Spratt & Lisiecki');
 
   await page.getByRole('button', { name: '5,000 years earlier' }).click();
   await expect(page).toHaveURL(/&ma=0\.026(&|$)/);
+
+  // Before the ice maps reach, the bar says so and draws none.
+  await page.goto('./?ma=0.5&scale=ice');
+  await globeRendered(page);
+  await expect(page.getByTestId('ice-sheets')).toContainText('no openly licensed maps');
+  await expect(globe).toHaveAttribute('data-ice', 'off');
 
   await page.getByRole('button', { name: '540 Myr' }).click();
   await expect(page).not.toHaveURL(/scale=/);
