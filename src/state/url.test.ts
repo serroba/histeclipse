@@ -62,6 +62,7 @@ describe('parseViewState', () => {
       sunLayer: 'visible',
       culture: 'modern',
       borders: 'cliopatria',
+      seenIn: null,
     } satisfies ViewState);
   });
 
@@ -108,6 +109,13 @@ describe('parseViewState', () => {
     expect(state.focus).toBe('moon');
     expect(serializeViewState(state)).toContain('&focus=moon');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
+  });
+
+  it('reads which state’s eclipses to pick out, writing it only when there is one', () => {
+    const { state } = parseViewState('seen=Neo-Babylonian+Empire', NOW);
+    expect(state.seenIn).toBe('Neo-Babylonian Empire');
+    expect(serializeViewState(state)).toContain('&seen=Neo-Babylonian+Empire');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('seen=');
   });
 
   it('reads whose borders the empires layer draws, writing it only when not Cliopatria', () => {
@@ -181,6 +189,7 @@ describe('parseViewState', () => {
     ['sun=xray', 'sun', 'unknown sun'],
     ['culture=martian', 'culture', 'unknown culture'],
     ['borders=guesswork', 'borders', 'unknown borders'],
+    ['seen=%20', 'seen', 'name of a past state'],
     ['sel=lunar', 'sel', 'expected kind:date'],
     ['sel=lunar:yesterday', 'sel', 'expected a date'],
     ['sel=annular:2025-01-01', 'sel', 'unknown eclipse kind'],
@@ -244,6 +253,7 @@ describe('parseViewState', () => {
             'sun',
             'culture',
             'borders',
+            'seen',
             'x',
           ),
           fc.string(),
@@ -318,6 +328,10 @@ describe('serializeViewState', () => {
     sunLayer: fc.constantFrom(...SUN_LAYERS),
     culture: fc.constantFrom(...SKY_CULTURES),
     borders: fc.constantFrom(...BORDER_SOURCES),
+    seenIn: fc.option(
+      fc.string({ minLength: 1, maxLength: 120 }).filter((name) => name.trim() === name),
+      { nil: null },
+    ),
   });
 
   it('round-trips every view state through a link', () => {

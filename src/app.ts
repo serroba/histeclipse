@@ -9,7 +9,7 @@ import { loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
 import { loadSky } from './data/sky';
 import { earthFixedToJ2000, sunPositionJ2000 } from './astro/precession';
 import { subsolarPoint } from './astro/sun';
-import { greatestEclipseUT } from './data/catalog';
+import { greatestEclipseUT, yearOf } from './data/catalog';
 import {
   famousDate,
   famousFor,
@@ -70,12 +70,15 @@ import { createSunSwitch } from './ui/sunSwitch';
 import { createLayerSwitch } from './ui/layerSwitch';
 import {
   centuryFor,
+  labelPoint,
   loadEmpireCentury,
   loadEmpireIndex,
   territoriesIn,
   type EmpireCentury,
   type EmpireIndex,
+  type Territory,
 } from './data/empires';
+import { createEmpireEclipses, SEARCH_YEARS } from './eclipses/empireEclipses';
 import {
   loadOhmCentury,
   loadOhmIndex,
@@ -96,7 +99,7 @@ import type { Figure } from './sky/look';
 import { loadSunImages, type SunImages } from './data/sunImages';
 import { createFigureSwitch } from './ui/figureSwitch';
 import { createViewSwitch } from './ui/viewSwitch';
-import { createTimeline, type Eclipse, type YearEclipses } from './ui/timeline';
+import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
 import { elementAt } from './util/arrays';
 import { errorMessage } from './util/errors';
 
@@ -212,6 +215,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
         time: eclipseMoment(eclipse),
         selection: eclipseSelection(eclipse),
       }));
+    },
+    onSeenIn(seenIn) {
+      store.set((state) => ({ ...state, seenIn }));
+      if (seenIn === null || store.get().mode !== 'globe') return;
+      // Turn the globe to the state picked.
+      territoryOf(seenIn, store.get().time.date.year).then(
+        (territory) => {
+          if (territory !== null) globe.flyTo(labelPoint(territory));
+        },
+        () => undefined, // The bar reports load errors.
+      );
+    },
+    onSeenStep(direction) {
+      stepSeen(direction);
     },
   });
   const scrubber = createScrubber((offsetMinutes) => {
@@ -362,6 +379,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let listing: YearEclipses = { status: 'loading' };
   let pathShownFor: SolarEclipse | null = null;
 
+  // Which of those eclipses could be seen from a past state picked in the bar.
+  let seenView: SeenView = { status: 'off' };
+  let seenName: string | null = null;
+  let seenListing: YearEclipses | null = null;
+  let seenOptions: readonly string[] = [];
+  let seenOptionsYear: number | null = null;
+
   function selectedEclipse(state: ViewState): Eclipse | undefined {
     return listing.status === 'ready' ? findSelected(listing.eclipses, state.selection) : undefined;
   }
@@ -419,7 +443,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function renderSelection(state: ViewState): void {
     const selected = selectedEclipse(state);
-    timeline.render({ year: barYear(state), calendar: state.years, eclipses: listing, selected });
+    refreshSeen(state);
+    timeline.render({
+      year: barYear(state),
+      calendar: state.years,
+      eclipses: listing,
+      selected,
+      seen: { shown: seenShown(state), options: seenOptions, view: seenView },
+    });
     const uncertainty =
       selected === undefined ? 0 : deltaT.uncertaintySeconds(greatestEclipseUT(selected));
 
@@ -597,6 +628,169 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return file;
   }
 
+  const fetchJson = (url: string): Promise<Response> => fetch(url);
+
+  /** Cliopatria's file for the century of `year`, or null if there is none. */
+  function empireCenturyFor(year: number): Promise<EmpireCentury | null> {
+    empireIndex ??= loadEmpireIndex(`${base}data/empires/index.json`, fetchJson);
+    return empireIndex.then((index) => {
+      const century = centuryFor(index, year);
+      if (century === null) return null;
+      return centuryFile(empireCenturies, century, () =>
+        loadEmpireCentury(`${base}data/empires/${String(century)}.json`, fetchJson),
+      );
+    });
+  }
+
+  // A state's territory, kept while its borders stay the same so its region is prepared once.
+  const territories = new WeakMap<object, Territory>();
+  async function territoryOf(name: string, year: number): Promise<Territory | null> {
+    const file = await empireCenturyFor(year);
+    if (file === null) return null;
+    const polities = file.polities.filter(
+      (polity) => polity.name === name && polity.from <= year && year <= polity.to,
+    );
+    const first = polities[0];
+    if (first === undefined) return null;
+    let territory = territories.get(first);
+    if (territory === undefined) {
+      const parts = territoriesIn({ ...file, polities }, year);
+      territory = { name, wikipedia: first.wikipedia, rings: parts.flatMap(({ rings }) => rings) };
+      territories.set(first, territory);
+    }
+    return territory;
+  }
+
+  const empireEclipses = createEmpireEclipses({
+    territory: territoryOf,
+    async eclipses(year) {
+      const each = astronomicalYear(year);
+      if (!lunarCatalog.covers(each) || !solarCatalog.covers(each)) return null;
+      const [lunar, solar] = await Promise.all([
+        lunarCatalog.eclipsesInYear(each),
+        solarCatalog.eclipsesInYear(each),
+      ]);
+      return [...lunar, ...solar].sort((a, b) => a.jdTT - b.jdTT);
+    },
+    uncertainty: (eclipse) => deltaT.uncertaintySeconds(greatestEclipseUT(eclipse)),
+  });
+
+  function seenShown(state: ViewState): boolean {
+    return state.layers.has('empires') || state.seenIn !== null;
+  }
+
+  /** Bring the bar's "seen from" picker and marks up to date with the state and the year. */
+  function refreshSeen(state: ViewState): void {
+    const year = state.time.date.year;
+    if (seenShown(state) && year !== seenOptionsYear) {
+      seenOptionsYear = year;
+      empireCenturyFor(year).then(
+        (file) => {
+          if (seenOptionsYear !== year) return;
+          const names = file === null ? [] : territoriesIn(file, year).map(({ name }) => name);
+          seenOptions = [...new Set(names)].sort((a, b) => a.localeCompare(b));
+          renderSelection(store.get());
+        },
+        (error: unknown) => {
+          seenOptionsYear = null;
+          notify(`Could not load the states of the time: ${errorMessage(error)}`);
+        },
+      );
+    }
+    const name = state.seenIn;
+    if (name === seenName && listing === seenListing) return;
+    seenName = name;
+    seenListing = listing;
+    if (name === null) {
+      seenView = { status: 'off' };
+      return;
+    }
+    seenView = { status: 'loading', name };
+    if (listing.status !== 'ready') return;
+    const current = listing;
+    // A year of another calendar can span two western years, each with its own borders.
+    const byYear = new Map<number, Eclipse[]>();
+    for (const eclipse of current.eclipses) {
+      const each = yearOf(greatestEclipseUT(eclipse));
+      byYear.set(each, [...(byYear.get(each) ?? []), eclipse]);
+    }
+    const years = byYear.size === 0 ? new Map([[year, []]]) : byYear;
+    Promise.all(
+      [...years].map(([each, eclipses]) => empireEclipses.seenInYear(name, each, eclipses)),
+    ).then(
+      (results) => {
+        if (seenName !== name || seenListing !== current) return;
+        const marks = results.filter((result) => result !== null);
+        seenView =
+          marks.length === 0
+            ? { status: 'absent', name }
+            : { status: 'ready', name, marks: new Map(marks.flatMap((result) => [...result])) };
+        renderSelection(store.get());
+      },
+      (error: unknown) => {
+        if (seenName !== name || seenListing !== current) return;
+        seenView = { status: 'off' };
+        notify(`Could not work out what ${name} saw: ${errorMessage(error)}`);
+        renderSelection(store.get());
+      },
+    );
+  }
+
+  function goToEclipse(eclipse: Eclipse): void {
+    flyToSelection = true;
+    store.set((state) => ({
+      ...state,
+      time: eclipseMoment(eclipse),
+      selection: eclipseSelection(eclipse),
+    }));
+  }
+
+  /** The previous or next eclipse seen from the state picked: this year first, then further. */
+  function stepSeen(direction: 1 | -1): void {
+    const state = store.get();
+    const name = state.seenIn;
+    if (name === null) return;
+    const selected = selectedEclipse(state);
+    const pivot =
+      selected === undefined ? momentJulianDay(state.time) : greatestEclipseUT(selected);
+    if (listing.status === 'ready' && seenView.status === 'ready') {
+      const { marks } = seenView;
+      const later = listing.eclipses.filter((eclipse) => {
+        const mark = marks.get(eclipse);
+        if (mark === undefined || mark.verdict === 'not') return false;
+        const when = greatestEclipseUT(eclipse);
+        return direction === 1 ? when > pivot : when < pivot;
+      });
+      const pick = direction === 1 ? later.at(0) : later.at(-1);
+      if (pick !== undefined) {
+        goToEclipse(pick);
+        return;
+      }
+    }
+    const western = westernYearsOf(state, barYear(state)) ?? [state.time.date.year];
+    const from = direction === 1 ? western.at(-1) : western.at(0);
+    seenView = { status: 'searching', name };
+    renderSelection(state);
+    empireEclipses.nearest(name, from ?? state.time.date.year, direction).then(
+      (found) => {
+        if (store.get().seenIn !== name) return;
+        if (found !== null) {
+          goToEclipse(found.eclipse);
+          return;
+        }
+        const way = direction === 1 ? 'after' : 'before';
+        notify(`No eclipse seen from ${name} in the ${String(SEARCH_YEARS)} years ${way} this one`);
+        seenListing = null; // Recompute this year's marks.
+        renderSelection(store.get());
+      },
+      (error: unknown) => {
+        notify(`Could not search for eclipses: ${errorMessage(error)}`);
+        seenListing = null;
+        renderSelection(store.get());
+      },
+    );
+  }
+
   function showEmpires(state: ViewState): void {
     const on = state.layers.has('empires');
     layerSwitch.render(on, state.mode === 'globe', state.borders);
@@ -611,20 +805,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setEmpires(null);
       return;
     }
-    const fetchJson = (url: string): Promise<Response> => fetch(url);
-    empireIndex ??= loadEmpireIndex(`${base}data/empires/index.json`, fetchJson);
     ohmIndex ??= loadOhmIndex(`${base}data/ohm/index.json`, fetchJson);
     const territories =
       source === 'ohm'
         ? Promise.resolve([])
-        : empireIndex.then(async (index) => {
-            const century = centuryFor(index, year);
-            if (century === null) return [];
-            const file = await centuryFile(empireCenturies, century, () =>
-              loadEmpireCentury(`${base}data/empires/${String(century)}.json`, fetchJson),
-            );
-            return territoriesIn(file, year);
-          });
+        : empireCenturyFor(year).then((file) => (file === null ? [] : territoriesIn(file, year)));
     const ohm =
       source === 'cliopatria'
         ? Promise.resolve(null)
@@ -910,7 +1095,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (
       state.selection !== previous?.selection ||
       state.layers !== previous.layers ||
-      state.location !== previous.location
+      state.location !== previous.location ||
+      state.seenIn !== previous.seenIn
     ) {
       renderSelection(state);
     } else if (state.time !== previous.time) {

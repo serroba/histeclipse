@@ -6,6 +6,7 @@
 import type { LunarEclipse } from '../data/lunarCatalog';
 import type { SolarEclipse } from '../data/solarCatalog';
 import { isSolar } from '../eclipses/describe';
+import type { SeenIn } from '../eclipses/seenIn';
 import { greatestEclipseUT } from '../data/catalog';
 import { CALENDAR_INFO, shortDate, YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
 import { astronomicalYear, toHistoricalYear } from '../time/year';
@@ -22,12 +23,48 @@ export type YearEclipses =
   | { readonly status: 'ready'; readonly eclipses: readonly Eclipse[] }
   | { readonly status: 'error'; readonly message: string };
 
+/** Which eclipses could be seen from a past state picked in the bar. */
+export type SeenView =
+  | { readonly status: 'off' }
+  | { readonly status: 'loading'; readonly name: string }
+  | { readonly status: 'absent'; readonly name: string }
+  | { readonly status: 'searching'; readonly name: string }
+  | {
+      readonly status: 'ready';
+      readonly name: string;
+      readonly marks: ReadonlyMap<Eclipse, SeenIn>;
+    };
+
+export interface SeenControls {
+  /** Whether to offer the picker: with the empires layer on, or a state already picked. */
+  readonly shown: boolean;
+  /** States on the map in the year shown, to pick from. */
+  readonly options: readonly string[];
+  readonly view: SeenView;
+}
+
+const SEEN_WORDS: Record<SeenIn['phase'], string> = {
+  total: 'total',
+  annular: 'annular',
+  partial: 'partial',
+  penumbral: 'penumbral',
+  none: 'not seen',
+};
+
+/** What a chip says about how an eclipse looked from the state picked. */
+export function seenLabel(seen: SeenIn): string {
+  if (seen.verdict === 'not') return 'not seen';
+  if (seen.verdict === 'maybe') return 'maybe seen (ΔT)';
+  return `seen, ${SEEN_WORDS[seen.phase]}`;
+}
+
 export interface TimelineView {
   /** The year in `calendar`; western years are astronomical (0 is 1 BCE). */
   readonly year: number;
   readonly calendar: YearCalendar;
   readonly eclipses: YearEclipses;
   readonly selected: Eclipse | undefined;
+  readonly seen: SeenControls;
 }
 
 export interface Timeline {
@@ -41,6 +78,10 @@ export function createTimeline(handlers: {
   /** Count years in another calendar, keeping the moment. */
   onCalendar(calendar: YearCalendar): void;
   onSelect(eclipse: Eclipse): void;
+  /** Pick a past state whose eclipses to mark, or null for anywhere. */
+  onSeenIn(name: string | null): void;
+  /** Go to the previous or next eclipse seen from that state. */
+  onSeenStep(direction: 1 | -1): void;
 }): Timeline {
   // Digits only (a numeric keypad on phones); the era is picked beside it.
   const input = element('input', {
@@ -89,12 +130,80 @@ export function createTimeline(handlers: {
     hint,
   );
   const list = element('ul', { class: 'eclipse-list', 'aria-label': 'Eclipses this year' });
+  const ANYWHERE = '';
+  const seenSelect = element('select', {
+    id: 'seen-select',
+    class: 'seen-select',
+    'data-testid': 'seen-select',
+  });
+  const seenPrevious = element(
+    'button',
+    { type: 'button', class: 'step seen-step', 'aria-label': 'Previous eclipse seen from there' },
+    '‹',
+  );
+  const seenNext = element(
+    'button',
+    { type: 'button', class: 'step seen-step', 'aria-label': 'Next eclipse seen from there' },
+    '›',
+  );
+  const seenStatus = element('span', {
+    class: 'seen-status',
+    role: 'status',
+    'data-testid': 'seen-status',
+  });
+  const seenRow = element(
+    'div',
+    { class: 'seen-controls', hidden: '' },
+    element('label', { for: 'seen-select', class: 'seen-label' }, 'Seen from'),
+    seenSelect,
+    seenPrevious,
+    seenNext,
+    seenStatus,
+  );
   const root = element(
     'nav',
     { class: 'timeline', 'aria-label': 'Year and eclipses' },
     element('div', { class: 'year-controls' }, previous, form, next),
     list,
+    seenRow,
   );
+  seenSelect.addEventListener('change', () => {
+    handlers.onSeenIn(seenSelect.value === ANYWHERE ? null : seenSelect.value);
+  });
+  seenPrevious.addEventListener('click', () => {
+    handlers.onSeenStep(-1);
+  });
+  seenNext.addEventListener('click', () => {
+    handlers.onSeenStep(1);
+  });
+
+  function renderSeen(seen: SeenControls): void {
+    seenRow.hidden = !seen.shown;
+    const picked = seen.view.status === 'off' ? null : seen.view.name;
+    const names = [...seen.options];
+    // A state picked in another year stays in the list, even where it is not on the map.
+    if (picked !== null && !names.includes(picked)) names.unshift(picked);
+    const wanted = [ANYWHERE, ...names].join('\n');
+    if (seenSelect.dataset['options'] !== wanted) {
+      seenSelect.dataset['options'] = wanted;
+      seenSelect.replaceChildren(
+        element('option', { value: ANYWHERE }, 'Anywhere'),
+        ...names.map((name) => element('option', { value: name }, name)),
+      );
+    }
+    seenSelect.value = picked ?? ANYWHERE;
+    seenPrevious.disabled = picked === null;
+    seenNext.disabled = picked === null;
+    const view = seen.view;
+    if (view.status === 'off') seenStatus.textContent = '';
+    else if (view.status === 'loading') seenStatus.textContent = 'Working out what was seen…';
+    else if (view.status === 'searching') seenStatus.textContent = 'Searching…';
+    else if (view.status === 'absent') seenStatus.textContent = 'Not on the map this year';
+    else {
+      const count = [...view.marks.values()].filter((mark) => mark.verdict !== 'not').length;
+      seenStatus.textContent = `${String(count)} of ${String(view.marks.size)} seen`;
+    }
+  }
 
   let year = 2000;
   let calendar: YearCalendar = 'western';
@@ -152,6 +261,8 @@ export function createTimeline(handlers: {
         era.value = calendar;
       }
       hint.textContent = HINT;
+      renderSeen(view.seen);
+      const marks = view.seen.view.status === 'ready' ? view.seen.view.marks : null;
       const listing = view.eclipses;
       if (listing.status === 'loading') {
         list.replaceChildren(element('li', { class: 'eclipse-empty' }, 'Loading…'));
@@ -169,11 +280,12 @@ export function createTimeline(handlers: {
         ...listing.eclipses.map((eclipse) => {
           const body = isSolar(eclipse) ? 'solar' : 'lunar';
           const kind = `${eclipse.kind[0]?.toUpperCase() ?? ''}${eclipse.kind.slice(1)} ${body}`;
+          const mark = marks?.get(eclipse);
           const chip = element(
             'button',
             {
               type: 'button',
-              class: `eclipse-chip body-${body} kind-${eclipse.kind}`,
+              class: `eclipse-chip body-${body} kind-${eclipse.kind}${mark === undefined ? '' : ` seen-${mark.verdict}`}`,
               'aria-pressed': String(eclipse === view.selected),
             },
             element('span', { class: 'eclipse-dot', 'aria-hidden': 'true' }),
@@ -184,6 +296,9 @@ export function createTimeline(handlers: {
             ),
             element('span', { class: 'eclipse-kind' }, kind),
           );
+          if (mark !== undefined) {
+            chip.append(element('span', { class: 'eclipse-seen' }, seenLabel(mark)));
+          }
           chip.addEventListener('click', () => {
             handlers.onSelect(eclipse);
           });

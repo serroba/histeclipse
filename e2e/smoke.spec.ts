@@ -915,3 +915,26 @@ test('past borders can come from Cliopatria, OpenHistoricalMap, or both to compa
   // OpenHistoricalMap has kingdoms Cliopatria lacks, such as Mutapa.
   await expect(page.locator('.empire-label.is-ohm', { hasText: /Mutapa/ }).first()).toBeAttached();
 });
+
+test('picking a state marks the eclipses seen from it, and steps through them', async ({
+  page,
+}) => {
+  // 763 BCE: the eclipse of the Assyrian eponym list, total in Assyria on 15 June.
+  await page.goto('./?t=-762-06-15T12:00&cam=35,43,3&layers=lunar,solar,terminator,empires');
+  await globeRendered(page);
+  const seen = page.getByLabel('Seen from', { exact: true });
+  await expect(seen.locator('option', { hasText: 'Neo-Assyrian Empire' })).toHaveCount(1);
+  await seen.selectOption('Neo-Assyrian Empire');
+  await expect(page).toHaveURL(/seen=Neo-Assyrian\+Empire/);
+  await expect(page.getByRole('button', { name: /Total solar\s*seen, total/ })).toBeVisible();
+  await expect(page.getByTestId('seen-status')).toHaveText(/^[1-9]\d* of \d+ seen$/);
+
+  // The next one seen from Assyria: the Moon, eclipsed a fortnight later.
+  await page.getByRole('button', { name: 'Next eclipse seen from there' }).click();
+  await expect(page).toHaveURL(/sel=lunar:-0762-06-30/);
+  await expect(page.locator('.eclipse-chip[aria-pressed="true"]')).toContainText(/seen|maybe/);
+
+  await seen.selectOption('Anywhere');
+  await expect(page).not.toHaveURL(/seen=/);
+  await expect(page.locator('.eclipse-seen')).toHaveCount(0);
+});
