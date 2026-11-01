@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { eclipseNote, formatPlace, skyCaption } from './caption';
+import { eclipseNote, formatPlace, planetNote, skyCaption } from './caption';
 
 const BABYLON = { latitude: 32.5422, longitude: 44.4209 };
 
@@ -49,6 +49,22 @@ describe('eclipseNote', () => {
     expect(eclipseNote({ ...quiet, moonSunlight: 0 })).toContain('darkest shadow');
     expect(eclipseNote({ ...quiet, moonSunlight: 0.4 })).toBe(
       'Earth’s shadow is falling on the Moon.',
+    );
+  });
+});
+
+describe('planetNote', () => {
+  it('says nothing while every planet is within half an arcminute', () => {
+    expect(planetNote(-586)).toBe('');
+    expect(planetNote(2024)).toBe('');
+  });
+
+  it('gives the error budget of the planets that drift in the remote past', () => {
+    expect(planetNote(-2500)).toBe(
+      'This far back, planet positions are good to Jupiter ±3′, Saturn ±6′.',
+    );
+    expect(planetNote(-1500)).toBe(
+      'This far back, planet positions are good to Jupiter ±1′, Saturn ±2.5′.',
     );
   });
 });

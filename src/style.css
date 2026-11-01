@@ -765,6 +765,15 @@ body {
   text-shadow: 0 0 4px #000;
 }
 
+/* Planets are named plainly, in warm white, to set them apart from the figures. */
+.sky-label.is-planet {
+  margin: -1.6em 0 0 0.4em;
+  color: rgb(255 236 200 / 0.9);
+  font-size: 12px;
+  font-weight: 600;
+  text-shadow: 0 0 3px #000;
+}
+
 /* Hints, not headlines: faint, so the stars stay the point. */
 .sky-label.is-constellation {
   color: rgb(150 180 255 / 0.7);

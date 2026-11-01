@@ -38,6 +38,7 @@ import type { Figures, SkyLook } from '../state/viewState';
 import type { JulianDay } from '../time/julianDay';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import {
+  angleBetween,
   angularRadius,
   EARTH_RADIUS_KM,
   eclipsedLimit,
@@ -48,7 +49,13 @@ import {
   sunVisible,
   topocentric,
 } from './bodies';
-import { apparentDirection, apparentMagnitude, horizontal, limitingMagnitude } from './horizon';
+import {
+  aberrate,
+  apparentDirection,
+  apparentMagnitude,
+  horizontal,
+  limitingMagnitude,
+} from './horizon';
 import {
   COMPASS,
   dragLook,
@@ -71,7 +78,28 @@ export interface SkyMoment {
   readonly moon: Vec3 | null;
   /** The observer's position from Earth's centre, km, J2000. */
   readonly observer: Vec3;
+  /** The planets as seen from the observer; empty until their theory has loaded. */
+  readonly planets: readonly SkyPlanet[];
+  /** Earth's velocity, km/s, J2000: everything in the sky is shifted by annual aberration. */
+  readonly velocity: Vec3;
 }
+
+export interface SkyPlanet {
+  readonly name: string;
+  /** Direction from the observer, J2000 equatorial (any length). */
+  readonly direction: Vec3;
+  readonly magnitude: number;
+}
+
+/** Planet colours as the eye sees them: Mars ruddy, Saturn pale gold, the rest near white. */
+const PLANET_COLOURS: Readonly<Record<string, readonly [number, number, number]>> = {
+  Mercury: [1, 0.95, 0.88],
+  Venus: [1, 0.98, 0.9],
+  Mars: [1, 0.62, 0.42],
+  Jupiter: [1, 0.96, 0.86],
+  Saturn: [1, 0.9, 0.68],
+};
+const PLANET_NAMES = Object.keys(PLANET_COLOURS);
 
 export interface SkyScene {
   setVisible(visible: boolean): void;
@@ -429,9 +457,42 @@ export function createSkyScene(
     }),
   );
   ground.renderOrder = 4;
-  scene.add(dome, stars, lines, sun, sunGlow, corona, moon, ground);
+  // The planets: drawn like stars (the same shader), one point each, in front of the stars
+  // and behind the Moon, which can pass in front of them.
+  const planetPositions = new Float32Array(PLANET_NAMES.length * 3);
+  const planetMagnitudes = new Float32Array(PLANET_NAMES.length).fill(99);
+  const planetColours = new Float32Array(
+    PLANET_NAMES.flatMap((name) => [...(PLANET_COLOURS[name] ?? [1, 1, 1])]),
+  );
+  const planetGeometry = new BufferGeometry();
+  const planetPositionAttribute = new BufferAttribute(planetPositions, 3);
+  const planetMagnitudeAttribute = new BufferAttribute(planetMagnitudes, 1);
+  planetGeometry.setAttribute('position', planetPositionAttribute);
+  planetGeometry.setAttribute('color', new BufferAttribute(planetColours, 3));
+  planetGeometry.setAttribute('magnitude', planetMagnitudeAttribute);
+  const planetPoints = new Points(
+    planetGeometry,
+    new ShaderMaterial({
+      uniforms: starUniforms,
+      vertexShader: STAR_VERTEX,
+      fragmentShader: STAR_FRAGMENT,
+      blending: AdditiveBlending,
+      depthTest: false,
+      depthWrite: false,
+      transparent: true,
+    }),
+  );
+  planetPoints.frustumCulled = false;
+  planetPoints.renderOrder = 2.5;
+  scene.add(dome, stars, lines, planetPoints, sun, sunGlow, corona, moon, ground);
 
   // Labels: the compass along the horizon, and the names of the figures drawn.
+  const planetLabels = PLANET_NAMES.map((name) => ({
+    name,
+    label: skyLabel(labelLayer, name, 'is-planet'),
+    position: new Vector3(),
+    shown: false,
+  }));
   const compassLabels = COMPASS.map(([name, azimuth]) => {
     const label = skyLabel(labelLayer, name, 'is-compass');
     const position = new Vector3(...toScene(lookDirectionAt(azimuth, 0))).multiplyScalar(40);
@@ -474,6 +535,8 @@ export function createSkyScene(
   let shown: readonly Figure[] = [];
   let segments: [number, number][] = [];
   let visible = false;
+  // Earth's velocity at the moment shown, for annual aberration.
+  let motion: Vec3 = [0, 0, 0];
   let insets = { top: 0, bottom: 0 };
   let needsRender = true;
   let frame = 0;
@@ -605,6 +668,25 @@ export function createSkyScene(
     for (const { label, position } of compassLabels) {
       placeLabel(label, position, true, width, height);
     }
+    for (const { label, position, shown } of planetLabels) {
+      placeLabel(label, position, shown, width, height);
+    }
+    // Planets close together on screen (a conjunction) share one label: "Jupiter & Saturn".
+    const named: { label: HTMLElement; x: number; y: number; names: string[] }[] = [];
+    for (const { name, label, position } of planetLabels) {
+      if (label.hidden !== false) continue;
+      projected.copy(position).project(camera);
+      const x = ((projected.x + 1) / 2) * width;
+      const y = ((1 - projected.y) / 2) * height;
+      const near = named.find((other) => Math.hypot(other.x - x, other.y - y) < 24);
+      if (near === undefined) {
+        named.push({ label, x, y, names: [name] });
+      } else {
+        near.names.push(name);
+        label.hidden = true;
+      }
+    }
+    for (const { label, names } of named) label.textContent = names.join(' & ');
     for (const { label, position } of namesBySize) {
       // Names of figures low in the haze or below the horizon are left out.
       const show = label.dataset['shown'] === 'true' && position.y > 40 * 0.03;
@@ -612,8 +694,11 @@ export function createSkyScene(
     }
     const candidates = namesBySize.filter(({ label }) => label.hidden === false);
     const boxes = candidates.map(({ label }) => label.getBoundingClientRect());
-    // Bigger figures are named first; a name that would overlap one already placed is left out.
-    const placed: DOMRect[] = [];
+    // Planets keep their names; then bigger figures first. A name that would overlap one
+    // already placed is left out.
+    const placed: DOMRect[] = planetLabels
+      .filter(({ label }) => label.hidden === false)
+      .map(({ label }) => label.getBoundingClientRect());
     candidates.forEach(({ label }, index) => {
       const box = boxes[index];
       if (box === undefined) return;
@@ -637,7 +722,7 @@ export function createSkyScene(
       moon.visible = false;
       return;
     }
-    const seen = apparentDirection(horizon, unit(moonHere));
+    const seen = apparentDirection(horizon, aberrate(moonHere, motion));
     const high = horizontal(seen).altitude;
     moon.visible = high > -1;
     const [mx, my, mz] = toScene(seen);
@@ -662,6 +747,53 @@ export function createSkyScene(
     container.dataset['moonAltitude'] = high.toFixed(2);
     container.dataset['moonPhase'] = illuminatedFraction(moonHere, sunHere).toFixed(3);
     container.dataset['moonSunlight'] = moonSunlight(moonJ2000, sunJ2000).toFixed(3);
+  }
+
+  function placePlanets(
+    horizon: Matrix3,
+    planets: readonly SkyPlanet[],
+    limit: number,
+    sunHere: Vec3 | null,
+    moonHere: Vec3 | null,
+  ): void {
+    const report: string[] = [];
+    // A planet behind the Moon's or the Sun's disc is hidden, point and name.
+    const covers = (body: Vec3 | null, radiusKm: number, direction: Vec3): boolean =>
+      body !== null && angleBetween(body, direction) < angularRadius(radiusKm, body);
+    PLANET_NAMES.forEach((name, index) => {
+      const planet = planets.find((entry) => entry.name === name);
+      const entry = planetLabels[index];
+      if (entry === undefined) return;
+      if (planet === undefined) {
+        planetMagnitudes[index] = 99;
+        entry.shown = false;
+        return;
+      }
+      const seen = apparentDirection(horizon, aberrate(planet.direction, motion));
+      const [x, y, z] = toScene(seen);
+      const radius = STAR_RADIUS * 0.99;
+      planetPositions.set([x * radius, y * radius, z * radius], index * 3);
+      const hidden =
+        covers(moonHere, MOON_RADIUS_KM, planet.direction) ||
+        covers(sunHere, SUN_RADIUS_KM, planet.direction);
+      planetMagnitudes[index] = hidden ? 99 : planet.magnitude;
+      const { altitude, azimuth } = horizontal(seen);
+      entry.shown =
+        !hidden && altitude > 0 && apparentMagnitude(planet.magnitude, altitude) < limit;
+      entry.position.set(x, y, z).multiplyScalar(40);
+      report.push(
+        [
+          name,
+          altitude.toFixed(2),
+          azimuth.toFixed(2),
+          planet.magnitude.toFixed(1),
+          hidden ? 'covered' : entry.shown ? 'seen' : 'unseen',
+        ].join(':'),
+      );
+    });
+    planetPositionAttribute.needsUpdate = true;
+    planetMagnitudeAttribute.needsUpdate = true;
+    container.dataset['planets'] = report.join(' ');
   }
 
   function loop(): void {
@@ -753,10 +885,11 @@ export function createSkyScene(
         cancelAnimationFrame(frame);
       }
     },
-    setMoment({ horizon, jdTT, sun: sunJ2000, moon: moonJ2000, observer }) {
+    setMoment({ horizon, jdTT, sun: sunJ2000, moon: moonJ2000, observer, planets, velocity }) {
       updateMotion(jdTT);
+      motion = velocity;
       const sunHere = topocentric(sunJ2000, observer);
-      const sunSeen = apparentDirection(horizon, unit(sunHere));
+      const sunSeen = apparentDirection(horizon, aberrate(sunHere, motion));
       const sunHigh = horizontal(sunSeen).altitude;
       const moonHere = moonJ2000 === null ? null : topocentric(moonJ2000, observer);
       // How much of the Sun the Moon leaves, if the Sun is up to be seen.
@@ -764,11 +897,17 @@ export function createSkyScene(
       const limit = eclipsedLimit(limitingMagnitude(sunHigh), sunShare);
       let seen = 0;
       for (let index = 0; index < count; index++) {
-        const direction = apparentDirection(horizon, [
-          starJ2000[index * 3] ?? 0,
-          starJ2000[index * 3 + 1] ?? 0,
-          starJ2000[index * 3 + 2] ?? 0,
-        ]);
+        const direction = apparentDirection(
+          horizon,
+          aberrate(
+            [
+              starJ2000[index * 3] ?? 0,
+              starJ2000[index * 3 + 1] ?? 0,
+              starJ2000[index * 3 + 2] ?? 0,
+            ],
+            motion,
+          ),
+        );
         const [x, y, z] = toScene(direction);
         starPositions[index * 3] = x * STAR_RADIUS;
         starPositions[index * 3 + 1] = y * STAR_RADIUS;
@@ -798,6 +937,7 @@ export function createSkyScene(
       lineOpacity.value = 0.12 + 0.28 * (1 - Math.min(1, Math.max(0, (sunHigh + 18) / 18)));
       container.dataset['sunAltitude'] = sunHigh.toFixed(2);
       container.dataset['starsSeen'] = String(seen);
+      placePlanets(horizon, planets, limit, sunHigh > -1 ? sunHere : null, moonHere);
       needsRender = true;
     },
     setLook(next) {

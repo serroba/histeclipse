@@ -5,9 +5,11 @@ import { starDirection, type StarMotion } from '../astro/stars';
 import { subsolarPoint } from '../astro/sun';
 import { julianDayNumber } from '../time/julianDay';
 import {
+  aberrate,
   airmass,
   apparentDirection,
   apparentMagnitude,
+  earthVelocity,
   horizontal,
   horizontalOf,
   horizonMatrix,
@@ -145,5 +147,36 @@ describe('limitingMagnitude', () => {
     for (let altitude = -25; altitude < 20; altitude += 0.5) {
       expect(limitingMagnitude(altitude + 0.5)).toBeLessThanOrEqual(limitingMagnitude(altitude));
     }
+  });
+});
+
+describe('annual aberration', () => {
+  const ARCSECOND = Math.PI / 180 / 3600;
+  const angle = (a: readonly number[], b: readonly number[]) => {
+    const [ax = 0, ay = 0, az = 0] = a;
+    const [bx = 0, by = 0, bz = 0] = b;
+    return Math.atan2(
+      Math.hypot(ay * bz - az * by, az * bx - ax * bz, ax * by - ay * bx),
+      ax * bx + ay * by + az * bz,
+    );
+  };
+
+  it('moves Earth at about 30 km/s, at right angles to the Sun', () => {
+    const v = earthVelocity((jd) => sunPositionJ2000(julianDayNumber(jd)), 2_451_545);
+    expect(Math.hypot(...v)).toBeGreaterThan(29);
+    expect(Math.hypot(...v)).toBeLessThan(31);
+    expect(angle(v, sunPositionJ2000(julianDayNumber(2_451_545))) / (Math.PI / 180)).toBeCloseTo(
+      90,
+      0,
+    );
+  });
+
+  it('shifts a star at right angles to the motion by the constant of aberration, 20.5″', () => {
+    const moved = aberrate([1, 0, 0], [0, 29.79, 0]);
+    expect(angle(moved, [1, 0, 0]) / ARCSECOND).toBeCloseTo(20.5, 1);
+    // Toward the direction of motion.
+    expect(moved[1]).toBeGreaterThan(0);
+    // Straight ahead, nothing moves.
+    expect(angle(aberrate([0, 1, 0], [0, 29.79, 0]), [0, 1, 0])).toBeLessThan(1e-12);
   });
 });
