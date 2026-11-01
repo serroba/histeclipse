@@ -26,8 +26,14 @@ export function visibleFraction(source: number, occluder: number, separation: nu
   const r1 = source;
   const r2 = occluder;
   const d = separation;
-  const alpha = Math.acos((d * d + r1 * r1 - r2 * r2) / (2 * d * r1));
-  const beta = Math.acos((d * d + r2 * r2 - r1 * r1) / (2 * d * r2));
+  const cosAlpha = (d * d + r1 * r1 - r2 * r2) / (2 * d * r1);
+  const cosBeta = (d * d + r2 * r2 - r1 * r1) / (2 * d * r2);
+  // Equal discs a few denormals apart: 2·d·r underflows to 0 and the cosines to 0/0. The discs
+  // are concentric to working precision, and equal, so the source is covered.
+  if (Number.isNaN(cosAlpha) || Number.isNaN(cosBeta)) return 0;
+  // Rounding can push the cosines just past ±1 where the discs barely touch.
+  const alpha = Math.acos(clampUnit(cosAlpha));
+  const beta = Math.acos(clampUnit(cosBeta));
   const lens =
     r1 * r1 * (alpha - Math.sin(2 * alpha) / 2) + r2 * r2 * (beta - Math.sin(2 * beta) / 2);
   return 1 - lens / (Math.PI * r1 * r1);
@@ -56,6 +62,10 @@ export function sunlightAt(options: {
     Math.asin(occluderRadius / occluderDistance),
     separation,
   );
+}
+
+function clampUnit(value: number): number {
+  return Math.min(1, Math.max(-1, value));
 }
 
 function difference(a: Vector3, b: Vector3): Vector3 {
