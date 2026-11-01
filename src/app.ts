@@ -118,6 +118,16 @@ import { loadSeaLevel, type SeaLevelIndex } from './data/seaLevel';
 import { iceFramesInMa, loadIceSheets, oldestIceKa, type IceSheetIndex } from './data/iceSheets';
 import { loadShelf, type ShelfIndex } from './data/shelf';
 import { coastlineAt } from './deepTime/coastline';
+import {
+  mapModel,
+  meanAt,
+  reachMa,
+  TEMPERATURE_MODEL_FOLDERS,
+  TEMPERATURE_MODEL_LABELS,
+  TEMPERATURE_MODELS,
+  type TemperatureIndexes,
+  type TemperatureModel,
+} from './deepTime/temperatureModels';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
 import { elementAt } from './util/arrays';
 import { errorMessage } from './util/errors';
@@ -220,6 +230,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     element('a', { href: 'https://creativecommons.org/licenses/by/4.0/' }, 'CC BY 4.0'),
     ', repacked) · Temperature: ',
     element('a', { href: 'https://doi.org/10.5281/zenodo.5718392' }, 'Scotese 2022'),
+    ', ',
+    element('a', { href: 'https://doi.org/10.5281/zenodo.7322003' }, 'CESM, Li et al. 2023'),
     ' (CC BY 4.0) · Periods: ',
     element('a', { href: 'https://stratigraphy.org/chart' }, 'ICS chart v2026/06'),
   );
@@ -278,6 +290,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ma:
           deepScale === 'ice' && (state.ma ?? 0) > ICE_AGES_MA ? LAST_GLACIAL_MAXIMUM_MA : state.ma,
       }));
+    },
+    onTemperatureModel(temperatureModel) {
+      store.set((state) => ({ ...state, temperatureModel }));
     },
     onTemperature(on) {
       store.set((state) => {
@@ -911,9 +926,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   // Deep time: Earth's surface from the elevation maps, which load a few at a time as needed.
   let paleoIndex: Promise<PaleoDemIndex> | null = null;
-  // The temperature maps load the first time the layer is asked for; `tempIndex` once they have.
-  let tempLoading: Promise<PaleoTempIndex> | null = null;
-  let tempIndex: PaleoTempIndex | null = null;
+  // Each model's temperature maps load the first time the layer is asked for.
+  let tempLoading: Readonly<Record<TemperatureModel, Promise<PaleoTempIndex> | null>> = {
+    scotese: null,
+    cesm: null,
+  };
+  let tempIndexes: TemperatureIndexes = { scotese: null, cesm: null };
   // Sea level, likewise: asked for once, drawn when it arrives.
   let seaLevelLoading: Promise<SeaLevelIndex> | null = null;
   let seaLevelIndex: SeaLevelIndex | null = null;
@@ -1095,18 +1113,59 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   /** What the bar says about temperature: off, loading, or the global mean then and now. */
+  /** Every temperature model's maps, each asked for once; null until it arrives. */
+  function temperatureIndexes(): TemperatureIndexes {
+    for (const model of TEMPERATURE_MODELS) {
+      if (tempIndexes[model] !== null || tempLoading[model] !== null) continue;
+      const loading = loadPaleoTempIndex(
+        `${base}data/${TEMPERATURE_MODEL_FOLDERS[model]}/index.json`,
+        fetchJson,
+      );
+      tempLoading = { ...tempLoading, [model]: loading };
+      loading.then(
+        (index) => {
+          tempIndexes = { ...tempIndexes, [model]: index };
+          showDeepTime(store.get());
+        },
+        (error: unknown) => {
+          tempLoading = { ...tempLoading, [model]: null };
+          notify(
+            `Could not load the ${TEMPERATURE_MODEL_LABELS[model]} temperature maps: ${errorMessage(error)}`,
+          );
+        },
+      );
+    }
+    return tempIndexes;
+  }
+
+  /** What the bar says about temperature: every model's global mean, and which one is drawn. */
   function temperatureView(state: ViewState, ma: number): TemperatureView {
-    if (!state.layers.has('temperature')) return { on: false, mean: null, today: null, note: null };
-    if (tempIndex === null) return { on: true, mean: null, today: null, note: null };
-    const { younger, older, mix } = framesAround(tempIndex.frames, ma);
-    // The note of the map nearer the moment, if it has one.
-    const nearer = mix < 0.5 ? younger : older;
-    return {
-      on: true,
-      mean: younger.mean + (older.mean - younger.mean) * mix,
-      today: tempIndex.frames[0]?.mean ?? null,
-      note: nearer.note ?? null,
-    };
+    const wanted = state.temperatureModel;
+    if (!state.layers.has('temperature')) {
+      return { on: false, wanted, shown: null, readings: [], note: null };
+    }
+    const indexes = temperatureIndexes();
+    const readings = TEMPERATURE_MODELS.flatMap((model) => {
+      const index = indexes[model];
+      if (index === null) return [];
+      return [
+        {
+          model,
+          mean: meanAt(index, ma),
+          today: index.frames[0]?.mean ?? null,
+          reach: reachMa(index),
+        },
+      ];
+    });
+    const drawn = mapModel(wanted, indexes, ma);
+    const index = drawn === null ? null : indexes[drawn.model];
+    let note: string | null = null;
+    if (index !== null) {
+      // The note of the map nearer the moment, if it has one.
+      const { younger, older, mix } = framesAround(index.frames, ma);
+      note = (mix < 0.5 ? younger : older).note ?? null;
+    }
+    return { on: true, wanted, shown: drawn?.model ?? null, readings, note };
   }
 
   function showTemperature(state: ViewState, ma: number): void {
@@ -1114,31 +1173,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setTemperature(null);
       return;
     }
-    if (tempIndex === null) {
-      // Asked once; the moment shown when they arrive is drawn then.
-      if (tempLoading !== null) return;
-      tempLoading = loadPaleoTempIndex(`${base}data/paleotemp/index.json`, fetchJson);
-      tempLoading.then(
-        (index) => {
-          tempIndex = index;
-          showDeepTime(store.get());
-        },
-        (error: unknown) => {
-          tempLoading = null;
-          notify(`Could not load the temperature maps: ${errorMessage(error)}`);
-        },
-      );
-      return;
-    }
-    const { younger, older, mix } = framesAround(tempIndex.frames, ma);
+    const indexes = temperatureIndexes();
+    const drawn = mapModel(state.temperatureModel, indexes, ma);
+    const index = drawn === null ? null : indexes[drawn.model];
+    if (drawn === null || index === null) return;
+    const folder = TEMPERATURE_MODEL_FOLDERS[drawn.model];
+    const { younger, older, mix } = framesAround(index.frames, ma);
     globe.setTemperature({
-      younger: `${base}data/paleotemp/${younger.file}`,
-      older: `${base}data/paleotemp/${older.file}`,
+      younger: `${base}data/${folder}/${younger.file}`,
+      older: `${base}data/${folder}/${older.file}`,
       mix,
-      columns: tempIndex.columns,
-      rows: tempIndex.rows,
-      coldest: tempIndex.coldest,
-      warmest: tempIndex.warmest,
+      columns: index.columns,
+      rows: index.rows,
+      coldest: index.coldest,
+      warmest: index.warmest,
     });
   }
 
@@ -1494,7 +1542,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.years !== previous.years ||
       state.layers !== previous.layers ||
       state.deepScale !== previous.deepScale ||
-      state.coast !== previous.coast
+      state.coast !== previous.coast ||
+      state.temperatureModel !== previous.temperatureModel
     ) {
       showDeepTime(state);
     }

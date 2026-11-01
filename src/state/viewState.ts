@@ -5,6 +5,7 @@
 
 import type { SkyCulture } from '../data/skyCultures';
 import { type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
+import { DEFAULT_TEMPERATURE_MODEL, type TemperatureModel } from '../deepTime/temperatureModels';
 import type { SunLayer } from '../data/sunImages';
 import type { YearCalendar } from '../time/calendars';
 import {
@@ -134,6 +135,8 @@ export interface ViewState {
   readonly deepScale: DeepScale;
   /** Whose sea level the ice-age coastlines follow. */
   readonly coast: CoastSource;
+  /** Whose temperature maps colour the deep-time globe. */
+  readonly temperatureModel: TemperatureModel;
 }
 
 // In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
@@ -207,5 +210,6 @@ export function defaultViewState(now: Date): ViewState {
     ma: null,
     deepScale: 'all',
     coast: DEFAULT_COAST,
+    temperatureModel: DEFAULT_TEMPERATURE_MODEL,
   };
 }

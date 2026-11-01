@@ -37,6 +37,11 @@ import { calendarDate, calendarDateOf, julianDay, type Calendar } from '../time/
 import { SKY_CULTURES, type SkyCulture } from '../data/skyCultures';
 import { SUN_LAYERS, type SunLayer } from '../data/sunImages';
 import { COAST_SOURCES, type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
+import {
+  DEFAULT_TEMPERATURE_MODEL,
+  TEMPERATURE_MODELS,
+  type TemperatureModel,
+} from '../deepTime/temperatureModels';
 import { YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
 import { errorMessage } from '../util/errors';
@@ -134,6 +139,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     ma: read<number | null>('ma', parseMa, defaults.ma),
     deepScale: read('scale', parseDeepScale, defaults.deepScale),
     coast: read('coast', parseCoast, defaults.coast),
+    temperatureModel: read('temp', parseTemperatureModel, defaults.temperatureModel),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -166,6 +172,9 @@ export function serializeViewState(state: ViewState): string {
   if (state.ma !== null) params.set('ma', formatMa(state.ma));
   if (state.deepScale !== 'all') params.set('scale', state.deepScale);
   if (state.coast !== DEFAULT_COAST) params.set('coast', state.coast);
+  if (state.temperatureModel !== DEFAULT_TEMPERATURE_MODEL) {
+    params.set('temp', state.temperatureModel);
+  }
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
@@ -176,6 +185,10 @@ function parseMode(raw: string): Mode {
 
 function parseFigures(raw: string): Figures {
   return oneOf(raw, FIGURES, 'figures');
+}
+
+function parseTemperatureModel(raw: string): TemperatureModel {
+  return oneOf(raw, TEMPERATURE_MODELS, 'temp');
 }
 
 function parseCoast(raw: string): CoastSource {
