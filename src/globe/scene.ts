@@ -205,6 +205,17 @@ export interface ShelfSurface {
   readonly seaLevel: number;
 }
 
+/** On the ice-age scale: ice thickness, two maps either side of the moment, blended. */
+export interface IceSurface {
+  readonly younger: string;
+  readonly older: string;
+  /** 0 shows `younger`, 1 `older`. */
+  readonly mix: number;
+  readonly columns: number;
+  readonly rows: number;
+  readonly metresPerStep: number;
+}
+
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
   setSunDirection(direction: Vector3Tuple): void;
@@ -252,6 +263,8 @@ export interface Globe {
   setTemperature(surface: TemperatureSurface | null): void;
   /** Draw coastlines at a past sea level from today's shelves; null uses the elevation maps'. */
   setShelf(surface: ShelfSurface | null): void;
+  /** Draw ice sheets over the surface; null draws none. */
+  setIce(surface: IceSurface | null): void;
   /** Pin the chosen place on the globe; null removes the pin. */
   setLocation(place: GeoPoint | null): void;
   /**
@@ -321,6 +334,12 @@ const EARTH_FRAGMENT = /* glsl */ `
   uniform vec2 shelfGrid;
   uniform vec2 shelfRange;
   uniform float seaLevel;
+  uniform sampler2D iceYounger;
+  uniform sampler2D iceOlder;
+  uniform float iceMix;
+  uniform float iceActive;
+  uniform vec2 iceGrid;
+  uniform float iceStep;
   uniform vec2 paleoGrid;
   uniform float seaDepth;
   uniform float landHeight;
@@ -421,6 +440,12 @@ const EARTH_FRAGMENT = /* glsl */ `
     return mix(c, srgb(vec3(0.647, 0.0, 0.149)), smoothstep(35.0, 45.0, celsius));
   }
 
+  // Node-registered like the other deep-time maps; a byte per iceStep metres, 0 for no ice.
+  float iceFrom(sampler2D map, vec2 uv) {
+    vec2 at = (uv * (iceGrid - 1.0) + 0.5) / iceGrid;
+    return texture2D(map, at).r * 255.0 * iceStep;
+  }
+
   vec3 paleoSurface(vec2 uv) {
     float height = paleoHeight(uv);
     // Where the coast runs comes from heights averaged over about half a degree (a tent of
@@ -471,6 +496,14 @@ const EARTH_FRAGMENT = /* glsl */ `
       float sea = 1.0 - smoothstep(-blur, blur, coast);
       float shore = 1.0 - smoothstep(blur, 3.0 * blur, abs(coast));
       color = temperatureColour(paleoTemperature(uv)) * (1.0 - 0.3 * sea) * (1.0 - 0.55 * shore);
+    }
+    if (iceActive > 0.5) {
+      // Ice sheets: white, a little blue where thin; the edge blends over about a pixel.
+      float thickness = mix(iceFrom(iceYounger, uv), iceFrom(iceOlder, uv), iceMix);
+      float iceBlur = max(fwidth(thickness), 1.0);
+      float covered = smoothstep(8.0 - iceBlur, 8.0 + iceBlur, thickness);
+      vec3 ice = mix(srgb(vec3(0.78, 0.87, 0.95)), srgb(vec3(0.97, 0.98, 1.0)), smoothstep(0.0, 2000.0, thickness));
+      color = mix(color, ice, covered);
     }
     return color * clamp(mix(1.0, shade, 0.7), 0.45, 1.35);
   }
@@ -789,6 +822,12 @@ export async function createGlobe(
         shelfGrid: { value: new Vector2(3601, 1801) },
         shelfRange: { value: new Vector2(-200, 55) },
         seaLevel: { value: 0 },
+        iceYounger: { value: null as Texture | null },
+        iceOlder: { value: null as Texture | null },
+        iceMix: { value: 0 },
+        iceActive: { value: 0 },
+        iceGrid: { value: new Vector2(1441, 721) },
+        iceStep: { value: 16 },
         evenLight,
         paleoGrid: { value: new Vector2(361, 181) },
         seaDepth: { value: 11_000 },
@@ -949,6 +988,7 @@ export async function createGlobe(
   let deepTimeWanted: DeepTimeSurface | null = null;
   let deepTime = false;
   let temperatureWanted: TemperatureSurface | null = null;
+  let iceWanted: IceSurface | null = null;
   function hiddenInDeepTime(): Object3D[] {
     return [sun, corona, moon, ...Object.values(planets.meshes)];
   }
@@ -1741,6 +1781,34 @@ export async function createGlobe(
         },
       );
       needsRender = true;
+    },
+    setIce(surface) {
+      iceWanted = surface;
+      const uniforms = earth.material.uniforms;
+      if (surface === null) {
+        uniforms['iceActive'] = { value: 0 };
+        container.dataset['ice'] = 'off';
+        needsRender = true;
+        return;
+      }
+      Promise.all([paleoTexture(surface.younger), paleoTexture(surface.older)]).then(
+        ([younger, older]) => {
+          // A later request (the slider kept moving) wins.
+          if (iceWanted !== surface) return;
+          uniforms['iceYounger'] = { value: younger };
+          uniforms['iceOlder'] = { value: older };
+          uniforms['iceMix'] = { value: surface.mix };
+          uniforms['iceGrid'] = { value: new Vector2(surface.columns, surface.rows) };
+          uniforms['iceStep'] = { value: surface.metresPerStep };
+          uniforms['iceActive'] = { value: 1 };
+          container.dataset['ice'] = `${surface.younger} ${surface.older}`;
+          needsRender = true;
+        },
+        () => {
+          paleoTextures.delete(surface.younger);
+          paleoTextures.delete(surface.older);
+        },
+      );
     },
     setEmpires(layer) {
       const uniforms = earth.material.uniforms;

@@ -84,6 +84,18 @@ export function coastlineText(view: CoastlineView): string {
   return `Coastline at ${level}, following ${view.label}.${stand}`;
 }
 
+/** What the bar says about the ice sheets on the ice-age scale. */
+export function iceText(view: {
+  readonly drawn: boolean;
+  readonly oldestKa: number | null;
+}): string {
+  if (view.oldestKa === null) return 'Ice sheets: loading…';
+  const reach = `${(view.oldestKa * 1000).toLocaleString('en')} years`;
+  return view.drawn
+    ? `Ice sheets: PaleoMIST 1.0 (Gowan et al. 2021), every 2,500 years over the last ${reach}.`
+    : `Ice sheets: no openly licensed maps reach back beyond ${reach}; sea level and the bared shelves still show each glacial cycle.`;
+}
+
 export interface DeepTimeView {
   readonly ma: number;
   /** The oldest moment the maps reach, Ma. */
@@ -95,6 +107,8 @@ export interface DeepTimeView {
   readonly temperature: TemperatureView;
   /** The ice-age coastline; null on the 540 Myr scale. */
   readonly coastline: CoastlineView | null;
+  /** Whether ice is drawn at the moment shown, and how far back the ice maps reach (ka). */
+  readonly ice: { readonly drawn: boolean; readonly oldestKa: number | null };
   /** Sea level: off, on while the reconstructions load (null), or on with them. */
   readonly seaLevel:
     { readonly on: false } | { readonly on: true; readonly index: SeaLevelIndex | null };
@@ -156,6 +170,7 @@ export function createDeepTimeBar(handlers: {
     scaleIce,
   );
   const coastText = element('span', { 'data-testid': 'coastline' });
+  const iceLine = element('p', { 'data-testid': 'ice-sheets' });
   const coastPicker = element(
     'select',
     { class: 'deep-coast', 'aria-label': 'Coastline follows' },
@@ -167,8 +182,9 @@ export function createDeepTimeBar(handlers: {
     element(
       'p',
       {},
-      'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time; bared shelf is sandy. Ice sheets are not drawn yet, nor the small moves of the continents, and the temperature maps are 5 million years apart.',
+      'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time; bared shelf is sandy. The small moves of the continents are not drawn, and the temperature maps are 5 million years apart.',
     ),
+    iceLine,
     element(
       'p',
       {},
@@ -320,6 +336,7 @@ export function createDeepTimeBar(handlers: {
       scaleAll.setAttribute('aria-pressed', String(!ice));
       scaleIce.setAttribute('aria-pressed', String(ice));
       iceNote.hidden = !ice;
+      iceLine.textContent = iceText(view.ice);
       if (view.coastline !== null) {
         coastText.textContent = coastlineText(view.coastline);
         coastPicker.value = view.coastline.coast;

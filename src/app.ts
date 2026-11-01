@@ -115,6 +115,7 @@ import { formatMa, periodAt } from './deepTime/periods';
 import { framesAround, loadPaleoDemIndex, oldestMa, type PaleoDemIndex } from './data/paleoDem';
 import { loadPaleoTempIndex, type PaleoTempIndex } from './data/paleoTemp';
 import { loadSeaLevel, type SeaLevelIndex } from './data/seaLevel';
+import { iceFramesInMa, loadIceSheets, oldestIceKa, type IceSheetIndex } from './data/iceSheets';
 import { loadShelf, type ShelfIndex } from './data/shelf';
 import { coastlineAt } from './deepTime/coastline';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
@@ -918,6 +919,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let seaLevelIndex: SeaLevelIndex | null = null;
   let shelfLoading: Promise<ShelfIndex> | null = null;
   let shelfIndex: ShelfIndex | null = null;
+  let iceLoading: Promise<IceSheetIndex> | null = null;
+  let iceIndex: IceSheetIndex | null = null;
   let oldest: number = MA_RANGE.max;
   let playing = false;
   let playFrame = 0;
@@ -934,6 +937,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setDeepTime(null);
       globe.setTemperature(null);
       globe.setShelf(null);
+      globe.setIce(null);
       return;
     }
     const period = periodAt(ma);
@@ -946,6 +950,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       playing,
       scale: state.deepScale,
       coastline: showCoastline(state, ma),
+      ice: showIce(state, ma),
       temperature: temperatureView(state, ma),
       seaLevel: seaLevelView(state),
     });
@@ -1019,6 +1024,45 @@ export async function startApp(root: HTMLElement): Promise<void> {
       );
     }
     return shelfIndex;
+  }
+
+  /** On the ice-age scale, the ice sheets of the moment, where the maps reach. */
+  function showIce(state: ViewState, ma: number): DeepTimeView['ice'] {
+    if (state.deepScale !== 'ice') {
+      globe.setIce(null);
+      return { drawn: false, oldestKa: null };
+    }
+    if (iceIndex === null) {
+      if (iceLoading === null) {
+        iceLoading = loadIceSheets(`${base}data/icesheets/index.json`, fetchJson);
+        iceLoading.then(
+          (index) => {
+            iceIndex = index;
+            showDeepTime(store.get());
+          },
+          (error: unknown) => {
+            iceLoading = null;
+            notify(`Could not load the ice-sheet maps: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return { drawn: false, oldestKa: null };
+    }
+    const oldestKa = oldestIceKa(iceIndex);
+    if (ma * 1000 > oldestKa) {
+      globe.setIce(null);
+      return { drawn: false, oldestKa };
+    }
+    const { younger, older, mix } = framesAround(iceFramesInMa(iceIndex), ma);
+    globe.setIce({
+      younger: `${base}data/icesheets/${younger.file}`,
+      older: `${base}data/icesheets/${older.file}`,
+      mix,
+      columns: iceIndex.columns,
+      rows: iceIndex.rows,
+      metresPerStep: iceIndex.metresPerStep,
+    });
+    return { drawn: true, oldestKa };
   }
 
   /** On the ice-age scale, coastlines at the sea level of the moment, by the source chosen. */
