@@ -5,6 +5,8 @@ description = "Offline generator for histeclipse's static astronomical data file
 license = "MIT"
 requires-python = ">=3.14"
 dependencies = [
+    "h5py>=3.12",
+    "numpy>=2",
     "pillow>=11",
     "skyfield>=1.55",
 ]
