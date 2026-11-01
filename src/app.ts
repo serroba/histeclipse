@@ -1000,7 +1000,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       period,
       playing,
       scale,
-      coastline: showCoastline(state, ma),
+      coastline: showCoastline(ma, state),
       ice: showIce(state, ma),
       temperature: temperatureView(state, ma),
       seaLevel: seaLevelView(state),
@@ -1169,9 +1169,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return { drawn: true, oldestKa };
   }
 
-  /** On the ice-age scale, coastlines at the sea level of the moment, by the source chosen. */
-  function showCoastline(state: ViewState, ma: number): CoastlineView | null {
-    if (state.deepScale !== 'ice') {
+  /**
+   * Over the ice ages, on either scale, coastlines from NOAA's present-day depths at the sea
+   * level of the moment, by the source chosen: the elevation maps' 8-bit heights cannot tell a
+   * strait a few metres deep from land.
+   */
+  function showCoastline(ma: number, state: ViewState): CoastlineView | null {
+    if (ma > ICE_AGES_MA) {
       globe.setShelf(null);
       return null;
     }

@@ -1182,6 +1182,27 @@ test('deep time narrows to the ice ages, in thousands of years', async ({ page }
   expect(problems).toEqual([]);
 });
 
+test('deep time draws recent coasts from NOAA’s depths on the 540 Myr scale too', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  // Today: shallow straits such as Torres Strait come from the 1-metre depths, at today's sea.
+  await page.goto('./?ma=0');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  await expect(globe).toHaveAttribute('data-shelf', /shelf\/today\.png$/);
+  await expect(globe).toHaveAttribute('data-sea-level', '0.0');
+  await expect(page.getByTestId('coastline')).toHaveText(
+    'Coastline at today’s sea level, following Bintanja & van de Wal 2008.',
+  );
+  // Before the ice ages, the elevation maps' own coasts.
+  await page.goto('./?ma=100');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute('data-shelf', 'off');
+  await expect(page.getByTestId('coast-note')).toBeHidden();
+  expect(problems).toEqual([]);
+});
+
 test('deep time outlines a second reconstruction’s continents', async ({ page }) => {
   const problems = collectProblems(page);
   await page.goto('./?ma=252');

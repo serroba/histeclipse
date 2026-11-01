@@ -100,7 +100,7 @@ export function temperatureMapText(view: TemperatureView): string {
   return `The globe shows ${shown}.${stand}${limits}`;
 }
 
-/** On the ice-age scale: the sea level the coastlines follow, and whose. */
+/** Over the ice ages: the sea level the coastlines follow, and whose. */
 export interface CoastlineView {
   readonly coast: CoastSource;
   /** Metres from today's; null while the reconstructions load. */
@@ -149,7 +149,7 @@ export interface DeepTimeView {
   /** Whether a second reconstruction's continents are outlined, and what to say of them. */
   readonly plates: boolean;
   readonly platesText: string | null;
-  /** The ice-age coastline; null on the 540 Myr scale. */
+  /** The ice-age coastline; null before the ice ages. */
   readonly coastline: CoastlineView | null;
   /** Whether ice is drawn at the moment shown, and how far back the ice maps reach (ka). */
   readonly ice: { readonly drawn: boolean; readonly oldestKa: number | null };
@@ -242,14 +242,14 @@ export function createDeepTimeBar(handlers: {
       'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time; bared shelf is sandy. The small moves of the continents are not drawn, and the temperature maps are 5 million years apart.',
     ),
     iceLine,
-    element(
-      'p',
-      {},
-      coastText,
-      ' ',
-      element('label', {}, 'Follow ', coastPicker),
-      ' Each source is measured from its own present day.',
-    ),
+  );
+  const coastNote = element(
+    'p',
+    { class: 'deep-note', hidden: '', 'data-testid': 'coast-note' },
+    coastText,
+    ' ',
+    element('label', {}, 'Follow ', coastPicker),
+    ' Drawn on NOAA’s present-day depths (ETOPO1); each source is measured from its own present day.',
   );
   const when = element('strong', { class: 'deep-when', 'data-testid': 'deep-when' });
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
@@ -342,6 +342,7 @@ export function createDeepTimeBar(handlers: {
     ),
     iceNote,
     unchartedNote,
+    coastNote,
     seaLevel.legend,
     legend,
     platesNote,
@@ -428,6 +429,7 @@ export function createDeepTimeBar(handlers: {
       unchartedNote.hidden = !uncharted;
       iceNote.hidden = !ice;
       iceLine.textContent = iceText(view.ice);
+      coastNote.hidden = view.coastline === null;
       if (view.coastline !== null) {
         coastText.textContent = coastlineText(view.coastline);
         coastPicker.value = view.coastline.coast;
