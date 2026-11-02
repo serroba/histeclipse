@@ -396,7 +396,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   const detailText = element('p', { class: 'hud-detail' });
   // A first visit (no link to follow, never welcomed before) gets one line on what this is and
-  // where to start; it goes for good once closed or followed.
+  // where to start; it goes for good once closed, followed, or once something is picked.
   const welcome = createWelcome(window.location.search === '', () => {
     famousPanel.button.click();
   });
@@ -471,7 +471,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       fullView,
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
-      welcome,
+      welcome.root,
       element(
         'div',
         { class: 'hud-actions' },
@@ -1964,6 +1964,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   store.subscribe((state, previous) => {
     render(state, previous);
+    // Once the visitor picks an eclipse, a place, a view or deep time, they have found the way in.
+    if (
+      state.selection !== previous.selection ||
+      state.location !== previous.location ||
+      state.mode !== previous.mode ||
+      state.view !== previous.view ||
+      state.ma !== previous.ma
+    ) {
+      welcome.dismiss();
+    }
   });
   render(store.get(), null);
   // Write the canonical, fully explicit URL straight away so it can be shared as is.

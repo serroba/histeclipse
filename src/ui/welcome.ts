@@ -1,6 +1,7 @@
 /**
- * One line for a first visit: what the site is and where to start. Remembered in this browser
- * once closed or followed; without storage (private windows) it simply shows on bare visits.
+ * One line for a first visit: what the site is and where to start. It goes, and is remembered
+ * in this browser, once closed, followed, or once the visitor has found their own way in;
+ * without storage (private windows) it simply shows on bare visits.
  */
 
 import { element } from './dom';
@@ -31,6 +32,12 @@ function localStorageOrNull(): Storage | null {
   }
 }
 
+export interface Welcome {
+  readonly root: HTMLElement;
+  /** Retire it for good, as when the visitor picks something on their own. */
+  dismiss(): void;
+}
+
 /**
  * The welcome line, hidden unless this is a bare visit (`firstVisit`) never welcomed before.
  * `onStart` follows its suggestion.
@@ -39,7 +46,7 @@ export function createWelcome(
   firstVisit: boolean,
   onStart: () => void,
   storage: Storage | null = localStorageOrNull(),
-): HTMLElement {
+): Welcome {
   const start = element(
     'button',
     { type: 'button', class: 'welcome-start' },
@@ -59,6 +66,7 @@ export function createWelcome(
   );
   root.hidden = !firstVisit || welcomedBefore(storage);
   const dismiss = (): void => {
+    if (root.hidden === true) return;
     root.hidden = true;
     remember(storage);
   };
@@ -67,5 +75,5 @@ export function createWelcome(
     onStart();
   });
   close.addEventListener('click', dismiss);
-  return root;
+  return { root, dismiss };
 }
