@@ -1869,3 +1869,36 @@ body {
   max-height: 22vh;
   overflow-y: auto;
 }
+
+.sky-options[hidden] {
+  display: none;
+}
+
+.sky-options > summary {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  color: var(--ink-muted);
+  font-size: 14px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.sky-options > summary {
+  list-style: none;
+}
+
+.sky-options > summary::-webkit-details-marker {
+  display: none;
+}
+
+.sky-options > summary::before {
+  margin-right: 6px;
+  font-size: 11px;
+  transition: transform 0.15s;
+  content: '▶';
+}
+
+.sky-options[open] > summary::before {
+  transform: rotate(90deg);
+}

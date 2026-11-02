@@ -603,6 +603,12 @@ test('serves the expected release', async ({ page }) => {
 
 const BABYLON_NIGHT_3000_BCE = './?mode=sky&t=-2999-03-20T19:00&loc=32.5422,44.4209';
 
+/** Open the sky's constellation options, folded away on phones. */
+async function openSkyOptions(page: Page): Promise<void> {
+  const options = page.locator('details.sky-options');
+  if ((await options.getAttribute('open')) === null) await options.locator('> summary').click();
+}
+
 async function skyRendered(page: Page): Promise<void> {
   await expect(page.getByTestId('sky')).toHaveAttribute('data-rendered', 'true');
 }
@@ -664,6 +670,7 @@ test('the constellation switch draws all 88 figures, and the link keeps it', asy
   await skyRendered(page);
   // Draco, Thuban's constellation, is not among the famous figures shown by default.
   await expect(page.getByText('Draco', { exact: true })).toBeHidden();
+  await openSkyOptions(page);
   await page.getByRole('button', { name: 'All 88' }).click();
   await expect(page).toHaveURL(/figures=all/);
   await expect(page.getByText('Draco', { exact: true })).toBeVisible();
@@ -1015,6 +1022,7 @@ test('the sky can be drawn as other cultures saw it, credited, and the link keep
 }) => {
   await page.goto('./?mode=sky&t=-586-01-15T20:00&loc=32.54,44.42&look=200,45,100');
   await skyRendered(page);
+  await openSkyOptions(page);
   const culture = page.getByLabel('Sky culture');
   await expect(culture).toHaveValue('modern');
   await culture.selectOption('babylonian_mulapin');
@@ -1106,6 +1114,7 @@ test('the Moon hides Mars from Berlin in the occultation of 8 December 2022', as
 test('picking a culture puts you where its sky-watchers stood', async ({ page }) => {
   await page.goto('./?mode=sky&t=-586-01-15T20:00&loc=51.5,-0.12&look=180,40,90');
   await skyRendered(page);
+  await openSkyOptions(page);
   await page.getByLabel('Sky culture').selectOption('chinese');
   await expect(page).toHaveURL(/loc=34\.6197,112\.4540/);
   await expect(page.locator('.sky-caption')).toContainText(

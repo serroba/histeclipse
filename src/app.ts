@@ -388,6 +388,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
   const skyContainer = element('div', { class: 'sky', 'data-testid': 'sky', hidden: '' });
   const skyText = element('p', { class: 'sky-caption' });
+  // Which constellations, and whose: folded on phones, where they would cover the sky itself.
+  const skyOptions = element(
+    'details',
+    { class: 'sky-options', hidden: '' },
+    element('summary', {}, 'Constellations and whose sky'),
+    figureSwitch.root,
+    cultureSwitch.root,
+  );
+  skyOptions.open = !window.matchMedia('(max-width: 600px)').matches;
   const skyEclipse = element('p', { class: 'sky-eclipse', 'data-testid': 'sky-eclipse' });
   const dateText = element('time', { class: 'hud-date' });
   const timeText = element('span', {
@@ -482,8 +491,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ),
       viewSwitch.root,
       aimSwitch.root,
-      figureSwitch.root,
-      cultureSwitch.root,
+      skyOptions,
       sunSwitch.root,
       skyText,
       skyEclipse,
@@ -1834,6 +1842,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const inSky = state.mode === 'sky';
     globeContainer.hidden = inSky;
     skyText.hidden = !inSky;
+    skyOptions.hidden = !inSky;
     skyEclipse.hidden = true;
     figureSwitch.render(state.figures, inSky, state.culture === 'modern');
     cultureSwitch.render(state.culture, inSky);
