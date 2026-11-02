@@ -101,6 +101,14 @@ const PLANET_COLOURS: Readonly<Record<string, readonly [number, number, number]>
 };
 const PLANET_NAMES = Object.keys(PLANET_COLOURS);
 
+/** A body to point out, by name, where it stands. */
+export interface SkyMark {
+  readonly name: string;
+  /** Degrees from north through east, and above the horizon. */
+  readonly azimuth: number;
+  readonly altitude: number;
+}
+
 export interface SkyScene {
   setVisible(visible: boolean): void;
   setMoment(moment: SkyMoment): void;
@@ -110,6 +118,8 @@ export interface SkyScene {
   setCulture(figures: readonly Figure[] | null): void;
   /** Pixels covered by panels at the top and bottom; the view is centred between them. */
   setInsets(top: number, bottom: number): void;
+  /** Point out named bodies, as a record being checked names them; empty clears them. */
+  setMarks(marks: readonly SkyMark[]): void;
   /** Called when someone taps the sky (a press that barely moves). */
   onTap(listener: () => void): () => void;
   /** Called with the rounded look as the observer drags or zooms. */
@@ -493,6 +503,7 @@ export function createSkyScene(
     position: new Vector3(),
     shown: false,
   }));
+  let markLabels: { label: HTMLElement; position: Vector3 }[] = [];
   const compassLabels = COMPASS.map(([name, azimuth]) => {
     const label = skyLabel(labelLayer, name, 'is-compass');
     const position = new Vector3(...toScene(lookDirectionAt(azimuth, 0))).multiplyScalar(40);
@@ -666,6 +677,9 @@ export function createSkyScene(
     const width = container.clientWidth;
     const height = container.clientHeight;
     for (const { label, position } of compassLabels) {
+      placeLabel(label, position, true, width, height);
+    }
+    for (const { label, position } of markLabels) {
       placeLabel(label, position, true, width, height);
     }
     for (const { label, position, shown } of planetLabels) {
@@ -965,6 +979,14 @@ export function createSkyScene(
       nameLabels = makeNameLabels();
       namesBySize = bySize();
       rebuildFigures();
+    },
+    setMarks(marks) {
+      for (const { label } of markLabels) label.remove();
+      markLabels = marks.map(({ name, azimuth, altitude }) => ({
+        label: skyLabel(labelLayer, name, 'is-mark'),
+        position: new Vector3(...toScene(lookDirectionAt(azimuth, altitude))).multiplyScalar(40),
+      }));
+      placeLabels();
     },
     setInsets(top, bottom) {
       if (top === insets.top && bottom === insets.bottom) return;

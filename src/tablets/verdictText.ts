@@ -2,8 +2,8 @@
 
 import { calendarDate, julianDayNumber } from '../time/julianDay';
 import { formatYear, astronomicalYear } from '../time/year';
-import type { Verdict } from './check';
-import { FINGERS_PER_CUBIT } from './tabletSky';
+import type { Observation, Verdict } from './check';
+import { type Body, FINGERS_PER_CUBIT } from './tabletSky';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const RD_TO_JD = 1_721_424.5;
@@ -56,4 +56,29 @@ export function recordedText(verdict: Verdict): string {
   return observation.cubits === undefined
     ? observation.relation
     : `${cubitsText(observation.cubits)} ${observation.relation}`;
+}
+
+/** The stars VAT 4956 names, by Bright Star Catalogue number. */
+const STAR_NAMES: Readonly<Record<number, string>> = {
+  1165: 'η Tauri (Pleiades)',
+  2990: 'β Geminorum',
+  3429: 'ε Cancri (Praesepe)',
+  3982: 'Regulus',
+  4540: 'β Virginis',
+  5685: 'β Librae',
+  6134: 'Antares',
+  7776: 'β Capricorni',
+};
+
+/** A body as the record names it: "Moon", "Venus", "β Virginis". */
+export function bodyName(body: Body): string {
+  if (typeof body === 'object') return STAR_NAMES[body.star] ?? `HR ${String(body.star)}`;
+  return `${body.charAt(0).toUpperCase()}${body.slice(1)}`;
+}
+
+/** The bodies a record is about, to point out in the sky: none for a calendar note. */
+export function recordBodies(observation: Observation): readonly Body[] {
+  if (observation.kind === 'position') return [observation.body, observation.reference];
+  if (observation.kind === 'lunar six') return ['moon', 'sun'];
+  return [];
 }

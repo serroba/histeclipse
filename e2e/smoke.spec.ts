@@ -867,6 +867,19 @@ test('VAT 4956 can be checked against two candidate years, record by record', as
   await page.locator('[data-record="II-18-venus"]').click();
   await expect(page).toHaveURL(/mode=sky/);
   await expect(page).toHaveURL(/t=-0567-06-08T/);
+  // The record stays on screen with its verdict, its bodies are pointed out, and the way back
+  // to the list is one tap.
+  const record = page.getByTestId('tablet-record');
+  await expect(record).toContainText('Venus');
+  await expect(record).toContainText('✓ fits');
+  await expect(page.locator('.sky-label.is-mark', { hasText: 'Venus' })).toBeVisible();
+  await record.getByRole('button', { name: 'Back to the tablet' }).click();
+  await expect(page.getByRole('dialog', { name: /VAT 4956/ })).toBeVisible();
+  await expect(page.locator('[data-record="II-18-venus"]')).toBeFocused();
+  await page.keyboard.press('Escape');
+  // Leaving the sky lets the record go.
+  await page.getByRole('button', { name: 'Orbit' }).click();
+  await expect(record).toBeHidden();
   expect(problems).toEqual([]);
 });
 
