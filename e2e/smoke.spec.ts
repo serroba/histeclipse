@@ -1375,6 +1375,28 @@ test('deep time charts sea level by four reconstructions, side by side', async (
   expect(problems).toEqual([]);
 });
 
+for (const rate of [60, 120]) {
+  test(`on a ${String(rate)} Hz display, playing the ice ages moves towards the present`, async ({
+    page,
+  }) => {
+    // Frames at exactly this rate, so the step each frame takes is what such a display gives.
+    await page.addInitScript((hz) => {
+      let time = performance.now();
+      window.requestAnimationFrame = (callback) =>
+        window.setTimeout(() => {
+          time += 1000 / hz;
+          callback(time);
+        }, 1000 / hz);
+    }, rate);
+    await page.goto('./?ma=0.5&scale=ice');
+    await globeRendered(page);
+    await page.getByRole('button', { name: 'Play' }).click();
+    // 50,000 years a second: well under a second brings it past 480,000 years ago.
+    await expect(page).toHaveURL(/&ma=0\.4[0-7]\d/);
+    await page.getByRole('button', { name: 'Pause' }).click();
+  });
+}
+
 test('deep time narrows to the ice ages, in thousands of years', async ({ page }) => {
   const problems = collectProblems(page);
   await page.goto('./?ma=250&layers=sealevel');
