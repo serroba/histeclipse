@@ -1268,7 +1268,7 @@ test('deep time shows Pangaea 250 million years ago, steps, plays and returns', 
   // Poles, field, tilt and day, folded away until asked for.
   const facts = page.getByTestId('deep-facts');
   await expect(facts.getByText('Magnetic field', { exact: true })).toBeHidden();
-  await facts.getByText('Poles, magnetic field, tilt and day').click();
+  await facts.getByText('Poles, magnetic field, tilt, day and Sun').click();
   await expect(facts.locator('dd').nth(0)).toContainText('spin axis then');
   await expect(facts.locator('dd').nth(1)).toContainText('Reversing often');
   await expect(facts.locator('dd').nth(2)).toContainText('22.1° and 24.5°');
@@ -1520,7 +1520,47 @@ test('deep time outlines a second reconstruction’s continents', async ({ page 
   expect(problems).toEqual([]);
 });
 
-test('deep time reaches back 4.6 billion years, leaving the globe blank before the maps', async ({
+test('before the reconstructions, the reader picks whose hypotheses the globe sketches', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await page.goto('./?ma=3000&scale=eons');
+  await globeRendered(page);
+  const globe = page.getByTestId('globe');
+  // Land of invented shape, its share from a crust-growth curve, with the choice in view.
+  await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.184 90');
+  await expect(page.getByTestId('sketch-headline')).toContainText('18% of the surface land');
+  await page.getByLabel('How much land').selectOption('flooded');
+  await expect(page).toHaveURL(/land=flooded/);
+  await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.025 90');
+  // What it rests on is folded away, with its sources.
+  const sources = page.getByTestId('sketch-sources');
+  await sources.locator('summary').click();
+  await expect(sources).toContainText('Flament, Coltice & Rey 2008');
+
+  // A snowball: frozen over by default, open tropics in the slushball.
+  await page.goto('./?ma=700&scale=eons');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.000 -1');
+  await expect(page.getByLabel('How much land')).toBeHidden();
+  await page.getByLabel('Snowball ice').selectOption('slush');
+  await expect(page).toHaveURL(/snowball=slush/);
+  await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.000 25');
+
+  // Molten until shortly after the Moon-forming impact, whose date the reader picks.
+  await page.goto('./?ma=4450&scale=eons');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute('data-sketch', /^ocean/);
+  await page.getByLabel('Moon-forming impact').selectOption('young');
+  await expect(page).toHaveURL(/impact=young/);
+  await expect(globe).toHaveAttribute('data-sketch', /^magma/);
+  await expect(page.getByTestId('sketch-headline')).toHaveText(
+    'Sketch, not a map: a molten surface.',
+  );
+  expect(problems).toEqual([]);
+});
+
+test('deep time reaches back 4.6 billion years, sketching hypotheses before the maps', async ({
   page,
 }) => {
   const problems = collectProblems(page);
@@ -1531,13 +1571,13 @@ test('deep time reaches back 4.6 billion years, leaving the globe blank before t
   await expect(page).toHaveURL(/scale=eons/);
   await expect(page.getByTestId('uncharted-note')).toBeHidden();
 
-  // Before the elevation maps reach, no made-up map: a blank globe, and the bar says why.
+  // Before the elevation maps reach, no map: a sketch of a hypothesis, which says so.
   await page.goto('./?ma=3000&scale=eons');
   await globeRendered(page);
   await expect(page.locator('.hud-date')).toHaveText('3,000 million years ago');
   await expect(page.locator('.hud-detail')).toHaveText('Mesoarchean era · Archean eon');
   await expect(globe).toHaveAttribute('data-uncharted', 'true');
-  await expect(page.getByTestId('uncharted-note')).toBeVisible();
+  await expect(page.getByTestId('sketch-headline')).toContainText('Sketch, not a map');
   await expect(page.getByRole('button', { name: 'Temperature' })).toBeDisabled();
 
   // Milestones reach back too: the next older is the Late Heavy Bombardment's oldest view.
@@ -1556,6 +1596,8 @@ test('deep time reaches back 4.6 billion years, leaving the globe blank before t
   await expect(globe).toHaveAttribute('data-uncharted', 'true');
   await expect(globe).toHaveAttribute('data-plates', /plates\/1495\.png .*plates\/1500\.png$/);
   await expect(page.getByTestId('plates-note')).toContainText('No surface map reaches this far');
+  await expect(page.getByTestId('uncharted-note')).toBeVisible();
+  await expect(page.getByTestId('sketch-note')).toBeHidden();
   await page.goto('./?ma=3000&scale=eons&layers=plates');
   await globeRendered(page);
   await expect(globe).toHaveAttribute('data-plates', 'off');

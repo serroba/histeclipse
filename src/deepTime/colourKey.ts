@@ -39,7 +39,10 @@ export const MAP_KEY: readonly KeyEntry[] = [
   { label: 'Sea floor laid bare by a low sea (ice ages)', swatch: hex(0.72, 0.68, 0.46) },
   { label: 'Ice sheets and sea ice', swatch: gradient(hex(0.78, 0.87, 0.95), hex(0.97, 0.98, 1)) },
   { label: 'Continents as plate models draw them', swatch: hex(0.55, 0.45, 0.58) },
-  { label: 'Before any map: a plain globe, not a guess', swatch: hex(0.2, 0.25, 0.33) },
+  { label: 'Sketch: open ocean', swatch: hex(0.12, 0.25, 0.36) },
+  { label: 'Sketch: bare rock, its shapes invented', swatch: hex(0.5, 0.45, 0.38) },
+  { label: 'Sketch: a molten surface', swatch: gradient(hex(0.16, 0.05, 0.03), hex(1, 0.62, 0.2)) },
+  { label: 'Sketch: snowball ice', swatch: hex(0.92, 0.95, 0.99) },
 ];
 
 /** The milestone ticks on the time line, by kind; their colours are in the stylesheet. */

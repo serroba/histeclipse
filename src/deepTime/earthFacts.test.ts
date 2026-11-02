@@ -7,12 +7,13 @@ function fact(ma: number, label: string): string {
 }
 
 describe('earthFacts', () => {
-  it('names the poles, field, tilt and day', () => {
+  it('names the poles, field, tilt, day and Sun', () => {
     expect(earthFacts(250).map(({ label }) => label)).toEqual([
       'Poles',
       'Magnetic field',
       'Tilt',
       'Day',
+      'Sun',
     ]);
     expect(fact(250, 'Poles')).toContain('spin axis then');
     expect(fact(250, 'Tilt')).toContain('22.1° and 24.5°');
@@ -45,5 +46,13 @@ describe('earthFacts', () => {
       'Measured 23.5 h 70 Ma, from daily layers in a rudist shell (Oman) (de Winter et al. 2020, Paleoceanography and Paleoclimatology 35), and 21.9 h 390 Ma, from daily growth lines on Devonian corals (Wells 1963, Nature 197).',
     );
     expect(fact(700, 'Day')).toMatch(/^Shorter than 21\.9 ± 0\.4 h: 21\.9 ± 0\.4 h 620 Ma/);
+  });
+
+  it('gives the young Sun’s brightness, and the paradox where it bites', () => {
+    expect(fact(250, 'Sun')).toBe(
+      'About 98% as bright as today (Gough 1981): the Sun brightens as it ages.',
+    );
+    expect(fact(3500, 'Sun')).toContain('About 77% as bright');
+    expect(fact(3500, 'Sun')).toContain('faint young Sun paradox');
   });
 });

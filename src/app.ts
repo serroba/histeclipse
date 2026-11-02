@@ -151,6 +151,7 @@ import {
   type TemperatureIndexes,
   type TemperatureModel,
 } from './deepTime/temperatureModels';
+import { PLATES_REACH_MA, sketchAt } from './deepTime/sketch';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
 import { elementAt } from './util/arrays';
 import { errorMessage } from './util/errors';
@@ -374,6 +375,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     onTemperatureModel(temperatureModel) {
       store.set((state) => ({ ...state, temperatureModel }));
+    },
+    onSketch(choice) {
+      store.set((state) => ({ ...state, ...choice }));
     },
     onTemperature(on) {
       store.set((state) => {
@@ -1165,6 +1169,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       stopPlay();
       deepBar.render(null);
       globe.setUncharted(false);
+      globe.setSketch(null);
       globe.setDeepTime(null);
       globe.setTemperature(null);
       globe.setShelf(null);
@@ -1177,9 +1182,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     // A link to before the elevation maps opens on the scale that reaches it.
     const scale = state.deepScale === 'all' && ma > oldest ? 'eons' : state.deepScale;
     const ice = scale === 'ice';
-    // Before the elevation maps reach, the globe is left blank rather than given a map.
+    // Before the elevation maps reach, no map: a sketch of the chosen hypotheses instead.
     const uncharted = ma > oldest;
     globe.setUncharted(uncharted);
+    // Before the maps, a sketch of the hypotheses chosen; invented land only beyond the plates.
+    const choices = { impact: state.impact, land: state.land, snowball: state.snowball };
+    const reconstructed = ma <= (platesIndex?.frames.at(-1)?.ma ?? PLATES_REACH_MA);
+    const sketch = uncharted ? sketchAt(ma, choices, reconstructed) : null;
+    globe.setSketch(sketch);
     deepBar.render({
       ma,
       oldest: spanOf(scale),
@@ -1193,6 +1203,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       temperature: temperatureView(state, ma),
       seaLevel: seaLevelView(state),
       ...showPlates(state, ma),
+      sketch: sketch === null ? null : { sketch, choices },
     });
     // The temperature maps are 5 million years apart, and stop where the elevation maps do: none
     // on the ice-age scale or before them.
@@ -2018,7 +2029,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.deepScale !== previous.deepScale ||
       state.coast !== previous.coast ||
       state.seaIce !== previous.seaIce ||
-      state.temperatureModel !== previous.temperatureModel
+      state.temperatureModel !== previous.temperatureModel ||
+      state.impact !== previous.impact ||
+      state.land !== previous.land ||
+      state.snowball !== previous.snowball
     ) {
       showDeepTime(state);
     }

@@ -17,6 +17,18 @@ import {
   TEMPERATURE_MODELS,
   type TemperatureModel,
 } from '../deepTime/temperatureModels';
+import {
+  IMPACT_MODELS,
+  IMPACTS,
+  LAND_CHOICES,
+  LAND_MODELS,
+  type Sketch,
+  type SketchChoices,
+  type SketchQuestion,
+  SNOWBALL_CHOICES,
+  SNOWBALL_MODELS,
+} from '../deepTime/sketch';
+import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import type { DeepScale } from '../state/viewState';
 import { element } from './dom';
 import { createMilestonePanel } from './milestonePanel';
@@ -201,6 +213,8 @@ export interface DeepTimeView {
   /** Sea level: off, on while the reconstructions load (null), or on with them. */
   readonly seaLevel:
     { readonly on: false } | { readonly on: true; readonly index: SeaLevelIndex | null };
+  /** Before the reconstructions: the hypotheses sketched, and whose; null where a map reaches. */
+  readonly sketch: { readonly sketch: Sketch; readonly choices: SketchChoices } | null;
 }
 
 export interface DeepTimeBar {
@@ -220,6 +234,7 @@ export function createDeepTimeBar(handlers: {
   onCoast(coast: CoastSource): void;
   onSeaIce(model: SeaIceModel): void;
   onTemperatureModel(model: TemperatureModel): void;
+  onSketch(choice: Partial<SketchChoices>): void;
 }): DeepTimeBar {
   const play = element(
     'button',
@@ -272,7 +287,59 @@ export function createDeepTimeBar(handlers: {
   const unchartedNote = element(
     'p',
     { class: 'deep-note', hidden: '', 'data-testid': 'uncharted-note' },
-    'No map: before 540 million years ago the continents’ positions are too uncertain to draw here, so the globe is left blank. The Plates layer fills in one reconstruction’s continents back to 1,800 million years; the milestones tell what was happening.',
+    'No map: before 540 million years ago no surface map reaches. The Plates layer fills in one reconstruction’s continents back to 1,800 million years. Before that, and for snowball ice, the globe sketches what competing hypotheses say; pick whose below.',
+  );
+  // One picker per question a sketch can answer; only those the moment asks are shown.
+  const sketchPickers: Readonly<Record<SketchQuestion, HTMLSelectElement>> = {
+    impact: element(
+      'select',
+      { class: 'deep-coast', 'aria-label': 'Moon-forming impact' },
+      ...IMPACT_MODELS.map((model) => element('option', { value: model }, IMPACTS[model].label)),
+    ),
+    land: element(
+      'select',
+      { class: 'deep-coast', 'aria-label': 'How much land' },
+      ...LAND_MODELS.map((model) => element('option', { value: model }, LAND_CHOICES[model].label)),
+    ),
+    snowball: element(
+      'select',
+      { class: 'deep-coast', 'aria-label': 'Snowball ice' },
+      ...SNOWBALL_MODELS.map((model) =>
+        element('option', { value: model }, SNOWBALL_CHOICES[model].label),
+      ),
+    ),
+  };
+  const SKETCH_QUESTIONS: readonly SketchQuestion[] = ['impact', 'land', 'snowball'];
+  const sketchRow = (question: SketchQuestion, label: string): HTMLElement =>
+    element('p', { hidden: '' }, element('label', {}, label, sketchPickers[question]));
+  const sketchRows: Readonly<Record<SketchQuestion, HTMLElement>> = {
+    impact: sketchRow('impact', 'Moon-forming impact '),
+    land: sketchRow('land', 'How much land '),
+    snowball: sketchRow('snowball', 'Snowball ice '),
+  };
+  // In view: one line and the pickers. What it rests on is folded, so a phone still sees the globe.
+  const sketchHead = element('p', { 'data-testid': 'sketch-headline' });
+  const sketchNote = element(
+    'div',
+    { class: 'deep-note', hidden: '', 'data-testid': 'sketch-note' },
+    sketchHead,
+    ...SKETCH_QUESTIONS.map((question) => sketchRows[question]),
+  );
+  const sketchWords = element('div', {});
+  const sketchSources = element(
+    'details',
+    { class: 'deep-facts', hidden: '', 'data-testid': 'sketch-sources', name: 'deep-fold' },
+    element('summary', {}, 'What the sketch rests on'),
+    element(
+      'div',
+      { class: 'colour-key-body' },
+      element(
+        'p',
+        {},
+        'No surface map reaches before 540 million years ago, and the continent reconstruction stops at 1,800 million. Before that, and for snowball ice, the globe sketches what competing hypotheses say.',
+      ),
+      sketchWords,
+    ),
   );
   const coastText = element('span', { 'data-testid': 'coastline' });
   const iceLine = element('p', { 'data-testid': 'ice-sheets' });
@@ -375,7 +442,7 @@ export function createDeepTimeBar(handlers: {
   const factsPanel = element(
     'details',
     { class: 'deep-facts', 'data-testid': 'deep-facts', name: 'deep-fold' },
-    element('summary', {}, 'Poles, magnetic field, tilt and day'),
+    element('summary', {}, 'Poles, magnetic field, tilt, day and Sun'),
     facts,
   );
   // What the colours mean: the map's and the ticks'. Folded away like the facts.
@@ -444,13 +511,14 @@ export function createDeepTimeBar(handlers: {
     ),
     iceNote,
     unchartedNote,
+    sketchNote,
     coastNote,
     seaLevel.legend,
     legend,
     platesNote,
     milestones.root,
     // One open at a time (they share a name), so the bar doesn't grow over the globe.
-    element('div', { class: 'deep-folds' }, colourKey, factsPanel),
+    element('div', { class: 'deep-folds' }, colourKey, sketchSources, factsPanel),
   );
 
   let current: DeepTimeView | null = null;
@@ -478,6 +546,18 @@ export function createDeepTimeBar(handlers: {
   modelPicker.addEventListener('change', () => {
     const model = TEMPERATURE_MODELS.find((option) => option === modelPicker.value);
     if (model !== undefined) handlers.onTemperatureModel(model);
+  });
+  sketchPickers.impact.addEventListener('change', () => {
+    const impact = IMPACT_MODELS.find((option) => option === sketchPickers.impact.value);
+    if (impact !== undefined) handlers.onSketch({ impact });
+  });
+  sketchPickers.land.addEventListener('change', () => {
+    const land = LAND_MODELS.find((option) => option === sketchPickers.land.value);
+    if (land !== undefined) handlers.onSketch({ land });
+  });
+  sketchPickers.snowball.addEventListener('change', () => {
+    const snowball = SNOWBALL_MODELS.find((option) => option === sketchPickers.snowball.value);
+    if (snowball !== undefined) handlers.onSketch({ snowball });
   });
   scaleEons.addEventListener('click', () => {
     handlers.onScale('eons');
@@ -533,7 +613,21 @@ export function createDeepTimeBar(handlers: {
       scaleIce.setAttribute('aria-pressed', String(ice));
       scaleEons.setAttribute('aria-pressed', String(view.scale === 'eons'));
       const uncharted = view.ma > view.mapsReach;
-      unchartedNote.hidden = !uncharted;
+      const sketched = view.sketch !== null && view.sketch.sketch.questions.length > 0;
+      unchartedNote.hidden = !uncharted || sketched;
+      sketchNote.hidden = !sketched;
+      sketchSources.hidden = !sketched;
+      if (view.sketch !== null) {
+        const { sketch, choices } = view.sketch;
+        sketchHead.textContent = sketchHeadline(sketch);
+        sketchWords.replaceChildren(
+          ...sketchLines(sketch, choices, view.ma).map((line) => element('p', {}, line)),
+        );
+        for (const question of SKETCH_QUESTIONS) {
+          sketchRows[question].hidden = !sketch.questions.includes(question);
+          sketchPickers[question].value = choices[question];
+        }
+      }
       iceNote.hidden = !ice;
       iceLine.textContent = iceText(view.ice);
       if (view.seaIce !== null) {

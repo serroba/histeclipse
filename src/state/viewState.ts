@@ -7,6 +7,14 @@ import type { SkyCulture } from '../data/skyCultures';
 import { type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
 import { DEFAULT_SEA_ICE_MODEL, type SeaIceModel } from '../data/seaIce';
 import { DEFAULT_TEMPERATURE_MODEL, type TemperatureModel } from '../deepTime/temperatureModels';
+import {
+  DEFAULT_IMPACT_MODEL,
+  DEFAULT_LAND_MODEL,
+  DEFAULT_SNOWBALL_MODEL,
+  type ImpactModel,
+  type LandModel,
+  type SnowballModel,
+} from '../deepTime/sketch';
 import type { SunLayer } from '../data/sunImages';
 import type { YearCalendar } from '../time/calendars';
 import {
@@ -148,6 +156,10 @@ export interface ViewState {
   readonly seaIce: SeaIceModel;
   /** Whose temperature maps colour the deep-time globe. */
   readonly temperatureModel: TemperatureModel;
+  /** Before the reconstructions: which hypotheses the sketched surface follows. */
+  readonly impact: ImpactModel;
+  readonly land: LandModel;
+  readonly snowball: SnowballModel;
 }
 
 // In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
@@ -225,5 +237,8 @@ export function defaultViewState(now: Date): ViewState {
     coast: DEFAULT_COAST,
     seaIce: DEFAULT_SEA_ICE_MODEL,
     temperatureModel: DEFAULT_TEMPERATURE_MODEL,
+    impact: DEFAULT_IMPACT_MODEL,
+    land: DEFAULT_LAND_MODEL,
+    snowball: DEFAULT_SNOWBALL_MODEL,
   };
 }
