@@ -207,6 +207,19 @@ test('a first visit is welcomed once, with a place to start', async ({ page }) =
   expect(problems).toEqual([]);
 });
 
+test('the welcome goes once the visitor finds their own way in', async ({ page }) => {
+  await page.goto('./');
+  await globeRendered(page);
+  const welcome = page.getByTestId('welcome');
+  // Still there after the site settles: nothing the visitor did yet.
+  await page.waitForTimeout(1000);
+  await expect(welcome).toBeVisible();
+  await page.getByRole('button', { name: 'Deep time' }).click();
+  await expect(welcome).toBeHidden();
+  await page.getByRole('button', { name: 'Back to history' }).click();
+  await expect(welcome).toBeHidden();
+});
+
 test('explains parts of a link it could not use', async ({ page }) => {
   await page.goto('./?t=yesterday');
   await globeRendered(page);
