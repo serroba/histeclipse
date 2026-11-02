@@ -229,3 +229,18 @@ export function babylonianDate(rd: number): BabylonianDate | null {
     seleucidYear: year >= SELEUCID_FIRST ? year - SELEUCID_FIRST + 1 : null,
   };
 }
+
+export interface BabylonianMonth {
+  /** "Nisannu", "Addaru II". */
+  readonly name: string;
+  /** Fixed day of its first day. */
+  readonly start: number;
+}
+
+/** The months of a Nabonassar year, in order, or null outside the computed months. */
+export function babylonianMonths(year: number): readonly BabylonianMonth[] | null {
+  const { starts, first, end, years } = babylonTable();
+  const from = years.indexOf(year, first);
+  if (from < 0 || from >= end) return null;
+  return monthsOf(year).map(([name], place) => ({ name, start: elementAt(starts, from + place) }));
+}
