@@ -4,7 +4,7 @@
  * A rectilinear (pinhole) camera stretches things near the edge of a wide view by 1/cos²θ in
  * one direction only, so on a tall phone the Sun near the top or bottom becomes a long oval.
  * The stereographic projection is conformal: small things keep their shape everywhere, only
- * growing by 1/cos²(θ/2) away from the centre (about 1.7× at 60°, 2× at 90°). It is
+ * growing by 1/cos²(θ/2) away from the centre (about 1.33× at 60°, 2× at 90°). It is
  * Stellarium's default for the same reason.
  *
  * Directions are in view space: the camera looks down −z, x to the right, y up. A direction
