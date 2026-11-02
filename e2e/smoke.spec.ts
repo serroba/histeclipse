@@ -721,6 +721,17 @@ test('years can be counted in the Hebrew calendar, and the link keeps it', async
   await expect(year).toHaveValue('2025');
 });
 
+test('years can be counted in the Chinese calendar, with the cycle names', async ({ page }) => {
+  await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08&years=chinese');
+  await globeRendered(page);
+  await expect(page.getByLabel('Year', { exact: true })).toHaveValue('4721');
+  // The new moon fell after midnight in Beijing: the eclipse is on the last day of the month.
+  await expect(page.locator('.hud-detail')).toContainText(
+    '2nd month, day 30, 4721 HE (甲辰 jiǎchén, Wood Dragon)',
+  );
+  await expect(page.getByRole('button', { name: /2nd month 30\s*Total solar/ })).toBeVisible();
+});
+
 test('Ptolemy’s eclipse of 721 BCE is listed on 29 Thoth in year 27 of Nabonassar', async ({
   page,
 }) => {

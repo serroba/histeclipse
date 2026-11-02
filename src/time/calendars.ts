@@ -12,6 +12,9 @@
  * - Egyptian: 12 months of 30 days and 5 extra days, no leap years, counted from 1 Thoth of
  *   Nabonassar's first year (26 February 747 BCE). Ptolemy dated Babylonian eclipses this way.
  * - Roman: Varro's count from the founding of Rome (753 BCE = year 1), on Julian/Gregorian dates.
+ * - Chinese: months computed from new moons (see `chinese.ts`) for 720 BCE to 2100 CE, years
+ *   counted from the Yellow Emperor. Outside those years only the cycle names are given, and
+ *   a year is taken to run from 1 January.
  *
  * Days are civil days from midnight; the Hebrew and Islamic days really begin at sunset the
  * evening before, so an event after sunset belongs to the next day in those calendars.
@@ -24,9 +27,24 @@ import {
   julianDayNumber,
   type JulianDay,
 } from './julianDay';
+import {
+  chineseDate,
+  chineseNewYear,
+  chineseYearOf,
+  dayCycle,
+  HUANGDI_OFFSET,
+  yearCycle,
+} from './chinese';
 import { astronomicalYear } from './year';
 
-export const YEAR_CALENDARS = ['western', 'hebrew', 'islamic', 'egyptian', 'roman'] as const;
+export const YEAR_CALENDARS = [
+  'western',
+  'hebrew',
+  'islamic',
+  'egyptian',
+  'roman',
+  'chinese',
+] as const;
 export type YearCalendar = (typeof YEAR_CALENDARS)[number];
 
 export interface YearCalendarInfo {
@@ -41,6 +59,7 @@ export const CALENDAR_INFO: Readonly<Record<YearCalendar, YearCalendarInfo>> = {
   islamic: { name: 'Islamic', era: 'AH' },
   egyptian: { name: 'Egyptian', era: 'Nab.' },
   roman: { name: 'Roman', era: 'AUC' },
+  chinese: { name: 'Chinese', era: 'HE' },
 };
 
 /** The days of one calendar year: from midnight starting its first day to the next year's. */
@@ -225,7 +244,20 @@ function newYear(calendar: YearCalendar, year: number): number {
       return islamicFixed(year, 1, 1);
     case 'egyptian':
       return EGYPTIAN_EPOCH + (year - 1) * 365;
+    case 'chinese':
+      return chineseNewYear(year) ?? westernNewYear(year - HUANGDI_OFFSET);
   }
+}
+
+/** Outside the computed months, a Chinese year is taken to run from 1 January. */
+function chineseYearAround(jd: JulianDay): number {
+  const rd = fixedDay(jd);
+  const computed = chineseYearOf(rd);
+  if (computed !== null) return computed;
+  const year = calendarDate(jd, historicalCalendar(jd)).year + HUANGDI_OFFSET;
+  // Early in the first computed year, before its first month: still the year before.
+  const start = chineseNewYear(year);
+  return start !== null && rd < start ? year - 1 : year;
 }
 
 /** The days of `year` in `calendar`. */
@@ -250,12 +282,14 @@ export function yearContaining(calendar: YearCalendar, jd: JulianDay): number {
       return islamicYearOf(rd);
     case 'egyptian':
       return Math.floor((rd - EGYPTIAN_EPOCH) / 365) + 1;
+    case 'chinese':
+      return chineseYearAround(jd);
   }
 }
 
 /** The date in a non-western calendar of the civil day containing `jd`. */
 export function otherDate(
-  calendar: Exclude<YearCalendar, 'western' | 'roman'>,
+  calendar: Exclude<YearCalendar, 'western' | 'roman' | 'chinese'>,
   jd: JulianDay,
 ): OtherDate {
   const rd = fixedDay(jd);
@@ -282,7 +316,7 @@ export function otherDate(
   throw new RangeError('Day beyond the end of its year'); // unreachable: months fill the year
 }
 
-/** "3175 AM", "1446 AH", "167 Nab.", "754 AUC"; western years as "587 BCE". */
+/** "3175 AM", "1446 AH", "167 Nab.", "754 AUC", "4721 HE"; western years as "587 BCE". */
 export function formatCalendarYear(calendar: YearCalendar, year: number): string {
   if (calendar === 'western') {
     return year >= 1 ? `${String(year)} CE` : `${String(1 - year)} BCE`;
@@ -297,6 +331,7 @@ export function formatInCalendar(calendar: YearCalendar, jd: JulianDay): string 
     const year = calendar === 'roman' ? date.year + AUC_OFFSET : date.year;
     return `${String(Math.floor(date.day))} ${MONTH_NAMES[date.month - 1] ?? ''} ${formatCalendarYear(calendar, year)}`;
   }
+  if (calendar === 'chinese') return formatChinese(jd);
   const date = otherDate(calendar, jd);
   if (calendar === 'egyptian' && date.month === 13) {
     return `extra day ${String(date.day)}, ${formatCalendarYear(calendar, date.year)}`;
@@ -325,7 +360,31 @@ export function shortDate(calendar: YearCalendar, jd: JulianDay): string {
     const date = calendarDate(jd, historicalCalendar(jd));
     return `${String(Math.floor(date.day))} ${MONTH_NAMES[date.month - 1]?.slice(0, 3) ?? ''}`;
   }
+  if (calendar === 'chinese') {
+    const date = chineseDate(fixedDay(jd));
+    return date === null
+      ? dayCycle(fixedDay(jd)).characters
+      : `${date.monthName} ${String(date.day)}`;
+  }
   const date = otherDate(calendar, jd);
   if (calendar === 'egyptian' && date.month === 13) return `extra day ${String(date.day)}`;
   return `${String(date.day)} ${date.monthName}`;
+}
+
+/**
+ * "3rd month, day 5, 4721 HE (甲辰 jiǎchén, Wood Dragon) · day 戊午 wùwǔ". Outside the computed
+ * months, the year's and the day's names only.
+ */
+function formatChinese(jd: JulianDay): string {
+  const rd = fixedDay(jd);
+  const day = dayCycle(rd);
+  const dayName = `day ${day.characters} ${day.pinyin}`;
+  const date = chineseDate(rd);
+  if (date === null) {
+    const western = calendarDate(jd, historicalCalendar(jd)).year;
+    const year = yearCycle(western + HUANGDI_OFFSET);
+    return `${year.characters} ${year.pinyin} year (by 1 January; months not computed) · ${dayName}`;
+  }
+  const year = yearCycle(date.year);
+  return `${date.monthName}, day ${String(date.day)}, ${formatCalendarYear('chinese', date.year)} (${year.characters} ${year.pinyin}, ${year.sign}) · ${dayName}`;
 }
