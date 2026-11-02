@@ -745,6 +745,29 @@ test('the Babylonian calendar dates Jerusalem’s capture to 2 Addaru, 16 March 
   await expect(page.locator('.hud-detail')).toContainText('Ptolemy’s canon: Nabokolassaros 8');
 });
 
+test('VAT 4956 can be checked against two candidate years, record by record', async ({ page }) => {
+  const problems = collectProblems(page);
+  await page.goto('./?t=-567-04-23T12:00&years=babylonian');
+  await globeRendered(page);
+  // The check shows with the Babylonian calendar only.
+  await page.goto('./?t=-567-04-23T12:00');
+  await globeRendered(page);
+  await expect(page.getByRole('button', { name: 'Check a tablet' })).toBeHidden();
+  await page.getByLabel('Era', { exact: true }).selectOption('babylonian');
+  await page.getByRole('button', { name: 'Check a tablet' }).click();
+  const summary = page.getByTestId('tablet-summary');
+  await expect(summary).toHaveText('20 of 21 records fit 568/567 BCE.', { timeout: 30_000 });
+  await page.getByRole('button', { name: '588 BCE' }).click();
+  await expect(summary).toHaveText('10 of 21 records fit 588/587 BCE.', { timeout: 30_000 });
+  await page.getByRole('button', { name: '568 BCE' }).click();
+  await expect(summary).toHaveText('20 of 21 records fit 568/567 BCE.', { timeout: 30_000 });
+  // A record opens the sky over Babylon that evening.
+  await page.locator('[data-record="II-18-venus"]').click();
+  await expect(page).toHaveURL(/mode=sky/);
+  await expect(page).toHaveURL(/t=-0567-06-08T/);
+  expect(problems).toEqual([]);
+});
+
 test('Ptolemy’s eclipse of 721 BCE is listed on 29 Thoth in year 27 of Nabonassar', async ({
   page,
 }) => {

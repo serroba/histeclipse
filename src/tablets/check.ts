@@ -252,3 +252,21 @@ export function candidateYear(bce: number, shift = 0): Candidate | null {
     previousLeap: shift > 0 ? 'Addaru II' : null,
   };
 }
+
+/** The moment to show for a checked observation, or null for a note about the calendar. */
+export function verdictMoment(sky: TabletSky, verdict: Verdict): JulianDay | null {
+  const { observation, date } = verdict;
+  if (date === null || observation.kind === 'leap') return null;
+  if (observation.kind === 'lunar six') {
+    const evening =
+      observation.six === 'NA first' || observation.six === 'ME' || observation.six === 'GE6';
+    return evening ? sunsetOn(sky, date) : sunriseOn(sky, date);
+  }
+  if (observation.watch === 'morning') {
+    const sunrise = sunriseOn(sky, date);
+    return sunrise === null ? null : julianDayNumber(sunrise - BEFORE_SUNRISE);
+  }
+  const sunset = sunsetOn(sky, date);
+  if (sunset === null) return null;
+  return julianDayNumber(sunset + (observation.watch === 'dusk' ? DUSK : AFTER_SUNSET));
+}
