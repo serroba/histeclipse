@@ -1,6 +1,6 @@
 /** Which channel of light the Sun is shown in, close up, and what that channel shows. */
 
-import type { SunImage, SunLayer } from '../data/sunImages';
+import { frameSpan, type SunImage, type SunLayer } from '../data/sunImages';
 import { element } from './dom';
 
 export interface SunSwitch {
@@ -47,12 +47,12 @@ export function createSunSwitch(onSelect: (layer: SunLayer) => void): SunSwitch 
       }
       const shown = layers.find(({ key }) => key === layer);
       if (shown === undefined) return;
-      const day = new Date(shown.observed).toUTCString().slice(5, 16);
+      const [first, last] = frameSpan(shown);
       about.textContent =
-        `${shown.description} SDO image of ${day}: the Sun's surface changes daily, ` +
-        'so on the date shown it looked different. SDO sees the side facing Earth; the side ' +
-        "it couldn't see is shown as a plain, featureless surface, because its details that " +
-        `day are unknown. Credit: ${credit}.`;
+        `${shown.description} Stitched from ${String(shown.frames.length)} SDO images, ` +
+        `${first} – ${last}: each side as it last faced Earth, so not one moment, with the ` +
+        'poles, which SDO barely sees, smoothed in. This is the Sun of 2024; on the date shown ' +
+        `it looked different, in ways unknown. Credit: ${credit}.`;
     },
   };
 }

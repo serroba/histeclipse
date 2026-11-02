@@ -534,6 +534,20 @@ test('clicking the Moon flies to it, and the camera then orbits and zooms around
   await expect(page).toHaveURL(/,[123]\.\d\d&focus=moon/);
 });
 
+test('clicking the Sun flies to the side facing Earth, wherever the camera was', async ({
+  page,
+}) => {
+  // Far out, a quarter turn round from the line between Earth and the Sun.
+  await page.goto('./?t=2024-05-08T12:00&cam=0,-91,80000');
+  await globeRendered(page);
+  await page.locator('.space-marker[data-body="sun"]').click();
+  const globe = page.getByTestId('globe');
+  await expect(globe).toHaveAttribute('data-focus', 'sun');
+  // Lands where the link for Earth's side of the Sun that day points.
+  await expect(page).toHaveURL(/cam=-17\.\d+,-134\.\d+,4\.00&focus=sun/);
+  await expect(globe).toHaveAttribute('data-sun-facing', '1.000');
+});
+
 test('a link centred on the Moon opens there, and Earth is one click back', async ({ page }) => {
   // Over the far side, so Earth lies ahead, beyond the Moon.
   await page.goto('./?t=2025-11-05T12:00&cam=0,180,3&focus=moon');
@@ -1000,8 +1014,14 @@ test('close to the Sun, SDO’s images show it in six kinds of light', async ({ 
   await expect(globe).toHaveAttribute('data-sun-image', 'large', { timeout: 30_000 });
   await expect(globe).toHaveAttribute('data-sun-layer', 'visible');
   await expect(globe).toHaveAttribute('data-sun-facing', '1.000');
-  await expect(page.getByTestId('sun-caption')).toContainText('08 May 2024');
+  // The surface is stitched from frames of three weeks, ending that day.
+  await expect(page.getByTestId('sun-caption')).toContainText('18 Apr 2024 – 08 May 2024');
   await expect(page.getByTestId('sun-caption')).toContainText('NASA/SDO');
+
+  // From behind, the far side is SDO's too, from earlier frames, not a plain surface.
+  await page.goto('./?t=2024-05-08T12:00&focus=sun&cam=17.2,45.8,4');
+  await expect(globe).toHaveAttribute('data-sun-image', 'large', { timeout: 30_000 });
+  await expect(globe).toHaveAttribute('data-sun-facing', '-1.000');
 
   await page.getByRole('button', { name: '171 Å' }).click();
   await expect(page).toHaveURL(/sun=171/);

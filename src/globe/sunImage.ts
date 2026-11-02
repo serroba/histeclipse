@@ -1,14 +1,13 @@
 /**
- * Wrapping a full-disk image of the Sun onto a sphere. The image shows the hemisphere that faces
- * Earth, solar north up and solar west to the right (as the sky looks from Earth), so a point on
- * the Sun's surface lands where an orthographic view from Earth puts it. The far side was not
- * seen and gets no image: it is drawn as a plain surface at the image's average colour.
+ * Wrapping a map of the whole Sun onto a sphere. The map (see `data/sunImages.ts`) is
+ * equirectangular in heliographic coordinates: latitude from the Sun's equator, north at the
+ * top, and longitude from the central meridian, the one facing Earth, growing toward the west
+ * limb (to the right as the sky looks from Earth), with the central meridian in the middle.
  *
  * The shader in `scene.ts` does the same in GLSL; this is the tested reference.
  */
 
 import { directionFromRaDec, type Vector3 } from '../astro/matrix';
-import { valueAt } from '../util/arrays';
 
 const RADIANS = Math.PI / 180;
 
@@ -32,27 +31,26 @@ function unit(v: Vector3): Vector3 {
 }
 
 /**
- * Where the surface point with outward unit normal `normal` appears in the image, as texture
- * coordinates (0..1, v up), or null on the far side. `toEarth` points from the Sun to Earth,
- * `north` along the Sun's rotation axis; `diskRadius` is the limb's radius in the image.
+ * Where the surface point with outward unit normal `normal` lies on the map, as texture
+ * coordinates (0..1, v up). `toEarth` points from the Sun to Earth, `north` along the Sun's
+ * rotation axis; both unit vectors.
  */
-export function sunImageUv(
+export function sunMapUv(
   normal: Vector3,
   toEarth: Vector3,
   north: Vector3,
-  diskRadius: number,
-): readonly [u: number, v: number] | null {
-  if (dot(normal, toEarth) < 0) return null;
-  // Solar north as seen from Earth: the pole's direction across the line of sight.
-  const along = dot(north, toEarth);
-  const up = unit([
-    north[0] - along * toEarth[0],
-    north[1] - along * toEarth[1],
-    north[2] - along * toEarth[2],
+): readonly [u: number, v: number] {
+  // The central meridian's direction on the equator, and the direction 90° west of it.
+  const along = dot(toEarth, north);
+  const meridian = unit([
+    toEarth[0] - along * north[0],
+    toEarth[1] - along * north[1],
+    toEarth[2] - along * north[2],
   ]);
-  // Looking from Earth toward the Sun, with north up, right is west.
-  const right = cross([-toEarth[0], -toEarth[1], -toEarth[2]], up);
-  return [0.5 + diskRadius * dot(normal, right), 0.5 + diskRadius * dot(normal, up)];
+  const west = cross(north, meridian);
+  const latitude = Math.asin(Math.min(1, Math.max(-1, dot(normal, north))));
+  const longitude = Math.atan2(dot(normal, west), dot(normal, meridian));
+  return [0.5 + longitude / (2 * Math.PI), 0.5 + latitude / Math.PI];
 }
 
 /** Heliographic latitude of the centre of the disc seen from Earth (B₀), degrees. */
@@ -66,42 +64,4 @@ export function diskCentreLatitude(toEarth: Vector3, north: Vector3): number {
  */
 export function limbDarkening(mu: number, coefficient: number): number {
   return 1 - coefficient * (1 - Math.max(0, mu));
-}
-
-/** sRGB-encoded 0..255 to linear light 0..1, as the GPU decodes an sRGB texture. */
-function linearFromSrgb(value: number): number {
-  const c = value / 255;
-  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-}
-
-/**
- * The average colour of the disc in an RGBA image (rows top down, sRGB), in linear light: the
- * quiet Sun's typical level in that channel. Only pixels well inside the limb count, so the dark
- * sky and the corona beyond do not. A limb-darkened disc averages 1 − u/3 of its centre, so
- * with a `limbDarkening` coefficient u the result is scaled back up to the centre's level.
- */
-export function discAverage(
-  pixels: ArrayLike<number>,
-  width: number,
-  height: number,
-  diskRadius: number,
-  limbDarkeningCoefficient = 0,
-): readonly [r: number, g: number, b: number] {
-  const limit = diskRadius * 0.97 * width;
-  let r = 0;
-  let g = 0;
-  let b = 0;
-  let count = 0;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (Math.hypot(x + 0.5 - width / 2, y + 0.5 - height / 2) > limit) continue;
-      const i = 4 * (y * width + x);
-      r += linearFromSrgb(valueAt(pixels, i));
-      g += linearFromSrgb(valueAt(pixels, i + 1));
-      b += linearFromSrgb(valueAt(pixels, i + 2));
-      count++;
-    }
-  }
-  const scale = 1 / Math.max(1, count) / (1 - limbDarkeningCoefficient / 3);
-  return [r * scale, g * scale, b * scale];
 }

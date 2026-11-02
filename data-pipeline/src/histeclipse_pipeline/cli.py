@@ -284,7 +284,7 @@ def calendars(args: Arguments) -> int:  # pragma: no cover - needs the full DE44
 
 def sun_images(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Render the SDO layers into ``public/textures/sun`` and write their manifest."""
-    result = fetch_images(args.out)
+    result = fetch_images(args.out, args.kernels.parent / "sdo")
     return _say(f"wrote {len(result['layers'])} layers of the Sun to {args.out}")
 
 

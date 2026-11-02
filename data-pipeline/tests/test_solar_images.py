@@ -2,22 +2,32 @@ import io
 import urllib.parse
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pytest
 from PIL import Image
 
+from histeclipse_pipeline.arrays import FloatArray, as_floats
 from histeclipse_pipeline.solar_images import (
     DISK_RADIUS,
     LAYERS,
+    MAP_SIZES,
     SIZES,
-    Observation,
     closest_image_url,
-    file_name,
+    decode,
+    disc_name,
+    encode,
+    frame_dates,
     image_scale,
     manifest,
+    map_name,
     parse_closest_image,
+    resized,
     screenshot_url,
+    shifted,
+    stitch,
     to_webp,
 )
+from histeclipse_pipeline.sun_map import Frame, disc_radii
 
 if TYPE_CHECKING:
     from histeclipse_pipeline.sky import Json
@@ -76,22 +86,58 @@ def test_builds_helioviewer_queries() -> None:
     assert shot["watermark"] == ["false"]
 
 
-def test_reencodes_frames_as_webp_keeping_transparency() -> None:
+def test_spaces_four_frames_a_quarter_turn_apart_ending_on_the_date() -> None:
+    assert frame_dates("2024-05-08T12:00:00Z") == [
+        "2024-04-18T01:02:40Z",
+        "2024-04-24T20:41:47Z",
+        "2024-05-01T16:20:53Z",
+        "2024-05-08T12:00:00Z",
+    ]
+    assert shifted("2024-05-08T12:00:00Z", -3) == "2024-05-08T09:00:00Z"
+
+
+def test_decodes_and_encodes_frames() -> None:
     png = io.BytesIO()
-    Image.new("RGBA", (8, 8), (255, 200, 0, 0)).save(png, format="PNG")
-    with Image.open(io.BytesIO(to_webp(png.getvalue()))) as image:
-        assert image.format == "WEBP"
-        assert image.size == (8, 8)
-        assert image.mode == "RGBA"
+    Image.new("RGBA", (8, 4), (255, 51, 0, 0)).save(png, format="PNG")
+    pixels = decode(png.getvalue())
+    assert pixels.shape == (4, 8, 3)
+    assert as_floats(np.ravel(pixels[:1, :1])) == pytest.approx([1, 0.2, 0])
+    image = encode(pixels)
+    assert image.size == (8, 4)
+    assert resized(image, 4).size == (4, 2)
+    assert resized(image, 8) is image
+    with Image.open(io.BytesIO(to_webp(image))) as webp:
+        assert webp.format == "WEBP"
+        assert webp.size == (8, 4)
 
 
-def test_lists_every_layer_and_size_in_the_manifest() -> None:
-    observed: Observation = {"date": "2024-05-08T12:00:09Z", "radius_arcsec": 959.6}
-    result = manifest({layer.key: observed for layer in LAYERS})
+def _disc(size: int, value: float) -> FloatArray:
+    r = disc_radii(Frame(np.zeros((size, size, 3)), 0, DISK_RADIUS))
+    return np.repeat(np.where(r < 1, value, 0.0)[..., np.newaxis], 3, axis=2)
+
+
+@pytest.mark.parametrize("key", ["visible", "magnetogram"])
+def test_stitches_a_whole_surface_map(key: str) -> None:
+    layer = next(layer for layer in LAYERS if layer.key == key)
+    frames = [(_disc(96, 0.5), moment) for moment in frame_dates()]
+    surface = stitch(layer, frames, 64)
+    assert surface.shape == (32, 64, 3)
+    # A uniform Sun seen from every side stitches to a uniform map, poles and all.
+    assert np.allclose(surface, 0.5, atol=0.02)
+
+
+def test_lists_every_layer_its_frames_and_files_in_the_manifest() -> None:
+    frames = ["2024-04-18T01:02:48Z", "2024-05-08T12:00:09Z"]
+    result = manifest({layer.key: frames for layer in LAYERS})
+    assert result["schemaVersion"] == 2
     assert result["diskRadius"] == DISK_RADIUS
     assert [entry["key"] for entry in result["layers"]] == [layer.key for layer in LAYERS]
     first = result["layers"][0]
-    assert first["files"] == {
-        str(size): f"textures/sun/{file_name(LAYERS[0], size)}" for size in SIZES
+    assert first["frames"] == frames
+    assert first["map"] == {
+        str(width): f"textures/sun/{map_name(LAYERS[0], width)}" for width in MAP_SIZES
     }
-    assert first["observed"] == "2024-05-08T12:00:09Z"
+    assert first["disc"] == {
+        str(size): f"textures/sun/{disc_name(LAYERS[0], size)}" for size in SIZES
+    }
+    assert first["map"]["4096"] == "textures/sun/visible-map-4096.webp"
