@@ -8,6 +8,7 @@ import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period, periodShort } from '../deepTime/periods';
 import type { IceStandIn } from '../data/iceSheets';
+import { SEA_ICE_MODELS, type SeaIceModel } from '../data/seaIce';
 import type { SeaLevelIndex } from '../data/seaLevel';
 import { COAST_SOURCES, type CoastSource } from '../deepTime/coastline';
 import {
@@ -124,6 +125,32 @@ export function coastlineText(view: CoastlineView): string {
   return `Coastline at ${level}, following ${view.label}.${stand}`;
 }
 
+/** On the ice-age scale: the sea ice drawn, blended from today's towards an ice-age model's. */
+export interface SeaIceView {
+  readonly model: SeaIceModel;
+  /** 0 for today's sea ice, 1 for the glacial maximum's; null while the maps load. */
+  readonly mix: number | null;
+}
+
+/** What the bar says about the sea ice. */
+export function seaIceText(view: SeaIceView): string {
+  if (view.mix === null) return 'Sea ice: loading…';
+  const key = 'Solid white lasts all year; faint white forms only in winter.';
+  if (view.mix < 0.005) return `Sea ice: today’s (NSIDC, 1981–2010). ${key}`;
+  const model = SEA_ICE_LABELS[view.model];
+  if (view.mix > 0.995) {
+    return `Sea ice: the Last Glacial Maximum’s, 21,000 years ago, as the ${model} climate model has it. ${key}`;
+  }
+  const share = `${String(Math.round(view.mix * 100))}%`;
+  return `Sea ice: a stand-in, ${share} of the way from today’s (NSIDC) to the Last Glacial Maximum’s (${model} model), by how far the sea had fallen. ${key}`;
+}
+
+export const SEA_ICE_LABELS: Readonly<Record<SeaIceModel, string>> = {
+  'mpi-esm1-2-lr': 'MPI-ESM1-2-LR',
+  'miroc-es2l': 'MIROC-ES2L',
+  'awi-esm-1-1-lr': 'AWI-ESM-1-1-LR',
+};
+
 /** What the bar says about the ice sheets on the ice-age scale. */
 export function iceText(view: DeepTimeView['ice']): string {
   if (view.oldestKa === null) return 'Ice sheets: loading…';
@@ -163,6 +190,8 @@ export interface DeepTimeView {
    * Whether ice is drawn at the moment shown, how far back the ice maps reach (ka), and, beyond
    * them, which map stands in.
    */
+  /** The sea ice; null off the ice-age scale. */
+  readonly seaIce: SeaIceView | null;
   readonly ice: {
     readonly drawn: boolean;
     readonly oldestKa: number | null;
@@ -187,6 +216,7 @@ export function createDeepTimeBar(handlers: {
   onPlates(on: boolean): void;
   onScale(scale: DeepScale): void;
   onCoast(coast: CoastSource): void;
+  onSeaIce(model: SeaIceModel): void;
   onTemperatureModel(model: TemperatureModel): void;
 }): DeepTimeBar {
   const play = element(
@@ -243,6 +273,12 @@ export function createDeepTimeBar(handlers: {
   );
   const coastText = element('span', { 'data-testid': 'coastline' });
   const iceLine = element('p', { 'data-testid': 'ice-sheets' });
+  const seaIceWords = element('span', { 'data-testid': 'sea-ice' });
+  const seaIcePicker = element(
+    'select',
+    { class: 'deep-coast', 'aria-label': 'Ice-age sea ice from' },
+    ...SEA_ICE_MODELS.map((model) => element('option', { value: model }, SEA_ICE_LABELS[model])),
+  );
   const coastPicker = element(
     'select',
     { class: 'deep-coast', 'aria-label': 'Coastline follows' },
@@ -257,6 +293,14 @@ export function createDeepTimeBar(handlers: {
       'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time. Sea floor laid dry is sandy; ice sheets are white. The small moves of the continents are not drawn, and the temperature maps are 5 million years apart.',
     ),
     iceLine,
+    element(
+      'p',
+      {},
+      seaIceWords,
+      ' ',
+      element('label', {}, 'Ice-age model ', seaIcePicker),
+      ' Three climate models (PMIP4) differ; pick one.',
+    ),
   );
   const coastNote = element(
     'p',
@@ -394,6 +438,10 @@ export function createDeepTimeBar(handlers: {
   scaleEons.addEventListener('click', () => {
     handlers.onScale('eons');
   });
+  seaIcePicker.addEventListener('change', () => {
+    const model = SEA_ICE_MODELS.find((option) => option === seaIcePicker.value);
+    if (model !== undefined) handlers.onSeaIce(model);
+  });
   coastPicker.addEventListener('change', () => {
     const source = COAST_SOURCES.find((option) => option === coastPicker.value);
     if (source !== undefined) handlers.onCoast(source);
@@ -444,6 +492,10 @@ export function createDeepTimeBar(handlers: {
       unchartedNote.hidden = !uncharted;
       iceNote.hidden = !ice;
       iceLine.textContent = iceText(view.ice);
+      if (view.seaIce !== null) {
+        seaIceWords.textContent = seaIceText(view.seaIce);
+        seaIcePicker.value = view.seaIce.model;
+      }
       coastNote.hidden = view.coastline === null;
       if (view.coastline !== null) {
         coastText.textContent = coastlineText(view.coastline);

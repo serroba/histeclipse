@@ -5,6 +5,7 @@
 
 import type { SkyCulture } from '../data/skyCultures';
 import { type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
+import { DEFAULT_SEA_ICE_MODEL, type SeaIceModel } from '../data/seaIce';
 import { DEFAULT_TEMPERATURE_MODEL, type TemperatureModel } from '../deepTime/temperatureModels';
 import type { SunLayer } from '../data/sunImages';
 import type { YearCalendar } from '../time/calendars';
@@ -140,6 +141,8 @@ export interface ViewState {
   readonly deepScale: DeepScale;
   /** Whose sea level the ice-age coastlines follow. */
   readonly coast: CoastSource;
+  /** Which climate model's ice-age sea ice the globe blends towards. */
+  readonly seaIce: SeaIceModel;
   /** Whose temperature maps colour the deep-time globe. */
   readonly temperatureModel: TemperatureModel;
 }
@@ -217,6 +220,7 @@ export function defaultViewState(now: Date): ViewState {
     ma: null,
     deepScale: 'all',
     coast: DEFAULT_COAST,
+    seaIce: DEFAULT_SEA_ICE_MODEL,
     temperatureModel: DEFAULT_TEMPERATURE_MODEL,
   };
 }

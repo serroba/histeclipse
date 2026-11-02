@@ -1,6 +1,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
+import { SEA_ICE_MODELS } from '../data/seaIce';
 import { COAST_SOURCES } from '../deepTime/coastline';
 import { TEMPERATURE_MODELS } from '../deepTime/temperatureModels';
 
@@ -70,6 +71,7 @@ describe('parseViewState', () => {
       ma: null,
       deepScale: 'all',
       coast: 'bintanja-2008',
+      seaIce: 'mpi-esm1-2-lr',
       temperatureModel: 'scotese',
     } satisfies ViewState);
   });
@@ -123,6 +125,14 @@ describe('parseViewState', () => {
     expect(parseViewState('temp=cesm', NOW).state.temperatureModel).toBe('cesm');
     expect(serializeViewState(parseViewState('temp=cesm', NOW).state)).toContain('&temp=cesm');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('temp=');
+  });
+
+  it('reads which model’s ice-age sea ice to show, writing it only when not the default', () => {
+    expect(parseViewState('seaice=miroc-es2l', NOW).state.seaIce).toBe('miroc-es2l');
+    expect(serializeViewState(parseViewState('seaice=miroc-es2l', NOW).state)).toContain(
+      'seaice=miroc-es2l',
+    );
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('seaice');
   });
 
   it('reads whose sea level the coastlines follow, writing it only when not the default', () => {
@@ -384,6 +394,7 @@ describe('serializeViewState', () => {
     ),
     deepScale: fc.constantFrom(...DEEP_SCALES),
     coast: fc.constantFrom(...COAST_SOURCES),
+    seaIce: fc.constantFrom(...SEA_ICE_MODELS),
     temperatureModel: fc.constantFrom(...TEMPERATURE_MODELS),
   });
 

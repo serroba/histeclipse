@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { iceText } from './deepTimeBar';
+import { iceText, seaIceText } from './deepTimeBar';
 
 describe('iceText', () => {
   it('credits the ice maps where they reach, and says where they do not', () => {
@@ -26,6 +26,21 @@ describe('iceText', () => {
       }),
     ).toContain(
       'so this is today’s ice, when sea level was similar (0 m, against +4 m at the moment shown)',
+    );
+  });
+});
+
+describe('seaIceText', () => {
+  it('says whose sea ice is drawn, and when it is a blend', () => {
+    expect(seaIceText({ model: 'mpi-esm1-2-lr', mix: null })).toBe('Sea ice: loading…');
+    expect(seaIceText({ model: 'mpi-esm1-2-lr', mix: 0 })).toMatch(
+      /^Sea ice: today’s \(NSIDC, 1981–2010\)\./,
+    );
+    expect(seaIceText({ model: 'miroc-es2l', mix: 1 })).toContain(
+      'the Last Glacial Maximum’s, 21,000 years ago, as the MIROC-ES2L climate model has it',
+    );
+    expect(seaIceText({ model: 'awi-esm-1-1-lr', mix: 0.5 })).toContain(
+      'a stand-in, 50% of the way from today’s (NSIDC) to the Last Glacial Maximum’s (AWI-ESM-1-1-LR model)',
     );
   });
 });

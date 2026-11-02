@@ -216,6 +216,20 @@ export interface IceSurface {
   readonly metresPerStep: number;
 }
 
+/**
+ * Sea ice: today's and an ice-age model's, each as the most ice in the year and the ice that
+ * lasts all year, blended `mix` of the way from today's to the ice age's.
+ */
+export interface SeaIceSurface {
+  readonly todayMost: string;
+  readonly todayYearRound: string;
+  readonly pastMost: string;
+  readonly pastYearRound: string;
+  readonly mix: number;
+  readonly columns: number;
+  readonly rows: number;
+}
+
 /** A second reconstruction's continents: two masks either side of the moment, blended. */
 export interface PlateSurface {
   readonly younger: string;
@@ -278,6 +292,8 @@ export interface Globe {
   setShelf(surface: ShelfSurface | null): void;
   /** Draw ice sheets over the surface; null draws none. */
   setIce(surface: IceSurface | null): void;
+  /** Draw sea ice over the oceans; null draws none. */
+  setSeaIce(surface: SeaIceSurface | null): void;
   /** Outline a second reconstruction's continents; null draws none. */
   setPlates(surface: PlateSurface | null): void;
   /** Before the elevation maps reach: a plain globe with a faint grid, not a made-up map. */
@@ -351,6 +367,13 @@ const EARTH_FRAGMENT = /* glsl */ `
   uniform vec2 shelfGrid;
   uniform vec2 shelfRange;
   uniform float seaLevel;
+  uniform sampler2D seaIceTodayMost;
+  uniform sampler2D seaIceTodayYearRound;
+  uniform sampler2D seaIcePastMost;
+  uniform sampler2D seaIcePastYearRound;
+  uniform float seaIceMix;
+  uniform float seaIceActive;
+  uniform vec2 seaIceGrid;
   uniform sampler2D iceYounger;
   uniform sampler2D iceOlder;
   uniform float iceMix;
@@ -546,6 +569,16 @@ const EARTH_FRAGMENT = /* glsl */ `
       float sea = 1.0 - smoothstep(-blur, blur, coast);
       float shore = 1.0 - smoothstep(blur, 3.0 * blur, abs(coast));
       color = temperatureColour(paleoTemperature(uv)) * (1.0 - 0.3 * sea) * (1.0 - 0.55 * shore);
+    }
+    if (seaIceActive > 0.5) {
+      // Sea ice over the sea only: solid white where it lasts all year, a fainter white where
+      // it forms only in winter. Bytes hold 0.4% steps (250 is full cover).
+      vec2 at = (uv * (seaIceGrid - 1.0) + 0.5) / seaIceGrid;
+      float most = mix(texture2D(seaIceTodayMost, at).r, texture2D(seaIcePastMost, at).r, seaIceMix) * 255.0 / 250.0;
+      float lasting = mix(texture2D(seaIceTodayYearRound, at).r, texture2D(seaIcePastYearRound, at).r, seaIceMix) * 255.0 / 250.0;
+      float sea = 1.0 - smoothstep(-blur, blur, coast);
+      float cover = max(0.45 * smoothstep(0.15, 0.4, most), 0.92 * smoothstep(0.15, 0.4, lasting));
+      color = mix(color, srgb(vec3(0.92, 0.95, 0.99)), sea * cover);
     }
     if (iceActive > 0.5) {
       // Ice sheets: white, a little blue where thin; the edge blends over about a pixel.
@@ -873,6 +906,13 @@ export async function createGlobe(
         shelfGrid: { value: new Vector2(3601, 1801) },
         shelfRange: { value: new Vector2(-200, 55) },
         seaLevel: { value: 0 },
+        seaIceTodayMost: { value: null as Texture | null },
+        seaIceTodayYearRound: { value: null as Texture | null },
+        seaIcePastMost: { value: null as Texture | null },
+        seaIcePastYearRound: { value: null as Texture | null },
+        seaIceMix: { value: 0 },
+        seaIceActive: { value: 0 },
+        seaIceGrid: { value: new Vector2(361, 181) },
         iceYounger: { value: null as Texture | null },
         iceOlder: { value: null as Texture | null },
         iceMix: { value: 0 },
@@ -1047,6 +1087,7 @@ export async function createGlobe(
   let deepTime = false;
   let temperatureWanted: TemperatureSurface | null = null;
   let iceWanted: IceSurface | null = null;
+  let seaIceWanted: SeaIceSurface | null = null;
   let platesWanted: PlateSurface | null = null;
   function hiddenInDeepTime(): Object3D[] {
     return [sun, corona, moon, ...Object.values(planets.meshes)];
@@ -1866,6 +1907,40 @@ export async function createGlobe(
         () => {
           paleoTextures.delete(surface.younger);
           paleoTextures.delete(surface.older);
+        },
+      );
+    },
+    setSeaIce(surface) {
+      seaIceWanted = surface;
+      const uniforms = earth.material.uniforms;
+      if (surface === null) {
+        uniforms['seaIceActive'] = { value: 0 };
+        container.dataset['seaIce'] = 'off';
+        needsRender = true;
+        return;
+      }
+      const urls = [
+        surface.todayMost,
+        surface.todayYearRound,
+        surface.pastMost,
+        surface.pastYearRound,
+      ] as const;
+      Promise.all(urls.map((url) => paleoTexture(url))).then(
+        ([todayMost, todayYearRound, pastMost, pastYearRound]) => {
+          // A later request (the slider kept moving) wins.
+          if (seaIceWanted !== surface) return;
+          uniforms['seaIceTodayMost'] = { value: todayMost };
+          uniforms['seaIceTodayYearRound'] = { value: todayYearRound };
+          uniforms['seaIcePastMost'] = { value: pastMost };
+          uniforms['seaIcePastYearRound'] = { value: pastYearRound };
+          uniforms['seaIceMix'] = { value: surface.mix };
+          uniforms['seaIceGrid'] = { value: new Vector2(surface.columns, surface.rows) };
+          uniforms['seaIceActive'] = { value: 1 };
+          container.dataset['seaIce'] = `${surface.pastMost} ${surface.mix.toFixed(2)}`;
+          needsRender = true;
+        },
+        () => {
+          for (const url of urls) paleoTextures.delete(url);
         },
       );
     },
