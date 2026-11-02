@@ -5,31 +5,13 @@ import { subsolarPoint } from '../src/astro/sun';
 import { parseViewState } from '../src/state/url';
 import { momentJulianDay } from '../src/state/viewState';
 import { DeltaT } from '../src/time/deltaT';
+import { collectProblems, globeRendered, openLayers, openSources } from './support';
 
 // Commit SHA the deployment is expected to serve. Empty or unset skips the release check.
 const expectedVersion = process.env['EXPECTED_VERSION'] ?? '';
 
 // The 621 BCE lunar eclipse from Babylon, as someone might share it.
 const SHARED_LINK = '?t=-620-04-22T07:20&loc=32.5422,44.4209&cam=30,40,3&sel=lunar:-0620-04-22';
-
-function collectProblems(page: Page): string[] {
-  const problems: string[] = [];
-  page.on('console', (message) => {
-    if (message.type() === 'error') problems.push(`console error: ${message.text()}`);
-  });
-  page.on('pageerror', (error) => problems.push(`uncaught: ${error.message}`));
-  page.on('requestfailed', (request) => problems.push(`request failed: ${request.url()}`));
-  page.on('response', (response) => {
-    if (response.status() >= 400) {
-      problems.push(`HTTP ${String(response.status())}: ${response.url()}`);
-    }
-  });
-  return problems;
-}
-
-async function globeRendered(page: Page): Promise<void> {
-  await expect(page.getByTestId('globe')).toHaveAttribute('data-rendered', 'true');
-}
 
 test('loads the globe without errors or failed requests', async ({ page }) => {
   const problems = collectProblems(page);
@@ -144,12 +126,6 @@ test('a one-finger swipe rotates the globe on touch screens', async ({ page, con
   await expect(page).not.toHaveURL(/cam=0\.0000,0\.0000,3\.00/);
   await expect(page).toHaveURL(/cam=0\.0000,-?\d+\.\d{4},3\.00|cam=-?0\.\d{4},-?\d+\.\d{4},3\.00/);
 });
-
-/** Source credits sit under a "Sources" toggle in the date panel: open it. */
-async function openSources(page: Page): Promise<void> {
-  const sources = page.locator('.credits');
-  if ((await sources.getAttribute('open')) === null) await sources.locator('summary').click();
-}
 
 test('the date panel stays readable on a phone', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile', 'phone layout');
@@ -1038,34 +1014,6 @@ test('close to the Sun, SDO’s images show it in six kinds of light', async ({ 
   await expect(globe).toHaveAttribute('data-sun-image', 'none');
 });
 
-test('the empires layer draws the states of the year shown, and the link keeps it', async ({
-  page,
-}) => {
-  await page.goto('./?t=-586-07-29T12:00&cam=33,40,3');
-  await globeRendered(page);
-  const globe = page.getByTestId('globe');
-  const empires = page.getByRole('button', { name: 'Empires' });
-  await expect(empires).toHaveAttribute('aria-pressed', 'false');
-  await expect(globe).not.toHaveAttribute('data-empires', /\d/);
-
-  await empires.click();
-  await expect(page).toHaveURL(/layers=[a-z,]*empires/);
-  await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
-  await expect(page.locator('.empire-label', { hasText: /^Neo-Babylonian Empire$/ })).toBeVisible();
-  await openSources(page);
-  await expect(page.getByRole('link', { name: 'Cliopatria' })).toBeVisible();
-
-  // Fifty years later, Persia holds the Near East.
-  const year = page.getByLabel('Year', { exact: true });
-  await year.fill('500');
-  await year.press('Enter');
-  await expect(page.locator('.empire-label', { hasText: /^Achaemenid Empire$/ })).toBeVisible();
-
-  await empires.click();
-  await expect(globe).toHaveAttribute('data-empires', 'off');
-  await expect(page.getByRole('link', { name: 'Cliopatria' })).toBeHidden();
-});
-
 test('the sky can be drawn as other cultures saw it, credited, and the link keeps it', async ({
   page,
 }) => {
@@ -1181,6 +1129,7 @@ test('past borders can come from Cliopatria, OpenHistoricalMap, or both to compa
   await page.goto('./?t=1500-06-01T12:00&cam=5,20,2.6&layers=lunar,solar,terminator,empires');
   await globeRendered(page);
   const globe = page.getByTestId('globe');
+  await openLayers(page);
   const source = page.getByLabel('Borders from');
   await expect(source).toHaveValue('cliopatria');
   await expect(globe).toHaveAttribute('data-ohm-borders', 'off');

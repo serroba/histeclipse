@@ -82,7 +82,7 @@ import { VAT_4956 } from './tablets/vat4956';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createAimSwitch, type AimTarget } from './ui/aimSwitch';
 import { createSunSwitch } from './ui/sunSwitch';
-import { createLayerSwitch } from './ui/layerSwitch';
+import { createLayersPanel } from './ui/layersPanel';
 import {
   centuryFor,
   labelPoint,
@@ -238,12 +238,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const figureSwitch = createFigureSwitch((figures) => {
     store.set((state) => ({ ...state, figures }));
   });
-  const layerSwitch = createLayerSwitch(
-    (on) => {
+  const layersPanel = createLayersPanel(
+    (layer, on) => {
       store.set((state) => {
         const layers = new Set(state.layers);
-        if (on) layers.add('empires');
-        else layers.delete('empires');
+        if (on) layers.add(layer);
+        else layers.delete(layer);
         return { ...state, layers };
       });
     },
@@ -550,7 +550,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         famousPanel.button,
         tabletPanel.button,
         deepButton,
-        layerSwitch.root,
+        layersPanel.button,
       ),
       viewSwitch.root,
       aimSwitch.root,
@@ -580,6 +580,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     bottom,
     famousPanel.dialog,
     tabletPanel.dialog,
+    layersPanel.dialog,
   );
 
   // Full view hides the panels for a clear view; Show controls, Escape, or a tap on open sky or
@@ -1615,7 +1616,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function showEmpires(state: ViewState): void {
     // Past states belong to historical time, not deep time.
     const on = state.layers.has('empires') && state.ma === null;
-    layerSwitch.render(on, state.mode === 'globe', state.borders);
+    layersPanel.render({
+      layers: state.layers,
+      borders: state.borders,
+      year: state.time.date.year,
+      visible: state.mode === 'globe' && state.ma === null,
+    });
     const source = state.borders;
     empireCredit.hidden = !on || source === 'ohm';
     ohmCredit.hidden = !on || source === 'cliopatria';
