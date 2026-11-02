@@ -947,6 +947,33 @@ test('the card names the place an eclipse is seen from, or calls it your spot', 
   await expect(page.locator('.eclipse-observer')).toHaveText(/^Your spot \(40\.7°N 74\.0°W\): /);
 });
 
+test('Back steps through deep time: milestones and layers, and leaving takes its layers along', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await page.goto('./?t=2024-04-08T18:17');
+  await globeRendered(page);
+  await page.getByRole('button', { name: 'Deep time' }).click();
+  await expect(page).toHaveURL(/&ma=250(&|$)/);
+  await page.getByRole('button', { name: 'Later milestone' }).click();
+  await expect(page).not.toHaveURL(/&ma=250(&|$)/);
+  await page.getByRole('button', { name: 'Temperature' }).click();
+  await expect(page).toHaveURL(/layers=[^&]*temperature/);
+  // Back undoes the layer, then the milestone, and stays in deep time.
+  await page.goBack();
+  await expect(page).not.toHaveURL(/temperature/);
+  await page.goBack();
+  await expect(page).toHaveURL(/&ma=250(&|$)/);
+  // Leaving deep time drops its layers from the link.
+  await page.goForward();
+  await page.goForward();
+  await expect(page).toHaveURL(/temperature/);
+  await page.getByRole('button', { name: 'Back to history' }).click();
+  await expect(page).not.toHaveURL(/ma=/);
+  await expect(page).not.toHaveURL(/temperature/);
+  expect(problems).toEqual([]);
+});
+
 test('leaving deep time brings back the date and the eclipse that was picked', async ({ page }) => {
   const problems = collectProblems(page);
   await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');

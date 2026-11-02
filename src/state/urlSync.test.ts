@@ -97,6 +97,33 @@ describe('createUrlSync', () => {
     expect(isStep(base, { ...base, years: 'hebrew' })).toBe(true);
   });
 
+  it('counts turning a layer on or off as a step, not the same layers in a new set', () => {
+    expect(isStep(base, { ...base, layers: new Set([...base.layers, 'temperature']) })).toBe(true);
+    expect(isStep(base, { ...base, layers: new Set(base.layers) })).toBe(false);
+    const swapped = new Set(base.layers);
+    const [first] = swapped;
+    if (first !== undefined) swapped.delete(first);
+    swapped.add('plates');
+    expect(isStep(base, { ...base, layers: swapped })).toBe(true);
+  });
+
+  it('makes the next update a step when asked, as for a jump to a milestone', () => {
+    const writes: string[] = [];
+    const sync = createUrlSync(replacing(writes), 100);
+    const deep = { ...base, ma: 250 };
+    sync.update(deep);
+    sync.step();
+    sync.update({ ...deep, ma: 66 });
+    // Only that one: the next small change replaces again.
+    sync.update({ ...deep, ma: 65 });
+    vi.runAllTimers();
+    expect(writes).toEqual([
+      serializeViewState(deep),
+      `push ${serializeViewState({ ...deep, ma: 66 })}`,
+      serializeViewState({ ...deep, ma: 65 }),
+    ]);
+  });
+
   it('drops pending writes when disposed', () => {
     const writes: string[] = [];
     const sync = createUrlSync(replacing(writes));

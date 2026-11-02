@@ -25,6 +25,8 @@ export interface UrlSync {
    * reader would want to go back from is written at once, as a new history entry.
    */
   update(state: ViewState): void;
+  /** Make the next update a step, with its own history entry, whatever it changes. */
+  step(): void;
   /** Write any pending state now. */
   flush(): void;
   /** Take `state` as already in the address bar: after Back or Forward, nothing to write. */
@@ -42,8 +44,13 @@ export function isStep(before: ViewState, after: ViewState): boolean {
     (before.ma === null) !== (after.ma === null) ||
     before.deepScale !== after.deepScale ||
     before.years !== after.years ||
-    before.seenIn !== after.seenIn
+    before.seenIn !== after.seenIn ||
+    !sameLayers(before.layers, after.layers)
   );
+}
+
+function sameLayers(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
+  return a.size === b.size && [...a].every((layer) => b.has(layer));
 }
 
 export function createUrlSync(writer: UrlWriter, intervalMs = 500): UrlSync {
@@ -52,6 +59,8 @@ export function createUrlSync(writer: UrlWriter, intervalMs = 500): UrlSync {
   let written = '';
   /** The latest state seen, to tell a step from a small change. */
   let latest: ViewState | null = null;
+  /** Whether the next update was asked to be a step. */
+  let stepNext = false;
 
   function flush(): void {
     if (timer !== null) clearTimeout(timer);
@@ -69,7 +78,9 @@ export function createUrlSync(writer: UrlWriter, intervalMs = 500): UrlSync {
     update(state) {
       const before = latest;
       latest = state;
-      if (before !== null && isStep(before, state)) {
+      const forced = stepNext;
+      stepNext = false;
+      if (before !== null && (forced || isStep(before, state))) {
         // Settle the entry being left, then start a new one for the step.
         flush();
         const query = serializeViewState(state);
@@ -82,6 +93,9 @@ export function createUrlSync(writer: UrlWriter, intervalMs = 500): UrlSync {
       pending = state;
       // Keep an existing timer: later updates just replace what it will write.
       timer ??= setTimeout(flush, intervalMs);
+    },
+    step() {
+      stepNext = true;
     },
     flush,
     adopt(state) {

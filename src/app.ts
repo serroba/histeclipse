@@ -35,6 +35,7 @@ import { parseViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import {
   DEFAULT_CAMERA,
+  DEEP_LAYERS,
   defaultViewState,
   type DeepScale,
   EARTH_AGE_MA,
@@ -294,7 +295,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     stopPlay();
     const selection = selectionBeforeDeep;
     selectionBeforeDeep = null;
-    store.set((state) => ({ ...state, ma: null, selection: state.selection ?? selection }));
+    store.set((state) => {
+      // Deep time's own layers go with it, so they don't linger in the link.
+      const layers = new Set(state.layers);
+      for (const layer of DEEP_LAYERS) layers.delete(layer);
+      return { ...state, ma: null, layers, selection: state.selection ?? selection };
+    });
   }
   deepButton.addEventListener('click', () => {
     if (store.get().ma === null) {
@@ -314,8 +320,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
   });
   const deepBar = createDeepTimeBar({
-    onMa(ma) {
+    onMa(ma, jump) {
       stopPlay();
+      if (jump) sync.step();
       store.set((state) => ({ ...state, ma: roundMa(ma) }));
     },
     onPlay(play) {
