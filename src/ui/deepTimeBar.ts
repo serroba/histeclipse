@@ -4,6 +4,7 @@
  * Mobile first: 44 px targets, like the year bar it replaces.
  */
 
+import { MAP_KEY, MILESTONE_KEY } from '../deepTime/colourKey';
 import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period, periodShort } from '../deepTime/periods';
@@ -372,9 +373,49 @@ export function createDeepTimeBar(handlers: {
   const facts = element('dl', { class: 'deep-facts-list' });
   const factsPanel = element(
     'details',
-    { class: 'deep-facts', 'data-testid': 'deep-facts' },
+    { class: 'deep-facts', 'data-testid': 'deep-facts', name: 'deep-fold' },
     element('summary', {}, 'Poles, magnetic field, tilt and day'),
     facts,
+  );
+  // What the colours mean: the map's and the ticks'. Folded away like the facts.
+  const swatch = (background: string) => {
+    const box = element('span', { class: 'colour-swatch', 'aria-hidden': 'true' });
+    box.style.background = background;
+    return box;
+  };
+  const colourKey = element(
+    'details',
+    { class: 'deep-facts deep-key', 'data-testid': 'deep-key', name: 'deep-fold' },
+    element('summary', {}, 'What the colours mean'),
+    element(
+      'div',
+      { class: 'colour-key-body' },
+      element(
+        'ul',
+        { class: 'colour-key' },
+        ...MAP_KEY.map(({ label, swatch: background }) =>
+          element('li', {}, swatch(background), label),
+        ),
+      ),
+      element('p', { class: 'colour-key-heading' }, 'Ticks on the time line: milestones'),
+      element(
+        'ul',
+        { class: 'colour-key' },
+        ...MILESTONE_KEY.map(({ kind, label }) =>
+          element(
+            'li',
+            {},
+            element('span', { class: `colour-tick milestone-${kind}`, 'aria-hidden': 'true' }),
+            label,
+          ),
+        ),
+      ),
+      element(
+        'p',
+        { class: 'colour-key-heading' },
+        'With Temperature on, the map shows °C instead, on the scale above.',
+      ),
+    ),
   );
   // A tick on the track for each milestone, placed when the time line's span is known.
   const marks = element('div', { class: 'deep-marks', 'aria-hidden': 'true' });
@@ -407,7 +448,8 @@ export function createDeepTimeBar(handlers: {
     legend,
     platesNote,
     milestones.root,
-    factsPanel,
+    // One open at a time (they share a name), so the bar doesn't grow over the globe.
+    element('div', { class: 'deep-folds' }, colourKey, factsPanel),
   );
 
   let current: DeepTimeView | null = null;
