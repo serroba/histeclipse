@@ -43,6 +43,7 @@ uv run histeclipse-pipeline fetch-ephemeris
 uv run histeclipse-pipeline lunar-catalog --out ../public/data/lunar
 uv run histeclipse-pipeline solar-catalog --out ../public/data/solar   # with Besselian elements
 uv run histeclipse-pipeline delta-t --out ../public/data/delta-t.json
+uv run histeclipse-pipeline calendars --out ../public/data/calendars   # Babylonian and Chinese months
 ```
 
 Positions come from [JPL DE441](https://ssd.jpl.nasa.gov/planets/eph_export.html), via [Skyfield](https://rhodesmill.org/skyfield/). Results are checked against NASA's _Five Millennium Canon_ (Espenak & Meeus). Skyfield's ΔT model is the Morrison–Stephenson–Hohenkerk–Zawilski spline, and every catalog records which model it used.
@@ -58,6 +59,7 @@ Positions come from [JPL DE441](https://ssd.jpl.nasa.gov/planets/eph_export.html
 
 - Planetary positions: [JPL DE441](https://ssd.jpl.nasa.gov/planets/eph_export.html) (NASA/JPL), via [Skyfield](https://rhodesmill.org/skyfield/).
 - Eclipse validation: NASA _Five Millennium Canon_ (Espenak & Meeus).
+- Lunisolar months, computed from DE441: Babylonian months begin after the first evening the crescent is visible at Babylon by Yallop's q-test (B. D. Yallop 1997, _A Method for Predicting the First Sighting of the New Crescent Moon_, NAO Technical Note 69); close calls are flagged. Chinese months follow the rules in use since 1645 as set out by Reingold & Dershowitz, _Calendrical Calculations_ (Beijing local time before 1929, UTC+8 after); before 1645 they are approximate.
 - Long-term precession: Vondrák, Capitaine & Wallace (2011), A&A 534, A22, ported from [ERFA](https://github.com/liberfa/erfa) (BSD 3-Clause, © NumFOCUS Foundation; derived from the IAU [SOFA](http://www.iausofa.org) library; full licence in [`licenses/ERFA.txt`](licenses/ERFA.txt)).
 - Stars: Yale _Bright Star Catalogue_, 5th revised ed. (Hoffleit & Warren 1991), distributed by NASA's Astronomical Data Center; J2000 positions, proper motions, parallaxes and radial velocities for 9,096 naked-eye stars.
 - Constellation figures and names: [d3-celestial](https://github.com/ofrohn/d3-celestial) by Olaf Frohn (BSD 3-Clause, full licence in [`licenses/d3-celestial.txt`](licenses/d3-celestial.txt)), after the IAU's constellation charts.
