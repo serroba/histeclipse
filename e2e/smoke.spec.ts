@@ -186,6 +186,27 @@ test('the panels fold away for a full view and come back', async ({ page }) => {
   expect(problems).toEqual([]);
 });
 
+test('a first visit is welcomed once, with a place to start', async ({ page }) => {
+  const problems = collectProblems(page);
+  await page.goto('./');
+  await globeRendered(page);
+  const welcome = page.getByTestId('welcome');
+  await expect(welcome).toBeVisible();
+  await welcome.getByRole('button', { name: 'Start with a famous eclipse' }).click();
+  await expect(page.getByRole('dialog', { name: 'Famous eclipses' })).toBeVisible();
+  // Remembered: not again on the next bare visit, and never on a shared link.
+  await page.goto('./');
+  await globeRendered(page);
+  await expect(welcome).toBeHidden();
+  await page.evaluate(() => {
+    localStorage.clear();
+  });
+  await page.goto('./?t=2024-04-08T18:17');
+  await globeRendered(page);
+  await expect(welcome).toBeHidden();
+  expect(problems).toEqual([]);
+});
+
 test('explains parts of a link it could not use', async ({ page }) => {
   await page.goto('./?t=yesterday');
   await globeRendered(page);
