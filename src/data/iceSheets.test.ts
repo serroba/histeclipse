@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import index from '../../public/data/icesheets/index.json';
 import type { Fetch } from './fetchJson';
-import { iceFramesInMa, loadIceSheets, oldestIceKa } from './iceSheets';
+import { iceFramesInMa, iceStandIn, loadIceSheets, oldestIceKa } from './iceSheets';
 import { framesAround } from './paleoDem';
 
 const serve =
@@ -31,5 +31,39 @@ describe('the ice-sheet maps', () => {
   it('reject frames out of order', async () => {
     const shuffled = { ...index, frames: [...index.frames].reverse() };
     await expect(loadIceSheets('/x', serve(shuffled))).rejects.toThrow(/present back/);
+  });
+});
+
+describe('a stand-in before the maps reach', () => {
+  const index = {
+    schemaVersion: 1 as const,
+    credit: 'test',
+    source: 'https://example.org',
+    rows: 2,
+    columns: 2,
+    metresPerStep: 16,
+    frames: [
+      { ka: 0, file: '0.png', ice: 0.1 },
+      { ka: 20, file: '20000.png', ice: 0.2 },
+      { ka: 60, file: '60000.png', ice: 0.15 },
+    ],
+  };
+  const levels: Record<number, number> = { 0: 0, 20: -120, 60: -60 };
+
+  it('picks the map whose sea level is closest', () => {
+    const levelAt = (ka: number) => levels[ka] ?? null;
+    expect(iceStandIn(index, -55, levelAt)).toEqual({
+      ka: 60,
+      file: '60000.png',
+      frameLevel: -60,
+      level: -55,
+    });
+    expect(iceStandIn(index, -125, levelAt)?.ka).toBe(20);
+    expect(iceStandIn(index, 6, levelAt)?.ka).toBe(0);
+  });
+
+  it('skips maps without a sea level, and gives none without any', () => {
+    expect(iceStandIn(index, -55, (ka) => (ka === 60 ? null : (levels[ka] ?? null)))?.ka).toBe(0);
+    expect(iceStandIn(index, -55, () => null)).toBeNull();
   });
 });

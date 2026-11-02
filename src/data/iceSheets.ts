@@ -51,3 +51,35 @@ export function iceFramesInMa(
 ): readonly { readonly ma: number; readonly file: string; readonly ice: number }[] {
   return index.frames.map(({ ka, file, ice }) => ({ ma: ka / 1000, file, ice }));
 }
+
+/** An ice map standing in for a moment older than the maps, matched by sea level. */
+export interface IceStandIn {
+  /** The frame shown: thousands of years ago. */
+  readonly ka: number;
+  readonly file: string;
+  /** Sea level then and at the moment shown, metres from today's. */
+  readonly frameLevel: number;
+  readonly level: number;
+}
+
+/**
+ * Before the ice maps reach, the map whose sea level is closest to the moment's: sea level
+ * mostly measures how much water the ice sheets hold, so it picks a map of about the right
+ * amount of ice. The ice sheets' shapes then may have differed. `levelAt` gives sea level
+ * (metres from today's) thousands of years ago, or null where its source does not reach.
+ */
+export function iceStandIn(
+  index: IceSheetIndex,
+  level: number,
+  levelAt: (ka: number) => number | null,
+): IceStandIn | null {
+  let best: IceStandIn | null = null;
+  for (const { ka, file } of index.frames) {
+    const frameLevel = levelAt(ka);
+    if (frameLevel === null) continue;
+    if (best === null || Math.abs(frameLevel - level) < Math.abs(best.frameLevel - level)) {
+      best = { ka, file, frameLevel, level };
+    }
+  }
+  return best;
+}
