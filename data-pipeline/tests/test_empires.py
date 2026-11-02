@@ -19,6 +19,7 @@ from histeclipse_pipeline.empires import (
     ring_area,
     simplify,
     simplify_ring,
+    smallest_kept,
     unpack,
     write_empires,
 )
@@ -89,9 +90,23 @@ def test_reads_polities_and_skips_alliances_and_empty_rows() -> None:
     polities = parse_polities(collection)
     assert [(p.name, p.start, p.end) for p in polities] == [
         ("Achaemenid Empire", -549, -540),
+        ("Specks", 100, 200),
         ("Lydia", -599, -546),
     ]
-    assert polities[1].wikipedia == ""
+    assert polities[2].wikipedia == ""
+
+
+def test_keeps_a_small_polity_by_its_largest_ring() -> None:
+    speck = [(0.0, 0.0), (0.1, 0.0), (0.1, 0.1), (0.0, 0.1), (0.0, 0.0)]
+    dot = [(5.0, 5.0), (5.01, 5.0), (5.0, 5.01), (5.0, 5.0)]
+    rings = [[list(point) for point in ring] for ring in (dot, speck)]
+    collection = as_json(
+        {"type": "FeatureCollection", "features": [feature("Malta", 1964, 2024, rings)]}
+    )
+    [malta] = parse_polities(collection)
+    assert malta.rings == [speck]
+    # A ring that fine simplification would collapse is kept as it is.
+    assert smallest_kept([dot]) == dot
 
 
 def test_merges_rows_whose_borders_did_not_change() -> None:

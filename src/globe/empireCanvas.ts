@@ -26,6 +26,8 @@ export function paintTerritories(
   const { width, height } = canvas;
   context.clearRect(0, 0, width, height);
   context.lineJoin = 'round';
+  // Round caps, so a state smaller than a pixel (Monaco, say) still shows as a dot.
+  context.lineCap = 'round';
   context.lineWidth = 2;
   for (const territory of territories) {
     const hue = territoryHue(territory.name);
