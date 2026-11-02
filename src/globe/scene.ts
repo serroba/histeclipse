@@ -1414,10 +1414,19 @@ export async function createGlobe(
   }
 
   function applyFov(): void {
-    const halfAngle = (narrowFov / 2) * (Math.PI / 180);
+    // Attached views frame their body in the space the panels leave, not the whole screen, so
+    // the card doesn't cut across the Sun and Moon: widen the lens by how much smaller that is.
+    const { clientWidth, clientHeight } = container;
+    const narrow = Math.max(Math.min(clientWidth, clientHeight), 1);
+    const free = Math.max(
+      Math.min(clientWidth, clientHeight - insets.top - insets.bottom),
+      narrow / 4,
+    );
+    const widen = viewpoint === 'free' ? 1 : Math.max(1, narrow / free);
+    const halfAngle = Math.atan(Math.tan((narrowFov / 2) * (Math.PI / 180)) * widen);
     camera.fov =
       camera.aspect >= 1
-        ? narrowFov
+        ? (2 * halfAngle * 180) / Math.PI
         : (2 * Math.atan(Math.tan(halfAngle) / camera.aspect) * 180) / Math.PI;
     camera.updateProjectionMatrix();
     needsRender = true;
