@@ -1897,14 +1897,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // Write the canonical, fully explicit URL straight away so it can be shared as is.
   sync.flush();
 
-  // Keep the globe centred in the space the panels leave free. On wide screens the date panel
-  // sits beside the globe, so only the bottom panels count.
+  // Keep the globe centred in the space the panels leave free. The date panel counts when it
+  // spans most of the width (on phones, and on wide screens once it fills with controls); a
+  // narrow one sits beside the globe.
   const top = root.querySelector('.hud');
   if (top !== null) {
     const update = (): void => {
-      const narrow = window.innerWidth <= 600;
+      const spans = top.getBoundingClientRect().width > window.innerWidth * 0.55;
       panelInsets = {
-        top: narrow ? top.getBoundingClientRect().bottom : 0,
+        top: spans ? top.getBoundingClientRect().bottom : 0,
         bottom: bottom.getBoundingClientRect().height,
       };
       globe.setInsets(panelInsets.top, panelInsets.bottom);
@@ -1913,6 +1914,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const observer = new ResizeObserver(update);
     observer.observe(top);
     observer.observe(bottom);
+    window.addEventListener('resize', update);
   }
 
   globe.onBodyClick((focus) => {
