@@ -22,7 +22,7 @@ export function createLayerSwitch(
   onSource: (source: BorderSource) => void,
 ): LayerSwitch {
   let on = false;
-  const empires = element('button', { type: 'button', 'aria-pressed': 'false' }, 'Empires');
+  const empires = element('button', { type: 'button', 'aria-pressed': 'false' }, 'Show empires');
   empires.addEventListener('click', () => {
     onEmpires(!on);
   });
@@ -38,7 +38,6 @@ export function createLayerSwitch(
   const root = element(
     'div',
     { class: 'view-switch layer-switch', role: 'group', 'aria-label': 'Layers' },
-    element('span', { class: 'switch-label' }, 'Layers'),
     empires,
     source,
   );

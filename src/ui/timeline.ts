@@ -218,6 +218,10 @@ export function createTimeline(handlers: {
     const digits = input.value.replaceAll(/\D/g, '').slice(0, 5);
     if (digits !== input.value) input.value = digits;
   });
+  // A year typed and left counts too, not only one confirmed with Enter.
+  input.addEventListener('change', () => {
+    if (input.value !== String(year)) submit();
+  });
   function submit(): void {
     try {
       // Other calendars count from 1 with no era to pick, like CE.

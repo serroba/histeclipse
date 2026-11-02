@@ -262,6 +262,7 @@ export function createDeepTimeBar(handlers: {
   const scaleSwitch = element(
     'span',
     { class: 'deep-scale', role: 'group', 'aria-label': 'Time span' },
+    element('span', { class: 'deep-scale-label', 'aria-hidden': 'true' }, 'Span'),
     scaleIce,
     scaleAll,
     scaleEons,

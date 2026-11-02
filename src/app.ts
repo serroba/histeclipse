@@ -179,9 +179,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let flyToSelection = false;
   let flyTarget: GeoPoint | null = null;
   let famous: readonly FamousEclipse[] = [];
-  const famousPanel = createFamousPanel((entry) => {
-    void goToFamous(entry);
-  });
+  const famousPanel = createFamousPanel(
+    (entry) => {
+      void goToFamous(entry);
+    },
+    () => {
+      // The tablet is dated in the Babylonian calendar: switch to it, where its check lives.
+      store.set((state) => ({ ...state, years: 'babylonian' }));
+      tabletPanel.open();
+    },
+  );
   const tabletPanel = createTabletPanel({
     async check(bce, shift) {
       const sky = await tabletSky();
