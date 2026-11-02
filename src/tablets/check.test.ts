@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { candidateYear, check, checkAll, momentOf, type Observation } from './check';
+import { candidateYear, check, checkAll, momentOf, type Observation, verdictMoment } from './check';
 import { sunsetOn } from './tabletSky';
 import { testSky } from './testSky';
 import { VAT_4956 } from './vat4956';
@@ -73,6 +73,19 @@ describe('a single check', () => {
     const behind = check(testSky, { ...direction, relation: 'behind' }, candidate);
     expect((ahead.computed ?? 0) + (behind.computed ?? 0)).toBeCloseTo(0, 6);
     expect(ahead.fits).not.toBe(behind.fits);
+  });
+
+  it('gives the moment to show for each kind of record', () => {
+    const at = (id: string) => verdictMoment(testSky, check(testSky, observation(id), candidate));
+    const venus = check(testSky, observation('II-18-venus'), candidate);
+    expect(at('II-18-venus')).toBeCloseTo((sunsetOn(testSky, venus.date ?? 0) ?? 0) + 1.5 / 24, 6);
+    expect(at('III-1-na')).toBe(
+      sunsetOn(testSky, check(testSky, observation('III-1-na'), candidate).date ?? 0),
+    );
+    expect(at('I-14-na')).not.toBeNull();
+    expect(at('X-19-venus')).not.toBeNull();
+    expect(at('III-12-mars')).not.toBeNull();
+    expect(at('leap')).toBeNull();
   });
 
   it('has no candidate outside the computed months', () => {

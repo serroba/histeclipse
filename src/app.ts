@@ -71,6 +71,10 @@ import { moveToYear } from './time/yearInput';
 import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
 import { createFamousPanel } from './ui/famousPanel';
+import { createTabletPanel } from './ui/tabletPanel';
+import { candidateYear, checkAll, type Verdict, verdictMoment } from './tablets/check';
+import { BABYLON, directionOf, starsByNumber, type TabletSky } from './tablets/tabletSky';
+import { VAT_4956 } from './tablets/vat4956';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createAimSwitch, type AimTarget } from './ui/aimSwitch';
 import { createSunSwitch } from './ui/sunSwitch';
@@ -168,6 +172,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let famous: readonly FamousEclipse[] = [];
   const famousPanel = createFamousPanel((entry) => {
     void goToFamous(entry);
+  });
+  const tabletPanel = createTabletPanel({
+    async check(bce, shift) {
+      const sky = await tabletSky();
+      const candidate = candidateYear(bce, shift);
+      if (candidate === null) {
+        throw new Error(`No Babylonian months are computed for ${String(bce)} BCE.`);
+      }
+      // Let "Computing the sky…" show before the work starts.
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      return checkAll(sky, VAT_4956, candidate);
+    },
+    go(verdict) {
+      void goToRecord(verdict);
+    },
   });
 
   const viewSwitch = createViewSwitch((choice) => {
@@ -402,7 +421,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
       element('h1', {}, 'histeclipse'),
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
-      element('div', { class: 'hud-actions' }, famousPanel.button, deepButton, layerSwitch.root),
+      element(
+        'div',
+        { class: 'hud-actions' },
+        famousPanel.button,
+        tabletPanel.button,
+        deepButton,
+        layerSwitch.root,
+      ),
       viewSwitch.root,
       aimSwitch.root,
       figureSwitch.root,
@@ -428,6 +454,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     notices,
     bottom,
     famousPanel.dialog,
+    tabletPanel.dialog,
   );
 
   // A tap on open sky or empty space hides the panels for a clear view; another brings them back.
@@ -1562,6 +1589,55 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   /** A look facing the Sun or the Moon from where the observer stands, or null if unknown. */
+  // Checking a tablet needs the Moon, the planets and the stars; they load the first time.
+  const RECORD_FOV = 40;
+  let tabletSkyLoading: Promise<TabletSky> | null = null;
+  function tabletSky(): Promise<TabletSky> {
+    tabletSkyLoading ??= Promise.all([
+      moonEphemeris === null ? loadMoonEphemeris() : Promise.resolve(moonEphemeris),
+      loadPlanets(),
+      loadSky(`${base}data/sky.json`, (url) => fetch(url)),
+    ]).then(([moon, planetTheory, catalogue]) => ({
+      moon,
+      planets: planetTheory,
+      stars: starsByNumber(catalogue.stars),
+      deltaT: (jd) => deltaT.seconds(jd),
+      place: BABYLON,
+    }));
+    tabletSkyLoading.catch(() => {
+      tabletSkyLoading = null;
+    });
+    return tabletSkyLoading;
+  }
+
+  /** Stand in Babylon at the moment of a tablet's record, facing what it describes. */
+  async function goToRecord(verdict: Verdict): Promise<void> {
+    const sky = await tabletSky();
+    const moment = verdictMoment(sky, verdict);
+    if (moment === null) return;
+    const { observation } = verdict;
+    const body = observation.kind === 'position' ? observation.body : 'moon';
+    const jdTT = julianDayNumber(moment + deltaT.seconds(moment) / 86_400);
+    const { azimuth, altitude } = horizontalOf(
+      horizonMatrix(BABYLON, moment, jdTT),
+      directionOf(sky, body, moment),
+    );
+    store.set((state) => ({
+      ...state,
+      mode: 'sky',
+      ma: null,
+      years: 'babylonian',
+      location: BABYLON,
+      time: momentAt(moment),
+      // Aim a little above the body, so it shows below the panel at the top.
+      look: roundLook({
+        azimuth,
+        altitude: Math.max(LOWEST_LOOK, altitude + RECORD_FOV / 4),
+        fov: RECORD_FOV,
+      }),
+    }));
+  }
+
   function aimAt(state: ViewState, target: AimTarget): ViewState['look'] | null {
     const seen = bodiesSeen(state);
     if (seen === null) return null;
@@ -1689,6 +1765,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (state.years !== previous?.years || barYear(state) !== barYear(previous)) {
       loadYear(state);
     }
+    // Tablets are dated in the Babylonian calendar: their check shows with it.
+    tabletPanel.button.hidden = state.years !== 'babylonian';
     if (
       state.selection !== previous?.selection ||
       state.layers !== previous.layers ||
