@@ -235,7 +235,7 @@ test('a link to an eclipse restores it, with visibility from the chosen place', 
   await globeRendered(page);
   await expect(page.getByRole('heading', { name: 'Partial lunar eclipse' })).toBeVisible();
   await expect(page.locator('.eclipse-observer')).toHaveText(
-    '32.5°N 44.4°E: The Moon was above the horizon here.',
+    'Babylon (32.5°N 44.4°E): The Moon was above the horizon here.',
   );
   await expect(page.getByTestId('globe')).toHaveAttribute('data-lunar-overlay', 'on');
 });
@@ -404,7 +404,11 @@ test('famous eclipses: pick one and land on it with its history', async ({ page 
   await expect(page).toHaveURL(/loc=37\.0755,15\.2866/);
   await expect(page.locator('.famous-card-title')).toHaveText('The eclipse at Syracuse');
   await expect(page.locator('.famous-card-source')).toContainText('Thucydides');
-  await expect(page.locator('.eclipse-observer')).toContainText('The Moon was above the horizon');
+  // The place the record is linked to is named, and can be changed.
+  await expect(page.locator('.eclipse-observer')).toHaveText(
+    /^Syracuse.*\(37\.1°N 15\.3°E\): The Moon was above the horizon here\.$/,
+  );
+  await expect(page.locator('.eclipse-elsewhere')).toBeAttached();
 });
 
 test('a famous solar eclipse opens at its deepest where it was seen, and every view agrees', async ({
@@ -870,9 +874,12 @@ test('newcomers find their way: the tablet from the famous list, years typed, pi
   await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
   await globeRendered(page);
   // Until a place is picked, the card says how to pick one.
+  // Click with a mouse, tap on a phone.
   await expect(page.locator('.eclipse-hint')).toHaveText(
-    'Tap the globe to see this eclipse from there.',
+    /^(Click|Tap) the globe to see this eclipse from there\.$/,
   );
+  const touch = await page.evaluate(() => window.matchMedia('(pointer: coarse)').matches);
+  await expect(page.locator('.eclipse-hint')).toContainText(touch ? 'Tap' : 'Click');
   // A year typed and left applies without Enter.
   const year = page.getByLabel('Year', { exact: true });
   await year.fill('1999');
@@ -886,6 +893,19 @@ test('newcomers find their way: the tablet from the famous list, years typed, pi
     timeout: 30_000,
   });
   expect(problems).toEqual([]);
+});
+
+test('the card names the place an eclipse is seen from, or calls it your spot', async ({
+  page,
+}) => {
+  await page.goto('./?t=2024-04-08T18:30&sel=solar:2024-04-08&loc=32.7767,-96.797');
+  await globeRendered(page);
+  await expect(page.locator('.eclipse-observer')).toHaveText(
+    /^Dallas \(32\.8°N 96\.8°W\): a total eclipse\./,
+  );
+  await page.goto('./?t=2024-04-08T18:30&sel=solar:2024-04-08&loc=40.7128,-74.006');
+  await globeRendered(page);
+  await expect(page.locator('.eclipse-observer')).toHaveText(/^Your spot \(40\.7°N 74\.0°W\): /);
 });
 
 test('leaving deep time brings back the date and the eclipse that was picked', async ({ page }) => {

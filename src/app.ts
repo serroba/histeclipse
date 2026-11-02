@@ -638,7 +638,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setSolarShadow(null);
       globe.setLunarOverlay(null);
       scrubber.render(null);
-      card.render(undefined, 0, state.location);
+      card.render(undefined, 0, null);
       return;
     }
     const universal = momentJulianDay(state.time);
@@ -679,7 +679,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
     } else {
       globe.setLunarOverlay(null);
     }
-    card.render(selected, uncertainty, state.location, famousFor(famous, state.selection), offset);
+    const famousHere = famousFor(famous, state.selection);
+    card.render(
+      selected,
+      uncertainty,
+      state.location === null
+        ? null
+        : { point: state.location, name: placeName(state.location, famousHere) },
+      famousHere,
+      offset,
+    );
   }
 
   function renderSelection(state: ViewState): void {
@@ -1700,6 +1709,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   /** The name of a culture's observing site, if the observer stands right there. */
+  /** The name of where the observer stands: a famous eclipse's place, or a culture's site. */
+  function placeName(place: GeoPoint, famousHere: FamousEclipse | undefined): string | null {
+    const record = famousHere?.place;
+    if (
+      record !== undefined &&
+      Math.abs(record.latitude - place.latitude) < 0.01 &&
+      Math.abs(record.longitude - place.longitude) < 0.01
+    ) {
+      return record.name;
+    }
+    return namedPlace(place);
+  }
+
   function namedPlace(place: GeoPoint): string | null {
     const site = Object.values(CULTURE_INFO).find(
       (info) =>
