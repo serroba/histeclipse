@@ -1216,11 +1216,12 @@ test('deep time narrows to the ice ages, in thousands of years', async ({ page }
   await page.getByRole('button', { name: '5,000 years earlier' }).click();
   await expect(page).toHaveURL(/&ma=0\.026(&|$)/);
 
-  // Before the ice maps reach, the bar says so and draws none.
-  await page.goto('./?ma=0.5&scale=ice');
+  // Before the ice maps reach, a later map stands in, matched by sea level, and the bar says so.
+  await page.goto('./?ma=0.377&scale=ice');
   await globeRendered(page);
-  await expect(page.getByTestId('ice-sheets')).toContainText('no openly licensed maps');
-  await expect(globe).toHaveAttribute('data-ice', 'off');
+  await expect(page.getByTestId('ice-sheets')).toContainText('Ice sheets: a stand-in.');
+  await expect(page.getByTestId('ice-sheets')).toContainText('when sea level was similar');
+  await expect(globe).toHaveAttribute('data-ice', /icesheets\/(\d+)\.png .*icesheets\/\1\.png$/);
 
   await page.getByRole('button', { name: '540 Myr' }).click();
   await expect(page).not.toHaveURL(/scale=/);

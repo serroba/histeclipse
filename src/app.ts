@@ -120,7 +120,14 @@ import { formatMa, periodAt, periodWords } from './deepTime/periods';
 import { framesAround, loadPaleoDemIndex, oldestMa, type PaleoDemIndex } from './data/paleoDem';
 import { loadPaleoTempIndex, type PaleoTempIndex } from './data/paleoTemp';
 import { loadSeaLevel, type SeaLevelIndex } from './data/seaLevel';
-import { iceFramesInMa, loadIceSheets, oldestIceKa, type IceSheetIndex } from './data/iceSheets';
+import {
+  iceFramesInMa,
+  iceStandIn,
+  type IceStandIn,
+  loadIceSheets,
+  oldestIceKa,
+  type IceSheetIndex,
+} from './data/iceSheets';
 import {
   loadPlateMasks,
   type PlateMaskIndex,
@@ -128,7 +135,7 @@ import {
   plateText,
 } from './data/plateMasks';
 import { loadShelf, type ShelfIndex } from './data/shelf';
-import { coastlineAt } from './deepTime/coastline';
+import { COAST_SOURCES, coastlineAt, type CoastSource } from './deepTime/coastline';
 import {
   mapModel,
   meanAt,
@@ -1171,7 +1178,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function showIce(state: ViewState, ma: number): DeepTimeView['ice'] {
     if (state.deepScale !== 'ice') {
       globe.setIce(null);
-      return { drawn: false, oldestKa: null };
+      return { drawn: false, oldestKa: null, standIn: null };
     }
     if (iceIndex === null) {
       if (iceLoading === null) {
@@ -1187,12 +1194,24 @@ export async function startApp(root: HTMLElement): Promise<void> {
           },
         );
       }
-      return { drawn: false, oldestKa: null };
+      return { drawn: false, oldestKa: null, standIn: null };
     }
     const oldestKa = oldestIceKa(iceIndex);
     if (ma * 1000 > oldestKa) {
-      globe.setIce(null);
-      return { drawn: false, oldestKa };
+      const standIn = iceStandInFor(state, ma, iceIndex);
+      globe.setIce(
+        standIn === null
+          ? null
+          : {
+              younger: `${base}data/icesheets/${standIn.file}`,
+              older: `${base}data/icesheets/${standIn.file}`,
+              mix: 0,
+              columns: iceIndex.columns,
+              rows: iceIndex.rows,
+              metresPerStep: iceIndex.metresPerStep,
+            },
+      );
+      return { drawn: standIn !== null, oldestKa, standIn };
     }
     const { younger, older, mix } = framesAround(iceFramesInMa(iceIndex), ma);
     globe.setIce({
@@ -1203,7 +1222,22 @@ export async function startApp(root: HTMLElement): Promise<void> {
       rows: iceIndex.rows,
       metresPerStep: iceIndex.metresPerStep,
     });
-    return { drawn: true, oldestKa };
+    return { drawn: true, oldestKa, standIn: null };
+  }
+
+  /** Before the ice maps reach: the map whose sea level, by the coastline's source, matches. */
+  function iceStandInFor(state: ViewState, ma: number, index: IceSheetIndex): IceStandIn | null {
+    const levels = seaLevels();
+    if (levels === null) return null;
+    const now = coastlineAt(levels, state.coast, ma * 1000);
+    if (now === null) return null;
+    // The same source throughout, so the levels compare like with like.
+    const source: CoastSource = COAST_SOURCES.find((id) => id === now.series.id) ?? state.coast;
+    return iceStandIn(
+      index,
+      now.seaLevel,
+      (ka) => coastlineAt(levels, source, ka)?.seaLevel ?? null,
+    );
   }
 
   /**

@@ -7,6 +7,7 @@
 import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period, periodShort } from '../deepTime/periods';
+import type { IceStandIn } from '../data/iceSheets';
 import type { SeaLevelIndex } from '../data/seaLevel';
 import { COAST_SOURCES, type CoastSource } from '../deepTime/coastline';
 import {
@@ -124,12 +125,19 @@ export function coastlineText(view: CoastlineView): string {
 }
 
 /** What the bar says about the ice sheets on the ice-age scale. */
-export function iceText(view: {
-  readonly drawn: boolean;
-  readonly oldestKa: number | null;
-}): string {
+export function iceText(view: DeepTimeView['ice']): string {
   if (view.oldestKa === null) return 'Ice sheets: loading…';
   const reach = `${(view.oldestKa * 1000).toLocaleString('en')} years`;
+  if (view.standIn !== null) {
+    const { ka, frameLevel, level } = view.standIn;
+    const metres = (value: number) => {
+      const rounded = Math.round(value);
+      return rounded === 0 ? '0 m' : `${rounded < 0 ? '−' : '+'}${String(Math.abs(rounded))} m`;
+    };
+    const then =
+      ka === 0 ? 'today’s ice' : `the ice of ${(ka * 1000).toLocaleString('en')} years ago`;
+    return `Ice sheets: a stand-in. No openly licensed maps reach back beyond ${reach}, so this is ${then}, when sea level was similar (${metres(frameLevel)}, against ${metres(level)} at the moment shown). Sea level tracks how much ice there was, not where: the ice sheets’ shapes may have differed.`;
+  }
   return view.drawn
     ? `Ice sheets: PaleoMIST 1.0 (Gowan et al. 2021), every 2,500 years over the last ${reach}.`
     : `Ice sheets: no openly licensed maps reach back beyond ${reach}; sea level and the bared shelves still show each glacial cycle.`;
@@ -151,8 +159,15 @@ export interface DeepTimeView {
   readonly platesText: string | null;
   /** The ice-age coastline; null before the ice ages. */
   readonly coastline: CoastlineView | null;
-  /** Whether ice is drawn at the moment shown, and how far back the ice maps reach (ka). */
-  readonly ice: { readonly drawn: boolean; readonly oldestKa: number | null };
+  /**
+   * Whether ice is drawn at the moment shown, how far back the ice maps reach (ka), and, beyond
+   * them, which map stands in.
+   */
+  readonly ice: {
+    readonly drawn: boolean;
+    readonly oldestKa: number | null;
+    readonly standIn: IceStandIn | null;
+  };
   /** Sea level: off, on while the reconstructions load (null), or on with them. */
   readonly seaLevel:
     { readonly on: false } | { readonly on: true; readonly index: SeaLevelIndex | null };
@@ -239,7 +254,7 @@ export function createDeepTimeBar(handlers: {
     element(
       'p',
       {},
-      'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time; bared shelf is sandy. The small moves of the continents are not drawn, and the temperature maps are 5 million years apart.',
+      'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time. Sea floor laid dry is sandy; ice sheets are white. The small moves of the continents are not drawn, and the temperature maps are 5 million years apart.',
     ),
     iceLine,
   );
