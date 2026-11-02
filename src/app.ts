@@ -1910,6 +1910,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   window.addEventListener('pagehide', () => {
     sync.flush();
   });
+  // Back and Forward: show the view the address bar now describes, without writing it again.
+  window.addEventListener('popstate', () => {
+    const restored = parseViewState(window.location.search, new Date()).state;
+    sync.adopt(restored);
+    store.set(() => restored);
+  });
 }
 
 function round(value: number, digits: number): number {

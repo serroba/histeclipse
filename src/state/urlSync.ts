@@ -1,6 +1,8 @@
 /**
  * Keeps the address bar describing the current view, so it can be copied and shared at any
- * moment. Uses `replaceState` (not `pushState`) so exploring doesn't flood the back button.
+ * moment. Small changes (dragging the globe, scrubbing time) replace the current history entry,
+ * so they don't flood the back button; a step a reader would want to go back from (picking an
+ * eclipse, changing view, entering or leaving deep time) adds one, so Back returns to it.
  *
  * Writes are throttled, not debounced: the URL updates at most once per `intervalMs` while the
  * view keeps changing, and the final state is always written. A debounce would starve during
@@ -14,20 +16,42 @@ import type { ViewState } from './viewState';
 
 export interface UrlWriter {
   replace(query: string): void;
+  push(query: string): void;
 }
 
 export interface UrlSync {
-  /** Schedule writing `state`; within an interval only the latest state is written. */
+  /**
+   * Schedule writing `state`; within an interval only the latest state is written. A step a
+   * reader would want to go back from is written at once, as a new history entry.
+   */
   update(state: ViewState): void;
   /** Write any pending state now. */
   flush(): void;
+  /** Take `state` as already in the address bar: after Back or Forward, nothing to write. */
+  adopt(state: ViewState): void;
   dispose(): void;
+}
+
+/** Whether going from one view to another is a step worth its own place in history. */
+export function isStep(before: ViewState, after: ViewState): boolean {
+  return (
+    before.mode !== after.mode ||
+    before.view !== after.view ||
+    before.focus !== after.focus ||
+    before.selection !== after.selection ||
+    (before.ma === null) !== (after.ma === null) ||
+    before.deepScale !== after.deepScale ||
+    before.years !== after.years ||
+    before.seenIn !== after.seenIn
+  );
 }
 
 export function createUrlSync(writer: UrlWriter, intervalMs = 500): UrlSync {
   let pending: ViewState | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let written = '';
+  /** The latest state seen, to tell a step from a small change. */
+  let latest: ViewState | null = null;
 
   function flush(): void {
     if (timer !== null) clearTimeout(timer);
@@ -43,11 +67,30 @@ export function createUrlSync(writer: UrlWriter, intervalMs = 500): UrlSync {
 
   return {
     update(state) {
+      const before = latest;
+      latest = state;
+      if (before !== null && isStep(before, state)) {
+        // Settle the entry being left, then start a new one for the step.
+        flush();
+        const query = serializeViewState(state);
+        if (query !== written) {
+          written = query;
+          writer.push(query);
+        }
+        return;
+      }
       pending = state;
       // Keep an existing timer: later updates just replace what it will write.
       timer ??= setTimeout(flush, intervalMs);
     },
     flush,
+    adopt(state) {
+      if (timer !== null) clearTimeout(timer);
+      timer = null;
+      pending = null;
+      latest = state;
+      written = serializeViewState(state);
+    },
     dispose() {
       if (timer !== null) clearTimeout(timer);
       timer = null;
@@ -61,6 +104,9 @@ export function browserUrlWriter(location: Location, history: History): UrlWrite
   return {
     replace(query) {
       history.replaceState(history.state, '', `${location.pathname}?${query}${location.hash}`);
+    },
+    push(query) {
+      history.pushState(null, '', `${location.pathname}?${query}${location.hash}`);
     },
   };
 }
