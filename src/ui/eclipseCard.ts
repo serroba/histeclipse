@@ -23,10 +23,26 @@ export interface EclipseCard {
   render(
     eclipse: LunarEclipse | SolarEclipse | undefined,
     uncertaintySeconds: number,
-    observer: GeoPoint | null,
+    observer: Observer | null,
     famous?: FamousEclipse,
     offsetMinutes?: number,
   ): void;
+}
+
+/** Where the eclipse is seen from, and the place's name when it is a known one. */
+export interface Observer {
+  readonly point: GeoPoint;
+  readonly name: string | null;
+}
+
+/** A named place with its coordinates, or the coordinates of a spot picked on the globe. */
+function placeText({ point, name }: Observer): string {
+  return name === null ? `Your spot (${formatPoint(point)})` : `${name} (${formatPoint(point)})`;
+}
+
+/** Click with a mouse, tap on a touch screen. */
+function pickVerb(): string {
+  return window.matchMedia('(pointer: coarse)').matches ? 'Tap' : 'Click';
 }
 
 export function formatPoint({ latitude, longitude }: GeoPoint): string {
@@ -66,7 +82,7 @@ const LUNAR_PHASE_NOW: Record<LunarPhase, string> = {
 function lunarLines(
   eclipse: LunarEclipse,
   uncertaintySeconds: number,
-  observer: GeoPoint | null,
+  observer: Observer | null,
   offsetMinutes: number,
 ): HTMLElement[] {
   const { title, depth } = describeLunarEclipse(eclipse);
@@ -91,13 +107,14 @@ function lunarLines(
   ];
   if (observer === null) lines.push(pickHint());
   if (observer !== null) {
-    const visibility = moonVisibility(sublunar, observer, uncertaintySeconds);
+    const visibility = moonVisibility(sublunar, observer.point, uncertaintySeconds);
     lines.push(
       element(
         'p',
         { class: `eclipse-observer is-${visibility}` },
-        `${formatPoint(observer)}: ${LUNAR_OBSERVER_TEXT[visibility]}`,
+        `${placeText(observer)}: ${LUNAR_OBSERVER_TEXT[visibility]}`,
       ),
+      elsewhereHint(),
     );
   }
   return lines;
@@ -106,7 +123,7 @@ function lunarLines(
 function solarLines(
   eclipse: SolarEclipse,
   uncertaintySeconds: number,
-  observer: GeoPoint | null,
+  observer: Observer | null,
 ): HTMLElement[] {
   const { title, depth } = describeSolarEclipse(eclipse);
   const moment = eclipseMoment(eclipse);
@@ -128,8 +145,13 @@ function solarLines(
   ];
   if (observer === null) lines.push(pickHint());
   if (observer !== null) {
-    const outlook = solarOutlook(eclipse.elements, eclipse.deltaT, uncertaintySeconds, observer);
-    const here = formatPoint(observer);
+    const outlook = solarOutlook(
+      eclipse.elements,
+      eclipse.deltaT,
+      uncertaintySeconds,
+      observer.point,
+    );
+    const here = placeText(observer);
     if (outlook.nominal === null && outlook.phases.length === 1) {
       lines.push(
         element('p', { class: 'eclipse-observer is-hidden' }, `${here}: no eclipse here.`),
@@ -152,13 +174,27 @@ function solarLines(
         ),
       );
     }
+    lines.push(elsewhereHint());
   }
   return lines;
 }
 
 /** Until a place is picked, how to pick one. */
 function pickHint(): HTMLElement {
-  return element('p', { class: 'eclipse-hint' }, 'Tap the globe to see this eclipse from there.');
+  return element(
+    'p',
+    { class: 'eclipse-hint' },
+    `${pickVerb()} the globe to see this eclipse from there.`,
+  );
+}
+
+/** Once one is picked, that it can be changed: kept with the background, under "More". */
+function elsewhereHint(): HTMLElement {
+  return element(
+    'p',
+    { class: 'eclipse-elsewhere' },
+    `${pickVerb()} anywhere else on the globe to see this eclipse from there instead.`,
+  );
 }
 
 /** The historical context of a famous eclipse: why it is known, and from where. */
@@ -209,7 +245,11 @@ export function createEclipseCard(): EclipseCard {
         : lunarLines(eclipse, uncertaintySeconds, observer, offsetMinutes);
       // Essentials stay in view; background and how to read the map fold away, which keeps the
       // globe visible on phones.
-      const background = lines.filter((line) => line.classList.contains('eclipse-uncertainty'));
+      const background = lines.filter(
+        (line) =>
+          line.classList.contains('eclipse-uncertainty') ||
+          line.classList.contains('eclipse-elsewhere'),
+      );
       const essentials = lines.filter((line) => !background.includes(line));
       const famousBackground = famous === undefined ? [] : famousLines(famous).slice(1);
       // The card is rebuilt as time changes; keep "More about this eclipse" open if it was.
