@@ -27,6 +27,13 @@ describe('MILESTONES', () => {
 });
 
 describe('milestonesNear', () => {
+  it('lists them oldest first, as the time line runs', () => {
+    const near = milestonesNear(200, 80);
+    expect(near.length).toBeGreaterThan(1);
+    const ages = near.map(anchorMa);
+    expect(ages).toEqual([...ages].sort((a, b) => b - a));
+  });
+
   it('finds what overlaps the moment, give or take', () => {
     expect(milestonesNear(252, 1).map(({ id }) => id)).toContain('end-permian-extinction');
     expect(milestonesNear(51, 1).map(({ id }) => id)).toEqual(['india-asia-collision']);

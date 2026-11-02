@@ -51,13 +51,13 @@ function card(milestone: Milestone): HTMLElement {
 export function createMilestonePanel(handlers: { onMa(ma: number): void }): MilestonePanel {
   const earlier = element(
     'button',
-    { type: 'button', class: 'step', 'aria-label': 'Earlier milestone' },
-    '«',
+    { type: 'button', class: 'step milestone-step', 'aria-label': 'Earlier milestone' },
+    '‹ Earlier',
   );
   const later = element(
     'button',
-    { type: 'button', class: 'step', 'aria-label': 'Later milestone' },
-    '»',
+    { type: 'button', class: 'step milestone-step', 'aria-label': 'Later milestone' },
+    'Later ›',
   );
   const summary = element('summary', {});
   const cards = element('div', { class: 'milestone-cards' });

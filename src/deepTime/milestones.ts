@@ -992,9 +992,10 @@ export function anchorMa(milestone: Milestone): number {
 
 /** Milestones with an estimate within `reach` Ma of `ma`, oldest first. */
 export function milestonesNear(ma: number, reach: number): readonly Milestone[] {
+  // Oldest first, as the time line runs from earlier to later.
   return MILESTONES.filter(({ estimates }) =>
     estimates.some(({ min, max }) => ma >= min - reach && ma <= max + reach),
-  );
+  ).toSorted((a, b) => anchorMa(b) - anchorMa(a));
 }
 
 /**
