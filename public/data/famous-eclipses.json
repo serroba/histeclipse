@@ -68,10 +68,16 @@
       "kind": "solar",
       "date": "-584-05-28",
       "title": "The eclipse of Thales",
-      "summary": "Herodotus writes that day turned to night during a battle between the Lydians and the Medes, ending a six-year war, and that Thales of Miletus had foretold it. With this site's ΔT model, the path of totality crosses Asia Minor from the Aegean to northern Syria; where the battle took place is not known.",
+      "summary": "Herodotus writes that day turned to night during a battle between the Lydians and the Medes, ending a six-year war, and that Thales of Miletus had foretold it. With this site's ΔT model, the path of totality crosses Asia Minor from the Aegean to northern Syria; where the battle took place is not known. At the Halys, the usual guess, it was partial: the path of totality passed further south.",
       "source": "Herodotus, Histories 1.74",
       "debated": true,
-      "debateNote": "This is the usual identification, but the battle's place and year are uncertain, and whether Thales could have predicted it is doubted."
+      "debateNote": "This is the usual identification, but the battle's place and year are uncertain, and whether Thales could have predicted it is doubted.",
+      "place": {
+        "name": "Halys river (Kızılırmak), the usual guess for the battlefield",
+        "latitude": 39.85,
+        "longitude": 33.52
+      },
+      "seen": "partial"
     },
     {
       "id": "cambyses-523-bce",
