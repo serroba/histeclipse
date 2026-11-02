@@ -1196,6 +1196,14 @@ test('deep time shows Pangaea 250 million years ago, steps, plays and returns', 
   await expect(facts.locator('dd').nth(1)).toContainText('Reversing often');
   await expect(facts.locator('dd').nth(2)).toContainText('22.1° and 24.5°');
   await expect(facts.locator('dd').nth(3)).toContainText('23.5 h 70 Ma');
+  // What the map's colours and the milestone ticks mean, folded away too.
+  const key = page.getByTestId('deep-key');
+  await expect(key.getByText('Ice sheets and sea ice')).toBeHidden();
+  await key.getByText('What the colours mean').click();
+  await expect(key.getByText('Ice sheets and sea ice')).toBeVisible();
+  await expect(key.getByText('Extinctions')).toBeVisible();
+  // One fold at a time: opening the key closed the facts.
+  await expect(facts).not.toHaveAttribute('open', '');
   await openSources(page);
   await expect(page.getByRole('link', { name: 'PALEOMAP PaleoDEMs' })).toBeVisible();
   // The year bar gives way to the deep-time bar.

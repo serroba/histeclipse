@@ -1788,3 +1788,84 @@ body {
   font-size: 20px;
   cursor: pointer;
 }
+
+/* Folded panels in the deep-time bar show an arrow that turns as they open. */
+.deep-facts summary {
+  list-style: none;
+}
+
+.deep-facts summary::-webkit-details-marker {
+  display: none;
+}
+
+.deep-facts summary::before {
+  margin-right: 6px;
+  font-size: 11px;
+  transition: transform 0.15s;
+  content: '▶';
+}
+
+.deep-facts[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.colour-key {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 4px 12px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-muted);
+  line-height: 1.35;
+}
+
+.colour-key li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colour-swatch {
+  flex: none;
+  width: 28px;
+  height: 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
+}
+
+.colour-tick {
+  flex: none;
+  width: 3px;
+  height: 12px;
+  margin: 0 12px 0 13px;
+  border-radius: 1px;
+  background: var(--mark, #c9d4e6);
+}
+
+.colour-key-heading {
+  margin: 4px 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.deep-folds {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 8px;
+}
+
+.deep-folds > details {
+  flex: 1 1 auto;
+}
+
+/* Open, a fold takes the whole row. */
+.deep-folds > details[open] {
+  flex-basis: 100%;
+}
+
+/* Open, the key scrolls inside the bar rather than covering the globe. */
+.colour-key-body {
+  max-height: 22vh;
+  overflow-y: auto;
+}
