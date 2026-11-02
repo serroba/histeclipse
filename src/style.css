@@ -1749,6 +1749,8 @@ body {
   text-decoration: underline dotted rgb(255 255 255 / 0.35);
   text-underline-offset: 3px;
   cursor: help;
+}
+
 /* The first-visit welcome: one line and where to start. */
 .welcome {
   display: flex;
