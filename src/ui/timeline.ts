@@ -130,6 +130,13 @@ export function createTimeline(handlers: {
     hint,
   );
   const list = element('ul', { class: 'eclipse-list', 'aria-label': 'Eclipses this year' });
+  // A fade at the end that cuts off tells the row scrolls; it goes once the end is reached.
+  function markOverflow(): void {
+    const more = list.scrollLeft + list.clientWidth < list.scrollWidth - 2;
+    list.dataset['more'] = String(more);
+  }
+  list.addEventListener('scroll', markOverflow, { passive: true });
+  new ResizeObserver(markOverflow).observe(list);
   const ANYWHERE = '';
   const seenSelect = element('select', {
     id: 'seen-select',
@@ -309,6 +316,7 @@ export function createTimeline(handlers: {
           return element('li', {}, chip);
         }),
       );
+      markOverflow();
     },
   };
 }

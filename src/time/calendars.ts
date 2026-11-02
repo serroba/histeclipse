@@ -342,12 +342,17 @@ export function otherDate(
   throw new RangeError('Day beyond the end of its year'); // unreachable: months fill the year
 }
 
-/** "3175 AM", "1446 AH", "167 Nab.", "754 AUC", "4721 HE"; western years as "587 BCE". */
+/**
+ * "3175 AM", "1446 AH", "167 Nab.", "754 AUC", "4721 HE"; western years as "587 BCE"; before an
+ * era's first year, "16 before 1 Bab.".
+ */
 export function formatCalendarYear(calendar: YearCalendar, year: number): string {
   if (calendar === 'western') {
     return year >= 1 ? `${String(year)} CE` : `${String(1 - year)} BCE`;
   }
-  return `${String(year)} ${CALENDAR_INFO[calendar].era}`;
+  const era = CALENDAR_INFO[calendar].era;
+  // Before an era's year 1 there is no year 0 or below to write: count back from year 1.
+  return year >= 1 ? `${String(year)} ${era}` : `${String(1 - year)} before 1 ${era}`;
 }
 
 /** The civil day containing `jd` in a calendar: "11 Shevat 3175 AM". */
@@ -389,7 +394,8 @@ export function shortDate(calendar: YearCalendar, jd: JulianDay): string {
   }
   if (calendar === 'babylonian') {
     const date = babylonianDate(fixedDay(jd));
-    return date === null ? '' : `${String(date.day)} ${date.monthName}`;
+    // Outside the computed months, the western day and month, so the date is never blank.
+    return date === null ? shortDate('western', jd) : `${String(date.day)} ${date.monthName}`;
   }
   if (calendar === 'chinese') {
     const date = chineseDate(fixedDay(jd));

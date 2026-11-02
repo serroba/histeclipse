@@ -286,8 +286,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { type: 'button', class: 'deep-open', 'aria-pressed': 'false' },
     'Deep time',
   );
+  // The eclipse picked before entering deep time, picked again on leaving it.
+  let selectionBeforeDeep: ViewState['selection'] = null;
+  function leaveDeepTime(): void {
+    stopPlay();
+    const selection = selectionBeforeDeep;
+    selectionBeforeDeep = null;
+    store.set((state) => ({ ...state, ma: null, selection: state.selection ?? selection }));
+  }
   deepButton.addEventListener('click', () => {
     if (store.get().ma === null) {
+      selectionBeforeDeep = store.get().selection;
       // Deep time shows the whole Earth: the globe, with no eclipse picked.
       store.set((state) => ({
         ...state,
@@ -299,8 +308,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         selection: null,
       }));
     } else {
-      stopPlay();
-      store.set((state) => ({ ...state, ma: null }));
+      leaveDeepTime();
     }
   });
   const deepBar = createDeepTimeBar({
@@ -313,8 +321,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       else stopPlay();
     },
     onExit() {
-      stopPlay();
-      store.set((state) => ({ ...state, ma: null }));
+      leaveDeepTime();
     },
     onPlates(on) {
       store.set((state) => {
@@ -382,7 +389,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const skyText = element('p', { class: 'sky-caption' });
   const skyEclipse = element('p', { class: 'sky-eclipse', 'data-testid': 'sky-eclipse' });
   const dateText = element('time', { class: 'hud-date' });
-  const timeText = element('span', { class: 'hud-time' });
+  const timeText = element('span', {
+    class: 'hud-time',
+    title: 'UT: Universal Time, the time of day at Greenwich, England',
+  });
   const detailText = element('p', { class: 'hud-detail' });
   const notices = element('ul', { class: 'notices', role: 'status', 'aria-live': 'polite' });
   // The panels hide for a clear view, by this button or a tap on empty space; one button brings
@@ -790,8 +800,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const uncertainty = deltaT.uncertaintySeconds(universal);
     // In another calendar, the same day written its way too (by day, from midnight).
     const other = state.years === 'western' ? '' : ` · ${formatInCalendar(state.years, universal)}`;
-    detailText.textContent = `${formatCalendar(state.time)}${other} · ΔT ${formatDuration(seconds)} ± ${formatDuration(uncertainty)}`;
+    // ΔT is a term few readers know: it explains itself on hover.
+    detailText.replaceChildren(
+      `${formatCalendar(state.time)}${other} · `,
+      element(
+        'abbr',
+        { title: DELTA_T_MEANING },
+        `ΔT ${formatDuration(seconds)} ± ${formatDuration(uncertainty)}`,
+      ),
+    );
   }
+
+  const DELTA_T_MEANING =
+    'ΔT: how far Earth’s slowing spin has put clock time behind a perfectly even time. It decides where on Earth an ancient eclipse fell; the ± is how uncertain it is.';
 
   // The sky view, its code and its 9,000 stars load the first time someone opens it.
   let skyScene: SkyScene | null = null;
@@ -1832,7 +1853,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
         notify(`Could not load the planets' orbits: ${errorMessage(error)}`);
       });
     }
-    if (state.time !== previous?.time || state.years !== previous.years) showTime(state);
+    const leftDeepTime = previous !== null && previous.ma !== null && state.ma === null;
+    if (state.time !== previous?.time || state.years !== previous.years || leftDeepTime) {
+      showTime(state);
+    }
     if (
       state.ma !== previous?.ma ||
       state.time !== previous.time ||

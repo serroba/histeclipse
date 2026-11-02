@@ -106,7 +106,7 @@ describe('Babylonian dates written out', () => {
     expect(formatInCalendar('babylonian', at(500, 6, 1))).toBe(
       '1247 Bab. (by 1 January; months not computed)',
     );
-    expect(shortDate('babylonian', at(500, 6, 1))).toBe('');
+    expect(shortDate('babylonian', at(500, 6, 1))).toBe('1 Jun');
     expect(yearSpan('babylonian', 1247).start).toBe(at(500, 1, 1));
   });
 });

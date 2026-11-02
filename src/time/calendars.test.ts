@@ -129,6 +129,12 @@ describe('western years', () => {
     expect(formatInCalendar('western', on(-586, 7, 29, 'julian'))).toBe('29 July 587 BCE');
     expect(formatCalendarYear('western', 2025)).toBe('2025 CE');
   });
+
+  it('count back from year 1 before an era begins, never writing year 0 or below', () => {
+    expect(formatCalendarYear('babylonian', 0)).toBe('1 before 1 Bab.');
+    expect(formatCalendarYear('babylonian', -15)).toBe('16 before 1 Bab.');
+    expect(formatCalendarYear('hebrew', 1)).toBe('1 AM');
+  });
 });
 
 describe('every calendar', () => {
