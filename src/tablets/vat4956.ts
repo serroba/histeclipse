@@ -11,6 +11,9 @@
  * numbers and readings follow the astro-tablets project's presentation of it (J. Halsey, GPL-3.0),
  * from which only these facts are taken.
  *
+ * Planets low in the west are checked at dusk, half an hour after sunset (Mars by Regulus on the
+ * 12th of Simanu had set an hour later); Venus in Tebetu was a morning star, checked before dawn.
+ *
  * Stars are Bright Star Catalogue (HR) numbers: β Virginis 4540, β Geminorum (Pollux) 2990,
  * ε Cancri 3429 (in Praesepe), α Leonis (Regulus) 3982, α Scorpii (Antares) 6134, β Librae 5685,
  * β Capricorni 7776, η Tauri (Alcyone, in the Pleiades) 1165.
@@ -60,7 +63,7 @@ export const VAT_4956: readonly Observation[] = [
     line: 'Obv. 8',
     month: 'Ayyaru',
     days: [1, 1],
-    watch: 'first evening',
+    watch: 'dusk',
     text: 'Ayyaru 1, the Moon appeared below β Geminorum.',
     body: 'moon',
     reference: { star: 2990 },
@@ -117,7 +120,7 @@ export const VAT_4956: readonly Observation[] = [
     line: 'Obv. 12',
     month: 'Simanu',
     days: [1, 1],
-    watch: 'first evening',
+    watch: 'dusk',
     text: 'At that time, Mars and Mercury were 4 cubits in front of Regulus (Mars).',
     body: 'mars',
     reference: REGULUS,
@@ -130,7 +133,7 @@ export const VAT_4956: readonly Observation[] = [
     line: 'Obv. 12',
     month: 'Simanu',
     days: [1, 1],
-    watch: 'first evening',
+    watch: 'dusk',
     text: 'At that time, Mars and Mercury were 4 cubits in front of Regulus (Mercury).',
     body: 'mercury',
     reference: REGULUS,
@@ -143,7 +146,7 @@ export const VAT_4956: readonly Observation[] = [
     line: 'Obv. 13',
     month: 'Simanu',
     days: [1, 1],
-    watch: 'first evening',
+    watch: 'dusk',
     text: 'Jupiter was above Antares.',
     body: 'jupiter',
     reference: ANTARES,
@@ -181,7 +184,7 @@ export const VAT_4956: readonly Observation[] = [
     line: 'Obv. 16',
     month: 'Simanu',
     days: [12, 12],
-    watch: 'evening',
+    watch: 'dusk',
     text: 'The 12th, Mars was ⅔ cubit above Regulus.',
     body: 'mars',
     reference: REGULUS,
@@ -204,7 +207,7 @@ export const VAT_4956: readonly Observation[] = [
     line: 'Rev. 3′',
     month: 'Tebetu',
     days: [19, 19],
-    watch: 'evening',
+    watch: 'morning',
     text: 'The 19th, Venus was below β Capricorni.',
     body: 'venus',
     reference: { star: 7776 },

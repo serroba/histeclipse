@@ -45,11 +45,11 @@ describe('a single check', () => {
   const candidate = candidateYear(568);
   if (candidate === null) throw new Error('no candidate');
 
-  it('dates the evening after sunset and the first evening just after it', () => {
+  it('dates the evening after sunset and dusk just after it', () => {
     const start = candidate.months[0]?.start ?? 0;
     const sunset = sunsetOn(testSky, start + 7) ?? 0;
     expect(momentOf(testSky, 'evening', start, 9)).toBeCloseTo(sunset + 1.5 / 24, 6);
-    expect(momentOf(testSky, 'first evening', start, 9)).toBeCloseTo(sunset + 0.5 / 24, 6);
+    expect(momentOf(testSky, 'dusk', start, 9)).toBeCloseTo(sunset + 0.5 / 24, 6);
     expect(momentOf(testSky, 'morning', start, 9) ?? 0).toBeGreaterThan(sunset);
   });
 

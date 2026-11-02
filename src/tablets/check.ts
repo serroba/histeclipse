@@ -28,8 +28,12 @@ import {
 
 export type Relation = 'in front of' | 'behind' | 'above' | 'below' | 'near';
 
-/** When in the Babylonian day an observation was made. */
-export type Watch = 'first evening' | 'evening' | 'morning';
+/**
+ * When in the Babylonian day an observation was made: at dusk (half an hour after sunset, for
+ * the first crescent and for bodies low in the west), in the evening (an hour and a half after),
+ * or before dawn (half an hour before sunrise).
+ */
+export type Watch = 'dusk' | 'evening' | 'morning';
 
 interface Dated {
   readonly id: string;
@@ -89,7 +93,7 @@ const SIX_TOLERANCE_SHARE = 0.2;
 const NEAR_CUBITS = 1;
 /** How long after sunset (days) an evening observation is taken, and before sunrise a morning. */
 const AFTER_SUNSET = 1.5 / 24;
-const FIRST_EVENING = 0.5 / 24;
+const DUSK = 0.5 / 24;
 const BEFORE_SUNRISE = 0.5 / 24;
 
 /** The moment an observation on Babylonian day `day` of a month starting on `start` is made. */
@@ -106,7 +110,7 @@ export function momentOf(
   }
   const sunset = sunsetOn(sky, start + day - 2);
   if (sunset === null) return null;
-  return julianDayNumber(sunset + (watch === 'first evening' ? FIRST_EVENING : AFTER_SUNSET));
+  return julianDayNumber(sunset + (watch === 'dusk' ? DUSK : AFTER_SUNSET));
 }
 
 /** The computed value of a position, in cubits, signed so that positive agrees with the text. */
