@@ -1391,8 +1391,9 @@ for (const rate of [60, 120]) {
     await page.goto('./?ma=0.5&scale=ice');
     await globeRendered(page);
     await page.getByRole('button', { name: 'Play' }).click();
-    // 50,000 years a second: well under a second brings it past 480,000 years ago.
-    await expect(page).toHaveURL(/&ma=0\.4[0-7]\d/);
+    // Any frame rate moves it on from 500,000 years ago; a step rounded away would not. (How
+    // fast depends on how often a busy machine runs the frames, so the pace is unit-tested.)
+    await expect(page).toHaveURL(/&ma=0\.4\d*(&|$)/);
     await page.getByRole('button', { name: 'Pause' }).click();
   });
 }
