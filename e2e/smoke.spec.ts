@@ -732,6 +732,18 @@ test('years can be counted in the Chinese calendar, with the cycle names', async
   await expect(page.getByRole('button', { name: /2nd month 30\s*Total solar/ })).toBeVisible();
 });
 
+test('the Babylonian calendar dates Jerusalem’s capture to 2 Addaru, 16 March 597 BCE', async ({
+  page,
+}) => {
+  await page.goto('./?t=-596-03-16T12:00&years=babylonian');
+  await globeRendered(page);
+  await expect(page.getByLabel('Year', { exact: true })).toHaveValue('150');
+  await expect(page.locator('.hud-detail')).toContainText('2 Addaru 150 Bab. (598/597 BCE)');
+  await expect(page.locator('.hud-detail')).toContainText(
+    'leap months by the 19-year cycle run back',
+  );
+});
+
 test('Ptolemy’s eclipse of 721 BCE is listed on 29 Thoth in year 27 of Nabonassar', async ({
   page,
 }) => {
