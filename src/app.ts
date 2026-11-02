@@ -19,7 +19,7 @@ import {
 import { LunarCatalog } from './data/lunarCatalog';
 import { SolarCatalog, type SolarEclipse } from './data/solarCatalog';
 import {
-  eclipseMoment,
+  eclipseMomentAt,
   eclipseSelection,
   findSelected,
   isSolar,
@@ -427,7 +427,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       flyToSelection = true;
       store.set((state) => ({
         ...state,
-        time: eclipseMoment(eclipse),
+        time: eclipseMomentAt(eclipse, state.location),
         selection: eclipseSelection(eclipse),
       }));
     },
@@ -580,15 +580,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     flyToSelection = true;
     flyTarget = entry.place ?? null;
-    store.set((state) => ({
-      ...state,
-      time: eclipseMoment(match),
-      selection: eclipseSelection(match),
-      location:
+    store.set((state) => {
+      const location =
         entry.place === undefined
           ? state.location
-          : { latitude: entry.place.latitude, longitude: entry.place.longitude },
-    }));
+          : { latitude: entry.place.latitude, longitude: entry.place.longitude };
+      return {
+        ...state,
+        time: eclipseMomentAt(match, location),
+        selection: eclipseSelection(match),
+        location,
+      };
+    });
   }
 
   /** The year on the bar: in the calendar picked, holding the moment shown. */
@@ -993,7 +996,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     flyToSelection = true;
     store.set((state) => ({
       ...state,
-      time: eclipseMoment(eclipse),
+      time: eclipseMomentAt(eclipse, state.location),
       selection: eclipseSelection(eclipse),
     }));
   }
@@ -1961,7 +1964,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
   globe.onEmptyTap(togglePanels);
   globe.onPlacePick((place) => {
     const location = { latitude: round(place.latitude, 4), longitude: round(place.longitude, 4) };
-    store.set((state) => ({ ...state, location }));
+    // During a solar eclipse, show the moment it is deepest at the place picked.
+    const selected = selectedEclipse(store.get());
+    store.set((state) => ({
+      ...state,
+      location,
+      time:
+        selected === undefined || !isSolar(selected)
+          ? state.time
+          : eclipseMomentAt(selected, location),
+    }));
   });
   globe.onCameraChange((camera) => {
     store.set((state) => ({ ...state, camera }));

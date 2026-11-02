@@ -3,7 +3,7 @@
 import { greatestEclipseUT, type CatalogRecord } from '../data/catalog';
 import type { LunarEclipse } from '../data/lunarCatalog';
 import type { SolarEclipse } from '../data/solarCatalog';
-import type { Moment, Selection } from '../state/viewState';
+import type { GeoPoint, Moment, Selection } from '../state/viewState';
 import {
   calendarDate,
   historicalCalendar,
@@ -12,12 +12,28 @@ import {
   type CalendarDate,
   type JulianDay,
 } from '../time/julianDay';
+import { maximumEclipseAt } from './solar';
 
 const MINUTES_PER_DAY = 1440;
 
 /** Greatest eclipse in UT, to the nearest minute, in the calendar in use at the time. */
 export function eclipseMoment(eclipse: CatalogRecord): Moment {
   return momentAt(greatestEclipseUT(eclipse));
+}
+
+/**
+ * The moment to show an eclipse at for someone standing at `place`: when a solar eclipse is
+ * deepest there, so every view of it agrees with the card. Greatest eclipse otherwise: for
+ * lunar eclipses, with no place, or where the Moon's shadow misses.
+ */
+export function eclipseMomentAt(
+  eclipse: LunarEclipse | SolarEclipse,
+  place: GeoPoint | null,
+): Moment {
+  if (place === null || !isSolar(eclipse)) return eclipseMoment(eclipse);
+  const deepest = maximumEclipseAt(eclipse.elements, eclipse.deltaT, place);
+  if (deepest === null) return eclipseMoment(eclipse);
+  return momentAt(julianDayNumber(deepest.jdTT - eclipse.deltaT / 86_400));
 }
 
 /** A UT Julian Day as a moment, to the nearest minute, in the calendar in use at the time. */

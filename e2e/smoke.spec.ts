@@ -358,7 +358,8 @@ test('picking a solar eclipse draws its path and the Moon’s shadow', async ({ 
   await globeRendered(page);
   await page.getByRole('button', { name: /8 Apr\s*Total solar/ }).click();
 
-  await expect(page).toHaveURL(/t=2024-04-08T18:17Z/);
+  // Not greatest eclipse (18:17, in Mexico) but mid-totality where the observer stands.
+  await expect(page).toHaveURL(/t=2024-04-08T18:43Z/);
   await expect(page).toHaveURL(/sel=solar:2024-04-08/);
   const globe = page.getByTestId('globe');
   await expect(globe).toHaveAttribute('data-solar-path', 'on');
@@ -404,6 +405,28 @@ test('famous eclipses: pick one and land on it with its history', async ({ page 
   await expect(page.locator('.famous-card-title')).toHaveText('The eclipse at Syracuse');
   await expect(page.locator('.famous-card-source')).toContainText('Thucydides');
   await expect(page.locator('.eclipse-observer')).toContainText('The Moon was above the horizon');
+});
+
+test('a famous solar eclipse opens at its deepest where it was seen, and every view agrees', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await page.goto('./?t=2024-01-01T00:00');
+  await globeRendered(page);
+  await page.getByRole('button', { name: 'Famous eclipses' }).click();
+  await page
+    .getByRole('dialog', { name: 'Famous eclipses' })
+    .getByRole('button', { name: /The 2024 North American eclipse/ })
+    .click();
+  // Dallas is in totality from 18:40 to 18:44 UT, not at greatest eclipse (18:17) in Mexico.
+  await expect(page).toHaveURL(/t=2024-04-08T18:4[1-4]/);
+  await expect(page.locator('.eclipse-observer')).toContainText('total');
+  await page.getByRole('button', { name: 'Sky' }).click();
+  await skyRendered(page);
+  await expect(page.getByTestId('sky-eclipse')).toHaveText(
+    'Totality: the Moon hides the whole Sun.',
+  );
+  expect(problems).toEqual([]);
 });
 
 test('famous eclipses: debated entries say so, and the list closes', async ({ page }) => {

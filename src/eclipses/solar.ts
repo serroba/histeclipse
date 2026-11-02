@@ -90,8 +90,8 @@ export function shadowAtHours(
   };
 }
 
-/** How the eclipse looks from `place` (at sea level) given the shadow at one instant. */
-export function localCircumstances(shadow: ShadowGeometry, place: GeoPoint): LocalCircumstances {
+/** Where `place` stands against the shadow at one instant, in Earth radii on the fundamental plane. */
+function placeInShadow(shadow: ShadowGeometry, place: GeoPoint) {
   const latitude = place.latitude * RADIANS;
   // Geocentric position on the ellipsoid: ρ sin φ′ and ρ cos φ′.
   const u = Math.atan(POLAR_RATIO * Math.tan(latitude));
@@ -103,10 +103,17 @@ export function localCircumstances(shadow: ShadowGeometry, place: GeoPoint): Loc
   const eta = rhoSin * Math.cos(d) - rhoCos * Math.cos(hourAngle) * Math.sin(d);
   const zeta = rhoSin * Math.sin(d) + rhoCos * Math.cos(hourAngle) * Math.cos(d);
 
-  const sunUp = zeta > 0;
-  const penumbra = shadow.l1 - zeta * shadow.tanF1;
-  const umbra = shadow.l2 - zeta * shadow.tanF2;
-  const distance = Math.hypot(shadow.x - xi, shadow.y - eta);
+  return {
+    sunUp: zeta > 0,
+    penumbra: shadow.l1 - zeta * shadow.tanF1,
+    umbra: shadow.l2 - zeta * shadow.tanF2,
+    distance: Math.hypot(shadow.x - xi, shadow.y - eta),
+  };
+}
+
+/** How the eclipse looks from `place` (at sea level) given the shadow at one instant. */
+export function localCircumstances(shadow: ShadowGeometry, place: GeoPoint): LocalCircumstances {
+  const { sunUp, penumbra, umbra, distance } = placeInShadow(shadow, place);
   if (!sunUp || distance >= penumbra) return { phase: 'none', magnitude: 0, sunUp };
   if (distance < Math.abs(umbra)) {
     // Inside the umbra or antumbra, magnitude is the ratio of the Moon's apparent diameter to
@@ -132,17 +139,24 @@ export function maximumEclipseAt(
   deltaTSeconds: number,
   place: GeoPoint,
 ): MaximumEclipse | null {
-  const at = (seconds: number): LocalCircumstances =>
-    localCircumstances(shadowAtHours(elements, seconds / 3600, deltaTSeconds), place);
+  const shadow = (seconds: number): ShadowGeometry =>
+    shadowAtHours(elements, seconds / 3600, deltaTSeconds);
+  const at = (seconds: number): LocalCircumstances => localCircumstances(shadow(seconds), place);
+  // Deepest is where the place comes closest to the shadow's axis. The magnitude alone won't
+  // do: inside the umbra it is the same all through totality.
+  const depth = (seconds: number): number => {
+    const { sunUp, penumbra, umbra, distance } = placeInShadow(shadow(seconds), place);
+    return sunUp ? (penumbra - distance) / (penumbra + umbra) : 0;
+  };
   // Scan the whole span in 10 s steps, then the best 20 s window in 0.1 s steps.
   const span = ELEMENTS_HALF_SPAN_HOURS * 3600;
   const deepest = (from: number, to: number, step: number): number => {
     let bestSeconds = from;
-    let bestMagnitude = at(from).magnitude;
+    let bestDepth = depth(from);
     for (let seconds = from + step; seconds <= to; seconds += step) {
-      const magnitude = at(seconds).magnitude;
-      if (magnitude > bestMagnitude) {
-        bestMagnitude = magnitude;
+      const here = depth(seconds);
+      if (here > bestDepth) {
+        bestDepth = here;
         bestSeconds = seconds;
       }
     }
