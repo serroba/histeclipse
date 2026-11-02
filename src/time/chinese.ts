@@ -14,6 +14,7 @@
 
 import * as v from 'valibot';
 
+import { elementAt } from '../util/arrays';
 import table from '../../public/data/calendars/chinese.json' with { type: 'json' };
 
 /** Year 1 of the Yellow Emperor's era: 2697 BCE, astronomical year −2696. */
@@ -114,18 +115,14 @@ function yearLength(entry: ChineseYear): number {
 export function chineseYearOf(rd: number): number | null {
   const { firstYear, years } = chineseTable();
   const last = years.at(-1);
-  if (
-    last === undefined ||
-    rd < (years[0]?.start ?? Infinity) ||
-    rd >= last.start + yearLength(last)
-  ) {
+  if (last === undefined || rd < elementAt(years, 0).start || rd >= last.start + yearLength(last)) {
     return null;
   }
   let low = 0;
   let high = years.length - 1;
   while (low < high) {
     const middle = Math.ceil((low + high) / 2);
-    if ((years[middle]?.start ?? Infinity) <= rd) low = middle;
+    if (elementAt(years, middle).start <= rd) low = middle;
     else high = middle - 1;
   }
   return firstYear + low + HUANGDI_OFFSET;
@@ -168,7 +165,7 @@ export function chineseDate(rd: number): ChineseDate | null {
     if (!leap) number++;
     const length = monthLength(entry, position);
     if (left < length) {
-      const name = `${ORDINALS[number - 1] ?? ''} month`;
+      const name = `${elementAt(ORDINALS, number - 1)} month`;
       return { year, month: number, leap, day: left + 1, monthName: leap ? `leap ${name}` : name };
     }
     left -= length;
@@ -220,8 +217,8 @@ export interface CycleName {
 }
 
 function cycleName(index: number): CycleName {
-  const stem = STEMS[index % 10] ?? STEMS[0];
-  const branch = BRANCHES[index % 12] ?? BRANCHES[0];
+  const stem = elementAt(STEMS, index % 10);
+  const branch = elementAt(BRANCHES, index % 12);
   return { index, characters: stem[0] + branch[0], pinyin: stem[1] + branch[1] };
 }
 
@@ -233,7 +230,7 @@ export function dayCycle(rd: number): CycleName {
 /** A year's name in the cycle, with its element and animal: 4721 (2024) is 甲辰, Wood Dragon. */
 export function yearCycle(year: number): CycleName & { readonly sign: string } {
   const index = mod(year - HUANGDI_OFFSET - 4, 60);
-  const element = ELEMENTS[Math.floor((index % 10) / 2)] ?? ELEMENTS[0];
-  const animal = BRANCHES[index % 12]?.[2] ?? '';
+  const element = elementAt(ELEMENTS, Math.floor((index % 10) / 2));
+  const animal = elementAt(BRANCHES, index % 12)[2];
   return { ...cycleName(index), sign: `${element} ${animal}` };
 }

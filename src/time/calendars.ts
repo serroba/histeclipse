@@ -12,6 +12,9 @@
  * - Egyptian: 12 months of 30 days and 5 extra days, no leap years, counted from 1 Thoth of
  *   Nabonassar's first year (26 February 747 BCE). Ptolemy dated Babylonian eclipses this way.
  * - Roman: Varro's count from the founding of Rome (753 BCE = year 1), on Julian/Gregorian dates.
+ * - Babylonian: months from the first visible crescent at Babylon (see `babylonian.ts`) for 750
+ *   BCE to 100 CE, years from Nisannu counted from Nabonassar, with Old Persian month names under
+ *   the Persian kings. Outside those years a year is taken to run from 1 January.
  * - Chinese: months computed from new moons (see `chinese.ts`) for 720 BCE to 2100 CE, years
  *   counted from the Yellow Emperor. Outside those years only the cycle names are given, and
  *   a year is taken to run from 1 January.
@@ -28,6 +31,13 @@ import {
   type JulianDay,
 } from './julianDay';
 import {
+  babylonianDate,
+  babylonianNewYear,
+  babylonianYearOf,
+  type BabylonianDate,
+  NABONASSAR_OFFSET,
+} from './babylonian';
+import {
   chineseDate,
   chineseNewYear,
   chineseYearOf,
@@ -43,6 +53,7 @@ export const YEAR_CALENDARS = [
   'islamic',
   'egyptian',
   'roman',
+  'babylonian',
   'chinese',
 ] as const;
 export type YearCalendar = (typeof YEAR_CALENDARS)[number];
@@ -59,6 +70,7 @@ export const CALENDAR_INFO: Readonly<Record<YearCalendar, YearCalendarInfo>> = {
   islamic: { name: 'Islamic', era: 'AH' },
   egyptian: { name: 'Egyptian', era: 'Nab.' },
   roman: { name: 'Roman', era: 'AUC' },
+  babylonian: { name: 'Babylonian', era: 'Bab.' },
   chinese: { name: 'Chinese', era: 'HE' },
 };
 
@@ -244,19 +256,29 @@ function newYear(calendar: YearCalendar, year: number): number {
       return islamicFixed(year, 1, 1);
     case 'egyptian':
       return EGYPTIAN_EPOCH + (year - 1) * 365;
+    case 'babylonian':
+      return babylonianNewYear(year) ?? westernNewYear(year - NABONASSAR_OFFSET);
     case 'chinese':
       return chineseNewYear(year) ?? westernNewYear(year - HUANGDI_OFFSET);
   }
 }
 
-/** Outside the computed months, a Chinese year is taken to run from 1 January. */
-function chineseYearAround(jd: JulianDay): number {
+/**
+ * The year of a calendar computed from tables. Outside them a year is taken to run from
+ * 1 January, numbered `offset` years on from the western count.
+ */
+function computedYearAround(
+  jd: JulianDay,
+  yearOf: (rd: number) => number | null,
+  newYearOf: (year: number) => number | null,
+  offset: number,
+): number {
   const rd = fixedDay(jd);
-  const computed = chineseYearOf(rd);
+  const computed = yearOf(rd);
   if (computed !== null) return computed;
-  const year = calendarDate(jd, historicalCalendar(jd)).year + HUANGDI_OFFSET;
+  const year = calendarDate(jd, historicalCalendar(jd)).year + offset;
   // Early in the first computed year, before its first month: still the year before.
-  const start = chineseNewYear(year);
+  const start = newYearOf(year);
   return start !== null && rd < start ? year - 1 : year;
 }
 
@@ -282,14 +304,16 @@ export function yearContaining(calendar: YearCalendar, jd: JulianDay): number {
       return islamicYearOf(rd);
     case 'egyptian':
       return Math.floor((rd - EGYPTIAN_EPOCH) / 365) + 1;
+    case 'babylonian':
+      return computedYearAround(jd, babylonianYearOf, babylonianNewYear, NABONASSAR_OFFSET);
     case 'chinese':
-      return chineseYearAround(jd);
+      return computedYearAround(jd, chineseYearOf, chineseNewYear, HUANGDI_OFFSET);
   }
 }
 
 /** The date in a non-western calendar of the civil day containing `jd`. */
 export function otherDate(
-  calendar: Exclude<YearCalendar, 'western' | 'roman' | 'chinese'>,
+  calendar: Exclude<YearCalendar, 'western' | 'roman' | 'babylonian' | 'chinese'>,
   jd: JulianDay,
 ): OtherDate {
   const rd = fixedDay(jd);
@@ -332,6 +356,7 @@ export function formatInCalendar(calendar: YearCalendar, jd: JulianDay): string 
     return `${String(Math.floor(date.day))} ${MONTH_NAMES[date.month - 1] ?? ''} ${formatCalendarYear(calendar, year)}`;
   }
   if (calendar === 'chinese') return formatChinese(jd);
+  if (calendar === 'babylonian') return formatBabylonian(jd);
   const date = otherDate(calendar, jd);
   if (calendar === 'egyptian' && date.month === 13) {
     return `extra day ${String(date.day)}, ${formatCalendarYear(calendar, date.year)}`;
@@ -360,6 +385,10 @@ export function shortDate(calendar: YearCalendar, jd: JulianDay): string {
     const date = calendarDate(jd, historicalCalendar(jd));
     return `${String(Math.floor(date.day))} ${MONTH_NAMES[date.month - 1]?.slice(0, 3) ?? ''}`;
   }
+  if (calendar === 'babylonian') {
+    const date = babylonianDate(fixedDay(jd));
+    return date === null ? '' : `${String(date.day)} ${date.monthName}`;
+  }
   if (calendar === 'chinese') {
     const date = chineseDate(fixedDay(jd));
     return date === null
@@ -387,4 +416,36 @@ function formatChinese(jd: JulianDay): string {
   }
   const year = yearCycle(date.year);
   return `${date.monthName}, day ${String(date.day)}, ${formatCalendarYear('chinese', date.year)} (${year.characters} ${year.pinyin}, ${year.sign}) · ${dayName}`;
+}
+
+/** "Ululu II", or "Addaru (Viyaxna)" with its Old Persian name under the Persian kings. */
+function babylonianMonth(date: BabylonianDate): string {
+  return date.persianName === null ? date.monthName : `${date.monthName} (${date.persianName})`;
+}
+
+/** "598/597 BCE": the western years a Babylonian year spans. */
+function westernSpan(year: number): string {
+  if (year >= 1) return `${String(year)}/${String(year + 1)} CE`;
+  if (year === 0) return '1 BCE/1 CE';
+  return `${String(1 - year)}/${String(-year)} BCE`;
+}
+
+/**
+ * "2 Addaru 150 Bab. (598/597 BCE)", with the Seleucid year from 311 BCE and what is uncertain:
+ * a close-call crescent, and leap months before 380 BCE.
+ */
+function formatBabylonian(jd: JulianDay): string {
+  const date = babylonianDate(fixedDay(jd));
+  if (date === null) {
+    const year = yearContaining('babylonian', jd);
+    return `${formatCalendarYear('babylonian', year)} (by 1 January; months not computed)`;
+  }
+  const notes = [
+    date.seleucidYear === null ? null : `SE ${String(date.seleucidYear)}`,
+    date.dayUncertain ? 'crescent a close call: ±1 day' : null,
+    date.leapUncertain ? 'leap months by the 19-year cycle run back' : null,
+  ].filter((note) => note !== null);
+  const tail = notes.length === 0 ? '' : ` · ${notes.join(' · ')}`;
+  const western = westernSpan(date.year - NABONASSAR_OFFSET);
+  return `${String(date.day)} ${babylonianMonth(date)} ${formatCalendarYear('babylonian', date.year)} (${western})${tail}`;
 }
