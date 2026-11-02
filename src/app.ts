@@ -71,6 +71,7 @@ import { moveToYear } from './time/yearInput';
 import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
 import { createFamousPanel } from './ui/famousPanel';
+import { createWelcome } from './ui/welcome';
 import { loadSeaIce, type SeaIceIndex, seaIceMix, seaIcePair } from './data/seaIce';
 import { createTabletPanel } from './ui/tabletPanel';
 import { candidateYear, checkAll, type Verdict, verdictMoment } from './tablets/check';
@@ -394,6 +395,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     title: 'UT: Universal Time, the time of day at Greenwich, England',
   });
   const detailText = element('p', { class: 'hud-detail' });
+  // A first visit (no link to follow, never welcomed before) gets one line on what this is and
+  // where to start; it goes for good once closed or followed.
+  const welcome = createWelcome(window.location.search === '', () => {
+    famousPanel.button.click();
+  });
   const notices = element('ul', { class: 'notices', role: 'status', 'aria-live': 'polite' });
   // The panels hide for a clear view, by this button or a tap on empty space; one button brings
   // them back.
@@ -465,6 +471,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       fullView,
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
+      welcome,
       element(
         'div',
         { class: 'hud-actions' },
