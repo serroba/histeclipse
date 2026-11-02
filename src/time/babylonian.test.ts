@@ -24,7 +24,7 @@ describe('Babylonian calendar', () => {
       monthName: 'Nisannu',
       day: 1,
       seleucidYear: 1,
-      leapUncertain: false,
+      leapSource: 'cycle',
     });
     expect(babylonianNewYear(nabonassar(311))).toBe(rdOf(-310, 4, 3));
   });
@@ -43,7 +43,7 @@ describe('Babylonian calendar', () => {
       year: nabonassar(568),
       monthName: 'Nisannu',
       day: 1,
-      leapUncertain: true,
+      leapSource: 'reconstructed',
       persianName: null,
       seleucidYear: null,
     });
@@ -83,18 +83,22 @@ describe('Babylonian dates written out', () => {
 
   it('give the year from Nabonassar, its western years, and what is uncertain', () => {
     // Babylonian Chronicle (ABC 5): Jerusalem taken on 2 Addaru, Nebuchadnezzar's year 7.
+    // The canon counts Egyptian years, which began in February: there it is already year 8.
     expect(formatInCalendar('babylonian', at(-596, 3, 16))).toBe(
-      '2 Addaru 150 Bab. (598/597 BCE) · leap months by the 19-year cycle run back',
+      '2 Addaru, year 7 of Nebuchadnezzar II · 150 Bab. (598/597 BCE) · Ptolemy’s canon: Nabokolassaros 8 · Ululu II attested on tablets',
+    );
+    expect(formatInCalendar('babylonian', at(-720, 3, 19))).toMatch(
+      /^\d+ Addaru · 26 Bab\. \(722\/721 BCE\) · Ptolemy’s canon: Mardokempados 1 · leap months by the 19-year cycle run back$/,
     );
     expect(shortDate('babylonian', at(-596, 3, 16))).toBe('2 Addaru');
   });
 
   it('add the Seleucid year, and Old Persian names under the Persian kings', () => {
     expect(formatInCalendar('babylonian', at(-310, 4, 3))).toBe(
-      '1 Nisannu 437 Bab. (311/310 BCE) · SE 1',
+      '1 Nisannu · 437 Bab. (311/310 BCE) · SE 1',
     );
     expect(formatInCalendar('babylonian', at(-519, 6, 11))).toMatch(
-      /^\d+ \w+ \(\S+\) 228 Bab\. \(520\/519 BCE\)/,
+      /^\d+ \w+ \(\S+\), year 2 of Darius I · 228 Bab\. \(520\/519 BCE\)/,
     );
   });
 
