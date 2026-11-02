@@ -66,12 +66,11 @@ describe('a single check', () => {
   it('reads "behind" as east along the ecliptic', () => {
     const venus = VAT_4956.find(({ id }) => id === 'II-18-venus');
     if (venus?.kind !== 'position') throw new Error('no Venus');
-    const ahead = check(
-      testSky,
-      { ...venus, relation: 'in front of', cubits: undefined },
-      candidate,
-    );
-    const behind = check(testSky, { ...venus, relation: 'behind', cubits: undefined }, candidate);
+    // Direction only: without the distance the tablet gives.
+    const { cubits, ...direction } = venus;
+    expect(cubits).toBeCloseTo(1 + 4 / 24, 6);
+    const ahead = check(testSky, { ...direction, relation: 'in front of' }, candidate);
+    const behind = check(testSky, { ...direction, relation: 'behind' }, candidate);
     expect((ahead.computed ?? 0) + (behind.computed ?? 0)).toBeCloseTo(0, 6);
     expect(ahead.fits).not.toBe(behind.fits);
   });
