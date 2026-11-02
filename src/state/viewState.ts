@@ -46,6 +46,9 @@ export const LAYERS = [
 ] as const;
 export type Layer = (typeof LAYERS)[number];
 
+/** Layers that belong to deep time, dropped on leaving it. */
+export const DEEP_LAYERS: readonly Layer[] = ['temperature', 'sealevel', 'plates'];
+
 /**
  * How the camera is placed: orbiting Earth freely, or attached to the bodies (standing on Earth
  * looking at the Moon, or on the Moon looking at Earth) and following them through time.

@@ -209,7 +209,8 @@ export interface DeepTimeBar {
 }
 
 export function createDeepTimeBar(handlers: {
-  onMa(ma: number): void;
+  /** A new moment: `jump` when it is a step to go back from (a milestone, a click), not a drag. */
+  onMa(ma: number, jump: boolean): void;
   onPlay(playing: boolean): void;
   onExit(): void;
   onTemperature(on: boolean): void;
@@ -335,7 +336,7 @@ export function createDeepTimeBar(handlers: {
   );
   const seaLevel = createSeaLevelChart({
     onKa(ka) {
-      handlers.onMa(ka / 1000);
+      handlers.onMa(ka / 1000, true);
     },
   });
   const temperatureButton = element(
@@ -422,7 +423,7 @@ export function createDeepTimeBar(handlers: {
   const track = element('div', { class: 'deep-track' }, seaLevel.chart, slider, marks);
   const milestones = createMilestonePanel({
     onMa(ma) {
-      handlers.onMa(ma);
+      handlers.onMa(ma, true);
     },
   });
   const root = element(
@@ -460,13 +461,13 @@ export function createDeepTimeBar(handlers: {
   const step = (): number =>
     current?.scale === 'ice' ? ICE_STEP_MA : current?.scale === 'eons' ? EONS_STEP_MA : STEP_MA;
   slider.addEventListener('input', () => {
-    handlers.onMa(-Number(slider.value) / unit());
+    handlers.onMa(-Number(slider.value) / unit(), false);
   });
   older.addEventListener('click', () => {
-    if (current !== null) handlers.onMa(Math.min(current.oldest, current.ma + step()));
+    if (current !== null) handlers.onMa(Math.min(current.oldest, current.ma + step()), true);
   });
   younger.addEventListener('click', () => {
-    if (current !== null) handlers.onMa(Math.max(0, current.ma - step()));
+    if (current !== null) handlers.onMa(Math.max(0, current.ma - step()), true);
   });
   scaleAll.addEventListener('click', () => {
     handlers.onScale('all');
