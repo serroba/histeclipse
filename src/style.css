@@ -1964,6 +1964,8 @@ body {
   color: inherit;
   font: inherit;
   cursor: pointer;
+}
+
 /* The milestone steps say which way they go: one word each, not a bare arrow. */
 .step.milestone-step {
   flex: none;
