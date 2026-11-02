@@ -1216,6 +1216,13 @@ test('deep time narrows to the ice ages, in thousands of years', async ({ page }
   await page.getByRole('button', { name: '5,000 years earlier' }).click();
   await expect(page).toHaveURL(/&ma=0\.026(&|$)/);
 
+  // Sea ice: the glacial maximum's, by one of three models, which the reader can switch.
+  await expect(page.getByTestId('sea-ice')).toContainText('the Last Glacial Maximum’s');
+  await expect(globe).toHaveAttribute('data-sea-ice', /seaice\/mpi-esm1-2-lr-most\.png 1\.00$/);
+  await page.getByLabel('Ice-age sea ice from').selectOption('miroc-es2l');
+  await expect(page).toHaveURL(/seaice=miroc-es2l/);
+  await expect(globe).toHaveAttribute('data-sea-ice', /seaice\/miroc-es2l-most\.png /);
+
   // Before the ice maps reach, a later map stands in, matched by sea level, and the bar says so.
   await page.goto('./?ma=0.377&scale=ice');
   await globeRendered(page);

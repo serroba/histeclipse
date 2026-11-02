@@ -30,6 +30,7 @@ from histeclipse_pipeline.planets import (
     fetch_planet_vectors,
     write_planet_vectors,
 )
+from histeclipse_pipeline.seaice import fetch_seaice
 from histeclipse_pipeline.sealevel import fetch_sealevel
 from histeclipse_pipeline.shelf import fetch_shelf
 from histeclipse_pipeline.sky import (
@@ -237,6 +238,12 @@ def shelf(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote a {size}-byte shelf image to {args.out}")
 
 
+def seaice(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write sea ice today (NSIDC) and at the Last Glacial Maximum (three PMIP4 models)."""
+    count = fetch_seaice(args.out)
+    return _say(f"wrote sea ice from {count} sources to {args.out}")
+
+
 def sealevel(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write four reconstructions of global sea level, side by side."""
     points = fetch_sealevel(args.out)
@@ -337,6 +344,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "shelf": (
         shelf,
         "write today's coasts and shelves (ETOPO1) for coastlines at past sea levels",
+        "output directory",
+    ),
+    "seaice": (
+        seaice,
+        "write sea ice today (NSIDC) and at the Last Glacial Maximum (PMIP4 models)",
         "output directory",
     ),
     "sealevel": (

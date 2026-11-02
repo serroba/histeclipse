@@ -71,6 +71,7 @@ import { moveToYear } from './time/yearInput';
 import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
 import { createFamousPanel } from './ui/famousPanel';
+import { loadSeaIce, type SeaIceIndex, seaIceMix, seaIcePair } from './data/seaIce';
 import { createTabletPanel } from './ui/tabletPanel';
 import { candidateYear, checkAll, type Verdict, verdictMoment } from './tablets/check';
 import { BABYLON, directionOf, starsByNumber, type TabletSky } from './tablets/tabletSky';
@@ -114,6 +115,7 @@ import {
   type CoastlineView,
   createDeepTimeBar,
   type DeepTimeView,
+  type SeaIceView,
   type TemperatureView,
 } from './ui/deepTimeBar';
 import { formatMa, periodAt, periodWords } from './deepTime/periods';
@@ -325,6 +327,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     onCoast(coast) {
       store.set((state) => ({ ...state, coast }));
+    },
+    onSeaIce(seaIce) {
+      store.set((state) => ({ ...state, seaIce }));
     },
     onScale(deepScale) {
       stopPlay();
@@ -1041,6 +1046,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       scale,
       coastline: showCoastline(ma, state),
       ice: showIce(state, ma),
+      seaIce: showSeaIce(state, ma),
       temperature: temperatureView(state, ma),
       seaLevel: seaLevelView(state),
       ...showPlates(state, ma),
@@ -1223,6 +1229,56 @@ export async function startApp(root: HTMLElement): Promise<void> {
       metresPerStep: iceIndex.metresPerStep,
     });
     return { drawn: true, oldestKa, standIn: null };
+  }
+
+  // Sea ice: its index loads the first time the ice-age scale is shown.
+  let seaIceIndex: SeaIceIndex | null = null;
+  let seaIceLoading: Promise<SeaIceIndex> | null = null;
+
+  /** On the ice-age scale, sea ice blended from today's towards the chosen model's. */
+  function showSeaIce(state: ViewState, ma: number): SeaIceView | null {
+    if (state.deepScale !== 'ice') {
+      globe.setSeaIce(null);
+      return null;
+    }
+    if (seaIceIndex === null) {
+      if (seaIceLoading === null) {
+        seaIceLoading = loadSeaIce(`${base}data/seaice/index.json`, fetchJson);
+        seaIceLoading.then(
+          (index) => {
+            seaIceIndex = index;
+            showDeepTime(store.get());
+          },
+          (error: unknown) => {
+            seaIceLoading = null;
+            notify(`Could not load the sea-ice maps: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return { model: state.seaIce, mix: null };
+    }
+    const pair = seaIcePair(seaIceIndex, state.seaIce);
+    const levels = seaLevels();
+    const now = levels === null ? null : coastlineAt(levels, state.coast, ma * 1000);
+    if (pair === null || levels === null || now === null) {
+      globe.setSeaIce(null);
+      return { model: state.seaIce, mix: null };
+    }
+    // How far the sea had fallen towards its glacial low, by the same source.
+    const source: CoastSource = COAST_SOURCES.find((id) => id === now.series.id) ?? state.coast;
+    const glacial = coastlineAt(levels, source, LAST_GLACIAL_MAXIMUM_MA * 1000);
+    const mix = seaIceMix(now.seaLevel, glacial?.seaLevel ?? -120);
+    const folder = `${base}data/seaice/`;
+    globe.setSeaIce({
+      todayMost: folder + pair.today.most,
+      todayYearRound: folder + pair.today.yearRound,
+      pastMost: folder + pair.past.most,
+      pastYearRound: folder + pair.past.yearRound,
+      mix,
+      columns: seaIceIndex.columns,
+      rows: seaIceIndex.rows,
+    });
+    return { model: state.seaIce, mix };
   }
 
   /** Before the ice maps reach: the map whose sea level, by the coastline's source, matches. */
@@ -1758,6 +1814,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.layers !== previous.layers ||
       state.deepScale !== previous.deepScale ||
       state.coast !== previous.coast ||
+      state.seaIce !== previous.seaIce ||
       state.temperatureModel !== previous.temperatureModel
     ) {
       showDeepTime(state);

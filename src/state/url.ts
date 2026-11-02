@@ -37,6 +37,7 @@ import { calendarDate, calendarDateOf, julianDay, type Calendar } from '../time/
 import { SKY_CULTURES, type SkyCulture } from '../data/skyCultures';
 import { SUN_LAYERS, type SunLayer } from '../data/sunImages';
 import { COAST_SOURCES, type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
+import { DEFAULT_SEA_ICE_MODEL, SEA_ICE_MODELS, type SeaIceModel } from '../data/seaIce';
 import {
   DEFAULT_TEMPERATURE_MODEL,
   TEMPERATURE_MODELS,
@@ -139,6 +140,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     ma: read<number | null>('ma', parseMa, defaults.ma),
     deepScale: read('scale', parseDeepScale, defaults.deepScale),
     coast: read('coast', parseCoast, defaults.coast),
+    seaIce: read('seaice', parseSeaIce, defaults.seaIce),
     temperatureModel: read('temp', parseTemperatureModel, defaults.temperatureModel),
   };
   if (calendar !== null && !params.has('t')) {
@@ -172,6 +174,7 @@ export function serializeViewState(state: ViewState): string {
   if (state.ma !== null) params.set('ma', formatMa(state.ma));
   if (state.deepScale !== 'all') params.set('scale', state.deepScale);
   if (state.coast !== DEFAULT_COAST) params.set('coast', state.coast);
+  if (state.seaIce !== DEFAULT_SEA_ICE_MODEL) params.set('seaice', state.seaIce);
   if (state.temperatureModel !== DEFAULT_TEMPERATURE_MODEL) {
     params.set('temp', state.temperatureModel);
   }
@@ -193,6 +196,10 @@ function parseTemperatureModel(raw: string): TemperatureModel {
 
 function parseCoast(raw: string): CoastSource {
   return oneOf(raw, COAST_SOURCES, 'coast');
+}
+
+function parseSeaIce(raw: string): SeaIceModel {
+  return oneOf(raw, SEA_ICE_MODELS, 'seaice');
 }
 
 function parseDeepScale(raw: string): DeepScale {
