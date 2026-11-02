@@ -168,6 +168,25 @@ function famousLines(famous: FamousEclipse): HTMLElement[] {
 
 export function createEclipseCard(): EclipseCard {
   const root = element('section', { class: 'eclipse-card', 'aria-live': 'polite', hidden: '' });
+  // Folding the card leaves its title, so the globe gets the room; it stays folded as the card
+  // is rebuilt while time moves.
+  const fold = element(
+    'button',
+    {
+      type: 'button',
+      class: 'eclipse-fold',
+      'aria-expanded': 'true',
+      'aria-label': 'Fold the eclipse card',
+    },
+    '−',
+  );
+  fold.addEventListener('click', () => {
+    const folded = root.dataset['folded'] !== 'true';
+    root.dataset['folded'] = String(folded);
+    fold.setAttribute('aria-expanded', String(!folded));
+    fold.setAttribute('aria-label', folded ? 'Unfold the eclipse card' : 'Fold the eclipse card');
+    fold.textContent = folded ? '+' : '−';
+  });
   // Reused across renders, so scrubbing time moves the Moon smoothly instead of rebuilding it.
   const moonView = createMoonView();
   return {
@@ -204,6 +223,7 @@ export function createEclipseCard(): EclipseCard {
       );
       moonView.render(isSolar(eclipse) ? null : moonInShadow(eclipse, offsetMinutes));
       root.replaceChildren(
+        fold,
         isSolar(eclipse) ? text : element('div', { class: 'eclipse-head' }, text, moonView.root),
         more,
       );
