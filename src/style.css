@@ -1738,3 +1738,15 @@ body {
 .tablet-mark.misses {
   color: var(--accent);
 }
+
+/* The eclipse row fades out where more chips lie beyond the edge. */
+.eclipse-list[data-more='true'] {
+  mask-image: linear-gradient(to right, black calc(100% - 48px), transparent);
+}
+
+.hud-detail abbr,
+.hud-time[title] {
+  text-decoration: underline dotted rgb(255 255 255 / 0.35);
+  text-underline-offset: 3px;
+  cursor: help;
+}

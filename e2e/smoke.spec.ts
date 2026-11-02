@@ -844,6 +844,21 @@ test('newcomers find their way: the tablet from the famous list, years typed, pi
   expect(problems).toEqual([]);
 });
 
+test('leaving deep time brings back the date and the eclipse that was picked', async ({ page }) => {
+  const problems = collectProblems(page);
+  await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
+  await globeRendered(page);
+  await page.getByRole('button', { name: 'Deep time' }).click();
+  await expect(page.locator('.hud-date')).toHaveText(/million years ago/);
+  await page.getByRole('button', { name: 'Back to history' }).click();
+  await expect(page.locator('.hud-date')).toHaveText('8 April 2024 CE');
+  await expect(page).toHaveURL(/sel=solar:2024-04-08/);
+  // ΔT and UT explain themselves on hover.
+  await expect(page.locator('.hud-detail abbr')).toHaveAttribute('title', /^ΔT: /);
+  await expect(page.locator('.hud-time')).toHaveAttribute('title', /Universal Time/);
+  expect(problems).toEqual([]);
+});
+
 test('Ptolemy’s eclipse of 721 BCE is listed on 29 Thoth in year 27 of Nabonassar', async ({
   page,
 }) => {
