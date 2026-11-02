@@ -22,7 +22,10 @@
  * - `seen` names a past state, as Cliopatria names it (`Neo-Babylonian Empire`): the year bar
  *   marks which eclipses could be seen from its territory. Absent means anywhere.
  * - `ma` switches the globe to deep time: Earth's surface that many million years ago (0 to
- *   540, to a tenth). Absent means historical time, given by `t`.
+ *   4,568, to a thousandth). Absent means historical time, given by `t`.
+ * - `impact`, `land` and `snowball` pick the hypotheses the deep-time globe sketches before
+ *   the reconstructions reach: when the Moon-forming impact struck, how much of the surface
+ *   was land, and how far a snowball's ice reached. Absent means the first of each.
  * - `culture` is whose constellations the sky view draws: `modern` (absent) or a sky culture
  *   such as `babylonian_mulapin` or `chinese`.
  * - `loc` (observer), `sel` (selected eclipse), `view` (an attached viewpoint; absent means
@@ -43,6 +46,14 @@ import {
   TEMPERATURE_MODELS,
   type TemperatureModel,
 } from '../deepTime/temperatureModels';
+import {
+  DEFAULT_IMPACT_MODEL,
+  DEFAULT_LAND_MODEL,
+  DEFAULT_SNOWBALL_MODEL,
+  IMPACT_MODELS,
+  LAND_MODELS,
+  SNOWBALL_MODELS,
+} from '../deepTime/sketch';
 import { YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
 import { errorMessage } from '../util/errors';
@@ -142,6 +153,9 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     coast: read('coast', parseCoast, defaults.coast),
     seaIce: read('seaice', parseSeaIce, defaults.seaIce),
     temperatureModel: read('temp', parseTemperatureModel, defaults.temperatureModel),
+    impact: read('impact', (raw) => oneOf(raw, IMPACT_MODELS, 'impact'), defaults.impact),
+    land: read('land', (raw) => oneOf(raw, LAND_MODELS, 'land'), defaults.land),
+    snowball: read('snowball', (raw) => oneOf(raw, SNOWBALL_MODELS, 'snowball'), defaults.snowball),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -178,6 +192,9 @@ export function serializeViewState(state: ViewState): string {
   if (state.temperatureModel !== DEFAULT_TEMPERATURE_MODEL) {
     params.set('temp', state.temperatureModel);
   }
+  if (state.impact !== DEFAULT_IMPACT_MODEL) params.set('impact', state.impact);
+  if (state.land !== DEFAULT_LAND_MODEL) params.set('land', state.land);
+  if (state.snowball !== DEFAULT_SNOWBALL_MODEL) params.set('snowball', state.snowball);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }

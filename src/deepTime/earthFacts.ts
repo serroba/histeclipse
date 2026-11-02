@@ -1,9 +1,10 @@
 /**
- * Earth's poles, magnetic field, tilt and day at a moment in deep time, as short lines for
+ * Earth's poles, magnetic field, tilt, day and Sun at a moment in deep time, as short lines for
  * the deep-time bar. Each says how it is known; uncertain things say so.
  */
 
 import { dayMeasurementsAround, fieldAt, type DayMeasurement, TILT } from './earthState';
+import { sunBrightness } from './sketch';
 
 export interface EarthFact {
   readonly label: string;
@@ -51,6 +52,15 @@ function day(ma: number): string {
   return `Measured ${measured(younger)}, and ${measured(older)}.`;
 }
 
+/** Before this, today's air under that Sun would have frozen the ocean: the faint young Sun paradox. */
+const FAINT_SUN_MA = 2500;
+
+function sun(ma: number): string {
+  const brightness = `About ${(sunBrightness(ma) * 100).toFixed(0)}% as bright as today (Gough 1981): the Sun brightens as it ages.`;
+  if (ma <= FAINT_SUN_MA) return brightness;
+  return `${brightness} With today’s air the ocean would have frozen, yet there is evidence of liquid water: the faint young Sun paradox (Sagan & Mullen 1972). Stronger greenhouse gases are the usual answer; how much of which is argued over.`;
+}
+
 /** The Precambrian tilt is argued over. */
 const PRECAMBRIAN_TILT =
   'A much larger tilt has been proposed for these times (Williams 1993) and argued to be unlikely (Néron de Surgy & Laskar 1997). Today: ';
@@ -67,5 +77,6 @@ export function earthFacts(ma: number): readonly EarthFact[] {
       text: `${ma > SPARSE_FIELD_MA ? PRECAMBRIAN_TILT : ''}Between ${String(TILT.min)}° and ${String(TILT.max)}°, cycling every ${(TILT.periodYears / 1000).toFixed(0)},000 years today (faster then, with the Moon nearer); ${String(TILT.today)}° now. Too quick to show here. The Moon keeps it from swinging further (${TILT.source}).`,
     },
     { label: 'Day', text: day(ma) },
+    { label: 'Sun', text: sun(ma) },
   ];
 }

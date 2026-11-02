@@ -11,6 +11,7 @@ import {
   CanvasTexture,
   Color,
   CylinderGeometry,
+  DataTexture,
   Group,
   LinearFilter,
   Matrix4,
@@ -20,6 +21,8 @@ import {
   OrthographicCamera,
   PerspectiveCamera,
   PlaneGeometry,
+  RedFormat,
+  RepeatWrapping,
   Quaternion,
   Raycaster,
   Scene,
@@ -29,6 +32,7 @@ import {
   SpriteMaterial,
   SRGBColorSpace,
   TextureLoader,
+  UnsignedByteType,
   CustomBlending,
   OneFactor,
   ZeroFactor,
@@ -51,6 +55,7 @@ import {
   type Viewpoint,
 } from '../state/viewState';
 import type { BesselianElements } from '../data/solarCatalog';
+import { LAND_NOISE_GRID, landNoise, levelForShare, shareAtOrAbove } from '../deepTime/landScheme';
 import {
   ELEMENTS_HALF_SPAN_HOURS,
   SIDEREAL_DEGREES_PER_SECOND,
@@ -245,6 +250,19 @@ export interface PlateSurface {
   readonly turnOlder: number;
 }
 
+/**
+ * Before any reconstruction: what a hypothesis says the surface was like, drawn as a sketch.
+ * Land, if any, has invented shapes and places; only its share of the surface is the source's.
+ */
+export interface SurfaceSketch {
+  /** A molten surface, or an ocean with that share of the surface as land. */
+  readonly kind: 'magma' | 'ocean';
+  /** Share of the whole surface that is land, 0..1. */
+  readonly land: number;
+  /** Ice covers everything poleward of this latitude, degrees; 90 or more draws none. */
+  readonly iceEdge: number;
+}
+
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
   setSunDirection(direction: Vector3Tuple): void;
@@ -300,6 +318,8 @@ export interface Globe {
   setPlates(surface: PlateSurface | null): void;
   /** Before the elevation maps reach: a plain globe with a faint grid, not a made-up map. */
   setUncharted(uncharted: boolean): void;
+  /** On the plain globe, sketch a hypothesis of the surface; null leaves it plain. */
+  setSketch(sketch: SurfaceSketch | null): void;
   /** Pin the chosen place on the globe; null removes the pin. */
   setLocation(place: GeoPoint | null): void;
   /**
@@ -389,6 +409,10 @@ const EARTH_FRAGMENT = /* glsl */ `
   uniform vec2 plateGrid;
   uniform vec2 plateTurn;
   uniform float uncharted;
+  uniform sampler2D sketchNoise;
+  uniform float sketchKind;
+  uniform float sketchLevel;
+  uniform float sketchIceEdge;
   uniform vec2 paleoGrid;
   uniform float seaDepth;
   uniform float landHeight;
@@ -497,12 +521,15 @@ const EARTH_FRAGMENT = /* glsl */ `
 
   // No map before the elevation maps reach: a plain globe, with a graticule every 30 degrees so
   // it still reads as a sphere turning.
-  vec3 unchartedSurface(vec2 uv) {
+  float gridLine(vec2 uv) {
     vec2 degrees = vec2(uv.x * 360.0, uv.y * 180.0);
     vec2 toLine = abs(fract(degrees / 30.0 + 0.5) - 0.5) * 30.0;
     vec2 width = fwidth(degrees) * 0.8;
-    float line = 1.0 - min(smoothstep(0.0, width.x, toLine.x), smoothstep(0.0, width.y, toLine.y));
-    return mix(srgb(vec3(0.20, 0.25, 0.33)), srgb(vec3(0.42, 0.50, 0.62)), line * 0.6);
+    return 1.0 - min(smoothstep(0.0, width.x, toLine.x), smoothstep(0.0, width.y, toLine.y));
+  }
+
+  vec3 unchartedSurface(vec2 uv) {
+    return mix(srgb(vec3(0.20, 0.25, 0.33)), srgb(vec3(0.42, 0.50, 0.62)), gridLine(uv) * 0.6);
   }
 
   // A second reconstruction's continents as a thin magenta line, a pixel or two wide at any
@@ -520,8 +547,41 @@ const EARTH_FRAGMENT = /* glsl */ `
     return mix(color, srgb(vec3(1.0, 0.42, 0.84)), edge * 0.9);
   }
 
+  // A hypothesis sketched on the plain globe: a molten surface with glowing seams, or an ocean
+  // with land of invented shape cut from a noise field, and ice poleward of an edge. The grid
+  // stays on top, faintly, so it reads as a sketch and not a map.
+  float sketchIce(vec2 uv) {
+    if (sketchKind < 0.5) return 0.0;
+    float latitude = abs(uv.y - 0.5) * 180.0;
+    float blur = max(fwidth(latitude), 0.3);
+    return smoothstep(sketchIceEdge - blur, sketchIceEdge + blur, latitude);
+  }
+
+  vec3 sketchSurface(vec2 uv) {
+    if (sketchKind < 0.5) return unchartedSurface(uv);
+    float noise = texture2D(sketchNoise, uv).r;
+    vec3 color;
+    if (sketchKind < 1.5) {
+      // Chilled crust, darker where thicker, split by thin seams of glowing melt.
+      // Held below 1, so the highest values don't wrap to a dark patch.
+      float band = fract(min(noise, 0.99) * 4.0);
+      float seam = abs(band - 0.5);
+      float glow = 1.0 - smoothstep(0.0, 0.035 + fwidth(noise) * 4.0, seam);
+      vec3 crust = mix(srgb(vec3(0.16, 0.05, 0.03)), srgb(vec3(0.42, 0.12, 0.04)), band);
+      color = mix(crust, srgb(vec3(1.0, 0.62, 0.2)), glow);
+    } else {
+      float blur = max(fwidth(noise), 1e-3);
+      float land = smoothstep(sketchLevel - blur, sketchLevel + blur, noise);
+      // Bare rock: there were no plants on land.
+      color = mix(srgb(vec3(0.12, 0.25, 0.36)), srgb(vec3(0.50, 0.45, 0.38)), land);
+    }
+    color = mix(color, srgb(vec3(0.92, 0.95, 0.99)), sketchIce(uv));
+    return mix(color, srgb(vec3(0.42, 0.50, 0.62)), 0.35 * gridLine(uv));
+  }
+
   vec3 paleoSurface(vec2 uv) {
-    if (uncharted > 0.5) return withPlates(unchartedSurface(uv), uv, 1.0);
+    // Under a sketch's ice, a reconstruction's continents keep only their outline.
+    if (uncharted > 0.5) return withPlates(sketchSurface(uv), uv, 1.0 - sketchIce(uv));
     float height = paleoHeight(uv);
     // Where the coast runs comes from heights averaged over about half a degree (a tent of
     // nine samples): some source grids draw coasts in 0.5–1° steps, and this rounds them off.
@@ -820,6 +880,18 @@ const ATMOSPHERE_FRAGMENT = /* glsl */ `
   }
 `;
 
+/** The sketch's noise field as a texture, made once, wrapping east–west. */
+function sketchTexture(): { readonly texture: DataTexture; readonly shares: Float64Array } {
+  const { columns, rows } = LAND_NOISE_GRID;
+  const field = landNoise(columns, rows);
+  const texture = new DataTexture(field, columns, rows, RedFormat, UnsignedByteType);
+  texture.wrapS = RepeatWrapping;
+  texture.minFilter = LinearFilter;
+  texture.magFilter = LinearFilter;
+  texture.needsUpdate = true;
+  return { texture, shares: shareAtOrAbove(field, columns, rows) };
+}
+
 export async function createGlobe(
   container: HTMLElement,
   options: {
@@ -928,6 +1000,10 @@ export async function createGlobe(
         plateGrid: { value: new Vector2(1441, 721) },
         plateTurn: { value: new Vector2(0, 0) },
         uncharted: { value: 0 },
+        sketchNoise: { value: null as Texture | null },
+        sketchKind: { value: 0 },
+        sketchLevel: { value: 2 },
+        sketchIceEdge: { value: 90 },
         evenLight,
         paleoGrid: { value: new Vector2(361, 181) },
         seaDepth: { value: 11_000 },
@@ -1091,6 +1167,7 @@ export async function createGlobe(
   let iceWanted: IceSurface | null = null;
   let seaIceWanted: SeaIceSurface | null = null;
   let platesWanted: PlateSurface | null = null;
+  let sketchField: { readonly texture: DataTexture; readonly shares: Float64Array } | null = null;
   function hiddenInDeepTime(): Object3D[] {
     return [sun, corona, moon, ...Object.values(planets.meshes)];
   }
@@ -1994,6 +2071,23 @@ export async function createGlobe(
       earth.material.uniforms['uncharted'] = { value: blank ? 1 : 0 };
       container.dataset['uncharted'] = String(blank);
       needsRender = true;
+    },
+    setSketch(sketch) {
+      const uniforms = earth.material.uniforms;
+      container.dataset['sketch'] =
+        sketch === null
+          ? 'off'
+          : `${sketch.kind} ${sketch.land.toFixed(3)} ${String(sketch.iceEdge)}`;
+      needsRender = true;
+      if (sketch === null) {
+        uniforms['sketchKind'] = { value: 0 };
+        return;
+      }
+      sketchField ??= sketchTexture();
+      uniforms['sketchNoise'] = { value: sketchField.texture };
+      uniforms['sketchKind'] = { value: sketch.kind === 'magma' ? 1 : 2 };
+      uniforms['sketchLevel'] = { value: levelForShare(sketchField.shares, sketch.land) };
+      uniforms['sketchIceEdge'] = { value: sketch.iceEdge };
     },
     setEmpires(layer) {
       const uniforms = earth.material.uniforms;
