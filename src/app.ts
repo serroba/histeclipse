@@ -151,6 +151,7 @@ import {
   type TemperatureIndexes,
   type TemperatureModel,
 } from './deepTime/temperatureModels';
+import { playhead } from './deepTime/playhead';
 import { PLATES_REACH_MA, sketchAt } from './deepTime/sketch';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
 import { elementAt } from './util/arrays';
@@ -1160,6 +1161,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let playing = false;
   let playFrame = 0;
   let lastTick = 0;
+  let head = playhead();
 
   function showDeepTime(state: ViewState): void {
     const { ma } = state;
@@ -1578,12 +1580,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => ({ ...state, ma: spanOf(state.deepScale) }));
     }
     lastTick = performance.now();
+    head = playhead();
     playFrame = requestAnimationFrame(tick);
     showDeepTime(store.get());
   }
 
   function tick(now: number): void {
-    const seconds = Math.min((now - lastTick) / 1000, 0.25);
+    const seconds = (now - lastTick) / 1000;
     lastTick = now;
     const ma = store.get().ma;
     if (ma === null) {
@@ -1597,7 +1600,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         : scale === 'eons'
           ? EONS_PLAY_MA_PER_SECOND
           : PLAY_MA_PER_SECOND;
-    const next = Math.max(0, roundMa(ma - speed * seconds));
+    const next = head.step(ma, speed, seconds);
     store.set((state) => ({ ...state, ma: next }));
     if (next <= 0) {
       stopPlay();
