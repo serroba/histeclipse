@@ -738,10 +738,11 @@ test('the Babylonian calendar dates Jerusalem’s capture to 2 Addaru, 16 March 
   await page.goto('./?t=-596-03-16T12:00&years=babylonian');
   await globeRendered(page);
   await expect(page.getByLabel('Year', { exact: true })).toHaveValue('150');
-  await expect(page.locator('.hud-detail')).toContainText('2 Addaru 150 Bab. (598/597 BCE)');
   await expect(page.locator('.hud-detail')).toContainText(
-    'leap months by the 19-year cycle run back',
+    '2 Addaru, year 7 of Nebuchadnezzar II · 150 Bab. (598/597 BCE)',
   );
+  // The canon counts Egyptian years, which began in February: there it is already year 8.
+  await expect(page.locator('.hud-detail')).toContainText('Ptolemy’s canon: Nabokolassaros 8');
 });
 
 test('Ptolemy’s eclipse of 721 BCE is listed on 29 Thoth in year 27 of Nabonassar', async ({

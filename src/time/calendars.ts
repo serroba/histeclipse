@@ -35,8 +35,10 @@ import {
   babylonianNewYear,
   babylonianYearOf,
   type BabylonianDate,
+  bceOf,
   NABONASSAR_OFFSET,
 } from './babylonian';
+import { canonYear, type RegnalYear, tabletYears } from './babylonianHistory';
 import {
   chineseDate,
   chineseNewYear,
@@ -430,9 +432,26 @@ function westernSpan(year: number): string {
   return `${String(1 - year)}/${String(-year)} BCE`;
 }
 
+/** "year 7 of Nebuchadnezzar II", "accession year of Nebuchadnezzar II". */
+function regnalText({ king, year, alsoYear }: RegnalYear): string {
+  if (year === 0) return `accession year of ${king}`;
+  const also = alsoYear === undefined || alsoYear === null ? '' : ` (or year ${String(alsoYear)})`;
+  return `year ${String(year)}${also} of ${king}`;
+}
+
+/** Where the year's leap month comes from, when it has one or the sources run out. */
+function leapNote(date: BabylonianDate): string | null {
+  if (date.leapSource === 'cycle run back') return 'leap months by the 19-year cycle run back';
+  if (date.leapMonth === null || date.leapSource === 'cycle') return null;
+  return date.leapSource === 'attested'
+    ? `${date.leapMonth} attested on tablets`
+    : `${date.leapMonth} reconstructed by Parker & Dubberstein`;
+}
+
 /**
- * "2 Addaru 150 Bab. (598/597 BCE)", with the Seleucid year from 311 BCE and what is uncertain:
- * a close-call crescent, and leap months before 380 BCE.
+ * "2 Addaru, year 7 of Nebuchadnezzar II · 150 Bab. (598/597 BCE) · Ptolemy's canon:
+ * Nabokolassaros 7", with the Seleucid year from 311 BCE and what is uncertain: a close-call
+ * crescent, and where the year's leap month comes from.
  */
 function formatBabylonian(jd: JulianDay): string {
   const date = babylonianDate(fixedDay(jd));
@@ -440,12 +459,17 @@ function formatBabylonian(jd: JulianDay): string {
     const year = yearContaining('babylonian', jd);
     return `${formatCalendarYear('babylonian', year)} (by 1 January; months not computed)`;
   }
+  const reigns = tabletYears(bceOf(date.year)).map(regnalText);
+  const canon = canonYear(yearContaining('egyptian', jd));
   const notes = [
+    canon === null ? null : `Ptolemy’s canon: ${canon.king} ${String(canon.year)}`,
     date.seleucidYear === null ? null : `SE ${String(date.seleucidYear)}`,
     date.dayUncertain ? 'crescent a close call: ±1 day' : null,
-    date.leapUncertain ? 'leap months by the 19-year cycle run back' : null,
+    leapNote(date),
   ].filter((note) => note !== null);
   const tail = notes.length === 0 ? '' : ` · ${notes.join(' · ')}`;
+  const day = `${String(date.day)} ${babylonianMonth(date)}`;
+  const dated = reigns.length === 0 ? day : `${day}, ${reigns.join('; ')}`;
   const western = westernSpan(date.year - NABONASSAR_OFFSET);
-  return `${String(date.day)} ${babylonianMonth(date)} ${formatCalendarYear('babylonian', date.year)} (${western})${tail}`;
+  return `${dated} · ${formatCalendarYear('babylonian', date.year)} (${western})${tail}`;
 }

@@ -2,11 +2,12 @@
  * The Babylonian calendar: months from the first visible crescent at Babylon, computed from
  * DE441 (see `data-pipeline/src/histeclipse_pipeline/lunisolar.py`), for 750 BCE to 100 CE.
  *
- * Years begin with Nisannu in spring. A year has 12 months or 13: in the 19-year cycle counted
- * from Nabonassar's first year (747 BCE), years 3, 6, 8, 11, 14 and 19 add a second Addaru and
- * year 17 a second Ululu (Parker & Dubberstein; Britton 2007). The cycle ruled from about 499 BCE
- * and without exception from 380 BCE; before then the king decreed each leap month, so earlier
- * leap months here are the cycle run backwards and may differ from those attested.
+ * Years begin with Nisannu in spring. A year has 12 months or 13. From 367 BCE the 19-year cycle
+ * counted from Nabonassar's first year (747 BCE) set them: years 3, 6, 8, 11, 14 and 19 add a
+ * second Addaru and year 17 a second Ululu (Parker & Dubberstein; Britton 2007). Before, the king
+ * or the temple decreed each leap month: for 626–367 BCE they are those attested on tablets or
+ * reconstructed by Parker & Dubberstein (`babylonianHistory.ts`); before 626 BCE, the cycle run
+ * backwards, which may differ from those decreed.
  *
  * Years are counted from Nabonassar, as Babylonian astronomers did (year 1 begins in spring 747
  * BCE); from 311 BCE the Seleucid Era is given too. Under the Persian kings (550–330 BCE) each
@@ -19,6 +20,7 @@
 import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
+import { leapMonthOf, type LeapMonth } from './babylonianHistory';
 import table from '../../public/data/calendars/babylon.json' with { type: 'json' };
 
 /** Nabonassar's year 1 begins in spring 747 BCE, astronomical year −746. */
@@ -27,8 +29,6 @@ export const NABONASSAR_OFFSET = 747;
 const SELEUCID_FIRST = 437;
 /** Fixed day of 3 April 311 BCE (Julian). */
 const SELEUCID_EPOCH = -113_502;
-/** From 380 BCE (Nabonassar 368) the cycle held without exception. */
-const CYCLE_FIRM_FROM = 368;
 /** The Persian kings: Cyrus took Babylon in 539 BCE; Old Persian names from 550 to 330 BCE. */
 const PERSIAN_FROM = 198;
 const PERSIAN_UNTIL = 417;
@@ -68,11 +68,39 @@ function mod(value: number, divisor: number): number {
 }
 
 /** The months of a year counted from Nabonassar, in order. */
+/** The year BCE in which a Nabonassar year began. */
+export function bceOf(year: number): number {
+  return NABONASSAR_OFFSET + 1 - year;
+}
+
 function monthsOf(year: number): readonly MonthName[] {
+  const recorded = leapMonthOf(bceOf(year));
+  if (recorded !== undefined) return withLeap(recorded);
   const place = mod(year, 19);
   if (place === 17) return [...MONTHS.slice(0, 6), SECOND_ULULU, ...MONTHS.slice(6)];
   if ([0, 3, 6, 8, 11, 14].includes(place)) return [...MONTHS, SECOND_ADDARU];
   return MONTHS;
+}
+
+function withLeap(leap: LeapMonth | null): readonly MonthName[] {
+  if (leap === null) return MONTHS;
+  if (leap.kind === 'Ululu II') return [...MONTHS.slice(0, 6), SECOND_ULULU, ...MONTHS.slice(6)];
+  return [...MONTHS, SECOND_ADDARU];
+}
+
+function leapMonthName(year: number): string | null {
+  const months = monthsOf(year);
+  if (months.length === 12) return null;
+  return months.includes(SECOND_ULULU) ? SECOND_ULULU[0] : SECOND_ADDARU[0];
+}
+
+/** Where a year's leap month comes from: tablets, a reconstruction, or the cycle. */
+export type LeapSource = 'attested' | 'reconstructed' | 'cycle' | 'cycle run back';
+
+function leapSourceOf(year: number): LeapSource {
+  const recorded = leapMonthOf(bceOf(year));
+  if (recorded === undefined) return bceOf(year) > 626 ? 'cycle run back' : 'cycle';
+  return recorded?.attested === true ? 'attested' : 'reconstructed';
 }
 
 interface BabylonTable {
@@ -172,8 +200,13 @@ export interface BabylonianDate {
   readonly day: number;
   /** The crescent was a close call: the month may have begun a day earlier or later. */
   readonly dayUncertain: boolean;
-  /** Before 380 BCE: leap months are the cycle run backwards, not those decreed. */
-  readonly leapUncertain: boolean;
+  /**
+   * Where the year's leap month (or its lack) comes from. A year of 626–367 BCE with none is
+   * "reconstructed": Parker & Dubberstein leave it at twelve months.
+   */
+  readonly leapSource: LeapSource;
+  /** The year's leap month, if it has one. */
+  readonly leapMonth: string | null;
   /** The Seleucid Era year, from 311 BCE; otherwise null. */
   readonly seleucidYear: number | null;
 }
@@ -191,7 +224,8 @@ export function babylonianDate(rd: number): BabylonianDate | null {
     persianName: year >= PERSIAN_FROM && year <= PERSIAN_UNTIL ? name[1] : null,
     day: rd - elementAt(starts, month) + 1,
     dayUncertain: uncertain.has(month),
-    leapUncertain: year < CYCLE_FIRM_FROM,
+    leapSource: leapSourceOf(year),
+    leapMonth: leapMonthName(year),
     seleucidYear: year >= SELEUCID_FIRST ? year - SELEUCID_FIRST + 1 : null,
   };
 }
