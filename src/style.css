@@ -185,8 +185,88 @@ body {
 
 .hud-actions .famous-open,
 .hud-actions .deep-open,
-.hud-actions .layer-switch {
+.hud-actions .layers-open {
   margin-top: 0;
+}
+
+/* Layers: a button beside Deep time, opening a panel that leaves the globe in reach. */
+.layers-open {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgb(150 180 255 / 0.35);
+  border-radius: 22px;
+  background: rgb(150 180 255 / 0.06);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.layers-open[aria-expanded='true'] {
+  border-color: rgb(150 180 255 / 0.85);
+  background: rgb(150 180 255 / 0.2);
+}
+
+.famous-dialog.layers-dialog {
+  position: fixed;
+  inset: 16px 16px auto auto;
+  z-index: 3;
+  width: min(360px, calc(100% - 32px));
+  max-height: calc(100vh - 32px);
+  margin: 0;
+  overflow: auto;
+  /* Opaque: labels and the year bar would read through a see-through sheet. */
+  background: rgb(10 16 32);
+}
+
+.layers-group {
+  margin: 0;
+  padding: 4px 18px 12px;
+  border: none;
+}
+
+.layers-group legend {
+  padding: 8px 0 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.layer-item + .layer-item {
+  margin-top: 8px;
+}
+
+.layer-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.layer-box {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: #8fb4ff;
+}
+
+.layer-about,
+.layer-note {
+  margin: 0 0 6px 30px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.layer-note {
+  color: var(--accent);
+}
+
+.layer-item .borders-select {
+  margin: 2px 0 6px 30px;
 }
 
 .empire-labels {
@@ -1680,22 +1760,21 @@ body {
   }
 }
 
-/* On phones the header's first row holds Famous eclipses, Deep time and the layers: the group's
-   name stays for screen readers, and the buttons tighten up. */
+/* On phones the header's first row holds Famous eclipses, Deep time and Layers: the buttons
+   tighten up, and the Layers panel becomes a sheet along the bottom. */
 @media (max-width: 600px) {
-  .hud-actions .layer-switch .switch-label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
-
   .hud-actions .famous-open,
   .hud-actions .deep-open,
-  .hud-actions .layer-switch button {
+  .hud-actions .layers-open {
     padding: 0 10px;
+  }
+
+  .famous-dialog.layers-dialog {
+    inset: auto 0 0;
+    width: 100%;
+    max-height: 70vh;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
