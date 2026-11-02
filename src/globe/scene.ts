@@ -365,7 +365,7 @@ const PATH_VERTEX = /* glsl */ `
 // Day side lit by the Sun, a twilight band down to about −6° (civil twilight), a dim blue night
 // side (no city lights: they would be anachronistic for most of history), and a faint warm glow
 // along the terminator.
-const EARTH_FRAGMENT = /* glsl */ `
+export const EARTH_FRAGMENT = /* glsl */ `
   #include <logdepthbuf_pars_fragment>
   ${SOLAR_COMMON}
   ${SOLAR_SHADOW}
@@ -409,14 +409,15 @@ const EARTH_FRAGMENT = /* glsl */ `
   uniform vec2 plateGrid;
   uniform vec2 plateTurn;
   uniform float uncharted;
-  uniform sampler2D sketchNoise;
   uniform float sketchKind;
   uniform float sketchLevel;
   uniform float sketchIceEdge;
   uniform vec2 paleoGrid;
   uniform float seaDepth;
   uniform float landHeight;
-  uniform sampler2D empiresMap;
+  // Shared by the empires map (historical time) and the sketch's noise (deep time), which never
+  // show together: a seventeenth texture would pass the 16 that many GPUs allow a shader.
+  uniform sampler2D overlayMap;
   uniform float empiresActive;
   // The Moon and Sun in the scene, for the Moon's shadow at any moment.
   uniform vec3 moonPosition;
@@ -559,7 +560,7 @@ const EARTH_FRAGMENT = /* glsl */ `
 
   vec3 sketchSurface(vec2 uv) {
     if (sketchKind < 0.5) return unchartedSurface(uv);
-    float noise = texture2D(sketchNoise, uv).r;
+    float noise = texture2D(overlayMap, uv).r;
     vec3 color;
     if (sketchKind < 1.5) {
       // Chilled crust, darker where thicker, split by thin seams of glowing melt.
@@ -657,7 +658,7 @@ const EARTH_FRAGMENT = /* glsl */ `
   // Past states and empires, painted on a map in the ground texture's layout. Each keeps its
   // colour by night too, a little dimmer, so borders read on both sides.
   vec3 empiresLayer(vec3 color, float daylight) {
-    vec4 painted = texture2D(empiresMap, vUv);
+    vec4 painted = texture2D(overlayMap, vUv);
     vec3 tinted = mix(color, painted.rgb * (0.45 + 0.55 * daylight), painted.a * 0.85);
     return mix(color, tinted, empiresActive);
   }
@@ -1000,7 +1001,6 @@ export async function createGlobe(
         plateGrid: { value: new Vector2(1441, 721) },
         plateTurn: { value: new Vector2(0, 0) },
         uncharted: { value: 0 },
-        sketchNoise: { value: null as Texture | null },
         sketchKind: { value: 0 },
         sketchLevel: { value: 2 },
         sketchIceEdge: { value: 90 },
@@ -1008,7 +1008,7 @@ export async function createGlobe(
         paleoGrid: { value: new Vector2(361, 181) },
         seaDepth: { value: 11_000 },
         landHeight: { value: 6_500 },
-        empiresMap: { value: empiresTexture },
+        overlayMap: { value: empiresTexture as Texture },
         empiresActive: { value: 0 },
         sunDirection: { value: sunDirection },
         lunarActive: lunarActive,
@@ -2084,7 +2084,7 @@ export async function createGlobe(
         return;
       }
       sketchField ??= sketchTexture();
-      uniforms['sketchNoise'] = { value: sketchField.texture };
+      uniforms['overlayMap'] = { value: sketchField.texture };
       uniforms['sketchKind'] = { value: sketch.kind === 'magma' ? 1 : 2 };
       uniforms['sketchLevel'] = { value: levelForShare(sketchField.shares, sketch.land) };
       uniforms['sketchIceEdge'] = { value: sketch.iceEdge };
@@ -2092,6 +2092,7 @@ export async function createGlobe(
     setEmpires(layer) {
       const uniforms = earth.material.uniforms;
       uniforms['empiresActive'] = { value: layer === null ? 0 : 1 };
+      if (layer !== null) uniforms['overlayMap'] = { value: empiresTexture };
       empireLabelLayer.replaceChildren();
       empireLabels = [];
       if (layer !== null) {
