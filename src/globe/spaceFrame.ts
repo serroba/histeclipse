@@ -140,16 +140,29 @@ const STANDING_HEIGHT = 1.05;
 /**
  * The camera for a viewpoint attached to the bodies, given the Moon's scene position (Earth
  * radii, Earth at the origin). Positions are true; only the lens narrows, like binoculars.
+ *
+ * From Earth, the camera stands where `observer` (a point on Earth's surface, in the same
+ * frame) sees the Moon from, if it is up there: on that place's line of sight, just far enough
+ * along it to clear the drawn atmosphere, so the Moon lines up with the Sun exactly as it did
+ * there. Otherwise it stands under the Moon.
  */
-export function attachedPose(viewpoint: Exclude<Viewpoint, 'free'>, moon: Vector3): CameraPose {
+export function attachedPose(
+  viewpoint: Exclude<Viewpoint, 'free'>,
+  moon: Vector3,
+  observer: Vector3 | null = null,
+): CameraPose {
   const distance = Math.hypot(...moon);
   const toMoon = moon.map((value) => value / distance) as unknown as Vector3;
   if (viewpoint === 'moon-from-earth') {
-    const eye = scale(toMoon, STANDING_HEIGHT);
+    const eye = observer === null ? null : alongSight(observer, moon);
+    const standing = eye ?? scale(toMoon, STANDING_HEIGHT);
     return {
-      eye,
+      eye: standing,
       target: moon,
-      fovDegrees: framingFov(MOON_RADIUS_EARTH_RADII, distance - STANDING_HEIGHT),
+      fovDegrees: framingFov(
+        MOON_RADIUS_EARTH_RADII,
+        Math.hypot(...moon.map((value, index) => value - (standing[index] ?? 0))),
+      ),
     };
   }
   const height = MOON_RADIUS_EARTH_RADII * STANDING_HEIGHT;
@@ -158,6 +171,21 @@ export function attachedPose(viewpoint: Exclude<Viewpoint, 'free'>, moon: Vector
     target: [0, 0, 0],
     fovDegrees: framingFov(1, distance - height),
   };
+}
+
+/**
+ * Where the line from `observer` to `moon` leaves the drawn atmosphere, or null if the Moon is
+ * below that place's horizon.
+ */
+function alongSight(observer: Vector3, moon: Vector3): Vector3 | null {
+  const sight = moon.map((value, index) => value - (observer[index] ?? 0));
+  const length = Math.hypot(...sight);
+  const unit = sight.map((value) => value / length);
+  const along = observer.reduce((sum, value, index) => sum + value * (unit[index] ?? 0), 0);
+  if (along <= 0) return null;
+  const squared = observer.reduce((sum, value) => sum + value * value, 0);
+  const step = -along + Math.sqrt(along * along - (squared - STANDING_HEIGHT ** 2));
+  return observer.map((value, index) => value + step * (unit[index] ?? 0)) as unknown as Vector3;
 }
 
 function framingFov(radius: number, distance: number): number {

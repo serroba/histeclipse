@@ -117,6 +117,28 @@ describe('attachedPose', () => {
     expect(pose.fovDegrees).toBeCloseTo(1.32, 2);
   });
 
+  it('stands on the line of sight from a place that sees the Moon', () => {
+    // A place 60° from the point under the Moon, which is 60 Earth radii up +z.
+    const observer: Vector3 = [Math.sin(Math.PI / 3), 0, Math.cos(Math.PI / 3)];
+    const pose = attachedPose('moon-from-earth', moon, observer);
+    expect(Math.hypot(...pose.eye)).toBeCloseTo(1.05, 12);
+    // The same direction to the Moon as from the place itself.
+    const direction = (from: Vector3) => {
+      const d = moon.map((value, index) => value - (from[index] ?? 0));
+      const length = Math.hypot(...d);
+      return d.map((value) => value / length);
+    };
+    const fromEye = direction(pose.eye);
+    direction(observer).forEach((value, index) => {
+      expect(fromEye[index]).toBeCloseTo(value, 12);
+    });
+  });
+
+  it('stands under the Moon when it is below the place’s horizon', () => {
+    const pose = attachedPose('moon-from-earth', moon, [0, 0, -1]);
+    expect(pose.eye).toEqual([0, 0, 1.05]);
+  });
+
   it('stands on the Moon facing Earth, framing it', () => {
     const pose = attachedPose('earth-from-moon', moon);
     expect(pose.eye[2]).toBeCloseTo(60 - 1.05 * MOON_RADIUS_EARTH_RADII, 12);

@@ -94,6 +94,8 @@ import {
   SOLAR_SHADOW,
 } from './solarShaders';
 
+/** How far out the place pin floats, in Earth radii, so it shows above the ground. */
+const PIN_HEIGHT = 1.004;
 const NARROW_SIDE_FOV_DEGREES = 40;
 const FLIGHT_MS = 900;
 /** Flights between viewpoints cross up to 60 Earth radii: quick, but long enough to follow. */
@@ -1347,7 +1349,14 @@ export async function createGlobe(
 
   function livePose(): CameraPose {
     if (viewpoint === 'free') return focusPose(focus, focusCamera);
-    return attachedPose(viewpoint, [moon.position.x, moon.position.y, moon.position.z]);
+    // From Earth, stand where the place picked sees the Moon from.
+    const place = pin.visible ? pin.getWorldPosition(new Vector3()) : null;
+    return attachedPose(
+      viewpoint,
+      [moon.position.x, moon.position.y, moon.position.z],
+      // The pin floats a little above the ground; the place is on it.
+      place === null ? null : [place.x / PIN_HEIGHT, place.y / PIN_HEIGHT, place.z / PIN_HEIGHT],
+    );
   }
 
   function applyPose(pose: CameraPose): void {
@@ -2037,7 +2046,7 @@ export async function createGlobe(
     },
     setLocation(place) {
       pin.visible = place !== null;
-      if (place !== null) pin.position.set(...geoToVector(place, 1.004));
+      if (place !== null) pin.position.set(...geoToVector(place, PIN_HEIGHT));
       container.dataset['location'] =
         place === null ? '' : `${place.latitude.toFixed(2)},${place.longitude.toFixed(2)}`;
       needsRender = true;
