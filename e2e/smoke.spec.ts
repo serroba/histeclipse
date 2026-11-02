@@ -768,6 +768,29 @@ test('VAT 4956 can be checked against two candidate years, record by record', as
   expect(problems).toEqual([]);
 });
 
+test('Back steps through what the reader did, and Forward returns', async ({ page }) => {
+  const problems = collectProblems(page);
+  await page.goto('./?t=2024-04-08T18:17');
+  await globeRendered(page);
+  await page
+    .getByRole('button', { name: /Total solar/ })
+    .first()
+    .click();
+  await expect(page).toHaveURL(/sel=solar:2024-04-08/);
+  await page.getByRole('button', { name: 'Sky', exact: true }).click();
+  await expect(page).toHaveURL(/mode=sky/);
+  // Back: from the sky to the globe, the eclipse still picked; again: before the pick.
+  await page.goBack();
+  await expect(page).not.toHaveURL(/mode=sky/);
+  await expect(page).toHaveURL(/sel=solar:2024-04-08/);
+  await page.goBack();
+  await expect(page).not.toHaveURL(/sel=/);
+  await expect(page.locator('.hud')).toBeVisible();
+  await page.goForward();
+  await expect(page).toHaveURL(/sel=solar:2024-04-08/);
+  expect(problems).toEqual([]);
+});
+
 test('Ptolemy’s eclipse of 721 BCE is listed on 29 Thoth in year 27 of Nabonassar', async ({
   page,
 }) => {
