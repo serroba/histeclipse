@@ -7,11 +7,13 @@ import {
   describeLunarEclipse,
   describeSolarEclipse,
   eclipseMoment,
+  eclipseMomentAt,
   eclipseSelection,
   findSelected,
   isSolar,
 } from './describe';
 import type { SolarEclipse } from '../data/solarCatalog';
+import century from '../../public/data/solar/2000.json';
 
 const day = (year: number, month: number, date: number, calendar: 'julian' | 'gregorian') =>
   calendarDateOf(astronomicalYear(year), month, date, calendar);
@@ -144,5 +146,32 @@ describe('solar eclipses', () => {
     expect(
       findSelected([MARCH_2025, total], { kind: 'solar', date: day(2024, 4, 8, 'gregorian') }),
     ).toBe(total);
+  });
+});
+
+describe('eclipseMomentAt', () => {
+  const april2024 = (century as unknown as SolarEclipse[]).find(
+    (record) =>
+      eclipseSelection(record).date.year === 2024 && eclipseSelection(record).date.month === 4,
+  );
+  if (april2024 === undefined) throw new Error('2024 April 8 is missing from the catalog');
+  const minuteOf = (hours: number, minutes: number) => hours * 60 + minutes;
+
+  it('moves to the moment the eclipse is deepest at the place', () => {
+    // NASA: totality in Dallas 18:40:43–18:44:35 UT.
+    const dallas = eclipseMomentAt(april2024, { latitude: 32.7767, longitude: -96.797 });
+    expect(dallas.date).toEqual(day(2024, 4, 8, 'gregorian'));
+    expect(dallas.minuteOfDay).toBeGreaterThanOrEqual(minuteOf(18, 42));
+    expect(dallas.minuteOfDay).toBeLessThanOrEqual(minuteOf(18, 43));
+  });
+
+  it('keeps greatest eclipse with no place, where the shadow misses, and for the Moon', () => {
+    expect(eclipseMomentAt(april2024, null)).toEqual(eclipseMoment(april2024));
+    expect(eclipseMomentAt(april2024, { latitude: -33.87, longitude: 151.21 })).toEqual(
+      eclipseMoment(april2024),
+    );
+    expect(eclipseMomentAt(MARCH_2025, { latitude: 0, longitude: 0 })).toEqual(
+      eclipseMoment(MARCH_2025),
+    );
   });
 });

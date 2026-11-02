@@ -37,6 +37,14 @@ describe('local circumstances', () => {
     ).toBe('total');
   });
 
+  it('puts deepest eclipse in the middle of totality, not at its start', () => {
+    // NASA: totality in Dallas 18:40:43–18:44:35 UT, so mid-totality about 18:42:39.
+    const maximum = maximumEclipseAt(APRIL_2024.elements, APRIL_2024.deltaT, DALLAS);
+    const ut = maximum === null ? Number.NaN : maximum.jdTT - APRIL_2024.deltaT / 86_400;
+    const seconds = ((ut + 0.5) % 1) * 86_400;
+    expect(Math.abs(seconds - (18 * 3600 + 42 * 60 + 39))).toBeLessThan(20);
+  });
+
   it('gives New York a deep partial eclipse on 2024 April 8', () => {
     const maximum = maximumEclipseAt(APRIL_2024.elements, APRIL_2024.deltaT, NEW_YORK);
     expect(maximum?.circumstances.phase).toBe('partial');
