@@ -429,8 +429,39 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const timeText = element('span', {
     class: 'hud-time',
     title: 'UT: Universal Time, the time of day at Greenwich, England',
+    tabindex: '0',
   });
   const detailText = element('p', { class: 'hud-detail' });
+  // A tap (or Enter) on a term with an explanation shows it here: phones have no hover.
+  const termNote = element('p', { class: 'term-note', 'data-testid': 'term-note', hidden: '' });
+  // By its text, since the line is rebuilt as time moves.
+  let termShown: string | null = null;
+  function explain(term: Element): void {
+    const text = term.getAttribute('title');
+    if (text === null || text === termShown) {
+      termShown = null;
+      termNote.hidden = true;
+      return;
+    }
+    termShown = text;
+    termNote.textContent = text;
+    termNote.hidden = false;
+  }
+  const termOf = (target: EventTarget | null): Element | null =>
+    target instanceof Element ? target.closest('.hud-detail abbr[title], .hud-time[title]') : null;
+  for (const holder of [timeText, detailText]) {
+    holder.addEventListener('click', (event) => {
+      const term = termOf(event.target);
+      if (term !== null) explain(term);
+    });
+    holder.addEventListener('keydown', (event) => {
+      const term = termOf(event.target);
+      if (term !== null && (event.key === 'Enter' || event.key === ' ')) {
+        event.preventDefault();
+        explain(term);
+      }
+    });
+  }
   // A first visit (no link to follow, never welcomed before) gets one line on what this is and
   // where to start; it goes for good once closed, followed, or once something is picked.
   const welcome = createWelcome(window.location.search === '', () => {
@@ -507,6 +538,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       fullView,
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
+      termNote,
       welcome.root,
       element(
         'div',
@@ -864,12 +896,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const uncertainty = deltaT.uncertaintySeconds(universal);
     // In another calendar, the same day written its way too (by day, from midnight).
     const other = state.years === 'western' ? '' : ` · ${formatInCalendar(state.years, universal)}`;
-    // ΔT is a term few readers know: it explains itself on hover.
+    // ΔT is a term few readers know: it explains itself on hover, or on a tap.
     detailText.replaceChildren(
       `${formatCalendar(state.time)}${other} · `,
       element(
         'abbr',
-        { title: DELTA_T_MEANING },
+        { title: DELTA_T_MEANING, tabindex: '0' },
         `ΔT ${formatDuration(seconds)} ± ${formatDuration(uncertainty)}`,
       ),
     );
