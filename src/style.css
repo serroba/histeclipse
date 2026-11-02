@@ -1965,3 +1965,34 @@ body {
   font: inherit;
   cursor: pointer;
 }
+
+/* The milestone steps say which way they go: one word each, not a bare arrow. */
+.step.milestone-step {
+  flex: none;
+  width: auto;
+  padding: 0 8px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* The milestones near here open, like the other folds, with an arrow that turns. */
+.deep-milestones summary {
+  list-style: none;
+}
+
+.deep-milestones summary::-webkit-details-marker {
+  display: none;
+}
+
+.deep-milestones summary::before {
+  flex: none;
+  margin-right: 6px;
+  font-size: 11px;
+  transition: transform 0.15s;
+  content: '▶';
+}
+
+.deep-milestones[open] summary::before {
+  transform: rotate(90deg);
+}
