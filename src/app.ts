@@ -378,6 +378,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const timeText = element('span', { class: 'hud-time' });
   const detailText = element('p', { class: 'hud-detail' });
   const notices = element('ul', { class: 'notices', role: 'status', 'aria-live': 'polite' });
+  // The panels hide for a clear view, by this button or a tap on empty space; one button brings
+  // them back.
+  const fullView = element(
+    'button',
+    { type: 'button', class: 'full-view', 'aria-label': 'Hide the panels for a full view' },
+    'Full view',
+  );
+  fullView.addEventListener('click', togglePanels);
+  const showControls = element(
+    'button',
+    { type: 'button', class: 'show-controls' },
+    'Show controls',
+  );
+  showControls.addEventListener('click', togglePanels);
   const card = createEclipseCard();
   const timeline = createTimeline({
     onYear(year) {
@@ -431,6 +445,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       'header',
       { class: 'hud' },
       element('h1', {}, 'histeclipse'),
+      fullView,
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
       element(
@@ -449,8 +464,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       skyText,
       skyEclipse,
       element(
-        'p',
+        'details',
         { class: 'credits' },
+        element('summary', {}, 'Sources'),
         'Earth: ',
         element(
           'a',
@@ -464,6 +480,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ),
     ),
     notices,
+    showControls,
     bottom,
     famousPanel.dialog,
     tabletPanel.dialog,
@@ -473,6 +490,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function togglePanels(): void {
     const hidden = root.dataset['panels'] !== 'hidden';
     root.dataset['panels'] = hidden ? 'hidden' : 'shown';
+    if (!hidden) fullView.focus();
+    else showControls.focus();
   }
 
   function notify(message: string): void {

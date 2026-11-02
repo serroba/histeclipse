@@ -145,6 +145,12 @@ test('a one-finger swipe rotates the globe on touch screens', async ({ page, con
   await expect(page).toHaveURL(/cam=0\.0000,-?\d+\.\d{4},3\.00|cam=-?0\.\d{4},-?\d+\.\d{4},3\.00/);
 });
 
+/** Source credits sit under a "Sources" toggle in the date panel: open it. */
+async function openSources(page: Page): Promise<void> {
+  const sources = page.locator('.credits');
+  if ((await sources.getAttribute('open')) === null) await sources.locator('summary').click();
+}
+
 test('the date panel stays readable on a phone', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile', 'phone layout');
   await page.goto(SHARED_LINK);
@@ -156,6 +162,28 @@ test('the date panel stays readable on a phone', async ({ page }, info) => {
   expect(panel.x + panel.width).toBeLessThanOrEqual(viewport.width);
   // The panel must leave most of the screen to the globe.
   expect(panel.height).toBeLessThan(viewport.height * 0.25);
+});
+
+test('the panels fold away for a full view and come back', async ({ page }) => {
+  const problems = collectProblems(page);
+  await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
+  await globeRendered(page);
+  // The eclipse card folds to its title and unfolds again.
+  const card = page.locator('.eclipse-card');
+  await page.getByRole('button', { name: 'Fold the eclipse card' }).click();
+  await expect(card).toHaveAttribute('data-folded', 'true');
+  await expect(card.locator('.eclipse-more')).toBeHidden();
+  await expect(card.locator('.eclipse-text > :first-child')).toBeVisible();
+  await page.getByRole('button', { name: 'Unfold the eclipse card' }).click();
+  await expect(card.locator('.eclipse-more')).toBeVisible();
+  // Full view hides every panel; one button brings them back.
+  await page.getByRole('button', { name: 'Hide the panels for a full view' }).click();
+  await expect(page.locator('.hud')).toBeHidden();
+  await expect(page.locator('.bottom')).toBeHidden();
+  await page.getByRole('button', { name: 'Show controls' }).click();
+  await expect(page.locator('.hud')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Show controls' })).toBeHidden();
+  expect(problems).toEqual([]);
 });
 
 test('explains parts of a link it could not use', async ({ page }) => {
@@ -845,6 +873,7 @@ test('the empires layer draws the states of the year shown, and the link keeps i
   await expect(page).toHaveURL(/layers=[a-z,]*empires/);
   await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
   await expect(page.locator('.empire-label', { hasText: /^Neo-Babylonian Empire$/ })).toBeVisible();
+  await openSources(page);
   await expect(page.getByRole('link', { name: 'Cliopatria' })).toBeVisible();
 
   // Fifty years later, Persia holds the Near East.
@@ -979,6 +1008,7 @@ test('past borders can come from Cliopatria, OpenHistoricalMap, or both to compa
   await expect(page).toHaveURL(/borders=both/);
   await expect(globe).toHaveAttribute('data-ohm-borders', /^[1-9]\d*$/);
   await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
+  await openSources(page);
   await expect(page.getByRole('link', { name: 'OpenHistoricalMap' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Cliopatria' })).toBeVisible();
 
@@ -1062,6 +1092,7 @@ test('deep time shows Pangaea 250 million years ago, steps, plays and returns', 
   await expect(facts.locator('dd').nth(1)).toContainText('Reversing often');
   await expect(facts.locator('dd').nth(2)).toContainText('22.1° and 24.5°');
   await expect(facts.locator('dd').nth(3)).toContainText('23.5 h 70 Ma');
+  await openSources(page);
   await expect(page.getByRole('link', { name: 'PALEOMAP PaleoDEMs' })).toBeVisible();
   // The year bar gives way to the deep-time bar.
   await expect(page.getByLabel('Year', { exact: true })).toBeHidden();

@@ -344,37 +344,78 @@ body {
   display: none;
 }
 
-#app[data-panels='hidden']::after {
-  content: 'Tap to show the controls';
+/* "Show controls": only while the panels are hidden. */
+.show-controls {
+  display: none;
   position: absolute;
   bottom: calc(16px + env(safe-area-inset-bottom));
   left: 50%;
-  padding: 6px 12px;
-  border-radius: 999px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--panel-border);
+  border-radius: 22px;
   background: var(--panel);
-  color: var(--ink-muted);
-  font-size: 13px;
+  backdrop-filter: blur(14px);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
   transform: translateX(-50%);
-  pointer-events: none;
-  animation: fade-hint 2.5s ease-in forwards;
+  cursor: pointer;
 }
 
-@keyframes fade-hint {
-  0%,
-  60% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
+#app[data-panels='hidden'] .show-controls {
+  display: block;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  #app[data-panels='hidden']::after {
-    animation: none;
-    opacity: 0.7;
-  }
+/* "Full view" sits in the date panel's corner (the panel is positioned), adding no height. */
+.full-view {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.credits summary {
+  width: fit-content;
+  /* A taller tap target than the line it sits on, without making the panel taller. */
+  margin: -10px 0;
+  padding: 10px 12px 10px 0;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* The eclipse card folds to its title. */
+.eclipse-card {
+  position: relative;
+}
+
+.eclipse-fold {
+  float: right;
+  width: 36px;
+  height: 36px;
+  margin: -6px -8px 0 8px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.eclipse-card[data-folded='true'] .eclipse-text > :not(:first-child),
+.eclipse-card[data-folded='true'] .eclipse-more,
+.eclipse-card[data-folded='true'] .moon-view {
+  display: none;
 }
 
 /* Bottom area: eclipse card above the timeline bar. */
