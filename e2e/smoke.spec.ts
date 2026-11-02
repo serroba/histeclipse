@@ -986,6 +986,15 @@ test('leaving deep time brings back the date and the eclipse that was picked', a
   // ΔT and UT explain themselves on hover.
   await expect(page.locator('.hud-detail abbr')).toHaveAttribute('title', /^ΔT: /);
   await expect(page.locator('.hud-time')).toHaveAttribute('title', /Universal Time/);
+  // A tap shows what they mean too, for phones with no hover; another tap hides it.
+  const note = page.getByTestId('term-note');
+  await expect(note).toBeHidden();
+  await page.locator('.hud-detail abbr').click();
+  await expect(note).toContainText('Earth’s slowing spin');
+  await page.locator('.hud-time').click();
+  await expect(note).toContainText('Universal Time');
+  await page.locator('.hud-time').click();
+  await expect(note).toBeHidden();
   expect(problems).toEqual([]);
 });
 
