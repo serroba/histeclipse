@@ -729,14 +729,20 @@ async function freeSpot(page: Page, x?: number): Promise<{ x: number; y: number 
   return { x: x ?? (left + viewport.width) / 2, y: (from + bottom.y) / 2 };
 }
 
-test('tapping the sky hides the panels, and tapping again brings them back', async ({ page }) => {
+test('a tap on the sky never hides the panels; once hidden, a tap brings them back', async ({
+  page,
+}) => {
   await page.goto(BABYLON_NIGHT_3000_BCE);
   await skyRendered(page);
   const hud = page.locator('.hud');
   const bottom = page.locator('.bottom');
   const spot = await freeSpot(page);
 
+  // A stray tap leaves everything where it is.
   await page.mouse.click(spot.x, spot.y);
+  await expect(hud).toBeVisible();
+
+  await page.getByRole('button', { name: 'Hide the panels for a full view' }).click();
   await expect(hud).toBeHidden();
   await expect(bottom).toBeHidden();
   await expect(page.locator('#app')).toHaveAttribute('data-panels', 'hidden');
@@ -751,27 +757,27 @@ test('tapping the sky hides the panels, and tapping again brings them back', asy
   await page.mouse.click(spot.x, spot.y);
   await expect(hud).toBeVisible();
   await expect(bottom).toBeVisible();
-
-  // A tap on the panel itself does not hide it.
-  await page.locator('.hud h1').click();
-  await expect(hud).toBeVisible();
 });
 
-test('tapping empty space beside the globe toggles the panels', async ({ page }) => {
+test('empty space beside the globe never hides the panels; Escape brings them back', async ({
+  page,
+}) => {
   await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
   await globeRendered(page);
   const spot = await freeSpot(page, 8);
   await page.mouse.click(spot.x, spot.y);
+  await expect(page.locator('.hud')).toBeVisible();
+  await page.getByRole('button', { name: 'Hide the panels for a full view' }).click();
   await expect(page.locator('.hud')).toBeHidden();
-  await expect(page.locator('.bottom')).toBeHidden();
-  // Tapping Earth itself still picks a place, and does not toggle anything.
+  // Tapping Earth itself still picks a place, and does not bring the panels back.
   const globe = await page.getByTestId('globe').boundingBox();
   if (globe === null) throw new Error('globe has no size');
   await page.mouse.click(globe.x + globe.width / 2, globe.y + globe.height / 2);
   await expect(page).toHaveURL(/loc=/);
   await expect(page.locator('.hud')).toBeHidden();
-  await page.mouse.click(spot.x, spot.y);
+  await page.keyboard.press('Escape');
   await expect(page.locator('.hud')).toBeVisible();
+  await expect(page.locator('.bottom')).toBeVisible();
 });
 
 test('years can be counted in the Hebrew calendar, and the link keeps it', async ({ page }) => {

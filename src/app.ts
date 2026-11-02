@@ -510,13 +510,22 @@ export async function startApp(root: HTMLElement): Promise<void> {
     tabletPanel.dialog,
   );
 
-  // A tap on open sky or empty space hides the panels for a clear view; another brings them back.
+  // Full view hides the panels for a clear view; Show controls, Escape, or a tap on open sky or
+  // empty space brings them back. A stray tap never hides them.
   function togglePanels(): void {
     const hidden = root.dataset['panels'] !== 'hidden';
     root.dataset['panels'] = hidden ? 'hidden' : 'shown';
     if (!hidden) fullView.focus();
     else showControls.focus();
   }
+
+  function showPanels(): void {
+    if (root.dataset['panels'] === 'hidden') togglePanels();
+  }
+
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') showPanels();
+  });
 
   function notify(message: string): void {
     notices.append(element('li', {}, message));
@@ -858,7 +867,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
         });
         skyScene.setInsets(panelInsets.top, panelInsets.bottom);
-        skyScene.onTap(togglePanels);
+        skyScene.onTap(showPanels);
         skyScene.onLookChange((look) => {
           store.set((current) => ({ ...current, look }));
         });
@@ -1983,7 +1992,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   globe.onBodyClick((focus) => {
     store.set((state) => ({ ...state, focus, view: 'free' }));
   });
-  globe.onEmptyTap(togglePanels);
+  globe.onEmptyTap(showPanels);
   globe.onPlacePick((place) => {
     const location = { latitude: round(place.latitude, 4), longitude: round(place.longitude, 4) };
     // During a solar eclipse, show the moment it is deepest at the place picked.
