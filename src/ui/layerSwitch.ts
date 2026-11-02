@@ -38,7 +38,6 @@ export function createLayerSwitch(
   const root = element(
     'div',
     { class: 'view-switch layer-switch', role: 'group', 'aria-label': 'Layers' },
-    element('span', { class: 'switch-label' }, 'Layers'),
     empires,
     source,
   );

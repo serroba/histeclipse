@@ -1365,6 +1365,18 @@ body {
   overflow: hidden;
 }
 
+.deep-scale-label {
+  align-self: center;
+  padding: 0 4px 0 10px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.eclipse-hint {
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
 .deep-scale-option {
   min-height: 44px;
   padding: 0 12px;

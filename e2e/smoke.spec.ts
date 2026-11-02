@@ -819,6 +819,31 @@ test('Back steps through what the reader did, and Forward returns', async ({ pag
   expect(problems).toEqual([]);
 });
 
+test('newcomers find their way: the tablet from the famous list, years typed, picking a place', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
+  await globeRendered(page);
+  // Until a place is picked, the card says how to pick one.
+  await expect(page.locator('.eclipse-hint')).toHaveText(
+    'Tap the globe to see this eclipse from there.',
+  );
+  // A year typed and left applies without Enter.
+  const year = page.getByLabel('Year', { exact: true });
+  await year.fill('1999');
+  await year.blur();
+  await expect(page).toHaveURL(/t=1999-/);
+  // The tablet check is one of the famous list's entries, and opens in the Babylonian calendar.
+  await page.getByRole('button', { name: 'Famous eclipses' }).click();
+  await page.getByRole('button', { name: /Check a Babylonian tablet against the sky/ }).click();
+  await expect(page).toHaveURL(/years=babylonian/);
+  await expect(page.getByTestId('tablet-summary')).toHaveText('20 of 21 records fit 568/567 BCE.', {
+    timeout: 30_000,
+  });
+  expect(problems).toEqual([]);
+});
+
 test('Ptolemy’s eclipse of 721 BCE is listed on 29 Thoth in year 27 of Nabonassar', async ({
   page,
 }) => {

@@ -74,7 +74,7 @@ function lunarLines(
   const [latitude, longitude] = eclipse.sublunar;
   const sublunar = { latitude, longitude };
   const shift = longitudeUncertainty(uncertaintySeconds);
-  const lines = [
+  const lines: HTMLElement[] = [
     element('h2', {}, title),
     element('p', { class: 'eclipse-depth' }, depth),
     element(
@@ -89,6 +89,7 @@ function lunarLines(
       `In a lunar eclipse Earth’s shadow falls on the Moon, so the ground doesn’t darken. Copper: where the Moon is above the horizon now, so people could watch it. ${uncertaintyText(uncertaintySeconds, shift)}`,
     ),
   ];
+  if (observer === null) lines.push(pickHint());
   if (observer !== null) {
     const visibility = moonVisibility(sublunar, observer, uncertaintySeconds);
     lines.push(
@@ -111,7 +112,7 @@ function solarLines(
   const moment = eclipseMoment(eclipse);
   const [latitude, longitude] = eclipse.greatest;
   const shift = longitudeUncertainty(uncertaintySeconds);
-  const lines = [
+  const lines: HTMLElement[] = [
     element('h2', {}, title),
     element('p', { class: 'eclipse-depth' }, depth),
     element(
@@ -125,6 +126,7 @@ function solarLines(
       `Shadow: where the Moon covers the Sun now (dark core: ${eclipse.kind === 'annular' ? 'annular' : 'total'}). ${eclipse.kind === 'partial' ? 'No central path: the umbra misses Earth.' : 'Gold band: the central path.'} Dashed blue line: the limits of the partial eclipse. ${uncertaintyText(uncertaintySeconds, shift)}`,
     ),
   ];
+  if (observer === null) lines.push(pickHint());
   if (observer !== null) {
     const outlook = solarOutlook(eclipse.elements, eclipse.deltaT, uncertaintySeconds, observer);
     const here = formatPoint(observer);
@@ -152,6 +154,11 @@ function solarLines(
     }
   }
   return lines;
+}
+
+/** Until a place is picked, how to pick one. */
+function pickHint(): HTMLElement {
+  return element('p', { class: 'eclipse-hint' }, 'Tap the globe to see this eclipse from there.');
 }
 
 /** The historical context of a famous eclipse: why it is known, and from where. */

@@ -17,6 +17,8 @@ export interface TabletHandlers {
 export interface TabletPanel {
   readonly button: HTMLButtonElement;
   readonly dialog: HTMLDialogElement;
+  /** Open the panel, checking the first candidate year if nothing has been checked yet. */
+  open(): void;
 }
 
 const SHIFTS = [
@@ -150,10 +152,11 @@ export function createTabletPanel(handlers: TabletHandlers): TabletPanel {
     );
   }
 
-  button.addEventListener('click', () => {
+  function open(): void {
     dialog.showModal();
     if (asked === 0) run();
-  });
+  }
+  button.addEventListener('click', open);
   year.addEventListener('change', run);
   shift.addEventListener('change', run);
   close.addEventListener('click', () => {
@@ -162,5 +165,5 @@ export function createTabletPanel(handlers: TabletHandlers): TabletPanel {
   dialog.addEventListener('click', (event) => {
     if (event.target === dialog) dialog.close();
   });
-  return { button, dialog };
+  return { button, dialog, open };
 }

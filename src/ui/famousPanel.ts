@@ -18,13 +18,36 @@ export interface FamousPanel {
   setEclipses(eclipses: readonly FamousEclipse[]): void;
 }
 
-export function createFamousPanel(onPick: (eclipse: FamousEclipse) => void): FamousPanel {
+export function createFamousPanel(
+  onPick: (eclipse: FamousEclipse) => void,
+  onTablet: () => void,
+): FamousPanel {
   const button = element(
     'button',
     { type: 'button', class: 'famous-open', 'aria-haspopup': 'dialog' },
     'Famous eclipses',
   );
   const list = element('ul', { class: 'famous-list' });
+  // Not an eclipse, but the same kind of question: does a record fit the sky of its date?
+  const tabletButton = element(
+    'button',
+    { type: 'button', class: 'famous-item famous-tablet' },
+    element(
+      'span',
+      { class: 'famous-text' },
+      element('span', { class: 'famous-title' }, 'Check a Babylonian tablet against the sky'),
+      element(
+        'span',
+        { class: 'famous-meta' },
+        'VAT 4956: Nebuchadnezzar’s year 37, Moon and planets, tested against candidate years',
+      ),
+    ),
+  );
+  tabletButton.addEventListener('click', () => {
+    dialog.close();
+    onTablet();
+  });
+  const tablet = element('div', { class: 'famous-list' }, tabletButton);
   const close = element(
     'button',
     { type: 'button', class: 'famous-close', 'aria-label': 'Close' },
@@ -45,6 +68,7 @@ export function createFamousPanel(onPick: (eclipse: FamousEclipse) => void): Fam
       'Eclipses known from history and science. Each links to its source; “debated” marks records whose identification historians disagree on.',
     ),
     list,
+    tablet,
   );
 
   button.addEventListener('click', () => {
