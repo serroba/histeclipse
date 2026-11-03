@@ -5,11 +5,11 @@ Features are written as scenarios: each test is a story of Given, When and Then 
 
 ## Projects
 
-| Project         | Runs                        | Why                                                                                                                |
-| --------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `desktop`       | everything                  | Chrome on a laptop screen                                                                                          |
-| `mobile`        | everything                  | Chrome on a Pixel 7: touch, a narrow screen                                                                        |
-| `desktop-120hz` | journeys, time, layers, ice | frames at exactly 120 Hz, as on a fast Mac or phone: animation that counts frames instead of time goes wrong there |
+| Project         | Runs                                 | Why                                                                                                                |
+| --------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `desktop`       | everything                           | Chrome on a laptop screen                                                                                          |
+| `mobile`        | everything                           | Chrome on a Pixel 7: touch, a narrow screen                                                                        |
+| `desktop-120hz` | journeys, time, layers, ice, history | frames at exactly 120 Hz, as on a fast Mac or phone: animation that counts frames instead of time goes wrong there |
 
 CI also runs the `desktop` project on macOS, whose GPU limits differ from Linux's (a shader
 once passed on Linux and drew a black globe on a Mac). After each deploy the whole suite runs
@@ -28,14 +28,17 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 
 ## Features
 
-| File              | Feature                                                                   |
-| ----------------- | ------------------------------------------------------------------------- |
-| `time.spec.ts`    | Picking the Holocene or deep time                                         |
-| `layers.spec.ts`  | The Layers panel: what the globe overlays, and when each layer has data   |
-| `sheet.spec.ts`   | The deep-time bar as a sheet: folding and swiping its details             |
-| `humans.spec.ts`  | Humans in the ice ages: dated finds, and competing claims side by side    |
-| `genomes.spec.ts` | Ancient genomes: AADR genomes counted by region around the year shown     |
-| `smoke.spec.ts`   | Everything else: loading, links, eclipses, views, sky, the Sun, deep time |
+| File               | Feature                                                                     |
+| ------------------ | --------------------------------------------------------------------------- |
+| `time.spec.ts`     | Picking the Holocene or deep time                                           |
+| `layers.spec.ts`   | The Layers panel: what the globe overlays, and when each layer has data     |
+| `sheet.spec.ts`    | The deep-time bar as a sheet: folding and swiping its details               |
+| `humans.spec.ts`   | Humans in the ice ages: dated finds, and competing claims side by side      |
+| `genomes.spec.ts`  | Ancient genomes: AADR genomes counted by region around the year shown       |
+| `history.spec.ts`  | Travelling through the Holocene: playing the years, states coming and going |
+| `ice.spec.ts`      | Ice sheets in the ice ages: Batchelor et al.'s outlines and their range     |
+| `fullview.spec.ts` | Full view: clearing the panels, and deep time's strip                       |
+| `smoke.spec.ts`    | Everything else: loading, links, eclipses, views, sky, the Sun, deep time   |
 
 `support.ts` holds the shared steps and the `test` every file imports, which takes the
 project's refresh rate.
