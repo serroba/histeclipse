@@ -52,28 +52,51 @@ interface Span {
   readonly to: number;
 }
 
+/** Cliopatria's latest year. Its borders then stand for the years since, up to the present. */
+export const CLIOPATRIA_LATEST = 2024;
+
 /** The years each source of borders covers: Cliopatria 3400 BCE–2024, its files' reach. */
 const BORDER_SPANS: Readonly<Record<'cliopatria' | 'ohm', Span>> = {
-  cliopatria: { name: 'Cliopatria', from: -3399, to: 2024 },
+  cliopatria: { name: 'Cliopatria', from: -3399, to: CLIOPATRIA_LATEST },
   ohm: { name: 'OpenHistoricalMap', from: -4000, to: 2099 },
 };
 
-function sourcesOf(borders: BorderSource): readonly Span[] {
-  if (borders === 'both') return [BORDER_SPANS.cliopatria, BORDER_SPANS.ohm];
-  return [BORDER_SPANS[borders]];
+/** The year whose Cliopatria borders show in `year`: its own, or 2024's from then to `present`. */
+export function cliopatriaYear(year: number, present: number): number {
+  return year > CLIOPATRIA_LATEST && year <= present ? CLIOPATRIA_LATEST : year;
 }
 
-/** What a layer says at `year` when it has nothing to draw there; null when it does. */
-export function layerNote(layer: Layer, year: number, borders: BorderSource): string | null {
+function sourcesOf(borders: BorderSource, present: number): readonly Span[] {
+  // Cliopatria's latest borders carry on to the present.
+  const cliopatria = {
+    ...BORDER_SPANS.cliopatria,
+    to: Math.max(BORDER_SPANS.cliopatria.to, present),
+  };
+  if (borders === 'both') return [cliopatria, BORDER_SPANS.ohm];
+  return borders === 'ohm' ? [BORDER_SPANS.ohm] : [cliopatria];
+}
+
+/** What a layer says at `year`, a year in `present`, when it has nothing to draw there or draws
+ * another year's; null when it draws its own. */
+export function layerNote(
+  layer: Layer,
+  year: number,
+  borders: BorderSource,
+  present: number,
+): string | null {
   if (layer !== 'empires') return null;
-  const spans = sourcesOf(borders);
+  const spans = sourcesOf(borders, present);
   const earliest = spans.reduce((first, span) => (span.from < first.from ? span : first));
   if (year < earliest.from) {
     return `Nothing to draw yet: ${earliest.name} begins in ${formatYear(astronomicalYear(earliest.from))}.`;
   }
   const latest = spans.reduce((last, span) => (span.to > last.to ? span : last));
   if (year > latest.to) {
-    return `Nothing to draw: ${latest.name} ends in ${formatYear(astronomicalYear(latest.to))}.`;
+    const end = latest === BORDER_SPANS.ohm ? latest.to : CLIOPATRIA_LATEST;
+    return `Nothing to draw: ${latest.name} ends in ${formatYear(astronomicalYear(end))}.`;
+  }
+  if (borders !== 'ohm' && cliopatriaYear(year, present) !== year) {
+    return `Borders as of ${formatYear(astronomicalYear(CLIOPATRIA_LATEST))}, Cliopatria’s latest year.`;
   }
   return null;
 }

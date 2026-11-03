@@ -13,6 +13,8 @@ export interface LayersView {
   readonly borders: BorderSource;
   /** Astronomical year shown. */
   readonly year: number;
+  /** The present year, up to which Cliopatria's latest borders carry on. */
+  readonly present: number;
   /** Whether the panel applies to the view: historical time on the globe. */
   readonly visible: boolean;
 }
@@ -127,14 +129,14 @@ export function createLayersPanel(
   return {
     button,
     dialog,
-    render({ layers, borders, year, visible }) {
+    render({ layers, borders, year, present, visible }) {
       button.hidden = !visible;
       if (!visible) shut();
       for (const [layer, box] of boxes) {
         box.checked = layers.has(layer);
         const note = notes.get(layer);
         if (note === undefined) continue;
-        const text = layers.has(layer) ? layerNote(layer, year, borders) : null;
+        const text = layers.has(layer) ? layerNote(layer, year, borders, present) : null;
         note.hidden = text === null;
         note.textContent = text ?? '';
       }
