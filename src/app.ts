@@ -83,6 +83,7 @@ import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createAimSwitch, type AimTarget } from './ui/aimSwitch';
 import { createSunSwitch } from './ui/sunSwitch';
 import { createLayersPanel } from './ui/layersPanel';
+import { cliopatriaYear } from './state/layerCatalog';
 import {
   centuryFor,
   labelPoint,
@@ -162,6 +163,9 @@ const MINUTES_PER_DAY = 1440;
 const AIM_FOV = 12;
 /** Earth radii (or the focused body's): beyond this the space view loads the planets. */
 const PLANETS_SHOWN_BEYOND = 1000;
+/** This year, up to which the latest borders of states carry on. */
+const PRESENT_YEAR = new Date().getUTCFullYear();
+
 /** Deep time plays at this many million years per second: 540 Myr in about half a minute. */
 const PLAY_MA_PER_SECOND = 20;
 /** On the ice-age scale: 50,000 years a second, 2.6 million years in under a minute. */
@@ -1003,7 +1007,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function empireCenturyFor(year: number): Promise<EmpireCentury | null> {
     empireIndex ??= loadEmpireIndex(`${base}data/empires/index.json`, fetchJson);
     return empireIndex.then((index) => {
-      const century = centuryFor(index, year);
+      const century = centuryFor(index, cliopatriaYear(year, PRESENT_YEAR));
       if (century === null) return null;
       return centuryFile(empireCenturies, century, () =>
         loadEmpireCentury(`${base}data/empires/${String(century)}.json`, fetchJson),
@@ -1013,7 +1017,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   // A state's territory, kept while its borders stay the same so its region is prepared once.
   const territories = new WeakMap<object, Territory>();
-  async function territoryOf(name: string, year: number): Promise<Territory | null> {
+  async function territoryOf(name: string, shown: number): Promise<Territory | null> {
+    const year = cliopatriaYear(shown, PRESENT_YEAR);
     const file = await empireCenturyFor(year);
     if (file === null) return null;
     const polities = file.polities.filter(
@@ -1056,7 +1061,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       empireCenturyFor(year).then(
         (file) => {
           if (seenOptionsYear !== year) return;
-          const names = file === null ? [] : territoriesIn(file, year).map(({ name }) => name);
+          const names =
+            file === null
+              ? []
+              : territoriesIn(file, cliopatriaYear(year, PRESENT_YEAR)).map(({ name }) => name);
           seenOptions = [...new Set(names)].sort((a, b) => a.localeCompare(b));
           renderSelection(store.get());
         },
@@ -1645,6 +1653,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       layers: state.layers,
       borders: state.borders,
       year: state.time.date.year,
+      present: PRESENT_YEAR,
       visible: state.mode === 'globe' && state.ma === null,
     });
     const source = state.borders;
@@ -1662,7 +1671,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const territories =
       source === 'ohm'
         ? Promise.resolve([])
-        : empireCenturyFor(year).then((file) => (file === null ? [] : territoriesIn(file, year)));
+        : empireCenturyFor(year).then((file) =>
+            file === null ? [] : territoriesIn(file, cliopatriaYear(year, PRESENT_YEAR)),
+          );
     const ohm =
       source === 'cliopatria'
         ? Promise.resolve(null)

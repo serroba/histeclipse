@@ -136,3 +136,25 @@ test('the Layers panel leaves the globe usable while it is open', async ({ page 
     await expect(page.getByRole('dialog', { name: 'Layers' })).toBeHidden();
   });
 });
+
+test('today shows the states as Cliopatria last drew them, and says so', async ({ page }) => {
+  const globe = page.getByTestId('globe');
+  await test.step('Given the globe in 2026 with states and empires on', async () => {
+    await page.goto('./?t=2026-06-01T12:00&layers=lunar,solar,empires');
+    await globeRendered(page);
+  });
+  await test.step('Then the states of 2024 are drawn', async () => {
+    await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
+  });
+  await test.step('And the Layers panel says the borders are as of 2024', async () => {
+    await openLayers(page);
+    await expect(page.getByTestId('layer-note-empires')).toHaveText(
+      'Borders as of 2024 CE, Cliopatria’s latest year.',
+    );
+  });
+  await test.step('And the states can be picked to see their eclipses', async () => {
+    await expect(
+      page.getByTestId('seen-select').locator('option', { hasText: /^French Fifth Republic$/ }),
+    ).toHaveCount(1);
+  });
+});
