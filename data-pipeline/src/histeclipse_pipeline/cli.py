@@ -19,6 +19,7 @@ from histeclipse_pipeline.empires import (
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.iceoutlines import fetch_outlines
 from histeclipse_pipeline.icesheets import fetch_icesheets
+from histeclipse_pipeline.ics import fetch_chart
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table, write_table
@@ -229,6 +230,12 @@ def cesm(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} CESM temperature images to {args.out}")
 
 
+def ics(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the International Chronostratigraphic Chart's units (ICS, CC BY 4.0)."""
+    count = fetch_chart(args.out)
+    return _say(f"wrote {count} chart units to {args.out}")
+
+
 def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write ice-sheet thickness every 2,500 years over the last 80,000 (PaleoMIST 1.0)."""
     count = fetch_icesheets(args.out)
@@ -356,6 +363,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         cesm,
         "write a second model's surface temperature every 10 Myr since 250 Ma (CESM)",
         "output directory",
+    ),
+    "ics": (
+        ics,
+        "write the International Chronostratigraphic Chart's units (ICS, CC BY 4.0)",
+        "output JSON file",
     ),
     "icesheets": (
         icesheets,

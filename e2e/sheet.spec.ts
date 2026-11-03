@@ -52,7 +52,7 @@ test('on a phone the deep-time bar folds to its controls, and swipes open and sh
     const viewport = page.viewportSize();
     if (box === null || viewport === null) throw new Error('no layout');
     expect(box.y).toBeGreaterThan(viewport.height * 0.2);
-    await expect(page.getByRole('button', { name: 'Holocene' })).toBeInViewport();
+    await expect(page.getByRole('button', { name: 'Holocene', exact: true })).toBeInViewport();
   });
   await test.step('When they swipe the bar down, it folds again', async () => {
     const label = await bar.locator('.deep-label').boundingBox();
