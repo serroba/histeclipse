@@ -413,7 +413,8 @@ body {
   }
 }
 
-/* A tap on open sky or empty space hides the panels; another brings them back. */
+/* Full view hides the panels; a tap on open sky or empty space (or, in deep time, on the globe)
+   brings them back. */
 #app[data-panels='hidden'] .hud,
 #app[data-panels='hidden'] .bottom,
 #app[data-panels='hidden'] .notices {
@@ -441,6 +442,70 @@ body {
 
 #app[data-panels='hidden'] .show-controls {
   display: block;
+}
+
+/* Deep time in full view: a strip above "Show controls" keeps saying when it is. */
+.deep-glance {
+  display: none;
+  position: absolute;
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  left: 50%;
+  align-items: center;
+  gap: 10px;
+  width: min(560px, calc(100% - 32px));
+  padding: 6px 14px 8px 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  transform: translateX(-50%);
+}
+
+#app[data-panels='hidden'] .deep-glance:not([hidden]) {
+  display: flex;
+}
+
+.deep-glance-play {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.deep-glance-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.deep-glance-body p {
+  margin: 0 0 6px;
+  overflow: hidden;
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.deep-glance-period {
+  color: var(--ink-muted);
+}
+
+.deep-glance-track {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.12);
+}
+
+.deep-glance-fill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: rgb(120 200 150 / 0.9);
 }
 
 /* "Full view" sits in the date panel's corner (the panel is positioned), adding no height. */
