@@ -145,6 +145,7 @@ import {
   type IceOutlineIndex,
   type IceOutlines,
 } from './data/iceOutlines';
+import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import {
   genomesNear,
   genomesNote,
@@ -1395,6 +1396,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       coastline: showCoastline(ma, state),
       ice: showIce(state, ma),
       iceOutlines: showIceOutlines(state, ma),
+      plateMotion: plateMotionText(state, ma),
       humans: showHumans(state, ma),
       air: showAir(state),
       seaIce: showSeaIce(state, ma),
@@ -1637,6 +1639,31 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return { scenario, name: arrivalNames.get(scenario) ?? null, share: settledShare(grid, ka) };
   }
   const arrivalNames = new Map<string, string>();
+
+  // How far the plates have moved: the file loads the first time the ice-age scale is shown.
+  let plateMotion: PlateMotion | null = null;
+  let plateMotionLoading: Promise<PlateMotion> | null = null;
+
+  function plateMotionText(state: ViewState, ma: number): string | null {
+    if (state.deepScale !== 'ice') return null;
+    if (plateMotion === null) {
+      if (plateMotionLoading === null) {
+        plateMotionLoading = loadPlateMotion(`${base}data/plates-motion.json`, fetchJson);
+        plateMotionLoading.then(
+          (loaded) => {
+            plateMotion = loaded;
+            showDeepTime(store.get());
+          },
+          (error: unknown) => {
+            plateMotionLoading = null;
+            notify(`Could not load how far the plates moved: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return null;
+    }
+    return motionText(plateMotion, ma);
+  }
 
   // Batchelor et al.'s outlines: their file loads the first time the ice-age scale is shown.
   let iceOutlineIndex: IceOutlineIndex | null = null;
