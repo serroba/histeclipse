@@ -89,6 +89,7 @@ import { labelPoint, type Territory } from '../data/empires';
 import { PLANETS, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius } from './planetLook';
 import { createPlanetMeshes } from './planetMeshes';
+import type { HumanSite } from '../data/humanClaims';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { OhmYear } from '../data/ohmBorders';
 import {
@@ -316,6 +317,8 @@ export interface Globe {
    * the layer.
    */
   setEmpires(layer: EmpireLayer | null): void;
+  /** Mark dated finds of humans and their relatives in deep time; null hides them. */
+  setHumanSites(sites: readonly HumanSite[] | null): void;
   /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
   setIceOutlines(outlines: IceOutlines | null): void;
   /**
@@ -1193,13 +1196,39 @@ export async function createGlobe(
   const empireLabelLayer = document.createElement('div');
   empireLabelLayer.className = 'empire-labels';
   container.append(empireLabelLayer);
-  let empireLabels: {
+  interface GlobeLabel {
     element: HTMLElement;
     position: Vector3;
     /** Approximate size on screen, pixels, for keeping names apart. */
     width: number;
     height: number;
-  }[] = [];
+  }
+  let empireLabels: GlobeLabel[] = [];
+  // Dated finds of humans, in deep time: placed before the states' names, which never show then.
+  const humanLabelLayer = document.createElement('div');
+  humanLabelLayer.className = 'empire-labels human-sites';
+  container.append(humanLabelLayer);
+  let humanLabels: GlobeLabel[] = [];
+  let humanSitesKey = '';
+
+  /** Labels laid out once, unseen, so their real sizes are known for keeping them apart. */
+  function measured(
+    layer: HTMLElement,
+    entries: readonly { readonly element: HTMLElement; readonly point: GeoPoint }[],
+  ): GlobeLabel[] {
+    const labels = entries.map(({ element, point }) => {
+      element.style.visibility = 'hidden';
+      layer.append(element);
+      return { element, position: new Vector3(...geoToVector(point, 1.01)), width: 0, height: 0 };
+    });
+    for (const entry of labels) {
+      entry.width = entry.element.offsetWidth;
+      entry.height = entry.element.offsetHeight;
+      entry.element.hidden = true;
+      entry.element.style.visibility = '';
+    }
+    return labels;
+  }
   const markers = {
     earth: spaceMarker(markerLayer, 'Earth', 'earth'),
     moon: spaceMarker(markerLayer, 'Moon', 'moon'),
@@ -1573,7 +1602,7 @@ export async function createGlobe(
     const near = focus === 'earth' && camera.position.length() < 12;
     // Labels come largest first; a smaller state's name gives way where it would overlap.
     const placed: { x: number; y: number; w: number; h: number }[] = [];
-    for (const { element, position, width, height } of empireLabels) {
+    for (const { element, position, width, height } of [...humanLabels, ...empireLabels]) {
       projected.copy(position).project(camera);
       const shown =
         near && position.dot(eye) > 0.25 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1;
@@ -2105,6 +2134,28 @@ export async function createGlobe(
       paintIceOutlines(empiresCanvas, outlines);
       empiresTexture.needsUpdate = true;
       uniforms['overlayMap'] = { value: empiresTexture };
+    },
+    setHumanSites(sites) {
+      // Laying labels out is slow: not again for the same finds, as time plays on.
+      const key = sites === null ? 'off' : sites.map((site) => site.id).join(' ');
+      if (key === humanSitesKey) return;
+      humanSitesKey = key;
+      humanLabelLayer.replaceChildren();
+      humanLabels =
+        sites === null
+          ? []
+          : measured(
+              humanLabelLayer,
+              sites.map((site) => {
+                const element = document.createElement('span');
+                element.className = `empire-label human-site is-${site.species}${site.disputed ? ' is-disputed' : ''}`;
+                element.textContent = site.label;
+                element.dataset['site'] = site.id;
+                return { element, point: site.point };
+              }),
+            );
+      container.dataset['humans'] = sites === null ? 'off' : String(sites.length);
+      needsRender = true;
     },
     setEmpires(layer) {
       const uniforms = earth.material.uniforms;

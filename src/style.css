@@ -1609,6 +1609,44 @@ body {
   cursor: not-allowed;
 }
 
+/* Dated finds of humans and their relatives: a dot and the date; disputed ones in italics. */
+.human-site::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: rgb(247 201 90);
+  vertical-align: middle;
+}
+
+.human-site.is-neanderthal::before {
+  background: rgb(120 200 255);
+}
+
+.human-site.is-denisovan::before {
+  background: rgb(220 140 255);
+}
+
+.human-site.is-disputed {
+  font-style: italic;
+}
+
+.humans-note ul {
+  margin: 0 0 6px;
+  padding-left: 18px;
+}
+
+.humans-note li.is-later {
+  opacity: 0.7;
+}
+
+.humans-question {
+  color: var(--ink);
+  font-weight: 600;
+}
+
 .deep-note {
   margin: 0;
   padding: 0 8px;

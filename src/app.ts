@@ -141,6 +141,7 @@ import {
   type IceOutlineIndex,
   type IceOutlines,
 } from './data/iceOutlines';
+import { humansAt, loadHumanClaims, type HumanClaims } from './data/humanClaims';
 import {
   loadPlateMasks,
   type PlateMaskIndex,
@@ -370,6 +371,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
         const layers = new Set(state.layers);
         if (on) layers.add('plates');
         else layers.delete('plates');
+        return { ...state, layers };
+      });
+    },
+    onHumans(on) {
+      store.set((state) => {
+        const layers = new Set(state.layers);
+        if (on) layers.add('humans');
+        else layers.delete('humans');
         return { ...state, layers };
       });
     },
@@ -1227,6 +1236,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setShelf(null);
       globe.setIce(null);
       globe.setIceOutlines(null);
+      globe.setHumanSites(null);
       globe.setPlates(null);
       return;
     }
@@ -1253,6 +1263,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       coastline: showCoastline(ma, state),
       ice: showIce(state, ma),
       iceOutlines: showIceOutlines(state, ma),
+      humans: showHumans(state, ma),
       seaIce: showSeaIce(state, ma),
       temperature: temperatureView(state, ma),
       seaLevel: seaLevelView(state),
@@ -1393,6 +1404,37 @@ export async function startApp(root: HTMLElement): Promise<void> {
       turnOlder: older.turn ?? 0,
     });
     return { plates: true, platesText: plateText(mix < 0.5 ? younger : older) };
+  }
+
+  // The curated human finds: loaded the first time the layer is turned on.
+  let humanClaims: HumanClaims | null = null;
+  let humanClaimsLoading: Promise<HumanClaims> | null = null;
+
+  /** On the ice-age scale with Humans on, the finds of the moment and the claims about them. */
+  function showHumans(state: ViewState, ma: number): DeepTimeView['humans'] {
+    if (state.deepScale !== 'ice' || !state.layers.has('humans')) {
+      globe.setHumanSites(null);
+      return { on: false };
+    }
+    if (humanClaims === null) {
+      if (humanClaimsLoading === null) {
+        humanClaimsLoading = loadHumanClaims(`${base}data/humans/claims.json`, fetchJson);
+        humanClaimsLoading.then(
+          (claims) => {
+            humanClaims = claims;
+            showDeepTime(store.get());
+          },
+          (error: unknown) => {
+            humanClaimsLoading = null;
+            notify(`Could not load the human finds: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return { on: true, view: null };
+    }
+    const view = humansAt(humanClaims, ma * 1000);
+    globe.setHumanSites(view.sites);
+    return { on: true, view };
   }
 
   // Batchelor et al.'s outlines: their file loads the first time the ice-age scale is shown.
