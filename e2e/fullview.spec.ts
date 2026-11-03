@@ -24,14 +24,22 @@ test('in deep time a tap on the globe clears the panels, and the strip says when
     await expect(glance).toBeVisible();
     await expect(glance).toContainText('250 million years ago');
     await expect(glance).toContainText('Triassic');
-    const progress = glance.getByRole('progressbar', { name: 'Time shown' });
-    await expect(progress).toHaveAttribute('aria-valuetext', '250 million years ago');
+    const slider = glance.getByRole('slider', { name: 'Time shown' });
+    await expect(slider).toHaveAttribute('aria-valuetext', '250 million years ago');
+  });
+  await test.step('When they drag the strip to halfway', async () => {
+    await glance.getByRole('slider', { name: 'Time shown' }).fill('500');
+  });
+  await test.step('Then the globe shows that moment, and the panels stay away', async () => {
+    await expect(page).toHaveURL(/&ma=270(&|$)/);
+    await expect(glance).toContainText('270 million years ago');
+    await expect(page.locator('.hud')).toBeHidden();
   });
   await test.step('When they play from the strip', async () => {
     await glance.getByRole('button', { name: 'Play' }).click();
   });
   await test.step('Then the strip follows time towards the present', async () => {
-    await expect(glance).not.toContainText('250 million years ago');
+    await expect(glance).not.toContainText('270 million years ago');
     await glance.getByRole('button', { name: 'Pause' }).click();
   });
   await test.step('When they tap the globe again, the panels come back', async () => {

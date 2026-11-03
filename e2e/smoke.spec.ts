@@ -5,7 +5,15 @@ import { subsolarPoint } from '../src/astro/sun';
 import { parseViewState } from '../src/state/url';
 import { momentJulianDay } from '../src/state/viewState';
 import { DeltaT } from '../src/time/deltaT';
-import { collectProblems, expect, globeRendered, openLayers, openSources, test } from './support';
+import {
+  collectProblems,
+  expect,
+  globeRendered,
+  openLayers,
+  openSources,
+  showDeepDetails,
+  test,
+} from './support';
 
 // Commit SHA the deployment is expected to serve. Empty or unset skips the release check.
 const expectedVersion = process.env['EXPECTED_VERSION'] ?? '';
@@ -945,6 +953,7 @@ test('Back steps through deep time: milestones and layers, and leaving takes its
   await page.goto('./?t=2024-04-08T18:17');
   await globeRendered(page);
   await page.getByRole('button', { name: 'Deep time' }).click();
+  await showDeepDetails(page);
   await expect(page).toHaveURL(/&ma=250(&|$)/);
   await page.getByRole('button', { name: 'Later milestone' }).click();
   await expect(page).not.toHaveURL(/&ma=250(&|$)/);
@@ -1228,6 +1237,7 @@ test('deep time shows Pangaea 250 million years ago, steps, plays and returns', 
   const moon = page.locator('.space-marker[data-body="moon"]');
   await expect(moon).toBeVisible();
   await page.getByRole('button', { name: 'Deep time' }).click();
+  await showDeepDetails(page);
   await expect(page).toHaveURL(/&ma=250(&|$)/);
   await expect(page.locator('.hud-date')).toHaveText('250 million years ago');
   await expect(page.getByTestId('deep-period')).toHaveText('Triassic · Mesozoic');
@@ -1283,6 +1293,7 @@ test('deep time steps through milestones and shows each estimate with its source
   const problems = collectProblems(page);
   await page.goto('./?ma=250');
   await globeRendered(page);
+  await showDeepDetails(page);
   const milestones = page.getByTestId('deep-milestones');
   // The end-Permian extinction is within reach of 250 Ma.
   await expect(milestones.locator('summary')).toContainText('End-Permian mass extinction');
@@ -1320,6 +1331,7 @@ test('deep time colours the globe by temperature, with the global mean and its c
   const problems = collectProblems(page);
   await page.goto('./?ma=250');
   await globeRendered(page);
+  await showDeepDetails(page);
   const globe = page.getByTestId('globe');
   const toggle = page.getByRole('button', { name: 'Temperature' });
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
@@ -1365,6 +1377,7 @@ test('deep time charts sea level by four reconstructions, side by side', async (
   const problems = collectProblems(page);
   await page.goto('./?ma=250');
   await globeRendered(page);
+  await showDeepDetails(page);
   const toggle = page.getByRole('button', { name: 'Sea level' });
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
@@ -1416,6 +1429,7 @@ test('deep time narrows to the ice ages, in thousands of years', async ({ page }
   const problems = collectProblems(page);
   await page.goto('./?ma=250&layers=sealevel');
   await globeRendered(page);
+  await showDeepDetails(page);
   await page.getByRole('button', { name: 'Ice ages' }).click();
   // From further back, the ice ages open at the last glacial maximum.
   await expect(page).toHaveURL(/&ma=0\.021&scale=ice/);
@@ -1512,6 +1526,7 @@ test('before the reconstructions, the reader picks whose hypotheses the globe sk
   const problems = collectProblems(page);
   await page.goto('./?ma=3000&scale=eons');
   await globeRendered(page);
+  await showDeepDetails(page);
   const globe = page.getByTestId('globe');
   // Land of invented shape, its share from a crust-growth curve, with the choice in view.
   await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.184 90');
@@ -1552,6 +1567,7 @@ test('deep time reaches back 4.6 billion years, sketching hypotheses before the 
   const problems = collectProblems(page);
   await page.goto('./?ma=250');
   await globeRendered(page);
+  await showDeepDetails(page);
   const globe = page.getByTestId('globe');
   await page.getByRole('button', { name: '4.6 Gyr' }).click();
   await expect(page).toHaveURL(/scale=eons/);
@@ -1560,6 +1576,7 @@ test('deep time reaches back 4.6 billion years, sketching hypotheses before the 
   // Before the elevation maps reach, no map: a sketch of a hypothesis, which says so.
   await page.goto('./?ma=3000&scale=eons');
   await globeRendered(page);
+  await showDeepDetails(page);
   await expect(page.locator('.hud-date')).toHaveText('3,000 million years ago');
   await expect(page.locator('.hud-detail')).toHaveText('Mesoarchean era · Archean eon');
   await expect(globe).toHaveAttribute('data-uncharted', 'true');

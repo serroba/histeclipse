@@ -494,18 +494,13 @@ body {
   color: var(--ink-muted);
 }
 
-.deep-glance-track {
+.deep-glance-slider {
   display: block;
-  height: 4px;
-  border-radius: 2px;
-  background: rgb(255 255 255 / 0.12);
-}
-
-.deep-glance-fill {
-  display: block;
-  height: 100%;
-  border-radius: 2px;
-  background: rgb(120 200 150 / 0.9);
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  accent-color: rgb(120 200 150);
+  cursor: pointer;
 }
 
 /* "Full view" sits in the date panel's corner (the panel is positioned), adding no height. */
@@ -1383,6 +1378,45 @@ body {
   display: none;
 }
 
+/* The details scroll inside the bar, which never grows past part of the screen. */
+.deep-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 45vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.deep-time[data-sheet='folded'] .deep-details {
+  display: none;
+}
+
+/* A grip along the bar's top edge: tap it, or swipe the bar, to fold or open the details. */
+.deep-handle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 32px;
+  margin: -8px 0 -8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.deep-handle-grip {
+  width: 44px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.35);
+}
+
+@media (max-width: 600px) {
+  .deep-details {
+    max-height: 38vh;
+  }
+}
+
 .deep-controls {
   display: flex;
   /* With sea level shown the track is taller; the buttons stay level with the slider. */
@@ -1588,14 +1622,6 @@ body {
 
 .deep-note p {
   margin: 0 0 4px;
-}
-
-/* On phones a long note scrolls inside the bar, so the bar never climbs over the time switch. */
-@media (max-width: 600px) {
-  .deep-note {
-    max-height: 20vh;
-    overflow-y: auto;
-  }
 }
 
 .plates-swatch {

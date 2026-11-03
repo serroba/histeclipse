@@ -3,7 +3,7 @@
  * et al.'s outlines of 18 time slices show where others put the ice, with their range.
  */
 
-import { collectProblems, expect, globeRendered, test } from './support';
+import { collectProblems, expect, globeRendered, showDeepDetails, test } from './support';
 
 test('the ice ages outline Batchelor et al.’s ice sheets, with their range', async ({ page }) => {
   const problems = collectProblems(page);
@@ -35,6 +35,7 @@ test('between Batchelor et al.’s time slices, no outlines are drawn', async ({
   await test.step('Given the ice ages 120,000 years ago, between time slices', async () => {
     await page.goto('./?ma=0.12&scale=ice');
     await globeRendered(page);
+    await showDeepDetails(page);
   });
   await test.step('Then no outlines are drawn, and none are described', async () => {
     await expect(page.getByTestId('ice-sheets')).toBeVisible();

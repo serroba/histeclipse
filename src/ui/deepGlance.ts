@@ -1,6 +1,7 @@
 /**
  * Deep time at a glance, for full view: when it is, the period, and how far through the span,
- * with Play, on a strip along the bottom while the panels are cleared away.
+ * with Play, on a strip along the bottom while the panels are cleared away. Its bar is a
+ * slider: tap or drag it to any moment of the span.
  *
  * DOM glue, covered by the Playwright suite.
  */
@@ -23,7 +24,13 @@ export interface DeepGlance {
   render(view: DeepGlanceView | null): void;
 }
 
-export function createDeepGlance(onPlay: (play: boolean) => void): DeepGlance {
+/** Slider steps across the span. */
+const STEPS = 1000;
+
+export function createDeepGlance(
+  onPlay: (play: boolean) => void,
+  onMa: (ma: number) => void,
+): DeepGlance {
   const play = element(
     'button',
     { type: 'button', class: 'deep-glance-play', 'aria-label': 'Play' },
@@ -31,25 +38,26 @@ export function createDeepGlance(onPlay: (play: boolean) => void): DeepGlance {
   );
   const when = element('strong', { class: 'deep-glance-when' });
   const period = element('span', { class: 'deep-glance-period' });
-  const fill = element('span', { class: 'deep-glance-fill' });
-  const progress = element(
-    'div',
-    {
-      class: 'deep-glance-track',
-      role: 'progressbar',
-      'aria-label': 'Time shown',
-      'aria-valuemin': '0',
-      'aria-valuemax': '100',
-    },
-    fill,
-  );
+  const slider = element('input', {
+    type: 'range',
+    class: 'deep-glance-slider',
+    min: '0',
+    max: String(STEPS),
+    step: '1',
+    'aria-label': 'Time shown',
+  });
   const root = element(
     'div',
     { class: 'deep-glance', 'data-testid': 'deep-glance', hidden: '' },
     play,
-    element('div', { class: 'deep-glance-body' }, element('p', {}, when, ' ', period), progress),
+    element('div', { class: 'deep-glance-body' }, element('p', {}, when, ' ', period), slider),
   );
   let playing = false;
+  let oldest = 0;
+  slider.addEventListener('input', () => {
+    // From the span's oldest at the left to the present at the right, as on the bar's slider.
+    onMa(oldest * (1 - Number(slider.value) / STEPS));
+  });
   play.addEventListener('click', () => {
     onPlay(!playing);
   });
@@ -63,12 +71,10 @@ export function createDeepGlance(onPlay: (play: boolean) => void): DeepGlance {
       play.setAttribute('aria-label', view.playing ? 'Pause' : 'Play');
       when.textContent = view.when;
       period.textContent = view.period;
-      // From the span's oldest at the left to the present at the right, as on the slider.
+      oldest = view.oldest;
       const share = view.oldest > 0 ? Math.min(1, Math.max(0, 1 - view.ma / view.oldest)) : 1;
-      const percent = Math.round(share * 100);
-      progress.setAttribute('aria-valuenow', String(percent));
-      progress.setAttribute('aria-valuetext', view.when);
-      fill.style.width = `${String(share * 100)}%`;
+      if (document.activeElement !== slider) slider.value = String(Math.round(share * STEPS));
+      slider.setAttribute('aria-valuetext', view.when);
     },
   };
 }

@@ -522,9 +522,31 @@ export function createDeepTimeBar(handlers: {
       handlers.onMa(ma, true);
     },
   });
+  // The notes, legends, milestones and folds: on a phone folded away until asked for, so the
+  // globe stays in view; open, they scroll inside the bar rather than the page.
+  const details = element(
+    'div',
+    { class: 'deep-details', id: 'deep-details', 'data-testid': 'deep-details' },
+    iceNote,
+    unchartedNote,
+    sketchNote,
+    coastNote,
+    seaLevel.legend,
+    legend,
+    platesNote,
+    milestones.root,
+    // One open at a time (they share a name), so the bar doesn't grow over the globe.
+    element('div', { class: 'deep-folds' }, colourKey, sketchSources, factsPanel),
+  );
+  const handle = element(
+    'button',
+    { type: 'button', class: 'deep-handle', 'aria-controls': 'deep-details' },
+    element('span', { class: 'deep-handle-grip', 'aria-hidden': 'true' }),
+  );
   const root = element(
     'nav',
     { class: 'deep-time', 'aria-label': 'Deep time', hidden: '' },
+    handle,
     element('div', { class: 'deep-controls' }, play, older, track, younger),
     element(
       'p',
@@ -537,16 +559,67 @@ export function createDeepTimeBar(handlers: {
       temperatureButton,
       platesButton,
     ),
-    iceNote,
-    unchartedNote,
-    sketchNote,
-    coastNote,
-    seaLevel.legend,
-    legend,
-    platesNote,
-    milestones.root,
-    // One open at a time (they share a name), so the bar doesn't grow over the globe.
-    element('div', { class: 'deep-folds' }, colourKey, sketchSources, factsPanel),
+    details,
+  );
+  // Open or folded as the reader last left it; at first, folded on a phone, open elsewhere.
+  const SHEET_KEY = 'histeclipse.deepSheet';
+  function remembered(): string | null {
+    try {
+      return localStorage.getItem(SHEET_KEY);
+    } catch {
+      return null;
+    }
+  }
+  let open =
+    (remembered() ?? (window.matchMedia('(max-width: 600px)').matches ? 'folded' : 'open')) ===
+    'open';
+  function setOpen(value: boolean, keep = true): void {
+    if (keep) {
+      try {
+        localStorage.setItem(SHEET_KEY, value ? 'open' : 'folded');
+      } catch {
+        // Not kept, as in a private window: the sheet still works.
+      }
+    }
+    open = value;
+    root.dataset['sheet'] = value ? 'open' : 'folded';
+    handle.setAttribute('aria-expanded', String(value));
+    handle.setAttribute('aria-label', value ? 'Hide the details' : 'Show the details');
+  }
+  setOpen(open, false);
+  handle.addEventListener('click', () => {
+    setOpen(!open);
+  });
+  // A swipe down folds the details, once they are scrolled to their top; a swipe up opens them.
+  // Not on the slider or a picker, whose own drags are left alone.
+  const SWIPE_PIXELS = 48;
+  let swipeFrom: { readonly y: number; readonly scrolled: number } | null = null;
+  root.addEventListener(
+    'touchstart',
+    (event) => {
+      const touch = event.touches[0];
+      const target = event.target instanceof Element ? event.target : null;
+      swipeFrom =
+        event.touches.length === 1 &&
+        touch !== undefined &&
+        (target?.closest('input, select, .deep-controls') ?? null) === null
+          ? { y: touch.clientY, scrolled: details.scrollTop }
+          : null;
+    },
+    { passive: true },
+  );
+  root.addEventListener(
+    'touchend',
+    (event) => {
+      const touch = event.changedTouches[0];
+      const from = swipeFrom;
+      swipeFrom = null;
+      if (from === null || touch === undefined) return;
+      const moved = touch.clientY - from.y;
+      if (moved > SWIPE_PIXELS && from.scrolled <= 0) setOpen(false);
+      else if (moved < -SWIPE_PIXELS && !open) setOpen(true);
+    },
+    { passive: true },
   );
 
   let current: DeepTimeView | null = null;
