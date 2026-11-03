@@ -15,6 +15,7 @@ from histeclipse_pipeline.empires import (
     write_empires,
 )
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
+from histeclipse_pipeline.iceoutlines import fetch_outlines
 from histeclipse_pipeline.icesheets import fetch_icesheets
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
@@ -232,6 +233,12 @@ def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network acces
     return _say(f"wrote {count} ice-sheet images to {args.out}")
 
 
+def iceoutlines(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write ice-sheet outlines for 18 Quaternary time slices (Batchelor et al. 2019)."""
+    count = fetch_outlines(args.out)
+    return _say(f"wrote outlines from {count} shapefiles to {args.out}")
+
+
 def shelf(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write today's coasts and shelves, for coastlines at past sea levels."""
     size = fetch_shelf(args.out)
@@ -340,6 +347,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         icesheets,
         "write ice-sheet thickness every 2,500 years since 80 ka (PaleoMIST 1.0)",
         "output directory",
+    ),
+    "iceoutlines": (
+        iceoutlines,
+        "write ice-sheet outlines for 18 Quaternary time slices (Batchelor et al. 2019)",
+        "output JSON file",
     ),
     "shelf": (
         shelf,

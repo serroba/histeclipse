@@ -1590,6 +1590,14 @@ body {
   margin: 0 0 4px;
 }
 
+/* On phones a long note scrolls inside the bar, so the bar never climbs over the time switch. */
+@media (max-width: 600px) {
+  .deep-note {
+    max-height: 20vh;
+    overflow-y: auto;
+  }
+}
+
 .plates-swatch {
   display: inline-block;
   width: 14px;

@@ -136,6 +136,12 @@ import {
   type IceSheetIndex,
 } from './data/iceSheets';
 import {
+  iceOutlinesAt,
+  loadIceOutlines,
+  type IceOutlineIndex,
+  type IceOutlines,
+} from './data/iceOutlines';
+import {
   loadPlateMasks,
   type PlateMaskIndex,
   platesBeyondText,
@@ -1214,6 +1220,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setTemperature(null);
       globe.setShelf(null);
       globe.setIce(null);
+      globe.setIceOutlines(null);
       globe.setPlates(null);
       return;
     }
@@ -1239,6 +1246,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       scale,
       coastline: showCoastline(ma, state),
       ice: showIce(state, ma),
+      iceOutlines: showIceOutlines(state, ma),
       seaIce: showSeaIce(state, ma),
       temperature: temperatureView(state, ma),
       seaLevel: seaLevelView(state),
@@ -1379,6 +1387,37 @@ export async function startApp(root: HTMLElement): Promise<void> {
       turnOlder: older.turn ?? 0,
     });
     return { plates: true, platesText: plateText(mix < 0.5 ? younger : older) };
+  }
+
+  // Batchelor et al.'s outlines: their file loads the first time the ice-age scale is shown.
+  let iceOutlineIndex: IceOutlineIndex | null = null;
+  let iceOutlinesLoading: Promise<IceOutlineIndex> | null = null;
+
+  /** On the ice-age scale, Batchelor et al.'s outlines of the time slice shown, if any. */
+  function showIceOutlines(state: ViewState, ma: number): IceOutlines | null {
+    if (state.deepScale !== 'ice') {
+      globe.setIceOutlines(null);
+      return null;
+    }
+    if (iceOutlineIndex === null) {
+      if (iceOutlinesLoading === null) {
+        iceOutlinesLoading = loadIceOutlines(`${base}data/icesheets/batchelor.json`, fetchJson);
+        iceOutlinesLoading.then(
+          (index) => {
+            iceOutlineIndex = index;
+            showDeepTime(store.get());
+          },
+          (error: unknown) => {
+            iceOutlinesLoading = null;
+            notify(`Could not load the ice-sheet outlines: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return null;
+    }
+    const outlines = iceOutlinesAt(iceOutlineIndex, ma * 1000);
+    globe.setIceOutlines(outlines);
+    return outlines;
   }
 
   /** On the ice-age scale, the ice sheets of the moment, where the maps reach. */
