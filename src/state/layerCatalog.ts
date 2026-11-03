@@ -33,6 +33,12 @@ export const HISTORY_LAYER_GROUPS: readonly LayerGroup[] = [
           'How people lived by region, as archaeologists rated it (ArchaeoGLOBE): foraging, herding, farming, towns.',
       },
       {
+        id: 'periods',
+        label: 'Named periods',
+        about:
+          'The archaeological and historical periods named for the place picked, each by its source (PeriodO).',
+      },
+      {
         id: 'genomes',
         label: 'Ancient genomes',
         about:

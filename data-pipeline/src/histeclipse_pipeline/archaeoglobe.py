@@ -93,8 +93,8 @@ def to_eckert_iv(lon: float, lat: float) -> tuple[float, float]:
     )
 
 
-def dbf_rows(data: bytes) -> list[dict[str, str]]:
-    """Read a dBASE table's rows, as text."""
+def dbf_rows(data: bytes, encoding: str = "latin-1") -> list[dict[str, str]]:
+    """Read a dBASE table's rows, as text (padding, by spaces or nulls, trimmed)."""
     count, header_length, record_length = struct.unpack("<IHH", data[4:12])
     fields: list[tuple[str, int]] = []
     position = 32
@@ -110,7 +110,8 @@ def dbf_rows(data: bytes) -> list[dict[str, str]]:
         offset = 1
         row: dict[str, str] = {}
         for name, length in fields:
-            row[name] = record[offset : offset + length].decode("latin-1").strip()
+            text = record[offset : offset + length].decode(encoding, "replace")
+            row[name] = text.replace("\0", "").strip()
             offset += length
         rows.append(row)
     return rows
@@ -128,7 +129,7 @@ def region_outlines(shp: bytes, dbf: bytes) -> dict[int, list[list[tuple[float, 
     """Each region's rings in degrees, simplified, by its ArchaeoGLOBE identifier."""
     rows = dbf_rows(dbf)
     outlines: dict[int, list[list[tuple[float, float]]]] = {}
-    for row, rings in zip(rows, _rings_by_record(shp), strict=True):
+    for row, rings in zip(rows, rings_by_record(shp), strict=True):
         region = int(row["Archaeo_ID"])
         for projected in rings:
             ring = unwrapped([from_eckert_iv(x, y) for x, y in projected])
@@ -140,7 +141,7 @@ def region_outlines(shp: bytes, dbf: bytes) -> dict[int, list[list[tuple[float, 
     return outlines
 
 
-def _rings_by_record(shp: bytes) -> list[list[list[tuple[float, float]]]]:
+def rings_by_record(shp: bytes) -> list[list[list[tuple[float, float]]]]:
     """Read the rings of each record of a polygon shapefile, record by record."""
     records: list[list[list[tuple[float, float]]]] = []
     position = 100

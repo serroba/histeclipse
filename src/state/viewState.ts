@@ -52,6 +52,8 @@ export const LAYERS = [
   'ways',
   // The rocks at the surface today and how old they are (Macrostrat).
   'rocks',
+  // Named periods for the place picked (PeriodO), each by its source.
+  'periods',
   // Deep time only: the surface coloured by temperature, and sea level through time.
   'temperature',
   'sealevel',
