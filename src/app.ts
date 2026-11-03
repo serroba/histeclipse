@@ -146,6 +146,7 @@ import {
   type IceOutlines,
 } from './data/iceOutlines';
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
+import { loadWaysOfLife, waysAt, waysNote, type WaysOfLife } from './data/waysOfLife';
 import {
   genomesNear,
   genomesNote,
@@ -282,6 +283,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     (borders) => {
       store.set((state) => ({ ...state, borders }));
     },
+  );
+  const waysCredit = element(
+    'span',
+    { class: 'empire-credit', hidden: '' },
+    ' · Ways of life: ',
+    element('a', { href: 'https://doi.org/10.1126/science.aax1192' }, 'ArchaeoGLOBE'),
+    ' (2019, CC0)',
   );
   const genomeCredit = element(
     'span',
@@ -755,6 +763,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ', images of 2024 days apart stitched into one surface',
         empireCredit,
         genomeCredit,
+        waysCredit,
         ohmCredit,
         paleoCredit,
       ),
@@ -2012,6 +2021,48 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe.setGenomeCells(near.cells);
   }
 
+  // Ways of life: their file loads the first time the layer is turned on.
+  let waysOfLife: WaysOfLife | null = null;
+  let waysLoading: Promise<WaysOfLife> | null = null;
+  let waysSaid: string | null = null;
+
+  /** In historical time with the layer on, the regions by their most widespread way of life. */
+  function showWays(state: ViewState): void {
+    const on = state.layers.has('ways') && state.ma === null;
+    waysCredit.hidden = !on;
+    if (!on) {
+      waysSaid = null;
+      waysShownYear = null;
+      globe.setWays(null);
+      return;
+    }
+    if (waysOfLife === null) {
+      waysSaid = 'Loading the ways of life…';
+      if (waysLoading === null) {
+        waysLoading = loadWaysOfLife(`${base}data/ways-of-life.json`, fetchJson);
+        waysLoading.then(
+          (data) => {
+            waysOfLife = data;
+            showWays(store.get());
+            showEmpires(store.get());
+          },
+          (error: unknown) => {
+            waysLoading = null;
+            notify(`Could not load the ways of life: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return;
+    }
+    const at = waysAt(waysOfLife, state.time.date.year);
+    waysSaid = waysNote(at, (year) => formatYear(astronomicalYear(year)));
+    // Repainting the map is slow: only when the moment rated changes, as the years go by.
+    if (at.year === waysShownYear) return;
+    waysShownYear = at.year;
+    globe.setWays(at.regions);
+  }
+  let waysShownYear: number | null = null;
+
   function showEmpires(state: ViewState): void {
     // Past states belong to historical time, not deep time.
     const on = state.layers.has('empires') && state.ma === null;
@@ -2021,7 +2072,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       year: state.time.date.year,
       present: PRESENT_YEAR,
       visible: state.mode === 'globe' && state.ma === null,
-      ...(genomesSaid === null ? {} : { said: new Map([['genomes', genomesSaid] as const]) }),
+      said: new Map<Layer, string>([
+        ...(genomesSaid === null ? [] : [['genomes', genomesSaid] as const]),
+        ...(waysSaid === null ? [] : [['ways', waysSaid] as const]),
+      ]),
     });
     const source = state.borders;
     empireCredit.hidden = !on || source === 'ohm';
@@ -2479,6 +2533,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.time.date.year !== previous.time.date.year
     ) {
       showGenomes(state);
+      showWays(state);
       showEmpires(state);
     }
     // Deep time, or an eclipse picked, ends a trip through the years.

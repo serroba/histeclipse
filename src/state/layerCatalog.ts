@@ -27,6 +27,12 @@ export const HISTORY_LAYER_GROUPS: readonly LayerGroup[] = [
         about: 'Borders from Cliopatria or OpenHistoricalMap, or both to compare.',
       },
       {
+        id: 'ways',
+        label: 'Ways of life',
+        about:
+          'How people lived by region, as archaeologists rated it (ArchaeoGLOBE): foraging, herding, farming, towns.',
+      },
+      {
         id: 'genomes',
         label: 'Ancient genomes',
         about:

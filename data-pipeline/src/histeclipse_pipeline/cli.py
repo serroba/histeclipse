@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.aadr import fetch_genomes
+from histeclipse_pipeline.archaeoglobe import fetch_ways
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
 from histeclipse_pipeline.cesm import fetch_cesm
@@ -249,6 +250,12 @@ def atmosphere(args: Arguments) -> int:  # pragma: no cover - needs network acce
     return _say(f"wrote {count} ice-core gas measurements to {args.out}")
 
 
+def ways(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write how people lived by region over 10,000 years (ArchaeoGLOBE, CC0)."""
+    count = fetch_ways(args.out)
+    return _say(f"wrote the ways of life of {count} regions to {args.out}")
+
+
 def genomes(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write dated ancient genomes by 2° cell (Allen Ancient DNA Resource)."""
     count = fetch_genomes(args.out)
@@ -384,6 +391,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "atmosphere": (
         atmosphere,
         "write CO2 and methane over 800,000 years from Antarctic ice cores (NOAA)",
+        "output JSON file",
+    ),
+    "ways": (
+        ways,
+        "write how people lived by region over 10,000 years (ArchaeoGLOBE, CC0)",
         "output JSON file",
     ),
     "genomes": (
