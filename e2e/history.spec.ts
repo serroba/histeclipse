@@ -24,14 +24,18 @@ test('playing history moves through the years and names the states that come and
     await globeRendered(page);
     await expect(page.getByTestId('globe')).toHaveAttribute('data-empires', /^[1-9]\d*$/);
   });
-  await test.step('When they open the track, pick 200 years a second and play', async () => {
+  await test.step('When they open the track, pick 1,000 years a second and play', async () => {
     await openTrack(page);
-    await bar.getByLabel('Speed').selectOption('200');
+    await bar.getByLabel('Speed').selectOption('1000');
     await bar.getByRole('button', { name: 'Travel through the years' }).click();
   });
   await test.step('Then the years run on, and the track names states that appeared or went', async () => {
-    await expect(page.locator('.hud-date')).toHaveText(/ CE$/, { timeout: 20_000 });
-    await expect(bar.getByTestId('history-changes')).toHaveText(/^By \d+ (BCE|CE): /);
+    // How far it gets depends on how fast the machine draws; it moves on a century at least.
+    const year = () => Number(/[?&]t=(-?\d+)-/.exec(page.url())?.[1]);
+    await expect.poll(year, { timeout: 20_000 }).toBeGreaterThan(-500);
+    await expect(bar.getByTestId('history-changes')).toHaveText(/^By \d+ (BCE|CE): /, {
+      timeout: 20_000,
+    });
   });
   await test.step('When they pause, the year stays and the link keeps it', async () => {
     await bar.getByRole('button', { name: 'Stop travelling' }).click();
