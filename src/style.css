@@ -183,13 +183,7 @@ body {
   background: #10162a;
 }
 
-.hud-actions .famous-open,
-.hud-actions .deep-open,
-.hud-actions .layers-open {
-  margin-top: 0;
-}
-
-/* Layers: a button beside Deep time, opening a panel that leaves the globe in reach. */
+/* Layers: a button beside the time switch, opening a panel that leaves the globe in reach. */
 .layers-open {
   min-height: 44px;
   padding: 0 14px;
@@ -596,6 +590,14 @@ body {
   border-color: var(--accent);
 }
 
+.eclipse-row {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .eclipse-list {
   display: flex;
   flex: 1;
@@ -887,10 +889,10 @@ body {
   }
 }
 
-/* Famous eclipses: a button in the date panel opening a sheet. */
+/* Famous eclipses: a button at the start of the year's eclipses, opening a sheet. */
 .famous-open {
+  flex: none;
   min-height: 44px;
-  margin-top: 8px;
   padding: 0 14px;
   border: 1px solid rgb(247 201 90 / 0.45);
   border-radius: 22px;
@@ -1189,11 +1191,6 @@ body {
     padding: 10px 12px;
   }
 
-  .famous-open {
-    min-height: 44px;
-    margin-top: 6px;
-  }
-
   .eclipse-card {
     font-size: 13px;
   }
@@ -1274,23 +1271,31 @@ body {
   }
 }
 
-/* Deep time: a button beside Famous eclipses, and a bar that takes the year bar's place. */
-.deep-open {
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid rgb(120 200 150 / 0.45);
+/* Time: the Holocene or deep time, one always picked, in a two-part pill at the top. In deep
+   time its bar takes the year bar's place. */
+.time-switch {
+  display: flex;
   border-radius: 22px;
-  background: rgb(120 200 150 / 0.08);
-  color: var(--ink);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
+  /* An outline drawn inside, so the pill is no taller than the buttons beside it. */
+  box-shadow: inset 0 0 0 1px rgb(120 200 150 / 0.45);
   pointer-events: auto;
 }
 
-.deep-open[aria-pressed='true'] {
-  border-color: rgb(120 200 150 / 0.9);
+.time-option {
+  min-height: 44px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 22px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.time-option[aria-pressed='true'] {
   background: rgb(120 200 150 / 0.22);
+  color: var(--ink);
 }
 
 .bottom[data-deep='on'] > :not(.deep-time) {
@@ -1556,11 +1561,6 @@ body {
   color: var(--ink);
 }
 
-/* With the layer button taking the free space, Back to history sits beside it. */
-.deep-layer + .deep-exit {
-  margin-left: 0;
-}
-
 /* Sea level above the slider: the same width, inset like the slider's thumb, so a point on
    the chart sits over its moment. */
 .sea-chart-box {
@@ -1703,19 +1703,6 @@ body {
   font-style: italic;
 }
 
-.deep-exit {
-  min-height: 44px;
-  margin-left: auto;
-  padding: 0 14px;
-  border: 1px solid var(--panel-border);
-  border-radius: 22px;
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-}
-
 .deep-facts {
   padding: 0 8px;
   font-size: 13px;
@@ -1760,12 +1747,11 @@ body {
   }
 }
 
-/* On phones the header's first row holds Famous eclipses, Deep time and Layers: the buttons
-   tighten up, and the Layers panel becomes a sheet along the bottom. */
+/* On phones the header's first row holds the time switch and Layers: the buttons tighten up,
+   and the Layers panel becomes a sheet along the bottom. */
 @media (max-width: 600px) {
-  .hud-actions .famous-open,
-  .hud-actions .deep-open,
-  .hud-actions .layers-open {
+  .time-option,
+  .layers-open {
     padding: 0 10px;
   }
 

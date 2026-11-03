@@ -192,7 +192,7 @@ test('the welcome goes once the visitor finds their own way in', async ({ page }
   await expect(welcome).toBeVisible();
   await page.getByRole('button', { name: 'Deep time' }).click();
   await expect(welcome).toBeHidden();
-  await page.getByRole('button', { name: 'Back to history' }).click();
+  await page.getByRole('button', { name: 'Holocene' }).click();
   await expect(welcome).toBeHidden();
 });
 
@@ -331,7 +331,8 @@ test('controls are large enough to tap and stay on screen', async ({ page }) => 
   await page.getByRole('button', { name: /8 Apr/ }).click();
   for (const control of await page
     .locator(
-      '.timeline button, .timeline input, .timeline select, .scrubber button, .scrubber input',
+      // Visible ones: the tablet check's button waits there for the Babylonian calendar.
+      ':is(.timeline, .scrubber) :is(button, input, select):visible',
     )
     .all()) {
     const box = await control.boundingBox();
@@ -944,7 +945,7 @@ test('Back steps through deep time: milestones and layers, and leaving takes its
   await page.goForward();
   await page.goForward();
   await expect(page).toHaveURL(/temperature/);
-  await page.getByRole('button', { name: 'Back to history' }).click();
+  await page.getByRole('button', { name: 'Holocene' }).click();
   await expect(page).not.toHaveURL(/ma=/);
   await expect(page).not.toHaveURL(/temperature/);
   expect(problems).toEqual([]);
@@ -956,7 +957,7 @@ test('leaving deep time brings back the date and the eclipse that was picked', a
   await globeRendered(page);
   await page.getByRole('button', { name: 'Deep time' }).click();
   await expect(page.locator('.hud-date')).toHaveText(/million years ago/);
-  await page.getByRole('button', { name: 'Back to history' }).click();
+  await page.getByRole('button', { name: 'Holocene' }).click();
   await expect(page.locator('.hud-date')).toHaveText('8 April 2024 CE');
   await expect(page).toHaveURL(/sel=solar:2024-04-08/);
   // ΔT and UT explain themselves on hover.
@@ -1247,7 +1248,7 @@ test('deep time shows Pangaea 250 million years ago, steps, plays and returns', 
   const ma = Number(new URL(page.url()).searchParams.get('ma'));
   expect(ma).toBeLessThan(255);
 
-  await page.getByRole('button', { name: 'Back to history' }).click();
+  await page.getByRole('button', { name: 'Holocene' }).click();
   await expect(page).not.toHaveURL(/ma=/);
   await expect(globe).toHaveAttribute('data-deep-time', 'off');
   await expect(globe).toHaveAttribute('data-light', 'sun');

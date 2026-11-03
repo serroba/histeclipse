@@ -226,7 +226,6 @@ export function createDeepTimeBar(handlers: {
   /** A new moment: `jump` when it is a step to go back from (a milestone, a click), not a drag. */
   onMa(ma: number, jump: boolean): void;
   onPlay(playing: boolean): void;
-  onExit(): void;
   onTemperature(on: boolean): void;
   onSeaLevel(on: boolean): void;
   onPlates(on: boolean): void;
@@ -382,7 +381,6 @@ export function createDeepTimeBar(handlers: {
   );
   const when = element('strong', { class: 'deep-when', 'data-testid': 'deep-when' });
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
-  const exit = element('button', { type: 'button', class: 'deep-exit' }, 'Back to history');
   const platesButton = element(
     'button',
     { type: 'button', class: 'deep-layer', 'aria-pressed': 'false' },
@@ -507,7 +505,6 @@ export function createDeepTimeBar(handlers: {
       seaLevelButton,
       temperatureButton,
       platesButton,
-      exit,
     ),
     iceNote,
     unchartedNote,
@@ -572,9 +569,6 @@ export function createDeepTimeBar(handlers: {
   });
   play.addEventListener('click', () => {
     handlers.onPlay(!(current?.playing ?? false));
-  });
-  exit.addEventListener('click', () => {
-    handlers.onExit();
   });
   platesButton.addEventListener('click', () => {
     handlers.onPlates(!(current?.plates ?? false));
