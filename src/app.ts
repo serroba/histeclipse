@@ -587,6 +587,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
           'NASA Blue Marble',
         ),
         ' · Positions: JPL DE441',
+        ' · Sun close up: ',
+        element('a', { href: 'https://sdo.gsfc.nasa.gov/' }, 'NASA SDO'),
+        ' via ',
+        element('a', { href: 'https://helioviewer.org/' }, 'Helioviewer'),
+        ', images of 2024 days apart stitched into one surface',
         empireCredit,
         ohmCredit,
         paleoCredit,
@@ -1712,12 +1717,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (image === undefined) return;
     globe.setSunImage({
       key: image.key,
-      small: `${base}${image.files['512']}`,
-      large: `${base}${image.files['2048']}`,
+      map: { small: `${base}${image.map['512']}`, large: `${base}${image.map['4096']}` },
+      disc: { small: `${base}${image.disc['512']}`, large: `${base}${image.disc['2048']}` },
       // Visible light comes as grey; the Sun's own light is a warm white.
       tint: image.key === 'visible' ? [1, 0.93, 0.8] : [1, 1, 1],
       diskRadius: sunImages.diskRadius,
-      // HMI's continuum darkens toward the limb like the Sun seen by eye.
+      // The map is the surface seen face-on; in visible light it darkens toward the limb, as
+      // the Sun does seen by eye.
       limbDarkening: image.key === 'visible' ? 0.6 : 0,
     });
   }

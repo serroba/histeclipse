@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "credit": "NASA/SDO and the AIA and HMI science teams, via Helioviewer",
   "diskRadius": 0.4,
   "layers": [
@@ -7,8 +7,17 @@
       "key": "visible",
       "label": "Visible light",
       "description": "617 nm, close to what the eye sees through a safe filter: the surface and its sunspots.",
-      "observed": "2024-05-08T11:59:50Z",
-      "files": {
+      "frames": [
+        "2024-04-18T01:02:48Z",
+        "2024-04-24T20:41:48Z",
+        "2024-05-01T17:55:19Z",
+        "2024-05-08T11:59:50Z"
+      ],
+      "map": {
+        "512": "textures/sun/visible-map-512.webp",
+        "4096": "textures/sun/visible-map-4096.webp"
+      },
+      "disc": {
         "512": "textures/sun/visible-512.webp",
         "2048": "textures/sun/visible-2048.webp"
       }
@@ -16,9 +25,18 @@
     {
       "key": "magnetogram",
       "label": "Magnetic field",
-      "description": "The field along our line of sight: white points toward us, black away.",
-      "observed": "2024-05-08T11:59:50Z",
-      "files": {
+      "description": "The magnetic field at the surface: white where it points out of the Sun, black in.",
+      "frames": [
+        "2024-04-18T01:02:48Z",
+        "2024-04-24T20:41:48Z",
+        "2024-05-01T16:35:49Z",
+        "2024-05-08T11:59:50Z"
+      ],
+      "map": {
+        "512": "textures/sun/magnetogram-map-512.webp",
+        "4096": "textures/sun/magnetogram-map-4096.webp"
+      },
+      "disc": {
         "512": "textures/sun/magnetogram-512.webp",
         "2048": "textures/sun/magnetogram-2048.webp"
       }
@@ -27,8 +45,17 @@
       "key": "304",
       "label": "304 Å",
       "description": "Extreme ultraviolet from helium at about 50,000 °C: the chromosphere and prominences.",
-      "observed": "2024-05-08T12:00:05Z",
-      "files": {
+      "frames": [
+        "2024-04-18T01:02:29Z",
+        "2024-04-24T20:41:29Z",
+        "2024-05-01T19:21:05Z",
+        "2024-05-08T12:00:05Z"
+      ],
+      "map": {
+        "512": "textures/sun/304-map-512.webp",
+        "4096": "textures/sun/304-map-4096.webp"
+      },
+      "disc": {
         "512": "textures/sun/304-512.webp",
         "2048": "textures/sun/304-2048.webp"
       }
@@ -37,8 +64,17 @@
       "key": "171",
       "label": "171 Å",
       "description": "Iron at about 600,000 °C: the quiet corona and its magnetic loops.",
-      "observed": "2024-05-08T12:00:09Z",
-      "files": {
+      "frames": [
+        "2024-04-18T01:02:33Z",
+        "2024-04-24T20:41:33Z",
+        "2024-05-01T19:21:09Z",
+        "2024-05-08T12:00:09Z"
+      ],
+      "map": {
+        "512": "textures/sun/171-map-512.webp",
+        "4096": "textures/sun/171-map-4096.webp"
+      },
+      "disc": {
         "512": "textures/sun/171-512.webp",
         "2048": "textures/sun/171-2048.webp"
       }
@@ -47,8 +83,17 @@
       "key": "193",
       "label": "193 Å",
       "description": "Iron at about 1 million °C: the corona, with dark coronal holes where the wind escapes.",
-      "observed": "2024-05-08T12:00:07Z",
-      "files": {
+      "frames": [
+        "2024-04-18T01:02:53Z",
+        "2024-04-24T20:41:53Z",
+        "2024-05-01T19:20:53Z",
+        "2024-05-08T12:00:07Z"
+      ],
+      "map": {
+        "512": "textures/sun/193-map-512.webp",
+        "4096": "textures/sun/193-map-4096.webp"
+      },
+      "disc": {
         "512": "textures/sun/193-512.webp",
         "2048": "textures/sun/193-2048.webp"
       }
@@ -57,8 +102,17 @@
       "key": "131",
       "label": "131 Å",
       "description": "Iron at about 10 million °C: the hottest flaring plasma.",
-      "observed": "2024-05-08T11:59:45Z",
-      "files": {
+      "frames": [
+        "2024-04-18T01:02:43Z",
+        "2024-04-24T20:41:43Z",
+        "2024-05-01T19:20:43Z",
+        "2024-05-08T11:59:45Z"
+      ],
+      "map": {
+        "512": "textures/sun/131-map-512.webp",
+        "4096": "textures/sun/131-map-4096.webp"
+      },
+      "disc": {
         "512": "textures/sun/131-512.webp",
         "2048": "textures/sun/131-2048.webp"
       }

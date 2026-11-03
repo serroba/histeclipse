@@ -18,3 +18,8 @@ def as_floats(value: float | FloatArray) -> list[float]:
 def as_ints(value: np.typing.NDArray[np.int64]) -> list[int]:
     """Plain Python ints from a numpy integer array of any shape, flattened."""
     return list(map(int, np.ravel(value)))
+
+
+def dims(value: FloatArray) -> list[int]:
+    """Give an array's shape as plain ints."""
+    return list(map(int, value.shape))

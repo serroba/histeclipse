@@ -1,9 +1,13 @@
-"""Full-disk images of the Sun from NASA's Solar Dynamics Observatory, for the space view.
+"""Maps of the whole Sun from NASA's Solar Dynamics Observatory, for the space view.
 
 Images come from Helioviewer (NASA/ESA), which serves calibrated SDO data with its pointing:
 each frame is rendered with solar north up, centred on the Sun, at a scale chosen here so the
-disc's radius is exactly ``DISK_RADIUS`` of the frame's width. The web app relies on that to
-map the frame onto the side of the Sun that faces Earth.
+disc's radius is exactly ``DISK_RADIUS`` of the frame's width.
+
+SDO sees only the side facing Earth, so for each channel four frames a quarter of a solar
+rotation apart are stitched into one map of the whole surface (``sun_map``). The newest frame is
+kept as well: beyond its limb it shows the corona and prominences, which the web app draws
+around the Sun when it is seen from Earth's side.
 
 SDO data is public: credit NASA/SDO and the AIA and HMI science teams.
 """
@@ -13,22 +17,50 @@ import json
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, TypedDict
 
+import numpy as np
 from PIL import Image
 
+from histeclipse_pipeline.arrays import dims
 from histeclipse_pipeline.sky import Json, parse_json
+from histeclipse_pipeline.sun_map import (
+    Composite,
+    Frame,
+    composite,
+    fill_unseen,
+    flatten_all,
+    grid,
+    julian_day,
+    linear_from_srgb,
+    srgb_from_linear,
+    usable,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from histeclipse_pipeline.arrays import FloatArray
+
 HELIOVIEWER_API = "https://api.helioviewer.org/v2"
-#: One date for every layer, so they show the same Sun: two days before the May 2024
-#: superstorm, with the giant active region 3664 near the middle of the disc.
+#: The newest frame, one date for every layer so they show the same Sun: two days before the
+#: May 2024 superstorm, with the giant active region 3664 near the middle of the disc.
 DEFAULT_DATE = "2024-05-08T12:00:00Z"
+#: Frames per map, and the days between them: a quarter of the Sun's 27.27-day turn as seen
+#: from Earth, so each frame looks 90° further round and every longitude is seen within 45° of
+#: the centre of some frame's disc.
+FRAME_COUNT = 4
+FRAME_SPACING_DAYS = 27.2753 / 4
 #: The disc's radius as a share of the frame's width; the frame reaches 1.25 solar radii.
 DISK_RADIUS = 0.4
+#: Widths of the newest frame, kept for the corona around the limb.
 SIZES = (512, 2048)
+#: Widths of the maps (twice their height): a small one to show at once and a sharp one, which
+#: at the disc's centre about matches the frames' own detail.
+MAP_SIZES = (512, 4096)
+#: The frames stitched into a map are fetched at this width.
+FRAME_SIZE = 2048
 WEBP_QUALITY = 82
 
 
@@ -41,6 +73,9 @@ class Layer:
     layer: str
     label: str
     description: str
+    #: Whether the brightness is light (scaled and blended as linear light) or, for the
+    #: magnetogram, a signed field coded as grey (blended as it is, never rescaled).
+    light: bool = True
 
 
 LAYERS = (
@@ -56,7 +91,8 @@ LAYERS = (
         19,
         "SDO,HMI,HMI,magnetogram",
         "Magnetic field",
-        "The field along our line of sight: white points toward us, black away.",
+        "The magnetic field at the surface: white where it points out of the Sun, black in.",
+        light=False,
     ),
     Layer(
         "304",
@@ -144,17 +180,83 @@ def screenshot_url(layer: Layer, date: str, scale: float, size: int) -> str:
     return f"{HELIOVIEWER_API}/takeScreenshot/?{query}"
 
 
-def to_webp(png: bytes) -> bytes:
-    """Re-encode a rendered frame as WebP, keeping transparency off the disc."""
+#: When the frame closest to a date is blank, try these hours away from it, in turn.
+RETRY_HOURS = (0, 1, -1, 3, -3, 6, -6)
+
+
+def shifted(date: str, hours: float) -> str:
+    """``date`` moved by ``hours``, as an ISO 8601 UTC moment."""
+    moment = datetime.fromisoformat(date) + timedelta(hours=hours)
+    return moment.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def frame_dates(newest: str = DEFAULT_DATE) -> list[str]:
+    """List the moments to fetch for one map, oldest first, ending at ``newest``."""
+    steps = range(FRAME_COUNT - 1, -1, -1)
+    return [shifted(newest, -24 * FRAME_SPACING_DAYS * step) for step in steps]
+
+
+def decode(png: bytes) -> FloatArray:
+    """Decode a rendered frame as height x width x RGB, 0..1, still sRGB-encoded."""
     with Image.open(io.BytesIO(png)) as image:
-        out = io.BytesIO()
-        image.save(out, format="WEBP", quality=WEBP_QUALITY, method=6)
-        return out.getvalue()
+        rgb = np.asarray(image.convert("RGB"), dtype=np.float64)
+    return rgb / 255
 
 
-def file_name(layer: Layer, size: int) -> str:
-    """Where a frame goes under ``textures/sun/``."""
+def encode(pixels: FloatArray) -> Image.Image:
+    """Height x width x RGB, 0..1 sRGB-encoded, as an 8-bit image."""
+    values = np.round(np.clip(pixels, 0, 1) * 255).astype(np.uint8)
+    return Image.fromarray(values, mode="RGB")
+
+
+def to_webp(image: Image.Image) -> bytes:
+    """Encode an image as WebP."""
+    out = io.BytesIO()
+    image.save(out, format="WEBP", quality=WEBP_QUALITY, method=6)
+    return out.getvalue()
+
+
+def resized(image: Image.Image, width: int) -> Image.Image:
+    """``image`` scaled to ``width``, keeping its shape."""
+    if image.width == width:
+        return image
+    height = round(image.height * width / image.width)
+    return image.resize((width, height), Image.Resampling.LANCZOS)
+
+
+#: Map rows stitched at a time, which bounds memory for the large map.
+_BAND_ROWS = 256
+
+
+def stitch(layer: Layer, frames: list[tuple[FloatArray, str]], width: int) -> FloatArray:
+    """Stitch (sRGB pixels, moment) frames into a 2:1 sRGB map of the surface in ``layer``."""
+    linear = [
+        Frame(linear_from_srgb(pixels) if layer.light else pixels, julian_day(moment), DISK_RADIUS)
+        for pixels, moment in frames
+    ]
+    if layer.light:
+        linear = flatten_all(linear)
+    lon, lat = grid(width)
+    pieces = [
+        composite(linear, lon[row : row + _BAND_ROWS], lat[row : row + _BAND_ROWS])
+        for row in range(0, dims(lon)[0], _BAND_ROWS)
+    ]
+    stitched = Composite(
+        np.concatenate([piece.pixels for piece in pieces], axis=0),
+        np.concatenate([piece.trust for piece in pieces], axis=0),
+    )
+    filled = fill_unseen(stitched, mottled=layer.light)
+    return srgb_from_linear(filled) if layer.light else np.clip(filled, 0, 1)
+
+
+def disc_name(layer: Layer, size: int) -> str:
+    """Where the newest frame goes under ``textures/sun/``."""
     return f"{layer.key}-{size}.webp"
+
+
+def map_name(layer: Layer, width: int) -> str:
+    """Where a map goes under ``textures/sun/``."""
+    return f"{layer.key}-map-{width}.webp"
 
 
 class LayerEntry(TypedDict):
@@ -163,12 +265,13 @@ class LayerEntry(TypedDict):
     key: str
     label: str
     description: str
-    observed: str
-    files: dict[str, str]
+    frames: list[str]
+    map: dict[str, str]
+    disc: dict[str, str]
 
 
 class Manifest(TypedDict):
-    """``sun-images.json``: what the frames are and where they came from."""
+    """``sun-images.json``: what the maps and frames are and where they came from."""
 
     schemaVersion: int
     credit: str
@@ -179,10 +282,10 @@ class Manifest(TypedDict):
 CREDIT = "NASA/SDO and the AIA and HMI science teams, via Helioviewer"
 
 
-def manifest(observations: dict[str, Observation]) -> Manifest:
-    """Describe the frames of every layer in ``LAYERS``."""
+def manifest(observed: dict[str, list[str]]) -> Manifest:
+    """Describe every layer in ``LAYERS``, given when its frames were taken, oldest first."""
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "credit": CREDIT,
         "diskRadius": DISK_RADIUS,
         "layers": [
@@ -190,8 +293,11 @@ def manifest(observations: dict[str, Observation]) -> Manifest:
                 "key": layer.key,
                 "label": layer.label,
                 "description": layer.description,
-                "observed": observations[layer.key]["date"],
-                "files": {str(size): f"textures/sun/{file_name(layer, size)}" for size in SIZES},
+                "frames": observed[layer.key],
+                "map": {
+                    str(width): f"textures/sun/{map_name(layer, width)}" for width in MAP_SIZES
+                },
+                "disc": {str(size): f"textures/sun/{disc_name(layer, size)}" for size in SIZES},
             }
             for layer in LAYERS
         ],
@@ -207,19 +313,54 @@ def _download(url: str) -> bytes:  # pragma: no cover - needs network access
         return body
 
 
-def fetch_images(public: Path, date: str = DEFAULT_DATE) -> Manifest:  # pragma: no cover
-    """Render every layer at every size into ``public/textures/sun`` and write the manifest."""
+def _cached(cache: Path, name: str, url: str) -> bytes:  # pragma: no cover - needs network access
+    path = cache / name
+    if path.exists():
+        return path.read_bytes()
+    body = _download(url)
+    _ = path.write_bytes(body)
+    return body
+
+
+def fetch_frame(
+    layer: Layer, date: str, cache: Path
+) -> tuple[FloatArray, str]:  # pragma: no cover - needs network access
+    """Fetch the usable frame of ``layer`` closest to ``date``, decoded, and when it was taken."""
+    for hours in RETRY_HOURS:
+        moment = shifted(date, hours)
+        stamp = moment.replace(":", "")
+        closest = _cached(cache, f"{layer.key}-{stamp}.json", closest_image_url(layer, moment))
+        observation = parse_closest_image(parse_json(closest))
+        scale = image_scale(observation["radius_arcsec"], FRAME_SIZE)
+        url = screenshot_url(layer, moment, scale, FRAME_SIZE)
+        pixels = decode(_cached(cache, f"{layer.key}-{stamp}-{FRAME_SIZE}.png", url))
+        if usable(pixels, DISK_RADIUS):
+            return pixels, observation["date"]
+    msg = f"no usable {layer.key} frame near {date}"
+    raise ValueError(msg)
+
+
+def fetch_images(
+    public: Path, cache: Path, date: str = DEFAULT_DATE
+) -> Manifest:  # pragma: no cover - needs network access
+    """Fetch every layer's frames, write its map and newest frame, and write the manifest.
+
+    Downloads are kept in ``cache``, so a second run only redoes the stitching.
+    """
     folder = public / "textures" / "sun"
     folder.mkdir(parents=True, exist_ok=True)
-    observations: dict[str, Observation] = {}
+    cache.mkdir(parents=True, exist_ok=True)
+    observed: dict[str, list[str]] = {}
     for layer in LAYERS:
-        observation = parse_closest_image(parse_json(_download(closest_image_url(layer, date))))
-        observations[layer.key] = observation
+        frames = [fetch_frame(layer, moment, cache) for moment in frame_dates(date)]
+        observed[layer.key] = [moment for _, moment in frames]
+        newest = encode(frames[-1][0])
         for size in SIZES:
-            scale = image_scale(observation["radius_arcsec"], size)
-            frame = to_webp(_download(screenshot_url(layer, date, scale, size)))
-            _ = (folder / file_name(layer, size)).write_bytes(frame)
-    result = manifest(observations)
+            _ = (folder / disc_name(layer, size)).write_bytes(to_webp(resized(newest, size)))
+        surface = encode(stitch(layer, frames, max(MAP_SIZES)))
+        for width in MAP_SIZES:
+            _ = (folder / map_name(layer, width)).write_bytes(to_webp(resized(surface, width)))
+    result = manifest(observed)
     path = public / "data" / "sun-images.json"
     _ = path.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
     return result
