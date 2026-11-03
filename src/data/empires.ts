@@ -162,3 +162,17 @@ export function territoryHue(name: string): number {
   }
   return hash % 360;
 }
+
+/** The states that `after` has and `before` lacks, and those gone from it, each sorted. */
+export function stateChanges(
+  before: readonly string[],
+  after: readonly string[],
+): { readonly appeared: readonly string[]; readonly gone: readonly string[] } {
+  const had = new Set(before);
+  const has = new Set(after);
+  const sorted = (names: Iterable<string>) => [...names].sort((a, b) => a.localeCompare(b));
+  return {
+    appeared: sorted([...has].filter((name) => !had.has(name))),
+    gone: sorted([...had].filter((name) => !has.has(name))),
+  };
+}

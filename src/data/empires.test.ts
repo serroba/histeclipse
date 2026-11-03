@@ -11,6 +11,7 @@ import {
   loadEmpireCentury,
   loadEmpireIndex,
   ringArea,
+  stateChanges,
   territoriesIn,
   territoryHue,
   unwrapRing,
@@ -136,5 +137,14 @@ describe('helpers', () => {
       longitude: 0,
       area: 0,
     });
+  });
+});
+
+describe('stateChanges', () => {
+  it('names the states that appeared and those gone, sorted', () => {
+    expect(
+      stateChanges(['Neo-Babylonian Empire', 'Lydia', 'Media'], ['Achaemenid Empire', 'Lydia']),
+    ).toEqual({ appeared: ['Achaemenid Empire'], gone: ['Media', 'Neo-Babylonian Empire'] });
+    expect(stateChanges(['Egypt'], ['Egypt', 'Egypt'])).toEqual({ appeared: [], gone: [] });
   });
 });

@@ -86,11 +86,14 @@ import { createSunSwitch } from './ui/sunSwitch';
 import { createLayersPanel } from './ui/layersPanel';
 import { createDeepGlance } from './ui/deepGlance';
 import { cliopatriaYear } from './state/layerCatalog';
+import { changesText, createHistoryTrack, STATES_HINT } from './ui/historyTrack';
+import { yearPlayhead, type YearSpeed } from './time/yearPlay';
 import {
   centuryFor,
   labelPoint,
   loadEmpireCentury,
   loadEmpireIndex,
+  stateChanges,
   territoriesIn,
   type EmpireCentury,
   type EmpireIndex,
@@ -562,6 +565,99 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   );
   const card = createEclipseCard();
+  // The Holocene track: the years played by, from as far back as ΔT reaches to the present.
+  let historySpeed: YearSpeed = 50;
+  let historyPlaying = false;
+  let historyFrame = 0;
+  let historyTick = 0;
+  let historyHead = yearPlayhead();
+  // What the track last said of the states, and what was drawn then, to tell what changed.
+  let statesSaid = 'Which states appear and which are gone shows here as the years go by.';
+  let statesBefore: { readonly year: number; readonly names: readonly string[] } | null = null;
+  const historyTrack = createHistoryTrack({
+    onYear(year) {
+      stopHistory();
+      setYear(year);
+    },
+    onPlay(play) {
+      if (play) startHistory();
+      else stopHistory();
+    },
+    onSpeed(speed) {
+      historySpeed = speed;
+      showHistory(store.get());
+    },
+  });
+
+  function historyFirst(): number {
+    return Math.ceil(deltaT.firstYear) + 1;
+  }
+
+  function setYear(year: number): void {
+    store.set((state) => ({
+      ...state,
+      time: moveToYear(state.time, astronomicalYear(year)),
+      selection: null,
+    }));
+  }
+
+  function startHistory(): void {
+    if (store.get().time.date.year >= PRESENT_YEAR) setYear(historyFirst());
+    historyPlaying = true;
+    historyHead = yearPlayhead();
+    historyTick = performance.now();
+    historyFrame = requestAnimationFrame(tickHistory);
+    showHistory(store.get());
+  }
+
+  // A new year at most every 80 ms: each brings its eclipses and borders to load.
+  const HISTORY_STEP_SECONDS = 0.08;
+  function tickHistory(now: number): void {
+    if (!historyPlaying) return;
+    const seconds = (now - historyTick) / 1000;
+    if (seconds >= HISTORY_STEP_SECONDS) {
+      historyTick = now;
+      const year = store.get().time.date.year;
+      const next = historyHead.step(year, historySpeed, seconds, PRESENT_YEAR);
+      if (next !== year) setYear(next);
+      if (next >= PRESENT_YEAR) {
+        stopHistory();
+        return;
+      }
+    }
+    historyFrame = requestAnimationFrame(tickHistory);
+  }
+
+  function stopHistory(): void {
+    if (!historyPlaying) return;
+    historyPlaying = false;
+    cancelAnimationFrame(historyFrame);
+    showHistory(store.get());
+  }
+
+  function showHistory(state: ViewState): void {
+    historyTrack.render({
+      year: state.time.date.year,
+      first: historyFirst(),
+      last: PRESENT_YEAR,
+      playing: historyPlaying,
+      speed: historySpeed,
+      changes: state.layers.has('empires') ? statesSaid : STATES_HINT,
+    });
+  }
+
+  /** Note which states appeared or went since the year drawn before, if it was near. */
+  function noteStates(year: number, names: readonly string[]): void {
+    const before = statesBefore;
+    statesBefore = { year, names };
+    // Far apart, a list of what differs says little about what happened.
+    if (before === null || Math.abs(year - before.year) > 500) return;
+    const { appeared, gone } = stateChanges(before.names, names);
+    const said = changesText(year, appeared, gone);
+    if (said !== null) statesSaid = said;
+    showHistory(store.get());
+  }
+
   const timeline = createTimeline(
     {
       onYear(year) {
@@ -593,7 +689,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         stepSeen(direction);
       },
     },
-    [famousPanel.button, tabletPanel.button],
+    [famousPanel.button, historyTrack.button, tabletPanel.button],
   );
   const scrubber = createScrubber((offsetMinutes) => {
     const selected = selectedEclipse(store.get());
@@ -607,6 +703,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { class: 'bottom', 'data-deep': 'off' },
     card.root,
     scrubber.root,
+    historyTrack.root,
     timeline.root,
     deepBar.root,
   );
@@ -1901,6 +1998,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
         // The year or source may have moved on while the files loaded.
         if (empiresShown !== key) return;
         globe.setEmpires({ territories: drawn, ohm: lines });
+        noteStates(year, [
+          ...drawn.map(({ name }) => name),
+          ...(lines?.labels ?? []).map(({ name }) => name),
+        ]);
       },
       (error: unknown) => {
         empiresShown = null;
@@ -2320,6 +2421,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ) {
       showGenomes(state);
       showEmpires(state);
+    }
+    // Deep time, or an eclipse picked, ends a trip through the years.
+    if (state.ma !== null || state.selection !== null) stopHistory();
+    if (state.time.date.year !== previous?.time.date.year || state.layers !== previous.layers) {
+      showHistory(state);
     }
     if (state.location !== previous?.location) globe.setLocation(state.location);
     if (state.view !== previous?.view) globe.setViewpoint(state.view);

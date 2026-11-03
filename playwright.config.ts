@@ -24,7 +24,7 @@ export default defineConfig<DisplayOptions>({
     // frames instead of time shows up there (deep time once stalled at 120 Hz).
     {
       name: 'desktop-120hz',
-      testMatch: /(journeys|time|layers|ice)\.spec\.ts$/,
+      testMatch: /(journeys|time|layers|ice|history)\.spec\.ts$/,
       use: { ...devices['Desktop Chrome'], refreshRate: 120 },
     },
   ],

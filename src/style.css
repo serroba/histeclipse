@@ -601,6 +601,60 @@ body {
   backdrop-filter: blur(14px);
 }
 
+/* The Holocene track: Play, the years, the speed, and which states came and went. */
+.history-track {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: min(760px, 100%);
+  padding: 4px 8px 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+}
+
+.history-track[hidden] {
+  display: none;
+}
+
+.history-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-slider {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  accent-color: rgb(247 201 90);
+}
+
+.history-speed {
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.05);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+}
+
+.history-speed option {
+  background: #10162a;
+}
+
+.history-changes {
+  margin: 0 8px;
+  overflow: hidden;
+  color: var(--ink-muted);
+  font-size: 13px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .year-controls {
   display: flex;
   flex: none;
