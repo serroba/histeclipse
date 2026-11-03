@@ -644,6 +644,45 @@ body {
   color: var(--ink-muted);
 }
 
+/* The temperature colours, under the time slider, small: what the globe's colours mean. */
+.deep-glance-temperature {
+  margin-top: 6px;
+}
+
+.deep-glance-temperature[hidden] {
+  display: none;
+}
+
+.deep-glance-scale {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.deep-glance-ticks {
+  position: relative;
+  display: block;
+  height: 14px;
+  margin-top: 2px;
+  color: var(--ink-muted);
+  font-size: 10px;
+}
+
+.deep-glance-ticks span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.deep-glance-ticks span:first-child {
+  transform: none;
+}
+
+.deep-glance-ticks span:last-child {
+  transform: translateX(-100%);
+}
+
 .deep-glance-slider {
   display: block;
   width: 100%;
