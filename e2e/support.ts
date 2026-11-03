@@ -1,6 +1,34 @@
-/** Steps shared by the end-to-end features. */
+/** Steps shared by the end-to-end features, and the test they run in. */
 
-import { expect, type Page } from '@playwright/test';
+import { expect, test as base, type Page } from '@playwright/test';
+
+export { expect };
+
+export interface DisplayOptions {
+  /** Frames per second the display gives, exactly; null for the browser's own. */
+  readonly refreshRate: number | null;
+}
+
+/**
+ * Playwright's test, with the display's refresh rate as a project option: a 120 Hz project
+ * runs the features with frames at that rate, as a fast Mac or phone gives them.
+ */
+export const test = base.extend<DisplayOptions>({
+  refreshRate: [null, { option: true }],
+  page: async ({ page, refreshRate }, use) => {
+    if (refreshRate !== null) {
+      await page.addInitScript((hz) => {
+        let time = performance.now();
+        window.requestAnimationFrame = (callback) =>
+          window.setTimeout(() => {
+            time += 1000 / hz;
+            callback(time);
+          }, 1000 / hz);
+      }, refreshRate);
+    }
+    await use(page);
+  },
+});
 
 export function collectProblems(page: Page): string[] {
   const problems: string[] = [];
