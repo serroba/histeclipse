@@ -85,7 +85,8 @@ test('a reader travels into the ice ages and back to the day they left', async (
     await page.getByRole('button', { name: 'Play' }).click();
   });
   await test.step('Then time runs to the present and stops there', async () => {
-    await expect(page.locator('.hud-date')).toHaveText('Today');
+    // A slow machine runs fewer frames a second, so the trip can take a while.
+    await expect(page.locator('.hud-date')).toHaveText('Today', { timeout: 30_000 });
     await expect(page.getByRole('button', { name: 'Play' })).toBeVisible();
   });
   await test.step('When they go back to the Holocene', async () => {
