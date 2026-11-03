@@ -83,6 +83,7 @@ import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createAimSwitch, type AimTarget } from './ui/aimSwitch';
 import { createSunSwitch } from './ui/sunSwitch';
 import { createLayersPanel } from './ui/layersPanel';
+import { createDeepGlance } from './ui/deepGlance';
 import { cliopatriaYear } from './state/layerCatalog';
 import {
   centuryFor,
@@ -511,6 +512,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     'Show controls',
   );
   showControls.addEventListener('click', togglePanels);
+  const glance = createDeepGlance((play) => {
+    if (play) startPlay();
+    else stopPlay();
+  });
   const card = createEclipseCard();
   const timeline = createTimeline(
     {
@@ -602,6 +607,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ),
     ),
     notices,
+    glance.root,
     showControls,
     bottom,
     famousPanel.dialog,
@@ -1201,6 +1207,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (ma === null) {
       stopPlay();
       deepBar.render(null);
+      glance.render(null);
       globe.setUncharted(false);
       globe.setSketch(null);
       globe.setDeepTime(null);
@@ -1237,6 +1244,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       seaLevel: seaLevelView(state),
       ...showPlates(state, ma),
       sketch: sketch === null ? null : { sketch, choices },
+    });
+    glance.render({
+      when: formatMa(ma),
+      period: period === null ? 'Deep time' : periodWords(period),
+      ma,
+      oldest: spanOf(scale),
+      playing,
     });
     // The temperature maps are 5 million years apart, and stop where the elevation maps do: none
     // on the ice-age scale or before them.
@@ -2173,6 +2187,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   globe.onEmptyTap(showPanels);
   globe.onPlacePick((place) => {
+    // Deep time has no place to stand: a tap on the globe clears the panels, or brings them back.
+    if (store.get().ma !== null) {
+      togglePanels();
+      return;
+    }
     const location = { latitude: round(place.latitude, 4), longitude: round(place.longitude, 4) };
     // During a solar eclipse, show the moment it is deepest at the place picked.
     const selected = selectedEclipse(store.get());
