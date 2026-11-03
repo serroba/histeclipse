@@ -4,9 +4,7 @@
  * Famous eclipses are events of the Holocene, so they sit with the year's eclipses.
  */
 
-import { expect, test } from '@playwright/test';
-
-import { collectProblems, globeRendered } from './support';
+import { collectProblems, globeRendered, expect, test } from './support';
 
 test('the top row picks the time; famous eclipses sit with the year’s eclipses', async ({
   page,

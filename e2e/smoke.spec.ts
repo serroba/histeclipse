@@ -1,11 +1,11 @@
-import { expect, test, type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 import deltaTTable from '../public/data/delta-t.json' with { type: 'json' };
 import { subsolarPoint } from '../src/astro/sun';
 import { parseViewState } from '../src/state/url';
 import { momentJulianDay } from '../src/state/viewState';
 import { DeltaT } from '../src/time/deltaT';
-import { collectProblems, globeRendered, openLayers, openSources } from './support';
+import { collectProblems, expect, globeRendered, openLayers, openSources, test } from './support';
 
 // Commit SHA the deployment is expected to serve. Empty or unset skips the release check.
 const expectedVersion = process.env['EXPECTED_VERSION'] ?? '';
@@ -1397,25 +1397,18 @@ test('deep time charts sea level by four reconstructions, side by side', async (
 });
 
 for (const rate of [60, 120]) {
-  test(`on a ${String(rate)} Hz display, playing the ice ages moves towards the present`, async ({
-    page,
-  }) => {
+  test.describe(`on a ${String(rate)} Hz display`, () => {
     // Frames at exactly this rate, so the step each frame takes is what such a display gives.
-    await page.addInitScript((hz) => {
-      let time = performance.now();
-      window.requestAnimationFrame = (callback) =>
-        window.setTimeout(() => {
-          time += 1000 / hz;
-          callback(time);
-        }, 1000 / hz);
-    }, rate);
-    await page.goto('./?ma=0.5&scale=ice');
-    await globeRendered(page);
-    await page.getByRole('button', { name: 'Play' }).click();
-    // Any frame rate moves it on from 500,000 years ago; a step rounded away would not. (How
-    // fast depends on how often a busy machine runs the frames, so the pace is unit-tested.)
-    await expect(page).toHaveURL(/&ma=0\.4\d*(&|$)/);
-    await page.getByRole('button', { name: 'Pause' }).click();
+    test.use({ refreshRate: rate });
+    test('playing the ice ages moves towards the present', async ({ page }) => {
+      await page.goto('./?ma=0.5&scale=ice');
+      await globeRendered(page);
+      await page.getByRole('button', { name: 'Play' }).click();
+      // Any frame rate moves it on from 500,000 years ago; a step rounded away would not. (How
+      // fast depends on how often a busy machine runs the frames, so the pace is unit-tested.)
+      await expect(page).toHaveURL(/&ma=0\.4\d*(&|$)/);
+      await page.getByRole('button', { name: 'Pause' }).click();
+    });
   });
 }
 

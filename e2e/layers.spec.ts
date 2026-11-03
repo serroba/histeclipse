@@ -3,9 +3,7 @@
  * them as they travel through time.
  */
 
-import { expect, test } from '@playwright/test';
-
-import { collectProblems, globeRendered, openLayers, openSources } from './support';
+import { collectProblems, globeRendered, openLayers, openSources, expect, test } from './support';
 
 test('the reader finds every layer in one panel, grouped by what it shows', async ({ page }) => {
   const problems = collectProblems(page);
