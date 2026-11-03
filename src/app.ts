@@ -145,6 +145,13 @@ import {
   type IceOutlineIndex,
   type IceOutlines,
 } from './data/iceOutlines';
+import {
+  countryRings,
+  loadNamedPeriods,
+  periodsHere,
+  periodsText,
+  type NamedPeriods,
+} from './data/namedPeriods';
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
 import { loadWaysOfLife, waysAt, waysNote, type WaysOfLife } from './data/waysOfLife';
@@ -292,6 +299,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ' · Rocks: ',
     element('a', { href: 'https://macrostrat.org' }, 'Macrostrat'),
     ' (Peters et al., CC BY 4.0)',
+  );
+  const periodsCredit = element(
+    'span',
+    { class: 'empire-credit', hidden: '' },
+    ' · Periods: ',
+    element('a', { href: 'https://perio.do' }, 'PeriodO'),
+    ' (CC0), countries from Natural Earth',
   );
   const waysCredit = element(
     'span',
@@ -785,6 +799,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         empireCredit,
         genomeCredit,
         waysCredit,
+        periodsCredit,
         rocksCredit,
         ohmCredit,
         paleoCredit,
@@ -2129,6 +2144,48 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
   }
 
+  // Named periods: their file loads the first time the layer is turned on.
+  let namedPeriods: {
+    readonly data: NamedPeriods;
+    readonly rings: ReturnType<typeof countryRings>;
+  } | null = null;
+  let namedPeriodsLoading: Promise<NamedPeriods> | null = null;
+  let periodsSaid: string | null = null;
+
+  /** In historical time with the layer on, the periods named for the place picked. */
+  function showPeriods(state: ViewState): void {
+    const on = state.layers.has('periods') && state.ma === null;
+    periodsCredit.hidden = !on;
+    if (!on) {
+      periodsSaid = null;
+      return;
+    }
+    if (namedPeriods === null) {
+      periodsSaid = 'Loading the named periods…';
+      if (namedPeriodsLoading === null) {
+        namedPeriodsLoading = loadNamedPeriods(`${base}data/periods.json`, fetchJson);
+        namedPeriodsLoading.then(
+          (data) => {
+            namedPeriods = { data, rings: countryRings(data) };
+            showPeriods(store.get());
+            showEmpires(store.get());
+          },
+          (error: unknown) => {
+            namedPeriodsLoading = null;
+            notify(`Could not load the named periods: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return;
+    }
+    const year = state.time.date.year;
+    const here =
+      state.location === null
+        ? null
+        : periodsHere(namedPeriods.data, namedPeriods.rings, state.location, year);
+    periodsSaid = periodsText(here, formatYear(astronomicalYear(year)));
+  }
+
   // Ways of life: their file loads the first time the layer is turned on.
   let waysOfLife: WaysOfLife | null = null;
   let waysLoading: Promise<WaysOfLife> | null = null;
@@ -2183,6 +2240,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       said: new Map<Layer, string>([
         ...(genomesSaid === null ? [] : [['genomes', genomesSaid] as const]),
         ...(waysSaid === null ? [] : [['ways', waysSaid] as const]),
+        ...(periodsSaid === null ? [] : [['periods', periodsSaid] as const]),
         ...(rocksSaid === null ? [] : [['rocks', rocksSaid] as const]),
       ]),
       actions: new Map(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
@@ -2646,6 +2704,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showGenomes(state);
       showWays(state);
       showRocks(state);
+      showPeriods(state);
       showEmpires(state);
     }
     // Deep time, or an eclipse picked, ends a trip through the years.

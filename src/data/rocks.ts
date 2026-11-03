@@ -7,7 +7,7 @@
 import * as v from 'valibot';
 
 import type { GeoPoint } from '../state/viewState';
-import { elementAt } from '../util/arrays';
+import { insideWrapped, ringsOf, type Ring } from '../util/polygons';
 import { getJson, type Fetch } from './fetchJson';
 
 const Ma = v.pipe(v.number(), v.minValue(0));
@@ -36,8 +36,6 @@ export async function loadRocks(url: string, fetchJson: Fetch): Promise<Rocks> {
   return getJson(fetchJson, url, RocksSchema);
 }
 
-export type Ring = readonly (readonly [number, number])[];
-
 /** A map unit in degrees. */
 export interface RockUnit {
   readonly name: string;
@@ -52,40 +50,14 @@ export interface RockUnit {
 export function rockUnits(data: Rocks): readonly RockUnit[] {
   return data.units.map((unit) => ({
     ...unit,
-    rings: unit.rings.map((ring) => {
-      const points: [number, number][] = [];
-      for (let at = 0; at + 1 < ring.length; at += 2) {
-        points.push([elementAt(ring, at) / data.scale, elementAt(ring, at + 1) / data.scale]);
-      }
-      return points;
-    }),
+    rings: ringsOf(unit.rings, data.scale),
   }));
-}
-
-/** Whether a point lies inside an odd number of a unit's rings (holes count out). */
-function inside(rings: readonly Ring[], longitude: number, latitude: number): boolean {
-  let crossings = 0;
-  for (const ring of rings) {
-    for (let at = 0, before = ring.length - 1; at < ring.length; before = at, at += 1) {
-      const [x1, y1] = elementAt(ring, at);
-      const [x2, y2] = elementAt(ring, before);
-      if (
-        y1 > latitude !== y2 > latitude &&
-        longitude < ((x2 - x1) * (latitude - y1)) / (y2 - y1) + x1
-      ) {
-        crossings += 1;
-      }
-    }
-  }
-  return crossings % 2 === 1;
 }
 
 /** The unit at a place, if the map has one there; rings may run past ±180°. */
 export function rockAt(units: readonly RockUnit[], place: GeoPoint): RockUnit | null {
   for (const unit of units) {
-    for (const offset of [0, 360, -360]) {
-      if (inside(unit.rings, place.longitude + offset, place.latitude)) return unit;
-    }
+    if (insideWrapped(unit.rings, place.longitude, place.latitude)) return unit;
   }
   return null;
 }
