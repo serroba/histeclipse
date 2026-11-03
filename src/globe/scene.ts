@@ -91,6 +91,7 @@ import { PLANET_NAMES, planetRadius } from './planetLook';
 import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
 import type { FossilCell } from '../data/fossils';
+import type { ImpactMark } from '../data/impacts';
 import type { ArrivalGrid } from '../data/dispersal';
 import type { HumanSite } from '../data/humanClaims';
 import type { RockUnit } from '../data/rocks';
@@ -343,6 +344,10 @@ export interface Globe {
   setFossilCells(cells: readonly FossilCell[] | null): void;
   /** Mark dated finds of humans and their relatives in deep time; null hides them. */
   setHumanSites(sites: readonly HumanSite[] | null): void;
+  /** Mark impact craters and deposits, sized by diameter, each to tap for its card; null hides them. */
+  setImpacts(marks: readonly ImpactMark[] | null): void;
+  /** Called when someone taps a marker that has a card, with its key (such as `impact:47`). */
+  onMarkerPick(listener: (key: string) => void): () => void;
   /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
   setIceOutlines(outlines: IceOutlines | null): void;
   /**
@@ -1269,6 +1274,19 @@ export async function createGlobe(
   container.append(fossilLayer);
   let fossilLabels: GlobeLabel[] = [];
   let fossilKey = '';
+  // Impact craters and deposits, in either time: markers to tap for a card.
+  const impactLayer = document.createElement('div');
+  impactLayer.className = 'empire-labels impact-marks';
+  container.append(impactLayer);
+  let impactLabels: GlobeLabel[] = [];
+  let impactKey = '';
+  const markerPickListeners = new Set<(key: string) => void>();
+  impactLayer.addEventListener('click', (event) => {
+    const marker = event.target instanceof Element ? event.target.closest('[data-pick]') : null;
+    const key = marker?.getAttribute('data-pick');
+    if (key === null || key === undefined) return;
+    for (const listener of markerPickListeners) listener(key);
+  });
   // Deep time's overlay, on the states' map (never shown then): a dispersal model's settled
   // land, and the ice-sheet outlines over it.
   let deepOverlay: {
@@ -1683,6 +1701,7 @@ export async function createGlobe(
     for (const { element, position, width, height } of [
       ...humanLabels,
       ...genomeLabels,
+      ...impactLabels,
       ...fossilLabels,
       ...empireLabels,
     ]) {
@@ -2287,6 +2306,51 @@ export async function createGlobe(
             );
       container.dataset['fossils'] = cells === null ? 'off' : String(cells.length);
       needsRender = true;
+    },
+    setImpacts(marks) {
+      const key =
+        marks === null
+          ? 'off'
+          : marks
+              .map(
+                ({ impact, point, uncertain }) =>
+                  `${String(impact.id)}:${point.latitude.toFixed(2)},${point.longitude.toFixed(2)}${uncertain ? '?' : ''}`,
+              )
+              .join(' ');
+      if (key === impactKey) return;
+      impactKey = key;
+      impactLayer.replaceChildren();
+      impactLabels =
+        marks === null
+          ? []
+          : measured(
+              impactLayer,
+              marks.map(({ impact, point, uncertain }) => {
+                const element = document.createElement('button');
+                element.type = 'button';
+                element.className = `empire-label impact-mark is-${impact.kind}${uncertain ? ' is-uncertain' : ''}`;
+                element.dataset['pick'] = `impact:${String(impact.id)}`;
+                const diameter = impact.diameterKm ?? 0;
+                // Wider for larger craters, gently: a logarithm, from 9 to 26 pixels.
+                const size = Math.round(Math.min(26, 9 + 3 * Math.log2(1 + diameter / 4)));
+                element.style.setProperty('--size', `${String(size)}px`);
+                // The largest are named; every one says what it is to a screen reader.
+                if (diameter >= 40) {
+                  const name = document.createElement('span');
+                  name.className = 'impact-name';
+                  name.textContent = impact.name;
+                  element.append(name);
+                }
+                element.setAttribute('aria-label', `${impact.name}: details`);
+                return { element, point };
+              }),
+            );
+      container.dataset['impacts'] = marks === null ? 'off' : String(marks.length);
+      needsRender = true;
+    },
+    onMarkerPick(listener) {
+      markerPickListeners.add(listener);
+      return () => markerPickListeners.delete(listener);
     },
     setHumanSites(sites) {
       // Laying labels out is slow: not again for the same finds, as time plays on.

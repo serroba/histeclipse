@@ -55,6 +55,12 @@ export const HISTORY_LAYER_GROUPS: readonly LayerGroup[] = [
         about:
           'How old the rocks at the surface are, from Macrostrat; pick a place to see its rock, then the Earth when it formed.',
       },
+      {
+        id: 'impacts',
+        label: 'Impact craters',
+        about:
+          'Craters and deposits left by asteroids and comets, from the Impact Earth Database; tap one for its details.',
+      },
     ],
   },
   {

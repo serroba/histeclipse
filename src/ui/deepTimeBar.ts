@@ -233,6 +233,8 @@ export interface DeepTimeView {
     { readonly on: false } | { readonly on: true; readonly atmosphere: Atmosphere | null };
   /** Fossils: off, on while they load (null), or on with the finds of the moment. */
   readonly fossils: { readonly on: false } | { readonly on: true; readonly at: FossilsAt | null };
+  /** Impact craters and deposits: off, on while they load (null), or on with what to say. */
+  readonly impacts: { readonly on: false } | { readonly on: true; readonly text: string | null };
   /** Dated finds of humans: off, on while the claims load (null), or on with what to say. */
   readonly humans:
     | { readonly on: false }
@@ -285,6 +287,7 @@ export function createDeepTimeBar(handlers: {
   onPlates(on: boolean): void;
   onHumans(on: boolean): void;
   onFossils(on: boolean): void;
+  onImpacts(on: boolean): void;
   onAir(on: boolean): void;
   onDispersal(scenario: DispersalScenario): void;
   onScale(scale: DeepScale): void;
@@ -477,6 +480,16 @@ export function createDeepTimeBar(handlers: {
     hidden: '',
     'data-testid': 'fossils-note',
   });
+  const impactsButton = element(
+    'button',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
+    'Impacts',
+  );
+  const impactsNote = element('p', {
+    class: 'deep-note impacts-note',
+    hidden: '',
+    'data-testid': 'impacts-note',
+  });
   const humansButton = element(
     'button',
     { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
@@ -620,6 +633,7 @@ export function createDeepTimeBar(handlers: {
     platesNote,
     humansNote,
     fossilsNote,
+    impactsNote,
     airNote,
     milestones.root,
     // One open at a time (they share a name), so the bar doesn't grow over the globe.
@@ -647,6 +661,7 @@ export function createDeepTimeBar(handlers: {
       platesButton,
       humansButton,
       fossilsButton,
+      impactsButton,
       airButton,
     ),
     details,
@@ -841,6 +856,9 @@ export function createDeepTimeBar(handlers: {
   fossilsButton.addEventListener('click', () => {
     handlers.onFossils(!(current?.fossils.on ?? false));
   });
+  impactsButton.addEventListener('click', () => {
+    handlers.onImpacts(!(current?.impacts.on ?? false));
+  });
   humansButton.addEventListener('click', () => {
     handlers.onHumans(!(current?.humans.on ?? false));
   });
@@ -962,6 +980,20 @@ export function createDeepTimeBar(handlers: {
                 element('a', { href: 'https://paleobiodb.org' }, 'the Paleobiology Database'),
                 ' (CC BY 4.0).',
               ]),
+        );
+      }
+      // Impacts are placed on the elevation maps' reconstruction: not before them.
+      impactsButton.hidden = view.scale === 'eons';
+      impactsButton.setAttribute('aria-pressed', String(view.impacts.on));
+      impactsNote.hidden = !view.impacts.on;
+      if (view.impacts.on) {
+        impactsNote.replaceChildren(
+          view.impacts.text ?? 'Impacts: loading…',
+          ' Source: ',
+          element('a', { href: 'https://impact.uwo.ca' }, 'the Impact Earth Database'),
+          '; places then from the PALEOMAP model by the ',
+          element('a', { href: 'https://gws.gplates.org' }, 'GPlates Web Service'),
+          '.',
         );
       }
       airButton.hidden = view.scale !== 'ice';

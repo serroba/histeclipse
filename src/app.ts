@@ -75,6 +75,7 @@ import { createEclipseCard } from './ui/eclipseCard';
 import { createFamousPanel } from './ui/famousPanel';
 import { createWelcome } from './ui/welcome';
 import { loadSeaIce, type SeaIceIndex, seaIceMix, seaIcePair } from './data/seaIce';
+import { createMarkerCard } from './ui/markerCard';
 import { createTabletPanel } from './ui/tabletPanel';
 import { candidateYear, checkAll, type Verdict, verdictMoment } from './tablets/check';
 import { BABYLON, directionOf, starsByNumber, type TabletSky } from './tablets/tabletSky';
@@ -163,6 +164,7 @@ import {
 } from './data/ancientGenomes';
 import { loadAtmosphere, type Atmosphere } from './data/atmosphere';
 import { fossilsAt, loadFossils, type Fossils } from './data/fossils';
+import { impactDetails, impactsAt, impactsText, loadImpacts, type Impacts } from './data/impacts';
 import { humansAt, loadHumanClaims, type HumanClaims } from './data/humanClaims';
 import { loadArrivalGrid } from './globe/arrivalGrid';
 import {
@@ -202,6 +204,8 @@ const AIM_FOV = 12;
 const PLANETS_SHOWN_BEYOND = 1000;
 /** This year, up to which the latest borders of states carry on. */
 const PRESENT_YEAR = new Date().getUTCFullYear();
+/** The year “before present” counts back from, as radiocarbon dates do. */
+const BP_ZERO_YEAR = 1950;
 
 /** Deep time plays at this many million years per second: 540 Myr in about half a minute. */
 const PLAY_MA_PER_SECOND = 20;
@@ -293,6 +297,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => ({ ...state, borders }));
     },
   );
+  const markerCard = createMarkerCard();
   const rocksCredit = element(
     'span',
     { class: 'empire-credit', hidden: '' },
@@ -443,6 +448,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
         const layers = new Set(state.layers);
         if (on) layers.add('air');
         else layers.delete('air');
+        return { ...state, layers };
+      });
+    },
+    onImpacts(on) {
+      store.set((state) => {
+        const layers = new Set(state.layers);
+        if (on) layers.add('impacts');
+        else layers.delete('impacts');
         return { ...state, layers };
       });
     },
@@ -812,6 +825,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     famousPanel.dialog,
     tabletPanel.dialog,
     layersPanel.dialog,
+    markerCard.dialog,
   );
 
   // Full view hides the panels for a clear view; Show controls, Escape, or a tap on open sky or
@@ -1446,6 +1460,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       plateMotion: plateMotionText(state, ma),
       humans: showHumans(state, ma),
       fossils: showFossils(state, ma),
+      impacts: showImpacts(state),
       air: showAir(state),
       seaIce: showSeaIce(state, ma),
       temperature: temperatureView(state, ma),
@@ -1610,6 +1625,72 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     return { on: true, atmosphere };
   }
+
+  // Impact craters and deposits: loaded the first time the layer is turned on, in either time.
+  let impacts: Impacts | null = null;
+  let impactsLoading: Promise<Impacts> | null = null;
+  let impactsSaid: string | null = null;
+
+  /**
+   * With Impacts on, the craters that may have struck by the moment shown, where they lay then:
+   * on today's Earth in historical time, on the elevation maps' reconstruction in deep time.
+   */
+  function showImpacts(state: ViewState): DeepTimeView['impacts'] {
+    const { ma } = state;
+    const scale =
+      ma !== null && state.deepScale === 'all' && ma > oldest ? 'eons' : state.deepScale;
+    const on =
+      state.layers.has('impacts') && state.mode === 'globe' && (ma === null || scale !== 'eons');
+    if (!on) {
+      impactsSaid = null;
+      globe.setImpacts(null);
+      return { on: false };
+    }
+    if (impacts === null) {
+      impactsSaid = 'Loading the impact craters…';
+      if (impactsLoading === null) {
+        impactsLoading = loadImpacts(`${base}data/impacts.json`, fetchJson);
+        impactsLoading.then(
+          (loaded) => {
+            impacts = loaded;
+            const now = store.get();
+            if (now.ma !== null) {
+              showDeepTime(now);
+              return;
+            }
+            showImpacts(now);
+            showEmpires(now);
+          },
+          (error: unknown) => {
+            impactsLoading = null;
+            notify(`Could not load the impact craters: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return { on: true, text: null };
+    }
+    if (ma === null) {
+      // In historical time, today's places; a crater younger than the year shown is not there.
+      const since = Math.max(0, BP_ZERO_YEAR - state.time.date.year) / 1e6;
+      const marks = impactsAt(impacts, since, true);
+      globe.setImpacts(marks);
+      impactsSaid = impactsText(impacts, marks, null);
+      return { on: true, text: impactsSaid };
+    }
+    // On the ice-age scale the map is today's, so the craters are where they are today.
+    const marks = impactsAt(impacts, ma, false, scale === 'ice' ? 0 : ma);
+    globe.setImpacts(marks);
+    impactsSaid = null;
+    return { on: true, text: impactsText(impacts, marks, ma) };
+  }
+
+  globe.onMarkerPick((key) => {
+    const id = /^impact:(\d+)$/.exec(key)?.[1];
+    const impact = impacts?.impacts.find((each) => String(each.id) === id);
+    if (impact === undefined) return;
+    const details = impactDetails(impact);
+    markerCard.show({ title: details.title, facts: details.facts, links: [details.link] });
+  });
 
   // Fossils: loaded the first time the layer is turned on.
   let fossils: Fossils | null = null;
@@ -2242,6 +2323,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ...(waysSaid === null ? [] : [['ways', waysSaid] as const]),
         ...(periodsSaid === null ? [] : [['periods', periodsSaid] as const]),
         ...(rocksSaid === null ? [] : [['rocks', rocksSaid] as const]),
+        ...(impactsSaid === null ? [] : [['impacts', impactsSaid] as const]),
       ]),
       actions: new Map(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
     });
@@ -2705,6 +2787,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showWays(state);
       showRocks(state);
       showPeriods(state);
+      showImpacts(state);
       showEmpires(state);
     }
     // Deep time, or an eclipse picked, ends a trip through the years.

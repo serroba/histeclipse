@@ -43,6 +43,7 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 | `ways.spec.ts`     | Ways of life: ArchaeoGLOBE's regions by how people lived                    |
 | `rocks.spec.ts`    | Rocks at the surface: Macrostrat's map, and deep time at a rock's age       |
 | `fossils.spec.ts`  | Fossils in deep time: PBDB finds where they lay then                        |
+| `impacts.spec.ts`  | Impact craters: today and where they lay, each with a card                  |
 | `periods.spec.ts`  | Named periods: PeriodO's periods for the place picked, each by its source   |
 | `smoke.spec.ts`    | Everything else: loading, links, eclipses, views, sky, the Sun, deep time   |
 

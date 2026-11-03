@@ -23,6 +23,7 @@ from histeclipse_pipeline.fossils import fetch_fossils
 from histeclipse_pipeline.iceoutlines import fetch_outlines
 from histeclipse_pipeline.icesheets import fetch_icesheets
 from histeclipse_pipeline.ics import fetch_chart
+from histeclipse_pipeline.impacts import fetch_impacts
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table, write_table
@@ -259,6 +260,12 @@ def fossils(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} fossil occurrences to {args.out}")
 
 
+def impacts(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write impact craters and deposits, and their places when they struck (Impact Earth)."""
+    count = fetch_impacts(args.out)
+    return _say(f"wrote {count} impact craters and deposits to {args.out}")
+
+
 def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write ice-sheet thickness every 2,500 years over the last 80,000 (PaleoMIST 1.0)."""
     count = fetch_icesheets(args.out)
@@ -417,6 +424,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "fossils": (
         fossils,
         "write fossil occurrences of four groups at their age's places (PBDB, CC BY 4.0)",
+        "output JSON file",
+    ),
+    "impacts": (
+        impacts,
+        "write impact craters and deposits, and their places when they struck (Impact Earth)",
         "output JSON file",
     ),
     "icesheets": (
