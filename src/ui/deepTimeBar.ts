@@ -257,6 +257,8 @@ export interface DeepTimeView {
     readonly oldestKa: number | null;
     readonly standIn: IceStandIn | null;
   };
+  /** How far the plates have moved since the moment shown, on the ice-age scale; null if not known. */
+  readonly plateMotion: string | null;
   /** Batchelor et al.'s outlines of the time slice shown, on the ice-age scale; null if none. */
   readonly iceOutlines: IceOutlines | null;
   /** Sea level: off, on while the reconstructions load (null), or on with them. */
@@ -395,6 +397,7 @@ export function createDeepTimeBar(handlers: {
   const coastText = element('span', { 'data-testid': 'coastline' });
   const iceLine = element('p', { 'data-testid': 'ice-sheets' });
   const outlineLine = element('p', { 'data-testid': 'ice-outlines', hidden: '' });
+  const motionLine = element('p', { 'data-testid': 'plate-motion', hidden: '' });
   const seaIceWords = element('span', { 'data-testid': 'sea-ice' });
   const seaIcePicker = element(
     'select',
@@ -412,10 +415,11 @@ export function createDeepTimeBar(handlers: {
     element(
       'p',
       {},
-      'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time. Sea floor laid dry is sandy; ice sheets are white. The small moves of the continents are not drawn, and the temperature maps are 5 million years apart.',
+      'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time. Sea floor laid dry is sandy; ice sheets are white. The continents are drawn where they are today (how far they have moved is below), and the temperature maps are 5 million years apart.',
     ),
     iceLine,
     outlineLine,
+    motionLine,
     element(
       'p',
       {},
@@ -876,6 +880,8 @@ export function createDeepTimeBar(handlers: {
       }
       iceNote.hidden = !ice;
       iceLine.textContent = iceText(view.ice);
+      motionLine.hidden = view.plateMotion === null;
+      motionLine.textContent = view.plateMotion ?? '';
       const outlines = iceOutlineText(view.iceOutlines);
       outlineLine.hidden = outlines === null;
       outlineLine.textContent = outlines ?? '';

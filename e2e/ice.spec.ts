@@ -43,3 +43,16 @@ test('between Batchelor et al.’s time slices, no outlines are drawn', async ({
     await expect(page.getByTestId('ice-outlines')).toBeHidden();
   });
 });
+
+test('the ice ages say how far the plates have moved since', async ({ page }) => {
+  await test.step('Given the ice ages a million years ago', async () => {
+    await page.goto('./?ma=1&scale=ice');
+    await globeRendered(page);
+    await showDeepDetails(page);
+  });
+  await test.step('Then the note gives each plate’s move to today, and in which frame', async () => {
+    await expect(page.getByTestId('plate-motion')).toHaveText(
+      /^Since then the plates have moved, relative to Earth’s spin axis in Cao et al\.’s \(2024\) model: Pacific \d+ km [a-z-]+, .*Indian \d+ km [a-z-]+/,
+    );
+  });
+});
