@@ -22,7 +22,6 @@ import {
   PerspectiveCamera,
   PlaneGeometry,
   RedFormat,
-  RepeatWrapping,
   Quaternion,
   Raycaster,
   RepeatWrapping,
