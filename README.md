@@ -46,7 +46,7 @@ uv run histeclipse-pipeline delta-t --out ../public/data/delta-t.json
 uv run histeclipse-pipeline calendars --out ../public/data/calendars   # Babylonian and Chinese months
 ```
 
-Positions come from [JPL DE441](https://ssd.jpl.nasa.gov/planets/eph_export.html), via [Skyfield](https://rhodesmill.org/skyfield/). Results are checked against NASA's _Five Millennium Canon_ (Espenak & Meeus). Skyfield's ΔT model is the Morrison–Stephenson–Hohenkerk–Zawilski spline, and every catalog records which model it used.
+Positions come from [JPL DE441](https://ssd.jpl.nasa.gov/planets/eph_export.html), via [Skyfield](https://rhodesmill.org/skyfield/). Results are checked against NASA's _Five Millennium Canon_ (Espenak & Meeus). Skyfield's ΔT model is the Morrison–Stephenson–Hohenkerk–Zawilski spline, and every catalog records which model it used. The ΔT table reaches back to 9700 BCE, the Holocene's start, by the long-term parabola of Stephenson, Morrison & Hohenkerk (2016), with an uncertainty that grows to about ±3 hours there; the eclipse catalogs are computed from 4000 BCE, and before then the Moon's and planets' positions in the sky view are not checked against DE441.
 
 ## Contributing
 

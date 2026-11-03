@@ -40,7 +40,10 @@ export function formatCalendar(moment: Moment): string {
   return `${CALENDAR_NAMES[moment.date.calendar]} calendar`;
 }
 
-/** A duration in seconds as "5 h 13 min", "8 min", "69 s". Rounded to what the size justifies. */
+/**
+ * A duration in seconds as "4 d 9 h", "5 h 13 min", "8 min", "69 s". Rounded to what the size
+ * justifies: from two days, to the hour (ΔT early in the Holocene).
+ */
 export function formatDuration(seconds: number): string {
   const sign = seconds < 0 ? '−' : '';
   const total = Math.abs(seconds);
@@ -48,6 +51,12 @@ export function formatDuration(seconds: number): string {
   const minutes = Math.round(total / 60);
   if (minutes < 60) return `${sign}${String(minutes)} min`;
   const hours = Math.floor(minutes / 60);
+  if (hours >= 48) {
+    const wholeHours = Math.round(total / 3600);
+    const days = Math.floor(wholeHours / 24);
+    const left = wholeHours % 24;
+    return left === 0 ? `${sign}${String(days)} d` : `${sign}${String(days)} d ${String(left)} h`;
+  }
   const rest = minutes % 60;
   return rest === 0 ? `${sign}${String(hours)} h` : `${sign}${String(hours)} h ${String(rest)} min`;
 }

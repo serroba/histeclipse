@@ -38,6 +38,9 @@ describe('formatting', () => {
     [3600, '1 h'],
     [18_781, '5 h 13 min'],
     [-7200, '−2 h'],
+    [172_799, '2 d'],
+    [380_400, '4 d 10 h'],
+    [432_000, '5 d'],
   ])('writes %d seconds as %s', (seconds, text) => {
     expect(formatDuration(seconds)).toBe(text);
   });

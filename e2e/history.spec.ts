@@ -95,3 +95,31 @@ test('the track opens from the year bar and folds away again', async ({ page }) 
     );
   });
 });
+
+test('the Holocene reaches back to 9700 BCE, its ΔT growing uncertain', async ({ page }) => {
+  const problems = collectProblems(page);
+  const bar = page.getByRole('group', { name: track });
+  await test.step('Given 2024', async () => {
+    await page.goto('./?t=2024-04-08T18:17');
+    await globeRendered(page);
+  });
+  await test.step('When they move the track to its start', async () => {
+    await openTrack(page);
+    const slider = bar.getByRole('slider', { name: 'Year in the Holocene' });
+    await expect(slider).toHaveAttribute('min', '-9699');
+    await slider.fill('-9699');
+  });
+  await test.step('Then it is 9700 BCE, with ΔT in days and hours of doubt', async () => {
+    await expect(page).toHaveURL(/t=-9699-/);
+    await expect(page.locator('.hud-date')).toHaveText(/9700 BCE$/);
+    await expect(page.locator('.hud-detail')).toContainText(
+      /ΔT \d+ d( \d+ h)? ± [23] h( \d+ min)?/,
+    );
+  });
+  await test.step('And the year bar says the eclipses are catalogued from 4000 BCE only', async () => {
+    await expect(page.locator('.eclipse-list')).toContainText(
+      'Eclipses are catalogued from 4000 BCE',
+    );
+  });
+  expect(problems).toEqual([]);
+});

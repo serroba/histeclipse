@@ -27,9 +27,13 @@ export interface CalendarDate {
 /** Julian Day of 1582 October 15 (Gregorian) at 0h, the first day of the Gregorian reform. */
 export const GREGORIAN_REFORM_JD = julianDayNumber(2_299_160.5);
 
+/**
+ * A Julian Day. Days before Julian Day 0 (4713 BCE) are negative: the arithmetic below floors
+ * rather than truncates, so it carries on before then, as the Holocene needs (9700 BCE).
+ */
 export function julianDayNumber(value: number): JulianDay {
-  if (!Number.isFinite(value) || value < 0) {
-    throw new RangeError(`Julian Day must be finite and non-negative, got ${String(value)}`);
+  if (!Number.isFinite(value)) {
+    throw new RangeError(`Julian Day must be finite, got ${String(value)}`);
   }
   return value as JulianDay;
 }
@@ -83,9 +87,6 @@ export function julianDay(date: CalendarDate): JulianDay {
     date.day +
     correction -
     1524.5;
-  if (jd < 0) {
-    throw new RangeError(`Dates before Julian Day 0 are not supported`);
-  }
   return jd as JulianDay;
 }
 
