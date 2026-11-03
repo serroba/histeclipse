@@ -1360,6 +1360,15 @@ test('deep time colours the globe by temperature, with the global mean and its c
     'data-temperature',
     /paleotemp\/245\.png .*paleotemp\/250\.png$/,
   );
+  // The key says what the colours stand for: each one named, at its temperature.
+  const key = page.getByTestId('temperature-key');
+  await expect(page.locator('.temperature-heading')).toHaveText(
+    'Colours: the average temperature at the surface over a year',
+  );
+  await expect(key.getByRole('listitem')).toHaveCount(9);
+  await expect(key).toContainText('−40 °C or colder: ice-cap cold');
+  await expect(key).toContainText('15 °C: mild (today’s global mean)');
+  await expect(key).toContainText('45 °C or hotter: extreme heat');
   // The hothouse after the end-Permian extinction, against today's world.
   // Both models' global means, side by side: they part by seven degrees here.
   await expect(page.getByTestId('temperature-mean')).toHaveText(

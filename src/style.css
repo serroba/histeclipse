@@ -2150,18 +2150,46 @@ body {
   color: var(--ink-muted);
 }
 
-.temperature-scale-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ink-muted);
-  font-size: 12px;
+.temperature-legend .temperature-heading {
+  margin: 0 0 4px;
+  color: var(--ink);
 }
 
 .temperature-scale {
-  flex: 1;
-  height: 8px;
+  display: block;
+  height: 10px;
   border-radius: 4px;
+}
+
+/* °C under the scale, each centred on its place; the ends kept inside the bar. */
+.temperature-ticks {
+  position: relative;
+  height: 16px;
+  margin: 2px 0 4px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.temperature-ticks span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.temperature-ticks span:first-child {
+  transform: none;
+}
+
+.temperature-ticks span:last-child {
+  transform: translateX(-100%);
+}
+
+/* The colours named, in columns where there is room. */
+.colour-key.temperature-key {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  margin: 0 0 4px;
+  font-size: 12px;
 }
 
 .temperature-note {

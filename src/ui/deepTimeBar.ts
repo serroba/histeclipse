@@ -84,6 +84,34 @@ export const TEMPERATURE_STOPS: readonly (readonly [number, string])[] = [
   [45, '#a50026'],
 ];
 
+/** What each colour of the scale stands for: a stop's temperature, and what it is like. */
+export const TEMPERATURE_KEY: readonly { readonly celsius: number; readonly label: string }[] = [
+  { celsius: -40, label: 'ice-cap cold' },
+  { celsius: -20, label: 'bitter cold' },
+  { celsius: -5, label: 'below freezing' },
+  { celsius: 5, label: 'cool' },
+  { celsius: 15, label: 'mild (today’s global mean)' },
+  { celsius: 22, label: 'warm' },
+  { celsius: 28, label: 'hot (tropical)' },
+  { celsius: 35, label: 'very hot' },
+  { celsius: 45, label: 'extreme heat' },
+];
+
+/** The ticks under the scale: each temperature and how far along it is placed, 0 to 1. */
+export function scaleTicks(
+  stops: readonly (readonly [number, string])[],
+  ticks: readonly number[],
+): readonly { readonly celsius: number; readonly at: number }[] {
+  const first = stops[0]?.[0] ?? 0;
+  const last = stops.at(-1)?.[0] ?? 1;
+  return ticks.map((celsius) => ({ celsius, at: (celsius - first) / (last - first) }));
+}
+
+/** "−40 °C", with a true minus sign. */
+export function celsiusText(celsius: number): string {
+  return `${celsius < 0 ? '−' : ''}${String(Math.abs(celsius))} °C`;
+}
+
 /** A CSS gradient through the stops, placed by temperature. */
 export function legendGradient(stops: readonly (readonly [number, string])[]): string {
   const first = stops[0]?.[0] ?? 0;
@@ -546,16 +574,45 @@ export function createDeepTimeBar(handlers: {
       element('option', { value: model }, TEMPERATURE_MODEL_LABELS[model]),
     ),
   );
+  const swatch = (background: string) => {
+    const box = element('span', { class: 'colour-swatch', 'aria-hidden': 'true' });
+    box.style.background = background;
+    return box;
+  };
+  // The scale, its ticks in °C under it, and each colour named: what the globe's colours mean.
+  const ticks = element(
+    'div',
+    { class: 'temperature-ticks', 'aria-hidden': 'true' },
+    ...scaleTicks(TEMPERATURE_STOPS, [-40, -20, 0, 15, 30, 45]).map(({ celsius, at }) => {
+      const tick = element('span', {}, celsiusText(celsius));
+      tick.style.left = `${(at * 100).toFixed(1)}%`;
+      return tick;
+    }),
+  );
+  const named = element(
+    'ul',
+    { class: 'colour-key temperature-key', 'data-testid': 'temperature-key' },
+    ...TEMPERATURE_KEY.map(({ celsius, label }) => {
+      const colour = TEMPERATURE_STOPS.find(([stop]) => stop === celsius)?.[1] ?? '#888';
+      return element(
+        'li',
+        {},
+        swatch(colour),
+        `${celsiusText(celsius)}${celsius === -40 ? ' or colder' : celsius === 45 ? ' or hotter' : ''}: ${label}`,
+      );
+    }),
+  );
   const legend = element(
     'div',
     { class: 'temperature-legend', hidden: '' },
     element(
-      'div',
-      { class: 'temperature-scale-row' },
-      element('span', {}, '−40 °C'),
-      legendScale,
-      element('span', {}, '45 °C'),
+      'p',
+      { class: 'temperature-heading' },
+      'Colours: the average temperature at the surface over a year',
     ),
+    legendScale,
+    ticks,
+    named,
     element('p', {}, legendMean),
     element('p', {}, legendMap, ' ', element('label', {}, 'Colour by ', modelPicker)),
     legendNote,
@@ -569,11 +626,6 @@ export function createDeepTimeBar(handlers: {
     facts,
   );
   // What the colours mean: the map's and the ticks'. Folded away like the facts.
-  const swatch = (background: string) => {
-    const box = element('span', { class: 'colour-swatch', 'aria-hidden': 'true' });
-    box.style.background = background;
-    return box;
-  };
   const colourKey = element(
     'details',
     { class: 'deep-facts deep-key', 'data-testid': 'deep-key', name: 'deep-fold' },
