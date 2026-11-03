@@ -286,10 +286,32 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ' (CC BY 4.0) · Periods: ',
     element('a', { href: 'https://stratigraphy.org/chart' }, 'ICS chart v2026/06'),
   );
+  // The two times the reader can be in, one always picked: the calendar's, and deep time's.
+  const holoceneButton = element(
+    'button',
+    {
+      type: 'button',
+      class: 'time-option',
+      'aria-pressed': 'true',
+      title: 'The last 11,700 years: dates, states and eclipses',
+    },
+    'Holocene',
+  );
   const deepButton = element(
     'button',
-    { type: 'button', class: 'deep-open', 'aria-pressed': 'false' },
+    {
+      type: 'button',
+      class: 'time-option',
+      'aria-pressed': 'false',
+      title: 'Millions of years: the ice ages, moving continents, Earth’s history',
+    },
     'Deep time',
+  );
+  const timeSwitch = element(
+    'div',
+    { class: 'time-switch', role: 'group', 'aria-label': 'Time' },
+    holoceneButton,
+    deepButton,
   );
   // The eclipse picked before entering deep time, picked again on leaving it.
   let selectionBeforeDeep: ViewState['selection'] = null;
@@ -304,6 +326,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return { ...state, ma: null, layers, selection: state.selection ?? selection };
     });
   }
+  holoceneButton.addEventListener('click', () => {
+    if (store.get().ma !== null) leaveDeepTime();
+  });
   deepButton.addEventListener('click', () => {
     if (store.get().ma === null) {
       selectionBeforeDeep = store.get().selection;
@@ -317,8 +342,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
         focus: 'earth',
         selection: null,
       }));
-    } else {
-      leaveDeepTime();
     }
   });
   const deepBar = createDeepTimeBar({
@@ -330,9 +353,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     onPlay(play) {
       if (play) startPlay();
       else stopPlay();
-    },
-    onExit() {
-      leaveDeepTime();
     },
     onPlates(on) {
       store.set((state) => {
@@ -488,36 +508,39 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
   showControls.addEventListener('click', togglePanels);
   const card = createEclipseCard();
-  const timeline = createTimeline({
-    onYear(year) {
-      store.set((state) => ({ ...state, time: timeInYear(state, year), selection: null }));
+  const timeline = createTimeline(
+    {
+      onYear(year) {
+        store.set((state) => ({ ...state, time: timeInYear(state, year), selection: null }));
+      },
+      onCalendar(years) {
+        store.set((state) => ({ ...state, years }));
+      },
+      onSelect(eclipse) {
+        flyToSelection = true;
+        store.set((state) => ({
+          ...state,
+          time: eclipseMomentAt(eclipse, state.location),
+          selection: eclipseSelection(eclipse),
+        }));
+      },
+      onSeenIn(seenIn) {
+        store.set((state) => ({ ...state, seenIn }));
+        if (seenIn === null || store.get().mode !== 'globe') return;
+        // Turn the globe to the state picked.
+        territoryOf(seenIn, store.get().time.date.year).then(
+          (territory) => {
+            if (territory !== null) globe.flyTo(labelPoint(territory));
+          },
+          () => undefined, // The bar reports load errors.
+        );
+      },
+      onSeenStep(direction) {
+        stepSeen(direction);
+      },
     },
-    onCalendar(years) {
-      store.set((state) => ({ ...state, years }));
-    },
-    onSelect(eclipse) {
-      flyToSelection = true;
-      store.set((state) => ({
-        ...state,
-        time: eclipseMomentAt(eclipse, state.location),
-        selection: eclipseSelection(eclipse),
-      }));
-    },
-    onSeenIn(seenIn) {
-      store.set((state) => ({ ...state, seenIn }));
-      if (seenIn === null || store.get().mode !== 'globe') return;
-      // Turn the globe to the state picked.
-      territoryOf(seenIn, store.get().time.date.year).then(
-        (territory) => {
-          if (territory !== null) globe.flyTo(labelPoint(territory));
-        },
-        () => undefined, // The bar reports load errors.
-      );
-    },
-    onSeenStep(direction) {
-      stepSeen(direction);
-    },
-  });
+    [famousPanel.button, tabletPanel.button],
+  );
   const scrubber = createScrubber((offsetMinutes) => {
     const selected = selectedEclipse(store.get());
     if (selected === undefined) return;
@@ -545,14 +568,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       detailText,
       termNote,
       welcome.root,
-      element(
-        'div',
-        { class: 'hud-actions' },
-        famousPanel.button,
-        tabletPanel.button,
-        deepButton,
-        layersPanel.button,
-      ),
+      element('div', { class: 'hud-actions' }, timeSwitch, layersPanel.button),
       viewSwitch.root,
       aimSwitch.root,
       skyOptions,
@@ -1166,6 +1182,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function showDeepTime(state: ViewState): void {
     const { ma } = state;
     deepButton.setAttribute('aria-pressed', String(ma !== null));
+    holoceneButton.setAttribute('aria-pressed', String(ma === null));
     bottom.dataset['deep'] = ma === null ? 'off' : 'on';
     paleoCredit.hidden = ma === null;
     if (ma === null) {

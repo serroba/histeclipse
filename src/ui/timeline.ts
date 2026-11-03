@@ -72,17 +72,21 @@ export interface Timeline {
   render(view: TimelineView): void;
 }
 
-export function createTimeline(handlers: {
-  /** A year in the calendar shown. */
-  onYear(year: number): void;
-  /** Count years in another calendar, keeping the moment. */
-  onCalendar(calendar: YearCalendar): void;
-  onSelect(eclipse: Eclipse): void;
-  /** Pick a past state whose eclipses to mark, or null for anywhere. */
-  onSeenIn(name: string | null): void;
-  /** Go to the previous or next eclipse seen from that state. */
-  onSeenStep(direction: 1 | -1): void;
-}): Timeline {
+export function createTimeline(
+  handlers: {
+    /** A year in the calendar shown. */
+    onYear(year: number): void;
+    /** Count years in another calendar, keeping the moment. */
+    onCalendar(calendar: YearCalendar): void;
+    onSelect(eclipse: Eclipse): void;
+    /** Pick a past state whose eclipses to mark, or null for anywhere. */
+    onSeenIn(name: string | null): void;
+    /** Go to the previous or next eclipse seen from that state. */
+    onSeenStep(direction: 1 | -1): void;
+  },
+  /** Ways into the Holocene's events, such as the famous eclipses, set before the year's own. */
+  events: readonly HTMLElement[] = [],
+): Timeline {
   // Digits only (a numeric keypad on phones); the era is picked beside it.
   const input = element('input', {
     id: 'year-input',
@@ -171,7 +175,7 @@ export function createTimeline(handlers: {
     'nav',
     { class: 'timeline', 'aria-label': 'Year and eclipses' },
     element('div', { class: 'year-controls' }, previous, form, next),
-    list,
+    element('div', { class: 'eclipse-row' }, ...events, list),
     seenRow,
   );
   seenSelect.addEventListener('change', () => {
