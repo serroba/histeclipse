@@ -104,10 +104,13 @@ describe('famous eclipse data rules', () => {
 
   it('requires a note on debated entries and a place with every outcome', async () => {
     // The Assyrian eclipse: not debated, with a place.
-    const assyria = elementAt(valid.eclipses, 1);
-    await expect(load({ ...valid, eclipses: [{ ...assyria, debated: true }] })).rejects.toThrow(
-      /debateNote/,
-    );
+    const assyria = valid.eclipses.find((entry) => 'id' in entry && entry.id === 'assyria-763-bce');
+    await expect(
+      load({ ...valid, eclipses: [{ ...assyria, debated: true, confidence: 'debated' }] }),
+    ).rejects.toThrow(/debateNote/);
+    await expect(
+      load({ ...valid, eclipses: [{ ...assyria, confidence: 'debated' }] }),
+    ).rejects.toThrow(/confidence/);
     await expect(load({ ...valid, eclipses: [{ ...assyria, place: undefined }] })).rejects.toThrow(
       /go together/,
     );
@@ -129,18 +132,17 @@ describe('famousDateParts', () => {
 describe('famousFor', () => {
   it('finds the entry for a selection, whatever calendar its date is in', () => {
     const syracuse = famous.find((entry) => entry.id === 'syracuse-413-bce');
-    expect(famousFor(famous, { kind: 'lunar', date: famousDate(elementAt(famous, 6)) })).toBe(
-      syracuse,
-    );
+    if (syracuse === undefined) throw new Error('no Syracuse eclipse');
+    expect(famousFor(famous, { kind: 'lunar', date: famousDate(syracuse) })).toBe(syracuse);
     // The same day, written in the proleptic Gregorian calendar.
     const gregorian = calendarDateOf(astronomicalYear(-412), 8, 22, 'gregorian');
     expect(famousFor(famous, { kind: 'lunar', date: gregorian })).toBe(syracuse);
   });
 
   it('needs the kind to match too, and a selection', () => {
-    expect(
-      famousFor(famous, { kind: 'solar', date: famousDate(elementAt(famous, 6)) }),
-    ).toBeUndefined();
+    const syracuse = famous.find((entry) => entry.id === 'syracuse-413-bce');
+    if (syracuse === undefined) throw new Error('no Syracuse eclipse');
+    expect(famousFor(famous, { kind: 'solar', date: famousDate(syracuse) })).toBeUndefined();
     expect(famousFor(famous, null)).toBeUndefined();
   });
 });

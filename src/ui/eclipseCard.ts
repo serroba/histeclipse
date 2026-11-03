@@ -197,12 +197,24 @@ function elsewhereHint(): HTMLElement {
   );
 }
 
+/** How firmly scholars tie a record to its eclipse, in words. */
+const CONFIDENCE_WORDS: Readonly<Record<FamousEclipse['confidence'], string>> = {
+  secure: 'secure, without serious dispute.',
+  probable: 'probable: widely accepted, with some doubt.',
+  debated: 'debated.',
+};
+
 /** The historical context of a famous eclipse: why it is known, and from where. */
 function famousLines(famous: FamousEclipse): HTMLElement[] {
   return [
     element('p', { class: 'famous-card-title' }, famous.title),
     element('p', { class: 'famous-card-summary' }, famous.summary),
     element('p', { class: 'famous-card-source' }, `Source: ${famous.source}`),
+    element(
+      'p',
+      { class: 'famous-card-confidence', 'data-confidence': famous.confidence },
+      `Link to this eclipse: ${CONFIDENCE_WORDS[famous.confidence]}`,
+    ),
     ...(famous.debateNote === undefined
       ? []
       : [element('p', { class: 'famous-card-debate' }, `Debated: ${famous.debateNote}`)]),

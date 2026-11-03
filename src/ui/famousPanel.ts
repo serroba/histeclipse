@@ -65,7 +65,7 @@ export function createFamousPanel(
     element(
       'p',
       { class: 'famous-intro' },
-      'Eclipses known from history and science. Each links to its source; “debated” marks records whose identification historians disagree on.',
+      'Eclipses known from history and science, each with its source. “Probable” and “debated” mark how firmly scholars tie a record to its eclipse.',
     ),
     list,
     tablet,
@@ -100,9 +100,9 @@ export function createFamousPanel(
                 'span',
                 { class: 'famous-meta' },
                 `${famousDateLabel(eclipse)} · ${eclipse.kind === 'solar' ? 'solar' : 'lunar'}`,
-                ...(eclipse.debated
-                  ? [' · ', element('span', { class: 'famous-debated' }, 'debated')]
-                  : []),
+                ...(eclipse.confidence === 'secure'
+                  ? []
+                  : [' · ', element('span', { class: 'famous-debated' }, eclipse.confidence)]),
               ),
             ),
           );

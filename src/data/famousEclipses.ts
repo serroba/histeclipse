@@ -23,6 +23,11 @@ const FamousEclipseSchema = v.strictObject({
   source: v.pipe(v.string(), v.minLength(1)),
   /** Whether historians disagree about which eclipse the record describes. */
   debated: v.boolean(),
+  /**
+   * How firmly scholars tie the record to this eclipse: secure (no serious dispute), probable
+   * (widely accepted, with doubts), or debated.
+   */
+  confidence: v.picklist(['secure', 'probable', 'debated']),
   debateNote: v.optional(v.pipe(v.string(), v.minLength(1))),
   /** A place connected with the record, when one is known. */
   place: v.optional(
@@ -51,6 +56,11 @@ const FamousEclipsesSchema = v.pipe(
     (document) =>
       document.eclipses.every((eclipse) => eclipse.debated === (eclipse.debateNote !== undefined)),
     'debated eclipses, and only those, need a debateNote',
+  ),
+  v.check(
+    (document) =>
+      document.eclipses.every((eclipse) => eclipse.debated === (eclipse.confidence === 'debated')),
+    'an entry is debated exactly when its confidence says so',
   ),
   v.check(
     (document) =>
