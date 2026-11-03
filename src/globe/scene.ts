@@ -2323,6 +2323,8 @@ export async function createGlobe(
               }),
             );
       container.dataset['genomes'] = cells === null ? 'off' : String(cells.length);
+      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
+      placeEmpireLabels();
       needsRender = true;
     },
     setFossilCells(cells) {
@@ -2357,19 +2359,27 @@ export async function createGlobe(
               }),
             );
       container.dataset['fossils'] = cells === null ? 'off' : String(cells.length);
+      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
+      placeEmpireLabels();
       needsRender = true;
     },
     setImpacts(marks) {
+      // The same craters as before (as time plays, they drift with their plates): moved, not
+      // laid out again, which would hide them until the next frame, and so every frame.
       const key =
         marks === null
           ? 'off'
           : marks
-              .map(
-                ({ impact, point, uncertain }) =>
-                  `${String(impact.id)}:${point.latitude.toFixed(2)},${point.longitude.toFixed(2)}${uncertain ? '?' : ''}`,
-              )
+              .map(({ impact, uncertain }) => `${String(impact.id)}${uncertain ? '?' : ''}`)
               .join(' ');
-      if (key === impactKey) return;
+      if (key === impactKey) {
+        marks?.forEach(({ point }, index) => {
+          impactLabels[index]?.position.set(...geoToVector(point, 1.01));
+        });
+        placeEmpireLabels();
+        needsRender = true;
+        return;
+      }
       impactKey = key;
       impactLayer.replaceChildren();
       impactLabels =
@@ -2398,6 +2408,8 @@ export async function createGlobe(
               }),
             );
       container.dataset['impacts'] = marks === null ? 'off' : String(marks.length);
+      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
+      placeEmpireLabels();
       needsRender = true;
     },
     setVolcanoes(marks) {
@@ -2440,6 +2452,8 @@ export async function createGlobe(
               }),
             );
       container.dataset['volcanoes'] = marks === null ? 'off' : String(marks.length);
+      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
+      placeEmpireLabels();
       needsRender = true;
     },
     onMarkerPick(listener) {
@@ -2468,6 +2482,8 @@ export async function createGlobe(
               }),
             );
       container.dataset['humans'] = sites === null ? 'off' : String(sites.length);
+      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
+      placeEmpireLabels();
       needsRender = true;
     },
     setRocks(units) {
