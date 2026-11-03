@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  celsiusText,
   legendGradient,
+  scaleTicks,
+  TEMPERATURE_KEY,
   TEMPERATURE_STOPS,
   temperatureMapText,
   temperatureText,
@@ -13,6 +16,25 @@ describe('the temperature legend', () => {
     expect(gradient).toMatch(/^linear-gradient\(to right, #313695 0\.0%, /);
     expect(gradient).toContain('#e0f3f8 52.9%');
     expect(gradient).toMatch(/#a50026 100\.0%\)$/);
+  });
+
+  it('names every colour of the scale, at its own temperature', () => {
+    expect(TEMPERATURE_KEY.map(({ celsius }) => celsius)).toEqual(
+      TEMPERATURE_STOPS.map(([celsius]) => celsius),
+    );
+    expect(TEMPERATURE_KEY.find(({ celsius }) => celsius === 15)?.label).toContain(
+      'today’s global mean',
+    );
+  });
+
+  it('places the ticks along the scale, in °C with a true minus', () => {
+    expect(scaleTicks(TEMPERATURE_STOPS, [-40, 0, 45])).toEqual([
+      { celsius: -40, at: 0 },
+      { celsius: 0, at: 40 / 85 },
+      { celsius: 45, at: 1 },
+    ]);
+    expect(celsiusText(-40)).toBe('−40 °C');
+    expect(celsiusText(15)).toBe('15 °C');
   });
 
   it('runs its stops from cold to hot', () => {
