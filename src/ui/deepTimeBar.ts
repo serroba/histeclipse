@@ -9,6 +9,15 @@ import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period, periodShort } from '../deepTime/periods';
 import { gasText, type Atmosphere } from '../data/atmosphere';
+import {
+  co2Text,
+  NITROGEN_NOTE,
+  O2_TODAY,
+  o2Text,
+  PREINDUSTRIAL_CO2,
+  type DeepAir,
+} from '../data/deepAir';
+import { createBandChart } from './bandChart';
 import { fossilsText, type FossilsAt } from '../data/fossils';
 import type { ClaimLine, HumansView } from '../data/humanClaims';
 import type { IceOutlines } from '../data/iceOutlines';
@@ -257,8 +266,17 @@ export interface DeepTimeView {
   /** Whether a second reconstruction's continents are outlined, and what to say of them. */
   readonly plates: boolean;
   /** The ice-core gases: off, on while they load (null), or on with them. */
+  /**
+   * The air: off, or on with the ice-core gases (on the ice-age scale) or the gases of the last
+   * 540 million years (on that scale), each null while it loads.
+   */
   readonly air:
-    { readonly on: false } | { readonly on: true; readonly atmosphere: Atmosphere | null };
+    | { readonly on: false }
+    | {
+        readonly on: true;
+        readonly atmosphere: Atmosphere | null;
+        readonly deep: DeepAir | null;
+      };
   /** Fossils: off, on while they load (null), or on with the finds of the moment. */
   readonly fossils: { readonly on: false } | { readonly on: true; readonly at: FossilsAt | null };
   /** Impact craters and deposits: off, on while they load (null), or on with what to say. */
@@ -791,9 +809,83 @@ export function createDeepTimeBar(handlers: {
     return `Shaded: where Timmermann & Friedrich’s (2016) model, ${model.name}, has people settled by then: ${String(Math.round(model.share * 100))}% of the land it ever reaches. One model’s view, not evidence; its data is CC BY-NC 4.0 (non-commercial).`;
   }
 
-  function renderAir(air: DeepTimeView['air'], oldestKa: number, ka: number): void {
+  const deepCharts = {
+    co2: createBandChart({ low: 100, high: 6000, log: true, testId: 'deep-co2-chart' }),
+    o2: createBandChart({ low: 0, high: 45, log: false, testId: 'deep-o2-chart' }),
+  };
+
+  /** On the 540 Myr scale: CO2 and O2 with their ranges, and nitrogen in words. */
+  function renderDeepAir(deep: DeepAir | null, oldest: number, ma: number): void {
+    if (deep === null) {
+      airNote.replaceChildren(element('p', {}, 'Air: loading…'));
+      return;
+    }
+    deepCharts.co2.render(
+      {
+        bands: [
+          deep.co2.fit.map(([at, , low95, , , high95]) => [at, low95, high95] as const),
+          deep.co2.fit.map(([at, , , low68, high68]) => [at, low68, high68] as const),
+        ],
+        line: deep.co2.fit.map(([at, best]) => [at, best] as const),
+        dots: deep.co2.proxies.flatMap(({ estimates }) =>
+          estimates.map(([at, value]) => [at, value] as const),
+        ),
+        reference: PREINDUSTRIAL_CO2,
+      },
+      oldest,
+      ma,
+    );
+    deepCharts.o2.render(
+      {
+        bands: [deep.o2.points.map(([at, , low, high]) => [at, low, high] as const)],
+        line: deep.o2.points.map(([at, best]) => [at, best] as const),
+        dots: [],
+        reference: O2_TODAY,
+      },
+      oldest,
+      ma,
+    );
+    airNote.replaceChildren(
+      element(
+        'p',
+        { 'data-testid': 'deep-co2' },
+        `${co2Text(deep, ma)} `,
+        element('a', { href: `https://doi.org/${deep.co2.doi}` }, 'Foster, Royer & Lunt 2017'),
+      ),
+      deepCharts.co2.root,
+      element(
+        'p',
+        { 'data-testid': 'deep-o2' },
+        `${o2Text(deep, ma)} `,
+        element('a', { href: `https://doi.org/${deep.o2.doi}` }, 'Mills et al. 2023'),
+      ),
+      deepCharts.o2.root,
+      element(
+        'p',
+        { 'data-testid': 'deep-n2' },
+        `${NITROGEN_NOTE.text} `,
+        ...NITROGEN_NOTE.sources.flatMap(({ label, doi }, index) => [
+          ...(index === 0 ? [] : [' · ']),
+          element('a', { href: `https://doi.org/${doi}` }, label),
+        ]),
+      ),
+      element(
+        'p',
+        {},
+        'Shaded: the likely and possible range (CO₂, on a log scale, 100–6,000 ppm), or the range of the methods combined (O₂, 0–45%); dots: single CO₂ estimates; dashed: the 1750 level of CO₂, and today’s O₂.',
+      ),
+    );
+  }
+
+  function renderAir(air: DeepTimeView['air'], scale: DeepScale, oldest: number, ma: number): void {
     airNote.hidden = !air.on;
     if (!air.on) return;
+    if (scale !== 'ice') {
+      renderDeepAir(air.deep, oldest, ma);
+      return;
+    }
+    const oldestKa = oldest * 1000;
+    const ka = ma * 1000;
     if (air.atmosphere === null) {
       airNote.replaceChildren(element('p', {}, 'Air: loading…'));
       return;
@@ -1048,9 +1140,10 @@ export function createDeepTimeBar(handlers: {
           '.',
         );
       }
-      airButton.hidden = view.scale !== 'ice';
+      // The ice cores on the ice-age scale; the proxies' 540 million years on that one.
+      airButton.hidden = view.scale === 'eons';
       airButton.setAttribute('aria-pressed', String(view.air.on));
-      renderAir(view.air, view.oldest * 1000, view.ma * 1000);
+      renderAir(view.air, view.scale, view.oldest, view.ma);
       humansButton.setAttribute('aria-pressed', String(view.humans.on));
       renderHumans(view.humans);
       platesNote.hidden = !view.plates;
