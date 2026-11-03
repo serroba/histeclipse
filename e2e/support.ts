@@ -61,3 +61,11 @@ export async function openLayers(page: Page): Promise<void> {
   if ((await button.getAttribute('aria-expanded')) !== 'true') await button.click();
   await expect(page.getByRole('dialog', { name: 'Layers' })).toBeVisible();
 }
+
+/** Open the deep-time bar's details (folded on phones), unless they are open already. */
+export async function showDeepDetails(page: Page): Promise<void> {
+  const handle = page.getByRole('navigation', { name: 'Deep time' }).locator('.deep-handle');
+  await expect(handle).toBeVisible();
+  if ((await handle.getAttribute('aria-expanded')) !== 'true') await handle.click();
+  await expect(page.getByTestId('deep-details')).toBeVisible();
+}

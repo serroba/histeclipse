@@ -518,10 +518,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
     'Show controls',
   );
   showControls.addEventListener('click', togglePanels);
-  const glance = createDeepGlance((play) => {
-    if (play) startPlay();
-    else stopPlay();
-  });
+  const glance = createDeepGlance(
+    (play) => {
+      if (play) startPlay();
+      else stopPlay();
+    },
+    (ma) => {
+      stopPlay();
+      store.set((state) => ({ ...state, ma: roundMa(ma) }));
+    },
+  );
   const card = createEclipseCard();
   const timeline = createTimeline(
     {
