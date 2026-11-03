@@ -46,6 +46,8 @@ export const LAYERS = [
   'terminator',
   'places',
   'empires',
+  // Dated ancient genomes (AADR), counted by region around the year shown.
+  'genomes',
   // Deep time only: the surface coloured by temperature, and sea level through time.
   'temperature',
   'sealevel',

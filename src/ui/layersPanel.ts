@@ -17,6 +17,8 @@ export interface LayersView {
   readonly present: number;
   /** Whether the panel applies to the view: historical time on the globe. */
   readonly visible: boolean;
+  /** What a layer says about what it draws now, where that depends on loaded data. */
+  readonly said?: ReadonlyMap<Layer, string>;
 }
 
 export interface LayersPanel {
@@ -129,14 +131,16 @@ export function createLayersPanel(
   return {
     button,
     dialog,
-    render({ layers, borders, year, present, visible }) {
+    render({ layers, borders, year, present, visible, said }) {
       button.hidden = !visible;
       if (!visible) shut();
       for (const [layer, box] of boxes) {
         box.checked = layers.has(layer);
         const note = notes.get(layer);
         if (note === undefined) continue;
-        const text = layers.has(layer) ? layerNote(layer, year, borders, present) : null;
+        const text = layers.has(layer)
+          ? (said?.get(layer) ?? layerNote(layer, year, borders, present))
+          : null;
         note.hidden = text === null;
         note.textContent = text ?? '';
       }

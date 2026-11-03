@@ -26,6 +26,12 @@ export const HISTORY_LAYER_GROUPS: readonly LayerGroup[] = [
         label: 'States and empires',
         about: 'Borders from Cliopatria or OpenHistoricalMap, or both to compare.',
       },
+      {
+        id: 'genomes',
+        label: 'Ancient genomes',
+        about:
+          'Dated ancient DNA from the Allen Ancient DNA Resource (Reich lab), counted by region within 250 years.',
+      },
     ],
   },
   {

@@ -89,6 +89,7 @@ import { labelPoint, type Territory } from '../data/empires';
 import { PLANETS, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius } from './planetLook';
 import { createPlanetMeshes } from './planetMeshes';
+import type { GenomeCell } from '../data/ancientGenomes';
 import type { HumanSite } from '../data/humanClaims';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { OhmYear } from '../data/ohmBorders';
@@ -317,6 +318,8 @@ export interface Globe {
    * the layer.
    */
   setEmpires(layer: EmpireLayer | null): void;
+  /** Mark regions with ancient genomes near the year shown, by count; null hides them. */
+  setGenomeCells(cells: readonly GenomeCell[] | null): void;
   /** Mark dated finds of humans and their relatives in deep time; null hides them. */
   setHumanSites(sites: readonly HumanSite[] | null): void;
   /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
@@ -1210,6 +1213,12 @@ export async function createGlobe(
   container.append(humanLabelLayer);
   let humanLabels: GlobeLabel[] = [];
   let humanSitesKey = '';
+  // Regions with ancient genomes near the year shown, in historical time.
+  const genomeLayer = document.createElement('div');
+  genomeLayer.className = 'empire-labels genome-cells';
+  container.append(genomeLayer);
+  let genomeLabels: GlobeLabel[] = [];
+  let genomeKey = '';
 
   /** Labels laid out once, unseen, so their real sizes are known for keeping them apart. */
   function measured(
@@ -1602,7 +1611,11 @@ export async function createGlobe(
     const near = focus === 'earth' && camera.position.length() < 12;
     // Labels come largest first; a smaller state's name gives way where it would overlap.
     const placed: { x: number; y: number; w: number; h: number }[] = [];
-    for (const { element, position, width, height } of [...humanLabels, ...empireLabels]) {
+    for (const { element, position, width, height } of [
+      ...humanLabels,
+      ...genomeLabels,
+      ...empireLabels,
+    ]) {
       projected.copy(position).project(camera);
       const shown =
         near && position.dot(eye) > 0.25 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1;
@@ -2134,6 +2147,39 @@ export async function createGlobe(
       paintIceOutlines(empiresCanvas, outlines);
       empiresTexture.needsUpdate = true;
       uniforms['overlayMap'] = { value: empiresTexture };
+    },
+    setGenomeCells(cells) {
+      const key =
+        cells === null
+          ? 'off'
+          : cells
+              .map(
+                (cell) =>
+                  `${String(cell.latitude)},${String(cell.longitude)}:${String(cell.count)}`,
+              )
+              .join(' ');
+      if (key === genomeKey) return;
+      genomeKey = key;
+      genomeLayer.replaceChildren();
+      genomeLabels =
+        cells === null
+          ? []
+          : measured(
+              genomeLayer,
+              cells.map((cell) => {
+                const element = document.createElement('span');
+                element.className = 'empire-label genome-cell';
+                element.textContent = String(cell.count);
+                // Bigger for more genomes, gently: a square root, from 18 to 44 pixels.
+                const size = Math.round(Math.min(44, 18 + 4 * Math.sqrt(cell.count)));
+                element.style.width = `${String(size)}px`;
+                element.style.height = `${String(size)}px`;
+                element.title = `${String(cell.count)} genomes; lab labels: ${cell.labels.map(([label, count]) => `${label} ×${String(count)}`).join(', ')}`;
+                return { element, point: cell };
+              }),
+            );
+      container.dataset['genomes'] = cells === null ? 'off' : String(cells.length);
+      needsRender = true;
     },
     setHumanSites(sites) {
       // Laying labels out is slow: not again for the same finds, as time plays on.
