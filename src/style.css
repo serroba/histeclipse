@@ -1483,7 +1483,7 @@ body {
 
 @media (max-width: 600px) {
   .deep-details {
-    max-height: 38vh;
+    max-height: 34vh;
   }
 }
 
@@ -1516,6 +1516,39 @@ body {
   left: 9px;
   height: 7px;
   pointer-events: none;
+}
+
+/* The chart's units under the slider, inset like its thumb so each band sits under its time. */
+.period-bands {
+  position: relative;
+  height: 22px;
+  margin: 2px 9px 0;
+}
+
+.period-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+  padding: 0 2px;
+  border: none;
+  border-right: 1px solid rgb(0 0 0 / 0.35);
+  color: rgb(0 0 0 / 0.8);
+  font: inherit;
+  font-size: 11px;
+  line-height: 22px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+.period-band[aria-current='true'] {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+  opacity: 1;
+  z-index: 1;
 }
 
 .deep-mark {

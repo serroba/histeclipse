@@ -34,6 +34,7 @@ import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import { DISPERSAL_SCENARIOS, type DeepScale, type DispersalScenario } from '../state/viewState';
 import { element } from './dom';
 import { createMilestonePanel } from './milestonePanel';
+import { createPeriodBands } from './periodBands';
 import { createSeaLevelChart } from './seaLevelChart';
 
 /** Each step button moves by one elevation map, or on the ice-age scale by 5,000 years. */
@@ -561,7 +562,10 @@ export function createDeepTimeBar(handlers: {
   );
   // A tick on the track for each milestone, placed when the time line's span is known.
   const marks = element('div', { class: 'deep-marks', 'aria-hidden': 'true' });
-  const track = element('div', { class: 'deep-track' }, seaLevel.chart, slider, marks);
+  const bands = createPeriodBands((ma) => {
+    handlers.onMa(ma, true);
+  });
+  const track = element('div', { class: 'deep-track' }, seaLevel.chart, slider, marks, bands.root);
   const milestones = createMilestonePanel({
     onMa(ma) {
       handlers.onMa(ma, true);
@@ -801,6 +805,7 @@ export function createDeepTimeBar(handlers: {
           ),
         );
       }
+      bands.render(view.oldest, view.ma);
       const ice = view.scale === 'ice';
       const perMa = ice ? 1000 : 1;
       scaleAll.setAttribute('aria-pressed', String(view.scale === 'all'));
