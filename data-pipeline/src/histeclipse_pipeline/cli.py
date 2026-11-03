@@ -9,6 +9,7 @@ from histeclipse_pipeline.aadr import fetch_genomes
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
 from histeclipse_pipeline.cesm import fetch_cesm
 from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
+from histeclipse_pipeline.dispersal import fetch_dispersal
 from histeclipse_pipeline.empires import (
     fetch_cliopatria,
     merge_unchanged,
@@ -240,6 +241,12 @@ def genomes(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} ancient genomes to {args.out}")
 
 
+def dispersal(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write a dispersal model's arrival times (Timmermann & Friedrich 2016, CC BY-NC)."""
+    count = fetch_dispersal(args.out)
+    return _say(f"wrote {count} arrival-time maps to {args.out}")
+
+
 def iceoutlines(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write ice-sheet outlines for 18 Quaternary time slices (Batchelor et al. 2019)."""
     count = fetch_outlines(args.out)
@@ -359,6 +366,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         genomes,
         "write dated ancient genomes by 2° cell (Allen Ancient DNA Resource)",
         "output JSON file",
+    ),
+    "dispersal": (
+        dispersal,
+        "write a dispersal model's arrival times (Timmermann & Friedrich 2016, CC BY-NC)",
+        "output directory",
     ),
     "iceoutlines": (
         iceoutlines,

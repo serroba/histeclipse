@@ -90,13 +90,16 @@ import { PLANETS, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius } from './planetLook';
 import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
+import type { ArrivalGrid } from '../data/dispersal';
 import type { HumanSite } from '../data/humanClaims';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { OhmYear } from '../data/ohmBorders';
 import {
+  clearOverlay,
   createEmpireCanvas,
   paintBorders,
   paintIceOutlines,
+  paintSettled,
   paintTerritories,
 } from './empireCanvas';
 import {
@@ -320,6 +323,13 @@ export interface Globe {
   setEmpires(layer: EmpireLayer | null): void;
   /** Mark regions with ancient genomes near the year shown, by count; null hides them. */
   setGenomeCells(cells: readonly GenomeCell[] | null): void;
+  /**
+   * Shade where a dispersal model has people settled `ka` thousand years ago, under any ice
+   * outlines; null hides it.
+   */
+  setSettled(
+    settled: { readonly scenario: string; readonly grid: ArrivalGrid; readonly ka: number } | null,
+  ): void;
   /** Mark dated finds of humans and their relatives in deep time; null hides them. */
   setHumanSites(sites: readonly HumanSite[] | null): void;
   /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
@@ -1219,6 +1229,25 @@ export async function createGlobe(
   container.append(genomeLayer);
   let genomeLabels: GlobeLabel[] = [];
   let genomeKey = '';
+  // Deep time's overlay, on the states' map (never shown then): a dispersal model's settled
+  // land, and the ice-sheet outlines over it.
+  let deepOverlay: {
+    readonly outlines: IceOutlines | null;
+    readonly settled: { readonly grid: ArrivalGrid; readonly ka: number } | null;
+  } = { outlines: null, settled: null };
+  function paintDeepOverlay(): void {
+    const uniforms = earth.material.uniforms;
+    const { outlines, settled } = deepOverlay;
+    const on = outlines !== null || settled !== null;
+    uniforms['iceOutlinesActive'] = { value: on ? 1 : 0 };
+    needsRender = true;
+    if (!on) return;
+    clearOverlay(empiresCanvas);
+    if (settled !== null) paintSettled(empiresCanvas, settled.grid, settled.ka);
+    if (outlines !== null) paintIceOutlines(empiresCanvas, outlines);
+    empiresTexture.needsUpdate = true;
+    uniforms['overlayMap'] = { value: empiresTexture };
+  }
 
   /** Labels laid out once, unseen, so their real sizes are known for keeping them apart. */
   function measured(
@@ -2138,15 +2167,21 @@ export async function createGlobe(
     setIceOutlines(outlines) {
       // Painting the map is slow: not again for the slice already shown, as time plays on.
       if ((outlines?.name ?? 'off') === container.dataset['iceOutlines']) return;
-      const uniforms = earth.material.uniforms;
-      uniforms['iceOutlinesActive'] = { value: outlines === null ? 0 : 1 };
       container.dataset['iceOutlines'] = outlines === null ? 'off' : outlines.name;
-      needsRender = true;
-      if (outlines === null) return;
-      // The states' map, painted over: they are never shown in deep time.
-      paintIceOutlines(empiresCanvas, outlines);
-      empiresTexture.needsUpdate = true;
-      uniforms['overlayMap'] = { value: empiresTexture };
+      deepOverlay = { ...deepOverlay, outlines };
+      paintDeepOverlay();
+    },
+    setSettled(settled) {
+      // Whole thousands of years only: the model's own step.
+      const ka = settled === null ? null : Math.round(settled.ka);
+      const key = settled === null ? 'off' : `${settled.scenario} ${String(ka)}`;
+      if (key === container.dataset['settled']) return;
+      container.dataset['settled'] = key;
+      deepOverlay = {
+        ...deepOverlay,
+        settled: settled === null || ka === null ? null : { grid: settled.grid, ka },
+      };
+      paintDeepOverlay();
     },
     setGenomeCells(cells) {
       const key =

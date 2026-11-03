@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "credit": "Timmermann & Friedrich (2016), Nature 538, 92; ICCP climate data server, CC BY-NC 4.0 (non-commercial use only); arrival times packed into 8-bit images for this site",
+  "source": "https://climatedata.ibs.re.kr/data/human-dispersal-simulation/arrival-time",
+  "license": "CC BY-NC 4.0",
+  "rows": 180,
+  "columns": 360,
+  "scenarios": [
+    {
+      "id": "a",
+      "name": "early exit from Africa (scenario A)",
+      "file": "arrival-a.png"
+    },
+    {
+      "id": "b",
+      "name": "late exit from Africa (scenario B)",
+      "file": "arrival-b.png"
+    }
+  ]
+}

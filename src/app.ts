@@ -45,6 +45,7 @@ import {
   roundMa,
   momentJulianDay,
   type GeoPoint,
+  type DispersalScenario,
   type ViewState,
 } from './state/viewState';
 import { eclipseNote, planetNote, skyCaption } from './sky/caption';
@@ -148,6 +149,13 @@ import {
   type AncientGenomes,
 } from './data/ancientGenomes';
 import { humansAt, loadHumanClaims, type HumanClaims } from './data/humanClaims';
+import { loadArrivalGrid } from './globe/arrivalGrid';
+import {
+  loadDispersalIndex,
+  settledShare,
+  type ArrivalGrid,
+  type DispersalIndex,
+} from './data/dispersal';
 import {
   loadPlateMasks,
   type PlateMaskIndex,
@@ -386,6 +394,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
         else layers.delete('plates');
         return { ...state, layers };
       });
+    },
+    onDispersal(dispersal) {
+      store.set((state) => ({ ...state, dispersal }));
     },
     onHumans(on) {
       store.set((state) => {
@@ -1251,6 +1262,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setIce(null);
       globe.setIceOutlines(null);
       globe.setHumanSites(null);
+      globe.setSettled(null);
       globe.setPlates(null);
       return;
     }
@@ -1428,8 +1440,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function showHumans(state: ViewState, ma: number): DeepTimeView['humans'] {
     if (state.deepScale !== 'ice' || !state.layers.has('humans')) {
       globe.setHumanSites(null);
+      globe.setSettled(null);
       return { on: false };
     }
+    const model = showDispersal(state.dispersal, ma);
     if (humanClaims === null) {
       if (humanClaimsLoading === null) {
         humanClaimsLoading = loadHumanClaims(`${base}data/humans/claims.json`, fetchJson);
@@ -1444,12 +1458,56 @@ export async function startApp(root: HTMLElement): Promise<void> {
           },
         );
       }
-      return { on: true, view: null };
+      return { on: true, view: null, model };
     }
     const view = humansAt(humanClaims, ma * 1000);
     globe.setHumanSites(view.sites);
-    return { on: true, view };
+    return { on: true, view, model };
   }
+
+  // Timmermann & Friedrich's dispersal model: its index and each scenario load when picked.
+  let dispersalIndex: Promise<DispersalIndex> | null = null;
+  const arrivalGrids = new Map<string, ArrivalGrid>();
+  const arrivalLoading = new Set<string>();
+
+  /** Shade the scenario picked, if any, and say what share of its land is settled then. */
+  function showDispersal(
+    scenario: DispersalScenario,
+    ma: number,
+  ): { scenario: DispersalScenario; name: string | null; share: number | null } {
+    if (scenario === 'off') {
+      globe.setSettled(null);
+      return { scenario, name: null, share: null };
+    }
+    dispersalIndex ??= loadDispersalIndex(`${base}data/dispersal/index.json`, fetchJson);
+    const grid = arrivalGrids.get(scenario);
+    if (grid === undefined) {
+      globe.setSettled(null);
+      if (!arrivalLoading.has(scenario)) {
+        arrivalLoading.add(scenario);
+        dispersalIndex
+          .then(async (index) => {
+            const entry = index.scenarios.find((each) => each.id === scenario);
+            if (entry === undefined) throw new Error(`no scenario ${scenario}`);
+            arrivalNames.set(scenario, entry.name);
+            arrivalGrids.set(
+              scenario,
+              await loadArrivalGrid(`${base}data/dispersal/${entry.file}`, fetchJson),
+            );
+            showDeepTime(store.get());
+          })
+          .catch((error: unknown) => {
+            arrivalLoading.delete(scenario);
+            notify(`Could not load the dispersal model: ${errorMessage(error)}`);
+          });
+      }
+      return { scenario, name: null, share: null };
+    }
+    const ka = ma * 1000;
+    globe.setSettled({ scenario, grid, ka });
+    return { scenario, name: arrivalNames.get(scenario) ?? null, share: settledShare(grid, ka) };
+  }
+  const arrivalNames = new Map<string, string>();
 
   // Batchelor et al.'s outlines: their file loads the first time the ice-age scale is shown.
   let iceOutlineIndex: IceOutlineIndex | null = null;
@@ -2226,6 +2284,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.coast !== previous.coast ||
       state.seaIce !== previous.seaIce ||
       state.temperatureModel !== previous.temperatureModel ||
+      state.dispersal !== previous.dispersal ||
       state.impact !== previous.impact ||
       state.land !== previous.land ||
       state.snowball !== previous.snowball
