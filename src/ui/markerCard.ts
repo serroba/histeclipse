@@ -29,6 +29,21 @@ function safeLink(href: string): boolean {
   }
 }
 
+/** A thumbnail with its credit; gone without a trace if its host will not serve it. */
+function picture(image: NonNullable<MarkerCardContent['image']>): HTMLElement {
+  const img = element('img', { src: image.src, alt: image.alt });
+  const figure = element(
+    'figure',
+    { class: 'marker-card-image' },
+    img,
+    element('figcaption', {}, image.credit),
+  );
+  img.addEventListener('error', () => {
+    figure.remove();
+  });
+  return figure;
+}
+
 export function createMarkerCard(): MarkerCard {
   const close = element(
     'button',
@@ -60,16 +75,7 @@ export function createMarkerCard(): MarkerCard {
       title.textContent = text;
       const shown = links.filter((link) => safeLink(link.href));
       body.replaceChildren(
-        ...(image === undefined || !safeLink(image.src)
-          ? []
-          : [
-              element(
-                'figure',
-                { class: 'marker-card-image' },
-                element('img', { src: image.src, alt: image.alt, loading: 'lazy' }),
-                element('figcaption', {}, image.credit),
-              ),
-            ]),
+        ...(image === undefined || !safeLink(image.src) ? [] : [picture(image)]),
         element(
           'dl',
           { class: 'marker-card-facts' },

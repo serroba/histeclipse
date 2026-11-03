@@ -54,6 +54,7 @@ from histeclipse_pipeline.skycultures import fetch_skycultures
 from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.solar_images import fetch_images
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
+from histeclipse_pipeline.volcanoes import fetch_volcanoes
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -266,6 +267,12 @@ def impacts(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} impact craters and deposits to {args.out}")
 
 
+def volcanoes(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write Holocene volcanoes and their eruptions (Smithsonian GVP), and their summaries."""
+    count = fetch_volcanoes(args.out)
+    return _say(f"wrote {count} eruptions to {args.out}")
+
+
 def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write ice-sheet thickness every 2,500 years over the last 80,000 (PaleoMIST 1.0)."""
     count = fetch_icesheets(args.out)
@@ -429,6 +436,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "impacts": (
         impacts,
         "write impact craters and deposits, and their places when they struck (Impact Earth)",
+        "output JSON file",
+    ),
+    "volcanoes": (
+        volcanoes,
+        "write Holocene volcanoes and their eruptions (Smithsonian GVP), and their summaries",
         "output JSON file",
     ),
     "icesheets": (

@@ -92,6 +92,7 @@ import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
 import type { FossilCell } from '../data/fossils';
 import type { ImpactMark } from '../data/impacts';
+import type { VolcanoMark } from '../data/volcanoes';
 import type { ArrivalGrid } from '../data/dispersal';
 import type { HumanSite } from '../data/humanClaims';
 import type { RockUnit } from '../data/rocks';
@@ -346,6 +347,8 @@ export interface Globe {
   setHumanSites(sites: readonly HumanSite[] | null): void;
   /** Mark impact craters and deposits, sized by diameter, each to tap for its card; null hides them. */
   setImpacts(marks: readonly ImpactMark[] | null): void;
+  /** Mark volcanoes erupting near the year shown, sized by VEI, each to tap; null hides them. */
+  setVolcanoes(marks: readonly VolcanoMark[] | null): void;
   /** Called when someone taps a marker that has a card, with its key (such as `impact:47`). */
   onMarkerPick(listener: (key: string) => void): () => void;
   /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
@@ -1280,13 +1283,21 @@ export async function createGlobe(
   container.append(impactLayer);
   let impactLabels: GlobeLabel[] = [];
   let impactKey = '';
+  // Volcanoes erupting near the year shown, in historical time: markers to tap for a card.
+  const volcanoLayer = document.createElement('div');
+  volcanoLayer.className = 'empire-labels volcano-marks';
+  container.append(volcanoLayer);
+  let volcanoLabels: GlobeLabel[] = [];
+  let volcanoKey = '';
   const markerPickListeners = new Set<(key: string) => void>();
-  impactLayer.addEventListener('click', (event) => {
-    const marker = event.target instanceof Element ? event.target.closest('[data-pick]') : null;
-    const key = marker?.getAttribute('data-pick');
-    if (key === null || key === undefined) return;
-    for (const listener of markerPickListeners) listener(key);
-  });
+  for (const layer of [impactLayer, volcanoLayer]) {
+    layer.addEventListener('click', (event) => {
+      const marker = event.target instanceof Element ? event.target.closest('[data-pick]') : null;
+      const key = marker?.getAttribute('data-pick');
+      if (key === null || key === undefined) return;
+      for (const listener of markerPickListeners) listener(key);
+    });
+  }
   // Deep time's overlay, on the states' map (never shown then): a dispersal model's settled
   // land, and the ice-sheet outlines over it.
   let deepOverlay: {
@@ -1701,6 +1712,7 @@ export async function createGlobe(
     for (const { element, position, width, height } of [
       ...humanLabels,
       ...genomeLabels,
+      ...volcanoLabels,
       ...impactLabels,
       ...fossilLabels,
       ...empireLabels,
@@ -2346,6 +2358,48 @@ export async function createGlobe(
               }),
             );
       container.dataset['impacts'] = marks === null ? 'off' : String(marks.length);
+      needsRender = true;
+    },
+    setVolcanoes(marks) {
+      const key =
+        marks === null
+          ? 'off'
+          : marks
+              .map(
+                ({ volcano, eruptions }) => `${String(volcano.number)}:${String(eruptions.length)}`,
+              )
+              .join(' ');
+      if (key === volcanoKey) return;
+      volcanoKey = key;
+      volcanoLayer.replaceChildren();
+      volcanoLabels =
+        marks === null
+          ? []
+          : measured(
+              volcanoLayer,
+              marks.map(({ volcano, vei, uncertain }) => {
+                const element = document.createElement('button');
+                element.type = 'button';
+                element.className = `empire-label volcano-mark${uncertain ? ' is-uncertain' : ''}`;
+                element.dataset['pick'] = `volcano:${String(volcano.number)}`;
+                // Larger for a larger eruption: from 10 pixels (VEI unknown or 0) to 34 (VEI 8).
+                const size = 10 + 3 * Math.max(0, vei ?? 0);
+                element.style.setProperty('--size', `${String(size)}px`);
+                // The largest are named; every one says what it is to a screen reader.
+                if ((vei ?? 0) >= 4) {
+                  const name = document.createElement('span');
+                  name.className = 'impact-name';
+                  name.textContent = volcano.name;
+                  element.append(name);
+                }
+                element.setAttribute('aria-label', `${volcano.name}: details`);
+                return {
+                  element,
+                  point: { latitude: volcano.latitude, longitude: volcano.longitude },
+                };
+              }),
+            );
+      container.dataset['volcanoes'] = marks === null ? 'off' : String(marks.length);
       needsRender = true;
     },
     onMarkerPick(listener) {

@@ -61,6 +61,12 @@ export const HISTORY_LAYER_GROUPS: readonly LayerGroup[] = [
         about:
           'Craters and deposits left by asteroids and comets, from the Impact Earth Database; tap one for its details.',
       },
+      {
+        id: 'volcanoes',
+        label: 'Volcanic eruptions',
+        about:
+          'Eruptions dated near the year shown, sized by explosivity, from the Smithsonian’s Global Volcanism Program; tap one for its details.',
+      },
     ],
   },
   {
