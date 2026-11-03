@@ -431,6 +431,21 @@ test('a famous solar eclipse opens at its deepest where it was seen, and every v
   expect(problems).toEqual([]);
 });
 
+test('famous eclipses say how firmly each record is tied to its eclipse', async ({ page }) => {
+  await page.goto('./?t=-309-08-15T12:00&sel=solar:-0309-08-15');
+  await globeRendered(page);
+  await expect(page.locator('.famous-card-title')).toHaveText("Agathocles' eclipse");
+  await expect(page.locator('.famous-card-confidence')).toHaveText(
+    'Link to this eclipse: probable: widely accepted, with some doubt.',
+  );
+  await page.getByRole('button', { name: 'Famous eclipses' }).click();
+  await expect(
+    page
+      .getByRole('dialog', { name: 'Famous eclipses' })
+      .getByRole('button', { name: /Agathocles.*probable/ }),
+  ).toBeVisible();
+});
+
 test('famous eclipses: debated entries say so, and the list closes', async ({ page }) => {
   await page.goto('./');
   await globeRendered(page);
@@ -451,6 +466,9 @@ test('a link to a famous eclipse shows its history', async ({ page }) => {
   await globeRendered(page);
   await expect(page.locator('.famous-card-title')).toHaveText('The eclipse of Thales');
   await expect(page.locator('.famous-card-debate')).toContainText('Debated');
+  await expect(page.locator('.famous-card-confidence')).toHaveText(
+    'Link to this eclipse: debated.',
+  );
   await expect(page.getByTestId('globe')).toHaveAttribute('data-solar-path', 'on');
 });
 
