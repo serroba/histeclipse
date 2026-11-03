@@ -8,6 +8,7 @@ import { MAP_KEY, MILESTONE_KEY } from '../deepTime/colourKey';
 import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period, periodShort } from '../deepTime/periods';
+import type { ClaimLine, HumansView } from '../data/humanClaims';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { IceStandIn } from '../data/iceSheets';
 import { SEA_ICE_MODELS, type SeaIceModel } from '../data/seaIce';
@@ -223,6 +224,8 @@ export interface DeepTimeView {
   readonly temperature: TemperatureView;
   /** Whether a second reconstruction's continents are outlined, and what to say of them. */
   readonly plates: boolean;
+  /** Dated finds of humans: off, on while the claims load (null), or on with what to say. */
+  readonly humans: { readonly on: false } | { readonly on: true; readonly view: HumansView | null };
   readonly platesText: string | null;
   /** The ice-age coastline; null before the ice ages. */
   readonly coastline: CoastlineView | null;
@@ -258,6 +261,7 @@ export function createDeepTimeBar(handlers: {
   onTemperature(on: boolean): void;
   onSeaLevel(on: boolean): void;
   onPlates(on: boolean): void;
+  onHumans(on: boolean): void;
   onScale(scale: DeepScale): void;
   onCoast(coast: CoastSource): void;
   onSeaIce(model: SeaIceModel): void;
@@ -425,6 +429,16 @@ export function createDeepTimeBar(handlers: {
     ' ',
     platesWords,
   );
+  const humansButton = element(
+    'button',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
+    'Humans',
+  );
+  const humansNote = element('div', {
+    class: 'deep-note humans-note',
+    hidden: '',
+    'data-testid': 'humans-note',
+  });
   const seaLevelButton = element(
     'button',
     { type: 'button', class: 'deep-layer', 'aria-pressed': 'false' },
@@ -534,6 +548,7 @@ export function createDeepTimeBar(handlers: {
     seaLevel.legend,
     legend,
     platesNote,
+    humansNote,
     milestones.root,
     // One open at a time (they share a name), so the bar doesn't grow over the globe.
     element('div', { class: 'deep-folds' }, colourKey, sketchSources, factsPanel),
@@ -558,6 +573,7 @@ export function createDeepTimeBar(handlers: {
       seaLevelButton,
       temperatureButton,
       platesButton,
+      humansButton,
     ),
     details,
   );
@@ -622,6 +638,37 @@ export function createDeepTimeBar(handlers: {
     { passive: true },
   );
 
+  function claimLine(line: ClaimLine): HTMLElement {
+    return element(
+      'li',
+      { class: line.reached ? 'is-reached' : 'is-later' },
+      `${line.text} `,
+      element('a', { href: `https://doi.org/${line.doi}` }, line.citation),
+    );
+  }
+
+  function renderHumans(humans: DeepTimeView['humans']): void {
+    humansNote.hidden = !humans.on;
+    if (!humans.on) return;
+    if (humans.view === null) {
+      humansNote.replaceChildren(element('p', {}, 'Humans: loading…'));
+      return;
+    }
+    const { questions, others, sites } = humans.view;
+    humansNote.replaceChildren(
+      element(
+        'p',
+        {},
+        `Humans: ${String(sites.length)} dated finds marked, each from its date on, as its source reports it; disputed ones in italics. Hand-picked, not complete.`,
+      ),
+      ...questions.flatMap(({ title, claims }) => [
+        element('p', { class: 'humans-question' }, title),
+        element('ul', {}, ...claims.map(claimLine)),
+      ]),
+      ...(others.length > 0 ? [element('ul', {}, ...others.map(claimLine))] : []),
+    );
+  }
+
   let current: DeepTimeView | null = null;
   // The span the ticks were placed for.
   let marksSpan = 0;
@@ -673,6 +720,9 @@ export function createDeepTimeBar(handlers: {
   });
   play.addEventListener('click', () => {
     handlers.onPlay(!(current?.playing ?? false));
+  });
+  humansButton.addEventListener('click', () => {
+    handlers.onHumans(!(current?.humans.on ?? false));
   });
   platesButton.addEventListener('click', () => {
     handlers.onPlates(!(current?.plates ?? false));
@@ -762,6 +812,10 @@ export function createDeepTimeBar(handlers: {
       milestones.render(view.ma, view.oldest);
       seaLevelButton.setAttribute('aria-pressed', String(view.seaLevel.on));
       platesButton.setAttribute('aria-pressed', String(view.plates));
+      // People are a matter of the last few hundred thousand years: the ice-age scale's.
+      humansButton.hidden = view.scale !== 'ice';
+      humansButton.setAttribute('aria-pressed', String(view.humans.on));
+      renderHumans(view.humans);
       platesNote.hidden = !view.plates;
       platesWords.textContent = view.platesText ?? 'Loading the continent outlines…';
       seaLevel.render(

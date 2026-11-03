@@ -33,6 +33,7 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 | `time.spec.ts`   | Picking the Holocene or deep time                                         |
 | `layers.spec.ts` | The Layers panel: what the globe overlays, and when each layer has data   |
 | `sheet.spec.ts`  | The deep-time bar as a sheet: folding and swiping its details             |
+| `humans.spec.ts` | Humans in the ice ages: dated finds, and competing claims side by side    |
 | `smoke.spec.ts`  | Everything else: loading, links, eclipses, views, sky, the Sun, deep time |
 
 `support.ts` holds the shared steps and the `test` every file imports, which takes the

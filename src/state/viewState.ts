@@ -51,11 +51,13 @@ export const LAYERS = [
   'sealevel',
   // Deep time: a second reconstruction's continents, outlined.
   'plates',
+  // Deep time: dated finds of our species and its relatives.
+  'humans',
 ] as const;
 export type Layer = (typeof LAYERS)[number];
 
 /** Layers that belong to deep time, dropped on leaving it. */
-export const DEEP_LAYERS: readonly Layer[] = ['temperature', 'sealevel', 'plates'];
+export const DEEP_LAYERS: readonly Layer[] = ['temperature', 'sealevel', 'plates', 'humans'];
 
 /**
  * How the camera is placed: orbiting Earth freely, or attached to the bodies (standing on Earth

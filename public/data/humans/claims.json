@@ -1,0 +1,195 @@
+{
+  "schemaVersion": 1,
+  "about": "Dated finds of Homo sapiens and its relatives, each as its source reports it, hand-curated for histeclipse. Dates are thousands of years ago; places are rounded to 0.1°. Where finds are argued over, competing claims share a question.",
+  "questions": [
+    { "id": "first-out-of-africa", "title": "When did our species first leave Africa?" },
+    { "id": "europe", "title": "When did our species reach Europe?" },
+    { "id": "australia", "title": "When did people first reach Australia?" },
+    { "id": "americas", "title": "When did people first reach the Americas?" },
+    { "id": "neanderthal-admixture", "title": "When did Neanderthals and our species interbreed?" }
+  ],
+  "claims": [
+    {
+      "id": "jebel-irhoud",
+      "species": "sapiens",
+      "place": { "name": "Jebel Irhoud", "region": "Morocco", "latitude": 31.9, "longitude": -8.9 },
+      "fromKa": 349,
+      "toKa": 281,
+      "claim": "The oldest known fossils of our species, about 315,000 years old.",
+      "source": { "citation": "Hublin et al. 2017, Nature", "doi": "10.1038/nature22336" }
+    },
+    {
+      "id": "omo-kibish",
+      "species": "sapiens",
+      "place": { "name": "Omo Kibish", "region": "Ethiopia", "latitude": 5.4, "longitude": 35.9 },
+      "fromKa": 233,
+      "toKa": 233,
+      "claim": "Omo I, the oldest Homo sapiens known from eastern Africa: at least 233,000 years old.",
+      "source": { "citation": "Vidal et al. 2022, Nature", "doi": "10.1038/s41586-021-04275-8" }
+    },
+    {
+      "id": "apidima",
+      "species": "sapiens",
+      "question": "first-out-of-africa",
+      "place": { "name": "Apidima Cave", "region": "Greece", "latitude": 36.4, "longitude": 22.4 },
+      "fromKa": 210,
+      "toKa": 210,
+      "claim": "A skull fragment read as Homo sapiens, over 210,000 years old; the reading is disputed.",
+      "source": { "citation": "Harvati et al. 2019, Nature", "doi": "10.1038/s41586-019-1376-z" }
+    },
+    {
+      "id": "misliya",
+      "species": "sapiens",
+      "question": "first-out-of-africa",
+      "place": { "name": "Misliya Cave", "region": "Israel", "latitude": 32.7, "longitude": 35.0 },
+      "fromKa": 194,
+      "toKa": 177,
+      "claim": "A modern human jaw, 177,000 to 194,000 years old.",
+      "source": { "citation": "Hershkovitz et al. 2018, Science", "doi": "10.1126/science.aap8369" }
+    },
+    {
+      "id": "qafzeh",
+      "species": "sapiens",
+      "place": { "name": "Qafzeh Cave", "region": "Israel", "latitude": 32.7, "longitude": 35.3 },
+      "fromKa": 97,
+      "toKa": 87,
+      "claim": "Burials of early modern humans, about 92,000 years old.",
+      "source": { "citation": "Valladas et al. 1988, Nature", "doi": "10.1038/331614a0" }
+    },
+    {
+      "id": "madjedbebe",
+      "species": "sapiens",
+      "question": "australia",
+      "place": { "name": "Madjedbebe", "region": "northern Australia", "latitude": -12.5, "longitude": 132.9 },
+      "fromKa": 71,
+      "toKa": 59,
+      "claim": "Stone tools and pigments of people in northern Australia by about 65,000 years ago.",
+      "source": { "citation": "Clarkson et al. 2017, Nature", "doi": "10.1038/nature22968" }
+    },
+    {
+      "id": "sahul-50",
+      "species": "sapiens",
+      "question": "australia",
+      "place": null,
+      "fromKa": 50,
+      "toKa": 47,
+      "claim": "A review of the sites finds people reached Sahul (Australia and New Guinea joined by low seas) about 47,000 to 50,000 years ago, not earlier.",
+      "source": { "citation": "O’Connell et al. 2018, PNAS", "doi": "10.1073/pnas.1808385115" }
+    },
+    {
+      "id": "mandrin",
+      "species": "sapiens",
+      "question": "europe",
+      "place": { "name": "Grotte Mandrin", "region": "France", "latitude": 44.4, "longitude": 4.8 },
+      "fromKa": 54,
+      "toKa": 54,
+      "claim": "A child’s tooth and tools read as our species, about 54,000 years ago, between Neanderthal layers.",
+      "source": { "citation": "Slimak et al. 2022, Science Advances", "doi": "10.1126/sciadv.abj9496" }
+    },
+    {
+      "id": "bacho-kiro",
+      "species": "sapiens",
+      "question": "europe",
+      "place": { "name": "Bacho Kiro Cave", "region": "Bulgaria", "latitude": 43.0, "longitude": 25.4 },
+      "fromKa": 46,
+      "toKa": 44,
+      "claim": "The oldest securely dated Homo sapiens remains in Europe, about 44,000 to 46,000 years old.",
+      "source": { "citation": "Hublin et al. 2020, Nature", "doi": "10.1038/s41586-020-2259-z" }
+    },
+    {
+      "id": "ust-ishim",
+      "species": "sapiens",
+      "place": { "name": "Ust’-Ishim", "region": "western Siberia", "latitude": 57.7, "longitude": 71.2 },
+      "fromKa": 45,
+      "toKa": 45,
+      "claim": "The genome of a man who lived about 45,000 years ago, with Neanderthal ancestry from an admixture not long before.",
+      "source": { "citation": "Fu et al. 2014, Nature", "doi": "10.1038/nature13810" }
+    },
+    {
+      "id": "white-sands",
+      "species": "sapiens",
+      "question": "americas",
+      "place": { "name": "White Sands", "region": "New Mexico", "latitude": 32.8, "longitude": -106.3 },
+      "fromKa": 23,
+      "toKa": 21,
+      "claim": "Human footprints dated to 21,000 to 23,000 years ago, during the Last Glacial Maximum; later dated again by other methods, with the same result.",
+      "source": { "citation": "Bennett et al. 2021, Science; Pigati et al. 2023, Science", "doi": "10.1126/science.abg7586" }
+    },
+    {
+      "id": "monte-verde",
+      "species": "sapiens",
+      "question": "americas",
+      "place": { "name": "Monte Verde", "region": "Chile", "latitude": -41.5, "longitude": -73.2 },
+      "fromKa": 14.5,
+      "toKa": 14.5,
+      "claim": "A camp about 14,500 years old, far south, before Clovis.",
+      "source": { "citation": "Dillehay et al. 2015, PLOS ONE", "doi": "10.1371/journal.pone.0141923" }
+    },
+    {
+      "id": "clovis",
+      "species": "sapiens",
+      "question": "americas",
+      "place": { "name": "Clovis", "region": "New Mexico", "latitude": 34.3, "longitude": -103.3 },
+      "fromKa": 13.05,
+      "toKa": 12.75,
+      "claim": "The Clovis culture, about 12,750 to 13,050 years ago; long held to be the first people in the Americas.",
+      "source": { "citation": "Waters & Stafford 2007, Science", "doi": "10.1126/science.1137166" }
+    },
+    {
+      "id": "neanderthal-end",
+      "species": "neanderthal",
+      "place": null,
+      "fromKa": 41,
+      "toKa": 39,
+      "claim": "Neanderthals disappear from Europe about 39,000 to 41,000 years ago.",
+      "source": { "citation": "Higham et al. 2014, Nature", "doi": "10.1038/nature13621" }
+    },
+    {
+      "id": "admixture-iasi",
+      "species": "neanderthal",
+      "question": "neanderthal-admixture",
+      "place": null,
+      "fromKa": 50.5,
+      "toKa": 43.5,
+      "claim": "From ancient and present-day genomes, one long period of mixing, about 43,500 to 50,500 years ago.",
+      "source": { "citation": "Iasi et al. 2024, Science", "doi": "10.1126/science.adq3010" }
+    },
+    {
+      "id": "admixture-sumer",
+      "species": "neanderthal",
+      "question": "neanderthal-admixture",
+      "place": null,
+      "fromKa": 49,
+      "toKa": 45,
+      "claim": "From the earliest modern human genomes, from Ranis and Zlatý kůň, about 45,000 to 49,000 years ago.",
+      "source": { "citation": "Sümer et al. 2024, Nature", "doi": "10.1038/s41586-024-08420-x" }
+    },
+    {
+      "id": "denisova-cave",
+      "species": "denisovan",
+      "place": { "name": "Denisova Cave", "region": "Altai, Siberia", "latitude": 51.4, "longitude": 84.7 },
+      "fromKa": 200,
+      "toKa": 200,
+      "claim": "Denisovans at the cave by about 200,000 years ago; the group is known mainly from its genome.",
+      "source": { "citation": "Douka et al. 2019, Nature", "doi": "10.1038/s41586-018-0870-z" }
+    },
+    {
+      "id": "baishiya",
+      "species": "denisovan",
+      "place": { "name": "Baishiya Karst Cave", "region": "Tibetan Plateau", "latitude": 35.4, "longitude": 102.6 },
+      "fromKa": 160,
+      "toKa": 160,
+      "claim": "A Denisovan jaw at 3,280 m, at least 160,000 years old.",
+      "source": { "citation": "Chen et al. 2019, Nature", "doi": "10.1038/s41586-019-1139-x" }
+    },
+    {
+      "id": "tam-ngu-hao",
+      "species": "denisovan",
+      "place": { "name": "Tam Ngu Hao 2", "region": "northern Laos", "latitude": 20.2, "longitude": 103.4 },
+      "fromKa": 164,
+      "toKa": 131,
+      "claim": "A molar most likely Denisovan, 131,000 to 164,000 years old.",
+      "source": { "citation": "Demeter et al. 2022, Nature Communications", "doi": "10.1038/s41467-022-29923-z" }
+    }
+  ]
+}
