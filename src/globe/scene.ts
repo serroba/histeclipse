@@ -1290,7 +1290,7 @@ export async function createGlobe(
   let volcanoLabels: GlobeLabel[] = [];
   let volcanoKey = '';
   const markerPickListeners = new Set<(key: string) => void>();
-  for (const layer of [impactLayer, volcanoLayer]) {
+  for (const layer of [impactLayer, volcanoLayer, humanLabelLayer]) {
     layer.addEventListener('click', (event) => {
       const marker = event.target instanceof Element ? event.target.closest('[data-pick]') : null;
       const key = marker?.getAttribute('data-pick');
@@ -2418,10 +2418,12 @@ export async function createGlobe(
           : measured(
               humanLabelLayer,
               sites.map((site) => {
-                const element = document.createElement('span');
+                const element = document.createElement('button');
+                element.type = 'button';
                 element.className = `empire-label human-site is-${site.species}${site.disputed ? ' is-disputed' : ''}`;
                 element.textContent = site.label;
                 element.dataset['site'] = site.id;
+                element.dataset['pick'] = `human:${site.id}`;
                 return { element, point: site.point };
               }),
             );

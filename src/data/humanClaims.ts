@@ -8,6 +8,7 @@ import * as v from 'valibot';
 
 import type { GeoPoint } from '../state/viewState';
 import { getJson, type Fetch } from './fetchJson';
+import { pictureFor, type Pictures } from './pictures';
 
 const ka = v.pipe(v.number(), v.minValue(0));
 
@@ -43,6 +44,8 @@ const ClaimsSchema = v.pipe(
             citation: v.pipe(v.string(), v.minLength(1)),
             doi: v.pipe(v.string(), v.regex(/^10\.\d{4,9}\/\S+$/)),
           }),
+          /** The English Wikipedia page about the find, for its card's picture and link. */
+          wikipedia: v.optional(v.pipe(v.string(), v.minLength(1))),
         }),
         v.check((claim) => claim.fromKa >= claim.toKa, 'a date runs from oldest to youngest'),
       ),
@@ -128,4 +131,54 @@ export function humansAt(data: HumanClaims, shownKa: number): HumansView {
     .filter((claim) => claim.place === null && claim.question === undefined && reached(claim))
     .map(line);
   return { sites, questions, others };
+}
+
+const SPECIES: Readonly<Record<Claim['species'], string>> = {
+  sapiens: 'Homo sapiens',
+  neanderthal: 'Neanderthals',
+  denisovan: 'Denisovans',
+};
+
+/** A find's card: its claim and source, the question it belongs to with its rivals, a picture. */
+export function claimCard(
+  data: HumanClaims,
+  id: string,
+  pictures: Pictures | null,
+): {
+  readonly title: string;
+  readonly facts: readonly (readonly [string, string])[];
+  readonly links: readonly { readonly label: string; readonly href: string }[];
+  readonly image?: { readonly src: string; readonly alt: string; readonly credit: string };
+  readonly note?: string;
+} | null {
+  const claim = data.claims.find((each) => each.id === id);
+  if (claim === undefined) return null;
+  const name = claim.place?.name ?? claim.claim;
+  const question = data.questions.find((each) => each.id === claim.question);
+  const rivals = data.claims.filter(
+    (each) => each.question !== undefined && each.question === claim.question && each !== claim,
+  );
+  const { image, links } = pictureFor(pictures, claim.wikipedia, name);
+  return {
+    title: name,
+    facts: [
+      ['Who', SPECIES[claim.species]],
+      ...(claim.place === null ? [] : [['Where', claim.place.region] as const]),
+      ['When', `${kaRange(claim.fromKa, claim.toKa)} (thousands of years ago)`],
+      ['Claim', claim.claim],
+      ['Source', claim.source.citation],
+    ],
+    links: [
+      { label: claim.source.citation, href: `https://doi.org/${claim.source.doi}` },
+      ...links,
+    ],
+    ...(image === undefined ? {} : { image }),
+    ...(question === undefined
+      ? {}
+      : {
+          note: `One answer to “${question.title}” Others: ${rivals
+            .map((rival) => `${kaRange(rival.fromKa, rival.toKa)}, ${rival.source.citation}`)
+            .join('; ')}.`,
+        }),
+  };
 }

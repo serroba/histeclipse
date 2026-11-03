@@ -32,6 +32,7 @@ from histeclipse_pipeline.ohm import fetch_ohm
 from histeclipse_pipeline.paleodem import fetch_paleodem
 from histeclipse_pipeline.paleotemp import fetch_paleotemp
 from histeclipse_pipeline.periodo import fetch_periods
+from histeclipse_pipeline.pictures import fetch_pictures
 from histeclipse_pipeline.planets import (
     APPARENT,
     PLANET_APPARENT_DESCRIPTION,
@@ -93,6 +94,8 @@ class Arguments(argparse.Namespace):
     out: Path = Path()
     count: int = SUN_VECTOR_COUNT
     seed: int | None = None
+    # The data file whose "wikipedia" titles the pictures command looks up.
+    source: Path = Path()
 
 
 def year_start_jd(year: int) -> float:
@@ -273,6 +276,12 @@ def volcanoes(args: Arguments) -> int:  # pragma: no cover - needs network acces
     return _say(f"wrote {count} eruptions to {args.out}")
 
 
+def pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the lead picture, author and licence of each Wikipedia page a data file names."""
+    count = fetch_pictures(args.source, args.out)
+    return _say(f"wrote {count} pictures to {args.out}")
+
+
 def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write ice-sheet thickness every 2,500 years over the last 80,000 (PaleoMIST 1.0)."""
     count = fetch_icesheets(args.out)
@@ -443,6 +452,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write Holocene volcanoes and their eruptions (Smithsonian GVP), and their summaries",
         "output JSON file",
     ),
+    "pictures": (
+        pictures,
+        "write the lead picture, author and licence of each Wikipedia page a data file names",
+        "output JSON file",
+    ),
     "icesheets": (
         icesheets,
         "write ice-sheet thickness every 2,500 years since 80 ka (PaleoMIST 1.0)",
@@ -519,6 +533,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         _ = command.add_argument("--kernels", type=Path, default=DEFAULT_KERNELS)
         _ = command.add_argument("--start-year", type=int, default=DEFAULT_START_YEAR)
         _ = command.add_argument("--end-year", type=int, default=DEFAULT_END_YEAR)
+        if name == "pictures":
+            _ = command.add_argument(
+                "--source", type=Path, required=True, help="data file naming Wikipedia titles"
+            )
         if name in {"sun-vectors", "moon-vectors", "planet-vectors", "planet-apparent-vectors"}:
             _ = command.add_argument("--count", type=int, default=SUN_VECTOR_COUNT)
             _ = command.add_argument(
