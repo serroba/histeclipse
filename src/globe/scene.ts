@@ -358,6 +358,8 @@ export interface Globe {
    * today's imagery; null returns to today's Earth.
    */
   setDeepTime(surface: DeepTimeSurface | null): void;
+  /** Start loading maps that will be wanted soon (as time plays), so they are there in time. */
+  prefetch(urls: readonly string[]): void;
   /** Colour the deep-time surface by temperature; null shows relief alone. */
   setTemperature(surface: TemperatureSurface | null): void;
   /** Draw coastlines at a past sea level from today's shelves; null uses the elevation maps'. */
@@ -1197,12 +1199,32 @@ export async function createGlobe(
   // Deep time's elevation maps, loaded once each. They hold data, not colour: no colour space,
   // and linear filtering so the coast falls between the sea's last byte and the land's first.
   const paleoTextures = new Map<string, Promise<Texture>>();
-  let deepTimeWanted: DeepTimeSurface | null = null;
+  /**
+   * Maps loaded in the order they were asked for: a newer one is shown as soon as it arrives,
+   * even if a later one is still loading (as time plays, the latest is often not there yet);
+   * an older one arriving late is not. Turning a layer off drops what is still loading.
+   */
+  function inOrder(): { ask(): number; show(ticket: number): boolean; drop(): void } {
+    let asked = 0;
+    let shown = 0;
+    return {
+      ask: () => ++asked,
+      show(ticket) {
+        if (ticket <= shown) return false;
+        shown = ticket;
+        return true;
+      },
+      drop() {
+        shown = ++asked;
+      },
+    };
+  }
+  const deepTimeOrder = inOrder();
   let deepTime = false;
-  let temperatureWanted: TemperatureSurface | null = null;
-  let iceWanted: IceSurface | null = null;
-  let seaIceWanted: SeaIceSurface | null = null;
-  let platesWanted: PlateSurface | null = null;
+  const temperatureOrder = inOrder();
+  const iceOrder = inOrder();
+  const seaIceOrder = inOrder();
+  const platesOrder = inOrder();
   let sketchField: { readonly texture: DataTexture; readonly shares: Float64Array } | null = null;
   function hiddenInDeepTime(): Object3D[] {
     return [sun, corona, moon, ...Object.values(planets.meshes)];
@@ -2036,8 +2058,15 @@ export async function createGlobe(
           if (sunImageWanted === image) container.dataset['sunImage'] = 'error';
         });
     },
+    prefetch(urls) {
+      for (const url of urls) {
+        paleoTexture(url).catch(() => {
+          // Tried again when it is wanted.
+          paleoTextures.delete(url);
+        });
+      }
+    },
     setDeepTime(surface) {
-      deepTimeWanted = surface;
       deepTime = surface !== null;
       evenLight.value = deepTime ? 1 : 0;
       spinAxis.visible = deepTime;
@@ -2045,15 +2074,17 @@ export async function createGlobe(
       needsRender = true;
       const uniforms = earth.material.uniforms;
       if (surface === null) {
+        deepTimeOrder.drop();
         uniforms['paleoActive'] = { value: 0 };
         container.dataset['deepTime'] = 'off';
         needsRender = true;
         return;
       }
+      const ticket = deepTimeOrder.ask();
       Promise.all([paleoTexture(surface.younger), paleoTexture(surface.older)]).then(
         ([younger, older]) => {
-          // A later request (the slider kept moving) wins.
-          if (deepTimeWanted !== surface) return;
+          // Newer than the map shown: shown, though a later one may still be loading.
+          if (!deepTimeOrder.show(ticket)) return;
           uniforms['paleoYounger'] = { value: younger };
           uniforms['paleoOlder'] = { value: older };
           uniforms['paleoMix'] = { value: surface.mix };
@@ -2072,18 +2103,19 @@ export async function createGlobe(
       );
     },
     setTemperature(surface) {
-      temperatureWanted = surface;
       const uniforms = earth.material.uniforms;
       if (surface === null) {
+        temperatureOrder.drop();
         uniforms['tempActive'] = { value: 0 };
         container.dataset['temperature'] = 'off';
         needsRender = true;
         return;
       }
+      const ticket = temperatureOrder.ask();
       Promise.all([paleoTexture(surface.younger), paleoTexture(surface.older)]).then(
         ([younger, older]) => {
-          // A later request (the slider kept moving) wins.
-          if (temperatureWanted !== surface) return;
+          // Newer than the map shown: shown, though a later one may still be loading.
+          if (!temperatureOrder.show(ticket)) return;
           uniforms['tempYounger'] = { value: younger };
           uniforms['tempOlder'] = { value: older };
           uniforms['tempMix'] = { value: surface.mix };
@@ -2125,18 +2157,19 @@ export async function createGlobe(
       needsRender = true;
     },
     setIce(surface) {
-      iceWanted = surface;
       const uniforms = earth.material.uniforms;
       if (surface === null) {
+        iceOrder.drop();
         uniforms['iceActive'] = { value: 0 };
         container.dataset['ice'] = 'off';
         needsRender = true;
         return;
       }
+      const ticket = iceOrder.ask();
       Promise.all([paleoTexture(surface.younger), paleoTexture(surface.older)]).then(
         ([younger, older]) => {
-          // A later request (the slider kept moving) wins.
-          if (iceWanted !== surface) return;
+          // Newer than the map shown: shown, though a later one may still be loading.
+          if (!iceOrder.show(ticket)) return;
           uniforms['iceYounger'] = { value: younger };
           uniforms['iceOlder'] = { value: older };
           uniforms['iceMix'] = { value: surface.mix };
@@ -2153,9 +2186,9 @@ export async function createGlobe(
       );
     },
     setSeaIce(surface) {
-      seaIceWanted = surface;
       const uniforms = earth.material.uniforms;
       if (surface === null) {
+        seaIceOrder.drop();
         uniforms['seaIceActive'] = { value: 0 };
         container.dataset['seaIce'] = 'off';
         needsRender = true;
@@ -2167,10 +2200,11 @@ export async function createGlobe(
         surface.pastMost,
         surface.pastYearRound,
       ] as const;
+      const ticket = seaIceOrder.ask();
       Promise.all(urls.map((url) => paleoTexture(url))).then(
         ([todayMost, todayYearRound, pastMost, pastYearRound]) => {
-          // A later request (the slider kept moving) wins.
-          if (seaIceWanted !== surface) return;
+          // Newer than the map shown: shown, though a later one may still be loading.
+          if (!seaIceOrder.show(ticket)) return;
           uniforms['seaIceTodayMost'] = { value: todayMost };
           uniforms['seaIceTodayYearRound'] = { value: todayYearRound };
           uniforms['seaIcePastMost'] = { value: pastMost };
@@ -2187,18 +2221,19 @@ export async function createGlobe(
       );
     },
     setPlates(surface) {
-      platesWanted = surface;
       const uniforms = earth.material.uniforms;
       if (surface === null) {
+        platesOrder.drop();
         uniforms['plateActive'] = { value: 0 };
         container.dataset['plates'] = 'off';
         needsRender = true;
         return;
       }
+      const ticket = platesOrder.ask();
       Promise.all([paleoTexture(surface.younger), paleoTexture(surface.older)]).then(
         ([younger, older]) => {
-          // A later request (the slider kept moving) wins.
-          if (platesWanted !== surface) return;
+          // Newer than the map shown: shown, though a later one may still be loading.
+          if (!platesOrder.show(ticket)) return;
           uniforms['plateYounger'] = { value: younger };
           uniforms['plateOlder'] = { value: older };
           uniforms['plateMix'] = { value: surface.mix };
