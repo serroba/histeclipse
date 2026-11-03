@@ -141,6 +141,12 @@ import {
   type IceOutlineIndex,
   type IceOutlines,
 } from './data/iceOutlines';
+import {
+  genomesNear,
+  genomesNote,
+  loadAncientGenomes,
+  type AncientGenomes,
+} from './data/ancientGenomes';
 import { humansAt, loadHumanClaims, type HumanClaims } from './data/humanClaims';
 import {
   loadPlateMasks,
@@ -263,6 +269,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     (borders) => {
       store.set((state) => ({ ...state, borders }));
     },
+  );
+  const genomeCredit = element(
+    'span',
+    { class: 'empire-credit', hidden: '' },
+    ' · Ancient genomes: ',
+    element('a', { href: 'https://doi.org/10.7910/DVN/FFIDCW' }, 'Allen Ancient DNA Resource'),
+    ' (Mallick et al. 2024, Reich lab; CC0)',
   );
   const empireCredit = element(
     'span',
@@ -623,6 +636,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         element('a', { href: 'https://helioviewer.org/' }, 'Helioviewer'),
         ', images of 2024 days apart stitched into one surface',
         empireCredit,
+        genomeCredit,
         ohmCredit,
         paleoCredit,
       ),
@@ -1747,6 +1761,43 @@ export async function startApp(root: HTMLElement): Promise<void> {
     showDeepTime(store.get());
   }
 
+  // Ancient genomes: their file loads the first time the layer is turned on.
+  let ancientGenomes: AncientGenomes | null = null;
+  let ancientGenomesLoading: Promise<AncientGenomes> | null = null;
+  let genomesSaid: string | null = null;
+
+  /** In historical time with the layer on, the regions with genomes dated near the year. */
+  function showGenomes(state: ViewState): void {
+    const on = state.layers.has('genomes') && state.ma === null;
+    genomeCredit.hidden = !on;
+    if (!on) {
+      genomesSaid = null;
+      globe.setGenomeCells(null);
+      return;
+    }
+    if (ancientGenomes === null) {
+      genomesSaid = 'Loading the ancient genomes…';
+      if (ancientGenomesLoading === null) {
+        ancientGenomesLoading = loadAncientGenomes(`${base}data/genomes/aadr.json`, fetchJson);
+        ancientGenomesLoading.then(
+          (data) => {
+            ancientGenomes = data;
+            showGenomes(store.get());
+            showEmpires(store.get());
+          },
+          (error: unknown) => {
+            ancientGenomesLoading = null;
+            notify(`Could not load the ancient genomes: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return;
+    }
+    const near = genomesNear(ancientGenomes, state.time.date.year);
+    genomesSaid = genomesNote(near);
+    globe.setGenomeCells(near.cells);
+  }
+
   function showEmpires(state: ViewState): void {
     // Past states belong to historical time, not deep time.
     const on = state.layers.has('empires') && state.ma === null;
@@ -1756,6 +1807,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       year: state.time.date.year,
       present: PRESENT_YEAR,
       visible: state.mode === 'globe' && state.ma === null,
+      ...(genomesSaid === null ? {} : { said: new Map([['genomes', genomesSaid] as const]) }),
     });
     const source = state.borders;
     empireCredit.hidden = !on || source === 'ohm';
@@ -2207,6 +2259,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.ma !== previous.ma ||
       state.time.date.year !== previous.time.date.year
     ) {
+      showGenomes(state);
       showEmpires(state);
     }
     if (state.location !== previous?.location) globe.setLocation(state.location);
