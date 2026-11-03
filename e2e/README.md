@@ -39,6 +39,7 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 | `ice.spec.ts`      | Ice sheets in the ice ages: Batchelor et al.'s outlines and their range     |
 | `fullview.spec.ts` | Full view: clearing the panels, and deep time's strip                       |
 | `chart.spec.ts`    | Geological time along the slider: the chart's units in its colours          |
+| `air.spec.ts`      | The air in the ice ages: CO₂ and methane against 1750                       |
 | `smoke.spec.ts`    | Everything else: loading, links, eclipses, views, sky, the Sun, deep time   |
 
 `support.ts` holds the shared steps and the `test` every file imports, which takes the

@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.aadr import fetch_genomes
+from histeclipse_pipeline.atmosphere import fetch_atmosphere
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
 from histeclipse_pipeline.cesm import fetch_cesm
 from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
@@ -242,6 +243,12 @@ def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network acces
     return _say(f"wrote {count} ice-sheet images to {args.out}")
 
 
+def atmosphere(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write CO2 and methane over 800,000 years from Antarctic ice cores (NOAA)."""
+    count = fetch_atmosphere(args.out)
+    return _say(f"wrote {count} ice-core gas measurements to {args.out}")
+
+
 def genomes(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write dated ancient genomes by 2° cell (Allen Ancient DNA Resource)."""
     count = fetch_genomes(args.out)
@@ -373,6 +380,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         icesheets,
         "write ice-sheet thickness every 2,500 years since 80 ka (PaleoMIST 1.0)",
         "output directory",
+    ),
+    "atmosphere": (
+        atmosphere,
+        "write CO2 and methane over 800,000 years from Antarctic ice cores (NOAA)",
+        "output JSON file",
     ),
     "genomes": (
         genomes,
