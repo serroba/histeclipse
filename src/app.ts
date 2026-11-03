@@ -146,6 +146,7 @@ import {
   type IceOutlines,
 } from './data/iceOutlines';
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
+import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
 import { loadWaysOfLife, waysAt, waysNote, type WaysOfLife } from './data/waysOfLife';
 import {
   genomesNear,
@@ -284,6 +285,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => ({ ...state, borders }));
     },
   );
+  const rocksCredit = element(
+    'span',
+    { class: 'empire-credit', hidden: '' },
+    ' · Rocks: ',
+    element('a', { href: 'https://macrostrat.org' }, 'Macrostrat'),
+    ' (Peters et al., CC BY 4.0)',
+  );
   const waysCredit = element(
     'span',
     { class: 'empire-credit', hidden: '' },
@@ -375,20 +383,24 @@ export async function startApp(root: HTMLElement): Promise<void> {
   holoceneButton.addEventListener('click', () => {
     if (store.get().ma !== null) leaveDeepTime();
   });
+  /** Go into deep time at `ma`, on the span that reaches it. */
+  function enterDeepTime(ma: number, deepScale?: DeepScale): void {
+    selectionBeforeDeep = store.get().selection;
+    sync.step();
+    // Deep time shows the whole Earth: the globe, with no eclipse picked.
+    store.set((state) => ({
+      ...state,
+      ma: roundMa(ma),
+      ...(deepScale === undefined ? {} : { deepScale }),
+      mode: 'globe',
+      view: 'free',
+      // The Sun, Moon and planets are left out of deep time, so the view centres on Earth.
+      focus: 'earth',
+      selection: null,
+    }));
+  }
   deepButton.addEventListener('click', () => {
-    if (store.get().ma === null) {
-      selectionBeforeDeep = store.get().selection;
-      // Deep time shows the whole Earth: the globe, with no eclipse picked.
-      store.set((state) => ({
-        ...state,
-        ma: DEEP_TIME_START_MA,
-        mode: 'globe',
-        view: 'free',
-        // The Sun, Moon and planets are left out of deep time, so the view centres on Earth.
-        focus: 'earth',
-        selection: null,
-      }));
-    }
+    if (store.get().ma === null) enterDeepTime(DEEP_TIME_START_MA);
   });
   const deepBar = createDeepTimeBar({
     onMa(ma, jump) {
@@ -764,6 +776,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         empireCredit,
         genomeCredit,
         waysCredit,
+        rocksCredit,
         ohmCredit,
         paleoCredit,
       ),
@@ -2021,6 +2034,59 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe.setGenomeCells(near.cells);
   }
 
+  // Rocks at the surface: their file loads the first time the layer is turned on.
+  let rocks: readonly RockUnit[] | null = null;
+  let rocksLoading: Promise<Rocks> | null = null;
+  let rocksSaid: string | null = null;
+  let rocksAction: { readonly label: string; readonly run: () => void } | null = null;
+
+  /** In historical time with the layer on, the rocks by age, and the rock at the place picked. */
+  function showRocks(state: ViewState): void {
+    const on = state.layers.has('rocks') && state.ma === null;
+    rocksCredit.hidden = !on;
+    rocksAction = null;
+    if (!on) {
+      rocksSaid = null;
+      globe.setRocks(null);
+      return;
+    }
+    if (rocks === null) {
+      rocksSaid = 'Loading the rocks…';
+      if (rocksLoading === null) {
+        rocksLoading = loadRocks(`${base}data/rocks.json`, fetchJson);
+        rocksLoading.then(
+          (data) => {
+            rocks = rockUnits(data);
+            showRocks(store.get());
+            showEmpires(store.get());
+          },
+          (error: unknown) => {
+            rocksLoading = null;
+            notify(`Could not load the rocks: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return;
+    }
+    globe.setRocks(rocks);
+    const rock = state.location === null ? null : rockAt(rocks, state.location);
+    rocksSaid =
+      state.location === null
+        ? 'Pick a place on the globe to see its rock, and when it formed.'
+        : rockText(rock);
+    if (rock !== null) {
+      // The middle of the rock's age range, on the span that reaches it.
+      const ma = (rock.topMa + rock.bottomMa) / 2;
+      const scale: DeepScale = ma <= ICE_AGES_MA ? 'ice' : ma <= oldest ? 'all' : 'eons';
+      rocksAction = {
+        label: `See the Earth as it was then, ${formatMa(ma)}`,
+        run: () => {
+          enterDeepTime(ma, scale);
+        },
+      };
+    }
+  }
+
   // Ways of life: their file loads the first time the layer is turned on.
   let waysOfLife: WaysOfLife | null = null;
   let waysLoading: Promise<WaysOfLife> | null = null;
@@ -2075,7 +2141,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       said: new Map<Layer, string>([
         ...(genomesSaid === null ? [] : [['genomes', genomesSaid] as const]),
         ...(waysSaid === null ? [] : [['ways', waysSaid] as const]),
+        ...(rocksSaid === null ? [] : [['rocks', rocksSaid] as const]),
       ]),
+      actions: new Map(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
     });
     const source = state.borders;
     empireCredit.hidden = !on || source === 'ohm';
@@ -2530,10 +2598,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.mode !== previous.mode ||
       state.borders !== previous.borders ||
       state.ma !== previous.ma ||
-      state.time.date.year !== previous.time.date.year
+      state.time.date.year !== previous.time.date.year ||
+      state.location !== previous.location
     ) {
       showGenomes(state);
       showWays(state);
+      showRocks(state);
       showEmpires(state);
     }
     // Deep time, or an eclipse picked, ends a trip through the years.

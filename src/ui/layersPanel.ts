@@ -19,6 +19,8 @@ export interface LayersView {
   readonly visible: boolean;
   /** What a layer says about what it draws now, where that depends on loaded data. */
   readonly said?: ReadonlyMap<Layer, string>;
+  /** A step a layer offers from what it shows, such as going to the time a rock formed. */
+  readonly actions?: ReadonlyMap<Layer, { readonly label: string; readonly run: () => void }>;
 }
 
 export interface LayersPanel {
@@ -65,6 +67,8 @@ export function createLayersPanel(
 
   const boxes = new Map<Layer, HTMLInputElement>();
   const notes = new Map<Layer, HTMLElement>();
+  const actionButtons = new Map<Layer, HTMLButtonElement>();
+  const runs = new Map<Layer, () => void>();
   const groups = HISTORY_LAYER_GROUPS.map((group) =>
     element(
       'fieldset',
@@ -82,6 +86,11 @@ export function createLayersPanel(
           hidden: '',
         });
         notes.set(layer.id, note);
+        const action = element('button', { type: 'button', class: 'layer-action', hidden: '' });
+        action.addEventListener('click', () => {
+          runs.get(layer.id)?.();
+        });
+        actionButtons.set(layer.id, action);
         return element(
           'div',
           { class: 'layer-item' },
@@ -94,6 +103,7 @@ export function createLayersPanel(
           element('p', { class: 'layer-about' }, layer.about),
           ...(layer.id === 'empires' ? [source] : []),
           note,
+          action,
         );
       }),
     ),
@@ -131,7 +141,14 @@ export function createLayersPanel(
   return {
     button,
     dialog,
-    render({ layers, borders, year, present, visible, said }) {
+    render({ layers, borders, year, present, visible, said, actions }) {
+      runs.clear();
+      for (const [layer, action] of actionButtons) {
+        const offered = layers.has(layer) ? actions?.get(layer) : undefined;
+        action.hidden = offered === undefined;
+        action.textContent = offered?.label ?? '';
+        if (offered !== undefined) runs.set(layer, offered.run);
+      }
       button.hidden = !visible;
       if (!visible) shut();
       for (const [layer, box] of boxes) {

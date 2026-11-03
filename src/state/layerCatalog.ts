@@ -41,6 +41,17 @@ export const HISTORY_LAYER_GROUPS: readonly LayerGroup[] = [
     ],
   },
   {
+    name: 'Earth',
+    layers: [
+      {
+        id: 'rocks',
+        label: 'Rocks at the surface',
+        about:
+          'How old the rocks at the surface are, from Macrostrat; pick a place to see its rock, then the Earth when it formed.',
+      },
+    ],
+  },
+  {
     name: 'Sky and events',
     layers: [
       {

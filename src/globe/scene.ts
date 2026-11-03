@@ -92,6 +92,7 @@ import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
 import type { ArrivalGrid } from '../data/dispersal';
 import type { HumanSite } from '../data/humanClaims';
+import type { RockUnit } from '../data/rocks';
 import type { WayRegion } from '../data/waysOfLife';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { OhmYear } from '../data/ohmBorders';
@@ -100,6 +101,7 @@ import {
   createEmpireCanvas,
   paintBorders,
   paintIceOutlines,
+  paintRocks,
   paintSettled,
   paintWays,
   paintTerritories,
@@ -332,6 +334,8 @@ export interface Globe {
   setSettled(
     settled: { readonly scenario: string; readonly grid: ArrivalGrid; readonly ka: number } | null,
   ): void;
+  /** Shade the rocks at the surface by age, under everything else; null hides them. */
+  setRocks(units: readonly RockUnit[] | null): void;
   /** Shade regions by their most widespread way of life, under any states; null hides them. */
   setWays(regions: readonly WayRegion[] | null): void;
   /** Mark dated finds of humans and their relatives in deep time; null hides them. */
@@ -1229,17 +1233,19 @@ export async function createGlobe(
   let humanSitesKey = '';
   // Historical time's overlay, on the states' map: ways of life, and the states over them.
   let historyOverlay: {
+    readonly rocks: readonly RockUnit[] | null;
     readonly ways: readonly WayRegion[] | null;
     readonly empires: EmpireLayer | null;
-  } = { ways: null, empires: null };
+  } = { rocks: null, ways: null, empires: null };
   function paintHistoryOverlay(): void {
     const uniforms = earth.material.uniforms;
-    const { ways, empires } = historyOverlay;
-    const on = ways !== null || empires !== null;
+    const { rocks, ways, empires } = historyOverlay;
+    const on = rocks !== null || ways !== null || empires !== null;
     uniforms['empiresActive'] = { value: on ? 1 : 0 };
     needsRender = true;
     if (!on) return;
     clearOverlay(empiresCanvas);
+    if (rocks !== null) paintRocks(empiresCanvas, rocks);
     if (ways !== null) paintWays(empiresCanvas, ways);
     if (empires !== null) {
       paintTerritories(empiresCanvas, empires.territories);
@@ -2262,6 +2268,12 @@ export async function createGlobe(
             );
       container.dataset['humans'] = sites === null ? 'off' : String(sites.length);
       needsRender = true;
+    },
+    setRocks(units) {
+      if ((units === null ? 'off' : 'on') === container.dataset['rocks']) return;
+      historyOverlay = { ...historyOverlay, rocks: units };
+      container.dataset['rocks'] = units === null ? 'off' : 'on';
+      paintHistoryOverlay();
     },
     setWays(regions) {
       historyOverlay = { ...historyOverlay, ways: regions };
