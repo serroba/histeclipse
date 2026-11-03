@@ -326,6 +326,51 @@ body {
   display: none;
 }
 
+/* Impact craters and deposits: a ring sized by diameter, centred on the place, the largest
+   named beside it; tap for a card. */
+.empire-label.impact-mark {
+  width: var(--size);
+  height: var(--size);
+  box-sizing: border-box;
+  padding: 0;
+  border: 2px solid rgb(255 150 60);
+  border-radius: 50%;
+  background: rgb(255 150 60 / 0.25);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.impact-mark .impact-name {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 4px);
+  transform: translateY(-50%);
+}
+
+.empire-label.impact-mark.is-deposit {
+  border-style: dotted;
+  background: none;
+}
+
+/* An age that spans the moment: it may not have struck yet. */
+.empire-label.impact-mark.is-uncertain {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.empire-label.impact-mark:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.empire-label.impact-mark[hidden] {
+  display: none;
+}
+
 .is-trilobites {
   --fossil: rgb(57 135 229 / 0.7);
 }
@@ -1216,6 +1261,47 @@ body {
   background: rgb(10 16 32 / 0.94);
   color: var(--ink);
   overscroll-behavior: contain;
+}
+
+/* A marker's card: its picture, what the source says, and where to read more. */
+.marker-card-body {
+  padding: 0 18px 16px;
+}
+
+.marker-card-image {
+  margin: 0 0 10px;
+}
+
+.marker-card-image img {
+  display: block;
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: 8px;
+}
+
+.marker-card-image figcaption,
+.marker-card-note {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.marker-card-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0 0 10px;
+}
+
+.marker-card-facts dt {
+  color: var(--ink-muted);
+}
+
+.marker-card-facts dd {
+  margin: 0;
+}
+
+.marker-card-links a {
+  color: var(--accent);
 }
 
 .famous-dialog::backdrop {

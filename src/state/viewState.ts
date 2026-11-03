@@ -54,6 +54,8 @@ export const LAYERS = [
   'rocks',
   // Named periods for the place picked (PeriodO), each by its source.
   'periods',
+  // Impact craters and deposits (Impact Earth), in either time: where they lay then.
+  'impacts',
   // Deep time only: the surface coloured by temperature, and sea level through time.
   'temperature',
   'sealevel',
