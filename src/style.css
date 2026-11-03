@@ -296,6 +296,12 @@ body {
 
 /* Ancient genomes: a circle per region, sized by how many, with the count. */
 .empire-label.genome-cell {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1873,6 +1879,24 @@ body {
 .deep-layer:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Dated finds of humans and their relatives: a dot and the date; disputed ones in italics.
+   Each is a button, to tap for its card. */
+.empire-label.human-site {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.empire-label.human-site:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 /* Dated finds of humans and their relatives: a dot and the date; disputed ones in italics. */

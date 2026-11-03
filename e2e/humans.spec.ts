@@ -80,3 +80,45 @@ test('a dispersal model shades where it has people settled, scenario by scenario
   });
   expect(problems).toEqual([]);
 });
+
+// A one-pixel image, for Wikimedia's pictures: the suite does not reach out to Wikimedia.
+const PIXEL = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=',
+  'base64',
+);
+
+test('a find opens its card: its claim, its source, its rivals and a picture', async ({ page }) => {
+  const problems = collectProblems(page);
+  const card = page.getByTestId('marker-card');
+  await page.route(/^https:\/\/(upload|thumb)\.wikimedia\.org\//, (route) =>
+    route.fulfill({ contentType: 'image/png', body: PIXEL }),
+  );
+  await test.step('Given the finds 60,000 years ago, looking at Australia', async () => {
+    await page.goto('./?ma=0.06&scale=ice&cam=-15,135,3&layers=humans');
+    await globeRendered(page);
+  });
+  await test.step('When they tap Madjedbebe', async () => {
+    await page.locator('.human-site', { hasText: 'Madjedbebe' }).click();
+  });
+  await test.step('Then its card gives the claim with its source, and the rival date', async () => {
+    await expect(card).toBeVisible();
+    await expect(card.getByRole('heading', { name: 'Madjedbebe' })).toBeVisible();
+    await expect(card.getByRole('link', { name: 'Clarkson et al. 2017, Nature' })).toHaveAttribute(
+      'href',
+      /^https:\/\/doi\.org\/10\./,
+    );
+    await expect(card).toContainText('One answer to “When did people first reach Australia?”');
+    await expect(card).toContainText('O’Connell et al. 2018, PNAS');
+    await expect(card.getByRole('link', { name: 'Wikipedia' })).toBeVisible();
+  });
+  await test.step('When they open a find with a picture, it shows with its credit', async () => {
+    await page.getByRole('button', { name: 'Close' }).last().click();
+    await page.goto('./?ma=0.3&scale=ice&cam=30,-5,3&layers=humans');
+    await globeRendered(page);
+    await page.locator('.human-site', { hasText: 'Jebel Irhoud' }).click();
+    await expect(card.locator('.marker-card-image figcaption')).toContainText(
+      'via Wikimedia Commons.',
+    );
+  });
+  expect(problems).toEqual([]);
+});

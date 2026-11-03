@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import aadr from '../../public/data/genomes/aadr.json';
 import {
+  genomeCellCard,
   genomesNear,
   genomesNote,
   loadAncientGenomes,
@@ -45,8 +46,15 @@ describe('ancient genomes', () => {
     const near = genomesNear(small, -2499);
     expect(near.total).toBe(3);
     expect(near.cells).toEqual([
-      { latitude: 51, longitude: 87, count: 2, labels: [['Russia_Afanasievo', 2]], papers: 1 },
-      { latitude: 41, longitude: 11, count: 1, labels: [['Italy_BA', 1]], papers: 1 },
+      {
+        cell: 0,
+        latitude: 51,
+        longitude: 87,
+        count: 2,
+        labels: [['Russia_Afanasievo', 2]],
+        papers: 1,
+      },
+      { cell: 1, latitude: 41, longitude: 11, count: 1, labels: [['Italy_BA', 1]], papers: 1 },
     ]);
     expect(genomesNear(small, 1000).total).toBe(1);
     expect(genomesNear(small, 1900).cells).toEqual([]);
@@ -62,5 +70,48 @@ describe('ancient genomes', () => {
     expect(yearSpanText(-2749, -2249)).toBe('2750–2250 BCE');
     expect(yearSpanText(1000, 1500)).toBe('1000–1500 CE');
     expect(yearSpanText(-249, 250)).toBe('250 BCE–250 CE');
+  });
+});
+
+describe('genomeCellCard', () => {
+  const many: AncientGenomes = {
+    ...small,
+    cells: [[-4, -72]],
+    groups: Array.from({ length: 10 }, (_, i) => `Group_${String(i)}`),
+    papers: [
+      { name: 'LinkedPaper2020', doi: 'https://doi.org/10.1/p' },
+      { name: 'UnlinkedPaper2026', doi: 'No electronic version' },
+    ],
+    genomes: [
+      ...Array.from(
+        { length: 10 },
+        (_, i) => [0, 1000 + i, i, 0] as [number, number, number, number],
+      ),
+      [0, 1000, 0, 0],
+      [0, 1000, 0, 1],
+    ],
+  };
+
+  it('lists a region’s genomes near the year by lab label and by paper, linked by DOI', () => {
+    const card = genomeCellCard(many, 0, 950);
+    expect(card?.title).toBe('Ancient genomes, 4°S–2°S, 72°W–70°W');
+    expect(card?.facts).toEqual([
+      ['Genomes', '12'],
+      ['Dated', '941–950 CE'],
+      [
+        'Lab labels',
+        'Group_0 ×3, Group_1 ×1, Group_2 ×1, Group_3 ×1, Group_4 ×1, Group_5 ×1, Group_6 ×1, Group_7 ×1, and 2 more',
+      ],
+      ['Published in', 'LinkedPaper2020, UnlinkedPaper2026'],
+    ]);
+    expect(card?.links).toEqual([
+      { label: 'LinkedPaper2020', href: 'https://doi.org/10.1/p' },
+      { label: 'Allen Ancient DNA Resource', href: 'https://doi.org/10.7910/DVN/FFIDCW' },
+    ]);
+    expect(card?.note).toContain('not how many people lived');
+  });
+
+  it('has no card for a region with no genomes near the year', () => {
+    expect(genomeCellCard(many, 0, -5000)).toBeNull();
   });
 });

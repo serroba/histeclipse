@@ -159,6 +159,7 @@ import { loadWaysOfLife, waysAt, waysNote, type WaysOfLife } from './data/waysOf
 import {
   genomesNear,
   genomesNote,
+  genomeCellCard,
   loadAncientGenomes,
   type AncientGenomes,
 } from './data/ancientGenomes';
@@ -175,7 +176,8 @@ import {
   type VolcanoMark,
   type Volcanoes,
 } from './data/volcanoes';
-import { humansAt, loadHumanClaims, type HumanClaims } from './data/humanClaims';
+import { claimCard, humansAt, loadHumanClaims, type HumanClaims } from './data/humanClaims';
+import { loadPictures, type Pictures } from './data/pictures';
 import { loadArrivalGrid } from './globe/arrivalGrid';
 import {
   loadDispersalIndex,
@@ -1759,13 +1761,53 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
   }
 
+  // The finds' pictures: loaded the first time a find's card opens.
+  let humanPictures: Pictures | null = null;
+  let humanPicturesLoading: Promise<Pictures> | null = null;
+  let humanShown: string | null = null;
+
+  function showHumanCard(id: string): void {
+    if (humanClaims === null) return;
+    const card = claimCard(humanClaims, id, humanPictures);
+    if (card === null) return;
+    humanShown = id;
+    markerCard.show(card);
+    if (humanPictures !== null || humanPicturesLoading !== null) return;
+    humanPicturesLoading = loadPictures(`${base}data/humans/pictures.json`, fetchJson);
+    humanPicturesLoading.then(
+      (loaded) => {
+        humanPictures = loaded;
+        // Its picture, if its card is still the one open.
+        const again =
+          humanClaims === null || humanShown === null
+            ? null
+            : claimCard(humanClaims, humanShown, loaded);
+        if (markerCard.dialog.open && again !== null) markerCard.show(again);
+      },
+      (error: unknown) => {
+        humanPicturesLoading = null;
+        notify(`Could not load the finds’ pictures: ${errorMessage(error)}`);
+      },
+    );
+  }
+
   globe.onMarkerPick((key) => {
     const [kind, id] = key.split(':');
+    volcanoShown = null;
+    humanShown = null;
     if (kind === 'volcano' && id !== undefined) {
       showVolcanoCard(id);
       return;
     }
-    volcanoShown = null;
+    if (kind === 'human' && id !== undefined) {
+      showHumanCard(id);
+      return;
+    }
+    if (kind === 'genome' && ancientGenomes !== null) {
+      const card = genomeCellCard(ancientGenomes, Number(id), store.get().time.date.year);
+      if (card !== null) markerCard.show(card);
+      return;
+    }
     const impact = impacts?.impacts.find((each) => String(each.id) === id);
     if (kind !== 'impact' || impact === undefined) return;
     const details = impactDetails(impact);
