@@ -32,9 +32,10 @@ test('playing history moves through the years and names the states that come and
     await bar.getByRole('button', { name: 'Travel through the years' }).click();
   });
   await test.step('Then the years run on, and the track names states that appeared or went', async () => {
-    // How far it gets depends on how fast the machine draws; it moves on a century at least.
+    // How far it gets depends on how fast the machine draws (a slow one, at 120 Hz, gets
+    // through only decades): it moves on, at least.
     const year = () => Number(/[?&]t=(-?\d+)-/.exec(page.url())?.[1]);
-    await expect.poll(year, { timeout: 20_000 }).toBeGreaterThan(-500);
+    await expect.poll(year, { timeout: 20_000 }).toBeGreaterThan(-590);
     await expect(bar.getByTestId('history-changes')).toHaveText(/^By \d+ (BCE|CE): /, {
       timeout: 20_000,
     });
