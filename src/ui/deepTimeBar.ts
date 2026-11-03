@@ -9,6 +9,7 @@ import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period, periodShort } from '../deepTime/periods';
 import { gasText, type Atmosphere } from '../data/atmosphere';
+import { fossilsText, type FossilsAt } from '../data/fossils';
 import type { ClaimLine, HumansView } from '../data/humanClaims';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { IceStandIn } from '../data/iceSheets';
@@ -230,6 +231,8 @@ export interface DeepTimeView {
   /** The ice-core gases: off, on while they load (null), or on with them. */
   readonly air:
     { readonly on: false } | { readonly on: true; readonly atmosphere: Atmosphere | null };
+  /** Fossils: off, on while they load (null), or on with the finds of the moment. */
+  readonly fossils: { readonly on: false } | { readonly on: true; readonly at: FossilsAt | null };
   /** Dated finds of humans: off, on while the claims load (null), or on with what to say. */
   readonly humans:
     | { readonly on: false }
@@ -281,6 +284,7 @@ export function createDeepTimeBar(handlers: {
   onSeaLevel(on: boolean): void;
   onPlates(on: boolean): void;
   onHumans(on: boolean): void;
+  onFossils(on: boolean): void;
   onAir(on: boolean): void;
   onDispersal(scenario: DispersalScenario): void;
   onScale(scale: DeepScale): void;
@@ -463,6 +467,16 @@ export function createDeepTimeBar(handlers: {
     'data-testid': 'air-note',
   });
   const gasCharts = { co2: createGasChart(), ch4: createGasChart() };
+  const fossilsButton = element(
+    'button',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
+    'Fossils',
+  );
+  const fossilsNote = element('p', {
+    class: 'deep-note fossils-note',
+    hidden: '',
+    'data-testid': 'fossils-note',
+  });
   const humansButton = element(
     'button',
     { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
@@ -605,6 +619,7 @@ export function createDeepTimeBar(handlers: {
     legend,
     platesNote,
     humansNote,
+    fossilsNote,
     airNote,
     milestones.root,
     // One open at a time (they share a name), so the bar doesn't grow over the globe.
@@ -631,6 +646,7 @@ export function createDeepTimeBar(handlers: {
       temperatureButton,
       platesButton,
       humansButton,
+      fossilsButton,
       airButton,
     ),
     details,
@@ -822,6 +838,9 @@ export function createDeepTimeBar(handlers: {
   airButton.addEventListener('click', () => {
     handlers.onAir(!(current?.air.on ?? false));
   });
+  fossilsButton.addEventListener('click', () => {
+    handlers.onFossils(!(current?.fossils.on ?? false));
+  });
   humansButton.addEventListener('click', () => {
     handlers.onHumans(!(current?.humans.on ?? false));
   });
@@ -918,6 +937,33 @@ export function createDeepTimeBar(handlers: {
       platesButton.setAttribute('aria-pressed', String(view.plates));
       // People are a matter of the last few hundred thousand years: the ice-age scale's.
       humansButton.hidden = view.scale !== 'ice';
+      // Fossils are counted by 5 million years: a matter of the 540 Myr span.
+      fossilsButton.hidden = view.scale !== 'all';
+      fossilsButton.setAttribute('aria-pressed', String(view.fossils.on));
+      fossilsNote.hidden = !view.fossils.on;
+      if (view.fossils.on) {
+        fossilsNote.replaceChildren(
+          ...(view.fossils.at === null
+            ? ['Fossils: loading…']
+            : [
+                ...view.fossils.at.totals.flatMap((total) =>
+                  total.count > 0
+                    ? [
+                        element('span', {
+                          class: `fossil-key is-${total.id}`,
+                          'aria-hidden': 'true',
+                        }),
+                        ' ',
+                      ]
+                    : [],
+                ),
+                fossilsText(view.fossils.at),
+                ' Source: ',
+                element('a', { href: 'https://paleobiodb.org' }, 'the Paleobiology Database'),
+                ' (CC BY 4.0).',
+              ]),
+        );
+      }
       airButton.hidden = view.scale !== 'ice';
       airButton.setAttribute('aria-pressed', String(view.air.on));
       renderAir(view.air, view.oldest * 1000, view.ma * 1000);

@@ -90,6 +90,7 @@ import { PLANETS, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius } from './planetLook';
 import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
+import type { FossilCell } from '../data/fossils';
 import type { ArrivalGrid } from '../data/dispersal';
 import type { HumanSite } from '../data/humanClaims';
 import type { RockUnit } from '../data/rocks';
@@ -338,6 +339,8 @@ export interface Globe {
   setRocks(units: readonly RockUnit[] | null): void;
   /** Shade regions by their most widespread way of life, under any states; null hides them. */
   setWays(regions: readonly WayRegion[] | null): void;
+  /** Mark cells with fossils of the moment, by group and count; null hides them. */
+  setFossilCells(cells: readonly FossilCell[] | null): void;
   /** Mark dated finds of humans and their relatives in deep time; null hides them. */
   setHumanSites(sites: readonly HumanSite[] | null): void;
   /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
@@ -1260,6 +1263,12 @@ export async function createGlobe(
   container.append(genomeLayer);
   let genomeLabels: GlobeLabel[] = [];
   let genomeKey = '';
+  // Fossils of the moment, in deep time.
+  const fossilLayer = document.createElement('div');
+  fossilLayer.className = 'empire-labels fossil-cells';
+  container.append(fossilLayer);
+  let fossilLabels: GlobeLabel[] = [];
+  let fossilKey = '';
   // Deep time's overlay, on the states' map (never shown then): a dispersal model's settled
   // land, and the ice-sheet outlines over it.
   let deepOverlay: {
@@ -1674,6 +1683,7 @@ export async function createGlobe(
     for (const { element, position, width, height } of [
       ...humanLabels,
       ...genomeLabels,
+      ...fossilLabels,
       ...empireLabels,
     ]) {
       projected.copy(position).project(camera);
@@ -2245,6 +2255,37 @@ export async function createGlobe(
               }),
             );
       container.dataset['genomes'] = cells === null ? 'off' : String(cells.length);
+      needsRender = true;
+    },
+    setFossilCells(cells) {
+      const key =
+        cells === null
+          ? 'off'
+          : cells
+              .map(
+                (cell) =>
+                  `${cell.group}:${String(cell.latitude)},${String(cell.longitude)}:${String(cell.count)}`,
+              )
+              .join(' ');
+      if (key === fossilKey) return;
+      fossilKey = key;
+      fossilLayer.replaceChildren();
+      fossilLabels =
+        cells === null
+          ? []
+          : measured(
+              fossilLayer,
+              cells.map((cell) => {
+                const element = document.createElement('span');
+                element.className = `empire-label fossil-cell is-${cell.group}`;
+                element.textContent = String(cell.count);
+                const size = Math.round(Math.min(40, 16 + 3 * Math.sqrt(cell.count)));
+                element.style.width = `${String(size)}px`;
+                element.style.height = `${String(size)}px`;
+                return { element, point: cell };
+              }),
+            );
+      container.dataset['fossils'] = cells === null ? 'off' : String(cells.length);
       needsRender = true;
     },
     setHumanSites(sites) {

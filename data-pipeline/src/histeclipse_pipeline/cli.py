@@ -19,6 +19,7 @@ from histeclipse_pipeline.empires import (
     write_empires,
 )
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
+from histeclipse_pipeline.fossils import fetch_fossils
 from histeclipse_pipeline.iceoutlines import fetch_outlines
 from histeclipse_pipeline.icesheets import fetch_icesheets
 from histeclipse_pipeline.ics import fetch_chart
@@ -245,6 +246,12 @@ def rocks(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} map units to {args.out}")
 
 
+def fossils(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write fossil occurrences of four groups at their age's places (PBDB, CC BY 4.0)."""
+    count = fetch_fossils(args.out)
+    return _say(f"wrote {count} fossil occurrences to {args.out}")
+
+
 def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write ice-sheet thickness every 2,500 years over the last 80,000 (PaleoMIST 1.0)."""
     count = fetch_icesheets(args.out)
@@ -393,6 +400,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "rocks": (
         rocks,
         "write the rocks at the surface and their ages (Macrostrat, CC BY 4.0)",
+        "output JSON file",
+    ),
+    "fossils": (
+        fossils,
+        "write fossil occurrences of four groups at their age's places (PBDB, CC BY 4.0)",
         "output JSON file",
     ),
     "icesheets": (

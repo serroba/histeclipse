@@ -155,6 +155,7 @@ import {
   type AncientGenomes,
 } from './data/ancientGenomes';
 import { loadAtmosphere, type Atmosphere } from './data/atmosphere';
+import { fossilsAt, loadFossils, type Fossils } from './data/fossils';
 import { humansAt, loadHumanClaims, type HumanClaims } from './data/humanClaims';
 import { loadArrivalGrid } from './globe/arrivalGrid';
 import {
@@ -428,6 +429,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
         const layers = new Set(state.layers);
         if (on) layers.add('air');
         else layers.delete('air');
+        return { ...state, layers };
+      });
+    },
+    onFossils(on) {
+      store.set((state) => {
+        const layers = new Set(state.layers);
+        if (on) layers.add('fossils');
+        else layers.delete('fossils');
         return { ...state, layers };
       });
     },
@@ -1392,6 +1401,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setIceOutlines(null);
       globe.setHumanSites(null);
       globe.setSettled(null);
+      globe.setFossilCells(null);
       globe.setPlates(null);
       return;
     }
@@ -1420,6 +1430,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       iceOutlines: showIceOutlines(state, ma),
       plateMotion: plateMotionText(state, ma),
       humans: showHumans(state, ma),
+      fossils: showFossils(state, ma),
       air: showAir(state),
       seaIce: showSeaIce(state, ma),
       temperature: temperatureView(state, ma),
@@ -1583,6 +1594,37 @@ export async function startApp(root: HTMLElement): Promise<void> {
       );
     }
     return { on: true, atmosphere };
+  }
+
+  // Fossils: loaded the first time the layer is turned on.
+  let fossils: Fossils | null = null;
+  let fossilsLoading: Promise<Fossils> | null = null;
+
+  /** On the 540 Myr span with Fossils on, the finds of the moment where they lay then. */
+  function showFossils(state: ViewState, ma: number): DeepTimeView['fossils'] {
+    if (state.deepScale !== 'all' || !state.layers.has('fossils')) {
+      globe.setFossilCells(null);
+      return { on: false };
+    }
+    if (fossils === null) {
+      if (fossilsLoading === null) {
+        fossilsLoading = loadFossils(`${base}data/fossils.json`, fetchJson);
+        fossilsLoading.then(
+          (loaded) => {
+            fossils = loaded;
+            showDeepTime(store.get());
+          },
+          (error: unknown) => {
+            fossilsLoading = null;
+            notify(`Could not load the fossils: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return { on: true, at: null };
+    }
+    const at = fossilsAt(fossils, ma);
+    globe.setFossilCells(at.cells);
+    return { on: true, at };
   }
 
   // The curated human finds: loaded the first time the layer is turned on.
