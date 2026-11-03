@@ -7,26 +7,31 @@
  * Everything sits on spheres around the observer, drawn back to front without depth testing:
  * the sky's glow, then stars, constellation figures and the Sun, and the ground last, which
  * hides whatever is below the horizon.
+ *
+ * The view is stereographic, not a pinhole camera's (see `projection.ts`): every material
+ * projects its vertices with `skyProject`, and the camera only supplies the view matrix.
  */
 
 import {
   AdditiveBlending,
   BackSide,
+  DoubleSide,
   BufferAttribute,
   BufferGeometry,
   CanvasTexture,
+  Color,
   LineSegments,
   Mesh,
-  MeshBasicMaterial,
+  type Object3D,
   PerspectiveCamera,
+  PlaneGeometry,
   Points,
   Scene,
   ShaderMaterial,
   SphereGeometry,
-  Sprite,
-  SpriteMaterial,
   SRGBColorSpace,
   TextureLoader,
+  Vector2,
   Vector3,
   WebGLRenderer,
 } from 'three';
@@ -66,6 +71,16 @@ import {
   shownConstellations,
   zoomLook,
 } from './look';
+import {
+  CLIP_COS,
+  pixelsPerDegree,
+  project,
+  projectionFrame,
+  type ProjectionFrame,
+  SKY_PROJECTION,
+  SKY_UNPROJECTION,
+  toPixels,
+} from './projection';
 import { starColor } from './starColor';
 
 export interface SkyMoment {
@@ -137,8 +152,11 @@ const MOTION_STEP_DAYS = 365.25;
 const DRAG_SLOP_PIXELS = 3;
 /** A press that moves less than this (pixels) in all is a tap, not a drag. */
 const TAP_SLOP_PIXELS = 6;
+/** Each figure line is drawn in this many pieces, so it can follow its curve on screen. */
+const LINE_PIECES = 8;
 
 const STAR_VERTEX = /* glsl */ `
+  ${SKY_PROJECTION}
   attribute float magnitude;
   attribute vec3 color;
   uniform float limit;
@@ -158,7 +176,7 @@ const STAR_VERTEX = /* glsl */ `
     vAlpha = altitude < -0.5 ? 0.0 : clamp(margin / 1.5, 0.0, 1.0);
     gl_PointSize = vAlpha > 0.0 ? clamp(1.5 + 1.2 * margin, 1.5, 9.0) * pixelRatio * zoom : 0.0;
     vColor = color;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    gl_Position = skyProject((modelViewMatrix * vec4(position, 1.0)).xyz);
   }
 `;
 
@@ -174,10 +192,11 @@ const STAR_FRAGMENT = /* glsl */ `
 `;
 
 const LINE_VERTEX = /* glsl */ `
+  ${SKY_PROJECTION}
   varying float vAltitude;
   void main() {
     vAltitude = normalize(position).y;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    gl_Position = skyProject((modelViewMatrix * vec4(position, 1.0)).xyz);
   }
 `;
 
@@ -190,11 +209,59 @@ const LINE_FRAGMENT = /* glsl */ `
   }
 `;
 
+// The dome and the ground are spheres around the observer that only need to cover the
+// screen: each fragment works out its own direction from where it is on screen, so the
+// horizon is exact however coarse the mesh.
 const DOME_VERTEX = /* glsl */ `
-  varying vec3 vDirection;
+  ${SKY_PROJECTION}
   void main() {
-    vDirection = normalize(position);
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    gl_Position = skyProject((modelViewMatrix * vec4(position, 1.0)).xyz);
+  }
+`;
+
+// The direction under this fragment, in the scene's axes (the dome and ground sit at the
+// origin unturned, so undoing the view's rotation is enough).
+const FRAGMENT_DIRECTION = /* glsl */ `
+  ${SKY_UNPROJECTION}
+  vec3 fragmentDirection() {
+    return normalize(transpose(mat3(viewMatrix)) * skyViewDirection());
+  }
+`;
+
+// A disc that faces the viewer, the Sun's glow or the corona: \`extent\` is its full angular
+// width in radians.
+const GLOW_VERTEX = /* glsl */ `
+  ${SKY_PROJECTION}
+  uniform float extent;
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    vec3 centre = (modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    gl_Position = skyProjectSprite(centre, position.xy * extent);
+  }
+`;
+
+const GLOW_FRAGMENT = /* glsl */ `
+  uniform sampler2D map;
+  uniform float opacity;
+  varying vec2 vUv;
+  void main() {
+    vec4 texel = texture2D(map, vUv);
+    gl_FragColor = linearToOutputTexel(vec4(texel.rgb, texel.a * opacity));
+  }
+`;
+
+const SUN_VERTEX = /* glsl */ `
+  ${SKY_PROJECTION}
+  void main() {
+    gl_Position = skyProject((modelViewMatrix * vec4(position, 1.0)).xyz);
+  }
+`;
+
+const SUN_FRAGMENT = /* glsl */ `
+  uniform vec3 color;
+  void main() {
+    gl_FragColor = linearToOutputTexel(vec4(color, 1.0));
   }
 `;
 
@@ -203,10 +270,10 @@ const SKY_FRAGMENT = /* glsl */ `
   uniform vec3 sunDirection;
   uniform float sunAltitude;
   uniform float sunlight;
-  varying vec3 vDirection;
+  ${FRAGMENT_DIRECTION}
 
   void main() {
-    vec3 direction = normalize(vDirection);
+    vec3 direction = fragmentDirection();
     // An eclipse dims the day: little until most of the Sun is covered, then fast.
     float day = smoothstep(-18.0, 8.0, sunAltitude) * pow(sunlight, 0.4);
     vec3 night = vec3(0.006, 0.009, 0.02);
@@ -228,20 +295,23 @@ const SKY_FRAGMENT = /* glsl */ `
 const GROUND_FRAGMENT = /* glsl */ `
   uniform float sunAltitude;
   uniform float sunlight;
-  varying vec3 vDirection;
+  ${FRAGMENT_DIRECTION}
 
   void main() {
-    vec3 direction = normalize(vDirection);
-    if (direction.y > 0.0) discard;
+    vec3 direction = fragmentDirection();
+    // The horizon is a curve on screen: soften it over a pixel rather than leave stairs.
+    float edge = clamp(0.5 - direction.y / max(fwidth(direction.y), 1e-6), 0.0, 1.0);
+    if (edge <= 0.0) discard;
     float day = smoothstep(-12.0, 8.0, sunAltitude) * pow(sunlight, 0.4);
     vec3 color = mix(vec3(0.008, 0.009, 0.011), vec3(0.17, 0.15, 0.11), day);
     // A little haze along the horizon line, so the edge reads as distance.
-    color += vec3(0.04, 0.05, 0.07) * (0.3 + day) * exp(direction.y * 60.0);
-    gl_FragColor = vec4(color, 1.0);
+    color += vec3(0.04, 0.05, 0.07) * (0.3 + day) * exp(min(direction.y, 0.0) * 60.0);
+    gl_FragColor = vec4(color, edge);
   }
 `;
 
 const MOON_VERTEX = /* glsl */ `
+  ${SKY_PROJECTION}
   varying vec2 vUv;
   varying vec3 vNormal;
   varying vec3 vWorld;
@@ -250,7 +320,7 @@ const MOON_VERTEX = /* glsl */ `
     vNormal = normalize(mat3(modelMatrix) * normal);
     vec4 world = modelMatrix * vec4(position, 1.0);
     vWorld = world.xyz;
-    gl_Position = projectionMatrix * viewMatrix * world;
+    gl_Position = skyProject((viewMatrix * world).xyz);
   }
 `;
 
@@ -318,7 +388,16 @@ export function createSkyScene(
   container.append(labelLayer);
 
   const scene = new Scene();
+  // Only its position and turn are used: the projection is the shaders' (see projection.ts).
   const camera = new PerspectiveCamera(60, 1, 0.1, 1000);
+  let view: ProjectionFrame = projectionFrame(90, 1, 1);
+  // Shared by every material in the sky: one update moves them all.
+  const projection = {
+    skyScale: { value: new Vector2(1, 1) },
+    skyShift: { value: new Vector2(0, 0) },
+    skyClip: { value: CLIP_COS },
+    skyViewport: { value: new Vector2(1, 1) },
+  };
 
   const sunDirection = { value: new Vector3(0, -1, 0) };
   const sunAltitude = { value: -90 };
@@ -326,7 +405,7 @@ export function createSkyScene(
   const dome = new Mesh(
     new SphereGeometry(500, 64, 32),
     new ShaderMaterial({
-      uniforms: { sunDirection, sunAltitude, sunlight },
+      uniforms: { ...projection, sunDirection, sunAltitude, sunlight },
       vertexShader: DOME_VERTEX,
       fragmentShader: SKY_FRAGMENT,
       side: BackSide,
@@ -351,6 +430,7 @@ export function createSkyScene(
   starGeometry.setAttribute('color', new BufferAttribute(starColors, 3));
   starGeometry.setAttribute('magnitude', new BufferAttribute(magnitudes, 1));
   const starUniforms = {
+    ...projection,
     limit: { value: 6.5 },
     pixelRatio: { value: renderer.getPixelRatio() },
     zoom: { value: 1 },
@@ -375,7 +455,7 @@ export function createSkyScene(
   const lines = new LineSegments(
     lineGeometry,
     new ShaderMaterial({
-      uniforms: { opacity: lineOpacity },
+      uniforms: { ...projection, opacity: lineOpacity },
       vertexShader: LINE_VERTEX,
       fragmentShader: LINE_FRAGMENT,
       transparent: true,
@@ -389,39 +469,44 @@ export function createSkyScene(
   const sunRadius = SUN_DISTANCE * Math.tan(SUN_ANGULAR_RADIUS);
   const sun = new Mesh(
     new SphereGeometry(sunRadius, 32, 16),
-    new MeshBasicMaterial({ color: 0xfff6e0, depthTest: false, depthWrite: false }),
+    new ShaderMaterial({
+      uniforms: { ...projection, color: { value: new Color(0xfff6e0) } },
+      vertexShader: SUN_VERTEX,
+      fragmentShader: SUN_FRAGMENT,
+      depthTest: false,
+      depthWrite: false,
+    }),
   );
   sun.renderOrder = 3;
-  const sunGlow = new Sprite(
-    new SpriteMaterial({
-      map: glowTexture(),
-      blending: AdditiveBlending,
-      depthTest: false,
-      depthWrite: false,
-      transparent: true,
-    }),
-  );
-  sunGlow.scale.setScalar(sunRadius * 14);
+  const sunGlowOpacity = { value: 1 };
+  const sunGlow = glowDisc(glowTexture(), (sunRadius * 14) / SUN_DISTANCE, sunGlowOpacity);
   sunGlow.renderOrder = 3;
   // The corona: only seen when the Moon hides the whole bright disc.
-  const corona = new Sprite(
-    new SpriteMaterial({
-      map: coronaTexture(),
-      blending: AdditiveBlending,
-      depthTest: false,
-      depthWrite: false,
-      transparent: true,
-    }),
-  );
-  corona.scale.setScalar(sunRadius * 9);
+  const corona = glowDisc(coronaTexture(), (sunRadius * 9) / SUN_DISTANCE, { value: 1 });
   corona.renderOrder = 3;
   corona.visible = false;
+  function glowDisc(map: CanvasTexture, extent: number, opacity: { value: number }): Mesh {
+    return new Mesh(
+      new PlaneGeometry(1, 1),
+      new ShaderMaterial({
+        uniforms: { ...projection, map: { value: map }, extent: { value: extent }, opacity },
+        vertexShader: GLOW_VERTEX,
+        fragmentShader: GLOW_FRAGMENT,
+        blending: AdditiveBlending,
+        depthTest: false,
+        depthWrite: false,
+        transparent: true,
+        side: DoubleSide,
+      }),
+    );
+  }
 
   const moonTexture = new TextureLoader().load(options.moonTextureUrl, () => {
     needsRender = true;
   });
   moonTexture.colorSpace = SRGBColorSpace;
   const moonUniforms = {
+    ...projection,
     map: { value: moonTexture },
     sunDirection,
     moonCentre: { value: new Vector3() },
@@ -455,7 +540,7 @@ export function createSkyScene(
   const ground = new Mesh(
     new SphereGeometry(50, 64, 32),
     new ShaderMaterial({
-      uniforms: { sunAltitude, sunlight },
+      uniforms: { ...projection, sunAltitude, sunlight },
       vertexShader: DOME_VERTEX,
       fragmentShader: GROUND_FRAGMENT,
       side: BackSide,
@@ -494,7 +579,20 @@ export function createSkyScene(
   );
   planetPoints.frustumCulled = false;
   planetPoints.renderOrder = 2.5;
-  scene.add(dome, stars, lines, planetPoints, sun, sunGlow, corona, moon, ground);
+  const everything: Object3D[] = [
+    dome,
+    stars,
+    lines,
+    planetPoints,
+    sun,
+    sunGlow,
+    corona,
+    moon,
+    ground,
+  ];
+  // The camera's frustum is a pinhole's and does not match what the shaders put on screen.
+  for (const object of everything) object.frustumCulled = false;
+  scene.add(...everything);
 
   // Labels: the compass along the horizon, and the names of the figures drawn.
   const planetLabels = PLANET_NAMES.map((name) => ({
@@ -581,7 +679,7 @@ export function createSkyScene(
     segments = figureSegments(shown);
     lineGeometry.setAttribute(
       'position',
-      new BufferAttribute(new Float32Array(segments.length * 6), 3),
+      new BufferAttribute(new Float32Array(segments.length * LINE_PIECES * 6), 3),
     );
     placeFigures();
   }
@@ -590,14 +688,21 @@ export function createSkyScene(
     const attribute = lineGeometry.getAttribute('position');
     if (!(attribute instanceof BufferAttribute)) return;
     const target = attribute.array;
+    // Straight lines between stars curve on a stereographic view, so each is drawn in pieces
+    // along its chord; the shader puts every point back on the sphere.
     segments.forEach(([from, to], index) => {
-      for (const [offset, star] of [
-        [0, from],
-        [3, to],
-      ] as const) {
-        target[index * 6 + offset] = starPositions[star * 3] ?? 0;
-        target[index * 6 + offset + 1] = starPositions[star * 3 + 1] ?? 0;
-        target[index * 6 + offset + 2] = starPositions[star * 3 + 2] ?? 0;
+      for (let piece = 0; piece < LINE_PIECES; piece++) {
+        const base = (index * LINE_PIECES + piece) * 6;
+        for (const [offset, t] of [
+          [0, piece / LINE_PIECES],
+          [3, (piece + 1) / LINE_PIECES],
+        ] as const) {
+          for (let axis = 0; axis < 3; axis++) {
+            const a = starPositions[from * 3 + axis] ?? 0;
+            const b = starPositions[to * 3 + axis] ?? 0;
+            target[base + offset + axis] = a + (b - a) * t;
+          }
+        }
       }
     });
     attribute.needsUpdate = true;
@@ -623,6 +728,8 @@ export function createSkyScene(
     const [x, y, z] = toScene(lookDirection({ ...look, altitude: Math.min(look.altitude, 89.9) }));
     camera.up.set(0, 1, 0);
     camera.lookAt(x, y, z);
+    // Labels are placed from the view matrix, so keep it current between renders.
+    camera.updateMatrixWorld();
     resize();
     starUniforms.zoom.value = Math.min(2, Math.max(1, Math.sqrt(60 / look.fov)));
     container.dataset['look'] =
@@ -633,28 +740,21 @@ export function createSkyScene(
   function resize(): void {
     const { clientWidth, clientHeight } = container;
     renderer.setSize(clientWidth, clientHeight, false);
-    camera.aspect = clientWidth / Math.max(clientHeight, 1);
-    // The field of view is on the narrower side, as on the globe.
-    const half = (look.fov / 2) * (Math.PI / 180);
-    camera.fov =
-      camera.aspect >= 1
-        ? look.fov
-        : (2 * Math.atan(Math.tan(half) / camera.aspect) * 180) / Math.PI;
-    // Shift the picture so what we look at sits in the middle of the space the panels leave.
-    const height = Math.max(clientHeight, 1);
-    camera.setViewOffset(
-      clientWidth,
-      height,
-      0,
-      -(insets.top - insets.bottom) / 2,
-      clientWidth,
-      height,
-    );
-    camera.updateProjectionMatrix();
+    // The field of view is on the narrower side, as on the globe, and what we look at sits in
+    // the middle of the space the panels leave.
+    view = projectionFrame(look.fov, clientWidth, clientHeight, insets.top, insets.bottom);
+    projection.skyScale.value.set(view.scaleX, view.scaleY);
+    projection.skyShift.value.set(0, view.shiftY);
+    renderer.getDrawingBufferSize(projection.skyViewport.value);
     needsRender = true;
   }
 
-  const projected = new Vector3();
+  const inView = new Vector3();
+  /** Where a scene position lands on screen, in NDC, as the shaders put it; null if behind. */
+  function screenPoint(position: Vector3): readonly [number, number] | null {
+    inView.copy(position).applyMatrix4(camera.matrixWorldInverse);
+    return project(view, [inView.x, inView.y, inView.z]);
+  }
   function placeLabel(
     label: HTMLElement,
     position: Vector3,
@@ -662,13 +762,11 @@ export function createSkyScene(
     width: number,
     height: number,
   ): void {
-    projected.copy(position).project(camera);
-    const onScreen =
-      show && projected.z < 1 && Math.abs(projected.x) < 1.1 && Math.abs(projected.y) < 1.1;
+    const ndc = show ? screenPoint(position) : null;
+    const onScreen = ndc !== null && Math.abs(ndc[0]) < 1.1 && Math.abs(ndc[1]) < 1.1;
     label.hidden = !onScreen;
     if (!onScreen) return;
-    const x = ((projected.x + 1) / 2) * width;
-    const y = ((1 - projected.y) / 2) * height;
+    const [x, y] = toPixels(ndc, width, height);
     label.style.transform = `translate(${String(x)}px, ${String(y)}px)`;
   }
 
@@ -689,9 +787,9 @@ export function createSkyScene(
     const named: { label: HTMLElement; x: number; y: number; names: string[] }[] = [];
     for (const { name, label, position } of planetLabels) {
       if (label.hidden !== false) continue;
-      projected.copy(position).project(camera);
-      const x = ((projected.x + 1) / 2) * width;
-      const y = ((1 - projected.y) / 2) * height;
+      const ndc = screenPoint(position);
+      if (ndc === null) continue;
+      const [x, y] = toPixels(ndc, width, height);
       const near = named.find((other) => Math.hypot(other.x - x, other.y - y) < 24);
       if (near === undefined) {
         named.push({ label, x, y, names: [name] });
@@ -857,7 +955,9 @@ export function createSkyScene(
     const dy = current.y - last.y;
     if (Math.hypot(dx, dy) < DRAG_SLOP_PIXELS) return;
     pointers.set(event.pointerId, current);
-    setLookFromInput(dragLook(look, dx, dy, container.clientHeight));
+    // The sky follows the pointer at the centre's scale: dragLook turns by fov per `height`.
+    const perDegree = pixelsPerDegree(view, container.clientWidth);
+    setLookFromInput(dragLook(look, dx, dy, look.fov * perDegree));
   });
   const release = (event: PointerEvent): void => {
     pointers.delete(event.pointerId);
@@ -940,7 +1040,7 @@ export function createSkyScene(
       sunGlow.position.copy(sun.position);
       sun.visible = sunHigh > -1;
       sunGlow.visible = sun.visible && sunShare > 0;
-      sunGlow.material.opacity = Math.min(1, sunShare * 4);
+      sunGlowOpacity.value = Math.min(1, sunShare * 4);
       sunlight.value = sunShare;
       corona.position.copy(sun.position);
       corona.visible = sun.visible && sunShare < 0.002;
