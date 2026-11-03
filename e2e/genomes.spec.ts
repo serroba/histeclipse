@@ -34,3 +34,25 @@ test('ancient genomes are counted by region around the year shown, with the sour
   });
   expect(problems).toEqual([]);
 });
+
+test('a region of genomes opens its card: labels, papers and the source', async ({ page }) => {
+  const problems = collectProblems(page);
+  const card = page.getByTestId('marker-card');
+  await test.step('Given 2500 BCE in Europe, with Ancient genomes on', async () => {
+    await page.goto('./?t=-2499-06-01T12:00&cam=48,15,3&layers=genomes');
+    await globeRendered(page);
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-genomes', /^[1-9]\d*$/);
+  });
+  await test.step('When they tap the region with the most genomes', async () => {
+    await page.locator('.genome-cell:visible').first().click();
+  });
+  await test.step('Then its card lists the lab’s labels and the papers, with the source', async () => {
+    await expect(card).toBeVisible();
+    await expect(card.getByRole('heading', { name: /^Ancient genomes, \d+°[NS]/ })).toBeVisible();
+    await expect(card).toContainText('Lab labels');
+    await expect(card).toContainText('Published in');
+    await expect(card).toContainText('not how many people lived');
+    await expect(card.getByRole('link', { name: 'Allen Ancient DNA Resource' })).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});

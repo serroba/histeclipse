@@ -159,6 +159,7 @@ import { loadWaysOfLife, waysAt, waysNote, type WaysOfLife } from './data/waysOf
 import {
   genomesNear,
   genomesNote,
+  genomeCellCard,
   loadAncientGenomes,
   type AncientGenomes,
 } from './data/ancientGenomes';
@@ -1800,6 +1801,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     if (kind === 'human' && id !== undefined) {
       showHumanCard(id);
+      return;
+    }
+    if (kind === 'genome' && ancientGenomes !== null) {
+      const card = genomeCellCard(ancientGenomes, Number(id), store.get().time.date.year);
+      if (card !== null) markerCard.show(card);
       return;
     }
     const impact = impacts?.impacts.find((each) => String(each.id) === id);

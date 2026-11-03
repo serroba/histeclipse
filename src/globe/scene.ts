@@ -1290,7 +1290,7 @@ export async function createGlobe(
   let volcanoLabels: GlobeLabel[] = [];
   let volcanoKey = '';
   const markerPickListeners = new Set<(key: string) => void>();
-  for (const layer of [impactLayer, volcanoLayer, humanLabelLayer]) {
+  for (const layer of [impactLayer, volcanoLayer, humanLabelLayer, genomeLayer]) {
     layer.addEventListener('click', (event) => {
       const marker = event.target instanceof Element ? event.target.closest('[data-pick]') : null;
       const key = marker?.getAttribute('data-pick');
@@ -2274,9 +2274,11 @@ export async function createGlobe(
           : measured(
               genomeLayer,
               cells.map((cell) => {
-                const element = document.createElement('span');
+                const element = document.createElement('button');
+                element.type = 'button';
                 element.className = 'empire-label genome-cell';
                 element.textContent = String(cell.count);
+                element.dataset['pick'] = `genome:${String(cell.cell)}`;
                 // Bigger for more genomes, gently: a square root, from 18 to 44 pixels.
                 const size = Math.round(Math.min(44, 18 + 4 * Math.sqrt(cell.count)));
                 element.style.width = `${String(size)}px`;
