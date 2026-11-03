@@ -33,3 +33,36 @@ test('the Fossils layer marks finds of the moment on the land of their time', as
   });
   expect(problems).toEqual([]);
 });
+
+// A one-pixel image, for Wikimedia's pictures: the suite does not reach out to Wikimedia.
+const PIXEL = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII=',
+  'base64',
+);
+
+test('a cell of fossils opens its card: its genera, linked to the PBDB', async ({ page }) => {
+  const problems = collectProblems(page);
+  const card = page.getByTestId('marker-card');
+  await page.route(/^https:\/\/(upload|thumb)\.wikimedia\.org\//, (route) =>
+    route.fulfill({ contentType: 'image/png', body: PIXEL }),
+  );
+  await test.step('Given the late Cretaceous with Fossils on', async () => {
+    await page.goto('./?ma=68&layers=fossils');
+    await globeRendered(page);
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-fossils', /^[1-9]\d*$/);
+  });
+  await test.step('When they tap the cell with the most finds', async () => {
+    await page.locator('.fossil-cell:visible').first().click();
+  });
+  await test.step('Then its card names the genera found most, each linked to the PBDB', async () => {
+    await expect(card).toBeVisible();
+    await expect(card.getByRole('heading')).toContainText('70–65 million years ago');
+    await expect(card).toContainText('Found most');
+    await expect(card.getByRole('link', { name: / in the PBDB$/ }).first()).toHaveAttribute(
+      'href',
+      /^https:\/\/paleobiodb\.org\/classic\/checkTaxonInfo\?taxon_name=/,
+    );
+    await expect(card).toContainText('not how many animals lived');
+  });
+  expect(problems).toEqual([]);
+});

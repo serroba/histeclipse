@@ -318,6 +318,12 @@ body {
 
 /* Fossils: a circle per cell, by group (fixed colours, with a key in the note). */
 .empire-label.fossil-cell {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: center;

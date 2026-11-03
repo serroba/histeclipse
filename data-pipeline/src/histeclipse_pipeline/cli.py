@@ -94,8 +94,10 @@ class Arguments(argparse.Namespace):
     out: Path = Path()
     count: int = SUN_VECTOR_COUNT
     seed: int | None = None
-    # The data file whose "wikipedia" titles the pictures command looks up.
+    # The data file whose "wikipedia" titles the pictures command looks up, and a word their
+    # pages' descriptions must have (such as "genus"), if any.
     source: Path = Path()
+    must_mention: str | None = None
 
 
 def year_start_jd(year: int) -> float:
@@ -278,7 +280,7 @@ def volcanoes(args: Arguments) -> int:  # pragma: no cover - needs network acces
 
 def pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the lead picture, author and licence of each Wikipedia page a data file names."""
-    count = fetch_pictures(args.source, args.out)
+    count = fetch_pictures(args.source, args.out, args.must_mention)
     return _say(f"wrote {count} pictures to {args.out}")
 
 
@@ -536,6 +538,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         if name == "pictures":
             _ = command.add_argument(
                 "--source", type=Path, required=True, help="data file naming Wikipedia titles"
+            )
+            _ = command.add_argument(
+                "--must-mention",
+                default=None,
+                help="a word each page's description must have; pages without it are skipped",
             )
         if name in {"sun-vectors", "moon-vectors", "planet-vectors", "planet-apparent-vectors"}:
             _ = command.add_argument("--count", type=int, default=SUN_VECTOR_COUNT)

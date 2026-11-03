@@ -164,7 +164,7 @@ import {
   type AncientGenomes,
 } from './data/ancientGenomes';
 import { loadAtmosphere, type Atmosphere } from './data/atmosphere';
-import { fossilsAt, loadFossils, type Fossils } from './data/fossils';
+import { fossilCard, fossilsAt, loadFossils, type Fossils } from './data/fossils';
 import { impactDetails, impactsAt, impactsText, loadImpacts, type Impacts } from './data/impacts';
 import {
   eruptionsNear,
@@ -1761,6 +1761,45 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
   }
 
+  // The genera's pictures: loaded the first time a fossil cell's card opens.
+  let fossilPictures: Pictures | null = null;
+  let fossilPicturesLoading: Promise<Pictures> | null = null;
+  let fossilShown: string | null = null;
+
+  function fossilCardFor(
+    key: string,
+    pictures: Pictures | null,
+  ): ReturnType<typeof fossilCard> | null {
+    const { ma } = store.get();
+    if (fossils === null || ma === null) return null;
+    const at = fossilsAt(fossils, ma);
+    const cell = at.cells.find(
+      (each) => `fossil:${each.group}:${String(each.latitude)}:${String(each.longitude)}` === key,
+    );
+    return cell === undefined ? null : fossilCard(fossils, cell, at, pictures);
+  }
+
+  function showFossilCard(key: string): void {
+    const card = fossilCardFor(key, fossilPictures);
+    if (card === null) return;
+    fossilShown = key;
+    markerCard.show(card);
+    if (fossilPictures !== null || fossilPicturesLoading !== null) return;
+    fossilPicturesLoading = loadPictures(`${base}data/fossil-pictures.json`, fetchJson);
+    fossilPicturesLoading.then(
+      (loaded) => {
+        fossilPictures = loaded;
+        // Its picture, if its card is still the one open.
+        const again = fossilShown === null ? null : fossilCardFor(fossilShown, loaded);
+        if (markerCard.dialog.open && again !== null) markerCard.show(again);
+      },
+      (error: unknown) => {
+        fossilPicturesLoading = null;
+        notify(`Could not load the fossils’ pictures: ${errorMessage(error)}`);
+      },
+    );
+  }
+
   // The finds' pictures: loaded the first time a find's card opens.
   let humanPictures: Pictures | null = null;
   let humanPicturesLoading: Promise<Pictures> | null = null;
@@ -1795,12 +1834,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const [kind, id] = key.split(':');
     volcanoShown = null;
     humanShown = null;
+    fossilShown = null;
     if (kind === 'volcano' && id !== undefined) {
       showVolcanoCard(id);
       return;
     }
     if (kind === 'human' && id !== undefined) {
       showHumanCard(id);
+      return;
+    }
+    if (kind === 'fossil') {
+      showFossilCard(key);
       return;
     }
     if (kind === 'genome' && ancientGenomes !== null) {

@@ -1290,7 +1290,7 @@ export async function createGlobe(
   let volcanoLabels: GlobeLabel[] = [];
   let volcanoKey = '';
   const markerPickListeners = new Set<(key: string) => void>();
-  for (const layer of [impactLayer, volcanoLayer, humanLabelLayer, genomeLayer]) {
+  for (const layer of [impactLayer, volcanoLayer, humanLabelLayer, genomeLayer, fossilLayer]) {
     layer.addEventListener('click', (event) => {
       const marker = event.target instanceof Element ? event.target.closest('[data-pick]') : null;
       const key = marker?.getAttribute('data-pick');
@@ -2309,9 +2309,12 @@ export async function createGlobe(
           : measured(
               fossilLayer,
               cells.map((cell) => {
-                const element = document.createElement('span');
+                const element = document.createElement('button');
+                element.type = 'button';
                 element.className = `empire-label fossil-cell is-${cell.group}`;
                 element.textContent = String(cell.count);
+                element.dataset['pick'] =
+                  `fossil:${cell.group}:${String(cell.latitude)}:${String(cell.longitude)}`;
                 const size = Math.round(Math.min(40, 16 + 3 * Math.sqrt(cell.count)));
                 element.style.width = `${String(size)}px`;
                 element.style.height = `${String(size)}px`;
