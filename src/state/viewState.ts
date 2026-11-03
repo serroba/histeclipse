@@ -55,6 +55,8 @@ export const LAYERS = [
   'plates',
   // Deep time: dated finds of our species and its relatives.
   'humans',
+  // Deep time: carbon dioxide and methane from the ice cores.
+  'air',
 ] as const;
 export type Layer = (typeof LAYERS)[number];
 
@@ -63,7 +65,7 @@ export const DISPERSAL_SCENARIOS = ['off', 'a', 'b'] as const;
 export type DispersalScenario = (typeof DISPERSAL_SCENARIOS)[number];
 
 /** Layers that belong to deep time, dropped on leaving it. */
-export const DEEP_LAYERS: readonly Layer[] = ['temperature', 'sealevel', 'plates', 'humans'];
+export const DEEP_LAYERS: readonly Layer[] = ['temperature', 'sealevel', 'plates', 'humans', 'air'];
 
 /**
  * How the camera is placed: orbiting Earth freely, or attached to the bodies (standing on Earth

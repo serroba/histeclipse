@@ -8,6 +8,7 @@ import { MAP_KEY, MILESTONE_KEY } from '../deepTime/colourKey';
 import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period, periodShort } from '../deepTime/periods';
+import { gasText, type Atmosphere } from '../data/atmosphere';
 import type { ClaimLine, HumansView } from '../data/humanClaims';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { IceStandIn } from '../data/iceSheets';
@@ -33,6 +34,7 @@ import {
 import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import { DISPERSAL_SCENARIOS, type DeepScale, type DispersalScenario } from '../state/viewState';
 import { element } from './dom';
+import { createGasChart } from './gasChart';
 import { createMilestonePanel } from './milestonePanel';
 import { createPeriodBands } from './periodBands';
 import { createSeaLevelChart } from './seaLevelChart';
@@ -225,6 +227,9 @@ export interface DeepTimeView {
   readonly temperature: TemperatureView;
   /** Whether a second reconstruction's continents are outlined, and what to say of them. */
   readonly plates: boolean;
+  /** The ice-core gases: off, on while they load (null), or on with them. */
+  readonly air:
+    { readonly on: false } | { readonly on: true; readonly atmosphere: Atmosphere | null };
   /** Dated finds of humans: off, on while the claims load (null), or on with what to say. */
   readonly humans:
     | { readonly on: false }
@@ -274,6 +279,7 @@ export function createDeepTimeBar(handlers: {
   onSeaLevel(on: boolean): void;
   onPlates(on: boolean): void;
   onHumans(on: boolean): void;
+  onAir(on: boolean): void;
   onDispersal(scenario: DispersalScenario): void;
   onScale(scale: DeepScale): void;
   onCoast(coast: CoastSource): void;
@@ -442,6 +448,17 @@ export function createDeepTimeBar(handlers: {
     ' ',
     platesWords,
   );
+  const airButton = element(
+    'button',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
+    'Air',
+  );
+  const airNote = element('div', {
+    class: 'deep-note air-note',
+    hidden: '',
+    'data-testid': 'air-note',
+  });
+  const gasCharts = { co2: createGasChart(), ch4: createGasChart() };
   const humansButton = element(
     'button',
     { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
@@ -584,6 +601,7 @@ export function createDeepTimeBar(handlers: {
     legend,
     platesNote,
     humansNote,
+    airNote,
     milestones.root,
     // One open at a time (they share a name), so the bar doesn't grow over the globe.
     element('div', { class: 'deep-folds' }, colourKey, sketchSources, factsPanel),
@@ -609,6 +627,7 @@ export function createDeepTimeBar(handlers: {
       temperatureButton,
       platesButton,
       humansButton,
+      airButton,
     ),
     details,
   );
@@ -683,6 +702,31 @@ export function createDeepTimeBar(handlers: {
     }
     if (model.share === null || model.name === null) return 'Loading the model…';
     return `Shaded: where Timmermann & Friedrich’s (2016) model, ${model.name}, has people settled by then: ${String(Math.round(model.share * 100))}% of the land it ever reaches. One model’s view, not evidence; its data is CC BY-NC 4.0 (non-commercial).`;
+  }
+
+  function renderAir(air: DeepTimeView['air'], oldestKa: number, ka: number): void {
+    airNote.hidden = !air.on;
+    if (!air.on) return;
+    if (air.atmosphere === null) {
+      airNote.replaceChildren(element('p', {}, 'Air: loading…'));
+      return;
+    }
+    airNote.replaceChildren(
+      ...air.atmosphere.gases.flatMap((gas) => {
+        const chart = gasCharts[gas.id];
+        chart.render(gas, oldestKa, ka);
+        return [
+          element(
+            'p',
+            { 'data-testid': `gas-${gas.id}` },
+            `${gasText(gas, ka)} `,
+            element('a', { href: `https://doi.org/${gas.doi}` }, gas.credit),
+          ),
+          chart.root,
+        ];
+      }),
+      element('p', {}, 'Dashed: the 1750 level. From air trapped in Antarctic ice.'),
+    );
   }
 
   function claimLine(line: ClaimLine): HTMLElement {
@@ -770,6 +814,9 @@ export function createDeepTimeBar(handlers: {
   });
   play.addEventListener('click', () => {
     handlers.onPlay(!(current?.playing ?? false));
+  });
+  airButton.addEventListener('click', () => {
+    handlers.onAir(!(current?.air.on ?? false));
   });
   humansButton.addEventListener('click', () => {
     handlers.onHumans(!(current?.humans.on ?? false));
@@ -865,6 +912,9 @@ export function createDeepTimeBar(handlers: {
       platesButton.setAttribute('aria-pressed', String(view.plates));
       // People are a matter of the last few hundred thousand years: the ice-age scale's.
       humansButton.hidden = view.scale !== 'ice';
+      airButton.hidden = view.scale !== 'ice';
+      airButton.setAttribute('aria-pressed', String(view.air.on));
+      renderAir(view.air, view.oldest * 1000, view.ma * 1000);
       humansButton.setAttribute('aria-pressed', String(view.humans.on));
       renderHumans(view.humans);
       platesNote.hidden = !view.plates;

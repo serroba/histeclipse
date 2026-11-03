@@ -151,6 +151,7 @@ import {
   loadAncientGenomes,
   type AncientGenomes,
 } from './data/ancientGenomes';
+import { loadAtmosphere, type Atmosphere } from './data/atmosphere';
 import { humansAt, loadHumanClaims, type HumanClaims } from './data/humanClaims';
 import { loadArrivalGrid } from './globe/arrivalGrid';
 import {
@@ -400,6 +401,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     onDispersal(dispersal) {
       store.set((state) => ({ ...state, dispersal }));
+    },
+    onAir(on) {
+      store.set((state) => {
+        const layers = new Set(state.layers);
+        if (on) layers.add('air');
+        else layers.delete('air');
+        return { ...state, layers };
+      });
     },
     onHumans(on) {
       store.set((state) => {
@@ -1387,6 +1396,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ice: showIce(state, ma),
       iceOutlines: showIceOutlines(state, ma),
       humans: showHumans(state, ma),
+      air: showAir(state),
       seaIce: showSeaIce(state, ma),
       temperature: temperatureView(state, ma),
       seaLevel: seaLevelView(state),
@@ -1527,6 +1537,28 @@ export async function startApp(root: HTMLElement): Promise<void> {
       turnOlder: older.turn ?? 0,
     });
     return { plates: true, platesText: plateText(mix < 0.5 ? younger : older) };
+  }
+
+  // The ice-core gases: loaded the first time the layer is turned on.
+  let atmosphere: Atmosphere | null = null;
+  let atmosphereLoading: Promise<Atmosphere> | null = null;
+
+  function showAir(state: ViewState): DeepTimeView['air'] {
+    if (state.deepScale !== 'ice' || !state.layers.has('air')) return { on: false };
+    if (atmosphere === null && atmosphereLoading === null) {
+      atmosphereLoading = loadAtmosphere(`${base}data/atmosphere.json`, fetchJson);
+      atmosphereLoading.then(
+        (loaded) => {
+          atmosphere = loaded;
+          showDeepTime(store.get());
+        },
+        (error: unknown) => {
+          atmosphereLoading = null;
+          notify(`Could not load the ice-core gases: ${errorMessage(error)}`);
+        },
+      );
+    }
+    return { on: true, atmosphere };
   }
 
   // The curated human finds: loaded the first time the layer is turned on.
