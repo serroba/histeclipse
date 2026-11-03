@@ -36,6 +36,8 @@ TOLERANCE = 0.1
 ROUNDING = 100
 #: Rings smaller than this (square degrees, about 30 km across) are dropped.
 MIN_RING_AREA = 0.08
+#: A polity with no ring that large keeps its largest, simplified only to about 1 km.
+FINE_TOLERANCE = 0.01
 CENTURY = 100
 
 Point = tuple[float, float]
@@ -104,6 +106,13 @@ def simplify_ring(ring: list[Point]) -> list[Point] | None:
     return simplified if len(simplified) >= 4 else None  # noqa: PLR2004
 
 
+def smallest_kept(rings: list[list[Point]]) -> list[Point]:
+    """Return a small polity's largest ring, so city-states and island states are not lost."""
+    largest = max(rings, key=ring_area)
+    fine = simplify(largest, FINE_TOLERANCE)
+    return fine if len(fine) >= 4 else largest  # noqa: PLR2004
+
+
 def _point(value: Json) -> Point:
     pair = cast("list[float]", value)
     return (float(pair[0]), float(pair[1]))
@@ -121,7 +130,11 @@ def _outer_rings(geometry: dict[str, Json]) -> list[list[Point]]:
 
 
 def parse_polities(collection: Json) -> list[Polity]:
-    """Polities from Cliopatria's GeoJSON, simplified; alliances (in parentheses) are skipped."""
+    """Polities from Cliopatria's GeoJSON, simplified; alliances (in parentheses) are skipped.
+
+    A polity too small for any ring to pass the area cut keeps its largest ring, finely
+    simplified: Singapore, Malta and the island states are countries too.
+    """
     features = cast("list[dict[str, Json]]", cast("dict[str, Json]", collection)["features"])
     polities: list[Polity] = []
     for feature in features:
@@ -130,9 +143,10 @@ def parse_polities(collection: Json) -> list[Polity]:
         geometry = feature.get("geometry")
         if name.startswith("(") or not isinstance(geometry, dict):
             continue
-        rings = [kept for ring in _outer_rings(geometry) if (kept := simplify_ring(ring))]
-        if not rings:
+        outer = _outer_rings(geometry)
+        if not outer:
             continue
+        rings = [kept for ring in outer if (kept := simplify_ring(ring))] or [smallest_kept(outer)]
         polities.append(
             Polity(
                 name=name,
