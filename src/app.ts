@@ -170,6 +170,7 @@ import {
   type AncientGenomes,
 } from './data/ancientGenomes';
 import { loadAtmosphere, type Atmosphere } from './data/atmosphere';
+import { loadDeepAir, type DeepAir } from './data/deepAir';
 import { fossilCard, fossilsAt, loadFossils, type Fossils } from './data/fossils';
 import { impactDetails, impactsAt, impactsText, loadImpacts, type Impacts } from './data/impacts';
 import {
@@ -1638,8 +1639,28 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let atmosphere: Atmosphere | null = null;
   let atmosphereLoading: Promise<Atmosphere> | null = null;
 
+  // The gases of the last 540 million years: loaded the first time Air is on at that scale.
+  let deepAir: DeepAir | null = null;
+  let deepAirLoading: Promise<DeepAir> | null = null;
+
   function showAir(state: ViewState): DeepTimeView['air'] {
-    if (state.deepScale !== 'ice' || !state.layers.has('air')) return { on: false };
+    if (state.deepScale === 'eons' || !state.layers.has('air')) return { on: false };
+    if (state.deepScale === 'all') {
+      if (deepAir === null && deepAirLoading === null) {
+        deepAirLoading = loadDeepAir(`${base}data/air-deep.json`, fetchJson);
+        deepAirLoading.then(
+          (loaded) => {
+            deepAir = loaded;
+            showDeepTime(store.get());
+          },
+          (error: unknown) => {
+            deepAirLoading = null;
+            notify(`Could not load the deep-time gases: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return { on: true, atmosphere, deep: deepAir };
+    }
     if (atmosphere === null && atmosphereLoading === null) {
       atmosphereLoading = loadAtmosphere(`${base}data/atmosphere.json`, fetchJson);
       atmosphereLoading.then(
@@ -1653,7 +1674,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         },
       );
     }
-    return { on: true, atmosphere };
+    return { on: true, atmosphere, deep: deepAir };
   }
 
   // Impact craters and deposits: loaded the first time the layer is turned on, in either time.

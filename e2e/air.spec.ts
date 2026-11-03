@@ -36,3 +36,42 @@ test('the Air layer gives carbon dioxide and methane at the moment, against 1750
   });
   expect(problems).toEqual([]);
 });
+
+test('over 540 million years, Air gives CO₂ and O₂ with their ranges, and nitrogen in words', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const note = page.getByTestId('air-note');
+  await test.step('Given 300 million years ago, in the late Paleozoic ice age', async () => {
+    await page.goto('./?ma=300');
+    await globeRendered(page);
+    await showDeepDetails(page);
+  });
+  await test.step('When they turn on Air', async () => {
+    await page.getByRole('button', { name: 'Air', exact: true }).click();
+  });
+  await test.step('Then CO₂ is given with its ranges and the estimates near then', async () => {
+    await expect(page.getByTestId('deep-co2')).toContainText(
+      /^Carbon dioxide \(CO₂\): about \d+ ppm/,
+    );
+    await expect(page.getByTestId('deep-co2')).toContainText('Estimates within 5 million years:');
+    await expect(note.getByRole('link', { name: 'Foster, Royer & Lunt 2017' })).toBeVisible();
+    await expect(page.getByTestId('deep-co2-chart')).toBeVisible();
+  });
+  await test.step('And O₂ with its range, and nitrogen in words with its sources', async () => {
+    await expect(page.getByTestId('deep-o2')).toContainText(
+      /^Oxygen \(O₂\): about \d+% of the air/,
+    );
+    await expect(note.getByRole('link', { name: 'Mills et al. 2023' })).toBeVisible();
+    await expect(page.getByTestId('deep-n2')).toContainText('no record is firm enough to chart');
+    await expect(note.getByRole('link', { name: 'Berner 2006' })).toBeVisible();
+  });
+  await test.step('When they go back past the CO₂ fit, it says how far it reaches', async () => {
+    await page.goto('./?ma=500&layers=air');
+    await globeRendered(page);
+    await showDeepDetails(page);
+    await expect(page.getByTestId('deep-co2')).toContainText('reaches 419 million years back');
+    await expect(page.getByTestId('deep-o2')).toContainText('Oxygen (O₂): about');
+  });
+  expect(problems).toEqual([]);
+});

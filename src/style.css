@@ -2065,6 +2065,33 @@ body {
   vector-effect: non-scaling-stroke;
 }
 
+/* Deep time's gases: bands of their range (the widest palest), the best line, estimates as dots. */
+.band-chart {
+  height: 56px;
+}
+
+.band-area {
+  fill: rgb(127 214 208 / 0.18);
+  stroke: none;
+}
+
+.band-area.band-1 {
+  fill: rgb(127 214 208 / 0.3);
+}
+
+.band-line {
+  stroke: #7fd6d0;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.band-dots {
+  stroke: rgb(255 255 255 / 0.45);
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
 /* Sea level above the slider: the same width, inset like the slider's thumb, so a point on
    the chart sits over its moment. */
 .sea-chart-box {

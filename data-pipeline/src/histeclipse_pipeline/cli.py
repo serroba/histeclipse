@@ -10,6 +10,7 @@ from histeclipse_pipeline.archaeoglobe import fetch_ways
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
 from histeclipse_pipeline.cesm import fetch_cesm
+from histeclipse_pipeline.deep_air import fetch_deep_air
 from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
 from histeclipse_pipeline.dispersal import fetch_dispersal
 from histeclipse_pipeline.empires import (
@@ -284,6 +285,12 @@ def pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} pictures to {args.out}")
 
 
+def deep_air(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write CO2 and O2 over the last 540 million years (Foster 2017; Mills 2023)."""
+    count = fetch_deep_air(args.out)
+    return _say(f"wrote {count} CO2 estimates, the CO2 fit and the O2 estimate to {args.out}")
+
+
 def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write ice-sheet thickness every 2,500 years over the last 80,000 (PaleoMIST 1.0)."""
     count = fetch_icesheets(args.out)
@@ -457,6 +464,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "pictures": (
         pictures,
         "write the lead picture, author and licence of each Wikipedia page a data file names",
+        "output JSON file",
+    ),
+    "deep-air": (
+        deep_air,
+        "write CO2 and O2 over the last 540 million years (Foster 2017; Mills 2023)",
         "output JSON file",
     ),
     "icesheets": (
