@@ -92,6 +92,7 @@ import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
 import type { ArrivalGrid } from '../data/dispersal';
 import type { HumanSite } from '../data/humanClaims';
+import type { WayRegion } from '../data/waysOfLife';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { OhmYear } from '../data/ohmBorders';
 import {
@@ -100,6 +101,7 @@ import {
   paintBorders,
   paintIceOutlines,
   paintSettled,
+  paintWays,
   paintTerritories,
 } from './empireCanvas';
 import {
@@ -330,6 +332,8 @@ export interface Globe {
   setSettled(
     settled: { readonly scenario: string; readonly grid: ArrivalGrid; readonly ka: number } | null,
   ): void;
+  /** Shade regions by their most widespread way of life, under any states; null hides them. */
+  setWays(regions: readonly WayRegion[] | null): void;
   /** Mark dated finds of humans and their relatives in deep time; null hides them. */
   setHumanSites(sites: readonly HumanSite[] | null): void;
   /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
@@ -1223,6 +1227,27 @@ export async function createGlobe(
   container.append(humanLabelLayer);
   let humanLabels: GlobeLabel[] = [];
   let humanSitesKey = '';
+  // Historical time's overlay, on the states' map: ways of life, and the states over them.
+  let historyOverlay: {
+    readonly ways: readonly WayRegion[] | null;
+    readonly empires: EmpireLayer | null;
+  } = { ways: null, empires: null };
+  function paintHistoryOverlay(): void {
+    const uniforms = earth.material.uniforms;
+    const { ways, empires } = historyOverlay;
+    const on = ways !== null || empires !== null;
+    uniforms['empiresActive'] = { value: on ? 1 : 0 };
+    needsRender = true;
+    if (!on) return;
+    clearOverlay(empiresCanvas);
+    if (ways !== null) paintWays(empiresCanvas, ways);
+    if (empires !== null) {
+      paintTerritories(empiresCanvas, empires.territories);
+      if (empires.ohm !== null) paintBorders(empiresCanvas, empires.ohm.borders);
+    }
+    empiresTexture.needsUpdate = true;
+    uniforms['overlayMap'] = { value: empiresTexture };
+  }
   // Regions with ancient genomes near the year shown, in historical time.
   const genomeLayer = document.createElement('div');
   genomeLayer.className = 'empire-labels genome-cells';
@@ -2238,16 +2263,17 @@ export async function createGlobe(
       container.dataset['humans'] = sites === null ? 'off' : String(sites.length);
       needsRender = true;
     },
+    setWays(regions) {
+      historyOverlay = { ...historyOverlay, ways: regions };
+      container.dataset['ways'] = regions === null ? 'off' : String(regions.length);
+      paintHistoryOverlay();
+    },
     setEmpires(layer) {
-      const uniforms = earth.material.uniforms;
-      uniforms['empiresActive'] = { value: layer === null ? 0 : 1 };
-      if (layer !== null) uniforms['overlayMap'] = { value: empiresTexture };
+      historyOverlay = { ...historyOverlay, empires: layer };
+      paintHistoryOverlay();
       empireLabelLayer.replaceChildren();
       empireLabels = [];
       if (layer !== null) {
-        paintTerritories(empiresCanvas, layer.territories);
-        if (layer.ohm !== null) paintBorders(empiresCanvas, layer.ohm.borders);
-        empiresTexture.needsUpdate = true;
         // Names of the larger states first; as the camera comes closer, more fit between them.
         const ranked = layer.territories
           .map((territory) => ({ territory, label: labelPoint(territory) }))

@@ -40,6 +40,7 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 | `fullview.spec.ts` | Full view: clearing the panels, and deep time's strip                       |
 | `chart.spec.ts`    | Geological time along the slider: the chart's units in its colours          |
 | `air.spec.ts`      | The air in the ice ages: CO₂ and methane against 1750                       |
+| `ways.spec.ts`     | Ways of life: ArchaeoGLOBE's regions by how people lived                    |
 | `smoke.spec.ts`    | Everything else: loading, links, eclipses, views, sky, the Sun, deep time   |
 
 `support.ts` holds the shared steps and the `test` every file imports, which takes the

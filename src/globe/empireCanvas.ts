@@ -8,6 +8,7 @@
 
 import { territoryHue, unwrapRing, type Territory } from '../data/empires';
 import type { ArrivalGrid } from '../data/dispersal';
+import type { Shown, WayRegion } from '../data/waysOfLife';
 import type { IceOutlines } from '../data/iceOutlines';
 
 export const EMPIRE_MAP_WIDTH = 4096;
@@ -26,7 +27,6 @@ export function paintTerritories(
   const context = canvas.getContext('2d');
   if (context === null) return;
   const { width, height } = canvas;
-  context.clearRect(0, 0, width, height);
   context.lineJoin = 'round';
   // Round caps, so a state smaller than a pixel (Monaco, say) still shows as a dot.
   context.lineCap = 'round';
@@ -153,6 +153,43 @@ export function paintSettled(canvas: HTMLCanvasElement, grid: ArrivalGrid, ka: n
         );
         start = -1;
       }
+    }
+  }
+}
+
+/** Fixed per way of life, never by rank. */
+export const WAY_COLOURS: Readonly<Record<Shown, string>> = {
+  foraging: '25, 158, 112',
+  pastoralism: '201, 133, 0',
+  extensive: '217, 89, 38',
+  intensive: '57, 135, 229',
+  urban: '138, 92, 214',
+  // Neutral: no one way is shown where several are as widespread.
+  mixed: '200, 205, 215',
+};
+
+/**
+ * Shades each region by its most widespread way of life, stronger the more widespread: under
+ * the states, which are drawn over it.
+ */
+export function paintWays(canvas: HTMLCanvasElement, regions: readonly WayRegion[]): void {
+  const context = canvas.getContext('2d');
+  if (context === null) return;
+  const { width, height } = canvas;
+  for (const region of regions) {
+    context.fillStyle = `rgba(${WAY_COLOURS[region.way]}, ${String(0.12 + 0.14 * region.level)})`;
+    for (const offset of [-360, 0, 360]) {
+      context.beginPath();
+      for (const ring of region.rings) {
+        unwrapRing(ring).forEach(([lon, lat], index) => {
+          const x = ((lon + offset + 180) / 360) * width;
+          const y = ((90 - lat) / 180) * height;
+          if (index === 0) context.moveTo(x, y);
+          else context.lineTo(x, y);
+        });
+        context.closePath();
+      }
+      context.fill('evenodd');
     }
   }
 }

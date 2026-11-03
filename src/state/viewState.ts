@@ -48,6 +48,8 @@ export const LAYERS = [
   'empires',
   // Dated ancient genomes (AADR), counted by region around the year shown.
   'genomes',
+  // How people lived by region (ArchaeoGLOBE): foraging, herding, farming, towns.
+  'ways',
   // Deep time only: the surface coloured by temperature, and sea level through time.
   'temperature',
   'sealevel',
