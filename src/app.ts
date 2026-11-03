@@ -1486,6 +1486,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ma,
       oldest: spanOf(scale),
       playing,
+      // As showTemperature has it below: none on the ice-age scale or before the maps.
+      temperature: state.layers.has('temperature') && !ice && !uncharted,
     });
     // The temperature maps are 5 million years apart, and stop where the elevation maps do: none
     // on the ice-age scale or before them.

@@ -66,3 +66,31 @@ test('in the Holocene a tap on the globe still picks a place, leaving the panels
     await expect(page.getByTestId('deep-glance')).toBeHidden();
   });
 });
+
+test('in full view with Temperature on, the strip has a small scale of its colours', async ({
+  page,
+}) => {
+  const glance = page.getByTestId('deep-glance');
+  const scale = page.getByTestId('glance-temperature');
+  await test.step('Given deep time 375 million years ago, coloured by temperature', async () => {
+    await page.goto('./?ma=375&layers=temperature');
+    await globeRendered(page);
+  });
+  await test.step('When they clear the panels', async () => {
+    await page.getByRole('button', { name: 'Full view' }).click();
+    await expect(glance).toBeVisible();
+  });
+  await test.step('Then the strip shows the temperature scale, from −40 °C to 45 °C', async () => {
+    await expect(scale).toBeVisible();
+    await expect(scale).toContainText('−40 °C');
+    await expect(scale).toContainText('15 °C');
+    await expect(scale).toContainText('45 °C');
+  });
+  await test.step('And without Temperature, no scale', async () => {
+    await page.goto('./?ma=375');
+    await globeRendered(page);
+    await page.getByRole('button', { name: 'Full view' }).click();
+    await expect(glance).toBeVisible();
+    await expect(scale).toBeHidden();
+  });
+});

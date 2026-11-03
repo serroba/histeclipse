@@ -1,11 +1,13 @@
 /**
  * Deep time at a glance, for full view: when it is, the period, and how far through the span,
  * with Play, on a strip along the bottom while the panels are cleared away. Its bar is a
- * slider: tap or drag it to any moment of the span.
+ * slider: tap or drag it to any moment of the span. With the globe coloured by temperature, a
+ * small scale says what the colours mean.
  *
  * DOM glue, covered by the Playwright suite.
  */
 
+import { celsiusText, legendGradient, scaleTicks, TEMPERATURE_STOPS } from './deepTimeBar';
 import { element } from './dom';
 
 export interface DeepGlanceView {
@@ -16,6 +18,8 @@ export interface DeepGlanceView {
   readonly ma: number;
   readonly oldest: number;
   readonly playing: boolean;
+  /** Whether the globe is coloured by temperature. */
+  readonly temperature: boolean;
 }
 
 export interface DeepGlance {
@@ -46,11 +50,41 @@ export function createDeepGlance(
     step: '1',
     'aria-label': 'Time shown',
   });
+  const scale = element('span', { class: 'deep-glance-scale', 'aria-hidden': 'true' });
+  scale.style.background = legendGradient(TEMPERATURE_STOPS);
+  const ticks = element(
+    'span',
+    { class: 'deep-glance-ticks', 'aria-hidden': 'true' },
+    ...scaleTicks(TEMPERATURE_STOPS, [-40, 0, 15, 30, 45]).map(({ celsius, at }) => {
+      const tick = element('span', {}, celsiusText(celsius));
+      tick.style.left = `${(at * 100).toFixed(1)}%`;
+      return tick;
+    }),
+  );
+  const temperature = element(
+    'div',
+    {
+      class: 'deep-glance-temperature',
+      'data-testid': 'glance-temperature',
+      role: 'img',
+      'aria-label':
+        'Temperature: blue −40 °C or colder, white about 5 °C, yellow 15 °C, red 45 °C or hotter',
+      hidden: '',
+    },
+    scale,
+    ticks,
+  );
   const root = element(
     'div',
     { class: 'deep-glance', 'data-testid': 'deep-glance', hidden: '' },
     play,
-    element('div', { class: 'deep-glance-body' }, element('p', {}, when, ' ', period), slider),
+    element(
+      'div',
+      { class: 'deep-glance-body' },
+      element('p', {}, when, ' ', period),
+      slider,
+      temperature,
+    ),
   );
   let playing = false;
   let oldest = 0;
@@ -71,6 +105,7 @@ export function createDeepGlance(
       play.setAttribute('aria-label', view.playing ? 'Pause' : 'Play');
       when.textContent = view.when;
       period.textContent = view.period;
+      temperature.hidden = !view.temperature;
       oldest = view.oldest;
       const share = view.oldest > 0 ? Math.min(1, Math.max(0, 1 - view.ma / view.oldest)) : 1;
       if (document.activeElement !== slider) slider.value = String(Math.round(share * STEPS));
