@@ -98,8 +98,9 @@ export interface ParseResult {
   readonly warnings: readonly string[];
 }
 
-// Earliest year with a non-negative Julian Day; the latest the format supports.
-const YEAR_RANGE = { min: -4712, max: 9999 } as const;
+// The Holocene's start, 11,700 years before 2000 (9700 BCE), as far back as ΔT reaches; the latest
+// year the format supports.
+const YEAR_RANGE = { min: -9699, max: 9999 } as const;
 
 const DATE_PATTERN = /^([+-]?\d{1,6})-(\d{2})-(\d{2})$/;
 const MOMENT_PATTERN = /^([+-]?\d{1,6}-\d{2}-\d{2})(?:T(\d{2}):(\d{2})Z?)?$/;

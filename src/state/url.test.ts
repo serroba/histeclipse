@@ -241,7 +241,7 @@ describe('parseViewState', () => {
     ['t=yesterday', 't', 'expected a time'],
     ['t=2025-02-30', 't', 'Day must be in'],
     ['t=2025-01-01T24:00Z', 't', 'time of day'],
-    ['t=-5000-01-01', 't', 'year must be between'],
+    ['t=-9800-01-01', 't', 'year must be between'],
     ['t=2025-01-01&cal=hebrew', 'cal', 'unknown calendar'],
     ['loc=95,0', 'loc', 'latitude must be between'],
     ['loc=1,2,3', 'loc', 'expected 2'],

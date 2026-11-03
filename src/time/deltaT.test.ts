@@ -18,8 +18,14 @@ const deltaT = new DeltaT(tableJson);
 const jdOfYear = (year: number) => julianDayNumber(2_451_545 + (year - 2000) * 365.25);
 
 describe('DeltaT', () => {
-  it('covers the catalog years with a year to spare on each side', () => {
-    expect([deltaT.firstYear, deltaT.lastYear]).toEqual([-4000, 3001]);
+  it('covers the Holocene, from 9700 BCE, to the catalogs’ end, a year to spare each side', () => {
+    expect([deltaT.firstYear, deltaT.lastYear]).toEqual([-9700, 3001]);
+  });
+
+  it('grows uncertain back through the Holocene, to hours by its start', () => {
+    // The long-term parabola: about five days, give or take some three hours, in 9700 BCE.
+    expect(deltaT.seconds(jdOfYear(-9699)) / 86_400).toBeCloseTo(5, 0);
+    expect(deltaT.uncertaintySeconds(jdOfYear(-9699)) / 3600).toBeGreaterThan(2.5);
   });
 
   it('agrees with the ΔT stored on every catalogued eclipse', () => {
@@ -67,8 +73,8 @@ describe('DeltaT', () => {
   });
 
   it('refuses to extrapolate', () => {
-    expect(() => deltaT.seconds(jdOfYear(3001.5))).toThrow(/tabulated for -4000 to 3001/);
-    expect(() => deltaT.seconds(jdOfYear(-4000.5))).toThrow(RangeError);
+    expect(() => deltaT.seconds(jdOfYear(3001.5))).toThrow(/tabulated for -9700 to 3001/);
+    expect(() => deltaT.seconds(jdOfYear(-9700.5))).toThrow(RangeError);
   });
 
   it('rejects malformed tables', () => {
@@ -80,6 +86,6 @@ describe('DeltaT', () => {
       Promise.resolve(Response.json(tableJson)),
     );
     expect(loaded.seconds(jdOfYear(2000))).toBeCloseTo(63.83, 2);
-    expect(astronomicalYear(loaded.firstYear)).toBe(-4000);
+    expect(astronomicalYear(loaded.firstYear)).toBe(-9700);
   });
 });

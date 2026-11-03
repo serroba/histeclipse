@@ -44,9 +44,15 @@ describe('julianDay', () => {
     expect(julianDay(date)).toBeCloseTo(jd, 9);
   });
 
-  it('rejects dates before Julian Day 0', () => {
-    const date = calendarDateOf(astronomicalYear(-4713), 12, 31, 'julian');
-    expect(() => julianDay(date)).toThrow(RangeError);
+  it('carries on before Julian Day 0, back through the Holocene', () => {
+    // 4713 BCE January 1 (Julian), noon, is Julian Day 0; a day earlier is −1.
+    const before = calendarDateOf(astronomicalYear(-4712), 1, 0.5 + 1, 'julian');
+    expect(julianDay(before)).toBe(0);
+    const day = julianDay(calendarDateOf(astronomicalYear(-8999), 6, 1, 'julian'));
+    expect(day).toBeLessThan(0);
+    expect(calendarDate(day, 'julian')).toEqual(
+      calendarDateOf(astronomicalYear(-8999), 6, 1, 'julian'),
+    );
   });
 
   it('puts 1582-10-15 (Gregorian) the day after 1582-10-04 (Julian)', () => {
@@ -145,7 +151,7 @@ describe('calendar rules', () => {
     expect(historicalCalendar(GREGORIAN_REFORM_JD)).toBe('gregorian');
   });
 
-  it.each([-1, Number.NaN, Number.POSITIVE_INFINITY])('rejects Julian Day %d', (value) => {
+  it.each([Number.NaN, Number.POSITIVE_INFINITY])('rejects Julian Day %d', (value) => {
     expect(() => julianDayNumber(value)).toThrow(RangeError);
   });
 });

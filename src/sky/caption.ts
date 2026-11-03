@@ -67,7 +67,14 @@ export function eclipseNote(options: {
  * A word on how far to trust the planets' places in a given year: silent while every planet is
  * within half an arcminute of DE441, otherwise the error budget of those that drift.
  */
+/** The first year the sky's positions are checked against DE441 (4000 BCE). */
+const CHECKED_FROM_YEAR = -3999;
+
 export function planetNote(year: number): string {
+  // The positions are checked against DE441 from 4000 BCE on; earlier, the Holocene's start, not.
+  if (year < CHECKED_FROM_YEAR) {
+    return 'Before 4000 BCE, the positions of the Moon and planets here have not been checked against JPL’s DE441, and may be further off.';
+  }
   const loose = PLANETS.map((planet) => [planet, planetUncertainty(planet, year)] as const).filter(
     ([, arcminutes]) => arcminutes > 0.5,
   );
