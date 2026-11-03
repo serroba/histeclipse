@@ -362,11 +362,47 @@ body {
   opacity: 0.6;
 }
 
+/* Volcanoes erupting near the year shown: a red triangle sized by VEI; paler if unconfirmed. */
+.empire-label.volcano-mark {
+  width: var(--size);
+  height: var(--size);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.empire-label.volcano-mark::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgb(235 60 50 / 0.85);
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.empire-label.volcano-mark.is-uncertain::before {
+  background: rgb(235 60 50 / 0.4);
+}
+
+.empire-label.volcano-mark .impact-name {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 4px);
+  transform: translateY(-50%);
+}
+
+.empire-label.volcano-mark:focus-visible,
 .empire-label.impact-mark:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
 
+.empire-label.volcano-mark[hidden],
 .empire-label.impact-mark[hidden] {
   display: none;
 }

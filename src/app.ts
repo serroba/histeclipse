@@ -165,6 +165,16 @@ import {
 import { loadAtmosphere, type Atmosphere } from './data/atmosphere';
 import { fossilsAt, loadFossils, type Fossils } from './data/fossils';
 import { impactDetails, impactsAt, impactsText, loadImpacts, type Impacts } from './data/impacts';
+import {
+  eruptionsNear,
+  loadVolcanoDetails,
+  loadVolcanoes,
+  volcanoCard,
+  volcanoesText,
+  type VolcanoDetails,
+  type VolcanoMark,
+  type Volcanoes,
+} from './data/volcanoes';
 import { humansAt, loadHumanClaims, type HumanClaims } from './data/humanClaims';
 import { loadArrivalGrid } from './globe/arrivalGrid';
 import {
@@ -1684,10 +1694,80 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return { on: true, text: impactsText(impacts, marks, ma) };
   }
 
+  // Volcanic eruptions near the year shown, in historical time: loaded with the layer; each
+  // volcano's summary and photo the first time a card opens.
+  let volcanoes: Volcanoes | null = null;
+  let volcanoesLoading: Promise<Volcanoes> | null = null;
+  let volcanoesSaid: string | null = null;
+  let volcanoMarks: readonly VolcanoMark[] = [];
+  let volcanoDetails: VolcanoDetails | null = null;
+  let volcanoDetailsLoading: Promise<VolcanoDetails> | null = null;
+  let volcanoShown: VolcanoMark | null = null;
+
+  function showVolcanoes(state: ViewState): void {
+    const on = state.layers.has('volcanoes') && state.mode === 'globe' && state.ma === null;
+    if (!on) {
+      volcanoesSaid = null;
+      volcanoMarks = [];
+      globe.setVolcanoes(null);
+      return;
+    }
+    if (volcanoes === null) {
+      volcanoesSaid = 'Loading the eruptions…';
+      if (volcanoesLoading === null) {
+        volcanoesLoading = loadVolcanoes(`${base}data/volcanoes.json`, fetchJson);
+        volcanoesLoading.then(
+          (loaded) => {
+            volcanoes = loaded;
+            const now = store.get();
+            showVolcanoes(now);
+            showEmpires(now);
+          },
+          (error: unknown) => {
+            volcanoesLoading = null;
+            notify(`Could not load the eruptions: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return;
+    }
+    const year = state.time.date.year;
+    volcanoMarks = eruptionsNear(volcanoes, year);
+    globe.setVolcanoes(volcanoMarks);
+    volcanoesSaid = volcanoesText(volcanoMarks, year);
+  }
+
+  function showVolcanoCard(number: string): void {
+    const mark = volcanoMarks.find((each) => String(each.volcano.number) === number);
+    if (mark === undefined) return;
+    volcanoShown = mark;
+    markerCard.show(volcanoCard(mark, volcanoDetails));
+    if (volcanoDetails !== null || volcanoDetailsLoading !== null) return;
+    volcanoDetailsLoading = loadVolcanoDetails(`${base}data/volcano-details.json`, fetchJson);
+    volcanoDetailsLoading.then(
+      (loaded) => {
+        volcanoDetails = loaded;
+        // Its summary and photo, if its card is still the one open.
+        if (markerCard.dialog.open && volcanoShown !== null) {
+          markerCard.show(volcanoCard(volcanoShown, loaded));
+        }
+      },
+      (error: unknown) => {
+        volcanoDetailsLoading = null;
+        notify(`Could not load the volcano’s summary: ${errorMessage(error)}`);
+      },
+    );
+  }
+
   globe.onMarkerPick((key) => {
-    const id = /^impact:(\d+)$/.exec(key)?.[1];
+    const [kind, id] = key.split(':');
+    if (kind === 'volcano' && id !== undefined) {
+      showVolcanoCard(id);
+      return;
+    }
+    volcanoShown = null;
     const impact = impacts?.impacts.find((each) => String(each.id) === id);
-    if (impact === undefined) return;
+    if (kind !== 'impact' || impact === undefined) return;
     const details = impactDetails(impact);
     markerCard.show({ title: details.title, facts: details.facts, links: [details.link] });
   });
@@ -2324,6 +2404,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ...(periodsSaid === null ? [] : [['periods', periodsSaid] as const]),
         ...(rocksSaid === null ? [] : [['rocks', rocksSaid] as const]),
         ...(impactsSaid === null ? [] : [['impacts', impactsSaid] as const]),
+        ...(volcanoesSaid === null ? [] : [['volcanoes', volcanoesSaid] as const]),
       ]),
       actions: new Map(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
     });
@@ -2788,6 +2869,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showRocks(state);
       showPeriods(state);
       showImpacts(state);
+      showVolcanoes(state);
       showEmpires(state);
     }
     // Deep time, or an eclipse picked, ends a trip through the years.

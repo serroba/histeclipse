@@ -56,6 +56,8 @@ export const LAYERS = [
   'periods',
   // Impact craters and deposits (Impact Earth), in either time: where they lay then.
   'impacts',
+  // Volcanoes erupting near the year shown (Smithsonian GVP).
+  'volcanoes',
   // Deep time only: the surface coloured by temperature, and sea level through time.
   'temperature',
   'sealevel',

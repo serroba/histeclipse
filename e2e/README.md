@@ -28,24 +28,25 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 
 ## Features
 
-| File               | Feature                                                                     |
-| ------------------ | --------------------------------------------------------------------------- |
-| `time.spec.ts`     | Picking the Holocene or deep time                                           |
-| `layers.spec.ts`   | The Layers panel: what the globe overlays, and when each layer has data     |
-| `sheet.spec.ts`    | The deep-time bar as a sheet: folding and swiping its details               |
-| `humans.spec.ts`   | Humans in the ice ages: dated finds, and competing claims side by side      |
-| `genomes.spec.ts`  | Ancient genomes: AADR genomes counted by region around the year shown       |
-| `history.spec.ts`  | Travelling through the Holocene: playing the years, states coming and going |
-| `ice.spec.ts`      | Ice sheets in the ice ages: Batchelor et al.'s outlines and their range     |
-| `fullview.spec.ts` | Full view: clearing the panels, and deep time's strip                       |
-| `chart.spec.ts`    | Geological time along the slider: the chart's units in its colours          |
-| `air.spec.ts`      | The air in the ice ages: CO₂ and methane against 1750                       |
-| `ways.spec.ts`     | Ways of life: ArchaeoGLOBE's regions by how people lived                    |
-| `rocks.spec.ts`    | Rocks at the surface: Macrostrat's map, and deep time at a rock's age       |
-| `fossils.spec.ts`  | Fossils in deep time: PBDB finds where they lay then                        |
-| `impacts.spec.ts`  | Impact craters: today and where they lay, each with a card                  |
-| `periods.spec.ts`  | Named periods: PeriodO's periods for the place picked, each by its source   |
-| `smoke.spec.ts`    | Everything else: loading, links, eclipses, views, sky, the Sun, deep time   |
+| File                | Feature                                                                     |
+| ------------------- | --------------------------------------------------------------------------- |
+| `time.spec.ts`      | Picking the Holocene or deep time                                           |
+| `layers.spec.ts`    | The Layers panel: what the globe overlays, and when each layer has data     |
+| `sheet.spec.ts`     | The deep-time bar as a sheet: folding and swiping its details               |
+| `humans.spec.ts`    | Humans in the ice ages: dated finds, and competing claims side by side      |
+| `genomes.spec.ts`   | Ancient genomes: AADR genomes counted by region around the year shown       |
+| `history.spec.ts`   | Travelling through the Holocene: playing the years, states coming and going |
+| `ice.spec.ts`       | Ice sheets in the ice ages: Batchelor et al.'s outlines and their range     |
+| `fullview.spec.ts`  | Full view: clearing the panels, and deep time's strip                       |
+| `chart.spec.ts`     | Geological time along the slider: the chart's units in its colours          |
+| `air.spec.ts`       | The air in the ice ages: CO₂ and methane against 1750                       |
+| `ways.spec.ts`      | Ways of life: ArchaeoGLOBE's regions by how people lived                    |
+| `rocks.spec.ts`     | Rocks at the surface: Macrostrat's map, and deep time at a rock's age       |
+| `fossils.spec.ts`   | Fossils in deep time: PBDB finds where they lay then                        |
+| `impacts.spec.ts`   | Impact craters: today and where they lay, each with a card                  |
+| `volcanoes.spec.ts` | Volcanic eruptions: GVP's eruptions near the year, each with a card         |
+| `periods.spec.ts`   | Named periods: PeriodO's periods for the place picked, each by its source   |
+| `smoke.spec.ts`     | Everything else: loading, links, eclipses, views, sky, the Sun, deep time   |
 
 `support.ts` holds the shared steps and the `test` every file imports, which takes the
 project's refresh rate.
