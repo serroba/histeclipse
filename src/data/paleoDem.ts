@@ -71,3 +71,18 @@ export function framesAround<F extends { readonly ma: number }>(
   const last = elementAt(frames, frames.length - 1);
   return { younger: last, older: last, mix: 0 };
 }
+
+/**
+ * The frames that playing towards the present comes to next from `ma`, nearest first, at most
+ * `count`: the ones to load before they are needed.
+ */
+export function framesAhead<F extends { readonly ma: number }>(
+  frames: readonly F[],
+  ma: number,
+  count: number,
+): readonly F[] {
+  return frames
+    .filter((frame) => frame.ma < ma)
+    .slice(-count)
+    .reverse();
+}

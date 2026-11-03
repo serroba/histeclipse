@@ -129,7 +129,13 @@ import {
   type TemperatureView,
 } from './ui/deepTimeBar';
 import { formatMa, periodAt, periodWords } from './deepTime/periods';
-import { framesAround, loadPaleoDemIndex, oldestMa, type PaleoDemIndex } from './data/paleoDem';
+import {
+  framesAhead,
+  framesAround,
+  loadPaleoDemIndex,
+  oldestMa,
+  type PaleoDemIndex,
+} from './data/paleoDem';
 import { loadPaleoTempIndex, type PaleoTempIndex } from './data/paleoTemp';
 import { loadSeaLevel, type SeaLevelIndex } from './data/seaLevel';
 import {
@@ -221,6 +227,8 @@ const BP_ZERO_YEAR = 1950;
 
 /** Deep time plays at this many million years per second: 540 Myr in about half a minute. */
 const PLAY_MA_PER_SECOND = 20;
+/** Maps loaded ahead while deep time plays: at 20 Myr a second, about a second's worth. */
+const PREFETCH_FRAMES = 4;
 /** On the ice-age scale: 50,000 years a second, 2.6 million years in under a minute. */
 const ICE_PLAY_MA_PER_SECOND = 0.05;
 /** Over all of Earth's history: 100 million years a second, 4.6 billion in under a minute. */
@@ -1506,6 +1514,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
         if (store.get().ma !== ma) return;
         // On the ice-age scale, today's map: the next is 5 million years back.
         const { younger, older, mix } = framesAround(index.frames, ice ? 0 : ma);
+        // Playing, the next maps load ahead, so the globe keeps up with the years.
+        if (playing && !ice) {
+          globe.prefetch(
+            framesAhead(index.frames, ma, PREFETCH_FRAMES).map(
+              (frame) => `${base}data/paleodem/${frame.file}`,
+            ),
+          );
+        }
         globe.setDeepTime({
           younger: `${base}data/paleodem/${younger.file}`,
           older: `${base}data/paleodem/${older.file}`,
@@ -2240,6 +2256,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (drawn === null || index === null) return;
     const folder = TEMPERATURE_MODEL_FOLDERS[drawn.model];
     const { younger, older, mix } = framesAround(index.frames, ma);
+    if (playing) {
+      globe.prefetch(
+        framesAhead(index.frames, ma, PREFETCH_FRAMES).map(
+          (frame) => `${base}data/${folder}/${frame.file}`,
+        ),
+      );
+    }
     globe.setTemperature({
       younger: `${base}data/${folder}/${younger.file}`,
       older: `${base}data/${folder}/${older.file}`,

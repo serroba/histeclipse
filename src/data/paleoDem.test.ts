@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import index from '../../public/data/paleodem/index.json';
 import type { Fetch } from './fetchJson';
-import { framesAround, loadPaleoDemIndex, oldestMa } from './paleoDem';
+import { framesAhead, framesAround, loadPaleoDemIndex, oldestMa } from './paleoDem';
 
 const serve =
   (body: unknown): Fetch =>
@@ -35,5 +35,18 @@ describe('the deep-time elevation maps', () => {
   it('reject an index whose maps are out of order', async () => {
     const shuffled = { ...index, frames: [...index.frames].reverse() };
     await expect(loadPaleoDemIndex('/x', serve(shuffled))).rejects.toThrow(/present back/);
+  });
+});
+
+describe('framesAhead', () => {
+  const frames = [0, 5, 10, 15, 20].map((ma) => ({ ma }));
+
+  it('gives the frames playing comes to next, nearest first', () => {
+    expect(framesAhead(frames, 17, 2)).toEqual([{ ma: 15 }, { ma: 10 }]);
+    expect(framesAhead(frames, 15, 4)).toEqual([{ ma: 10 }, { ma: 5 }, { ma: 0 }]);
+  });
+
+  it('has none left at the present', () => {
+    expect(framesAhead(frames, 0, 4)).toEqual([]);
   });
 });
