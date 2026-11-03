@@ -8,6 +8,7 @@ import { MAP_KEY, MILESTONE_KEY } from '../deepTime/colourKey';
 import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period, periodShort } from '../deepTime/periods';
+import type { IceOutlines } from '../data/iceOutlines';
 import type { IceStandIn } from '../data/iceSheets';
 import { SEA_ICE_MODELS, type SeaIceModel } from '../data/seaIce';
 import type { SeaLevelIndex } from '../data/seaLevel';
@@ -183,6 +184,32 @@ export function iceText(view: DeepTimeView['ice']): string {
     : `Ice sheets: no openly licensed maps reach back beyond ${reach}; sea level and the bared shelves still show each glacial cycle.`;
 }
 
+/** How a span of thousands of years ago reads: in thousands, or in millions from 1,000 ka. */
+function kaSpan(fromKa: number, toKa: number): string {
+  if (toKa >= 1000) {
+    const ma = (ka: number) => (ka / 1000).toLocaleString('en', { maximumFractionDigits: 2 });
+    return `${ma(fromKa)}–${ma(toKa)} million years ago`;
+  }
+  const years = (ka: number) => (ka * 1000).toLocaleString('en');
+  return `${years(fromKa)}–${years(toKa)} years ago`;
+}
+
+/** What the bar says about Batchelor et al.'s outlines of the time slice shown, if any. */
+export function iceOutlineText(outlines: IceOutlines | null): string | null {
+  if (outlines === null) return null;
+  const credit = 'Batchelor et al. (2019)';
+  const compare = 'Where the white ice and the outlines differ, the reconstructions disagree.';
+  if (outlines.min.length === 0 && outlines.max.length === 0) {
+    return `Outlines: ${credit}’s best estimate for the Last Glacial Maximum, about 26,500 years ago. ${compare}`;
+  }
+  const point = /^(\d+) ka$/.exec(outlines.name);
+  const when =
+    point?.[1] === undefined
+      ? `${outlines.name} (${kaSpan(outlines.fromKa, outlines.toKa)})`
+      : `about ${(Number(point[1]) * 1000).toLocaleString('en')} years ago`;
+  return `Outlines: ${credit}, ${when}: their best estimate (solid gold), minimum (dotted blue) and maximum (dashed red) of the ice sheets at their largest. ${compare}`;
+}
+
 export interface DeepTimeView {
   readonly ma: number;
   /** The oldest moment the maps reach, Ma. */
@@ -210,6 +237,8 @@ export interface DeepTimeView {
     readonly oldestKa: number | null;
     readonly standIn: IceStandIn | null;
   };
+  /** Batchelor et al.'s outlines of the time slice shown, on the ice-age scale; null if none. */
+  readonly iceOutlines: IceOutlines | null;
   /** Sea level: off, on while the reconstructions load (null), or on with them. */
   readonly seaLevel:
     { readonly on: false } | { readonly on: true; readonly index: SeaLevelIndex | null };
@@ -342,6 +371,7 @@ export function createDeepTimeBar(handlers: {
   );
   const coastText = element('span', { 'data-testid': 'coastline' });
   const iceLine = element('p', { 'data-testid': 'ice-sheets' });
+  const outlineLine = element('p', { 'data-testid': 'ice-outlines', hidden: '' });
   const seaIceWords = element('span', { 'data-testid': 'sea-ice' });
   const seaIcePicker = element(
     'select',
@@ -362,6 +392,7 @@ export function createDeepTimeBar(handlers: {
       'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time. Sea floor laid dry is sandy; ice sheets are white. The small moves of the continents are not drawn, and the temperature maps are 5 million years apart.',
     ),
     iceLine,
+    outlineLine,
     element(
       'p',
       {},
@@ -624,6 +655,9 @@ export function createDeepTimeBar(handlers: {
       }
       iceNote.hidden = !ice;
       iceLine.textContent = iceText(view.ice);
+      const outlines = iceOutlineText(view.iceOutlines);
+      outlineLine.hidden = outlines === null;
+      outlineLine.textContent = outlines ?? '';
       if (view.seaIce !== null) {
         seaIceWords.textContent = seaIceText(view.seaIce);
         seaIcePicker.value = view.seaIce.model;

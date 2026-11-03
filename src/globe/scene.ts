@@ -89,8 +89,14 @@ import { labelPoint, type Territory } from '../data/empires';
 import { PLANETS, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius } from './planetLook';
 import { createPlanetMeshes } from './planetMeshes';
+import type { IceOutlines } from '../data/iceOutlines';
 import type { OhmYear } from '../data/ohmBorders';
-import { createEmpireCanvas, paintBorders, paintTerritories } from './empireCanvas';
+import {
+  createEmpireCanvas,
+  paintBorders,
+  paintIceOutlines,
+  paintTerritories,
+} from './empireCanvas';
 import {
   OCCULTATION,
   SOLAR_COMMON,
@@ -310,6 +316,8 @@ export interface Globe {
    * the layer.
    */
   setEmpires(layer: EmpireLayer | null): void;
+  /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
+  setIceOutlines(outlines: IceOutlines | null): void;
   /**
    * Deep time: draw Earth's surface from two elevation maps blended by `mix` instead of
    * today's imagery; null returns to today's Earth.
@@ -428,6 +436,7 @@ export const EARTH_FRAGMENT = /* glsl */ `
   // show together: a seventeenth texture would pass the 16 that many GPUs allow a shader.
   uniform sampler2D overlayMap;
   uniform float empiresActive;
+  uniform float iceOutlinesActive;
   // The Moon and Sun in the scene, for the Moon's shadow at any moment.
   uniform vec3 moonPosition;
   uniform float moonRadius;
@@ -672,6 +681,13 @@ export const EARTH_FRAGMENT = /* glsl */ `
     return mix(color, tinted, empiresActive);
   }
 
+  // Deep time's ice-sheet outlines, on the same map as the states (never shown together), drawn
+  // over deep time's even light.
+  vec3 iceOutlinesLayer(vec3 color) {
+    vec4 painted = texture2D(overlayMap, vUv);
+    return mix(color, mix(color, painted.rgb, painted.a), iceOutlinesActive);
+  }
+
   void main() {
     #include <logdepthbuf_fragment>
     vec3 normal = normalize(vNormal);
@@ -702,6 +718,7 @@ export const EARTH_FRAGMENT = /* glsl */ `
     // side. A soft light from the viewer keeps the globe round.
     float facing = max(dot(normal, normalize(cameraPosition)), 0.0);
     color = mix(color, surface * (0.6 + 0.45 * facing), evenLight);
+    color = iceOutlinesLayer(color);
     gl_FragColor = vec4(color, 1.0);
     #include <colorspace_fragment>
   }
@@ -994,6 +1011,7 @@ export async function createGlobe(
         landHeight: { value: 6_500 },
         overlayMap: { value: empiresTexture as Texture },
         empiresActive: { value: 0 },
+        iceOutlinesActive: { value: 0 },
         sunDirection: { value: sunDirection },
         lunarActive: lunarActive,
         moonCenter: { value: moonCenter },
@@ -2074,6 +2092,19 @@ export async function createGlobe(
       uniforms['sketchKind'] = { value: sketch.kind === 'magma' ? 1 : 2 };
       uniforms['sketchLevel'] = { value: levelForShare(sketchField.shares, sketch.land) };
       uniforms['sketchIceEdge'] = { value: sketch.iceEdge };
+    },
+    setIceOutlines(outlines) {
+      // Painting the map is slow: not again for the slice already shown, as time plays on.
+      if ((outlines?.name ?? 'off') === container.dataset['iceOutlines']) return;
+      const uniforms = earth.material.uniforms;
+      uniforms['iceOutlinesActive'] = { value: outlines === null ? 0 : 1 };
+      container.dataset['iceOutlines'] = outlines === null ? 'off' : outlines.name;
+      needsRender = true;
+      if (outlines === null) return;
+      // The states' map, painted over: they are never shown in deep time.
+      paintIceOutlines(empiresCanvas, outlines);
+      empiresTexture.needsUpdate = true;
+      uniforms['overlayMap'] = { value: empiresTexture };
     },
     setEmpires(layer) {
       const uniforms = earth.material.uniforms;

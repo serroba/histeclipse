@@ -1,12 +1,13 @@
 /**
- * Paints territories onto an equirectangular map (longitude −180° at the left edge, north at
+ * Paints territories, or ice-sheet outlines, onto an equirectangular map (longitude −180° at the left edge, north at
  * the top), the layout of the globe's texture, for the Earth shader to lay over the ground.
  *
  * Canvas glue, covered by the Playwright suite; the geometry it uses is tested in
- * `data/empires.ts`.
+ * `data/empires.ts` and `data/iceOutlines.ts`.
  */
 
 import { territoryHue, unwrapRing, type Territory } from '../data/empires';
+import type { IceOutlines } from '../data/iceOutlines';
 
 export const EMPIRE_MAP_WIDTH = 4096;
 
@@ -80,4 +81,44 @@ export function paintBorders(
       context.stroke();
     }
   }
+}
+
+/** How each of a time slice's hypotheses is drawn, in colours that stand out from white ice. */
+const HYPOTHESIS_STYLES = {
+  max: { stroke: 'rgba(255, 120, 100, 0.95)', width: 6, dash: [22, 12] },
+  min: { stroke: 'rgba(110, 200, 255, 0.95)', width: 6, dash: [4, 10] },
+  best: { stroke: 'rgba(255, 205, 90, 0.98)', width: 7, dash: [] },
+} as const;
+
+/**
+ * Draws a time slice's ice-sheet outlines alone on the map: the maximum dashed, the minimum
+ * dotted, the best estimate solid.
+ */
+export function paintIceOutlines(canvas: HTMLCanvasElement, outlines: IceOutlines): void {
+  const context = canvas.getContext('2d');
+  if (context === null) return;
+  const { width, height } = canvas;
+  context.clearRect(0, 0, width, height);
+  context.lineJoin = 'round';
+  context.lineCap = 'round';
+  for (const hypothesis of ['max', 'min', 'best'] as const) {
+    const style = HYPOTHESIS_STYLES[hypothesis];
+    context.strokeStyle = style.stroke;
+    context.lineWidth = style.width;
+    context.setLineDash(style.dash);
+    for (const offset of [-360, 0, 360]) {
+      context.beginPath();
+      for (const ring of outlines[hypothesis]) {
+        unwrapRing(ring).forEach(([lon, lat], index) => {
+          const x = ((lon + offset + 180) / 360) * width;
+          const y = ((90 - lat) / 180) * height;
+          if (index === 0) context.moveTo(x, y);
+          else context.lineTo(x, y);
+        });
+        context.closePath();
+      }
+      context.stroke();
+    }
+  }
+  context.setLineDash([]);
 }

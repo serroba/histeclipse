@@ -5,11 +5,11 @@ Features are written as scenarios: each test is a story of Given, When and Then 
 
 ## Projects
 
-| Project         | Runs                   | Why                                                                                                                |
-| --------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `desktop`       | everything             | Chrome on a laptop screen                                                                                          |
-| `mobile`        | everything             | Chrome on a Pixel 7: touch, a narrow screen                                                                        |
-| `desktop-120hz` | journeys, time, layers | frames at exactly 120 Hz, as on a fast Mac or phone: animation that counts frames instead of time goes wrong there |
+| Project         | Runs                        | Why                                                                                                                |
+| --------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `desktop`       | everything                  | Chrome on a laptop screen                                                                                          |
+| `mobile`        | everything                  | Chrome on a Pixel 7: touch, a narrow screen                                                                        |
+| `desktop-120hz` | journeys, time, layers, ice | frames at exactly 120 Hz, as on a fast Mac or phone: animation that counts frames instead of time goes wrong there |
 
 CI also runs the `desktop` project on macOS, whose GPU limits differ from Linux's (a shader
 once passed on Linux and drew a black globe on a Mac). After each deploy the whole suite runs
