@@ -8,6 +8,7 @@
 
 import { territoryHue, unwrapRing, type Territory } from '../data/empires';
 import type { ArrivalGrid } from '../data/dispersal';
+import type { RockUnit } from '../data/rocks';
 import type { Shown, WayRegion } from '../data/waysOfLife';
 import type { IceOutlines } from '../data/iceOutlines';
 
@@ -192,4 +193,29 @@ export function paintWays(canvas: HTMLCanvasElement, regions: readonly WayRegion
       context.fill('evenodd');
     }
   }
+}
+
+/** Shades each map unit in its own colour (Macrostrat's, by age), under everything else. */
+export function paintRocks(canvas: HTMLCanvasElement, units: readonly RockUnit[]): void {
+  const context = canvas.getContext('2d');
+  if (context === null) return;
+  const { width, height } = canvas;
+  context.globalAlpha = 0.55;
+  for (const unit of units) {
+    context.fillStyle = unit.colour;
+    for (const offset of [-360, 0, 360]) {
+      context.beginPath();
+      for (const ring of unit.rings) {
+        unwrapRing(ring).forEach(([lon, lat], index) => {
+          const x = ((lon + offset + 180) / 360) * width;
+          const y = ((90 - lat) / 180) * height;
+          if (index === 0) context.moveTo(x, y);
+          else context.lineTo(x, y);
+        });
+        context.closePath();
+      }
+      context.fill('evenodd');
+    }
+  }
+  context.globalAlpha = 1;
 }

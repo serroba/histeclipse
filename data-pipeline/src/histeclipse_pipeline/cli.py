@@ -25,6 +25,7 @@ from histeclipse_pipeline.ics import fetch_chart
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table, write_table
+from histeclipse_pipeline.macrostrat import fetch_rocks
 from histeclipse_pipeline.ohm import fetch_ohm
 from histeclipse_pipeline.paleodem import fetch_paleodem
 from histeclipse_pipeline.paleotemp import fetch_paleotemp
@@ -238,6 +239,12 @@ def ics(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} chart units to {args.out}")
 
 
+def rocks(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the rocks at the surface and their ages (Macrostrat, CC BY 4.0)."""
+    count = fetch_rocks(args.out)
+    return _say(f"wrote {count} map units to {args.out}")
+
+
 def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write ice-sheet thickness every 2,500 years over the last 80,000 (PaleoMIST 1.0)."""
     count = fetch_icesheets(args.out)
@@ -381,6 +388,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "ics": (
         ics,
         "write the International Chronostratigraphic Chart's units (ICS, CC BY 4.0)",
+        "output JSON file",
+    ),
+    "rocks": (
+        rocks,
+        "write the rocks at the surface and their ages (Macrostrat, CC BY 4.0)",
         "output JSON file",
     ),
     "icesheets": (

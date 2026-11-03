@@ -50,6 +50,8 @@ export const LAYERS = [
   'genomes',
   // How people lived by region (ArchaeoGLOBE): foraging, herding, farming, towns.
   'ways',
+  // The rocks at the surface today and how old they are (Macrostrat).
+  'rocks',
   // Deep time only: the surface coloured by temperature, and sea level through time.
   'temperature',
   'sealevel',
