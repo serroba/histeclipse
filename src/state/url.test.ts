@@ -15,6 +15,7 @@ import { parseViewState, serializeViewState } from './url';
 import {
   DEFAULT_CAMERA,
   DEFAULT_LAYERS,
+  DISPERSAL_SCENARIOS,
   DEFAULT_LOOK,
   BORDER_SOURCES,
   DEEP_SCALES,
@@ -72,6 +73,7 @@ describe('parseViewState', () => {
       ma: null,
       deepScale: 'all',
       coast: 'bintanja-2008',
+      dispersal: 'off',
       seaIce: 'mpi-esm1-2-lr',
       temperatureModel: 'scotese',
       impact: 'early',
@@ -140,6 +142,15 @@ describe('parseViewState', () => {
       'seaice=miroc-es2l',
     );
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('seaice');
+  });
+
+  it('reads which dispersal scenario is shaded, writing it only when one is', () => {
+    expect(parseViewState('dispersal=b', NOW).state.dispersal).toBe('b');
+    expect(serializeViewState(parseViewState('dispersal=a', NOW).state)).toContain('&dispersal=a');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('dispersal');
+    expect(parseViewState('dispersal=z', NOW).warnings).toEqual([
+      'Ignored dispersal="z": unknown dispersal; expected one of off, a, b',
+    ]);
   });
 
   it('reads whose sea level the coastlines follow, writing it only when not the default', () => {
@@ -401,6 +412,7 @@ describe('serializeViewState', () => {
     ),
     deepScale: fc.constantFrom(...DEEP_SCALES),
     coast: fc.constantFrom(...COAST_SOURCES),
+    dispersal: fc.constantFrom(...DISPERSAL_SCENARIOS),
     seaIce: fc.constantFrom(...SEA_ICE_MODELS),
     temperatureModel: fc.constantFrom(...TEMPERATURE_MODELS),
     impact: fc.constantFrom(...IMPACT_MODELS),

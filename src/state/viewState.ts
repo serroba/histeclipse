@@ -58,6 +58,10 @@ export const LAYERS = [
 ] as const;
 export type Layer = (typeof LAYERS)[number];
 
+/** A dispersal model's scenario shaded with the Humans layer, or none. */
+export const DISPERSAL_SCENARIOS = ['off', 'a', 'b'] as const;
+export type DispersalScenario = (typeof DISPERSAL_SCENARIOS)[number];
+
 /** Layers that belong to deep time, dropped on leaving it. */
 export const DEEP_LAYERS: readonly Layer[] = ['temperature', 'sealevel', 'plates', 'humans'];
 
@@ -156,6 +160,8 @@ export interface ViewState {
   readonly deepScale: DeepScale;
   /** Whose sea level the ice-age coastlines follow. */
   readonly coast: CoastSource;
+  /** Timmermann & Friedrich's dispersal model shaded with Humans: off, early or late exit. */
+  readonly dispersal: DispersalScenario;
   /** Which climate model's ice-age sea ice the globe blends towards. */
   readonly seaIce: SeaIceModel;
   /** Whose temperature maps colour the deep-time globe. */
@@ -239,6 +245,7 @@ export function defaultViewState(now: Date): ViewState {
     ma: null,
     deepScale: 'all',
     coast: DEFAULT_COAST,
+    dispersal: 'off',
     seaIce: DEFAULT_SEA_ICE_MODEL,
     temperatureModel: DEFAULT_TEMPERATURE_MODEL,
     impact: DEFAULT_IMPACT_MODEL,

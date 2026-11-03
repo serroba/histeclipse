@@ -58,6 +58,7 @@ import { YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
 import { errorMessage } from '../util/errors';
 import {
+  DISPERSAL_SCENARIOS,
   CAMERA_DISTANCE_RANGE,
   BORDER_SOURCES,
   DEFAULT_LOOK,
@@ -151,6 +152,11 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     ma: read<number | null>('ma', parseMa, defaults.ma),
     deepScale: read('scale', parseDeepScale, defaults.deepScale),
     coast: read('coast', parseCoast, defaults.coast),
+    dispersal: read(
+      'dispersal',
+      (raw) => oneOf(raw, DISPERSAL_SCENARIOS, 'dispersal'),
+      defaults.dispersal,
+    ),
     seaIce: read('seaice', parseSeaIce, defaults.seaIce),
     temperatureModel: read('temp', parseTemperatureModel, defaults.temperatureModel),
     impact: read('impact', (raw) => oneOf(raw, IMPACT_MODELS, 'impact'), defaults.impact),
@@ -188,6 +194,7 @@ export function serializeViewState(state: ViewState): string {
   if (state.ma !== null) params.set('ma', formatMa(state.ma));
   if (state.deepScale !== 'all') params.set('scale', state.deepScale);
   if (state.coast !== DEFAULT_COAST) params.set('coast', state.coast);
+  if (state.dispersal !== 'off') params.set('dispersal', state.dispersal);
   if (state.seaIce !== DEFAULT_SEA_ICE_MODEL) params.set('seaice', state.seaIce);
   if (state.temperatureModel !== DEFAULT_TEMPERATURE_MODEL) {
     params.set('temp', state.temperatureModel);

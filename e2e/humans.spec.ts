@@ -47,3 +47,36 @@ test('Humans goes with deep time, and stays out of the link afterwards', async (
   await expect(page).not.toHaveURL(/humans/);
   await expect(page.getByTestId('globe')).toHaveAttribute('data-humans', 'off');
 });
+
+test('a dispersal model shades where it has people settled, scenario by scenario', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const words = page.getByTestId('dispersal-words');
+  await test.step('Given the ice ages 60,000 years ago with Humans on', async () => {
+    await page.goto('./?ma=0.06&scale=ice&layers=humans');
+    await globeRendered(page);
+    await showDeepDetails(page);
+  });
+  await test.step('When they pick the early-exit model', async () => {
+    await page.getByLabel('Dispersal model').selectOption('a');
+  });
+  await test.step('Then it shades its settled land, and says whose, how much and on what terms', async () => {
+    await expect(page).toHaveURL(/dispersal=a/);
+    await expect(globe).toHaveAttribute('data-settled', 'a 60');
+    await expect(words).toHaveText(
+      /^Shaded: where Timmermann & Friedrich’s \(2016\) model, early exit from Africa \(scenario A\), has people settled by then: \d+% of the land it ever reaches\. One model’s view, not evidence; its data is CC BY-NC 4\.0 \(non-commercial\)\.$/,
+    );
+  });
+  await test.step('When they pick the late-exit model, it shades that one instead', async () => {
+    await page.getByLabel('Dispersal model').selectOption('b');
+    await expect(globe).toHaveAttribute('data-settled', 'b 60');
+  });
+  await test.step('And turning the model off clears the shading', async () => {
+    await page.getByLabel('Dispersal model').selectOption('off');
+    await expect(globe).toHaveAttribute('data-settled', 'off');
+    await expect(page).not.toHaveURL(/dispersal=/);
+  });
+  expect(problems).toEqual([]);
+});

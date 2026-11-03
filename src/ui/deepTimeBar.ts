@@ -31,7 +31,7 @@ import {
   SNOWBALL_MODELS,
 } from '../deepTime/sketch';
 import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
-import type { DeepScale } from '../state/viewState';
+import { DISPERSAL_SCENARIOS, type DeepScale, type DispersalScenario } from '../state/viewState';
 import { element } from './dom';
 import { createMilestonePanel } from './milestonePanel';
 import { createSeaLevelChart } from './seaLevelChart';
@@ -225,7 +225,18 @@ export interface DeepTimeView {
   /** Whether a second reconstruction's continents are outlined, and what to say of them. */
   readonly plates: boolean;
   /** Dated finds of humans: off, on while the claims load (null), or on with what to say. */
-  readonly humans: { readonly on: false } | { readonly on: true; readonly view: HumansView | null };
+  readonly humans:
+    | { readonly on: false }
+    | {
+        readonly on: true;
+        readonly view: HumansView | null;
+        /** The dispersal model shaded, and the share of its land settled then. */
+        readonly model: {
+          readonly scenario: DispersalScenario;
+          readonly name: string | null;
+          readonly share: number | null;
+        };
+      };
   readonly platesText: string | null;
   /** The ice-age coastline; null before the ice ages. */
   readonly coastline: CoastlineView | null;
@@ -262,6 +273,7 @@ export function createDeepTimeBar(handlers: {
   onSeaLevel(on: boolean): void;
   onPlates(on: boolean): void;
   onHumans(on: boolean): void;
+  onDispersal(scenario: DispersalScenario): void;
   onScale(scale: DeepScale): void;
   onCoast(coast: CoastSource): void;
   onSeaIce(model: SeaIceModel): void;
@@ -433,6 +445,25 @@ export function createDeepTimeBar(handlers: {
     'button',
     { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
     'Humans',
+  );
+  const dispersalPicker = element(
+    'select',
+    { class: 'deep-coast', 'aria-label': 'Dispersal model' },
+    element('option', { value: 'off' }, 'Off'),
+    element('option', { value: 'a' }, 'Early exit from Africa'),
+    element('option', { value: 'b' }, 'Late exit from Africa'),
+  );
+  dispersalPicker.addEventListener('change', () => {
+    const picked = DISPERSAL_SCENARIOS.find((scenario) => scenario === dispersalPicker.value);
+    if (picked !== undefined) handlers.onDispersal(picked);
+  });
+  const dispersalWords = element('span', { 'data-testid': 'dispersal-words' });
+  const dispersalRow = element(
+    'p',
+    { class: 'dispersal-row' },
+    element('label', {}, 'Model ', dispersalPicker),
+    ' ',
+    dispersalWords,
   );
   const humansNote = element('div', {
     class: 'deep-note humans-note',
@@ -638,6 +669,18 @@ export function createDeepTimeBar(handlers: {
     { passive: true },
   );
 
+  function dispersalText(model: {
+    scenario: DispersalScenario;
+    name: string | null;
+    share: number | null;
+  }): string {
+    if (model.scenario === 'off') {
+      return 'Shade where a dispersal model has people settled by then (Timmermann & Friedrich 2016).';
+    }
+    if (model.share === null || model.name === null) return 'Loading the model…';
+    return `Shaded: where Timmermann & Friedrich’s (2016) model, ${model.name}, has people settled by then: ${String(Math.round(model.share * 100))}% of the land it ever reaches. One model’s view, not evidence; its data is CC BY-NC 4.0 (non-commercial).`;
+  }
+
   function claimLine(line: ClaimLine): HTMLElement {
     return element(
       'li',
@@ -655,7 +698,10 @@ export function createDeepTimeBar(handlers: {
       return;
     }
     const { questions, others, sites } = humans.view;
+    dispersalPicker.value = humans.model.scenario;
+    dispersalWords.textContent = dispersalText(humans.model);
     humansNote.replaceChildren(
+      dispersalRow,
       element(
         'p',
         {},

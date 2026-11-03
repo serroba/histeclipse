@@ -1,0 +1,10 @@
+The files in this folder are derived from data by Axel Timmermann and Tobias
+Friedrich (Late Pleistocene climate drivers of early human migration, Nature 538, 92-95, 2016,
+doi:10.1038/nature19365), shared by the IBS Center for Climate Physics climate data server
+(https://climatedata.ibs.re.kr/) under a Creative Commons Attribution-NonCommercial 4.0
+International licence (https://creativecommons.org/licenses/by-nc/4.0/).
+
+They keep that licence: they may be used for non-commercial purposes only, with attribution.
+Changes: two scenarios' arrival times were packed into 8-bit greyscale images and the grid was
+turned north up, starting at 179.5 W. The rest of this repository is under the MIT licence;
+that does not apply to these files.
