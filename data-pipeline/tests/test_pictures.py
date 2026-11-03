@@ -30,6 +30,14 @@ SUMMARIES: dict[str, object] = {
         "originalimage": {"source": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Odd.jpg"},
     },
     "Missing": {"type": "https://mediawiki.org/wiki/HyperSwitch/errors/not_found"},
+    "Baculites": {
+        "description": "Extinct genus of ammonites",
+        "content_urls": {"desktop": {"page": "https://en.wikipedia.org/wiki/Baculites"}},
+    },
+    "Paladin": {
+        "description": "Warrior of Charlemagne's court",
+        "content_urls": {"desktop": {"page": "https://en.wikipedia.org/wiki/Paladin"}},
+    },
 }
 
 COMMONS: dict[str, object] = {
@@ -60,6 +68,12 @@ COMMONS: dict[str, object] = {
 }
 
 
+def looked_up(title: str) -> Picture:
+    found = picture(title, fetch)
+    assert found is not None
+    return found
+
+
 def fetch(url: str) -> object:
     key = url.rsplit("/", 1)[-1] if "summary" in url else url.rsplit("titles=", 1)[-1]
     return SUMMARIES.get(key) if "summary" in url else COMMONS.get(key, {"query": {"pages": {}}})
@@ -74,6 +88,18 @@ def test_finds_each_title_a_data_file_names_once() -> None:
         ]
     }
     assert titles_in(data) == ["Jebel Irhoud", "Apidima Cave"]
+    assert titles_in({"wikipedia": ["Baculites", "Paladin"], "x": {"wikipedia": "Baculites"}}) == [
+        "Baculites",
+        "Paladin",
+    ]
+
+
+def test_a_page_that_must_say_genus_is_skipped_when_it_is_about_something_else() -> None:
+    assert picture("Baculites", fetch, "genus") == Picture(
+        page="https://en.wikipedia.org/wiki/Baculites"
+    )
+    assert picture("Paladin", fetch, "genus") is None
+    assert picture("Missing", fetch, "genus") is None
 
 
 def test_reads_commons_metadata_as_plain_text() -> None:
@@ -92,7 +118,7 @@ def test_knows_a_commons_file_from_one_kept_on_wikipedia_alone() -> None:
 
 
 def test_a_page_with_a_free_lead_image_gets_its_thumbnail_and_credit() -> None:
-    assert picture("Jebel Irhoud", fetch) == Picture(
+    assert looked_up("Jebel Irhoud") == Picture(
         page="https://en.wikipedia.org/wiki/Jebel_Irhoud",
         src="https://upload.wikimedia.org/thumb/320px-Hublin.jpg",
         width=320,
@@ -106,7 +132,7 @@ def test_a_page_with_a_free_lead_image_gets_its_thumbnail_and_credit() -> None:
 
 def test_a_page_without_a_free_image_keeps_its_link_only() -> None:
     for title in ("Apidima Cave", "A logo", "Unlicensed"):
-        found = picture(title, fetch)
+        found = looked_up(title)
         assert found.src is None
         assert found.page.startswith("https://en.wikipedia.org/wiki/")
 
@@ -119,8 +145,8 @@ def test_a_title_with_no_page_is_an_error() -> None:
 def test_the_site_file_has_each_page_and_its_picture_if_any() -> None:
     data = pictures_file(
         {
-            "Jebel Irhoud": picture("Jebel Irhoud", fetch),
-            "Apidima Cave": picture("Apidima Cave", fetch),
+            "Jebel Irhoud": looked_up("Jebel Irhoud"),
+            "Apidima Cave": looked_up("Apidima Cave"),
         },
         "2026-11-04",
     )

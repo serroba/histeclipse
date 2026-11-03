@@ -13,6 +13,7 @@ import html
 import json
 import re
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
@@ -55,16 +56,19 @@ class Picture:
 
 
 def titles_in(data: object) -> list[str]:
-    """Every ``"wikipedia"`` title a data file names, once each, in order."""
+    """Every ``"wikipedia"`` title a data file names (one, or a list), once each, in order."""
     found: list[str] = []
 
     def walk(value: object) -> None:
         if isinstance(value, dict):
             for key, item in cast("dict[str, object]", value).items():
-                if key == "wikipedia" and isinstance(item, str) and item not in found:
-                    found.append(item)
-                else:
+                if key != "wikipedia":
                     walk(item)
+                    continue
+                titles = cast("list[object]", item) if isinstance(item, list) else [item]
+                for title in titles:
+                    if isinstance(title, str) and title not in found:
+                        found.append(title)
         elif isinstance(value, list):
             for item in cast("list[object]", value):
                 walk(item)
@@ -98,14 +102,22 @@ def _meta(metadata: dict[str, object], key: str) -> str | None:
     return plain(value) if isinstance(value, str) and value.strip() else None
 
 
-def picture(title: str, fetch: Fetch) -> Picture:
-    """Look a title up: its page, and its lead image when Commons has it with a licence."""
+def picture(title: str, fetch: Fetch, must_mention: str | None = None) -> Picture | None:
+    """Look a title up: its page, and its lead image when Commons has it with a licence.
+
+    With ``must_mention``, a page whose short description does not say it (such as "genus")
+    is about something else of the same name, or missing: None, rather than an error.
+    """
     summary = cast(
         "dict[str, object]",
         fetch(SUMMARY.format(title=urllib.parse.quote(title.replace(" ", "_")))),
     )
     urls = cast("dict[str, dict[str, str]]", summary.get("content_urls", {}))
     page = urls.get("desktop", {}).get("page")
+    if must_mention is not None:
+        description = summary.get("description")
+        if not isinstance(description, str) or must_mention not in description.lower():
+            return None
     if page is None:
         msg = f"no Wikipedia page for {title!r}"
         raise ValueError(msg)
@@ -167,8 +179,15 @@ def pictures_file(pictures: dict[str, Picture], made: str) -> dict[str, Json]:
 
 def _fetch(url: str) -> object:  # pragma: no cover - needs network access
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})  # noqa: S310
-    with urllib.request.urlopen(request, timeout=60) as response:  # noqa: S310  # pyright: ignore[reportAny]
-        body: object = response.read()  # pyright: ignore[reportAny]
+    try:
+        with urllib.request.urlopen(request, timeout=60) as response:  # noqa: S310  # pyright: ignore[reportAny]
+            body: object = response.read()  # pyright: ignore[reportAny]
+    except urllib.error.HTTPError as error:
+        # No such page: an empty summary, which the caller reads as no page.
+        if error.code == 404:  # noqa: PLR2004
+            time.sleep(0.5)
+            return {}
+        raise
     if not isinstance(body, bytes):
         msg = f"{url}: expected bytes"
         raise TypeError(msg)
@@ -176,10 +195,13 @@ def _fetch(url: str) -> object:  # pragma: no cover - needs network access
     return cast("object", json.loads(body))
 
 
-def fetch_pictures(source: Path, path: Path) -> int:  # pragma: no cover - needs network access
+def fetch_pictures(
+    source: Path, path: Path, must_mention: str | None = None
+) -> int:  # pragma: no cover - needs network access
     """Look up every title in ``source`` and write the pictures file."""
     titles = titles_in(cast("object", json.loads(source.read_text())))
-    pictures = {title: picture(title, _fetch) for title in titles}
+    found = {title: picture(title, _fetch, must_mention) for title in titles}
+    pictures = {title: entry for title, entry in found.items() if entry is not None}
     made = dt.datetime.now(tz=dt.UTC).date().isoformat()
     path.parent.mkdir(parents=True, exist_ok=True)
     _ = path.write_text(
