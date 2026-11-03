@@ -24,9 +24,11 @@ test('playing history moves through the years and names the states that come and
     await globeRendered(page);
     await expect(page.getByTestId('globe')).toHaveAttribute('data-empires', /^[1-9]\d*$/);
   });
-  await test.step('When they open the track, pick 1,000 years a second and play', async () => {
+  await test.step('When they open the track and play, at 50 years a second', async () => {
     await openTrack(page);
-    await bar.getByLabel('Speed').selectOption('1000');
+    // Slow enough that the trip to today outlasts the scenario: a faster one can end just as
+    // Stop is pressed, and the tap then starts a new trip.
+    await expect(bar.getByLabel('Speed')).toHaveValue('50');
     await bar.getByRole('button', { name: 'Travel through the years' }).click();
   });
   await test.step('Then the years run on, and the track names states that appeared or went', async () => {
