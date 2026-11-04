@@ -47,7 +47,7 @@ test('the Impact craters layer marks craters to open, each with its details and 
   expect(problems).toEqual([]);
 });
 
-test('in deep time, impacts show where they lay, those of an uncertain age apart', async ({
+test('in deep time, impacts show around their time, or all that had struck by then', async ({
   page,
 }) => {
   const problems = collectProblems(page);
@@ -60,12 +60,22 @@ test('in deep time, impacts show where they lay, those of an uncertain age apart
   await test.step('When they turn on Impacts', async () => {
     await page.getByRole('button', { name: 'Impacts', exact: true }).click();
   });
-  await test.step('Then the craters of then are marked, and Chicxulub may have just struck', async () => {
+  await test.step('Then the impacts of about then are marked, Chicxulub among them', async () => {
     await expect(page.getByTestId('globe')).toHaveAttribute('data-impacts', /^[1-9]\d*$/);
+    await expect(note).toContainText('Impacts around 66 million years ago:');
+    await expect(note).toContainText('within 2.5 million years of then');
+    await expect(page.getByRole('button', { name: 'Chicxulub: details' })).toBeAttached();
+    await expect(note.getByRole('link', { name: 'the Impact Earth Database' })).toBeVisible();
+  });
+  await test.step('When they show all that had struck by then, the older craters join them', async () => {
+    const around = Number(await page.getByTestId('globe').getAttribute('data-impacts'));
+    await page.getByLabel('Show impacts').selectOption('struck');
     await expect(note).toContainText('Impacts by 66 million years ago:');
     await expect(note).toContainText('more may have (their ages span this moment)');
     await expect(page.locator('.impact-mark.is-uncertain').first()).toBeAttached();
-    await expect(note.getByRole('link', { name: 'the Impact Earth Database' })).toBeVisible();
+    await expect
+      .poll(async () => Number(await page.getByTestId('globe').getAttribute('data-impacts')))
+      .toBeGreaterThan(around);
   });
   await test.step('When they go back before the maps, the button goes', async () => {
     await page.goto('./?ma=1000&layers=impacts');

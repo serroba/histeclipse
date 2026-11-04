@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import data from '../../public/data/impacts.json';
 import {
+  AROUND_MA,
   impactDetails,
   impactsAt,
   impactsText,
@@ -150,5 +151,50 @@ describe('impacts', () => {
       ['Age', 'Middle Cambrian'],
     ]);
     expect(bed && impactDetails({ ...bed, age: '' }).facts.at(-1)).toEqual(['Age', 'not given']);
+  });
+});
+
+describe('impacts around their time', () => {
+  // Each with today's place only, so placed as today (placeMa 0).
+  const dated: Impacts = {
+    ...small,
+    impacts: [
+      // Dated closely: shown 2.5 million years either side of its range.
+      { ...chicxulub, then: [[2140, -8952]], olderMa: 66.136, youngerMa: 65.94 },
+      // Dated only to a span of 40 million years: shown across it, as loosely dated.
+      { ...chicxulub, id: 2, name: 'Wide', then: [[0, 0]], olderMa: 100, youngerMa: 60 },
+    ],
+  };
+
+  it('shows an impact near its dated age, not before, not long after', () => {
+    const names = (ma: number) =>
+      impactsAt(dated, ma, false, 0, 'around').map((mark) => mark.impact.name);
+    expect(names(66)).toEqual(['Chicxulub', 'Wide']);
+    expect(names(66.136 + AROUND_MA - 0.01)).toEqual(['Chicxulub', 'Wide']);
+    expect(names(62)).toEqual(['Wide']);
+    expect(names(57)).toEqual([]);
+    expect(names(103)).toEqual([]);
+    // Every one that had struck by then, as before.
+    expect(impactsAt(dated, 20, false, 0, 'struck')).toHaveLength(2);
+  });
+
+  it('marks the loosely dated as uncertain, and says how many', () => {
+    const marks = impactsAt(dated, 66, false, 0, 'around');
+    expect(marks.map((mark) => mark.uncertain)).toEqual([false, true]);
+    expect(impactsText(dated, marks, 66, 'around')).toBe(
+      'Impacts around 66 million years ago: 2 whose dated age falls within 2.5 million years of then, each where it lay; 1 of them dated only to a span of more than 10 million years (dashed). Ages as the Impact Earth Database gives them.',
+    );
+    expect(
+      impactsText(dated, impactsAt(dated, 66, false, 0, 'around').slice(0, 1), 66, 'around'),
+    ).toBe(
+      'Impacts around 66 million years ago: 1 whose dated age falls within 2.5 million years of then, each where it lay. Ages as the Impact Earth Database gives them.',
+    );
+    expect(impactsText(dated, [], 30, 'around')).toBe(
+      'No impacts dated to within 2.5 million years of 30 million years ago.',
+    );
+  });
+
+  it('today shows every impact whatever the mode', () => {
+    expect(impactsAt(dated, 0, true, 0, 'around')).toHaveLength(2);
   });
 });

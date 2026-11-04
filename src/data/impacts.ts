@@ -80,22 +80,45 @@ function placeThen(data: Impacts, impact: Impact, ma: number): GeoPoint | null {
 }
 
 /**
- * The impacts that may have struck by `ma` million years ago, where each lay then (or at
- * `placeMa`, for a map of another moment), largest first. Today's Earth (`today`) also shows
- * those whose age the database gives in words only.
+ * How deep time shows the impacts: each around its time (`around`: from its youngest dated age
+ * to its oldest, give or take `AROUND_MA`), or every one that may have struck by then (`struck`).
+ */
+export type ImpactsMode = 'around' | 'struck';
+export const IMPACTS_MODES: readonly ImpactsMode[] = ['around', 'struck'];
+
+/** How near its dated age a moment must be for an impact to show around its time, Ma. */
+export const AROUND_MA = 2.5;
+/** An impact dated only to a span wider than this, Ma, is marked as loosely dated. */
+export const WIDE_SPAN_MA = 10;
+
+/**
+ * The impacts to mark `ma` million years ago, where each lay then (or at `placeMa`, for a map of
+ * another moment), largest first: around their time, or every one that may have struck by then.
+ * Today's Earth (`today`) shows every one, those whose age is given in words only too.
  */
 export function impactsAt(
   data: Impacts,
   ma: number,
   today = false,
   placeMa = ma,
+  mode: ImpactsMode = 'struck',
 ): readonly ImpactMark[] {
   const marks: ImpactMark[] = [];
   for (const impact of data.impacts) {
-    if (impact.olderMa === null ? !today : impact.olderMa < ma) continue;
+    const { olderMa, youngerMa } = impact;
+    if (olderMa === null || youngerMa === null) {
+      if (!today) continue;
+    } else if (mode === 'around' && !today) {
+      if (ma < youngerMa - AROUND_MA || ma > olderMa + AROUND_MA) continue;
+    } else if (olderMa < ma) continue;
     const point = placeThen(data, impact, placeMa);
     if (point === null) continue;
-    const uncertain = impact.youngerMa !== null && impact.youngerMa < ma;
+    // Around its time, an impact is uncertain when dated only loosely; by then, when it may not
+    // have struck yet.
+    const uncertain =
+      olderMa !== null &&
+      youngerMa !== null &&
+      (mode === 'around' && !today ? olderMa - youngerMa > WIDE_SPAN_MA : youngerMa < ma);
     marks.push({ impact, point, uncertain });
   }
   return marks.sort((a, b) => (b.impact.diameterKm ?? 0) - (a.impact.diameterKm ?? 0));
@@ -112,6 +135,7 @@ export function impactsText(
   data: Impacts,
   marks: readonly ImpactMark[],
   ma: number | null,
+  mode: ImpactsMode = 'struck',
 ): string {
   const left =
     data.leftOut.length === 0
@@ -122,6 +146,16 @@ export function impactsText(
   }
   const sure = marks.filter((mark) => !mark.uncertain).length;
   const maybe = marks.length - sure;
+  if (mode === 'around') {
+    if (marks.length === 0) {
+      return `No impacts dated to within ${String(AROUND_MA)} million years of ${formatMa(ma)}.`;
+    }
+    const loose =
+      maybe === 0
+        ? ''
+        : `; ${String(maybe)} of them dated only to a span of more than ${String(WIDE_SPAN_MA)} million years (dashed)`;
+    return `Impacts around ${formatMa(ma)}: ${String(marks.length)} whose dated age falls within ${String(AROUND_MA)} million years of then, each where it lay${loose}. Ages as the Impact Earth Database gives them.`;
+  }
   const more =
     maybe === 0 ? '' : `, and ${String(maybe)} more may have (their ages span this moment)`;
   return `Impacts by ${formatMa(ma)}: ${String(sure)} had struck${more}, each where it lay then. Ages as the Impact Earth Database gives them.`;
