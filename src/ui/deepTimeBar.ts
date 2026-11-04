@@ -9,6 +9,7 @@ import { earthFacts } from '../deepTime/earthFacts';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period, periodShort } from '../deepTime/periods';
 import { gasText, type Atmosphere } from '../data/atmosphere';
+import { IMPACTS_MODES, type ImpactsMode } from '../data/impacts';
 import {
   co2Text,
   NITROGEN_NOTE,
@@ -283,7 +284,9 @@ export interface DeepTimeView {
   /** Fossils: off, on while they load (null), or on with the finds of the moment. */
   readonly fossils: { readonly on: false } | { readonly on: true; readonly at: FossilsAt | null };
   /** Impact craters and deposits: off, on while they load (null), or on with what to say. */
-  readonly impacts: { readonly on: false } | { readonly on: true; readonly text: string | null };
+  readonly impacts:
+    | { readonly on: false }
+    | { readonly on: true; readonly text: string | null; readonly mode: ImpactsMode };
   /** Dated finds of humans: off, on while the claims load (null), or on with what to say. */
   readonly humans:
     | { readonly on: false }
@@ -337,6 +340,8 @@ export function createDeepTimeBar(handlers: {
   onHumans(on: boolean): void;
   onFossils(on: boolean): void;
   onImpacts(on: boolean): void;
+  /** Show each impact around its time, or every one that had struck by then. */
+  onImpactsMode(mode: ImpactsMode): void;
   onAir(on: boolean): void;
   /** The reader asked for the Paleo-CO2 Data Archive's estimates: load them. */
   onCo2Archive(): void;
@@ -536,6 +541,17 @@ export function createDeepTimeBar(handlers: {
     { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
     'Impacts',
   );
+  const impactsMode = element(
+    'select',
+    { class: 'deep-coast', 'aria-label': 'Show impacts' },
+    element('option', { value: 'around' }, 'each around its time'),
+    element('option', { value: 'struck' }, 'all that had struck by then'),
+  );
+  impactsMode.addEventListener('change', () => {
+    const mode = IMPACTS_MODES.find((each) => each === impactsMode.value);
+    if (mode !== undefined) handlers.onImpactsMode(mode);
+  });
+  const impactsPicker = element('label', { class: 'impacts-picker' }, 'Show impacts ', impactsMode);
   const impactsNote = element('p', {
     class: 'deep-note impacts-note',
     hidden: '',
@@ -1219,7 +1235,10 @@ export function createDeepTimeBar(handlers: {
       impactsButton.setAttribute('aria-pressed', String(view.impacts.on));
       impactsNote.hidden = !view.impacts.on;
       if (view.impacts.on) {
+        impactsMode.value = view.impacts.mode;
         impactsNote.replaceChildren(
+          impactsPicker,
+          ' ',
           view.impacts.text ?? 'Impacts: loading…',
           ' Source: ',
           element('a', { href: 'https://impact.uwo.ca' }, 'the Impact Earth Database'),

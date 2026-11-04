@@ -173,7 +173,14 @@ import { loadAtmosphere, type Atmosphere } from './data/atmosphere';
 import { loadCo2Archive, type Co2Archive } from './data/co2Archive';
 import { loadDeepAir, type DeepAir } from './data/deepAir';
 import { fossilCard, fossilsAt, loadFossils, type Fossils } from './data/fossils';
-import { impactDetails, impactsAt, impactsText, loadImpacts, type Impacts } from './data/impacts';
+import {
+  impactDetails,
+  impactsAt,
+  impactsText,
+  loadImpacts,
+  type Impacts,
+  type ImpactsMode,
+} from './data/impacts';
 import {
   eruptionsNear,
   loadVolcanoDetails,
@@ -475,6 +482,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     onCo2Archive() {
       loadArchive();
+    },
+    onImpactsMode(mode) {
+      impactsMode = mode;
+      showDeepTime(store.get());
     },
     onImpacts(on) {
       store.set((state) => {
@@ -1705,6 +1716,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let impacts: Impacts | null = null;
   let impactsLoading: Promise<Impacts> | null = null;
   let impactsSaid: string | null = null;
+  // In deep time: each impact around its time, or every one that had struck by then.
+  let impactsMode: ImpactsMode = 'around';
 
   /**
    * With Impacts on, the craters that may have struck by the moment shown, where they lay then:
@@ -1742,7 +1755,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           },
         );
       }
-      return { on: true, text: null };
+      return { on: true, text: null, mode: impactsMode };
     }
     if (ma === null) {
       // In historical time, today's places; a crater younger than the year shown is not there.
@@ -1750,13 +1763,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       const marks = impactsAt(impacts, since, true);
       globe.setImpacts(marks);
       impactsSaid = impactsText(impacts, marks, null);
-      return { on: true, text: impactsSaid };
+      return { on: true, text: impactsSaid, mode: impactsMode };
     }
     // On the ice-age scale the map is today's, so the craters are where they are today.
-    const marks = impactsAt(impacts, ma, false, scale === 'ice' ? 0 : ma);
+    const marks = impactsAt(impacts, ma, false, scale === 'ice' ? 0 : ma, impactsMode);
     globe.setImpacts(marks);
     impactsSaid = null;
-    return { on: true, text: impactsText(impacts, marks, ma) };
+    return { on: true, text: impactsText(impacts, marks, ma, impactsMode), mode: impactsMode };
   }
 
   // Volcanic eruptions near the year shown, in historical time: loaded with the layer; each
