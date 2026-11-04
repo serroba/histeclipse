@@ -1,6 +1,7 @@
 /**
  * Feature: Full view. The reader clears the panels to look at the globe. In deep time a tap on
- * the globe clears them (there is no place to pick), and a strip keeps saying when it is.
+ * the globe, or on the space around it, clears them (there is no place to pick), and a strip
+ * keeps saying when it is.
  */
 
 import { collectProblems, expect, globeRendered, test } from './support';
@@ -93,4 +94,40 @@ test('in full view with Temperature on, the strip has a small scale of its colou
     await expect(glance).toBeVisible();
     await expect(scale).toBeHidden();
   });
+});
+
+test('in deep time a tap on the space around the globe clears the panels too', async ({ page }) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  // Beside the globe, at the right edge of the view: empty space.
+  const space = async () => {
+    const box = await globe.boundingBox();
+    if (box === null) throw new Error('no globe');
+    await page.mouse.click(box.x + box.width - 4, box.y + box.height * 0.45);
+  };
+  await test.step('Given deep time 180 million years ago', async () => {
+    await page.goto('./?ma=180');
+    await globeRendered(page);
+  });
+  await test.step('When they tap the space beside the globe', async () => {
+    await space();
+  });
+  await test.step('Then the panels go, as with a tap on the globe', async () => {
+    await expect(page.locator('.hud')).toBeHidden();
+    await expect(page.getByTestId('deep-glance')).toBeVisible();
+  });
+  await test.step('When they tap it again, the panels come back', async () => {
+    await space();
+    await expect(page.locator('.hud')).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});
+
+test('in the Holocene a tap on empty space still only brings the panels back', async ({ page }) => {
+  await page.goto('./?t=2024-04-08T18:17');
+  await globeRendered(page);
+  const box = await page.getByTestId('globe').boundingBox();
+  if (box === null) throw new Error('no globe');
+  await page.mouse.click(box.x + box.width - 4, box.y + box.height * 0.45);
+  await expect(page.locator('.hud')).toBeVisible();
 });
