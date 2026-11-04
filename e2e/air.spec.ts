@@ -66,6 +66,18 @@ test('over 540 million years, Air gives CO₂ and O₂ with their ranges, and ni
     await expect(page.getByTestId('deep-n2')).toContainText('no record is firm enough to chart');
     await expect(note.getByRole('link', { name: 'Berner 2006' })).toBeVisible();
   });
+  await test.step('When they pick the Paleo-CO₂ Data Archive, by method', async () => {
+    await page.getByLabel('CO₂ estimates from').selectOption('archive');
+    await expect(page.getByTestId('co2-archive')).toContainText(
+      /^The Paleo-CO₂ Data Archive: [\d,]+ estimates within 5 million years of then/,
+    );
+    await expect(page.getByTestId('co2-archive')).toContainText('By method:');
+    await page.getByLabel('CO₂ method').selectOption({ label: 'Paleosols' });
+    await expect(page.getByTestId('co2-archive')).toContainText('estimates by Paleosols');
+    await expect(
+      page.getByTestId('co2-archive').getByRole('link', { name: 'Paleo-CO₂ Data Archive' }),
+    ).toBeVisible();
+  });
   await test.step('When they go back past the CO₂ fit, it says how far it reaches', async () => {
     await page.goto('./?ma=500&layers=air');
     await globeRendered(page);

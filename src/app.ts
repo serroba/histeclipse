@@ -170,6 +170,7 @@ import {
   type AncientGenomes,
 } from './data/ancientGenomes';
 import { loadAtmosphere, type Atmosphere } from './data/atmosphere';
+import { loadCo2Archive, type Co2Archive } from './data/co2Archive';
 import { loadDeepAir, type DeepAir } from './data/deepAir';
 import { fossilCard, fossilsAt, loadFossils, type Fossils } from './data/fossils';
 import { impactDetails, impactsAt, impactsText, loadImpacts, type Impacts } from './data/impacts';
@@ -471,6 +472,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
         else layers.delete('air');
         return { ...state, layers };
       });
+    },
+    onCo2Archive() {
+      loadArchive();
     },
     onImpacts(on) {
       store.set((state) => {
@@ -1659,7 +1663,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           },
         );
       }
-      return { on: true, atmosphere, deep: deepAir };
+      return { on: true, atmosphere, deep: deepAir, archive: co2Archive };
     }
     if (atmosphere === null && atmosphereLoading === null) {
       atmosphereLoading = loadAtmosphere(`${base}data/atmosphere.json`, fetchJson);
@@ -1674,7 +1678,26 @@ export async function startApp(root: HTMLElement): Promise<void> {
         },
       );
     }
-    return { on: true, atmosphere, deep: deepAir };
+    return { on: true, atmosphere, deep: deepAir, archive: co2Archive };
+  }
+
+  // The Paleo-CO2 Data Archive: loaded the first time the reader picks its estimates.
+  let co2Archive: Co2Archive | null = null;
+  let co2ArchiveLoading: Promise<Co2Archive> | null = null;
+
+  function loadArchive(): void {
+    if (co2Archive !== null || co2ArchiveLoading !== null) return;
+    co2ArchiveLoading = loadCo2Archive(`${base}data/air-co2-archive.json`, fetchJson);
+    co2ArchiveLoading.then(
+      (loaded) => {
+        co2Archive = loaded;
+        showDeepTime(store.get());
+      },
+      (error: unknown) => {
+        co2ArchiveLoading = null;
+        notify(`Could not load the Paleo-CO₂ Data Archive: ${errorMessage(error)}`);
+      },
+    );
   }
 
   // Impact craters and deposits: loaded the first time the layer is turned on, in either time.

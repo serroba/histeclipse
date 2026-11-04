@@ -7,6 +7,7 @@
 
 import * as v from 'valibot';
 
+import { elementAt } from '../util/arrays';
 import { getJson, type Fetch } from './fetchJson';
 
 const ma = v.pipe(v.number(), v.minValue(0));
@@ -44,15 +45,17 @@ export async function loadDeepAir(url: string, fetchJson: Fetch): Promise<DeepAi
 
 /** A row of a series by age (its first value), between the two around `at`; null beyond it. */
 function between(rows: readonly (readonly number[])[], at: number): readonly number[] | null {
-  const age = (row: readonly number[] | undefined) => row?.[0] ?? Number.NaN;
-  if (!(at >= age(rows[0]) && at <= age(rows.at(-1)))) return null;
-  const after = rows.findIndex((row) => age(row) >= at);
-  const older = rows[after];
-  const younger = rows[Math.max(0, after - 1)];
-  if (older === undefined || younger === undefined) return null;
-  if (age(older) === age(younger)) return older;
+  // The schemas give every series two rows or more, each starting with its age.
+  const age = (row: readonly number[]) => elementAt(row, 0);
+  if (at < age(elementAt(rows, 0)) || at > age(elementAt(rows, rows.length - 1))) return null;
+  const after = Math.max(
+    1,
+    rows.findIndex((row) => age(row) >= at),
+  );
+  const older = elementAt(rows, after);
+  const younger = elementAt(rows, after - 1);
   const share = (at - age(younger)) / (age(older) - age(younger));
-  return younger.map((value, index) => value + share * ((older[index] ?? value) - value));
+  return younger.map((value, index) => value + share * (elementAt(older, index) - value));
 }
 
 /** CO2 `at` million years ago by the fit: best, and the 68% and 95% ranges; null beyond it. */
@@ -83,7 +86,7 @@ export function o2At(
 
 /** How far back the CO2 fit reaches, Ma. */
 export function co2Reach(data: DeepAir): number {
-  return data.co2.fit.at(-1)?.[0] ?? 0;
+  return elementAt(data.co2.fit, data.co2.fit.length - 1)[0];
 }
 
 /** The proxy estimates within `window` million years of `at`, by proxy, most first. */
