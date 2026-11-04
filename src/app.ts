@@ -854,7 +854,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
 
   // Full view hides the panels for a clear view; Show controls, Escape, or a tap on open sky or
-  // empty space brings them back. A stray tap never hides them.
+  // empty space brings them back. In historical time a stray tap never hides them; in deep time a
+  // tap on the globe or on the space around it does.
   function togglePanels(): void {
     const hidden = root.dataset['panels'] !== 'hidden';
     root.dataset['panels'] = hidden ? 'hidden' : 'shown';
@@ -3095,7 +3096,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   globe.onBodyClick((focus) => {
     store.set((state) => ({ ...state, focus, view: 'free' }));
   });
-  globe.onEmptyTap(showPanels);
+  globe.onEmptyTap(() => {
+    // In deep time, empty space is like the globe: a tap clears the panels, or brings them back.
+    // In historical time a tap on the globe picks a place, so empty space only brings them back.
+    if (store.get().ma !== null) togglePanels();
+    else showPanels();
+  });
   globe.onPlacePick((place) => {
     // Deep time has no place to stand: a tap on the globe clears the panels, or brings them back.
     if (store.get().ma !== null) {
