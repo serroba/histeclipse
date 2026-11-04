@@ -31,6 +31,8 @@ export interface BandSeries {
   readonly dots: readonly (readonly [number, number])[];
   /** Today's (or 1750's) level, drawn dashed. */
   readonly reference: number;
+  /** Names what is drawn, so a change of it (another source's dots) is drawn again. */
+  readonly key?: string;
 }
 
 export interface BandChart {
@@ -75,7 +77,7 @@ export function createBandChart(options: {
       const x = (at: number) => ((1 - at / oldest) * WIDTH).toFixed(1);
       const within = <R extends readonly number[]>(rows: readonly R[]) =>
         rows.filter((row) => (row[0] ?? Infinity) <= oldest);
-      const key = `${String(oldest)} ${String(series.line.length)}`;
+      const key = `${String(oldest)} ${series.key ?? ''} ${String(series.line.length)} ${String(series.dots.length)}`;
       if (key !== drawn) {
         drawn = key;
         bands.replaceChildren(

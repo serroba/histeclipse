@@ -17,6 +17,7 @@ import {
   PREINDUSTRIAL_CO2,
   type DeepAir,
 } from '../data/deepAir';
+import { archiveDots, archiveText, studiesNear, type Co2Archive } from '../data/co2Archive';
 import { createBandChart } from './bandChart';
 import { fossilsText, type FossilsAt } from '../data/fossils';
 import type { ClaimLine, HumansView } from '../data/humanClaims';
@@ -276,6 +277,8 @@ export interface DeepTimeView {
         readonly on: true;
         readonly atmosphere: Atmosphere | null;
         readonly deep: DeepAir | null;
+        /** The Paleo-CO2 Data Archive, once asked for (null until it loads). */
+        readonly archive: Co2Archive | null;
       };
   /** Fossils: off, on while they load (null), or on with the finds of the moment. */
   readonly fossils: { readonly on: false } | { readonly on: true; readonly at: FossilsAt | null };
@@ -335,6 +338,8 @@ export function createDeepTimeBar(handlers: {
   onFossils(on: boolean): void;
   onImpacts(on: boolean): void;
   onAir(on: boolean): void;
+  /** The reader asked for the Paleo-CO2 Data Archive's estimates: load them. */
+  onCo2Archive(): void;
   onDispersal(scenario: DispersalScenario): void;
   onScale(scale: DeepScale): void;
   onCoast(coast: CoastSource): void;
@@ -814,12 +819,94 @@ export function createDeepTimeBar(handlers: {
     o2: createBandChart({ low: 0, high: 45, log: false, testId: 'deep-o2-chart' }),
   };
 
+  // Whose CO2 estimates the dots show (Foster et al.'s compilation, or the archive's, by method):
+  // the reader's choice, kept while the bar is open.
+  const co2Source = element(
+    'select',
+    { class: 'deep-coast', 'aria-label': 'CO₂ estimates from' },
+    element('option', { value: 'foster' }, 'Foster et al. 2017 compilation'),
+    element('option', { value: 'archive' }, 'Paleo-CO₂ Data Archive (2025)'),
+  );
+  const co2Method = element('select', { class: 'deep-coast', 'aria-label': 'CO₂ method' });
+  const co2Methods = element('label', { hidden: '' }, ' Method ', co2Method);
+  const co2Picker = element(
+    'p',
+    { class: 'co2-picker' },
+    element('label', {}, 'Dots: estimates from ', co2Source),
+    co2Methods,
+  );
+  /** The archive's estimates near the moment, with their studies, when the reader picks it. */
+  const archiveNote = element('p', { 'data-testid': 'co2-archive', hidden: '' });
+  let methodsListed: Co2Archive | null = null;
+  const pickedMethod = () => (co2Method.value === '' ? null : Number(co2Method.value));
+  for (const picker of [co2Source, co2Method]) {
+    picker.addEventListener('change', () => {
+      if (co2Source.value === 'archive') handlers.onCo2Archive();
+      if (current !== null) bar.render(current);
+    });
+  }
+
+  /** The Paleo-CO2 Data Archive's dots and words, once it has loaded. */
+  function archiveDotsAndWords(archive: Co2Archive | null, ma: number) {
+    co2Methods.hidden = archive === null;
+    archiveNote.hidden = false;
+    if (archive === null) {
+      archiveNote.replaceChildren('Loading the Paleo-CO₂ Data Archive…');
+      return { dots: [], key: 'archive-loading' };
+    }
+    if (methodsListed !== archive) {
+      methodsListed = archive;
+      co2Method.replaceChildren(
+        element('option', { value: '' }, 'All methods'),
+        ...archive.methods.map((name, at) => element('option', { value: String(at) }, name)),
+      );
+    }
+    const method = pickedMethod();
+    const studies = studiesNear(archive, ma, 5, method).slice(0, 6);
+    archiveNote.replaceChildren(
+      `${archiveText(archive, ma, 5, method)} `,
+      ...(studies.length === 0
+        ? []
+        : [
+            'Studies: ',
+            ...studies.flatMap(({ label, doi, count }, at) => [
+              ...(at === 0 ? [] : [' · ']),
+              doi === null
+                ? `${label} (${String(count)})`
+                : element('a', { href: `https://doi.org/${doi}` }, `${label} (${String(count)})`),
+            ]),
+            '. ',
+          ]),
+      element('a', { href: archive.source }, 'Paleo-CO₂ Data Archive'),
+      ' (CC BY 4.0).',
+    );
+    return { dots: archiveDots(archive, method), key: `archive ${co2Method.value}` };
+  }
+
   /** On the 540 Myr scale: CO2 and O2 with their ranges, and nitrogen in words. */
-  function renderDeepAir(deep: DeepAir | null, oldest: number, ma: number): void {
+  function renderDeepAir(
+    deep: DeepAir | null,
+    archive: Co2Archive | null,
+    oldest: number,
+    ma: number,
+  ): void {
     if (deep === null) {
       airNote.replaceChildren(element('p', {}, 'Air: loading…'));
       return;
     }
+    const fromArchive = co2Source.value === 'archive';
+    if (!fromArchive) {
+      co2Methods.hidden = true;
+      archiveNote.hidden = true;
+    }
+    const picked = fromArchive
+      ? archiveDotsAndWords(archive, ma)
+      : {
+          dots: deep.co2.proxies.flatMap(({ estimates }) =>
+            estimates.map(([at, value]) => [at, value] as const),
+          ),
+          key: 'foster',
+        };
     deepCharts.co2.render(
       {
         bands: [
@@ -827,9 +914,8 @@ export function createDeepTimeBar(handlers: {
           deep.co2.fit.map(([at, , , low68, high68]) => [at, low68, high68] as const),
         ],
         line: deep.co2.fit.map(([at, best]) => [at, best] as const),
-        dots: deep.co2.proxies.flatMap(({ estimates }) =>
-          estimates.map(([at, value]) => [at, value] as const),
-        ),
+        dots: picked.dots,
+        key: picked.key,
         reference: PREINDUSTRIAL_CO2,
       },
       oldest,
@@ -852,6 +938,8 @@ export function createDeepTimeBar(handlers: {
         `${co2Text(deep, ma)} `,
         element('a', { href: `https://doi.org/${deep.co2.doi}` }, 'Foster, Royer & Lunt 2017'),
       ),
+      co2Picker,
+      archiveNote,
       deepCharts.co2.root,
       element(
         'p',
@@ -881,7 +969,7 @@ export function createDeepTimeBar(handlers: {
     airNote.hidden = !air.on;
     if (!air.on) return;
     if (scale !== 'ice') {
-      renderDeepAir(air.deep, oldest, ma);
+      renderDeepAir(air.deep, air.archive, oldest, ma);
       return;
     }
     const oldestKa = oldest * 1000;
@@ -1016,7 +1104,7 @@ export function createDeepTimeBar(handlers: {
     handlers.onTemperature(!(current?.temperature.on ?? false));
   });
 
-  return {
+  const bar: DeepTimeBar = {
     root,
     render(view) {
       current = view;
@@ -1165,4 +1253,5 @@ export function createDeepTimeBar(handlers: {
       play.setAttribute('aria-label', view.playing ? 'Pause' : 'Play');
     },
   };
+  return bar;
 }

@@ -30,6 +30,7 @@ from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table, write_table
 from histeclipse_pipeline.macrostrat import fetch_rocks
 from histeclipse_pipeline.ohm import fetch_ohm
+from histeclipse_pipeline.paleo_co2 import fetch_co2_archive
 from histeclipse_pipeline.paleodem import fetch_paleodem
 from histeclipse_pipeline.paleotemp import fetch_paleotemp
 from histeclipse_pipeline.periodo import fetch_periods
@@ -291,6 +292,13 @@ def deep_air(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} CO2 estimates, the CO2 fit and the O2 estimate to {args.out}")
 
 
+def co2_archive(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write CO2 estimates by method from the Paleo-CO2 Data Archive (CC BY 4.0)."""
+    count, empty = fetch_co2_archive(args.out)
+    skipped = f"; no estimates in {', '.join(empty)}" if empty else ""
+    return _say(f"wrote {count} CO2 estimates to {args.out}{skipped}")
+
+
 def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write ice-sheet thickness every 2,500 years over the last 80,000 (PaleoMIST 1.0)."""
     count = fetch_icesheets(args.out)
@@ -469,6 +477,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "deep-air": (
         deep_air,
         "write CO2 and O2 over the last 540 million years (Foster 2017; Mills 2023)",
+        "output JSON file",
+    ),
+    "co2-archive": (
+        co2_archive,
+        "write CO2 estimates by method from the Paleo-CO2 Data Archive (CC BY 4.0)",
         "output JSON file",
     ),
     "icesheets": (
