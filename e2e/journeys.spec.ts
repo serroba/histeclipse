@@ -77,9 +77,9 @@ test('a reader travels into the ice ages and back to the day they left', async (
     await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
     await globeRendered(page);
   });
-  await test.step('When they zoom out to the ice ages, go back 21,000 years and play', async () => {
+  await test.step('When they pick the ice ages, which open at their oldest, go to 21,000 years ago and play', async () => {
     await pickSpan(page, 'Ice ages');
-    await expect(page.locator('.hud-date')).toHaveText('Today');
+    await expect(page.locator('.hud-date')).toHaveText('2,600,000 years ago');
     await page.getByRole('slider', { name: 'Thousands of years ago' }).fill('-21');
     await expect(page.locator('.hud-date')).toHaveText('21,000 years ago');
     await page.getByRole('button', { name: 'Play' }).click();
@@ -199,7 +199,7 @@ test('links made before one time bar still open what they showed', async ({ page
 
 test('a rail at the side shows how far out the view is, and that the planets are a tap away', async ({
   page,
-}) => {
+}, info) => {
   const problems = collectProblems(page);
   const rail = page.getByRole('group', { name: 'Zoom' });
   const globe = page.getByTestId('globe');
@@ -214,8 +214,16 @@ test('a rail at the side shows how far out the view is, and that the planets are
     ).toBeVisible();
     await expect(page.getByTestId('zoom-readout')).toHaveText('29,000 km');
   });
-  await test.step('When they tap Planets', async () => {
-    await rail.getByRole('button', { name: 'Zoom to The inner planets, around the Sun' }).click();
+  await test.step('When they tap Planets (on a touch screen, the track beside its name)', async () => {
+    const stop = rail.getByRole('button', { name: 'Zoom to The inner planets, around the Sun' });
+    if (info.project.name === 'mobile') {
+      const name = await stop.boundingBox();
+      const track = await page.getByRole('slider', { name: 'Distance' }).boundingBox();
+      if (name === null || track === null) throw new Error('no rail');
+      await page.touchscreen.tap(track.x + track.width / 2, name.y + name.height / 2);
+    } else {
+      await stop.click();
+    }
   });
   await test.step('Then the view glides out until the planets show, and the link keeps it', async () => {
     // The glide is timed by the frames: a slow machine draws fewer, so it can take a while.
