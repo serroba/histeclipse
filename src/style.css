@@ -1961,6 +1961,13 @@ body {
   color: var(--ink-muted);
 }
 
+/* Small beside the date: the speed is chosen now and then, the slider used all the time. */
+.deep-label .deep-speed {
+  min-height: 36px;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
 /* 540 Myr | Ice ages: one segmented control, the chosen span lit. */
 .deep-scale {
   display: inline-flex;

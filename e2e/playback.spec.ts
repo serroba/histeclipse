@@ -65,9 +65,10 @@ test('deep time has speeds in the units of its span, and plays at the one picked
   await test.step('When they turn to the ice ages, the speeds are thousands of years', async () => {
     await page.getByRole('button', { name: 'Ice ages' }).click();
     await expect(speed.locator('option')).toHaveText([
-      '10,000 years/s',
-      '50,000 years/s',
-      '200,000 years/s',
+      '1 kyr/s',
+      '10 kyr/s',
+      '50 kyr/s',
+      '200 kyr/s',
     ]);
     await expect(speed).toHaveValue('0.05');
   });
