@@ -77,9 +77,9 @@ test('a reader travels into the ice ages and back to the day they left', async (
     await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
     await globeRendered(page);
   });
-  await test.step('When they zoom out to the ice ages, go back 21,000 years and play', async () => {
+  await test.step('When they pick the ice ages, which open at their oldest, go to 21,000 years ago and play', async () => {
     await pickSpan(page, 'Ice ages');
-    await expect(page.locator('.hud-date')).toHaveText('Today');
+    await expect(page.locator('.hud-date')).toHaveText('2,600,000 years ago');
     await page.getByRole('slider', { name: 'Thousands of years ago' }).fill('-21');
     await expect(page.locator('.hud-date')).toHaveText('21,000 years ago');
     await page.getByRole('button', { name: 'Play' }).click();

@@ -460,14 +460,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
   }
   /** Go to a span, keeping the moment: the years are the Holocene's, the rest deep time. */
+  /**
+   * Picking a span is a fresh start: deep time's spans open at their oldest moment, ready to
+   * play forward; the years come back to the date left. (A link with ma= opens where it points.)
+   */
   function goToSpan(span: Span): void {
     const { ma } = store.get();
     if (span === 'years') {
       if (ma !== null) leaveDeepTime();
     } else if (ma === null) {
-      enterDeepTime(maOfYear(store.get().time.date.year), span);
+      enterDeepTime(spanOf(span), span);
     } else {
-      setScale(span);
+      stopPlay();
+      sync.step();
+      store.set((state) => ({ ...state, deepScale: span, ma: roundMa(spanOf(span)) }));
     }
   }
   /** Go into deep time at `ma`, on the span that reaches it. */

@@ -977,7 +977,7 @@ test('Back steps through deep time: milestones and layers, and its layers stay o
   await globeRendered(page);
   await pickSpan(page, '540 Myr');
   await showDeepDetails(page);
-  await expect(page).toHaveURL(/&ma=0(&|$)/);
+  await expect(page).toHaveURL(/&ma=540(&|$)/);
   await page.getByRole('slider', { name: 'Millions of years ago' }).fill('-250');
   await expect(page).toHaveURL(/&ma=250(&|$)/);
   await page.getByRole('button', { name: 'Later milestone' }).click();
@@ -1467,7 +1467,9 @@ test('deep time narrows to the ice ages, in thousands of years', async ({ page }
   await globeRendered(page);
   await showDeepDetails(page);
   await page.getByRole('button', { name: 'Ice ages' }).click();
-  // From further back, the ice ages open at the last glacial maximum.
+  // The ice ages open at their oldest moment; then on to the last glacial maximum.
+  await expect(page).toHaveURL(/&ma=2\.6&scale=ice/);
+  await page.getByLabel('Thousands of years ago').fill('-21');
   await expect(page).toHaveURL(/&ma=0\.021&scale=ice/);
   await expect(page.locator('.hud-date')).toHaveText('21,000 years ago');
   await expect(page.getByTestId('ice-note')).toBeVisible();
