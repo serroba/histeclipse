@@ -15,6 +15,8 @@ import { sunPositionJ2000 } from './precession';
 import {
   createPlanetEphemeris,
   loadPlanetEphemeris,
+  ORBIT_DAYS,
+  orbitPath,
   planetMagnitude,
   planetUncertainty,
   PLANETS,
@@ -124,4 +126,31 @@ describe('apparent places against DE441 with light time and aberration (1900–2
       expect(without).toBeGreaterThan(10);
     });
   }
+});
+
+describe('orbitPath', () => {
+  const J2000 = 2_451_545;
+  const AU_KM = 149_597_870.7;
+
+  it('draws a body round the Sun once, through where it is', () => {
+    const path = orbitPath(ephemeris, 'mars', J2000, 64);
+    expect(path).toHaveLength(64);
+    // The middle sample is the moment itself.
+    expect(apart(path[32] ?? [], ephemeris.heliocentric('mars', J2000))).toBeLessThan(1);
+    // Mars stays between about 1.38 and 1.67 AU from the Sun all the way round.
+    for (const point of path) {
+      const au = Math.hypot(...point) / AU_KM;
+      expect(au).toBeGreaterThan(1.37);
+      expect(au).toBeLessThan(1.68);
+    }
+  });
+
+  it('puts the planet where the geocentric positions put it, seen from Earth', () => {
+    const fromEarth = ephemeris.position('venus', julianDayNumber(J2000));
+    const helio = ephemeris.heliocentric('venus', J2000);
+    const earthHelio = ephemeris.heliocentric('earth', J2000);
+    const derived = helio.map((value, axis) => value - (earthHelio[axis] ?? 0));
+    expect(apart(derived, fromEarth)).toBeLessThan(1);
+    expect(ORBIT_DAYS.earth).toBeCloseTo(365.256);
+  });
 });

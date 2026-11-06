@@ -5,7 +5,7 @@
  * modules it calls.
  */
 
-import { loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
+import { type EquatorialVector, loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
 import { loadSky } from './data/sky';
 import { earthFixedToJ2000, sunPositionJ2000 } from './astro/precession';
 import { subsolarPoint } from './astro/sun';
@@ -53,9 +53,13 @@ import {
 import { eclipseNote, planetNote, skyCaption } from './sky/caption';
 import {
   loadPlanetEphemeris,
+  ORBIT_DAYS,
+  ORBITING,
+  orbitPath,
   planetMagnitude,
   PLANETS,
   saturnRingTilt,
+  type Orbiting,
   type PlanetEphemeris,
   type PlanetName,
 } from './astro/planets';
@@ -323,6 +327,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   const figureSwitch = createFigureSwitch((figures) => {
     store.set((state) => ({ ...state, figures }));
+  });
+  // The orbits, offered where they mean something: far out, or on the Sun or a planet.
+  const orbitsButton = element(
+    'button',
+    { type: 'button', class: 'layers-open', 'aria-pressed': 'false', hidden: '' },
+    'Orbits',
+  );
+  orbitsButton.addEventListener('click', () => {
+    store.set((state) => ({
+      ...state,
+      layers: withLayer(state.layers, 'orbits', !state.layers.has('orbits')),
+    }));
   });
   const layersPanel = createLayersPanel(
     (layer, on) => {
@@ -896,7 +912,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       detailText,
       termNote,
       welcome.root,
-      element('div', { class: 'hud-actions' }, timeSwitch, layersPanel.button),
+      element('div', { class: 'hud-actions' }, timeSwitch, layersPanel.button, orbitsButton),
       viewSwitch.root,
       aimSwitch.root,
       skyOptions,
@@ -1247,6 +1263,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       moonKm: moonEphemeris?.position(terrestrial) ?? null,
       planetsKm: planetPositions(terrestrial),
     });
+    lastTerrestrial = terrestrial;
+    showOrbits(state, terrestrial);
     root.dataset['subsolar'] = `${sun.latitude.toFixed(3)},${sun.longitude.toFixed(3)}`;
     if (state.ma !== null) {
       showDeepTimeText(state.ma);
@@ -2813,6 +2831,45 @@ export async function startApp(root: HTMLElement): Promise<void> {
       : state.camera.distance > PLANETS_SHOWN_BEYOND;
   }
 
+  // Each orbit as last drawn, and the day it was centred on: drawn again only once the body has
+  // gone a quarter of the way round, as summing the series 128 times a body takes a while.
+  let orbitCache: Partial<Record<Orbiting, { jdTT: number; path: readonly EquatorialVector[] }>> =
+    {};
+  let orbitsDrawn: string | null = null;
+  let lastTerrestrial: number | null = null;
+  /** With the layer on and the view far enough out, the orbits around the Sun. */
+  function showOrbits(state: ViewState, jdTT: number): void {
+    orbitsButton.hidden = !wantPlanets(state) || state.ma !== null;
+    orbitsButton.setAttribute('aria-pressed', String(state.layers.has('orbits')));
+    const theory = planets;
+    if (
+      !state.layers.has('orbits') ||
+      !wantPlanets(state) ||
+      theory === null ||
+      state.ma !== null
+    ) {
+      if (orbitsDrawn !== null) globe.setOrbits(null);
+      orbitsDrawn = null;
+      return;
+    }
+    let changed = orbitsDrawn === null;
+    for (const body of ORBITING) {
+      const cached = orbitCache[body];
+      if (cached === undefined || Math.abs(jdTT - cached.jdTT) > ORBIT_DAYS[body] / 4) {
+        orbitCache = { ...orbitCache, [body]: { jdTT, path: orbitPath(theory, body, jdTT) } };
+        changed = true;
+      }
+    }
+    if (!changed) return;
+    orbitsDrawn = 'on';
+    globe.setOrbits(
+      Object.fromEntries(ORBITING.map((body) => [body, orbitCache[body]?.path ?? []])) as Record<
+        Orbiting,
+        readonly EquatorialVector[]
+      >,
+    );
+  }
+
   function planetPositions(
     jdTT: JulianDay,
   ): Readonly<Record<PlanetName, readonly [number, number, number]>> | null {
@@ -3146,6 +3203,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
       if (state.mode === 'sky' || previous?.mode === 'sky' || previous === null) showSky(state);
     }
     if (previous !== null && state.focus !== previous.focus) globe.setFocus(state.focus);
+    // The orbits come and go as the view moves out and in, or turns to the Sun or a planet.
+    if (
+      lastTerrestrial !== null &&
+      (state.layers !== previous?.layers ||
+        state.camera !== previous.camera ||
+        state.focus !== previous.focus ||
+        state.mode !== previous.mode ||
+        state.ma !== previous.ma)
+    ) {
+      showOrbits(state, lastTerrestrial);
+    }
     if (
       state.focus !== previous?.focus ||
       state.mode !== previous.mode ||

@@ -43,6 +43,8 @@ export type BorderSource = (typeof BORDER_SOURCES)[number];
 export const LAYERS = [
   'lunar',
   'solar',
+  // The orbits of Earth and the planets, seen from far out or from the Sun or a planet.
+  'orbits',
   'empires',
   // Dated ancient genomes (AADR), counted by region around the year shown.
   'genomes',

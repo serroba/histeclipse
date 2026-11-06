@@ -209,7 +209,8 @@ body {
   pointer-events: auto;
 }
 
-.layers-open[aria-expanded='true'] {
+.layers-open[aria-expanded='true'],
+.layers-open[aria-pressed='true'] {
   border-color: rgb(150 180 255 / 0.85);
   background: rgb(150 180 255 / 0.2);
 }
