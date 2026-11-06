@@ -1306,7 +1306,7 @@ export async function createGlobe(
     if (!on) return;
     clearOverlay(empiresCanvas);
     if (rocks !== null) paintRocks(empiresCanvas, rocks);
-    if (ways !== null) paintWays(empiresCanvas, ways);
+    if (ways !== null) paintWays(empiresCanvas, ways, empires === null ? 1 : 0.45);
     if (empires !== null) {
       paintTerritories(empiresCanvas, empires.territories);
       if (empires.ohm !== null) paintBorders(empiresCanvas, empires.ohm.borders);

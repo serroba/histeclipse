@@ -88,7 +88,7 @@ import { createSunSwitch } from './ui/sunSwitch';
 import { createLayersPanel } from './ui/layersPanel';
 import { createDeepGlance } from './ui/deepGlance';
 import { cliopatriaYear } from './state/layerCatalog';
-import { changesText, createHistoryTrack, STATES_HINT } from './ui/historyTrack';
+import { blankText, changesText, createHistoryTrack, STATES_HINT } from './ui/historyTrack';
 import { yearPlayhead, type YearSpeed } from './time/yearPlay';
 import {
   centuryFor,
@@ -699,17 +699,23 @@ export async function startApp(root: HTMLElement): Promise<void> {
     onOpen(open) {
       travelling = open;
       globe.setEvenLight(open);
-      // The trip is about peoples and states: their borders come on with it, and go with it
-      // if it brought them.
+      // The trip is about peoples and states: their borders, and how people lived where no
+      // state is drawn, come on with it, and go with it if it brought them.
       const { layers } = store.get();
-      if (open && !layers.has('empires')) {
-        travelBroughtStates = true;
-        store.set((state) => ({ ...state, layers: new Set([...state.layers, 'empires']) }));
-      } else if (!open && travelBroughtStates) {
-        travelBroughtStates = false;
+      if (open) {
+        travelBrought = TRAVEL_LAYERS.filter((layer) => !layers.has(layer));
+        if (travelBrought.length > 0) {
+          store.set((state) => ({
+            ...state,
+            layers: new Set([...state.layers, ...travelBrought]),
+          }));
+        }
+      } else if (travelBrought.length > 0) {
+        const brought = new Set<Layer>(travelBrought);
+        travelBrought = [];
         store.set((state) => ({
           ...state,
-          layers: new Set([...state.layers].filter((layer) => layer !== 'empires')),
+          layers: new Set([...state.layers].filter((layer) => !brought.has(layer))),
         }));
       }
       const now = store.get();
@@ -722,7 +728,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // While the track is open, the globe is lit evenly and the markers of single finds and
   // events rest: at years a second they flicker past without meaning.
   let travelling = false;
-  let travelBroughtStates = false;
+  const TRAVEL_LAYERS: readonly Layer[] = ['empires', 'ways'];
+  let travelBrought: readonly Layer[] = [];
   const RESTING = 'Resting while you travel through the years; back when the track closes.';
 
   function historyFirst(): number {
@@ -779,6 +786,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       playing: historyPlaying,
       speed: historySpeed,
       changes: state.layers.has('empires') ? statesSaid : STATES_HINT,
+      blank: state.layers.has('empires') ? blankText(state.layers.has('ways')) : null,
     });
   }
 

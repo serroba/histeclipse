@@ -173,12 +173,18 @@ export const WAY_COLOURS: Readonly<Record<Shown, string>> = {
  * Shades each region by its most widespread way of life, stronger the more widespread: under
  * the states, which are drawn over it.
  */
-export function paintWays(canvas: HTMLCanvasElement, regions: readonly WayRegion[]): void {
+export function paintWays(
+  canvas: HTMLCanvasElement,
+  regions: readonly WayRegion[],
+  // Under the states' own colours, fainter, so theirs still read.
+  strength = 1,
+): void {
   const context = canvas.getContext('2d');
   if (context === null) return;
   const { width, height } = canvas;
   for (const region of regions) {
-    context.fillStyle = `rgba(${WAY_COLOURS[region.way]}, ${String(0.12 + 0.14 * region.level)})`;
+    const alpha = (0.12 + 0.14 * region.level) * strength;
+    context.fillStyle = `rgba(${WAY_COLOURS[region.way]}, ${String(alpha)})`;
     for (const offset of [-360, 0, 360]) {
       context.beginPath();
       for (const ring of region.rings) {
