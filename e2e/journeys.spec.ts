@@ -196,3 +196,46 @@ test('links made before one time bar still open what they showed', async ({ page
   });
   expect(problems).toEqual([]);
 });
+
+test('a rail at the side shows how far out the view is, and that the planets are a tap away', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const rail = page.getByRole('group', { name: 'Zoom' });
+  const globe = page.getByTestId('globe');
+  await test.step('Given Earth on the globe', async () => {
+    await page.goto('./?t=2024-04-08T18:17&cam=20,0,4.5');
+    await globeRendered(page);
+  });
+  await test.step('Then the rail names its stops out to the planets, and how far the view is', async () => {
+    await expect(rail).toBeVisible();
+    await expect(
+      rail.getByRole('button', { name: 'Zoom to The inner planets, around the Sun' }),
+    ).toBeVisible();
+    await expect(page.getByTestId('zoom-readout')).toHaveText('29,000 km');
+  });
+  await test.step('When they tap Planets', async () => {
+    await rail.getByRole('button', { name: 'Zoom to The inner planets, around the Sun' }).click();
+  });
+  await test.step('Then the view glides out until the planets show, and the link keeps it', async () => {
+    // The glide is timed by the frames: a slow machine draws fewer, so it can take a while.
+    await expect(page).toHaveURL(/cam=-?\d+\.\d{4},-?\d+\.\d{4},60000\.00/, { timeout: 20_000 });
+    await expect(globe).toHaveAttribute('data-planets', 'on');
+    await expect(page.getByTestId('zoom-readout')).toHaveText('2.6 AU');
+  });
+  await test.step('When they zoom in a step', async () => {
+    await rail.getByRole('button', { name: 'Zoom in' }).click();
+  });
+  await test.step('Then the view comes nearer', async () => {
+    await expect
+      .poll(() => Number(new URL(page.url()).searchParams.get('cam')?.split(',')[2]), {
+        timeout: 20_000,
+      })
+      .toBeLessThan(20_000);
+  });
+  await test.step('And in deep time, where the planets are left out, the rail goes', async () => {
+    await pickSpan(page, '540 Myr');
+    await expect(rail).toBeHidden();
+  });
+  expect(problems).toEqual([]);
+});

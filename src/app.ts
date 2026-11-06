@@ -180,6 +180,7 @@ import {
 } from './data/namedPeriods';
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
+import { createZoomRail } from './ui/zoomRail';
 import { createWaysLegend } from './ui/waysLegend';
 import { loadWaysOfLife, waysAt, waysNote, type WaysOfLife } from './data/waysOfLife';
 import {
@@ -263,6 +264,8 @@ const BODY_NAMES: Readonly<Record<SkyBody, string>> = {
 };
 /** Earth radii (or the focused body's): beyond this the space view loads the planets. */
 const PLANETS_SHOWN_BEYOND = 1000;
+/** Pixels the zoom rail needs between the panels: its buttons, a short track and its reading. */
+const ZOOM_RAIL_ROOM = 180;
 /** This year, up to which the latest borders of states carry on. */
 const PRESENT_YEAR = new Date().getUTCFullYear();
 /** The year “before present” counts back from, as radiocarbon dates do. */
@@ -373,6 +376,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   );
   const markerCard = createMarkerCard();
+  // How far out the view is, and that zooming out reaches the planets: from Earth, in the years
+  // (deep time leaves the Sun, Moon and planets out).
+  const zoomRail = createZoomRail({
+    onZoom(distance) {
+      globe.zoomTo(distance);
+    },
+  });
   const rocksCredit = element(
     'span',
     { class: 'empire-credit', hidden: '' },
@@ -940,6 +950,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   root.replaceChildren(
     globeContainer,
     skyContainer,
+    zoomRail.root,
     element(
       'header',
       { class: 'hud' },
@@ -3325,6 +3336,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
       setTravel(false);
     }
     // With an eclipse open, its own player runs the time; the years' slider makes way.
+    zoomRail.render(
+      state.mode === 'globe' &&
+        state.focus === 'earth' &&
+        state.view === 'free' &&
+        state.ma === null
+        ? state.camera.distance
+        : null,
+    );
     historyTrack.root.hidden = state.selection !== null;
     historyTrack.extras.hidden = state.selection !== null;
     if (state.time.date.year !== previous?.time.date.year || state.layers !== previous.layers) {
@@ -3383,6 +3402,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       };
       globe.setInsets(panelInsets.top, panelInsets.bottom);
       skyScene?.setInsets(panelInsets.top, panelInsets.bottom);
+      // The zoom rail sits in the space between the panels, whatever their width.
+      root.style.setProperty('--free-top', `${String(top.getBoundingClientRect().bottom)}px`);
+      root.style.setProperty('--free-bottom', `${String(panelInsets.bottom)}px`);
+      const free = window.innerHeight - top.getBoundingClientRect().bottom - panelInsets.bottom;
+      zoomRail.root.classList.toggle('is-cramped', free < ZOOM_RAIL_ROOM);
     };
     const observer = new ResizeObserver(update);
     observer.observe(top);

@@ -125,6 +125,8 @@ import {
 const PIN_HEIGHT = 1.004;
 const NARROW_SIDE_FOV_DEGREES = 40;
 const FLIGHT_MS = 900;
+/** A zoom from one stop to another, however far: eased in log distance, so it reads as one move. */
+const ZOOM_MS = 1200;
 /** Flights between viewpoints cross up to 60 Earth radii: quick, but long enough to follow. */
 const VIEW_FLIGHT_MS = 1600;
 /** Arriving at a body, the camera stops this many of its radii from the centre. */
@@ -417,6 +419,8 @@ export interface Globe {
   /** Turn the globe smoothly so `target` faces the camera, keeping the distance. */
   flyTo(target: GeoPoint): void;
   setCamera(camera: GlobeCamera): void;
+  /** Glide to `distance` from the body in focus, in its radii, keeping the direction. */
+  zoomTo(distance: number): void;
   /** Called while the user moves the camera, relative to the body in focus. Returns an unsubscribe function. */
   onCameraChange(listener: (camera: GlobeCamera) => void): () => void;
   readonly canvas: HTMLCanvasElement;
@@ -1641,6 +1645,9 @@ export async function createGlobe(
   let frame = 0;
   // Rotation along the sphere (a slerp), which also handles flying to the opposite side.
   let flight: { from: Vector3; rotation: Quaternion; start: number } | null = null;
+  // Distances from the body in focus, in scene units; it starts on the first frame, timed by the
+  // frames' own clock (which can run apart from performance.now()).
+  let zoomFlight: { from: number; to: number; start: number | null } | null = null;
 
   function placeCamera(state: GlobeCamera): void {
     focusCamera = state;
@@ -1770,6 +1777,7 @@ export async function createGlobe(
   // Grabbing the globe cancels an automatic flight.
   controls.addEventListener('start', () => {
     flight = null;
+    zoomFlight = null;
   });
 
   controls.addEventListener('change', () => {
@@ -1796,6 +1804,17 @@ export async function createGlobe(
       const step = new Quaternion().slerp(flight.rotation, eased);
       camera.position.copy(flight.from).applyQuaternion(step).setLength(distance);
       if (progress === 1) flight = null;
+    }
+    if (zoomFlight !== null && viewFlight === null) {
+      zoomFlight.start ??= now;
+      const progress = Math.min(1, (now - zoomFlight.start) / ZOOM_MS);
+      const eased = progress < 0.5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
+      const length = zoomFlight.from * (zoomFlight.to / zoomFlight.from) ** eased;
+      const offset = camera.position.clone().sub(controls.target).setLength(length);
+      // The controls report the move, which puts the camera in the link.
+      camera.position.copy(controls.target).add(offset);
+      needsRender = true;
+      if (progress === 1) zoomFlight = null;
     }
     // Wheel steps scale the distance; take bigger steps far out so the Sun is a few spins away.
     controls.zoomSpeed =
@@ -2782,6 +2801,17 @@ export async function createGlobe(
       };
     },
     setCamera: placeCamera,
+    zoomTo(distance) {
+      if (viewpoint !== 'free') return;
+      const radius = BODY_RADIUS[focus];
+      const to = Math.min(Math.max(distance * radius, controls.minDistance), controls.maxDistance);
+      zoomFlight = {
+        from: camera.position.distanceTo(controls.target),
+        to,
+        start: null,
+      };
+      needsRender = true;
+    },
     onCameraChange(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
