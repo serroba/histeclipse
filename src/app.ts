@@ -880,7 +880,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     element(
       'header',
       { class: 'hud' },
-      element('h1', {}, 'histeclipse'),
+      // The name leads home: today on the globe, as a first visit opens (welcome too, until the
+      // visitor has dismissed it).
+      element(
+        'h1',
+        {},
+        element('a', { class: 'home', href: base, title: 'Back to the start' }, 'histeclipse'),
+      ),
       fullView,
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
