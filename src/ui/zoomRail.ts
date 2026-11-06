@@ -2,6 +2,7 @@
  * How far out the view is, on a rail at the side: Earth at the top, out past the Moon to the
  * planets at the bottom, with the stops named so the reader sees that zooming out reaches the
  * Solar System. A stop flies there; the slider and the + and − buttons move along the rail.
+ * Below it, a small icon draws the planets' orbits, offered wherever they can be seen.
  *
  * DOM glue, covered by the Playwright suite; the scale and its words are unit-tested.
  */
@@ -51,18 +52,74 @@ export function distanceText(distance: number): string {
   return `${au < 10 ? au.toFixed(1) : String(Math.round(au))} AU from Earth`;
 }
 
+/** How near a stop, as a share of the rail, the slider settles on it. */
+const SNAP = 0.06;
+
+/** The distance at `position`, settled on a stop when it is that near one. */
+export function snappedDistance(position: number): number {
+  const near = ZOOM_STOPS.find((stop) => Math.abs(railPosition(stop.distance) - position) < SNAP);
+  return near?.distance ?? distanceAt(position);
+}
+
 /** One step of + or −: a sixth of the rail, so six steps go from Earth to Saturn. */
 const STEP = 1 / 6;
 
 export interface ZoomRail {
   readonly root: HTMLElement;
-  /** The distance shown, in Earth radii; null hides the rail. */
+  /** The distance shown, in Earth radii; null hides the zoom, leaving the orbits icon. */
   render(distance: number | null): void;
+  /** Whether the orbits icon is offered, and on. */
+  setOrbits(offered: boolean, on: boolean): void;
+}
+
+/** An orbit around a sun, as a small line icon. */
+function orbitsIcon(): SVGSVGElement {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', '20');
+  svg.setAttribute('height', '20');
+  svg.setAttribute('aria-hidden', 'true');
+  const orbit = document.createElementNS(ns, 'ellipse');
+  for (const [name, value] of [
+    ['cx', '12'],
+    ['cy', '12'],
+    ['rx', '10'],
+    ['ry', '5'],
+    ['transform', 'rotate(-20 12 12)'],
+    ['fill', 'none'],
+    ['stroke', 'currentColor'],
+    ['stroke-width', '1.6'],
+  ] as const) {
+    orbit.setAttribute(name, value);
+  }
+  const sun = document.createElementNS(ns, 'circle');
+  for (const [name, value] of [
+    ['cx', '12'],
+    ['cy', '12'],
+    ['r', '2.6'],
+    ['fill', 'currentColor'],
+  ] as const) {
+    sun.setAttribute(name, value);
+  }
+  const planet = document.createElementNS(ns, 'circle');
+  for (const [name, value] of [
+    ['cx', '20.6'],
+    ['cy', '8.6'],
+    ['r', '1.8'],
+    ['fill', 'currentColor'],
+  ] as const) {
+    planet.setAttribute(name, value);
+  }
+  svg.append(orbit, sun, planet);
+  return svg;
 }
 
 export function createZoomRail(handlers: {
   /** Glide to a distance, in Earth radii. */
   onZoom(distance: number): void;
+  /** Turn the planets' orbits on or off. */
+  onOrbits(): void;
 }): ZoomRail {
   let shown: number = ZOOM_STOPS[0]?.distance ?? 3;
   const zoomIn = element(
@@ -102,14 +159,39 @@ export function createZoomRail(handlers: {
     return button;
   });
   const readout = element('span', { class: 'zoom-readout', 'data-testid': 'zoom-readout' });
-  const root = element(
+  const orbits = element('button', {
+    type: 'button',
+    class: 'zoom-step zoom-orbits',
+    'aria-label': 'Orbits',
+    'aria-pressed': 'false',
+    title: 'The planets’ orbits round the Sun',
+    hidden: '',
+  });
+  orbits.append(orbitsIcon());
+  orbits.addEventListener('click', () => {
+    handlers.onOrbits();
+  });
+  const zoom = element(
     'div',
-    { class: 'zoom-rail', role: 'group', 'aria-label': 'Zoom', hidden: '' },
+    { class: 'zoom-parts' },
     zoomIn,
     element('div', { class: 'zoom-track' }, slider, ...stops),
     zoomOut,
+  );
+  const root = element(
+    'div',
+    { class: 'zoom-rail', role: 'group', 'aria-label': 'Zoom', hidden: '' },
+    zoom,
+    orbits,
     readout,
   );
+  let zooming = false;
+  // Shown while either part has something to offer.
+  function sync(): void {
+    zoom.hidden = !zooming;
+    readout.hidden = !zooming;
+    root.hidden = !zooming && orbits.hidden;
+  }
   zoomIn.addEventListener('click', () => {
     handlers.onZoom(distanceAt(railPosition(shown) - STEP));
   });
@@ -117,12 +199,18 @@ export function createZoomRail(handlers: {
     handlers.onZoom(distanceAt(railPosition(shown) + STEP));
   });
   slider.addEventListener('input', () => {
-    handlers.onZoom(distanceAt(Number(slider.value) / 1000));
+    handlers.onZoom(snappedDistance(Number(slider.value) / 1000));
   });
   return {
     root,
+    setOrbits(offered, on) {
+      orbits.hidden = !offered;
+      orbits.setAttribute('aria-pressed', String(on));
+      sync();
+    },
     render(distance) {
-      root.hidden = distance === null;
+      zooming = distance !== null;
+      sync();
       if (distance === null) return;
       shown = distance;
       if (document.activeElement !== slider) {

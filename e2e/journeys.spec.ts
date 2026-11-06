@@ -199,7 +199,7 @@ test('links made before one time bar still open what they showed', async ({ page
 
 test('a rail at the side shows how far out the view is, and that the planets are a tap away', async ({
   page,
-}) => {
+}, info) => {
   const problems = collectProblems(page);
   const rail = page.getByRole('group', { name: 'Zoom' });
   const globe = page.getByTestId('globe');
@@ -214,8 +214,16 @@ test('a rail at the side shows how far out the view is, and that the planets are
     ).toBeVisible();
     await expect(page.getByTestId('zoom-readout')).toHaveText('29,000 km');
   });
-  await test.step('When they tap Planets', async () => {
-    await rail.getByRole('button', { name: 'Zoom to The inner planets, around the Sun' }).click();
+  await test.step('When they tap Planets (on a touch screen, the track beside its name)', async () => {
+    const stop = rail.getByRole('button', { name: 'Zoom to The inner planets, around the Sun' });
+    if (info.project.name === 'mobile') {
+      const name = await stop.boundingBox();
+      const track = await page.getByRole('slider', { name: 'Distance' }).boundingBox();
+      if (name === null || track === null) throw new Error('no rail');
+      await page.touchscreen.tap(track.x + track.width / 2, name.y + name.height / 2);
+    } else {
+      await stop.click();
+    }
   });
   await test.step('Then the view glides out until the planets show, and the link keeps it', async () => {
     // The glide is timed by the frames: a slow machine draws fewer, so it can take a while.
