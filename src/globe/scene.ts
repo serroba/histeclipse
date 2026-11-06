@@ -724,6 +724,29 @@ export const EARTH_FRAGMENT = /* glsl */ `
     return withPlates(color, uv, 0.0);
   }
 
+  // Travelling through the Holocene: today's Earth, with the shelf a lower sea left bare (in
+  // the sand tint the ice ages use) and the ice sheets that still lay on the land.
+  vec3 holoceneSurface(vec2 uv) {
+    vec3 color = texture2D(dayMap, uv).rgb;
+    if (shelfActive > 0.5) {
+      vec2 at = (uv * (shelfGrid - 1.0) + 0.5) / shelfGrid;
+      float shelf = mix(shelfRange.x, shelfRange.y, texture2D(shelfMap, at).r);
+      // Above the sea of the year and below today's: land then, sea now.
+      float coast = shelf - seaLevel;
+      float blur = max(fwidth(coast), 1.0);
+      float bared = smoothstep(-blur, blur, coast) * (1.0 - smoothstep(-blur, blur, shelf));
+      color = mix(color, srgb(vec3(0.72, 0.68, 0.46)), bared);
+    }
+    if (iceActive > 0.5) {
+      float thickness = mix(iceFrom(iceYounger, uv), iceFrom(iceOlder, uv), iceMix);
+      float iceBlur = max(fwidth(thickness), 1.0);
+      float covered = smoothstep(8.0 - iceBlur, 8.0 + iceBlur, thickness);
+      vec3 ice = mix(srgb(vec3(0.78, 0.87, 0.95)), srgb(vec3(0.97, 0.98, 1.0)), smoothstep(0.0, 2000.0, thickness));
+      color = mix(color, ice, covered);
+    }
+    return color;
+  }
+
   // Past states and empires, painted on a map in the ground texture's layout. Each keeps its
   // colour by night too, a little dimmer, so borders read on both sides.
   vec3 empiresLayer(vec3 color, float daylight) {
@@ -743,7 +766,7 @@ export const EARTH_FRAGMENT = /* glsl */ `
     #include <logdepthbuf_fragment>
     vec3 normal = normalize(vNormal);
     float sunAltitude = dot(normal, sunDirection);
-    vec3 surface = paleoActive > 0.5 ? paleoSurface(vUv) : texture2D(dayMap, vUv).rgb;
+    vec3 surface = paleoActive > 0.5 ? paleoSurface(vUv) : holoceneSurface(vUv);
     float daylight = smoothstep(-0.105, 0.035, sunAltitude);
     vec3 lit = surface * (0.45 + 0.75 * clamp(sunAltitude, 0.0, 1.0));
     vec3 night = surface * vec3(0.035, 0.05, 0.09) + vec3(0.004, 0.008, 0.02);

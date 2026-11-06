@@ -6,6 +6,7 @@
  */
 
 import { astronomicalYear, formatYear } from '../time/year';
+import type { Coastline } from '../deepTime/coastline';
 import { YEAR_SPEEDS, type YearSpeed } from '../time/yearPlay';
 import { element } from './dom';
 
@@ -20,6 +21,8 @@ export interface HistoryView {
   readonly changes: string;
   /** Why land may have no state drawn on it; null with the states off. */
   readonly blank: string | null;
+  /** The sea level and ice of the year; null until the maps are in. */
+  readonly earth: string | null;
 }
 
 export interface HistoryTrack {
@@ -53,6 +56,18 @@ export function changesText(
 }
 
 export const STATES_HINT = 'Turn on States and empires in Layers to watch them come and go.';
+
+/** The sea level of the year against today's, by its source, and where the ice comes from. */
+export function earthText(coastline: Coastline): string {
+  const metres = Math.round(coastline.seaLevel);
+  const level =
+    metres === 0
+      ? 'about today’s'
+      : `${String(Math.abs(metres))} m ${metres < 0 ? 'below' : 'above'} today’s`;
+  const instead =
+    coastline.instead === null ? '' : `, as ${coastline.instead.label} does not reach`;
+  return `Sea level ${level} (${coastline.series.label}${instead}); shelf it left bare is tinted sand. Ice sheets: PaleoMIST (Gowan et al. 2021).`;
+}
 
 /** Why land may have no state on it: the sources draw states, not every people. */
 export function blankText(ways: boolean): string {
@@ -89,6 +104,7 @@ export function createHistoryTrack(handlers: {
   );
   const changes = element('p', { class: 'history-changes', 'data-testid': 'history-changes' });
   const blank = element('p', { class: 'history-blank', 'data-testid': 'history-blank' });
+  const earth = element('p', { class: 'history-blank', 'data-testid': 'history-earth' });
   const close = element(
     'button',
     { type: 'button', class: 'step history-close', 'aria-label': 'Close the track' },
@@ -106,6 +122,7 @@ export function createHistoryTrack(handlers: {
     element('div', { class: 'history-controls' }, play, slider, speed, close),
     changes,
     blank,
+    earth,
   );
   // Folded away until asked for, so the globe keeps its room.
   const button = element(
@@ -160,6 +177,8 @@ export function createHistoryTrack(handlers: {
       changes.textContent = view.changes;
       blank.hidden = view.blank === null;
       blank.textContent = view.blank ?? '';
+      earth.hidden = view.earth === null;
+      earth.textContent = view.earth ?? '';
     },
   };
 }

@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest';
 
 import index from '../../public/data/icesheets/index.json';
 import type { Fetch } from './fetchJson';
-import { iceFramesInMa, iceStandIn, loadIceSheets, oldestIceKa } from './iceSheets';
+import {
+  iceFramesInMa,
+  iceStandIn,
+  kaBeforePresent,
+  loadIceSheets,
+  oldestIceKa,
+} from './iceSheets';
 import { framesAround } from './paleoDem';
 
 const serve =
@@ -65,5 +71,13 @@ describe('a stand-in before the maps reach', () => {
   it('skips maps without a sea level, and gives none without any', () => {
     expect(iceStandIn(index, -55, (ka) => (ka === 60 ? null : (levels[ka] ?? null)))?.ka).toBe(0);
     expect(iceStandIn(index, -55, () => null)).toBeNull();
+  });
+});
+
+describe('kaBeforePresent', () => {
+  it('counts back from 1950, and not past it', () => {
+    expect(kaBeforePresent(-8999)).toBeCloseTo(10.949);
+    expect(kaBeforePresent(1950)).toBe(0);
+    expect(kaBeforePresent(2024)).toBe(0);
   });
 });
