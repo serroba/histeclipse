@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { CAMERA_DISTANCE_RANGE } from '../state/viewState';
-import { distanceAt, distanceText, railPosition, ZOOM_STOPS } from './zoomRail';
+import { distanceAt, distanceText, railPosition, snappedDistance, ZOOM_STOPS } from './zoomRail';
 
 describe('the zoom rail', () => {
   it('runs from the nearest the camera goes to the farthest, by the logarithm', () => {
@@ -33,5 +33,12 @@ describe('the zoom rail', () => {
     expect(distanceText(150)).toBe('960,000 km from Earth');
     expect(distanceText(60_000)).toBe('2.6 AU from Earth');
     expect(distanceText(300_000)).toBe('13 AU from Earth');
+  });
+
+  it('settles on a stop when the slider comes near it, and goes between them otherwise', () => {
+    const planets = railPosition(60_000);
+    expect(snappedDistance(planets + 0.05)).toBe(60_000);
+    expect(snappedDistance(planets - 0.05)).toBe(60_000);
+    expect(snappedDistance(0.6)).toBeCloseTo(distanceAt(0.6));
   });
 });
