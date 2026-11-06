@@ -1997,6 +1997,11 @@ body {
   display: none;
 }
 
+/* While a finger drags the sheet, the details show as tall as it has pulled them. */
+.deep-time[data-sheet='dragging'] .deep-details {
+  overflow: hidden;
+}
+
 /* A grip along the bar's top edge: tap it, or swipe the bar, to fold or open the details. */
 .deep-handle {
   display: flex;
@@ -2006,7 +2011,9 @@ body {
   margin: -8px 0 -8px;
   border: none;
   background: transparent;
-  cursor: pointer;
+  cursor: grab;
+  /* The handle's own drags move the sheet, not the page. */
+  touch-action: none;
 }
 
 .deep-handle-grip {
