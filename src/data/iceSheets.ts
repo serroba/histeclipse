@@ -83,3 +83,11 @@ export function iceStandIn(
   }
   return best;
 }
+
+/**
+ * Thousands of years before present (1950, radiocarbon's and the ice maps' "present") of an
+ * astronomical year; none after 1950.
+ */
+export function kaBeforePresent(year: number): number {
+  return Math.max(0, (1950 - year) / 1000);
+}

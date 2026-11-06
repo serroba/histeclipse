@@ -88,7 +88,13 @@ import { createSunSwitch } from './ui/sunSwitch';
 import { createLayersPanel } from './ui/layersPanel';
 import { createDeepGlance } from './ui/deepGlance';
 import { cliopatriaYear } from './state/layerCatalog';
-import { blankText, changesText, createHistoryTrack, STATES_HINT } from './ui/historyTrack';
+import {
+  blankText,
+  changesText,
+  createHistoryTrack,
+  earthText,
+  STATES_HINT,
+} from './ui/historyTrack';
 import { yearPlayhead, type YearSpeed } from './time/yearPlay';
 import {
   centuryFor,
@@ -145,6 +151,7 @@ import {
   iceFramesInMa,
   iceStandIn,
   type IceStandIn,
+  kaBeforePresent,
   loadIceSheets,
   oldestIceKa,
   type IceSheetIndex,
@@ -210,7 +217,7 @@ import {
   plateText,
 } from './data/plateMasks';
 import { loadShelf, type ShelfIndex } from './data/shelf';
-import { COAST_SOURCES, coastlineAt, type CoastSource } from './deepTime/coastline';
+import { COAST_SOURCES, coastlineAt, type Coastline, type CoastSource } from './deepTime/coastline';
 import {
   mapModel,
   meanAt,
@@ -723,6 +730,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showImpacts(now);
       showVolcanoes(now);
       showEmpires(now);
+      showHoloceneEarth(now);
+      showHistory(now);
     },
   });
   // While the track is open, the globe is lit evenly and the markers of single finds and
@@ -787,6 +796,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       speed: historySpeed,
       changes: state.layers.has('empires') ? statesSaid : STATES_HINT,
       blank: state.layers.has('empires') ? blankText(state.layers.has('ways')) : null,
+      earth: holoceneSea === null ? null : earthText(holoceneSea),
     });
   }
 
@@ -1520,8 +1530,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setSketch(null);
       globe.setDeepTime(null);
       globe.setTemperature(null);
-      globe.setShelf(null);
-      globe.setIce(null);
+      showHoloceneEarth(state);
       globe.setIceOutlines(null);
       globe.setHumanSites(null);
       globe.setSettled(null);
@@ -2156,31 +2165,82 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return outlines;
   }
 
+  /** The ice-sheet maps' index, asked for once; null until it arrives. */
+  function iceSheets(): IceSheetIndex | null {
+    if (iceIndex === null && iceLoading === null) {
+      iceLoading = loadIceSheets(`${base}data/icesheets/index.json`, fetchJson);
+      iceLoading.then(
+        (index) => {
+          iceIndex = index;
+          showDeepTime(store.get());
+        },
+        (error: unknown) => {
+          iceLoading = null;
+          notify(`Could not load the ice-sheet maps: ${errorMessage(error)}`);
+        },
+      );
+    }
+    return iceIndex;
+  }
+
+  /**
+   * While travelling through the Holocene: the ice sheets and the sea level of the year, over
+   * today's Earth: the shelf the lower sea left bare, and the ice that still lay on the land.
+   */
+  function showHoloceneEarth(state: ViewState): void {
+    if (!travelling || state.mode !== 'globe') {
+      holoceneSea = null;
+      globe.setShelf(null);
+      globe.setIce(null);
+      return;
+    }
+    const ka = kaBeforePresent(state.time.date.year);
+    const levels = seaLevels();
+    const shelf = shelves();
+    const coastline = levels === null ? null : coastlineAt(levels, state.coast, ka);
+    holoceneSea = coastline;
+    globe.setShelf(
+      coastline === null || shelf === null
+        ? null
+        : {
+            url: `${base}data/shelf/${shelf.file}`,
+            columns: shelf.columns,
+            rows: shelf.rows,
+            lowest: shelf.lowest,
+            highest: shelf.highest,
+            seaLevel: coastline.seaLevel,
+          },
+    );
+    const ice = iceSheets();
+    if (ice === null) {
+      globe.setIce(null);
+      showHistory(state);
+      return;
+    }
+    const { younger, older, mix } = framesAround(iceFramesInMa(ice), ka / 1000);
+    globe.setIce({
+      younger: `${base}data/icesheets/${younger.file}`,
+      older: `${base}data/icesheets/${older.file}`,
+      mix,
+      columns: ice.columns,
+      rows: ice.rows,
+      metresPerStep: ice.metresPerStep,
+    });
+    showHistory(state);
+  }
+  let holoceneSea: Coastline | null = null;
+
   /** On the ice-age scale, the ice sheets of the moment, where the maps reach. */
   function showIce(state: ViewState, ma: number): DeepTimeView['ice'] {
     if (state.deepScale !== 'ice') {
       globe.setIce(null);
       return { drawn: false, oldestKa: null, standIn: null };
     }
-    if (iceIndex === null) {
-      if (iceLoading === null) {
-        iceLoading = loadIceSheets(`${base}data/icesheets/index.json`, fetchJson);
-        iceLoading.then(
-          (index) => {
-            iceIndex = index;
-            showDeepTime(store.get());
-          },
-          (error: unknown) => {
-            iceLoading = null;
-            notify(`Could not load the ice-sheet maps: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return { drawn: false, oldestKa: null, standIn: null };
-    }
-    const oldestKa = oldestIceKa(iceIndex);
+    const index = iceSheets();
+    if (index === null) return { drawn: false, oldestKa: null, standIn: null };
+    const oldestKa = oldestIceKa(index);
     if (ma * 1000 > oldestKa) {
-      const standIn = iceStandInFor(state, ma, iceIndex);
+      const standIn = iceStandInFor(state, ma, index);
       globe.setIce(
         standIn === null
           ? null
@@ -2188,21 +2248,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
               younger: `${base}data/icesheets/${standIn.file}`,
               older: `${base}data/icesheets/${standIn.file}`,
               mix: 0,
-              columns: iceIndex.columns,
-              rows: iceIndex.rows,
-              metresPerStep: iceIndex.metresPerStep,
+              columns: index.columns,
+              rows: index.rows,
+              metresPerStep: index.metresPerStep,
             },
       );
       return { drawn: standIn !== null, oldestKa, standIn };
     }
-    const { younger, older, mix } = framesAround(iceFramesInMa(iceIndex), ma);
+    const { younger, older, mix } = framesAround(iceFramesInMa(index), ma);
     globe.setIce({
       younger: `${base}data/icesheets/${younger.file}`,
       older: `${base}data/icesheets/${older.file}`,
       mix,
-      columns: iceIndex.columns,
-      rows: iceIndex.rows,
-      metresPerStep: iceIndex.metresPerStep,
+      columns: index.columns,
+      rows: index.rows,
+      metresPerStep: index.metresPerStep,
     });
     return { drawn: true, oldestKa, standIn: null };
   }

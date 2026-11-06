@@ -238,3 +238,30 @@ test('while travelling, the states are shaded over the evenly lit globe, not onl
     expect(changed).toBeGreaterThan(0.05);
   });
 });
+
+test('travelling shows the ice sheets and the sea level of the year, and they go with the track', async ({
+  page,
+}) => {
+  const bar = page.getByRole('group', { name: track });
+  const globe = page.getByTestId('globe');
+  await test.step('Given 9000 BCE', async () => {
+    await page.goto('./?t=-8999-06-01T12:00&layers=lunar,solar');
+    await globeRendered(page);
+    await expect(globe).toHaveAttribute('data-ice', 'off');
+  });
+  await test.step('When they open the track', async () => {
+    await openTrack(page);
+  });
+  await test.step('Then the ice of then lies on the land, and the sea stands lower', async () => {
+    await expect(globe).toHaveAttribute('data-ice', /icesheets\/(7500|10000)\.png/);
+    await expect(globe).toHaveAttribute('data-sea-level', /^-\d+\.\d$/);
+    await expect(bar.getByTestId('history-earth')).toHaveText(
+      /^Sea level \d+ m below today’s \(.+\); shelf it left bare is tinted sand\. Ice sheets: PaleoMIST/,
+    );
+  });
+  await test.step('When they close it, today’s Earth is back', async () => {
+    await bar.getByRole('button', { name: 'Close the track' }).click();
+    await expect(globe).toHaveAttribute('data-ice', 'off');
+    await expect(globe).toHaveAttribute('data-shelf', 'off');
+  });
+});
