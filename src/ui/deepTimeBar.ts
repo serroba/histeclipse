@@ -772,6 +772,7 @@ export function createDeepTimeBar(handlers: {
   }
   setOpen(open, false);
   handle.addEventListener('click', () => {
+    landSettle();
     setOpen(!open);
   });
   // The details follow a finger dragged up or down the bar, and settle open or folded when it
@@ -799,6 +800,17 @@ export function createDeepTimeBar(handlers: {
     speed: number;
   }
   let drag: Drag | null = null;
+  // A settle under way, finished at once if a new drag starts before it lands: else the new
+  // drag would start from the state before it, and the old settle land after the new one.
+  let settling: { readonly timer: number; readonly opening: boolean } | null = null;
+  function landSettle(): void {
+    if (settling === null) return;
+    window.clearTimeout(settling.timer);
+    details.style.transition = '';
+    details.style.height = '';
+    setOpen(settling.opening);
+    settling = null;
+  }
   function begin(x: number, y: number, t: number): void {
     drag = {
       x,
@@ -822,6 +834,7 @@ export function createDeepTimeBar(handlers: {
         drag = null;
         return false;
       }
+      landSettle();
       // Measure once: how tall the details are now, and opened in full (up to their limit).
       now.from = open ? details.getBoundingClientRect().height : 0;
       root.dataset['sheet'] = 'dragging';
@@ -852,11 +865,7 @@ export function createDeepTimeBar(handlers: {
     const opening = speed < -FLICK ? true : speed > FLICK ? false : height > now.full / 2;
     details.style.transition = `height ${String(SETTLE_MS)}ms ease-out`;
     details.style.height = `${String(opening ? now.full : 0)}px`;
-    window.setTimeout(() => {
-      details.style.transition = '';
-      details.style.height = '';
-      setOpen(opening);
-    }, SETTLE_MS);
+    settling = { timer: window.setTimeout(landSettle, SETTLE_MS), opening };
   }
   root.addEventListener(
     'touchstart',
