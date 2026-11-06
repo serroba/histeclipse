@@ -10,6 +10,9 @@ const isCI = process.env['CI'] !== undefined;
 
 export default defineConfig<DisplayOptions>({
   testDir: 'e2e',
+  // Tests, not files, are shared out among workers and CI's shards: one long file (the smoke
+  // tests) would otherwise keep a shard going long after the others.
+  fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
   reporter: isCI ? [['github'], ['list'], ['html', { open: 'never' }]] : 'list',
