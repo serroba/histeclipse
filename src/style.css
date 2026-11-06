@@ -2486,9 +2486,14 @@ body {
 /* On phones the header's first row holds the time switch and Layers: the buttons tighten up,
    and the Layers panel becomes a sheet along the bottom. */
 @media (max-width: 600px) {
+  .hud-actions {
+    column-gap: 8px;
+  }
+
   .time-option,
   .layers-open {
-    padding: 0 10px;
+    padding: 0 8px;
+    white-space: nowrap;
   }
 
   .famous-dialog.layers-dialog {

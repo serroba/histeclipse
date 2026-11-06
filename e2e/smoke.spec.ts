@@ -97,12 +97,13 @@ test('dragging an attached view, even while an eclipse plays, hands over to orbi
   const hud = await page.locator('.hud').boundingBox();
   const panels = await page.locator('.bottom').boundingBox();
   if (box === null || hud === null || panels === null) throw new Error('no layout');
-  // Between the panels, where the globe can be dragged.
-  const center = { x: box.x + box.width / 2, y: (hud.y + hud.height + panels.y) / 2 };
+  // Between the panels, where the globe can be dragged, and to one side: the body in the
+  // middle has a marker, which a tap flies to rather than drags.
+  const start = { x: box.x + box.width * 0.2, y: (hud.y + hud.height + panels.y) / 2 };
   const drag = async (): Promise<void> => {
-    await page.mouse.move(center.x, center.y);
+    await page.mouse.move(start.x, start.y);
     await page.mouse.down();
-    await page.mouse.move(center.x - 150, center.y + 40, { steps: 10 });
+    await page.mouse.move(start.x + 150, start.y + 40, { steps: 10 });
     await page.mouse.up();
   };
   // The first drag releases the view and flies to the Moon it was looking at.
