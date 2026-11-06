@@ -769,6 +769,9 @@ export const EARTH_FRAGMENT = /* glsl */ `
     // side. A soft light from the viewer keeps the globe round.
     float facing = max(dot(normal, normalize(cameraPosition)), 0.0);
     color = mix(color, surface * (0.6 + 0.45 * facing), evenLight);
+    // The Holocene's track lights evenly too: its states, ways of life and rocks go back over
+    // the evenly lit ground (in deep time none of them is on).
+    color = mix(color, empiresLayer(color, 1.0), evenLight);
     color = iceOutlinesLayer(color);
     gl_FragColor = vec4(color, 1.0);
     #include <colorspace_fragment>
