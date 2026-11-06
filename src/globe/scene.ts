@@ -1313,6 +1313,9 @@ export async function createGlobe(
   let humanLabels: GlobeLabel[] = [];
   let humanSitesKey = '';
   // Historical time's overlay, on the states' map: ways of life, and the states over them.
+  // The sizes of the states' names already laid out, by class, size and name: as the years
+  // play, most names come back step after step.
+  const labelSizes = new Map<string, { readonly width: number; readonly height: number }>();
   // States that appeared or went lately, by name: named on the map for a while.
   const recentStates = new Map<string, { readonly change: StateChange; readonly at: number }>();
   let historyOverlay: {
@@ -1400,13 +1403,23 @@ export async function createGlobe(
       layer.append(element);
       return { element, position: new Vector3(...geoToVector(point, 1.01)), width: 0, height: 0 };
     });
+    settleSizes(labels);
+    return labels;
+  }
+
+  /**
+   * Read every label's size, then hide them all: one layout for the lot. Hiding one between
+   * reads would make the browser lay the page out again for the next, label after label.
+   */
+  function settleSizes(labels: readonly GlobeLabel[]): void {
     for (const entry of labels) {
       entry.width = entry.element.offsetWidth;
       entry.height = entry.element.offsetHeight;
+    }
+    for (const entry of labels) {
       entry.element.hidden = true;
       entry.element.style.visibility = '';
     }
-    return labels;
   }
   const markers = {
     earth: spaceMarker(markerLayer, 'Earth', 'earth'),
@@ -1781,6 +1794,10 @@ export async function createGlobe(
     const near = focus === 'earth' && camera.position.length() < 12;
     // Labels come largest first; a smaller state's name gives way where it would overlap.
     const placed: { x: number; y: number; w: number; h: number }[] = [];
+    // Read once: read after a label is moved, the size makes the browser lay the page out
+    // again, for every label.
+    const viewWidth = container.clientWidth;
+    const viewHeight = container.clientHeight;
     for (const { element, position, width, height } of [
       ...humanLabels,
       ...genomeLabels,
@@ -1792,8 +1809,8 @@ export async function createGlobe(
       projected.copy(position).project(camera);
       const shown =
         near && position.dot(eye) > 0.25 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1;
-      const x = ((projected.x + 1) / 2) * container.clientWidth;
-      const centre = ((1 - projected.y) / 2) * container.clientHeight;
+      const x = ((projected.x + 1) / 2) * viewWidth;
+      const centre = ((1 - projected.y) / 2) * viewHeight;
       // Where it would overlap, a name may move a line up or down before it gives way.
       const y = [0, -1, 1, -2, 2]
         .map((step) => centre + step * height)
@@ -2426,7 +2443,8 @@ export async function createGlobe(
               .map(({ impact, uncertain }) => `${String(impact.id)}${uncertain ? '?' : ''}`)
               .join(' ');
       if (key === impactKey) {
-        marks?.forEach(({ point }, index) => {
+        if (marks === null) return;
+        marks.forEach(({ point }, index) => {
           impactLabels[index]?.position.set(...geoToVector(point, 1.01));
         });
         placeEmpireLabels();
@@ -2605,29 +2623,33 @@ export async function createGlobe(
             size: 11,
             kind: 'empire-label is-ohm',
           }));
-        empireLabels = [...changed, ...ranked, ...ohmNames].map((label) => {
+        const made = [...changed, ...ranked, ...ohmNames].map((label) => {
           const { name, point, size, kind } = label;
           const element = document.createElement('span');
           element.className = kind;
           element.textContent = name;
           element.style.fontSize = `${String(size)}px`;
           if ('delay' in label) element.style.animationDelay = `${String(label.delay)}ms`;
-          // Laid out once, unseen, so its real size is known for keeping names apart.
-          element.style.visibility = 'hidden';
+          const known = labelSizes.get(`${kind}|${String(size)}|${name}`);
+          // A name not seen before is laid out once, unseen, so its real size is known for
+          // keeping names apart; one seen before keeps its size, and costs no layout.
+          if (known === undefined) element.style.visibility = 'hidden';
+          else element.hidden = true;
           empireLabelLayer.append(element);
           return {
             element,
             position: new Vector3(...geoToVector(point, 1.01)),
-            width: 0,
-            height: 0,
+            width: known?.width ?? 0,
+            height: known?.height ?? 0,
+            key: known === undefined ? `${kind}|${String(size)}|${name}` : null,
           };
         });
-        for (const entry of empireLabels) {
-          entry.width = entry.element.offsetWidth;
-          entry.height = entry.element.offsetHeight;
-          entry.element.hidden = true;
-          entry.element.style.visibility = '';
+        const fresh = made.filter((entry) => entry.key !== null);
+        settleSizes(fresh);
+        for (const { key, width, height } of fresh) {
+          if (key !== null) labelSizes.set(key, { width, height });
         }
+        empireLabels = made;
       }
       container.dataset['empires'] = layer === null ? 'off' : String(layer.territories.length);
       container.dataset['statesChanged'] = String(
