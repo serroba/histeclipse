@@ -168,6 +168,8 @@ export interface NamedPoint {
   readonly name: string;
   readonly latitude: number;
   readonly longitude: number;
+  /** How large the state is drawn, where known: the larger ones' changes are named first. */
+  readonly area?: number;
 }
 
 /**
@@ -181,6 +183,7 @@ export function stateChangesOnMap(
   readonly name: string;
   readonly kind: 'new' | 'gone';
   readonly point: { readonly latitude: number; readonly longitude: number };
+  readonly area: number;
 }[] {
   const first = (points: readonly NamedPoint[]) => {
     const byName = new Map<string, NamedPoint>();
@@ -194,11 +197,15 @@ export function stateChangesOnMap(
   return [
     ...appeared.flatMap((name) => {
       const point = has.get(name);
-      return point === undefined ? [] : [{ name, kind: 'new' as const, point: at(point) }];
+      return point === undefined
+        ? []
+        : [{ name, kind: 'new' as const, point: at(point), area: point.area ?? 0 }];
     }),
     ...gone.flatMap((name) => {
       const point = had.get(name);
-      return point === undefined ? [] : [{ name, kind: 'gone' as const, point: at(point) }];
+      return point === undefined
+        ? []
+        : [{ name, kind: 'gone' as const, point: at(point), area: point.area ?? 0 }];
     }),
   ];
 }

@@ -268,3 +268,40 @@ test('travelling shows the ice sheets and the sea level of the year, and they go
     await expect(globe).toHaveAttribute('data-shelf', 'off');
   });
 });
+
+test('as the years play, state names stay put on the map, and only a few light up', async ({
+  page,
+}) => {
+  const bar = page.getByRole('group', { name: track });
+  await test.step('Given 800 CE with the track open, its names shown', async () => {
+    await page.goto('./?t=800-06-01T12:00&layers=lunar,solar&cam=45.0000,20.0000,3.00');
+    await globeRendered(page);
+    await openTrack(page);
+    await expect(page.locator('.empire-label:not([hidden])').first()).toBeVisible();
+  });
+  await test.step('When they travel at 200 years a second', async () => {
+    await bar.getByLabel('Speed').selectOption('200');
+    await bar.getByRole('button', { name: 'Travel through the years' }).click();
+  });
+  await test.step('Then the names never all go dark, and at most four are new or gone', async () => {
+    // Sampled between tasks, as the page is painted: names made anew each year once went
+    // unseen for a frame, again and again, and read as flicker.
+    const samples = await page.evaluate(async () => {
+      const seen: { shown: number; lit: number }[] = [];
+      for (let i = 0; i < 30; i += 1) {
+        await new Promise((done) => setTimeout(done, 60));
+        const labels = [
+          ...document.querySelectorAll<HTMLElement>('.empire-labels > .empire-label'),
+        ].filter((label) => label.closest('.genome-cells, .impact-marks, .volcano-marks') === null);
+        const shown = labels.filter((label) => label.hidden === false);
+        seen.push({
+          shown: shown.length,
+          lit: shown.filter((label) => /\bis-(new|gone)\b/.test(label.className)).length,
+        });
+      }
+      return seen;
+    });
+    expect(Math.min(...samples.map(({ shown }) => shown))).toBeGreaterThan(0);
+    expect(Math.max(...samples.map(({ lit }) => lit))).toBeLessThanOrEqual(4);
+  });
+});
