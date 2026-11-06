@@ -87,6 +87,8 @@ test('on a phone the deep-time bar folds to its controls, and swipes open and sh
     await swipe(page, label.x + 20, label.y + 10, -120);
   });
   await test.step('Then the details open within the screen, and scroll inside the bar', async () => {
+    // Settled, not only showing: mid-settle the bar is still growing under the next swipe.
+    await expect(bar).toHaveAttribute('data-sheet', 'open');
     await expect(details).toBeVisible();
     const box = await bar.boundingBox();
     const viewport = page.viewportSize();
@@ -201,5 +203,27 @@ test('on a desktop, the handle can be dragged with the mouse as well as clicked'
   await test.step('Then the details settle open, and the drag was not taken for a click', async () => {
     await expect(bar).toHaveAttribute('data-sheet', 'open');
     await expect(handle).toHaveAttribute('aria-expanded', 'true');
+  });
+});
+
+test('a second swipe straight after the first goes the way it was swiped', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'phone layout');
+  const bar = page.getByRole('navigation', { name: 'Deep time' });
+  await test.step('Given the ice ages on a phone, the details folded', async () => {
+    await page.goto('./?ma=0.021&scale=ice');
+    await globeRendered(page);
+    await expect(bar).toHaveAttribute('data-sheet', 'folded');
+  });
+  await test.step('When they flick up and, before it settles, flick down', async () => {
+    const label = await bar.locator('.deep-label').boundingBox();
+    if (label === null) throw new Error('no label');
+    await swipe(page, label.x + 20, label.y + 10, -120, 2);
+    await swipe(page, label.x + 20, label.y - 20, 120, 2);
+  });
+  await test.step('Then the details end folded, the way the last flick went', async () => {
+    await page.waitForTimeout(400);
+    await expect(bar).toHaveAttribute('data-sheet', 'folded');
   });
 });
