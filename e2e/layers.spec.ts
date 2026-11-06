@@ -178,3 +178,27 @@ test('the ground shows one fill at a time: rocks or ways of life', async ({ page
   });
   expect(problems).toEqual([]);
 });
+
+test('with Ways of life on, a key names each colour on the map', async ({ page }) => {
+  const problems = collectProblems(page);
+  const key = page.getByRole('group', { name: 'Ways of life' });
+  await test.step('Given 2000 BCE with Ways of life on', async () => {
+    await page.goto('./?t=-1999-06-01T12:00&layers=lunar,solar,ways');
+    await globeRendered(page);
+  });
+  await test.step('Then a key beside the years names the ways shown, and how to read them', async () => {
+    await expect(key).toBeVisible();
+    await expect(key.getByRole('listitem').filter({ hasText: 'foraging' })).toBeVisible();
+    await expect(key.getByRole('listitem').filter({ hasText: 'farming' }).first()).toBeVisible();
+    await expect(key).toContainText('stronger where more widespread');
+  });
+  await test.step('When they turn Ways of life off', async () => {
+    await openLayers(page);
+    await page.getByRole('checkbox', { name: 'Ways of life' }).uncheck();
+    await page.keyboard.press('Escape');
+  });
+  await test.step('Then the key goes with it', async () => {
+    await expect(key).toBeHidden();
+  });
+  expect(problems).toEqual([]);
+});

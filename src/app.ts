@@ -180,6 +180,7 @@ import {
 } from './data/namedPeriods';
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
+import { createWaysLegend } from './ui/waysLegend';
 import { loadWaysOfLife, waysAt, waysNote, type WaysOfLife } from './data/waysOfLife';
 import {
   genomesNear,
@@ -378,6 +379,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     element('a', { href: 'https://perio.do' }, 'PeriodO'),
     ' (CC0), countries from Natural Earth',
   );
+  const waysLegend = createWaysLegend();
   const waysCredit = element(
     'span',
     { class: 'empire-credit', hidden: '' },
@@ -919,7 +921,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { class: 'bottom', 'data-deep': 'off' },
     card.root,
     scrubber.root,
-    element('div', { class: 'holocene-bar' }, historyTrack.root, timeline.root),
+    element('div', { class: 'holocene-bar' }, waysLegend.root, historyTrack.root, timeline.root),
     deepBar.root,
   );
   root.replaceChildren(
@@ -2710,6 +2712,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       waysSaid = null;
       waysShownYear = null;
       globe.setWays(null);
+      waysLegend.render(null);
       return;
     }
     if (waysOfLife === null) {
@@ -2732,6 +2735,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     const at = waysAt(waysOfLife, state.time.date.year);
     waysSaid = waysNote(at, (year) => formatYear(astronomicalYear(year)));
+    waysLegend.render(at);
     // Repainting the map is slow: only when the moment rated changes, as the years go by.
     if (at.year === waysShownYear) return;
     waysShownYear = at.year;

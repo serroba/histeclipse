@@ -867,6 +867,52 @@ body {
   }
 }
 
+/* The key to the ways-of-life shading: a swatch and a name for each way on the map. */
+.ways-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  padding: 0 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.ways-legend[hidden],
+.ways-legend li[hidden] {
+  display: none;
+}
+
+.ways-legend-title {
+  color: var(--ink);
+}
+
+.ways-legend-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ways-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.ways-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.ways-legend-note {
+  font-style: italic;
+}
+
 .holocene-bar > .timeline {
   width: 100%;
   padding: 0;
