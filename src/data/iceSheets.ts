@@ -91,3 +91,16 @@ export function iceStandIn(
 export function kaBeforePresent(year: number): number {
   return Math.max(0, (1950 - year) / 1000);
 }
+
+/** Millions of years before present of an astronomical year, as deep time counts it. */
+export function maOfYear(year: number): number {
+  return kaBeforePresent(year) / 1000;
+}
+
+/** The astronomical year of a moment `ma` million years before present (1950). */
+export function yearOfMa(ma: number): number {
+  return Math.round(1950 - ma * 1e6);
+}
+
+/** The Holocene's start, million years before present: where the years' span begins. */
+export const HOLOCENE_MA = 0.0117;

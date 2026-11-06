@@ -157,10 +157,13 @@ import {
   iceFramesInMa,
   iceStandIn,
   type IceStandIn,
+  HOLOCENE_MA,
   kaBeforePresent,
   loadIceSheets,
+  maOfYear,
   oldestIceKa,
   type IceSheetIndex,
+  yearOfMa,
 } from './data/iceSheets';
 import {
   iceOutlinesAt,
@@ -238,6 +241,8 @@ import {
 import { playhead } from './deepTime/playhead';
 import { PLATES_REACH_MA, sketchAt } from './deepTime/sketch';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
+import { createPeriodBands } from './ui/periodBands';
+import { createSpanSwitch, type Span } from './ui/spanSwitch';
 import { elementAt } from './util/arrays';
 import { errorMessage } from './util/errors';
 
@@ -271,8 +276,6 @@ function prefetchFrames(maPerSecond: number): number {
 }
 /** The elevation maps reach back this far (their index says for certain once loaded). */
 const MAPS_REACH_MA = 540;
-/** Where deep time opens: Pangaea, at the start of the Triassic. */
-const DEEP_TIME_START_MA = 250;
 
 export async function startApp(root: HTMLElement): Promise<void> {
   const base = import.meta.env.BASE_URL;
@@ -423,33 +426,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ' (CC BY 4.0) · Periods: ',
     element('a', { href: 'https://stratigraphy.org/chart' }, 'ICS chart v2026/06'),
   );
-  // The two times the reader can be in, one always picked: the calendar's, and deep time's.
-  const holoceneButton = element(
-    'button',
-    {
-      type: 'button',
-      class: 'time-option',
-      'aria-pressed': 'true',
-      title: 'The last 11,700 years: dates, states and eclipses',
-    },
-    'Holocene',
-  );
-  const deepButton = element(
-    'button',
-    {
-      type: 'button',
-      class: 'time-option',
-      'aria-pressed': 'false',
-      title: 'Millions of years: the ice ages, moving continents, Earth’s history',
-    },
-    'Deep time',
-  );
-  const timeSwitch = element(
-    'div',
-    { class: 'time-switch', role: 'group', 'aria-label': 'Time' },
-    holoceneButton,
-    deepButton,
-  );
   // The eclipse picked before entering deep time, picked again on leaving it.
   let selectionBeforeDeep: ViewState['selection'] = null;
   function leaveDeepTime(): void {
@@ -460,12 +436,27 @@ export async function startApp(root: HTMLElement): Promise<void> {
       // Deep time's own layers go with it, so they don't linger in the link.
       const layers = new Set(state.layers);
       for (const layer of DEEP_LAYERS) layers.delete(layer);
-      return { ...state, ma: null, layers, selection: state.selection ?? selection };
+      // Within the Holocene's years, the same moment, now as a year; else the year left.
+      // (If deep time is still where it was entered, the very date left comes back.)
+      const { ma } = state;
+      const time =
+        ma !== null && ma <= HOLOCENE_MA && ma !== roundMa(maOfYear(state.time.date.year))
+          ? moveToYear(state.time, astronomicalYear(yearOfMa(ma)))
+          : state.time;
+      return { ...state, ma: null, time, layers, selection: state.selection ?? selection };
     });
   }
-  holoceneButton.addEventListener('click', () => {
-    if (store.get().ma !== null) leaveDeepTime();
-  });
+  /** Go to a span, keeping the moment: the years are the Holocene's, the rest deep time. */
+  function goToSpan(span: Span): void {
+    const { ma } = store.get();
+    if (span === 'years') {
+      if (ma !== null) leaveDeepTime();
+    } else if (ma === null) {
+      enterDeepTime(maOfYear(store.get().time.date.year), span);
+    } else {
+      setScale(span);
+    }
+  }
   /** Go into deep time at `ma`, on the span that reaches it. */
   function enterDeepTime(ma: number, deepScale?: DeepScale): void {
     selectionBeforeDeep = store.get().selection;
@@ -482,9 +473,24 @@ export async function startApp(root: HTMLElement): Promise<void> {
       selection: null,
     }));
   }
-  deepButton.addEventListener('click', () => {
-    if (store.get().ma === null) enterDeepTime(DEEP_TIME_START_MA);
-  });
+  function setScale(deepScale: DeepScale): void {
+    stopPlay();
+    store.set((state) => {
+      const ma = state.ma ?? 0;
+      return {
+        ...state,
+        deepScale,
+        // From further back than the ice ages, open them at the last glacial maximum; from
+        // before the elevation maps, the 540 Myr scale opens at their oldest.
+        ma:
+          deepScale === 'ice' && ma > ICE_AGES_MA
+            ? LAST_GLACIAL_MAXIMUM_MA
+            : deepScale === 'all' && ma > oldest
+              ? oldest
+              : state.ma,
+      };
+    });
+  }
   const deepBar = createDeepTimeBar({
     onMa(ma, jump) {
       stopPlay();
@@ -562,24 +568,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     onSeaIce(seaIce) {
       store.set((state) => ({ ...state, seaIce }));
-    },
-    onScale(deepScale) {
-      stopPlay();
-      store.set((state) => {
-        const ma = state.ma ?? 0;
-        return {
-          ...state,
-          deepScale,
-          // From further back than the ice ages, open them at the last glacial maximum; from
-          // before the elevation maps, the 540 Myr scale opens at their oldest.
-          ma:
-            deepScale === 'ice' && ma > ICE_AGES_MA
-              ? LAST_GLACIAL_MAXIMUM_MA
-              : deepScale === 'all' && ma > oldest
-                ? oldest
-                : state.ma,
-        };
-      });
     },
     onTemperatureModel(temperatureModel) {
       store.set((state) => ({ ...state, temperatureModel }));
@@ -720,51 +708,73 @@ export async function startApp(root: HTMLElement): Promise<void> {
     readonly year: number;
     readonly places: readonly NamedPoint[];
   } | null = null;
-  const historyTrack = createHistoryTrack({
-    onYear(year) {
-      stopHistory();
-      setYear(year);
+  // How far back time reaches, one choice for all of it: going deeper is zooming out, to the
+  // same moment.
+  const historySpan = createSpanSwitch((span) => {
+    goToSpan(span);
+  });
+  // The Holocene's ages under its slider; a tap goes to an age's start.
+  const historyBands = createPeriodBands((ma) => {
+    stopHistory();
+    setYear(Math.max(historyFirst(), yearOfMa(ma)));
+  });
+  const historyTrack = createHistoryTrack(
+    {
+      onYear(year) {
+        stopHistory();
+        setYear(year);
+      },
+      onPlay(play) {
+        if (play) startHistory();
+        else stopHistory();
+      },
+      onSpeed(speed) {
+        historySpeed = speed;
+        showHistory(store.get());
+      },
+      onEndTravel() {
+        stopHistory();
+        setTravel(false);
+      },
     },
-    onPlay(play) {
-      if (play) startHistory();
-      else stopHistory();
-    },
-    onSpeed(speed) {
-      historySpeed = speed;
-      showHistory(store.get());
-    },
-    onOpen(open) {
-      travelling = open;
-      globe.setEvenLight(open);
-      // The trip is about peoples and states: their borders, and how people lived where no
-      // state is drawn, come on with it, and go with it if it brought them.
-      const { layers } = store.get();
-      if (open) {
-        travelBrought = TRAVEL_LAYERS.filter((layer) => !layers.has(layer));
-        if (travelBrought.length > 0) {
-          store.set((state) => ({
-            ...state,
-            layers: new Set([...state.layers, ...travelBrought]),
-          }));
-        }
-      } else if (travelBrought.length > 0) {
-        const brought = new Set<Layer>(travelBrought);
-        travelBrought = [];
+    historyBands.root,
+  );
+  /**
+   * The travel view, on as the years play and until the reader leaves it: even light, states
+   * and ways of life, the year's ice and sea; markers of single finds and events resting.
+   */
+  function setTravel(open: boolean): void {
+    if (open === travelling) return;
+    travelling = open;
+    globe.setEvenLight(open);
+    // The trip is about peoples and states: their borders, and how people lived where no
+    // state is drawn, come on with it, and go with it if it brought them.
+    const { layers } = store.get();
+    if (open) {
+      travelBrought = TRAVEL_LAYERS.filter((layer) => !layers.has(layer));
+      if (travelBrought.length > 0) {
         store.set((state) => ({
           ...state,
-          layers: new Set([...state.layers].filter((layer) => !brought.has(layer))),
+          layers: new Set([...state.layers, ...travelBrought]),
         }));
       }
-      const now = store.get();
-      showGenomes(now);
-      showImpacts(now);
-      showVolcanoes(now);
-      showRocks(now);
-      showEmpires(now);
-      showHoloceneEarth(now);
-      showHistory(now);
-    },
-  });
+    } else if (travelBrought.length > 0) {
+      const brought = new Set<Layer>(travelBrought);
+      travelBrought = [];
+      store.set((state) => ({
+        ...state,
+        layers: new Set([...state.layers].filter((layer) => !brought.has(layer))),
+      }));
+    }
+    const now = store.get();
+    showGenomes(now);
+    showImpacts(now);
+    showVolcanoes(now);
+    showRocks(now);
+    showEmpires(now);
+    showHoloceneEarth(now);
+    showHistory(now);
+  }
   // While the track is open, the globe is lit evenly and the markers of single finds and
   // events rest: at years a second they flicker past without meaning.
   let travelling = false;
@@ -787,6 +797,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function startHistory(): void {
     if (store.get().time.date.year >= PRESENT_YEAR) setYear(historyFirst());
     historyPlaying = true;
+    setTravel(true);
     historyHead = yearPlayhead();
     historyTick = performance.now();
     historyFrame = requestAnimationFrame(tickHistory);
@@ -819,13 +830,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function showHistory(state: ViewState): void {
+    historyBands.render(maOfYear(historyFirst()), maOfYear(state.time.date.year));
     historyTrack.render({
       year: state.time.date.year,
       first: historyFirst(),
       last: PRESENT_YEAR,
       playing: historyPlaying,
+      travelling,
       speed: historySpeed,
-      changes: state.layers.has('empires') ? statesSaid : STATES_HINT,
+      // The hint only while travelling, where it helps; the changes whenever states are on.
+      changes: state.layers.has('empires') ? statesSaid : travelling ? STATES_HINT : '',
       blank: state.layers.has('empires') ? blankText(state.layers.has('ways')) : null,
       earth: holoceneSea === null ? null : earthText(holoceneSea),
     });
@@ -890,7 +904,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
         stepSeen(direction);
       },
     },
-    [famousPanel.button, historyTrack.button, tabletPanel.button],
+    [famousPanel.button, tabletPanel.button],
+    [historyTrack.speed],
   );
   const scrubber = createScrubber((offsetMinutes) => {
     const selected = selectedEclipse(store.get());
@@ -904,8 +919,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { class: 'bottom', 'data-deep': 'off' },
     card.root,
     scrubber.root,
-    historyTrack.root,
-    timeline.root,
+    element('div', { class: 'holocene-bar' }, historyTrack.root, timeline.root),
     deepBar.root,
   );
   root.replaceChildren(
@@ -926,7 +940,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       detailText,
       termNote,
       welcome.root,
-      element('div', { class: 'hud-actions' }, timeSwitch, layersPanel.button, orbitsButton),
+      element('div', { class: 'hud-actions' }, historySpan.root, layersPanel.button, orbitsButton),
       viewSwitch.root,
       aimSwitch.root,
       skyOptions,
@@ -1564,11 +1578,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function showDeepTime(state: ViewState): void {
     const { ma } = state;
-    deepButton.setAttribute('aria-pressed', String(ma !== null));
-    holoceneButton.setAttribute('aria-pressed', String(ma === null));
     bottom.dataset['deep'] = ma === null ? 'off' : 'on';
     paleoCredit.hidden = ma === null;
     if (ma === null) {
+      historySpan.render('years');
       stopPlay();
       deepBar.render(null);
       glance.render(null);
@@ -1588,6 +1601,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     showDeepTimeText(ma);
     // A link to before the elevation maps opens on the scale that reaches it.
     const scale = state.deepScale === 'all' && ma > oldest ? 'eons' : state.deepScale;
+    historySpan.render(scale);
     const ice = scale === 'ice';
     // Before the elevation maps reach, no map: a sketch of the chosen hypotheses instead.
     const uncharted = ma > oldest;
@@ -3287,7 +3301,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showEmpires(state);
     }
     // Deep time, or an eclipse picked, ends a trip through the years.
-    if (state.ma !== null || state.selection !== null) stopHistory();
+    if (state.ma !== null || state.selection !== null) {
+      stopHistory();
+      setTravel(false);
+    }
+    // With an eclipse open, its own player runs the time; the years' slider makes way.
+    historyTrack.root.hidden = state.selection !== null;
+    historyTrack.speed.hidden = state.selection !== null;
     if (state.time.date.year !== previous?.time.date.year || state.layers !== previous.layers) {
       showHistory(state);
     }

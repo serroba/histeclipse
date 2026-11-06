@@ -29,6 +29,11 @@ describe('the chronostratigraphic chart', () => {
       'Upper Pleistocene',
       'Holocene',
     ]);
+    expect(bandsFor(0.0117).map((band) => band.unit.name)).toEqual([
+      'Greenlandian',
+      'Northgrippian',
+      'Meghalayan',
+    ]);
     const eras = bandsFor(4567).map((band) => band.unit.name);
     expect(eras[0]).toBe('Hadean');
     expect(eras).toContain('Mesozoic');

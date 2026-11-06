@@ -3,7 +3,7 @@
  * its source; where the evidence is argued over, the competing dates are given side by side.
  */
 
-import { collectProblems, expect, globeRendered, showDeepDetails, test } from './support';
+import { collectProblems, expect, globeRendered, pickSpan, showDeepDetails, test } from './support';
 
 test('the Humans layer marks dated finds, and gives competing dates side by side', async ({
   page,
@@ -43,7 +43,7 @@ test('the Humans layer marks dated finds, and gives competing dates side by side
 test('Humans goes with deep time, and stays out of the link afterwards', async ({ page }) => {
   await page.goto('./?ma=0.06&scale=ice&layers=humans');
   await globeRendered(page);
-  await page.getByRole('group', { name: 'Time' }).getByRole('button', { name: 'Holocene' }).click();
+  await pickSpan(page, 'Years');
   await expect(page).not.toHaveURL(/humans/);
   await expect(page.getByTestId('globe')).toHaveAttribute('data-humans', 'off');
 });

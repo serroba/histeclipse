@@ -3,7 +3,7 @@
  * et al.'s outlines of 18 time slices show where others put the ice, with their range.
  */
 
-import { collectProblems, expect, globeRendered, showDeepDetails, test } from './support';
+import { collectProblems, expect, globeRendered, pickSpan, showDeepDetails, test } from './support';
 
 test('the ice ages outline Batchelor et al.’s ice sheets, with their range', async ({ page }) => {
   const problems = collectProblems(page);
@@ -19,11 +19,8 @@ test('the ice ages outline Batchelor et al.’s ice sheets, with their range', a
       /^Outlines: Batchelor et al\. \(2019\), MIS 6 \(132,000–190,000 years ago\): their best estimate \(solid gold\), minimum \(dotted blue\) and maximum \(dashed red\)/,
     );
   });
-  await test.step('When they go back to the Holocene', async () => {
-    await page
-      .getByRole('group', { name: 'Time' })
-      .getByRole('button', { name: 'Holocene' })
-      .click();
+  await test.step('When they go back to the years', async () => {
+    await pickSpan(page, 'Years');
   });
   await test.step('Then the outlines go with deep time', async () => {
     await expect(globe).toHaveAttribute('data-ice-outlines', 'off');

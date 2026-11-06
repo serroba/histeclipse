@@ -69,3 +69,11 @@ export async function showDeepDetails(page: Page): Promise<void> {
   if ((await handle.getAttribute('aria-expanded')) !== 'true') await handle.click();
   await expect(page.getByTestId('deep-details')).toBeVisible();
 }
+
+/** Pick how far back time reaches, in the switch at the top: Years, Ice ages, 540 Myr, 4.6 Gyr. */
+export async function pickSpan(page: Page, span: string): Promise<void> {
+  await page
+    .getByRole('group', { name: 'Time span' })
+    .getByRole('button', { name: span, exact: true })
+    .click();
+}
