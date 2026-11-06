@@ -774,36 +774,150 @@ export function createDeepTimeBar(handlers: {
   handle.addEventListener('click', () => {
     setOpen(!open);
   });
-  // A swipe down folds the details, once they are scrolled to their top; a swipe up opens them.
-  // Not on the slider or a picker, whose own drags are left alone.
-  const SWIPE_PIXELS = 48;
-  let swipeFrom: { readonly y: number; readonly scrolled: number } | null = null;
+  // The details follow a finger dragged up or down the bar, and settle open or folded when it
+  // lifts: by a flick's direction, else by whether they are more than half open. Not on the
+  // slider or a picker, whose own drags are left alone; and a drag down inside the details
+  // scrolls them until they are at their top. A mouse can drag the handle the same way.
+  /** Pixels a finger moves before a drag counts, so taps stay taps. */
+  const DRAG_SLOP = 8;
+  /** A release faster than this, in pixels a millisecond, settles the way it was going. */
+  const FLICK = 0.5;
+  const SETTLE_MS = 200;
+  /** A gesture shorter than this is a flick, judged by its whole length and time. */
+  const FLICK_MS = 250;
+  /** Held still this long before lifting, the finger has no speed left. */
+  const STILL_MS = 100;
+  interface Drag {
+    readonly x: number;
+    readonly y: number;
+    readonly t: number;
+    readonly scrolled: number;
+    /** Set once the move is a drag: the details' height then, and opened in full. */
+    from: number | null;
+    full: number;
+    last: { readonly y: number; readonly t: number };
+    speed: number;
+  }
+  let drag: Drag | null = null;
+  function begin(x: number, y: number, t: number): void {
+    drag = {
+      x,
+      y,
+      t,
+      scrolled: details.scrollTop,
+      from: null,
+      full: 0,
+      last: { y, t },
+      speed: 0,
+    };
+  }
+  function follow(x: number, y: number, t: number): boolean {
+    const now = drag;
+    if (now === null) return false;
+    const dy = y - now.y;
+    if (now.from === null) {
+      if (Math.abs(dy) < DRAG_SLOP || Math.abs(dy) < Math.abs(x - now.x)) return false;
+      // Down inside details scrolled away from their top is a scroll, not a fold.
+      if (dy > 0 && now.scrolled > 0) {
+        drag = null;
+        return false;
+      }
+      // Measure once: how tall the details are now, and opened in full (up to their limit).
+      now.from = open ? details.getBoundingClientRect().height : 0;
+      root.dataset['sheet'] = 'dragging';
+      details.style.height = 'auto';
+      const limit = Number.parseFloat(getComputedStyle(details).maxHeight);
+      now.full = Math.min(details.scrollHeight, Number.isFinite(limit) ? limit : Infinity);
+    }
+    const height = Math.min(now.full, Math.max(0, now.from - dy));
+    details.style.height = `${String(height)}px`;
+    const elapsed = t - now.last.t;
+    if (elapsed > 0) now.speed = (y - now.last.y) / elapsed;
+    now.last = { y, t };
+    return true;
+  }
+  function release(t: number): void {
+    const now = drag;
+    drag = null;
+    // A tap, not a drag: the handle's click, or nothing.
+    if (now === null) return;
+    if (now.from === null) return;
+    const height = details.getBoundingClientRect().height;
+    const speed =
+      t - now.t < FLICK_MS
+        ? (now.last.y - now.y) / Math.max(1, now.last.t - now.t)
+        : t - now.last.t > STILL_MS
+          ? 0
+          : now.speed;
+    const opening = speed < -FLICK ? true : speed > FLICK ? false : height > now.full / 2;
+    details.style.transition = `height ${String(SETTLE_MS)}ms ease-out`;
+    details.style.height = `${String(opening ? now.full : 0)}px`;
+    window.setTimeout(() => {
+      details.style.transition = '';
+      details.style.height = '';
+      setOpen(opening);
+    }, SETTLE_MS);
+  }
   root.addEventListener(
     'touchstart',
     (event) => {
       const touch = event.touches[0];
       const target = event.target instanceof Element ? event.target : null;
-      swipeFrom =
+      if (
         event.touches.length === 1 &&
         touch !== undefined &&
         (target?.closest('input, select, .deep-controls') ?? null) === null
-          ? { y: touch.clientY, scrolled: details.scrollTop }
-          : null;
+      ) {
+        begin(touch.clientX, touch.clientY, event.timeStamp);
+      } else drag = null;
     },
     { passive: true },
   );
   root.addEventListener(
-    'touchend',
+    'touchmove',
     (event) => {
-      const touch = event.changedTouches[0];
-      const from = swipeFrom;
-      swipeFrom = null;
-      if (from === null || touch === undefined) return;
-      const moved = touch.clientY - from.y;
-      if (moved > SWIPE_PIXELS && from.scrolled <= 0) setOpen(false);
-      else if (moved < -SWIPE_PIXELS && !open) setOpen(true);
+      const touch = event.touches[0];
+      if (touch === undefined) return;
+      // Once it is a drag, the sheet moves and the page and the details stay put.
+      if (follow(touch.clientX, touch.clientY, event.timeStamp) && event.cancelable) {
+        event.preventDefault();
+      }
     },
-    { passive: true },
+    { passive: false },
+  );
+  for (const type of ['touchend', 'touchcancel'] as const) {
+    root.addEventListener(
+      type,
+      (event) => {
+        release(event.timeStamp);
+      },
+      { passive: true },
+    );
+  }
+  // A mouse drags by the handle; a click on it still toggles.
+  let dragged = false;
+  handle.addEventListener('pointerdown', (event) => {
+    if (event.pointerType !== 'mouse') return;
+    dragged = false;
+    handle.setPointerCapture(event.pointerId);
+    begin(event.clientX, event.clientY, event.timeStamp);
+  });
+  handle.addEventListener('pointermove', (event) => {
+    if (event.pointerType === 'mouse' && follow(event.clientX, event.clientY, event.timeStamp)) {
+      dragged = true;
+    }
+  });
+  handle.addEventListener('pointerup', (event) => {
+    if (event.pointerType === 'mouse') release(event.timeStamp);
+  });
+  handle.addEventListener(
+    'click',
+    (event) => {
+      // The click that ends a mouse drag is not a tap.
+      if (dragged) event.stopImmediatePropagation();
+      dragged = false;
+    },
+    { capture: true },
   );
 
   function dispersalText(model: {
