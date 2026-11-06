@@ -18,6 +18,8 @@ export interface HistoryView {
   readonly speed: YearSpeed;
   /** What the track says about states; a hint when the layer is off. */
   readonly changes: string;
+  /** Why land may have no state drawn on it; null with the states off. */
+  readonly blank: string | null;
 }
 
 export interface HistoryTrack {
@@ -52,6 +54,14 @@ export function changesText(
 
 export const STATES_HINT = 'Turn on States and empires in Layers to watch them come and go.';
 
+/** Why land may have no state on it: the sources draw states, not every people. */
+export function blankText(ways: boolean): string {
+  const lived = ways
+    ? 'the faint shading is how people lived there (ArchaeoGLOBE).'
+    : 'turn on Ways of life to see how people lived there.';
+  return `Land with no state drawn was not empty: these sources map states, not every people; ${lived}`;
+}
+
 export function createHistoryTrack(handlers: {
   onYear(year: number): void;
   onPlay(play: boolean): void;
@@ -78,6 +88,7 @@ export function createHistoryTrack(handlers: {
     ),
   );
   const changes = element('p', { class: 'history-changes', 'data-testid': 'history-changes' });
+  const blank = element('p', { class: 'history-blank', 'data-testid': 'history-blank' });
   const close = element(
     'button',
     { type: 'button', class: 'step history-close', 'aria-label': 'Close the track' },
@@ -94,6 +105,7 @@ export function createHistoryTrack(handlers: {
     },
     element('div', { class: 'history-controls' }, play, slider, speed, close),
     changes,
+    blank,
   );
   // Folded away until asked for, so the globe keeps its room.
   const button = element(
@@ -146,6 +158,8 @@ export function createHistoryTrack(handlers: {
       slider.setAttribute('aria-valuetext', formatYear(astronomicalYear(view.year)));
       speed.value = String(view.speed);
       changes.textContent = view.changes;
+      blank.hidden = view.blank === null;
+      blank.textContent = view.blank ?? '';
     },
   };
 }

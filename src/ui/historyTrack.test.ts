@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { changesText } from './historyTrack';
+import { blankText, changesText } from './historyTrack';
 
 describe('changesText', () => {
   it('says which states are new and which are gone by the year', () => {
@@ -18,5 +18,14 @@ describe('changesText', () => {
 
   it('has nothing to say when nothing changed', () => {
     expect(changesText(1500, [], [])).toBeNull();
+  });
+});
+
+describe('blankText', () => {
+  it('says why land may have no state, and where to see its people', () => {
+    expect(blankText(true)).toBe(
+      'Land with no state drawn was not empty: these sources map states, not every people; the faint shading is how people lived there (ArchaeoGLOBE).',
+    );
+    expect(blankText(false)).toContain('turn on Ways of life to see how people lived there.');
   });
 });

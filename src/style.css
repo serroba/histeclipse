@@ -873,6 +873,17 @@ body {
   text-overflow: ellipsis;
 }
 
+.history-blank {
+  margin: 2px 8px 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.history-blank[hidden] {
+  display: none;
+}
+
 .year-controls {
   display: flex;
   flex: none;

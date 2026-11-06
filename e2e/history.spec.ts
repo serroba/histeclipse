@@ -89,10 +89,15 @@ test('travelling lights the whole globe and rests the markers, which return with
   await test.step('When they open the track', async () => {
     await openTrack(page);
   });
-  await test.step('Then there is no night, the craters rest, and the states are drawn', async () => {
+  await test.step('Then there is no night, the craters rest, and states and ways of life are drawn', async () => {
     await expect(globe).toHaveAttribute('data-light', 'even');
     await expect(globe).toHaveAttribute('data-impacts', 'off');
     await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
+    await expect(globe).toHaveAttribute('data-ways', /^[1-9]\d*$/);
+    // Land with no state drawn is explained, not left to look empty.
+    await expect(bar.getByTestId('history-blank')).toHaveText(
+      'Land with no state drawn was not empty: these sources map states, not every people; the faint shading is how people lived there (ArchaeoGLOBE).',
+    );
     await expect(bar.getByTestId('history-changes')).not.toHaveText(
       'Turn on States and empires in Layers to watch them come and go.',
     );
@@ -102,6 +107,7 @@ test('travelling lights the whole globe and rests the markers, which return with
     await expect(globe).toHaveAttribute('data-light', 'sun');
     await expect(globe).toHaveAttribute('data-impacts', /^[1-9]\d*$/);
     await expect(page).not.toHaveURL(/layers=[a-z,]*empires/);
+    await expect(globe).toHaveAttribute('data-ways', 'off');
   });
   expect(problems).toEqual([]);
 });
