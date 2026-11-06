@@ -44,6 +44,9 @@ export interface Band {
 }
 
 /** The ice ages' divisions: the Pleistocene's ages and the Holocene. */
+/** The Holocene's three ages: the bands over the years, its own span. */
+const HOLOCENE_AGES = new Set(['Greenlandian', 'Northgrippian', 'Meghalayan']);
+
 const QUATERNARY_PARTS = new Set([
   'Gelasian',
   'Calabrian',
@@ -54,16 +57,18 @@ const QUATERNARY_PARTS = new Set([
 
 /**
  * The units to draw along a slider from `oldest` million years ago to the present: the
- * Quaternary's divisions over the ice ages, the periods over the Phanerozoic, the eras over
+ * Holocene's ages over its own years, the Quaternary's divisions over the ice ages, the periods over the Phanerozoic, the eras over
  * Earth's whole history. Oldest first, clipped to the span.
  */
 export function bandsFor(oldest: number, chart: Chart = CHART): readonly Band[] {
   const units = chart.units.filter((unit) =>
-    oldest <= 3
-      ? QUATERNARY_PARTS.has(unit.id)
-      : oldest <= 600
-        ? unit.rank === 'Period'
-        : unit.rank === 'Era' || (unit.rank === 'Eon' && unit.id === 'Hadean'),
+    oldest <= 0.012
+      ? HOLOCENE_AGES.has(unit.id)
+      : oldest <= 3
+        ? QUATERNARY_PARTS.has(unit.id)
+        : oldest <= 600
+          ? unit.rank === 'Period'
+          : unit.rank === 'Era' || (unit.rank === 'Eon' && unit.id === 'Hadean'),
   );
   return units
     .filter((unit) => unit.top < oldest)

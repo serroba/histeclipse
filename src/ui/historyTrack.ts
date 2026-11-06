@@ -1,6 +1,7 @@
 /**
- * The Holocene track: Play, a slider over the years the date view reaches, and the speed, above
- * the year bar; and, with the states layer on, which states came and went.
+ * The Holocene's time bar, its upper half: Play, a slider over the years the date view reaches
+ * with the Holocene's ages beneath, and what changed; while travelling, a way back to today's
+ * Earth; and, folded behind ⓘ, what the travel view shows and why.
  *
  * DOM glue, covered by the Playwright suite; `changesText` is unit-tested.
  */
@@ -16,6 +17,8 @@ export interface HistoryView {
   readonly first: number;
   readonly last: number;
   readonly playing: boolean;
+  /** Whether the travel view is on: even light, states and ways of life, the year's ice. */
+  readonly travelling: boolean;
   readonly speed: YearSpeed;
   /** What the track says about states; a hint when the layer is off. */
   readonly changes: string;
@@ -27,8 +30,8 @@ export interface HistoryView {
 
 export interface HistoryTrack {
   readonly root: HTMLElement;
-  /** The button in the year bar that opens the track. */
-  readonly button: HTMLButtonElement;
+  /** The speed picker, for the year bar's row beside the date. */
+  readonly speed: HTMLSelectElement;
   render(view: HistoryView): void;
 }
 
@@ -77,13 +80,17 @@ export function blankText(ways: boolean): string {
   return `Land with no state drawn was not empty: these sources map states, not every people; ${lived}`;
 }
 
-export function createHistoryTrack(handlers: {
-  onYear(year: number): void;
-  onPlay(play: boolean): void;
-  onSpeed(speed: YearSpeed): void;
-  /** The track opened or closed. */
-  onOpen(open: boolean): void;
-}): HistoryTrack {
+export function createHistoryTrack(
+  handlers: {
+    onYear(year: number): void;
+    onPlay(play: boolean): void;
+    onSpeed(speed: YearSpeed): void;
+    /** Leave the travel view for today's Earth, day and night. */
+    onEndTravel(): void;
+  },
+  /** The ages along the slider, as deep time draws its periods. */
+  bands: HTMLElement,
+): HistoryTrack {
   const play = element(
     'button',
     { type: 'button', class: 'step history-play', 'aria-label': 'Travel through the years' },
@@ -99,55 +106,45 @@ export function createHistoryTrack(handlers: {
     'select',
     { class: 'history-speed', 'aria-label': 'Speed' },
     ...YEAR_SPEEDS.map((each) =>
-      element('option', { value: String(each) }, `${each.toLocaleString('en')} years/s`),
+      element('option', { value: String(each) }, `${each.toLocaleString('en')} yr/s`),
     ),
   );
   const changes = element('p', { class: 'history-changes', 'data-testid': 'history-changes' });
   const blank = element('p', { class: 'history-blank', 'data-testid': 'history-blank' });
   const earth = element('p', { class: 'history-blank', 'data-testid': 'history-earth' });
-  const close = element(
-    'button',
-    { type: 'button', class: 'step history-close', 'aria-label': 'Close the track' },
-    '×',
-  );
-  const root = element(
-    'div',
-    {
-      class: 'history-track',
-      role: 'group',
-      'aria-label': 'Holocene',
-      id: 'history-track',
-      hidden: '',
-    },
-    element('div', { class: 'history-controls' }, play, slider, speed, close),
-    changes,
+  // What the travel view shows, and why: there when wanted, folded away otherwise.
+  const about = element(
+    'details',
+    { class: 'history-about' },
+    element('summary', { 'aria-label': 'About this view' }, 'ⓘ'),
     blank,
     earth,
   );
-  // Folded away until asked for, so the globe keeps its room.
-  const button = element(
+  const travel = element(
     'button',
     {
       type: 'button',
-      class: 'famous-open history-open',
-      'aria-expanded': 'false',
-      'aria-controls': 'history-track',
+      class: 'travel-chip',
+      'aria-label': 'Leave the travel view',
+      title: 'Back to today’s Earth, with day and night',
+      hidden: '',
     },
-    'Travel',
+    'Travel view ✕',
   );
-  function setOpen(open: boolean): void {
-    root.hidden = !open;
-    button.setAttribute('aria-expanded', String(open));
-    if (!open && playing) handlers.onPlay(false);
-    handlers.onOpen(open);
-  }
-  button.addEventListener('click', () => {
-    setOpen(button.getAttribute('aria-expanded') !== 'true');
+  travel.addEventListener('click', () => {
+    handlers.onEndTravel();
   });
-  close.addEventListener('click', () => {
-    setOpen(false);
-    button.focus();
-  });
+  const root = element(
+    'div',
+    { class: 'history-track', role: 'group', 'aria-label': 'Holocene', id: 'history-track' },
+    element(
+      'div',
+      { class: 'history-controls' },
+      play,
+      element('div', { class: 'history-lane' }, slider, bands),
+    ),
+    element('div', { class: 'history-notes' }, changes, travel, about),
+  );
   let playing = false;
   play.addEventListener('click', () => {
     handlers.onPlay(!playing);
@@ -161,7 +158,7 @@ export function createHistoryTrack(handlers: {
   });
   return {
     root,
-    button,
+    speed,
     render(view) {
       playing = view.playing;
       play.textContent = view.playing ? '❚❚' : '▶';
@@ -175,10 +172,13 @@ export function createHistoryTrack(handlers: {
       slider.setAttribute('aria-valuetext', formatYear(astronomicalYear(view.year)));
       speed.value = String(view.speed);
       changes.textContent = view.changes;
+      changes.hidden = view.changes === '';
+      travel.hidden = !view.travelling;
       blank.hidden = view.blank === null;
       blank.textContent = view.blank ?? '';
       earth.hidden = view.earth === null;
       earth.textContent = view.earth ?? '';
+      about.hidden = view.blank === null && view.earth === null;
     },
   };
 }

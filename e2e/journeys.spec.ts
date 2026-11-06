@@ -4,7 +4,7 @@
  * The catalogue is in `e2e/README.md`.
  */
 
-import { collectProblems, expect, globeRendered, openLayers, test } from './support';
+import { collectProblems, expect, globeRendered, openLayers, pickSpan, test } from './support';
 
 test('a newcomer starts with a famous eclipse and looks at the sky that day', async ({ page }) => {
   const problems = collectProblems(page);
@@ -73,14 +73,14 @@ test('a historian follows the eclipses seen from one empire', async ({ page }) =
 
 test('a reader travels into the ice ages and back to the day they left', async ({ page }) => {
   const problems = collectProblems(page);
-  const time = page.getByRole('group', { name: 'Time' });
   await test.step('Given a reader at the 2024 eclipse', async () => {
     await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
     await globeRendered(page);
   });
-  await test.step('When they go to deep time, narrow it to the ice ages and play', async () => {
-    await time.getByRole('button', { name: 'Deep time' }).click();
-    await page.getByRole('button', { name: 'Ice ages' }).click();
+  await test.step('When they zoom out to the ice ages, go back 21,000 years and play', async () => {
+    await pickSpan(page, 'Ice ages');
+    await expect(page.locator('.hud-date')).toHaveText('Today');
+    await page.getByRole('slider', { name: 'Thousands of years ago' }).fill('-21');
     await expect(page.locator('.hud-date')).toHaveText('21,000 years ago');
     await page.getByRole('button', { name: 'Play' }).click();
   });
@@ -89,8 +89,8 @@ test('a reader travels into the ice ages and back to the day they left', async (
     await expect(page.locator('.hud-date')).toHaveText('Today', { timeout: 30_000 });
     await expect(page.getByRole('button', { name: 'Play' })).toBeVisible();
   });
-  await test.step('When they go back to the Holocene', async () => {
-    await time.getByRole('button', { name: 'Holocene' }).click();
+  await test.step('When they go back to the years', async () => {
+    await pickSpan(page, 'Years');
   });
   await test.step('Then the day and the eclipse they left are there', async () => {
     await expect(page.locator('.hud-date')).toHaveText('8 April 2024 CE');

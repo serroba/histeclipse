@@ -1,6 +1,7 @@
 /**
- * Feature: Travelling through the Holocene. A track above the year bar plays the years by, at a
- * chosen speed, and with the states layer on says which states appear and which are gone.
+ * Feature: Travelling through the Holocene. The year bar plays the years by, at a chosen speed;
+ * playing turns on the travel view, and with the states layer on the bar says which states
+ * appear and which are gone.
  */
 
 import type { Page } from '@playwright/test';
@@ -9,9 +10,12 @@ import { collectProblems, expect, globeRendered, openLayers, test } from './supp
 
 const track = 'Holocene';
 
+/** Turn the travel view on, as playing does, and pause there. */
 async function openTrack(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Travel', exact: true }).click();
-  await expect(page.getByRole('group', { name: track })).toBeVisible();
+  const bar = page.getByRole('group', { name: track });
+  await bar.getByRole('button', { name: 'Travel through the years' }).click();
+  await bar.getByRole('button', { name: 'Stop travelling' }).click();
+  await expect(bar.getByRole('button', { name: 'Leave the travel view' })).toBeVisible();
 }
 
 test('playing history moves through the years and names the states that come and go', async ({
@@ -24,11 +28,12 @@ test('playing history moves through the years and names the states that come and
     await globeRendered(page);
     await expect(page.getByTestId('globe')).toHaveAttribute('data-empires', /^[1-9]\d*$/);
   });
-  await test.step('When they open the track and play, at 50 years a second', async () => {
-    await openTrack(page);
+  await test.step('When they play, at 50 years a second', async () => {
     // Slow enough that the trip to today outlasts the scenario: a faster one can end just as
     // Stop is pressed, and the tap then starts a new trip.
-    await expect(bar.getByLabel('Speed')).toHaveValue('50');
+    await expect(
+      page.getByRole('navigation', { name: 'Year and eclipses' }).getByLabel('Speed'),
+    ).toHaveValue('50');
     await bar.getByRole('button', { name: 'Travel through the years' }).click();
   });
   await test.step('Then the years run on, and the track names states that appeared or went', async () => {
@@ -61,16 +66,15 @@ test('the track jumps to any year of the Holocene', async ({ page }) => {
     await page.goto('./?t=2024-04-08T18:17');
     await globeRendered(page);
   });
-  await test.step('When they open the track and move it to 1000 CE', async () => {
-    await openTrack(page);
+  await test.step('When they move the bar to 1000 CE', async () => {
     await bar.getByRole('slider', { name: 'Year in the Holocene' }).fill('1000');
   });
   await test.step('Then the globe shows that year', async () => {
     await expect(page).toHaveURL(/t=1000-/);
     await expect(page.getByLabel('Year', { exact: true })).toHaveValue('1000');
   });
-  await test.step('And the track brought States and empires on with it', async () => {
-    await expect(page).toHaveURL(/layers=[a-z,]*empires/);
+  await test.step('And only scrubbing, not playing, the day and night stay', async () => {
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-light', 'sun');
   });
 });
 
@@ -105,7 +109,7 @@ test('travelling lights the whole globe and rests the markers, which return with
     );
   });
   await test.step('When they close it, night, the craters and their own layers come back', async () => {
-    await bar.getByRole('button', { name: 'Close the track' }).click();
+    await bar.getByRole('button', { name: 'Leave the travel view' }).click();
     await expect(globe).toHaveAttribute('data-light', 'sun');
     await expect(globe).toHaveAttribute('data-impacts', /^[1-9]\d*$/);
     await expect(page).not.toHaveURL(/layers=[a-z,]*empires/);
@@ -121,23 +125,25 @@ test('the track goes with the Holocene into deep time', async ({ page }) => {
   await expect(page.getByRole('group', { name: track })).toBeHidden();
 });
 
-test('the track opens from the year bar and folds away again', async ({ page }) => {
+test('playing starts the travel view, and its chip leaves it for today’s Earth', async ({
+  page,
+}) => {
   const bar = page.getByRole('group', { name: track });
-  await test.step('Given the globe in 2024, with the track folded away', async () => {
-    await page.goto('./?t=2024-04-08T18:17');
+  const globe = page.getByTestId('globe');
+  await test.step('Given the globe in 1000 CE, day and night drawn', async () => {
+    await page.goto('./?t=1000-06-01T12:00');
     await globeRendered(page);
-    await expect(bar).toBeHidden();
+    await expect(globe).toHaveAttribute('data-light', 'sun');
+    await expect(bar.getByRole('button', { name: 'Leave the travel view' })).toBeHidden();
   });
-  await test.step('When they open it and close it', async () => {
+  await test.step('When they play and pause, the travel view stays on', async () => {
     await openTrack(page);
-    await bar.getByRole('button', { name: 'Close the track' }).click();
+    await expect(globe).toHaveAttribute('data-light', 'even');
   });
-  await test.step('Then it folds away, and Travel says so', async () => {
-    await expect(bar).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Travel', exact: true })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    );
+  await test.step('When they leave it, day and night come back', async () => {
+    await bar.getByRole('button', { name: 'Leave the travel view' }).click();
+    await expect(globe).toHaveAttribute('data-light', 'sun');
+    await expect(bar.getByRole('button', { name: 'Leave the travel view' })).toBeHidden();
   });
 });
 
@@ -148,8 +154,7 @@ test('the Holocene reaches back to 9700 BCE, its ΔT growing uncertain', async (
     await page.goto('./?t=2024-04-08T18:17');
     await globeRendered(page);
   });
-  await test.step('When they move the track to its start', async () => {
-    await openTrack(page);
+  await test.step('When they move the bar to its start', async () => {
     const slider = bar.getByRole('slider', { name: 'Year in the Holocene' });
     await expect(slider).toHaveAttribute('min', '-9699');
     await slider.fill('-9699');
@@ -263,7 +268,7 @@ test('travelling shows the ice sheets and the sea level of the year, and they go
     );
   });
   await test.step('When they close it, today’s Earth is back', async () => {
-    await bar.getByRole('button', { name: 'Close the track' }).click();
+    await bar.getByRole('button', { name: 'Leave the travel view' }).click();
     await expect(globe).toHaveAttribute('data-ice', 'off');
     await expect(globe).toHaveAttribute('data-shelf', 'off');
   });
@@ -280,7 +285,10 @@ test('as the years play, state names stay put on the map, and only a few light u
     await expect(page.locator('.empire-label:not([hidden])').first()).toBeVisible();
   });
   await test.step('When they travel at 200 years a second', async () => {
-    await bar.getByLabel('Speed').selectOption('200');
+    await page
+      .getByRole('navigation', { name: 'Year and eclipses' })
+      .getByLabel('Speed')
+      .selectOption('200');
     await bar.getByRole('button', { name: 'Travel through the years' }).click();
   });
   await test.step('Then the names never all go dark, and at most four are new or gone', async () => {

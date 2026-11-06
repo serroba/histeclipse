@@ -351,7 +351,6 @@ export function createDeepTimeBar(handlers: {
   /** The reader asked for the Paleo-CO2 Data Archive's estimates: load them. */
   onCo2Archive(): void;
   onDispersal(scenario: DispersalScenario): void;
-  onScale(scale: DeepScale): void;
   onCoast(coast: CoastSource): void;
   onSeaIce(model: SeaIceModel): void;
   onTemperatureModel(model: TemperatureModel): void;
@@ -388,29 +387,6 @@ export function createDeepTimeBar(handlers: {
     step: '1',
     'aria-label': 'Millions of years ago',
   });
-  const scaleAll = element(
-    'button',
-    { type: 'button', class: 'deep-scale-option', 'aria-pressed': 'true' },
-    '540 Myr',
-  );
-  const scaleIce = element(
-    'button',
-    { type: 'button', class: 'deep-scale-option', 'aria-pressed': 'false' },
-    'Ice ages',
-  );
-  const scaleEons = element(
-    'button',
-    { type: 'button', class: 'deep-scale-option', 'aria-pressed': 'false' },
-    '4.6 Gyr',
-  );
-  const scaleSwitch = element(
-    'span',
-    { class: 'deep-scale', role: 'group', 'aria-label': 'Time span' },
-    element('span', { class: 'deep-scale-label', 'aria-hidden': 'true' }, 'Span'),
-    scaleIce,
-    scaleAll,
-    scaleEons,
-  );
   const unchartedNote = element(
     'p',
     { class: 'deep-note', hidden: '', 'data-testid': 'uncharted-note' },
@@ -759,7 +735,6 @@ export function createDeepTimeBar(handlers: {
       period,
       // Beside the moment, not the slider: on a phone the slider needs the whole row.
       speed,
-      scaleSwitch,
       seaLevelButton,
       temperatureButton,
       platesButton,
@@ -1075,12 +1050,6 @@ export function createDeepTimeBar(handlers: {
   younger.addEventListener('click', () => {
     if (current !== null) handlers.onMa(Math.max(0, current.ma - step()), true);
   });
-  scaleAll.addEventListener('click', () => {
-    handlers.onScale('all');
-  });
-  scaleIce.addEventListener('click', () => {
-    handlers.onScale('ice');
-  });
   modelPicker.addEventListener('change', () => {
     const model = TEMPERATURE_MODELS.find((option) => option === modelPicker.value);
     if (model !== undefined) handlers.onTemperatureModel(model);
@@ -1096,9 +1065,6 @@ export function createDeepTimeBar(handlers: {
   sketchPickers.snowball.addEventListener('change', () => {
     const snowball = SNOWBALL_MODELS.find((option) => option === sketchPickers.snowball.value);
     if (snowball !== undefined) handlers.onSketch({ snowball });
-  });
-  scaleEons.addEventListener('click', () => {
-    handlers.onScale('eons');
   });
   seaIcePicker.addEventListener('change', () => {
     const model = SEA_ICE_MODELS.find((option) => option === seaIcePicker.value);
@@ -1157,9 +1123,6 @@ export function createDeepTimeBar(handlers: {
       bands.render(view.oldest, view.ma);
       const ice = view.scale === 'ice';
       const perMa = ice ? 1000 : 1;
-      scaleAll.setAttribute('aria-pressed', String(view.scale === 'all'));
-      scaleIce.setAttribute('aria-pressed', String(ice));
-      scaleEons.setAttribute('aria-pressed', String(view.scale === 'eons'));
       const uncharted = view.ma > view.mapsReach;
       const sketched = view.sketch !== null && view.sketch.sketch.questions.length > 0;
       unchartedNote.hidden = !uncharted || sketched;

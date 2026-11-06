@@ -86,6 +86,8 @@ export function createTimeline(
   },
   /** Ways into the Holocene's events, such as the famous eclipses, set before the year's own. */
   events: readonly HTMLElement[] = [],
+  /** Set beside the year: how fast it plays, how far the bar reaches. */
+  beside: readonly HTMLElement[] = [],
 ): Timeline {
   // Digits only (a numeric keypad on phones); the era is picked beside it.
   const input = element('input', {
@@ -174,7 +176,7 @@ export function createTimeline(
   const root = element(
     'nav',
     { class: 'timeline', 'aria-label': 'Year and eclipses' },
-    element('div', { class: 'year-controls' }, previous, form, next),
+    element('div', { class: 'year-controls' }, previous, form, next, ...beside),
     element('div', { class: 'eclipse-row' }, ...events, list),
     seenRow,
   );

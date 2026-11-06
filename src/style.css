@@ -840,20 +840,49 @@ body {
   backdrop-filter: blur(14px);
 }
 
-/* The Holocene track: Play, the years, the speed, and which states came and went. */
-.history-track {
+/* The Holocene's time bar: one panel, as deep time's is: the years to play and scrub, then the
+   date with its speed and span, then the year's eclipses. */
+.holocene-bar {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   width: min(760px, 100%);
-  padding: 4px 8px 6px;
+  padding: 6px 8px 8px;
   border: 1px solid var(--panel-border);
   border-radius: 16px;
   background: var(--panel);
   backdrop-filter: blur(14px);
 }
 
-.history-track[hidden] {
+/* The year and its speed, then the year's eclipses beside them where they fit; on a phone the
+   year has a line to itself. */
+.holocene-bar .year-controls {
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+@media (max-width: 600px) {
+  .holocene-bar .year-controls {
+    flex: 1 1 100%;
+  }
+}
+
+.holocene-bar > .timeline {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  backdrop-filter: none;
+}
+
+.history-track {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.history-track[hidden],
+.history-speed[hidden] {
   display: none;
 }
 
@@ -863,11 +892,70 @@ body {
   gap: 8px;
 }
 
+.history-lane {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.history-lane .period-bands {
+  margin: 0 9px;
+}
+
 .history-slider {
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  accent-color: rgb(247 201 90);
+}
+
+.history-notes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+}
+
+.history-notes .history-changes {
   flex: 1;
   min-width: 0;
-  height: 44px;
-  accent-color: rgb(247 201 90);
+}
+
+.travel-chip {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgb(247 201 90 / 0.5);
+  border-radius: 16px;
+  background: rgb(247 201 90 / 0.1);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.history-changes[hidden],
+.travel-chip[hidden],
+.history-about[hidden] {
+  display: none;
+}
+
+.history-about summary {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.history-about summary::-webkit-details-marker {
+  display: none;
+}
+
+.history-about[open] {
+  flex-basis: 100%;
 }
 
 .history-speed,
@@ -1697,8 +1785,8 @@ body {
   }
 }
 
-/* Time: the Holocene or deep time, one always picked, in a two-part pill at the top. In deep
-   time its bar takes the year bar's place. */
+/* How far back time reaches, one always picked, in a pill at the top: the Holocene's years,
+   or deeper. Beyond the years, deep time's bar takes the year bar's place. */
 .time-switch {
   display: flex;
   border-radius: 22px;

@@ -1,28 +1,25 @@
 /**
- * Feature: Time. The reader is always in one of two times, the Holocene (the calendar, states
- * and eclipses) or deep time (millions of years), and switches between them from the top row.
- * Famous eclipses are events of the Holocene, so they sit with the year's eclipses.
+ * Feature: Time. One switch at the top says how far back time reaches: the Holocene's years
+ * (the calendar, states and eclipses), the ice ages, 540 million years, or all of Earth's
+ * history. Going deeper is zooming out, to the same moment; famous eclipses belong to the years.
  */
 
-import { collectProblems, globeRendered, expect, test } from './support';
+import { collectProblems, globeRendered, expect, pickSpan, test } from './support';
 
-test('the top row picks the time; famous eclipses sit with the year’s eclipses', async ({
+test('the top row picks how far back time reaches; famous eclipses sit with the years', async ({
   page,
 }) => {
   const problems = collectProblems(page);
-  const time = page.getByRole('group', { name: 'Time' });
+  const spans = page.getByRole('group', { name: 'Time span' });
   await test.step('Given a reader in 2024', async () => {
     await page.goto('./?t=2024-04-08T18:17');
     await globeRendered(page);
   });
-  await test.step('Then the top row offers the Holocene and deep time, with the Holocene on', async () => {
-    await expect(time.getByRole('button', { name: 'Holocene' })).toHaveAttribute(
+  await test.step('Then the top row offers four spans, with Years on', async () => {
+    await expect(spans.getByRole('button')).toHaveText(['Years', 'Ice ages', '540 Myr', '4.6 Gyr']);
+    await expect(spans.getByRole('button', { name: 'Years' })).toHaveAttribute(
       'aria-pressed',
       'true',
-    );
-    await expect(time.getByRole('button', { name: 'Deep time' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
     );
   });
   await test.step('And Famous eclipses is in the year bar, not the top row', async () => {
@@ -32,40 +29,36 @@ test('the top row picks the time; famous eclipses sit with the year’s eclipses
       0,
     );
   });
-  await test.step('When they pick Holocene again, nothing changes', async () => {
+  await test.step('When they pick Years again, nothing changes', async () => {
     const before = page.url();
-    await time.getByRole('button', { name: 'Holocene' }).click();
+    await pickSpan(page, 'Years');
     expect(page.url()).toBe(before);
   });
   expect(problems).toEqual([]);
 });
 
-test('from deep time, picking the Holocene returns to the date and eclipse left', async ({
+test('going deeper keeps the moment, and coming back returns to the date and eclipse left', async ({
   page,
 }) => {
   const problems = collectProblems(page);
-  const time = page.getByRole('group', { name: 'Time' });
+  const spans = page.getByRole('group', { name: 'Time span' });
   await test.step('Given a reader at the 2024 eclipse', async () => {
     await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
     await globeRendered(page);
   });
-  await test.step('When they pick Deep time', async () => {
-    await time.getByRole('button', { name: 'Deep time' }).click();
+  await test.step('When they pick 540 Myr', async () => {
+    await pickSpan(page, '540 Myr');
   });
-  await test.step('Then deep time is on, with no famous eclipses to pick', async () => {
-    await expect(page).toHaveURL(/&ma=250(&|$)/);
-    await expect(time.getByRole('button', { name: 'Deep time' })).toHaveAttribute(
+  await test.step('Then deep time opens at today, with no famous eclipses to pick', async () => {
+    await expect(page).toHaveURL(/&ma=0(&|$)/);
+    await expect(spans.getByRole('button', { name: '540 Myr' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     await expect(page.getByRole('button', { name: 'Famous eclipses' })).toBeHidden();
   });
-  await test.step('And picking Deep time again keeps them there', async () => {
-    await time.getByRole('button', { name: 'Deep time' }).click();
-    await expect(page).toHaveURL(/&ma=250(&|$)/);
-  });
-  await test.step('When they pick Holocene', async () => {
-    await time.getByRole('button', { name: 'Holocene' }).click();
+  await test.step('When they pick Years', async () => {
+    await pickSpan(page, 'Years');
   });
   await test.step('Then the date and eclipse they left come back', async () => {
     await expect(page).not.toHaveURL(/ma=/);
@@ -77,18 +70,38 @@ test('from deep time, picking the Holocene returns to the date and eclipse left'
   expect(problems).toEqual([]);
 });
 
-test('a link to deep time opens with Deep time picked', async ({ page }) => {
+test('from the years, the ice ages open at the same moment, and come back to its year', async ({
+  page,
+}) => {
+  await test.step('Given 6000 BCE', async () => {
+    await page.goto('./?t=-5999-06-01T12:00');
+    await globeRendered(page);
+  });
+  await test.step('When they pick Ice ages, deep time opens about 8,000 years ago', async () => {
+    await pickSpan(page, 'Ice ages');
+    await expect(page).toHaveURL(/&ma=0\.008(&|$)/);
+    await expect(page).toHaveURL(/scale=ice/);
+  });
+  await test.step('When they move to 10,000 years ago (8051 BCE) and pick Years, the year follows', async () => {
+    await page.goto('./?ma=0.01&scale=ice');
+    await globeRendered(page);
+    await pickSpan(page, 'Years');
+    await expect(page.getByLabel('Year', { exact: true })).toHaveValue('8051');
+  });
+});
+
+test('a link to deep time opens with its span picked', async ({ page }) => {
   await test.step('Given a link 985,000 years back', async () => {
     await page.goto('./?ma=0.985&scale=ice');
     await globeRendered(page);
   });
-  await test.step('Then Deep time is the time shown', async () => {
-    const time = page.getByRole('group', { name: 'Time' });
-    await expect(time.getByRole('button', { name: 'Deep time' })).toHaveAttribute(
+  await test.step('Then Ice ages is the span shown', async () => {
+    const spans = page.getByRole('group', { name: 'Time span' });
+    await expect(spans.getByRole('button', { name: 'Ice ages' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    await expect(time.getByRole('button', { name: 'Holocene' })).toHaveAttribute(
+    await expect(spans.getByRole('button', { name: 'Years' })).toHaveAttribute(
       'aria-pressed',
       'false',
     );
