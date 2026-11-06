@@ -82,6 +82,12 @@ export const HISTORY_LAYER_GROUPS: readonly LayerGroup[] = [
         label: 'Moon in Earth’s shadow',
         about: 'Where on Earth an eclipsed Moon was up, for a lunar eclipse.',
       },
+      {
+        id: 'orbits',
+        label: 'Planets’ orbits',
+        about:
+          'The paths of Earth and the five bright planets around the Sun, drawn when the view is far out or on the Sun or a planet.',
+      },
     ],
   },
 ];

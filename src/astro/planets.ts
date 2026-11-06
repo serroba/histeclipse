@@ -58,6 +58,8 @@ export interface PlanetEphemeris {
   position(planet: PlanetName, jdTT: JulianDay): EquatorialVector;
   /** Where the planet is seen: its position when the light now arriving left it. */
   apparent(planet: PlanetName, jdTT: JulianDay): EquatorialVector;
+  /** Heliocentric position in km, J2000 equator: a planet's, or Earth's. */
+  heliocentric(body: PlanetName | 'earth', jdTT: number): EquatorialVector;
 }
 
 type Theory = Pick<Planet, 'position2000'>;
@@ -102,6 +104,9 @@ export function createPlanetEphemeris(
         delay = Math.hypot(...geocentricAu(planet, jdTT - delay, jdTT)) * LIGHT_DAYS_PER_AU;
       }
       return toEquatorialKm(geocentricAu(planet, jdTT - delay, jdTT));
+    },
+    heliocentric(body, jdTT) {
+      return toEquatorialKm(heliocentric(theories[body], jdTT));
     },
   };
 }
@@ -175,4 +180,35 @@ export function saturnRingTilt(saturn: EquatorialVector): number {
   // Earth seen from Saturn is the opposite direction.
   const along = -(x * SATURN_POLE[0] + y * SATURN_POLE[1] + z * SATURN_POLE[2]) / length;
   return (Math.asin(along) * 180) / Math.PI;
+}
+
+/** The bodies whose orbits are drawn: Earth's and the five planets'. */
+export const ORBITING = ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn'] as const;
+export type Orbiting = (typeof ORBITING)[number];
+
+/** Sidereal orbital periods, days. */
+export const ORBIT_DAYS: Readonly<Record<Orbiting, number>> = {
+  mercury: 87.969,
+  venus: 224.701,
+  earth: 365.256,
+  mars: 686.98,
+  jupiter: 4332.59,
+  saturn: 10_759.22,
+};
+
+/**
+ * One revolution of a body around the Sun, centred on `jdTT`: `samples` heliocentric positions
+ * (km, J2000 equator) from half a period before to half after, from the same theory that places
+ * the body, so it sits on its path.
+ */
+export function orbitPath(
+  ephemeris: Pick<PlanetEphemeris, 'heliocentric'>,
+  body: Orbiting,
+  jdTT: number,
+  samples = 128,
+): readonly EquatorialVector[] {
+  const period = ORBIT_DAYS[body];
+  return Array.from({ length: samples }, (_, index) =>
+    ephemeris.heliocentric(body, jdTT + period * (index / samples - 0.5)),
+  );
 }

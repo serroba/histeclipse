@@ -8,22 +8,27 @@
 import {
   AdditiveBlending,
   BackSide,
+  BufferGeometry,
   CanvasTexture,
   Color,
+  CustomBlending,
   CylinderGeometry,
   DataTexture,
+  Float32BufferAttribute,
   Group,
   LinearFilter,
+  LineBasicMaterial,
+  LineLoop,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
-  type Object3D,
+  OneFactor,
   OrthographicCamera,
   PerspectiveCamera,
   PlaneGeometry,
-  RedFormat,
   Quaternion,
   Raycaster,
+  RedFormat,
   RepeatWrapping,
   Scene,
   ShaderMaterial,
@@ -32,16 +37,15 @@ import {
   SpriteMaterial,
   SRGBColorSpace,
   TextureLoader,
-  UnsignedByteType,
-  CustomBlending,
-  OneFactor,
-  ZeroFactor,
+  type Object3D,
   type Texture,
+  UnsignedByteType,
   Vector2,
   Vector3,
   Vector4,
   WebGLRenderer,
   WebGLRenderTarget,
+  ZeroFactor,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -86,7 +90,7 @@ import {
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { SOLAR_NORTH_POLE_J2000 } from './sunImage';
 import { labelPoint, type Territory } from '../data/empires';
-import { PLANETS, type PlanetName } from '../astro/planets';
+import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius } from './planetLook';
 import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
@@ -324,6 +328,11 @@ export interface Globe {
    * keeps its place among the stars as time moves, so Earth spins and the Moon orbits in view.
    */
   setSpace(bodies: SpaceBodies): void;
+  /**
+   * Draw the orbits of Earth and the planets around the Sun: each a loop of heliocentric J2000
+   * positions in km. Null hides them.
+   */
+  setOrbits(paths: Readonly<Record<Orbiting, readonly (readonly number[])[]>> | null): void;
   /**
    * Centre the camera on a body and fly there; it then orbits and zooms around that body. A
    * body that has not loaded yet (the Moon, briefly) is flown to once it has.
@@ -1243,6 +1252,19 @@ export async function createGlobe(
   sun.visible = false;
   scene.add(sun);
   const planets = createPlanetMeshes(scene);
+  // The planets' orbits, and Earth's: drawn about the Sun in J2000 axes, turned with them.
+  const orbits = new Group();
+  orbits.visible = false;
+  scene.add(orbits);
+  let orbitLoops: LineLoop<BufferGeometry, LineBasicMaterial>[] = [];
+  const ORBIT_COLOURS: Readonly<Record<Orbiting, string>> = {
+    mercury: '#b8b2a8',
+    venus: '#e3c98f',
+    earth: '#6fa8ff',
+    mars: '#d9774b',
+    jupiter: '#d8b48a',
+    saturn: '#e6d29a',
+  };
 
   // Deep time's elevation maps, loaded once each. They hold data, not colour: no colour space,
   // and linear filtering so the coast falls between the sea's last byte and the land's first.
@@ -1283,7 +1305,7 @@ export async function createGlobe(
   const platesOrder = inOrder();
   let sketchField: { readonly texture: DataTexture; readonly shares: Float64Array } | null = null;
   function hiddenInDeepTime(): Object3D[] {
-    return [sun, corona, moon, ...Object.values(planets.meshes)];
+    return [sun, corona, moon, orbits, ...Object.values(planets.meshes)];
   }
   function paleoTexture(url: string): Promise<Texture> {
     let pending = paleoTextures.get(url);
@@ -1926,6 +1948,37 @@ export async function createGlobe(
       sunDirection.set(x, y, z).normalize();
       needsRender = true;
     },
+    setOrbits(paths) {
+      for (const loop of orbitLoops) {
+        orbits.remove(loop);
+        loop.geometry.dispose();
+        loop.material.dispose();
+      }
+      orbitLoops = [];
+      orbits.visible = paths !== null;
+      container.dataset['orbits'] = paths === null ? 'off' : String(ORBITING.length);
+      if (paths === null) {
+        needsRender = true;
+        return;
+      }
+      for (const body of ORBITING) {
+        const points = paths[body].flatMap(([x = 0, y = 0, z = 0]) => sceneFromKm([x, y, z]));
+        const geometry = new BufferGeometry();
+        geometry.setAttribute('position', new Float32BufferAttribute(points, 3));
+        const loop = new LineLoop(
+          geometry,
+          new LineBasicMaterial({
+            color: ORBIT_COLOURS[body],
+            transparent: true,
+            opacity: 0.55,
+            depthWrite: false,
+          }),
+        );
+        orbitLoops.push(loop);
+        orbits.add(loop);
+      }
+      needsRender = true;
+    },
     setSpace(bodies) {
       // Keep a far camera still among the stars: carry it along by the rotation Earth made
       // since the last moment (old Earth-fixed -> J2000 -> new Earth-fixed).
@@ -1961,6 +2014,8 @@ export async function createGlobe(
       sun.position.set(...sceneFromKm(apply(toEarthFixed, bodies.sunKm)));
       sun.visible = true;
       sunPosition.copy(sun.position);
+      orbits.position.copy(sun.position);
+      orbits.quaternion.copy(sunFrame);
       // The image's frame: toward Earth, and the Sun's rotation axis, in scene axes.
       sunUniforms.toEarth.value.copy(sun.position).negate().normalize();
       // sunFrame turns J2000 vectors written in scene axes, like every position here.

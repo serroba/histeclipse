@@ -134,3 +134,35 @@ test('from anywhere, the name leads back to the start', async ({ page }) => {
   });
   expect(problems).toEqual([]);
 });
+
+test('far out, the planets’ orbits can be drawn round the Sun, and go as the view comes back in', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const orbits = page.getByRole('button', { name: 'Orbits', exact: true });
+  await test.step('Given Earth close up, where orbits mean nothing', async () => {
+    await page.goto('./?t=2024-04-08T18:17');
+    await globeRendered(page);
+    await expect(orbits).toBeHidden();
+  });
+  await test.step('When they look from far out, beyond Mars', async () => {
+    await page.goto('./?t=2024-04-08T18:17&cam=80.0000,0.0000,300000.00');
+    await globeRendered(page);
+  });
+  await test.step('Then Orbits is offered, and draws Earth’s and the five planets’', async () => {
+    await expect(orbits).toBeVisible();
+    await expect(orbits).toHaveAttribute('aria-pressed', 'false');
+    await orbits.click();
+    await expect(orbits).toHaveAttribute('aria-pressed', 'true');
+    await expect(globe).toHaveAttribute('data-orbits', '6');
+    await expect(page).toHaveURL(/layers=[a-z,]*orbits/);
+  });
+  await test.step('When they go back to Earth close up, the orbits go and so does the button', async () => {
+    await page.goto('./?t=2024-04-08T18:17&layers=lunar,solar,orbits&cam=20.0000,0.0000,3.00');
+    await globeRendered(page);
+    await expect(orbits).toBeHidden();
+    await expect(globe).not.toHaveAttribute('data-orbits', '6');
+  });
+  expect(problems).toEqual([]);
+});
