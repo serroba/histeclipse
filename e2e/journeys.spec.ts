@@ -166,3 +166,33 @@ test('far out, the planets’ orbits can be drawn round the Sun, and go as the v
   });
   expect(problems).toEqual([]);
 });
+
+test('links made before one time bar still open what they showed', async ({ page }) => {
+  const problems = collectProblems(page);
+  await test.step('Given a deep-time link with layers since retired', async () => {
+    await page.goto('./?ma=66&scale=all&layers=temperature,terminator,places');
+    await globeRendered(page);
+  });
+  await test.step('Then it opens on its span and moment, with its layer, the retired ones dropped', async () => {
+    await expect(page.locator('.hud-date')).toHaveText('66 million years ago');
+    await expect(
+      page.getByRole('group', { name: 'Time span' }).getByRole('button', { name: '540 Myr' }),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page).not.toHaveURL(/terminator|places/);
+  });
+  await test.step('When a link to the ice ages is opened', async () => {
+    await page.goto('./?ma=0.021&scale=ice');
+    await globeRendered(page);
+  });
+  await test.step('Then it opens there too', async () => {
+    await expect(page.locator('.hud-date')).toHaveText('21,000 years ago');
+    await expect(
+      page.getByRole('group', { name: 'Time span' }).getByRole('button', { name: 'Ice ages' }),
+    ).toHaveAttribute('aria-pressed', 'true');
+  });
+  expect(problems).toEqual([]);
+});

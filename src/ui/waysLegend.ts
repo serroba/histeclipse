@@ -27,7 +27,8 @@ export function legendWays(at: WaysAt): Shown[] {
 }
 
 export function createWaysLegend(): WaysLegend {
-  const list = element('ul', { class: 'ways-legend-list' });
+  // A list said as one, though laid out with the title (display: contents can drop the role).
+  const list = element('ul', { class: 'ways-legend-list', role: 'list' });
   const items = new Map(
     ORDER.map((way) => {
       const swatch = element('span', { class: 'ways-swatch', 'aria-hidden': 'true' });

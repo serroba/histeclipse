@@ -1,7 +1,7 @@
 /**
  * The Holocene's time bar, its upper half: Play, a slider over the years the date view reaches
  * with the Holocene's ages beneath, and what changed; while travelling, a way back to today's
- * Earth; and, folded behind ⓘ, what the travel view shows and why.
+ * Earth. Beside the date go the speed and, folded behind ⓘ, what the travel view shows and why.
  *
  * DOM glue, covered by the Playwright suite; `changesText` is unit-tested.
  */
@@ -30,8 +30,8 @@ export interface HistoryView {
 
 export interface HistoryTrack {
   readonly root: HTMLElement;
-  /** The speed picker, for the year bar's row beside the date. */
-  readonly speed: HTMLSelectElement;
+  /** The speed picker and ⓘ, for the year bar's row beside the date. */
+  readonly extras: HTMLElement;
   render(view: HistoryView): void;
 }
 
@@ -59,6 +59,9 @@ export function changesText(
 }
 
 export const STATES_HINT = 'Turn on States and empires in Layers to watch them come and go.';
+
+/** What the track says while travelling, before any state has come or gone. */
+export const STATES_WAIT = 'States that appear and go show here as the years go by.';
 
 /** The sea level of the year against today's, by its source, and where the ice comes from. */
 export function earthText(coastline: Coastline): string {
@@ -134,6 +137,8 @@ export function createHistoryTrack(
   travel.addEventListener('click', () => {
     handlers.onEndTravel();
   });
+  const notes = element('div', { class: 'history-notes' }, changes, travel);
+  const extras = element('span', { class: 'history-extras' }, speed, about);
   const root = element(
     'div',
     { class: 'history-track', role: 'group', 'aria-label': 'Holocene', id: 'history-track' },
@@ -143,7 +148,7 @@ export function createHistoryTrack(
       play,
       element('div', { class: 'history-lane' }, slider, bands),
     ),
-    element('div', { class: 'history-notes' }, changes, travel, about),
+    notes,
   );
   let playing = false;
   play.addEventListener('click', () => {
@@ -158,7 +163,7 @@ export function createHistoryTrack(
   });
   return {
     root,
-    speed,
+    extras,
     render(view) {
       playing = view.playing;
       play.textContent = view.playing ? '❚❚' : '▶';
@@ -174,6 +179,8 @@ export function createHistoryTrack(
       changes.textContent = view.changes;
       changes.hidden = view.changes === '';
       travel.hidden = !view.travelling;
+      // The row goes when it has nothing to say, so the bar is no taller than it needs.
+      notes.hidden = changes.hidden && travel.hidden;
       blank.hidden = view.blank === null;
       blank.textContent = view.blank ?? '';
       earth.hidden = view.earth === null;
