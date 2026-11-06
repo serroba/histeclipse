@@ -117,3 +117,20 @@ test('a link someone shares opens exactly what they saw', async ({ page }) => {
   });
   expect(problems).toEqual([]);
 });
+
+test('from anywhere, the name leads back to the start', async ({ page }) => {
+  const problems = collectProblems(page);
+  await test.step('Given deep time, 66 million years ago, with layers on', async () => {
+    await page.goto('./?ma=66&layers=temperature,impacts');
+    await globeRendered(page);
+  });
+  await test.step('When they follow the name at the top', async () => {
+    await page.getByRole('link', { name: 'histeclipse' }).click();
+  });
+  await test.step('Then they are back at the start, today on the globe, welcomed if this is their first visit', async () => {
+    await expect(page.getByTestId('welcome')).toBeVisible();
+    await expect(page).not.toHaveURL(/ma=66/);
+    await expect(page).not.toHaveURL(/temperature/);
+  });
+  expect(problems).toEqual([]);
+});
