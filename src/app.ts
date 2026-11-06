@@ -348,17 +348,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     store.set((state) => ({ ...state, figures }));
   });
   // The orbits, offered where they mean something: far out, or on the Sun or a planet.
-  const orbitsButton = element(
-    'button',
-    { type: 'button', class: 'layers-open', 'aria-pressed': 'false', hidden: '' },
-    'Orbits',
-  );
-  orbitsButton.addEventListener('click', () => {
-    store.set((state) => ({
-      ...state,
-      layers: withLayer(state.layers, 'orbits', !state.layers.has('orbits')),
-    }));
-  });
   const layersPanel = createLayersPanel(
     (layer, on) => {
       store.set((state) => ({ ...state, layers: withLayer(state.layers, layer, on) }));
@@ -381,6 +370,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const zoomRail = createZoomRail({
     onZoom(distance) {
       globe.zoomTo(distance);
+    },
+    onOrbits() {
+      store.set((state) => ({
+        ...state,
+        layers: withLayer(state.layers, 'orbits', !state.layers.has('orbits')),
+      }));
     },
   });
   const rocksCredit = element(
@@ -966,7 +961,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       detailText,
       termNote,
       welcome.root,
-      element('div', { class: 'hud-actions' }, historySpan.root, layersPanel.button, orbitsButton),
+      element('div', { class: 'hud-actions' }, historySpan.root, layersPanel.button),
       viewSwitch.root,
       aimSwitch.root,
       skyOptions,
@@ -2903,8 +2898,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let lastTerrestrial: number | null = null;
   /** With the layer on and the view far enough out, the orbits around the Sun. */
   function showOrbits(state: ViewState, jdTT: number): void {
-    orbitsButton.hidden = !wantPlanets(state) || state.ma !== null;
-    orbitsButton.setAttribute('aria-pressed', String(state.layers.has('orbits')));
+    zoomRail.setOrbits(wantPlanets(state) && state.ma === null, state.layers.has('orbits'));
     const theory = planets;
     if (
       !state.layers.has('orbits') ||

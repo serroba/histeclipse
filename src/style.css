@@ -3009,6 +3009,33 @@ body {
   backdrop-filter: blur(14px);
 }
 
+.zoom-parts {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-height: 0;
+}
+
+.zoom-parts[hidden],
+.zoom-readout[hidden],
+.zoom-orbits[hidden] {
+  display: none;
+}
+
+.zoom-orbits {
+  display: grid;
+  place-items: center;
+  color: var(--ink-muted);
+}
+
+.zoom-orbits[aria-pressed='true'] {
+  border-color: rgb(143 180 255 / 0.6);
+  background: rgb(143 180 255 / 0.2);
+  color: var(--ink);
+}
+
 .zoom-track {
   position: relative;
   /* As tall as there is room for, up to 200px. */
@@ -3047,6 +3074,14 @@ body {
     0 0 2px #000;
   transform: translateY(-50%);
   cursor: pointer;
+}
+
+/* On touch screens the names are a guide, not targets: a tap on one goes to what lies under
+   it (a planet's marker, say), and the track beside it takes the reader there. */
+@media (pointer: coarse) {
+  .zoom-stop {
+    pointer-events: none;
+  }
 }
 
 .zoom-stop:hover,
