@@ -42,7 +42,8 @@ describe('zoomLook', () => {
   it('scales the field of view within its range', () => {
     expect(zoomLook(DEFAULT_LOOK, 0.5).fov).toBe(45);
     expect(zoomLook(DEFAULT_LOOK, 100).fov).toBe(120);
-    expect(zoomLook(DEFAULT_LOOK, 0.001).fov).toBe(5);
+    // Down to 1°, where the Sun's or the Moon's disc fills half the view.
+    expect(zoomLook(DEFAULT_LOOK, 0.001).fov).toBe(1);
   });
 });
 

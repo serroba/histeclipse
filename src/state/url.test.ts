@@ -394,7 +394,7 @@ describe('serializeViewState', () => {
     look: fc.record({
       azimuth: rounded(0, 359.9, 1),
       altitude: rounded(-90, 90, 1),
-      fov: rounded(5, 120, 1),
+      fov: rounded(1, 120, 1),
     }),
     figures: fc.constantFrom(...FIGURES),
     years: fc.constantFrom(...YEAR_CALENDARS),

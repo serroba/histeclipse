@@ -1638,3 +1638,29 @@ test('deep time reaches back 4.6 billion years, sketching hypotheses before the 
   await expect(globe).toHaveAttribute('data-uncharted', 'false');
   expect(problems).toEqual([]);
 });
+
+test('tapping the Sun in the sky closes in on it, then offers it up close', async ({ page }) => {
+  const problems = collectProblems(page);
+  const sky = page.getByTestId('sky');
+  await test.step('Given the sky over Babylon at noon, the Sun high', async () => {
+    await page.goto('./?mode=sky&t=2025-03-20T09:00&loc=32.5422,44.4209&look=180,45,90');
+    await skyRendered(page);
+    await expect(sky).toHaveAttribute('data-sun-at', /^\d+,\d+$/);
+  });
+  await test.step('When they tap the Sun', async () => {
+    const at = (await sky.getAttribute('data-sun-at'))?.split(',').map(Number) ?? [];
+    const box = await sky.boundingBox();
+    if (box === null) throw new Error('sky has no size');
+    await page.mouse.click(box.x + (at[0] ?? 0), box.y + (at[1] ?? 0));
+  });
+  await test.step('Then the view turns to it and closes in, its disc half the view', async () => {
+    await expect(page).toHaveURL(/look=\d+\.\d,\d+\.\d,1\.\d/);
+    await expect(page.getByRole('button', { name: 'See the Sun up close' })).toBeVisible();
+  });
+  await test.step('When they ask to see it up close, the space view flies to the Sun', async () => {
+    await page.getByRole('button', { name: 'See the Sun up close' }).click();
+    await expect(page).toHaveURL(/mode=globe/);
+    await expect(page).toHaveURL(/focus=sun/);
+  });
+  expect(problems).toEqual([]);
+});

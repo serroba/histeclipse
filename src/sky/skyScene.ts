@@ -116,6 +116,20 @@ const PLANET_COLOURS: Readonly<Record<string, readonly [number, number, number]>
 };
 const PLANET_NAMES = Object.keys(PLANET_COLOURS);
 
+/** The bodies a tap can pick out of the sky. */
+export type SkyBody = 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn';
+
+/** A body tapped, where it stands, and how large it looks (radius, degrees; 0 for a point). */
+export interface SkyTap {
+  readonly body: SkyBody;
+  readonly azimuth: number;
+  readonly altitude: number;
+  readonly radius: number;
+}
+
+/** A tap this near a body picks it, pixels from its centre (or its disc's edge): a fingertip. */
+const BODY_TAP_PIXELS = 24;
+
 /** A body to point out, by name, where it stands. */
 export interface SkyMark {
   readonly name: string;
@@ -135,8 +149,11 @@ export interface SkyScene {
   setInsets(top: number, bottom: number): void;
   /** Point out named bodies, as a record being checked names them; empty clears them. */
   setMarks(marks: readonly SkyMark[]): void;
-  /** Called when someone taps the sky (a press that barely moves). */
-  onTap(listener: () => void): () => void;
+  /**
+   * Called when someone taps the sky (a press that barely moves): with the Sun, the Moon or the
+   * planet under the tap, where it stands, or null for the sky itself.
+   */
+  onTap(listener: (tapped: SkyTap | null) => void): () => void;
   /** Called with the rounded look as the observer drags or zooms. */
   onLookChange(listener: (look: SkyLook) => void): () => void;
 }
@@ -468,7 +485,8 @@ export function createSkyScene(
 
   const sunRadius = SUN_DISTANCE * Math.tan(SUN_ANGULAR_RADIUS);
   const sun = new Mesh(
-    new SphereGeometry(sunRadius, 32, 16),
+    // Fine enough to stay round when the view closes in on it.
+    new SphereGeometry(sunRadius, 96, 48),
     new ShaderMaterial({
       uniforms: { ...projection, color: { value: new Color(0xfff6e0) } },
       vertexShader: SUN_VERTEX,
@@ -479,6 +497,15 @@ export function createSkyScene(
   );
   sun.renderOrder = 3;
   const sunGlowOpacity = { value: 1 };
+  let sunGlowShare = 1;
+  /**
+   * The glare round the Sun, by how much of it is showing; and faded as the view closes in, as
+   * it spans some 4° and would cover a narrow view, hiding the disc it surrounds.
+   */
+  function showSunGlow(): void {
+    const close = Math.min(1, Math.max(0.1, (look.fov - 2) / 10));
+    sunGlowOpacity.value = Math.min(1, sunGlowShare * 4) * close;
+  }
   const sunGlow = glowDisc(glowTexture(), (sunRadius * 14) / SUN_DISTANCE, sunGlowOpacity);
   sunGlow.renderOrder = 3;
   // The corona: only seen when the Moon hides the whole bright disc.
@@ -520,7 +547,7 @@ export function createSkyScene(
     night: { value: 1 },
   };
   // As on the globe: turn the map's longitude 0 (at +X) to +Z, which lookAt() aims at us.
-  const moonGeometry = new SphereGeometry(1, 48, 24);
+  const moonGeometry = new SphereGeometry(1, 96, 48);
   moonGeometry.rotateY(-Math.PI / 2);
   const moon = new Mesh(
     moonGeometry,
@@ -732,6 +759,7 @@ export function createSkyScene(
     camera.updateMatrixWorld();
     resize();
     starUniforms.zoom.value = Math.min(2, Math.max(1, Math.sqrt(60 / look.fov)));
+    showSunGlow();
     container.dataset['look'] =
       `${look.azimuth.toFixed(1)},${look.altitude.toFixed(1)},${look.fov.toFixed(1)}`;
     needsRender = true;
@@ -777,6 +805,14 @@ export function createSkyScene(
     for (const { label, position } of compassLabels) {
       placeLabel(label, position, true, width, height);
     }
+    // Where the Sun's disc is on screen, in pixels, for whoever needs to find it.
+    const sunAt = sun.visible ? screenPoint(sun.position) : null;
+    container.dataset['sunAt'] =
+      sunAt === null
+        ? 'off'
+        : toPixels(sunAt, width, height)
+            .map((v) => v.toFixed(0))
+            .join(',');
     for (const { label, position } of markLabels) {
       placeLabel(label, position, true, width, height);
     }
@@ -922,7 +958,41 @@ export function createSkyScene(
   let pinch: number | null = null;
   // A single press that has not moved far yet: a tap if it ends here.
   let tap: { id: number; x: number; y: number } | null = null;
-  const tapListeners = new Set<() => void>();
+  const tapListeners = new Set<(tapped: SkyTap | null) => void>();
+  /** The body under a point of the page, nearest first, or null. */
+  function bodyAt(clientX: number, clientY: number): SkyTap | null {
+    const box = renderer.domElement.getBoundingClientRect();
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    const perDegree = pixelsPerDegree(view, width);
+    const moonRadius = (Math.atan(moon.scale.x / MOON_DISTANCE) * 180) / Math.PI;
+    const candidates: { body: SkyBody; position: Vector3; radius: number }[] = [
+      ...(sun.visible ? [{ body: 'sun' as const, position: sun.position, radius: 0.27 }] : []),
+      ...(moon.visible
+        ? [{ body: 'moon' as const, position: moon.position, radius: moonRadius }]
+        : []),
+      ...planetLabels
+        .filter(({ shown }) => shown)
+        .map(({ name, position }) => ({
+          body: name.toLowerCase() as SkyBody,
+          position,
+          radius: 0,
+        })),
+    ];
+    let best: { tapped: SkyTap; share: number } | null = null;
+    for (const { body, position, radius } of candidates) {
+      const ndc = screenPoint(position);
+      if (ndc === null) continue;
+      const [x, y] = toPixels(ndc, width, height);
+      const reach = Math.max(BODY_TAP_PIXELS, radius * perDegree + BODY_TAP_PIXELS / 3);
+      const share = Math.hypot(clientX - box.left - x, clientY - box.top - y) / reach;
+      if (share >= 1 || (best !== null && share >= best.share)) continue;
+      // Scene axes back to the horizon's: east, north, up.
+      const { azimuth, altitude } = horizontal([position.x, -position.z, position.y]);
+      best = { tapped: { body, azimuth, altitude, radius }, share };
+    }
+    return best?.tapped ?? null;
+  }
   function setLookFromInput(next: SkyLook): void {
     look = next;
     applyLook();
@@ -967,7 +1037,8 @@ export function createSkyScene(
     release(event);
     if (tap?.id !== event.pointerId) return;
     tap = null;
-    for (const listener of tapListeners) listener();
+    const tapped = bodyAt(event.clientX, event.clientY);
+    for (const listener of tapListeners) listener(tapped);
   });
   renderer.domElement.addEventListener('pointercancel', (event) => {
     release(event);
@@ -1040,7 +1111,8 @@ export function createSkyScene(
       sunGlow.position.copy(sun.position);
       sun.visible = sunHigh > -1;
       sunGlow.visible = sun.visible && sunShare > 0;
-      sunGlowOpacity.value = Math.min(1, sunShare * 4);
+      sunGlowShare = sunShare;
+      showSunGlow();
       sunlight.value = sunShare;
       corona.position.copy(sun.position);
       corona.visible = sun.visible && sunShare < 0.002;

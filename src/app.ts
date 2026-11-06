@@ -43,6 +43,7 @@ import {
   LAST_GLACIAL_MAXIMUM_MA,
   type BorderSource,
   type Layer,
+  SKY_FOV_RANGE,
   withLayer,
   roundMa,
   momentJulianDay,
@@ -69,7 +70,7 @@ import { earthVelocity, horizonMatrix, horizontalOf } from './sky/horizon';
 import { LOWEST_LOOK, roundLook } from './sky/look';
 import { longTermEarthFixedToJ2000 } from './astro/longTermPrecession';
 import type { Vector3 } from './astro/matrix';
-import type { SkyMark, SkyScene } from './sky/skyScene';
+import type { SkyBody, SkyMark, SkyScene, SkyTap } from './sky/skyScene';
 import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
 import { julianDayNumber, type JulianDay } from './time/julianDay';
@@ -243,6 +244,17 @@ import { errorMessage } from './util/errors';
 const MINUTES_PER_DAY = 1440;
 /** Field of view (degrees) when turning to the Sun or Moon: close enough to see the disc. */
 const AIM_FOV = 12;
+/** A planet tapped in the sky: a point at any zoom, so a few degrees, its neighbours in view. */
+const PLANET_SKY_FOV = 4;
+const BODY_NAMES: Readonly<Record<SkyBody, string>> = {
+  sun: 'Sun',
+  moon: 'Moon',
+  mercury: 'planet Mercury',
+  venus: 'planet Venus',
+  mars: 'planet Mars',
+  jupiter: 'planet Jupiter',
+  saturn: 'planet Saturn',
+};
 /** Earth radii (or the focused body's): beyond this the space view loads the planets. */
 const PLANETS_SHOWN_BEYOND = 1000;
 /** This year, up to which the latest borders of states carry on. */
@@ -596,6 +608,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
   const skyContainer = element('div', { class: 'sky', 'data-testid': 'sky', hidden: '' });
   const skyText = element('p', { class: 'sky-caption' });
+  // After a body is tapped in the sky: the way to it, up close.
+  const closeUp = element('button', { type: 'button', class: 'layers-open close-up', hidden: '' });
   // Which constellations, and whose: folded on phones, where they would cover the sky itself.
   const skyOptions = element(
     'details',
@@ -918,6 +932,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       skyOptions,
       sunSwitch.root,
       skyText,
+      closeUp,
       skyEclipse,
       recordBanner,
       element(
@@ -1315,7 +1330,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
           moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
         });
         skyScene.setInsets(panelInsets.top, panelInsets.bottom);
-        skyScene.onTap(showPanels);
+        skyScene.onTap((tapped) => {
+          if (tapped === null) {
+            showPanels();
+            return;
+          }
+          zoomToBody(tapped);
+        });
         skyScene.onLookChange((look) => {
           store.set((current) => ({ ...current, look }));
         });
@@ -3085,6 +3106,32 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }));
   }
 
+  // A body tapped in the sky: the view turns to it and closes in, and offers the way to it.
+  let skyPicked: SkyBody | null = null;
+  closeUp.addEventListener('click', () => {
+    const body = skyPicked;
+    if (body === null) return;
+    skyPicked = null;
+    store.set((state) => ({ ...state, mode: 'globe', focus: body, view: 'free' }));
+  });
+  /** Turn the sky to a body and close in: a disc to half the view, a planet to a few degrees. */
+  function zoomToBody({ body, azimuth, altitude, radius }: SkyTap): void {
+    skyPicked = body;
+    store.set((state) => ({
+      ...state,
+      look: roundLook({
+        azimuth,
+        altitude: Math.max(LOWEST_LOOK, altitude),
+        fov: radius > 0 ? Math.max(SKY_FOV_RANGE.min, radius * 4) : PLANET_SKY_FOV,
+      }),
+    }));
+    showCloseUp(store.get());
+  }
+  function showCloseUp(state: ViewState): void {
+    closeUp.hidden = state.mode !== 'sky' || skyPicked === null;
+    if (skyPicked !== null) closeUp.textContent = `See the ${BODY_NAMES[skyPicked]} up close`;
+  }
+
   function aimAt(state: ViewState, target: AimTarget): ViewState['look'] | null {
     const seen = bodiesSeen(state);
     if (seen === null) return null;
@@ -3101,6 +3148,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function showSky(state: ViewState): void {
     const inSky = state.mode === 'sky';
+    if (!inSky) skyPicked = null;
+    showCloseUp(state);
     globeContainer.hidden = inSky;
     skyText.hidden = !inSky;
     skyOptions.hidden = !inSky;
