@@ -154,12 +154,17 @@ describe('stateChangesOnMap', () => {
   it('places each new state where it is now, and each gone one where it was', () => {
     const babylon = { name: 'Neo-Babylonian Empire', latitude: 32, longitude: 44 };
     const lydia = { name: 'Lydia', latitude: 39, longitude: 28 };
-    const persia = { name: 'Achaemenid Empire', latitude: 30, longitude: 53 };
+    const persia = { name: 'Achaemenid Empire', latitude: 30, longitude: 53, area: 9 };
     expect(
       stateChangesOnMap([babylon, lydia], [persia, lydia, { ...persia, latitude: 0 }]),
     ).toEqual([
-      { name: 'Achaemenid Empire', kind: 'new', point: { latitude: 30, longitude: 53 } },
-      { name: 'Neo-Babylonian Empire', kind: 'gone', point: { latitude: 32, longitude: 44 } },
+      { name: 'Achaemenid Empire', kind: 'new', point: { latitude: 30, longitude: 53 }, area: 9 },
+      {
+        name: 'Neo-Babylonian Empire',
+        kind: 'gone',
+        point: { latitude: 32, longitude: 44 },
+        area: 0,
+      },
     ]);
     expect(stateChangesOnMap([lydia], [lydia])).toEqual([]);
   });

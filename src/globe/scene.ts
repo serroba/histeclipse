@@ -209,7 +209,15 @@ export interface StateChange {
   readonly name: string;
   readonly kind: 'new' | 'gone';
   readonly point: { readonly latitude: number; readonly longitude: number };
+  /** How large it is drawn: the larger ones are named first. */
+  readonly area: number;
 }
+
+/**
+ * How many states are named as new or gone at once, the largest first: as the years fly by in
+ * a busy century, more would light up most of the map and read as flicker.
+ */
+const STATE_CHANGES_SHOWN = 4;
 
 /** How long a state that appeared or went stays named as such, ms (its CSS animation's too). */
 const STATE_CHANGE_MS = 4000;
@@ -1305,7 +1313,7 @@ export async function createGlobe(
     width: number;
     height: number;
   }
-  let empireLabels: GlobeLabel[] = [];
+  let empireLabels: (GlobeLabel & { readonly id: string })[] = [];
   // Dated finds of humans, in deep time: placed before the states' names, which never show then.
   const humanLabelLayer = document.createElement('div');
   humanLabelLayer.className = 'empire-labels human-sites';
@@ -2571,7 +2579,13 @@ export async function createGlobe(
     setEmpires(layer) {
       historyOverlay = { ...historyOverlay, empires: layer };
       paintHistoryOverlay();
-      empireLabelLayer.replaceChildren();
+      // The names already made, by class, size and name: kept from year to year, so a name
+      // that stays stays where it is, shown, rather than being made anew and hidden a frame.
+      const previous = empireLabels;
+      const before = new Map(previous.map((entry) => [entry.id, entry]));
+      const shownBefore = new Set(
+        previous.filter(({ element }) => element.hidden === false).map(({ id }) => id),
+      );
       empireLabels = [];
       if (layer === null) recentStates.clear();
       if (layer !== null) {
@@ -2584,33 +2598,43 @@ export async function createGlobe(
         ]);
         // Those that came or went lately first, so their names win a place; the animation
         // carries on from where it was, though the names are made anew each year.
-        const changed = [...recentStates.entries()].flatMap(([name, { change, at }]) => {
-          const age = now - at;
-          if (age > STATE_CHANGE_MS || present.has(name) !== (change.kind === 'new')) {
+        for (const [name, { change, at }] of recentStates) {
+          if (now - at > STATE_CHANGE_MS || present.has(name) !== (change.kind === 'new')) {
             recentStates.delete(name);
-            return [];
           }
-          return [
-            {
-              name,
-              point: change.point,
-              size: 13,
-              kind: `empire-label is-${change.kind}`,
-              delay: -Math.round(age),
-            },
-          ];
-        });
+        }
+        // The largest few; the rest are named as usual, if at all.
+        const changed = [...recentStates.entries()]
+          .sort((a, b) => b[1].change.area - a[1].change.area)
+          .slice(0, STATE_CHANGES_SHOWN)
+          .map(([name, { change, at }]) => ({
+            name,
+            point: change.point,
+            size: 13,
+            kind: `empire-label is-${change.kind}`,
+            delay: -Math.round(now - at),
+          }));
         const named = new Set(changed.map(({ name }) => name));
         // Names of the larger states first; as the camera comes closer, more fit between them.
+        // Those shown the year before keep their place ahead of the rest, so names don't trade
+        // places as borders shift a little from year to year.
+        const wasShown = (name: string, size: number) =>
+          shownBefore.has(`empire-label|${String(size)}|${name}`);
+        const sizeOf = (area: number) => Math.round(10 + Math.min(6, Math.sqrt(area) / 4));
         const ranked = layer.territories
           .map((territory) => ({ territory, label: labelPoint(territory) }))
           .filter(({ territory }) => !named.has(territory.name))
           .sort((a, b) => b.label.area - a.label.area)
           .slice(0, 80)
+          .sort(
+            (a, b) =>
+              Number(wasShown(b.territory.name, sizeOf(b.label.area))) -
+              Number(wasShown(a.territory.name, sizeOf(a.label.area))),
+          )
           .map(({ territory, label }) => ({
             name: territory.name,
             point: label,
-            size: Math.round(10 + Math.min(6, Math.sqrt(label.area) / 4)),
+            size: sizeOf(label.area),
             kind: 'empire-label',
           }));
         // OpenHistoricalMap's names, set apart in italics, after Cliopatria's.
@@ -2625,6 +2649,13 @@ export async function createGlobe(
           }));
         const made = [...changed, ...ranked, ...ohmNames].map((label) => {
           const { name, point, size, kind } = label;
+          const id = `${kind}|${String(size)}|${name}`;
+          const kept = before.get(id);
+          if (kept !== undefined) {
+            before.delete(id);
+            kept.position.set(...geoToVector(point, 1.01));
+            return { ...kept, key: null };
+          }
           const element = document.createElement('span');
           element.className = kind;
           element.textContent = name;
@@ -2637,11 +2668,12 @@ export async function createGlobe(
           else element.hidden = true;
           empireLabelLayer.append(element);
           return {
+            id,
             element,
             position: new Vector3(...geoToVector(point, 1.01)),
             width: known?.width ?? 0,
             height: known?.height ?? 0,
-            key: known === undefined ? `${kind}|${String(size)}|${name}` : null,
+            key: known === undefined ? id : null,
           };
         });
         const fresh = made.filter((entry) => entry.key !== null);
@@ -2651,6 +2683,10 @@ export async function createGlobe(
         }
         empireLabels = made;
       }
+      // Names no longer wanted go; the rest are placed now, before the frame is painted.
+      const kept = new Set(empireLabels.map(({ element }) => element));
+      for (const { element } of previous) if (!kept.has(element)) element.remove();
+      placeEmpireLabels();
       container.dataset['empires'] = layer === null ? 'off' : String(layer.territories.length);
       container.dataset['statesChanged'] = String(
         empireLabels.filter(({ element }) => /\bis-(new|gone)\b/.test(element.className)).length,
