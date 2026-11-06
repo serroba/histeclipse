@@ -922,6 +922,49 @@ body {
   }
 }
 
+/* On a phone the era keeps room for its name; the speed and the ⓘ take what is left. */
+@media (max-width: 600px) {
+  .holocene-bar .year-controls {
+    column-gap: 4px;
+  }
+
+  /* The era a fixed width, so it never squeezes to a letter; the year takes what is left. */
+  .holocene-bar .era-select {
+    flex: none;
+    width: 72px;
+  }
+
+  .holocene-bar .year-input {
+    flex: 1 1 auto;
+    width: 5ch;
+    min-width: 5ch;
+    padding: 0 4px;
+  }
+
+  /* No narrower than the year and era: they'd spill over the step beside them. */
+  .holocene-bar .year-form {
+    min-width: min-content;
+  }
+
+  .holocene-bar .history-speed {
+    flex: none;
+    width: 84px;
+    font-size: 14px;
+  }
+}
+
+/* The narrowest phones: the speed gives up a little more, so the year's row still fits. */
+@media (max-width: 380px) {
+  .holocene-bar .history-speed {
+    width: 70px;
+    padding: 0 4px;
+  }
+
+  .holocene-bar .year-controls .step {
+    width: 36px;
+  }
+}
+
 /* The key to the ways-of-life shading: a swatch and a name for each way on the map. */
 .ways-legend {
   display: flex;
@@ -942,13 +985,9 @@ body {
   color: var(--ink);
 }
 
+/* Its items flow with the title and the note, so the key is as short as it can be. */
 .ways-legend-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  display: contents;
 }
 
 .ways-legend li {
@@ -1009,6 +1048,16 @@ body {
   height: 32px;
   margin: 0;
   accent-color: rgb(247 201 90);
+}
+
+/* The speed and ⓘ sit in the year's row as its own items; ⓘ opened takes a line of its own. */
+.history-extras {
+  display: contents;
+}
+
+.history-extras[hidden],
+.history-notes[hidden] {
+  display: none;
 }
 
 .history-notes {

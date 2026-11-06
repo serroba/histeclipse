@@ -99,6 +99,7 @@ import {
   createHistoryTrack,
   earthText,
   STATES_HINT,
+  STATES_WAIT,
 } from './ui/historyTrack';
 import { yearPlayhead, type YearSpeed } from './time/yearPlay';
 import {
@@ -708,8 +709,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let historyFrame = 0;
   let historyTick = 0;
   let historyHead = yearPlayhead();
-  // What the track last said of the states, and what was drawn then, to tell what changed.
-  let statesSaid = 'Which states appear and which are gone shows here as the years go by.';
+  // What the track last said of the states (nothing until they change), and what was drawn
+  // then, to tell what changed.
+  let statesSaid = '';
   let statesBefore: {
     readonly source: BorderSource;
     readonly year: number;
@@ -845,8 +847,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
       playing: historyPlaying,
       travelling,
       speed: historySpeed,
-      // The hint only while travelling, where it helps; the changes whenever states are on.
-      changes: state.layers.has('empires') ? statesSaid : travelling ? STATES_HINT : '',
+      // What changed whenever states are on; while travelling, what to expect until then.
+      changes: state.layers.has('empires')
+        ? statesSaid === '' && travelling
+          ? STATES_WAIT
+          : statesSaid
+        : travelling
+          ? STATES_HINT
+          : '',
       blank: state.layers.has('empires') ? blankText(state.layers.has('ways')) : null,
       earth: holoceneSea === null ? null : earthText(holoceneSea),
     });
@@ -912,7 +920,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
     },
     [famousPanel.button, tabletPanel.button],
-    [historyTrack.speed],
+    [historyTrack.extras],
   );
   const scrubber = createScrubber((offsetMinutes) => {
     const selected = selectedEclipse(store.get());
@@ -3318,7 +3326,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     // With an eclipse open, its own player runs the time; the years' slider makes way.
     historyTrack.root.hidden = state.selection !== null;
-    historyTrack.speed.hidden = state.selection !== null;
+    historyTrack.extras.hidden = state.selection !== null;
     if (state.time.date.year !== previous?.time.date.year || state.layers !== previous.layers) {
       showHistory(state);
     }

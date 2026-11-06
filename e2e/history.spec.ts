@@ -27,6 +27,8 @@ test('playing history moves through the years and names the states that come and
     await page.goto('./?t=-599-06-01T12:00&layers=lunar,solar,empires');
     await globeRendered(page);
     await expect(page.getByTestId('globe')).toHaveAttribute('data-empires', /^[1-9]\d*$/);
+    // Nothing has changed yet, so the track says nothing, rather than what it would say.
+    await expect(bar.getByTestId('history-changes')).toBeHidden();
   });
   await test.step('When they play, at 50 years a second', async () => {
     // Slow enough that the trip to today outlasts the scenario: a faster one can end just as
@@ -101,7 +103,7 @@ test('travelling lights the whole globe and rests the markers, which return with
     await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
     await expect(globe).toHaveAttribute('data-ways', /^[1-9]\d*$/);
     // Land with no state drawn is explained, not left to look empty.
-    await expect(bar.getByTestId('history-blank')).toHaveText(
+    await expect(page.getByTestId('history-blank')).toHaveText(
       'Land with no state drawn was not empty: these sources map states, not every people; the faint shading is how people lived there (ArchaeoGLOBE).',
     );
     await expect(bar.getByTestId('history-changes')).not.toHaveText(
@@ -263,7 +265,7 @@ test('travelling shows the ice sheets and the sea level of the year, and they go
   await test.step('Then the ice of then lies on the land, and the sea stands lower', async () => {
     await expect(globe).toHaveAttribute('data-ice', /icesheets\/(7500|10000)\.png/);
     await expect(globe).toHaveAttribute('data-sea-level', /^-\d+\.\d$/);
-    await expect(bar.getByTestId('history-earth')).toHaveText(
+    await expect(page.getByTestId('history-earth')).toHaveText(
       /^Sea level \d+ m below today’s \(.+\); shelf it left bare is tinted sand\. Ice sheets: PaleoMIST/,
     );
   });
