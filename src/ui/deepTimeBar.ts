@@ -43,6 +43,7 @@ import {
   SNOWBALL_CHOICES,
   SNOWBALL_MODELS,
 } from '../deepTime/sketch';
+import { DEEP_SPEEDS, deepSpeedText } from '../deepTime/playSpeed';
 import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import { DISPERSAL_SCENARIOS, type DeepScale, type DispersalScenario } from '../state/viewState';
 import { element } from './dom';
@@ -260,6 +261,8 @@ export interface DeepTimeView {
   readonly oldest: number;
   readonly period: Period | null;
   readonly playing: boolean;
+  /** How fast it plays, millions of years a second: one of the span's own speeds. */
+  readonly speed: number;
   /** The span shown; `oldest` is its start. */
   readonly scale: DeepScale;
   /** How far back the elevation maps reach, Ma; before it the globe is blank. */
@@ -334,6 +337,8 @@ export function createDeepTimeBar(handlers: {
   /** A new moment: `jump` when it is a step to go back from (a milestone, a click), not a drag. */
   onMa(ma: number, jump: boolean): void;
   onPlay(playing: boolean): void;
+  /** A speed picked, millions of years a second, for the span shown. */
+  onSpeed(maPerSecond: number): void;
   onTemperature(on: boolean): void;
   onSeaLevel(on: boolean): void;
   onPlates(on: boolean): void;
@@ -357,6 +362,12 @@ export function createDeepTimeBar(handlers: {
     { type: 'button', class: 'step deep-play', 'aria-label': 'Play' },
     '▶',
   );
+  // The span's own speeds, in its own units; offered anew when the span changes.
+  const speed = element('select', { class: 'deep-speed', 'aria-label': 'Speed' });
+  let speedsOf: DeepScale | null = null;
+  speed.addEventListener('change', () => {
+    handlers.onSpeed(Number(speed.value));
+  });
   const older = element(
     'button',
     { type: 'button', class: 'step', 'aria-label': `${String(STEP_MA)} million years earlier` },
@@ -739,7 +750,7 @@ export function createDeepTimeBar(handlers: {
     'nav',
     { class: 'deep-time', 'aria-label': 'Deep time', hidden: '' },
     handle,
-    element('div', { class: 'deep-controls' }, play, older, track, younger),
+    element('div', { class: 'deep-controls' }, play, older, track, younger, speed),
     element(
       'p',
       { class: 'deep-label' },
@@ -1270,6 +1281,15 @@ export function createDeepTimeBar(handlers: {
       legendNote.textContent = temperature.note ?? '';
       play.textContent = view.playing ? '❚❚' : '▶';
       play.setAttribute('aria-label', view.playing ? 'Pause' : 'Play');
+      if (speedsOf !== view.scale) {
+        speedsOf = view.scale;
+        speed.replaceChildren(
+          ...DEEP_SPEEDS[view.scale].map((each) =>
+            element('option', { value: String(each) }, deepSpeedText(each)),
+          ),
+        );
+      }
+      speed.value = String(view.speed);
     },
   };
   return bar;

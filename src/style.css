@@ -861,7 +861,10 @@ body {
   accent-color: rgb(247 201 90);
 }
 
-.history-speed {
+.history-speed,
+.deep-speed,
+.scrubber-speed {
+  flex: none;
   min-height: 44px;
   padding: 0 8px;
   border: 1px solid transparent;
@@ -872,7 +875,9 @@ body {
   font-size: 13px;
 }
 
-.history-speed option {
+.history-speed option,
+.deep-speed option,
+.scrubber-speed option {
   background: #10162a;
 }
 

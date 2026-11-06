@@ -218,6 +218,7 @@ import {
   plateText,
 } from './data/plateMasks';
 import { loadShelf, type ShelfIndex } from './data/shelf';
+import { deepSpeedFor } from './deepTime/playSpeed';
 import { COAST_SOURCES, coastlineAt, type Coastline, type CoastSource } from './deepTime/coastline';
 import {
   mapModel,
@@ -245,14 +246,13 @@ const PRESENT_YEAR = new Date().getUTCFullYear();
 /** The year “before present” counts back from, as radiocarbon dates do. */
 const BP_ZERO_YEAR = 1950;
 
-/** Deep time plays at this many million years per second: 540 Myr in about half a minute. */
-const PLAY_MA_PER_SECOND = 20;
-/** Maps loaded ahead while deep time plays: at 20 Myr a second, about a second's worth. */
-const PREFETCH_FRAMES = 4;
-/** On the ice-age scale: 50,000 years a second, 2.6 million years in under a minute. */
-const ICE_PLAY_MA_PER_SECOND = 0.05;
-/** Over all of Earth's history: 100 million years a second, 4.6 billion in under a minute. */
-const EONS_PLAY_MA_PER_SECOND = 100;
+/**
+ * Maps loaded ahead while deep time plays: at 20 Myr a second, about a second's worth; more at
+ * a faster speed, so the globe keeps up.
+ */
+function prefetchFrames(maPerSecond: number): number {
+  return Math.max(4, Math.ceil((4 * maPerSecond) / 20));
+}
 /** The elevation maps reach back this far (their index says for certain once loaded). */
 const MAPS_REACH_MA = 540;
 /** Where deep time opens: Pangaea, at the start of the Triassic. */
@@ -466,6 +466,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     onPlay(play) {
       if (play) startPlay();
       else stopPlay();
+    },
+    onSpeed(maPerSecond) {
+      deepSpeeds = { ...deepSpeeds, [store.get().deepScale]: maPerSecond };
+      showDeepTime(store.get());
     },
     onPlates(on) {
       store.set((state) => {
@@ -1560,6 +1564,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       mapsReach: oldest,
       period,
       playing,
+      speed: deepSpeedFor(state.deepScale, deepSpeeds[state.deepScale]),
       scale,
       coastline: showCoastline(ma, state),
       ice: showIce(state, ma),
@@ -1604,7 +1609,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         // Playing, the next maps load ahead, so the globe keeps up with the years.
         if (playing && !ice) {
           globe.prefetch(
-            framesAhead(index.frames, ma, PREFETCH_FRAMES).map(
+            framesAhead(index.frames, ma, prefetchFrames(playSpeed())).map(
               (frame) => `${base}data/paleodem/${frame.file}`,
             ),
           );
@@ -2437,7 +2442,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const { younger, older, mix } = framesAround(index.frames, ma);
     if (playing) {
       globe.prefetch(
-        framesAhead(index.frames, ma, PREFETCH_FRAMES).map(
+        framesAhead(index.frames, ma, prefetchFrames(playSpeed())).map(
           (frame) => `${base}data/${folder}/${frame.file}`,
         ),
       );
@@ -2462,6 +2467,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   /** Play towards the present; from today, start again at the oldest map. */
+  // The speed picked for each span, this visit; each starts at its own default.
+  let deepSpeeds: Partial<Record<DeepScale, number>> = {};
+  /** How fast deep time plays now, millions of years a second, by the span shown. */
+  function playSpeed(): number {
+    const { deepScale } = store.get();
+    return deepSpeedFor(deepScale, deepSpeeds[deepScale]);
+  }
+
   function startPlay(): void {
     if (playing) return;
     playing = true;
@@ -2482,14 +2495,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       stopPlay();
       return;
     }
-    const scale = store.get().deepScale;
-    const speed =
-      scale === 'ice'
-        ? ICE_PLAY_MA_PER_SECOND
-        : scale === 'eons'
-          ? EONS_PLAY_MA_PER_SECOND
-          : PLAY_MA_PER_SECOND;
-    const next = head.step(ma, speed, seconds);
+    const next = head.step(ma, playSpeed(), seconds);
     store.set((state) => ({ ...state, ma: next }));
     if (next <= 0) {
       stopPlay();
