@@ -1,2 +1,8 @@
 # Supply-chain hardening: don't install package versions published less than 7 days ago.
 minimumReleaseAge: 10080
+
+# minimatch below 11.0.1 can be made to do exponential work by a crafted glob
+# (GHSA-g3hv-75wg-m249). Only the lint tools use it, and with our own globs; held at 11
+# until eslint and typescript-eslint ask for it themselves.
+overrides:
+  minimatch: '>=11.0.1 <12'
