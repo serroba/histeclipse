@@ -163,6 +163,46 @@ export function territoryHue(name: string): number {
   return hash % 360;
 }
 
+/** A state's name and where it is written on the map. */
+export interface NamedPoint {
+  readonly name: string;
+  readonly latitude: number;
+  readonly longitude: number;
+}
+
+/**
+ * The states named in `after` and not `before` (new, where they are now) and those named only
+ * in `before` (gone, where they were), each sorted; a name written twice counts once.
+ */
+export function stateChangesOnMap(
+  before: readonly NamedPoint[],
+  after: readonly NamedPoint[],
+): readonly {
+  readonly name: string;
+  readonly kind: 'new' | 'gone';
+  readonly point: { readonly latitude: number; readonly longitude: number };
+}[] {
+  const first = (points: readonly NamedPoint[]) => {
+    const byName = new Map<string, NamedPoint>();
+    for (const point of points) if (!byName.has(point.name)) byName.set(point.name, point);
+    return byName;
+  };
+  const had = first(before);
+  const has = first(after);
+  const { appeared, gone } = stateChanges([...had.keys()], [...has.keys()]);
+  const at = (point: NamedPoint) => ({ latitude: point.latitude, longitude: point.longitude });
+  return [
+    ...appeared.flatMap((name) => {
+      const point = has.get(name);
+      return point === undefined ? [] : [{ name, kind: 'new' as const, point: at(point) }];
+    }),
+    ...gone.flatMap((name) => {
+      const point = had.get(name);
+      return point === undefined ? [] : [{ name, kind: 'gone' as const, point: at(point) }];
+    }),
+  ];
+}
+
 /** The states that `after` has and `before` lacks, and those gone from it, each sorted. */
 export function stateChanges(
   before: readonly string[],
