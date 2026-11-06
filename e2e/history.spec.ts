@@ -206,7 +206,7 @@ test('while travelling, the states are shaded over the evenly lit globe, not onl
   const shaded = await ground();
   await test.step('When they turn States and empires off', async () => {
     await openLayers(page);
-    await page.getByLabel('States and empires').uncheck();
+    await page.getByRole('checkbox', { name: 'States and empires' }).uncheck();
     await expect(globe).toHaveAttribute('data-empires', 'off');
     // The panel closed again, so the globe sits where it did.
     await page.locator('.layers-dialog').getByRole('button', { name: 'Close' }).click();

@@ -23,7 +23,7 @@ test('the Impact craters layer marks craters to open, each with its details and 
   });
   await test.step('When they turn on Impact craters in Layers', async () => {
     await openLayers(page);
-    await page.getByLabel('Impact craters').check();
+    await page.getByRole('checkbox', { name: 'Impact craters' }).check();
   });
   await test.step('Then craters are marked, with what the layer shows and its source', async () => {
     await expect(page).toHaveURL(/layers=[a-z,]*impacts/);

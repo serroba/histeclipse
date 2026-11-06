@@ -1,11 +1,19 @@
 /**
- * Optional layers on the globe, switched on and off like Windy's, from one panel: grouped by
- * what they show, each saying when the moment shown lies outside its data. The panel does not
- * block the globe: the reader can change the date with it open and watch the layers change.
+ * Optional layers on the globe, switched on and off like Windy's, from one panel for all of
+ * time: grouped by what they show, each saying when the moment shown lies outside its data. A
+ * layer that draws on other spans is greyed, says which, and offers to go there; it can still be
+ * turned on, and draws once the span is one of its own. The panel does not block the globe: the
+ * reader can change the date with it open and watch the layers change.
  */
 
-import { HISTORY_LAYER_GROUPS, layerNote } from '../state/layerCatalog';
-import { BORDER_SOURCES, type BorderSource, type Layer } from '../state/viewState';
+import { elsewhereNote, LAYER_GROUPS, layerNote } from '../state/layerCatalog';
+import {
+  BORDER_SOURCES,
+  SPAN_LABELS,
+  type BorderSource,
+  type Layer,
+  type Span,
+} from '../state/viewState';
 import { element } from './dom';
 
 export interface LayersView {
@@ -15,7 +23,9 @@ export interface LayersView {
   readonly year: number;
   /** The present year, up to which Cliopatria's latest borders carry on. */
   readonly present: number;
-  /** Whether the panel applies to the view: historical time on the globe. */
+  /** The span of time shown, which decides the layers that draw. */
+  readonly span: Span;
+  /** Whether the panel applies to the view: the globe. */
   readonly visible: boolean;
   /** What a layer says about what it draws now, where that depends on loaded data. */
   readonly said?: ReadonlyMap<Layer, string>;
@@ -38,6 +48,8 @@ const SOURCE_LABELS: Readonly<Record<BorderSource, string>> = {
 export function createLayersPanel(
   onLayer: (layer: Layer, on: boolean) => void,
   onSource: (source: BorderSource) => void,
+  /** Go to a span a layer draws on, at a moment of the layer's own if it has one. */
+  onSpan: (span: Span, ma?: number) => void,
 ): LayersPanel {
   const button = element(
     'button',
@@ -69,7 +81,12 @@ export function createLayersPanel(
   const notes = new Map<Layer, HTMLElement>();
   const actionButtons = new Map<Layer, HTMLButtonElement>();
   const runs = new Map<Layer, () => void>();
-  const groups = HISTORY_LAYER_GROUPS.map((group) =>
+  const items = new Map<Layer, HTMLElement>();
+  const wheres = new Map<Layer, HTMLElement>();
+  const choices = new Map(
+    LAYER_GROUPS.flatMap((group) => group.layers.map((layer) => [layer.id, layer] as const)),
+  );
+  const groups = LAYER_GROUPS.map((group) =>
     element(
       'fieldset',
       { class: 'layers-group' },
@@ -91,20 +108,50 @@ export function createLayersPanel(
           runs.get(layer.id)?.();
         });
         actionButtons.set(layer.id, action);
-        return element(
+        // Where a layer that draws elsewhere does draw, as on the switch: a tap turns it on there.
+        const [first] = layer.spans;
+        const where = element(
+          'button',
+          {
+            type: 'button',
+            class: 'layer-where',
+            hidden: '',
+            'aria-label': `Show ${layer.label} on ${layer.spans.map((span) => SPAN_LABELS[span]).join(' or ')}`,
+            title:
+              layer.arrive === undefined
+                ? `Turn on and go to ${first === undefined ? '' : SPAN_LABELS[first]}`
+                : `Turn on and go to ${layer.arrive.label}`,
+          },
+          layer.spans.map((span) => SPAN_LABELS[span]).join(' · '),
+          ' ›',
+        );
+        where.addEventListener('click', () => {
+          if (first === undefined) return;
+          onLayer(layer.id, true);
+          onSpan(first, layer.arrive?.ma);
+        });
+        wheres.set(layer.id, where);
+        const item = element(
           'div',
           { class: 'layer-item' },
           element(
-            'label',
-            { class: 'layer-label' },
-            box,
-            element('span', { class: 'layer-name' }, layer.label),
+            'div',
+            { class: 'layer-row' },
+            element(
+              'label',
+              { class: 'layer-label' },
+              box,
+              element('span', { class: 'layer-name' }, layer.label),
+            ),
+            where,
           ),
           element('p', { class: 'layer-about' }, layer.about),
           ...(layer.id === 'empires' ? [source] : []),
           note,
           action,
         );
+        items.set(layer.id, item);
+        return item;
       }),
     ),
   );
@@ -141,10 +188,23 @@ export function createLayersPanel(
   return {
     button,
     dialog,
-    render({ layers, borders, year, present, visible, said, actions }) {
+    render({ layers, borders, year, present, span, visible, said, actions }) {
       runs.clear();
+      const here = (layer: Layer): boolean => choices.get(layer)?.spans.includes(span) ?? true;
       for (const [layer, action] of actionButtons) {
-        const offered = layers.has(layer) ? actions?.get(layer) : undefined;
+        const choice = choices.get(layer);
+        const to = choice?.spans[0];
+        // On a span the layer does not draw on, the way to one it does.
+        const offered = !layers.has(layer)
+          ? undefined
+          : here(layer) || to === undefined
+            ? actions?.get(layer)
+            : {
+                label: `Go to ${choice?.arrive?.label ?? SPAN_LABELS[to]}`,
+                run: () => {
+                  onSpan(to, choice?.arrive?.ma);
+                },
+              };
         action.hidden = offered === undefined;
         action.textContent = offered?.label ?? '';
         if (offered !== undefined) runs.set(layer, offered.run);
@@ -153,15 +213,22 @@ export function createLayersPanel(
       if (!visible) shut();
       for (const [layer, box] of boxes) {
         box.checked = layers.has(layer);
+        const elsewhere = !here(layer);
+        items.get(layer)?.classList.toggle('is-elsewhere', elsewhere);
+        const where = wheres.get(layer);
+        if (where !== undefined) where.hidden = !elsewhere;
         const note = notes.get(layer);
-        if (note === undefined) continue;
-        const text = layers.has(layer)
-          ? (said?.get(layer) ?? layerNote(layer, year, borders, present))
-          : null;
+        const choice = choices.get(layer);
+        if (note === undefined || choice === undefined) continue;
+        const text = !layers.has(layer)
+          ? null
+          : elsewhere
+            ? elsewhereNote(choice)
+            : (said?.get(layer) ?? layerNote(layer, year, borders, present));
         note.hidden = text === null;
         note.textContent = text ?? '';
       }
-      source.hidden = !layers.has('empires');
+      source.hidden = !layers.has('empires') || !here('empires');
       source.value = borders;
     },
   };

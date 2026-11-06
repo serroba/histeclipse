@@ -35,7 +35,6 @@ import { parseViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import {
   DEFAULT_CAMERA,
-  DEEP_LAYERS,
   defaultViewState,
   type DeepScale,
   EARTH_AGE_MA,
@@ -363,6 +362,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     (borders) => {
       store.set((state) => ({ ...state, borders }));
     },
+    (span, ma) => {
+      if (ma === undefined || span === 'years') goToSpan(span);
+      else if (store.get().ma === null) enterDeepTime(ma, span);
+      else {
+        setScale(span);
+        store.set((state) => ({ ...state, ma: roundMa(ma) }));
+      }
+    },
   );
   const markerCard = createMarkerCard();
   const rocksCredit = element(
@@ -435,9 +442,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const selection = selectionBeforeDeep;
     selectionBeforeDeep = null;
     store.set((state) => {
-      // Deep time's own layers go with it, so they don't linger in the link.
-      const layers = new Set(state.layers);
-      for (const layer of DEEP_LAYERS) layers.delete(layer);
       // Within the Holocene's years, the same moment, now as a year; else the year left.
       // (If deep time is still where it was entered, the very date left comes back.)
       const { ma } = state;
@@ -445,7 +449,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ma !== null && ma <= HOLOCENE_MA && ma !== roundMa(maOfYear(state.time.date.year))
           ? moveToYear(state.time, astronomicalYear(yearOfMa(ma)))
           : state.time;
-      return { ...state, ma: null, time, layers, selection: state.selection ?? selection };
+      // Layers stay on: one set for all of time, each drawing on its own spans.
+      return { ...state, ma: null, time, selection: state.selection ?? selection };
     });
   }
   /** Go to a span, keeping the moment: the years are the Holocene's, the rest deep time. */
@@ -2751,7 +2756,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       borders: state.borders,
       year: state.time.date.year,
       present: PRESENT_YEAR,
-      visible: state.mode === 'globe' && state.ma === null,
+      span: state.ma === null ? 'years' : state.deepScale,
+      visible: state.mode === 'globe',
       said: new Map<Layer, string>([
         ...(genomesSaid === null ? [] : [['genomes', genomesSaid] as const]),
         ...(waysSaid === null ? [] : [['ways', waysSaid] as const]),
@@ -3293,6 +3299,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.mode !== previous.mode ||
       state.borders !== previous.borders ||
       state.ma !== previous.ma ||
+      state.deepScale !== previous.deepScale ||
       state.time.date.year !== previous.time.date.year ||
       state.location !== previous.location
     ) {

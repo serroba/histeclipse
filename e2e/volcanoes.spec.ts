@@ -24,7 +24,7 @@ test('the eruptions of 1815 include Tambora, and a volcano opens its card', asyn
   });
   await test.step('When they turn on Volcanic eruptions in Layers', async () => {
     await openLayers(page);
-    await page.getByLabel('Volcanic eruptions').check();
+    await page.getByRole('checkbox', { name: 'Volcanic eruptions' }).check();
   });
   await test.step('Then the eruptions near 1815 are marked, Tambora the largest', async () => {
     await expect(page).toHaveURL(/layers=[a-z,]*volcanoes/);

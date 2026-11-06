@@ -38,6 +38,15 @@ export const BORDER_SOURCES = ['cliopatria', 'ohm', 'both'] as const;
  */
 export const DEEP_SCALES = ['all', 'ice', 'eons'] as const;
 export type DeepScale = (typeof DEEP_SCALES)[number];
+
+/** How far the time bar reaches: the Holocene's years, or one of deep time's scales. */
+export type Span = 'years' | DeepScale;
+export const SPAN_LABELS: Readonly<Record<Span, string>> = {
+  years: 'Years',
+  ice: 'Ice ages',
+  all: '540 Myr',
+  eons: '4.6 Gyr',
+};
 export type BorderSource = (typeof BORDER_SOURCES)[number];
 
 export const LAYERS = [
@@ -75,16 +84,6 @@ export type Layer = (typeof LAYERS)[number];
 /** A dispersal model's scenario shaded with the Humans layer, or none. */
 export const DISPERSAL_SCENARIOS = ['off', 'a', 'b'] as const;
 export type DispersalScenario = (typeof DISPERSAL_SCENARIOS)[number];
-
-/** Layers that belong to deep time, dropped on leaving it. */
-export const DEEP_LAYERS: readonly Layer[] = [
-  'temperature',
-  'sealevel',
-  'plates',
-  'humans',
-  'air',
-  'fossils',
-];
 
 /**
  * How the camera is placed: orbiting Earth freely, or attached to the bodies (standing on Earth

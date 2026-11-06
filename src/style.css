@@ -284,6 +284,61 @@ body {
   margin: 2px 0 6px 30px;
 }
 
+/* A layer that draws on other spans: greyed, still there to turn on, with where it does draw. */
+.layer-item.is-elsewhere .layer-name,
+.layer-item.is-elsewhere .layer-about {
+  opacity: 0.55;
+}
+
+/* A step a layer offers: going to the time a rock formed, or to a span where the layer draws. */
+.layer-action {
+  min-height: 36px;
+  margin: 0 0 6px 30px;
+  padding: 0 14px;
+  border: 1px solid rgb(143 180 255 / 0.45);
+  border-radius: 18px;
+  background: rgb(143 180 255 / 0.12);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.layer-action[hidden] {
+  display: none;
+}
+
+.layer-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layer-row .layer-label {
+  flex: 1;
+}
+
+.layer-where {
+  min-height: 32px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 0.08);
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.layer-where:hover {
+  color: var(--ink);
+}
+
+.layer-where[hidden] {
+  display: none;
+}
+
 .empire-labels {
   position: absolute;
   inset: 0;

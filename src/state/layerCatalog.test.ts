@@ -1,13 +1,37 @@
 import { describe, expect, it } from 'vitest';
 
-import { cliopatriaYear, HISTORY_LAYER_GROUPS, layerNote } from './layerCatalog';
+import { cliopatriaYear, elsewhereNote, LAYER_GROUPS, layerNote } from './layerCatalog';
 import { LAYERS } from './viewState';
 
-describe('the historical layers', () => {
+describe('the layers', () => {
   it('offers each layer once, and only layers the view knows', () => {
-    const ids = HISTORY_LAYER_GROUPS.flatMap((group) => group.layers.map((layer) => layer.id));
+    const ids = LAYER_GROUPS.flatMap((group) => group.layers.map((layer) => layer.id));
     expect(new Set(ids).size).toBe(ids.length);
     for (const id of ids) expect(LAYERS).toContain(id);
+  });
+
+  it('offers every layer, for all of time, each drawing on a span of its own', () => {
+    const choices = LAYER_GROUPS.flatMap((group) => group.layers);
+    expect(choices.map((choice) => choice.id).sort()).toEqual([...LAYERS].sort());
+    for (const choice of choices) expect(choice.spans.length).toBeGreaterThan(0);
+  });
+
+  it('says, off its spans, where a layer draws and how far its data reaches', () => {
+    const choices = LAYER_GROUPS.flatMap((group) => group.layers);
+    const find = (id: string) => choices.find((choice) => choice.id === id);
+    const fossils = find('fossils');
+    const temperature = find('temperature');
+    const impacts = find('impacts');
+    if (fossils === undefined || temperature === undefined || impacts === undefined) {
+      throw new Error('missing layer');
+    }
+    expect(elsewhereNote(fossils)).toBe(
+      `Nothing here: drawn on the 540 Myr span. ${fossils.reach}`,
+    );
+    expect(elsewhereNote(temperature)).toMatch(
+      /^Nothing here: drawn on the 540 Myr and 4\.6 Gyr spans\. /,
+    );
+    expect(elsewhereNote(impacts)).toMatch(/drawn on the Years, Ice ages and 540 Myr spans\./);
   });
 
   it('says when the borders begin, by their source', () => {

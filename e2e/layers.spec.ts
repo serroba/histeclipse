@@ -202,3 +202,35 @@ test('with Ways of life on, a key names each colour on the map', async ({ page }
   });
   expect(problems).toEqual([]);
 });
+
+test('one set of layers for all of time: the panel and the bar’s chips switch the same ones', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const panel = page.getByRole('dialog', { name: 'Layers' });
+  await test.step('Given 250 million years ago, with the Layers panel open', async () => {
+    await page.goto('./?ma=250&scale=all');
+    await globeRendered(page);
+    await openLayers(page);
+  });
+  await test.step('When they turn on Temperature in the panel', async () => {
+    await panel.getByRole('checkbox', { name: /^Temperature/ }).check();
+  });
+  await test.step('Then the bar’s Temperature chip is on too, and the link keeps it', async () => {
+    await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page).toHaveURL(/layers=[a-z,]*temperature/);
+  });
+  await test.step('And the years’ layers are greyed, saying where they draw', async () => {
+    await expect(panel.locator('.layer-item.is-elsewhere')).not.toHaveCount(0);
+    await panel.getByRole('checkbox', { name: /^States and empires/ }).check();
+    await expect(panel.getByTestId('layer-note-empires')).toContainText(
+      'Nothing here: drawn on the Years span.',
+    );
+    await expect(panel.getByRole('checkbox', { name: /^Temperature/ })).toBeChecked();
+    await expect(panel.getByTestId('layer-note-temperature')).toBeHidden();
+  });
+  expect(problems).toEqual([]);
+});
