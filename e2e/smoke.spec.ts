@@ -66,7 +66,7 @@ test('rewrites a shared link into its full, explicit form', async ({ page }) => 
   await page.goto(SHARED_LINK);
   await globeRendered(page);
   await expect(page).toHaveURL(
-    /\?v=1&mode=globe&t=-0620-04-22T07:20Z&cal=julian&loc=32\.5422,44\.4209&cam=30\.0000,40\.0000,3\.00&layers=lunar,solar,terminator&sel=lunar:-0620-04-22$/,
+    /\?v=1&mode=globe&t=-0620-04-22T07:20Z&cal=julian&loc=32\.5422,44\.4209&cam=30\.0000,40\.0000,3\.00&layers=lunar,solar&sel=lunar:-0620-04-22$/,
   );
 });
 
@@ -291,7 +291,7 @@ test('the eclipse card keeps background one tap away', async ({ page }) => {
 });
 
 test('hiding the lunar layer hides the overlay but keeps the selection', async ({ page }) => {
-  await page.goto('./?t=-620-04-22T02:08&sel=lunar:-0620-04-22&layers=terminator');
+  await page.goto('./?t=-620-04-22T02:08&sel=lunar:-0620-04-22&layers=');
   await globeRendered(page);
   await expect(page.getByTestId('globe')).toHaveAttribute('data-lunar-overlay', 'off');
   await expect(page).toHaveURL(/sel=lunar:-0620-04-22/);
@@ -331,7 +331,7 @@ test("stepping and typing years lists that year's eclipses", async ({ page }) =>
 
 test('controls are large enough to tap and stay on screen', async ({ page }) => {
   // With the empires layer on, so the "Seen from" row is measured too.
-  await page.goto('./?t=2024-01-01T00:00&layers=lunar,solar,terminator,empires');
+  await page.goto('./?t=2024-01-01T00:00&layers=lunar,solar,empires');
   await globeRendered(page);
   await expect(page.getByRole('button', { name: /8 Apr/ })).toBeVisible();
   const viewport = page.viewportSize();
@@ -1174,7 +1174,7 @@ test('picking a culture puts you where its sky-watchers stood', async ({ page })
 test('past borders can come from Cliopatria, OpenHistoricalMap, or both to compare', async ({
   page,
 }) => {
-  await page.goto('./?t=1500-06-01T12:00&cam=5,20,2.6&layers=lunar,solar,terminator,empires');
+  await page.goto('./?t=1500-06-01T12:00&cam=5,20,2.6&layers=lunar,solar,empires');
   await globeRendered(page);
   const globe = page.getByTestId('globe');
   await openLayers(page);
@@ -1201,7 +1201,7 @@ test('picking a state marks the eclipses seen from it, and steps through them', 
   page,
 }) => {
   // 763 BCE: the eclipse of the Assyrian eponym list, total in Assyria on 15 June.
-  await page.goto('./?t=-762-06-15T12:00&cam=35,43,3&layers=lunar,solar,terminator,empires');
+  await page.goto('./?t=-762-06-15T12:00&cam=35,43,3&layers=lunar,solar,empires');
   await globeRendered(page);
   const seen = page.getByLabel('Seen from', { exact: true });
   await expect(seen.locator('option', { hasText: 'Neo-Assyrian Empire' })).toHaveCount(1);

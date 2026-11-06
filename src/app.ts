@@ -43,6 +43,7 @@ import {
   LAST_GLACIAL_MAXIMUM_MA,
   type BorderSource,
   type Layer,
+  withLayer,
   roundMa,
   momentJulianDay,
   type GeoPoint,
@@ -325,12 +326,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   const layersPanel = createLayersPanel(
     (layer, on) => {
-      store.set((state) => {
-        const layers = new Set(state.layers);
-        if (on) layers.add(layer);
-        else layers.delete(layer);
-        return { ...state, layers };
-      });
+      store.set((state) => ({ ...state, layers: withLayer(state.layers, layer, on) }));
     },
     (borders) => {
       store.set((state) => ({ ...state, borders }));
@@ -729,6 +725,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showGenomes(now);
       showImpacts(now);
       showVolcanoes(now);
+      showRocks(now);
       showEmpires(now);
       showHoloceneEarth(now);
       showHistory(now);
@@ -2548,10 +2545,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** In historical time with the layer on, the rocks by age, and the rock at the place picked. */
   function showRocks(state: ViewState): void {
     const on = state.layers.has('rocks') && state.ma === null;
-    rocksCredit.hidden = !on;
+    rocksCredit.hidden = !on || travelling;
     rocksAction = null;
-    if (!on) {
-      rocksSaid = null;
+    // Today's rocks say nothing of the year a trip shows: they rest with the markers.
+    if (!on || travelling) {
+      rocksSaid = on ? RESTING : null;
       globe.setRocks(null);
       return;
     }

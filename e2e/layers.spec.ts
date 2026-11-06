@@ -158,3 +158,23 @@ test('today shows the states as Cliopatria last drew them, and says so', async (
     ).toHaveCount(1);
   });
 });
+
+test('the ground shows one fill at a time: rocks or ways of life', async ({ page }) => {
+  const problems = collectProblems(page);
+  const panel = page.getByRole('dialog', { name: 'Layers' });
+  await test.step('Given 2000 BCE with Rocks at the surface on', async () => {
+    await page.goto('./?t=-1999-06-01T12:00&layers=lunar,solar,rocks');
+    await globeRendered(page);
+    await openLayers(page);
+    await expect(panel.getByRole('checkbox', { name: 'Rocks at the surface' })).toBeChecked();
+  });
+  await test.step('When they turn on Ways of life', async () => {
+    await panel.getByRole('checkbox', { name: 'Ways of life' }).check();
+  });
+  await test.step('Then the rocks give way: two fills on one map cannot both be read', async () => {
+    await expect(panel.getByRole('checkbox', { name: 'Rocks at the surface' })).not.toBeChecked();
+    await expect(page).toHaveURL(/layers=[a-z,]*ways/);
+    await expect(page).not.toHaveURL(/layers=[a-z,]*rocks/);
+  });
+  expect(problems).toEqual([]);
+});

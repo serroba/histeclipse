@@ -2,7 +2,7 @@
  * The query-string format for shareable links.
  *
  *   ?v=1&mode=globe&t=-0620-04-22T07:20Z&cal=julian&loc=32.5422,44.4209
- *     &cam=20.0000,0.0000,3.00&view=moon-from-earth&layers=lunar,terminator&sel=lunar:-0620-04-22
+ *     &cam=20.0000,0.0000,3.00&view=moon-from-earth&layers=lunar,solar&sel=lunar:-0620-04-22
  *
  * - `t` is Universal Time with ISO-8601 astronomical years (−0620 is 621 BCE).
  * - `cal` is the calendar `t` is written in. When missing, it is the one in use at the
@@ -73,6 +73,7 @@ import {
   LAYERS,
   BODIES,
   MODES,
+  RETIRED_LAYERS,
   VIEWPOINTS,
   defaultCalendarFor,
   defaultViewState,
@@ -350,7 +351,12 @@ function parseCamera(raw: string): GlobeCamera {
 
 function parseLayers(raw: string): ReadonlySet<Layer> {
   if (raw === '') return new Set();
-  return new Set(raw.split(',').map((name) => oneOf(name, LAYERS, 'layer')));
+  return new Set(
+    raw
+      .split(',')
+      .filter((name) => !RETIRED_LAYERS.includes(name))
+      .map((name) => oneOf(name, LAYERS, 'layer')),
+  );
 }
 
 function parseSelection(raw: string): Selection {

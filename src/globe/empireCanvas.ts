@@ -202,11 +202,16 @@ export function paintWays(
 }
 
 /** Shades each map unit in its own colour (Macrostrat's, by age), under everything else. */
-export function paintRocks(canvas: HTMLCanvasElement, units: readonly RockUnit[]): void {
+export function paintRocks(
+  canvas: HTMLCanvasElement,
+  units: readonly RockUnit[],
+  // Under the states' own colours, fainter, so theirs still read.
+  strength = 1,
+): void {
   const context = canvas.getContext('2d');
   if (context === null) return;
   const { width, height } = canvas;
-  context.globalAlpha = 0.55;
+  context.globalAlpha = 0.55 * strength;
   for (const unit of units) {
     context.fillStyle = unit.colour;
     for (const offset of [-360, 0, 360]) {

@@ -35,7 +35,7 @@ const NOW = new Date(Date.UTC(2026, 9, 31, 18, 45, 30));
 
 const BABYLON_ECLIPSE =
   'v=1&mode=globe&t=-0620-04-22T07:20Z&cal=julian&loc=32.5422,44.4209' +
-  '&cam=30.0000,40.0000,3.00&view=moon-from-earth&layers=lunar,terminator&sel=lunar:-0620-04-22';
+  '&cam=30.0000,40.0000,3.00&view=moon-from-earth&layers=lunar,solar&sel=lunar:-0620-04-22';
 
 const date = (year: number, month: number, day: number, calendar: Calendar) =>
   calendarDateOf(astronomicalYear(year), month, day, calendar);
@@ -61,7 +61,7 @@ describe('parseViewState', () => {
       camera: { target: { latitude: 30, longitude: 40 }, distance: 3 },
       view: 'moon-from-earth',
       focus: 'earth',
-      layers: new Set(['lunar', 'terminator']),
+      layers: new Set(['lunar', 'solar']),
       selection: { kind: 'lunar', date: date(-620, 4, 22, 'julian') },
       look: DEFAULT_LOOK,
       figures: 'famous',
@@ -437,7 +437,16 @@ describe('view state helpers', () => {
     expect(momentJulianDay(moment)).toBe(2_451_545);
   });
 
-  it('defaults to both eclipse layers and the day/night line', () => {
-    expect([...DEFAULT_LAYERS]).toEqual(['lunar', 'solar', 'terminator']);
+  it('defaults to both eclipse layers', () => {
+    expect([...DEFAULT_LAYERS]).toEqual(['lunar', 'solar']);
+  });
+
+  it('opens old links naming retired layers, without them', () => {
+    const { state, warnings } = parseViewState(
+      '?layers=lunar,solar,terminator,places,empires',
+      NOW,
+    );
+    expect(warnings).toEqual([]);
+    expect([...state.layers]).toEqual(['lunar', 'solar', 'empires']);
   });
 });
