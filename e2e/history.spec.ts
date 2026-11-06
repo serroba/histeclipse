@@ -288,7 +288,9 @@ test('as the years play, state names stay put on the map, and only a few light u
     // unseen for a frame, again and again, and read as flicker.
     const samples = await page.evaluate(async () => {
       const seen: { shown: number; lit: number }[] = [];
-      for (let i = 0; i < 30; i += 1) {
+      // For three seconds, however many samples a slow machine gets in that time.
+      const end = performance.now() + 3000;
+      while (performance.now() < end) {
         await new Promise((done) => setTimeout(done, 60));
         const labels = [
           ...document.querySelectorAll<HTMLElement>('.empire-labels > .empire-label'),
