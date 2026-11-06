@@ -969,7 +969,7 @@ test('the card names the place an eclipse is seen from, or calls it your spot', 
   await expect(page.locator('.eclipse-observer')).toHaveText(/^Your spot \(40\.7°N 74\.0°W\): /);
 });
 
-test('Back steps through deep time: milestones and layers, and leaving takes its layers along', async ({
+test('Back steps through deep time: milestones and layers, and its layers stay on in the years', async ({
   page,
 }) => {
   const problems = collectProblems(page);
@@ -989,13 +989,13 @@ test('Back steps through deep time: milestones and layers, and leaving takes its
   await expect(page).not.toHaveURL(/temperature/);
   await page.goBack();
   await expect(page).toHaveURL(/&ma=250(&|$)/);
-  // Leaving deep time drops its layers from the link.
+  // One set of layers for all of time: going to the years leaves Temperature on, resting.
   await page.goForward();
   await page.goForward();
   await expect(page).toHaveURL(/temperature/);
   await pickSpan(page, 'Years');
   await expect(page).not.toHaveURL(/ma=/);
-  await expect(page).not.toHaveURL(/temperature/);
+  await expect(page).toHaveURL(/temperature/);
   expect(problems).toEqual([]);
 });
 

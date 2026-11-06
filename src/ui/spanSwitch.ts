@@ -6,16 +6,16 @@
  * DOM glue, covered by the Playwright suite.
  */
 
-import type { DeepScale } from '../state/viewState';
+import { SPAN_LABELS, type Span } from '../state/viewState';
 import { element } from './dom';
 
-export type Span = 'years' | DeepScale;
+export type { Span };
 
-const SPANS: readonly (readonly [Span, string, string])[] = [
-  ['years', 'Years', 'The last 11,700 years, year by year: dates, states and eclipses'],
-  ['ice', 'Ice ages', 'The last 2.6 million years: ice sheets, sea level, the first people'],
-  ['all', '540 Myr', 'The last 540 million years: moving continents, climate, life'],
-  ['eons', '4.6 Gyr', 'All of Earth’s history'],
+const SPANS: readonly (readonly [Span, string])[] = [
+  ['years', 'The last 11,700 years, year by year: dates, states and eclipses'],
+  ['ice', 'The last 2.6 million years: ice sheets, sea level, the first people'],
+  ['all', 'The last 540 million years: moving continents, climate, life'],
+  ['eons', 'All of Earth’s history'],
 ];
 
 export interface SpanSwitch {
@@ -24,11 +24,11 @@ export interface SpanSwitch {
 }
 
 export function createSpanSwitch(onSpan: (span: Span) => void): SpanSwitch {
-  const buttons = SPANS.map(([span, label, title]) => {
+  const buttons = SPANS.map(([span, title]) => {
     const button = element(
       'button',
       { type: 'button', class: 'time-option', 'aria-pressed': 'false', title },
-      label,
+      SPAN_LABELS[span],
     );
     button.addEventListener('click', () => {
       onSpan(span);

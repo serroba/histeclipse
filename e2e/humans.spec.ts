@@ -3,7 +3,15 @@
  * its source; where the evidence is argued over, the competing dates are given side by side.
  */
 
-import { collectProblems, expect, globeRendered, pickSpan, showDeepDetails, test } from './support';
+import {
+  collectProblems,
+  expect,
+  globeRendered,
+  openLayers,
+  pickSpan,
+  showDeepDetails,
+  test,
+} from './support';
 
 test('the Humans layer marks dated finds, and gives competing dates side by side', async ({
   page,
@@ -40,12 +48,39 @@ test('the Humans layer marks dated finds, and gives competing dates side by side
   expect(problems).toEqual([]);
 });
 
-test('Humans goes with deep time, and stays out of the link afterwards', async ({ page }) => {
-  await page.goto('./?ma=0.06&scale=ice&layers=humans');
-  await globeRendered(page);
-  await pickSpan(page, 'Years');
-  await expect(page).not.toHaveURL(/humans/);
-  await expect(page.getByTestId('globe')).toHaveAttribute('data-humans', 'off');
+test('Humans rests in the years, greyed in Layers, and comes back with the ice ages', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  await test.step('Given the ice ages with Humans on', async () => {
+    await page.goto('./?ma=0.06&scale=ice&layers=humans');
+    await globeRendered(page);
+  });
+  await test.step('When they go to the years', async () => {
+    await pickSpan(page, 'Years');
+  });
+  await test.step('Then Humans draws nothing, stays on, and says where it does draw', async () => {
+    await expect(globe).toHaveAttribute('data-humans', 'off');
+    await expect(page).toHaveURL(/layers=[a-z,]*humans/);
+    await openLayers(page);
+    const panel = page.getByRole('dialog', { name: 'Layers' });
+    await expect(panel.getByRole('checkbox', { name: /Humans/ })).toBeChecked();
+    await expect(panel.getByTestId('layer-note-humans')).toContainText(
+      'Nothing here: drawn on the Ice ages span.',
+    );
+  });
+  await test.step('When they take its way back to the ice ages', async () => {
+    await page
+      .getByRole('dialog', { name: 'Layers' })
+      .getByRole('button', { name: 'Go to the earliest Homo sapiens' })
+      .click();
+  });
+  await test.step('Then the finds are back on the globe', async () => {
+    await expect(page).toHaveURL(/scale=ice/);
+    await expect(globe).not.toHaveAttribute('data-humans', 'off');
+  });
+  expect(problems).toEqual([]);
 });
 
 test('a dispersal model shades where it has people settled, scenario by scenario', async ({
@@ -119,6 +154,29 @@ test('a find opens its card: its claim, its source, its rivals and a picture', a
     await expect(card.locator('.marker-card-image figcaption')).toContainText(
       'via Wikimedia Commons.',
     );
+  });
+  expect(problems).toEqual([]);
+});
+
+test('from the years, one tap on Humans goes to the earliest Homo sapiens', async ({ page }) => {
+  const problems = collectProblems(page);
+  await test.step('Given the years, with the Layers panel open', async () => {
+    await page.goto('./?t=-499-06-01T12:00');
+    await globeRendered(page);
+    await openLayers(page);
+  });
+  await test.step('When they tap where Humans draws', async () => {
+    await page
+      .getByRole('dialog', { name: 'Layers' })
+      .getByRole('button', { name: 'Show Humans on Ice ages' })
+      .click();
+  });
+  await test.step('Then the ice ages open at the earliest Homo sapiens, with Humans on', async () => {
+    await expect(page).toHaveURL(/scale=ice/);
+    await expect(page).toHaveURL(/ma=0\.315/);
+    await expect(page).toHaveURL(/layers=[a-z,]*humans/);
+    await expect(page.locator('.hud-date')).toHaveText('315,000 years ago');
+    await expect(page.getByTestId('globe')).not.toHaveAttribute('data-humans', 'off');
   });
   expect(problems).toEqual([]);
 });
