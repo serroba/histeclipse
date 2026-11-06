@@ -33,10 +33,17 @@ jobs:
       - run: pnpm coverage
       - run: pnpm build
 
+  # The slowest job by far: WebGL draws in software on the runner's CPU. Split in four, run
+  # side by side.
   e2e:
-    name: End-to-end (local production build)
+    name: End-to-end (local production build, ${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      # Every shard runs to the end, so one failure doesn't hide another.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -47,22 +54,43 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+      - id: playwright
+        run: echo "version=$(pnpm exec playwright --version | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"
+      # The browser, kept between runs for each version of Playwright.
+      - id: browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      # The runner's image already has the system libraries Chromium needs; --with-deps only
+      # added CJK and Thai fonts, and once spent seven minutes fetching them from apt.
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install chromium
+      # Playwright's default, two workers, already fills the 4 vCPUs: a third made each test
+      # two-thirds slower, finished no sooner, and made a test flaky.
+      - run: pnpm test:e2e --shard="$SHARD/4"
+        env:
+          SHARD: ${{ matrix.shard }}
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: |
             playwright-report/
             test-results/
           retention-days: 14
 
   # A Mac's GPU limits differ from Linux's: a shader once passed here and drew a black globe there.
+  # One worker fills the Mac runner (a second made each test twice as slow), so it is split in
+  # two to finish alongside the Linux shards.
   e2e-macos:
-    name: End-to-end on macOS (desktop)
+    name: End-to-end on macOS (desktop, ${{ matrix.shard }}/2)
     runs-on: macos-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -74,11 +102,13 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install chromium
-      - run: pnpm test:e2e --project=desktop
+      - run: pnpm test:e2e --project=desktop --shard="$SHARD/2"
+        env:
+          SHARD: ${{ matrix.shard }}
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-report-macos
+          name: playwright-report-macos-${{ matrix.shard }}
           path: |
             playwright-report/
             test-results/
