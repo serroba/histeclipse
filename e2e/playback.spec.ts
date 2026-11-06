@@ -38,7 +38,11 @@ test('on a slow connection, the globe keeps changing as deep time plays', async 
   expect(problems).toEqual([]);
 });
 
-test('each player has speeds in its own units, and plays at the one picked', async ({ page }) => {
+test('deep time has speeds in the units of its span, and plays at the one picked', async ({
+  page,
+}) => {
+  // Plays for some seconds on purpose: slow machines need the room.
+  test.setTimeout(60_000);
   const problems = collectProblems(page);
   const deep = page.getByRole('navigation', { name: 'Deep time' });
   const speed = deep.getByLabel('Speed');
@@ -67,11 +71,18 @@ test('each player has speeds in its own units, and plays at the one picked', asy
     ]);
     await expect(speed).toHaveValue('0.05');
   });
-  await test.step('And an eclipse plays at minutes a second', async () => {
+  expect(problems).toEqual([]);
+});
+
+test('an eclipse plays at the minutes a second picked', async ({ page }) => {
+  const problems = collectProblems(page);
+  await test.step('Given the eclipse of Thales, and 60 minutes a second picked', async () => {
     await page.goto('./?t=-584-05-28T12:00&sel=solar:-0584-05-28');
     await globeRendered(page);
     await expect(page.locator('.scrubber').getByLabel('Speed')).toHaveValue('12');
     await page.locator('.scrubber').getByLabel('Speed').selectOption('60');
+  });
+  await test.step('When they play it, it reaches greatest eclipse', async () => {
     await page.locator('.scrubber').getByRole('button', { name: 'Play' }).click();
     await expect(page.locator('.scrubber-time')).toContainText(/\(\+?\d+ min\)|greatest/, {
       timeout: 15_000,
