@@ -43,8 +43,6 @@ export type BorderSource = (typeof BORDER_SOURCES)[number];
 export const LAYERS = [
   'lunar',
   'solar',
-  'terminator',
-  'places',
   'empires',
   // Dated ancient genomes (AADR), counted by region around the year shown.
   'genomes',
@@ -196,7 +194,30 @@ export interface ViewState {
 // In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
 // so Saturn (up to ~11 AU away) fits in view; the scene caps other bodies at the same reach.
 export const CAMERA_DISTANCE_RANGE = { min: 1.1, max: 300_000 } as const;
-export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'solar', 'terminator']);
+export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'solar']);
+
+/**
+ * Layers that once were and no longer are: old links naming them still open, without them.
+ * Day and night are always drawn; places were never drawn.
+ */
+export const RETIRED_LAYERS: readonly string[] = ['terminator', 'places'];
+
+/** The layers that colour the ground itself: one at a time, as two together cannot be read. */
+export const GROUND_FILLS: readonly Layer[] = ['rocks', 'ways'];
+
+/** The layers with one turned on or off; turning a ground fill on turns the other off. */
+export function withLayer(layers: ReadonlySet<Layer>, layer: Layer, on: boolean): Set<Layer> {
+  const next = new Set(layers);
+  if (!on) {
+    next.delete(layer);
+    return next;
+  }
+  if (GROUND_FILLS.includes(layer)) {
+    for (const other of GROUND_FILLS) next.delete(other);
+  }
+  next.add(layer);
+  return next;
+}
 export const DEFAULT_CAMERA: GlobeCamera = {
   target: { latitude: 20, longitude: 0 },
   // With a 40° field of view on the narrower side, the whole globe fits with a margin.

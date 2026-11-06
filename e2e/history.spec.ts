@@ -80,8 +80,8 @@ test('travelling lights the whole globe and rests the markers, which return with
   const problems = collectProblems(page);
   const bar = page.getByRole('group', { name: track });
   const globe = page.getByTestId('globe');
-  await test.step('Given 1000 CE with Impact craters on and States and empires off', async () => {
-    await page.goto('./?t=1000-06-01T12:00&layers=lunar,solar,impacts');
+  await test.step('Given 1000 CE with Impact craters and Rocks on, States and empires off', async () => {
+    await page.goto('./?t=1000-06-01T12:00&layers=lunar,solar,impacts,rocks');
     await globeRendered(page);
     await expect(globe).toHaveAttribute('data-light', 'sun');
     await expect(globe).toHaveAttribute('data-impacts', /^[1-9]\d*$/);
@@ -92,6 +92,8 @@ test('travelling lights the whole globe and rests the markers, which return with
   await test.step('Then there is no night, the craters rest, and states and ways of life are drawn', async () => {
     await expect(globe).toHaveAttribute('data-light', 'even');
     await expect(globe).toHaveAttribute('data-impacts', 'off');
+    // Today's rocks say nothing of the year: they rest too.
+    await expect(globe).toHaveAttribute('data-rocks', 'off');
     await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
     await expect(globe).toHaveAttribute('data-ways', /^[1-9]\d*$/);
     // Land with no state drawn is explained, not left to look empty.
@@ -108,6 +110,7 @@ test('travelling lights the whole globe and rests the markers, which return with
     await expect(globe).toHaveAttribute('data-impacts', /^[1-9]\d*$/);
     await expect(page).not.toHaveURL(/layers=[a-z,]*empires/);
     await expect(globe).toHaveAttribute('data-ways', 'off');
+    await expect(globe).toHaveAttribute('data-rocks', 'on');
   });
   expect(problems).toEqual([]);
 });
