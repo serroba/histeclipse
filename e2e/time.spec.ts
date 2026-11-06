@@ -37,7 +37,7 @@ test('the top row picks how far back time reaches; famous eclipses sit with the 
   expect(problems).toEqual([]);
 });
 
-test('going deeper keeps the moment, and coming back returns to the date and eclipse left', async ({
+test('a deeper span opens at its oldest moment, and coming back returns to the date and eclipse left', async ({
   page,
 }) => {
   const problems = collectProblems(page);
@@ -49,8 +49,9 @@ test('going deeper keeps the moment, and coming back returns to the date and ecl
   await test.step('When they pick 540 Myr', async () => {
     await pickSpan(page, '540 Myr');
   });
-  await test.step('Then deep time opens at today, with no famous eclipses to pick', async () => {
-    await expect(page).toHaveURL(/&ma=0(&|$)/);
+  await test.step('Then deep time opens 540 million years ago, ready to play forward, with no famous eclipses', async () => {
+    await expect(page).toHaveURL(/&ma=540(&|$)/);
+    await expect(page.locator('.hud-date')).toHaveText('540 million years ago');
     await expect(spans.getByRole('button', { name: '540 Myr' })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -70,21 +71,34 @@ test('going deeper keeps the moment, and coming back returns to the date and ecl
   expect(problems).toEqual([]);
 });
 
-test('from the years, the ice ages open at the same moment, and come back to its year', async ({
-  page,
-}) => {
-  await test.step('Given 6000 BCE', async () => {
-    await page.goto('./?t=-5999-06-01T12:00');
-    await globeRendered(page);
-  });
-  await test.step('When they pick Ice ages, deep time opens about 8,000 years ago', async () => {
+test('each deeper span opens at its own oldest moment', async ({ page }) => {
+  for (const [span, ma, said] of [
+    ['Ice ages', '2.6', '2,600,000 years ago'],
+    ['540 Myr', '540', '540 million years ago'],
+    ['4.6 Gyr', '4568', '4,568 million years ago'],
+  ] as const) {
+    await test.step(`Given 6000 BCE, when they pick ${span}`, async () => {
+      await page.goto('./?t=-5999-06-01T12:00');
+      await globeRendered(page);
+      await pickSpan(page, span);
+    });
+    await test.step(`Then it opens ${said}`, async () => {
+      await expect(page).toHaveURL(new RegExp(`&ma=${ma.replace('.', '\\.')}(&|$)`));
+      await expect(page.locator('.hud-date')).toHaveText(said);
+    });
+  }
+  await test.step('And from one deep span to another, the same', async () => {
     await pickSpan(page, 'Ice ages');
-    await expect(page).toHaveURL(/&ma=0\.008(&|$)/);
-    await expect(page).toHaveURL(/scale=ice/);
+    await expect(page).toHaveURL(/&ma=2\.6&scale=ice/);
   });
-  await test.step('When they move to 10,000 years ago (8051 BCE) and pick Years, the year follows', async () => {
+});
+
+test('a link in the Holocene’s reach comes back to the years as its year', async ({ page }) => {
+  await test.step('Given a link to 10,000 years ago, on the ice ages', async () => {
     await page.goto('./?ma=0.01&scale=ice');
     await globeRendered(page);
+  });
+  await test.step('When they pick Years, the year is 8051 BCE', async () => {
     await pickSpan(page, 'Years');
     await expect(page.getByLabel('Year', { exact: true })).toHaveValue('8051');
   });
