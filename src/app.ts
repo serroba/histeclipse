@@ -689,7 +689,34 @@ export async function startApp(root: HTMLElement): Promise<void> {
       historySpeed = speed;
       showHistory(store.get());
     },
+    onOpen(open) {
+      travelling = open;
+      globe.setEvenLight(open);
+      // The trip is about peoples and states: their borders come on with it, and go with it
+      // if it brought them.
+      const { layers } = store.get();
+      if (open && !layers.has('empires')) {
+        travelBroughtStates = true;
+        store.set((state) => ({ ...state, layers: new Set([...state.layers, 'empires']) }));
+      } else if (!open && travelBroughtStates) {
+        travelBroughtStates = false;
+        store.set((state) => ({
+          ...state,
+          layers: new Set([...state.layers].filter((layer) => layer !== 'empires')),
+        }));
+      }
+      const now = store.get();
+      showGenomes(now);
+      showImpacts(now);
+      showVolcanoes(now);
+      showEmpires(now);
+    },
   });
+  // While the track is open, the globe is lit evenly and the markers of single finds and
+  // events rest: at years a second they flicker past without meaning.
+  let travelling = false;
+  let travelBroughtStates = false;
+  const RESTING = 'Resting while you travel through the years; back when the track closes.';
 
   function historyFirst(): number {
     return Math.ceil(deltaT.firstYear) + 1;
@@ -1729,8 +1756,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ma !== null && state.deepScale === 'all' && ma > oldest ? 'eons' : state.deepScale;
     const on =
       state.layers.has('impacts') && state.mode === 'globe' && (ma === null || scale !== 'eons');
-    if (!on) {
-      impactsSaid = null;
+    if (!on || (travelling && ma === null)) {
+      impactsSaid = on ? RESTING : null;
       globe.setImpacts(null);
       return { on: false };
     }
@@ -1784,8 +1811,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   function showVolcanoes(state: ViewState): void {
     const on = state.layers.has('volcanoes') && state.mode === 'globe' && state.ma === null;
-    if (!on) {
-      volcanoesSaid = null;
+    if (!on || travelling) {
+      volcanoesSaid = on ? RESTING : null;
       volcanoMarks = [];
       globe.setVolcanoes(null);
       return;
@@ -2392,9 +2419,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** In historical time with the layer on, the regions with genomes dated near the year. */
   function showGenomes(state: ViewState): void {
     const on = state.layers.has('genomes') && state.ma === null;
-    genomeCredit.hidden = !on;
-    if (!on) {
-      genomesSaid = null;
+    genomeCredit.hidden = !on || travelling;
+    if (!on || travelling) {
+      genomesSaid = on ? RESTING : null;
       globe.setGenomeCells(null);
       return;
     }
