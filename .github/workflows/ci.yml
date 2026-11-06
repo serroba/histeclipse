@@ -62,12 +62,12 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      # The runner's image already has the system libraries Chromium needs; --with-deps only
+      # added CJK and Thai fonts, and once spent seven minutes fetching them from apt.
       - if: steps.browsers.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps chromium
-      # The system libraries it needs aren't in the cache.
-      - if: steps.browsers.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium
-      - run: pnpm test:e2e --shard="$SHARD/4"
+        run: pnpm exec playwright install chromium
+      # Two browsers at once slowed each test by only an eighth on the 4 vCPUs, so a third fits.
+      - run: pnpm test:e2e --shard="$SHARD/4" --workers=3
         env:
           SHARD: ${{ matrix.shard }}
       - if: failure()
@@ -95,7 +95,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install chromium
-      - run: pnpm test:e2e --project=desktop
+      # Playwright's default is one worker on the runner's 3 cores, and the GPU draws here, not
+      # the CPU: two keep this job from outlasting the Linux shards.
+      - run: pnpm test:e2e --project=desktop --workers=2
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
