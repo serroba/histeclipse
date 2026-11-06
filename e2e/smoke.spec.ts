@@ -1673,3 +1673,43 @@ test('tapping the Sun in the sky closes in on it, then offers it up close', asyn
   });
   expect(problems).toEqual([]);
 });
+
+test('no page says null, undefined or NaN where words should be', async ({ page }) => {
+  const pages = [
+    // The Sun close up during the eclipse of 763 BCE, where a stray "null" was once reported.
+    './?t=-0762-06-15T08:37Z&cal=julian&loc=36.3594,43.1529&cam=-21.7915,-64.9571,4.91&focus=sun&layers=lunar,solar,orbits&sel=solar:-0762-06-15',
+    './?t=-499-06-01T12:00&layers=lunar,solar,empires,ways,genomes,volcanoes',
+    './?ma=0.021&scale=ice&layers=humans,sealevel,air',
+    './?ma=250&scale=all&layers=temperature,plates,fossils,impacts',
+    './?ma=3000&scale=eons',
+    './?t=2024-04-08T18:17&cam=60,0,60000',
+  ];
+  for (const link of pages) {
+    await test.step(`Given ${link}`, async () => {
+      await page.goto(link);
+      await globeRendered(page);
+    });
+    await test.step('Then no visible text, link or tooltip reads null, undefined or NaN', async () => {
+      const found = await page.evaluate(() => {
+        const bad = /\b(null|undefined|NaN)\b/;
+        const out: string[] = [];
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+          const node = walker.currentNode;
+          const parent = node.parentElement;
+          if (parent?.checkVisibility() === true && bad.test(node.textContent ?? '')) {
+            out.push(`text: ${(node.textContent ?? '').trim().slice(0, 80)}`);
+          }
+        }
+        for (const element of document.querySelectorAll('[href], [title], [aria-label]')) {
+          for (const name of ['href', 'title', 'aria-label']) {
+            const value = element.getAttribute(name);
+            if (value !== null && bad.test(value)) out.push(`${name}: ${value.slice(0, 80)}`);
+          }
+        }
+        return out;
+      });
+      expect(found).toEqual([]);
+    });
+  }
+});
