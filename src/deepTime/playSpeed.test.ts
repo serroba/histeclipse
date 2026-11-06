@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { DEEP_SPEEDS, DEFAULT_DEEP_SPEED, deepSpeedFor, deepSpeedText } from './playSpeed';
+import {
+  DEEP_SPEEDS,
+  DEFAULT_DEEP_SPEED,
+  deepSpeedFor,
+  deepSpeedText,
+  deepSpeedWords,
+} from './playSpeed';
 
 describe('deep time play speeds', () => {
   it('gives each span a few speeds, its default among them', () => {
@@ -11,8 +17,10 @@ describe('deep time play speeds', () => {
   });
 
   it('says a speed in the units of its span', () => {
-    expect(deepSpeedText(0.05)).toBe('50,000 years/s');
-    expect(deepSpeedText(0.01)).toBe('10,000 years/s');
+    expect(deepSpeedText(0.05)).toBe('50 kyr/s');
+    expect(deepSpeedText(0.01)).toBe('10 kyr/s');
+    expect(deepSpeedWords(0.05)).toBe('50,000 years a second');
+    expect(deepSpeedWords(20)).toBe('20 million years a second');
     expect(deepSpeedText(20)).toBe('20 Myr/s');
     expect(deepSpeedText(250)).toBe('250 Myr/s');
   });

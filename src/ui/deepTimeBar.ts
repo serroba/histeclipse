@@ -43,7 +43,7 @@ import {
   SNOWBALL_CHOICES,
   SNOWBALL_MODELS,
 } from '../deepTime/sketch';
-import { DEEP_SPEEDS, deepSpeedText } from '../deepTime/playSpeed';
+import { DEEP_SPEEDS, deepSpeedText, deepSpeedWords } from '../deepTime/playSpeed';
 import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import { DISPERSAL_SCENARIOS, type DeepScale, type DispersalScenario } from '../state/viewState';
 import { element } from './dom';
@@ -750,13 +750,15 @@ export function createDeepTimeBar(handlers: {
     'nav',
     { class: 'deep-time', 'aria-label': 'Deep time', hidden: '' },
     handle,
-    element('div', { class: 'deep-controls' }, play, older, track, younger, speed),
+    element('div', { class: 'deep-controls' }, play, older, track, younger),
     element(
       'p',
       { class: 'deep-label' },
       when,
       ' ',
       period,
+      // Beside the moment, not the slider: on a phone the slider needs the whole row.
+      speed,
       scaleSwitch,
       seaLevelButton,
       temperatureButton,
@@ -1290,6 +1292,7 @@ export function createDeepTimeBar(handlers: {
         );
       }
       speed.value = String(view.speed);
+      speed.title = `Speed: ${deepSpeedWords(view.speed)}`;
     },
   };
   return bar;

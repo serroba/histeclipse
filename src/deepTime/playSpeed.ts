@@ -22,10 +22,17 @@ export const DEFAULT_DEEP_SPEED: Readonly<Record<DeepScale, number>> = {
   eons: 100,
 };
 
-/** The speed in words: "50,000 years/s", "20 Myr/s". */
+/** The speed, short, in geology's units: "50 kyr/s", "20 Myr/s". */
 export function deepSpeedText(maPerSecond: number): string {
-  if (maPerSecond < 1) return `${Math.round(maPerSecond * 1e6).toLocaleString('en')} years/s`;
+  if (maPerSecond < 1) return `${String(Math.round(maPerSecond * 1000))} kyr/s`;
   return `${maPerSecond.toLocaleString('en')} Myr/s`;
+}
+
+/** The speed in words, for a reader's tooltip: "50,000 years a second". */
+export function deepSpeedWords(maPerSecond: number): string {
+  return maPerSecond < 1
+    ? `${Math.round(maPerSecond * 1e6).toLocaleString('en')} years a second`
+    : `${maPerSecond.toLocaleString('en')} million years a second`;
 }
 
 /** The speed asked for, if the span offers it; else the span's own. */
