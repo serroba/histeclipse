@@ -56,6 +56,8 @@ export function createHistoryTrack(handlers: {
   onYear(year: number): void;
   onPlay(play: boolean): void;
   onSpeed(speed: YearSpeed): void;
+  /** The track opened or closed. */
+  onOpen(open: boolean): void;
 }): HistoryTrack {
   const play = element(
     'button',
@@ -108,6 +110,7 @@ export function createHistoryTrack(handlers: {
     root.hidden = !open;
     button.setAttribute('aria-expanded', String(open));
     if (!open && playing) handlers.onPlay(false);
+    handlers.onOpen(open);
   }
   button.addEventListener('click', () => {
     setOpen(button.getAttribute('aria-expanded') !== 'true');

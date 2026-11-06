@@ -64,11 +64,41 @@ test('the track jumps to any year of the Holocene', async ({ page }) => {
     await expect(page).toHaveURL(/t=1000-/);
     await expect(page.getByLabel('Year', { exact: true })).toHaveValue('1000');
   });
-  await test.step('And with states off, the track says how to watch them', async () => {
-    await expect(bar.getByTestId('history-changes')).toHaveText(
+  await test.step('And the track brought States and empires on with it', async () => {
+    await expect(page).toHaveURL(/layers=[a-z,]*empires/);
+  });
+});
+
+test('travelling lights the whole globe and rests the markers, which return with the borders gone', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const bar = page.getByRole('group', { name: track });
+  const globe = page.getByTestId('globe');
+  await test.step('Given 1000 CE with Impact craters on and States and empires off', async () => {
+    await page.goto('./?t=1000-06-01T12:00&layers=lunar,solar,impacts');
+    await globeRendered(page);
+    await expect(globe).toHaveAttribute('data-light', 'sun');
+    await expect(globe).toHaveAttribute('data-impacts', /^[1-9]\d*$/);
+  });
+  await test.step('When they open the track', async () => {
+    await openTrack(page);
+  });
+  await test.step('Then there is no night, the craters rest, and the states are drawn', async () => {
+    await expect(globe).toHaveAttribute('data-light', 'even');
+    await expect(globe).toHaveAttribute('data-impacts', 'off');
+    await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
+    await expect(bar.getByTestId('history-changes')).not.toHaveText(
       'Turn on States and empires in Layers to watch them come and go.',
     );
   });
+  await test.step('When they close it, night, the craters and their own layers come back', async () => {
+    await bar.getByRole('button', { name: 'Close the track' }).click();
+    await expect(globe).toHaveAttribute('data-light', 'sun');
+    await expect(globe).toHaveAttribute('data-impacts', /^[1-9]\d*$/);
+    await expect(page).not.toHaveURL(/layers=[a-z,]*empires/);
+  });
+  expect(problems).toEqual([]);
 });
 
 test('the track goes with the Holocene into deep time', async ({ page }) => {

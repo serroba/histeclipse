@@ -358,6 +358,8 @@ export interface Globe {
    * today's imagery; null returns to today's Earth.
    */
   setDeepTime(surface: DeepTimeSurface | null): void;
+  /** Light the whole globe evenly, without night, as deep time does; for the Holocene's track. */
+  setEvenLight(on: boolean): void;
   /** Start loading maps that will be wanted soon (as time plays), so they are there in time. */
   prefetch(urls: readonly string[]): void;
   /** Colour the deep-time surface by temperature; null shows relief alone. */
@@ -1221,6 +1223,14 @@ export async function createGlobe(
   }
   const deepTimeOrder = inOrder();
   let deepTime = false;
+  // Lit evenly outside deep time too, while the Holocene's track is open.
+  let evenLit = false;
+  function showLight(): void {
+    const even = deepTime || evenLit;
+    evenLight.value = even ? 1 : 0;
+    container.dataset['light'] = even ? 'even' : 'sun';
+    needsRender = true;
+  }
   const temperatureOrder = inOrder();
   const iceOrder = inOrder();
   const seaIceOrder = inOrder();
@@ -2066,11 +2076,14 @@ export async function createGlobe(
         });
       }
     },
+    setEvenLight(on) {
+      evenLit = on;
+      showLight();
+    },
     setDeepTime(surface) {
       deepTime = surface !== null;
-      evenLight.value = deepTime ? 1 : 0;
+      showLight();
       spinAxis.visible = deepTime;
-      container.dataset['light'] = deepTime ? 'even' : 'sun';
       needsRender = true;
       const uniforms = earth.material.uniforms;
       if (surface === null) {
