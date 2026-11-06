@@ -241,7 +241,8 @@ export function roundMa(ma: number): number {
   return Math.round(ma * 1000) / 1000;
 }
 
-export const SKY_FOV_RANGE = { min: 5, max: 120 } as const;
+// Down to 1°: the Sun's or the Moon's disc then fills half the view.
+export const SKY_FOV_RANGE = { min: 1, max: 120 } as const;
 /** Facing south, a third of the way up: where the ecliptic runs, seen from the north. */
 export const DEFAULT_LOOK: SkyLook = { azimuth: 180, altitude: 30, fov: 90 };
 
