@@ -29,7 +29,7 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { geoToVector } from './globe/geo';
-import { createGlobe } from './globe/scene';
+import { createGlobe, type StateChange } from './globe/scene';
 import { createStore } from './state/store';
 import { parseViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
@@ -41,6 +41,7 @@ import {
   EARTH_AGE_MA,
   ICE_AGES_MA,
   LAST_GLACIAL_MAXIMUM_MA,
+  type BorderSource,
   type Layer,
   roundMa,
   momentJulianDay,
@@ -95,6 +96,8 @@ import {
   loadEmpireCentury,
   loadEmpireIndex,
   stateChanges,
+  stateChangesOnMap,
+  type NamedPoint,
   territoriesIn,
   type EmpireCentury,
   type EmpireIndex,
@@ -675,7 +678,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let historyHead = yearPlayhead();
   // What the track last said of the states, and what was drawn then, to tell what changed.
   let statesSaid = 'Which states appear and which are gone shows here as the years go by.';
-  let statesBefore: { readonly year: number; readonly names: readonly string[] } | null = null;
+  let statesBefore: {
+    readonly source: BorderSource;
+    readonly year: number;
+    readonly places: readonly NamedPoint[];
+  } | null = null;
   const historyTrack = createHistoryTrack({
     onYear(year) {
       stopHistory();
@@ -775,16 +782,32 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
   }
 
-  /** Note which states appeared or went since the year drawn before, if it was near. */
-  function noteStates(year: number, names: readonly string[]): void {
+  /**
+   * Note which states appeared or went since the year drawn before, if it was near; and give
+   * those to name on the map, if it was nearer still.
+   */
+  function noteStates(
+    source: BorderSource,
+    year: number,
+    places: readonly NamedPoint[],
+  ): readonly StateChange[] {
     const before = statesBefore;
-    statesBefore = { year, names };
-    // Far apart, a list of what differs says little about what happened.
-    if (before === null || Math.abs(year - before.year) > 500) return;
-    const { appeared, gone } = stateChanges(before.names, names);
+    statesBefore = { source, year, places };
+    // Far apart, or by another source, a list of what differs says little about what happened.
+    if (before?.source !== source || Math.abs(year - before.year) > 500) {
+      return [];
+    }
+    const { appeared, gone } = stateChanges(
+      before.places.map(({ name }) => name),
+      places.map(({ name }) => name),
+    );
     const said = changesText(year, appeared, gone);
     if (said !== null) statesSaid = said;
     showHistory(store.get());
+    // On the map, only a step's worth (a year, or up to the fastest trip's 80): after a jump
+    // of centuries every name would light up.
+    const step = Math.abs(year - before.year);
+    return step === 0 || step > 100 ? [] : stateChangesOnMap(before.places, places);
   }
 
   const timeline = createTimeline(
@@ -2637,11 +2660,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ([drawn, lines]) => {
         // The year or source may have moved on while the files loaded.
         if (empiresShown !== key) return;
-        globe.setEmpires({ territories: drawn, ohm: lines });
-        noteStates(year, [
-          ...drawn.map(({ name }) => name),
-          ...(lines?.labels ?? []).map(({ name }) => name),
+        const changes = noteStates(source, year, [
+          ...drawn.map((territory) => ({ ...labelPoint(territory), name: territory.name })),
+          ...(lines?.labels ?? []),
         ]);
+        globe.setEmpires({ territories: drawn, ohm: lines, changes });
       },
       (error: unknown) => {
         empiresShown = null;

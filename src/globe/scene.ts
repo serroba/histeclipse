@@ -200,7 +200,19 @@ export interface SunImageRequest {
 export interface EmpireLayer {
   readonly territories: readonly Territory[];
   readonly ohm: OhmYear | null;
+  /** States that appeared or went since the year drawn before, to name on the map a while. */
+  readonly changes?: readonly StateChange[];
 }
+
+/** A state that appeared or went, and where its name goes. */
+export interface StateChange {
+  readonly name: string;
+  readonly kind: 'new' | 'gone';
+  readonly point: { readonly latitude: number; readonly longitude: number };
+}
+
+/** How long a state that appeared or went stays named as such, ms (its CSS animation's too). */
+const STATE_CHANGE_MS = 4000;
 
 /** Two elevation maps (URLs of greyscale images, see `data/paleoDem.ts`) and the blend between. */
 export interface DeepTimeSurface {
@@ -1275,6 +1287,8 @@ export async function createGlobe(
   let humanLabels: GlobeLabel[] = [];
   let humanSitesKey = '';
   // Historical time's overlay, on the states' map: ways of life, and the states over them.
+  // States that appeared or went lately, by name: named on the map for a while.
+  const recentStates = new Map<string, { readonly change: StateChange; readonly at: number }>();
   let historyOverlay: {
     readonly rocks: readonly RockUnit[] | null;
     readonly ways: readonly WayRegion[] | null;
@@ -2515,10 +2529,38 @@ export async function createGlobe(
       paintHistoryOverlay();
       empireLabelLayer.replaceChildren();
       empireLabels = [];
+      if (layer === null) recentStates.clear();
       if (layer !== null) {
+        const now = performance.now();
+        for (const change of layer.changes ?? [])
+          recentStates.set(change.name, { change, at: now });
+        const present = new Set([
+          ...layer.territories.map(({ name }) => name),
+          ...(layer.ohm?.labels ?? []).map(({ name }) => name),
+        ]);
+        // Those that came or went lately first, so their names win a place; the animation
+        // carries on from where it was, though the names are made anew each year.
+        const changed = [...recentStates.entries()].flatMap(([name, { change, at }]) => {
+          const age = now - at;
+          if (age > STATE_CHANGE_MS || present.has(name) !== (change.kind === 'new')) {
+            recentStates.delete(name);
+            return [];
+          }
+          return [
+            {
+              name,
+              point: change.point,
+              size: 13,
+              kind: `empire-label is-${change.kind}`,
+              delay: -Math.round(age),
+            },
+          ];
+        });
+        const named = new Set(changed.map(({ name }) => name));
         // Names of the larger states first; as the camera comes closer, more fit between them.
         const ranked = layer.territories
           .map((territory) => ({ territory, label: labelPoint(territory) }))
+          .filter(({ territory }) => !named.has(territory.name))
           .sort((a, b) => b.label.area - a.label.area)
           .slice(0, 80)
           .map(({ territory, label }) => ({
@@ -2528,17 +2570,22 @@ export async function createGlobe(
             kind: 'empire-label',
           }));
         // OpenHistoricalMap's names, set apart in italics, after Cliopatria's.
-        const ohmNames = (layer.ohm?.labels ?? []).slice(0, 120).map((label) => ({
-          name: label.name,
-          point: label,
-          size: 11,
-          kind: 'empire-label is-ohm',
-        }));
-        empireLabels = [...ranked, ...ohmNames].map(({ name, point, size, kind }) => {
+        const ohmNames = (layer.ohm?.labels ?? [])
+          .filter(({ name }) => !named.has(name))
+          .slice(0, 120)
+          .map((label) => ({
+            name: label.name,
+            point: label,
+            size: 11,
+            kind: 'empire-label is-ohm',
+          }));
+        empireLabels = [...changed, ...ranked, ...ohmNames].map((label) => {
+          const { name, point, size, kind } = label;
           const element = document.createElement('span');
           element.className = kind;
           element.textContent = name;
           element.style.fontSize = `${String(size)}px`;
+          if ('delay' in label) element.style.animationDelay = `${String(label.delay)}ms`;
           // Laid out once, unseen, so its real size is known for keeping names apart.
           element.style.visibility = 'hidden';
           empireLabelLayer.append(element);
@@ -2557,6 +2604,9 @@ export async function createGlobe(
         }
       }
       container.dataset['empires'] = layer === null ? 'off' : String(layer.territories.length);
+      container.dataset['statesChanged'] = String(
+        empireLabels.filter(({ element }) => /\bis-(new|gone)\b/.test(element.className)).length,
+      );
       container.dataset['ohmBorders'] =
         layer?.ohm === null || layer === null ? 'off' : String(layer.ohm.borders.length);
       needsRender = true;

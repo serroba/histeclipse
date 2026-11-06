@@ -40,6 +40,11 @@ test('playing history moves through the years and names the states that come and
       timeout: 20_000,
     });
   });
+  await test.step('And the map names them too, as new or gone, for a while', async () => {
+    await expect(page.locator('.empire-label.is-new, .empire-label.is-gone').first()).toBeAttached({
+      timeout: 20_000,
+    });
+  });
   await test.step('When they pause, the year stays and the link keeps it', async () => {
     await bar.getByRole('button', { name: 'Stop travelling' }).click();
     const shown = await page.locator('.hud-date').textContent();

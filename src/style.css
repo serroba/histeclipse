@@ -289,6 +289,51 @@ body {
   color: rgb(255 255 255 / 0.85);
 }
 
+/* A state that has just appeared glows gold, then settles; one that has gone is struck
+   through and fades. The time matches STATE_CHANGE_MS in globe/scene.ts. */
+.empire-label.is-new {
+  animation: state-new 4s ease-out forwards;
+}
+
+.empire-label.is-gone {
+  text-decoration: line-through;
+  animation: state-gone 4s ease-in forwards;
+}
+
+@keyframes state-new {
+  from {
+    color: #ffd166;
+    text-shadow:
+      0 0 8px rgb(255 190 60 / 0.9),
+      0 0 3px rgb(0 0 0 / 0.9);
+  }
+}
+
+@keyframes state-gone {
+  from {
+    color: #ffb4a8;
+    opacity: 1;
+  }
+
+  to {
+    color: #ffb4a8;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .empire-label.is-new {
+    animation: none;
+    color: #ffd166;
+  }
+
+  .empire-label.is-gone {
+    animation: none;
+    color: #ffb4a8;
+    opacity: 0.7;
+  }
+}
+
 .empire-label[hidden],
 .empire-credit[hidden] {
   display: none;
