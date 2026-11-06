@@ -7,8 +7,9 @@ import type { DeepScale } from '../state/viewState';
 
 /** Millions of years a second each span can play at, slowest first. */
 export const DEEP_SPEEDS: Readonly<Record<DeepScale, readonly number[]>> = {
-  // The ice ages: 10,000 to 200,000 years a second (2.6 million years in 4 minutes to 13 s).
-  ice: [0.01, 0.05, 0.2],
+  // The ice ages: 1,000 to 200,000 years a second (a glacial cycle in 100 s; 2.6 million
+  // years in 13 s at the fastest).
+  ice: [0.001, 0.01, 0.05, 0.2],
   // 540 million years: 5 to 50 million years a second (in 2 minutes to 11 s).
   all: [5, 20, 50],
   // All of Earth's 4.6 billion years: 25 to 250 million years a second (3 minutes to 18 s).

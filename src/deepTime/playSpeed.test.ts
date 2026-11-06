@@ -19,6 +19,8 @@ describe('deep time play speeds', () => {
   it('says a speed in the units of its span', () => {
     expect(deepSpeedText(0.05)).toBe('50 kyr/s');
     expect(deepSpeedText(0.01)).toBe('10 kyr/s');
+    expect(deepSpeedText(0.001)).toBe('1 kyr/s');
+    expect(deepSpeedWords(0.001)).toBe('1,000 years a second');
     expect(deepSpeedWords(0.05)).toBe('50,000 years a second');
     expect(deepSpeedWords(20)).toBe('20 million years a second');
     expect(deepSpeedText(20)).toBe('20 Myr/s');
