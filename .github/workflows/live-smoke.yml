@@ -23,10 +23,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The whole suite against the live site, in four shards side by side: in one job it outgrew
+  # its 20 minutes.
   smoke:
-    name: Smoke test live site
+    name: Smoke test live site (${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     env:
       BASE_URL: https://serroba.github.io/histeclipse/
       EXPECTED_VERSION: ${{ inputs.expected-version }}
@@ -52,12 +58,24 @@ jobs:
           done
           echo "::error::$BASE_URL did not serve $EXPECTED_VERSION within 10 minutes"
           exit 1
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+      - id: playwright
+        run: echo "version=$(pnpm exec playwright --version | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"
+      # The browser, kept between runs for each version of Playwright, as in CI.
+      - id: browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      # The runner's image has Chromium's system libraries; --with-deps only added fonts.
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install chromium
+      - run: pnpm test:e2e --shard="$SHARD/4"
+        env:
+          SHARD: ${{ matrix.shard }}
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-report-live
+          name: playwright-report-live-${{ matrix.shard }}
           path: |
             playwright-report/
             test-results/
