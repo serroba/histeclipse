@@ -18,8 +18,9 @@ export interface Scrubber {
 }
 
 export const SCRUB_RANGE_MINUTES = 180;
-/** Simulated minutes per real second while playing. */
-const PLAY_SPEED = 12;
+/** Simulated minutes per real second it can play at: the six hours in two minutes to six seconds. */
+export const ECLIPSE_SPEEDS = [3, 12, 30, 60] as const;
+const DEFAULT_SPEED = 12;
 
 export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubber {
   const slider = element('input', {
@@ -36,7 +37,15 @@ export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubb
     { type: 'button', class: 'scrubber-play', 'aria-label': 'Play' },
     '▶',
   );
-  const root = element('div', { class: 'scrubber', hidden: '' }, play, slider, label);
+  const speed = element(
+    'select',
+    { class: 'scrubber-speed', 'aria-label': 'Speed' },
+    ...ECLIPSE_SPEEDS.map((each) =>
+      element('option', { value: String(each) }, `${String(each)} min/s`),
+    ),
+  );
+  speed.value = String(DEFAULT_SPEED);
+  const root = element('div', { class: 'scrubber', hidden: '' }, play, slider, label, speed);
 
   let offset = 0;
   let playing: { frame: number; last: number } | null = null;
@@ -51,9 +60,10 @@ export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubb
   function tick(now: number): void {
     if (playing === null) return;
     const elapsed = (now - playing.last) / 1000;
-    if (elapsed * PLAY_SPEED >= 1) {
+    const minutesPerSecond = Number(speed.value);
+    if (elapsed * minutesPerSecond >= 1) {
       playing.last = now;
-      const next = offset + Math.round(elapsed * PLAY_SPEED);
+      const next = offset + Math.round(elapsed * minutesPerSecond);
       if (next > SCRUB_RANGE_MINUTES) {
         stop();
         return;
