@@ -465,6 +465,13 @@ export const SOURCES = {
     url: 'https://science.nasa.gov/photojournal/cassinis-best-maps-of-jupiter-cylindrical-map/',
     licence: 'NASA, public domain',
   },
+  cassiniSaturn: {
+    name: 'Cassini map of Saturn',
+    kind: 'imagery',
+    cite: 'Li, L., West, R., Jiang, X. & Knowles, B. (2023). Cassini ISS Global Maps of Jupiter and Saturn, colour map of Saturn from 11 August 2011. NASA Planetary Data System',
+    url: 'https://doi.org/10.17189/rkkb-6y30',
+    licence: 'NASA, public domain',
+  },
   kirschvink1997: {
     name: 'Kirschvink et al. 1997',
     kind: 'paper',
@@ -823,8 +830,15 @@ export const WHYS = {
   'close-up': {
     title: 'The Moon and planets close up',
     what: 'What the Moon and each planet look like near to: the missions’ own maps of them.',
-    sources: ['moonKit', 'messengerMap', 'vikingMap', 'cassiniJupiter', 'archinal2018'],
-    how: 'Each map is wrapped on the body as published, shrunk for the web, and each planet is turned as it was at the moment shown, by the IAU’s rotation models, the light’s travel time allowed for: the face toward you is the one that faced you then (checked against JPL Horizons). Jupiter’s and Saturn’s turning is that of their interiors (System III): their clouds drift against it, so a cloud feature is not where it was that day. Venus shows its cloud tops as a plain colour, as from space the clouds hide the ground, and Saturn its main bands painted, as no mission’s global map of it is used.',
+    sources: [
+      'moonKit',
+      'messengerMap',
+      'vikingMap',
+      'cassiniJupiter',
+      'cassiniSaturn',
+      'archinal2018',
+    ],
+    how: 'Each map is wrapped on the body as published, shrunk for the web, and each planet is turned as it was at the moment shown, by the IAU’s rotation models, the light’s travel time allowed for: the face toward you is the one that faced you then (checked against JPL Horizons). Jupiter’s and Saturn’s turning is that of their interiors (System III): their clouds drift against it, so a cloud feature is not where it was that day. Venus shows its cloud tops as a plain colour, as from space the clouds hide the ground. Saturn’s map has gaps where Cassini could not see (the poles, and the strip in the rings’ shadow): they are filled with the colour of the nearest latitude imaged.',
   },
   sky: {
     title: 'The night sky',

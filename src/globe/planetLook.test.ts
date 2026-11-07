@@ -65,7 +65,7 @@ describe('Saturn’s rings', () => {
 describe('planet pictures', () => {
   it('wrap the missions’ maps where one is used, and say whose they are', () => {
     const mapped = PLANETS.filter((planet) => PLANET_PICTURES[planet].map !== null);
-    expect(mapped).toEqual(['mercury', 'mars', 'jupiter']);
+    expect(mapped).toEqual(['mercury', 'mars', 'jupiter', 'saturn']);
     for (const planet of mapped) {
       expect(PLANET_PICTURES[planet].map).toBe(`textures/planets/${planet}-2048.jpg`);
       expect(PLANET_PICTURES[planet].caption).toMatch(/(NASA|USGS)[^.]*\.$/);
@@ -75,7 +75,7 @@ describe('planet pictures', () => {
 
   it('say so where the painted colours stand in', () => {
     expect(PLANET_PICTURES.venus.caption).toContain('clouds hide the ground');
-    expect(PLANET_PICTURES.saturn.caption).toContain('not a map');
+    expect(PLANET_PICTURES.saturn.caption).toContain('not imaged, are filled');
   });
 });
 
