@@ -3514,3 +3514,8 @@ body {
   float: left;
   margin: -4px 4px 0 -4px;
 }
+
+/* Beside ΔT the book keeps its finger-sized target without making the date line taller. */
+.hud-detail .why-mark {
+  margin-block: -10px;
+}
