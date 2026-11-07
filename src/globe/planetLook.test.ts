@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { PLANETS, saturnRingTilt } from '../astro/planets';
 import {
+  bodyAxes,
   colourAt,
   MOON_CAPTION,
+  primeMeridian,
   PLANET_NAMES,
   PLANET_PICTURES,
   planetRadius,
@@ -74,5 +76,58 @@ describe('planet pictures', () => {
   it('say so where the painted colours stand in', () => {
     expect(PLANET_PICTURES.venus.caption).toContain('clouds hide the ground');
     expect(PLANET_PICTURES.saturn.caption).toContain('not a map');
+  });
+});
+
+describe('how the planets turn', () => {
+  const AU = 149_597_870.7;
+  /** Where on the planet the middle of its disc is, seen from Earth: east longitude, latitude. */
+  const subEarth = (
+    planet: 'mars' | 'jupiter',
+    jdTT: number,
+    ra: number,
+    dec: number,
+    au: number,
+  ): [number, number] => {
+    const r = Math.PI / 180;
+    // From the planet toward Earth: the reverse of where Earth sees it.
+    const v = [
+      -Math.cos(dec * r) * Math.cos(ra * r),
+      -Math.cos(dec * r) * Math.sin(ra * r),
+      -Math.sin(dec * r),
+    ];
+    const { pole, prime, east } = bodyAxes(planet, jdTT, au * AU);
+    const dot = (a: readonly number[]) => a.reduce((sum, x, i) => sum + x * (v[i] ?? 0), 0);
+    const longitude = (((Math.atan2(dot(east), dot(prime)) / r) % 360) + 360) % 360;
+    return [longitude, Math.asin(dot(pole)) / r];
+  };
+  // JPL Horizons, 2026-01-10 12:00 TT, from Earth's centre: RA, Dec (ICRF), distance, and the
+  // sub-observer point (west longitude, as Horizons gives it for these planets).
+  const jd = 2_461_051;
+
+  it('turns Mars as JPL Horizons has it: the same face toward Earth', () => {
+    const [longitude, latitude] = subEarth('mars', jd, 291.39973, -22.93598, 2.40246742);
+    expect(longitude).toBeCloseTo(360 - 285.451899, 1);
+    // Horizons gives the latitude planetodetic (to the flattened surface's normal), this one
+    // planetocentric: they differ by a few tenths of a degree.
+    expect(latitude).toBeCloseTo(-10.953252, 0);
+  });
+
+  it('turns Jupiter by System III, light time and all', () => {
+    const [longitude, latitude] = subEarth('jupiter', jd, 111.37843, 22.24624, 4.23189956);
+    expect(longitude).toBeCloseTo(360 - 327.390203, 1);
+    expect(latitude).toBeCloseTo(1.589517, 0);
+  });
+
+  it('counts the light’s time: Jupiter some 20° less turned than at the moment itself', () => {
+    const now = primeMeridian('jupiter', jd);
+    const seen = primeMeridian('jupiter', jd, 4.23 * AU);
+    expect((((now - seen) % 360) + 360) % 360).toBeGreaterThan(20);
+    expect((((now - seen) % 360) + 360) % 360).toBeLessThan(22);
+  });
+
+  it('has Venus turning backward, slowly', () => {
+    expect(primeMeridian('venus', 2_451_545)).toBeCloseTo(160.2, 6);
+    expect(primeMeridian('venus', 2_451_546)).toBeCloseTo(160.2 - 1.4813688, 6);
   });
 });
