@@ -120,6 +120,63 @@ export function planetFacts(
   };
 }
 
+const EARTH_RADIUS_KM = 6378.137;
+const MOON_DISTANCE_KM = 384_400;
+const ARCSECONDS = 3600 * DEGREES;
+
+export interface EarthFromFacts {
+  readonly au: number;
+  /** How wide Earth looks from there, and how far the Moon can stand from it, arcseconds. */
+  readonly diameter: number;
+  readonly moonApart: number;
+  /** Share of Earth's disc lit, as seen from there. */
+  readonly lit: number;
+  /** Degrees between Earth and the Sun in that sky; null seen from the Sun itself. */
+  readonly fromSun: number | null;
+}
+
+/**
+ * Earth as seen from a body at geocentric `observer` (km), with the Sun at geocentric `sun` (km):
+ * how far, how wide, how much of it is lit, and how near the Sun it stands in that sky (#245).
+ */
+export function earthFromFacts(observer: EquatorialVector, sun: EquatorialVector): EarthFromFacts {
+  const km = length(observer);
+  const toEarth: EquatorialVector = [-observer[0], -observer[1], -observer[2]];
+  const toSun: EquatorialVector = [
+    sun[0] - observer[0],
+    sun[1] - observer[1],
+    sun[2] - observer[2],
+  ];
+  return {
+    au: km / AU_KM,
+    diameter: 2 * Math.atan(EARTH_RADIUS_KM / km) * ARCSECONDS,
+    moonApart: Math.atan(MOON_DISTANCE_KM / km) * ARCSECONDS,
+    // Sun–Earth–observer.
+    lit: litShare(angleBetween(sun, observer)),
+    fromSun: length(toSun) < EARTH_RADIUS_KM ? null : angleBetween(toEarth, toSun),
+  };
+}
+
+/** Earth from afar in words: "5.40 AU away, 3.3″ across, 99% lit · 10° from the Sun, …". */
+export function earthFromText(facts: EarthFromFacts): string {
+  const across =
+    facts.diameter >= 60
+      ? `${(facts.diameter / 60).toFixed(1)}′ across`
+      : `${facts.diameter.toFixed(1)}″ across`;
+  const apart =
+    facts.moonApart >= 600
+      ? `${(facts.moonApart / 60).toFixed(0)}′`
+      : `${facts.moonApart.toFixed(0)}″`;
+  const { fromSun } = facts;
+  const sun =
+    fromSun === null
+      ? ''
+      : fromSun < GLARE
+        ? ` · ${String(Math.round(fromSun))}° from the Sun, in its glare`
+        : ` · ${String(Math.round(fromSun))}° from the Sun`;
+  return `${facts.au.toFixed(2)} AU away, ${across}, ${String(Math.round(facts.lit * 100))}% lit${sun} · the Moon at most ${apart} from it`;
+}
+
 /** The Moon in words: "Waxing crescent, 23% lit · 384,000 km from Earth". */
 export function moonText(facts: MoonFacts): string {
   const km = Number(facts.km.toPrecision(3)).toLocaleString('en');

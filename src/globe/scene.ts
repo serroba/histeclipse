@@ -7,6 +7,8 @@
 
 import { createImpactAnimation, type ImpactAnimation, type ImpactSpec } from './impactAnimation';
 import { BODY_RADIUS } from './bodyRadius';
+import { createC14Glow } from './c14Glow';
+import { createShowerAnimation, type ShowerAnimation, type ShowerSpec } from './showerAnimation';
 import {
   AdditiveBlending,
   BackSide,
@@ -77,6 +79,7 @@ import {
 import {
   apparentRadiusPixels,
   attachedPose,
+  earthFromPose,
   blendPose,
   hiddenBehind,
   mergeMarkers,
@@ -171,6 +174,8 @@ export interface SpaceBodies {
   readonly moonKm: readonly [number, number, number] | null;
   /** Geocentric J2000 positions of the planets in km; null until their theory loads. */
   readonly planetsKm: Readonly<Record<PlanetName, readonly [number, number, number]>> | null;
+  /** The moment, Julian Day (TT): how far each planet has turned. */
+  readonly jdTT: number;
 }
 
 /** A small image to show at once and a sharp one to follow. */
@@ -348,8 +353,20 @@ export interface Globe {
   setSunImage(image: SunImageRequest | null): void;
   /** Mark the pole a compass pointed to in deep time; null when it is not known. */
   setMagneticNorth(where: 'north' | 'south' | 'either' | null): void;
-  /** Wrap a planet in a mission's global map, fetched the first time it is asked for. */
-  setPlanetMap(planet: PlanetName, url: string): void;
+  /** Glow where cosmic rays make carbon-14, a rate per 5° of latitude (1 for today's over the
+   * poles); null hides it. */
+  setC14Glow(profile: readonly number[] | null): void;
+  /** Play a cosmic-ray shower making carbon-14, once, captioned through its `onStep`. */
+  playShower(spec: ShowerSpec): void;
+  /**
+   * Wrap a planet in a mission's global map, fetched the first time it is asked for; a `sharp`
+   * one, asked for close up, replaces it and is kept.
+   */
+  setPlanetMap(planet: PlanetName, url: string, sharp?: boolean): void;
+  /** Dress Earth or the Moon in a sharper map, fetched once, for close up (#258). */
+  setBodyMap(body: 'earth' | 'moon', url: string): void;
+  /** The widest texture the graphics can hold, pixels. */
+  readonly maxTextureSize: number;
   /**
    * Lay past states and empires over the ground, with the names of the largest; null hides
    * the layer.
@@ -1214,6 +1231,10 @@ export function createGlobe(
   pin.visible = false;
   earth.add(pin);
 
+  // Where cosmic rays make carbon-14, when asked.
+  const c14Glow = createC14Glow();
+  earth.add(c14Glow.mesh);
+
   // The Moon, tidally locked: turn the map's longitude 0 (at +X) to +Z, which lookAt() aims at
   // Earth. Libration (a few degrees of wobble) is left out.
   const moonGeometry = new SphereGeometry(MOON_RADIUS_EARTH_RADII, 64, 32);
@@ -1294,7 +1315,16 @@ export function createGlobe(
   sun.visible = false;
   scene.add(sun);
   const planets = createPlanetMeshes(scene);
-  const planetMapsAsked = new Set<PlanetName>();
+  // Maps asked for, by address; the planets wearing their sharp map; and the bodies sharpened,
+  // for whoever needs to know (#258).
+  const planetMapsAsked = new Set<string>();
+  const sharpPlanets = new Set<PlanetName>();
+  const bodyMapsAsked = new Set<string>();
+  const sharpened = new Set<string>();
+  function markSharp(body: string): void {
+    sharpened.add(body);
+    container.dataset['sharp'] = [...sharpened].sort().join(' ');
+  }
   // The planets' orbits, and Earth's: drawn about the Sun in J2000 axes, turned with them.
   const orbits = new Group();
   orbits.visible = false;
@@ -1686,6 +1716,12 @@ export function createGlobe(
   // A map that fails to load leaves its plain colour: the globe still works, only plainer.
   earthMap.then(
     (map) => {
+      // A sharp map that came first (a link opened close up) stays.
+      if (sharpened.has('earth')) {
+        map.dispose();
+        earthMapped = true;
+        return;
+      }
       map.colorSpace = SRGBColorSpace;
       map.anisotropy = renderer.capabilities.getMaxAnisotropy();
       earth.material.uniforms['dayMap'] = { value: map };
@@ -1701,6 +1737,10 @@ export function createGlobe(
   );
   moonMap.then(
     (map) => {
+      if (sharpened.has('moon')) {
+        map.dispose();
+        return;
+      }
       map.colorSpace = SRGBColorSpace;
       moon.material.uniforms['map'] = { value: map };
       moonTexture.dispose();
@@ -1712,8 +1752,11 @@ export function createGlobe(
   );
   // Rotation along the sphere (a slerp), which also handles flying to the opposite side.
   let flight: { from: Vector3; rotation: Quaternion; start: number } | null = null;
-  // An impact playing, if one is.
+  // An impact playing, if one is, and how many have played out.
   let impact: ImpactAnimation | null = null;
+  let impactsPlayed = 0;
+  let shower: ShowerAnimation | null = null;
+  let showersPlayed = 0;
   // Distances from the body in focus, in scene units; it starts on the first frame, timed by the
   // frames' own clock (which can run apart from performance.now()).
   let zoomFlight: { from: number; to: number; start: number | null } | null = null;
@@ -1756,6 +1799,13 @@ export function createGlobe(
 
   function livePose(): CameraPose {
     if (viewpoint === 'free') return focusPose(focus, focusCamera);
+    // Away from Earth: stand on the body in focus and look back at Earth (from Earth itself,
+    // the Moon is the nearest place to look back from).
+    if (viewpoint === 'earth-from-here') {
+      const body = focus === 'earth' ? 'moon' : focus;
+      const { position } = bodyFrame(body);
+      return earthFromPose([position.x, position.y, position.z], BODY_RADIUS[body]);
+    }
     // From Earth, stand where the place picked sees the Moon from.
     const place = pin.visible ? pin.getWorldPosition(new Vector3()) : null;
     return attachedPose(
@@ -1881,6 +1931,19 @@ export function createGlobe(
       if (!playing) {
         impact.dispose();
         impact = null;
+        // How many have played out, for whoever needs to know one did, however briefly it showed.
+        impactsPlayed += 1;
+        container.dataset['impactsPlayed'] = String(impactsPlayed);
+      }
+    }
+    if (shower !== null) {
+      const playing = shower.update(now);
+      needsRender = true;
+      if (!playing) {
+        shower.dispose();
+        shower = null;
+        showersPlayed += 1;
+        container.dataset['showersPlayed'] = String(showersPlayed);
       }
     }
     if (zoomFlight !== null && viewFlight === null) {
@@ -2041,6 +2104,7 @@ export function createGlobe(
 
   return {
     canvas: renderer.domElement,
+    maxTextureSize: renderer.capabilities.maxTextureSize,
     setSunDirection([x, y, z]) {
       sunDirection.set(x, y, z).normalize();
       needsRender = true;
@@ -2139,6 +2203,7 @@ export function createGlobe(
             ) as Record<PlanetName, Vector3>),
         sun.position,
         sunFrame,
+        planetsKm === null ? undefined : { jdTT: bodies.jdTT, km: planetsKm },
       );
       container.dataset['planets'] = planetsKm === null ? 'off' : 'on';
       container.dataset['space'] = moon.visible ? 'moon' : 'sun';
@@ -2245,22 +2310,57 @@ export function createGlobe(
       emptyTapListeners.add(listener);
       return () => emptyTapListeners.delete(listener);
     },
-    setPlanetMap(planet, url) {
-      if (planetMapsAsked.has(planet)) return;
-      planetMapsAsked.add(planet);
+    setPlanetMap(planet, url, sharp = false) {
+      // The sharp map, once it is on, is never swapped back for the first.
+      if (sharpPlanets.has(planet) || planetMapsAsked.has(url)) return;
+      planetMapsAsked.add(url);
+      new TextureLoader()
+        .loadAsync(url)
+        .then((map) => {
+          if (!sharp && sharpPlanets.has(planet)) {
+            map.dispose();
+            return;
+          }
+          map.colorSpace = SRGBColorSpace;
+          map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+          planets.setMap(planet, map);
+          container.dataset['planetMap'] = planet;
+          if (sharp) {
+            sharpPlanets.add(planet);
+            markSharp(planet);
+          }
+          needsRender = true;
+        })
+        .catch(() => {
+          // Asked again the next time the planet is in view; what it wears stays meanwhile.
+          planetMapsAsked.delete(url);
+        });
+    },
+    setBodyMap(body, url) {
+      if (bodyMapsAsked.has(url)) return;
+      bodyMapsAsked.add(url);
       new TextureLoader()
         .loadAsync(url)
         .then((map) => {
           map.colorSpace = SRGBColorSpace;
           map.anisotropy = renderer.capabilities.getMaxAnisotropy();
-          planets.setMap(planet, map);
-          container.dataset['planetMap'] = planet;
+          const uniforms = (body === 'earth' ? earth : moon).material.uniforms;
+          const key = body === 'earth' ? 'dayMap' : 'map';
+          const previous = uniforms[key]?.value as Texture | undefined;
+          uniforms[key] = { value: map };
+          previous?.dispose();
+          markSharp(body);
           needsRender = true;
         })
         .catch(() => {
-          // Asked again the next time the planet is in view; the painted colours stay meanwhile.
-          planetMapsAsked.delete(planet);
+          bodyMapsAsked.delete(url);
         });
+    },
+    setC14Glow(profile) {
+      c14Glow.set(profile);
+      container.dataset['c14Glow'] =
+        profile === null ? 'off' : profile.map((value) => value.toFixed(2)).join(' ');
+      needsRender = true;
     },
     setMagneticNorth(where) {
       for (const [key, label] of magneticNorth) label.visible = key === where;
@@ -2883,7 +2983,7 @@ export function createGlobe(
     setViewpoint(next) {
       if (next === 'free') pendingViewpoint = null;
       if (next === viewpoint) return;
-      if (next !== 'free' && !moon.visible) {
+      if (next !== 'free' && (!moon.visible || !bodyReady(focus))) {
         pendingViewpoint = next;
         return;
       }
@@ -2906,6 +3006,22 @@ export function createGlobe(
       impact = createImpactAnimation(spec);
       earth.add(impact.group);
       container.dataset['impactPlaying'] = 'true';
+      needsRender = true;
+    },
+    playShower(spec) {
+      shower?.dispose();
+      // Every step it has shown, in order: a slow frame can pass a step's start, never a step.
+      const shown: string[] = [];
+      shower = createShowerAnimation({
+        ...spec,
+        onStep(step) {
+          container.dataset['showerStep'] = step ?? 'done';
+          if (step !== null) shown.push(step);
+          container.dataset['showerSteps'] = shown.join(' ');
+          spec.onStep(step);
+        },
+      });
+      earth.add(shower.group);
       needsRender = true;
     },
     zoomTo(distance) {
@@ -2932,6 +3048,8 @@ export function createGlobe(
       pathMaterial.dispose();
       texture.dispose();
       moonTexture.dispose();
+      c14Glow.dispose();
+      shower?.dispose();
       markerLayer.remove();
       renderer.domElement.remove();
     },

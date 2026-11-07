@@ -21,13 +21,15 @@ const moment = v.pipe(v.string(), v.isoTimestamp());
 
 const SunImagesSchema = v.pipe(
   v.strictObject({
-    schemaVersion: v.literal(2),
+    schemaVersion: v.literal(3),
     credit: v.pipe(v.string(), v.minLength(1)),
     diskRadius: v.pipe(v.number(), v.gtValue(0), v.maxValue(0.5)),
     layers: v.array(
       v.strictObject({
         key: v.picklist(SUN_LAYERS),
+        /** What the channel shows, such as "Chromosphere"; the light it is beneath (#249). */
         label: v.pipe(v.string(), v.minLength(1)),
+        detail: v.pipe(v.string(), v.minLength(1)),
         description: v.pipe(v.string(), v.minLength(1)),
         /** When SDO took each frame in the map, UTC, oldest first; the last is the disc's. */
         frames: v.pipe(
