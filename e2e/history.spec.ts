@@ -179,6 +179,9 @@ test('the Holocene reaches back to 9700 BCE, its ΔT growing uncertain', async (
 test('while travelling, the states are shaded over the evenly lit globe, not only named', async ({
   page,
 }) => {
+  // It waits for the globe to settle by comparing screenshots, twice: on a runner that renders
+  // in software, each takes a second or more, past the usual budget.
+  test.slow();
   const globe = page.getByTestId('globe');
   // The globe alone, names and panels set aside, once it has settled where the panels leave it.
   const ground = async () => {
@@ -279,6 +282,8 @@ test('travelling shows the ice sheets and the sea level of the year, and they go
 test('as the years play, state names stay put on the map, and only a few light up', async ({
   page,
 }) => {
+  // The years play for a while to watch the names: slow on a runner that renders in software.
+  test.slow();
   const bar = page.getByRole('group', { name: track });
   await test.step('Given 800 CE with the track open, its names shown', async () => {
     await page.goto('./?t=800-06-01T12:00&layers=lunar,solar&cam=45.0000,20.0000,3.00');
