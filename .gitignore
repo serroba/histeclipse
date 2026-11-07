@@ -18,3 +18,6 @@ playwright-report/
 
 # Downloaded ephemeris excerpts (hundreds of MB)
 .cache/
+
+# Local env files (e.g. VITE_HONEYCOMB_INGEST_KEY in .env.local)
+*.local
