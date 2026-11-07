@@ -16,6 +16,10 @@ export interface DisplayOptions {
 export const test = base.extend<DisplayOptions>({
   refreshRate: [null, { option: true }],
   page: async ({ page, refreshRate }, use) => {
+    // The live site exports telemetry; keep test runs out of the real data.
+    await page.route('https://api.honeycomb.io/**', (route) =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
+    );
     if (refreshRate !== null) {
       await page.addInitScript((hz) => {
         let time = performance.now();
