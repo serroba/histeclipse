@@ -810,8 +810,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (store.get().focus !== 'earth')
       store.set((state) => ({ ...state, focus: 'earth', view: 'free' }));
     layersPanel.dialog.close();
-    const { longitude } = store.get().camera.target;
-    const place = { latitude: 60, longitude };
+    // Over the place picked, if it is far enough from the equator for rays to get through
+    // today; else at 60° along the meridian in view.
+    const picked = store.get().location;
+    const place =
+      picked !== null && Math.abs(picked.latitude) >= 35
+        ? { latitude: picked.latitude, longitude: picked.longitude }
+        : { latitude: 60, longitude: store.get().camera.target.longitude };
+    const { longitude } = place;
     // From the side first, so the rays are seen coming in from space.
     globe.flyTo({ latitude: 20, longitude: longitude - 90 });
     globe.zoomTo(4.4);
@@ -826,6 +832,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
             globe.flyTo(place);
             globe.zoomTo(1.35);
           }
+          // A little south, to follow it falling to the plant.
+          if (step === 'fall') globe.flyTo({ latitude: place.latitude - 1.5, longitude });
           showerCaption.hidden = step === null;
           showerCaption.textContent = step === null ? '' : captionOf(step, dipole);
         },
