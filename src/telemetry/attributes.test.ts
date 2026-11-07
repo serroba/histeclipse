@@ -77,6 +77,7 @@ describe('gpuAttributes', () => {
       'gpu.max_texture_size': 16384,
       'gpu.vendor': 'Apple',
       'gpu.renderer': 'Apple M3',
+      'gpu.software': false,
     });
   });
 
@@ -87,6 +88,17 @@ describe('gpuAttributes', () => {
       'display.pixel_ratio': 1,
       'gpu.vendor': 'Mozilla',
       'gpu.renderer': 'Mozilla',
+      'gpu.software': false,
     });
+  });
+
+  it('flags software rendering, as headless browsers use', () => {
+    const swiftShader =
+      'ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver)';
+    const gl = probe(true, { 0x9246: swiftShader });
+    expect(gpuAttributes(gl, 1)['gpu.software']).toBe(true);
+    expect(
+      gpuAttributes(probe(true, { 0x9246: 'llvmpipe (LLVM 15.0.7, 256 bits)' }), 1)['gpu.software'],
+    ).toBe(true);
   });
 });
