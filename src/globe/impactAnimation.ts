@@ -98,8 +98,8 @@ const ease = (t: number): number => 1 - (1 - t) ** 3;
 const clamp = (t: number): number => Math.min(1, Math.max(0, t));
 
 export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
-  // Timed by the frames' own clock, from the first frame it is drawn in; a frame that comes late
-  // (a large map loading) pauses it rather than skipping to the end.
+  // Timed by the frames' own clock, from the first frame it is drawn in; a frame that comes very
+  // late (a large map loading) pauses it rather than skipping to the end.
   const clock = frameClock();
   const group = new Group();
   const ground = new Vector3(...geoToVector(spec.place, 1.002));

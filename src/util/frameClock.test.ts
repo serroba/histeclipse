@@ -11,12 +11,19 @@ describe('frameClock', () => {
   });
 
   it('pauses through a hitch instead of skipping ahead', () => {
-    const clock = frameClock(100);
+    const clock = frameClock();
     clock.tick(0);
     clock.tick(16);
-    // The page was busy for six seconds.
-    expect(clock.tick(6016)).toBe(116);
-    expect(clock.tick(6032)).toBe(132);
+    // The page was busy for six seconds: a second of animation, not six.
+    expect(clock.tick(6016)).toBe(1016);
+    expect(clock.tick(6032)).toBe(1032);
+  });
+
+  it('keeps pace with a slow device, a frame every half second', () => {
+    const clock = frameClock();
+    clock.tick(0);
+    expect(clock.tick(500)).toBe(500);
+    expect(clock.tick(1000)).toBe(1000);
   });
 
   it('never runs backward', () => {
