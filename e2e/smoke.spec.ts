@@ -1157,6 +1157,47 @@ test('close to the Sun, SDO’s images show it in six kinds of light', async ({ 
   await expect(globe).toHaveAttribute('data-sun-image', 'none');
 });
 
+test('the Sun’s channels are named by what they show, the light beneath, and Å explained', async ({
+  page,
+}, info) => {
+  const light = page.getByRole('group', { name: 'Light' });
+  await test.step('Given the Sun close up, in the hottest flaring light', async () => {
+    await page.goto('./?t=2024-05-08T12:00&focus=sun&cam=-17.2,-134.2,4&sun=131');
+    await globeRendered(page);
+  });
+  await test.step('Then each channel says what it shows, and its wavelength and heat beneath', async () => {
+    for (const [name, detail] of [
+      ['Surface', 'visible light, 617 nm'],
+      ['Magnetic field', 'at the surface'],
+      ['Chromosphere', '304 Å · 50,000 °C'],
+      ['Quiet corona', '171 Å · 600,000 °C'],
+      ['Corona and holes', '193 Å · 1 million °C'],
+      ['Flares', '131 Å · 10 million °C'],
+    ] as const) {
+      await expect(light.getByRole('button', { name: `${name} ${detail}` })).toHaveCount(1);
+    }
+    await expect(light.getByRole('button', { name: /^Flares/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+  if (info.project.name === 'mobile') {
+    await test.step('And on a phone they are one row, the one picked scrolled into it', async () => {
+      const row = await light.boundingBox();
+      const flares = await light.getByRole('button', { name: /^Flares/ }).boundingBox();
+      if (row === null || flares === null) throw new Error('not laid out');
+      expect(row.height).toBeLessThan(60);
+      expect(flares.x + flares.width).toBeLessThanOrEqual(row.x + row.width + 1);
+    });
+  }
+  await test.step('When they ask where the light comes from, Å is explained', async () => {
+    await light.getByRole('button', { name: 'Why: The Sun close up' }).click();
+    const sheet = page.getByRole('dialog', { name: 'The Sun close up' });
+    await expect(sheet).toContainText('ångströms (Å), a tenth of a nanometre');
+    await expect(sheet.getByRole('link', { name: 'Lemen et al. 2012', exact: true })).toBeVisible();
+  });
+});
+
 test('close to the Sun, the caption says what the light shows; how it was made is a tap away', async ({
   page,
 }, info) => {

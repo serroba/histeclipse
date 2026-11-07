@@ -71,7 +71,9 @@ class Layer:
     key: str
     source_id: int
     layer: str
+    #: What the channel shows, for its button; the light it is, small beneath (#249).
     label: str
+    detail: str
     description: str
     #: Whether the brightness is light (scaled and blended as linear light) or, for the
     #: magnetogram, a signed field coded as grey (blended as it is, never rescaled).
@@ -83,7 +85,8 @@ LAYERS = (
         "visible",
         18,
         "SDO,HMI,HMI,continuum",
-        "Visible light",
+        "Surface",
+        "visible light, 617 nm",
         "617 nm, close to what the eye sees through a safe filter: the surface and its sunspots.",
     ),
     Layer(
@@ -91,6 +94,7 @@ LAYERS = (
         19,
         "SDO,HMI,HMI,magnetogram",
         "Magnetic field",
+        "at the surface",
         "The magnetic field at the surface: white where it points out of the Sun, black in.",
         light=False,
     ),
@@ -98,28 +102,32 @@ LAYERS = (
         "304",
         13,
         "SDO,AIA,AIA,304",
-        "304 Å",
+        "Chromosphere",
+        "304 Å · 50,000 °C",
         "Extreme ultraviolet from helium at about 50,000 °C: the chromosphere and prominences.",
     ),
     Layer(
         "171",
         10,
         "SDO,AIA,AIA,171",
-        "171 Å",
+        "Quiet corona",
+        "171 Å · 600,000 °C",
         "Iron at about 600,000 °C: the quiet corona and its magnetic loops.",
     ),
     Layer(
         "193",
         11,
         "SDO,AIA,AIA,193",
-        "193 Å",
+        "Corona and holes",
+        "193 Å · 1 million °C",
         "Iron at about 1 million °C: the corona, with dark coronal holes where the wind escapes.",
     ),
     Layer(
         "131",
         9,
         "SDO,AIA,AIA,131",
-        "131 Å",
+        "Flares",
+        "131 Å · 10 million °C",
         "Iron at about 10 million °C: the hottest flaring plasma.",
     ),
 )
@@ -264,6 +272,7 @@ class LayerEntry(TypedDict):
 
     key: str
     label: str
+    detail: str
     description: str
     frames: list[str]
     map: dict[str, str]
@@ -285,13 +294,14 @@ CREDIT = "NASA/SDO and the AIA and HMI science teams, via Helioviewer"
 def manifest(observed: dict[str, list[str]]) -> Manifest:
     """Describe every layer in ``LAYERS``, given when its frames were taken, oldest first."""
     return {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "credit": CREDIT,
         "diskRadius": DISK_RADIUS,
         "layers": [
             {
                 "key": layer.key,
                 "label": layer.label,
+                "detail": layer.detail,
                 "description": layer.description,
                 "frames": observed[layer.key],
                 "map": {
