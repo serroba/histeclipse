@@ -2148,6 +2148,59 @@ body {
 
 /* The span's ends, just above the slider's line at each end: in the slider's own height, so
    the bar is no taller for them. */
+/* Round marks between the ends, above the line, each with its value. */
+.period-round {
+  position: absolute;
+  bottom: calc(100% + var(--rise) - 3px);
+  width: 1px;
+  height: 6px;
+  background: rgb(255 255 255 / 0.4);
+}
+
+.period-round-label {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  color: var(--ink-muted);
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+/* While playing: the chapter over the thumb, its name and length, where the marks' values
+   were, within the slider's own height. */
+.period-chapter {
+  position: absolute;
+  bottom: calc(100% + var(--rise) + 3px);
+  z-index: 1;
+  padding: 0 6px;
+  border-radius: 7px;
+  background: #1b2236;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.period-chapter[hidden] {
+  display: none;
+}
+
+.period-axis.is-playing .period-round-label {
+  visibility: hidden;
+}
+
+/* On a phone the marks stay, their values go: there is no room for them between the ends. */
+@media (max-width: 600px) {
+  .period-round-label {
+    display: none;
+  }
+}
+
 .period-scale {
   position: absolute;
   right: 9px;

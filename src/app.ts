@@ -243,7 +243,7 @@ import {
 import { playhead } from './deepTime/playhead';
 import { PLATES_REACH_MA, sketchAt } from './deepTime/sketch';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
-import { createPeriodBands } from './ui/periodBands';
+import { createPeriodBands, yearTicks } from './ui/periodBands';
 import { createSpanSwitch, type Span } from './ui/spanSwitch';
 import { elementAt } from './util/arrays';
 import { errorMessage } from './util/errors';
@@ -739,8 +739,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       stopHistory();
       setYear(Math.max(historyFirst(), yearOfMa(ma)));
     },
-    // In the years, a moment is its year.
+    // In the years, a moment is its year; the round marks are every other millennium.
     (ma) => formatYear(astronomicalYear(yearOfMa(ma))),
+    yearTicks,
   );
   const historyTrack = createHistoryTrack(
     {
@@ -856,7 +857,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function showHistory(state: ViewState): void {
     // Unclamped: the years run past 1950, where deep time's present stops.
     const maOf = (year: number): number => (1950 - year) / 1e6;
-    historyBands.render(maOf(historyFirst()), maOf(state.time.date.year), maOf(PRESENT_YEAR));
+    historyBands.render({
+      oldest: maOf(historyFirst()),
+      ma: maOf(state.time.date.year),
+      youngest: maOf(PRESENT_YEAR),
+      playing: historyPlaying,
+    });
     historyTrack.render({
       year: state.time.date.year,
       first: historyFirst(),

@@ -1243,7 +1243,7 @@ export function createDeepTimeBar(handlers: {
           ),
         );
       }
-      bands.render(view.oldest, view.ma);
+      bands.render({ oldest: view.oldest, ma: view.ma, playing: view.playing });
       const ice = view.scale === 'ice';
       const perMa = ice ? 1000 : 1;
       const uncharted = view.ma > view.mapsReach;

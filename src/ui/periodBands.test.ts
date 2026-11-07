@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { bandsFor } from '../deepTime/chart';
-import { readingAt } from './periodBands';
+import { deepTicks, lengthText, readingAt, roundStep, yearTicks } from './periodBands';
 
 describe('what a point on a time slider reads', () => {
   const phanerozoic = bandsFor(540);
@@ -33,5 +33,45 @@ describe('what a point on a time slider reads', () => {
     const today = (1950 - 2026) / 1e6;
     expect(readingAt(1, 0.0117, today, holocene, year)).toBe('2026 · Meghalayan');
     expect(readingAt(0, 0.0117, today, holocene, year)).toBe('-9750 · Greenlandian');
+  });
+});
+
+describe('the round marks between a slider’s ends', () => {
+  it('steps by 1, 2 or 5 times a power of ten', () => {
+    expect(roundStep(540, 5)).toBe(200);
+    expect(roundStep(2.6, 5)).toBe(1);
+    expect(roundStep(4568, 5)).toBe(1000);
+    expect(roundStep(11_976, 5)).toBe(5000);
+  });
+
+  it('marks deep time in Ma, and in ka under a million years, clear of the ends', () => {
+    expect(deepTicks(540, 0).map(({ label }) => label)).toEqual(['200 Ma', '400 Ma']);
+    expect(deepTicks(4568, 0).map(({ label }) => label)).toEqual([
+      '1,000 Ma',
+      '2,000 Ma',
+      '3,000 Ma',
+    ]);
+    expect(deepTicks(2.6, 0).map(({ label }) => label)).toEqual(['1 Ma', '2 Ma']);
+    expect(deepTicks(0.6, 0).map(({ label }) => label)).toEqual(['200 ka', '400 ka']);
+  });
+
+  it('marks the years at round historical years, with no year 0', () => {
+    const ma = (year: number): number => (1950 - year) / 1e6;
+    const ticks = yearTicks(ma(-9699), ma(2026));
+    // Every other millennium, clear of the ends, where 9700 BCE and this year are named.
+    expect(ticks.map(({ label }) => label)).toEqual(['6000 BCE', '4000 BCE', '2000 BCE']);
+    for (const { label } of ticks) expect(label).not.toMatch(/^0 /);
+    // 2000 BCE is astronomical year −1999.
+    const twoThousand = ticks.find(({ label }) => label === '2000 BCE');
+    expect(twoThousand?.ma).toBeCloseTo((1950 + 1999) / 1e6, 9);
+  });
+});
+
+describe('how long a chapter lasted', () => {
+  it('says millions of years for long ones, years for short ones', () => {
+    expect(lengthText(251.902, 201.4)).toBe('50.5 Myr');
+    expect(lengthText(4567, 4031)).toBe('536 Myr');
+    expect(lengthText(0.0042, 0)).toBe('4,200 years');
+    expect(lengthText(0.0117, 0.0082)).toBe('3,500 years');
   });
 });
