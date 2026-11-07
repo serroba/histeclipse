@@ -35,6 +35,7 @@ import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
 import { DATABLE_YEARS } from './data/radiocarbonProduction';
+import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruptions';
 import { dipoleAt, loadDipole, type DipoleSeries } from './data/dipoleMoment';
 import { captionOf } from './globe/showerSteps';
 import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
@@ -932,6 +933,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
   let radiocarbon: Radiocarbon | null = null;
   let radiocarbonAsked = false;
+  // The eruptions the ice cores record (HolVol), under the curve; loaded with it.
+  let eruptions: Eruptions | null = null;
+  let eruptionsAsked = false;
   /** The strip, for the years shown, from the curve of the hemisphere one stands in. */
   function showRadiocarbon(state: ViewState): void {
     const on = state.layers.has('radiocarbon') && state.mode === 'globe' && state.ma === null;
@@ -955,13 +959,28 @@ export async function startApp(root: HTMLElement): Promise<void> {
       );
       return;
     }
+    if (eruptions === null && !eruptionsAsked) {
+      eruptionsAsked = true;
+      loadEruptions(`${base}data/eruptions.json`, fetchJson).then(
+        (loaded) => {
+          eruptions = loaded;
+          showRadiocarbon(store.get());
+        },
+        (error: unknown) => {
+          eruptionsAsked = false;
+          notify(`Could not load the eruptions: ${errorMessage(error)}`);
+        },
+      );
+    }
     const south = (state.location?.latitude ?? 1) < 0;
+    const first = historyFirst();
     radiocarbonStrip.render({
       curve: south ? radiocarbon.curves.shcal20 : radiocarbon.curves.intcal20,
       name: south ? 'SHCal20' : 'IntCal20',
-      first: historyFirst(),
+      first,
       last: PRESENT_YEAR,
       events: RADIOCARBON_EVENTS,
+      eruptions: eruptions === null ? null : eruptionsBetween(eruptions, first, PRESENT_YEAR),
     });
   }
   /**

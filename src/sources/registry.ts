@@ -401,6 +401,25 @@ export const SOURCES = {
     cite: 'Godwin, H. (1962). Half-life of radiocarbon. Nature 195, 984',
     url: 'https://doi.org/10.1038/195984a0',
   },
+  holvol: {
+    name: 'HolVol',
+    kind: 'dataset',
+    cite: 'Sigl, M., Toohey, M., McConnell, J. R., Cole-Dai, J. & Severi, M. (2022). Volcanic stratospheric sulfur injections and aerosol optical depth during the Holocene (past 11 500 years) from a bipolar ice-core array. Earth System Science Data 14, 3167–3196; data: HolVol v1.0, PANGAEA, doi:10.1594/PANGAEA.928646',
+    url: 'https://doi.org/10.5194/essd-14-3167-2022',
+    licence: 'CC BY 4.0',
+  },
+  sigl2015: {
+    name: 'Sigl et al. 2015',
+    kind: 'paper',
+    cite: 'Sigl, M., et al. (2015). Timing and climate forcing of volcanic eruptions for the past 2,500 years. Nature 523, 543–549',
+    url: 'https://doi.org/10.1038/nature14565',
+  },
+  lavigne2013: {
+    name: 'Lavigne et al. 2013',
+    kind: 'paper',
+    cite: 'Lavigne, F., et al. (2013). Source of the great A.D. 1257 mystery eruption unveiled, Samalas volcano, Rinjani Volcanic Complex, Indonesia. PNAS 110, 16742–16747',
+    url: 'https://doi.org/10.1073/pnas.1307520110',
+  },
   stuiverPolach1977: {
     name: 'Stuiver & Polach 1977',
     kind: 'paper',
@@ -809,8 +828,11 @@ export const WHYS = {
       'oHare2019',
       'brehm2022',
       'kuitems2022',
+      'holvol',
+      'sigl2015',
+      'lavigne2013',
     ],
-    how: 'The line is the curve’s Δ14C: the air’s carbon-14 against a modern standard, per mille. IntCal20 for the northern hemisphere, SHCal20 for the southern, picked by where you stand. Living things take in the air’s carbon-14 and, once dead, lose half of it every 5,730 years; a laboratory measures what is left, as a radiocarbon age. Because the air’s carbon-14 rose and fell, that age is read against this curve to find calendar years: where the curve is steep, a narrow range; where it is flat (the Hallstatt plateau, about 800–400 BCE), centuries; where it wiggles, two or more ranges. Miyake events, sudden one-year rises from solar storms, let a tree ring be dated to its year. The curves end in 1950: after it nuclear tests nearly doubled the air’s carbon-14 (the bomb pulse).',
+    how: 'The line is the curve’s Δ14C: the air’s carbon-14 against a modern standard, per mille. IntCal20 for the northern hemisphere, SHCal20 for the southern, picked by where you stand. Living things take in the air’s carbon-14 and, once dead, lose half of it every 5,730 years; a laboratory measures what is left, as a radiocarbon age. Because the air’s carbon-14 rose and fell, that age is read against this curve to find calendar years: where the curve is steep, a narrow range; where it is flat (the Hallstatt plateau, about 800–400 BCE), centuries; where it wiggles, two or more ranges. Miyake events, sudden one-year rises from solar storms, let a tree ring be dated to its year. The curves end in 1950: after it nuclear tests nearly doubled the air’s carbon-14 (the bomb pulse). Under the line, each tick is an eruption the ice cores of Greenland and Antarctica record, as tall as the sulfur it sent into the stratosphere (HolVol, 9500 BCE to 1900 CE): its haze cooled the following summers, which tree rings record as frost rings and narrow rings. The ice cores were lined up with the tree rings by the same Miyake spikes, 774 and 993 CE, which left beryllium-10 in the ice as they left carbon-14 in the wood. Most eruptions are known only from the ice; the strip names those its sources do (Samalas, Tambora). Their dates are good to a few years over the last 2,500 years, to 5–15 years before that, and to about 66 years at 9500 BCE.',
   },
   carbonMade: {
     title: 'Carbon-14 made in the sky',
