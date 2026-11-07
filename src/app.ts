@@ -739,9 +739,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       stopHistory();
       setYear(Math.max(historyFirst(), yearOfMa(ma)));
     },
-    // In the years, a moment is its year; the round marks are every other millennium.
-    (ma) => formatYear(astronomicalYear(yearOfMa(ma))),
-    yearTicks,
+    // In the years, a moment is its year (the ends without the CE everyone assumes); the
+    // round marks are every other millennium.
+    {
+      words: (ma) => formatYear(astronomicalYear(yearOfMa(ma))),
+      short: (ma) => formatYear(astronomicalYear(yearOfMa(ma))).replace(/ CE$/, ''),
+      marks: yearTicks,
+    },
   );
   const historyTrack = createHistoryTrack(
     {
