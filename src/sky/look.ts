@@ -30,6 +30,19 @@ export function zoomLook(look: SkyLook, factor: number): SkyLook {
   return { ...look, fov };
 }
 
+/**
+ * The look a share `t` (0 to 1) of the way from one look to another: turning the short way
+ * round, and zooming at an even pace in the field's ratio, so closing in feels steady.
+ */
+export function lookBetween(from: SkyLook, to: SkyLook, t: number): SkyLook {
+  const turn = ((((to.azimuth - from.azimuth) % 360) + 540) % 360) - 180;
+  return {
+    azimuth: (((from.azimuth + turn * t) % 360) + 360) % 360,
+    altitude: from.altitude + (to.altitude - from.altitude) * t,
+    fov: from.fov * (to.fov / from.fov) ** t,
+  };
+}
+
 /** A look rounded as the link writes it, so the view and the link agree. */
 export function roundLook({ azimuth, altitude, fov }: SkyLook): SkyLook {
   const tenth = (value: number) => Math.round(value * 10) / 10;

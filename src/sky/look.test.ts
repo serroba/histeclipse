@@ -6,6 +6,7 @@ import {
   compassPoint,
   dragLook,
   figureSegments,
+  lookBetween,
   lookDirection,
   LOWEST_LOOK,
   roundLook,
@@ -44,6 +45,29 @@ describe('zoomLook', () => {
     expect(zoomLook(DEFAULT_LOOK, 100).fov).toBe(120);
     // Down to 1°, where the Sun's or the Moon's disc fills half the view.
     expect(zoomLook(DEFAULT_LOOK, 0.001).fov).toBe(1);
+  });
+});
+
+describe('lookBetween', () => {
+  const from = { azimuth: 350, altitude: 10, fov: 90 };
+  const to = { azimuth: 20, altitude: 40, fov: 1 };
+
+  it('starts and ends at the two looks', () => {
+    expect(lookBetween(from, to, 0)).toEqual(from);
+    const end = lookBetween(from, to, 1);
+    expect(end.azimuth).toBeCloseTo(20, 9);
+    expect(end.altitude).toBeCloseTo(40, 9);
+    expect(end.fov).toBeCloseTo(1, 9);
+  });
+
+  it('turns the short way round, through north', () => {
+    expect(lookBetween(from, to, 0.5).azimuth).toBeCloseTo(5, 9);
+    expect(lookBetween(to, from, 0.5).azimuth).toBeCloseTo(5, 9);
+  });
+
+  it('zooms at an even pace in ratio: halfway from 90° to 1° is √90°', () => {
+    expect(lookBetween(from, to, 0.5).fov).toBeCloseTo(Math.sqrt(90), 9);
+    expect(lookBetween(from, to, 0.5).altitude).toBeCloseTo(25, 9);
   });
 });
 
