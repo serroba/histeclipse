@@ -180,6 +180,7 @@ import {
 } from './data/namedPeriods';
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
+import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
 import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
@@ -288,7 +289,9 @@ const MAPS_REACH_MA = 540;
 export async function startApp(root: HTMLElement): Promise<void> {
   const base = import.meta.env.BASE_URL;
   const now = new Date();
-  const parsed = parseViewState(window.location.search, now);
+  // The link as the reader opened it, before the view is written back into it.
+  const openedSearch = window.location.search;
+  const parsed = parseViewState(openedSearch, now);
   const store = createStore<ViewState>(parsed.state);
 
   // Picking an eclipse also turns the globe toward it (or toward a famous eclipse's place);
@@ -3507,6 +3510,31 @@ export async function startApp(root: HTMLElement): Promise<void> {
           : eclipseMomentAt(selected, location),
     }));
   });
+  // A first visit whose link names no view of its own opens over the reader's region, from the
+  // browser's time zone: read here, matched to the tz database's places, sent nowhere. The globe
+  // turns there only if the reader has not moved it meanwhile.
+  if (leavesViewOpen(openedSearch)) {
+    const zone = browserTimeZone();
+    const opened = store.get().camera;
+    if (zone !== null) {
+      loadTimeZones(`${base}data/timezones.json`, fetchJson).then(
+        (zones) => {
+          const place = placeOfZone(zones, zone);
+          const state = store.get();
+          // The scene reports the camera it opened with: only a real move counts as moving it.
+          const moved =
+            Math.abs(state.camera.target.latitude - opened.target.latitude) > 0.01 ||
+            Math.abs(state.camera.target.longitude - opened.target.longitude) > 0.01 ||
+            Math.abs(state.camera.distance - opened.distance) > 0.01;
+          if (place === null || moved || state.focus !== 'earth') return;
+          globe.flyTo(place);
+        },
+        () => {
+          // Without the table the globe keeps its usual first view.
+        },
+      );
+    }
+  }
   globe.onCameraChange((camera) => {
     store.set((state) => ({ ...state, camera }));
   });
