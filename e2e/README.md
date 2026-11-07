@@ -46,6 +46,7 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 | `impacts.spec.ts`   | Impact craters: today and where they lay, each with a card                  |
 | `volcanoes.spec.ts` | Volcanic eruptions: GVP's eruptions near the year, each with a card         |
 | `periods.spec.ts`   | Named periods: PeriodO's periods for the place picked, each by its source   |
+| `sources.spec.ts`   | Why this? The sources of what is on screen, each with its book and licence  |
 | `playback.spec.ts`  | Playing deep time on a slow connection: map after map, loaded ahead         |
 | `smoke.spec.ts`     | Everything else: loading, links, eclipses, views, sky, the Sun, deep time   |
 

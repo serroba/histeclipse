@@ -26,7 +26,10 @@ export function legendWays(at: WaysAt): Shown[] {
   return ORDER.filter((way) => at.counts[way] > 0);
 }
 
-export function createWaysLegend(): WaysLegend {
+export function createWaysLegend(
+  /** The book that says where the shading comes from, beside the key's title. */
+  why?: HTMLElement,
+): WaysLegend {
   // A list said as one, though laid out with the title (display: contents can drop the role).
   const list = element('ul', { class: 'ways-legend-list', role: 'list' });
   const items = new Map(
@@ -53,6 +56,7 @@ export function createWaysLegend(): WaysLegend {
       hidden: '',
     },
     element('span', { class: 'ways-legend-title' }, 'Ways of life'),
+    ...(why === undefined ? [] : [why]),
     list,
     element('span', { class: 'ways-legend-note' }, 'stronger where more widespread'),
   );
