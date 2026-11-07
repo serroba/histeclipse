@@ -5,6 +5,7 @@
  * `astro/sun.ts`); this file is exercised by the Playwright suite in a real browser.
  */
 
+import { BODY_RADIUS } from './bodyRadius';
 import {
   AdditiveBlending,
   BackSide,
@@ -133,16 +134,6 @@ const VIEW_FLIGHT_MS = 1600;
 const FOCUS_DISTANCE = 4;
 /** A press that moves less than this (pixels) is a click on a body, not a drag. */
 const CLICK_SLOP_PIXELS = 6;
-const BODY_RADIUS: Record<Body, number> = {
-  earth: 1,
-  moon: MOON_RADIUS_EARTH_RADII,
-  sun: SUN_RADIUS_EARTH_RADII,
-  mercury: planetRadius('mercury'),
-  venus: planetRadius('venus'),
-  mars: planetRadius('mars'),
-  jupiter: planetRadius('jupiter'),
-  saturn: planetRadius('saturn'),
-};
 /** Beyond this distance (Earth radii) the view holds still in space and Earth turns in it. */
 const INERTIAL_VIEW_DISTANCE = 20;
 /** Bodies smaller than this on screen (radius, pixels) get a marker ring. */
