@@ -39,4 +39,9 @@ describe('the polarity time scale', () => {
     expect(chronAt(real, -1)).toBeNull();
     expect(scalePolarity(real, scaleEnd(real))).toBe('reversed');
   });
+
+  it('names no chron before the first one listed', () => {
+    const late = { ...real, chrons: real.chrons.filter(({ young }) => young > 1) };
+    expect(chronAt(late, 0.5)).toBeNull();
+  });
 });
