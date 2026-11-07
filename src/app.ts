@@ -3414,10 +3414,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       };
       globe.setInsets(panelInsets.top, panelInsets.bottom);
       skyScene?.setInsets(panelInsets.top, panelInsets.bottom);
-      // The zoom rail sits in the space between the panels, whatever their width.
-      root.style.setProperty('--free-top', `${String(top.getBoundingClientRect().bottom)}px`);
+      // The zoom rail sits at the right, between the panels that reach it: the date panel only
+      // when it spans the width (a narrow one, beside the globe, leaves the right edge free).
+      root.style.setProperty('--free-top', `${String(panelInsets.top)}px`);
       root.style.setProperty('--free-bottom', `${String(panelInsets.bottom)}px`);
-      const free = window.innerHeight - top.getBoundingClientRect().bottom - panelInsets.bottom;
+      const free = window.innerHeight - panelInsets.top - panelInsets.bottom;
       zoomRail.root.classList.toggle('is-cramped', free < ZOOM_RAIL_ROOM);
     };
     const observer = new ResizeObserver(update);
