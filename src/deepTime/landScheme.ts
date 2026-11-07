@@ -23,20 +23,38 @@ function smooth(t: number): number {
 
 /** Value noise in three dimensions, 0..1, smooth between the lattice points. */
 function valueNoise(x: number, y: number, z: number, seed: number): number {
+  // Written out without helper closures: this runs 650 thousand times for one field.
   const x0 = Math.floor(x);
   const y0 = Math.floor(y);
   const z0 = Math.floor(z);
   const fx = smooth(x - x0);
   const fy = smooth(y - y0);
   const fz = smooth(z - z0);
-  const at = (i: number, j: number, k: number): number => lattice(x0 + i, y0 + j, z0 + k, seed);
-  const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
-  return lerp(
-    lerp(lerp(at(0, 0, 0), at(1, 0, 0), fx), lerp(at(0, 1, 0), at(1, 1, 0), fx), fy),
-    lerp(lerp(at(0, 0, 1), at(1, 0, 1), fx), lerp(at(0, 1, 1), at(1, 1, 1), fx), fy),
-    fz,
-  );
+  const x1 = x0 + 1;
+  const y1 = y0 + 1;
+  const z1 = z0 + 1;
+  const a = lattice(x0, y0, z0, seed);
+  const b = lattice(x1, y0, z0, seed);
+  const c = lattice(x0, y1, z0, seed);
+  const d = lattice(x1, y1, z0, seed);
+  const e = lattice(x0, y0, z1, seed);
+  const f = lattice(x1, y0, z1, seed);
+  const g = lattice(x0, y1, z1, seed);
+  const h = lattice(x1, y1, z1, seed);
+  const near0 = a + (b - a) * fx;
+  const near1 = c + (d - c) * fx;
+  const far0 = e + (f - e) * fx;
+  const far1 = g + (h - g) * fx;
+  const near = near0 + (near1 - near0) * fy;
+  const far = far0 + (far1 - far0) * fy;
+  return near + (far - near) * fz;
 }
+
+/**
+ * Bins for spreading the field's values by area: fine enough that two cells rarely share one,
+ * so the bytes match an exact ranking but for a cell or two at a byte's edge.
+ */
+const SPREAD_BINS = 1 << 18;
 
 /**
  * The field as bytes, row 0 at the south pole like the other masks, sampled on the unit sphere
@@ -64,14 +82,38 @@ export function landNoise(columns: number, rows: number, seed = 1): Uint8Array {
       raw[row * columns + column] = sum;
     }
   }
-  const order = Array.from(raw.keys()).sort((a, b) => valueAt(raw, a) - valueAt(raw, b));
-  const total = Array.from(weights).reduce((sum, weight) => sum + weight, 0) * columns;
-  const bytes = new Uint8Array(columns * rows);
-  let below = 0;
-  for (const index of order) {
+  // Spread by area without sorting: a weighted histogram of the values, then each cell takes the
+  // share of the surface below its bin plus half its bin's own share.
+  let low = Infinity;
+  let high = -Infinity;
+  for (const value of raw) {
+    if (value < low) low = value;
+    if (value > high) high = value;
+  }
+  const scale = (SPREAD_BINS - 1) / (high - low || 1);
+  const binOf = new Uint32Array(raw.length);
+  const binWeight = new Float64Array(SPREAD_BINS);
+  let total = 0;
+  for (let index = 0; index < raw.length; index++) {
+    const bin = Math.floor((valueAt(raw, index) - low) * scale);
     const weight = valueAt(weights, Math.floor(index / columns));
-    bytes[index] = Math.min(255, Math.floor(((below + weight / 2) / total) * 256));
+    binOf[index] = bin;
+    binWeight[bin] = valueAt(binWeight, bin) + weight;
+    total += weight;
+  }
+  const middle = new Float64Array(SPREAD_BINS);
+  let below = 0;
+  for (let bin = 0; bin < SPREAD_BINS; bin++) {
+    const weight = valueAt(binWeight, bin);
+    middle[bin] = below + weight / 2;
     below += weight;
+  }
+  const bytes = new Uint8Array(columns * rows);
+  for (let index = 0; index < raw.length; index++) {
+    bytes[index] = Math.min(
+      255,
+      Math.floor((valueAt(middle, valueAt(binOf, index)) / total) * 256),
+    );
   }
   return bytes;
 }
