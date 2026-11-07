@@ -92,7 +92,7 @@ import { createAimSwitch, type AimTarget } from './ui/aimSwitch';
 import { createSunSwitch } from './ui/sunSwitch';
 import { createLayersPanel } from './ui/layersPanel';
 import { createDeepGlance } from './ui/deepGlance';
-import { cliopatriaYear } from './state/layerCatalog';
+import { cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
 import {
   blankText,
   changesText,
@@ -180,6 +180,8 @@ import {
 } from './data/namedPeriods';
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
+import { createWhySheet } from './ui/whySheet';
+import { layerWhy, onScreen, type WhyId } from './sources/registry';
 import { createZoomRail } from './ui/zoomRail';
 import { createWaysLegend } from './ui/waysLegend';
 import { loadWaysOfLife, waysAt, waysNote, type WaysOfLife } from './data/waysOfLife';
@@ -348,6 +350,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     store.set((state) => ({ ...state, figures }));
   });
   // The orbits, offered where they mean something: far out, or on the Sun or a planet.
+  // Why anything is on screen: the book marks beside things, and the panel they open.
+  const whySheet = createWhySheet();
+  const sourcesList = element('ul', { class: 'why-list', 'data-testid': 'sources-list' });
   const layersPanel = createLayersPanel(
     (layer, on) => {
       store.set((state) => ({ ...state, layers: withLayer(state.layers, layer, on) }));
@@ -363,6 +368,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         store.set((state) => ({ ...state, ma: roundMa(ma) }));
       }
     },
+    (layer, label) => whySheet.mark(() => layerWhy(layer, store.get().borders), label),
   );
   const markerCard = createMarkerCard();
   // How far out the view is, and that zooming out reaches the planets: from whichever body is
@@ -381,69 +387,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => ({ ...state, focus: 'earth', view: 'free' }));
     },
   });
-  const rocksCredit = element(
-    'span',
-    { class: 'empire-credit', hidden: '' },
-    ' · Rocks: ',
-    element('a', { href: 'https://macrostrat.org' }, 'Macrostrat'),
-    ' (Peters et al., CC BY 4.0)',
-  );
-  const periodsCredit = element(
-    'span',
-    { class: 'empire-credit', hidden: '' },
-    ' · Periods: ',
-    element('a', { href: 'https://perio.do' }, 'PeriodO'),
-    ' (CC0), countries from Natural Earth',
-  );
-  const waysLegend = createWaysLegend();
-  const waysCredit = element(
-    'span',
-    { class: 'empire-credit', hidden: '' },
-    ' · Ways of life: ',
-    element('a', { href: 'https://doi.org/10.1126/science.aax1192' }, 'ArchaeoGLOBE'),
-    ' (2019, CC0)',
-  );
-  const genomeCredit = element(
-    'span',
-    { class: 'empire-credit', hidden: '' },
-    ' · Ancient genomes: ',
-    element('a', { href: 'https://doi.org/10.7910/DVN/FFIDCW' }, 'Allen Ancient DNA Resource'),
-    ' (Mallick et al. 2024, Reich lab; CC0)',
-  );
-  const empireCredit = element(
-    'span',
-    { class: 'empire-credit', hidden: '' },
-    ' · Borders: ',
-    element(
-      'a',
-      { href: 'https://github.com/Seshat-Global-History-Databank/cliopatria' },
-      'Cliopatria',
-    ),
-    ' (Seshat, ',
-    element('a', { href: 'https://creativecommons.org/licenses/by/4.0/' }, 'CC BY 4.0'),
-    ', simplified)',
-  );
-  const ohmCredit = element(
-    'span',
-    { class: 'empire-credit', hidden: '' },
-    ' · Borders: © ',
-    element('a', { href: 'https://www.openhistoricalmap.org/copyright' }, 'OpenHistoricalMap'),
-    ' contributors (CC0, simplified)',
-  );
-  const paleoCredit = element(
-    'span',
-    { class: 'empire-credit', hidden: '' },
-    ' · Surface: ',
-    element('a', { href: 'https://doi.org/10.5281/zenodo.5460860' }, 'PALEOMAP PaleoDEMs'),
-    ' (Scotese & Wright 2018, ',
-    element('a', { href: 'https://creativecommons.org/licenses/by/4.0/' }, 'CC BY 4.0'),
-    ', repacked) · Temperature: ',
-    element('a', { href: 'https://doi.org/10.5281/zenodo.5718392' }, 'Scotese 2022'),
-    ', ',
-    element('a', { href: 'https://doi.org/10.5281/zenodo.7322003' }, 'CESM, Li et al. 2023'),
-    ' (CC BY 4.0) · Periods: ',
-    element('a', { href: 'https://stratigraphy.org/chart' }, 'ICS chart v2026/06'),
-  );
+  const waysLegend = createWaysLegend(whySheet.mark('ways', 'Ways of life'));
   // The eclipse picked before entering deep time, picked again on leaving it.
   let selectionBeforeDeep: ViewState['selection'] = null;
   function leaveDeepTime(): void {
@@ -971,6 +915,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globeContainer,
     skyContainer,
     zoomRail.root,
+    whySheet.dialog,
     element(
       'header',
       { class: 'hud' },
@@ -999,25 +944,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
         'details',
         { class: 'credits' },
         element('summary', {}, 'Sources'),
-        'Earth: ',
-        element(
-          'a',
-          { href: 'https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/' },
-          'NASA Blue Marble',
-        ),
-        ' · Positions: JPL DE441',
-        ' · Sun close up: ',
-        element('a', { href: 'https://sdo.gsfc.nasa.gov/' }, 'NASA SDO'),
-        ' via ',
-        element('a', { href: 'https://helioviewer.org/' }, 'Helioviewer'),
-        ', images of 2024 days apart stitched into one surface',
-        empireCredit,
-        genomeCredit,
-        waysCredit,
-        periodsCredit,
-        rocksCredit,
-        ohmCredit,
-        paleoCredit,
+        // What is on screen now, each with the book that says why, and its sources' links.
+        sourcesList,
       ),
     ),
     notices,
@@ -1625,7 +1553,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function showDeepTime(state: ViewState): void {
     const { ma } = state;
     bottom.dataset['deep'] = ma === null ? 'off' : 'on';
-    paleoCredit.hidden = ma === null;
     if (ma === null) {
       historySpan.render('years');
       stopPlay();
@@ -2618,7 +2545,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** In historical time with the layer on, the regions with genomes dated near the year. */
   function showGenomes(state: ViewState): void {
     const on = state.layers.has('genomes') && state.ma === null;
-    genomeCredit.hidden = !on || travelling;
     if (!on || travelling) {
       genomesSaid = on ? RESTING : null;
       globe.setGenomeCells(null);
@@ -2656,7 +2582,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** In historical time with the layer on, the rocks by age, and the rock at the place picked. */
   function showRocks(state: ViewState): void {
     const on = state.layers.has('rocks') && state.ma === null;
-    rocksCredit.hidden = !on || travelling;
     rocksAction = null;
     // Today's rocks say nothing of the year a trip shows: they rest with the markers.
     if (!on || travelling) {
@@ -2712,7 +2637,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** In historical time with the layer on, the periods named for the place picked. */
   function showPeriods(state: ViewState): void {
     const on = state.layers.has('periods') && state.ma === null;
-    periodsCredit.hidden = !on;
     if (!on) {
       periodsSaid = null;
       return;
@@ -2751,7 +2675,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** In historical time with the layer on, the regions by their most widespread way of life. */
   function showWays(state: ViewState): void {
     const on = state.layers.has('ways') && state.ma === null;
-    waysCredit.hidden = !on;
     if (!on) {
       waysSaid = null;
       waysShownYear = null;
@@ -2787,6 +2710,28 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
   let waysShownYear: number | null = null;
 
+  // The layers drawn on each span, as the Layers panel has them, for what is on screen now.
+  const layerSpans = new Map(
+    LAYER_GROUPS.flatMap((group) => group.layers.map((layer) => [layer.id, layer.spans] as const)),
+  );
+  let sourcesShown = '';
+  /** The Sources list: what is on screen now, drawn again only when that changes. */
+  function showSources(state: ViewState): void {
+    const ids: WhyId[] = onScreen({
+      mode: state.mode,
+      span: state.ma === null ? 'years' : state.deepScale,
+      focus: state.focus,
+      layers: state.layers,
+      borders: state.borders,
+      eclipse: state.selection !== null,
+      drawsOn: (layer, span) => layerSpans.get(layer)?.includes(span) ?? false,
+    });
+    const key = ids.join(' ');
+    if (key === sourcesShown) return;
+    sourcesShown = key;
+    whySheet.renderOnScreen(sourcesList, ids);
+  }
+
   function showEmpires(state: ViewState): void {
     // Past states belong to historical time, not deep time.
     const on = state.layers.has('empires') && state.ma === null;
@@ -2808,8 +2753,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       actions: new Map(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
     });
     const source = state.borders;
-    empireCredit.hidden = !on || source === 'ohm';
-    ohmCredit.hidden = !on || source === 'cliopatria';
     const year = state.time.date.year;
     const key = on ? `${source}:${String(year)}` : null;
     if (key === empiresShown) return;
@@ -3360,6 +3303,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ? { body: state.focus, distance: state.camera.distance }
         : null,
     );
+    showSources(state);
     historyTrack.root.hidden = state.selection !== null;
     historyTrack.extras.hidden = state.selection !== null;
     if (state.time.date.year !== previous?.time.date.year || state.layers !== previous.layers) {

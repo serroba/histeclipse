@@ -50,6 +50,8 @@ export function createLayersPanel(
   onSource: (source: BorderSource) => void,
   /** Go to a span a layer draws on, at a moment of the layer's own if it has one. */
   onSpan: (span: Span, ma?: number) => void,
+  /** The book that says where a layer comes from, beside its name. */
+  why?: (layer: Layer, label: string) => HTMLElement,
 ): LayersPanel {
   const button = element(
     'button',
@@ -143,6 +145,7 @@ export function createLayersPanel(
               box,
               element('span', { class: 'layer-name' }, layer.label),
             ),
+            ...(why === undefined ? [] : [why(layer.id, layer.label)]),
             where,
           ),
           element('p', { class: 'layer-about' }, layer.about),
