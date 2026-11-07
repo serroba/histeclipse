@@ -322,3 +322,39 @@ test('as the years play, state names stay put on the map, and only a few light u
     expect(Math.max(...samples.map(({ lit }) => lit))).toBeLessThanOrEqual(4);
   });
 });
+
+test('carbon-14 in the air runs under the years, its spikes and plateau marked and sourced', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const strip = page.getByTestId('radiocarbon-strip');
+  await test.step('Given the years with Carbon-14 in the air on, standing in Europe', async () => {
+    await page.goto('./?t=-0700-06-01T12:00&loc=48,10&layers=lunar,solar,radiocarbon');
+    await globeRendered(page);
+  });
+  await test.step('Then the northern curve runs under the slider, the events marked', async () => {
+    await expect(strip).toBeVisible({ timeout: 20_000 });
+    await expect(strip).toContainText('IntCal20');
+    await expect(strip.locator('[data-event="Miyake event, 774/775 CE"]')).toHaveCount(1);
+    await expect(strip.locator('[data-event="The Hallstatt plateau"]')).toHaveCount(1);
+  });
+  await test.step('When they ask where it comes from', async () => {
+    await strip.getByRole('button', { name: 'Why: Carbon-14 in the air' }).click();
+  });
+  await test.step('Then the why says why a date is a range, and links the curve', async () => {
+    const sheet = page.getByRole('dialog', { name: 'Carbon-14 in the air' });
+    await expect(sheet).toContainText('Hallstatt plateau');
+    await expect(sheet.getByRole('link', { name: 'IntCal20', exact: true })).toHaveAttribute(
+      'href',
+      'https://doi.org/10.1017/RDC.2020.41',
+    );
+  });
+  await test.step('When they stand in the southern hemisphere', async () => {
+    await page.goto('./?t=-0700-06-01T12:00&loc=-34,151&layers=lunar,solar,radiocarbon');
+    await globeRendered(page);
+  });
+  await test.step('Then the southern curve is drawn', async () => {
+    await expect(strip).toContainText('SHCal20', { timeout: 20_000 });
+  });
+  expect(problems).toEqual([]);
+});

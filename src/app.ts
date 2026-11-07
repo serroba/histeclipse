@@ -33,6 +33,9 @@ import { MOON_CAPTION, PLANET_NAMES, PLANET_PICTURES, SHARP_MAPS } from './globe
 import { loadPolarity, type PolarityScale } from './data/polarity';
 import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
+import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
+import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
+import { createRadiocarbonStrip } from './ui/radiocarbonStrip';
 import { createGlobe, type StateChange } from './globe/scene';
 import { createStore } from './state/store';
 import { parseViewState } from './state/url';
@@ -765,6 +768,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       marks: yearTicks,
     },
   );
+  // Carbon-14 in the air under the years' slider (#270), its curves loaded the first time the
+  // layer is on.
+  const radiocarbonStrip = createRadiocarbonStrip(
+    whySheet.mark('radiocarbon', 'Carbon-14 in the air'),
+  );
   const historyTrack = createHistoryTrack(
     {
       onYear(year) {
@@ -785,7 +793,42 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
     },
     historyBands.root,
+    radiocarbonStrip.root,
   );
+  let radiocarbon: Radiocarbon | null = null;
+  let radiocarbonAsked = false;
+  /** The strip, for the years shown, from the curve of the hemisphere one stands in. */
+  function showRadiocarbon(state: ViewState): void {
+    const on = state.layers.has('radiocarbon') && state.mode === 'globe' && state.ma === null;
+    if (!on) {
+      radiocarbonStrip.render(null);
+      return;
+    }
+    if (radiocarbon === null) {
+      radiocarbonStrip.render(null);
+      if (radiocarbonAsked) return;
+      radiocarbonAsked = true;
+      loadRadiocarbon(`${base}data/radiocarbon.json`, fetchJson).then(
+        (loaded) => {
+          radiocarbon = loaded;
+          showRadiocarbon(store.get());
+        },
+        (error: unknown) => {
+          radiocarbonAsked = false;
+          notify(`Could not load the radiocarbon curves: ${errorMessage(error)}`);
+        },
+      );
+      return;
+    }
+    const south = (state.location?.latitude ?? 1) < 0;
+    radiocarbonStrip.render({
+      curve: south ? radiocarbon.curves.shcal20 : radiocarbon.curves.intcal20,
+      name: south ? 'SHCal20' : 'IntCal20',
+      first: historyFirst(),
+      last: PRESENT_YEAR,
+      events: RADIOCARBON_EVENTS,
+    });
+  }
   /**
    * The travel view, on as the years play and until the reader leaves it: even light, states
    * and ways of life, the year's ice and sea; markers of single finds and events resting.
@@ -877,6 +920,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function showHistory(state: ViewState): void {
+    showRadiocarbon(state);
     // Unclamped: the years run past 1950, where deep time's present stops.
     const maOf = (year: number): number => (1950 - year) / 1e6;
     historyBands.render({
@@ -1345,6 +1389,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       sunKm: sunPositionJ2000(terrestrial),
       moonKm: moonEphemeris?.position(terrestrial) ?? null,
       planetsKm: planetPositions(terrestrial),
+      jdTT: terrestrial,
     });
     lastTerrestrial = terrestrial;
     bodiesAt = terrestrial;
@@ -3614,7 +3659,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     historyTrack.root.hidden = state.selection !== null;
     historyTrack.extras.hidden = state.selection !== null;
-    if (state.time.date.year !== previous?.time.date.year || state.layers !== previous.layers) {
+    if (
+      state.time.date.year !== previous?.time.date.year ||
+      state.layers !== previous.layers ||
+      // Which hemisphere's radiocarbon curve.
+      state.location !== previous.location
+    ) {
       showHistory(state);
     }
     if (state.location !== previous?.location) globe.setLocation(state.location);
