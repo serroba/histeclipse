@@ -237,7 +237,9 @@ export function createPeriodBands(
     marks: [],
   };
   function measure(): void {
-    rowWidth = row.getBoundingClientRect().width;
+    // The ends' row is inset as the bands are, and keeps its width when the bands rest (away
+    // from Earth, the Holocene's chapters do).
+    rowWidth = scale.getBoundingClientRect().width;
     labelWidths = {
       start: start.getBoundingClientRect().width,
       end: end.getBoundingClientRect().width,
@@ -259,14 +261,17 @@ export function createPeriodBands(
     if (listening || lane === null) return;
     listening = true;
     const show = (event: PointerEvent): void => {
-      const box = row.getBoundingClientRect();
+      // The ends' row is inset as the bands are, and stays when the bands rest.
+      const box = scale.getBoundingClientRect();
       if (box.width === 0) return;
       const fraction = (event.clientX - box.left) / box.width;
       if (fraction < 0 || fraction > 1) {
         reading.hidden = true;
         return;
       }
-      reading.textContent = readingAt(fraction, span.oldest, span.youngest, bands, words);
+      // With the chapters resting (away from Earth), the reading names the moment alone.
+      const shown = row.getClientRects().length > 0 ? bands : [];
+      reading.textContent = readingAt(fraction, span.oldest, span.youngest, shown, words);
       reading.style.left = `${String(fraction * 100)}%`;
       reading.hidden = false;
     };

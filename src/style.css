@@ -3678,6 +3678,15 @@ body {
   display: none;
 }
 
+/* Away from Earth the year still decides where the bodies are, so the slider stays; Earth's
+   own chapters (Greenlandian, Northgrippian, Meghalayan) and their boundaries rest (#248). */
+.bottom[data-away='true'] .history-lane .period-bands,
+.bottom[data-away='true'] .history-lane .period-ticks,
+.bottom[data-away='true'] .history-lane .period-bracket,
+.bottom[data-away='true'] .history-lane .period-chapter {
+  display: none;
+}
+
 .bottom[data-away='true'] .eclipse-row,
 .bottom[data-away='true'] .seen-controls,
 .bottom[data-away='true'] .ways-legend,
