@@ -661,9 +661,12 @@ export const WHYS = {
 
 export type WhyId = keyof typeof WHYS;
 
-/** What the why panel can show: one thing's why, or every source ('all'). */
-export type WhyView = WhyId | 'all';
-export const WHY_VIEWS: readonly WhyView[] = [...(Object.keys(WHYS) as WhyId[]), 'all'];
+/**
+ * What the why panel can show: one thing's why, every source ('all'), or what each layer has
+ * at the place picked ('here').
+ */
+export type WhyView = WhyId | 'all' | 'here';
+export const WHY_VIEWS: readonly WhyView[] = [...(Object.keys(WHYS) as WhyId[]), 'all', 'here'];
 
 /** A source's DOI, when its link is one. */
 export function doiOf(source: Source): string | null {
