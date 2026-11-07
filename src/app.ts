@@ -1024,8 +1024,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
 
   // Full view hides the panels for a clear view; Show controls, Escape, or a tap on open sky or
-  // empty space brings them back. In historical time a stray tap never hides them; in deep time a
-  // tap on the globe or on the space around it does.
+  // empty space brings them back. A tap on open sky clears them too, as does one on the globe or
+  // the space around it in deep time; in historical time a tap on the globe picks a place.
   function togglePanels(): void {
     const hidden = root.dataset['panels'] !== 'hidden';
     root.dataset['panels'] = hidden ? 'hidden' : 'shown';
