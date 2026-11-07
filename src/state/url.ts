@@ -36,6 +36,7 @@
  * show, so a mangled link still opens something sensible.
  */
 
+import { WHY_VIEWS, type WhyView } from '../sources/registry';
 import { calendarDate, calendarDateOf, julianDay, type Calendar } from '../time/julianDay';
 import { SKY_CULTURES, type SkyCulture } from '../data/skyCultures';
 import { SUN_LAYERS, type SunLayer } from '../data/sunImages';
@@ -164,6 +165,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     impact: read('impact', (raw) => oneOf(raw, IMPACT_MODELS, 'impact'), defaults.impact),
     land: read('land', (raw) => oneOf(raw, LAND_MODELS, 'land'), defaults.land),
     snowball: read('snowball', (raw) => oneOf(raw, SNOWBALL_MODELS, 'snowball'), defaults.snowball),
+    why: read<WhyView | null>('why', (raw) => oneOf(raw, WHY_VIEWS, 'why'), defaults.why),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -204,6 +206,7 @@ export function serializeViewState(state: ViewState): string {
   if (state.impact !== DEFAULT_IMPACT_MODEL) params.set('impact', state.impact);
   if (state.land !== DEFAULT_LAND_MODEL) params.set('land', state.land);
   if (state.snowball !== DEFAULT_SNOWBALL_MODEL) params.set('snowball', state.snowball);
+  if (state.why !== null) params.set('why', state.why);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }

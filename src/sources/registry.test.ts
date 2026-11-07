@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import { LAYERS, type Layer, type Span } from '../state/viewState';
-import { layerWhy, onScreen, SOURCES, WHYS, type Scene } from './registry';
+import {
+  bibtexUrl,
+  citation,
+  doiOf,
+  layerWhy,
+  onScreen,
+  SOURCES,
+  WHYS,
+  type Scene,
+} from './registry';
 
 const scene = (over: Partial<Scene>): Scene => ({
   mode: 'globe',
@@ -98,5 +107,23 @@ describe('what is on screen now', () => {
     expect(onScreen(scene({ span: 'ice' }))[0]).toBe('ice-surface');
     expect(onScreen(scene({ focus: 'sun' }))[0]).toBe('sun');
     expect(onScreen(scene({ mode: 'sky' }))).toEqual(['sky', 'bodies']);
+  });
+});
+
+describe('citing a source', () => {
+  it('copies the full reference, where to find it, and its licence', () => {
+    expect(citation(SOURCES.archaeoglobe)).toBe(
+      'ArchaeoGLOBE Project (2019), Archaeological assessment reveals Earth’s early transformation through land use, Science 365, 897; Harvard Dataverse. https://doi.org/10.1126/science.aax1192 Licence: CC0 1.0.',
+    );
+    expect(citation(SOURCES.impactEarth)).not.toContain('Licence');
+  });
+
+  it('finds a DOI in a link, and Crossref’s BibTeX for it', () => {
+    expect(doiOf(SOURCES.archaeoglobe)).toBe('10.1126/science.aax1192');
+    expect(bibtexUrl(SOURCES.archaeoglobe)).toBe(
+      'https://api.crossref.org/works/10.1126/science.aax1192/transform/application/x-bibtex',
+    );
+    expect(doiOf(SOURCES.macrostrat)).toBeNull();
+    expect(bibtexUrl(SOURCES.macrostrat)).toBeNull();
   });
 });
