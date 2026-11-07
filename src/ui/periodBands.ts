@@ -156,12 +156,29 @@ export function readingAt(
   return band === undefined ? moment : `${moment} · ${band.unit.name}`;
 }
 
+/** Deep time's ends, short: "540 Ma", "2.6 Ma", "now". */
+export function deepShort(ma: number): string {
+  if (ma <= 0) return 'now';
+  if (ma >= 1) return `${Number(ma.toPrecision(4)).toLocaleString('en')} Ma`;
+  return `${Math.round(ma * 1000).toLocaleString('en')} ka`;
+}
+
+export interface AxisWords {
+  /** How a moment is said in full, under the pointer and in the ends' tooltips. */
+  readonly words?: (ma: number) => string;
+  /** How the ends are named on the bar, short enough for a phone. */
+  readonly short?: (ma: number) => string;
+  /** The round marks between the ends. */
+  readonly marks?: (oldest: number, youngest: number) => readonly Tick[];
+}
+
+/** Pixels kept between the thumb's centre and a label, so the thumb never covers one. */
+const THUMB_ROOM = 14;
+
 export function createPeriodBands(
   onMa: (ma: number) => void,
-  /** How a moment is said at the ends and under the pointer; deep time's wording by default. */
-  words: (ma: number) => string = deepWords,
-  /** The round marks between the ends; deep time's, in Ma or ka, by default. */
-  marks: (oldest: number, youngest: number) => readonly Tick[] = deepTicks,
+  /** Deep time's wording, short ends and marks by default. */
+  { words = deepWords, short = deepShort, marks = deepTicks }: AxisWords = {},
 ): PeriodBands {
   const row = element('div', {
     class: 'period-bands',
@@ -211,9 +228,27 @@ export function createPeriodBands(
     readonly left: number;
     readonly width: number;
   }[] = [];
-  // Names are fitted to the bands' widths once laid out, and again when the bar resizes.
+  // Names are fitted to the bands' widths once laid out, and again when the bar resizes; the
+  // widths the labels are kept clear of the thumb by are measured then too, not every frame.
+  let rowWidth = 0;
+  let labelWidths: { start: number; end: number; marks: number[] } = {
+    start: 0,
+    end: 0,
+    marks: [],
+  };
+  function measure(): void {
+    rowWidth = row.getBoundingClientRect().width;
+    labelWidths = {
+      start: start.getBoundingClientRect().width,
+      end: end.getBoundingClientRect().width,
+      marks: [...rounds.querySelectorAll('.period-round-label')].map(
+        (label) => label.getBoundingClientRect().width,
+      ),
+    };
+  }
   new ResizeObserver(() => {
     fit(buttons);
+    measure();
   }).observe(row);
 
   // Under the pointer anywhere over the slider and its bands: the moment and its chapter, on a
@@ -296,13 +331,18 @@ export function createPeriodBands(
               { class: 'period-round' },
               element('span', { class: 'period-round-label' }, tick.label),
             );
-            mark.style.left = `${String(((oldest - tick.ma) / (oldest - youngest)) * 100)}%`;
+            const share = (oldest - tick.ma) / (oldest - youngest);
+            mark.dataset['share'] = String(share);
+            mark.style.left = `${String(share * 100)}%`;
             return mark;
           }),
         );
-        start.textContent = words(oldest);
-        end.textContent = words(youngest);
+        start.textContent = short(oldest);
+        end.textContent = short(youngest);
+        start.title = words(oldest);
+        end.title = words(youngest);
         fit(buttons);
+        measure();
       }
       let current: (typeof buttons)[number] | undefined;
       for (const entry of buttons) {
@@ -334,6 +374,15 @@ export function createPeriodBands(
         const share = Math.min(1, Math.max(0, (oldest - ma) / (oldest - youngest)));
         chapter.style.left = `${String(share * 100)}%`;
       }
+      // No label under the thumb: an end's name, or a mark's value, steps aside while it is near.
+      const thumb = Math.min(1, Math.max(0, (oldest - ma) / (oldest - youngest))) * rowWidth;
+      start.classList.toggle('is-covered', thumb < labelWidths.start + THUMB_ROOM);
+      end.classList.toggle('is-covered', rowWidth - thumb < labelWidths.end + THUMB_ROOM);
+      [...rounds.children].forEach((mark, index) => {
+        const at = Number((mark as HTMLElement).dataset['share']) * rowWidth;
+        const half = (labelWidths.marks[index] ?? 0) / 2;
+        mark.classList.toggle('is-covered', Math.abs(at - thumb) < half + THUMB_ROOM);
+      });
       bracket.hidden = current === undefined;
       if (current !== undefined) {
         bracket.style.left = `${String(current.left * 100)}%`;
