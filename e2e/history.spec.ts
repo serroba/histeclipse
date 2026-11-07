@@ -341,13 +341,25 @@ test('carbon-14 in the air runs under the years, its spikes and plateau marked a
   await test.step('When they ask where it comes from', async () => {
     await strip.getByRole('button', { name: 'Why: Carbon-14 in the air' }).click();
   });
-  await test.step('Then the why says why a date is a range, and links the curve', async () => {
+  await test.step('Then the why says why a date is a range, and links the curve and the eruptions', async () => {
     const sheet = page.getByRole('dialog', { name: 'Carbon-14 in the air' });
     await expect(sheet).toContainText('Hallstatt plateau');
     await expect(sheet.getByRole('link', { name: 'IntCal20', exact: true })).toHaveAttribute(
       'href',
       'https://doi.org/10.1017/RDC.2020.41',
     );
+    await expect(sheet.getByRole('link', { name: 'HolVol', exact: true })).toHaveAttribute(
+      'href',
+      'https://doi.org/10.5194/essd-14-3167-2022',
+    );
+  });
+  await test.step('And the eruptions the ice cores record lie under it, Tambora named', async () => {
+    const eruptions = page.getByTestId('radiocarbon-eruptions');
+    await expect(eruptions).toHaveAttribute('data-count', /^1\d{3}$/, { timeout: 20_000 });
+    await expect(eruptions.locator('[data-eruption="Tambora"] title')).toHaveText(
+      /^1815 CE: Tambora, 3\d\.\d ± \d+\.\d Tg of sulfur into the stratosphere\./,
+    );
+    await expect(eruptions.locator('[data-eruption="Samalas"] title')).toContainText('1257');
   });
   await test.step('When they stand in the southern hemisphere', async () => {
     await page.goto('./?t=-0700-06-01T12:00&loc=-34,151&layers=lunar,solar,radiocarbon');

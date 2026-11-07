@@ -2,7 +2,8 @@
  * Carbon-14 in the air along the years' slider (#270): the calibration curve's Δ14C as a line,
  * higher when the air held more, with the Miyake events marked and the Hallstatt plateau shaded.
  * The curve stops in 1950, where the calibration curves end; after it, nuclear tests nearly
- * doubled the air's carbon-14 (the bomb pulse), which is said in words, not drawn.
+ * doubled the air's carbon-14 (the bomb pulse), which is said in words, not drawn. Below it,
+ * the eruptions the ice cores record (#274), each a tick as tall as the sulfur it sent up.
  *
  * DOM glue, covered by the Playwright suite; the points are worked out in `stripPoints`.
  */
@@ -10,6 +11,7 @@
 import type { CalibrationCurve } from '../data/radiocarbon';
 import { yearOfCalBP } from '../data/radiocarbon';
 import type { RadiocarbonEvent } from '../data/radiocarbonEvents';
+import { eruptionText, LARGEST_SULFUR, type Eruption } from '../data/eruptions';
 import { element } from './dom';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -45,6 +47,8 @@ export interface RadiocarbonStrip {
       readonly first: number;
       readonly last: number;
       readonly events: readonly RadiocarbonEvent[];
+      /** The eruptions in the years shown, or null until they load. */
+      readonly eruptions: readonly Eruption[] | null;
     } | null,
   ): void;
 }
@@ -69,6 +73,11 @@ export function createRadiocarbonStrip(
   svg.setAttribute('preserveAspectRatio', 'none');
   svg.setAttribute('aria-hidden', 'true');
   const marks = element('div', { class: 'radiocarbon-marks' });
+  const eruptions = document.createElementNS(NS, 'svg');
+  eruptions.setAttribute('class', 'radiocarbon-eruptions');
+  eruptions.setAttribute('viewBox', '0 0 1000 30');
+  eruptions.setAttribute('preserveAspectRatio', 'none');
+  eruptions.setAttribute('data-testid', 'radiocarbon-eruptions');
   const label = element('span', { class: 'radiocarbon-label' });
   const root = element(
     'div',
@@ -79,6 +88,7 @@ export function createRadiocarbonStrip(
       hidden: '',
     },
     element('div', { class: 'radiocarbon-plot' }, svg, marks),
+    eruptions,
     element(
       'span',
       { class: 'radiocarbon-caption' },
@@ -87,6 +97,30 @@ export function createRadiocarbonStrip(
       ...(onDate === undefined ? [] : [date]),
     ),
   );
+  /** One tick per eruption, as tall as the square root of its sulfur against the largest. */
+  function drawEruptions(shown: readonly Eruption[], first: number, last: number): void {
+    const span = last - first || 1;
+    eruptions.dataset['count'] = String(shown.length);
+    eruptions.replaceChildren(
+      ...shown.map((eruption) => {
+        const height = 3 + 27 * Math.sqrt(Math.min(1, eruption.sulfur / LARGEST_SULFUR));
+        const x = ((eruption.year - first) / span) * 1000;
+        const tick = document.createElementNS(NS, 'line');
+        tick.setAttribute('x1', x.toFixed(1));
+        tick.setAttribute('x2', x.toFixed(1));
+        tick.setAttribute('y1', '30');
+        tick.setAttribute('y2', (30 - height).toFixed(1));
+        tick.setAttribute('vector-effect', 'non-scaling-stroke');
+        tick.setAttribute('class', eruption.name === null ? 'eruption' : 'eruption is-named');
+        if (eruption.name !== null) tick.setAttribute('data-eruption', eruption.name);
+        const title = document.createElementNS(NS, 'title');
+        title.textContent = eruptionText(eruption);
+        tick.append(title);
+        return tick;
+      }),
+    );
+  }
+
   let drawn = '';
   return {
     root,
@@ -94,7 +128,7 @@ export function createRadiocarbonStrip(
       root.hidden = view === null;
       shown = view;
       if (view === null) return;
-      const key = `${view.name}:${String(view.first)}:${String(view.last)}`;
+      const key = `${view.name}:${String(view.first)}:${String(view.last)}:${String(view.eruptions?.length)}`;
       if (key === drawn) return;
       drawn = key;
       const points = stripPoints(view.curve, view.first, view.last);
@@ -122,7 +156,11 @@ export function createRadiocarbonStrip(
             return mark;
           }),
       );
-      label.textContent = `Carbon-14 in the air, ${view.name}: higher means more, up to 1950`;
+      drawEruptions(view.eruptions ?? [], view.first, view.last);
+      label.textContent =
+        view.eruptions === null
+          ? `Carbon-14 in the air, ${view.name}: higher means more, up to 1950`
+          : `Carbon-14 in the air, ${view.name}: higher means more, up to 1950. below, eruptions in the ice cores`;
       root.setAttribute(
         'aria-label',
         `Carbon-14 in the air over the years shown, from ${view.name}, with ${view.events

@@ -3987,6 +3987,24 @@ button:has(> .icon-label) > .icon {
   transform: translateX(-1px);
 }
 
+/* Eruptions in the ice cores (#274), under the curve: one tick each, taller for more sulfur. */
+.radiocarbon-eruptions {
+  display: block;
+  width: 100%;
+  height: 14px;
+  margin-top: 1px;
+}
+
+.radiocarbon-eruptions .eruption {
+  stroke: rgb(232 135 90 / 0.75);
+  stroke-width: 1;
+}
+
+.radiocarbon-eruptions .eruption.is-named {
+  stroke: #ffb27d;
+  stroke-width: 2;
+}
+
 .radiocarbon-caption {
   display: flex;
   align-items: center;

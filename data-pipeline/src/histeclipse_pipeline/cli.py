@@ -21,6 +21,7 @@ from histeclipse_pipeline.empires import (
     write_empires,
 )
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
+from histeclipse_pipeline.eruptions import fetch_eruptions
 from histeclipse_pipeline.fossils import fetch_fossils
 from histeclipse_pipeline.iceoutlines import fetch_outlines
 from histeclipse_pipeline.icesheets import fetch_icesheets
@@ -310,6 +311,12 @@ def radiocarbon(args: Arguments) -> int:  # pragma: no cover - needs network acc
     return _say(f"wrote {count} curve rows to {args.out}")
 
 
+def eruptions(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Holocene's eruptions as the ice cores record them (HolVol)."""
+    count = fetch_eruptions(args.out)
+    return _say(f"wrote {count} eruptions to {args.out}")
+
+
 def dipole(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the dipole moment of the last 55,000 years (GGF100k)."""
     count = fetch_dipole(args.out)
@@ -529,6 +536,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "radiocarbon": (
         radiocarbon,
         "write the radiocarbon calibration curves (IntCal20, SHCal20)",
+        "output JSON file",
+    ),
+    "eruptions": (
+        eruptions,
+        "write the Holocene's eruptions as the ice cores record them (HolVol)",
         "output JSON file",
     ),
     "dipole": (
