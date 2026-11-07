@@ -25,7 +25,7 @@ pnpm check        # everything CI runs: format, lint, typecheck, tests + coverag
 
 ## Deployment
 
-Each merge to `main` builds the site with its commit SHA stamped into a `<meta name="histeclipse-version">` tag and deploys it to GitHub Pages. The same Playwright suite then runs against **https://serroba.github.io/histeclipse/**, but only after the public URL is serving that exact commit. The live check also runs daily and can be started by hand (_Actions → Live smoke test_).
+Each merge to `main` builds the site with its commit SHA stamped into a `<meta name="histeclipse-version">` tag and deploys it to GitHub Pages, served at **https://histeclipse.limits.world/** through Cloudflare (which sets the caching and security headers; the old `serroba.github.io/histeclipse/` address redirects there). The same Playwright suite then runs against that address, but only after the public URL is serving that exact commit. The live check also runs daily and can be started by hand (_Actions → Live smoke test_).
 
 ## Data pipeline
 

@@ -1,8 +1,10 @@
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  // Served from https://serroba.github.io/histeclipse/
-  base: '/histeclipse/',
+  // Served at https://histeclipse.limits.world/ (#240). Relative, so the build also works under
+  // a path, as it once did at serroba.github.io/histeclipse/: every page is index.html at the
+  // site's root, so './' always resolves to the right place.
+  base: './',
   build: {
     target: 'es2023',
     sourcemap: true,

@@ -7,6 +7,9 @@ import {
   impactsAt,
   impactsText,
   loadImpacts,
+  STRIKE_MIN_KM,
+  strikeMa,
+  strikesPassed,
   type Impact,
   type Impacts,
 } from './impacts';
@@ -196,5 +199,43 @@ describe('impacts around their time', () => {
 
   it('today shows every impact whatever the mode', () => {
     expect(impactsAt(dated, 0, true, 0, 'around')).toHaveLength(2);
+  });
+});
+
+describe('strikes as time plays', () => {
+  const real = data as Impacts;
+  const named = (impacts: readonly Impact[]): string[] => impacts.map(({ name }) => name);
+
+  it('strike in the middle of a tight dating, and not at all when dated loosely or in words', () => {
+    expect(strikeMa(chicxulub)).toBeCloseTo(66.038, 6);
+    const loose = real.impacts.find(({ name }) => name === 'Woodleigh');
+    expect(loose).toBeDefined();
+    if (loose !== undefined) expect(strikeMa(loose)).toBeNull();
+    expect(strikeMa(small.impacts[2] ?? chicxulub)).toBeNull();
+  });
+
+  it('play Chicxulub as time runs through 66 Ma towards today, but not running back', () => {
+    expect(named(strikesPassed(small, 66.1, 66))).toEqual(['Chicxulub']);
+    expect(named(strikesPassed(small, 66, 65))).toEqual([]);
+    expect(named(strikesPassed(small, 66, 66.1))).toEqual([]);
+  });
+
+  it('leave small craters to appear without a strike', () => {
+    expect(named(strikesPassed(small, 1, 0))).toEqual([]);
+    expect(named(strikesPassed(small, 1, 0, 0.1))).toEqual(['Kaali']);
+  });
+
+  it('come in the order they struck, the great ones only, from the real file', () => {
+    const all = strikesPassed(real, 3000, 0);
+    expect(all.every(({ diameterKm }) => (diameterKm ?? 0) >= STRIKE_MIN_KM)).toBe(true);
+    expect(named(all).slice(0, 2)).toEqual(['Yarrabubba', 'Vredefort']);
+    expect(named(all)).toContain('Chicxulub');
+    expect(named(all)).not.toContain('Woodleigh');
+    expect(named(strikesPassed(real, 70, 30))).toEqual([
+      'Chicxulub',
+      'Montagnais',
+      'Popigai',
+      'Chesapeake Bay',
+    ]);
   });
 });

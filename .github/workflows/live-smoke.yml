@@ -34,7 +34,7 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4]
     env:
-      BASE_URL: https://serroba.github.io/histeclipse/
+      BASE_URL: https://histeclipse.limits.world/
       EXPECTED_VERSION: ${{ inputs.expected-version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
