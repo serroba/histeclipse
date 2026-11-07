@@ -3756,7 +3756,7 @@ button:has(> .icon-label) > .icon {
 }
 
 /* The Sun's channels: a dot in each channel's usual false colour beside its name. */
-.sun-switch button[data-layer]::before {
+.sun-switch button[data-layer] .sun-channel-name::before {
   content: '';
   display: inline-block;
   width: 9px;
@@ -3767,27 +3767,27 @@ button:has(> .icon-label) > .icon {
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.25);
 }
 
-.sun-switch button[data-layer='visible']::before {
+.sun-switch button[data-layer='visible'] .sun-channel-name::before {
   background: #fff0cc;
 }
 
-.sun-switch button[data-layer='magnetogram']::before {
+.sun-switch button[data-layer='magnetogram'] .sun-channel-name::before {
   background: linear-gradient(90deg, #111 50%, #eee 50%);
 }
 
-.sun-switch button[data-layer='304']::before {
+.sun-switch button[data-layer='304'] .sun-channel-name::before {
   background: #e0532a;
 }
 
-.sun-switch button[data-layer='171']::before {
+.sun-switch button[data-layer='171'] .sun-channel-name::before {
   background: #d9a520;
 }
 
-.sun-switch button[data-layer='193']::before {
+.sun-switch button[data-layer='193'] .sun-channel-name::before {
   background: #b8864a;
 }
 
-.sun-switch button[data-layer='131']::before {
+.sun-switch button[data-layer='131'] .sun-channel-name::before {
   background: #1ea5a5;
 }
 
@@ -3835,17 +3835,23 @@ button:has(> .icon-label) > .icon {
     max-width: none;
   }
 
+  /* One row that scrolls sideways, the next channel cut off at the edge to say there is more:
+     named by what they show, they would need three rows, and cover the Sun (#238, #249). */
   .view-switch.sun-switch {
     display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
   }
 
-  /* The label and its book lead the first row rather than taking one of their own. */
-  .sun-switch .switch-label {
-    flex-basis: auto;
+  .view-switch.sun-switch::-webkit-scrollbar {
+    display: none;
   }
 
+  .sun-switch .switch-label,
   .sun-switch button[data-layer] {
-    flex: 1 1 auto;
+    flex: none;
   }
 }
 
@@ -3916,4 +3922,299 @@ button:has(> .icon-label) > .icon {
 
 .polarity-span.is-unknown {
   background: rgb(255 255 255 / 0.08);
+}
+
+/* A channel's button: what it shows, and beneath, small, the light it is (#249). */
+.sun-switch button[data-layer] {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  line-height: 1.15;
+}
+
+.sun-channel-detail {
+  font-size: 10.5px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+/* Carbon-14 in the air under the years' slider (#270): a line, the Hallstatt plateau shaded,
+   Miyake events as ticks; inset as the chapters are, so a share of it is a share of the slider. */
+.radiocarbon-strip {
+  margin: 3px 9px 0;
+}
+
+.radiocarbon-strip[hidden] {
+  display: none;
+}
+
+.radiocarbon-plot {
+  position: relative;
+  height: 22px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.04);
+}
+
+.radiocarbon-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.radiocarbon-line polyline {
+  fill: none;
+  stroke: #9fd4a8;
+  stroke-width: 1.5;
+}
+
+.radiocarbon-marks > span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.radiocarbon-plateau {
+  background: rgb(247 201 90 / 0.18);
+  border-inline: 1px dashed rgb(247 201 90 / 0.5);
+}
+
+.radiocarbon-event {
+  width: 2px;
+  background: #f7c95a;
+  transform: translateX(-1px);
+}
+
+.radiocarbon-caption {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--ink-muted);
+}
+
+.bottom[data-away='true'] .radiocarbon-strip {
+  display: none;
+}
+
+/* "How was this dated?" (#270): the steps, the curve with the measured age across it, and the
+   calendar ranges it fits. */
+.radiocarbon-date {
+  margin-left: auto;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgb(159 212 168 / 0.5);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.famous-dialog.dating-dialog {
+  width: min(640px, calc(100% - 24px));
+  /* Opaque: the chart would read through a see-through sheet. */
+  background: rgb(10 16 32);
+}
+
+.famous-dialog.dating-dialog > :not(header) {
+  margin-inline: 18px;
+}
+
+.dating-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.dating-input {
+  width: 6em;
+  min-height: 40px;
+  padding: 0 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.05);
+  color: var(--ink);
+  font: inherit;
+}
+
+.dating-examples-label {
+  margin: 4px 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.dating-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dating-example {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  background: rgb(255 255 255 / 0.04);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.dating-step {
+  margin: 10px 0 4px;
+  font-size: 14px;
+}
+
+.dating-chart {
+  /* Full width less the sheet's margins either side. */
+  width: calc(100% - 36px);
+  height: auto;
+}
+
+.dating-measured {
+  fill: rgb(247 201 90 / 0.25);
+}
+
+.dating-curve {
+  fill: rgb(159 212 168 / 0.55);
+  stroke: #9fd4a8;
+  stroke-width: 1;
+}
+
+.dating-range {
+  fill: rgb(247 201 90 / 0.15);
+}
+
+.dating-density {
+  fill: rgb(247 201 90 / 0.75);
+}
+
+.dating-axis {
+  fill: var(--ink-muted);
+  font-size: 11px;
+}
+
+.dating-ranges {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+.famous-dialog.carbon-made-dialog {
+  width: min(640px, calc(100% - 24px));
+  /* Opaque: the chart would read through a see-through sheet. */
+  background: rgb(10 16 32);
+}
+
+.famous-dialog.carbon-made-dialog > :not(header) {
+  margin-inline: 18px;
+}
+
+.carbon-made-pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 8px 0;
+}
+
+.carbon-made-picker {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 13px;
+}
+
+.carbon-made-picker legend {
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.carbon-made-choice {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.carbon-made-notes {
+  margin: 4px 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.carbon-made-chart {
+  /* Full width less the sheet's margins either side. */
+  width: calc(100% - 36px);
+  height: auto;
+}
+
+.carbon-made-grid {
+  stroke: rgb(255 255 255 / 0.1);
+  stroke-width: 1;
+}
+
+.carbon-made-line {
+  fill: none;
+  stroke: #b79cff;
+  stroke-width: 2;
+}
+
+.carbon-made-today {
+  fill: none;
+  stroke: var(--ink-muted);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+
+.carbon-made-heading {
+  margin: 14px 0 4px;
+  font-size: 14px;
+}
+
+.carbon-made-path {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  font-size: 14px;
+}
+
+.carbon-made-path li + li {
+  margin-top: 4px;
+}
+
+.carbon-made-watch {
+  margin: 4px 0 8px;
+}
+
+/* Over the globe while a shower plays, just above the bottom panel. */
+.shower-caption {
+  position: absolute;
+  bottom: calc(var(--free-bottom, 120px) + 12px);
+  left: 50%;
+  z-index: 5;
+  width: min(520px, calc(100% - 32px));
+  margin: 0;
+  padding: 10px 14px;
+  transform: translateX(-50%);
+  border: 1px solid rgb(183 156 255 / 0.45);
+  border-radius: 10px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.shower-caption[hidden] {
+  display: none;
 }

@@ -179,6 +179,9 @@ test('the Holocene reaches back to 9700 BCE, its ΔT growing uncertain', async (
 test('while travelling, the states are shaded over the evenly lit globe, not only named', async ({
   page,
 }) => {
+  // It waits for the globe to settle by comparing screenshots, twice: on a runner that renders
+  // in software, each takes a second or more, past the usual budget.
+  test.slow();
   const globe = page.getByTestId('globe');
   // The globe alone, names and panels set aside, once it has settled where the panels leave it.
   const ground = async () => {
@@ -279,6 +282,8 @@ test('travelling shows the ice sheets and the sea level of the year, and they go
 test('as the years play, state names stay put on the map, and only a few light up', async ({
   page,
 }) => {
+  // The years play for a while to watch the names: slow on a runner that renders in software.
+  test.slow();
   const bar = page.getByRole('group', { name: track });
   await test.step('Given 800 CE with the track open, its names shown', async () => {
     await page.goto('./?t=800-06-01T12:00&layers=lunar,solar&cam=45.0000,20.0000,3.00');
@@ -316,4 +321,77 @@ test('as the years play, state names stay put on the map, and only a few light u
     expect(Math.min(...samples.map(({ shown }) => shown))).toBeGreaterThan(0);
     expect(Math.max(...samples.map(({ lit }) => lit))).toBeLessThanOrEqual(4);
   });
+});
+
+test('carbon-14 in the air runs under the years, its spikes and plateau marked and sourced', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const strip = page.getByTestId('radiocarbon-strip');
+  await test.step('Given the years with Carbon-14 in the air on, standing in Europe', async () => {
+    await page.goto('./?t=-0700-06-01T12:00&loc=48,10&layers=lunar,solar,radiocarbon');
+    await globeRendered(page);
+  });
+  await test.step('Then the northern curve runs under the slider, the events marked', async () => {
+    await expect(strip).toBeVisible({ timeout: 20_000 });
+    await expect(strip).toContainText('IntCal20');
+    await expect(strip.locator('[data-event="Miyake event, 774/775 CE"]')).toHaveCount(1);
+    await expect(strip.locator('[data-event="The Hallstatt plateau"]')).toHaveCount(1);
+  });
+  await test.step('When they ask where it comes from', async () => {
+    await strip.getByRole('button', { name: 'Why: Carbon-14 in the air' }).click();
+  });
+  await test.step('Then the why says why a date is a range, and links the curve', async () => {
+    const sheet = page.getByRole('dialog', { name: 'Carbon-14 in the air' });
+    await expect(sheet).toContainText('Hallstatt plateau');
+    await expect(sheet.getByRole('link', { name: 'IntCal20', exact: true })).toHaveAttribute(
+      'href',
+      'https://doi.org/10.1017/RDC.2020.41',
+    );
+  });
+  await test.step('When they stand in the southern hemisphere', async () => {
+    await page.goto('./?t=-0700-06-01T12:00&loc=-34,151&layers=lunar,solar,radiocarbon');
+    await globeRendered(page);
+  });
+  await test.step('Then the southern curve is drawn', async () => {
+    await expect(strip).toContainText('SHCal20', { timeout: 20_000 });
+  });
+  expect(problems).toEqual([]);
+});
+
+test('“How was this dated?” carries a radiocarbon age across the curve to its ranges', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const dialog = page.getByRole('dialog', { name: 'How was this dated?' });
+  await test.step('Given Carbon-14 in the air on, standing in Europe', async () => {
+    await page.goto('./?t=-0700-06-01T12:00&loc=48,10&layers=lunar,solar,radiocarbon');
+    await globeRendered(page);
+  });
+  await test.step('When they ask how a date is found', async () => {
+    await page.getByRole('button', { name: 'How was this dated?' }).click();
+  });
+  await test.step('Then an Iron Age age spreads over the Hallstatt plateau, in four ranges', async () => {
+    await expect(dialog.getByTestId('dating-left')).toContainText('73.7% of the carbon-14');
+    await expect(dialog.getByTestId('dating-result')).toContainText('it fits 4 stretches of years');
+    await expect(dialog.getByTestId('dating-ranges').locator('li')).toHaveCount(4);
+    await expect(dialog.getByTestId('dating-ranges')).toContainText('591–414 BCE');
+  });
+  await test.step('When they try one on a steep stretch', async () => {
+    await dialog.getByRole('button', { name: /^On a steep stretch/ }).click();
+  });
+  await test.step('Then it fits one stretch of years', async () => {
+    await expect(dialog.getByTestId('dating-result')).toContainText('one stretch of years');
+    await expect(dialog.getByTestId('dating-ranges').locator('li')).toHaveText([
+      '1894–1744 BCE 95%',
+    ]);
+  });
+  await test.step('When they type their own age', async () => {
+    await dialog.getByRole('spinbutton', { name: 'Radiocarbon age, years BP' }).fill('1000');
+    await dialog.getByRole('spinbutton', { name: 'Radiocarbon age, years BP' }).press('Enter');
+  });
+  await test.step('Then it is calibrated too', async () => {
+    await expect(dialog.getByTestId('dating-ranges')).toContainText('994–1048 CE');
+  });
+  expect(problems).toEqual([]);
 });

@@ -123,7 +123,7 @@ def test_regrids_onto_the_1_degree_grid_with_longitude_wrapping() -> None:
     assert out[90, middle] == pytest.approx(0.0)
     assert out[90, middle + 45] == pytest.approx(45.0)
     # 180° W and 180° E are the same meridian.
-    assert out[90, 0] == pytest.approx(out[90, -1])
+    assert np.allclose(out[90, :1], out[90, -1:])
     # Between 315° E and 360° the field falls back towards 0.
     assert out[90, middle - 20] == pytest.approx(315 * (20 / 45))
     flat = regrid(np.full((5, 8), 7.0), lat, lon)

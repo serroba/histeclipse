@@ -24,6 +24,10 @@ export interface LayerGroup {
   readonly layers: readonly LayerChoice[];
 }
 
+/** What radiocarbon cannot reach, and what dates older things instead. */
+export const CARBON_LIMIT =
+  'After about 50,000 years too little carbon-14 is left to measure, so older things are dated by other clocks, such as potassium–argon and uranium–lead.';
+
 const DEEP: readonly Span[] = ['ice', 'all', 'eons'];
 
 export const LAYER_GROUPS: readonly LayerGroup[] = [
@@ -142,6 +146,22 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
           'Carbon dioxide and methane from the ice cores; carbon dioxide and oxygen from proxies.',
         spans: ['ice', 'all'],
         reach: 'Ice cores over 800,000 years; proxies over 540 million years.',
+      },
+      {
+        id: 'radiocarbon',
+        label: 'Carbon-14 in the air',
+        about:
+          'How much radiocarbon the air held each year, under the years’ slider: its sudden spikes and its plateaus, and why a radiocarbon date is a range.',
+        spans: ['years'],
+        reach: 'The calibration curves reach back 55,000 years, to 1950.',
+      },
+      {
+        id: 'carbonMade',
+        label: 'Carbon-14 made in the sky',
+        about:
+          'Where cosmic rays make carbon-14, high in the air: most over the poles, where Earth’s magnetic field shields least. Try another field or Sun, and follow it into living things.',
+        spans: ['years', 'ice'],
+        reach: `${CARBON_LIMIT} Drawn on the Years and Ice ages spans, for the last 50,000 years.`,
       },
     ],
   },

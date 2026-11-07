@@ -77,6 +77,10 @@ export const LAYERS = [
   'humans',
   // Deep time: carbon dioxide and methane from the ice cores.
   'air',
+  // The years: carbon-14 in the air (IntCal20, SHCal20), why a radiocarbon date is a range.
+  'radiocarbon',
+  // Where cosmic rays make carbon-14, by latitude, for a field and a Sun (Kovaltsov et al. 2012).
+  'carbonMade',
   // Deep time: fossils of four groups of animals, where they lay then.
   'fossils',
 ] as const;
@@ -90,7 +94,14 @@ export type DispersalScenario = (typeof DISPERSAL_SCENARIOS)[number];
  * How the camera is placed: orbiting Earth freely, or attached to the bodies (standing on Earth
  * looking at the Moon, or on the Moon looking at Earth) and following them through time.
  */
-export const VIEWPOINTS = ['free', 'moon-from-earth', 'earth-from-moon'] as const;
+/** Orbit the body in focus; stand on Earth facing the Moon, or the reverse; or, away from Earth,
+ * stand on the body in focus and look back at Earth (#245). */
+export const VIEWPOINTS = [
+  'free',
+  'moon-from-earth',
+  'earth-from-moon',
+  'earth-from-here',
+] as const;
 export type Viewpoint = (typeof VIEWPOINTS)[number];
 
 /** The bodies the camera can centre on and orbit. */
@@ -197,7 +208,7 @@ export interface ViewState {
 
 // In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
 // so Saturn (up to ~11 AU away) fits in view; the scene caps other bodies at the same reach.
-export const CAMERA_DISTANCE_RANGE = { min: 1.1, max: 300_000 } as const;
+export const CAMERA_DISTANCE_RANGE = { min: 1.05, max: 300_000 } as const;
 export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'solar']);
 
 /**

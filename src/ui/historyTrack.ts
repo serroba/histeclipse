@@ -93,6 +93,8 @@ export function createHistoryTrack(
   },
   /** The ages along the slider, as deep time draws its periods. */
   bands: HTMLElement,
+  /** Drawn under the ages, lined up with the slider: carbon-14 in the air, when on. */
+  strip?: HTMLElement,
 ): HistoryTrack {
   const play = element(
     'button',
@@ -146,7 +148,13 @@ export function createHistoryTrack(
       'div',
       { class: 'history-controls' },
       play,
-      element('div', { class: 'history-lane' }, slider, bands),
+      element(
+        'div',
+        { class: 'history-lane' },
+        slider,
+        bands,
+        ...(strip === undefined ? [] : [strip]),
+      ),
     ),
     notes,
   );
