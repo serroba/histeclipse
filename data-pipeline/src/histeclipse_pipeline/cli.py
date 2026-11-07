@@ -290,9 +290,9 @@ def timezones(args: Arguments) -> int:  # pragma: no cover - needs network acces
 
 
 def planet_maps(args: Arguments) -> int:  # pragma: no cover - needs network access
-    """Write the planets' global maps from their missions, for the close-up view."""
+    """Write the bodies' maps from their missions, for the close-up view (public/textures)."""
     count = fetch_planet_maps(args.out, Path(".cache/planet-maps"))
-    return _say(f"wrote {count} planet maps to {args.out}")
+    return _say(f"wrote {count} maps to {args.out}")
 
 
 def polarity(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -497,8 +497,8 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     ),
     "planet-maps": (
         planet_maps,
-        "write the planets' global maps from their missions (MESSENGER, Viking, Cassini)",
-        "output folder",
+        "write the bodies' maps from their missions (MESSENGER, Viking, Cassini, BMNG, LRO)",
+        "output folder (public/textures)",
     ),
     "polarity": (
         polarity,

@@ -129,35 +129,52 @@ export function ringOpacity(radiusKm: number): number {
 export interface PlanetPicture {
   /** A mission's global map under `public/`, or null where the painted colours stand in. */
   readonly map: string | null;
+  /** The same map sharper, fetched only close up (#258); null where there is none. */
+  readonly sharp: string | null;
   readonly caption: string;
 }
 
 export const PLANET_PICTURES: Readonly<Record<PlanetName, PlanetPicture>> = {
   mercury: {
     map: 'textures/planets/mercury-2048.jpg',
+    sharp: 'textures/planets/mercury-4096.jpg',
     caption:
       'Pictured: MESSENGER’s map of the whole planet, from its first months in orbit (2011), brightened to show the craters. NASA/JHU APL/Carnegie Institution of Washington.',
   },
   venus: {
     map: null,
+    sharp: null,
     caption:
       'Pictured: the cloud tops, as a plain colour. From space the clouds hide the ground, which only radar (Magellan, 1990–94) has mapped.',
   },
   mars: {
     map: 'textures/planets/mars-2048.jpg',
+    sharp: 'textures/planets/mars-4096.jpg',
     caption:
       'Pictured: the Viking orbiters’ colour mosaic of the whole planet, from images of 1976–80. NASA/JPL/USGS.',
   },
   jupiter: {
     map: 'textures/planets/jupiter-2048.jpg',
+    sharp: 'textures/planets/jupiter-3600.jpg',
     caption:
       'Pictured: Cassini’s map of the cloud tops, from its flyby in December 2000; the clouds have changed since. NASA/JPL/Space Science Institute.',
   },
   saturn: {
     map: null,
+    sharp: null,
     caption: 'Pictured: the main bands, painted as a rough impression, not a map.',
   },
 };
+
+/** Earth's and the Moon's maps fetched only close up (#258): Earth's in two sizes, the larger
+ * for screens whose graphics allow it, the smaller for phones. */
+export const SHARP_MAPS = {
+  earth: {
+    large: 'textures/earth-blue-marble-8192.jpg',
+    small: 'textures/earth-blue-marble-4096.jpg',
+  },
+  moon: { large: 'textures/moon-lroc-4096.jpg', small: 'textures/moon-lroc-4096.jpg' },
+} as const;
 
 /** What the Moon wears: LRO's mosaic, from NASA's CGI Moon Kit. */
 export const MOON_CAPTION =
