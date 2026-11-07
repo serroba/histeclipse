@@ -202,6 +202,42 @@ export const SOURCES = {
     cite: 'The GPlates Portal (EarthByte): reconstructions to explore in the browser',
     url: 'https://portal.gplates.org',
   },
+  finnegan2011: {
+    name: 'Finnegan et al. 2011',
+    kind: 'paper',
+    cite: 'Finnegan et al. (2011), The magnitude and duration of Late Ordovician–Early Silurian glaciation, Science 331, 903–906',
+    url: 'https://doi.org/10.1126/science.1200803',
+  },
+  burgess2014: {
+    name: 'Burgess, Bowring & Shen 2014',
+    kind: 'paper',
+    cite: 'Burgess, Bowring & Shen (2014), High-precision timeline for Earth’s most severe extinction, PNAS 111, 3316–3321',
+    url: 'https://doi.org/10.1073/pnas.1317692111',
+  },
+  blackburn2013: {
+    name: 'Blackburn et al. 2013',
+    kind: 'paper',
+    cite: 'Blackburn et al. (2013), Zircon U-Pb geochronology links the end-Triassic extinction with the Central Atlantic Magmatic Province, Science 340, 941–945',
+    url: 'https://doi.org/10.1126/science.1234204',
+  },
+  zachos2001: {
+    name: 'Zachos et al. 2001',
+    kind: 'paper',
+    cite: 'Zachos et al. (2001), Trends, rhythms, and aberrations in global climate 65 Ma to present, Science 292, 686–693',
+    url: 'https://doi.org/10.1126/science.1059412',
+  },
+  hu2016: {
+    name: 'Hu et al. 2016',
+    kind: 'paper',
+    cite: 'Hu et al. (2016), The timing of India-Asia collision onset: facts, theories, controversies, Earth-Science Reviews 160, 264–299',
+    url: 'https://doi.org/10.1016/j.earscirev.2016.07.014',
+  },
+  odea2016: {
+    name: 'O’Dea et al. 2016',
+    kind: 'paper',
+    cite: 'O’Dea et al. (2016), Formation of the Isthmus of Panama, Science Advances 2',
+    url: 'https://doi.org/10.1126/sciadv.1600883',
+  },
   sdo: {
     name: 'NASA SDO',
     kind: 'imagery',
@@ -661,9 +697,12 @@ export const WHYS = {
 
 export type WhyId = keyof typeof WHYS;
 
-/** What the why panel can show: one thing's why, or every source ('all'). */
-export type WhyView = WhyId | 'all';
-export const WHY_VIEWS: readonly WhyView[] = [...(Object.keys(WHYS) as WhyId[]), 'all'];
+/**
+ * What the why panel can show: one thing's why, every source ('all'), or what each layer has
+ * at the place picked ('here').
+ */
+export type WhyView = WhyId | 'all' | 'here';
+export const WHY_VIEWS: readonly WhyView[] = [...(Object.keys(WHYS) as WhyId[]), 'all', 'here'];
 
 /** A source's DOI, when its link is one. */
 export function doiOf(source: Source): string | null {

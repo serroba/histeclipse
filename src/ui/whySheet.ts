@@ -18,6 +18,7 @@ import {
   type WhyId,
   type WhyView,
 } from '../sources/registry';
+import type { HereFact } from '../sources/here';
 import { element } from './dom';
 import { bookIcon, KIND_NAMES, kindIcon } from './icons';
 
@@ -25,8 +26,11 @@ export interface WhySheet {
   readonly dialog: HTMLDialogElement;
   /** A book mark that asks for the why of `id`; `label` names what it explains. */
   mark(id: WhyId | (() => WhyId), label: string): HTMLButtonElement;
-  /** Show a why, every source ('all'), or nothing: as the view (and its link) has it. */
-  show(view: WhyView | null): void;
+  /**
+   * Show a why, every source ('all'), what is at the place picked ('here'), or nothing: as the
+   * view (and its link) has it. `version` changes when what 'here' says may have.
+   */
+  show(view: WhyView | null, version?: string): void;
   /** Fill `list` with the whys on screen, each with its mark and its sources' links. */
   renderOnScreen(list: HTMLElement, ids: readonly WhyId[]): void;
 }
@@ -130,9 +134,26 @@ function section(title: string, ...content: (Node | string)[]): HTMLElement {
   return element('section', { class: 'why-section' }, element('h3', {}, title), ...content);
 }
 
+/** What is at the place picked, for the 'here' view; null with no place picked. */
+export interface HereView {
+  readonly place: string;
+  readonly facts: readonly HereFact[];
+}
+
+/** What a why says of the moment shown: for deep time's map, the period's own evidence. */
+export interface WhyMoment {
+  readonly title: string;
+  readonly lines: readonly string[];
+  readonly sources: readonly SourceId[];
+}
+
 export function createWhySheet(
   /** Asked for a why, every source, or none: the view decides, and the panel follows it. */
   onRequest: (view: WhyView | null) => void,
+  /** What each layer has at the place picked, worked out when asked. */
+  here: () => HereView | null = () => null,
+  /** What a why says of the moment shown, when it has something of its own to say. */
+  moment: (id: WhyId) => WhyMoment | null = () => null,
 ): WhySheet {
   const heading = element('h2', { id: 'why-title' });
   const close = element(
@@ -164,6 +185,71 @@ export function createWhySheet(
     return button;
   }
   let shown: WhyView | null = null;
+  let shownVersion = '';
+
+  /** A book mark that asks for the why of `id`; `label` names what it explains. */
+  function markFor(id: WhyId | (() => WhyId), label: string): HTMLButtonElement {
+    const button = element('button', {
+      type: 'button',
+      class: 'why-mark',
+      'aria-label': `Why: ${label}`,
+      title: 'Where this comes from',
+    });
+    button.append(bookIcon());
+    button.addEventListener('click', (event) => {
+      // A mark inside a label or a summary is its own control, not the one it sits in.
+      event.preventDefault();
+      event.stopPropagation();
+      onRequest(typeof id === 'function' ? id() : id);
+    });
+    return button;
+  }
+
+  function openHere(): void {
+    const view = here();
+    heading.textContent = view === null ? 'Why here?' : `Here: ${view.place}`;
+    body.replaceChildren(
+      ...(view === null
+        ? [element('p', { class: 'why-here-empty' }, 'Tap the globe to pick a place.')]
+        : view.facts.length === 0
+          ? [
+              element(
+                'p',
+                { class: 'why-here-empty' },
+                'No layer on the map has a record of its own here. Turn on States, Ways of life or Rocks in Layers.',
+              ),
+            ]
+          : [
+              element(
+                'ul',
+                { class: 'why-here' },
+                ...view.facts.map((fact) =>
+                  element(
+                    'li',
+                    {},
+                    element('strong', {}, fact.title),
+                    ' ',
+                    fact.text,
+                    ' ',
+                    ...(fact.link === undefined
+                      ? []
+                      : [
+                          element(
+                            'a',
+                            { href: fact.link.href, target: '_blank', rel: 'noopener noreferrer' },
+                            fact.link.label,
+                          ),
+                          ' ',
+                        ]),
+                    markFor(fact.why, fact.title),
+                  ),
+                ),
+              ),
+            ]),
+      element('div', { class: 'why-actions' }, linkButton()),
+    );
+    reveal();
+  }
 
   function reveal(): void {
     // Not modal: the globe stays in reach, as the Layers panel leaves it.
@@ -226,8 +312,27 @@ export function createWhySheet(
             ),
           ]
         : [];
+    const now = moment(id);
+    const then =
+      now === null
+        ? []
+        : [
+            section(
+              now.title,
+              ...now.lines.map((line) => element('p', {}, line)),
+              element(
+                'p',
+                { class: 'why-then-sources' },
+                ...now.sources.flatMap((source, index) => [
+                  index === 0 ? 'Read: ' : ' · ',
+                  sourceLink(SOURCES[source]),
+                ]),
+              ),
+            ),
+          ];
     body.replaceChildren(
       section('What you see', element('p', {}, why.what)),
+      ...then,
       ...evidence,
       ...certainty,
       ...('others' in why ? [section('Other views', element('p', {}, why.others))] : []),
@@ -275,30 +380,17 @@ export function createWhySheet(
 
   return {
     dialog,
-    show(view) {
-      if (view === shown) return;
+    show(view, version = '') {
+      if (view === shown && version === shownVersion) return;
       shown = view;
+      shownVersion = version;
       if (view === null) {
         if (dialog.open) dialog.close();
       } else if (view === 'all') openAll();
+      else if (view === 'here') openHere();
       else open(view);
     },
-    mark(id, label) {
-      const button = element('button', {
-        type: 'button',
-        class: 'why-mark',
-        'aria-label': `Why: ${label}`,
-        title: 'Where this comes from',
-      });
-      button.append(bookIcon());
-      button.addEventListener('click', (event) => {
-        // A mark inside a label or a summary is its own control, not the one it sits in.
-        event.preventDefault();
-        event.stopPropagation();
-        onRequest(typeof id === 'function' ? id() : id);
-      });
-      return button;
-    },
+    mark: markFor,
     renderOnScreen(list, ids) {
       // Each source linked once, where it first appears; named plainly after that.
       const linked = new Set<SourceId>();

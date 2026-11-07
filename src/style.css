@@ -3580,3 +3580,58 @@ body {
   flex-wrap: wrap;
   gap: 8px;
 }
+
+/* "Why here?": the rail's toggle, the globe asking for a tap, and what is there. */
+.zoom-why-here {
+  display: grid;
+  place-items: center;
+  color: var(--ink-muted);
+}
+
+.zoom-why-here[hidden] {
+  display: none;
+}
+
+.zoom-why-here[aria-pressed='true'] {
+  border-color: rgb(143 180 255 / 0.6);
+  background: rgb(143 180 255 / 0.2);
+  color: var(--ink);
+}
+
+#app.is-asking-here .globe {
+  cursor: help;
+}
+
+.why-here {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  list-style: none;
+}
+
+.why-here a {
+  color: var(--ink);
+}
+
+.why-here-empty {
+  margin: 4px 0 0;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+/* The period's own reading, under its evidence. */
+.why-then-sources {
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.why-then-sources a {
+  color: var(--ink);
+}
+
+.why-section p + p {
+  margin-top: 6px;
+}

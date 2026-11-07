@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { leavesViewOpen, placeOfZone, type TimeZones } from './timezones';
+import { browserTimeZone, leavesViewOpen, placeOfZone, type TimeZones } from './timezones';
 
 const data: TimeZones = {
   schemaVersion: 1,
@@ -34,5 +34,29 @@ describe('the time zone’s place', () => {
     ]) {
       expect(leavesViewOpen(`?${own}`)).toBe(false);
     }
+  });
+});
+
+describe('the browser’s time zone', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('reads the zone the browser reports', () => {
+    vi.spyOn(Intl, 'DateTimeFormat').mockReturnValue({
+      resolvedOptions: () => ({ timeZone: 'Australia/Sydney' }),
+    } as Intl.DateTimeFormat);
+    expect(browserTimeZone()).toBe('Australia/Sydney');
+  });
+
+  it('gives none where the browser reports none, or cannot say', () => {
+    vi.spyOn(Intl, 'DateTimeFormat').mockReturnValue({
+      resolvedOptions: () => ({ timeZone: '' }),
+    } as Intl.DateTimeFormat);
+    expect(browserTimeZone()).toBeNull();
+    vi.spyOn(Intl, 'DateTimeFormat').mockImplementation(() => {
+      throw new RangeError('no time zones here');
+    });
+    expect(browserTimeZone()).toBeNull();
   });
 });

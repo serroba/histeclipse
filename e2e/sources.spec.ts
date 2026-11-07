@@ -238,3 +238,88 @@ test('a source can be cited, and a why shared by its link', async ({ page, conte
     await expect(page).not.toHaveURL(/why=/);
   });
 });
+
+test('why here: each layer says what it has at a place, and where that comes from', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const here = page.getByRole('dialog', { name: /^Here: / });
+  await test.step('Given a link to a place in Persia in 500 BCE, with states and ways of life on', async () => {
+    await page.goto('./?t=-499-06-01T12:00&loc=32.5,51.7&layers=lunar,solar,empires,ways&why=here');
+    await globeRendered(page);
+  });
+  await test.step('Then "Here" names the state drawn there, its page, and the way of life rated', async () => {
+    await expect(here).toHaveAccessibleName('Here: 32.5°N 51.7°E');
+    await expect(here).toContainText('Cliopatria draws Achaemenid Empire here in 500 BCE.');
+    await expect(
+      here.getByRole('link', { name: 'Achaemenid Empire on Wikipedia' }),
+    ).toHaveAttribute('href', 'https://en.wikipedia.org/wiki/Achaemenid_Empire');
+    await expect(here).toContainText('as archaeologists rated it for');
+  });
+  await test.step('When they ask where the state comes from', async () => {
+    await here.getByRole('button', { name: 'Why: States' }).click();
+  });
+  await test.step('Then its source opens', async () => {
+    await expect(
+      page.getByRole('dialog', { name: 'States and empires (Cliopatria)' }),
+    ).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});
+
+test('"Why here?" on the rail asks for a tap, and a tap says what is there', async ({ page }) => {
+  const rail = page.getByRole('group', { name: 'Zoom' });
+  await test.step('Given 500 BCE with states on, and no place picked', async () => {
+    await page.goto('./?t=-499-06-01T12:00&layers=lunar,solar,empires&cam=50,32,3');
+    await globeRendered(page);
+  });
+  await test.step('When they turn on "Why here?"', async () => {
+    await rail.getByRole('button', { name: 'Why here?' }).click();
+  });
+  await test.step('Then it asks for a place', async () => {
+    await expect(rail.getByRole('button', { name: 'Why here?' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.getByRole('dialog', { name: 'Why here?' })).toContainText('Tap the globe');
+  });
+  await test.step('When they tap the globe', async () => {
+    const box = await page.getByTestId('globe').boundingBox();
+    const hud = await page.locator('.hud').boundingBox();
+    const bottom = await page.locator('.bottom').boundingBox();
+    if (box === null || hud === null || bottom === null) throw new Error('no layout');
+    await page.mouse.click(box.x + box.width * 0.45, (hud.y + hud.height + bottom.y) / 2);
+  });
+  await test.step('Then "Here" says what the states layer has at that place', async () => {
+    const here = page.getByRole('dialog', { name: /^Here: / });
+    await expect(here).toBeVisible();
+    await expect(here).toContainText(/Cliopatria draws/);
+    await expect(page).toHaveURL(/why=here/);
+    await expect(page).toHaveURL(/loc=/);
+  });
+});
+
+test('"How do we know?" speaks of the period shown, and changes with it', async ({ page }) => {
+  const sheet = page.getByRole('dialog', { name: 'How do we know what Earth looked like?' });
+  await test.step('Given the Carboniferous, with "How do we know?" open from its link', async () => {
+    await page.goto('./?ma=320&scale=all&why=deep-evidence');
+    await globeRendered(page);
+  });
+  await test.step('Then it names the period, what the map shows, and its evidence and papers', async () => {
+    await expect(sheet.getByRole('heading', { name: 'Then: the Carboniferous' })).toBeVisible();
+    await expect(sheet).toContainText('Pangaea is gathering');
+    await expect(sheet).toContainText('late Palaeozoic ice age');
+    await expect(
+      sheet
+        .locator('.why-then-sources')
+        .getByRole('link', { name: 'Montañez & Poulsen 2013', exact: true }),
+    ).toHaveAttribute('href', 'https://doi.org/10.1146/annurev.earth.031208.100118');
+  });
+  await test.step('When the moment moves into the Triassic', async () => {
+    await page.getByRole('slider', { name: 'Millions of years ago' }).fill('-240');
+  });
+  await test.step('Then the panel speaks of the Triassic', async () => {
+    await expect(sheet.getByRole('heading', { name: 'Then: the Triassic' })).toBeVisible();
+    await expect(sheet).toContainText('Lystrosaurus');
+  });
+});

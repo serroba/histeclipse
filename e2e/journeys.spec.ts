@@ -281,7 +281,8 @@ test('with the Sun in focus, the rail measures from the Sun and leads back to Ea
 test.describe('a first visit from Sydney', () => {
   test.use({ timezoneId: 'Australia/Sydney' });
 
-  test('opens over the reader’s region, from the browser’s time zone', async ({ page }) => {
+  test('opens over the reader’s region, from the browser’s time zone', async ({ page }, info) => {
+    test.skip(info.project.name === 'desktop-120hz', 'about the time zone, not frames');
     const problems = collectProblems(page);
     await test.step('Given a first visit, from a browser set to Sydney’s time zone', async () => {
       await page.goto('./');
