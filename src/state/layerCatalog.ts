@@ -143,6 +143,14 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
         spans: ['ice', 'all'],
         reach: 'Ice cores over 800,000 years; proxies over 540 million years.',
       },
+      {
+        id: 'radiocarbon',
+        label: 'Carbon-14 in the air',
+        about:
+          'How much radiocarbon the air held each year, under the years’ slider: its sudden spikes and its plateaus, and why a radiocarbon date is a range.',
+        spans: ['years'],
+        reach: 'The calibration curves reach back 55,000 years, to 1950.',
+      },
     ],
   },
   {

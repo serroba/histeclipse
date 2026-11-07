@@ -77,6 +77,8 @@ export const LAYERS = [
   'humans',
   // Deep time: carbon dioxide and methane from the ice cores.
   'air',
+  // The years: carbon-14 in the air (IntCal20, SHCal20), why a radiocarbon date is a range.
+  'radiocarbon',
   // Deep time: fossils of four groups of animals, where they lay then.
   'fossils',
 ] as const;
