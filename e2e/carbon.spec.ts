@@ -104,3 +104,42 @@ test('beyond 50,000 years the layer says radiocarbon cannot reach, and names oth
   });
   expect(problems).toEqual([]);
 });
+
+test('a cosmic ray’s shower makes carbon-14, step by step, under the field picked', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const caption = page.getByTestId('shower-caption');
+  const dialog = page.getByRole('dialog', { name: 'How is carbon-14 made?' });
+  await test.step('Given the card on how carbon-14 is made, with today’s field', async () => {
+    await page.goto('./?t=1500-06-01T12:00&loc=48,10&layers=carbonMade');
+    await globeRendered(page);
+    await openLayers(page);
+    await page.getByRole('button', { name: 'How is it made?' }).click();
+  });
+  await test.step('When they watch a cosmic ray make carbon-14', async () => {
+    await dialog.getByRole('button', { name: 'Watch a cosmic ray make carbon-14' }).click();
+  });
+  await test.step('Then the field turns the equator’s ray away, and the caption says so', async () => {
+    await expect(dialog).toBeHidden();
+    await expect(caption).toContainText('bends this one back out to space', { timeout: 20_000 });
+  });
+  await test.step('And it plays every step, from the shower to carbon dioxide, then clears', async () => {
+    await expect(globe).toHaveAttribute('data-showers-played', '1', { timeout: 60_000 });
+    await expect(globe).toHaveAttribute('data-shower-steps', 'rays shower capture dioxide drift');
+    await expect(caption).toBeHidden();
+  });
+  await test.step('When they pick the Laschamp excursion and watch again', async () => {
+    await openLayers(page);
+    await page.getByRole('button', { name: 'How is it made?' }).click();
+    await dialog.getByRole('radio', { name: 'Laschamp excursion, 41,000 years ago' }).check();
+    await dialog.getByRole('button', { name: 'Watch a cosmic ray make carbon-14' }).click();
+  });
+  await test.step('Then the rays reach the air at the equator too', async () => {
+    await expect(caption).toContainText('reach the air at the equator too', { timeout: 20_000 });
+    await expect(globe).toHaveAttribute('data-showers-played', '2', { timeout: 60_000 });
+  });
+  expect(problems).toEqual([]);
+});

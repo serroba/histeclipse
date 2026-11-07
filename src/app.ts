@@ -35,6 +35,7 @@ import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
 import { DATABLE_YEARS } from './data/radiocarbonProduction';
+import { captionOf } from './globe/showerSteps';
 import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
 import { createDatingCard } from './ui/datingCard';
 import { createCarbonMadeCard, glowOf } from './ui/carbonMadeCard';
@@ -776,10 +777,53 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const datingCard = createDatingCard();
   // Where cosmic rays make carbon-14 (#269): a glow over the globe, for the field and Sun picked
   // in its card.
-  const carbonMadeCard = createCarbonMadeCard(() => {
-    showCarbonMade(store.get());
-    showEmpires(store.get());
+  const carbonMadeCard = createCarbonMadeCard(
+    () => {
+      showCarbonMade(store.get());
+      showEmpires(store.get());
+    },
+    (made) => {
+      watchShower(made.field.dipole);
+    },
+  );
+  // What the shower shows at each step, over the globe while it plays.
+  const showerCaption = element('p', {
+    class: 'shower-caption',
+    'data-testid': 'shower-caption',
+    'aria-live': 'polite',
   });
+  showerCaption.hidden = true;
+
+  /**
+   * Play a cosmic-ray shower over the meridian in view: seen from the side as the rays come in,
+   * then close up as one bursts, under the field picked.
+   */
+  function watchShower(dipole: number): void {
+    if (store.get().focus !== 'earth')
+      store.set((state) => ({ ...state, focus: 'earth', view: 'free' }));
+    layersPanel.dialog.close();
+    const { longitude } = store.get().camera.target;
+    const place = { latitude: 60, longitude };
+    // From the side first, so the rays are seen coming in from space.
+    globe.flyTo({ latitude: 20, longitude: longitude - 90 });
+    globe.zoomTo(4.4);
+    // Once the globe has turned to it.
+    window.setTimeout(() => {
+      globe.playShower({
+        place,
+        dipole,
+        onStep(step) {
+          // In close over the strike, for the shower and what it makes.
+          if (step === 'shower') {
+            globe.flyTo(place);
+            globe.zoomTo(1.35);
+          }
+          showerCaption.hidden = step === null;
+          showerCaption.textContent = step === null ? '' : captionOf(step, dipole);
+        },
+      });
+    }, 1000);
+  }
   let carbonMadeSaid: string | null = null;
   let carbonMadeAction: { readonly label: string; readonly run: () => void } | null = null;
 
@@ -1122,6 +1166,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     markerCard.dialog,
     datingCard.dialog,
     carbonMadeCard.dialog,
+    showerCaption,
   );
 
   // Full view hides the panels for a clear view; Show controls, Escape, or a tap on open sky or
