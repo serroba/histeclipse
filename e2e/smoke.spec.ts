@@ -1650,7 +1650,7 @@ test('deep time reaches back 4.6 billion years, sketching hypotheses before the 
   expect(problems).toEqual([]);
 });
 
-test('tapping the Sun in the sky closes in on it, then offers it up close', async ({ page }) => {
+test('tapping the Sun in the sky closes in on it, then goes to it up close', async ({ page }) => {
   const problems = collectProblems(page);
   const sky = page.getByTestId('sky');
   await test.step('Given the sky over Babylon at noon, the Sun high', async () => {
@@ -1664,14 +1664,56 @@ test('tapping the Sun in the sky closes in on it, then offers it up close', asyn
     if (box === null) throw new Error('sky has no size');
     await page.mouse.click(box.x + (at[0] ?? 0), box.y + (at[1] ?? 0));
   });
-  await test.step('Then the view turns to it and closes in, its disc half the view', async () => {
+  await test.step('Then the view closes in on it, its disc half the view, and goes to it up close', async () => {
     await expect(page).toHaveURL(/look=\d+\.\d,\d+\.\d,1\.\d/);
-    await expect(page.getByRole('button', { name: 'See the Sun up close' })).toBeVisible();
-  });
-  await test.step('When they ask to see it up close, the space view flies to the Sun', async () => {
-    await page.getByRole('button', { name: 'See the Sun up close' }).click();
     await expect(page).toHaveURL(/mode=globe/);
     await expect(page).toHaveURL(/focus=sun/);
+  });
+  expect(problems).toEqual([]);
+});
+
+test('tapping a planet in the sky goes to it up close, and the way back faces it', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const sky = page.getByTestId('sky');
+  const mars = sky.locator('.sky-label.is-planet', { hasText: /^Mars$/ });
+  await test.step('Given the sky over Kansas before dawn, Mars up in the south-east', async () => {
+    const link = './?mode=sky&t=2026-11-04T10:59&loc=38.62,-100.35';
+    await page.goto(`${link}&look=135,25,90`);
+    await skyRendered(page);
+    // Facing it, whatever the screen's width: the sky reports where each planet stands.
+    const report = (await sky.getAttribute('data-planets')) ?? '';
+    const [, altitude, azimuth] = /Mars:([-\d.]+):([-\d.]+)/.exec(report) ?? [];
+    expect(Number(altitude)).toBeGreaterThan(10);
+    await page.goto(`${link}&look=${azimuth ?? ''},${altitude ?? ''},60`);
+    await skyRendered(page);
+    await expect(mars).toBeVisible();
+  });
+  await test.step('When they tap Mars', async () => {
+    // A label stands at its planet's point on screen.
+    const at = await mars.evaluate((label) => {
+      const match = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(label.style.transform);
+      return [Number(match?.[1]), Number(match?.[2])];
+    });
+    const box = await sky.boundingBox();
+    if (box === null) throw new Error('sky has no size');
+    await page.mouse.click(box.x + (at[0] ?? 0), box.y + (at[1] ?? 0));
+  });
+  await test.step('Then the space view shows Mars up close, wearing its map', async () => {
+    await expect(page).toHaveURL(/focus=mars/);
+    await expect(page.getByTestId('body-bar')).toContainText('Mars');
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-planet-map', 'mars', {
+      timeout: 30_000,
+    });
+  });
+  await test.step('When they go back to the sky', async () => {
+    await page.getByRole('button', { name: 'Sky', exact: true }).click();
+    await skyRendered(page);
+  });
+  await test.step('Then the sky faces Mars, closed in on it', async () => {
+    await expect(page).toHaveURL(/look=1\d\d\.\d,\d+\.\d,4\.0/);
+    await expect(mars).toBeVisible();
   });
   expect(problems).toEqual([]);
 });
