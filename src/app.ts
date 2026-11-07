@@ -1950,6 +1950,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (greatest === undefined) return;
     const approach = approachOf(greatest.impact.name);
     strikeBusyUntil = performance.now() + IMPACT_ANIMATION_MS;
+    globeContainer.dataset['strike'] = greatest.impact.name;
     globe.playImpact({
       place: greatest.place,
       craterKm: greatest.impact.diameterKm ?? STRIKE_MIN_KM,
