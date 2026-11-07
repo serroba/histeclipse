@@ -317,6 +317,12 @@ export const SOURCES = {
     url: 'https://sdo.gsfc.nasa.gov/',
     licence: 'NASA, public domain',
   },
+  lemen2012: {
+    name: 'Lemen et al. 2012',
+    kind: 'paper',
+    cite: 'Lemen, J. R., Title, A. M., Akin, D. J., Boerner, P. F., et al. (2012). The Atmospheric Imaging Assembly (AIA) on the Solar Dynamics Observatory (SDO). Solar Physics 275, 17–40',
+    url: 'https://doi.org/10.1007/s11207-011-9776-8',
+  },
   moonKit: {
     name: 'NASA CGI Moon Kit',
     kind: 'imagery',
@@ -657,9 +663,9 @@ export const WHYS = {
   },
   sun: {
     title: 'The Sun close up',
-    what: 'The Sun’s surface in the light picked.',
-    sources: ['sdo', 'helioviewer'],
-    how: 'Images of 2024, days apart, stitched into one surface: the Sun of the date shown looked different, in ways unknown.',
+    what: 'The Sun’s surface in the light picked, from the surface outward: its spots, its magnetic field, then ever hotter layers above it.',
+    sources: ['sdo', 'helioviewer', 'lemen2012'],
+    how: 'Images of 2024, days apart, stitched into one surface: the Sun of the date shown looked different, in ways unknown. The four hotter layers are seen in extreme ultraviolet, each through a filter that passes the light of one kind of atom at one temperature (helium in the chromosphere, iron in the corona). They are named by wavelength in ångströms (Å), a tenth of a nanometre: visible light is about 6,000 Å, these 131 to 304 Å. Earth’s air blocks this light, so only spacecraft see it.',
   },
   'close-up': {
     title: 'The Moon and planets close up',
