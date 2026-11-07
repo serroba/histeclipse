@@ -48,6 +48,7 @@ import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import { DISPERSAL_SCENARIOS, type DeepScale, type DispersalScenario } from '../state/viewState';
 import type { WhyId } from '../sources/registry';
 import { element } from './dom';
+import { bookIcon } from './icons';
 import { createGasChart } from './gasChart';
 import { createMilestonePanel } from './milestonePanel';
 import { createPeriodBands } from './periodBands';
@@ -337,6 +338,8 @@ export interface DeepTimeBar {
 export function createDeepTimeBar(handlers: {
   /** The book that says where a note's content comes from. */
   why(id: WhyId, label: string): HTMLElement;
+  /** Open the why of `id` in full: the map's evidence, from its own chip. */
+  explain(id: WhyId): void;
   /** A new moment: `jump` when it is a step to go back from (a milestone, a click), not a drag. */
   onMa(ma: number, jump: boolean): void;
   onPlay(playing: boolean): void;
@@ -472,6 +475,16 @@ export function createDeepTimeBar(handlers: {
   const humansWhy = handlers.why('humans', 'Humans');
   const fossilsWhy = handlers.why('fossils', 'Fossils');
   const impactsWhy = handlers.why('impacts', 'Impact craters');
+  // What the map rests on, asked plainly, first among the chips: a reconstruction should say so.
+  const evidenceButton = element(
+    'button',
+    { type: 'button', class: 'deep-layer deep-evidence', hidden: '' },
+    bookIcon(),
+    'How do we know?',
+  );
+  evidenceButton.addEventListener('click', () => {
+    handlers.explain('deep-evidence');
+  });
   const iceNote = element(
     'div',
     { class: 'deep-note', hidden: '', 'data-testid': 'ice-note' },
@@ -755,6 +768,7 @@ export function createDeepTimeBar(handlers: {
       period,
       // Beside the moment, not the slider: on a phone the slider needs the whole row.
       speed,
+      evidenceButton,
       seaLevelButton,
       temperatureButton,
       platesButton,
@@ -1326,6 +1340,8 @@ export function createDeepTimeBar(handlers: {
       milestones.render(view.ma, view.oldest);
       seaLevelButton.setAttribute('aria-pressed', String(view.seaLevel.on));
       platesButton.setAttribute('aria-pressed', String(view.plates));
+      // The maps of the 540 Myr and 4.6 Gyr spans are reconstructions; the ice ages', today's land.
+      evidenceButton.hidden = view.scale === 'ice';
       // People are a matter of the last few hundred thousand years: the ice-age scale's.
       humansButton.hidden = view.scale !== 'ice';
       // Fossils are counted by 5 million years: a matter of the 540 Myr span.

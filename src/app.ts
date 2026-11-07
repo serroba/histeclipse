@@ -461,6 +461,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     why(id, label) {
       return whySheet.mark(id, label);
     },
+    explain(id) {
+      whySheet.open(id);
+    },
     onMa(ma, jump) {
       stopPlay();
       if (jump) sync.step();

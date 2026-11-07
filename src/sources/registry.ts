@@ -148,6 +148,60 @@ export const SOURCES = {
     cite: 'Tarduno et al. (2015), A Hadean to Paleoarchean geodynamo recorded by single zircon crystals, Science 349, 521–524',
     url: 'https://doi.org/10.1126/science.aaa9114',
   },
+  torsvik2012: {
+    name: 'Torsvik et al. 2012',
+    kind: 'paper',
+    cite: 'Torsvik et al. (2012), Phanerozoic polar wander, palaeogeography and dynamics, Earth-Science Reviews 114, 325–368',
+    url: 'https://doi.org/10.1016/j.earscirev.2012.06.007',
+  },
+  torsvikCocks: {
+    name: 'Torsvik & Cocks, Earth History and Palaeogeography',
+    kind: 'paper',
+    cite: 'Torsvik & Cocks (2016), Earth History and Palaeogeography, Cambridge University Press: a textbook, period by period',
+    url: 'https://doi.org/10.1017/9781316225523',
+  },
+  boucot2013: {
+    name: 'Boucot, Chen & Scotese 2013',
+    kind: 'paper',
+    cite: 'Boucot, Chen & Scotese (2013), Phanerozoic Paleoclimate: an atlas of lithologic indicators of climate, SEPM Concepts in Sedimentology and Paleontology 11',
+    url: 'https://doi.org/10.2110/sepmcsp.11',
+  },
+  montanez2013: {
+    name: 'Montañez & Poulsen 2013',
+    kind: 'paper',
+    cite: 'Montañez & Poulsen (2013), The Late Paleozoic Ice Age: an evolving paradigm, Annual Review of Earth and Planetary Sciences 41, 629–656',
+    url: 'https://doi.org/10.1146/annurev.earth.031208.100118',
+  },
+  seton2020: {
+    name: 'Seton et al. 2020',
+    kind: 'dataset',
+    cite: 'Seton et al. (2020), A global data set of present-day oceanic crustal age and seafloor spreading parameters, Geochemistry, Geophysics, Geosystems 21',
+    url: 'https://doi.org/10.1029/2020GC009214',
+  },
+  steinberger2008: {
+    name: 'Steinberger & Torsvik 2008',
+    kind: 'paper',
+    cite: 'Steinberger & Torsvik (2008), Absolute plate motions and true polar wander in the absence of hotspot tracks, Nature 452, 620–623',
+    url: 'https://doi.org/10.1038/nature06824',
+  },
+  merdith2021: {
+    name: 'Merdith et al. 2021',
+    kind: 'model',
+    cite: 'Merdith et al. (2021), Extending full-plate tectonic models into deep time, Earth-Science Reviews 214, 103477',
+    url: 'https://doi.org/10.1016/j.earscirev.2020.103477',
+  },
+  muller2019: {
+    name: 'Müller et al. 2019',
+    kind: 'model',
+    cite: 'Müller et al. (2019), A global plate model including lithospheric deformation along major rifts and orogens since the Triassic, Tectonics 38',
+    url: 'https://doi.org/10.1029/2018TC005462',
+  },
+  gplatesPortal: {
+    name: 'GPlates Portal',
+    kind: 'model',
+    cite: 'The GPlates Portal (EarthByte): reconstructions to explore in the browser',
+    url: 'https://portal.gplates.org',
+  },
   sdo: {
     name: 'NASA SDO',
     kind: 'imagery',
@@ -385,6 +439,16 @@ export interface Why {
   readonly how?: string;
   /** Where sources disagree, and how to see the others. */
   readonly others?: string;
+  /** The kinds of evidence a reconstruction rests on: what each tells, and a key paper. */
+  readonly evidence?: readonly {
+    readonly name: string;
+    readonly says: string;
+    readonly source: SourceId;
+  }[];
+  /** How sure each part is, from firmest to most illustrative. */
+  readonly certainty?: readonly string[];
+  /** Where a student might read on, in order. */
+  readonly reading?: readonly SourceId[];
 }
 
 export const WHYS = {
@@ -508,6 +572,46 @@ export const WHYS = {
     others:
       'Other reconstructions place the continents differently: turn on Plates to outline Cao et al. 2024’s over this one.',
   },
+  'deep-evidence': {
+    title: 'How do we know what Earth looked like?',
+    what: 'The globe is a reconstruction: a model of where land and sea, mountains and shelves were, built from evidence that survives in rocks. Some of it is measured, some inferred, some the map-maker’s judgement. This is what it rests on.',
+    sources: ['paleodem', 'torsvik2012', 'torsvikCocks', 'cao2024', 'merdith2021', 'muller2019'],
+    evidence: [
+      {
+        name: 'Rock magnetism',
+        says: 'Iron minerals in lava and sediment lock in the direction of Earth’s field as the rock forms. Their tilt gives the latitude where the rock formed, and they point to the pole of the time. They say nothing about longitude.',
+        source: 'torsvik2012',
+      },
+      {
+        name: 'Matching rocks and fossils',
+        says: 'Mountain belts, rock sequences and the same land plants and animals (Glossopteris, Mesosaurus, Lystrosaurus) on continents now oceans apart show which ones were once joined.',
+        source: 'torsvikCocks',
+      },
+      {
+        name: 'Rocks that record climate',
+        says: 'Glacial deposits, coal, salt and reefs form in particular climates, so they hint at latitude independently of magnetism. Where the two agree, the map is surer: the ice of the late Palaeozoic, for one, lay over the south pole the magnetism finds.',
+        source: 'boucot2013',
+      },
+      {
+        name: 'The ocean floor',
+        says: 'Magnetic stripes and the ages of the sea floor record how oceans opened. But sea floor sinks back into the mantle: none older than about 180 million years survives in place, so older oceans are inferred.',
+        source: 'seton2020',
+      },
+      {
+        name: 'Longitude, by assumption',
+        says: 'Since magnetism cannot give longitude, models fix it another way: hotspot tracks, or the deep mantle’s large hot regions held still beneath the plates, or plates moving as little as they can. Different choices, different maps.',
+        source: 'steinberger2008',
+      },
+    ],
+    certainty: [
+      'Surer: the latitudes of the larger continents, and which continents were joined.',
+      'Less sure: longitudes; the outlines of small blocks and of oceans now lost; anything before about 180 million years that would rest on sea floor.',
+      'Illustrative: mountain heights and exact coastlines, drawn by the map-maker from rock types and sea-level estimates.',
+    ],
+    others:
+      'Other reconstructions place the continents differently, the more so further back: Cao et al. 2024 (turn on Plates to outline it over this map), Merdith et al. 2021, Müller et al. 2019 (from the Triassic).',
+    reading: ['torsvikCocks', 'torsvik2012', 'gplatesPortal', 'montanez2013'],
+  },
   'ice-surface': {
     title: 'The ice ages’ Earth',
     what: 'Today’s land and sea floor, with the coast at the sea level of the moment and the ice sheets of the time.',
@@ -596,7 +700,7 @@ export function onScreen(scene: Scene): WhyId[] {
         ? ['earth', 'bodies']
         : scene.span === 'ice'
           ? ['ice-surface']
-          : ['deep-surface'];
+          : ['deep-surface', 'deep-evidence'];
   const layers = (layer: Layer): boolean =>
     scene.layers.has(layer) && scene.drawsOn(layer, scene.span);
   const borders: WhyId[] = !layers('empires')
