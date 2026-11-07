@@ -133,3 +133,20 @@ export function rangeText({ older, younger }: CalRange): string {
   if (from > 0 && to > 0) return `${String(from)}–${String(to)} CE`;
   return `${yearText(from)}–${yearText(to)}`;
 }
+
+/**
+ * The share of its carbon-14 a sample has left, from its radiocarbon age: by convention ages use
+ * Libby's half-life of 5,568 years, a mean life of 8,033 (Stuiver & Polach 1977). The true
+ * half-life is 5,730 years; calibrating against the curve takes care of the difference.
+ */
+export function fractionLeft(age: number): number {
+  return Math.exp(-age / 8033);
+}
+
+/** The calendar ages (cal BP) a chart of a calibration spans: its ranges with room either side. */
+export function chartWindow(ranges: readonly CalRange[]): { older: number; younger: number } {
+  const older = Math.max(...ranges.map(({ older: o }) => o));
+  const younger = Math.min(...ranges.map(({ younger: y }) => y));
+  const room = Math.max(50, (older - younger) * 0.4);
+  return { older: older + room, younger: Math.max(0, younger - room) };
+}

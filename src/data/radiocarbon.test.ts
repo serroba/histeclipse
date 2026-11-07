@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 import data from '../../public/data/radiocarbon.json';
 import {
   calibrate,
+  chartWindow,
+  fractionLeft,
   highestDensity,
   loadRadiocarbon,
   rangeText,
@@ -105,5 +107,23 @@ describe('calibrating', () => {
     // Centuries wide, from before 700 BCE to after 450 BCE.
     expect(yearOfCalBP(oldest)).toBeLessThan(-699);
     expect(yearOfCalBP(youngest)).toBeGreaterThan(-449);
+  });
+});
+
+describe('for the card', () => {
+  it('says how much carbon-14 is left: half after one Libby half-life', () => {
+    expect(fractionLeft(0)).toBe(1);
+    expect(fractionLeft(5568)).toBeCloseTo(0.5, 3);
+    expect(fractionLeft(2450)).toBeCloseTo(0.737, 3);
+  });
+
+  it('frames a calibration with room either side', () => {
+    const window = chartWindow([
+      { older: 2750, younger: 2700, share: 0.3 },
+      { older: 2650, younger: 2400, share: 0.65 },
+    ]);
+    expect(window.older).toBeGreaterThan(2750);
+    expect(window.younger).toBeLessThan(2400);
+    expect(chartWindow([{ older: 30, younger: 10, share: 1 }]).younger).toBe(0);
   });
 });
