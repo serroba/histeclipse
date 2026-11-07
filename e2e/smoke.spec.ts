@@ -635,6 +635,62 @@ async function skyRendered(page: Page): Promise<void> {
   await expect(page.getByTestId('sky')).toHaveAttribute('data-rendered', 'true');
 }
 
+test('a page opened before a deploy reloads once when a late part of it is gone', async ({
+  page,
+}) => {
+  let missing = 1;
+  let loads = 0;
+  page.on('load', () => {
+    loads += 1;
+  });
+  await test.step('Given the sky’s code gone from the server once, as after a deploy', async () => {
+    await page.route('**/assets/skyScene-*.js', async (route) => {
+      if (missing > 0) {
+        missing -= 1;
+        await route.fulfill({ status: 404, body: 'gone' });
+      } else {
+        await route.continue();
+      }
+    });
+  });
+  await test.step('When they open the sky', async () => {
+    await page.goto('./?mode=sky&t=2025-03-20T19:00Z&loc=32.5422,44.4209');
+  });
+  await test.step('Then the page reloads by itself and the stars come up', async () => {
+    // A whole second load: more than the usual wait on a busy machine.
+    await expect.poll(() => loads, { timeout: 15_000 }).toBe(2);
+    await expect(page.getByTestId('sky')).toHaveAttribute('data-rendered', 'true', {
+      timeout: 15_000,
+    });
+    expect(loads).toBe(2);
+  });
+});
+
+test('a late part that stays missing says so once, without reloading again and again', async ({
+  page,
+}) => {
+  let loads = 0;
+  page.on('load', () => {
+    loads += 1;
+  });
+  await test.step('Given the sky’s code missing for good', async () => {
+    await page.route('**/assets/skyScene-*.js', (route) =>
+      route.fulfill({ status: 404, body: 'gone' }),
+    );
+  });
+  await test.step('When they open the sky', async () => {
+    await page.goto('./?mode=sky&t=2025-03-20T19:00Z&loc=32.5422,44.4209');
+  });
+  await test.step('Then, after one reload, a single notice says the stars could not load', async () => {
+    const notice = page.getByRole('status').getByText(/^Could not load the stars/);
+    await expect(notice).toHaveCount(1, { timeout: 15_000 });
+    // Drawing again asks again: still one notice, and no further reload.
+    await page.getByRole('button', { name: 'Sky', exact: true }).click();
+    await expect(notice).toHaveCount(1);
+    expect(loads).toBe(2);
+  });
+});
+
 test('the Sky button stands you where the globe is looking, and back again', async ({ page }) => {
   const problems = collectProblems(page);
   await page.goto('./?t=2025-03-20T19:00Z&cam=32.5,44.4,3');
@@ -1068,6 +1124,45 @@ test('close to the Sun, SDO’s images show it in six kinds of light', async ({ 
   await globeRendered(page);
   await expect(page.getByRole('group', { name: 'Light' })).toBeHidden();
   await expect(globe).toHaveAttribute('data-sun-image', 'none');
+});
+
+test('close to the Sun, the caption says what the light shows; how it was made is a tap away', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
+  const phone = info.project.name === 'mobile';
+  const caption = page.getByTestId('sun-caption');
+  const more = caption.getByText('How it was made, and credit');
+  const credit = caption.getByText(/Credit: NASA\/SDO/);
+  await test.step('Given the Sun close up', async () => {
+    await page.goto('./?t=2024-05-08T12:00&focus=sun&cam=-17.2,-134.2,4');
+    await globeRendered(page);
+  });
+  await test.step('Then the first line says what the light shows', async () => {
+    await expect(caption).toContainText('617 nm, close to what the eye sees');
+  });
+  await test.step(
+    phone
+      ? 'And on a phone the rest is folded, so the panel leaves the Sun in view'
+      : 'And on a wide screen the rest shows at once',
+    async () => {
+      if (phone) {
+        await expect(credit).toBeHidden();
+        const panel = await page.locator('.hud').boundingBox();
+        const height = page.viewportSize()?.height ?? 0;
+        expect((panel?.y ?? 0) + (panel?.height ?? 0)).toBeLessThan(height / 2);
+      } else {
+        await expect(credit).toBeVisible();
+      }
+    },
+  );
+  if (phone) {
+    await test.step('When they open how it was made, the credit and the caveat show', async () => {
+      await more.click();
+      await expect(credit).toBeVisible();
+      await expect(caption).toContainText('This is the Sun of 2024');
+    });
+  }
 });
 
 test('the sky can be drawn as other cultures saw it, credited, and the link keeps it', async ({
