@@ -4,7 +4,15 @@
  * the Sources list names what is on screen now.
  */
 
-import { collectProblems, expect, globeRendered, openLayers, openSources, test } from './support';
+import {
+  collectProblems,
+  expect,
+  globeRendered,
+  openLayers,
+  openSources,
+  showDeepDetails,
+  test,
+} from './support';
 
 test('the Sources list names what is on screen now, and each book opens why', async ({ page }) => {
   const problems = collectProblems(page);
@@ -85,5 +93,58 @@ test('in deep time, the Sources list follows the span and the layers drawn there
   await test.step('Then it names the Earth then and the temperature, not the resting states', async () => {
     await expect(list.locator('.why-row-title')).toHaveText(['The Earth then', 'Temperature']);
     await expect(list.getByRole('link', { name: 'PALEOMAP PaleoDEMs' })).toBeVisible();
+  });
+});
+
+test('the numbers say where they come from: ΔT and an eclipse’s figures', async ({ page }) => {
+  const problems = collectProblems(page);
+  await test.step('Given the eclipse of Thales', async () => {
+    await page.goto('./?t=-584-05-28T14:26&sel=solar:-0584-05-28');
+    await globeRendered(page);
+  });
+  await test.step('When they ask why ΔT is what it is', async () => {
+    await page.getByRole('button', { name: 'Why: ΔT' }).click();
+  });
+  await test.step('Then the papers behind it, and its uncertainty, are named', async () => {
+    const sheet = page.getByRole('dialog', { name: 'ΔT' });
+    await expect(sheet.getByRole('link', { name: 'Morrison et al. 2021' })).toHaveAttribute(
+      'href',
+      'https://doi.org/10.1098/rspa.2020.0776',
+    );
+    await expect(sheet.getByRole('link', { name: 'Morrison & Stephenson 2004' })).toBeVisible();
+    await expect(sheet).toContainText('standard error');
+    await sheet.getByRole('button', { name: 'Close' }).click();
+  });
+  await test.step('When they ask why the eclipse card says what it says', async () => {
+    await page.locator('.eclipse-card').getByRole('button', { name: 'Why: Eclipse' }).click();
+  });
+  await test.step('Then the ephemeris and the computation are named', async () => {
+    const sheet = page.getByRole('dialog', { name: 'Eclipses' });
+    await expect(sheet.getByRole('link', { name: 'JPL DE441' })).toBeVisible();
+    await expect(sheet.getByRole('link', { name: 'Skyfield' })).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});
+
+test('deep time’s notes and facts each have their book', async ({ page }) => {
+  await test.step('Given 250 million years ago with temperature on, details open', async () => {
+    await page.goto('./?ma=250&scale=all&layers=temperature');
+    await globeRendered(page);
+    await showDeepDetails(page);
+  });
+  await test.step('Then the temperature’s book opens both models', async () => {
+    await page.getByRole('button', { name: 'Why: Temperature' }).first().click();
+    const sheet = page.getByRole('dialog', { name: 'Temperature' });
+    await expect(sheet.getByRole('link', { name: 'Scotese 2022' })).toBeVisible();
+    await expect(sheet.getByRole('link', { name: 'CESM, Li et al. 2023' })).toBeVisible();
+    await sheet.getByRole('button', { name: 'Close' }).click();
+  });
+  await test.step('And the Earth facts’ book opens the papers they cite', async () => {
+    await page
+      .getByRole('button', { name: 'Why: Poles, magnetic field, tilt, day and Sun' })
+      .click();
+    const sheet = page.getByRole('dialog', { name: 'Poles, magnetic field, tilt, day and Sun' });
+    await expect(sheet.getByRole('link', { name: 'Wells 1963' })).toBeVisible();
+    await expect(sheet.getByRole('link', { name: 'Laskar et al. 2004' })).toBeVisible();
   });
 });
