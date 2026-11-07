@@ -48,7 +48,7 @@ import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import { DISPERSAL_SCENARIOS, type DeepScale, type DispersalScenario } from '../state/viewState';
 import type { WhyId } from '../sources/registry';
 import { element } from './dom';
-import { bookIcon } from './icons';
+import { bookIcon, uiIcon } from './icons';
 import { createGasChart } from './gasChart';
 import { createMilestonePanel } from './milestonePanel';
 import { createPeriodBands } from './periodBands';
@@ -521,8 +521,9 @@ export function createDeepTimeBar(handlers: {
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
   const platesButton = element(
     'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false' },
-    'Plates',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', title: 'Plates' },
+    uiIcon('plates'),
+    element('span', { class: 'icon-label' }, 'Plates'),
   );
   const platesWords = element('span', {});
   const platesNote = element(
@@ -536,8 +537,9 @@ export function createDeepTimeBar(handlers: {
   );
   const airButton = element(
     'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
-    'Air',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '', title: 'Air' },
+    uiIcon('air'),
+    element('span', { class: 'icon-label' }, 'Air'),
   );
   const airNote = element('div', {
     class: 'deep-note air-note',
@@ -547,8 +549,9 @@ export function createDeepTimeBar(handlers: {
   const gasCharts = { co2: createGasChart(), ch4: createGasChart() };
   const fossilsButton = element(
     'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
-    'Fossils',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '', title: 'Fossils' },
+    uiIcon('fossils'),
+    element('span', { class: 'icon-label' }, 'Fossils'),
   );
   const fossilsNote = element('p', {
     class: 'deep-note fossils-note',
@@ -557,8 +560,9 @@ export function createDeepTimeBar(handlers: {
   });
   const impactsButton = element(
     'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
-    'Impacts',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '', title: 'Impacts' },
+    uiIcon('impacts'),
+    element('span', { class: 'icon-label' }, 'Impacts'),
   );
   const impactsMode = element(
     'select',
@@ -578,8 +582,9 @@ export function createDeepTimeBar(handlers: {
   });
   const humansButton = element(
     'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '' },
-    'Humans',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '', title: 'Humans' },
+    uiIcon('humans'),
+    element('span', { class: 'icon-label' }, 'Humans'),
   );
   const dispersalPicker = element(
     'select',
@@ -607,8 +612,9 @@ export function createDeepTimeBar(handlers: {
   });
   const seaLevelButton = element(
     'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false' },
-    'Sea level',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', title: 'Sea level' },
+    uiIcon('seaLevel'),
+    element('span', { class: 'icon-label' }, 'Sea level'),
   );
   const seaLevel = createSeaLevelChart({
     onKa(ka) {
@@ -617,8 +623,9 @@ export function createDeepTimeBar(handlers: {
   });
   const temperatureButton = element(
     'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false' },
-    'Temperature',
+    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', title: 'Temperature' },
+    uiIcon('temperature'),
+    element('span', { class: 'icon-label' }, 'Temperature'),
   );
   const legendScale = element('span', { class: 'temperature-scale', 'aria-hidden': 'true' });
   legendScale.style.background = legendGradient(TEMPERATURE_STOPS);

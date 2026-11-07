@@ -56,6 +56,7 @@ from histeclipse_pipeline.sky import (
 from histeclipse_pipeline.skycultures import fetch_skycultures
 from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.solar_images import fetch_images
+from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
 from histeclipse_pipeline.volcanoes import fetch_volcanoes
 
@@ -280,6 +281,12 @@ def volcanoes(args: Arguments) -> int:  # pragma: no cover - needs network acces
     return _say(f"wrote {count} eruptions to {args.out}")
 
 
+def timezones(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write each time zone's place (the tz database), for the globe's first view."""
+    count = fetch_timezones(args.out)
+    return _say(f"wrote {count} time zones to {args.out}")
+
+
 def pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the lead picture, author and licence of each Wikipedia page a data file names."""
     count = fetch_pictures(args.source, args.out, args.must_mention)
@@ -463,6 +470,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         impacts,
         "write impact craters and deposits, and their places when they struck (Impact Earth)",
         "output JSON file",
+    ),
+    "timezones": (
+        timezones,
+        "write each time zone's place, to open the globe over the reader's region",
+        "output file",
     ),
     "volcanoes": (
         volcanoes,

@@ -16,7 +16,96 @@ export interface PeriodEvidence {
   readonly sources: readonly SourceId[];
 }
 
+/** What the globe is before the surface maps: outlines back to 1.8 billion years, then sketches. */
+const OUTLINED =
+  'There are no surface maps this far back: the globe sketches competing hypotheses, and Plates outlines Cao et al.’s continents.';
+const SKETCHED =
+  'No reconstruction reaches this far back: the globe sketches what competing hypotheses say.';
+
 export const PERIOD_EVIDENCE: Readonly<Record<string, PeriodEvidence>> = {
+  Hadean: {
+    map: `Earth forms, and the Moon with it; no rocks of this time survive. ${SKETCHED}`,
+    evidence:
+      'Grains of zircon about 4.4 billion years old, from the Jack Hills of Australia, carry hints of continental crust and liquid water; magnetism in such grains has been read as an early magnetic field, a reading that is argued over.',
+    sources: ['wilde2001', 'tarduno2015'],
+  },
+  Eoarchean: {
+    map: `The oldest surviving rocks; how much crust there was is not known. ${SKETCHED}`,
+    evidence:
+      'The Acasta Gneiss of northwestern Canada, about 4.03 billion years old, is among the oldest dated rocks on Earth.',
+    sources: ['bowring1999'],
+  },
+  Paleoarchean: {
+    map: `Small continents in a mostly ocean world. ${SKETCHED}`,
+    evidence:
+      'Stromatolite reefs about 3.43 billion years old in the Pilbara of Australia are among the oldest signs of life; magnetism in rocks of 3.4 to 3.45 billion years records a magnetic field already shielding Earth.',
+    sources: ['allwood2006', 'tarduno2010'],
+  },
+  Mesoarchean: {
+    map: `Continental crust grows in small cratons. ${SKETCHED}`,
+    evidence:
+      'Granite and greenstone terrains survive in Australia and southern Africa; whether plate tectonics as we know it had begun is argued over.',
+    sources: ['bleeker2003'],
+  },
+  Neoarchean: {
+    map: `The first large cratons form; whether they were ever joined in one supercontinent is not known. ${SKETCHED}`,
+    evidence:
+      'Some 35 pieces of Archean crust survive; fitting them into the wholes they came from is a puzzle with several answers.',
+    sources: ['bleeker2003'],
+  },
+  Siderian: {
+    map: `The Archean cratons, their arrangement not known; the air begins to gain oxygen. ${SKETCHED}`,
+    evidence:
+      'Sulfur isotopes lose a signal that forms only in air without oxygen around 2.4 billion years ago: the Great Oxidation Event. Glaciations of the time may be tied to it.',
+    sources: ['farquhar2000'],
+  },
+  Rhyacian: {
+    map: `After the Great Oxidation, with oxygen in the air to stay. ${SKETCHED}`,
+    evidence:
+      'Collisions that will build the supercontinent Nuna (Columbia) begin; their mountain belts of 2.1 to 1.8 billion years survive on every continent.',
+    sources: ['farquhar2000', 'zhao2002'],
+  },
+  Orosirian: {
+    map: `Continents collide to build Nuna (Columbia). ${SKETCHED}`,
+    evidence:
+      'Mountain belts of 2.1 to 1.8 billion years on every continent record the collisions that built it.',
+    sources: ['zhao2002'],
+  },
+  Statherian: {
+    map: `Nuna (Columbia) stands assembled. ${OUTLINED}`,
+    evidence:
+      'Its core, of Laurentia, Baltica and Siberia, is pinned together by palaeomagnetism; Cao et al.’s plate model, the one Plates outlines, begins at 1.8 billion years.',
+    sources: ['evans2011', 'zhao2002', 'cao2024'],
+  },
+  Calymmian: {
+    map: `Nuna slowly comes apart, in a long, quiet stretch some call the “boring billion”. ${OUTLINED}`,
+    evidence:
+      'Few new mountain belts, and little change in the rock record’s chemistry; palaeomagnetic poles are sparse, so maps of this time are among the least certain.',
+    sources: ['evans2011'],
+  },
+  Ectasian: {
+    map: `Nuna’s pieces drift; the quiet “boring billion” goes on. ${OUTLINED}`,
+    evidence: 'Palaeomagnetic poles are still sparse; reconstructions of this time differ widely.',
+    sources: ['evans2011', 'cao2024'],
+  },
+  Stenian: {
+    map: `Rodinia assembles. ${OUTLINED}`,
+    evidence:
+      'The Grenville mountain belts, of about 1.1 to 0.9 billion years, run across several continents and mark the collisions that built Rodinia.',
+    sources: ['li2008'],
+  },
+  Tonian: {
+    map: `Rodinia holds most continents together, and begins to rift. ${OUTLINED}`,
+    evidence:
+      'Mountain belts of the same age and palaeomagnetic poles are the evidence; reconstructions of Rodinia differ over which pieces sat where.',
+    sources: ['li2008'],
+  },
+  Cryogenian: {
+    map: `Rodinia breaks up, and ice reaches the tropics twice. ${OUTLINED}`,
+    evidence:
+      'Glacial deposits laid down near the equator, by their magnetism, and capped by carbonates formed in warm water: the evidence for a “Snowball Earth”. How complete the ice was, a hard snowball or a slushball, is argued over; the globe sketches each.',
+    sources: ['hoffman1998', 'hoffman2017'],
+  },
   Ediacaran: {
     map: 'Rodinia has broken apart, and Gondwana is gathering in the south.',
     evidence:
