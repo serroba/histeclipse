@@ -141,10 +141,14 @@ test('a cosmic ray’s shower makes carbon-14, step by step, under the field pic
   await test.step('Then the field turns the equator’s ray away, and the caption says so', async () => {
     await expect(dialog).toBeHidden();
     await expect(caption).toContainText('bends this one back out to space', { timeout: 20_000 });
+    await expect(globe).toHaveAttribute('data-shower-labels', /Turned away: under \d+ GeV/);
   });
   await test.step('And it plays every step, from the shower to carbon dioxide, then clears', async () => {
     await expect(globe).toHaveAttribute('data-showers-played', '1', { timeout: 60_000 });
-    await expect(globe).toHaveAttribute('data-shower-steps', 'rays shower capture dioxide drift');
+    await expect(globe).toHaveAttribute(
+      'data-shower-steps',
+      'rays shower capture dioxide fall plant',
+    );
     await expect(caption).toBeHidden();
   });
   await test.step('When they pick the Laschamp excursion and watch again', async () => {

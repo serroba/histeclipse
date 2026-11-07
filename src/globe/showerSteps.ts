@@ -6,7 +6,7 @@
 
 import { cutoffRigidity } from '../data/radiocarbonProduction';
 
-export type ShowerStep = 'rays' | 'shower' | 'capture' | 'dioxide' | 'drift';
+export type ShowerStep = 'rays' | 'shower' | 'capture' | 'dioxide' | 'fall' | 'plant';
 
 /** When each step begins, ms from the start. */
 export const SHOWER_STEPS: readonly { readonly step: ShowerStep; readonly at: number }[] = [
@@ -14,14 +14,15 @@ export const SHOWER_STEPS: readonly { readonly step: ShowerStep; readonly at: nu
   { step: 'shower', at: 2200 },
   { step: 'capture', at: 5000 },
   { step: 'dioxide', at: 7200 },
-  { step: 'drift', at: 9200 },
+  { step: 'fall', at: 9200 },
+  { step: 'plant', at: 12_400 },
 ];
 
 /** The shower bursts this long into its step, once the view has come in close, ms. */
 export const BURST_DELAY = 900;
 
 /** How long the whole plays, ms. */
-export const SHOWER_MS = 12_000;
+export const SHOWER_MS = 16_000;
 
 /**
  * Below this cutoff at the equator, GV, the equator's ray is let in: nearly all the cosmic rays
@@ -29,6 +30,26 @@ export const SHOWER_MS = 12_000;
  * above 4–10 GeV per nucleon, about 5–11 GV for a proton).
  */
 export const LET_IN_GV = 2;
+
+/** A proton's rest energy, GeV. */
+const PROTON_GEV = 0.938;
+
+/** The kinetic energy, GeV, of a proton just stiff enough to reach the equator through the field. */
+export function equatorCutoffGeV(dipole: number): number {
+  const rigidity = cutoffRigidity(0, dipole);
+  return Math.sqrt(rigidity ** 2 + PROTON_GEV ** 2) - PROTON_GEV;
+}
+
+/** What the two rays' labels say: the one near the pole, and the one at the equator. */
+export function rayLabels(dipole: number): { readonly polar: string; readonly equator: string } {
+  return {
+    // Half of carbon-14 is made by rays above 4–10 GeV per nucleon (Kovaltsov et al. 2012).
+    polar: 'Cosmic ray: a proton of a few GeV',
+    equator: turnedAway(dipole)
+      ? `Turned away: under ${String(Math.round(equatorCutoffGeV(dipole)))} GeV`
+      : 'Let in: the field is too weak to turn it',
+  };
+}
 
 /** Whether the field turns away a ray aimed at the equator. */
 export function turnedAway(dipole: number): boolean {
@@ -51,12 +72,14 @@ export function captionOf(step: ShowerStep, dipole: number): string {
         ? 'Cosmic rays, nuclei from far beyond the Sun, race in. Near the equator Earth’s magnetic field bends this one back out to space.'
         : 'Cosmic rays, nuclei from far beyond the Sun, race in. With the field this weak, they reach the air at the equator too.';
     case 'shower':
-      return 'Near the pole the field lets it through. It strikes the air high up and bursts into a shower of particles.';
+      return 'Away from the equator the field lets it through. It strikes the air high up and bursts into a shower of particles.';
     case 'capture':
       return 'A neutron from the shower hits a nitrogen-14 atom (blue). It becomes carbon-14 (violet), and a proton (yellow) flies off: n + ¹⁴N → ¹⁴C + p.';
     case 'dioxide':
       return 'The carbon-14 joins two oxygen atoms (red): carbon dioxide, like any other.';
-    case 'drift':
-      return 'It mixes through the air within a few years, and plants take it in as they grow. (Not to scale: a shower is kilometres across.)';
+    case 'fall':
+      return 'The carbon dioxide falls and mixes through the air, over a few years: here, a few seconds. (Not to scale: a shower is kilometres across.)';
+    case 'plant':
+      return 'A leaf takes it in by photosynthesis, and the carbon-14 becomes part of the plant. When the plant dies the intake stops, and the clock starts: half is gone every 5,730 years.';
   }
 }

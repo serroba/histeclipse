@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { DIPOLE_TODAY } from '../data/radiocarbonProduction';
-import { captionOf, SHOWER_MS, SHOWER_STEPS, stepAt, turnedAway } from './showerSteps';
+import {
+  captionOf,
+  equatorCutoffGeV,
+  rayLabels,
+  SHOWER_MS,
+  SHOWER_STEPS,
+  stepAt,
+  turnedAway,
+} from './showerSteps';
 
 describe('a cosmic-ray shower, step by step', () => {
   it('plays its steps in order, then ends', () => {
@@ -11,9 +19,10 @@ describe('a cosmic-ray shower, step by step', () => {
       'shower',
       'capture',
       'dioxide',
-      'drift',
+      'fall',
+      'plant',
     ]);
-    expect(stepAt(SHOWER_MS - 1)).toBe('drift');
+    expect(stepAt(SHOWER_MS - 1)).toBe('plant');
     expect(stepAt(SHOWER_MS)).toBeNull();
   });
 
@@ -29,5 +38,17 @@ describe('a cosmic-ray shower, step by step', () => {
     for (const { step } of SHOWER_STEPS)
       expect(captionOf(step, DIPOLE_TODAY).length).toBeGreaterThan(20);
     expect(captionOf('capture', DIPOLE_TODAY)).toContain('n + ¹⁴N → ¹⁴C + p');
+  });
+
+  it('labels the rays with their energies: the equator’s cutoff from the field', () => {
+    // Today's cutoff at the equator, 14.8 GV, is a proton of about 13.9 GeV.
+    expect(equatorCutoffGeV(DIPOLE_TODAY)).toBeCloseTo(13.9, 1);
+    expect(rayLabels(DIPOLE_TODAY)).toEqual({
+      polar: 'Cosmic ray: a proton of a few GeV',
+      equator: 'Turned away: under 14 GeV',
+    });
+    expect(rayLabels(0.3).equator).toBe('Let in: the field is too weak to turn it');
+    expect(captionOf('plant', DIPOLE_TODAY)).toContain('photosynthesis');
+    expect(captionOf('fall', DIPOLE_TODAY)).toContain('falls');
   });
 });

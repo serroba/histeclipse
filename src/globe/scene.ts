@@ -9,6 +9,7 @@ import { createImpactAnimation, type ImpactAnimation, type ImpactSpec } from './
 import { BODY_RADIUS } from './bodyRadius';
 import { createC14Glow } from './c14Glow';
 import { createShowerAnimation, type ShowerAnimation, type ShowerSpec } from './showerAnimation';
+import { rayLabels } from './showerSteps';
 import {
   AdditiveBlending,
   BackSide,
@@ -3022,6 +3023,9 @@ export function createGlobe(
         },
       });
       earth.add(shower.group);
+      // What the rays' labels say, for whoever needs to read them.
+      const words = rayLabels(spec.dipole);
+      container.dataset['showerLabels'] = `${words.polar} | ${words.equator}`;
       needsRender = true;
     },
     zoomTo(distance) {
