@@ -131,8 +131,9 @@ test('each time bar names its two ends, reads the moment under the pointer, and 
     await globeRendered(page);
   });
   await test.step('Then the bar’s ends are named', async () => {
-    await expect(bar.getByTestId('scale-start')).toHaveText('540 million years ago');
-    await expect(bar.getByTestId('scale-end')).toHaveText('Today');
+    await expect(bar.getByTestId('scale-start')).toHaveText('540 Ma');
+    await expect(bar.getByTestId('scale-start')).toHaveAttribute('title', '540 million years ago');
+    await expect(bar.getByTestId('scale-end')).toHaveText('now');
   });
   await test.step('And the chapter shown, the Triassic, is bracketed over its length', async () => {
     const triassic = bar.getByRole('button', { name: /^Triassic, / });
@@ -166,7 +167,8 @@ test('the years’ bar runs from 9700 BCE to this year, and marks the age shown 
   });
   await test.step('Then its ends are 9700 BCE and this year, and the Meghalayan is the age shown', async () => {
     await expect(bar.getByTestId('scale-start')).toHaveText('9700 BCE');
-    await expect(bar.getByTestId('scale-end')).toHaveText(/^20\d\d CE$/);
+    await expect(bar.getByTestId('scale-end')).toHaveText(/^20\d\d$/);
+    await expect(bar.getByTestId('scale-end')).toHaveAttribute('title', /^20\d\d CE$/);
     await expect(bar.getByRole('button', { name: /^Meghalayan, / })).toHaveAttribute(
       'aria-current',
       'true',
@@ -197,5 +199,22 @@ test('playing, the chapter rides over the thumb with how long it lasted; at rest
   await test.step('When they pause, it goes', async () => {
     await bar.getByRole('button', { name: 'Pause', exact: true }).click();
     await expect(chapter).toBeHidden();
+  });
+});
+
+test('at a span’s oldest moment, the thumb covers no label', async ({ page }) => {
+  const bar = page.getByRole('navigation', { name: 'Deep time' });
+  await test.step('Given the 540 Myr span at its oldest moment, where the thumb rests on its end', async () => {
+    await page.goto('./?ma=540&scale=all');
+    await globeRendered(page);
+  });
+  await test.step('Then the oldest end’s name steps aside, and the newest stays', async () => {
+    await expect(bar.getByTestId('scale-start')).toHaveCSS('opacity', '0');
+    await expect(bar.getByTestId('scale-end')).toHaveCSS('opacity', '1');
+  });
+  await test.step('When the moment moves to the middle, the name comes back', async () => {
+    await page.goto('./?ma=250&scale=all');
+    await globeRendered(page);
+    await expect(bar.getByTestId('scale-start')).toHaveCSS('opacity', '1');
   });
 });

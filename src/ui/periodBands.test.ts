@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { bandsFor } from '../deepTime/chart';
-import { deepTicks, lengthText, readingAt, roundStep, yearTicks } from './periodBands';
+import { deepShort, deepTicks, lengthText, readingAt, roundStep, yearTicks } from './periodBands';
 
 describe('what a point on a time slider reads', () => {
   const phanerozoic = bandsFor(540);
@@ -73,5 +73,15 @@ describe('how long a chapter lasted', () => {
     expect(lengthText(4567, 4031)).toBe('536 Myr');
     expect(lengthText(0.0042, 0)).toBe('4,200 years');
     expect(lengthText(0.0117, 0.0082)).toBe('3,500 years');
+  });
+});
+
+describe('the ends, short enough for a phone', () => {
+  it('names deep time in Ma, ka under a million years, and now', () => {
+    expect(deepShort(540)).toBe('540 Ma');
+    expect(deepShort(4568)).toBe('4,568 Ma');
+    expect(deepShort(2.6)).toBe('2.6 Ma');
+    expect(deepShort(0.021)).toBe('21 ka');
+    expect(deepShort(0)).toBe('now');
   });
 });
