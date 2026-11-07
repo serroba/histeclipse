@@ -4,6 +4,7 @@ import type { FamousEclipse } from '../data/famousEclipses';
 import { famousDateParts } from '../data/famousEclipses';
 import { astronomicalYear, formatYear } from '../time/year';
 import { element } from './dom';
+import { uiIcon } from './icons';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -25,7 +26,9 @@ export function createFamousPanel(
   const button = element(
     'button',
     { type: 'button', class: 'famous-open', 'aria-haspopup': 'dialog' },
-    'Famous eclipses',
+    uiIcon('famous'),
+    // Kept on phones too: the icon alone would not say what the list is.
+    element('span', { class: 'icon-label icon-label-kept' }, 'Famous eclipses'),
   );
   const list = element('ul', { class: 'famous-list' });
   // Not an eclipse, but the same kind of question: does a record fit the sky of its date?

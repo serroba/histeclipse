@@ -80,6 +80,7 @@ import { moveToYear } from './time/yearInput';
 import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
 import { createFamousPanel } from './ui/famousPanel';
+import { uiIcon } from './ui/icons';
 import { createWelcome } from './ui/welcome';
 import { loadSeaIce, type SeaIceIndex, seaIceMix, seaIcePair } from './data/seaIce';
 import { createMarkerCard } from './ui/markerCard';
@@ -680,7 +681,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const fullView = element(
     'button',
     { type: 'button', class: 'full-view', 'aria-label': 'Hide the panels for a full view' },
-    'Full view',
+    uiIcon('fullView', 16),
+    element('span', { class: 'icon-label' }, 'Full view'),
   );
   fullView.addEventListener('click', togglePanels);
   const showControls = element(

@@ -3683,7 +3683,7 @@ button:has(> .icon-label) > .icon {
 }
 
 @media (max-width: 600px) {
-  .icon-label {
+  .icon-label:not(.icon-label-kept) {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -3692,7 +3692,7 @@ button:has(> .icon-label) > .icon {
     white-space: nowrap;
   }
 
-  button:has(> .icon-label) {
+  button:has(> .icon-label:not(.icon-label-kept)) {
     min-width: 44px;
     padding: 0;
   }
@@ -3722,4 +3722,46 @@ button:has(> .icon-label) > .icon {
   font: inherit;
   font-size: 14px;
   cursor: pointer;
+}
+
+/* A layer's icon between its box and its name. */
+.layer-label > .icon {
+  flex: none;
+  color: var(--ink-muted);
+}
+
+/* The Sun's channels: a dot in each channel's usual false colour beside its name. */
+.sun-switch button[data-layer]::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: 0;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.25);
+}
+
+.sun-switch button[data-layer='visible']::before {
+  background: #fff0cc;
+}
+
+.sun-switch button[data-layer='magnetogram']::before {
+  background: linear-gradient(90deg, #111 50%, #eee 50%);
+}
+
+.sun-switch button[data-layer='304']::before {
+  background: #e0532a;
+}
+
+.sun-switch button[data-layer='171']::before {
+  background: #d9a520;
+}
+
+.sun-switch button[data-layer='193']::before {
+  background: #b8864a;
+}
+
+.sun-switch button[data-layer='131']::before {
+  background: #1ea5a5;
 }
