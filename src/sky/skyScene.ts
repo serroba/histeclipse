@@ -65,6 +65,7 @@ import {
   COMPASS,
   dragLook,
   figureSegments,
+  lookBetween,
   lookDirection,
   type Figure,
   roundLook,
@@ -142,6 +143,8 @@ export interface SkyScene {
   setVisible(visible: boolean): void;
   setMoment(moment: SkyMoment): void;
   setLook(look: SkyLook): void;
+  /** Turn and close in on a look over `ms`, then resolve; input or a new look cuts it short. */
+  glideTo(look: SkyLook, ms: number): Promise<void>;
   setFigures(figures: Figures): void;
   /** Draw another culture's figures; null returns to the modern constellations. */
   setCulture(figures: readonly Figure[] | null): void;
@@ -676,6 +679,24 @@ export function createSkyScene(
   let insets = { top: 0, bottom: 0 };
   let needsRender = true;
   let frame = 0;
+  // A glide under way: from where, to where, over how long, and when it started (by the frames'
+  // own clock, from the first frame it is drawn in).
+  let glide: {
+    readonly from: SkyLook;
+    readonly to: SkyLook;
+    readonly ms: number;
+    start: number | null;
+    readonly done: () => void;
+  } | null = null;
+  const sameLook = (a: SkyLook, b: SkyLook): boolean => {
+    const [x, y] = [roundLook(a), roundLook(b)];
+    return x.azimuth === y.azimuth && x.altitude === y.altitude && x.fov === y.fov;
+  };
+  function endGlide(): void {
+    const ended = glide;
+    glide = null;
+    ended?.done();
+  }
   // J2000 directions after proper motion, recomputed when time has moved far enough.
   const starJ2000 = new Float64Array(count * 3);
   let motionEpoch: number | null = null;
@@ -944,8 +965,15 @@ export function createSkyScene(
     container.dataset['planets'] = report.join(' ');
   }
 
-  function loop(): void {
+  function loop(now: number): void {
     frame = requestAnimationFrame(loop);
+    if (glide !== null) {
+      glide.start ??= now;
+      const progress = Math.min(1, (now - glide.start) / glide.ms);
+      look = lookBetween(glide.from, glide.to, 1 - (1 - progress) ** 3);
+      applyLook();
+      if (progress === 1) endGlide();
+    }
     if (!needsRender) return;
     needsRender = false;
     renderer.render(scene, camera);
@@ -994,6 +1022,7 @@ export function createSkyScene(
     return best?.tapped ?? null;
   }
   function setLookFromInput(next: SkyLook): void {
+    endGlide();
     look = next;
     applyLook();
     const rounded = roundLook(look);
@@ -1007,7 +1036,14 @@ export function createSkyScene(
   });
   renderer.domElement.addEventListener('pointermove', (event) => {
     const last = pointers.get(event.pointerId);
-    if (last === undefined) return;
+    if (last === undefined) {
+      // Hovering with a mouse: a hand over a body says a click goes to it.
+      if (event.pointerType === 'mouse') {
+        renderer.domElement.style.cursor =
+          bodyAt(event.clientX, event.clientY) === null ? '' : 'pointer';
+      }
+      return;
+    }
     const current = { x: event.clientX, y: event.clientY };
     if (tap !== null && Math.hypot(current.x - tap.x, current.y - tap.y) > TAP_SLOP_PIXELS) {
       tap = null;
@@ -1068,6 +1104,7 @@ export function createSkyScene(
         frame = requestAnimationFrame(loop);
       } else {
         cancelAnimationFrame(frame);
+        endGlide();
       }
     },
     setMoment({ horizon, jdTT, sun: sunJ2000, moon: moonJ2000, observer, planets, velocity }) {
@@ -1127,16 +1164,20 @@ export function createSkyScene(
       needsRender = true;
     },
     setLook(next) {
-      const current = roundLook(look);
-      if (
-        current.azimuth === next.azimuth &&
-        current.altitude === next.altitude &&
-        current.fov === next.fov
-      ) {
-        return;
-      }
+      // While gliding, the look the link held when it began, or the one it ends on, is the
+      // glide's own: let it run.
+      if (glide !== null && (sameLook(next, glide.from) || sameLook(next, glide.to))) return;
+      if (sameLook(next, look)) return;
+      endGlide();
       look = next;
       applyLook();
+    },
+    glideTo(next, ms) {
+      endGlide();
+      return new Promise((resolve) => {
+        glide = { from: look, to: next, ms, start: null, done: resolve };
+        needsRender = true;
+      });
     },
     setFigures(next) {
       if (next === figures) return;

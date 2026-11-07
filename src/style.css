@@ -165,14 +165,6 @@ body {
   color: var(--ink-muted);
 }
 
-.close-up {
-  margin-top: 8px;
-}
-
-.close-up[hidden] {
-  display: none;
-}
-
 .hud-actions {
   display: flex;
   flex-wrap: wrap;
