@@ -30,6 +30,7 @@ import { frameClock } from '../util/frameClock';
 import { geoToVector } from './geo';
 import {
   BURST_DELAY,
+  landing,
   rayLabels,
   SHOWER_MS,
   SHOWER_STEPS,
@@ -43,6 +44,8 @@ export interface ShowerSpec {
   readonly place: GeoPoint;
   /** The field's dipole, ×10²² A m². */
   readonly dipole: number;
+  /** Whether the carbon lands on water, where algae take it in, rather than on land. */
+  readonly water: boolean;
   /** Told each step as it begins. */
   readonly onStep: (step: ShowerStep | null) => void;
 }
@@ -103,6 +106,39 @@ function labelTexture(text: string): { texture: CanvasTexture; aspect: number } 
     context.fillText(text, 18, height / 2 + 2);
   }
   return { texture: new CanvasTexture(canvas), aspect: width / height };
+}
+
+/** Algae on the water, drawn: a few green strands and floating cells, at the bottom middle. */
+function algaeTexture(): CanvasTexture {
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext('2d');
+  if (context !== null) {
+    context.strokeStyle = '#3f9a6a';
+    context.lineWidth = 5;
+    context.lineCap = 'round';
+    for (const x of [44, 64, 84]) {
+      context.beginPath();
+      context.moveTo(x, 124);
+      context.bezierCurveTo(x - 14, 100, x + 14, 80, x - 4, 56);
+      context.stroke();
+    }
+    context.fillStyle = '#7fd19b';
+    for (const [x, y, r] of [
+      [40, 60, 7],
+      [62, 48, 8],
+      [86, 62, 7],
+      [52, 86, 5],
+      [76, 90, 5],
+    ] as const) {
+      context.beginPath();
+      context.arc(x, y, r, 0, Math.PI * 2);
+      context.fill();
+    }
+  }
+  return new CanvasTexture(canvas);
 }
 
 /** A small plant, drawn: a stem and four leaves, rooted at the bottom middle. */
@@ -343,13 +379,10 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
     polar.east.clone().multiplyScalar(-0.016),
   ];
   // It falls at a slant to the ground, a little south, where a plant takes it in.
-  const ground = polar.up
-    .clone()
-    .multiplyScalar(1.003)
-    .add(polar.north.clone().multiplyScalar(-0.05));
+  const ground = new Vector3(...geoToVector(landing(spec.place), 1.003));
   const leaf = ground.clone().addScaledVector(polar.up, 0.006);
   const plantMaterial = new SpriteMaterial({
-    map: plantTexture(),
+    map: spec.water ? algaeTexture() : plantTexture(),
     transparent: true,
     depthWrite: false,
   });
@@ -370,7 +403,7 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
     proton: label('proton', small),
     oxygens: [label('O', small), label('O', small)],
     dioxide: label('¹⁴CO₂ carbon dioxide', small),
-    plant: label('plant', small),
+    plant: label(spec.water ? 'algae' : 'plant', small),
   };
 
   let shown: ShowerStep | null | undefined;

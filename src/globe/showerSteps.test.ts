@@ -4,6 +4,7 @@ import { DIPOLE_TODAY } from '../data/radiocarbonProduction';
 import {
   captionOf,
   equatorCutoffGeV,
+  landing,
   rayLabels,
   SHOWER_MS,
   SHOWER_STEPS,
@@ -50,5 +51,12 @@ describe('a cosmic-ray shower, step by step', () => {
     expect(rayLabels(0.3).equator).toBe('Let in: the field is too weak to turn it');
     expect(captionOf('plant', DIPOLE_TODAY)).toContain('photosynthesis');
     expect(captionOf('fall', DIPOLE_TODAY)).toContain('falls');
+  });
+
+  it('lands a little toward the equator, and says algae take it in at sea', () => {
+    expect(landing({ latitude: 48, longitude: 10 })).toEqual({ latitude: 45.1, longitude: 10 });
+    expect(captionOf('plant', DIPOLE_TODAY, true)).toContain('Algae');
+    expect(captionOf('plant', DIPOLE_TODAY, true)).toContain('400–600 radiocarbon years');
+    expect(captionOf('plant', DIPOLE_TODAY)).toContain('A leaf');
   });
 });

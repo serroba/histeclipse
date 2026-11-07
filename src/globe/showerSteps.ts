@@ -5,6 +5,7 @@
  */
 
 import { cutoffRigidity } from '../data/radiocarbonProduction';
+import type { GeoPoint } from '../state/viewState';
 
 export type ShowerStep = 'rays' | 'shower' | 'capture' | 'dioxide' | 'fall' | 'plant';
 
@@ -30,6 +31,14 @@ export const SHOWER_MS = 16_000;
  * above 4–10 GeV per nucleon, about 5–11 GV for a proton).
  */
 export const LET_IN_GV = 2;
+
+/** How far the carbon dioxide falls toward the equator from where it was made, degrees. */
+export const FALL_DEGREES = 2.9;
+
+/** Where the carbon dioxide reaches the ground: a little toward the equator from `place`. */
+export function landing(place: GeoPoint): GeoPoint {
+  return { latitude: place.latitude - FALL_DEGREES, longitude: place.longitude };
+}
 
 /** A proton's rest energy, GeV. */
 const PROTON_GEV = 0.938;
@@ -64,8 +73,11 @@ export function stepAt(t: number): ShowerStep | null {
   return current;
 }
 
-/** What a step's caption says, for a field of `dipole` ×10²² A m². */
-export function captionOf(step: ShowerStep, dipole: number): string {
+/**
+ * What a step's caption says, for a field of `dipole` ×10²² A m², the carbon landing on water
+ * (`water`) or on land.
+ */
+export function captionOf(step: ShowerStep, dipole: number, water = false): string {
   switch (step) {
     case 'rays':
       return turnedAway(dipole)
@@ -80,6 +92,8 @@ export function captionOf(step: ShowerStep, dipole: number): string {
     case 'fall':
       return 'The carbon dioxide falls and mixes through the air, over a few years: here, a few seconds. (Not to scale: a shower is kilometres across.)';
     case 'plant':
+      if (water)
+        return 'Algae in the sea take it in by photosynthesis. The ocean takes in carbon dioxide slowly and holds it for centuries, so a sea shell reads about 400–600 radiocarbon years older than a land plant of the same year.';
       return 'A leaf takes it in by photosynthesis, and the carbon-14 becomes part of the plant. When the plant dies the intake stops, and the clock starts: half is gone every 5,730 years.';
   }
 }
