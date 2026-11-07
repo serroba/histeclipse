@@ -326,6 +326,42 @@ test('away from Earth, the bar speaks of the body in view, and Earth’s own par
   expect(problems).toEqual([]);
 });
 
+test('away from Earth the year slider stays, but Earth’s chapters rest', async ({ page }, info) => {
+  const lane = page.locator('.history-lane');
+  const chapters = lane.getByRole('group', { name: 'Geological periods' });
+  const slider = page.getByRole('slider', { name: 'Year in the Holocene' });
+  await test.step('Given Earth in the years', async () => {
+    await page.goto('./?t=2024-05-08T12:00');
+    await globeRendered(page);
+  });
+  await test.step('Then the Holocene’s chapters are under the slider', async () => {
+    await expect(chapters.getByText('Meghalayan')).toBeVisible();
+  });
+  await test.step('When they look at the Sun', async () => {
+    await page.goto('./?t=2024-05-08T12:00&focus=sun&cam=-17.2,-134.2,4');
+    await globeRendered(page);
+  });
+  await test.step('Then the slider and its first year stay, without Earth’s chapters', async () => {
+    await expect(slider).toBeVisible();
+    await expect(chapters).toBeHidden();
+    await expect(lane.getByTestId('scale-start')).toHaveText('9700 BCE');
+    await expect(lane.getByTestId('scale-start')).not.toHaveClass(/is-covered/);
+  });
+  if (info.project.name !== 'mobile') {
+    await test.step('And the reading under the pointer names the year alone', async () => {
+      const box = await slider.boundingBox();
+      if (box === null) throw new Error('no slider');
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await expect(lane.getByTestId('scale-reading')).toHaveText(/^\d+ BCE$/);
+    });
+  }
+  await test.step('When they go back to Earth, the chapters come back', async () => {
+    await page.goto('./?t=2024-05-08T12:00');
+    await globeRendered(page);
+    await expect(chapters.getByText('Meghalayan')).toBeVisible();
+  });
+});
+
 test('close up, a planet wears its mission’s map, captioned and credited', async ({ page }) => {
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');
