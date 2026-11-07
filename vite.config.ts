@@ -19,6 +19,7 @@ export default defineConfig({
       exclude: [
         'src/**/*.test.ts',
         'src/main.ts',
+        'src/telemetry/start.ts',
         'src/app.ts',
         'src/globe/scene.ts',
         'src/globe/solarShaders.ts',
