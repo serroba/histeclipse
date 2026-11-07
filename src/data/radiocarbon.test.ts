@@ -127,3 +127,27 @@ describe('for the card', () => {
     expect(chartWindow([{ older: 30, younger: 10, share: 1 }]).younger).toBe(0);
   });
 });
+
+describe('calibrating a published date', () => {
+  it('matches the IntCal20 companion’s ranges for Thera, 3350 ± 10 BP, to a year', () => {
+    // van der Plicht et al. 2020 (OxCal 4.3.2): 1733–1719, 1688–1651, 1645–1608, 1604–1602,
+    // 1583–1559 and 1556–1544 calBC, with 3.5, 22.1, 53.0, 0.3, 11.4 and 5.0%.
+    const published = [
+      [1733, 1719, 3.5],
+      [1688, 1651, 22.1],
+      [1645, 1608, 53.0],
+      [1604, 1602, 0.3],
+      [1583, 1559, 11.4],
+      [1556, 1544, 5.0],
+    ];
+    const found = highestDensity(calibrate(3350, 10, real.curves.intcal20));
+    expect(found).toHaveLength(published.length);
+    found.forEach((range, i) => {
+      const [older = 0, younger = 0, share = 0] = published[i] ?? [];
+      // calBC to BP: 1950 + years BC − 1, as there is no year zero.
+      expect(Math.abs(range.older - (older + 1949))).toBeLessThanOrEqual(1);
+      expect(Math.abs(range.younger - (younger + 1949))).toBeLessThanOrEqual(1);
+      expect(Math.abs(range.share * 100 - share)).toBeLessThan(0.3);
+    });
+  });
+});

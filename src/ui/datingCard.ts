@@ -3,7 +3,9 @@
  * calendar years it fits, step by step: how much carbon-14 is left, the curve with the measured
  * age across it, and the ranges that hold most of the probability. Examples show the three
  * cases a student meets: a steep stretch (one range), a plateau (centuries) and a wiggle
- * (several ranges); they are illustrations, not real samples.
+ * (several ranges); they are illustrations, not real samples. Real eruptions follow (#275): Thera,
+ * whose radiocarbon age falls on a plateau and whose date is still disputed, and Changbaishan,
+ * dated to its year by a cosmic-ray spike in a tree it killed rather than by calibration.
  *
  * DOM glue, covered by the Playwright suite; the arithmetic is in `data/radiocarbon.ts`.
  */
@@ -29,6 +31,28 @@ export const DATING_EXAMPLES = [
   { label: 'On the Hallstatt plateau', age: 2450, sigma: 25 },
   { label: 'Where the curve wiggles', age: 1250, sigma: 25 },
 ] as const;
+
+/** Real eruptions, as their sources report them: a radiocarbon age to calibrate, or a spike. */
+export const REAL_EXAMPLES: readonly {
+  readonly label: string;
+  /** A radiocarbon age and its 1σ to calibrate, or null where a spike dates it instead. */
+  readonly age: number | null;
+  readonly sigma: number;
+  readonly note: string;
+}[] = [
+  {
+    label: 'Thera (Santorini), Bronze Age: 3350 ± 10 BP',
+    age: 3350,
+    sigma: 10,
+    note: 'The average of many dates from sites the eruption buried: Akrotiri, on Santorini, and Palaikastro, on Crete. It falls on a plateau of the curve, so it fits several stretches, most likely 1645–1608 BCE as the paper calibrates it. Radiocarbon has long put the eruption 100 to 150 years earlier than the traditional archaeological dating, and the two are still debated; a later stretch, in the 1500s BCE, keeps about a sixth of the probability (van der Plicht et al. 2020, the IntCal20 companion).',
+  },
+  {
+    label: 'Changbaishan, the Millennium Eruption: dated by a spike',
+    age: null,
+    sigma: 0,
+    note: 'A larch engulfed and killed by the eruption’s first pyroclastic flows, on the China–North Korea border, was found in its deposits. Its rings carry the sudden carbon-14 rise of 775 CE, a Miyake event; counting outward from that ring to the bark gives the year the tree died, 946 CE, and ice-core evidence from Greenland puts the eruption late that year (Oppenheimer et al. 2017). No calibration curve is needed: the spike is a fixed point in time.',
+  },
+];
 
 export interface DatingCard {
   readonly dialog: HTMLDialogElement;
@@ -72,6 +96,7 @@ export function createDatingCard(): DatingCard {
   }) as SVGSVGElement;
   const ranges = element('ul', { class: 'dating-ranges', 'data-testid': 'dating-ranges' });
   const result = element('p', { class: 'dating-step', 'data-testid': 'dating-result' });
+  const note = element('p', { class: 'dating-note', 'data-testid': 'dating-note', hidden: '' });
   const close = element(
     'button',
     { type: 'button', class: 'famous-close', 'aria-label': 'Close' },
@@ -89,6 +114,26 @@ export function createDatingCard(): DatingCard {
       pick.addEventListener('click', () => {
         ageInput.value = String(age);
         sigmaInput.value = String(sigma);
+        note.hidden = true;
+        draw();
+      });
+      return pick;
+    }),
+  );
+  const real = element(
+    'div',
+    { class: 'dating-examples' },
+    ...REAL_EXAMPLES.map((example) => {
+      const pick = element('button', { type: 'button', class: 'dating-example' }, example.label);
+      pick.addEventListener('click', () => {
+        note.hidden = false;
+        note.textContent = example.note;
+        if (example.age === null) {
+          showSpike();
+          return;
+        }
+        ageInput.value = String(example.age);
+        sigmaInput.value = String(example.sigma);
         draw();
       });
       return pick;
@@ -116,6 +161,9 @@ export function createDatingCard(): DatingCard {
     ),
     element('p', { class: 'dating-examples-label' }, 'Or try (illustrations, not real samples):'),
     examples,
+    element('p', { class: 'dating-examples-label' }, 'Real eruptions:'),
+    real,
+    note,
     left,
     chart,
     result,
@@ -123,6 +171,16 @@ export function createDatingCard(): DatingCard {
   );
   let curve: CalibrationCurve | null = null;
   let curveName = '';
+
+  /** A date fixed by a spike, not calibrated: the steps say so, and the chart and ranges rest. */
+  function showSpike(): void {
+    left.textContent =
+      '1. No radiocarbon age to calibrate: the tree’s rings themselves are counted, from the ring that holds the 775 CE spike.';
+    result.textContent = '2. The tree died in 946 CE, to the year.';
+    chart.replaceChildren();
+    chart.setAttribute('aria-label', 'No calibration: dated by counting rings from a spike.');
+    ranges.replaceChildren();
+  }
 
   function draw(): void {
     const age = Number(ageInput.value);
@@ -238,7 +296,13 @@ export function createDatingCard(): DatingCard {
     );
   }
 
-  for (const input of [ageInput, sigmaInput]) input.addEventListener('change', draw);
+  for (const input of [ageInput, sigmaInput]) {
+    input.addEventListener('change', () => {
+      // An age typed in is the reader's own, not the example's.
+      note.hidden = true;
+      draw();
+    });
+  }
   close.addEventListener('click', () => {
     dialog.close();
   });
@@ -253,6 +317,7 @@ export function createDatingCard(): DatingCard {
       curveName = name;
       ageInput.value = String(age);
       sigmaInput.value = String(sigma);
+      note.hidden = true;
       dialog.showModal();
       draw();
     },
