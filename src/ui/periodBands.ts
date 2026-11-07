@@ -10,15 +10,90 @@
 
 import { bandsFor, type Band } from '../deepTime/chart';
 import { formatMa } from '../deepTime/periods';
+import { astronomicalYear, formatYear } from '../time/year';
 import { element } from './dom';
+
+export interface AxisView {
+  /** The slider runs from `oldest` Ma to `youngest` (today, unless it ends a little later). */
+  readonly oldest: number;
+  readonly youngest?: number;
+  /** The moment shown, whose band is marked and bracketed. */
+  readonly ma: number;
+  /** While playing, the chapter rides above the thumb. */
+  readonly playing?: boolean;
+}
 
 export interface PeriodBands {
   readonly root: HTMLElement;
-  /**
-   * Bands for a slider from `oldest` Ma to `youngest` (today, unless the slider ends a little
-   * earlier or later), with the one holding `ma` marked.
-   */
-  render(oldest: number, ma: number, youngest?: number): void;
+  render(view: AxisView): void;
+}
+
+/** A round mark between the slider's ends, at `ma`, and what it says. */
+export interface Tick {
+  readonly ma: number;
+  readonly label: string;
+}
+
+/** The roundest step (1, 2 or 5 times a power of ten) giving about `count` marks over `range`. */
+export function roundStep(range: number, count: number): number {
+  const rough = range / count;
+  const power = 10 ** Math.floor(Math.log10(rough));
+  const step = [1, 2, 5, 10].map((each) => each * power).find((each) => each >= rough);
+  return step ?? 10 * power;
+}
+
+/** No closer to an end than this share of the slider, where the end's own name is. */
+const END_ROOM = 0.16;
+
+/** Deep time's round marks: in Ma, or ka under a million years. */
+export function deepTicks(oldest: number, youngest: number): Tick[] {
+  const step = roundStep(oldest - youngest, 5);
+  const ticks: Tick[] = [];
+  for (let ma = step; ma < oldest; ma += step) {
+    const share = (oldest - ma) / (oldest - youngest);
+    if (share < END_ROOM || share > 1 - END_ROOM) continue;
+    // Rounded to the step, so sums of 0.1 do not show as 0.30000000000000004.
+    const value = Number(ma.toPrecision(6));
+    ticks.push({
+      ma: value,
+      label:
+        value >= 1
+          ? `${value.toLocaleString('en')} Ma`
+          : `${Math.round(value * 1000).toLocaleString('en')} ka`,
+    });
+  }
+  return ticks;
+}
+
+/**
+ * The years' round marks: round historical years (8000 BCE, 6000 BCE… 2000 CE), which have no
+ * year 0, between a slider's ends given in Ma before 1950.
+ */
+export function yearTicks(oldest: number, youngest: number): Tick[] {
+  const yearOf = (ma: number): number => 1950 - ma * 1e6;
+  const first = yearOf(oldest);
+  const last = yearOf(youngest);
+  const step = roundStep(last - first, 6);
+  const ticks: Tick[] = [];
+  for (let count = Math.ceil(first / step); count * step <= last; count += 1) {
+    // Counted as historians count: 2000 BCE is astronomical year -1999.
+    const historical = count * step;
+    if (historical === 0) continue;
+    const astronomical = historical < 0 ? historical + 1 : historical;
+    const ma = (1950 - astronomical) / 1e6;
+    const share = (oldest - ma) / (oldest - youngest);
+    if (share < END_ROOM || share > 1 - END_ROOM) continue;
+    ticks.push({ ma, label: formatYear(astronomicalYear(astronomical)) });
+  }
+  return ticks;
+}
+
+/** How long a unit from `base` to `top` Ma lasted, in words that suit its length. */
+export function lengthText(base: number, top: number): string {
+  const ma = base - top;
+  if (ma >= 1) return `${Number(ma.toPrecision(3)).toLocaleString('en')} Myr`;
+  const years = Number((ma * 1e6).toPrecision(3));
+  return `${years.toLocaleString('en')} years`;
 }
 
 /** The usual symbols for the Phanerozoic's periods, for a band too narrow for its name. */
@@ -85,6 +160,8 @@ export function createPeriodBands(
   onMa: (ma: number) => void,
   /** How a moment is said at the ends and under the pointer; deep time's wording by default. */
   words: (ma: number) => string = deepWords,
+  /** The round marks between the ends; deep time's, in Ma or ka, by default. */
+  marks: (oldest: number, youngest: number) => readonly Tick[] = deepTicks,
 ): PeriodBands {
   const row = element('div', {
     class: 'period-bands',
@@ -102,13 +179,23 @@ export function createPeriodBands(
     'data-testid': 'scale-reading',
     hidden: '',
   });
+  // The round marks between the ends, above the line.
+  const rounds = element('div', { class: 'period-rounds' });
+  // While playing: the chapter over the thumb, its name and how long it lasted.
+  const chapter = element('div', {
+    class: 'period-chapter',
+    'data-testid': 'scale-chapter',
+    hidden: '',
+  });
   // Laid over the bands, inset as they are, so a share of its width is a share of the slider.
   // Decorative: the bands' names and the slider's value text say the same to a screen reader.
   const overlay = element(
     'div',
     { class: 'period-overlay', 'aria-hidden': 'true' },
     ticks,
+    rounds,
     bracket,
+    chapter,
     reading,
   );
   const root = element('div', { class: 'period-axis' }, overlay, row, scale);
@@ -165,7 +252,7 @@ export function createPeriodBands(
 
   return {
     root,
-    render(oldest, ma, youngest = 0) {
+    render({ oldest, ma, youngest = 0, playing = false }) {
       listen();
       const key = `${String(oldest)}:${String(youngest)}`;
       if (key !== drawnFor) {
@@ -202,6 +289,17 @@ export function createPeriodBands(
             return tick;
           }),
         );
+        rounds.replaceChildren(
+          ...marks(oldest, youngest).map((tick) => {
+            const mark = element(
+              'span',
+              { class: 'period-round' },
+              element('span', { class: 'period-round-label' }, tick.label),
+            );
+            mark.style.left = `${String(((oldest - tick.ma) / (oldest - youngest)) * 100)}%`;
+            return mark;
+          }),
+        );
         start.textContent = words(oldest);
         end.textContent = words(youngest);
         fit(buttons);
@@ -213,6 +311,28 @@ export function createPeriodBands(
           entry.button.setAttribute('aria-current', 'true');
           current = entry;
         } else entry.button.removeAttribute('aria-current');
+      }
+      // The chapter rides over the thumb while playing, and pulses as a new one begins.
+      chapter.hidden = !playing || current === undefined;
+      // Playing, the chapter takes the marks' place above the line.
+      root.classList.toggle('is-playing', playing);
+      if (playing && current !== undefined) {
+        const text = `${current.name} · ${lengthText(current.base, current.top)}`;
+        if (chapter.textContent !== text) {
+          chapter.textContent = text;
+          // A short rise, unless the reader asks for less motion.
+          if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            chapter.animate(
+              [
+                { opacity: 0.3, transform: 'translate(-50%, 6px)' },
+                { opacity: 1, transform: 'translate(-50%, 0)' },
+              ],
+              { duration: 350, easing: 'ease-out' },
+            );
+          }
+        }
+        const share = Math.min(1, Math.max(0, (oldest - ma) / (oldest - youngest)));
+        chapter.style.left = `${String(share * 100)}%`;
       }
       bracket.hidden = current === undefined;
       if (current !== undefined) {

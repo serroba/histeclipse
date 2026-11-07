@@ -173,3 +173,29 @@ test('the years’ bar runs from 9700 BCE to this year, and marks the age shown 
     );
   });
 });
+
+test('playing, the chapter rides over the thumb with how long it lasted; at rest, round marks show', async ({
+  page,
+}) => {
+  const bar = page.getByRole('navigation', { name: 'Deep time' });
+  const chapter = bar.getByTestId('scale-chapter');
+  await test.step('Given 500 million years ago, at rest', async () => {
+    await page.goto('./?ma=500&scale=all');
+    await globeRendered(page);
+  });
+  await test.step('Then round marks stand between the ends, and no chapter rides the thumb', async () => {
+    await expect(bar.locator('.period-round')).toHaveCount(2);
+    await expect(chapter).toBeHidden();
+  });
+  await test.step('When they play', async () => {
+    await bar.getByRole('button', { name: 'Play', exact: true }).click();
+  });
+  await test.step('Then the chapter shown rides over the thumb, named with its length', async () => {
+    await expect(chapter).toBeVisible();
+    await expect(chapter).toHaveText(/^[A-Z][a-z]+ · [\d.,]+ Myr$/);
+  });
+  await test.step('When they pause, it goes', async () => {
+    await bar.getByRole('button', { name: 'Pause', exact: true }).click();
+    await expect(chapter).toBeHidden();
+  });
+});
