@@ -1,9 +1,19 @@
+import { cachedViewAttributes, gpuAttributes, type Attributes } from './attributes';
 import type { TelemetryConfig } from './config';
+
+/** Asks a throwaway WebGL 2 context what the GPU offers, then releases it. */
+function probeGpu(): Attributes {
+  const gl = document.createElement('canvas').getContext('webgl2');
+  const attributes = gpuAttributes(gl, window.devicePixelRatio);
+  gl?.getExtension('WEBGL_lose_context')?.loseContext();
+  return attributes;
+}
 
 /**
  * Starts the Honeycomb browser SDK: page load, data-file fetches, clicks, web vitals and
- * uncaught errors. The SDK is a separate chunk loaded only when a key is configured, so
- * builds without one (CI, local dev without `.env.local`) ship and run none of it.
+ * uncaught errors. Every span also carries the view shown (from the URL) and the GPU's
+ * capabilities. The SDK is a separate chunk loaded only when a key is configured, so builds
+ * without one (CI, local dev without `.env.local`) ship and run none of it.
  */
 export async function startTelemetry(config: TelemetryConfig): Promise<void> {
   const [{ HoneycombWebSDK }, { getWebAutoInstrumentations }] = await Promise.all([
@@ -11,11 +21,25 @@ export async function startTelemetry(config: TelemetryConfig): Promise<void> {
     import('@opentelemetry/auto-instrumentations-web'),
   ]);
   const ignoreUrls = [...config.ignoreUrls];
+  const viewFor = cachedViewAttributes(() => new Date());
+  const gpu = probeGpu();
   const sdk = new HoneycombWebSDK({
     apiKey: config.apiKey,
     endpoint: config.endpoint,
     serviceName: config.serviceName,
     serviceVersion: config.serviceVersion,
+    spanProcessors: [
+      {
+        onStart(span) {
+          span.setAttributes({ ...viewFor(window.location.search), ...gpu });
+        },
+        onEnd() {
+          // Attributes are set at start; nothing to do once the span ends.
+        },
+        forceFlush: () => Promise.resolve(),
+        shutdown: () => Promise.resolve(),
+      },
+    ],
     instrumentations: [
       getWebAutoInstrumentations({
         '@opentelemetry/instrumentation-document-load': {},
