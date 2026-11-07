@@ -38,8 +38,24 @@ describe('where everything comes from', () => {
     }
   });
 
+  it('points every piece of evidence and every reading at a registered source', () => {
+    for (const why of Object.values(WHYS)) {
+      for (const item of 'evidence' in why ? why.evidence : []) {
+        expect(SOURCES).toHaveProperty(item.source);
+        expect(item.says.length).toBeGreaterThan(40);
+      }
+      for (const id of 'reading' in why ? why.reading : []) expect(SOURCES).toHaveProperty(id);
+    }
+  });
+
   it('uses every source somewhere', () => {
-    const used = new Set(Object.values(WHYS).flatMap((why) => why.sources));
+    const used = new Set(
+      Object.values(WHYS).flatMap((why) => [
+        ...why.sources,
+        ...('evidence' in why ? why.evidence.map((item) => item.source) : []),
+        ...('reading' in why ? why.reading : []),
+      ]),
+    );
     for (const id of Object.keys(SOURCES)) expect(used).toContain(id);
   });
 });
@@ -61,6 +77,7 @@ describe('what is on screen now', () => {
     ]);
     expect(onScreen(scene({ layers, drawsOn, span: 'all' }))).toEqual([
       'deep-surface',
+      'deep-evidence',
       'temperature',
     ]);
   });

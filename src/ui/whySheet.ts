@@ -107,14 +107,68 @@ export function createWhySheet(): WhySheet {
     const why = WHYS[id];
     heading.textContent = why.title;
     const sources = why.sources.map((source) => SOURCES[source]);
+    // For a reconstruction: the evidence it rests on, how sure each part is, and where to read
+    // on, ahead of the full list of its sources.
+    const evidence =
+      'evidence' in why
+        ? [
+            section(
+              'The evidence',
+              element(
+                'ul',
+                { class: 'why-evidence' },
+                ...why.evidence.map((item) =>
+                  element(
+                    'li',
+                    {},
+                    element('strong', {}, item.name),
+                    ' ',
+                    item.says,
+                    ' ',
+                    sourceLink(SOURCES[item.source]),
+                  ),
+                ),
+              ),
+            ),
+          ]
+        : [];
+    const certainty =
+      'certainty' in why
+        ? [
+            section(
+              'How sure',
+              element(
+                'ul',
+                { class: 'why-certainty' },
+                ...why.certainty.map((line) => element('li', {}, line)),
+              ),
+            ),
+          ]
+        : [];
+    const reading =
+      'reading' in why
+        ? [
+            section(
+              'Read on',
+              element(
+                'ol',
+                { class: 'why-sources why-reading' },
+                ...why.reading.map((source) => sourceItem(SOURCES[source])),
+              ),
+            ),
+          ]
+        : [];
     body.replaceChildren(
       section('What you see', element('p', {}, why.what)),
+      ...evidence,
+      ...certainty,
+      ...('others' in why ? [section('Other views', element('p', {}, why.others))] : []),
+      ...reading,
       section(
         'Where it comes from',
         element('ul', { class: 'why-sources' }, ...sources.map(sourceItem)),
       ),
       ...('how' in why ? [section('How this site used it', element('p', {}, why.how))] : []),
-      ...('others' in why ? [section('Other views', element('p', {}, why.others))] : []),
       element('button', { type: 'button', class: 'why-all' }, 'All sources the site uses'),
     );
     body.querySelector('.why-all')?.addEventListener('click', openAll);

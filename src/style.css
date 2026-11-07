@@ -3519,3 +3519,34 @@ body {
 .hud-detail .why-mark {
   margin-block: -10px;
 }
+
+/* A reconstruction's evidence, one kind a line, and how sure each part is. */
+.why-evidence,
+.why-certainty {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0 0 0 18px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.why-evidence a {
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.why-reading {
+  padding: 0;
+}
+
+/* The deep bar's "How do we know?": the book and the question, among the chips. */
+.deep-evidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.deep-evidence[hidden] {
+  display: none;
+}
