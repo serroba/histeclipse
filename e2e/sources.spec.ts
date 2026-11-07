@@ -91,7 +91,11 @@ test('in deep time, the Sources list follows the span and the layers drawn there
     await openSources(page);
   });
   await test.step('Then it names the Earth then and the temperature, not the resting states', async () => {
-    await expect(list.locator('.why-row-title')).toHaveText(['The Earth then', 'Temperature']);
+    await expect(list.locator('.why-row-title')).toHaveText([
+      'The Earth then',
+      'How do we know what Earth looked like?',
+      'Temperature',
+    ]);
     await expect(list.getByRole('link', { name: 'PALEOMAP PaleoDEMs' })).toBeVisible();
   });
 });
@@ -147,4 +151,39 @@ test('deep time’s notes and facts each have their book', async ({ page }) => {
     await expect(sheet.getByRole('link', { name: 'Wells 1963' })).toBeVisible();
     await expect(sheet.getByRole('link', { name: 'Laskar et al. 2004' })).toBeVisible();
   });
+});
+
+test('in deep time, the map says how we know what Earth looked like', async ({ page }) => {
+  const problems = collectProblems(page);
+  const sheet = page.getByRole('dialog', { name: 'How do we know what Earth looked like?' });
+  await test.step('Given the Carboniferous, 359 million years ago', async () => {
+    await page.goto('./?ma=358.9&scale=all');
+    await globeRendered(page);
+  });
+  await test.step('When they ask how we know', async () => {
+    await page.getByRole('button', { name: 'How do we know?' }).click();
+  });
+  await test.step('Then the evidence is named, each with its paper, and how sure each part is', async () => {
+    await expect(sheet).toContainText('a reconstruction');
+    await expect(sheet.locator('.why-evidence li')).toHaveCount(5);
+    await expect(sheet.locator('.why-evidence')).toContainText('Rock magnetism');
+    await expect(sheet.getByRole('link', { name: 'Torsvik et al. 2012' }).first()).toHaveAttribute(
+      'href',
+      'https://doi.org/10.1016/j.earscirev.2012.06.007',
+    );
+    await expect(sheet.locator('.why-certainty li')).toHaveCount(3);
+    await expect(sheet).toContainText('Illustrative: mountain heights');
+  });
+  await test.step('And other reconstructions and a reading path are offered', async () => {
+    await expect(sheet).toContainText('turn on Plates');
+    await expect(sheet.locator('.why-reading li').first()).toContainText(
+      'Earth History and Palaeogeography',
+    );
+  });
+  await test.step('And in the ice ages, on today’s land, the chip is not offered', async () => {
+    await page.goto('./?ma=0.021&scale=ice');
+    await globeRendered(page);
+    await expect(page.getByRole('button', { name: 'How do we know?' })).toBeHidden();
+  });
+  expect(problems).toEqual([]);
 });
