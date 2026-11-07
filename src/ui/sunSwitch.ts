@@ -49,11 +49,13 @@ export function createSunSwitch(
       buttons.replaceChildren(
         // The label and its book head the channels, which share the rows below.
         element('span', { class: 'switch-label' }, 'Light', ...(why === undefined ? [] : [why])),
-        ...next.map(({ key, label }) => {
+        ...next.map(({ key, label, detail }) => {
+          // What it shows, and beneath it the light it is: its wavelength and temperature.
           const button = element(
             'button',
             { type: 'button', 'aria-pressed': 'false', 'data-layer': key },
-            label,
+            element('span', { class: 'sun-channel-name' }, label),
+            element('span', { class: 'sun-channel-detail' }, detail),
           );
           button.addEventListener('click', () => {
             onSelect(key);
@@ -65,7 +67,12 @@ export function createSunSwitch(
     render(layer, visible) {
       root.hidden = !visible || layers.length === 0;
       for (const button of buttons.querySelectorAll('button')) {
-        button.setAttribute('aria-pressed', String(button.dataset['layer'] === layer));
+        const pressed = button.dataset['layer'] === layer;
+        button.setAttribute('aria-pressed', String(pressed));
+        // On a phone the channels are one row that scrolls: keep the one picked in it.
+        if (pressed && !root.hidden && buttons.scrollWidth > buttons.clientWidth) {
+          buttons.scrollLeft = Math.max(0, button.offsetLeft - buttons.clientWidth / 3);
+        }
       }
       const shown = layers.find(({ key }) => key === layer);
       if (shown === undefined) return;

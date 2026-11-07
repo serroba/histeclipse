@@ -3756,7 +3756,7 @@ button:has(> .icon-label) > .icon {
 }
 
 /* The Sun's channels: a dot in each channel's usual false colour beside its name. */
-.sun-switch button[data-layer]::before {
+.sun-switch button[data-layer] .sun-channel-name::before {
   content: '';
   display: inline-block;
   width: 9px;
@@ -3767,27 +3767,27 @@ button:has(> .icon-label) > .icon {
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.25);
 }
 
-.sun-switch button[data-layer='visible']::before {
+.sun-switch button[data-layer='visible'] .sun-channel-name::before {
   background: #fff0cc;
 }
 
-.sun-switch button[data-layer='magnetogram']::before {
+.sun-switch button[data-layer='magnetogram'] .sun-channel-name::before {
   background: linear-gradient(90deg, #111 50%, #eee 50%);
 }
 
-.sun-switch button[data-layer='304']::before {
+.sun-switch button[data-layer='304'] .sun-channel-name::before {
   background: #e0532a;
 }
 
-.sun-switch button[data-layer='171']::before {
+.sun-switch button[data-layer='171'] .sun-channel-name::before {
   background: #d9a520;
 }
 
-.sun-switch button[data-layer='193']::before {
+.sun-switch button[data-layer='193'] .sun-channel-name::before {
   background: #b8864a;
 }
 
-.sun-switch button[data-layer='131']::before {
+.sun-switch button[data-layer='131'] .sun-channel-name::before {
   background: #1ea5a5;
 }
 
@@ -3835,17 +3835,23 @@ button:has(> .icon-label) > .icon {
     max-width: none;
   }
 
+  /* One row that scrolls sideways, the next channel cut off at the edge to say there is more:
+     named by what they show, they would need three rows, and cover the Sun (#238, #249). */
   .view-switch.sun-switch {
     display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
   }
 
-  /* The label and its book lead the first row rather than taking one of their own. */
-  .sun-switch .switch-label {
-    flex-basis: auto;
+  .view-switch.sun-switch::-webkit-scrollbar {
+    display: none;
   }
 
+  .sun-switch .switch-label,
   .sun-switch button[data-layer] {
-    flex: 1 1 auto;
+    flex: none;
   }
 }
 
@@ -3916,6 +3922,22 @@ button:has(> .icon-label) > .icon {
 
 .polarity-span.is-unknown {
   background: rgb(255 255 255 / 0.08);
+}
+
+/* A channel's button: what it shows, and beneath, small, the light it is (#249). */
+.sun-switch button[data-layer] {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  line-height: 1.15;
+}
+
+.sun-channel-detail {
+  font-size: 10.5px;
+  color: var(--ink-muted);
+  white-space: nowrap;
 }
 
 /* Carbon-14 in the air under the years' slider (#270): a line, the Hallstatt plateau shaded,

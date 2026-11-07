@@ -129,7 +129,7 @@ def test_stitches_a_whole_surface_map(key: str) -> None:
 def test_lists_every_layer_its_frames_and_files_in_the_manifest() -> None:
     frames = ["2024-04-18T01:02:48Z", "2024-05-08T12:00:09Z"]
     result = manifest({layer.key: frames for layer in LAYERS})
-    assert result["schemaVersion"] == 2
+    assert result["schemaVersion"] == 3
     assert result["diskRadius"] == DISK_RADIUS
     assert [entry["key"] for entry in result["layers"]] == [layer.key for layer in LAYERS]
     first = result["layers"][0]
@@ -141,3 +141,7 @@ def test_lists_every_layer_its_frames_and_files_in_the_manifest() -> None:
         str(size): f"textures/sun/{disc_name(LAYERS[0], size)}" for size in SIZES
     }
     assert first["map"]["4096"] == "textures/sun/visible-map-4096.webp"
+    # Named by what each shows, the light it is beneath (#249).
+    named = {entry["key"]: (entry["label"], entry["detail"]) for entry in result["layers"]}
+    assert named["304"] == ("Chromosphere", "304 Å · 50,000 °C")
+    assert named["visible"] == ("Surface", "visible light, 617 nm")
