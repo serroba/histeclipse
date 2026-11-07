@@ -7,6 +7,7 @@
 
 import { createImpactAnimation, type ImpactAnimation, type ImpactSpec } from './impactAnimation';
 import { BODY_RADIUS } from './bodyRadius';
+import { createC14Glow } from './c14Glow';
 import {
   AdditiveBlending,
   BackSide,
@@ -351,6 +352,9 @@ export interface Globe {
   setSunImage(image: SunImageRequest | null): void;
   /** Mark the pole a compass pointed to in deep time; null when it is not known. */
   setMagneticNorth(where: 'north' | 'south' | 'either' | null): void;
+  /** Glow where cosmic rays make carbon-14, a rate per 5° of latitude (1 for today's over the
+   * poles); null hides it. */
+  setC14Glow(profile: readonly number[] | null): void;
   /**
    * Wrap a planet in a mission's global map, fetched the first time it is asked for; a `sharp`
    * one, asked for close up, replaces it and is kept.
@@ -1223,6 +1227,10 @@ export function createGlobe(
   );
   pin.visible = false;
   earth.add(pin);
+
+  // Where cosmic rays make carbon-14, when asked.
+  const c14Glow = createC14Glow();
+  earth.add(c14Glow.mesh);
 
   // The Moon, tidally locked: turn the map's longitude 0 (at +X) to +Z, which lookAt() aims at
   // Earth. Libration (a few degrees of wobble) is left out.
@@ -2333,6 +2341,12 @@ export function createGlobe(
           bodyMapsAsked.delete(url);
         });
     },
+    setC14Glow(profile) {
+      c14Glow.set(profile);
+      container.dataset['c14Glow'] =
+        profile === null ? 'off' : profile.map((value) => value.toFixed(2)).join(' ');
+      needsRender = true;
+    },
     setMagneticNorth(where) {
       for (const [key, label] of magneticNorth) label.visible = key === where;
       container.dataset['magneticNorth'] = where ?? 'unknown';
@@ -3003,6 +3017,7 @@ export function createGlobe(
       pathMaterial.dispose();
       texture.dispose();
       moonTexture.dispose();
+      c14Glow.dispose();
       markerLayer.remove();
       renderer.domElement.remove();
     },

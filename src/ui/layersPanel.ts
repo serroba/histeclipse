@@ -56,6 +56,7 @@ const LAYER_ICONS: Readonly<Record<Layer, UiIcon>> = {
   sealevel: 'seaLevel',
   air: 'air',
   radiocarbon: 'radiocarbon',
+  carbonMade: 'carbonMade',
   solar: 'solar',
   lunar: 'lunar',
   orbits: 'orbits',

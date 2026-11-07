@@ -357,6 +357,44 @@ export const SOURCES = {
     url: 'https://doi.org/10.1017/RDC.2020.59',
     licence: 'CC BY 4.0',
   },
+  kovaltsov2012: {
+    name: 'Kovaltsov et al. 2012',
+    kind: 'paper',
+    cite: 'Kovaltsov, G. A., Mishev, A. & Usoskin, I. G. (2012). A new model of cosmogenic production of radiocarbon 14C in the atmosphere. Earth and Planetary Science Letters 337–338, 114–120',
+    url: 'https://doi.org/10.1016/j.epsl.2012.05.036',
+  },
+  usoskin2005: {
+    name: 'Usoskin et al. 2005',
+    kind: 'paper',
+    cite: 'Usoskin, I. G., Alanko-Huotari, K., Kovaltsov, G. A. & Mursula, K. (2005). Heliospheric modulation of cosmic rays: monthly reconstruction for 1951–2004. Journal of Geophysical Research 110, A12108',
+    url: 'https://doi.org/10.1029/2005JA011250',
+  },
+  korte2011: {
+    name: 'Korte et al. 2011',
+    kind: 'paper',
+    cite: 'Korte, M., Constable, C., Donadini, F. & Holme, R. (2011). Reconstructing the Holocene geomagnetic field. Earth and Planetary Science Letters 312, 497–505',
+    url: 'https://doi.org/10.1016/j.epsl.2011.10.031',
+  },
+  korte2019: {
+    name: 'Korte et al. 2019',
+    kind: 'paper',
+    cite: 'Korte, M., Brown, M. C., Panovska, S. & Wardinski, I. (2019). Robust characteristics of the Laschamp and Mono Lake geomagnetic excursions: results from global field models. Frontiers in Earth Science 7, 86',
+    url: 'https://doi.org/10.3389/feart.2019.00086',
+    licence: 'CC BY 4.0',
+  },
+  marine20: {
+    name: 'Marine20',
+    kind: 'dataset',
+    cite: 'Heaton, T. J., et al. (2020). Marine20—the marine radiocarbon age calibration curve (0–55,000 cal BP). Radiocarbon 62, 779–820',
+    url: 'https://doi.org/10.1017/RDC.2020.68',
+    licence: 'CC BY 4.0',
+  },
+  godwin1962: {
+    name: 'Godwin 1962',
+    kind: 'paper',
+    cite: 'Godwin, H. (1962). Half-life of radiocarbon. Nature 195, 984',
+    url: 'https://doi.org/10.1038/195984a0',
+  },
   stuiverPolach1977: {
     name: 'Stuiver & Polach 1977',
     kind: 'paper',
@@ -761,6 +799,20 @@ export const WHYS = {
     ],
     how: 'The line is the curve’s Δ14C: the air’s carbon-14 against a modern standard, per mille. IntCal20 for the northern hemisphere, SHCal20 for the southern, picked by where you stand. Living things take in the air’s carbon-14 and, once dead, lose half of it every 5,730 years; a laboratory measures what is left, as a radiocarbon age. Because the air’s carbon-14 rose and fell, that age is read against this curve to find calendar years: where the curve is steep, a narrow range; where it is flat (the Hallstatt plateau, about 800–400 BCE), centuries; where it wiggles, two or more ranges. Miyake events, sudden one-year rises from solar storms, let a tree ring be dated to its year. The curves end in 1950: after it nuclear tests nearly doubled the air’s carbon-14 (the bomb pulse).',
   },
+  carbonMade: {
+    title: 'Carbon-14 made in the sky',
+    what: 'Where cosmic rays make carbon-14 in the air, and how it reaches living things: the clock a radiocarbon date reads.',
+    sources: [
+      'kovaltsov2012',
+      'usoskin2005',
+      'korte2011',
+      'korte2019',
+      'marine20',
+      'intcal20',
+      'godwin1962',
+    ],
+    how: 'Cosmic rays strike the air high up; neutrons from the shower turn nitrogen-14 into carbon-14. Earth’s magnetic field turns slower rays away, least near the poles, so several times more is made over the poles than over the equator. The rates are Kovaltsov et al.’s model, computed here from their yield function: by their own reckoning about 1.6 atoms per cm² each second on average over 1951–2010. A weaker field or a quieter Sun lets more rays in: with no field, about twice as much. The glow is drawn about the spin axis, which the field lines up with when averaged over thousands of years; today it is tilted about 10°. Mixed through the air as carbon dioxide within a few years, carbon-14 enters plants, then animals; the ocean takes it in slowly, so a sea shell reads about 400–600 radiocarbon years older than a plant of the same year (Marine20 against IntCal20, the last 11,000 years). At death the intake stops and half is gone every 5,730 years. After about 50,000 years too little is left to measure.',
+  },
   'close-up': {
     title: 'The Moon and planets close up',
     what: 'What the Moon and each planet look like near to: the missions’ own maps of them.',
@@ -1004,6 +1056,7 @@ export interface Scene {
 /** The layers whose why is their own id. */
 const LAYER_WHYS: readonly (Layer & WhyId)[] = [
   'radiocarbon',
+  'carbonMade',
   'ways',
   'periods',
   'genomes',
