@@ -8,23 +8,25 @@
  */
 
 import {
+  bibtexUrl,
+  citation,
   SOURCES,
   WHYS,
   type Source,
   type SourceId,
   type SourceKind,
   type WhyId,
+  type WhyView,
 } from '../sources/registry';
 import { element } from './dom';
 import { bookIcon, KIND_NAMES, kindIcon } from './icons';
 
 export interface WhySheet {
   readonly dialog: HTMLDialogElement;
-  /** A book mark that opens the why of `id`; `label` names what it explains. */
+  /** A book mark that asks for the why of `id`; `label` names what it explains. */
   mark(id: WhyId | (() => WhyId), label: string): HTMLButtonElement;
-  open(id: WhyId): void;
-  /** Every source the site uses, grouped by kind. */
-  openAll(): void;
+  /** Show a why, every source ('all'), or nothing: as the view (and its link) has it. */
+  show(view: WhyView | null): void;
   /** Fill `list` with the whys on screen, each with its mark and its sources' links. */
   renderOnScreen(list: HTMLElement, ids: readonly WhyId[]): void;
 }
@@ -38,8 +40,61 @@ function sourceLink(source: Source): HTMLAnchorElement {
   );
 }
 
-/** A source as the panel lists it: its kind, its full reference and link, its licence. */
+/** Put `text` on the clipboard; say on `button` whether it worked, for a moment. */
+function copyFrom(button: HTMLButtonElement, text: string): void {
+  const label = button.textContent;
+  const say = (words: string): void => {
+    button.textContent = words;
+    window.setTimeout(() => {
+      button.textContent = label;
+    }, 1600);
+  };
+  navigator.clipboard.writeText(text).then(
+    () => {
+      say('Copied');
+    },
+    () => {
+      say('Could not copy');
+    },
+  );
+}
+
+/** A source as the panel lists it: its kind, its full reference and link, its licence, and
+ * ways to cite it. */
 function sourceItem(source: Source): HTMLElement {
+  const copy = element(
+    'button',
+    {
+      type: 'button',
+      class: 'why-cite-action',
+      'aria-label': `Copy the reference to ${source.name}`,
+    },
+    'Copy reference',
+  );
+  copy.addEventListener('click', () => {
+    copyFrom(copy, citation(source));
+  });
+  const bibtex = bibtexUrl(source);
+  const actions = element(
+    'span',
+    { class: 'why-cite-actions' },
+    copy,
+    ...(bibtex === null
+      ? []
+      : [
+          element(
+            'a',
+            {
+              class: 'why-cite-action',
+              href: bibtex,
+              target: '_blank',
+              rel: 'noopener noreferrer',
+              'aria-label': `BibTeX for ${source.name}, from Crossref`,
+            },
+            'BibTeX',
+          ),
+        ]),
+  );
   const kind = element('span', { class: 'why-kind', title: KIND_NAMES[source.kind] });
   kind.append(kindIcon(source.kind));
   return element(
@@ -66,6 +121,7 @@ function sourceItem(source: Source): HTMLElement {
               source.licence,
             ),
           ]),
+      actions,
     ),
   );
 }
@@ -74,7 +130,10 @@ function section(title: string, ...content: (Node | string)[]): HTMLElement {
   return element('section', { class: 'why-section' }, element('h3', {}, title), ...content);
 }
 
-export function createWhySheet(): WhySheet {
+export function createWhySheet(
+  /** Asked for a why, every source, or none: the view decides, and the panel follows it. */
+  onRequest: (view: WhyView | null) => void,
+): WhySheet {
   const heading = element('h2', { id: 'why-title' });
   const close = element(
     'button',
@@ -91,13 +150,22 @@ export function createWhySheet(): WhySheet {
     body,
   );
   close.addEventListener('click', () => {
-    dialog.close();
+    onRequest(null);
   });
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && dialog.open) dialog.close();
+    if (event.key === 'Escape' && dialog.open) onRequest(null);
   });
+  // The link to what is open: the address, which carries ?why= while the panel is open.
+  function linkButton(): HTMLButtonElement {
+    const button = element('button', { type: 'button', class: 'why-all' }, 'Copy a link to this');
+    button.addEventListener('click', () => {
+      copyFrom(button, window.location.href);
+    });
+    return button;
+  }
+  let shown: WhyView | null = null;
 
-  function show(): void {
+  function reveal(): void {
     // Not modal: the globe stays in reach, as the Layers panel leaves it.
     if (!dialog.open) dialog.show();
     body.scrollTop = 0;
@@ -169,10 +237,17 @@ export function createWhySheet(): WhySheet {
         element('ul', { class: 'why-sources' }, ...sources.map(sourceItem)),
       ),
       ...('how' in why ? [section('How this site used it', element('p', {}, why.how))] : []),
-      element('button', { type: 'button', class: 'why-all' }, 'All sources the site uses'),
+      element(
+        'div',
+        { class: 'why-actions' },
+        element('button', { type: 'button', class: 'why-all' }, 'All sources the site uses'),
+        linkButton(),
+      ),
     );
-    body.querySelector('.why-all')?.addEventListener('click', openAll);
-    show();
+    body.querySelector('.why-all')?.addEventListener('click', () => {
+      onRequest('all');
+    });
+    reveal();
   }
 
   function openAll(): void {
@@ -193,14 +268,21 @@ export function createWhySheet(): WhySheet {
           ),
         ),
       ),
+      element('div', { class: 'why-actions' }, linkButton()),
     );
-    show();
+    reveal();
   }
 
   return {
     dialog,
-    open,
-    openAll,
+    show(view) {
+      if (view === shown) return;
+      shown = view;
+      if (view === null) {
+        if (dialog.open) dialog.close();
+      } else if (view === 'all') openAll();
+      else open(view);
+    },
     mark(id, label) {
       const button = element('button', {
         type: 'button',
@@ -213,7 +295,7 @@ export function createWhySheet(): WhySheet {
         // A mark inside a label or a summary is its own control, not the one it sits in.
         event.preventDefault();
         event.stopPropagation();
-        open(typeof id === 'function' ? id() : id);
+        onRequest(typeof id === 'function' ? id() : id);
       });
       return button;
     },
@@ -246,7 +328,9 @@ export function createWhySheet(): WhySheet {
           element('button', { type: 'button', class: 'why-all' }, 'All sources the site uses'),
         ),
       );
-      list.querySelector('.why-all')?.addEventListener('click', openAll);
+      list.querySelector('.why-all')?.addEventListener('click', () => {
+        onRequest('all');
+      });
     },
   };
 }

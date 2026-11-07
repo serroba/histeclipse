@@ -39,7 +39,7 @@ test('the Sources list names what is on screen now, and each book opens why', as
   await test.step('Then the panel says what it shows, its source and licence, and how it was used', async () => {
     await expect(sheet).toBeVisible();
     await expect(sheet).toContainText('How people lived in each region');
-    const link = sheet.getByRole('link', { name: 'ArchaeoGLOBE' });
+    const link = sheet.getByRole('link', { name: 'ArchaeoGLOBE', exact: true });
     await expect(link).toHaveAttribute('href', 'https://doi.org/10.1126/science.aax1192');
     await expect(link).toHaveAttribute('target', '_blank');
     await expect(sheet.locator('.why-licence')).toHaveText('CC0 1.0');
@@ -76,7 +76,9 @@ test('every layer in the panel has its book, and non-commercial terms are flagge
   });
   await test.step('Then the source’s non-commercial terms stand out', async () => {
     const sheet = page.getByRole('dialog', { name: 'Volcanic eruptions' });
-    await expect(sheet.getByRole('link', { name: 'Global Volcanism Program' })).toBeVisible();
+    await expect(
+      sheet.getByRole('link', { name: 'Global Volcanism Program', exact: true }),
+    ).toBeVisible();
     await expect(sheet.locator('.why-licence.is-nc')).toHaveText('Non-commercial use with credit');
   });
 });
@@ -96,7 +98,7 @@ test('in deep time, the Sources list follows the span and the layers drawn there
       'How do we know what Earth looked like?',
       'Temperature',
     ]);
-    await expect(list.getByRole('link', { name: 'PALEOMAP PaleoDEMs' })).toBeVisible();
+    await expect(list.getByRole('link', { name: 'PALEOMAP PaleoDEMs', exact: true })).toBeVisible();
   });
 });
 
@@ -111,11 +113,12 @@ test('the numbers say where they come from: ΔT and an eclipse’s figures', asy
   });
   await test.step('Then the papers behind it, and its uncertainty, are named', async () => {
     const sheet = page.getByRole('dialog', { name: 'ΔT' });
-    await expect(sheet.getByRole('link', { name: 'Morrison et al. 2021' })).toHaveAttribute(
-      'href',
-      'https://doi.org/10.1098/rspa.2020.0776',
-    );
-    await expect(sheet.getByRole('link', { name: 'Morrison & Stephenson 2004' })).toBeVisible();
+    await expect(
+      sheet.getByRole('link', { name: 'Morrison et al. 2021', exact: true }),
+    ).toHaveAttribute('href', 'https://doi.org/10.1098/rspa.2020.0776');
+    await expect(
+      sheet.getByRole('link', { name: 'Morrison & Stephenson 2004', exact: true }),
+    ).toBeVisible();
     await expect(sheet).toContainText('standard error');
     await sheet.getByRole('button', { name: 'Close' }).click();
   });
@@ -124,8 +127,8 @@ test('the numbers say where they come from: ΔT and an eclipse’s figures', asy
   });
   await test.step('Then the ephemeris and the computation are named', async () => {
     const sheet = page.getByRole('dialog', { name: 'Eclipses' });
-    await expect(sheet.getByRole('link', { name: 'JPL DE441' })).toBeVisible();
-    await expect(sheet.getByRole('link', { name: 'Skyfield' })).toBeVisible();
+    await expect(sheet.getByRole('link', { name: 'JPL DE441', exact: true })).toBeVisible();
+    await expect(sheet.getByRole('link', { name: 'Skyfield', exact: true })).toBeVisible();
   });
   expect(problems).toEqual([]);
 });
@@ -139,8 +142,10 @@ test('deep time’s notes and facts each have their book', async ({ page }) => {
   await test.step('Then the temperature’s book opens both models', async () => {
     await page.getByRole('button', { name: 'Why: Temperature' }).first().click();
     const sheet = page.getByRole('dialog', { name: 'Temperature' });
-    await expect(sheet.getByRole('link', { name: 'Scotese 2022' })).toBeVisible();
-    await expect(sheet.getByRole('link', { name: 'CESM, Li et al. 2023' })).toBeVisible();
+    await expect(sheet.getByRole('link', { name: 'Scotese 2022', exact: true })).toBeVisible();
+    await expect(
+      sheet.getByRole('link', { name: 'CESM, Li et al. 2023', exact: true }),
+    ).toBeVisible();
     await sheet.getByRole('button', { name: 'Close' }).click();
   });
   await test.step('And the Earth facts’ book opens the papers they cite', async () => {
@@ -148,8 +153,10 @@ test('deep time’s notes and facts each have their book', async ({ page }) => {
       .getByRole('button', { name: 'Why: Poles, magnetic field, tilt, day and Sun' })
       .click();
     const sheet = page.getByRole('dialog', { name: 'Poles, magnetic field, tilt, day and Sun' });
-    await expect(sheet.getByRole('link', { name: 'Wells 1963' })).toBeVisible();
-    await expect(sheet.getByRole('link', { name: 'Laskar et al. 2004' })).toBeVisible();
+    await expect(sheet.getByRole('link', { name: 'Wells 1963', exact: true })).toBeVisible();
+    await expect(
+      sheet.getByRole('link', { name: 'Laskar et al. 2004', exact: true }),
+    ).toBeVisible();
   });
 });
 
@@ -167,10 +174,9 @@ test('in deep time, the map says how we know what Earth looked like', async ({ p
     await expect(sheet).toContainText('a reconstruction');
     await expect(sheet.locator('.why-evidence li')).toHaveCount(5);
     await expect(sheet.locator('.why-evidence')).toContainText('Rock magnetism');
-    await expect(sheet.getByRole('link', { name: 'Torsvik et al. 2012' }).first()).toHaveAttribute(
-      'href',
-      'https://doi.org/10.1016/j.earscirev.2012.06.007',
-    );
+    await expect(
+      sheet.getByRole('link', { name: 'Torsvik et al. 2012', exact: true }).first(),
+    ).toHaveAttribute('href', 'https://doi.org/10.1016/j.earscirev.2012.06.007');
     await expect(sheet.locator('.why-certainty li')).toHaveCount(3);
     await expect(sheet).toContainText('Illustrative: mountain heights');
   });
@@ -186,4 +192,49 @@ test('in deep time, the map says how we know what Earth looked like', async ({ p
     await expect(page.getByRole('button', { name: 'How do we know?' })).toBeHidden();
   });
   expect(problems).toEqual([]);
+});
+
+test('a source can be cited, and a why shared by its link', async ({ page, context }, info) => {
+  test.skip(info.project.name === 'desktop-120hz', 'not about frames');
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  const sheet = page.getByRole('dialog', { name: 'Ways of life' });
+  await test.step('Given a link to why the ways of life are shown', async () => {
+    await page.goto('./?t=-499-06-01T12:00&layers=lunar,solar,ways&why=ways');
+    await globeRendered(page);
+  });
+  await test.step('Then the panel opens on it', async () => {
+    await expect(sheet).toBeVisible();
+  });
+  await test.step('When they copy ArchaeoGLOBE’s reference', async () => {
+    await sheet.getByRole('button', { name: 'Copy the reference to ArchaeoGLOBE' }).click();
+  });
+  await test.step('Then the full reference, its link and licence are on the clipboard', async () => {
+    await expect(
+      sheet.getByRole('button', { name: 'Copy the reference to ArchaeoGLOBE' }),
+    ).toHaveText('Copied');
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied).toContain('ArchaeoGLOBE Project (2019)');
+    expect(copied).toContain('https://doi.org/10.1126/science.aax1192');
+    expect(copied).toContain('Licence: CC0 1.0');
+  });
+  await test.step('And its BibTeX comes from Crossref', async () => {
+    await expect(
+      sheet.getByRole('link', { name: 'BibTeX for ArchaeoGLOBE, from Crossref', exact: true }),
+    ).toHaveAttribute(
+      'href',
+      'https://api.crossref.org/works/10.1126/science.aax1192/transform/application/x-bibtex',
+    );
+  });
+  await test.step('When they copy a link to this', async () => {
+    await sheet.getByRole('button', { name: 'Copy a link to this' }).click();
+  });
+  await test.step('Then the link opens this why again', async () => {
+    const link = await page.evaluate(() => navigator.clipboard.readText());
+    expect(link).toMatch(/[?&]why=ways(&|$)/);
+  });
+  await test.step('When they close the panel, the link lets go of it', async () => {
+    await sheet.getByRole('button', { name: 'Close' }).click();
+    await expect(sheet).toBeHidden();
+    await expect(page).not.toHaveURL(/why=/);
+  });
 });

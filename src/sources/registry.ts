@@ -661,6 +661,30 @@ export const WHYS = {
 
 export type WhyId = keyof typeof WHYS;
 
+/** What the why panel can show: one thing's why, or every source ('all'). */
+export type WhyView = WhyId | 'all';
+export const WHY_VIEWS: readonly WhyView[] = [...(Object.keys(WHYS) as WhyId[]), 'all'];
+
+/** A source's DOI, when its link is one. */
+export function doiOf(source: Source): string | null {
+  const match = /^https:\/\/doi\.org\/(.+)$/.exec(source.url);
+  return match?.[1] ?? null;
+}
+
+/** The reference to copy: the full citation, where to find it, and its licence. */
+export function citation(source: Source): string {
+  const licence = source.licence === undefined ? '' : ` Licence: ${source.licence}.`;
+  return `${source.cite}. ${source.url}${licence}`;
+}
+
+/** Where to get a source's BibTeX, from Crossref, when it has a DOI. */
+export function bibtexUrl(source: Source): string | null {
+  const doi = doiOf(source);
+  return doi === null
+    ? null
+    : `https://api.crossref.org/works/${doi}/transform/application/x-bibtex`;
+}
+
 /** What decides what is on screen, for the sources it rests on. */
 export interface Scene {
   readonly mode: 'globe' | 'sky';

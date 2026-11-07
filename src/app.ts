@@ -351,7 +351,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   // The orbits, offered where they mean something: far out, or on the Sun or a planet.
   // Why anything is on screen: the book marks beside things, and the panel they open.
-  const whySheet = createWhySheet();
+  // The panel follows the view, so the link names the why open and opens it again.
+  const whySheet = createWhySheet((why) => {
+    store.set((state) => ({ ...state, why }));
+  });
   const sourcesList = element('ul', { class: 'why-list', 'data-testid': 'sources-list' });
   const layersPanel = createLayersPanel(
     (layer, on) => {
@@ -462,7 +465,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return whySheet.mark(id, label);
     },
     explain(id) {
-      whySheet.open(id);
+      store.set((state) => ({ ...state, why: id }));
     },
     onMa(ma, jump) {
       stopPlay();
@@ -3317,6 +3320,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         : null,
     );
     showSources(state);
+    whySheet.show(state.why);
     historyTrack.root.hidden = state.selection !== null;
     historyTrack.extras.hidden = state.selection !== null;
     if (state.time.date.year !== previous?.time.date.year || state.layers !== previous.layers) {

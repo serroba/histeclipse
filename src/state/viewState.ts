@@ -15,6 +15,7 @@ import {
   type LandModel,
   type SnowballModel,
 } from '../deepTime/sketch';
+import type { WhyView } from '../sources/registry';
 import type { SunLayer } from '../data/sunImages';
 import type { YearCalendar } from '../time/calendars';
 import {
@@ -190,6 +191,8 @@ export interface ViewState {
   readonly impact: ImpactModel;
   readonly land: LandModel;
   readonly snowball: SnowballModel;
+  /** The why panel open: what it explains, or every source; null when closed. */
+  readonly why: WhyView | null;
 }
 
 // In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
@@ -295,5 +298,6 @@ export function defaultViewState(now: Date): ViewState {
     impact: DEFAULT_IMPACT_MODEL,
     land: DEFAULT_LAND_MODEL,
     snowball: DEFAULT_SNOWBALL_MODEL,
+    why: null,
   };
 }

@@ -1,3 +1,4 @@
+import { WHY_VIEWS } from '../sources/registry';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
@@ -79,6 +80,7 @@ describe('parseViewState', () => {
       impact: 'early',
       land: 'dhuime',
       snowball: 'hard',
+      why: null,
     } satisfies ViewState);
   });
 
@@ -131,6 +133,14 @@ describe('parseViewState', () => {
     expect(parseViewState('temp=cesm', NOW).state.temperatureModel).toBe('cesm');
     const sketch = parseViewState('impact=young&land=flooded&snowball=slush', NOW).state;
     expect([sketch.impact, sketch.land, sketch.snowball]).toEqual(['young', 'flooded', 'slush']);
+  });
+
+  it('opens a why from the link, and ignores one it does not know', () => {
+    expect(parseViewState('why=ways', NOW).state.why).toBe('ways');
+    expect(parseViewState('why=all', NOW).state.why).toBe('all');
+    const unknown = parseViewState('why=nonsense', NOW);
+    expect(unknown.state.why).toBeNull();
+    expect(unknown.warnings.join(' ')).toMatch(/why/);
     expect(parseViewState('land=moon', NOW).warnings).toHaveLength(1);
     expect(serializeViewState(parseViewState('temp=cesm', NOW).state)).toContain('&temp=cesm');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('temp=');
@@ -418,6 +428,7 @@ describe('serializeViewState', () => {
     impact: fc.constantFrom(...IMPACT_MODELS),
     land: fc.constantFrom(...LAND_MODELS),
     snowball: fc.constantFrom(...SNOWBALL_MODELS),
+    why: fc.constantFrom(null, ...WHY_VIEWS),
   });
 
   it('round-trips every view state through a link', () => {

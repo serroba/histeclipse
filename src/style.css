@@ -3550,3 +3550,33 @@ body {
 .deep-evidence[hidden] {
   display: none;
 }
+
+/* Citing a source: copy its reference, or fetch its BibTeX from Crossref. */
+.why-cite-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.why-cite-action {
+  padding: 1px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 11px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.why-cite-action:hover,
+.why-cite-action:focus-visible {
+  color: var(--ink);
+}
+
+.why-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
