@@ -8,6 +8,7 @@
 import { createImpactAnimation, type ImpactAnimation, type ImpactSpec } from './impactAnimation';
 import { BODY_RADIUS } from './bodyRadius';
 import { createC14Glow } from './c14Glow';
+import { createShowerAnimation, type ShowerAnimation, type ShowerSpec } from './showerAnimation';
 import {
   AdditiveBlending,
   BackSide,
@@ -355,6 +356,8 @@ export interface Globe {
   /** Glow where cosmic rays make carbon-14, a rate per 5° of latitude (1 for today's over the
    * poles); null hides it. */
   setC14Glow(profile: readonly number[] | null): void;
+  /** Play a cosmic-ray shower making carbon-14, once, captioned through its `onStep`. */
+  playShower(spec: ShowerSpec): void;
   /**
    * Wrap a planet in a mission's global map, fetched the first time it is asked for; a `sharp`
    * one, asked for close up, replaces it and is kept.
@@ -1752,6 +1755,8 @@ export function createGlobe(
   // An impact playing, if one is, and how many have played out.
   let impact: ImpactAnimation | null = null;
   let impactsPlayed = 0;
+  let shower: ShowerAnimation | null = null;
+  let showersPlayed = 0;
   // Distances from the body in focus, in scene units; it starts on the first frame, timed by the
   // frames' own clock (which can run apart from performance.now()).
   let zoomFlight: { from: number; to: number; start: number | null } | null = null;
@@ -1929,6 +1934,16 @@ export function createGlobe(
         // How many have played out, for whoever needs to know one did, however briefly it showed.
         impactsPlayed += 1;
         container.dataset['impactsPlayed'] = String(impactsPlayed);
+      }
+    }
+    if (shower !== null) {
+      const playing = shower.update(now);
+      needsRender = true;
+      if (!playing) {
+        shower.dispose();
+        shower = null;
+        showersPlayed += 1;
+        container.dataset['showersPlayed'] = String(showersPlayed);
       }
     }
     if (zoomFlight !== null && viewFlight === null) {
@@ -2993,6 +3008,22 @@ export function createGlobe(
       container.dataset['impactPlaying'] = 'true';
       needsRender = true;
     },
+    playShower(spec) {
+      shower?.dispose();
+      // Every step it has shown, in order: a slow frame can pass a step's start, never a step.
+      const shown: string[] = [];
+      shower = createShowerAnimation({
+        ...spec,
+        onStep(step) {
+          container.dataset['showerStep'] = step ?? 'done';
+          if (step !== null) shown.push(step);
+          container.dataset['showerSteps'] = shown.join(' ');
+          spec.onStep(step);
+        },
+      });
+      earth.add(shower.group);
+      needsRender = true;
+    },
     zoomTo(distance) {
       if (viewpoint !== 'free') return;
       const radius = BODY_RADIUS[focus];
@@ -3018,6 +3049,7 @@ export function createGlobe(
       texture.dispose();
       moonTexture.dispose();
       c14Glow.dispose();
+      shower?.dispose();
       markerLayer.remove();
       renderer.domElement.remove();
     },

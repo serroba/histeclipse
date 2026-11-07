@@ -4192,3 +4192,29 @@ button:has(> .icon-label) > .icon {
 .carbon-made-path li + li {
   margin-top: 4px;
 }
+
+.carbon-made-watch {
+  margin: 4px 0 8px;
+}
+
+/* Over the globe while a shower plays, just above the bottom panel. */
+.shower-caption {
+  position: absolute;
+  bottom: calc(var(--free-bottom, 120px) + 12px);
+  left: 50%;
+  z-index: 5;
+  width: min(520px, calc(100% - 32px));
+  margin: 0;
+  padding: 10px 14px;
+  transform: translateX(-50%);
+  border: 1px solid rgb(183 156 255 / 0.45);
+  border-radius: 10px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.shower-caption[hidden] {
+  display: none;
+}
