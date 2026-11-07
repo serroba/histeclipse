@@ -317,6 +317,34 @@ export const SOURCES = {
     url: 'https://sdo.gsfc.nasa.gov/',
     licence: 'NASA, public domain',
   },
+  moonKit: {
+    name: 'NASA CGI Moon Kit',
+    kind: 'imagery',
+    cite: 'NASA Scientific Visualization Studio, CGI Moon Kit (2019): the Lunar Reconnaissance Orbiter Camera’s colour mosaic of the Moon',
+    url: 'https://svs.gsfc.nasa.gov/4720',
+    licence: 'NASA, public domain',
+  },
+  messengerMap: {
+    name: 'MESSENGER map of Mercury',
+    kind: 'imagery',
+    cite: 'NASA/JHU APL/Carnegie Institution of Washington, “A Global View from Orbit”, MESSENGER mosaic of Mercury, NASA Photojournal PIA15063 (2011)',
+    url: 'https://science.nasa.gov/photojournal/a-global-view-from-orbit/',
+    licence: 'NASA, public domain',
+  },
+  vikingMap: {
+    name: 'Viking colour mosaic of Mars',
+    kind: 'imagery',
+    cite: 'NASA/JPL/USGS Astrogeology Science Center, Mars Viking Global Color Mosaic 925 m, from Viking Orbiter images of 1976–80',
+    url: 'https://astrogeology.usgs.gov/search/map/mars_viking_global_color_mosaic_925m',
+    licence: 'USGS, public domain',
+  },
+  cassiniJupiter: {
+    name: 'Cassini map of Jupiter',
+    kind: 'imagery',
+    cite: 'NASA/JPL/Space Science Institute, “Cassini’s Best Maps of Jupiter (Cylindrical Map)”, from the flyby of December 2000, NASA Photojournal PIA07782 (2006)',
+    url: 'https://science.nasa.gov/photojournal/cassinis-best-maps-of-jupiter-cylindrical-map/',
+    licence: 'NASA, public domain',
+  },
   helioviewer: {
     name: 'Helioviewer',
     kind: 'imagery',
@@ -584,6 +612,12 @@ export const WHYS = {
     sources: ['sdo', 'helioviewer'],
     how: 'Images of 2024, days apart, stitched into one surface: the Sun of the date shown looked different, in ways unknown.',
   },
+  'close-up': {
+    title: 'The Moon and planets close up',
+    what: 'What the Moon and each planet look like near to: the missions’ own maps of them.',
+    sources: ['moonKit', 'messengerMap', 'vikingMap', 'cassiniJupiter'],
+    how: 'Each map is wrapped on the body as published, shrunk for the web. Which side of a planet faces you is not worked out: only its pole is set true. Venus shows its cloud tops as a plain colour, as from space the clouds hide the ground, and Saturn its main bands painted, as no mission’s global map of it is used.',
+  },
   sky: {
     title: 'The night sky',
     what: 'The stars as seen from the place picked, at the moment shown.',
@@ -831,11 +865,13 @@ export function onScreen(scene: Scene): WhyId[] {
   const ground: WhyId[] =
     scene.focus === 'sun'
       ? ['sun']
-      : scene.span === 'years'
-        ? ['earth', 'bodies']
-        : scene.span === 'ice'
-          ? ['ice-surface']
-          : ['deep-surface', 'deep-evidence'];
+      : scene.focus !== 'earth' && scene.span === 'years'
+        ? ['close-up', 'bodies']
+        : scene.span === 'years'
+          ? ['earth', 'bodies']
+          : scene.span === 'ice'
+            ? ['ice-surface']
+            : ['deep-surface', 'deep-evidence'];
   const layers = (layer: Layer): boolean =>
     scene.layers.has(layer) && scene.drawsOn(layer, scene.span);
   const borders: WhyId[] = !layers('empires')

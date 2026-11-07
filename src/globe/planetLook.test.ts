@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { PLANETS, saturnRingTilt } from '../astro/planets';
 import {
   colourAt,
+  MOON_CAPTION,
   PLANET_NAMES,
+  PLANET_PICTURES,
   planetRadius,
   poleVector,
   polarRatio,
@@ -55,5 +57,22 @@ describe('Saturn’s rings', () => {
     expect(ringOpacity(120_000)).toBeLessThan(0.1);
     expect(ringOpacity(133_589)).toBeLessThan(0.1);
     expect(ringOpacity(128_000)).toBeGreaterThan(0.5);
+  });
+});
+
+describe('planet pictures', () => {
+  it('wrap the missions’ maps where one is used, and say whose they are', () => {
+    const mapped = PLANETS.filter((planet) => PLANET_PICTURES[planet].map !== null);
+    expect(mapped).toEqual(['mercury', 'mars', 'jupiter']);
+    for (const planet of mapped) {
+      expect(PLANET_PICTURES[planet].map).toBe(`textures/planets/${planet}-2048.jpg`);
+      expect(PLANET_PICTURES[planet].caption).toMatch(/(NASA|USGS)[^.]*\.$/);
+    }
+    expect(MOON_CAPTION).toContain('NASA');
+  });
+
+  it('say so where the painted colours stand in', () => {
+    expect(PLANET_PICTURES.venus.caption).toContain('clouds hide the ground');
+    expect(PLANET_PICTURES.saturn.caption).toContain('not a map');
   });
 });

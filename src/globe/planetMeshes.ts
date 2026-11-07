@@ -17,6 +17,7 @@ import {
   ShaderMaterial,
   SphereGeometry,
   SRGBColorSpace,
+  type Texture,
   UnsignedByteType,
   Vector3,
 } from 'three';
@@ -102,6 +103,8 @@ export interface PlanetMeshes {
     sun: Vector3,
     j2000ToScene: Quaternion,
   ): void;
+  /** Wrap a planet in a mission's global map, in place of its painted colours. */
+  setMap(planet: PlanetName, map: Texture): void;
 }
 
 /** A map of latitude bands: north at the top, as SphereGeometry's v runs. */
@@ -141,6 +144,7 @@ export function createPlanetMeshes(scene: Scene): PlanetMeshes {
   const up = new Vector3(0, 1, 0);
   const tilts = new Map<PlanetName, Quaternion>();
   const toSun = new Map<PlanetName, Vector3>();
+  const maps = new Map<PlanetName, { value: Texture }>();
   function planetMesh(planet: PlanetName): Mesh {
     const radius = planetRadius(planet);
     const geometry = new SphereGeometry(
@@ -151,10 +155,12 @@ export function createPlanetMeshes(scene: Scene): PlanetMeshes {
     geometry.scale(1, polarRatio(planet), 1);
     const direction = new Vector3(1, 0, 0);
     toSun.set(planet, direction);
+    const map: { value: Texture } = { value: bandTexture(planet) };
+    maps.set(planet, map);
     const mesh = new Mesh(
       geometry,
       new ShaderMaterial({
-        uniforms: { map: { value: bandTexture(planet) }, toSun: { value: direction } },
+        uniforms: { map, toSun: { value: direction } },
         vertexShader: PLANET_VERTEX,
         fragmentShader: PLANET_FRAGMENT,
       }),
@@ -217,6 +223,12 @@ export function createPlanetMeshes(scene: Scene): PlanetMeshes {
       }
       ringUniforms.toSun.value.copy(toSun.get('saturn') ?? ringUniforms.toSun.value);
       ringNormal.set(0, 1, 0).applyQuaternion(meshes.saturn.quaternion);
+    },
+    setMap(planet, texture) {
+      const map = maps.get(planet);
+      if (map === undefined || map.value === texture) return;
+      map.value.dispose();
+      map.value = texture;
     },
   };
 }

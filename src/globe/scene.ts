@@ -346,6 +346,8 @@ export interface Globe {
    * a plain disc.
    */
   setSunImage(image: SunImageRequest | null): void;
+  /** Wrap a planet in a mission's global map, fetched the first time it is asked for. */
+  setPlanetMap(planet: PlanetName, url: string): void;
   /**
    * Lay past states and empires over the ground, with the names of the largest; null hides
    * the layer.
@@ -1266,6 +1268,7 @@ export function createGlobe(
   sun.visible = false;
   scene.add(sun);
   const planets = createPlanetMeshes(scene);
+  const planetMapsAsked = new Set<PlanetName>();
   // The planets' orbits, and Earth's: drawn about the Sun in J2000 axes, turned with them.
   const orbits = new Group();
   orbits.visible = false;
@@ -2215,6 +2218,23 @@ export function createGlobe(
     onEmptyTap(listener) {
       emptyTapListeners.add(listener);
       return () => emptyTapListeners.delete(listener);
+    },
+    setPlanetMap(planet, url) {
+      if (planetMapsAsked.has(planet)) return;
+      planetMapsAsked.add(planet);
+      new TextureLoader()
+        .loadAsync(url)
+        .then((map) => {
+          map.colorSpace = SRGBColorSpace;
+          map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+          planets.setMap(planet, map);
+          container.dataset['planetMap'] = planet;
+          needsRender = true;
+        })
+        .catch(() => {
+          // Asked again the next time the planet is in view; the painted colours stay meanwhile.
+          planetMapsAsked.delete(planet);
+        });
     },
     setSunImage(image) {
       sunImageWanted = image;

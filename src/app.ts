@@ -29,6 +29,7 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { geoToVector } from './globe/geo';
+import { MOON_CAPTION, PLANET_NAMES, PLANET_PICTURES } from './globe/planetLook';
 import { createGlobe, type StateChange } from './globe/scene';
 import { createStore } from './state/store';
 import { parseViewState } from './state/url';
@@ -2853,16 +2854,22 @@ export async function startApp(root: HTMLElement): Promise<void> {
     } else if (focus === 'moon') {
       const moonKm = moonEphemeris?.position(jdTT) ?? null;
       bodyBar.render(
-        moonKm === null ? null : { name: 'The Moon', text: moonText(moonFacts(moonKm, sunKm)) },
+        moonKm === null
+          ? null
+          : { name: 'The Moon', text: moonText(moonFacts(moonKm, sunKm)), picture: MOON_CAPTION },
       );
     } else {
+      // A mission's map, fetched the first time the planet is looked at close up.
+      const { map, caption } = PLANET_PICTURES[focus];
+      if (map !== null) globe.setPlanetMap(focus, `${base}${map}`);
       const position = planets?.position(focus, jdTT);
       bodyBar.render(
         position === undefined
           ? null
           : {
-              name: `${focus.charAt(0).toUpperCase()}${focus.slice(1)}`,
+              name: PLANET_NAMES[focus],
               text: planetText(planetFacts(focus, position, sunKm)),
+              picture: caption,
             },
       );
     }
