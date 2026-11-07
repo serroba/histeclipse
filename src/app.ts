@@ -3538,6 +3538,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
       root.style.setProperty('--free-bottom', `${String(panelInsets.bottom)}px`);
       const free = window.innerHeight - panelInsets.top - panelInsets.bottom;
       zoomRail.root.classList.toggle('is-cramped', free < ZOOM_RAIL_ROOM);
+      // Deep time's sheet stops short of the date panel where the two share columns (#237).
+      const panel = top.getBoundingClientRect();
+      const sheet = bottom.querySelector('.deep-time')?.getBoundingClientRect();
+      const shared =
+        sheet !== undefined &&
+        sheet.width > 0 &&
+        panel.right > sheet.left &&
+        panel.left < sheet.right;
+      root.style.setProperty('--hud-clear', `${String(shared ? panel.bottom + 8 : 0)}px`);
     };
     const observer = new ResizeObserver(update);
     observer.observe(top);
