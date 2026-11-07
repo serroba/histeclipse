@@ -12,6 +12,7 @@ import { BODY_RADIUS } from '../globe/bodyRadius';
 import { EARTH_RADIUS_KM } from '../globe/spaceFrame';
 import { CAMERA_DISTANCE_RANGE, type Body } from '../state/viewState';
 import { element } from './dom';
+import { bookIcon } from './icons';
 
 /** A rail for one body: its distances in its own radii, as near and as far as the camera goes. */
 export interface RailScale {
@@ -143,6 +144,8 @@ export interface ZoomRail {
   render(view: RailView | null): void;
   /** Whether the orbits icon is offered, and on. */
   setOrbits(offered: boolean, on: boolean): void;
+  /** Whether "Why here?" is offered, and on: a tap on the globe then says what is there. */
+  setWhyHere(offered: boolean, on: boolean): void;
 }
 
 /** An orbit around a sun, as a small line icon. */
@@ -193,6 +196,8 @@ export function createZoomRail(handlers: {
   onZoom(distance: number): void;
   /** Turn the planets' orbits on or off. */
   onOrbits(): void;
+  /** Turn "Why here?" on or off. */
+  onWhyHere(): void;
   /** Centre on Earth again. */
   onEarth(): void;
 }): ZoomRail {
@@ -269,12 +274,25 @@ export function createZoomRail(handlers: {
   orbits.addEventListener('click', () => {
     handlers.onOrbits();
   });
+  const whyHere = element('button', {
+    type: 'button',
+    class: 'zoom-step zoom-why-here',
+    'aria-label': 'Why here?',
+    'aria-pressed': 'false',
+    title: 'Tap the globe to see what each layer has there, and where it comes from',
+    hidden: '',
+  });
+  whyHere.append(bookIcon(18));
+  whyHere.addEventListener('click', () => {
+    handlers.onWhyHere();
+  });
   const zoom = element('div', { class: 'zoom-parts' }, home, zoomIn, track, zoomOut);
   const root = element(
     'div',
     { class: 'zoom-rail', role: 'group', 'aria-label': 'Zoom', hidden: '' },
     zoom,
     orbits,
+    whyHere,
     readout,
   );
   let zooming = false;
@@ -282,7 +300,7 @@ export function createZoomRail(handlers: {
   function sync(): void {
     zoom.hidden = !zooming;
     readout.hidden = !zooming;
-    root.hidden = !zooming && orbits.hidden;
+    root.hidden = !zooming && orbits.hidden === true && whyHere.hidden === true;
   }
   zoomIn.addEventListener('click', () => {
     handlers.onZoom(distanceAt(railPosition(shown, scale) - STEP, scale));
@@ -295,6 +313,11 @@ export function createZoomRail(handlers: {
   });
   return {
     root,
+    setWhyHere(offered, on) {
+      whyHere.hidden = !offered;
+      whyHere.setAttribute('aria-pressed', String(on));
+      sync();
+    },
     setOrbits(offered, on) {
       orbits.hidden = !offered;
       orbits.setAttribute('aria-pressed', String(on));

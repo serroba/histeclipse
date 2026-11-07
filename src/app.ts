@@ -180,7 +180,8 @@ import {
 } from './data/namedPeriods';
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
-import { createWhySheet } from './ui/whySheet';
+import { createWhySheet, type HereView } from './ui/whySheet';
+import { hereFacts, placeText } from './sources/here';
 import { layerWhy, onScreen, type WhyId } from './sources/registry';
 import { createZoomRail } from './ui/zoomRail';
 import { createWaysLegend } from './ui/waysLegend';
@@ -352,9 +353,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The orbits, offered where they mean something: far out, or on the Sun or a planet.
   // Why anything is on screen: the book marks beside things, and the panel they open.
   // The panel follows the view, so the link names the why open and opens it again.
-  const whySheet = createWhySheet((why) => {
-    store.set((state) => ({ ...state, why }));
-  });
+  const whySheet = createWhySheet(
+    (why) => {
+      // Closing "Here" by hand leaves the asking too.
+      if (why === null) askingHere = false;
+      store.set((state) => ({ ...state, why }));
+    },
+    () => hereView(store.get()),
+  );
+  // "Why here?": while on, a tap on the globe says what each layer has there.
+  let askingHere = false;
   const sourcesList = element('ul', { class: 'why-list', 'data-testid': 'sources-list' });
   const layersPanel = createLayersPanel(
     (layer, on) => {
@@ -379,6 +387,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const zoomRail = createZoomRail({
     onZoom(distance) {
       globe.zoomTo(distance);
+    },
+    onWhyHere() {
+      askingHere = !askingHere;
+      store.set((state) => ({
+        ...state,
+        why: askingHere ? 'here' : state.why === 'here' ? null : state.why,
+      }));
     },
     onOrbits() {
       store.set((state) => ({
@@ -2748,6 +2763,49 @@ export async function startApp(root: HTMLElement): Promise<void> {
     whySheet.renderOnScreen(sourcesList, ids);
   }
 
+  // The states last drawn, for "Why here?" to read back.
+  let statesDrawn: { readonly year: number; readonly territories: readonly Territory[] } | null =
+    null;
+
+  /** What each layer on the map has at the place picked: "Why here?". */
+  function hereView(state: ViewState): HereView | null {
+    if (state.location === null || state.ma !== null) return null;
+    const year = state.time.date.year;
+    const words = (y: number): string => formatYear(astronomicalYear(y));
+    const shownYear = cliopatriaYear(year, PRESENT_YEAR);
+    const ways = state.layers.has('ways') && waysOfLife !== null ? waysAt(waysOfLife, year) : null;
+    return {
+      place: placeText(state.location),
+      facts: hereFacts({
+        place: state.location,
+        yearText: words(year),
+        states: state.layers.has('empires')
+          ? {
+              source: state.borders,
+              territories: statesDrawn?.year === year ? statesDrawn.territories : null,
+              asOf: shownYear === year ? null : words(shownYear),
+            }
+          : null,
+        ways: ways === null ? null : { at: ways, momentText: words(ways.year) },
+        rock:
+          state.layers.has('rocks') && rocks !== null ? rockAt(rocks, state.location) : undefined,
+      }),
+    };
+  }
+
+  /** What "Here" depends on, so it is written again only when that changes. */
+  function hereVersion(state: ViewState): string {
+    return [
+      state.location === null ? '' : placeText(state.location),
+      state.time.date.year,
+      [...state.layers].join(','),
+      state.borders,
+      statesDrawn?.year ?? '',
+      waysOfLife === null ? 0 : 1,
+      rocks === null ? 0 : 1,
+    ].join('|');
+  }
+
   function showEmpires(state: ViewState): void {
     // Past states belong to historical time, not deep time.
     const on = state.layers.has('empires') && state.ma === null;
@@ -2799,6 +2857,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ([drawn, lines]) => {
         // The year or source may have moved on while the files loaded.
         if (empiresShown !== key) return;
+        statesDrawn = { year, territories: drawn };
+        if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get()));
         const changes = noteStates(source, year, [
           ...drawn.map((territory) => ({ ...labelPoint(territory), name: territory.name })),
           ...(lines?.labels ?? []),
@@ -3320,7 +3380,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
         : null,
     );
     showSources(state);
-    whySheet.show(state.why);
+    zoomRail.setWhyHere(
+      state.mode === 'globe' && state.focus === 'earth' && state.ma === null,
+      askingHere,
+    );
+    root.classList.toggle('is-asking-here', askingHere && state.ma === null);
+    whySheet.show(state.why, state.why === 'here' ? hereVersion(state) : '');
     historyTrack.root.hidden = state.selection !== null;
     historyTrack.extras.hidden = state.selection !== null;
     if (state.time.date.year !== previous?.time.date.year || state.layers !== previous.layers) {
@@ -3413,6 +3478,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     store.set((state) => ({
       ...state,
       location,
+      ...(askingHere ? { why: 'here' as const } : {}),
       time:
         selected === undefined || !isSolar(selected)
           ? state.time
