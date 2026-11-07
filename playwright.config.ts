@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 import type { DisplayOptions } from './e2e/support';
 
-// With BASE_URL set (e.g. the live GitHub Pages URL) the suite tests that deployment.
+// With BASE_URL set (e.g. the live site, https://histeclipse.limits.world/) the suite tests that deployment.
 // Without it, the suite builds the site and tests a local production preview.
 const remoteBaseURL = process.env['BASE_URL'];
 const localBaseURL = 'http://localhost:4173/';
