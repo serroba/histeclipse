@@ -691,8 +691,12 @@ test('a late part that stays missing says so once, without reloading again and a
   });
 });
 
-test('the Sky button stands you where the globe is looking, and back again', async ({ page }) => {
+test('the Sky button stands you where the globe is looking, and back again', async ({
+  page,
+}, info) => {
   const problems = collectProblems(page);
+  // An upright phone looks lower, so the horizon shows between the panels.
+  const altitude = info.project.name === 'mobile' ? '12' : '30';
   await page.goto('./?t=2025-03-20T19:00Z&cam=32.5,44.4,3');
   await globeRendered(page);
   await page.getByRole('button', { name: 'Sky' }).click();
@@ -700,7 +704,7 @@ test('the Sky button stands you where the globe is looking, and back again', asy
   await expect(page.getByTestId('globe')).toBeHidden();
   await expect(page).toHaveURL(/mode=sky/);
   await expect(page).toHaveURL(/loc=32\.5000,44\.4000/);
-  await expect(page).toHaveURL(/look=180\.0,30\.0,90\.0/);
+  await expect(page).toHaveURL(new RegExp(`look=180\\.0,${altitude}\\.0,90\\.0`));
   await expect(page.getByText('Standing at 32.50° N, 44.40° E, facing S.')).toBeVisible();
 
   await page.getByRole('button', { name: 'Orbit' }).click();
