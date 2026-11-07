@@ -53,9 +53,53 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
+  # Cloudflare keeps copies of the site at its edge (#240). Once GitHub serves the new release,
+  # drop those copies so nobody gets an old data file with a new page.
+  purge-cache:
+    name: Purge Cloudflare cache
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions: {}
+    env:
+      HOST: histeclipse.limits.world
+      ZONE_ID: 6343df74544be96ed2cb0d02349a7d46 # limits.world
+      EXPECTED_VERSION: ${{ github.sha }}
+      # Scoped to Cache Purge on limits.world only.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      # Ask GitHub directly, past Cloudflare: purging before GitHub serves the release would
+      # only let the edge fetch the old files again.
+      - name: Wait until GitHub serves the new release
+        run: |
+          for _ in $(seq 1 60); do
+            if curl -fsS --resolve "$HOST:443:185.199.108.153" "https://$HOST/" | grep -q "content=\"$EXPECTED_VERSION\""; then
+              echo "GitHub is serving $EXPECTED_VERSION"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::GitHub did not serve $EXPECTED_VERSION within 10 minutes"
+          exit 1
+      # Purged twice, a minute apart: GitHub's own CDN can lag behind in some regions, and the
+      # second purge drops anything the edge fetched from a lagging one.
+      - name: Purge the site's host
+        run: |
+          purge() {
+            curl -fsS -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/purge_cache" \
+              -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+              -H 'Content-Type: application/json' \
+              --data "{\"hosts\":[\"$HOST\"]}" | grep -q '"success":true'
+          }
+          purge
+          echo "Purged $HOST"
+          sleep 60
+          purge
+          echo "Purged $HOST again"
+
   live-smoke:
     name: Verify live site
-    needs: deploy
+    needs: purge-cache
     permissions:
       contents: read
     uses: $/.github/workflows/live-smoke.yml
