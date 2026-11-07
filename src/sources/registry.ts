@@ -337,6 +337,50 @@ export const SOURCES = {
     url: 'https://science.nasa.gov/photojournal/the-day-the-earth-smiled-sneak-preview/',
     licence: 'NASA, public domain',
   },
+  intcal20: {
+    name: 'IntCal20',
+    kind: 'dataset',
+    cite: 'Reimer, P. J., et al. (2020). The IntCal20 Northern Hemisphere radiocarbon age calibration curve (0–55 cal kBP). Radiocarbon 62, 725–757',
+    url: 'https://doi.org/10.1017/RDC.2020.41',
+    licence: 'CC BY 4.0',
+  },
+  shcal20: {
+    name: 'SHCal20',
+    kind: 'dataset',
+    cite: 'Hogg, A. G., et al. (2020). SHCal20 Southern Hemisphere calibration, 0–55,000 years cal BP. Radiocarbon 62, 759–778',
+    url: 'https://doi.org/10.1017/RDC.2020.59',
+    licence: 'CC BY 4.0',
+  },
+  miyake2012: {
+    name: 'Miyake et al. 2012',
+    kind: 'paper',
+    cite: 'Miyake, F., Nagaya, K., Masuda, K. & Nakamura, T. (2012). A signature of cosmic-ray increase in AD 774–775 from tree rings in Japan. Nature 486, 240–242',
+    url: 'https://doi.org/10.1038/nature11123',
+  },
+  miyake2013: {
+    name: 'Miyake et al. 2013',
+    kind: 'paper',
+    cite: 'Miyake, F., Masuda, K. & Nakamura, T. (2013). Another rapid event in the carbon-14 content of tree rings. Nature Communications 4, 1748',
+    url: 'https://doi.org/10.1038/ncomms2783',
+  },
+  oHare2019: {
+    name: 'O’Hare et al. 2019',
+    kind: 'paper',
+    cite: 'O’Hare, P., Mekhaldi, F., Adolphi, F., et al. (2019). Multiradionuclide evidence for an extreme solar proton event around 2,610 B.P. (∼660 BC). PNAS 116, 5961–5966',
+    url: 'https://doi.org/10.1073/pnas.1815725116',
+  },
+  brehm2022: {
+    name: 'Brehm et al. 2022',
+    kind: 'paper',
+    cite: 'Brehm, N., Christl, M., Knowles, T. D. J., et al. (2022). Tree-rings reveal two strong solar proton events in 7176 and 5259 BCE. Nature Communications 13, 1196',
+    url: 'https://doi.org/10.1038/s41467-022-28804-9',
+  },
+  kuitems2022: {
+    name: 'Kuitems et al. 2022',
+    kind: 'paper',
+    cite: 'Kuitems, M., Wallace, B. L., Lindsay, C., et al. (2022). Evidence for European presence in the Americas in AD 1021. Nature 601, 388–391',
+    url: 'https://doi.org/10.1038/s41586-021-03972-8',
+  },
   moonKit: {
     name: 'NASA CGI Moon Kit',
     kind: 'imagery',
@@ -690,6 +734,20 @@ export const WHYS = {
     sources: ['sdo', 'helioviewer'],
     how: 'Images of 2024, days apart, stitched into one surface: the Sun of the date shown looked different, in ways unknown.',
   },
+  radiocarbon: {
+    title: 'Carbon-14 in the air',
+    what: 'How much carbon-14 the air held each year, as tree rings, corals and cave formations record it: the curve every radiocarbon date is read against.',
+    sources: [
+      'intcal20',
+      'shcal20',
+      'miyake2012',
+      'miyake2013',
+      'oHare2019',
+      'brehm2022',
+      'kuitems2022',
+    ],
+    how: 'The line is the curve’s Δ14C: the air’s carbon-14 against a modern standard, per mille. IntCal20 for the northern hemisphere, SHCal20 for the southern, picked by where you stand. Living things take in the air’s carbon-14 and, once dead, lose half of it every 5,730 years; a laboratory measures what is left, as a radiocarbon age. Because the air’s carbon-14 rose and fell, that age is read against this curve to find calendar years: where the curve is steep, a narrow range; where it is flat (the Hallstatt plateau, about 800–400 BCE), centuries; where it wiggles, two or more ranges. Miyake events, sudden one-year rises from solar storms, let a tree ring be dated to its year. The curves end in 1950: after it nuclear tests nearly doubled the air’s carbon-14 (the bomb pulse).',
+  },
   'close-up': {
     title: 'The Moon and planets close up',
     what: 'What the Moon and each planet look like near to: the missions’ own maps of them.',
@@ -932,6 +990,7 @@ export interface Scene {
 
 /** The layers whose why is their own id. */
 const LAYER_WHYS: readonly (Layer & WhyId)[] = [
+  'radiocarbon',
   'ways',
   'periods',
   'genomes',

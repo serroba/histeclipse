@@ -45,6 +45,7 @@ from histeclipse_pipeline.planets import (
     write_planet_vectors,
 )
 from histeclipse_pipeline.polarity import fetch_polarity
+from histeclipse_pipeline.radiocarbon import fetch_radiocarbon
 from histeclipse_pipeline.seaice import fetch_seaice
 from histeclipse_pipeline.sealevel import fetch_sealevel
 from histeclipse_pipeline.shelf import fetch_shelf
@@ -301,6 +302,12 @@ def polarity(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} polarity chrons to {args.out}")
 
 
+def radiocarbon(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the radiocarbon calibration curves (IntCal20, SHCal20)."""
+    count = fetch_radiocarbon(args.out)
+    return _say(f"wrote {count} curve rows to {args.out}")
+
+
 def pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the lead picture, author and licence of each Wikipedia page a data file names."""
     count = fetch_pictures(args.source, args.out, args.must_mention)
@@ -503,6 +510,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "polarity": (
         polarity,
         "write the geomagnetic polarity time scale (GTS 2020, via PmagPy)",
+        "output JSON file",
+    ),
+    "radiocarbon": (
+        radiocarbon,
+        "write the radiocarbon calibration curves (IntCal20, SHCal20)",
         "output JSON file",
     ),
     "pictures": (
