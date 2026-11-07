@@ -46,7 +46,9 @@ const PLANET_VERTEX = /* glsl */ `
   }
 `;
 
-// Sunlit by a plain Lambert law, with a faint night side so the disc stays findable.
+// Sunlit by a plain Lambert law. The night side keeps a trace of light so the disc stays
+// findable, kept small: the floor is in linear light, and once encoded for the screen even 3%
+// shows as a fifth of full brightness, which reads as a grey band, not night (#230).
 const PLANET_FRAGMENT = /* glsl */ `
   #include <logdepthbuf_pars_fragment>
   uniform sampler2D map;
@@ -57,7 +59,7 @@ const PLANET_FRAGMENT = /* glsl */ `
     #include <logdepthbuf_fragment>
     float light = max(dot(normalize(vNormal), toSun), 0.0);
     vec3 colour = texture2D(map, vUv).rgb;
-    gl_FragColor = vec4(colour * (0.03 + 0.97 * light), 1.0);
+    gl_FragColor = vec4(colour * (0.006 + 0.994 * light), 1.0);
     #include <colorspace_fragment>
   }
 `;
