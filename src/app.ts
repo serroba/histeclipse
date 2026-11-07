@@ -734,10 +734,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     goToSpan(span);
   });
   // The Holocene's ages under its slider; a tap goes to an age's start.
-  const historyBands = createPeriodBands((ma) => {
-    stopHistory();
-    setYear(Math.max(historyFirst(), yearOfMa(ma)));
-  });
+  const historyBands = createPeriodBands(
+    (ma) => {
+      stopHistory();
+      setYear(Math.max(historyFirst(), yearOfMa(ma)));
+    },
+    // In the years, a moment is its year.
+    (ma) => formatYear(astronomicalYear(yearOfMa(ma))),
+  );
   const historyTrack = createHistoryTrack(
     {
       onYear(year) {
@@ -850,7 +854,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function showHistory(state: ViewState): void {
-    historyBands.render(maOfYear(historyFirst()), maOfYear(state.time.date.year));
+    // Unclamped: the years run past 1950, where deep time's present stops.
+    const maOf = (year: number): number => (1950 - year) / 1e6;
+    historyBands.render(maOf(historyFirst()), maOf(state.time.date.year), maOf(PRESENT_YEAR));
     historyTrack.render({
       year: state.time.date.year,
       first: historyFirst(),
