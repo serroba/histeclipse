@@ -3,6 +3,8 @@
  * in historical time and where they lay in deep time; each opens a card with its details.
  */
 
+import type { Page } from '@playwright/test';
+
 import {
   collectProblems,
   expect,
@@ -146,4 +148,50 @@ test('a crater’s card estimates its impactor, and plays the impact as an illus
     });
   }
   expect(problems).toEqual([]);
+});
+
+test.describe('as deep time plays, the great impacts strike', () => {
+  const deep = (page: Page) => page.getByRole('navigation', { name: 'Deep time' });
+  const play = async (page: Page, link: string): Promise<void> => {
+    await page.goto(link);
+    await globeRendered(page);
+    await deep(page).getByRole('button', { name: 'Play', exact: true }).click();
+  };
+
+  test('Chicxulub strikes as the time passes 66 Ma, on the side in view', async ({ page }) => {
+    const problems = collectProblems(page);
+    const globe = page.getByTestId('globe');
+    await test.step('Given 70 million years ago, Impacts on, looking down on the Gulf of Mexico', async () => {
+      await play(page, './?ma=70&scale=all&layers=impacts&cam=20,-80,3');
+    });
+    await test.step('Then, as the time passes 66 Ma, Chicxulub’s strike plays', async () => {
+      await expect(globe).toHaveAttribute('data-strike', 'Chicxulub', { timeout: 20_000 });
+      await expect(globe).toHaveAttribute('data-impact-playing', 'true');
+    });
+    expect(problems).toEqual([]);
+  });
+
+  test('on the far side of the globe, Chicxulub passes without a strike', async ({ page }) => {
+    const globe = page.getByTestId('globe');
+    await test.step('Given 70 million years ago, Impacts on, looking down on Asia', async () => {
+      await play(page, './?ma=70&scale=all&layers=impacts&cam=20,100,3');
+    });
+    await test.step('Then the time runs to today without Chicxulub striking', async () => {
+      await expect(page).toHaveURL(/[?&]ma=0(&|$)/, { timeout: 30_000 });
+      await expect(globe).not.toHaveAttribute('data-strike', 'Chicxulub');
+    });
+  });
+
+  test('for a reader who asks for less motion, no strike plays', async ({ page }) => {
+    const globe = page.getByTestId('globe');
+    await test.step('Given less motion asked for, and 70 million years ago facing Chicxulub', async () => {
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await play(page, './?ma=70&scale=all&layers=impacts&cam=20,-80,3');
+    });
+    await test.step('Then the time runs to today and no strike plays', async () => {
+      await expect(page).toHaveURL(/[?&]ma=0(&|$)/, { timeout: 30_000 });
+      await expect(globe).not.toHaveAttribute('data-strike');
+      await expect(globe).not.toHaveAttribute('data-impact-playing', 'true');
+    });
+  });
 });
