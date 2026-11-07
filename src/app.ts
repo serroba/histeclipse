@@ -37,6 +37,7 @@ import { parseViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import {
   DEFAULT_CAMERA,
+  DEFAULT_LOOK,
   defaultViewState,
   type DeepScale,
   EARTH_AGE_MA,
@@ -45,6 +46,7 @@ import {
   type BorderSource,
   type Layer,
   SKY_FOV_RANGE,
+  type SkyLook,
   withLayer,
   roundMa,
   momentJulianDay,
@@ -270,6 +272,8 @@ const AIM_FOV = 12;
 const PLANET_SKY_FOV = 4;
 /** How long the sky takes to turn and close in on a tapped body, ms, before going to it. */
 const SKY_GLIDE_MS = 900;
+/** How high an upright phone looks on entering the sky, degrees: the horizon low in view. */
+const PHONE_SKY_ALTITUDE = 12;
 /** Degrees from the centre of the globe in view within which a strike is played as time runs. */
 const STRIKE_IN_VIEW = 70;
 /** Earth radii (or the focused body's): beyond this the space view loads the planets. */
@@ -330,13 +334,30 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   });
 
+  /**
+   * On a phone held upright the sky shows less from top to bottom (#253), and the panels cover
+   * much of it: an untouched look is lowered so the horizon is in view. A look the reader chose,
+   * or a link's, stays as it is.
+   */
+  function phoneLook(look: SkyLook): SkyLook {
+    const untouched = look.altitude === DEFAULT_LOOK.altitude && look.fov === DEFAULT_LOOK.fov;
+    if (!untouched || window.innerHeight <= window.innerWidth) return look;
+    return { ...look, altitude: PHONE_SKY_ALTITUDE };
+  }
+
   const viewSwitch = createViewSwitch((choice) => {
     if (choice === 'sky') {
       // Stand where the link says, or else on the spot in the middle of the globe; during an
       // eclipse, face it.
       store.set((state) => {
         // The sky is drawn for historical time: leaving for it leaves deep time too.
-        const next: ViewState = { ...state, mode: 'sky', location: observerOf(state), ma: null };
+        const next: ViewState = {
+          ...state,
+          mode: 'sky',
+          location: observerOf(state),
+          ma: null,
+          look: phoneLook(state.look),
+        };
         const selected = selectedEclipse(state);
         if (selected === undefined) return next;
         const look = aimAt(next, isSolar(selected) ? 'sun' : 'moon');
@@ -1372,8 +1393,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
         });
         skyScene.setInsets(panelInsets.top, panelInsets.bottom);
         skyScene.onTap((tapped) => {
+          // Open sky picks nothing: a tap there clears the panels, or brings them back (#253).
           if (tapped === null) {
-            showPanels();
+            togglePanels();
             return;
           }
           zoomToBody(tapped);
