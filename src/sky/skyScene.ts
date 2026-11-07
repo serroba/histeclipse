@@ -77,6 +77,7 @@ import {
   pixelsPerDegree,
   project,
   projectionFrame,
+  widestFov,
   type ProjectionFrame,
   SKY_PROJECTION,
   SKY_UNPROJECTION,
@@ -781,8 +782,6 @@ export function createSkyScene(
     resize();
     starUniforms.zoom.value = Math.min(2, Math.max(1, Math.sqrt(60 / look.fov)));
     showSunGlow();
-    container.dataset['look'] =
-      `${look.azimuth.toFixed(1)},${look.altitude.toFixed(1)},${look.fov.toFixed(1)}`;
     needsRender = true;
   }
 
@@ -790,7 +789,12 @@ export function createSkyScene(
     const { clientWidth, clientHeight } = container;
     renderer.setSize(clientWidth, clientHeight, false);
     // The field of view is on the narrower side, as on the globe, and what we look at sits in
-    // the middle of the space the panels leave.
+    // the middle of the space the panels leave. A tall phone shows no more than it can without
+    // bending the sky like a fisheye (#253).
+    const widest = widestFov(clientWidth, clientHeight);
+    if (look.fov > widest) look = { ...look, fov: widest };
+    container.dataset['look'] =
+      `${look.azimuth.toFixed(1)},${look.altitude.toFixed(1)},${look.fov.toFixed(1)}`;
     view = projectionFrame(look.fov, clientWidth, clientHeight, insets.top, insets.bottom);
     projection.skyScale.value.set(view.scaleX, view.scaleY);
     projection.skyShift.value.set(0, view.shiftY);

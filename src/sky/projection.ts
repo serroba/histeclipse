@@ -28,6 +28,23 @@ export interface ProjectionFrame {
   readonly shiftY: number;
 }
 
+/** The most sky a tall view may span top to bottom, degrees: more bends it like a fisheye. */
+export const LONGEST_SPAN = 110;
+
+/**
+ * The widest field (across the narrower side, degrees) a `width` by `height` view may show. A
+ * tall view, a phone held upright, spans no more than `LONGEST_SPAN` top to bottom, so the
+ * horizon does not bend into an arc; a wide one is not limited, and looks as it always has.
+ */
+export function widestFov(width: number, height: number): number {
+  if (width >= height) return Number.POSITIVE_INFINITY;
+  const long = Math.max(height, 1);
+  const short = Math.max(width, 1);
+  // Stereographic: a point θ from the centre lies tan(θ/2)/tan(fov/4) narrow half-widths out.
+  const quarter = Math.atan((Math.tan((LONGEST_SPAN * Math.PI) / 180 / 4) * short) / long);
+  return (quarter * 4 * 180) / Math.PI;
+}
+
 /**
  * The frame for a field of view `fov` (degrees, across the narrower side) on a view `width`
  * by `height` pixels, centred in the space left between panels covering `insetTop` and

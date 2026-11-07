@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest';
 
 import type { Vector3 } from '../astro/matrix';
 import {
+  LONGEST_SPAN,
+  widestFov,
   CLIP_ANGLE_DEGREES,
   CLIP_COS,
   magnification,
@@ -27,6 +29,26 @@ function at(frame: ReturnType<typeof projectionFrame>, direction: Vector3): [num
   if (ndc === null) throw new Error('clipped');
   return [ndc[0], ndc[1]];
 }
+
+describe('widestFov', () => {
+  /** The span, degrees, of the longer side at a field across the narrower one. */
+  const longSpan = (fov: number, width: number, height: number): number => {
+    const ratio = Math.max(width, height) / Math.min(width, height);
+    return (4 * Math.atan(ratio * Math.tan((fov * Math.PI) / 180 / 4)) * 180) / Math.PI;
+  };
+
+  it('keeps a tall phone to about 50° across, so it spans no more than 110° up and down', () => {
+    const fov = widestFov(412, 915);
+    expect(fov).toBeGreaterThan(45);
+    expect(fov).toBeLessThan(55);
+    expect(longSpan(fov, 412, 915)).toBeCloseTo(LONGEST_SPAN, 6);
+  });
+
+  it('leaves a wide or square screen as it was', () => {
+    expect(widestFov(1280, 720)).toBe(Number.POSITIVE_INFINITY);
+    expect(widestFov(1000, 1000)).toBe(Number.POSITIVE_INFINITY);
+  });
+});
 
 describe('projectionFrame', () => {
   it('puts the field of view across the narrower side, square pixels both ways', () => {
