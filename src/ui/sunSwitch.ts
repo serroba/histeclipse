@@ -19,7 +19,24 @@ export function createSunSwitch(
     role: 'group',
     'aria-label': 'Light',
   });
-  const about = element('p', { class: 'sun-caption', 'data-testid': 'sun-caption' });
+  // What the channel shows, in a line; how the map was made and whose it is, one tap below. On
+  // a phone that part starts folded, so the panel leaves the Sun in view (#238).
+  const lead = element('span', { class: 'sun-caption-lead' });
+  const made = element('span', {});
+  const more = element(
+    'details',
+    { class: 'sun-caption-more' },
+    element('summary', {}, 'How it was made, and credit'),
+    made,
+  );
+  more.open = !window.matchMedia('(max-width: 600px)').matches;
+  const about = element(
+    'div',
+    { class: 'sun-caption', 'data-testid': 'sun-caption' },
+    lead,
+    ' ',
+    more,
+  );
   const root = element('div', { class: 'sun-panel', hidden: '' }, buttons, about);
   let layers: readonly SunImage[] = [];
   let credit = '';
@@ -53,8 +70,9 @@ export function createSunSwitch(
       const shown = layers.find(({ key }) => key === layer);
       if (shown === undefined) return;
       const [first, last] = frameSpan(shown);
-      about.textContent =
-        `${shown.description} Stitched from ${String(shown.frames.length)} SDO images, ` +
+      lead.textContent = shown.description;
+      made.textContent =
+        `Stitched from ${String(shown.frames.length)} SDO images, ` +
         `${first} – ${last}: each side as it last faced Earth, so not one moment, with the ` +
         'poles, which SDO barely sees, smoothed in. This is the Sun of 2024; on the date shown ' +
         `it looked different, in ways unknown. Credit: ${credit}.`;
