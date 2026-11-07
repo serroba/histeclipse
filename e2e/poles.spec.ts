@@ -104,3 +104,37 @@ test('before the record, no magnetic north is marked', async ({ page }) => {
   await expect(page.getByTestId('globe')).toHaveAttribute('data-magnetic-north', 'unknown');
   await expect(strip(page).locator('.polarity-span.is-unknown')).not.toHaveCount(0);
 });
+
+test('in the Late Jurassic the poles’ fact names the monster shift, and who doubts it', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const facts = page.getByTestId('deep-facts');
+  await test.step('Given 150 million years ago, the facts open', async () => {
+    await page.goto('./?ma=150&scale=all');
+    await globeRendered(page);
+    await showDeepDetails(page);
+    await facts.getByText('Poles, magnetic field, tilt, day and Sun').click();
+  });
+  await test.step('Then the poles’ fact names the shift, its size, and the doubt', async () => {
+    const poles = facts.locator('dd').nth(0);
+    await expect(poles).toContainText('True polar wander then, the Jurassic “monster” polar shift');
+    await expect(poles).toContainText('About 30°');
+    await expect(poles).toContainText('“apparent (or true)”');
+  });
+  await test.step('When they ask where that comes from', async () => {
+    await facts
+      .getByRole('button', { name: 'Why: Poles, magnetic field, tilt, day and Sun' })
+      .click();
+  });
+  await test.step('Then the papers on both sides are linked', async () => {
+    const sheet = page.getByRole('dialog', { name: 'Poles, magnetic field, tilt, day and Sun' });
+    await expect(
+      sheet.getByRole('link', { name: 'Muttoni & Kent 2019', exact: true }),
+    ).toHaveAttribute('href', 'https://doi.org/10.1029/2018JB017199');
+    await expect(
+      sheet.getByRole('link', { name: 'Torsvik, Meert & Smethurst 1998', exact: true }),
+    ).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});
