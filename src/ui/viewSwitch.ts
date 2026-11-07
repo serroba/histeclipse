@@ -5,6 +5,7 @@
 
 import type { Mode, Viewpoint } from '../state/viewState';
 import { element } from './dom';
+import { uiIcon, type UiIcon } from './icons';
 
 export type ViewChoice = Viewpoint | 'sky';
 
@@ -13,16 +14,22 @@ export interface ViewSwitch {
   render(mode: Mode, viewpoint: Viewpoint, moonReady: boolean): void;
 }
 
-const LABELS: readonly (readonly [ViewChoice, string])[] = [
-  ['free', 'Orbit'],
-  ['moon-from-earth', 'Moon from Earth'],
-  ['earth-from-moon', 'Earth from Moon'],
-  ['sky', 'Sky'],
+const LABELS: readonly (readonly [ViewChoice, string, UiIcon])[] = [
+  ['free', 'Orbit', 'orbit'],
+  ['moon-from-earth', 'Moon from Earth', 'moonFromEarth'],
+  ['earth-from-moon', 'Earth from Moon', 'earthFromMoon'],
+  ['sky', 'Sky', 'sky'],
 ];
 
 export function createViewSwitch(onSelect: (choice: ViewChoice) => void): ViewSwitch {
-  const buttons = LABELS.map(([choice, label]) => {
-    const button = element('button', { type: 'button', 'aria-pressed': 'false' }, label);
+  const buttons = LABELS.map(([choice, label, glyph]) => {
+    // The icon and the word; on a phone the word is for screen readers and the tooltip.
+    const button = element(
+      'button',
+      { type: 'button', 'aria-pressed': 'false', title: label },
+      uiIcon(glyph),
+      element('span', { class: 'icon-label' }, label),
+    );
     button.addEventListener('click', () => {
       onSelect(choice);
     });
