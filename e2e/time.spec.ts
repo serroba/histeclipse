@@ -121,3 +121,55 @@ test('a link to deep time opens with its span picked', async ({ page }) => {
     );
   });
 });
+
+test('each time bar names its two ends, reads the moment under the pointer, and brackets the chapter shown', async ({
+  page,
+}, info) => {
+  const bar = page.getByRole('navigation', { name: 'Deep time' });
+  await test.step('Given 250 million years ago, on the 540 Myr span', async () => {
+    await page.goto('./?ma=250&scale=all');
+    await globeRendered(page);
+  });
+  await test.step('Then the bar’s ends are named', async () => {
+    await expect(bar.getByTestId('scale-start')).toHaveText('540 million years ago');
+    await expect(bar.getByTestId('scale-end')).toHaveText('Today');
+  });
+  await test.step('And the chapter shown, the Triassic, is bracketed over its length', async () => {
+    const triassic = bar.getByRole('button', { name: /^Triassic, / });
+    const bracket = bar.locator('.period-bracket');
+    await expect(bracket).toBeVisible();
+    const [band, mark] = [await triassic.boundingBox(), await bracket.boundingBox()];
+    if (band === null || mark === null) throw new Error('no layout');
+    expect(Math.abs(mark.x - band.x)).toBeLessThan(2);
+    expect(Math.abs(mark.width - band.width)).toBeLessThan(3);
+  });
+  await test.step('When the pointer rests a third of the way along', async () => {
+    test.skip(info.project.name === 'mobile', 'no pointer to rest on a phone');
+    const row = await bar.getByRole('group', { name: 'Geological periods' }).boundingBox();
+    if (row === null) throw new Error('no bands');
+    await page.mouse.move(row.x + row.width / 3, row.y - 20);
+    await test.step('Then it reads the moment there and its chapter', async () => {
+      await expect(bar.getByTestId('scale-reading')).toHaveText(
+        /^3\d\d(\.\d)? million years ago · (Devonian|Carboniferous)$/,
+      );
+    });
+  });
+});
+
+test('the years’ bar runs from 9700 BCE to this year, and marks the age shown even after 1950', async ({
+  page,
+}) => {
+  const bar = page.getByRole('group', { name: 'Holocene' });
+  await test.step('Given 2000 CE', async () => {
+    await page.goto('./?t=2000-06-01T12:00');
+    await globeRendered(page);
+  });
+  await test.step('Then its ends are 9700 BCE and this year, and the Meghalayan is the age shown', async () => {
+    await expect(bar.getByTestId('scale-start')).toHaveText('9700 BCE');
+    await expect(bar.getByTestId('scale-end')).toHaveText(/^20\d\d CE$/);
+    await expect(bar.getByRole('button', { name: /^Meghalayan, / })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+  });
+});
