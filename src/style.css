@@ -3757,3 +3757,60 @@ button:has(> .icon-label) > .icon {
 .sun-switch button[data-layer='131']::before {
   background: #1ea5a5;
 }
+
+/* One grid for the date panel (#232): every row meets the same two edges. The time switch
+   stretches beside Layers, its spans sharing the pill, and the viewpoints share their row. */
+.hud-actions {
+  flex-wrap: nowrap;
+}
+
+.hud-actions .time-switch {
+  flex: 1;
+}
+
+.time-switch .time-option {
+  flex: 1 1 auto;
+}
+
+.view-switch.viewpoints {
+  flex-wrap: nowrap;
+}
+
+.view-switch.viewpoints button {
+  flex: 1 1 auto;
+}
+
+/* The Sun's channels: their label and book above, the channels in even columns below. */
+.view-switch.sun-switch {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+}
+
+.sun-switch .switch-label {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 6px;
+}
+
+/* On a phone the panel spans the screen, as the bar along the bottom does; the Sun's channels
+   flow two or three to a row, stretched to both edges, so they take no more of the Sun than
+   they must. */
+@media (max-width: 600px) {
+  .hud {
+    right: 12px;
+    max-width: none;
+  }
+
+  .view-switch.sun-switch {
+    display: flex;
+  }
+
+  .sun-switch .switch-label {
+    flex-basis: 100%;
+  }
+
+  .sun-switch button[data-layer] {
+    flex: 1 1 auto;
+  }
+}
