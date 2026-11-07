@@ -1,11 +1,16 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
+import polarity from '../../public/data/polarity.json';
+import type { PolarityScale } from '../data/polarity';
+
 import {
   DAY_MEASUREMENTS,
   dayMeasurementsAround,
   fieldAt,
   LAST_REVERSAL_MA,
+  POLARITY_RECORD_MA,
+  polaritySpans,
   SEA_FLOOR_RECORD_MA,
   SUPERCHRONS,
   TILT,
@@ -42,6 +47,66 @@ describe('fieldAt', () => {
       const next = SUPERCHRONS[index + 1];
       if (next !== undefined) expect(chron.old).toBeLessThan(next.young);
     }
+  });
+});
+
+describe('fieldAt with the polarity time scale', () => {
+  const scale = polarity as PolarityScale;
+
+  it('knows each reversal of the last 83 Ma: Chicxulub struck in a reversed chron', () => {
+    expect(fieldAt(66.04, scale).polarity).toBe('reversed');
+    expect(fieldAt(1, scale).polarity).toBe('normal');
+    expect(fieldAt(LAST_REVERSAL_MA + 0.1, scale).polarity).toBe('reversed');
+  });
+
+  it('runs the scale’s last chron on to the superchron, with no gap', () => {
+    expect(fieldAt(82.95, scale).polarity).toBe('reversed');
+    expect(fieldAt(83.5, scale).polarity).toBe('normal');
+  });
+
+  it('falls back to the superchrons and reversing often beyond the scale', () => {
+    expect(fieldAt(100, scale).interval?.name).toBe('Cretaceous Normal Superchron');
+    expect(fieldAt(150, scale).polarity).toBe('mixed');
+  });
+});
+
+describe('polaritySpans', () => {
+  const scale = polarity as PolarityScale;
+
+  it('cover the span end to end, youngest first, without gaps', () => {
+    const spans = polaritySpans(scale, 540);
+    expect(spans[0]?.young).toBe(0);
+    expect(spans.at(-1)?.old).toBe(540);
+    for (const [index, span] of spans.entries()) {
+      expect(span.young).toBeLessThan(span.old);
+      const next = spans[index + 1];
+      if (next !== undefined) {
+        expect(next.young).toBe(span.old);
+        expect(next.polarity).not.toBe(span.polarity);
+      }
+    }
+  });
+
+  it('show every reversal of the scale, then the superchrons and reversing often', () => {
+    const spans = polaritySpans(scale, 540);
+    expect(spans.filter(({ young }) => young < 82.875)).toHaveLength(scale.boundaries.length - 1);
+    expect(spans.find(({ young }) => young === 83)).toMatchObject({ polarity: 'normal', old: 121 });
+    expect(spans.find(({ young }) => young === 267)).toMatchObject({
+      polarity: 'reversed',
+      old: 318,
+    });
+  });
+
+  it('say the record is unknown before it reaches', () => {
+    const spans = polaritySpans(scale, 1000);
+    expect(spans.at(-1)).toEqual({ young: POLARITY_RECORD_MA, old: 1000, polarity: 'unknown' });
+  });
+
+  it('keep to a window of the span, and work without the scale', () => {
+    const window = polaritySpans(scale, 70, 60);
+    expect(window[0]?.young).toBe(60);
+    expect(window.at(-1)?.old).toBe(70);
+    expect(polaritySpans(null, 2).map(({ polarity: p }) => p)).toEqual(['normal', 'mixed']);
   });
 });
 

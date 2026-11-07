@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import polarity from '../../public/data/polarity.json';
+import type { PolarityScale } from '../data/polarity';
 import { earthFacts } from './earthFacts';
 
 function fact(ma: number, label: string): string {
@@ -54,5 +56,14 @@ describe('earthFacts', () => {
     );
     expect(fact(3500, 'Sun')).toContain('About 77% as bright');
     expect(fact(3500, 'Sun')).toContain('faint young Sun paradox');
+  });
+
+  it('names the chron from the polarity time scale once it has loaded', () => {
+    const scale = polarity as PolarityScale;
+    const field = (ma: number): string =>
+      earthFacts(ma, scale).find(({ label }) => label === 'Magnetic field')?.text ?? '';
+    expect(field(66.04)).toContain('Reversed polarity (chron C29r, GTS 2020)');
+    expect(field(0.5)).toContain('Normal polarity, as today (chron C1n, GTS 2020)');
+    expect(field(150)).toContain('Reversing often');
   });
 });

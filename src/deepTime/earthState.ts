@@ -4,6 +4,7 @@
  * smoothed into a curve the measurements do not support.
  */
 
+import { scaleEnd, scalePolarity, type PolarityScale } from '../data/polarity';
 import { elementAt } from '../util/arrays';
 
 /** Polarity of the magnetic field: as today (normal), swapped, or swapping often. */
@@ -53,11 +54,61 @@ export interface FieldState {
   readonly landRecord: boolean;
 }
 
-export function fieldAt(ma: number): FieldState {
+/**
+ * The field `ma` million years ago: from the polarity time scale where it reaches (every
+ * reversal of the last 83 Ma), else a superchron's, else reversing often.
+ */
+export function fieldAt(ma: number, scale: PolarityScale | null = null): FieldState {
   const landRecord = ma > SEA_FLOOR_RECORD_MA;
+  // The scale ends inside C33r, the chron just before the Cretaceous Normal Superchron: its
+  // last interval runs on to the superchron's edge, whose date differs a little by source.
+  const [cretaceous] = SUPERCHRONS;
+  const reach =
+    scale !== null && cretaceous !== undefined && ma > scaleEnd(scale) && ma < cretaceous.young
+      ? scaleEnd(scale)
+      : ma;
+  const measured = scale === null ? null : scalePolarity(scale, reach);
+  if (measured !== null) return { polarity: measured, interval: null, landRecord };
   const interval = SUPERCHRONS.find(({ young, old }) => ma >= young && ma <= old) ?? null;
   if (interval !== null) return { polarity: interval.polarity, interval, landRecord };
   return { polarity: ma < LAST_REVERSAL_MA ? 'normal' : 'mixed', interval: null, landRecord };
+}
+
+/** A stretch of time of one polarity, for drawing: young and old edges, Ma. */
+export interface PolaritySpan {
+  readonly young: number;
+  readonly old: number;
+  readonly polarity: Polarity | 'unknown';
+}
+
+/** Before this the record is too sparse to say which way the field pointed. */
+export const POLARITY_RECORD_MA = 540;
+
+/**
+ * The field's polarity across `youngest` to `oldest` Ma, youngest first: every reversal the
+ * scale records, the superchrons, reversing often between them, and unknown before the record.
+ */
+export function polaritySpans(
+  scale: PolarityScale | null,
+  oldest: number,
+  youngest = 0,
+): readonly PolaritySpan[] {
+  const edges = new Set<number>([youngest, oldest]);
+  for (const age of scale?.boundaries ?? []) edges.add(age);
+  for (const { young, old } of SUPERCHRONS) edges.add(young).add(old);
+  edges.add(LAST_REVERSAL_MA).add(POLARITY_RECORD_MA);
+  const cuts = [...edges].filter((age) => age >= youngest && age <= oldest).sort((a, b) => a - b);
+  const spans: PolaritySpan[] = [];
+  for (let i = 1; i < cuts.length; i += 1) {
+    const young = elementAt(cuts, i - 1);
+    const old = elementAt(cuts, i);
+    const middle = (young + old) / 2;
+    const polarity = middle > POLARITY_RECORD_MA ? 'unknown' : fieldAt(middle, scale).polarity;
+    const last = spans.at(-1);
+    if (last?.polarity === polarity) spans[spans.length - 1] = { ...last, old };
+    else spans.push({ young, old, polarity });
+  }
+  return spans;
 }
 
 /** A measured length of day, from growth lines counted in a year. */

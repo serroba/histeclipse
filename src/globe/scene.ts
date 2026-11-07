@@ -346,6 +346,8 @@ export interface Globe {
    * a plain disc.
    */
   setSunImage(image: SunImageRequest | null): void;
+  /** Mark the pole a compass pointed to in deep time; null when it is not known. */
+  setMagneticNorth(where: 'north' | 'south' | 'either' | null): void;
   /** Wrap a planet in a mission's global map, fetched the first time it is asked for. */
   setPlanetMap(planet: PlanetName, url: string): void;
   /**
@@ -1166,17 +1168,41 @@ export function createGlobe(
       new MeshBasicMaterial({ color: new Color(0.85, 0.9, 1), transparent: true, opacity: 0.7 }),
     ),
   );
+  // The spin axis's poles: fixed by the reconstruction, the continents moving beneath them.
   for (const [text, y] of [
-    ['North pole then', 1.42],
-    ['South pole then', -1.42],
+    ['North pole (spin axis)', 1.42],
+    ['South pole (spin axis)', -1.42],
   ] as const) {
     const label = new Sprite(
-      new SpriteMaterial({ map: labelTexture(text), transparent: true, depthWrite: false }),
+      new SpriteMaterial({ map: labelTexture(text, 768), transparent: true, depthWrite: false }),
     );
-    label.scale.set(0.9, 0.9 / 4, 1);
+    label.scale.set(1.35, 1.35 / 6, 1);
     label.position.set(0, y, 0);
     spinAxis.add(label);
   }
+  // Where a compass pointed: magnetic north at the north pole, or the south when the field was
+  // reversed; when it reversed too often to say, a note at the north pole instead.
+  const magneticLabels = {
+    north: ['Magnetic north', 1.62],
+    south: ['Magnetic north', -1.62],
+    either: ['Magnetic north: either pole, reversing often', 1.62],
+  } as const;
+  const magneticNorth = new Map(
+    Object.entries(magneticLabels).map(([where, [text, y]]) => {
+      const label = new Sprite(
+        new SpriteMaterial({
+          map: labelTexture(text, 1280, 'rgba(255, 150, 120, 0.95)'),
+          transparent: true,
+          depthWrite: false,
+        }),
+      );
+      label.scale.set(2.25, 2.25 / 10, 1);
+      label.position.set(0, y, 0);
+      label.visible = false;
+      spinAxis.add(label);
+      return [where, label] as const;
+    }),
+  );
   spinAxis.visible = false;
   scene.add(spinAxis);
 
@@ -2236,6 +2262,11 @@ export function createGlobe(
           planetMapsAsked.delete(planet);
         });
     },
+    setMagneticNorth(where) {
+      for (const [key, label] of magneticNorth) label.visible = key === where;
+      container.dataset['magneticNorth'] = where ?? 'unknown';
+      needsRender = true;
+    },
     setSunImage(image) {
       sunImageWanted = image;
       if (image === null) {
@@ -2909,9 +2940,13 @@ export function createGlobe(
 
 /** A soft radial glow for the Sun, drawn once into a small canvas. */
 /** A short label on a transparent canvas, four times as wide as it is tall. */
-function labelTexture(text: string): CanvasTexture {
+function labelTexture(
+  text: string,
+  width = 512,
+  colour = 'rgba(225, 235, 255, 0.95)',
+): CanvasTexture {
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
+  canvas.width = width;
   canvas.height = 128;
   const context = canvas.getContext('2d');
   if (context !== null) {
@@ -2920,7 +2955,7 @@ function labelTexture(text: string): CanvasTexture {
     context.textBaseline = 'middle';
     context.shadowColor = 'rgba(0, 0, 0, 0.9)';
     context.shadowBlur = 8;
-    context.fillStyle = 'rgba(225, 235, 255, 0.95)';
+    context.fillStyle = colour;
     context.fillText(text, canvas.width / 2, canvas.height / 2);
   }
   const texture = new CanvasTexture(canvas);
