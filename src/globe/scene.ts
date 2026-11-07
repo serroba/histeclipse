@@ -971,6 +971,18 @@ const ATMOSPHERE_FRAGMENT = /* glsl */ `
   }
 `;
 
+/** Stand-ins until the maps arrive: the Blue Marble's open ocean and the Moon's mean grey. */
+const OCEAN_RGB = [11, 28, 66] as const;
+const MOON_RGB = [128, 126, 122] as const;
+
+/** A one-pixel texture of one colour (sRGB bytes). */
+function plainTexture([red, green, blue]: readonly [number, number, number]): DataTexture {
+  const texture = new DataTexture(new Uint8Array([red, green, blue, 255]), 1, 1);
+  texture.colorSpace = SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
 /** The sketch's noise field as a texture, made once, wrapping east–west. */
 function sketchTexture(): { readonly texture: DataTexture; readonly shares: Float64Array } {
   const { columns, rows } = LAND_NOISE_GRID;
@@ -983,7 +995,7 @@ function sketchTexture(): { readonly texture: DataTexture; readonly shares: Floa
   return { texture, shares: shareAtOrAbove(field, columns, rows) };
 }
 
-export async function createGlobe(
+export function createGlobe(
   container: HTMLElement,
   options: {
     readonly camera: GlobeCamera;
@@ -991,7 +1003,7 @@ export async function createGlobe(
     readonly moonTextureUrl: string;
     readonly focus: Body;
   },
-): Promise<Globe> {
+): Globe {
   // preserveDrawingBuffer lets the page (and tests) read the rendered image back.
   // Transparent, so the page's space gradient shows behind the globe. No preserveDrawingBuffer:
   // it forces a buffer copy every frame, which stalls slow and mobile GPUs.
@@ -1008,9 +1020,15 @@ export async function createGlobe(
   // With a logarithmic depth buffer one camera spans metres above the ground to past the Sun.
   const camera = new PerspectiveCamera(35, 1, 1e-4, 1e6);
 
-  const texture = await new TextureLoader().loadAsync(options.textureUrl);
-  texture.colorSpace = SRGBColorSpace;
-  texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  // The maps are the largest downloads; the globe draws at once in plain colours and takes
+  // each map as it arrives, so nothing else waits on them. Both load side by side.
+  const loader = new TextureLoader();
+  const earthMap = loader.loadAsync(options.textureUrl);
+  const moonMap = loader.loadAsync(options.moonTextureUrl);
+  const texture = plainTexture(OCEAN_RGB);
+  const moonTexture = plainTexture(MOON_RGB);
+  // `rendered` waits for the Earth's map, so it still means "the globe is drawn as it looks".
+  let earthMapped = false;
 
   const sunDirection = new Vector3(1, 0, 0);
   // 1 in deep time: the globe lit evenly, with no day and night.
@@ -1167,8 +1185,6 @@ export async function createGlobe(
 
   // The Moon, tidally locked: turn the map's longitude 0 (at +X) to +Z, which lookAt() aims at
   // Earth. Libration (a few degrees of wobble) is left out.
-  const moonTexture = await new TextureLoader().loadAsync(options.moonTextureUrl);
-  moonTexture.colorSpace = SRGBColorSpace;
   const moonGeometry = new SphereGeometry(MOON_RADIUS_EARTH_RADII, 64, 32);
   moonGeometry.rotateY(-Math.PI / 2);
   const moon = new Mesh(
@@ -1634,6 +1650,34 @@ export async function createGlobe(
   const listeners = new Set<(camera: GlobeCamera) => void>();
   let needsRender = true;
   let frame = 0;
+
+  // A map that fails to load leaves its plain colour: the globe still works, only plainer.
+  earthMap.then(
+    (map) => {
+      map.colorSpace = SRGBColorSpace;
+      map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      earth.material.uniforms['dayMap'] = { value: map };
+      texture.dispose();
+      earthMapped = true;
+      needsRender = true;
+    },
+    (error: unknown) => {
+      console.warn("Could not load the Earth's map:", error);
+      earthMapped = true;
+      needsRender = true;
+    },
+  );
+  moonMap.then(
+    (map) => {
+      map.colorSpace = SRGBColorSpace;
+      moon.material.uniforms['map'] = { value: map };
+      moonTexture.dispose();
+      needsRender = true;
+    },
+    (error: unknown) => {
+      console.warn("Could not load the Moon's map:", error);
+    },
+  );
   // Rotation along the sphere (a slerp), which also handles flying to the opposite side.
   let flight: { from: Vector3; rotation: Quaternion; start: number } | null = null;
   // Distances from the body in focus, in scene units; it starts on the first frame, timed by the
@@ -1823,7 +1867,7 @@ export async function createGlobe(
       placeMarkers();
       for (const object of hidden) object.visible = true;
       placeEmpireLabels();
-      container.dataset['rendered'] = 'true';
+      if (earthMapped) container.dataset['rendered'] = 'true';
     }
     frame = requestAnimationFrame(loop);
   }

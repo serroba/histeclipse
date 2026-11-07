@@ -1677,6 +1677,8 @@ test('tapping the Sun in the sky closes in on it, then offers it up close', asyn
 });
 
 test('no page says null, undefined or NaN where words should be', async ({ page }) => {
+  // Six full page loads in one test: software-rendered CI browsers need the room.
+  test.setTimeout(60_000);
   const pages = [
     // The Sun close up during the eclipse of 763 BCE, where a stray "null" was once reported.
     './?t=-0762-06-15T08:37Z&cal=julian&loc=36.3594,43.1529&cam=-21.7915,-64.9571,4.91&focus=sun&layers=lunar,solar,orbits&sel=solar:-0762-06-15',
