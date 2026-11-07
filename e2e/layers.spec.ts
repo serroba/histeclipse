@@ -305,3 +305,30 @@ test('the Layers rows, Layers, Full view and Famous eclipses wear icons too', as
     await expect(panel.getByRole('checkbox', { name: /^Volcanic eruptions/ })).toBeVisible();
   });
 });
+
+test('the date panel’s rows line up on both edges, and on a phone it spans the screen', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
+  const phone = info.project.name === 'mobile';
+  await test.step('Given the years', async () => {
+    await page.goto('./?t=2026-01-10T12:00');
+    await globeRendered(page);
+  });
+  await test.step('Then the time switch with Layers, and the viewpoints, meet the same edges', async () => {
+    const spans = await page.getByRole('group', { name: 'Time span' }).boundingBox();
+    const layers = await page.getByRole('button', { name: 'Layers', exact: true }).boundingBox();
+    const views = await page.getByRole('group', { name: 'Viewpoint' }).boundingBox();
+    if (spans === null || layers === null || views === null) throw new Error('not laid out');
+    expect(Math.abs(spans.x - views.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(layers.x + layers.width - (views.x + views.width))).toBeLessThanOrEqual(1);
+  });
+  if (phone) {
+    await test.step('And on a phone the panel leaves the same margin on both sides', async () => {
+      const hud = await page.locator('.hud').boundingBox();
+      const width = page.viewportSize()?.width ?? 0;
+      if (hud === null) throw new Error('not laid out');
+      expect(Math.abs(hud.x - (width - hud.x - hud.width))).toBeLessThanOrEqual(1);
+    });
+  }
+});

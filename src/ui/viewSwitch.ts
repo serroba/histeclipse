@@ -37,7 +37,7 @@ export function createViewSwitch(onSelect: (choice: ViewChoice) => void): ViewSw
   });
   const root = element(
     'div',
-    { class: 'view-switch', role: 'group', 'aria-label': 'Viewpoint' },
+    { class: 'view-switch viewpoints', role: 'group', 'aria-label': 'Viewpoint' },
     ...buttons.map(([, button]) => button),
   );
   return {
