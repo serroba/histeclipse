@@ -49,7 +49,20 @@ export interface RadiocarbonStrip {
   ): void;
 }
 
-export function createRadiocarbonStrip(why?: HTMLElement): RadiocarbonStrip {
+export function createRadiocarbonStrip(
+  why?: HTMLElement,
+  /** Open "How was this dated?" on the curve drawn. */
+  onDate?: (curve: CalibrationCurve, name: string) => void,
+): RadiocarbonStrip {
+  let shown: { readonly curve: CalibrationCurve; readonly name: string } | null = null;
+  const date = element(
+    'button',
+    { type: 'button', class: 'radiocarbon-date' },
+    'How was this dated?',
+  );
+  date.addEventListener('click', () => {
+    if (shown !== null) onDate?.(shown.curve, shown.name);
+  });
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('class', 'radiocarbon-line');
   svg.setAttribute('viewBox', '0 0 1000 100');
@@ -66,13 +79,20 @@ export function createRadiocarbonStrip(why?: HTMLElement): RadiocarbonStrip {
       hidden: '',
     },
     element('div', { class: 'radiocarbon-plot' }, svg, marks),
-    element('span', { class: 'radiocarbon-caption' }, label, ...(why === undefined ? [] : [why])),
+    element(
+      'span',
+      { class: 'radiocarbon-caption' },
+      label,
+      ...(why === undefined ? [] : [why]),
+      ...(onDate === undefined ? [] : [date]),
+    ),
   );
   let drawn = '';
   return {
     root,
     render(view) {
       root.hidden = view === null;
+      shown = view;
       if (view === null) return;
       const key = `${view.name}:${String(view.first)}:${String(view.last)}`;
       if (key === drawn) return;

@@ -358,3 +358,40 @@ test('carbon-14 in the air runs under the years, its spikes and plateau marked a
   });
   expect(problems).toEqual([]);
 });
+
+test('“How was this dated?” carries a radiocarbon age across the curve to its ranges', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const dialog = page.getByRole('dialog', { name: 'How was this dated?' });
+  await test.step('Given Carbon-14 in the air on, standing in Europe', async () => {
+    await page.goto('./?t=-0700-06-01T12:00&loc=48,10&layers=lunar,solar,radiocarbon');
+    await globeRendered(page);
+  });
+  await test.step('When they ask how a date is found', async () => {
+    await page.getByRole('button', { name: 'How was this dated?' }).click();
+  });
+  await test.step('Then an Iron Age age spreads over the Hallstatt plateau, in four ranges', async () => {
+    await expect(dialog.getByTestId('dating-left')).toContainText('73.7% of the carbon-14');
+    await expect(dialog.getByTestId('dating-result')).toContainText('it fits 4 stretches of years');
+    await expect(dialog.getByTestId('dating-ranges').locator('li')).toHaveCount(4);
+    await expect(dialog.getByTestId('dating-ranges')).toContainText('591–414 BCE');
+  });
+  await test.step('When they try one on a steep stretch', async () => {
+    await dialog.getByRole('button', { name: /^On a steep stretch/ }).click();
+  });
+  await test.step('Then it fits one stretch of years', async () => {
+    await expect(dialog.getByTestId('dating-result')).toContainText('one stretch of years');
+    await expect(dialog.getByTestId('dating-ranges').locator('li')).toHaveText([
+      '1894–1744 BCE 95%',
+    ]);
+  });
+  await test.step('When they type their own age', async () => {
+    await dialog.getByRole('spinbutton', { name: 'Radiocarbon age, years BP' }).fill('1000');
+    await dialog.getByRole('spinbutton', { name: 'Radiocarbon age, years BP' }).press('Enter');
+  });
+  await test.step('Then it is calibrated too', async () => {
+    await expect(dialog.getByTestId('dating-ranges')).toContainText('994–1048 CE');
+  });
+  expect(problems).toEqual([]);
+});

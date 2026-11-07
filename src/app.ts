@@ -35,6 +35,7 @@ import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
 import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
+import { createDatingCard } from './ui/datingCard';
 import { createRadiocarbonStrip } from './ui/radiocarbonStrip';
 import { createGlobe, type StateChange } from './globe/scene';
 import { createStore } from './state/store';
@@ -770,8 +771,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
   // Carbon-14 in the air under the years' slider (#270), its curves loaded the first time the
   // layer is on.
+  const datingCard = createDatingCard();
   const radiocarbonStrip = createRadiocarbonStrip(
     whySheet.mark('radiocarbon', 'Carbon-14 in the air'),
+    (curve, name) => {
+      datingCard.open(curve, name);
+    },
   );
   const historyTrack = createHistoryTrack(
     {
@@ -1077,6 +1082,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     tabletPanel.dialog,
     layersPanel.dialog,
     markerCard.dialog,
+    datingCard.dialog,
   );
 
   // Full view hides the panels for a clear view; Show controls, Escape, or a tap on open sky or

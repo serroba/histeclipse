@@ -351,6 +351,12 @@ export const SOURCES = {
     url: 'https://doi.org/10.1017/RDC.2020.59',
     licence: 'CC BY 4.0',
   },
+  stuiverPolach1977: {
+    name: 'Stuiver & Polach 1977',
+    kind: 'paper',
+    cite: 'Stuiver, M. & Polach, H. A. (1977). Discussion: reporting of 14C data. Radiocarbon 19, 355–363',
+    url: 'https://doi.org/10.1017/S0033822200003672',
+  },
   miyake2012: {
     name: 'Miyake et al. 2012',
     kind: 'paper',
@@ -740,6 +746,7 @@ export const WHYS = {
     sources: [
       'intcal20',
       'shcal20',
+      'stuiverPolach1977',
       'miyake2012',
       'miyake2013',
       'oHare2019',
