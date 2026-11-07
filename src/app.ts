@@ -142,7 +142,7 @@ import {
 import type { Figure } from './sky/look';
 import { loadSunImages, type SunImages } from './data/sunImages';
 import { createFigureSwitch } from './ui/figureSwitch';
-import { createViewSwitch } from './ui/viewSwitch';
+import { createViewSwitch, lookBack } from './ui/viewSwitch';
 import {
   type CoastlineView,
   createDeepTimeBar,
@@ -188,7 +188,15 @@ import {
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
 import { createBodyBar } from './ui/bodyBar';
-import { moonFacts, moonText, planetFacts, planetText, sunText } from './astro/bodyFacts';
+import {
+  earthFromFacts,
+  earthFromText,
+  moonFacts,
+  moonText,
+  planetFacts,
+  planetText,
+  sunText,
+} from './astro/bodyFacts';
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
 import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
@@ -1072,7 +1080,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     (ephemeris) => {
       moonEphemeris = ephemeris;
       showTime(store.get());
-      viewSwitch.render(store.get().mode, store.get().view, true);
+      viewSwitch.render(store.get().mode, store.get().view, true, store.get().focus);
       showSky(store.get());
     },
     (error: unknown) => {
@@ -2924,6 +2932,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The moment last shown (TT), for the body bar: it works out only the body in view.
   let bodiesAt: JulianDay | null = null;
 
+  /** Earth looked back at from afar, as two missions photographed it. */
+  const LOOKED_BACK =
+    'So Voyager 1 saw it in 1990, from beyond Neptune: the “Pale Blue Dot” (NASA/JPL, PIA00452); and Cassini from Saturn in 2013, “The Day the Earth Smiled” (NASA/JPL-Caltech/SSI, PIA17171).';
+
   /**
    * Close up, a sharper map for the body in focus, fetched once (#258): Earth's largest only
    * where the graphics hold it and the screen is not a phone's, whose memory it would strain.
@@ -2953,7 +2965,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const jdTT = bodiesAt;
     const sunKm = sunPositionJ2000(jdTT);
     const focus = state.focus;
-    if (focus === 'sun') {
+    if (state.view === 'earth-from-here' && focus !== 'moon') {
+      // Standing on the body in focus, looking back at Earth (#245).
+      const observer = focus === 'sun' ? sunKm : (planets?.position(focus, jdTT) ?? null);
+      const [, label] = lookBack(focus);
+      bodyBar.render(
+        observer === null
+          ? null
+          : {
+              name: label.replace('Earth from', 'Earth, seen from'),
+              text: earthFromText(earthFromFacts(observer, sunKm)),
+              picture: LOOKED_BACK,
+            },
+      );
+    } else if (focus === 'sun') {
       bodyBar.render({ name: 'The Sun', text: sunText(sunDistance(jdTT)) });
     } else if (focus === 'moon') {
       const moonKm = moonEphemeris?.position(jdTT) ?? null;
@@ -3594,8 +3619,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     if (state.location !== previous?.location) globe.setLocation(state.location);
     if (state.view !== previous?.view) globe.setViewpoint(state.view);
-    if (state.view !== previous?.view || state.mode !== previous.mode) {
-      viewSwitch.render(state.mode, state.view, moonEphemeris !== null);
+    if (
+      state.view !== previous?.view ||
+      state.mode !== previous.mode ||
+      state.focus !== previous.focus
+    ) {
+      viewSwitch.render(state.mode, state.view, moonEphemeris !== null, state.focus);
     }
     if (state.years !== previous?.years || barYear(state) !== barYear(previous)) {
       loadYear(state);

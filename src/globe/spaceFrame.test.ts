@@ -6,6 +6,8 @@ import {
   hiddenBehind,
   apparentRadiusPixels,
   attachedPose,
+  EARTH_MOON_FRAME,
+  earthFromPose,
   blendPose,
   fromScene,
   mergeMarkers,
@@ -103,6 +105,31 @@ describe('mergeMarkers', () => {
 
   it('is empty without markers', () => {
     expect(mergeMarkers([], 40).size).toBe(0);
+  });
+});
+
+describe('earthFromPose', () => {
+  it('stands on the side of Mars facing Earth, looking at Earth', () => {
+    // Mars 1 AU out along +x, 0.53 Earth radii across.
+    const au = 23_455;
+    const pose = earthFromPose([au, 0, 0], 0.53);
+    expect(pose.target).toEqual([0, 0, 0]);
+    expect(pose.eye[0]).toBeCloseTo(au - 0.53 * 1.05, 6);
+    expect(pose.eye[1]).toBe(0);
+  });
+
+  it('frames Earth and the Moon’s orbit together, like a telescope', () => {
+    const au = 23_455;
+    const pose = earthFromPose([0, au * 4, 0], 11.2);
+    // The frame's radius fills 40% of the narrower side.
+    const half = (pose.fovDegrees * 0.4 * Math.PI) / 360;
+    expect(Math.sin(half) * (au * 4 - 11.2 * 1.05)).toBeCloseTo(EARTH_MOON_FRAME, 3);
+    expect(pose.fovDegrees).toBeLessThan(0.25);
+  });
+
+  it('never asks for more than the whole sky, even close by', () => {
+    const pose = earthFromPose([0, 0, 60], 0.27);
+    expect(Number.isFinite(pose.fovDegrees)).toBe(true);
   });
 });
 
