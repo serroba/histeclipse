@@ -44,6 +44,7 @@ from histeclipse_pipeline.planets import (
     fetch_planet_vectors,
     write_planet_vectors,
 )
+from histeclipse_pipeline.polarity import fetch_polarity
 from histeclipse_pipeline.seaice import fetch_seaice
 from histeclipse_pipeline.sealevel import fetch_sealevel
 from histeclipse_pipeline.shelf import fetch_shelf
@@ -294,6 +295,12 @@ def planet_maps(args: Arguments) -> int:  # pragma: no cover - needs network acc
     return _say(f"wrote {count} planet maps to {args.out}")
 
 
+def polarity(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write every reversal of the last 83 Ma (GTS 2020, as PmagPy carries it)."""
+    count = fetch_polarity(args.out)
+    return _say(f"wrote {count} polarity chrons to {args.out}")
+
+
 def pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the lead picture, author and licence of each Wikipedia page a data file names."""
     count = fetch_pictures(args.source, args.out, args.must_mention)
@@ -492,6 +499,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         planet_maps,
         "write the planets' global maps from their missions (MESSENGER, Viking, Cassini)",
         "output folder",
+    ),
+    "polarity": (
+        polarity,
+        "write the geomagnetic polarity time scale (GTS 2020, via PmagPy)",
+        "output JSON file",
     ),
     "pictures": (
         pictures,

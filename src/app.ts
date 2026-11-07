@@ -30,6 +30,8 @@ import { shadowAt } from './eclipses/solar';
 import { longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { geoToVector } from './globe/geo';
 import { MOON_CAPTION, PLANET_NAMES, PLANET_PICTURES } from './globe/planetLook';
+import { loadPolarity, type PolarityScale } from './data/polarity';
+import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { createGlobe, type StateChange } from './globe/scene';
 import { createStore } from './state/store';
 import { parseViewState } from './state/url';
@@ -1597,9 +1599,35 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let lastTick = 0;
   let head = playhead();
 
+  // Every reversal of the last 83 Ma: small, loaded the first time deep time shows.
+  let polarity: PolarityScale | null = null;
+  let polarityAsked = false;
+  function wantPolarity(): void {
+    if (polarityAsked) return;
+    polarityAsked = true;
+    loadPolarity(`${base}data/polarity.json`, fetchJson).then(
+      (loaded) => {
+        polarity = loaded;
+        showDeepTime(store.get());
+      },
+      (error: unknown) => {
+        polarityAsked = false;
+        notify(`Could not load the magnetic reversals: ${errorMessage(error)}`);
+      },
+    );
+  }
+  /** The pole a compass pointed to then, as the globe marks it. */
+  function magneticNorthAt(ma: number): 'north' | 'south' | 'either' | null {
+    if (ma > POLARITY_RECORD_MA) return null;
+    const { polarity: field } = fieldAt(ma, polarity);
+    return field === 'normal' ? 'north' : field === 'reversed' ? 'south' : 'either';
+  }
+
   function showDeepTime(state: ViewState): void {
     const { ma } = state;
     bottom.dataset['deep'] = ma === null ? 'off' : 'on';
+    globe.setMagneticNorth(ma === null ? null : magneticNorthAt(ma));
+    if (ma !== null) wantPolarity();
     if (ma === null) {
       historySpan.render('years');
       stopPlay();
@@ -1636,6 +1664,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       oldest: spanOf(scale),
       mapsReach: oldest,
       period,
+      polarity,
       playing,
       speed: deepSpeedFor(state.deepScale, deepSpeeds[state.deepScale]),
       scale,
