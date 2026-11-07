@@ -51,6 +51,8 @@ const APPROACH = 1400;
 const FLASH = 700;
 const RING = 2800;
 const TOTAL = 5200;
+/** How long an impact plays, ms, from its first frame. */
+export const IMPACT_ANIMATION_MS = TOTAL;
 
 /** A soft round glow, white at the heart and orange at the edge. */
 function glowTexture(): CanvasTexture {
