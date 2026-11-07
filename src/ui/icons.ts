@@ -71,3 +71,62 @@ export const KIND_NAMES: Readonly<Record<SourceKind, string>> = {
   imagery: 'Imagery',
   catalogue: 'Catalogue',
 };
+
+/** The site's control icons, by what they stand for. */
+const UI_PATHS = {
+  // A globe with an arrow going round it.
+  orbit: [
+    'M12 7.5a4.5 4.5 0 1 0 0 9a4.5 4.5 0 1 0 0-9z',
+    'M4 9.5a9 9 0 0 1 15-3.8',
+    'M19 3.5v2.4h-2.4',
+    'M20 14.5a9 9 0 0 1-15 3.8',
+    'M5 20.5v-2.4h2.4',
+  ],
+  // A crescent Moon over the ground.
+  moonFromEarth: ['M15.5 4a5 5 0 1 0 4.5 6.5a4 4 0 0 1-4.5-6.5z', 'M3 20h18', 'M5 20c2-3 5-4 8-2'],
+  // Earth over the Moon's cratered horizon.
+  earthFromMoon: [
+    'M12 3.5a4.75 4.75 0 1 0 0 9.5a4.75 4.75 0 1 0 0-9.5z',
+    'M12 3.5c-2 2.6-2 6.9 0 9.5',
+    'M12 3.5c2 2.6 2 6.9 0 9.5',
+    'M7.3 8.25h9.4',
+    'M3 20c6-3 12-3 18 0',
+    'M8 18.6h.01',
+    'M15 18.4h.01',
+  ],
+  // Stars.
+  sky: [
+    'M8 4.5l1.2 2.6 2.8.4-2 2 .5 2.8-2.5-1.4-2.5 1.4.5-2.8-2-2 2.8-.4z',
+    'M17.5 12l.8 1.7 1.9.3-1.4 1.3.3 1.9-1.6-.9-1.6.9.3-1.9-1.4-1.3 1.9-.3z',
+    'M6 18h.01',
+    'M13 19.5h.01',
+    'M19 6h.01',
+  ],
+  // Waves.
+  seaLevel: ['M3 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0', 'M3 14c2-2 4-2 6 0s4 2 6 0 4-2 6 0', 'M3 19h18'],
+  // A thermometer.
+  temperature: ['M10 4a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z', 'M12 9v7'],
+  // A globe split by a plate boundary.
+  plates: ['M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z', 'M5 7l4 3-1 4 4 2 1 5', 'M13 3.2l1 4.8 4 1.5'],
+  // An ammonite's coil.
+  fossils: [
+    'M12 20a8 8 0 1 1 8-8c0 3.5-2.7 6-6 6-2.8 0-5-2.2-5-5 0-2.2 1.8-4 4-4 1.7 0 3 1.3 3 3 0 1.1-.9 2-2 2',
+  ],
+  // A meteor striking.
+  impacts: ['M3 3l9 9', 'M7 3l7 7', 'M3 7l7 7', 'M16 13a4 4 0 1 0 0 8a4 4 0 1 0 0-8z'],
+  // Wind.
+  air: ['M3 9h11a3 3 0 1 0-3-3', 'M3 14h15a3 3 0 1 1-3 3', 'M3 19h6'],
+  // A person.
+  humans: [
+    'M12 4a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5z',
+    'M8 21v-6l-2-1 2-4h8l2 4-2 1v6',
+    'M12 15v6',
+  ],
+} as const;
+
+export type UiIcon = keyof typeof UI_PATHS;
+
+/** A control's icon. */
+export function uiIcon(name: UiIcon, size = 18): SVGSVGElement {
+  return icon(UI_PATHS[name], size);
+}

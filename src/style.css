@@ -3635,3 +3635,44 @@ body {
 .why-section p + p {
   margin-top: 6px;
 }
+
+/* Controls with an icon: the icon and the word side by side; on a phone the icon alone, the
+   word kept for screen readers (and the tooltip), so a row of them fits on one line. */
+button:has(> .icon-label):not([hidden]) {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+}
+
+button:has(> .icon-label) > .icon {
+  flex: none;
+}
+
+@media (max-width: 600px) {
+  .icon-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  button:has(> .icon-label) {
+    min-width: 44px;
+    padding: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  /* The chips packed from the start, so as many as fit share a line. */
+  .deep-label {
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .deep-label .deep-layer {
+    margin-left: 0;
+  }
+}
