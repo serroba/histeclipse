@@ -7,7 +7,7 @@
  * degree over the site's span, which a view this small cannot show. Saturn's ring radii are from
  * NASA's Saturnian Rings Fact Sheet. Colours are rough true-colour impressions, with Jupiter's and
  * Saturn's main belts placed at their usual latitudes: they are not maps of the surfaces. Close
- * up, Mercury, Mars and Jupiter wear their missions' global maps instead (`PLANET_PICTURES`),
+ * up, Mercury, Mars, Jupiter and Saturn wear their missions' global maps instead (`PLANET_PICTURES`),
  * turned as the planet was at the moment shown (`bodyAxes`).
  */
 
@@ -227,9 +227,10 @@ export const PLANET_PICTURES: Readonly<Record<PlanetName, PlanetPicture>> = {
       'Pictured: Cassini’s map of the cloud tops, from its flyby in December 2000; the clouds have changed since. NASA/JPL/Space Science Institute.',
   },
   saturn: {
-    map: null,
-    sharp: null,
-    caption: 'Pictured: the main bands, painted as a rough impression, not a map.',
+    map: 'textures/planets/saturn-2048.jpg',
+    sharp: 'textures/planets/saturn-3600.jpg',
+    caption:
+      'Pictured: Cassini’s map of the cloud tops on 11 August 2011, the great northern storm of 2010–11 trailing round the planet; the poles and the strip in the rings’ shadow, not imaged, are filled with the colour of the nearest latitude. NASA/JPL/Space Science Institute; Li, West, Jiang & Knowles (NASA PDS, 2023).',
   },
 };
 

@@ -3,15 +3,24 @@
 Each map is a mission's own release, in simple cylindrical projection (equal steps of latitude
 and longitude, north at the top): MESSENGER's monochrome mosaic of Mercury (NASA Photojournal
 PIA15063), the Viking colour mosaic of Mars (USGS Astrogeology), Cassini's colour map of Jupiter
-(PIA07782), NASA's Blue Marble Next Generation of Earth (April 2004, with topography and
+(PIA07782), Cassini's colour map of Saturn (11 August 2011; Li, West, Jiang & Knowles 2023, in
+the PDS), NASA's Blue Marble Next Generation of Earth (April 2004, with topography and
 bathymetry), and the Lunar Reconnaissance Orbiter's colour mosaic of the Moon (NASA's CGI Moon
 Kit). Each download is pinned by checksum, so a changed upstream file is never used unseen, and is
 shrunk to the widths the site loads: one shown at once (planets), and a sharper one fetched only
 close up (#258). All are NASA or USGS works, in the public domain; the site credits each where it
 is shown.
 
+Saturn's map is a FITS file of three float bands, longitude counted west from its left edge
+(0° there, 180° in the middle). Its header and label say the first row is the south pole, but
+its features say otherwise: as stored, the first row is the north, where the Great White Spot
+storm of 2010-11 raged (about 35° N), and the rings' shadow falls in the south, as it did with
+the Sun 10.7° north of the ring plane. Its gaps (the poles out of sight or in winter night,
+and the rings' shadow) are filled with the mean colour of the nearest latitude imaged, which
+suits a planet of bands.
+
 Venus is left out on purpose: from space it shows only cloud, and Magellan's map is radar of the
-ground beneath. No mission has published a global map of Saturn; it keeps its painted bands.
+ground beneath.
 Earth's first map (2048 wide) and the Moon's (1024) were made before this command and are kept.
 """
 
@@ -51,6 +60,8 @@ class MapSource:
     sha256: str
     widths: tuple[int, ...]
     stretch: bool = False
+    #: A Cassini global map as FITS, read by `cassini_fits_map`, not an image file.
+    fits: bool = False
 
 
 PHOTOJOURNAL = "https://assets.science.nasa.gov/content/dam/science/psd/photojournal/pia"
@@ -80,6 +91,17 @@ MAPS = (
         sha256="6b835ddd8036ea9efd25def04f75aa60b69b096025a37eeae5e9b6978e0a2281",
         # Cassini's map is 3601 pixels wide: its sharp size is its own, not enlarged.
         widths=(2048, 3600),
+    ),
+    MapSource(
+        stem="planets/saturn",
+        url=(
+            "https://atmos.nmsu.edu/PDS/data/PDS4/co_iss_global-maps/data_derived/"
+            "Cassini_ISS_RGB_Saturn_global_color_map_original.fits"
+        ),
+        sha256="32a62eca9b82255c7dd763ba0752cee1664ae73d5ec4d5d5260227deecd422af",
+        # 3,600 columns once the repeated edge is dropped: its sharp size is its own.
+        widths=(2048, 3600),
+        fits=True,
     ),
     MapSource(
         stem="earth-blue-marble",
@@ -126,6 +148,67 @@ def stretched(image: Image.Image) -> Image.Image:
     return Image.fromarray(scaled)
 
 
+FITS_BLOCK = 2880
+FITS_CARD = 80
+BANDS = 3
+
+
+def _fits_header(data: bytes) -> tuple[dict[str, str], int]:
+    """Read a FITS header's cards up to END; return them and where the data begins."""
+    cards: dict[str, str] = {}
+    at = 0
+    while at + FITS_CARD <= len(data):
+        card = data[at : at + FITS_CARD].decode("ascii")
+        at += FITS_CARD
+        key = card[:8].strip()
+        if key == "END":
+            return cards, -(-at // FITS_BLOCK) * FITS_BLOCK
+        if card[8:10] == "= ":
+            cards[key] = card[10:].split("/", 1)[0].strip().strip("'").strip()
+    msg = "FITS header has no END"
+    raise ValueError(msg)
+
+
+def fits_bands(data: bytes) -> FloatArray:
+    """Read a FITS image of three 32-bit float bands: its bands as (rows, columns, 3)."""
+    cards, start = _fits_header(data)
+    shape = [int(cards.get(f"NAXIS{axis}", "0")) for axis in (3, 2, 1)]
+    if cards.get("BITPIX") != "-32" or cards.get("NAXIS") != "3" or shape[0] != BANDS:
+        msg = f"expected three bands of 32-bit floats, not {cards}"
+        raise ValueError(msg)
+    count = shape[0] * shape[1] * shape[2]
+    values = np.frombuffer(data, dtype=">f4", count=count, offset=start).astype(np.float64)
+    return np.moveaxis(values.reshape(shape), 0, -1)
+
+
+def filled_by_latitude(bands: FloatArray) -> FloatArray:
+    """Fill the gaps (black, where nothing was imaged) with the mean of the nearest row imaged."""
+    filled: FloatArray = np.nan_to_num(bands)
+    seen: FloatArray = (np.max(filled, axis=2, keepdims=True) > 0).astype(np.float64)
+    counts: FloatArray = np.sum(seen, axis=1)
+    imaged = np.flatnonzero(counts[:, 0] > 0)
+    if imaged.size == 0:
+        msg = "nothing was imaged"
+        raise ValueError(msg)
+    means: FloatArray = np.sum(filled * seen, axis=1) / np.maximum(counts, 1)
+    rows = np.arange(dims(filled)[0])
+    nearest = imaged[np.argmin(np.abs(imaged[np.newaxis, :] - rows[:, np.newaxis]), axis=1)]
+    return filled * seen + means[nearest][:, np.newaxis, :] * (1 - seen)
+
+
+def cassini_fits_map(data: bytes) -> Image.Image:
+    """Turn Cassini's FITS global map into an image: north up, 0° in the middle, gaps filled.
+
+    Columns run from 360° west at the left edge round to 0°, so east rises to the right. The
+    first and last columns are the same meridian; the first is a dark seam and is dropped, which
+    leaves 0° in the last column, and half a turn brings it to the middle.
+    """
+    bands = fits_bands(data)[:, 1:]
+    turned = np.roll(bands, dims(bands)[1] // 2 + 1, axis=1)
+    pixels = np.clip(filled_by_latitude(turned), 0, 255).round().astype(np.uint8)
+    return Image.fromarray(pixels)
+
+
 def web_map(image: Image.Image, *, stretch: bool = False, width: int = WIDTH) -> Image.Image:
     """Make the map for the web: RGB, ``width`` by half that, brightened if asked."""
     shrunk = image.convert("RGB").resize((width, width // 2), Image.Resampling.LANCZOS)
@@ -157,7 +240,11 @@ def fetch_planet_maps(folder: Path, cache: Path) -> int:  # pragma: no cover - n
         path = cache / source.url.rsplit("/", 1)[-1]
         if not path.exists():
             _download(source.url, path)
-        with Image.open(checked(path, source.sha256)) as image:
+        with (
+            cassini_fits_map(checked(path, source.sha256).read_bytes())
+            if source.fits
+            else Image.open(checked(path, source.sha256))
+        ) as image:
             for width in source.widths:
                 made = web_map(image, stretch=source.stretch, width=width)
                 write_map(made, folder / f"{source.stem}-{width}.jpg")
