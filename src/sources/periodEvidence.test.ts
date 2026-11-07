@@ -5,9 +5,14 @@ import { PERIOD_EVIDENCE } from './periodEvidence';
 import { SOURCES } from './registry';
 
 describe('the evidence for each period', () => {
-  it('covers every period of the last 540 million years, by the chart’s names', () => {
-    const phanerozoic = PERIODS.filter((period) => period.base <= 540 && period.rank === undefined);
-    for (const period of phanerozoic) expect(PERIOD_EVIDENCE).toHaveProperty(period.name);
+  it('covers every unit the bar names, from the Hadean to the Quaternary', () => {
+    for (const period of PERIODS) expect(PERIOD_EVIDENCE).toHaveProperty(period.name);
+  });
+
+  it('says, before the surface maps, that the globe is outlines or a sketch', () => {
+    for (const period of PERIODS.filter(({ base }) => base > 635)) {
+      expect(PERIOD_EVIDENCE[period.name]?.map).toMatch(/sketch/);
+    }
   });
 
   it('names only periods the chart has, each resting on registered sources', () => {
