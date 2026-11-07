@@ -8,7 +8,7 @@
 import { type EquatorialVector, loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
 import { loadSky } from './data/sky';
 import { earthFixedToJ2000, sunPositionJ2000 } from './astro/precession';
-import { subsolarPoint } from './astro/sun';
+import { subsolarPoint, sunDistance } from './astro/sun';
 import { greatestEclipseUT, yearOf } from './data/catalog';
 import {
   famousDate,
@@ -180,6 +180,8 @@ import {
 } from './data/namedPeriods';
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
+import { createBodyBar } from './ui/bodyBar';
+import { moonFacts, moonText, planetFacts, planetText, sunText } from './astro/bodyFacts';
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
 import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
@@ -411,6 +413,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   });
   const waysLegend = createWaysLegend(whySheet.mark('ways', 'Ways of life'));
+  // Away from Earth, the bar's line for the body in view, in place of Earth's own.
+  const bodyBar = createBodyBar(whySheet.mark('bodies', 'Sun, Moon and planets'));
   // The eclipse picked before entering deep time, picked again on leaving it.
   let selectionBeforeDeep: ViewState['selection'] = null;
   function leaveDeepTime(): void {
@@ -940,7 +944,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { class: 'bottom', 'data-deep': 'off' },
     card.root,
     scrubber.root,
-    element('div', { class: 'holocene-bar' }, waysLegend.root, historyTrack.root, timeline.root),
+    element(
+      'div',
+      { class: 'holocene-bar' },
+      bodyBar.root,
+      waysLegend.root,
+      historyTrack.root,
+      timeline.root,
+    ),
     deepBar.root,
   );
   root.replaceChildren(
@@ -1300,6 +1311,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       planetsKm: planetPositions(terrestrial),
     });
     lastTerrestrial = terrestrial;
+    bodiesAt = terrestrial;
+    showBody(state);
     showOrbits(state, terrestrial);
     root.dataset['subsolar'] = `${sun.latitude.toFixed(3)},${sun.longitude.toFixed(3)}`;
     if (state.ma !== null) {
@@ -2799,6 +2812,40 @@ export async function startApp(root: HTMLElement): Promise<void> {
     };
   }
 
+  // The moment last shown (TT), for the body bar: it works out only the body in view.
+  let bodiesAt: JulianDay | null = null;
+
+  /** Away from Earth: the body in view and what can be said of it; Earth's own bits rest. */
+  function showBody(state: ViewState): void {
+    const away = state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
+    bottom.dataset['away'] = String(away);
+    if (!away || bodiesAt === null) {
+      bodyBar.render(null);
+      return;
+    }
+    const jdTT = bodiesAt;
+    const sunKm = sunPositionJ2000(jdTT);
+    const focus = state.focus;
+    if (focus === 'sun') {
+      bodyBar.render({ name: 'The Sun', text: sunText(sunDistance(jdTT)) });
+    } else if (focus === 'moon') {
+      const moonKm = moonEphemeris?.position(jdTT) ?? null;
+      bodyBar.render(
+        moonKm === null ? null : { name: 'The Moon', text: moonText(moonFacts(moonKm, sunKm)) },
+      );
+    } else {
+      const position = planets?.position(focus, jdTT);
+      bodyBar.render(
+        position === undefined
+          ? null
+          : {
+              name: `${focus.charAt(0).toUpperCase()}${focus.slice(1)}`,
+              text: planetText(planetFacts(focus, position, sunKm)),
+            },
+      );
+    }
+  }
+
   /** What a why says of the moment shown: deep time's map, the period's own evidence. */
   function whyMoment(id: WhyId, state: ViewState): WhyMoment | null {
     if (id !== 'deep-evidence' || state.ma === null) return null;
@@ -3399,6 +3446,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         : null,
     );
     showSources(state);
+    showBody(state);
     zoomRail.setWhyHere(
       state.mode === 'globe' && state.focus === 'earth' && state.ma === null,
       askingHere,
