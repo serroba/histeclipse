@@ -635,6 +635,62 @@ async function skyRendered(page: Page): Promise<void> {
   await expect(page.getByTestId('sky')).toHaveAttribute('data-rendered', 'true');
 }
 
+test('a page opened before a deploy reloads once when a late part of it is gone', async ({
+  page,
+}) => {
+  let missing = 1;
+  let loads = 0;
+  page.on('load', () => {
+    loads += 1;
+  });
+  await test.step('Given the sky’s code gone from the server once, as after a deploy', async () => {
+    await page.route('**/assets/skyScene-*.js', async (route) => {
+      if (missing > 0) {
+        missing -= 1;
+        await route.fulfill({ status: 404, body: 'gone' });
+      } else {
+        await route.continue();
+      }
+    });
+  });
+  await test.step('When they open the sky', async () => {
+    await page.goto('./?mode=sky&t=2025-03-20T19:00Z&loc=32.5422,44.4209');
+  });
+  await test.step('Then the page reloads by itself and the stars come up', async () => {
+    // A whole second load: more than the usual wait on a busy machine.
+    await expect.poll(() => loads, { timeout: 15_000 }).toBe(2);
+    await expect(page.getByTestId('sky')).toHaveAttribute('data-rendered', 'true', {
+      timeout: 15_000,
+    });
+    expect(loads).toBe(2);
+  });
+});
+
+test('a late part that stays missing says so once, without reloading again and again', async ({
+  page,
+}) => {
+  let loads = 0;
+  page.on('load', () => {
+    loads += 1;
+  });
+  await test.step('Given the sky’s code missing for good', async () => {
+    await page.route('**/assets/skyScene-*.js', (route) =>
+      route.fulfill({ status: 404, body: 'gone' }),
+    );
+  });
+  await test.step('When they open the sky', async () => {
+    await page.goto('./?mode=sky&t=2025-03-20T19:00Z&loc=32.5422,44.4209');
+  });
+  await test.step('Then, after one reload, a single notice says the stars could not load', async () => {
+    const notice = page.getByRole('status').getByText(/^Could not load the stars/);
+    await expect(notice).toHaveCount(1, { timeout: 15_000 });
+    // Drawing again asks again: still one notice, and no further reload.
+    await page.getByRole('button', { name: 'Sky', exact: true }).click();
+    await expect(notice).toHaveCount(1);
+    expect(loads).toBe(2);
+  });
+});
+
 test('the Sky button stands you where the globe is looking, and back again', async ({ page }) => {
   const problems = collectProblems(page);
   await page.goto('./?t=2025-03-20T19:00Z&cam=32.5,44.4,3');

@@ -5,6 +5,10 @@ import { SpanStatusCode, trace } from '@opentelemetry/api';
 import { startApp } from './app';
 import { telemetryConfig } from './telemetry/config';
 import { errorMessage } from './util/errors';
+import { reloadOnStaleBuild } from './util/staleBuild';
+
+// A page opened before a deploy reloads once when a late part of it is gone.
+reloadOnStaleBuild(window);
 
 const root = document.querySelector<HTMLElement>('#app');
 if (root === null) {
