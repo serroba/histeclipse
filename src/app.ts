@@ -29,10 +29,17 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { geoToVector } from './globe/geo';
-import { MOON_CAPTION, PLANET_NAMES, PLANET_PICTURES } from './globe/planetLook';
+import { MOON_CAPTION, PLANET_NAMES, PLANET_PICTURES, SHARP_MAPS } from './globe/planetLook';
 import { loadPolarity, type PolarityScale } from './data/polarity';
 import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
+import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
+import { DATABLE_YEARS } from './data/radiocarbonProduction';
+import { captionOf } from './globe/showerSteps';
+import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
+import { createDatingCard } from './ui/datingCard';
+import { createCarbonMadeCard, glowOf } from './ui/carbonMadeCard';
+import { createRadiocarbonStrip } from './ui/radiocarbonStrip';
 import { createGlobe, type StateChange } from './globe/scene';
 import { createStore } from './state/store';
 import { parseViewState } from './state/url';
@@ -99,7 +106,7 @@ import { createAimSwitch, type AimTarget } from './ui/aimSwitch';
 import { createSunSwitch } from './ui/sunSwitch';
 import { createLayersPanel } from './ui/layersPanel';
 import { createDeepGlance } from './ui/deepGlance';
-import { cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
+import { CARBON_LIMIT, cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
 import {
   blankText,
   changesText,
@@ -142,7 +149,7 @@ import {
 import type { Figure } from './sky/look';
 import { loadSunImages, type SunImages } from './data/sunImages';
 import { createFigureSwitch } from './ui/figureSwitch';
-import { createViewSwitch } from './ui/viewSwitch';
+import { createViewSwitch, lookBack } from './ui/viewSwitch';
 import {
   type CoastlineView,
   createDeepTimeBar,
@@ -188,7 +195,15 @@ import {
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
 import { createBodyBar } from './ui/bodyBar';
-import { moonFacts, moonText, planetFacts, planetText, sunText } from './astro/bodyFacts';
+import {
+  earthFromFacts,
+  earthFromText,
+  moonFacts,
+  moonText,
+  planetFacts,
+  planetText,
+  sunText,
+} from './astro/bodyFacts';
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
 import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
@@ -274,6 +289,8 @@ const AIM_FOV = 12;
 const PLANET_SKY_FOV = 4;
 /** How long the sky takes to turn and close in on a tapped body, ms, before going to it. */
 const SKY_GLIDE_MS = 900;
+/** Within this many radii of the body in focus, its sharper map is fetched (#258). */
+const SHARP_WITHIN = 2.5;
 /** How high an upright phone looks on entering the sky, degrees: the horizon low in view. */
 const PHONE_SKY_ALTITUDE = 12;
 /** Degrees from the centre of the globe in view within which a strike is played as time runs. */
@@ -755,6 +772,94 @@ export async function startApp(root: HTMLElement): Promise<void> {
       marks: yearTicks,
     },
   );
+  // Carbon-14 in the air under the years' slider (#270), its curves loaded the first time the
+  // layer is on.
+  const datingCard = createDatingCard();
+  // Where cosmic rays make carbon-14 (#269): a glow over the globe, for the field and Sun picked
+  // in its card.
+  const carbonMadeCard = createCarbonMadeCard(
+    () => {
+      showCarbonMade(store.get());
+      showEmpires(store.get());
+    },
+    (made) => {
+      watchShower(made.field.dipole);
+    },
+  );
+  // What the shower shows at each step, over the globe while it plays.
+  const showerCaption = element('p', {
+    class: 'shower-caption',
+    'data-testid': 'shower-caption',
+    'aria-live': 'polite',
+  });
+  showerCaption.hidden = true;
+
+  /**
+   * Play a cosmic-ray shower over the meridian in view: seen from the side as the rays come in,
+   * then close up as one bursts, under the field picked.
+   */
+  function watchShower(dipole: number): void {
+    if (store.get().focus !== 'earth')
+      store.set((state) => ({ ...state, focus: 'earth', view: 'free' }));
+    layersPanel.dialog.close();
+    const { longitude } = store.get().camera.target;
+    const place = { latitude: 60, longitude };
+    // From the side first, so the rays are seen coming in from space.
+    globe.flyTo({ latitude: 20, longitude: longitude - 90 });
+    globe.zoomTo(4.4);
+    // Once the globe has turned to it.
+    window.setTimeout(() => {
+      globe.playShower({
+        place,
+        dipole,
+        onStep(step) {
+          // In close over the strike, for the shower and what it makes.
+          if (step === 'shower') {
+            globe.flyTo(place);
+            globe.zoomTo(1.35);
+          }
+          showerCaption.hidden = step === null;
+          showerCaption.textContent = step === null ? '' : captionOf(step, dipole);
+        },
+      });
+    }, 1000);
+  }
+  let carbonMadeSaid: string | null = null;
+  let carbonMadeAction: { readonly label: string; readonly run: () => void } | null = null;
+
+  /** The glow, on the spans and years radiocarbon reaches; what the layer says, and its card. */
+  function showCarbonMade(state: ViewState): void {
+    const layerOn = state.layers.has('carbonMade') && state.mode === 'globe';
+    const span = state.ma === null ? 'years' : state.deepScale;
+    const here = span === 'years' || span === 'ice';
+    const reached = state.ma === null || state.ma * 1e6 <= DATABLE_YEARS;
+    carbonMadeAction =
+      layerOn && here
+        ? {
+            label: 'How is it made?',
+            run: () => {
+              carbonMadeCard.open();
+            },
+          }
+        : null;
+    if (!layerOn || !here || !reached) {
+      carbonMadeSaid = layerOn && here ? CARBON_LIMIT : null;
+      globe.setC14Glow(null);
+      return;
+    }
+    const made = carbonMadeCard.current();
+    globe.setC14Glow(glowOf(made));
+    carbonMadeSaid =
+      state.ma === null
+        ? `${made.field.label} field, ${made.sun.label.toLowerCase()}: most is made over the poles.`
+        : `Drawn for the field and Sun picked (${made.field.label.toLowerCase()}), not those of the moment shown: around 41,000 years ago, in the Laschamp excursion, the field nearly vanished and about twice as much was made.`;
+  }
+  const radiocarbonStrip = createRadiocarbonStrip(
+    whySheet.mark('radiocarbon', 'Carbon-14 in the air'),
+    (curve, name) => {
+      datingCard.open(curve, name);
+    },
+  );
   const historyTrack = createHistoryTrack(
     {
       onYear(year) {
@@ -775,7 +880,42 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
     },
     historyBands.root,
+    radiocarbonStrip.root,
   );
+  let radiocarbon: Radiocarbon | null = null;
+  let radiocarbonAsked = false;
+  /** The strip, for the years shown, from the curve of the hemisphere one stands in. */
+  function showRadiocarbon(state: ViewState): void {
+    const on = state.layers.has('radiocarbon') && state.mode === 'globe' && state.ma === null;
+    if (!on) {
+      radiocarbonStrip.render(null);
+      return;
+    }
+    if (radiocarbon === null) {
+      radiocarbonStrip.render(null);
+      if (radiocarbonAsked) return;
+      radiocarbonAsked = true;
+      loadRadiocarbon(`${base}data/radiocarbon.json`, fetchJson).then(
+        (loaded) => {
+          radiocarbon = loaded;
+          showRadiocarbon(store.get());
+        },
+        (error: unknown) => {
+          radiocarbonAsked = false;
+          notify(`Could not load the radiocarbon curves: ${errorMessage(error)}`);
+        },
+      );
+      return;
+    }
+    const south = (state.location?.latitude ?? 1) < 0;
+    radiocarbonStrip.render({
+      curve: south ? radiocarbon.curves.shcal20 : radiocarbon.curves.intcal20,
+      name: south ? 'SHCal20' : 'IntCal20',
+      first: historyFirst(),
+      last: PRESENT_YEAR,
+      events: RADIOCARBON_EVENTS,
+    });
+  }
   /**
    * The travel view, on as the years play and until the reader leaves it: even light, states
    * and ways of life, the year's ice and sea; markers of single finds and events resting.
@@ -867,6 +1007,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function showHistory(state: ViewState): void {
+    showRadiocarbon(state);
     // Unclamped: the years run past 1950, where deep time's present stops.
     const maOf = (year: number): number => (1950 - year) / 1e6;
     historyBands.render({
@@ -1023,6 +1164,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     tabletPanel.dialog,
     layersPanel.dialog,
     markerCard.dialog,
+    datingCard.dialog,
+    carbonMadeCard.dialog,
+    showerCaption,
   );
 
   // Full view hides the panels for a clear view; Show controls, Escape, or a tap on open sky or
@@ -1070,7 +1214,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     (ephemeris) => {
       moonEphemeris = ephemeris;
       showTime(store.get());
-      viewSwitch.render(store.get().mode, store.get().view, true);
+      viewSwitch.render(store.get().mode, store.get().view, true, store.get().focus);
       showSky(store.get());
     },
     (error: unknown) => {
@@ -1335,6 +1479,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       sunKm: sunPositionJ2000(terrestrial),
       moonKm: moonEphemeris?.position(terrestrial) ?? null,
       planetsKm: planetPositions(terrestrial),
+      jdTT: terrestrial,
     });
     lastTerrestrial = terrestrial;
     bodiesAt = terrestrial;
@@ -2922,6 +3067,28 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The moment last shown (TT), for the body bar: it works out only the body in view.
   let bodiesAt: JulianDay | null = null;
 
+  /** Earth looked back at from afar, as two missions photographed it. */
+  const LOOKED_BACK =
+    'So Voyager 1 saw it in 1990, from beyond Neptune: the “Pale Blue Dot” (NASA/JPL, PIA00452); and Cassini from Saturn in 2013, “The Day the Earth Smiled” (NASA/JPL-Caltech/SSI, PIA17171).';
+
+  /**
+   * Close up, a sharper map for the body in focus, fetched once (#258): Earth's largest only
+   * where the graphics hold it and the screen is not a phone's, whose memory it would strain.
+   */
+  const largeMaps = globe.maxTextureSize >= 8192 && !window.matchMedia('(pointer: coarse)').matches;
+  function sharpenClose(state: ViewState): void {
+    if (state.mode !== 'globe' || state.ma !== null || state.camera.distance > SHARP_WITHIN) return;
+    const { focus } = state;
+    if (focus === 'earth' || focus === 'moon') {
+      const sizes = SHARP_MAPS[focus];
+      globe.setBodyMap(focus, `${base}${largeMaps ? sizes.large : sizes.small}`);
+      return;
+    }
+    if (focus === 'sun') return;
+    const { sharp } = PLANET_PICTURES[focus];
+    if (sharp !== null) globe.setPlanetMap(focus, `${base}${sharp}`, true);
+  }
+
   /** Away from Earth: the body in view and what can be said of it; Earth's own bits rest. */
   function showBody(state: ViewState): void {
     const away = state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
@@ -2933,7 +3100,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const jdTT = bodiesAt;
     const sunKm = sunPositionJ2000(jdTT);
     const focus = state.focus;
-    if (focus === 'sun') {
+    if (state.view === 'earth-from-here' && focus !== 'moon') {
+      // Standing on the body in focus, looking back at Earth (#245).
+      const observer = focus === 'sun' ? sunKm : (planets?.position(focus, jdTT) ?? null);
+      const [, label] = lookBack(focus);
+      bodyBar.render(
+        observer === null
+          ? null
+          : {
+              name: label.replace('Earth from', 'Earth, seen from'),
+              text: earthFromText(earthFromFacts(observer, sunKm)),
+              picture: LOOKED_BACK,
+            },
+      );
+    } else if (focus === 'sun') {
       bodyBar.render({ name: 'The Sun', text: sunText(sunDistance(jdTT)) });
     } else if (focus === 'moon') {
       const moonKm = moonEphemeris?.position(jdTT) ?? null;
@@ -3002,8 +3182,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ...(rocksSaid === null ? [] : [['rocks', rocksSaid] as const]),
         ...(impactsSaid === null ? [] : [['impacts', impactsSaid] as const]),
         ...(volcanoesSaid === null ? [] : [['volcanoes', volcanoesSaid] as const]),
+        ...(carbonMadeSaid === null ? [] : [['carbonMade', carbonMadeSaid] as const]),
       ]),
-      actions: new Map(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
+      actions: new Map([
+        ...(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
+        ...(carbonMadeAction === null ? [] : [['carbonMade', carbonMadeAction] as const]),
+      ]),
     });
     const source = state.borders;
     const year = state.time.date.year;
@@ -3538,6 +3722,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showPeriods(state);
       showImpacts(state);
       showVolcanoes(state);
+      showCarbonMade(state);
       showEmpires(state);
     }
     // Deep time, or an eclipse picked, ends a trip through the years.
@@ -3553,6 +3738,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     showSources(state);
     showBody(state);
+    sharpenClose(state);
     zoomRail.setWhyHere(
       state.mode === 'globe' && state.focus === 'earth' && state.ma === null,
       askingHere,
@@ -3568,13 +3754,22 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     historyTrack.root.hidden = state.selection !== null;
     historyTrack.extras.hidden = state.selection !== null;
-    if (state.time.date.year !== previous?.time.date.year || state.layers !== previous.layers) {
+    if (
+      state.time.date.year !== previous?.time.date.year ||
+      state.layers !== previous.layers ||
+      // Which hemisphere's radiocarbon curve.
+      state.location !== previous.location
+    ) {
       showHistory(state);
     }
     if (state.location !== previous?.location) globe.setLocation(state.location);
     if (state.view !== previous?.view) globe.setViewpoint(state.view);
-    if (state.view !== previous?.view || state.mode !== previous.mode) {
-      viewSwitch.render(state.mode, state.view, moonEphemeris !== null);
+    if (
+      state.view !== previous?.view ||
+      state.mode !== previous.mode ||
+      state.focus !== previous.focus
+    ) {
+      viewSwitch.render(state.mode, state.view, moonEphemeris !== null, state.focus);
     }
     if (state.years !== previous?.years || barYear(state) !== barYear(previous)) {
       loadYear(state);

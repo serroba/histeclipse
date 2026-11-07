@@ -16,12 +16,30 @@ if TYPE_CHECKING:
 
 
 def test_each_map_is_pinned_and_from_a_mission_release() -> None:
-    assert [source.planet for source in MAPS] == ["mercury", "mars", "jupiter"]
+    assert [source.stem for source in MAPS] == [
+        "planets/mercury",
+        "planets/mars",
+        "planets/jupiter",
+        "earth-blue-marble",
+        "moon-lroc",
+    ]
     for source in MAPS:
         assert len(source.sha256) == 64
         assert source.url.startswith(
-            ("https://assets.science.nasa.gov/", "https://planetarymaps.usgs.gov/")
+            (
+                "https://assets.science.nasa.gov/",
+                "https://planetarymaps.usgs.gov/",
+                "https://svs.gsfc.nasa.gov/",
+            )
         )
+
+
+def test_each_map_comes_in_the_sizes_the_site_loads_never_enlarged() -> None:
+    sizes = {source.stem: source.widths for source in MAPS}
+    assert sizes["planets/mars"] == (2048, 4096)
+    assert sizes["earth-blue-marble"] == (4096, 8192)
+    # Cassini's map is 3601 wide: its sharp size is its own.
+    assert max(sizes["planets/jupiter"]) <= 3601
 
 
 def test_a_file_whose_checksum_matches_is_used(tmp_path: Path) -> None:

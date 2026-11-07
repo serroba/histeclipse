@@ -45,6 +45,7 @@ from histeclipse_pipeline.planets import (
     write_planet_vectors,
 )
 from histeclipse_pipeline.polarity import fetch_polarity
+from histeclipse_pipeline.radiocarbon import fetch_radiocarbon
 from histeclipse_pipeline.seaice import fetch_seaice
 from histeclipse_pipeline.sealevel import fetch_sealevel
 from histeclipse_pipeline.shelf import fetch_shelf
@@ -59,6 +60,7 @@ from histeclipse_pipeline.skycultures import fetch_skycultures
 from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.solar_images import fetch_images
 from histeclipse_pipeline.timezones import fetch_timezones
+from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
 from histeclipse_pipeline.volcanoes import fetch_volcanoes
 
@@ -99,8 +101,8 @@ class Arguments(argparse.Namespace):
     out: Path = Path()
     count: int = SUN_VECTOR_COUNT
     seed: int | None = None
-    # The data file whose "wikipedia" titles the pictures command looks up, and a word their
-    # pages' descriptions must have (such as "genus"), if any.
+    # The data file whose "wikipedia" titles the pictures command looks up (or whose genera the
+    # tree-of-life command places), and a word their pages' descriptions must have, if any.
     source: Path = Path()
     must_mention: str | None = None
 
@@ -290,15 +292,27 @@ def timezones(args: Arguments) -> int:  # pragma: no cover - needs network acces
 
 
 def planet_maps(args: Arguments) -> int:  # pragma: no cover - needs network access
-    """Write the planets' global maps from their missions, for the close-up view."""
+    """Write the bodies' maps from their missions, for the close-up view (public/textures)."""
     count = fetch_planet_maps(args.out, Path(".cache/planet-maps"))
-    return _say(f"wrote {count} planet maps to {args.out}")
+    return _say(f"wrote {count} maps to {args.out}")
 
 
 def polarity(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write every reversal of the last 83 Ma (GTS 2020, as PmagPy carries it)."""
     count = fetch_polarity(args.out)
     return _say(f"wrote {count} polarity chrons to {args.out}")
+
+
+def radiocarbon(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the radiocarbon calibration curves (IntCal20, SHCal20)."""
+    count = fetch_radiocarbon(args.out)
+    return _say(f"wrote {count} curve rows to {args.out}")
+
+
+def tree_of_life(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the tree of life trimmed to what the site shows (Open Tree of Life, CC0)."""
+    count = fetch_tree_of_life(args.source, args.out, Path(".cache/tree-of-life"))
+    return _say(f"wrote {count} nodes of the tree of life to {args.out}")
 
 
 def pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -497,12 +511,22 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     ),
     "planet-maps": (
         planet_maps,
-        "write the planets' global maps from their missions (MESSENGER, Viking, Cassini)",
-        "output folder",
+        "write the bodies' maps from their missions (MESSENGER, Viking, Cassini, BMNG, LRO)",
+        "output folder (public/textures)",
     ),
     "polarity": (
         polarity,
         "write the geomagnetic polarity time scale (GTS 2020, via PmagPy)",
+        "output JSON file",
+    ),
+    "radiocarbon": (
+        radiocarbon,
+        "write the radiocarbon calibration curves (IntCal20, SHCal20)",
+        "output JSON file",
+    ),
+    "tree-of-life": (
+        tree_of_life,
+        "write the tree of life trimmed to what the site shows (Open Tree of Life)",
         "output JSON file",
     ),
     "pictures": (
@@ -596,6 +620,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         _ = command.add_argument("--kernels", type=Path, default=DEFAULT_KERNELS)
         _ = command.add_argument("--start-year", type=int, default=DEFAULT_START_YEAR)
         _ = command.add_argument("--end-year", type=int, default=DEFAULT_END_YEAR)
+        if name == "tree-of-life":
+            _ = command.add_argument(
+                "--source", type=Path, required=True, help="the fossils file naming genera"
+            )
         if name == "pictures":
             _ = command.add_argument(
                 "--source", type=Path, required=True, help="data file naming Wikipedia titles"
