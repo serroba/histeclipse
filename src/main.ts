@@ -35,8 +35,37 @@ function recordStart(started: Date, ended: Date, failed: boolean, failure: unkno
   span.end(ended);
 }
 
+/** Resolves with ms since navigation when the globe first draws; never, in the sky view. */
+function whenGlobeRendered(appRoot: HTMLElement): Promise<number> {
+  return new Promise((resolve) => {
+    const observer = new MutationObserver(() => {
+      if (appRoot.querySelector('[data-testid="globe"][data-rendered="true"]') !== null) {
+        observer.disconnect();
+        resolve(performance.now());
+      }
+    });
+    observer.observe(appRoot, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['data-rendered'],
+    });
+  });
+}
+
+/** From navigation to the globe's first frame: when the reader first sees something. */
+function recordFirstRender(atMs: number): void {
+  trace
+    .getTracer('histeclipse')
+    .startSpan('globe.first_render', { startTime: performance.timeOrigin })
+    .end(performance.timeOrigin + atMs);
+}
+
 async function boot(appRoot: HTMLElement): Promise<void> {
   const telemetry = loadTelemetry();
+  void Promise.all([whenGlobeRendered(appRoot), telemetry]).then(([atMs]) => {
+    recordFirstRender(atMs);
+  });
   const started = new Date();
   const outcome = await startApp(appRoot).then(
     () => ({ failed: false, failure: undefined as unknown }),
