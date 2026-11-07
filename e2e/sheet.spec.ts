@@ -227,3 +227,25 @@ test('a second swipe straight after the first goes the way it was swiped', async
     await expect(bar).toHaveAttribute('data-sheet', 'folded');
   });
 });
+
+test('deep time’s sheet never reaches up over the date panel', async ({ page }, info) => {
+  test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
+  for (const link of ['./?ma=0.021&scale=ice', './?ma=250&scale=all', './?ma=3000&scale=eons']) {
+    await test.step(`Given ${link}`, async () => {
+      await page.goto(link);
+      await globeRendered(page);
+    });
+    await test.step('Then the sheet and the date panel share no pixels', async () => {
+      await expect(async () => {
+        const panel = await page.locator('.hud').boundingBox();
+        const sheet = await page.locator('.deep-time').boundingBox();
+        if (panel === null || sheet === null) throw new Error('not laid out');
+        const apart =
+          sheet.y >= panel.y + panel.height ||
+          sheet.x >= panel.x + panel.width ||
+          sheet.x + sheet.width <= panel.x;
+        expect(apart).toBe(true);
+      }).toPass();
+    });
+  }
+});
