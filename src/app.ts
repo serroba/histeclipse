@@ -34,8 +34,10 @@ import { loadPolarity, type PolarityScale } from './data/polarity';
 import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
+import { DATABLE_YEARS } from './data/radiocarbonProduction';
 import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
 import { createDatingCard } from './ui/datingCard';
+import { createCarbonMadeCard, glowOf } from './ui/carbonMadeCard';
 import { createRadiocarbonStrip } from './ui/radiocarbonStrip';
 import { createGlobe, type StateChange } from './globe/scene';
 import { createStore } from './state/store';
@@ -103,7 +105,7 @@ import { createAimSwitch, type AimTarget } from './ui/aimSwitch';
 import { createSunSwitch } from './ui/sunSwitch';
 import { createLayersPanel } from './ui/layersPanel';
 import { createDeepGlance } from './ui/deepGlance';
-import { cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
+import { CARBON_LIMIT, cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
 import {
   blankText,
   changesText,
@@ -772,6 +774,42 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // Carbon-14 in the air under the years' slider (#270), its curves loaded the first time the
   // layer is on.
   const datingCard = createDatingCard();
+  // Where cosmic rays make carbon-14 (#269): a glow over the globe, for the field and Sun picked
+  // in its card.
+  const carbonMadeCard = createCarbonMadeCard(() => {
+    showCarbonMade(store.get());
+    showEmpires(store.get());
+  });
+  let carbonMadeSaid: string | null = null;
+  let carbonMadeAction: { readonly label: string; readonly run: () => void } | null = null;
+
+  /** The glow, on the spans and years radiocarbon reaches; what the layer says, and its card. */
+  function showCarbonMade(state: ViewState): void {
+    const layerOn = state.layers.has('carbonMade') && state.mode === 'globe';
+    const span = state.ma === null ? 'years' : state.deepScale;
+    const here = span === 'years' || span === 'ice';
+    const reached = state.ma === null || state.ma * 1e6 <= DATABLE_YEARS;
+    carbonMadeAction =
+      layerOn && here
+        ? {
+            label: 'How is it made?',
+            run: () => {
+              carbonMadeCard.open();
+            },
+          }
+        : null;
+    if (!layerOn || !here || !reached) {
+      carbonMadeSaid = layerOn && here ? CARBON_LIMIT : null;
+      globe.setC14Glow(null);
+      return;
+    }
+    const made = carbonMadeCard.current();
+    globe.setC14Glow(glowOf(made));
+    carbonMadeSaid =
+      state.ma === null
+        ? `${made.field.label} field, ${made.sun.label.toLowerCase()}: most is made over the poles.`
+        : `Drawn for the field and Sun picked (${made.field.label.toLowerCase()}), not those of the moment shown: around 41,000 years ago, in the Laschamp excursion, the field nearly vanished and about twice as much was made.`;
+  }
   const radiocarbonStrip = createRadiocarbonStrip(
     whySheet.mark('radiocarbon', 'Carbon-14 in the air'),
     (curve, name) => {
@@ -1083,6 +1121,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     layersPanel.dialog,
     markerCard.dialog,
     datingCard.dialog,
+    carbonMadeCard.dialog,
   );
 
   // Full view hides the panels for a clear view; Show controls, Escape, or a tap on open sky or
@@ -3098,8 +3137,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ...(rocksSaid === null ? [] : [['rocks', rocksSaid] as const]),
         ...(impactsSaid === null ? [] : [['impacts', impactsSaid] as const]),
         ...(volcanoesSaid === null ? [] : [['volcanoes', volcanoesSaid] as const]),
+        ...(carbonMadeSaid === null ? [] : [['carbonMade', carbonMadeSaid] as const]),
       ]),
-      actions: new Map(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
+      actions: new Map([
+        ...(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
+        ...(carbonMadeAction === null ? [] : [['carbonMade', carbonMadeAction] as const]),
+      ]),
     });
     const source = state.borders;
     const year = state.time.date.year;
@@ -3634,6 +3677,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showPeriods(state);
       showImpacts(state);
       showVolcanoes(state);
+      showCarbonMade(state);
       showEmpires(state);
     }
     // Deep time, or an eclipse picked, ends a trip through the years.

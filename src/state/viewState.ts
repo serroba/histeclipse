@@ -79,6 +79,8 @@ export const LAYERS = [
   'air',
   // The years: carbon-14 in the air (IntCal20, SHCal20), why a radiocarbon date is a range.
   'radiocarbon',
+  // Where cosmic rays make carbon-14, by latitude, for a field and a Sun (Kovaltsov et al. 2012).
+  'carbonMade',
   // Deep time: fossils of four groups of animals, where they lay then.
   'fossils',
 ] as const;
