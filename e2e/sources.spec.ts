@@ -323,3 +323,31 @@ test('"How do we know?" speaks of the period shown, and changes with it', async 
     await expect(sheet).toContainText('Lystrosaurus');
   });
 });
+
+test('on the 4.6 Gyr span, "How do we know?" says what each eon’s globe rests on', async ({
+  page,
+}) => {
+  const sheet = page.getByRole('dialog', { name: 'How do we know what Earth looked like?' });
+  await test.step('Given 2.4 billion years ago, with "How do we know?" open', async () => {
+    await page.goto('./?ma=2400&scale=eons&why=deep-evidence');
+    await globeRendered(page);
+  });
+  await test.step('Then it names the Siderian, says the globe is a sketch, and gives its evidence', async () => {
+    await expect(sheet.getByRole('heading', { name: 'Then: the Siderian' })).toBeVisible();
+    await expect(sheet).toContainText('sketches what competing hypotheses say');
+    await expect(sheet).toContainText('Great Oxidation Event');
+    await expect(
+      sheet
+        .locator('.why-then-sources')
+        .getByRole('link', { name: 'Farquhar, Bao & Thiemens 2000', exact: true }),
+    ).toHaveAttribute('href', 'https://doi.org/10.1126/science.289.5480.756');
+  });
+  await test.step('When the moment moves to the Hadean', async () => {
+    await page.goto('./?ma=4400&scale=eons&why=deep-evidence');
+    await globeRendered(page);
+  });
+  await test.step('Then it speaks of the oldest zircons', async () => {
+    await expect(sheet.getByRole('heading', { name: 'Then: the Hadean' })).toBeVisible();
+    await expect(sheet).toContainText('Jack Hills');
+  });
+});
