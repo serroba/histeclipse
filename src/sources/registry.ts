@@ -420,6 +420,20 @@ export const SOURCES = {
     cite: 'Lavigne, F., et al. (2013). Source of the great A.D. 1257 mystery eruption unveiled, Samalas volcano, Rinjani Volcanic Complex, Indonesia. PNAS 110, 16742–16747',
     url: 'https://doi.org/10.1073/pnas.1307520110',
   },
+  vanDerPlicht2020: {
+    name: 'van der Plicht et al. 2020',
+    kind: 'paper',
+    cite: 'van der Plicht, J., Bronk Ramsey, C., Heaton, T. J., Scott, E. M. & Talamo, S. (2020). Recent developments in calibration for archaeological and environmental samples. Radiocarbon 62, 1095–1117',
+    url: 'https://doi.org/10.1017/RDC.2020.22',
+    licence: 'CC BY 4.0',
+  },
+  oppenheimer2017: {
+    name: 'Oppenheimer et al. 2017',
+    kind: 'paper',
+    cite: 'Oppenheimer, C., et al. (2017). Multi-proxy dating the ‘Millennium Eruption’ of Changbaishan to late 946 CE. Quaternary Science Reviews 158, 164–171',
+    url: 'https://doi.org/10.1016/j.quascirev.2016.12.024',
+    licence: 'CC BY 4.0',
+  },
   stuiverPolach1977: {
     name: 'Stuiver & Polach 1977',
     kind: 'paper',
@@ -831,8 +845,10 @@ export const WHYS = {
       'holvol',
       'sigl2015',
       'lavigne2013',
+      'vanDerPlicht2020',
+      'oppenheimer2017',
     ],
-    how: 'The line is the curve’s Δ14C: the air’s carbon-14 against a modern standard, per mille. IntCal20 for the northern hemisphere, SHCal20 for the southern, picked by where you stand. Living things take in the air’s carbon-14 and, once dead, lose half of it every 5,730 years; a laboratory measures what is left, as a radiocarbon age. Because the air’s carbon-14 rose and fell, that age is read against this curve to find calendar years: where the curve is steep, a narrow range; where it is flat (the Hallstatt plateau, about 800–400 BCE), centuries; where it wiggles, two or more ranges. Miyake events, sudden one-year rises from solar storms, let a tree ring be dated to its year. The curves end in 1950: after it nuclear tests nearly doubled the air’s carbon-14 (the bomb pulse). Under the line, each tick is an eruption the ice cores of Greenland and Antarctica record, as tall as the sulfur it sent into the stratosphere (HolVol, 9500 BCE to 1900 CE): its haze cooled the following summers, which tree rings record as frost rings and narrow rings. The ice cores were lined up with the tree rings by the same Miyake spikes, 774 and 993 CE, which left beryllium-10 in the ice as they left carbon-14 in the wood. Most eruptions are known only from the ice; the strip names those its sources do (Samalas, Tambora). Their dates are good to a few years over the last 2,500 years, to 5–15 years before that, and to about 66 years at 9500 BCE.',
+    how: 'The line is the curve’s Δ14C: the air’s carbon-14 against a modern standard, per mille. IntCal20 for the northern hemisphere, SHCal20 for the southern, picked by where you stand. Living things take in the air’s carbon-14 and, once dead, lose half of it every 5,730 years; a laboratory measures what is left, as a radiocarbon age. Because the air’s carbon-14 rose and fell, that age is read against this curve to find calendar years: where the curve is steep, a narrow range; where it is flat (the Hallstatt plateau, about 800–400 BCE), centuries; where it wiggles, two or more ranges. Miyake events, sudden one-year rises from solar storms, let a tree ring be dated to its year. The curves end in 1950: after it nuclear tests nearly doubled the air’s carbon-14 (the bomb pulse). Under the line, each tick is an eruption the ice cores of Greenland and Antarctica record, as tall as the sulfur it sent into the stratosphere (HolVol, 9500 BCE to 1900 CE): its haze cooled the following summers, which tree rings record as frost rings and narrow rings. The ice cores were lined up with the tree rings by the same Miyake spikes, 774 and 993 CE, which left beryllium-10 in the ice as they left carbon-14 in the wood. Most eruptions are known only from the ice; the strip names those its sources do (Samalas, Tambora). Their dates are good to a few years over the last 2,500 years, to 5–15 years before that, and to about 66 years at 9500 BCE. “How was this dated?” works through two real eruptions: Thera, whose age falls on a plateau and whose date is still debated, and Changbaishan, dated to 946 CE by counting a tree’s rings from the 775 CE spike.',
   },
   carbonMade: {
     title: 'Carbon-14 made in the sky',

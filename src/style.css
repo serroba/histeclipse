@@ -4126,6 +4126,20 @@ button:has(> .icon-label) > .icon {
   font-size: 14px;
 }
 
+.dating-note {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid #f7c95a;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 0.04);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.dating-note[hidden] {
+  display: none;
+}
+
 .famous-dialog.carbon-made-dialog {
   width: min(640px, calc(100% - 24px));
   /* Opaque: the chart would read through a see-through sheet. */

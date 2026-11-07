@@ -405,5 +405,30 @@ test('“How was this dated?” carries a radiocarbon age across the curve to it
   await test.step('Then it is calibrated too', async () => {
     await expect(dialog.getByTestId('dating-ranges')).toContainText('994–1048 CE');
   });
+  await test.step('When they try the Thera eruption, a real date on a plateau', async () => {
+    await dialog.getByRole('button', { name: /^Thera \(Santorini\)/ }).click();
+  });
+  await test.step('Then it fits several stretches, the dispute is said, and its source named', async () => {
+    await expect(dialog.getByTestId('dating-ranges').locator('li')).toHaveCount(5);
+    await expect(dialog.getByTestId('dating-ranges')).toContainText('1644–1609 BCE 53%');
+    await expect(dialog.getByTestId('dating-note')).toContainText('still debated');
+    await expect(dialog.getByTestId('dating-note')).toContainText('van der Plicht et al. 2020');
+  });
+  await test.step('When they try Changbaishan, dated by a spike', async () => {
+    await dialog.getByRole('button', { name: /^Changbaishan/ }).click();
+  });
+  await test.step('Then it is dated to the year, by counting rings, with no ranges', async () => {
+    await expect(dialog.getByTestId('dating-result')).toHaveText(
+      '2. The tree died in 946 CE, to the year.',
+    );
+    await expect(dialog.getByTestId('dating-ranges').locator('li')).toHaveCount(0);
+    await expect(dialog.getByTestId('dating-note')).toContainText('775 CE');
+  });
+  await test.step('When they type their own age again, the example’s note goes', async () => {
+    await dialog.getByRole('spinbutton', { name: 'Radiocarbon age, years BP' }).fill('2000');
+    await dialog.getByRole('spinbutton', { name: 'Radiocarbon age, years BP' }).press('Enter');
+    await expect(dialog.getByTestId('dating-note')).toBeHidden();
+    await expect(dialog.getByTestId('dating-ranges').locator('li')).not.toHaveCount(0);
+  });
   expect(problems).toEqual([]);
 });
