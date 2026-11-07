@@ -317,3 +317,37 @@ test('away from Earth, the bar speaks of the body in view, and Earth’s own par
   });
   expect(problems).toEqual([]);
 });
+
+test.describe('a first visit from Sydney', () => {
+  test.use({ timezoneId: 'Australia/Sydney' });
+
+  test('opens over the reader’s region, from the browser’s time zone', async ({ page }, info) => {
+    test.skip(info.project.name === 'desktop-120hz', 'about the time zone, not frames');
+    const problems = collectProblems(page);
+    await test.step('Given a first visit, from a browser set to Sydney’s time zone', async () => {
+      await page.goto('./');
+      await globeRendered(page);
+    });
+    await test.step('Then the globe turns to face Australia', async () => {
+      const cam = (index: number) => () =>
+        Number(new URL(page.url()).searchParams.get('cam')?.split(',')[index]);
+      await expect.poll(cam(0), { timeout: 15_000 }).toBeCloseTo(-33.9, 0);
+      await expect.poll(cam(1), { timeout: 15_000 }).toBeCloseTo(151.2, 0);
+    });
+    expect(problems).toEqual([]);
+  });
+
+  test('a link with its own view still opens where it points', async ({ page }) => {
+    await page.goto('./?t=2024-04-08T18:17&cam=20,0,4.5');
+    await globeRendered(page);
+    await page.waitForTimeout(1500);
+    await expect(page).toHaveURL(/cam=20\.0000,0\.0000,4\.50/);
+  });
+});
+
+test('a first visit from a browser in UTC keeps the usual first view', async ({ page }) => {
+  await page.goto('./?t=2024-04-08T18:17');
+  await globeRendered(page);
+  await page.waitForTimeout(1500);
+  await expect(page).toHaveURL(/cam=20\.0000,0\.0000,/);
+});

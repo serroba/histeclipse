@@ -54,6 +54,7 @@ export interface GlProbe {
 }
 
 const MAX_TEXTURE_SIZE = 0x0d33;
+const SOFTWARE_RENDERERS = /swiftshader|llvmpipe|softpipe|software/i;
 const UNMASKED_VENDOR_WEBGL = 0x9245;
 const UNMASKED_RENDERER_WEBGL = 0x9246;
 
@@ -78,6 +79,11 @@ export function gpuAttributes(webgl2: GlProbe | null, pixelRatio: number): Attri
   const vendor = webgl2.getParameter(debug ? UNMASKED_VENDOR_WEBGL : 0x1f00);
   const renderer = webgl2.getParameter(debug ? UNMASKED_RENDERER_WEBGL : 0x1f01);
   if (typeof vendor === 'string') attributes['gpu.vendor'] = vendor;
-  if (typeof renderer === 'string') attributes['gpu.renderer'] = renderer;
+  if (typeof renderer === 'string') {
+    attributes['gpu.renderer'] = renderer;
+    // Software WebGL (headless browsers, blocklisted GPUs) draws many times slower than any real
+    // GPU; flag it so render timings can be read without it.
+    attributes['gpu.software'] = SOFTWARE_RENDERERS.test(renderer);
+  }
   return attributes;
 }
