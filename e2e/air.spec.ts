@@ -15,7 +15,7 @@ test('the Air layer gives carbon dioxide and methane at the moment, against 1750
     await showDeepDetails(page);
   });
   await test.step('When they turn on Air', async () => {
-    await page.getByRole('button', { name: 'Air' }).click();
+    await page.getByRole('button', { name: 'Air', exact: true }).click();
   });
   await test.step('Then each gas says its level then and how it compares, with its source', async () => {
     await expect(page).toHaveURL(/layers=[a-z,]*air/);

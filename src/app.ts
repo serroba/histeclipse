@@ -458,6 +458,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
   }
   const deepBar = createDeepTimeBar({
+    why(id, label) {
+      return whySheet.mark(id, label);
+    },
     onMa(ma, jump) {
       stopPlay();
       if (jump) sync.step();
@@ -550,9 +553,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       });
     },
   });
-  const sunSwitch = createSunSwitch((sunLayer) => {
-    store.set((state) => ({ ...state, sunLayer }));
-  });
+  const sunSwitch = createSunSwitch(
+    (sunLayer) => {
+      store.set((state) => ({ ...state, sunLayer }));
+    },
+    whySheet.mark('sun', 'The Sun close up'),
+  );
   const aimSwitch = createAimSwitch((target) => {
     store.set((state) => {
       const look = aimAt(state, target);
@@ -568,7 +574,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const skyOptions = element(
     'details',
     { class: 'sky-options', hidden: '' },
-    element('summary', {}, 'Constellations and whose sky'),
+    element('summary', {}, 'Constellations and whose sky ', whySheet.mark('sky', 'The night sky')),
     figureSwitch.root,
     cultureSwitch.root,
   );
@@ -660,7 +666,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => ({ ...state, ma: roundMa(ma) }));
     },
   );
-  const card = createEclipseCard();
+  const card = createEclipseCard(whySheet.mark('eclipses', 'Eclipse'));
   // The Holocene track: the years played by, from as far back as ΔT reaches to the present.
   let historySpeed: YearSpeed = 50;
   let historyPlaying = false;
@@ -1287,9 +1293,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
         { title: DELTA_T_MEANING, tabindex: '0' },
         `ΔT ${formatDuration(seconds)} ± ${formatDuration(uncertainty)}`,
       ),
+      ' ',
+      deltaTWhy,
     );
   }
 
+  // ΔT's book, made once: the date line is written again as time moves.
+  const deltaTWhy = whySheet.mark('delta-t', 'ΔT');
   const DELTA_T_MEANING =
     'ΔT: how far Earth’s slowing spin has put clock time behind a perfectly even time. It decides where on Earth an ancient eclipse fell; the ± is how uncertain it is.';
 

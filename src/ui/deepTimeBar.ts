@@ -46,6 +46,7 @@ import {
 import { DEEP_SPEEDS, deepSpeedText, deepSpeedWords } from '../deepTime/playSpeed';
 import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import { DISPERSAL_SCENARIOS, type DeepScale, type DispersalScenario } from '../state/viewState';
+import type { WhyId } from '../sources/registry';
 import { element } from './dom';
 import { createGasChart } from './gasChart';
 import { createMilestonePanel } from './milestonePanel';
@@ -334,6 +335,8 @@ export interface DeepTimeBar {
 }
 
 export function createDeepTimeBar(handlers: {
+  /** The book that says where a note's content comes from. */
+  why(id: WhyId, label: string): HTMLElement;
   /** A new moment: `jump` when it is a step to go back from (a milestone, a click), not a drag. */
   onMa(ma: number, jump: boolean): void;
   onPlay(playing: boolean): void;
@@ -459,12 +462,24 @@ export function createDeepTimeBar(handlers: {
     { class: 'deep-coast', 'aria-label': 'Coastline follows' },
     ...COAST_SOURCES.map((source) => element('option', { value: source }, COAST_LABELS[source])),
   );
+  // The books beside each note, made once: the notes that are drawn again keep them first.
+  const iceWhy = handlers.why('ice-surface', 'The ice ages’ Earth');
+  const coastWhy = handlers.why('ice-surface', 'The coast and sea level');
+  const platesWhy = handlers.why('plates', 'Plates');
+  const temperatureWhy = handlers.why('temperature', 'Temperature');
+  const factsWhy = handlers.why('earth-facts', 'Poles, magnetic field, tilt, day and Sun');
+  const airWhy = handlers.why('air', 'Air');
+  const humansWhy = handlers.why('humans', 'Humans');
+  const fossilsWhy = handlers.why('fossils', 'Fossils');
+  const impactsWhy = handlers.why('impacts', 'Impact craters');
   const iceNote = element(
     'div',
     { class: 'deep-note', hidden: '', 'data-testid': 'ice-note' },
     element(
       'p',
       {},
+      iceWhy,
+      ' ',
       'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time. Sea floor laid dry is sandy; ice sheets are white. The continents are drawn where they are today (how far they have moved is below), and the temperature maps are 5 million years apart.',
     ),
     iceLine,
@@ -482,6 +497,8 @@ export function createDeepTimeBar(handlers: {
   const coastNote = element(
     'p',
     { class: 'deep-note', hidden: '', 'data-testid': 'coast-note' },
+    coastWhy,
+    ' ',
     coastText,
     ' ',
     element('label', {}, 'Follow ', coastPicker),
@@ -498,6 +515,8 @@ export function createDeepTimeBar(handlers: {
   const platesNote = element(
     'p',
     { class: 'deep-note', hidden: '', 'data-testid': 'plates-note' },
+    platesWhy,
+    ' ',
     element('span', { class: 'plates-swatch', 'aria-hidden': 'true' }),
     ' ',
     platesWords,
@@ -634,7 +653,8 @@ export function createDeepTimeBar(handlers: {
     element(
       'p',
       { class: 'temperature-heading' },
-      'Colours: the average temperature at the surface over a year',
+      'Colours: the average temperature at the surface over a year ',
+      temperatureWhy,
     ),
     legendScale,
     ticks,
@@ -648,7 +668,7 @@ export function createDeepTimeBar(handlers: {
   const factsPanel = element(
     'details',
     { class: 'deep-facts', 'data-testid': 'deep-facts', name: 'deep-fold' },
-    element('summary', {}, 'Poles, magnetic field, tilt, day and Sun'),
+    element('summary', {}, 'Poles, magnetic field, tilt, day and Sun ', factsWhy),
     facts,
   );
   // What the colours mean: the map's and the ticks'. Folded away like the facts.
@@ -1018,7 +1038,7 @@ export function createDeepTimeBar(handlers: {
     ma: number,
   ): void {
     if (deep === null) {
-      airNote.replaceChildren(element('p', {}, 'Air: loading…'));
+      airNote.replaceChildren(airWhy, ' ', element('p', {}, 'Air: loading…'));
       return;
     }
     const fromArchive = co2Source.value === 'archive';
@@ -1059,6 +1079,8 @@ export function createDeepTimeBar(handlers: {
       ma,
     );
     airNote.replaceChildren(
+      airWhy,
+      ' ',
       element(
         'p',
         { 'data-testid': 'deep-co2' },
@@ -1102,10 +1124,12 @@ export function createDeepTimeBar(handlers: {
     const oldestKa = oldest * 1000;
     const ka = ma * 1000;
     if (air.atmosphere === null) {
-      airNote.replaceChildren(element('p', {}, 'Air: loading…'));
+      airNote.replaceChildren(airWhy, ' ', element('p', {}, 'Air: loading…'));
       return;
     }
     airNote.replaceChildren(
+      airWhy,
+      ' ',
       ...air.atmosphere.gases.flatMap((gas) => {
         const chart = gasCharts[gas.id];
         chart.render(gas, oldestKa, ka);
@@ -1136,13 +1160,15 @@ export function createDeepTimeBar(handlers: {
     humansNote.hidden = !humans.on;
     if (!humans.on) return;
     if (humans.view === null) {
-      humansNote.replaceChildren(element('p', {}, 'Humans: loading…'));
+      humansNote.replaceChildren(humansWhy, ' ', element('p', {}, 'Humans: loading…'));
       return;
     }
     const { questions, others, sites } = humans.view;
     dispersalPicker.value = humans.model.scenario;
     dispersalWords.textContent = dispersalText(humans.model);
     humansNote.replaceChildren(
+      humansWhy,
+      ' ',
       dispersalRow,
       element(
         'p',
@@ -1308,6 +1334,8 @@ export function createDeepTimeBar(handlers: {
       fossilsNote.hidden = !view.fossils.on;
       if (view.fossils.on) {
         fossilsNote.replaceChildren(
+          fossilsWhy,
+          ' ',
           ...(view.fossils.at === null
             ? ['Fossils: loading…']
             : [
@@ -1336,6 +1364,8 @@ export function createDeepTimeBar(handlers: {
       if (view.impacts.on) {
         impactsMode.value = view.impacts.mode;
         impactsNote.replaceChildren(
+          impactsWhy,
+          ' ',
           impactsPicker,
           ' ',
           view.impacts.text ?? 'Impacts: loading…',

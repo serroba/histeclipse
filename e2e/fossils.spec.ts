@@ -15,7 +15,7 @@ test('the Fossils layer marks finds of the moment on the land of their time', as
     await showDeepDetails(page);
   });
   await test.step('When they turn on Fossils', async () => {
-    await page.getByRole('button', { name: 'Fossils' }).click();
+    await page.getByRole('button', { name: 'Fossils', exact: true }).click();
   });
   await test.step('Then dinosaurs and others are marked, counted, with the source', async () => {
     await expect(page).toHaveURL(/layers=[a-z,]*fossils/);

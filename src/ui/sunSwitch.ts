@@ -9,7 +9,11 @@ export interface SunSwitch {
   render(layer: SunLayer, visible: boolean): void;
 }
 
-export function createSunSwitch(onSelect: (layer: SunLayer) => void): SunSwitch {
+export function createSunSwitch(
+  onSelect: (layer: SunLayer) => void,
+  /** The book that says where the Sun's pictures come from, beside the picker's label. */
+  why?: HTMLElement,
+): SunSwitch {
   const buttons = element('div', {
     class: 'view-switch sun-switch',
     role: 'group',
@@ -27,6 +31,7 @@ export function createSunSwitch(onSelect: (layer: SunLayer) => void): SunSwitch 
       credit = nextCredit;
       buttons.replaceChildren(
         element('span', { class: 'switch-label' }, 'Light'),
+        ...(why === undefined ? [] : [why]),
         ...next.map(({ key, label }) => {
           const button = element(
             'button',

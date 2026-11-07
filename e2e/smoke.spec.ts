@@ -982,7 +982,7 @@ test('Back steps through deep time: milestones and layers, and its layers stay o
   await expect(page).toHaveURL(/&ma=250(&|$)/);
   await page.getByRole('button', { name: 'Later milestone' }).click();
   await expect(page).not.toHaveURL(/&ma=250(&|$)/);
-  await page.getByRole('button', { name: 'Temperature' }).click();
+  await page.getByRole('button', { name: 'Temperature', exact: true }).click();
   await expect(page).toHaveURL(/layers=[^&]*temperature/);
   // Back undoes the layer, then the milestone, and stays in deep time.
   await page.goBack();
@@ -1360,7 +1360,7 @@ test('deep time colours the globe by temperature, with the global mean and its c
   await globeRendered(page);
   await showDeepDetails(page);
   const globe = page.getByTestId('globe');
-  const toggle = page.getByRole('button', { name: 'Temperature' });
+  const toggle = page.getByRole('button', { name: 'Temperature', exact: true });
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
@@ -1403,7 +1403,7 @@ test('deep time colours the globe by temperature, with the global mean and its c
   await globeRendered(page);
   await expect(page.locator('.temperature-note')).toContainText('does not say why');
 
-  await page.getByRole('button', { name: 'Temperature' }).click();
+  await page.getByRole('button', { name: 'Temperature', exact: true }).click();
   await expect(globe).toHaveAttribute('data-temperature', 'off');
   await expect(page.locator('.temperature-legend')).toBeHidden();
   expect(problems).toEqual([]);
@@ -1414,7 +1414,7 @@ test('deep time charts sea level by four reconstructions, side by side', async (
   await page.goto('./?ma=250');
   await globeRendered(page);
   await showDeepDetails(page);
-  const toggle = page.getByRole('button', { name: 'Sea level' });
+  const toggle = page.getByRole('button', { name: 'Sea level', exact: true });
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page).toHaveURL(/layers=[^&]*sealevel/);
@@ -1474,7 +1474,7 @@ test('deep time narrows to the ice ages, in thousands of years', async ({ page }
   await expect(page.locator('.hud-date')).toHaveText('21,000 years ago');
   await expect(page.getByTestId('ice-note')).toBeVisible();
   await expect(page.getByLabel('Thousands of years ago')).toHaveValue('-21');
-  await expect(page.getByRole('button', { name: 'Temperature' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toBeDisabled();
   // Both ice-age reconstructions read the glacial maximum.
   const legend = page.getByTestId('sea-legend');
   await expect(legend.locator('[data-series="bintanja-2008"]')).toContainText('−123 m');
@@ -1544,7 +1544,7 @@ test('deep time outlines a second reconstruction’s continents', async ({ page 
   await page.goto('./?ma=252');
   await globeRendered(page);
   const globe = page.getByTestId('globe');
-  const toggle = page.getByRole('button', { name: 'Plates' });
+  const toggle = page.getByRole('button', { name: 'Plates', exact: true });
   await toggle.click();
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page).toHaveURL(/layers=[^&]*plates/);
@@ -1619,7 +1619,7 @@ test('deep time reaches back 4.6 billion years, sketching hypotheses before the 
   await expect(page.locator('.hud-detail')).toHaveText('Mesoarchean era · Archean eon');
   await expect(globe).toHaveAttribute('data-uncharted', 'true');
   await expect(page.getByTestId('sketch-headline')).toContainText('Sketch, not a map');
-  await expect(page.getByRole('button', { name: 'Temperature' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toBeDisabled();
 
   // Milestones reach back too: the next older is the Late Heavy Bombardment's oldest view.
   await page.getByRole('button', { name: 'Earlier milestone' }).click();

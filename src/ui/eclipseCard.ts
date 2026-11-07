@@ -221,7 +221,10 @@ function famousLines(famous: FamousEclipse): HTMLElement[] {
   ];
 }
 
-export function createEclipseCard(): EclipseCard {
+export function createEclipseCard(
+  /** The book that says where the eclipse's figures come from, beside the fold. */
+  why?: HTMLElement,
+): EclipseCard {
   const root = element('section', { class: 'eclipse-card', 'aria-live': 'polite', hidden: '' });
   // Folding the card leaves its title, so the globe gets the room; it stays folded as the card
   // is rebuilt while time moves.
@@ -283,6 +286,7 @@ export function createEclipseCard(): EclipseCard {
       moonView.render(isSolar(eclipse) ? null : moonInShadow(eclipse, offsetMinutes));
       root.replaceChildren(
         fold,
+        ...(why === undefined ? [] : [why]),
         isSolar(eclipse) ? text : element('div', { class: 'eclipse-head' }, text, moonView.root),
         more,
       );

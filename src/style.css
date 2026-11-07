@@ -3502,3 +3502,20 @@ body {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
+
+/* The eclipse card's book floats beside its fold, off the title's line. */
+.eclipse-card > .why-mark {
+  float: right;
+  margin: 0 4px 0 0;
+}
+
+/* A note's book leads its first line, the text running on beside it. */
+.deep-note > .why-mark:first-child {
+  float: left;
+  margin: -4px 4px 0 -4px;
+}
+
+/* Beside ΔT the book keeps its finger-sized target without making the date line taller. */
+.hud-detail .why-mark {
+  margin-block: -10px;
+}
