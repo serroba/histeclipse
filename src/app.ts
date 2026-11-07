@@ -27,9 +27,10 @@ import {
 } from './eclipses/describe';
 import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarPhases';
 import { shadowAt } from './eclipses/solar';
-import { longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
+import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { geoToVector } from './globe/geo';
 import { MOON_CAPTION, PLANET_NAMES, PLANET_PICTURES } from './globe/planetLook';
+import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
 import { createGlobe, type StateChange } from './globe/scene';
 import { createStore } from './state/store';
 import { parseViewState } from './state/url';
@@ -210,6 +211,9 @@ import {
   impactsText,
   placeThen,
   loadImpacts,
+  STRIKE_MIN_KM,
+  strikesPassed,
+  type Impact,
   type Impacts,
   type ImpactsMode,
 } from './data/impacts';
@@ -266,6 +270,8 @@ const AIM_FOV = 12;
 const PLANET_SKY_FOV = 4;
 /** How long the sky takes to turn and close in on a tapped body, ms, before going to it. */
 const SKY_GLIDE_MS = 900;
+/** Degrees from the centre of the globe in view within which a strike is played as time runs. */
+const STRIKE_IN_VIEW = 70;
 /** Earth radii (or the focused body's): beyond this the space view loads the planets. */
 const PLANETS_SHOWN_BEYOND = 1000;
 /** Pixels the zoom rail needs between the panels: its buttons, a short track and its reading. */
@@ -1914,10 +1920,43 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return { on: true, text: impactsSaid, mode: impactsMode };
     }
     // On the ice-age scale the map is today's, so the craters are where they are today.
-    const marks = impactsAt(impacts, ma, false, scale === 'ice' ? 0 : ma, impactsMode);
+    const placeMa = scale === 'ice' ? 0 : ma;
+    const marks = impactsAt(impacts, ma, false, placeMa, impactsMode);
     globe.setImpacts(marks);
+    strikeAsItPasses(state, impacts, ma, placeMa);
     impactsSaid = null;
     return { on: true, text: impactsText(impacts, marks, ma, impactsMode), mode: impactsMode };
+  }
+
+  // As deep time plays, a great impact strikes when the time passes it (#242): one at a time,
+  // only on the side of the globe in view, and never for a reader who asks for less motion.
+  let strikeFrom: number | null = null;
+  let strikeBusyUntil = 0;
+  const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  function strikeAsItPasses(state: ViewState, data: Impacts, ma: number, placeMa: number): void {
+    const from = strikeFrom;
+    strikeFrom = playing ? ma : null;
+    if (from === null || !playing || lessMotion.matches || state.focus !== 'earth') return;
+    if (performance.now() < strikeBusyUntil) return;
+    // Of those passed since the last frame, the greatest that can be seen.
+    const seen = strikesPassed(data, from, ma)
+      .map((impact) => ({ impact, place: placeThen(data, impact, placeMa) }))
+      .filter(
+        (each): each is { impact: Impact; place: GeoPoint } =>
+          each.place !== null && angularDistance(each.place, state.camera.target) < STRIKE_IN_VIEW,
+      )
+      .sort((a, b) => (b.impact.diameterKm ?? 0) - (a.impact.diameterKm ?? 0));
+    const [greatest] = seen;
+    if (greatest === undefined) return;
+    const approach = approachOf(greatest.impact.name);
+    strikeBusyUntil = performance.now() + IMPACT_ANIMATION_MS;
+    globeContainer.dataset['strike'] = greatest.impact.name;
+    globe.playImpact({
+      place: greatest.place,
+      craterKm: greatest.impact.diameterKm ?? STRIKE_MIN_KM,
+      fromAzimuth: approach.fromAzimuth,
+      angleDegrees: approach.angleDegrees,
+    });
   }
 
   // Volcanic eruptions near the year shown, in historical time: loaded with the layer; each

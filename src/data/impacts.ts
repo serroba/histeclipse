@@ -124,6 +124,38 @@ export function impactsAt(
   return marks.sort((a, b) => (b.impact.diameterKm ?? 0) - (a.impact.diameterKm ?? 0));
 }
 
+/** As time plays, a strike is shown for craters at least this wide, km: the great ones. */
+export const STRIKE_MIN_KM = 40;
+
+/**
+ * When an impact is shown striking: the middle of its dated span. None for one dated only in
+ * words or loosely (a span wider than `WIDE_SPAN_MA`): a strike at one moment would mislead.
+ */
+export function strikeMa(impact: Impact): number | null {
+  const { olderMa, youngerMa } = impact;
+  if (olderMa === null || youngerMa === null || olderMa - youngerMa > WIDE_SPAN_MA) return null;
+  return (olderMa + youngerMa) / 2;
+}
+
+/**
+ * The great impacts whose strike falls as time runs from `fromMa` towards today to `toMa`
+ * (`fromMa` older, inclusive of `toMa`, exclusive of `fromMa`), in the order they struck.
+ */
+export function strikesPassed(
+  data: Impacts,
+  fromMa: number,
+  toMa: number,
+  minKm = STRIKE_MIN_KM,
+): readonly Impact[] {
+  if (!(fromMa > toMa)) return [];
+  return data.impacts
+    .filter((impact) => {
+      const at = strikeMa(impact);
+      return (impact.diameterKm ?? 0) >= minKm && at !== null && at < fromMa && at >= toMa;
+    })
+    .sort((a, b) => (strikeMa(b) ?? 0) - (strikeMa(a) ?? 0));
+}
+
 const KIND_NAMES: Readonly<Record<ImpactKind, string>> = {
   hypervelocity: 'Impact crater (shock metamorphism found)',
   crater: 'Impact crater (meteorite fragments found)',
