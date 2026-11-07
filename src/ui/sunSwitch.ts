@@ -30,8 +30,8 @@ export function createSunSwitch(
       layers = next;
       credit = nextCredit;
       buttons.replaceChildren(
-        element('span', { class: 'switch-label' }, 'Light'),
-        ...(why === undefined ? [] : [why]),
+        // The label and its book head the channels, which share the rows below.
+        element('span', { class: 'switch-label' }, 'Light', ...(why === undefined ? [] : [why])),
         ...next.map(({ key, label }) => {
           const button = element(
             'button',
