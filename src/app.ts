@@ -180,7 +180,8 @@ import {
 } from './data/namedPeriods';
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
-import { createWhySheet, type HereView } from './ui/whySheet';
+import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
+import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
 import { layerWhy, onScreen, type WhyId } from './sources/registry';
 import { createZoomRail } from './ui/zoomRail';
@@ -360,6 +361,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => ({ ...state, why }));
     },
     () => hereView(store.get()),
+    (id) => whyMoment(id, store.get()),
   );
   // "Why here?": while on, a tap on the globe says what each layer has there.
   let askingHere = false;
@@ -2793,6 +2795,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
     };
   }
 
+  /** What a why says of the moment shown: deep time's map, the period's own evidence. */
+  function whyMoment(id: WhyId, state: ViewState): WhyMoment | null {
+    if (id !== 'deep-evidence' || state.ma === null) return null;
+    const period = periodAt(state.ma);
+    const evidence = period === null ? undefined : PERIOD_EVIDENCE[period.name];
+    if (period === null || evidence === undefined) return null;
+    return {
+      title: `Then: the ${period.name}`,
+      lines: [evidence.map, evidence.evidence],
+      sources: evidence.sources,
+    };
+  }
+
   /** What "Here" depends on, so it is written again only when that changes. */
   function hereVersion(state: ViewState): string {
     return [
@@ -3385,7 +3400,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
       askingHere,
     );
     root.classList.toggle('is-asking-here', askingHere && state.ma === null);
-    whySheet.show(state.why, state.why === 'here' ? hereVersion(state) : '');
+    whySheet.show(
+      state.why,
+      state.why === 'here'
+        ? hereVersion(state)
+        : state.why === 'deep-evidence' && state.ma !== null
+          ? (periodAt(state.ma)?.name ?? '')
+          : '',
+    );
     historyTrack.root.hidden = state.selection !== null;
     historyTrack.extras.hidden = state.selection !== null;
     if (state.time.date.year !== previous?.time.date.year || state.layers !== previous.layers) {

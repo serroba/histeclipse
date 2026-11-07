@@ -298,3 +298,28 @@ test('"Why here?" on the rail asks for a tap, and a tap says what is there', asy
     await expect(page).toHaveURL(/loc=/);
   });
 });
+
+test('"How do we know?" speaks of the period shown, and changes with it', async ({ page }) => {
+  const sheet = page.getByRole('dialog', { name: 'How do we know what Earth looked like?' });
+  await test.step('Given the Carboniferous, with "How do we know?" open from its link', async () => {
+    await page.goto('./?ma=320&scale=all&why=deep-evidence');
+    await globeRendered(page);
+  });
+  await test.step('Then it names the period, what the map shows, and its evidence and papers', async () => {
+    await expect(sheet.getByRole('heading', { name: 'Then: the Carboniferous' })).toBeVisible();
+    await expect(sheet).toContainText('Pangaea is gathering');
+    await expect(sheet).toContainText('late Palaeozoic ice age');
+    await expect(
+      sheet
+        .locator('.why-then-sources')
+        .getByRole('link', { name: 'Montañez & Poulsen 2013', exact: true }),
+    ).toHaveAttribute('href', 'https://doi.org/10.1146/annurev.earth.031208.100118');
+  });
+  await test.step('When the moment moves into the Triassic', async () => {
+    await page.getByRole('slider', { name: 'Millions of years ago' }).fill('-240');
+  });
+  await test.step('Then the panel speaks of the Triassic', async () => {
+    await expect(sheet.getByRole('heading', { name: 'Then: the Triassic' })).toBeVisible();
+    await expect(sheet).toContainText('Lystrosaurus');
+  });
+});

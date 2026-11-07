@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { LAYERS, type Layer, type Span } from '../state/viewState';
+import { PERIOD_EVIDENCE } from './periodEvidence';
 import {
   bibtexUrl,
   citation,
@@ -10,6 +11,7 @@ import {
   SOURCES,
   WHYS,
   type Scene,
+  type SourceId,
 } from './registry';
 
 const scene = (over: Partial<Scene>): Scene => ({
@@ -58,13 +60,16 @@ describe('where everything comes from', () => {
   });
 
   it('uses every source somewhere', () => {
-    const used = new Set(
+    const used = new Set<SourceId>(
       Object.values(WHYS).flatMap((why) => [
         ...why.sources,
         ...('evidence' in why ? why.evidence.map((item) => item.source) : []),
         ...('reading' in why ? why.reading : []),
       ]),
     );
+    for (const entry of Object.values(PERIOD_EVIDENCE)) {
+      for (const id of entry.sources) used.add(id);
+    }
     for (const id of Object.keys(SOURCES)) expect(used).toContain(id);
   });
 });

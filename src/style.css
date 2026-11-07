@@ -3621,3 +3621,17 @@ body {
   color: var(--ink-muted);
   font-size: 14px;
 }
+
+/* The period's own reading, under its evidence. */
+.why-then-sources {
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.why-then-sources a {
+  color: var(--ink);
+}
+
+.why-section p + p {
+  margin-top: 6px;
+}
