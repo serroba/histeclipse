@@ -365,6 +365,43 @@ test('away from Earth the year slider stays, but Earth’s chapters rest', async
   });
 });
 
+test('from any planet the reader can look back at Earth, and see what it looks like there', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const views = page.getByRole('group', { name: 'Viewpoint' });
+  await test.step('Given Earth in focus', async () => {
+    await page.goto('./?t=2026-01-10T12:00Z&cam=10,20,3');
+    await globeRendered(page);
+  });
+  await test.step('Then the third viewpoint looks at Earth from the Moon', async () => {
+    await expect(views.getByRole('button', { name: 'Earth from Moon', exact: true })).toBeVisible();
+  });
+  await test.step('When they go to Jupiter, at opposition that day, and look back', async () => {
+    await page.goto('./?t=2026-01-10T12:00Z&cam=10,20,3&focus=jupiter');
+    await globeRendered(page);
+    await views.getByRole('button', { name: 'Earth from Jupiter', exact: true }).click();
+  });
+  await test.step('Then Earth is marked, in front of the Sun, with how it looks from there', async () => {
+    await expect(page).toHaveURL(/view=earth-from-here/);
+    await expect(page.getByTestId('body-bar')).toContainText('Earth, seen from Jupiter');
+    await expect(page.getByTestId('body-facts')).toHaveText(
+      /^4\.2\d AU away, 4\.\d″ across, 0% lit · 0° from the Sun, in its glare · the Moon at most 1\d\d″ from it$/,
+    );
+    await expect(page.getByTestId('body-picture')).toContainText('Pale Blue Dot');
+    await expect(page.locator('.space-marker', { hasText: 'Earth' }).first()).toBeVisible();
+  });
+  await test.step('When they orbit Jupiter again', async () => {
+    await views.getByRole('button', { name: 'Orbit', exact: true }).click();
+  });
+  await test.step('Then the bar speaks of Jupiter once more', async () => {
+    await expect(page).not.toHaveURL(/view=/);
+    await expect(page.getByTestId('body-bar')).toContainText('Jupiter');
+    await expect(page.getByTestId('body-bar')).not.toContainText('Earth, seen from');
+  });
+  expect(problems).toEqual([]);
+});
+
 test('close up, a planet wears its mission’s map, captioned and credited', async ({ page }) => {
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');

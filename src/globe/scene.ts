@@ -77,6 +77,7 @@ import {
 import {
   apparentRadiusPixels,
   attachedPose,
+  earthFromPose,
   blendPose,
   hiddenBehind,
   mergeMarkers,
@@ -1756,6 +1757,13 @@ export function createGlobe(
 
   function livePose(): CameraPose {
     if (viewpoint === 'free') return focusPose(focus, focusCamera);
+    // Away from Earth: stand on the body in focus and look back at Earth (from Earth itself,
+    // the Moon is the nearest place to look back from).
+    if (viewpoint === 'earth-from-here') {
+      const body = focus === 'earth' ? 'moon' : focus;
+      const { position } = bodyFrame(body);
+      return earthFromPose([position.x, position.y, position.z], BODY_RADIUS[body]);
+    }
     // From Earth, stand where the place picked sees the Moon from.
     const place = pin.visible ? pin.getWorldPosition(new Vector3()) : null;
     return attachedPose(
@@ -2883,7 +2891,7 @@ export function createGlobe(
     setViewpoint(next) {
       if (next === 'free') pendingViewpoint = null;
       if (next === viewpoint) return;
-      if (next !== 'free' && !moon.visible) {
+      if (next !== 'free' && (!moon.visible || !bodyReady(focus))) {
         pendingViewpoint = next;
         return;
       }

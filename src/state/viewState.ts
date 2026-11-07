@@ -90,7 +90,14 @@ export type DispersalScenario = (typeof DISPERSAL_SCENARIOS)[number];
  * How the camera is placed: orbiting Earth freely, or attached to the bodies (standing on Earth
  * looking at the Moon, or on the Moon looking at Earth) and following them through time.
  */
-export const VIEWPOINTS = ['free', 'moon-from-earth', 'earth-from-moon'] as const;
+/** Orbit the body in focus; stand on Earth facing the Moon, or the reverse; or, away from Earth,
+ * stand on the body in focus and look back at Earth (#245). */
+export const VIEWPOINTS = [
+  'free',
+  'moon-from-earth',
+  'earth-from-moon',
+  'earth-from-here',
+] as const;
 export type Viewpoint = (typeof VIEWPOINTS)[number];
 
 /** The bodies the camera can centre on and orbit. */

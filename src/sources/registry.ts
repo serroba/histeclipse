@@ -317,6 +317,20 @@ export const SOURCES = {
     url: 'https://sdo.gsfc.nasa.gov/',
     licence: 'NASA, public domain',
   },
+  paleBlueDot: {
+    name: 'Voyager 1: Pale Blue Dot',
+    kind: 'imagery',
+    cite: 'NASA/JPL, “Solar System Portrait – Earth as ‘Pale Blue Dot’”, Voyager 1, 14 February 1990, NASA Photojournal PIA00452',
+    url: 'https://science.nasa.gov/photojournal/solar-system-portrait-earth-as-pale-blue-dot/',
+    licence: 'NASA, public domain',
+  },
+  dayEarthSmiled: {
+    name: 'Cassini: The Day the Earth Smiled',
+    kind: 'imagery',
+    cite: 'NASA/JPL-Caltech/Space Science Institute, “The Day the Earth Smiled: Sneak Preview”, Cassini, 19 July 2013, NASA Photojournal PIA17171',
+    url: 'https://science.nasa.gov/photojournal/the-day-the-earth-smiled-sneak-preview/',
+    licence: 'NASA, public domain',
+  },
   moonKit: {
     name: 'NASA CGI Moon Kit',
     kind: 'imagery',
@@ -646,7 +660,16 @@ export const WHYS = {
   bodies: {
     title: 'Sun, Moon and planets',
     what: 'Where the Sun, the Moon and the planets were at the moment shown, and the day and night they make.',
-    sources: ['meeus', 'elpmpp02', 'de441', 'vsop87', 'deltaTSplines', 'deltaTLongTerm'],
+    sources: [
+      'meeus',
+      'elpmpp02',
+      'de441',
+      'vsop87',
+      'deltaTSplines',
+      'deltaTLongTerm',
+      'paleBlueDot',
+      'dayEarthSmiled',
+    ],
     how: 'Worked out in your browser: the Sun by Meeus’s formulas and the Moon by ELP/MPP02, both checked against JPL DE441 (the Moon’s mean motion refitted to it); the planets by VSOP87. Clock time is turned into Earth’s turning by ΔT, whose uncertainty grows the further back the date.',
   },
   eclipses: {
