@@ -27,6 +27,7 @@ import {
 } from 'three';
 
 import type { GeoPoint } from '../state/viewState';
+import { frameClock } from '../util/frameClock';
 import { geoToVector } from './geo';
 
 export interface ImpactSpec {
@@ -97,8 +98,9 @@ const ease = (t: number): number => 1 - (1 - t) ** 3;
 const clamp = (t: number): number => Math.min(1, Math.max(0, t));
 
 export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
-  // Timed by the frames' own clock, from the first frame it is drawn in.
-  let start: number | null = null;
+  // Timed by the frames' own clock, from the first frame it is drawn in; a frame that comes very
+  // late (a large map loading) pauses it rather than skipping to the end.
+  const clock = frameClock();
   const group = new Group();
   const ground = new Vector3(...geoToVector(spec.place, 1.002));
   const up = ground.clone().normalize();
@@ -173,8 +175,7 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
   return {
     group,
     update(now) {
-      start ??= now;
-      const t = now - start;
+      const t = clock.tick(now);
       // The approach, quickening as it falls.
       const falling = clamp(t / APPROACH);
       const at = origin.clone().lerp(ground, falling ** 1.6);

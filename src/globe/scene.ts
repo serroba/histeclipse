@@ -77,6 +77,7 @@ import {
 import {
   apparentRadiusPixels,
   attachedPose,
+  earthFromPose,
   blendPose,
   hiddenBehind,
   mergeMarkers,
@@ -1738,8 +1739,9 @@ export function createGlobe(
   );
   // Rotation along the sphere (a slerp), which also handles flying to the opposite side.
   let flight: { from: Vector3; rotation: Quaternion; start: number } | null = null;
-  // An impact playing, if one is.
+  // An impact playing, if one is, and how many have played out.
   let impact: ImpactAnimation | null = null;
+  let impactsPlayed = 0;
   // Distances from the body in focus, in scene units; it starts on the first frame, timed by the
   // frames' own clock (which can run apart from performance.now()).
   let zoomFlight: { from: number; to: number; start: number | null } | null = null;
@@ -1782,6 +1784,13 @@ export function createGlobe(
 
   function livePose(): CameraPose {
     if (viewpoint === 'free') return focusPose(focus, focusCamera);
+    // Away from Earth: stand on the body in focus and look back at Earth (from Earth itself,
+    // the Moon is the nearest place to look back from).
+    if (viewpoint === 'earth-from-here') {
+      const body = focus === 'earth' ? 'moon' : focus;
+      const { position } = bodyFrame(body);
+      return earthFromPose([position.x, position.y, position.z], BODY_RADIUS[body]);
+    }
     // From Earth, stand where the place picked sees the Moon from.
     const place = pin.visible ? pin.getWorldPosition(new Vector3()) : null;
     return attachedPose(
@@ -1907,6 +1916,9 @@ export function createGlobe(
       if (!playing) {
         impact.dispose();
         impact = null;
+        // How many have played out, for whoever needs to know one did, however briefly it showed.
+        impactsPlayed += 1;
+        container.dataset['impactsPlayed'] = String(impactsPlayed);
       }
     }
     if (zoomFlight !== null && viewFlight === null) {
@@ -2939,7 +2951,7 @@ export function createGlobe(
     setViewpoint(next) {
       if (next === 'free') pendingViewpoint = null;
       if (next === viewpoint) return;
-      if (next !== 'free' && !moon.visible) {
+      if (next !== 'free' && (!moon.visible || !bodyReady(focus))) {
         pendingViewpoint = next;
         return;
       }
