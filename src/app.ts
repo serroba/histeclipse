@@ -1010,16 +1010,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
   parsed.warnings.forEach(notify);
 
-  const [deltaT, lunarCatalog, solarCatalog, globe] = await Promise.all([
+  // The globe draws at once and takes its maps as they arrive; nothing below waits on them.
+  const globe = createGlobe(globeContainer, {
+    camera: store.get().camera,
+    textureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
+    moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
+    focus: store.get().focus,
+  });
+  const [deltaT, lunarCatalog, solarCatalog] = await Promise.all([
     DeltaT.load(`${base}data/delta-t.json`, (url) => fetch(url)),
     LunarCatalog.load(`${base}data/lunar/`, (url) => fetch(url)),
     SolarCatalog.load(`${base}data/solar/`, (url) => fetch(url)),
-    createGlobe(globeContainer, {
-      camera: store.get().camera,
-      textureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
-      moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
-      focus: store.get().focus,
-    }),
   ]);
   const sync = createUrlSync(browserUrlWriter(window.location, window.history));
 
