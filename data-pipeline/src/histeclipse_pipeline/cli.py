@@ -35,6 +35,7 @@ from histeclipse_pipeline.paleodem import fetch_paleodem
 from histeclipse_pipeline.paleotemp import fetch_paleotemp
 from histeclipse_pipeline.periodo import fetch_periods
 from histeclipse_pipeline.pictures import fetch_pictures
+from histeclipse_pipeline.planet_maps import fetch_planet_maps
 from histeclipse_pipeline.planets import (
     APPARENT,
     PLANET_APPARENT_DESCRIPTION,
@@ -287,6 +288,12 @@ def timezones(args: Arguments) -> int:  # pragma: no cover - needs network acces
     return _say(f"wrote {count} time zones to {args.out}")
 
 
+def planet_maps(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the planets' global maps from their missions, for the close-up view."""
+    count = fetch_planet_maps(args.out, Path(".cache/planet-maps"))
+    return _say(f"wrote {count} planet maps to {args.out}")
+
+
 def pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the lead picture, author and licence of each Wikipedia page a data file names."""
     count = fetch_pictures(args.source, args.out, args.must_mention)
@@ -480,6 +487,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         volcanoes,
         "write Holocene volcanoes and their eruptions (Smithsonian GVP), and their summaries",
         "output JSON file",
+    ),
+    "planet-maps": (
+        planet_maps,
+        "write the planets' global maps from their missions (MESSENGER, Viking, Cassini)",
+        "output folder",
     ),
     "pictures": (
         pictures,

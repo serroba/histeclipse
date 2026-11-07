@@ -3653,6 +3653,15 @@ body {
   color: var(--ink);
 }
 
+.body-bar-picture {
+  display: block;
+  font-size: 12px;
+}
+
+.body-bar-picture[hidden] {
+  display: none;
+}
+
 .bottom[data-away='true'] .eclipse-row,
 .bottom[data-away='true'] .seen-controls,
 .bottom[data-away='true'] .ways-legend,

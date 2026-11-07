@@ -109,6 +109,9 @@ test('as deep time plays, the craters show as they strike, not only once it stop
 test('a crater’s card estimates its impactor, and plays the impact as an illustration', async ({
   page,
 }) => {
+  // Two impacts, each a turn of the globe and five seconds of animation: more than the usual
+  // budget on a slow runner.
+  test.slow();
   const problems = collectProblems(page);
   const card = page.getByTestId('marker-card');
   const globe = page.getByTestId('globe');

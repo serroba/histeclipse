@@ -6,7 +6,8 @@
  * Elements (Archinal et al. 2018, the 2015 report), at J2000; the poles drift by well under a
  * degree over the site's span, which a view this small cannot show. Saturn's ring radii are from
  * NASA's Saturnian Rings Fact Sheet. Colours are rough true-colour impressions, with Jupiter's and
- * Saturn's main belts placed at their usual latitudes: they are not maps of the surfaces.
+ * Saturn's main belts placed at their usual latitudes: they are not maps of the surfaces. Close
+ * up, Mercury, Mars and Jupiter wear their missions' global maps instead (`PLANET_PICTURES`).
  */
 
 import type { PlanetName } from '../astro/planets';
@@ -123,3 +124,41 @@ export function ringOpacity(radiusKm: number): number {
   if (Math.abs(radiusKm - 133_589) < 160) return 0.05; // Encke Gap
   return 0.55; // A ring
 }
+
+/** What a planet wears close up, and what the picture is, when it was made and whose it is. */
+export interface PlanetPicture {
+  /** A mission's global map under `public/`, or null where the painted colours stand in. */
+  readonly map: string | null;
+  readonly caption: string;
+}
+
+export const PLANET_PICTURES: Readonly<Record<PlanetName, PlanetPicture>> = {
+  mercury: {
+    map: 'textures/planets/mercury-2048.jpg',
+    caption:
+      'Pictured: MESSENGER’s map of the whole planet, from its first months in orbit (2011), brightened to show the craters. NASA/JHU APL/Carnegie Institution of Washington.',
+  },
+  venus: {
+    map: null,
+    caption:
+      'Pictured: the cloud tops, as a plain colour. From space the clouds hide the ground, which only radar (Magellan, 1990–94) has mapped.',
+  },
+  mars: {
+    map: 'textures/planets/mars-2048.jpg',
+    caption:
+      'Pictured: the Viking orbiters’ colour mosaic of the whole planet, from images of 1976–80. NASA/JPL/USGS.',
+  },
+  jupiter: {
+    map: 'textures/planets/jupiter-2048.jpg',
+    caption:
+      'Pictured: Cassini’s map of the cloud tops, from its flyby in December 2000; the clouds have changed since. NASA/JPL/Space Science Institute.',
+  },
+  saturn: {
+    map: null,
+    caption: 'Pictured: the main bands, painted as a rough impression, not a map.',
+  },
+};
+
+/** What the Moon wears: LRO's mosaic, from NASA's CGI Moon Kit. */
+export const MOON_CAPTION =
+  'Pictured: the Lunar Reconnaissance Orbiter’s colour mosaic, from NASA’s CGI Moon Kit. NASA’s Scientific Visualization Studio.';

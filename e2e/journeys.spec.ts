@@ -4,7 +4,15 @@
  * The catalogue is in `e2e/README.md`.
  */
 
-import { collectProblems, expect, globeRendered, openLayers, pickSpan, test } from './support';
+import {
+  collectProblems,
+  expect,
+  globeRendered,
+  openLayers,
+  openSources,
+  pickSpan,
+  test,
+} from './support';
 
 test('a newcomer starts with a famous eclipse and looks at the sky that day', async ({ page }) => {
   const problems = collectProblems(page);
@@ -314,6 +322,46 @@ test('away from Earth, the bar speaks of the body in view, and Earth’s own par
     );
     await body.getByRole('button', { name: 'Why: Sun, Moon and planets' }).click();
     await expect(page.getByRole('dialog', { name: 'Sun, Moon and planets' })).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});
+
+test('close up, a planet wears its mission’s map, captioned and credited', async ({ page }) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const picture = page.getByTestId('body-picture');
+  await test.step('Given Mars in view, close up', async () => {
+    await page.goto('./?t=2026-01-10T12:00&cam=10,20,4&focus=mars');
+    await globeRendered(page);
+  });
+  await test.step('Then it wears the Viking orbiters’ map, and the bar says what and whose it is', async () => {
+    await expect(globe).toHaveAttribute('data-planet-map', 'mars', { timeout: 30_000 });
+    await expect(picture).toHaveText(
+      'Pictured: the Viking orbiters’ colour mosaic of the whole planet, from images of 1976–80. NASA/JPL/USGS.',
+    );
+  });
+  await test.step('When they open Sources', async () => {
+    await openSources(page);
+  });
+  await test.step('Then the close-up maps are listed first, with the bodies’ positions', async () => {
+    const list = page.getByTestId('sources-list');
+    await expect(list.locator('.why-row-title').first()).toHaveText(
+      'The Moon and planets close up',
+    );
+    await list.getByRole('button', { name: 'Why: The Moon and planets close up' }).click();
+    const sheet = page.getByRole('dialog', { name: 'The Moon and planets close up' });
+    await expect(sheet.getByRole('link', { name: 'Viking colour mosaic of Mars' })).toHaveAttribute(
+      'href',
+      'https://astrogeology.usgs.gov/search/map/mars_viking_global_color_mosaic_925m',
+    );
+  });
+  await test.step('When they look at Venus instead', async () => {
+    await page.goto('./?t=2026-01-10T12:00&cam=10,20,4&focus=venus');
+    await globeRendered(page);
+  });
+  await test.step('Then the bar says why it shows only cloud, and no map is fetched', async () => {
+    await expect(picture).toContainText('From space the clouds hide the ground');
+    await expect(globe).not.toHaveAttribute('data-planet-map');
   });
   expect(problems).toEqual([]);
 });

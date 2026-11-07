@@ -111,6 +111,8 @@ describe('what is on screen now', () => {
   it('follows the view: the ice ages’ Earth, the Sun close up, the sky', () => {
     expect(onScreen(scene({ span: 'ice' }))[0]).toBe('ice-surface');
     expect(onScreen(scene({ focus: 'sun' }))[0]).toBe('sun');
+    expect(onScreen(scene({ focus: 'mars' })).slice(0, 2)).toEqual(['close-up', 'bodies']);
+    expect(onScreen(scene({ focus: 'moon', span: 'ice' }))[0]).toBe('ice-surface');
     expect(onScreen(scene({ mode: 'sky' }))).toEqual(['sky', 'bodies']);
   });
 });
