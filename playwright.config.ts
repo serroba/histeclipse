@@ -19,6 +19,9 @@ export default defineConfig<DisplayOptions>({
   use: {
     baseURL: remoteBaseURL ?? localBaseURL,
     trace: 'retain-on-failure',
+    // A first visit turns to the reader's time zone; UTC has no place, so the usual first view
+    // holds wherever the suite runs. Scenarios about the time zone pick their own.
+    timezoneId: 'UTC',
   },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
