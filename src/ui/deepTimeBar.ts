@@ -6,6 +6,7 @@
 
 import { MAP_KEY, MILESTONE_KEY } from '../deepTime/colourKey';
 import { earthFacts } from '../deepTime/earthFacts';
+import { polaritySpans } from '../deepTime/earthState';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { formatMa, type Period, periodShort } from '../deepTime/periods';
 import { gasText, type Atmosphere } from '../data/atmosphere';
@@ -23,6 +24,7 @@ import { createBandChart } from './bandChart';
 import { fossilsText, type FossilsAt } from '../data/fossils';
 import type { ClaimLine, HumansView } from '../data/humanClaims';
 import type { IceOutlines } from '../data/iceOutlines';
+import type { PolarityScale } from '../data/polarity';
 import type { IceStandIn } from '../data/iceSheets';
 import { SEA_ICE_MODELS, type SeaIceModel } from '../data/seaIce';
 import type { SeaLevelIndex } from '../data/seaLevel';
@@ -52,6 +54,7 @@ import { bookIcon, uiIcon } from './icons';
 import { createGasChart } from './gasChart';
 import { createMilestonePanel } from './milestonePanel';
 import { createPeriodBands } from './periodBands';
+import { createPolarityStrip } from './polarityStrip';
 import { createSeaLevelChart } from './seaLevelChart';
 
 /** Each step button moves by one elevation map, or on the ice-age scale by 5,000 years. */
@@ -262,6 +265,8 @@ export interface DeepTimeView {
   /** The oldest moment the maps reach, Ma. */
   readonly oldest: number;
   readonly period: Period | null;
+  /** Every reversal of the last 83 Ma, once loaded (null until then). */
+  readonly polarity: PolarityScale | null;
   readonly playing: boolean;
   /** How fast it plays, millions of years a second: one of the span's own speeds. */
   readonly speed: number;
@@ -731,7 +736,16 @@ export function createDeepTimeBar(handlers: {
   const bands = createPeriodBands((ma) => {
     handlers.onMa(ma, true);
   });
-  const track = element('div', { class: 'deep-track' }, seaLevel.chart, slider, marks, bands.root);
+  const polarityStrip = createPolarityStrip();
+  const track = element(
+    'div',
+    { class: 'deep-track' },
+    seaLevel.chart,
+    slider,
+    marks,
+    bands.root,
+    polarityStrip.root,
+  );
   const milestones = createMilestonePanel({
     onMa(ma) {
       handlers.onMa(ma, true);
@@ -1291,6 +1305,7 @@ export function createDeepTimeBar(handlers: {
         );
       }
       bands.render({ oldest: view.oldest, ma: view.ma, playing: view.playing });
+      polarityStrip.render(polaritySpans(view.polarity, view.oldest), view.oldest);
       const ice = view.scale === 'ice';
       const perMa = ice ? 1000 : 1;
       const uncharted = view.ma > view.mapsReach;
@@ -1339,7 +1354,7 @@ export function createDeepTimeBar(handlers: {
       when.textContent = formatMa(view.ma);
       period.textContent = view.period === null ? '' : periodShort(view.period);
       facts.replaceChildren(
-        ...earthFacts(view.ma).flatMap(({ label, text }) => [
+        ...earthFacts(view.ma, view.polarity).flatMap(({ label, text }) => [
           element('dt', {}, label),
           element('dd', {}, text),
         ]),

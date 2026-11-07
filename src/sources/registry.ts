@@ -345,6 +345,19 @@ export const SOURCES = {
     url: 'https://science.nasa.gov/photojournal/cassinis-best-maps-of-jupiter-cylindrical-map/',
     licence: 'NASA, public domain',
   },
+  gts2020Polarity: {
+    name: 'GTS 2020: Geomagnetic Polarity Time Scale',
+    kind: 'dataset',
+    cite: 'Ogg, J. G. (2020). Geomagnetic Polarity Time Scale. In Gradstein, Ogg, Schmitz & Ogg (eds.), Geologic Time Scale 2020, 159–192. Elsevier',
+    url: 'https://doi.org/10.1016/B978-0-12-824360-2.00005-X',
+  },
+  pmagpy: {
+    name: 'PmagPy',
+    kind: 'model',
+    cite: 'Tauxe, L., Shaar, R., Jonestrask, L., et al. (2016). PmagPy: software package for paleomagnetic data analysis and a bridge to the Magnetics Information Consortium (MagIC) database. Geochemistry, Geophysics, Geosystems 17, 2450–2463',
+    url: 'https://doi.org/10.1002/2016GC006307',
+    licence: 'BSD-3-Clause',
+  },
   helioviewer: {
     name: 'Helioviewer',
     kind: 'imagery',
@@ -652,6 +665,8 @@ export const WHYS = {
       'paleodem',
       'tarduno2010',
       'tarduno2015',
+      'gts2020Polarity',
+      'pmagpy',
       'laskar2004',
       'laskar1993',
       'iers',
@@ -661,7 +676,7 @@ export const WHYS = {
       'gough1981',
       'saganMullen1972',
     ],
-    how: 'Each fact names its source in its text. The day’s length is read between measurements (corals, a rudist shell, tidal rhythmites), and its ± is the source’s where it gives one.',
+    how: 'Each fact names its source in its text. The day’s length is read between measurements (corals, a rudist shell, tidal rhythmites), and its ± is the source’s where it gives one. The magnetic field’s reversals of the last 83 million years are GTS 2020’s, as PmagPy carries them; before that, the superchrons, and between them a field reversing too often to draw here. The globe’s poles are the spin axis; magnetic north is marked at the pole a compass pointed to, averaged over thousands of years.',
     others:
       'Where sources disagree (a much larger Precambrian tilt; the faint young Sun paradox) the text says so.',
   },

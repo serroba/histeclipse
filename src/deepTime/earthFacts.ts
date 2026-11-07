@@ -3,6 +3,7 @@
  * the deep-time bar. Each says how it is known; uncertain things say so.
  */
 
+import { chronAt, type PolarityScale } from '../data/polarity';
 import { dayMeasurementsAround, fieldAt, type DayMeasurement, TILT } from './earthState';
 import { sunBrightness } from './sketch';
 
@@ -25,14 +26,16 @@ function measured(measurement: DayMeasurement): string {
 /** Before this, the reversal record is too sparse to say what the field was doing. */
 const SPARSE_FIELD_MA = 540;
 
-function field(ma: number): string {
+function field(ma: number, scale: PolarityScale | null): string {
   if (ma > SPARSE_FIELD_MA) {
     return 'Too far back to say which way it pointed: the record is sparse. A magnetic field existed by 3.45–3.4 billion years ago (Tarduno et al. 2010); one recorded in 4.2-billion-year-old zircons (Tarduno et al. 2015) has been questioned (Weiss et al. 2018).';
   }
-  const { polarity, interval, landRecord } = fieldAt(ma);
+  const { polarity, interval, landRecord } = fieldAt(ma, scale);
+  const chron = scale === null ? null : chronAt(scale, ma);
+  const named = chron === null ? '' : ` (chron ${chron}, GTS 2020)`;
   const state = {
-    normal: 'Normal polarity, as today: a compass would point north.',
-    reversed: 'Reversed polarity: a compass would point south.',
+    normal: `Normal polarity, as today${named}: a compass would point north.`,
+    reversed: `Reversed polarity${named}: a compass would point south.`,
     mixed:
       'Reversing often: north and south swapped every few hundred thousand years, so either way round at this moment.',
   }[polarity];
@@ -65,13 +68,13 @@ function sun(ma: number): string {
 const PRECAMBRIAN_TILT =
   'A much larger tilt has been proposed for these times (Williams 1993) and argued to be unlikely (Néron de Surgy & Laskar 1997). Today: ';
 
-export function earthFacts(ma: number): readonly EarthFact[] {
+export function earthFacts(ma: number, scale: PolarityScale | null = null): readonly EarthFact[] {
   return [
     {
       label: 'Poles',
-      text: 'The globe’s poles are the spin axis then, found from magnetism frozen in rocks. The continents moved beneath them, by plate motion and true polar wander.',
+      text: 'The globe’s poles are the spin axis then, found from magnetism frozen in rocks: the poles stay put and the continents moved beneath them, by plate motion and true polar wander. Magnetic north is marked at the pole a compass pointed to; it swapped at each reversal, drawn under the slider.',
     },
-    { label: 'Magnetic field', text: field(ma) },
+    { label: 'Magnetic field', text: field(ma, scale) },
     {
       label: 'Tilt',
       text: `${ma > SPARSE_FIELD_MA ? PRECAMBRIAN_TILT : ''}Between ${String(TILT.min)}° and ${String(TILT.max)}°, cycling every ${(TILT.periodYears / 1000).toFixed(0)},000 years today (faster then, with the Moon nearer); ${String(TILT.today)}° now. Too quick to show here. The Moon keeps it from swinging further (${TILT.source}).`,
