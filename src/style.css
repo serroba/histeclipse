@@ -3635,3 +3635,27 @@ body {
 .why-section p + p {
   margin-top: 6px;
 }
+
+/* Away from Earth: the bar says what the body in view is doing, and Earth's own parts rest
+   (the year's eclipses, Seen from, the ways-of-life key and the states' ticker). */
+.body-bar {
+  margin: 0;
+  padding: 0 4px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.body-bar[hidden] {
+  display: none;
+}
+
+.body-bar-name {
+  color: var(--ink);
+}
+
+.bottom[data-away='true'] .eclipse-row,
+.bottom[data-away='true'] .seen-controls,
+.bottom[data-away='true'] .ways-legend,
+.bottom[data-away='true'] .history-notes {
+  display: none;
+}

@@ -277,3 +277,43 @@ test('with the Sun in focus, the rail measures from the Sun and leads back to Ea
   });
   expect(problems).toEqual([]);
 });
+
+test('away from Earth, the bar speaks of the body in view, and Earth’s own parts rest', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const body = page.getByTestId('body-bar');
+  await test.step('Given Earth, with an eclipse year’s list and the ways of life on', async () => {
+    await page.goto('./?t=2026-01-10T12:00&layers=lunar,solar,ways');
+    await globeRendered(page);
+  });
+  await test.step('Then the bar is Earth’s: no body line, the year’s eclipses listed', async () => {
+    await expect(body).toBeHidden();
+    await expect(page.getByRole('list', { name: 'Eclipses this year' })).toBeVisible();
+  });
+  await test.step('When they look at Jupiter, at opposition that day', async () => {
+    await page.goto('./?t=2026-01-10T12:00&cam=10,20,4&focus=jupiter&layers=lunar,solar,ways');
+    await globeRendered(page);
+  });
+  await test.step('Then the bar says where Jupiter is, and the eclipses and ways of life rest', async () => {
+    await expect(body).toContainText('Jupiter');
+    await expect(page.getByTestId('body-facts')).toHaveText(
+      /^4\.2\d AU from Earth, 5\.2\d from the Sun · 100% lit, magnitude −2\.\d · in the evening sky, 1(79|80)° east of the Sun$/,
+    );
+    await expect(page.getByRole('list', { name: 'Eclipses this year' })).toBeHidden();
+    await expect(page.getByTestId('ways-legend')).toBeHidden();
+    await expect(page.getByRole('slider', { name: 'Year in the Holocene' })).toBeVisible();
+  });
+  await test.step('When they look at the Moon on a full-Moon day', async () => {
+    await page.goto('./?t=2025-11-05T12:00&cam=0,180,3&focus=moon');
+    await globeRendered(page);
+  });
+  await test.step('Then the bar gives its phase and distance, and its book opens the sources', async () => {
+    await expect(page.getByTestId('body-facts')).toHaveText(
+      /^Full Moon, 100% lit · 357,000 km from Earth$/,
+    );
+    await body.getByRole('button', { name: 'Why: Sun, Moon and planets' }).click();
+    await expect(page.getByRole('dialog', { name: 'Sun, Moon and planets' })).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});
