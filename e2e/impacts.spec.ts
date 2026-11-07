@@ -105,3 +105,42 @@ test('as deep time plays, the craters show as they strike, not only once it stop
   });
   expect(problems).toEqual([]);
 });
+
+test('a crater’s card estimates its impactor, and plays the impact as an illustration', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const card = page.getByTestId('marker-card');
+  const globe = page.getByTestId('globe');
+  for (const [where, link] of [
+    ['today', './?t=2024-04-08T18:17&layers=impacts&cam=20,-90,3'],
+    [
+      '66 million years ago, where the plates had it',
+      './?ma=66&scale=all&layers=impacts&cam=20,-70,3',
+    ],
+  ] as const) {
+    await test.step(`Given Chicxulub’s card, ${where}`, async () => {
+      await page.goto(link);
+      await globeRendered(page);
+      const marker = page.locator('[data-pick^="impact:"]', { hasText: 'Chicxulub' }).first();
+      await marker.click({ force: true });
+      await expect(card).toBeVisible();
+    });
+    await test.step('Then it estimates the impactor, saying what is assumed and whose the angle is', async () => {
+      await expect(card).toContainText(
+        /About 1\d km across, by the crater-scaling laws of Collins et al\. \(2005\)/,
+      );
+      await expect(card).toContainText('60° from the north-east, as Collins et al. (2020) found');
+      await expect(card).toContainText('An estimate');
+    });
+    await test.step('When they play the impact', async () => {
+      await card.getByRole('button', { name: 'Play the impact (an illustration)' }).click();
+    });
+    await test.step('Then the card makes way, the impact plays out, and ends', async () => {
+      await expect(card).toBeHidden();
+      await expect(globe).toHaveAttribute('data-impact-playing', 'true', { timeout: 5_000 });
+      await expect(globe).toHaveAttribute('data-impact-playing', 'false', { timeout: 20_000 });
+    });
+  }
+  expect(problems).toEqual([]);
+});

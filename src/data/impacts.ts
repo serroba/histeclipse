@@ -63,7 +63,7 @@ function between(a: number, b: number, mix: number): number {
 }
 
 /** Where an impact lay `ma` million years ago, between the steps around it; null on no plate. */
-function placeThen(data: Impacts, impact: Impact, ma: number): GeoPoint | null {
+export function placeThen(data: Impacts, impact: Impact, ma: number): GeoPoint | null {
   const at = ma / data.stepMa;
   const index = Math.floor(at);
   const younger = impact.then[index];

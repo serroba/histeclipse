@@ -26,6 +26,7 @@ export default defineConfig({
         'src/globe/empireCanvas.ts',
         'src/globe/arrivalGrid.ts',
         'src/globe/planetMeshes.ts',
+        'src/globe/impactAnimation.ts',
         'src/sky/skyScene.ts',
         'src/ui/**',
       ],

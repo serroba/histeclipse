@@ -13,6 +13,8 @@ export interface MarkerCardContent {
   readonly image?: { readonly src: string; readonly alt: string; readonly credit: string };
   /** A word on what the source can and cannot say. */
   readonly note?: string;
+  /** Something to do with it, such as playing an impact: the card closes first, to show it. */
+  readonly action?: { readonly label: string; readonly run: () => void };
 }
 
 export interface MarkerCard {
@@ -69,9 +71,18 @@ export function createMarkerCard(): MarkerCard {
     if (event.target === dialog) dialog.close();
   });
 
+  function actionButton(action: NonNullable<MarkerCardContent['action']>): HTMLButtonElement {
+    const button = element('button', { type: 'button', class: 'marker-card-action' }, action.label);
+    button.addEventListener('click', () => {
+      dialog.close();
+      action.run();
+    });
+    return button;
+  }
+
   return {
     dialog,
-    show({ title: text, facts, links, image, note }) {
+    show({ title: text, facts, links, image, note, action }) {
       title.textContent = text;
       const shown = links.filter((link) => safeLink(link.href));
       body.replaceChildren(
@@ -85,6 +96,7 @@ export function createMarkerCard(): MarkerCard {
           ]),
         ),
         ...(note === undefined ? [] : [element('p', { class: 'marker-card-note' }, note)]),
+        ...(action === undefined ? [] : [actionButton(action)]),
         ...(shown.length === 0
           ? []
           : [
