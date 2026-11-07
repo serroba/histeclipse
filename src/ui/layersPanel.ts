@@ -15,6 +15,7 @@ import {
   type Span,
 } from '../state/viewState';
 import { element } from './dom';
+import { uiIcon, type UiIcon } from './icons';
 
 export interface LayersView {
   readonly layers: ReadonlySet<Layer>;
@@ -39,6 +40,26 @@ export interface LayersPanel {
   render(view: LayersView): void;
 }
 
+/** Each layer's icon, beside its name. */
+const LAYER_ICONS: Readonly<Record<Layer, UiIcon>> = {
+  empires: 'empires',
+  ways: 'ways',
+  periods: 'periods',
+  genomes: 'genomes',
+  humans: 'humans',
+  rocks: 'rocks',
+  plates: 'plates',
+  fossils: 'fossils',
+  impacts: 'impacts',
+  volcanoes: 'volcanoes',
+  temperature: 'temperature',
+  sealevel: 'seaLevel',
+  air: 'air',
+  solar: 'solar',
+  lunar: 'lunar',
+  orbits: 'orbits',
+};
+
 const SOURCE_LABELS: Readonly<Record<BorderSource, string>> = {
   cliopatria: 'Cliopatria',
   ohm: 'OpenHistoricalMap',
@@ -62,7 +83,8 @@ export function createLayersPanel(
       'aria-expanded': 'false',
       'aria-controls': 'layers-panel',
     },
-    'Layers',
+    uiIcon('layers'),
+    element('span', { class: 'icon-label' }, 'Layers'),
   );
   const close = element(
     'button',
@@ -143,6 +165,7 @@ export function createLayersPanel(
               'label',
               { class: 'layer-label' },
               box,
+              uiIcon(LAYER_ICONS[layer.id], 16),
               element('span', { class: 'layer-name' }, layer.label),
             ),
             ...(why === undefined ? [] : [why(layer.id, layer.label)]),
