@@ -247,3 +247,33 @@ test('a rail at the side shows how far out the view is, and that the planets are
   });
   expect(problems).toEqual([]);
 });
+
+test('with the Sun in focus, the rail measures from the Sun and leads back to Earth', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const rail = page.getByRole('group', { name: 'Zoom' });
+  const globe = page.getByTestId('globe');
+  await test.step('Given the Sun close up', async () => {
+    await page.goto('./?t=2024-04-08T18:17&cam=10,20,4&focus=sun');
+    await globeRendered(page);
+    await expect(globe).toHaveAttribute('data-focus', 'sun');
+  });
+  await test.step('Then the rail names the Sun’s stops and reads from the Sun', async () => {
+    await expect(rail.getByRole('button', { name: 'Zoom to The whole Sun' })).toBeAttached();
+    await expect(rail.getByRole('button', { name: 'Zoom to Out to Saturn' })).toBeAttached();
+    await expect(page.getByTestId('zoom-readout')).toHaveText('2,800,000 km');
+    await expect(page.getByRole('slider', { name: 'Distance' })).toHaveAttribute(
+      'aria-valuetext',
+      '2,800,000 km from the Sun',
+    );
+  });
+  await test.step('When they take the way back to Earth', async () => {
+    await rail.getByRole('button', { name: 'Back to Earth' }).click();
+  });
+  await test.step('Then Earth is in focus again, and the way back goes', async () => {
+    await expect(globe).toHaveAttribute('data-focus', 'earth');
+    await expect(rail.getByRole('button', { name: 'Back to Earth' })).toBeHidden();
+  });
+  expect(problems).toEqual([]);
+});

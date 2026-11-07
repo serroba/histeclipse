@@ -3178,6 +3178,25 @@ body {
   display: none;
 }
 
+/* Away from Earth, the way back to it, at the rail's top. */
+.zoom-home {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+}
+
+.zoom-home[hidden] {
+  display: none;
+}
+
 .zoom-orbits {
   display: grid;
   place-items: center;

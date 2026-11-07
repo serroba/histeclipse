@@ -365,8 +365,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   );
   const markerCard = createMarkerCard();
-  // How far out the view is, and that zooming out reaches the planets: from Earth, in the years
-  // (deep time leaves the Sun, Moon and planets out).
+  // How far out the view is, and that zooming out reaches the planets: from whichever body is
+  // in focus, in the years (deep time leaves the Sun, Moon and planets out).
   const zoomRail = createZoomRail({
     onZoom(distance) {
       globe.zoomTo(distance);
@@ -376,6 +376,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ...state,
         layers: withLayer(state.layers, 'orbits', !state.layers.has('orbits')),
       }));
+    },
+    onEarth() {
+      store.set((state) => ({ ...state, focus: 'earth', view: 'free' }));
     },
   });
   const rocksCredit = element(
@@ -3349,11 +3352,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     // With an eclipse open, its own player runs the time; the years' slider makes way.
     zoomRail.render(
-      state.mode === 'globe' &&
-        state.focus === 'earth' &&
-        state.view === 'free' &&
-        state.ma === null
-        ? state.camera.distance
+      state.mode === 'globe' && state.view === 'free' && state.ma === null
+        ? { body: state.focus, distance: state.camera.distance }
         : null,
     );
     historyTrack.root.hidden = state.selection !== null;
