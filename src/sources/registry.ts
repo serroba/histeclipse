@@ -317,6 +317,12 @@ export const SOURCES = {
     url: 'https://sdo.gsfc.nasa.gov/',
     licence: 'NASA, public domain',
   },
+  archinal2018: {
+    name: 'Archinal et al. 2018',
+    kind: 'model',
+    cite: 'Archinal, B. A., Acton, C. H., A’Hearn, M. F., et al. (2018). Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015. Celestial Mechanics and Dynamical Astronomy 130, 22',
+    url: 'https://doi.org/10.1007/s10569-017-9805-5',
+  },
   paleBlueDot: {
     name: 'Voyager 1: Pale Blue Dot',
     kind: 'imagery',
@@ -687,8 +693,8 @@ export const WHYS = {
   'close-up': {
     title: 'The Moon and planets close up',
     what: 'What the Moon and each planet look like near to: the missions’ own maps of them.',
-    sources: ['moonKit', 'messengerMap', 'vikingMap', 'cassiniJupiter'],
-    how: 'Each map is wrapped on the body as published, shrunk for the web. Which side of a planet faces you is not worked out: only its pole is set true. Venus shows its cloud tops as a plain colour, as from space the clouds hide the ground, and Saturn its main bands painted, as no mission’s global map of it is used.',
+    sources: ['moonKit', 'messengerMap', 'vikingMap', 'cassiniJupiter', 'archinal2018'],
+    how: 'Each map is wrapped on the body as published, shrunk for the web, and each planet is turned as it was at the moment shown, by the IAU’s rotation models, the light’s travel time allowed for: the face toward you is the one that faced you then (checked against JPL Horizons). Jupiter’s and Saturn’s turning is that of their interiors (System III): their clouds drift against it, so a cloud feature is not where it was that day. Venus shows its cloud tops as a plain colour, as from space the clouds hide the ground, and Saturn its main bands painted, as no mission’s global map of it is used.',
   },
   sky: {
     title: 'The night sky',

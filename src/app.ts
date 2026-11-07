@@ -1345,6 +1345,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       sunKm: sunPositionJ2000(terrestrial),
       moonKm: moonEphemeris?.position(terrestrial) ?? null,
       planetsKm: planetPositions(terrestrial),
+      jdTT: terrestrial,
     });
     lastTerrestrial = terrestrial;
     bodiesAt = terrestrial;

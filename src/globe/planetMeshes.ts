@@ -9,6 +9,7 @@ import {
   DataTexture,
   DoubleSide,
   LinearFilter,
+  Matrix4,
   Mesh,
   Quaternion,
   RedFormat,
@@ -24,6 +25,7 @@ import {
 
 import { PLANETS, type PlanetName } from '../astro/planets';
 import {
+  bodyAxes,
   colourAt,
   planetRadius,
   poleVector,
@@ -104,6 +106,11 @@ export interface PlanetMeshes {
     positions: Readonly<Record<PlanetName, Vector3>> | null,
     sun: Vector3,
     j2000ToScene: Quaternion,
+    /** The moment and the planets' geocentric positions (km), to turn each as it was seen. */
+    turn?: {
+      readonly jdTT: number;
+      readonly km: Readonly<Record<PlanetName, readonly [number, number, number]>>;
+    },
   ): void;
   /** Wrap a planet in a mission's global map, in place of its painted colours. */
   setMap(planet: PlanetName, map: Texture): void;
@@ -140,6 +147,19 @@ function ringTexture(): DataTexture {
   texture.magFilter = LinearFilter;
   texture.needsUpdate = true;
   return texture;
+}
+
+/**
+ * How a planet's mesh is turned in J2000 axes (mapped to the scene's) at a moment, seen from
+ * `distanceKm`: the mesh's +Y to its north pole and +X to its prime meridian, which SphereGeometry
+ * wraps with the middle of a map (longitude 0, east to the right).
+ */
+export function facing(planet: PlanetName, jdTT: number, distanceKm: number): Quaternion {
+  const { pole, prime } = bodyAxes(planet, jdTT, distanceKm);
+  const x = new Vector3(...toScene(prime));
+  const y = new Vector3(...toScene(pole));
+  const z = new Vector3().crossVectors(x, y);
+  return new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(x, y, z));
 }
 
 export function createPlanetMeshes(scene: Scene): PlanetMeshes {
@@ -211,7 +231,7 @@ export function createPlanetMeshes(scene: Scene): PlanetMeshes {
 
   return {
     meshes,
-    place(positions, sun, j2000ToScene) {
+    place(positions, sun, j2000ToScene, turn) {
       for (const planet of PLANETS) {
         const mesh = meshes[planet];
         if (positions === null) {
@@ -219,7 +239,11 @@ export function createPlanetMeshes(scene: Scene): PlanetMeshes {
           continue;
         }
         mesh.position.copy(positions[planet]);
-        mesh.quaternion.copy(j2000ToScene).multiply(tilts.get(planet) ?? new Quaternion());
+        const orientation =
+          turn === undefined
+            ? (tilts.get(planet) ?? new Quaternion())
+            : facing(planet, turn.jdTT, Math.hypot(...turn.km[planet]));
+        mesh.quaternion.copy(j2000ToScene).multiply(orientation);
         toSun.get(planet)?.copy(sun).sub(mesh.position).normalize();
         mesh.visible = true;
       }

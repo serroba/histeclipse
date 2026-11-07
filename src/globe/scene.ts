@@ -172,6 +172,8 @@ export interface SpaceBodies {
   readonly moonKm: readonly [number, number, number] | null;
   /** Geocentric J2000 positions of the planets in km; null until their theory loads. */
   readonly planetsKm: Readonly<Record<PlanetName, readonly [number, number, number]>> | null;
+  /** The moment, Julian Day (TT): how far each planet has turned. */
+  readonly jdTT: number;
 }
 
 /** A small image to show at once and a sharp one to follow. */
@@ -2178,6 +2180,7 @@ export function createGlobe(
             ) as Record<PlanetName, Vector3>),
         sun.position,
         sunFrame,
+        planetsKm === null ? undefined : { jdTT: bodies.jdTT, km: planetsKm },
       );
       container.dataset['planets'] = planetsKm === null ? 'off' : 'on';
       container.dataset['space'] = moon.visible ? 'moon' : 'sun';
