@@ -691,8 +691,12 @@ test('a late part that stays missing says so once, without reloading again and a
   });
 });
 
-test('the Sky button stands you where the globe is looking, and back again', async ({ page }) => {
+test('the Sky button stands you where the globe is looking, and back again', async ({
+  page,
+}, info) => {
   const problems = collectProblems(page);
+  // An upright phone looks lower, so the horizon shows between the panels.
+  const altitude = info.project.name === 'mobile' ? '12' : '30';
   await page.goto('./?t=2025-03-20T19:00Z&cam=32.5,44.4,3');
   await globeRendered(page);
   await page.getByRole('button', { name: 'Sky' }).click();
@@ -700,7 +704,7 @@ test('the Sky button stands you where the globe is looking, and back again', asy
   await expect(page.getByTestId('globe')).toBeHidden();
   await expect(page).toHaveURL(/mode=sky/);
   await expect(page).toHaveURL(/loc=32\.5000,44\.4000/);
-  await expect(page).toHaveURL(/look=180\.0,30\.0,90\.0/);
+  await expect(page).toHaveURL(new RegExp(`look=180\\.0,${altitude}\\.0,90\\.0`));
   await expect(page.getByText('Standing at 32.50° N, 44.40° E, facing S.')).toBeVisible();
 
   await page.getByRole('button', { name: 'Orbit' }).click();
@@ -737,10 +741,14 @@ test('dragging and zooming the sky turn the view, and the link follows', async (
   await page.mouse.down();
   await page.mouse.move(center.x + 200, center.y, { steps: 8 });
   await page.mouse.up();
-  // Dragging the sky to the right turns the view from south toward east.
-  await expect(page).toHaveURL(/look=1[0-7]\d\.\d,30\.0,90\.0/);
+  // Dragging the sky to the right turns the view from south toward east. (On an upright phone
+  // the field is narrowed, so it is not the link's 90°.)
+  await expect(page).toHaveURL(/look=1[0-7]\d\.\d,30\.0,\d+\.\d/);
+  const fov = (): number => Number(/look=[\d.]+,[\d.]+,([\d.]+)/.exec(page.url())?.[1]);
+  const before = fov();
   await page.mouse.wheel(0, -400);
-  await expect(page).toHaveURL(/look=1[0-7]\d\.\d,30\.0,[1-8]\d\.\d/);
+  await expect.poll(fov).toBeLessThan(before);
+  await expect(page).toHaveURL(/look=1[0-7]\d\.\d,30\.0,/);
 });
 
 test('the constellation switch draws all 88 figures, and the link keeps it', async ({ page }) => {
@@ -827,34 +835,57 @@ async function freeSpot(page: Page, x?: number): Promise<{ x: number; y: number 
   return { x: x ?? (left + viewport.width) / 2, y: (from + bottom.y) / 2 };
 }
 
-test('a tap on the sky never hides the panels; once hidden, a tap brings them back', async ({
+test('a tap on open sky clears the panels, as on the globe; another brings them back', async ({
   page,
 }) => {
-  await page.goto(BABYLON_NIGHT_3000_BCE);
-  await skyRendered(page);
   const hud = page.locator('.hud');
   const bottom = page.locator('.bottom');
-  const spot = await freeSpot(page);
+  let spot = { x: 0, y: 0 };
+  await test.step('Given the night sky over Babylon', async () => {
+    await page.goto(BABYLON_NIGHT_3000_BCE);
+    await skyRendered(page);
+    spot = await freeSpot(page);
+  });
+  await test.step('When they tap open sky, the panels clear', async () => {
+    await page.mouse.click(spot.x, spot.y);
+    await expect(hud).toBeHidden();
+    await expect(bottom).toBeHidden();
+    await expect(page.locator('#app')).toHaveAttribute('data-panels', 'hidden');
+  });
+  await test.step('And dragging still turns the sky, leaving the panels as they are', async () => {
+    await page.mouse.move(spot.x, spot.y);
+    await page.mouse.down();
+    await page.mouse.move(spot.x + 120, spot.y, { steps: 6 });
+    await page.mouse.up();
+    await expect(hud).toBeHidden();
+  });
+  await test.step('When they tap again, the panels come back', async () => {
+    await page.mouse.click(spot.x, spot.y);
+    await expect(hud).toBeVisible();
+    await expect(bottom).toBeVisible();
+  });
+});
 
-  // A stray tap leaves everything where it is.
-  await page.mouse.click(spot.x, spot.y);
-  await expect(hud).toBeVisible();
-
-  await page.getByRole('button', { name: 'Hide the panels for a full view' }).click();
-  await expect(hud).toBeHidden();
-  await expect(bottom).toBeHidden();
-  await expect(page.locator('#app')).toHaveAttribute('data-panels', 'hidden');
-
-  // Dragging still turns the sky and leaves the panels as they are.
-  await page.mouse.move(spot.x, spot.y);
-  await page.mouse.down();
-  await page.mouse.move(spot.x + 120, spot.y, { steps: 6 });
-  await page.mouse.up();
-  await expect(hud).toBeHidden();
-
-  await page.mouse.click(spot.x, spot.y);
-  await expect(hud).toBeVisible();
-  await expect(bottom).toBeVisible();
+test('on a phone held upright the sky opens low, with the horizon in view', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'about an upright phone');
+  await test.step('Given the globe, nothing chosen in the sky yet', async () => {
+    await page.goto('./?t=2026-11-07T07:49Z&loc=-33.90,151.20&cam=-33.9,151.2,3');
+    await globeRendered(page);
+  });
+  await test.step('When they open the sky', async () => {
+    await page.getByRole('button', { name: 'Sky', exact: true }).click();
+    await skyRendered(page);
+  });
+  await test.step('Then it looks low over the horizon, and shows less than a fisheye would', async () => {
+    await expect(page).toHaveURL(/look=180\.0,12\.0,/);
+    // The field across the screen is narrowed: a tall phone spans no more than 110° top to bottom.
+    await expect(page.getByTestId('sky')).toHaveAttribute(
+      'data-look',
+      /^180\.0,12\.0,(4|5)\d\.\d$/,
+    );
+  });
 });
 
 test('empty space beside the globe never hides the panels; Escape brings them back', async ({
