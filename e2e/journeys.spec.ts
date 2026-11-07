@@ -389,7 +389,11 @@ test('from any planet the reader can look back at Earth, and see what it looks l
       /^4\.2\d AU away, 4\.\d″ across, 0% lit · 0° from the Sun, in its glare · the Moon at most 1\d\d″ from it$/,
     );
     await expect(page.getByTestId('body-picture')).toContainText('Pale Blue Dot');
-    await expect(page.locator('.space-marker', { hasText: 'Earth' }).first()).toBeVisible();
+    // Marked once the flight to the viewpoint lands: the flight is timed by frames, and the
+    // 120 Hz project's clock moves a frame at a time, slowly on a runner drawing in software.
+    await expect(page.locator('.space-marker', { hasText: 'Earth' }).first()).toBeVisible({
+      timeout: 30_000,
+    });
   });
   await test.step('When they orbit Jupiter again', async () => {
     await views.getByRole('button', { name: 'Orbit', exact: true }).click();

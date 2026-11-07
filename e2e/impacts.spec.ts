@@ -143,8 +143,10 @@ test('a crater’s card estimates its impactor, and plays the impact as an illus
     });
     await test.step('Then the card makes way, the impact plays out, and ends', async () => {
       await expect(card).toBeHidden();
-      await expect(globe).toHaveAttribute('data-impact-playing', 'true', { timeout: 5_000 });
-      await expect(globe).toHaveAttribute('data-impact-playing', 'false', { timeout: 20_000 });
+      // Its outcome, not the moment it shows: on a slow runner that moment can slip by unseen,
+      // and a phone drawn in software takes a while to play it out.
+      await expect(globe).toHaveAttribute('data-impacts-played', '1', { timeout: 60_000 });
+      await expect(globe).toHaveAttribute('data-impact-playing', 'false');
     });
   }
   expect(problems).toEqual([]);
@@ -159,6 +161,8 @@ test.describe('as deep time plays, the great impacts strike', () => {
   };
 
   test('Chicxulub strikes as the time passes 66 Ma, on the side in view', async ({ page }) => {
+    // Deep time plays and an impact plays out: slow on a phone drawn in software.
+    test.slow();
     const problems = collectProblems(page);
     const globe = page.getByTestId('globe');
     await test.step('Given 70 million years ago, Impacts on, looking down on the Gulf of Mexico', async () => {
@@ -166,7 +170,7 @@ test.describe('as deep time plays, the great impacts strike', () => {
     });
     await test.step('Then, as the time passes 66 Ma, Chicxulub’s strike plays', async () => {
       await expect(globe).toHaveAttribute('data-strike', 'Chicxulub', { timeout: 20_000 });
-      await expect(globe).toHaveAttribute('data-impact-playing', 'true');
+      await expect(globe).toHaveAttribute('data-impacts-played', /^[1-9]/, { timeout: 60_000 });
     });
     expect(problems).toEqual([]);
   });

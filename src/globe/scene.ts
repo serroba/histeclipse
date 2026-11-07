@@ -1741,8 +1741,9 @@ export function createGlobe(
   );
   // Rotation along the sphere (a slerp), which also handles flying to the opposite side.
   let flight: { from: Vector3; rotation: Quaternion; start: number } | null = null;
-  // An impact playing, if one is.
+  // An impact playing, if one is, and how many have played out.
   let impact: ImpactAnimation | null = null;
+  let impactsPlayed = 0;
   // Distances from the body in focus, in scene units; it starts on the first frame, timed by the
   // frames' own clock (which can run apart from performance.now()).
   let zoomFlight: { from: number; to: number; start: number | null } | null = null;
@@ -1917,6 +1918,9 @@ export function createGlobe(
       if (!playing) {
         impact.dispose();
         impact = null;
+        // How many have played out, for whoever needs to know one did, however briefly it showed.
+        impactsPlayed += 1;
+        container.dataset['impactsPlayed'] = String(impactsPlayed);
       }
     }
     if (zoomFlight !== null && viewFlight === null) {
