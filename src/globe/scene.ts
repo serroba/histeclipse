@@ -5,6 +5,7 @@
  * `astro/sun.ts`); this file is exercised by the Playwright suite in a real browser.
  */
 
+import { createImpactAnimation, type ImpactAnimation, type ImpactSpec } from './impactAnimation';
 import { BODY_RADIUS } from './bodyRadius';
 import {
   AdditiveBlending,
@@ -412,6 +413,8 @@ export interface Globe {
   setCamera(camera: GlobeCamera): void;
   /** Glide to `distance` from the body in focus, in its radii, keeping the direction. */
   zoomTo(distance: number): void;
+  /** Play an impact at its place: the approach, the flash, the ring, the crater. */
+  playImpact(spec: ImpactSpec): void;
   /** Called while the user moves the camera, relative to the body in focus. Returns an unsubscribe function. */
   onCameraChange(listener: (camera: GlobeCamera) => void): () => void;
   readonly canvas: HTMLCanvasElement;
@@ -1636,6 +1639,8 @@ export async function createGlobe(
   let frame = 0;
   // Rotation along the sphere (a slerp), which also handles flying to the opposite side.
   let flight: { from: Vector3; rotation: Quaternion; start: number } | null = null;
+  // An impact playing, if one is.
+  let impact: ImpactAnimation | null = null;
   // Distances from the body in focus, in scene units; it starts on the first frame, timed by the
   // frames' own clock (which can run apart from performance.now()).
   let zoomFlight: { from: number; to: number; start: number | null } | null = null;
@@ -1795,6 +1800,15 @@ export async function createGlobe(
       const step = new Quaternion().slerp(flight.rotation, eased);
       camera.position.copy(flight.from).applyQuaternion(step).setLength(distance);
       if (progress === 1) flight = null;
+    }
+    if (impact !== null) {
+      const playing = impact.update(now);
+      container.dataset['impactPlaying'] = String(playing);
+      needsRender = true;
+      if (!playing) {
+        impact.dispose();
+        impact = null;
+      }
     }
     if (zoomFlight !== null && viewFlight === null) {
       zoomFlight.start ??= now;
@@ -2792,6 +2806,13 @@ export async function createGlobe(
       };
     },
     setCamera: placeCamera,
+    playImpact(spec) {
+      impact?.dispose();
+      impact = createImpactAnimation(spec);
+      earth.add(impact.group);
+      container.dataset['impactPlaying'] = 'true';
+      needsRender = true;
+    },
     zoomTo(distance) {
       if (viewpoint !== 'free') return;
       const radius = BODY_RADIUS[focus];

@@ -181,6 +181,7 @@ import {
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
+import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
@@ -203,6 +204,7 @@ import {
   impactDetails,
   impactsAt,
   impactsText,
+  placeThen,
   loadImpacts,
   type Impacts,
   type ImpactsMode,
@@ -2068,7 +2070,27 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const impact = impacts?.impacts.find((each) => String(each.id) === id);
     if (kind !== 'impact' || impact === undefined) return;
     const details = impactDetails(impact);
-    markerCard.show({ title: details.title, facts: details.facts, links: [details.link] });
+    // Where it lies at the moment shown: today's place, or where the plates had it.
+    const place = impacts === null ? null : placeThen(impacts, impact, store.get().ma ?? 0);
+    const craterKm = impact.diameterKm;
+    markerCard.show({
+      title: details.title,
+      facts:
+        craterKm === null
+          ? details.facts
+          : [...details.facts, ['Impactor', impactorText(impact.name, craterKm)]],
+      links: [details.link],
+      ...(place === null || craterKm === null
+        ? {}
+        : {
+            action: {
+              label: 'Play the impact (an illustration)',
+              run: () => {
+                playImpact(impact.name, place, craterKm);
+              },
+            },
+          }),
+    });
   });
 
   // Fossils: loaded the first time the layer is turned on.
@@ -3534,6 +3556,26 @@ export async function startApp(root: HTMLElement): Promise<void> {
         },
       );
     }
+  }
+  /**
+   * Play an impact at its place: turn the globe to it, come in close, and let it fall. The
+   * approach is a study's where one exists, else the most likely angle, assumed.
+   */
+  function playImpact(name: string, place: GeoPoint, craterKm: number): void {
+    const approach = approachOf(name);
+    if (store.get().focus !== 'earth')
+      store.set((state) => ({ ...state, focus: 'earth', view: 'free' }));
+    globe.flyTo(place);
+    globe.zoomTo(Math.min(store.get().camera.distance, 2.2));
+    // Once the globe has turned to it.
+    window.setTimeout(() => {
+      globe.playImpact({
+        place,
+        craterKm,
+        fromAzimuth: approach.fromAzimuth,
+        angleDegrees: approach.angleDegrees,
+      });
+    }, 1000);
   }
   globe.onCameraChange((camera) => {
     store.set((state) => ({ ...state, camera }));

@@ -238,6 +238,18 @@ export const SOURCES = {
     cite: 'O’Dea et al. (2016), Formation of the Isthmus of Panama, Science Advances 2',
     url: 'https://doi.org/10.1126/sciadv.1600883',
   },
+  collins2005: {
+    name: 'Collins, Melosh & Marcus 2005',
+    kind: 'model',
+    cite: 'Collins, Melosh & Marcus (2005), Earth Impact Effects Program: a web-based computer program for calculating the regional environmental consequences of a meteoroid impact on Earth, Meteoritics & Planetary Science 40, 817–840',
+    url: 'https://doi.org/10.1111/j.1945-5100.2005.tb00157.x',
+  },
+  collins2020: {
+    name: 'Collins et al. 2020',
+    kind: 'paper',
+    cite: 'Collins et al. (2020), A steeply-inclined trajectory for the Chicxulub impact, Nature Communications 11',
+    url: 'https://doi.org/10.1038/s41467-020-15269-x',
+  },
   sdo: {
     name: 'NASA SDO',
     kind: 'imagery',
@@ -586,8 +598,8 @@ export const WHYS = {
   impacts: {
     title: 'Impact craters',
     what: 'Craters and deposits left by asteroids and comets, and in deep time, where they lay when they struck.',
-    sources: ['impactEarth', 'gplates', 'paleodem'],
-    how: 'Places when they struck reconstructed on the PALEOMAP model by the GPlates Web Service.',
+    sources: ['impactEarth', 'gplates', 'paleodem', 'collins2005', 'collins2020'],
+    how: 'Places when they struck reconstructed on the PALEOMAP model by the GPlates Web Service. A crater’s card estimates the impactor’s size from the crater by Collins et al.’s scaling laws, under assumptions it states; “Play the impact” is an illustration, with Chicxulub’s approach from Collins et al. 2020 and the others assumed.',
   },
   volcanoes: {
     title: 'Volcanic eruptions',
