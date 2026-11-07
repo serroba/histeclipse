@@ -1983,6 +1983,20 @@ body {
   display: none;
 }
 
+/* The sheet never reaches up to the date panel above it (--hud-clear, measured by the page):
+   the details give way first, so the bar and its chips stay whole. */
+.deep-time {
+  max-height: calc(100dvh - var(--hud-clear, 0px) - 12px - env(safe-area-inset-bottom));
+}
+
+.deep-time > :not(.deep-details) {
+  flex-shrink: 0;
+}
+
+.deep-details {
+  min-height: 0;
+}
+
 /* The details scroll inside the bar, which never grows past part of the screen. */
 .deep-details {
   display: flex;
