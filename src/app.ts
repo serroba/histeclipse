@@ -1015,6 +1015,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
 
   function notify(message: string): void {
+    // A failure asked again (each time the view is drawn) says so once.
+    if ([...notices.children].some((notice) => notice.textContent === message)) return;
     notices.append(element('li', {}, message));
   }
   parsed.warnings.forEach(notify);
