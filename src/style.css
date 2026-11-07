@@ -609,6 +609,16 @@ body {
   color: var(--ink-muted);
 }
 
+.sun-caption-lead {
+  display: block;
+}
+
+.sun-caption-more summary {
+  width: fit-content;
+  padding: 6px 0;
+  cursor: pointer;
+}
+
 .sun-panel[hidden] {
   display: none;
 }
@@ -1981,6 +1991,20 @@ body {
 
 .deep-time[hidden] {
   display: none;
+}
+
+/* The sheet never reaches up to the date panel above it (--hud-clear, measured by the page):
+   the details give way first, so the bar and its chips stay whole. */
+.deep-time {
+  max-height: calc(100dvh - var(--hud-clear, 0px) - 12px - env(safe-area-inset-bottom));
+}
+
+.deep-time > :not(.deep-details) {
+  flex-shrink: 0;
+}
+
+.deep-details {
+  min-height: 0;
 }
 
 /* The details scroll inside the bar, which never grows past part of the screen. */
@@ -3806,8 +3830,9 @@ button:has(> .icon-label) > .icon {
     display: flex;
   }
 
+  /* The label and its book lead the first row rather than taking one of their own. */
   .sun-switch .switch-label {
-    flex-basis: 100%;
+    flex-basis: auto;
   }
 
   .sun-switch button[data-layer] {
