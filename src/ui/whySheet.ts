@@ -140,11 +140,20 @@ export interface HereView {
   readonly facts: readonly HereFact[];
 }
 
+/** What a why says of the moment shown: for deep time's map, the period's own evidence. */
+export interface WhyMoment {
+  readonly title: string;
+  readonly lines: readonly string[];
+  readonly sources: readonly SourceId[];
+}
+
 export function createWhySheet(
   /** Asked for a why, every source, or none: the view decides, and the panel follows it. */
   onRequest: (view: WhyView | null) => void,
   /** What each layer has at the place picked, worked out when asked. */
   here: () => HereView | null = () => null,
+  /** What a why says of the moment shown, when it has something of its own to say. */
+  moment: (id: WhyId) => WhyMoment | null = () => null,
 ): WhySheet {
   const heading = element('h2', { id: 'why-title' });
   const close = element(
@@ -303,8 +312,27 @@ export function createWhySheet(
             ),
           ]
         : [];
+    const now = moment(id);
+    const then =
+      now === null
+        ? []
+        : [
+            section(
+              now.title,
+              ...now.lines.map((line) => element('p', {}, line)),
+              element(
+                'p',
+                { class: 'why-then-sources' },
+                ...now.sources.flatMap((source, index) => [
+                  index === 0 ? 'Read: ' : ' · ',
+                  sourceLink(SOURCES[source]),
+                ]),
+              ),
+            ),
+          ];
     body.replaceChildren(
       section('What you see', element('p', {}, why.what)),
+      ...then,
       ...evidence,
       ...certainty,
       ...('others' in why ? [section('Other views', element('p', {}, why.others))] : []),
