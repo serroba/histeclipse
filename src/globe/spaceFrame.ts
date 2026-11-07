@@ -147,7 +147,7 @@ const STANDING_HEIGHT = 1.05;
  * there. Otherwise it stands under the Moon.
  */
 export function attachedPose(
-  viewpoint: Exclude<Viewpoint, 'free'>,
+  viewpoint: Extract<Viewpoint, 'moon-from-earth' | 'earth-from-moon'>,
   moon: Vector3,
   observer: Vector3 | null = null,
 ): CameraPose {
@@ -170,6 +170,25 @@ export function attachedPose(
     eye: scale(toMoon, distance - height),
     target: [0, 0, 0],
     fovDegrees: framingFov(1, distance - height),
+  };
+}
+
+/** Earth radii framed when looking back at Earth from afar: the Moon's orbit, with room. */
+export const EARTH_MOON_FRAME = 70;
+
+/**
+ * Looking back at Earth from a body at scene position `body` (Earth radii, Earth at the origin)
+ * of `radius` Earth radii: standing just above its surface on the side facing Earth, looking at
+ * Earth, the lens narrowed to frame Earth and the Moon's orbit together (#245). Positions are
+ * true; only the lens narrows, like a telescope.
+ */
+export function earthFromPose(body: Vector3, radius: number): CameraPose {
+  const distance = Math.hypot(...body);
+  const standing = distance - radius * STANDING_HEIGHT;
+  return {
+    eye: scale(body, standing / distance),
+    target: [0, 0, 0],
+    fovDegrees: framingFov(Math.min(EARTH_MOON_FRAME, standing * 0.99), standing),
   };
 }
 
