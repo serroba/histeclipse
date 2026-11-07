@@ -42,6 +42,8 @@ test('cosmic rays make carbon-14 mostly over the poles, more as the shield weake
   });
   await test.step('Then the card explains it, and how it reaches living things', async () => {
     await expect(dialog).toContainText('n + ¹⁴N → ¹⁴C + p');
+    await expect(dialog.getByRole('radio', { name: 'At the moment shown' })).toBeChecked();
+    await expect(dialog.getByTestId('carbon-made-notes')).toContainText('GGF100k');
     await expect(dialog.getByTestId('carbon-made-result')).toContainText(
       /times as much over the poles as over the equator/,
     );
@@ -69,7 +71,7 @@ test('cosmic rays make carbon-14 mostly over the poles, more as the shield weake
   expect(problems).toEqual([]);
 });
 
-test('beyond 50,000 years the layer says radiocarbon cannot reach, and names other clocks', async ({
+test('the glow follows the field through the ice ages, and beyond 50,000 years names other clocks', async ({
   page,
 }) => {
   test.slow();
@@ -80,9 +82,23 @@ test('beyond 50,000 years the layer says radiocarbon cannot reach, and names oth
     await globeRendered(page);
     await openLayers(page);
   });
-  await test.step('Then it glows, saying the field then is not what is drawn', async () => {
-    await expect(note).toContainText('Laschamp excursion');
+  let equatorThen = 0;
+  await test.step('Then it glows for the field then, as GGF100k has it', async () => {
+    await expect(note).toContainText(
+      /The field at the moment shown, 6\.\d × 10²² A m² \(GGF100k\)/,
+    );
     await expect.poll(async () => (await glow(page)).length).toBe(19);
+    equatorThen = (await glow(page))[0] ?? 0;
+  });
+  await test.step('When they go to the Laschamp excursion, 41,000 years ago', async () => {
+    await page.goto('./?ma=0.041&scale=ice&layers=carbonMade');
+    await globeRendered(page);
+    await openLayers(page);
+  });
+  await test.step('Then the field is weak, more is made nearer the equator, and other models are named', async () => {
+    await expect(note).toContainText('is weak, 2.');
+    await expect(note).toContainText('Korte et al. 2019');
+    await expect.poll(async () => (await glow(page))[0] ?? 0).toBeGreaterThan(equatorThen * 1.5);
   });
   await test.step('When they go back 100,000 years', async () => {
     await page.goto('./?ma=0.1&scale=ice&layers=carbonMade');

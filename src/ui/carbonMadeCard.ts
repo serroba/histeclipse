@@ -41,10 +41,35 @@ export function glowOf(made: CarbonMade): readonly number[] {
   return made.profile.map((value) => value / pole);
 }
 
+/** The field at the moment shown, as the card offers it first; its dipole is set by `setThen`. */
+export const THEN_ID = 'then';
+export const THEN_UNKNOWN: FieldChoice = {
+  id: THEN_ID,
+  label: 'At the moment shown',
+  dipole: TODAY_FIELD.dipole,
+  note: 'The field at the moment shown is not known here: today’s is drawn.',
+};
+
+/** The field at the moment shown, with what to say of it, for a dipole of `dipole` ×10²² A m². */
+export function thenField(dipole: number): FieldChoice {
+  const weak =
+    dipole < 4
+      ? ' A smooth model: those fitted to the Laschamp excursion put its low far lower, under 0.4 (Korte et al. 2019).'
+      : '';
+  return {
+    id: THEN_ID,
+    label: 'At the moment shown',
+    dipole,
+    note: `GGF100k puts the dipole at ${dipole.toFixed(1)} × 10²² A m² then (Panovska et al. 2018; today’s is 7.8).${weak}`,
+  };
+}
+
 export interface CarbonMadeCard {
   readonly dialog: HTMLDialogElement;
   /** The field and Sun picked, and what they make. */
   current(): CarbonMade;
+  /** The field at the moment shown, or null where it is not known (today's stands in). */
+  setThen(field: FieldChoice | null): void;
   open(): void;
 }
 
@@ -108,7 +133,13 @@ export function createCarbonMadeCard(
     { type: 'button', class: 'famous-close', 'aria-label': 'Close' },
     '×',
   );
-  const field = picker('Earth’s magnetic field', 'carbon-made-field', FIELD_CHOICES, draw);
+  const field = picker(
+    'Earth’s magnetic field',
+    'carbon-made-field',
+    [THEN_UNKNOWN, ...FIELD_CHOICES],
+    draw,
+  );
+  let then: FieldChoice | null = null;
   const sun = picker('The Sun', 'carbon-made-sun', SUN_CHOICES, draw);
   const notes = element('p', { class: 'carbon-made-notes', 'data-testid': 'carbon-made-notes' });
   const chart = svgElement('svg', {
@@ -175,13 +206,28 @@ export function createCarbonMadeCard(
 
   const today = TODAY;
   const todayGlobal = globalFor(TODAY_FIELD, TODAY_SUN);
-  let made: CarbonMade = { field: field.chosen(), sun: sun.chosen(), profile: today };
+  let made: CarbonMade = { field: THEN_UNKNOWN, sun: sun.chosen(), profile: today };
+
+  /** The field picked: the moment's, where it is known, or a fixed one. */
+  function pickedField(): FieldChoice {
+    const chosen = field.chosen();
+    return chosen.id === THEN_ID ? (then ?? THEN_UNKNOWN) : chosen;
+  }
+
+  /** Work out what the field and Sun picked make, without drawing. */
+  function reckon(): CarbonMade {
+    const chosenField = pickedField();
+    const chosenSun = sun.chosen();
+    made = {
+      field: chosenField,
+      sun: chosenSun,
+      profile: profileFor(chosenField, chosenSun, STEP),
+    };
+    return made;
+  }
 
   function draw(): void {
-    const chosenField = field.chosen();
-    const chosenSun = sun.chosen();
-    const profile = profileFor(chosenField, chosenSun, STEP);
-    made = { field: chosenField, sun: chosenSun, profile };
+    const { field: chosenField, sun: chosenSun, profile } = reckon();
     notes.textContent = `${chosenField.note} ${chosenSun.note}`;
     const global = globalFor(chosenField, chosenSun);
     const equator = profile[0] ?? 0;
@@ -266,6 +312,14 @@ export function createCarbonMadeCard(
   return {
     dialog,
     current: () => made,
+    setThen(next) {
+      // Drawing tells the app, which sets the moment's field again: the same one changes nothing.
+      if (next?.dipole === then?.dipole && next?.note === then?.note) return;
+      then = next;
+      if (field.chosen().id !== THEN_ID) return;
+      if (dialog.open) draw();
+      else reckon();
+    },
     open() {
       dialog.showModal();
       draw();

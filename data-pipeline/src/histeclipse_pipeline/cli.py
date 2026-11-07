@@ -12,6 +12,7 @@ from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalo
 from histeclipse_pipeline.cesm import fetch_cesm
 from histeclipse_pipeline.deep_air import fetch_deep_air
 from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
+from histeclipse_pipeline.dipole import fetch_dipole
 from histeclipse_pipeline.dispersal import fetch_dispersal
 from histeclipse_pipeline.empires import (
     fetch_cliopatria,
@@ -309,6 +310,12 @@ def radiocarbon(args: Arguments) -> int:  # pragma: no cover - needs network acc
     return _say(f"wrote {count} curve rows to {args.out}")
 
 
+def dipole(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the dipole moment of the last 55,000 years (GGF100k)."""
+    count = fetch_dipole(args.out)
+    return _say(f"wrote {count} dipole moments to {args.out}")
+
+
 def tree_of_life(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the tree of life trimmed to what the site shows (Open Tree of Life, CC0)."""
     count = fetch_tree_of_life(args.source, args.out, Path(".cache/tree-of-life"))
@@ -522,6 +529,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "radiocarbon": (
         radiocarbon,
         "write the radiocarbon calibration curves (IntCal20, SHCal20)",
+        "output JSON file",
+    ),
+    "dipole": (
+        dipole,
+        "write the dipole moment of the last 55,000 years (GGF100k)",
         "output JSON file",
     ),
     "tree-of-life": (

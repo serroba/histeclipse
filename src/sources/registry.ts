@@ -375,6 +375,12 @@ export const SOURCES = {
     cite: 'Korte, M., Constable, C., Donadini, F. & Holme, R. (2011). Reconstructing the Holocene geomagnetic field. Earth and Planetary Science Letters 312, 497–505',
     url: 'https://doi.org/10.1016/j.epsl.2011.10.031',
   },
+  ggf100k: {
+    name: 'GGF100k',
+    kind: 'dataset',
+    cite: 'Panovska, S., Constable, C. G. & Korte, M. (2018). Extending global continuous geomagnetic field reconstructions on timescales beyond human civilization. Geochemistry, Geophysics, Geosystems 19, 4757–4772; dipole moment from the model archive, EarthRef ERDA 2382 (no licence stated)',
+    url: 'https://doi.org/10.1029/2018GC007966',
+  },
   korte2019: {
     name: 'Korte et al. 2019',
     kind: 'paper',
@@ -813,12 +819,13 @@ export const WHYS = {
       'kovaltsov2012',
       'usoskin2005',
       'korte2011',
+      'ggf100k',
       'korte2019',
       'marine20',
       'intcal20',
       'godwin1962',
     ],
-    how: 'Cosmic rays strike the air high up; neutrons from the shower turn nitrogen-14 into carbon-14. Earth’s magnetic field turns slower rays away, least near the poles, so several times more is made over the poles than over the equator. The rates are Kovaltsov et al.’s model, computed here from their yield function: by their own reckoning about 1.6 atoms per cm² each second on average over 1951–2010. A weaker field or a quieter Sun lets more rays in: with no field, about twice as much. The glow is drawn about the spin axis, which the field lines up with when averaged over thousands of years; today it is tilted about 10°. Mixed through the air as carbon dioxide within a few years, carbon-14 enters plants, then animals; the ocean takes it in slowly, so a sea shell reads about 400–600 radiocarbon years older than a plant of the same year (Marine20 against IntCal20, the last 11,000 years). At death the intake stops and half is gone every 5,730 years. After about 50,000 years too little is left to measure.',
+    how: 'Cosmic rays strike the air high up; neutrons from the shower turn nitrogen-14 into carbon-14. Earth’s magnetic field turns slower rays away, least near the poles, so several times more is made over the poles than over the equator. The rates are Kovaltsov et al.’s model, computed here from their yield function: by their own reckoning about 1.6 atoms per cm² each second on average over 1951–2010. A weaker field or a quieter Sun lets more rays in: with no field, about twice as much. By default the field is that of the moment shown, from the GGF100k model, back 55,000 years: it fell to about a third of today’s in the Laschamp excursion, 41,000 years ago, and models fitted to the excursion alone put it far lower (Korte et al. 2019). The glow is drawn about the spin axis, which the field lines up with when averaged over thousands of years; today it is tilted about 10°. Mixed through the air as carbon dioxide within a few years, carbon-14 enters plants, then animals; the ocean takes it in slowly, so a sea shell reads about 400–600 radiocarbon years older than a plant of the same year (Marine20 against IntCal20, the last 11,000 years). At death the intake stops and half is gone every 5,730 years. After about 50,000 years too little is left to measure.',
   },
   'close-up': {
     title: 'The Moon and planets close up',

@@ -35,10 +35,17 @@ import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
 import { DATABLE_YEARS } from './data/radiocarbonProduction';
+import { dipoleAt, loadDipole, type DipoleSeries } from './data/dipoleMoment';
 import { captionOf } from './globe/showerSteps';
 import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
 import { createDatingCard } from './ui/datingCard';
-import { createCarbonMadeCard, glowOf } from './ui/carbonMadeCard';
+import {
+  createCarbonMadeCard,
+  glowOf,
+  THEN_ID,
+  THEN_UNKNOWN,
+  thenField,
+} from './ui/carbonMadeCard';
 import { createRadiocarbonStrip } from './ui/radiocarbonStrip';
 import { createGlobe, type StateChange } from './globe/scene';
 import { createStore } from './state/store';
@@ -827,6 +834,35 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let carbonMadeSaid: string | null = null;
   let carbonMadeAction: { readonly label: string; readonly run: () => void } | null = null;
 
+  // The dipole's strength through the years radiocarbon reaches (GGF100k), loaded with the layer.
+  let dipole: DipoleSeries | null = null;
+  let dipoleAsked = false;
+
+  /** The field at the moment shown, or null until it loads or beyond its reach. */
+  function fieldThen(state: ViewState): ReturnType<typeof thenField> | null {
+    if (dipole === null) {
+      if (!dipoleAsked) {
+        dipoleAsked = true;
+        loadDipole(`${base}data/dipole.json`, fetchJson).then(
+          (loaded) => {
+            dipole = loaded;
+            showCarbonMade(store.get());
+            showEmpires(store.get());
+          },
+          (error: unknown) => {
+            dipoleAsked = false;
+            notify(`Could not load the field's strength: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return null;
+    }
+    // Thousands of years before 1950, as the model counts.
+    const ka = state.ma === null ? (1950 - state.time.date.year) / 1000 : state.ma * 1000;
+    const strength = dipoleAt(dipole, ka);
+    return strength === null ? null : thenField(strength);
+  }
+
   /** The glow, on the spans and years radiocarbon reaches; what the layer says, and its card. */
   function showCarbonMade(state: ViewState): void {
     const layerOn = state.layers.has('carbonMade') && state.mode === 'globe';
@@ -847,12 +883,24 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setC14Glow(null);
       return;
     }
+    carbonMadeCard.setThen(fieldThen(state));
     const made = carbonMadeCard.current();
     globe.setC14Glow(glowOf(made));
+    const sun = made.sun.label.toLowerCase();
+    if (made.field.id !== THEN_ID) {
+      carbonMadeSaid =
+        state.ma === null
+          ? `${made.field.label} field, ${sun}: most is made over the poles.`
+          : `Drawn for the field picked (${made.field.label.toLowerCase()}), not that of the moment shown.`;
+      return;
+    }
+    const strength = made.field.dipole.toFixed(1);
     carbonMadeSaid =
-      state.ma === null
-        ? `${made.field.label} field, ${made.sun.label.toLowerCase()}: most is made over the poles.`
-        : `Drawn for the field and Sun picked (${made.field.label.toLowerCase()}), not those of the moment shown: around 41,000 years ago, in the Laschamp excursion, the field nearly vanished and about twice as much was made.`;
+      made.field !== THEN_UNKNOWN
+        ? made.field.dipole < 4
+          ? `The field at the moment shown is weak, ${strength} × 10²² A m² (GGF100k; today’s is 7.8): more is made, and nearer the equator. Other models put this low far lower (Korte et al. 2019).`
+          : `The field at the moment shown, ${strength} × 10²² A m² (GGF100k), ${sun}: most is made over the poles.`
+        : `The field at the moment shown is not known yet; today’s is drawn, ${sun}.`;
   }
   const radiocarbonStrip = createRadiocarbonStrip(
     whySheet.mark('radiocarbon', 'Carbon-14 in the air'),
