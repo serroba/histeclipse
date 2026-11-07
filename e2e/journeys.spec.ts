@@ -208,6 +208,8 @@ test('links made before one time bar still open what they showed', async ({ page
 test('a rail at the side shows how far out the view is, and that the planets are a tap away', async ({
   page,
 }, info) => {
+  // A long glide, timed by frames: see the wait below.
+  test.slow();
   const problems = collectProblems(page);
   const rail = page.getByRole('group', { name: 'Zoom' });
   const globe = page.getByTestId('globe');
@@ -234,8 +236,9 @@ test('a rail at the side shows how far out the view is, and that the planets are
     }
   });
   await test.step('Then the view glides out until the planets show, and the link keeps it', async () => {
-    // The glide is timed by the frames: a slow machine draws fewer, so it can take a while.
-    await expect(page).toHaveURL(/cam=-?\d+\.\d{4},-?\d+\.\d{4},60000\.00/, { timeout: 20_000 });
+    // The glide is timed by the frames, and the 120 Hz project's clock moves 1/120 s a frame
+    // whatever the real time: on a loaded machine frames come slowly, so it can take a while.
+    await expect(page).toHaveURL(/cam=-?\d+\.\d{4},-?\d+\.\d{4},60000\.00/, { timeout: 45_000 });
     await expect(globe).toHaveAttribute('data-planets', 'on');
     await expect(page.getByTestId('zoom-readout')).toHaveText('2.6 AU');
   });

@@ -5,6 +5,7 @@
 
 import { chronAt, type PolarityScale } from '../data/polarity';
 import { dayMeasurementsAround, fieldAt, type DayMeasurement, TILT } from './earthState';
+import { polarWanderAt } from './polarWander';
 import { sunBrightness } from './sketch';
 
 export interface EarthFact {
@@ -21,6 +22,16 @@ function hours({ hours, uncertainty }: DayMeasurement): string {
 function measured(measurement: DayMeasurement): string {
   if (measurement.ma === 0) return `${hours(measurement)} today`;
   return `${hours(measurement)} ${String(measurement.ma)} Ma, from ${measurement.evidence} (${measurement.source})`;
+}
+
+const POLES =
+  'The globe’s poles are the spin axis then, found from magnetism frozen in rocks: the poles stay put and the continents moved beneath them, by plate motion and true polar wander (the whole Earth turning beneath its spin axis). Magnetic north is marked at the pole a compass pointed to; it swapped at each reversal, drawn under the slider.';
+
+/** The poles, and the true polar wander under way then, with who found it and who doubts it. */
+function poles(ma: number): string {
+  const episode = polarWanderAt(ma);
+  if (episode === null) return POLES;
+  return `${POLES} True polar wander then, the ${episode.name}: ${episode.found} ${episode.questioned}`;
 }
 
 /** Before this, the reversal record is too sparse to say what the field was doing. */
@@ -72,7 +83,7 @@ export function earthFacts(ma: number, scale: PolarityScale | null = null): read
   return [
     {
       label: 'Poles',
-      text: 'The globe’s poles are the spin axis then, found from magnetism frozen in rocks: the poles stay put and the continents moved beneath them, by plate motion and true polar wander. Magnetic north is marked at the pole a compass pointed to; it swapped at each reversal, drawn under the slider.',
+      text: poles(ma),
     },
     { label: 'Magnetic field', text: field(ma, scale) },
     {
