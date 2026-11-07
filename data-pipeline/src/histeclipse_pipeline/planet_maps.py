@@ -1,14 +1,18 @@
-"""Global maps of the planets from their missions, to wrap on each planet seen close up.
+"""Global maps of the bodies seen close up, from their missions, at the sizes the site loads.
 
 Each map is a mission's own release, in simple cylindrical projection (equal steps of latitude
 and longitude, north at the top): MESSENGER's monochrome mosaic of Mercury (NASA Photojournal
-PIA15063), the Viking colour mosaic of Mars (USGS Astrogeology), and Cassini's colour map of
-Jupiter (PIA07782). Each download is pinned by checksum, so a changed upstream file is never used
-unseen, and is shrunk to 2048 by 1024 pixels for the web. All are NASA or USGS works, in the
-public domain; the site credits each where it is shown.
+PIA15063), the Viking colour mosaic of Mars (USGS Astrogeology), Cassini's colour map of Jupiter
+(PIA07782), NASA's Blue Marble Next Generation of Earth (April 2004, with topography and
+bathymetry), and the Lunar Reconnaissance Orbiter's colour mosaic of the Moon (NASA's CGI Moon
+Kit). Each download is pinned by checksum, so a changed upstream file is never used unseen, and is
+shrunk to the widths the site loads: one shown at once (planets), and a sharper one fetched only
+close up (#258). All are NASA or USGS works, in the public domain; the site credits each where it
+is shown.
 
 Venus is left out on purpose: from space it shows only cloud, and Magellan's map is radar of the
 ground beneath. No mission has published a global map of Saturn; it keeps its painted bands.
+Earth's first map (2048 wide) and the Moon's (1024) were made before this command and are kept.
 """
 
 import hashlib
@@ -38,32 +42,57 @@ USER_AGENT = "histeclipse-pipeline (https://github.com/serroba/histeclipse)"
 
 @dataclass(frozen=True)
 class MapSource:
-    """A planet's map: where it is, its pinned checksum, and whether to brighten it."""
+    """A body's map: where it is, its checksum, the files made of it, and whether to brighten."""
 
-    planet: str
+    #: Each file's path under the textures folder without its width: ``planets/mars`` makes
+    #: ``planets/mars-2048.jpg`` and so on.
+    stem: str
     url: str
     sha256: str
+    widths: tuple[int, ...]
     stretch: bool = False
 
 
 PHOTOJOURNAL = "https://assets.science.nasa.gov/content/dam/science/psd/photojournal/pia"
+BLUE_MARBLE = (
+    "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/"
+    "bmng-topography-bathymetry"
+)
+MOON_KIT = "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720"
 
 MAPS = (
     MapSource(
-        planet="mercury",
+        stem="planets/mercury",
         url=f"{PHOTOJOURNAL}/pia15/pia15063/PIA15063.jpg",
         sha256="f633fe2fc51656a9c5198cd34eaaf1fa5e5ae77c05461e012e19f4e14faa9f1f",
+        widths=(2048, 4096),
         stretch=True,
     ),
     MapSource(
-        planet="mars",
+        stem="planets/mars",
         url="https://planetarymaps.usgs.gov/mosaic/Mars_Viking_ClrMosaic_global_925m.tif",
         sha256="5b3c6bea36cec0ec65b9ce5927db6b1c555c5fae60a227c774f9fcaecdf5bb33",
+        widths=(2048, 4096),
     ),
     MapSource(
-        planet="jupiter",
+        stem="planets/jupiter",
         url=f"{PHOTOJOURNAL}/pia07/pia07782/PIA07782.jpg",
         sha256="6b835ddd8036ea9efd25def04f75aa60b69b096025a37eeae5e9b6978e0a2281",
+        # Cassini's map is 3601 pixels wide: its sharp size is its own, not enlarged.
+        widths=(2048, 3600),
+    ),
+    MapSource(
+        stem="earth-blue-marble",
+        url=f"{BLUE_MARBLE}/april/world.topo.bathy.200404.3x21600x10800.jpg",
+        sha256="7d3a8c58de56782a68156c67dd171074e210a7feec9283987622e569fa338f6a",
+        # Phones load the 4096; screens whose graphics allow it, the 8192.
+        widths=(4096, 8192),
+    ),
+    MapSource(
+        stem="moon-lroc",
+        url=f"{MOON_KIT}/lroc_color_poles_4k.tif",
+        sha256="918649a7f8ed2f1329b2cd95bb0d25483befdcb60ae1a66db681a637cc21344f",
+        widths=(4096,),
     ),
 )
 
@@ -119,16 +148,18 @@ def _download(url: str, path: Path) -> None:  # pragma: no cover - needs network
 
 
 def fetch_planet_maps(folder: Path, cache: Path) -> int:  # pragma: no cover - needs network access
-    """Download each map once into ``cache``, check it, and write ``<planet>-2048.jpg``."""
-    # Mars's mosaic is 23040 by 11520 pixels, past Pillow's guard against decompression bombs;
-    # its checksum is pinned, so it is the file expected.
+    """Download each map once into ``cache``, check it, and write each size under ``folder``."""
+    # Mars's mosaic is 23040 by 11520 pixels and Earth's 21600 by 10800, past Pillow's guard
+    # against decompression bombs; their checksums are pinned, so they are the files expected.
     Image.MAX_IMAGE_PIXELS = None
+    written = 0
     for source in MAPS:
         path = cache / source.url.rsplit("/", 1)[-1]
         if not path.exists():
             _download(source.url, path)
         with Image.open(checked(path, source.sha256)) as image:
-            write_map(
-                web_map(image, stretch=source.stretch), folder / f"{source.planet}-{WIDTH}.jpg"
-            )
-    return len(MAPS)
+            for width in source.widths:
+                made = web_map(image, stretch=source.stretch, width=width)
+                write_map(made, folder / f"{source.stem}-{width}.jpg")
+                written += 1
+    return written

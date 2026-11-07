@@ -29,7 +29,7 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { geoToVector } from './globe/geo';
-import { MOON_CAPTION, PLANET_NAMES, PLANET_PICTURES } from './globe/planetLook';
+import { MOON_CAPTION, PLANET_NAMES, PLANET_PICTURES, SHARP_MAPS } from './globe/planetLook';
 import { loadPolarity, type PolarityScale } from './data/polarity';
 import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
@@ -282,6 +282,8 @@ const AIM_FOV = 12;
 const PLANET_SKY_FOV = 4;
 /** How long the sky takes to turn and close in on a tapped body, ms, before going to it. */
 const SKY_GLIDE_MS = 900;
+/** Within this many radii of the body in focus, its sharper map is fetched (#258). */
+const SHARP_WITHIN = 2.5;
 /** How high an upright phone looks on entering the sky, degrees: the horizon low in view. */
 const PHONE_SKY_ALTITUDE = 12;
 /** Degrees from the centre of the globe in view within which a strike is played as time runs. */
@@ -2934,6 +2936,24 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const LOOKED_BACK =
     'So Voyager 1 saw it in 1990, from beyond Neptune: the “Pale Blue Dot” (NASA/JPL, PIA00452); and Cassini from Saturn in 2013, “The Day the Earth Smiled” (NASA/JPL-Caltech/SSI, PIA17171).';
 
+  /**
+   * Close up, a sharper map for the body in focus, fetched once (#258): Earth's largest only
+   * where the graphics hold it and the screen is not a phone's, whose memory it would strain.
+   */
+  const largeMaps = globe.maxTextureSize >= 8192 && !window.matchMedia('(pointer: coarse)').matches;
+  function sharpenClose(state: ViewState): void {
+    if (state.mode !== 'globe' || state.ma !== null || state.camera.distance > SHARP_WITHIN) return;
+    const { focus } = state;
+    if (focus === 'earth' || focus === 'moon') {
+      const sizes = SHARP_MAPS[focus];
+      globe.setBodyMap(focus, `${base}${largeMaps ? sizes.large : sizes.small}`);
+      return;
+    }
+    if (focus === 'sun') return;
+    const { sharp } = PLANET_PICTURES[focus];
+    if (sharp !== null) globe.setPlanetMap(focus, `${base}${sharp}`, true);
+  }
+
   /** Away from Earth: the body in view and what can be said of it; Earth's own bits rest. */
   function showBody(state: ViewState): void {
     const away = state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
@@ -3578,6 +3598,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     showSources(state);
     showBody(state);
+    sharpenClose(state);
     zoomRail.setWhyHere(
       state.mode === 'globe' && state.focus === 'earth' && state.ma === null,
       askingHere,

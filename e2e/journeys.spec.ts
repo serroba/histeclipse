@@ -402,6 +402,42 @@ test('from any planet the reader can look back at Earth, and see what it looks l
   expect(problems).toEqual([]);
 });
 
+test('close up, Earth and the planets fetch a sharper map; from afar, nothing extra', async ({
+  page,
+}, info) => {
+  const sharp: string[] = [];
+  page.on('request', (request) => {
+    if (/-(8192|4096|3600)\.jpg$/.test(request.url())) sharp.push(request.url());
+  });
+  const globe = page.getByTestId('globe');
+  await test.step('Given Earth at the usual distance', async () => {
+    await page.goto('./?t=2024-04-08T12:00Z&cam=31,31,3');
+    await globeRendered(page);
+  });
+  await test.step('Then no sharper map is fetched', async () => {
+    await expect(globe).not.toHaveAttribute('data-sharp');
+    expect(sharp).toEqual([]);
+  });
+  await test.step('When they come close over the Nile', async () => {
+    await page.goto('./?t=2024-04-08T12:00Z&cam=31,31,1.1');
+    await globeRendered(page);
+  });
+  await test.step('Then Earth’s sharper map is fetched once, smaller on a phone', async () => {
+    await expect(globe).toHaveAttribute('data-sharp', 'earth', { timeout: 30_000 });
+    const size = info.project.name === 'mobile' ? '4096' : '(4096|8192)';
+    expect(sharp).toHaveLength(1);
+    expect(sharp[0]).toMatch(new RegExp(`earth-blue-marble-${size}\\.jpg$`));
+  });
+  await test.step('When they come close to Mars', async () => {
+    await page.goto('./?t=2026-01-10T12:00Z&focus=mars&cam=0,120,1.5');
+    await globeRendered(page);
+  });
+  await test.step('Then it wears its sharper map', async () => {
+    await expect(globe).toHaveAttribute('data-sharp', /mars/, { timeout: 30_000 });
+    expect(sharp.some((url) => url.endsWith('planets/mars-4096.jpg'))).toBe(true);
+  });
+});
+
 test('close up, a planet wears its mission’s map, captioned and credited', async ({ page }) => {
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');

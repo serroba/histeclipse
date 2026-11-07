@@ -204,7 +204,7 @@ export interface ViewState {
 
 // In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
 // so Saturn (up to ~11 AU away) fits in view; the scene caps other bodies at the same reach.
-export const CAMERA_DISTANCE_RANGE = { min: 1.1, max: 300_000 } as const;
+export const CAMERA_DISTANCE_RANGE = { min: 1.05, max: 300_000 } as const;
 export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'solar']);
 
 /**

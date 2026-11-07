@@ -349,8 +349,15 @@ export interface Globe {
   setSunImage(image: SunImageRequest | null): void;
   /** Mark the pole a compass pointed to in deep time; null when it is not known. */
   setMagneticNorth(where: 'north' | 'south' | 'either' | null): void;
-  /** Wrap a planet in a mission's global map, fetched the first time it is asked for. */
-  setPlanetMap(planet: PlanetName, url: string): void;
+  /**
+   * Wrap a planet in a mission's global map, fetched the first time it is asked for; a `sharp`
+   * one, asked for close up, replaces it and is kept.
+   */
+  setPlanetMap(planet: PlanetName, url: string, sharp?: boolean): void;
+  /** Dress Earth or the Moon in a sharper map, fetched once, for close up (#258). */
+  setBodyMap(body: 'earth' | 'moon', url: string): void;
+  /** The widest texture the graphics can hold, pixels. */
+  readonly maxTextureSize: number;
   /**
    * Lay past states and empires over the ground, with the names of the largest; null hides
    * the layer.
@@ -1295,7 +1302,16 @@ export function createGlobe(
   sun.visible = false;
   scene.add(sun);
   const planets = createPlanetMeshes(scene);
-  const planetMapsAsked = new Set<PlanetName>();
+  // Maps asked for, by address; the planets wearing their sharp map; and the bodies sharpened,
+  // for whoever needs to know (#258).
+  const planetMapsAsked = new Set<string>();
+  const sharpPlanets = new Set<PlanetName>();
+  const bodyMapsAsked = new Set<string>();
+  const sharpened = new Set<string>();
+  function markSharp(body: string): void {
+    sharpened.add(body);
+    container.dataset['sharp'] = [...sharpened].sort().join(' ');
+  }
   // The planets' orbits, and Earth's: drawn about the Sun in J2000 axes, turned with them.
   const orbits = new Group();
   orbits.visible = false;
@@ -1687,6 +1703,12 @@ export function createGlobe(
   // A map that fails to load leaves its plain colour: the globe still works, only plainer.
   earthMap.then(
     (map) => {
+      // A sharp map that came first (a link opened close up) stays.
+      if (sharpened.has('earth')) {
+        map.dispose();
+        earthMapped = true;
+        return;
+      }
       map.colorSpace = SRGBColorSpace;
       map.anisotropy = renderer.capabilities.getMaxAnisotropy();
       earth.material.uniforms['dayMap'] = { value: map };
@@ -1702,6 +1724,10 @@ export function createGlobe(
   );
   moonMap.then(
     (map) => {
+      if (sharpened.has('moon')) {
+        map.dispose();
+        return;
+      }
       map.colorSpace = SRGBColorSpace;
       moon.material.uniforms['map'] = { value: map };
       moonTexture.dispose();
@@ -2049,6 +2075,7 @@ export function createGlobe(
 
   return {
     canvas: renderer.domElement,
+    maxTextureSize: renderer.capabilities.maxTextureSize,
     setSunDirection([x, y, z]) {
       sunDirection.set(x, y, z).normalize();
       needsRender = true;
@@ -2253,21 +2280,50 @@ export function createGlobe(
       emptyTapListeners.add(listener);
       return () => emptyTapListeners.delete(listener);
     },
-    setPlanetMap(planet, url) {
-      if (planetMapsAsked.has(planet)) return;
-      planetMapsAsked.add(planet);
+    setPlanetMap(planet, url, sharp = false) {
+      // The sharp map, once it is on, is never swapped back for the first.
+      if (sharpPlanets.has(planet) || planetMapsAsked.has(url)) return;
+      planetMapsAsked.add(url);
+      new TextureLoader()
+        .loadAsync(url)
+        .then((map) => {
+          if (!sharp && sharpPlanets.has(planet)) {
+            map.dispose();
+            return;
+          }
+          map.colorSpace = SRGBColorSpace;
+          map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+          planets.setMap(planet, map);
+          container.dataset['planetMap'] = planet;
+          if (sharp) {
+            sharpPlanets.add(planet);
+            markSharp(planet);
+          }
+          needsRender = true;
+        })
+        .catch(() => {
+          // Asked again the next time the planet is in view; what it wears stays meanwhile.
+          planetMapsAsked.delete(url);
+        });
+    },
+    setBodyMap(body, url) {
+      if (bodyMapsAsked.has(url)) return;
+      bodyMapsAsked.add(url);
       new TextureLoader()
         .loadAsync(url)
         .then((map) => {
           map.colorSpace = SRGBColorSpace;
           map.anisotropy = renderer.capabilities.getMaxAnisotropy();
-          planets.setMap(planet, map);
-          container.dataset['planetMap'] = planet;
+          const uniforms = (body === 'earth' ? earth : moon).material.uniforms;
+          const key = body === 'earth' ? 'dayMap' : 'map';
+          const previous = uniforms[key]?.value as Texture | undefined;
+          uniforms[key] = { value: map };
+          previous?.dispose();
+          markSharp(body);
           needsRender = true;
         })
         .catch(() => {
-          // Asked again the next time the planet is in view; the painted colours stay meanwhile.
-          planetMapsAsked.delete(planet);
+          bodyMapsAsked.delete(url);
         });
     },
     setMagneticNorth(where) {
