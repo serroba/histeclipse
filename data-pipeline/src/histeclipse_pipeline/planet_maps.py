@@ -121,6 +121,13 @@ MAPS = (
         widths=(2048, 4096),
     ),
     MapSource(
+        stem="moon-height",
+        # LOLA heights, coloured and shaded (USGS, public domain).
+        url="https://planetarymaps.usgs.gov/mosaic/Lunar_LRO_LOLA_ClrShade_Global_128ppd_v04.tif",
+        sha256="2b51e3541af472cd64208e68c8f30616c7387405c706ab6c0ca00eb7b8a13d15",
+        widths=(2048, 4096),
+    ),
+    MapSource(
         stem="planets/mercury-colour",
         # MESSENGER's enhanced-colour map (PIA17386), centred on 180° E.
         url=f"{PHOTOJOURNAL}/pia17/pia17386/PIA17386.jpg",
