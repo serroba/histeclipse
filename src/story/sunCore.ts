@@ -1,12 +1,16 @@
 /**
- * The carbon-14 story's first chapter in 3D (#317): the Sun cut open, its surface churning, its
- * three zones on the cut faces, and in the core protons fusing through the proton–proton chain,
- * one chain followed and labelled, gamma rays flashing out. The reader can pause, turn and zoom
- * at any moment; dragging takes the camera from the story, which hands it back on a restart.
- * Not to scale: the core would hold some 10⁵⁶ protons, each 10⁻¹⁵ m across.
+ * The carbon-14 story's chapters inside the Sun, in 3D (#317), in one scene: the Sun cut open,
+ * its surface churning, its three zones on the cut faces.
+ * - Fusion: in the core, protons fusing through the proton–proton chain, one chain followed and
+ *   labelled, gamma rays flashing out.
+ * - Escape: that light's random walk out through the radiative zone, coloured by what it is,
+ *   the years counting; convection carrying it up the last third; leaving as visible light.
+ * The reader can pause, turn and zoom at any moment; dragging takes the camera from the story,
+ * which hands it back on a restart. Not to scale: the core would hold some 10⁵⁶ protons, each
+ * 10⁻¹⁵ m across, and each step of the walk drawn stands for countless real ones.
  *
  * Three.js glue, loaded on demand and covered by the Playwright suite; the chain's timing is in
- * `fusionChain.ts`.
+ * `fusionChain.ts`, the walk in `photonWalk.ts`.
  */
 
 import {
@@ -36,16 +40,25 @@ import {
   WebGLRenderer,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Line2 } from 'three/addons/lines/Line2.js';
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
 import { CHAIN, SETTLED_T, stageAt, stageProgress, type ChainStage } from './fusionChain';
+import { BANDS, bandAt, photonWalk, yearsAt, type Band } from './photonWalk';
+
+/** The chapters this scene plays. */
+export type SunChapter = 'fusion' | 'escape';
 
 export interface SunCore {
+  /** Turn to a chapter; `restart` or `settle` then starts it. */
+  setChapter(chapter: SunChapter): void;
   /** Play or hold; held, nothing moves but the reader can still turn and zoom. */
   setPlaying(playing: boolean): void;
   /** Start the chapter again, the camera back with the story. */
   restart(): void;
-  /** Show the chain complete and hold there, for readers who ask for less motion. */
+  /** Show the chapter complete and hold there, for readers who ask for less motion. */
   settle(): void;
   dispose(): void;
 }
@@ -67,6 +80,17 @@ const INSIDE = 0.5;
 const PLASMA = new Color(0.78, 0.36, 0.08);
 /** The story's camera move, from outside the Sun into the core, ms. */
 const DIVE_MS = 3200;
+/** How long the walk takes to draw, from the core to the surface, ms. */
+const WALK_MS = 4800;
+/** The camera's move out of the core to watch the walk, ms. */
+const PULL_MS = 1800;
+/** The colour of the light as it goes: violet-white, X-ray blue, convection orange, sunlight. */
+const BAND_COLOURS: Readonly<Record<Band, Color>> = {
+  gamma: new Color(0.9, 0.8, 1),
+  xray: new Color(0.45, 0.72, 1),
+  convection: new Color(1, 0.55, 0.15),
+  visible: new Color(1, 0.95, 0.55),
+};
 
 const NOISE = /* glsl */ `
   float hash(vec3 p) {
@@ -443,7 +467,53 @@ export function createSunCore(container: HTMLElement): SunCore {
   const hint = document.createElement('p');
   hint.className = 'story-hint';
   hint.textContent = 'Drag to turn, scroll or pinch to zoom. Not to scale.';
-  container.append(legend, hint);
+
+  // The escape: the walk, drawn as it goes, coloured by what the light is at each step.
+  const walk = photonWalk([CHAIN_AT.x, CHAIN_AT.y, CHAIN_AT.z]);
+  const walkGeometry = new LineGeometry();
+  walkGeometry.setPositions(walk.points.flatMap(([x, y, z]) => [x, y, z]));
+  walkGeometry.setColors(
+    walk.points.flatMap((_, index) => BAND_COLOURS[bandAt(walk, index)].toArray()),
+  );
+  const walkMaterial = new LineMaterial({ vertexColors: true, linewidth: 3 });
+  const trail = new Line2(walkGeometry, walkMaterial);
+  const segments = walk.points.length - 1;
+  const head = lepton(0xffffff, 0.035);
+  const headLabel = label('', 'is-photon');
+  scene.add(trail, head);
+
+  // What the light is along its way, beside the scene: the stage it is at lit.
+  const escapeLegend = document.createElement('ol');
+  escapeLegend.className = 'story-chain';
+  escapeLegend.setAttribute('aria-label', 'A photon’s way out');
+  const escapeItems = new Map<Band, HTMLLIElement>();
+  for (const info of BANDS) {
+    const item = document.createElement('li');
+    item.value = BANDS.indexOf(info) + 1;
+    const name = document.createElement('strong');
+    name.textContent = info.label;
+    item.append(name, document.createTextNode(`: ${info.about}`));
+    escapeLegend.append(item);
+    escapeItems.set(info.band, item);
+  }
+  container.append(legend, escapeLegend, hint);
+
+  /** The walk's picture at `t` ms into the escape: drawn so far, its head, what it is. */
+  function placeWalk(t: number): Band {
+    const index = Math.min(segments, Math.floor((segments * t) / WALK_MS));
+    walkGeometry.instanceCount = index;
+    const [x, y, z] = walk.points[index] ?? [0, 0, 0];
+    const band = bandAt(walk, index);
+    head.position.set(x, y, z);
+    head.material.color.copy(BAND_COLOURS[band]);
+    headLabel.position.set(x, y, z);
+    const info = BANDS.find((each) => each.band === band);
+    const years = yearsAt(walk, index);
+    headLabel.element.textContent = `${info?.label ?? ''} · ${years.toLocaleString('en')} years`;
+    container.dataset['years'] = String(years);
+    for (const [each, item] of escapeItems) item.classList.toggle('is-now', each === band);
+    return band;
+  }
 
   /** Lay a ray from `from` along `direction`, `length` long (chain units). */
   function lay(mesh: Mesh, from: Vector3, direction: Vector3, length: number): void {
@@ -537,10 +607,22 @@ export function createSunCore(container: HTMLElement): SunCore {
     return stage;
   }
 
-  // The story's camera: from outside the Sun, looking into the cut, down into the core.
+  // The story's camera: from outside the Sun, looking into the cut, down into the core; for
+  // the escape, out again to watch the walk cross the zones.
   const startAt = new Vector3(-2.4, 1.25, 2.7);
   const endAt = CHAIN_AT.clone().add(new Vector3(-0.07, 0.035, 0.11));
+  const watchAt = new Vector3(-1.75, 0.95, 2.05);
+  const watchTarget = new Vector3(-0.3, 0.25, 0.3);
+  /** Where the camera was when the escape began, to move from. */
+  const pullFrom = { at: endAt.clone(), target: CHAIN_AT.clone() };
   function storyCamera(t: number): void {
+    if (chapter === 'escape') {
+      const k = EASE(clamp01(t / PULL_MS));
+      camera.position.copy(pullFrom.at).lerp(watchAt, k);
+      controls.target.copy(pullFrom.target).lerp(watchTarget, k);
+      camera.lookAt(controls.target);
+      return;
+    }
     const k = EASE(clamp01(t / DIVE_MS));
     // Through a path that bends a little, so the dive passes over the cut rather than into it.
     const at = startAt.clone().lerp(endAt, k);
@@ -550,6 +632,7 @@ export function createSunCore(container: HTMLElement): SunCore {
     camera.lookAt(controls.target);
   }
 
+  let chapter: SunChapter = 'fusion';
   let t = 0;
   let playing = true;
   let byStory = true;
@@ -569,6 +652,7 @@ export function createSunCore(container: HTMLElement): SunCore {
     if (width === 0 || height === 0) return;
     renderer.setSize(width, height);
     labels.setSize(width, height);
+    walkMaterial.resolution.set(width, height);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     dirty = true;
@@ -621,7 +705,19 @@ export function createSunCore(container: HTMLElement): SunCore {
     for (const { object } of zoneLabels) object.visible = distance > 0.8;
     if (dirty) {
       dirty = false;
-      container.dataset['chainStage'] = placeChain(t);
+      const fusing = chapter === 'fusion';
+      chain.visible = fusing;
+      legend.hidden = !fusing;
+      trail.visible = !fusing;
+      head.visible = !fusing;
+      headLabel.visible = !fusing;
+      escapeLegend.hidden = fusing;
+      if (fusing) {
+        container.dataset['chainStage'] = placeChain(t);
+      } else {
+        for (const object of Object.values(chainLabels)) object.visible = false;
+        container.dataset['band'] = placeWalk(t);
+      }
       // The chain's names belong to the core; from out where the zones are named, too small.
       if (distance > 0.8) for (const object of Object.values(chainLabels)) object.visible = false;
       renderer.render(scene, camera);
@@ -635,6 +731,16 @@ export function createSunCore(container: HTMLElement): SunCore {
   frame = requestAnimationFrame(draw);
 
   return {
+    setChapter(next) {
+      if (next === 'escape' && chapter !== 'escape') {
+        // The walk's camera moves out from wherever the reader left it.
+        pullFrom.at.copy(camera.position);
+        pullFrom.target.copy(controls.target);
+      }
+      chapter = next;
+      container.dataset['chapter'] = next;
+      dirty = true;
+    },
     setPlaying(next) {
       playing = next;
       last = performance.now();
@@ -647,9 +753,9 @@ export function createSunCore(container: HTMLElement): SunCore {
       dirty = true;
     },
     settle() {
-      t = SETTLED_T;
+      t = chapter === 'escape' ? WALK_MS : SETTLED_T;
       byStory = true;
-      storyCamera(DIVE_MS);
+      storyCamera(chapter === 'escape' ? PULL_MS : DIVE_MS);
       byStory = false;
       playing = false;
       container.dataset['playing'] = 'false';
@@ -659,6 +765,8 @@ export function createSunCore(container: HTMLElement): SunCore {
       cancelAnimationFrame(frame);
       observer.disconnect();
       controls.dispose();
+      walkGeometry.dispose();
+      walkMaterial.dispose();
       for (const geometry of [shell.geometry, faceGeometry, nucleonGeometry, gammaGeometry]) {
         geometry.dispose();
       }
@@ -679,6 +787,9 @@ export function createSunCore(container: HTMLElement): SunCore {
       delete container.dataset['chapter'];
       delete container.dataset['rendered'];
       delete container.dataset['chainStage'];
+      delete container.dataset['band'];
+      delete container.dataset['years'];
+      delete container.dataset['inside'];
       delete container.dataset['playing'];
     },
   };
