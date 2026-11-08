@@ -169,8 +169,17 @@ test.describe('as deep time plays, the great impacts strike', () => {
       await play(page, './?ma=70&scale=all&layers=impacts&cam=20,-80,3');
     });
     await test.step('Then, as the time passes 66 Ma, Chicxulub’s strike plays', async () => {
-      await expect(globe).toHaveAttribute('data-strike', 'Chicxulub', { timeout: 20_000 });
+      await expect(globe).toHaveAttribute('data-strikes', /(^|\|)Chicxulub(\||$)/, {
+        timeout: 20_000,
+      });
       await expect(globe).toHaveAttribute('data-impacts-played', /^[1-9]/, { timeout: 60_000 });
+    });
+    await test.step('And smaller craters in view strike too, as their times pass', async () => {
+      await expect(page).toHaveURL(/[?&]ma=0(&|$)/, { timeout: 60_000 });
+      await expect(globe).toHaveAttribute('data-strikes', /Chesapeake Bay/);
+      await expect(globe).toHaveAttribute('data-impacts-played', /^([3-9]|\d\d)/, {
+        timeout: 60_000,
+      });
     });
     expect(problems).toEqual([]);
   });
@@ -182,7 +191,7 @@ test.describe('as deep time plays, the great impacts strike', () => {
     });
     await test.step('Then the time runs to today without Chicxulub striking', async () => {
       await expect(page).toHaveURL(/[?&]ma=0(&|$)/, { timeout: 30_000 });
-      await expect(globe).not.toHaveAttribute('data-strike', 'Chicxulub');
+      await expect(globe).not.toHaveAttribute('data-strikes', /Chicxulub/);
     });
   });
 
@@ -194,7 +203,7 @@ test.describe('as deep time plays, the great impacts strike', () => {
     });
     await test.step('Then the time runs to today and no strike plays', async () => {
       await expect(page).toHaveURL(/[?&]ma=0(&|$)/, { timeout: 30_000 });
-      await expect(globe).not.toHaveAttribute('data-strike');
+      await expect(globe).not.toHaveAttribute('data-strikes');
       await expect(globe).not.toHaveAttribute('data-impact-playing', 'true');
     });
   });
