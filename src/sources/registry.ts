@@ -556,6 +556,13 @@ export const SOURCES = {
     url: 'https://astrogeology.usgs.gov/search/map/venus_magellan_c3_mdir_colorized_topographic_mosaic_6600m',
     licence: 'NASA/USGS, public domain',
   },
+  molaMars: {
+    name: 'MOLA map of Mars’s heights',
+    kind: 'imagery',
+    cite: 'NASA/JPL/GSFC/USGS, Mars MGS MOLA global color shaded relief, 463 m (from the Mars Orbiter Laser Altimeter, Smith et al. 2001), USGS Astrogeology',
+    url: 'https://astrogeology.usgs.gov/search/map/mars_mgs_mola_global_color_shaded_relief_463m',
+    licence: 'NASA/USGS, public domain',
+  },
   cassiniSaturn: {
     name: 'Cassini map of Saturn',
     kind: 'imagery',
@@ -944,6 +951,7 @@ export const WHYS = {
       'cassiniJupiter',
       'cassiniSaturn',
       'magellanVenus',
+      'molaMars',
       'messengerColour',
       'opalJupiter',
       'archinal2018',
