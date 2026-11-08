@@ -64,6 +64,8 @@ export const LAYERS = [
   'rocks',
   // Named periods for the place picked (PeriodO), each by its source.
   'periods',
+  // Archaeological radiocarbon dates (p3k14c), calibrated, by cell and 250 years.
+  'dates',
   // Impact craters and deposits (Impact Earth), in either time: where they lay then.
   'impacts',
   // Volcanoes erupting near the year shown (Smithsonian GVP).

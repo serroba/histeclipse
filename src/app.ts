@@ -35,6 +35,16 @@ import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
 import { DATABLE_YEARS } from './data/radiocarbonProduction';
+import {
+  datesHere,
+  datesNear,
+  datesNote,
+  loadDatesHeat,
+  loadDatesTile,
+  tileKeyOf,
+  type DatesHeat,
+  type DatesTile,
+} from './data/radiocarbonDates';
 import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruptions';
 import { dipoleAt, loadDipole, type DipoleSeries } from './data/dipoleMoment';
 import { captionOf, landing, SHOWER_STORY, SUN_STORY, type ShowerStep } from './globe/showerSteps';
@@ -1065,6 +1075,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     const now = store.get();
     showGenomes(now);
+    showDates(now);
     showImpacts(now);
     showVolcanoes(now);
     showRocks(now);
@@ -2995,6 +3006,102 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe.setGenomeCells(near.cells);
   }
 
+  // Archaeological radiocarbon dates (p3k14c): the counts load with the layer, a place's tile
+  // when it is picked.
+  let datesHeat: DatesHeat | null = null;
+  let datesHeatLoading: Promise<DatesHeat> | null = null;
+  const datesTiles = new Map<string, Promise<DatesTile | null>>();
+  let datesSaid: string | null = null;
+  let datesAction: { readonly label: string; readonly run: () => void } | null = null;
+
+  /** The curves, for carrying a date across one: loaded once, with or without their layer. */
+  function radiocarbonCurves(): Promise<Radiocarbon> {
+    return radiocarbon === null
+      ? loadRadiocarbon(`${base}data/radiocarbon.json`, fetchJson).then((loaded) => {
+          radiocarbon = loaded;
+          return loaded;
+        })
+      : Promise.resolve(radiocarbon);
+  }
+
+  function datesTile(heat: DatesHeat, place: GeoPoint): Promise<DatesTile | null> {
+    const key = tileKeyOf(heat, place);
+    let tile = datesTiles.get(key);
+    if (tile === undefined) {
+      // A place with no dates nearby has no tile: none to fetch, nothing to say.
+      tile = loadDatesTile(`${base}data/radiocarbon-dates/tiles/${key}.json`, fetchJson).catch(
+        () => null,
+      );
+      datesTiles.set(key, tile);
+    }
+    return tile;
+  }
+
+  /** In historical time with the layer on: the squares with dates, and the place's, if picked. */
+  function showDates(state: ViewState): void {
+    const on = state.layers.has('dates') && state.ma === null;
+    datesAction = null;
+    if (!on || travelling) {
+      datesSaid = on ? RESTING : null;
+      globe.setDateCells(null);
+      return;
+    }
+    if (datesHeat === null) {
+      datesSaid = 'Loading the radiocarbon dates…';
+      if (datesHeatLoading === null) {
+        datesHeatLoading = loadDatesHeat(`${base}data/radiocarbon-dates/heat.json`, fetchJson);
+        datesHeatLoading.then(
+          (loaded) => {
+            datesHeat = loaded;
+            showDates(store.get());
+            showEmpires(store.get());
+          },
+          (error: unknown) => {
+            datesHeatLoading = null;
+            notify(`Could not load the radiocarbon dates: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return;
+    }
+    const heat = datesHeat;
+    const year = state.time.date.year;
+    const near = datesNear(heat, year);
+    globe.setDateCells(near === null ? null : { cells: near.cells, cellDegrees: heat.cellDegrees });
+    datesSaid = datesNote(near, null);
+    const place = state.location;
+    if (place === null || near === null) return;
+    void datesTile(heat, place).then((tile) => {
+      const now = store.get();
+      // Only if the view still shows this place and year.
+      if (now.location !== place || now.time.date.year !== year || !now.layers.has('dates')) return;
+      const here = tile === null ? { samples: [], sites: [] } : datesHere(heat, tile, place, year);
+      datesSaid = datesNote(near, here);
+      // The date nearest the middle of the step, to carry across the curve.
+      const middle = here.samples[Math.floor(here.samples.length / 2)];
+      datesAction =
+        middle === undefined
+          ? null
+          : {
+              label: 'How was a date here found?',
+              run: () => {
+                void radiocarbonCurves().then((curves) => {
+                  const south = place.latitude < 0;
+                  const what = [middle.material, middle.period].filter((word) => word !== '');
+                  datingCard.open(
+                    south ? curves.curves.shcal20 : curves.curves.intcal20,
+                    south ? 'SHCal20' : 'IntCal20',
+                    middle.age,
+                    middle.error,
+                    `${middle.lab || 'A sample'} from ${middle.site || 'an unnamed site'}${middle.country === '' ? '' : `, ${middle.country}`}${what.length === 0 ? '' : ` (${what.join(', ')})`}: ${String(middle.age)} ± ${String(middle.error)} radiocarbon years, from p3k14c.`,
+                  );
+                });
+              },
+            };
+      showEmpires(store.get());
+    });
+  }
+
   // Rocks at the surface: their file loads the first time the layer is turned on.
   let rocks: readonly RockUnit[] | null = null;
   let rocksLoading: Promise<Rocks> | null = null;
@@ -3300,12 +3407,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ...(waysSaid === null ? [] : [['ways', waysSaid] as const]),
         ...(periodsSaid === null ? [] : [['periods', periodsSaid] as const]),
         ...(rocksSaid === null ? [] : [['rocks', rocksSaid] as const]),
+        ...(datesSaid === null ? [] : [['dates', datesSaid] as const]),
         ...(impactsSaid === null ? [] : [['impacts', impactsSaid] as const]),
         ...(volcanoesSaid === null ? [] : [['volcanoes', volcanoesSaid] as const]),
         ...(carbonMadeSaid === null ? [] : [['carbonMade', carbonMadeSaid] as const]),
       ]),
       actions: new Map([
         ...(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
+        ...(datesAction === null ? [] : [['dates', datesAction] as const]),
         ...(carbonMadeAction === null ? [] : [['carbonMade', carbonMadeAction] as const]),
       ]),
     });
@@ -3837,6 +3946,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.location !== previous.location
     ) {
       showGenomes(state);
+      showDates(state);
       showWays(state);
       showRocks(state);
       showPeriods(state);

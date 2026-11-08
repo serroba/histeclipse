@@ -32,6 +32,7 @@ from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table, write_table
 from histeclipse_pipeline.macrostrat import fetch_rocks
 from histeclipse_pipeline.ohm import fetch_ohm
+from histeclipse_pipeline.p3k14c import fetch_p3k14c
 from histeclipse_pipeline.paleo_co2 import fetch_co2_archive
 from histeclipse_pipeline.paleodem import fetch_paleodem
 from histeclipse_pipeline.paleotemp import fetch_paleotemp
@@ -311,6 +312,12 @@ def radiocarbon(args: Arguments) -> int:  # pragma: no cover - needs network acc
     return _say(f"wrote {count} curve rows to {args.out}")
 
 
+def p3k14c(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write archaeological radiocarbon dates, calibrated and counted by cell (p3k14c)."""
+    count = fetch_p3k14c(args.source, args.out)
+    return _say(f"calibrated {count} dates into {args.out}")
+
+
 def eruptions(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the Holocene's eruptions as the ice cores record them (HolVol)."""
     count = fetch_eruptions(args.out)
@@ -538,6 +545,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write the radiocarbon calibration curves (IntCal20, SHCal20)",
         "output JSON file",
     ),
+    "p3k14c": (
+        p3k14c,
+        "write archaeological radiocarbon dates, calibrated and counted by cell (p3k14c)",
+        "output folder (public/data/radiocarbon-dates)",
+    ),
     "eruptions": (
         eruptions,
         "write the Holocene's eruptions as the ice cores record them (HolVol)",
@@ -644,6 +656,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         _ = command.add_argument("--kernels", type=Path, default=DEFAULT_KERNELS)
         _ = command.add_argument("--start-year", type=int, default=DEFAULT_START_YEAR)
         _ = command.add_argument("--end-year", type=int, default=DEFAULT_END_YEAR)
+        if name == "p3k14c":
+            _ = command.add_argument(
+                "--source", type=Path, required=True, help="the site's radiocarbon curves file"
+            )
         if name == "tree-of-life":
             _ = command.add_argument(
                 "--source", type=Path, required=True, help="the fossils file naming genera"

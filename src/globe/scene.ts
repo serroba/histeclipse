@@ -113,11 +113,13 @@ import type { HumanSite } from '../data/humanClaims';
 import type { RockUnit } from '../data/rocks';
 import type { WayRegion } from '../data/waysOfLife';
 import type { IceOutlines } from '../data/iceOutlines';
+import type { DateCell } from '../data/radiocarbonDates';
 import type { OhmYear } from '../data/ohmBorders';
 import {
   clearOverlay,
   createEmpireCanvas,
   paintBorders,
+  paintDateCells,
   paintIceOutlines,
   paintRocks,
   paintSettled,
@@ -392,6 +394,10 @@ export interface Globe {
   ): void;
   /** Shade the rocks at the surface by age, under everything else; null hides them. */
   setRocks(units: readonly RockUnit[] | null): void;
+  /** Shade cells by how many radiocarbon dates fall in the step shown; null hides them. */
+  setDateCells(
+    dates: { readonly cells: readonly DateCell[]; readonly cellDegrees: number } | null,
+  ): void;
   /** Shade regions by their most widespread way of life, under any states; null hides them. */
   setWays(regions: readonly WayRegion[] | null): void;
   /** Mark cells with fossils of the moment, by group and count; null hides them. */
@@ -1433,18 +1439,22 @@ export function createGlobe(
   let historyOverlay: {
     readonly rocks: readonly RockUnit[] | null;
     readonly ways: readonly WayRegion[] | null;
+    readonly dates: { readonly cells: readonly DateCell[]; readonly cellDegrees: number } | null;
     readonly empires: EmpireLayer | null;
-  } = { rocks: null, ways: null, empires: null };
+  } = { rocks: null, ways: null, dates: null, empires: null };
   function paintHistoryOverlay(): void {
     const uniforms = earth.material.uniforms;
-    const { rocks, ways, empires } = historyOverlay;
-    const on = rocks !== null || ways !== null || empires !== null;
+    const { rocks, ways, dates, empires } = historyOverlay;
+    const on = rocks !== null || ways !== null || dates !== null || empires !== null;
     uniforms['empiresActive'] = { value: on ? 1 : 0 };
     needsRender = true;
     if (!on) return;
     clearOverlay(empiresCanvas);
     if (rocks !== null) paintRocks(empiresCanvas, rocks, empires === null ? 1 : 0.45);
     if (ways !== null) paintWays(empiresCanvas, ways, empires === null ? 1 : 0.45);
+    if (dates !== null) {
+      paintDateCells(empiresCanvas, dates.cells, dates.cellDegrees, empires === null ? 1 : 0.6);
+    }
     if (empires !== null) {
       paintTerritories(empiresCanvas, empires.territories);
       if (empires.ohm !== null) paintBorders(empiresCanvas, empires.ohm.borders);
@@ -2848,6 +2858,12 @@ export function createGlobe(
       if ((units === null ? 'off' : 'on') === container.dataset['rocks']) return;
       historyOverlay = { ...historyOverlay, rocks: units };
       container.dataset['rocks'] = units === null ? 'off' : 'on';
+      paintHistoryOverlay();
+    },
+    setDateCells(dates) {
+      const key = dates === null ? 'off' : String(dates.cells.length);
+      historyOverlay = { ...historyOverlay, dates };
+      container.dataset['dateCells'] = key;
       paintHistoryOverlay();
     },
     setWays(regions) {

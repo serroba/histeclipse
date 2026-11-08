@@ -56,8 +56,9 @@ export const REAL_EXAMPLES: readonly {
 
 export interface DatingCard {
   readonly dialog: HTMLDialogElement;
-  /** Open it on a curve, named, for a radiocarbon age and its 1σ. */
-  open(curve: CalibrationCurve, name: string, age?: number, sigma?: number): void;
+  /** Open it on a curve, named, for a radiocarbon age and its 1σ, with a line on the sample
+   * it came from, if any. */
+  open(curve: CalibrationCurve, name: string, age?: number, sigma?: number, about?: string): void;
 }
 
 function svgElement(name: string, attributes: Record<string, string>): SVGElement {
@@ -312,12 +313,13 @@ export function createDatingCard(): DatingCard {
 
   return {
     dialog,
-    open(next, name, age = 2450, sigma = 25) {
+    open(next, name, age = 2450, sigma = 25, about) {
       curve = next;
       curveName = name;
       ageInput.value = String(age);
       sigmaInput.value = String(sigma);
-      note.hidden = true;
+      note.hidden = about === undefined;
+      note.textContent = about ?? '';
       dialog.showModal();
       draw();
     },

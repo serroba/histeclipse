@@ -11,6 +11,7 @@ import type { ArrivalGrid } from '../data/dispersal';
 import type { RockUnit } from '../data/rocks';
 import type { Shown, WayRegion } from '../data/waysOfLife';
 import type { IceOutlines } from '../data/iceOutlines';
+import { heatLevel, type DateCell } from '../data/radiocarbonDates';
 
 export const EMPIRE_MAP_WIDTH = 4096;
 
@@ -229,4 +230,30 @@ export function paintRocks(
     }
   }
   context.globalAlpha = 1;
+}
+
+/**
+ * Shades each cell with radiocarbon dates in the step shown, one warm hue, deeper for more
+ * dates on a log scale against the busiest cell: under the states, which are drawn over it.
+ */
+export function paintDateCells(
+  canvas: HTMLCanvasElement,
+  cells: readonly DateCell[],
+  cellDegrees: number,
+  // Under the states' own colours, fainter, so theirs still read.
+  strength = 1,
+): void {
+  const context = canvas.getContext('2d');
+  if (context === null) return;
+  const { width, height } = canvas;
+  const busiest = Math.max(1, ...cells.map(({ count }) => count));
+  const w = (cellDegrees / 360) * width;
+  const h = (cellDegrees / 180) * height;
+  for (const cell of cells) {
+    const level = heatLevel(cell.count, busiest);
+    context.fillStyle = `rgba(255, 128, 48, ${String((0.2 + 0.65 * level) * strength)})`;
+    const x = ((cell.longitude + 180) / 360) * width;
+    const y = ((90 - cell.latitude - cellDegrees) / 180) * height;
+    context.fillRect(x, y, w, h);
+  }
 }

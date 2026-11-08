@@ -166,6 +166,8 @@ const UI_PATHS = {
   ],
   // A decay curve over axes: half gone, then half again.
   radiocarbon: ['M4 4v16h16', 'M6 6c2 6 5 9 9 10.5s4 1.5 5 1.5', 'M10 13.6h.01'],
+  // A grid of squares, some filled: dates counted by cell.
+  dates: ['M4 4h6v6H4z', 'M14 4h6v6h-6z', 'M4 14h6v6H4z', 'M15 15h4v4h-4z'],
   // A ray striking from above, and the burst it sets off.
   carbonMade: ['M5 3l5 8', 'M10 11l-3 5', 'M10 11l1 6', 'M10 11l5 4', 'M3 20h18'],
   // Stacked sheets.
