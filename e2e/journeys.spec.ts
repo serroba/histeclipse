@@ -584,6 +584,15 @@ test('close up on Venus, the Light switch shows the ground beneath its clouds, b
       page.getByText(/^Pictured: the Lunar Reconnaissance Orbiter’s colour mosaic/),
     ).toBeVisible();
   });
+  await test.step('And its enhanced colour, Clementine’s, tells its rocks apart', async () => {
+    await page.goto('./?t=2024-06-01T12:00&focus=moon&cam=10,0,2.6&light=minerals');
+    await expect(globe).toHaveAttribute('data-moon-map', 'view', { timeout: 30_000 });
+    await expect(light.getByRole('button', { name: /^Enhanced colour/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.getByText(/Clementine’s colour-ratio map/)).toBeVisible();
+  });
   await test.step('And Saturn, with one way only, has no Light switch', async () => {
     await page.goto('./?t=2024-06-01T12:00&focus=saturn&cam=10,0,2.6');
     await expect(globe).toHaveAttribute('data-focus', 'saturn', { timeout: 30_000 });

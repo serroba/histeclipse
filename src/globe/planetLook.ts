@@ -330,6 +330,15 @@ export const PLANET_VIEWS: Readonly<Record<PlanetName | 'moon', readonly PlanetV
       caption:
         'Pictured: the height of the ground, measured by the Lunar Reconnaissance Orbiter’s laser altimeter (LOLA, from 2009), shaded as if lit and coloured from blue lowlands to red and white heights: the dark seas low, the far side’s highlands high, and the South Pole–Aitken basin, the largest, deepest of all. NASA/GSFC/USGS.',
     },
+    {
+      key: 'minerals',
+      label: 'Enhanced colour',
+      detail: 'its rocks told apart',
+      map: 'textures/moon-minerals-2048.jpg',
+      sharp: 'textures/moon-minerals-4096.jpg',
+      caption:
+        'Pictured: Clementine’s colour-ratio map (1994). Not true colour: each colour is a ratio of light in three filters (415, 750 and 1000 nm), chosen to tell the Moon’s rocks apart. Red is the highlands and volcanic glass, poor in titanium; blue the seas richest in titanium; green and yellow-green iron-bearing minerals. Black strips are gaps in the coverage. NASA/DoD/USGS; Lucey, Blewett & Jolliff (2000).',
+    },
   ],
 };
 

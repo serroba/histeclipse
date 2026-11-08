@@ -87,6 +87,7 @@ describe('planet views, for the Light switch', () => {
     expect(first?.caption).toBe(MOON_CAPTION);
     expect(planetView('moon', 'radar').key).toBe('colour');
     expect(planetView('moon', 'height').map).toBe('textures/moon-height-2048.jpg');
+    expect(planetView('moon', 'minerals').caption).toContain('Clementine');
   });
 });
 

@@ -128,6 +128,13 @@ MAPS = (
         widths=(2048, 4096),
     ),
     MapSource(
+        stem="moon-minerals",
+        # Clementine's colour ratios, telling the rocks apart (USGS, public domain).
+        url="https://planetarymaps.usgs.gov/mosaic/Lunar_Clementine_UVVIS_Warp_ClrRatio_Global_200m.tif",
+        sha256="e818ab2b404d216b12d708a01354f9864d64aa887be8b43a795cf4b5feb3fc28",
+        widths=(2048, 4096),
+    ),
+    MapSource(
         stem="planets/mercury-colour",
         # MESSENGER's enhanced-colour map (PIA17386), centred on 180° E.
         url=f"{PHOTOJOURNAL}/pia17/pia17386/PIA17386.jpg",
