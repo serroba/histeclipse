@@ -315,14 +315,26 @@ test('away from Earth, the bar speaks of the body in view, and Earth’s own par
     await expect(page.getByTestId('ways-legend')).toBeHidden();
     await expect(page.getByRole('slider', { name: 'Year in the Holocene' })).toBeVisible();
   });
+  await test.step('And the date panel leaves out Earth’s spans, its layers and the Moon from Earth', async () => {
+    await expect(page.getByRole('group', { name: 'Time span' })).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Layers', exact: true })).toBeHidden();
+    const views = page.getByRole('group', { name: 'Viewpoint' });
+    await expect(views.getByRole('button', { name: 'Moon from Earth' })).toBeHidden();
+    await expect(views.getByRole('button', { name: 'Earth from Jupiter' })).toBeVisible();
+  });
   await test.step('When they look at the Moon on a full-Moon day', async () => {
     await page.goto('./?t=2025-11-05T12:00&cam=0,180,3&focus=moon');
     await globeRendered(page);
   });
-  await test.step('Then the bar gives its phase and distance, and its book opens the sources', async () => {
+  await test.step('Then the bar gives its phase and distance, the year’s eclipses, and its book opens the sources', async () => {
     await expect(page.getByTestId('body-facts')).toHaveText(
       /^Full Moon, 100% lit · 357,000 km from Earth$/,
     );
+    // The Moon keeps the year's eclipses, but not Earth's spans.
+    await expect(page.getByRole('list', { name: 'Eclipses this year' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Time span' })).toBeHidden();
+    const views = page.getByRole('group', { name: 'Viewpoint' });
+    await expect(views.getByRole('button', { name: 'Moon from Earth' })).toBeVisible();
     await body.getByRole('button', { name: 'Why: Sun, Moon and planets' }).click();
     await expect(page.getByRole('dialog', { name: 'Sun, Moon and planets' })).toBeVisible();
   });
