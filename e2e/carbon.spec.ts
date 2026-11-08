@@ -148,14 +148,6 @@ test('a cosmic ray’s shower makes carbon-14, step by step, under the field pic
     // The place's pin rests while the shower plays, so the plant can be seen.
     await expect(globe).toHaveAttribute('data-pin-shown', 'false');
   });
-  await test.step('And the rays come in in 3D, Earth’s field drawn, each ray named', async () => {
-    const story = page.getByTestId('story-3d');
-    await expect(story).toHaveAttribute('data-chapter', 'rays', { timeout: 20_000 });
-    await expect(story).toHaveAttribute('data-rendered', 'true', { timeout: 20_000 });
-    await expect(story).toContainText('Earth’s magnetic field');
-    await expect(story).toContainText('Cosmic ray: a proton of a few GeV');
-    await expect(story).toContainText(/Turned away: under \d+ GeV/);
-  });
   const stage = page.getByRole('region', { name: 'How carbon-14 is made, step by step' });
   await test.step('And the panels step aside for its stage', async () => {
     await expect(stage).toBeVisible();
@@ -165,6 +157,21 @@ test('a cosmic ray’s shower makes carbon-14, step by step, under the field pic
     // A slow runner may have played it out by now: replay first, so the pause comes early.
     await stage.getByRole('button', { name: 'Replay' }).click();
     await stage.getByRole('button', { name: 'Pause', exact: true }).click();
+  });
+  await test.step('And the rays come in in 3D, Earth’s field drawn, each ray named', async () => {
+    // A slow runner may have played on before the pause: back to the first step.
+    for (let tries = 0; tries < 6; tries += 1) {
+      if ((await globe.getAttribute('data-shower-step')) === 'rays') break;
+      await stage.getByRole('button', { name: 'Back' }).click();
+      await page.waitForTimeout(200);
+    }
+    await expect(globe).toHaveAttribute('data-shower-step', 'rays');
+    const story = page.getByTestId('story-3d');
+    await expect(story).toHaveAttribute('data-chapter', 'rays', { timeout: 20_000 });
+    await expect(story).toHaveAttribute('data-rendered', 'true', { timeout: 20_000 });
+    await expect(story).toContainText('Earth’s magnetic field');
+    await expect(story).toContainText('Cosmic ray: a proton of a few GeV');
+    await expect(story).toContainText(/Turned away: under \d+ GeV/);
   });
   let paused = '';
   await test.step('Then it stands still', async () => {
