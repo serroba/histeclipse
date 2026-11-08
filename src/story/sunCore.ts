@@ -5,12 +5,14 @@
  *   labelled, gamma rays flashing out.
  * - Escape: that light's random walk out through the radiative zone, coloured by what it is,
  *   the years counting; convection carrying it up the last third; leaving as visible light.
+ * - Journey: one photon of red light crossing to Earth, the camera following; a few seconds on
+ *   screen, while a clock beside it tells the real time, 8 minutes 19 seconds.
  * The reader can pause, turn and zoom at any moment; dragging takes the camera from the story,
  * which hands it back on a restart. Not to scale: the core would hold some 10⁵⁶ protons, each
  * 10⁻¹⁵ m across, and each step of the walk drawn stands for countless real ones.
  *
  * Three.js glue, loaded on demand and covered by the Playwright suite; the chain's timing is in
- * `fusionChain.ts`, the walk in `photonWalk.ts`.
+ * `fusionChain.ts`, the walk in `photonWalk.ts`, the journey's numbers in `sunlightJourney.ts`.
  */
 
 import {
@@ -36,6 +38,8 @@ import {
   SphereGeometry,
   Sprite,
   SpriteMaterial,
+  SRGBColorSpace,
+  TextureLoader,
   Vector3,
   WebGLRenderer,
 } from 'three';
@@ -47,9 +51,22 @@ import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer
 
 import { CHAIN, SETTLED_T, stageAt, stageProgress, type ChainStage } from './fusionChain';
 import { BANDS, bandAt, photonWalk, yearsAt, type Band } from './photonWalk';
+import {
+  clock,
+  elapsedAt,
+  JOURNEY_FACTS,
+  RED_NM,
+  SUN_OVER_EARTH,
+  TRAVEL_S,
+} from './sunlightJourney';
 
 /** The chapters this scene plays. */
-export type SunChapter = 'fusion' | 'escape';
+export type SunChapter = 'fusion' | 'escape' | 'journey';
+
+export interface SunCoreOptions {
+  /** Earth's map, the one the globe wears, for the light to arrive at. */
+  readonly earthTextureUrl: string;
+}
 
 export interface SunCore {
   /** Turn to a chapter; `restart` or `settle` then starts it. */
@@ -84,6 +101,10 @@ const DIVE_MS = 3200;
 const WALK_MS = 4800;
 /** The camera's move out of the core to watch the walk, ms. */
 const PULL_MS = 1800;
+/** How long the photon takes to cross to Earth on screen, ms; the clock says the real time. */
+const JOURNEY_MS = 4000;
+/** How far Earth is drawn from the Sun, in the Sun's radius: short of the real 215. */
+const EARTH_DRAWN_AT = 40;
 /** The colour of the light as it goes: violet-white, X-ray blue, convection orange, sunlight. */
 const BAND_COLOURS: Readonly<Record<Band, Color>> = {
   gamma: new Color(0.9, 0.8, 1),
@@ -225,7 +246,7 @@ const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
 const within = (progress: number, from: number, to: number): number =>
   clamp01((progress - from) / (to - from));
 
-export function createSunCore(container: HTMLElement): SunCore {
+export function createSunCore(container: HTMLElement, options: SunCoreOptions): SunCore {
   const renderer = new WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x02040a);
@@ -496,7 +517,86 @@ export function createSunCore(container: HTMLElement): SunCore {
     escapeLegend.append(item);
     escapeItems.set(info.band, item);
   }
-  container.append(legend, escapeLegend, hint);
+  // The journey: from where the walk left the surface, straight out to Earth.
+  const [lx, ly, lz] = walk.points.at(-1) ?? [0, 1, 0];
+  const leaving = new Vector3(lx, ly, lz);
+  const outward = leaving.clone().normalize();
+  const earthAt = outward.clone().multiplyScalar(EARTH_DRAWN_AT);
+  const earthMap = new TextureLoader().load(options.earthTextureUrl, () => {
+    dirty = true;
+  });
+  earthMap.colorSpace = SRGBColorSpace;
+  const earthGeometry = new SphereGeometry(1 / SUN_OVER_EARTH, 64, 48);
+  const earthMaterial = new MeshStandardMaterial({ map: earthMap, roughness: 0.9 });
+  const earth = new Mesh(earthGeometry, earthMaterial);
+  earth.position.copy(earthAt);
+  earth.rotation.z = (23.4 * Math.PI) / 180;
+  // Sunlight on Earth, from the Sun.
+  const sunlight = new DirectionalLight(0xffffff, 2.6);
+  sunlight.position.set(0, 0, 0);
+  sunlight.target = earth;
+  // It lands on the day side, not at Earth's centre.
+  const arriveAt = earthAt.clone().addScaledVector(outward, -1 / SUN_OVER_EARTH);
+  // The ray behind the photon: a line a few pixels wide however near, drawn as far as it has got.
+  const RAY_POINTS = 200;
+  const rayGeometry = new LineGeometry();
+  rayGeometry.setPositions(
+    Array.from({ length: RAY_POINTS }, (_, i) =>
+      leaving
+        .clone()
+        .lerp(arriveAt, i / (RAY_POINTS - 1))
+        .toArray(),
+    ).flat(),
+  );
+  const rayMaterial = new LineMaterial({
+    color: 0xff3a2a,
+    linewidth: 2,
+    transparent: true,
+    opacity: 0.8,
+  });
+  const lightRay = new Line2(rayGeometry, rayMaterial);
+  // Its glow keeps one size on screen, however near the camera comes.
+  const redPhoton = lepton(0xff4030, 0.05);
+  const redLabel = label('', 'is-red');
+  const earthLabel = label('Earth');
+  scene.add(earth, sunlight, lightRay, redPhoton);
+
+  const journeyLegend = document.createElement('ol');
+  journeyLegend.className = 'story-chain';
+  journeyLegend.setAttribute('aria-label', 'Sunlight’s way to Earth');
+  JOURNEY_FACTS.forEach((fact, index) => {
+    const item = document.createElement('li');
+    item.value = index + 1;
+    // The time it takes is the one lit, and the one a phone keeps when it shows only one.
+    if (fact.includes(clock(TRAVEL_S))) item.className = 'is-now';
+    item.textContent = fact;
+    journeyLegend.append(item);
+  });
+  container.append(legend, escapeLegend, journeyLegend, hint);
+
+  /**
+   * How far across the photon is at `t` ms, from 0 to 1. Light goes steadily, but the screen
+   * eases it out of the Sun and in to Earth, and hurries it across the empty middle; the clock
+   * beside it follows the distance, so it tells the real time all the same.
+   */
+  function travelled(t: number): number {
+    const p = clamp01(t / JOURNEY_MS);
+    return p * p * (3 - 2 * p);
+  }
+
+  /** The photon's place at `t` ms into the journey, and the clock beside it. */
+  function placeJourney(t: number): number {
+    const progress = travelled(t);
+    const at = leaving.clone().lerp(arriveAt, progress);
+    redPhoton.position.copy(at);
+    redPhoton.scale.setScalar(camera.position.distanceTo(at) * 0.045);
+    rayGeometry.instanceCount = Math.floor(progress * (RAY_POINTS - 1));
+    const seconds = elapsedAt(progress);
+    redLabel.position.copy(at);
+    redLabel.element.textContent = `red light, ${String(RED_NM)} nm · ${clock(seconds)}`;
+    earthLabel.position.copy(earthAt).addScaledVector(new Vector3(0, 1, 0), 1.6 / SUN_OVER_EARTH);
+    return Math.round(seconds);
+  }
 
   /** The walk's picture at `t` ms into the escape: drawn so far, its head, what it is. */
   function placeWalk(t: number): Band {
@@ -612,10 +712,38 @@ export function createSunCore(container: HTMLElement): SunCore {
   const startAt = new Vector3(-2.4, 1.25, 2.7);
   const endAt = CHAIN_AT.clone().add(new Vector3(-0.07, 0.035, 0.11));
   const watchAt = new Vector3(-1.75, 0.95, 2.05);
+  // Across to Earth: beside the photon at first, the Sun behind; close to Earth at the end.
+  const aside = new Vector3(0, 1, 0).cross(outward).normalize();
   const watchTarget = new Vector3(-0.3, 0.25, 0.3);
   /** Where the camera was when the escape began, to move from. */
   const pullFrom = { at: endAt.clone(), target: CHAIN_AT.clone() };
   function storyCamera(t: number): void {
+    if (chapter === 'journey') {
+      const progress = travelled(t);
+      const at = leaving.clone().lerp(arriveAt, progress);
+      // From a fixed place off to the side at first, framing the Sun and the light leaving it;
+      // then in behind the photon, close, as Earth comes up. A narrow, upright screen stands
+      // further back to fit the same.
+      const near = EASE(clamp01((t / JOURNEY_MS - 0.35) / 0.65));
+      const fit = 1 / Math.min(1, camera.aspect);
+      // On an upright screen the path runs across its narrow side: closer to the Sun, further back.
+      const farTarget = leaving.clone().addScaledVector(outward, 2.5 / fit);
+      const farAt = farTarget
+        .clone()
+        .addScaledVector(aside, 7 * fit ** 1.3)
+        .addScaledVector(new Vector3(0, 1, 0), 2 * fit ** 1.3);
+      const nearAt = at
+        .clone()
+        .addScaledVector(outward, -0.05)
+        .addScaledVector(aside, 0.02)
+        .addScaledVector(new Vector3(0, 1, 0), 0.015);
+      camera.position.copy(farAt).lerp(nearAt, near);
+      // Looking past the photon at first, then at it, and at the end at Earth.
+      const nearTarget = at.clone().lerp(earthAt, EASE(clamp01((progress - 0.6) / 0.4)));
+      controls.target.copy(farTarget).lerp(nearTarget, near);
+      camera.lookAt(controls.target);
+      return;
+    }
     if (chapter === 'escape') {
       const k = EASE(clamp01(t / PULL_MS));
       camera.position.copy(pullFrom.at).lerp(watchAt, k);
@@ -653,6 +781,7 @@ export function createSunCore(container: HTMLElement): SunCore {
     renderer.setSize(width, height);
     labels.setSize(width, height);
     walkMaterial.resolution.set(width, height);
+    rayMaterial.resolution.set(width, height);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     dirty = true;
@@ -706,17 +835,27 @@ export function createSunCore(container: HTMLElement): SunCore {
     if (dirty) {
       dirty = false;
       const fusing = chapter === 'fusion';
+      const escaping = chapter === 'escape';
+      const journeying = chapter === 'journey';
       chain.visible = fusing;
       legend.hidden = !fusing;
-      trail.visible = !fusing;
-      head.visible = !fusing;
-      headLabel.visible = !fusing;
-      escapeLegend.hidden = fusing;
-      if (fusing) {
-        container.dataset['chainStage'] = placeChain(t);
-      } else {
-        for (const object of Object.values(chainLabels)) object.visible = false;
-        container.dataset['band'] = placeWalk(t);
+      trail.visible = escaping;
+      head.visible = escaping;
+      headLabel.visible = escaping;
+      escapeLegend.hidden = !escaping;
+      earth.visible = journeying;
+      lightRay.visible = journeying;
+      redPhoton.visible = journeying;
+      redLabel.visible = journeying;
+      earthLabel.visible = journeying;
+      journeyLegend.hidden = !journeying;
+      if (!fusing) for (const object of Object.values(chainLabels)) object.visible = false;
+      if (fusing) container.dataset['chainStage'] = placeChain(t);
+      if (escaping) container.dataset['band'] = placeWalk(t);
+      if (journeying) {
+        container.dataset['clock'] = String(placeJourney(t));
+        // The Sun's zones are named for its inside; out here they would float in space.
+        for (const { object } of zoneLabels) object.visible = false;
       }
       // The chain's names belong to the core; from out where the zones are named, too small.
       if (distance > 0.8) for (const object of Object.values(chainLabels)) object.visible = false;
@@ -753,9 +892,9 @@ export function createSunCore(container: HTMLElement): SunCore {
       dirty = true;
     },
     settle() {
-      t = chapter === 'escape' ? WALK_MS : SETTLED_T;
+      t = { fusion: SETTLED_T, escape: WALK_MS, journey: JOURNEY_MS }[chapter];
       byStory = true;
-      storyCamera(chapter === 'escape' ? PULL_MS : DIVE_MS);
+      storyCamera({ fusion: DIVE_MS, escape: PULL_MS, journey: JOURNEY_MS }[chapter]);
       byStory = false;
       playing = false;
       container.dataset['playing'] = 'false';
@@ -767,6 +906,11 @@ export function createSunCore(container: HTMLElement): SunCore {
       controls.dispose();
       walkGeometry.dispose();
       walkMaterial.dispose();
+      earthGeometry.dispose();
+      earthMaterial.dispose();
+      earthMap.dispose();
+      rayGeometry.dispose();
+      rayMaterial.dispose();
       for (const geometry of [shell.geometry, faceGeometry, nucleonGeometry, gammaGeometry]) {
         geometry.dispose();
       }
@@ -789,6 +933,7 @@ export function createSunCore(container: HTMLElement): SunCore {
       delete container.dataset['chainStage'];
       delete container.dataset['band'];
       delete container.dataset['years'];
+      delete container.dataset['clock'];
       delete container.dataset['inside'];
       delete container.dataset['playing'];
     },

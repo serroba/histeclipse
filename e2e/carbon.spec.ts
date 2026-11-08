@@ -306,6 +306,16 @@ test('started from the Sun, the story follows a photon from fusion to Earth', as
     await stage.getByRole('button', { name: 'Next' }).click();
     await expect(globe).toHaveAttribute('data-shower-step', step, { timeout: 20_000 });
   };
+  /** Pause, and step back to `step` should a slow runner have played on past it first. */
+  const pauseOn = async (step: string) => {
+    await stage.getByRole('button', { name: 'Pause', exact: true }).click();
+    for (let tries = 0; tries < 6; tries += 1) {
+      if ((await globe.getAttribute('data-shower-step')) === step) break;
+      await stage.getByRole('button', { name: 'Back' }).click();
+      await page.waitForTimeout(200);
+    }
+    await expect(globe).toHaveAttribute('data-shower-step', step);
+  };
   await test.step('Given the card on how carbon-14 is made', async () => {
     await page.goto('./?t=1500-06-01T12:00&loc=48,10&layers=carbonMade');
     await globeRendered(page);
@@ -370,14 +380,24 @@ test('started from the Sun, the story follows a photon from fusion to Earth', as
     await expect
       .poll(async () => Number(await story.getAttribute('data-years')))
       .toBeGreaterThan(years);
-    await stage.getByRole('button', { name: 'Pause', exact: true }).click();
+    await pauseOn('escape');
   });
-  await test.step('Then it crosses to Earth, drawn flat for now', async () => {
+  await test.step('Then its red light crosses to Earth in 3D, the clock saying 8 min 19 s', async () => {
     await next('journey');
-    await expect(page.getByTestId('story-3d')).toBeHidden();
-    await expect(stage.getByTestId('sun-diagram')).toContainText(
-      'red light: 680 nm, 441 THz, 1.8 eV',
-    );
+    const story = page.getByTestId('story-3d');
+    await expect(story).toHaveAttribute('data-chapter', 'journey');
+    const way = story.getByRole('list', { name: 'Sunlight’s way to Earth' });
+    await expect(way).toContainText('8 min 19 s');
+    await expect(way).toContainText('red light: 680 nm, 441 THz, 1.8 eV');
+    await expect(way).toContainText('215 Sun radii away');
+    await expect(stage.getByTestId('sun-diagram')).toHaveCount(0);
+    // Played, the clock runs on toward 8 min 19 s (499 s).
+    const clock = Number(await story.getAttribute('data-clock'));
+    await stage.getByRole('button', { name: 'Play', exact: true }).click();
+    await expect
+      .poll(async () => Number(await story.getAttribute('data-clock')))
+      .toBeGreaterThan(clock);
+    await pauseOn('journey');
   });
   await test.step('Then the shower begins on Earth', async () => {
     // (The leaf's caption, where the red photon arrives, is in the unit tests: stepping through
