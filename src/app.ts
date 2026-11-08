@@ -902,6 +902,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     journey: 'sun',
     rays: 'air',
     shower: 'air',
+    capture: 'air',
   };
   const STEPS_IN_3D: ReadonlySet<ShowerStep> = new Set(Object.keys(SCENE_OF) as ShowerStep[]);
   const storyContainer = element('div', {
@@ -995,7 +996,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       if (story3d.kind === 'sun') {
         story3d.scene.setChapter(step === 'escape' || step === 'journey' ? step : 'fusion');
       } else {
-        story3d.scene.setChapter(step === 'shower' ? 'shower' : 'rays');
+        story3d.scene.setChapter(step === 'shower' || step === 'capture' ? step : 'rays');
       }
       if (reduced) story3d.scene.settle();
       else story3d.scene.restart();

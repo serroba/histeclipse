@@ -7,11 +7,13 @@
  *   nucleus about 17 km up, and what it makes strikes others, a cascade toward the ground,
  *   coloured by particle; its front reaches the ground some 57 µs later, a clock beside it says.
  *   One neutron, knocked out where most carbon-14 is made, is followed as it slows.
+ * - Capture: that neutron enters a nitrogen-14 nucleus, 7 protons and 7 neutrons; for an
+ *   instant it is nitrogen-15, then a proton flies off, and carbon-14 remains: 6 and 8.
  * The reader can pause, turn and zoom at any moment, as in the Sun's chapters. Not to scale:
  * the air is drawn thick on Earth, and only a few of the shower's particles are drawn.
  *
  * Three.js glue, loaded on demand and covered by the Playwright suite; the shower's numbers are
- * in `airCascade.ts`, the rays' words in `showerSteps.ts`.
+ * in `airCascade.ts`, the reaction's in `neutronCapture.ts`, the rays' words in `showerSteps.ts`.
  */
 
 import {
@@ -66,9 +68,19 @@ import {
   type Particle,
   type Point,
 } from './airCascade';
+import {
+  capture,
+  element,
+  makeUp,
+  nuclearRadius,
+  NUCLEON_FM,
+  PROTON_MEV,
+  REACTION_FACTS,
+  type Stage,
+} from './neutronCapture';
 
 /** The chapters this scene plays. */
-export type AirChapter = 'rays' | 'shower';
+export type AirChapter = 'rays' | 'shower' | 'capture';
 
 export interface AirShowerOptions {
   /** Earth's map, the one the globe wears. */
@@ -103,6 +115,16 @@ const CASCADE_MS = 3400;
 const SLOW_MS = 1000;
 /** The whole of the shower chapter, ms. */
 const AIR_MS = ENTER_MS + CASCADE_MS + SLOW_MS;
+/** The reaction's moments, ms: the neutron arrives, and the proton leaves. */
+const ARRIVE_MS = 1800;
+const LEAVE_MS = 2500;
+/** How long the proton takes to fly out of the frame, ms; the reaction is whole after it. */
+const FLY_MS = 1400;
+const CAPTURE_MS = LEAVE_MS + FLY_MS;
+/** The colours the stage's captions name: nitrogen blue, carbon-14 violet, the proton yellow. */
+const NITROGEN = new Color(0x5a99ff);
+const CARBON = new Color(0xb87aff);
+const FREED = new Color(0xffd94d);
 /** The camera's move from beside the incoming proton to the side of the column, ms. */
 const SWING_MS = 2200;
 /** How wide the column of air is drawn, km either side. */
@@ -585,8 +607,128 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
   const hint = document.createElement('p');
   hint.className = 'story-hint';
   hint.textContent = 'Drag to turn, scroll or pinch to zoom. Not to scale.';
-  container.append(legend, hint);
-  scene.add(space, air);
+  // The reaction: one nitrogen nucleus, in femtometres.
+  const nucleus = new Group();
+  const reaction = capture();
+  const nucleonGeometry = new SphereGeometry(NUCLEON_FM, 24, 16);
+  const protonMaterial = new MeshStandardMaterial({
+    color: 0xff5a48,
+    roughness: 0.45,
+    emissive: 0x401008,
+  });
+  const neutronMaterial = new MeshStandardMaterial({
+    color: 0xa8bccf,
+    roughness: 0.45,
+    emissive: 0x101820,
+  });
+  geometries.push(nucleonGeometry);
+  materials.push(protonMaterial, neutronMaterial);
+  const homes = reaction.slots.map(({ at }) => vector(at));
+  const nucleons = reaction.slots.map(({ kind }, index) => {
+    const mesh = new Mesh(nucleonGeometry, kind === 'proton' ? protonMaterial : neutronMaterial);
+    mesh.position.copy(homes[index] ?? new Vector3());
+    nucleus.add(mesh);
+    return mesh;
+  });
+  const halo = glow(NITROGEN.clone(), nuclearRadius(15) * 5, nucleus);
+  halo.material.opacity = 0.35;
+  halo.renderOrder = -1;
+  const burst = glow(new Color(1, 0.95, 0.85), 4, nucleus);
+  const arrivingFrom = new Vector3(-24, 4, 6);
+  const leavingTo = new Vector3(30, 5, -4);
+  const arrivingGlow = glow(new Color(0xf2f2f2), 3, nucleus);
+  const leavingGlow = glow(FREED.clone(), 3.4, nucleus);
+  const leavingTrail = line(
+    Array.from({ length: 32 }, (_, i) =>
+      (homes[reaction.leaves] ?? new Vector3()).clone().lerp(leavingTo, i / 31),
+    ),
+    FREED,
+    2.5,
+    nucleus,
+  );
+  const nucleusLabel = label('', nucleus);
+  nucleusLabel.position.set(0, nuclearRadius(15) + 1, 0);
+  const arrivingLabel = label('neutron n, slowed', nucleus);
+  const leavingLabel = label(`proton p, ${PROTON_MEV.toFixed(2)} MeV`, nucleus);
+  leavingLabel.element.style.color = `#${FREED.getHexString()}`;
+
+  /** The reaction at `t` ms into its chapter; returns the stage it is at. */
+  function placeCapture(t: number): Stage {
+    const stage: Stage = t < ARRIVE_MS ? 'nitrogen' : t < LEAVE_MS ? 'compound' : 'carbon';
+    const arriving = EASE(clamp01(t / ARRIVE_MS));
+    const flying = 1 - (1 - clamp01((t - LEAVE_MS) / FLY_MS)) ** 3;
+    const leaving = homes[reaction.leaves] ?? new Vector3();
+    const flown = leaving.clone().lerp(leavingTo, flying);
+    // The carbon-14 recoils the other way, a fourteenth as far: momentum shared equally.
+    const recoil = flown
+      .clone()
+      .sub(leaving)
+      .multiplyScalar(-1 / 14);
+    for (const [index, mesh] of nucleons.entries()) {
+      const home = homes[index] ?? new Vector3();
+      // Each nucleon trembles in place, the more so for an instant once the neutron is in.
+      const shake = 0.06 + (stage === 'compound' ? 0.18 : 0);
+      const wobble = new Vector3(
+        Math.sin(t / 90 + index * 1.7),
+        Math.sin(t / 110 + index * 2.3),
+        Math.sin(t / 100 + index * 3.1),
+      ).multiplyScalar(shake);
+      if (index === reaction.arrives) {
+        mesh.position.copy(arrivingFrom).lerp(home, arriving);
+        if (arriving === 1) mesh.position.add(wobble).add(recoil);
+      } else if (index === reaction.leaves) {
+        mesh.position.copy(flying > 0 ? flown : home.clone().add(wobble));
+      } else {
+        mesh.position.copy(home).add(wobble).add(recoil);
+      }
+    }
+    const incoming = nucleons[reaction.arrives];
+    const outgoing = nucleons[reaction.leaves];
+    arrivingGlow.visible = arriving < 1;
+    arrivingLabel.visible = arriving < 1;
+    if (incoming !== undefined) {
+      arrivingGlow.position.copy(incoming.position);
+      arrivingLabel.position.copy(incoming.position);
+    }
+    leavingGlow.visible = flying > 0;
+    leavingLabel.visible = flying > 0;
+    leavingTrail.visible = flying > 0;
+    leavingTrail.geometry.instanceCount = Math.round(flying * 31);
+    if (outgoing !== undefined) {
+      leavingGlow.position.copy(outgoing.position);
+      leavingLabel.position.copy(outgoing.position);
+    }
+    const flash = clamp01((t - ARRIVE_MS) / 600);
+    burst.visible = flash > 0 && flash < 1;
+    burst.scale.setScalar(4 + 10 * flash);
+    burst.material.opacity = 1 - flash;
+    halo.position.copy(recoil);
+    halo.material.color.copy(NITROGEN).lerp(CARBON, clamp01((t - LEAVE_MS) / 600));
+    const { protons, neutrons } = makeUp(stage);
+    const name =
+      stage === 'compound'
+        ? 'nitrogen-15, for an instant'
+        : `${element(protons)}-${String(protons + neutrons)}`;
+    nucleusLabel.element.textContent = `${name}: ${String(protons)} protons, ${String(neutrons)} neutrons`;
+    nucleusLabel.position.set(0, nuclearRadius(15) + 1, 0).add(recoil);
+    reactionItems[1]?.classList.toggle('is-now', stage !== 'carbon');
+    reactionItems[2]?.classList.toggle('is-now', stage === 'carbon');
+    return stage;
+  }
+
+  // The reaction, written out beside it: the equation, and the stage it is at lit.
+  const reactionLegend = document.createElement('ol');
+  reactionLegend.className = 'story-chain';
+  reactionLegend.setAttribute('aria-label', 'The reaction');
+  const reactionItems = REACTION_FACTS.map((fact, index) => {
+    const item = document.createElement('li');
+    if (index === 0) item.className = 'is-now';
+    item.textContent = fact;
+    reactionLegend.append(item);
+    return item;
+  });
+  container.append(legend, reactionLegend, hint);
+  scene.add(space, air, nucleus);
 
   // The cameras' ways: beside Earth, seeing the rays' meridian face on; then down the proton's
   // path into the column and round to its side.
@@ -613,6 +755,17 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
         .multiplyScalar(distance)
         .add(raysTarget);
       controls.target.copy(raysTarget);
+    } else if (chapter === 'capture') {
+      // From far, the nucleus a speck, in close as the neutron comes; then a little after the
+      // proton.
+      const p = EASE(clamp01(t / ARRIVE_MS));
+      // Less so on a narrow screen, where the nucleus would go off its edge.
+      const after = EASE(clamp01((t - LEAVE_MS) / FLY_MS)) * Math.min(1, camera.aspect);
+      camera.position
+        .set(-6, 5, 80)
+        .lerp(new Vector3(-5, 6, 26 * fit), p)
+        .add(new Vector3(4 * after, 0, 4 * after));
+      controls.target.set(3 * after, 0, 0);
     } else {
       const p = EASE(clamp01(t / SWING_MS));
       const beside = new Vector3(5, 12, 38 * fit ** 1.1);
@@ -636,16 +789,22 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
     dirty = true;
   });
 
-  /** The camera's reach and range for the chapter's scale: Earth radii, or km. */
+  /** The camera's reach and range for the chapter's scale: Earth radii, km, or fm. */
+  const reach: Record<AirChapter, { near: number; far: number; min: number; max: number }> = {
+    rays: { near: 0.01, far: 200, min: 1.3, max: 14 },
+    shower: { near: 0.1, far: 400, min: 3, max: 120 },
+    capture: { near: 0.1, far: 300, min: 5, max: 120 },
+  };
   function scaleFor(next: AirChapter): void {
     const wide = next === 'rays';
-    camera.near = wide ? 0.01 : 0.1;
-    camera.far = wide ? 200 : 400;
+    camera.near = reach[next].near;
+    camera.far = reach[next].far;
     camera.updateProjectionMatrix();
-    controls.minDistance = wide ? 1.3 : 3;
-    controls.maxDistance = wide ? 14 : 120;
+    controls.minDistance = reach[next].min;
+    controls.maxDistance = reach[next].max;
     space.visible = wide;
-    air.visible = !wide;
+    air.visible = next === 'shower';
+    nucleus.visible = next === 'capture';
     sunlight.position.copy(
       wide ? side.clone().applyAxisAngle(new Vector3(0, 1, 0), 0.9) : new Vector3(-1, 2, 1.5),
     );
@@ -680,10 +839,15 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
       dirty = false;
       if (chapter === 'rays') {
         container.dataset['rays'] = placeRays(t).toFixed(2);
-      } else {
+      } else if (chapter === 'shower') {
         container.dataset['microseconds'] = String(Math.round(placeShower(t)));
+      } else {
+        const { protons, neutrons } = makeUp(placeCapture(t));
+        container.dataset['protons'] = String(protons);
+        container.dataset['neutrons'] = String(neutrons);
       }
       legend.hidden = chapter !== 'shower';
+      reactionLegend.hidden = chapter !== 'capture';
       renderer.render(scene, camera);
       labels.render(scene, camera);
       container.dataset['rendered'] = 'true';
@@ -694,7 +858,7 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
   container.dataset['playing'] = 'true';
   frame = requestAnimationFrame(draw);
 
-  const ends: Record<AirChapter, number> = { rays: RAYS_MS, shower: AIR_MS };
+  const ends: Record<AirChapter, number> = { rays: RAYS_MS, shower: AIR_MS, capture: CAPTURE_MS };
   return {
     setChapter(next) {
       chapter = next;
@@ -715,7 +879,7 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
     settle() {
       t = ends[chapter];
       byStory = true;
-      storyCamera(chapter === 'rays' ? RAYS_MS : SWING_MS);
+      storyCamera({ rays: RAYS_MS, shower: SWING_MS, capture: CAPTURE_MS }[chapter]);
       byStory = false;
       playing = false;
       container.dataset['playing'] = 'false';
@@ -736,6 +900,8 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
       delete container.dataset['playing'];
       delete container.dataset['rays'];
       delete container.dataset['microseconds'];
+      delete container.dataset['protons'];
+      delete container.dataset['neutrons'];
     },
   };
 }

@@ -22,16 +22,16 @@ export const SHOWER_STEPS: readonly StepStart[] = [
   { step: 'rays', at: 0 },
   { step: 'shower', at: 4500 },
   { step: 'capture', at: 10_000 },
-  { step: 'dioxide', at: 12_200 },
-  { step: 'fall', at: 14_200 },
-  { step: 'plant', at: 17_400 },
+  { step: 'dioxide', at: 15_000 },
+  { step: 'fall', at: 17_000 },
+  { step: 'plant', at: 20_200 },
 ];
 
 /** The shower bursts this long into its step, once the view has come in close, ms. */
 export const BURST_DELAY = 900;
 
 /** How long the whole plays, ms. */
-export const SHOWER_MS = 21_000;
+export const SHOWER_MS = 23_800;
 
 /** The Sun's steps, before the shower, ms from their start. */
 const SUN_STEPS: readonly StepStart[] = [
