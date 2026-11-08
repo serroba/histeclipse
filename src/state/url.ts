@@ -93,6 +93,7 @@ import {
   type ViewState,
   type TreeView,
   type CratersView,
+  CRATERS_SHAPES,
 } from './viewState';
 
 export const URL_VERSION = 1;
@@ -172,6 +173,11 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     why: read<WhyView | null>('why', (raw) => oneOf(raw, WHY_VIEWS, 'why'), defaults.why),
     tree: read<TreeView | null>('tree', parseTree, defaults.tree),
     craters: read<CratersView | null>('craters', parseCraters, defaults.craters),
+    cratersIn: read(
+      'cratersin',
+      (raw) => oneOf(raw, CRATERS_SHAPES, 'cratersin'),
+      defaults.cratersIn,
+    ),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -218,6 +224,7 @@ export function serializeViewState(state: ViewState): string {
   if (state.craters !== null) {
     params.set('craters', state.craters === 'all' ? 'all' : String(state.craters.id));
   }
+  if (state.cratersIn !== 'map') params.set('cratersin', state.cratersIn);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }

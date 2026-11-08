@@ -104,3 +104,18 @@ function greatCircleKm(a: GeoPoint, b: GeoPoint): number {
     Math.cos(a.latitude * rad) * Math.cos(b.latitude * rad) * Math.sin(dLon / 2) ** 2;
   return 2 * EARTH_KM * Math.asin(Math.min(1, Math.sqrt(h)));
 }
+
+/** Where the maps name today's continents, for bearings. */
+export const CONTINENT_LABELS: readonly {
+  readonly name: string;
+  readonly latitude: number;
+  readonly longitude: number;
+}[] = [
+  { name: 'North America', latitude: 45, longitude: -100 },
+  { name: 'South America', latitude: -15, longitude: -60 },
+  { name: 'Europe', latitude: 52, longitude: 15 },
+  { name: 'Africa', latitude: 5, longitude: 20 },
+  { name: 'Asia', latitude: 50, longitude: 95 },
+  { name: 'Australia', latitude: -25, longitude: 134 },
+  { name: 'Antarctica', latitude: -80, longitude: 30 },
+];
