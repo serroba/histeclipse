@@ -159,7 +159,9 @@ test('today shows the states as Cliopatria last drew them, and says so', async (
   });
 });
 
-test('the ground shows one fill at a time: rocks or ways of life', async ({ page }) => {
+test('the ground shows one fill at a time: rocks, ways of life or radiocarbon dates', async ({
+  page,
+}) => {
   const problems = collectProblems(page);
   const panel = page.getByRole('dialog', { name: 'Layers' });
   await test.step('Given 2000 BCE with Rocks at the surface on', async () => {
@@ -175,6 +177,14 @@ test('the ground shows one fill at a time: rocks or ways of life', async ({ page
     await expect(panel.getByRole('checkbox', { name: 'Rocks at the surface' })).not.toBeChecked();
     await expect(page).toHaveURL(/layers=[a-z,]*ways/);
     await expect(page).not.toHaveURL(/layers=[a-z,]*rocks/);
+  });
+  await test.step('When they turn on Radiocarbon dates', async () => {
+    await panel.getByRole('checkbox', { name: 'Radiocarbon dates' }).check();
+  });
+  await test.step('Then ways of life give way too: the dates shade the ground in its colours', async () => {
+    await expect(panel.getByRole('checkbox', { name: 'Ways of life' })).not.toBeChecked();
+    await expect(page).toHaveURL(/layers=[a-zA-Z,]*dates/);
+    await expect(page).not.toHaveURL(/layers=[a-z,]*ways/);
   });
   expect(problems).toEqual([]);
 });
