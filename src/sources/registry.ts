@@ -563,6 +563,13 @@ export const SOURCES = {
     url: 'https://astrogeology.usgs.gov/search/map/mars_mgs_mola_global_color_shaded_relief_463m',
     licence: 'NASA/USGS, public domain',
   },
+  lolaMoon: {
+    name: 'LOLA map of the Moon’s heights',
+    kind: 'imagery',
+    cite: 'NASA/GSFC/USGS, Moon LRO LOLA color shaded relief, 388 m (from the Lunar Orbiter Laser Altimeter, Smith et al. 2010), USGS Astrogeology',
+    url: 'https://astrogeology.usgs.gov/search/map/moon_lro_lola_color_shaded_relief_388m',
+    licence: 'NASA/USGS, public domain',
+  },
   cassiniSaturn: {
     name: 'Cassini map of Saturn',
     kind: 'imagery',
@@ -952,6 +959,7 @@ export const WHYS = {
       'cassiniSaturn',
       'magellanVenus',
       'molaMars',
+      'lolaMoon',
       'messengerColour',
       'opalJupiter',
       'archinal2018',

@@ -571,6 +571,19 @@ test('close up on Venus, the Light switch shows the ground beneath its clouds, b
     );
     await expect(page.getByText(/Mars Global Surveyor’s laser altimeter/)).toBeVisible();
   });
+  await test.step('And the Moon’s switch shows its heights, by laser, and back', async () => {
+    await page.goto('./?t=2024-06-01T12:00&focus=moon&cam=10,0,2.6');
+    await expect(globe).toHaveAttribute('data-focus', 'moon', { timeout: 30_000 });
+    await light.getByRole('button', { name: /^Height/ }).click();
+    await expect(page).toHaveURL(/[?&]light=height/);
+    await expect(globe).toHaveAttribute('data-moon-map', 'view', { timeout: 30_000 });
+    await expect(page.getByText(/Lunar Reconnaissance Orbiter’s laser altimeter/)).toBeVisible();
+    await light.getByRole('button', { name: /^As it looks/ }).click();
+    await expect(globe).toHaveAttribute('data-moon-map', 'usual');
+    await expect(
+      page.getByText(/^Pictured: the Lunar Reconnaissance Orbiter’s colour mosaic/),
+    ).toBeVisible();
+  });
   await test.step('And Saturn, with one way only, has no Light switch', async () => {
     await page.goto('./?t=2024-06-01T12:00&focus=saturn&cam=10,0,2.6');
     await expect(globe).toHaveAttribute('data-focus', 'saturn', { timeout: 30_000 });
