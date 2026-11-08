@@ -10,9 +10,11 @@ describe('withLayer', () => {
     expect([...withLayer(layers('lunar', 'empires'), 'empires', false)]).toEqual(['lunar']);
   });
 
-  it('keeps one ground fill at a time: rocks or ways of life', () => {
+  it('keeps one ground fill at a time: rocks, ways of life or radiocarbon dates', () => {
     expect([...withLayer(layers('empires', 'rocks'), 'ways', true)]).toEqual(['empires', 'ways']);
     expect([...withLayer(layers('ways'), 'rocks', true)]).toEqual(['rocks']);
     expect([...withLayer(layers('rocks', 'ways'), 'ways', false)]).toEqual(['rocks']);
+    expect([...withLayer(layers('empires', 'ways'), 'dates', true)]).toEqual(['empires', 'dates']);
+    expect([...withLayer(layers('dates', 'genomes'), 'rocks', true)]).toEqual(['genomes', 'rocks']);
   });
 });
