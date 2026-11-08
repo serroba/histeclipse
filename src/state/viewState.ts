@@ -212,7 +212,15 @@ export interface ViewState {
   readonly snowball: SnowballModel;
   /** The why panel open: what it explains, or every source; null when closed. */
   readonly why: WhyView | null;
+  /**
+   * The tree of life open (#300): the whole tree, or the node an Open Tree of Life id names, its
+   * line back to the root lit; null when closed.
+   */
+  readonly tree: TreeView | null;
 }
+
+/** What the tree of life shows: all of it, or one taxon's place in it (its Open Tree id). */
+export type TreeView = 'all' | { readonly ott: number };
 
 // In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
 // so Saturn (up to ~11 AU away) fits in view; the scene caps other bodies at the same reach.
@@ -319,5 +327,6 @@ export function defaultViewState(now: Date): ViewState {
     land: DEFAULT_LAND_MODEL,
     snowball: DEFAULT_SNOWBALL_MODEL,
     why: null,
+    tree: null,
   };
 }

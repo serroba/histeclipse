@@ -4486,3 +4486,107 @@ button:has(> .icon-label) > .icon {
     transform: translateX(434px);
   }
 }
+
+/* The tree of life (#300): a wide sheet with the tree in 3D, its legend under it, and the
+ * picked taxon's line back to the first cells as a trail of links. */
+.famous-dialog.tree-dialog {
+  /* Above Layers, which can open it. */
+  z-index: 4;
+  width: min(760px, calc(100% - 32px));
+  max-height: calc(100vh - 32px);
+}
+
+.tree-dialog .famous-header h2 {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+}
+
+.tree-body {
+  padding: 0 18px 16px;
+}
+
+.tree-stage {
+  position: relative;
+}
+
+.tree-canvas {
+  display: block;
+  width: 100%;
+  height: min(52vh, 460px);
+  border-radius: 12px;
+  background: rgb(4 8 18);
+  touch-action: none;
+}
+
+.tree-legend {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.tree-status {
+  color: var(--ink-muted);
+}
+
+.tree-focus h3 {
+  margin: 12px 0 4px;
+  font-size: 16px;
+}
+
+.tree-lineage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+.tree-lineage li:not(:last-child)::after {
+  content: '›';
+  margin: 0 5px;
+  color: var(--ink-muted);
+}
+
+.tree-crumb {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tree-crumb:hover,
+.tree-crumb:focus-visible {
+  text-decoration: underline;
+}
+
+.tree-note {
+  margin: 10px 0 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.tree-label-focus {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #fff;
+  color: #0a1020;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .famous-dialog.tree-dialog {
+    width: 100%;
+    max-height: 88vh;
+  }
+
+  .tree-canvas {
+    height: 46vh;
+  }
+}
