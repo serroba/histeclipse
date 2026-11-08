@@ -829,6 +829,13 @@ export const SOURCES = {
     url: 'https://doi.org/10.5281/zenodo.15546408',
     licence: 'CC BY 4.0',
   },
+  openTree: {
+    name: 'Open Tree of Life',
+    kind: 'dataset',
+    cite: 'Open Tree of Life, synthetic tree opentree16.1 and taxonomy ott3.7.3 (Hinchliff et al. 2015, PNAS 112, 12764)',
+    url: 'https://tree.opentreeoflife.org',
+    licence: 'CC0 1.0',
+  },
   pbdb: {
     name: 'Paleobiology Database',
     kind: 'dataset',
@@ -1142,6 +1149,14 @@ export const WHYS = {
     what: 'Carbon dioxide and methane from the ice cores, and carbon dioxide and oxygen from proxies over 540 million years.',
     sources: ['bereiter', 'loulergue', 'foster', 'mills', 'co2pip'],
     others: 'Proxy estimates scatter widely: each study’s points are shown, by method.',
+  },
+  tree: {
+    title: 'Tree of life',
+    what: 'How the living things on this site are related: one tree from the first cells to our species, the fossil genera on the map hung on it.',
+    sources: ['openTree'],
+    how: 'Open Tree of Life’s synthetic tree, which merges hundreds of published phylogenies and fills the gaps from its taxonomy, trimmed to the backbone down to orders, the site’s fossil genera and our species with its closest relatives. Drawn as a radial tree: the root at the centre, each level further out, each group a wedge as wide as its share of the tips. Branch lengths mean nothing here: the tree says who is related to whom, not when they split.',
+    others:
+      'Where no published phylogeny places a taxon, only the taxonomy does: the tree marks those. Some named groups are not one branch in the synthesis (Open Tree calls them broken): many dinosaurs, Tyrannosaurus among them, hang beside the node named Dinosauria rather than under it, so they take the colour of the next group up.',
   },
   fossils: {
     title: 'Fossils',

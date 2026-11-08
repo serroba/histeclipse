@@ -45,8 +45,14 @@ export function isStep(before: ViewState, after: ViewState): boolean {
     before.deepScale !== after.deepScale ||
     before.years !== after.years ||
     before.seenIn !== after.seenIn ||
-    !sameLayers(before.layers, after.layers)
+    !sameLayers(before.layers, after.layers) ||
+    !sameTree(before.tree, after.tree)
   );
+}
+
+/** Opening, closing or moving about the tree of life: Back returns to where the reader was. */
+function sameTree(a: ViewState['tree'], b: ViewState['tree']): boolean {
+  return a === b || (typeof a === 'object' && typeof b === 'object' && a?.ott === b?.ott);
 }
 
 function sameLayers(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
