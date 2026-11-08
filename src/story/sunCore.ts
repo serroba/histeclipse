@@ -12,13 +12,12 @@
  * 10⁻¹⁵ m across, and each step of the walk drawn stands for countless real ones.
  *
  * Three.js glue, loaded on demand and covered by the Playwright suite; the chain's timing is in
- * `fusionChain.ts`, the walk in `photonWalk.ts`, the journey's numbers in `sunlightJourney.ts`.
+ * `fusionChain.ts`, the walk in `photonWalk.ts`, the journey's numbers in `sunlightJourney.ts`;
+ * what every story scene shares is in `storyScene.ts`.
  */
 
 import {
-  AdditiveBlending,
   AmbientLight,
-  CanvasTexture,
   CircleGeometry,
   Color,
   CylinderGeometry,
@@ -31,23 +30,17 @@ import {
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
-  PerspectiveCamera,
   Quaternion,
-  Scene,
   ShaderMaterial,
   SphereGeometry,
-  Sprite,
-  SpriteMaterial,
+  type Sprite,
   SRGBColorSpace,
   TextureLoader,
   Vector3,
-  WebGLRenderer,
 } from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { Line2 } from 'three/addons/lines/Line2.js';
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
-import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
-import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+import type { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 import { CHAIN, SETTLED_T, stageAt, stageProgress, type ChainStage } from './fusionChain';
 import { BANDS, bandAt, photonWalk, yearsAt, type Band } from './photonWalk';
@@ -59,6 +52,15 @@ import {
   SUN_OVER_EARTH,
   TRAVEL_S,
 } from './sunlightJourney';
+import { seeded } from './seeded';
+import {
+  createStoryScene,
+  nucleonMaterial,
+  type StoryChapters,
+  type StoryKit,
+  type StoryScene,
+} from './storyScene';
+import { clamp01, ease as EASE, within } from './timing';
 
 /** The chapters this scene plays. */
 export type SunChapter = 'fusion' | 'escape' | 'journey';
@@ -68,17 +70,7 @@ export interface SunCoreOptions {
   readonly earthTextureUrl: string;
 }
 
-export interface SunCore {
-  /** Turn to a chapter; `restart` or `settle` then starts it. */
-  setChapter(chapter: SunChapter): void;
-  /** Play or hold; held, nothing moves but the reader can still turn and zoom. */
-  setPlaying(playing: boolean): void;
-  /** Start the chapter again, the camera back with the story. */
-  restart(): void;
-  /** Show the chapter complete and hold there, for readers who ask for less motion. */
-  settle(): void;
-  dispose(): void;
-}
+export type SunCore = StoryScene<SunChapter>;
 
 /** The Sun's zones, as fractions of its radius. */
 const CORE = 0.25;
@@ -215,23 +207,6 @@ function cutMaterial(): ShaderMaterial {
   });
 }
 
-/** A soft round glow, white, tinted by its material. */
-function glowTexture(): CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 64;
-  canvas.height = 64;
-  const context = canvas.getContext('2d');
-  if (context !== null) {
-    const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
-    gradient.addColorStop(0, 'rgba(255,255,255,1)');
-    gradient.addColorStop(0.35, 'rgba(255,255,255,0.6)');
-    gradient.addColorStop(1, 'rgba(255,255,255,0)');
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 64, 64);
-  }
-  return new CanvasTexture(canvas);
-}
-
 /** Where the nucleons of a nucleus sit around its centre, in units of U. */
 const PACKING: readonly (readonly [number, number, number])[] = [
   [0.28, 0.2, 0],
@@ -240,25 +215,17 @@ const PACKING: readonly (readonly [number, number, number])[] = [
   [0, -0.25, -0.3],
 ];
 
-const EASE = (x: number): number => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
-const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
-/** How far through the span from `from` to `to` a stage's progress is, from 0 to 1. */
-const within = (progress: number, from: number, to: number): number =>
-  clamp01((progress - from) / (to - from));
-
 export function createSunCore(container: HTMLElement, options: SunCoreOptions): SunCore {
-  const renderer = new WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(0x02040a);
-  container.append(renderer.domElement);
-  const labels = new CSS2DRenderer();
-  labels.domElement.className = 'story-labels';
-  container.append(labels.domElement);
+  return createStoryScene<SunChapter>(container, {
+    first: 'fusion',
+    near: 0.0005,
+    far: 50,
+    build: (kit) => build(kit, options),
+  });
+}
 
-  const scene = new Scene();
-  const camera = new PerspectiveCamera(40, 1, 0.0005, 50);
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
+function build(kit: StoryKit<SunChapter>, options: SunCoreOptions): StoryChapters<SunChapter> {
+  const { scene, camera, controls, own, glow } = kit;
   controls.minDistance = 0.04;
   controls.maxDistance = 8;
 
@@ -268,44 +235,26 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
   scene.add(key);
 
   // The Sun, a quarter cut away to show its inside: the open quarter faces the camera.
-  const surface = surfaceMaterial();
-  const cut = cutMaterial();
-  const shell = new Mesh(new SphereGeometry(1, 128, 96, Math.PI / 2, Math.PI * 1.5), surface);
+  const surface = own(surfaceMaterial());
+  const cut = own(cutMaterial());
+  const shell = new Mesh(own(new SphereGeometry(1, 128, 96, Math.PI / 2, Math.PI * 1.5)), surface);
   // Two half-discs close the cut: one in the plane z = 0, one in x = 0, each on the open side.
-  const faceGeometry = new CircleGeometry(1, 128, Math.PI / 2, Math.PI);
+  const faceGeometry = own(new CircleGeometry(1, 128, Math.PI / 2, Math.PI));
   const faceA = new Mesh(faceGeometry, cut);
   const faceB = new Mesh(faceGeometry, cut);
   faceB.rotation.y = Math.PI / 2;
-  const glowMap = glowTexture();
-  const halo = new Sprite(
-    new SpriteMaterial({
-      map: glowMap,
-      color: new Color(1, 0.55, 0.15),
-      blending: AdditiveBlending,
-      depthWrite: false,
-      transparent: true,
-      opacity: 0.55,
-    }),
-  );
-  halo.scale.setScalar(3.4);
+  const halo = glow(new Color(1, 0.55, 0.15), 3.4, scene);
+  halo.material.opacity = 0.55;
   halo.renderOrder = -1;
-  scene.add(halo, shell, faceA, faceB);
+  scene.add(shell, faceA, faceB);
   // In the core, the plasma glows on every side and fades what is far off; outside, no haze.
   const haze = new Fog(PLASMA, 100, 200);
   scene.fog = haze;
 
   // Nucleons: one sphere, drawn as protons (red) and neutrons (grey-blue).
-  const nucleonGeometry = new SphereGeometry(NUCLEON, 20, 14);
-  const protonMaterial = new MeshStandardMaterial({
-    color: 0xff5a48,
-    roughness: 0.45,
-    emissive: 0x401008,
-  });
-  const neutronMaterial = new MeshStandardMaterial({
-    color: 0xa8bccf,
-    roughness: 0.45,
-    emissive: 0x101820,
-  });
+  const nucleonGeometry = own(new SphereGeometry(NUCLEON, 20, 14));
+  const protonMaterial = own(nucleonMaterial('proton'));
+  const neutronMaterial = own(nucleonMaterial('neutron'));
 
   /** A nucleus of `protons` and `neutrons`, packed around its centre. */
   function nucleus(protons: number, neutrons: number): Group {
@@ -322,14 +271,10 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
   }
 
   // The protons that wander the core's open quarter, by the hundred.
-  const wanderers = new InstancedMesh(nucleonGeometry, protonMaterial, WANDERERS);
+  const wanderers = own(new InstancedMesh(nucleonGeometry, protonMaterial, WANDERERS));
   const wanderAt: Vector3[] = [];
   const wanderVelocity: Vector3[] = [];
-  let seed = 11;
-  const random = (): number => {
-    seed = (seed * 16807) % 2147483647;
-    return seed / 2147483647;
-  };
+  const random = seeded(11);
   for (let i = 0; i < WANDERERS; i += 1) {
     let point: Vector3;
     // Inside the core, and clear of the followed chain; seen from outside, the cut faces hide
@@ -368,17 +313,9 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
   placeWanderers(0);
 
   // Elsewhere in the core, other chains flash now and then.
-  const flashMaterial = new SpriteMaterial({
-    map: glowMap,
-    color: new Color(1, 0.95, 0.7),
-    blending: AdditiveBlending,
-    depthWrite: false,
-    transparent: true,
-  });
   const flashes = Array.from({ length: 8 }, () => {
-    const sprite = new Sprite(flashMaterial.clone());
+    const sprite = glow(new Color(1, 0.95, 0.7), 1, scene);
     sprite.visible = false;
-    scene.add(sprite);
     return { sprite, born: -1e9 };
   });
   let nextFlash = 0;
@@ -396,26 +333,13 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
   const helium4 = nucleus(2, 2);
   const freedA = nucleus(1, 0);
   const freedB = nucleus(1, 0);
-  const lepton = (colour: number, size: number): Sprite => {
-    const sprite = new Sprite(
-      new SpriteMaterial({
-        map: glowMap,
-        color: new Color(colour),
-        blending: AdditiveBlending,
-        depthWrite: false,
-        transparent: true,
-      }),
-    );
-    sprite.scale.setScalar(size);
-    return sprite;
-  };
-  const positron = lepton(0x9fe8ff, U * 0.9);
-  const electron = lepton(0x6f8cff, U * 0.9);
-  const neutrino = lepton(0xd8ffd8, U * 0.6);
-  const burst = lepton(0xfff3c0, U * 6);
-  const gammaGeometry = new CylinderGeometry(U * 0.07, U * 0.07, 1, 6);
+  const positron = glow(0x9fe8ff, U * 0.9, chain);
+  const electron = glow(0x6f8cff, U * 0.9, chain);
+  const neutrino = glow(0xd8ffd8, U * 0.6, chain);
+  const burst = glow(0xfff3c0, U * 6, chain);
+  const gammaGeometry = own(new CylinderGeometry(U * 0.07, U * 0.07, 1, 6));
   gammaGeometry.translate(0, 0.5, 0);
-  const gammaMaterial = new MeshBasicMaterial({ color: 0xfff1a0 });
+  const gammaMaterial = own(new MeshBasicMaterial({ color: 0xfff1a0 }));
   const ray = (): Mesh => new Mesh(gammaGeometry, gammaMaterial);
   const gammaA = ray();
   const gammaB = ray();
@@ -430,25 +354,13 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
     helium4,
     freedA,
     freedB,
-    positron,
-    electron,
-    neutrino,
-    burst,
     gammaA,
     gammaB,
     gammaC,
   );
 
   /** A label in the page, tied to a point in the scene. */
-  function label(text: string, kind = ''): CSS2DObject {
-    const element = document.createElement('span');
-    element.className = `story-label ${kind}`.trim();
-    element.textContent = text;
-    const object = new CSS2DObject(element);
-    object.center.set(0, 1.2);
-    scene.add(object);
-    return object;
-  }
+  const label = (text: string, kind = ''): CSS2DObject => kit.label(text, scene, kind);
   const zoneLabels = [
     { object: label('core · 15 million °C', 'is-zone'), at: new Vector3(-0.12, 0.13, 0.002) },
     { object: label('radiative zone', 'is-zone'), at: new Vector3(-0.33, 0.36, 0.002) },
@@ -471,63 +383,41 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
   };
 
   // What the chain is, step by step, beside the scene: the equations, the one playing lit.
-  const legend = document.createElement('ol');
-  legend.className = 'story-chain';
-  legend.setAttribute('aria-label', 'The proton–proton chain');
-  const legendItems = new Map<ChainStage, HTMLLIElement>();
-  for (const info of CHAIN) {
-    const item = document.createElement('li');
-    // Numbered by the reaction, so the one shown alone on a phone keeps its number.
-    item.value = CHAIN.indexOf(info) + 1;
-    const equation = document.createElement('strong');
-    equation.textContent = info.equation;
-    item.append(equation, document.createTextNode(`: ${info.gives}`));
-    legend.append(item);
-    legendItems.set(info.stage, item);
-  }
-  const hint = document.createElement('p');
-  hint.className = 'story-hint';
-  hint.textContent = 'Drag to turn, scroll or pinch to zoom. Not to scale.';
+  const legend = kit.legend(
+    'The proton–proton chain',
+    CHAIN.map(({ equation, gives }) => ({ name: equation, about: gives })),
+  );
+  const legendItems = new Map(CHAIN.map((info, index) => [info.stage, legend.items[index]]));
 
   // The escape: the walk, drawn as it goes, coloured by what the light is at each step.
   const walk = photonWalk([CHAIN_AT.x, CHAIN_AT.y, CHAIN_AT.z]);
-  const walkGeometry = new LineGeometry();
+  const walkGeometry = own(new LineGeometry());
   walkGeometry.setPositions(walk.points.flatMap(([x, y, z]) => [x, y, z]));
   walkGeometry.setColors(
     walk.points.flatMap((_, index) => BAND_COLOURS[bandAt(walk, index)].toArray()),
   );
-  const walkMaterial = new LineMaterial({ vertexColors: true, linewidth: 3 });
+  const walkMaterial = kit.lineMaterial({ vertexColors: true, linewidth: 3 });
   const trail = new Line2(walkGeometry, walkMaterial);
   const segments = walk.points.length - 1;
-  const head = lepton(0xffffff, 0.035);
+  const head = glow(0xffffff, 0.035, scene);
   const headLabel = label('', 'is-photon');
-  scene.add(trail, head);
+  scene.add(trail);
 
   // What the light is along its way, beside the scene: the stage it is at lit.
-  const escapeLegend = document.createElement('ol');
-  escapeLegend.className = 'story-chain';
-  escapeLegend.setAttribute('aria-label', 'A photon’s way out');
-  const escapeItems = new Map<Band, HTMLLIElement>();
-  for (const info of BANDS) {
-    const item = document.createElement('li');
-    item.value = BANDS.indexOf(info) + 1;
-    const name = document.createElement('strong');
-    name.textContent = info.label;
-    item.append(name, document.createTextNode(`: ${info.about}`));
-    escapeLegend.append(item);
-    escapeItems.set(info.band, item);
-  }
+  const escapeLegend = kit.legend(
+    'A photon’s way out',
+    BANDS.map(({ label: name, about }) => ({ name, about })),
+  );
+  const escapeItems = new Map(BANDS.map((info, index) => [info.band, escapeLegend.items[index]]));
   // The journey: from where the walk left the surface, straight out to Earth.
   const [lx, ly, lz] = walk.points.at(-1) ?? [0, 1, 0];
   const leaving = new Vector3(lx, ly, lz);
   const outward = leaving.clone().normalize();
   const earthAt = outward.clone().multiplyScalar(EARTH_DRAWN_AT);
-  const earthMap = new TextureLoader().load(options.earthTextureUrl, () => {
-    dirty = true;
-  });
+  const earthMap = own(new TextureLoader().load(options.earthTextureUrl, kit.invalidate));
   earthMap.colorSpace = SRGBColorSpace;
-  const earthGeometry = new SphereGeometry(1 / SUN_OVER_EARTH, 64, 48);
-  const earthMaterial = new MeshStandardMaterial({ map: earthMap, roughness: 0.9 });
+  const earthGeometry = own(new SphereGeometry(1 / SUN_OVER_EARTH, 64, 48));
+  const earthMaterial = own(new MeshStandardMaterial({ map: earthMap, roughness: 0.9 }));
   const earth = new Mesh(earthGeometry, earthMaterial);
   earth.position.copy(earthAt);
   earth.rotation.z = (23.4 * Math.PI) / 180;
@@ -539,7 +429,7 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
   const arriveAt = earthAt.clone().addScaledVector(outward, -1 / SUN_OVER_EARTH);
   // The ray behind the photon: a line a few pixels wide however near, drawn as far as it has got.
   const RAY_POINTS = 200;
-  const rayGeometry = new LineGeometry();
+  const rayGeometry = own(new LineGeometry());
   rayGeometry.setPositions(
     Array.from({ length: RAY_POINTS }, (_, i) =>
       leaving
@@ -548,7 +438,7 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
         .toArray(),
     ).flat(),
   );
-  const rayMaterial = new LineMaterial({
+  const rayMaterial = kit.lineMaterial({
     color: 0xff3a2a,
     linewidth: 2,
     transparent: true,
@@ -556,23 +446,19 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
   });
   const lightRay = new Line2(rayGeometry, rayMaterial);
   // Its glow keeps one size on screen, however near the camera comes.
-  const redPhoton = lepton(0xff4030, 0.05);
+  const redPhoton = glow(0xff4030, 0.05, scene);
   const redLabel = label('', 'is-red');
   const earthLabel = label('Earth');
-  scene.add(earth, sunlight, lightRay, redPhoton);
+  scene.add(earth, sunlight, lightRay);
 
-  const journeyLegend = document.createElement('ol');
-  journeyLegend.className = 'story-chain';
-  journeyLegend.setAttribute('aria-label', 'Sunlight’s way to Earth');
-  JOURNEY_FACTS.forEach((fact, index) => {
-    const item = document.createElement('li');
-    item.value = index + 1;
-    // The time it takes is the one lit, and the one a phone keeps when it shows only one.
-    if (fact.includes(clock(TRAVEL_S))) item.className = 'is-now';
-    item.textContent = fact;
-    journeyLegend.append(item);
-  });
-  container.append(legend, escapeLegend, journeyLegend, hint);
+  const journeyLegend = kit.legend('Sunlight’s way to Earth', JOURNEY_FACTS);
+  // The time it takes is the one lit, and the one a phone keeps when it shows only one.
+  for (const [index, fact] of JOURNEY_FACTS.entries()) {
+    if (fact.includes(clock(TRAVEL_S))) journeyLegend.items[index]?.classList.add('is-now');
+  }
+  kit.during('fusion', chain, legend.list);
+  kit.during('escape', trail, head, headLabel, escapeLegend.list);
+  kit.during('journey', earth, lightRay, redPhoton, redLabel, earthLabel, journeyLegend.list);
 
   /**
    * How far across the photon is at `t` ms, from 0 to 1. Light goes steadily, but the screen
@@ -610,8 +496,8 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
     const info = BANDS.find((each) => each.band === band);
     const years = yearsAt(walk, index);
     headLabel.element.textContent = `${info?.label ?? ''} · ${years.toLocaleString('en')} years`;
-    container.dataset['years'] = String(years);
-    for (const [each, item] of escapeItems) item.classList.toggle('is-now', each === band);
+    kit.mark('years', String(years));
+    for (const [each, item] of escapeItems) item?.classList.toggle('is-now', each === band);
     return band;
   }
 
@@ -703,7 +589,7 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
     } else {
       show(helium4, v(0, 0, 0), chainLabels.helium4);
     }
-    for (const [each, item] of legendItems) item.classList.toggle('is-now', each === stage);
+    for (const [each, item] of legendItems) item?.classList.toggle('is-now', each === stage);
     return stage;
   }
 
@@ -717,7 +603,7 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
   const watchTarget = new Vector3(-0.3, 0.25, 0.3);
   /** Where the camera was when the escape began, to move from. */
   const pullFrom = { at: endAt.clone(), target: CHAIN_AT.clone() };
-  function storyCamera(t: number): void {
+  function storyCamera(chapter: SunChapter, t: number): void {
     if (chapter === 'journey') {
       const progress = travelled(t);
       const at = leaving.clone().lerp(arriveAt, progress);
@@ -741,14 +627,12 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
       // Looking past the photon at first, then at it, and at the end at Earth.
       const nearTarget = at.clone().lerp(earthAt, EASE(clamp01((progress - 0.6) / 0.4)));
       controls.target.copy(farTarget).lerp(nearTarget, near);
-      camera.lookAt(controls.target);
       return;
     }
     if (chapter === 'escape') {
       const k = EASE(clamp01(t / PULL_MS));
       camera.position.copy(pullFrom.at).lerp(watchAt, k);
       controls.target.copy(pullFrom.target).lerp(watchTarget, k);
-      camera.lookAt(controls.target);
       return;
     }
     const k = EASE(clamp01(t / DIVE_MS));
@@ -757,185 +641,73 @@ export function createSunCore(container: HTMLElement, options: SunCoreOptions): 
     at.y += Math.sin(k * Math.PI) * 0.25;
     camera.position.copy(at);
     controls.target.copy(new Vector3(0, 0, 0).lerp(CHAIN_AT, k));
-    camera.lookAt(controls.target);
   }
-
-  let chapter: SunChapter = 'fusion';
-  let t = 0;
-  let playing = true;
-  let byStory = true;
-  let dirty = true;
-  let last = performance.now();
-  let frame = 0;
-  controls.addEventListener('start', () => {
-    byStory = false;
-  });
-  controls.addEventListener('change', () => {
-    dirty = true;
-  });
-
-  function resize(): void {
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    if (width === 0 || height === 0) return;
-    renderer.setSize(width, height);
-    labels.setSize(width, height);
-    walkMaterial.resolution.set(width, height);
-    rayMaterial.resolution.set(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    dirty = true;
-  }
-  const observer = new ResizeObserver(resize);
-  observer.observe(container);
-  resize();
-
-  function draw(now: number): void {
-    const dt = Math.min(100, now - last);
-    last = now;
-    if (playing) {
-      t += dt;
-      placeWanderers(dt);
-      surface.uniforms['time'] = { value: t / 1000 };
-      cut.uniforms['time'] = { value: t / 1000 };
-      if (t > nextFlash) {
-        nextFlash = t + 120 + random() * 260;
-        const flash = flashes.find(({ sprite }) => !sprite.visible) ?? flashes[0];
-        if (flash !== undefined) {
-          const at = wanderAt[Math.floor(random() * WANDERERS)] ?? new Vector3();
-          flash.sprite.position.copy(at);
-          flash.sprite.visible = true;
-          flash.born = t;
-        }
-      }
-      for (const flash of flashes) {
-        const age = (t - flash.born) / 350;
-        flash.sprite.visible = age < 1;
-        flash.sprite.scale.setScalar(U * (2 + 4 * age));
-        flash.sprite.material.opacity = 1 - age;
-      }
-      dirty = true;
-    }
-    if (byStory) storyCamera(t);
-    controls.update();
-    const distance = camera.position.length();
-    // In the core the Sun's cut gives way to the plasma all round, so the chain stays in view
-    // whichever way the reader turns; out past the core's edge, the Sun cut open again.
-    const inside = distance < INSIDE;
-    shell.visible = !inside;
-    faceA.visible = !inside;
-    faceB.visible = !inside;
-    halo.visible = distance > 1.6;
-    scene.background = inside ? PLASMA : null;
-    haze.near = inside ? 0.04 : 100;
-    haze.far = inside ? 0.7 : 200;
-    container.dataset['inside'] = String(inside);
-    // Zone names belong to the Sun seen whole; in the core they would crowd the chain.
-    for (const { object } of zoneLabels) object.visible = distance > 0.8;
-    if (dirty) {
-      dirty = false;
-      const fusing = chapter === 'fusion';
-      const escaping = chapter === 'escape';
-      const journeying = chapter === 'journey';
-      chain.visible = fusing;
-      legend.hidden = !fusing;
-      trail.visible = escaping;
-      head.visible = escaping;
-      headLabel.visible = escaping;
-      escapeLegend.hidden = !escaping;
-      earth.visible = journeying;
-      lightRay.visible = journeying;
-      redPhoton.visible = journeying;
-      redLabel.visible = journeying;
-      earthLabel.visible = journeying;
-      journeyLegend.hidden = !journeying;
-      if (!fusing) for (const object of Object.values(chainLabels)) object.visible = false;
-      if (fusing) container.dataset['chainStage'] = placeChain(t);
-      if (escaping) container.dataset['band'] = placeWalk(t);
-      if (journeying) {
-        container.dataset['clock'] = String(placeJourney(t));
-        // The Sun's zones are named for its inside; out here they would float in space.
-        for (const { object } of zoneLabels) object.visible = false;
-      }
-      // The chain's names belong to the core; from out where the zones are named, too small.
-      if (distance > 0.8) for (const object of Object.values(chainLabels)) object.visible = false;
-      renderer.render(scene, camera);
-      labels.render(scene, camera);
-      container.dataset['rendered'] = 'true';
-    }
-    frame = requestAnimationFrame(draw);
-  }
-  container.dataset['chapter'] = 'fusion';
-  container.dataset['playing'] = 'true';
-  frame = requestAnimationFrame(draw);
 
   return {
-    setChapter(next) {
-      if (next === 'escape' && chapter !== 'escape') {
+    ends: { fusion: SETTLED_T, escape: WALK_MS, journey: JOURNEY_MS },
+    camera: storyCamera,
+    turn(next, previous) {
+      if (next === 'escape' && previous !== 'escape') {
         // The walk's camera moves out from wherever the reader left it.
         pullFrom.at.copy(camera.position);
         pullFrom.target.copy(controls.target);
       }
-      chapter = next;
-      container.dataset['chapter'] = next;
-      dirty = true;
-    },
-    setPlaying(next) {
-      playing = next;
-      last = performance.now();
-      container.dataset['playing'] = String(next);
     },
     restart() {
-      t = 0;
       nextFlash = 0;
-      byStory = true;
-      dirty = true;
     },
-    settle() {
-      t = { fusion: SETTLED_T, escape: WALK_MS, journey: JOURNEY_MS }[chapter];
-      byStory = true;
-      storyCamera({ fusion: DIVE_MS, escape: PULL_MS, journey: JOURNEY_MS }[chapter]);
-      byStory = false;
-      playing = false;
-      container.dataset['playing'] = 'false';
-      dirty = true;
+    frame(t, dt, playing) {
+      if (playing) {
+        placeWanderers(dt);
+        surface.uniforms['time'] = { value: t / 1000 };
+        cut.uniforms['time'] = { value: t / 1000 };
+        if (t > nextFlash) {
+          nextFlash = t + 120 + random() * 260;
+          const flash = flashes.find(({ sprite }) => !sprite.visible) ?? flashes[0];
+          if (flash !== undefined) {
+            const at = wanderAt[Math.floor(random() * WANDERERS)] ?? new Vector3();
+            flash.sprite.position.copy(at);
+            flash.sprite.visible = true;
+            flash.born = t;
+          }
+        }
+        for (const flash of flashes) {
+          const age = (t - flash.born) / 350;
+          flash.sprite.visible = age < 1;
+          flash.sprite.scale.setScalar(U * (2 + 4 * age));
+          flash.sprite.material.opacity = 1 - age;
+        }
+      }
+      const distance = camera.position.length();
+      // In the core the Sun's cut gives way to the plasma all round, so the chain stays in view
+      // whichever way the reader turns; out past the core's edge, the Sun cut open again.
+      const inside = distance < INSIDE;
+      shell.visible = !inside;
+      faceA.visible = !inside;
+      faceB.visible = !inside;
+      halo.visible = distance > 1.6;
+      scene.background = inside ? PLASMA : null;
+      haze.near = inside ? 0.04 : 100;
+      haze.far = inside ? 0.7 : 200;
+      kit.mark('inside', String(inside));
+      // Zone names belong to the Sun seen whole; in the core they would crowd the chain.
+      for (const { object } of zoneLabels) object.visible = distance > 0.8;
     },
-    dispose() {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      controls.dispose();
-      walkGeometry.dispose();
-      walkMaterial.dispose();
-      earthGeometry.dispose();
-      earthMaterial.dispose();
-      earthMap.dispose();
-      rayGeometry.dispose();
-      rayMaterial.dispose();
-      for (const geometry of [shell.geometry, faceGeometry, nucleonGeometry, gammaGeometry]) {
-        geometry.dispose();
+    place(chapter, t) {
+      if (chapter !== 'fusion') {
+        for (const object of Object.values(chainLabels)) object.visible = false;
       }
-      for (const material of [
-        surface,
-        cut,
-        protonMaterial,
-        neutronMaterial,
-        flashMaterial,
-        gammaMaterial,
-      ]) {
-        material.dispose();
+      if (chapter === 'fusion') kit.mark('chainStage', placeChain(t));
+      if (chapter === 'escape') kit.mark('band', placeWalk(t));
+      if (chapter === 'journey') {
+        kit.mark('clock', String(placeJourney(t)));
+        // The Sun's zones are named for its inside; out here they would float in space.
+        for (const { object } of zoneLabels) object.visible = false;
       }
-      glowMap.dispose();
-      renderer.dispose();
-      renderer.forceContextLoss();
-      container.replaceChildren();
-      delete container.dataset['chapter'];
-      delete container.dataset['rendered'];
-      delete container.dataset['chainStage'];
-      delete container.dataset['band'];
-      delete container.dataset['years'];
-      delete container.dataset['clock'];
-      delete container.dataset['inside'];
-      delete container.dataset['playing'];
+      // The chain's names belong to the core; from out where the zones are named, too small.
+      if (camera.position.length() > 0.8) {
+        for (const object of Object.values(chainLabels)) object.visible = false;
+      }
     },
   };
 }

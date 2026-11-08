@@ -13,7 +13,8 @@
  * the air is drawn thick on Earth, and only a few of the shower's particles are drawn.
  *
  * Three.js glue, loaded on demand and covered by the Playwright suite; the shower's numbers are
- * in `airCascade.ts`, the reaction's in `neutronCapture.ts`, the rays' words in `showerSteps.ts`.
+ * in `airCascade.ts`, the reaction's in `neutronCapture.ts`, the rays' words in `showerSteps.ts`;
+ * what every story scene shares is in `storyScene.ts`.
  */
 
 import {
@@ -21,7 +22,6 @@ import {
   AmbientLight,
   BackSide,
   BufferGeometry,
-  CanvasTexture,
   CircleGeometry,
   Color,
   CylinderGeometry,
@@ -31,26 +31,17 @@ import {
   Group,
   Mesh,
   MeshStandardMaterial,
-  PerspectiveCamera,
   Points,
   PointsMaterial,
-  Scene,
   ShaderMaterial,
   SphereGeometry,
-  Sprite,
-  SpriteMaterial,
   SRGBColorSpace,
   TextureLoader,
   Vector3,
-  WebGLRenderer,
 } from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Line2 } from 'three/addons/lines/Line2.js';
-import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
-import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+import type { Line2 } from 'three/addons/lines/Line2.js';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
-import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
 import { geoToVector } from '../globe/geo';
 import { rayLabels, turnedAway } from '../globe/showerSteps';
@@ -78,6 +69,15 @@ import {
   REACTION_FACTS,
   type Stage,
 } from './neutronCapture';
+import { PALETTE } from './palette';
+import {
+  createStoryScene,
+  nucleonMaterial,
+  type StoryChapters,
+  type StoryKit,
+  type StoryScene,
+} from './storyScene';
+import { clamp01, ease as EASE } from './timing';
 
 /** The chapters this scene plays. */
 export type AirChapter = 'rays' | 'shower' | 'capture';
@@ -93,17 +93,7 @@ export interface AirShowerOptions {
   readonly water: boolean;
 }
 
-export interface AirShower {
-  /** Turn to a chapter; `restart` or `settle` then starts it. */
-  setChapter(chapter: AirChapter): void;
-  /** Play or hold; held, nothing moves but the reader can still turn and zoom. */
-  setPlaying(playing: boolean): void;
-  /** Start the chapter again, the camera back with the story. */
-  restart(): void;
-  /** Show the chapter complete and hold there, for readers who ask for less motion. */
-  settle(): void;
-  dispose(): void;
-}
+export type AirShower = StoryScene<AirChapter>;
 
 /** How long the rays take to come in, ms. */
 const RAYS_MS = 3600;
@@ -122,9 +112,9 @@ const LEAVE_MS = 2500;
 const FLY_MS = 1400;
 const CAPTURE_MS = LEAVE_MS + FLY_MS;
 /** The colours the stage's captions name: nitrogen blue, carbon-14 violet, the proton yellow. */
-const NITROGEN = new Color(0x5a99ff);
-const CARBON = new Color(0xb87aff);
-const FREED = new Color(0xffd94d);
+const NITROGEN = new Color(PALETTE.nitrogen);
+const CARBON = new Color(PALETTE.carbon14);
+const FREED = new Color(PALETTE.freedProton);
 /** The camera's move from beside the incoming proton to the side of the column, ms. */
 const SWING_MS = 2200;
 /** How wide the column of air is drawn, km either side. */
@@ -138,26 +128,6 @@ const COLOURS: Readonly<Record<Particle, Color>> = {
   muon: new Color(0.35, 0.85, 1),
   electromagnetic: new Color(1, 0.82, 0.35),
 };
-
-const EASE = (x: number): number => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
-const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
-
-/** A soft round glow, white, tinted by its material. */
-function glowTexture(): CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 64;
-  canvas.height = 64;
-  const context = canvas.getContext('2d');
-  if (context !== null) {
-    const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
-    gradient.addColorStop(0, 'rgba(255,255,255,1)');
-    gradient.addColorStop(0.35, 'rgba(255,255,255,0.6)');
-    gradient.addColorStop(1, 'rgba(255,255,255,0)');
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 64, 64);
-  }
-  return new CanvasTexture(canvas);
-}
 
 /** The air round Earth: brightest at the limb, as it is seen edge-on there. */
 function airGlowMaterial(): ShaderMaterial {
@@ -229,80 +199,29 @@ function frameAt(place: GeoPoint): { up: Vector3; east: Vector3 } {
 const vector = ([x, y, z]: Point): Vector3 => new Vector3(x, y, z);
 
 export function createAirShower(container: HTMLElement, options: AirShowerOptions): AirShower {
-  const renderer = new WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(0x02040a);
-  container.append(renderer.domElement);
-  const labels = new CSS2DRenderer();
-  labels.domElement.className = 'story-labels';
-  container.append(labels.domElement);
+  return createStoryScene<AirChapter>(container, {
+    first: 'rays',
+    near: 0.01,
+    far: 200,
+    build: (kit) => build(kit, options),
+  });
+}
 
-  const scene = new Scene();
-  const camera = new PerspectiveCamera(40, 1, 0.01, 200);
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
+function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapters<AirChapter> {
+  const { scene, camera, controls, own, glow, label, line } = kit;
   scene.add(new AmbientLight(0xffffff, 0.7));
   const sunlight = new DirectionalLight(0xffffff, 2.4);
   scene.add(sunlight);
 
-  const glowMap = glowTexture();
-  const geometries: BufferGeometry[] = [];
-  const materials: { dispose(): void }[] = [];
-  const lineMaterials: LineMaterial[] = [];
-  /** A glow of `color`, `size` across. */
-  function glow(color: Color, size: number, parent: Group): Sprite {
-    const material = new SpriteMaterial({
-      map: glowMap,
-      color,
-      blending: AdditiveBlending,
-      depthWrite: false,
-      transparent: true,
-    });
-    materials.push(material);
-    const sprite = new Sprite(material);
-    sprite.scale.setScalar(size);
-    parent.add(sprite);
-    return sprite;
-  }
-  /** A label in the page, tied to a point in the scene. */
-  function label(text: string, parent: Group, kind = ''): CSS2DObject {
-    const element = document.createElement('span');
-    element.className = `story-label ${kind}`.trim();
-    element.textContent = text;
-    const object = new CSS2DObject(element);
-    object.center.set(0, 1.2);
-    parent.add(object);
-    return object;
-  }
-  /** A line a few pixels wide through `points`, drawn a part at a time. */
-  function line(points: readonly Vector3[], color: Color, width: number, parent: Group): Line2 {
-    const geometry = new LineGeometry();
-    geometry.setPositions(points.flatMap(({ x, y, z }) => [x, y, z]));
-    geometries.push(geometry);
-    const material = new LineMaterial({
-      color: color.getHex(),
-      linewidth: width,
-      transparent: true,
-      depthWrite: false,
-    });
-    lineMaterials.push(material);
-    const drawn = new Line2(geometry, material);
-    parent.add(drawn);
-    return drawn;
-  }
-
   // Rays: Earth, its air, its field, the stars.
   const space = new Group();
-  const earthMap = new TextureLoader().load(options.earthTextureUrl, () => {
-    dirty = true;
-  });
+  const earthMap = new TextureLoader().load(options.earthTextureUrl, kit.invalidate);
   earthMap.colorSpace = SRGBColorSpace;
   const earthGeometry = new SphereGeometry(1, 96, 64);
   const earthMaterial = new MeshStandardMaterial({ map: earthMap, roughness: 0.9 });
   const airGeometry = new SphereGeometry(1.06, 96, 64);
   const airMaterial = airGlowMaterial();
-  geometries.push(earthGeometry, airGeometry);
-  materials.push(earthMap, earthMaterial, airMaterial);
+  for (const item of [earthGeometry, airGeometry, earthMap, earthMaterial, airMaterial]) own(item);
   space.add(new Mesh(earthGeometry, earthMaterial), new Mesh(airGeometry, airMaterial));
 
   const starPositions: number[] = [];
@@ -316,8 +235,8 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
   const starGeometry = new BufferGeometry();
   starGeometry.setAttribute('position', new Float32BufferAttribute(starPositions, 3));
   const starMaterial = new PointsMaterial({ color: 0x9fb4d8, size: 1.4, sizeAttenuation: false });
-  geometries.push(starGeometry);
-  materials.push(starMaterial);
+  own(starGeometry);
+  own(starMaterial);
   space.add(new Points(starGeometry, starMaterial));
 
   // The field: a dipole about the spin axis (r = L cos² latitude), in the rays' meridian and
@@ -432,15 +351,14 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
   showerGeometry.setColors(
     drawn.flatMap(({ kind }) => [...COLOURS[kind].toArray(), ...COLOURS[kind].toArray()]),
   );
-  const showerMaterial = new LineMaterial({
+  const showerMaterial = kit.lineMaterial({
     vertexColors: true,
     linewidth: 2.5,
     transparent: true,
     depthWrite: false,
     blending: AdditiveBlending,
   });
-  geometries.push(showerGeometry);
-  lineMaterials.push(showerMaterial);
+  own(showerGeometry);
   const shower = new LineSegments2(showerGeometry, showerMaterial);
   air.add(shower);
 
@@ -469,8 +387,16 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
     depthWrite: false,
     side: BackSide,
   });
-  geometries.push(groundGeometry, columnGeometry, bandGeometry);
-  materials.push(groundMaterial, columnMaterial, bandMaterial);
+  for (const item of [
+    groundGeometry,
+    columnGeometry,
+    bandGeometry,
+    groundMaterial,
+    columnMaterial,
+    bandMaterial,
+  ]) {
+    own(item);
+  }
   const column = new Mesh(columnGeometry, columnMaterial);
   column.position.y = TOP_KM / 2;
   const band = new Mesh(bandGeometry, bandMaterial);
@@ -586,43 +512,28 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
   }
 
   // What the shower is made of, and its numbers, beside the scene.
-  const legend = document.createElement('ul');
-  legend.className = 'story-chain';
-  legend.setAttribute('aria-label', 'An air shower');
-  for (const particle of PARTICLES) {
-    const item = document.createElement('li');
-    const name = document.createElement('strong');
-    name.textContent = particle.name;
-    name.style.color = `#${COLOURS[particle.kind].getHexString()}`;
-    item.append(name, document.createTextNode(`: ${particle.about}`));
-    legend.append(item);
+  const showerLegend = kit.legend(
+    'An air shower',
+    [
+      ...PARTICLES.map(({ kind, name, about }) => ({
+        name,
+        about,
+        colour: COLOURS[kind].getHex(),
+      })),
+      ...SHOWER_FACTS,
+    ],
+    false,
+  );
+  // On a phone, only the time and the height carbon-14 is made at.
+  for (const index of [1, 2]) {
+    showerLegend.items[PARTICLES.length + index]?.classList.add('is-now');
   }
-  for (const [index, fact] of SHOWER_FACTS.entries()) {
-    const item = document.createElement('li');
-    // On a phone, only the time and the height carbon-14 is made at.
-    if (index === 1 || index === 2) item.className = 'is-now';
-    item.textContent = fact;
-    legend.append(item);
-  }
-  const hint = document.createElement('p');
-  hint.className = 'story-hint';
-  hint.textContent = 'Drag to turn, scroll or pinch to zoom. Not to scale.';
   // The reaction: one nitrogen nucleus, in femtometres.
   const nucleus = new Group();
   const reaction = capture();
-  const nucleonGeometry = new SphereGeometry(NUCLEON_FM, 24, 16);
-  const protonMaterial = new MeshStandardMaterial({
-    color: 0xff5a48,
-    roughness: 0.45,
-    emissive: 0x401008,
-  });
-  const neutronMaterial = new MeshStandardMaterial({
-    color: 0xa8bccf,
-    roughness: 0.45,
-    emissive: 0x101820,
-  });
-  geometries.push(nucleonGeometry);
-  materials.push(protonMaterial, neutronMaterial);
+  const nucleonGeometry = own(new SphereGeometry(NUCLEON_FM, 24, 16));
+  const protonMaterial = own(nucleonMaterial('proton'));
+  const neutronMaterial = own(nucleonMaterial('neutron'));
   const homes = reaction.slots.map(({ at }) => vector(at));
   const nucleons = reaction.slots.map(({ kind }, index) => {
     const mesh = new Mesh(nucleonGeometry, kind === 'proton' ? protonMaterial : neutronMaterial);
@@ -636,7 +547,7 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
   const burst = glow(new Color(1, 0.95, 0.85), 4, nucleus);
   const arrivingFrom = new Vector3(-24, 4, 6);
   const leavingTo = new Vector3(30, 5, -4);
-  const arrivingGlow = glow(new Color(0xf2f2f2), 3, nucleus);
+  const arrivingGlow = glow(PALETTE.neutron, 3, nucleus);
   const leavingGlow = glow(FREED.clone(), 3.4, nucleus);
   const leavingTrail = line(
     Array.from({ length: 32 }, (_, i) =>
@@ -651,6 +562,10 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
   const arrivingLabel = label('neutron n, slowed', nucleus);
   const leavingLabel = label(`proton p, ${PROTON_MEV.toFixed(2)} MeV`, nucleus);
   leavingLabel.element.style.color = `#${FREED.getHexString()}`;
+  // The reaction, written out beside it: the equation, and the stage it is at lit.
+  const reactionLegend = kit.legend('The reaction', REACTION_FACTS);
+  const reactionItems = reactionLegend.items;
+  reactionItems[0]?.classList.add('is-now');
 
   /** The reaction at `t` ms into its chapter; returns the stage it is at. */
   function placeCapture(t: number): Stage {
@@ -716,19 +631,10 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
     return stage;
   }
 
-  // The reaction, written out beside it: the equation, and the stage it is at lit.
-  const reactionLegend = document.createElement('ol');
-  reactionLegend.className = 'story-chain';
-  reactionLegend.setAttribute('aria-label', 'The reaction');
-  const reactionItems = REACTION_FACTS.map((fact, index) => {
-    const item = document.createElement('li');
-    if (index === 0) item.className = 'is-now';
-    item.textContent = fact;
-    reactionLegend.append(item);
-    return item;
-  });
-  container.append(legend, reactionLegend, hint);
   scene.add(space, air, nucleus);
+  kit.during('rays', space);
+  kit.during('shower', air, showerLegend.list);
+  kit.during('capture', nucleus, reactionLegend.list);
 
   // The cameras' ways: beside Earth, seeing the rays' meridian face on; then down the proton's
   // path into the column and round to its side.
@@ -744,51 +650,6 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
   // High above the column's edge, looking down the proton's way in.
   const swingFrom = new Vector3(10, 36, 30);
 
-  function storyCamera(t: number): void {
-    const fit = 1 / Math.min(1, camera.aspect);
-    if (chapter === 'rays') {
-      const p = EASE(clamp01(t / RAYS_MS));
-      const distance = (6.2 - 1.4 * p) * fit ** 1.2;
-      camera.position
-        .copy(side)
-        .applyAxisAngle(new Vector3(0, 1, 0), 0.25 - 0.4 * p)
-        .multiplyScalar(distance)
-        .add(raysTarget);
-      controls.target.copy(raysTarget);
-    } else if (chapter === 'capture') {
-      // From far, the nucleus a speck, in close as the neutron comes; then a little after the
-      // proton.
-      const p = EASE(clamp01(t / ARRIVE_MS));
-      // Less so on a narrow screen, where the nucleus would go off its edge.
-      const after = EASE(clamp01((t - LEAVE_MS) / FLY_MS)) * Math.min(1, camera.aspect);
-      camera.position
-        .set(-6, 5, 80)
-        .lerp(new Vector3(-5, 6, 26 * fit), p)
-        .add(new Vector3(4 * after, 0, 4 * after));
-      controls.target.set(3 * after, 0, 0);
-    } else {
-      const p = EASE(clamp01(t / SWING_MS));
-      const beside = new Vector3(5, 12, 38 * fit ** 1.1);
-      camera.position.copy(swingFrom).lerp(beside, p);
-      controls.target.copy(first).lerp(showerTarget, p);
-    }
-    camera.lookAt(controls.target);
-  }
-
-  let chapter: AirChapter = 'rays';
-  let t = 0;
-  let playing = true;
-  let byStory = true;
-  let dirty = true;
-  let last = performance.now();
-  let frame = 0;
-  controls.addEventListener('start', () => {
-    byStory = false;
-  });
-  controls.addEventListener('change', () => {
-    dirty = true;
-  });
-
   /** The camera's reach and range for the chapter's scale: Earth radii, km, or fm. */
   const reach: Record<AirChapter, { near: number; far: number; min: number; max: number }> = {
     rays: { near: 0.01, far: 200, min: 1.3, max: 14 },
@@ -796,112 +657,61 @@ export function createAirShower(container: HTMLElement, options: AirShowerOption
     capture: { near: 0.1, far: 300, min: 5, max: 120 },
   };
   function scaleFor(next: AirChapter): void {
-    const wide = next === 'rays';
     camera.near = reach[next].near;
     camera.far = reach[next].far;
     camera.updateProjectionMatrix();
     controls.minDistance = reach[next].min;
     controls.maxDistance = reach[next].max;
-    space.visible = wide;
-    air.visible = next === 'shower';
-    nucleus.visible = next === 'capture';
     sunlight.position.copy(
-      wide ? side.clone().applyAxisAngle(new Vector3(0, 1, 0), 0.9) : new Vector3(-1, 2, 1.5),
+      next === 'rays'
+        ? side.clone().applyAxisAngle(new Vector3(0, 1, 0), 0.9)
+        : new Vector3(-1, 2, 1.5),
     );
   }
   scaleFor('rays');
 
-  function resize(): void {
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    if (width === 0 || height === 0) return;
-    renderer.setSize(width, height);
-    labels.setSize(width, height);
-    for (const material of lineMaterials) material.resolution.set(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    dirty = true;
-  }
-  const observer = new ResizeObserver(resize);
-  observer.observe(container);
-  resize();
-
-  function draw(now: number): void {
-    const dt = Math.min(100, now - last);
-    last = now;
-    if (playing) {
-      t += dt;
-      dirty = true;
-    }
-    if (byStory) storyCamera(t);
-    controls.update();
-    if (dirty) {
-      dirty = false;
+  return {
+    ends: { rays: RAYS_MS, shower: AIR_MS, capture: CAPTURE_MS },
+    turn: scaleFor,
+    camera(chapter, t) {
+      const fit = 1 / Math.min(1, camera.aspect);
       if (chapter === 'rays') {
-        container.dataset['rays'] = placeRays(t).toFixed(2);
+        const p = EASE(clamp01(t / RAYS_MS));
+        const distance = (6.2 - 1.4 * p) * fit ** 1.2;
+        camera.position
+          .copy(side)
+          .applyAxisAngle(new Vector3(0, 1, 0), 0.25 - 0.4 * p)
+          .multiplyScalar(distance)
+          .add(raysTarget);
+        controls.target.copy(raysTarget);
+      } else if (chapter === 'capture') {
+        // From far, the nucleus a speck, in close as the neutron comes; then a little after the
+        // proton.
+        const p = EASE(clamp01(t / ARRIVE_MS));
+        // Less so on a narrow screen, where the nucleus would go off its edge.
+        const after = EASE(clamp01((t - LEAVE_MS) / FLY_MS)) * Math.min(1, camera.aspect);
+        camera.position
+          .set(-6, 5, 80)
+          .lerp(new Vector3(-5, 6, 26 * fit), p)
+          .add(new Vector3(4 * after, 0, 4 * after));
+        controls.target.set(3 * after, 0, 0);
+      } else {
+        const p = EASE(clamp01(t / SWING_MS));
+        const beside = new Vector3(5, 12, 38 * fit ** 1.1);
+        camera.position.copy(swingFrom).lerp(beside, p);
+        controls.target.copy(first).lerp(showerTarget, p);
+      }
+    },
+    place(chapter, t) {
+      if (chapter === 'rays') {
+        kit.mark('rays', placeRays(t).toFixed(2));
       } else if (chapter === 'shower') {
-        container.dataset['microseconds'] = String(Math.round(placeShower(t)));
+        kit.mark('microseconds', String(Math.round(placeShower(t))));
       } else {
         const { protons, neutrons } = makeUp(placeCapture(t));
-        container.dataset['protons'] = String(protons);
-        container.dataset['neutrons'] = String(neutrons);
+        kit.mark('protons', String(protons));
+        kit.mark('neutrons', String(neutrons));
       }
-      legend.hidden = chapter !== 'shower';
-      reactionLegend.hidden = chapter !== 'capture';
-      renderer.render(scene, camera);
-      labels.render(scene, camera);
-      container.dataset['rendered'] = 'true';
-    }
-    frame = requestAnimationFrame(draw);
-  }
-  container.dataset['chapter'] = 'rays';
-  container.dataset['playing'] = 'true';
-  frame = requestAnimationFrame(draw);
-
-  const ends: Record<AirChapter, number> = { rays: RAYS_MS, shower: AIR_MS, capture: CAPTURE_MS };
-  return {
-    setChapter(next) {
-      chapter = next;
-      scaleFor(next);
-      container.dataset['chapter'] = next;
-      dirty = true;
-    },
-    setPlaying(next) {
-      playing = next;
-      last = performance.now();
-      container.dataset['playing'] = String(next);
-    },
-    restart() {
-      t = 0;
-      byStory = true;
-      dirty = true;
-    },
-    settle() {
-      t = ends[chapter];
-      byStory = true;
-      storyCamera({ rays: RAYS_MS, shower: SWING_MS, capture: CAPTURE_MS }[chapter]);
-      byStory = false;
-      playing = false;
-      container.dataset['playing'] = 'false';
-      dirty = true;
-    },
-    dispose() {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      controls.dispose();
-      for (const geometry of geometries) geometry.dispose();
-      for (const material of [...materials, ...lineMaterials]) material.dispose();
-      glowMap.dispose();
-      renderer.dispose();
-      renderer.forceContextLoss();
-      container.replaceChildren();
-      delete container.dataset['chapter'];
-      delete container.dataset['rendered'];
-      delete container.dataset['playing'];
-      delete container.dataset['rays'];
-      delete container.dataset['microseconds'];
-      delete container.dataset['protons'];
-      delete container.dataset['neutrons'];
     },
   };
 }
