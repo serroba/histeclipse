@@ -48,6 +48,7 @@ import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruption
 import { dipoleAt, loadDipole, type DipoleSeries } from './data/dipoleMoment';
 import type { ShowerState } from './globe/showerAnimation';
 import { captionOf, landing, SHOWER_STORY, SUN_STORY, type ShowerStep } from './globe/showerSteps';
+import type { AirShower } from './story/airShower';
 import type { SunCore } from './story/sunCore';
 import { createShowerStage } from './ui/showerStage';
 import { onLand, type ElevationGrid } from './data/landSea';
@@ -891,17 +892,29 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
   });
 
-  // The story's chapters in 3D (#317), in a scene of their own over the globe, loaded the first
-  // time one shows; its WebGL context is let go when the story closes. Should it fail to load,
-  // the stage draws the step flat, as before.
-  const STEPS_IN_3D: ReadonlySet<ShowerStep> = new Set<ShowerStep>(['fusion', 'escape', 'journey']);
+  // The story's chapters in 3D (#317), over the globe: the Sun's in one scene, the air's in
+  // another, each loaded the first time one of its steps shows, one at a time; a scene's WebGL
+  // context is let go when the story leaves it or closes. Should one fail to load, the stage
+  // draws the steps flat, as before.
+  const SCENE_OF: Partial<Record<ShowerStep, 'sun' | 'air'>> = {
+    fusion: 'sun',
+    escape: 'sun',
+    journey: 'sun',
+    rays: 'air',
+    shower: 'air',
+    capture: 'air',
+  };
+  const STEPS_IN_3D: ReadonlySet<ShowerStep> = new Set(Object.keys(SCENE_OF) as ShowerStep[]);
   const storyContainer = element('div', {
     class: 'story-3d',
     'data-testid': 'story-3d',
     hidden: '',
   });
-  let sunCore: SunCore | null = null;
-  let sunCoreLoading = false;
+  type Story3d =
+    | { readonly kind: 'sun'; readonly scene: SunCore }
+    | { readonly kind: 'air'; readonly scene: AirShower };
+  let story3d: Story3d | null = null;
+  let story3dLoading: 'sun' | 'air' | null = null;
   let story3dFailed = false;
   /** The step the 3D scene last showed, to start a chapter afresh on coming to it. */
   let story3dStep: ShowerStep | null = null;
@@ -910,59 +923,91 @@ export async function startApp(root: HTMLElement): Promise<void> {
     readonly reduced: boolean;
     readonly caption: string;
   } | null = null;
+  /** The shower the air's scene draws: where, under what field, over land or sea. */
+  let story3dShower: {
+    readonly place: GeoPoint;
+    readonly dipole: number;
+    readonly water: boolean;
+  } | null = null;
   showerStage.setDrawnIn3d(STEPS_IN_3D);
+
+  /** Load a scene's code and make it, if the story still wants it once it has loaded. */
+  function loadStory3d(kind: 'sun' | 'air'): void {
+    story3dLoading = kind;
+    const earthTextureUrl = `${base}textures/earth-blue-marble-2048.jpg`;
+    const wanted = (): boolean =>
+      story3dLoading === kind &&
+      showerStage.isOpen &&
+      story3dLatest !== null &&
+      SCENE_OF[story3dLatest.state.step] === kind;
+    const made: Promise<Story3d | null> =
+      kind === 'sun'
+        ? import('./story/sunCore').then(({ createSunCore }) =>
+            wanted() ? { kind, scene: createSunCore(storyContainer, { earthTextureUrl }) } : null,
+          )
+        : import('./story/airShower').then(({ createAirShower }) => {
+            if (!wanted()) return null;
+            if (story3dShower === null) throw new Error('no shower to draw yet');
+            return {
+              kind,
+              scene: createAirShower(storyContainer, { earthTextureUrl, ...story3dShower }),
+            };
+          });
+    made
+      .then((scene) => {
+        if (story3dLoading === kind) story3dLoading = null;
+        story3d = scene ?? story3d;
+        if (story3dLatest !== null) {
+          const latest = story3dLatest;
+          showStory3d(latest.state, latest.reduced, latest.caption);
+        }
+      })
+      .catch((error: unknown) => {
+        story3dLoading = null;
+        story3dFailed = true;
+        storyContainer.hidden = true;
+        showerStage.setDrawnIn3d(new Set());
+        if (story3dLatest !== null) showerStage.render(story3dLatest.state, story3dLatest.caption);
+        notify(`Could not draw the story in 3D, so it is drawn flat: ${errorMessage(error)}`);
+      });
+  }
 
   function showStory3d(state: ShowerState, reduced: boolean, caption: string): void {
     story3dLatest = { state, reduced, caption };
     const before = story3dStep;
     story3dStep = state.step;
-    if (!STEPS_IN_3D.has(state.step) || story3dFailed) {
+    const kind = SCENE_OF[state.step];
+    if (kind === undefined || story3dFailed) {
       storyContainer.hidden = true;
-      sunCore?.setPlaying(false);
+      story3d?.scene.setPlaying(false);
       return;
     }
     storyContainer.hidden = false;
-    if (sunCore === null) {
+    if (story3d?.kind !== kind) {
+      // The other scene, if one is up, gives way; this one starts afresh once it has loaded.
+      story3d?.scene.dispose();
+      story3d = null;
       story3dStep = null;
-      if (sunCoreLoading) return;
-      sunCoreLoading = true;
-      import('./story/sunCore')
-        .then(({ createSunCore }) => {
-          sunCoreLoading = false;
-          if (!showerStage.isOpen) return;
-          sunCore = createSunCore(storyContainer, {
-            earthTextureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
-          });
-          if (story3dLatest !== null) {
-            const latest = story3dLatest;
-            showStory3d(latest.state, latest.reduced, latest.caption);
-          }
-        })
-        .catch((error: unknown) => {
-          sunCoreLoading = false;
-          story3dFailed = true;
-          storyContainer.hidden = true;
-          showerStage.setDrawnIn3d(new Set());
-          if (story3dLatest !== null)
-            showerStage.render(story3dLatest.state, story3dLatest.caption);
-          notify(`Could not draw the Sun in 3D, so it is drawn flat: ${errorMessage(error)}`);
-        });
+      if (story3dLoading !== kind) loadStory3d(kind);
       return;
     }
     if (before !== state.step) {
-      // Only the Sun's chapters are drawn in 3D so far.
-      sunCore.setChapter(
-        state.step === 'escape' || state.step === 'journey' ? state.step : 'fusion',
-      );
-      if (reduced) sunCore.settle();
-      else sunCore.restart();
+      const { step } = state;
+      if (story3d.kind === 'sun') {
+        story3d.scene.setChapter(step === 'escape' || step === 'journey' ? step : 'fusion');
+      } else {
+        story3d.scene.setChapter(step === 'shower' || step === 'capture' ? step : 'rays');
+      }
+      if (reduced) story3d.scene.settle();
+      else story3d.scene.restart();
     }
-    if (!reduced) sunCore.setPlaying(state.playing);
+    if (!reduced) story3d.scene.setPlaying(state.playing);
   }
 
   function closeStory3d(): void {
-    sunCore?.dispose();
-    sunCore = null;
+    story3d?.scene.dispose();
+    story3d = null;
+    story3dLoading = null;
     story3dStep = null;
     story3dLatest = null;
     storyContainer.hidden = true;
@@ -1032,6 +1077,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const turned = new Promise((done) => window.setTimeout(done, 1000));
     void Promise.all([landAndSea(), turned]).then(([grid]) => {
       const water = grid !== null && !onLand(grid, landing(place));
+      story3dShower = { place, dipole, water };
       let framed: ShowerStep | null = null;
       globe.playShower({
         place,

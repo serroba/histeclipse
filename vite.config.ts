@@ -32,6 +32,7 @@ export default defineConfig({
         'src/globe/showerAnimation.ts',
         'src/sky/skyScene.ts',
         'src/story/sunCore.ts',
+        'src/story/airShower.ts',
         'src/ui/**',
       ],
       thresholds: {
