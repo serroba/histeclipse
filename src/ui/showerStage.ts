@@ -59,7 +59,10 @@ export function createShowerStage(
     step('back');
   });
   const toggle = button('Pause', () => {
-    onCommand(playing ? 'pause' : 'play');
+    // The button answers at once; the shower confirms at its next frame.
+    playing = !playing;
+    toggle.textContent = playing ? 'Pause' : 'Play';
+    onCommand(playing ? 'play' : 'pause');
   });
   const next = button('Next', () => {
     step('next');
@@ -92,7 +95,7 @@ export function createShowerStage(
     if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return;
     const keys: Record<string, () => void> = {
       ' ': () => {
-        if (!reduced) onCommand(playing ? 'pause' : 'play');
+        if (!reduced) toggle.click();
       },
       ArrowLeft: () => {
         step('back');

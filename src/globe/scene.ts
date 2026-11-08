@@ -3049,6 +3049,10 @@ export function createGlobe(
       if (shower === null) return;
       if (command !== 'stop') {
         shower.command(command);
+        // Said at once, not at the next frame, which a busy device may be slow to draw.
+        if (command === 'pause' || command === 'settle')
+          container.dataset['showerPlaying'] = 'false';
+        if (command === 'play' || command === 'replay') container.dataset['showerPlaying'] = 'true';
         needsRender = true;
         return;
       }
