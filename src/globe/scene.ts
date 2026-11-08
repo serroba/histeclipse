@@ -1958,8 +1958,8 @@ export function createGlobe(
     if (shower !== null) {
       const size = renderer.getSize(new Vector2());
       shower.setResolution(size.x, size.y);
-      shower.update(now);
-      needsRender = true;
+      // Only while it plays, or just after a control: paused or held, it draws nothing new.
+      if (shower.update(now)) needsRender = true;
     }
     if (zoomFlight !== null && viewFlight === null) {
       zoomFlight.start ??= now;
