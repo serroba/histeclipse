@@ -108,6 +108,8 @@ class Arguments(argparse.Namespace):
     # tree-of-life command places), and a word their pages' descriptions must have, if any.
     source: Path = Path()
     must_mention: str | None = None
+    # The one map the planet-maps command makes, by its stem, if not all.
+    only: str | None = None
 
 
 def year_start_jd(year: int) -> float:
@@ -296,7 +298,7 @@ def timezones(args: Arguments) -> int:  # pragma: no cover - needs network acces
 
 def planet_maps(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the bodies' maps from their missions, for the close-up view (public/textures)."""
-    count = fetch_planet_maps(args.out, Path(".cache/planet-maps"))
+    count = fetch_planet_maps(args.out, Path(".cache/planet-maps"), args.only)
     return _say(f"wrote {count} maps to {args.out}")
 
 
@@ -656,6 +658,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         _ = command.add_argument("--kernels", type=Path, default=DEFAULT_KERNELS)
         _ = command.add_argument("--start-year", type=int, default=DEFAULT_START_YEAR)
         _ = command.add_argument("--end-year", type=int, default=DEFAULT_END_YEAR)
+        if name == "planet-maps":
+            _ = command.add_argument(
+                "--only",
+                default=None,
+                help="make only the map with this stem (planets/mars-height)",
+            )
         if name == "p3k14c":
             _ = command.add_argument(
                 "--source", type=Path, required=True, help="the site's radiocarbon curves file"

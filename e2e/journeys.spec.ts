@@ -562,9 +562,18 @@ test('close up on Venus, the Light switch shows the ground beneath its clouds, b
       page.getByText(/Hubble’s map of the cloud tops on 19–20 November 2024/),
     ).toBeVisible();
   });
-  await test.step('And Mars, with one way only, has no Light switch', async () => {
-    await page.goto('./?t=2024-06-01T12:00&focus=mars&cam=10,0,2.6');
-    await expect(globe).toHaveAttribute('data-focus', 'mars', { timeout: 30_000 });
+  await test.step('And Mars’s switch shows the height of its ground, by laser', async () => {
+    await page.goto('./?t=2024-06-01T12:00&focus=mars&cam=10,0,2.6&light=height');
+    await expect(globe).toHaveAttribute('data-planet-map', 'mars', { timeout: 30_000 });
+    await expect(light.getByRole('button', { name: /^Height/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.getByText(/Mars Global Surveyor’s laser altimeter/)).toBeVisible();
+  });
+  await test.step('And Saturn, with one way only, has no Light switch', async () => {
+    await page.goto('./?t=2024-06-01T12:00&focus=saturn&cam=10,0,2.6');
+    await expect(globe).toHaveAttribute('data-focus', 'saturn', { timeout: 30_000 });
     await expect(light).toBeHidden();
   });
   expect(problems).toEqual([]);
