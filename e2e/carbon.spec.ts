@@ -305,12 +305,25 @@ test('with reduced motion, each step waits for the reader, its picture complete'
   await test.step('When they go on to the step where carbon-14 is made', async () => {
     await page.keyboard.press('ArrowRight');
   });
-  await test.step('Then a diagram counts the nucleus, nitrogen-14 to carbon-14', async () => {
+  await test.step('Then the nucleus is drawn in 3D, nitrogen-14 become carbon-14', async () => {
     await expect(globe).toHaveAttribute('data-shower-step', 'capture');
+    const story = page.getByTestId('story-3d');
+    await expect(story).toHaveAttribute('data-chapter', 'capture', { timeout: 20_000 });
+    // Complete: the proton gone, 6 protons and 8 neutrons left.
+    await expect(story).toHaveAttribute('data-protons', '6');
+    await expect(story).toHaveAttribute('data-neutrons', '8');
+    await expect(story).toContainText('carbon-14: 6 protons, 8 neutrons');
+    const reaction = story.getByRole('list', { name: 'The reaction' });
+    await expect(reaction).toContainText('n + ¹⁴N → ¹⁴C + p');
+    await expect(reaction).toContainText('Nitrogen-14: 7 protons, 7 neutrons');
+    await expect(reaction).toContainText('It gives off 0.63 MeV');
+    // Drawn in 3D, so not flat on the stage too.
+    await expect(stage.getByTestId('reaction-diagram')).toHaveCount(0);
+  });
+  await test.step('And carbon dioxide is still drawn flat, the scene let go', async () => {
     const diagram = stage.getByTestId('reaction-diagram');
-    await expect(diagram).toContainText('7 protons, 7 neutrons');
-    await expect(diagram).toContainText('6 protons, 8 neutrons');
     await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('story-3d')).toBeHidden();
     await expect(diagram).toContainText('carbon dioxide');
     await page.keyboard.press('ArrowRight');
     await expect(stage.getByTestId('reaction-diagram')).toBeHidden();

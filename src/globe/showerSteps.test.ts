@@ -68,12 +68,12 @@ describe('a cosmic-ray shower, step by step', () => {
   it('steps forward and back as a player does', () => {
     expect(nextStepStart(0)).toBe(4500);
     expect(nextStepStart(4500)).toBe(10_000);
-    expect(nextStepStart(18_000)).toBe(SHOWER_MS);
+    expect(nextStepStart(21_000)).toBe(SHOWER_MS);
     // Well into a step, back goes to its start; just after it began, to the one before.
     expect(previousStepStart(11_500)).toBe(10_000);
     expect(previousStepStart(10_300)).toBe(4500);
     expect(previousStepStart(300)).toBe(0);
-    expect(stepEnd(10_000)).toBe(12_199);
+    expect(stepEnd(10_000)).toBe(14_999);
   });
 
   it('starts from the Sun: its three steps, then the shower’s, navigated alike', () => {
