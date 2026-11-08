@@ -47,7 +47,9 @@ import {
 } from './data/radiocarbonDates';
 import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruptions';
 import { dipoleAt, loadDipole, type DipoleSeries } from './data/dipoleMoment';
+import type { ShowerState } from './globe/showerAnimation';
 import { captionOf, landing, SHOWER_STORY, SUN_STORY, type ShowerStep } from './globe/showerSteps';
+import type { SunCore } from './story/sunCore';
 import { createShowerStage } from './ui/showerStage';
 import { onLand, type ElevationGrid } from './data/landSea';
 import { loadElevationGrid } from './ui/elevationImage';
@@ -815,8 +817,82 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The stage the shower plays on: its caption, its steps, and controls; the panels step aside.
   const showerStage = createShowerStage((command) => {
     globe.controlShower(command);
-    if (command === 'stop') showerStage.close();
+    if (command === 'stop') {
+      showerStage.close();
+      closeStory3d();
+    }
   });
+
+  // The story's chapters in 3D (#317), in a scene of their own over the globe, loaded the first
+  // time one shows; its WebGL context is let go when the story closes. Should it fail to load,
+  // the stage draws the step flat, as before.
+  const STEPS_IN_3D: ReadonlySet<ShowerStep> = new Set<ShowerStep>(['fusion']);
+  const storyContainer = element('div', {
+    class: 'story-3d',
+    'data-testid': 'story-3d',
+    hidden: '',
+  });
+  let sunCore: SunCore | null = null;
+  let sunCoreLoading = false;
+  let story3dFailed = false;
+  /** The step the 3D scene last showed, to start a chapter afresh on coming to it. */
+  let story3dStep: ShowerStep | null = null;
+  let story3dLatest: {
+    readonly state: ShowerState;
+    readonly reduced: boolean;
+    readonly caption: string;
+  } | null = null;
+  showerStage.setDrawnIn3d(STEPS_IN_3D);
+
+  function showStory3d(state: ShowerState, reduced: boolean, caption: string): void {
+    story3dLatest = { state, reduced, caption };
+    const before = story3dStep;
+    story3dStep = state.step;
+    if (!STEPS_IN_3D.has(state.step) || story3dFailed) {
+      storyContainer.hidden = true;
+      sunCore?.setPlaying(false);
+      return;
+    }
+    storyContainer.hidden = false;
+    if (sunCore === null) {
+      story3dStep = null;
+      if (sunCoreLoading) return;
+      sunCoreLoading = true;
+      import('./story/sunCore')
+        .then(({ createSunCore }) => {
+          sunCoreLoading = false;
+          if (!showerStage.isOpen) return;
+          sunCore = createSunCore(storyContainer);
+          if (story3dLatest !== null) {
+            const latest = story3dLatest;
+            showStory3d(latest.state, latest.reduced, latest.caption);
+          }
+        })
+        .catch((error: unknown) => {
+          sunCoreLoading = false;
+          story3dFailed = true;
+          storyContainer.hidden = true;
+          showerStage.setDrawnIn3d(new Set());
+          if (story3dLatest !== null)
+            showerStage.render(story3dLatest.state, story3dLatest.caption);
+          notify(`Could not draw the Sun in 3D, so it is drawn flat: ${errorMessage(error)}`);
+        });
+      return;
+    }
+    if (before !== state.step) {
+      if (reduced) sunCore.settle();
+      else sunCore.restart();
+    }
+    if (!reduced) sunCore.setPlaying(state.playing);
+  }
+
+  function closeStory3d(): void {
+    sunCore?.dispose();
+    sunCore = null;
+    story3dStep = null;
+    story3dLatest = null;
+    storyContainer.hidden = true;
+  }
 
   // Today's land and sea, to say whether the carbon lands on land or water; asked for once.
   let elevations: Promise<ElevationGrid | null> | null = null;
@@ -893,7 +969,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
             framed = state.step;
             frame(state.step);
           }
-          showerStage.render(state, captionOf(state.step, dipole, water, fromSun));
+          const caption = captionOf(state.step, dipole, water, fromSun);
+          showerStage.render(state, caption);
+          showStory3d(state, reduced, caption);
         },
       });
       // Under reduced motion, each step waits for the reader, its picture complete.
@@ -1303,6 +1381,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     markerCard.dialog,
     datingCard.dialog,
     carbonMadeCard.dialog,
+    storyContainer,
     showerStage.root,
   );
 
