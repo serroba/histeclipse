@@ -226,8 +226,12 @@ export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'sola
  */
 export const RETIRED_LAYERS: readonly string[] = ['terminator', 'places'];
 
-/** The layers that colour the ground itself: one at a time, as two together cannot be read. */
-export const GROUND_FILLS: readonly Layer[] = ['rocks', 'ways'];
+/**
+ * The layers that colour the ground itself: one at a time, as two together cannot be read.
+ * Radiocarbon dates shade squares in oranges and pinks that read as ways of life or as states'
+ * fills (#163).
+ */
+export const GROUND_FILLS: readonly Layer[] = ['rocks', 'ways', 'dates'];
 
 /** The layers with one turned on or off; turning a ground fill on turns the other off. */
 export function withLayer(layers: ReadonlySet<Layer>, layer: Layer, on: boolean): Set<Layer> {
