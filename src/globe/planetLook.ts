@@ -235,7 +235,11 @@ export const PLANET_PICTURES: Readonly<Record<PlanetName, PlanetPicture>> = {
   },
 };
 
-/** One way of looking at a planet close up, in the Light switch (#239). */
+/** What the Moon wears: LRO's mosaic, from NASA's CGI Moon Kit. */
+export const MOON_CAPTION =
+  'Pictured: the Lunar Reconnaissance Orbiter’s colour mosaic, from NASA’s CGI Moon Kit. NASA’s Scientific Visualization Studio.';
+
+/** One way of looking at a planet or the Moon close up, in the Light switch (#239). */
 export interface PlanetView {
   readonly key: string;
   readonly label: string;
@@ -247,10 +251,11 @@ export interface PlanetView {
 }
 
 /**
- * The ways of looking at each planet: first, as it looks (`PLANET_PICTURES`); then any others
- * the missions give. Venus's ground is seen only by radar, beneath clouds that hide it.
+ * The ways of looking at each planet, and the Moon: first, as it looks (`PLANET_PICTURES`; the
+ * Moon's usual map, null here); then any others the missions give. Venus's ground is seen only
+ * by radar, beneath clouds that hide it.
  */
-export const PLANET_VIEWS: Readonly<Record<PlanetName, readonly PlanetView[]>> = {
+export const PLANET_VIEWS: Readonly<Record<PlanetName | 'moon', readonly PlanetView[]>> = {
   mercury: [
     { key: 'colour', label: 'As it looks', detail: 'visible light', ...PLANET_PICTURES.mercury },
     {
@@ -280,7 +285,18 @@ export const PLANET_VIEWS: Readonly<Record<PlanetName, readonly PlanetView[]>> =
         'Pictured: the ground beneath the clouds, as Magellan’s radar mapped it (1990–94), coloured by height: blue lowlands to red and white highlands, Maxwell Montes highest. No eye could see this; radar passes through the clouds. NASA/JPL/USGS.',
     },
   ],
-  mars: [{ key: 'colour', label: 'As it looks', detail: 'visible light', ...PLANET_PICTURES.mars }],
+  mars: [
+    { key: 'colour', label: 'As it looks', detail: 'visible light', ...PLANET_PICTURES.mars },
+    {
+      key: 'height',
+      label: 'Height',
+      detail: 'by laser, MOLA',
+      map: 'textures/planets/mars-height-2048.jpg',
+      sharp: 'textures/planets/mars-height-4096.jpg',
+      caption:
+        'Pictured: the height of the ground, measured by Mars Global Surveyor’s laser altimeter (MOLA, 1997–2001), shaded as if lit and coloured from blue lowlands to white heights: the northern plains low, the southern uplands high, Olympus Mons and the Tharsis volcanoes highest. NASA/JPL/GSFC/USGS.',
+    },
+  ],
   jupiter: [
     { key: 'colour', label: 'In 2000', detail: 'Cassini, passing by', ...PLANET_PICTURES.jupiter },
     {
@@ -296,10 +312,20 @@ export const PLANET_VIEWS: Readonly<Record<PlanetName, readonly PlanetView[]>> =
   saturn: [
     { key: 'colour', label: 'As it looks', detail: 'visible light', ...PLANET_PICTURES.saturn },
   ],
+  moon: [
+    {
+      key: 'colour',
+      label: 'As it looks',
+      detail: 'visible light',
+      map: null,
+      sharp: null,
+      caption: MOON_CAPTION,
+    },
+  ],
 };
 
-/** The view a key names for a planet, or its first (as it looks) when the key is not one of its. */
-export function planetView(planet: PlanetName, key: string): PlanetView {
+/** The view a key names for a body, or its first (as it looks) when the key is not one of its. */
+export function planetView(planet: PlanetName | 'moon', key: string): PlanetView {
   const views = PLANET_VIEWS[planet];
   return views.find((view) => view.key === key) ?? elementAt(views, 0);
 }
@@ -313,7 +339,3 @@ export const SHARP_MAPS = {
   },
   moon: { large: 'textures/moon-lroc-4096.jpg', small: 'textures/moon-lroc-4096.jpg' },
 } as const;
-
-/** What the Moon wears: LRO's mosaic, from NASA's CGI Moon Kit. */
-export const MOON_CAPTION =
-  'Pictured: the Lunar Reconnaissance Orbiter’s colour mosaic, from NASA’s CGI Moon Kit. NASA’s Scientific Visualization Studio.';
