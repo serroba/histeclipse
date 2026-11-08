@@ -313,7 +313,8 @@ test('away from Earth, the bar speaks of the body in view, and Earth’s own par
     );
     await expect(page.getByRole('list', { name: 'Eclipses this year' })).toBeHidden();
     await expect(page.getByTestId('ways-legend')).toBeHidden();
-    await expect(page.getByRole('slider', { name: 'Year in the Holocene' })).toBeVisible();
+    await expect(page.getByRole('slider', { name: 'Year in the Holocene' })).toBeHidden();
+    await expect(page.getByRole('slider', { name: 'Day in Jupiter’s cycle' })).toBeVisible();
   });
   await test.step('And the date panel leaves out Earth’s spans, its layers and the Moon from Earth', async () => {
     await expect(page.getByRole('group', { name: 'Time span' })).toBeHidden();
@@ -341,40 +342,75 @@ test('away from Earth, the bar speaks of the body in view, and Earth’s own par
   expect(problems).toEqual([]);
 });
 
-test('away from Earth the year slider stays, but Earth’s chapters rest', async ({ page }, info) => {
-  const lane = page.locator('.history-lane');
-  const chapters = lane.getByRole('group', { name: 'Geological periods' });
-  const slider = page.getByRole('slider', { name: 'Year in the Holocene' });
+test('away from Earth the bar runs over the body’s own cycle, and Earth’s years come back on Earth', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const chapters = page.locator('.history-lane').getByRole('group', { name: 'Geological periods' });
+  const years = page.getByRole('slider', { name: 'Year in the Holocene' });
+  const cycle = page.getByRole('group', { name: 'Mars’s cycle, as seen from Earth' });
   await test.step('Given Earth in the years', async () => {
-    await page.goto('./?t=2024-05-08T12:00');
+    await page.goto('./?t=2025-01-10T12:00');
     await globeRendered(page);
   });
   await test.step('Then the Holocene’s chapters are under the slider', async () => {
     await expect(chapters.getByText('Meghalayan')).toBeVisible();
   });
-  await test.step('When they look at the Sun', async () => {
-    await page.goto('./?t=2024-05-08T12:00&focus=sun&cam=-17.2,-134.2,4');
+  await test.step('When they look at Mars', async () => {
+    await page.goto('./?t=2025-01-10T12:00&cam=10,20,4&focus=mars');
     await globeRendered(page);
   });
-  await test.step('Then the slider and its first year stay, without Earth’s chapters', async () => {
-    await expect(slider).toBeVisible();
+  await test.step('Then the bar runs from conjunction to conjunction, opposition between', async () => {
+    await expect(years).toBeHidden();
+    await expect(cycle.getByRole('slider', { name: 'Day in Mars’s cycle' })).toBeVisible();
+    const moments = cycle.getByRole('listitem');
+    await expect(moments).toHaveText([
+      /^Behind the Sun 18 Nov 2023 CE$/,
+      /^Opposite the Sun 16 Jan 2025 CE$/,
+      /^Behind the Sun 9 Jan 2026 CE$/,
+    ]);
+    await expect(cycle.getByRole('button', { name: /^Behind the Sun 18 Nov/ })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+  });
+  await test.step('When they tap opposition', async () => {
+    await cycle.getByRole('button', { name: /^Opposite the Sun/ }).click();
+  });
+  await test.step('Then the date is that day, and Mars stands opposite the Sun', async () => {
+    await expect(page).toHaveURL(/t=2025-01-16T/);
+    // Opposite in longitude; Mars stands a few degrees off the ecliptic, so not quite 180°.
+    await expect(page.getByTestId('body-facts')).toHaveText(/, 17\d° (east|west) of the Sun$/);
+    await expect(cycle.getByRole('button', { name: /^Opposite the Sun/ })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+  });
+  await test.step('When they play the cycle, the days go by, and stop when asked', async () => {
+    await cycle.getByRole('button', { name: 'Play the cycle' }).click();
+    await expect(page).not.toHaveURL(/t=2025-01-16T/, { timeout: 15_000 });
+    await cycle.getByRole('button', { name: 'Stop the cycle' }).click();
+    await expect(cycle.getByRole('button', { name: 'Play the cycle' })).toBeVisible();
+  });
+  await test.step('When they look at the Sun, the bar is Earth’s year', async () => {
+    await page.goto('./?t=2025-03-01T12:00&focus=sun&cam=-17.2,-134.2,4');
+    await globeRendered(page);
+    const year = page.getByRole('group', { name: 'Earth’s year around the Sun' });
+    await expect(year.getByRole('listitem')).toHaveText([
+      /^Earth nearest the Sun 4 Jan 2025 CE$/,
+      /^Earth farthest from the Sun 3 Jul 2025 CE$/,
+      /^Earth nearest the Sun 3 Jan 2026 CE$/,
+    ]);
     await expect(chapters).toBeHidden();
-    await expect(lane.getByTestId('scale-start')).toHaveText('9700 BCE');
-    await expect(lane.getByTestId('scale-start')).not.toHaveClass(/is-covered/);
   });
-  if (info.project.name !== 'mobile') {
-    await test.step('And the reading under the pointer names the year alone', async () => {
-      const box = await slider.boundingBox();
-      if (box === null) throw new Error('no slider');
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-      await expect(lane.getByTestId('scale-reading')).toHaveText(/^\d+ BCE$/);
-    });
-  }
-  await test.step('When they go back to Earth, the chapters come back', async () => {
-    await page.goto('./?t=2024-05-08T12:00');
+  await test.step('When they go back to Earth, the years and their chapters come back', async () => {
+    await page.goto('./?t=2025-01-10T12:00');
     await globeRendered(page);
+    await expect(years).toBeVisible();
     await expect(chapters.getByText('Meghalayan')).toBeVisible();
   });
+  expect(problems).toEqual([]);
 });
 
 test('from any planet the reader can look back at Earth, and see what it looks like there', async ({

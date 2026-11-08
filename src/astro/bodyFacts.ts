@@ -25,7 +25,7 @@ function angleBetween(a: EquatorialVector, b: EquatorialVector): number {
 }
 
 /** Longitude along the ecliptic, degrees [0, 360). */
-function eclipticLongitude([x, y, z]: EquatorialVector): number {
+export function eclipticLongitude([x, y, z]: EquatorialVector): number {
   const yEcliptic = y * Math.cos(OBLIQUITY) + z * Math.sin(OBLIQUITY);
   return (((Math.atan2(yEcliptic, x) * DEGREES) % 360) + 360) % 360;
 }
