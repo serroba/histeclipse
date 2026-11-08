@@ -89,6 +89,9 @@ test('the track jumps to any year of the Holocene', async ({ page }) => {
 test('travelling lights the whole globe and rests the markers, which return with the borders gone', async ({
   page,
 }) => {
+  // Travelling, closing and checking each layer: on a runner that renders in software it can
+  // take most of the usual 30 s.
+  test.slow();
   const problems = collectProblems(page);
   const bar = page.getByRole('group', { name: track });
   const globe = page.getByTestId('globe');

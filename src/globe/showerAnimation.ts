@@ -73,8 +73,11 @@ export type ShowerCommand = 'play' | 'pause' | 'next' | 'back' | 'replay' | 'set
 
 export interface ShowerAnimation {
   readonly group: Group;
-  /** Advance to `now` (ms). It holds on its last picture at the end, until disposed. */
-  update(now: number): void;
+  /**
+   * Advance to `now` (ms); true if the picture changed and needs drawing. It holds on its last
+   * picture at the end, until disposed: paused or held, nothing changes and nothing is drawn.
+   */
+  update(now: number): boolean;
   /** Play, pause, step forward or back, or start again. */
   command(command: ShowerCommand): void;
   /** The drawing's size in pixels, which the rays' thick tracks are measured in. */
@@ -471,11 +474,15 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
   };
 
   let shown = '';
+  // A command since the last frame: the picture changes once even while paused.
+  let changed = true;
   const showerPositions = showerGeometry.getAttribute('position');
 
   return {
     group,
     update(now) {
+      const moving = clock.playing || changed;
+      changed = false;
       const storyT = clock.tick(now);
       const step = stepAt(storyT, story) ?? 'plant';
       // The shower's own time: below zero while the Sun's steps play, when nothing here shows.
@@ -580,11 +587,13 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
       labels.photon.visible = photon.visible;
       pin(labels.photon, photon.position, polar.up, polar.east, 0.008);
       pin(labels.plant, ground, polar.up, polar.north.clone().negate(), 0.008);
+      return moving;
     },
     setResolution(width, height) {
       for (const material of tracks) material.resolution.set(width, height);
     },
     command(command) {
+      changed = true;
       if (command === 'play') clock.play();
       else if (command === 'pause') clock.pause();
       else if (command === 'next') clock.seek(nextStepStart(clock.position, story));
