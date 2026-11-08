@@ -207,17 +207,6 @@ test('a cosmic ray’s shower makes carbon-14, step by step, under the field pic
     await expect(page.locator('.hud')).toBeVisible();
     await expect(globe).toHaveAttribute('data-pin-shown', 'true');
   });
-  await test.step('When they pick the Laschamp excursion and watch again', async () => {
-    await openLayers(page);
-    await page.getByRole('button', { name: 'How is it made?' }).click();
-    await dialog.getByRole('radio', { name: 'Laschamp excursion, 41,000 years ago' }).check();
-    await dialog.getByRole('button', { name: 'Watch a cosmic ray make carbon-14' }).click();
-  });
-  await test.step('Then the rays reach the air at the equator too', async () => {
-    await expect(caption).toContainText('reach the air at the equator too', { timeout: 20_000 });
-    await stage.getByRole('button', { name: 'Close' }).click();
-    await expect(stage).toBeHidden();
-  });
   expect(problems).toEqual([]);
 });
 
@@ -364,6 +353,30 @@ test('started from the Sun, the story follows a photon from fusion to Earth', as
     await stage.getByRole('button', { name: 'Close' }).click();
     await expect(stage).toBeHidden();
     await expect(globe).toHaveAttribute('data-focus', 'earth');
+  });
+  expect(problems).toEqual([]);
+});
+
+test('with the Laschamp field, the equator’s ray reaches the air too', async ({ page }) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const caption = page.getByTestId('shower-caption');
+  const dialog = page.getByRole('dialog', { name: 'How is carbon-14 made?' });
+  const stage = page.getByRole('region', { name: 'How carbon-14 is made, step by step' });
+  await test.step('Given the card on how carbon-14 is made', async () => {
+    await page.goto('./?t=1500-06-01T12:00&loc=48,10&layers=carbonMade');
+    await globeRendered(page);
+    await openLayers(page);
+    await page.getByRole('button', { name: 'How is it made?' }).click();
+  });
+  await test.step('When they pick the Laschamp excursion and watch', async () => {
+    await dialog.getByRole('radio', { name: 'Laschamp excursion, 41,000 years ago' }).check();
+    await dialog.getByRole('button', { name: 'Watch a cosmic ray make carbon-14' }).click();
+  });
+  await test.step('Then the rays reach the air at the equator too', async () => {
+    await expect(caption).toContainText('reach the air at the equator too', { timeout: 20_000 });
+    await stage.getByRole('button', { name: 'Close' }).click();
+    await expect(stage).toBeHidden();
   });
   expect(problems).toEqual([]);
 });
