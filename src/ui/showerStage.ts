@@ -38,6 +38,8 @@ export interface ShowerStage {
   readonly isOpen: boolean;
   /** Show the state the shower reports, with the step's caption. */
   render(state: ShowerState, caption: string): void;
+  /** The steps drawn in 3D (#317), whose flat diagram the stage leaves out. */
+  setDrawnIn3d(steps: ReadonlySet<ShowerStep>): void;
 }
 
 export function createShowerStage(
@@ -48,6 +50,7 @@ export function createShowerStage(
   // The chemistry, drawn, for the steps where it happens.
   const diagram = element('div', { class: 'shower-diagram' });
   let drawnFor: ShowerStep | null = null;
+  let drawnIn3d: ReadonlySet<ShowerStep> = new Set();
   const caption = element('p', {
     class: 'shower-caption',
     'data-testid': 'shower-caption',
@@ -138,6 +141,11 @@ export function createShowerStage(
       drawnFor = null;
       document.documentElement.classList.remove('is-explaining');
     },
+    setDrawnIn3d(steps) {
+      drawnIn3d = steps;
+      // Drawn again at the next state, flat or not.
+      drawnFor = null;
+    },
     get isOpen() {
       return !root.hasAttribute('hidden');
     },
@@ -146,7 +154,9 @@ export function createShowerStage(
       caption.textContent = text;
       if (drawnFor !== state.step) {
         drawnFor = state.step;
-        const drawn = reactionDiagram(state.step) ?? sunDiagram(state.step);
+        const drawn = drawnIn3d.has(state.step)
+          ? null
+          : (reactionDiagram(state.step) ?? sunDiagram(state.step));
         diagram.replaceChildren(...(drawn === null ? [] : [drawn]));
         diagram.hidden = drawn === null;
       }

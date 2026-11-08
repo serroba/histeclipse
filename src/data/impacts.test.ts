@@ -14,6 +14,9 @@ import {
   type Impacts,
 } from './impacts';
 
+const FOUND =
+  ' These are the craters found: erosion, burial and the sinking of old sea floor have erased most of those that struck, so far more hit than are shown.';
+
 const serve = (body: unknown) => (): Promise<Response> => Promise.resolve(Response.json(body));
 
 const chicxulub: Impact = {
@@ -120,10 +123,12 @@ describe('impacts', () => {
       ],
     };
     expect(impactsText(span, impactsAt(span, 2), 2)).toBe(
-      'Impacts by 2,000,000 years ago: 1 had struck, and 1 more may have (their ages span this moment), each where it lay then. Ages as the Impact Earth Database gives them.',
+      'Impacts by 2,000,000 years ago: 1 had struck, and 1 more may have (their ages span this moment), each where it lay then. Ages as the Impact Earth Database gives them.' +
+        FOUND,
     );
     expect(impactsText(span, impactsAt(span, 0.5), 0.5)).toBe(
-      'Impacts by 500,000 years ago: 2 had struck, each where it lay then. Ages as the Impact Earth Database gives them.',
+      'Impacts by 500,000 years ago: 2 had struck, each where it lay then. Ages as the Impact Earth Database gives them.' +
+        FOUND,
     );
   });
 
@@ -185,12 +190,14 @@ describe('impacts around their time', () => {
     const marks = impactsAt(dated, 66, false, 0, 'around');
     expect(marks.map((mark) => mark.uncertain)).toEqual([false, true]);
     expect(impactsText(dated, marks, 66, 'around')).toBe(
-      'Impacts around 66 million years ago: 2 whose dated age falls within 2.5 million years of then, each where it lay; 1 of them dated only to a span of more than 10 million years (dashed). Ages as the Impact Earth Database gives them.',
+      'Impacts around 66 million years ago: 2 whose dated age falls within 2.5 million years of then, each where it lay; 1 of them dated only to a span of more than 10 million years (dashed). Ages as the Impact Earth Database gives them.' +
+        FOUND,
     );
     expect(
       impactsText(dated, impactsAt(dated, 66, false, 0, 'around').slice(0, 1), 66, 'around'),
     ).toBe(
-      'Impacts around 66 million years ago: 1 whose dated age falls within 2.5 million years of then, each where it lay. Ages as the Impact Earth Database gives them.',
+      'Impacts around 66 million years ago: 1 whose dated age falls within 2.5 million years of then, each where it lay. Ages as the Impact Earth Database gives them.' +
+        FOUND,
     );
     expect(impactsText(dated, [], 30, 'around')).toBe(
       'No impacts dated to within 2.5 million years of 30 million years ago.',
@@ -220,18 +227,20 @@ describe('strikes as time plays', () => {
     expect(named(strikesPassed(small, 66, 66.1))).toEqual([]);
   });
 
-  it('leave small craters to appear without a strike', () => {
-    expect(named(strikesPassed(small, 1, 0))).toEqual([]);
-    expect(named(strikesPassed(small, 1, 0, 0.1))).toEqual(['Kaali']);
+  it('strike for small craters too, any with a width known, or only the wide when asked', () => {
+    expect(named(strikesPassed(small, 1, 0))).toEqual(['Kaali']);
+    expect(named(strikesPassed(small, 1, 0, 40))).toEqual([]);
   });
 
-  it('come in the order they struck, the great ones only, from the real file', () => {
+  it('come in the order they struck, every dated crater, from the real file', () => {
     const all = strikesPassed(real, 3000, 0);
-    expect(all.every(({ diameterKm }) => (diameterKm ?? 0) >= STRIKE_MIN_KM)).toBe(true);
+    expect(all.every(({ diameterKm }) => (diameterKm ?? -1) >= STRIKE_MIN_KM)).toBe(true);
+    expect(all.length).toBeGreaterThan(80);
     expect(named(all).slice(0, 2)).toEqual(['Yarrabubba', 'Vredefort']);
     expect(named(all)).toContain('Chicxulub');
     expect(named(all)).not.toContain('Woodleigh');
-    expect(named(strikesPassed(real, 70, 30))).toEqual([
+    expect(named(strikesPassed(real, 70, 30))).toHaveLength(15);
+    expect(named(strikesPassed(real, 70, 30, 40))).toEqual([
       'Chicxulub',
       'Montagnais',
       'Popigai',

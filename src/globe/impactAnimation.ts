@@ -1,8 +1,10 @@
 /**
  * An impact, played once: the impactor coming in along its approach, a flash where it strikes,
  * a ring of blast and ejecta spreading out, and the crater left behind. An illustration, scaled
- * to the crater: the approach is a study's where one exists and an assumption otherwise, and
- * the ring's reach is illustrative. Built in Earth-fixed coordinates, to hang on the globe.
+ * to the crater: the flash, the impactor, its trail, the ring and how long it lasts all grow
+ * with the crater's width, Chicxulub's the yardstick, a small crater kept large enough to see
+ * (#314). The approach is a study's where one exists and an assumption otherwise, and the
+ * ring's reach is illustrative. Built in Earth-fixed coordinates, to hang on the globe.
  *
  * Three.js glue, covered by the Playwright suite.
  */
@@ -47,13 +49,45 @@ export interface ImpactAnimation {
 }
 
 const EARTH_KM = 6371;
-/** Milliseconds: the approach, the flash, the ring, and the whole. */
+/** Milliseconds, for an impact Chicxulub's size: the approach, the flash, the ring, the whole. */
 const APPROACH = 1400;
 const FLASH = 700;
 const RING = 2800;
 const TOTAL = 5200;
-/** How long an impact plays, ms, from its first frame. */
-export const IMPACT_ANIMATION_MS = TOTAL;
+/** Chicxulub's crater, km: the yardstick the others are drawn against. */
+const YARDSTICK_KM = 180;
+
+/** How large an impact is drawn, in Earth radii, and how long it lasts, ms. */
+export interface ImpactSizes {
+  /** Its crater's width against Chicxulub's: 1 for Chicxulub, capped for the very largest. */
+  readonly strength: number;
+  readonly head: number;
+  readonly trail: number;
+  readonly flash: number;
+  readonly craterRadius: number;
+  readonly blastRadius: number;
+  readonly totalMs: number;
+}
+
+/**
+ * An impact's sizes, in proportion to its crater: the flash, impactor and trail grow with the
+ * crater's width, so Chicxulub's flash is eighteen times a 10 km crater's; each has a floor,
+ * so the smallest still show. A smaller one plays out sooner.
+ */
+export function impactSizes(craterKm: number): ImpactSizes {
+  const strength = Math.min(Math.max(craterKm, 0) / YARDSTICK_KM, 1.7);
+  const craterRadius = Math.max(craterKm / 2 / EARTH_KM, 0.002);
+  return {
+    strength,
+    head: Math.max(0.012, 0.05 * strength),
+    trail: Math.max(0.04, 0.12 * strength),
+    flash: Math.max(0.02, 0.3 * strength),
+    craterRadius,
+    // The blast's reach is illustrative: four crater radii, and never too small to see.
+    blastRadius: Math.max(craterRadius * 4, 0.015),
+    totalMs: TOTAL * (0.5 + 0.5 * Math.min(strength, 1)),
+  };
+}
 
 /** A soft round glow, white at the heart and orange at the edge. */
 function glowTexture(): CanvasTexture {
@@ -101,6 +135,9 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
   // Timed by the frames' own clock, from the first frame it is drawn in; a frame that comes very
   // late (a large map loading) pauses it rather than skipping to the end.
   const clock = frameClock();
+  const sizes = impactSizes(spec.craterKm);
+  // A smaller impact plays the same story quicker.
+  const pace = sizes.totalMs / TOTAL;
   const group = new Group();
   const ground = new Vector3(...geoToVector(spec.place, 1.002));
   const up = ground.clone().normalize();
@@ -119,7 +156,7 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
 
   // The impactor: a bright head with a trail behind it.
   const head = new Sprite(glowMaterial(1));
-  head.scale.setScalar(0.05);
+  head.scale.setScalar(sizes.head);
   const trailGeometry = new BufferGeometry();
   trailGeometry.setAttribute('position', new Float32BufferAttribute(new Float32Array(6), 3));
   const trailMaterial = new LineBasicMaterial({
@@ -154,9 +191,7 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
     mesh.scale.setScalar(0.001);
     return mesh;
   };
-  const craterRadius = Math.max(spec.craterKm / 2 / EARTH_KM, 0.004);
-  // The blast's reach is illustrative: four crater radii, and never too small to see.
-  const blastRadius = Math.max(craterRadius * 4, 0.03);
+  const { craterRadius, blastRadius } = sizes;
   const blast = ring(0.82, new Color(1, 0.62, 0.3));
   const crater = ring(0.88, new Color(1, 0.85, 0.6));
   crater.scale.setScalar(craterRadius);
@@ -175,18 +210,19 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
   return {
     group,
     update(now) {
-      const t = clock.tick(now);
+      // Time as for an impact Chicxulub's size: a smaller one runs through it faster.
+      const t = clock.tick(now) / pace;
       // The approach, quickening as it falls.
       const falling = clamp(t / APPROACH);
       const at = origin.clone().lerp(ground, falling ** 1.6);
       head.position.copy(at);
       head.visible = falling < 1;
       trail.visible = falling < 1;
-      setTrail(at, 0.12 * (1 - falling * 0.5));
+      setTrail(at, sizes.trail * (1 - falling * 0.5));
       // The flash.
       const flashing = clamp((t - APPROACH) / FLASH);
       flash.visible = t >= APPROACH && flashing < 1;
-      flash.scale.setScalar(0.02 + 0.3 * ease(flashing));
+      flash.scale.setScalar(sizes.flash * (0.07 + 0.93 * ease(flashing)));
       flash.material.opacity = 1 - flashing;
       // The ring spreading and fading.
       const spreading = clamp((t - APPROACH) / RING);
