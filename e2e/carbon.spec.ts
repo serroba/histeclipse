@@ -326,6 +326,12 @@ test('started from the Sun, the story follows a photon from fusion to the leaf',
     await expect(globe).toHaveAttribute('data-shower-step', /./, { timeout: 30_000 });
     await stage.getByRole('button', { name: 'Replay' }).click();
     await stage.getByRole('button', { name: 'Pause', exact: true }).click();
+    // A slow runner may have moved on before the pause: step back to the first step.
+    for (let tries = 0; tries < 6; tries += 1) {
+      if ((await globe.getAttribute('data-shower-step')) === 'fusion') break;
+      await stage.getByRole('button', { name: 'Back' }).click();
+      await page.waitForTimeout(200);
+    }
   });
   await test.step('Then the Sun shows, its core fusing, the gamma ray’s energy given', async () => {
     await expect(globe).toHaveAttribute('data-shower-step', 'fusion');
