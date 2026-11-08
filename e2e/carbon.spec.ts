@@ -353,12 +353,28 @@ test('started from the Sun, the story follows a photon from fusion to Earth', as
     await expect(globe).toHaveAttribute('data-shower-step', 'fusion');
     await expect(story).toHaveAttribute('data-playing', 'false');
   });
-  await test.step('And its light escapes over some 170,000 years, then crosses to Earth', async () => {
+  await test.step('And its light walks out over some 170,000 years, in 3D, the years counting', async () => {
     await next('escape');
-    await expect(page.getByTestId('story-3d')).toBeHidden();
-    await expect(stage.getByTestId('sun-diagram')).toContainText('≈ 170,000 years');
+    const story = page.getByTestId('story-3d');
+    await expect(story).toHaveAttribute('data-chapter', 'escape');
     await expect(caption).toContainText('Mitalas & Sills 1992');
+    const way = story.getByRole('list', { name: 'A photon’s way out' });
+    await expect(way).toContainText('X-rays, about 1 keV');
+    await expect(way).toContainText('about 170,000 years across the radiative zone');
+    await expect(way).toContainText('visible light, about 2.5 eV');
+    await expect(story.getByRole('list', { name: 'The proton–proton chain' })).toBeHidden();
+    await expect(stage.getByTestId('sun-diagram')).toHaveCount(0);
+    // Paused, it stays where it is; played, the walk goes on and the years with it.
+    const years = Number(await story.getAttribute('data-years'));
+    await stage.getByRole('button', { name: 'Play', exact: true }).click();
+    await expect
+      .poll(async () => Number(await story.getAttribute('data-years')))
+      .toBeGreaterThan(years);
+    await stage.getByRole('button', { name: 'Pause', exact: true }).click();
+  });
+  await test.step('Then it crosses to Earth, drawn flat for now', async () => {
     await next('journey');
+    await expect(page.getByTestId('story-3d')).toBeHidden();
     await expect(stage.getByTestId('sun-diagram')).toContainText(
       'red light: 680 nm, 441 THz, 1.8 eV',
     );

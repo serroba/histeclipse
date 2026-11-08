@@ -894,7 +894,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The story's chapters in 3D (#317), in a scene of their own over the globe, loaded the first
   // time one shows; its WebGL context is let go when the story closes. Should it fail to load,
   // the stage draws the step flat, as before.
-  const STEPS_IN_3D: ReadonlySet<ShowerStep> = new Set<ShowerStep>(['fusion']);
+  const STEPS_IN_3D: ReadonlySet<ShowerStep> = new Set<ShowerStep>(['fusion', 'escape']);
   const storyContainer = element('div', {
     class: 'story-3d',
     'data-testid': 'story-3d',
@@ -948,6 +948,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return;
     }
     if (before !== state.step) {
+      // Only the Sun's chapters are drawn in 3D so far.
+      sunCore.setChapter(state.step === 'escape' ? 'escape' : 'fusion');
       if (reduced) sunCore.settle();
       else sunCore.restart();
     }

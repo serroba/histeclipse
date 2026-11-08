@@ -94,7 +94,7 @@ describe('a cosmic-ray shower, step by step', () => {
     expect(stepAt(SUN_MS, SUN_STORY)).toBe('rays');
     expect(stepAt(SUN_STORY.total, SUN_STORY)).toBeNull();
     expect(nextStepStart(SUN_MS - 1, SUN_STORY)).toBe(SUN_MS);
-    expect(previousStepStart(SUN_MS + 100, SUN_STORY)).toBe(15_000);
+    expect(previousStepStart(SUN_MS + 100, SUN_STORY)).toBe(17_000);
     expect(stepEnd(0, SUN_STORY)).toBe(8999);
   });
 
