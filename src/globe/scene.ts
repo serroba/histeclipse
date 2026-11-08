@@ -1384,6 +1384,8 @@ export function createGlobe(
     moonView = view;
     if (view === null) {
       moon.material.uniforms['map'] = { value: moonStandard };
+      // Which the Moon wears, for whoever needs to know a view took.
+      container.dataset['moonMap'] = 'usual';
       needsRender = true;
       return;
     }
@@ -1391,6 +1393,7 @@ export function createGlobe(
       (map) => {
         if (moonView !== view) return;
         moon.material.uniforms['map'] = { value: map };
+        container.dataset['moonMap'] = 'view';
         needsRender = true;
       },
       () => undefined,

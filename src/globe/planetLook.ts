@@ -321,6 +321,15 @@ export const PLANET_VIEWS: Readonly<Record<PlanetName | 'moon', readonly PlanetV
       sharp: null,
       caption: MOON_CAPTION,
     },
+    {
+      key: 'height',
+      label: 'Height',
+      detail: 'by laser, LOLA',
+      map: 'textures/moon-height-2048.jpg',
+      sharp: 'textures/moon-height-4096.jpg',
+      caption:
+        'Pictured: the height of the ground, measured by the Lunar Reconnaissance Orbiter’s laser altimeter (LOLA, from 2009), shaded as if lit and coloured from blue lowlands to red and white heights: the dark seas low, the far side’s highlands high, and the South Pole–Aitken basin, the largest, deepest of all. NASA/GSFC/USGS.',
+    },
   ],
 };
 
