@@ -1583,6 +1583,8 @@ body {
 }
 
 .view-switch[hidden],
+.view-switch button[hidden],
+.hud-actions[hidden],
 .sky-caption[hidden],
 .sky-eclipse[hidden] {
   display: none;
@@ -3666,7 +3668,8 @@ body {
 }
 
 /* Away from Earth: the bar says what the body in view is doing, and Earth's own parts rest
-   (the year's eclipses, Seen from, the ways-of-life key and the states' ticker). */
+   (the year's eclipses but on the Moon, Seen from, the ways-of-life key and the states'
+   ticker); so do Earth's spans and Layers in the date panel (#329). */
 .body-bar {
   margin: 0;
   padding: 0 4px;
@@ -3700,7 +3703,8 @@ body {
   display: none;
 }
 
-.bottom[data-away='true'] .eclipse-row,
+/* The Moon keeps the year's eclipses (#329). */
+.bottom[data-away='true']:not([data-body='moon']) .eclipse-row,
 .bottom[data-away='true'] .seen-controls,
 .bottom[data-away='true'] .ways-legend,
 .bottom[data-away='true'] .history-notes {

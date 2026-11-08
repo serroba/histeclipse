@@ -1393,6 +1393,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     store.set((state) => ({ ...state, time: momentAt(julianDayNumber(jd)) }));
   });
 
+  // Earth's spans and its map's layers; away from Earth they rest (#329).
+  const hudActions = element('div', { class: 'hud-actions' }, historySpan.root, layersPanel.button);
   const bottom = element(
     'div',
     { class: 'bottom', 'data-deep': 'off' },
@@ -1430,7 +1432,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       detailText,
       termNote,
       welcome.root,
-      element('div', { class: 'hud-actions' }, historySpan.root, layersPanel.button),
+      hudActions,
       viewSwitch.root,
       aimSwitch.root,
       skyOptions,
@@ -3508,8 +3510,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   /** Away from Earth: the body in view and what can be said of it; Earth's own bits rest. */
   function showBody(state: ViewState): void {
+    // As `awayFromEarth`, spelled out so the focus is known not to be Earth below.
     const away = state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
     bottom.dataset['away'] = String(away);
+    // The Moon keeps the year's eclipses; Earth's other timelines rest there too (#329).
+    bottom.dataset['body'] = state.focus;
+    hudActions.hidden = away;
     // The Light switch, for a planet or the Moon in view with more than one way to show it.
     const planet = state.focus === 'moon' ? 'moon' : PLANETS.find((name) => name === state.focus);
     if (away && (state.view !== 'earth-from-here' || planet === 'moon') && planet !== undefined) {
@@ -3610,7 +3616,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       year: state.time.date.year,
       present: PRESENT_YEAR,
       span: state.ma === null ? 'years' : state.deepScale,
-      visible: state.mode === 'globe',
+      visible: state.mode === 'globe' && !awayFromEarth(state),
       said: new Map<Layer, string>([
         ...(genomesSaid === null ? [] : [['genomes', genomesSaid] as const]),
         ...(waysSaid === null ? [] : [['ways', waysSaid] as const]),
@@ -4177,6 +4183,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showVolcanoes(state);
       showCarbonMade(state);
       showEmpires(state);
+    } else if (state.focus !== previous.focus) {
+      // The Layers panel is Earth's: it shuts on going to another body.
+      showEmpires(state);
     }
     // Deep time, or an eclipse picked, ends a trip through the years.
     if (state.ma !== null || state.selection !== null) {
@@ -4381,6 +4390,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     sync.adopt(restored);
     store.set(() => restored);
   });
+}
+
+/** Orbiting another body in the years: the bars and panels speak of it, not of Earth. */
+function awayFromEarth(state: ViewState): boolean {
+  return state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
 }
 
 function round(value: number, digits: number): number {
