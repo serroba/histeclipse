@@ -10,6 +10,7 @@ import {
   labelPoint,
   loadEmpireCentury,
   loadEmpireIndex,
+  namedByBoth,
   ringArea,
   stateChanges,
   stateChangesOnMap,
@@ -167,5 +168,32 @@ describe('stateChangesOnMap', () => {
       },
     ]);
     expect(stateChangesOnMap([lydia], [lydia])).toEqual([]);
+  });
+});
+
+describe('namedByBoth', () => {
+  const sweden = { name: 'Kingdom of Sweden', latitude: 60, longitude: 15 };
+  const hungary = { name: 'Kingdom of Hungary', latitude: 47, longitude: 19 };
+
+  it('finds a state both sources name nearby, however they write it', () => {
+    const { repeated, shared } = namedByBoth(
+      [sweden, hungary],
+      [
+        { name: 'kingdom of sweden', latitude: 62, longitude: 16 },
+        { name: 'Duchy of Normandy', latitude: 49, longitude: 0 },
+        { name: 'The Kingdom of Hungary', latitude: 46, longitude: 20 },
+      ],
+    );
+    expect([...repeated]).toEqual([0, 2]);
+    expect([...shared]).toEqual(['Kingdom of Sweden', 'Kingdom of Hungary']);
+  });
+
+  it('keeps both where the same name stands far apart', () => {
+    const { repeated, shared } = namedByBoth(
+      [{ name: 'Georgia', latitude: 42, longitude: 44 }],
+      [{ name: 'Georgia', latitude: 33, longitude: -83 }],
+    );
+    expect(repeated.size).toBe(0);
+    expect(shared.size).toBe(0);
   });
 });

@@ -1375,6 +1375,10 @@ test('past borders can come from Cliopatria, OpenHistoricalMap, or both to compa
   await openSources(page);
   await expect(page.getByRole('link', { name: 'OpenHistoricalMap' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Cliopatria' })).toBeVisible();
+  // A state both sources name nearby is named once, marked as named by both (#163).
+  await expect(page.locator('.empire-label.is-both').first()).toBeAttached();
+  const shown = await page.locator('.empire-label:not([hidden])').allTextContents();
+  expect(shown.filter((name, index) => shown.indexOf(name) !== index)).toEqual([]);
 
   await source.selectOption('ohm');
   await expect(globe).toHaveAttribute('data-empires', '0');

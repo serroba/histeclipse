@@ -37,7 +37,8 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
       {
         id: 'empires',
         label: 'States and empires',
-        about: 'Borders from Cliopatria or OpenHistoricalMap, or both to compare.',
+        about:
+          'Borders from Cliopatria or OpenHistoricalMap, or both to compare: OpenHistoricalMap’s names in italics, and a state both name nearby named once, underlined with dots.',
         spans: ['years'],
         reach: 'From 3400 BCE (Cliopatria) or 4000 BCE (OpenHistoricalMap) to today.',
       },
