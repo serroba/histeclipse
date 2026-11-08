@@ -255,6 +255,11 @@ test('where the carbon lands on the sea, algae take it in', async ({ page }) => 
     }
     await expect(caption).toContainText('Algae in the sea take it in');
     await expect(caption).toContainText('400–600 radiocarbon years older');
+    // In 3D, a single-celled alga under the sea's surface.
+    const story = page.getByTestId('story-3d');
+    await expect(story).toHaveAttribute('data-chapter', 'plant', { timeout: 20_000 });
+    await expect(story.getByRole('list', { name: 'Into the alga' })).toContainText('no stomata');
+    await expect(story).toContainText('an alga: one cell');
   });
   expect(problems).toEqual([]);
 });
@@ -320,13 +325,27 @@ test('with reduced motion, each step waits for the reader, its picture complete'
     // Drawn in 3D, so not flat on the stage too.
     await expect(stage.getByTestId('reaction-diagram')).toHaveCount(0);
   });
-  await test.step('And carbon dioxide is still drawn flat, the scene let go', async () => {
-    const diagram = stage.getByTestId('reaction-diagram');
+  await test.step('And on to the plant, each step in 3D, complete', async () => {
+    const story = page.getByTestId('story-3d');
     await page.keyboard.press('ArrowRight');
-    await expect(page.getByTestId('story-3d')).toBeHidden();
-    await expect(diagram).toContainText('carbon dioxide');
+    await expect(globe).toHaveAttribute('data-shower-step', 'dioxide');
+    await expect(story).toHaveAttribute('data-chapter', 'dioxide', { timeout: 20_000 });
+    await expect(story).toHaveAttribute('data-molecule', 'CO2');
+    await expect(story.getByRole('list', { name: 'Carbon dioxide made' })).toContainText(
+      '¹⁴C + O → ¹⁴CO: carbon monoxide first',
+    );
     await page.keyboard.press('ArrowRight');
-    await expect(stage.getByTestId('reaction-diagram')).toBeHidden();
+    await expect(story).toHaveAttribute('data-chapter', 'fall');
+    await expect(story.getByRole('list', { name: 'Through the air' })).toContainText(
+      '7,808 nitrogen',
+    );
+    await page.keyboard.press('ArrowRight');
+    await expect(story).toHaveAttribute('data-chapter', 'plant');
+    await expect(story).toHaveAttribute('data-taken', 'true');
+    // Over northern Italy, on land: a leaf, through a stoma.
+    await expect(story.getByRole('list', { name: 'Into the leaf' })).toContainText('stoma');
+    // Every step drawn in 3D, nothing flat on the stage.
+    await expect(stage.getByTestId('reaction-diagram')).toHaveCount(0);
   });
   await test.step('When they press Escape, it closes', async () => {
     await page.keyboard.press('Escape');
