@@ -83,6 +83,7 @@ describe('parseViewState', () => {
       land: 'dhuime',
       snowball: 'hard',
       why: null,
+      tree: null,
     } satisfies ViewState);
   });
 
@@ -135,6 +136,17 @@ describe('parseViewState', () => {
     expect(parseViewState('temp=cesm', NOW).state.temperatureModel).toBe('cesm');
     const sketch = parseViewState('impact=young&land=flooded&snowball=slush', NOW).state;
     expect([sketch.impact, sketch.land, sketch.snowball]).toEqual(['young', 'flooded', 'slush']);
+  });
+
+  it('opens the tree of life from the link, whole or at a taxon, and ignores a bad one', () => {
+    expect(parseViewState('tree=all', NOW).state.tree).toBe('all');
+    expect(parseViewState('tree=ott770315', NOW).state.tree).toEqual({ ott: 770315 });
+    expect(serializeViewState({ ...parseViewState('', NOW).state, tree: { ott: 770315 } })).toMatch(
+      /tree=ott770315/,
+    );
+    const bad = parseViewState('tree=sapiens', NOW);
+    expect(bad.state.tree).toBeNull();
+    expect(bad.warnings.join(' ')).toMatch(/tree/);
   });
 
   it('opens a why from the link, and ignores one it does not know', () => {
@@ -439,6 +451,11 @@ describe('serializeViewState', () => {
     land: fc.constantFrom(...LAND_MODELS),
     snowball: fc.constantFrom(...SNOWBALL_MODELS),
     why: fc.constantFrom(null, ...WHY_VIEWS),
+    tree: fc.oneof(
+      fc.constant(null),
+      fc.constant('all' as const),
+      fc.integer({ min: 0, max: 9_999_999_999 }).map((ott) => ({ ott })),
+    ),
   });
 
   it('round-trips every view state through a link', () => {
