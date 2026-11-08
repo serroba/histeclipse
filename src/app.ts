@@ -32,7 +32,6 @@ import { geoToVector } from './globe/geo';
 import { PLANET_NAMES, PLANET_VIEWS, planetView, SHARP_MAPS } from './globe/planetLook';
 import { loadPolarity, type PolarityScale } from './data/polarity';
 import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
-import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
 import { DATABLE_YEARS } from './data/radiocarbonProduction';
 import {
@@ -47,7 +46,9 @@ import {
 } from './data/radiocarbonDates';
 import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruptions';
 import { dipoleAt, loadDipole, type DipoleSeries } from './data/dipoleMoment';
+import type { ShowerState } from './globe/showerAnimation';
 import { captionOf, landing, SHOWER_STORY, SUN_STORY, type ShowerStep } from './globe/showerSteps';
+import type { SunCore } from './story/sunCore';
 import { createShowerStage } from './ui/showerStage';
 import { onLand, type ElevationGrid } from './data/landSea';
 import { loadElevationGrid } from './ui/elevationImage';
@@ -254,7 +255,6 @@ import {
   impactsText,
   placeThen,
   loadImpacts,
-  STRIKE_MIN_KM,
   strikesPassed,
   type Impact,
   type Impacts,
@@ -319,6 +319,8 @@ const SHARP_WITHIN = 2.5;
 const PHONE_SKY_ALTITUDE = 12;
 /** Degrees from the centre of the globe in view within which a strike is played as time runs. */
 const STRIKE_IN_VIEW = 70;
+/** Strikes started in one frame at most, the greatest first, when time runs fast past several. */
+const STRIKES_AT_ONCE = 4;
 /** Earth radii (or the focused body's): beyond this the space view loads the planets. */
 const PLANETS_SHOWN_BEYOND = 1000;
 /** Pixels the zoom rail needs between the panels: its buttons, a short track and its reading. */
@@ -855,8 +857,82 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The stage the shower plays on: its caption, its steps, and controls; the panels step aside.
   const showerStage = createShowerStage((command) => {
     globe.controlShower(command);
-    if (command === 'stop') showerStage.close();
+    if (command === 'stop') {
+      showerStage.close();
+      closeStory3d();
+    }
   });
+
+  // The story's chapters in 3D (#317), in a scene of their own over the globe, loaded the first
+  // time one shows; its WebGL context is let go when the story closes. Should it fail to load,
+  // the stage draws the step flat, as before.
+  const STEPS_IN_3D: ReadonlySet<ShowerStep> = new Set<ShowerStep>(['fusion']);
+  const storyContainer = element('div', {
+    class: 'story-3d',
+    'data-testid': 'story-3d',
+    hidden: '',
+  });
+  let sunCore: SunCore | null = null;
+  let sunCoreLoading = false;
+  let story3dFailed = false;
+  /** The step the 3D scene last showed, to start a chapter afresh on coming to it. */
+  let story3dStep: ShowerStep | null = null;
+  let story3dLatest: {
+    readonly state: ShowerState;
+    readonly reduced: boolean;
+    readonly caption: string;
+  } | null = null;
+  showerStage.setDrawnIn3d(STEPS_IN_3D);
+
+  function showStory3d(state: ShowerState, reduced: boolean, caption: string): void {
+    story3dLatest = { state, reduced, caption };
+    const before = story3dStep;
+    story3dStep = state.step;
+    if (!STEPS_IN_3D.has(state.step) || story3dFailed) {
+      storyContainer.hidden = true;
+      sunCore?.setPlaying(false);
+      return;
+    }
+    storyContainer.hidden = false;
+    if (sunCore === null) {
+      story3dStep = null;
+      if (sunCoreLoading) return;
+      sunCoreLoading = true;
+      import('./story/sunCore')
+        .then(({ createSunCore }) => {
+          sunCoreLoading = false;
+          if (!showerStage.isOpen) return;
+          sunCore = createSunCore(storyContainer);
+          if (story3dLatest !== null) {
+            const latest = story3dLatest;
+            showStory3d(latest.state, latest.reduced, latest.caption);
+          }
+        })
+        .catch((error: unknown) => {
+          sunCoreLoading = false;
+          story3dFailed = true;
+          storyContainer.hidden = true;
+          showerStage.setDrawnIn3d(new Set());
+          if (story3dLatest !== null)
+            showerStage.render(story3dLatest.state, story3dLatest.caption);
+          notify(`Could not draw the Sun in 3D, so it is drawn flat: ${errorMessage(error)}`);
+        });
+      return;
+    }
+    if (before !== state.step) {
+      if (reduced) sunCore.settle();
+      else sunCore.restart();
+    }
+    if (!reduced) sunCore.setPlaying(state.playing);
+  }
+
+  function closeStory3d(): void {
+    sunCore?.dispose();
+    sunCore = null;
+    story3dStep = null;
+    story3dLatest = null;
+    storyContainer.hidden = true;
+  }
 
   // Today's land and sea, to say whether the carbon lands on land or water; asked for once.
   let elevations: Promise<ElevationGrid | null> | null = null;
@@ -933,7 +1009,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
             framed = state.step;
             frame(state.step);
           }
-          showerStage.render(state, captionOf(state.step, dipole, water, fromSun));
+          const caption = captionOf(state.step, dipole, water, fromSun);
+          showerStage.render(state, caption);
+          showStory3d(state, reduced, caption);
         },
       });
       // Under reduced motion, each step waits for the reader, its picture complete.
@@ -1344,6 +1422,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     markerCard.dialog,
     datingCard.dialog,
     carbonMadeCard.dialog,
+    storyContainer,
     showerStage.root,
   );
 
@@ -2302,17 +2381,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return { on: true, text: impactsText(impacts, marks, ma, impactsMode), mode: impactsMode };
   }
 
-  // As deep time plays, a great impact strikes when the time passes it (#242): one at a time,
-  // only on the side of the globe in view, and never for a reader who asks for less motion.
+  // As deep time plays, each crater strikes when the time passes it (#242, #314): several at
+  // once, only on the side of the globe in view, and never for a reader who asks for less motion.
   let strikeFrom: number | null = null;
-  let strikeBusyUntil = 0;
   const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   function strikeAsItPasses(state: ViewState, data: Impacts, ma: number, placeMa: number): void {
     const from = strikeFrom;
     strikeFrom = playing ? ma : null;
     if (from === null || !playing || lessMotion.matches || state.focus !== 'earth') return;
-    if (performance.now() < strikeBusyUntil) return;
-    // Of those passed since the last frame, the greatest that can be seen.
+    // Of those passed since the last frame, the greatest few that can be seen.
     const seen = strikesPassed(data, from, ma)
       .map((impact) => ({ impact, place: placeThen(data, impact, placeMa) }))
       .filter(
@@ -2320,17 +2397,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
           each.place !== null && angularDistance(each.place, state.camera.target) < STRIKE_IN_VIEW,
       )
       .sort((a, b) => (b.impact.diameterKm ?? 0) - (a.impact.diameterKm ?? 0));
-    const [greatest] = seen;
-    if (greatest === undefined) return;
-    const approach = approachOf(greatest.impact.name);
-    strikeBusyUntil = performance.now() + IMPACT_ANIMATION_MS;
-    globeContainer.dataset['strike'] = greatest.impact.name;
-    globe.playImpact({
-      place: greatest.place,
-      craterKm: greatest.impact.diameterKm ?? STRIKE_MIN_KM,
-      fromAzimuth: approach.fromAzimuth,
-      angleDegrees: approach.angleDegrees,
-    });
+    for (const { impact, place } of seen.slice(0, STRIKES_AT_ONCE).reverse()) {
+      const approach = approachOf(impact.name);
+      // The latest few struck, for whoever needs to know one did: they follow fast as time runs.
+      const struck = (globeContainer.dataset['strikes'] ?? '').split('|').filter(Boolean);
+      globeContainer.dataset['strikes'] = [...struck, impact.name].slice(-12).join('|');
+      globe.playImpact({
+        place,
+        craterKm: impact.diameterKm ?? 0,
+        fromAzimuth: approach.fromAzimuth,
+        angleDegrees: approach.angleDegrees,
+      });
+    }
   }
 
   // Volcanic eruptions near the year shown, in historical time: loaded with the layer; each

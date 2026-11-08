@@ -124,8 +124,9 @@ export function impactsAt(
   return marks.sort((a, b) => (b.impact.diameterKm ?? 0) - (a.impact.diameterKm ?? 0));
 }
 
-/** As time plays, a strike is shown for craters at least this wide, km: the great ones. */
-export const STRIKE_MIN_KM = 40;
+/** As time plays, a strike is shown for craters at least this wide, km: every one whose width
+ * is known (#314), a deposit without a crater not. */
+export const STRIKE_MIN_KM = 0;
 
 /**
  * When an impact is shown striking: the middle of its dated span. None for one dated only in
@@ -151,7 +152,13 @@ export function strikesPassed(
   return data.impacts
     .filter((impact) => {
       const at = strikeMa(impact);
-      return (impact.diameterKm ?? 0) >= minKm && at !== null && at < fromMa && at >= toMa;
+      return (
+        impact.diameterKm !== null &&
+        impact.diameterKm >= minKm &&
+        at !== null &&
+        at < fromMa &&
+        at >= toMa
+      );
     })
     .sort((a, b) => (strikeMa(b) ?? 0) - (strikeMa(a) ?? 0));
 }
@@ -161,6 +168,10 @@ const KIND_NAMES: Readonly<Record<ImpactKind, string>> = {
   crater: 'Impact crater (meteorite fragments found)',
   deposit: 'Impact deposit',
 };
+
+/** Said in deep time, where they strike as it plays: the craters found are a floor (#314). */
+const FOUND_ONLY =
+  ' These are the craters found: erosion, burial and the sinking of old sea floor have erased most of those that struck, so far more hit than are shown.';
 
 /** What the layer says of the impacts marked at a moment. */
 export function impactsText(
@@ -186,11 +197,11 @@ export function impactsText(
       maybe === 0
         ? ''
         : `; ${String(maybe)} of them dated only to a span of more than ${String(WIDE_SPAN_MA)} million years (dashed)`;
-    return `Impacts around ${formatMa(ma)}: ${String(marks.length)} whose dated age falls within ${String(AROUND_MA)} million years of then, each where it lay${loose}. Ages as the Impact Earth Database gives them.`;
+    return `Impacts around ${formatMa(ma)}: ${String(marks.length)} whose dated age falls within ${String(AROUND_MA)} million years of then, each where it lay${loose}. Ages as the Impact Earth Database gives them.${FOUND_ONLY}`;
   }
   const more =
     maybe === 0 ? '' : `, and ${String(maybe)} more may have (their ages span this moment)`;
-  return `Impacts by ${formatMa(ma)}: ${String(sure)} had struck${more}, each where it lay then. Ages as the Impact Earth Database gives them.`;
+  return `Impacts by ${formatMa(ma)}: ${String(sure)} had struck${more}, each where it lay then. Ages as the Impact Earth Database gives them.${FOUND_ONLY}`;
 }
 
 /** A crater's or deposit's details, for its card. */
