@@ -43,6 +43,7 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 | `ways.spec.ts`      | Ways of life: ArchaeoGLOBE's regions by how people lived                                                |
 | `rocks.spec.ts`     | Rocks at the surface: Macrostrat's map, and deep time at a rock's age                                   |
 | `fossils.spec.ts`   | Fossils in deep time: PBDB finds where they lay then                                                    |
+| `tree.spec.ts`      | The tree of life: a taxon's line to the first cells, from a find, a fossil or a link                    |
 | `poles.spec.ts`     | Poles and the magnetic field in deep time: the spin axis, magnetic north, and every reversal (GTS 2020) |
 | `impacts.spec.ts`   | Impact craters: today and where they lay, each with a card                                              |
 | `volcanoes.spec.ts` | Volcanic eruptions: GVP's eruptions near the year, each with a card                                     |

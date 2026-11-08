@@ -235,8 +235,23 @@ class Node:
     flags: int
 
 
-def _node_flags(taxon: Taxon | None, *, supported: bool, taxonomy_only: bool) -> int:
-    extinct = taxon is not None and any(flag.startswith("extinct") for flag in taxon.flags)
+# Living taxa the taxonomy flags extinct. OTT 3.7.3 marks Homo sapiens "extinct" (from a
+# fossil-record source it merges), and Homo "extinct_inherited" because of it; both are living.
+LIVING_DESPITE_TAXONOMY = frozenset({770315, 770309})  # Homo sapiens, Homo
+
+
+def node_flags(
+    ott: int | None, taxon: Taxon | None, *, supported: bool, taxonomy_only: bool
+) -> int:
+    """Return a node's flags: extinct, supported by phylogenies, placed by the taxonomy alone.
+
+    Extinct is as the taxonomy says, less the living taxa it gets wrong.
+    """
+    extinct = (
+        taxon is not None
+        and ott not in LIVING_DESPITE_TAXONOMY
+        and any(flag.startswith("extinct") for flag in taxon.flags)
+    )
     return (
         (EXTINCT if extinct else 0)
         | (PHYLOGENY if supported else 0)
@@ -320,7 +335,7 @@ def _ordered(  # noqa: PLR0913
                 name=taxon.name if taxon else "",
                 rank=taxon.rank if taxon else "",
                 parent=parent,
-                flags=_node_flags(taxon, supported=label in supported, taxonomy_only=False),
+                flags=node_flags(ott, taxon, supported=label in supported, taxonomy_only=False),
             )
         )
         if ott in wanted:
@@ -353,7 +368,7 @@ def _hang(
                 name=taxon.name,
                 rank=taxon.rank,
                 parent=parent,
-                flags=_node_flags(taxon, supported=False, taxonomy_only=True),
+                flags=node_flags(ott, taxon, supported=False, taxonomy_only=True),
             )
         )
 

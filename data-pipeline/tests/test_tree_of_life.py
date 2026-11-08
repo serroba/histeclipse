@@ -12,9 +12,11 @@ from histeclipse_pipeline.tree_of_life import (
     EXTINCT,
     PHYLOGENY,
     TAXONOMY_ONLY,
+    Taxon,
     genus_names,
     match_genera,
     member,
+    node_flags,
     ott_of,
     parse_newick,
     parse_taxonomy,
@@ -199,3 +201,12 @@ def test_reads_a_file_inside_an_archive(tmp_path: Path) -> None:
         archive.getmember("release/folder").type = tarfile.DIRTYPE
         with pytest.raises(ValueError, match="not a file"):
             _ = member(archive, "release/folder")
+
+
+def test_keeps_our_species_living_though_the_taxonomy_flags_it_extinct() -> None:
+    flagged = Taxon(parent=1, name="Homo sapiens", rank="species", flags=frozenset({"extinct"}))
+    neanderthal = Taxon(
+        parent=1, name="H. s. neanderthalensis", rank="no rank", flags=frozenset({"extinct"})
+    )
+    assert node_flags(770315, flagged, supported=True, taxonomy_only=False) & EXTINCT == 0
+    assert node_flags(83926, neanderthal, supported=False, taxonomy_only=False) & EXTINCT
