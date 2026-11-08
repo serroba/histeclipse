@@ -3033,6 +3033,7 @@ export function createGlobe(
       // What the rays' labels say, for whoever needs to read them.
       const words = rayLabels(spec.dipole);
       container.dataset['showerLabels'] = `${words.polar} | ${words.equator}`;
+      container.dataset['showerGround'] = spec.water ? 'water' : 'land';
       needsRender = true;
     },
     zoomTo(distance) {

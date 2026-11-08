@@ -37,7 +37,9 @@ import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
 import { DATABLE_YEARS } from './data/radiocarbonProduction';
 import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruptions';
 import { dipoleAt, loadDipole, type DipoleSeries } from './data/dipoleMoment';
-import { captionOf } from './globe/showerSteps';
+import { captionOf, landing } from './globe/showerSteps';
+import { onLand, type ElevationGrid } from './data/landSea';
+import { loadElevationGrid } from './ui/elevationImage';
 import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
 import { createDatingCard } from './ui/datingCard';
 import {
@@ -802,9 +804,23 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   showerCaption.hidden = true;
 
+  // Today's land and sea, to say whether the carbon lands on land or water; asked for once.
+  let elevations: Promise<ElevationGrid | null> | null = null;
+  function landAndSea(): Promise<ElevationGrid | null> {
+    elevations ??= loadShelf(`${base}data/shelf/index.json`, fetchJson)
+      .then((index) => loadElevationGrid(`${base}data/shelf/${index.file}`, index))
+      .catch((error: unknown) => {
+        elevations = null;
+        notify(`Could not load today's coasts: ${errorMessage(error)}`);
+        return null;
+      });
+    return elevations;
+  }
+
   /**
    * Play a cosmic-ray shower over the meridian in view: seen from the side as the rays come in,
-   * then close up as one bursts, under the field picked.
+   * then close up as one bursts, under the field picked. It ends on a plant where it lands on
+   * land, and on algae where it lands on water.
    */
   function watchShower(dipole: number): void {
     if (store.get().focus !== 'earth')
@@ -821,24 +837,27 @@ export async function startApp(root: HTMLElement): Promise<void> {
     // From the side first, so the rays are seen coming in from space.
     globe.flyTo({ latitude: 20, longitude: longitude - 90 });
     globe.zoomTo(4.4);
-    // Once the globe has turned to it.
-    window.setTimeout(() => {
+    // Once the globe has turned to it, and today's coasts have said where it lands.
+    const turned = new Promise((done) => window.setTimeout(done, 1000));
+    void Promise.all([landAndSea(), turned]).then(([grid]) => {
+      const water = grid !== null && !onLand(grid, landing(place));
       globe.playShower({
         place,
         dipole,
+        water,
         onStep(step) {
           // In close over the strike, for the shower and what it makes.
           if (step === 'shower') {
             globe.flyTo(place);
             globe.zoomTo(1.35);
           }
-          // A little south, to follow it falling to the plant.
+          // A little toward the equator, to follow it falling to where it lands.
           if (step === 'fall') globe.flyTo({ latitude: place.latitude - 1.5, longitude });
           showerCaption.hidden = step === null;
-          showerCaption.textContent = step === null ? '' : captionOf(step, dipole);
+          showerCaption.textContent = step === null ? '' : captionOf(step, dipole, water);
         },
       });
-    }, 1000);
+    });
   }
   let carbonMadeSaid: string | null = null;
   let carbonMadeAction: { readonly label: string; readonly run: () => void } | null = null;

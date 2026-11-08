@@ -142,6 +142,8 @@ test('a cosmic ray’s shower makes carbon-14, step by step, under the field pic
     await expect(dialog).toBeHidden();
     await expect(caption).toContainText('bends this one back out to space', { timeout: 20_000 });
     await expect(globe).toHaveAttribute('data-shower-labels', /Turned away: under \d+ GeV/);
+    // Over the place picked, it lands in northern Italy: on land, so a plant takes it in.
+    await expect(globe).toHaveAttribute('data-shower-ground', 'land');
     // The place's pin rests while the shower plays, so the plant can be seen.
     await expect(globe).toHaveAttribute('data-pin-shown', 'false');
   });
@@ -163,6 +165,31 @@ test('a cosmic ray’s shower makes carbon-14, step by step, under the field pic
   await test.step('Then the rays reach the air at the equator too', async () => {
     await expect(caption).toContainText('reach the air at the equator too', { timeout: 20_000 });
     await expect(globe).toHaveAttribute('data-showers-played', '2', { timeout: 60_000 });
+  });
+  expect(problems).toEqual([]);
+});
+
+test('where the carbon lands on the sea, algae take it in', async ({ page }) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const caption = page.getByTestId('shower-caption');
+  await test.step('Given a place picked in the middle of the North Atlantic', async () => {
+    await page.goto('./?t=1500-06-01T12:00&loc=45,-30&layers=carbonMade');
+    await globeRendered(page);
+    await openLayers(page);
+    await page.getByRole('button', { name: 'How is it made?' }).click();
+  });
+  await test.step('When they watch a cosmic ray make carbon-14 there', async () => {
+    await page
+      .getByRole('dialog', { name: 'How is carbon-14 made?' })
+      .getByRole('button', { name: 'Watch a cosmic ray make carbon-14' })
+      .click();
+  });
+  await test.step('Then it lands on water, and algae take it in, the sea’s age said', async () => {
+    await expect(globe).toHaveAttribute('data-shower-ground', 'water', { timeout: 20_000 });
+    await expect(caption).toContainText('Algae in the sea take it in', { timeout: 60_000 });
+    await expect(caption).toContainText('400–600 radiocarbon years older');
   });
   expect(problems).toEqual([]);
 });
