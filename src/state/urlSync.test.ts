@@ -115,6 +115,12 @@ describe('createUrlSync', () => {
     expect(isStep({ ...base, tree: 'all' }, { ...base, tree: 'all' })).toBe(false);
   });
 
+  it('counts opening, closing and picking a crater in the impacts’ paths as steps', () => {
+    expect(isStep(base, { ...base, craters: 'all' })).toBe(true);
+    expect(isStep({ ...base, craters: { id: 1 } }, { ...base, craters: { id: 2 } })).toBe(true);
+    expect(isStep({ ...base, craters: { id: 1 } }, { ...base, craters: { id: 1 } })).toBe(false);
+  });
+
   it('makes the next update a step when asked, as for a jump to a milestone', () => {
     const writes: string[] = [];
     const sync = createUrlSync(replacing(writes), 100);

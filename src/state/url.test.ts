@@ -84,6 +84,7 @@ describe('parseViewState', () => {
       snowball: 'hard',
       why: null,
       tree: null,
+      craters: null,
     } satisfies ViewState);
   });
 
@@ -147,6 +148,14 @@ describe('parseViewState', () => {
     const bad = parseViewState('tree=sapiens', NOW);
     expect(bad.state.tree).toBeNull();
     expect(bad.warnings.join(' ')).toMatch(/tree/);
+  });
+
+  it('opens the impacts’ paths from the link, all or one crater, and ignores a bad one', () => {
+    expect(parseViewState('craters=all', NOW).state.craters).toBe('all');
+    expect(parseViewState('craters=12', NOW).state.craters).toEqual({ id: 12 });
+    const bad = parseViewState('craters=chicxulub', NOW);
+    expect(bad.state.craters).toBeNull();
+    expect(bad.warnings.join(' ')).toMatch(/craters/);
   });
 
   it('opens a why from the link, and ignores one it does not know', () => {
@@ -455,6 +464,11 @@ describe('serializeViewState', () => {
       fc.constant(null),
       fc.constant('all' as const),
       fc.integer({ min: 0, max: 9_999_999_999 }).map((ott) => ({ ott })),
+    ),
+    craters: fc.oneof(
+      fc.constant(null),
+      fc.constant('all' as const),
+      fc.integer({ min: 0, max: 999_999 }).map((id) => ({ id })),
     ),
   });
 
