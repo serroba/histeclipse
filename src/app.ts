@@ -120,6 +120,14 @@ import { astronomicalYear, formatYear, type AstronomicalYear } from './time/year
 import { moveToYear } from './time/yearInput';
 import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
+import type { BodyKey } from './ui/bodyBar';
+import {
+  keyGradient,
+  keyTicks,
+  loadColourKeys,
+  type ColourKeys,
+  type KeyedBody,
+} from './data/planetKeys';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
 import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
 import { createFamousPanel } from './ui/famousPanel';
@@ -3685,6 +3693,38 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe.sharpenPlanet(focus);
   }
 
+  // The height views' colour keys (#334), loaded the first time one shows.
+  let colourKeys: ColourKeys | null = null;
+  let colourKeysAsked = false;
+  /** A view's colour key for the bar, if it has one and the keys are in; else nothing. */
+  function keyFor(body: KeyedBody | undefined): { key?: BodyKey } {
+    if (body === undefined) return {};
+    if (colourKeys === null) {
+      if (!colourKeysAsked) {
+        colourKeysAsked = true;
+        loadColourKeys(`${base}data/planet-keys.json`, fetchJson).then(
+          (loaded) => {
+            colourKeys = loaded;
+            showBody(store.get());
+          },
+          (error: unknown) => {
+            colourKeysAsked = false;
+            notify(`Could not load the colour keys: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return {};
+    }
+    const key = colourKeys[body];
+    return {
+      key: {
+        gradient: keyGradient(key),
+        ticks: keyTicks(key),
+        note: `Height ${key.datum}; key ${key.credit}.`,
+      },
+    };
+  }
+
   /** Away from Earth: the body in view and what can be said of it; Earth's own bits rest. */
   function showBody(state: ViewState): void {
     // As `awayFromEarth`, spelled out so the focus is known not to be Earth below.
@@ -3726,7 +3766,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     } else if (focus === 'moon') {
       const moonKm = moonEphemeris?.position(jdTT) ?? null;
       // The view picked (#239): the usual map, or a mission's other one, fetched the first time.
-      const { map, sharp, caption } = planetView('moon', state.planetLight);
+      const { map, sharp, caption, colourKey } = planetView('moon', state.planetLight);
       globe.showMoonView(
         map === null
           ? null
@@ -3735,11 +3775,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
       bodyBar.render(
         moonKm === null
           ? null
-          : { name: 'The Moon', text: moonText(moonFacts(moonKm, sunKm)), picture: caption },
+          : {
+              name: 'The Moon',
+              text: moonText(moonFacts(moonKm, sunKm)),
+              picture: caption,
+              ...keyFor(colourKey),
+            },
       );
     } else {
       // The view picked (#239): a mission's map, fetched the first time, or the painted colours.
-      const { map, sharp, caption } = planetView(focus, state.planetLight);
+      const { map, sharp, caption, colourKey } = planetView(focus, state.planetLight);
       globe.showPlanetView(
         focus,
         map === null
@@ -3754,6 +3799,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
               name: PLANET_NAMES[focus],
               text: planetText(planetFacts(focus, position, sunKm)),
               picture: caption,
+              ...keyFor(colourKey),
             },
       );
     }

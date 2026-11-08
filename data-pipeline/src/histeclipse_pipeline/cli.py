@@ -38,6 +38,7 @@ from histeclipse_pipeline.paleodem import fetch_paleodem
 from histeclipse_pipeline.paleotemp import fetch_paleotemp
 from histeclipse_pipeline.periodo import fetch_periods
 from histeclipse_pipeline.pictures import fetch_pictures
+from histeclipse_pipeline.planet_keys import fetch_planet_keys
 from histeclipse_pipeline.planet_maps import fetch_planet_maps
 from histeclipse_pipeline.planets import (
     APPARENT,
@@ -302,6 +303,12 @@ def planet_maps(args: Arguments) -> int:  # pragma: no cover - needs network acc
     return _say(f"wrote {count} maps to {args.out}")
 
 
+def planet_keys(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the height views' colour keys, measured against altimetry (public/data)."""
+    count = fetch_planet_keys(args.out, Path("../public/textures"), Path(".cache/planet-keys"))
+    return _say(f"wrote {count} colour keys to {args.out}")
+
+
 def polarity(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write every reversal of the last 83 Ma (GTS 2020, as PmagPy carries it)."""
     count = fetch_polarity(args.out)
@@ -536,6 +543,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         planet_maps,
         "write the bodies' maps from their missions (MESSENGER, Viking, Cassini, BMNG, LRO)",
         "output folder (public/textures)",
+    ),
+    "planet-keys": (
+        planet_keys,
+        "write the height views' colour keys, measured against MOLA and LOLA heights",
+        "output JSON file (public/data/planet-keys.json)",
     ),
     "polarity": (
         polarity,

@@ -281,7 +281,8 @@ def write_map(image: Image.Image, path: Path) -> None:
     image.save(path, "JPEG", quality=JPEG_QUALITY, progressive=True, optimize=True)
 
 
-def _download(url: str, path: Path) -> None:  # pragma: no cover - needs network access
+def download(url: str, path: Path) -> None:  # pragma: no cover - needs network access
+    """Download ``url`` to ``path``, through a partial file so a broken one is never kept."""
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})  # noqa: S310
     path.parent.mkdir(parents=True, exist_ok=True)
     partial = path.with_suffix(path.suffix + ".part")
@@ -307,7 +308,7 @@ def fetch_planet_maps(  # pragma: no cover - needs network access
             continue
         path = cache / source.url.rsplit("/", 1)[-1]
         if not path.exists():
-            _download(source.url, path)
+            download(source.url, path)
         with (
             cassini_fits_map(checked(path, source.sha256).read_bytes())
             if source.fits

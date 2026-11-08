@@ -14,6 +14,7 @@
 import type { PlanetName } from '../astro/planets';
 import { elementAt } from '../util/arrays';
 import { EARTH_RADIUS_KM } from './spaceFrame';
+import type { KeyedBody } from '../data/planetKeys';
 
 export interface PlanetShape {
   /** Equatorial and polar radii, km. */
@@ -248,6 +249,8 @@ export interface PlanetView {
   readonly map: string | null;
   readonly sharp: string | null;
   readonly caption: string;
+  /** The colour key that goes with it, for a map coloured by height (#334). */
+  readonly colourKey?: KeyedBody;
 }
 
 /**
@@ -281,8 +284,9 @@ export const PLANET_VIEWS: Readonly<Record<PlanetName | 'moon', readonly PlanetV
       detail: 'Magellan, coloured by height',
       map: 'textures/planets/venus-radar-2048.jpg',
       sharp: 'textures/planets/venus-radar-4096.jpg',
+      colourKey: 'venus',
       caption:
-        'Pictured: the ground beneath the clouds, as Magellan’s radar mapped it (1990–94), coloured by height: blue lowlands to red and white highlands, Maxwell Montes highest. No eye could see this; radar passes through the clouds. NASA/JPL/USGS.',
+        'Pictured: the ground beneath the clouds, as Magellan’s radar mapped it (1990–94), coloured by height as the key shows, Maxwell Montes highest. No eye could see this; radar passes through the clouds. NASA/JPL/USGS.',
     },
   ],
   mars: [
@@ -293,8 +297,9 @@ export const PLANET_VIEWS: Readonly<Record<PlanetName | 'moon', readonly PlanetV
       detail: 'by laser, MOLA',
       map: 'textures/planets/mars-height-2048.jpg',
       sharp: 'textures/planets/mars-height-4096.jpg',
+      colourKey: 'mars',
       caption:
-        'Pictured: the height of the ground, measured by Mars Global Surveyor’s laser altimeter (MOLA, 1997–2001), shaded as if lit and coloured from blue lowlands to white heights: the northern plains low, the southern uplands high, Olympus Mons and the Tharsis volcanoes highest. NASA/JPL/GSFC/USGS.',
+        'Pictured: the height of the ground, measured by Mars Global Surveyor’s laser altimeter (MOLA, 1997–2001), shaded as if lit and coloured by height as the key shows: the northern plains low, the southern uplands high, Olympus Mons and the Tharsis volcanoes highest. NASA/JPL/GSFC/USGS.',
     },
   ],
   jupiter: [
@@ -327,8 +332,9 @@ export const PLANET_VIEWS: Readonly<Record<PlanetName | 'moon', readonly PlanetV
       detail: 'by laser, LOLA',
       map: 'textures/moon-height-2048.jpg',
       sharp: 'textures/moon-height-4096.jpg',
+      colourKey: 'moon',
       caption:
-        'Pictured: the height of the ground, measured by the Lunar Reconnaissance Orbiter’s laser altimeter (LOLA, from 2009), shaded as if lit and coloured from blue lowlands to red and white heights: the dark seas low, the far side’s highlands high, and the South Pole–Aitken basin, the largest, deepest of all. NASA/GSFC/USGS.',
+        'Pictured: the height of the ground, measured by the Lunar Reconnaissance Orbiter’s laser altimeter (LOLA, from 2009), shaded as if lit and coloured by height as the key shows: the dark seas low, the far side’s highlands high, and the South Pole–Aitken basin, the largest, deepest of all. NASA/GSFC/USGS.',
     },
     {
       key: 'minerals',
