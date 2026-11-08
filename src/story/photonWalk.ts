@@ -10,6 +10,8 @@
  * visible light of about 2.5 eV at the surface.
  */
 
+import { seeded } from './seeded';
+
 export type Point = readonly [x: number, y: number, z: number];
 
 /** Where the radiative zone ends and the convective zone begins, in the Sun's radius. */
@@ -58,15 +60,6 @@ export const BANDS: readonly BandInfo[] = [
     about: 'at the surface, 5,772 K, it leaves as sunlight, softened to visible light',
   },
 ];
-
-/** A seeded random number from 0 to 1, the same walk every time. */
-export function seeded(seed: number): () => number {
-  let state = seed;
-  return () => {
-    state = (state * 16807) % 2147483647;
-    return state / 2147483647;
-  };
-}
 
 /** Into the open quarter of the cut: x ≤ 0 and z ≥ 0, mirrored back where a step left it. */
 function intoOpenQuarter([x, y, z]: Point): Point {

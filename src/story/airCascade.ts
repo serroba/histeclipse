@@ -11,7 +11,7 @@
  */
 
 import { LIGHT_KM_S } from './sunlightJourney';
-import { seeded } from './photonWalk';
+import { seeded } from './seeded';
 
 export type Point = readonly [x: number, y: number, z: number];
 
