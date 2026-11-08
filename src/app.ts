@@ -49,6 +49,7 @@ import { dipoleAt, loadDipole, type DipoleSeries } from './data/dipoleMoment';
 import type { ShowerState } from './globe/showerAnimation';
 import { captionOf, landing, SHOWER_STORY, SUN_STORY, type ShowerStep } from './globe/showerSteps';
 import type { AirShower } from './story/airShower';
+import type { LeafScene } from './story/leafScene';
 import type { SunCore } from './story/sunCore';
 import { createShowerStage } from './ui/showerStage';
 import { onLand, type ElevationGrid } from './data/landSea';
@@ -900,16 +901,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
 
   // The story's chapters in 3D (#317), over the globe: the Sun's in one scene, the air's in
-  // another, each loaded the first time one of its steps shows, one at a time; a scene's WebGL
+  // another, the plant's in a third, each loaded the first time one of its steps shows, one at a time; a scene's WebGL
   // context is let go when the story leaves it or closes. Should one fail to load, the stage
   // draws the steps flat, as before.
-  const SCENE_OF: Partial<Record<ShowerStep, 'sun' | 'air'>> = {
+  const SCENE_OF: Readonly<Record<ShowerStep, 'sun' | 'air' | 'leaf'>> = {
     fusion: 'sun',
     escape: 'sun',
     journey: 'sun',
     rays: 'air',
     shower: 'air',
     capture: 'air',
+    dioxide: 'leaf',
+    fall: 'leaf',
+    plant: 'leaf',
   };
   const STEPS_IN_3D: ReadonlySet<ShowerStep> = new Set(Object.keys(SCENE_OF) as ShowerStep[]);
   const storyContainer = element('div', {
@@ -919,9 +923,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   type Story3d =
     | { readonly kind: 'sun'; readonly scene: SunCore }
-    | { readonly kind: 'air'; readonly scene: AirShower };
+    | { readonly kind: 'air'; readonly scene: AirShower }
+    | { readonly kind: 'leaf'; readonly scene: LeafScene };
   let story3d: Story3d | null = null;
-  let story3dLoading: 'sun' | 'air' | null = null;
+  let story3dLoading: 'sun' | 'air' | 'leaf' | null = null;
   let story3dFailed = false;
   /** The step the 3D scene last showed, to start a chapter afresh on coming to it. */
   let story3dStep: ShowerStep | null = null;
@@ -930,16 +935,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     readonly reduced: boolean;
     readonly caption: string;
   } | null = null;
-  /** The shower the air's scene draws: where, under what field, over land or sea. */
+  /** The shower the scenes draw: where, under what field, over land or sea, from the Sun. */
   let story3dShower: {
     readonly place: GeoPoint;
     readonly dipole: number;
     readonly water: boolean;
+    readonly fromSun: boolean;
   } | null = null;
   showerStage.setDrawnIn3d(STEPS_IN_3D);
 
   /** Load a scene's code and make it, if the story still wants it once it has loaded. */
-  function loadStory3d(kind: 'sun' | 'air'): void {
+  function loadStory3d(kind: 'sun' | 'air' | 'leaf'): void {
     story3dLoading = kind;
     const earthTextureUrl = `${base}textures/earth-blue-marble-2048.jpg`;
     const wanted = (): boolean =>
@@ -952,14 +958,22 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ? import('./story/sunCore').then(({ createSunCore }) =>
             wanted() ? { kind, scene: createSunCore(storyContainer, { earthTextureUrl }) } : null,
           )
-        : import('./story/airShower').then(({ createAirShower }) => {
-            if (!wanted()) return null;
-            if (story3dShower === null) throw new Error('no shower to draw yet');
-            return {
-              kind,
-              scene: createAirShower(storyContainer, { earthTextureUrl, ...story3dShower }),
-            };
-          });
+        : kind === 'air'
+          ? import('./story/airShower').then(({ createAirShower }) => {
+              if (!wanted()) return null;
+              if (story3dShower === null) throw new Error('no shower to draw yet');
+              const { place, dipole, water } = story3dShower;
+              return {
+                kind,
+                scene: createAirShower(storyContainer, { earthTextureUrl, place, dipole, water }),
+              };
+            })
+          : import('./story/leafScene').then(({ createLeafScene }) => {
+              if (!wanted()) return null;
+              if (story3dShower === null) throw new Error('no shower to draw yet');
+              const { water, fromSun } = story3dShower;
+              return { kind, scene: createLeafScene(storyContainer, { water, fromSun }) };
+            });
     made
       .then((scene) => {
         if (story3dLoading === kind) story3dLoading = null;
@@ -984,7 +998,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const before = story3dStep;
     story3dStep = state.step;
     const kind = SCENE_OF[state.step];
-    if (kind === undefined || story3dFailed) {
+    if (story3dFailed) {
       storyContainer.hidden = true;
       story3d?.scene.setPlaying(false);
       return;
@@ -1002,8 +1016,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       const { step } = state;
       if (story3d.kind === 'sun') {
         story3d.scene.setChapter(step === 'escape' || step === 'journey' ? step : 'fusion');
-      } else {
+      } else if (story3d.kind === 'air') {
         story3d.scene.setChapter(step === 'shower' || step === 'capture' ? step : 'rays');
+      } else {
+        story3d.scene.setChapter(step === 'fall' || step === 'plant' ? step : 'dioxide');
       }
       if (reduced) story3d.scene.settle();
       else story3d.scene.restart();
@@ -1084,7 +1100,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const turned = new Promise((done) => window.setTimeout(done, 1000));
     void Promise.all([landAndSea(), turned]).then(([grid]) => {
       const water = grid !== null && !onLand(grid, landing(place));
-      story3dShower = { place, dipole, water };
+      story3dShower = { place, dipole, water, fromSun };
       let framed: ShowerStep | null = null;
       globe.playShower({
         place,
