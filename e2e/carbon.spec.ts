@@ -327,14 +327,35 @@ test('started from the Sun, the story follows a photon from fusion to Earth', as
       await page.waitForTimeout(200);
     }
   });
-  await test.step('Then the Sun shows, its core fusing, the gamma ray’s energy given', async () => {
+  await test.step('Then the Sun shows in 3D, cut open, its core fusing, the chain written out', async () => {
     await expect(globe).toHaveAttribute('data-shower-step', 'fusion');
     await expect(globe).toHaveAttribute('data-focus', 'sun', { timeout: 20_000 });
     await expect(stage.locator('.shower-dots li')).toHaveCount(9);
-    await expect(stage.getByTestId('sun-diagram')).toContainText('0.511 MeV, 1.2 × 10²⁰ Hz');
+    const story = page.getByTestId('story-3d');
+    await expect(story).toHaveAttribute('data-chapter', 'fusion', { timeout: 20_000 });
+    await expect(story).toHaveAttribute('data-rendered', 'true', { timeout: 20_000 });
+    const chain = story.getByRole('list', { name: 'The proton–proton chain' });
+    await expect(chain).toContainText('¹H + ¹H → ²H + e⁺ + ν');
+    await expect(chain).toContainText('two gamma rays of 0.511 MeV');
+    await expect(chain).toContainText('26.7 MeV');
+    // Drawn in 3D, so not flat on the stage too.
+    await expect(stage.getByTestId('sun-diagram')).toHaveCount(0);
+  });
+  await test.step('And, paused, the reader can turn it', async () => {
+    const story = page.getByTestId('story-3d');
+    await expect(story).toHaveAttribute('data-playing', 'false');
+    const box = await story.boundingBox();
+    if (box === null) throw new Error('no story');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 3);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.7, box.y + box.height / 4, { steps: 8 });
+    await page.mouse.up();
+    await expect(globe).toHaveAttribute('data-shower-step', 'fusion');
+    await expect(story).toHaveAttribute('data-playing', 'false');
   });
   await test.step('And its light escapes over some 170,000 years, then crosses to Earth', async () => {
     await next('escape');
+    await expect(page.getByTestId('story-3d')).toBeHidden();
     await expect(stage.getByTestId('sun-diagram')).toContainText('≈ 170,000 years');
     await expect(caption).toContainText('Mitalas & Sills 1992');
     await next('journey');

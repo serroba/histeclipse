@@ -468,6 +468,9 @@ export interface Globe {
   dispose(): void;
 }
 
+/** Impacts that play at once, at most; deep time running fast can pass several in a frame. */
+const MAX_IMPACTS = 8;
+
 // Custom shaders include three.js's logarithmic-depth chunks: the scene spans from metres above
 // the ground to beyond the Sun, which a linear depth buffer cannot resolve.
 const EARTH_VERTEX = /* glsl */ `
@@ -1852,8 +1855,9 @@ export function createGlobe(
   );
   // Rotation along the sphere (a slerp), which also handles flying to the opposite side.
   let flight: { from: Vector3; rotation: Quaternion; start: number } | null = null;
-  // An impact playing, if one is, and how many have played out.
-  let impact: ImpactAnimation | null = null;
+  // The impacts playing, oldest first, several at once as deep time runs (#314), and how many
+  // have played out.
+  const impacts = new Set<ImpactAnimation>();
   let impactsPlayed = 0;
   let shower: ShowerAnimation | null = null;
   let showersPlayed = 0;
@@ -2024,17 +2028,15 @@ export function createGlobe(
       camera.position.copy(flight.from).applyQuaternion(step).setLength(distance);
       if (progress === 1) flight = null;
     }
-    if (impact !== null) {
-      const playing = impact.update(now);
-      container.dataset['impactPlaying'] = String(playing);
+    for (const impact of impacts) {
       needsRender = true;
-      if (!playing) {
-        impact.dispose();
-        impact = null;
-        // How many have played out, for whoever needs to know one did, however briefly it showed.
-        impactsPlayed += 1;
-        container.dataset['impactsPlayed'] = String(impactsPlayed);
-      }
+      if (impact.update(now)) continue;
+      impact.dispose();
+      impacts.delete(impact);
+      // How many have played out, for whoever needs to know one did, however briefly it showed.
+      impactsPlayed += 1;
+      container.dataset['impactsPlayed'] = String(impactsPlayed);
+      container.dataset['impactPlaying'] = String(impacts.size > 0);
     }
     if (shower !== null) {
       const size = renderer.getSize(new Vector2());
@@ -3120,8 +3122,14 @@ export function createGlobe(
     },
     setCamera: placeCamera,
     playImpact(spec) {
-      impact?.dispose();
-      impact = createImpactAnimation(spec);
+      // Beyond a handful at once, the oldest makes way.
+      const [oldest] = impacts;
+      if (oldest !== undefined && impacts.size >= MAX_IMPACTS) {
+        oldest.dispose();
+        impacts.delete(oldest);
+      }
+      const impact = createImpactAnimation(spec);
+      impacts.add(impact);
       earth.add(impact.group);
       container.dataset['impactPlaying'] = 'true';
       needsRender = true;
@@ -3203,6 +3211,7 @@ export function createGlobe(
       moonTexture.dispose();
       c14Glow.dispose();
       shower?.dispose();
+      for (const impact of impacts) impact.dispose();
       markerLayer.remove();
       renderer.domElement.remove();
     },
