@@ -153,8 +153,10 @@ test('a cosmic ray’s shower makes carbon-14, step by step, under the field pic
     await expect(stage).toBeVisible();
     await expect(page.locator('.hud')).toBeHidden();
   });
-  await test.step('When they pause it', async () => {
-    await stage.getByRole('button', { name: 'Pause' }).click();
+  await test.step('When they replay it from the start and pause it', async () => {
+    // A slow runner may have played it out by now: replay first, so the pause comes early.
+    await stage.getByRole('button', { name: 'Replay' }).click();
+    await stage.getByRole('button', { name: 'Pause', exact: true }).click();
   });
   let paused = '';
   await test.step('Then it stands still', async () => {
