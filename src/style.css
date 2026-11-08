@@ -4322,6 +4322,12 @@ button:has(> .icon-label) > .icon {
   color: rgb(255 241 160);
 }
 
+/* The red photon crossing to Earth, and the real time gone. */
+.story-label.is-red {
+  color: rgb(255 150 140);
+  font-variant-numeric: tabular-nums;
+}
+
 /* The escaping photon: what it is, and the years so far. */
 .story-label.is-photon {
   color: rgb(190 220 255);
