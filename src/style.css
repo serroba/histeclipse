@@ -426,9 +426,15 @@ body {
   justify-content: center;
   border: 1px solid rgb(255 255 255 / 0.7);
   border-radius: 50%;
-  background: rgb(232 120 90 / 0.55);
+  /* Violet, apart from the impact rings' orange and the volcanoes' red (#163). */
+  background: rgb(130 90 220 / 0.6);
   font-size: 11px;
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.8);
+}
+
+/* One or two genomes: a small dot, the count in its label and title. */
+.empire-label.genome-cell.is-few {
+  background: rgb(130 90 220 / 0.85);
 }
 
 .empire-label.genome-cell[hidden] {
