@@ -15,6 +15,9 @@ export default defineConfig<DisplayOptions>({
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,
+  // A render on a busy machine (a full run's workers, or software WebGL) can take more than
+  // the default 5 s; a check that fails still fails, only later (#306).
+  expect: { timeout: 10_000 },
   reporter: isCI ? [['github'], ['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: remoteBaseURL ?? localBaseURL,
