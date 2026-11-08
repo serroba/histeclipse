@@ -332,7 +332,9 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
       ray.head.position.copy(at);
       ray.head.visible = progress > 0 && progress < 1;
       ray.label.position.copy(at);
-      ray.label.visible = progress > 0;
+      // Named from the start, where it will come in from, so a scene paused there says which is
+      // which.
+      ray.label.visible = true;
       const bursting = clamp01((t - ray.delay - (RAYS_MS - 800)) / 700);
       ray.flash.visible = ray.strikes && bursting > 0 && bursting < 1;
       ray.flash.position.copy(ray.to);
