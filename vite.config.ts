@@ -33,6 +33,7 @@ export default defineConfig({
         'src/sky/skyScene.ts',
         'src/story/sunCore.ts',
         'src/story/airShower.ts',
+        'src/story/leafScene.ts',
         'src/ui/**',
       ],
       thresholds: {
