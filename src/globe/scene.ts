@@ -8,7 +8,12 @@
 import { createImpactAnimation, type ImpactAnimation, type ImpactSpec } from './impactAnimation';
 import { BODY_RADIUS } from './bodyRadius';
 import { createC14Glow } from './c14Glow';
-import { createShowerAnimation, type ShowerAnimation, type ShowerSpec } from './showerAnimation';
+import {
+  createShowerAnimation,
+  type ShowerAnimation,
+  type ShowerCommand,
+  type ShowerSpec,
+} from './showerAnimation';
 import { rayLabels } from './showerSteps';
 import {
   AdditiveBlending,
@@ -357,8 +362,11 @@ export interface Globe {
   /** Glow where cosmic rays make carbon-14, a rate per 5° of latitude (1 for today's over the
    * poles); null hides it. */
   setC14Glow(profile: readonly number[] | null): void;
-  /** Play a cosmic-ray shower making carbon-14, once, captioned through its `onStep`. */
+  /** Play a cosmic-ray shower making carbon-14, reporting its state through `onState`; it
+   * holds on its last picture until stopped. */
   playShower(spec: ShowerSpec): void;
+  /** Play, pause, step through or replay the shower, or stop it and take it away. */
+  controlShower(command: ShowerCommand | 'stop'): void;
   /**
    * Wrap a planet in a mission's global map, fetched the first time it is asked for; a `sharp`
    * one, asked for close up, replaces it and is kept.
@@ -1938,17 +1946,10 @@ export function createGlobe(
       }
     }
     if (shower !== null) {
-      const playing = shower.update(now);
+      const size = renderer.getSize(new Vector2());
+      shower.setResolution(size.x, size.y);
+      shower.update(now);
       needsRender = true;
-      if (!playing) {
-        shower.dispose();
-        shower = null;
-        // The place's pin comes back once the shower is over.
-        pin.material.visible = true;
-        container.dataset['pinShown'] = 'true';
-        showersPlayed += 1;
-        container.dataset['showersPlayed'] = String(showersPlayed);
-      }
     }
     if (zoomFlight !== null && viewFlight === null) {
       zoomFlight.start ??= now;
@@ -3016,13 +3017,21 @@ export function createGlobe(
       shower?.dispose();
       // Every step it has shown, in order: a slow frame can pass a step's start, never a step.
       const shown: string[] = [];
+      let counted = false;
       shower = createShowerAnimation({
         ...spec,
-        onStep(step) {
-          container.dataset['showerStep'] = step ?? 'done';
-          if (step !== null) shown.push(step);
+        onState(state) {
+          container.dataset['showerStep'] = state.step;
+          container.dataset['showerPlaying'] = String(state.playing);
+          if (shown.at(-1) !== state.step) shown.push(state.step);
           container.dataset['showerSteps'] = shown.join(' ');
-          spec.onStep(step);
+          // How many have played to their end, for whoever needs to know one did.
+          if (state.ended && !counted) {
+            counted = true;
+            showersPlayed += 1;
+            container.dataset['showersPlayed'] = String(showersPlayed);
+          }
+          spec.onState(state);
         },
       });
       earth.add(shower.group);
@@ -3034,6 +3043,25 @@ export function createGlobe(
       const words = rayLabels(spec.dipole);
       container.dataset['showerLabels'] = `${words.polar} | ${words.equator}`;
       container.dataset['showerGround'] = spec.water ? 'water' : 'land';
+      needsRender = true;
+    },
+    controlShower(command) {
+      if (shower === null) return;
+      if (command !== 'stop') {
+        shower.command(command);
+        // Said at once, not at the next frame, which a busy device may be slow to draw.
+        if (command === 'pause' || command === 'settle')
+          container.dataset['showerPlaying'] = 'false';
+        if (command === 'play' || command === 'replay') container.dataset['showerPlaying'] = 'true';
+        needsRender = true;
+        return;
+      }
+      shower.dispose();
+      shower = null;
+      // The place's pin comes back once the shower is taken away.
+      pin.material.visible = true;
+      container.dataset['pinShown'] = 'true';
+      container.dataset['showerStep'] = 'done';
       needsRender = true;
     },
     zoomTo(distance) {

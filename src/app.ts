@@ -37,7 +37,8 @@ import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
 import { DATABLE_YEARS } from './data/radiocarbonProduction';
 import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruptions';
 import { dipoleAt, loadDipole, type DipoleSeries } from './data/dipoleMoment';
-import { captionOf, landing } from './globe/showerSteps';
+import { captionOf, landing, type ShowerStep } from './globe/showerSteps';
+import { createShowerStage } from './ui/showerStage';
 import { onLand, type ElevationGrid } from './data/landSea';
 import { loadElevationGrid } from './ui/elevationImage';
 import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
@@ -796,13 +797,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       watchShower(made.field.dipole);
     },
   );
-  // What the shower shows at each step, over the globe while it plays.
-  const showerCaption = element('p', {
-    class: 'shower-caption',
-    'data-testid': 'shower-caption',
-    'aria-live': 'polite',
+  // The stage the shower plays on: its caption, its steps, and controls; the panels step aside.
+  const showerStage = createShowerStage((command) => {
+    globe.controlShower(command);
+    if (command === 'stop') showerStage.close();
   });
-  showerCaption.hidden = true;
 
   // Today's land and sea, to say whether the carbon lands on land or water; asked for once.
   let elevations: Promise<ElevationGrid | null> | null = null;
@@ -834,29 +833,44 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ? { latitude: picked.latitude, longitude: picked.longitude }
         : { latitude: 60, longitude: store.get().camera.target.longitude };
     const { longitude } = place;
-    // From the side first, so the rays are seen coming in from space.
-    globe.flyTo({ latitude: 20, longitude: longitude - 90 });
-    globe.zoomTo(4.4);
+    /** Where the camera stands for each step, whichever way the reader came to it. */
+    const frame = (step: ShowerStep): void => {
+      if (step === 'rays') {
+        // From the side, so the rays are seen coming in from space.
+        globe.flyTo({ latitude: 20, longitude: longitude - 90 });
+        globe.zoomTo(4.4);
+      } else if (step === 'fall' || step === 'plant') {
+        // A little toward the equator, to follow it falling to where it lands.
+        globe.flyTo({ latitude: place.latitude - 1.5, longitude });
+        globe.zoomTo(1.35);
+      } else {
+        // In close over the strike, for the shower and what it makes.
+        globe.flyTo(place);
+        globe.zoomTo(1.35);
+      }
+    };
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    frame('rays');
+    showerStage.open(reduced);
     // Once the globe has turned to it, and today's coasts have said where it lands.
     const turned = new Promise((done) => window.setTimeout(done, 1000));
     void Promise.all([landAndSea(), turned]).then(([grid]) => {
       const water = grid !== null && !onLand(grid, landing(place));
+      let framed: ShowerStep | null = null;
       globe.playShower({
         place,
         dipole,
         water,
-        onStep(step) {
-          // In close over the strike, for the shower and what it makes.
-          if (step === 'shower') {
-            globe.flyTo(place);
-            globe.zoomTo(1.35);
+        onState(state) {
+          if (state.step !== framed) {
+            framed = state.step;
+            frame(state.step);
           }
-          // A little toward the equator, to follow it falling to where it lands.
-          if (step === 'fall') globe.flyTo({ latitude: place.latitude - 1.5, longitude });
-          showerCaption.hidden = step === null;
-          showerCaption.textContent = step === null ? '' : captionOf(step, dipole, water);
+          showerStage.render(state, captionOf(state.step, dipole, water));
         },
       });
+      // Under reduced motion, each step waits for the reader, its picture complete.
+      if (reduced) globe.controlShower('settle');
     });
   }
   let carbonMadeSaid: string | null = null;
@@ -1260,7 +1274,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     markerCard.dialog,
     datingCard.dialog,
     carbonMadeCard.dialog,
-    showerCaption,
+    showerStage.root,
   );
 
   // Full view hides the panels for a clear view; Show controls, Escape, or a tap on open sky or
