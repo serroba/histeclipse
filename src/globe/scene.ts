@@ -1943,6 +1943,9 @@ export function createGlobe(
       if (!playing) {
         shower.dispose();
         shower = null;
+        // The place's pin comes back once the shower is over.
+        pin.material.visible = true;
+        container.dataset['pinShown'] = 'true';
         showersPlayed += 1;
         container.dataset['showersPlayed'] = String(showersPlayed);
       }
@@ -3023,6 +3026,10 @@ export function createGlobe(
         },
       });
       earth.add(shower.group);
+      // The place's pin, a big ball close up, would hide the plant: it rests while the shower
+      // plays. Its material only, so the place still counts for the attached viewpoints.
+      pin.material.visible = false;
+      container.dataset['pinShown'] = 'false';
       // What the rays' labels say, for whoever needs to read them.
       const words = rayLabels(spec.dipole);
       container.dataset['showerLabels'] = `${words.polar} | ${words.equator}`;

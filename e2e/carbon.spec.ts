@@ -144,14 +144,17 @@ test('a cosmic ray’s shower makes carbon-14, step by step, under the field pic
     await expect(globe).toHaveAttribute('data-shower-labels', /Turned away: under \d+ GeV/);
     // Over the place picked, it lands in northern Italy: on land, so a plant takes it in.
     await expect(globe).toHaveAttribute('data-shower-ground', 'land');
+    // The place's pin rests while the shower plays, so the plant can be seen.
+    await expect(globe).toHaveAttribute('data-pin-shown', 'false');
   });
-  await test.step('And it plays every step, from the shower to carbon dioxide, then clears', async () => {
+  await test.step('And it plays every step, from the shower to the plant, then clears and shows the pin again', async () => {
     await expect(globe).toHaveAttribute('data-showers-played', '1', { timeout: 60_000 });
     await expect(globe).toHaveAttribute(
       'data-shower-steps',
       'rays shower capture dioxide fall plant',
     );
     await expect(caption).toBeHidden();
+    await expect(globe).toHaveAttribute('data-pin-shown', 'true');
   });
   await test.step('When they pick the Laschamp excursion and watch again', async () => {
     await openLayers(page);
