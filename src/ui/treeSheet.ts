@@ -88,21 +88,21 @@ export function createTreeSheet(
     { type: 'button', class: 'famous-close', 'aria-label': 'Close' },
     '×',
   );
-  const status = element('p', { class: 'tree-status', role: 'status' }, 'Loading the tree…');
+  const status = element('p', { class: 'stage-status', role: 'status' }, 'Loading the tree…');
   const canvas = element('canvas', {
-    class: 'tree-canvas',
+    class: 'stage-canvas',
     'data-testid': 'tree-canvas',
     'aria-label': 'The tree of life in 3D: drag to turn it, scroll to zoom',
   });
-  const legend = element('div', { class: 'tree-legend' });
+  const legend = element('div', { class: 'stage-legend' });
   // The canvas joins the page only when the tree is first drawn: until then the globe's is the
   // page's only canvas.
-  const stage = element('div', { class: 'tree-stage' }, legend);
-  const focus = element('div', { class: 'tree-focus', 'data-testid': 'tree-focus' });
+  const stage = element('div', { class: 'stage-frame' }, legend);
+  const focus = element('div', { class: 'stage-focus', 'data-testid': 'tree-focus' });
   const whole = element('button', { type: 'button', class: 'why-all' }, 'The whole tree');
   const dialog = element(
     'dialog',
-    { class: 'famous-dialog tree-dialog', 'aria-labelledby': 'tree-title' },
+    { class: 'famous-dialog stage-sheet', 'aria-labelledby': 'tree-title' },
     element(
       'header',
       { class: 'famous-header' },
@@ -111,13 +111,13 @@ export function createTreeSheet(
     ),
     element(
       'div',
-      { class: 'tree-body' },
+      { class: 'stage-body' },
       stage,
       status,
       focus,
       element(
         'p',
-        { class: 'tree-note' },
+        { class: 'stage-note' },
         'Who is related to whom, not when they split: distance from the centre counts branchings, not years. Dimmer taxa are placed by the taxonomy alone, with no published phylogeny behind them.',
       ),
       element('div', { class: 'why-actions' }, whole),

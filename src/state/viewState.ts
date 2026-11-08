@@ -218,7 +218,15 @@ export interface ViewState {
    * line back to the root lit; null when closed.
    */
   readonly tree: TreeView | null;
+  /**
+   * The impacts' paths through time open (#304): all of them, or one crater's (its Impact Earth
+   * Database id) picked out; null when closed.
+   */
+  readonly craters: CratersView | null;
 }
+
+/** What the impacts' paths show: all of them, or one crater's picked out. */
+export type CratersView = 'all' | { readonly id: number };
 
 /** What the tree of life shows: all of it, or one taxon's place in it (its Open Tree id). */
 export type TreeView = 'all' | { readonly ott: number };
@@ -333,5 +341,6 @@ export function defaultViewState(now: Date): ViewState {
     snowball: DEFAULT_SNOWBALL_MODEL,
     why: null,
     tree: null,
+    craters: null,
   };
 }

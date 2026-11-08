@@ -92,6 +92,7 @@ import {
   type Viewpoint,
   type ViewState,
   type TreeView,
+  type CratersView,
 } from './viewState';
 
 export const URL_VERSION = 1;
@@ -170,6 +171,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     snowball: read('snowball', (raw) => oneOf(raw, SNOWBALL_MODELS, 'snowball'), defaults.snowball),
     why: read<WhyView | null>('why', (raw) => oneOf(raw, WHY_VIEWS, 'why'), defaults.why),
     tree: read<TreeView | null>('tree', parseTree, defaults.tree),
+    craters: read<CratersView | null>('craters', parseCraters, defaults.craters),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -213,6 +215,9 @@ export function serializeViewState(state: ViewState): string {
   if (state.snowball !== DEFAULT_SNOWBALL_MODEL) params.set('snowball', state.snowball);
   if (state.why !== null) params.set('why', state.why);
   if (state.tree !== null) params.set('tree', formatTree(state.tree));
+  if (state.craters !== null) {
+    params.set('craters', state.craters === 'all' ? 'all' : String(state.craters.id));
+  }
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
@@ -252,6 +257,13 @@ function parseTree(raw: string): TreeView {
   if (match === null)
     throw new Error('expected all, or ott and an Open Tree id, such as ott770315');
   return { ott: Number(match[1]) };
+}
+
+/** `craters=all`, or `craters=` and an Impact Earth Database id. */
+function parseCraters(raw: string): CratersView {
+  if (raw === 'all') return 'all';
+  if (!/^\d{1,6}$/.test(raw)) throw new Error('expected all, or a crater’s id, such as 12');
+  return { id: Number(raw) };
 }
 
 function formatTree(tree: TreeView): string {
