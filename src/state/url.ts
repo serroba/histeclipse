@@ -91,6 +91,7 @@ import {
   type SkyLook,
   type Viewpoint,
   type ViewState,
+  type TreeView,
 } from './viewState';
 
 export const URL_VERSION = 1;
@@ -168,6 +169,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     land: read('land', (raw) => oneOf(raw, LAND_MODELS, 'land'), defaults.land),
     snowball: read('snowball', (raw) => oneOf(raw, SNOWBALL_MODELS, 'snowball'), defaults.snowball),
     why: read<WhyView | null>('why', (raw) => oneOf(raw, WHY_VIEWS, 'why'), defaults.why),
+    tree: read<TreeView | null>('tree', parseTree, defaults.tree),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -210,6 +212,7 @@ export function serializeViewState(state: ViewState): string {
   if (state.land !== DEFAULT_LAND_MODEL) params.set('land', state.land);
   if (state.snowball !== DEFAULT_SNOWBALL_MODEL) params.set('snowball', state.snowball);
   if (state.why !== null) params.set('why', state.why);
+  if (state.tree !== null) params.set('tree', formatTree(state.tree));
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
@@ -240,6 +243,19 @@ function parseDeepScale(raw: string): DeepScale {
 
 function parseBorders(raw: string): BorderSource {
   return oneOf(raw, BORDER_SOURCES, 'borders');
+}
+
+/** `tree=all`, or `tree=ott` and an Open Tree of Life id, as Open Tree writes them. */
+function parseTree(raw: string): TreeView {
+  if (raw === 'all') return 'all';
+  const match = /^ott(\d{1,10})$/.exec(raw);
+  if (match === null)
+    throw new Error('expected all, or ott and an Open Tree id, such as ott770315');
+  return { ott: Number(match[1]) };
+}
+
+function formatTree(tree: TreeView): string {
+  return tree === 'all' ? 'all' : `ott${String(tree.ott)}`;
 }
 
 function parseMa(raw: string): number {

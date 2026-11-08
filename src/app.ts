@@ -229,6 +229,8 @@ import {
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
 import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
+import { createTreeSheet } from './ui/treeSheet';
+import { loadTreeOfLife, type TreeOfLife } from './data/treeOfLife';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
 import { layerWhy, onScreen, type WhyId } from './sources/registry';
@@ -433,6 +435,44 @@ export async function startApp(root: HTMLElement): Promise<void> {
     () => hereView(store.get()),
     (id) => whyMoment(id, store.get()),
   );
+  // The tree of life (#300): loaded the first time anything asks for it.
+  let treeOfLife: Promise<TreeOfLife> | null = null;
+  const loadTree = (): Promise<TreeOfLife> => {
+    treeOfLife ??= loadTreeOfLife(`${base}data/tree-of-life.json`, fetchJson);
+    treeOfLife.catch(() => {
+      treeOfLife = null;
+    });
+    return treeOfLife;
+  };
+  const treeSheet = createTreeSheet(
+    (tree) => {
+      store.set((state) => ({ ...state, tree }));
+    },
+    loadTree,
+    whySheet.mark('tree', 'Tree of life'),
+  );
+  /** Open the tree at the node `pick` finds in it, or the whole tree when it finds none. */
+  function openTreeAt(pick: (tree: TreeOfLife) => number | undefined): void {
+    loadTree().then(
+      (tree) => {
+        const node = pick(tree);
+        const ott = node === undefined ? undefined : tree.ott[node];
+        store.set((state) => ({ ...state, tree: ott === undefined ? 'all' : { ott } }));
+      },
+      (error: unknown) => {
+        notify(`Could not load the tree of life: ${errorMessage(error)}`);
+      },
+    );
+  }
+  const treeAction = (
+    label: string,
+    pick: (tree: TreeOfLife) => number | undefined,
+  ): { readonly label: string; readonly run: () => void } => ({
+    label,
+    run: () => {
+      openTreeAt(pick);
+    },
+  });
   // "Why here?": while on, a tap on the globe says what each layer has there.
   let askingHere = false;
   const sourcesList = element('ul', { class: 'why-list', 'data-testid': 'sources-list' });
@@ -1260,6 +1300,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globeContainer,
     skyContainer,
     zoomRail.root,
+    treeSheet.dialog,
     whySheet.dialog,
     element(
       'header',
@@ -2372,7 +2413,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const cell = at.cells.find(
       (each) => `fossil:${each.group}:${String(each.latitude)}:${String(each.longitude)}` === key,
     );
-    return cell === undefined ? null : fossilCard(fossils, cell, at, pictures);
+    if (cell === undefined) return null;
+    const genus = cell.genera[0]?.[0];
+    return {
+      ...fossilCard(fossils, cell, at, pictures),
+      ...(genus === undefined
+        ? {}
+        : {
+            action: treeAction(
+              `${genus} on the tree of life`,
+              (tree) => tree.ours.fossilGenera[genus],
+            ),
+          }),
+    };
   }
 
   function showFossilCard(key: string): void {
@@ -2401,12 +2454,29 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let humanPicturesLoading: Promise<Pictures> | null = null;
   let humanShown: string | null = null;
 
+  /** A find's card, with a way to its species' place on the tree of life. */
+  function withSpeciesTree<T extends object>(
+    card: T,
+    id: string,
+  ): T | (T & { action: ReturnType<typeof treeAction> }) {
+    const species = humanClaims?.claims.find((claim) => claim.id === id)?.species;
+    return species === undefined
+      ? card
+      : {
+          ...card,
+          action: treeAction(
+            'Its species on the tree of life',
+            (tree) => tree.ours.humans[species],
+          ),
+        };
+  }
+
   function showHumanCard(id: string): void {
     if (humanClaims === null) return;
     const card = claimCard(humanClaims, id, humanPictures);
     if (card === null) return;
     humanShown = id;
-    markerCard.show(card);
+    markerCard.show(withSpeciesTree(card, id));
     if (humanPictures !== null || humanPicturesLoading !== null) return;
     humanPicturesLoading = loadPictures(`${base}data/humans/pictures.json`, fetchJson);
     humanPicturesLoading.then(
@@ -2417,7 +2487,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
           humanClaims === null || humanShown === null
             ? null
             : claimCard(humanClaims, humanShown, loaded);
-        if (markerCard.dialog.open && again !== null) markerCard.show(again);
+        if (markerCard.dialog.open && again !== null && humanShown !== null) {
+          markerCard.show(withSpeciesTree(again, humanShown));
+        }
       },
       (error: unknown) => {
         humanPicturesLoading = null;
@@ -3437,6 +3509,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ...(carbonMadeSaid === null ? [] : [['carbonMade', carbonMadeSaid] as const]),
       ]),
       actions: new Map([
+        ['fossils', treeAction('The four groups on the tree of life', () => undefined)] as const,
+        [
+          'humans',
+          treeAction('Our species on the tree of life', (tree) => tree.ours.humans['sapiens']),
+        ] as const,
         ...(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
         ...(datesAction === null ? [] : [['dates', datesAction] as const]),
         ...(carbonMadeAction === null ? [] : [['carbonMade', carbonMadeAction] as const]),
@@ -3998,6 +4075,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       askingHere,
     );
     root.classList.toggle('is-asking-here', askingHere && state.ma === null);
+    treeSheet.show(state.tree);
     whySheet.show(
       state.why,
       state.why === 'here'
