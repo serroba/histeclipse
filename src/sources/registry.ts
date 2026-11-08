@@ -563,6 +563,19 @@ export const SOURCES = {
     url: 'https://astrogeology.usgs.gov/search/map/mars_mgs_mola_global_color_shaded_relief_463m',
     licence: 'NASA/USGS, public domain',
   },
+  clementineMoon: {
+    name: 'Clementine colour-ratio map of the Moon',
+    kind: 'imagery',
+    cite: 'NASA/DoD/USGS, Moon Clementine UVVIS warped color ratio mosaic, 200 m (from Clementine, 1994), USGS Astrogeology',
+    url: 'https://astrogeology.usgs.gov/search/map/moon_clementine_uvvis_warped_color_ratio_mosaic_200m',
+    licence: 'NASA/USGS, public domain',
+  },
+  lucey2000: {
+    name: 'Lucey, Blewett & Jolliff 2000',
+    kind: 'paper',
+    cite: 'Lucey, P. G., Blewett, D. T. & Jolliff, B. L. (2000). Lunar iron and titanium abundance algorithms based on final processing of Clementine ultraviolet-visible images. Journal of Geophysical Research: Planets 105, 20297–20305',
+    url: 'https://doi.org/10.1029/1999JE001117',
+  },
   lolaMoon: {
     name: 'LOLA map of the Moon’s heights',
     kind: 'imagery',
@@ -967,6 +980,8 @@ export const WHYS = {
       'magellanVenus',
       'molaMars',
       'lolaMoon',
+      'clementineMoon',
+      'lucey2000',
       'messengerColour',
       'opalJupiter',
       'archinal2018',

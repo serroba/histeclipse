@@ -519,6 +519,8 @@ test('a first visit from a browser in UTC keeps the usual first view', async ({ 
 test('close up on Venus, the Light switch shows the ground beneath its clouds, by radar', async ({
   page,
 }) => {
+  // A planet after another, each a map fetched: slow on a phone drawn in software.
+  test.slow();
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');
   const light = page.getByTestId('planet-light');
@@ -571,9 +573,27 @@ test('close up on Venus, the Light switch shows the ground beneath its clouds, b
     );
     await expect(page.getByText(/Mars Global Surveyor’s laser altimeter/)).toBeVisible();
   });
-  await test.step('And the Moon’s switch shows its heights, by laser, and back', async () => {
+  await test.step('And Saturn, with one way only, has no Light switch', async () => {
+    await page.goto('./?t=2024-06-01T12:00&focus=saturn&cam=10,0,2.6');
+    await expect(globe).toHaveAttribute('data-focus', 'saturn', { timeout: 30_000 });
+    await expect(light).toBeHidden();
+  });
+  expect(problems).toEqual([]);
+});
+
+test('close up on the Moon, the Light switch shows its heights and its rocks told apart', async ({
+  page,
+}) => {
+  // Two maps fetched, each a few megabytes: slow on a phone drawn in software.
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const light = page.getByTestId('planet-light');
+  await test.step('Given the Moon close up', async () => {
     await page.goto('./?t=2024-06-01T12:00&focus=moon&cam=10,0,2.6');
     await expect(globe).toHaveAttribute('data-focus', 'moon', { timeout: 30_000 });
+  });
+  await test.step('Then its switch shows its heights, by laser, and back', async () => {
     await light.getByRole('button', { name: /^Height/ }).click();
     await expect(page).toHaveURL(/[?&]light=height/);
     await expect(globe).toHaveAttribute('data-moon-map', 'view', { timeout: 30_000 });
@@ -584,10 +604,14 @@ test('close up on Venus, the Light switch shows the ground beneath its clouds, b
       page.getByText(/^Pictured: the Lunar Reconnaissance Orbiter’s colour mosaic/),
     ).toBeVisible();
   });
-  await test.step('And Saturn, with one way only, has no Light switch', async () => {
-    await page.goto('./?t=2024-06-01T12:00&focus=saturn&cam=10,0,2.6');
-    await expect(globe).toHaveAttribute('data-focus', 'saturn', { timeout: 30_000 });
-    await expect(light).toBeHidden();
+  await test.step('And its enhanced colour, Clementine’s, tells its rocks apart', async () => {
+    await page.goto('./?t=2024-06-01T12:00&focus=moon&cam=10,0,2.6&light=minerals');
+    await expect(globe).toHaveAttribute('data-moon-map', 'view', { timeout: 30_000 });
+    await expect(light.getByRole('button', { name: /^Enhanced colour/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.getByText(/Clementine’s colour-ratio map/)).toBeVisible();
   });
   expect(problems).toEqual([]);
 });
