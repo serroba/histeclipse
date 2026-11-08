@@ -21,6 +21,9 @@ async function openTrack(page: Page): Promise<void> {
 test('playing history moves through the years and names the states that come and go', async ({
   page,
 }) => {
+  // Several steps each wait up to 20 s for the years to move: on a runner that renders in
+  // software they can take most of the usual 30 s between them (#292).
+  test.slow();
   const problems = collectProblems(page);
   const bar = page.getByRole('group', { name: track });
   await test.step('Given 600 BCE with states and empires on', async () => {
@@ -54,6 +57,9 @@ test('playing history moves through the years and names the states that come and
   });
   await test.step('When they pause, the year stays and the link keeps it', async () => {
     await bar.getByRole('button', { name: 'Stop travelling' }).click();
+    // Once it has stopped: a frame already on its way may still move the year once.
+    await expect(bar.getByRole('button', { name: 'Travel through the years' })).toBeVisible();
+    await page.waitForTimeout(300);
     const shown = await page.locator('.hud-date').textContent();
     await page.waitForTimeout(500);
     await expect(page.locator('.hud-date')).toHaveText(shown ?? '');
