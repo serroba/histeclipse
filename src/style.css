@@ -4365,3 +4365,122 @@ button:has(> .icon-label) > .icon {
   font-size: 26px;
   text-anchor: middle;
 }
+
+.carbon-made-watches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* The Sun's part of the carbon-14 story, drawn on the shower's stage (#277). */
+.sun-diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 160px;
+}
+
+.sun-convective {
+  fill: #f08a2c;
+}
+
+.sun-radiative {
+  fill: #f6b13b;
+}
+
+.sun-core {
+  fill: #fff1a8;
+}
+
+.sun-earth {
+  fill: #4f8fe0;
+}
+
+.sun-zone,
+.sun-note {
+  fill: var(--ink-muted);
+  font-size: 11px;
+}
+
+.sun-note {
+  text-anchor: middle;
+}
+
+.sun-equation,
+.sun-photon-label {
+  fill: var(--ink);
+  font-size: 13px;
+  text-anchor: middle;
+}
+
+.sun-equation {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sun-flash {
+  fill: #ffffff;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sun-flash 1.2s ease-out infinite;
+}
+
+.sun-walk {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 1.2;
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: sun-walk 5s linear forwards;
+}
+
+.sun-path {
+  stroke: rgb(255 255 255 / 0.3);
+  stroke-dasharray: 4 5;
+}
+
+.sun-red-photon {
+  fill: #ff4a3d;
+  animation: sun-journey 4s ease-in-out forwards;
+}
+
+@keyframes sun-flash {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(3);
+  }
+}
+
+@keyframes sun-walk {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes sun-journey {
+  to {
+    transform: translateX(434px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sun-flash,
+  .sun-walk,
+  .sun-red-photon {
+    animation: none;
+  }
+
+  .sun-walk {
+    stroke-dashoffset: 0;
+  }
+
+  /* Its picture complete: the photon already at Earth. */
+  .sun-red-photon {
+    transform: translateX(434px);
+  }
+}

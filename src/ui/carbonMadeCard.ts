@@ -121,12 +121,18 @@ function picker<T extends { readonly id: string; readonly label: string }>(
 
 export function createCarbonMadeCard(
   onChange: (made: CarbonMade) => void,
-  onWatch: (made: CarbonMade) => void,
+  /** Play the shower; `fromSun` starts the story at the Sun's core. */
+  onWatch: (made: CarbonMade, fromSun: boolean) => void,
 ): CarbonMadeCard {
   const watch = element(
     'button',
     { type: 'button', class: 'dating-example carbon-made-watch' },
     'Watch a cosmic ray make carbon-14',
+  );
+  const fromSun = element(
+    'button',
+    { type: 'button', class: 'dating-example carbon-made-watch' },
+    'Start from the Sun',
   );
   const close = element(
     'button',
@@ -167,7 +173,7 @@ export function createCarbonMadeCard(
       { class: 'dating-step' },
       'Earth’s magnetic field turns the slower rays away, least near the poles, where its lines run into the ground. The Sun’s wind turns some away too, more when the Sun is active. Pick a field and a Sun; the globe glows to match.',
     ),
-    watch,
+    element('div', { class: 'carbon-made-watches' }, watch, fromSun),
     element('div', { class: 'carbon-made-pickers' }, field.root, sun.root),
     notes,
     chart,
@@ -303,7 +309,11 @@ export function createCarbonMadeCard(
   });
   watch.addEventListener('click', () => {
     dialog.close();
-    onWatch(made);
+    onWatch(made, false);
+  });
+  fromSun.addEventListener('click', () => {
+    dialog.close();
+    onWatch(made, true);
   });
   dialog.addEventListener('click', (event) => {
     if (event.target === dialog) dialog.close();
