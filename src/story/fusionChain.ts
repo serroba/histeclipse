@@ -17,7 +17,7 @@ export interface ChainStageInfo {
 }
 
 /** The chain's stages, in order. */
-export const CHAIN: readonly ChainStageInfo[] = [
+export const CHAIN = [
   {
     stage: 'pp',
     at: 0,
@@ -42,7 +42,7 @@ export const CHAIN: readonly ChainStageInfo[] = [
     equation: '4 ¹H → ⁴He + energy',
     gives: 'in all, 26.7 MeV for each helium nucleus made',
   },
-];
+] as const satisfies readonly ChainStageInfo[];
 
 /** How long one chain plays before it starts again, ms. */
 export const CHAIN_MS = 9000;
@@ -50,19 +50,19 @@ export const CHAIN_MS = 9000;
 /** The stage at `t` ms into the story's fusion step, the chain playing over and over. */
 export function stageAt(t: number): ChainStageInfo {
   const into = ((t % CHAIN_MS) + CHAIN_MS) % CHAIN_MS;
-  const current = CHAIN.filter((info) => into >= info.at).at(-1);
-  if (current === undefined) throw new Error('The chain has no stage at its start');
+  let current: ChainStageInfo = CHAIN[0];
+  for (const info of CHAIN) if (into >= info.at) current = info;
   return current;
 }
 
 /** How far through its stage `t` is, from 0 to 1. */
 export function stageProgress(t: number): number {
   const into = ((t % CHAIN_MS) + CHAIN_MS) % CHAIN_MS;
-  const { stage, at } = stageAt(t);
-  const index = CHAIN.findIndex((info) => info.stage === stage);
-  const end = CHAIN[index + 1]?.at ?? CHAIN_MS;
+  const { at } = stageAt(t);
+  // The next stage's start, or the chain's end after the last.
+  const end = CHAIN.find((info) => info.at > into)?.at ?? CHAIN_MS;
   return Math.min(1, Math.max(0, (into - at) / (end - at)));
 }
 
 /** The moment that shows the chain complete, for readers who ask for less motion. */
-export const SETTLED_T = CHAIN.find(({ stage }) => stage === 'done')?.at ?? 0;
+export const SETTLED_T = CHAIN[3].at;

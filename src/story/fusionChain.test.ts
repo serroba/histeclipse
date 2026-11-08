@@ -15,6 +15,8 @@ describe('the proton–proton chain', () => {
     expect(stageProgress(0)).toBe(0);
     expect(stageProgress(1300)).toBeCloseTo(0.5);
     expect(stageProgress(2599)).toBeLessThan(1);
+    // The last stage runs to the chain's end.
+    expect(stageProgress(8200)).toBeCloseTo(0.5);
   });
 
   it('settles on the chain complete', () => {
