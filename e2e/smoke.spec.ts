@@ -93,14 +93,15 @@ test('dragging an attached view, even while an eclipse plays, hands over to orbi
   await globeRendered(page);
   await expect(page.getByTestId('globe')).toHaveAttribute('data-space', 'moon');
   await page.getByRole('button', { name: 'Play' }).click();
-  const box = await page.getByTestId('globe').boundingBox();
-  const hud = await page.locator('.hud').boundingBox();
-  const panels = await page.locator('.bottom').boundingBox();
-  if (box === null || hud === null || panels === null) throw new Error('no layout');
   // Between the panels, where the globe can be dragged, and to one side: the body in the
-  // middle has a marker, which a tap flies to rather than drags.
-  const start = { x: box.x + box.width * 0.2, y: (hud.y + hud.height + panels.y) / 2 };
+  // middle has a marker, which a tap flies to rather than drags. Measured for each drag, as
+  // the panels change with the body in focus (the Moon's Light switch).
   const drag = async (): Promise<void> => {
+    const box = await page.getByTestId('globe').boundingBox();
+    const hud = await page.locator('.hud').boundingBox();
+    const panels = await page.locator('.bottom').boundingBox();
+    if (box === null || hud === null || panels === null) throw new Error('no layout');
+    const start = { x: box.x + box.width * 0.2, y: (hud.y + hud.height + panels.y) / 2 };
     await page.mouse.move(start.x, start.y);
     await page.mouse.down();
     await page.mouse.move(start.x + 150, start.y + 40, { steps: 10 });
