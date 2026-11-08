@@ -32,6 +32,8 @@ def test_each_map_is_pinned_and_from_a_mission_release() -> None:
         "planets/jupiter",
         "planets/saturn",
         "planets/venus-radar",
+        "planets/mercury-colour",
+        "planets/jupiter-2024",
         "earth-blue-marble",
         "moon-lroc",
     ]
@@ -43,6 +45,7 @@ def test_each_map_is_pinned_and_from_a_mission_release() -> None:
                 "https://planetarymaps.usgs.gov/",
                 "https://svs.gsfc.nasa.gov/",
                 "https://atmos.nmsu.edu/PDS/",
+                "https://archive.stsci.edu/missions/hlsp/opal/",
             )
         )
 
@@ -156,3 +159,13 @@ def test_turns_cassinis_map_north_up_with_zero_longitude_in_the_middle() -> None
     # 180° at the left edge, then 270°, 0° in the middle, 90°.
     assert np.array_equal(pixels[1:2, :, 0], [[30, 40, 10, 20]])
     assert np.array_equal(pixels[0:1, 2:3], [[[200, 200, 200]]])
+
+
+def test_turns_a_map_half_a_turn_to_put_zero_longitude_in_the_middle() -> None:
+    # Four columns from 0° at the left edge: 0°, 90°, 180°, 270°.
+    columns = np.zeros((2, 4, 3), dtype=np.uint8)
+    for column, value in enumerate([10, 20, 30, 40]):
+        columns[:, column] = value
+    turned = np.asarray(web_map(Image.fromarray(columns), width=4, half_turn=True), dtype=np.uint8)
+    # 180° at the left edge, 0° in the middle.
+    assert np.array_equal(turned[0:1, :, 0], [[30, 40, 10, 20]])

@@ -535,6 +535,20 @@ export const SOURCES = {
     url: 'https://science.nasa.gov/photojournal/cassinis-best-maps-of-jupiter-cylindrical-map/',
     licence: 'NASA, public domain',
   },
+  messengerColour: {
+    name: 'MESSENGER enhanced-colour map',
+    kind: 'imagery',
+    cite: 'NASA/Johns Hopkins University Applied Physics Laboratory/Carnegie Institution of Washington, “Enhanced Color Mercury Map”, MESSENGER MDIS, NASA Photojournal PIA17386',
+    url: 'https://science.nasa.gov/photojournal/enhanced-color-mercury-map',
+    licence: 'NASA, public domain',
+  },
+  opalJupiter: {
+    name: 'Hubble OPAL map of Jupiter, 2024',
+    kind: 'imagery',
+    cite: 'NASA/ESA/STScI, Outer Planet Atmospheres Legacy (OPAL), PI A. Simon: Jupiter global map, 19–20 November 2024 (doi:10.17909/T9G593); Simon, A. A., Wong, M. H. & Orton, G. S. (2015). First results from the Hubble OPAL program: Jupiter in 2015. ApJ 812, 55',
+    url: 'https://archive.stsci.edu/hlsp/opal',
+    licence: 'CC BY 4.0',
+  },
   magellanVenus: {
     name: 'Magellan map of Venus',
     kind: 'imagery',
@@ -930,9 +944,11 @@ export const WHYS = {
       'cassiniJupiter',
       'cassiniSaturn',
       'magellanVenus',
+      'messengerColour',
+      'opalJupiter',
       'archinal2018',
     ],
-    how: 'Each map is wrapped on the body as published, shrunk for the web, and each planet is turned as it was at the moment shown, by the IAU’s rotation models, the light’s travel time allowed for: the face toward you is the one that faced you then (checked against JPL Horizons). Jupiter’s and Saturn’s turning is that of their interiors (System III): their clouds drift against it, so a cloud feature is not where it was that day. Venus shows its cloud tops as a plain colour, as from space the clouds hide the ground; its Light switch shows the ground beneath instead, as Magellan’s radar mapped it, coloured by height. Saturn’s map has gaps where Cassini could not see (the poles, and the strip in the rings’ shadow): they are filled with the colour of the nearest latitude imaged.',
+    how: 'Each map is wrapped on the body as published, shrunk for the web, and each planet is turned as it was at the moment shown, by the IAU’s rotation models, the light’s travel time allowed for: the face toward you is the one that faced you then (checked against JPL Horizons). Jupiter’s and Saturn’s turning is that of their interiors (System III): their clouds drift against it, so a cloud feature is not where it was that day. Venus shows its cloud tops as a plain colour, as from space the clouds hide the ground; its Light switch shows the ground beneath instead, as Magellan’s radar mapped it, coloured by height. Mercury’s switch shows MESSENGER’s enhanced colour, which tells its rocks apart, and Jupiter’s sets Hubble’s map of 2024 beside Cassini’s of 2000. Saturn’s map has gaps where Cassini could not see (the poles, and the strip in the rings’ shadow): they are filled with the colour of the nearest latitude imaged.',
   },
   sky: {
     title: 'The night sky',
