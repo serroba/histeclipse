@@ -9,6 +9,7 @@
  * absorbs best, P680.
  */
 
+import { seeded } from './seeded';
 import { electronVolts, RED_NM } from './sunlightJourney';
 
 export type Point = readonly [x: number, y: number, z: number];
@@ -44,11 +45,7 @@ export function airAround(
   size: number,
 ): readonly { readonly kind: Molecule; readonly at: Point; readonly turn: Point }[] {
   const total = AIR_PARTS.nitrogen + AIR_PARTS.oxygen + AIR_PARTS.argon;
-  let state = 12_345;
-  const random = (): number => {
-    state = (state * 16807) % 2147483647;
-    return state / 2147483647;
-  };
+  const random = seeded(12_345);
   const molecules: { kind: Molecule; at: Point; turn: Point }[] = [];
   for (let i = 0; i < count; i += 1) {
     // Kinds dealt out in proportion, by where each falls in the running total.

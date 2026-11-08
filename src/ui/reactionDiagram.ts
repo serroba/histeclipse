@@ -7,6 +7,7 @@
  */
 
 import type { ShowerStep } from '../globe/showerSteps';
+import { css, PALETTE } from '../story/palette';
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -57,11 +58,11 @@ function equation(
   return root;
 }
 
-const NITROGEN = '#5a99ff';
-const CARBON = '#b87aff';
-const PROTON = '#ffd94d';
-const NEUTRON = '#f2f2f2';
-const OXYGEN = '#ff6b6b';
+const NITROGEN = css(PALETTE.nitrogen);
+const CARBON = css(PALETTE.carbon14);
+const PROTON = css(PALETTE.freedProton);
+const NEUTRON = css(PALETTE.neutron);
+const OXYGEN = css(PALETTE.oxygen);
 
 /** The diagram for a step, or null for the steps the globe shows on its own. */
 export function reactionDiagram(step: ShowerStep): SVGElement | null {

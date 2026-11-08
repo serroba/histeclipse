@@ -12,14 +12,12 @@
  * the molecules are drawn far larger beside the leaf than they are.
  *
  * Three.js glue, loaded on demand and covered by the Playwright suite; the numbers are in
- * `leafUptake.ts`.
+ * `leafUptake.ts`, what every story scene shares in `storyScene.ts`.
  */
 
 import {
-  AdditiveBlending,
   AmbientLight,
   BoxGeometry,
-  CanvasTexture,
   CapsuleGeometry,
   Color,
   DirectionalLight,
@@ -31,24 +29,18 @@ import {
   Matrix4,
   Mesh,
   MeshStandardMaterial,
-  PerspectiveCamera,
   PlaneGeometry,
   Quaternion,
-  Scene,
   SphereGeometry,
-  Sprite,
-  SpriteMaterial,
   Vector3,
-  WebGLRenderer,
 } from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { Line2 } from 'three/addons/lines/Line2.js';
-import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
-import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
-import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
+import type { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
 
 import { airAround, DIOXIDE_FACTS, FALL_FACTS, plantFacts, type Molecule } from './leafUptake';
+import { PALETTE } from './palette';
+import { createStoryScene, type StoryChapters, type StoryKit, type StoryScene } from './storyScene';
 import { RED_NM } from './sunlightJourney';
+import { clamp01, ease as EASE, within } from './timing';
 
 /** The chapters this scene plays. */
 export type LeafChapter = 'dioxide' | 'fall' | 'plant';
@@ -60,17 +52,7 @@ export interface LeafSceneOptions {
   readonly fromSun: boolean;
 }
 
-export interface LeafScene {
-  /** Turn to a chapter; `restart` or `settle` then starts it. */
-  setChapter(chapter: LeafChapter): void;
-  /** Play or hold; held, nothing moves but the reader can still turn and zoom. */
-  setPlaying(playing: boolean): void;
-  /** Start the chapter again, the camera back with the story. */
-  restart(): void;
-  /** Show the chapter complete and hold there, for readers who ask for less motion. */
-  settle(): void;
-  dispose(): void;
-}
+export type LeafScene = StoryScene<LeafChapter>;
 
 /** When the oxygen joins, then the hydroxyl, ms; whole after `DIOXIDE_MS`. */
 const OXYGEN_MS = 1400;
@@ -92,11 +74,11 @@ const AIR_MOLECULES = 200;
 const AIR_BOX = 60;
 
 /** The atoms' colours, as the stage's captions name them: carbon-14 violet, oxygen red. */
-const CARBON14 = new Color(0xb87aff);
-const OXYGEN = new Color(0xff6b6b);
-const NITROGEN = new Color(0x5a99ff);
+const CARBON14 = new Color(PALETTE.carbon14);
+const OXYGEN = new Color(PALETTE.oxygen);
+const NITROGEN = new Color(PALETTE.nitrogen);
 const ARGON = new Color(0xc8c8d0);
-const HYDROGEN = new Color(0xf2f2f2);
+const HYDROGEN = new Color(PALETTE.hydrogen);
 const CARBON = new Color(0x70737a);
 const RED_LIGHT = new Color(0xff4030);
 /** The atoms' sizes, in units of 100 pm, a little under their van der Waals radii. */
@@ -108,40 +90,17 @@ const CO_BOND = 1.16;
 const NN_BOND = 1.1;
 const OO_BOND = 1.21;
 
-const EASE = (x: number): number => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
-const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
-const within = (t: number, from: number, to: number): number => clamp01((t - from) / (to - from));
-
-/** A soft round glow, white, tinted by its material. */
-function glowTexture(): CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = 64;
-  canvas.height = 64;
-  const context = canvas.getContext('2d');
-  if (context !== null) {
-    const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
-    gradient.addColorStop(0, 'rgba(255,255,255,1)');
-    gradient.addColorStop(0.35, 'rgba(255,255,255,0.6)');
-    gradient.addColorStop(1, 'rgba(255,255,255,0)');
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 64, 64);
-  }
-  return new CanvasTexture(canvas);
+export function createLeafScene(container: HTMLElement, options: LeafSceneOptions): LeafScene {
+  return createStoryScene<LeafChapter>(container, {
+    first: 'dioxide',
+    near: 0.1,
+    far: 400,
+    build: (kit) => build(kit, options),
+  });
 }
 
-export function createLeafScene(container: HTMLElement, options: LeafSceneOptions): LeafScene {
-  const renderer = new WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor(0x02040a);
-  container.append(renderer.domElement);
-  const labels = new CSS2DRenderer();
-  labels.domElement.className = 'story-labels';
-  container.append(labels.domElement);
-
-  const scene = new Scene();
-  const camera = new PerspectiveCamera(40, 1, 0.1, 400);
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
+function build(kit: StoryKit<LeafChapter>, options: LeafSceneOptions): StoryChapters<LeafChapter> {
+  const { scene, camera, controls, own, glow, label, line } = kit;
   controls.minDistance = 3;
   controls.maxDistance = 160;
   scene.add(new AmbientLight(0xffffff, 0.8));
@@ -149,23 +108,20 @@ export function createLeafScene(container: HTMLElement, options: LeafSceneOption
   key.position.set(-1, 2, 1.5);
   scene.add(key);
 
-  const glowMap = glowTexture();
-  const disposables: { dispose(): void }[] = [glowMap];
-  const lineMaterials: LineMaterial[] = [];
-  const atomGeometry = new SphereGeometry(1, 32, 20);
-  disposables.push(atomGeometry);
+  const atomGeometry = own(new SphereGeometry(1, 32, 20));
   const atomMaterials = new Map<Color, MeshStandardMaterial>();
   /** A material for atoms of `color`, made once. */
   function atomMaterial(color: Color): MeshStandardMaterial {
     let material = atomMaterials.get(color);
     if (material === undefined) {
-      material = new MeshStandardMaterial({
-        color,
-        roughness: 0.4,
-        emissive: color.clone().multiplyScalar(0.12),
-      });
+      material = own(
+        new MeshStandardMaterial({
+          color,
+          roughness: 0.4,
+          emissive: color.clone().multiplyScalar(0.12),
+        }),
+      );
       atomMaterials.set(color, material);
-      disposables.push(material);
     }
     return material;
   }
@@ -176,61 +132,6 @@ export function createLeafScene(container: HTMLElement, options: LeafSceneOption
     parent.add(mesh);
     return mesh;
   }
-  /** A glow of `color`, `size` across. */
-  function glow(color: Color, size: number, parent: Group): Sprite {
-    const material = new SpriteMaterial({
-      map: glowMap,
-      color,
-      blending: AdditiveBlending,
-      depthWrite: false,
-      transparent: true,
-    });
-    disposables.push(material);
-    const sprite = new Sprite(material);
-    sprite.scale.setScalar(size);
-    parent.add(sprite);
-    return sprite;
-  }
-  /** A label in the page, tied to a point in the scene. */
-  function label(text: string, parent: Group, kind = ''): CSS2DObject {
-    const element = document.createElement('span');
-    element.className = `story-label ${kind}`.trim();
-    element.textContent = text;
-    const object = new CSS2DObject(element);
-    object.center.set(0, 1.2);
-    parent.add(object);
-    return object;
-  }
-  /** A line a few pixels wide through `points`, drawn a part at a time. */
-  function line(points: readonly Vector3[], color: Color, width: number, parent: Group): Line2 {
-    const geometry = new LineGeometry();
-    geometry.setPositions(points.flatMap(({ x, y, z }) => [x, y, z]));
-    const material = new LineMaterial({
-      color: color.getHex(),
-      linewidth: width,
-      transparent: true,
-      depthWrite: false,
-    });
-    disposables.push(geometry, material);
-    lineMaterials.push(material);
-    const drawn = new Line2(geometry, material);
-    parent.add(drawn);
-    return drawn;
-  }
-  /** A legend beside the scene: `facts`, the first lit. */
-  function legend(name: string, facts: readonly string[]): HTMLOListElement {
-    const list = document.createElement('ol');
-    list.className = 'story-chain';
-    list.setAttribute('aria-label', name);
-    for (const [index, fact] of facts.entries()) {
-      const item = document.createElement('li');
-      if (index === 0) item.className = 'is-now';
-      item.textContent = fact;
-      list.append(item);
-    }
-    return list;
-  }
-
   // Dioxide: the carbon-14 atom, an oxygen atom, then a hydroxyl.
   const making = new Group();
   const carbon14 = atom(CARBON14, C_RADIUS, making);
@@ -293,7 +194,7 @@ export function createLeafScene(container: HTMLElement, options: LeafSceneOption
   for (const kind of ['nitrogen', 'oxygen', 'argon'] as const) {
     const count = air.filter((m) => m.kind === kind).length * atomsOf(kind);
     const colour = { nitrogen: NITROGEN, oxygen: OXYGEN, argon: ARGON }[kind];
-    const mesh = new InstancedMesh(atomGeometry, atomMaterial(colour), Math.max(1, count));
+    const mesh = own(new InstancedMesh(atomGeometry, atomMaterial(colour), Math.max(1, count)));
     mesh.count = count;
     falling.add(mesh);
     instanced.set(kind, mesh);
@@ -317,7 +218,8 @@ export function createLeafScene(container: HTMLElement, options: LeafSceneOption
     opacity: options.water ? 0.75 : 1,
     side: DoubleSide,
   });
-  disposables.push(surfaceGeometry, surfaceMaterial);
+  own(surfaceGeometry);
+  own(surfaceMaterial);
   const surface = new Mesh(surfaceGeometry, surfaceMaterial);
   falling.add(surface);
   const surfaceLabel = label(options.water ? 'the sea' : 'a leaf', falling, 'is-zone');
@@ -392,7 +294,9 @@ export function createLeafScene(container: HTMLElement, options: LeafSceneOption
     roughness: 0.5,
     emissive: 0x0a2a08,
   });
-  disposables.push(greenMaterial, skinMaterial, guardMaterial, chloroplastMaterial);
+  for (const material of [greenMaterial, skinMaterial, guardMaterial, chloroplastMaterial]) {
+    own(material);
+  }
   const chloroplastSpots: Vector3[] = [];
   let target = new Vector3();
   let inlet = new Vector3();
@@ -414,7 +318,7 @@ export function createLeafScene(container: HTMLElement, options: LeafSceneOption
       depthWrite: false,
     });
     const cellGeometry = new SphereGeometry(8, 48, 32);
-    disposables.push(waterGeometry, waterMaterial, cellGeometry);
+    for (const item of [waterGeometry, waterMaterial, cellGeometry]) own(item);
     const water = new Mesh(waterGeometry, waterMaterial);
     water.position.y = 14;
     plant.add(water, new Mesh(cellGeometry, greenMaterial));
@@ -437,7 +341,9 @@ export function createLeafScene(container: HTMLElement, options: LeafSceneOption
     const cellGeometry = new CapsuleGeometry(2.1, 7, 8, 16);
     const spongyGeometry = new SphereGeometry(2.6, 24, 16);
     const guardGeometry = new CapsuleGeometry(1.1, 5, 8, 16);
-    disposables.push(skinGeometry, halfSkin, cellGeometry, spongyGeometry, guardGeometry);
+    for (const item of [skinGeometry, halfSkin, cellGeometry, spongyGeometry, guardGeometry]) {
+      own(item);
+    }
     const upper = new Mesh(skinGeometry, skinMaterial);
     upper.position.y = 10;
     plant.add(upper);
@@ -482,10 +388,8 @@ export function createLeafScene(container: HTMLElement, options: LeafSceneOption
     pinned('palisade cells, packed with chloroplasts', new Vector3(-16, 6, 11));
     pinned('stoma, between two guard cells', new Vector3(3, -10.5, 8));
   }
-  const chloroplasts = new InstancedMesh(
-    atomGeometry,
-    chloroplastMaterial,
-    chloroplastSpots.length,
+  const chloroplasts = own(
+    new InstancedMesh(atomGeometry, chloroplastMaterial, chloroplastSpots.length),
   );
   for (const [index, spot] of chloroplastSpots.entries()) {
     chloroplasts.setMatrixAt(
@@ -572,140 +476,45 @@ export function createLeafScene(container: HTMLElement, options: LeafSceneOption
     return taken;
   }
 
-  const dioxideLegend = legend('Carbon dioxide made', DIOXIDE_FACTS);
-  const fallLegend = legend('Through the air', FALL_FACTS);
-  const plantLegend = legend(
+  const dioxideLegend = kit.legend('Carbon dioxide made', DIOXIDE_FACTS);
+  const fallLegend = kit.legend('Through the air', FALL_FACTS);
+  const plantLegend = kit.legend(
     options.water ? 'Into the alga' : 'Into the leaf',
     plantFacts(options.water, options.fromSun),
   );
-  const hint = document.createElement('p');
-  hint.className = 'story-hint';
-  hint.textContent = 'Drag to turn, scroll or pinch to zoom. Not to scale.';
-  container.append(dioxideLegend, fallLegend, plantLegend, hint);
+  for (const { items } of [dioxideLegend, fallLegend, plantLegend]) {
+    items[0]?.classList.add('is-now');
+  }
   scene.add(making, falling, plant);
-  const haze = new Fog(0x02040a, 34, 90);
+  kit.during('dioxide', making, dioxideLegend.list);
+  kit.during('fall', falling, fallLegend.list);
+  kit.during('plant', plant, plantLegend.list);
+  const haze = new Fog(PALETTE.night, 34, 90);
 
-  function storyCamera(t: number): void {
-    const fit = 1 / Math.min(1, camera.aspect);
-    if (chapter === 'dioxide') {
-      const p = EASE(clamp01(t / DIOXIDE_MS));
-      camera.position.set(-3 + 6 * p, 3, 14 * fit);
-      controls.target.set(0, 0, 0);
-    } else if (chapter === 'fall') {
-      const p = EASE(clamp01(t / FALL_MS));
-      camera.position.set(5, 3 - 4 * p, 46 * fit);
-      controls.target.set(0, -3 * p, 0);
-    } else {
-      const p = EASE(clamp01(t / PLANT_MS));
-      camera.position.set(-16 + 10 * p, 6 - 3 * p, (84 - 10 * p) * fit ** 0.9);
-      controls.target.set(0, -4, 0);
-    }
-    camera.lookAt(controls.target);
-  }
-
-  let chapter: LeafChapter = 'dioxide';
-  let t = 0;
-  let playing = true;
-  let byStory = true;
-  let dirty = true;
-  let last = performance.now();
-  let frame = 0;
-  controls.addEventListener('start', () => {
-    byStory = false;
-  });
-  controls.addEventListener('change', () => {
-    dirty = true;
-  });
-
-  function resize(): void {
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    if (width === 0 || height === 0) return;
-    renderer.setSize(width, height);
-    labels.setSize(width, height);
-    for (const material of lineMaterials) material.resolution.set(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    dirty = true;
-  }
-  const observer = new ResizeObserver(resize);
-  observer.observe(container);
-  resize();
-
-  function draw(now: number): void {
-    const dt = Math.min(100, now - last);
-    last = now;
-    if (playing) {
-      t += dt;
-      dirty = true;
-    }
-    if (byStory) storyCamera(t);
-    controls.update();
-    if (dirty) {
-      dirty = false;
-      making.visible = chapter === 'dioxide';
-      falling.visible = chapter === 'fall';
+  return {
+    ends: { dioxide: DIOXIDE_MS, fall: FALL_MS, plant: PLANT_MS },
+    camera(chapter, t) {
+      const fit = 1 / Math.min(1, camera.aspect);
+      if (chapter === 'dioxide') {
+        const p = EASE(clamp01(t / DIOXIDE_MS));
+        camera.position.set(-3 + 6 * p, 3, 14 * fit);
+        controls.target.set(0, 0, 0);
+      } else if (chapter === 'fall') {
+        const p = EASE(clamp01(t / FALL_MS));
+        camera.position.set(5, 3 - 4 * p, 46 * fit);
+        controls.target.set(0, -3 * p, 0);
+      } else {
+        const p = EASE(clamp01(t / PLANT_MS));
+        camera.position.set(-16 + 10 * p, 6 - 3 * p, (84 - 10 * p) * fit ** 0.9);
+        controls.target.set(0, -4, 0);
+      }
+    },
+    place(chapter, t) {
       // The air fades into the dark with distance as it falls; nowhere else.
       scene.fog = chapter === 'fall' ? haze : null;
-      plant.visible = chapter === 'plant';
-      dioxideLegend.hidden = chapter !== 'dioxide';
-      fallLegend.hidden = chapter !== 'fall';
-      plantLegend.hidden = chapter !== 'plant';
-      if (chapter === 'dioxide') container.dataset['molecule'] = placeDioxide(t);
-      else if (chapter === 'fall') container.dataset['fallen'] = placeFall(t).toFixed(2);
-      else container.dataset['taken'] = String(placePlant(t));
-      renderer.render(scene, camera);
-      labels.render(scene, camera);
-      container.dataset['rendered'] = 'true';
-    }
-    frame = requestAnimationFrame(draw);
-  }
-  container.dataset['chapter'] = 'dioxide';
-  container.dataset['playing'] = 'true';
-  frame = requestAnimationFrame(draw);
-
-  const ends: Record<LeafChapter, number> = { dioxide: DIOXIDE_MS, fall: FALL_MS, plant: PLANT_MS };
-  return {
-    setChapter(next) {
-      chapter = next;
-      container.dataset['chapter'] = next;
-      dirty = true;
-    },
-    setPlaying(next) {
-      playing = next;
-      last = performance.now();
-      container.dataset['playing'] = String(next);
-    },
-    restart() {
-      t = 0;
-      byStory = true;
-      dirty = true;
-    },
-    settle() {
-      t = ends[chapter];
-      byStory = true;
-      storyCamera(t);
-      byStory = false;
-      playing = false;
-      container.dataset['playing'] = 'false';
-      dirty = true;
-    },
-    dispose() {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      controls.dispose();
-      chloroplasts.dispose();
-      for (const mesh of instanced.values()) mesh.dispose();
-      for (const item of disposables) item.dispose();
-      renderer.dispose();
-      renderer.forceContextLoss();
-      container.replaceChildren();
-      delete container.dataset['chapter'];
-      delete container.dataset['rendered'];
-      delete container.dataset['playing'];
-      delete container.dataset['molecule'];
-      delete container.dataset['fallen'];
-      delete container.dataset['taken'];
+      if (chapter === 'dioxide') kit.mark('molecule', placeDioxide(t));
+      else if (chapter === 'fall') kit.mark('fallen', placeFall(t).toFixed(2));
+      else kit.mark('taken', String(placePlant(t)));
     },
   };
 }
