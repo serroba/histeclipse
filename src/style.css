@@ -2013,12 +2013,13 @@ body {
   min-height: 0;
 }
 
-/* The details scroll inside the bar, which never grows past part of the screen. */
+/* The details scroll inside the bar, which never grows past part of the screen: with several
+   layers' notes open they once took most of it, and the globe went off the top (#163). */
 .deep-details {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-height: 45vh;
+  max-height: clamp(120px, 25vh, 260px);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
