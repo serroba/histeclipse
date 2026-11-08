@@ -14,6 +14,7 @@ import { YEAR_CALENDARS } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
 import { parseViewState, serializeViewState } from './url';
 import {
+  PLANET_LIGHTS,
   DEFAULT_CAMERA,
   DEFAULT_LAYERS,
   DISPERSAL_SCENARIOS,
@@ -68,6 +69,7 @@ describe('parseViewState', () => {
       figures: 'famous',
       years: 'western',
       sunLayer: 'visible',
+      planetLight: 'look',
       culture: 'modern',
       borders: 'cliopatria',
       seenIn: null,
@@ -210,6 +212,13 @@ describe('parseViewState', () => {
     expect(state.culture).toBe('babylonian_mulapin');
     expect(serializeViewState(state)).toContain('&culture=babylonian_mulapin');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('culture=');
+  });
+
+  it('reads how a planet is shown close up, writing it only when not as it looks', () => {
+    const { state } = parseViewState('light=radar', NOW);
+    expect(state.planetLight).toBe('radar');
+    expect(serializeViewState(state)).toContain('&light=radar');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('light=');
   });
 
   it('reads the channel the Sun is shown in, writing it only when not visible light', () => {
@@ -409,6 +418,7 @@ describe('serializeViewState', () => {
     figures: fc.constantFrom(...FIGURES),
     years: fc.constantFrom(...YEAR_CALENDARS),
     sunLayer: fc.constantFrom(...SUN_LAYERS),
+    planetLight: fc.constantFrom(...PLANET_LIGHTS),
     culture: fc.constantFrom(...SKY_CULTURES),
     borders: fc.constantFrom(...BORDER_SOURCES),
     seenIn: fc.option(

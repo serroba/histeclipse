@@ -19,8 +19,9 @@ the Sun 10.7° north of the ring plane. Its gaps (the poles out of sight or in w
 and the rings' shadow) are filled with the mean colour of the nearest latitude imaged, which
 suits a planet of bands.
 
-Venus is left out on purpose: from space it shows only cloud, and Magellan's map is radar of the
-ground beneath.
+Venus's map is Magellan's radar of the ground beneath its clouds (1990-94, the colourised
+topographic mosaic at 6.6 km, USGS Astrogeology): the site shows it only when asked, as from
+space Venus shows only cloud.
 Earth's first map (2048 wide) and the Moon's (1024) were made before this command and are kept.
 """
 
@@ -102,6 +103,12 @@ MAPS = (
         # 3,600 columns once the repeated edge is dropped: its sharp size is its own.
         widths=(2048, 3600),
         fits=True,
+    ),
+    MapSource(
+        stem="planets/venus-radar",
+        url="https://planetarymaps.usgs.gov/mosaic/Venus_Magellan_C3-MDIR_ClrTopo_Global_Mosaic_6600m.tif",
+        sha256="5c4acbade3a88526cf80b006f21816405fc6cc8d184ca9f3d1dc6d00f71694e0",
+        widths=(2048, 4096),
     ),
     MapSource(
         stem="earth-blue-marble",

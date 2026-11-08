@@ -112,8 +112,9 @@ export interface PlanetMeshes {
       readonly km: Readonly<Record<PlanetName, readonly [number, number, number]>>;
     },
   ): void;
-  /** Wrap a planet in a mission's global map, in place of its painted colours. */
-  setMap(planet: PlanetName, map: Texture): void;
+  /** Wrap a planet in a mission's global map, in place of its painted colours; null goes back
+   * to the colours. The maps are the caller's to keep: switching does not throw one away. */
+  setMap(planet: PlanetName, map: Texture | null): void;
 }
 
 /** A map of latitude bands: north at the top, as SphereGeometry's v runs. */
@@ -167,6 +168,7 @@ export function createPlanetMeshes(scene: Scene): PlanetMeshes {
   const tilts = new Map<PlanetName, Quaternion>();
   const toSun = new Map<PlanetName, Vector3>();
   const maps = new Map<PlanetName, { value: Texture }>();
+  const bands = new Map<PlanetName, Texture>();
   function planetMesh(planet: PlanetName): Mesh {
     const radius = planetRadius(planet);
     const geometry = new SphereGeometry(
@@ -177,7 +179,9 @@ export function createPlanetMeshes(scene: Scene): PlanetMeshes {
     geometry.scale(1, polarRatio(planet), 1);
     const direction = new Vector3(1, 0, 0);
     toSun.set(planet, direction);
-    const map: { value: Texture } = { value: bandTexture(planet) };
+    const painted = bandTexture(planet);
+    bands.set(planet, painted);
+    const map: { value: Texture } = { value: painted };
     maps.set(planet, map);
     const mesh = new Mesh(
       geometry,
@@ -252,9 +256,9 @@ export function createPlanetMeshes(scene: Scene): PlanetMeshes {
     },
     setMap(planet, texture) {
       const map = maps.get(planet);
-      if (map === undefined || map.value === texture) return;
-      map.value.dispose();
-      map.value = texture;
+      const next = texture ?? bands.get(planet);
+      if (map === undefined || next === undefined) return;
+      map.value = next;
     },
   };
 }

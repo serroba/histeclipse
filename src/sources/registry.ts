@@ -535,6 +535,13 @@ export const SOURCES = {
     url: 'https://science.nasa.gov/photojournal/cassinis-best-maps-of-jupiter-cylindrical-map/',
     licence: 'NASA, public domain',
   },
+  magellanVenus: {
+    name: 'Magellan map of Venus',
+    kind: 'imagery',
+    cite: 'NASA/JPL/USGS, Venus Magellan C3-MDIR colorized topographic global mosaic, 6,600 m (from Magellan radar, 1990–94), USGS Astrogeology',
+    url: 'https://astrogeology.usgs.gov/search/map/venus_magellan_c3_mdir_colorized_topographic_mosaic_6600m',
+    licence: 'NASA/USGS, public domain',
+  },
   cassiniSaturn: {
     name: 'Cassini map of Saturn',
     kind: 'imagery',
@@ -922,9 +929,10 @@ export const WHYS = {
       'vikingMap',
       'cassiniJupiter',
       'cassiniSaturn',
+      'magellanVenus',
       'archinal2018',
     ],
-    how: 'Each map is wrapped on the body as published, shrunk for the web, and each planet is turned as it was at the moment shown, by the IAU’s rotation models, the light’s travel time allowed for: the face toward you is the one that faced you then (checked against JPL Horizons). Jupiter’s and Saturn’s turning is that of their interiors (System III): their clouds drift against it, so a cloud feature is not where it was that day. Venus shows its cloud tops as a plain colour, as from space the clouds hide the ground. Saturn’s map has gaps where Cassini could not see (the poles, and the strip in the rings’ shadow): they are filled with the colour of the nearest latitude imaged.',
+    how: 'Each map is wrapped on the body as published, shrunk for the web, and each planet is turned as it was at the moment shown, by the IAU’s rotation models, the light’s travel time allowed for: the face toward you is the one that faced you then (checked against JPL Horizons). Jupiter’s and Saturn’s turning is that of their interiors (System III): their clouds drift against it, so a cloud feature is not where it was that day. Venus shows its cloud tops as a plain colour, as from space the clouds hide the ground; its Light switch shows the ground beneath instead, as Magellan’s radar mapped it, coloured by height. Saturn’s map has gaps where Cassini could not see (the poles, and the strip in the rings’ shadow): they are filled with the colour of the nearest latitude imaged.',
   },
   sky: {
     title: 'The night sky',

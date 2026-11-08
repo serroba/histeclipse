@@ -59,6 +59,7 @@ import { YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
 import { errorMessage } from '../util/errors';
 import {
+  PLANET_LIGHTS,
   DISPERSAL_SCENARIOS,
   CAMERA_DISTANCE_RANGE,
   BORDER_SOURCES,
@@ -149,6 +150,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     figures: read('figures', parseFigures, defaults.figures),
     years: read('years', parseYears, defaults.years),
     sunLayer: read('sun', parseSunLayer, defaults.sunLayer),
+    planetLight: read('light', (raw) => oneOf(raw, PLANET_LIGHTS, 'light'), defaults.planetLight),
     culture: read('culture', parseCulture, defaults.culture),
     borders: read('borders', parseBorders, defaults.borders),
     seenIn: read<string | null>('seen', parseSeenIn, defaults.seenIn),
@@ -192,6 +194,7 @@ export function serializeViewState(state: ViewState): string {
   if (state.figures !== 'famous') params.set('figures', state.figures);
   if (state.years !== 'western') params.set('years', state.years);
   if (state.sunLayer !== 'visible') params.set('sun', state.sunLayer);
+  if (state.planetLight !== 'look') params.set('light', state.planetLight);
   if (state.culture !== 'modern') params.set('culture', state.culture);
   if (state.borders !== 'cliopatria') params.set('borders', state.borders);
   if (state.seenIn !== null) params.set('seen', state.seenIn);
