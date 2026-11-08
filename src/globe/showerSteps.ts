@@ -36,12 +36,12 @@ export const SHOWER_MS = 16_000;
 /** The Sun's steps, before the shower, ms from their start. */
 const SUN_STEPS: readonly StepStart[] = [
   { step: 'fusion', at: 0 },
-  { step: 'escape', at: 5000 },
-  { step: 'journey', at: 11_000 },
+  { step: 'escape', at: 9000 },
+  { step: 'journey', at: 15_000 },
 ];
 
 /** How long the Sun's steps take, ms. */
-export const SUN_MS = 16_000;
+export const SUN_MS = 20_000;
 
 /** A story to play: its steps in order, how long it lasts, and where the shower begins in it. */
 export interface Story {

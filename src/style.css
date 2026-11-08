@@ -4268,6 +4268,108 @@ button:has(> .icon-label) > .icon {
   display: none;
 }
 
+/* The story's chapters in 3D (#317): over the globe, under the stage; drag to turn it. */
+.story-3d {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: #02040a;
+  cursor: grab;
+  touch-action: none;
+}
+
+.story-3d:active {
+  cursor: grabbing;
+}
+
+.story-3d[hidden] {
+  display: none;
+}
+
+.story-3d canvas {
+  display: block;
+}
+
+.story-labels {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.story-label {
+  padding: 2px 7px;
+  border-radius: 9px;
+  background: rgb(8 12 28 / 0.78);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.story-label.is-zone {
+  background: rgb(8 12 28 / 0.55);
+  font-weight: 500;
+}
+
+.story-label.is-gamma {
+  color: rgb(255 241 160);
+}
+
+/* The chain, written out: the reaction playing lit. */
+.story-chain {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  left: 12px;
+  max-width: min(360px, calc(100% - 24px));
+  margin: 0;
+  padding: 10px 12px 10px 30px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  color: var(--ink-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.story-chain li + li {
+  margin-top: 4px;
+}
+
+.story-chain li.is-now {
+  color: #fff;
+}
+
+.story-chain strong {
+  font-weight: 600;
+}
+
+.story-hint {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  right: 12px;
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  /* On a phone the chain gives its room to the Sun: the equation playing only. */
+  .story-chain li:not(.is-now) {
+    display: none;
+  }
+
+  .story-hint {
+    top: auto;
+    right: auto;
+    bottom: calc(100% - 100px);
+    left: 12px;
+    display: none;
+  }
+}
+
 .shower-caption {
   min-height: 3.9em;
   margin: 0;
