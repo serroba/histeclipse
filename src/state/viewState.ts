@@ -223,7 +223,12 @@ export interface ViewState {
    * Database id) picked out; null when closed.
    */
   readonly craters: CratersView | null;
+  /** How the impacts' paths are drawn (#322): on a flat map, or in a 3D box with time as depth. */
+  readonly cratersIn: CratersShape;
 }
+
+export const CRATERS_SHAPES = ['map', 'box'] as const;
+export type CratersShape = (typeof CRATERS_SHAPES)[number];
 
 /** What the impacts' paths show: all of them, or one crater's picked out. */
 export type CratersView = 'all' | { readonly id: number };
@@ -342,5 +347,6 @@ export function defaultViewState(now: Date): ViewState {
     why: null,
     tree: null,
     craters: null,
+    cratersIn: 'map',
   };
 }
