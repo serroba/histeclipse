@@ -114,6 +114,13 @@ MAPS = (
         widths=(2048, 4096),
     ),
     MapSource(
+        stem="planets/mars-height",
+        # MOLA heights, coloured and shaded (USGS, public domain).
+        url="https://planetarymaps.usgs.gov/mosaic/Mars_MGS_MOLA_ClrShade_merge_global_463m.tif",
+        sha256="c438516ecbc24d6bb7072103d59d2f0e023a033e57c02f1d79043a8cac01f229",
+        widths=(2048, 4096),
+    ),
+    MapSource(
         stem="planets/mercury-colour",
         # MESSENGER's enhanced-colour map (PIA17386), centred on 180° E.
         url=f"{PHOTOJOURNAL}/pia17/pia17386/PIA17386.jpg",
@@ -269,13 +276,21 @@ def _download(url: str, path: Path) -> None:  # pragma: no cover - needs network
     _ = partial.replace(path)
 
 
-def fetch_planet_maps(folder: Path, cache: Path) -> int:  # pragma: no cover - needs network access
-    """Download each map once into ``cache``, check it, and write each size under ``folder``."""
+def fetch_planet_maps(  # pragma: no cover - needs network access
+    folder: Path, cache: Path, only: str | None = None
+) -> int:
+    """Download each map once into ``cache``, check it, and write each size under ``folder``.
+
+    ``only`` limits it to the map with that stem, so a large source can be fetched, made and
+    cleared one at a time.
+    """
     # Mars's mosaic is 23040 by 11520 pixels and Earth's 21600 by 10800, past Pillow's guard
     # against decompression bombs; their checksums are pinned, so they are the files expected.
     Image.MAX_IMAGE_PIXELS = None
     written = 0
     for source in MAPS:
+        if only is not None and source.stem != only:
+            continue
         path = cache / source.url.rsplit("/", 1)[-1]
         if not path.exists():
             _download(source.url, path)

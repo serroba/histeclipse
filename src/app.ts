@@ -29,13 +29,7 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { geoToVector } from './globe/geo';
-import {
-  MOON_CAPTION,
-  PLANET_NAMES,
-  PLANET_VIEWS,
-  planetView,
-  SHARP_MAPS,
-} from './globe/planetLook';
+import { PLANET_NAMES, PLANET_VIEWS, planetView, SHARP_MAPS } from './globe/planetLook';
 import { loadPolarity, type PolarityScale } from './data/polarity';
 import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
@@ -3331,9 +3325,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function showBody(state: ViewState): void {
     const away = state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
     bottom.dataset['away'] = String(away);
-    // The Light switch, for a planet in view with more than one way to show it.
-    const planet = PLANETS.find((name) => name === state.focus);
-    if (away && state.view !== 'earth-from-here' && planet !== undefined) {
+    // The Light switch, for a planet or the Moon in view with more than one way to show it.
+    const planet = state.focus === 'moon' ? 'moon' : PLANETS.find((name) => name === state.focus);
+    if (away && (state.view !== 'earth-from-here' || planet === 'moon') && planet !== undefined) {
       planetSwitch.render(PLANET_VIEWS[planet], planetView(planet, state.planetLight).key);
     } else {
       planetSwitch.render(null, '');
@@ -3362,10 +3356,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
       bodyBar.render({ name: 'The Sun', text: sunText(sunDistance(jdTT)) });
     } else if (focus === 'moon') {
       const moonKm = moonEphemeris?.position(jdTT) ?? null;
+      // The view picked (#239): the usual map, or a mission's other one, fetched the first time.
+      const { map, sharp, caption } = planetView('moon', state.planetLight);
+      globe.showMoonView(
+        map === null
+          ? null
+          : { map: `${base}${map}`, sharp: sharp === null ? null : `${base}${sharp}` },
+      );
       bodyBar.render(
         moonKm === null
           ? null
-          : { name: 'The Moon', text: moonText(moonFacts(moonKm, sunKm)), picture: MOON_CAPTION },
+          : { name: 'The Moon', text: moonText(moonFacts(moonKm, sunKm)), picture: caption },
       );
     } else {
       // The view picked (#239): a mission's map, fetched the first time, or the painted colours.
