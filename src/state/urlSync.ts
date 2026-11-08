@@ -46,8 +46,14 @@ export function isStep(before: ViewState, after: ViewState): boolean {
     before.years !== after.years ||
     before.seenIn !== after.seenIn ||
     !sameLayers(before.layers, after.layers) ||
-    !sameTree(before.tree, after.tree)
+    !sameTree(before.tree, after.tree) ||
+    !sameCraters(before.craters, after.craters)
   );
+}
+
+/** Opening, closing or picking a crater in the impacts' paths: a step, as for the tree. */
+function sameCraters(a: ViewState['craters'], b: ViewState['craters']): boolean {
+  return a === b || (typeof a === 'object' && typeof b === 'object' && a?.id === b?.id);
 }
 
 /** Opening, closing or moving about the tree of life: Back returns to where the reader was. */

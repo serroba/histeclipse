@@ -231,6 +231,7 @@ import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './d
 import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
 import { createTreeSheet } from './ui/treeSheet';
+import { createImpactPathsSheet } from './ui/impactPathsSheet';
 import { loadTreeOfLife, type TreeOfLife } from './data/treeOfLife';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
@@ -475,6 +476,30 @@ export async function startApp(root: HTMLElement): Promise<void> {
       openTreeAt(pick);
     },
   });
+  // The impacts' paths through time (#304): the craters and today's coasts, loaded when opened,
+  // from what the layers already loaded where they have.
+  const impactPathsSheet = createImpactPathsSheet(
+    (craters) => {
+      store.set((state) => ({ ...state, craters }));
+    },
+    async () => {
+      const [loaded, periods] = await Promise.all([
+        impacts ?? impactsLoading ?? loadImpacts(`${base}data/impacts.json`, fetchJson),
+        namedPeriods?.data ??
+          namedPeriodsLoading ??
+          loadNamedPeriods(`${base}data/periods.json`, fetchJson),
+      ]);
+      return { impacts: loaded, coasts: countryRings(periods) };
+    },
+    (ma, where) => {
+      store.set((state) => ({ ...state, craters: null }));
+      enterDeepTime(ma, 'all');
+      // Impacts on to mark it, and the globe turned to face it where it lay then.
+      store.set((state) => ({ ...state, layers: withLayer(state.layers, 'impacts', true) }));
+      globe.flyTo(where);
+    },
+    whySheet.mark('impacts', 'Impact craters'),
+  );
   // "Why here?": while on, a tap on the globe says what each layer has there.
   let askingHere = false;
   const sourcesList = element('ul', { class: 'why-list', 'data-testid': 'sources-list' });
@@ -1381,6 +1406,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     skyContainer,
     zoomRail.root,
     treeSheet.dialog,
+    impactPathsSheet.dialog,
     whySheet.dialog,
     element(
       'header',
@@ -3591,6 +3617,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
       actions: new Map([
         ['fossils', treeAction('The four groups on the tree of life', () => undefined)] as const,
         [
+          'impacts',
+          {
+            label: 'Their paths through time, in 3D',
+            run: () => {
+              store.set((state) => ({ ...state, craters: 'all' }));
+            },
+          },
+        ] as const,
+        [
           'humans',
           treeAction('Our species on the tree of life', (tree) => tree.ours.humans['sapiens']),
         ] as const,
@@ -4156,6 +4191,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     root.classList.toggle('is-asking-here', askingHere && state.ma === null);
     treeSheet.show(state.tree);
+    impactPathsSheet.show(state.craters, state.ma ?? 0);
     whySheet.show(
       state.why,
       state.why === 'here'

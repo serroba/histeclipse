@@ -4608,16 +4608,16 @@ button:has(> .icon-label) > .icon {
   }
 }
 
-/* The tree of life (#300): a wide sheet with the tree in 3D, its legend under it, and the
- * picked taxon's line back to the first cells as a trail of links. */
-.famous-dialog.tree-dialog {
+/* A wide sheet with a 3D view (phoria2) and its legend: the tree of life (#300) and the
+ * impacts' paths through time (#304). The tree adds its picked taxon's trail of links. */
+.famous-dialog.stage-sheet {
   /* Above Layers, which can open it. */
   z-index: 4;
   width: min(760px, calc(100% - 32px));
   max-height: calc(100vh - 32px);
 }
 
-.tree-dialog .famous-header h2 {
+.stage-sheet .famous-header h2 {
   display: flex;
   flex: 1;
   align-items: center;
@@ -4625,15 +4625,15 @@ button:has(> .icon-label) > .icon {
   text-align: left;
 }
 
-.tree-body {
+.stage-body {
   padding: 0 18px 16px;
 }
 
-.tree-stage {
+.stage-frame {
   position: relative;
 }
 
-.tree-canvas {
+.stage-canvas {
   display: block;
   width: 100%;
   height: min(52vh, 460px);
@@ -4642,17 +4642,17 @@ button:has(> .icon-label) > .icon {
   touch-action: none;
 }
 
-.tree-legend {
+.stage-legend {
   margin-top: 6px;
   font-size: 11px;
   color: var(--ink-muted);
 }
 
-.tree-status {
+.stage-status {
   color: var(--ink-muted);
 }
 
-.tree-focus h3 {
+.stage-focus h3 {
   margin: 12px 0 4px;
   font-size: 16px;
 }
@@ -4687,7 +4687,7 @@ button:has(> .icon-label) > .icon {
   text-decoration: underline;
 }
 
-.tree-note {
+.stage-note {
   margin: 10px 0 4px;
   color: var(--ink-muted);
   font-size: 12px;
@@ -4702,12 +4702,12 @@ button:has(> .icon-label) > .icon {
 }
 
 @media (max-width: 640px) {
-  .famous-dialog.tree-dialog {
+  .famous-dialog.stage-sheet {
     width: 100%;
     max-height: 88vh;
   }
 
-  .tree-canvas {
+  .stage-canvas {
     height: 46vh;
   }
 }

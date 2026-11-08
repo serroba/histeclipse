@@ -46,6 +46,7 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 | `tree.spec.ts`      | The tree of life: a taxon's line to the first cells, from a find, a fossil or a link                    |
 | `poles.spec.ts`     | Poles and the magnetic field in deep time: the spin axis, magnetic north, and every reversal (GTS 2020) |
 | `impacts.spec.ts`   | Impact craters: today and where they lay, each with a card                                              |
+| `craters.spec.ts`   | Impacts through time: each crater's path as its plate moved, in 3D                                      |
 | `volcanoes.spec.ts` | Volcanic eruptions: GVP's eruptions near the year, each with a card                                     |
 | `periods.spec.ts`   | Named periods: PeriodO's periods for the place picked, each by its source                               |
 | `sources.spec.ts`   | Why this? The sources of what is on screen, each with its book and licence                              |
