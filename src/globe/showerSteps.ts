@@ -20,18 +20,18 @@ export interface StepStart {
 /** When each step begins, ms from the start. */
 export const SHOWER_STEPS: readonly StepStart[] = [
   { step: 'rays', at: 0 },
-  { step: 'shower', at: 2200 },
-  { step: 'capture', at: 5000 },
-  { step: 'dioxide', at: 7200 },
-  { step: 'fall', at: 9200 },
-  { step: 'plant', at: 12_400 },
+  { step: 'shower', at: 4500 },
+  { step: 'capture', at: 10_000 },
+  { step: 'dioxide', at: 12_200 },
+  { step: 'fall', at: 14_200 },
+  { step: 'plant', at: 17_400 },
 ];
 
 /** The shower bursts this long into its step, once the view has come in close, ms. */
 export const BURST_DELAY = 900;
 
 /** How long the whole plays, ms. */
-export const SHOWER_MS = 16_000;
+export const SHOWER_MS = 21_000;
 
 /** The Sun's steps, before the shower, ms from their start. */
 const SUN_STEPS: readonly StepStart[] = [
