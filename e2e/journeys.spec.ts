@@ -590,10 +590,17 @@ test('close up on Venus, the Light switch shows the ground beneath its clouds, b
     await expect(globe).toHaveAttribute('data-planet-map', 'venus', { timeout: 30_000 });
     await expect(page).toHaveURL(/[?&]light=radar/);
     await expect(page.getByText(/Magellan’s radar mapped it/)).toBeVisible();
+    // Its colours keyed to heights, as USGS's legend gives them.
+    const key = page.getByTestId('colour-key');
+    await expect(key).toContainText('−2');
+    await expect(key).toContainText('+10 km');
+    await expect(key).toContainText('Height above a radius of 6,051 km');
+    await expect(key).toContainText('USGS Astrogeology’s legend');
   });
   await test.step('When they go back to the cloud tops, the link forgets the radar', async () => {
     await light.getByRole('button', { name: /^Cloud tops/ }).click();
     await expect(page).not.toHaveURL(/light=/);
+    await expect(page.getByTestId('colour-key')).toBeHidden();
   });
   await test.step('And Mercury’s switch shows its enhanced colour, Jupiter’s its 2024 clouds', async () => {
     await page.goto('./?t=2024-06-01T12:00&focus=mercury&cam=10,0,2.6&light=minerals');
@@ -620,6 +627,12 @@ test('close up on Venus, the Light switch shows the ground beneath its clouds, b
       'true',
     );
     await expect(page.getByText(/Mars Global Surveyor’s laser altimeter/)).toBeVisible();
+    // Keyed from Hellas's depths to Olympus Mons, measured against MOLA's heights.
+    const key = page.getByTestId('colour-key');
+    await expect(key).toContainText('−4');
+    await expect(key).toContainText('+20 km');
+    await expect(key).toContainText('Height above the areoid');
+    await expect(key).toContainText('measured against MOLA heights');
   });
   await test.step('And Saturn, with one way only, has no Light switch', async () => {
     await page.goto('./?t=2024-06-01T12:00&focus=saturn&cam=10,0,2.6');
@@ -629,7 +642,7 @@ test('close up on Venus, the Light switch shows the ground beneath its clouds, b
   expect(problems).toEqual([]);
 });
 
-test('close up on the Moon, the Light switch shows its heights and its rocks told apart', async ({
+test('close up on the Moon, the Light switch shows its heights, keyed, and its rocks told apart', async ({
   page,
 }) => {
   // Two maps fetched, each a few megabytes: slow on a phone drawn in software.
@@ -646,8 +659,11 @@ test('close up on the Moon, the Light switch shows its heights and its rocks tol
     await expect(page).toHaveURL(/[?&]light=height/);
     await expect(globe).toHaveAttribute('data-moon-map', 'view', { timeout: 30_000 });
     await expect(page.getByText(/Lunar Reconnaissance Orbiter’s laser altimeter/)).toBeVisible();
+    await expect(page.getByTestId('colour-key')).toContainText('+8 km');
+    await expect(page.getByTestId('colour-key')).toContainText('measured against LOLA heights');
     await light.getByRole('button', { name: /^As it looks/ }).click();
     await expect(globe).toHaveAttribute('data-moon-map', 'usual');
+    await expect(page.getByTestId('colour-key')).toBeHidden();
     await expect(
       page.getByText(/^Pictured: the Lunar Reconnaissance Orbiter’s colour mosaic/),
     ).toBeVisible();
