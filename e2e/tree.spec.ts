@@ -7,6 +7,8 @@
 import { collectProblems, expect, globeRendered, openLayers, test } from './support';
 
 const NODES = /^[1-9]\d{3,}$/;
+// Drawing eight thousand taxa beside the globe takes seconds on runners that render in software.
+const DRAWN = { timeout: 20_000 };
 
 // A one-pixel image, for Wikimedia's pictures: the suite does not reach out to Wikimedia.
 const PIXEL = Buffer.from(
@@ -31,7 +33,7 @@ test('from our species to the mammals, and the whole tree, then back to the glob
   });
   await test.step('Then the tree opens at Homo sapiens, living, its line back to the first cells', async () => {
     await expect(page).toHaveURL(/tree=ott770315/);
-    await expect(page.getByTestId('tree-canvas')).toHaveAttribute('data-nodes', NODES);
+    await expect(page.getByTestId('tree-canvas')).toHaveAttribute('data-nodes', NODES, DRAWN);
     const focus = page.getByTestId('tree-focus');
     await expect(focus.getByRole('heading')).toHaveText('Homo sapiens');
     await expect(focus.getByRole('list')).toContainText('Primates');
@@ -79,8 +81,8 @@ test('a fossil’s card leads to its genus on the tree of life', async ({ page }
   });
   await test.step('Then the tree opens at that genus', async () => {
     await expect(page).toHaveURL(/tree=ott\d+/);
-    await expect(page.getByTestId('tree-focus').getByRole('heading')).toContainText(genus);
-    await expect(page.getByTestId('tree-canvas')).toHaveAttribute('data-nodes', NODES);
+    await expect(page.getByTestId('tree-focus').getByRole('heading')).toContainText(genus, DRAWN);
+    await expect(page.getByTestId('tree-canvas')).toHaveAttribute('data-nodes', NODES, DRAWN);
   });
   expect(problems).toEqual([]);
 });
@@ -95,7 +97,7 @@ test('a link opens the tree at a taxon, and its book says where the tree comes f
   });
   await test.step('Then the tree opens there, extinct, among our species', async () => {
     const focus = page.getByTestId('tree-focus');
-    await expect(focus.getByRole('heading')).toHaveText('Homo sapiens neanderthalensis †');
+    await expect(focus.getByRole('heading')).toHaveText('Homo sapiens neanderthalensis †', DRAWN);
     await expect(focus.getByRole('list')).toContainText('Homo sapiens');
   });
   await test.step('When they open its book', async () => {
