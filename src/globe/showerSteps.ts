@@ -65,6 +65,29 @@ export function turnedAway(dipole: number): boolean {
   return cutoffRigidity(0, dipole) >= LET_IN_GV;
 }
 
+/** Where each step begins, in order. */
+const STARTS = SHOWER_STEPS.map(({ at }) => at);
+
+/** Where the step after the one playing at `t` begins; the end, from the last. */
+export function nextStepStart(t: number): number {
+  return STARTS.find((at) => at > t) ?? SHOWER_MS;
+}
+
+/**
+ * Where "back" goes from `t`: the start of the step playing, if it has run a while (as a
+ * player's back button does), else the start of the one before.
+ */
+export function previousStepStart(t: number): number {
+  const current = STARTS.findLast((at) => at <= t) ?? 0;
+  if (t - current > 800) return current;
+  return STARTS.findLast((at) => at < current) ?? 0;
+}
+
+/** Just before the step after the one at `t` begins: where that step's picture is complete. */
+export function stepEnd(t: number): number {
+  return nextStepStart(t) - 1;
+}
+
 /** The step playing at `t` ms; null once it has played out. */
 export function stepAt(t: number): ShowerStep | null {
   if (t < 0 || t >= SHOWER_MS) return null;

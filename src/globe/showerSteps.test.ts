@@ -5,6 +5,9 @@ import {
   captionOf,
   equatorCutoffGeV,
   landing,
+  nextStepStart,
+  previousStepStart,
+  stepEnd,
   rayLabels,
   SHOWER_MS,
   SHOWER_STEPS,
@@ -58,5 +61,16 @@ describe('a cosmic-ray shower, step by step', () => {
     expect(captionOf('plant', DIPOLE_TODAY, true)).toContain('Algae');
     expect(captionOf('plant', DIPOLE_TODAY, true)).toContain('400–600 radiocarbon years');
     expect(captionOf('plant', DIPOLE_TODAY)).toContain('A leaf');
+  });
+
+  it('steps forward and back as a player does', () => {
+    expect(nextStepStart(0)).toBe(2200);
+    expect(nextStepStart(2200)).toBe(5000);
+    expect(nextStepStart(13_000)).toBe(SHOWER_MS);
+    // Well into a step, back goes to its start; just after it began, to the one before.
+    expect(previousStepStart(6500)).toBe(5000);
+    expect(previousStepStart(5300)).toBe(2200);
+    expect(previousStepStart(300)).toBe(0);
+    expect(stepEnd(5000)).toBe(7199);
   });
 });

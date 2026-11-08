@@ -26,11 +26,14 @@ import {
 } from 'three';
 
 import type { GeoPoint } from '../state/viewState';
-import { frameClock } from '../util/frameClock';
+import { playbackClock } from '../util/playbackClock';
 import { geoToVector } from './geo';
 import {
   BURST_DELAY,
   landing,
+  nextStepStart,
+  previousStepStart,
+  stepEnd,
   rayLabels,
   SHOWER_MS,
   SHOWER_STEPS,
@@ -46,14 +49,27 @@ export interface ShowerSpec {
   readonly dipole: number;
   /** Whether the carbon lands on water, where algae take it in, rather than on land. */
   readonly water: boolean;
-  /** Told each step as it begins. */
-  readonly onStep: (step: ShowerStep | null) => void;
+  /** Told whenever the step, playing or ended changes. */
+  readonly onState: (state: ShowerState) => void;
 }
+
+export interface ShowerState {
+  readonly step: ShowerStep;
+  readonly playing: boolean;
+  /** Whether it has played to its end, at least once. */
+  readonly ended: boolean;
+}
+
+/** What the reader can ask of a shower as it plays; `settle` shows the step's finished picture
+ * and pauses there, for reduced motion. */
+export type ShowerCommand = 'play' | 'pause' | 'next' | 'back' | 'replay' | 'settle';
 
 export interface ShowerAnimation {
   readonly group: Group;
-  /** Advance to `now` (ms); false once it has played out. */
-  update(now: number): boolean;
+  /** Advance to `now` (ms). It holds on its last picture at the end, until disposed. */
+  update(now: number): void;
+  /** Play, pause, step forward or back, or start again. */
+  command(command: ShowerCommand): void;
   dispose(): void;
 }
 
@@ -203,7 +219,8 @@ function frame(place: GeoPoint): { up: Vector3; east: Vector3; north: Vector3 } 
 }
 
 export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
-  const clock = frameClock();
+  // A millisecond short of the end, so the last step's picture holds.
+  const clock = playbackClock(SHOWER_MS - 1);
   const group = new Group();
   group.name = 'shower';
   const texture = dotTexture();
@@ -406,17 +423,18 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
     plant: label(spec.water ? 'algae' : 'plant', small),
   };
 
-  let shown: ShowerStep | null | undefined;
+  let shown = '';
   const showerPositions = showerGeometry.getAttribute('position');
 
   return {
     group,
     update(now) {
       const t = clock.tick(now);
-      const step = stepAt(t);
-      if (step !== shown) {
-        shown = step;
-        spec.onStep(step);
+      const step = stepAt(t) ?? 'plant';
+      const state = `${step}:${String(clock.playing)}:${String(clock.ended)}`;
+      if (state !== shown) {
+        shown = state;
+        spec.onState({ step, playing: clock.playing, ended: clock.ended });
       }
       // The rays, the one at the pole quickening in, the other bent away or let in.
       for (const [i, ray] of rays.entries()) {
@@ -503,12 +521,19 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
       plantMaterial.color.setRGB(1, 1, 1).lerp(carbonViolet, Math.sin(Math.PI * taking) * 0.6);
       labels.plant.visible = plant.visible;
       pin(labels.plant, ground, polar.up, polar.north.clone().negate(), 0.008);
-      // Fade out at the end.
-      const leaving = 1 - through(t, SHOWER_MS - 700, 700);
-      nitrogen.material.opacity = leaving;
-      for (const oxygen of oxygens) oxygen.material.opacity = leaving;
-      plantMaterial.opacity = leaving;
-      return t < SHOWER_MS;
+    },
+    command(command) {
+      if (command === 'play') clock.play();
+      else if (command === 'pause') clock.pause();
+      else if (command === 'next') clock.seek(nextStepStart(clock.position));
+      else if (command === 'back') clock.seek(previousStepStart(clock.position));
+      else if (command === 'settle') {
+        clock.seek(stepEnd(clock.position));
+        clock.pause();
+      } else {
+        clock.seek(0);
+        clock.play();
+      }
     },
     dispose() {
       group.removeFromParent();
