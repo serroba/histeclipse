@@ -253,6 +253,15 @@ export interface PlanetView {
 export const PLANET_VIEWS: Readonly<Record<PlanetName, readonly PlanetView[]>> = {
   mercury: [
     { key: 'colour', label: 'As it looks', detail: 'visible light', ...PLANET_PICTURES.mercury },
+    {
+      key: 'minerals',
+      label: 'Enhanced colour',
+      detail: 'its rocks told apart',
+      map: 'textures/planets/mercury-colour-2048.jpg',
+      sharp: 'textures/planets/mercury-colour-4096.jpg',
+      caption:
+        'Pictured: MESSENGER’s enhanced-colour map, from its first year in orbit (2011–12). Not true colour: each colour is a measure of the light in several filters, chosen to tell Mercury’s rocks apart, the volcanic plains, the dark material, the young bright crater rays. NASA/JHU APL/Carnegie Institution of Washington.',
+    },
   ],
   venus: [
     {
@@ -273,7 +282,16 @@ export const PLANET_VIEWS: Readonly<Record<PlanetName, readonly PlanetView[]>> =
   ],
   mars: [{ key: 'colour', label: 'As it looks', detail: 'visible light', ...PLANET_PICTURES.mars }],
   jupiter: [
-    { key: 'colour', label: 'As it looks', detail: 'visible light', ...PLANET_PICTURES.jupiter },
+    { key: 'colour', label: 'In 2000', detail: 'Cassini, passing by', ...PLANET_PICTURES.jupiter },
+    {
+      key: 'recent',
+      label: 'In 2024',
+      detail: 'Hubble, OPAL',
+      map: 'textures/planets/jupiter-2024-2048.jpg',
+      sharp: 'textures/planets/jupiter-2024-3600.jpg',
+      caption:
+        'Pictured: Hubble’s map of the cloud tops on 19–20 November 2024, from the Outer Planet Atmospheres Legacy programme; beside Cassini’s of 2000, the belts have changed colour and width. NASA/ESA, OPAL (A. Simon), CC BY 4.0.',
+    },
   ],
   saturn: [
     { key: 'colour', label: 'As it looks', detail: 'visible light', ...PLANET_PICTURES.saturn },

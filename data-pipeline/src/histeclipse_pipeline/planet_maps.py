@@ -63,6 +63,9 @@ class MapSource:
     stretch: bool = False
     #: A Cassini global map as FITS, read by `cassini_fits_map`, not an image file.
     fits: bool = False
+    #: Whether the map starts at 0° on its left edge (180° in the middle) and is turned half a
+    #: turn to the site's layout, 0° in the middle.
+    half_turn: bool = False
 
 
 PHOTOJOURNAL = "https://assets.science.nasa.gov/content/dam/science/psd/photojournal/pia"
@@ -109,6 +112,26 @@ MAPS = (
         url="https://planetarymaps.usgs.gov/mosaic/Venus_Magellan_C3-MDIR_ClrTopo_Global_Mosaic_6600m.tif",
         sha256="5c4acbade3a88526cf80b006f21816405fc6cc8d184ca9f3d1dc6d00f71694e0",
         widths=(2048, 4096),
+    ),
+    MapSource(
+        stem="planets/mercury-colour",
+        # MESSENGER's enhanced-colour map (PIA17386), centred on 180° E.
+        url=f"{PHOTOJOURNAL}/pia17/pia17386/PIA17386.jpg",
+        sha256="5e1c8607693605d18ae11c0401f925759762d3affa4a5f057ab9a611a125fdb1",
+        widths=(2048, 4096),
+        half_turn=True,
+    ),
+    MapSource(
+        stem="planets/jupiter-2024",
+        # Hubble OPAL, 19-20 Nov 2024 (CC BY 4.0): left edge 0° System III west longitude,
+        # decreasing to the right, so east rises to the right from 0° at the left.
+        url=(
+            "https://archive.stsci.edu/missions/hlsp/opal/cycle31/jupiter/"
+            "hlsp_opal_hst_wfc3-uvis_jupiter-2024c_f395n-f502n-f631n_v1_globalmap.tif"
+        ),
+        sha256="59f95498702f8684060008866a961b72b2f03e30db8a8b318f5ea226c305b5ae",
+        widths=(2048, 3600),
+        half_turn=True,
     ),
     MapSource(
         stem="earth-blue-marble",
@@ -216,9 +239,18 @@ def cassini_fits_map(data: bytes) -> Image.Image:
     return Image.fromarray(pixels)
 
 
-def web_map(image: Image.Image, *, stretch: bool = False, width: int = WIDTH) -> Image.Image:
-    """Make the map for the web: RGB, ``width`` by half that, brightened if asked."""
-    shrunk = image.convert("RGB").resize((width, width // 2), Image.Resampling.LANCZOS)
+def half_turned(image: Image.Image) -> Image.Image:
+    """Turn a map half a turn about the pole: the middle column to the left edge."""
+    pixels: np.typing.NDArray[np.uint8] = np.asarray(image.convert("RGB"), dtype=np.uint8)
+    return Image.fromarray(np.roll(pixels, image.width // 2, axis=1))
+
+
+def web_map(
+    image: Image.Image, *, stretch: bool = False, width: int = WIDTH, half_turn: bool = False
+) -> Image.Image:
+    """Make the map for the web: RGB, ``width`` by half that, brightened and turned if asked."""
+    turned = half_turned(image) if half_turn else image
+    shrunk = turned.convert("RGB").resize((width, width // 2), Image.Resampling.LANCZOS)
     return stretched(shrunk) if stretch else shrunk
 
 
@@ -253,7 +285,9 @@ def fetch_planet_maps(folder: Path, cache: Path) -> int:  # pragma: no cover - n
             else Image.open(checked(path, source.sha256))
         ) as image:
             for width in source.widths:
-                made = web_map(image, stretch=source.stretch, width=width)
+                made = web_map(
+                    image, stretch=source.stretch, width=width, half_turn=source.half_turn
+                )
                 write_map(made, folder / f"{source.stem}-{width}.jpg")
                 written += 1
     return written

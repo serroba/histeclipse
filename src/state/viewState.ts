@@ -86,8 +86,9 @@ export const LAYERS = [
   // Deep time: fossils of four groups of animals, where they lay then.
   'fossils',
 ] as const;
-/** How a planet is shown close up: as it looks, or Venus's ground by radar. */
-export const PLANET_LIGHTS = ['look', 'radar'] as const;
+/** How a planet is shown close up: as it looks, or another way where a mission gives one:
+ * Venus's ground by radar, Mercury's minerals in enhanced colour, Jupiter recently. */
+export const PLANET_LIGHTS = ['look', 'radar', 'minerals', 'recent'] as const;
 export type PlanetLight = (typeof PLANET_LIGHTS)[number];
 
 export type Layer = (typeof LAYERS)[number];

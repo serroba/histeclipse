@@ -545,6 +545,23 @@ test('close up on Venus, the Light switch shows the ground beneath its clouds, b
     await light.getByRole('button', { name: /^Cloud tops/ }).click();
     await expect(page).not.toHaveURL(/light=/);
   });
+  await test.step('And Mercury’s switch shows its enhanced colour, Jupiter’s its 2024 clouds', async () => {
+    await page.goto('./?t=2024-06-01T12:00&focus=mercury&cam=10,0,2.6&light=minerals');
+    await expect(globe).toHaveAttribute('data-planet-map', 'mercury', { timeout: 30_000 });
+    await expect(light.getByRole('button', { name: /^Enhanced colour/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await page.goto('./?t=2024-06-01T12:00&focus=jupiter&cam=10,0,2.6&light=recent');
+    await expect(globe).toHaveAttribute('data-planet-map', 'jupiter', { timeout: 30_000 });
+    await expect(light.getByRole('button', { name: /^In 2024/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(
+      page.getByText(/Hubble’s map of the cloud tops on 19–20 November 2024/),
+    ).toBeVisible();
+  });
   await test.step('And Mars, with one way only, has no Light switch', async () => {
     await page.goto('./?t=2024-06-01T12:00&focus=mars&cam=10,0,2.6');
     await expect(globe).toHaveAttribute('data-focus', 'mars', { timeout: 30_000 });
