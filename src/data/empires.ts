@@ -223,3 +223,52 @@ export function stateChanges(
     gone: sorted([...had].filter((name) => !has.has(name))),
   };
 }
+
+/** How a name is compared across sources: case, accents and a leading "the" aside. */
+function nameKey(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/^the\s+/, '')
+    .trim();
+}
+
+/** The angle between two places on the globe, degrees. */
+function degreesApart(a: NamedPoint, b: NamedPoint): number {
+  const radians = Math.PI / 180;
+  const cos =
+    Math.sin(a.latitude * radians) * Math.sin(b.latitude * radians) +
+    Math.cos(a.latitude * radians) *
+      Math.cos(b.latitude * radians) *
+      Math.cos((a.longitude - b.longitude) * radians);
+  return Math.acos(Math.min(1, Math.max(-1, cos))) / radians;
+}
+
+/**
+ * Where a second source names a state the first names too, within `maxDegrees` of it: the
+ * second's names to leave out, by index, and the first's names to mark as given by both.
+ * With borders from both sources, the same state named twice side by side was clutter (#163).
+ */
+export function namedByBoth(
+  first: readonly NamedPoint[],
+  second: readonly NamedPoint[],
+  maxDegrees = 10,
+): { readonly repeated: ReadonlySet<number>; readonly shared: ReadonlySet<string> } {
+  const byKey = new Map<string, NamedPoint[]>();
+  for (const point of first) {
+    const key = nameKey(point.name);
+    byKey.set(key, [...(byKey.get(key) ?? []), point]);
+  }
+  const repeated = new Set<number>();
+  const shared = new Set<string>();
+  second.forEach((point, index) => {
+    const match = byKey
+      .get(nameKey(point.name))
+      ?.find((candidate) => degreesApart(candidate, point) <= maxDegrees);
+    if (match === undefined) return;
+    repeated.add(index);
+    shared.add(match.name);
+  });
+  return { repeated, shared };
+}

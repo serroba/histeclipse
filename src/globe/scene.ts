@@ -100,7 +100,7 @@ import {
 } from './spaceFrame';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { SOLAR_NORTH_POLE_J2000 } from './sunImage';
-import { labelPoint, type Territory } from '../data/empires';
+import { labelPoint, namedByBoth, type Territory } from '../data/empires';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius } from './planetLook';
 import { createPlanetMeshes } from './planetMeshes';
@@ -2961,11 +2961,25 @@ export function createGlobe(
             name: territory.name,
             point: label,
             size: sizeOf(label.area),
-            kind: 'empire-label',
           }));
+        // A state OpenHistoricalMap names too, near where Cliopatria does, is named once, marked
+        // as named by both (#163).
+        const ohmLabels = layer.ohm?.labels ?? [];
+        const both = namedByBoth(
+          ranked.map(({ name, point }) => ({
+            name,
+            latitude: point.latitude,
+            longitude: point.longitude,
+          })),
+          ohmLabels,
+        );
+        const cliopatriaNames = ranked.map((label) => ({
+          ...label,
+          kind: both.shared.has(label.name) ? 'empire-label is-both' : 'empire-label',
+        }));
         // OpenHistoricalMap's names, set apart in italics, after Cliopatria's.
-        const ohmNames = (layer.ohm?.labels ?? [])
-          .filter(({ name }) => !named.has(name))
+        const ohmNames = ohmLabels
+          .filter(({ name }, index) => !named.has(name) && !both.repeated.has(index))
           .slice(0, 120)
           .map((label) => ({
             name: label.name,
@@ -2973,7 +2987,7 @@ export function createGlobe(
             size: 11,
             kind: 'empire-label is-ohm',
           }));
-        const made = [...changed, ...ranked, ...ohmNames].map((label) => {
+        const made = [...changed, ...cliopatriaNames, ...ohmNames].map((label) => {
           const { name, point, size, kind } = label;
           const id = `${kind}|${String(size)}|${name}`;
           const kept = before.get(id);
