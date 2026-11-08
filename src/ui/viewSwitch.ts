@@ -1,7 +1,8 @@
 /**
  * One-click views: orbit the body in focus, stand on Earth facing the Moon or the reverse, or
  * stand on the ground and look at the sky. Away from Earth and the Moon, the third looks back
- * at Earth from the body in focus: Earth from Jupiter, Earth from the Sun (#245).
+ * at Earth from the body in focus: Earth from Jupiter, Earth from the Sun (#245), and Moon from
+ * Earth goes (#329).
  */
 
 import type { Body, Mode, Viewpoint } from '../state/viewState';
@@ -75,6 +76,8 @@ export function createViewSwitch(onSelect: (choice: ViewChoice) => void): ViewSw
         const option = choices.get(button);
         const pressed = mode === 'sky' ? option === 'sky' : option === viewpoint;
         button.setAttribute('aria-pressed', String(pressed));
+        // From a planet or the Sun, standing on Earth to face the Moon is beside the point.
+        button.hidden = option === 'moon-from-earth' && focus !== 'earth' && focus !== 'moon';
         // The attached views need the Moon's position, which loads just after the page.
         button.disabled = option !== 'free' && option !== 'sky' && !moonReady;
       }
