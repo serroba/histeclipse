@@ -515,3 +515,40 @@ test('a first visit from a browser in UTC keeps the usual first view', async ({ 
   await page.waitForTimeout(1500);
   await expect(page).toHaveURL(/cam=20\.0000,0\.0000,/);
 });
+
+test('close up on Venus, the Light switch shows the ground beneath its clouds, by radar', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const light = page.getByTestId('planet-light');
+  await test.step('Given Venus close up', async () => {
+    await page.goto('./?t=2024-06-01T12:00&focus=venus&cam=10,0,2.6');
+    await expect(globe).toHaveAttribute('data-focus', 'venus', { timeout: 30_000 });
+  });
+  await test.step('Then it shows its cloud tops, as from space', async () => {
+    await expect(light.getByRole('button', { name: /^Cloud tops/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(page.getByText(/^Pictured: the cloud tops/)).toBeVisible();
+  });
+  await test.step('When they pick the ground, by radar', async () => {
+    await light.getByRole('button', { name: /^Ground, by radar/ }).click();
+  });
+  await test.step('Then Magellan’s map wraps Venus, and the link keeps it', async () => {
+    await expect(globe).toHaveAttribute('data-planet-map', 'venus', { timeout: 30_000 });
+    await expect(page).toHaveURL(/[?&]light=radar/);
+    await expect(page.getByText(/Magellan’s radar mapped it/)).toBeVisible();
+  });
+  await test.step('When they go back to the cloud tops, the link forgets the radar', async () => {
+    await light.getByRole('button', { name: /^Cloud tops/ }).click();
+    await expect(page).not.toHaveURL(/light=/);
+  });
+  await test.step('And Mars, with one way only, has no Light switch', async () => {
+    await page.goto('./?t=2024-06-01T12:00&focus=mars&cam=10,0,2.6');
+    await expect(globe).toHaveAttribute('data-focus', 'mars', { timeout: 30_000 });
+    await expect(light).toBeHidden();
+  });
+  expect(problems).toEqual([]);
+});

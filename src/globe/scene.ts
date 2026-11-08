@@ -370,10 +370,15 @@ export interface Globe {
   /** Play, pause, step through or replay the shower, or stop it and take it away. */
   controlShower(command: ShowerCommand | 'stop'): void;
   /**
-   * Wrap a planet in a mission's global map, fetched the first time it is asked for; a `sharp`
-   * one, asked for close up, replaces it and is kept.
+   * Show a planet as one of its views (#239): a mission's map, fetched the first time it is
+   * asked for, or null for its painted colours. Maps are kept, so switching back is instant.
    */
-  setPlanetMap(planet: PlanetName, url: string, sharp?: boolean): void;
+  showPlanetView(
+    planet: PlanetName,
+    view: { readonly map: string; readonly sharp: string | null } | null,
+  ): void;
+  /** Close up: the planet's sharper map for its view, from now on (#258). */
+  sharpenPlanet(planet: PlanetName): void;
   /** Dress Earth or the Moon in a sharper map, fetched once, for close up (#258). */
   setBodyMap(body: 'earth' | 'moon', url: string): void;
   /** The widest texture the graphics can hold, pixels. */
@@ -1332,8 +1337,51 @@ export function createGlobe(
   const planets = createPlanetMeshes(scene);
   // Maps asked for, by address; the planets wearing their sharp map; and the bodies sharpened,
   // for whoever needs to know (#258).
-  const planetMapsAsked = new Set<string>();
-  const sharpPlanets = new Set<PlanetName>();
+  // Each planet's view (#239), its maps by address once fetched, and those close up enough for
+  // their sharper map.
+  const planetViews = new Map<
+    PlanetName,
+    { readonly map: string; readonly sharp: string | null } | null
+  >();
+  const planetTextures = new Map<string, Promise<Texture>>();
+  const sharpWanted = new Set<PlanetName>();
+  function planetTexture(url: string): Promise<Texture> {
+    let texture = planetTextures.get(url);
+    if (texture === undefined) {
+      texture = new TextureLoader().loadAsync(url).then((map) => {
+        map.colorSpace = SRGBColorSpace;
+        map.anisotropy = renderer.capabilities.getMaxAnisotropy();
+        return map;
+      });
+      // Asked again the next time, if it failed; what the planet wears stays meanwhile.
+      texture.catch(() => planetTextures.delete(url));
+      planetTextures.set(url, texture);
+    }
+    return texture;
+  }
+  /** Dress a planet as its view asks: the sharp map close up, else the first, else its colours. */
+  function applyPlanetView(planet: PlanetName): void {
+    const view = planetViews.get(planet) ?? null;
+    if (view === null) {
+      planets.setMap(planet, null);
+      needsRender = true;
+      return;
+    }
+    const sharpUrl = sharpWanted.has(planet) ? view.sharp : null;
+    const sharp = sharpUrl !== null;
+    const url = sharpUrl ?? view.map;
+    planetTexture(url).then(
+      (map) => {
+        // Only if the planet still wants this view.
+        if (planetViews.get(planet) !== view) return;
+        planets.setMap(planet, map);
+        container.dataset['planetMap'] = planet;
+        if (sharp) markSharp(planet);
+        needsRender = true;
+      },
+      () => undefined,
+    );
+  }
   const bodyMapsAsked = new Set<string>();
   const sharpened = new Set<string>();
   function markSharp(body: string): void {
@@ -2325,31 +2373,14 @@ export function createGlobe(
       emptyTapListeners.add(listener);
       return () => emptyTapListeners.delete(listener);
     },
-    setPlanetMap(planet, url, sharp = false) {
-      // The sharp map, once it is on, is never swapped back for the first.
-      if (sharpPlanets.has(planet) || planetMapsAsked.has(url)) return;
-      planetMapsAsked.add(url);
-      new TextureLoader()
-        .loadAsync(url)
-        .then((map) => {
-          if (!sharp && sharpPlanets.has(planet)) {
-            map.dispose();
-            return;
-          }
-          map.colorSpace = SRGBColorSpace;
-          map.anisotropy = renderer.capabilities.getMaxAnisotropy();
-          planets.setMap(planet, map);
-          container.dataset['planetMap'] = planet;
-          if (sharp) {
-            sharpPlanets.add(planet);
-            markSharp(planet);
-          }
-          needsRender = true;
-        })
-        .catch(() => {
-          // Asked again the next time the planet is in view; what it wears stays meanwhile.
-          planetMapsAsked.delete(url);
-        });
+    showPlanetView(planet, view) {
+      planetViews.set(planet, view);
+      applyPlanetView(planet);
+    },
+    sharpenPlanet(planet) {
+      if (sharpWanted.has(planet)) return;
+      sharpWanted.add(planet);
+      applyPlanetView(planet);
     },
     setBodyMap(body, url) {
       if (bodyMapsAsked.has(url)) return;

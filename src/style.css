@@ -3924,8 +3924,10 @@ button:has(> .icon-label) > .icon {
   background: rgb(255 255 255 / 0.08);
 }
 
-/* A channel's button: what it shows, and beneath, small, the light it is (#249). */
-.sun-switch button[data-layer] {
+/* A channel's button: what it shows, and beneath, small, the light it is (#249); a planet's
+   views alike (#239). */
+.sun-switch button[data-layer],
+.sun-switch button[data-view] {
   display: inline-flex;
   flex-direction: column;
   align-items: center;

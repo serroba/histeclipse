@@ -8,6 +8,8 @@ import {
   primeMeridian,
   PLANET_NAMES,
   PLANET_PICTURES,
+  PLANET_VIEWS,
+  planetView,
   planetRadius,
   poleVector,
   polarRatio,
@@ -59,6 +61,21 @@ describe('Saturn’s rings', () => {
     expect(ringOpacity(120_000)).toBeLessThan(0.1);
     expect(ringOpacity(133_589)).toBeLessThan(0.1);
     expect(ringOpacity(128_000)).toBeGreaterThan(0.5);
+  });
+});
+
+describe('planet views, for the Light switch', () => {
+  it('starts each planet as it looks, and gives Venus its radar ground', () => {
+    for (const planet of PLANETS) {
+      const [first] = PLANET_VIEWS[planet];
+      expect(first?.caption).toBe(PLANET_PICTURES[planet].caption);
+    }
+    expect(PLANET_VIEWS.venus.map(({ key }) => key)).toEqual(['clouds', 'radar']);
+    expect(planetView('venus', 'radar').map).toBe('textures/planets/venus-radar-2048.jpg');
+    expect(planetView('venus', 'radar').caption).toContain('Magellan');
+    // A key a planet does not have, or none, falls back to how it looks.
+    expect(planetView('venus', '').key).toBe('clouds');
+    expect(planetView('mars', 'radar').key).toBe('colour');
   });
 });
 

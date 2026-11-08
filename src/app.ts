@@ -29,7 +29,13 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { geoToVector } from './globe/geo';
-import { MOON_CAPTION, PLANET_NAMES, PLANET_PICTURES, SHARP_MAPS } from './globe/planetLook';
+import {
+  MOON_CAPTION,
+  PLANET_NAMES,
+  PLANET_VIEWS,
+  planetView,
+  SHARP_MAPS,
+} from './globe/planetLook';
 import { loadPolarity, type PolarityScale } from './data/polarity';
 import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { IMPACT_ANIMATION_MS } from './globe/impactAnimation';
@@ -125,6 +131,7 @@ import { VAT_4956 } from './tablets/vat4956';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createAimSwitch, type AimTarget } from './ui/aimSwitch';
 import { createSunSwitch } from './ui/sunSwitch';
+import { createPlanetSwitch } from './ui/planetSwitch';
 import { createLayersPanel } from './ui/layersPanel';
 import { createDeepGlance } from './ui/deepGlance';
 import { CARBON_LIMIT, cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
@@ -653,6 +660,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     whySheet.mark('sun', 'The Sun close up'),
   );
+  // How a planet is shown close up (#239), where it has more than one way.
+  const planetSwitch = createPlanetSwitch((planetLight) => {
+    store.set((state) => ({ ...state, planetLight }));
+  });
   const aimSwitch = createAimSwitch((target) => {
     store.set((state) => {
       const look = aimAt(state, target);
@@ -1276,6 +1287,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       aimSwitch.root,
       skyOptions,
       sunSwitch.root,
+      planetSwitch.root,
       skyText,
       skyEclipse,
       recordBanner,
@@ -3312,14 +3324,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return;
     }
     if (focus === 'sun') return;
-    const { sharp } = PLANET_PICTURES[focus];
-    if (sharp !== null) globe.setPlanetMap(focus, `${base}${sharp}`, true);
+    globe.sharpenPlanet(focus);
   }
 
   /** Away from Earth: the body in view and what can be said of it; Earth's own bits rest. */
   function showBody(state: ViewState): void {
     const away = state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
     bottom.dataset['away'] = String(away);
+    // The Light switch, for a planet in view with more than one way to show it.
+    const planet = PLANETS.find((name) => name === state.focus);
+    if (away && state.view !== 'earth-from-here' && planet !== undefined) {
+      planetSwitch.render(PLANET_VIEWS[planet], planetView(planet, state.planetLight).key);
+    } else {
+      planetSwitch.render(null, '');
+    }
     if (!away || bodiesAt === null) {
       bodyBar.render(null);
       return;
@@ -3350,9 +3368,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
           : { name: 'The Moon', text: moonText(moonFacts(moonKm, sunKm)), picture: MOON_CAPTION },
       );
     } else {
-      // A mission's map, fetched the first time the planet is looked at close up.
-      const { map, caption } = PLANET_PICTURES[focus];
-      if (map !== null) globe.setPlanetMap(focus, `${base}${map}`);
+      // The view picked (#239): a mission's map, fetched the first time, or the painted colours.
+      const { map, sharp, caption } = planetView(focus, state.planetLight);
+      globe.showPlanetView(
+        focus,
+        map === null
+          ? null
+          : { map: `${base}${map}`, sharp: sharp === null ? null : `${base}${sharp}` },
+      );
       const position = planets?.position(focus, jdTT);
       bodyBar.render(
         position === undefined

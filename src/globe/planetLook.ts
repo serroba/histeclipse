@@ -12,6 +12,7 @@
  */
 
 import type { PlanetName } from '../astro/planets';
+import { elementAt } from '../util/arrays';
 import { EARTH_RADIUS_KM } from './spaceFrame';
 
 export interface PlanetShape {
@@ -233,6 +234,57 @@ export const PLANET_PICTURES: Readonly<Record<PlanetName, PlanetPicture>> = {
       'Pictured: Cassini’s map of the cloud tops on 11 August 2011, the great northern storm of 2010–11 trailing round the planet; the poles and the strip in the rings’ shadow, not imaged, are filled with the colour of the nearest latitude. NASA/JPL/Space Science Institute; Li, West, Jiang & Knowles (NASA PDS, 2023).',
   },
 };
+
+/** One way of looking at a planet close up, in the Light switch (#239). */
+export interface PlanetView {
+  readonly key: string;
+  readonly label: string;
+  /** What light or data it is, beneath the label. */
+  readonly detail: string;
+  readonly map: string | null;
+  readonly sharp: string | null;
+  readonly caption: string;
+}
+
+/**
+ * The ways of looking at each planet: first, as it looks (`PLANET_PICTURES`); then any others
+ * the missions give. Venus's ground is seen only by radar, beneath clouds that hide it.
+ */
+export const PLANET_VIEWS: Readonly<Record<PlanetName, readonly PlanetView[]>> = {
+  mercury: [
+    { key: 'colour', label: 'As it looks', detail: 'visible light', ...PLANET_PICTURES.mercury },
+  ],
+  venus: [
+    {
+      key: 'clouds',
+      label: 'Cloud tops',
+      detail: 'as from space',
+      ...PLANET_PICTURES.venus,
+    },
+    {
+      key: 'radar',
+      label: 'Ground, by radar',
+      detail: 'Magellan, coloured by height',
+      map: 'textures/planets/venus-radar-2048.jpg',
+      sharp: 'textures/planets/venus-radar-4096.jpg',
+      caption:
+        'Pictured: the ground beneath the clouds, as Magellan’s radar mapped it (1990–94), coloured by height: blue lowlands to red and white highlands, Maxwell Montes highest. No eye could see this; radar passes through the clouds. NASA/JPL/USGS.',
+    },
+  ],
+  mars: [{ key: 'colour', label: 'As it looks', detail: 'visible light', ...PLANET_PICTURES.mars }],
+  jupiter: [
+    { key: 'colour', label: 'As it looks', detail: 'visible light', ...PLANET_PICTURES.jupiter },
+  ],
+  saturn: [
+    { key: 'colour', label: 'As it looks', detail: 'visible light', ...PLANET_PICTURES.saturn },
+  ],
+};
+
+/** The view a key names for a planet, or its first (as it looks) when the key is not one of its. */
+export function planetView(planet: PlanetName, key: string): PlanetView {
+  const views = PLANET_VIEWS[planet];
+  return views.find((view) => view.key === key) ?? elementAt(views, 0);
+}
 
 /** Earth's and the Moon's maps fetched only close up (#258): Earth's in two sizes, the larger
  * for screens whose graphics allow it, the smaller for phones. */

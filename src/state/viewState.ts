@@ -86,6 +86,10 @@ export const LAYERS = [
   // Deep time: fossils of four groups of animals, where they lay then.
   'fossils',
 ] as const;
+/** How a planet is shown close up: as it looks, or Venus's ground by radar. */
+export const PLANET_LIGHTS = ['look', 'radar'] as const;
+export type PlanetLight = (typeof PLANET_LIGHTS)[number];
+
 export type Layer = (typeof LAYERS)[number];
 
 /** A dispersal model's scenario shaded with the Humans layer, or none. */
@@ -182,6 +186,8 @@ export interface ViewState {
   readonly years: YearCalendar;
   /** The channel of light the Sun is shown in, close up. */
   readonly sunLayer: SunLayer;
+  /** How a planet is shown close up (#239): as it looks, or by another light where it has one. */
+  readonly planetLight: PlanetLight;
   /** Whose constellations the sky view draws. */
   readonly culture: SkyCulture;
   /** Whose borders the empires layer draws. */
@@ -299,6 +305,7 @@ export function defaultViewState(now: Date): ViewState {
     figures: 'famous',
     years: 'western',
     sunLayer: 'visible',
+    planetLight: 'look',
     culture: 'modern',
     borders: 'cliopatria',
     seenIn: null,
