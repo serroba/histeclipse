@@ -638,10 +638,14 @@ async function skyRendered(page: Page): Promise<void> {
 test('a page opened before a deploy reloads once when a late part of it is gone', async ({
   page,
 }) => {
+  // Two whole page loads, the second up to 30 s on a busy machine.
+  test.slow();
   let missing = 1;
+  // Each request for the page itself, rather than each load event: on the live site a reload
+  // can start before the first page's load event, which then never fires (#306).
   let loads = 0;
-  page.on('load', () => {
-    loads += 1;
+  page.on('request', (request) => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) loads += 1;
   });
   await test.step('Given the sky’s code gone from the server once, as after a deploy', async () => {
     await page.route('**/assets/skyScene-*.js', async (route) => {
@@ -658,7 +662,7 @@ test('a page opened before a deploy reloads once when a late part of it is gone'
   });
   await test.step('Then the page reloads by itself and the stars come up', async () => {
     // A whole second load: more than the usual wait on a busy machine.
-    await expect.poll(() => loads, { timeout: 15_000 }).toBe(2);
+    await expect.poll(() => loads, { timeout: 30_000 }).toBe(2);
     await expect(page.getByTestId('sky')).toHaveAttribute('data-rendered', 'true', {
       timeout: 15_000,
     });
@@ -669,9 +673,13 @@ test('a page opened before a deploy reloads once when a late part of it is gone'
 test('a late part that stays missing says so once, without reloading again and again', async ({
   page,
 }) => {
+  // Two whole page loads, the second up to 30 s on a busy machine.
+  test.slow();
+  // Each request for the page itself, rather than each load event: on the live site a reload
+  // can start before the first page's load event, which then never fires (#306).
   let loads = 0;
-  page.on('load', () => {
-    loads += 1;
+  page.on('request', (request) => {
+    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) loads += 1;
   });
   await test.step('Given the sky’s code missing for good', async () => {
     await page.route('**/assets/skyScene-*.js', (route) =>
@@ -682,6 +690,8 @@ test('a late part that stays missing says so once, without reloading again and a
     await page.goto('./?mode=sky&t=2025-03-20T19:00Z&loc=32.5422,44.4209');
   });
   await test.step('Then, after one reload, a single notice says the stars could not load', async () => {
+    // The first page can show the notice too, just before it reloads: wait for the second.
+    await expect.poll(() => loads, { timeout: 30_000 }).toBe(2);
     const notice = page.getByRole('status').getByText(/^Could not load the stars/);
     await expect(notice).toHaveCount(1, { timeout: 15_000 });
     // Drawing again asks again: still one notice, and no further reload.

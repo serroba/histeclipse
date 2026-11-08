@@ -379,6 +379,8 @@ export interface Globe {
   ): void;
   /** Close up: the planet's sharper map for its view, from now on (#258). */
   sharpenPlanet(planet: PlanetName): void;
+  /** Show the Moon as another view than its usual map (#239), or null for its usual map. */
+  showMoonView(view: { readonly map: string; readonly sharp: string | null } | null): void;
   /** Dress Earth or the Moon in a sharper map, fetched once, for close up (#258). */
   setBodyMap(body: 'earth' | 'moon', url: string): void;
   /** The widest texture the graphics can hold, pixels. */
@@ -1359,6 +1361,34 @@ export function createGlobe(
     }
     return texture;
   }
+  // The Moon's usual map (the plain grey, then its first map, then the sharp one), and the
+  // view it is shown as instead, if any (#239).
+  let moonStandard: Texture = moonTexture;
+  let moonView: { readonly map: string; readonly sharp: string | null } | null = null;
+  function setMoonStandard(map: Texture): void {
+    moonStandard.dispose();
+    moonStandard = map;
+    if (moonView === null) moon.material.uniforms['map'] = { value: map };
+    needsRender = true;
+  }
+  function showMoonView(
+    view: { readonly map: string; readonly sharp: string | null } | null,
+  ): void {
+    moonView = view;
+    if (view === null) {
+      moon.material.uniforms['map'] = { value: moonStandard };
+      needsRender = true;
+      return;
+    }
+    planetTexture(sharpened.has('moon') && view.sharp !== null ? view.sharp : view.map).then(
+      (map) => {
+        if (moonView !== view) return;
+        moon.material.uniforms['map'] = { value: map };
+        needsRender = true;
+      },
+      () => undefined,
+    );
+  }
   /** Dress a planet as its view asks: the sharp map close up, else the first, else its colours. */
   function applyPlanetView(planet: PlanetName): void {
     const view = planetViews.get(planet) ?? null;
@@ -1809,9 +1839,7 @@ export function createGlobe(
         return;
       }
       map.colorSpace = SRGBColorSpace;
-      moon.material.uniforms['map'] = { value: map };
-      moonTexture.dispose();
-      needsRender = true;
+      setMoonStandard(map);
     },
     (error: unknown) => {
       console.warn("Could not load the Moon's map:", error);
@@ -2377,6 +2405,7 @@ export function createGlobe(
       planetViews.set(planet, view);
       applyPlanetView(planet);
     },
+    showMoonView,
     sharpenPlanet(planet) {
       if (sharpWanted.has(planet)) return;
       sharpWanted.add(planet);
@@ -2390,10 +2419,16 @@ export function createGlobe(
         .then((map) => {
           map.colorSpace = SRGBColorSpace;
           map.anisotropy = renderer.capabilities.getMaxAnisotropy();
-          const uniforms = (body === 'earth' ? earth : moon).material.uniforms;
-          const key = body === 'earth' ? 'dayMap' : 'map';
-          const previous = uniforms[key]?.value as Texture | undefined;
-          uniforms[key] = { value: map };
+          if (body === 'moon') {
+            setMoonStandard(map);
+            markSharp(body);
+            // A view shown instead takes its own sharper map too.
+            if (moonView !== null) showMoonView(moonView);
+            return;
+          }
+          const uniforms = earth.material.uniforms;
+          const previous = uniforms['dayMap']?.value as Texture | undefined;
+          uniforms['dayMap'] = { value: map };
           previous?.dispose();
           markSharp(body);
           needsRender = true;
