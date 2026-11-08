@@ -1,7 +1,8 @@
 /**
- * Feature: impacts through time (#304). Each crater's path from where it struck to where it lies
- * today, as its plate carried it, in a 3D box of longitude, latitude and time; a plane at the
- * slider's moment; and a way from a crater back to the globe at its strike.
+ * Feature: impacts through time (#304, #322). Each crater's journey with its plate, from where it
+ * struck to where it lies today: on a world map, a picked crater followed by a dot that travels
+ * its track with the date; or, behind a switch, in a 3D box with time as depth. And a way from a
+ * crater back to the globe at its strike.
  */
 
 import { collectProblems, expect, globeRendered, openLayers, test } from './support';
@@ -23,13 +24,10 @@ test('Layers opens every crater’s path through time, in 3D', async ({ page }) 
     await openLayers(page);
     await page.getByRole('button', { name: 'Their paths through time, in 3D' }).click();
   });
-  await test.step('Then every dated crater’s path is drawn, with the dating in the legend', async () => {
+  await test.step('Then every crater’s track is drawn on a world map, with how to read it', async () => {
     await expect(page).toHaveURL(/craters=all/);
-    await expect(page.getByTestId('craters-canvas')).toHaveAttribute(
-      'data-craters',
-      CRATERS,
-      DRAWN,
-    );
+    await expect(page.getByTestId('craters-how')).toContainText('Pick a crater to follow it');
+    await expect(page.getByTestId('craters-map')).toHaveAttribute('data-craters', CRATERS, DRAWN);
     await expect(sheet).toContainText('Dated to within 10 million years');
     await expect(sheet).toContainText('540 million years back');
   });
@@ -58,6 +56,13 @@ test('a crater’s path says how far its plate carried it, and leads to the glob
     await expect(focus).toContainText('180 km across');
     await expect(focus).toContainText(/Carried about [\d,]+ km by its plate since it struck/);
   });
+  await test.step('And a dot follows its journey on the map, saying the date it has reached', async () => {
+    await expect(page.getByTestId('craters-map')).toBeVisible();
+    await expect(page.locator('.stage-pin', { hasText: 'Chicxulub: struck here' })).toBeVisible();
+    await expect(
+      page.locator('.tree-label-focus', { hasText: /million years ago|Today/ }),
+    ).toBeVisible();
+  });
   await test.step('When they go to see it on the globe', async () => {
     await focus.getByRole('button', { name: /See it on the globe, 66 million years ago/ }).click();
   });
@@ -66,6 +71,38 @@ test('a crater’s path says how far its plate carried it, and leads to the glob
     await expect(page).toHaveURL(/layers=[a-z,]*impacts/);
     await expect(page).not.toHaveURL(/craters=/);
     await expect(page.getByTestId('globe')).toHaveAttribute('data-impacts', /^[1-9]\d*$/);
+  });
+  expect(problems).toEqual([]);
+});
+
+test('the 3D box is a switch away, and the link keeps it', async ({ page }) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const sheet = page.getByRole('dialog', { name: /Impacts through time/ });
+  await test.step('Given Chicxulub’s journey on the map', async () => {
+    await page.goto('./?ma=66&craters=26');
+    await globeRendered(page);
+    await expect(page.getByTestId('craters-map')).toHaveAttribute('data-craters', CRATERS, DRAWN);
+  });
+  await test.step('When they switch to 3D', async () => {
+    await sheet.getByRole('button', { name: '3D', exact: true }).click();
+  });
+  await test.step('Then the box is drawn instead, time as depth, and the link says so', async () => {
+    await expect(page).toHaveURL(/cratersin=box/);
+    await expect(page.getByTestId('craters-box')).toHaveAttribute('data-craters', CRATERS, DRAWN);
+    await expect(page.getByTestId('craters-map')).toBeHidden();
+    await expect(page.getByTestId('craters-how')).toContainText('today on top');
+  });
+  await test.step('When the link is opened again', async () => {
+    await page.reload();
+    await globeRendered(page);
+  });
+  await test.step('Then it opens in 3D', async () => {
+    await expect(page.getByTestId('craters-box')).toHaveAttribute('data-craters', CRATERS, DRAWN);
+    await expect(sheet.getByRole('button', { name: '3D', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
   expect(problems).toEqual([]);
 });

@@ -20,6 +20,7 @@ import {
   DISPERSAL_SCENARIOS,
   DEFAULT_LOOK,
   BORDER_SOURCES,
+  CRATERS_SHAPES,
   DEEP_SCALES,
   FIGURES,
   BODIES,
@@ -85,6 +86,7 @@ describe('parseViewState', () => {
       why: null,
       tree: null,
       craters: null,
+      cratersIn: 'map',
     } satisfies ViewState);
   });
 
@@ -153,6 +155,8 @@ describe('parseViewState', () => {
   it('opens the impacts’ paths from the link, all or one crater, and ignores a bad one', () => {
     expect(parseViewState('craters=all', NOW).state.craters).toBe('all');
     expect(parseViewState('craters=12', NOW).state.craters).toEqual({ id: 12 });
+    expect(parseViewState('craters=26&cratersin=box', NOW).state.cratersIn).toBe('box');
+    expect(parseViewState('craters=26', NOW).state.cratersIn).toBe('map');
     const bad = parseViewState('craters=chicxulub', NOW);
     expect(bad.state.craters).toBeNull();
     expect(bad.warnings.join(' ')).toMatch(/craters/);
@@ -470,6 +474,7 @@ describe('serializeViewState', () => {
       fc.constant('all' as const),
       fc.integer({ min: 0, max: 999_999 }).map((id) => ({ id })),
     ),
+    cratersIn: fc.constantFrom(...CRATERS_SHAPES),
   });
 
   it('round-trips every view state through a link', () => {

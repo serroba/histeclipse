@@ -4619,6 +4619,8 @@ button:has(> .icon-label) > .icon {
 .famous-dialog.stage-sheet {
   /* Above Layers, which can open it. */
   z-index: 4;
+  /* Opaque, as Layers is: the bar and labels behind would read through. */
+  background: rgb(10 16 32);
   width: min(760px, calc(100% - 32px));
   max-height: calc(100vh - 32px);
 }
@@ -4716,4 +4718,91 @@ button:has(> .icon-label) > .icon {
   .stage-canvas {
     height: 46vh;
   }
+}
+
+/* Impacts through time (#322): Map | 3D, a line on how to read the view, the dating key, the
+ * continents' names for bearings, and where the picked crater struck. */
+.stage-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-bottom: 8px;
+}
+
+.stage-switch {
+  display: inline-flex;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.stage-switch-option {
+  padding: 4px 14px;
+  border: 0;
+  background: none;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.stage-switch-option[aria-pressed='true'] {
+  background: rgb(255 183 94 / 0.18);
+  color: var(--ink);
+}
+
+.stage-how {
+  flex: 1 1 260px;
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.stage-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+
+.stage-key-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-left: 6px;
+  border-radius: 2px;
+}
+
+.stage-key-swatch.is-tight {
+  background: #ff8a3d;
+}
+
+.stage-key-swatch.is-loose {
+  background: #8a93a8;
+}
+
+.stage-continent {
+  color: rgb(200 215 240 / 0.55);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.stage-pin {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgb(10 16 32 / 0.85);
+  color: #ffd2b0;
+  font-size: 12px;
+}
+
+/* One view of a 3D sheet: its canvas and the labels drawn over it, shown or hidden as one. */
+.stage-view {
+  position: relative;
+}
+
+.stage-view[hidden] {
+  display: none;
 }

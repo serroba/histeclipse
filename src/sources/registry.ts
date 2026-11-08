@@ -1058,7 +1058,7 @@ export const WHYS = {
     title: 'Impact craters',
     what: 'Craters and deposits left by asteroids and comets, and in deep time, where they lay when they struck.',
     sources: ['impactEarth', 'gplates', 'paleodem', 'collins2005', 'collins2020', 'naturalEarth'],
-    how: 'Places when they struck reconstructed on the PALEOMAP model by the GPlates Web Service. A crater’s card estimates the impactor’s size from the crater by Collins et al.’s scaling laws, under assumptions it states; “Play the impact” is an illustration, with Chicxulub’s approach from Collins et al. 2020 and the others assumed. “Impacts through time” draws each crater’s place every 5 million years from its strike to today as a line through a box of longitude, latitude and time, today’s coasts (Natural Earth) on top; the reconstruction reaches 540 million years back, so older craters start there, and craters dated only loosely are drawn faint from the middle of their span.',
+    how: 'Places when they struck reconstructed on the PALEOMAP model by the GPlates Web Service. A crater’s card estimates the impactor’s size from the crater by Collins et al.’s scaling laws, under assumptions it states; “Play the impact” is an illustration, with Chicxulub’s approach from Collins et al. 2020 and the others assumed. “Impacts through time” draws each crater’s place every 5 million years from its strike to today: as a track on a map of today’s coasts (Natural Earth), a picked crater followed by a dot along it, or as a line through a 3D box of longitude, latitude and time. The reconstruction reaches 540 million years back, so older craters start there; craters dated only loosely are drawn faint from the middle of their span.',
   },
   volcanoes: {
     title: 'Volcanic eruptions',
