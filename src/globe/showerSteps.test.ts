@@ -8,6 +8,8 @@ import {
   nextStepStart,
   previousStepStart,
   stepEnd,
+  SUN_MS,
+  SUN_STORY,
   rayLabels,
   SHOWER_MS,
   SHOWER_STEPS,
@@ -72,5 +74,36 @@ describe('a cosmic-ray shower, step by step', () => {
     expect(previousStepStart(5300)).toBe(2200);
     expect(previousStepStart(300)).toBe(0);
     expect(stepEnd(5000)).toBe(7199);
+  });
+
+  it('starts from the Sun: its three steps, then the shower’s, navigated alike', () => {
+    expect(SUN_STORY.steps.map(({ step }) => step)).toEqual([
+      'fusion',
+      'escape',
+      'journey',
+      'rays',
+      'shower',
+      'capture',
+      'dioxide',
+      'fall',
+      'plant',
+    ]);
+    expect(SUN_STORY.offset).toBe(SUN_MS);
+    expect(SUN_STORY.total).toBe(SUN_MS + SHOWER_MS);
+    expect(stepAt(0, SUN_STORY)).toBe('fusion');
+    expect(stepAt(SUN_MS, SUN_STORY)).toBe('rays');
+    expect(stepAt(SUN_STORY.total, SUN_STORY)).toBeNull();
+    expect(nextStepStart(SUN_MS - 1, SUN_STORY)).toBe(SUN_MS);
+    expect(previousStepStart(SUN_MS + 100, SUN_STORY)).toBe(11_000);
+    expect(stepEnd(0, SUN_STORY)).toBe(4999);
+  });
+
+  it('captions the Sun’s steps with the photon’s energies, and joins them at the leaf', () => {
+    expect(captionOf('fusion', DIPOLE_TODAY)).toContain('0.511 MeV');
+    expect(captionOf('escape', DIPOLE_TODAY)).toContain('170,000 years');
+    expect(captionOf('journey', DIPOLE_TODAY)).toContain('441 THz');
+    expect(captionOf('plant', DIPOLE_TODAY, false, true)).toContain('red photon');
+    expect(captionOf('plant', DIPOLE_TODAY, true, true)).toContain('eight minutes ago');
+    expect(captionOf('plant', DIPOLE_TODAY, true)).not.toContain('eight minutes');
   });
 });

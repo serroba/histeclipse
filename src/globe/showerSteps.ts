@@ -1,16 +1,24 @@
 /**
  * The steps of a cosmic-ray shower making carbon-14 (#269), as the animation plays them: when
  * each begins, and what its caption says. The rays come from far beyond the Sun; the field
- * turns them away near the equator unless it is weak.
+ * turns them away near the equator unless it is weak. Started from the Sun (#277), three steps
+ * come first: fusion in its core, a photon's long escape, and its journey to Earth, where at the
+ * end it is the light the leaf takes the carbon in by.
  */
 
 import { cutoffRigidity } from '../data/radiocarbonProduction';
 import type { GeoPoint } from '../state/viewState';
 
-export type ShowerStep = 'rays' | 'shower' | 'capture' | 'dioxide' | 'fall' | 'plant';
+export type ShowerStep =
+  'fusion' | 'escape' | 'journey' | 'rays' | 'shower' | 'capture' | 'dioxide' | 'fall' | 'plant';
+
+export interface StepStart {
+  readonly step: ShowerStep;
+  readonly at: number;
+}
 
 /** When each step begins, ms from the start. */
-export const SHOWER_STEPS: readonly { readonly step: ShowerStep; readonly at: number }[] = [
+export const SHOWER_STEPS: readonly StepStart[] = [
   { step: 'rays', at: 0 },
   { step: 'shower', at: 2200 },
   { step: 'capture', at: 5000 },
@@ -24,6 +32,33 @@ export const BURST_DELAY = 900;
 
 /** How long the whole plays, ms. */
 export const SHOWER_MS = 16_000;
+
+/** The Sun's steps, before the shower, ms from their start. */
+const SUN_STEPS: readonly StepStart[] = [
+  { step: 'fusion', at: 0 },
+  { step: 'escape', at: 5000 },
+  { step: 'journey', at: 11_000 },
+];
+
+/** How long the Sun's steps take, ms. */
+export const SUN_MS = 16_000;
+
+/** A story to play: its steps in order, how long it lasts, and where the shower begins in it. */
+export interface Story {
+  readonly steps: readonly StepStart[];
+  readonly total: number;
+  /** Where the shower's own steps begin, ms from the story's start. */
+  readonly offset: number;
+}
+
+export const SHOWER_STORY: Story = { steps: SHOWER_STEPS, total: SHOWER_MS, offset: 0 };
+
+/** The story from the Sun: its three steps, then the shower's. */
+export const SUN_STORY: Story = {
+  steps: [...SUN_STEPS, ...SHOWER_STEPS.map(({ step, at }) => ({ step, at: at + SUN_MS }))],
+  total: SUN_MS + SHOWER_MS,
+  offset: SUN_MS,
+};
 
 /**
  * Below this cutoff at the equator, GV, the equator's ray is let in: nearly all the cosmic rays
@@ -65,43 +100,52 @@ export function turnedAway(dipole: number): boolean {
   return cutoffRigidity(0, dipole) >= LET_IN_GV;
 }
 
-/** Where each step begins, in order. */
-const STARTS = SHOWER_STEPS.map(({ at }) => at);
-
 /** Where the step after the one playing at `t` begins; the end, from the last. */
-export function nextStepStart(t: number): number {
-  return STARTS.find((at) => at > t) ?? SHOWER_MS;
+export function nextStepStart(t: number, story = SHOWER_STORY): number {
+  return story.steps.find(({ at }) => at > t)?.at ?? story.total;
 }
 
 /**
  * Where "back" goes from `t`: the start of the step playing, if it has run a while (as a
  * player's back button does), else the start of the one before.
  */
-export function previousStepStart(t: number): number {
-  const current = STARTS.findLast((at) => at <= t) ?? 0;
+export function previousStepStart(t: number, story = SHOWER_STORY): number {
+  const current = story.steps.findLast(({ at }) => at <= t)?.at ?? 0;
   if (t - current > 800) return current;
-  return STARTS.findLast((at) => at < current) ?? 0;
+  return story.steps.findLast(({ at }) => at < current)?.at ?? 0;
 }
 
 /** Just before the step after the one at `t` begins: where that step's picture is complete. */
-export function stepEnd(t: number): number {
-  return nextStepStart(t) - 1;
+export function stepEnd(t: number, story = SHOWER_STORY): number {
+  return nextStepStart(t, story) - 1;
 }
 
-/** The step playing at `t` ms; null once it has played out. */
-export function stepAt(t: number): ShowerStep | null {
-  if (t < 0 || t >= SHOWER_MS) return null;
-  let current: ShowerStep = 'rays';
-  for (const { step, at } of SHOWER_STEPS) if (t >= at) current = step;
-  return current;
+/** The step playing at `t` ms; null before the start or once it has played out. */
+export function stepAt(t: number, story = SHOWER_STORY): ShowerStep | null {
+  if (t < 0 || t >= story.total) return null;
+  return story.steps.findLast(({ at }) => at <= t)?.step ?? null;
 }
 
 /**
  * What a step's caption says, for a field of `dipole` ×10²² A m², the carbon landing on water
- * (`water`) or on land.
+ * (`water`) or on land, and the story begun at the Sun (`fromSun`) or not.
  */
-export function captionOf(step: ShowerStep, dipole: number, water = false): string {
+export function captionOf(
+  step: ShowerStep,
+  dipole: number,
+  water = false,
+  fromSun = false,
+): string {
+  const sunlight = fromSun
+    ? ' The red sunlight it needs set out from the Sun eight minutes ago, and from its core some 170,000 years before.'
+    : '';
   switch (step) {
+    case 'fusion':
+      return 'In the Sun’s core, at about 15 million degrees, hydrogen nuclei fuse into helium. Each positron the chain makes meets an electron and becomes gamma rays: light of 0.511 MeV, 1.2 × 10²⁰ Hz.';
+    case 'escape':
+      return 'That light cannot fly out. It is absorbed and given off again countless times, a random walk, softening from X-rays to visible light. About 170,000 years to reach the surface (Mitalas & Sills 1992); quick estimates give ten times less.';
+    case 'journey':
+      return 'From the surface, at 5,772 K, sunlight crosses 150 million km to Earth in 8 minutes 19 seconds. One photon is red light, 680 nm: 441 THz, 1.8 eV.';
     case 'rays':
       return turnedAway(dipole)
         ? 'Cosmic rays, nuclei from far beyond the Sun, race in. Near the equator Earth’s magnetic field bends this one back out to space.'
@@ -116,7 +160,9 @@ export function captionOf(step: ShowerStep, dipole: number, water = false): stri
       return 'The carbon dioxide falls and mixes through the air, over a few years: here, a few seconds. (Not to scale: a shower is kilometres across.)';
     case 'plant':
       if (water)
-        return 'Algae in the sea take it in by photosynthesis. The ocean takes in carbon dioxide slowly and holds it for centuries, so a sea shell reads about 400–600 radiocarbon years older than a land plant of the same year.';
-      return 'A leaf takes it in by photosynthesis, and the carbon-14 becomes part of the plant. When the plant dies the intake stops, and the clock starts: half is gone every 5,730 years.';
+        return `Algae in the sea take it in by photosynthesis. The ocean takes in carbon dioxide slowly and holds it for centuries, so a sea shell reads about 400–600 radiocarbon years older than a land plant of the same year.${sunlight}`;
+      return fromSun
+        ? 'The red photon reaches a leaf. Chlorophyll absorbs it (it reflects the green, which is why leaves look green), and its energy draws the carbon dioxide in: the carbon-14 becomes part of the plant. When the plant dies the clock starts: half is gone every 5,730 years.'
+        : 'A leaf takes it in by photosynthesis, and the carbon-14 becomes part of the plant. When the plant dies the intake stops, and the clock starts: half is gone every 5,730 years.';
   }
 }

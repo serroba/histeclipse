@@ -7,11 +7,21 @@
  */
 
 import type { ShowerCommand, ShowerState } from '../globe/showerAnimation';
-import { SHOWER_STEPS, type ShowerStep } from '../globe/showerSteps';
+import {
+  SHOWER_STEPS,
+  SHOWER_STORY,
+  type ShowerStep,
+  type StepStart,
+  type Story,
+} from '../globe/showerSteps';
 import { element } from './dom';
 import { reactionDiagram } from './reactionDiagram';
+import { sunDiagram } from './sunDiagram';
 
 const STEP_NAMES: Readonly<Record<ShowerStep, string>> = {
+  fusion: 'Fusion',
+  escape: 'The escape',
+  journey: 'To Earth',
   rays: 'Cosmic rays',
   shower: 'The shower',
   capture: 'Carbon-14 made',
@@ -22,8 +32,8 @@ const STEP_NAMES: Readonly<Record<ShowerStep, string>> = {
 
 export interface ShowerStage {
   readonly root: HTMLElement;
-  /** Open it; under reduced motion the steps wait for the reader rather than play. */
-  open(reducedMotion: boolean): void;
+  /** Open it for a story; under reduced motion the steps wait for the reader rather than play. */
+  open(reducedMotion: boolean, story?: Story): void;
   close(): void;
   readonly isOpen: boolean;
   /** Show the state the shower reports, with the step's caption. */
@@ -43,13 +53,8 @@ export function createShowerStage(
     'data-testid': 'shower-caption',
     'aria-live': 'polite',
   });
-  const dots = element(
-    'ol',
-    { class: 'shower-dots', 'aria-label': 'Steps' },
-    ...SHOWER_STEPS.map(({ step }) =>
-      element('li', { 'data-step': step, title: STEP_NAMES[step] }, STEP_NAMES[step]),
-    ),
-  );
+  const dots = element('ol', { class: 'shower-dots', 'aria-label': 'Steps' });
+  let steps: readonly StepStart[] = SHOWER_STEPS;
   const button = (label: string, run: () => void): HTMLButtonElement => {
     const made = element('button', { type: 'button', class: 'shower-control' }, label);
     made.addEventListener('click', run);
@@ -115,8 +120,14 @@ export function createShowerStage(
 
   return {
     root,
-    open(reducedMotion) {
+    open(reducedMotion, story = SHOWER_STORY) {
       reduced = reducedMotion;
+      steps = story.steps;
+      dots.replaceChildren(
+        ...steps.map(({ step: each }) =>
+          element('li', { 'data-step': each, title: STEP_NAMES[each] }, STEP_NAMES[each]),
+        ),
+      );
       toggle.hidden = reduced;
       root.hidden = false;
       document.documentElement.classList.add('is-explaining');
@@ -135,21 +146,21 @@ export function createShowerStage(
       caption.textContent = text;
       if (drawnFor !== state.step) {
         drawnFor = state.step;
-        const drawn = reactionDiagram(state.step);
+        const drawn = reactionDiagram(state.step) ?? sunDiagram(state.step);
         diagram.replaceChildren(...(drawn === null ? [] : [drawn]));
         diagram.hidden = drawn === null;
       }
       toggle.textContent = state.playing ? 'Pause' : 'Play';
       root.dataset['step'] = state.step;
       root.dataset['playing'] = String(state.playing);
-      const index = SHOWER_STEPS.findIndex(({ step: each }) => each === state.step);
+      const index = steps.findIndex(({ step: each }) => each === state.step);
       for (const [i, dot] of [...dots.children].entries()) {
         dot.classList.toggle('is-done', i < index);
         if (i === index) dot.setAttribute('aria-current', 'step');
         else dot.removeAttribute('aria-current');
       }
       back.disabled = index === 0 && !state.ended;
-      next.disabled = index === SHOWER_STEPS.length - 1;
+      next.disabled = index === steps.length - 1;
     },
   };
 }

@@ -39,8 +39,10 @@ import {
   stepEnd,
   rayLabels,
   SHOWER_MS,
+  SHOWER_STORY,
   SHOWER_STEPS,
   stepAt,
+  SUN_STORY,
   turnedAway,
   type ShowerStep,
 } from './showerSteps';
@@ -52,6 +54,8 @@ export interface ShowerSpec {
   readonly dipole: number;
   /** Whether the carbon lands on water, where algae take it in, rather than on land. */
   readonly water: boolean;
+  /** Whether the story starts at the Sun (#277): its steps first, the 3D shower after them. */
+  readonly fromSun: boolean;
   /** Told whenever the step, playing or ended changes. */
   readonly onState: (state: ShowerState) => void;
 }
@@ -225,7 +229,8 @@ function frame(place: GeoPoint): { up: Vector3; east: Vector3; north: Vector3 } 
 
 export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
   // A millisecond short of the end, so the last step's picture holds.
-  const clock = playbackClock(SHOWER_MS - 1);
+  const story = spec.fromSun ? SUN_STORY : SHOWER_STORY;
+  const clock = playbackClock(story.total - 1);
   const group = new Group();
   group.name = 'shower';
   const texture = dotTexture();
@@ -450,6 +455,9 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
   plant.visible = false;
   group.add(plant);
   const carbonViolet = new Color(0.72, 0.48, 1);
+  // The Sun's red photon, coming down at a slant to the leaf.
+  const photon = dot(new Color(1, 0.25, 0.2), 0.012);
+  const skyward = leaf.clone().addScaledVector(polar.up, 0.05).addScaledVector(polar.east, 0.04);
   const small = 0.009;
   const labels = {
     neutron: label('neutron', small),
@@ -459,6 +467,7 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
     oxygens: [label('O', small), label('O', small)],
     dioxide: label('¹⁴CO₂ carbon dioxide', small),
     plant: label(spec.water ? 'algae' : 'plant', small),
+    photon: label('sunlight: red, 680 nm, 441 THz, 1.8 eV', small),
   };
 
   let shown = '';
@@ -467,8 +476,11 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
   return {
     group,
     update(now) {
-      const t = clock.tick(now);
-      const step = stepAt(t) ?? 'plant';
+      const storyT = clock.tick(now);
+      const step = stepAt(storyT, story) ?? 'plant';
+      // The shower's own time: below zero while the Sun's steps play, when nothing here shows.
+      const t = storyT - story.offset;
+      group.visible = t >= 0;
       const state = `${step}:${String(clock.playing)}:${String(clock.ended)}`;
       if (state !== shown) {
         shown = state;
@@ -560,6 +572,13 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
       plant.visible = t >= AT.fall;
       plantMaterial.color.setRGB(1, 1, 1).lerp(carbonViolet, Math.sin(Math.PI * taking) * 0.6);
       labels.plant.visible = plant.visible;
+      // From the Sun, its red photon comes down to the leaf as it takes the carbon in.
+      // It comes down over 1.6 s, then rests at the leaf a moment as the leaf takes it in.
+      const arriving = through(t, AT.plant, 1600);
+      photon.visible = spec.fromSun && t >= AT.plant && t < AT.plant + 3000;
+      photon.position.copy(skyward.clone().lerp(leaf, ease(arriving)));
+      labels.photon.visible = photon.visible;
+      pin(labels.photon, photon.position, polar.up, polar.east, 0.008);
       pin(labels.plant, ground, polar.up, polar.north.clone().negate(), 0.008);
     },
     setResolution(width, height) {
@@ -568,10 +587,10 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
     command(command) {
       if (command === 'play') clock.play();
       else if (command === 'pause') clock.pause();
-      else if (command === 'next') clock.seek(nextStepStart(clock.position));
-      else if (command === 'back') clock.seek(previousStepStart(clock.position));
+      else if (command === 'next') clock.seek(nextStepStart(clock.position, story));
+      else if (command === 'back') clock.seek(previousStepStart(clock.position, story));
       else if (command === 'settle') {
-        clock.seek(stepEnd(clock.position));
+        clock.seek(stepEnd(clock.position, story));
         clock.pause();
       } else {
         clock.seek(0);

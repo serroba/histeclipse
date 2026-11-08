@@ -37,7 +37,7 @@ import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
 import { DATABLE_YEARS } from './data/radiocarbonProduction';
 import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruptions';
 import { dipoleAt, loadDipole, type DipoleSeries } from './data/dipoleMoment';
-import { captionOf, landing, type ShowerStep } from './globe/showerSteps';
+import { captionOf, landing, SHOWER_STORY, SUN_STORY, type ShowerStep } from './globe/showerSteps';
 import { createShowerStage } from './ui/showerStage';
 import { onLand, type ElevationGrid } from './data/landSea';
 import { loadElevationGrid } from './ui/elevationImage';
@@ -793,8 +793,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showCarbonMade(store.get());
       showEmpires(store.get());
     },
-    (made) => {
-      watchShower(made.field.dipole);
+    (made, fromSun) => {
+      watchShower(made.field.dipole, fromSun);
     },
   );
   // The stage the shower plays on: its caption, its steps, and controls; the panels step aside.
@@ -821,9 +821,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
    * then close up as one bursts, under the field picked. It ends on a plant where it lands on
    * land, and on algae where it lands on water.
    */
-  function watchShower(dipole: number): void {
-    if (store.get().focus !== 'earth')
-      store.set((state) => ({ ...state, focus: 'earth', view: 'free' }));
+  function watchShower(dipole: number, fromSun: boolean): void {
+    const story = fromSun ? SUN_STORY : SHOWER_STORY;
+    /** Turn to a body: the Sun for its steps, Earth for the shower's. */
+    const focusOn = (body: 'sun' | 'earth'): void => {
+      if (store.get().focus !== body)
+        store.set((state) => ({ ...state, focus: body, view: 'free' }));
+    };
+    focusOn('earth');
     layersPanel.dialog.close();
     // Over the place picked, if it is far enough from the equator for rays to get through
     // today; else at 60° along the meridian in view.
@@ -835,6 +840,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const { longitude } = place;
     /** Where the camera stands for each step, whichever way the reader came to it. */
     const frame = (step: ShowerStep): void => {
+      if (step === 'fusion' || step === 'escape' || step === 'journey') {
+        // The Sun, close up, while its part of the story is drawn on the stage.
+        focusOn('sun');
+        return;
+      }
+      focusOn('earth');
       if (step === 'rays') {
         // From the side, so the rays are seen coming in from space.
         globe.flyTo({ latitude: 20, longitude: longitude - 90 });
@@ -850,8 +861,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
     };
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    frame('rays');
-    showerStage.open(reduced);
+    frame(fromSun ? 'fusion' : 'rays');
+    showerStage.open(reduced, story);
     // Once the globe has turned to it, and today's coasts have said where it lands.
     const turned = new Promise((done) => window.setTimeout(done, 1000));
     void Promise.all([landAndSea(), turned]).then(([grid]) => {
@@ -861,12 +872,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
         place,
         dipole,
         water,
+        fromSun,
         onState(state) {
           if (state.step !== framed) {
             framed = state.step;
             frame(state.step);
           }
-          showerStage.render(state, captionOf(state.step, dipole, water));
+          showerStage.render(state, captionOf(state.step, dipole, water, fromSun));
         },
       });
       // Under reduced motion, each step waits for the reader, its picture complete.

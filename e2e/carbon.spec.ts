@@ -299,3 +299,59 @@ test('with reduced motion, each step waits for the reader, its picture complete'
   });
   expect(problems).toEqual([]);
 });
+
+test('started from the Sun, the story follows a photon from fusion to the leaf', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const caption = page.getByTestId('shower-caption');
+  const stage = page.getByRole('region', { name: 'How carbon-14 is made, step by step' });
+  const next = async (step: string) => {
+    await stage.getByRole('button', { name: 'Next' }).click();
+    await expect(globe).toHaveAttribute('data-shower-step', step, { timeout: 20_000 });
+  };
+  await test.step('Given the card on how carbon-14 is made', async () => {
+    await page.goto('./?t=1500-06-01T12:00&loc=48,10&layers=carbonMade');
+    await globeRendered(page);
+    await openLayers(page);
+    await page.getByRole('button', { name: 'How is it made?' }).click();
+  });
+  await test.step('When they start from the Sun, and pause to read', async () => {
+    await page
+      .getByRole('dialog', { name: 'How is carbon-14 made?' })
+      .getByRole('button', { name: 'Start from the Sun' })
+      .click();
+    await expect(globe).toHaveAttribute('data-shower-step', /./, { timeout: 30_000 });
+    await stage.getByRole('button', { name: 'Replay' }).click();
+    await stage.getByRole('button', { name: 'Pause', exact: true }).click();
+  });
+  await test.step('Then the Sun shows, its core fusing, the gamma ray’s energy given', async () => {
+    await expect(globe).toHaveAttribute('data-shower-step', 'fusion');
+    await expect(globe).toHaveAttribute('data-focus', 'sun', { timeout: 20_000 });
+    await expect(stage.locator('.shower-dots li')).toHaveCount(9);
+    await expect(stage.getByTestId('sun-diagram')).toContainText('0.511 MeV, 1.2 × 10²⁰ Hz');
+  });
+  await test.step('And its light escapes over some 170,000 years, then crosses to Earth', async () => {
+    await next('escape');
+    await expect(stage.getByTestId('sun-diagram')).toContainText('≈ 170,000 years');
+    await expect(caption).toContainText('Mitalas & Sills 1992');
+    await next('journey');
+    await expect(stage.getByTestId('sun-diagram')).toContainText(
+      'red light: 680 nm, 441 THz, 1.8 eV',
+    );
+  });
+  await test.step('Then the shower plays on Earth, and the red photon reaches the leaf', async () => {
+    await next('rays');
+    await expect(globe).toHaveAttribute('data-focus', 'earth', { timeout: 20_000 });
+    for (const step of ['shower', 'capture', 'dioxide', 'fall', 'plant']) await next(step);
+    await expect(caption).toContainText('The red photon reaches a leaf');
+  });
+  await test.step('When they close it, Earth stays in view', async () => {
+    await stage.getByRole('button', { name: 'Close' }).click();
+    await expect(stage).toBeHidden();
+    await expect(globe).toHaveAttribute('data-focus', 'earth');
+  });
+  expect(problems).toEqual([]);
+});
