@@ -78,6 +78,14 @@ describe('planet views, for the Light switch', () => {
     expect(planetView('mars', 'radar').key).toBe('colour');
     expect(planetView('mercury', 'minerals').map).toBe('textures/planets/mercury-colour-2048.jpg');
     expect(planetView('jupiter', 'recent').caption).toContain('2024');
+    expect(planetView('mars', 'height').map).toBe('textures/planets/mars-height-2048.jpg');
+  });
+
+  it('starts the Moon on its usual map, which the scene keeps', () => {
+    const [first] = PLANET_VIEWS.moon;
+    expect(first?.map).toBeNull();
+    expect(first?.caption).toBe(MOON_CAPTION);
+    expect(planetView('moon', 'radar').key).toBe('colour');
   });
 });
 
