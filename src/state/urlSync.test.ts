@@ -107,6 +107,14 @@ describe('createUrlSync', () => {
     expect(isStep(base, { ...base, layers: swapped })).toBe(true);
   });
 
+  it('counts opening, closing and moving about the tree of life as steps', () => {
+    expect(isStep(base, { ...base, tree: 'all' })).toBe(true);
+    expect(isStep({ ...base, tree: 'all' }, base)).toBe(true);
+    expect(isStep({ ...base, tree: { ott: 1 } }, { ...base, tree: { ott: 2 } })).toBe(true);
+    expect(isStep({ ...base, tree: { ott: 1 } }, { ...base, tree: { ott: 1 } })).toBe(false);
+    expect(isStep({ ...base, tree: 'all' }, { ...base, tree: 'all' })).toBe(false);
+  });
+
   it('makes the next update a step when asked, as for a jump to a milestone', () => {
     const writes: string[] = [];
     const sync = createUrlSync(replacing(writes), 100);
