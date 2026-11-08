@@ -60,7 +60,7 @@ export const BANDS: readonly BandInfo[] = [
 ];
 
 /** A seeded random number from 0 to 1, the same walk every time. */
-function seeded(seed: number): () => number {
+export function seeded(seed: number): () => number {
   let state = seed;
   return () => {
     state = (state * 16807) % 2147483647;

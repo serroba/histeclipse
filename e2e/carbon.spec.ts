@@ -158,6 +158,21 @@ test('a cosmic ray’s shower makes carbon-14, step by step, under the field pic
     await stage.getByRole('button', { name: 'Replay' }).click();
     await stage.getByRole('button', { name: 'Pause', exact: true }).click();
   });
+  await test.step('And the rays come in in 3D, Earth’s field drawn, each ray named', async () => {
+    // A slow runner may have played on before the pause: back to the first step.
+    for (let tries = 0; tries < 6; tries += 1) {
+      if ((await globe.getAttribute('data-shower-step')) === 'rays') break;
+      await stage.getByRole('button', { name: 'Back' }).click();
+      await page.waitForTimeout(200);
+    }
+    await expect(globe).toHaveAttribute('data-shower-step', 'rays');
+    const story = page.getByTestId('story-3d');
+    await expect(story).toHaveAttribute('data-chapter', 'rays', { timeout: 20_000 });
+    await expect(story).toHaveAttribute('data-rendered', 'true', { timeout: 20_000 });
+    await expect(story).toContainText('Earth’s magnetic field');
+    await expect(story).toContainText('Cosmic ray: a proton of a few GeV');
+    await expect(story).toContainText(/Turned away: under \d+ GeV/);
+  });
   let paused = '';
   await test.step('Then it stands still', async () => {
     await expect(globe).toHaveAttribute('data-shower-playing', 'false');
@@ -276,15 +291,39 @@ test('with reduced motion, each step waits for the reader, its picture complete'
     await expect(globe).toHaveAttribute('data-shower-step', 'shower');
     await expect(globe).toHaveAttribute('data-shower-playing', 'false');
   });
+  await test.step('And the shower is drawn in 3D, complete, its front at the ground', async () => {
+    const story = page.getByTestId('story-3d');
+    await expect(story).toHaveAttribute('data-chapter', 'shower', { timeout: 20_000 });
+    await expect(story).toHaveAttribute('data-playing', 'false');
+    await expect(story).toHaveAttribute('data-microseconds', '57');
+    const shower = story.getByRole('list', { name: 'An air shower' });
+    await expect(shower).toContainText('First collision about 17 km up');
+    await expect(shower).toContainText('some 57 µs later');
+    await expect(shower).toContainText('Most carbon-14 is made 9–15 km up');
+    await expect(shower).toContainText('Muons μ');
+  });
   await test.step('When they go on to the step where carbon-14 is made', async () => {
     await page.keyboard.press('ArrowRight');
   });
-  await test.step('Then a diagram counts the nucleus, nitrogen-14 to carbon-14', async () => {
+  await test.step('Then the nucleus is drawn in 3D, nitrogen-14 become carbon-14', async () => {
     await expect(globe).toHaveAttribute('data-shower-step', 'capture');
+    const story = page.getByTestId('story-3d');
+    await expect(story).toHaveAttribute('data-chapter', 'capture', { timeout: 20_000 });
+    // Complete: the proton gone, 6 protons and 8 neutrons left.
+    await expect(story).toHaveAttribute('data-protons', '6');
+    await expect(story).toHaveAttribute('data-neutrons', '8');
+    await expect(story).toContainText('carbon-14: 6 protons, 8 neutrons');
+    const reaction = story.getByRole('list', { name: 'The reaction' });
+    await expect(reaction).toContainText('n + ¹⁴N → ¹⁴C + p');
+    await expect(reaction).toContainText('Nitrogen-14: 7 protons, 7 neutrons');
+    await expect(reaction).toContainText('It gives off 0.63 MeV');
+    // Drawn in 3D, so not flat on the stage too.
+    await expect(stage.getByTestId('reaction-diagram')).toHaveCount(0);
+  });
+  await test.step('And carbon dioxide is still drawn flat, the scene let go', async () => {
     const diagram = stage.getByTestId('reaction-diagram');
-    await expect(diagram).toContainText('7 protons, 7 neutrons');
-    await expect(diagram).toContainText('6 protons, 8 neutrons');
     await page.keyboard.press('ArrowRight');
+    await expect(page.getByTestId('story-3d')).toBeHidden();
     await expect(diagram).toContainText('carbon dioxide');
     await page.keyboard.press('ArrowRight');
     await expect(stage.getByTestId('reaction-diagram')).toBeHidden();
@@ -405,6 +444,10 @@ test('started from the Sun, the story follows a photon from fusion to Earth', as
     await next('rays');
     await expect(globe).toHaveAttribute('data-focus', 'earth', { timeout: 20_000 });
     await expect(caption).toContainText('Cosmic rays');
+    // The Sun's scene gives way to the air's.
+    const story = page.getByTestId('story-3d');
+    await expect(story).toHaveAttribute('data-chapter', 'rays', { timeout: 20_000 });
+    await expect(story.getByRole('list', { name: 'Sunlight’s way to Earth' })).toHaveCount(0);
   });
   await test.step('When they close it, Earth stays in view', async () => {
     await stage.getByRole('button', { name: 'Close' }).click();
