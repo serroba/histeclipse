@@ -229,6 +229,10 @@ export interface StateChange {
  * a busy century, more would light up most of the map and read as flicker.
  */
 const STATE_CHANGES_SHOWN = 4;
+/** A state's name at this size or larger (its larger states) is placed before the markers. */
+const MAJOR_STATE_SIZE = 14;
+/** Regions with this many genomes or fewer are a small dot, without a number. */
+const FEW_GENOMES = 2;
 
 /** How long a state that appeared or went stays named as such, ms (its CSS animation's too). */
 const STATE_CHANGE_MS = 4000;
@@ -1501,7 +1505,8 @@ export function createGlobe(
     width: number;
     height: number;
   }
-  let empireLabels: (GlobeLabel & { readonly id: string })[] = [];
+  /** A state's name; `major` for the larger states' and those just come or gone. */
+  let empireLabels: (GlobeLabel & { readonly id: string; readonly major: boolean })[] = [];
   // Dated finds of humans, in deep time: placed before the states' names, which never show then.
   const humanLabelLayer = document.createElement('div');
   humanLabelLayer.className = 'empire-labels human-sites';
@@ -2074,18 +2079,21 @@ export function createGlobe(
     // Only names on the near side of Earth, and only while it fills enough of the view.
     const near = focus === 'earth' && camera.position.length() < 12;
     // Labels come largest first; a smaller state's name gives way where it would overlap.
+    // The larger states' names go before the markers, so a crowd of small counts can't take
+    // their places; the smaller names come after, where room is left (#163).
     const placed: { x: number; y: number; w: number; h: number }[] = [];
     // Read once: read after a label is moved, the size makes the browser lay the page out
     // again, for every label.
     const viewWidth = container.clientWidth;
     const viewHeight = container.clientHeight;
     for (const { element, position, width, height } of [
+      ...empireLabels.filter(({ major }) => major),
       ...humanLabels,
       ...genomeLabels,
       ...volcanoLabels,
       ...impactLabels,
       ...fossilLabels,
-      ...empireLabels,
+      ...empireLabels.filter(({ major }) => !major),
     ]) {
       projected.copy(position).project(camera);
       const shown =
@@ -2744,11 +2752,18 @@ export function createGlobe(
               cells.map((cell) => {
                 const element = document.createElement('button');
                 element.type = 'button';
-                element.className = 'empire-label genome-cell';
-                element.textContent = String(cell.count);
+                // One or two genomes make a small dot, without a number: many of them together
+                // crowded out the states' names (#163). The count is still in its label.
+                const few = cell.count <= FEW_GENOMES;
+                element.className = `empire-label genome-cell${few ? ' is-few' : ''}`;
+                if (!few) element.textContent = String(cell.count);
+                element.setAttribute(
+                  'aria-label',
+                  `${String(cell.count)} ${cell.count === 1 ? 'genome' : 'genomes'}: details`,
+                );
                 element.dataset['pick'] = `genome:${String(cell.cell)}`;
                 // Bigger for more genomes, gently: a square root, from 18 to 44 pixels.
-                const size = Math.round(Math.min(44, 18 + 4 * Math.sqrt(cell.count)));
+                const size = few ? 10 : Math.round(Math.min(44, 18 + 4 * Math.sqrt(cell.count)));
                 element.style.width = `${String(size)}px`;
                 element.style.height = `${String(size)}px`;
                 element.title = `${String(cell.count)} genomes; lab labels: ${cell.labels.map(([label, count]) => `${label} ×${String(count)}`).join(', ')}`;
@@ -3030,6 +3045,8 @@ export function createGlobe(
           empireLabelLayer.append(element);
           return {
             id,
+            // The larger states, and those just come or gone (which carry a delay).
+            major: size >= MAJOR_STATE_SIZE || 'delay' in label,
             element,
             position: new Vector3(...geoToVector(point, 1.01)),
             width: known?.width ?? 0,
