@@ -482,6 +482,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     (craters) => {
       store.set((state) => ({ ...state, craters }));
     },
+    (cratersIn) => {
+      store.set((state) => ({ ...state, cratersIn }));
+    },
     async () => {
       const [loaded, periods] = await Promise.all([
         impacts ?? impactsLoading ?? loadImpacts(`${base}data/impacts.json`, fetchJson),
@@ -4191,7 +4194,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     root.classList.toggle('is-asking-here', askingHere && state.ma === null);
     treeSheet.show(state.tree);
-    impactPathsSheet.show(state.craters, state.ma ?? 0);
+    impactPathsSheet.show(state.craters, state.ma ?? 0, state.cratersIn);
     whySheet.show(
       state.why,
       state.why === 'here'
