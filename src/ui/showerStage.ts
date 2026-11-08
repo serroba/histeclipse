@@ -9,6 +9,7 @@
 import type { ShowerCommand, ShowerState } from '../globe/showerAnimation';
 import { SHOWER_STEPS, type ShowerStep } from '../globe/showerSteps';
 import { element } from './dom';
+import { reactionDiagram } from './reactionDiagram';
 
 const STEP_NAMES: Readonly<Record<ShowerStep, string>> = {
   rays: 'Cosmic rays',
@@ -34,6 +35,9 @@ export function createShowerStage(
 ): ShowerStage {
   let reduced = false;
   let playing = true;
+  // The chemistry, drawn, for the steps where it happens.
+  const diagram = element('div', { class: 'shower-diagram' });
+  let drawnFor: ShowerStep | null = null;
   const caption = element('p', {
     class: 'shower-caption',
     'data-testid': 'shower-caption',
@@ -70,6 +74,7 @@ export function createShowerStage(
   const root = element(
     'section',
     { class: 'shower-stage', 'aria-label': 'How carbon-14 is made, step by step', hidden: '' },
+    diagram,
     caption,
     dots,
     element('div', { class: 'shower-controls' }, back, toggle, next, replay, close),
@@ -116,6 +121,7 @@ export function createShowerStage(
     close() {
       root.hidden = true;
       caption.textContent = '';
+      drawnFor = null;
       document.documentElement.classList.remove('is-explaining');
     },
     get isOpen() {
@@ -124,6 +130,12 @@ export function createShowerStage(
     render(state, text) {
       playing = state.playing;
       caption.textContent = text;
+      if (drawnFor !== state.step) {
+        drawnFor = state.step;
+        const drawn = reactionDiagram(state.step);
+        diagram.replaceChildren(...(drawn === null ? [] : [drawn]));
+        diagram.hidden = drawn === null;
+      }
       toggle.textContent = state.playing ? 'Pause' : 'Play';
       root.dataset['step'] = state.step;
       root.dataset['playing'] = String(state.playing);

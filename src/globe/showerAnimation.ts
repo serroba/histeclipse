@@ -24,6 +24,9 @@ import {
   SpriteMaterial,
   Vector3,
 } from 'three';
+import { Line2 } from 'three/addons/lines/Line2.js';
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 import type { GeoPoint } from '../state/viewState';
 import { playbackClock } from '../util/playbackClock';
@@ -70,6 +73,8 @@ export interface ShowerAnimation {
   update(now: number): void;
   /** Play, pause, step forward or back, or start again. */
   command(command: ShowerCommand): void;
+  /** The drawing's size in pixels, which the rays' thick tracks are measured in. */
+  setResolution(width: number, height: number): void;
   dispose(): void;
 }
 
@@ -267,38 +272,71 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
   };
   const geometries: BufferGeometry[] = [];
   const lineMaterials: LineBasicMaterial[] = [];
-  const trail = (color: Color): Line<BufferGeometry, LineBasicMaterial> => {
-    const geometry = new BufferGeometry();
-    geometry.setAttribute(
-      'position',
-      new Float32BufferAttribute(new Float32Array(TRACK_POINTS * 3), 3),
-    );
+  // The rays' tracks: thick lines (three pixels whatever the zoom), each built once along its
+  // whole path and shown a segment more as the ray comes on.
+  const tracks: LineMaterial[] = [];
+  const track = (color: Color, ray: { from: Vector3; bend: Vector3; to: Vector3 }): Line2 => {
+    const points: number[] = [];
+    for (let i = 0; i < TRACK_POINTS; i += 1) {
+      const point = curve(ray.from, ray.bend, ray.to, i / (TRACK_POINTS - 1));
+      points.push(point.x, point.y, point.z);
+    }
+    const geometry = new LineGeometry();
+    geometry.setPositions(points);
+    geometry.instanceCount = 0;
     geometries.push(geometry);
-    const material = new LineBasicMaterial({
-      color,
+    const material = new LineMaterial({
+      color: color.getHex(),
+      linewidth: 3,
       transparent: true,
       depthWrite: false,
-      blending: AdditiveBlending,
     });
-    lineMaterials.push(material);
-    const line = new Line(geometry, material);
+    tracks.push(material);
+    const line = new Line2(geometry, material);
     line.visible = false;
     group.add(line);
     return line;
   };
-  /** Draw the path a ray has taken so far, `along` 0 to 1 of the way. */
-  const setTrack = (
-    line: Line,
-    ray: { from: Vector3; bend: Vector3; to: Vector3 },
-    along: number,
-  ): void => {
-    const positions = line.geometry.getAttribute('position');
-    for (let i = 0; i < TRACK_POINTS; i += 1) {
-      const point = curve(ray.from, ray.bend, ray.to, (along * i) / (TRACK_POINTS - 1));
-      positions.setXYZ(i, point.x, point.y, point.z);
-    }
-    positions.needsUpdate = true;
+  /** Show the path a ray has taken so far, `along` 0 to 1 of the way. */
+  const setTrack = (line: Line2, along: number): void => {
+    line.geometry.instanceCount = Math.round(along * (TRACK_POINTS - 1));
   };
+
+  // Earth's field, as a few of its lines in the rays' meridian (a dipole about the spin axis:
+  // r = L cos² latitude), on both sides of the globe: the rays follow them in, or are turned
+  // away across them. Fainter for a weaker field; none without one.
+  const fieldMaterial = new LineBasicMaterial({
+    color: new Color(0.55, 0.85, 1),
+    transparent: true,
+    opacity: 0.45 * Math.min(1, spec.dipole / 7.8),
+    depthWrite: false,
+  });
+  lineMaterials.push(fieldMaterial);
+  const fieldLines = new Group();
+  fieldLines.visible = false;
+  group.add(fieldLines);
+  if (spec.dipole > 0) {
+    const out = new Vector3(...geoToVector({ latitude: 0, longitude: spec.place.longitude }));
+    for (const side of [1, -1]) {
+      for (const shell of [1.35, 1.8, 2.6, 3.8]) {
+        const reach = Math.acos(Math.sqrt(1 / shell));
+        const points: Vector3[] = [];
+        for (let i = 0; i <= 64; i += 1) {
+          const latitude = -reach + (2 * reach * i) / 64;
+          const r = shell * Math.cos(latitude) ** 2;
+          points.push(
+            out
+              .clone()
+              .multiplyScalar(side * r * Math.cos(latitude))
+              .add(new Vector3(0, r * Math.sin(latitude), 0)),
+          );
+        }
+        const geometry = new BufferGeometry().setFromPoints(points);
+        geometries.push(geometry);
+        fieldLines.add(new Line(geometry, fieldMaterial));
+      }
+    }
+  }
 
   const rayColor = new Color(0.75, 0.9, 1);
   const polar = frame(spec.place);
@@ -333,7 +371,7 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
       bend: polarBend,
       to: strike,
       head: dot(rayColor, 0.08),
-      tail: trail(rayColor),
+      tail: track(rayColor, { from: polarFrom, bend: polarBend, to: strike }),
       label: label(rayWords.polar, 0.12),
       frame: polar,
     },
@@ -342,7 +380,7 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
       bend: equatorBend,
       to: equatorTo,
       head: dot(rayColor, 0.08),
-      tail: trail(rayColor),
+      tail: track(rayColor, { from: equatorFrom, bend: equatorBend, to: equatorTo }),
       label: label(rayWords.equator, 0.12, true),
       frame: equator,
     },
@@ -436,6 +474,8 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
         shown = state;
         spec.onState({ step, playing: clock.playing, ended: clock.ended });
       }
+      // The field's lines, while the rays come in.
+      fieldLines.visible = t < AT.shower;
       // The rays, the one at the pole quickening in, the other bent away or let in.
       for (const [i, ray] of rays.entries()) {
         const going = through(t, i * 200, AT.shower - 400);
@@ -445,7 +485,7 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
         ray.tail.visible = t < AT.capture;
         ray.tail.material.opacity = 0.85 * (1 - through(t, AT.shower + 300, 1500));
         ray.head.position.copy(at);
-        setTrack(ray.tail, ray, ease(going));
+        setTrack(ray.tail, ease(going));
         ray.label.visible = t > 300 && t < AT.shower;
         pin(
           ray.label,
@@ -522,6 +562,9 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
       labels.plant.visible = plant.visible;
       pin(labels.plant, ground, polar.up, polar.north.clone().negate(), 0.008);
     },
+    setResolution(width, height) {
+      for (const material of tracks) material.resolution.set(width, height);
+    },
     command(command) {
       if (command === 'play') clock.play();
       else if (command === 'pause') clock.pause();
@@ -540,6 +583,7 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
       for (const made of textures) made.dispose();
       for (const material of materials) material.dispose();
       for (const material of lineMaterials) material.dispose();
+      for (const material of tracks) material.dispose();
       for (const geometry of geometries) geometry.dispose();
     },
   };

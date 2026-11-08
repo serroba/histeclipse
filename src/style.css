@@ -4328,3 +4328,40 @@ button:has(> .icon-label) > .icon {
     font-size: 0;
   }
 }
+
+/* The chemistry of the shower, drawn on its stage (#282). */
+.shower-diagram[hidden] {
+  display: none;
+}
+
+.reaction-diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 140px;
+}
+
+.reaction-name {
+  fill: #0b1020;
+  font-size: 15px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.reaction-detail,
+.reaction-note {
+  fill: var(--ink-muted);
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+.reaction-note {
+  fill: var(--ink);
+  font-size: 13px;
+}
+
+.reaction-sign {
+  fill: var(--ink);
+  font-size: 26px;
+  text-anchor: middle;
+}

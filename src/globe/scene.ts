@@ -1946,6 +1946,8 @@ export function createGlobe(
       }
     }
     if (shower !== null) {
+      const size = renderer.getSize(new Vector2());
+      shower.setResolution(size.x, size.y);
       shower.update(now);
       needsRender = true;
     }
