@@ -158,6 +158,12 @@ test('a cosmic ray’s shower makes carbon-14, step by step, under the field pic
   let paused = '';
   await test.step('Then it stands still', async () => {
     await expect(globe).toHaveAttribute('data-shower-playing', 'false');
+    // A slow runner may have played on to the last step before the pause: go back one first,
+    // so there is a next step to go to.
+    if ((await globe.getAttribute('data-shower-step')) === 'plant') {
+      await stage.getByRole('button', { name: 'Back' }).click();
+      await expect(globe).not.toHaveAttribute('data-shower-step', 'plant');
+    }
     paused = (await globe.getAttribute('data-shower-step')) ?? '';
     await page.waitForTimeout(1_500);
     await expect(globe).toHaveAttribute('data-shower-step', paused);
@@ -177,11 +183,15 @@ test('a cosmic ray’s shower makes carbon-14, step by step, under the field pic
   });
   await test.step('Then every step plays, and the last picture holds with its caption', async () => {
     await expect(globe).toHaveAttribute('data-showers-played', '1', { timeout: 60_000 });
-    // Every step, the reader's steps back and on among them, ending on the plant.
-    await expect(globe).toHaveAttribute(
-      'data-shower-steps',
-      /^rays shower (\w+ )*dioxide fall plant$/,
-    );
+    // Every step, the reader's steps back and on among them wherever it paused, ending on the
+    // plant.
+    await expect
+      .poll(async () => {
+        const steps = (await globe.getAttribute('data-shower-steps')) ?? '';
+        const names = ['rays', 'shower', 'capture', 'dioxide', 'fall', 'plant'];
+        return names.every((name) => steps.split(' ').includes(name)) && steps.endsWith('plant');
+      })
+      .toBe(true);
     await expect(caption).toContainText('photosynthesis');
     await expect(stage.getByRole('button', { name: 'Replay' })).toBeVisible();
   });
@@ -262,6 +272,19 @@ test('with reduced motion, each step waits for the reader, its picture complete'
   await test.step('Then the next step shows, still waiting', async () => {
     await expect(globe).toHaveAttribute('data-shower-step', 'shower');
     await expect(globe).toHaveAttribute('data-shower-playing', 'false');
+  });
+  await test.step('When they go on to the step where carbon-14 is made', async () => {
+    await page.keyboard.press('ArrowRight');
+  });
+  await test.step('Then a diagram counts the nucleus, nitrogen-14 to carbon-14', async () => {
+    await expect(globe).toHaveAttribute('data-shower-step', 'capture');
+    const diagram = stage.getByTestId('reaction-diagram');
+    await expect(diagram).toContainText('7 protons, 7 neutrons');
+    await expect(diagram).toContainText('6 protons, 8 neutrons');
+    await page.keyboard.press('ArrowRight');
+    await expect(diagram).toContainText('carbon dioxide');
+    await page.keyboard.press('ArrowRight');
+    await expect(stage.getByTestId('reaction-diagram')).toBeHidden();
   });
   await test.step('When they press Escape, it closes', async () => {
     await page.keyboard.press('Escape');
