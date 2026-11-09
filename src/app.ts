@@ -128,6 +128,7 @@ import {
   type ColourKeys,
   type KeyedBody,
 } from './data/planetKeys';
+import { isNamedBody, loadPlaceNames, type NamedBody, type PlaceNames } from './data/planetNames';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
 import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
 import { createFamousPanel } from './ui/famousPanel';
@@ -3693,6 +3694,33 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe.sharpenPlanet(focus);
   }
 
+  // The IAU's place names on the rocky bodies (#334), loaded the first time one is in view.
+  let placeNames: PlaceNames | null = null;
+  let placeNamesAsked = false;
+  let namesShown: NamedBody | null = null;
+  /** Name the features of the body in view, if it has names; take away any others. */
+  function showPlaceNames(body: string | null): void {
+    const named = body !== null && isNamedBody(body) ? body : null;
+    if (named !== null && placeNames === null && !placeNamesAsked) {
+      placeNamesAsked = true;
+      loadPlaceNames(`${base}data/planet-names.json`, fetchJson).then(
+        (loaded) => {
+          placeNames = loaded;
+          showBody(store.get());
+        },
+        (error: unknown) => {
+          placeNamesAsked = false;
+          notify(`Could not load the place names: ${errorMessage(error)}`);
+        },
+      );
+    }
+    if (namesShown !== null && namesShown !== named) globe.setPlaceNames(namesShown, null);
+    namesShown = named !== null && placeNames !== null ? named : null;
+    if (namesShown !== null && placeNames !== null) {
+      globe.setPlaceNames(namesShown, placeNames[namesShown]);
+    }
+  }
+
   // The height views' colour keys (#334), loaded the first time one shows.
   let colourKeys: ColourKeys | null = null;
   let colourKeysAsked = false;
@@ -3734,6 +3762,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
     // The Moon keeps the year's eclipses; Earth's other timelines rest there too (#329).
     bottom.dataset['body'] = state.focus;
     hudActions.hidden = away;
+    // Not while standing on a planet looking back at Earth, nor on Venus's clouds, which hide
+    // the ground the names are for.
+    showPlaceNames(
+      away &&
+        (state.view !== 'earth-from-here' || state.focus === 'moon') &&
+        (state.focus !== 'venus' || state.planetLight === 'radar')
+        ? state.focus
+        : null,
+    );
     // The Light switch, for a planet or the Moon in view with more than one way to show it.
     const planet = state.focus === 'moon' ? 'moon' : PLANETS.find((name) => name === state.focus);
     if (away && (state.view !== 'earth-from-here' || planet === 'moon') && planet !== undefined) {
