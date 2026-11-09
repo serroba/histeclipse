@@ -6,7 +6,15 @@
 
 import type { Page } from '@playwright/test';
 
-import { collectProblems, expect, globeRendered, openLayers, openSources, test } from './support';
+import {
+  collectProblems,
+  expect,
+  globeRendered,
+  LIVE,
+  openLayers,
+  openSources,
+  test,
+} from './support';
 
 /** The glow's rates by latitude, equator first, as the globe reports them. */
 async function glow(page: Page): Promise<number[]> {
@@ -264,95 +272,97 @@ test('where the carbon lands on the sea, algae take it in', async ({ page }) => 
   expect(problems).toEqual([]);
 });
 
-test('with reduced motion, each step waits for the reader, its picture complete', async ({
-  page,
-}) => {
-  test.slow();
-  const problems = collectProblems(page);
-  const globe = page.getByTestId('globe');
-  const stage = page.getByRole('region', { name: 'How carbon-14 is made, step by step' });
-  await test.step('Given a reader who asks for reduced motion', async () => {
-    await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto('./?t=1500-06-01T12:00&loc=48,10&layers=carbonMade');
-    await globeRendered(page);
-    await openLayers(page);
-    await page.getByRole('button', { name: 'How is it made?' }).click();
-  });
-  await test.step('When they watch a cosmic ray make carbon-14', async () => {
-    await page
-      .getByRole('dialog', { name: 'How is carbon-14 made?' })
-      .getByRole('button', { name: 'Watch a cosmic ray make carbon-14' })
-      .click();
-  });
-  await test.step('Then the first step waits, with no play button', async () => {
-    await expect(globe).toHaveAttribute('data-shower-playing', 'false', { timeout: 20_000 });
-    await expect(globe).toHaveAttribute('data-shower-step', 'rays');
-    await expect(stage.getByRole('button', { name: /^(Play|Pause)$/ })).toBeHidden();
-  });
-  await test.step('When they go on with the arrow key', async () => {
-    await page.keyboard.press('ArrowRight');
-  });
-  await test.step('Then the next step shows, still waiting', async () => {
-    await expect(globe).toHaveAttribute('data-shower-step', 'shower');
-    await expect(globe).toHaveAttribute('data-shower-playing', 'false');
-  });
-  await test.step('And the shower is drawn in 3D, complete, its front at the ground', async () => {
-    const story = page.getByTestId('story-3d');
-    await expect(story).toHaveAttribute('data-chapter', 'shower', { timeout: 20_000 });
-    await expect(story).toHaveAttribute('data-playing', 'false');
-    await expect(story).toHaveAttribute('data-microseconds', '57');
-    const shower = story.getByRole('list', { name: 'An air shower' });
-    await expect(shower).toContainText('First collision about 17 km up');
-    await expect(shower).toContainText('some 57 µs later');
-    await expect(shower).toContainText('Most carbon-14 is made 9–15 km up');
-    await expect(shower).toContainText('Muons μ');
-  });
-  await test.step('When they go on to the step where carbon-14 is made', async () => {
-    await page.keyboard.press('ArrowRight');
-  });
-  await test.step('Then the nucleus is drawn in 3D, nitrogen-14 become carbon-14', async () => {
-    await expect(globe).toHaveAttribute('data-shower-step', 'capture');
-    const story = page.getByTestId('story-3d');
-    await expect(story).toHaveAttribute('data-chapter', 'capture', { timeout: 20_000 });
-    // Complete: the proton gone, 6 protons and 8 neutrons left.
-    await expect(story).toHaveAttribute('data-protons', '6');
-    await expect(story).toHaveAttribute('data-neutrons', '8');
-    await expect(story).toContainText('carbon-14: 6 protons, 8 neutrons');
-    const reaction = story.getByRole('list', { name: 'The reaction' });
-    await expect(reaction).toContainText('n + ¹⁴N → ¹⁴C + p');
-    await expect(reaction).toContainText('Nitrogen-14: 7 protons, 7 neutrons');
-    await expect(reaction).toContainText('It gives off 0.63 MeV');
-    // Drawn in 3D, so not flat on the stage too.
-    await expect(stage.getByTestId('reaction-diagram')).toHaveCount(0);
-  });
-  await test.step('And on to the plant, each step in 3D, complete', async () => {
-    const story = page.getByTestId('story-3d');
-    await page.keyboard.press('ArrowRight');
-    await expect(globe).toHaveAttribute('data-shower-step', 'dioxide');
-    await expect(story).toHaveAttribute('data-chapter', 'dioxide', { timeout: 20_000 });
-    await expect(story).toHaveAttribute('data-molecule', 'CO2');
-    await expect(story.getByRole('list', { name: 'Carbon dioxide made' })).toContainText(
-      '¹⁴C + O → ¹⁴CO: carbon monoxide first',
-    );
-    await page.keyboard.press('ArrowRight');
-    await expect(story).toHaveAttribute('data-chapter', 'fall');
-    await expect(story.getByRole('list', { name: 'Through the air' })).toContainText(
-      '7,808 nitrogen',
-    );
-    await page.keyboard.press('ArrowRight');
-    await expect(story).toHaveAttribute('data-chapter', 'plant');
-    await expect(story).toHaveAttribute('data-taken', 'true');
-    // Over northern Italy, on land: a leaf, through a stoma.
-    await expect(story.getByRole('list', { name: 'Into the leaf' })).toContainText('stoma');
-    // Every step drawn in 3D, nothing flat on the stage.
-    await expect(stage.getByTestId('reaction-diagram')).toHaveCount(0);
-  });
-  await test.step('When they press Escape, it closes', async () => {
-    await page.keyboard.press('Escape');
-    await expect(stage).toBeHidden();
-  });
-  expect(problems).toEqual([]);
-});
+test(
+  'with reduced motion, each step waits for the reader, its picture complete',
+  LIVE,
+  async ({ page }) => {
+    test.slow();
+    const problems = collectProblems(page);
+    const globe = page.getByTestId('globe');
+    const stage = page.getByRole('region', { name: 'How carbon-14 is made, step by step' });
+    await test.step('Given a reader who asks for reduced motion', async () => {
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      await page.goto('./?t=1500-06-01T12:00&loc=48,10&layers=carbonMade');
+      await globeRendered(page);
+      await openLayers(page);
+      await page.getByRole('button', { name: 'How is it made?' }).click();
+    });
+    await test.step('When they watch a cosmic ray make carbon-14', async () => {
+      await page
+        .getByRole('dialog', { name: 'How is carbon-14 made?' })
+        .getByRole('button', { name: 'Watch a cosmic ray make carbon-14' })
+        .click();
+    });
+    await test.step('Then the first step waits, with no play button', async () => {
+      await expect(globe).toHaveAttribute('data-shower-playing', 'false', { timeout: 20_000 });
+      await expect(globe).toHaveAttribute('data-shower-step', 'rays');
+      await expect(stage.getByRole('button', { name: /^(Play|Pause)$/ })).toBeHidden();
+    });
+    await test.step('When they go on with the arrow key', async () => {
+      await page.keyboard.press('ArrowRight');
+    });
+    await test.step('Then the next step shows, still waiting', async () => {
+      await expect(globe).toHaveAttribute('data-shower-step', 'shower');
+      await expect(globe).toHaveAttribute('data-shower-playing', 'false');
+    });
+    await test.step('And the shower is drawn in 3D, complete, its front at the ground', async () => {
+      const story = page.getByTestId('story-3d');
+      await expect(story).toHaveAttribute('data-chapter', 'shower', { timeout: 20_000 });
+      await expect(story).toHaveAttribute('data-playing', 'false');
+      await expect(story).toHaveAttribute('data-microseconds', '57');
+      const shower = story.getByRole('list', { name: 'An air shower' });
+      await expect(shower).toContainText('First collision about 17 km up');
+      await expect(shower).toContainText('some 57 µs later');
+      await expect(shower).toContainText('Most carbon-14 is made 9–15 km up');
+      await expect(shower).toContainText('Muons μ');
+    });
+    await test.step('When they go on to the step where carbon-14 is made', async () => {
+      await page.keyboard.press('ArrowRight');
+    });
+    await test.step('Then the nucleus is drawn in 3D, nitrogen-14 become carbon-14', async () => {
+      await expect(globe).toHaveAttribute('data-shower-step', 'capture');
+      const story = page.getByTestId('story-3d');
+      await expect(story).toHaveAttribute('data-chapter', 'capture', { timeout: 20_000 });
+      // Complete: the proton gone, 6 protons and 8 neutrons left.
+      await expect(story).toHaveAttribute('data-protons', '6');
+      await expect(story).toHaveAttribute('data-neutrons', '8');
+      await expect(story).toContainText('carbon-14: 6 protons, 8 neutrons');
+      const reaction = story.getByRole('list', { name: 'The reaction' });
+      await expect(reaction).toContainText('n + ¹⁴N → ¹⁴C + p');
+      await expect(reaction).toContainText('Nitrogen-14: 7 protons, 7 neutrons');
+      await expect(reaction).toContainText('It gives off 0.63 MeV');
+      // Drawn in 3D, so not flat on the stage too.
+      await expect(stage.getByTestId('reaction-diagram')).toHaveCount(0);
+    });
+    await test.step('And on to the plant, each step in 3D, complete', async () => {
+      const story = page.getByTestId('story-3d');
+      await page.keyboard.press('ArrowRight');
+      await expect(globe).toHaveAttribute('data-shower-step', 'dioxide');
+      await expect(story).toHaveAttribute('data-chapter', 'dioxide', { timeout: 20_000 });
+      await expect(story).toHaveAttribute('data-molecule', 'CO2');
+      await expect(story.getByRole('list', { name: 'Carbon dioxide made' })).toContainText(
+        '¹⁴C + O → ¹⁴CO: carbon monoxide first',
+      );
+      await page.keyboard.press('ArrowRight');
+      await expect(story).toHaveAttribute('data-chapter', 'fall');
+      await expect(story.getByRole('list', { name: 'Through the air' })).toContainText(
+        '7,808 nitrogen',
+      );
+      await page.keyboard.press('ArrowRight');
+      await expect(story).toHaveAttribute('data-chapter', 'plant');
+      await expect(story).toHaveAttribute('data-taken', 'true');
+      // Over northern Italy, on land: a leaf, through a stoma.
+      await expect(story.getByRole('list', { name: 'Into the leaf' })).toContainText('stoma');
+      // Every step drawn in 3D, nothing flat on the stage.
+      await expect(stage.getByTestId('reaction-diagram')).toHaveCount(0);
+    });
+    await test.step('When they press Escape, it closes', async () => {
+      await page.keyboard.press('Escape');
+      await expect(stage).toBeHidden();
+    });
+    expect(problems).toEqual([]);
+  },
+);
 
 test('started from the Sun, the story follows a photon from fusion to Earth', async ({ page }) => {
   test.setTimeout(180_000);

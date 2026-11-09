@@ -105,3 +105,4 @@ jobs:
     uses: $/.github/workflows/live-smoke.yml
     with:
       expected-version: ${{ github.sha }}
+      scope: live
