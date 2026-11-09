@@ -242,10 +242,12 @@ MAPS = (
     ),
     MapSource(
         stem="moons/titan",
-        # Cassini in near infrared (PIA19658, USGS), centred on 180°; 4040 wide.
+        # Cassini in near infrared (PIA19658, USGS), centred on 180°: its sharp size its own
+        # 4040 pixels, not enlarged. (USGS's 450 m mosaic, 45° N to 65° S, is sharper only past
+        # 8192 pixels, and lower in contrast, being an average of its images.)
         url="https://planetarymaps.usgs.gov/mosaic/Titan_ISS_P19658_Mosaic_Global_4km.tif",
         sha256="ca0fe5f6f9bdba1b6d03245969a42336a010ddc17d636e5e06fffa939d10ca83",
-        widths=(2048,),
+        widths=(2048, 4040),
         half_turn=True,
     ),
     MapSource(
