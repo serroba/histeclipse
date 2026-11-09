@@ -7,7 +7,8 @@
 import { collectProblems, expect, globeRendered, openLayers, test } from './support';
 
 const NODES = /^[1-9]\d{3,}$/;
-// Drawing eight thousand taxa beside the globe takes seconds on runners that render in software.
+// Drawing eight thousand taxa beside the globe takes seconds on runners that render in software,
+// and while it lays them out a tap's answer (the link changing) is as slow to come (#326).
 const DRAWN = { timeout: 20_000 };
 
 // A one-pixel image, for Wikimedia's pictures: the suite does not reach out to Wikimedia.
@@ -32,7 +33,7 @@ test('from our species to the mammals, and the whole tree, then back to the glob
     await page.getByRole('button', { name: 'Our species on the tree of life' }).click();
   });
   await test.step('Then the tree opens at Homo sapiens, living, its line back to the first cells', async () => {
-    await expect(page).toHaveURL(/tree=ott770315/);
+    await expect(page).toHaveURL(/tree=ott770315/, DRAWN);
     await expect(page.getByTestId('tree-canvas')).toHaveAttribute('data-nodes', NODES, DRAWN);
     const focus = page.getByTestId('tree-focus');
     await expect(focus.getByRole('heading')).toHaveText('Homo sapiens');
@@ -43,18 +44,18 @@ test('from our species to the mammals, and the whole tree, then back to the glob
     await page.getByTestId('tree-focus').getByRole('button', { name: 'Mammalia' }).click();
   });
   await test.step('Then the tree lights the mammals instead', async () => {
-    await expect(page).toHaveURL(/tree=ott244265/);
+    await expect(page).toHaveURL(/tree=ott244265/, DRAWN);
     await expect(page.getByTestId('tree-focus').getByRole('heading')).toHaveText('Mammalia');
   });
   await test.step('When they ask for the whole tree, then close it', async () => {
     await sheet.getByRole('button', { name: 'The whole tree' }).click();
-    await expect(page).toHaveURL(/tree=all/);
+    await expect(page).toHaveURL(/tree=all/, DRAWN);
     await expect(page.getByTestId('tree-focus').getByRole('heading')).toHaveCount(0);
     await sheet.getByRole('button', { name: 'Close' }).click();
   });
   await test.step('Then the globe is back, and the link no longer names the tree', async () => {
     await expect(sheet).toBeHidden();
-    await expect(page).not.toHaveURL(/tree=/);
+    await expect(page).not.toHaveURL(/tree=/, DRAWN);
   });
   expect(problems).toEqual([]);
 });
@@ -80,7 +81,7 @@ test('a fossil’s card leads to its genus on the tree of life', async ({ page }
     await action.click();
   });
   await test.step('Then the tree opens at that genus', async () => {
-    await expect(page).toHaveURL(/tree=ott\d+/);
+    await expect(page).toHaveURL(/tree=ott\d+/, DRAWN);
     await expect(page.getByTestId('tree-focus').getByRole('heading')).toContainText(genus, DRAWN);
     await expect(page.getByTestId('tree-canvas')).toHaveAttribute('data-nodes', NODES, DRAWN);
   });
@@ -90,6 +91,8 @@ test('a fossil’s card leads to its genus on the tree of life', async ({ page }
 test('a link opens the tree at a taxon, and its book says where the tree comes from', async ({
   page,
 }) => {
+  // The globe and then eight thousand taxa, drawn in software on CI's runners, as above.
+  test.slow();
   const problems = collectProblems(page);
   await test.step('Given a link to the tree at Neanderthals', async () => {
     await page.goto('./?tree=ott83926');
@@ -107,7 +110,8 @@ test('a link opens the tree at a taxon, and its book says where the tree comes f
       .click();
   });
   await test.step('Then it names Open Tree of Life, its licence, and where groups are broken', async () => {
-    await expect(page).toHaveURL(/why=tree/);
+    // The tree may still be laying out, so the tap's answer can be slow to come (#326).
+    await expect(page).toHaveURL(/why=tree/, DRAWN);
     const why = page.locator('.why-dialog');
     await expect(why).toContainText('Open Tree of Life');
     await expect(why).toContainText('CC0');
