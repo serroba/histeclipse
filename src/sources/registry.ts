@@ -741,6 +741,27 @@ export const SOURCES = {
     cite: 'Stofan, E. R. et al. (2007). The lakes of Titan. Nature 445, 61–64',
     url: 'https://doi.org/10.1038/nature05438',
   },
+  galileoMoonMaps: {
+    name: 'Galileo and Voyager maps of Jupiter’s moons',
+    kind: 'imagery',
+    cite: 'USGS Astrogeology: Io Galileo SSI/Voyager colour merged global mosaic (1 km); Europa (500 m), Ganymede (1 km) and Callisto (1 km) Voyager–Galileo SSI global mosaics',
+    url: 'https://astrogeology.usgs.gov/search/map/europa_voyager_galileo_ssi_global_mosaic_500m',
+    licence: 'NASA/JPL/USGS, public domain',
+  },
+  cassiniMoonMaps: {
+    name: 'Cassini maps of Saturn’s moons',
+    kind: 'imagery',
+    cite: 'Cassini ISS global mosaics: Enceladus (110 m, USGS Astrogeology); Tethys, Dione, Rhea and Iapetus (DLR, Roatsch and others, via USGS Astrogeology); Mimas (NASA Photojournal PIA14926, 2012); Titan in near infrared (PIA19658, 2015, via USGS)',
+    url: 'https://astrogeology.usgs.gov/search/map/tethys_cassini_global_mosaic_293m',
+    licence: 'NASA/JPL-Caltech/Space Science Institute/DLR/USGS, public domain',
+  },
+  vikingPhobosMap: {
+    name: 'Viking map of Phobos',
+    kind: 'imagery',
+    cite: 'Phobos Viking global mosaic, 5 m (Viking orbiter images, mosaicked by P. Stooke, controlled by DLR), USGS Astrogeology',
+    url: 'https://astrogeology.usgs.gov/search/map/phobos_viking_global_mosaic_5m',
+    licence: 'NASA/USGS, public domain',
+  },
   iauGazetteer: {
     name: 'Gazetteer of Planetary Nomenclature',
     kind: 'dataset',
@@ -1072,6 +1093,9 @@ export const WHYS = {
     what: 'Where Mars’s, Jupiter’s and Saturn’s moons are, and what is known of each.',
     sources: [
       'jplSatellites',
+      'galileoMoonMaps',
+      'cassiniMoonMaps',
+      'vikingPhobosMap',
       'nasaPhobos',
       'nasaDeimos',
       'jaxaMmx',
@@ -1097,7 +1121,7 @@ export const WHYS = {
       'nasaHyperion',
       'nasaIapetus',
     ],
-    how: 'Mars’s two moons, Jupiter’s four large ones and Saturn’s eight go round their planets at their true sizes, each painted roughly its colour: each orbit is a mean orbit fitted to JPL’s ephemerides from 1750 to 2200, its angles turning steadily, with the swings a resonance adds (Mimas’s with Tethys, Hyperion’s with Titan). Over those years each moon is within a fifth of a degree of JPL’s place, as seen from its planet, but Mimas (half a degree) and Hyperion (four degrees). Outside them the orbits are carried on at the same rates, which says only roughly where a moon was: centuries away, where Phobos was along its orbit is unknown. What the bar says of each moon (who found it, what it is known for) comes from NASA’s pages on it, its missions’ pages, and the papers behind the findings, at the length its story deserves; what is not settled is said to be so.',
+    how: 'Mars’s two moons, Jupiter’s four large ones and Saturn’s eight go round their planets at their true sizes, each painted roughly its colour: each orbit is a mean orbit fitted to JPL’s ephemerides from 1750 to 2200, its angles turning steadily, with the swings a resonance adds (Mimas’s with Tethys, Hyperion’s with Titan). Over those years each moon is within a fifth of a degree of JPL’s place, as seen from its planet, but Mimas (half a degree) and Hyperion (four degrees). Outside them the orbits are carried on at the same rates, which says only roughly where a moon was: centuries away, where Phobos was along its orbit is unknown. Close up, twelve of them wear their missions’ global maps (Galileo and Voyager for Jupiter’s four, Cassini for Saturn’s, Viking for Phobos), each turned to keep the face it keeps to its planet; Deimos and Hyperion, with no map fit to use, keep a colour. What the bar says of each moon (who found it, what it is known for) comes from NASA’s pages on it, its missions’ pages, and the papers behind the findings, at the length its story deserves; what is not settled is said to be so.',
   },
   bodies: {
     title: 'Sun, Moon and planets',

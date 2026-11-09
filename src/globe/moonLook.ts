@@ -59,3 +59,85 @@ export function moonPlanet(moon: MoonName): MoonPlanet {
 export function moonRadius(moon: MoonName): number {
   return MOON_RADIUS_KM[moon] / EARTH_RADIUS_KM;
 }
+
+/** A moon's mission map: the size shown, a sharper one for close up, and its credit. */
+export interface MoonMap {
+  readonly map: string;
+  readonly sharp: string | null;
+  readonly caption: string;
+}
+
+const GALILEO = 'Galileo’s and Voyager’s images, mosaicked by USGS Astrogeology';
+const CASSINI_DLR =
+  'mosaicked by DLR (Roatsch and others) via USGS Astrogeology, its brightness evened out across the globe';
+
+function moonMap(moon: MoonName, sharp: boolean, caption: string): MoonMap {
+  return {
+    map: `textures/moons/${moon}-2048.jpg`,
+    sharp: sharp ? `textures/moons/${moon}-4096.jpg` : null,
+    caption: `Pictured: ${caption}`,
+  };
+}
+
+/**
+ * The moons with a mission's global map (`pipeline planet-maps`), all public domain. Deimos has
+ * none fit to use, and Hyperion, tumbling and lumpy, none at all: they keep their colour.
+ */
+export const MOON_MAPS: Readonly<Partial<Record<MoonName, MoonMap>>> = {
+  phobos: moonMap(
+    'phobos',
+    false,
+    'the Viking orbiters’ images (1976–80), mosaicked by Phil Stooke and controlled by DLR. Phobos is not round: wrapped on a sphere, its map is stretched. NASA/USGS.',
+  ),
+  io: moonMap(
+    'io',
+    true,
+    `${GALILEO}, in colour; nothing was seen within some 5° of the poles. NASA/JPL/USGS.`,
+  ),
+  europa: moonMap(
+    'europa',
+    true,
+    `${GALILEO}; black near the south pole, which they did not see. NASA/JPL/USGS.`,
+  ),
+  ganymede: moonMap(
+    'ganymede',
+    true,
+    `${GALILEO}; black at the poles, which they did not see. NASA/JPL/USGS.`,
+  ),
+  callisto: moonMap(
+    'callisto',
+    true,
+    `${GALILEO}; black near the south pole, which they did not see. NASA/JPL/USGS.`,
+  ),
+  mimas: moonMap(
+    'mimas',
+    true,
+    'Cassini’s map of Mimas (June 2012), Voyager’s images filling its gaps. NASA/JPL-Caltech/Space Science Institute.',
+  ),
+  enceladus: moonMap(
+    'enceladus',
+    true,
+    'Cassini’s images, mosaicked by USGS Astrogeology (Bland, Becker and others). NASA/JPL-Caltech/SSI/USGS.',
+  ),
+  tethys: moonMap('tethys', true, `Cassini’s images, ${CASSINI_DLR}. NASA/JPL-Caltech/SSI/DLR.`),
+  dione: moonMap(
+    'dione',
+    true,
+    `Cassini’s and Voyager’s images, ${CASSINI_DLR}. NASA/JPL-Caltech/SSI/DLR.`,
+  ),
+  rhea: moonMap(
+    'rhea',
+    true,
+    `Cassini’s and Voyager’s images, ${CASSINI_DLR}. NASA/JPL-Caltech/SSI/DLR.`,
+  ),
+  titan: moonMap(
+    'titan',
+    false,
+    'Cassini’s view of the ground in near infrared, through the haze that hides it from the eye (2015); grey where it saw too little. NASA/JPL-Caltech/Space Science Institute, via USGS.',
+  ),
+  iapetus: moonMap(
+    'iapetus',
+    true,
+    `Cassini’s and Voyager’s images, ${CASSINI_DLR}, which hides most of the contrast between its dark and bright sides. NASA/JPL-Caltech/SSI/DLR.`,
+  ),
+};

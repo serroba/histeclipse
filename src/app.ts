@@ -131,7 +131,7 @@ import { keyGradient, keyTicks, loadColourKeys } from './data/planetKeys';
 import { isNamedBody, loadPlaceNames, type NamedBody, type PlaceNames } from './data/planetNames';
 import { loadMoonOrbits, moonPosition, type MoonName, type MoonOrbits } from './astro/moonOrbits';
 import { moonAbout, moonLine } from './data/moonFacts';
-import { isMoonBody, MOON_NAMES, moonPlanet } from './globe/moonLook';
+import { isMoonBody, MOON_MAPS, MOON_NAMES, moonPlanet } from './globe/moonLook';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
 import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
 import { createFamousPanel } from './ui/famousPanel';
@@ -3848,6 +3848,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       bodyBar.render({ name: 'The Sun', text: sunText(sunDistance(jdTT)) });
     } else if (isMoonBody(focus)) {
       const at = moonFromEarth(focus, jdTT);
+      // Its mission map, the sharper one close up (#335).
+      const look = MOON_MAPS[focus];
+      if (look !== undefined) {
+        const sharp = state.camera.distance <= SHARP_WITHIN ? look.sharp : null;
+        globe.setMoonMap(focus, `${base}${sharp ?? look.map}`);
+      }
       bodyBar.render(
         at === null || moonOrbits === null
           ? null
@@ -3855,6 +3861,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
               name: MOON_NAMES[focus],
               text: moonLine(focus, moonOrbits[focus], Math.hypot(...at)),
               about: moonAbout(focus),
+              ...(look === undefined ? {} : { picture: look.caption }),
             },
       );
     } else if (focus === 'moon') {

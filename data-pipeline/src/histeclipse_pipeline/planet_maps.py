@@ -19,6 +19,11 @@ the Sun 10.7° north of the ring plane. Its gaps (the poles out of sight or in w
 and the rings' shadow) are filled with the mean colour of the nearest latitude imaged, which
 suits a planet of bands.
 
+The planets' moons (#335) are their missions' global mosaics, as USGS Astrogeology and NASA's
+Photojournal publish them: Galileo and Voyager for Jupiter's four, Cassini (and Voyager) for
+Saturn's, Viking for Phobos. Each is checked against its own features for where longitude 0
+lies; those centred on 180° are turned half a turn.
+
 Venus's map is Magellan's radar of the ground beneath its clouds (1990-94, the colourised
 topographic mosaic at 6.6 km, USGS Astrogeology): the site shows it only when asked, as from
 space Venus shows only cloud.
@@ -153,6 +158,102 @@ MAPS = (
         sha256="59f95498702f8684060008866a961b72b2f03e30db8a8b318f5ea226c305b5ae",
         widths=(2048, 3600),
         half_turn=True,
+    ),
+    MapSource(
+        stem="moons/phobos",
+        # Viking orbiter images, mosaicked by P. Stooke and controlled by DLR (USGS).
+        url="https://planetarymaps.usgs.gov/mosaic/Phobos_Viking_Mosaic_40ppd_DLRcontrol.tif",
+        sha256="d7934d5b209e5f31ed26297e1e85a4713d8d0aa2906111ffe4b3d60d02ae0ccb",
+        widths=(2048,),
+    ),
+    MapSource(
+        stem="moons/io",
+        # Galileo and Voyager, in colour (USGS).
+        url=(
+            "https://planetarymaps.usgs.gov/mosaic/Io_GalileoSSI-Voyager_Global_Mosaic_ClrMerge_1km.tif"
+        ),
+        sha256="135f88cb645bfdb4e045b380971ab2ba14e230590c96c9c86cfe7310fda881ac",
+        widths=(2048, 4096),
+    ),
+    MapSource(
+        stem="moons/europa",
+        # Galileo and Voyager (USGS), centred on 180°.
+        url=(
+            "https://planetarymaps.usgs.gov/mosaic/Europa_Voyager_GalileoSSI_global_mosaic_500m.tif"
+        ),
+        sha256="a323f0c9ccb47d5af9902ea8297fe81f9a9708795645b80801f103c3f7c9a624",
+        widths=(2048, 4096),
+        half_turn=True,
+    ),
+    MapSource(
+        stem="moons/ganymede",
+        # Galileo and Voyager (USGS), centred on 180°.
+        url=(
+            "https://planetarymaps.usgs.gov/mosaic/Ganymede_Voyager_GalileoSSI_global_mosaic_1km.tif"
+        ),
+        sha256="c2c8d9506b8cf8f7a0a90d823d9052e91c8d9885cf7267fdce8de8216f4df888",
+        widths=(2048, 4096),
+        half_turn=True,
+    ),
+    MapSource(
+        stem="moons/callisto",
+        # Galileo and Voyager (USGS), centred on 180°.
+        url=(
+            "https://planetarymaps.usgs.gov/mosaic/Callisto_Voyager_GalileoSSI_global_mosaic_1km.tif"
+        ),
+        sha256="e1f0bd2e0e05de605d067d6b5f5ededddaf31ca6c064562a1ca770f15a7dbaa3",
+        widths=(2048, 4096),
+        half_turn=True,
+    ),
+    MapSource(
+        stem="moons/mimas",
+        # Cassini, Voyager filling gaps (PIA14926, June 2012).
+        url=f"{PHOTOJOURNAL}/pia14/pia14926/PIA14926.jpg",
+        sha256="a0cdde111976af47d38b88388863cf43d451f1610b6207c6ac8864c9462f4d0e",
+        widths=(2048, 4096),
+    ),
+    MapSource(
+        stem="moons/enceladus",
+        # Cassini (USGS).
+        url="https://planetarymaps.usgs.gov/mosaic/Enceladus_Cassini_mosaic_global_110m.tif",
+        sha256="c9d29292141dd986e52b2a24b692df34701d1dabaee69bcb9fb64ebc6baba335",
+        widths=(2048, 4096),
+    ),
+    MapSource(
+        stem="moons/tethys",
+        # Cassini, mosaicked by DLR (USGS).
+        url="https://planetarymaps.usgs.gov/mosaic/Tethys_Cassini_mosaic_global_293m.tif",
+        sha256="40723c3ebfaaa52a657827b37309bc84234811db1cf26a21d086e26aba2b3640",
+        widths=(2048, 4096),
+    ),
+    MapSource(
+        stem="moons/dione",
+        # Cassini and Voyager, mosaicked by DLR (USGS).
+        url="https://planetarymaps.usgs.gov/mosaic/Dione_Cassini_Voyager_mosaic_global_154m.tif",
+        sha256="5c5d796c02e3c99fde5dd034e01dd1f25905699a4885843aed445ded955e08b5",
+        widths=(2048, 4096),
+    ),
+    MapSource(
+        stem="moons/rhea",
+        # Cassini and Voyager, mosaicked by DLR (USGS).
+        url="https://planetarymaps.usgs.gov/mosaic/Rhea_Cassini_Voyager_mosaic_global_417m.tif",
+        sha256="ce537c3c93670a0d4ea5a64b99bffb76ff308727eb3eabeee0a38cf9f6f1abc7",
+        widths=(2048, 4096),
+    ),
+    MapSource(
+        stem="moons/titan",
+        # Cassini in near infrared (PIA19658, USGS), centred on 180°; 4040 wide.
+        url="https://planetarymaps.usgs.gov/mosaic/Titan_ISS_P19658_Mosaic_Global_4km.tif",
+        sha256="ca0fe5f6f9bdba1b6d03245969a42336a010ddc17d636e5e06fffa939d10ca83",
+        widths=(2048,),
+        half_turn=True,
+    ),
+    MapSource(
+        stem="moons/iapetus",
+        # Cassini and Voyager, mosaicked by DLR (USGS).
+        url="https://planetarymaps.usgs.gov/mosaic/Iapetus_Cassini_Voyager_mosaic_global_783m.tif",
+        sha256="eb8acdbed3af495102b6ec6d3efce1f03dc6bc39bb43323c23231ce590494d6e",
+        widths=(2048, 4096),
     ),
     MapSource(
         stem="earth-blue-marble",

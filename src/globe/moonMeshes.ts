@@ -1,12 +1,16 @@
 /**
  * The moons of Mars, Jupiter and Saturn in the space view (#335): each at its true size, lit
  * by the Sun, going round its planet as its orbit (`astro/moonOrbits.ts`) says, its path drawn
- * faintly while its planet is in view. Each moon is painted one colour, roughly its own; they
- * are spheres, though Phobos, Deimos and Hyperion are not.
+ * faintly while its planet is in view. Each is painted one colour, roughly its own, until its
+ * mission map comes. They keep one face to their planet, as all these moons do but tumbling
+ * Hyperion: longitude 0 towards the planet, north along the orbit's pole, so the side a moon
+ * leads with is centred on 90° west, as the IAU counts it. They are spheres, though Phobos,
+ * Deimos and Hyperion are not.
  */
 
 import {
   BufferGeometry,
+  Matrix4,
   DataTexture,
   Float32BufferAttribute,
   Group,
@@ -14,6 +18,7 @@ import {
   LineLoop,
   Mesh,
   type Quaternion,
+  type Texture,
   RGBAFormat,
   type Scene,
   ShaderMaterial,
@@ -73,6 +78,8 @@ export interface MoonMeshes {
   showPaths(planet: MoonPlanet | null): void;
   /** Whether the moons are placed: their orbits in, and the planets. */
   ready(): boolean;
+  /** Wrap a moon in its mission map; null goes back to its painted colour. */
+  setMap(moon: MoonName, map: Texture | null): void;
 }
 
 function colourTexture(hex: string): DataTexture {
@@ -100,17 +107,23 @@ export function createMoonMeshes(scene: Scene): MoonMeshes {
     }),
   ) as Record<MoonPlanet, Group>;
   const toSun = new Map<MoonName, Vector3>();
+  const maps = new Map<MoonName, { value: Texture }>();
+  const colours = new Map<MoonName, Texture>();
   const paths = new Map<MoonName, LineLoop<BufferGeometry, LineBasicMaterial>>();
   const meshes = Object.fromEntries(
     planets.flatMap((planet) =>
       MOONS[planet].map((name) => {
         const direction = new Vector3(1, 0, 0);
         toSun.set(name, direction);
+        const colour = colourTexture(MOON_COLOURS[name]);
+        colours.set(name, colour);
+        const map: { value: Texture } = { value: colour };
+        maps.set(name, map);
         const mesh = new Mesh(
           new SphereGeometry(MOON_RADIUS_KM[name] / EARTH_RADIUS_KM, 64, 32),
           new ShaderMaterial({
             uniforms: {
-              map: { value: colourTexture(MOON_COLOURS[name]) },
+              map,
               toSun: { value: direction },
             },
             vertexShader: PLANET_VERTEX,
@@ -147,6 +160,21 @@ export function createMoonMeshes(scene: Scene): MoonMeshes {
   // The moment each path was drawn for: redrawn once the orbit has turned a little.
   const drawnAt = new Map<MoonName, number>();
   const world = new Vector3();
+  const towardPlanet = new Vector3();
+  const pole = new Vector3();
+  const ahead = new Vector3();
+  const basis = new Matrix4();
+
+  /** Turn a moon to keep its face to its planet: longitude 0 towards it, north up its orbit. */
+  function face(mesh: Mesh, orbit: MoonOrbits[MoonName], jdTT: number): void {
+    towardPlanet.copy(mesh.position).negate().normalize();
+    // A minute on, to know which way it goes round.
+    ahead.set(...sceneFromKm(moonPosition(orbit, jdTT + 1 / 1440))).sub(mesh.position);
+    pole.crossVectors(mesh.position, ahead);
+    pole.addScaledVector(towardPlanet, -pole.dot(towardPlanet)).normalize();
+    ahead.crossVectors(towardPlanet, pole);
+    mesh.quaternion.setFromRotationMatrix(basis.makeBasis(towardPlanet, pole, ahead));
+  }
 
   function drawPath(name: MoonName, jdTT: number, orbit: MoonOrbits[MoonName]): void {
     const path = paths.get(name);
@@ -189,6 +217,12 @@ export function createMoonMeshes(scene: Scene): MoonMeshes {
       if (lastPlacing !== null) this.place(...lastPlacing);
       refreshPaths();
     },
+    setMap(moon, map) {
+      const uniform = maps.get(moon);
+      const colour = colours.get(moon);
+      if (uniform === undefined || colour === undefined) return;
+      uniform.value = map ?? colour;
+    },
     ready() {
       return orbits !== null && lastPlacing !== null && lastPlacing[1] !== null;
     },
@@ -210,6 +244,7 @@ export function createMoonMeshes(scene: Scene): MoonMeshes {
         for (const name of MOONS[planet]) {
           const orbit = orbits[name];
           meshes[name].position.set(...sceneFromKm(moonPosition(orbit, jdTT)));
+          face(meshes[name], orbit, jdTT);
           meshes[name].getWorldPosition(world);
           toSun.get(name)?.copy(sun).sub(world).normalize();
         }
