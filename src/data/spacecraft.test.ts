@@ -39,8 +39,13 @@ describe('every craft sent beyond Earth orbit', () => {
 
   it('Given a probe carried and set loose, Then it knows its carrier', () => {
     const huygens = named('Huygens');
-    expect(huygens?.mission).toBe('Cassini');
+    expect(record.craft.find(({ id }) => id === huygens?.parent)?.name).toBe('Cassini');
     expect(huygens?.about).toBe('Titan Probe');
+  });
+
+  it('Given a craft that shared its rocket, Then it keeps its own name, not the mission’s', () => {
+    expect(named('Artemis I')?.mission).toBe('Artemis 1');
+    expect(named('LunaH-Map')?.mission).not.toBe('Artemis 1');
   });
 
   it('Given those that set out but never left, Then the early failures and Mars 96 are among them', () => {

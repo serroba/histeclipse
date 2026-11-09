@@ -170,3 +170,24 @@ def test_a_launch_a_day_off_in_another_time_zone_is_the_same_launch() -> None:
     assert near_day("2025-02-27T00:16", "2025-02-26")
     assert not near_day("2025-03-01", "2025-02-26")
     assert near_day("1979-05?", "1979-05")
+
+
+def test_a_craft_that_shared_the_rocket_keeps_its_own_name() -> None:
+    # Given an uncrewed flight and a CubeSat launched with it, the chronology naming the flight.
+    flight = (
+        "D01100\t2022-156\t2022-156A\tP   D\tArtemis I\t2022 Nov 16\t-\t2022 Nov 16 0647"
+        "\tEarth\t2022 Nov 21\tEO\tLuna\tNASA\tUS"
+    )
+    cubesat = (
+        "D01101\t2022-156\t2022-156B\tP   D\tLunaH-Map\t2022 Nov 16\t-\t2022 Nov 16 0647"
+        "\tEarth\t2022 Nov 21\tEO\tHCO\tASU\tUS"
+    )
+    craft, _ = craft_record(
+        gcat(flight, cubesat),
+        [],
+        [],
+        [Chronicle("Artemis 1", "2022-11-16", "Lunar Test Flight", "2022-156A")],
+    )
+    by_name = {c["name"]: c for c in craft}
+    assert by_name["Artemis I"]["mission"] == "Artemis 1"
+    assert "mission" not in by_name["LunaH-Map"]
