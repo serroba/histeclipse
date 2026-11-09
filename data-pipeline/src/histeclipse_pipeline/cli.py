@@ -52,6 +52,7 @@ from histeclipse_pipeline.planets import (
 )
 from histeclipse_pipeline.polarity import fetch_polarity
 from histeclipse_pipeline.radiocarbon import fetch_radiocarbon
+from histeclipse_pipeline.saturn_rings import fetch_saturn_rings
 from histeclipse_pipeline.seaice import fetch_seaice
 from histeclipse_pipeline.sealevel import fetch_sealevel
 from histeclipse_pipeline.shelf import fetch_shelf
@@ -329,6 +330,12 @@ def spacecraft_paths(args: Arguments) -> int:  # pragma: no cover - needs networ
     return _say(f"wrote the paths of {count} craft to {args.out}")
 
 
+def saturn_rings(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write Saturn's rings' texture: Voyager's opacity, Cassini's colour (public/textures)."""
+    width = fetch_saturn_rings(args.out, Path(".cache/saturn-rings"))
+    return _say(f"wrote the rings, {width} pixels across, to {args.out}")
+
+
 def planet_keys(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the height views' colour keys, measured against altimetry (public/data)."""
     count = fetch_planet_keys(args.out, Path("../public/textures"), Path(".cache/planet-keys"))
@@ -590,6 +597,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         spacecraft_paths,
         "write the paths JPL Horizons has for the craft beyond Earth orbit",
         "output JSON file (public/data/spacecraft-paths.json)",
+    ),
+    "saturn-rings": (
+        saturn_rings,
+        "write Saturn's rings' texture: Voyager's optical depth, Cassini's colour",
+        "output PNG file (public/textures/planets/saturn-rings.png)",
     ),
     "planet-keys": (
         planet_keys,

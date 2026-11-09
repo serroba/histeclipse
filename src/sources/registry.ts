@@ -762,6 +762,20 @@ export const SOURCES = {
     url: 'https://astrogeology.usgs.gov/search/map/phobos_viking_global_mosaic_5m',
     licence: 'NASA/USGS, public domain',
   },
+  voyagerRings: {
+    name: 'Voyager 2’s occultation of Saturn’s rings',
+    kind: 'dataset',
+    cite: 'Voyager 2 photopolarimeter, stellar occultation of delta Scorpii by Saturn’s rings (1981), normal optical depth every 10 km, 72,000–142,500 km: PDS Ring-Moon Systems Node, VG_2801, PS1P01',
+    url: 'https://pds-rings.seti.org/holdings/volumes/VG_28xx/VG_2801/',
+    licence: 'NASA, public domain',
+  },
+  cassiniRingPanorama: {
+    name: 'Cassini’s Panoramic Rings',
+    kind: 'imagery',
+    cite: 'NASA/JPL/Space Science Institute, “Panoramic Rings”, Cassini’s natural-colour view of the lit side of Saturn’s rings (2004), NASA Photojournal PIA06175',
+    url: 'https://science.nasa.gov/photojournal/panoramic-rings/',
+    licence: 'NASA/JPL, public domain',
+  },
   gcat: {
     name: 'GCAT (General Catalog of Artificial Space Objects)',
     kind: 'catalogue',
@@ -1226,6 +1240,8 @@ export const WHYS = {
       'vikingMap',
       'cassiniJupiter',
       'cassiniSaturn',
+      'voyagerRings',
+      'cassiniRingPanorama',
       'magellanVenus',
       'molaMars',
       'lolaMoon',
@@ -1238,7 +1254,7 @@ export const WHYS = {
       'opalJupiter',
       'archinal2018',
     ],
-    how: 'Each map is wrapped on the body as published, shrunk for the web, and each planet is turned as it was at the moment shown, by the IAU’s rotation models, the light’s travel time allowed for: the face toward you is the one that faced you then (checked against JPL Horizons). Jupiter’s and Saturn’s turning is that of their interiors (System III): their clouds drift against it, so a cloud feature is not where it was that day. Venus shows its cloud tops as a plain colour, as from space the clouds hide the ground; its Light switch shows the ground beneath instead, as Magellan’s radar mapped it, coloured by height. Mercury’s switch shows MESSENGER’s enhanced colour, which tells its rocks apart, and Jupiter’s sets Hubble’s map of 2024 beside Cassini’s of 2000. Saturn’s map has gaps where Cassini could not see (the poles, and the strip in the rings’ shadow): they are filled with the colour of the nearest latitude imaged. The height maps come with a colour key. USGS publishes none for Mars’s and the Moon’s, so theirs is measured: the map’s colours read against the altimeters’ own heights at the same places (MOLA’s and LOLA’s gridded records), one colour a kilometre, from the sunlit half of each kilometre’s pixels so the shading does not darken it. Venus’s is read off the legend USGS publishes with its map. The enhanced-colour maps (the Moon’s, Mercury’s) colour kinds of rock, not heights: their keys name each kind as its source describes it, with the colour the map gives a place known for it (Mare Tranquillitatis for the seas richest in titanium), read off the map there. Close up, Mercury, Venus (by radar), the Moon and Mars name their largest features, as the IAU names them: the largest first, as many as fit without crowding, more as you zoom in, and only on the day side, where they can be seen. Long, thin features (ridges, scarps, troughs) are left out, as their name would sit on only a part of them.',
+    how: 'Each map is wrapped on the body as published, shrunk for the web, and each planet is turned as it was at the moment shown, by the IAU’s rotation models, the light’s travel time allowed for: the face toward you is the one that faced you then (checked against JPL Horizons). Jupiter’s and Saturn’s turning is that of their interiors (System III): their clouds drift against it, so a cloud feature is not where it was that day. Venus shows its cloud tops as a plain colour, as from space the clouds hide the ground; its Light switch shows the ground beneath instead, as Magellan’s radar mapped it, coloured by height. Mercury’s switch shows MESSENGER’s enhanced colour, which tells its rocks apart, and Jupiter’s sets Hubble’s map of 2024 beside Cassini’s of 2000. Saturn’s map has gaps where Cassini could not see (the poles, and the strip in the rings’ shadow): they are filled with the colour of the nearest latitude imaged. No sharper map of the whole of Saturn has been made: this one is at the camera’s own limit. Its rings are drawn as measured: how much light gets through at each radius from Voyager 2’s watch of a star passing behind them (every 10 km, the C ring to the F ring), and their colour from Cassini’s panorama of their lit side, tied to radius at the edges of the B and A rings. The height maps come with a colour key. USGS publishes none for Mars’s and the Moon’s, so theirs is measured: the map’s colours read against the altimeters’ own heights at the same places (MOLA’s and LOLA’s gridded records), one colour a kilometre, from the sunlit half of each kilometre’s pixels so the shading does not darken it. Venus’s is read off the legend USGS publishes with its map. The enhanced-colour maps (the Moon’s, Mercury’s) colour kinds of rock, not heights: their keys name each kind as its source describes it, with the colour the map gives a place known for it (Mare Tranquillitatis for the seas richest in titanium), read off the map there. Close up, Mercury, Venus (by radar), the Moon and Mars name their largest features, as the IAU names them: the largest first, as many as fit without crowding, more as you zoom in, and only on the day side, where they can be seen. Long, thin features (ridges, scarps, troughs) are left out, as their name would sit on only a part of them.',
   },
   sky: {
     title: 'The night sky',
