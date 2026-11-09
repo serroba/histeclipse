@@ -10,13 +10,20 @@ gives its colour. Within 70° of the equator only, where the maps and grids are 
 Venus's map comes with its legend (USGS Astrogeology): a bar from 3 km below to 11 km above a
 radius of 6,051 km. Its key is read off that bar, a colour at each kilometre's tick.
 
-Each source is pinned by checksum. The keys go to one JSON file, loaded when a height view
+The enhanced-colour maps (the Moon's Clementine colour ratios, Mercury's MESSENGER colour)
+colour kinds of rock, not heights. Their keys are swatches: each kind, as its source describes
+it, with the colour the map gives a place known for it (Mare Tranquillitatis, rich in
+titanium), read off the map: the median colour within a few degrees of the place, gaps in the
+coverage left out, and for a young crater, its brightest pixels, its fresh rock.
+
+Each source is pinned by checksum. The keys go to one JSON file, loaded when a view with a key
 shows.
 """
 
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -93,6 +100,64 @@ VENUS_KM = (-3, 11)
 VENUS_ROWS = (88, 126)
 
 
+@dataclass(frozen=True)
+class Swatch:
+    """A kind of rock, and a place known for it whose colour on the map stands for it."""
+
+    kind: str
+    place: str
+    latitude: float
+    #: East, as the IAU gives it (0 to 360).
+    longitude: float
+    #: Degrees about the place read.
+    radius: float
+    #: Only the brightest tenth: a young crater's fresh rock, not the older ground about it.
+    brightest: bool = False
+
+
+@dataclass(frozen=True)
+class SwatchKey:
+    """A map whose colours stand for kinds of rock, and the swatches that say which."""
+
+    body: str
+    texture: str
+    credit: str
+    source: str
+    swatches: tuple[Swatch, ...]
+
+
+READ_AT_PLACE = "each colour read off the map at the place named"
+#: The places from the IAU's gazetteer (planet-names); the kinds as Lucey et al. (2000) and
+#: the MESSENGER team describe them.
+SWATCH_KEYS = (
+    SwatchKey(
+        body="moon",
+        texture="moon-minerals-2048.jpg",
+        credit=f"{READ_AT_PLACE}; the kinds as Lucey et al. (2000) describe them",
+        source="https://doi.org/10.1029/1999JE001117",
+        swatches=(
+            Swatch("Highlands, poor in iron and titanium", "the far side", 0, 180, 25),
+            Swatch("Seas richest in titanium", "Mare Tranquillitatis", 8.35, 30.83, 5),
+            Swatch("Seas poorer in titanium, rich in iron", "Mare Serenitatis", 27.29, 18.36, 5),
+            Swatch("Young craters, fresh rock", "Aristarchus", 23.73, 312.51, 1.5, brightest=True),
+        ),
+    ),
+    SwatchKey(
+        body="mercury",
+        texture="planets/mercury-colour-2048.jpg",
+        credit=f"{READ_AT_PLACE}; the kinds as the MESSENGER team describes them",
+        source="https://science.nasa.gov/photojournal/enhanced-color-mercury-map",
+        swatches=(
+            Swatch("Smooth volcanic plains", "Borealis Planitia", 67.3, 32.6, 10),
+            Swatch("Dark, low-reflectance material", "about Tolstoj", -16.3, 196.4, 8),
+            Swatch("Young craters and their rays", "Hokusai", 57.8, 16.8, 1.5, brightest=True),
+        ),
+    ),
+)
+#: Pixels no brighter than this in any colour are gaps in the coverage, black on the map.
+GAP = 30
+
+
 def hex_colour(rgb: FloatArray) -> str:
     """Write an RGB triple as ``#rrggbb``."""
     red, green, blue = (round(value) for value in as_floats(rgb))
@@ -144,6 +209,41 @@ def legend_stops(legend: FloatArray) -> list[tuple[float, str]]:
     return stops
 
 
+def patch_colour(image: FloatArray, swatch: Swatch) -> str:
+    """Read a swatch's colour off a map (rows of latitude, 0° east in the middle).
+
+    The median of the pixels within ``swatch.radius`` degrees of its place, gaps left out; only
+    the brightest tenth of them for a young crater.
+    """
+    rows, columns = dims(image)[:2]
+    latitudes: FloatArray = np.radians(90 - (np.arange(rows) + 0.5) * 180 / rows)
+    longitudes: FloatArray = np.radians(-180 + (np.arange(columns) + 0.5) * 360 / columns)
+    lat, lon = math.radians(swatch.latitude), math.radians(swatch.longitude)
+    sines: FloatArray = math.sin(lat) * np.sin(latitudes)
+    cosines: FloatArray = math.cos(lat) * np.cos(latitudes)
+    turned: FloatArray = np.cos(longitudes - lon)
+    cosine: FloatArray = sines[:, None] + cosines[:, None] * turned[None, :]
+    near = cosine >= math.cos(math.radians(swatch.radius))
+    pixels: FloatArray = image[near]
+    pixels = pixels[np.max(pixels, axis=1) > GAP]
+    if swatch.brightest:
+        brightness = np.sum(pixels, axis=1)
+        pixels = pixels[brightness >= np.quantile(brightness, 0.9)]
+    return hex_colour(np.median(pixels, axis=0))
+
+
+def swatch_key(image: FloatArray, entry: SwatchKey) -> dict[str, object]:
+    """Put a swatch key as the site reads it: each kind, its place, and its colour."""
+    return {
+        "credit": entry.credit,
+        "source": entry.source,
+        "swatches": [
+            {"kind": each.kind, "place": each.place, "colour": patch_colour(image, each)}
+            for each in entry.swatches
+        ],
+    }
+
+
 def key(stops: list[tuple[float, str]], datum: str, credit: str, url: str) -> dict[str, object]:
     """Put a key as the site reads it: its stops (km, colour), datum, and where it comes from."""
     return {
@@ -179,7 +279,12 @@ def fetch_planet_keys(  # pragma: no cover - needs network access
         "read off USGS Astrogeology\u2019s legend to the map",
         VENUS_LEGEND,
     )
+    swatches: dict[str, object] = {}
+    for entry in SWATCH_KEYS:
+        with Image.open(textures / entry.texture) as image:
+            pixels: FloatArray = np.asarray(image.convert("RGB"), dtype=np.float64)
+        swatches[entry.body] = swatch_key(pixels, entry)
     path.parent.mkdir(parents=True, exist_ok=True)
-    data = {"schemaVersion": 1, "keys": keys}
+    data = {"schemaVersion": 2, "keys": keys, "swatches": swatches}
     _ = path.write_text(json.dumps(data, separators=(",", ":"), ensure_ascii=False) + "\n")
     return len(keys)

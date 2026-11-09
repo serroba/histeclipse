@@ -29,7 +29,13 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { geoToVector } from './globe/geo';
-import { PLANET_NAMES, PLANET_VIEWS, planetView, SHARP_MAPS } from './globe/planetLook';
+import {
+  PLANET_NAMES,
+  PLANET_VIEWS,
+  planetView,
+  SHARP_MAPS,
+  type PlanetView,
+} from './globe/planetLook';
 import { loadPolarity, type PolarityScale } from './data/polarity';
 import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
@@ -121,13 +127,7 @@ import { moveToYear } from './time/yearInput';
 import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
 import type { BodyKey } from './ui/bodyBar';
-import {
-  keyGradient,
-  keyTicks,
-  loadColourKeys,
-  type ColourKeys,
-  type KeyedBody,
-} from './data/planetKeys';
+import { keyGradient, keyTicks, loadColourKeys } from './data/planetKeys';
 import { isNamedBody, loadPlaceNames, type NamedBody, type PlaceNames } from './data/planetNames';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
 import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
@@ -3721,12 +3721,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
   }
 
-  // The height views' colour keys (#334), loaded the first time one shows.
-  let colourKeys: ColourKeys | null = null;
+  // The colour keys (#334): the height views', and the enhanced-colour views' swatches,
+  // loaded the first time one shows.
+  let colourKeys: Awaited<ReturnType<typeof loadColourKeys>> | null = null;
   let colourKeysAsked = false;
   /** A view's colour key for the bar, if it has one and the keys are in; else nothing. */
-  function keyFor(body: KeyedBody | undefined): { key?: BodyKey } {
-    if (body === undefined) return {};
+  function keyFor({ colourKey, rockKey }: PlanetView): { key?: BodyKey } {
+    if (colourKey === undefined && rockKey === undefined) return {};
     if (colourKeys === null) {
       if (!colourKeysAsked) {
         colourKeysAsked = true;
@@ -3743,7 +3744,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
       return {};
     }
-    const key = colourKeys[body];
+    if (rockKey !== undefined) {
+      const { swatches, credit } = colourKeys.rocks[rockKey];
+      return { key: { swatches, note: `${credit.charAt(0).toUpperCase()}${credit.slice(1)}.` } };
+    }
+    if (colourKey === undefined) return {};
+    const key = colourKeys.heights[colourKey];
     return {
       key: {
         gradient: keyGradient(key),
@@ -3803,7 +3809,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     } else if (focus === 'moon') {
       const moonKm = moonEphemeris?.position(jdTT) ?? null;
       // The view picked (#239): the usual map, or a mission's other one, fetched the first time.
-      const { map, sharp, caption, colourKey } = planetView('moon', state.planetLight);
+      const view = planetView('moon', state.planetLight);
+      const { map, sharp, caption } = view;
       globe.showMoonView(
         map === null
           ? null
@@ -3816,12 +3823,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
               name: 'The Moon',
               text: moonText(moonFacts(moonKm, sunKm)),
               picture: caption,
-              ...keyFor(colourKey),
+              ...keyFor(view),
             },
       );
     } else {
       // The view picked (#239): a mission's map, fetched the first time, or the painted colours.
-      const { map, sharp, caption, colourKey } = planetView(focus, state.planetLight);
+      const view = planetView(focus, state.planetLight);
+      const { map, sharp, caption } = view;
       globe.showPlanetView(
         focus,
         map === null
@@ -3836,7 +3844,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
               name: PLANET_NAMES[focus],
               text: planetText(planetFacts(focus, position, sunKm)),
               picture: caption,
-              ...keyFor(colourKey),
+              ...keyFor(view),
             },
       );
     }

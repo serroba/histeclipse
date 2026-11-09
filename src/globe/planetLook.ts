@@ -14,7 +14,7 @@
 import type { PlanetName } from '../astro/planets';
 import { elementAt } from '../util/arrays';
 import { EARTH_RADIUS_KM } from './spaceFrame';
-import type { KeyedBody } from '../data/planetKeys';
+import type { KeyedBody, SwatchedBody } from '../data/planetKeys';
 
 export interface PlanetShape {
   /** Equatorial and polar radii, km. */
@@ -251,6 +251,8 @@ export interface PlanetView {
   readonly caption: string;
   /** The colour key that goes with it, for a map coloured by height (#334). */
   readonly colourKey?: KeyedBody;
+  /** The swatches that go with it, for a map coloured by kind of rock (#334). */
+  readonly rockKey?: SwatchedBody;
 }
 
 /**
@@ -268,7 +270,8 @@ export const PLANET_VIEWS: Readonly<Record<PlanetName | 'moon', readonly PlanetV
       map: 'textures/planets/mercury-colour-2048.jpg',
       sharp: 'textures/planets/mercury-colour-4096.jpg',
       caption:
-        'Pictured: MESSENGER’s enhanced-colour map, from its first year in orbit (2011–12). Not true colour: each colour is a measure of the light in several filters, chosen to tell Mercury’s rocks apart, the volcanic plains, the dark material, the young bright crater rays. NASA/JHU APL/Carnegie Institution of Washington.',
+        'Pictured: MESSENGER’s enhanced-colour map, from its first year in orbit (2011–12). Not true colour: each colour is a measure of the light in several filters, chosen to tell Mercury’s rocks apart, as the key shows. NASA/JHU APL/Carnegie Institution of Washington.',
+      rockKey: 'mercury',
     },
   ],
   venus: [
@@ -343,7 +346,8 @@ export const PLANET_VIEWS: Readonly<Record<PlanetName | 'moon', readonly PlanetV
       map: 'textures/moon-minerals-2048.jpg',
       sharp: 'textures/moon-minerals-4096.jpg',
       caption:
-        'Pictured: Clementine’s colour-ratio map (1994). Not true colour: each colour is a ratio of light in three filters (415, 750 and 1000 nm), chosen to tell the Moon’s rocks apart. Red is the highlands and volcanic glass, poor in titanium; blue the seas richest in titanium; green and yellow-green iron-bearing minerals. Black strips are gaps in the coverage. NASA/DoD/USGS; Lucey, Blewett & Jolliff (2000).',
+        'Pictured: Clementine’s colour-ratio map (1994). Not true colour: each colour is a ratio of light in three filters (415, 750 and 1000 nm), chosen to tell the Moon’s rocks apart, as the key shows. Black strips are gaps in the coverage. NASA/DoD/USGS; Lucey, Blewett & Jolliff (2000).',
+      rockKey: 'moon',
     },
   ],
 };

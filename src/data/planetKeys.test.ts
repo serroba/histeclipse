@@ -18,11 +18,17 @@ function stops(...kms: number[]): ColourKey {
 
 describe('the height views’ colour keys', () => {
   it('Given the file the pipeline wrote, Then Mars runs from Hellas’s depths to Olympus Mons, the Moon and Venus each over theirs', async () => {
-    const keys = await loadColourKeys('planet-keys.json', serve(file));
+    const { heights: keys } = await loadColourKeys('planet-keys.json', serve(file));
     expect(keyRange(keys.mars)).toEqual([-7.5, 20.5]);
     expect(keyRange(keys.moon)).toEqual([-7.5, 8.5]);
     expect(keyRange(keys.venus)).toEqual([-3, 11]);
     expect(keys.venus.credit).toContain('USGS');
+  });
+
+  it('Given the file, Then the enhanced-colour maps are keyed by kinds of rock, each at a named place', async () => {
+    const { rocks } = await loadColourKeys('planet-keys.json', serve(file));
+    expect(rocks.moon.swatches.map(({ place }) => place)).toContain('Mare Tranquillitatis');
+    expect(rocks.mercury.swatches.map(({ kind }) => kind)).toContain('Smooth volcanic plains');
   });
 
   it('Given heights out of order, Then the file is refused', async () => {
