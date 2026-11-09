@@ -199,6 +199,14 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
         spans: ['years'],
         reach: 'In the years, seen from far out.',
       },
+      {
+        id: 'spacecraft',
+        label: 'Spacecraft',
+        about:
+          'Every craft sent beyond Earth orbit since 1959, where it was at the moment shown, flying as the time plays; a tap on its name for its story.',
+        spans: ['years'],
+        reach: 'In the years, from Luna 1 in January 1959 to today.',
+      },
     ],
   },
 ];

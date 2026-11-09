@@ -108,6 +108,7 @@ import { elementAt } from '../util/arrays';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius, polarRatio } from './planetLook';
 import { isMoonBody, MOON_NAMES, moonPlanet } from './moonLook';
+import { createCraftLayer } from './craftLayer';
 import { createMoonMeshes } from './moonMeshes';
 import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
@@ -178,6 +179,17 @@ export interface SolarPath {
   readonly elements: BesselianElements;
   readonly deltaTSeconds: number;
   readonly uncertaintySeconds: number;
+}
+
+/** A craft beyond Earth orbit, from Earth's centre (J2000 km), and its trail. */
+export interface SceneCraft {
+  readonly id: string;
+  readonly name: string;
+  readonly km: readonly [number, number, number];
+  readonly trail: readonly (readonly [number, number, number])[];
+  readonly approximate: boolean;
+  /** At a world, rather than on its way: named after those on their way. */
+  readonly at: string | null;
 }
 
 /** Where the Moon and Sun are at the current moment, from Earth's centre. */
@@ -435,6 +447,11 @@ export interface Globe {
   setMoonOrbits(orbits: MoonOrbits | null): void;
   /** Wrap a moon in a mission's map, fetched once: the latest asked for each moon wins. */
   setMoonMap(moon: MoonName, url: string): void;
+  /**
+   * Draw the craft beyond Earth orbit in flight (#350), each with its trail and its name, a
+   * tap on it picked as `craft:<id>`; null takes them away.
+   */
+  setSpacecraft(craft: readonly SceneCraft[] | null): void;
   /** Called when someone taps a marker that has a card, with its key (such as `impact:47`). */
   onMarkerPick(listener: (key: string) => void): () => void;
   /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
@@ -1361,6 +1378,7 @@ export function createGlobe(
   scene.add(sun);
   const planets = createPlanetMeshes(scene);
   const moonSystems = createMoonMeshes(scene);
+  const craftLayer = createCraftLayer(scene);
   // Maps asked for, by address; the planets wearing their sharp map; and the bodies sharpened,
   // for whoever needs to know (#258).
   // Each planet's view (#239), its maps by address once fetched, and those close up enough for
@@ -1625,7 +1643,24 @@ export function createGlobe(
     readonly labels: (GlobeLabel & { km: number })[];
   } | null = null;
   const markerPickListeners = new Set<(key: string) => void>();
-  for (const layer of [impactLayer, volcanoLayer, humanLabelLayer, genomeLayer, fossilLayer]) {
+  // The craft beyond Earth orbit (#350), each named, a tap opening its card.
+  const craftNameLayer = document.createElement('div');
+  craftNameLayer.className = 'empire-labels craft-names';
+  craftNameLayer.dataset['testid'] = 'craft-names';
+  container.append(craftNameLayer);
+  const craftLabels = new Map<
+    string,
+    { element: HTMLButtonElement; width: number; height: number }
+  >();
+  let craftShown: readonly (SceneCraft & { readonly scene: Vector3 })[] = [];
+  for (const layer of [
+    impactLayer,
+    volcanoLayer,
+    humanLabelLayer,
+    genomeLayer,
+    fossilLayer,
+    craftNameLayer,
+  ]) {
     layer.addEventListener('click', (event) => {
       const marker = event.target instanceof Element ? event.target.closest('[data-pick]') : null;
       const key = marker?.getAttribute('data-pick');
@@ -2136,6 +2171,7 @@ export function createGlobe(
       placeEmpireLabels();
       placePlaceNames();
       placeMoonNames();
+      placeCraftNames();
       if (earthMapped) container.dataset['rendered'] = 'true';
     }
     frame = requestAnimationFrame(loop);
@@ -2204,6 +2240,43 @@ export function createGlobe(
       radius: planetRadius(body),
       shown: mesh.visible,
     };
+  }
+
+  /** Name the craft in view, those on their way first, none crowding another. */
+  function placeCraftNames(): void {
+    if (craftShown.length === 0) return;
+    const viewWidth = container.clientWidth;
+    const viewHeight = container.clientHeight;
+    const placed: { x: number; y: number; w: number; h: number }[] = [];
+    const order = [...craftShown].sort((a, b) => Number(a.at !== null) - Number(b.at !== null));
+    let count = 0;
+    for (const craft of order) {
+      const label = craftLabels.get(craft.id);
+      if (label === undefined) continue;
+      projected.copy(craft.scene).project(camera);
+      const x = ((projected.x + 1) / 2) * viewWidth;
+      const y = ((1 - projected.y) / 2) * viewHeight;
+      const box = { x, y: y - label.height / 2, w: label.width, h: label.height };
+      const visible =
+        projected.z < 1 &&
+        box.x >= 0 &&
+        box.x + box.w <= viewWidth &&
+        box.y >= 0 &&
+        box.y + box.h <= viewHeight &&
+        placed.every(
+          (other) =>
+            box.x > other.x + other.w ||
+            other.x > box.x + box.w ||
+            box.y > other.y + other.h ||
+            other.y > box.y + box.h,
+        );
+      label.element.hidden = !visible;
+      if (!visible) continue;
+      placed.push(box);
+      count += 1;
+      label.element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(0, -50%)`;
+    }
+    craftNameLayer.dataset['named'] = String(count);
   }
 
   const moonWorld = new Vector3();
@@ -3105,6 +3178,48 @@ export function createGlobe(
       container.dataset['impacts'] = marks === null ? 'off' : String(marks.length);
       // Placed now, not at the next frame: as time plays, that frame may lay them out again.
       placeEmpireLabels();
+      needsRender = true;
+    },
+    setSpacecraft(craft) {
+      if (craft === null || earthFixedToJ2000 === null) {
+        craftLayer.set(null);
+        craftShown = [];
+        for (const { element } of craftLabels.values()) element.hidden = true;
+        delete container.dataset['craft'];
+        needsRender = true;
+        return;
+      }
+      const toScene = transpose(earthFixedToJ2000);
+      const place = (km: readonly [number, number, number]): readonly [number, number, number] =>
+        sceneFromKm(apply(toScene, [km[0], km[1], km[2]]));
+      craftShown = craft.map((each) => ({ ...each, scene: new Vector3(...place(each.km)) }));
+      craftLayer.set(
+        craft.map(({ km, trail, approximate }) => ({
+          at: place(km),
+          trail: trail.map(place),
+          approximate,
+        })),
+      );
+      // A name for each craft, made the first time it flies, measured once.
+      const fresh: { id: string; element: HTMLButtonElement }[] = [];
+      for (const { id, name } of craft) {
+        if (craftLabels.has(id)) continue;
+        const element = document.createElement('button');
+        element.type = 'button';
+        element.className = 'craft-name';
+        element.textContent = name;
+        element.dataset['pick'] = `craft:${id}`;
+        element.style.visibility = 'hidden';
+        craftNameLayer.append(element);
+        fresh.push({ id, element });
+      }
+      for (const { id, element } of fresh) {
+        craftLabels.set(id, { element, width: element.offsetWidth, height: element.offsetHeight });
+      }
+      for (const { element } of fresh) element.style.visibility = '';
+      const flying = new Set(craft.map(({ id }) => id));
+      for (const [id, { element }] of craftLabels) if (!flying.has(id)) element.hidden = true;
+      container.dataset['craft'] = String(craft.length);
       needsRender = true;
     },
     setMoonMap(moon, url) {

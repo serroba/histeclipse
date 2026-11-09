@@ -56,6 +56,8 @@ export const LAYERS = [
   'solar',
   // The orbits of Earth and the planets, seen from far out or from the Sun or a planet.
   'orbits',
+  // Every craft sent beyond Earth orbit, flying as the time plays (#350).
+  'spacecraft',
   'empires',
   // Dated ancient genomes (AADR), counted by region around the year shown.
   'genomes',

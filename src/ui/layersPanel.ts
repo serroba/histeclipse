@@ -61,6 +61,7 @@ const LAYER_ICONS: Readonly<Record<Layer, UiIcon>> = {
   solar: 'solar',
   lunar: 'lunar',
   orbits: 'orbits',
+  spacecraft: 'spacecraft',
 };
 
 const SOURCE_LABELS: Readonly<Record<BorderSource, string>> = {

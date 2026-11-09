@@ -758,6 +758,40 @@ test('tapping a moon’s name flies to it, and the bar tells what is known of it
   expect(problems).toEqual([]);
 });
 
+test('with Spacecraft on, the craft beyond Earth orbit fly where they were, each with its card', async ({
+  page,
+}) => {
+  // Two data files and a planet theory: slow on a phone drawn in software.
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const names = page.getByTestId('craft-names');
+  await test.step('Given Mars in January 2025, seen from afar', async () => {
+    await page.goto('./?t=2025-01-10T12:00&cam=25,20,40&focus=mars');
+    await expect(globe).toHaveAttribute('data-focus', 'mars', { timeout: 30_000 });
+  });
+  await test.step('When they turn the spacecraft on', async () => {
+    await page.getByRole('button', { name: 'Spacecraft', exact: true }).click();
+  });
+  await test.step('Then dozens of craft are in flight, and some are named', async () => {
+    await expect(page).toHaveURL(/layers=[a-z,]*spacecraft/);
+    await expect
+      .poll(async () => Number(await globe.getAttribute('data-craft')), { timeout: 30_000 })
+      .toBeGreaterThan(30);
+    await expect
+      .poll(async () => Number(await names.getAttribute('data-named')), { timeout: 30_000 })
+      .toBeGreaterThan(0);
+  });
+  await test.step('When they tap a craft’s name, Then its card says when it set out, and credits GCAT', async () => {
+    await names.locator('.craft-name:not([hidden])').first().click();
+    const card = page.getByRole('dialog');
+    await expect(card).toContainText('Set out');
+    await expect(card).toContainText('Path');
+    await expect(card).toContainText('GCAT, Jonathan McDowell');
+  });
+  expect(problems).toEqual([]);
+});
+
 test('close up, the IAU’s names for the largest features turn with each rocky body, on its day side', async ({
   page,
 }) => {

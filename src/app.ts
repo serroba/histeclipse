@@ -130,6 +130,11 @@ import type { BodyKey } from './ui/bodyBar';
 import { keyGradient, keyTicks, loadColourKeys } from './data/planetKeys';
 import { isNamedBody, loadPlaceNames, type NamedBody, type PlaceNames } from './data/planetNames';
 import { loadMoonOrbits, moonPosition, type MoonName, type MoonOrbits } from './astro/moonOrbits';
+import type { Geocentric } from './astro/approximatePaths';
+import { craftNow, craftWheres, type CraftWheres } from './astro/craftNow';
+import { craftCard } from './data/craftCard';
+import { loadSpacecraft, type Spacecraft } from './data/spacecraft';
+import { loadSpacecraftPaths } from './data/spacecraftPaths';
 import { moonAbout, moonLine } from './data/moonFacts';
 import { isMoonBody, MOON_MAPS, MOON_NAMES, moonPlanet } from './globe/moonLook';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
@@ -562,6 +567,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => ({
         ...state,
         layers: withLayer(state.layers, 'orbits', !state.layers.has('orbits')),
+      }));
+    },
+    onSpacecraft() {
+      store.set((state) => ({
+        ...state,
+        layers: withLayer(state.layers, 'spacecraft', !state.layers.has('spacecraft')),
       }));
     },
     onEarth() {
@@ -1979,6 +1990,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     bodiesAt = terrestrial;
     showBody(state);
     showOrbits(state, terrestrial);
+    showSpacecraft(state, terrestrial);
     root.dataset['subsolar'] = `${sun.latitude.toFixed(3)},${sun.longitude.toFixed(3)}`;
     if (state.ma !== null) {
       showDeepTimeText(state.ma);
@@ -2815,6 +2827,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   globe.onMarkerPick((key) => {
     const [kind, id] = key.split(':');
+    if (kind === 'craft') {
+      const craft = spacecraft?.craft.find((each) => each.id === id);
+      if (craft !== undefined && spacecraftWheres !== null) {
+        markerCard.show(craftCard(craft, spacecraftWheres.approximate(craft)));
+      }
+      return;
+    }
     volcanoShown = null;
     humanShown = null;
     fossilShown = null;
@@ -4087,6 +4106,49 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return planetsLoading;
   }
 
+  // Every craft sent beyond Earth orbit (#350): the record and Horizons's paths, loaded the
+  // first time the layer is on; each craft's approximate path worked out once, as it flies.
+  let spacecraft: Spacecraft | null = null;
+  let spacecraftWheres: CraftWheres | null = null;
+  let spacecraftAsked = false;
+  /** Where the Sun, the Moon and the planets are from Earth's centre, for the craft. */
+  const craftGeocentric: Geocentric = (body, jdTT) => {
+    const jd = jdTT as JulianDay;
+    if (body === 'Sun') return sunPositionJ2000(jd);
+    if (body === 'Moon') return moonEphemeris?.position(jd) ?? null;
+    const planet = PLANETS.find((name) => name === body.toLowerCase());
+    return planet === undefined ? null : (planets?.position(planet, jd) ?? null);
+  };
+  function showSpacecraft(state: ViewState, jdTT: number): void {
+    const offered = state.mode === 'globe' && state.ma === null;
+    zoomRail.setSpacecraft(offered, state.layers.has('spacecraft'));
+    if (!offered || !state.layers.has('spacecraft')) {
+      globe.setSpacecraft(null);
+      return;
+    }
+    if (planets === null) void loadPlanets();
+    if (spacecraft === null || spacecraftWheres === null) {
+      if (spacecraftAsked) return;
+      spacecraftAsked = true;
+      Promise.all([
+        loadSpacecraft(`${base}data/spacecraft.json`, fetchJson),
+        loadSpacecraftPaths(`${base}data/spacecraft-paths.json`, fetchJson),
+      ]).then(
+        ([record, paths]) => {
+          spacecraft = record;
+          spacecraftWheres = craftWheres(paths, craftGeocentric);
+          showTime(store.get());
+        },
+        (error: unknown) => {
+          spacecraftAsked = false;
+          notify(`Could not load the spacecraft: ${errorMessage(error)}`);
+        },
+      );
+      return;
+    }
+    globe.setSpacecraft(craftNow(spacecraft.craft, spacecraftWheres, craftGeocentric, jdTT));
+  }
+
   /** Whether the space view is far enough out, or close to a planet, to need them. */
   function wantPlanets(state: ViewState): boolean {
     if (state.mode !== 'globe') return false;
@@ -4459,6 +4521,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const leftDeepTime = previous !== null && previous.ma !== null && state.ma === null;
     if (state.time !== previous?.time || state.years !== previous.years || leftDeepTime) {
       showTime(state);
+    } else if (lastTerrestrial !== null && state.layers !== previous.layers) {
+      // The craft come and go with their layer, at the moment shown (#350).
+      showSpacecraft(state, lastTerrestrial);
     }
     if (
       state.ma !== previous?.ma ||
