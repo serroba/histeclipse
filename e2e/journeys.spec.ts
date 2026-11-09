@@ -8,6 +8,7 @@ import {
   collectProblems,
   expect,
   globeRendered,
+  LIVE,
   openLayers,
   openSources,
   pickSpan,
@@ -108,7 +109,7 @@ test('a reader travels into the ice ages and back to the day they left', async (
   expect(problems).toEqual([]);
 });
 
-test('a link someone shares opens exactly what they saw', async ({ page }) => {
+test('a link someone shares opens exactly what they saw', LIVE, async ({ page }) => {
   const problems = collectProblems(page);
   const shared =
     './?t=-584-05-28T14:26&sel=solar:-0584-05-28&layers=lunar,solar,empires&borders=both';

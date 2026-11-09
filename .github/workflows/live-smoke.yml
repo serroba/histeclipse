@@ -1,7 +1,8 @@
 name: Live smoke test
 
-# Runs the e2e suite against the public site: after every deploy (called from deploy.yml),
-# daily to catch problems between releases, and on demand.
+# Runs the e2e suite against the public site. After every deploy (called from deploy.yml), only
+# the scenarios tagged @live: what production adds to the build CI already tested (#348). Daily,
+# to catch problems between releases, and on demand, the whole suite.
 on:
   workflow_call:
     inputs:
@@ -10,6 +11,11 @@ on:
         type: string
         required: false
         default: ''
+      scope:
+        description: "'live' for the @live scenarios only; 'full' for the whole suite"
+        type: string
+        required: false
+        default: full
   workflow_dispatch:
   schedule:
     - cron: '17 6 * * *'
@@ -23,16 +29,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # The whole suite against the live site, in four shards side by side: in one job it outgrew
-  # its 20 minutes.
+  # The whole suite runs in four shards side by side (in one job it outgrew its 20 minutes); the
+  # @live scenarios in one. A scheduled or manual run has no inputs, so it runs everything.
   smoke:
-    name: Smoke test live site (${{ matrix.shard }}/4)
+    name: Smoke test live site (${{ inputs.scope == 'live' && 'after deploy' || format('{0}/4', matrix.shard) }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: ${{ fromJSON(inputs.scope == 'live' && '[1]' || '[1, 2, 3, 4]') }}
     env:
       BASE_URL: https://histeclipse.limits.world/
       EXPECTED_VERSION: ${{ inputs.expected-version }}
@@ -69,7 +75,10 @@ jobs:
       # The runner's image has Chromium's system libraries; --with-deps only added fonts.
       - if: steps.browsers.outputs.cache-hit != 'true'
         run: pnpm exec playwright install chromium
-      - run: pnpm test:e2e --shard="$SHARD/4"
+      - if: inputs.scope == 'live'
+        run: pnpm test:e2e --grep @live --project desktop --project mobile
+      - if: inputs.scope != 'live'
+        run: pnpm test:e2e --shard="$SHARD/4"
         env:
           SHARD: ${{ matrix.shard }}
       - if: failure()

@@ -12,8 +12,11 @@ Features are written as scenarios: each test is a story of Given, When and Then 
 | `desktop-120hz` | journeys, time, layers, ice, history | frames at exactly 120 Hz, as on a fast Mac or phone: animation that counts frames instead of time goes wrong there |
 
 CI also runs the `desktop` project on macOS, whose GPU limits differ from Linux's (a shader
-once passed on Linux and drew a black globe on a Mac). After each deploy the whole suite runs
-again against the live site.
+once passed on Linux and drew a black globe on a Mac). After each deploy, the scenarios tagged
+`@live` (via `LIVE` in `support.ts`) run against the live site: what production adds to the
+tested build, such as its host, its edge cache and headers, and a stale page after a release.
+The whole suite runs there daily. Against the live site, browsers add `histeclipse-live-test`
+to their user agent, so analytics can leave them out.
 
 ## Journeys
 

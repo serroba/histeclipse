@@ -4,6 +4,13 @@ import { expect, test as base, type Page } from '@playwright/test';
 
 export { expect };
 
+/**
+ * The scenarios run against the live site after each deploy (#348): what production adds to
+ * the build CI tested (the host, the domain, the edge's cache and headers, a stale page after a
+ * release). The daily live run, like CI, runs everything.
+ */
+export const LIVE = { tag: '@live' };
+
 export interface DisplayOptions {
   /** Frames per second the display gives, exactly; null for the browser's own. */
   readonly refreshRate: number | null;
