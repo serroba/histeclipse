@@ -4902,6 +4902,40 @@ button:has(> .icon-label) > .icon {
   white-space: nowrap;
 }
 
+.body-key-strip[hidden],
+.body-key-ticks[hidden],
+.body-key-swatches[hidden] {
+  display: none;
+}
+
+/* An enhanced-colour map's key: each kind of rock, a swatch of the colour the map gives it. */
+.body-key-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: 0 0 2px;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+.body-key-swatches li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.body-key-swatch {
+  flex: none;
+  width: 22px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.body-key-place {
+  color: var(--ink-muted);
+}
+
 .body-key-note {
   display: block;
   font-size: 11px;

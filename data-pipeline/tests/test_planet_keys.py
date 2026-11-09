@@ -7,14 +7,18 @@ import numpy as np
 from histeclipse_pipeline.planet_keys import (
     GRID,
     GRIDS,
+    SWATCH_KEYS,
     VENUS_KM,
     VENUS_ROWS,
     VENUS_TICKS,
+    Swatch,
     heights_km,
     hex_colour,
     key,
     legend_stops,
     measured_stops,
+    patch_colour,
+    swatch_key,
 )
 
 
@@ -90,3 +94,44 @@ def test_a_key_carries_its_datum_and_where_it_comes_from() -> None:
         "source": "https://pds",
         "stops": [[0.5, "#000000"]],
     }
+
+
+def test_the_enhanced_colour_maps_are_keyed_by_kinds_of_rock_at_named_places() -> None:
+    assert [(entry.body, entry.texture) for entry in SWATCH_KEYS] == [
+        ("moon", "moon-minerals-2048.jpg"),
+        ("mercury", "planets/mercury-colour-2048.jpg"),
+    ]
+    tranquillitatis = SWATCH_KEYS[0].swatches[1]
+    assert tranquillitatis.place == "Mare Tranquillitatis"
+    assert tranquillitatis.kind == "Seas richest in titanium"
+
+
+def test_a_swatch_is_the_median_colour_about_its_place_gaps_left_out() -> None:
+    # Given a grey map, blue within 10° of 0° N 90° E, with a black gap in the blue.
+    image = np.full((180, 360, 3), 128.0)
+    image[80:100, 260:280] = [0, 0, 255]
+    image[88:92, 268:272] = 0
+    # When the swatch at 0° N 90° E is read, 5° about.
+    colour = patch_colour(image, Swatch("Blue", "here", 0, 90, 5))
+    # Then it is the blue, the gap not counted.
+    assert colour == "#0000ff"
+
+
+def test_a_young_crater_is_its_brightest_pixels() -> None:
+    # Given a dark crater floor with a bright tenth of fresh rock.
+    image = np.full((180, 360, 3), 60.0)
+    image[89:91, 180:182] = 250
+    # When it is read, brightest only.
+    colour = patch_colour(image, Swatch("Fresh", "crater", 0, 0.9, 3, brightest=True))
+    # Then it is the fresh rock.
+    assert colour == "#fafafa"
+
+
+def test_a_swatch_key_names_each_kind_and_its_place() -> None:
+    image = np.full((180, 360, 3), 128.0)
+    data = swatch_key(image, SWATCH_KEYS[1])
+    assert data["swatches"] == [
+        {"kind": "Smooth volcanic plains", "place": "Borealis Planitia", "colour": "#808080"},
+        {"kind": "Dark, low-reflectance material", "place": "about Tolstoj", "colour": "#808080"},
+        {"kind": "Young craters and their rays", "place": "Hokusai", "colour": "#808080"},
+    ]
