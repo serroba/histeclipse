@@ -2,6 +2,7 @@ import { WHY_VIEWS } from '../sources/registry';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
+import { LINEAGE_GROUPS } from '../data/lineages';
 import { SEA_ICE_MODELS } from '../data/seaIce';
 import { COAST_SOURCES } from '../deepTime/coastline';
 import { TEMPERATURE_MODELS } from '../deepTime/temperatureModels';
@@ -87,6 +88,7 @@ describe('parseViewState', () => {
       tree: null,
       craters: null,
       cratersIn: 'map',
+      lineages: null,
     } satisfies ViewState);
   });
 
@@ -157,6 +159,19 @@ describe('parseViewState', () => {
     expect(parseViewState('craters=12', NOW).state.craters).toEqual({ id: 12 });
     expect(parseViewState('craters=26&cratersin=box', NOW).state.cratersIn).toBe('box');
     expect(parseViewState('craters=26', NOW).state.cratersIn).toBe('map');
+    expect(parseViewState('lineages=dinosaurs', NOW).state.lineages).toEqual({
+      group: 'dinosaurs',
+      pick: null,
+    });
+    expect(parseViewState('lineages=mammals:41020', NOW).state.lineages).toEqual({
+      group: 'mammals',
+      pick: 41020,
+    });
+    for (const wrong of ['birds', 'dinosaurs:rex', 'dinosaurs:1:2']) {
+      const read = parseViewState(`lineages=${wrong}`, NOW);
+      expect(read.state.lineages).toBeNull();
+      expect(read.warnings).toHaveLength(1);
+    }
     const bad = parseViewState('craters=chicxulub', NOW);
     expect(bad.state.craters).toBeNull();
     expect(bad.warnings.join(' ')).toMatch(/craters/);
@@ -475,6 +490,12 @@ describe('serializeViewState', () => {
       fc.integer({ min: 0, max: 999_999 }).map((id) => ({ id })),
     ),
     cratersIn: fc.constantFrom(...CRATERS_SHAPES),
+    lineages: fc.option(
+      fc.record({
+        group: fc.constantFrom(...LINEAGE_GROUPS),
+        pick: fc.option(fc.integer({ min: 0, max: 9_999_999 })),
+      }),
+    ),
   });
 
   it('round-trips every view state through a link', () => {

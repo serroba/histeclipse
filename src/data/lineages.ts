@@ -1,0 +1,373 @@
+/**
+ * A fossil group's genera through time and place (`public/data/time-tree/<group>.json`, #358):
+ * the Paleobiology Database's classification (CC BY 4.0) with each genus's first and last
+ * appearance and where its finds lay, every 5 million years, on the PALEOMAP reconstruction.
+ * Written by the pipeline's `time-tree` command. Nodes are columns, each after its parent and
+ * siblings oldest first; a genus has a track, a group (family, order…) has none.
+ *
+ * This places each line in time and space: a genus drifts with its finds, and a group starts
+ * where and when its oldest member does. A group's place is an estimate of that kind, not a
+ * find of its own.
+ */
+
+import * as v from 'valibot';
+
+import { elementAt, valueAt } from '../util/arrays';
+import { getJson, type Fetch } from './fetchJson';
+
+export const LINEAGE_GROUPS = ['trilobites', 'ammonoids', 'dinosaurs', 'mammals'] as const;
+export type LineageGroup = (typeof LINEAGE_GROUPS)[number];
+
+const Count = v.pipe(v.number(), v.integer(), v.minValue(0));
+const Age = v.pipe(v.number(), v.minValue(0), v.maxValue(4600));
+
+const LineagesSchema = v.pipe(
+  v.strictObject({
+    schemaVersion: v.literal(1),
+    credit: v.pipe(v.string(), v.minLength(1)),
+    source: v.pipe(v.string(), v.url()),
+    accessed: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),
+    id: v.picklist(LINEAGE_GROUPS),
+    name: v.pipe(v.string(), v.minLength(1)),
+    stepMa: v.pipe(v.number(), v.gtValue(0)),
+    ranks: v.pipe(v.array(v.string()), v.minLength(1)),
+    pbdb: v.array(Count),
+    names: v.pipe(v.array(v.string()), v.minLength(1)),
+    rank: v.array(Count),
+    parent: v.array(v.pipe(v.number(), v.integer(), v.minValue(-1))),
+    first: v.array(Age),
+    last: v.array(Age),
+    species: v.array(Count),
+    /** Each genus's track as [step Ma, latitude, longitude, finds, …]; empty for a group. */
+    tracks: v.array(v.array(v.number())),
+  }),
+  v.check((file) => {
+    const count = file.names.length;
+    return [file.pbdb, file.rank, file.parent, file.first, file.last, file.species, file.tracks]
+      .map((column) => column.length)
+      .every((length) => length === count);
+  }, 'every column has a value for each node'),
+  v.check(
+    (file) =>
+      file.parent.every((parent, index) =>
+        index === 0 ? parent === -1 : parent >= 0 && parent < index,
+      ) &&
+      file.rank.every((rank) => rank < file.ranks.length) &&
+      file.tracks.every((track) => track.length % 4 === 0),
+    'each node comes after its parent, and ranks and tracks are well formed',
+  ),
+);
+
+export interface Place {
+  readonly latitude: number;
+  readonly longitude: number;
+}
+
+export interface TrackPoint extends Place {
+  /** The middle of the 5-million-year step its finds fall in (Ma). */
+  readonly ma: number;
+  readonly finds: number;
+}
+
+export interface Lineage {
+  readonly index: number;
+  /** PBDB's number for the name, for links to its page. */
+  readonly pbdb: number;
+  readonly name: string;
+  readonly rank: string;
+  /** Index of its parent, -1 for the group itself. */
+  readonly parent: number;
+  readonly children: readonly number[];
+  /** First and last appearance, Ma (0: still living). */
+  readonly first: number;
+  readonly last: number;
+  /** How many valid species PBDB lists in it (genera only). */
+  readonly species: number;
+  /** Where its finds lay, oldest first; empty for a group. */
+  readonly track: readonly TrackPoint[];
+}
+
+export interface Lineages {
+  readonly id: LineageGroup;
+  readonly name: string;
+  readonly credit: string;
+  readonly source: string;
+  readonly accessed: string;
+  readonly stepMa: number;
+  readonly nodes: readonly Lineage[];
+}
+
+export function parseLineages(raw: unknown): Lineages {
+  const file = v.parse(LineagesSchema, raw);
+  const children: number[][] = file.names.map(() => []);
+  file.parent.forEach((parent, index) => {
+    if (parent >= 0) elementAt(children, parent).push(index);
+  });
+  const nodes = file.names.map((name, index): Lineage => {
+    const flat = elementAt(file.tracks, index);
+    const track: TrackPoint[] = [];
+    for (let at = 0; at + 3 < flat.length; at += 4) {
+      track.push({
+        ma: valueAt(flat, at) + file.stepMa / 2,
+        latitude: valueAt(flat, at + 1),
+        longitude: valueAt(flat, at + 2),
+        finds: valueAt(flat, at + 3),
+      });
+    }
+    // Oldest first, and never outside the genus's own span.
+    const first = valueAt(file.first, index);
+    const last = valueAt(file.last, index);
+    track.sort((a, b) => b.ma - a.ma);
+    return {
+      index,
+      pbdb: valueAt(file.pbdb, index),
+      name,
+      rank: elementAt(file.ranks, valueAt(file.rank, index)),
+      parent: valueAt(file.parent, index),
+      children: elementAt(children, index),
+      first,
+      last,
+      species: valueAt(file.species, index),
+      track: track.map((point) => ({ ...point, ma: Math.min(first, Math.max(last, point.ma)) })),
+    };
+  });
+  return {
+    id: file.id,
+    name: file.name,
+    credit: file.credit,
+    source: file.source,
+    accessed: file.accessed,
+    stepMa: file.stepMa,
+    nodes,
+  };
+}
+
+export async function loadLineages(url: string, fetchJson: Fetch): Promise<Lineages> {
+  return parseLineages(await getJson(fetchJson, url, v.unknown()));
+}
+
+export function isGenus(node: Lineage): boolean {
+  return node.track.length > 0;
+}
+
+/** Whether a genus was living at `ma`. */
+export function aliveAt(node: Lineage, ma: number): boolean {
+  return isGenus(node) && ma <= node.first && ma >= node.last;
+}
+
+/** Wrap a longitude into [-180, 180). */
+function wrap(longitude: number): number {
+  return ((((longitude + 180) % 360) + 360) % 360) - 180;
+}
+
+/**
+ * Where a genus's finds lay at `ma`: between two steps, part way from one place to the next
+ * (the short way round); before its first step or after its last, that step's place.
+ */
+export function trackAt(track: readonly TrackPoint[], ma: number): Place {
+  const oldest = elementAt(track, 0);
+  if (ma >= oldest.ma) return placeOf(oldest);
+  for (let at = 1; at < track.length; at++) {
+    const younger = elementAt(track, at);
+    if (ma >= younger.ma) {
+      const older = elementAt(track, at - 1);
+      const span = older.ma - younger.ma;
+      const share = span === 0 ? 0 : (older.ma - ma) / span;
+      let turn = younger.longitude - older.longitude;
+      if (turn > 180) turn -= 360;
+      if (turn < -180) turn += 360;
+      return {
+        latitude: older.latitude + share * (younger.latitude - older.latitude),
+        longitude: wrap(older.longitude + share * turn),
+      };
+    }
+  }
+  return placeOf(elementAt(track, track.length - 1));
+}
+
+function placeOf(point: Place): Place {
+  return { latitude: point.latitude, longitude: point.longitude };
+}
+
+export interface Origin extends Place {
+  readonly ma: number;
+}
+
+/**
+ * Where and when each line starts: a genus at its first appearance, where its oldest finds lay;
+ * a group where and when its oldest member starts.
+ */
+export function origins(lineages: Lineages): readonly Origin[] {
+  const out: Origin[] = [];
+  // Children come after parents, so settle them from the end.
+  for (let index = lineages.nodes.length - 1; index >= 0; index--) {
+    const node = elementAt(lineages.nodes, index);
+    if (isGenus(node)) {
+      out[index] = { ma: node.first, ...trackAt(node.track, node.first) };
+      continue;
+    }
+    let oldest: Origin | undefined;
+    for (const child of node.children) {
+      const origin = out[child];
+      if (origin !== undefined && (oldest === undefined || origin.ma > oldest.ma)) oldest = origin;
+    }
+    out[index] = oldest ?? { ma: node.first, latitude: 0, longitude: 0 };
+  }
+  return out;
+}
+
+/** A vertex of a drawn line: its moment and place. */
+export interface Vertex extends Place {
+  readonly ma: number;
+}
+
+/** A line to draw: whose it is, and its vertices from oldest to youngest. */
+export interface Stroke {
+  readonly node: number;
+  /** A branch joining a group to a member, rather than a genus's own life. */
+  readonly branch: boolean;
+  readonly vertices: readonly Vertex[];
+}
+
+/**
+ * Every line of the tree: each genus from its first appearance to its last, through its place
+ * at each step between; and a branch from each group's start to each member's.
+ */
+export function strokes(lineages: Lineages, starts: readonly Origin[]): readonly Stroke[] {
+  const out: Stroke[] = [];
+  for (const node of lineages.nodes) {
+    const start = elementAt(starts, node.index);
+    if (node.parent >= 0) {
+      const from = elementAt(starts, node.parent);
+      if (
+        from.ma !== start.ma ||
+        from.latitude !== start.latitude ||
+        from.longitude !== start.longitude
+      ) {
+        out.push({ node: node.index, branch: true, vertices: [from, start] });
+      }
+    }
+    if (!isGenus(node)) continue;
+    const vertices: Vertex[] = [start];
+    const step = lineages.stepMa;
+    for (let ma = Math.ceil(node.first / step) * step - step; ma > node.last; ma -= step) {
+      if (ma < node.first) vertices.push({ ma, ...trackAt(node.track, ma) });
+    }
+    if (node.last < node.first) vertices.push({ ma: node.last, ...trackAt(node.track, node.last) });
+    out.push({ node: node.index, branch: false, vertices });
+  }
+  return out;
+}
+
+/**
+ * The part of a stroke up to `ma`: what had happened by then. Cut where it crosses `ma`; empty
+ * if it starts later.
+ */
+export function strokeUntil(vertices: readonly Vertex[], ma: number): readonly Vertex[] {
+  const first = vertices[0];
+  if (first === undefined || first.ma < ma) return [];
+  const out: Vertex[] = [first];
+  for (let at = 1; at < vertices.length; at++) {
+    const older = elementAt(vertices, at - 1);
+    const younger = elementAt(vertices, at);
+    if (younger.ma >= ma) {
+      out.push(younger);
+      continue;
+    }
+    const share = (older.ma - ma) / (older.ma - younger.ma);
+    let turn = younger.longitude - older.longitude;
+    if (turn > 180) turn -= 360;
+    if (turn < -180) turn += 360;
+    out.push({
+      ma,
+      latitude: older.latitude + share * (younger.latitude - older.latitude),
+      longitude: wrap(older.longitude + share * turn),
+    });
+    break;
+  }
+  return out;
+}
+
+/**
+ * Colour groups: the group's members split, largest first, until there are up to `most` of
+ * them. Groups with fewer than `least` of the genera (a share) are left uncoloured. Each node's
+ * colour is the index of the group it is in, -1 above them or in a small one.
+ */
+export function colourGroups(
+  lineages: Lineages,
+  most = 8,
+  least = 0.02,
+): { readonly heads: readonly number[]; readonly colour: readonly number[] } {
+  const genera = new Array<number>(lineages.nodes.length).fill(0);
+  for (let index = lineages.nodes.length - 1; index >= 0; index--) {
+    const node = elementAt(lineages.nodes, index);
+    if (isGenus(node)) genera[index] = (genera[index] ?? 0) + 1;
+    if (node.parent >= 0) genera[node.parent] = (genera[node.parent] ?? 0) + (genera[index] ?? 0);
+  }
+  // A head with one member is that member: open single lines until they branch.
+  const opened = (head: number): number => {
+    let at = head;
+    for (;;) {
+      const only = elementAt(lineages.nodes, at).children;
+      if (only.length !== 1) return at;
+      at = elementAt(only, 0);
+    }
+  };
+  const total = valueAt(genera, 0);
+  const big = (node: number): boolean => valueAt(genera, node) >= least * total;
+  const bySize = (a: number, b: number): number => valueAt(genera, b) - valueAt(genera, a);
+  let heads = [opened(0)];
+  const whole = new Set<number>();
+  for (;;) {
+    const largest = heads.filter((head) => !whole.has(head)).sort(bySize)[0];
+    if (largest === undefined) break;
+    // Its members big enough to colour; the small ones stay uncoloured.
+    const members = elementAt(lineages.nodes, largest)
+      .children.map(opened)
+      .filter(big)
+      .sort(bySize);
+    const [only] = members;
+    if (members.length === 1 && only !== undefined) {
+      // One big member and small ones: the big one takes its place.
+      heads = heads.map((head) => (head === largest ? only : head));
+      continue;
+    }
+    if (members.length === 0) {
+      whole.add(largest);
+      continue;
+    }
+    const room = most - heads.length + 1;
+    if (room < 2) break;
+    heads = [...heads.filter((head) => head !== largest), ...members.slice(0, room)];
+    if (members.length > room) break;
+  }
+  heads.sort(bySize);
+  const colour = new Array<number>(lineages.nodes.length).fill(-1);
+  heads.forEach((head, at) => {
+    colour[head] = at;
+  });
+  const isHead = new Set(heads);
+  for (const node of lineages.nodes) {
+    if (!isHead.has(node.index) && node.parent >= 0) {
+      colour[node.index] = valueAt(colour, node.parent);
+    }
+  }
+  return { heads, colour };
+}
+
+/** The node's line of ancestors, from the group down to it. */
+export function ancestry(lineages: Lineages, index: number): readonly Lineage[] {
+  const line: Lineage[] = [];
+  for (let at = index; at >= 0; at = elementAt(lineages.nodes, at).parent) {
+    line.unshift(elementAt(lineages.nodes, at));
+  }
+  return line;
+}
+
+/** Whether `index` is `ancestor` or below it. */
+export function isWithin(lineages: Lineages, index: number, ancestor: number): boolean {
+  for (let at = index; at >= 0; at = elementAt(lineages.nodes, at).parent) {
+    if (at === ancestor) return true;
+  }
+  return false;
+}

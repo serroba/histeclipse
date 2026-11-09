@@ -119,6 +119,14 @@ describe('createUrlSync', () => {
     expect(isStep(base, { ...base, craters: 'all' })).toBe(true);
     expect(isStep({ ...base, craters: { id: 1 } }, { ...base, craters: { id: 2 } })).toBe(true);
     expect(isStep({ ...base, craters: { id: 1 } }, { ...base, craters: { id: 1 } })).toBe(false);
+    const dinosaurs = { group: 'dinosaurs', pick: null } as const;
+    expect(isStep(base, { ...base, lineages: dinosaurs })).toBe(true);
+    expect(
+      isStep({ ...base, lineages: dinosaurs }, { ...base, lineages: { ...dinosaurs, pick: 4 } }),
+    ).toBe(true);
+    expect(isStep({ ...base, lineages: dinosaurs }, { ...base, lineages: { ...dinosaurs } })).toBe(
+      false,
+    );
   });
 
   it('makes the next update a step when asked, as for a jump to a milestone', () => {

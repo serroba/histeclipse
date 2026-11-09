@@ -6,6 +6,7 @@
 import { MOONS } from '../astro/moonOrbits';
 import type { SkyCulture } from '../data/skyCultures';
 import { type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
+import type { LineageGroup } from '../data/lineages';
 import { DEFAULT_SEA_ICE_MODEL, type SeaIceModel } from '../data/seaIce';
 import { DEFAULT_TEMPERATURE_MODEL, type TemperatureModel } from '../deepTime/temperatureModels';
 import {
@@ -232,6 +233,17 @@ export interface ViewState {
   readonly craters: CratersView | null;
   /** How the impacts' paths are drawn (#322): on a flat map, or in a 3D box with time as depth. */
   readonly cratersIn: CratersShape;
+  /**
+   * A fossil group's genera through time and place open (#358): the group, and the genus or
+   * group within it picked out (its PBDB number); null when closed.
+   */
+  readonly lineages: LineagesView | null;
+}
+
+/** What the lineages through time show: a fossil group, and one of its names picked out. */
+export interface LineagesView {
+  readonly group: LineageGroup;
+  readonly pick: number | null;
 }
 
 export const CRATERS_SHAPES = ['map', 'box'] as const;
@@ -355,5 +367,6 @@ export function defaultViewState(now: Date): ViewState {
     tree: null,
     craters: null,
     cratersIn: 'map',
+    lineages: null,
   };
 }
