@@ -179,7 +179,9 @@ def craft_record(
 
     A craft NSSDCA's chronology names is kept even if it never left Earth's sphere: Zond 4
     and Peregrine flew out to the Moon's distance and fell back. The chronology's mission
-    name ("Apollo 11") goes to every craft of its launch (Columbia, Eagle).
+    name ("Apollo 11") goes to the craft, to the parts it set loose (Sojourner), and, for a
+    crewed mission, to all its craft (Columbia, Eagle); not to others that shared its rocket
+    (the CubeSats launched with Artemis I have their own).
     """
     phases: dict[str, list[dict[str, str]]] = {}
     for row in [*deep, *registers]:
@@ -200,8 +202,10 @@ def craft_record(
         if found is not None:
             kept.add(str(found["id"]))
             _ = found.setdefault("about", chronicle.about)
+            crewed = "crewed" in chronicle.about.lower()
             for entry in payloads:
-                if entry["launchTag"] == found["launchTag"]:
+                ours = entry is found or bool(entry["part"]) or crewed
+                if entry["launchTag"] == found["launchTag"] and ours:
                     _ = entry.setdefault("mission", chronicle.name)
             continue
         if EARTH_ORBITER.search(chronicle.about) or NEVER_LEFT.search(chronicle.about) is None:

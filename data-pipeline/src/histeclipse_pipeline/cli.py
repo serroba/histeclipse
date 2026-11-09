@@ -66,6 +66,7 @@ from histeclipse_pipeline.skycultures import fetch_skycultures
 from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.solar_images import fetch_images
 from histeclipse_pipeline.spacecraft import fetch_spacecraft
+from histeclipse_pipeline.spacecraft_paths import fetch_spacecraft_paths
 from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
@@ -318,6 +319,14 @@ def spacecraft(args: Arguments) -> int:  # pragma: no cover - needs network acce
     """Write every craft sent beyond Earth orbit, and those that never left (public/data)."""
     left, never = fetch_spacecraft(args.out, Path(".cache/spacecraft"))
     return _say(f"wrote {left} craft beyond Earth orbit and {never} that never left to {args.out}")
+
+
+def spacecraft_paths(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the paths JPL Horizons has for the craft beyond Earth orbit (public/data)."""
+    count = fetch_spacecraft_paths(
+        Path("../public/data/spacecraft.json"), args.out, Path(".cache/spacecraft-paths")
+    )
+    return _say(f"wrote the paths of {count} craft to {args.out}")
 
 
 def planet_keys(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -576,6 +585,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         spacecraft,
         "write every craft sent beyond Earth orbit (GCAT, NSSDCA's chronology)",
         "output JSON file (public/data/spacecraft.json)",
+    ),
+    "spacecraft-paths": (
+        spacecraft_paths,
+        "write the paths JPL Horizons has for the craft beyond Earth orbit",
+        "output JSON file (public/data/spacecraft-paths.json)",
     ),
     "planet-keys": (
         planet_keys,
