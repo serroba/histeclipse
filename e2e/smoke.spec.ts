@@ -9,6 +9,7 @@ import {
   collectProblems,
   expect,
   globeRendered,
+  LIVE,
   openLayers,
   openSources,
   pickSpan,
@@ -22,7 +23,7 @@ const expectedVersion = process.env['EXPECTED_VERSION'] ?? '';
 // The 621 BCE lunar eclipse from Babylon, as someone might share it.
 const SHARED_LINK = '?t=-620-04-22T07:20&loc=32.5422,44.4209&cam=30,40,3&sel=lunar:-0620-04-22';
 
-test('loads the globe without errors or failed requests', async ({ page }) => {
+test('loads the globe without errors or failed requests', LIVE, async ({ page }) => {
   const problems = collectProblems(page);
   const response = await page.goto('./');
 
@@ -34,7 +35,7 @@ test('loads the globe without errors or failed requests', async ({ page }) => {
   expect(problems).toEqual([]);
 });
 
-test('draws the Earth, not an empty canvas', async ({ page }) => {
+test('draws the Earth, not an empty canvas', LIVE, async ({ page }) => {
   await page.goto('./');
   await globeRendered(page);
   // A screenshot captures what is on screen without reading the WebGL buffer back. An empty
@@ -43,7 +44,7 @@ test('draws the Earth, not an empty canvas', async ({ page }) => {
   expect(png.byteLength).toBeGreaterThan(60_000);
 });
 
-test('a shared link reproduces the view it describes', async ({ page }) => {
+test('a shared link reproduces the view it describes', LIVE, async ({ page }) => {
   await page.goto(SHARED_LINK);
   await globeRendered(page);
 
@@ -615,13 +616,34 @@ test('page fits the viewport without horizontal scroll', async ({ page }) => {
   expect(overflow).toBeLessThanOrEqual(0);
 });
 
-test('serves the expected release', async ({ page }) => {
+test('serves the expected release', LIVE, async ({ page }) => {
   test.skip(expectedVersion === '', 'EXPECTED_VERSION is not set');
   await page.goto('./');
   await expect(page.locator('meta[name="histeclipse-version"]')).toHaveAttribute(
     'content',
     expectedVersion,
   );
+});
+
+test('the live site is served with its security and caching headers', LIVE, async ({ page }) => {
+  // Cloudflare sets these in front of GitHub Pages (#240); a local preview has none of them.
+  test.skip(process.env['BASE_URL'] === undefined, 'only the live site sets these headers');
+  const scripts: string[] = [];
+  page.on('response', (response) => {
+    if (/\/assets\/[^/]+\.js$/.test(response.url())) scripts.push(response.url());
+  });
+  const response = await page.goto('./');
+  const headers = response?.headers() ?? {};
+  expect(headers['x-content-type-options']).toBe('nosniff');
+  expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+  expect(headers['strict-transport-security']).toMatch(/max-age=\d+/);
+  expect(headers['permissions-policy']).toContain('camera=()');
+  // The page is checked for a new release on every visit; its hashed parts are kept a year.
+  expect(headers['cache-control']).toBe('no-cache');
+  await globeRendered(page);
+  expect(scripts.length).toBeGreaterThan(0);
+  const script = await page.request.get(scripts[0] ?? '');
+  expect(script.headers()['cache-control']).toMatch(/max-age=31536000/);
 });
 
 const BABYLON_NIGHT_3000_BCE = './?mode=sky&t=-2999-03-20T19:00&loc=32.5422,44.4209';
@@ -636,40 +658,42 @@ async function skyRendered(page: Page): Promise<void> {
   await expect(page.getByTestId('sky')).toHaveAttribute('data-rendered', 'true');
 }
 
-test('a page opened before a deploy reloads once when a late part of it is gone', async ({
-  page,
-}) => {
-  // Two whole page loads, the second up to 30 s on a busy machine.
-  test.slow();
-  let missing = 1;
-  // Each request for the page itself, rather than each load event: on the live site a reload
-  // can start before the first page's load event, which then never fires (#306).
-  let loads = 0;
-  page.on('request', (request) => {
-    if (request.isNavigationRequest() && request.frame() === page.mainFrame()) loads += 1;
-  });
-  await test.step('Given the sky’s code gone from the server once, as after a deploy', async () => {
-    await page.route('**/assets/skyScene-*.js', async (route) => {
-      if (missing > 0) {
-        missing -= 1;
-        await route.fulfill({ status: 404, body: 'gone' });
-      } else {
-        await route.continue();
-      }
+test(
+  'a page opened before a deploy reloads once when a late part of it is gone',
+  LIVE,
+  async ({ page }) => {
+    // Two whole page loads, the second up to 30 s on a busy machine.
+    test.slow();
+    let missing = 1;
+    // Each request for the page itself, rather than each load event: on the live site a reload
+    // can start before the first page's load event, which then never fires (#306).
+    let loads = 0;
+    page.on('request', (request) => {
+      if (request.isNavigationRequest() && request.frame() === page.mainFrame()) loads += 1;
     });
-  });
-  await test.step('When they open the sky', async () => {
-    await page.goto('./?mode=sky&t=2025-03-20T19:00Z&loc=32.5422,44.4209');
-  });
-  await test.step('Then the page reloads by itself and the stars come up', async () => {
-    // A whole second load: more than the usual wait on a busy machine.
-    await expect.poll(() => loads, { timeout: 30_000 }).toBe(2);
-    await expect(page.getByTestId('sky')).toHaveAttribute('data-rendered', 'true', {
-      timeout: 15_000,
+    await test.step('Given the sky’s code gone from the server once, as after a deploy', async () => {
+      await page.route('**/assets/skyScene-*.js', async (route) => {
+        if (missing > 0) {
+          missing -= 1;
+          await route.fulfill({ status: 404, body: 'gone' });
+        } else {
+          await route.continue();
+        }
+      });
     });
-    expect(loads).toBe(2);
-  });
-});
+    await test.step('When they open the sky', async () => {
+      await page.goto('./?mode=sky&t=2025-03-20T19:00Z&loc=32.5422,44.4209');
+    });
+    await test.step('Then the page reloads by itself and the stars come up', async () => {
+      // A whole second load: more than the usual wait on a busy machine.
+      await expect.poll(() => loads, { timeout: 30_000 }).toBe(2);
+      await expect(page.getByTestId('sky')).toHaveAttribute('data-rendered', 'true', {
+        timeout: 15_000,
+      });
+      expect(loads).toBe(2);
+    });
+  },
+);
 
 test('a late part that stays missing says so once, without reloading again and again', async ({
   page,

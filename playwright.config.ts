@@ -8,6 +8,18 @@ const remoteBaseURL = process.env['BASE_URL'];
 const localBaseURL = 'http://localhost:4173/';
 const isCI = process.env['CI'] !== undefined;
 
+/**
+ * Against the live site, each browser says it is a test, so the site's analytics can tell the
+ * suite from readers (#348). The device's own user agent stays in front, as sites read it.
+ */
+function device(name: string): (typeof devices)[string] {
+  const profile = devices[name];
+  if (profile === undefined) throw new Error(`No such device: ${name}`);
+  return remoteBaseURL === undefined
+    ? profile
+    : { ...profile, userAgent: `${profile.userAgent} histeclipse-live-test` };
+}
+
 export default defineConfig<DisplayOptions>({
   testDir: 'e2e',
   // Tests, not files, are shared out among workers and CI's shards: one long file (the smoke
@@ -27,14 +39,14 @@ export default defineConfig<DisplayOptions>({
     timezoneId: 'UTC',
   },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile', use: { ...devices['Pixel 7'] } },
+    { name: 'desktop', use: { ...device('Desktop Chrome') } },
+    { name: 'mobile', use: { ...device('Pixel 7') } },
     // The journeys and the time features again, on a 120 Hz display: animation that counts
     // frames instead of time shows up there (deep time once stalled at 120 Hz).
     {
       name: 'desktop-120hz',
       testMatch: /(journeys|time|layers|ice|history)\.spec\.ts$/,
-      use: { ...devices['Desktop Chrome'], refreshRate: 120 },
+      use: { ...device('Desktop Chrome'), refreshRate: 120 },
     },
   ],
   ...(remoteBaseURL === undefined && {
