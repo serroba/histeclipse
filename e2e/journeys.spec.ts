@@ -693,6 +693,15 @@ test('Jupiter’s, Saturn’s and Mars’s moons go round them, each named, glid
     await expect(globe).toHaveAttribute('data-focus', 'mars', { timeout: 30_000 });
     await expect(moons.getByText('Phobos', { exact: true })).toBeVisible();
   });
+  await test.step('And with the orbits drawn, every moon’s orbit is drawn about its planet', async () => {
+    await page.goto('./?t=2025-01-10T12:00&cam=25,20,10&focus=mars&layers=lunar,solar,orbits');
+    await expect(globe).toHaveAttribute('data-focus', 'mars', { timeout: 30_000 });
+    // All fourteen: Mars's two, Jupiter's four and Saturn's eight, not only those in view.
+    await expect(globe).toHaveAttribute('data-moon-paths', '14', { timeout: 30_000 });
+    await page.getByRole('button', { name: 'Orbits', exact: true }).click();
+    // Without them, only the moons of the planet in view.
+    await expect(globe).toHaveAttribute('data-moon-paths', '2');
+  });
   await test.step('And Venus, alone with Mercury, is said to have none', async () => {
     await page.goto('./?t=2025-01-10T12:00&cam=25,20,4&focus=venus');
     await expect(globe).toHaveAttribute('data-focus', 'venus', { timeout: 30_000 });

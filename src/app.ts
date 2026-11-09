@@ -3711,9 +3711,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The moons of Mars, Jupiter and Saturn (#335), loaded the first time one of them is in view.
   let moonOrbitsAsked = false;
   let moonOrbits: MoonOrbits | null = null;
-  function showMoons(body: string): void {
+  /** Load the moons' orbits once a planet with moons is in view, or the orbits are drawn. */
+  function showMoons(body: string, orbitsShown = false): void {
     const near = body === 'mars' || body === 'jupiter' || body === 'saturn' || isMoonBody(body);
-    if (moonOrbitsAsked || !near) return;
+    if (moonOrbitsAsked || !(near || orbitsShown)) return;
     moonOrbitsAsked = true;
     loadMoonOrbits(`${base}data/moon-orbits.json`, fetchJson).then(
       (orbits) => {
@@ -4124,6 +4125,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     if (!changed) return;
     orbitsDrawn = 'on';
+    // The moons' orbits are drawn with the planets' (#335).
+    showMoons(state.focus, true);
     globe.setOrbits(
       Object.fromEntries(ORBITING.map((body) => [body, orbitCache[body]?.path ?? []])) as Record<
         Orbiting,
