@@ -4950,3 +4950,34 @@ button:has(> .icon-label) > .icon {
   text-transform: uppercase;
   color: rgb(255 255 255 / 0.88);
 }
+
+/* The moons of the planet in view (#335): a dot on the moon, its name beside it, as moons too
+   small to see still need finding. */
+.moon-name {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: rgb(255 255 255 / 0.9);
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+  text-shadow:
+    0 0 3px rgb(0 0 0 / 0.9),
+    0 1px 2px rgb(0 0 0 / 0.8);
+}
+
+.moon-name::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.85);
+}
+
+.moon-name[hidden] {
+  display: none;
+}

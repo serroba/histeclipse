@@ -646,6 +646,55 @@ test('close up on Venus, the Light switch shows the ground beneath its clouds, b
   expect(problems).toEqual([]);
 });
 
+test('Jupiter’s, Saturn’s and Mars’s moons go round them, each named, gliding as the hours play', async ({
+  page,
+}) => {
+  // Three planets, each a map fetched: slow on a phone drawn in software.
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const moons = page.getByTestId('moon-names');
+  const cycle = page.getByRole('group', { name: /cycle/ });
+  await test.step('Given Jupiter seen from afar, its moons about it', async () => {
+    await page.goto('./?t=2025-01-10T12:00&cam=25,20,40&focus=jupiter');
+    await expect(globe).toHaveAttribute('data-focus', 'jupiter', { timeout: 30_000 });
+  });
+  await test.step('Then the Galilean moons in view are named', async () => {
+    await expect(moons).toHaveAttribute('data-planet', 'jupiter');
+    await expect(moons.getByText('Io', { exact: true })).toBeVisible();
+    await expect(moons.getByText('Europa', { exact: true })).toBeVisible();
+    // Saturn's moons are not named here.
+    await expect(moons.getByText('Titan', { exact: true })).toBeHidden();
+  });
+  await test.step('When the cycle plays at an hour a second', async () => {
+    await page.getByRole('combobox', { name: 'Time a second' }).selectOption({ label: '1 hour/s' });
+    const before = await moons.getByText('Io', { exact: true }).getAttribute('style');
+    await cycle.getByRole('button', { name: 'Play the cycle' }).click();
+    // Then Io glides on along its orbit: its name moves with it.
+    await expect(moons.getByText('Io', { exact: true })).not.toHaveAttribute(
+      'style',
+      before ?? '',
+      {
+        timeout: 15_000,
+      },
+    );
+    await cycle.getByRole('button', { name: 'Stop the cycle' }).click();
+  });
+  await test.step('And Saturn’s moons are named about it, Titan among them', async () => {
+    await page.goto('./?t=2025-01-10T12:00&cam=25,20,40&focus=saturn');
+    await expect(globe).toHaveAttribute('data-focus', 'saturn', { timeout: 30_000 });
+    await expect(moons).toHaveAttribute('data-planet', 'saturn');
+    await expect(moons.getByText('Rhea', { exact: true })).toBeVisible();
+    await expect(moons.getByText('Dione', { exact: true })).toBeVisible();
+  });
+  await test.step('And Mars’s two, Phobos and Deimos', async () => {
+    await page.goto('./?t=2025-01-10T12:00&cam=25,20,10&focus=mars');
+    await expect(globe).toHaveAttribute('data-focus', 'mars', { timeout: 30_000 });
+    await expect(moons.getByText('Phobos', { exact: true })).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});
+
 test('close up, the IAU’s names for the largest features turn with each rocky body, on its day side', async ({
   page,
 }) => {

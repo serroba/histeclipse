@@ -2,7 +2,7 @@
  * Away from Earth, the bottom bar's time is the body's own cycle as Earth sees it (#329): Play,
  * a slider over the days from one conjunction to the next (or, for the Sun, perihelion to
  * perihelion), ticks where the cycle turns, and those moments named beneath, each a tap away.
- * Beside the date goes the speed, in days a second.
+ * Beside the date goes the speed: hours a second, to watch moons go round (#335), or days.
  *
  * DOM glue, covered by the Playwright suite; the cycle is worked out in `astro/planetCycle.ts`.
  */
@@ -10,8 +10,9 @@
 import type { CycleMark } from '../astro/planetCycle';
 import { element } from './dom';
 
-/** Days a second the cycle can play at. */
-export const CYCLE_SPEEDS = [1, 5, 10, 30] as const;
+/** Hours a second the cycle can play at: an hour or six for the moons, a day or more for the
+ * planets. */
+export const CYCLE_SPEEDS = [1, 6, 24, 120, 240, 720] as const;
 export type CycleSpeed = (typeof CYCLE_SPEEDS)[number];
 
 /** Each moment's words, and what it means. */
@@ -24,6 +25,13 @@ export const MARK_WORDS: Readonly<Record<CycleMark, readonly [string, string]>> 
   perihelion: ['Earth nearest the Sun', 'Perihelion: the Sun looks its largest'],
   aphelion: ['Earth farthest from the Sun', 'Aphelion: the Sun looks its smallest'],
 };
+
+/** A speed as written: "6 hours/s", "1 day/s", "10 days/s". */
+export function speedWords(hours: CycleSpeed): string {
+  if (hours < 24) return `${String(hours)} ${hours === 1 ? 'hour' : 'hours'}/s`;
+  const days = hours / 24;
+  return `${String(days)} ${days === 1 ? 'day' : 'days'}/s`;
+}
 
 export interface CycleMoment {
   readonly mark: CycleMark;
@@ -66,14 +74,8 @@ export function createCycleTrack(handlers: {
   const moments = element('ol', { class: 'cycle-moments' });
   const speed = element(
     'select',
-    { class: 'history-speed', 'aria-label': 'Days a second' },
-    ...CYCLE_SPEEDS.map((each) =>
-      element(
-        'option',
-        { value: String(each) },
-        `${String(each)} ${each === 1 ? 'day' : 'days'}/s`,
-      ),
-    ),
+    { class: 'history-speed', 'aria-label': 'Time a second' },
+    ...CYCLE_SPEEDS.map((each) => element('option', { value: String(each) }, speedWords(each))),
   );
   const extras = element('span', { class: 'history-extras', hidden: '' }, speed);
   const root = element(
