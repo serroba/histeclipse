@@ -1087,7 +1087,7 @@ export const SOURCES = {
   pbdb: {
     name: 'Paleobiology Database',
     kind: 'dataset',
-    cite: 'The Paleobiology Database, fossil occurrences of four groups of animals',
+    cite: 'The Paleobiology Database, fossil occurrences and classification of four groups of animals',
     url: 'https://paleobiodb.org',
     licence: 'CC BY 4.0',
   },
@@ -1460,6 +1460,14 @@ export const WHYS = {
     what: 'Fossils of four groups of animals, counted by 5 million years and 5°, where they lay then.',
     sources: ['pbdb', 'paleodem'],
     how: 'Places at their age on the PALEOMAP reconstruction.',
+  },
+  lineages: {
+    title: 'Life through time',
+    what: 'Each genus of four groups of animals as a line through time, from its first fossil to its last, standing where its fossils lay then and joined to its family and order.',
+    sources: ['pbdb', 'paleodem'],
+    how: 'The Paleobiology Database’s classification gives each genus its family, order and so on, and its first and last appearance; its finds give where it lay, placed at their age on the PALEOMAP reconstruction and averaged every 5 million years. A family or order starts where and when its oldest member does. The floor is PALEOMAP’s elevation map at the slider’s moment. Footprints, burrows and eggs, which PBDB names apart from the animals that made them, are left out.',
+    others:
+      'The classification is a taxonomy, not a dated phylogeny: branch points are drawn at the oldest fossil found, and true splits came earlier. Open Tree of Life’s synthesis, on the tree of life, places some of these genera differently; both are kept.',
   },
 } as const satisfies Record<string, Why>;
 
