@@ -37,12 +37,12 @@ export function createBodyBar(why: HTMLElement): BodyBar {
   const name = element('strong', { class: 'body-bar-name' });
   const text = element('span', { class: 'body-bar-text', 'data-testid': 'body-facts' });
   const picture = element('span', { class: 'body-bar-picture', 'data-testid': 'body-picture' });
-  const strip = element('span', { class: 'colour-key-strip' });
-  const ticks = element('span', { class: 'colour-key-ticks' });
-  const note = element('span', { class: 'colour-key-note' });
+  const strip = element('span', { class: 'body-key-strip' });
+  const ticks = element('span', { class: 'body-key-ticks' });
+  const note = element('span', { class: 'body-key-note' });
   const key = element(
     'span',
-    { class: 'colour-key', role: 'img', 'data-testid': 'colour-key', hidden: '' },
+    { class: 'body-key', role: 'img', 'data-testid': 'colour-key', hidden: '' },
     strip,
     ticks,
     note,
@@ -72,7 +72,7 @@ export function createBodyBar(why: HTMLElement): BodyBar {
       strip.style.background = view.key.gradient;
       ticks.replaceChildren(
         ...view.key.ticks.map(({ label, at }) => {
-          const tick = element('span', { class: 'colour-key-tick' }, label);
+          const tick = element('span', { class: 'body-key-tick' }, label);
           tick.style.left = `${String(at * 100)}%`;
           // Shifted by its own width as far as it is across, so the end labels stay inside.
           tick.style.transform = `translateX(${String(-at * 100)}%)`;
