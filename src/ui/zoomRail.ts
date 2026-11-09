@@ -8,6 +8,7 @@
  * DOM glue, covered by the Playwright suite; the scale, its stops and its words are unit-tested.
  */
 
+import { MOON_NAMES } from '../globe/moonLook';
 import { BODY_RADIUS } from '../globe/bodyRadius';
 import { EARTH_RADIUS_KM } from '../globe/spaceFrame';
 import { CAMERA_DISTANCE_RANGE, type Body } from '../state/viewState';
@@ -44,6 +45,7 @@ const NAMES: Readonly<Record<Body, string>> = {
   mars: 'Mars',
   jupiter: 'Jupiter',
   saturn: 'Saturn',
+  ...MOON_NAMES,
 };
 
 /** "from Earth", "from the Sun": how the readout says where it measures from. */

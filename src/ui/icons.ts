@@ -56,6 +56,8 @@ const KIND_PATHS: Readonly<Record<SourceKind, readonly string[]>> = {
   imagery: ['M3 5h18v14H3z', 'M3 16l5-5 4 4 3-3 6 6', 'M15.5 9a1.5 1.5 0 1 0 0-.01'],
   // A list.
   catalogue: ['M9 6h11', 'M9 12h11', 'M9 18h11', 'M4.5 6h.01', 'M4.5 12h.01', 'M4.5 18h.01'],
+  // An "i" in a circle: an agency's page on a body or a mission.
+  reference: ['M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z', 'M12 11v6', 'M12 7.5h.01'],
 };
 
 /** The icon for a kind of source. */
@@ -70,6 +72,7 @@ export const KIND_NAMES: Readonly<Record<SourceKind, string>> = {
   model: 'Model',
   imagery: 'Imagery',
   catalogue: 'Catalogue',
+  reference: 'Reference',
 };
 
 /** The site's control icons, by what they stand for. */

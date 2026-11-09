@@ -129,7 +129,9 @@ import { createEclipseCard } from './ui/eclipseCard';
 import type { BodyKey } from './ui/bodyBar';
 import { keyGradient, keyTicks, loadColourKeys } from './data/planetKeys';
 import { isNamedBody, loadPlaceNames, type NamedBody, type PlaceNames } from './data/planetNames';
-import { loadMoonOrbits } from './astro/moonOrbits';
+import { loadMoonOrbits, moonPosition, type MoonName, type MoonOrbits } from './astro/moonOrbits';
+import { moonAbout, moonLine } from './data/moonFacts';
+import { isMoonBody, MOON_NAMES, moonPlanet } from './globe/moonLook';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
 import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
 import { createFamousPanel } from './ui/famousPanel';
@@ -568,7 +570,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   const waysLegend = createWaysLegend(whySheet.mark('ways', 'Ways of life'));
   // Away from Earth, the bar's line for the body in view, in place of Earth's own.
-  const bodyBar = createBodyBar(whySheet.mark('bodies', 'Sun, Moon and planets'));
+  // A planet's moon in view has its own sources (#335).
+  const bodyBar = createBodyBar(
+    whySheet.mark(
+      () => (isMoonBody(store.get().focus) ? 'moons' : 'bodies'),
+      'Sun, Moon and planets',
+    ),
+  );
   // The eclipse picked before entering deep time, picked again on leaving it.
   let selectionBeforeDeep: ViewState['selection'] = null;
   function leaveDeepTime(): void {
@@ -1263,6 +1271,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function cycleBody(state: ViewState): PlanetName | 'sun' | null {
     const { focus } = state;
     if (!awayFromEarth(state) || state.selection !== null) return null;
+    // A planet's moon goes by its planet's cycle.
+    if (isMoonBody(focus)) return moonPlanet(focus);
     return focus === 'earth' || focus === 'moon' ? null : focus;
   }
   /** A moment of the cycle as written: "16 Jan 2025". */
@@ -3694,18 +3704,22 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setBodyMap(focus, `${base}${largeMaps ? sizes.large : sizes.small}`);
       return;
     }
-    if (focus === 'sun') return;
+    if (focus === 'sun' || isMoonBody(focus)) return;
     globe.sharpenPlanet(focus);
   }
 
   // The moons of Mars, Jupiter and Saturn (#335), loaded the first time one of them is in view.
   let moonOrbitsAsked = false;
+  let moonOrbits: MoonOrbits | null = null;
   function showMoons(body: string): void {
-    if (moonOrbitsAsked || (body !== 'mars' && body !== 'jupiter' && body !== 'saturn')) return;
+    const near = body === 'mars' || body === 'jupiter' || body === 'saturn' || isMoonBody(body);
+    if (moonOrbitsAsked || !near) return;
     moonOrbitsAsked = true;
     loadMoonOrbits(`${base}data/moon-orbits.json`, fetchJson).then(
       (orbits) => {
+        moonOrbits = orbits;
         globe.setMoonOrbits(orbits);
+        showBody(store.get());
       },
       (error: unknown) => {
         moonOrbitsAsked = false;
@@ -3814,7 +3828,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const focus = state.focus;
     if (state.view === 'earth-from-here' && focus !== 'moon') {
       // Standing on the body in focus, looking back at Earth (#245).
-      const observer = focus === 'sun' ? sunKm : (planets?.position(focus, jdTT) ?? null);
+      const observer =
+        focus === 'sun'
+          ? sunKm
+          : isMoonBody(focus)
+            ? moonFromEarth(focus, jdTT)
+            : (planets?.position(focus, jdTT) ?? null);
       const [, label] = lookBack(focus);
       bodyBar.render(
         observer === null
@@ -3827,6 +3846,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
       );
     } else if (focus === 'sun') {
       bodyBar.render({ name: 'The Sun', text: sunText(sunDistance(jdTT)) });
+    } else if (isMoonBody(focus)) {
+      const at = moonFromEarth(focus, jdTT);
+      bodyBar.render(
+        at === null || moonOrbits === null
+          ? null
+          : {
+              name: MOON_NAMES[focus],
+              text: moonLine(focus, moonOrbits[focus], Math.hypot(...at)),
+              about: moonAbout(focus),
+            },
+      );
     } else if (focus === 'moon') {
       const moonKm = moonEphemeris?.position(jdTT) ?? null;
       // The view picked (#239): the usual map, or a mission's other one, fetched the first time.
@@ -3864,11 +3894,23 @@ export async function startApp(root: HTMLElement): Promise<void> {
           : {
               name: PLANET_NAMES[focus],
               text: planetText(planetFacts(focus, position, sunKm)),
+              // Of the planets drawn, the inner two alone have no moons (#335).
+              ...(focus === 'mercury' || focus === 'venus'
+                ? { about: `${PLANET_NAMES[focus]} has no moons.` }
+                : {}),
               picture: caption,
               ...keyFor(view),
             },
       );
     }
+  }
+
+  /** Where a planet's moon is from Earth's centre, J2000 km; null until both are known. */
+  function moonFromEarth(moon: MoonName, jdTT: JulianDay): [number, number, number] | null {
+    const planet = planets?.position(moonPlanet(moon), jdTT);
+    if (planet === undefined || moonOrbits === null) return null;
+    const [x, y, z] = moonPosition(moonOrbits[moon], jdTT);
+    return [planet[0] + x, planet[1] + y, planet[2] + z];
   }
 
   /** What a why says of the moment shown: deep time's map, the period's own evidence. */

@@ -3,6 +3,7 @@
  * See `url.ts` for the query-string format.
  */
 
+import { MOONS } from '../astro/moonOrbits';
 import type { SkyCulture } from '../data/skyCultures';
 import { type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
 import { DEFAULT_SEA_ICE_MODEL, type SeaIceModel } from '../data/seaIce';
@@ -121,6 +122,10 @@ export const BODIES = [
   'mars',
   'jupiter',
   'saturn',
+  // The moons of Mars, Jupiter and Saturn (#335).
+  ...MOONS.mars,
+  ...MOONS.jupiter,
+  ...MOONS.saturn,
 ] as const;
 export type Body = (typeof BODIES)[number];
 

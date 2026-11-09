@@ -693,6 +693,54 @@ test('Jupiter’s, Saturn’s and Mars’s moons go round them, each named, glid
     await expect(globe).toHaveAttribute('data-focus', 'mars', { timeout: 30_000 });
     await expect(moons.getByText('Phobos', { exact: true })).toBeVisible();
   });
+  await test.step('And Venus, alone with Mercury, is said to have none', async () => {
+    await page.goto('./?t=2025-01-10T12:00&cam=25,20,4&focus=venus');
+    await expect(globe).toHaveAttribute('data-focus', 'venus', { timeout: 30_000 });
+    await expect(page.getByTestId('body-about')).toHaveText('Venus has no moons.');
+  });
+  expect(problems).toEqual([]);
+});
+
+test('tapping a moon’s name flies to it, and the bar tells what is known of it', async ({
+  page,
+}) => {
+  // A planet, then a flight to its moon: slow on a phone drawn in software.
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const moons = page.getByTestId('moon-names');
+  await test.step('Given Jupiter seen from afar, Europa named beside it', async () => {
+    await page.goto('./?t=2025-01-10T12:00&cam=25,20,40&focus=jupiter');
+    await expect(globe).toHaveAttribute('data-focus', 'jupiter', { timeout: 30_000 });
+    await expect(moons.getByRole('button', { name: 'Europa', exact: true })).toBeVisible();
+  });
+  await test.step('When they tap Europa', async () => {
+    await moons.getByRole('button', { name: 'Europa', exact: true }).click();
+  });
+  await test.step('Then the view flies to Europa, and the link keeps it', async () => {
+    await expect(globe).toHaveAttribute('data-focus', 'europa', { timeout: 30_000 });
+    await expect(page).toHaveURL(/[?&]focus=europa/);
+  });
+  await test.step('And the bar says whose moon it is, and its story: an ocean under the ice', async () => {
+    await expect(page.getByTestId('body-facts')).toContainText(
+      'A moon of Jupiter · 3,122 km across',
+    );
+    const about = page.getByTestId('body-about');
+    await expect(about).toContainText('Europa was found by Galileo Galilei, January 1610.');
+    await expect(about).toContainText('an ocean of salt water');
+    // Its own name gives way to it; its neighbours keep theirs.
+    await expect(moons.getByRole('button', { name: 'Europa', exact: true })).toBeHidden();
+  });
+  await test.step('And its book opens the moons’ sources: NASA’s page on it, and the paper', async () => {
+    await page
+      .getByTestId('body-bar')
+      .getByRole('button', { name: 'Why: Sun, Moon and planets' })
+      .click();
+    const sheet = page.getByRole('dialog', { name: 'The planets’ moons' });
+    await expect(sheet).toBeVisible();
+    await expect(sheet.getByRole('link', { name: /NASA: Europa(?! Clipper)/ })).toBeVisible();
+    await expect(sheet.getByRole('link', { name: /Kivelson et al\. 2000/ }).first()).toBeVisible();
+  });
   expect(problems).toEqual([]);
 });
 

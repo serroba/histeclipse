@@ -357,7 +357,14 @@ export function createWhySheet(
 
   function openAll(): void {
     heading.textContent = 'All sources';
-    const kinds: readonly SourceKind[] = ['paper', 'dataset', 'model', 'imagery', 'catalogue'];
+    const kinds: readonly SourceKind[] = [
+      'paper',
+      'dataset',
+      'model',
+      'imagery',
+      'catalogue',
+      'reference',
+    ];
     const entries = Object.entries(SOURCES) as [SourceId, Source][];
     body.replaceChildren(
       ...kinds.map((kind) =>

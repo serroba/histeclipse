@@ -107,7 +107,8 @@ import { MOONS, type MoonOrbits } from '../astro/moonOrbits';
 import { elementAt } from '../util/arrays';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius, polarRatio } from './planetLook';
-import { createMoonMeshes, MOON_NAMES } from './moonMeshes';
+import { isMoonBody, MOON_NAMES, moonPlanet } from './moonLook';
+import { createMoonMeshes } from './moonMeshes';
 import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
 import type { FossilCell } from '../data/fossils';
@@ -149,6 +150,7 @@ const ZOOM_MS = 1200;
 const VIEW_FLIGHT_MS = 1600;
 /** Arriving at a body, the camera stops this many of its radii from the centre. */
 const FOCUS_DISTANCE = 4;
+
 /** A press that moves less than this (pixels) is a click on a body, not a drag. */
 const CLICK_SLOP_PIXELS = 6;
 /** Beyond this distance (Earth radii) the view holds still in space and Earth turns in it. */
@@ -1603,10 +1605,15 @@ export function createGlobe(
   const moonLabels = Object.values(MOONS)
     .flat()
     .map((name) => {
-      const element = document.createElement('span');
+      // A name to tap to fly to its moon.
+      const element = document.createElement('button');
+      element.type = 'button';
       element.className = 'moon-name';
       element.textContent = MOON_NAMES[name];
       element.hidden = true;
+      element.addEventListener('click', () => {
+        requestBody(name);
+      });
       moonNameLayer.append(element);
       return { name, element, width: 0, height: 0 };
     });
@@ -1686,7 +1693,13 @@ export function createGlobe(
   const sunFrame = new Quaternion();
   // The Moon's map has longitude 0 at the mesh's +Z (see above); geoToVector puts it at +X.
   const moonMapTurn = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2);
-  const bodyMeshes: Record<Body, Mesh> = { earth, moon, sun, ...planets.meshes };
+  const bodyMeshes: Record<Body, Mesh> = {
+    earth,
+    moon,
+    sun,
+    ...planets.meshes,
+    ...moonSystems.meshes,
+  };
   const bodyClickListeners = new Set<(body: Body) => void>();
   const placeListeners = new Set<(place: GeoPoint) => void>();
   const emptyTapListeners = new Set<() => void>();
@@ -1764,6 +1777,10 @@ export function createGlobe(
     }
     if (body === 'sun') return { position: sun.position, rotation: sunFrame };
     // Planets, like the Sun, are orbited in J2000 axes, so the camera does not spin with Earth.
+    // The planets' moons ride with their planet: where they are in the scene is their world's.
+    if (isMoonBody(body)) {
+      return { position: bodyMeshes[body].getWorldPosition(new Vector3()), rotation: sunFrame };
+    }
     if (body !== 'earth') return { position: bodyMeshes[body].position, rotation: sunFrame };
     return { position: new Vector3(), rotation: new Quaternion() };
   }
@@ -1809,6 +1826,7 @@ export function createGlobe(
   }
 
   function bodyReady(body: Body): boolean {
+    if (isMoonBody(body)) return moonSystems.ready();
     return body === 'earth' || bodyMeshes[body].visible;
   }
 
@@ -2188,7 +2206,12 @@ export function createGlobe(
   const moonWorld = new Vector3();
   /** Name the moons of the planet in view, those in front of it or beside it, on screen. */
   function placeMoonNames(): void {
-    const planet = focus === 'mars' || focus === 'jupiter' || focus === 'saturn' ? focus : null;
+    // A moon in view shows its planet's moons, itself among them.
+    const planet = isMoonBody(focus)
+      ? moonPlanet(focus)
+      : focus === 'mars' || focus === 'jupiter' || focus === 'saturn'
+        ? focus
+        : null;
     moonSystems.showPaths(planet);
     if (moonNameLayer.hidden === true) return;
     const viewWidth = container.clientWidth;
@@ -2217,7 +2240,9 @@ export function createGlobe(
     let count = 0;
     for (const label of moonLabels) {
       const { name, element } = label;
-      const mine = planet !== null && (MOONS[planet] as readonly string[]).includes(name);
+      // Not the moon in view itself: it fills the screen.
+      const mine =
+        planet !== null && name !== focus && (MOONS[planet] as readonly string[]).includes(name);
       let visible = mine && disc !== null && planetShown;
       let x = 0;
       let y = 0;
