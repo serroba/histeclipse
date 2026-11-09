@@ -48,6 +48,7 @@ def test_each_map_is_pinned_and_from_a_mission_release() -> None:
         "moons/dione",
         "moons/rhea",
         "moons/titan",
+        "moons/titan-radar",
         "moons/iapetus",
         "earth-blue-marble",
         "moon-lroc",
