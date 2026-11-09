@@ -1,8 +1,9 @@
 /**
- * The colour keys of the height views (`public/data/planet-keys.json`, #334), written by the
- * pipeline's `planet-keys` command: for Mars and the Moon, measured against MOLA and LOLA
- * heights; for Venus, read off USGS Astrogeology's legend. Each stop is a height in km and the
- * colour the map gives it.
+ * The colour keys (`public/data/planet-keys.json`, #334), written by the pipeline's
+ * `planet-keys` command. The height views': for Mars and the Moon, measured against MOLA and
+ * LOLA heights; for Venus, read off USGS Astrogeology's legend; each stop a height in km and the
+ * colour the map gives it. The enhanced-colour views' (the Moon's, Mercury's): swatches, each a
+ * kind of rock and the colour the map gives a place known for it.
  */
 
 import * as v from 'valibot';
@@ -26,17 +27,40 @@ const KeySchema = v.pipe(
   ),
 );
 
+const SwatchKeySchema = v.strictObject({
+  credit: v.pipe(v.string(), v.minLength(1)),
+  source: v.pipe(v.string(), v.url()),
+  swatches: v.pipe(
+    v.array(
+      v.strictObject({
+        kind: v.pipe(v.string(), v.minLength(1)),
+        place: v.pipe(v.string(), v.minLength(1)),
+        colour: v.pipe(v.string(), v.regex(/^#[0-9a-f]{6}$/)),
+      }),
+    ),
+    v.minLength(2),
+  ),
+});
+
 const KeysSchema = v.strictObject({
-  schemaVersion: v.literal(1),
+  schemaVersion: v.literal(2),
   keys: v.strictObject({ mars: KeySchema, moon: KeySchema, venus: KeySchema }),
+  swatches: v.strictObject({ moon: SwatchKeySchema, mercury: SwatchKeySchema }),
 });
 
 export type ColourKey = v.InferOutput<typeof KeySchema>;
+export type SwatchKey = v.InferOutput<typeof SwatchKeySchema>;
 export type ColourKeys = v.InferOutput<typeof KeysSchema>['keys'];
+export type SwatchKeys = v.InferOutput<typeof KeysSchema>['swatches'];
 export type KeyedBody = keyof ColourKeys;
+export type SwatchedBody = keyof SwatchKeys;
 
-export async function loadColourKeys(url: string, fetchJson: Fetch): Promise<ColourKeys> {
-  return (await getJson(fetchJson, url, KeysSchema)).keys;
+export async function loadColourKeys(
+  url: string,
+  fetchJson: Fetch,
+): Promise<{ readonly heights: ColourKeys; readonly rocks: SwatchKeys }> {
+  const { keys, swatches } = await getJson(fetchJson, url, KeysSchema);
+  return { heights: keys, rocks: swatches };
 }
 
 /** The key as a CSS gradient, left to right, each stop at its share of the heights' range. */

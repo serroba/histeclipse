@@ -2207,8 +2207,12 @@ export function createGlobe(
         near &&
         lit &&
         facing > 0.3 &&
-        Math.abs(projected.x) < 1 &&
-        Math.abs(projected.y) < 1 &&
+        // Whole names only: none cut by the edge of the view.
+        x - width / 2 >= 0 &&
+        x + width / 2 <= viewWidth &&
+        y - height / 2 >= 0 &&
+        y + height / 2 <= viewHeight &&
+        projected.z < 1 &&
         largeEnough(label.km, radius * EARTH_RADIUS_KM, radiusPixels) &&
         placed.every(
           (other) =>
