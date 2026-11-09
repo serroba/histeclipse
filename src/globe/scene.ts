@@ -2216,6 +2216,7 @@ export function createGlobe(
         ? focus
         : null;
     moonSystems.showPaths(planet);
+    container.dataset['moonPaths'] = String(moonSystems.pathsShown());
     if (moonNameLayer.hidden === true) return;
     const viewWidth = container.clientWidth;
     const viewHeight = container.clientHeight;
@@ -2447,6 +2448,8 @@ export function createGlobe(
       }
       orbitLoops = [];
       orbits.visible = paths !== null;
+      // The moons' orbits go with the planets' (#335).
+      moonSystems.showAllPaths(paths !== null);
       container.dataset['orbits'] = paths === null ? 'off' : String(ORBITING.length);
       if (paths === null) {
         needsRender = true;
