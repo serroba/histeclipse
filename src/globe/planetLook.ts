@@ -179,11 +179,13 @@ export function colourAt(planet: PlanetName, latitude: number): string {
 }
 
 /** Saturn's rings, km from the planet's centre: inner edge of the C ring to outer edge of the A. */
-export const SATURN_RINGS_KM = { inner: 74_658, outer: 136_775 } as const;
+/** The rings drawn, km from Saturn's centre: the C ring's inner edge to beyond the F ring. */
+export const SATURN_RINGS_KM = { inner: 74_500, outer: 140_600 } as const;
 
 /**
- * How opaque Saturn's rings are at a distance from its centre (km): the faint C ring, the
- * dense B ring, the Cassini Division, the A ring and the Encke Gap. Rough optical depths.
+ * How opaque Saturn's rings are at a distance from its centre (km), roughly: the faint C ring,
+ * the dense B ring, the Cassini Division, the A ring and the Encke Gap, and the thin F ring.
+ * Drawn only until the measured rings (Voyager's optical depths, Cassini's colour) load.
  */
 export function ringOpacity(radiusKm: number): number {
   if (radiusKm < SATURN_RINGS_KM.inner || radiusKm > SATURN_RINGS_KM.outer) return 0;
@@ -191,7 +193,8 @@ export function ringOpacity(radiusKm: number): number {
   if (radiusKm < 117_580) return 0.85; // B ring
   if (radiusKm < 122_170) return 0.08; // Cassini Division
   if (Math.abs(radiusKm - 133_589) < 160) return 0.05; // Encke Gap
-  return 0.55; // A ring
+  if (radiusKm <= 136_775) return 0.55; // A ring
+  return Math.abs(radiusKm - 140_180) < 60 ? 0.1 : 0; // F ring
 }
 
 /** What a planet wears close up, and what the picture is, when it was made and whose it is. */
@@ -232,7 +235,7 @@ export const PLANET_PICTURES: Readonly<Record<PlanetName, PlanetPicture>> = {
     map: 'textures/planets/saturn-2048.jpg',
     sharp: 'textures/planets/saturn-3600.jpg',
     caption:
-      'Pictured: Cassini’s map of the cloud tops on 11 August 2011, the great northern storm of 2010–11 trailing round the planet; the poles and the strip in the rings’ shadow, not imaged, are filled with the colour of the nearest latitude. NASA/JPL/Space Science Institute; Li, West, Jiang & Knowles (NASA PDS, 2023).',
+      'Pictured: Cassini’s map of the cloud tops on 11 August 2011, the great northern storm of 2010–11 trailing round the planet; the poles and the strip in the rings’ shadow, not imaged, are filled with the colour of the nearest latitude. NASA/JPL/Space Science Institute; Li, West, Jiang & Knowles (NASA PDS, 2023). The rings: how much light gets through each, as Voyager 2 measured it watching a star pass behind them (1981), in the colours Cassini saw them (2004). NASA/JPL/Space Science Institute.',
   },
 };
 

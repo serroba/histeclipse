@@ -4151,6 +4151,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function loadPlanets(): Promise<PlanetEphemeris> {
     planetsLoading ??= loadPlanetEphemeris().then((theory) => {
       planets = theory;
+      // Saturn's rings as measured (#336): Voyager's optical depths, Cassini's colour.
+      globe.setSaturnRings(`${base}textures/planets/saturn-rings.png`);
       showTime(store.get());
       return theory;
     });

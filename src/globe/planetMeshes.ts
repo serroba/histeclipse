@@ -6,13 +6,16 @@
 
 import {
   CanvasTexture,
+  CustomBlending,
   DataTexture,
   DoubleSide,
   LinearFilter,
   Matrix4,
   Mesh,
+  OneFactor,
+  OneMinusSrcAlphaFactor,
   Quaternion,
-  RedFormat,
+  RGBAFormat,
   RingGeometry,
   type Scene,
   ShaderMaterial,
@@ -77,11 +80,13 @@ const RING_VERTEX = /* glsl */ `
   }
 `;
 
-// Opacity by distance from Saturn, from a strip baked from ringOpacity(); brighter when the
+// Colour and opacity by distance from Saturn, from a strip across the rings: the light they
+// reflect, added on top, and the share of what is behind that they block (premultiplied, so
+// the colour, already the light the rings send back, is not dimmed twice). Brighter when the
 // Sun shines more steeply on the ring plane.
 const RING_FRAGMENT = /* glsl */ `
   #include <logdepthbuf_pars_fragment>
-  uniform sampler2D opacity;
+  uniform sampler2D rings;
   uniform float inner;
   uniform float outer;
   uniform vec3 toSun;
@@ -89,9 +94,9 @@ const RING_FRAGMENT = /* glsl */ `
   varying float vRadius;
   void main() {
     #include <logdepthbuf_fragment>
-    float alpha = texture2D(opacity, vec2((vRadius - inner) / (outer - inner), 0.5)).r;
+    vec4 ring = texture2D(rings, vec2((vRadius - inner) / (outer - inner), 0.5));
     float light = 0.2 + 0.8 * sqrt(abs(dot(normal, toSun)));
-    gl_FragColor = vec4(vec3(0.86, 0.79, 0.64) * light, alpha);
+    gl_FragColor = vec4(ring.rgb * light, ring.a);
     #include <colorspace_fragment>
   }
 `;
@@ -115,6 +120,8 @@ export interface PlanetMeshes {
   /** Wrap a planet in a mission's global map, in place of its painted colours; null goes back
    * to the colours. The maps are the caller's to keep: switching does not throw one away. */
   setMap(planet: PlanetName, map: Texture | null): void;
+  /** Draw Saturn's rings from their measured strip: colour, and the opacity across them. */
+  setRings(strip: Texture): void;
 }
 
 /** A map of latitude bands: north at the top, as SphereGeometry's v runs. */
@@ -134,16 +141,21 @@ function bandTexture(planet: PlanetName): CanvasTexture {
   return texture;
 }
 
+/** The rings drawn by hand, until the measured ones load: one colour, rough opacities. */
 function ringTexture(): DataTexture {
   const size = 512;
-  const data = new Uint8Array(size);
+  const data = new Uint8Array(size * 4);
   const span = SATURN_RINGS_KM.outer - SATURN_RINGS_KM.inner;
+  const colour = [219, 201, 163];
   for (let index = 0; index < size; index += 1) {
-    data[index] = Math.round(
-      255 * ringOpacity(SATURN_RINGS_KM.inner + ((index + 0.5) / size) * span),
-    );
+    const opacity = ringOpacity(SATURN_RINGS_KM.inner + ((index + 0.5) / size) * span);
+    colour.forEach((value, channel) => {
+      data[index * 4 + channel] = Math.round(value * opacity);
+    });
+    data[index * 4 + 3] = Math.round(255 * opacity);
   }
-  const texture = new DataTexture(data, size, 1, RedFormat, UnsignedByteType);
+  const texture = new DataTexture(data, size, 1, RGBAFormat, UnsignedByteType);
+  texture.colorSpace = SRGBColorSpace;
   texture.minFilter = LinearFilter;
   texture.magFilter = LinearFilter;
   texture.needsUpdate = true;
@@ -214,7 +226,7 @@ export function createPlanetMeshes(scene: Scene): PlanetMeshes {
   ringGeometry.rotateX(-Math.PI / 2);
   const ringNormal = new Vector3(0, 1, 0);
   const ringUniforms = {
-    opacity: { value: ringTexture() },
+    rings: { value: ringTexture() as Texture },
     inner: { value: inner },
     outer: { value: outer },
     toSun: { value: new Vector3(1, 0, 0) },
@@ -229,6 +241,9 @@ export function createPlanetMeshes(scene: Scene): PlanetMeshes {
       side: DoubleSide,
       transparent: true,
       depthWrite: false,
+      blending: CustomBlending,
+      blendSrc: OneFactor,
+      blendDst: OneMinusSrcAlphaFactor,
     }),
   );
   meshes.saturn.add(rings);
@@ -253,6 +268,9 @@ export function createPlanetMeshes(scene: Scene): PlanetMeshes {
       }
       ringUniforms.toSun.value.copy(toSun.get('saturn') ?? ringUniforms.toSun.value);
       ringNormal.set(0, 1, 0).applyQuaternion(meshes.saturn.quaternion);
+    },
+    setRings(strip) {
+      ringUniforms.rings.value = strip;
     },
     setMap(planet, texture) {
       const map = maps.get(planet);

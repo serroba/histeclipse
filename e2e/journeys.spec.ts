@@ -643,6 +643,8 @@ test('close up on Venus, the Light switch shows the ground beneath its clouds, b
     await page.goto('./?t=2024-06-01T12:00&focus=saturn&cam=10,0,2.6');
     await expect(globe).toHaveAttribute('data-focus', 'saturn', { timeout: 30_000 });
     await expect(light).toBeHidden();
+    // Its rings as measured: Voyager's optical depths, Cassini's colour (#336).
+    await expect(globe).toHaveAttribute('data-rings', 'measured', { timeout: 30_000 });
   });
   expect(problems).toEqual([]);
 });

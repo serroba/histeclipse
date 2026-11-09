@@ -61,6 +61,9 @@ describe('Saturn’s rings', () => {
     expect(ringOpacity(120_000)).toBeLessThan(0.1);
     expect(ringOpacity(133_589)).toBeLessThan(0.1);
     expect(ringOpacity(128_000)).toBeGreaterThan(0.5);
+    // Past the A ring: empty, but for the thin F ring.
+    expect(ringOpacity(138_500)).toBe(0);
+    expect(ringOpacity(140_180)).toBeGreaterThan(0);
   });
 });
 

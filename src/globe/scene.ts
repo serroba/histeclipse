@@ -402,6 +402,8 @@ export interface Globe {
   ): void;
   /** Close up: the planet's sharper map for its view, from now on (#258). */
   sharpenPlanet(planet: PlanetName): void;
+  /** Draw Saturn's rings as measured (#336): a strip of their colour and opacity, fetched once. */
+  setSaturnRings(url: string): void;
   /** Show the Moon as another view than its usual map (#239), or null for its usual map. */
   showMoonView(view: { readonly map: string; readonly sharp: string | null } | null): void;
   /** Dress Earth or the Moon in a sharper map, fetched once, for close up (#258). */
@@ -2733,6 +2735,18 @@ export function createGlobe(
       applyPlanetView(planet);
     },
     showMoonView,
+    setSaturnRings(url) {
+      if (bodyMapsAsked.has(url)) return;
+      bodyMapsAsked.add(url);
+      planetTexture(url).then(
+        (strip) => {
+          planets.setRings(strip);
+          container.dataset['rings'] = 'measured';
+          needsRender = true;
+        },
+        () => undefined,
+      );
+    },
     sharpenPlanet(planet) {
       if (sharpWanted.has(planet)) return;
       sharpWanted.add(planet);
