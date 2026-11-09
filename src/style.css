@@ -4873,22 +4873,22 @@ button:has(> .icon-label) > .icon {
 
 /* A height map's colour key (#334): the colours in a strip, round heights beneath it, and what
    the heights are measured from. */
-.colour-key {
+.body-key {
   display: block;
   margin-top: 6px;
 }
 
-.colour-key[hidden] {
+.body-key[hidden] {
   display: none;
 }
 
-.colour-key-strip {
+.body-key-strip {
   display: block;
   height: 10px;
   border-radius: 3px;
 }
 
-.colour-key-ticks {
+.body-key-ticks {
   position: relative;
   display: block;
   height: 16px;
@@ -4896,13 +4896,13 @@ button:has(> .icon-label) > .icon {
   font-variant-numeric: tabular-nums;
 }
 
-.colour-key-tick {
+.body-key-tick {
   position: absolute;
   top: 2px;
   white-space: nowrap;
 }
 
-.colour-key-note {
+.body-key-note {
   display: block;
   font-size: 11px;
 }
