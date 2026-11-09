@@ -2789,7 +2789,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ? {}
         : {
             action: {
-              label: `${genus} through time, in 3D`,
+              label: `${genus} on the tree through time`,
               run: () => {
                 openLineagesAt(cell.group, genus);
               },
@@ -4033,7 +4033,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         [
           'fossils',
           {
-            label: 'Their genera through time, in 3D',
+            label: 'Their tree through time',
             run: () => {
               store.set((state) => ({ ...state, lineages: { group: 'dinosaurs', pick: null } }));
             },
