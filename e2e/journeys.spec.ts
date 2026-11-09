@@ -841,6 +841,39 @@ test('close up, the IAU’s names for the largest features turn with each rocky 
   expect(problems).toEqual([]);
 });
 
+test('close up on Titan, the Light switch shows its ground by radar, and its haze as it looks', async ({
+  page,
+}) => {
+  // A flight to Saturn's moon and a map of a few megabytes: slow on a phone drawn in software.
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const light = page.getByTestId('planet-light');
+  await test.step('Given Titan in view, in its near-infrared map', async () => {
+    await page.goto('./?t=2025-01-10T12:00&focus=titan');
+    await expect(globe).toHaveAttribute('data-focus', 'titan', { timeout: 30_000 });
+    await expect(globe).toHaveAttribute('data-moon-map', 'titan', { timeout: 30_000 });
+    await expect(light.getByRole('button', { name: /^Ground, near infrared/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+  await test.step('When they pick its ground by radar, Then Cassini’s radar map is worn', async () => {
+    const asked = page.waitForRequest(/titan-radar-\d+\.jpg/);
+    await light.getByRole('button', { name: /^Ground, by radar/ }).click();
+    await expect(page).toHaveURL(/[?&]light=radar/);
+    await asked;
+    await expect(page.getByTestId('body-picture')).toContainText('Cassini’s radar imaged it');
+  });
+  await test.step('And as it looks, it is all orange haze', async () => {
+    await light.getByRole('button', { name: /^As it looks/ }).click();
+    await expect(page).toHaveURL(/[?&]light=haze/);
+    await expect(globe).toHaveAttribute('data-moon-map', 'titan painted');
+    await expect(page.getByTestId('body-picture')).toContainText('hiding the ground entirely');
+  });
+  expect(problems).toEqual([]);
+});
+
 test('close up on the Moon, the Light switch shows its heights, keyed, and its rocks told apart', async ({
   page,
 }) => {

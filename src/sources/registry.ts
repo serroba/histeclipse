@@ -755,6 +755,13 @@ export const SOURCES = {
     url: 'https://astrogeology.usgs.gov/search/map/tethys_cassini_global_mosaic_293m',
     licence: 'NASA/JPL-Caltech/Space Science Institute/DLR/USGS, public domain',
   },
+  cassiniTitanRadar: {
+    name: 'Cassini radar map of Titan',
+    kind: 'imagery',
+    cite: 'Cassini SAR Team (JPL) and USGS Astrogeology, Titan Cassini SAR – HiSAR global mosaic, 351 m (flybys to T104, preliminary, 2015)',
+    url: 'https://astrogeology.usgs.gov/search/map/titan_cassini_sar_hisar_global_mosaic_351m',
+    licence: 'NASA/JPL-Caltech/ASI/USGS; no use constraints, cite its authors',
+  },
   vikingPhobosMap: {
     name: 'Viking map of Phobos',
     kind: 'imagery',
@@ -1130,6 +1137,7 @@ export const WHYS = {
       'jplSatellites',
       'galileoMoonMaps',
       'cassiniMoonMaps',
+      'cassiniTitanRadar',
       'vikingPhobosMap',
       'nasaPhobos',
       'nasaDeimos',
@@ -1156,7 +1164,7 @@ export const WHYS = {
       'nasaHyperion',
       'nasaIapetus',
     ],
-    how: 'Mars’s two moons, Jupiter’s four large ones and Saturn’s eight go round their planets at their true sizes, each painted roughly its colour: each orbit is a mean orbit fitted to JPL’s ephemerides from 1750 to 2200, its angles turning steadily, with the swings a resonance adds (Mimas’s with Tethys, Hyperion’s with Titan). Over those years each moon is within a fifth of a degree of JPL’s place, as seen from its planet, but Mimas (half a degree) and Hyperion (four degrees). Outside them the orbits are carried on at the same rates, which says only roughly where a moon was: centuries away, where Phobos was along its orbit is unknown. Close up, twelve of them wear their missions’ global maps (Galileo and Voyager for Jupiter’s four, Cassini for Saturn’s, Viking for Phobos), each turned to keep the face it keeps to its planet; Deimos and Hyperion, with no map fit to use, keep a colour. What the bar says of each moon (who found it, what it is known for) comes from NASA’s pages on it, its missions’ pages, and the papers behind the findings, at the length its story deserves; what is not settled is said to be so.',
+    how: 'Mars’s two moons, Jupiter’s four large ones and Saturn’s eight go round their planets at their true sizes, each painted roughly its colour: each orbit is a mean orbit fitted to JPL’s ephemerides from 1750 to 2200, its angles turning steadily, with the swings a resonance adds (Mimas’s with Tethys, Hyperion’s with Titan). Over those years each moon is within a fifth of a degree of JPL’s place, as seen from its planet, but Mimas (half a degree) and Hyperion (four degrees). Outside them the orbits are carried on at the same rates, which says only roughly where a moon was: centuries away, where Phobos was along its orbit is unknown. Close up, twelve of them wear their missions’ global maps (Galileo and Voyager for Jupiter’s four, Cassini for Saturn’s, Viking for Phobos), each turned to keep the face it keeps to its planet; Deimos and Hyperion, with no map fit to use, keep a colour. Titan, whose ground no eye has seen through its haze, has a Light switch: its ground in near infrared (its usual map), by Cassini’s radar (a preliminary mosaic, with gaps where the radar never looked), and as it looks, all orange haze. What the bar says of each moon (who found it, what it is known for) comes from NASA’s pages on it, its missions’ pages, and the papers behind the findings, at the length its story deserves; what is not settled is said to be so.',
   },
   bodies: {
     title: 'Sun, Moon and planets',

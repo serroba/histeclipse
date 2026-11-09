@@ -32,6 +32,7 @@ import { geoToVector } from './globe/geo';
 import {
   PLANET_NAMES,
   PLANET_VIEWS,
+  pickedView,
   planetView,
   SHARP_MAPS,
   type PlanetView,
@@ -136,7 +137,7 @@ import { craftCard } from './data/craftCard';
 import { loadSpacecraft, type Spacecraft } from './data/spacecraft';
 import { loadSpacecraftPaths } from './data/spacecraftPaths';
 import { moonAbout, moonLine } from './data/moonFacts';
-import { isMoonBody, MOON_MAPS, MOON_NAMES, moonPlanet } from './globe/moonLook';
+import { isMoonBody, MOON_MAPS, MOON_NAMES, MOON_VIEWS, moonPlanet } from './globe/moonLook';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
 import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
 import { createFamousPanel } from './ui/famousPanel';
@@ -3877,8 +3878,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     // The Light switch, for a planet or the Moon in view with more than one way to show it.
     const planet = state.focus === 'moon' ? 'moon' : PLANETS.find((name) => name === state.focus);
-    if (away && (state.view !== 'earth-from-here' || planet === 'moon') && planet !== undefined) {
-      planetSwitch.render(PLANET_VIEWS[planet], planetView(planet, state.planetLight).key);
+    const views =
+      planet !== undefined
+        ? PLANET_VIEWS[planet]
+        : isMoonBody(state.focus)
+          ? MOON_VIEWS[state.focus]
+          : undefined;
+    if (away && (state.view !== 'earth-from-here' || planet === 'moon') && views !== undefined) {
+      planetSwitch.render(views, pickedView(views, state.planetLight).key);
     } else {
       planetSwitch.render(null, '');
     }
@@ -3911,11 +3918,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
       bodyBar.render({ name: 'The Sun', text: sunText(sunDistance(jdTT)) });
     } else if (isMoonBody(focus)) {
       const at = moonFromEarth(focus, jdTT);
-      // Its mission map, the sharper one close up (#335).
-      const look = MOON_MAPS[focus];
+      // Its mission map, the sharper one close up (#335), or the view picked, for a moon seen
+      // by more than one light; a view with no map is its painted colour.
+      const views = MOON_VIEWS[focus];
+      const look = views === undefined ? MOON_MAPS[focus] : pickedView(views, state.planetLight);
       if (look !== undefined) {
         const sharp = state.camera.distance <= SHARP_WITHIN ? look.sharp : null;
-        globe.setMoonMap(focus, `${base}${sharp ?? look.map}`);
+        const url = sharp ?? look.map;
+        globe.setMoonMap(focus, url === null ? null : `${base}${url}`);
       }
       bodyBar.render(
         at === null || moonOrbits === null

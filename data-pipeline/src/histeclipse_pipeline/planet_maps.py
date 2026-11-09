@@ -21,8 +21,9 @@ suits a planet of bands.
 
 The planets' moons (#335) are their missions' global mosaics, as USGS Astrogeology and NASA's
 Photojournal publish them: Galileo and Voyager for Jupiter's four, Cassini (and Voyager) for
-Saturn's, Viking for Phobos. Each is checked against its own features for where longitude 0
-lies; those centred on 180° are turned half a turn.
+Saturn's, Viking for Phobos; Titan's ground both in near infrared and by Cassini's radar. Each
+is checked against its own features for where longitude 0 lies; those centred on 180° are
+turned half a turn.
 
 Venus's map is Magellan's radar of the ground beneath its clouds (1990-94, the colourised
 topographic mosaic at 6.6 km, USGS Astrogeology): the site shows it only when asked, as from
@@ -248,6 +249,20 @@ MAPS = (
         url="https://planetarymaps.usgs.gov/mosaic/Titan_ISS_P19658_Mosaic_Global_4km.tif",
         sha256="ca0fe5f6f9bdba1b6d03245969a42336a010ddc17d636e5e06fffa939d10ca83",
         widths=(2048, 4040),
+        half_turn=True,
+    ),
+    MapSource(
+        stem="moons/titan-radar",
+        # Cassini's radar (SAR and HiSAR) through flyby T104, mosaicked by the Cassini SAR Team
+        # and USGS (preliminary, 2015), centred on 180°; black where the radar never looked
+        # (about 38% of the ground). Its longitudes checked against the near-infrared map's:
+        # they correlate best as they are, turned half a turn, neither shifted nor mirrored.
+        url=(
+            "https://planetarymaps.usgs.gov/mosaic/"
+            "Titan_SAR_HiSAR_MosaicThru_T104_Jan2015_clon180_128ppd.tif"
+        ),
+        sha256="fde8a97ad85d5711a8070b491cccc0cc93a963ed9ddef753c517ba6874742773",
+        widths=(2048, 4096),
         half_turn=True,
     ),
     MapSource(

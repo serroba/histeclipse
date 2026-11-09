@@ -3,6 +3,7 @@
  */
 
 import { MOONS, type MoonName, type MoonPlanet } from '../astro/moonOrbits';
+import type { PlanetView } from './planetLook';
 import { EARTH_RADIUS_KM } from './spaceFrame';
 
 /** Mean radii, km, as JPL gives them (Solar System Dynamics, planetary satellite physical parameters). */
@@ -141,4 +142,40 @@ export const MOON_MAPS: Readonly<Partial<Record<MoonName, MoonMap>>> = {
     4096,
     `Cassini’s and Voyager’s images, ${CASSINI_DLR}, which hides most of the contrast between its dark and bright sides. NASA/JPL-Caltech/SSI/DLR.`,
   ),
+};
+
+/**
+ * The ways of looking at a moon close up, in the Light switch, for those a mission saw by more
+ * than one light: Titan, whose ground no eye has seen through its haze. Its first, as with the
+ * planets, is shown unless another is picked: here the ground in near infrared, its usual map.
+ */
+export const MOON_VIEWS: Readonly<Partial<Record<MoonName, readonly PlanetView[]>>> = {
+  titan: [
+    {
+      key: 'infrared',
+      label: 'Ground, near infrared',
+      detail: 'Cassini, through the haze',
+      map: MOON_MAPS.titan?.map ?? null,
+      sharp: MOON_MAPS.titan?.sharp ?? null,
+      caption: MOON_MAPS.titan?.caption ?? '',
+    },
+    {
+      key: 'radar',
+      label: 'Ground, by radar',
+      detail: 'Cassini’s radar images',
+      map: 'textures/moons/titan-radar-2048.jpg',
+      sharp: 'textures/moons/titan-radar-4096.jpg',
+      caption:
+        'Pictured: the ground as Cassini’s radar imaged it, through haze and cloud, from 2004 to its flyby T104 (2014), mosaicked by the Cassini SAR Team and USGS Astrogeology (2015), a preliminary map. The radar saw about three-fifths of Titan; black where it never looked. Rough or tilted ground is bright; smooth ground dark: the seas and lakes of liquid methane and ethane near the north pole, and the long dunes near the equator. NASA/JPL-Caltech/ASI/USGS.',
+    },
+    {
+      key: 'haze',
+      label: 'As it looks',
+      detail: 'visible light',
+      map: null,
+      sharp: null,
+      caption:
+        'Pictured: Titan as the eye would see it, an orange haze hundreds of kilometres deep, of nitrogen, methane and the organic smog sunlight makes of them, hiding the ground entirely. Painted one colour, roughly its own.',
+    },
+  ],
 };
