@@ -87,6 +87,7 @@ import {
   attachedPose,
   earthFromPose,
   blendPose,
+  EARTH_RADIUS_KM,
   hiddenBehind,
   mergeMarkers,
   MOON_RADIUS_EARTH_RADII,
@@ -101,8 +102,10 @@ import {
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { SOLAR_NORTH_POLE_J2000 } from './sunImage';
 import { labelPoint, namedByBoth, type Territory } from '../data/empires';
+import { largeEnough, type NamedBody, type PlaceName } from '../data/planetNames';
+import { elementAt } from '../util/arrays';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
-import { PLANET_NAMES, planetRadius } from './planetLook';
+import { PLANET_NAMES, planetRadius, polarRatio } from './planetLook';
 import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
 import type { FossilCell } from '../data/fossils';
@@ -419,6 +422,11 @@ export interface Globe {
   setImpacts(marks: readonly ImpactMark[] | null): void;
   /** Mark volcanoes erupting near the year shown, sized by VEI, each to tap; null hides them. */
   setVolcanoes(marks: readonly VolcanoMark[] | null): void;
+  /**
+   * Name a rocky body's largest features on its globe (#334), largest first, as many as fit and
+   * more as the view zooms in; null takes the names away.
+   */
+  setPlaceNames(body: NamedBody, names: readonly PlaceName[] | null): void;
   /** Called when someone taps a marker that has a card, with its key (such as `impact:47`). */
   onMarkerPick(listener: (key: string) => void): () => void;
   /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
@@ -1575,6 +1583,16 @@ export function createGlobe(
   container.append(volcanoLayer);
   let volcanoLabels: GlobeLabel[] = [];
   let volcanoKey = '';
+  // The IAU's names on the rocky body in view (#334), turning with it. Each label's position is
+  // on the body, in its own axes; where it is in the scene is worked out each frame.
+  const placeNameLayer = document.createElement('div');
+  placeNameLayer.className = 'empire-labels place-names';
+  placeNameLayer.dataset['testid'] = 'place-names';
+  container.append(placeNameLayer);
+  let placeNames: {
+    readonly body: NamedBody;
+    readonly labels: (GlobeLabel & { km: number })[];
+  } | null = null;
   const markerPickListeners = new Set<(key: string) => void>();
   for (const layer of [impactLayer, volcanoLayer, humanLabelLayer, genomeLayer, fossilLayer]) {
     layer.addEventListener('click', (event) => {
@@ -2074,6 +2092,7 @@ export function createGlobe(
       placeMarkers();
       for (const object of hidden) object.visible = true;
       placeEmpireLabels();
+      placePlaceNames();
       if (earthMapped) container.dataset['rendered'] = 'true';
     }
     frame = requestAnimationFrame(loop);
@@ -2123,6 +2142,88 @@ export function createGlobe(
       placed.push({ x: x - width / 2, y: y - height / 2, w: width, h: height });
       element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(-50%, -50%)`;
     }
+  }
+
+  /** Where a named body is, how it is turned, and its radius, in the scene's units. */
+  function namedFrame(body: NamedBody): {
+    position: Vector3;
+    rotation: Quaternion;
+    radius: number;
+    shown: boolean;
+  } {
+    if (body === 'moon') {
+      return { ...bodyFrame('moon'), radius: MOON_RADIUS_EARTH_RADII, shown: moon.visible };
+    }
+    const mesh = bodyMeshes[body];
+    return {
+      position: mesh.position,
+      rotation: mesh.quaternion,
+      radius: planetRadius(body),
+      shown: mesh.visible,
+    };
+  }
+
+  const toEye = new Vector3();
+  const outward = new Vector3();
+  const toLight = new Vector3();
+  function placePlaceNames(): void {
+    if (placeNames === null) return;
+    const { body, labels } = placeNames;
+    const { position, rotation, radius, shown } = namedFrame(body);
+    const viewWidth = container.clientWidth;
+    const viewHeight = container.clientHeight;
+    const radiusPixels = apparentRadiusPixels({
+      radius,
+      distance: camera.position.distanceTo(position),
+      verticalFovDegrees: camera.fov,
+      viewportHeight: viewHeight,
+    });
+    // Only on the body in view, and only once it is more than a dot.
+    const near = shown && focus === body && radiusPixels > 60;
+    placeNameLayer.dataset['body'] = body;
+    toLight.copy(sun.position).sub(position).normalize();
+    const placed: { x: number; y: number; w: number; h: number }[] = [];
+    let count = 0;
+    // Largest first: a smaller feature's name gives way where it would come near another.
+    for (const label of labels) {
+      const { element, width, height } = label;
+      outward.copy(label.position).applyQuaternion(rotation);
+      projected.copy(outward).add(position);
+      toEye.copy(camera.position).sub(projected).normalize();
+      const facing = outward.normalize().dot(toEye);
+      // Named only where the Sun is up: on the night side there is nothing to see.
+      const lit = outward.dot(toLight) > 0;
+      projected.project(camera);
+      const x = ((projected.x + 1) / 2) * viewWidth;
+      const y = ((1 - projected.y) / 2) * viewHeight;
+      // Kept half a line apart, so the names read as a map's, not a crowd.
+      const box = {
+        x: x - width / 2 - height / 4,
+        y: y - (3 * height) / 4,
+        w: width + height / 2,
+        h: (3 * height) / 2,
+      };
+      const visible =
+        near &&
+        lit &&
+        facing > 0.3 &&
+        Math.abs(projected.x) < 1 &&
+        Math.abs(projected.y) < 1 &&
+        largeEnough(label.km, radius * EARTH_RADIUS_KM, radiusPixels) &&
+        placed.every(
+          (other) =>
+            box.x > other.x + other.w ||
+            other.x > box.x + box.w ||
+            box.y > other.y + other.h ||
+            other.y > box.y + box.h,
+        );
+      element.hidden = !visible;
+      if (!visible) continue;
+      placed.push(box);
+      count += 1;
+      element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(-50%, -50%)`;
+    }
+    placeNameLayer.dataset['shown'] = String(count);
   }
 
   const projected = new Vector3();
@@ -2864,6 +2965,39 @@ export function createGlobe(
       container.dataset['impacts'] = marks === null ? 'off' : String(marks.length);
       // Placed now, not at the next frame: as time plays, that frame may lay them out again.
       placeEmpireLabels();
+      needsRender = true;
+    },
+    setPlaceNames(body, names) {
+      if (names === null) {
+        if (placeNames?.body !== body) return;
+        placeNames = null;
+        placeNameLayer.replaceChildren();
+        delete placeNameLayer.dataset['body'];
+        delete placeNameLayer.dataset['shown'];
+        return;
+      }
+      if (placeNames?.body === body) return;
+      placeNameLayer.replaceChildren();
+      const radius = body === 'moon' ? MOON_RADIUS_EARTH_RADII : planetRadius(body);
+      const squash = body === 'moon' ? 1 : polarRatio(body);
+      const labels = measured(
+        placeNameLayer,
+        names.map(({ name, point }) => {
+          const element = document.createElement('span');
+          element.className = 'empire-label place-name';
+          element.textContent = name;
+          return { element, point };
+        }),
+      );
+      placeNames = {
+        body,
+        labels: labels.map((label, index) => {
+          const { point, km } = elementAt(names, index);
+          const [x, y, z] = geoToVector(point, radius);
+          label.position.set(x, y * squash, z);
+          return { ...label, km };
+        }),
+      };
       needsRender = true;
     },
     setVolcanoes(marks) {

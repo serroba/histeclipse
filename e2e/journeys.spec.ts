@@ -642,6 +642,53 @@ test('close up on Venus, the Light switch shows the ground beneath its clouds, b
   expect(problems).toEqual([]);
 });
 
+test('close up, the IAU’s names for the largest features turn with each rocky body, on its day side', async ({
+  page,
+}) => {
+  // Four bodies, each a map fetched: slow on a phone drawn in software.
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const names = page.getByTestId('place-names');
+  await test.step('Given Mars, Olympus Mons towards us, by its heights', async () => {
+    await page.goto('./?t=2025-03-25T12:00&cam=10,20,2.5&focus=mars&light=height');
+    await expect(globe).toHaveAttribute('data-planet-map', 'mars', { timeout: 30_000 });
+  });
+  await test.step('Then its largest features are named, Olympus Mons among them', async () => {
+    await expect(names).toHaveAttribute('data-body', 'mars');
+    await expect(names.getByText('Olympus Mons', { exact: true })).toBeVisible();
+    // Far fewer than the 400 it has: as many as fit, and the rest on the far or night side.
+    const shown = Number(await names.getAttribute('data-shown'));
+    expect(shown).toBeGreaterThan(5);
+    expect(shown).toBeLessThan(40);
+  });
+  await test.step('When they turn to Venus’s clouds, nothing is named on them', async () => {
+    await page.goto('./?t=2025-01-10T12:00&cam=60,0,4&focus=venus');
+    await expect(globe).toHaveAttribute('data-focus', 'venus', { timeout: 30_000 });
+    await expect(names).not.toHaveAttribute('data-body', /./);
+  });
+  await test.step('But under them, by radar, Ishtar Terra is named', async () => {
+    await page
+      .getByTestId('planet-light')
+      .getByRole('button', { name: /^Ground, by radar/ })
+      .click();
+    await expect(names).toHaveAttribute('data-body', 'venus');
+    await expect(names.getByText('Ishtar Terra', { exact: true })).toBeVisible();
+  });
+  await test.step('And the full Moon’s seas are named', async () => {
+    await page.goto('./?t=2025-11-05T12:00&cam=0,0,3&focus=moon');
+    await expect(globe).toHaveAttribute('data-focus', 'moon', { timeout: 30_000 });
+    await expect(names.getByText('Mare Tranquillitatis', { exact: true })).toBeVisible();
+    await expect(names.getByText('Mare Serenitatis', { exact: true })).toBeVisible();
+  });
+  await test.step('And Jupiter, all cloud, has none', async () => {
+    await page.goto('./?t=2025-01-10T12:00&cam=10,20,4&focus=jupiter');
+    await expect(globe).toHaveAttribute('data-focus', 'jupiter', { timeout: 30_000 });
+    await expect(names).not.toHaveAttribute('data-body', /./);
+  });
+  expect(problems).toEqual([]);
+});
+
 test('close up on the Moon, the Light switch shows its heights, keyed, and its rocks told apart', async ({
   page,
 }) => {
