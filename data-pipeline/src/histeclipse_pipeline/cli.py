@@ -65,6 +65,7 @@ from histeclipse_pipeline.sky import (
 from histeclipse_pipeline.skycultures import fetch_skycultures
 from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.solar_images import fetch_images
+from histeclipse_pipeline.spacecraft import fetch_spacecraft
 from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
@@ -311,6 +312,12 @@ def moon_orbits(args: Arguments) -> int:  # pragma: no cover - needs network acc
         args.out, Path("../test-vectors/moons.json"), Path(".cache/moon-orbits")
     )
     return _say("\n".join([*report, f"wrote {len(report)} orbits to {args.out}"]))
+
+
+def spacecraft(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write every craft sent beyond Earth orbit, and those that never left (public/data)."""
+    left, never = fetch_spacecraft(args.out, Path(".cache/spacecraft"))
+    return _say(f"wrote {left} craft beyond Earth orbit and {never} that never left to {args.out}")
 
 
 def planet_keys(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -564,6 +571,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         moon_orbits,
         "fit the orbits of the moons of Mars, Jupiter and Saturn to JPL Horizons",
         "output JSON file (public/data/moon-orbits.json)",
+    ),
+    "spacecraft": (
+        spacecraft,
+        "write every craft sent beyond Earth orbit (GCAT, NSSDCA's chronology)",
+        "output JSON file (public/data/spacecraft.json)",
     ),
     "planet-keys": (
         planet_keys,
