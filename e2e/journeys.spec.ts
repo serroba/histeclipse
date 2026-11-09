@@ -728,6 +728,11 @@ test('tapping a moon’s name flies to it, and the bar tells what is known of it
     const about = page.getByTestId('body-about');
     await expect(about).toContainText('Europa was found by Galileo Galilei, January 1610.');
     await expect(about).toContainText('an ocean of salt water');
+    // Wrapped in Galileo's and Voyager's map, credited.
+    await expect(globe).toHaveAttribute('data-moon-map', 'europa', { timeout: 30_000 });
+    await expect(page.getByTestId('body-picture')).toContainText(
+      'Galileo’s and Voyager’s images, mosaicked by USGS Astrogeology',
+    );
     // Its own name gives way to it; its neighbours keep theirs.
     await expect(moons.getByRole('button', { name: 'Europa', exact: true })).toBeHidden();
   });

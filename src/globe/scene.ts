@@ -103,7 +103,7 @@ import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { SOLAR_NORTH_POLE_J2000 } from './sunImage';
 import { labelPoint, namedByBoth, type Territory } from '../data/empires';
 import { largeEnough, type NamedBody, type PlaceName } from '../data/planetNames';
-import { MOONS, type MoonOrbits } from '../astro/moonOrbits';
+import { MOONS, type MoonName, type MoonOrbits } from '../astro/moonOrbits';
 import { elementAt } from '../util/arrays';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius, polarRatio } from './planetLook';
@@ -433,6 +433,8 @@ export interface Globe {
   setPlaceNames(body: NamedBody, names: readonly PlaceName[] | null): void;
   /** Set Mars's, Jupiter's and Saturn's moons going round them (#335); null takes them away. */
   setMoonOrbits(orbits: MoonOrbits | null): void;
+  /** Wrap a moon in a mission's map, fetched once: the latest asked for each moon wins. */
+  setMoonMap(moon: MoonName, url: string): void;
   /** Called when someone taps a marker that has a card, with its key (such as `impact:47`). */
   onMarkerPick(listener: (key: string) => void): () => void;
   /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
@@ -1438,6 +1440,7 @@ export function createGlobe(
     );
   }
   const bodyMapsAsked = new Set<string>();
+  const moonMapsWanted = new Map<MoonName, string>();
   const sharpened = new Set<string>();
   function markSharp(body: string): void {
     sharpened.add(body);
@@ -3100,6 +3103,20 @@ export function createGlobe(
       // Placed now, not at the next frame: as time plays, that frame may lay them out again.
       placeEmpireLabels();
       needsRender = true;
+    },
+    setMoonMap(moon, url) {
+      if (moonMapsWanted.get(moon) === url) return;
+      moonMapsWanted.set(moon, url);
+      planetTexture(url).then(
+        (map) => {
+          // Only if the moon still wants this map: a sharper one may have been asked since.
+          if (moonMapsWanted.get(moon) !== url) return;
+          moonSystems.setMap(moon, map);
+          container.dataset['moonMap'] = moon;
+          needsRender = true;
+        },
+        () => undefined,
+      );
     },
     setMoonOrbits(orbits) {
       moonSystems.setOrbits(orbits);
