@@ -129,6 +129,7 @@ import { createEclipseCard } from './ui/eclipseCard';
 import type { BodyKey } from './ui/bodyBar';
 import { keyGradient, keyTicks, loadColourKeys } from './data/planetKeys';
 import { isNamedBody, loadPlaceNames, type NamedBody, type PlaceNames } from './data/planetNames';
+import { loadMoonOrbits } from './astro/moonOrbits';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
 import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
 import { createFamousPanel } from './ui/famousPanel';
@@ -1251,7 +1252,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     readonly moments: readonly CycleMoment[];
   } | null = null;
   let cyclePlaying = false;
-  let cycleSpeed: CycleSpeed = 10;
+  let cycleSpeed: CycleSpeed = 240;
   let cycleFrame = 0;
   let cycleTick = 0;
   // Where play has got to, UT, unrounded; shown a whole day at a time, so the time of day (and
@@ -1324,9 +1325,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const seconds = Math.min(Math.max(now - cycleTick, 0) / 1000, 0.25);
     cycleTick = now;
     const shown = momentJulianDay(store.get().time);
-    cycleHead += cycleSpeed * seconds;
-    const days = Math.floor(cycleHead - shown + 1e-9);
-    if (days >= 1) setMoment(shown + days);
+    cycleHead += (cycleSpeed / 24) * seconds;
+    // A day or more a second steps whole days, so each planet's turning holds still; slower
+    // steps whole minutes, the finest time kept, so moons glide round (#335).
+    const step = cycleSpeed >= 24 ? 1 : 1 / 1440;
+    const steps = Math.floor((cycleHead - shown) / step + 1e-9);
+    if (steps >= 1) setMoment(shown + steps * step);
     cycleFrame = requestAnimationFrame(tickCycle);
   }
   function stopCycle(): void {
@@ -3694,6 +3698,22 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe.sharpenPlanet(focus);
   }
 
+  // The moons of Mars, Jupiter and Saturn (#335), loaded the first time one of them is in view.
+  let moonOrbitsAsked = false;
+  function showMoons(body: string): void {
+    if (moonOrbitsAsked || (body !== 'mars' && body !== 'jupiter' && body !== 'saturn')) return;
+    moonOrbitsAsked = true;
+    loadMoonOrbits(`${base}data/moon-orbits.json`, fetchJson).then(
+      (orbits) => {
+        globe.setMoonOrbits(orbits);
+      },
+      (error: unknown) => {
+        moonOrbitsAsked = false;
+        notify(`Could not load the moons’ orbits: ${errorMessage(error)}`);
+      },
+    );
+  }
+
   // The IAU's place names on the rocky bodies (#334), loaded the first time one is in view.
   let placeNames: PlaceNames | null = null;
   let placeNamesAsked = false;
@@ -3768,6 +3788,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     // The Moon keeps the year's eclipses; Earth's other timelines rest there too (#329).
     bottom.dataset['body'] = state.focus;
     hudActions.hidden = away;
+    if (away) showMoons(state.focus);
     // Not while standing on a planet looking back at Earth, nor on Venus's clouds, which hide
     // the ground the names are for.
     showPlaceNames(

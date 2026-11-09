@@ -35,7 +35,7 @@ import {
 } from './planetLook';
 import { EARTH_RADIUS_KM, toScene } from './spaceFrame';
 
-const PLANET_VERTEX = /* glsl */ `
+export const PLANET_VERTEX = /* glsl */ `
   #include <common>
   #include <logdepthbuf_pars_vertex>
   varying vec2 vUv;
@@ -51,7 +51,7 @@ const PLANET_VERTEX = /* glsl */ `
 // Sunlit by a plain Lambert law. The night side keeps a trace of light so the disc stays
 // findable, kept small: the floor is in linear light, and once encoded for the screen even 3%
 // shows as a fifth of full brightness, which reads as a grey band, not night (#230).
-const PLANET_FRAGMENT = /* glsl */ `
+export const PLANET_FRAGMENT = /* glsl */ `
   #include <logdepthbuf_pars_fragment>
   uniform sampler2D map;
   uniform vec3 toSun;
