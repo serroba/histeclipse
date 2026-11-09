@@ -5,6 +5,7 @@
  * Earth goes (#329).
  */
 
+import { MOON_NAMES } from '../globe/moonLook';
 import type { Body, Mode, Viewpoint } from '../state/viewState';
 import { element } from './dom';
 import { uiIcon, type UiIcon } from './icons';
@@ -31,6 +32,7 @@ const FROM: Readonly<Record<Exclude<Body, 'earth' | 'moon'>, string>> = {
   mars: 'Mars',
   jupiter: 'Jupiter',
   saturn: 'Saturn',
+  ...MOON_NAMES,
 };
 
 /** The "look back at Earth" choice and its words, for the body in focus. */

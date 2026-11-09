@@ -4,7 +4,11 @@
  */
 
 import type { Body } from '../state/viewState';
+import { MOONS, type MoonName } from '../astro/moonOrbits';
+import { moonRadius } from './moonLook';
 import { planetRadius } from './planetLook';
+
+const MOON_NAMES_LIST: readonly MoonName[] = Object.values(MOONS).flat();
 import { MOON_RADIUS_EARTH_RADII, SUN_RADIUS_EARTH_RADII } from './spaceFrame';
 
 export const BODY_RADIUS: Readonly<Record<Body, number>> = {
@@ -16,4 +20,8 @@ export const BODY_RADIUS: Readonly<Record<Body, number>> = {
   mars: planetRadius('mars'),
   jupiter: planetRadius('jupiter'),
   saturn: planetRadius('saturn'),
+  ...(Object.fromEntries(MOON_NAMES_LIST.map((moon) => [moon, moonRadius(moon)])) as Record<
+    MoonName,
+    number
+  >),
 };

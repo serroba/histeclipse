@@ -30,25 +30,8 @@ import {
   type MoonPlanet,
 } from '../astro/moonOrbits';
 import { PLANET_FRAGMENT, PLANET_VERTEX } from './planetMeshes';
+import { MOON_RADIUS_KM } from './moonLook';
 import { EARTH_RADIUS_KM, sceneFromKm } from './spaceFrame';
-
-/** Mean radii, km, as JPL gives them (Solar System Dynamics, planetary satellite physical parameters). */
-export const MOON_RADIUS_KM: Readonly<Record<MoonName, number>> = {
-  phobos: 11.08,
-  deimos: 6.2,
-  io: 1821.49,
-  europa: 1560.8,
-  ganymede: 2631.2,
-  callisto: 2410.3,
-  mimas: 198.2,
-  enceladus: 252.1,
-  tethys: 531.1,
-  dione: 561.4,
-  rhea: 763.5,
-  titan: 2574.76,
-  hyperion: 135.0,
-  iapetus: 734.3,
-};
 
 /** Each moon's colour, roughly as it looks: Io's sulphur, Titan's haze, Callisto's dark ice. */
 const MOON_COLOURS: Readonly<Record<MoonName, string>> = {
@@ -66,23 +49,6 @@ const MOON_COLOURS: Readonly<Record<MoonName, string>> = {
   titan: '#d9a05b',
   hyperion: '#a99a86',
   iapetus: '#8a7a68',
-};
-
-export const MOON_NAMES: Readonly<Record<MoonName, string>> = {
-  phobos: 'Phobos',
-  deimos: 'Deimos',
-  io: 'Io',
-  europa: 'Europa',
-  ganymede: 'Ganymede',
-  callisto: 'Callisto',
-  mimas: 'Mimas',
-  enceladus: 'Enceladus',
-  tethys: 'Tethys',
-  dione: 'Dione',
-  rhea: 'Rhea',
-  titan: 'Titan',
-  hyperion: 'Hyperion',
-  iapetus: 'Iapetus',
 };
 
 /** Points along each drawn orbit. */
@@ -105,6 +71,8 @@ export interface MoonMeshes {
   ): void;
   /** Draw the paths of one planet's moons (the planet in view), or of none. */
   showPaths(planet: MoonPlanet | null): void;
+  /** Whether the moons are placed: their orbits in, and the planets. */
+  ready(): boolean;
 }
 
 function colourTexture(hex: string): DataTexture {
@@ -139,7 +107,7 @@ export function createMoonMeshes(scene: Scene): MoonMeshes {
         const direction = new Vector3(1, 0, 0);
         toSun.set(name, direction);
         const mesh = new Mesh(
-          new SphereGeometry(MOON_RADIUS_KM[name] / EARTH_RADIUS_KM, 24, 16),
+          new SphereGeometry(MOON_RADIUS_KM[name] / EARTH_RADIUS_KM, 64, 32),
           new ShaderMaterial({
             uniforms: {
               map: { value: colourTexture(MOON_COLOURS[name]) },
@@ -220,6 +188,9 @@ export function createMoonMeshes(scene: Scene): MoonMeshes {
       drawnAt.clear();
       if (lastPlacing !== null) this.place(...lastPlacing);
       refreshPaths();
+    },
+    ready() {
+      return orbits !== null && lastPlacing !== null && lastPlacing[1] !== null;
     },
     showPaths(planet) {
       if (planet === pathsOf) return;

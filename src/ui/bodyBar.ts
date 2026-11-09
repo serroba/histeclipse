@@ -14,6 +14,8 @@ export interface BodyView {
   readonly text: string;
   /** What the body is pictured with, when and by whom; none where nothing need be said. */
   readonly picture?: string;
+  /** What is known of it: for a planet's moon, who found it and what it is known for (#335). */
+  readonly about?: string;
   /** For a map coloured by height or by kind of rock, its key (#334). */
   readonly key?: BodyKey;
 }
@@ -50,6 +52,7 @@ export function createBodyBar(why: HTMLElement): BodyBar {
   const name = element('strong', { class: 'body-bar-name' });
   const text = element('span', { class: 'body-bar-text', 'data-testid': 'body-facts' });
   const picture = element('span', { class: 'body-bar-picture', 'data-testid': 'body-picture' });
+  const about = element('span', { class: 'body-bar-about', 'data-testid': 'body-about' });
   const strip = element('span', { class: 'body-key-strip' });
   const ticks = element('span', { class: 'body-key-ticks' });
   const swatches = element('ul', { class: 'body-key-swatches' });
@@ -70,6 +73,7 @@ export function createBodyBar(why: HTMLElement): BodyBar {
     text,
     ' ',
     why,
+    about,
     picture,
     key,
   );
@@ -82,6 +86,8 @@ export function createBodyBar(why: HTMLElement): BodyBar {
       text.textContent = view.text;
       picture.textContent = view.picture ?? '';
       picture.hidden = view.picture === undefined;
+      about.textContent = view.about ?? '';
+      about.hidden = view.about === undefined;
       key.hidden = view.key === undefined;
       if (view.key === undefined) return;
       note.textContent = view.key.note;
