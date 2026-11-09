@@ -74,6 +74,9 @@ LONG_MONTHS = {
         ]
     )
 }
+#: Crewed flights neither source marks so: GCAT types Artemis II's Orion as any payload, and
+#: NSSDCA's chronology ends before its flight (crewed, round the Moon, April 2026).
+CREWED = {"2026-069A"}
 #: Characters of an ISO date to the day: "1977-08-20".
 ISO_DAY = 10
 #: An outcome that means the craft never left Earth orbit: failed at launch, or "Attempted"
@@ -196,6 +199,7 @@ def craft_record(
         seen.add(jcat)
         payloads.append(craft_entry(row, phases[jcat], landed.get(jcat)))
     kept = {str(entry["id"]) for entry in payloads if entry.pop("left")}
+    piloted = {str(entry["id"]) for entry in payloads if entry.pop("piloted")}
     never: list[dict[str, object]] = []
     for chronicle in chronology:
         found = matching(chronicle, payloads)
@@ -207,6 +211,8 @@ def craft_record(
                 ours = entry is found or bool(entry["part"]) or crewed
                 if entry["launchTag"] == found["launchTag"] and ours:
                     _ = entry.setdefault("mission", chronicle.name)
+                    if crewed and entry["id"] in piloted:
+                        entry["crewed"] = True
             continue
         if EARTH_ORBITER.search(chronicle.about) or NEVER_LEFT.search(chronicle.about) is None:
             continue
@@ -235,7 +241,10 @@ def craft_entry(
         "launch": gcat_date(row["LDate"]),
         "owner": row["Owner"],
         "state": row["State"],
-        "crewed": "H" in row["Type"][1:3],
+        # Crewed: GCAT marks a craft that carried people with "H" second; a crewed vehicle that
+        # can (a lunar module) with "P", crewed on a crewed mission (`craft_record`).
+        "crewed": row["Type"][1:2] == "H" or row["Piece"] in CREWED,
+        "piloted": row["Type"][1:2] == "P",
         # A part of a craft, carried and set loose (a lander, a probe, a cruise stage).
         "part": row["Type"][1:2] == "X",
         # A craft carried and set loose by another (Huygens by Cassini), and the other.
@@ -267,8 +276,9 @@ def matching(chronicle: Chronicle, craft: list[dict[str, object]]) -> dict[str, 
 
     GCAT writes the early craft's designations the old way ("1959 MU 1"), and NSSDCA gives
     recent ones its own ("PEREGRN-1"), so those are found by their launch day, a day either
-    side for time zones; of several that day, the one named alike, else the crewed one for a
-    crewed mission, else the first that is not a part of another (a cruise stage, a lander).
+    side for time zones. Of several that day: the crewed one, for a crewed mission; else one
+    named alike that is not a part of another (Apollo 13's experiments are named "Apollo 13"
+    too); else the first that is not a part (a cruise stage, a lander).
     """
     keys = {chronicle.nssdc, *chronicle.parts}
     by_designation = [c for c in craft if c["cospar"] in keys]
@@ -277,15 +287,13 @@ def matching(chronicle: Chronicle, craft: list[dict[str, object]]) -> dict[str, 
     day = [c for c in craft if near_day(str(c["launch"]), chronicle.launch)]
     if not day:
         return None
-    named = [c for c in day if words(str(c["name"])) & words(chronicle.name)]
-    if named:
-        return named[0]
-    if "crewed" in chronicle.about.lower():
-        crewed = [c for c in day if c["crewed"]]
-        if crewed:
-            return crewed[0]
-    main = [c for c in day if not c["part"]]
-    return (main or day)[0]
+    crewed = "crewed" in chronicle.about.lower()
+
+    def rank(c: dict[str, object]) -> tuple[bool, bool, bool]:
+        named = bool(words(str(c["name"])) & words(chronicle.name))
+        return (crewed and bool(c["crewed"]), named and not c["part"], not c["part"])
+
+    return max(day, key=rank)
 
 
 def near_day(launch: str, day: str) -> bool:

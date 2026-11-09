@@ -762,6 +762,27 @@ export const SOURCES = {
     url: 'https://astrogeology.usgs.gov/search/map/phobos_viking_global_mosaic_5m',
     licence: 'NASA/USGS, public domain',
   },
+  gcat: {
+    name: 'GCAT (General Catalog of Artificial Space Objects)',
+    kind: 'catalogue',
+    cite: 'McDowell, J. C., General Catalog of Artificial Space Objects (GCAT), planet4589.org: its deep space catalog, lunar and planetary and heliocentric registers, and lander catalog, as downloaded on 9 November 2026',
+    url: 'https://planet4589.org/space/gcat/',
+    licence: 'CC BY 4.0',
+  },
+  nssdcaChronology: {
+    name: 'NSSDCA Chronology of Lunar and Planetary Exploration',
+    kind: 'catalogue',
+    cite: 'Williams, D. R., Chronology of Lunar and Planetary Exploration, NASA Space Science Data Coordinated Archive',
+    url: 'https://nssdc.gsfc.nasa.gov/planetary/chronology.html',
+    licence: 'NASA, public domain',
+  },
+  jplHorizonsCraft: {
+    name: 'JPL Horizons: spacecraft',
+    kind: 'dataset',
+    cite: 'JPL Solar System Dynamics, Horizons System: the trajectories of the spacecraft it holds',
+    url: 'https://ssd.jpl.nasa.gov/horizons/',
+    licence: 'NASA/JPL, public domain',
+  },
   iauGazetteer: {
     name: 'Gazetteer of Planetary Nomenclature',
     kind: 'dataset',
@@ -1311,6 +1332,12 @@ export const WHYS = {
     what: 'Eruptions dated near the year shown, sized by explosivity.',
     sources: ['gvp'],
   },
+  spacecraft: {
+    title: 'Spacecraft beyond Earth',
+    what: 'Every craft sent beyond Earth orbit, from Luna 1 in 1959 to today, where it was at the moment shown, and those that set out but never left.',
+    sources: ['gcat', 'nssdcaChronology', 'jplHorizonsCraft'],
+    how: 'The record is Jonathan McDowell’s GCAT: each craft that left Earth orbit (not its rocket stages), with each stretch of its flight about one body, and its landing; NASA NSSDCA’s chronology gives each mission’s objective and outcome, and the craft that set out but never left (failures at launch, probes stranded in Earth orbit). Paths are JPL Horizons’s where it has the craft (about 95), thinned to as few points as draw them within 75,000 km about the Sun, 1,000 km through a flyby, 500 km near Earth; a long stay in orbit is drawn at its world. For the others the path is approximate, drawn amber: each leg as the transfer orbit between where it left and where it arrived, as first planned, not as flown; within about 0.02 AU of Horizons for a direct transfer. A leg to a comet or asteroid, or one that loops back to the world it left, is not drawn.',
+  },
   orbits: {
     title: 'Planets’ orbits',
     what: 'The paths of Earth and the five bright planets around the Sun.',
@@ -1473,6 +1500,7 @@ const LAYER_WHYS: readonly (Layer & WhyId)[] = [
   'impacts',
   'volcanoes',
   'orbits',
+  'spacecraft',
   'temperature',
   'sealevel',
   'plates',

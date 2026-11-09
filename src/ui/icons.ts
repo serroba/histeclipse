@@ -167,6 +167,8 @@ const UI_PATHS = {
     'M12 11a1 1 0 1 0 0 2a1 1 0 1 0 0-2z',
     'M19.5 8.5h.01',
   ],
+  // A probe: its body, its panels, and its dish.
+  spacecraft: ['M10 10h4v4h-4z', 'M3 11h7M14 11h7M3 9v4M21 9v4', 'M12 10V6', 'M9 5a3 3 0 0 0 6 0'],
   // A decay curve over axes: half gone, then half again.
   radiocarbon: ['M4 4v16h16', 'M6 6c2 6 5 9 9 10.5s4 1.5 5 1.5', 'M10 13.6h.01'],
   // A grid of squares, some filled: dates counted by cell.

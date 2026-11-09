@@ -129,6 +129,8 @@ def test_a_crewed_mission_is_found_by_its_day_and_named_for_all_its_craft() -> N
     assert by_name["Columbia"]["crewed"] is True
     assert "about" not in by_name["Eagle"]
     assert by_name["Eagle"]["mission"] == "Apollo 11"
+    # The lander carried a crew too, on a crewed mission.
+    assert by_name["Eagle"]["crewed"] is True
 
 
 def test_a_craft_that_never_left_is_kept_from_the_chronology() -> None:
@@ -191,3 +193,54 @@ def test_a_craft_that_shared_the_rocket_keeps_its_own_name() -> None:
     by_name = {c["name"]: c for c in craft}
     assert by_name["Artemis I"]["mission"] == "Artemis 1"
     assert "mission" not in by_name["LunaH-Map"]
+
+
+def test_a_capsule_built_for_a_crew_flown_without_one_is_not_crewed() -> None:
+    zond = (
+        "D00194\t1968-013\t1968-013A\tPP HD\tZond-4\t1968 Mar  2\t-\t1968 Mar  2"
+        "\tEarth\t1968 Mar  9\tL\tG of Guinea\tMOM\tSU"
+    )
+    craft, _ = craft_record(
+        gcat(zond), [], [], [Chronicle("Zond 4", "1968-03-02", "Test Flight", "1968-013A")]
+    )
+    assert craft[0]["crewed"] is False
+
+
+def test_a_part_named_for_the_mission_does_not_take_its_outcome() -> None:
+    odyssey = (
+        "D00316\t1970-029\t1970-029A\tPH HD\tOdyssey\t1970 Apr 11\t-\t1970 Apr 11"
+        "\tEarth\t1970 Apr 14\tEAO\tLuna\tNASA\tUS"
+    )
+    experiments = (
+        "D00328\t1970-029\t1970-029A\tPXALD--\tApollo 13 ALSEP\t1970 Apr 11\tD00326"
+        "\t1970 Apr 11\tEarth\t1970 Apr 14\tEAO\tLuna\tNASA\tUS"
+    )
+    craft, _ = craft_record(
+        gcat(odyssey, experiments),
+        [],
+        [],
+        [Chronicle("Apollo 13", "1970-04-11", "Crewed Lunar Mission (Landing Aborted)", None)],
+    )
+    by_name = {c["name"]: c for c in craft}
+    assert by_name["Odyssey"]["about"] == "Crewed Lunar Mission (Landing Aborted)"
+    assert "about" not in by_name["Apollo 13 ALSEP"]
+
+
+def test_a_subsatellite_left_by_a_crewed_mission_is_not_crewed() -> None:
+    casper = (
+        "D00441\t1972-031\t1972-031A\tPH HD\tCasper\t1972 Apr 16\t-\t1972 Apr 16"
+        "\tEarth\t1972 Apr 19\tEAO\tLuna\tNASA\tUS"
+    )
+    subsatellite = (
+        "D00443\t1972-031\t1972-031D\tP   D\tApollo 16 Subsatellite\t1972 Apr 16\t-"
+        "\t1972 Apr 16\tEarth\t1972 Apr 19\tEAO\tLuna\tNASA\tUS"
+    )
+    craft, _ = craft_record(
+        gcat(casper, subsatellite),
+        [],
+        [],
+        [Chronicle("Apollo 16", "1972-04-16", "Crewed Lunar Landing", None)],
+    )
+    by_name = {c["name"]: c for c in craft}
+    assert by_name["Casper"]["crewed"] is True
+    assert by_name["Apollo 16 Subsatellite"]["crewed"] is False

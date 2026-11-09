@@ -13,7 +13,7 @@ import { BODY_RADIUS } from '../globe/bodyRadius';
 import { EARTH_RADIUS_KM } from '../globe/spaceFrame';
 import { CAMERA_DISTANCE_RANGE, type Body } from '../state/viewState';
 import { element } from './dom';
-import { bookIcon } from './icons';
+import { bookIcon, uiIcon } from './icons';
 
 /** A rail for one body: its distances in its own radii, as near and as far as the camera goes. */
 export interface RailScale {
@@ -146,6 +146,8 @@ export interface ZoomRail {
   render(view: RailView | null): void;
   /** Whether the orbits icon is offered, and on. */
   setOrbits(offered: boolean, on: boolean): void;
+  /** Whether the spacecraft icon is offered, and on. */
+  setSpacecraft(offered: boolean, on: boolean): void;
   /** Whether "Why here?" is offered, and on: a tap on the globe then says what is there. */
   setWhyHere(offered: boolean, on: boolean): void;
 }
@@ -198,6 +200,8 @@ export function createZoomRail(handlers: {
   onZoom(distance: number): void;
   /** Turn the planets' orbits on or off. */
   onOrbits(): void;
+  /** Turn the craft beyond Earth orbit on or off. */
+  onSpacecraft(): void;
   /** Turn "Why here?" on or off. */
   onWhyHere(): void;
   /** Centre on Earth again. */
@@ -276,6 +280,18 @@ export function createZoomRail(handlers: {
   orbits.addEventListener('click', () => {
     handlers.onOrbits();
   });
+  const spacecraft = element('button', {
+    type: 'button',
+    class: 'zoom-step zoom-spacecraft',
+    'aria-label': 'Spacecraft',
+    'aria-pressed': 'false',
+    title: 'Every craft sent beyond Earth orbit, flying as the time plays',
+    hidden: '',
+  });
+  spacecraft.append(uiIcon('spacecraft', 18));
+  spacecraft.addEventListener('click', () => {
+    handlers.onSpacecraft();
+  });
   const whyHere = element('button', {
     type: 'button',
     class: 'zoom-step zoom-why-here',
@@ -294,6 +310,7 @@ export function createZoomRail(handlers: {
     { class: 'zoom-rail', role: 'group', 'aria-label': 'Zoom', hidden: '' },
     zoom,
     orbits,
+    spacecraft,
     whyHere,
     readout,
   );
@@ -323,6 +340,11 @@ export function createZoomRail(handlers: {
     setOrbits(offered, on) {
       orbits.hidden = !offered;
       orbits.setAttribute('aria-pressed', String(on));
+      sync();
+    },
+    setSpacecraft(offered, on) {
+      spacecraft.hidden = !offered;
+      spacecraft.setAttribute('aria-pressed', String(on));
       sync();
     },
     render(view) {

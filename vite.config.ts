@@ -29,6 +29,7 @@ export default defineConfig({
         'src/globe/arrivalGrid.ts',
         'src/globe/planetMeshes.ts',
         'src/globe/moonMeshes.ts',
+        'src/globe/craftLayer.ts',
         'src/globe/impactAnimation.ts',
         'src/globe/showerAnimation.ts',
         'src/sky/skyScene.ts',

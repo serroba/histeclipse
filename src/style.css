@@ -5007,3 +5007,33 @@ button:has(> .icon-label) > .icon {
 .moon-name[hidden] {
   display: none;
 }
+
+/* The craft beyond Earth orbit (#350): each name beside its dot, a tap opening its card. */
+.craft-name {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 1px 0 1px 8px;
+  border: 0;
+  background: none;
+  color: rgb(214 236 255 / 0.92);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 500;
+  white-space: nowrap;
+  text-shadow:
+    0 0 3px rgb(0 0 0 / 0.9),
+    0 1px 2px rgb(0 0 0 / 0.8);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.craft-name:hover,
+.craft-name:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.craft-name[hidden] {
+  display: none;
+}
