@@ -76,6 +76,10 @@ export interface MoonMeshes {
   ): void;
   /** Draw the paths of one planet's moons (the planet in view), or of none. */
   showPaths(planet: MoonPlanet | null): void;
+  /** Draw every moon's path, about every planet: with the planets' orbits, when they show. */
+  showAllPaths(all: boolean): void;
+  /** How many moons' paths are drawn. */
+  pathsShown(): number;
   /** Whether the moons are placed: their orbits in, and the planets. */
   ready(): boolean;
   /** Wrap a moon in its mission map; null goes back to its painted colour. */
@@ -157,6 +161,7 @@ export function createMoonMeshes(scene: Scene): MoonMeshes {
   // The last placing, to place the moons again as soon as their orbits come.
   let lastPlacing: Parameters<MoonMeshes['place']> | null = null;
   let pathsOf: MoonPlanet | null = null;
+  let allPaths = false;
   // The moment each path was drawn for: redrawn once the orbit has turned a little.
   const drawnAt = new Map<MoonName, number>();
   const world = new Vector3();
@@ -195,7 +200,7 @@ export function createMoonMeshes(scene: Scene): MoonMeshes {
       for (const name of MOONS[planet]) {
         const path = paths.get(name);
         if (path === undefined) continue;
-        path.visible = pathsOf === planet && orbits !== null && placedAt !== null;
+        path.visible = (allPaths || pathsOf === planet) && orbits !== null && placedAt !== null;
         // A path a day old is still the moon's path, near enough.
         if (
           path.visible &&
@@ -225,6 +230,14 @@ export function createMoonMeshes(scene: Scene): MoonMeshes {
     },
     ready() {
       return orbits !== null && lastPlacing !== null && lastPlacing[1] !== null;
+    },
+    pathsShown() {
+      return [...paths.values()].filter((path) => path.visible).length;
+    },
+    showAllPaths(all) {
+      if (all === allPaths) return;
+      allPaths = all;
+      refreshPaths();
     },
     showPaths(planet) {
       if (planet === pathsOf) return;
