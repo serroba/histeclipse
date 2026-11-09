@@ -41,6 +41,7 @@ import { calendarDate, calendarDateOf, julianDay, type Calendar } from '../time/
 import { SKY_CULTURES, type SkyCulture } from '../data/skyCultures';
 import { SUN_LAYERS, type SunLayer } from '../data/sunImages';
 import { COAST_SOURCES, type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
+import { LINEAGE_GROUPS } from '../data/lineages';
 import { DEFAULT_SEA_ICE_MODEL, SEA_ICE_MODELS, type SeaIceModel } from '../data/seaIce';
 import {
   DEFAULT_TEMPERATURE_MODEL,
@@ -93,6 +94,7 @@ import {
   type ViewState,
   type TreeView,
   type CratersView,
+  type LineagesView,
   CRATERS_SHAPES,
 } from './viewState';
 
@@ -178,6 +180,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
       (raw) => oneOf(raw, CRATERS_SHAPES, 'cratersin'),
       defaults.cratersIn,
     ),
+    lineages: read<LineagesView | null>('lineages', parseLineagesView, defaults.lineages),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -225,6 +228,10 @@ export function serializeViewState(state: ViewState): string {
     params.set('craters', state.craters === 'all' ? 'all' : String(state.craters.id));
   }
   if (state.cratersIn !== 'map') params.set('cratersin', state.cratersIn);
+  if (state.lineages !== null) {
+    const { group, pick } = state.lineages;
+    params.set('lineages', pick === null ? group : `${group}:${String(pick)}`);
+  }
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
@@ -271,6 +278,18 @@ function parseCraters(raw: string): CratersView {
   if (raw === 'all') return 'all';
   if (!/^\d{1,6}$/.test(raw)) throw new Error('expected all, or a crater’s id, such as 12');
   return { id: Number(raw) };
+}
+
+/** `lineages=` and a fossil group, then `:` and a PBDB number to pick one of its names out. */
+function parseLineagesView(raw: string): LineagesView {
+  const [group, pick, ...rest] = raw.split(':');
+  const known = LINEAGE_GROUPS.find((each) => each === group);
+  if (known === undefined || rest.length > 0 || (pick !== undefined && !/^\d{1,7}$/.test(pick))) {
+    throw new Error(
+      `expected ${LINEAGE_GROUPS.join(', ')}, then perhaps : and a PBDB number, such as dinosaurs:38613`,
+    );
+  }
+  return { group: known, pick: pick === undefined ? null : Number(pick) };
 }
 
 function formatTree(tree: TreeView): string {

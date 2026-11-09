@@ -67,6 +67,7 @@ from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.solar_images import fetch_images
 from histeclipse_pipeline.spacecraft import fetch_spacecraft
 from histeclipse_pipeline.spacecraft_paths import fetch_spacecraft_paths
+from histeclipse_pipeline.time_tree import fetch_time_trees
 from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
@@ -377,6 +378,12 @@ def tree_of_life(args: Arguments) -> int:  # pragma: no cover - needs network ac
     return _say(f"wrote {count} nodes of the tree of life to {args.out}")
 
 
+def time_tree(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write each fossil group's genera through time and place (PBDB, CC BY 4.0)."""
+    count = fetch_time_trees(args.out)
+    return _say(f"wrote {count} genera's tracks to {args.out}")
+
+
 def pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the lead picture, author and licence of each Wikipedia page a data file names."""
     count = fetch_pictures(args.source, args.out, args.must_mention)
@@ -630,6 +637,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         tree_of_life,
         "write the tree of life trimmed to what the site shows (Open Tree of Life)",
         "output JSON file",
+    ),
+    "time-tree": (
+        time_tree,
+        "write each fossil group's genera through time and place (PBDB, CC BY 4.0)",
+        "output directory",
     ),
     "pictures": (
         pictures,

@@ -258,6 +258,8 @@ import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
 import { createTreeSheet } from './ui/treeSheet';
 import { createImpactPathsSheet } from './ui/impactPathsSheet';
+import { createLineagesSheet } from './ui/lineagesSheet';
+import { loadLineages, type LineageGroup, type Lineages } from './data/lineages';
 import { loadTreeOfLife, type TreeOfLife } from './data/treeOfLife';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
@@ -529,6 +531,44 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     whySheet.mark('impacts', 'Impact craters'),
   );
+  // Life through time (#358): each fossil group's genera, a file per group, loaded when shown.
+  const lineagesLoading = new Map<LineageGroup, Promise<Lineages>>();
+  const loadGroupLineages = (group: LineageGroup): Promise<Lineages> => {
+    let loading = lineagesLoading.get(group);
+    if (loading === undefined) {
+      loading = loadLineages(`${base}data/time-tree/${group}.json`, fetchJson);
+      loading.catch(() => lineagesLoading.delete(group));
+      lineagesLoading.set(group, loading);
+    }
+    return loading;
+  };
+  const lineagesSheet = createLineagesSheet(
+    (lineages) => {
+      store.set((state) => ({ ...state, lineages }));
+    },
+    loadGroupLineages,
+    (ma) => `${base}data/paleodem/${String(ma)}.png`,
+    (ma, where) => {
+      store.set((state) => ({ ...state, lineages: null }));
+      enterDeepTime(ma, 'all');
+      // Fossils on, and the globe turned to face where the line starts.
+      store.set((state) => ({ ...state, layers: withLayer(state.layers, 'fossils', true) }));
+      globe.flyTo(where);
+    },
+    whySheet.mark('lineages', 'Life through time'),
+  );
+  /** Open a group's lines with a genus picked out by name, or the group if it has none such. */
+  function openLineagesAt(group: LineageGroup, genus: string): void {
+    loadGroupLineages(group).then(
+      (lineages) => {
+        const pick = lineages.nodes.find((node) => node.name === genus)?.pbdb ?? null;
+        store.set((state) => ({ ...state, lineages: { group, pick } }));
+      },
+      (error: unknown) => {
+        notify(`Could not load the lines through time: ${errorMessage(error)}`);
+      },
+    );
+  }
   // "Why here?": while on, a tap on the globe says what each layer has there.
   let askingHere = false;
   const sourcesList = element('ul', { class: 'why-list', 'data-testid': 'sources-list' });
@@ -1627,6 +1667,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     zoomRail.root,
     treeSheet.dialog,
     impactPathsSheet.dialog,
+    lineagesSheet.dialog,
     whySheet.dialog,
     element(
       'header',
@@ -2747,10 +2788,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ...(genus === undefined
         ? {}
         : {
-            action: treeAction(
-              `${genus} on the tree of life`,
-              (tree) => tree.ours.fossilGenera[genus],
-            ),
+            action: {
+              label: `${genus} through time, in 3D`,
+              run: () => {
+                openLineagesAt(cell.group, genus);
+              },
+            },
           }),
     };
   }
@@ -3987,7 +4030,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ...(carbonMadeSaid === null ? [] : [['carbonMade', carbonMadeSaid] as const]),
       ]),
       actions: new Map([
-        ['fossils', treeAction('The four groups on the tree of life', () => undefined)] as const,
+        [
+          'fossils',
+          {
+            label: 'Their genera through time, in 3D',
+            run: () => {
+              store.set((state) => ({ ...state, lineages: { group: 'dinosaurs', pick: null } }));
+            },
+          },
+        ] as const,
         [
           'impacts',
           {
@@ -4615,6 +4666,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     root.classList.toggle('is-asking-here', askingHere && state.ma === null);
     treeSheet.show(state.tree);
     impactPathsSheet.show(state.craters, state.ma ?? 0, state.cratersIn);
+    lineagesSheet.show(state.lineages);
     whySheet.show(
       state.why,
       state.why === 'here'

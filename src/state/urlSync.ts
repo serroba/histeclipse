@@ -47,7 +47,9 @@ export function isStep(before: ViewState, after: ViewState): boolean {
     before.seenIn !== after.seenIn ||
     !sameLayers(before.layers, after.layers) ||
     !sameTree(before.tree, after.tree) ||
-    !sameCraters(before.craters, after.craters)
+    !sameCraters(before.craters, after.craters) ||
+    before.lineages?.group !== after.lineages?.group ||
+    before.lineages?.pick !== after.lineages?.pick
   );
 }
 
