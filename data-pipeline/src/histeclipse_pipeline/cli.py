@@ -31,6 +31,7 @@ from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table, write_table
 from histeclipse_pipeline.macrostrat import fetch_rocks
+from histeclipse_pipeline.moon_orbits import fetch_moon_orbits
 from histeclipse_pipeline.ohm import fetch_ohm
 from histeclipse_pipeline.p3k14c import fetch_p3k14c
 from histeclipse_pipeline.paleo_co2 import fetch_co2_archive
@@ -304,6 +305,14 @@ def planet_maps(args: Arguments) -> int:  # pragma: no cover - needs network acc
     return _say(f"wrote {count} maps to {args.out}")
 
 
+def moon_orbits(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Fit the moons' orbits to JPL Horizons (public/data), with reference positions."""
+    report = fetch_moon_orbits(
+        args.out, Path("../test-vectors/moons.json"), Path(".cache/moon-orbits")
+    )
+    return _say("\n".join([*report, f"wrote {len(report)} orbits to {args.out}"]))
+
+
 def planet_keys(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the height views' colour keys, measured against altimetry (public/data)."""
     count = fetch_planet_keys(args.out, Path("../public/textures"), Path(".cache/planet-keys"))
@@ -550,6 +559,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         planet_maps,
         "write the bodies' maps from their missions (MESSENGER, Viking, Cassini, BMNG, LRO)",
         "output folder (public/textures)",
+    ),
+    "moon-orbits": (
+        moon_orbits,
+        "fit the orbits of the moons of Mars, Jupiter and Saturn to JPL Horizons",
+        "output JSON file (public/data/moon-orbits.json)",
     ),
     "planet-keys": (
         planet_keys,

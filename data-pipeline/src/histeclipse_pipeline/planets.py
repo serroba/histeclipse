@@ -58,8 +58,12 @@ def horizons_url(
     jds_tt: list[float],
     center: str = GEOCENTRIC,
     corrections: str = GEOMETRIC,
+    table: str = "1",
 ) -> str:
-    """Build a Horizons query for geometric geocentric vectors at the given TT Julian Days."""
+    """Build a Horizons query for vectors at the given TT Julian Days.
+
+    ``table`` is Horizons' vector table: 1 for positions, 2 for positions and velocities.
+    """
     query = urllib.parse.urlencode(
         {
             "format": "text",
@@ -68,7 +72,7 @@ def horizons_url(
             "CENTER": f"'{center}'",
             "REF_PLANE": "'FRAME'",
             "REF_SYSTEM": "'ICRF'",
-            "VEC_TABLE": "'1'",
+            "VEC_TABLE": f"'{table}'",
             "OUT_UNITS": "'KM-S'",
             "VEC_CORR": f"'{corrections}'",
             "CSV_FORMAT": "'YES'",
