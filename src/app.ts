@@ -32,7 +32,6 @@ import { fossilLayer } from './globe/fossilLayer';
 import { genomeLayer } from './globe/genomeLayer';
 import { humanSiteLayer } from './globe/humanSiteLayer';
 import { impactLayer } from './globe/impactLayer';
-import { volcanoLayer } from './globe/volcanoLayer';
 import { geoToVector } from './globe/geo';
 import {
   PLANET_NAMES,
@@ -137,7 +136,7 @@ import { keyGradient, keyTicks, loadColourKeys } from './data/planetKeys';
 import { isNamedBody, loadPlaceNames, type NamedBody, type PlaceNames } from './data/planetNames';
 import { loadMoonOrbits, moonPosition, type MoonName, type MoonOrbits } from './astro/moonOrbits';
 import { FEATURES } from './features';
-import type { FeatureContext } from './features/feature';
+import { RESTING, type FeatureContext } from './features/feature';
 import { moonAbout, moonLine } from './text/moonFacts';
 import { isMoonBody, MOON_MAPS, MOON_NAMES, MOON_VIEWS, moonPlanet } from './globe/moonLook';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
@@ -298,16 +297,6 @@ import {
   type Impacts,
   type ImpactsMode,
 } from './data/impacts';
-import {
-  eruptionsNear,
-  loadVolcanoDetails,
-  loadVolcanoes,
-  volcanoCard,
-  volcanoesText,
-  type VolcanoDetails,
-  type VolcanoMark,
-  type Volcanoes,
-} from './data/volcanoes';
 import { claimCard, humansAt, loadHumanClaims, type HumanClaims } from './data/humanClaims';
 import { loadPictures, type Pictures } from './data/pictures';
 import { loadArrivalGrid } from './globe/arrivalGrid';
@@ -1534,7 +1523,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     showGenomes(now);
     showDates(now);
     showImpacts(now);
-    showVolcanoes(now);
+    if (lastTerrestrial !== null) showFeatures(now, lastTerrestrial);
     showRocks(now);
     showEmpires(now);
     showHoloceneEarth(now);
@@ -1545,7 +1534,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let travelling = false;
   const TRAVEL_LAYERS: readonly Layer[] = ['empires', 'ways'];
   let travelBrought: readonly Layer[] = [];
-  const RESTING = 'Resting while you travel through the years; back when the track closes.';
 
   function historyFirst(): number {
     return Math.ceil(deltaT.firstYear) + 1;
@@ -1819,7 +1807,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     focus: store.get().focus,
   });
   // Drawn on the globe as layers of their own (#379).
-  const volcanoesOnGlobe = globe.addLayer(volcanoLayer);
   const impactsOnGlobe = globe.addLayer(impactLayer);
   const fossilsOnGlobe = globe.addLayer(fossilLayer);
   const genomesOnGlobe = globe.addLayer(genomeLayer);
@@ -1834,13 +1821,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     showCard: (card) => {
       markerCard.show(card);
     },
+    cardOpen: () => markerCard.dialog.open,
     planets: () => planets,
     moon: () => moonEphemeris,
     loadPlanets: () => {
       void loadPlanets();
     },
+    travelling: () => travelling,
     refresh: () => {
-      showTime(store.get());
+      const now = store.get();
+      showTime(now);
+      showEmpires(now);
     },
   };
   const mounted = FEATURES.map((feature) => ({ feature, shown: feature.mount(featureContext) }));
@@ -2801,71 +2792,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
   }
 
-  // Volcanic eruptions near the year shown, in historical time: loaded with the layer; each
-  // volcano's summary and photo the first time a card opens.
-  let volcanoes: Volcanoes | null = null;
-  let volcanoesLoading: Promise<Volcanoes> | null = null;
-  let volcanoesSaid: string | null = null;
-  let volcanoMarks: readonly VolcanoMark[] = [];
-  let volcanoDetails: VolcanoDetails | null = null;
-  let volcanoDetailsLoading: Promise<VolcanoDetails> | null = null;
-  let volcanoShown: VolcanoMark | null = null;
-
-  function showVolcanoes(state: ViewState): void {
-    const on = state.layers.has('volcanoes') && state.mode === 'globe' && state.ma === null;
-    if (!on || travelling) {
-      volcanoesSaid = on ? RESTING : null;
-      volcanoMarks = [];
-      volcanoesOnGlobe.update(null);
-      return;
-    }
-    if (volcanoes === null) {
-      volcanoesSaid = 'Loading the eruptions…';
-      if (volcanoesLoading === null) {
-        volcanoesLoading = loadVolcanoes(`${base}data/volcanoes.json`, fetchJson);
-        volcanoesLoading.then(
-          (loaded) => {
-            volcanoes = loaded;
-            const now = store.get();
-            showVolcanoes(now);
-            showEmpires(now);
-          },
-          (error: unknown) => {
-            volcanoesLoading = null;
-            notify(`Could not load the eruptions: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return;
-    }
-    const year = state.time.date.year;
-    volcanoMarks = eruptionsNear(volcanoes, year);
-    volcanoesOnGlobe.update(volcanoMarks);
-    volcanoesSaid = volcanoesText(volcanoMarks, year);
-  }
-
-  function showVolcanoCard(number: string): void {
-    const mark = volcanoMarks.find((each) => String(each.volcano.number) === number);
-    if (mark === undefined) return;
-    volcanoShown = mark;
-    markerCard.show(volcanoCard(mark, volcanoDetails));
-    if (volcanoDetails !== null || volcanoDetailsLoading !== null) return;
-    volcanoDetailsLoading = loadVolcanoDetails(`${base}data/volcano-details.json`, fetchJson);
-    volcanoDetailsLoading.then(
-      (loaded) => {
-        volcanoDetails = loaded;
-        // Its summary and photo, if its card is still the one open.
-        if (markerCard.dialog.open && volcanoShown !== null) {
-          markerCard.show(volcanoCard(volcanoShown, loaded));
-        }
-      },
-      (error: unknown) => {
-        volcanoDetailsLoading = null;
-        notify(`Could not load the volcano’s summary: ${errorMessage(error)}`);
-      },
-    );
-  }
-
   // The genera's pictures: loaded the first time a fossil cell's card opens.
   let fossilPictures: Pictures | null = null;
   let fossilPicturesLoading: Promise<Pictures> | null = null;
@@ -2970,18 +2896,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   globe.onMarkerPick((key) => {
     const [kind, id] = key.split(':');
+    for (const { shown } of mounted) shown.unpick?.();
     const picked = mounted.find(({ feature }) => feature.picks === kind);
     if (picked !== undefined) {
       if (id !== undefined) picked.shown.pick?.(id);
       return;
     }
-    volcanoShown = null;
     humanShown = null;
     fossilShown = null;
-    if (kind === 'volcano' && id !== undefined) {
-      showVolcanoCard(id);
-      return;
-    }
     if (kind === 'human' && id !== undefined) {
       showHumanCard(id);
       return;
@@ -4169,7 +4091,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ...(rocksSaid === null ? [] : [['rocks', rocksSaid] as const]),
         ...(datesSaid === null ? [] : [['dates', datesSaid] as const]),
         ...(impactsSaid === null ? [] : [['impacts', impactsSaid] as const]),
-        ...(volcanoesSaid === null ? [] : [['volcanoes', volcanoesSaid] as const]),
+        ...mounted.flatMap(({ feature, shown }) => {
+          const text = shown.said?.() ?? null;
+          return text === null ? [] : [[feature.id, text] as const];
+        }),
         ...(carbonMadeSaid === null ? [] : [['carbonMade', carbonMadeSaid] as const]),
       ]),
       actions: new Map([
@@ -4744,7 +4669,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showRocks(state);
       showPeriods(state);
       showImpacts(state);
-      showVolcanoes(state);
       showCarbonMade(state);
       showEmpires(state);
     } else if (state.focus !== previous.focus) {

@@ -2,6 +2,7 @@
 
 import { asteroidsFeature } from './asteroids';
 import { spacecraftFeature } from './spacecraft';
+import { volcanoesFeature } from './volcanoes';
 import type { Feature } from './feature';
 
-export const FEATURES: readonly Feature[] = [spacecraftFeature, asteroidsFeature];
+export const FEATURES: readonly Feature[] = [spacecraftFeature, asteroidsFeature, volcanoesFeature];
