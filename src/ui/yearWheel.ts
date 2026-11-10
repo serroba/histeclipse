@@ -138,6 +138,7 @@ function column(name: string, step: (by: number) => void, settled: () => void): 
 export function createYearWheel(onYear: (year: number) => void): YearWheel {
   let range: YearRange = { min: 1, max: 1 };
   let shown = 1;
+  let isOpen = false;
 
   function pick(year: number): void {
     const kept = Math.min(range.max, Math.max(range.min, year));
@@ -147,6 +148,8 @@ export function createYearWheel(onYear: (year: number) => void): YearWheel {
     onYear(kept);
   }
   function fromColumns(): void {
+    // Hiding the wheel scrolls its columns back to the top: that is no pick.
+    if (!isOpen) return;
     pick(joinYear(hundreds.value(), units.value(), range));
   }
 
@@ -202,7 +205,6 @@ export function createYearWheel(onYear: (year: number) => void): YearWheel {
     '⇅',
   );
 
-  let isOpen = false;
   function setOpen(open: boolean): void {
     isOpen = open;
     panel.hidden = !open;

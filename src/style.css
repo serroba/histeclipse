@@ -1227,6 +1227,21 @@ body {
   cursor: pointer;
 }
 
+/* As wide as the era shown, not the longest calendar's name, so the year's eclipses keep room
+   beside the wheel's button. Where a browser can't size a list to its choice, a cap instead. */
+@supports (field-sizing: content) {
+  .era-select {
+    field-sizing: content;
+    padding-right: 28px;
+  }
+}
+
+@supports not (field-sizing: content) {
+  .era-select {
+    max-width: 136px;
+  }
+}
+
 .era-select option {
   background: #10162a;
   color: var(--ink);
