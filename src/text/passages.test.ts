@@ -6,7 +6,13 @@ import type { FamousEclipse } from '../data/famousEclipses';
 import { SOURCES, WHYS } from '../sources/registry';
 import type { LayerChoice } from '../state/layerCatalog';
 import { parseViewState } from '../state/url';
-import { eclipsePassages, landingPassages, loadPassages, type Passage } from './passages';
+import {
+  eclipsePassages,
+  landingPassages,
+  loadPassages,
+  passagesOnce,
+  type Passage,
+} from './passages';
 import { whyPassages } from './passages';
 
 const serve = (body: unknown) => () => Promise.resolve(new Response(JSON.stringify(body)));
@@ -154,5 +160,23 @@ describe('passages from records with gaps', () => {
     expect(temperature?.anchors[0]?.view).toBe(
       'layers=temperature&ma=250&scale=all&why=temperature',
     );
+  });
+});
+
+describe('the passages, asked for once', () => {
+  it('Given two readers asking, Then the file is fetched once; after a failure, again', async () => {
+    let asked = 0;
+    let fail = true;
+    const once = passagesOnce('passages.json', () => {
+      asked += 1;
+      return Promise.resolve(
+        fail ? new Response(null, { status: 503 }) : new Response(JSON.stringify(data)),
+      );
+    });
+    await expect(once()).rejects.toThrow(/503/);
+    fail = false;
+    const [first, second] = await Promise.all([once(), once()]);
+    expect(first).toBe(second);
+    expect(asked).toBe(2);
   });
 });

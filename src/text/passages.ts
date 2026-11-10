@@ -70,6 +70,21 @@ export async function loadPassages(url: string, fetchJson: Fetch): Promise<Passa
   return getJson(fetchJson, url, PassagesSchema);
 }
 
+/** The passages, asked for once however many readers of them ask; asked again after a failure. */
+export function passagesOnce(url: string, fetchJson: Fetch): () => Promise<readonly Passage[]> {
+  let loading: Promise<readonly Passage[]> | null = null;
+  return () => {
+    loading ??= loadPassages(url, fetchJson).then(
+      (loaded) => loaded.passages,
+      (error: unknown) => {
+        loading = null;
+        throw error;
+      },
+    );
+    return loading;
+  };
+}
+
 /** Where each deep span opens: the last glacial maximum, 540 million years ago, Earth's birth. */
 const SPAN_VIEWS: Readonly<Record<Exclude<Span, 'years'>, string>> = {
   ice: `ma=${String(LAST_GLACIAL_MAXIMUM_MA)}&scale=ice`,

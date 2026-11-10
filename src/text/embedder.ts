@@ -9,7 +9,10 @@
 
 import wasm from 'onnxruntime-web/ort-wasm-simd-threaded.wasm?url';
 
+import { loadPassageVectors, searchMeaning } from './meaning';
 import { EMBEDDING_MODEL } from './model';
+import type { Passage } from './passages';
+import type { Hit } from './wordSearch';
 import { readVocabulary, tokenIds } from './wordpiece';
 
 export interface Embedder {
@@ -54,4 +57,20 @@ export async function loadEmbedder(base: string): Promise<Embedder> {
       return vector.map((part) => part / (length || 1));
     },
   };
+}
+
+/**
+ * Search by meaning (#393): the model, its runtime and the passages' vectors, asked for only once
+ * the reader turns it on; then each query ranked against every passage.
+ */
+export async function loadMeaningSearch(
+  base: string,
+  passages: () => Promise<readonly Passage[]>,
+): Promise<(query: string) => Promise<Hit[]>> {
+  const [vectors, all, embedder] = await Promise.all([
+    loadPassageVectors(`${base}data/passage-vectors.bin`, (url) => fetch(url)),
+    passages(),
+    loadEmbedder(base),
+  ]);
+  return async (query) => searchMeaning(vectors, all, await embedder.embedQuery(query));
 }

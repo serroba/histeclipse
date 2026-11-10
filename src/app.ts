@@ -145,9 +145,9 @@ import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
 import { createFamousPanel } from './ui/famousPanel';
 import { createSearchPanel } from './ui/searchPanel';
 import { anchorLabel, anchorQuery } from './text/anchors';
-import { loadPassageVectors, searchMeaning } from './text/meaning';
+import { loadMeaningSearch } from './text/embedder';
 import { nearby } from './text/nearby';
-import { loadPassages, type Anchor, type Passage } from './text/passages';
+import { passagesOnce, type Anchor, type Passage } from './text/passages';
 import { indexPassages } from './text/wordSearch';
 import { uiIcon } from './ui/icons';
 import { createWelcome } from './ui/welcome';
@@ -912,31 +912,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
   fullView.addEventListener('click', togglePanels);
   // The site's texts as passages, asked for once, by search or by what is written about here.
-  let passagesLoading: Promise<readonly Passage[]> | null = null;
-  function passages(): Promise<readonly Passage[]> {
-    passagesLoading ??= loadPassages(`${base}data/passages.json`, (url) => fetch(url)).then(
-      (loaded) => loaded.passages,
-      (error: unknown) => {
-        passagesLoading = null;
-        throw error;
-      },
-    );
-    return passagesLoading;
-  }
-  // The site's texts, searched by their words; a passage opens the view of its place (#392).
+  const passages = passagesOnce(`${base}data/passages.json`, (url) => fetch(url));
+  // The site's texts, searched by their words, and by meaning once turned on (#392, #393).
   const searchPanel = createSearchPanel(
     () => passages().then(indexPassages),
-    // Search by meaning (#393): the model, its runtime and the passages' vectors, asked for only
-    // once the reader turns it on.
-    async () => {
-      const [{ loadEmbedder }, vectors, all] = await Promise.all([
-        import('./text/embedder'),
-        loadPassageVectors(`${base}data/passage-vectors.bin`, (url) => fetch(url)),
-        passages(),
-      ]);
-      const embedder = await loadEmbedder(base);
-      return async (query) => searchMeaning(vectors, all, await embedder.embedQuery(query));
-    },
+    () => loadMeaningSearch(base, passages),
     (anchor) => {
       openAnchor(anchor);
     },
