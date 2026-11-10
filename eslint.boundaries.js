@@ -17,6 +17,8 @@ export const TIERS = [
   ['globe', 'sky', 'story', 'tablets'],
   // The page around it, and what is reported about it.
   ['ui', 'telemetry'],
+  // Features, each a folder of its own on one contract (#380): domain, drawing and card together.
+  ['features'],
   // The wiring: `src/app.ts`, `src/main.ts`.
   ['app', 'main'],
 ];
@@ -45,7 +47,8 @@ function rule(names) {
   if (names.length === 0) return 'off';
   const folders = names.filter((name) => !ROOT_FILES.has(name));
   const files = names.filter((name) => ROOT_FILES.has(name));
-  const up = '\\.\\./';
+  // One or more steps up: features sit a folder deeper.
+  const up = '(\\.\\./)+';
   const patterns = [];
   if (folders.length > 0) {
     patterns.push({

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import data from '../../public/data/asteroids.json';
-import reference from '../../test-vectors/asteroids.json';
-import { asteroidPosition, loadAsteroids } from './asteroids';
+import data from '../../../public/data/asteroids.json';
+import reference from '../../../test-vectors/asteroids.json';
+import { asteroidPosition, loadAsteroids } from './orbits';
 
 const file = JSON.stringify(data);
 const serve = (body: string) => () => Promise.resolve(new Response(body));
