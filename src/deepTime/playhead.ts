@@ -4,7 +4,7 @@
  * frame's step smaller than half of it, so at 120 frames a second the ice ages never moved.
  */
 
-import { roundMa } from '../state/viewState';
+import { roundMa } from './scale';
 
 /** Longest step one frame may take, seconds: a frame after a stall does not leap. */
 const LONGEST_FRAME = 0.25;

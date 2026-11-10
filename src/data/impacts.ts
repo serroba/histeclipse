@@ -8,7 +8,7 @@
 import * as v from 'valibot';
 
 import { formatMa } from '../deepTime/periods';
-import type { GeoPoint } from '../state/viewState';
+import type { GeoPoint } from '../core/geo';
 import { getJson, type Fetch } from './fetchJson';
 
 const Ma = v.nullable(v.pipe(v.number(), v.minValue(0)));

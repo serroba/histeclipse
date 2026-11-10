@@ -4,7 +4,7 @@
  * to 180° E and `rows` from 90° N to 90° S. Above today's sea level is land.
  */
 
-import type { GeoPoint } from '../state/viewState';
+import type { GeoPoint } from '../core/geo';
 import { valueAt } from '../util/arrays';
 
 export interface ElevationGrid {

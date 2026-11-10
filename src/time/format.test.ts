@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Moment } from '../state/viewState';
+import type { Moment } from './moment';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './format';
 import { calendarDateOf } from './julianDay';
 import { astronomicalYear } from './year';

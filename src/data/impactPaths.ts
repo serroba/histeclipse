@@ -4,7 +4,7 @@
  * sheet (`ui/impactPathsSheet.ts`) only has to draw what this says.
  */
 
-import type { GeoPoint } from '../state/viewState';
+import type { GeoPoint } from '../core/geo';
 import { placeThen, strikeMa, type Impact, type Impacts } from './impacts';
 
 /** A place on a path: where the crater lay `ma` million years ago. */

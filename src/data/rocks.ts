@@ -6,7 +6,7 @@
 
 import * as v from 'valibot';
 
-import type { GeoPoint } from '../state/viewState';
+import type { GeoPoint } from '../core/geo';
 import { insideWrapped, ringsOf, type Ring } from '../util/polygons';
 import { getJson, type Fetch } from './fetchJson';
 

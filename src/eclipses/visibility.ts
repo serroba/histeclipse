@@ -10,7 +10,7 @@
  * sits Δ / 239.34 degrees further east (Earth turns once per 86,164 s relative to the stars).
  */
 
-import type { GeoPoint } from '../state/viewState';
+import type { GeoPoint } from '../core/geo';
 
 const RADIANS = Math.PI / 180;
 export const SECONDS_PER_DEGREE_OF_ROTATION = 86_164.0905 / 360;

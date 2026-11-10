@@ -5,7 +5,8 @@
 
 import * as v from 'valibot';
 
-import { defaultCalendarFor, type Selection } from '../state/viewState';
+import { defaultCalendarFor } from '../time/moment';
+import type { Selection } from '../eclipses/kind';
 import { calendarDateOf, julianDay, type CalendarDate } from '../time/julianDay';
 import { astronomicalYear } from '../time/year';
 import { getJson, type Fetch } from './fetchJson';

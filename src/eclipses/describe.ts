@@ -3,7 +3,9 @@
 import { greatestEclipseUT, type CatalogRecord } from '../data/catalog';
 import type { LunarEclipse } from '../data/lunarCatalog';
 import type { SolarEclipse } from '../data/solarCatalog';
-import type { GeoPoint, Moment, Selection } from '../state/viewState';
+import type { GeoPoint } from '../core/geo';
+import type { Moment } from '../time/moment';
+import type { Selection } from './kind';
 import {
   calendarDate,
   historicalCalendar,
