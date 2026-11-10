@@ -1,0 +1,15 @@
+{
+  "embedding": {
+    "name": "bge-small-en-v1.5",
+    "repo": "Xenova/bge-small-en-v1.5",
+    "revision": "ea104dacec62c0de699686887e3f920caeb4f3e3",
+    "licence": "MIT",
+    "query": "Represent this sentence for searching relevant passages: ",
+    "files": {
+      "onnx/model_quantized.onnx": "6c9c6101a956d62dfb5e7190c538226c0c5bb9cb27b651234b6df063ee7dbfe4",
+      "vocab.txt": "07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3",
+      "tokenizer.json": "d241a60d5e8f04cc1b2b3e9ef7a4921b27bf526d9f6050ab90f9267a1f9e5c66"
+    },
+    "site": ["onnx/model_quantized.onnx", "vocab.txt"]
+  }
+}

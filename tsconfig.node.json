@@ -5,7 +5,8 @@
     "lib": ["ES2023"],
     "types": ["node"],
     "allowJs": true,
-    "checkJs": true
+    "checkJs": true,
+    "allowImportingTsExtensions": true
   },
-  "include": ["vite.config.ts", "eslint.config.js", "eslint.boundaries.js"]
+  "include": ["vite.config.ts", "vite.models.ts", "eslint.config.js", "eslint.boundaries.js"]
 }

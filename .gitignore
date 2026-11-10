@@ -21,3 +21,7 @@ playwright-report/
 
 # Local env files (e.g. VITE_HONEYCOMB_INGEST_KEY in .env.local)
 *.local
+
+# The models the site serves, fetched and checked by vite.models.ts (models.lock.json); only
+# the small vocabulary is kept in git, for the tokenizer's tests.
+public/models/**/onnx/
