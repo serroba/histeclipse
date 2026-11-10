@@ -28,6 +28,8 @@ import {
 import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarPhases';
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
+import { asteroidBelt } from './globe/asteroidLayer';
+import { craftInFlight } from './globe/craftLayer';
 import { geoToVector } from './globe/geo';
 import {
   PLANET_NAMES,
@@ -1756,6 +1758,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
     focus: store.get().focus,
   });
+  // Drawn on the globe as layers of their own (#379).
+  const craftOnGlobe = globe.addLayer(craftInFlight);
+  const asteroidsOnGlobe = globe.addLayer(asteroidBelt);
   const [deltaT, lunarCatalog, solarCatalog] = await Promise.all([
     DeltaT.load(`${base}data/delta-t.json`, (url) => fetch(url)),
     LunarCatalog.load(`${base}data/lunar/`, (url) => fetch(url)),
@@ -4202,7 +4207,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const offered = state.mode === 'globe' && state.ma === null;
     zoomRail.setSpacecraft(offered, state.layers.has('spacecraft'));
     if (!offered || !state.layers.has('spacecraft')) {
-      globe.setSpacecraft(null);
+      craftOnGlobe.update(null);
       return;
     }
     if (planets === null) void loadPlanets();
@@ -4225,7 +4230,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       );
       return;
     }
-    globe.setSpacecraft(craftNow(spacecraft.craft, spacecraftWheres, craftGeocentric, jdTT));
+    craftOnGlobe.update(craftNow(spacecraft.craft, spacecraftWheres, craftGeocentric, jdTT));
   }
 
   // The asteroid belt (#372): its large asteroids' orbits, loaded the first time it is on.
@@ -4235,7 +4240,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const offered = state.mode === 'globe' && state.ma === null;
     zoomRail.setAsteroids(offered, state.layers.has('asteroids'));
     if (!offered || !state.layers.has('asteroids')) {
-      globe.setAsteroids(null);
+      asteroidsOnGlobe.update(null);
       return;
     }
     if (planets === null) void loadPlanets();
@@ -4258,7 +4263,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const earth = planets?.heliocentric('earth', jdTT) ?? null;
     if (earth === null) return;
     const [ex, ey, ez] = earth;
-    globe.setAsteroids(
+    asteroidsOnGlobe.update(
       asteroids.asteroids.map((asteroid) => {
         const [x, y, z] = asteroidPosition(asteroid, jdTT);
         return {

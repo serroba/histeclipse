@@ -1,0 +1,106 @@
+/**
+ * What the globe offers the things drawn on it (#379). A layer gets the scene, the page element
+ * around it and a few services, and draws itself; the globe does not need a method for it.
+ * New things drawn on the globe are layers; the globe's own `set…` methods only shrink.
+ */
+
+import type { Scene, Vector3 } from 'three';
+
+export type Triple = readonly [number, number, number];
+
+/** A name on screen that a tap picks, measured once. */
+export interface NameLabel {
+  readonly element: HTMLButtonElement;
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface LayerHost {
+  readonly scene: Scene;
+  /** The element the globe draws in; labels go inside it. */
+  readonly container: HTMLElement;
+  /**
+   * From J2000 km from Earth's centre to scene units, for the moment shown; null until the
+   * globe has one.
+   */
+  spaceToScene(): ((km: Triple) => Triple) | null;
+  /** Draw a new frame soon. */
+  requestRender(): void;
+  /** Run after each frame is drawn, to lay out what follows the camera. */
+  afterRender(place: () => void): void;
+  /** Show each name, in order, where it is on screen, clear of the panels and of those shown. */
+  layOutNames(
+    names: readonly { readonly scene: Vector3; readonly label: NameLabel | undefined }[],
+    layer: HTMLElement,
+  ): void;
+  /** Taps on `[data-pick]` elements inside `element` reach the globe's marker-pick listeners. */
+  pickable(element: HTMLElement): void;
+}
+
+export interface GlobeLayer<Input> {
+  /** Draw this; each layer says what null means, usually "nothing". */
+  update(input: Input): void;
+  dispose?(): void;
+}
+
+export type LayerFactory<Input> = (host: LayerHost) => GlobeLayer<Input>;
+
+/** A name to show for a thing drawn: its key, its text, what a tap picks, and where it is. */
+export interface Named {
+  readonly key: string;
+  readonly name: string;
+  readonly pick: string;
+  readonly scene: Vector3;
+}
+
+export interface NameLabels {
+  /** Name these, in the order they get room; null hides them all. */
+  show(names: readonly Named[] | null): void;
+}
+
+/**
+ * Names for the things a layer draws, each a button a tap picks, laid out after every frame.
+ * Labels are made the first time a thing is named and measured once, all together.
+ */
+export function createNameLabels(
+  host: LayerHost,
+  options: { readonly className: string; readonly labelClass: string; readonly testId: string },
+): NameLabels {
+  const layer = document.createElement('div');
+  layer.className = `empire-labels ${options.className}`;
+  layer.dataset['testid'] = options.testId;
+  host.container.append(layer);
+  host.pickable(layer);
+  const labels = new Map<string, NameLabel>();
+  let shown: readonly Named[] = [];
+  host.afterRender(() => {
+    if (shown.length === 0) return;
+    host.layOutNames(
+      shown.map(({ key, scene }) => ({ scene, label: labels.get(key) })),
+      layer,
+    );
+  });
+  return {
+    show(names) {
+      shown = names ?? [];
+      const fresh: { key: string; element: HTMLButtonElement }[] = [];
+      for (const { key, name, pick } of shown) {
+        if (labels.has(key)) continue;
+        const element = document.createElement('button');
+        element.type = 'button';
+        element.className = options.labelClass;
+        element.textContent = name;
+        element.dataset['pick'] = pick;
+        element.style.visibility = 'hidden';
+        layer.append(element);
+        fresh.push({ key, element });
+      }
+      for (const { key, element } of fresh) {
+        labels.set(key, { element, width: element.offsetWidth, height: element.offsetHeight });
+      }
+      for (const { element } of fresh) element.style.visibility = '';
+      const keys = new Set(shown.map(({ key }) => key));
+      for (const [key, { element }] of labels) if (!keys.has(key)) element.hidden = true;
+    },
+  };
+}

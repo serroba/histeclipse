@@ -108,8 +108,7 @@ import { elementAt } from '../util/arrays';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius, polarRatio } from './planetLook';
 import { isMoonBody, MOON_NAMES, moonPlanet } from './moonLook';
-import { createAsteroidLayer } from './asteroidLayer';
-import { createCraftLayer } from './craftLayer';
+import type { GlobeLayer, LayerFactory, LayerHost, NameLabel } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
 import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
@@ -180,28 +179,6 @@ export interface SolarPath {
   readonly elements: BesselianElements;
   readonly deltaTSeconds: number;
   readonly uncertaintySeconds: number;
-}
-
-/** A craft beyond Earth orbit, from Earth's centre (J2000 km), and its trail. */
-export interface SceneCraft {
-  readonly id: string;
-  readonly name: string;
-  readonly km: readonly [number, number, number];
-  readonly trail: readonly (readonly [number, number, number])[];
-  readonly approximate: boolean;
-  /** At a world, rather than on its way: named after those on their way. */
-  readonly at: string | null;
-}
-
-/** The asteroids named, those at least this wide, km: 27 of them, Ceres to Fortuna. */
-const ASTEROIDS_NAMED_FROM_KM = 200;
-
-/** An asteroid of the belt as the scene draws it (#372): where it is from Earth, km. */
-export interface SceneAsteroid {
-  readonly number: string;
-  readonly name: string;
-  readonly km: readonly [number, number, number];
-  readonly diameterKm: number;
 }
 
 /** Where the Moon and Sun are at the current moment, from Earth's centre. */
@@ -462,15 +439,10 @@ export interface Globe {
   /** Wrap a moon in a mission's map, fetched once: the latest asked for each moon wins. */
   setMoonMap(moon: MoonName, url: string | null): void;
   /**
-   * Draw the craft beyond Earth orbit in flight (#350), each with its trail and its name, a
-   * tap on it picked as `craft:<id>`; null takes them away.
+   * Draw something more on the globe (#379): the layer gets the scene and the globe's services,
+   * and is updated through what this returns. New things drawn are layers, not methods here.
    */
-  setSpacecraft(craft: readonly SceneCraft[] | null): void;
-  /**
-   * Draw the belt's large asteroids (#372), the largest named where they fit, a tap on a name
-   * picked as `asteroid:<number>`; null takes them away.
-   */
-  setAsteroids(asteroids: readonly SceneAsteroid[] | null): void;
+  addLayer<Input>(factory: LayerFactory<Input>): GlobeLayer<Input>;
   /** Called when someone taps a marker that has a card, with its key (such as `impact:47`). */
   onMarkerPick(listener: (key: string) => void): () => void;
   /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
@@ -1397,8 +1369,6 @@ export function createGlobe(
   scene.add(sun);
   const planets = createPlanetMeshes(scene);
   const moonSystems = createMoonMeshes(scene);
-  const craftLayer = createCraftLayer(scene);
-  const asteroidLayer = createAsteroidLayer(scene);
   // Maps asked for, by address; the planets wearing their sharp map; and the bodies sharpened,
   // for whoever needs to know (#258).
   // Each planet's view (#239), its maps by address once fetched, and those close up enough for
@@ -1663,35 +1633,14 @@ export function createGlobe(
     readonly labels: (GlobeLabel & { km: number })[];
   } | null = null;
   const markerPickListeners = new Set<(key: string) => void>();
-  // The craft beyond Earth orbit (#350), each named, a tap opening its card.
-  const craftNameLayer = document.createElement('div');
-  craftNameLayer.className = 'empire-labels craft-names';
-  craftNameLayer.dataset['testid'] = 'craft-names';
-  container.append(craftNameLayer);
-  /** A name on screen that a tap picks, measured once. */
-  interface NameLabel {
-    readonly element: HTMLButtonElement;
-    readonly width: number;
-    readonly height: number;
+  // The layers added (#379), and what they lay out after each frame: declared before the first.
+  const afterRenders: (() => void)[] = [];
+  const layers: GlobeLayer<never>[] = [];
+  for (const layer of [impactLayer, volcanoLayer, humanLabelLayer, genomeLayer, fossilLayer]) {
+    pickable(layer);
   }
-  const craftLabels = new Map<string, NameLabel>();
-  let craftShown: readonly (SceneCraft & { readonly scene: Vector3 })[] = [];
-  // The belt's asteroids (#372), the largest named, a tap opening its card.
-  const asteroidNameLayer = document.createElement('div');
-  asteroidNameLayer.className = 'empire-labels asteroid-names';
-  asteroidNameLayer.dataset['testid'] = 'asteroid-names';
-  container.append(asteroidNameLayer);
-  const asteroidLabels = new Map<string, NameLabel>();
-  let asteroidsShown: readonly (SceneAsteroid & { readonly scene: Vector3 })[] = [];
-  for (const layer of [
-    impactLayer,
-    volcanoLayer,
-    humanLabelLayer,
-    genomeLayer,
-    fossilLayer,
-    craftNameLayer,
-    asteroidNameLayer,
-  ]) {
+  /** Taps on `[data-pick]` inside `layer` reach the marker-pick listeners. */
+  function pickable(layer: HTMLElement): void {
     layer.addEventListener('click', (event) => {
       const marker = event.target instanceof Element ? event.target.closest('[data-pick]') : null;
       const key = marker?.getAttribute('data-pick');
@@ -2214,8 +2163,7 @@ export function createGlobe(
       placeEmpireLabels();
       placePlaceNames();
       placeMoonNames();
-      placeCraftNames();
-      placeAsteroidNames();
+      for (const place of afterRenders) place();
       if (earthMapped) container.dataset['rendered'] = 'true';
     }
     frame = requestAnimationFrame(loop);
@@ -2284,28 +2232,6 @@ export function createGlobe(
       radius: planetRadius(body),
       shown: mesh.visible,
     };
-  }
-
-  /** Name the craft in view, those on their way first, none crowding another. */
-  function placeCraftNames(): void {
-    if (craftShown.length === 0) return;
-    const order = [...craftShown].sort((a, b) => Number(a.at !== null) - Number(b.at !== null));
-    layOutNames(
-      order.map((craft) => ({ scene: craft.scene, label: craftLabels.get(craft.id) })),
-      craftNameLayer,
-    );
-  }
-
-  /** Name the asteroids in view, the largest first, none crowding another. */
-  function placeAsteroidNames(): void {
-    if (asteroidsShown.length === 0) return;
-    layOutNames(
-      asteroidsShown.map((asteroid) => ({
-        scene: asteroid.scene,
-        label: asteroidLabels.get(asteroid.number),
-      })),
-      asteroidNameLayer,
-    );
   }
 
   /** Show each name, in order, where it is on screen, clear of the panels and of those shown. */
@@ -2572,6 +2498,25 @@ export function createGlobe(
   resize();
   placeCamera(options.camera);
   loop(performance.now());
+
+  // What layers get (#379): the scene, the container and a few services.
+  const host: LayerHost = {
+    scene,
+    container,
+    spaceToScene() {
+      if (earthFixedToJ2000 === null) return null;
+      const toScene = transpose(earthFixedToJ2000);
+      return (km) => sceneFromKm(apply(toScene, [km[0], km[1], km[2]]));
+    },
+    requestRender() {
+      needsRender = true;
+    },
+    afterRender(place) {
+      afterRenders.push(place);
+    },
+    layOutNames,
+    pickable,
+  };
 
   return {
     canvas: renderer.domElement,
@@ -3255,89 +3200,10 @@ export function createGlobe(
       placeEmpireLabels();
       needsRender = true;
     },
-    setSpacecraft(craft) {
-      if (craft === null || earthFixedToJ2000 === null) {
-        craftLayer.set(null);
-        craftShown = [];
-        for (const { element } of craftLabels.values()) element.hidden = true;
-        delete container.dataset['craft'];
-        needsRender = true;
-        return;
-      }
-      const toScene = transpose(earthFixedToJ2000);
-      const place = (km: readonly [number, number, number]): readonly [number, number, number] =>
-        sceneFromKm(apply(toScene, [km[0], km[1], km[2]]));
-      craftShown = craft.map((each) => ({ ...each, scene: new Vector3(...place(each.km)) }));
-      craftLayer.set(
-        craft.map(({ km, trail, approximate }) => ({
-          at: place(km),
-          trail: trail.map(place),
-          approximate,
-        })),
-      );
-      // A name for each craft, made the first time it flies, measured once.
-      const fresh: { id: string; element: HTMLButtonElement }[] = [];
-      for (const { id, name } of craft) {
-        if (craftLabels.has(id)) continue;
-        const element = document.createElement('button');
-        element.type = 'button';
-        element.className = 'craft-name';
-        element.textContent = name;
-        element.dataset['pick'] = `craft:${id}`;
-        element.style.visibility = 'hidden';
-        craftNameLayer.append(element);
-        fresh.push({ id, element });
-      }
-      for (const { id, element } of fresh) {
-        craftLabels.set(id, { element, width: element.offsetWidth, height: element.offsetHeight });
-      }
-      for (const { element } of fresh) element.style.visibility = '';
-      const flying = new Set(craft.map(({ id }) => id));
-      for (const [id, { element }] of craftLabels) if (!flying.has(id)) element.hidden = true;
-      container.dataset['craft'] = String(craft.length);
-      needsRender = true;
-    },
-    setAsteroids(asteroids) {
-      if (asteroids === null || earthFixedToJ2000 === null) {
-        asteroidLayer.set(null);
-        asteroidsShown = [];
-        for (const { element } of asteroidLabels.values()) element.hidden = true;
-        delete container.dataset['asteroids'];
-        needsRender = true;
-        return;
-      }
-      const toScene = transpose(earthFixedToJ2000);
-      const place = (km: readonly [number, number, number]): readonly [number, number, number] =>
-        sceneFromKm(apply(toScene, [km[0], km[1], km[2]]));
-      asteroidsShown = asteroids.map((each) => ({
-        ...each,
-        scene: new Vector3(...place(each.km)),
-      }));
-      asteroidLayer.set(asteroids.map(({ km, diameterKm }) => ({ at: place(km), diameterKm })));
-      // A name for each of the largest, made the first time, measured once: all at once, one
-      // layout. Two hundred names would crowd the belt; the dots are there for the rest.
-      const fresh: { number: string; element: HTMLButtonElement }[] = [];
-      for (const { number, name, diameterKm } of asteroids) {
-        if (diameterKm < ASTEROIDS_NAMED_FROM_KM || asteroidLabels.has(number)) continue;
-        const element = document.createElement('button');
-        element.type = 'button';
-        element.className = 'asteroid-name';
-        element.textContent = name;
-        element.dataset['pick'] = `asteroid:${number}`;
-        element.style.visibility = 'hidden';
-        asteroidNameLayer.append(element);
-        fresh.push({ number, element });
-      }
-      for (const { number, element } of fresh) {
-        asteroidLabels.set(number, {
-          element,
-          width: element.offsetWidth,
-          height: element.offsetHeight,
-        });
-      }
-      for (const { element } of fresh) element.style.visibility = '';
-      container.dataset['asteroids'] = String(asteroids.length);
-      needsRender = true;
+    addLayer(factory) {
+      const layer = factory(host);
+      layers.push(layer);
+      return layer;
     },
     setMoonMap(moon, url) {
       if (moonMapsWanted.get(moon) === url) return;
@@ -3764,6 +3630,7 @@ export function createGlobe(
       c14Glow.dispose();
       shower?.dispose();
       for (const impact of impacts) impact.dispose();
+      for (const layer of layers) layer.dispose?.();
       markerLayer.remove();
       renderer.domElement.remove();
     },

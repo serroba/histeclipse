@@ -1,6 +1,7 @@
 /**
  * The asteroid belt in the space view (#372): each asteroid a dot where it is, the larger ones
- * larger, all one dusty grey. Positions come in scene units; `scene.ts` places them.
+ * larger, all one dusty grey, the largest named, a tap on a name picked as `asteroid:<number>`.
+ * A layer on the globe's host (#379): `globe.addLayer(asteroidBelt)`.
  */
 
 import {
@@ -10,7 +11,20 @@ import {
   Points,
   PointsMaterial,
   type Scene,
+  Vector3,
 } from 'three';
+import { createNameLabels, type LayerFactory, type Triple } from './layerHost';
+
+/** The asteroids named, those at least this wide, km: 27 of them, Ceres to Fortuna. */
+const NAMED_FROM_KM = 200;
+
+/** An asteroid of the belt as the globe is given it: where it is from Earth, J2000 km. */
+export interface SceneAsteroid {
+  readonly number: string;
+  readonly name: string;
+  readonly km: Triple;
+  readonly diameterKm: number;
+}
 
 /** Dot sizes, pixels, for asteroids at least as wide as each diameter (km): Ceres the largest. */
 const SIZES: readonly (readonly [number, number])[] = [
@@ -77,3 +91,40 @@ export function createAsteroidLayer(scene: Scene): AsteroidLayer {
     },
   };
 }
+
+/** The belt on the globe: null takes it away, as does a globe with no moment yet. */
+export const asteroidBelt: LayerFactory<readonly SceneAsteroid[] | null> = (host) => {
+  const dots = createAsteroidLayer(host.scene);
+  const names = createNameLabels(host, {
+    className: 'asteroid-names',
+    labelClass: 'asteroid-name',
+    testId: 'asteroid-names',
+  });
+  return {
+    update(asteroids) {
+      const toScene = host.spaceToScene();
+      if (asteroids === null || toScene === null) {
+        dots.set(null);
+        names.show(null);
+        delete host.container.dataset['asteroids'];
+        host.requestRender();
+        return;
+      }
+      const placed = asteroids.map((asteroid) => ({ ...asteroid, at: toScene(asteroid.km) }));
+      dots.set(placed);
+      // Two hundred names would crowd the belt; the dots are there for the rest.
+      names.show(
+        placed
+          .filter(({ diameterKm }) => diameterKm >= NAMED_FROM_KM)
+          .map(({ number, name, at }) => ({
+            key: number,
+            name,
+            pick: `asteroid:${number}`,
+            scene: new Vector3(...at),
+          })),
+      );
+      host.container.dataset['asteroids'] = String(asteroids.length);
+      host.requestRender();
+    },
+  };
+};

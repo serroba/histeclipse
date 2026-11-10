@@ -31,6 +31,7 @@ export default defineConfig({
         'src/globe/moonMeshes.ts',
         'src/globe/craftLayer.ts',
         'src/globe/asteroidLayer.ts',
+        'src/globe/layerHost.ts',
         'src/globe/impactAnimation.ts',
         'src/globe/showerAnimation.ts',
         'src/sky/skyScene.ts',
