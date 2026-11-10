@@ -358,6 +358,27 @@ test('controls are large enough to tap and stay on screen', async ({ page }) => 
   }
 });
 
+test('with a long calendar picked, every control in the bar stays within it', async ({ page }) => {
+  await page.goto('./?t=2024-01-01T00:00');
+  await globeRendered(page);
+  const bar = page.locator('.timeline');
+  for (const calendar of ['babylonian', 'egyptian']) {
+    await page.getByRole('combobox', { name: 'Era', exact: true }).selectOption(calendar);
+    await expect(page.getByRole('button', { name: 'Famous eclipses' })).toBeVisible();
+    const edge = await bar.boundingBox();
+    if (edge === null) throw new Error('no bar');
+    // The year's eclipses scroll within their own list; everything else must fit (#400).
+    for (const control of await bar
+      .locator(':is(button, input, select):visible:not(.eclipse-chip)')
+      .all()) {
+      const box = await control.boundingBox();
+      if (box === null) throw new Error('control without a box');
+      expect(box.x).toBeGreaterThanOrEqual(edge.x - 1);
+      expect(box.x + box.width).toBeLessThanOrEqual(edge.x + edge.width + 1);
+    }
+  }
+});
+
 test('picking a solar eclipse draws its path and the Moon’s shadow', async ({ page }) => {
   await page.goto('./?t=2024-01-01T00:00&loc=32.7767,-96.797');
   await globeRendered(page);

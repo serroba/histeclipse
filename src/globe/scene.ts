@@ -108,15 +108,16 @@ import { elementAt } from '../util/arrays';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius, polarRatio } from './planetLook';
 import { isMoonBody, MOON_NAMES, moonPlanet } from './moonLook';
-import type { GlobeLayer, LayerFactory, LayerHost, NameLabel } from './layerHost';
+import {
+  SURFACE_PRIORITY,
+  type GlobeLayer,
+  type LayerFactory,
+  type LayerHost,
+  type NameLabel,
+} from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
 import { createPlanetMeshes } from './planetMeshes';
-import type { GenomeCell } from '../data/ancientGenomes';
-import type { FossilCell } from '../data/fossils';
-import type { ImpactMark } from '../data/impacts';
-import type { VolcanoMark } from '../data/volcanoes';
 import type { ArrivalGrid } from '../data/dispersal';
-import type { HumanSite } from '../data/humanClaims';
 import type { RockUnit } from '../data/rocks';
 import type { WayRegion } from '../data/waysOfLife';
 import type { IceOutlines } from '../data/iceOutlines';
@@ -239,8 +240,6 @@ export interface StateChange {
 const STATE_CHANGES_SHOWN = 4;
 /** A state's name at this size or larger (its larger states) is placed before the markers. */
 const MAJOR_STATE_SIZE = 14;
-/** Regions with this many genomes or fewer are a small dot, without a number. */
-const FEW_GENOMES = 2;
 
 /** How long a state that appeared or went stays named as such, ms (its CSS animation's too). */
 const STATE_CHANGE_MS = 4000;
@@ -404,8 +403,6 @@ export interface Globe {
    * the layer.
    */
   setEmpires(layer: EmpireLayer | null): void;
-  /** Mark regions with ancient genomes near the year shown, by count; null hides them. */
-  setGenomeCells(cells: readonly GenomeCell[] | null): void;
   /**
    * Shade where a dispersal model has people settled `ka` thousand years ago, under any ice
    * outlines; null hides it.
@@ -421,14 +418,6 @@ export interface Globe {
   ): void;
   /** Shade regions by their most widespread way of life, under any states; null hides them. */
   setWays(regions: readonly WayRegion[] | null): void;
-  /** Mark cells with fossils of the moment, by group and count; null hides them. */
-  setFossilCells(cells: readonly FossilCell[] | null): void;
-  /** Mark dated finds of humans and their relatives in deep time; null hides them. */
-  setHumanSites(sites: readonly HumanSite[] | null): void;
-  /** Mark impact craters and deposits, sized by diameter, each to tap for its card; null hides them. */
-  setImpacts(marks: readonly ImpactMark[] | null): void;
-  /** Mark volcanoes erupting near the year shown, sized by VEI, each to tap; null hides them. */
-  setVolcanoes(marks: readonly VolcanoMark[] | null): void;
   /**
    * Name a rocky body's largest features on its globe (#334), largest first, as many as fit and
    * more as the view zooms in; null takes the names away.
@@ -1539,12 +1528,6 @@ export function createGlobe(
   }
   /** A state's name; `major` for the larger states' and those just come or gone. */
   let empireLabels: (GlobeLabel & { readonly id: string; readonly major: boolean })[] = [];
-  // Dated finds of humans, in deep time: placed before the states' names, which never show then.
-  const humanLabelLayer = document.createElement('div');
-  humanLabelLayer.className = 'empire-labels human-sites';
-  container.append(humanLabelLayer);
-  let humanLabels: GlobeLabel[] = [];
-  let humanSitesKey = '';
   // Historical time's overlay, on the states' map: ways of life, and the states over them.
   // The sizes of the states' names already laid out, by class, size and name: as the years
   // play, most names come back step after step.
@@ -1577,30 +1560,6 @@ export function createGlobe(
     empiresTexture.needsUpdate = true;
     uniforms['overlayMap'] = { value: empiresTexture };
   }
-  // Regions with ancient genomes near the year shown, in historical time.
-  const genomeLayer = document.createElement('div');
-  genomeLayer.className = 'empire-labels genome-cells';
-  container.append(genomeLayer);
-  let genomeLabels: GlobeLabel[] = [];
-  let genomeKey = '';
-  // Fossils of the moment, in deep time.
-  const fossilLayer = document.createElement('div');
-  fossilLayer.className = 'empire-labels fossil-cells';
-  container.append(fossilLayer);
-  let fossilLabels: GlobeLabel[] = [];
-  let fossilKey = '';
-  // Impact craters and deposits, in either time: markers to tap for a card.
-  const impactLayer = document.createElement('div');
-  impactLayer.className = 'empire-labels impact-marks';
-  container.append(impactLayer);
-  let impactLabels: GlobeLabel[] = [];
-  let impactKey = '';
-  // Volcanoes erupting near the year shown, in historical time: markers to tap for a card.
-  const volcanoLayer = document.createElement('div');
-  volcanoLayer.className = 'empire-labels volcano-marks';
-  container.append(volcanoLayer);
-  let volcanoLabels: GlobeLabel[] = [];
-  let volcanoKey = '';
   // The IAU's names on the rocky body in view (#334), turning with it. Each label's position is
   // on the body, in its own axes; where it is in the scene is worked out each frame.
   const placeNameLayer = document.createElement('div');
@@ -1635,10 +1594,9 @@ export function createGlobe(
   const markerPickListeners = new Set<(key: string) => void>();
   // The layers added (#379), and what they lay out after each frame: declared before the first.
   const afterRenders: (() => void)[] = [];
+  /** Labels on Earth's surface from the layers, each slot laid out in its priority's place. */
+  const surfaceSlots: { readonly priority: number; labels: readonly GlobeLabel[] }[] = [];
   const layers: GlobeLayer<never>[] = [];
-  for (const layer of [impactLayer, volcanoLayer, humanLabelLayer, genomeLayer, fossilLayer]) {
-    pickable(layer);
-  }
   /** Taps on `[data-pick]` inside `layer` reach the marker-pick listeners. */
   function pickable(layer: HTMLElement): void {
     layer.addEventListener('click', (event) => {
@@ -2181,15 +2139,16 @@ export function createGlobe(
     // again, for every label.
     const viewWidth = container.clientWidth;
     const viewHeight = container.clientHeight;
-    for (const { element, position, width, height } of [
-      ...empireLabels.filter(({ major }) => major),
-      ...humanLabels,
-      ...genomeLabels,
-      ...volcanoLabels,
-      ...impactLabels,
-      ...fossilLabels,
-      ...empireLabels.filter(({ major }) => !major),
-    ]) {
+    const slots = [
+      { priority: SURFACE_PRIORITY.majorStates, labels: empireLabels.filter(({ major }) => major) },
+      {
+        priority: SURFACE_PRIORITY.minorStates,
+        labels: empireLabels.filter(({ major }) => !major),
+      },
+      // Those of the layers on the host (#379), each in its place.
+      ...surfaceSlots,
+    ].sort((a, b) => a.priority - b.priority);
+    for (const { element, position, width, height } of slots.flatMap(({ labels }) => labels)) {
       projected.copy(position).project(camera);
       const shown =
         near && position.dot(eye) > 0.25 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1;
@@ -2516,6 +2475,26 @@ export function createGlobe(
     },
     layOutNames,
     pickable,
+    surfaceLabels(priority, layer) {
+      const slot: (typeof surfaceSlots)[number] = { priority, labels: [] };
+      surfaceSlots.push(slot);
+      return {
+        show(pins) {
+          layer.replaceChildren();
+          slot.labels = pins === null ? [] : measured(layer, pins);
+          // Placed now, not at the next frame: as time plays, that frame may lay them out again.
+          placeEmpireLabels();
+          needsRender = true;
+        },
+        move(points) {
+          points.forEach((point, index) => {
+            slot.labels[index]?.position.set(...geoToVector(point, 1.01));
+          });
+          placeEmpireLabels();
+          needsRender = true;
+        },
+      };
+    },
   };
 
   return {
@@ -3070,136 +3049,6 @@ export function createGlobe(
       };
       paintDeepOverlay();
     },
-    setGenomeCells(cells) {
-      const key =
-        cells === null
-          ? 'off'
-          : cells
-              .map(
-                (cell) =>
-                  `${String(cell.latitude)},${String(cell.longitude)}:${String(cell.count)}`,
-              )
-              .join(' ');
-      if (key === genomeKey) return;
-      genomeKey = key;
-      genomeLayer.replaceChildren();
-      genomeLabels =
-        cells === null
-          ? []
-          : measured(
-              genomeLayer,
-              cells.map((cell) => {
-                const element = document.createElement('button');
-                element.type = 'button';
-                // One or two genomes make a small dot, without a number: many of them together
-                // crowded out the states' names (#163). The count is still in its label.
-                const few = cell.count <= FEW_GENOMES;
-                element.className = `empire-label genome-cell${few ? ' is-few' : ''}`;
-                if (!few) element.textContent = String(cell.count);
-                element.setAttribute(
-                  'aria-label',
-                  `${String(cell.count)} ${cell.count === 1 ? 'genome' : 'genomes'}: details`,
-                );
-                element.dataset['pick'] = `genome:${String(cell.cell)}`;
-                // Bigger for more genomes, gently: a square root, from 18 to 44 pixels.
-                const size = few ? 10 : Math.round(Math.min(44, 18 + 4 * Math.sqrt(cell.count)));
-                element.style.width = `${String(size)}px`;
-                element.style.height = `${String(size)}px`;
-                element.title = `${String(cell.count)} genomes; lab labels: ${cell.labels.map(([label, count]) => `${label} ×${String(count)}`).join(', ')}`;
-                return { element, point: cell };
-              }),
-            );
-      container.dataset['genomes'] = cells === null ? 'off' : String(cells.length);
-      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-      placeEmpireLabels();
-      needsRender = true;
-    },
-    setFossilCells(cells) {
-      const key =
-        cells === null
-          ? 'off'
-          : cells
-              .map(
-                (cell) =>
-                  `${cell.group}:${String(cell.latitude)},${String(cell.longitude)}:${String(cell.count)}`,
-              )
-              .join(' ');
-      if (key === fossilKey) return;
-      fossilKey = key;
-      fossilLayer.replaceChildren();
-      fossilLabels =
-        cells === null
-          ? []
-          : measured(
-              fossilLayer,
-              cells.map((cell) => {
-                const element = document.createElement('button');
-                element.type = 'button';
-                element.className = `empire-label fossil-cell is-${cell.group}`;
-                element.textContent = String(cell.count);
-                element.dataset['pick'] =
-                  `fossil:${cell.group}:${String(cell.latitude)}:${String(cell.longitude)}`;
-                const size = Math.round(Math.min(40, 16 + 3 * Math.sqrt(cell.count)));
-                element.style.width = `${String(size)}px`;
-                element.style.height = `${String(size)}px`;
-                return { element, point: cell };
-              }),
-            );
-      container.dataset['fossils'] = cells === null ? 'off' : String(cells.length);
-      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-      placeEmpireLabels();
-      needsRender = true;
-    },
-    setImpacts(marks) {
-      // The same craters as before (as time plays, they drift with their plates): moved, not
-      // laid out again, which would hide them until the next frame, and so every frame.
-      const key =
-        marks === null
-          ? 'off'
-          : marks
-              .map(({ impact, uncertain }) => `${String(impact.id)}${uncertain ? '?' : ''}`)
-              .join(' ');
-      if (key === impactKey) {
-        if (marks === null) return;
-        marks.forEach(({ point }, index) => {
-          impactLabels[index]?.position.set(...geoToVector(point, 1.01));
-        });
-        placeEmpireLabels();
-        needsRender = true;
-        return;
-      }
-      impactKey = key;
-      impactLayer.replaceChildren();
-      impactLabels =
-        marks === null
-          ? []
-          : measured(
-              impactLayer,
-              marks.map(({ impact, point, uncertain }) => {
-                const element = document.createElement('button');
-                element.type = 'button';
-                element.className = `empire-label impact-mark is-${impact.kind}${uncertain ? ' is-uncertain' : ''}`;
-                element.dataset['pick'] = `impact:${String(impact.id)}`;
-                const diameter = impact.diameterKm ?? 0;
-                // Wider for larger craters, gently: a logarithm, from 9 to 26 pixels.
-                const size = Math.round(Math.min(26, 9 + 3 * Math.log2(1 + diameter / 4)));
-                element.style.setProperty('--size', `${String(size)}px`);
-                // The largest are named; every one says what it is to a screen reader.
-                if (diameter >= 40) {
-                  const name = document.createElement('span');
-                  name.className = 'impact-name';
-                  name.textContent = impact.name;
-                  element.append(name);
-                }
-                element.setAttribute('aria-label', `${impact.name}: details`);
-                return { element, point };
-              }),
-            );
-      container.dataset['impacts'] = marks === null ? 'off' : String(marks.length);
-      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-      placeEmpireLabels();
-      needsRender = true;
-    },
     addLayer(factory) {
       const layer = factory(host);
       layers.push(layer);
@@ -3281,79 +3130,9 @@ export function createGlobe(
       };
       needsRender = true;
     },
-    setVolcanoes(marks) {
-      const key =
-        marks === null
-          ? 'off'
-          : marks
-              .map(
-                ({ volcano, eruptions }) => `${String(volcano.number)}:${String(eruptions.length)}`,
-              )
-              .join(' ');
-      if (key === volcanoKey) return;
-      volcanoKey = key;
-      volcanoLayer.replaceChildren();
-      volcanoLabels =
-        marks === null
-          ? []
-          : measured(
-              volcanoLayer,
-              marks.map(({ volcano, vei, uncertain }) => {
-                const element = document.createElement('button');
-                element.type = 'button';
-                element.className = `empire-label volcano-mark${uncertain ? ' is-uncertain' : ''}`;
-                element.dataset['pick'] = `volcano:${String(volcano.number)}`;
-                // Larger for a larger eruption: from 10 pixels (VEI unknown or 0) to 34 (VEI 8).
-                const size = 10 + 3 * Math.max(0, vei ?? 0);
-                element.style.setProperty('--size', `${String(size)}px`);
-                // The largest are named; every one says what it is to a screen reader.
-                if ((vei ?? 0) >= 4) {
-                  const name = document.createElement('span');
-                  name.className = 'impact-name';
-                  name.textContent = volcano.name;
-                  element.append(name);
-                }
-                element.setAttribute('aria-label', `${volcano.name}: details`);
-                return {
-                  element,
-                  point: { latitude: volcano.latitude, longitude: volcano.longitude },
-                };
-              }),
-            );
-      container.dataset['volcanoes'] = marks === null ? 'off' : String(marks.length);
-      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-      placeEmpireLabels();
-      needsRender = true;
-    },
     onMarkerPick(listener) {
       markerPickListeners.add(listener);
       return () => markerPickListeners.delete(listener);
-    },
-    setHumanSites(sites) {
-      // Laying labels out is slow: not again for the same finds, as time plays on.
-      const key = sites === null ? 'off' : sites.map((site) => site.id).join(' ');
-      if (key === humanSitesKey) return;
-      humanSitesKey = key;
-      humanLabelLayer.replaceChildren();
-      humanLabels =
-        sites === null
-          ? []
-          : measured(
-              humanLabelLayer,
-              sites.map((site) => {
-                const element = document.createElement('button');
-                element.type = 'button';
-                element.className = `empire-label human-site is-${site.species}${site.disputed ? ' is-disputed' : ''}`;
-                element.textContent = site.label;
-                element.dataset['site'] = site.id;
-                element.dataset['pick'] = `human:${site.id}`;
-                return { element, point: site.point };
-              }),
-            );
-      container.dataset['humans'] = sites === null ? 'off' : String(sites.length);
-      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-      placeEmpireLabels();
-      needsRender = true;
     },
     setRocks(units) {
       if ((units === null ? 'off' : 'on') === container.dataset['rocks']) return;

@@ -1322,12 +1322,32 @@ body {
   flex: 1;
   gap: 8px;
   min-width: 0;
+  /* Its chips scroll, and never widen the row. */
+  contain: inline-size;
   margin: 0;
   padding: 0;
   overflow-x: auto;
   list-style: none;
   scroll-snap-type: x proximity;
   scrollbar-width: none;
+}
+
+/* Beside the year, never narrower than its buttons and a chip's room: where the year's row
+   leaves less, the bar wraps it onto a line of its own rather than letting a button spill past
+   the edge (#400). A phone stacks the bar already, and its row is the screen's width. */
+@media (min-width: 601px) {
+  .eclipse-row {
+    min-width: min-content;
+  }
+
+  .eclipse-row > button {
+    white-space: nowrap;
+  }
+
+  /* Room for a chip beside the buttons. */
+  .eclipse-list {
+    min-width: 120px;
+  }
 }
 
 .eclipse-list li {
