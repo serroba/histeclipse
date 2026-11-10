@@ -1,7 +1,8 @@
 /**
  * The craft beyond Earth orbit in the space view (#350): each a dot where it is, and a trail
  * fading back along where it had just been. Cyan for a path as flown (JPL Horizons), amber for
- * an approximate one. Positions come in scene units; `scene.ts` places them.
+ * an approximate one, each named, a tap on a name picked as `craft:<id>`. A layer on the globe's
+ * host (#379): `globe.addLayer(craftInFlight)`.
  */
 
 import {
@@ -13,7 +14,20 @@ import {
   Points,
   PointsMaterial,
   type Scene,
+  Vector3,
 } from 'three';
+import { createNameLabels, type LayerFactory, type Triple } from './layerHost';
+
+/** A craft beyond Earth orbit as the globe is given it: from Earth's centre (J2000 km), its trail. */
+export interface SceneCraft {
+  readonly id: string;
+  readonly name: string;
+  readonly km: Triple;
+  readonly trail: readonly Triple[];
+  readonly approximate: boolean;
+  /** At a world, rather than on its way: named after those on their way. */
+  readonly at: string | null;
+}
 
 /** A craft as the layer draws it: scene positions, now and back along its trail. */
 export interface CraftDrawn {
@@ -101,3 +115,44 @@ export function createCraftLayer(scene: Scene): CraftLayer {
     },
   };
 }
+
+/** The craft on the globe: null takes them away, as does a globe with no moment yet. */
+export const craftInFlight: LayerFactory<readonly SceneCraft[] | null> = (host) => {
+  const drawn = createCraftLayer(host.scene);
+  const names = createNameLabels(host, {
+    className: 'craft-names',
+    labelClass: 'craft-name',
+    testId: 'craft-names',
+  });
+  return {
+    update(craft) {
+      const toScene = host.spaceToScene();
+      if (craft === null || toScene === null) {
+        drawn.set(null);
+        names.show(null);
+        delete host.container.dataset['craft'];
+        host.requestRender();
+        return;
+      }
+      drawn.set(
+        craft.map(({ km, trail, approximate }) => ({
+          at: toScene(km),
+          trail: trail.map(toScene),
+          approximate,
+        })),
+      );
+      // Those on their way get room first; those at a world are named after them.
+      const order = [...craft].sort((a, b) => Number(a.at !== null) - Number(b.at !== null));
+      names.show(
+        order.map(({ id, name, km }) => ({
+          key: id,
+          name,
+          pick: `craft:${id}`,
+          scene: new Vector3(...toScene(km)),
+        })),
+      );
+      host.container.dataset['craft'] = String(craft.length);
+      host.requestRender();
+    },
+  };
+};
