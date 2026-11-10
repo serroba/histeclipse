@@ -35,7 +35,7 @@ Folders sit in tiers, and imports only go down (lint enforces it; see `eslint.bo
 6. `features`: one folder per feature, on one contract (`features/feature.ts`).
 7. `app.ts`, `main.ts`: the wiring.
 
-The few imports that still go up are listed there as exceptions, to be removed, not added to. `src/architecture.test.ts` checks two more things that may only shrink: the imports between folders that close a cycle, and the methods on the globe's interface (draw new things with `globe.addLayer`). The wider plan is in #384.
+The few imports that still go up are listed there as exceptions, to be removed, not added to. `src/architecture.test.ts` checks two more things that may only shrink: the imports between folders that close a cycle, and the methods on the globe's interface (draw new things with `globe.addLayer`). The two largest files, `src/app.ts` and `src/globe/scene.ts`, may only shrink: lint fails when either passes its limit in `LINE_LIMITS` (`eslint.boundaries.js`), so new work goes into a feature (`src/features/`) or a globe layer instead. When one shrinks by more than 50 lines, the architecture test asks for its limit to come down. The wider plan is in #384.
 
 Styles live beside the code they style: a component imports its own `.css` file (as `globe/layerHost.ts` imports `nameLabels.css`), and `src/style.css` keeps the page-wide rules and the styles not yet moved (#382).
 
