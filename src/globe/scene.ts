@@ -119,7 +119,6 @@ import { createMoonMeshes } from './moonMeshes';
 import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
 import type { FossilCell } from '../data/fossils';
-import type { ImpactMark } from '../data/impacts';
 import type { ArrivalGrid } from '../data/dispersal';
 import type { HumanSite } from '../data/humanClaims';
 import type { RockUnit } from '../data/rocks';
@@ -430,8 +429,6 @@ export interface Globe {
   setFossilCells(cells: readonly FossilCell[] | null): void;
   /** Mark dated finds of humans and their relatives in deep time; null hides them. */
   setHumanSites(sites: readonly HumanSite[] | null): void;
-  /** Mark impact craters and deposits, sized by diameter, each to tap for its card; null hides them. */
-  setImpacts(marks: readonly ImpactMark[] | null): void;
   /**
    * Name a rocky body's largest features on its globe (#334), largest first, as many as fit and
    * more as the view zooms in; null takes the names away.
@@ -1592,12 +1589,6 @@ export function createGlobe(
   container.append(fossilLayer);
   let fossilLabels: GlobeLabel[] = [];
   let fossilKey = '';
-  // Impact craters and deposits, in either time: markers to tap for a card.
-  const impactLayer = document.createElement('div');
-  impactLayer.className = 'empire-labels impact-marks';
-  container.append(impactLayer);
-  let impactLabels: GlobeLabel[] = [];
-  let impactKey = '';
   // The IAU's names on the rocky body in view (#334), turning with it. Each label's position is
   // on the body, in its own axes; where it is in the scene is worked out each frame.
   const placeNameLayer = document.createElement('div');
@@ -1635,7 +1626,7 @@ export function createGlobe(
   /** Labels on Earth's surface from the layers, each slot laid out in its priority's place. */
   const surfaceSlots: { readonly priority: number; labels: readonly GlobeLabel[] }[] = [];
   const layers: GlobeLayer<never>[] = [];
-  for (const layer of [impactLayer, humanLabelLayer, genomeLayer, fossilLayer]) {
+  for (const layer of [humanLabelLayer, genomeLayer, fossilLayer]) {
     pickable(layer);
   }
   /** Taps on `[data-pick]` inside `layer` reach the marker-pick listeners. */
@@ -2184,7 +2175,6 @@ export function createGlobe(
       { priority: SURFACE_PRIORITY.majorStates, labels: empireLabels.filter(({ major }) => major) },
       { priority: SURFACE_PRIORITY.humans, labels: humanLabels },
       { priority: SURFACE_PRIORITY.genomes, labels: genomeLabels },
-      { priority: SURFACE_PRIORITY.impacts, labels: impactLabels },
       { priority: SURFACE_PRIORITY.fossils, labels: fossilLabels },
       {
         priority: SURFACE_PRIORITY.minorStates,
@@ -2528,6 +2518,13 @@ export function createGlobe(
           layer.replaceChildren();
           slot.labels = pins === null ? [] : measured(layer, pins);
           // Placed now, not at the next frame: as time plays, that frame may lay them out again.
+          placeEmpireLabels();
+          needsRender = true;
+        },
+        move(points) {
+          points.forEach((point, index) => {
+            slot.labels[index]?.position.set(...geoToVector(point, 1.01));
+          });
           placeEmpireLabels();
           needsRender = true;
         },
@@ -3163,56 +3160,6 @@ export function createGlobe(
               }),
             );
       container.dataset['fossils'] = cells === null ? 'off' : String(cells.length);
-      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-      placeEmpireLabels();
-      needsRender = true;
-    },
-    setImpacts(marks) {
-      // The same craters as before (as time plays, they drift with their plates): moved, not
-      // laid out again, which would hide them until the next frame, and so every frame.
-      const key =
-        marks === null
-          ? 'off'
-          : marks
-              .map(({ impact, uncertain }) => `${String(impact.id)}${uncertain ? '?' : ''}`)
-              .join(' ');
-      if (key === impactKey) {
-        if (marks === null) return;
-        marks.forEach(({ point }, index) => {
-          impactLabels[index]?.position.set(...geoToVector(point, 1.01));
-        });
-        placeEmpireLabels();
-        needsRender = true;
-        return;
-      }
-      impactKey = key;
-      impactLayer.replaceChildren();
-      impactLabels =
-        marks === null
-          ? []
-          : measured(
-              impactLayer,
-              marks.map(({ impact, point, uncertain }) => {
-                const element = document.createElement('button');
-                element.type = 'button';
-                element.className = `empire-label impact-mark is-${impact.kind}${uncertain ? ' is-uncertain' : ''}`;
-                element.dataset['pick'] = `impact:${String(impact.id)}`;
-                const diameter = impact.diameterKm ?? 0;
-                // Wider for larger craters, gently: a logarithm, from 9 to 26 pixels.
-                const size = Math.round(Math.min(26, 9 + 3 * Math.log2(1 + diameter / 4)));
-                element.style.setProperty('--size', `${String(size)}px`);
-                // The largest are named; every one says what it is to a screen reader.
-                if (diameter >= 40) {
-                  const name = document.createElement('span');
-                  name.className = 'impact-name';
-                  name.textContent = impact.name;
-                  element.append(name);
-                }
-                element.setAttribute('aria-label', `${impact.name}: details`);
-                return { element, point };
-              }),
-            );
-      container.dataset['impacts'] = marks === null ? 'off' : String(marks.length);
       // Placed now, not at the next frame: as time plays, that frame may lay them out again.
       placeEmpireLabels();
       needsRender = true;

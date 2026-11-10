@@ -53,6 +53,11 @@ export interface SurfacePin {
 export interface SurfaceLabels {
   /** Replace this layer's pins (measured once, laid out from the next frame); null clears them. */
   show(pins: readonly SurfacePin[] | null): void;
+  /**
+   * Move the pins shown, in order, without making them again: laid out again they would hide
+   * until the next frame, and as time plays, every frame.
+   */
+  move(points: readonly GeoPoint[]): void;
 }
 
 /**

@@ -29,6 +29,7 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { craftInFlight } from './globe/craftLayer';
+import { impactLayer } from './globe/impactLayer';
 import { volcanoLayer } from './globe/volcanoLayer';
 import { geoToVector } from './globe/geo';
 import {
@@ -1761,6 +1762,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // Drawn on the globe as layers of their own (#379).
   const craftOnGlobe = globe.addLayer(craftInFlight);
   const volcanoesOnGlobe = globe.addLayer(volcanoLayer);
+  const impactsOnGlobe = globe.addLayer(impactLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureContext: FeatureContext = {
     base,
@@ -2665,7 +2667,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.layers.has('impacts') && state.mode === 'globe' && (ma === null || scale !== 'eons');
     if (!on || (travelling && ma === null)) {
       impactsSaid = on ? RESTING : null;
-      globe.setImpacts(null);
+      impactsOnGlobe.update(null);
       return { on: false };
     }
     if (impacts === null) {
@@ -2695,14 +2697,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
       // In historical time, today's places; a crater younger than the year shown is not there.
       const since = Math.max(0, BP_ZERO_YEAR - state.time.date.year) / 1e6;
       const marks = impactsAt(impacts, since, true);
-      globe.setImpacts(marks);
+      impactsOnGlobe.update(marks);
       impactsSaid = impactsText(impacts, marks, null);
       return { on: true, text: impactsSaid, mode: impactsMode };
     }
     // On the ice-age scale the map is today's, so the craters are where they are today.
     const placeMa = scale === 'ice' ? 0 : ma;
     const marks = impactsAt(impacts, ma, false, placeMa, impactsMode);
-    globe.setImpacts(marks);
+    impactsOnGlobe.update(marks);
     strikeAsItPasses(state, impacts, ma, placeMa);
     impactsSaid = null;
     return { on: true, text: impactsText(impacts, marks, ma, impactsMode), mode: impactsMode };

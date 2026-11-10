@@ -33,6 +33,7 @@ export default defineConfig({
         'src/features/asteroids/beltLayer.ts',
         'src/globe/layerHost.ts',
         'src/globe/volcanoLayer.ts',
+        'src/globe/impactLayer.ts',
         'src/globe/impactAnimation.ts',
         'src/globe/showerAnimation.ts',
         'src/sky/skyScene.ts',
