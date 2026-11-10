@@ -1,0 +1,360 @@
+{
+  "earth": {
+    "title": "Earth today",
+    "what": "The planet as satellites see it now: land, sea and cloudless colour.",
+    "sources": ["blueMarble"],
+    "how": "Today’s imagery, whatever the date shown: the ancient Earth’s own colours are not known."
+  },
+  "moons": {
+    "title": "The planets’ moons",
+    "what": "Where Mars’s, Jupiter’s and Saturn’s moons are, and what is known of each.",
+    "sources": [
+      "jplSatellites",
+      "galileoMoonMaps",
+      "cassiniMoonMaps",
+      "cassiniTitanRadar",
+      "vikingPhobosMap",
+      "nasaPhobos",
+      "nasaDeimos",
+      "jaxaMmx",
+      "nasaIo",
+      "nasaEuropa",
+      "kivelson2000",
+      "nasaEuropaClipper",
+      "nasaGanymede",
+      "saur2015",
+      "esaJuice",
+      "nasaCallisto",
+      "nasaMimas",
+      "lainey2024",
+      "nasaEnceladus",
+      "waite2017",
+      "postberg2023",
+      "nasaTethys",
+      "nasaDione",
+      "nasaRhea",
+      "nasaTitan",
+      "stofan2007",
+      "nasaDragonfly",
+      "nasaHyperion",
+      "nasaIapetus"
+    ],
+    "how": "Mars’s two moons, Jupiter’s four large ones and Saturn’s eight go round their planets at their true sizes, each painted roughly its colour: each orbit is a mean orbit fitted to JPL’s ephemerides from 1750 to 2200, its angles turning steadily, with the swings a resonance adds (Mimas’s with Tethys, Hyperion’s with Titan). Over those years each moon is within a fifth of a degree of JPL’s place, as seen from its planet, but Mimas (half a degree) and Hyperion (four degrees). Outside them the orbits are carried on at the same rates, which says only roughly where a moon was: centuries away, where Phobos was along its orbit is unknown. Close up, twelve of them wear their missions’ global maps (Galileo and Voyager for Jupiter’s four, Cassini for Saturn’s, Viking for Phobos), each turned to keep the face it keeps to its planet; Deimos and Hyperion, with no map fit to use, keep a colour. Titan, whose ground no eye has seen through its haze, has a Light switch: its ground in near infrared (its usual map), by Cassini’s radar (a preliminary mosaic, with gaps where the radar never looked), and as it looks, all orange haze. What the bar says of each moon (who found it, what it is known for) comes from NASA’s pages on it, its missions’ pages, and the papers behind the findings, at the length its story deserves; what is not settled is said to be so."
+  },
+  "bodies": {
+    "title": "Sun, Moon and planets",
+    "what": "Where the Sun, the Moon and the planets were at the moment shown, and the day and night they make.",
+    "sources": [
+      "meeus",
+      "elpmpp02",
+      "de441",
+      "vsop87",
+      "deltaTSplines",
+      "deltaTLongTerm",
+      "paleBlueDot",
+      "dayEarthSmiled"
+    ],
+    "how": "Worked out in your browser: the Sun by Meeus’s formulas and the Moon by ELP/MPP02, both checked against JPL DE441 (the Moon’s mean motion refitted to it); the planets by VSOP87. Clock time is turned into Earth’s turning by ΔT, whose uncertainty grows the further back the date."
+  },
+  "eclipses": {
+    "title": "Eclipses",
+    "what": "The year’s eclipses, their times and magnitudes, and the Moon’s shadow on Earth.",
+    "sources": ["de441", "skyfield", "deltaTSplines", "deltaTLongTerm"],
+    "how": "Computed for this site from JPL DE441 with Skyfield. Where on Earth an eclipse was seen depends on ΔT, which is uncertain by minutes to hours in antiquity: the paths shift east or west with it."
+  },
+  "sun": {
+    "title": "The Sun close up",
+    "what": "The Sun’s surface in the light picked, from the surface outward: its spots, its magnetic field, then ever hotter layers above it.",
+    "sources": ["sdo", "helioviewer", "lemen2012"],
+    "how": "Images of 2024, days apart, stitched into one surface: the Sun of the date shown looked different, in ways unknown. The four hotter layers are seen in extreme ultraviolet, each through a filter that passes the light of one kind of atom at one temperature (helium in the chromosphere, iron in the corona). They are named by wavelength in ångströms (Å), a tenth of a nanometre: visible light is about 6,000 Å, these 131 to 304 Å. Earth’s air blocks this light, so only spacecraft see it."
+  },
+  "radiocarbon": {
+    "title": "Carbon-14 in the air",
+    "what": "How much carbon-14 the air held each year, as tree rings, corals and cave formations record it: the curve every radiocarbon date is read against.",
+    "sources": [
+      "intcal20",
+      "shcal20",
+      "stuiverPolach1977",
+      "miyake2012",
+      "miyake2013",
+      "oHare2019",
+      "brehm2022",
+      "kuitems2022",
+      "holvol",
+      "sigl2015",
+      "lavigne2013",
+      "vanDerPlicht2020",
+      "oppenheimer2017"
+    ],
+    "how": "The line is the curve’s Δ14C: the air’s carbon-14 against a modern standard, per mille. IntCal20 for the northern hemisphere, SHCal20 for the southern, picked by where you stand. Living things take in the air’s carbon-14 and, once dead, lose half of it every 5,730 years; a laboratory measures what is left, as a radiocarbon age. Because the air’s carbon-14 rose and fell, that age is read against this curve to find calendar years: where the curve is steep, a narrow range; where it is flat (the Hallstatt plateau, about 800–400 BCE), centuries; where it wiggles, two or more ranges. Miyake events, sudden one-year rises from solar storms, let a tree ring be dated to its year. The curves end in 1950: after it nuclear tests nearly doubled the air’s carbon-14 (the bomb pulse). Under the line, each tick is an eruption the ice cores of Greenland and Antarctica record, as tall as the sulfur it sent into the stratosphere (HolVol, 9500 BCE to 1900 CE): its haze cooled the following summers, which tree rings record as frost rings and narrow rings. The ice cores were lined up with the tree rings by the same Miyake spikes, 774 and 993 CE, which left beryllium-10 in the ice as they left carbon-14 in the wood. Most eruptions are known only from the ice; the strip names those its sources do (Samalas, Tambora). Their dates are good to a few years over the last 2,500 years, to 5–15 years before that, and to about 66 years at 9500 BCE. “How was this dated?” works through two real eruptions: Thera, whose age falls on a plateau and whose date is still debated, and Changbaishan, dated to 946 CE by counting a tree’s rings from the 775 CE spike."
+  },
+  "dates": {
+    "title": "Radiocarbon dates",
+    "what": "Where archaeologists have dated remains by carbon-14: bones, charcoal, seeds, shell, from about 35,000 sites.",
+    "sources": ["p3k14c", "intcal20", "shcal20"],
+    "how": "About 170,000 dates gathered from many regional databases by the p3k14c project. Each is a radiocarbon age, so it is calibrated here, against IntCal20 north of the equator and SHCal20 south of it, and placed at its median calendar age; then counted by 1° square and 250 years, back to 10,550 BCE. The squares are deeper where there are more dates, on a scale against the busiest shown. They show where dates have been measured, not how many people lived: some regions, Europe and North America above all, have been dug and dated far more than others. The database fuzzes its locations to protect the sites, so a square is as close as it goes. Picking a place lists its sites, and “How was a date here found?” carries one of its dates across the curve again."
+  },
+  "carbonMade": {
+    "title": "Carbon-14 made in the sky",
+    "what": "Where cosmic rays make carbon-14 in the air, and how it reaches living things: the clock a radiocarbon date reads.",
+    "sources": [
+      "kovaltsov2012",
+      "usoskin2005",
+      "korte2011",
+      "ggf100k",
+      "korte2019",
+      "marine20",
+      "intcal20",
+      "godwin1962",
+      "bahcall2005",
+      "mitalasSills1992",
+      "stix2003",
+      "prsa2016",
+      "barber2003"
+    ],
+    "how": "Cosmic rays strike the air high up; neutrons from the shower turn nitrogen-14 into carbon-14. Earth’s magnetic field turns slower rays away, least near the poles, so several times more is made over the poles than over the equator. The rates are Kovaltsov et al.’s model, computed here from their yield function: by their own reckoning about 1.6 atoms per cm² each second on average over 1951–2010. A weaker field or a quieter Sun lets more rays in: with no field, about twice as much. By default the field is that of the moment shown, from the GGF100k model, back 55,000 years: it fell to about a third of today’s in the Laschamp excursion, 41,000 years ago, and models fitted to the excursion alone put it far lower (Korte et al. 2019). The glow is drawn about the spin axis, which the field lines up with when averaged over thousands of years; today it is tilted about 10°. Mixed through the air as carbon dioxide within a few years, carbon-14 enters plants, then animals; the ocean takes it in slowly, so a sea shell reads about 400–600 radiocarbon years older than a plant of the same year (Marine20 against IntCal20, the last 11,000 years). At death the intake stops and half is gone every 5,730 years. After about 50,000 years too little is left to measure. Started from the Sun, the story begins in its core, at about 15 million degrees (Bahcall et al. 2005), where fusion gives off gamma rays; that light takes about 170,000 years to random-walk to the surface (Mitalas & Sills 1992; quick estimates give ten times less, and the energy itself, rather than one photon, takes tens of millions of years, Stix 2003); leaves the surface at 5,772 K (Prša et al. 2016) and reaches Earth in 8 minutes 19 seconds. Chlorophyll absorbs its red light, near 680 nm (Barber 2003), and reflects the green."
+  },
+  "close-up": {
+    "title": "The Moon and planets close up",
+    "what": "What the Moon and each planet look like near to: the missions’ own maps of them.",
+    "sources": [
+      "moonKit",
+      "messengerMap",
+      "vikingMap",
+      "cassiniJupiter",
+      "cassiniSaturn",
+      "voyagerRings",
+      "cassiniRingPanorama",
+      "magellanVenus",
+      "molaMars",
+      "lolaMoon",
+      "molaHeights",
+      "lolaHeights",
+      "iauGazetteer",
+      "clementineMoon",
+      "lucey2000",
+      "messengerColour",
+      "opalJupiter",
+      "archinal2018"
+    ],
+    "how": "Each map is wrapped on the body as published, shrunk for the web, and each planet is turned as it was at the moment shown, by the IAU’s rotation models, the light’s travel time allowed for: the face toward you is the one that faced you then (checked against JPL Horizons). Jupiter’s and Saturn’s turning is that of their interiors (System III): their clouds drift against it, so a cloud feature is not where it was that day. Venus shows its cloud tops as a plain colour, as from space the clouds hide the ground; its Light switch shows the ground beneath instead, as Magellan’s radar mapped it, coloured by height. Mercury’s switch shows MESSENGER’s enhanced colour, which tells its rocks apart, and Jupiter’s sets Hubble’s map of 2024 beside Cassini’s of 2000. Saturn’s map has gaps where Cassini could not see (the poles, and the strip in the rings’ shadow): they are filled with the colour of the nearest latitude imaged. No sharper map of the whole of Saturn has been made: this one is at the camera’s own limit. Its rings are drawn as measured: how much light gets through at each radius from Voyager 2’s watch of a star passing behind them (every 10 km, the C ring to the F ring), and their colour from Cassini’s panorama of their lit side, tied to radius at the edges of the B and A rings. The height maps come with a colour key. USGS publishes none for Mars’s and the Moon’s, so theirs is measured: the map’s colours read against the altimeters’ own heights at the same places (MOLA’s and LOLA’s gridded records), one colour a kilometre, from the sunlit half of each kilometre’s pixels so the shading does not darken it. Venus’s is read off the legend USGS publishes with its map. The enhanced-colour maps (the Moon’s, Mercury’s) colour kinds of rock, not heights: their keys name each kind as its source describes it, with the colour the map gives a place known for it (Mare Tranquillitatis for the seas richest in titanium), read off the map there. Close up, Mercury, Venus (by radar), the Moon and Mars name their largest features, as the IAU names them: the largest first, as many as fit without crowding, more as you zoom in, and only on the day side, where they can be seen. Long, thin features (ridges, scarps, troughs) are left out, as their name would sit on only a part of them."
+  },
+  "sky": {
+    "title": "The night sky",
+    "what": "The stars as seen from the place picked, at the moment shown.",
+    "sources": ["hipparcos", "vondrak", "meeus", "elpmpp02", "vsop87"],
+    "how": "Each star carried back along its own motion through space, and the sky turned by precession to the date shown."
+  },
+  "empires-cliopatria": {
+    "title": "States and empires (Cliopatria)",
+    "what": "The borders of states and empires in the year shown, and their names.",
+    "sources": ["cliopatria"],
+    "how": "Borders simplified and split by century for this site. Cliopatria’s latest borders, of 2024, stand for the years since.",
+    "others": "OpenHistoricalMap draws some borders differently: pick it, or both to compare, in Layers."
+  },
+  "empires-ohm": {
+    "title": "States and empires (OpenHistoricalMap)",
+    "what": "The borders of states and empires in the year shown, and their names.",
+    "sources": ["ohm"],
+    "how": "Borders simplified and split by century for this site.",
+    "others": "Cliopatria draws some borders differently: pick it, or both to compare, in Layers."
+  },
+  "delta-t": {
+    "title": "ΔT",
+    "what": "How far Earth’s turning had fallen behind a uniform clock by the date shown, and how sure that is. It moves where on Earth an eclipse was seen.",
+    "sources": ["deltaTSplines", "deltaTLongTerm", "morrison2004"],
+    "how": "Splines fitted to ancient and modern observations from 720 BCE to 2015 CE, and a long-term parabola outside them (as Skyfield has them). The ± is an approximate standard error, 0.8 t² seconds for t centuries from 1820, at least a second."
+  },
+  "earth-facts": {
+    "title": "Poles, magnetic field, tilt, day and Sun",
+    "what": "What Earth was like then, beyond its map: where its poles were, its magnetic field, its tilt, the length of its day and the Sun’s brightness.",
+    "sources": [
+      "paleodem",
+      "tarduno2010",
+      "tarduno2015",
+      "gts2020Polarity",
+      "pmagpy",
+      "steinberger2008",
+      "torsvik2012",
+      "sagerKoppers2000",
+      "mitchell2021",
+      "kent2015",
+      "muttoniKent2019",
+      "kirschvink1997",
+      "torsvik1998",
+      "laskar2004",
+      "laskar1993",
+      "iers",
+      "wells1963",
+      "williams2000",
+      "deWinter2020",
+      "gough1981",
+      "saganMullen1972"
+    ],
+    "how": "Each fact names its source in its text. The day’s length is read between measurements (corals, a rudist shell, tidal rhythmites), and its ± is the source’s where it gives one. The magnetic field’s reversals of the last 83 million years are GTS 2020’s, as PmagPy carries them; before that, the superchrons, and between them a field reversing too often to draw here. The globe’s poles are the spin axis; magnetic north is marked at the pole a compass pointed to, averaged over thousands of years.",
+    "others": "Where sources disagree (a much larger Precambrian tilt; the faint young Sun paradox) the text says so."
+  },
+  "ways": {
+    "title": "Ways of life",
+    "what": "How people lived in each region, as archaeologists rated it: foraging, herding, farming, intensive farming, towns.",
+    "sources": ["archaeoglobe"],
+    "how": "Each region shaded by its most widespread way of life at the rated moment nearest the year shown (ten moments, 10,000 years ago to 1850); mixed where several are as widespread. Region outlines simplified."
+  },
+  "periods": {
+    "title": "Named periods",
+    "what": "The archaeological and historical periods named for the place picked.",
+    "sources": ["periodo", "naturalEarth"],
+    "how": "Periods matched to the country at the place picked by their Wikidata identifiers; each listed with the source that defines it."
+  },
+  "genomes": {
+    "title": "Ancient genomes",
+    "what": "Dated ancient DNA, counted by region within 250 years of the year shown.",
+    "sources": ["aadr"],
+    "how": "Ancient individuals that pass the resource’s own assessment, counted by 2° cell."
+  },
+  "rocks": {
+    "title": "Rocks at the surface",
+    "what": "How old the rocks at the surface are today.",
+    "sources": ["macrostrat"],
+    "how": "World map units, simplified for this site."
+  },
+  "impacts": {
+    "title": "Impact craters",
+    "what": "Craters and deposits left by asteroids and comets, and in deep time, where they lay when they struck.",
+    "sources": ["impactEarth", "gplates", "paleodem", "collins2005", "collins2020", "naturalEarth"],
+    "how": "Places when they struck reconstructed on the PALEOMAP model by the GPlates Web Service. A crater’s card estimates the impactor’s size from the crater by Collins et al.’s scaling laws, under assumptions it states; “Play the impact” is an illustration, with Chicxulub’s approach from Collins et al. 2020 and the others assumed. “Impacts through time” draws each crater’s place every 5 million years from its strike to today: as a track on a map of today’s coasts (Natural Earth), a picked crater followed by a dot along it, or as a line through a 3D box of longitude, latitude and time. The reconstruction reaches 540 million years back, so older craters start there; craters dated only loosely are drawn faint from the middle of their span."
+  },
+  "volcanoes": {
+    "title": "Volcanic eruptions",
+    "what": "Eruptions dated near the year shown, sized by explosivity.",
+    "sources": ["gvp"]
+  },
+  "spacecraft": {
+    "title": "Spacecraft beyond Earth",
+    "what": "Every craft sent beyond Earth orbit, from Luna 1 in 1959 to today, where it was at the moment shown, and those that set out but never left.",
+    "sources": ["gcat", "nssdcaChronology", "jplHorizonsCraft"],
+    "how": "The record is Jonathan McDowell’s GCAT: each craft that left Earth orbit (not its rocket stages), with each stretch of its flight about one body, and its landing; NASA NSSDCA’s chronology gives each mission’s objective and outcome, and the craft that set out but never left (failures at launch, probes stranded in Earth orbit). Paths are JPL Horizons’s where it has the craft (about 95), thinned to as few points as draw them within 75,000 km about the Sun, 1,000 km through a flyby, 500 km near Earth; a long stay in orbit is drawn at its world. For the others the path is approximate, drawn amber: each leg as the transfer orbit between where it left and where it arrived, as first planned, not as flown; within about 0.02 AU of Horizons for a direct transfer. A leg to a comet or asteroid, or one that loops back to the world it left, is not drawn."
+  },
+  "asteroids": {
+    "title": "The asteroid belt",
+    "what": "The main belt’s asteroids at least 100 km across, between Mars and Jupiter, where each was at the moment shown.",
+    "sources": ["jplSbdb", "jplHorizonsAsteroids"],
+    "how": "Which asteroids, their names and their diameters are JPL’s Small-Body Database’s: every one in the main belt it gives as 100 km across or more, some two hundred, from Ceres (939 km) down; the hundreds of thousands smaller are left out. Each is drawn as a dot, the larger ones larger, not to scale: at the scale of the Solar System even Ceres would be far too small to see. Its orbit is a mean orbit about the Sun fitted to JPL Horizons from 1600 to 2500, as the moons’ are: the elements JPL publishes for an asteroid hold only at their epoch, and carried with Kepler’s laws alone they stray tens of degrees in a few centuries, as Jupiter pulls on the asteroids. Fitted, half are within a degree of JPL’s place along their orbits throughout those years, as Ceres and Vesta are (within half a degree), and 169 of the 210 within two. The furthest out, held in step with Jupiter (the Hildas, which go round three times to its two, and Thule, four to its three), are swung by it most: up to 12 degrees off. Each card says how close its own fit came. Outside those years the orbits are carried on at the same rates: where an asteroid is along its orbit is then only roughly known."
+  },
+  "orbits": {
+    "title": "Planets’ orbits",
+    "what": "The paths of Earth and the five bright planets around the Sun.",
+    "sources": ["vsop87"],
+    "how": "Each orbit sampled at 128 points around the date shown."
+  },
+  "deep-surface": {
+    "title": "The Earth then",
+    "what": "Land, sea and mountains as one reconstruction draws them for the moment shown.",
+    "sources": ["paleodem", "ics"],
+    "how": "Elevation grids smoothed to 0.2°, seams repaired, and blended between the maps either side of the moment. The maps put the poles of their time at top and bottom, so “North pole then” and “South pole then” are the map’s own. Period names and dates from the ICS chart.",
+    "others": "Other reconstructions place the continents differently: turn on Plates to outline Cao et al. 2024’s over this one."
+  },
+  "deep-evidence": {
+    "title": "How do we know what Earth looked like?",
+    "what": "The globe is a reconstruction: a model of where land and sea, mountains and shelves were, built from evidence that survives in rocks. Some of it is measured, some inferred, some the map-maker’s judgement. This is what it rests on.",
+    "sources": ["paleodem", "torsvik2012", "torsvikCocks", "cao2024", "merdith2021", "muller2019"],
+    "evidence": [
+      {
+        "name": "Rock magnetism",
+        "says": "Iron minerals in lava and sediment lock in the direction of Earth’s field as the rock forms. Their tilt gives the latitude where the rock formed, and they point to the pole of the time. They say nothing about longitude.",
+        "source": "torsvik2012"
+      },
+      {
+        "name": "Matching rocks and fossils",
+        "says": "Mountain belts, rock sequences and the same land plants and animals (Glossopteris, Mesosaurus, Lystrosaurus) on continents now oceans apart show which ones were once joined.",
+        "source": "torsvikCocks"
+      },
+      {
+        "name": "Rocks that record climate",
+        "says": "Glacial deposits, coal, salt and reefs form in particular climates, so they hint at latitude independently of magnetism. Where the two agree, the map is surer: the ice of the late Palaeozoic, for one, lay over the south pole the magnetism finds.",
+        "source": "boucot2013"
+      },
+      {
+        "name": "The ocean floor",
+        "says": "Magnetic stripes and the ages of the sea floor record how oceans opened. But sea floor sinks back into the mantle: none older than about 180 million years survives in place, so older oceans are inferred.",
+        "source": "seton2020"
+      },
+      {
+        "name": "Longitude, by assumption",
+        "says": "Since magnetism cannot give longitude, models fix it another way: hotspot tracks, or the deep mantle’s large hot regions held still beneath the plates, or plates moving as little as they can. Different choices, different maps.",
+        "source": "steinberger2008"
+      }
+    ],
+    "certainty": [
+      "Surer: the latitudes of the larger continents, and which continents were joined.",
+      "Less sure: longitudes; the outlines of small blocks and of oceans now lost; anything before about 180 million years that would rest on sea floor.",
+      "Illustrative: mountain heights and exact coastlines, drawn by the map-maker from rock types and sea-level estimates."
+    ],
+    "others": "Other reconstructions place the continents differently, the more so further back: Cao et al. 2024 (turn on Plates to outline it over this map), Merdith et al. 2021, Müller et al. 2019 (from the Triassic).",
+    "reading": ["torsvikCocks", "torsvik2012", "gplatesPortal", "montanez2013"]
+  },
+  "ice-surface": {
+    "title": "The ice ages’ Earth",
+    "what": "Today’s land and sea floor, with the coast at the sea level of the moment and the ice sheets of the time.",
+    "sources": ["etopo1", "paleomist", "batchelor", "bintanja", "spratt"],
+    "how": "Sea level from the reconstruction picked, laid on today’s depths (not on the land as it was); ice from PaleoMIST every 2,500 years, with Batchelor et al.’s outlines at their time slices.",
+    "others": "Sea level by Bintanja & van de Wal or by Spratt & Lisiecki: pick whose to follow."
+  },
+  "temperature": {
+    "title": "Temperature",
+    "what": "The surface coloured by its temperature, and each model’s global mean.",
+    "sources": ["scotese2022", "cesm"],
+    "how": "Maps every 5 million years, packed into images and blended between them.",
+    "others": "Scotese 2022 and CESM (Li et al. 2023) disagree, at times by several degrees: pick whose to colour by."
+  },
+  "sealevel": {
+    "title": "Sea level",
+    "what": "Sea level through time, as each reconstruction has it, on a chart.",
+    "sources": ["bintanja", "spratt", "miller", "vanDerMeer"],
+    "others": "Each reconstruction is drawn side by side; they differ, the more so further back."
+  },
+  "plates": {
+    "title": "Plates",
+    "what": "A second reconstruction’s continents, outlined over the first.",
+    "sources": ["cao2024"],
+    "how": "Continent outlines reconstructed with pyGPlates in the model’s paleomagnetic frame, drawn as 0.25° masks."
+  },
+  "humans": {
+    "title": "Humans",
+    "what": "Dated finds of our species and its relatives, and where a dispersal model has people settled.",
+    "sources": ["humanFinds", "timmermann"],
+    "how": "Each find is shown with the paper that dates it, and rival dates side by side. The dispersal model is one model’s view, not evidence."
+  },
+  "air": {
+    "title": "Air",
+    "what": "Carbon dioxide and methane from the ice cores, and carbon dioxide and oxygen from proxies over 540 million years.",
+    "sources": ["bereiter", "loulergue", "foster", "mills", "co2pip"],
+    "others": "Proxy estimates scatter widely: each study’s points are shown, by method."
+  },
+  "tree": {
+    "title": "Tree of life",
+    "what": "How the living things on this site are related: one tree from the first cells to our species, the fossil genera on the map hung on it.",
+    "sources": ["openTree"],
+    "how": "Open Tree of Life’s synthetic tree, which merges hundreds of published phylogenies and fills the gaps from its taxonomy, trimmed to the backbone down to orders, the site’s fossil genera and our species with its closest relatives. Drawn as a radial tree: the root at the centre, each level further out, each group a wedge as wide as its share of the tips. Branch lengths mean nothing here: the tree says who is related to whom, not when they split.",
+    "others": "Where no published phylogeny places a taxon, only the taxonomy does: the tree marks those. Some named groups are not one branch in the synthesis (Open Tree calls them broken): many dinosaurs, Tyrannosaurus among them, hang beside the node named Dinosauria rather than under it, so they take the colour of the next group up."
+  },
+  "fossils": {
+    "title": "Fossils",
+    "what": "Fossils of four groups of animals, counted by 5 million years and 5°, where they lay then.",
+    "sources": ["pbdb", "paleodem"],
+    "how": "Places at their age on the PALEOMAP reconstruction."
+  },
+  "lineages": {
+    "title": "Life through time",
+    "what": "Each genus of four groups of animals as a line through time, from its first fossil to its last, standing where its fossils lay then and joined to its family and order.",
+    "sources": ["pbdb", "paleodem"],
+    "how": "The Paleobiology Database’s classification gives each genus its family, order and so on, and its first and last appearance; its finds give where it lay, placed at their age on the PALEOMAP reconstruction and averaged every 5 million years. A family or order starts where and when its oldest member does. The floor is PALEOMAP’s elevation map at the slider’s moment. Footprints, burrows and eggs, which PBDB names apart from the animals that made them, are left out.",
+    "others": "The classification is a taxonomy, not a dated phylogeny: branch points are drawn at the oldest fossil found, and true splits came earlier. Open Tree of Life’s synthesis, on the tree of life, places some of these genera differently; both are kept."
+  },
+  "search": {
+    "title": "Search",
+    "what": "The site’s texts found by their words, or by their meaning, each opening the view of the place and time it is about.",
+    "sources": ["bgeSmall", "onnxRuntime"],
+    "how": "Every text the site shows is cut into passages, each tied to the bodies, places and years it is about. Words are matched as typed, ranked by BM25. Search by meaning, once turned on, runs a small English model, bge-small-en-v1.5, in your browser: it turns the question into 384 numbers that stand for its meaning, and the passages, turned into numbers the same way beforehand, are ranked by how alike they are; the two lists are then merged. The model and its runtime are downloaded from this site once, about 48 MB; nothing typed leaves the browser. A model of meaning can be wrong: it ranks by likeness, not by truth, so each passage found says where it comes from."
+  }
+}

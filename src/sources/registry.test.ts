@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 
 import { LAYERS, type Layer, type Span } from '../state/viewState';
@@ -23,6 +24,40 @@ const scene = (over: Partial<Scene>): Scene => ({
   eclipse: false,
   drawsOn: () => true,
   ...over,
+});
+
+/** A source's shape, as `Source` declares it: sources.json is content, checked here (#383). */
+const SourceSchema = v.strictObject({
+  name: v.pipe(v.string(), v.minLength(1)),
+  kind: v.picklist(['paper', 'dataset', 'model', 'imagery', 'catalogue', 'reference']),
+  cite: v.pipe(v.string(), v.minLength(1)),
+  url: v.pipe(v.string(), v.url()),
+  licence: v.optional(v.pipe(v.string(), v.minLength(1))),
+  nonCommercial: v.optional(v.literal(true)),
+});
+
+/** A why's shape, as `Why` declares it: whys.json is content, checked here (#383). */
+const WhySchema = v.strictObject({
+  title: v.pipe(v.string(), v.minLength(1)),
+  what: v.pipe(v.string(), v.minLength(1)),
+  sources: v.array(v.string()),
+  how: v.optional(v.string()),
+  others: v.optional(v.string()),
+  evidence: v.optional(
+    v.array(v.strictObject({ name: v.string(), says: v.string(), source: v.string() })),
+  ),
+  certainty: v.optional(v.array(v.string())),
+  reading: v.optional(v.array(v.string())),
+});
+
+describe('the registry’s content', () => {
+  it.each(Object.entries(SOURCES))('source %s has the shape of a Source', (_id, source) => {
+    expect(v.safeParse(SourceSchema, source).issues).toBeUndefined();
+  });
+
+  it.each(Object.entries(WHYS))('why %s has the shape of a Why', (_id, why) => {
+    expect(v.safeParse(WhySchema, why).issues).toBeUndefined();
+  });
 });
 
 describe('where everything comes from', () => {
