@@ -37,6 +37,16 @@ export const EXCEPTIONS = {
   'astro/precession.test.ts': ['globe'],
 };
 
+/**
+ * The largest files, which every feature used to edit: each may only shrink (#383). New work goes
+ * into a feature (#380) or a globe layer (#379) instead. When a file shrinks, lower its limit;
+ * `src/architecture.test.ts` asks for it once a limit is 50 lines above the file.
+ */
+export const LINE_LIMITS = {
+  'app.ts': 4976,
+  'globe/scene.ts': 3484,
+};
+
 const ROOT_FILES = new Set(TIERS[TIERS.length - 1]);
 
 /**
@@ -65,6 +75,12 @@ function rule(names) {
   return ['error', { patterns }];
 }
 
+/**
+ * @param {number} max
+ * @returns {import('eslint').Linter.RuleEntry}
+ */
+const maxLines = (max) => ['error', { max, skipBlankLines: false, skipComments: false }];
+
 /** @param {number} tier */
 const above = (tier) => TIERS.slice(tier + 1).flat();
 
@@ -87,4 +103,8 @@ export const boundaries = [
       },
     };
   }),
+  ...Object.entries(LINE_LIMITS).map(([file, max]) => ({
+    files: [`src/${file}`],
+    rules: { 'max-lines': maxLines(max) },
+  })),
 ];
