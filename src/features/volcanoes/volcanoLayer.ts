@@ -4,8 +4,8 @@
  * A layer on the globe's host (#379): `globe.addLayer(volcanoLayer)`.
  */
 
-import type { VolcanoMark } from '../data/volcanoes';
-import { SURFACE_PRIORITY, type LayerFactory } from './layerHost';
+import type { VolcanoMark } from '../../data/volcanoes';
+import { SURFACE_PRIORITY, type LayerFactory } from '../../globe/layerHost';
 
 export const volcanoLayer: LayerFactory<readonly VolcanoMark[] | null> = (host) => {
   const layer = document.createElement('div');

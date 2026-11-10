@@ -17,6 +17,9 @@ import type { Layer, ViewState } from '../state/viewState';
 import type { MarkerCardContent } from '../ui/markerCard';
 import type { ZoomRail } from '../ui/zoomRail';
 
+/** Said in the Layers panel of a layer whose markers rest while the years play. */
+export const RESTING = 'Resting while you travel through the years; back when the track closes.';
+
 /** What the app lends a feature. */
 export interface FeatureContext {
   /** Where the site's files are served from, ending in `/`. */
@@ -28,12 +31,16 @@ export interface FeatureContext {
   notify(message: string): void;
   /** Open the card for a marker. */
   showCard(card: MarkerCardContent): void;
+  /** Whether a marker's card is open. */
+  cardOpen(): boolean;
   /** The planets' theory, once loaded; `loadPlanets` asks for it. */
   planets(): PlanetEphemeris | null;
   loadPlanets(): void;
   /** The Moon's ephemeris, once loaded (it loads with the app). */
   moon(): MoonEphemeris | null;
-  /** Show the moment again: data the feature waited for has arrived. */
+  /** Whether the reader is travelling through the years: markers of single events rest then. */
+  travelling(): boolean;
+  /** Show the moment and the Layers panel again: data the feature waited for has arrived. */
   refresh(): void;
 }
 
@@ -43,6 +50,10 @@ export interface FeatureInstance {
   show(state: ViewState, jdTT: number): void;
   /** One of its markers was tapped: what follows `<picks>:` in the marker's pick. */
   pick?(id: string): void;
+  /** Another marker was tapped: a card of this feature's still loading should not open. */
+  unpick?(): void;
+  /** What the Layers panel says under its layer, if anything. */
+  said?(): string | null;
 }
 
 export interface Feature {

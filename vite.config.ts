@@ -37,7 +37,7 @@ export default defineConfig({
         'src/text/embedder.ts',
         'src/text/meaningLoader.ts',
         'src/globe/layerHost.ts',
-        'src/globe/volcanoLayer.ts',
+        'src/features/volcanoes/volcanoLayer.ts',
         'src/globe/impactLayer.ts',
         'src/globe/fossilLayer.ts',
         'src/globe/genomeLayer.ts',
