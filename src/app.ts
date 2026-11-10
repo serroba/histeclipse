@@ -150,8 +150,9 @@ import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleT
 import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
 import { createFamousPanel } from './ui/famousPanel';
 import { createSearchPanel } from './ui/searchPanel';
-import { anchorQuery } from './text/anchors';
-import { loadPassages, type Anchor } from './text/passages';
+import { anchorLabel, anchorQuery } from './text/anchors';
+import { nearby } from './text/nearby';
+import { loadPassages, type Anchor, type Passage } from './text/passages';
 import { indexPassages } from './text/wordSearch';
 import { uiIcon } from './ui/icons';
 import { createWelcome } from './ui/welcome';
@@ -915,16 +916,49 @@ export async function startApp(root: HTMLElement): Promise<void> {
     element('span', { class: 'icon-label' }, 'Full view'),
   );
   fullView.addEventListener('click', togglePanels);
+  // The site's texts as passages, asked for once, by search or by what is written about here.
+  let passagesLoading: Promise<readonly Passage[]> | null = null;
+  function passages(): Promise<readonly Passage[]> {
+    passagesLoading ??= loadPassages(`${base}data/passages.json`, (url) => fetch(url)).then(
+      (loaded) => loaded.passages,
+      (error: unknown) => {
+        passagesLoading = null;
+        throw error;
+      },
+    );
+    return passagesLoading;
+  }
   // The site's texts, searched by their words; a passage opens the view of its place (#392).
   const searchPanel = createSearchPanel(
-    () =>
-      loadPassages(`${base}data/passages.json`, (url) => fetch(url)).then(({ passages }) =>
-        indexPassages(passages),
-      ),
+    () => passages().then(indexPassages),
     (anchor) => {
       openAnchor(anchor);
     },
   );
+  // What is written about where the reader looks, at the moment shown (#391).
+  const hereList = element('ul', { class: 'here-list', 'data-testid': 'here-list' });
+  const hereText = element(
+    'details',
+    { class: 'here-text' },
+    element('summary', {}, 'About here'),
+    hereList,
+  );
+  let herePassages: readonly Passage[] | null = null;
+  hereText.addEventListener('toggle', () => {
+    if (!hereText.open || herePassages !== null) return;
+    hereList.replaceChildren(element('li', { class: 'here-empty' }, 'Loading…'));
+    passages().then(
+      (loaded) => {
+        herePassages = loaded;
+        showHere(store.get());
+      },
+      () => {
+        hereList.replaceChildren(
+          element('li', { class: 'here-empty' }, 'Could not load the texts.'),
+        );
+      },
+    );
+  });
   const showControls = element(
     'button',
     { type: 'button', class: 'show-controls' },
@@ -1722,12 +1756,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
       skyText,
       skyEclipse,
       recordBanner,
+      // Sources and what is written about here share a line, each a full row once open.
       element(
-        'details',
-        { class: 'credits' },
-        element('summary', {}, 'Sources'),
-        // What is on screen now, each with the book that says why, and its sources' links.
-        sourcesList,
+        'div',
+        { class: 'hud-more' },
+        element(
+          'details',
+          { class: 'credits' },
+          element('summary', {}, 'Sources'),
+          // What is on screen now, each with the book that says why, and its sources' links.
+          sourcesList,
+        ),
+        hereText,
       ),
     ),
     notices,
@@ -3795,6 +3835,42 @@ export async function startApp(root: HTMLElement): Promise<void> {
     whySheet.renderOnScreen(sourcesList, ids);
   }
 
+  let hereShown: string | null = null;
+  /** What is written about here: the passages anchored where the reader looks, when. */
+  function showHere(state: ViewState): void {
+    if (!hereText.open || herePassages === null) return;
+    const sky = state.mode === 'sky';
+    const found = nearby(herePassages, {
+      body: sky ? 'earth' : state.focus,
+      target: sky ? (state.location ?? state.camera.target) : state.camera.target,
+      distance: sky ? 3 : state.camera.distance,
+      year: state.ma === null ? state.time.date.year : null,
+    });
+    const key = found.map(({ passage }) => passage.id).join(' ');
+    if (key === hereShown) return;
+    hereShown = key;
+    if (found.length === 0) {
+      hereList.replaceChildren(
+        element('li', { class: 'here-empty' }, 'Nothing written about here yet. Try Search.'),
+      );
+      return;
+    }
+    hereList.replaceChildren(
+      ...found.map(({ passage, anchor }) => {
+        const open = element(
+          'button',
+          { type: 'button', class: 'here-item' },
+          element('span', { class: 'here-title' }, passage.title),
+          element('span', { class: 'here-meta' }, anchorLabel(anchor)),
+        );
+        open.addEventListener('click', () => {
+          openAnchor(anchor);
+        });
+        return element('li', { 'data-passage': passage.id }, open);
+      }),
+    );
+  }
+
   // The states last drawn, for "Why here?" to read back.
   let statesDrawn: { readonly year: number; readonly territories: readonly Territory[] } | null =
     null;
@@ -4748,6 +4824,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         : null,
     );
     showSources(state);
+    showHere(state);
     showBody(state);
     sharpenClose(state);
     zoomRail.setWhyHere(
