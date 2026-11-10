@@ -40,6 +40,7 @@ function craft(phases: CraftPhase[]): Craft {
     id: 'D1',
     name: 'Probe',
     cospar: '2000-001A',
+    nssdc: '2000-001A',
     launchTag: '2000-001',
     launch: '2000-01-01',
     owner: 'X',

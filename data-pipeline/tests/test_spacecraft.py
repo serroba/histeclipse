@@ -152,6 +152,7 @@ def test_a_craft_that_never_left_is_kept_from_the_chronology() -> None:
 def test_a_landing_is_kept_with_its_craft() -> None:
     landing = {
         "JCAT": "D00274",
+        "Piece": "1969-059C",
         "World": "Luna",
         "Lat": "0.67",
         "Lon": "23.47",
@@ -244,3 +245,124 @@ def test_a_subsatellite_left_by_a_crewed_mission_is_not_crewed() -> None:
     by_name = {c["name"]: c for c in craft}
     assert by_name["Casper"]["crewed"] is True
     assert by_name["Apollo 16 Subsatellite"]["crewed"] is False
+
+
+def test_a_craft_designated_the_old_way_links_nssdca_under_the_chronicle_s_id() -> None:
+    # Given Luna 1, "1959 MU 1" to GCAT, found in the chronology by its launch day.
+    luna = (
+        "D00002\t1959 MU\t1959 MU 1\tP   D\tAMS Luna-1\t1959 Jan  2\t-\t1959 Jan  3"
+        "\tEarth\t1959 Jan  4\tEO\tHCO\tOKB1\tSU"
+    )
+    craft, _ = craft_record(
+        gcat(luna), [], [], [Chronicle("Luna 1", "1959-01-02", "Lunar Flyby", "1959-012A")]
+    )
+    # Then NSSDCA's page is the one the chronology links.
+    assert craft[0]["nssdc"] == "1959-012A"
+
+
+def test_an_orbiter_found_by_its_own_designation_keeps_it() -> None:
+    # Given Venera 9's orbiter, the chronology linking its lander first and both in its text.
+    orbiter = (
+        "D00480\t1975-050\t1975-050A\tP   D\tVenera-9\t1975 Jun  8\t-\t1975 Jun  8"
+        "\tEarth\t1975 Jun 10\tEO\tHCO\tLA\tSU"
+    )
+    craft, _ = craft_record(
+        gcat(orbiter),
+        [],
+        [],
+        [
+            Chronicle(
+                "Venera 9",
+                "1975-06-08",
+                "Venus Orbiter and Lander",
+                "1975-050D",
+                ("1975-050A", "1975-050D"),
+            )
+        ],
+    )
+    # Then the orbiter links its own page, not the lander's.
+    assert craft[0]["nssdc"] == "1975-050A"
+
+
+def test_a_part_nssdca_has_no_page_for_links_its_carrier_s() -> None:
+    # Given Eagle, and its ascent stage, which left the Moon from the descent stage (a lander).
+    ascent = (
+        "D01001\t1969-U01\t1969-U01\tP   D\tEagle\t1969 Jul 21\tD00271\t1969 Jul 21"
+        "\tLuna\t1969 Jul 21\tEO\tLuna\tNASA\tUS"
+    )
+    descent = {
+        "JCAT": "D00271",
+        "Piece": "1969-059",
+        "World": "Luna",
+        "Lat": "0.7",
+        "Lon": "23.4",
+        "LandDate": "1969 Jul 20",
+        "LSite": "Statio Tranquillitatis",
+    }
+    craft, _ = craft_record(
+        gcat(COLUMBIA, EAGLE, ascent),
+        [],
+        [descent],
+        [Chronicle("Apollo 11", "1969-07-16", "Crewed Lunar Landing", "1969-059A")],
+    )
+    by_id = {c["id"]: c for c in craft}
+    # Then the ascent stage links Apollo 11's page, the craft launched with its descent stage.
+    assert by_id["D01001"]["nssdc"] == "1969-059A"
+    # And the lander keeps its own.
+    assert by_id["D00274"]["nssdc"] == "1969-059C"
+
+
+def test_a_craft_one_chronicle_names_is_not_taken_by_another_launched_that_day() -> None:
+    # Given Mariner 7 and a Soviet probe lost at launch the same day, which GCAT does not list.
+    mariner = (
+        "D00281\t1969-030\t1969-030A\tP   D\tMariner 7\t1969 Mar 27\t-\t1969 Mar 27"
+        "\tEarth\t1969 Mar 29\tEO\tHCO\tJPL\tUS"
+    )
+    craft, never = craft_record(
+        gcat(mariner),
+        [],
+        [],
+        [
+            Chronicle("Mariner 7", "1969-03-27", "Mars Flyby", "1969-030A"),
+            Chronicle(
+                "Mars 1969A", "1969-03-27", "Attempted Mars Orbiter (Launch Failure)", "MARS69A"
+            ),
+        ],
+    )
+    # Then Mariner 7 keeps its page, and the lost probe is among those that never left.
+    assert craft[0]["nssdc"] == "1969-030A"
+    assert [n["name"] for n in never] == ["Mars 1969A"]
+
+
+def test_a_craft_launched_again_from_the_moon_links_its_launch_s_page() -> None:
+    # Given Luna 16's return capsule, as launched and as it left the Moon.
+    launched = (
+        "D00337\t1970-072\t1970-072A\tPX  D\tLuna-16 VA\t1970 Sep 12\t-\t1970 Sep 12"
+        "\tEarth\t1970 Sep 13\tEO\tLuna\tLA\tSU"
+    )
+    left = (
+        "D01058\t1970-U01\t1970-U01\tP   D\tLuna-16 VA\t1970 Sep 21\tD01057\t1970 Sep 21"
+        "\tLuna\t1970 Sep 21\tEO\tEarth\tLA\tSU"
+    )
+    craft, _ = craft_record(gcat(launched, left), [], [], [])
+    # Then the capsule leaving the Moon links the page of its launch.
+    assert {c["id"]: c["nssdc"] for c in craft} == {"D00337": "1970-072A", "D01058": "1970-072A"}
+
+
+def test_pioneer_5_which_the_chronology_leaves_out_links_nssdca_s_page() -> None:
+    pioneer = (
+        "D00006\t1960 ALP\t1960 ALP 1\tP   D\tPioneer V\t1960 Mar 11\t-\t1960 Mar 11"
+        "\tEarth\t1960 Mar 12\tEO\tHCO\tSTL\tUS"
+    )
+    craft, _ = craft_record(gcat(pioneer), [], [], [])
+    assert craft[0]["nssdc"] == "1960-001A"
+
+
+def test_a_craft_nssdca_never_catalogued_has_no_page() -> None:
+    # Given a probe lost at launch, with no designation NSSDCA uses and nothing that carried it.
+    lost = (
+        "D00009\t1960-U01\t1960-U01\tP   D\t[Luna-4]\t1960 Apr 15\t-\t1960 Apr 15"
+        "\tEarth\t1960 Apr 15\tEO\tHCO\tOKB1\tSU"
+    )
+    craft, _ = craft_record(gcat(lost), [], [], [])
+    assert craft[0]["nssdc"] is None

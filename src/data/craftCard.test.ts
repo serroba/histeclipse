@@ -58,6 +58,7 @@ describe('a craft’s card', () => {
         id: 'D9',
         name: 'Test craft',
         cospar: '2030-001A',
+        nssdc: null,
         launchTag: '2030-001',
         launch: '2030-01-01',
         owner: 'ABC',
@@ -75,5 +76,22 @@ describe('a craft’s card', () => {
     expect(facts['Whose']).toBe('XX (ABC)');
     expect(facts['Went to']).toBeUndefined();
     expect(facts['Came down']).toBe('on Mars');
+    // Nor a page at NSSDCA, which has none for it.
+    expect(card.links).toEqual([]);
+  });
+
+  it('Given craft GCAT designates the old way or not at all, Then each links NSSDCA’s page under its own designation or its carrier’s', () => {
+    const page = (name: string) => craftCard(named(name), true).links[0]?.href ?? '';
+    // Luna 1, "1959 MU 1" to GCAT; and Pragyan, which Chandrayaan-3 carried.
+    expect(page('AMS Luna-1')).toMatch(/id=1959-012A$/);
+    expect(
+      craftCard(
+        record.craft.find((craft) => craft.name === 'Pragyan' && craft.launchTag === '2023-098') ??
+          named('none'),
+        true,
+      ).links[0]?.href,
+    ).toMatch(/id=2023-098C$/);
+    // Peregrine, under NSSDCA's own name for it.
+    expect(page('Peregrine Mission One')).toMatch(/id=PEREGRN-1$/);
   });
 });
