@@ -22,10 +22,10 @@
  * These are the paths as first planned, not as flown: drawn, they are marked approximate.
  */
 
-import type { Craft } from '../data/spacecraft';
-import { elementAt } from '../util/arrays';
-import type { CraftWhere } from '../data/spacecraftPaths';
-import { GM_EARTH, GM_SUN, lambert, propagate, type Vec3 } from './transfer';
+import type { Craft } from '../../data/spacecraft';
+import { elementAt } from '../../util/arrays';
+import type { CraftWhere } from '../../data/spacecraftPaths';
+import { GM_EARTH, GM_SUN, lambert, propagate, type Vec3 } from '../../astro/transfer';
 
 /** Where a body is from Earth's centre at a moment (TT), J2000 km; null if not known. */
 export type Geocentric = (body: string, jdTT: number) => Vec3 | null;

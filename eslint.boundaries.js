@@ -15,8 +15,8 @@ export const TIERS = [
   ['state', 'sources'],
   // Drawing it.
   ['globe', 'sky', 'story', 'tablets'],
-  // The page around it, and what is reported about it.
-  ['ui', 'telemetry'],
+  // The page around it, what is reported about it, and the site's texts to search.
+  ['ui', 'telemetry', 'text'],
   // Features, each a folder of its own on one contract (#380): domain, drawing and card together.
   ['features'],
   // The wiring: `src/app.ts`, `src/main.ts`.

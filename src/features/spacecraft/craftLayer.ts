@@ -16,7 +16,7 @@ import {
   type Scene,
   Vector3,
 } from 'three';
-import { createNameLabels, type LayerFactory, type Triple } from './layerHost';
+import { createNameLabels, type LayerFactory, type Triple } from '../../globe/layerHost';
 
 /** A craft beyond Earth orbit as the globe is given it: from Earth's centre (J2000 km), its trail. */
 export interface SceneCraft {

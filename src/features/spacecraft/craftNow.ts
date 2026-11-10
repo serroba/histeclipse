@@ -6,10 +6,10 @@
  * path places at that moment, is left out.
  */
 
-import type { Craft } from '../data/spacecraft';
-import { craftAt, type CraftPaths, type CraftWhere } from '../data/spacecraftPaths';
+import type { Craft } from '../../data/spacecraft';
+import { craftAt, type CraftPaths, type CraftWhere } from '../../data/spacecraftPaths';
 import { approximatePath, gcatJd, type Geocentric } from './approximatePaths';
-import type { Vec3 } from './transfer';
+import type { Vec3 } from '../../astro/transfer';
 
 export interface CraftNow {
   readonly id: string;
