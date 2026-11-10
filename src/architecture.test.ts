@@ -122,3 +122,37 @@ describe('the shape of src', () => {
     );
   });
 });
+
+/** The line limits set in eslint.boundaries.js, which lint enforces (#383). */
+function lineLimits(): Record<string, number> {
+  const config = readFileSync(join(SRC, '..', 'eslint.boundaries.js'), 'utf8');
+  const block = /export const LINE_LIMITS = \{([\s\S]*?)\};/.exec(config)?.[1] ?? '';
+  return Object.fromEntries(
+    [...block.matchAll(/'([^']+)':\s*(\d+)/g)].map((match) => [match[1] ?? '', Number(match[2])]),
+  );
+}
+
+/** Lines as ESLint's max-lines counts them. */
+function lineCount(text: string): number {
+  const lines = text.split('\n').length;
+  return text.endsWith('\n') ? lines - 1 : lines;
+}
+
+/** How far below its limit a file may shrink before the limit must come down with it. */
+const SLACK = 50;
+
+describe('the largest files only shrink', () => {
+  const limits = Object.entries(lineLimits());
+
+  it('has limits to check', () => {
+    expect(limits.length).toBeGreaterThan(0);
+  });
+
+  it.each(limits)('the limit on %s follows it down', (file, limit) => {
+    const lines = lineCount(readFileSync(join(SRC, file), 'utf8'));
+    expect(
+      limit - lines,
+      `src/${file} is ${String(lines)} lines: lower its LINE_LIMITS entry in eslint.boundaries.js to ${String(lines)}`,
+    ).toBeLessThanOrEqual(SLACK);
+  });
+});
