@@ -22,6 +22,7 @@ function craft(id: string, phases: CraftPhase[], extra: Partial<Craft> = {}): Cr
     id,
     name: `Craft ${id}`,
     cospar: '2000-001A',
+    nssdc: '2000-001A',
     launchTag: '2000-001',
     launch: '2000-01-01',
     owner: 'X',

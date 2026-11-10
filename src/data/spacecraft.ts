@@ -26,6 +26,8 @@ const CraftSchema = v.strictObject({
   id: v.pipe(v.string(), v.regex(/^D\d+$/)),
   name: v.pipe(v.string(), v.minLength(1)),
   cospar: v.string(),
+  /** NSSDCA's identifier for its page on the craft, or its carrier's; null where it has none. */
+  nssdc: v.nullable(v.string()),
   launchTag: v.string(),
   launch: When,
   owner: v.string(),
