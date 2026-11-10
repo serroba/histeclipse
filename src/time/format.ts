@@ -1,6 +1,6 @@
 /** Human-readable dates and durations for the interface. */
 
-import type { Moment } from '../state/viewState';
+import type { Moment } from './moment';
 import { elementAt } from '../util/arrays';
 import { formatYear } from './year';
 

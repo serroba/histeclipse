@@ -1,7 +1,7 @@
 /** Reading years people type, and moving a moment to another year. */
 
-import type { Moment } from '../state/viewState';
-import { defaultCalendarFor } from '../state/viewState';
+import type { Moment } from './moment';
+import { defaultCalendarFor } from './moment';
 import { calendarDateOf, daysInMonth } from './julianDay';
 import { toAstronomicalYear, type AstronomicalYear, type Era } from './year';
 

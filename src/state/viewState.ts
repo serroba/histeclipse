@@ -3,6 +3,14 @@
  * See `url.ts` for the query-string format.
  */
 
+import type { GeoPoint } from '../core/geo';
+import { DEEP_SCALES, EARTH_AGE_MA, roundMa, type DeepScale } from '../deepTime/scale';
+import { ECLIPSE_KINDS, type EclipseKind, type Selection } from '../eclipses/kind';
+import { defaultCalendarFor, type Moment } from '../time/moment';
+
+// Defined below state, where the domain needs them; re-exported for the layers above (#378).
+export type { DeepScale, EclipseKind, GeoPoint, Moment, Selection };
+export { DEEP_SCALES, defaultCalendarFor, EARTH_AGE_MA, ECLIPSE_KINDS, roundMa };
 import { MOONS } from '../astro/moonOrbits';
 import type { SkyCulture } from '../data/skyCultures';
 import { type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
@@ -20,14 +28,7 @@ import {
 import type { WhyView } from '../sources/registry';
 import type { SunLayer } from '../data/sunImages';
 import type { YearCalendar } from '../time/calendars';
-import {
-  calendarDateOf,
-  julianDay,
-  julianDayNumber,
-  type Calendar,
-  type CalendarDate,
-  type JulianDay,
-} from '../time/julianDay';
+import { calendarDateOf, julianDay, julianDayNumber, type JulianDay } from '../time/julianDay';
 import { astronomicalYear } from '../time/year';
 
 export const MODES = ['globe', 'sky'] as const;
@@ -35,12 +36,6 @@ export type Mode = (typeof MODES)[number];
 
 /** Whose borders of past states the empires layer shows. */
 export const BORDER_SOURCES = ['cliopatria', 'ohm', 'both'] as const;
-/**
- * Deep time's span: the 540 million years the elevation maps cover, the ice ages of the last
- * 2.6 million, or all of Earth's 4.6 billion.
- */
-export const DEEP_SCALES = ['all', 'ice', 'eons'] as const;
-export type DeepScale = (typeof DEEP_SCALES)[number];
 
 /** How far the time bar reaches: the Holocene's years, or one of deep time's scales. */
 export type Span = 'years' | DeepScale;
@@ -138,24 +133,6 @@ export type Body = (typeof BODIES)[number];
 export const FIGURES = ['famous', 'all', 'none'] as const;
 export type Figures = (typeof FIGURES)[number];
 
-export const ECLIPSE_KINDS = ['lunar', 'solar'] as const;
-export type EclipseKind = (typeof ECLIPSE_KINDS)[number];
-
-export interface GeoPoint {
-  /** Degrees, −90 to 90. */
-  readonly latitude: number;
-  /** Degrees, −180 (exclusive) to 180. */
-  readonly longitude: number;
-}
-
-/** A calendar day plus a time of day, in Universal Time, to the minute. */
-export interface Moment {
-  /** `day` is a whole number here; the time of day lives in `minuteOfDay`. */
-  readonly date: CalendarDate;
-  /** 0 to 1439. */
-  readonly minuteOfDay: number;
-}
-
 /**
  * The orbiting camera, relative to the body in focus: the point on its surface under the camera
  * (on the Moon in selenographic coordinates; on the Sun in J2000 right ascension and
@@ -174,12 +151,6 @@ export interface SkyLook {
   readonly altitude: number;
   /** Field of view on the narrower side of the screen, in degrees. */
   readonly fov: number;
-}
-
-export interface Selection {
-  readonly kind: EclipseKind;
-  /** Day of greatest eclipse, as a whole calendar day. */
-  readonly date: CalendarDate;
 }
 
 export interface ViewState {
@@ -294,9 +265,6 @@ export const DEFAULT_CAMERA: GlobeCamera = {
   distance: 4.5,
 };
 
-/** How far back deep time reaches, millions of years: the oldest elevation map. */
-/** Deep time reaches back to the oldest solids of the Solar System (Connelly et al. 2012). */
-export const EARTH_AGE_MA = 4568;
 export const MA_RANGE = { min: 0, max: EARTH_AGE_MA } as const;
 
 /** The ice-age scale: the Quaternary, 2.58 million years, rounded up to whole hundred thousands. */
@@ -304,22 +272,10 @@ export const ICE_AGES_MA = 2.6;
 /** Where the ice-age scale opens from further back: the last glacial maximum. */
 export const LAST_GLACIAL_MAXIMUM_MA = 0.021;
 
-/** Deep-time moments are kept to a thousand years, fine enough for the ice ages. */
-export function roundMa(ma: number): number {
-  return Math.round(ma * 1000) / 1000;
-}
-
 // Down to 1°: the Sun's or the Moon's disc then fills half the view.
 export const SKY_FOV_RANGE = { min: 1, max: 120 } as const;
 /** Facing south, a third of the way up: where the ecliptic runs, seen from the north. */
 export const DEFAULT_LOOK: SkyLook = { azimuth: 180, altitude: 30, fov: 90 };
-
-/** The calendar historians use for a date: Julian before 1582-10-15, Gregorian from then on. */
-export function defaultCalendarFor(year: number, month: number, day: number): Calendar {
-  const isBeforeReform =
-    year < 1582 || (year === 1582 && (month < 10 || (month === 10 && day < 15)));
-  return isBeforeReform ? 'julian' : 'gregorian';
-}
 
 /** The moment `date` falls in, to the minute, in the Gregorian calendar. */
 export function momentFromDate(date: Date): Moment {

@@ -9,7 +9,7 @@
  */
 
 import type { BesselianElements } from '../data/solarCatalog';
-import type { GeoPoint } from '../state/viewState';
+import type { GeoPoint } from '../core/geo';
 import { julianDayNumber, type JulianDay } from '../time/julianDay';
 import { elementAt } from '../util/arrays';
 

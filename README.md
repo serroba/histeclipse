@@ -23,6 +23,19 @@ pnpm check        # everything CI runs: format, lint, typecheck, tests + coverag
 | `pnpm typecheck`    | `tsc -b` with `strict` plus every additional strictness flag               |
 | `pnpm format:check` | Prettier                                                                   |
 
+### How `src` is layered
+
+Folders sit in tiers, and imports only go down (lint enforces it; see `eslint.boundaries.js`):
+
+1. `core`, `util`: shared vocabulary and helpers.
+2. `astro`, `time`, `eclipses`, `deepTime`, `data`: the domain.
+3. `state`, `sources`: what the reader is looking at, and where each thing shown comes from.
+4. `globe`, `sky`, `story`, `tablets`: drawing it.
+5. `ui`, `telemetry`: the page around it.
+6. `app.ts`, `main.ts`: the wiring.
+
+The few imports that still go up are listed there as exceptions, to be removed, not added to. The wider plan is in #384.
+
 ## Deployment
 
 Each merge to `main` builds the site with its commit SHA stamped into a `<meta name="histeclipse-version">` tag and deploys it to GitHub Pages, served at **https://histeclipse.limits.world/** through Cloudflare (which sets the caching and security headers; the old `serroba.github.io/histeclipse/` address redirects there). The Playwright scenarios tagged `@live` then run against that address, but only after the public URL is serving that exact commit. The whole suite runs against it daily and can be started by hand (_Actions → Live smoke test_).

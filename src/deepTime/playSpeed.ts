@@ -3,7 +3,7 @@
  * suit it, from a slow look to a quick sweep.
  */
 
-import type { DeepScale } from '../state/viewState';
+import type { DeepScale } from './scale';
 
 /** Millions of years a second each span can play at, slowest first. */
 export const DEEP_SPEEDS: Readonly<Record<DeepScale, readonly number[]>> = {

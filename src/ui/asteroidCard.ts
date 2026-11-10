@@ -4,7 +4,7 @@
  */
 
 import type { AsteroidOrbit } from '../astro/asteroids';
-import type { MarkerCardContent } from '../ui/markerCard';
+import type { MarkerCardContent } from './markerCard';
 
 const KM_PER_AU = 149_597_870.7;
 const DAYS_PER_YEAR = 365.25;

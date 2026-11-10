@@ -15,7 +15,7 @@
 
 import type { LunarEclipse } from '../data/lunarCatalog';
 import type { SolarEclipse } from '../data/solarCatalog';
-import type { GeoPoint } from '../state/viewState';
+import type { GeoPoint } from '../core/geo';
 import { elementAt } from '../util/arrays';
 import { lunarSemiDurations, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './lunarPhases';
 import {

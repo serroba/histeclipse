@@ -1,7 +1,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
-import { EARTH_AGE_MA } from '../state/viewState';
+import { EARTH_AGE_MA } from './scale';
 import { anchorMa, MILESTONES, milestonesNear, nextMilestone, STANDING_MA } from './milestones';
 
 describe('MILESTONES', () => {

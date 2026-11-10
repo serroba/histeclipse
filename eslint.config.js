@@ -4,6 +4,7 @@ import prettier from 'eslint-config-prettier';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import { boundaries } from './eslint.boundaries.js';
 
 export default defineConfig(
   globalIgnores(['dist', 'coverage', 'data-pipeline', 'test-results', 'playwright-report']),
@@ -36,5 +37,6 @@ export default defineConfig(
     files: ['eslint.config.js', 'vite.config.ts', 'playwright.config.ts', 'e2e/**/*.ts'],
     languageOptions: { globals: globals.node },
   },
+  ...boundaries,
   prettier,
 );

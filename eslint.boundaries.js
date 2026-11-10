@@ -1,0 +1,87 @@
+// @ts-check
+/**
+ * One import direction for `src` (#378): a folder may import from its own tier or the tiers
+ * below it, never above. Parts low in the stack can then change and be tested without the app
+ * around them, and the app's wiring cannot leak down into the maths and the data.
+ */
+
+/** Lowest first. */
+export const TIERS = [
+  // Shared vocabulary and helpers; imports nothing from the rest of `src`.
+  ['core', 'util'],
+  // The domain: astronomy, calendars, eclipses, deep time, the data files and their parsing.
+  ['astro', 'time', 'eclipses', 'deepTime', 'data'],
+  // What the reader is looking at, and where each thing shown comes from.
+  ['state', 'sources'],
+  // Drawing it.
+  ['globe', 'sky', 'story', 'tablets'],
+  // The page around it, and what is reported about it.
+  ['ui', 'telemetry'],
+  // The wiring: `src/app.ts`, `src/main.ts`.
+  ['app', 'main'],
+];
+
+/**
+ * Imports against the direction that exist today, each to be removed rather than added to:
+ * file (from `src/`) → the folders above it that it still reaches.
+ */
+export const EXCEPTIONS = {
+  // Source ids are keys of the sources registry; they move below it with the feature contract (#380).
+  'data/radiocarbonEvents.ts': ['sources'],
+  'deepTime/polarWander.ts': ['sources'],
+  'deepTime/polarWander.test.ts': ['sources'],
+  // Tests checking the maths against the renderer's own helpers.
+  'astro/planets.test.ts': ['sky'],
+  'astro/precession.test.ts': ['globe'],
+};
+
+const ROOT_FILES = new Set(TIERS[TIERS.length - 1]);
+
+/**
+ * @param {readonly string[]} names
+ * @returns {import('eslint').Linter.RuleEntry}
+ */
+function rule(names) {
+  if (names.length === 0) return 'off';
+  const folders = names.filter((name) => !ROOT_FILES.has(name));
+  const files = names.filter((name) => ROOT_FILES.has(name));
+  const up = '\\.\\./';
+  const patterns = [];
+  if (folders.length > 0) {
+    patterns.push({
+      regex: `^${up}(${folders.join('|')})(/|$)`,
+      message: 'Imports go down the tiers in eslint.boundaries.js, not up (#378).',
+    });
+  }
+  if (files.length > 0) {
+    patterns.push({
+      regex: `^${up}(${files.join('|')})$`,
+      message: 'Only the entry point imports the app wiring (#378).',
+    });
+  }
+  return ['error', { patterns }];
+}
+
+/** @param {number} tier */
+const above = (tier) => TIERS.slice(tier + 1).flat();
+
+/** @type {import('eslint').Linter.Config[]} */
+export const boundaries = [
+  ...TIERS.flatMap((names, tier) =>
+    names
+      .filter((name) => !ROOT_FILES.has(name))
+      .map((name) => ({
+        files: [`src/${name}/**/*.ts`],
+        rules: { 'no-restricted-imports': rule(above(tier)) },
+      })),
+  ),
+  ...Object.entries(EXCEPTIONS).map(([file, allowed]) => {
+    const tier = TIERS.findIndex((names) => names.includes(file.split('/')[0] ?? ''));
+    return {
+      files: [`src/${file}`],
+      rules: {
+        'no-restricted-imports': rule(above(tier).filter((name) => !allowed.includes(name))),
+      },
+    };
+  }),
+];

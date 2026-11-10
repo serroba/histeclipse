@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { eclipseMoment, isSolar } from '../eclipses/describe';
 import { solarOutlook } from '../eclipses/solar';
 import { moonVisibility } from '../eclipses/visibility';
-import { defaultCalendarFor } from '../state/viewState';
+import { defaultCalendarFor } from '../time/moment';
 import { DeltaT } from '../time/deltaT';
 import { elementAt } from '../util/arrays';
 import { calendarDateOf, julianDay } from '../time/julianDay';
