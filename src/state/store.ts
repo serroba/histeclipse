@@ -25,3 +25,13 @@ export function createStore<T>(initial: T): Store<T> {
     },
   };
 }
+
+/**
+ * Whether any of the values a subscriber reads has changed (#381), compared by `Object.is`: a
+ * listener can then say what it depends on, as a feature's `watches` does.
+ */
+export function changed(before: readonly unknown[], after: readonly unknown[]): boolean {
+  return (
+    before.length !== after.length || after.some((value, index) => !Object.is(value, before[index]))
+  );
+}

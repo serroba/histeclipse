@@ -40,6 +40,11 @@ function fakeContext(planetsLoaded: boolean) {
 }
 
 describe('the asteroid belt as a feature', () => {
+  it('is shown again when the layers change, and not for other changes', () => {
+    expect(asteroidsFeature.watches(on)).toEqual([on.layers]);
+    expect(asteroidsFeature.watches({ ...on, mode: 'sky' })).toEqual([on.layers]);
+  });
+
   it('draws nothing while its layer is off, and offers its icon in the globe view', () => {
     const { context, drawn, rail } = fakeContext(true);
     asteroidsFeature.mount(context).show(off, J2000);

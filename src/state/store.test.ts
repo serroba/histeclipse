@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createStore } from './store';
+import { changed, createStore } from './store';
 
 describe('createStore', () => {
   it('notifies listeners with the new and previous values', () => {
@@ -37,5 +37,15 @@ describe('createStore', () => {
     store.set(1);
     store.set(2);
     expect(seen).toEqual(['b', 'a', 'a']);
+  });
+});
+
+describe('changed', () => {
+  it('compares each value by Object.is, and the count of them', () => {
+    const layers = new Set(['a']);
+    expect(changed([layers, 1], [layers, 1])).toBe(false);
+    expect(changed([layers, 1], [new Set(['a']), 1])).toBe(true);
+    expect(changed([Number.NaN], [Number.NaN])).toBe(false);
+    expect(changed([1], [1, 2])).toBe(true);
   });
 });

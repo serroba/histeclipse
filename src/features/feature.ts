@@ -9,6 +9,7 @@
  * state and URL by feature (#381) and the CSS by component (#382).
  */
 
+import type { MoonEphemeris } from '../astro/moon';
 import type { PlanetEphemeris } from '../astro/planets';
 import type { Fetch } from '../data/fetchJson';
 import type { Globe } from '../globe/scene';
@@ -30,6 +31,8 @@ export interface FeatureContext {
   /** The planets' theory, once loaded; `loadPlanets` asks for it. */
   planets(): PlanetEphemeris | null;
   loadPlanets(): void;
+  /** The Moon's ephemeris, once loaded (it loads with the app). */
+  moon(): MoonEphemeris | null;
   /** Show the moment again: data the feature waited for has arrived. */
   refresh(): void;
 }
@@ -44,6 +47,11 @@ export interface FeatureInstance {
 
 export interface Feature {
   readonly id: Layer;
+  /**
+   * What the feature shows depends on, besides the moment (#381): when any of these changes, it
+   * is shown again. Each moment shown shows every feature anyway.
+   */
+  watches(state: ViewState): readonly unknown[];
   /** The kind its markers' picks start with, such as `asteroid` in `asteroid:1`. */
   readonly picks?: string;
   mount(context: FeatureContext): FeatureInstance;

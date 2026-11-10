@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Craft, CraftPhase } from '../data/spacecraft';
-import type { CraftPaths } from '../data/spacecraftPaths';
-import { elementAt } from '../util/arrays';
+import type { Craft, CraftPhase } from '../../data/spacecraft';
+import type { CraftPaths } from '../../data/spacecraftPaths';
+import { elementAt } from '../../util/arrays';
 import { gcatJd, type Geocentric } from './approximatePaths';
 import { craftNow, craftWheres, fromEarth, inFlight } from './craftNow';
 

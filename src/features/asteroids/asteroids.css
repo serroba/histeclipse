@@ -1,0 +1,4 @@
+/* The belt's asteroids' names (#372): a dusty white, apart from the craft's blue. */
+.asteroid-name {
+  color: rgb(232 222 204 / 0.85);
+}

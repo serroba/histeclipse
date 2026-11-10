@@ -9,10 +9,13 @@ import type { Feature } from '../feature';
 import { asteroidBelt } from './beltLayer';
 import { asteroidCard } from './card';
 import { asteroidPosition, loadAsteroids, type Asteroids } from './orbits';
+import './asteroids.css';
 
 export const asteroidsFeature: Feature = {
   id: 'asteroids',
   picks: 'asteroid',
+  // On or off with its layer.
+  watches: (state) => [state.layers],
   mount(context) {
     const belt = context.globe.addLayer(asteroidBelt);
     let asteroids: Asteroids | null = null;

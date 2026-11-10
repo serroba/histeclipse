@@ -31,11 +31,13 @@ Folders sit in tiers, and imports only go down (lint enforces it; see `eslint.bo
 2. `astro`, `time`, `eclipses`, `deepTime`, `data`: the domain.
 3. `state`, `sources`: what the reader is looking at, and where each thing shown comes from.
 4. `globe`, `sky`, `story`, `tablets`: drawing it.
-5. `ui`, `telemetry`: the page around it.
+5. `ui`, `telemetry`, `text`: the page around it, and the texts to search.
 6. `features`: one folder per feature, on one contract (`features/feature.ts`).
 7. `app.ts`, `main.ts`: the wiring.
 
 The few imports that still go up are listed there as exceptions, to be removed, not added to. `src/architecture.test.ts` checks two more things that may only shrink: the imports between folders that close a cycle, and the methods on the globe's interface (draw new things with `globe.addLayer`). The wider plan is in #384.
+
+Styles live beside the code they style: a component imports its own `.css` file (as `globe/layerHost.ts` imports `nameLabels.css`), and `src/style.css` keeps the page-wide rules and the styles not yet moved (#382).
 
 ## Deployment
 
