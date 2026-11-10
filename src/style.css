@@ -1288,7 +1288,7 @@ body {
 
   /* Room for a chip beside the buttons. */
   .eclipse-list {
-    min-width: 160px;
+    min-width: 120px;
   }
 }
 
