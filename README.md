@@ -31,7 +31,7 @@ Folders sit in tiers, and imports only go down (lint enforces it; see `eslint.bo
 2. `astro`, `time`, `eclipses`, `deepTime`, `data`: the domain.
 3. `state`, `sources`: what the reader is looking at, and where each thing shown comes from.
 4. `globe`, `sky`, `story`, `tablets`: drawing it.
-5. `ui`, `telemetry`: the page around it.
+5. `ui`, `telemetry`, `text`: the page around it, and the texts to search.
 6. `features`: one folder per feature, on one contract (`features/feature.ts`).
 7. `app.ts`, `main.ts`: the wiring.
 

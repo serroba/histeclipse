@@ -29,7 +29,7 @@ export default defineConfig({
         'src/globe/arrivalGrid.ts',
         'src/globe/planetMeshes.ts',
         'src/globe/moonMeshes.ts',
-        'src/globe/craftLayer.ts',
+        'src/features/spacecraft/craftLayer.ts',
         'src/features/asteroids/beltLayer.ts',
         'src/globe/layerHost.ts',
         'src/globe/volcanoLayer.ts',
