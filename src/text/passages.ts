@@ -195,7 +195,7 @@ export function landingPassages(craft: readonly Craft[]): Passage[] {
       {
         id: `landing:${one.id.toLowerCase()}`,
         kind: 'landing',
-        title: card.title,
+        title: card.title === one.name ? card.title : `${card.title}: ${one.name}`,
         text: card.facts
           .filter(([fact]) => fact !== 'Path')
           .map(([fact, value]) => `${fact}: ${value}.`)

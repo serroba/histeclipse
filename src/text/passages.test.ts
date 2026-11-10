@@ -65,7 +65,7 @@ describe('passages anchored to places and times', () => {
     const eagle = passages.find(
       (passage) => passage.kind === 'landing' && passage.text.includes('Craft: Eagle'),
     );
-    expect(eagle?.title).toBe('Apollo 11');
+    expect(eagle?.title).toBe('Apollo 11: Eagle');
     const anchor = eagle?.anchors[0];
     expect(anchor?.body).toBe('moon');
     expect(anchor?.at?.[0]).toBeCloseTo(0.69, 1);
