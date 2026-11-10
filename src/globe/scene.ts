@@ -1971,10 +1971,19 @@ export function createGlobe(
     if (!bodyReady(focus)) {
       // Hold the usual view of Earth until the body arrives.
       applyPose(focusPose('earth', DEFAULT_CAMERA));
+      container.dataset['framed'] = 'earth';
       return;
     }
     applyPose(focusPose(focus, state));
+    container.dataset['framed'] = focus;
     orbitFocus();
+  }
+
+  /** Once the body a link centres on has arrived, go straight there, as the link describes. */
+  function settleFocus(): void {
+    if (!pendingFocus || !bodyReady(focus)) return;
+    pendingFocus = false;
+    if (viewpoint === 'free') placeCamera(focusCamera);
   }
 
   let insets = { top: 0, bottom: 0 };
@@ -2118,7 +2127,10 @@ export function createGlobe(
       if (progress === 1) {
         viewFlight = null;
         // Orbit controls report the landing, which puts the camera in the link.
-        if (viewpoint === 'free') orbitFocus();
+        if (viewpoint === 'free') {
+          container.dataset['framed'] = focus;
+          orbitFocus();
+        }
       }
     } else if (flight !== null) {
       const progress = Math.min(1, (now - flight.start) / FLIGHT_MS);
@@ -2632,11 +2644,7 @@ export function createGlobe(
         applyPose(focusPose(focus, relative));
         controls.target.copy(bodyFrame(focus).position);
       }
-      if (pendingFocus && bodyReady(focus)) {
-        // A link that centres on the Moon: go straight there, as the link describes.
-        pendingFocus = false;
-        if (viewpoint === 'free') placeCamera(focusCamera);
-      }
+      settleFocus();
       if (pendingViewpoint !== null && moon.visible) {
         startViewFlight(pendingViewpoint);
         pendingViewpoint = null;
@@ -3259,6 +3267,8 @@ export function createGlobe(
     },
     setMoonOrbits(orbits) {
       moonSystems.setOrbits(orbits);
+      // A link to a moon waits for its orbit; the bodies may not be placed again, time at rest.
+      settleFocus();
       moonNameLayer.hidden = orbits === null;
       if (orbits !== null && moonLabels.every(({ width }) => width === 0)) {
         // Measured once, unseen: read every size, then hide them all, one layout for the lot.

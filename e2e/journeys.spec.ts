@@ -841,6 +841,28 @@ test('close up, the IAU’s names for the largest features turn with each rocky 
   expect(problems).toEqual([]);
 });
 
+test('a link to a moon frames the moon, even when its orbits arrive after the planets (#366)', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  await test.step('Given the moons’ orbits slow to arrive', async () => {
+    await page.route('**/data/moon-orbits.json', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+      await route.continue();
+    });
+  });
+  await test.step('When a link to Titan opens, time at rest', async () => {
+    await page.goto('./?t=2025-01-10T12:00&focus=titan&cam=90,0,3');
+    await expect(globe).toHaveAttribute('data-focus', 'titan', { timeout: 30_000 });
+  });
+  await test.step('Then, once the orbits are in, the camera is at Titan, not Earth', async () => {
+    await expect(globe).toHaveAttribute('data-framed', 'titan', { timeout: 30_000 });
+  });
+  expect(problems).toEqual([]);
+});
+
 test('close up on Titan, the Light switch shows its ground by radar, and its haze as it looks', async ({
   page,
 }) => {
