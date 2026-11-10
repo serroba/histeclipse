@@ -14,12 +14,15 @@ import {
   fanLayout,
   origins,
   parseLineages,
-  trackAt,
+  sitesAt,
 } from './lineages';
 
-/** Dinosauria > Theropoda > { Tyrannosaurus (83.6–66, drifting), Coelophysis (227–193) }. */
+/**
+ * Dinosauria > Theropoda > { Tyrannosaurus (83.6–66: found near 75 Ma in Asia, near 65 Ma at two
+ * sites in North America), Coelophysis (227–193) }.
+ */
 const FILE = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   credit: 'PBDB',
   source: 'https://paleobiodb.org',
   accessed: '2026-11-09',
@@ -34,7 +37,12 @@ const FILE = {
   first: [227.3, 227.3, 227.3, 83.6],
   last: [66, 66, 192.9, 66],
   species: [0, 0, 2, 2],
-  tracks: [[], [], [195, 24, -18, 1, 200, 18, -36, 2], [65, 52, -79, 80, 75, 50, 170, 4]],
+  tracks: [
+    [],
+    [],
+    [195, 24, -18, 1, 200, 18, -36, 2],
+    [65, 52, -79, 80, 65, 40, -105, 3, 75, 50, 170, 4],
+  ],
 };
 
 describe('parseLineages', () => {
@@ -43,8 +51,8 @@ describe('parseLineages', () => {
     const [root, theropods, coelophysis] = lineages.nodes;
     expect(root?.children).toEqual([1]);
     expect(theropods?.children).toEqual([2, 3]);
-    // Each point at the middle of its step, oldest first, within the genus's span.
-    expect(coelophysis?.track.map((point) => point.ma)).toEqual([202.5, 197.5]);
+    // Each site at its step's middle (a map's age), oldest first.
+    expect(coelophysis?.track.map((point) => point.ma)).toEqual([200, 195]);
     expect(coelophysis?.rank).toBe('genus');
   });
 
@@ -78,13 +86,18 @@ describe('places in time', () => {
   const rex = lineages.nodes[3];
   if (rex === undefined) throw new Error('fixture');
 
-  it('follows a track between steps the short way round the antimeridian', () => {
-    // 77.5 Ma at 170°E, 67.5 Ma at 79°W: half way is across the antimeridian, not over Africa.
-    const half = trackAt(rex.track, 72.5);
-    expect(half.latitude).toBeCloseTo(51);
-    expect(Math.abs(half.longitude)).toBeGreaterThan(90);
-    expect(trackAt(rex.track, 83)).toEqual({ latitude: 50, longitude: 170 });
-    expect(trackAt(rex.track, 66)).toEqual({ latitude: 52, longitude: -79 });
+  it('shows a genus where it was found in the step, never part way between steps', () => {
+    // 72.5 Ma is in the step around 70 Ma, with no find: where it was last found, in Asia, not
+    // half way across the Pacific to where it is found next.
+    const between = sitesAt(rex.track, 72, 5);
+    expect(between.found).toBe(false);
+    expect(between.sites).toEqual([{ ma: 75, latitude: 50, longitude: 170, finds: 4 }]);
+    // Found at two sites near 65 Ma: both, the larger first, not their middle.
+    const both = sitesAt(rex.track, 66, 5);
+    expect(both.found).toBe(true);
+    expect(both.sites.map((site) => site.longitude)).toEqual([-79, -105]);
+    // Before its first find, where it was first found.
+    expect(sitesAt(rex.track, 83, 5).sites[0]?.ma).toBe(75);
   });
 
   it('starts a group where and when its oldest member starts', () => {

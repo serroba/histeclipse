@@ -9,9 +9,12 @@ its finds, joined to its family, order and so on up to the group.
 For each genus with a placed find, this keeps:
 
 - its first and last appearance (Ma), as PBDB computes them from all its finds (0 if living);
-- its track: the middle of its finds' places in each 5-million-year step (a find is counted at
+- its sites in each 5-million-year step, the step centred on a map's age (a find is counted at
   the middle of its age range, and one dated only to a span wider than 15 million years is left
-  out, as for the fossil counts);
+  out, as for the fossil counts). Finds within 500 km of a site's first find are one site, at
+  their middle; finds further apart stay apart. A genus found on two continents is shown on
+  both, not at a middle in the sea between them, and nothing is drawn between steps: a genus
+  found in Asia then in North America was found there, not seen crossing;
 - how many valid species PBDB lists in it.
 
 Names PBDB flags as for traces (footprints, burrows) or forms (eggs) are left out: they name
@@ -80,6 +83,10 @@ RANKS: tuple[str, ...] = (
 )
 #: A genus last found this recently (Ma, the Holocene) is living.
 LIVING_MA = 0.0117
+#: Finds within this distance (km) of a site's first find are one site.
+SITE_KM = 500.0
+#: The Earth's mean radius (km).
+EARTH_KM = 6371.0
 #: Below this length, the places' summed directions cancel: they have no middle.
 NO_MIDDLE = 1e-9
 #: Ranks below a genus, through which a find is matched to its genus.
@@ -170,7 +177,10 @@ type Point = tuple[int, float, float, int]
 
 
 def tracks(finds: Iterable[Find], taxa: dict[int, Taxon]) -> dict[int, list[Point]]:
-    """Each genus's finds by step: (step's start Ma, middle latitude, longitude, how many)."""
+    """Each genus's sites by step: (step's middle Ma, latitude, longitude, how many finds).
+
+    A step is centred on a map's age, so a step's finds are those of the map shown with it.
+    """
     placed: dict[int, dict[int, list[tuple[float, float]]]] = defaultdict(lambda: defaultdict(list))
     for find in finds:
         if find.max_ma - find.min_ma > WIDEST_SPAN_MA:
@@ -178,12 +188,42 @@ def tracks(finds: Iterable[Find], taxa: dict[int, Taxon]) -> dict[int, list[Poin
         genus = genus_of(find.number, taxa)
         if genus is None:
             continue
-        step = math.floor((find.max_ma + find.min_ma) / 2 / STEP_MA) * STEP_MA
+        step = round((find.max_ma + find.min_ma) / 2 / STEP_MA) * STEP_MA
         placed[genus][step].append((find.paleolat, find.paleolng))
     return {
-        genus: [(step, *middle_of(places), len(places)) for step, places in sorted(steps.items())]
+        genus: [
+            (step, *middle_of(site), len(site))
+            for step, places in sorted(steps.items())
+            for site in sites_of(places)
+        ]
         for genus, steps in placed.items()
     }
+
+
+def distance_km(a: tuple[float, float], b: tuple[float, float]) -> float:
+    """Measure the great-circle distance between two places (latitude, longitude), in km."""
+    phi1, phi2 = math.radians(a[0]), math.radians(b[0])
+    half_phi = (phi2 - phi1) / 2
+    half_lam = math.radians(b[1] - a[1]) / 2
+    h = math.sin(half_phi) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(half_lam) ** 2
+    return 2 * EARTH_KM * math.asin(min(1.0, math.sqrt(h)))
+
+
+def sites_of(places: list[tuple[float, float]]) -> list[list[tuple[float, float]]]:
+    """Group places into sites: each place joins the first site whose first place is near.
+
+    Places are taken in order (south to north, then west to east) so the grouping does not
+    depend on the order PBDB lists them in; sites come most finds first.
+    """
+    sites: list[list[tuple[float, float]]] = []
+    for place in sorted(places):
+        for site in sites:
+            if distance_km(site[0], place) <= SITE_KM:
+                site.append(place)
+                break
+        else:
+            sites.append([place])
+    return sorted(sites, key=lambda site: (-len(site), site[0]))
 
 
 def middle_of(places: list[tuple[float, float]]) -> tuple[float, float]:
@@ -293,7 +333,7 @@ def tree_file(
         return RANKS.index(rank) if rank in RANKS else RANKS.index("clade")
 
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "credit": CREDIT,
         "source": SOURCE,
         "accessed": accessed,
@@ -310,7 +350,8 @@ def tree_file(
         "first": [round(first[number], 2) for number in order],
         "last": [round(last[number], 2) for number in order],
         "species": [species.get(number, 0) for number in order],
-        # Each genus's track as [step Ma, latitude, longitude, finds, …]; empty for a group.
+        # Each genus's sites as [step's middle Ma, latitude, longitude, finds, …], several to a
+        # step where its finds lay far apart; empty for a group.
         "tracks": [
             [value for point in genera.get(number, []) for value in point] for number in order
         ],
