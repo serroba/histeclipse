@@ -25,8 +25,8 @@ export type MoonName = (typeof MOONS)[MoonPlanet][number];
 
 const Angle = v.pipe(v.number(), v.minValue(0), v.maxValue(360));
 
-const OrbitSchema = v.strictObject({
-  planet: v.picklist(['mars', 'jupiter', 'saturn']),
+/** A mean orbit's elements, as the pipeline writes them, for moons and asteroids alike. */
+export const MEAN_ORBIT_ENTRIES = {
   axisKm: v.pipe(v.number(), v.minValue(1)),
   eccentricity: v.pipe(v.number(), v.minValue(0), v.maxValue(0.5)),
   inclination: v.pipe(v.number(), v.minValue(0), v.maxValue(90)),
@@ -39,6 +39,11 @@ const OrbitSchema = v.strictObject({
   node: v.tuple([Angle, v.number()]),
   /** The Laplace plane's pole: right ascension and declination, ICRF. */
   pole: v.tuple([Angle, v.pipe(v.number(), v.minValue(-90), v.maxValue(90))]),
+};
+
+const OrbitSchema = v.strictObject({
+  planet: v.picklist(['mars', 'jupiter', 'saturn']),
+  ...MEAN_ORBIT_ENTRIES,
 });
 
 const MOON_NAMES = Object.values(MOONS).flat();
@@ -54,6 +59,8 @@ const OrbitsSchema = v.strictObject({
 });
 
 export type MoonOrbit = v.InferOutput<typeof OrbitSchema>;
+/** A mean orbit about whatever body it goes round: a moon's, or an asteroid's about the Sun. */
+export type MeanOrbit = Omit<MoonOrbit, 'planet'>;
 export type MoonOrbits = Readonly<Record<MoonName, MoonOrbit>>;
 
 export async function loadMoonOrbits(url: string, fetchJson: Fetch): Promise<MoonOrbits> {
@@ -68,7 +75,7 @@ const RADIANS = Math.PI / 180;
  * Where a moon is at `jdTT`: km from its planet's centre, in ICRF axes. Its mean orbit's angles
  * are carried to the moment, and Kepler's equation solved for where along the ellipse it is.
  */
-export function moonPosition(orbit: MoonOrbit, jdTT: number): readonly [number, number, number] {
+export function moonPosition(orbit: MeanOrbit, jdTT: number): readonly [number, number, number] {
   const t = jdTT - J2000;
   const [l0, n, half] = orbit.longitude;
   const swing = orbit.swings.reduce(
