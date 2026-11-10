@@ -1,34 +1,33 @@
 /**
- * Life through time (#358): a fossil group's genera as lines rising through time over the map
- * of each age. The floor is the playhead: the world at that moment (PALEOMAP's elevation map),
- * the genera then living as dots on it where their finds lay, and below it everything that had
- * happened by then: each genus's line from its first appearance, drifting with its plate, and
- * the branches joining it to its family and order. Play grows the tree; the slider scrubs it.
- * Picking a genus or a group lights its line back to the group and dims the rest.
+ * Life through time (#358): a fossil group's genera as a radial tree of time, after the
+ * fan-shaped trees of life (Hug et al. 2016). The group starts at the centre; time runs out to
+ * the rim, the geological periods as rings. Each genus is a spoke from its first fossil to its
+ * last, branches join it to its family and order, and each large group is a fan of its own
+ * colour, named at the rim. A playhead ring sweeps outward: inside it, what had happened by
+ * then; on it, the genera living then; and beside the tree, the map of that moment with those
+ * genera where their finds lay. Picking a genus or a group lights its line back to the centre.
  *
- * phoria2 draws it, loaded only when the sheet first opens. DOM and WebGL glue, covered by the
- * Playwright suite; the placing in time and space is in `data/lineages.ts`.
+ * Drawn on 2D canvases. DOM glue, covered by the Playwright suite; the layout and the placing in
+ * time and space are in `data/lineages.ts`.
  */
-
-import type * as Phoria2 from 'phoria2';
 
 import {
   aliveAt,
   ancestry,
   colourGroups,
+  fanLayout,
   isGenus,
   isWithin,
   LINEAGE_GROUPS,
   origins,
-  strokes,
-  strokeUntil,
   trackAt,
+  type Fan,
   type LineageGroup,
   type Lineages,
   type Origin,
   type Place,
-  type Stroke,
 } from '../data/lineages';
+import { PERIODS } from '../deepTime/periods';
 import type { LineagesView } from '../state/viewState';
 import { elementAt, valueAt } from '../util/arrays';
 import { errorMessage } from '../util/errors';
@@ -40,11 +39,6 @@ export interface LineagesSheet {
   show(view: LineagesView | null): void;
 }
 
-type Phoria = typeof Phoria2;
-type Xyz = readonly [number, number, number];
-
-/** The box: longitude across, time up, latitude in depth. */
-const BOX: Xyz = [12, 7, 6];
 /** The elevation maps' step and reach (Ma), as `public/data/paleodem/` holds them. */
 const MAP_STEP_MA = 5;
 const MAP_REACH_MA = 540;
@@ -69,19 +63,39 @@ const GROUP_NAMES: Readonly<Record<LineageGroup, string>> = {
 };
 /** Seconds to play a group from its first line to its last. */
 const PLAY_SECONDS = 24;
+/** The centre's radius, so the first branches have room (a share of the rim's). */
+const CORE = 0.05;
+/** The rim's radius as a share of half the canvas, leaving room for the names round it. */
+const REACH = 0.78;
+/** How near (CSS pixels) a pointer must come to a line to pick it. */
+const NEAR = 7;
 
 interface Loaded {
   readonly lineages: Lineages;
-  readonly strokes: readonly Stroke[];
-  /** Where and when each line starts. */
   readonly starts: readonly Origin[];
   readonly colour: readonly number[];
   readonly heads: readonly number[];
   readonly genera: readonly number[];
+  readonly fan: Fan;
+  /** The genera's angles round the circle, in order, for finding the one under the pointer. */
+  readonly roundAngles: readonly number[];
   /** The oldest and youngest moments the group's lines reach (Ma). */
   readonly oldest: number;
   readonly youngest: number;
   readonly byPbdb: ReadonlyMap<number, number>;
+  /** The tree's lines and fans in unit coordinates, one path per colour group (-1 first). */
+  readonly branches: readonly Path2D[];
+  readonly lives: readonly Path2D[];
+  readonly fans: readonly Path2D[];
+  /** The middle of each colour group's own genera round the circle, where its name goes. */
+  readonly middles: readonly number[];
+}
+
+/** Where the pointer is over a canvas, and the genus under it, for the tooltip. */
+interface Hover {
+  readonly x: number;
+  readonly y: number;
+  readonly index: number;
 }
 
 export function createLineagesSheet(
@@ -138,21 +152,36 @@ export function createLineagesSheet(
   });
   const moment = element('span', { class: 'lineages-moment', 'aria-live': 'off' });
   const clock = element('div', { class: 'lineages-clock' }, play, slider, moment);
-  const status = element('p', { class: 'stage-status', role: 'status' }, 'Loading the lines…');
+  const status = element('p', { class: 'stage-status', role: 'status' }, 'Loading the tree…');
   const legend = element('div', { class: 'stage-legend stage-key' });
   const canvas = element('canvas', {
-    class: 'stage-canvas',
+    class: 'lineages-fan',
     'data-testid': 'lineages-canvas',
     'aria-label':
-      'Genera through time: time rises, the floor is the world at the slider’s moment. Drag to turn, scroll to zoom',
+      'The tree through time: the group starts at the centre and time runs outward, the ring is the slider’s moment. Drag to move, scroll or pinch to zoom, double-click to fit',
   });
-  const view3d = element('div', { class: 'stage-view' });
-  const frame = element('div', { class: 'stage-frame' }, view3d, legend);
+  const mapCanvas = element('canvas', {
+    class: 'lineages-map',
+    'data-testid': 'lineages-map',
+    'aria-label':
+      'The world at the slider’s moment, with the genera then living where their finds lay',
+  });
+  const mapCaption = element('p', { class: 'lineages-map-caption' });
+  const tip = element('div', { class: 'lineages-tip', role: 'tooltip', hidden: '' });
+  const fanFrame = element('div', { class: 'lineages-fan-frame' }, canvas);
+  const side = element(
+    'div',
+    { class: 'lineages-side' },
+    element('div', { class: 'lineages-map-frame' }, mapCanvas),
+    mapCaption,
+    legend,
+  );
+  const stage = element('div', { class: 'lineages-stage' }, fanFrame, side, tip);
   const focus = element('div', { class: 'stage-focus', 'data-testid': 'lineages-focus' });
   const whole = element('button', { type: 'button', class: 'why-all' }, 'The whole group');
   const dialog = element(
     'dialog',
-    { class: 'famous-dialog stage-sheet', 'aria-labelledby': 'lineages-title' },
+    { class: 'famous-dialog stage-sheet lineages-sheet', 'aria-labelledby': 'lineages-title' },
     element(
       'header',
       { class: 'famous-header' },
@@ -169,17 +198,17 @@ export function createLineagesSheet(
         element(
           'p',
           { class: 'stage-how' },
-          'Time rises; the floor is the world at the slider’s moment. Each line is a genus, from its first fossil to its last, drifting with its plate; branches join it to its family and order. Dots are the genera living then. Play to watch the group grow.',
+          'The group starts at the centre; time runs outward, ring by geological period. Each spoke is a genus, from its first fossil to its last; branches join it to its family and order, and each colour is a branch of the tree. The bright ring is the moment: the dots on it are the genera then living, and the map shows where. Play to watch the tree grow.',
         ),
       ),
-      frame,
+      stage,
       clock,
       status,
       focus,
       element(
         'p',
         { class: 'stage-note' },
-        'From the Paleobiology Database’s classification and finds. A genus stands where its finds lay, every 5 million years; between finds its place is drawn part way. A family or order starts where and when its oldest member does: an estimate from the fossils found, not a moment anyone saw. Footprints and eggs are left out.',
+        'From the Paleobiology Database’s classification and finds. A family or order branches when its oldest member first appears: an estimate from the fossils found, not a moment anyone saw. On the map a genus stands where its finds lay, every 5 million years, part way between. Footprints and eggs are left out.',
       ),
       element('div', { class: 'why-actions' }, whole),
     ),
@@ -194,18 +223,31 @@ export function createLineagesSheet(
     if (event.key === 'Escape' && dialog.open) onRequest(null);
   });
 
-  let phoria: Phoria | null = null;
-  let starting: Promise<Phoria> | null = null;
   const groups = new Map<LineageGroup, Promise<Loaded>>();
   let wanted: LineagesView | null = null;
   let shown = '';
-  let scene: ReturnType<typeof build> | null = null;
   let current: Loaded | null = null;
+  /** The picked node, -1 for none; and its lines, lit. */
+  let picked = -1;
+  let pickedPath: Path2D | null = null;
   /** The playhead (Ma), and whether it is moving towards the present. */
   let at = 0;
   let playing = false;
+  let lastFrame = 0;
+  let frameRequest = 0;
   /** The name picked when last drawn, to move the playhead only when the pick changes. */
   let lastPick: number | undefined;
+  /** The view of the fan: zoom about the centre, and how far it is moved (CSS pixels). */
+  let zoom = 1;
+  let panX = 0;
+  let panY = 0;
+  let hover: Hover | null = null;
+  let mapHover: Hover | null = null;
+  let living: number[] = [];
+  /** The maps of each moment, coloured, as they load; and the step shown. */
+  const maps = new Map<number, Promise<HTMLCanvasElement>>();
+  let mapImage: HTMLCanvasElement | null = null;
+  let mapStep = -1;
 
   slider.addEventListener('input', () => {
     playing = false;
@@ -218,286 +260,499 @@ export function createLineagesSheet(
     setMoment(at);
   });
 
+  function tick(time: number): void {
+    frameRequest = 0;
+    if (!playing || current === null || !dialog.open) {
+      lastFrame = 0;
+      return;
+    }
+    const seconds = lastFrame === 0 ? 0 : Math.min(0.1, (time - lastFrame) / 1000);
+    lastFrame = time;
+    const next = at - ((current.oldest - current.youngest) / PLAY_SECONDS) * seconds;
+    if (next <= current.youngest) playing = false;
+    setMoment(next);
+  }
+
   function setMoment(ma: number): void {
     if (current === null) return;
     at = Math.min(current.oldest, Math.max(current.youngest, ma));
     slider.value = String(-at);
     play.textContent = playing ? '❚❚' : '▶';
     play.setAttribute('aria-label', playing ? 'Pause' : 'Play');
-    scene?.moment(at);
-    const living = scene?.living() ?? 0;
+    const data = current;
+    living = data.genera.filter((index) => aliveAt(elementAt(data.lineages.nodes, index), at));
     const when = at < 0.5 ? 'Today' : `${String(Math.round(at))} million years ago`;
-    const genera = living === 1 ? '1 genus' : `${living.toLocaleString('en')} genera`;
+    const genera = living.length === 1 ? '1 genus' : `${living.length.toLocaleString('en')} genera`;
     moment.textContent = `${when} · ${genera} living`;
+    canvas.dataset['ma'] = at.toFixed(1);
+    mapCaption.textContent = `The world ${when === 'Today' ? 'today' : when}, and where the ${genera} then living lay`;
+    loadMap(at);
+    draw();
+    if (playing && frameRequest === 0) frameRequest = requestAnimationFrame(tick);
+    if (!playing) lastFrame = 0;
   }
 
   function prepare(group: LineageGroup): Promise<Loaded> {
     let loading = groups.get(group);
     if (loading === undefined) {
-      loading = load(group).then((lineages) => {
-        const starts = origins(lineages);
-        const { heads, colour } = colourGroups(lineages, PALETTE.length);
-        const genera = lineages.nodes.filter(isGenus).map((node) => node.index);
-        let youngest = Infinity;
-        for (const index of genera)
-          youngest = Math.min(youngest, elementAt(lineages.nodes, index).last);
-        return {
-          lineages,
-          starts,
-          strokes: strokes(lineages, starts),
-          colour,
-          heads,
-          genera,
-          oldest: elementAt(lineages.nodes, 0).first,
-          youngest: Number.isFinite(youngest) ? youngest : 0,
-          byPbdb: new Map(lineages.nodes.map((node) => [node.pbdb, node.index] as const)),
-        };
-      });
+      loading = load(group).then(arrange);
       loading.catch(() => groups.delete(group));
       groups.set(group, loading);
     }
     return loading;
   }
 
-  /** The view, made once; each group's lines are drawn into it when shown. */
-  function build(p: Phoria) {
-    const view = new p.View({
-      canvas,
-      orbit: { minDistance: 3, maxDistance: 40 },
-      framing: 'both',
-      tooltip: (hit) => tooltipFor(hit.datum),
-    });
-    view3d.append(canvas);
-    const [width, height, depth] = BOX;
-    // The floor: the world at the playhead, drawn into a canvas from the elevation map.
-    const paper = document.createElement('canvas');
-    paper.width = 720;
-    paper.height = 360;
-    const texture = new p.Texture({ image: paper, wrap: 'clamp' });
-    const floor = new p.Mesh({
-      geometry: p.plane({ width, depth }),
-      material: { map: texture, unlit: true, doubleSided: true },
-      pickable: false,
-    });
-    // The box's edges, so time reads as height.
-    const edges: number[] = [];
-    for (const [x, z] of [
-      [-width / 2, -depth / 2],
-      [width / 2, -depth / 2],
-      [-width / 2, depth / 2],
-      [width / 2, depth / 2],
-    ] as const) {
-      edges.push(x, 0, z, x, height, z);
-    }
-    // And the bottom and top rims, so the view frames the whole box.
-    for (const y of [0, height]) {
-      edges.push(-width / 2, y, -depth / 2, width / 2, y, -depth / 2);
-      edges.push(width / 2, y, -depth / 2, width / 2, y, depth / 2);
-      edges.push(width / 2, y, depth / 2, -width / 2, y, depth / 2);
-      edges.push(-width / 2, y, depth / 2, -width / 2, y, -depth / 2);
-    }
-    const frameLines = lines(p, edges, null, '#2a3a5c', 1, 0.8);
-    const genusLines = lines(p, [], [], '#ffffff', 1.4, 0.9);
-    const branchLines = lines(p, [], [], '#ffffff', 1, 0.16);
-    const pickedLines = lines(p, [], null, '#ffffff', 3.5, 1);
-    const ticks = new p.Group({ name: 'ticks' });
-    const pin = new p.Label({
-      text: '',
-      position: [0, 0, 0],
-      className: 'tree-label-focus',
-      place: 'above',
-      priority: 10,
-      overlap: 'show',
-      visible: false,
-    });
-    view.scene.add(floor, frameLines, genusLines, branchLines, pickedLines, ticks, pin);
-    let dots: InstanceType<Phoria['InstancedMesh']> | null = null;
-    let data: Loaded | null = null;
-    let picked = -1;
-    let builtAt = Number.NaN;
-    let floorStep = -1;
-    let alive = 0;
-    const maps = new Map<number, Promise<HTMLCanvasElement>>();
+  // ---- The fan ----
 
-    const yOf = (ma: number): number =>
-      data === null || data.oldest === data.youngest
-        ? 0
-        : (height * (data.oldest - ma)) / (data.oldest - data.youngest);
-    const xyz = (place: Place, ma: number): Xyz => [
-      (place.longitude / 180) * (width / 2),
-      yOf(ma),
-      (-place.latitude / 90) * (depth / 2),
-    ];
-
-    function mapFor(step: number): Promise<HTMLCanvasElement> {
-      let made = maps.get(step);
-      if (made === undefined) {
-        made = paint(floorUrl(step), paper.width, paper.height);
-        made.catch(() => maps.delete(step));
-        maps.set(step, made);
-      }
-      return made;
-    }
-
-    function drawFloor(ma: number): void {
-      const step = Math.min(MAP_REACH_MA, Math.max(0, Math.round(ma / MAP_STEP_MA) * MAP_STEP_MA));
-      if (step === floorStep) return;
-      floorStep = step;
-      mapFor(step).then(
-        (painted) => {
-          if (floorStep !== step) return;
-          paper.getContext('2d')?.drawImage(painted, 0, 0);
-          texture.needsUpdate();
-        },
-        () => {
-          // The floor stays as it was; the lines still read without it.
-        },
-      );
-    }
-
-    /** Redraw what had happened by `ma`: lines below the floor, the living as dots on it. */
-    function draw(ma: number): void {
-      if (data === null) return;
-      floor.position.set(0, yOf(ma), 0);
-      drawFloor(ma);
-      if (Math.abs(ma - builtAt) < 0.05) return;
-      builtAt = ma;
-      const own: number[] = [];
-      const ownColours: number[] = [];
-      const branch: number[] = [];
-      const branchColours: number[] = [];
-      const lit: number[] = [];
-      for (const stroke of data.strokes) {
-        const cut = strokeUntil(stroke.vertices, ma);
-        if (cut.length < 2) continue;
-        const within =
-          picked < 0 || isWithin(data.lineages, stroke.node, picked) || isAncestor(stroke.node);
-        const rgb = rgbOf(valueAt(data.colour, stroke.node), picked >= 0 && !within);
-        const target = stroke.branch ? branch : own;
-        const colours = stroke.branch ? branchColours : ownColours;
-        for (let index = 1; index < cut.length; index++) {
-          const a = xyz(elementAt(cut, index - 1), elementAt(cut, index - 1).ma);
-          const b = xyz(elementAt(cut, index), elementAt(cut, index).ma);
-          // Across the antimeridian a line would cross the whole map: leave that piece out.
-          if (Math.abs(a[0] - b[0]) > width / 2) continue;
-          target.push(...a, ...b);
-          colours.push(...rgb, ...rgb);
-          if (picked >= 0 && within) lit.push(...a, ...b);
-        }
-      }
-      genusLines.geometry = new p.Geometry({ positions: own, colors: ownColours });
-      branchLines.geometry = new p.Geometry({ positions: branch, colors: branchColours });
-      pickedLines.geometry = new p.Geometry({ positions: lit });
-      pickedLines.visible = lit.length > 0;
-
-      alive = 0;
-      const shown = data;
-      const living = dots;
-      if (living !== null) {
-        shown.genera.forEach((index, slot) => {
-          const node = elementAt(shown.lineages.nodes, index);
-          if (!aliveAt(node, ma)) {
-            living.setInstance(slot, { position: [0, -1000, 0], scale: 0 });
-            return;
-          }
-          alive += 1;
-          const dimmed = picked >= 0 && !isWithin(shown.lineages, index, picked);
-          living.setInstance(slot, {
-            position: [...xyz(trackAt(node.track, ma), ma)],
-            scale: index === picked ? 0.09 : 0.045,
-            color: dimmed ? '#3a4560' : (PALETTE[valueAt(shown.colour, index)] ?? OTHERS),
-          });
-        });
-      }
-      placePin(ma);
-    }
-
-    function isAncestor(node: number): boolean {
-      return data !== null && picked >= 0 && isWithin(data.lineages, picked, node);
-    }
-
-    function placePin(ma: number): void {
-      if (data === null || picked < 0) {
-        pin.visible = false;
-        return;
-      }
-      const node = elementAt(data.lineages.nodes, picked);
-      const start = elementAt(data.starts, picked);
-      const when = Math.max(Math.min(ma, node.first), node.last);
-      const place = isGenus(node) && ma <= node.first ? trackAt(node.track, when) : start;
-      pin.text = node.name;
-      pin.position.set(...xyz(place, ma <= node.first ? when : start.ma));
-      pin.visible = ma <= start.ma;
-    }
-
-    function setData(next: Loaded): void {
-      data = next;
-      builtAt = Number.NaN;
-      floorStep = -1;
-      if (dots !== null) view.scene.remove(dots);
-      const rows = next.genera.map((index) => {
-        const node = elementAt(next.lineages.nodes, index);
-        return {
-          pbdb: node.pbdb,
-          name: node.name,
-          span: span(node.first, node.last),
-          species: node.species,
-          family: familyOf(next.lineages, index),
-        };
-      });
-      dots = new p.InstancedMesh({
-        geometry: p.sphere({ radius: 1, segments: 10, rings: 6 }),
-        material: { unlit: true },
-        data: rows,
-      });
-      view.scene.add(dots);
-      ticks.remove(...ticks.children);
-      for (const ma of tickMoments(next.oldest, next.youngest)) {
-        ticks.add(
-          new p.Label({
-            text: ma < 0.5 ? 'Today' : `${String(ma)} Ma`,
-            position: [-width / 2, yOf(ma), depth / 2],
-            className: 'lineages-tick',
-            place: 'left',
-            overlap: 'hide',
-          }),
-        );
-      }
-      canvas.dataset['genera'] = String(next.genera.length);
-      canvas.dataset['group'] = next.lineages.id;
-      view.frame(frameLines, { padding: 0.05, direction: [0.35, 0.45, 1] });
-    }
-
-    view.on('click', (hit) => {
-      const pbdb = pbdbOf(hit?.datum);
-      if (pbdb !== undefined && data !== null) onRequest({ group: data.lineages.id, pick: pbdb });
-    });
-    view.start((dt) => {
-      if (!playing || current === null) return;
-      const next = playhead() - ((current.oldest - current.youngest) / PLAY_SECONDS) * dt;
-      if (next <= current.youngest) playing = false;
-      setMoment(next);
-    });
-
+  /** The fan's scale (CSS pixels per unit radius) and centre. */
+  function frameOf(): { scale: number; cx: number; cy: number; width: number; height: number } {
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
     return {
-      view,
-      setData,
-      pick(index: number) {
-        picked = index;
-        builtAt = Number.NaN;
-      },
-      moment(ma: number) {
-        draw(ma);
-        canvas.dataset['ma'] = ma.toFixed(1);
-      },
-      living: () => alive,
+      scale: (Math.min(width, height) / 2) * REACH * zoom,
+      cx: width / 2 + panX,
+      cy: height / 2 + panY,
+      width,
+      height,
     };
   }
 
-  /** The playhead, read inside the view's frame callback. */
-  function playhead(): number {
-    return at;
+  function draw(): void {
+    drawFan();
+    drawMap();
+    placeTip();
   }
+
+  function drawFan(): void {
+    const context = fit(canvas);
+    const data = current;
+    if (context === null || data === null) return;
+    const { scale, cx, cy, width, height } = frameOf();
+    context.fillStyle = '#040812';
+    context.fillRect(0, 0, width, height);
+    const ratio = window.devicePixelRatio || 1;
+    const px = 1 / scale;
+    const now = rOf(data, at);
+    context.setTransform(ratio * scale, 0, 0, ratio * scale, ratio * cx, ratio * cy);
+
+    // The periods as rings, shaded in turn.
+    let shade = false;
+    for (const { outer, inner } of periodRings(data)) {
+      shade = !shade;
+      context.beginPath();
+      context.arc(0, 0, outer, 0, 2 * Math.PI);
+      context.arc(0, 0, inner, 0, 2 * Math.PI, true);
+      context.fillStyle = shade ? 'rgba(120, 150, 210, 0.07)' : 'rgba(120, 150, 210, 0.025)';
+      context.fill();
+      context.beginPath();
+      context.arc(0, 0, outer, 0, 2 * Math.PI);
+      context.lineWidth = px;
+      context.strokeStyle = 'rgba(160, 185, 230, 0.16)';
+      context.stroke();
+    }
+
+    // The future, faint: the shape of what is to come.
+    context.globalAlpha = 0.13;
+    paintTree(context, data, px);
+    context.globalAlpha = 1;
+    // The past, inside the playhead ring.
+    context.save();
+    context.beginPath();
+    context.arc(0, 0, now, 0, 2 * Math.PI);
+    context.clip();
+    if (picked >= 0) context.globalAlpha = 0.4;
+    paintTree(context, data, px);
+    context.globalAlpha = 1;
+    if (pickedPath !== null) {
+      context.lineWidth = 2.4 * px;
+      context.strokeStyle = '#ffffff';
+      context.stroke(pickedPath);
+    }
+    context.restore();
+
+    // The playhead ring, and the genera living then on it.
+    context.beginPath();
+    context.arc(0, 0, now, 0, 2 * Math.PI);
+    context.lineWidth = 1.6 * px;
+    context.strokeStyle = 'rgba(255, 220, 170, 0.75)';
+    context.stroke();
+    const dot = Math.min(3.2, 1.8 * Math.sqrt(zoom)) * px;
+    for (const index of living) {
+      const angle = valueAt(data.fan.angle, index);
+      const dimmed = picked >= 0 && !isWithin(data.lineages, index, picked);
+      context.beginPath();
+      context.arc(now * Math.cos(angle), now * Math.sin(angle), dot, 0, 2 * Math.PI);
+      context.fillStyle = dimmed ? '#3a4560' : colourOf(data, index);
+      context.fill();
+    }
+
+    // Words, in screen pixels: the periods in the opening at the top, the groups round the rim.
+    context.setTransform(ratio, 0, 0, ratio, 0, 0);
+    context.textBaseline = 'middle';
+    context.textAlign = 'center';
+    context.font = '10px system-ui, sans-serif';
+    for (const { name, outer, inner } of periodRings(data)) {
+      const y = ((outer + inner) / 2) * scale;
+      // Not where the moment is named, at the top of its ring.
+      if ((outer - inner) * scale < 11 || Math.abs(y - (now * scale + 9)) < 12) continue;
+      halo(context, name, cx, cy - y, 'rgba(190, 205, 235, 0.75)');
+    }
+    context.font = '600 12px system-ui, sans-serif';
+    data.heads.forEach((head, colour) => {
+      const angle = valueAt(data.middles, colour);
+      const reach = 1.03 * scale;
+      const flip = Math.cos(angle) < 0;
+      context.save();
+      context.translate(cx + reach * Math.cos(angle), cy + reach * Math.sin(angle));
+      context.rotate(flip ? angle + Math.PI : angle);
+      context.textAlign = flip ? 'right' : 'left';
+      const related =
+        picked < 0 ||
+        isWithin(data.lineages, head, picked) ||
+        isWithin(data.lineages, picked, head);
+      context.fillStyle = related ? (PALETTE[colour] ?? OTHERS) : 'rgba(160, 170, 190, 0.5)';
+      context.fillText(elementAt(data.lineages.nodes, head).name, 0, 0);
+      context.restore();
+    });
+    // The moment, at the top of its ring.
+    context.textAlign = 'center';
+    context.font = '600 11px system-ui, sans-serif';
+    halo(
+      context,
+      at < 0.5 ? 'Today' : `${String(Math.round(at))} Ma`,
+      cx,
+      cy - now * scale - 9,
+      '#ffdcaa',
+    );
+    if (picked >= 0) pinName(context, data, scale, cx, cy);
+  }
+
+  /** The picked name, on a white tab where its line is at the playhead (or ends). */
+  function pinName(
+    context: CanvasRenderingContext2D,
+    data: Loaded,
+    scale: number,
+    cx: number,
+    cy: number,
+  ): void {
+    const node = elementAt(data.lineages.nodes, picked);
+    const angle = valueAt(data.fan.angle, picked);
+    const r = rOf(data, Math.max(Math.min(at, node.first), node.last)) * scale;
+    const x = cx + r * Math.cos(angle);
+    const y = cy + r * Math.sin(angle);
+    context.font = '600 12px system-ui, sans-serif';
+    context.textAlign = 'left';
+    const wide = context.measureText(node.name).width;
+    context.fillStyle = '#ffffff';
+    context.beginPath();
+    context.roundRect(x + 8, y - 9, wide + 10, 18, 6);
+    context.arc(x, y, 3.5, 0, 2 * Math.PI);
+    context.fill();
+    context.fillStyle = '#0a1020';
+    context.fillText(node.name, x + 13, y);
+  }
+
+  function paintTree(context: CanvasRenderingContext2D, data: Loaded, px: number): void {
+    data.fans.forEach((path, slot) => {
+      context.fillStyle = withAlpha(slot - 1, 0.2);
+      context.fill(path);
+    });
+    context.lineWidth = 0.7 * px;
+    data.branches.forEach((path, slot) => {
+      context.strokeStyle = withAlpha(slot - 1, 0.55);
+      context.stroke(path);
+    });
+    context.lineWidth = 1.2 * px;
+    data.lives.forEach((path, slot) => {
+      context.strokeStyle = withAlpha(slot - 1, 0.95);
+      context.stroke(path);
+    });
+  }
+
+  /** The picked node's lines: its members' and its line back to the centre. */
+  function litPath(data: Loaded, index: number): Path2D {
+    const path = new Path2D();
+    for (const node of data.lineages.nodes) {
+      if (
+        isWithin(data.lineages, node.index, index) ||
+        isWithin(data.lineages, index, node.index)
+      ) {
+        traceNode(data, node.index, path, path);
+      }
+    }
+    return path;
+  }
+
+  /** The node (genus, or group by its name at the rim) at a point on the fan, if near enough. */
+  function genusAtFan(x: number, y: number): number | undefined {
+    const data = current;
+    if (data === null) return undefined;
+    const { scale, cx, cy } = frameOf();
+    const ux = (x - cx) / scale;
+    const uy = (y - cy) / scale;
+    const r = Math.hypot(ux, uy);
+    let angle = Math.atan2(uy, ux);
+    if (angle < -Math.PI / 2) angle += 2 * Math.PI;
+    const tolerance = NEAR / scale;
+    if (r > 1 + tolerance) {
+      return data.heads.find(
+        (each) =>
+          angle >= valueAt(data.fan.low, each) - 0.01 &&
+          angle <= valueAt(data.fan.high, each) + 0.01,
+      );
+    }
+    const angles = data.roundAngles;
+    let low = 0;
+    let high = angles.length;
+    while (low < high) {
+      const middle = (low + high) >> 1;
+      if (valueAt(angles, middle) < angle) low = middle + 1;
+      else high = middle;
+    }
+    const now = rOf(data, at);
+    let best: number | undefined;
+    let nearest = NEAR;
+    for (let slot = Math.max(0, low - 8); slot < Math.min(angles.length, low + 8); slot++) {
+      const index = valueAt(data.fan.round, slot);
+      const node = elementAt(data.lineages.nodes, index);
+      const inner = rOf(data, node.first) - tolerance;
+      const outer = Math.min(rOf(data, node.last), now) + tolerance;
+      if (r < inner || r > outer) continue;
+      const away = Math.abs(valueAt(angles, slot) - angle) * r * scale;
+      if (away < nearest) {
+        nearest = away;
+        best = index;
+      }
+    }
+    return best;
+  }
+
+  // ---- The map of the moment ----
+
+  function loadMap(ma: number): void {
+    const step = Math.min(MAP_REACH_MA, Math.max(0, Math.round(ma / MAP_STEP_MA) * MAP_STEP_MA));
+    if (step === mapStep) return;
+    mapStep = step;
+    let made = maps.get(step);
+    if (made === undefined) {
+      made = paint(floorUrl(step), 720, 360);
+      made.catch(() => maps.delete(step));
+      maps.set(step, made);
+    }
+    made.then(
+      (painted) => {
+        if (mapStep !== step) return;
+        mapImage = painted;
+        drawMap();
+      },
+      () => {
+        // The map stays as it was; the dots still read without it.
+      },
+    );
+  }
+
+  function mapXy(place: Place): readonly [number, number] {
+    return [
+      ((place.longitude + 180) / 360) * mapCanvas.clientWidth,
+      ((90 - place.latitude) / 180) * mapCanvas.clientHeight,
+    ];
+  }
+
+  function drawMap(): void {
+    const context = fit(mapCanvas);
+    const data = current;
+    if (context === null || data === null) return;
+    const width = mapCanvas.clientWidth;
+    const height = mapCanvas.clientHeight;
+    context.fillStyle = '#0a1428';
+    context.fillRect(0, 0, width, height);
+    if (mapImage !== null) context.drawImage(mapImage, 0, 0, width, height);
+    // The picked genus's whole path, as its plate carried it.
+    const node = picked >= 0 ? elementAt(data.lineages.nodes, picked) : null;
+    if (node !== null && node.track.length > 1) {
+      context.beginPath();
+      let last: readonly [number, number] | null = null;
+      for (const point of node.track) {
+        const xy = mapXy(point);
+        if (last === null || Math.abs(xy[0] - last[0]) > width / 2) context.moveTo(...xy);
+        else context.lineTo(...xy);
+        last = xy;
+      }
+      context.lineWidth = 1.5;
+      context.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      context.stroke();
+    }
+    for (const index of living) {
+      const [x, y] = mapXy(trackAt(elementAt(data.lineages.nodes, index).track, at));
+      const dimmed = picked >= 0 && !isWithin(data.lineages, index, picked);
+      context.beginPath();
+      context.arc(x, y, index === picked ? 4.5 : 2.4, 0, 2 * Math.PI);
+      context.fillStyle = dimmed ? 'rgba(70, 85, 115, 0.8)' : colourOf(data, index);
+      context.fill();
+      if (index === picked) {
+        context.lineWidth = 1.5;
+        context.strokeStyle = '#ffffff';
+        context.stroke();
+      }
+    }
+  }
+
+  function genusAtMap(x: number, y: number): number | undefined {
+    const data = current;
+    if (data === null) return undefined;
+    let best: number | undefined;
+    let nearest = NEAR;
+    for (const index of living) {
+      const [dx, dy] = mapXy(trackAt(elementAt(data.lineages.nodes, index).track, at));
+      const away = Math.hypot(dx - x, dy - y);
+      if (away < nearest) {
+        nearest = away;
+        best = index;
+      }
+    }
+    return best;
+  }
+
+  // ---- Pointing, moving and zooming ----
+
+  function placeTip(): void {
+    const data = current;
+    const over = hover ?? mapHover;
+    if (data === null || over === null) {
+      tip.hidden = true;
+      return;
+    }
+    const node = elementAt(data.lineages.nodes, over.index);
+    const kind = isGenus(node)
+      ? `${familyOf(data.lineages, node.index) || 'Genus'} · ${String(node.species)} species`
+      : `${capital(rankWord(node.rank))} of ${String(generaWithin(data, node.index))} genera`;
+    tip.replaceChildren(
+      element('strong', {}, node.name),
+      element('span', {}, capital(span(node.first, node.last))),
+      element('span', {}, kind),
+    );
+    const box = stage.getBoundingClientRect();
+    const source = (hover === null ? mapCanvas : canvas).getBoundingClientRect();
+    const left = Math.min(box.width - 190, over.x + source.left - box.left + 12);
+    tip.style.left = `${String(Math.max(0, left))}px`;
+    tip.style.top = `${String(over.y + source.top - box.top + 12)}px`;
+    tip.hidden = false;
+  }
+
+  const pointers = new Map<number, { x: number; y: number }>();
+  let dragged = 0;
+  let pinch = 0;
+
+  function zoomAbout(x: number, y: number, factor: number): void {
+    const next = Math.min(40, Math.max(1, zoom * factor));
+    const applied = next / zoom;
+    const middleX = canvas.clientWidth / 2;
+    const middleY = canvas.clientHeight / 2;
+    // Keep the point under the pointer where it is.
+    panX = x - middleX - (x - middleX - panX) * applied;
+    panY = y - middleY - (y - middleY - panY) * applied;
+    zoom = next;
+    if (zoom === 1) {
+      panX = 0;
+      panY = 0;
+    }
+    draw();
+  }
+
+  function pickAt(index: number | undefined): void {
+    if (index !== undefined && current !== null) {
+      onRequest({
+        group: current.lineages.id,
+        pick: elementAt(current.lineages.nodes, index).pbdb,
+      });
+    }
+  }
+
+  canvas.addEventListener('pointerdown', (event) => {
+    canvas.setPointerCapture(event.pointerId);
+    pointers.set(event.pointerId, local(event, canvas));
+    dragged = 0;
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      pinch = a !== undefined && b !== undefined ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+    }
+  });
+  canvas.addEventListener('pointermove', (event) => {
+    const point = local(event, canvas);
+    const before = pointers.get(event.pointerId);
+    if (before === undefined) {
+      const index = genusAtFan(point.x, point.y);
+      hover = index === undefined ? null : { ...point, index };
+      canvas.style.cursor = index === undefined ? (zoom > 1 ? 'grab' : 'default') : 'pointer';
+      placeTip();
+      return;
+    }
+    pointers.set(event.pointerId, point);
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      if (a === undefined || b === undefined) return;
+      const apart = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinch > 0) zoomAbout((a.x + b.x) / 2, (a.y + b.y) / 2, apart / pinch);
+      pinch = apart;
+      dragged += 10;
+      return;
+    }
+    dragged += Math.hypot(point.x - before.x, point.y - before.y);
+    if (zoom > 1) {
+      panX += point.x - before.x;
+      panY += point.y - before.y;
+      hover = null;
+      draw();
+    }
+  });
+  const release = (event: PointerEvent): void => {
+    const was = pointers.get(event.pointerId);
+    pointers.delete(event.pointerId);
+    if (pointers.size < 2) pinch = 0;
+    if (was === undefined || dragged > 4 || event.type === 'pointercancel') return;
+    pickAt(genusAtFan(was.x, was.y));
+  };
+  canvas.addEventListener('pointerup', release);
+  canvas.addEventListener('pointercancel', release);
+  canvas.addEventListener('pointerleave', () => {
+    hover = null;
+    placeTip();
+  });
+  canvas.addEventListener(
+    'wheel',
+    (event) => {
+      event.preventDefault();
+      const point = local(event, canvas);
+      zoomAbout(point.x, point.y, Math.exp(-event.deltaY * 0.0015));
+    },
+    { passive: false },
+  );
+  canvas.addEventListener('dblclick', () => {
+    zoom = 1;
+    panX = 0;
+    panY = 0;
+    draw();
+  });
+  mapCanvas.addEventListener('pointermove', (event) => {
+    const point = local(event, mapCanvas);
+    const index = genusAtMap(point.x, point.y);
+    mapHover = index === undefined ? null : { ...point, index };
+    mapCanvas.style.cursor = index === undefined ? 'default' : 'pointer';
+    placeTip();
+  });
+  mapCanvas.addEventListener('pointerleave', () => {
+    mapHover = null;
+    placeTip();
+  });
+  mapCanvas.addEventListener('click', (event) => {
+    const point = local(event, mapCanvas);
+    pickAt(genusAtMap(point.x, point.y));
+  });
+  new ResizeObserver(() => {
+    if (dialog.open) draw();
+  }).observe(stage);
+
+  // ---- The words under the tree ----
 
   function describe(data: Loaded, index: number | undefined): void {
     if (index === undefined) {
@@ -505,7 +760,7 @@ export function createLineagesSheet(
         element(
           'p',
           { class: 'stage-note' },
-          `${data.lineages.name}: ${data.genera.length.toLocaleString('en')} genera, ${span(data.oldest, data.youngest)}. Pick a dot to follow its genus.`,
+          `${data.lineages.name}: ${data.genera.length.toLocaleString('en')} genera, ${span(data.oldest, data.youngest)}. Pick a spoke, a dot or a name round the rim to follow it.`,
         ),
       );
       return;
@@ -544,7 +799,7 @@ export function createLineagesSheet(
     );
     const kind = isGenus(node)
       ? `Genus, ${String(node.species)} species named`
-      : `${capital(node.rank === 'clade' ? 'group' : node.rank)} of ${String(generaWithin(data, index))} genera here`;
+      : `${capital(rankWord(node.rank))} of ${String(generaWithin(data, index))} genera here`;
     focus.replaceChildren(
       element('h3', {}, node.name),
       element('p', { class: 'stage-note' }, `${kind}. ${capital(span(node.first, node.last))}.`),
@@ -554,16 +809,21 @@ export function createLineagesSheet(
   }
 
   function render(): void {
-    if (wanted === null || phoria === null) return;
+    if (wanted === null) return;
     const view = wanted;
     void prepare(view.group).then(
       (data) => {
-        if (wanted !== view || phoria === null) return;
+        if (wanted !== view) return;
         status.hidden = true;
-        scene ??= build(phoria);
         if (current !== data) {
           current = data;
-          scene.setData(data);
+          zoom = 1;
+          panX = 0;
+          panY = 0;
+          mapStep = -1;
+          mapImage = null;
+          canvas.dataset['genera'] = String(data.genera.length);
+          canvas.dataset['group'] = data.lineages.id;
           slider.min = String(-data.oldest);
           slider.max = String(-data.youngest);
           legend.replaceChildren(
@@ -582,20 +842,21 @@ export function createLineagesSheet(
           at = playing ? data.oldest : data.youngest;
         }
         const index = view.pick === null ? undefined : data.byPbdb.get(view.pick);
-        scene.pick(index ?? -1);
-        if (index !== undefined && index !== lastPick && !playing) {
+        picked = index ?? -1;
+        pickedPath = index === undefined ? null : litPath(data, index);
+        if (index !== undefined && index !== lastPick) {
           // A newly picked name's line shows whole: the playhead at its last appearance.
+          playing = false;
           at = elementAt(data.lineages.nodes, index).last;
         }
         lastPick = index;
         setMoment(at);
         describe(data, index);
-        scene.view.start();
       },
       (error: unknown) => {
         shown = '';
         status.hidden = false;
-        status.textContent = `Could not draw the lines: ${errorMessage(error)}`;
+        status.textContent = `Could not draw the tree: ${errorMessage(error)}`;
       },
     );
   }
@@ -608,7 +869,6 @@ export function createLineagesSheet(
       wanted = null;
       playing = false;
       if (dialog.open) dialog.close();
-      scene?.view.stop();
       return;
     }
     wanted = view;
@@ -616,56 +876,152 @@ export function createLineagesSheet(
       button.setAttribute('aria-pressed', String(group === view.group));
     }
     if (!dialog.open) dialog.show();
-    if (phoria !== null) {
-      render();
-      return;
-    }
-    status.hidden = false;
-    starting ??= import('phoria2');
-    starting.then(
-      (loaded) => {
-        phoria = loaded;
-        render();
-      },
-      (error: unknown) => {
-        starting = null;
-        shown = '';
-        status.textContent = `Could not draw the lines: ${errorMessage(error)}`;
-      },
-    );
+    if (current?.lineages.id !== view.group) status.hidden = false;
+    render();
   }
 
   return { dialog, show };
 }
 
-function lines(
-  p: Phoria,
-  positions: readonly number[],
-  colors: readonly number[] | null,
-  color: string,
-  width: number,
-  opacity: number,
-): InstanceType<Phoria['Lines']> {
-  return new p.Lines({
-    geometry: new p.Geometry(
-      colors === null
-        ? { positions: [...positions] }
-        : { positions: [...positions], colors: [...colors] },
-    ),
-    material: { color, width, unlit: true, opacity, vertexColors: colors !== null },
-    pickable: false,
+/** Lay a group's tree round the circle, and trace its lines and fans once. */
+function arrange(lineages: Lineages): Loaded {
+  const { heads, colour } = colourGroups(lineages, PALETTE.length);
+  const genera = lineages.nodes.filter(isGenus).map((node) => node.index);
+  let youngest = Infinity;
+  for (const index of genera) youngest = Math.min(youngest, elementAt(lineages.nodes, index).last);
+  const fan = fanLayout(lineages, colour);
+  const slots = PALETTE.length + 1;
+  const data: Loaded = {
+    lineages,
+    starts: origins(lineages),
+    colour,
+    heads,
+    genera,
+    fan,
+    roundAngles: fan.round.map((index) => valueAt(fan.angle, index)),
+    oldest: elementAt(lineages.nodes, 0).first,
+    youngest: Number.isFinite(youngest) ? youngest : 0,
+    byPbdb: new Map(lineages.nodes.map((node) => [node.pbdb, node.index] as const)),
+    branches: Array.from({ length: slots }, () => new Path2D()),
+    lives: Array.from({ length: slots }, () => new Path2D()),
+    fans: Array.from({ length: slots }, () => new Path2D()),
+    middles: heads.map((_, at) => {
+      const own = fan.round.filter((genus) => valueAt(colour, genus) === at);
+      const first = own[0];
+      const last = own.at(-1);
+      return first === undefined || last === undefined
+        ? 0
+        : (valueAt(fan.angle, first) + valueAt(fan.angle, last)) / 2;
+    }),
+  };
+  for (const node of lineages.nodes) {
+    const slot = valueAt(colour, node.index) + 1;
+    traceNode(data, node.index, elementAt(data.branches, slot), elementAt(data.lives, slot));
+  }
+  // Each colour group's fan: from where it branches, out along its genera's last fossils.
+  heads.forEach((head, at) => {
+    const path = elementAt(data.fans, at + 1);
+    const from = rOf(data, elementAt(lineages.nodes, head).first);
+    const angle = valueAt(data.middles, at);
+    path.moveTo(from * Math.cos(angle), from * Math.sin(angle));
+    for (const genus of fan.round) {
+      if (valueAt(colour, genus) !== at) continue;
+      const r = rOf(data, elementAt(lineages.nodes, genus).last);
+      const turn = valueAt(fan.angle, genus);
+      path.lineTo(r * Math.cos(turn), r * Math.sin(turn));
+    }
+    path.closePath();
   });
+  return data;
 }
 
-/** A colour group's colour as rgb 0–1, or a dim grey for lines outside the picked one. */
-function rgbOf(colour: number, dimmed: boolean): readonly [number, number, number] {
-  if (dimmed) return [0.2, 0.24, 0.32];
+/** A node's branch from its parent (along the parent's ring, then out) and, for a genus, its life. */
+function traceNode(data: Loaded, index: number, branch: Path2D, life: Path2D): void {
+  const node = elementAt(data.lineages.nodes, index);
+  const angle = valueAt(data.fan.angle, index);
+  const start = rOf(data, node.first);
+  if (node.parent >= 0) {
+    const from = rOf(data, elementAt(data.lineages.nodes, node.parent).first);
+    const turn = valueAt(data.fan.angle, node.parent);
+    branch.moveTo(from * Math.cos(turn), from * Math.sin(turn));
+    if (Math.abs(turn - angle) > 1e-9) branch.arc(0, 0, from, turn, angle, angle < turn);
+    branch.lineTo(start * Math.cos(angle), start * Math.sin(angle));
+  }
+  if (isGenus(node)) {
+    const end = rOf(data, node.last);
+    life.moveTo(start * Math.cos(angle), start * Math.sin(angle));
+    life.lineTo(end * Math.cos(angle), end * Math.sin(angle));
+  }
+}
+
+/** A moment's radius: the group's start at the core, its last fossils (or today) at the rim. */
+function rOf(data: Pick<Loaded, 'oldest' | 'youngest'>, ma: number): number {
+  const spanMa = data.oldest - data.youngest;
+  return spanMa <= 0 ? 1 : CORE + ((1 - CORE) * (data.oldest - ma)) / spanMa;
+}
+
+/** The geological periods the group lived through, as rings (radii) with their names. */
+function periodRings(
+  data: Loaded,
+): readonly { readonly name: string; readonly outer: number; readonly inner: number }[] {
+  const out: { name: string; outer: number; inner: number }[] = [];
+  PERIODS.forEach((period, index) => {
+    const top = index === 0 ? 0 : elementAt(PERIODS, index - 1).base;
+    if (period.base <= data.youngest || top >= data.oldest) return;
+    out.push({
+      name: period.name,
+      outer: rOf(data, Math.max(top, data.youngest)),
+      inner: rOf(data, Math.min(period.base, data.oldest)),
+    });
+  });
+  return out;
+}
+
+function colourOf(data: Loaded, index: number): string {
+  return PALETTE[valueAt(data.colour, index)] ?? OTHERS;
+}
+
+/** Size a canvas's backing store to its box at the screen's pixel ratio; draw in CSS pixels. */
+function fit(target: HTMLCanvasElement): CanvasRenderingContext2D | null {
+  const ratio = window.devicePixelRatio || 1;
+  const width = Math.max(1, Math.round(target.clientWidth * ratio));
+  const height = Math.max(1, Math.round(target.clientHeight * ratio));
+  if (target.width !== width || target.height !== height) {
+    target.width = width;
+    target.height = height;
+  }
+  const context = target.getContext('2d');
+  context?.setTransform(ratio, 0, 0, ratio, 0, 0);
+  return context;
+}
+
+function local(event: MouseEvent, target: HTMLElement): { x: number; y: number } {
+  const box = target.getBoundingClientRect();
+  return { x: event.clientX - box.left, y: event.clientY - box.top };
+}
+
+/** Text with a dark edge, so it reads over the lines. */
+function halo(
+  context: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  colour: string,
+): void {
+  context.lineWidth = 3;
+  context.strokeStyle = 'rgba(4, 8, 18, 0.9)';
+  context.strokeText(text, x, y);
+  context.fillStyle = colour;
+  context.fillText(text, x, y);
+}
+
+/** A colour group's colour (-1: the others) at an opacity. */
+function withAlpha(colour: number, alpha: number): string {
   const hex = PALETTE[colour] ?? OTHERS;
-  return [
-    Number.parseInt(hex.slice(1, 3), 16) / 255,
-    Number.parseInt(hex.slice(3, 5), 16) / 255,
-    Number.parseInt(hex.slice(5, 7), 16) / 255,
-  ];
+  const r = Number.parseInt(hex.slice(1, 3), 16);
+  const g = Number.parseInt(hex.slice(3, 5), 16);
+  const b = Number.parseInt(hex.slice(5, 7), 16);
+  return `rgba(${String(r)}, ${String(g)}, ${String(b)}, ${String(alpha)})`;
 }
 
 /**
@@ -703,15 +1059,6 @@ async function paint(url: string, width: number, height: number): Promise<HTMLCa
   return out;
 }
 
-/** Round moments for the time ticks, five or so across the group's span. */
-function tickMoments(oldest: number, youngest: number): number[] {
-  const spanMa = oldest - youngest;
-  const step = [10, 20, 25, 50, 100].find((each) => spanMa / each <= 6) ?? 100;
-  const out: number[] = [];
-  for (let ma = Math.ceil(youngest / step) * step; ma <= oldest; ma += step) out.push(ma);
-  return out;
-}
-
 function span(first: number, last: number): string {
   const from = `${formatMa(first)} million years ago`;
   return last <= 0 ? `from ${from} to today` : `from ${from} to ${formatMa(last)}`;
@@ -725,6 +1072,10 @@ function capital(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+function rankWord(rank: string): string {
+  return rank === 'clade' ? 'group' : rank;
+}
+
 /** The nearest family above a genus, or its parent's name if none is a family. */
 function familyOf(lineages: Lineages, index: number): string {
   const line = ancestry(lineages, index);
@@ -734,22 +1085,4 @@ function familyOf(lineages: Lineages, index: number): string {
 
 function generaWithin(data: Loaded, index: number): number {
   return data.genera.filter((genus) => isWithin(data.lineages, genus, index)).length;
-}
-
-function tooltipFor(datum: unknown): Phoria2.TooltipContent {
-  if (typeof datum !== 'object' || datum === null || !('name' in datum)) return '';
-  const row = datum as { name: string; span: string; species: number; family: string };
-  return {
-    title: row.name,
-    rows: { Lived: capital(row.span), Family: row.family || '—', Species: String(row.species) },
-  };
-}
-
-function pbdbOf(datum: unknown): number | undefined {
-  return typeof datum === 'object' &&
-    datum !== null &&
-    'pbdb' in datum &&
-    typeof datum.pbdb === 'number'
-    ? datum.pbdb
-    : undefined;
 }

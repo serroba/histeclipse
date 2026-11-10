@@ -1,4 +1,3 @@
-import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import ammonoids from '../../public/data/time-tree/ammonoids.json';
@@ -12,12 +11,10 @@ import {
   colourGroups,
   isWithin,
   LINEAGE_GROUPS,
+  fanLayout,
   origins,
   parseLineages,
-  strokes,
-  strokeUntil,
   trackAt,
-  type Vertex,
 } from './lineages';
 
 /** Dinosauria > Theropoda > { Tyrannosaurus (83.6–66, drifting), Coelophysis (227–193) }. */
@@ -103,44 +100,29 @@ describe('places in time', () => {
     expect(aliveAt(rex, 60)).toBe(false);
     expect(aliveAt(lineages.nodes[1] ?? rex, 70)).toBe(false);
   });
+});
 
-  it('draws each genus through its steps, and a branch to each member from its group', () => {
-    const drawn = strokes(lineages, origins(lineages));
-    const own = drawn.find((stroke) => stroke.node === 3 && !stroke.branch);
-    expect(own?.vertices.map((vertex) => vertex.ma)).toEqual([83.6, 80, 75, 70, 66]);
-    expect(drawn.some((stroke) => stroke.node === 3 && stroke.branch)).toBe(true);
-    // Theropoda starts with Coelophysis: no branch of zero length.
-    expect(drawn.some((stroke) => stroke.node === 2 && stroke.branch)).toBe(false);
+describe('fanLayout', () => {
+  it('sets the genera round the circle, each group between its members', () => {
+    const lineages = parseLineages(FILE);
+    const fan = fanLayout(lineages, [-1, -1, -1, -1], 0.5);
+    expect(fan.round).toEqual([2, 3]);
+    // Two leaves span the circle less its opening, which is centred at the top.
+    expect(fan.angle[2]).toBeCloseTo(-Math.PI / 2 + 0.25);
+    expect(fan.angle[3]).toBeCloseTo((3 * Math.PI) / 2 - 0.25);
+    expect(fan.angle[1]).toBeCloseTo(((fan.angle[2] ?? 0) + (fan.angle[3] ?? 0)) / 2);
+    expect(fan.low[0]).toBe(fan.angle[2]);
+    expect(fan.high[0]).toBe(fan.angle[3]);
   });
 
-  it('cuts a stroke at a moment, keeping only what had happened', () => {
-    const line: Vertex[] = [
-      { ma: 100, latitude: 0, longitude: 0 },
-      { ma: 90, latitude: 10, longitude: 10 },
-      { ma: 80, latitude: 20, longitude: 20 },
-    ];
-    expect(strokeUntil(line, 110)).toEqual([]);
-    expect(strokeUntil(line, 70)).toEqual(line);
-    expect(strokeUntil(line, 85)).toEqual([
-      line[0],
-      line[1],
-      { ma: 85, latitude: 15, longitude: 15 },
-    ]);
-  });
-
-  it('a cut never reaches later than the moment', () => {
-    fc.assert(
-      fc.property(fc.double({ min: 0, max: 120, noNaN: true }), (ma) => {
-        const line: Vertex[] = [
-          { ma: 100, latitude: 0, longitude: 0 },
-          { ma: 50, latitude: 10, longitude: 170 },
-          { ma: 10, latitude: 20, longitude: -170 },
-        ];
-        return strokeUntil(line, ma).every(
-          (vertex) => vertex.ma >= ma - 1e-9 && vertex.longitude >= -180 && vertex.longitude < 180,
-        );
-      }),
-    );
+  it('leaves a gap where the colour changes, and keeps every genus in order', () => {
+    const lineages = parseLineages(dinosaurs);
+    const { colour } = colourGroups(lineages);
+    const fan = fanLayout(lineages, colour);
+    const angles = fan.round.map((genus) => fan.angle[genus] ?? 0);
+    expect(angles.every((angle, at) => at === 0 || angle > (angles[at - 1] ?? 0))).toBe(true);
+    expect(fan.round.length).toBe(lineages.nodes.filter((node) => node.track.length > 0).length);
+    expect((angles.at(-1) ?? 0) - (angles[0] ?? 0)).toBeLessThan(2 * Math.PI);
   });
 });
 

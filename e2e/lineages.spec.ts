@@ -1,8 +1,9 @@
 /**
- * Feature: life through time (#358). A fossil group's genera as lines rising through time over
- * the map of each age, from the Paleobiology Database: the tree grows as the playhead moves, the
- * genera living then are dots on the floor. Opened from Layers, a fossil's card or a link; a
- * genus's line back to its group is lit and listed, with a way to its fossils on the globe.
+ * Feature: life through time (#358). A fossil group's genera as a radial tree of time, from the
+ * Paleobiology Database: the group starts at the centre, time runs outward, and the tree grows as
+ * the playhead ring moves; the genera living then are dots on the ring and on the map of that
+ * moment. Opened from Layers, a fossil's card or a link; a genus's line back to its group is lit
+ * and listed, with a way to its fossils on the globe.
  */
 
 import { collectProblems, expect, globeRendered, openLayers, test } from './support';
@@ -30,7 +31,7 @@ test('Layers opens the dinosaurs through time, which grow as the playhead moves'
   });
   await test.step('When they ask Layers for the genera through time', async () => {
     await openLayers(page);
-    await page.getByRole('button', { name: 'Their genera through time, in 3D' }).click();
+    await page.getByRole('button', { name: 'Their tree through time' }).click();
   });
   await test.step('Then the dinosaurs are drawn, with their groups as a key', async () => {
     await expect(page).toHaveURL(/lineages=dinosaurs/);
@@ -119,8 +120,8 @@ test('a fossil’s card leads to its genus through time', async ({ page }) => {
   });
   let genus = '';
   await test.step('When they ask for the genus found most, through time', async () => {
-    const action = card.getByRole('button', { name: / through time, in 3D$/ });
-    genus = (await action.textContent())?.replace(' through time, in 3D', '') ?? '';
+    const action = card.getByRole('button', { name: / on the tree through time$/ });
+    genus = (await action.textContent())?.replace(' on the tree through time', '') ?? '';
     await action.click();
   });
   await test.step('Then its group opens through time, the genus picked out', async () => {

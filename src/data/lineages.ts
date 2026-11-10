@@ -216,76 +216,69 @@ export function origins(lineages: Lineages): readonly Origin[] {
   return out;
 }
 
-/** A vertex of a drawn line: its moment and place. */
-export interface Vertex extends Place {
-  readonly ma: number;
-}
-
-/** A line to draw: whose it is, and its vertices from oldest to youngest. */
-export interface Stroke {
-  readonly node: number;
-  /** A branch joining a group to a member, rather than a genus's own life. */
-  readonly branch: boolean;
-  readonly vertices: readonly Vertex[];
+/** The radial tree's layout: each node's angle (radians), and the angles its members span. */
+export interface Fan {
+  readonly angle: readonly number[];
+  /** The smallest and largest angle of its members; a leaf's are its own. */
+  readonly low: readonly number[];
+  readonly high: readonly number[];
+  /** The genera in order round the circle. */
+  readonly round: readonly number[];
 }
 
 /**
- * Every line of the tree: each genus from its first appearance to its last, through its place
- * at each step between; and a branch from each group's start to each member's.
+ * Lay the tree out round a circle, its root at the centre: each leaf a slot in the order the
+ * tree lists them, with a gap where the colour changes so each colour group is a fan of its
+ * own, and an opening of `opening` radians at the top where the time scale reads. A group sits
+ * in the middle of its members.
  */
-export function strokes(lineages: Lineages, starts: readonly Origin[]): readonly Stroke[] {
-  const out: Stroke[] = [];
-  for (const node of lineages.nodes) {
-    const start = elementAt(starts, node.index);
-    if (node.parent >= 0) {
-      const from = elementAt(starts, node.parent);
-      if (
-        from.ma !== start.ma ||
-        from.latitude !== start.latitude ||
-        from.longitude !== start.longitude
-      ) {
-        out.push({ node: node.index, branch: true, vertices: [from, start] });
+export function fanLayout(
+  lineages: Lineages,
+  colour: readonly number[],
+  opening = 0.5,
+  gap = 0.012,
+): Fan {
+  const count = lineages.nodes.length;
+  const leaves: number[] = [];
+  // Depth first, children in the order listed (oldest first).
+  const stack = [0];
+  while (stack.length > 0) {
+    const at = stack.pop() ?? 0;
+    const { children } = elementAt(lineages.nodes, at);
+    if (children.length === 0) leaves.push(at);
+    for (let child = children.length - 1; child >= 0; child--) stack.push(valueAt(children, child));
+  }
+  const breaks = leaves.filter(
+    (leaf, at) => at > 0 && valueAt(colour, leaf) !== valueAt(colour, valueAt(leaves, at - 1)),
+  ).length;
+  const room = 2 * Math.PI - opening - breaks * gap;
+  const step = leaves.length > 1 ? room / (leaves.length - 1) : 0;
+  const angle = new Array<number>(count).fill(0);
+  const low = new Array<number>(count).fill(Infinity);
+  const high = new Array<number>(count).fill(-Infinity);
+  let turn = -Math.PI / 2 + opening / 2;
+  leaves.forEach((leaf, at) => {
+    if (at > 0) {
+      turn += step;
+      if (valueAt(colour, leaf) !== valueAt(colour, valueAt(leaves, at - 1))) turn += gap;
+    }
+    angle[leaf] = turn;
+    low[leaf] = turn;
+    high[leaf] = turn;
+  });
+  // Children come after parents: settle groups from the end.
+  for (let index = count - 1; index >= 0; index--) {
+    const node = elementAt(lineages.nodes, index);
+    if (node.children.length > 0) {
+      for (const child of node.children) {
+        low[index] = Math.min(valueAt(low, index), valueAt(low, child));
+        high[index] = Math.max(valueAt(high, index), valueAt(high, child));
       }
+      angle[index] = (valueAt(low, index) + valueAt(high, index)) / 2;
     }
-    if (!isGenus(node)) continue;
-    const vertices: Vertex[] = [start];
-    const step = lineages.stepMa;
-    for (let ma = Math.ceil(node.first / step) * step - step; ma > node.last; ma -= step) {
-      if (ma < node.first) vertices.push({ ma, ...trackAt(node.track, ma) });
-    }
-    if (node.last < node.first) vertices.push({ ma: node.last, ...trackAt(node.track, node.last) });
-    out.push({ node: node.index, branch: false, vertices });
   }
-  return out;
-}
-
-/**
- * The part of a stroke up to `ma`: what had happened by then. Cut where it crosses `ma`; empty
- * if it starts later.
- */
-export function strokeUntil(vertices: readonly Vertex[], ma: number): readonly Vertex[] {
-  const first = vertices[0];
-  if (first === undefined || first.ma < ma) return [];
-  const out: Vertex[] = [first];
-  for (let at = 1; at < vertices.length; at++) {
-    const older = elementAt(vertices, at - 1);
-    const younger = elementAt(vertices, at);
-    if (younger.ma >= ma) {
-      out.push(younger);
-      continue;
-    }
-    const share = (older.ma - ma) / (older.ma - younger.ma);
-    let turn = younger.longitude - older.longitude;
-    if (turn > 180) turn -= 360;
-    if (turn < -180) turn += 360;
-    out.push({
-      ma,
-      latitude: older.latitude + share * (younger.latitude - older.latitude),
-      longitude: wrap(older.longitude + share * turn),
-    });
-    break;
-  }
-  return out;
+  const round = leaves.filter((leaf) => isGenus(elementAt(lineages.nodes, leaf)));
+  return { angle, low, high, round };
 }
 
 /**

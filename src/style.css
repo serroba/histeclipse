@@ -4886,6 +4886,80 @@ button:has(> .icon-label) > .icon {
   background: #f94144;
 }
 
+/* The tree as a fan (#358): wide, the fan beside the map of the moment, stacked on a phone. */
+.famous-dialog.lineages-sheet {
+  width: min(1080px, calc(100% - 32px));
+}
+
+.lineages-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  gap: 12px;
+  align-items: start;
+}
+
+.lineages-fan {
+  display: block;
+  width: 100%;
+  height: min(68vh, 640px);
+  border-radius: 12px;
+  background: #040812;
+  touch-action: none;
+}
+
+.lineages-map-frame {
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+}
+
+.lineages-map {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: #0a1428;
+}
+
+.lineages-map-caption {
+  margin: 6px 0 8px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.lineages-tip {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  gap: 2px;
+  max-width: 220px;
+  padding: 6px 9px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgb(10 16 32 / 0.94);
+  color: var(--ink-muted);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.lineages-tip[hidden] {
+  display: none;
+}
+
+.lineages-tip strong {
+  color: var(--ink);
+}
+
+@media (max-width: 760px) {
+  .lineages-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lineages-fan {
+    height: min(92vw, 60vh);
+  }
+}
+
 /* One view of a 3D sheet: its canvas and the labels drawn over it, shown or hidden as one. */
 .stage-view {
   position: relative;
