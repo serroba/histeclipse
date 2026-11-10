@@ -12,7 +12,7 @@ import { loadFamousEclipses } from '../data/famousEclipses';
 import { loadSpacecraft } from '../data/spacecraft';
 import { WHYS } from '../sources/registry';
 import { LAYER_GROUPS } from '../state/layerCatalog';
-import { MOON_FACTS } from '../ui/moonFacts';
+import { MOON_FACTS } from './moonFacts';
 import {
   eclipsePassages,
   landingPassages,

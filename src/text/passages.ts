@@ -21,6 +21,7 @@ import { MOON_NAMES } from '../globe/moonLook';
 import type { MoonName } from '../astro/moonOrbits';
 import type { LayerChoice } from '../state/layerCatalog';
 import { BODIES, LAST_GLACIAL_MAXIMUM_MA, type Body, type Span } from '../state/viewState';
+import type { MoonFacts } from './moonFacts';
 import type { Why, WhyId } from '../sources/registry';
 import { getJson, type Fetch } from '../data/fetchJson';
 
@@ -118,15 +119,8 @@ export function whyPassages(
 }
 
 /** Each moon's story, anchored to the moon. */
-/** What is known of a moon, as `ui/moonFacts.ts` tells it. */
-interface MoonStory {
-  readonly found: string;
-  readonly about: string;
-  readonly sources: readonly string[];
-}
-
-export function moonPassages(facts: Readonly<Record<MoonName, MoonStory>>): Passage[] {
-  return (Object.entries(facts) as [MoonName, MoonStory][]).map(([moon, fact]) => ({
+export function moonPassages(facts: Readonly<Record<MoonName, MoonFacts>>): Passage[] {
+  return (Object.entries(facts) as [MoonName, MoonFacts][]).map(([moon, fact]) => ({
     id: `moon:${moon}`,
     kind: 'moon',
     title: MOON_NAMES[moon],

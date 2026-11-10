@@ -139,7 +139,7 @@ import { FEATURES } from './features';
 import type { FeatureContext } from './features/feature';
 import { loadSpacecraft, type Spacecraft } from './data/spacecraft';
 import { loadSpacecraftPaths } from './data/spacecraftPaths';
-import { moonAbout, moonLine } from './ui/moonFacts';
+import { moonAbout, moonLine } from './text/moonFacts';
 import { isMoonBody, MOON_MAPS, MOON_NAMES, MOON_VIEWS, moonPlanet } from './globe/moonLook';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
 import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
