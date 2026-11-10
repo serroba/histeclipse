@@ -23,7 +23,7 @@ const Age = v.pipe(v.number(), v.minValue(0), v.maxValue(4600));
 
 const LineagesSchema = v.pipe(
   v.strictObject({
-    schemaVersion: v.literal(1),
+    schemaVersion: v.literal(2),
     credit: v.pipe(v.string(), v.minLength(1)),
     source: v.pipe(v.string(), v.url()),
     accessed: v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}$/)),
@@ -38,7 +38,10 @@ const LineagesSchema = v.pipe(
     first: v.array(Age),
     last: v.array(Age),
     species: v.array(Count),
-    /** Each genus's track as [step Ma, latitude, longitude, finds, …]; empty for a group. */
+    /**
+     * Each genus's sites as [step's middle Ma, latitude, longitude, finds, …], several to a step
+     * where its finds lay far apart; empty for a group.
+     */
     tracks: v.array(v.array(v.number())),
   }),
   v.check((file) => {
@@ -63,8 +66,9 @@ export interface Place {
   readonly longitude: number;
 }
 
+/** A site: where some of a genus's finds lay, in one step. */
 export interface TrackPoint extends Place {
-  /** The middle of the 5-million-year step its finds fall in (Ma). */
+  /** The middle of the 5-million-year step its finds fall in (Ma), a map's age. */
   readonly ma: number;
   readonly finds: number;
 }
@@ -108,13 +112,13 @@ export function parseLineages(raw: unknown): Lineages {
     const track: TrackPoint[] = [];
     for (let at = 0; at + 3 < flat.length; at += 4) {
       track.push({
-        ma: valueAt(flat, at) + file.stepMa / 2,
+        ma: valueAt(flat, at),
         latitude: valueAt(flat, at + 1),
         longitude: valueAt(flat, at + 2),
         finds: valueAt(flat, at + 3),
       });
     }
-    // Oldest first, and never outside the genus's own span.
+    // Oldest step first; within a step, the most finds first (as written).
     const first = valueAt(file.first, index);
     const last = valueAt(file.last, index);
     track.sort((a, b) => b.ma - a.ma);
@@ -128,7 +132,7 @@ export function parseLineages(raw: unknown): Lineages {
       first,
       last,
       species: valueAt(file.species, index),
-      track: track.map((point) => ({ ...point, ma: Math.min(first, Math.max(last, point.ma)) })),
+      track,
     };
   });
   return {
@@ -155,34 +159,28 @@ export function aliveAt(node: Lineage, ma: number): boolean {
   return isGenus(node) && ma <= node.first && ma >= node.last;
 }
 
-/** Wrap a longitude into [-180, 180). */
-function wrap(longitude: number): number {
-  return ((((longitude + 180) % 360) + 360) % 360) - 180;
+export interface Sites {
+  readonly sites: readonly TrackPoint[];
+  /** Whether the sites are of the step at `ma`; if not, they are where it was last found. */
+  readonly found: boolean;
 }
 
 /**
- * Where a genus's finds lay at `ma`: between two steps, part way from one place to the next
- * (the short way round); before its first step or after its last, that step's place.
+ * Where a genus's finds lay at `ma`: its sites in the step at `ma` (the map's), or, with none
+ * then, its sites in the nearest step before (where it was last found), or failing that, its
+ * first. Nothing moves between steps: a genus found in Asia, then in North America, was found
+ * in both, not seen crossing the sea between them.
  */
-export function trackAt(track: readonly TrackPoint[], ma: number): Place {
-  const oldest = elementAt(track, 0);
-  if (ma >= oldest.ma) return placeOf(oldest);
-  for (let at = 1; at < track.length; at++) {
-    const younger = elementAt(track, at);
-    if (ma >= younger.ma) {
-      const older = elementAt(track, at - 1);
-      const span = older.ma - younger.ma;
-      const share = span === 0 ? 0 : (older.ma - ma) / span;
-      let turn = younger.longitude - older.longitude;
-      if (turn > 180) turn -= 360;
-      if (turn < -180) turn += 360;
-      return {
-        latitude: older.latitude + share * (younger.latitude - older.latitude),
-        longitude: wrap(older.longitude + share * turn),
-      };
-    }
+export function sitesAt(track: readonly TrackPoint[], ma: number, stepMa: number): Sites {
+  const step = Math.round(ma / stepMa) * stepMa;
+  let found = false;
+  let before = Infinity;
+  for (const point of track) {
+    if (point.ma === step) found = true;
+    else if (point.ma > step && point.ma < before) before = point.ma;
   }
-  return placeOf(elementAt(track, track.length - 1));
+  const chosen = found ? step : before === Infinity ? (track[0]?.ma ?? step) : before;
+  return { sites: track.filter((point) => point.ma === chosen), found };
 }
 
 function placeOf(point: Place): Place {
@@ -203,7 +201,7 @@ export function origins(lineages: Lineages): readonly Origin[] {
   for (let index = lineages.nodes.length - 1; index >= 0; index--) {
     const node = elementAt(lineages.nodes, index);
     if (isGenus(node)) {
-      out[index] = { ma: node.first, ...trackAt(node.track, node.first) };
+      out[index] = { ma: node.first, ...placeOf(elementAt(node.track, 0)) };
       continue;
     }
     let oldest: Origin | undefined;

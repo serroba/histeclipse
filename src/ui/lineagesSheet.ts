@@ -20,7 +20,7 @@ import {
   isWithin,
   LINEAGE_GROUPS,
   origins,
-  trackAt,
+  sitesAt,
   type Fan,
   type LineageGroup,
   type Lineages,
@@ -208,7 +208,7 @@ export function createLineagesSheet(
       element(
         'p',
         { class: 'stage-note' },
-        'From the Paleobiology Database’s classification and finds. A family or order branches when its oldest member first appears: an estimate from the fossils found, not a moment anyone saw. On the map a genus stands where its finds lay, every 5 million years, part way between. Footprints and eggs are left out.',
+        'From the Paleobiology Database’s classification and finds. A family or order branches when its oldest member first appears: an estimate from the fossils found, not a moment anyone saw. On the map a genus stands where it was found in each 5 million years, at each place apart (finds within 500 km are one), and nothing is drawn between: a genus found in Asia then in North America was found in both, not seen crossing. Footprints and eggs are left out.',
       ),
       element('div', { class: 'why-actions' }, whole),
     ),
@@ -285,7 +285,7 @@ export function createLineagesSheet(
     const genera = living.length === 1 ? '1 genus' : `${living.length.toLocaleString('en')} genera`;
     moment.textContent = `${when} · ${genera} living`;
     canvas.dataset['ma'] = at.toFixed(1);
-    mapCaption.textContent = `The world ${when === 'Today' ? 'today' : when}, and where the ${genera} then living lay`;
+    mapCaption.textContent = `The world ${when === 'Today' ? 'today' : when}, and where the ${genera} then living were found: filled in these 5 million years, a ring where last found`;
     loadMap(at);
     draw();
     if (playing && frameRequest === 0) frameRequest = requestAnimationFrame(tick);
@@ -567,32 +567,43 @@ export function createLineagesSheet(
     context.fillStyle = '#0a1428';
     context.fillRect(0, 0, width, height);
     if (mapImage !== null) context.drawImage(mapImage, 0, 0, width, height);
-    // The picked genus's whole path, as its plate carried it.
+    // Every site the picked genus was found at, faint, each where its plate carried it then.
     const node = picked >= 0 ? elementAt(data.lineages.nodes, picked) : null;
-    if (node !== null && node.track.length > 1) {
-      context.beginPath();
-      let last: readonly [number, number] | null = null;
-      for (const point of node.track) {
-        const xy = mapXy(point);
-        if (last === null || Math.abs(xy[0] - last[0]) > width / 2) context.moveTo(...xy);
-        else context.lineTo(...xy);
-        last = xy;
+    if (node !== null) {
+      context.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      for (const site of node.track) {
+        const [x, y] = mapXy(site);
+        context.beginPath();
+        context.arc(x, y, 1.6, 0, 2 * Math.PI);
+        context.fill();
       }
-      context.lineWidth = 1.5;
-      context.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-      context.stroke();
     }
     for (const index of living) {
-      const [x, y] = mapXy(trackAt(elementAt(data.lineages.nodes, index).track, at));
+      const { sites, found } = sitesAt(
+        elementAt(data.lineages.nodes, index).track,
+        at,
+        data.lineages.stepMa,
+      );
       const dimmed = picked >= 0 && !isWithin(data.lineages, index, picked);
-      context.beginPath();
-      context.arc(x, y, index === picked ? 4.5 : 2.4, 0, 2 * Math.PI);
-      context.fillStyle = dimmed ? 'rgba(70, 85, 115, 0.8)' : colourOf(data, index);
-      context.fill();
-      if (index === picked) {
-        context.lineWidth = 1.5;
-        context.strokeStyle = '#ffffff';
-        context.stroke();
+      const colour = dimmed ? 'rgba(70, 85, 115, 0.8)' : colourOf(data, index);
+      for (const site of sites) {
+        const [x, y] = mapXy(site);
+        context.beginPath();
+        context.arc(x, y, index === picked ? 4.5 : found ? 2.4 : 2, 0, 2 * Math.PI);
+        // Found in this step: filled. Not found then: a ring where it was last found.
+        if (found) {
+          context.fillStyle = colour;
+          context.fill();
+        } else {
+          context.lineWidth = 1;
+          context.strokeStyle = colour;
+          context.stroke();
+        }
+        if (index === picked) {
+          context.lineWidth = 1.5;
+          context.strokeStyle = '#ffffff';
+          context.stroke();
+        }
       }
     }
   }
@@ -603,11 +614,17 @@ export function createLineagesSheet(
     let best: number | undefined;
     let nearest = NEAR;
     for (const index of living) {
-      const [dx, dy] = mapXy(trackAt(elementAt(data.lineages.nodes, index).track, at));
-      const away = Math.hypot(dx - x, dy - y);
-      if (away < nearest) {
-        nearest = away;
-        best = index;
+      for (const site of sitesAt(
+        elementAt(data.lineages.nodes, index).track,
+        at,
+        data.lineages.stepMa,
+      ).sites) {
+        const [dx, dy] = mapXy(site);
+        const away = Math.hypot(dx - x, dy - y);
+        if (away < nearest) {
+          nearest = away;
+          best = index;
+        }
       }
     }
     return best;
