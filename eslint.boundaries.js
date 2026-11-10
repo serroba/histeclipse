@@ -37,14 +37,32 @@ export const EXCEPTIONS = {
   'astro/precession.test.ts': ['globe'],
 };
 
+/** Most lines a file in `src` may have (#383): tests aside, a file this long does too much. */
+export const MAX_LINES = 400;
+
 /**
- * The largest files, which every feature used to edit: each may only shrink (#383). New work goes
- * into a feature (#380) or a globe layer (#379) instead. When a file shrinks, lower its limit;
- * `src/architecture.test.ts` asks for it once a limit is 50 lines above the file.
+ * The files longer than MAX_LINES when it came in: each may only shrink, to MAX_LINES and off this
+ * list. New work goes into a feature (#380) or a globe layer (#379), or a new file, instead.
+ * `src/architecture.test.ts` asks for a limit to come down once it is 50 lines above its file.
+ * Two are mostly content, not code (the sources registry, the deep-time milestones): theirs is to
+ * move into data files.
  */
 export const LINE_LIMITS = {
   'app.ts': 4976,
   'globe/scene.ts': 3484,
+  'sources/registry.ts': 1597,
+  'ui/deepTimeBar.ts': 1453,
+  'sky/skyScene.ts': 1281,
+  'ui/lineagesSheet.ts': 1105,
+  'deepTime/milestones.ts': 1016,
+  'ui/impactPathsSheet.ts': 744,
+  'story/airShower.ts': 719,
+  'story/sunCore.ts': 713,
+  'globe/showerAnimation.ts': 618,
+  'story/leafScene.ts': 520,
+  'state/url.ts': 504,
+  'time/calendars.ts': 481,
+  'ui/whySheet.ts': 435,
 };
 
 const ROOT_FILES = new Set(TIERS[TIERS.length - 1]);
@@ -103,6 +121,11 @@ export const boundaries = [
       },
     };
   }),
+  {
+    files: ['src/**/*.ts'],
+    ignores: ['src/**/*.test.ts'],
+    rules: { 'max-lines': maxLines(MAX_LINES) },
+  },
   ...Object.entries(LINE_LIMITS).map(([file, max]) => ({
     files: [`src/${file}`],
     rules: { 'max-lines': maxLines(max) },
