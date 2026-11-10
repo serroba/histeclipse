@@ -5219,45 +5219,6 @@ button:has(> .icon-label) > .icon {
   display: none;
 }
 
-/* The craft beyond Earth orbit (#350) and the belt's asteroids (#372): each name beside its
-   dot, a tap opening its card. */
-.craft-name,
-.asteroid-name {
-  position: absolute;
-  top: 0;
-  left: 0;
-  padding: 1px 0 1px 8px;
-  border: 0;
-  background: none;
-  color: rgb(214 236 255 / 0.92);
-  font: inherit;
-  font-size: 0.68rem;
-  font-weight: 500;
-  white-space: nowrap;
-  text-shadow:
-    0 0 3px rgb(0 0 0 / 0.9),
-    0 1px 2px rgb(0 0 0 / 0.8);
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-.asteroid-name {
-  color: rgb(232 222 204 / 0.85);
-}
-
-.craft-name:hover,
-.craft-name:focus-visible,
-.asteroid-name:hover,
-.asteroid-name:focus-visible {
-  color: #fff;
-  text-decoration: underline;
-}
-
-.craft-name[hidden],
-.asteroid-name[hidden] {
-  display: none;
-}
-
 /* The year wheel (#376): the button beside the year, and two columns above it, the hundreds and
    the years within them, each scrolled or flicked and snapping to a row. */
 .year-form {

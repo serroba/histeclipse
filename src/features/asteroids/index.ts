@@ -9,6 +9,7 @@ import type { Feature } from '../feature';
 import { asteroidBelt } from './beltLayer';
 import { asteroidCard } from './card';
 import { asteroidPosition, loadAsteroids, type Asteroids } from './orbits';
+import './asteroids.css';
 
 export const asteroidsFeature: Feature = {
   id: 'asteroids',

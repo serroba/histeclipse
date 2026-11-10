@@ -37,6 +37,8 @@ Folders sit in tiers, and imports only go down (lint enforces it; see `eslint.bo
 
 The few imports that still go up are listed there as exceptions, to be removed, not added to. `src/architecture.test.ts` checks two more things that may only shrink: the imports between folders that close a cycle, and the methods on the globe's interface (draw new things with `globe.addLayer`). The wider plan is in #384.
 
+Styles live beside the code they style: a component imports its own `.css` file (as `globe/layerHost.ts` imports `nameLabels.css`), and `src/style.css` keeps the page-wide rules and the styles not yet moved (#382).
+
 ## Deployment
 
 Each merge to `main` builds the site with its commit SHA stamped into a `<meta name="histeclipse-version">` tag and deploys it to GitHub Pages, served at **https://histeclipse.limits.world/** through Cloudflare (which sets the caching and security headers; the old `serroba.github.io/histeclipse/` address redirects there). The Playwright scenarios tagged `@live` then run against that address, but only after the public URL is serving that exact commit. The whole suite runs against it daily and can be started by hand (_Actions → Live smoke test_).
