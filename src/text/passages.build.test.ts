@@ -7,6 +7,7 @@
 import { describe, expect, it } from 'vitest';
 
 import eclipses from '../../public/data/famous-eclipses.json';
+import historical from '../../public/data/historical-texts.json';
 import spacecraft from '../../public/data/spacecraft.json';
 import { loadFamousEclipses } from '../data/famousEclipses';
 import { loadSpacecraft } from '../data/spacecraft';
@@ -16,8 +17,10 @@ import { MOON_FACTS } from './moonFacts';
 import {
   eclipsePassages,
   landingPassages,
+  loadHistoricalTexts,
   loadPassages,
   moonPassages,
+  textPassages,
   whyPassages,
   type Passages,
 } from './passages';
@@ -25,7 +28,7 @@ import {
 const serve = (body: unknown) => () => Promise.resolve(new Response(JSON.stringify(body)));
 
 describe('the passages file', () => {
-  it('Given the whys, the moons, the famous eclipses and the landings, Then the file kept is what they make', async () => {
+  it('Given the whys, the moons, the famous eclipses, the landings and the historical texts, Then the file kept is what they make', async () => {
     const famous = await loadFamousEclipses('famous-eclipses.json', serve(eclipses));
     const record = await loadSpacecraft('spacecraft.json', serve(spacecraft));
     const built: Passages = {
@@ -38,6 +41,10 @@ describe('the passages file', () => {
         ...moonPassages(MOON_FACTS),
         ...eclipsePassages(famous),
         ...landingPassages(record.craft),
+        ...textPassages(
+          await loadHistoricalTexts('historical-texts.json', serve(historical)),
+          famous,
+        ),
       ],
     };
     const text = `${JSON.stringify(built)}\n`;

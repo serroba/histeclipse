@@ -24,6 +24,7 @@ from histeclipse_pipeline.empires import (
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.eruptions import fetch_eruptions
 from histeclipse_pipeline.fossils import fetch_fossils
+from histeclipse_pipeline.historical_texts import fetch_historical_texts
 from histeclipse_pipeline.iceoutlines import fetch_outlines
 from histeclipse_pipeline.icesheets import fetch_icesheets
 from histeclipse_pipeline.ics import fetch_chart
@@ -333,6 +334,12 @@ def asteroids(args: Arguments) -> int:  # pragma: no cover - needs network acces
     return _say("\n".join([*report, f"wrote {len(report)} orbits to {args.out}"]))
 
 
+def historical_texts(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Quote the historical texts that tell of the famous eclipses (public/data)."""
+    count = fetch_historical_texts(args.out, Path(".cache/historical-texts"))
+    return _say(f"quoted {count} historical texts into {args.out}")
+
+
 def passage_vectors(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Embed the passages for search by meaning (public/data), with test vectors for the site.
 
@@ -629,6 +636,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         asteroids,
         "fit the orbits of the main belt's asteroids 100 km across or more to JPL Horizons",
         "output JSON file (public/data/asteroids.json)",
+    ),
+    "historical-texts": (
+        historical_texts,
+        "quote the historical texts that tell of the famous eclipses (Project Gutenberg)",
+        "output JSON file (public/data/historical-texts.json)",
     ),
     "passage-vectors": (
         passage_vectors,

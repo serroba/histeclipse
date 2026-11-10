@@ -25,7 +25,7 @@ import type { MoonFacts } from './moonFacts';
 import type { Why, WhyId } from '../sources/registry';
 import { getJson, type Fetch } from '../data/fetchJson';
 
-export const PASSAGE_KINDS = ['why', 'moon', 'eclipse', 'landing'] as const;
+export const PASSAGE_KINDS = ['why', 'moon', 'eclipse', 'landing', 'text'] as const;
 export type PassageKind = (typeof PASSAGE_KINDS)[number];
 
 const AnchorSchema = v.strictObject({
@@ -136,33 +136,90 @@ function yearOf(date: string): number {
 }
 
 /** The famous eclipses: each record, anchored to its day and, where known, its place. */
+/** Where and when a famous eclipse was, and the view that picks it, seen from its place. */
+function eclipseAnchor(eclipse: FamousEclipse): Anchor {
+  const year = yearOf(eclipse.date);
+  const place = eclipse.place;
+  const shown = `t=${eclipse.date}&sel=${eclipse.kind}:${eclipse.date}&layers=lunar,solar`;
+  const view =
+    place === undefined
+      ? shown
+      : `${shown}&loc=${place.latitude.toFixed(4)},${place.longitude.toFixed(4)}` +
+        `&cam=${place.latitude.toFixed(4)},${place.longitude.toFixed(4)},3.00`;
+  return {
+    body: 'earth',
+    ...(place === undefined ? {} : { at: [place.latitude, place.longitude] as const }),
+    when: [year, year],
+    view,
+  };
+}
+
+/** The famous eclipses: each record, anchored to its day and, where known, its place. */
 export function eclipsePassages(eclipses: readonly FamousEclipse[]): Passage[] {
-  return eclipses.map((eclipse) => {
-    const year = yearOf(eclipse.date);
-    const place = eclipse.place;
-    const shown = `t=${eclipse.date}&sel=${eclipse.kind}:${eclipse.date}&layers=lunar,solar`;
-    const view =
-      place === undefined
-        ? shown
-        : `${shown}&loc=${place.latitude.toFixed(4)},${place.longitude.toFixed(4)}` +
-          `&cam=${place.latitude.toFixed(4)},${place.longitude.toFixed(4)},3.00`;
-    return {
-      id: `eclipse:${eclipse.id}`,
-      kind: 'eclipse',
-      title: eclipse.title,
-      text: [eclipse.summary, eclipse.debateNote].filter((part) => part !== undefined).join(' '),
-      sources: [],
-      cite: eclipse.source,
-      anchors: [
-        {
-          body: 'earth',
-          ...(place === undefined ? {} : { at: [place.latitude, place.longitude] as const }),
-          when: [year, year],
-          view,
-        },
-      ],
-    };
-  });
+  return eclipses.map((eclipse) => ({
+    id: `eclipse:${eclipse.id}`,
+    kind: 'eclipse',
+    title: eclipse.title,
+    text: [eclipse.summary, eclipse.debateNote].filter((part) => part !== undefined).join(' '),
+    sources: [],
+    cite: eclipse.source,
+    anchors: [eclipseAnchor(eclipse)],
+  }));
+}
+
+const HistoricalTextSchema = v.strictObject({
+  id: v.pipe(v.string(), v.regex(/^[a-z0-9-]+$/)),
+  work: v.pipe(v.string(), v.minLength(1)),
+  /** Where in the work, as it is cited: "1.74", "Alexander 31". */
+  where: v.pipe(v.string(), v.minLength(1)),
+  translator: v.pipe(v.string(), v.minLength(1)),
+  year: v.pipe(v.number(), v.integer()),
+  url: v.pipe(v.string(), v.url()),
+  licence: v.literal('Public domain'),
+  /** Word for word from the translation. */
+  text: v.pipe(v.string(), v.minLength(1)),
+  /** The famous eclipses it is held to tell of: more than one where its date is disputed. */
+  eclipses: v.pipe(v.array(v.string()), v.minLength(1)),
+  note: v.optional(v.string()),
+});
+export type HistoricalText = v.InferOutput<typeof HistoricalTextSchema>;
+
+const HistoricalTextsSchema = v.strictObject({
+  schemaVersion: v.literal(1),
+  source: v.string(),
+  texts: v.array(HistoricalTextSchema),
+});
+
+export async function loadHistoricalTexts(
+  url: string,
+  fetchJson: Fetch,
+): Promise<readonly HistoricalText[]> {
+  return (await getJson(fetchJson, url, HistoricalTextsSchema)).texts;
+}
+
+/**
+ * The historical texts (#394): each passage in its translator's words, anchored to every famous
+ * eclipse it is held to tell of, at that eclipse's place and day. A text naming an eclipse the
+ * list does not have is an error, not a passage with nowhere to go.
+ */
+export function textPassages(
+  texts: readonly HistoricalText[],
+  eclipses: readonly FamousEclipse[],
+): Passage[] {
+  const byId = new Map(eclipses.map((eclipse) => [eclipse.id, eclipse]));
+  return texts.map((text) => ({
+    id: `text:${text.id}`,
+    kind: 'text',
+    title: `${text.work} ${text.where}`,
+    text: text.text,
+    sources: [],
+    cite: `${text.work} ${text.where}, translated by ${text.translator} (${String(text.year)}); ${text.url}, public domain.${text.note === undefined ? '' : ` ${text.note}`}`,
+    anchors: text.eclipses.map((id) => {
+      const eclipse = byId.get(id);
+      if (eclipse === undefined) throw new Error(`${text.id} names no famous eclipse ${id}`);
+      return eclipseAnchor(eclipse);
+    }),
+  }));
 }
 
 /** GCAT's worlds as the site's bodies; landings elsewhere (an asteroid, a comet) are left out. */

@@ -1,0 +1,125 @@
+{
+ "schemaVersion": 1,
+ "source": "Project Gutenberg (gutenberg.org), public-domain translations",
+ "texts": [
+  {
+   "id": "herodotus-1-74",
+   "work": "Herodotus, The Histories",
+   "where": "1.74",
+   "translator": "G. C. Macaulay",
+   "year": 1890,
+   "url": "https://www.gutenberg.org/ebooks/2707",
+   "licence": "Public domain",
+   "text": "…in the sixth year a battle took place in which it happened, when the fight had begun, that suddenly the day became night. And this change of the day Thales the Milesian had foretold to the Ionians laying down as a limit this very year in which the change took place. The Lydians however and the Medes, when they saw that it had become night instead of day, ceased from their fighting and were much more eager both of them that peace should be made between them.",
+   "eclipses": [
+    "thales-585-bce"
+   ]
+  },
+  {
+   "id": "odyssey-20-351",
+   "work": "Homer, The Odyssey",
+   "where": "20.351–357",
+   "translator": "Samuel Butler",
+   "year": 1900,
+   "url": "https://www.gutenberg.org/ebooks/1727",
+   "licence": "Public domain",
+   "text": "Theoclymenus saw this and said, “Unhappy men, what is it that ails you? There is a shroud of darkness drawn over you from head to foot, your cheeks are wet with tears; the air is alive with wailing voices; the walls and roof-beams drip blood; the gate of the cloisters and the court beyond them are full of ghosts trooping down into the night of hell; the sun is blotted out of heaven, and a blighting gloom is over all the land.”",
+   "eclipses": [
+    "odyssey-1178-bce"
+   ]
+  },
+  {
+   "id": "thucydides-2-28",
+   "work": "Thucydides, The History of the Peloponnesian War",
+   "where": "2.28",
+   "translator": "Richard Crawley",
+   "year": 1874,
+   "url": "https://www.gutenberg.org/ebooks/7142",
+   "licence": "Public domain",
+   "text": "The same summer, at the beginning of a new lunar month, the only time by the way at which it appears possible, the sun was eclipsed after noon. After it had assumed the form of a crescent and some of the stars had come out, it returned to its natural shape.",
+   "eclipses": [
+    "athens-431-bce"
+   ]
+  },
+  {
+   "id": "thucydides-7-50",
+   "work": "Thucydides, The History of the Peloponnesian War",
+   "where": "7.50",
+   "translator": "Richard Crawley",
+   "year": 1874,
+   "url": "https://www.gutenberg.org/ebooks/7142",
+   "licence": "Public domain",
+   "text": "All was at last ready, and they were on the point of sailing away, when an eclipse of the moon, which was then at the full, took place. Most of the Athenians, deeply impressed by this occurrence, now urged the generals to wait; and Nicias, who was somewhat over-addicted to divination and practices of that kind, refused from that moment even to take the question of departure into consideration, until they had waited the thrice nine days prescribed by the soothsayers.",
+   "eclipses": [
+    "syracuse-413-bce"
+   ]
+  },
+  {
+   "id": "arrian-3-7",
+   "work": "Arrian, The Anabasis of Alexander",
+   "where": "3.7",
+   "translator": "E. J. Chinnock",
+   "year": 1884,
+   "url": "https://www.gutenberg.org/ebooks/46976",
+   "licence": "Public domain",
+   "text": "There he made his army rest, and while so doing, an eclipse of the moon nearly total occurred. Alexander thereupon offered sacrifice to the moon, the sun and the earth, whose deed this was, according to common report. Aristander thought that this eclipse of the moon was a portent favourable to Alexander and the Macedonians; that there would be a battle that very month, and that victory for Alexander was signified by the sacrificial victims.",
+   "eclipses": [
+    "gaugamela-331-bce"
+   ],
+   "note": "Footnote markers dropped."
+  },
+  {
+   "id": "plutarch-alexander-31",
+   "work": "Plutarch, Lives: Alexander",
+   "where": "Alexander 31",
+   "translator": "the Dryden translation, edited by A. H. Clough",
+   "year": 1864,
+   "url": "https://www.gutenberg.org/ebooks/674",
+   "licence": "Public domain",
+   "text": "It came to pass that in the month Boedromion, about the beginning of the feast of Mysteries at Athens, there was an eclipse of the moon, the eleventh night after which, the two armies being now in view of one another, Darius kept his men in arms, and by torchlight took a general review of them.",
+   "eclipses": [
+    "gaugamela-331-bce"
+   ]
+  },
+  {
+   "id": "josephus-17-6-4",
+   "work": "Flavius Josephus, Antiquities of the Jews",
+   "where": "17.6.4",
+   "translator": "William Whiston",
+   "year": 1737,
+   "url": "https://www.gutenberg.org/ebooks/2848",
+   "licence": "Public domain",
+   "text": "But Herod deprived this Matthias of the high priesthood, and burnt the other Matthias, who had raised the sedition, with his companions, alive. And that very night there was an eclipse of the moon.",
+   "eclipses": [
+    "herod-4-bce",
+    "herod-1-bce"
+   ]
+  },
+  {
+   "id": "snorri-stiklestad",
+   "work": "Snorri Sturluson, Heimskringla: Saga of Olaf Haraldson",
+   "where": "ch. 238 and 248 (Laing’s numbering)",
+   "translator": "Samuel Laing",
+   "year": 1844,
+   "url": "https://www.gutenberg.org/ebooks/598",
+   "licence": "Public domain",
+   "text": "The weather was beautiful, and the sun shone clear; but when the battle began the heaven and the sun became red, and before the battle ended it became as dark as at night. … King Olaf fell on Wednesday, the 29th of July (A.D. 1030). It was near mid-day when the two armies met, and the battle began before half-past one, and before three the king fell. The darkness continued from about half-past one to three also.",
+   "eclipses": [
+    "stiklestad-1030"
+   ]
+  },
+  {
+   "id": "chronicle-1135",
+   "work": "The Anglo-Saxon Chronicle (Peterborough)",
+   "where": "A.D. 1135 [for 1133]",
+   "translator": "James Ingram, with readings from J. A. Giles",
+   "year": 1823,
+   "url": "https://www.gutenberg.org/ebooks/657",
+   "licence": "Public domain",
+   "text": "In this year went the King Henry over sea at the Lammas; and the next day, as he lay asleep on ship, the day darkened over all lands, and the sun was all as it were a three night old moon, and the stars about him at midday.",
+   "eclipses": [
+    "henry-1133"
+   ]
+  }
+ ]
+}

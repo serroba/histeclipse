@@ -6,7 +6,14 @@ import type { FamousEclipse } from '../data/famousEclipses';
 import { SOURCES, WHYS } from '../sources/registry';
 import type { LayerChoice } from '../state/layerCatalog';
 import { parseViewState } from '../state/url';
-import { eclipsePassages, landingPassages, loadPassages, type Passage } from './passages';
+import {
+  eclipsePassages,
+  landingPassages,
+  loadPassages,
+  textPassages,
+  type HistoricalText,
+  type Passage,
+} from './passages';
 import { whyPassages } from './passages';
 
 const serve = (body: unknown) => () => Promise.resolve(new Response(JSON.stringify(body)));
@@ -153,6 +160,59 @@ describe('passages from records with gaps', () => {
     const temperature = whyPassages(WHYS, [layer]).find((p) => p.id === 'why:temperature');
     expect(temperature?.anchors[0]?.view).toBe(
       'layers=temperature&ma=250&scale=all&why=temperature',
+    );
+  });
+});
+
+describe('historical texts as passages', () => {
+  it('Given Josephus, whose eclipse is disputed, Then he is anchored to both readings at Jerusalem', () => {
+    const josephus = byId('text:josephus-17-6-4');
+    expect(josephus.kind).toBe('text');
+    expect(josephus.anchors.map((anchor) => anchor.when)).toEqual([
+      [-3, -3],
+      [0, 0],
+    ]);
+    expect(josephus.cite).toContain('William Whiston (1737)');
+    expect(josephus.text).toContain('that very night there was an eclipse of the moon');
+  });
+
+  it('Given Herodotus, Then the eclipse of Thales opens where the battle was', () => {
+    const { state } = opened(byId('text:herodotus-1-74'));
+    expect(state.selection?.kind).toBe('solar');
+    expect(state.time.date.year).toBe(-584);
+  });
+
+  const text: HistoricalText = {
+    id: 'a-text',
+    work: 'A work',
+    where: '1.1',
+    translator: 'A translator',
+    year: 1900,
+    url: 'https://www.gutenberg.org/ebooks/1',
+    licence: 'Public domain',
+    text: 'The day became night.',
+    eclipses: ['nowhere'],
+    note: 'Footnote markers dropped.',
+  };
+
+  it('Given a text naming an eclipse the list lacks, Then it is an error, not a passage with nowhere to go', () => {
+    expect(() => textPassages([text], [])).toThrow(/names no famous eclipse nowhere/);
+  });
+
+  it('Given a text with a note, Then the note follows its citation', () => {
+    const eclipse = {
+      id: 'nowhere',
+      kind: 'solar',
+      date: '1900-05-28',
+      title: 'E',
+      summary: 'S',
+      source: 'X',
+      debated: false,
+      confidence: 'secure',
+    } as const;
+    const [passage] = textPassages([text], [eclipse]);
+    expect(passage?.cite).toBe(
+      'A work 1.1, translated by A translator (1900); https://www.gutenberg.org/ebooks/1, public domain. Footnote markers dropped.',
     );
   });
 });
