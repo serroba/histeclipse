@@ -48,9 +48,9 @@ export const MAX_LINES = 400;
  * move into data files.
  */
 export const LINE_LIMITS = {
-  'app.ts': 4976,
+  'app.ts': 4969,
   'globe/scene.ts': 3484,
-  'sources/registry.ts': 1597,
+  'sources/registry.ts': 1617,
   'ui/deepTimeBar.ts': 1453,
   'sky/skyScene.ts': 1281,
   'ui/lineagesSheet.ts': 1105,

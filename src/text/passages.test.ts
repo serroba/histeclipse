@@ -6,7 +6,13 @@ import type { FamousEclipse } from '../data/famousEclipses';
 import { SOURCES, WHYS } from '../sources/registry';
 import type { LayerChoice } from '../state/layerCatalog';
 import { parseViewState } from '../state/url';
-import { eclipsePassages, landingPassages, loadPassages, type Passage } from './passages';
+import {
+  cachedPassages,
+  eclipsePassages,
+  landingPassages,
+  loadPassages,
+  type Passage,
+} from './passages';
 import { whyPassages } from './passages';
 
 const serve = (body: unknown) => () => Promise.resolve(new Response(JSON.stringify(body)));
@@ -154,5 +160,25 @@ describe('passages from records with gaps', () => {
     expect(temperature?.anchors[0]?.view).toBe(
       'layers=temperature&ma=250&scale=all&why=temperature',
     );
+  });
+});
+
+describe('cachedPassages', () => {
+  it('fetches once for every caller, and again after a failure', async () => {
+    let calls = 0;
+    let failing = true;
+    const fetchJson = () => {
+      calls += 1;
+      return failing
+        ? Promise.reject(new Error('offline'))
+        : Promise.resolve(new Response(JSON.stringify(data)));
+    };
+    const shared = cachedPassages('passages.json', fetchJson);
+    await expect(shared()).rejects.toThrow('offline');
+    failing = false;
+    const [first, second] = await Promise.all([shared(), shared()]);
+    expect(first).toBe(second);
+    expect(first.length).toBe(passages.length);
+    expect(calls).toBe(2);
   });
 });
