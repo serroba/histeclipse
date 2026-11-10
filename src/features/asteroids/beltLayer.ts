@@ -13,7 +13,7 @@ import {
   type Scene,
   Vector3,
 } from 'three';
-import { createNameLabels, type LayerFactory, type Triple } from './layerHost';
+import { createNameLabels, type LayerFactory, type Triple } from '../../globe/layerHost';
 
 /** The asteroids named, those at least this wide, km: 27 of them, Ceres to Fortuna. */
 const NAMED_FROM_KM = 200;

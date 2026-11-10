@@ -28,7 +28,6 @@ import {
 import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarPhases';
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
-import { asteroidBelt } from './globe/asteroidLayer';
 import { craftInFlight } from './globe/craftLayer';
 import { geoToVector } from './globe/geo';
 import {
@@ -136,8 +135,8 @@ import { loadMoonOrbits, moonPosition, type MoonName, type MoonOrbits } from './
 import type { Geocentric } from './astro/approximatePaths';
 import { craftNow, craftWheres, type CraftWheres } from './astro/craftNow';
 import { craftCard } from './data/craftCard';
-import { asteroidPosition, loadAsteroids, type Asteroids } from './astro/asteroids';
-import { asteroidCard } from './ui/asteroidCard';
+import { FEATURES } from './features';
+import type { FeatureContext } from './features/feature';
 import { loadSpacecraft, type Spacecraft } from './data/spacecraft';
 import { loadSpacecraftPaths } from './data/spacecraftPaths';
 import { moonAbout, moonLine } from './ui/moonFacts';
@@ -1758,9 +1757,30 @@ export async function startApp(root: HTMLElement): Promise<void> {
     moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
     focus: store.get().focus,
   });
-  // Drawn on the globe as layers of their own (#379).
+  // Drawn on the globe as a layer of its own (#379).
   const craftOnGlobe = globe.addLayer(craftInFlight);
-  const asteroidsOnGlobe = globe.addLayer(asteroidBelt);
+  // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
+  const featureContext: FeatureContext = {
+    base,
+    fetchJson: (url) => fetch(url),
+    globe,
+    zoomRail,
+    notify,
+    showCard: (card) => {
+      markerCard.show(card);
+    },
+    planets: () => planets,
+    loadPlanets: () => {
+      void loadPlanets();
+    },
+    refresh: () => {
+      showTime(store.get());
+    },
+  };
+  const mounted = FEATURES.map((feature) => ({ feature, shown: feature.mount(featureContext) }));
+  function showFeatures(state: ViewState, jdTT: number): void {
+    for (const { shown } of mounted) shown.show(state, jdTT);
+  }
   const [deltaT, lunarCatalog, solarCatalog] = await Promise.all([
     DeltaT.load(`${base}data/delta-t.json`, (url) => fetch(url)),
     LunarCatalog.load(`${base}data/lunar/`, (url) => fetch(url)),
@@ -2046,7 +2066,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     showBody(state);
     showOrbits(state, terrestrial);
     showSpacecraft(state, terrestrial);
-    showAsteroids(state, terrestrial);
+    showFeatures(state, terrestrial);
     root.dataset['subsolar'] = `${sun.latitude.toFixed(3)},${sun.longitude.toFixed(3)}`;
     if (state.ma !== null) {
       showDeepTimeText(state.ma);
@@ -2892,11 +2912,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
       return;
     }
-    if (kind === 'asteroid') {
-      const asteroid = asteroids?.asteroids.find((each) => each.number === id);
-      if (asteroid !== undefined && asteroids !== null && lastTerrestrial !== null) {
-        markerCard.show(asteroidCard(asteroid, asteroids.fitted, lastTerrestrial));
-      }
+    const picked = mounted.find(({ feature }) => feature.picks === kind);
+    if (picked !== undefined) {
+      if (id !== undefined) picked.shown.pick?.(id);
       return;
     }
     volcanoShown = null;
@@ -4233,49 +4251,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     craftOnGlobe.update(craftNow(spacecraft.craft, spacecraftWheres, craftGeocentric, jdTT));
   }
 
-  // The asteroid belt (#372): its large asteroids' orbits, loaded the first time it is on.
-  let asteroids: Asteroids | null = null;
-  let asteroidsAsked = false;
-  function showAsteroids(state: ViewState, jdTT: number): void {
-    const offered = state.mode === 'globe' && state.ma === null;
-    zoomRail.setAsteroids(offered, state.layers.has('asteroids'));
-    if (!offered || !state.layers.has('asteroids')) {
-      asteroidsOnGlobe.update(null);
-      return;
-    }
-    if (planets === null) void loadPlanets();
-    if (asteroids === null) {
-      if (asteroidsAsked) return;
-      asteroidsAsked = true;
-      loadAsteroids(`${base}data/asteroids.json`, fetchJson).then(
-        (loaded) => {
-          asteroids = loaded;
-          showTime(store.get());
-        },
-        (error: unknown) => {
-          asteroidsAsked = false;
-          notify(`Could not load the asteroids: ${errorMessage(error)}`);
-        },
-      );
-      return;
-    }
-    // From Earth's centre, as the scene places everything.
-    const earth = planets?.heliocentric('earth', jdTT) ?? null;
-    if (earth === null) return;
-    const [ex, ey, ez] = earth;
-    asteroidsOnGlobe.update(
-      asteroids.asteroids.map((asteroid) => {
-        const [x, y, z] = asteroidPosition(asteroid, jdTT);
-        return {
-          number: asteroid.number,
-          name: asteroid.name,
-          diameterKm: asteroid.diameterKm,
-          km: [x - ex, y - ey, z - ez],
-        };
-      }),
-    );
-  }
-
   /** Whether the space view is far enough out, or close to a planet, to need them. */
   function wantPlanets(state: ViewState): boolean {
     if (state.mode !== 'globe') return false;
@@ -4651,7 +4626,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     } else if (lastTerrestrial !== null && state.layers !== previous.layers) {
       // The craft and the asteroids come and go with their layers, at the moment shown.
       showSpacecraft(state, lastTerrestrial);
-      showAsteroids(state, lastTerrestrial);
+      showFeatures(state, lastTerrestrial);
     }
     if (
       state.ma !== previous?.ma ||

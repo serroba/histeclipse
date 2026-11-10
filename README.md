@@ -32,7 +32,8 @@ Folders sit in tiers, and imports only go down (lint enforces it; see `eslint.bo
 3. `state`, `sources`: what the reader is looking at, and where each thing shown comes from.
 4. `globe`, `sky`, `story`, `tablets`: drawing it.
 5. `ui`, `telemetry`: the page around it.
-6. `app.ts`, `main.ts`: the wiring.
+6. `features`: one folder per feature, on one contract (`features/feature.ts`).
+7. `app.ts`, `main.ts`: the wiring.
 
 The few imports that still go up are listed there as exceptions, to be removed, not added to. The wider plan is in #384.
 

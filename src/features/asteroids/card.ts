@@ -3,8 +3,8 @@
  * years its orbit is fitted to JPL's, as closely as the fit came; outside them, only roughly.
  */
 
-import type { AsteroidOrbit } from '../astro/asteroids';
-import type { MarkerCardContent } from './markerCard';
+import type { AsteroidOrbit } from './orbits';
+import type { MarkerCardContent } from '../../ui/markerCard';
 
 const KM_PER_AU = 149_597_870.7;
 const DAYS_PER_YEAR = 365.25;
