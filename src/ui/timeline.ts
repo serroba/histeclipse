@@ -9,10 +9,12 @@ import { isSolar } from '../eclipses/describe';
 import type { SeenIn } from '../eclipses/seenIn';
 import { greatestEclipseUT } from '../data/catalog';
 import { CALENDAR_INFO, shortDate, YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
-import { astronomicalYear, toHistoricalYear } from '../time/year';
+import { astronomicalYear, toAstronomicalYear, toHistoricalYear } from '../time/year';
 import { parseYearNumber } from '../time/yearInput';
+import { yearRange } from '../time/yearRange';
 import { errorMessage } from '../util/errors';
 import { element } from './dom';
+import { createYearWheel } from './yearWheel';
 
 const HINT = 'Type a year as a number, and pick its era or calendar beside it';
 
@@ -127,13 +129,23 @@ export function createTimeline(
     '‹',
   );
   const next = element('button', { type: 'button', class: 'step', 'aria-label': 'Next year' }, '›');
+  // Or turn to a year on a wheel, kept to the era or calendar picked (#376).
+  const wheel = createYearWheel((picked) => {
+    handlers.onYear(
+      era.value === 'BCE' || era.value === 'CE'
+        ? toAstronomicalYear({ year: picked, era: era.value })
+        : picked,
+    );
+  });
   const form = element(
     'form',
     { class: 'year-form' },
     element('label', { for: 'year-input', class: 'visually-hidden' }, 'Year'),
     input,
+    wheel.button,
     era,
     hint,
+    wheel.panel,
   );
   const list = element('ul', { class: 'eclipse-list', 'aria-label': 'Eclipses this year' });
   // A fade at the end that cuts off tells the row scrolls; it goes once the end is reached.
@@ -273,9 +285,11 @@ export function createTimeline(
         const shown = toHistoricalYear(astronomicalYear(view.year));
         if (document.activeElement !== input) input.value = String(shown.year);
         era.value = shown.era;
+        wheel.render(shown.year, yearRange('western', shown.era));
       } else {
         if (document.activeElement !== input) input.value = String(view.year);
         era.value = calendar;
+        wheel.render(view.year, yearRange(calendar, 'CE'));
       }
       hint.textContent = HINT;
       renderSeen(view.seen);
