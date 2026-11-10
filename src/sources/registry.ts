@@ -8,8 +8,8 @@
  */
 
 import type { BorderSource, Layer, Span } from '../state/viewState';
-import sourcesJson from './sources.json';
-import whysJson from './whys.json';
+import sourcesJson from './sources.json' with { type: 'json' };
+import whysJson from './whys.json' with { type: 'json' };
 
 /** What kind of thing a source is, each shown with its own icon. */
 export type SourceKind = 'paper' | 'dataset' | 'model' | 'imagery' | 'catalogue' | 'reference';
