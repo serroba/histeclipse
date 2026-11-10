@@ -662,8 +662,19 @@ body {
   font-size: 13px;
 }
 
-.credits {
+.hud-more {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 16px;
   margin: 6px 0 0;
+}
+
+.hud-more > details[open] {
+  flex-basis: 100%;
+}
+
+.credits,
+.here-text {
   font-size: 11px;
   color: var(--ink-muted);
 }
@@ -891,7 +902,8 @@ body {
   font-size: 11px;
 }
 
-.credits summary {
+.credits summary,
+.here-text summary {
   width: fit-content;
   /* A taller tap target than the line it sits on, without making the panel taller. */
   margin: -10px 0;

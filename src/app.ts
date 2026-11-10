@@ -934,7 +934,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const hereList = element('ul', { class: 'here-list', 'data-testid': 'here-list' });
   const hereText = element(
     'details',
-    { class: 'credits here-text' },
+    { class: 'here-text' },
     element('summary', {}, 'About here'),
     hereList,
   );
@@ -1751,14 +1751,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
       skyText,
       skyEclipse,
       recordBanner,
+      // Sources and what is written about here share a line, each a full row once open.
       element(
-        'details',
-        { class: 'credits' },
-        element('summary', {}, 'Sources'),
-        // What is on screen now, each with the book that says why, and its sources' links.
-        sourcesList,
+        'div',
+        { class: 'hud-more' },
+        element(
+          'details',
+          { class: 'credits' },
+          element('summary', {}, 'Sources'),
+          // What is on screen now, each with the book that says why, and its sources' links.
+          sourcesList,
+        ),
+        hereText,
       ),
-      hereText,
     ),
     notices,
     glance.root,
