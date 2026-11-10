@@ -66,6 +66,11 @@ def test_can_ask_for_light_time_and_aberration() -> None:
     assert urllib.parse.parse_qs(urllib.parse.urlparse(url).query)["VEC_CORR"] == ["'LT+S'"]
 
 
+def test_small_bodies_can_be_asked_for_in_horizons_plain_layout() -> None:
+    url = horizons_url("1;", [2451545.0], HELIOCENTRIC, table="2", csv=False)
+    assert urllib.parse.parse_qs(urllib.parse.urlparse(url).query)["CSV_FORMAT"] == ["'NO'"]
+
+
 def test_covers_the_naked_eye_planets() -> None:
     assert sorted(PLANETS) == ["jupiter", "mars", "mercury", "saturn", "venus"]
 

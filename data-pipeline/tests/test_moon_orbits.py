@@ -70,6 +70,23 @@ def test_horizons_states_are_read_from_its_data_block() -> None:
         _ = parse_states("nothing here")
 
 
+def test_horizons_states_are_read_from_its_plain_layout_too() -> None:
+    # Given Ceres at J2000, as Horizons writes a small body's state when not asked for CSV.
+    text = (
+        "header\n$$SOE\n"
+        "2451545.000000000 = A.D. 2000-Jan-01 12:00:00.0000 TT\n"
+        " X =-3.559423585020455E+08 Y = 8.163123943042323E+07 Z = 1.108857536227779E+08\n"
+        " VX=-7.090431839632006E+00 VY=-1.708963893735919E+01 VZ=-6.508011339062025E+00\n"
+        "$$EOE\nfooter"
+    )
+    [ceres] = parse_states(text)
+    assert ceres.jd == J2000
+    assert ceres.r == pytest.approx(
+        (-3.559423585020455e8, 8.163123943042323e7, 1.108857536227779e8)
+    )
+    assert ceres.v[2] == pytest.approx(-6.508011339062025)
+
+
 def test_angles_wrap_within_half_a_turn() -> None:
     assert wrap(190) == -170
     assert wrap(-190) == 170
@@ -105,6 +122,24 @@ def test_samples_crowd_about_j2000_then_spread_across_the_span() -> None:
     assert min(abs(t - J2000) for t in times[1:]) == pytest.approx(1.77 / 20)
     assert all(START <= t <= STOP for t in times)
     assert len(times) > 1000
+
+
+def test_samples_can_span_other_years_and_fewer_moments() -> None:
+    times = sample_times(1680.0, seed=1, span=(J2000 - 40_000, J2000 + 40_000), uniform=10)
+    assert all(J2000 - 40_000 <= t <= J2000 + 40_000 for t in times)
+    # J2000; 24 steps each way, from a twentieth of the period growing by 1.3 to the span's
+    # ends; and the ten across the span.
+    assert len(times) == 1 + 2 * 24 + 10
+
+
+def test_an_orbit_is_fitted_with_a_central_mass_given() -> None:
+    # Given the made-up moon's states, and its planet's GM known.
+    jds = [J2000 + 0.05 * k for k in range(40)] + [START + 400.5 * k for k in range(400)]
+    states = [state(MADE_UP, jd) for jd in jds]
+    # When its orbit is fitted with that GM.
+    orbit = fit_orbit("jupiter", (268.0, 64.5), states, GM)
+    # Then its size is the made-up moon's.
+    assert orbit.axis == pytest.approx(AXIS, rel=1e-4)
 
 
 def test_a_made_up_moon_s_orbit_is_found_again_from_its_states() -> None:
