@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.aadr import fetch_genomes
 from histeclipse_pipeline.archaeoglobe import fetch_ways
-from histeclipse_pipeline.asteroids import fetch_asteroids
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
 from histeclipse_pipeline.cesm import fetch_cesm
@@ -318,14 +317,6 @@ def moon_orbits(args: Arguments) -> int:  # pragma: no cover - needs network acc
     return _say("\n".join([*report, f"wrote {len(report)} orbits to {args.out}"]))
 
 
-def asteroids(args: Arguments) -> int:  # pragma: no cover - needs network access
-    """Fit the large asteroids' orbits to JPL Horizons (public/data), with reference positions."""
-    report = fetch_asteroids(
-        args.out, Path("../test-vectors/asteroids.json"), Path(".cache/asteroids")
-    )
-    return _say("\n".join([*report, f"wrote {len(report)} orbits to {args.out}"]))
-
-
 def spacecraft(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write every craft sent beyond Earth orbit, and those that never left (public/data)."""
     left, never = fetch_spacecraft(args.out, Path(".cache/spacecraft"))
@@ -603,11 +594,6 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         moon_orbits,
         "fit the orbits of the moons of Mars, Jupiter and Saturn to JPL Horizons",
         "output JSON file (public/data/moon-orbits.json)",
-    ),
-    "asteroids": (
-        asteroids,
-        "fit the orbits of the main belt's asteroids 100 km across or more to JPL Horizons",
-        "output JSON file (public/data/asteroids.json)",
     ),
     "spacecraft": (
         spacecraft,

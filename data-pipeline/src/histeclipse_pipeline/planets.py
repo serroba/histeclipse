@@ -53,20 +53,16 @@ PLANET_APPARENT_DESCRIPTION = (
 )
 
 
-def horizons_url(  # noqa: PLR0913 - each a Horizons setting
+def horizons_url(
     command: str,
     jds_tt: list[float],
     center: str = GEOCENTRIC,
     corrections: str = GEOMETRIC,
     table: str = "1",
-    *,
-    csv: bool = True,
 ) -> str:
     """Build a Horizons query for vectors at the given TT Julian Days.
 
     ``table`` is Horizons' vector table: 1 for positions, 2 for positions and velocities.
-    ``csv`` asks for comma-separated rows; Horizons leaves an asteroid's rows empty in them,
-    so small bodies are asked for in its plain layout.
     """
     query = urllib.parse.urlencode(
         {
@@ -79,7 +75,7 @@ def horizons_url(  # noqa: PLR0913 - each a Horizons setting
             "VEC_TABLE": f"'{table}'",
             "OUT_UNITS": "'KM-S'",
             "VEC_CORR": f"'{corrections}'",
-            "CSV_FORMAT": "'YES'" if csv else "'NO'",
+            "CSV_FORMAT": "'YES'",
             "TIME_TYPE": "'TT'",
             # Without this, small Julian Days are read as Modified Julian Days.
             "TLIST_TYPE": "'JD'",

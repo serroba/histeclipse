@@ -34,7 +34,6 @@ import hashlib
 import json
 import math
 import random
-import re
 import urllib.request
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -139,33 +138,12 @@ def wrap(degrees: float) -> float:
     return (degrees + 180) % 360 - 180
 
 
-#: A state in Horizons' plain layout: the JD, then each of X, Y, Z, VX, VY, VZ as ``X =value``.
-PLAIN_STATE = re.compile(
-    r"^(?P<jd>\d+\.\d+) = .*?"
-    + "".join(rf"{axis} ?=\s*(?P<{axis.lower()}>\S+)\s*" for axis in ("X", "Y", "Z"))
-    + "".join(rf"V{axis} ?=\s*(?P<v{axis.lower()}>\S+)\s*" for axis in ("X", "Y", "Z")),
-    re.MULTILINE | re.DOTALL,
-)
-
-
 def parse_states(text: str) -> list[State]:
-    """Rows between Horizons' $$SOE and $$EOE markers: JD, date, x, y, z, vx, vy, vz.
-
-    Read from its comma-separated rows, or from its plain layout, a state a few lines.
-    """
+    """Rows between Horizons' $$SOE and $$EOE markers: JD, date, x, y, z, vx, vy, vz."""
     if "$$SOE" not in text or "$$EOE" not in text:
         msg = "Horizons answer has no data block"
         raise ValueError(msg)
     block = text.split("$$SOE", 1)[1].split("$$EOE", 1)[0]
-    if " X =" in block:
-        return [
-            State(
-                float(match["jd"]),
-                (float(match["x"]), float(match["y"]), float(match["z"])),
-                (float(match["vx"]), float(match["vy"]), float(match["vz"])),
-            )
-            for match in PLAIN_STATE.finditer(block)
-        ]
     states: list[State] = []
     for line in block.strip().splitlines():
         fields = [float(field) for field in line.split(",")[2:8]]
@@ -348,33 +326,21 @@ def unwrapped(ts: list[float], angles: list[float], rate: float, degree: int) ->
     return out
 
 
-def sample_times(
-    period: float,
-    seed: int,
-    span: tuple[float, float] = (START, STOP),
-    uniform: int = UNIFORM,
-) -> list[float]:
+def sample_times(period: float, seed: int) -> list[float]:
     """Moments to sample (TT JD): closely about J2000, then ever further, then across the span."""
-    start, stop = span
     times: list[float] = []
     step = period / 20
-    while J2000 + step < stop or J2000 - step > start:
-        times.extend(t for t in (J2000 + step, J2000 - step) if start <= t <= stop)
+    while J2000 + step < STOP or J2000 - step > START:
+        times.extend(t for t in (J2000 + step, J2000 - step) if START <= t <= STOP)
         step *= 1.3
     generator = random.Random(seed)  # noqa: S311 - reproducible sampling, not security
-    times.extend(generator.uniform(start, stop) for _ in range(uniform))
+    times.extend(generator.uniform(START, STOP) for _ in range(UNIFORM))
     return [J2000, *times]
 
 
-def fit_orbit(
-    planet: str, pole: tuple[float, float], states: list[State], gm: float | None = None
-) -> Orbit:
-    """Fit a moon's mean orbit, on the Laplace plane of ``pole``, to its states.
-
-    ``gm`` is the central body's, km³/s²; if not given, it is estimated from the states, which
-    suits the moons' near-circular orbits.
-    """
-    gm = gravity(states) if gm is None else gm
+def fit_orbit(planet: str, pole: tuple[float, float], states: list[State]) -> Orbit:
+    """Fit a moon's mean orbit, on the Laplace plane of ``pole``, to its states."""
+    gm = gravity(states)
     frame = laplace_frame(pole_vector(pole))
     samples = [osculating(state, gm, frame) for state in states]
     ts = [s.t for s in samples]
@@ -458,13 +424,13 @@ def orbit_json(orbit: Orbit) -> dict[str, object]:
 
 
 def fetch_states(  # pragma: no cover - needs network access
-    command: str, center: str, jds: list[float], cache: Path, *, csv: bool = True
+    command: str, center: str, jds: list[float], cache: Path
 ) -> list[State]:
-    """Ask Horizons for a body's states at the given moments, each answer kept in ``cache``."""
+    """Ask Horizons for a moon's states at the given moments, each answer kept in ``cache``."""
     states: list[State] = []
     cache.mkdir(parents=True, exist_ok=True)
     for start in range(0, len(jds), BATCH):
-        url = horizons_url(command, jds[start : start + BATCH], center, table="2", csv=csv)
+        url = horizons_url(command, jds[start : start + BATCH], center, table="2")
         file = cache / f"{hashlib.sha256(url.encode()).hexdigest()[:16]}.txt"
         if not file.exists():
             with urllib.request.urlopen(url, timeout=120) as response:  # noqa: S310  # pyright: ignore[reportAny]
