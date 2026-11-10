@@ -47,6 +47,11 @@ function fakeContext(options: { readonly planetsLoaded: boolean; readonly failin
 }
 
 describe('the spacecraft as a feature', () => {
+  it('is shown again when the layers change, and not for other changes', () => {
+    expect(spacecraftFeature.watches(on)).toEqual([on.layers]);
+    expect(spacecraftFeature.watches({ ...on, mode: 'sky' })).toEqual([on.layers]);
+  });
+
   it('draws nothing while its layer is off, and offers its icon in the globe view', () => {
     const { context, drawn, rail } = fakeContext({ planetsLoaded: true });
     spacecraftFeature.mount(context).show(off, JD_2010);

@@ -77,7 +77,7 @@ import {
 } from './ui/carbonMadeCard';
 import { createRadiocarbonStrip } from './ui/radiocarbonStrip';
 import { createGlobe, type StateChange } from './globe/scene';
-import { createStore } from './state/store';
+import { changed, createStore } from './state/store';
 import { parseViewState, serializeViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import {
@@ -4681,9 +4681,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const leftDeepTime = previous !== null && previous.ma !== null && state.ma === null;
     if (state.time !== previous?.time || state.years !== previous.years || leftDeepTime) {
       showTime(state);
-    } else if (lastTerrestrial !== null && state.layers !== previous.layers) {
-      // The features (the craft, the asteroids) come and go with their layers, at the moment shown.
-      showFeatures(state, lastTerrestrial);
+    } else if (lastTerrestrial !== null) {
+      // Each feature is shown again, at the moment shown, when what it watches changes.
+      for (const { feature, shown } of mounted) {
+        if (changed(feature.watches(previous), feature.watches(state))) {
+          shown.show(state, lastTerrestrial);
+        }
+      }
     }
     if (
       state.ma !== previous?.ma ||

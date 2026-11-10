@@ -47,6 +47,11 @@ export interface FeatureInstance {
 
 export interface Feature {
   readonly id: Layer;
+  /**
+   * What the feature shows depends on, besides the moment (#381): when any of these changes, it
+   * is shown again. Each moment shown shows every feature anyway.
+   */
+  watches(state: ViewState): readonly unknown[];
   /** The kind its markers' picks start with, such as `asteroid` in `asteroid:1`. */
   readonly picks?: string;
   mount(context: FeatureContext): FeatureInstance;

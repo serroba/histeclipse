@@ -31,6 +31,8 @@ function geocentric(context: FeatureContext): Geocentric {
 export const spacecraftFeature: Feature = {
   id: 'spacecraft',
   picks: 'craft',
+  // On or off with its layer.
+  watches: (state) => [state.layers],
   mount(context) {
     const drawn = context.globe.addLayer(craftInFlight);
     const where = geocentric(context);
