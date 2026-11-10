@@ -40,7 +40,7 @@ export default defineConfig({
         'src/features/volcanoes/volcanoLayer.ts',
         'src/globe/impactLayer.ts',
         'src/globe/fossilLayer.ts',
-        'src/globe/genomeLayer.ts',
+        'src/features/genomes/genomeLayer.ts',
         'src/globe/humanSiteLayer.ts',
         'src/globe/impactAnimation.ts',
         'src/globe/showerAnimation.ts',

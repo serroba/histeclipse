@@ -29,7 +29,6 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { fossilLayer } from './globe/fossilLayer';
-import { genomeLayer } from './globe/genomeLayer';
 import { humanSiteLayer } from './globe/humanSiteLayer';
 import { impactLayer } from './globe/impactLayer';
 import { geoToVector } from './globe/geo';
@@ -275,13 +274,6 @@ import { layerWhy, onScreen, type WhyId } from './sources/registry';
 import { createZoomRail } from './ui/zoomRail';
 import { createWaysLegend } from './ui/waysLegend';
 import { loadWaysOfLife, waysAt, waysNote, type WaysOfLife } from './data/waysOfLife';
-import {
-  genomesNear,
-  genomesNote,
-  genomeCellCard,
-  loadAncientGenomes,
-  type AncientGenomes,
-} from './data/ancientGenomes';
 import { loadAtmosphere, type Atmosphere } from './data/atmosphere';
 import { loadCo2Archive, type Co2Archive } from './data/co2Archive';
 import { loadDeepAir, type DeepAir } from './data/deepAir';
@@ -1520,7 +1512,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }));
     }
     const now = store.get();
-    showGenomes(now);
     showDates(now);
     showImpacts(now);
     if (lastTerrestrial !== null) showFeatures(now, lastTerrestrial);
@@ -1809,7 +1800,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // Drawn on the globe as layers of their own (#379).
   const impactsOnGlobe = globe.addLayer(impactLayer);
   const fossilsOnGlobe = globe.addLayer(fossilLayer);
-  const genomesOnGlobe = globe.addLayer(genomeLayer);
   const humanSitesOnGlobe = globe.addLayer(humanSiteLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureContext: FeatureContext = {
@@ -2912,11 +2902,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showFossilCard(key);
       return;
     }
-    if (kind === 'genome' && ancientGenomes !== null) {
-      const card = genomeCellCard(ancientGenomes, Number(id), store.get().time.date.year);
-      if (card !== null) markerCard.show(card);
-      return;
-    }
     const impact = impacts?.impacts.find((each) => String(each.id) === id);
     if (kind !== 'impact' || impact === undefined) return;
     const details = impactDetails(impact);
@@ -3443,42 +3428,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     playing = false;
     cancelAnimationFrame(playFrame);
     showDeepTime(store.get());
-  }
-
-  // Ancient genomes: their file loads the first time the layer is turned on.
-  let ancientGenomes: AncientGenomes | null = null;
-  let ancientGenomesLoading: Promise<AncientGenomes> | null = null;
-  let genomesSaid: string | null = null;
-
-  /** In historical time with the layer on, the regions with genomes dated near the year. */
-  function showGenomes(state: ViewState): void {
-    const on = state.layers.has('genomes') && state.ma === null;
-    if (!on || travelling) {
-      genomesSaid = on ? RESTING : null;
-      genomesOnGlobe.update(null);
-      return;
-    }
-    if (ancientGenomes === null) {
-      genomesSaid = 'Loading the ancient genomes…';
-      if (ancientGenomesLoading === null) {
-        ancientGenomesLoading = loadAncientGenomes(`${base}data/genomes/aadr.json`, fetchJson);
-        ancientGenomesLoading.then(
-          (data) => {
-            ancientGenomes = data;
-            showGenomes(store.get());
-            showEmpires(store.get());
-          },
-          (error: unknown) => {
-            ancientGenomesLoading = null;
-            notify(`Could not load the ancient genomes: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return;
-    }
-    const near = genomesNear(ancientGenomes, state.time.date.year);
-    genomesSaid = genomesNote(near);
-    genomesOnGlobe.update(near.cells);
   }
 
   // Archaeological radiocarbon dates (p3k14c): the counts load with the layer, a place's tile
@@ -4085,7 +4034,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       span: state.ma === null ? 'years' : state.deepScale,
       visible: state.mode === 'globe' && !awayFromEarth(state),
       said: new Map<Layer, string>([
-        ...(genomesSaid === null ? [] : [['genomes', genomesSaid] as const]),
         ...(waysSaid === null ? [] : [['ways', waysSaid] as const]),
         ...(periodsSaid === null ? [] : [['periods', periodsSaid] as const]),
         ...(rocksSaid === null ? [] : [['rocks', rocksSaid] as const]),
@@ -4663,7 +4611,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.time.date.year !== previous.time.date.year ||
       state.location !== previous.location
     ) {
-      showGenomes(state);
       showDates(state);
       showWays(state);
       showRocks(state);
