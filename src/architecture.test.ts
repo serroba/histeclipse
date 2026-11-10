@@ -132,6 +132,12 @@ function lineLimits(): Record<string, number> {
   );
 }
 
+/** The most lines any file may have, set in eslint.boundaries.js. */
+function maxLines(): number {
+  const config = readFileSync(join(SRC, '..', 'eslint.boundaries.js'), 'utf8');
+  return Number(/export const MAX_LINES = (\d+);/.exec(config)?.[1] ?? Number.NaN);
+}
+
 /** Lines as ESLint's max-lines counts them. */
 function lineCount(text: string): number {
   const lines = text.split('\n').length;
@@ -150,6 +156,10 @@ describe('the largest files only shrink', () => {
 
   it.each(limits)('the limit on %s follows it down', (file, limit) => {
     const lines = lineCount(readFileSync(join(SRC, file), 'utf8'));
+    expect(
+      lines,
+      `src/${file} is ${String(lines)} lines, within MAX_LINES: take it off LINE_LIMITS`,
+    ).toBeGreaterThan(maxLines());
     expect(
       limit - lines,
       `src/${file} is ${String(lines)} lines: lower its LINE_LIMITS entry in eslint.boundaries.js to ${String(lines)}`,

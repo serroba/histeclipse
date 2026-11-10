@@ -35,6 +35,7 @@ export default defineConfig({
         'src/features/spacecraft/craftLayer.ts',
         'src/features/asteroids/beltLayer.ts',
         'src/text/embedder.ts',
+        'src/text/meaningLoader.ts',
         'src/globe/layerHost.ts',
         'src/globe/volcanoLayer.ts',
         'src/globe/impactLayer.ts',
