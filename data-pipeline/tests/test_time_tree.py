@@ -5,10 +5,12 @@ import pytest
 from histeclipse_pipeline.time_tree import (
     Find,
     Taxon,
+    distance_km,
     genus_of,
     middle_of,
     parse_finds,
     parse_taxa,
+    sites_of,
     species_counts,
     tracks,
     tree_file,
@@ -74,13 +76,37 @@ def test_a_find_goes_to_its_genus_through_its_species() -> None:
     assert species_counts(taxa) == {4: 1}
 
 
-def test_tracks_each_genus_by_step_leaving_out_vague_finds() -> None:
+def test_places_each_genus_by_step_leaving_out_vague_finds() -> None:
     taxa = parse_taxa(TAXA)
     found = tracks(parse_finds(FINDS), taxa)
-    # The two Tyrannosaurus finds dated closely both fall in the step from 65 Ma; the one dated
-    # only to 100-66 Ma is too vague, and the family-level find names no genus.
-    assert found[4] == [(65, 51.0, -79.0, 2)]
+    # Each Tyrannosaurus find dated closely falls in the step around the map's age nearest its
+    # middle: 67 Ma in the one around 65 Ma, 68 Ma in the one around 70 Ma. The one dated only
+    # to 100-66 Ma is too vague, and the family-level find names no genus.
+    assert found[4] == [(65, 52.0, -78.0, 1), (70, 50.0, -80.0, 1)]
     assert found[7] == [(205, 20.0, 10.0, 1)]
+
+
+def test_finds_far_apart_stay_apart_not_averaged_into_the_sea() -> None:
+    taxa = parse_taxa(TAXA)
+    finds = [
+        Find(number=4, max_ma=70, min_ma=66, paleolat=50, paleolng=-80),
+        Find(number=4, max_ma=70, min_ma=66, paleolat=51, paleolng=-79),
+        Find(number=4, max_ma=70, min_ma=66, paleolat=40, paleolng=10),
+    ]
+    # Two in North America, one in Europe: two sites, the larger first, none mid-Atlantic.
+    assert tracks(finds, taxa)[4] == [(70, 50.5, -79.5, 2), (70, 40.0, 10.0, 1)]
+
+
+def test_a_site_is_the_finds_near_its_first() -> None:
+    assert distance_km((0.0, 0.0), (0.0, 1.0)) == pytest.approx(111.2, abs=0.1)
+    assert distance_km((0.0, 179.0), (0.0, -179.0)) == pytest.approx(222.4, abs=0.1)
+    near = [(0.0, 0.0), (0.0, 4.0), (0.0, 179.5), (0.0, -179.5)]
+    # Across the antimeridian is near too; the order found in does not matter.
+    assert (
+        sites_of(near)
+        == sites_of(near[::-1])
+        == [[(0.0, -179.5), (0.0, 179.5)], [(0.0, 0.0), (0.0, 4.0)]]
+    )
 
 
 def test_the_middle_of_places_is_on_the_sphere() -> None:
@@ -112,7 +138,13 @@ def test_builds_a_group_file_parents_first_without_traces() -> None:
     # A group spans its kept members, not its own first and last finds.
     assert built["first"] == [83.6, 83.6, 83.6, 83.6, 72.2]
     assert built["last"] == [66.0, 66.0, 66.0, 66.0, 66.0]
-    assert built["tracks"] == [[], [], [], [65, 51.0, -79.0, 2], [70, -25.0, -35.0, 1]]
+    assert built["tracks"] == [
+        [],
+        [],
+        [],
+        [65, 52.0, -78.0, 1, 70, 50.0, -80.0, 1],
+        [70, -25.0, -35.0, 1],
+    ]
     assert built["species"] == [0, 0, 0, 1, 0]
     assert built["rank"] == [13, 13, 8, 12, 12]
     assert built["pbdb"] == [1, 2, 3, 4, 8]
