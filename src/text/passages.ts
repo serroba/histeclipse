@@ -70,6 +70,24 @@ export async function loadPassages(url: string, fetchJson: Fetch): Promise<Passa
   return getJson(fetchJson, url, PassagesSchema);
 }
 
+/**
+ * The passages, asked for once and shared (by search, and by what is written about here); a
+ * failed load is asked for again next time.
+ */
+export function cachedPassages(url: string, fetchJson: Fetch): () => Promise<readonly Passage[]> {
+  let loading: Promise<readonly Passage[]> | null = null;
+  return () => {
+    loading ??= loadPassages(url, fetchJson).then(
+      (loaded) => loaded.passages,
+      (error: unknown) => {
+        loading = null;
+        throw error;
+      },
+    );
+    return loading;
+  };
+}
+
 /** Where each deep span opens: the last glacial maximum, 540 million years ago, Earth's birth. */
 const SPAN_VIEWS: Readonly<Record<Exclude<Span, 'years'>, string>> = {
   ice: `ma=${String(LAST_GLACIAL_MAXIMUM_MA)}&scale=ice`,
@@ -210,10 +228,10 @@ export function textPassages(
   return texts.map((text) => ({
     id: `text:${text.id}`,
     kind: 'text',
-    title: `${text.work} ${text.where}`,
+    title: `${text.work}, ${text.where}`,
     text: text.text,
     sources: [],
-    cite: `${text.work} ${text.where}, translated by ${text.translator} (${String(text.year)}); ${text.url}, public domain.${text.note === undefined ? '' : ` ${text.note}`}`,
+    cite: `${text.work}, ${text.where}, translated by ${text.translator} (${String(text.year)}); ${text.url}, public domain.${text.note === undefined ? '' : ` ${text.note}`}`,
     anchors: text.eclipses.map((id) => {
       const eclipse = byId.get(id);
       if (eclipse === undefined) throw new Error(`${text.id} names no famous eclipse ${id}`);

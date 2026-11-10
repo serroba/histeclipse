@@ -7,6 +7,7 @@ import { SOURCES, WHYS } from '../sources/registry';
 import type { LayerChoice } from '../state/layerCatalog';
 import { parseViewState } from '../state/url';
 import {
+  cachedPassages,
   eclipsePassages,
   landingPassages,
   loadPassages,
@@ -212,7 +213,27 @@ describe('historical texts as passages', () => {
     } as const;
     const [passage] = textPassages([text], [eclipse]);
     expect(passage?.cite).toBe(
-      'A work 1.1, translated by A translator (1900); https://www.gutenberg.org/ebooks/1, public domain. Footnote markers dropped.',
+      'A work, 1.1, translated by A translator (1900); https://www.gutenberg.org/ebooks/1, public domain. Footnote markers dropped.',
     );
+  });
+});
+
+describe('cachedPassages', () => {
+  it('fetches once for every caller, and again after a failure', async () => {
+    let calls = 0;
+    let failing = true;
+    const fetchJson = () => {
+      calls += 1;
+      return failing
+        ? Promise.reject(new Error('offline'))
+        : Promise.resolve(new Response(JSON.stringify(data)));
+    };
+    const shared = cachedPassages('passages.json', fetchJson);
+    await expect(shared()).rejects.toThrow('offline');
+    failing = false;
+    const [first, second] = await Promise.all([shared(), shared()]);
+    expect(first).toBe(second);
+    expect(first.length).toBe(passages.length);
+    expect(calls).toBe(2);
   });
 });

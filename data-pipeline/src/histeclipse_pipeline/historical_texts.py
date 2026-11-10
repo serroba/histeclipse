@@ -69,7 +69,7 @@ BOOKS = {
     "plutarch": Book(
         674,
         "e849186d3483c1779053a5f70c8ae477316c019907c740f878de0d2c788975f8",
-        "Plutarch, Lives: Alexander",
+        "Plutarch, Lives",
         "the Dryden translation, edited by A. H. Clough",
         1864,
     ),
