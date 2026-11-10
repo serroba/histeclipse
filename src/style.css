@@ -5078,8 +5078,10 @@ button:has(> .icon-label) > .icon {
   display: none;
 }
 
-/* The craft beyond Earth orbit (#350): each name beside its dot, a tap opening its card. */
-.craft-name {
+/* The craft beyond Earth orbit (#350) and the belt's asteroids (#372): each name beside its
+   dot, a tap opening its card. */
+.craft-name,
+.asteroid-name {
   position: absolute;
   top: 0;
   left: 0;
@@ -5098,12 +5100,19 @@ button:has(> .icon-label) > .icon {
   pointer-events: auto;
 }
 
+.asteroid-name {
+  color: rgb(232 222 204 / 0.85);
+}
+
 .craft-name:hover,
-.craft-name:focus-visible {
+.craft-name:focus-visible,
+.asteroid-name:hover,
+.asteroid-name:focus-visible {
   color: #fff;
   text-decoration: underline;
 }
 
-.craft-name[hidden] {
+.craft-name[hidden],
+.asteroid-name[hidden] {
   display: none;
 }

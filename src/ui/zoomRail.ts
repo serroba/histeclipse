@@ -148,6 +148,8 @@ export interface ZoomRail {
   setOrbits(offered: boolean, on: boolean): void;
   /** Whether the spacecraft icon is offered, and on. */
   setSpacecraft(offered: boolean, on: boolean): void;
+  /** Whether the asteroid belt's icon is offered, and on. */
+  setAsteroids(offered: boolean, on: boolean): void;
   /** Whether "Why here?" is offered, and on: a tap on the globe then says what is there. */
   setWhyHere(offered: boolean, on: boolean): void;
 }
@@ -202,6 +204,8 @@ export function createZoomRail(handlers: {
   onOrbits(): void;
   /** Turn the craft beyond Earth orbit on or off. */
   onSpacecraft(): void;
+  /** Turn the asteroid belt on or off. */
+  onAsteroids(): void;
   /** Turn "Why here?" on or off. */
   onWhyHere(): void;
   /** Centre on Earth again. */
@@ -292,6 +296,18 @@ export function createZoomRail(handlers: {
   spacecraft.addEventListener('click', () => {
     handlers.onSpacecraft();
   });
+  const asteroids = element('button', {
+    type: 'button',
+    class: 'zoom-step zoom-asteroids',
+    'aria-label': 'Asteroid belt',
+    'aria-pressed': 'false',
+    title: 'The asteroid belt: its asteroids 100 km across or more',
+    hidden: '',
+  });
+  asteroids.append(uiIcon('asteroids', 18));
+  asteroids.addEventListener('click', () => {
+    handlers.onAsteroids();
+  });
   const whyHere = element('button', {
     type: 'button',
     class: 'zoom-step zoom-why-here',
@@ -311,6 +327,7 @@ export function createZoomRail(handlers: {
     zoom,
     orbits,
     spacecraft,
+    asteroids,
     whyHere,
     readout,
   );
@@ -345,6 +362,11 @@ export function createZoomRail(handlers: {
     setSpacecraft(offered, on) {
       spacecraft.hidden = !offered;
       spacecraft.setAttribute('aria-pressed', String(on));
+      sync();
+    },
+    setAsteroids(offered, on) {
+      asteroids.hidden = !offered;
+      asteroids.setAttribute('aria-pressed', String(on));
       sync();
     },
     render(view) {

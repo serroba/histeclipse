@@ -108,6 +108,7 @@ import { elementAt } from '../util/arrays';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius, polarRatio } from './planetLook';
 import { isMoonBody, MOON_NAMES, moonPlanet } from './moonLook';
+import { createAsteroidLayer } from './asteroidLayer';
 import { createCraftLayer } from './craftLayer';
 import { createMoonMeshes } from './moonMeshes';
 import { createPlanetMeshes } from './planetMeshes';
@@ -190,6 +191,17 @@ export interface SceneCraft {
   readonly approximate: boolean;
   /** At a world, rather than on its way: named after those on their way. */
   readonly at: string | null;
+}
+
+/** The asteroids named, those at least this wide, km: 27 of them, Ceres to Fortuna. */
+const ASTEROIDS_NAMED_FROM_KM = 200;
+
+/** An asteroid of the belt as the scene draws it (#372): where it is from Earth, km. */
+export interface SceneAsteroid {
+  readonly number: string;
+  readonly name: string;
+  readonly km: readonly [number, number, number];
+  readonly diameterKm: number;
 }
 
 /** Where the Moon and Sun are at the current moment, from Earth's centre. */
@@ -454,6 +466,11 @@ export interface Globe {
    * tap on it picked as `craft:<id>`; null takes them away.
    */
   setSpacecraft(craft: readonly SceneCraft[] | null): void;
+  /**
+   * Draw the belt's large asteroids (#372), the largest named where they fit, a tap on a name
+   * picked as `asteroid:<number>`; null takes them away.
+   */
+  setAsteroids(asteroids: readonly SceneAsteroid[] | null): void;
   /** Called when someone taps a marker that has a card, with its key (such as `impact:47`). */
   onMarkerPick(listener: (key: string) => void): () => void;
   /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
@@ -1381,6 +1398,7 @@ export function createGlobe(
   const planets = createPlanetMeshes(scene);
   const moonSystems = createMoonMeshes(scene);
   const craftLayer = createCraftLayer(scene);
+  const asteroidLayer = createAsteroidLayer(scene);
   // Maps asked for, by address; the planets wearing their sharp map; and the bodies sharpened,
   // for whoever needs to know (#258).
   // Each planet's view (#239), its maps by address once fetched, and those close up enough for
@@ -1650,11 +1668,21 @@ export function createGlobe(
   craftNameLayer.className = 'empire-labels craft-names';
   craftNameLayer.dataset['testid'] = 'craft-names';
   container.append(craftNameLayer);
-  const craftLabels = new Map<
-    string,
-    { element: HTMLButtonElement; width: number; height: number }
-  >();
+  /** A name on screen that a tap picks, measured once. */
+  interface NameLabel {
+    readonly element: HTMLButtonElement;
+    readonly width: number;
+    readonly height: number;
+  }
+  const craftLabels = new Map<string, NameLabel>();
   let craftShown: readonly (SceneCraft & { readonly scene: Vector3 })[] = [];
+  // The belt's asteroids (#372), the largest named, a tap opening its card.
+  const asteroidNameLayer = document.createElement('div');
+  asteroidNameLayer.className = 'empire-labels asteroid-names';
+  asteroidNameLayer.dataset['testid'] = 'asteroid-names';
+  container.append(asteroidNameLayer);
+  const asteroidLabels = new Map<string, NameLabel>();
+  let asteroidsShown: readonly (SceneAsteroid & { readonly scene: Vector3 })[] = [];
   for (const layer of [
     impactLayer,
     volcanoLayer,
@@ -1662,6 +1690,7 @@ export function createGlobe(
     genomeLayer,
     fossilLayer,
     craftNameLayer,
+    asteroidNameLayer,
   ]) {
     layer.addEventListener('click', (event) => {
       const marker = event.target instanceof Element ? event.target.closest('[data-pick]') : null;
@@ -2186,6 +2215,7 @@ export function createGlobe(
       placePlaceNames();
       placeMoonNames();
       placeCraftNames();
+      placeAsteroidNames();
       if (earthMapped) container.dataset['rendered'] = 'true';
     }
     frame = requestAnimationFrame(loop);
@@ -2259,15 +2289,37 @@ export function createGlobe(
   /** Name the craft in view, those on their way first, none crowding another. */
   function placeCraftNames(): void {
     if (craftShown.length === 0) return;
+    const order = [...craftShown].sort((a, b) => Number(a.at !== null) - Number(b.at !== null));
+    layOutNames(
+      order.map((craft) => ({ scene: craft.scene, label: craftLabels.get(craft.id) })),
+      craftNameLayer,
+    );
+  }
+
+  /** Name the asteroids in view, the largest first, none crowding another. */
+  function placeAsteroidNames(): void {
+    if (asteroidsShown.length === 0) return;
+    layOutNames(
+      asteroidsShown.map((asteroid) => ({
+        scene: asteroid.scene,
+        label: asteroidLabels.get(asteroid.number),
+      })),
+      asteroidNameLayer,
+    );
+  }
+
+  /** Show each name, in order, where it is on screen, clear of the panels and of those shown. */
+  function layOutNames(
+    names: readonly { readonly scene: Vector3; readonly label: NameLabel | undefined }[],
+    layer: HTMLElement,
+  ): void {
     const viewWidth = container.clientWidth;
     const viewHeight = container.clientHeight;
     const placed: { x: number; y: number; w: number; h: number }[] = [];
-    const order = [...craftShown].sort((a, b) => Number(a.at !== null) - Number(b.at !== null));
     let count = 0;
-    for (const craft of order) {
-      const label = craftLabels.get(craft.id);
+    for (const { scene: at, label } of names) {
       if (label === undefined) continue;
-      projected.copy(craft.scene).project(camera);
+      projected.copy(at).project(camera);
       const x = ((projected.x + 1) / 2) * viewWidth;
       const y = ((1 - projected.y) / 2) * viewHeight;
       const box = { x, y: y - label.height / 2, w: label.width, h: label.height };
@@ -2275,8 +2327,9 @@ export function createGlobe(
         projected.z < 1 &&
         box.x >= 0 &&
         box.x + box.w <= viewWidth &&
-        box.y >= 0 &&
-        box.y + box.h <= viewHeight &&
+        // Clear of the panels above and below the view, where a name could not be tapped.
+        box.y >= insets.top &&
+        box.y + box.h <= viewHeight - insets.bottom &&
         placed.every(
           (other) =>
             box.x > other.x + other.w ||
@@ -2290,7 +2343,7 @@ export function createGlobe(
       count += 1;
       label.element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(0, -50%)`;
     }
-    craftNameLayer.dataset['named'] = String(count);
+    layer.dataset['named'] = String(count);
   }
 
   const moonWorld = new Vector3();
@@ -3242,6 +3295,48 @@ export function createGlobe(
       const flying = new Set(craft.map(({ id }) => id));
       for (const [id, { element }] of craftLabels) if (!flying.has(id)) element.hidden = true;
       container.dataset['craft'] = String(craft.length);
+      needsRender = true;
+    },
+    setAsteroids(asteroids) {
+      if (asteroids === null || earthFixedToJ2000 === null) {
+        asteroidLayer.set(null);
+        asteroidsShown = [];
+        for (const { element } of asteroidLabels.values()) element.hidden = true;
+        delete container.dataset['asteroids'];
+        needsRender = true;
+        return;
+      }
+      const toScene = transpose(earthFixedToJ2000);
+      const place = (km: readonly [number, number, number]): readonly [number, number, number] =>
+        sceneFromKm(apply(toScene, [km[0], km[1], km[2]]));
+      asteroidsShown = asteroids.map((each) => ({
+        ...each,
+        scene: new Vector3(...place(each.km)),
+      }));
+      asteroidLayer.set(asteroids.map(({ km, diameterKm }) => ({ at: place(km), diameterKm })));
+      // A name for each of the largest, made the first time, measured once: all at once, one
+      // layout. Two hundred names would crowd the belt; the dots are there for the rest.
+      const fresh: { number: string; element: HTMLButtonElement }[] = [];
+      for (const { number, name, diameterKm } of asteroids) {
+        if (diameterKm < ASTEROIDS_NAMED_FROM_KM || asteroidLabels.has(number)) continue;
+        const element = document.createElement('button');
+        element.type = 'button';
+        element.className = 'asteroid-name';
+        element.textContent = name;
+        element.dataset['pick'] = `asteroid:${number}`;
+        element.style.visibility = 'hidden';
+        asteroidNameLayer.append(element);
+        fresh.push({ number, element });
+      }
+      for (const { number, element } of fresh) {
+        asteroidLabels.set(number, {
+          element,
+          width: element.offsetWidth,
+          height: element.offsetHeight,
+        });
+      }
+      for (const { element } of fresh) element.style.visibility = '';
+      container.dataset['asteroids'] = String(asteroids.length);
       needsRender = true;
     },
     setMoonMap(moon, url) {

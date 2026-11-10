@@ -794,6 +794,39 @@ test('with Spacecraft on, the craft beyond Earth orbit fly where they were, each
   expect(problems).toEqual([]);
 });
 
+test('with the asteroid belt on, its large asteroids go round between Mars and Jupiter, each with its card', async ({
+  page,
+}) => {
+  // A data file and a planet theory: slow on a phone drawn in software.
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const names = page.getByTestId('asteroid-names');
+  await test.step('Given the Solar System in January 2025, seen from far above the Sun', async () => {
+    await page.goto('./?t=2025-01-10T12:00&cam=0,80,2400&focus=sun');
+    await expect(globe).toHaveAttribute('data-focus', 'sun', { timeout: 30_000 });
+  });
+  await test.step('When they turn the asteroid belt on', async () => {
+    await page.getByRole('button', { name: 'Asteroid belt', exact: true }).click();
+  });
+  await test.step('Then some two hundred asteroids are drawn, the largest named', async () => {
+    await expect(page).toHaveURL(/layers=[a-z,]*asteroids/);
+    await expect
+      .poll(async () => Number(await globe.getAttribute('data-asteroids')), { timeout: 30_000 })
+      .toBeGreaterThan(200);
+    await expect(names.getByRole('button', { name: 'Vesta', exact: true })).toBeVisible();
+    // Only the largest: Gudrun, some 146 km across, has a dot but no name.
+    await expect(names.getByRole('button', { name: 'Gudrun', exact: true })).toHaveCount(0);
+  });
+  await test.step('When they tap Vesta, Then its card says how big it is, and how well its place is known', async () => {
+    await names.getByRole('button', { name: 'Vesta', exact: true }).click();
+    const card = page.getByRole('dialog');
+    await expect(card).toContainText('523 km');
+    await expect(card).toContainText('of JPL’s place along its orbit');
+  });
+  expect(problems).toEqual([]);
+});
+
 test('close up, the IAU’s names for the largest features turn with each rocky body, on its day side', async ({
   page,
 }) => {
