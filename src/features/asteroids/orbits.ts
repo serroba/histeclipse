@@ -12,8 +12,8 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from '../data/fetchJson';
-import { MEAN_ORBIT_ENTRIES, moonPosition } from './moonOrbits';
+import { getJson, type Fetch } from '../../data/fetchJson';
+import { MEAN_ORBIT_ENTRIES, moonPosition } from '../../astro/moonOrbits';
 
 const AsteroidSchema = v.strictObject({
   name: v.pipe(v.string(), v.minLength(1)),

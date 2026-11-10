@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { AsteroidOrbit } from '../astro/asteroids';
-import { asteroidCard } from './asteroidCard';
+import type { AsteroidOrbit } from './orbits';
+import { asteroidCard } from './card';
 
 /** Ceres, roughly: 2.77 AU out, round in 4.6 years. */
 const CERES: AsteroidOrbit & { readonly number: string } = {

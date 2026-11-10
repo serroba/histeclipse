@@ -21,7 +21,7 @@ import { MOON_NAMES } from '../globe/moonLook';
 import type { MoonName } from '../astro/moonOrbits';
 import type { LayerChoice } from '../state/layerCatalog';
 import { BODIES, LAST_GLACIAL_MAXIMUM_MA, type Body, type Span } from '../state/viewState';
-import type { MoonFacts } from '../ui/moonFacts';
+import type { MoonFacts } from './moonFacts';
 import type { Why, WhyId } from '../sources/registry';
 import { getJson, type Fetch } from '../data/fetchJson';
 
