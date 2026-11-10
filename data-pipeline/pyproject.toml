@@ -7,10 +7,12 @@ requires-python = ">=3.14"
 dependencies = [
     "h5py>=3.12",
     "numpy>=2",
+    "onnxruntime>=1.31.1",
     "openpyxl>=3.1",
     "pillow>=11",
     "rdflib>=7",
     "skyfield>=1.55",
+    "tokenizers>=0.23.3",
 ]
 
 [project.scripts]

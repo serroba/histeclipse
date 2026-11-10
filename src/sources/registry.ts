@@ -1112,6 +1112,20 @@ export const SOURCES = {
     url: 'https://paleobiodb.org',
     licence: 'CC BY 4.0',
   },
+  bgeSmall: {
+    name: 'bge-small-en-v1.5',
+    kind: 'model',
+    cite: 'Xiao, Liu, Zhang & Muennighoff (2023), C-Pack: Packaged Resources To Advance General Chinese Embedding, arXiv:2309.07597; the Beijing Academy of Artificial Intelligence’s small English embedding model, bge-small-en-v1.5, as ONNX quantised to 8 bits (Xenova)',
+    url: 'https://huggingface.co/BAAI/bge-small-en-v1.5',
+    licence: 'MIT',
+  },
+  onnxRuntime: {
+    name: 'ONNX Runtime Web',
+    kind: 'model',
+    cite: 'Microsoft, ONNX Runtime: runs the embedding model in the browser (onnxruntime-web 1.31.1)',
+    url: 'https://onnxruntime.ai/',
+    licence: 'MIT',
+  },
 } as const satisfies Record<string, Source>;
 
 export type SourceId = keyof typeof SOURCES;
@@ -1496,6 +1510,12 @@ export const WHYS = {
     how: 'The Paleobiology Database’s classification gives each genus its family, order and so on, and its first and last appearance; its finds give where it lay, placed at their age on the PALEOMAP reconstruction and averaged every 5 million years. A family or order starts where and when its oldest member does. The floor is PALEOMAP’s elevation map at the slider’s moment. Footprints, burrows and eggs, which PBDB names apart from the animals that made them, are left out.',
     others:
       'The classification is a taxonomy, not a dated phylogeny: branch points are drawn at the oldest fossil found, and true splits came earlier. Open Tree of Life’s synthesis, on the tree of life, places some of these genera differently; both are kept.',
+  },
+  search: {
+    title: 'Search',
+    what: 'The site’s texts found by their words, or by their meaning, each opening the view of the place and time it is about.',
+    sources: ['bgeSmall', 'onnxRuntime'],
+    how: 'Every text the site shows is cut into passages, each tied to the bodies, places and years it is about. Words are matched as typed, ranked by BM25. Search by meaning, once turned on, runs a small English model, bge-small-en-v1.5, in your browser: it turns the question into 384 numbers that stand for its meaning, and the passages, turned into numbers the same way beforehand, are ranked by how alike they are; the two lists are then merged. The model and its runtime are downloaded from this site once, about 48 MB; nothing typed leaves the browser. A model of meaning can be wrong: it ranks by likeness, not by truth, so each passage found says where it comes from.',
   },
 } as const satisfies Record<string, Why>;
 

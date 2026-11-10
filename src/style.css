@@ -1912,6 +1912,27 @@ body {
   font-size: 16px;
 }
 
+.search-meaning {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 0 18px 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.search-meaning-box {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: var(--accent);
+}
+
+.search-meaning-note {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
 .search-snippet {
   color: var(--ink-muted);
   font-size: 13px;

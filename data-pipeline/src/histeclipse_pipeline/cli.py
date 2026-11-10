@@ -38,6 +38,13 @@ from histeclipse_pipeline.p3k14c import fetch_p3k14c
 from histeclipse_pipeline.paleo_co2 import fetch_co2_archive
 from histeclipse_pipeline.paleodem import fetch_paleodem
 from histeclipse_pipeline.paleotemp import fetch_paleotemp
+from histeclipse_pipeline.passage_vectors import (
+    fetch_model,
+    onnx_embedder,
+    read_lock,
+    write_passage_vectors,
+    write_test_vectors,
+)
 from histeclipse_pipeline.periodo import fetch_periods
 from histeclipse_pipeline.pictures import fetch_pictures
 from histeclipse_pipeline.planet_keys import fetch_planet_keys
@@ -326,6 +333,20 @@ def asteroids(args: Arguments) -> int:  # pragma: no cover - needs network acces
     return _say("\n".join([*report, f"wrote {len(report)} orbits to {args.out}"]))
 
 
+def passage_vectors(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Embed the passages for search by meaning (public/data), with test vectors for the site.
+
+    Then run Prettier on test-vectors/embedding.json, as on every file the repository keeps.
+    """
+    lock = read_lock(Path("../models.lock.json"))
+    folder = fetch_model(lock, Path(".cache/models") / lock["name"])
+    count = write_passage_vectors(
+        Path("../public/data/passages.json"), args.out, onnx_embedder(folder), lock
+    )
+    write_test_vectors(folder, lock, Path("../test-vectors/embedding.json"))
+    return _say(f"embedded {count} passages into {args.out}")
+
+
 def spacecraft(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write every craft sent beyond Earth orbit, and those that never left (public/data)."""
     left, never = fetch_spacecraft(args.out, Path(".cache/spacecraft"))
@@ -608,6 +629,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         asteroids,
         "fit the orbits of the main belt's asteroids 100 km across or more to JPL Horizons",
         "output JSON file (public/data/asteroids.json)",
+    ),
+    "passage-vectors": (
+        passage_vectors,
+        "embed the site's passages for search by meaning (bge-small-en-v1.5)",
+        "output binary file (public/data/passage-vectors.bin)",
     ),
     "spacecraft": (
         spacecraft,

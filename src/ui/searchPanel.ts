@@ -1,11 +1,14 @@
 /**
- * Search the site's texts (#392): a box, and the passages that match, each with the places and
- * times it is anchored to; a tap on one opens its view. The index is asked for on first opening.
+ * Search the site's texts (#392, #393): a box, and the passages that match, each with the places
+ * and times it is anchored to; a tap on one opens its view. Words are matched at once; search by
+ * meaning, once the reader turns it on (it downloads a model), merges its results in as they
+ * come. The index is asked for on first opening, the model on first turning it on.
  */
 
+import { fused } from '../text/meaning';
 import { anchorLabel } from '../text/anchors';
 import type { Anchor, PassageKind } from '../text/passages';
-import { searchWords, snippet, type WordIndex } from '../text/wordSearch';
+import { searchWords, snippet, type Hit, type WordIndex } from '../text/wordSearch';
 import { element } from './dom';
 import { uiIcon } from './icons';
 
@@ -16,9 +19,31 @@ const KINDS: Readonly<Record<PassageKind, string>> = {
   landing: 'Landing',
 };
 
+/** Where the reader's choice to search by meaning is remembered, in this browser only. */
+const MEANING_KEY = 'histeclipse.searchByMeaning';
+/** How long typing must pause before the model is asked. */
+const MEANING_PAUSE_MS = 200;
+
 /** Whether an anchor says more than "Earth": a place, a time, or another body. */
 function telling(anchor: Anchor): boolean {
   return anchor.body !== 'earth' || anchor.at !== undefined || anchor.when !== undefined;
+}
+
+function remembered(): boolean {
+  try {
+    return localStorage.getItem(MEANING_KEY) === 'on';
+  } catch {
+    return false;
+  }
+}
+
+function remember(on: boolean): void {
+  try {
+    if (on) localStorage.setItem(MEANING_KEY, 'on');
+    else localStorage.removeItem(MEANING_KEY);
+  } catch {
+    // Without storage the choice lasts as long as the page.
+  }
 }
 
 export interface SearchPanel {
@@ -27,8 +52,12 @@ export interface SearchPanel {
   open(): void;
 }
 
+/** Ranks the passages by meaning, once its model has loaded. */
+export type MeaningSearch = (query: string) => Promise<Hit[]>;
+
 export function createSearchPanel(
   load: () => Promise<WordIndex>,
+  loadMeaning: () => Promise<MeaningSearch>,
   onOpen: (anchor: Anchor) => void,
 ): SearchPanel {
   const button = element(
@@ -40,11 +69,17 @@ export function createSearchPanel(
   const input = element('input', {
     type: 'search',
     class: 'search-input',
-    placeholder: 'Places, people, missions, eclipses…',
+    placeholder: 'Places, people, missions, or a question…',
     'aria-label': 'Search the texts',
     autocomplete: 'off',
     spellcheck: 'false',
   });
+  const meaningBox = element('input', { type: 'checkbox', class: 'search-meaning-box' });
+  const meaningNote = element(
+    'span',
+    { class: 'search-meaning-note' },
+    'Downloads a 48 MB model once (bge-small, MIT); it runs in your browser, and nothing you type leaves it.',
+  );
   const status = element('p', { class: 'famous-intro search-status', role: 'status' });
   const list = element('ul', { class: 'famous-list search-results' });
   const close = element(
@@ -62,6 +97,12 @@ export function createSearchPanel(
       close,
     ),
     element('div', { class: 'search-box' }, input),
+    element(
+      'label',
+      { class: 'search-meaning' },
+      meaningBox,
+      element('span', {}, 'Search by meaning too', element('br'), meaningNote),
+    ),
     status,
     list,
   );
@@ -69,23 +110,13 @@ export function createSearchPanel(
   let index: WordIndex | null = null;
   let loading: Promise<void> | null = null;
   let failed = false;
+  let meaning: MeaningSearch | null = null;
+  let meaningLoading = false;
+  let meaningFailed = false;
+  let pause: ReturnType<typeof setTimeout> | null = null;
+  meaningBox.checked = remembered();
 
-  function render(): void {
-    const query = input.value;
-    if (index === null) {
-      status.textContent = failed
-        ? 'Could not load the texts. Try again later.'
-        : 'Loading the texts…';
-      list.replaceChildren();
-      return;
-    }
-    const hits = query.trim() === '' ? [] : searchWords(index, query);
-    status.textContent =
-      query.trim() === ''
-        ? `Search ${String(index.passages.length)} texts: what each view shows, the moons, eclipse records and landings.`
-        : hits.length === 0
-          ? 'Nothing found.'
-          : `${String(hits.length)} found`;
+  function show(hits: readonly Hit[]): void {
     list.replaceChildren(
       ...hits.map(({ passage, matched }) => {
         const go = (anchor: Anchor) => () => {
@@ -132,6 +163,69 @@ export function createSearchPanel(
     );
   }
 
+  function counted(hits: readonly Hit[], byMeaning: boolean): string {
+    if (hits.length === 0) return 'Nothing found.';
+    return `${String(hits.length)} found${byMeaning ? ', by words and meaning' : ''}`;
+  }
+
+  /** The word results now; the merged ones once the model answers, if the query still stands. */
+  function render(): void {
+    const query = input.value;
+    if (pause !== null) clearTimeout(pause);
+    if (index === null) {
+      status.textContent = failed
+        ? 'Could not load the texts. Try again later.'
+        : 'Loading the texts…';
+      list.replaceChildren();
+      return;
+    }
+    if (query.trim() === '') {
+      status.textContent = `Search ${String(index.passages.length)} texts: what each view shows, the moons, eclipse records and landings.`;
+      list.replaceChildren();
+      return;
+    }
+    const words = searchWords(index, query);
+    const ask = meaningBox.checked ? meaning : null;
+    status.textContent = meaningFailed
+      ? `${counted(words, false)} Could not load search by meaning.`
+      : meaningBox.checked && meaning === null
+        ? `${counted(words, false)} Loading search by meaning…`
+        : counted(words, false);
+    show(words);
+    if (ask === null) return;
+    pause = setTimeout(() => {
+      ask(query).then(
+        (byMeaning) => {
+          if (input.value !== query) return;
+          const merged = fused(words, byMeaning);
+          status.textContent = counted(merged, true);
+          show(merged);
+        },
+        () => {
+          status.textContent = `${counted(words, false)} Search by meaning failed.`;
+        },
+      );
+    }, MEANING_PAUSE_MS);
+  }
+
+  function startMeaning(): void {
+    if (!meaningBox.checked || meaning !== null || meaningLoading) return;
+    meaningLoading = true;
+    meaningFailed = false;
+    loadMeaning().then(
+      (loaded) => {
+        meaning = loaded;
+        meaningLoading = false;
+        render();
+      },
+      () => {
+        meaningLoading = false;
+        meaningFailed = true;
+        render();
+      },
+    );
+  }
+
   function open(): void {
     if (!dialog.open) dialog.showModal();
     input.focus();
@@ -150,11 +244,17 @@ export function createSearchPanel(
         },
       );
     }
+    startMeaning();
     render();
   }
 
   button.addEventListener('click', open);
   input.addEventListener('input', render);
+  meaningBox.addEventListener('change', () => {
+    remember(meaningBox.checked);
+    startMeaning();
+    render();
+  });
   close.addEventListener('click', () => {
     dialog.close();
   });

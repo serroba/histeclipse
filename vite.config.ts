@@ -1,10 +1,13 @@
 import { defineConfig } from 'vitest/config';
 
+import { models } from './vite.models.ts';
+
 export default defineConfig({
   // Served at https://histeclipse.limits.world/ (#240). Relative, so the build also works under
   // a path, as it once did at serroba.github.io/histeclipse/: every page is index.html at the
   // site's root, so './' always resolves to the right place.
   base: './',
+  plugins: [models()],
   build: {
     target: 'es2023',
     sourcemap: true,
@@ -31,6 +34,7 @@ export default defineConfig({
         'src/globe/moonMeshes.ts',
         'src/globe/craftLayer.ts',
         'src/features/asteroids/beltLayer.ts',
+        'src/text/embedder.ts',
         'src/globe/layerHost.ts',
         'src/globe/impactAnimation.ts',
         'src/globe/showerAnimation.ts',

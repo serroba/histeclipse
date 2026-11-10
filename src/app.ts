@@ -146,6 +146,7 @@ import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
 import { createFamousPanel } from './ui/famousPanel';
 import { createSearchPanel } from './ui/searchPanel';
 import { anchorLabel, anchorQuery } from './text/anchors';
+import { loadPassageVectors, searchMeaning } from './text/meaning';
 import { nearby } from './text/nearby';
 import { loadPassages, type Anchor, type Passage } from './text/passages';
 import { indexPassages } from './text/wordSearch';
@@ -926,6 +927,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The site's texts, searched by their words; a passage opens the view of its place (#392).
   const searchPanel = createSearchPanel(
     () => passages().then(indexPassages),
+    // Search by meaning (#393): the model, its runtime and the passages' vectors, asked for only
+    // once the reader turns it on.
+    async () => {
+      const [{ loadEmbedder }, vectors, all] = await Promise.all([
+        import('./text/embedder'),
+        loadPassageVectors(`${base}data/passage-vectors.bin`, (url) => fetch(url)),
+        passages(),
+      ]);
+      const embedder = await loadEmbedder(base);
+      return async (query) => searchMeaning(vectors, all, await embedder.embedQuery(query));
+    },
     (anchor) => {
       openAnchor(anchor);
     },
