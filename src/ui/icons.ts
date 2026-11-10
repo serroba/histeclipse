@@ -177,6 +177,8 @@ const UI_PATHS = {
   dates: ['M4 4h6v6H4z', 'M14 4h6v6h-6z', 'M4 14h6v6H4z', 'M15 15h4v4h-4z'],
   // A ray striking from above, and the burst it sets off.
   carbonMade: ['M5 3l5 8', 'M10 11l-3 5', 'M10 11l1 6', 'M10 11l5 4', 'M3 20h18'],
+  // A lens and its handle.
+  search: ['M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13z', 'M15.3 15.3L20 20'],
   // Stacked sheets.
   layers: ['M12 3l9 5-9 5-9-5z', 'M3 12.5l9 5 9-5', 'M3 16.5l9 5 9-5'],
   // Four corners pushed out.

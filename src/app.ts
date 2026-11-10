@@ -79,7 +79,7 @@ import {
 import { createRadiocarbonStrip } from './ui/radiocarbonStrip';
 import { createGlobe, type StateChange } from './globe/scene';
 import { createStore } from './state/store';
-import { parseViewState } from './state/url';
+import { parseViewState, serializeViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import {
   DEFAULT_CAMERA,
@@ -144,11 +144,15 @@ import { FEATURES } from './features';
 import type { FeatureContext } from './features/feature';
 import { loadSpacecraft, type Spacecraft } from './data/spacecraft';
 import { loadSpacecraftPaths } from './data/spacecraftPaths';
-import { moonAbout, moonLine } from './ui/moonFacts';
+import { moonAbout, moonLine } from './text/moonFacts';
 import { isMoonBody, MOON_MAPS, MOON_NAMES, MOON_VIEWS, moonPlanet } from './globe/moonLook';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
 import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
 import { createFamousPanel } from './ui/famousPanel';
+import { createSearchPanel } from './ui/searchPanel';
+import { anchorQuery } from './text/anchors';
+import { loadPassages, type Anchor } from './text/passages';
+import { indexPassages } from './text/wordSearch';
 import { uiIcon } from './ui/icons';
 import { createWelcome } from './ui/welcome';
 import { loadSeaIce, type SeaIceIndex, seaIceMix, seaIcePair } from './data/seaIce';
@@ -911,6 +915,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
     element('span', { class: 'icon-label' }, 'Full view'),
   );
   fullView.addEventListener('click', togglePanels);
+  // The site's texts, searched by their words; a passage opens the view of its place (#392).
+  const searchPanel = createSearchPanel(
+    () =>
+      loadPassages(`${base}data/passages.json`, (url) => fetch(url)).then(({ passages }) =>
+        indexPassages(passages),
+      ),
+    (anchor) => {
+      openAnchor(anchor);
+    },
+  );
   const showControls = element(
     'button',
     { type: 'button', class: 'show-controls' },
@@ -1694,7 +1708,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         {},
         element('a', { class: 'home', href: base, title: 'Back to the start' }, 'histeclipse'),
       ),
-      fullView,
+      element('div', { class: 'hud-tools' }, searchPanel.button, fullView),
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
       termNote,
@@ -1721,6 +1735,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     showControls,
     bottom,
     famousPanel.dialog,
+    searchPanel.dialog,
     tabletPanel.dialog,
     layersPanel.dialog,
     markerCard.dialog,
@@ -1746,7 +1761,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   window.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') showPanels();
+    // "/" opens search, unless it is being typed somewhere.
+    const typing =
+      event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;
+    if (event.key === '/' && !typing && !event.ctrlKey && !event.metaKey) {
+      event.preventDefault();
+      searchPanel.open();
+    }
   });
+  /** Open a passage's anchor: its view laid over the reader's, as a step back can undo. */
+  function openAnchor(anchor: Anchor): void {
+    const next = parseViewState(anchorQuery(anchor, serializeViewState(store.get())), new Date());
+    stopPlay();
+    sync.step();
+    store.set(() => next.state);
+  }
 
   function notify(message: string): void {
     // A failure asked again (each time the view is drawn) says so once.
