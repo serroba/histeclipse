@@ -111,12 +111,15 @@ export function craftCard(craft: Craft, approximate: boolean): CraftCard {
       ? 'Approximate: each leg as the transfer orbit between where it left and where it arrived, as first planned, not as flown'
       : 'As flown, from JPL Horizons',
   ]);
-  const links = [
-    {
-      label: 'NASA NSSDCA',
-      href: `https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=${encodeURIComponent(craft.cospar)}`,
-    },
-  ];
+  const links =
+    craft.nssdc === null
+      ? []
+      : [
+          {
+            label: 'NASA NSSDCA',
+            href: `https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=${encodeURIComponent(craft.nssdc)}`,
+          },
+        ];
   return {
     title: craft.mission ?? craft.name,
     facts,

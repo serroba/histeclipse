@@ -79,11 +79,18 @@ LONG_MONTHS = {
 CREWED = {"2026-069A"}
 #: Characters of an ISO date to the day: "1977-08-20".
 ISO_DAY = 10
+#: A launch's tag, the start of each of its pieces' designations: "1969-059".
+LAUNCH_TAG = 8
 #: An outcome that means the craft never left Earth orbit: failed at launch, or "Attempted"
 #: and found among no craft that left.
 NEVER_LEFT = re.compile(r"launch failure|^attempted", re.IGNORECASE)
 #: The chronology's Earth orbiters (Sputnik 1, Hubble), which are not ours.
 EARTH_ORBITER = re.compile(r"earth orbit", re.IGNORECASE)
+#: A COSPAR designation as NSSDCA files craft under it: "1977-076A". GCAT writes the early ones
+#: the old way ("1959 MU 1"), and its parts without the letter ("1969-059"); NSSDCA has neither.
+NSSDCA_DESIGNATION = re.compile(r"^\d{4}-\d{3}[A-Z]+$")
+#: NSSDCA's identifiers for early craft its chronology of the Moon and planets leaves out.
+NSSDCA_IDS = {"1960 ALP 1": "1960-001A"}  # Pioneer 5, round the Sun
 
 
 def gcat_rows(text: str) -> list[dict[str, str]]:
@@ -201,11 +208,14 @@ def craft_record(
     kept = {str(entry["id"]) for entry in payloads if entry.pop("left")}
     piloted = {str(entry["id"]) for entry in payloads if entry.pop("piloted")}
     never: list[dict[str, object]] = []
+    claimed: set[str] = set()
     for chronicle in chronology:
-        found = matching(chronicle, payloads)
+        found = matching(chronicle, [c for c in payloads if c["id"] not in claimed])
         if found is not None:
+            claimed.add(str(found["id"]))
             kept.add(str(found["id"]))
             _ = found.setdefault("about", chronicle.about)
+            found["nssdc"] = page(found, chronicle)
             crewed = "crewed" in chronicle.about.lower()
             for entry in payloads:
                 ours = entry is found or bool(entry["part"]) or crewed
@@ -225,7 +235,50 @@ def craft_record(
             }
         )
     craft = [entry for entry in payloads if entry["id"] in kept]
+    pieces = {row["JCAT"]: row["Piece"] for row in [*deep, *registers, *landings]}
+    carried_by(craft, pieces)
     return craft, never
+
+
+def page(found: dict[str, object], chronicle: Chronicle) -> object:
+    """Give NSSDCA's identifier for a craft the chronology names: the chronicle's.
+
+    Unless the craft is one of the parts it links by its own: Venera 9's orbiter, its lander
+    linked first.
+    """
+    if chronicle.nssdc is None or found["cospar"] in chronicle.parts:
+        return found["nssdc"]
+    return chronicle.nssdc
+
+
+def carried_by(craft: list[dict[str, object]], pieces: dict[str, str]) -> None:
+    """Give a craft NSSDCA has no page for its carrier's: Pragyan Chandrayaan-3's.
+
+    The carrier is the craft that set it loose, else the one launched with it, or with what set
+    it loose (Eagle's ascent stage left the Moon from its descent stage, launched with Apollo
+    11), that is not a part of another; else the craft itself as it was launched.
+    """
+    by_id = {entry["id"]: entry for entry in craft}
+    for entry in craft:
+        if entry["nssdc"] is not None:
+            continue
+        parent = by_id.get(entry["parent"])
+        tags = {entry["launchTag"], pieces.get(str(entry["parent"]), "")[:LAUNCH_TAG]}
+        mates = [
+            other
+            for other in craft
+            if other["launchTag"] in tags and not other["part"] and other["nssdc"] is not None
+        ]
+        carrier = parent if parent is not None and parent["nssdc"] is not None else None
+        if carrier is None and mates:
+            carrier = mates[0]
+        if carrier is None:
+            # The same craft again, as GCAT writes it after it left the Moon: Luna 16's capsule.
+            carrier = next(
+                (o for o in craft if o["name"] == entry["name"] and o["nssdc"] is not None), None
+            )
+        if carrier is not None:
+            entry["nssdc"] = carrier["nssdc"]
 
 
 def craft_entry(
@@ -237,6 +290,11 @@ def craft_entry(
         "id": row["JCAT"],
         "name": row["Name"],
         "cospar": row["Piece"],
+        # NSSDCA's identifier, for its page on the craft: the COSPAR one where NSSDCA writes it
+        # so; else the chronology's, or its carrier's (`craft_record`, `carried_by`).
+        "nssdc": row["Piece"]
+        if NSSDCA_DESIGNATION.match(row["Piece"])
+        else NSSDCA_IDS.get(row["Piece"]),
         "launchTag": row["Launch_Tag"],
         "launch": gcat_date(row["LDate"]),
         "owner": row["Owner"],
