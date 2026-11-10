@@ -27,6 +27,12 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The search model (#393), kept between runs for each pin in models.lock.json. The build
+      # checks every file against its pinned SHA-256 whether it came from here or the network.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: public/models/*/onnx
+          key: models-${{ hashFiles('models.lock.json') }}
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
@@ -54,6 +60,12 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The search model (#393), kept between runs for each pin in models.lock.json. The build
+      # checks every file against its pinned SHA-256 whether it came from here or the network.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: public/models/*/onnx
+          key: models-${{ hashFiles('models.lock.json') }}
       - id: playwright
         run: echo "version=$(pnpm exec playwright --version | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"
       # The browser, kept between runs for each version of Playwright.
@@ -101,6 +113,12 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The search model (#393), kept between runs for each pin in models.lock.json. The build
+      # checks every file against its pinned SHA-256 whether it came from here or the network.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: public/models/*/onnx
+          key: models-${{ hashFiles('models.lock.json') }}
       - run: pnpm exec playwright install chromium
       - run: pnpm test:e2e --project=desktop --shard="$SHARD/2"
         env:
