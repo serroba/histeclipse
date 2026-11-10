@@ -1,0 +1,31 @@
+/* Names of things drawn in space (the craft, #350; the belt's asteroids, #372): each beside its
+   dot, a tap opening its card. Made by createNameLabels in layerHost.ts (#382: CSS beside the
+   code it styles); a layer adds its own class for its colour. */
+.space-name {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 1px 0 1px 8px;
+  border: 0;
+  background: none;
+  color: rgb(214 236 255 / 0.92);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 500;
+  white-space: nowrap;
+  text-shadow:
+    0 0 3px rgb(0 0 0 / 0.9),
+    0 1px 2px rgb(0 0 0 / 0.8);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.space-name:hover,
+.space-name:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.space-name[hidden] {
+  display: none;
+}

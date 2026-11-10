@@ -6,6 +6,8 @@
 
 import type { Scene, Vector3 } from 'three';
 
+import './nameLabels.css';
+
 import type { GeoPoint } from '../core/geo';
 
 export type Triple = readonly [number, number, number];
@@ -126,7 +128,7 @@ export function createNameLabels(
         if (labels.has(key)) continue;
         const element = document.createElement('button');
         element.type = 'button';
-        element.className = options.labelClass;
+        element.className = `space-name ${options.labelClass}`;
         element.textContent = name;
         element.dataset['pick'] = pick;
         element.style.visibility = 'hidden';
