@@ -35,7 +35,7 @@ Folders sit in tiers, and imports only go down (lint enforces it; see `eslint.bo
 6. `features`: one folder per feature, on one contract (`features/feature.ts`).
 7. `app.ts`, `main.ts`: the wiring.
 
-The few imports that still go up are listed there as exceptions, to be removed, not added to. The wider plan is in #384.
+The few imports that still go up are listed there as exceptions, to be removed, not added to. `src/architecture.test.ts` checks two more things that may only shrink: the imports between folders that close a cycle, and the methods on the globe's interface (draw new things with `globe.addLayer`). The wider plan is in #384.
 
 ## Deployment
 
