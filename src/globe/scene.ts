@@ -108,13 +108,18 @@ import { elementAt } from '../util/arrays';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius, polarRatio } from './planetLook';
 import { isMoonBody, MOON_NAMES, moonPlanet } from './moonLook';
-import type { GlobeLayer, LayerFactory, LayerHost, NameLabel } from './layerHost';
+import {
+  SURFACE_PRIORITY,
+  type GlobeLayer,
+  type LayerFactory,
+  type LayerHost,
+  type NameLabel,
+} from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
 import { createPlanetMeshes } from './planetMeshes';
 import type { GenomeCell } from '../data/ancientGenomes';
 import type { FossilCell } from '../data/fossils';
 import type { ImpactMark } from '../data/impacts';
-import type { VolcanoMark } from '../data/volcanoes';
 import type { ArrivalGrid } from '../data/dispersal';
 import type { HumanSite } from '../data/humanClaims';
 import type { RockUnit } from '../data/rocks';
@@ -427,8 +432,6 @@ export interface Globe {
   setHumanSites(sites: readonly HumanSite[] | null): void;
   /** Mark impact craters and deposits, sized by diameter, each to tap for its card; null hides them. */
   setImpacts(marks: readonly ImpactMark[] | null): void;
-  /** Mark volcanoes erupting near the year shown, sized by VEI, each to tap; null hides them. */
-  setVolcanoes(marks: readonly VolcanoMark[] | null): void;
   /**
    * Name a rocky body's largest features on its globe (#334), largest first, as many as fit and
    * more as the view zooms in; null takes the names away.
@@ -1595,12 +1598,6 @@ export function createGlobe(
   container.append(impactLayer);
   let impactLabels: GlobeLabel[] = [];
   let impactKey = '';
-  // Volcanoes erupting near the year shown, in historical time: markers to tap for a card.
-  const volcanoLayer = document.createElement('div');
-  volcanoLayer.className = 'empire-labels volcano-marks';
-  container.append(volcanoLayer);
-  let volcanoLabels: GlobeLabel[] = [];
-  let volcanoKey = '';
   // The IAU's names on the rocky body in view (#334), turning with it. Each label's position is
   // on the body, in its own axes; where it is in the scene is worked out each frame.
   const placeNameLayer = document.createElement('div');
@@ -1635,8 +1632,10 @@ export function createGlobe(
   const markerPickListeners = new Set<(key: string) => void>();
   // The layers added (#379), and what they lay out after each frame: declared before the first.
   const afterRenders: (() => void)[] = [];
+  /** Labels on Earth's surface from the layers, each slot laid out in its priority's place. */
+  const surfaceSlots: { readonly priority: number; labels: readonly GlobeLabel[] }[] = [];
   const layers: GlobeLayer<never>[] = [];
-  for (const layer of [impactLayer, volcanoLayer, humanLabelLayer, genomeLayer, fossilLayer]) {
+  for (const layer of [impactLayer, humanLabelLayer, genomeLayer, fossilLayer]) {
     pickable(layer);
   }
   /** Taps on `[data-pick]` inside `layer` reach the marker-pick listeners. */
@@ -2181,15 +2180,20 @@ export function createGlobe(
     // again, for every label.
     const viewWidth = container.clientWidth;
     const viewHeight = container.clientHeight;
-    for (const { element, position, width, height } of [
-      ...empireLabels.filter(({ major }) => major),
-      ...humanLabels,
-      ...genomeLabels,
-      ...volcanoLabels,
-      ...impactLabels,
-      ...fossilLabels,
-      ...empireLabels.filter(({ major }) => !major),
-    ]) {
+    const slots = [
+      { priority: SURFACE_PRIORITY.majorStates, labels: empireLabels.filter(({ major }) => major) },
+      { priority: SURFACE_PRIORITY.humans, labels: humanLabels },
+      { priority: SURFACE_PRIORITY.genomes, labels: genomeLabels },
+      { priority: SURFACE_PRIORITY.impacts, labels: impactLabels },
+      { priority: SURFACE_PRIORITY.fossils, labels: fossilLabels },
+      {
+        priority: SURFACE_PRIORITY.minorStates,
+        labels: empireLabels.filter(({ major }) => !major),
+      },
+      // Those of the layers on the host (#379), each in its place.
+      ...surfaceSlots,
+    ].sort((a, b) => a.priority - b.priority);
+    for (const { element, position, width, height } of slots.flatMap(({ labels }) => labels)) {
       projected.copy(position).project(camera);
       const shown =
         near && position.dot(eye) > 0.25 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1;
@@ -2516,6 +2520,19 @@ export function createGlobe(
     },
     layOutNames,
     pickable,
+    surfaceLabels(priority, layer) {
+      const slot: (typeof surfaceSlots)[number] = { priority, labels: [] };
+      surfaceSlots.push(slot);
+      return {
+        show(pins) {
+          layer.replaceChildren();
+          slot.labels = pins === null ? [] : measured(layer, pins);
+          // Placed now, not at the next frame: as time plays, that frame may lay them out again.
+          placeEmpireLabels();
+          needsRender = true;
+        },
+      };
+    },
   };
 
   return {
@@ -3279,50 +3296,6 @@ export function createGlobe(
           return { ...label, km };
         }),
       };
-      needsRender = true;
-    },
-    setVolcanoes(marks) {
-      const key =
-        marks === null
-          ? 'off'
-          : marks
-              .map(
-                ({ volcano, eruptions }) => `${String(volcano.number)}:${String(eruptions.length)}`,
-              )
-              .join(' ');
-      if (key === volcanoKey) return;
-      volcanoKey = key;
-      volcanoLayer.replaceChildren();
-      volcanoLabels =
-        marks === null
-          ? []
-          : measured(
-              volcanoLayer,
-              marks.map(({ volcano, vei, uncertain }) => {
-                const element = document.createElement('button');
-                element.type = 'button';
-                element.className = `empire-label volcano-mark${uncertain ? ' is-uncertain' : ''}`;
-                element.dataset['pick'] = `volcano:${String(volcano.number)}`;
-                // Larger for a larger eruption: from 10 pixels (VEI unknown or 0) to 34 (VEI 8).
-                const size = 10 + 3 * Math.max(0, vei ?? 0);
-                element.style.setProperty('--size', `${String(size)}px`);
-                // The largest are named; every one says what it is to a screen reader.
-                if ((vei ?? 0) >= 4) {
-                  const name = document.createElement('span');
-                  name.className = 'impact-name';
-                  name.textContent = volcano.name;
-                  element.append(name);
-                }
-                element.setAttribute('aria-label', `${volcano.name}: details`);
-                return {
-                  element,
-                  point: { latitude: volcano.latitude, longitude: volcano.longitude },
-                };
-              }),
-            );
-      container.dataset['volcanoes'] = marks === null ? 'off' : String(marks.length);
-      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-      placeEmpireLabels();
       needsRender = true;
     },
     onMarkerPick(listener) {

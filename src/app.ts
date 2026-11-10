@@ -29,6 +29,7 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { craftInFlight } from './globe/craftLayer';
+import { volcanoLayer } from './globe/volcanoLayer';
 import { geoToVector } from './globe/geo';
 import {
   PLANET_NAMES,
@@ -1757,8 +1758,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
     focus: store.get().focus,
   });
-  // Drawn on the globe as a layer of its own (#379).
+  // Drawn on the globe as layers of their own (#379).
   const craftOnGlobe = globe.addLayer(craftInFlight);
+  const volcanoesOnGlobe = globe.addLayer(volcanoLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureContext: FeatureContext = {
     base,
@@ -2751,7 +2753,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (!on || travelling) {
       volcanoesSaid = on ? RESTING : null;
       volcanoMarks = [];
-      globe.setVolcanoes(null);
+      volcanoesOnGlobe.update(null);
       return;
     }
     if (volcanoes === null) {
@@ -2775,7 +2777,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     const year = state.time.date.year;
     volcanoMarks = eruptionsNear(volcanoes, year);
-    globe.setVolcanoes(volcanoMarks);
+    volcanoesOnGlobe.update(volcanoMarks);
     volcanoesSaid = volcanoesText(volcanoMarks, year);
   }
 

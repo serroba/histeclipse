@@ -6,6 +6,8 @@
 
 import type { Scene, Vector3 } from 'three';
 
+import type { GeoPoint } from '../core/geo';
+
 export type Triple = readonly [number, number, number];
 
 /** A name on screen that a tap picks, measured once. */
@@ -35,7 +37,38 @@ export interface LayerHost {
   ): void;
   /** Taps on `[data-pick]` elements inside `element` reach the globe's marker-pick listeners. */
   pickable(element: HTMLElement): void;
+  /**
+   * Pin labels inside `layer` to Earth's surface, laid out with all the others after each frame
+   * and given room in `priority` order (see SURFACE_PRIORITY).
+   */
+  surfaceLabels(priority: number, layer: HTMLElement): SurfaceLabels;
 }
+
+/** A marker or name pinned to Earth's surface. */
+export interface SurfacePin {
+  readonly element: HTMLElement;
+  readonly point: GeoPoint;
+}
+
+export interface SurfaceLabels {
+  /** Replace this layer's pins (measured once, laid out from the next frame); null clears them. */
+  show(pins: readonly SurfacePin[] | null): void;
+}
+
+/**
+ * Who claims room first where labels on Earth's surface would overlap: lower first. The larger
+ * states' names before the markers, so a crowd of small counts can't take their places; the
+ * smaller states' names last, where room is left (#163).
+ */
+export const SURFACE_PRIORITY = {
+  majorStates: 0,
+  humans: 10,
+  genomes: 20,
+  volcanoes: 30,
+  impacts: 40,
+  fossils: 50,
+  minorStates: 60,
+} as const;
 
 export interface GlobeLayer<Input> {
   /** Draw this; each layer says what null means, usually "nothing". */
