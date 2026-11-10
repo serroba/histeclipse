@@ -1256,14 +1256,19 @@ body {
   flex: 1;
   align-items: center;
   gap: 8px;
-  min-width: 0;
+  /* Never narrower than its buttons and a chip's room: where the year's row leaves less, the
+     bar wraps it onto a line of its own rather than letting a button spill past the edge
+     (#400). */
+  min-width: min-content;
 }
 
 .eclipse-list {
   display: flex;
   flex: 1;
   gap: 8px;
-  min-width: 0;
+  /* Room for a chip; the rest scrolls, and its chips never widen the row. */
+  min-width: 160px;
+  contain: inline-size;
   margin: 0;
   padding: 0;
   overflow-x: auto;
