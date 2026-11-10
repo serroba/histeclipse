@@ -218,3 +218,52 @@ test('at a span’s oldest moment, the thumb covers no label', async ({ page }) 
     await expect(bar.getByTestId('scale-start')).toHaveCSS('opacity', '1');
   });
 });
+
+test('the year turns on a wheel kept to the era, and can still be typed', async ({ page }) => {
+  const problems = collectProblems(page);
+  const year = page.getByLabel('Year', { exact: true });
+  const wheel = page.getByRole('group', { name: 'Turn to a year' });
+  await test.step('Given a reader in 587 CE', async () => {
+    await page.goto('./?t=0587-06-01T12:00');
+    await globeRendered(page);
+    await expect(year).toHaveValue('587');
+  });
+  await test.step('When they open the wheel beside the year', async () => {
+    await page.getByRole('button', { name: 'Turn to a year' }).click();
+    await expect(wheel).toBeVisible();
+    // The wheel stays on screen, above the bar, on a phone too.
+    const box = await wheel.boundingBox();
+    const viewport = page.viewportSize();
+    expect(box !== null && viewport !== null && box.x >= 0).toBe(true);
+    expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(viewport?.width ?? 0);
+  });
+  await test.step('Then its columns read 5 | 87, and turn a year or a hundred at a time', async () => {
+    const hundreds = wheel.getByRole('spinbutton', { name: 'Hundreds of years' });
+    const years = wheel.getByRole('spinbutton', { name: 'Years', exact: true });
+    await expect(hundreds).toHaveAttribute('aria-valuenow', '5');
+    await expect(years).toHaveAttribute('aria-valuenow', '87');
+    await years.press('ArrowDown');
+    await expect(year).toHaveValue('588');
+    await hundreds.press('ArrowDown');
+    await expect(year).toHaveValue('688');
+  });
+  await test.step('And in BCE it goes no further back than 9700', async () => {
+    await page.getByRole('combobox', { name: 'Era', exact: true }).selectOption('BCE');
+    await expect(year).toHaveValue('688');
+    const hundreds = wheel.getByRole('spinbutton', { name: 'Hundreds of years' });
+    await expect(hundreds).toHaveAttribute('aria-valuemax', '97');
+    await hundreds.evaluate((column) => {
+      column.scrollTop = column.scrollHeight;
+    });
+    await expect(year).toHaveValue('9700');
+  });
+  await test.step('And Escape closes it; typing a year still works', async () => {
+    await page.keyboard.press('Escape');
+    await expect(wheel).toBeHidden();
+    await year.fill('753');
+    await year.press('Enter');
+    await expect(year).toHaveValue('753');
+    await expect(page.getByRole('combobox', { name: 'Era', exact: true })).toHaveValue('BCE');
+  });
+  expect(problems).toEqual([]);
+});

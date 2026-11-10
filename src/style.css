@@ -5116,3 +5116,95 @@ button:has(> .icon-label) > .icon {
 .asteroid-name[hidden] {
   display: none;
 }
+
+/* The year wheel (#376): the button beside the year, and two columns above it, the hundreds and
+   the years within them, each scrolled or flicked and snapping to a row. */
+.year-form {
+  position: relative;
+}
+
+.year-wheel-button {
+  flex: none;
+  width: 32px;
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.05);
+  color: var(--ink-muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.year-wheel-button:hover,
+.year-wheel-button[aria-expanded='true'] {
+  color: var(--ink);
+  background: rgb(255 255 255 / 0.1);
+}
+
+.year-wheel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: #10162a;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.5);
+}
+
+.year-wheel[hidden] {
+  display: none;
+}
+
+.year-wheel-column {
+  width: 64px;
+  height: calc(var(--row) * (2 * var(--around) + 1));
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  touch-action: pan-y;
+  border-radius: 10px;
+  outline: none;
+  /* Rows fade out above and below the picked one. */
+  mask-image: linear-gradient(transparent, #000 35%, #000 65%, transparent);
+}
+
+.year-wheel-column::-webkit-scrollbar {
+  display: none;
+}
+
+.year-wheel-column:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.year-wheel-list {
+  margin: 0;
+  padding: calc(var(--row) * var(--around)) 0;
+  list-style: none;
+}
+
+.year-wheel-list li {
+  height: var(--row);
+  scroll-snap-align: center;
+  color: var(--ink);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  line-height: var(--row);
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* The band the picked year sits in. */
+.year-wheel-band {
+  position: absolute;
+  inset: calc(6px + var(--row) * var(--around)) 6px auto;
+  height: var(--row);
+  border-block: 1px solid rgb(255 183 94 / 0.5);
+  pointer-events: none;
+}
