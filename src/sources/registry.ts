@@ -804,6 +804,20 @@ export const SOURCES = {
     url: 'https://ssd.jpl.nasa.gov/horizons/',
     licence: 'NASA/JPL, public domain',
   },
+  jplSbdb: {
+    name: 'JPL Small-Body Database',
+    kind: 'dataset',
+    cite: 'JPL Solar System Dynamics, Small-Body Database Query API: the main belt’s asteroids 100 km across or more, their names and diameters',
+    url: 'https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html',
+    licence: 'NASA/JPL, public domain',
+  },
+  jplHorizonsAsteroids: {
+    name: 'JPL Horizons: asteroids',
+    kind: 'dataset',
+    cite: 'JPL Solar System Dynamics, Horizons System: the asteroids’ positions from 1600 to 2500, to which their orbits are fitted',
+    url: 'https://ssd.jpl.nasa.gov/horizons/',
+    licence: 'NASA/JPL, public domain',
+  },
   iauGazetteer: {
     name: 'Gazetteer of Planetary Nomenclature',
     kind: 'dataset',
@@ -1362,6 +1376,12 @@ export const WHYS = {
     sources: ['gcat', 'nssdcaChronology', 'jplHorizonsCraft'],
     how: 'The record is Jonathan McDowell’s GCAT: each craft that left Earth orbit (not its rocket stages), with each stretch of its flight about one body, and its landing; NASA NSSDCA’s chronology gives each mission’s objective and outcome, and the craft that set out but never left (failures at launch, probes stranded in Earth orbit). Paths are JPL Horizons’s where it has the craft (about 95), thinned to as few points as draw them within 75,000 km about the Sun, 1,000 km through a flyby, 500 km near Earth; a long stay in orbit is drawn at its world. For the others the path is approximate, drawn amber: each leg as the transfer orbit between where it left and where it arrived, as first planned, not as flown; within about 0.02 AU of Horizons for a direct transfer. A leg to a comet or asteroid, or one that loops back to the world it left, is not drawn.',
   },
+  asteroids: {
+    title: 'The asteroid belt',
+    what: 'The main belt’s asteroids at least 100 km across, between Mars and Jupiter, where each was at the moment shown.',
+    sources: ['jplSbdb', 'jplHorizonsAsteroids'],
+    how: 'Which asteroids, their names and their diameters are JPL’s Small-Body Database’s: every one in the main belt it gives as 100 km across or more, some two hundred, from Ceres (939 km) down; the hundreds of thousands smaller are left out. Each is drawn as a dot, the larger ones larger, not to scale: at the scale of the Solar System even Ceres would be far too small to see. Its orbit is a mean orbit about the Sun fitted to JPL Horizons from 1600 to 2500, as the moons’ are: the elements JPL publishes for an asteroid hold only at their epoch, and carried with Kepler’s laws alone they stray tens of degrees in a few centuries, as Jupiter pulls on the asteroids. Fitted, half are within a degree of JPL’s place along their orbits throughout those years, as Ceres and Vesta are (within half a degree), and 169 of the 210 within two. The furthest out, held in step with Jupiter (the Hildas, which go round three times to its two, and Thule, four to its three), are swung by it most: up to 12 degrees off. Each card says how close its own fit came. Outside those years the orbits are carried on at the same rates: where an asteroid is along its orbit is then only roughly known.',
+  },
   orbits: {
     title: 'Planets’ orbits',
     what: 'The paths of Earth and the five bright planets around the Sun.',
@@ -1533,6 +1553,7 @@ const LAYER_WHYS: readonly (Layer & WhyId)[] = [
   'volcanoes',
   'orbits',
   'spacecraft',
+  'asteroids',
   'temperature',
   'sealevel',
   'plates',

@@ -59,6 +59,8 @@ export const LAYERS = [
   'orbits',
   // Every craft sent beyond Earth orbit, flying as the time plays (#350).
   'spacecraft',
+  // The main belt's asteroids at least 100 km across, going round the Sun (#372).
+  'asteroids',
   'empires',
   // Dated ancient genomes (AADR), counted by region around the year shown.
   'genomes',

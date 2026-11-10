@@ -134,6 +134,8 @@ import { loadMoonOrbits, moonPosition, type MoonName, type MoonOrbits } from './
 import type { Geocentric } from './astro/approximatePaths';
 import { craftNow, craftWheres, type CraftWheres } from './astro/craftNow';
 import { craftCard } from './data/craftCard';
+import { asteroidPosition, loadAsteroids, type Asteroids } from './astro/asteroids';
+import { asteroidCard } from './data/asteroidCard';
 import { loadSpacecraft, type Spacecraft } from './data/spacecraft';
 import { loadSpacecraftPaths } from './data/spacecraftPaths';
 import { moonAbout, moonLine } from './data/moonFacts';
@@ -614,6 +616,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => ({
         ...state,
         layers: withLayer(state.layers, 'spacecraft', !state.layers.has('spacecraft')),
+      }));
+    },
+    onAsteroids() {
+      store.set((state) => ({
+        ...state,
+        layers: withLayer(state.layers, 'asteroids', !state.layers.has('asteroids')),
       }));
     },
     onEarth() {
@@ -2033,6 +2041,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     showBody(state);
     showOrbits(state, terrestrial);
     showSpacecraft(state, terrestrial);
+    showAsteroids(state, terrestrial);
     root.dataset['subsolar'] = `${sun.latitude.toFixed(3)},${sun.longitude.toFixed(3)}`;
     if (state.ma !== null) {
       showDeepTimeText(state.ma);
@@ -2875,6 +2884,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       const craft = spacecraft?.craft.find((each) => each.id === id);
       if (craft !== undefined && spacecraftWheres !== null) {
         markerCard.show(craftCard(craft, spacecraftWheres.approximate(craft)));
+      }
+      return;
+    }
+    if (kind === 'asteroid') {
+      const asteroid = asteroids?.asteroids.find((each) => each.number === id);
+      if (asteroid !== undefined && asteroids !== null && lastTerrestrial !== null) {
+        markerCard.show(asteroidCard(asteroid, asteroids.fitted, lastTerrestrial));
       }
       return;
     }
@@ -4212,6 +4228,49 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe.setSpacecraft(craftNow(spacecraft.craft, spacecraftWheres, craftGeocentric, jdTT));
   }
 
+  // The asteroid belt (#372): its large asteroids' orbits, loaded the first time it is on.
+  let asteroids: Asteroids | null = null;
+  let asteroidsAsked = false;
+  function showAsteroids(state: ViewState, jdTT: number): void {
+    const offered = state.mode === 'globe' && state.ma === null;
+    zoomRail.setAsteroids(offered, state.layers.has('asteroids'));
+    if (!offered || !state.layers.has('asteroids')) {
+      globe.setAsteroids(null);
+      return;
+    }
+    if (planets === null) void loadPlanets();
+    if (asteroids === null) {
+      if (asteroidsAsked) return;
+      asteroidsAsked = true;
+      loadAsteroids(`${base}data/asteroids.json`, fetchJson).then(
+        (loaded) => {
+          asteroids = loaded;
+          showTime(store.get());
+        },
+        (error: unknown) => {
+          asteroidsAsked = false;
+          notify(`Could not load the asteroids: ${errorMessage(error)}`);
+        },
+      );
+      return;
+    }
+    // From Earth's centre, as the scene places everything.
+    const earth = planets?.heliocentric('earth', jdTT) ?? null;
+    if (earth === null) return;
+    const [ex, ey, ez] = earth;
+    globe.setAsteroids(
+      asteroids.asteroids.map((asteroid) => {
+        const [x, y, z] = asteroidPosition(asteroid, jdTT);
+        return {
+          number: asteroid.number,
+          name: asteroid.name,
+          diameterKm: asteroid.diameterKm,
+          km: [x - ex, y - ey, z - ez],
+        };
+      }),
+    );
+  }
+
   /** Whether the space view is far enough out, or close to a planet, to need them. */
   function wantPlanets(state: ViewState): boolean {
     if (state.mode !== 'globe') return false;
@@ -4585,8 +4644,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (state.time !== previous?.time || state.years !== previous.years || leftDeepTime) {
       showTime(state);
     } else if (lastTerrestrial !== null && state.layers !== previous.layers) {
-      // The craft come and go with their layer, at the moment shown (#350).
+      // The craft and the asteroids come and go with their layers, at the moment shown.
       showSpacecraft(state, lastTerrestrial);
+      showAsteroids(state, lastTerrestrial);
     }
     if (
       state.ma !== previous?.ma ||
