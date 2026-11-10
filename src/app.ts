@@ -29,6 +29,9 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { craftInFlight } from './globe/craftLayer';
+import { fossilLayer } from './globe/fossilLayer';
+import { genomeLayer } from './globe/genomeLayer';
+import { humanSiteLayer } from './globe/humanSiteLayer';
 import { impactLayer } from './globe/impactLayer';
 import { volcanoLayer } from './globe/volcanoLayer';
 import { geoToVector } from './globe/geo';
@@ -1763,6 +1766,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const craftOnGlobe = globe.addLayer(craftInFlight);
   const volcanoesOnGlobe = globe.addLayer(volcanoLayer);
   const impactsOnGlobe = globe.addLayer(impactLayer);
+  const fossilsOnGlobe = globe.addLayer(fossilLayer);
+  const genomesOnGlobe = globe.addLayer(genomeLayer);
+  const humanSitesOnGlobe = globe.addLayer(humanSiteLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureContext: FeatureContext = {
     base,
@@ -2398,9 +2404,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setTemperature(null);
       showHoloceneEarth(state);
       globe.setIceOutlines(null);
-      globe.setHumanSites(null);
+      humanSitesOnGlobe.update(null);
       globe.setSettled(null);
-      globe.setFossilCells(null);
+      fossilsOnGlobe.update(null);
       globe.setPlates(null);
       return;
     }
@@ -2974,7 +2980,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** On the 540 Myr span with Fossils on, the finds of the moment where they lay then. */
   function showFossils(state: ViewState, ma: number): DeepTimeView['fossils'] {
     if (state.deepScale !== 'all' || !state.layers.has('fossils')) {
-      globe.setFossilCells(null);
+      fossilsOnGlobe.update(null);
       return { on: false };
     }
     if (fossils === null) {
@@ -2994,7 +3000,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return { on: true, at: null };
     }
     const at = fossilsAt(fossils, ma);
-    globe.setFossilCells(at.cells);
+    fossilsOnGlobe.update(at.cells);
     return { on: true, at };
   }
 
@@ -3005,7 +3011,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** On the ice-age scale with Humans on, the finds of the moment and the claims about them. */
   function showHumans(state: ViewState, ma: number): DeepTimeView['humans'] {
     if (state.deepScale !== 'ice' || !state.layers.has('humans')) {
-      globe.setHumanSites(null);
+      humanSitesOnGlobe.update(null);
       globe.setSettled(null);
       return { on: false };
     }
@@ -3027,7 +3033,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return { on: true, view: null, model };
     }
     const view = humansAt(humanClaims, ma * 1000);
-    globe.setHumanSites(view.sites);
+    humanSitesOnGlobe.update(view.sites);
     return { on: true, view, model };
   }
 
@@ -3479,7 +3485,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const on = state.layers.has('genomes') && state.ma === null;
     if (!on || travelling) {
       genomesSaid = on ? RESTING : null;
-      globe.setGenomeCells(null);
+      genomesOnGlobe.update(null);
       return;
     }
     if (ancientGenomes === null) {
@@ -3502,7 +3508,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     const near = genomesNear(ancientGenomes, state.time.date.year);
     genomesSaid = genomesNote(near);
-    globe.setGenomeCells(near.cells);
+    genomesOnGlobe.update(near.cells);
   }
 
   // Archaeological radiocarbon dates (p3k14c): the counts load with the layer, a place's tile

@@ -117,10 +117,7 @@ import {
 } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
 import { createPlanetMeshes } from './planetMeshes';
-import type { GenomeCell } from '../data/ancientGenomes';
-import type { FossilCell } from '../data/fossils';
 import type { ArrivalGrid } from '../data/dispersal';
-import type { HumanSite } from '../data/humanClaims';
 import type { RockUnit } from '../data/rocks';
 import type { WayRegion } from '../data/waysOfLife';
 import type { IceOutlines } from '../data/iceOutlines';
@@ -243,8 +240,6 @@ export interface StateChange {
 const STATE_CHANGES_SHOWN = 4;
 /** A state's name at this size or larger (its larger states) is placed before the markers. */
 const MAJOR_STATE_SIZE = 14;
-/** Regions with this many genomes or fewer are a small dot, without a number. */
-const FEW_GENOMES = 2;
 
 /** How long a state that appeared or went stays named as such, ms (its CSS animation's too). */
 const STATE_CHANGE_MS = 4000;
@@ -408,8 +403,6 @@ export interface Globe {
    * the layer.
    */
   setEmpires(layer: EmpireLayer | null): void;
-  /** Mark regions with ancient genomes near the year shown, by count; null hides them. */
-  setGenomeCells(cells: readonly GenomeCell[] | null): void;
   /**
    * Shade where a dispersal model has people settled `ka` thousand years ago, under any ice
    * outlines; null hides it.
@@ -425,10 +418,6 @@ export interface Globe {
   ): void;
   /** Shade regions by their most widespread way of life, under any states; null hides them. */
   setWays(regions: readonly WayRegion[] | null): void;
-  /** Mark cells with fossils of the moment, by group and count; null hides them. */
-  setFossilCells(cells: readonly FossilCell[] | null): void;
-  /** Mark dated finds of humans and their relatives in deep time; null hides them. */
-  setHumanSites(sites: readonly HumanSite[] | null): void;
   /**
    * Name a rocky body's largest features on its globe (#334), largest first, as many as fit and
    * more as the view zooms in; null takes the names away.
@@ -1539,12 +1528,6 @@ export function createGlobe(
   }
   /** A state's name; `major` for the larger states' and those just come or gone. */
   let empireLabels: (GlobeLabel & { readonly id: string; readonly major: boolean })[] = [];
-  // Dated finds of humans, in deep time: placed before the states' names, which never show then.
-  const humanLabelLayer = document.createElement('div');
-  humanLabelLayer.className = 'empire-labels human-sites';
-  container.append(humanLabelLayer);
-  let humanLabels: GlobeLabel[] = [];
-  let humanSitesKey = '';
   // Historical time's overlay, on the states' map: ways of life, and the states over them.
   // The sizes of the states' names already laid out, by class, size and name: as the years
   // play, most names come back step after step.
@@ -1577,18 +1560,6 @@ export function createGlobe(
     empiresTexture.needsUpdate = true;
     uniforms['overlayMap'] = { value: empiresTexture };
   }
-  // Regions with ancient genomes near the year shown, in historical time.
-  const genomeLayer = document.createElement('div');
-  genomeLayer.className = 'empire-labels genome-cells';
-  container.append(genomeLayer);
-  let genomeLabels: GlobeLabel[] = [];
-  let genomeKey = '';
-  // Fossils of the moment, in deep time.
-  const fossilLayer = document.createElement('div');
-  fossilLayer.className = 'empire-labels fossil-cells';
-  container.append(fossilLayer);
-  let fossilLabels: GlobeLabel[] = [];
-  let fossilKey = '';
   // The IAU's names on the rocky body in view (#334), turning with it. Each label's position is
   // on the body, in its own axes; where it is in the scene is worked out each frame.
   const placeNameLayer = document.createElement('div');
@@ -1626,9 +1597,6 @@ export function createGlobe(
   /** Labels on Earth's surface from the layers, each slot laid out in its priority's place. */
   const surfaceSlots: { readonly priority: number; labels: readonly GlobeLabel[] }[] = [];
   const layers: GlobeLayer<never>[] = [];
-  for (const layer of [humanLabelLayer, genomeLayer, fossilLayer]) {
-    pickable(layer);
-  }
   /** Taps on `[data-pick]` inside `layer` reach the marker-pick listeners. */
   function pickable(layer: HTMLElement): void {
     layer.addEventListener('click', (event) => {
@@ -2173,9 +2141,6 @@ export function createGlobe(
     const viewHeight = container.clientHeight;
     const slots = [
       { priority: SURFACE_PRIORITY.majorStates, labels: empireLabels.filter(({ major }) => major) },
-      { priority: SURFACE_PRIORITY.humans, labels: humanLabels },
-      { priority: SURFACE_PRIORITY.genomes, labels: genomeLabels },
-      { priority: SURFACE_PRIORITY.fossils, labels: fossilLabels },
       {
         priority: SURFACE_PRIORITY.minorStates,
         labels: empireLabels.filter(({ major }) => !major),
@@ -3084,86 +3049,6 @@ export function createGlobe(
       };
       paintDeepOverlay();
     },
-    setGenomeCells(cells) {
-      const key =
-        cells === null
-          ? 'off'
-          : cells
-              .map(
-                (cell) =>
-                  `${String(cell.latitude)},${String(cell.longitude)}:${String(cell.count)}`,
-              )
-              .join(' ');
-      if (key === genomeKey) return;
-      genomeKey = key;
-      genomeLayer.replaceChildren();
-      genomeLabels =
-        cells === null
-          ? []
-          : measured(
-              genomeLayer,
-              cells.map((cell) => {
-                const element = document.createElement('button');
-                element.type = 'button';
-                // One or two genomes make a small dot, without a number: many of them together
-                // crowded out the states' names (#163). The count is still in its label.
-                const few = cell.count <= FEW_GENOMES;
-                element.className = `empire-label genome-cell${few ? ' is-few' : ''}`;
-                if (!few) element.textContent = String(cell.count);
-                element.setAttribute(
-                  'aria-label',
-                  `${String(cell.count)} ${cell.count === 1 ? 'genome' : 'genomes'}: details`,
-                );
-                element.dataset['pick'] = `genome:${String(cell.cell)}`;
-                // Bigger for more genomes, gently: a square root, from 18 to 44 pixels.
-                const size = few ? 10 : Math.round(Math.min(44, 18 + 4 * Math.sqrt(cell.count)));
-                element.style.width = `${String(size)}px`;
-                element.style.height = `${String(size)}px`;
-                element.title = `${String(cell.count)} genomes; lab labels: ${cell.labels.map(([label, count]) => `${label} ×${String(count)}`).join(', ')}`;
-                return { element, point: cell };
-              }),
-            );
-      container.dataset['genomes'] = cells === null ? 'off' : String(cells.length);
-      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-      placeEmpireLabels();
-      needsRender = true;
-    },
-    setFossilCells(cells) {
-      const key =
-        cells === null
-          ? 'off'
-          : cells
-              .map(
-                (cell) =>
-                  `${cell.group}:${String(cell.latitude)},${String(cell.longitude)}:${String(cell.count)}`,
-              )
-              .join(' ');
-      if (key === fossilKey) return;
-      fossilKey = key;
-      fossilLayer.replaceChildren();
-      fossilLabels =
-        cells === null
-          ? []
-          : measured(
-              fossilLayer,
-              cells.map((cell) => {
-                const element = document.createElement('button');
-                element.type = 'button';
-                element.className = `empire-label fossil-cell is-${cell.group}`;
-                element.textContent = String(cell.count);
-                element.dataset['pick'] =
-                  `fossil:${cell.group}:${String(cell.latitude)}:${String(cell.longitude)}`;
-                const size = Math.round(Math.min(40, 16 + 3 * Math.sqrt(cell.count)));
-                element.style.width = `${String(size)}px`;
-                element.style.height = `${String(size)}px`;
-                return { element, point: cell };
-              }),
-            );
-      container.dataset['fossils'] = cells === null ? 'off' : String(cells.length);
-      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-      placeEmpireLabels();
-      needsRender = true;
-    },
     addLayer(factory) {
       const layer = factory(host);
       layers.push(layer);
@@ -3248,32 +3133,6 @@ export function createGlobe(
     onMarkerPick(listener) {
       markerPickListeners.add(listener);
       return () => markerPickListeners.delete(listener);
-    },
-    setHumanSites(sites) {
-      // Laying labels out is slow: not again for the same finds, as time plays on.
-      const key = sites === null ? 'off' : sites.map((site) => site.id).join(' ');
-      if (key === humanSitesKey) return;
-      humanSitesKey = key;
-      humanLabelLayer.replaceChildren();
-      humanLabels =
-        sites === null
-          ? []
-          : measured(
-              humanLabelLayer,
-              sites.map((site) => {
-                const element = document.createElement('button');
-                element.type = 'button';
-                element.className = `empire-label human-site is-${site.species}${site.disputed ? ' is-disputed' : ''}`;
-                element.textContent = site.label;
-                element.dataset['site'] = site.id;
-                element.dataset['pick'] = `human:${site.id}`;
-                return { element, point: site.point };
-              }),
-            );
-      container.dataset['humans'] = sites === null ? 'off' : String(sites.length);
-      // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-      placeEmpireLabels();
-      needsRender = true;
     },
     setRocks(units) {
       if ((units === null ? 'off' : 'on') === container.dataset['rocks']) return;
