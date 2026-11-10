@@ -357,7 +357,11 @@ export const PLANET_VIEWS: Readonly<Record<PlanetName | 'moon', readonly PlanetV
 
 /** The view a key names for a body, or its first (as it looks) when the key is not one of its. */
 export function planetView(planet: PlanetName | 'moon', key: string): PlanetView {
-  const views = PLANET_VIEWS[planet];
+  return pickedView(PLANET_VIEWS[planet], key);
+}
+
+/** Of a body's views, the one a key names, or its first when the key is not one of them. */
+export function pickedView(views: readonly PlanetView[], key: string): PlanetView {
   return views.find((view) => view.key === key) ?? elementAt(views, 0);
 }
 

@@ -48,6 +48,7 @@ def test_each_map_is_pinned_and_from_a_mission_release() -> None:
         "moons/dione",
         "moons/rhea",
         "moons/titan",
+        "moons/titan-radar",
         "moons/iapetus",
         "earth-blue-marble",
         "moon-lroc",
@@ -67,10 +68,10 @@ def test_each_map_is_pinned_and_from_a_mission_release() -> None:
 
 def test_each_map_comes_in_the_sizes_the_site_loads_never_enlarged() -> None:
     sizes = {source.stem: source.widths for source in MAPS}
-    # No sharp size for Phobos, 22 km across, nor for Titan, whose map is 4040 wide.
+    # No sharp size for Phobos, 22 km across; Titan's is its own 4040, not enlarged.
     assert sizes["moons/europa"] == (2048, 4096)
     assert sizes["moons/phobos"] == (2048,)
-    assert sizes["moons/titan"] == (2048,)
+    assert sizes["moons/titan"] == (2048, 4040)
     assert sizes["planets/mars"] == (2048, 4096)
     assert sizes["earth-blue-marble"] == (4096, 8192)
     # Cassini's map is 3601 wide: its sharp size is its own.

@@ -448,7 +448,7 @@ export interface Globe {
   /** Set Mars's, Jupiter's and Saturn's moons going round them (#335); null takes them away. */
   setMoonOrbits(orbits: MoonOrbits | null): void;
   /** Wrap a moon in a mission's map, fetched once: the latest asked for each moon wins. */
-  setMoonMap(moon: MoonName, url: string): void;
+  setMoonMap(moon: MoonName, url: string | null): void;
   /**
    * Draw the craft beyond Earth orbit in flight (#350), each with its trail and its name, a
    * tap on it picked as `craft:<id>`; null takes them away.
@@ -1460,7 +1460,7 @@ export function createGlobe(
     );
   }
   const bodyMapsAsked = new Set<string>();
-  const moonMapsWanted = new Map<MoonName, string>();
+  const moonMapsWanted = new Map<MoonName, string | null>();
   const sharpened = new Set<string>();
   function markSharp(body: string): void {
     sharpened.add(body);
@@ -3239,6 +3239,13 @@ export function createGlobe(
     setMoonMap(moon, url) {
       if (moonMapsWanted.get(moon) === url) return;
       moonMapsWanted.set(moon, url);
+      if (url === null) {
+        // Its painted colour: as Titan looks, all haze.
+        moonSystems.setMap(moon, null);
+        container.dataset['moonMap'] = `${moon} painted`;
+        needsRender = true;
+        return;
+      }
       planetTexture(url).then(
         (map) => {
           // Only if the moon still wants this map: a sharper one may have been asked since.
