@@ -68,6 +68,7 @@ export default defineConfig({
         'src/features/ways/index.ts',
         'src/features/dates/index.ts',
         'src/features/periods/index.ts',
+        'src/features/empires/index.ts',
         'src/story/sunCore.ts',
         'src/story/airShower.ts',
         'src/story/leafScene.ts',

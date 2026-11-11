@@ -31,7 +31,7 @@ import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruption
 import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
 import { createDatingCard } from './ui/datingCard';
 import { createRadiocarbonStrip } from './ui/radiocarbonStrip';
-import { createGlobe, type StateChange } from './globe/scene';
+import { createGlobe } from './globe/scene';
 import {
   DEEP_TIME,
   EARTH_LAYERS,
@@ -54,7 +54,6 @@ import {
   EARTH_AGE_MA,
   ICE_AGES_MA,
   LAST_GLACIAL_MAXIMUM_MA,
-  type BorderSource,
   type Layer,
   withLayer,
   roundMa,
@@ -87,35 +86,10 @@ import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createLayersPanel } from './ui/layersPanel';
 import { createDeepGlance } from './ui/deepGlance';
 import { cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
-import {
-  blankText,
-  changesText,
-  createHistoryTrack,
-  STATES_HINT,
-  STATES_WAIT,
-} from './ui/historyTrack';
+import { blankText, createHistoryTrack, STATES_HINT, STATES_WAIT } from './ui/historyTrack';
 import { yearPlayhead, type YearSpeed } from './time/yearPlay';
-import {
-  centuryFor,
-  labelPoint,
-  loadEmpireCentury,
-  loadEmpireIndex,
-  stateChanges,
-  stateChangesOnMap,
-  type NamedPoint,
-  territoriesIn,
-  type EmpireCentury,
-  type EmpireIndex,
-  type Territory,
-} from './data/empires';
+import { labelPoint, territoriesIn } from './data/empires';
 import { createEmpireEclipses, SEARCH_YEARS } from './eclipses/empireEclipses';
-import {
-  loadOhmCentury,
-  loadOhmIndex,
-  ohmIn,
-  type OhmCentury,
-  type OhmIndex,
-} from './data/ohmBorders';
 import { CULTURE_INFO } from './data/skyCultures';
 import { createViewSwitch } from './ui/viewSwitch';
 import { createDeepTimeBar, type DeepTimeView } from './ui/deepTimeBar';
@@ -151,6 +125,8 @@ import { mountRocks } from './features/rocks';
 import { mountWays } from './features/ways';
 import { mountDates } from './features/dates';
 import { mountPeriods } from './features/periods';
+import { mountEmpires } from './features/empires';
+import { PRESENT_YEAR } from './time/present';
 import { phoneLook, type BodiesSeen } from './sky/aim';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
@@ -185,8 +161,6 @@ const STRIKE_IN_VIEW = 70;
 const STRIKES_AT_ONCE = 4;
 /** Pixels the zoom rail needs between the panels: its buttons, a short track and its reading. */
 const ZOOM_RAIL_ROOM = 180;
-/** This year, up to which the latest borders of states carry on. */
-const PRESENT_YEAR = new Date().getUTCFullYear();
 /** The year “before present” counts back from, as radiocarbon dates do. */
 const BP_ZERO_YEAR = 1950;
 
@@ -662,14 +636,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let historyFrame = 0;
   let historyTick = 0;
   let historyHead = yearPlayhead();
-  // What the track last said of the states (nothing until they change), and what was drawn
-  // then, to tell what changed.
-  let statesSaid = '';
-  let statesBefore: {
-    readonly source: BorderSource;
-    readonly year: number;
-    readonly places: readonly NamedPoint[];
-  } | null = null;
   // How far back time reaches, one choice for all of it: going deeper is zooming out, to the
   // same moment.
   const historySpan = createSpanSwitch((span) => {
@@ -912,9 +878,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       speed: historySpeed,
       // What changed whenever states are on; while travelling, what to expect until then.
       changes: state.layers.has('empires')
-        ? statesSaid === '' && travelling
+        ? empires.said() === '' && travelling
           ? STATES_WAIT
-          : statesSaid
+          : empires.said()
         : travelling
           ? STATES_HINT
           : '',
@@ -923,33 +889,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
   }
 
-  /**
-   * Note which states appeared or went since the year drawn before, if it was near; and give
-   * those to name on the map, if it was nearer still.
-   */
-  function noteStates(
-    source: BorderSource,
-    year: number,
-    places: readonly NamedPoint[],
-  ): readonly StateChange[] {
-    const before = statesBefore;
-    statesBefore = { source, year, places };
-    // Far apart, or by another source, a list of what differs says little about what happened.
-    if (before?.source !== source || Math.abs(year - before.year) > 500) {
-      return [];
-    }
-    const { appeared, gone } = stateChanges(
-      before.places.map(({ name }) => name),
-      places.map(({ name }) => name),
-    );
-    const said = changesText(year, appeared, gone);
-    if (said !== null) statesSaid = said;
-    showHistory(store.get());
-    // On the map, only a step's worth (a year, or up to the fastest trip's 80): after a jump
-    // of centuries every name would light up.
-    const step = Math.abs(year - before.year);
-    return step === 0 || step > 100 ? [] : stateChangesOnMap(before.places, places);
-  }
+  // The borders of past states (#446), a century's file at a time, and what changed.
+  const empires = mountEmpires({
+    ...partContext,
+    globe,
+    noted: () => {
+      showHistory(store.get());
+    },
+    drawn: () => {
+      if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get()));
+    },
+  });
 
   const timeline = createTimeline(
     {
@@ -971,7 +921,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         store.set((state) => ({ ...state, seenIn }));
         if (seenIn === null || store.get().mode !== 'globe') return;
         // Turn the globe to the state picked.
-        territoryOf(seenIn, store.get().time.date.year).then(
+        empires.territoryOf(seenIn, store.get().time.date.year).then(
           (territory) => {
             if (territory !== null) globe.flyTo(labelPoint(territory));
           },
@@ -1467,28 +1417,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const DELTA_T_MEANING =
     'ΔT: how far Earth’s slowing spin has put clock time behind a perfectly even time. It decides where on Earth an ancient eclipse fell; the ± is how uncertain it is.';
 
-  // Borders of past states load a century at a time, the first time the layer is on.
-  let empireIndex: Promise<EmpireIndex> | null = null;
-  const empireCenturies = new Map<number, Promise<EmpireCentury>>();
-  let empiresShown: string | null = null;
-  const ohmCenturies = new Map<number, Promise<OhmCentury>>();
-  let ohmIndex: Promise<OhmIndex> | null = null;
-
-  /** One century file, loaded once and kept; a failed load is retried next time. */
-  function centuryFile<T>(
-    cache: Map<number, Promise<T>>,
-    century: number,
-    load: () => Promise<T>,
-  ): Promise<T> {
-    let file = cache.get(century);
-    if (file === undefined) {
-      file = load();
-      file.catch(() => cache.delete(century));
-      cache.set(century, file);
-    }
-    return file;
-  }
-
   const temperatureLayer = createTemperatureLayer({
     dataUrl: (path) => `${base}data/${path}`,
     fetchJson,
@@ -1499,40 +1427,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   });
 
-  /** Cliopatria's file for the century of `year`, or null if there is none. */
-  function empireCenturyFor(year: number): Promise<EmpireCentury | null> {
-    empireIndex ??= loadEmpireIndex(`${base}data/empires/index.json`, fetchJson);
-    return empireIndex.then((index) => {
-      const century = centuryFor(index, cliopatriaYear(year, PRESENT_YEAR));
-      if (century === null) return null;
-      return centuryFile(empireCenturies, century, () =>
-        loadEmpireCentury(`${base}data/empires/${String(century)}.json`, fetchJson),
-      );
-    });
-  }
-
-  // A state's territory, kept while its borders stay the same so its region is prepared once.
-  const territories = new WeakMap<object, Territory>();
-  async function territoryOf(name: string, shown: number): Promise<Territory | null> {
-    const year = cliopatriaYear(shown, PRESENT_YEAR);
-    const file = await empireCenturyFor(year);
-    if (file === null) return null;
-    const polities = file.polities.filter(
-      (polity) => polity.name === name && polity.from <= year && year <= polity.to,
-    );
-    const first = polities[0];
-    if (first === undefined) return null;
-    let territory = territories.get(first);
-    if (territory === undefined) {
-      const parts = territoriesIn({ ...file, polities }, year);
-      territory = { name, wikipedia: first.wikipedia, rings: parts.flatMap(({ rings }) => rings) };
-      territories.set(first, territory);
-    }
-    return territory;
-  }
-
   const empireEclipses = createEmpireEclipses({
-    territory: territoryOf,
+    territory: (name, shown) => empires.territoryOf(name, shown),
     async eclipses(year) {
       const each = astronomicalYear(year);
       if (!lunarCatalog.covers(each) || !solarCatalog.covers(each)) return null;
@@ -1554,7 +1450,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const year = state.time.date.year;
     if (seenShown(state) && year !== seenOptionsYear) {
       seenOptionsYear = year;
-      empireCenturyFor(year).then(
+      empires.centuryFor(year).then(
         (file) => {
           if (seenOptionsYear !== year) return;
           const names =
@@ -2038,10 +1934,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
   }
 
-  // The states last drawn, for "Why here?" to read back.
-  let statesDrawn: { readonly year: number; readonly territories: readonly Territory[] } | null =
-    null;
-
   /** The rock at a place, once the rocks are in; undefined until then. */
   function rockOf(place: GeoPoint): ReturnType<typeof rockAt> | undefined {
     const units = rocks.units();
@@ -2054,6 +1946,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const year = state.time.date.year;
     const words = (y: number): string => formatYear(astronomicalYear(y));
     const shownYear = cliopatriaYear(year, PRESENT_YEAR);
+    const drawn = empires.drawn();
     const waysOfLife = ways.data();
     const waysThen =
       state.layers.has('ways') && waysOfLife !== null ? waysAt(waysOfLife, year) : null;
@@ -2065,7 +1958,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         states: state.layers.has('empires')
           ? {
               source: state.borders,
-              territories: statesDrawn?.year === year ? statesDrawn.territories : null,
+              territories: drawn?.year === year ? drawn.territories : null,
               asOf: shownYear === year ? null : words(shownYear),
             }
           : null,
@@ -2110,7 +2003,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       state.time.date.year,
       [...state.layers].join(','),
       state.borders,
-      statesDrawn?.year ?? '',
+      empires.drawn()?.year ?? '',
       ways.data() === null ? 0 : 1,
       rocks.units() === null ? 0 : 1,
     ].join('|');
@@ -2125,8 +2018,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const datesAction = dates.action();
     const carbonSaid = carbonMade.said();
     const carbonAction = carbonMade.action();
-    // Past states belong to historical time, not deep time.
-    const on = state.layers.has('empires') && state.ma === null;
     layersPanel.render({
       layers: state.layers,
       borders: state.borders,
@@ -2177,50 +2068,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ...(carbonAction === null ? [] : [['carbonMade', carbonAction] as const]),
       ]),
     });
-    const source = state.borders;
-    const year = state.time.date.year;
-    const key = on ? `${source}:${String(year)}` : null;
-    if (key === empiresShown) return;
-    empiresShown = key;
-    if (!on) {
-      globe.setEmpires(null);
-      return;
-    }
-    ohmIndex ??= loadOhmIndex(`${base}data/ohm/index.json`, fetchJson);
-    const territories =
-      source === 'ohm'
-        ? Promise.resolve([])
-        : empireCenturyFor(year).then((file) =>
-            file === null ? [] : territoriesIn(file, cliopatriaYear(year, PRESENT_YEAR)),
-          );
-    const ohm =
-      source === 'cliopatria'
-        ? Promise.resolve(null)
-        : ohmIndex.then(async (index) => {
-            const century = Math.floor(year / 100) * 100;
-            if (!index.centuries.includes(century)) return { borders: [], labels: [] };
-            const file = await centuryFile(ohmCenturies, century, () =>
-              loadOhmCentury(`${base}data/ohm/${String(century)}.json`, fetchJson),
-            );
-            return ohmIn(file, year);
-          });
-    Promise.all([territories, ohm]).then(
-      ([drawn, lines]) => {
-        // The year or source may have moved on while the files loaded.
-        if (empiresShown !== key) return;
-        statesDrawn = { year, territories: drawn };
-        if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get()));
-        const changes = noteStates(source, year, [
-          ...drawn.map((territory) => ({ ...labelPoint(territory), name: territory.name })),
-          ...(lines?.labels ?? []),
-        ]);
-        globe.setEmpires({ territories: drawn, ohm: lines, changes });
-      },
-      (error: unknown) => {
-        empiresShown = null;
-        notify(`Could not load the borders of past states: ${errorMessage(error)}`);
-      },
-    );
+    empires.show(state);
   }
 
   /** The name of a culture's observing site, if the observer stands right there. */
