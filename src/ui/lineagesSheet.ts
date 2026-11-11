@@ -6,7 +6,6 @@
  * colour, named at the rim. A playhead ring sweeps outward: inside it, what had happened by
  * then; on it, the genera living then; and beside the tree, the map of that moment with those
  * genera where their finds lay. Picking a genus or a group lights its line back to the centre.
- *
  * Drawn on 2D canvases. DOM glue, covered by the Playwright suite; the layout and the placing in
  * time and space are in `data/lineages.ts`.
  */
@@ -32,6 +31,7 @@ import type { LineagesView } from '../state/viewState';
 import { elementAt, valueAt } from '../util/arrays';
 import { errorMessage } from '../util/errors';
 import { element } from './dom';
+import './stageSheet.css';
 
 export interface LineagesSheet {
   readonly dialog: HTMLDialogElement;

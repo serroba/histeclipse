@@ -1,0 +1,59 @@
+/* Away from Earth, the body's cycle (#329): ticks under the slider where it turns, and those
+   moments named in a row of chips that scrolls sideways, as the year's eclipses do. */
+.cycle-ticks {
+  position: relative;
+  height: 6px;
+  margin: 0 9px;
+}
+
+.cycle-tick {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 6px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--ink-muted);
+}
+
+.cycle-moments {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.cycle-moments li {
+  flex: none;
+  scroll-snap-align: start;
+}
+
+.cycle-moment {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 22px;
+  background: rgb(255 255 255 / 0.04);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cycle-moment[aria-current='true'] {
+  border-color: rgb(247 201 90 / 0.7);
+  background: rgb(247 201 90 / 0.14);
+}
+
+.cycle-moment-date {
+  color: var(--ink-muted);
+}
