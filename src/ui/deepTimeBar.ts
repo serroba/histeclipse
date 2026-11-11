@@ -21,7 +21,6 @@ import {
 } from '../data/deepAir';
 import { archiveDots, archiveText, studiesNear, type Co2Archive } from '../data/co2Archive';
 import { createBandChart } from './bandChart';
-import type { ClaimLine, HumansView } from '../data/humanClaims';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { PolarityScale } from '../data/polarity';
 import type { IceStandIn } from '../data/iceSheets';
@@ -46,12 +45,7 @@ import {
 } from '../deepTime/sketch';
 import { DEEP_SPEEDS, deepSpeedText, deepSpeedWords } from '../deepTime/playSpeed';
 import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
-import {
-  DISPERSAL_SCENARIOS,
-  type DeepScale,
-  type DispersalScenario,
-  type Layer,
-} from '../state/viewState';
+import type { DeepScale, Layer } from '../state/viewState';
 import type { WhyId } from '../sources/registry';
 import { element } from './dom';
 import { createDeepChips, type DeepChip, type DeepChipView } from './deepChips';
@@ -302,19 +296,6 @@ export interface DeepTimeView {
   readonly impacts:
     | { readonly on: false }
     | { readonly on: true; readonly text: string | null; readonly mode: ImpactsMode };
-  /** Dated finds of humans: off, on while the claims load (null), or on with what to say. */
-  readonly humans:
-    | { readonly on: false }
-    | {
-        readonly on: true;
-        readonly view: HumansView | null;
-        /** The dispersal model shaded, and the share of its land settled then. */
-        readonly model: {
-          readonly scenario: DispersalScenario;
-          readonly name: string | null;
-          readonly share: number | null;
-        };
-      };
   readonly platesText: string | null;
   /** The ice-age coastline; null before the ice ages. */
   readonly coastline: CoastlineView | null;
@@ -359,7 +340,6 @@ export function createDeepTimeBar(
     onTemperature(on: boolean): void;
     onSeaLevel(on: boolean): void;
     onPlates(on: boolean): void;
-    onHumans(on: boolean): void;
     /** A feature's chip pressed: its layer on or off. */
     onLayer(layer: Layer, on: boolean): void;
     onImpacts(on: boolean): void;
@@ -368,7 +348,6 @@ export function createDeepTimeBar(
     onAir(on: boolean): void;
     /** The reader asked for the Paleo-CO2 Data Archive's estimates: load them. */
     onCo2Archive(): void;
-    onDispersal(scenario: DispersalScenario): void;
     onCoast(coast: CoastSource): void;
     onSeaIce(model: SeaIceModel): void;
     onTemperatureModel(model: TemperatureModel): void;
@@ -486,7 +465,6 @@ export function createDeepTimeBar(
   const temperatureWhy = handlers.why('temperature', 'Temperature');
   const factsWhy = handlers.why('earth-facts', 'Poles, magnetic field, tilt, day and Sun');
   const airWhy = handlers.why('air', 'Air');
-  const humansWhy = handlers.why('humans', 'Humans');
   const impactsWhy = handlers.why('impacts', 'Impact craters');
   // What the map rests on, asked plainly, first among the chips: a reconstruction should say so.
   const evidenceButton = element(
@@ -589,36 +567,6 @@ export function createDeepTimeBar(
     class: 'deep-note impacts-note',
     hidden: '',
     'data-testid': 'impacts-note',
-  });
-  const humansButton = element(
-    'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '', title: 'Humans' },
-    uiIcon('humans'),
-    element('span', { class: 'icon-label' }, 'Humans'),
-  );
-  const dispersalPicker = element(
-    'select',
-    { class: 'deep-coast', 'aria-label': 'Dispersal model' },
-    element('option', { value: 'off' }, 'Off'),
-    element('option', { value: 'a' }, 'Early exit from Africa'),
-    element('option', { value: 'b' }, 'Late exit from Africa'),
-  );
-  dispersalPicker.addEventListener('change', () => {
-    const picked = DISPERSAL_SCENARIOS.find((scenario) => scenario === dispersalPicker.value);
-    if (picked !== undefined) handlers.onDispersal(picked);
-  });
-  const dispersalWords = element('span', { 'data-testid': 'dispersal-words' });
-  const dispersalRow = element(
-    'p',
-    { class: 'dispersal-row' },
-    element('label', {}, 'Model ', dispersalPicker),
-    ' ',
-    dispersalWords,
-  );
-  const humansNote = element('div', {
-    class: 'deep-note humans-note',
-    hidden: '',
-    'data-testid': 'humans-note',
   });
   const seaLevelButton = element(
     'button',
@@ -768,7 +716,6 @@ export function createDeepTimeBar(
     seaLevel.legend,
     legend,
     platesNote,
-    humansNote,
     ...featureChips.notes,
     impactsNote,
     airNote,
@@ -798,7 +745,6 @@ export function createDeepTimeBar(
       seaLevelButton,
       temperatureButton,
       platesButton,
-      humansButton,
       ...featureChips.buttons,
       impactsButton,
       airButton,
@@ -989,18 +935,6 @@ export function createDeepTimeBar(
     { capture: true },
   );
 
-  function dispersalText(model: {
-    scenario: DispersalScenario;
-    name: string | null;
-    share: number | null;
-  }): string {
-    if (model.scenario === 'off') {
-      return 'Shade where a dispersal model has people settled by then (Timmermann & Friedrich 2016).';
-    }
-    if (model.share === null || model.name === null) return 'Loading the model…';
-    return `Shaded: where Timmermann & Friedrich’s (2016) model, ${model.name}, has people settled by then: ${String(Math.round(model.share * 100))}% of the land it ever reaches. One model’s view, not evidence; its data is CC BY-NC 4.0 (non-commercial).`;
-  }
-
   const deepCharts = {
     co2: createBandChart({ low: 100, high: 6000, log: true, testId: 'deep-co2-chart' }),
     o2: createBandChart({ low: 0, high: 45, log: false, testId: 'deep-o2-chart' }),
@@ -1187,42 +1121,6 @@ export function createDeepTimeBar(
     );
   }
 
-  function claimLine(line: ClaimLine): HTMLElement {
-    return element(
-      'li',
-      { class: line.reached ? 'is-reached' : 'is-later' },
-      `${line.text} `,
-      element('a', { href: `https://doi.org/${line.doi}` }, line.citation),
-    );
-  }
-
-  function renderHumans(humans: DeepTimeView['humans']): void {
-    humansNote.hidden = !humans.on;
-    if (!humans.on) return;
-    if (humans.view === null) {
-      humansNote.replaceChildren(humansWhy, ' ', element('p', {}, 'Humans: loading…'));
-      return;
-    }
-    const { questions, others, sites } = humans.view;
-    dispersalPicker.value = humans.model.scenario;
-    dispersalWords.textContent = dispersalText(humans.model);
-    humansNote.replaceChildren(
-      humansWhy,
-      ' ',
-      dispersalRow,
-      element(
-        'p',
-        {},
-        `Humans: ${String(sites.length)} dated finds marked, each from its date on, as its source reports it; disputed ones in italics. Hand-picked, not complete.`,
-      ),
-      ...questions.flatMap(({ title, claims }) => [
-        element('p', { class: 'humans-question' }, title),
-        element('ul', {}, ...claims.map(claimLine)),
-      ]),
-      ...(others.length > 0 ? [element('ul', {}, ...others.map(claimLine))] : []),
-    );
-  }
-
   let current: DeepTimeView | null = null;
   // The span the ticks were placed for.
   let marksSpan = 0;
@@ -1271,9 +1169,6 @@ export function createDeepTimeBar(
   });
   impactsButton.addEventListener('click', () => {
     handlers.onImpacts(!(current?.impacts.on ?? false));
-  });
-  humansButton.addEventListener('click', () => {
-    handlers.onHumans(!(current?.humans.on ?? false));
   });
   platesButton.addEventListener('click', () => {
     handlers.onPlates(!(current?.plates ?? false));
@@ -1366,8 +1261,6 @@ export function createDeepTimeBar(
       platesButton.setAttribute('aria-pressed', String(view.plates));
       // The maps of the 540 Myr and 4.6 Gyr spans are reconstructions; the ice ages', today's land.
       evidenceButton.hidden = view.scale === 'ice';
-      // People are a matter of the last few hundred thousand years: the ice-age scale's.
-      humansButton.hidden = view.scale !== 'ice';
       featureChips.render(view.chips);
       // Impacts are placed on the elevation maps' reconstruction: not before them.
       impactsButton.hidden = view.scale === 'eons';
@@ -1392,8 +1285,6 @@ export function createDeepTimeBar(
       airButton.hidden = view.scale === 'eons';
       airButton.setAttribute('aria-pressed', String(view.air.on));
       renderAir(view.air, view.scale, view.oldest, view.ma);
-      humansButton.setAttribute('aria-pressed', String(view.humans.on));
-      renderHumans(view.humans);
       platesNote.hidden = !view.plates;
       platesWords.textContent = view.platesText ?? 'Loading the continent outlines…';
       seaLevel.render(

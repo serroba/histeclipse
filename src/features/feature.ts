@@ -15,6 +15,7 @@ import type { Fetch } from '../data/fetchJson';
 import type { Globe } from '../globe/scene';
 import type { DeepScale, Layer, ViewState } from '../state/viewState';
 import type { LineageGroup } from '../data/lineages';
+import type { TreeOfLife } from '../data/treeOfLife';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
 import type { MarkerCardContent } from '../ui/markerCard';
 import type { ZoomRail } from '../ui/zoomRail';
@@ -27,7 +28,8 @@ export interface FeatureContext {
   /** Where the site's files are served from, ending in `/`. */
   readonly base: string;
   readonly fetchJson: Fetch;
-  readonly globe: Pick<Globe, 'addLayer'>;
+  /** Its layers on the globe; `setSettled` shades a dispersal model's settled land. */
+  readonly globe: Pick<Globe, 'addLayer' | 'setSettled'>;
   readonly zoomRail: ZoomRail;
   /** Tell the reader something went wrong. */
   notify(message: string): void;
@@ -42,6 +44,10 @@ export interface FeatureContext {
   moon(): MoonEphemeris | null;
   /** Open the tree of life through time at a genus (#358). */
   openLineages(group: LineageGroup, genus: string): void;
+  /** Open the tree of life at the node `pick` finds in it. */
+  openTree(pick: (tree: TreeOfLife) => number | undefined): void;
+  /** Change what the reader is looking at, as one of the feature's own choices does. */
+  change(update: (state: ViewState) => ViewState): void;
   /** Whether the reader is travelling through the years: markers of single events rest then. */
   travelling(): boolean;
   /** Show the moment and the Layers panel again: data the feature waited for has arrived. */

@@ -4,8 +4,8 @@
  * A layer on the globe's host (#379): `globe.addLayer(humanSiteLayer)`.
  */
 
-import type { HumanSite } from '../data/humanClaims';
-import { SURFACE_PRIORITY, type LayerFactory } from './layerHost';
+import type { HumanSite } from '../../data/humanClaims';
+import { SURFACE_PRIORITY, type LayerFactory } from '../../globe/layerHost';
 
 export const humanSiteLayer: LayerFactory<readonly HumanSite[] | null> = (host) => {
   const layer = document.createElement('div');

@@ -28,7 +28,6 @@ import {
 import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarPhases';
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
-import { humanSiteLayer } from './globe/humanSiteLayer';
 import { impactLayer } from './globe/impactLayer';
 import { geoToVector } from './globe/geo';
 import {
@@ -93,7 +92,6 @@ import {
   roundMa,
   momentJulianDay,
   type GeoPoint,
-  type DispersalScenario,
   type ViewState,
 } from './state/viewState';
 import { eclipseNote, planetNote, skyCaption } from './sky/caption';
@@ -288,15 +286,6 @@ import {
   type Impacts,
   type ImpactsMode,
 } from './data/impacts';
-import { claimCard, humansAt, loadHumanClaims, type HumanClaims } from './data/humanClaims';
-import { loadPictures, type Pictures } from './data/pictures';
-import { loadArrivalGrid } from './globe/arrivalGrid';
-import {
-  loadDispersalIndex,
-  settledShare,
-  type ArrivalGrid,
-  type DispersalIndex,
-} from './data/dispersal';
 import {
   loadPlateMasks,
   type PlateMaskIndex,
@@ -721,9 +710,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
           return { ...state, layers };
         });
       },
-      onDispersal(dispersal) {
-        store.set((state) => ({ ...state, dispersal }));
-      },
       onAir(on) {
         store.set((state) => {
           const layers = new Set(state.layers);
@@ -749,14 +735,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
       onLayer(layer, on) {
         store.set((state) => ({ ...state, layers: withLayer(state.layers, layer, on) }));
-      },
-      onHumans(on) {
-        store.set((state) => {
-          const layers = new Set(state.layers);
-          if (on) layers.add('humans');
-          else layers.delete('humans');
-          return { ...state, layers };
-        });
       },
       onSeaLevel(on) {
         store.set((state) => {
@@ -1799,7 +1777,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   // Drawn on the globe as layers of their own (#379).
   const impactsOnGlobe = globe.addLayer(impactLayer);
-  const humanSitesOnGlobe = globe.addLayer(humanSiteLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureContext: FeatureContext = {
     base,
@@ -1817,6 +1794,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       void loadPlanets();
     },
     openLineages: openLineagesAt,
+    openTree: openTreeAt,
+    change: (update) => {
+      store.set(update);
+    },
     travelling: () => travelling,
     refresh: () => {
       const now = store.get();
@@ -2450,8 +2431,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setTemperature(null);
       showHoloceneEarth(state);
       globe.setIceOutlines(null);
-      humanSitesOnGlobe.update(null);
-      globe.setSettled(null);
       for (const { shown } of mounted) shown.deep?.(state, null);
       globe.setPlates(null);
       return;
@@ -2483,7 +2462,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ice: showIce(state, ma),
       iceOutlines: showIceOutlines(state, ma),
       plateMotion: plateMotionText(state, ma),
-      humans: showHumans(state, ma),
       chips: deepChips(state, { ma, scale }),
       impacts: showImpacts(state),
       air: showAir(state),
@@ -2792,66 +2770,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
   }
 
-  // The finds' pictures: loaded the first time a find's card opens.
-  let humanPictures: Pictures | null = null;
-  let humanPicturesLoading: Promise<Pictures> | null = null;
-  let humanShown: string | null = null;
-
-  /** A find's card, with a way to its species' place on the tree of life. */
-  function withSpeciesTree<T extends object>(
-    card: T,
-    id: string,
-  ): T | (T & { action: ReturnType<typeof treeAction> }) {
-    const species = humanClaims?.claims.find((claim) => claim.id === id)?.species;
-    return species === undefined
-      ? card
-      : {
-          ...card,
-          action: treeAction(
-            'Its species on the tree of life',
-            (tree) => tree.ours.humans[species],
-          ),
-        };
-  }
-
-  function showHumanCard(id: string): void {
-    if (humanClaims === null) return;
-    const card = claimCard(humanClaims, id, humanPictures);
-    if (card === null) return;
-    humanShown = id;
-    markerCard.show(withSpeciesTree(card, id));
-    if (humanPictures !== null || humanPicturesLoading !== null) return;
-    humanPicturesLoading = loadPictures(`${base}data/humans/pictures.json`, fetchJson);
-    humanPicturesLoading.then(
-      (loaded) => {
-        humanPictures = loaded;
-        // Its picture, if its card is still the one open.
-        const again =
-          humanClaims === null || humanShown === null
-            ? null
-            : claimCard(humanClaims, humanShown, loaded);
-        if (markerCard.dialog.open && again !== null && humanShown !== null) {
-          markerCard.show(withSpeciesTree(again, humanShown));
-        }
-      },
-      (error: unknown) => {
-        humanPicturesLoading = null;
-        notify(`Could not load the finds’ pictures: ${errorMessage(error)}`);
-      },
-    );
-  }
-
   globe.onMarkerPick((key) => {
     const [kind, id] = key.split(':');
     for (const { shown } of mounted) shown.unpick?.();
     const picked = mounted.find(({ feature }) => feature.picks === kind);
     if (picked !== undefined) {
       picked.shown.pick?.(key.slice(key.indexOf(':') + 1));
-      return;
-    }
-    humanShown = null;
-    if (kind === 'human' && id !== undefined) {
-      showHumanCard(id);
       return;
     }
     const impact = impacts?.impacts.find((each) => String(each.id) === id);
@@ -2879,83 +2803,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
           }),
     });
   });
-
-  // The curated human finds: loaded the first time the layer is turned on.
-  let humanClaims: HumanClaims | null = null;
-  let humanClaimsLoading: Promise<HumanClaims> | null = null;
-
-  /** On the ice-age scale with Humans on, the finds of the moment and the claims about them. */
-  function showHumans(state: ViewState, ma: number): DeepTimeView['humans'] {
-    if (state.deepScale !== 'ice' || !state.layers.has('humans')) {
-      humanSitesOnGlobe.update(null);
-      globe.setSettled(null);
-      return { on: false };
-    }
-    const model = showDispersal(state.dispersal, ma);
-    if (humanClaims === null) {
-      if (humanClaimsLoading === null) {
-        humanClaimsLoading = loadHumanClaims(`${base}data/humans/claims.json`, fetchJson);
-        humanClaimsLoading.then(
-          (claims) => {
-            humanClaims = claims;
-            showDeepTime(store.get());
-          },
-          (error: unknown) => {
-            humanClaimsLoading = null;
-            notify(`Could not load the human finds: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return { on: true, view: null, model };
-    }
-    const view = humansAt(humanClaims, ma * 1000);
-    humanSitesOnGlobe.update(view.sites);
-    return { on: true, view, model };
-  }
-
-  // Timmermann & Friedrich's dispersal model: its index and each scenario load when picked.
-  let dispersalIndex: Promise<DispersalIndex> | null = null;
-  const arrivalGrids = new Map<string, ArrivalGrid>();
-  const arrivalLoading = new Set<string>();
-
-  /** Shade the scenario picked, if any, and say what share of its land is settled then. */
-  function showDispersal(
-    scenario: DispersalScenario,
-    ma: number,
-  ): { scenario: DispersalScenario; name: string | null; share: number | null } {
-    if (scenario === 'off') {
-      globe.setSettled(null);
-      return { scenario, name: null, share: null };
-    }
-    dispersalIndex ??= loadDispersalIndex(`${base}data/dispersal/index.json`, fetchJson);
-    const grid = arrivalGrids.get(scenario);
-    if (grid === undefined) {
-      globe.setSettled(null);
-      if (!arrivalLoading.has(scenario)) {
-        arrivalLoading.add(scenario);
-        dispersalIndex
-          .then(async (index) => {
-            const entry = index.scenarios.find((each) => each.id === scenario);
-            if (entry === undefined) throw new Error(`no scenario ${scenario}`);
-            arrivalNames.set(scenario, entry.name);
-            arrivalGrids.set(
-              scenario,
-              await loadArrivalGrid(`${base}data/dispersal/${entry.file}`, fetchJson),
-            );
-            showDeepTime(store.get());
-          })
-          .catch((error: unknown) => {
-            arrivalLoading.delete(scenario);
-            notify(`Could not load the dispersal model: ${errorMessage(error)}`);
-          });
-      }
-      return { scenario, name: null, share: null };
-    }
-    const ka = ma * 1000;
-    globe.setSettled({ scenario, grid, ka });
-    return { scenario, name: arrivalNames.get(scenario) ?? null, share: settledShare(grid, ka) };
-  }
-  const arrivalNames = new Map<string, string>();
 
   // How far the plates have moved: the file loads the first time the ice-age scale is shown.
   let plateMotion: PlateMotion | null = null;
