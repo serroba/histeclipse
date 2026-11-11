@@ -75,6 +75,7 @@ export default defineConfig({
         'src/features/eclipses/seen.ts',
         'src/features/texts/index.ts',
         'src/features/whyHere/sources.ts',
+        'src/features/moment/index.ts',
         'src/story/sunCore.ts',
         'src/story/airShower.ts',
         'src/story/leafScene.ts',

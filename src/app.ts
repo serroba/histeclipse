@@ -5,15 +5,11 @@
  */
 
 import { loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
-import { earthFixedToJ2000, sunPositionJ2000 } from './astro/precession';
-import { subsolarPoint } from './astro/sun';
-import { type FamousEclipse } from './data/famousEclipses';
 import { LunarCatalog } from './data/lunarCatalog';
 import { SolarCatalog } from './data/solarCatalog';
 import { eclipseMomentAt, isSolar } from './eclipses/describe';
 import { angularDistance } from './eclipses/visibility';
 import { impactLayer } from './globe/impactLayer';
-import { geoToVector } from './globe/geo';
 import { createDatingCard } from './ui/datingCard';
 import { createGlobe } from './globe/scene';
 import {
@@ -31,22 +27,14 @@ import { parseViewState, serializeViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import {
   awayFromEarth,
-  DEFAULT_CAMERA,
   DEFAULT_LOOK,
-  defaultViewState,
   type Layer,
   withLayer,
   roundMa,
-  momentJulianDay,
   type GeoPoint,
   type ViewState,
 } from './state/viewState';
-import { observerPosition } from './sky/bodies';
-import { longTermEarthFixedToJ2000 } from './astro/longTermPrecession';
 import { DeltaT } from './time/deltaT';
-import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
-import { type JulianDay } from './time/julianDay';
-import { formatInCalendar } from './time/calendars';
 import { element } from './ui/dom';
 import { FEATURES } from './features';
 import { RESTING, type DeepMoment, type FeatureContext } from './features/feature';
@@ -56,11 +44,10 @@ import { uiIcon } from './ui/icons';
 import { createWelcome } from './ui/welcome';
 import { createMarkerCard } from './ui/markerCard';
 import { createLayersPanel } from './ui/layersPanel';
-import { CULTURE_INFO } from './data/skyCultures';
 import { createViewSwitch } from './ui/viewSwitch';
 import { type DeepTimeView } from './ui/deepTimeBar';
 import type { DeepChipView } from './ui/deepChips';
-import { formatMa, periodAt, periodWords } from './deepTime/periods';
+import { periodAt } from './deepTime/periods';
 import { countryRings, loadNamedPeriods } from './data/namedPeriods';
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
 import { approachOf, impactorText } from './data/impactScaling';
@@ -89,9 +76,11 @@ import { mountEclipses } from './features/eclipses';
 import { mountTexts } from './features/texts';
 import { hereVersion, hereView, whyMoment, type HereData } from './features/whyHere/facts';
 import { createSourcesList } from './features/whyHere/sources';
+import { mountMoment } from './features/moment';
+import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment/observer';
 import { barYear } from './features/eclipses/years';
 import { PRESENT_YEAR } from './time/present';
-import { phoneLook, type BodiesSeen } from './sky/aim';
+import { phoneLook } from './sky/aim';
 import { layerWhy } from './sources/registry';
 import { createZoomRail } from './ui/zoomRail';
 import { createWaysLegend } from './ui/waysLegend';
@@ -196,7 +185,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The sky view (#448): loaded the first time it is opened.
   const sky = mountSky({
     ...partContext,
-    bodiesSeen,
+    bodiesSeen: (state) => bodiesSeen(state, (jd) => deltaT.terrestrialTime(jd), moonEphemeris),
     planetsSeen: (jdTT, sun, observer) => bodies.planetsSeen(jdTT, sun, observer),
     loadPlanets: () => bodies.loadPlanets(),
     deltaTUncertainty: (jdUT) => deltaT.uncertaintySeconds(jdUT),
@@ -322,7 +311,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       bottom.dataset['deep'] = on ? 'on' : 'off';
     },
     header: (ma) => {
-      showDeepTimeText(ma);
+      moment.deepHeader(ma);
     },
     bar: (state, moment) => ({
       ...iceAges.bar(state, moment.ma),
@@ -376,46 +365,27 @@ export async function startApp(root: HTMLElement): Promise<void> {
     zoomRail,
     moon: () => moonEphemeris,
     refresh: () => {
-      showTime(store.get());
+      moment.show(store.get());
     },
   });
-  const dateText = element('time', { class: 'hud-date' });
-  const timeText = element('span', {
-    class: 'hud-time',
-    title: 'UT: Universal Time, the time of day at Greenwich, England',
-    tabindex: '0',
+  // The moment shown (#451): the header's date line, and what is placed by the moment.
+  const moment = mountMoment({
+    ...partContext,
+    globe,
+    now,
+    deltaT: () => deltaT,
+    moon: () => moonEphemeris,
+    planetPositions: (jdTT) => bodies.planetPositions(jdTT),
+    atMoment: (state, terrestrial) => {
+      bodies.setMoment(terrestrial);
+      showBody(state);
+      bodies.showOrbits(state, terrestrial);
+      showFeatures(state, terrestrial);
+    },
+    subsolar: (point) => {
+      root.dataset['subsolar'] = point;
+    },
   });
-  const detailText = element('p', { class: 'hud-detail' });
-  // A tap (or Enter) on a term with an explanation shows it here: phones have no hover.
-  const termNote = element('p', { class: 'term-note', 'data-testid': 'term-note', hidden: '' });
-  // By its text, since the line is rebuilt as time moves.
-  let termShown: string | null = null;
-  function explain(term: Element): void {
-    const text = term.getAttribute('title');
-    if (text === null || text === termShown) {
-      termShown = null;
-      termNote.hidden = true;
-      return;
-    }
-    termShown = text;
-    termNote.textContent = text;
-    termNote.hidden = false;
-  }
-  const termOf = (target: EventTarget | null): Element | null =>
-    target instanceof Element ? target.closest('.hud-detail abbr[title], .hud-time[title]') : null;
-  for (const holder of [timeText, detailText]) {
-    holder.addEventListener('click', (event) => {
-      const term = termOf(event.target);
-      if (term !== null) explain(term);
-    });
-    holder.addEventListener('keydown', (event) => {
-      const term = termOf(event.target);
-      if (term !== null && (event.key === 'Enter' || event.key === ' ')) {
-        event.preventDefault();
-        explain(term);
-      }
-    });
-  }
   // A first visit (no link to follow, never welcomed before) gets one line on what this is and
   // where to start; it goes for good once closed, followed, or once something is picked.
   const welcome = createWelcome(window.location.search === '', () => {
@@ -473,7 +443,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     travelChanged: (now) => {
       dates.show(now);
       showImpacts(now);
-      if (lastTerrestrial !== null) showFeatures(now, lastTerrestrial);
+      const terrestrial = moment.terrestrial();
+      if (terrestrial !== null) showFeatures(now, terrestrial);
       rocks.show(now);
       showEmpires(now);
       iceAges.showHolocene(now);
@@ -486,7 +457,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ...partContext,
     planets: () => bodies.planets(),
     loadPlanets: () => bodies.loadPlanets(),
-    moment: () => bodiesAt,
+    moment: () => moment.terrestrial(),
     universalTime: (jdTT) => deltaT.universalTime(jdTT),
     hideHistory(hidden) {
       years.track.root.hidden = hidden;
@@ -566,9 +537,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
         element('a', { class: 'home', href: base, title: 'Back to the start' }, 'histeclipse'),
       ),
       element('div', { class: 'hud-tools' }, ...hudTools),
-      element('p', { class: 'hud-when' }, dateText, ' ', timeText),
-      detailText,
-      termNote,
+      element('p', { class: 'hud-when' }, moment.dateText, ' ', moment.timeText),
+      moment.detailText,
+      moment.termNote,
       welcome.root,
       hudActions,
       viewSwitch.root,
@@ -714,7 +685,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     travelling: () => years.travelling(),
     refresh: () => {
       const now = store.get();
-      showTime(now);
+      moment.show(now);
       if (now.ma !== null) deepTime.show(now);
       showEmpires(now);
     },
@@ -744,7 +715,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   loadMoonEphemeris().then(
     (ephemeris) => {
       moonEphemeris = ephemeris;
-      showTime(store.get());
+      moment.show(store.get());
       viewSwitch.render(store.get().mode, store.get().view, true, store.get().focus);
       sky.render(store.get());
     },
@@ -755,60 +726,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   // The famous list is a convenience: if it fails to load, everything else still works.
   famous.load();
-
-  function showTime(state: ViewState): void {
-    const universal = momentJulianDay(state.time);
-    let terrestrial;
-    try {
-      terrestrial = deltaT.terrestrialTime(universal);
-    } catch (error) {
-      notify(`${errorMessage(error)}. Showing today instead.`);
-      store.set({ ...state, time: defaultViewState(now).time, selection: null });
-      return;
-    }
-    const sun = subsolarPoint(universal, terrestrial);
-    globe.setSunDirection(geoToVector(sun));
-    globe.setSpace({
-      earthFixedToJ2000: earthFixedToJ2000(universal, terrestrial),
-      sunKm: sunPositionJ2000(terrestrial),
-      moonKm: moonEphemeris?.position(terrestrial) ?? null,
-      planetsKm: bodies.planetPositions(terrestrial),
-      jdTT: terrestrial,
-    });
-    lastTerrestrial = terrestrial;
-    bodiesAt = terrestrial;
-    bodies.setMoment(terrestrial);
-    showBody(state);
-    bodies.showOrbits(state, terrestrial);
-    showFeatures(state, terrestrial);
-    root.dataset['subsolar'] = `${sun.latitude.toFixed(3)},${sun.longitude.toFixed(3)}`;
-    if (state.ma !== null) {
-      showDeepTimeText(state.ma);
-      return;
-    }
-    dateText.textContent = formatDate(state.time);
-    timeText.textContent = formatTimeOfDay(state.time);
-    const seconds = deltaT.seconds(universal);
-    const uncertainty = deltaT.uncertaintySeconds(universal);
-    // In another calendar, the same day written its way too (by day, from midnight).
-    const other = state.years === 'western' ? '' : ` · ${formatInCalendar(state.years, universal)}`;
-    // ΔT is a term few readers know: it explains itself on hover, or on a tap.
-    detailText.replaceChildren(
-      `${formatCalendar(state.time)}${other} · `,
-      element(
-        'abbr',
-        { title: DELTA_T_MEANING, tabindex: '0' },
-        `ΔT ${formatDuration(seconds)} ± ${formatDuration(uncertainty)}`,
-      ),
-      ' ',
-      deltaTWhy,
-    );
-  }
-
-  // ΔT's book, made once: the date line is written again as time moves.
-  const deltaTWhy = whySheet.mark('delta-t', 'ΔT');
-  const DELTA_T_MEANING =
-    'ΔT: how far Earth’s slowing spin has put clock time behind a perfectly even time. It decides where on Earth an ancient eclipse fell; the ± is how uncertain it is.';
 
   // Impact craters and deposits: loaded the first time the layer is turned on, in either time.
   let impacts: Impacts | null = null;
@@ -937,18 +854,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
   });
 
-  /** The header in deep time: how long ago, and the period by the ICS chart. */
-  function showDeepTimeText(ma: number): void {
-    const period = periodAt(ma);
-    dateText.textContent = formatMa(ma);
-    timeText.textContent = '';
-    detailText.textContent = period === null ? 'Deep time' : periodWords(period);
-  }
-
-  // The moment last shown (TT), for the body bar: it works out only the body in view.
-  let bodiesAt: JulianDay | null = null;
-  let lastTerrestrial: number | null = null;
-
   /** Away from Earth: Earth's own bits rest, and the body in view shows. */
   function showBody(state: ViewState): void {
     const away = awayFromEarth(state);
@@ -1027,64 +932,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
     empires.show(state);
   }
 
-  /** The name of a culture's observing site, if the observer stands right there. */
-  /** The name of where the observer stands: a famous eclipse's place, or a culture's site. */
-  function placeName(place: GeoPoint, famousHere: FamousEclipse | undefined): string | null {
-    const record = famousHere?.place;
-    if (
-      record !== undefined &&
-      Math.abs(record.latitude - place.latitude) < 0.01 &&
-      Math.abs(record.longitude - place.longitude) < 0.01
-    ) {
-      return record.name;
-    }
-    return namedPlace(place);
-  }
-
-  function namedPlace(place: GeoPoint): string | null {
-    const site = Object.values(CULTURE_INFO).find(
-      (info) =>
-        info.place !== null &&
-        Math.abs(info.place.latitude - place.latitude) < 0.01 &&
-        Math.abs(info.place.longitude - place.longitude) < 0.01,
-    );
-    return site?.place?.name ?? null;
-  }
-
-  function observerOf(state: ViewState): GeoPoint {
-    if (state.location !== null) return state.location;
-    return state.focus === 'earth' ? state.camera.target : DEFAULT_CAMERA.target;
-  }
-
-  /** Where the Sun or Moon stands, from Earth's centre and from the observer, in km. */
-  function bodiesSeen(state: ViewState): BodiesSeen | null {
-    const place = observerOf(state);
-    const jdUT = momentJulianDay(state.time);
-    let jdTT;
-    try {
-      jdTT = deltaT.terrestrialTime(jdUT);
-    } catch {
-      return null; // showTime has already said so and moved to today.
-    }
-    return {
-      place,
-      jdUT,
-      jdTT,
-      observer: observerPosition(place, longTermEarthFixedToJ2000(jdUT, jdTT)),
-      sun: sunPositionJ2000(jdTT),
-      moon: moonEphemeris?.position(jdTT) ?? null,
-    };
-  }
-
   function render(state: ViewState, previous: ViewState | null): void {
     const leftDeepTime = previous !== null && previous.ma !== null && state.ma === null;
     if (state.time !== previous?.time || state.years !== previous.years || leftDeepTime) {
-      showTime(state);
-    } else if (lastTerrestrial !== null) {
+      moment.show(state);
+    } else if (moment.terrestrial() !== null) {
+      const terrestrial = moment.terrestrial() ?? 0;
       // Each feature is shown again, at the moment shown, when what it watches changes.
       for (const { feature, shown } of mounted) {
         if (changed(feature.watches(previous), feature.watches(state))) {
-          shown.show?.(state, lastTerrestrial);
+          shown.show?.(state, terrestrial);
         }
       }
     }
