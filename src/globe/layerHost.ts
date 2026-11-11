@@ -4,11 +4,13 @@
  * New things drawn on the globe are layers; the globe's own `set…` methods only shrink.
  */
 
-import type { Scene, Vector3 } from 'three';
+import type { PerspectiveCamera, Quaternion, Scene, Vector3 } from 'three';
 
 import './nameLabels.css';
 
 import type { GeoPoint } from '../core/geo';
+import type { NamedBody } from '../data/planetNames';
+import type { Body } from '../state/viewState';
 
 export type Triple = readonly [number, number, number];
 
@@ -21,8 +23,21 @@ export interface NameLabel {
 
 export interface LayerHost {
   readonly scene: Scene;
+  /** The camera the globe draws with; read it, the globe moves it. */
+  readonly camera: PerspectiveCamera;
   /** The element the globe draws in; labels go inside it. */
   readonly container: HTMLElement;
+  /** The body the view is on. */
+  focus(): Body;
+  /** Where a named body is, how it is turned, its radius (scene units), and whether it is drawn. */
+  bodyFrame(body: NamedBody): {
+    readonly position: Vector3;
+    readonly rotation: Quaternion;
+    readonly radius: number;
+    readonly shown: boolean;
+  };
+  /** Where the Sun is in the scene. */
+  sunPosition(): Vector3;
   /**
    * From J2000 km from Earth's centre to scene units, for the moment shown; null until the
    * globe has one.

@@ -1,0 +1,9 @@
+/* The IAU's names on a rocky body (#334): quieter than Earth's states, in the cartographers'
+   spaced capitals. */
+.place-name {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.88);
+}

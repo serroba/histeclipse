@@ -2227,16 +2227,6 @@ button:has(> .icon-label) > .icon {
   display: block;
 }
 
-/* The IAU's names on a rocky body (#334): quieter than Earth's states, in the cartographers'
-   spaced capitals. */
-.place-name {
-  font-size: 0.68rem;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgb(255 255 255 / 0.88);
-}
-
 /* The moons of the planet in view (#335): a dot on the moon, its name beside it, as moons too
    small to see still need finding. */
 .moon-name {
