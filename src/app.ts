@@ -4,10 +4,10 @@
  * modules it calls.
  */
 
-import { type EquatorialVector, loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
+import { loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
 import { loadSky } from './data/sky';
 import { earthFixedToJ2000, sunPositionJ2000 } from './astro/precession';
-import { subsolarPoint, sunDistance } from './astro/sun';
+import { subsolarPoint } from './astro/sun';
 import { greatestEclipseUT, yearOf } from './data/catalog';
 import {
   famousDate,
@@ -31,17 +31,8 @@ import { impactLayer } from './globe/impactLayer';
 import { dateCellsLayer, rocksLayer, waysLayer } from './globe/historyPaintLayers';
 import { iceOutlineLayer } from './globe/iceOutlineLayer';
 import { magneticNorthLayer } from './globe/magneticNorthLayer';
-import { moonNameLayer } from './globe/moonNameLayer';
-import { placeNameLayer } from './globe/placeNameLayer';
 import { geoToVector } from './globe/geo';
-import {
-  PLANET_NAMES,
-  PLANET_VIEWS,
-  pickedView,
-  planetView,
-  SHARP_MAPS,
-  type PlanetView,
-} from './globe/planetLook';
+import { PLANET_NAMES } from './globe/planetLook';
 import { loadPolarity, type PolarityScale } from './data/polarity';
 import { magneticNorthAt } from './deepTime/earthState';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
@@ -82,11 +73,9 @@ import {
   EARTH_LAYERS,
   FOUND_THE_WAY_IN,
   HISTORY,
-  ORBITS,
   redraws,
   SELECTION,
   SKY,
-  SUN,
   VIEW_SWITCH,
 } from './state/redraws';
 import { changed, createStore } from './state/store';
@@ -109,24 +98,11 @@ import {
   type GeoPoint,
   type ViewState,
 } from './state/viewState';
-import {
-  loadPlanetEphemeris,
-  ORBIT_DAYS,
-  ORBITING,
-  orbitPath,
-  planetMagnitude,
-  PLANETS,
-  saturnRingTilt,
-  type Orbiting,
-  type PlanetEphemeris,
-  type PlanetName,
-} from './astro/planets';
-import type { SkyPlanet } from './sky/skyScene';
-import { observerPosition, topocentric } from './sky/bodies';
+import { type PlanetName } from './astro/planets';
+import { observerPosition } from './sky/bodies';
 import { horizonMatrix, horizontalOf } from './sky/horizon';
 import { LOWEST_LOOK, roundLook } from './sky/look';
 import { longTermEarthFixedToJ2000 } from './astro/longTermPrecession';
-import type { Vector3 } from './astro/matrix';
 import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
 import {
@@ -140,14 +116,9 @@ import { astronomicalYear, formatYear, type AstronomicalYear } from './time/year
 import { moveToYear } from './time/yearInput';
 import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
-import type { BodyKey } from './ui/bodyBar';
-import { keyGradient, keyTicks, loadColourKeys } from './data/planetKeys';
-import { isNamedBody, loadPlaceNames, type PlaceNames } from './data/planetNames';
-import { loadMoonOrbits, moonPosition, type MoonName, type MoonOrbits } from './astro/moonOrbits';
 import { FEATURES } from './features';
 import { RESTING, type DeepMoment, type FeatureContext } from './features/feature';
-import { moonAbout, moonLine } from './text/moonFacts';
-import { isMoonBody, MOON_MAPS, MOON_NAMES, MOON_VIEWS, moonPlanet } from './globe/moonLook';
+import { isMoonBody, moonPlanet } from './globe/moonLook';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
 import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
 import { createFamousPanel } from './ui/famousPanel';
@@ -167,8 +138,6 @@ import { BABYLON, directionOf, starsByNumber, type TabletSky } from './tablets/t
 import { bodyName, computedText, recordBodies } from './tablets/verdictText';
 import { VAT_4956 } from './tablets/vat4956';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
-import { createSunSwitch } from './ui/sunSwitch';
-import { createPlanetSwitch } from './ui/planetSwitch';
 import { createLayersPanel } from './ui/layersPanel';
 import { createDeepGlance } from './ui/deepGlance';
 import { CARBON_LIMIT, cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
@@ -203,8 +172,7 @@ import {
   type OhmIndex,
 } from './data/ohmBorders';
 import { CULTURE_INFO } from './data/skyCultures';
-import { loadSunImages, type SunImages } from './data/sunImages';
-import { createViewSwitch, lookBack } from './ui/viewSwitch';
+import { createViewSwitch } from './ui/viewSwitch';
 import {
   type CoastlineView,
   createDeepTimeBar,
@@ -248,16 +216,6 @@ import {
 } from './data/namedPeriods';
 import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
-import { createBodyBar } from './ui/bodyBar';
-import {
-  earthFromFacts,
-  earthFromText,
-  moonFacts,
-  moonText,
-  planetFacts,
-  planetText,
-  sunText,
-} from './astro/bodyFacts';
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
 import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
@@ -266,6 +224,7 @@ import { createBoundariesSheet } from './ui/boundariesSheet';
 import type { PartContext } from './features/part';
 import { mountTreeOfLife } from './features/treeOfLife';
 import { mountSky } from './features/sky';
+import { mountBodies } from './features/bodies';
 import { phoneLook, type BodiesSeen } from './sky/aim';
 import type { SkyMark } from './sky/skyScene';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
@@ -303,18 +262,13 @@ import { PLATES_REACH_MA, sketchAt } from './deepTime/sketch';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
 import { createPeriodBands, yearTicks } from './ui/periodBands';
 import { createSpanSwitch, type Span } from './ui/spanSwitch';
-import { elementAt } from './util/arrays';
 import { errorMessage } from './util/errors';
 
 const MINUTES_PER_DAY = 1440;
-/** Within this many radii of the body in focus, its sharper map is fetched (#258). */
-const SHARP_WITHIN = 2.5;
 /** Degrees from the centre of the globe in view within which a strike is played as time runs. */
 const STRIKE_IN_VIEW = 70;
 /** Strikes started in one frame at most, the greatest first, when time runs fast past several. */
 const STRIKES_AT_ONCE = 4;
-/** Earth radii (or the focused body's): beyond this the space view loads the planets. */
-const PLANETS_SHOWN_BEYOND = 1000;
 /** Pixels the zoom rail needs between the panels: its buttons, a short track and its reading. */
 const ZOOM_RAIL_ROOM = 180;
 /** This year, up to which the latest borders of states carry on. */
@@ -429,8 +383,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const sky = mountSky({
     ...partContext,
     bodiesSeen,
-    planetsSeen,
-    loadPlanets,
+    planetsSeen: (jdTT, sun, observer) => bodies.planetsSeen(jdTT, sun, observer),
+    loadPlanets: () => bodies.loadPlanets(),
     deltaTUncertainty: (jdUT) => deltaT.uncertaintySeconds(jdUT),
     namedPlace,
     moonReady: () => moonEphemeris !== null,
@@ -526,14 +480,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   });
   const waysLegend = createWaysLegend(whySheet.mark('ways', 'Ways of life'));
-  // Away from Earth, the bar's line for the body in view, in place of Earth's own.
-  // A planet's moon in view has its own sources (#335).
-  const bodyBar = createBodyBar(
-    whySheet.mark(
-      () => (isMoonBody(store.get().focus) ? 'moons' : 'bodies'),
-      'Sun, Moon and planets',
-    ),
-  );
   // The eclipse picked before entering deep time, picked again on leaving it.
   let selectionBeforeDeep: ViewState['selection'] = null;
   function leaveDeepTime(): void {
@@ -675,17 +621,25 @@ export async function startApp(root: HTMLElement): Promise<void> {
       feature.deepChip === undefined ? [] : [{ layer: feature.id, ...feature.deepChip }],
     ),
   );
-  const sunSwitch = createSunSwitch(
-    (sunLayer) => {
-      store.set((state) => ({ ...state, sunLayer }));
-    },
-    whySheet.mark('sun', 'The Sun close up'),
-  );
-  // How a planet is shown close up (#239), where it has more than one way.
-  const planetSwitch = createPlanetSwitch((planetLight) => {
-    store.set((state) => ({ ...state, planetLight }));
-  });
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
+  // The globe draws at once and takes its maps as they arrive; nothing below waits on them.
+  // It sizes itself once its container is on the page.
+  const globe = createGlobe(globeContainer, {
+    camera: store.get().camera,
+    textureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
+    moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
+    focus: store.get().focus,
+  });
+  // The Sun, the Moon, the planets and their moons up close (#449).
+  const bodies = mountBodies({
+    ...partContext,
+    globe,
+    zoomRail,
+    moon: () => moonEphemeris,
+    refresh: () => {
+      showTime(store.get());
+    },
+  });
   // A tablet record being looked at: what it says, whether it fits, and the way back to the list.
   const recordText = element('span', { class: 'tablet-record-text' });
   const recordMark = element('span', { class: 'tablet-mark' });
@@ -1230,10 +1184,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     // With an eclipse open its own player runs the time; on a planet or the Sun, the cycle.
     historyTrack.root.hidden = state.selection !== null || body !== null;
     historyTrack.extras.hidden = historyTrack.root.hidden;
-    const theory = planets;
+    const theory = bodies.planets();
     if (body === null || theory === null || bodiesAt === null) {
       if (body === null) stopCycle();
-      else if (theory === null) void loadPlanets();
+      else if (theory === null) void bodies.loadPlanets();
       cycleTrack.render(null);
       return;
     }
@@ -1546,7 +1500,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     element(
       'div',
       { class: 'holocene-bar' },
-      bodyBar.root,
+      bodies.bar,
       waysLegend.root,
       historyTrack.root,
       cycleTrack.root,
@@ -1580,8 +1534,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       hudActions,
       viewSwitch.root,
       ...sky.controls,
-      sunSwitch.root,
-      planetSwitch.root,
+      ...bodies.switches,
       ...sky.captions,
       recordBanner,
       // Sources and what is written about here share a line, each a full row once open.
@@ -1652,16 +1605,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
   parsed.warnings.forEach(notify);
 
-  // The globe draws at once and takes its maps as they arrive; nothing below waits on them.
-  const globe = createGlobe(globeContainer, {
-    camera: store.get().camera,
-    textureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
-    moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
-    focus: store.get().focus,
-  });
   // Drawn on the globe as layers of their own (#379).
-  const placeNamesOnGlobe = globe.addLayer(placeNameLayer);
-  const moonNamesOnGlobe = globe.addLayer(moonNameLayer);
   const magneticNorthOnGlobe = globe.addLayer(magneticNorthLayer);
   const rocksOnGlobe = globe.addLayer(rocksLayer);
   const waysOnGlobe = globe.addLayer(waysLayer);
@@ -1679,10 +1623,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       markerCard.show(card);
     },
     cardOpen: () => markerCard.dialog.open,
-    planets: () => planets,
+    planets: () => bodies.planets(),
     moon: () => moonEphemeris,
     loadPlanets: () => {
-      void loadPlanets();
+      void bodies.loadPlanets();
     },
     openLineages: treeOfLife.openLineagesAt,
     openTree: treeOfLife.openTreeAt,
@@ -1987,13 +1931,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
       earthFixedToJ2000: earthFixedToJ2000(universal, terrestrial),
       sunKm: sunPositionJ2000(terrestrial),
       moonKm: moonEphemeris?.position(terrestrial) ?? null,
-      planetsKm: planetPositions(terrestrial),
+      planetsKm: bodies.planetPositions(terrestrial),
       jdTT: terrestrial,
     });
     lastTerrestrial = terrestrial;
     bodiesAt = terrestrial;
+    bodies.setMoment(terrestrial);
     showBody(state);
-    showOrbits(state, terrestrial);
+    bodies.showOrbits(state, terrestrial);
     showFeatures(state, terrestrial);
     root.dataset['subsolar'] = `${sun.latitude.toFixed(3)},${sun.longitude.toFixed(3)}`;
     if (state.ma !== null) {
@@ -3267,246 +3212,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   // The moment last shown (TT), for the body bar: it works out only the body in view.
   let bodiesAt: JulianDay | null = null;
+  let lastTerrestrial: number | null = null;
 
-  /** Earth looked back at from afar, as two missions photographed it. */
-  const LOOKED_BACK =
-    'So Voyager 1 saw it in 1990, from beyond Neptune: the “Pale Blue Dot” (NASA/JPL, PIA00452); and Cassini from Saturn in 2013, “The Day the Earth Smiled” (NASA/JPL-Caltech/SSI, PIA17171).';
-
-  /**
-   * Close up, a sharper map for the body in focus, fetched once (#258): Earth's largest only
-   * where the graphics hold it and the screen is not a phone's, whose memory it would strain.
-   */
-  const largeMaps = globe.maxTextureSize >= 8192 && !window.matchMedia('(pointer: coarse)').matches;
-  function sharpenClose(state: ViewState): void {
-    if (state.mode !== 'globe' || state.ma !== null || state.camera.distance > SHARP_WITHIN) return;
-    const { focus } = state;
-    if (focus === 'earth' || focus === 'moon') {
-      const sizes = SHARP_MAPS[focus];
-      globe.setBodyMap(focus, `${base}${largeMaps ? sizes.large : sizes.small}`);
-      return;
-    }
-    if (focus === 'sun' || isMoonBody(focus)) return;
-    globe.sharpenPlanet(focus);
-  }
-
-  // The moons of Mars, Jupiter and Saturn (#335), loaded the first time one of them is in view.
-  let moonOrbitsAsked = false;
-  let moonOrbits: MoonOrbits | null = null;
-  /** Load the moons' orbits once a planet with moons is in view, or the orbits are drawn. */
-  function showMoons(body: string, orbitsShown = false): void {
-    const near = body === 'mars' || body === 'jupiter' || body === 'saturn' || isMoonBody(body);
-    if (moonOrbitsAsked || !(near || orbitsShown)) return;
-    moonOrbitsAsked = true;
-    loadMoonOrbits(`${base}data/moon-orbits.json`, fetchJson).then(
-      (orbits) => {
-        moonOrbits = orbits;
-        globe.setMoonOrbits(orbits);
-        moonNamesOnGlobe.update(true);
-        showBody(store.get());
-      },
-      (error: unknown) => {
-        moonOrbitsAsked = false;
-        notify(`Could not load the moons’ orbits: ${errorMessage(error)}`);
-      },
-    );
-  }
-
-  // The IAU's place names on the rocky bodies (#334), loaded the first time one is in view.
-  let placeNames: PlaceNames | null = null;
-  let placeNamesAsked = false;
-  /** Name the features of the body in view, if it has names; take away any others. */
-  function showPlaceNames(body: string | null): void {
-    const named = body !== null && isNamedBody(body) ? body : null;
-    if (named !== null && placeNames === null && !placeNamesAsked) {
-      placeNamesAsked = true;
-      loadPlaceNames(`${base}data/planet-names.json`, fetchJson).then(
-        (loaded) => {
-          placeNames = loaded;
-          showBody(store.get());
-        },
-        (error: unknown) => {
-          placeNamesAsked = false;
-          notify(`Could not load the place names: ${errorMessage(error)}`);
-        },
-      );
-    }
-    placeNamesOnGlobe.update(
-      named !== null && placeNames !== null ? { body: named, names: placeNames[named] } : null,
-    );
-  }
-
-  // The colour keys (#334): the height views', and the enhanced-colour views' swatches,
-  // loaded the first time one shows.
-  let colourKeys: Awaited<ReturnType<typeof loadColourKeys>> | null = null;
-  let colourKeysAsked = false;
-  /** A view's colour key for the bar, if it has one and the keys are in; else nothing. */
-  function keyFor({ colourKey, rockKey }: PlanetView): { key?: BodyKey } {
-    if (colourKey === undefined && rockKey === undefined) return {};
-    if (colourKeys === null) {
-      if (!colourKeysAsked) {
-        colourKeysAsked = true;
-        loadColourKeys(`${base}data/planet-keys.json`, fetchJson).then(
-          (loaded) => {
-            colourKeys = loaded;
-            showBody(store.get());
-          },
-          (error: unknown) => {
-            colourKeysAsked = false;
-            notify(`Could not load the colour keys: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return {};
-    }
-    if (rockKey !== undefined) {
-      const { swatches, credit } = colourKeys.rocks[rockKey];
-      return { key: { swatches, note: `${credit.charAt(0).toUpperCase()}${credit.slice(1)}.` } };
-    }
-    if (colourKey === undefined) return {};
-    const key = colourKeys.heights[colourKey];
-    return {
-      key: {
-        gradient: keyGradient(key),
-        ticks: keyTicks(key),
-        note: `Height ${key.datum}; key ${key.credit}.`,
-      },
-    };
-  }
-
-  /** Away from Earth: the body in view and what can be said of it; Earth's own bits rest. */
+  /** Away from Earth: Earth's own bits rest, and the body in view shows. */
   function showBody(state: ViewState): void {
-    // As `awayFromEarth`, spelled out so the focus is known not to be Earth below.
-    const away = state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
+    const away = awayFromEarth(state);
     bottom.dataset['away'] = String(away);
     showCycle(state);
     // The Moon keeps the year's eclipses; Earth's other timelines rest there too (#329).
     bottom.dataset['body'] = state.focus;
     hudActions.hidden = away;
-    if (away) showMoons(state.focus);
-    // Not while standing on a planet looking back at Earth, nor on Venus's clouds, which hide
-    // the ground the names are for.
-    showPlaceNames(
-      away &&
-        (state.view !== 'earth-from-here' || state.focus === 'moon') &&
-        (state.focus !== 'venus' || state.planetLight === 'radar')
-        ? state.focus
-        : null,
-    );
-    // The Light switch, for a planet or the Moon in view with more than one way to show it.
-    const planet = state.focus === 'moon' ? 'moon' : PLANETS.find((name) => name === state.focus);
-    const views =
-      planet !== undefined
-        ? PLANET_VIEWS[planet]
-        : isMoonBody(state.focus)
-          ? MOON_VIEWS[state.focus]
-          : undefined;
-    if (away && (state.view !== 'earth-from-here' || planet === 'moon') && views !== undefined) {
-      planetSwitch.render(views, pickedView(views, state.planetLight).key);
-    } else {
-      planetSwitch.render(null, '');
-    }
-    if (!away || bodiesAt === null) {
-      bodyBar.render(null);
-      return;
-    }
-    const jdTT = bodiesAt;
-    const sunKm = sunPositionJ2000(jdTT);
-    const focus = state.focus;
-    if (state.view === 'earth-from-here' && focus !== 'moon') {
-      // Standing on the body in focus, looking back at Earth (#245).
-      const observer =
-        focus === 'sun'
-          ? sunKm
-          : isMoonBody(focus)
-            ? moonFromEarth(focus, jdTT)
-            : (planets?.position(focus, jdTT) ?? null);
-      const [, label] = lookBack(focus);
-      bodyBar.render(
-        observer === null
-          ? null
-          : {
-              name: label.replace('Earth from', 'Earth, seen from'),
-              text: earthFromText(earthFromFacts(observer, sunKm)),
-              picture: LOOKED_BACK,
-            },
-      );
-    } else if (focus === 'sun') {
-      bodyBar.render({ name: 'The Sun', text: sunText(sunDistance(jdTT)) });
-    } else if (isMoonBody(focus)) {
-      const at = moonFromEarth(focus, jdTT);
-      // Its mission map, the sharper one close up (#335), or the view picked, for a moon seen
-      // by more than one light; a view with no map is its painted colour.
-      const views = MOON_VIEWS[focus];
-      const look = views === undefined ? MOON_MAPS[focus] : pickedView(views, state.planetLight);
-      if (look !== undefined) {
-        const sharp = state.camera.distance <= SHARP_WITHIN ? look.sharp : null;
-        const url = sharp ?? look.map;
-        globe.setMoonMap(focus, url === null ? null : `${base}${url}`);
-      }
-      bodyBar.render(
-        at === null || moonOrbits === null
-          ? null
-          : {
-              name: MOON_NAMES[focus],
-              text: moonLine(focus, moonOrbits[focus], Math.hypot(...at)),
-              about: moonAbout(focus),
-              ...(look === undefined ? {} : { picture: look.caption }),
-            },
-      );
-    } else if (focus === 'moon') {
-      const moonKm = moonEphemeris?.position(jdTT) ?? null;
-      // The view picked (#239): the usual map, or a mission's other one, fetched the first time.
-      const view = planetView('moon', state.planetLight);
-      const { map, sharp, caption } = view;
-      globe.showMoonView(
-        map === null
-          ? null
-          : { map: `${base}${map}`, sharp: sharp === null ? null : `${base}${sharp}` },
-      );
-      bodyBar.render(
-        moonKm === null
-          ? null
-          : {
-              name: 'The Moon',
-              text: moonText(moonFacts(moonKm, sunKm)),
-              picture: caption,
-              ...keyFor(view),
-            },
-      );
-    } else {
-      // The view picked (#239): a mission's map, fetched the first time, or the painted colours.
-      const view = planetView(focus, state.planetLight);
-      const { map, sharp, caption } = view;
-      globe.showPlanetView(
-        focus,
-        map === null
-          ? null
-          : { map: `${base}${map}`, sharp: sharp === null ? null : `${base}${sharp}` },
-      );
-      const position = planets?.position(focus, jdTT);
-      bodyBar.render(
-        position === undefined
-          ? null
-          : {
-              name: PLANET_NAMES[focus],
-              text: planetText(planetFacts(focus, position, sunKm)),
-              // Of the planets drawn, the inner two alone have no moons (#335).
-              ...(focus === 'mercury' || focus === 'venus'
-                ? { about: `${PLANET_NAMES[focus]} has no moons.` }
-                : {}),
-              picture: caption,
-              ...keyFor(view),
-            },
-      );
-    }
-  }
-
-  /** Where a planet's moon is from Earth's centre, J2000 km; null until both are known. */
-  function moonFromEarth(moon: MoonName, jdTT: JulianDay): [number, number, number] | null {
-    const planet = planets?.position(moonPlanet(moon), jdTT);
-    if (planet === undefined || moonOrbits === null) return null;
-    const [x, y, z] = moonPosition(moonOrbits[moon], jdTT);
-    return [planet[0] + x, planet[1] + y, planet[2] + z];
+    bodies.show(state);
   }
 
   /** What a why says of the moment shown: deep time's map, the period's own evidence. */
@@ -3634,153 +3350,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
   }
 
-  // SDO's images of the Sun load the first time someone looks at it close up.
-  let sunImages: SunImages | null = null;
-  let sunImagesLoading = false;
-  function showSun(state: ViewState): void {
-    const close = state.mode === 'globe' && state.focus === 'sun';
-    sunSwitch.render(state.sunLayer, close);
-    if (!close) {
-      globe.setSunImage(null);
-      return;
-    }
-    if (sunImages === null) {
-      if (sunImagesLoading) return;
-      sunImagesLoading = true;
-      loadSunImages(`${base}data/sun-images.json`, (url) => fetch(url)).then(
-        (images) => {
-          sunImages = images;
-          sunSwitch.setLayers(images.layers, images.credit);
-          showSun(store.get());
-        },
-        (error: unknown) => {
-          sunImagesLoading = false;
-          notify(`Could not load the images of the Sun: ${errorMessage(error)}`);
-        },
-      );
-      return;
-    }
-    const image = sunImages.layers.find(({ key }) => key === state.sunLayer);
-    if (image === undefined) return;
-    globe.setSunImage({
-      key: image.key,
-      map: { small: `${base}${image.map['512']}`, large: `${base}${image.map['4096']}` },
-      disc: { small: `${base}${image.disc['512']}`, large: `${base}${image.disc['2048']}` },
-      // Visible light comes as grey; the Sun's own light is a warm white.
-      tint: image.key === 'visible' ? [1, 0.93, 0.8] : [1, 1, 1],
-      diskRadius: sunImages.diskRadius,
-      // The map is the surface seen face-on; in visible light it darkens toward the limb, as
-      // the Sun does seen by eye.
-      limbDarkening: image.key === 'visible' ? 0.6 : 0,
-    });
-  }
-
-  // The planets' theory loads with the sky view, or when the space view zooms out far enough to
-  // show them, or centres on one.
-  let planets: PlanetEphemeris | null = null;
-  let planetsLoading: Promise<PlanetEphemeris> | null = null;
-  function loadPlanets(): Promise<PlanetEphemeris> {
-    planetsLoading ??= loadPlanetEphemeris().then((theory) => {
-      planets = theory;
-      // Saturn's rings as measured (#336): Voyager's optical depths, Cassini's colour.
-      globe.setSaturnRings(`${base}textures/planets/saturn-rings.png`);
-      showTime(store.get());
-      return theory;
-    });
-    return planetsLoading;
-  }
-
-  /** Whether the space view is far enough out, or close to a planet, to need them. */
-  function wantPlanets(state: ViewState): boolean {
-    if (state.mode !== 'globe') return false;
-    return state.focus !== 'earth' && state.focus !== 'moon'
-      ? true
-      : state.camera.distance > PLANETS_SHOWN_BEYOND;
-  }
-
-  // Each orbit as last drawn, and the day it was centred on: drawn again only once the body has
-  // gone a quarter of the way round, as summing the series 128 times a body takes a while.
-  let orbitCache: Partial<Record<Orbiting, { jdTT: number; path: readonly EquatorialVector[] }>> =
-    {};
-  let orbitsDrawn: string | null = null;
-  let lastTerrestrial: number | null = null;
-  /** With the layer on and the view far enough out, the orbits around the Sun. */
-  function showOrbits(state: ViewState, jdTT: number): void {
-    zoomRail.setOrbits(wantPlanets(state) && state.ma === null, state.layers.has('orbits'));
-    const theory = planets;
-    if (
-      !state.layers.has('orbits') ||
-      !wantPlanets(state) ||
-      theory === null ||
-      state.ma !== null
-    ) {
-      if (orbitsDrawn !== null) globe.setOrbits(null);
-      orbitsDrawn = null;
-      return;
-    }
-    let changed = orbitsDrawn === null;
-    for (const body of ORBITING) {
-      const cached = orbitCache[body];
-      if (cached === undefined || Math.abs(jdTT - cached.jdTT) > ORBIT_DAYS[body] / 4) {
-        orbitCache = { ...orbitCache, [body]: { jdTT, path: orbitPath(theory, body, jdTT) } };
-        changed = true;
-      }
-    }
-    if (!changed) return;
-    orbitsDrawn = 'on';
-    // The moons' orbits are drawn with the planets' (#335).
-    showMoons(state.focus, true);
-    globe.setOrbits(
-      Object.fromEntries(ORBITING.map((body) => [body, orbitCache[body]?.path ?? []])) as Record<
-        Orbiting,
-        readonly EquatorialVector[]
-      >,
-    );
-  }
-
-  function planetPositions(
-    jdTT: JulianDay,
-  ): Readonly<Record<PlanetName, readonly [number, number, number]>> | null {
-    if (planets === null) return null;
-    const theory = planets;
-    return Object.fromEntries(
-      PLANETS.map((planet) => [planet, theory.position(planet, jdTT)]),
-    ) as Record<PlanetName, readonly [number, number, number]>;
-  }
-  const KM_PER_AU = 149_597_870.7;
-  // Planets from Earth's centre for the moment last shown: turning the view or moving the
-  // observer reuses them rather than summing the series again.
-  let planetCache: { jdTT: number; fromEarth: readonly Vector3[] } | null = null;
-  function planetsSeen(jdTT: JulianDay, sun: Vector3, observer: Vector3): SkyPlanet[] {
-    if (planets === null) return [];
-    const theory = planets;
-    if (planetCache?.jdTT !== jdTT) {
-      planetCache = { jdTT, fromEarth: PLANETS.map((planet) => theory.apparent(planet, jdTT)) };
-    }
-    const cached = planetCache.fromEarth;
-    return PLANETS.map((planet, index) => {
-      const fromEarth = elementAt(cached, index);
-      const [x, y, z] = fromEarth;
-      const [sx, sy, sz] = [sun[0] - x, sun[1] - y, sun[2] - z];
-      const delta = Math.hypot(x, y, z);
-      const r = Math.hypot(sx, sy, sz);
-      // Phase angle: at the planet, between the Sun and Earth.
-      const cosine = -(sx * x + sy * y + sz * z) / (r * delta);
-      const phase = (Math.acos(Math.max(-1, Math.min(1, cosine))) * 180) / Math.PI;
-      return {
-        name: `${planet[0]?.toUpperCase() ?? ''}${planet.slice(1)}`,
-        direction: topocentric(fromEarth, observer),
-        magnitude: planetMagnitude(
-          planet,
-          r / KM_PER_AU,
-          delta / KM_PER_AU,
-          phase,
-          planet === 'saturn' ? saturnRingTilt(fromEarth) : 0,
-        ),
-      };
-    });
-  }
-
   /** The name of a culture's observing site, if the observer stands right there. */
   /** The name of where the observer stands: a famous eclipse's place, or a culture's site. */
   function placeName(place: GeoPoint, famousHere: FamousEclipse | undefined): string | null {
@@ -3837,7 +3406,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function tabletSky(): Promise<TabletSky> {
     tabletSkyLoading ??= Promise.all([
       moonEphemeris === null ? loadMoonEphemeris() : Promise.resolve(moonEphemeris),
-      loadPlanets(),
+      bodies.loadPlanets(),
       loadSky(`${base}data/sky.json`, (url) => fetch(url)),
     ]).then(([moon, planetTheory, catalogue]) => ({
       moon,
@@ -3918,12 +3487,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function render(state: ViewState, previous: ViewState | null): void {
-    // Asked once: a failed load is reported once rather than on every move of the camera.
-    if (planetsLoading === null && wantPlanets(state)) {
-      loadPlanets().catch((error: unknown) => {
-        notify(`Could not load the planets' orbits: ${errorMessage(error)}`);
-      });
-    }
     const leftDeepTime = previous !== null && previous.ma !== null && state.ma === null;
     if (state.time !== previous?.time || state.years !== previous.years || leftDeepTime) {
       showTime(state);
@@ -3943,11 +3506,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
     }
     if (previous !== null && state.focus !== previous.focus) globe.setFocus(state.focus);
-    // The orbits come and go as the view moves out and in, or turns to the Sun or a planet.
-    if (lastTerrestrial !== null && redraws(ORBITS, state, previous)) {
-      showOrbits(state, lastTerrestrial);
-    }
-    if (redraws(SUN, state, previous)) showSun(state);
+    bodies.render(state, previous);
     if (redraws(EARTH_LAYERS, state, previous)) {
       showDates(state);
       showWays(state);
@@ -3974,7 +3533,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     showSources(state);
     showHere(state);
     showBody(state);
-    sharpenClose(state);
+    bodies.sharpen(state);
     zoomRail.setWhyHere(
       state.mode === 'globe' && state.focus === 'earth' && state.ma === null,
       askingHere,
