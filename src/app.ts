@@ -8,12 +8,7 @@ import { loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
 import { earthFixedToJ2000, sunPositionJ2000 } from './astro/precession';
 import { subsolarPoint } from './astro/sun';
 import { greatestEclipseUT, yearOf } from './data/catalog';
-import {
-  famousDate,
-  famousFor,
-  loadFamousEclipses,
-  type FamousEclipse,
-} from './data/famousEclipses';
+import { famousFor, type FamousEclipse } from './data/famousEclipses';
 import { LunarCatalog } from './data/lunarCatalog';
 import { SolarCatalog, type SolarEclipse } from './data/solarCatalog';
 import {
@@ -108,7 +103,6 @@ import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
 import { FEATURES } from './features';
 import { RESTING, type DeepMoment, type FeatureContext } from './features/feature';
-import { createFamousPanel } from './ui/famousPanel';
 import { createSearchPanel } from './ui/searchPanel';
 import { anchorLabel, anchorQuery } from './text/anchors';
 import { loadMeaningSearch } from './text/meaningLoader';
@@ -209,6 +203,7 @@ import { mountSky } from './features/sky';
 import { mountBodies } from './features/bodies';
 import { mountRecords } from './features/records';
 import { mountCycle } from './features/cycle';
+import { mountFamous } from './features/famous';
 import { phoneLook, type BodiesSeen } from './sky/aim';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
@@ -275,17 +270,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // opening a shared link does not, because the link already says where the camera should be.
   let flyToSelection = false;
   let flyTarget: GeoPoint | null = null;
-  let famous: readonly FamousEclipse[] = [];
-  const famousPanel = createFamousPanel(
-    (entry) => {
-      void goToFamous(entry);
-    },
-    () => {
-      // The tablet is dated in the Babylonian calendar: switch to it, where its check lives.
-      store.set((state) => ({ ...state, years: 'babylonian' }));
-      records.open();
-    },
-  );
+
   const viewSwitch = createViewSwitch((choice) => {
     if (choice === 'sky') {
       // Stand where the link says, or else on the spot in the middle of the globe; during an
@@ -599,6 +584,22 @@ export async function startApp(root: HTMLElement): Promise<void> {
       sky.setMarks(marks);
     },
   });
+  // The famous eclipses, and going to one (#447).
+  const famous = mountFamous({
+    ...partContext,
+    eclipsesInYear: (kind, year) =>
+      (kind === 'solar' ? solarCatalog : lunarCatalog).eclipsesInYear(year),
+    flyToPicked(place) {
+      flyToSelection = true;
+      flyTarget = place;
+    },
+    loaded: () => {
+      renderSelection(store.get());
+    },
+    openTablet: () => {
+      records.open();
+    },
+  });
   // The Sun, the Moon, the planets and their moons up close (#449).
   const bodies = mountBodies({
     ...partContext,
@@ -649,7 +650,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // A first visit (no link to follow, never welcomed before) gets one line on what this is and
   // where to start; it goes for good once closed, followed, or once something is picked.
   const welcome = createWelcome(window.location.search === '', () => {
-    famousPanel.button.click();
+    famous.button.click();
   });
   const notices = element('ul', { class: 'notices', role: 'status', 'aria-live': 'polite' });
   // The panels hide for a clear view, by this button or a tap on empty space; it brings them back.
@@ -1331,7 +1332,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         stepSeen(direction);
       },
     },
-    [famousPanel.button, records.button],
+    [famous.button, records.button],
     [historyTrack.extras, cycle.extras],
   );
   const scrubber = createScrubber((offsetMinutes) => {
@@ -1407,7 +1408,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     glance.root,
     showControls,
     bottom,
-    famousPanel.dialog,
+    famous.dialog,
     searchPanel.dialog,
     records.dialog,
     layersPanel.dialog,
@@ -1528,48 +1529,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
 
   // The famous list is a convenience: if it fails to load, everything else still works.
-  loadFamousEclipses(`${base}data/famous-eclipses.json`, (url) => fetch(url)).then(
-    (entries) => {
-      famous = entries;
-      famousPanel.setEclipses(entries);
-      renderSelection(store.get());
-    },
-    (error: unknown) => {
-      famousPanel.button.hidden = true;
-      notify(`Could not load the famous eclipses: ${errorMessage(error)}`);
-    },
-  );
-
-  async function goToFamous(entry: FamousEclipse): Promise<void> {
-    const date = famousDate(entry);
-    const catalog = entry.kind === 'solar' ? solarCatalog : lunarCatalog;
-    let eclipses: readonly Eclipse[];
-    try {
-      eclipses = await catalog.eclipsesInYear(date.year);
-    } catch (error) {
-      notify(`Could not load ${entry.title}: ${errorMessage(error)}`);
-      return;
-    }
-    const match = findSelected(eclipses, { kind: entry.kind, date });
-    if (match === undefined) {
-      notify(`${entry.title} is not in the catalog.`);
-      return;
-    }
-    flyToSelection = true;
-    flyTarget = entry.place ?? null;
-    store.set((state) => {
-      const location =
-        entry.place === undefined
-          ? state.location
-          : { latitude: entry.place.latitude, longitude: entry.place.longitude };
-      return {
-        ...state,
-        time: eclipseMomentAt(match, location),
-        selection: eclipseSelection(match),
-        location,
-      };
-    });
-  }
+  famous.load();
 
   /** The year on the bar: in the calendar picked, holding the moment shown. */
   function barYear(state: ViewState): number {
@@ -1656,7 +1616,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     } else {
       globe.setLunarOverlay(null);
     }
-    const famousHere = famousFor(famous, state.selection);
+    const famousHere = famousFor(famous.list(), state.selection);
     card.render(
       selected,
       uncertainty,
