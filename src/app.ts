@@ -1,6 +1,5 @@
 /**
  * Wires the view state (from the URL) to the globe, the timeline, the scrubber and the card.
- *
  * Browser-only glue, covered by the Playwright suite. Logic worth unit testing lives in the
  * modules it calls.
  */
@@ -30,6 +29,7 @@ import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { humanSiteLayer } from './globe/humanSiteLayer';
 import { impactLayer } from './globe/impactLayer';
+import { moonNameLayer } from './globe/moonNameLayer';
 import { placeNameLayer } from './globe/placeNameLayer';
 import { geoToVector } from './globe/geo';
 import {
@@ -1800,6 +1800,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   // Drawn on the globe as layers of their own (#379).
   const placeNamesOnGlobe = globe.addLayer(placeNameLayer);
+  const moonNamesOnGlobe = globe.addLayer(moonNameLayer);
   const impactsOnGlobe = globe.addLayer(impactLayer);
   const humanSitesOnGlobe = globe.addLayer(humanSiteLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
@@ -3709,6 +3710,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       (orbits) => {
         moonOrbits = orbits;
         globe.setMoonOrbits(orbits);
+        moonNamesOnGlobe.update(true);
         showBody(store.get());
       },
       (error: unknown) => {

@@ -8,6 +8,7 @@ import type { PerspectiveCamera, Quaternion, Scene, Vector3 } from 'three';
 
 import './nameLabels.css';
 
+import type { MoonName, MoonPlanet } from '../astro/moonOrbits';
 import type { GeoPoint } from '../core/geo';
 import type { NamedBody } from '../data/planetNames';
 import type { Body } from '../state/viewState';
@@ -29,8 +30,11 @@ export interface LayerHost {
   readonly container: HTMLElement;
   /** The body the view is on. */
   focus(): Body;
-  /** Where a named body is, how it is turned, its radius (scene units), and whether it is drawn. */
-  bodyFrame(body: NamedBody): {
+  /**
+   * Where a named body or a planet with moons is, how it is turned, its radius (scene units), and
+   * whether it is drawn.
+   */
+  bodyFrame(body: NamedBody | MoonPlanet): {
     readonly position: Vector3;
     readonly rotation: Quaternion;
     readonly radius: number;
@@ -38,6 +42,10 @@ export interface LayerHost {
   };
   /** Where the Sun is in the scene. */
   sunPosition(): Vector3;
+  /** Where a planet's moon is in the scene, written into `target`. */
+  moonPosition(moon: MoonName, target: Vector3): Vector3;
+  /** Ask to fly to a body, as a tap on it does. */
+  requestBody(body: Body): void;
   /**
    * From J2000 km from Earth's centre to scene units, for the moment shown; null until the
    * globe has one.

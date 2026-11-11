@@ -102,10 +102,10 @@ import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { SOLAR_NORTH_POLE_J2000 } from './sunImage';
 import { labelPoint, namedByBoth, type Territory } from '../data/empires';
 import type { NamedBody } from '../data/planetNames';
-import { MOONS, type MoonName, type MoonOrbits } from '../astro/moonOrbits';
+import type { MoonName, MoonOrbits, MoonPlanet } from '../astro/moonOrbits';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius } from './planetLook';
-import { isMoonBody, MOON_NAMES, moonPlanet } from './moonLook';
+import { isMoonBody, moonsInView } from './moonLook';
 import {
   SURFACE_PRIORITY,
   type GlobeLayer,
@@ -1546,27 +1546,6 @@ export function createGlobe(
     empiresTexture.needsUpdate = true;
     uniforms['overlayMap'] = { value: empiresTexture };
   }
-  // The names of the moons of the planet in view (#335), each beside its moon.
-  const moonNameLayer = document.createElement('div');
-  moonNameLayer.className = 'empire-labels moon-names';
-  moonNameLayer.dataset['testid'] = 'moon-names';
-  moonNameLayer.hidden = true;
-  container.append(moonNameLayer);
-  const moonLabels = Object.values(MOONS)
-    .flat()
-    .map((name) => {
-      // A name to tap to fly to its moon.
-      const element = document.createElement('button');
-      element.type = 'button';
-      element.className = 'moon-name';
-      element.textContent = MOON_NAMES[name];
-      element.hidden = true;
-      element.addEventListener('click', () => {
-        requestBody(name);
-      });
-      moonNameLayer.append(element);
-      return { name, element, width: 0, height: 0 };
-    });
   const markerPickListeners = new Set<(key: string) => void>();
   // The layers added (#379), and what they lay out after each frame: declared before the first.
   const afterRenders: (() => void)[] = [];
@@ -2095,7 +2074,7 @@ export function createGlobe(
       placeMarkers();
       for (const object of hidden) object.visible = true;
       placeEmpireLabels();
-      placeMoonNames();
+      showMoonPaths();
       for (const place of afterRenders) place();
       if (earthMapped) container.dataset['rendered'] = 'true';
     }
@@ -2150,7 +2129,7 @@ export function createGlobe(
   }
 
   /** Where a named body is, how it is turned, and its radius, in the scene's units. */
-  function namedFrame(body: NamedBody): {
+  function namedFrame(body: NamedBody | MoonPlanet): {
     position: Vector3;
     rotation: Quaternion;
     radius: number;
@@ -2206,83 +2185,10 @@ export function createGlobe(
     layer.dataset['named'] = String(count);
   }
 
-  const moonWorld = new Vector3();
-  /** Name the moons of the planet in view, those in front of it or beside it, on screen. */
-  function placeMoonNames(): void {
-    // A moon in view shows its planet's moons, itself among them.
-    const planet = isMoonBody(focus)
-      ? moonPlanet(focus)
-      : focus === 'mars' || focus === 'jupiter' || focus === 'saturn'
-        ? focus
-        : null;
-    moonSystems.showPaths(planet);
+  /** Draw the paths of the moons of the planet in view, or of the moon in view's planet. */
+  function showMoonPaths(): void {
+    moonSystems.showPaths(moonsInView(focus));
     container.dataset['moonPaths'] = String(moonSystems.pathsShown());
-    if (moonNameLayer.hidden === true) return;
-    const viewWidth = container.clientWidth;
-    const viewHeight = container.clientHeight;
-    const centre = planet === null ? null : bodyMeshes[planet].position;
-    const radius = planet === null ? 0 : planetRadius(planet);
-    // The planet's disc on screen, to hide the moons behind it.
-    let disc: { x: number; y: number; r: number; distance: number } | null = null;
-    if (planet !== null && centre !== null) {
-      projected.copy(centre).project(camera);
-      const distance = camera.position.distanceTo(centre);
-      disc = {
-        x: ((projected.x + 1) / 2) * viewWidth,
-        y: ((1 - projected.y) / 2) * viewHeight,
-        r: apparentRadiusPixels({
-          radius,
-          distance,
-          verticalFovDegrees: camera.fov,
-          viewportHeight: viewHeight,
-        }),
-        distance,
-      };
-    }
-    const planetShown = planet !== null && bodyMeshes[planet].visible;
-    const placed: { x: number; y: number; w: number; h: number }[] = [];
-    let count = 0;
-    for (const label of moonLabels) {
-      const { name, element } = label;
-      // Not the moon in view itself: it fills the screen.
-      const mine =
-        planet !== null && name !== focus && (MOONS[planet] as readonly string[]).includes(name);
-      let visible = mine && disc !== null && planetShown;
-      let x = 0;
-      let y = 0;
-      if (visible && disc !== null) {
-        moonSystems.meshes[name].getWorldPosition(moonWorld);
-        const distance = camera.position.distanceTo(moonWorld);
-        projected.copy(moonWorld).project(camera);
-        x = ((projected.x + 1) / 2) * viewWidth;
-        y = ((1 - projected.y) / 2) * viewHeight;
-        const behind = distance > disc.distance && Math.hypot(x - disc.x, y - disc.y) < disc.r;
-        const { width, height } = label;
-        // The name starts just right of the moon.
-        const box = { x, y: y - height / 2, w: width, h: height };
-        visible =
-          projected.z < 1 &&
-          !behind &&
-          box.x >= 0 &&
-          box.x + width <= viewWidth &&
-          box.y >= 0 &&
-          box.y + height <= viewHeight &&
-          placed.every(
-            (other) =>
-              box.x > other.x + other.w ||
-              other.x > box.x + box.w ||
-              box.y > other.y + other.h ||
-              other.y > box.y + box.h,
-          );
-        if (visible) placed.push(box);
-      }
-      element.hidden = !visible;
-      if (!visible) continue;
-      count += 1;
-      element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(0, -50%)`;
-    }
-    moonNameLayer.dataset['planet'] = planet ?? '';
-    moonNameLayer.dataset['shown'] = String(count);
   }
 
   const projected = new Vector3();
@@ -2374,6 +2280,8 @@ export function createGlobe(
     focus: () => focus,
     bodyFrame: namedFrame,
     sunPosition: () => sun.position,
+    moonPosition: (moon, target) => moonSystems.meshes[moon].getWorldPosition(target),
+    requestBody,
     spaceToScene() {
       if (earthFixedToJ2000 === null) return null;
       const toScene = transpose(earthFixedToJ2000);
@@ -2993,22 +2901,6 @@ export function createGlobe(
       moonSystems.setOrbits(orbits);
       // A link to a moon waits for its orbit; the bodies may not be placed again, time at rest.
       settleFocus();
-      moonNameLayer.hidden = orbits === null;
-      if (orbits !== null && moonLabels.every(({ width }) => width === 0)) {
-        // Measured once, unseen: read every size, then hide them all, one layout for the lot.
-        for (const { element } of moonLabels) {
-          element.style.visibility = 'hidden';
-          element.hidden = false;
-        }
-        for (const label of moonLabels) {
-          label.width = label.element.offsetWidth;
-          label.height = label.element.offsetHeight;
-        }
-        for (const { element } of moonLabels) {
-          element.hidden = true;
-          element.style.visibility = '';
-        }
-      }
       needsRender = true;
     },
     onMarkerPick(listener) {
