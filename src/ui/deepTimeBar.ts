@@ -21,7 +21,6 @@ import {
 } from '../data/deepAir';
 import { archiveDots, archiveText, studiesNear, type Co2Archive } from '../data/co2Archive';
 import { createBandChart } from './bandChart';
-import { fossilsText, type FossilsAt } from '../data/fossils';
 import type { ClaimLine, HumansView } from '../data/humanClaims';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { PolarityScale } from '../data/polarity';
@@ -47,9 +46,15 @@ import {
 } from '../deepTime/sketch';
 import { DEEP_SPEEDS, deepSpeedText, deepSpeedWords } from '../deepTime/playSpeed';
 import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
-import { DISPERSAL_SCENARIOS, type DeepScale, type DispersalScenario } from '../state/viewState';
+import {
+  DISPERSAL_SCENARIOS,
+  type DeepScale,
+  type DispersalScenario,
+  type Layer,
+} from '../state/viewState';
 import type { WhyId } from '../sources/registry';
 import { element } from './dom';
+import { createDeepChips, type DeepChip, type DeepChipView } from './deepChips';
 import { bookIcon, uiIcon } from './icons';
 import { createGasChart } from './gasChart';
 import { createMilestonePanel } from './milestonePanel';
@@ -291,8 +296,8 @@ export interface DeepTimeView {
         /** The Paleo-CO2 Data Archive, once asked for (null until it loads). */
         readonly archive: Co2Archive | null;
       };
-  /** Fossils: off, on while they load (null), or on with the finds of the moment. */
-  readonly fossils: { readonly on: false } | { readonly on: true; readonly at: FossilsAt | null };
+  /** The features' chips (#380), by layer: whether each is offered and on, and its note. */
+  readonly chips: ReadonlyMap<Layer, DeepChipView>;
   /** Impact craters and deposits: off, on while they load (null), or on with what to say. */
   readonly impacts:
     | { readonly on: false }
@@ -340,33 +345,37 @@ export interface DeepTimeBar {
   render(view: DeepTimeView | null): void;
 }
 
-export function createDeepTimeBar(handlers: {
-  /** The book that says where a note's content comes from. */
-  why(id: WhyId, label: string): HTMLElement;
-  /** Open the why of `id` in full: the map's evidence, from its own chip. */
-  explain(id: WhyId): void;
-  /** A new moment: `jump` when it is a step to go back from (a milestone, a click), not a drag. */
-  onMa(ma: number, jump: boolean): void;
-  onPlay(playing: boolean): void;
-  /** A speed picked, millions of years a second, for the span shown. */
-  onSpeed(maPerSecond: number): void;
-  onTemperature(on: boolean): void;
-  onSeaLevel(on: boolean): void;
-  onPlates(on: boolean): void;
-  onHumans(on: boolean): void;
-  onFossils(on: boolean): void;
-  onImpacts(on: boolean): void;
-  /** Show each impact around its time, or every one that had struck by then. */
-  onImpactsMode(mode: ImpactsMode): void;
-  onAir(on: boolean): void;
-  /** The reader asked for the Paleo-CO2 Data Archive's estimates: load them. */
-  onCo2Archive(): void;
-  onDispersal(scenario: DispersalScenario): void;
-  onCoast(coast: CoastSource): void;
-  onSeaIce(model: SeaIceModel): void;
-  onTemperatureModel(model: TemperatureModel): void;
-  onSketch(choice: Partial<SketchChoices>): void;
-}): DeepTimeBar {
+export function createDeepTimeBar(
+  handlers: {
+    /** The book that says where a note's content comes from. */
+    why(id: WhyId, label: string): HTMLElement;
+    /** Open the why of `id` in full: the map's evidence, from its own chip. */
+    explain(id: WhyId): void;
+    /** A new moment: `jump` when it is a step to go back from (a milestone, a click), not a drag. */
+    onMa(ma: number, jump: boolean): void;
+    onPlay(playing: boolean): void;
+    /** A speed picked, millions of years a second, for the span shown. */
+    onSpeed(maPerSecond: number): void;
+    onTemperature(on: boolean): void;
+    onSeaLevel(on: boolean): void;
+    onPlates(on: boolean): void;
+    onHumans(on: boolean): void;
+    /** A feature's chip pressed: its layer on or off. */
+    onLayer(layer: Layer, on: boolean): void;
+    onImpacts(on: boolean): void;
+    /** Show each impact around its time, or every one that had struck by then. */
+    onImpactsMode(mode: ImpactsMode): void;
+    onAir(on: boolean): void;
+    /** The reader asked for the Paleo-CO2 Data Archive's estimates: load them. */
+    onCo2Archive(): void;
+    onDispersal(scenario: DispersalScenario): void;
+    onCoast(coast: CoastSource): void;
+    onSeaIce(model: SeaIceModel): void;
+    onTemperatureModel(model: TemperatureModel): void;
+    onSketch(choice: Partial<SketchChoices>): void;
+  },
+  chips: readonly DeepChip[] = [],
+): DeepTimeBar {
   const play = element(
     'button',
     { type: 'button', class: 'step deep-play', 'aria-label': 'Play' },
@@ -478,7 +487,6 @@ export function createDeepTimeBar(handlers: {
   const factsWhy = handlers.why('earth-facts', 'Poles, magnetic field, tilt, day and Sun');
   const airWhy = handlers.why('air', 'Air');
   const humansWhy = handlers.why('humans', 'Humans');
-  const fossilsWhy = handlers.why('fossils', 'Fossils');
   const impactsWhy = handlers.why('impacts', 'Impact craters');
   // What the map rests on, asked plainly, first among the chips: a reconstruction should say so.
   const evidenceButton = element(
@@ -552,17 +560,14 @@ export function createDeepTimeBar(handlers: {
     'data-testid': 'air-note',
   });
   const gasCharts = { co2: createGasChart(), ch4: createGasChart() };
-  const fossilsButton = element(
-    'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '', title: 'Fossils' },
-    uiIcon('fossils'),
-    element('span', { class: 'icon-label' }, 'Fossils'),
+  // The features' chips (#380): each a button and a note, made once.
+  const featureChips = createDeepChips(
+    chips,
+    (id, label) => handlers.why(id, label),
+    (layer, on) => {
+      handlers.onLayer(layer, on);
+    },
   );
-  const fossilsNote = element('p', {
-    class: 'deep-note fossils-note',
-    hidden: '',
-    'data-testid': 'fossils-note',
-  });
   const impactsButton = element(
     'button',
     { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '', title: 'Impacts' },
@@ -764,7 +769,7 @@ export function createDeepTimeBar(handlers: {
     legend,
     platesNote,
     humansNote,
-    fossilsNote,
+    ...featureChips.notes,
     impactsNote,
     airNote,
     milestones.root,
@@ -794,7 +799,7 @@ export function createDeepTimeBar(handlers: {
       temperatureButton,
       platesButton,
       humansButton,
-      fossilsButton,
+      ...featureChips.buttons,
       impactsButton,
       airButton,
     ),
@@ -1264,9 +1269,6 @@ export function createDeepTimeBar(handlers: {
   airButton.addEventListener('click', () => {
     handlers.onAir(!(current?.air.on ?? false));
   });
-  fossilsButton.addEventListener('click', () => {
-    handlers.onFossils(!(current?.fossils.on ?? false));
-  });
   impactsButton.addEventListener('click', () => {
     handlers.onImpacts(!(current?.impacts.on ?? false));
   });
@@ -1366,35 +1368,7 @@ export function createDeepTimeBar(handlers: {
       evidenceButton.hidden = view.scale === 'ice';
       // People are a matter of the last few hundred thousand years: the ice-age scale's.
       humansButton.hidden = view.scale !== 'ice';
-      // Fossils are counted by 5 million years: a matter of the 540 Myr span.
-      fossilsButton.hidden = view.scale !== 'all';
-      fossilsButton.setAttribute('aria-pressed', String(view.fossils.on));
-      fossilsNote.hidden = !view.fossils.on;
-      if (view.fossils.on) {
-        fossilsNote.replaceChildren(
-          fossilsWhy,
-          ' ',
-          ...(view.fossils.at === null
-            ? ['Fossils: loading…']
-            : [
-                ...view.fossils.at.totals.flatMap((total) =>
-                  total.count > 0
-                    ? [
-                        element('span', {
-                          class: `fossil-key is-${total.id}`,
-                          'aria-hidden': 'true',
-                        }),
-                        ' ',
-                      ]
-                    : [],
-                ),
-                fossilsText(view.fossils.at),
-                ' Source: ',
-                element('a', { href: 'https://paleobiodb.org' }, 'the Paleobiology Database'),
-                ' (CC BY 4.0).',
-              ]),
-        );
-      }
+      featureChips.render(view.chips);
       // Impacts are placed on the elevation maps' reconstruction: not before them.
       impactsButton.hidden = view.scale === 'eons';
       impactsButton.setAttribute('aria-pressed', String(view.impacts.on));

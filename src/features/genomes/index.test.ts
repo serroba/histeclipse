@@ -43,8 +43,8 @@ describe('the ancient genomes as a feature', () => {
   it('draws nothing and says nothing while its layer is off, or in deep time', () => {
     const { context, drawn } = fakeContext();
     const shown = genomesFeature.mount(context);
-    shown.show(off, JD);
-    shown.show({ ...on, ma: 100 }, JD);
+    shown.show?.(off, JD);
+    shown.show?.({ ...on, ma: 100 }, JD);
     expect(drawn).toEqual([null]);
     expect(shown.said?.()).toBeNull();
   });
@@ -52,7 +52,7 @@ describe('the ancient genomes as a feature', () => {
   it('rests while the reader travels through the years', () => {
     const { context, drawn } = fakeContext({ travelling: true });
     const shown = genomesFeature.mount(context);
-    shown.show(bronzeAge, JD);
+    shown.show?.(bronzeAge, JD);
     expect(drawn).toEqual([null]);
     expect(shown.said?.()).toBe(RESTING);
   });
@@ -60,17 +60,17 @@ describe('the ancient genomes as a feature', () => {
   it('loads once, then counts the genomes near the year by region, each to tap', async () => {
     const { context, drawn, cards, refresh } = fakeContext();
     const shown = genomesFeature.mount(context);
-    shown.show(bronzeAge, JD);
+    shown.show?.(bronzeAge, JD);
     expect(shown.said?.()).toBe('Loading the ancient genomes…');
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalledTimes(1);
     });
-    shown.show(bronzeAge, JD);
+    shown.show?.(bronzeAge, JD);
     const cells = drawn[0] as readonly { cell: number; count: number }[];
     expect(cells.length).toBeGreaterThan(10);
     expect(shown.said?.()).toMatch(/genomes dated/);
     // Another moment of the same year draws nothing new.
-    shown.show(bronzeAge, JD + 0.5);
+    shown.show?.(bronzeAge, JD + 0.5);
     expect(drawn).toHaveLength(1);
 
     const first = cells[0];
@@ -88,11 +88,11 @@ describe('the ancient genomes as a feature', () => {
   it('says so when the genomes cannot be loaded, and tries again next time', async () => {
     const { context, notify } = fakeContext({ failing: true });
     const shown = genomesFeature.mount(context);
-    shown.show(bronzeAge, JD);
+    shown.show?.(bronzeAge, JD);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the ancient genomes: offline');
     });
-    shown.show(bronzeAge, JD);
+    shown.show?.(bronzeAge, JD);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledTimes(2);
     });

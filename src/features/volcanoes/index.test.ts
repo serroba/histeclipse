@@ -46,11 +46,11 @@ function fakeContext(options: { readonly failing?: boolean; readonly travelling?
 /** Shown once the eruptions have loaded. */
 async function loaded(context: FeatureContext, refresh: ReturnType<typeof vi.fn>) {
   const shown = volcanoesFeature.mount(context);
-  shown.show(in1815, JD);
+  shown.show?.(in1815, JD);
   await vi.waitFor(() => {
     expect(refresh).toHaveBeenCalled();
   });
-  shown.show(in1815, JD);
+  shown.show?.(in1815, JD);
   return shown;
 }
 
@@ -62,7 +62,7 @@ describe('the volcanoes as a feature', () => {
   it('draws nothing and says nothing while its layer is off', () => {
     const { context, drawn } = fakeContext();
     const shown = volcanoesFeature.mount(context);
-    shown.show(off, JD);
+    shown.show?.(off, JD);
     expect(drawn).toEqual([null]);
     expect(shown.said?.()).toBeNull();
   });
@@ -70,7 +70,7 @@ describe('the volcanoes as a feature', () => {
   it('rests while the reader travels through the years', () => {
     const { context, drawn } = fakeContext({ travelling: true });
     const shown = volcanoesFeature.mount(context);
-    shown.show(in1815, JD);
+    shown.show?.(in1815, JD);
     expect(drawn).toEqual([null]);
     expect(shown.said?.()).toBe(RESTING);
   });
@@ -78,17 +78,17 @@ describe('the volcanoes as a feature', () => {
   it('says it is loading, then marks the year’s eruptions, Tambora among them', async () => {
     const { context, drawn, refresh } = fakeContext();
     const shown = volcanoesFeature.mount(context);
-    shown.show(in1815, JD);
+    shown.show?.(in1815, JD);
     expect(shown.said?.()).toBe('Loading the eruptions…');
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalledTimes(1);
     });
-    shown.show(in1815, JD);
+    shown.show?.(in1815, JD);
     const marks = drawn[0] as readonly { volcano: { name: string } }[];
     expect(marks.some(({ volcano }) => volcano.name === 'Tambora')).toBe(true);
     expect(shown.said?.()).toMatch(/1815/);
     // Another moment of the same year draws nothing new.
-    shown.show(in1815, JD + 0.5);
+    shown.show?.(in1815, JD + 0.5);
     expect(drawn).toHaveLength(1);
   });
 
@@ -122,11 +122,11 @@ describe('the volcanoes as a feature', () => {
   it('says so when the eruptions cannot be loaded, and tries again next time', async () => {
     const { context, notify } = fakeContext({ failing: true });
     const shown = volcanoesFeature.mount(context);
-    shown.show(in1815, JD);
+    shown.show?.(in1815, JD);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the eruptions: offline');
     });
-    shown.show(in1815, JD);
+    shown.show?.(in1815, JD);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledTimes(2);
     });
