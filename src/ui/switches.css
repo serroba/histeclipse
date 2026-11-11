@@ -1,0 +1,150 @@
+/* The segmented switches (#382: CSS beside the code it styles): the view, viewpoints, aim and
+   figures, and the Sun's and planets' channels. Each switch imports this file. */
+
+/* Viewpoints: a segmented control under the famous eclipses button. */
+.view-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+  pointer-events: auto;
+}
+
+.view-switch button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 22px;
+  background: rgb(255 255 255 / 0.04);
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.view-switch button[aria-pressed='true'] {
+  border-color: rgb(150 180 255 / 0.6);
+  background: rgb(150 180 255 / 0.16);
+  color: var(--ink);
+}
+
+.view-switch button:disabled {
+  opacity: 0.45;
+  cursor: progress;
+}
+
+.view-switch[hidden],
+.view-switch button[hidden] {
+  display: none;
+}
+
+.switch-label {
+  align-self: center;
+  margin-right: 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 600px) {
+  /* Four views on one row, so the panel leaves the screen to the globe and the sky. */
+  .view-switch button {
+    padding: 0 9px;
+    font-size: 12px;
+  }
+}
+
+/* The Sun's channels: a dot in each channel's usual false colour beside its name. */
+.sun-switch button[data-layer] .sun-channel-name::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 6px;
+  border-radius: 50%;
+  vertical-align: 0;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.25);
+}
+
+.sun-switch button[data-layer='visible'] .sun-channel-name::before {
+  background: #fff0cc;
+}
+
+.sun-switch button[data-layer='magnetogram'] .sun-channel-name::before {
+  background: linear-gradient(90deg, #111 50%, #eee 50%);
+}
+
+.sun-switch button[data-layer='304'] .sun-channel-name::before {
+  background: #e0532a;
+}
+
+.sun-switch button[data-layer='171'] .sun-channel-name::before {
+  background: #d9a520;
+}
+
+.sun-switch button[data-layer='193'] .sun-channel-name::before {
+  background: #b8864a;
+}
+
+.sun-switch button[data-layer='131'] .sun-channel-name::before {
+  background: #1ea5a5;
+}
+
+.view-switch.viewpoints {
+  flex-wrap: nowrap;
+}
+
+.view-switch.viewpoints button {
+  flex: 1 1 auto;
+}
+
+/* The Sun's channels: their label and book above, the channels in even columns below. */
+.view-switch.sun-switch {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+}
+
+.sun-switch .switch-label {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 600px) {
+  /* One row that scrolls sideways, the next channel cut off at the edge to say there is more:
+     named by what they show, they would need three rows, and cover the Sun (#238, #249). */
+  .view-switch.sun-switch {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .view-switch.sun-switch::-webkit-scrollbar {
+    display: none;
+  }
+
+  .sun-switch .switch-label,
+  .sun-switch button[data-layer] {
+    flex: none;
+  }
+}
+
+/* A channel's button: what it shows, and beneath, small, the light it is (#249); a planet's
+   views alike (#239). */
+.sun-switch button[data-layer],
+.sun-switch button[data-view] {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  line-height: 1.15;
+}
+
+.sun-channel-detail {
+  font-size: 10.5px;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}

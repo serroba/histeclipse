@@ -1,6 +1,7 @@
 /** One click to turn the sky view toward the Sun or the Moon. */
 
 import { element } from './dom';
+import './switches.css';
 
 export type AimTarget = 'sun' | 'moon';
 

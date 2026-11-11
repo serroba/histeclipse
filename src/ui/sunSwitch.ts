@@ -2,6 +2,7 @@
 
 import { frameSpan, type SunImage, type SunLayer } from '../data/sunImages';
 import { element } from './dom';
+import './switches.css';
 
 export interface SunSwitch {
   readonly root: HTMLElement;

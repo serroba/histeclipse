@@ -1,0 +1,41 @@
+/* How far back time reaches, one always picked, in a pill at the top: the Holocene's years,
+   or deeper. Beyond the years, deep time's bar takes the year bar's place. */
+.time-switch {
+  display: flex;
+  border-radius: 22px;
+  /* An outline drawn inside, so the pill is no taller than the buttons beside it. */
+  box-shadow: inset 0 0 0 1px rgb(120 200 150 / 0.45);
+  pointer-events: auto;
+}
+
+.time-option {
+  min-height: 44px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 22px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.time-option[aria-pressed='true'] {
+  background: rgb(120 200 150 / 0.22);
+  color: var(--ink);
+}
+
+@media (max-width: 600px) {
+  .time-option {
+    padding: 0 8px;
+    white-space: nowrap;
+  }
+}
+
+.hud-actions .time-switch {
+  flex: 1;
+}
+
+.time-switch .time-option {
+  flex: 1 1 auto;
+}

@@ -7,6 +7,7 @@
 import type { PlanetView } from '../globe/planetLook';
 import type { PlanetLight } from '../state/viewState';
 import { element } from './dom';
+import './switches.css';
 
 export interface PlanetSwitch {
   readonly root: HTMLElement;
