@@ -30,6 +30,7 @@ import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipse
 import { humanSiteLayer } from './globe/humanSiteLayer';
 import { impactLayer } from './globe/impactLayer';
 import { dateCellsLayer, rocksLayer, waysLayer } from './globe/historyPaintLayers';
+import { iceOutlineLayer } from './globe/iceOutlineLayer';
 import { magneticNorthLayer } from './globe/magneticNorthLayer';
 import { moonNameLayer } from './globe/moonNameLayer';
 import { placeNameLayer } from './globe/placeNameLayer';
@@ -892,8 +893,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     famousPanel.button.click();
   });
   const notices = element('ul', { class: 'notices', role: 'status', 'aria-live': 'polite' });
-  // The panels hide for a clear view, by this button or a tap on empty space; one button brings
-  // them back.
+  // The panels hide for a clear view, by this button or a tap on empty space; it brings them back.
   const fullView = element(
     'button',
     { type: 'button', class: 'full-view', 'aria-label': 'Hide the panels for a full view' },
@@ -986,8 +986,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       marks: yearTicks,
     },
   );
-  // Carbon-14 in the air under the years' slider (#270), its curves loaded the first time the
-  // layer is on.
+  // Carbon-14 in the air under the years' slider (#270), its curves loaded once the layer is on.
   const datingCard = createDatingCard();
   // Where cosmic rays make carbon-14 (#269): a glow over the globe, for the field and Sun picked
   // in its card.
@@ -1813,6 +1812,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const rocksOnGlobe = globe.addLayer(rocksLayer);
   const waysOnGlobe = globe.addLayer(waysLayer);
   const datesOnGlobe = globe.addLayer(dateCellsLayer);
+  const iceOutlinesOnGlobe = globe.addLayer(iceOutlineLayer);
   const impactsOnGlobe = globe.addLayer(impactLayer);
   const humanSitesOnGlobe = globe.addLayer(humanSiteLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
@@ -2458,7 +2458,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setDeepTime(null);
       globe.setTemperature(null);
       showHoloceneEarth(state);
-      globe.setIceOutlines(null);
+      iceOutlinesOnGlobe.update(null);
       humanSitesOnGlobe.update(null);
       globe.setSettled(null);
       for (const { shown } of mounted) shown.deep?.(state, null);
@@ -2998,7 +2998,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** On the ice-age scale, Batchelor et al.'s outlines of the time slice shown, if any. */
   function showIceOutlines(state: ViewState, ma: number): IceOutlines | null {
     if (state.deepScale !== 'ice') {
-      globe.setIceOutlines(null);
+      iceOutlinesOnGlobe.update(null);
       return null;
     }
     if (iceOutlineIndex === null) {
@@ -3018,7 +3018,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return null;
     }
     const outlines = iceOutlinesAt(iceOutlineIndex, ma * 1000);
-    globe.setIceOutlines(outlines);
+    iceOutlinesOnGlobe.update(outlines);
     return outlines;
   }
 
