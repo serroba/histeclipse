@@ -1621,9 +1621,13 @@ test('deep time colours the globe by temperature, with the global mean and its c
   await expect(key).toContainText('15 °C: mild (today’s global mean)');
   await expect(key).toContainText('45 °C or hotter: extreme heat');
   // The hothouse after the end-Permian extinction, against today's world.
-  // Both models' global means, side by side: they part by seven degrees here.
+  // Every model's mean, side by side: the two deep-time ones part by seven degrees here, and the
+  // ice ages' own (#457), the default, stands down beyond its 800,000 years.
   await expect(page.getByTestId('temperature-mean')).toHaveText(
-    'Global mean: Scotese 2022 32.9 °C (today 14.6 °C) · CESM, Li et al. 2023 25.5 °C (today 13.2 °C)',
+    'Mean: Krapp et al. 2021, land — covers the last 798,000 years · Scotese 2022 32.9 °C (today 14.6 °C) · CESM, Li et al. 2023 25.5 °C (today 13.2 °C)',
+  );
+  await expect(page.getByTestId('temperature-map')).toContainText(
+    'The globe shows Scotese 2022. Krapp et al. 2021 does not reach this far.',
   );
   // Colour by the second model instead.
   await page.getByLabel('Temperature model').selectOption('cesm');

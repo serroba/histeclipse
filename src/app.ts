@@ -225,7 +225,6 @@ import {
   createDeepTimeBar,
   type DeepTimeView,
   type SeaIceView,
-  type TemperatureView,
 } from './ui/deepTimeBar';
 import type { DeepChipView } from './ui/deepChips';
 import { formatMa, periodAt, periodWords } from './deepTime/periods';
@@ -236,7 +235,6 @@ import {
   oldestMa,
   type PaleoDemIndex,
 } from './data/paleoDem';
-import { loadPaleoTempIndex, type PaleoTempIndex } from './data/paleoTemp';
 import { loadSeaLevel, type SeaLevelIndex } from './data/seaLevel';
 import {
   iceFramesInMa,
@@ -314,16 +312,7 @@ import {
 import { loadShelf, type ShelfIndex } from './data/shelf';
 import { deepSpeedFor, prefetchFrames } from './deepTime/playSpeed';
 import { COAST_SOURCES, coastlineAt, type Coastline, type CoastSource } from './deepTime/coastline';
-import {
-  mapModel,
-  meanAt,
-  reachMa,
-  TEMPERATURE_MODEL_FOLDERS,
-  TEMPERATURE_MODEL_LABELS,
-  TEMPERATURE_MODELS,
-  type TemperatureIndexes,
-  type TemperatureModel,
-} from './deepTime/temperatureModels';
+import { createTemperatureLayer } from './features/temperature/temperatureLayer';
 import { playhead } from './deepTime/playhead';
 import { PLATES_REACH_MA, sketchAt } from './deepTime/sketch';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
@@ -758,6 +747,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
       onTemperatureModel(temperatureModel) {
         store.set((state) => ({ ...state, temperatureModel }));
+      },
+      onTemperatureShow(temperatureShow) {
+        store.set((state) => ({ ...state, temperatureShow }));
       },
       onSketch(choice) {
         store.set((state) => ({ ...state, ...choice }));
@@ -2209,6 +2201,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   const fetchJson = (url: string): Promise<Response> => fetch(url);
+  const temperatureLayer = createTemperatureLayer({
+    dataUrl: (path) => `${base}data/${path}`,
+    fetchJson,
+    globe,
+    notify,
+    arrived: () => {
+      showDeepTime(store.get());
+    },
+  });
 
   /** Cliopatria's file for the century of `year`, or null if there is none. */
   function empireCenturyFor(year: number): Promise<EmpireCentury | null> {
@@ -2377,12 +2378,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   // Deep time: Earth's surface from the elevation maps, which load a few at a time as needed.
   let paleoIndex: Promise<PaleoDemIndex> | null = null;
-  // Each model's temperature maps load the first time the layer is asked for.
-  let tempLoading: Readonly<Record<TemperatureModel, Promise<PaleoTempIndex> | null>> = {
-    scotese: null,
-    cesm: null,
-  };
-  let tempIndexes: TemperatureIndexes = { scotese: null, cesm: null };
   // Sea level, likewise: asked for once, drawn when it arrives.
   let seaLevelLoading: Promise<SeaLevelIndex> | null = null;
   let seaLevelIndex: SeaLevelIndex | null = null;
@@ -2468,7 +2463,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       impacts: showImpacts(state),
       air: showAir(state),
       seaIce: showSeaIce(state, ma),
-      temperature: temperatureView(state, ma),
+      temperature: temperatureLayer.view(state, { ma, ice, uncharted }),
       seaLevel: seaLevelView(state),
       ...showPlates(state, ma),
       sketch: sketch === null ? null : { sketch, choices },
@@ -2479,15 +2474,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ma,
       oldest: spanOf(scale),
       playing,
-      // As showTemperature has it below: none on the ice-age scale or before the maps.
-      temperature: state.layers.has('temperature') && !ice && !uncharted,
+      temperature: temperatureLayer.drawn(state, { ma, ice, uncharted }),
     });
-    // The temperature maps are 5 million years apart, and stop where the elevation maps do: none
-    // on the ice-age scale or before them.
-    showTemperature(
-      ice || uncharted ? { ...state, layers: withoutTemperature(state.layers) } : state,
-      ma,
-    );
+    temperatureLayer.show(state, { ma, ice, uncharted }, playing ? playSpeed() : null);
     paleoIndex ??= loadPaleoDemIndex(`${base}data/paleodem/index.json`, fetchJson);
     paleoIndex.then(
       (index) => {
@@ -2528,12 +2517,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function spanOf(scale: DeepScale): number {
     if (scale === 'ice') return ICE_AGES_MA;
     return scale === 'eons' ? EARTH_AGE_MA : oldest;
-  }
-
-  function withoutTemperature(layers: ReadonlySet<Layer>): ReadonlySet<Layer> {
-    const kept = new Set(layers);
-    kept.delete('temperature');
-    return kept;
   }
 
   /** The sea-level reconstructions, asked for once; null until they arrive. */
@@ -3059,91 +3042,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       label: coastline?.series.label ?? null,
       instead: coastline?.instead?.label ?? null,
     };
-  }
-
-  /** What the bar says about temperature: off, loading, or the global mean then and now. */
-  /** Every temperature model's maps, each asked for once; null until it arrives. */
-  function temperatureIndexes(): TemperatureIndexes {
-    for (const model of TEMPERATURE_MODELS) {
-      if (tempIndexes[model] !== null || tempLoading[model] !== null) continue;
-      const loading = loadPaleoTempIndex(
-        `${base}data/${TEMPERATURE_MODEL_FOLDERS[model]}/index.json`,
-        fetchJson,
-      );
-      tempLoading = { ...tempLoading, [model]: loading };
-      loading.then(
-        (index) => {
-          tempIndexes = { ...tempIndexes, [model]: index };
-          showDeepTime(store.get());
-        },
-        (error: unknown) => {
-          tempLoading = { ...tempLoading, [model]: null };
-          notify(
-            `Could not load the ${TEMPERATURE_MODEL_LABELS[model]} temperature maps: ${errorMessage(error)}`,
-          );
-        },
-      );
-    }
-    return tempIndexes;
-  }
-
-  /** What the bar says about temperature: every model's global mean, and which one is drawn. */
-  function temperatureView(state: ViewState, ma: number): TemperatureView {
-    const wanted = state.temperatureModel;
-    if (!state.layers.has('temperature')) {
-      return { on: false, wanted, shown: null, readings: [], note: null };
-    }
-    const indexes = temperatureIndexes();
-    const readings = TEMPERATURE_MODELS.flatMap((model) => {
-      const index = indexes[model];
-      if (index === null) return [];
-      return [
-        {
-          model,
-          mean: meanAt(index, ma),
-          today: index.frames[0]?.mean ?? null,
-          reach: reachMa(index),
-        },
-      ];
-    });
-    const drawn = mapModel(wanted, indexes, ma);
-    const index = drawn === null ? null : indexes[drawn.model];
-    let note: string | null = null;
-    if (index !== null) {
-      // The note of the map nearer the moment, if it has one.
-      const { younger, older, mix } = framesAround(index.frames, ma);
-      note = (mix < 0.5 ? younger : older).note ?? null;
-    }
-    return { on: true, wanted, shown: drawn?.model ?? null, readings, note };
-  }
-
-  function showTemperature(state: ViewState, ma: number): void {
-    if (!state.layers.has('temperature')) {
-      globe.setTemperature(null);
-      return;
-    }
-    const indexes = temperatureIndexes();
-    const drawn = mapModel(state.temperatureModel, indexes, ma);
-    const index = drawn === null ? null : indexes[drawn.model];
-    if (drawn === null || index === null) return;
-    const folder = TEMPERATURE_MODEL_FOLDERS[drawn.model];
-    const { younger, older, mix } = framesAround(index.frames, ma);
-    if (playing) {
-      globe.prefetch(
-        framesAhead(index.frames, ma, prefetchFrames(playSpeed())).map(
-          (frame) => `${base}data/${folder}/${frame.file}`,
-        ),
-      );
-    }
-    globe.setTemperature({
-      younger: `${base}data/${folder}/${younger.file}`,
-      older: `${base}data/${folder}/${older.file}`,
-      mix,
-      columns: index.columns,
-      rows: index.rows,
-      coldest: index.coldest,
-      warmest: index.warmest,
-    });
   }
 
   /** The header in deep time: how long ago, and the period by the ICS chart. */

@@ -48,9 +48,9 @@ export const MAX_LINES = 400;
  * files, as the sources registry's did (#383).
  */
 export const LINE_LIMITS = {
-  'app.ts': 4535,
-  'globe/scene.ts': 3163,
-  'ui/deepTimeBar.ts': 1318,
+  'app.ts': 4433,
+  'globe/scene.ts': 3143,
+  'ui/deepTimeBar.ts': 1166,
   'sky/skyScene.ts': 1267,
   'ui/lineagesSheet.ts': 1105,
   'deepTime/milestones.ts': 1016,
@@ -59,7 +59,7 @@ export const LINE_LIMITS = {
   'story/sunCore.ts': 713,
   'globe/showerAnimation.ts': 618,
   'story/leafScene.ts': 520,
-  'state/url.ts': 499,
+  'state/url.ts': 489,
   'time/calendars.ts': 481,
   'ui/whySheet.ts': 435,
 };

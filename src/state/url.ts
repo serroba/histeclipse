@@ -36,7 +36,7 @@
  * show, so a mangled link still opens something sensible.
  */
 
-import { WHY_VIEWS, type WhyView } from '../sources/registry';
+import { WHY_VIEWS } from '../sources/registry';
 import { calendarDate, calendarDateOf, julianDay, type Calendar } from '../time/julianDay';
 import { SKY_CULTURES, type SkyCulture } from '../data/skyCultures';
 import { SUN_LAYERS, type SunLayer } from '../data/sunImages';
@@ -45,8 +45,9 @@ import { LINEAGE_GROUPS } from '../data/lineages';
 import { DEFAULT_SEA_ICE_MODEL, SEA_ICE_MODELS } from '../data/seaIce';
 import {
   DEFAULT_TEMPERATURE_MODEL,
+  DEFAULT_TEMPERATURE_SHOW,
   TEMPERATURE_MODELS,
-  type TemperatureModel,
+  TEMPERATURE_SHOWS,
 } from '../deepTime/temperatureModels';
 import {
   DEFAULT_IMPACT_MODEL,
@@ -62,7 +63,6 @@ import { errorMessage } from '../util/errors';
 import {
   PLANET_LIGHTS,
   BOUNDARY_CHAPTERS,
-  type BoundaryChapter,
   DISPERSAL_SCENARIOS,
   CAMERA_DISTANCE_RANGE,
   BORDER_SOURCES,
@@ -134,6 +134,9 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
       return fallback;
     }
   }
+  /** One of a fixed list, named by the parameter. */
+  const pick = <const T extends string, F>(name: string, options: readonly T[], fallback: T | F) =>
+    read<T | F>(name, (raw) => oneOf(raw, options, name), fallback);
 
   const version = params.getAll('v').at(-1) ?? null;
   if (version !== null && version !== String(URL_VERSION)) {
@@ -153,40 +156,29 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     layers: read('layers', parseLayers, defaults.layers),
     selection: read<Selection | null>('sel', parseSelection, defaults.selection),
     look: read('look', parseLook, defaults.look),
-    figures: read('figures', (raw) => oneOf(raw, FIGURES, 'figures'), defaults.figures),
+    figures: pick('figures', FIGURES, defaults.figures),
     years: read('years', parseYears, defaults.years),
     sunLayer: read('sun', parseSunLayer, defaults.sunLayer),
-    planetLight: read('light', (raw) => oneOf(raw, PLANET_LIGHTS, 'light'), defaults.planetLight),
+    planetLight: pick('light', PLANET_LIGHTS, defaults.planetLight),
     culture: read('culture', parseCulture, defaults.culture),
     borders: read('borders', parseBorders, defaults.borders),
     seenIn: read<string | null>('seen', parseSeenIn, defaults.seenIn),
     ma: read<number | null>('ma', parseMa, defaults.ma),
     deepScale: read('scale', parseDeepScale, defaults.deepScale),
-    coast: read('coast', (raw) => oneOf(raw, COAST_SOURCES, 'coast'), defaults.coast),
-    dispersal: read(
-      'dispersal',
-      (raw) => oneOf(raw, DISPERSAL_SCENARIOS, 'dispersal'),
-      defaults.dispersal,
-    ),
-    seaIce: read('seaice', (raw) => oneOf(raw, SEA_ICE_MODELS, 'seaice'), defaults.seaIce),
-    temperatureModel: read('temp', parseTemperatureModel, defaults.temperatureModel),
-    impact: read('impact', (raw) => oneOf(raw, IMPACT_MODELS, 'impact'), defaults.impact),
-    land: read('land', (raw) => oneOf(raw, LAND_MODELS, 'land'), defaults.land),
-    snowball: read('snowball', (raw) => oneOf(raw, SNOWBALL_MODELS, 'snowball'), defaults.snowball),
-    why: read<WhyView | null>('why', (raw) => oneOf(raw, WHY_VIEWS, 'why'), defaults.why),
+    coast: pick('coast', COAST_SOURCES, defaults.coast),
+    dispersal: pick('dispersal', DISPERSAL_SCENARIOS, defaults.dispersal),
+    seaIce: pick('seaice', SEA_ICE_MODELS, defaults.seaIce),
+    temperatureModel: pick('temp', TEMPERATURE_MODELS, defaults.temperatureModel),
+    temperatureShow: pick('tshow', TEMPERATURE_SHOWS, defaults.temperatureShow),
+    impact: pick('impact', IMPACT_MODELS, defaults.impact),
+    land: pick('land', LAND_MODELS, defaults.land),
+    snowball: pick('snowball', SNOWBALL_MODELS, defaults.snowball),
+    why: pick('why', WHY_VIEWS, defaults.why),
     tree: read<TreeView | null>('tree', parseTree, defaults.tree),
     craters: read<CratersView | null>('craters', parseCraters, defaults.craters),
-    cratersIn: read(
-      'cratersin',
-      (raw) => oneOf(raw, CRATERS_SHAPES, 'cratersin'),
-      defaults.cratersIn,
-    ),
+    cratersIn: pick('cratersin', CRATERS_SHAPES, defaults.cratersIn),
     lineages: read<LineagesView | null>('lineages', parseLineagesView, defaults.lineages),
-    boundaries: read<BoundaryChapter | null>(
-      'boundaries',
-      (raw) => oneOf(raw, BOUNDARY_CHAPTERS, 'boundaries'),
-      defaults.boundaries,
-    ),
+    boundaries: pick('boundaries', BOUNDARY_CHAPTERS, defaults.boundaries),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -225,6 +217,8 @@ export function serializeViewState(state: ViewState): string {
   if (state.temperatureModel !== DEFAULT_TEMPERATURE_MODEL) {
     params.set('temp', state.temperatureModel);
   }
+  if (state.temperatureShow !== DEFAULT_TEMPERATURE_SHOW)
+    params.set('tshow', state.temperatureShow);
   if (state.impact !== DEFAULT_IMPACT_MODEL) params.set('impact', state.impact);
   if (state.land !== DEFAULT_LAND_MODEL) params.set('land', state.land);
   if (state.snowball !== DEFAULT_SNOWBALL_MODEL) params.set('snowball', state.snowball);
@@ -245,10 +239,6 @@ export function serializeViewState(state: ViewState): string {
 
 function parseMode(raw: string): Mode {
   return oneOf(raw, MODES, 'mode');
-}
-
-function parseTemperatureModel(raw: string): TemperatureModel {
-  return oneOf(raw, TEMPERATURE_MODELS, 'temp');
 }
 
 function parseDeepScale(raw: string): DeepScale {

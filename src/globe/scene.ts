@@ -136,6 +136,7 @@ import {
   SOLAR_SHADOW,
 } from './solarShaders';
 import { SEA_ICE } from './seaIceShader';
+import { TEMPERATURE_GLSL, temperatureUniforms } from './temperatureShader';
 import './spaceMarkers.css';
 
 /** How far out the place pin floats, in Earth radii, so it shows above the ground. */
@@ -263,6 +264,8 @@ export interface TemperatureSurface {
   /** °C that bytes 0 and 255 stand for. */
   readonly coldest: number;
   readonly warmest: number;
+  /** Colour the change from today, which Krapp's maps carry beside each moment's (#457). */
+  readonly change: boolean;
 }
 
 /** On the ice-age scale: today's coasts and shelves, cut at the sea level of the moment. */
@@ -505,12 +508,6 @@ export const EARTH_FRAGMENT = /* glsl */ `
   uniform float paleoMix;
   uniform float paleoActive;
   uniform float evenLight;
-  uniform sampler2D tempYounger;
-  uniform sampler2D tempOlder;
-  uniform float tempMix;
-  uniform float tempActive;
-  uniform vec2 tempGrid;
-  uniform vec2 tempRange;
   uniform sampler2D shelfMap;
   uniform float shelfActive;
   uniform vec2 shelfGrid;
@@ -612,29 +609,7 @@ export const EARTH_FRAGMENT = /* glsl */ `
     return mix(color, srgb(vec3(0.92, 0.92, 0.90)), smoothstep(3500.0, 5000.0, height));
   }
 
-  // Node-registered like the elevation maps, so the same half-pixel shift applies.
-  float paleoTemperatureFrom(sampler2D map, vec2 uv) {
-    vec2 at = (uv * (tempGrid - 1.0) + 0.5) / tempGrid;
-    return mix(tempRange.x, tempRange.y, texture2D(map, at).r);
-  }
-
-  float paleoTemperature(vec2 uv) {
-    return mix(paleoTemperatureFrom(tempYounger, uv), paleoTemperatureFrom(tempOlder, uv), tempMix);
-  }
-
-  // A diverging scale, blue through pale yellow to red (ColorBrewer RdYlBu), °C. The legend in
-  // the deep-time bar draws the same stops.
-  vec3 temperatureColour(float celsius) {
-    vec3 c = srgb(vec3(0.192, 0.212, 0.584));
-    c = mix(c, srgb(vec3(0.271, 0.459, 0.706)), smoothstep(-40.0, -20.0, celsius));
-    c = mix(c, srgb(vec3(0.569, 0.749, 0.859)), smoothstep(-20.0, -5.0, celsius));
-    c = mix(c, srgb(vec3(0.878, 0.953, 0.973)), smoothstep(-5.0, 5.0, celsius));
-    c = mix(c, srgb(vec3(0.996, 0.878, 0.565)), smoothstep(5.0, 15.0, celsius));
-    c = mix(c, srgb(vec3(0.992, 0.682, 0.380)), smoothstep(15.0, 22.0, celsius));
-    c = mix(c, srgb(vec3(0.957, 0.427, 0.263)), smoothstep(22.0, 28.0, celsius));
-    c = mix(c, srgb(vec3(0.843, 0.188, 0.153)), smoothstep(28.0, 35.0, celsius));
-    return mix(c, srgb(vec3(0.647, 0.0, 0.149)), smoothstep(35.0, 45.0, celsius));
-  }
+  ${TEMPERATURE_GLSL}
 
   // Node-registered like the other deep-time maps; a byte per iceStep metres, 0 for no ice.
   float iceFrom(sampler2D map, vec2 uv) {
@@ -750,10 +725,12 @@ export const EARTH_FRAGMENT = /* glsl */ `
     float shade = dot(normal, light) / light.z;
     if (tempActive > 0.5) {
       // Temperature over the relief: the sea darker and the coast drawn as a thin dark line,
-      // so the continents still read where land and sea are the same temperature.
+      // so the continents still read where land and sea are the same temperature. Where the
+      // maps have none (Krapp's sea and ice sheets), the relief shows.
       float sea = 1.0 - smoothstep(-blur, blur, coast);
       float shore = 1.0 - smoothstep(blur, 3.0 * blur, abs(coast));
-      color = temperatureColour(paleoTemperature(uv)) * (1.0 - 0.3 * sea) * (1.0 - 0.55 * shore);
+      vec4 temp = temperatureLayer(uv);
+      color = mix(color, temp.rgb * (1.0 - 0.3 * sea) * (1.0 - 0.55 * shore), smoothstep(0.3, 0.7, temp.a));
     }
     color = seaIceOver(color, uv, 1.0 - smoothstep(-blur, blur, coast));
     if (iceActive > 0.5) {
@@ -1114,12 +1091,7 @@ export function createGlobe(
         paleoOlder: { value: null as Texture | null },
         paleoMix: { value: 0 },
         paleoActive: { value: 0 },
-        tempYounger: { value: null as Texture | null },
-        tempOlder: { value: null as Texture | null },
-        tempMix: { value: 0 },
-        tempActive: { value: 0 },
-        tempGrid: { value: new Vector2(361, 181) },
-        tempRange: { value: new Vector2(-60, 60) },
+        ...temperatureUniforms(),
         shelfMap: { value: null as Texture | null },
         shelfActive: { value: 0 },
         shelfGrid: { value: new Vector2(3601, 1801) },
@@ -2652,8 +2624,10 @@ export function createGlobe(
           uniforms['tempMix'] = { value: surface.mix };
           uniforms['tempGrid'] = { value: new Vector2(surface.columns, surface.rows) };
           uniforms['tempRange'] = { value: new Vector2(surface.coldest, surface.warmest) };
+          uniforms['tempChange'] = { value: surface.change ? 1 : 0 };
           uniforms['tempActive'] = { value: 1 };
           container.dataset['temperature'] = `${surface.younger} ${surface.older}`;
+          container.dataset['temperatureChange'] = String(surface.change);
           needsRender = true;
         },
         () => {

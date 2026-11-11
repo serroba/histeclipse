@@ -28,6 +28,7 @@ export default defineConfig({
         'src/app.ts',
         'src/globe/scene.ts',
         'src/globe/solarShaders.ts',
+        'src/globe/temperatureShader.ts',
         'src/globe/empireCanvas.ts',
         'src/globe/arrivalGrid.ts',
         'src/globe/planetMeshes.ts',
