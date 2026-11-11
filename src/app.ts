@@ -47,31 +47,24 @@ import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
 import { type JulianDay } from './time/julianDay';
 import { formatInCalendar } from './time/calendars';
-import { astronomicalYear, formatYear } from './time/year';
 import { element } from './ui/dom';
 import { FEATURES } from './features';
 import { RESTING, type DeepMoment, type FeatureContext } from './features/feature';
-import { createSearchPanel } from './ui/searchPanel';
-import { anchorLabel, anchorQuery } from './text/anchors';
-import { loadMeaningSearch } from './text/meaningLoader';
-import { nearby } from './text/nearby';
-import { cachedPassages, type Anchor, type Passage } from './text/passages';
-import { indexPassages } from './text/wordSearch';
+import { anchorQuery } from './text/anchors';
+import { type Anchor } from './text/passages';
 import { uiIcon } from './ui/icons';
 import { createWelcome } from './ui/welcome';
 import { createMarkerCard } from './ui/markerCard';
 import { createLayersPanel } from './ui/layersPanel';
-import { cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
 import { CULTURE_INFO } from './data/skyCultures';
 import { createViewSwitch } from './ui/viewSwitch';
 import { type DeepTimeView } from './ui/deepTimeBar';
 import type { DeepChipView } from './ui/deepChips';
 import { formatMa, periodAt, periodWords } from './deepTime/periods';
 import { countryRings, loadNamedPeriods } from './data/namedPeriods';
-import { rockAt } from './data/rocks';
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
 import { approachOf, impactorText } from './data/impactScaling';
-import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
+import { createWhySheet } from './ui/whySheet';
 import { createImpactPathsSheet } from './ui/impactPathsSheet';
 import { createBoundariesSheet } from './ui/boundariesSheet';
 import type { PartContext } from './features/part';
@@ -93,15 +86,15 @@ import { mountEmpires } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
 import { mountYears } from './features/years';
 import { mountEclipses } from './features/eclipses';
+import { mountTexts } from './features/texts';
+import { hereVersion, hereView, whyMoment, type HereData } from './features/whyHere/facts';
+import { createSourcesList } from './features/whyHere/sources';
 import { barYear } from './features/eclipses/years';
 import { PRESENT_YEAR } from './time/present';
 import { phoneLook, type BodiesSeen } from './sky/aim';
-import { PERIOD_EVIDENCE } from './sources/periodEvidence';
-import { hereFacts, placeText } from './sources/here';
-import { layerWhy, onScreen, type WhyId } from './sources/registry';
+import { layerWhy } from './sources/registry';
 import { createZoomRail } from './ui/zoomRail';
 import { createWaysLegend } from './ui/waysLegend';
-import { waysAt } from './data/waysOfLife';
 import {
   impactDetails,
   impactsAt,
@@ -164,7 +157,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       if (why === null) askingHere = false;
       store.set((state) => ({ ...state, why }));
     },
-    () => hereView(store.get()),
+    () => hereView(store.get(), hereData()),
     (id) => whyMoment(id, store.get()),
   );
   // What the app lends the parts of the page (#443).
@@ -238,7 +231,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
   // "Why here?": while on, a tap on the globe says what each layer has there.
   let askingHere = false;
-  const sourcesList = element('ul', { class: 'why-list', 'data-testid': 'sources-list' });
+  // The Sources list: the whys of what is on screen now.
+  const sources = createSourcesList(whySheet);
   const layersPanel = createLayersPanel(
     (layer, on) => {
       store.set((state) => ({ ...state, layers: withLayer(state.layers, layer, on) }));
@@ -436,40 +430,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     element('span', { class: 'icon-label' }, 'Full view'),
   );
   fullView.addEventListener('click', togglePanels);
-  // The site's texts as passages, asked for once, by search or by what is written about here.
-  const passages = cachedPassages(`${base}data/passages.json`, (url) => fetch(url));
-  // The site's texts, searched by their words; a passage opens the view of its place (#392).
-  const searchPanel = createSearchPanel(
-    () => passages().then(indexPassages),
-    // Search by meaning (#393), asked for only once the reader turns it on.
-    () => loadMeaningSearch(base, passages),
-    (anchor) => {
+  // The site's texts (#391, #392): search, and what is written about here.
+  const texts = mountTexts({
+    ...partContext,
+    openAnchor: (anchor) => {
       openAnchor(anchor);
     },
-  );
-  // What is written about where the reader looks, at the moment shown (#391).
-  const hereList = element('ul', { class: 'here-list', 'data-testid': 'here-list' });
-  const hereText = element(
-    'details',
-    { class: 'here-text' },
-    element('summary', {}, 'About here'),
-    hereList,
-  );
-  let herePassages: readonly Passage[] | null = null;
-  hereText.addEventListener('toggle', () => {
-    if (!hereText.open || herePassages !== null) return;
-    hereList.replaceChildren(element('li', { class: 'here-empty' }, 'Loading…'));
-    passages().then(
-      (loaded) => {
-        herePassages = loaded;
-        showHere(store.get());
-      },
-      () => {
-        hereList.replaceChildren(
-          element('li', { class: 'here-empty' }, 'Could not load the texts.'),
-        );
-      },
-    );
   });
   const showControls = element(
     'button',
@@ -539,7 +505,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       years.show(store.get());
     },
     drawn: () => {
-      if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get()));
+      if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get(), hereData()));
     },
   });
 
@@ -557,7 +523,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     timelineExtras: [years.track.extras, cycle.extras],
   });
 
-  const hudTools = [boundariesSheet.button, searchPanel.button, fullView];
+  const hudTools = [boundariesSheet.button, texts.search.button, fullView];
   // Earth's spans and its map's layers; away from Earth they rest (#329).
   const hudActions = element(
     'div',
@@ -619,9 +585,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
           { class: 'credits' },
           element('summary', {}, 'Sources'),
           // What is on screen now, each with the book that says why, and its sources' links.
-          sourcesList,
+          sources.list,
         ),
-        hereText,
+        texts.here,
       ),
     ),
     notices,
@@ -629,7 +595,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     showControls,
     bottom,
     famous.dialog,
-    searchPanel.dialog,
+    texts.search.dialog,
     records.dialog,
     layersPanel.dialog,
     markerCard.dialog,
@@ -660,7 +626,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;
     if (event.key === '/' && !typing && !event.ctrlKey && !event.metaKey) {
       event.preventDefault();
-      searchPanel.open();
+      texts.search.open();
     }
   });
   /** Open a passage's anchor: its view laid over the reader's, as a step back can undo. */
@@ -979,98 +945,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     detailText.textContent = period === null ? 'Deep time' : periodWords(period);
   }
 
-  // The layers drawn on each span, as the Layers panel has them, for what is on screen now.
-  const layerSpans = new Map(
-    LAYER_GROUPS.flatMap((group) => group.layers.map((layer) => [layer.id, layer.spans] as const)),
-  );
-  let sourcesShown = '';
-  /** The Sources list: what is on screen now, drawn again only when that changes. */
-  function showSources(state: ViewState): void {
-    const ids: WhyId[] = onScreen({
-      mode: state.mode,
-      span: state.ma === null ? 'years' : state.deepScale,
-      focus: state.focus,
-      layers: state.layers,
-      borders: state.borders,
-      eclipse: state.selection !== null,
-      drawsOn: (layer, span) => layerSpans.get(layer)?.includes(span) ?? false,
-    });
-    const key = ids.join(' ');
-    if (key === sourcesShown) return;
-    sourcesShown = key;
-    whySheet.renderOnScreen(sourcesList, ids);
-  }
-
-  let hereShown: string | null = null;
-  /** What is written about here: the passages anchored where the reader looks, when. */
-  function showHere(state: ViewState): void {
-    if (!hereText.open || herePassages === null) return;
-    const sky = state.mode === 'sky';
-    const found = nearby(herePassages, {
-      body: sky ? 'earth' : state.focus,
-      target: sky ? (state.location ?? state.camera.target) : state.camera.target,
-      distance: sky ? 3 : state.camera.distance,
-      year: state.ma === null ? state.time.date.year : null,
-    });
-    const key = found.map(({ passage }) => passage.id).join(' ');
-    if (key === hereShown) return;
-    hereShown = key;
-    if (found.length === 0) {
-      hereList.replaceChildren(
-        element('li', { class: 'here-empty' }, 'Nothing written about here yet. Try Search.'),
-      );
-      return;
-    }
-    hereList.replaceChildren(
-      ...found.map(({ passage, anchor }) => {
-        const open = element(
-          'button',
-          { type: 'button', class: 'here-item' },
-          element('span', { class: 'here-title' }, passage.title),
-          element('span', { class: 'here-meta' }, anchorLabel(anchor)),
-        );
-        open.addEventListener('click', () => {
-          openAnchor(anchor);
-        });
-        return element('li', { 'data-passage': passage.id }, open);
-      }),
-    );
-  }
-
-  /** The rock at a place, once the rocks are in; undefined until then. */
-  function rockOf(place: GeoPoint): ReturnType<typeof rockAt> | undefined {
-    const units = rocks.units();
-    return units === null ? undefined : rockAt(units, place);
-  }
-
-  /** What each layer on the map has at the place picked: "Why here?". */
-  function hereView(state: ViewState): HereView | null {
-    if (state.location === null || state.ma !== null) return null;
-    const year = state.time.date.year;
-    const words = (y: number): string => formatYear(astronomicalYear(y));
-    const shownYear = cliopatriaYear(year, PRESENT_YEAR);
-    const drawn = empires.drawn();
-    const waysOfLife = ways.data();
-    const waysThen =
-      state.layers.has('ways') && waysOfLife !== null ? waysAt(waysOfLife, year) : null;
-    return {
-      place: placeText(state.location),
-      facts: hereFacts({
-        place: state.location,
-        yearText: words(year),
-        states: state.layers.has('empires')
-          ? {
-              source: state.borders,
-              territories: drawn?.year === year ? drawn.territories : null,
-              asOf: shownYear === year ? null : words(shownYear),
-            }
-          : null,
-        ways: waysThen === null ? null : { at: waysThen, momentText: words(waysThen.year) },
-        rock: state.layers.has('rocks') ? rockOf(state.location) : undefined,
-      }),
-    };
-  }
-
   // The moment last shown (TT), for the body bar: it works out only the body in view.
   let bodiesAt: JulianDay | null = null;
   let lastTerrestrial: number | null = null;
@@ -1086,30 +960,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     bodies.show(state);
   }
 
-  /** What a why says of the moment shown: deep time's map, the period's own evidence. */
-  function whyMoment(id: WhyId, state: ViewState): WhyMoment | null {
-    if (id !== 'deep-evidence' || state.ma === null) return null;
-    const period = periodAt(state.ma);
-    const evidence = period === null ? undefined : PERIOD_EVIDENCE[period.name];
-    if (period === null || evidence === undefined) return null;
-    return {
-      title: `Then: the ${period.name}`,
-      lines: [evidence.map, evidence.evidence],
-      sources: evidence.sources,
-    };
-  }
-
-  /** What "Here" depends on, so it is written again only when that changes. */
-  function hereVersion(state: ViewState): string {
-    return [
-      state.location === null ? '' : placeText(state.location),
-      state.time.date.year,
-      [...state.layers].join(','),
-      state.borders,
-      empires.drawn()?.year ?? '',
-      ways.data() === null ? 0 : 1,
-      rocks.units() === null ? 0 : 1,
-    ].join('|');
+  /** What the layers have loaded, for "Why here?" to read. */
+  function hereData(): HereData {
+    return { drawn: empires.drawn(), waysOfLife: ways.data(), rocks: rocks.units() };
   }
 
   function showEmpires(state: ViewState): void {
@@ -1267,8 +1120,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ? { body: state.focus, distance: state.camera.distance }
         : null,
     );
-    showSources(state);
-    showHere(state);
+    sources.show(state);
+    texts.show(state);
     showBody(state);
     bodies.sharpen(state);
     zoomRail.setWhyHere(
@@ -1282,7 +1135,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     whySheet.show(
       state.why,
       state.why === 'here'
-        ? hereVersion(state)
+        ? hereVersion(state, hereData())
         : state.why === 'deep-evidence' && state.ma !== null
           ? (periodAt(state.ma)?.name ?? '')
           : '',
