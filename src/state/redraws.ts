@@ -60,6 +60,12 @@ export const HISTORY: Watch = (s) => [s.time.date.year, s.layers, s.location];
 /** The eclipse picked, drawn in full. */
 export const SELECTION: Watch = (s) => [s.selection, s.layers, s.location, s.seenIn];
 
+/** The view switch: which views it offers depends on the mode and the body in view. */
+export const VIEW_SWITCH: Watch = (s) => [s.view, s.mode, s.focus];
+
+/** Once the visitor picks an eclipse, a place, a view or deep time, they have found the way in. */
+export const FOUND_THE_WAY_IN: Watch = (s) => [s.selection, s.location, s.mode, s.view, s.ma];
+
 /** Whether what `watch` reads differs between the two states; always, with none before. */
 export function redraws(watch: Watch, state: ViewState, previous: ViewState | null): boolean {
   return previous === null || changed(watch(previous), watch(state));

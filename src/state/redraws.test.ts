@@ -3,12 +3,14 @@ import { describe, expect, it } from 'vitest';
 import {
   DEEP_TIME,
   EARTH_LAYERS,
+  FOUND_THE_WAY_IN,
   HISTORY,
   ORBITS,
   redraws,
   SELECTION,
   SKY,
   SUN,
+  VIEW_SWITCH,
   type Watch,
 } from './redraws';
 import { astronomicalYear } from '../time/year';
@@ -64,6 +66,11 @@ const WATCHES: Record<string, { watch: Watch; fields: readonly (keyof ViewState)
   },
   history: { watch: HISTORY, fields: ['layers', 'location'] },
   'the eclipse picked': { watch: SELECTION, fields: ['selection', 'layers', 'location', 'seenIn'] },
+  'the view switch': { watch: VIEW_SWITCH, fields: ['view', 'mode', 'focus'] },
+  'the welcome': {
+    watch: FOUND_THE_WAY_IN,
+    fields: ['selection', 'location', 'mode', 'view', 'ma'],
+  },
 };
 
 describe('what each part of the page redraws on', () => {

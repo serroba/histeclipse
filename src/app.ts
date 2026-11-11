@@ -79,12 +79,14 @@ import { createGlobe, type StateChange } from './globe/scene';
 import {
   DEEP_TIME,
   EARTH_LAYERS,
+  FOUND_THE_WAY_IN,
   HISTORY,
   ORBITS,
   redraws,
   SELECTION,
   SKY,
   SUN,
+  VIEW_SWITCH,
 } from './state/redraws';
 import { changed, createStore } from './state/store';
 import { parseViewState, serializeViewState } from './state/url';
@@ -4540,11 +4542,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (redraws(HISTORY, state, previous)) showHistory(state);
     if (state.location !== previous?.location) globe.setLocation(state.location);
     if (state.view !== previous?.view) globe.setViewpoint(state.view);
-    if (
-      state.view !== previous?.view ||
-      state.mode !== previous.mode ||
-      state.focus !== previous.focus
-    ) {
+    if (redraws(VIEW_SWITCH, state, previous)) {
       viewSwitch.render(state.mode, state.view, moonEphemeris !== null, state.focus);
     }
     if (state.years !== previous?.years || barYear(state) !== barYear(previous)) {
@@ -4562,16 +4560,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   store.subscribe((state, previous) => {
     render(state, previous);
-    // Once the visitor picks an eclipse, a place, a view or deep time, they have found the way in.
-    if (
-      state.selection !== previous.selection ||
-      state.location !== previous.location ||
-      state.mode !== previous.mode ||
-      state.view !== previous.view ||
-      state.ma !== previous.ma
-    ) {
-      welcome.dismiss();
-    }
+    if (redraws(FOUND_THE_WAY_IN, state, previous)) welcome.dismiss();
   });
   render(store.get(), null);
   // Write the canonical, fully explicit URL straight away so it can be shared as is.
