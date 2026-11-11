@@ -51,7 +51,7 @@ export const LINE_LIMITS = {
   'app.ts': 4761,
   'globe/scene.ts': 3257,
   'ui/deepTimeBar.ts': 1427,
-  'sky/skyScene.ts': 1281,
+  'sky/skyScene.ts': 1267,
   'ui/lineagesSheet.ts': 1105,
   'deepTime/milestones.ts': 1016,
   'ui/impactPathsSheet.ts': 744,
