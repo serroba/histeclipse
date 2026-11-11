@@ -1,6 +1,5 @@
 /**
  * The WebGL globe: Earth lit by the Sun at a given moment, with orbit controls.
- *
  * Rendering-only code. The math it relies on lives in tested modules (`geo.ts`,
  * `astro/sun.ts`); this file is exercised by the Playwright suite in a real browser.
  */
@@ -140,6 +139,7 @@ import {
   SOLAR_SHADOW,
 } from './solarShaders';
 import { SEA_ICE } from './seaIceShader';
+import './spaceMarkers.css';
 
 /** How far out the place pin floats, in Earth radii, so it shows above the ground. */
 const PIN_HEIGHT = 1.004;
