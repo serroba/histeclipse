@@ -30,7 +30,6 @@ import {
   DEFAULT_LOOK,
   type Layer,
   withLayer,
-  roundMa,
   type GeoPoint,
   type ViewState,
 } from './state/viewState';
@@ -43,7 +42,6 @@ import { type Anchor } from './text/passages';
 import { uiIcon } from './ui/icons';
 import { createWelcome } from './ui/welcome';
 import { createMarkerCard } from './ui/markerCard';
-import { createLayersPanel } from './ui/layersPanel';
 import { createViewSwitch } from './ui/viewSwitch';
 import { type DeepTimeView } from './ui/deepTimeBar';
 import type { DeepChipView } from './ui/deepChips';
@@ -77,11 +75,10 @@ import { mountTexts } from './features/texts';
 import { hereVersion, hereView, whyMoment, type HereData } from './features/whyHere/facts';
 import { createSourcesList } from './features/whyHere/sources';
 import { mountMoment } from './features/moment';
+import { mountLayersPanel } from './features/layersPanel';
 import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment/observer';
 import { barYear } from './features/eclipses/years';
-import { PRESENT_YEAR } from './time/present';
 import { phoneLook } from './sky/aim';
-import { layerWhy } from './sources/registry';
 import { createZoomRail } from './ui/zoomRail';
 import { createWaysLegend } from './ui/waysLegend';
 import {
@@ -179,7 +176,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const namedPeriods = mountPeriods({
     ...partContext,
     refresh: () => {
-      showEmpires(store.get());
+      showLayers(store.get());
     },
   });
   // The sky view (#448): loaded the first time it is opened.
@@ -222,23 +219,55 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let askingHere = false;
   // The Sources list: the whys of what is on screen now.
   const sources = createSourcesList(whySheet);
-  const layersPanel = createLayersPanel(
-    (layer, on) => {
-      store.set((state) => ({ ...state, layers: withLayer(state.layers, layer, on) }));
+  // The Layers panel (#451): what each layer says and offers, as the parts have it now.
+  const layersPanel = mountLayersPanel({
+    ...partContext,
+    goToSpan: (span) => {
+      deepTime.goToSpan(span);
     },
-    (borders) => {
-      store.set((state) => ({ ...state, borders }));
+    enterDeepTime: (ma, scale) => {
+      deepTime.enterDeepTime(ma, scale);
     },
-    (span, ma) => {
-      if (ma === undefined || span === 'years') deepTime.goToSpan(span);
-      else if (store.get().ma === null) deepTime.enterDeepTime(ma, span);
-      else {
-        deepTime.setScale(span);
-        store.set((state) => ({ ...state, ma: roundMa(ma) }));
-      }
+    setScale: (scale) => {
+      deepTime.setScale(scale);
     },
-    (layer, label) => whySheet.mark(() => layerWhy(layer, store.get().borders), label),
-  );
+    said: () => [
+      ['ways', ways.said()],
+      ['periods', namedPeriods.said()],
+      ['rocks', rocks.said()],
+      ['dates', dates.said()],
+      ['impacts', impactsSaid],
+      ...mounted.map(({ feature, shown }) => [feature.id, shown.said?.() ?? null] as const),
+      ['carbonMade', carbonMade.said()],
+    ],
+    actions: () => [
+      [
+        'fossils',
+        {
+          label: 'Their tree through time',
+          run: () => {
+            store.set((state) => ({ ...state, lineages: { group: 'dinosaurs', pick: null } }));
+          },
+        },
+      ],
+      [
+        'impacts',
+        {
+          label: 'Their paths through time, in 3D',
+          run: () => {
+            store.set((state) => ({ ...state, craters: 'all' }));
+          },
+        },
+      ],
+      [
+        'humans',
+        treeOfLife.action('Our species on the tree of life', (tree) => tree.ours.humans['sapiens']),
+      ],
+      ['rocks', rocks.action()],
+      ['dates', dates.action()],
+      ['carbonMade', carbonMade.action()],
+    ],
+  });
   const markerCard = createMarkerCard();
   // How far out the view is, and that zooming out reaches the planets: from whichever body is
   // in focus, in the years (deep time leaves the Sun, Moon and planets out).
@@ -431,7 +460,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       shower.watch(dipole, fromSun);
     },
     refresh: () => {
-      showEmpires(store.get());
+      showLayers(store.get());
     },
   });
   // The years (#446): the track, playing them, travelling through them, and carbon-14 in the air.
@@ -446,7 +475,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       const terrestrial = moment.terrestrial();
       if (terrestrial !== null) showFeatures(now, terrestrial);
       rocks.show(now);
-      showEmpires(now);
+      showLayers(now);
       iceAges.showHolocene(now);
     },
     statesSaid: () => empires.said(),
@@ -622,7 +651,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe,
     travelling: () => years.travelling(),
     refresh: () => {
-      showEmpires(store.get());
+      showLayers(store.get());
     },
   };
   const rocks = mountRocks({
@@ -687,7 +716,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       const now = store.get();
       moment.show(now);
       if (now.ma !== null) deepTime.show(now);
-      showEmpires(now);
+      showLayers(now);
     },
   };
   const mounted = FEATURES.map((feature) => ({ feature, shown: feature.mount(featureContext) }));
@@ -762,7 +791,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
               return;
             }
             showImpacts(now);
-            showEmpires(now);
+            showLayers(now);
           },
           (error: unknown) => {
             impactsLoading = null;
@@ -870,65 +899,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return { drawn: empires.drawn(), waysOfLife: ways.data(), rocks: rocks.units() };
   }
 
-  function showEmpires(state: ViewState): void {
-    const waysSaid = ways.said();
-    const periodsSaid = namedPeriods.said();
-    const rocksSaid = rocks.said();
-    const datesSaid = dates.said();
-    const rocksAction = rocks.action();
-    const datesAction = dates.action();
-    const carbonSaid = carbonMade.said();
-    const carbonAction = carbonMade.action();
-    layersPanel.render({
-      layers: state.layers,
-      borders: state.borders,
-      year: state.time.date.year,
-      present: PRESENT_YEAR,
-      span: state.ma === null ? 'years' : state.deepScale,
-      visible: state.mode === 'globe' && !awayFromEarth(state),
-      said: new Map<Layer, string>([
-        ...(waysSaid === null ? [] : [['ways', waysSaid] as const]),
-        ...(periodsSaid === null ? [] : [['periods', periodsSaid] as const]),
-        ...(rocksSaid === null ? [] : [['rocks', rocksSaid] as const]),
-        ...(datesSaid === null ? [] : [['dates', datesSaid] as const]),
-        ...(impactsSaid === null ? [] : [['impacts', impactsSaid] as const]),
-        ...mounted.flatMap(({ feature, shown }) => {
-          const text = shown.said?.() ?? null;
-          return text === null ? [] : [[feature.id, text] as const];
-        }),
-        ...(carbonSaid === null ? [] : [['carbonMade', carbonSaid] as const]),
-      ]),
-      actions: new Map([
-        [
-          'fossils',
-          {
-            label: 'Their tree through time',
-            run: () => {
-              store.set((state) => ({ ...state, lineages: { group: 'dinosaurs', pick: null } }));
-            },
-          },
-        ] as const,
-        [
-          'impacts',
-          {
-            label: 'Their paths through time, in 3D',
-            run: () => {
-              store.set((state) => ({ ...state, craters: 'all' }));
-            },
-          },
-        ] as const,
-        [
-          'humans',
-          treeOfLife.action(
-            'Our species on the tree of life',
-            (tree) => tree.ours.humans['sapiens'],
-          ),
-        ] as const,
-        ...(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
-        ...(datesAction === null ? [] : [['dates', datesAction] as const]),
-        ...(carbonAction === null ? [] : [['carbonMade', carbonAction] as const]),
-      ]),
-    });
+  /** The Layers panel, and the borders it turns on. */
+  function showLayers(state: ViewState): void {
+    layersPanel.show(state);
     empires.show(state);
   }
 
@@ -961,10 +934,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       namedPeriods.show(state);
       showImpacts(state);
       carbonMade.show(state);
-      showEmpires(state);
+      showLayers(state);
     } else if (previous !== null && state.focus !== previous.focus) {
       // The Layers panel is Earth's: it shuts on going to another body.
-      showEmpires(state);
+      showLayers(state);
     }
     // Deep time, or an eclipse picked, ends a trip through the years.
     if (state.ma !== null || state.selection !== null) {
