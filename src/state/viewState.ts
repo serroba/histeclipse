@@ -94,11 +94,11 @@ export type PlanetLight = (typeof PLANET_LIGHTS)[number];
 
 export type Layer = (typeof LAYERS)[number];
 
-/** A dispersal model's scenario shaded with the Humans layer, or none. */
 /** The planetary boundaries' story's chapters (#434), in order; the Holocene's first (#453). */
 export const BOUNDARY_CHAPTERS = ['holocene', 'safe', 'pressure', 'compare'] as const;
 export type BoundaryChapter = (typeof BOUNDARY_CHAPTERS)[number];
 
+/** A dispersal model's scenario shaded with the Humans layer, or none. */
 export const DISPERSAL_SCENARIOS = ['off', 'a', 'b'] as const;
 export type DispersalScenario = (typeof DISPERSAL_SCENARIOS)[number];
 

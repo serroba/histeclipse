@@ -14,7 +14,8 @@ source gives no range.
   kept on its own scale and baseline (``scope: "antarctic"``), not rescaled. It is thinned to
   the mean of each 200-year bin of age within 20 ka and each 1,000-year bin beyond, placed at
   the mean age of the samples in the bin.
-- Osman et al. (2021), Nature 599: 239, doi:10.1038/s41586-021-03984-4; NOAA, public domain.
+- Osman et al. (2021), Nature 599: 239, doi:10.1038/s41586-021-03984-4; NOAA, licence not
+  stated (NOAA asks for citation).
   The Last Glacial Maximum Reanalysis (LGMR): global mean surface temperature in 200-year bins
   from 23.9 ka to 100 BP, 500 ensemble members, absolute °C. Each member is taken relative to
   its own most recent bin (100 BP, about 1850 CE, roughly pre-industrial), and the median and
@@ -201,7 +202,7 @@ def lgmr(data: bytes) -> Series:
         baseline="each ensemble member's 100 BP bin (about 1850, roughly pre-industrial)",
         credit=(
             "Osman et al. 2021, Nature 599: 239, doi:10.1038/s41586-021-03984-4; NOAA, "
-            "public domain"
+            "licence not stated (NOAA asks for citation)"
         ),
         source=LGMR.url,
         points=lgmr_points(ages, gmst),

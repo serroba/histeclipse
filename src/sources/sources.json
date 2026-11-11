@@ -1121,5 +1121,31 @@
     "url": "https://doi.org/10.1126/sciadv.adh2458",
     "licence": "CC BY-NC 4.0",
     "nonCommercial": true
+  },
+  "jouzel2007": {
+    "name": "EPICA Dome C, Jouzel et al. 2007",
+    "kind": "dataset",
+    "cite": "Jouzel, J., Masson-Delmotte, V., Cattani, O., et al. (2007), Orbital and millennial Antarctic climate variability over the past 800,000 years, Science 317, 793–796; data: Jouzel, J., Masson-Delmotte, V. (2007), EPICA Dome C Ice Core 800KYr deuterium data and temperature estimates, PANGAEA",
+    "url": "https://doi.org/10.1594/PANGAEA.683655",
+    "licence": "CC BY 3.0"
+  },
+  "osman2021": {
+    "name": "Osman et al. 2021",
+    "kind": "dataset",
+    "cite": "Osman, M. B., Tierney, J. E., Zhu, J., Tardif, R., Hakim, G. J., King, J., Poulsen, C. J. (2021), Globally resolved surface temperatures since the Last Glacial Maximum, Nature 599, 239–244; data: Last Glacial Maximum Reanalysis (LGMR), NOAA NCEI Paleoclimatology",
+    "url": "https://doi.org/10.1038/s41586-021-03984-4"
+  },
+  "pages2k2019": {
+    "name": "PAGES 2k Consortium 2019",
+    "kind": "dataset",
+    "cite": "PAGES 2k Consortium: Neukom, R., Barboza, L. A., Erb, M. P., et al. (2019), Consistent multidecadal variability in global temperature reconstructions and simulations over the Common Era, Nature Geoscience 12, 643–649; data: NOAA NCEI Paleoclimatology",
+    "url": "https://doi.org/10.1038/s41561-019-0400-0"
+  },
+  "hadcrut5": {
+    "name": "HadCRUT5",
+    "kind": "dataset",
+    "cite": "Morice, C. P., Kennedy, J. J., Rayner, N. A., et al. (2021), An updated assessment of near-surface temperature change from 1850: the HadCRUT5 data set, Journal of Geophysical Research: Atmospheres 126, e2019JD032361; data: HadCRUT.5.1.0.0, Met Office Hadley Centre and Climatic Research Unit, University of East Anglia",
+    "url": "https://doi.org/10.1029/2019JD032361",
+    "licence": "Open Government Licence v3"
   }
 }
