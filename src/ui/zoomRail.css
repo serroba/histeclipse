@@ -1,0 +1,175 @@
+/* The zoom rail (#382: CSS beside the code it styles). */
+
+/* How far out the view is: a rail on the right, Earth at the top and the planets below, its
+   stops named so it is plain that zooming out reaches the Solar System. */
+.zoom-rail {
+  position: fixed;
+  /* Between the panels, as the globe is: never over a panel's buttons. */
+  top: calc(var(--free-top, 0px) + 8px);
+  right: 12px;
+  bottom: calc(var(--free-bottom, 0px) + 8px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.zoom-rail[hidden],
+.zoom-rail.is-cramped {
+  display: none;
+}
+
+.zoom-rail > * {
+  pointer-events: auto;
+}
+
+.zoom-step {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--panel-border);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+}
+
+.zoom-parts {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-height: 0;
+}
+
+.zoom-parts[hidden],
+.zoom-readout[hidden],
+.zoom-orbits[hidden] {
+  display: none;
+}
+
+/* Away from Earth, the way back to it, at the rail's top. */
+.zoom-home {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+}
+
+.zoom-home[hidden] {
+  display: none;
+}
+
+.zoom-orbits {
+  display: grid;
+  place-items: center;
+  color: var(--ink-muted);
+}
+
+.zoom-orbits[aria-pressed='true'] {
+  border-color: rgb(143 180 255 / 0.6);
+  background: rgb(143 180 255 / 0.2);
+  color: var(--ink);
+}
+
+.zoom-track {
+  position: relative;
+  /* As tall as there is room for, up to 200px. */
+  flex: 0 1 200px;
+  width: 36px;
+  min-height: 60px;
+}
+
+.zoom-slider {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 36px;
+  height: 100%;
+  margin: 0;
+  /* Vertical, nearest at the top: as + sits above and − below. */
+  writing-mode: vertical-lr;
+  accent-color: #8fb4ff;
+  cursor: pointer;
+}
+
+.zoom-stop {
+  position: absolute;
+  right: 40px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  /* Readable over the globe as well as over space. */
+  text-shadow:
+    0 0 4px #000,
+    0 0 2px #000;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+/* On touch screens the names are a guide, not targets: a tap on one goes to what lies under
+   it (a planet's marker, say), and the track beside it takes the reader there. */
+@media (pointer: coarse) {
+  .zoom-stop {
+    pointer-events: none;
+  }
+}
+
+.zoom-stop:hover,
+.zoom-stop[aria-pressed='true'] {
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.zoom-readout {
+  color: var(--ink-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* On a phone the rail is shorter, and leaves the panels their room. */
+@media (max-width: 600px) {
+  .zoom-track {
+    flex-basis: 150px;
+  }
+
+  .zoom-rail {
+    right: 6px;
+  }
+}
+
+/* "Why here?": the rail's toggle. */
+.zoom-why-here {
+  display: grid;
+  place-items: center;
+  color: var(--ink-muted);
+}
+
+.zoom-why-here[hidden] {
+  display: none;
+}
+
+.zoom-why-here[aria-pressed='true'] {
+  border-color: rgb(143 180 255 / 0.6);
+  background: rgb(143 180 255 / 0.2);
+  color: var(--ink);
+}

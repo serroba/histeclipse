@@ -2,9 +2,8 @@
  * "Why this?": one panel that says, for anything on screen, what it shows, where it comes from
  * and how this site used it, with each source's kind, link and licence; and the marks (an open
  * book) that open it, beside the things they explain. The same panel lists what is on screen
- * now, and every source the site uses.
- *
- * DOM glue, covered by the Playwright suite; what it says is in `sources/registry.ts`.
+ * now, and every source the site uses. DOM glue, covered by the Playwright suite; what it says
+ * is in `sources/registry.ts`.
  */
 
 import {
@@ -21,6 +20,7 @@ import {
 import type { HereFact } from '../sources/here';
 import { element } from './dom';
 import { bookIcon, KIND_NAMES, kindIcon } from './icons';
+import './whySheet.css';
 
 export interface WhySheet {
   readonly dialog: HTMLDialogElement;

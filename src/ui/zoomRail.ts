@@ -14,6 +14,7 @@ import { EARTH_RADIUS_KM } from '../globe/spaceFrame';
 import { CAMERA_DISTANCE_RANGE, type Body } from '../state/viewState';
 import { element } from './dom';
 import { bookIcon, uiIcon } from './icons';
+import './zoomRail.css';
 
 /** A rail for one body: its distances in its own radii, as near and as far as the camera goes. */
 export interface RailScale {

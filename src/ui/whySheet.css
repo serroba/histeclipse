@@ -1,0 +1,302 @@
+/* "Why this?" (#382: CSS beside the code it styles): a small open book beside anything with a
+   source, and the panel it opens. */
+.why-mark {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -4px 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-muted);
+  vertical-align: middle;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.why-mark:hover,
+.why-mark:focus-visible {
+  background: rgb(143 180 255 / 0.16);
+  color: var(--ink);
+}
+
+/* On touch screens a finger-sized target, the icon staying small. */
+@media (pointer: coarse) {
+  .why-mark {
+    width: 36px;
+    height: 36px;
+    margin: -8px -4px;
+  }
+}
+
+.famous-dialog.why-dialog {
+  position: fixed;
+  inset: 16px 16px auto auto;
+  z-index: 4;
+  width: min(400px, calc(100% - 32px));
+  max-height: calc(100vh - 32px);
+  margin: 0;
+  overflow: auto;
+  background: rgb(10 16 32);
+}
+
+.why-dialog .famous-header {
+  align-items: center;
+  gap: 8px;
+}
+
+.why-dialog .famous-header h2 {
+  flex: 1;
+  text-align: left;
+}
+
+.why-head-icon {
+  display: inline-grid;
+  color: var(--accent);
+}
+
+.why-body {
+  padding: 0 18px 16px;
+}
+
+.why-section h3 {
+  margin: 14px 0 6px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.why-section p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.why-sources {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.why-source {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+.why-kind {
+  display: inline-grid;
+  place-items: center;
+  margin-top: 2px;
+  color: var(--ink-muted);
+}
+
+.why-source-text {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  align-items: baseline;
+  font-size: 13px;
+}
+
+.why-source-text a {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.why-cite {
+  flex-basis: 100%;
+  color: var(--ink-muted);
+  line-height: 1.4;
+}
+
+/* The licence as a small chip; non-commercial terms in the warning colour. */
+.why-licence {
+  padding: 1px 7px;
+  border: 1px solid var(--panel-border);
+  border-radius: 9px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.why-licence.is-nc {
+  border-color: rgb(247 201 90 / 0.6);
+  color: rgb(247 201 90);
+}
+
+.why-all {
+  margin-top: 16px;
+  padding: 6px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* The Sources toggle: what is on screen now, one line each. */
+.why-list {
+  display: grid;
+  gap: 4px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.why-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 6px;
+  align-items: center;
+}
+
+.why-row-title {
+  color: var(--ink);
+}
+
+/* The sources under the title, so a long list wraps beneath it, not under the book. */
+.why-row-sources {
+  grid-column: 2;
+}
+
+.why-list .why-row:last-child {
+  display: block;
+}
+
+.why-list .why-all {
+  margin-top: 4px;
+  padding: 2px 10px;
+  font-size: 11px;
+}
+
+/* A Layers row: the book sits between the name and where the layer draws. */
+.layer-row .why-mark {
+  margin: 0;
+}
+
+.ways-legend .why-mark {
+  width: 22px;
+  height: 22px;
+  margin: -4px 0;
+}
+
+@media (max-width: 600px) {
+  .famous-dialog.why-dialog {
+    inset: auto 0 0;
+    width: 100%;
+    max-height: 75vh;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* The eclipse card's book floats beside its fold, off the title's line. */
+.eclipse-card > .why-mark {
+  float: right;
+  margin: 0 4px 0 0;
+}
+
+/* A note's book leads its first line, the text running on beside it. */
+.deep-note > .why-mark:first-child {
+  float: left;
+  margin: -4px 4px 0 -4px;
+}
+
+/* Beside ΔT the book keeps its finger-sized target without making the date line taller. */
+.hud-detail .why-mark {
+  margin-block: -10px;
+}
+
+/* A reconstruction's evidence, one kind a line, and how sure each part is. */
+.why-evidence,
+.why-certainty {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0 0 0 18px;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.why-evidence a {
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.why-reading {
+  padding: 0;
+}
+
+/* Citing a source: copy its reference, or fetch its BibTeX from Crossref. */
+.why-cite-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.why-cite-action {
+  padding: 1px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 11px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.why-cite-action:hover,
+.why-cite-action:focus-visible {
+  color: var(--ink);
+}
+
+.why-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.why-here {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  list-style: none;
+}
+
+.why-here a {
+  color: var(--ink);
+}
+
+.why-here-empty {
+  margin: 4px 0 0;
+  color: var(--ink-muted);
+  font-size: 14px;
+}
+
+/* The period's own reading, under its evidence. */
+.why-then-sources {
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.why-then-sources a {
+  color: var(--ink);
+}
+
+.why-section p + p {
+  margin-top: 6px;
+}
