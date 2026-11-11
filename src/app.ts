@@ -31,7 +31,6 @@ import { dateCellsLayer, rocksLayer, waysLayer } from './globe/historyPaintLayer
 import { iceOutlineLayer } from './globe/iceOutlineLayer';
 import { magneticNorthLayer } from './globe/magneticNorthLayer';
 import { geoToVector } from './globe/geo';
-import { PLANET_NAMES } from './globe/planetLook';
 import { loadPolarity, type PolarityScale } from './data/polarity';
 import { magneticNorthAt } from './deepTime/earthState';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
@@ -97,27 +96,18 @@ import {
   type GeoPoint,
   type ViewState,
 } from './state/viewState';
-import { type PlanetName } from './astro/planets';
 import { observerPosition } from './sky/bodies';
 import { longTermEarthFixedToJ2000 } from './astro/longTermPrecession';
 import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
-import {
-  calendarDate,
-  historicalCalendar,
-  julianDayNumber,
-  type JulianDay,
-} from './time/julianDay';
-import { formatInCalendar, shortDate, yearContaining, yearSpan } from './time/calendars';
+import { julianDayNumber, type JulianDay } from './time/julianDay';
+import { formatInCalendar, yearContaining, yearSpan } from './time/calendars';
 import { astronomicalYear, formatYear, type AstronomicalYear } from './time/year';
 import { moveToYear } from './time/yearInput';
 import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
 import { FEATURES } from './features';
 import { RESTING, type DeepMoment, type FeatureContext } from './features/feature';
-import { isMoonBody, moonPlanet } from './globe/moonLook';
-import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
-import { planetCycle, sunCycle, type BodyCycle } from './astro/planetCycle';
 import { createFamousPanel } from './ui/famousPanel';
 import { createSearchPanel } from './ui/searchPanel';
 import { anchorLabel, anchorQuery } from './text/anchors';
@@ -218,6 +208,7 @@ import { mountTreeOfLife } from './features/treeOfLife';
 import { mountSky } from './features/sky';
 import { mountBodies } from './features/bodies';
 import { mountRecords } from './features/records';
+import { mountCycle } from './features/cycle';
 import { phoneLook, type BodiesSeen } from './sky/aim';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
@@ -1096,117 +1087,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
     historyBands.root,
     radiocarbonStrip.root,
   );
-  // Away from Earth and the Moon, the bar's time is the body's own cycle as Earth sees it: a
-  // planet's from conjunction to conjunction, the Sun's Earth's year (#329).
-  const cycleTrack = createCycleTrack({
-    onDay(jd) {
-      stopCycle();
-      setMoment(jd);
+  // Away from Earth and the Moon, the bar's time is the body's own cycle as Earth sees it (#447).
+  const cycle = mountCycle({
+    ...partContext,
+    planets: () => bodies.planets(),
+    loadPlanets: () => bodies.loadPlanets(),
+    moment: () => bodiesAt,
+    universalTime: (jdTT) => deltaT.universalTime(jdTT),
+    hideHistory(hidden) {
+      historyTrack.root.hidden = hidden;
+      historyTrack.extras.hidden = hidden;
     },
-    onPlay(play) {
-      if (play) startCycle();
-      else stopCycle();
-    },
-    onSpeed(speed) {
-      cycleSpeed = speed;
-      showCycle(store.get());
-    },
+    stopHistory,
   });
-  let cycle: {
-    readonly body: PlanetName | 'sun';
-    readonly at: BodyCycle;
-    readonly moments: readonly CycleMoment[];
-  } | null = null;
-  let cyclePlaying = false;
-  let cycleSpeed: CycleSpeed = 240;
-  let cycleFrame = 0;
-  let cycleTick = 0;
-  // Where play has got to, UT, unrounded; shown a whole day at a time, so the time of day (and
-  // so how the bodies are turned) holds still as the days go by.
-  let cycleHead = 0;
-  let cycleShown: ViewState['time'] | null = null;
-  /** The body whose cycle the bar shows: a planet or the Sun, in the years, no eclipse open. */
-  function cycleBody(state: ViewState): PlanetName | 'sun' | null {
-    const { focus } = state;
-    if (!awayFromEarth(state) || state.selection !== null) return null;
-    // A planet's moon goes by its planet's cycle.
-    if (isMoonBody(focus)) return moonPlanet(focus);
-    return focus === 'earth' || focus === 'moon' ? null : focus;
-  }
-  /** A moment of the cycle as written: "16 Jan 2025". */
-  function cycleDate(jd: JulianDay): string {
-    const { year } = calendarDate(jd, historicalCalendar(jd));
-    return `${shortDate('western', jd)} ${formatYear(astronomicalYear(year))}`;
-  }
-  function showCycle(state: ViewState): void {
-    const body = cycleBody(state);
-    // With an eclipse open its own player runs the time; on a planet or the Sun, the cycle.
-    historyTrack.root.hidden = state.selection !== null || body !== null;
-    historyTrack.extras.hidden = historyTrack.root.hidden;
-    const theory = bodies.planets();
-    if (body === null || theory === null || bodiesAt === null) {
-      if (body === null) stopCycle();
-      else if (theory === null) void bodies.loadPlanets();
-      cycleTrack.render(null);
-      return;
-    }
-    stopHistory();
-    const jdTT = bodiesAt;
-    if (cycle?.body !== body || jdTT < cycle.at.start || jdTT >= cycle.at.end) {
-      const at = body === 'sun' ? sunCycle(theory, jdTT) : planetCycle(theory, body, jdTT);
-      cycle = {
-        body,
-        at,
-        moments: at.events.map(({ mark, jdTT: when }) => {
-          const jd = deltaT.universalTime(julianDayNumber(when));
-          return { mark, jd, date: cycleDate(jd) };
-        }),
-      };
-    }
-    cycleTrack.render({
-      title:
-        body === 'sun'
-          ? 'Earth’s year around the Sun'
-          : `${PLANET_NAMES[body]}’s cycle, as seen from Earth`,
-      slider: body === 'sun' ? 'Day in Earth’s year' : `Day in ${PLANET_NAMES[body]}’s cycle`,
-      jd: momentJulianDay(state.time),
-      moments: cycle.moments,
-      playing: cyclePlaying,
-      speed: cycleSpeed,
-    });
-  }
-  function setMoment(jd: number): void {
-    const time = momentAt(julianDayNumber(jd));
-    cycleShown = time;
-    store.set((state) => ({ ...state, time, selection: null }));
-  }
-  function startCycle(): void {
-    cyclePlaying = true;
-    cycleHead = momentJulianDay(store.get().time);
-    cycleTick = performance.now();
-    cycleFrame = requestAnimationFrame(tickCycle);
-    showCycle(store.get());
-  }
-  function tickCycle(now: number): void {
-    if (!cyclePlaying) return;
-    // A frame after a stall (a hidden tab) counts as a quarter of a second at most.
-    const seconds = Math.min(Math.max(now - cycleTick, 0) / 1000, 0.25);
-    cycleTick = now;
-    const shown = momentJulianDay(store.get().time);
-    cycleHead += (cycleSpeed / 24) * seconds;
-    // A day or more a second steps whole days, so each planet's turning holds still; slower
-    // steps whole minutes, the finest time kept, so moons glide round (#335).
-    const step = cycleSpeed >= 24 ? 1 : 1 / 1440;
-    const steps = Math.floor((cycleHead - shown) / step + 1e-9);
-    if (steps >= 1) setMoment(shown + steps * step);
-    cycleFrame = requestAnimationFrame(tickCycle);
-  }
-  function stopCycle(): void {
-    if (!cyclePlaying) return;
-    cyclePlaying = false;
-    cancelAnimationFrame(cycleFrame);
-    showCycle(store.get());
-  }
 
   let radiocarbon: Radiocarbon | null = null;
   let radiocarbonAsked = false;
@@ -1439,7 +1332,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
     },
     [famousPanel.button, records.button],
-    [historyTrack.extras, cycleTrack.extras],
+    [historyTrack.extras, cycle.extras],
   );
   const scrubber = createScrubber((offsetMinutes) => {
     const selected = selectedEclipse(store.get());
@@ -1462,7 +1355,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       bodies.bar,
       waysLegend.root,
       historyTrack.root,
-      cycleTrack.root,
+      cycle.root,
       timeline.root,
     ),
     deepBar.root,
@@ -3177,7 +3070,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function showBody(state: ViewState): void {
     const away = awayFromEarth(state);
     bottom.dataset['away'] = String(away);
-    showCycle(state);
+    cycle.show(state);
     // The Moon keeps the year's eclipses; Earth's other timelines rest there too (#329).
     bottom.dataset['body'] = state.focus;
     hudActions.hidden = away;
@@ -3423,7 +3316,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           : '',
     );
     // The time changed elsewhere (the year typed, the slider) ends the cycle's play.
-    if (cyclePlaying && state.time !== cycleShown) stopCycle();
+    cycle.render(state);
     if (redraws(HISTORY, state, previous)) showHistory(state);
     if (state.location !== previous?.location) globe.setLocation(state.location);
     if (state.view !== previous?.view) globe.setViewpoint(state.view);
