@@ -6,6 +6,7 @@
 import type { Verdict } from '../tablets/check';
 import { civilDateText, computedText, recordedText } from '../tablets/verdictText';
 import { element } from './dom';
+import './tabletPanel.css';
 
 export interface TabletHandlers {
   /** Check every record against the year beginning in spring of `bce`, Nisannu moved `shift`. */

@@ -1,0 +1,93 @@
+/* Deep time in full view: a strip above "Show controls" keeps saying when it is. */
+.deep-glance {
+  display: none;
+  position: absolute;
+  bottom: calc(72px + env(safe-area-inset-bottom));
+  left: 50%;
+  align-items: center;
+  gap: 10px;
+  width: min(560px, calc(100% - 32px));
+  padding: 6px 14px 8px 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  transform: translateX(-50%);
+}
+
+.deep-glance-play {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.deep-glance-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.deep-glance-body p {
+  margin: 0 0 6px;
+  overflow: hidden;
+  font-size: 14px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.deep-glance-period {
+  color: var(--ink-muted);
+}
+
+/* The temperature colours, under the time slider, small: what the globe's colours mean. */
+.deep-glance-temperature {
+  margin-top: 6px;
+}
+
+.deep-glance-temperature[hidden] {
+  display: none;
+}
+
+.deep-glance-scale {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.deep-glance-ticks {
+  position: relative;
+  display: block;
+  height: 14px;
+  margin-top: 2px;
+  color: var(--ink-muted);
+  font-size: 10px;
+}
+
+.deep-glance-ticks span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.deep-glance-ticks span:first-child {
+  transform: none;
+}
+
+.deep-glance-ticks span:last-child {
+  transform: translateX(-100%);
+}
+
+.deep-glance-slider {
+  display: block;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  accent-color: rgb(120 200 150);
+  cursor: pointer;
+}

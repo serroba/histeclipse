@@ -16,6 +16,7 @@ import {
 } from '../state/viewState';
 import { element } from './dom';
 import { uiIcon, type UiIcon } from './icons';
+import './layersPanel.css';
 
 export interface LayersView {
   readonly layers: ReadonlySet<Layer>;
