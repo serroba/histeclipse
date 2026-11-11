@@ -21,6 +21,7 @@ import {
   DISPERSAL_SCENARIOS,
   DEFAULT_LOOK,
   BORDER_SOURCES,
+  BOUNDARY_CHAPTERS,
   CRATERS_SHAPES,
   DEEP_SCALES,
   FIGURES,
@@ -89,6 +90,7 @@ describe('parseViewState', () => {
       craters: null,
       cratersIn: 'map',
       lineages: null,
+      boundaries: null,
     } satisfies ViewState);
   });
 
@@ -159,6 +161,8 @@ describe('parseViewState', () => {
     expect(parseViewState('craters=12', NOW).state.craters).toEqual({ id: 12 });
     expect(parseViewState('craters=26&cratersin=box', NOW).state.cratersIn).toBe('box');
     expect(parseViewState('craters=26', NOW).state.cratersIn).toBe('map');
+    expect(parseViewState('boundaries=pressure', NOW).state.boundaries).toBe('pressure');
+    expect(parseViewState('boundaries=nowhere', NOW).state.boundaries).toBeNull();
     expect(parseViewState('lineages=dinosaurs', NOW).state.lineages).toEqual({
       group: 'dinosaurs',
       pick: null,
@@ -496,6 +500,7 @@ describe('serializeViewState', () => {
         pick: fc.option(fc.integer({ min: 0, max: 9_999_999 })),
       }),
     ),
+    boundaries: fc.option(fc.constantFrom(...BOUNDARY_CHAPTERS)),
   });
 
   it('round-trips every view state through a link', () => {

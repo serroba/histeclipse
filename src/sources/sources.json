@@ -1106,5 +1106,20 @@
     "cite": "Fetterer, F., Knowles, K., Meier, W. N., Savoie, M., Windnagel, A. K. & Stafford, T. (2025), Sea Ice Index (G02135, Version 4) [Data Set], National Snow and Ice Data Center, Boulder, Colorado",
     "url": "https://doi.org/10.7265/a98x-0f50",
     "licence": "None stated; free to use on condition of citing it (NSIDC data use policy)"
+  },
+  "planetaryHealthCheck2026": {
+    "name": "Planetary Health Check 2026",
+    "kind": "paper",
+    "cite": "Caesar, L., Sakschewski, B., et al., eds. Kitzmann, N. H., Rockström, J. (2026), Planetary Health Check 2026: A Scientific Assessment of the State of the Planet, Planetary Boundaries Science (PBScience), Potsdam Institute for Climate Impact Research",
+    "url": "https://doi.org/10.48485/pik.2026.25",
+    "licence": "CC BY 4.0"
+  },
+  "richardson2023": {
+    "name": "Richardson et al. 2023",
+    "kind": "paper",
+    "cite": "Richardson, K., Steffen, W., Lucht, W., et al. (2023), Earth beyond six of nine planetary boundaries, Science Advances 9, eadh2458",
+    "url": "https://doi.org/10.1126/sciadv.adh2458",
+    "licence": "CC BY-NC 4.0",
+    "nonCommercial": true
   }
 }
