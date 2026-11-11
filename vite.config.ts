@@ -44,6 +44,8 @@ export default defineConfig({
         'src/globe/humanSiteLayer.ts',
         'src/globe/placeNameLayer.ts',
         'src/globe/moonNameLayer.ts',
+        'src/globe/magneticNorthLayer.ts',
+        'src/globe/labelTexture.ts',
         'src/globe/impactAnimation.ts',
         'src/globe/showerAnimation.ts',
         'src/sky/skyScene.ts',

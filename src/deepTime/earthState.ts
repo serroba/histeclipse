@@ -84,6 +84,16 @@ export interface PolaritySpan {
 /** Before this the record is too sparse to say which way the field pointed. */
 export const POLARITY_RECORD_MA = 540;
 
+/** The pole a compass pointed to, as the globe marks it; `either` when it reversed often. */
+export type MagneticNorth = 'north' | 'south' | 'either';
+
+/** Which pole a compass pointed to `ma` million years ago; null before the record. */
+export function magneticNorthAt(ma: number, scale: PolarityScale | null): MagneticNorth | null {
+  if (ma > POLARITY_RECORD_MA) return null;
+  const { polarity } = fieldAt(ma, scale);
+  return polarity === 'normal' ? 'north' : polarity === 'reversed' ? 'south' : 'either';
+}
+
 /**
  * The field's polarity across `youngest` to `oldest` Ma, youngest first: every reversal the
  * scale records, the superchrons, reversing often between them, and unknown before the record.
