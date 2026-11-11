@@ -278,12 +278,10 @@ import {
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
 import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
-import { createTreeSheet } from './ui/treeSheet';
 import { createImpactPathsSheet } from './ui/impactPathsSheet';
-import { createLineagesSheet } from './ui/lineagesSheet';
 import { createBoundariesSheet } from './ui/boundariesSheet';
-import { loadLineages, type LineageGroup, type Lineages } from './data/lineages';
-import { loadTreeOfLife, type TreeOfLife } from './data/treeOfLife';
+import type { PartContext } from './features/part';
+import { mountTreeOfLife } from './features/treeOfLife';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
 import { layerWhy, onScreen, type WhyId } from './sources/registry';
@@ -365,6 +363,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const openedSearch = window.location.search;
   const parsed = parseViewState(openedSearch, now);
   const store = createStore<ViewState>(parsed.state);
+  const fetchJson = (url: string): Promise<Response> => fetch(url);
 
   // Picking an eclipse also turns the globe toward it (or toward a famous eclipse's place);
   // opening a shared link does not, because the link already says where the camera should be.
@@ -455,14 +454,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
     () => hereView(store.get()),
     (id) => whyMoment(id, store.get()),
   );
-  // The tree of life (#300): loaded the first time anything asks for it.
-  let treeOfLife: Promise<TreeOfLife> | null = null;
-  const loadTree = (): Promise<TreeOfLife> => {
-    treeOfLife ??= loadTreeOfLife(`${base}data/tree-of-life.json`, fetchJson);
-    treeOfLife.catch(() => {
-      treeOfLife = null;
-    });
-    return treeOfLife;
+  // What the app lends the parts of the page (#443).
+  const partContext: PartContext = {
+    base,
+    fetchJson,
+    store,
+    notify,
+    why: (id, label) => whySheet.mark(id, label),
+    goToDeepTime(ma, layer, where) {
+      enterDeepTime(ma, 'all');
+      // The layer on to mark it, and the globe turned to face it where it lay then.
+      store.set((state) => ({ ...state, layers: withLayer(state.layers, layer, true) }));
+      globe.flyTo(where);
+    },
   };
   // The planetary boundaries' story (#434): its data and scene load when it first opens.
   const boundariesSheet = createBoundariesSheet(
@@ -474,35 +478,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     `${base}textures/earth-blue-marble-2048.jpg`,
     whySheet.mark('boundaries', 'Planetary boundaries'),
   );
-  const treeSheet = createTreeSheet(
-    (tree) => {
-      store.set((state) => ({ ...state, tree }));
-    },
-    loadTree,
-    whySheet.mark('tree', 'Tree of life'),
-  );
-  /** Open the tree at the node `pick` finds in it, or the whole tree when it finds none. */
-  function openTreeAt(pick: (tree: TreeOfLife) => number | undefined): void {
-    loadTree().then(
-      (tree) => {
-        const node = pick(tree);
-        const ott = node === undefined ? undefined : tree.ott[node];
-        store.set((state) => ({ ...state, tree: ott === undefined ? 'all' : { ott } }));
-      },
-      (error: unknown) => {
-        notify(`Could not load the tree of life: ${errorMessage(error)}`);
-      },
-    );
-  }
-  const treeAction = (
-    label: string,
-    pick: (tree: TreeOfLife) => number | undefined,
-  ): { readonly label: string; readonly run: () => void } => ({
-    label,
-    run: () => {
-      openTreeAt(pick);
-    },
-  });
+  // The tree of life and life through time: their sheets, and the ways to open them.
+  const treeOfLife = mountTreeOfLife(partContext);
   // The impacts' paths through time (#304): the craters and today's coasts, loaded when opened,
   // from what the layers already loaded where they have.
   const impactPathsSheet = createImpactPathsSheet(
@@ -523,51 +500,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     (ma, where) => {
       store.set((state) => ({ ...state, craters: null }));
-      enterDeepTime(ma, 'all');
-      // Impacts on to mark it, and the globe turned to face it where it lay then.
-      store.set((state) => ({ ...state, layers: withLayer(state.layers, 'impacts', true) }));
-      globe.flyTo(where);
+      partContext.goToDeepTime(ma, 'impacts', where);
     },
     whySheet.mark('impacts', 'Impact craters'),
   );
-  // Life through time (#358): each fossil group's genera, a file per group, loaded when shown.
-  const lineagesLoading = new Map<LineageGroup, Promise<Lineages>>();
-  const loadGroupLineages = (group: LineageGroup): Promise<Lineages> => {
-    let loading = lineagesLoading.get(group);
-    if (loading === undefined) {
-      loading = loadLineages(`${base}data/time-tree/${group}.json`, fetchJson);
-      loading.catch(() => lineagesLoading.delete(group));
-      lineagesLoading.set(group, loading);
-    }
-    return loading;
-  };
-  const lineagesSheet = createLineagesSheet(
-    (lineages) => {
-      store.set((state) => ({ ...state, lineages }));
-    },
-    loadGroupLineages,
-    (ma) => `${base}data/paleodem/${String(ma)}.png`,
-    (ma, where) => {
-      store.set((state) => ({ ...state, lineages: null }));
-      enterDeepTime(ma, 'all');
-      // Fossils on, and the globe turned to face where the line starts.
-      store.set((state) => ({ ...state, layers: withLayer(state.layers, 'fossils', true) }));
-      globe.flyTo(where);
-    },
-    whySheet.mark('lineages', 'Life through time'),
-  );
-  /** Open a group's lines with a genus picked out by name, or the group if it has none such. */
-  function openLineagesAt(group: LineageGroup, genus: string): void {
-    loadGroupLineages(group).then(
-      (lineages) => {
-        const pick = lineages.nodes.find((node) => node.name === genus)?.pbdb ?? null;
-        store.set((state) => ({ ...state, lineages: { group, pick } }));
-      },
-      (error: unknown) => {
-        notify(`Could not load the lines through time: ${errorMessage(error)}`);
-      },
-    );
-  }
   // "Why here?": while on, a tap on the globe says what each layer has there.
   let askingHere = false;
   const sourcesList = element('ul', { class: 'why-list', 'data-testid': 'sources-list' });
@@ -1672,9 +1608,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globeContainer,
     skyContainer,
     zoomRail.root,
-    treeSheet.dialog,
+    ...treeOfLife.elements,
     impactPathsSheet.dialog,
-    lineagesSheet.dialog,
     boundariesSheet.dialog,
     whySheet.dialog,
     element(
@@ -1788,7 +1723,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureContext: FeatureContext = {
     base,
-    fetchJson: (url) => fetch(url),
+    fetchJson,
     globe,
     zoomRail,
     notify,
@@ -1801,8 +1736,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     loadPlanets: () => {
       void loadPlanets();
     },
-    openLineages: openLineagesAt,
-    openTree: openTreeAt,
+    openLineages: treeOfLife.openLineagesAt,
+    openTree: treeOfLife.openTreeAt,
     change: (update) => {
       store.set(update);
     },
@@ -2207,8 +2142,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     return file;
   }
-
-  const fetchJson = (url: string): Promise<Response> => fetch(url);
 
   /** Cliopatria's file for the century of `year`, or null if there is none. */
   function empireCenturyFor(year: number): Promise<EmpireCentury | null> {
@@ -3835,7 +3768,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ] as const,
         [
           'humans',
-          treeAction('Our species on the tree of life', (tree) => tree.ours.humans['sapiens']),
+          treeOfLife.action(
+            'Our species on the tree of life',
+            (tree) => tree.ours.humans['sapiens'],
+          ),
         ] as const,
         ...(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
         ...(datesAction === null ? [] : [['dates', datesAction] as const]),
@@ -4366,9 +4302,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       askingHere,
     );
     root.classList.toggle('is-asking-here', askingHere && state.ma === null);
-    treeSheet.show(state.tree);
+    if (redraws(treeOfLife.watches, state, previous)) treeOfLife.render(state);
     impactPathsSheet.show(state.craters, state.ma ?? 0, state.cratersIn);
-    lineagesSheet.show(state.lineages);
     boundariesSheet.show(state.boundaries);
     whySheet.show(
       state.why,
