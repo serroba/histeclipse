@@ -4,8 +4,8 @@
  * `globe.addLayer(genomeLayer)`.
  */
 
-import type { GenomeCell } from '../data/ancientGenomes';
-import { SURFACE_PRIORITY, type LayerFactory } from './layerHost';
+import type { GenomeCell } from '../../data/ancientGenomes';
+import { SURFACE_PRIORITY, type LayerFactory } from '../../globe/layerHost';
 
 /** Regions with this many genomes or fewer are a small dot, without a number. */
 const FEW_GENOMES = 2;
