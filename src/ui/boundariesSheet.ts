@@ -223,7 +223,7 @@ export function createBoundariesSheet(
         element('a', { href: 'https://doi.org/10.1038/s41586-021-03984-4' }, 'Osman et al. (2021)'),
         ', ',
         element('a', { href: 'https://doi.org/10.1038/s41561-019-0400-0' }, 'PAGES 2k (2019)'),
-        ' and ',
+        ' (both from NOAA NCEI, accessed 12 November 2026; no licence stated, cited as NOAA asks) and ',
         element('a', { href: 'https://doi.org/10.1029/2019JD032361' }, 'HadCRUT5'),
         ' (Met Office, Open Government Licence v3), as the report’s Figure 1 cites them. The drawings are this site’s own.',
       ),

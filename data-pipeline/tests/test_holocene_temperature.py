@@ -119,7 +119,8 @@ PAGES_TEXT = (
 def test_reads_the_filtered_pages2k_columns_shifted_to_pre_industrial() -> None:
     series = pages2k(PAGES_TEXT, -0.36)
     assert series.points == [(16, 0.09, -0.16, 0.42), (2000, 0.61, 0.46, 0.76)]
-    assert "licence not stated" in series.credit
+    assert "no licence stated" in series.credit
+    assert "accessed 2026-11-12" in series.credit
 
 
 def test_writes_every_series_as_compact_points(tmp_path: Path) -> None:

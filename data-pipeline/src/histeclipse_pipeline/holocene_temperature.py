@@ -54,6 +54,15 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 
+#: NOAA states no licence for these two; it asks to be cited, with the date the data were taken.
+NOAA_TERMS = (
+    "no licence stated; NOAA NCEI asks users to cite the publication, the online resource and "
+    "the date accessed"
+)
+#: When the files pinned below were downloaded.
+ACCESSED = "2026-11-12"
+
+
 @dataclass(frozen=True)
 class Source:
     """Where a series comes from, and the file it is read from."""
@@ -201,8 +210,8 @@ def lgmr(data: bytes) -> Series:
         scope="global",
         baseline="each ensemble member's 100 BP bin (about 1850, roughly pre-industrial)",
         credit=(
-            "Osman et al. 2021, Nature 599: 239, doi:10.1038/s41586-021-03984-4; NOAA, "
-            "licence not stated (NOAA asks for citation)"
+            "Osman et al. 2021, Nature 599: 239, doi:10.1038/s41586-021-03984-4; NOAA NCEI, "
+            f"accessed {ACCESSED}; {NOAA_TERMS}"
         ),
         source=LGMR.url,
         points=lgmr_points(ages, gmst),
@@ -241,7 +250,8 @@ def pages2k(text: str, offset: float) -> Series:
         baseline="1850-1900, shifted from 1961-1990 by HadCRUT5's mean for 1850-1900",
         credit=(
             "PAGES 2k Consortium (Neukom et al.) 2019, Nature Geoscience 12: 643, "
-            "doi:10.1038/s41561-019-0400-0; NOAA, licence not stated (NOAA asks for citation)"
+            "doi:10.1038/s41561-019-0400-0; NOAA NCEI, "
+            f"accessed {ACCESSED}; {NOAA_TERMS}"
         ),
         source=PAGES2K.url,
         points=points,
