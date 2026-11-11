@@ -8,6 +8,7 @@
 
 import { SPAN_LABELS, type Span } from '../state/viewState';
 import { element } from './dom';
+import './spanSwitch.css';
 
 export type { Span };
 

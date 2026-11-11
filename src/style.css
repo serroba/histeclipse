@@ -277,50 +277,6 @@ body {
   display: none;
 }
 
-.culture-switch {
-  margin-top: 8px;
-  pointer-events: auto;
-}
-
-.culture-switch[hidden] {
-  display: none;
-}
-
-.culture-select {
-  min-height: 44px;
-  margin-left: 8px;
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: rgb(255 255 255 / 0.05);
-  color: var(--ink);
-  font: inherit;
-  font-size: 14px;
-}
-
-.culture-select option {
-  background: #10162a;
-}
-
-.culture-caption {
-  max-width: 34em;
-  margin: 4px 0 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--ink-muted);
-}
-
-.culture-details summary {
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--ink-muted);
-  cursor: pointer;
-}
-
-.culture-caption a {
-  color: inherit;
-}
-
 .sun-caption {
   max-width: 34em;
   margin: 4px 0 0;
@@ -736,51 +692,10 @@ body {
   pointer-events: auto;
 }
 
-/* Viewpoints: a segmented control under the famous eclipses button. */
-.view-switch {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 8px;
-  pointer-events: auto;
-}
-
-.view-switch button {
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--panel-border);
-  border-radius: 22px;
-  background: rgb(255 255 255 / 0.04);
-  color: var(--ink-muted);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.view-switch button[aria-pressed='true'] {
-  border-color: rgb(150 180 255 / 0.6);
-  background: rgb(150 180 255 / 0.16);
-  color: var(--ink);
-}
-
-.view-switch button:disabled {
-  opacity: 0.45;
-  cursor: progress;
-}
-
-.view-switch[hidden],
-.view-switch button[hidden],
 .hud-actions[hidden],
 .sky-caption[hidden],
 .sky-eclipse[hidden] {
   display: none;
-}
-
-.switch-label {
-  align-self: center;
-  margin-right: 4px;
-  color: var(--ink-muted);
-  font-size: 12px;
 }
 
 .sky {
@@ -985,41 +900,6 @@ body {
   .hud {
     padding: 10px 12px;
   }
-}
-
-@media (max-width: 600px) {
-  /* Four views on one row, so the panel leaves the screen to the globe and the sky. */
-  .view-switch button {
-    padding: 0 9px;
-    font-size: 12px;
-  }
-}
-
-/* How far back time reaches, one always picked, in a pill at the top: the Holocene's years,
-   or deeper. Beyond the years, deep time's bar takes the year bar's place. */
-.time-switch {
-  display: flex;
-  border-radius: 22px;
-  /* An outline drawn inside, so the pill is no taller than the buttons beside it. */
-  box-shadow: inset 0 0 0 1px rgb(120 200 150 / 0.45);
-  pointer-events: auto;
-}
-
-.time-option {
-  min-height: 44px;
-  padding: 0 14px;
-  border: none;
-  border-radius: 22px;
-  background: transparent;
-  color: var(--ink-muted);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.time-option[aria-pressed='true'] {
-  background: rgb(120 200 150 / 0.22);
-  color: var(--ink);
 }
 
 .bottom[data-deep='on'] > :not(.deep-time) {
@@ -1882,11 +1762,6 @@ body {
   .hud-actions {
     column-gap: 8px;
   }
-
-  .time-option {
-    padding: 0 8px;
-    white-space: nowrap;
-  }
 }
 
 /* The eclipse row fades out where more chips lie beyond the edge. */
@@ -2231,75 +2106,10 @@ button:has(> .icon-label) > .icon {
   cursor: pointer;
 }
 
-/* The Sun's channels: a dot in each channel's usual false colour beside its name. */
-.sun-switch button[data-layer] .sun-channel-name::before {
-  content: '';
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  margin-right: 6px;
-  border-radius: 50%;
-  vertical-align: 0;
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.25);
-}
-
-.sun-switch button[data-layer='visible'] .sun-channel-name::before {
-  background: #fff0cc;
-}
-
-.sun-switch button[data-layer='magnetogram'] .sun-channel-name::before {
-  background: linear-gradient(90deg, #111 50%, #eee 50%);
-}
-
-.sun-switch button[data-layer='304'] .sun-channel-name::before {
-  background: #e0532a;
-}
-
-.sun-switch button[data-layer='171'] .sun-channel-name::before {
-  background: #d9a520;
-}
-
-.sun-switch button[data-layer='193'] .sun-channel-name::before {
-  background: #b8864a;
-}
-
-.sun-switch button[data-layer='131'] .sun-channel-name::before {
-  background: #1ea5a5;
-}
-
 /* One grid for the date panel (#232): every row meets the same two edges. The time switch
    stretches beside Layers, its spans sharing the pill, and the viewpoints share their row. */
 .hud-actions {
   flex-wrap: nowrap;
-}
-
-.hud-actions .time-switch {
-  flex: 1;
-}
-
-.time-switch .time-option {
-  flex: 1 1 auto;
-}
-
-.view-switch.viewpoints {
-  flex-wrap: nowrap;
-}
-
-.view-switch.viewpoints button {
-  flex: 1 1 auto;
-}
-
-/* The Sun's channels: their label and book above, the channels in even columns below. */
-.view-switch.sun-switch {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
-}
-
-.sun-switch .switch-label {
-  display: flex;
-  grid-column: 1 / -1;
-  align-items: center;
-  gap: 6px;
 }
 
 /* On a phone the panel spans the screen, as the bar along the bottom does; the Sun's channels
@@ -2309,25 +2119,6 @@ button:has(> .icon-label) > .icon {
   .hud {
     right: 12px;
     max-width: none;
-  }
-
-  /* One row that scrolls sideways, the next channel cut off at the edge to say there is more:
-     named by what they show, they would need three rows, and cover the Sun (#238, #249). */
-  .view-switch.sun-switch {
-    display: flex;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-  }
-
-  .view-switch.sun-switch::-webkit-scrollbar {
-    display: none;
-  }
-
-  .sun-switch .switch-label,
-  .sun-switch button[data-layer] {
-    flex: none;
   }
 }
 
@@ -2398,24 +2189,6 @@ button:has(> .icon-label) > .icon {
 
 .polarity-span.is-unknown {
   background: rgb(255 255 255 / 0.08);
-}
-
-/* A channel's button: what it shows, and beneath, small, the light it is (#249); a planet's
-   views alike (#239). */
-.sun-switch button[data-layer],
-.sun-switch button[data-view] {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1px;
-  line-height: 1.15;
-}
-
-.sun-channel-detail {
-  font-size: 10.5px;
-  color: var(--ink-muted);
-  white-space: nowrap;
 }
 
 .bottom[data-away='true'] .radiocarbon-strip {
