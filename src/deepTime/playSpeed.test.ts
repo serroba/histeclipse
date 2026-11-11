@@ -6,6 +6,7 @@ import {
   deepSpeedFor,
   deepSpeedText,
   deepSpeedWords,
+  prefetchFrames,
 } from './playSpeed';
 
 describe('deep time play speeds', () => {
@@ -31,5 +32,13 @@ describe('deep time play speeds', () => {
     expect(deepSpeedFor('all', 50)).toBe(50);
     expect(deepSpeedFor('ice', 50)).toBe(0.05);
     expect(deepSpeedFor('eons', undefined)).toBe(100);
+  });
+});
+
+describe('prefetchFrames', () => {
+  it('Given a slow play, Then a few maps load ahead; faster, more, to keep up', () => {
+    expect(prefetchFrames(1)).toBe(4);
+    expect(prefetchFrames(20)).toBe(4);
+    expect(prefetchFrames(100)).toBe(20);
   });
 });

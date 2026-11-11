@@ -4,11 +4,13 @@
  * New things drawn on the globe are layers; the globe's own `set…` methods only shrink.
  */
 
-import type { PerspectiveCamera, Quaternion, Scene, Vector3 } from 'three';
+import type { Group, PerspectiveCamera, Quaternion, Scene, Vector3 } from 'three';
 
 import './nameLabels.css';
 
+import type { MoonName, MoonPlanet } from '../astro/moonOrbits';
 import type { GeoPoint } from '../core/geo';
+import type { PaintSlot } from './paintSlots';
 import type { NamedBody } from '../data/planetNames';
 import type { Body } from '../state/viewState';
 
@@ -29,8 +31,11 @@ export interface LayerHost {
   readonly container: HTMLElement;
   /** The body the view is on. */
   focus(): Body;
-  /** Where a named body is, how it is turned, its radius (scene units), and whether it is drawn. */
-  bodyFrame(body: NamedBody): {
+  /**
+   * Where a named body or a planet with moons is, how it is turned, its radius (scene units), and
+   * whether it is drawn.
+   */
+  bodyFrame(body: NamedBody | MoonPlanet): {
     readonly position: Vector3;
     readonly rotation: Quaternion;
     readonly radius: number;
@@ -38,6 +43,12 @@ export interface LayerHost {
   };
   /** Where the Sun is in the scene. */
   sunPosition(): Vector3;
+  /** Earth's spin axis in deep time, its poles marked; what is added to it shows with it. */
+  readonly spinAxis: Group;
+  /** Where a planet's moon is in the scene, written into `target`. */
+  moonPosition(moon: MoonName, target: Vector3): Vector3;
+  /** Ask to fly to a body, as a tap on it does. */
+  requestBody(body: Body): void;
   /**
    * From J2000 km from Earth's centre to scene units, for the moment shown; null until the
    * globe has one.
@@ -59,7 +70,36 @@ export interface LayerHost {
    * and given room in `priority` order (see SURFACE_PRIORITY).
    */
   surfaceLabels(priority: number, layer: HTMLElement): SurfaceLabels;
+  /**
+   * A place on the history map painted over Earth's surface, under the states, painted in
+   * `order` (see HISTORY_PAINT_ORDER) whenever any part of the map changes.
+   */
+  historyPaint(order: number): PaintSlot<HistoryPainter>;
+  /**
+   * A place on the deep-time map painted over Earth's surface, painted in `order` (see
+   * DEEP_PAINT_ORDER) whenever any part of it changes.
+   */
+  deepPaint(order: number): PaintSlot<DeepPainter>;
 }
+
+/** Paints a layer's part of the deep-time map. */
+export type DeepPainter = (canvas: HTMLCanvasElement) => void;
+
+/** The order the deep-time map's parts are painted in, lower first. */
+export const DEEP_PAINT_ORDER = {
+  settled: 0,
+  iceOutlines: 10,
+} as const;
+
+/** Paints a layer's part of the history map; `statesOver` when the states are drawn on top. */
+export type HistoryPainter = (canvas: HTMLCanvasElement, statesOver: boolean) => void;
+
+/** The order the history map's parts are painted in, lower first; the states go over them all. */
+export const HISTORY_PAINT_ORDER = {
+  rocks: 0,
+  ways: 10,
+  dates: 20,
+} as const;
 
 /** A marker or name pinned to Earth's surface. */
 export interface SurfacePin {

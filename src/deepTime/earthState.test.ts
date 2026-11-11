@@ -9,6 +9,7 @@ import {
   dayMeasurementsAround,
   fieldAt,
   LAST_REVERSAL_MA,
+  magneticNorthAt,
   POLARITY_RECORD_MA,
   polaritySpans,
   SEA_FLOOR_RECORD_MA,
@@ -144,4 +145,24 @@ describe('day length', () => {
 it('keeps today’s tilt inside its cycle', () => {
   expect(TILT.today).toBeGreaterThan(TILT.min);
   expect(TILT.today).toBeLessThan(TILT.max);
+});
+
+describe('magneticNorthAt', () => {
+  const scale = polarity as PolarityScale;
+
+  it('Given today, Then a compass points to the north pole', () => {
+    expect(magneticNorthAt(0, scale)).toBe('north');
+  });
+
+  it('Given the Kiaman superchron, Then it points to the south pole', () => {
+    expect(magneticNorthAt(290, null)).toBe('south');
+  });
+
+  it('Given a time of frequent reversals, Then either pole', () => {
+    expect(magneticNorthAt(400, null)).toBe('either');
+  });
+
+  it('Given a time before the record, Then nothing is marked', () => {
+    expect(magneticNorthAt(POLARITY_RECORD_MA + 1, scale)).toBeNull();
+  });
 });

@@ -98,7 +98,7 @@ const KNOWN_CYCLE_EDGES: readonly string[] = [
 ];
 
 /** Methods on the `Globe` interface in `globe/scene.ts`: new things drawn are layers (#379). */
-const GLOBE_METHODS = 48;
+const GLOBE_METHODS = 43;
 
 describe('the shape of src', () => {
   it('no folder imports its way back into itself, beyond the cycles already known', () => {
@@ -171,7 +171,7 @@ describe('the largest files only shrink', () => {
  * Lines in `src/style.css` (#382): a component's rules go in a `.css` file beside it, imported
  * by it, so this may only come down, to the page-wide rules and the shared tokens.
  */
-const STYLE_CSS_LINES = 1259;
+const STYLE_CSS_LINES = 1053;
 
 describe('style.css only shrinks', () => {
   const lines = lineCount(readFileSync(join(SRC, 'style.css'), 'utf8'));

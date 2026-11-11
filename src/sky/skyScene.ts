@@ -83,6 +83,7 @@ import {
   SKY_UNPROJECTION,
   toPixels,
 } from './projection';
+import { createSkyLabelLayer, overlaps, skyLabel } from './skyLabels';
 import { starColor } from './starColor';
 
 export interface SkyMoment {
@@ -404,9 +405,7 @@ export function createSkyScene(
   const renderer = new WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.append(renderer.domElement);
-  const labelLayer = document.createElement('div');
-  labelLayer.className = 'sky-labels';
-  container.append(labelLayer);
+  const labelLayer = createSkyLabelLayer(container);
 
   const scene = new Scene();
   // Only its position and turn are used: the projection is the shaders' (see projection.ts).
@@ -1223,19 +1222,6 @@ export function createSkyScene(
 
 function lookDirectionAt(azimuth: number, altitude: number): Vec3 {
   return lookDirection({ azimuth, altitude, fov: 60 });
-}
-
-function overlaps(a: DOMRect, b: DOMRect): boolean {
-  return a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
-}
-
-function skyLabel(layer: HTMLElement, text: string, kind: string): HTMLElement {
-  const label = document.createElement('span');
-  label.className = `sky-label ${kind}`;
-  label.textContent = text;
-  label.hidden = true;
-  layer.append(label);
-  return label;
 }
 
 /** A soft radial glow for the Sun. */

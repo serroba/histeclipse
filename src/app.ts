@@ -1,6 +1,5 @@
 /**
  * Wires the view state (from the URL) to the globe, the timeline, the scrubber and the card.
- *
  * Browser-only glue, covered by the Playwright suite. Logic worth unit testing lives in the
  * modules it calls.
  */
@@ -29,6 +28,10 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { impactLayer } from './globe/impactLayer';
+import { dateCellsLayer, rocksLayer, waysLayer } from './globe/historyPaintLayers';
+import { iceOutlineLayer } from './globe/iceOutlineLayer';
+import { magneticNorthLayer } from './globe/magneticNorthLayer';
+import { moonNameLayer } from './globe/moonNameLayer';
 import { placeNameLayer } from './globe/placeNameLayer';
 import { geoToVector } from './globe/geo';
 import {
@@ -40,7 +43,7 @@ import {
   type PlanetView,
 } from './globe/planetLook';
 import { loadPolarity, type PolarityScale } from './data/polarity';
-import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
+import { magneticNorthAt } from './deepTime/earthState';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
 import { DATABLE_YEARS } from './data/radiocarbonProduction';
 import {
@@ -74,10 +77,23 @@ import {
 } from './ui/carbonMadeCard';
 import { createRadiocarbonStrip } from './ui/radiocarbonStrip';
 import { createGlobe, type StateChange } from './globe/scene';
+import {
+  DEEP_TIME,
+  EARTH_LAYERS,
+  FOUND_THE_WAY_IN,
+  HISTORY,
+  ORBITS,
+  redraws,
+  SELECTION,
+  SKY,
+  SUN,
+  VIEW_SWITCH,
+} from './state/redraws';
 import { changed, createStore } from './state/store';
 import { parseViewState, serializeViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import {
+  awayFromEarth,
   DEFAULT_CAMERA,
   DEFAULT_LOOK,
   defaultViewState,
@@ -294,7 +310,7 @@ import {
   plateText,
 } from './data/plateMasks';
 import { loadShelf, type ShelfIndex } from './data/shelf';
-import { deepSpeedFor } from './deepTime/playSpeed';
+import { deepSpeedFor, prefetchFrames } from './deepTime/playSpeed';
 import { COAST_SOURCES, coastlineAt, type Coastline, type CoastSource } from './deepTime/coastline';
 import {
   mapModel,
@@ -338,13 +354,6 @@ const PRESENT_YEAR = new Date().getUTCFullYear();
 /** The year “before present” counts back from, as radiocarbon dates do. */
 const BP_ZERO_YEAR = 1950;
 
-/**
- * Maps loaded ahead while deep time plays: at 20 Myr a second, about a second's worth; more at
- * a faster speed, so the globe keeps up.
- */
-function prefetchFrames(maPerSecond: number): number {
-  return Math.max(4, Math.ceil((4 * maPerSecond) / 20));
-}
 /** The elevation maps reach back this far (their index says for certain once loaded). */
 const MAPS_REACH_MA = 540;
 
@@ -862,8 +871,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     famousPanel.button.click();
   });
   const notices = element('ul', { class: 'notices', role: 'status', 'aria-live': 'polite' });
-  // The panels hide for a clear view, by this button or a tap on empty space; one button brings
-  // them back.
+  // The panels hide for a clear view, by this button or a tap on empty space; it brings them back.
   const fullView = element(
     'button',
     { type: 'button', class: 'full-view', 'aria-label': 'Hide the panels for a full view' },
@@ -956,8 +964,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       marks: yearTicks,
     },
   );
-  // Carbon-14 in the air under the years' slider (#270), its curves loaded the first time the
-  // layer is on.
+  // Carbon-14 in the air under the years' slider (#270), its curves loaded once the layer is on.
   const datingCard = createDatingCard();
   // Where cosmic rays make carbon-14 (#269): a glow over the globe, for the field and Sun picked
   // in its card.
@@ -1778,6 +1785,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   // Drawn on the globe as layers of their own (#379).
   const placeNamesOnGlobe = globe.addLayer(placeNameLayer);
+  const moonNamesOnGlobe = globe.addLayer(moonNameLayer);
+  const magneticNorthOnGlobe = globe.addLayer(magneticNorthLayer);
+  const rocksOnGlobe = globe.addLayer(rocksLayer);
+  const waysOnGlobe = globe.addLayer(waysLayer);
+  const datesOnGlobe = globe.addLayer(dateCellsLayer);
+  const iceOutlinesOnGlobe = globe.addLayer(iceOutlineLayer);
   const impactsOnGlobe = globe.addLayer(impactLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureContext: FeatureContext = {
@@ -2410,17 +2423,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
     );
   }
-  /** The pole a compass pointed to then, as the globe marks it. */
-  function magneticNorthAt(ma: number): 'north' | 'south' | 'either' | null {
-    if (ma > POLARITY_RECORD_MA) return null;
-    const { polarity: field } = fieldAt(ma, polarity);
-    return field === 'normal' ? 'north' : field === 'reversed' ? 'south' : 'either';
-  }
 
   function showDeepTime(state: ViewState): void {
     const { ma } = state;
     bottom.dataset['deep'] = ma === null ? 'off' : 'on';
-    globe.setMagneticNorth(ma === null ? null : magneticNorthAt(ma));
+    magneticNorthOnGlobe.update(ma === null ? null : magneticNorthAt(ma, polarity));
     if (ma !== null) wantPolarity();
     if (ma === null) {
       historySpan.render('years');
@@ -2432,7 +2439,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setDeepTime(null);
       globe.setTemperature(null);
       showHoloceneEarth(state);
-      globe.setIceOutlines(null);
+      iceOutlinesOnGlobe.update(null);
       for (const { shown } of mounted) shown.deep?.(state, null);
       globe.setPlates(null);
       return;
@@ -2838,7 +2845,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** On the ice-age scale, Batchelor et al.'s outlines of the time slice shown, if any. */
   function showIceOutlines(state: ViewState, ma: number): IceOutlines | null {
     if (state.deepScale !== 'ice') {
-      globe.setIceOutlines(null);
+      iceOutlinesOnGlobe.update(null);
       return null;
     }
     if (iceOutlineIndex === null) {
@@ -2858,7 +2865,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       return null;
     }
     const outlines = iceOutlinesAt(iceOutlineIndex, ma * 1000);
-    globe.setIceOutlines(outlines);
+    iceOutlinesOnGlobe.update(outlines);
     return outlines;
   }
 
@@ -3236,7 +3243,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     datesAction = null;
     if (!on || travelling) {
       datesSaid = on ? RESTING : null;
-      globe.setDateCells(null);
+      datesOnGlobe.update(null);
       return;
     }
     if (datesHeat === null) {
@@ -3260,7 +3267,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const heat = datesHeat;
     const year = state.time.date.year;
     const near = datesNear(heat, year);
-    globe.setDateCells(near === null ? null : { cells: near.cells, cellDegrees: heat.cellDegrees });
+    datesOnGlobe.update(
+      near === null ? null : { cells: near.cells, cellDegrees: heat.cellDegrees },
+    );
     datesSaid = datesNote(near, null);
     const place = state.location;
     if (place === null || near === null) return;
@@ -3308,7 +3317,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     // Today's rocks say nothing of the year a trip shows: they rest with the markers.
     if (!on || travelling) {
       rocksSaid = on ? RESTING : null;
-      globe.setRocks(null);
+      rocksOnGlobe.update(null);
       return;
     }
     if (rocks === null) {
@@ -3329,7 +3338,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
       return;
     }
-    globe.setRocks(rocks);
+    rocksOnGlobe.update(rocks);
     const rock = state.location === null ? null : rockAt(rocks, state.location);
     rocksSaid =
       state.location === null
@@ -3400,7 +3409,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (!on) {
       waysSaid = null;
       waysShownYear = null;
-      globe.setWays(null);
+      waysOnGlobe.update(null);
       waysLegend.render(null);
       return;
     }
@@ -3428,7 +3437,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     // Repainting the map is slow: only when the moment rated changes, as the years go by.
     if (at.year === waysShownYear) return;
     waysShownYear = at.year;
-    globe.setWays(at.regions);
+    waysOnGlobe.update(at.regions);
   }
   let waysShownYear: number | null = null;
 
@@ -3556,6 +3565,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       (orbits) => {
         moonOrbits = orbits;
         globe.setMoonOrbits(orbits);
+        moonNamesOnGlobe.update(true);
         showBody(store.get());
       },
       (error: unknown) => {
@@ -4321,62 +4331,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
         }
       }
     }
-    if (
-      state.ma !== previous?.ma ||
-      state.time !== previous.time ||
-      state.years !== previous.years ||
-      state.layers !== previous.layers ||
-      state.deepScale !== previous.deepScale ||
-      state.coast !== previous.coast ||
-      state.seaIce !== previous.seaIce ||
-      state.temperatureModel !== previous.temperatureModel ||
-      state.dispersal !== previous.dispersal ||
-      state.impact !== previous.impact ||
-      state.land !== previous.land ||
-      state.snowball !== previous.snowball
-    ) {
-      showDeepTime(state);
-    }
-    if (
-      state.mode !== previous?.mode ||
-      state.time !== previous.time ||
-      state.location !== previous.location ||
-      state.look !== previous.look ||
-      state.figures !== previous.figures ||
-      state.culture !== previous.culture ||
-      state.focus !== previous.focus ||
-      state.camera !== previous.camera
-    ) {
+    if (redraws(DEEP_TIME, state, previous)) showDeepTime(state);
+    if (redraws(SKY, state, previous)) {
       if (state.mode === 'sky' || previous?.mode === 'sky' || previous === null) showSky(state);
     }
     if (previous !== null && state.focus !== previous.focus) globe.setFocus(state.focus);
     // The orbits come and go as the view moves out and in, or turns to the Sun or a planet.
-    if (
-      lastTerrestrial !== null &&
-      (state.layers !== previous?.layers ||
-        state.camera !== previous.camera ||
-        state.focus !== previous.focus ||
-        state.mode !== previous.mode ||
-        state.ma !== previous.ma)
-    ) {
+    if (lastTerrestrial !== null && redraws(ORBITS, state, previous)) {
       showOrbits(state, lastTerrestrial);
     }
-    if (
-      state.focus !== previous?.focus ||
-      state.mode !== previous.mode ||
-      state.sunLayer !== previous.sunLayer
-    ) {
-      showSun(state);
-    }
-    if (
-      state.layers !== previous?.layers ||
-      state.mode !== previous.mode ||
-      state.borders !== previous.borders ||
-      state.ma !== previous.ma ||
-      state.deepScale !== previous.deepScale ||
-      state.time.date.year !== previous.time.date.year ||
-      state.location !== previous.location
-    ) {
+    if (redraws(SUN, state, previous)) showSun(state);
+    if (redraws(EARTH_LAYERS, state, previous)) {
       showDates(state);
       showWays(state);
       showRocks(state);
@@ -4384,7 +4349,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showImpacts(state);
       showCarbonMade(state);
       showEmpires(state);
-    } else if (state.focus !== previous.focus) {
+    } else if (previous !== null && state.focus !== previous.focus) {
       // The Layers panel is Earth's: it shuts on going to another body.
       showEmpires(state);
     }
@@ -4421,21 +4386,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     // The time changed elsewhere (the year typed, the slider) ends the cycle's play.
     if (cyclePlaying && state.time !== cycleShown) stopCycle();
-    if (
-      state.time.date.year !== previous?.time.date.year ||
-      state.layers !== previous.layers ||
-      // Which hemisphere's radiocarbon curve.
-      state.location !== previous.location
-    ) {
-      showHistory(state);
-    }
+    if (redraws(HISTORY, state, previous)) showHistory(state);
     if (state.location !== previous?.location) globe.setLocation(state.location);
     if (state.view !== previous?.view) globe.setViewpoint(state.view);
-    if (
-      state.view !== previous?.view ||
-      state.mode !== previous.mode ||
-      state.focus !== previous.focus
-    ) {
+    if (redraws(VIEW_SWITCH, state, previous)) {
       viewSwitch.render(state.mode, state.view, moonEphemeris !== null, state.focus);
     }
     if (state.years !== previous?.years || barYear(state) !== barYear(previous)) {
@@ -4443,14 +4397,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     // Tablets are dated in the Babylonian calendar: their check shows with it.
     tabletPanel.button.hidden = state.years !== 'babylonian';
-    if (
-      state.selection !== previous?.selection ||
-      state.layers !== previous.layers ||
-      state.location !== previous.location ||
-      state.seenIn !== previous.seenIn
-    ) {
+    if (redraws(SELECTION, state, previous)) {
       renderSelection(state);
-    } else if (state.time !== previous.time) {
+    } else if (previous !== null && state.time !== previous.time) {
       renderMoment(state);
     }
     sync.update(state);
@@ -4458,16 +4407,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   store.subscribe((state, previous) => {
     render(state, previous);
-    // Once the visitor picks an eclipse, a place, a view or deep time, they have found the way in.
-    if (
-      state.selection !== previous.selection ||
-      state.location !== previous.location ||
-      state.mode !== previous.mode ||
-      state.view !== previous.view ||
-      state.ma !== previous.ma
-    ) {
-      welcome.dismiss();
-    }
+    if (redraws(FOUND_THE_WAY_IN, state, previous)) welcome.dismiss();
   });
   render(store.get(), null);
   // Write the canonical, fully explicit URL straight away so it can be shared as is.
@@ -4593,11 +4533,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     sync.adopt(restored);
     store.set(() => restored);
   });
-}
-
-/** Orbiting another body in the years: the bars and panels speak of it, not of Earth. */
-function awayFromEarth(state: ViewState): boolean {
-  return state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
 }
 
 function round(value: number, digits: number): number {

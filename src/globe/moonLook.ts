@@ -56,6 +56,12 @@ export function moonPlanet(moon: MoonName): MoonPlanet {
       : 'saturn';
 }
 
+/** The planet whose moons are named and their paths drawn: the one in view, or the moon's. */
+export function moonsInView(focus: string): MoonPlanet | null {
+  if (isMoonBody(focus)) return moonPlanet(focus);
+  return focus === 'mars' || focus === 'jupiter' || focus === 'saturn' ? focus : null;
+}
+
 /** A moon's radius, Earth radii: the scene's unit. */
 export function moonRadius(moon: MoonName): number {
   return MOON_RADIUS_KM[moon] / EARTH_RADIUS_KM;
