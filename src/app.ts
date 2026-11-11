@@ -30,6 +30,7 @@ import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { humanSiteLayer } from './globe/humanSiteLayer';
 import { impactLayer } from './globe/impactLayer';
+import { placeNameLayer } from './globe/placeNameLayer';
 import { geoToVector } from './globe/geo';
 import {
   PLANET_NAMES,
@@ -131,7 +132,7 @@ import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
 import type { BodyKey } from './ui/bodyBar';
 import { keyGradient, keyTicks, loadColourKeys } from './data/planetKeys';
-import { isNamedBody, loadPlaceNames, type NamedBody, type PlaceNames } from './data/planetNames';
+import { isNamedBody, loadPlaceNames, type PlaceNames } from './data/planetNames';
 import { loadMoonOrbits, moonPosition, type MoonName, type MoonOrbits } from './astro/moonOrbits';
 import { FEATURES } from './features';
 import { RESTING, type DeepMoment, type FeatureContext } from './features/feature';
@@ -1798,6 +1799,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     focus: store.get().focus,
   });
   // Drawn on the globe as layers of their own (#379).
+  const placeNamesOnGlobe = globe.addLayer(placeNameLayer);
   const impactsOnGlobe = globe.addLayer(impactLayer);
   const humanSitesOnGlobe = globe.addLayer(humanSiteLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
@@ -3719,7 +3721,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The IAU's place names on the rocky bodies (#334), loaded the first time one is in view.
   let placeNames: PlaceNames | null = null;
   let placeNamesAsked = false;
-  let namesShown: NamedBody | null = null;
   /** Name the features of the body in view, if it has names; take away any others. */
   function showPlaceNames(body: string | null): void {
     const named = body !== null && isNamedBody(body) ? body : null;
@@ -3736,11 +3737,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
         },
       );
     }
-    if (namesShown !== null && namesShown !== named) globe.setPlaceNames(namesShown, null);
-    namesShown = named !== null && placeNames !== null ? named : null;
-    if (namesShown !== null && placeNames !== null) {
-      globe.setPlaceNames(namesShown, placeNames[namesShown]);
-    }
+    placeNamesOnGlobe.update(
+      named !== null && placeNames !== null ? { body: named, names: placeNames[named] } : null,
+    );
   }
 
   // The colour keys (#334): the height views', and the enhanced-colour views' swatches,

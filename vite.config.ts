@@ -42,6 +42,7 @@ export default defineConfig({
         'src/features/fossils/fossilLayer.ts',
         'src/features/genomes/genomeLayer.ts',
         'src/globe/humanSiteLayer.ts',
+        'src/globe/placeNameLayer.ts',
         'src/globe/impactAnimation.ts',
         'src/globe/showerAnimation.ts',
         'src/sky/skyScene.ts',
