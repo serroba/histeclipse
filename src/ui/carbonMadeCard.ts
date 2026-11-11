@@ -18,6 +18,8 @@ import {
 } from '../data/radiocarbonProduction';
 import { elementAt } from '../util/arrays';
 import { element } from './dom';
+import './datingCard.css';
+import './carbonMadeCard.css';
 
 const NS = 'http://www.w3.org/2000/svg';
 /** Latitude step of the chart and the glow, degrees. */

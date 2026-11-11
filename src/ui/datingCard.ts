@@ -21,6 +21,7 @@ import {
   type CalRange,
 } from '../data/radiocarbon';
 import { element } from './dom';
+import './datingCard.css';
 
 const NS = 'http://www.w3.org/2000/svg';
 /** Ranges holding less than this share are left out of the words (they still shade the chart). */
