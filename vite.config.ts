@@ -57,6 +57,7 @@ export default defineConfig({
         'src/story/airShower.ts',
         'src/story/leafScene.ts',
         'src/story/boundaryWheel.ts',
+        'src/story/holoceneChart.ts',
         'src/story/storyScene.ts',
         'src/ui/**',
       ],

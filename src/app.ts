@@ -278,7 +278,6 @@ import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
 import { createImpactPathsSheet } from './ui/impactPathsSheet';
 import { createBoundariesSheet } from './ui/boundariesSheet';
-import { loadPlanetaryBoundaries } from './data/planetaryBoundaries';
 import type { PartContext } from './features/part';
 import { mountTreeOfLife } from './features/treeOfLife';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
@@ -463,7 +462,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     (boundaries) => {
       store.set((state) => ({ ...state, boundaries }));
     },
-    () => loadPlanetaryBoundaries(`${base}data/planetary-boundaries.json`, fetchJson),
+    (file) => `${base}data/${file}`,
+    (url) => fetch(url),
     `${base}textures/earth-blue-marble-2048.jpg`,
     whySheet.mark('boundaries', 'Planetary boundaries'),
   );

@@ -45,7 +45,9 @@ import {
 import { createStoryScene, type StoryChapters, type StoryKit, type StoryScene } from './storyScene';
 import { clamp01, ease, within } from './timing';
 
-export type BoundaryWheel = StoryScene<BoundaryChapter>;
+/** The chapters the wheel draws: all but the Holocene's, which is a chart (#453). */
+export type WheelChapter = Exclude<BoundaryChapter, 'holocene'>;
+export type BoundaryWheel = StoryScene<WheelChapter>;
 
 export interface BoundaryWheelOptions {
   readonly data: PlanetaryBoundaries;
@@ -106,7 +108,7 @@ export function createBoundaryWheel(
   container: HTMLElement,
   options: BoundaryWheelOptions,
 ): BoundaryWheel {
-  return createStoryScene<BoundaryChapter>(container, {
+  return createStoryScene<WheelChapter>(container, {
     first: 'safe',
     near: 0.05,
     far: 200,
@@ -115,9 +117,9 @@ export function createBoundaryWheel(
 }
 
 function build(
-  kit: StoryKit<BoundaryChapter>,
+  kit: StoryKit<WheelChapter>,
   { data, earthTextureUrl }: BoundaryWheelOptions,
-): StoryChapters<BoundaryChapter> {
+): StoryChapters<WheelChapter> {
   const { scene, camera, controls, own, label, line, mark, during } = kit;
   controls.minDistance = 2.5;
   controls.maxDistance = 30;

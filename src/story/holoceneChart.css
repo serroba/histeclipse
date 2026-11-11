@@ -1,0 +1,68 @@
+/* The Holocene chapter's chart (#453), drawn in the boundaries story's stage. */
+
+.holocene-chart {
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-size: 11px;
+}
+
+.holocene-chart text {
+  fill: var(--ink-muted);
+}
+
+.holocene-chart .axis {
+  stroke: rgb(255 255 255 / 0.08);
+}
+
+.holocene-chart .axis.is-zero {
+  stroke: rgb(255 255 255 / 0.25);
+}
+
+.holocene-chart .panel-edge,
+.holocene-chart .holocene-start {
+  stroke: rgb(255 255 255 / 0.2);
+  stroke-dasharray: 3 4;
+}
+
+.holocene-chart .panel-name {
+  fill: var(--ink);
+  font-size: 12px;
+}
+
+.holocene-chart .corridor rect {
+  fill: rgb(63 174 106 / 0.22);
+  stroke: rgb(63 174 106 / 0.6);
+}
+
+.holocene-chart .corridor text {
+  fill: #6fd394;
+}
+
+.holocene-chart .line {
+  fill: none;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.holocene-chart .line.is-antarctic {
+  stroke-width: 1;
+  opacity: 0.75;
+}
+
+.holocene-chart .range {
+  opacity: 0.22;
+}
+
+.holocene-chart .now circle {
+  fill: #ff8a3d;
+}
+
+.holocene-chart .now text {
+  fill: #ffb27a;
+  font-weight: 600;
+}
+
+.holocene-chart .legend text {
+  font-size: 10px;
+}

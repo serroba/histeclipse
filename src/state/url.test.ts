@@ -165,6 +165,7 @@ describe('parseViewState', () => {
     expect(parseViewState('craters=26&cratersin=box', NOW).state.cratersIn).toBe('box');
     expect(parseViewState('craters=26', NOW).state.cratersIn).toBe('map');
     expect(parseViewState('boundaries=pressure', NOW).state.boundaries).toBe('pressure');
+    expect(parseViewState('boundaries=holocene', NOW).state.boundaries).toBe('holocene');
     expect(parseViewState('boundaries=nowhere', NOW).state.boundaries).toBeNull();
     expect(parseViewState('lineages=dinosaurs', NOW).state.lineages).toEqual({
       group: 'dinosaurs',

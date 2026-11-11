@@ -24,6 +24,7 @@ from histeclipse_pipeline.empires import (
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.eruptions import fetch_eruptions
 from histeclipse_pipeline.fossils import fetch_fossils
+from histeclipse_pipeline.holocene_temperature import fetch_holocene_temperature
 from histeclipse_pipeline.iceoutlines import fetch_outlines
 from histeclipse_pipeline.icesheets import fetch_icesheets
 from histeclipse_pipeline.ics import fetch_chart
@@ -495,6 +496,12 @@ def sealevel(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {points} sea-level points to {args.out}")
 
 
+def holocene_temperature(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write temperature from 800,000 years ago to today, from four records side by side."""
+    points = fetch_holocene_temperature(args.out)
+    return _say(f"wrote {points} temperature points to {args.out}")
+
+
 def paleotemp(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write surface temperature maps for 100 steps since 540 Ma as small images."""
     count = fetch_paleotemp(args.out)
@@ -761,6 +768,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         sealevel,
         "write global sea level through time from four reconstructions",
         "output directory",
+    ),
+    "holocene-temperature": (
+        holocene_temperature,
+        "write temperature from 800 ka to today (EPICA, LGMR, PAGES 2k, HadCRUT5)",
+        "output JSON file",
     ),
     "paleotemp": (
         paleotemp,

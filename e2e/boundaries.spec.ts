@@ -1,7 +1,9 @@
 /**
- * Feature: the planetary boundaries (#434). The nine boundaries round Earth in 3D, from the
- * Planetary Health Check 2026: at pre-industrial levels, then growing to 2026's values, seven of
- * nine crossed, then beside Richardson et al. (2023), with the table of values and its notes.
+ * Feature: the planetary boundaries (#434). It opens on the Holocene (#453): temperature over
+ * 800,000 years, the stable corridor of the last 10,000 and the climb out of it. Then the nine
+ * boundaries round Earth in 3D, from the Planetary Health Check 2026: at pre-industrial levels,
+ * then growing to 2026's values, seven of nine crossed, then beside Richardson et al. (2023), with
+ * the table of values and its notes.
  */
 
 import { collectProblems, expect, globeRendered, test } from './support';
@@ -9,13 +11,14 @@ import { collectProblems, expect, globeRendered, test } from './support';
 // The scene loads with the sheet and plays its chapters; software rendering on CI is slow.
 const PLAYED = { timeout: 20_000 };
 
-test('the boundaries open from the header, grow to 2026 and compare with 2023', async ({
+test('the boundaries open on the Holocene, then grow to 2026 and compare with 2023', async ({
   page,
 }) => {
   test.slow();
   const problems = collectProblems(page);
   const sheet = page.getByRole('dialog', { name: /Planetary boundaries/ });
   const stage = page.getByTestId('boundary-stage');
+  const chart = page.getByTestId('holocene-stage');
   await test.step('Given the globe today', async () => {
     await page.goto('./');
     await globeRendered(page);
@@ -23,9 +26,21 @@ test('the boundaries open from the header, grow to 2026 and compare with 2023', 
   await test.step('When they open the boundaries', async () => {
     await page.getByRole('button', { name: 'Boundaries', exact: true }).click();
   });
+  await test.step('Then temperature is drawn through the ice ages into the Holocene corridor', async () => {
+    await expect(page).toHaveURL(/boundaries=holocene/);
+    await expect(sheet).toBeVisible();
+    await expect(chart).toHaveAttribute('data-rendered', 'true', PLAYED);
+    await expect(chart).toHaveAttribute('data-complete', 'true', PLAYED);
+    await expect(chart.getByTestId('holocene-corridor')).toBeVisible();
+    await expect(chart).toContainText('2025: +1.4 °C');
+    await expect(page.getByTestId('boundary-caption')).toContainText('within about a degree');
+  });
+  await test.step('When they turn to the safe space', async () => {
+    await sheet.getByRole('button', { name: 'Safe space' }).click();
+  });
   await test.step('Then the nine are drawn round Earth, at pre-industrial levels', async () => {
     await expect(page).toHaveURL(/boundaries=safe/);
-    await expect(sheet).toBeVisible();
+    await expect(chart).toBeHidden();
     await expect(stage).toHaveAttribute('data-rendered', 'true', PLAYED);
     await expect(stage).toHaveAttribute('data-crossed', '0');
     await expect(page.getByTestId('boundary-caption')).toContainText('Holocene');
@@ -74,6 +89,12 @@ test('a link opens the comparison complete for less motion, with the report’s 
     const table = page.getByTestId('boundary-table');
     await expect(table).toContainText('The 2026 table gives 4.4 Tg/yr');
     await expect(table).toContainText('not forest recovering');
+  });
+  await test.step('And back on the Holocene, the chart is drawn complete', async () => {
+    await page.getByRole('button', { name: 'Holocene' }).click();
+    const chart = page.getByTestId('holocene-stage');
+    await expect(chart).toHaveAttribute('data-complete', 'true');
+    await expect(chart).toHaveAttribute('data-playing', 'false');
   });
   expect(problems).toEqual([]);
 });
