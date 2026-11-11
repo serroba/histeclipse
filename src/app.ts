@@ -5,7 +5,6 @@
  */
 
 import { loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
-import { loadSky } from './data/sky';
 import { earthFixedToJ2000, sunPositionJ2000 } from './astro/precession';
 import { subsolarPoint } from './astro/sun';
 import { greatestEclipseUT, yearOf } from './data/catalog';
@@ -100,8 +99,6 @@ import {
 } from './state/viewState';
 import { type PlanetName } from './astro/planets';
 import { observerPosition } from './sky/bodies';
-import { horizonMatrix, horizontalOf } from './sky/horizon';
-import { LOWEST_LOOK, roundLook } from './sky/look';
 import { longTermEarthFixedToJ2000 } from './astro/longTermPrecession';
 import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
@@ -132,11 +129,6 @@ import { uiIcon } from './ui/icons';
 import { createWelcome } from './ui/welcome';
 import { loadSeaIce, type SeaIceIndex, seaIceMaps, seaIceMix, seaIceSeason } from './data/seaIce';
 import { createMarkerCard } from './ui/markerCard';
-import { createTabletPanel } from './ui/tabletPanel';
-import { candidateYear, checkAll, type Verdict, verdictMoment } from './tablets/check';
-import { BABYLON, directionOf, starsByNumber, type TabletSky } from './tablets/tabletSky';
-import { bodyName, computedText, recordBodies } from './tablets/verdictText';
-import { VAT_4956 } from './tablets/vat4956';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createLayersPanel } from './ui/layersPanel';
 import { createDeepGlance } from './ui/deepGlance';
@@ -225,8 +217,8 @@ import type { PartContext } from './features/part';
 import { mountTreeOfLife } from './features/treeOfLife';
 import { mountSky } from './features/sky';
 import { mountBodies } from './features/bodies';
+import { mountRecords } from './features/records';
 import { phoneLook, type BodiesSeen } from './sky/aim';
-import type { SkyMark } from './sky/skyScene';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
 import { layerWhy, onScreen, type WhyId } from './sources/registry';
@@ -300,25 +292,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     () => {
       // The tablet is dated in the Babylonian calendar: switch to it, where its check lives.
       store.set((state) => ({ ...state, years: 'babylonian' }));
-      tabletPanel.open();
+      records.open();
     },
   );
-  const tabletPanel = createTabletPanel({
-    async check(bce, shift) {
-      const sky = await tabletSky();
-      const candidate = candidateYear(bce, shift);
-      if (candidate === null) {
-        throw new Error(`No Babylonian months are computed for ${String(bce)} BCE.`);
-      }
-      // Let "Computing the sky…" show before the work starts.
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      return checkAll(sky, VAT_4956, candidate);
-    },
-    go(verdict) {
-      void goToRecord(verdict);
-    },
-  });
-
   const viewSwitch = createViewSwitch((choice) => {
     if (choice === 'sky') {
       // Stand where the link says, or else on the spot in the middle of the globe; during an
@@ -389,15 +365,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     namedPlace,
     moonReady: () => moonEphemeris !== null,
     togglePanels,
-    marks(state) {
-      // A tablet record's marks stay while the sky is seen from Babylon.
-      const atBabylon =
-        state.location !== null &&
-        state.location.latitude === BABYLON.latitude &&
-        state.location.longitude === BABYLON.longitude;
-      if (recordShown !== null && (state.mode !== 'sky' || !atBabylon)) clearRecord();
-      return recordMarks(state);
-    },
+    marks: (state) => records.marks(state),
   });
   // The impacts' paths through time (#304): the craters and today's coasts, loaded when opened,
   // from what the layers already loaded where they have.
@@ -630,6 +598,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
     moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
     focus: store.get().focus,
   });
+  // A tablet's records checked against the sky, and looked at from Babylon (#447).
+  const records = mountRecords({
+    ...partContext,
+    moon: () => moonEphemeris,
+    loadPlanets: () => bodies.loadPlanets(),
+    deltaTSeconds: (jd) => deltaT.seconds(jd),
+    setSkyMarks: (marks) => {
+      sky.setMarks(marks);
+    },
+  });
   // The Sun, the Moon, the planets and their moons up close (#449).
   const bodies = mountBodies({
     ...partContext,
@@ -640,25 +618,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showTime(store.get());
     },
   });
-  // A tablet record being looked at: what it says, whether it fits, and the way back to the list.
-  const recordText = element('span', { class: 'tablet-record-text' });
-  const recordMark = element('span', { class: 'tablet-mark' });
-  const recordBack = element(
-    'button',
-    { type: 'button', class: 'tablet-record-back' },
-    'Back to the tablet',
-  );
-  const recordClose = element(
-    'button',
-    { type: 'button', class: 'tablet-record-close', 'aria-label': 'Stop pointing out the record' },
-    '×',
-  );
-  const recordBanner = element(
-    'div',
-    { class: 'tablet-record', 'data-testid': 'tablet-record', hidden: '' },
-    element('p', {}, recordText, ' ', recordMark),
-    element('div', { class: 'tablet-record-actions' }, recordBack, recordClose),
-  );
   const dateText = element('time', { class: 'hud-date' });
   const timeText = element('span', {
     class: 'hud-time',
@@ -1479,7 +1438,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         stepSeen(direction);
       },
     },
-    [famousPanel.button, tabletPanel.button],
+    [famousPanel.button, records.button],
     [historyTrack.extras, cycleTrack.extras],
   );
   const scrubber = createScrubber((offsetMinutes) => {
@@ -1536,7 +1495,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ...sky.controls,
       ...bodies.switches,
       ...sky.captions,
-      recordBanner,
+      records.banner,
       // Sources and what is written about here share a line, each a full row once open.
       element(
         'div',
@@ -1557,7 +1516,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     bottom,
     famousPanel.dialog,
     searchPanel.dialog,
-    tabletPanel.dialog,
+    records.dialog,
     layersPanel.dialog,
     markerCard.dialog,
     datingCard.dialog,
@@ -3399,93 +3358,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     };
   }
 
-  /** A look facing the Sun or the Moon from where the observer stands, or null if unknown. */
-  // Checking a tablet needs the Moon, the planets and the stars; they load the first time.
-  const RECORD_FOV = 40;
-  let tabletSkyLoading: Promise<TabletSky> | null = null;
-  function tabletSky(): Promise<TabletSky> {
-    tabletSkyLoading ??= Promise.all([
-      moonEphemeris === null ? loadMoonEphemeris() : Promise.resolve(moonEphemeris),
-      bodies.loadPlanets(),
-      loadSky(`${base}data/sky.json`, (url) => fetch(url)),
-    ]).then(([moon, planetTheory, catalogue]) => ({
-      moon,
-      planets: planetTheory,
-      stars: starsByNumber(catalogue.stars),
-      deltaT: (jd) => deltaT.seconds(jd),
-      place: BABYLON,
-    }));
-    tabletSkyLoading.catch(() => {
-      tabletSkyLoading = null;
-    });
-    return tabletSkyLoading;
-  }
-
-  /** Stand in Babylon at the moment of a tablet's record, facing what it describes. */
-  // The record shown in the sky, with its bodies pointed out; cleared on leaving Babylon's sky.
-  let recordShown: { readonly verdict: Verdict; readonly sky: TabletSky } | null = null;
-  recordBack.addEventListener('click', () => {
-    const id = recordShown?.verdict.observation.id;
-    tabletPanel.open();
-    if (id !== undefined) {
-      const row = tabletPanel.dialog.querySelector<HTMLElement>(`[data-record="${id}"]`);
-      row?.scrollIntoView({ block: 'center' });
-      row?.focus();
-    }
-  });
-  recordClose.addEventListener('click', () => {
-    clearRecord();
-  });
-
-  function clearRecord(): void {
-    recordShown = null;
-    recordBanner.hidden = true;
-    sky.setMarks([]);
-  }
-
-  /** The bodies the record names, where they stand from Babylon at the moment shown. */
-  function recordMarks(state: ViewState): readonly SkyMark[] {
-    if (recordShown === null) return [];
-    const { sky, verdict } = recordShown;
-    const jdUT = momentJulianDay(state.time);
-    const jdTT = julianDayNumber(jdUT + deltaT.seconds(jdUT) / 86_400);
-    const horizon = horizonMatrix(BABYLON, jdUT, jdTT);
-    return recordBodies(verdict.observation).map((body) => ({
-      name: bodyName(body),
-      ...horizontalOf(horizon, directionOf(sky, body, jdUT)),
-    }));
-  }
-
-  async function goToRecord(verdict: Verdict): Promise<void> {
-    const sky = await tabletSky();
-    const moment = verdictMoment(sky, verdict);
-    if (moment === null) return;
-    const { observation } = verdict;
-    recordShown = { verdict, sky };
-    recordText.textContent = `${observation.line}: ${observation.text}`;
-    recordMark.className = `tablet-mark ${verdict.fits ? 'fits' : 'misses'}`;
-    recordMark.textContent = verdict.fits
-      ? `✓ fits: computed ${computedText(verdict)}`
-      : `✗ does not fit: computed ${computedText(verdict)}`;
-    recordBanner.hidden = false;
-    const body = observation.kind === 'position' ? observation.body : 'moon';
-    const jdTT = julianDayNumber(moment + deltaT.seconds(moment) / 86_400);
-    const { azimuth, altitude } = horizontalOf(
-      horizonMatrix(BABYLON, moment, jdTT),
-      directionOf(sky, body, moment),
-    );
-    store.set((state) => ({
-      ...state,
-      mode: 'sky',
-      ma: null,
-      years: 'babylonian',
-      location: BABYLON,
-      time: momentAt(moment),
-      // Aim at the body: the sky centres it in the space the panels leave.
-      look: roundLook({ azimuth, altitude: Math.max(LOWEST_LOOK, altitude), fov: RECORD_FOV }),
-    }));
-  }
-
   function render(state: ViewState, previous: ViewState | null): void {
     const leftDeepTime = previous !== null && previous.ma !== null && state.ma === null;
     if (state.time !== previous?.time || state.years !== previous.years || leftDeepTime) {
@@ -3561,8 +3433,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (state.years !== previous?.years || barYear(state) !== barYear(previous)) {
       loadYear(state);
     }
-    // Tablets are dated in the Babylonian calendar: their check shows with it.
-    tabletPanel.button.hidden = state.years !== 'babylonian';
+    records.render(state);
     if (redraws(SELECTION, state, previous)) {
       renderSelection(state);
     } else if (previous !== null && state.time !== previous.time) {

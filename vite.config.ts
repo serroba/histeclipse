@@ -57,6 +57,7 @@ export default defineConfig({
         'src/features/bodies/index.ts',
         'src/features/bodies/planets.ts',
         'src/features/bodies/sun.ts',
+        'src/features/records/index.ts',
         'src/story/sunCore.ts',
         'src/story/airShower.ts',
         'src/story/leafScene.ts',
