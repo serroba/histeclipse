@@ -5,6 +5,7 @@ import { famousDateParts } from '../data/famousEclipses';
 import { astronomicalYear, formatYear } from '../time/year';
 import { element } from './dom';
 import { uiIcon } from './icons';
+import './famousPanel.css';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 

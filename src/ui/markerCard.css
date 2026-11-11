@@ -1,0 +1,40 @@
+/* A marker's card: its picture, what the source says, and where to read more. */
+.marker-card-body {
+  padding: 0 18px 16px;
+}
+
+.marker-card-image {
+  margin: 0 0 10px;
+}
+
+.marker-card-image img {
+  display: block;
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: 8px;
+}
+
+.marker-card-image figcaption,
+.marker-card-note {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.marker-card-facts {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  margin: 0 0 10px;
+}
+
+.marker-card-facts dt {
+  color: var(--ink-muted);
+}
+
+.marker-card-facts dd {
+  margin: 0;
+}
+
+.marker-card-links a {
+  color: var(--accent);
+}

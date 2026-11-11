@@ -4,6 +4,7 @@
  */
 
 import { element } from './dom';
+import './markerCard.css';
 
 export interface MarkerCardContent {
   readonly title: string;
