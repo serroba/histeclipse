@@ -7,20 +7,11 @@
 import { loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
 import { earthFixedToJ2000, sunPositionJ2000 } from './astro/precession';
 import { subsolarPoint } from './astro/sun';
-import { greatestEclipseUT, yearOf } from './data/catalog';
-import { famousFor, type FamousEclipse } from './data/famousEclipses';
+import { type FamousEclipse } from './data/famousEclipses';
 import { LunarCatalog } from './data/lunarCatalog';
-import { SolarCatalog, type SolarEclipse } from './data/solarCatalog';
-import {
-  eclipseMomentAt,
-  eclipseSelection,
-  findSelected,
-  isSolar,
-  momentAt,
-} from './eclipses/describe';
-import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarPhases';
-import { shadowAt } from './eclipses/solar';
-import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
+import { SolarCatalog } from './data/solarCatalog';
+import { eclipseMomentAt, isSolar } from './eclipses/describe';
+import { angularDistance } from './eclipses/visibility';
 import { impactLayer } from './globe/impactLayer';
 import { geoToVector } from './globe/geo';
 import { createDatingCard } from './ui/datingCard';
@@ -54,12 +45,10 @@ import { observerPosition } from './sky/bodies';
 import { longTermEarthFixedToJ2000 } from './astro/longTermPrecession';
 import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
-import { julianDayNumber, type JulianDay } from './time/julianDay';
-import { formatInCalendar, yearContaining, yearSpan } from './time/calendars';
-import { astronomicalYear, formatYear, type AstronomicalYear } from './time/year';
-import { moveToYear } from './time/yearInput';
+import { type JulianDay } from './time/julianDay';
+import { formatInCalendar } from './time/calendars';
+import { astronomicalYear, formatYear } from './time/year';
 import { element } from './ui/dom';
-import { createEclipseCard } from './ui/eclipseCard';
 import { FEATURES } from './features';
 import { RESTING, type DeepMoment, type FeatureContext } from './features/feature';
 import { createSearchPanel } from './ui/searchPanel';
@@ -71,11 +60,8 @@ import { indexPassages } from './text/wordSearch';
 import { uiIcon } from './ui/icons';
 import { createWelcome } from './ui/welcome';
 import { createMarkerCard } from './ui/markerCard';
-import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createLayersPanel } from './ui/layersPanel';
 import { cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
-import { labelPoint, territoriesIn } from './data/empires';
-import { createEmpireEclipses, SEARCH_YEARS } from './eclipses/empireEclipses';
 import { CULTURE_INFO } from './data/skyCultures';
 import { createViewSwitch } from './ui/viewSwitch';
 import { type DeepTimeView } from './ui/deepTimeBar';
@@ -106,6 +92,8 @@ import { mountPeriods } from './features/periods';
 import { mountEmpires } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
 import { mountYears } from './features/years';
+import { mountEclipses } from './features/eclipses';
+import { barYear } from './features/eclipses/years';
 import { PRESENT_YEAR } from './time/present';
 import { phoneLook, type BodiesSeen } from './sky/aim';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
@@ -126,10 +114,7 @@ import {
   type ImpactsMode,
 } from './data/impacts';
 import { createTemperatureLayer } from './features/temperature/temperatureLayer';
-import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
 import { errorMessage } from './util/errors';
-
-const MINUTES_PER_DAY = 1440;
 /** Degrees from the centre of the globe in view within which a strike is played as time runs. */
 const STRIKE_IN_VIEW = 70;
 /** Strikes started in one frame at most, the greatest first, when time runs fast past several. */
@@ -148,11 +133,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const store = createStore<ViewState>(parsed.state);
   const fetchJson = (url: string): Promise<Response> => fetch(url);
 
-  // Picking an eclipse also turns the globe toward it (or toward a famous eclipse's place);
-  // opening a shared link does not, because the link already says where the camera should be.
-  let flyToSelection = false;
-  let flyTarget: GeoPoint | null = null;
-
   const viewSwitch = createViewSwitch((choice) => {
     if (choice === 'sky') {
       // Stand where the link says, or else on the spot in the middle of the globe; during an
@@ -166,7 +146,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           ma: null,
           look: phoneLook(state.look, DEFAULT_LOOK, window.innerHeight > window.innerWidth),
         };
-        const selected = selectedEclipse(state);
+        const selected = eclipses.selected(state);
         if (selected === undefined) return next;
         const look = sky.aimAt(next, isSolar(selected) ? 'sun' : 'moon');
         return look === null || look.altitude <= -1 ? next : { ...next, look };
@@ -386,11 +366,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     eclipsesInYear: (kind, year) =>
       (kind === 'solar' ? solarCatalog : lunarCatalog).eclipsesInYear(year),
     flyToPicked(place) {
-      flyToSelection = true;
-      flyTarget = place;
+      eclipses.flyToPicked(place);
     },
     loaded: () => {
-      renderSelection(store.get());
+      eclipses.renderSelection(store.get());
     },
     openTablet: () => {
       records.open();
@@ -498,7 +477,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     'Show controls',
   );
   showControls.addEventListener('click', togglePanels);
-  const card = createEclipseCard(whySheet.mark('eclipses', 'Eclipse'));
   // Carbon-14 in the air under the years' slider (#270), its curves loaded once the layer is on.
   const datingCard = createDatingCard();
   // The shower's story (#269, #317): its stage, and its chapters in 3D over the globe.
@@ -565,45 +543,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   });
 
-  const timeline = createTimeline(
-    {
-      onYear(year) {
-        store.set((state) => ({ ...state, time: timeInYear(state, year), selection: null }));
-      },
-      onCalendar(years) {
-        store.set((state) => ({ ...state, years }));
-      },
-      onSelect(eclipse) {
-        flyToSelection = true;
-        store.set((state) => ({
-          ...state,
-          time: eclipseMomentAt(eclipse, state.location),
-          selection: eclipseSelection(eclipse),
-        }));
-      },
-      onSeenIn(seenIn) {
-        store.set((state) => ({ ...state, seenIn }));
-        if (seenIn === null || store.get().mode !== 'globe') return;
-        // Turn the globe to the state picked.
-        empires.territoryOf(seenIn, store.get().time.date.year).then(
-          (territory) => {
-            if (territory !== null) globe.flyTo(labelPoint(territory));
-          },
-          () => undefined, // The bar reports load errors.
-        );
-      },
-      onSeenStep(direction) {
-        stepSeen(direction);
-      },
-    },
-    [famous.button, records.button],
-    [years.track.extras, cycle.extras],
-  );
-  const scrubber = createScrubber((offsetMinutes) => {
-    const selected = selectedEclipse(store.get());
-    if (selected === undefined) return;
-    const jd = greatestEclipseUT(selected) + offsetMinutes / MINUTES_PER_DAY;
-    store.set((state) => ({ ...state, time: momentAt(julianDayNumber(jd)) }));
+  // The eclipses (#447): the year's on the bar, picking one, and the moment shown of it.
+  const eclipses = mountEclipses({
+    ...partContext,
+    globe,
+    catalogs: () => ({ lunar: lunarCatalog, solar: solarCatalog }),
+    deltaT: () => deltaT,
+    famous: () => famous.list(),
+    placeName,
+    territoryOf: (name, shown) => empires.territoryOf(name, shown),
+    centuryFor: (year) => empires.centuryFor(year),
+    timelineButtons: [famous.button, records.button],
+    timelineExtras: [years.track.extras, cycle.extras],
   });
 
   const hudTools = [boundariesSheet.button, searchPanel.button, fullView];
@@ -617,8 +568,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const bottom = element(
     'div',
     { class: 'bottom', 'data-deep': 'off' },
-    card.root,
-    scrubber.root,
+    eclipses.card,
+    eclipses.scrubber,
     element(
       'div',
       { class: 'holocene-bar' },
@@ -626,7 +577,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       waysLegend.root,
       years.track.root,
       cycle.root,
-      timeline.root,
+      eclipses.timeline,
     ),
     deepTime.bar,
   );
@@ -839,202 +790,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The famous list is a convenience: if it fails to load, everything else still works.
   famous.load();
 
-  /** The year on the bar: in the calendar picked, holding the moment shown. */
-  function barYear(state: ViewState): number {
-    return state.years === 'western'
-      ? state.time.date.year
-      : yearContaining(state.years, momentJulianDay(state.time));
-  }
-
-  /**
-   * The same point in another year of the bar's calendar: the same date for western years, and
-   * the same number of days into the year for the others.
-   */
-  function timeInYear(state: ViewState, year: number): ViewState['time'] {
-    if (state.years === 'western') return moveToYear(state.time, astronomicalYear(year));
-    const now = momentJulianDay(state.time);
-    const from = yearSpan(state.years, barYear(state));
-    const to = yearSpan(state.years, year);
-    const into = Math.min(now - from.start, to.end - to.start - 1 / MINUTES_PER_DAY);
-    return momentAt(julianDayNumber(to.start + into));
-  }
-
-  // Eclipses of the year on screen. Loads are tagged with their year so a slow response for a
-  // year the user already left is ignored.
-  let shownYear: string | null = null;
-  let listing: YearEclipses = { status: 'loading' };
-  let pathShownFor: SolarEclipse | null = null;
-
-  // Which of those eclipses could be seen from a past state picked in the bar.
-  let seenView: SeenView = { status: 'off' };
-  let seenName: string | null = null;
-  let seenListing: YearEclipses | null = null;
-  let seenOptions: readonly string[] = [];
-  let seenOptionsYear: number | null = null;
-
-  function selectedEclipse(state: ViewState): Eclipse | undefined {
-    return listing.status === 'ready' ? findSelected(listing.eclipses, state.selection) : undefined;
-  }
-
-  /** Everything that changes with the moment shown: scrubber, shadow, Moon-up region, card. */
-  function renderMoment(state: ViewState): void {
-    const selected = selectedEclipse(state);
-    if (selected === undefined) {
-      globe.setSolarShadow(null);
-      globe.setLunarOverlay(null);
-      scrubber.render(null);
-      card.render(undefined, 0, null);
-      return;
-    }
-    const universal = momentJulianDay(state.time);
-    const offset = Math.round((universal - greatestEclipseUT(selected)) * MINUTES_PER_DAY);
-    const uncertainty = deltaT.uncertaintySeconds(greatestEclipseUT(selected));
-    scrubber.render({
-      offsetMinutes: Math.max(-SCRUB_RANGE_MINUTES, Math.min(SCRUB_RANGE_MINUTES, offset)),
-      timeLabel: formatTimeOfDay(state.time),
-    });
-
-    const showShadow = isSolar(selected) && state.layers.has('solar');
-    globe.setSolarShadow(
-      showShadow
-        ? shadowAt(
-            selected.elements,
-            julianDayNumber(universal + selected.deltaT / 86_400),
-            selected.deltaT,
-          )
-        : null,
-    );
-
-    // Where the eclipsed Moon is up now: the point under the Moon drifts west as Earth turns,
-    // and the region only shows while the eclipse is actually happening.
-    const phase = isSolar(selected) ? 'none' : lunarPhaseAt(selected, offset);
-    if (!isSolar(selected) && phase !== 'none' && state.layers.has('lunar')) {
-      const [latitude, longitude] = selected.sublunar;
-      const now = shiftLongitude(
-        { latitude, longitude },
-        -(offset / 60) * SUBLUNAR_DRIFT_DEGREES_PER_HOUR,
-      );
-      const shift = longitudeUncertainty(uncertainty);
-      globe.setLunarOverlay({
-        sublunar: geoToVector(now),
-        west: geoToVector(shiftLongitude(now, -shift)),
-        east: geoToVector(shiftLongitude(now, shift)),
-        strength: phase === 'penumbral' ? 0.5 : 1,
-      });
-    } else {
-      globe.setLunarOverlay(null);
-    }
-    const famousHere = famousFor(famous.list(), state.selection);
-    card.render(
-      selected,
-      uncertainty,
-      state.location === null
-        ? null
-        : { point: state.location, name: placeName(state.location, famousHere) },
-      famousHere,
-      offset,
-    );
-  }
-
-  function renderSelection(state: ViewState): void {
-    const selected = selectedEclipse(state);
-    refreshSeen(state);
-    timeline.render({
-      year: barYear(state),
-      calendar: state.years,
-      eclipses: listing,
-      selected,
-      seen: { shown: seenShown(state), options: seenOptions, view: seenView },
-    });
-    const uncertainty =
-      selected === undefined ? 0 : deltaT.uncertaintySeconds(greatestEclipseUT(selected));
-
-    const solarPath =
-      selected !== undefined && isSolar(selected) && state.layers.has('solar') ? selected : null;
-    if (solarPath !== pathShownFor) {
-      pathShownFor = solarPath;
-      globe.setSolarPath(
-        solarPath === null
-          ? null
-          : {
-              elements: solarPath.elements,
-              deltaTSeconds: solarPath.deltaT,
-              uncertaintySeconds: uncertainty,
-            },
-      );
-    }
-
-    if (selected !== undefined && flyToSelection) {
-      flyToSelection = false;
-      const [latitude, longitude] = isSolar(selected) ? selected.greatest : selected.sublunar;
-      globe.flyTo(flyTarget ?? { latitude, longitude });
-      flyTarget = null;
-    }
-    renderMoment(state);
-  }
-
-  /** The western years a year of the bar spans: one, or two for a year starting mid-way. */
-  function westernYearsOf(state: ViewState, year: number): readonly AstronomicalYear[] | null {
-    if (state.years === 'western') return [astronomicalYear(year)];
-    try {
-      const { start, end } = yearSpan(state.years, year);
-      const first = yearContaining('western', start);
-      const last = yearContaining('western', julianDayNumber(end - 1 / MINUTES_PER_DAY));
-      return Array.from({ length: last - first + 1 }, (_, index) =>
-        astronomicalYear(first + index),
-      );
-    } catch {
-      return null; // Before the start of the Julian Day count.
-    }
-  }
-
-  function loadYear(state: ViewState): void {
-    const year = barYear(state);
-    const key = `${state.years}:${String(year)}`;
-    if (key === shownYear) return;
-    shownYear = key;
-    const westernYears = westernYearsOf(state, year);
-    const covered = (westernYears ?? []).every(
-      (each) => lunarCatalog.covers(each) && solarCatalog.covers(each),
-    );
-    if (westernYears === null || !covered) {
-      listing = {
-        status: 'error',
-        message: `Eclipses are catalogued from ${formatYear(astronomicalYear(lunarCatalog.index.startYear))} to ${formatYear(astronomicalYear(lunarCatalog.index.endYear))}`,
-      };
-      renderSelection(state);
-      return;
-    }
-    const span = state.years === 'western' ? null : yearSpan(state.years, year);
-    listing = { status: 'loading' };
-    renderSelection(state);
-    Promise.all(
-      westernYears.flatMap((each) => [
-        lunarCatalog.eclipsesInYear(each),
-        solarCatalog.eclipsesInYear(each),
-      ]),
-    ).then(
-      (chunks) => {
-        if (shownYear !== key) return;
-        const eclipses: Eclipse[] = chunks
-          .flat()
-          .filter((eclipse) => {
-            if (span === null) return true;
-            const when = greatestEclipseUT(eclipse);
-            return when >= span.start && when < span.end;
-          })
-          .sort((a, b) => a.jdTT - b.jdTT);
-        listing = { status: 'ready', eclipses };
-        renderSelection(store.get());
-      },
-      (error: unknown) => {
-        if (shownYear !== key) return;
-        listing = { status: 'error', message: `Could not load eclipses: ${errorMessage(error)}` };
-        renderSelection(store.get());
-      },
-    );
-  }
-
   function showTime(state: ViewState): void {
     const universal = momentJulianDay(state.time);
     let terrestrial;
@@ -1088,139 +843,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const deltaTWhy = whySheet.mark('delta-t', 'ΔT');
   const DELTA_T_MEANING =
     'ΔT: how far Earth’s slowing spin has put clock time behind a perfectly even time. It decides where on Earth an ancient eclipse fell; the ± is how uncertain it is.';
-
-  const empireEclipses = createEmpireEclipses({
-    territory: (name, shown) => empires.territoryOf(name, shown),
-    async eclipses(year) {
-      const each = astronomicalYear(year);
-      if (!lunarCatalog.covers(each) || !solarCatalog.covers(each)) return null;
-      const [lunar, solar] = await Promise.all([
-        lunarCatalog.eclipsesInYear(each),
-        solarCatalog.eclipsesInYear(each),
-      ]);
-      return [...lunar, ...solar].sort((a, b) => a.jdTT - b.jdTT);
-    },
-    uncertainty: (eclipse) => deltaT.uncertaintySeconds(greatestEclipseUT(eclipse)),
-  });
-
-  function seenShown(state: ViewState): boolean {
-    return state.layers.has('empires') || state.seenIn !== null;
-  }
-
-  /** Bring the bar's "seen from" picker and marks up to date with the state and the year. */
-  function refreshSeen(state: ViewState): void {
-    const year = state.time.date.year;
-    if (seenShown(state) && year !== seenOptionsYear) {
-      seenOptionsYear = year;
-      empires.centuryFor(year).then(
-        (file) => {
-          if (seenOptionsYear !== year) return;
-          const names =
-            file === null
-              ? []
-              : territoriesIn(file, cliopatriaYear(year, PRESENT_YEAR)).map(({ name }) => name);
-          seenOptions = [...new Set(names)].sort((a, b) => a.localeCompare(b));
-          renderSelection(store.get());
-        },
-        (error: unknown) => {
-          seenOptionsYear = null;
-          notify(`Could not load the states of the time: ${errorMessage(error)}`);
-        },
-      );
-    }
-    const name = state.seenIn;
-    if (name === seenName && listing === seenListing) return;
-    seenName = name;
-    seenListing = listing;
-    if (name === null) {
-      seenView = { status: 'off' };
-      return;
-    }
-    seenView = { status: 'loading', name };
-    if (listing.status !== 'ready') return;
-    const current = listing;
-    // A year of another calendar can span two western years, each with its own borders.
-    const byYear = new Map<number, Eclipse[]>();
-    for (const eclipse of current.eclipses) {
-      const each = yearOf(greatestEclipseUT(eclipse));
-      byYear.set(each, [...(byYear.get(each) ?? []), eclipse]);
-    }
-    const years = byYear.size === 0 ? new Map([[year, []]]) : byYear;
-    Promise.all(
-      [...years].map(([each, eclipses]) => empireEclipses.seenInYear(name, each, eclipses)),
-    ).then(
-      (results) => {
-        if (seenName !== name || seenListing !== current) return;
-        const marks = results.filter((result) => result !== null);
-        seenView =
-          marks.length === 0
-            ? { status: 'absent', name }
-            : { status: 'ready', name, marks: new Map(marks.flatMap((result) => [...result])) };
-        renderSelection(store.get());
-      },
-      (error: unknown) => {
-        if (seenName !== name || seenListing !== current) return;
-        seenView = { status: 'off' };
-        notify(`Could not work out what ${name} saw: ${errorMessage(error)}`);
-        renderSelection(store.get());
-      },
-    );
-  }
-
-  function goToEclipse(eclipse: Eclipse): void {
-    flyToSelection = true;
-    store.set((state) => ({
-      ...state,
-      time: eclipseMomentAt(eclipse, state.location),
-      selection: eclipseSelection(eclipse),
-    }));
-  }
-
-  /** The previous or next eclipse seen from the state picked: this year first, then further. */
-  function stepSeen(direction: 1 | -1): void {
-    const state = store.get();
-    const name = state.seenIn;
-    if (name === null) return;
-    const selected = selectedEclipse(state);
-    const pivot =
-      selected === undefined ? momentJulianDay(state.time) : greatestEclipseUT(selected);
-    if (listing.status === 'ready' && seenView.status === 'ready') {
-      const { marks } = seenView;
-      const later = listing.eclipses.filter((eclipse) => {
-        const mark = marks.get(eclipse);
-        if (mark === undefined || mark.verdict === 'not') return false;
-        const when = greatestEclipseUT(eclipse);
-        return direction === 1 ? when > pivot : when < pivot;
-      });
-      const pick = direction === 1 ? later.at(0) : later.at(-1);
-      if (pick !== undefined) {
-        goToEclipse(pick);
-        return;
-      }
-    }
-    const western = westernYearsOf(state, barYear(state)) ?? [state.time.date.year];
-    const from = direction === 1 ? western.at(-1) : western.at(0);
-    seenView = { status: 'searching', name };
-    renderSelection(state);
-    empireEclipses.nearest(name, from ?? state.time.date.year, direction).then(
-      (found) => {
-        if (store.get().seenIn !== name) return;
-        if (found !== null) {
-          goToEclipse(found.eclipse);
-          return;
-        }
-        const way = direction === 1 ? 'after' : 'before';
-        notify(`No eclipse seen from ${name} in the ${String(SEARCH_YEARS)} years ${way} this one`);
-        seenListing = null; // Recompute this year's marks.
-        renderSelection(store.get());
-      },
-      (error: unknown) => {
-        notify(`Could not search for eclipses: ${errorMessage(error)}`);
-        seenListing = null;
-        renderSelection(store.get());
-      },
-    );
-  }
 
   // Impact craters and deposits: loaded the first time the layer is turned on, in either time.
   let impacts: Impacts | null = null;
@@ -1674,13 +1296,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       viewSwitch.render(state.mode, state.view, moonEphemeris !== null, state.focus);
     }
     if (state.years !== previous?.years || barYear(state) !== barYear(previous)) {
-      loadYear(state);
+      eclipses.loadYear(state);
     }
     records.render(state);
     if (redraws(SELECTION, state, previous)) {
-      renderSelection(state);
+      eclipses.renderSelection(state);
     } else if (previous !== null && state.time !== previous.time) {
-      renderMoment(state);
+      eclipses.renderMoment(state);
     }
     sync.update(state);
   }
@@ -1745,7 +1367,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     const location = { latitude: round(place.latitude, 4), longitude: round(place.longitude, 4) };
     // During a solar eclipse, show the moment it is deepest at the place picked.
-    const selected = selectedEclipse(store.get());
+    const selected = eclipses.selected(store.get());
     store.set((state) => ({
       ...state,
       location,

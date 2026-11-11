@@ -71,6 +71,8 @@ export default defineConfig({
         'src/features/empires/index.ts',
         'src/features/deepTime/index.ts',
         'src/features/years/index.ts',
+        'src/features/eclipses/index.ts',
+        'src/features/eclipses/seen.ts',
         'src/story/sunCore.ts',
         'src/story/airShower.ts',
         'src/story/leafScene.ts',
