@@ -17,6 +17,7 @@ import type { GeoPoint } from '../state/viewState';
 import { formatDate, formatDuration, formatTimeOfDay } from '../time/format';
 import { element } from './dom';
 import { createMoonView } from './moonView';
+import './eclipseCard.css';
 
 export interface EclipseCard {
   readonly root: HTMLElement;

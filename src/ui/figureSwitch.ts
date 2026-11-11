@@ -2,6 +2,7 @@
 
 import { FIGURES, type Figures } from '../state/viewState';
 import { element } from './dom';
+import './switches.css';
 
 export interface FigureSwitch {
   readonly root: HTMLElement;

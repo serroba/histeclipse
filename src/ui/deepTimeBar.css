@@ -1,0 +1,355 @@
+/* The bottom bar in deep time: its slider, ticks, layer controls, notes, keys and facts. */
+
+.deep-details {
+  min-height: 0;
+}
+
+/* The details scroll inside the bar, which never grows past part of the screen: with several
+   layers' notes open they once took most of it, and the globe went off the top (#163). */
+.deep-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: clamp(120px, 25vh, 260px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* A grip along the bar's top edge: tap it, or swipe the bar, to fold or open the details. */
+.deep-handle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 32px;
+  margin: -8px 0 -8px;
+  border: none;
+  background: transparent;
+  cursor: grab;
+  /* The handle's own drags move the sheet, not the page. */
+  touch-action: none;
+}
+
+.deep-handle-grip {
+  width: 44px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.35);
+}
+
+@media (max-width: 600px) {
+  .deep-details {
+    max-height: 34vh;
+  }
+}
+
+.deep-controls {
+  display: flex;
+  /* With sea level shown the track is taller; the buttons stay level with the slider. */
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.deep-track {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.deep-slider {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  accent-color: #7fcf9a;
+  cursor: pointer;
+}
+
+/* Milestone ticks under the slider's track, inset by about the thumb's radius. */
+.deep-marks {
+  position: absolute;
+  right: 9px;
+  bottom: 6px;
+  left: 9px;
+  height: 7px;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .deep-label .deep-when {
+    display: none;
+  }
+}
+
+.deep-mark {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  border-radius: 1px;
+  background: var(--mark, #c9d4e6);
+  transform: translateX(-1px);
+}
+
+.deep-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0;
+  padding: 0 8px;
+  font-size: 14px;
+}
+
+.deep-period {
+  color: var(--ink-muted);
+}
+
+/* Small beside the date: the speed is chosen now and then, the slider used all the time. */
+.deep-label .deep-speed {
+  min-height: 36px;
+  padding: 0 4px;
+  font-size: 12px;
+}
+
+.humans-note ul {
+  margin: 0 0 6px;
+  padding-left: 18px;
+}
+
+.humans-note li.is-later {
+  opacity: 0.7;
+}
+
+.humans-question {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.plates-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  background: #ff6bd6;
+  vertical-align: middle;
+}
+
+.deep-coast {
+  min-height: 32px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgb(10 16 32 / 0.9);
+  color: var(--ink);
+  font: inherit;
+}
+
+.temperature-legend {
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.temperature-legend[hidden] {
+  display: none;
+}
+
+.temperature-legend p {
+  margin: 4px 0 0;
+  color: var(--ink-muted);
+}
+
+.temperature-legend .temperature-heading {
+  margin: 0 0 4px;
+  color: var(--ink);
+}
+
+.temperature-scale {
+  display: block;
+  height: 10px;
+  border-radius: 4px;
+}
+
+/* °C under the scale, each centred on its place; the ends kept inside the bar. */
+.temperature-ticks {
+  position: relative;
+  height: 16px;
+  margin: 2px 0 4px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.temperature-ticks span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.temperature-ticks span:first-child {
+  transform: none;
+}
+
+.temperature-ticks span:last-child {
+  transform: translateX(-100%);
+}
+
+/* The colours named, in columns where there is room. */
+.colour-key.temperature-key {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  margin: 0 0 4px;
+  font-size: 12px;
+}
+
+.temperature-note {
+  font-style: italic;
+}
+
+.deep-facts {
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.deep-facts summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+/* Open, the facts scroll inside the bar rather than pushing it over the globe. */
+.deep-facts-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 12px;
+  max-height: 30vh;
+  margin: 0 0 6px;
+  overflow-y: auto;
+  line-height: 1.4;
+}
+
+.deep-facts-list dt {
+  font-weight: 600;
+}
+
+.deep-facts-list dd {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+@media (max-width: 600px) {
+  .deep-facts-list {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .deep-facts-list dd {
+    margin-bottom: 6px;
+  }
+}
+
+/* Folded panels in the deep-time bar show an arrow that turns as they open. */
+.deep-facts summary {
+  list-style: none;
+}
+
+.deep-facts summary::-webkit-details-marker {
+  display: none;
+}
+
+.deep-facts summary::before {
+  margin-right: 6px;
+  font-size: 11px;
+  transition: transform 0.15s;
+  content: '▶';
+}
+
+.deep-facts[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.colour-key {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 4px 12px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-muted);
+  line-height: 1.35;
+}
+
+.colour-key li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.colour-swatch {
+  flex: none;
+  width: 28px;
+  height: 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 3px;
+}
+
+.colour-tick {
+  flex: none;
+  width: 3px;
+  height: 12px;
+  margin: 0 12px 0 13px;
+  border-radius: 1px;
+  background: var(--mark, #c9d4e6);
+}
+
+.colour-key-heading {
+  margin: 4px 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.deep-folds {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 8px;
+}
+
+.deep-folds > details {
+  flex: 1 1 auto;
+}
+
+/* Open, a fold takes the whole row. */
+.deep-folds > details[open] {
+  flex-basis: 100%;
+}
+
+/* Open, the key scrolls inside the bar rather than covering the globe. */
+.colour-key-body {
+  max-height: 22vh;
+  overflow-y: auto;
+}
+
+/* The deep bar's "How do we know?": the book and the question, among the chips. */
+.deep-evidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.deep-evidence[hidden] {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  /* The chips packed from the start, so as many as fit share a line. */
+  .deep-label {
+    justify-content: flex-start;
+    gap: 6px;
+  }
+
+  .deep-label .deep-layer {
+    margin-left: 0;
+  }
+}
+
+/* The milestones' ticks stay on the chapters' row, above the strip (20 px and its margin). */
+.deep-track:has(> .polarity-strip) > .deep-marks {
+  bottom: 29px;
+}

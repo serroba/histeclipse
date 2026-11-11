@@ -17,6 +17,7 @@ import {
 import { errorMessage } from '../../util/errors';
 import { RESTING, type Feature } from '../feature';
 import { volcanoLayer } from './volcanoLayer';
+import './volcanoes.css';
 
 export const volcanoesFeature: Feature = {
   id: 'volcanoes',

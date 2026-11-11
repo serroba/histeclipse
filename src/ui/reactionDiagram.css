@@ -1,0 +1,34 @@
+/* The chemistry of the shower, drawn on its stage (#282, #382: CSS beside the code it
+   styles). */
+
+.reaction-diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 140px;
+}
+
+.reaction-name {
+  fill: #0b1020;
+  font-size: 15px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.reaction-detail,
+.reaction-note {
+  fill: var(--ink-muted);
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+.reaction-note {
+  fill: var(--ink);
+  font-size: 13px;
+}
+
+.reaction-sign {
+  fill: var(--ink);
+  font-size: 26px;
+  text-anchor: middle;
+}

@@ -8,6 +8,7 @@
  */
 
 import { element } from './dom';
+import './bodyBar.css';
 
 export interface BodyView {
   readonly name: string;

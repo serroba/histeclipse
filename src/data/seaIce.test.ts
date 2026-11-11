@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import index from '../../public/data/seaice/index.json';
 import type { Fetch } from './fetchJson';
-import { loadSeaIce, SEA_ICE_MODELS, seaIceMix, seaIcePair } from './seaIce';
+import { loadSeaIce, SEA_ICE_MODELS, seaIceMix, seaIcePair, seaIceSeason } from './seaIce';
 
 const serve =
   (body: unknown): Fetch =>
@@ -36,5 +36,30 @@ describe('sea ice', () => {
     expect(seaIceMix(-130, -120)).toBe(1);
     expect(seaIceMix(5, -120)).toBe(0);
     expect(seaIceMix(-10, 0)).toBe(0);
+  });
+});
+
+describe('the time of year for sea ice', () => {
+  // Julian days at noon UT.
+  const MID_MARCH_2026 = 2_461_116; // 16 March 2026
+  const MID_SEPTEMBER_2026 = 2_461_299; // 15 September 2026
+  const NOVEMBER_384 = 1_861_629; // 11 November 384, Julian calendar
+
+  it('is the north’s March ice in March and its September ice in September', () => {
+    expect(seaIceSeason(MID_MARCH_2026)).toBeGreaterThan(0.99);
+    expect(seaIceSeason(MID_SEPTEMBER_2026)).toBeLessThan(0.01);
+  });
+
+  it('has the north’s ice growing again by November', () => {
+    const season = seaIceSeason(NOVEMBER_384);
+    expect(season).toBeGreaterThan(0.15);
+    expect(season).toBeLessThan(0.35);
+  });
+
+  it('keeps to the seasons, not to the Julian calendar’s longer year', () => {
+    // 5,000 Julian years later the calendar has drifted about 39 days from the seasons.
+    const julianYears = 5000 * 365.25;
+    expect(seaIceSeason(MID_MARCH_2026 - julianYears)).toBeLessThan(0.9);
+    expect(seaIceSeason(MID_MARCH_2026 - 5000 * 365.242_19)).toBeGreaterThan(0.99);
   });
 });

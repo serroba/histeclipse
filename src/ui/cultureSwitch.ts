@@ -2,6 +2,8 @@
 
 import { CULTURE_INFO, SKY_CULTURES, type SkyCulture } from '../data/skyCultures';
 import { element } from './dom';
+import './switches.css';
+import './cultureSwitch.css';
 
 export interface CultureSwitch {
   readonly root: HTMLElement;

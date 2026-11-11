@@ -1,0 +1,189 @@
+/* The chart's units under the slider, inset like its thumb so each band sits under its time. */
+/* The bands, their chapter lines and bracket, the reading under the pointer, and the span's
+   two ends: one axis under each time slider. --rise is how far the lines reach up to the
+   slider's line. */
+.period-axis {
+  --rise: 24px;
+  position: relative;
+}
+
+.period-bands {
+  position: relative;
+  height: 22px;
+  margin: 2px 9px 0;
+}
+
+.period-overlay {
+  position: absolute;
+  top: 2px;
+  right: 9px;
+  left: 9px;
+  height: 22px;
+  pointer-events: none;
+}
+
+.period-tick {
+  position: absolute;
+  bottom: 100%;
+  width: 1px;
+  height: var(--rise);
+  background: rgb(255 255 255 / 0.28);
+  transform: translateX(-0.5px);
+}
+
+/* The chapter shown, bracketed over its whole length, so its span reads at a glance. */
+.period-bracket {
+  position: absolute;
+  bottom: calc(100% + 3px);
+  height: 6px;
+  border: 1.5px solid var(--ink);
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+  opacity: 0.75;
+  transition:
+    left 0.25s ease,
+    width 0.25s ease;
+}
+
+.period-bracket[hidden],
+.period-reading[hidden] {
+  display: none;
+}
+
+/* The moment under the pointer, on a hairline, above the slider. */
+.period-reading {
+  position: absolute;
+  bottom: calc(100% + var(--rise) + 10px);
+  z-index: 2;
+  padding: 3px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 12px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  backdrop-filter: blur(14px);
+}
+
+.period-reading::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 1px;
+  height: calc(var(--rise) + 10px);
+  background: rgb(255 255 255 / 0.5);
+}
+
+/* The span's ends, just above the slider's line at each end: in the slider's own height, so
+   the bar is no taller for them. */
+/* Round marks between the ends, above the line, each with its value. */
+.period-round {
+  position: absolute;
+  bottom: calc(100% + var(--rise) - 3px);
+  width: 1px;
+  height: 6px;
+  background: rgb(255 255 255 / 0.4);
+}
+
+.period-round-label {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+/* While playing: the chapter over the thumb, its name and length, where the marks' values
+   were, within the slider's own height. */
+.period-chapter {
+  position: absolute;
+  bottom: calc(100% + var(--rise) + 3px);
+  z-index: 1;
+  padding: 0 6px;
+  border-radius: 7px;
+  background: #1b2236;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.period-chapter[hidden] {
+  display: none;
+}
+
+.period-axis.is-playing .period-round-label {
+  visibility: hidden;
+}
+
+/* On a phone the marks stay, their values go: there is no room for them between the ends. The
+   chapter lines are short stubs over the bands, not lines across the track, and the bar's date
+   line keeps the chapter only: the top panel already says when. */
+@media (max-width: 600px) {
+  .period-round-label {
+    display: none;
+  }
+
+  .period-tick {
+    height: 7px;
+    background: rgb(255 255 255 / 0.2);
+  }
+}
+
+.period-scale {
+  position: absolute;
+  right: 9px;
+  bottom: calc(100% + var(--rise) + 5px);
+  left: 9px;
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* A label the thumb is over steps aside, and comes back as the thumb moves on. */
+.period-scale > .is-covered,
+.period-round.is-covered .period-round-label {
+  opacity: 0;
+}
+
+.period-scale > span,
+.period-round-label {
+  transition: opacity 0.15s;
+}
+
+.period-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+  padding: 0 2px;
+  border: none;
+  border-right: 1px solid rgb(0 0 0 / 0.35);
+  color: rgb(0 0 0 / 0.8);
+  font: inherit;
+  font-size: 11px;
+  line-height: 22px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+.period-band[aria-current='true'] {
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
+  opacity: 1;
+  z-index: 1;
+}

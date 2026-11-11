@@ -38,8 +38,8 @@ export interface Dispersal {
 
 export function createDispersal(context: FeatureContext): Dispersal {
   let index: Promise<DispersalIndex> | null = null;
-  const grids = new Map<string, ArrivalGrid>();
-  const names = new Map<string, string>();
+  /** Each scenario loaded: its arrival times and its name. */
+  const grids = new Map<string, { readonly grid: ArrivalGrid; readonly name: string }>();
   const loading = new Set<string>();
 
   function load(scenario: DispersalScenario): void {
@@ -50,11 +50,11 @@ export function createDispersal(context: FeatureContext): Dispersal {
       .then(async (loaded) => {
         const entry = loaded.scenarios.find((each) => each.id === scenario);
         if (entry === undefined) throw new Error(`no scenario ${scenario}`);
-        names.set(scenario, entry.name);
-        grids.set(
-          scenario,
-          await loadArrivalGrid(`${context.base}data/dispersal/${entry.file}`, context.fetchJson),
+        const grid = await loadArrivalGrid(
+          `${context.base}data/dispersal/${entry.file}`,
+          context.fetchJson,
         );
+        grids.set(scenario, { grid, name: entry.name });
         context.refresh();
       })
       .catch((error: unknown) => {
@@ -67,15 +67,15 @@ export function createDispersal(context: FeatureContext): Dispersal {
 
   return {
     show(scenario, ma) {
-      const grid = scenario === null || scenario === 'off' ? undefined : grids.get(scenario);
-      if (scenario === null || scenario === 'off' || grid === undefined) {
+      const loaded = scenario === null || scenario === 'off' ? undefined : grids.get(scenario);
+      if (scenario === null || scenario === 'off' || loaded === undefined) {
         context.globe.setSettled(null);
         if (scenario !== null && scenario !== 'off') load(scenario);
         return { scenario: scenario ?? 'off', name: null, share: null };
       }
       const ka = ma * 1000;
-      context.globe.setSettled({ scenario, grid, ka });
-      return { scenario, name: names.get(scenario) ?? null, share: settledShare(grid, ka) };
+      context.globe.setSettled({ scenario, grid: loaded.grid, ka });
+      return { scenario, name: loaded.name, share: settledShare(loaded.grid, ka) };
     },
   };
 }

@@ -87,7 +87,6 @@ import {
   attachedPose,
   earthFromPose,
   blendPose,
-  EARTH_RADIUS_KM,
   hiddenBehind,
   mergeMarkers,
   MOON_RADIUS_EARTH_RADII,
@@ -102,11 +101,10 @@ import {
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { SOLAR_NORTH_POLE_J2000 } from './sunImage';
 import { labelPoint, namedByBoth, type Territory } from '../data/empires';
-import { largeEnough, type NamedBody, type PlaceName } from '../data/planetNames';
+import type { NamedBody } from '../data/planetNames';
 import { MOONS, type MoonName, type MoonOrbits } from '../astro/moonOrbits';
-import { elementAt } from '../util/arrays';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
-import { PLANET_NAMES, planetRadius, polarRatio } from './planetLook';
+import { PLANET_NAMES, planetRadius } from './planetLook';
 import { isMoonBody, MOON_NAMES, moonPlanet } from './moonLook';
 import {
   SURFACE_PRIORITY,
@@ -141,6 +139,7 @@ import {
   SOLAR_PATH_LAYER,
   SOLAR_SHADOW,
 } from './solarShaders';
+import { SEA_ICE } from './seaIceShader';
 
 /** How far out the place pin floats, in Earth radii, so it shows above the ground. */
 const PIN_HEIGHT = 1.004;
@@ -304,6 +303,8 @@ export interface SeaIceSurface {
   readonly mix: number;
   readonly columns: number;
   readonly rows: number;
+  /** In the years, the time of year (see `SEA_ICE`); null on the ice-age scale. */
+  readonly season: number | null;
 }
 
 /** A second reconstruction's continents: two masks either side of the moment, blended. */
@@ -418,11 +419,6 @@ export interface Globe {
   ): void;
   /** Shade regions by their most widespread way of life, under any states; null hides them. */
   setWays(regions: readonly WayRegion[] | null): void;
-  /**
-   * Name a rocky body's largest features on its globe (#334), largest first, as many as fit and
-   * more as the view zooms in; null takes the names away.
-   */
-  setPlaceNames(body: NamedBody, names: readonly PlaceName[] | null): void;
   /** Set Mars's, Jupiter's and Saturn's moons going round them (#335); null takes them away. */
   setMoonOrbits(orbits: MoonOrbits | null): void;
   /** Wrap a moon in a mission's map, fetched once: the latest asked for each moon wins. */
@@ -535,13 +531,6 @@ export const EARTH_FRAGMENT = /* glsl */ `
   uniform vec2 shelfGrid;
   uniform vec2 shelfRange;
   uniform float seaLevel;
-  uniform sampler2D seaIceTodayMost;
-  uniform sampler2D seaIceTodayYearRound;
-  uniform sampler2D seaIcePastMost;
-  uniform sampler2D seaIcePastYearRound;
-  uniform float seaIceMix;
-  uniform float seaIceActive;
-  uniform vec2 seaIceGrid;
   uniform sampler2D iceYounger;
   uniform sampler2D iceOlder;
   uniform float iceMix;
@@ -615,6 +604,7 @@ export const EARTH_FRAGMENT = /* glsl */ `
   }
 
   vec3 srgb(vec3 c) { return pow(c, vec3(2.2)); }
+  ${SEA_ICE}
 
   const float PI = 3.141592653589793;
   const float EARTH_RADIUS_M = 6371000.0;
@@ -780,16 +770,7 @@ export const EARTH_FRAGMENT = /* glsl */ `
       float shore = 1.0 - smoothstep(blur, 3.0 * blur, abs(coast));
       color = temperatureColour(paleoTemperature(uv)) * (1.0 - 0.3 * sea) * (1.0 - 0.55 * shore);
     }
-    if (seaIceActive > 0.5) {
-      // Sea ice over the sea only: solid white where it lasts all year, a fainter white where
-      // it forms only in winter. Bytes hold 0.4% steps (250 is full cover).
-      vec2 at = (uv * (seaIceGrid - 1.0) + 0.5) / seaIceGrid;
-      float most = mix(texture2D(seaIceTodayMost, at).r, texture2D(seaIcePastMost, at).r, seaIceMix) * 255.0 / 250.0;
-      float lasting = mix(texture2D(seaIceTodayYearRound, at).r, texture2D(seaIcePastYearRound, at).r, seaIceMix) * 255.0 / 250.0;
-      float sea = 1.0 - smoothstep(-blur, blur, coast);
-      float cover = max(0.45 * smoothstep(0.15, 0.4, most), 0.92 * smoothstep(0.15, 0.4, lasting));
-      color = mix(color, srgb(vec3(0.92, 0.95, 0.99)), sea * cover);
-    }
+    color = seaIceOver(color, uv, 1.0 - smoothstep(-blur, blur, coast));
     if (iceActive > 0.5) {
       // Ice sheets: white, a little blue where thin; the edge blends over about a pixel.
       float thickness = mix(iceFrom(iceYounger, uv), iceFrom(iceOlder, uv), iceMix);
@@ -806,6 +787,7 @@ export const EARTH_FRAGMENT = /* glsl */ `
   // the sand tint the ice ages use) and the ice sheets that still lay on the land.
   vec3 holoceneSurface(vec2 uv) {
     vec3 color = texture2D(dayMap, uv).rgb;
+    float sea = 1.0;
     if (shelfActive > 0.5) {
       vec2 at = (uv * (shelfGrid - 1.0) + 0.5) / shelfGrid;
       float shelf = mix(shelfRange.x, shelfRange.y, texture2D(shelfMap, at).r);
@@ -814,7 +796,10 @@ export const EARTH_FRAGMENT = /* glsl */ `
       float blur = max(fwidth(coast), 1.0);
       float bared = smoothstep(-blur, blur, coast) * (1.0 - smoothstep(-blur, blur, shelf));
       color = mix(color, srgb(vec3(0.72, 0.68, 0.46)), bared);
+      sea = 1.0 - smoothstep(-blur, blur, coast);
     }
+    // The sea-ice maps are empty over today's land; the shelf, where loaded, masks the bared.
+    color = seaIceOver(color, uv, sea);
     if (iceActive > 0.5) {
       float thickness = mix(iceFrom(iceYounger, uv), iceFrom(iceOlder, uv), iceMix);
       float iceBlur = max(fwidth(thickness), 1.0);
@@ -1161,6 +1146,7 @@ export function createGlobe(
         seaIcePastYearRound: { value: null as Texture | null },
         seaIceMix: { value: 0 },
         seaIceActive: { value: 0 },
+        seaIceSeason: { value: -1 },
         seaIceGrid: { value: new Vector2(361, 181) },
         iceYounger: { value: null as Texture | null },
         iceOlder: { value: null as Texture | null },
@@ -1560,12 +1546,6 @@ export function createGlobe(
     empiresTexture.needsUpdate = true;
     uniforms['overlayMap'] = { value: empiresTexture };
   }
-  // The IAU's names on the rocky body in view (#334), turning with it. Each label's position is
-  // on the body, in its own axes; where it is in the scene is worked out each frame.
-  const placeNameLayer = document.createElement('div');
-  placeNameLayer.className = 'empire-labels place-names';
-  placeNameLayer.dataset['testid'] = 'place-names';
-  container.append(placeNameLayer);
   // The names of the moons of the planet in view (#335), each beside its moon.
   const moonNameLayer = document.createElement('div');
   moonNameLayer.className = 'empire-labels moon-names';
@@ -1587,10 +1567,6 @@ export function createGlobe(
       moonNameLayer.append(element);
       return { name, element, width: 0, height: 0 };
     });
-  let placeNames: {
-    readonly body: NamedBody;
-    readonly labels: (GlobeLabel & { km: number })[];
-  } | null = null;
   const markerPickListeners = new Set<(key: string) => void>();
   // The layers added (#379), and what they lay out after each frame: declared before the first.
   const afterRenders: (() => void)[] = [];
@@ -2119,7 +2095,6 @@ export function createGlobe(
       placeMarkers();
       for (const object of hidden) object.visible = true;
       placeEmpireLabels();
-      placePlaceNames();
       placeMoonNames();
       for (const place of afterRenders) place();
       if (earthMapped) container.dataset['rendered'] = 'true';
@@ -2310,73 +2285,6 @@ export function createGlobe(
     moonNameLayer.dataset['shown'] = String(count);
   }
 
-  const toEye = new Vector3();
-  const outward = new Vector3();
-  const toLight = new Vector3();
-  function placePlaceNames(): void {
-    if (placeNames === null) return;
-    const { body, labels } = placeNames;
-    const { position, rotation, radius, shown } = namedFrame(body);
-    const viewWidth = container.clientWidth;
-    const viewHeight = container.clientHeight;
-    const radiusPixels = apparentRadiusPixels({
-      radius,
-      distance: camera.position.distanceTo(position),
-      verticalFovDegrees: camera.fov,
-      viewportHeight: viewHeight,
-    });
-    // Only on the body in view, and only once it is more than a dot.
-    const near = shown && focus === body && radiusPixels > 60;
-    placeNameLayer.dataset['body'] = body;
-    toLight.copy(sun.position).sub(position).normalize();
-    const placed: { x: number; y: number; w: number; h: number }[] = [];
-    let count = 0;
-    // Largest first: a smaller feature's name gives way where it would come near another.
-    for (const label of labels) {
-      const { element, width, height } = label;
-      outward.copy(label.position).applyQuaternion(rotation);
-      projected.copy(outward).add(position);
-      toEye.copy(camera.position).sub(projected).normalize();
-      const facing = outward.normalize().dot(toEye);
-      // Named only where the Sun is up: on the night side there is nothing to see.
-      const lit = outward.dot(toLight) > 0;
-      projected.project(camera);
-      const x = ((projected.x + 1) / 2) * viewWidth;
-      const y = ((1 - projected.y) / 2) * viewHeight;
-      // Kept half a line apart, so the names read as a map's, not a crowd.
-      const box = {
-        x: x - width / 2 - height / 4,
-        y: y - (3 * height) / 4,
-        w: width + height / 2,
-        h: (3 * height) / 2,
-      };
-      const visible =
-        near &&
-        lit &&
-        facing > 0.3 &&
-        // Whole names only: none cut by the edge of the view.
-        x - width / 2 >= 0 &&
-        x + width / 2 <= viewWidth &&
-        y - height / 2 >= 0 &&
-        y + height / 2 <= viewHeight &&
-        projected.z < 1 &&
-        largeEnough(label.km, radius * EARTH_RADIUS_KM, radiusPixels) &&
-        placed.every(
-          (other) =>
-            box.x > other.x + other.w ||
-            other.x > box.x + box.w ||
-            box.y > other.y + other.h ||
-            other.y > box.y + box.h,
-        );
-      element.hidden = !visible;
-      if (!visible) continue;
-      placed.push(box);
-      count += 1;
-      element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(-50%, -50%)`;
-    }
-    placeNameLayer.dataset['shown'] = String(count);
-  }
-
   const projected = new Vector3();
   function placeMarkers(): void {
     const width = container.clientWidth;
@@ -2461,7 +2369,11 @@ export function createGlobe(
   // What layers get (#379): the scene, the container and a few services.
   const host: LayerHost = {
     scene,
+    camera,
     container,
+    focus: () => focus,
+    bodyFrame: namedFrame,
+    sunPosition: () => sun.position,
     spaceToScene() {
       if (earthFixedToJ2000 === null) return null;
       const toScene = transpose(earthFixedToJ2000);
@@ -2969,9 +2881,11 @@ export function createGlobe(
           uniforms['seaIcePastMost'] = { value: pastMost };
           uniforms['seaIcePastYearRound'] = { value: pastYearRound };
           uniforms['seaIceMix'] = { value: surface.mix };
+          uniforms['seaIceSeason'] = { value: surface.season ?? -1 };
           uniforms['seaIceGrid'] = { value: new Vector2(surface.columns, surface.rows) };
           uniforms['seaIceActive'] = { value: 1 };
-          container.dataset['seaIce'] = `${surface.pastMost} ${surface.mix.toFixed(2)}`;
+          const season = surface.season === null ? 'ice-age' : surface.season.toFixed(2);
+          container.dataset['seaIce'] = `${season} ${surface.pastMost} ${surface.mix.toFixed(2)}`;
           needsRender = true;
         },
         () => {
@@ -3095,39 +3009,6 @@ export function createGlobe(
           element.style.visibility = '';
         }
       }
-      needsRender = true;
-    },
-    setPlaceNames(body, names) {
-      if (names === null) {
-        if (placeNames?.body !== body) return;
-        placeNames = null;
-        placeNameLayer.replaceChildren();
-        delete placeNameLayer.dataset['body'];
-        delete placeNameLayer.dataset['shown'];
-        return;
-      }
-      if (placeNames?.body === body) return;
-      placeNameLayer.replaceChildren();
-      const radius = body === 'moon' ? MOON_RADIUS_EARTH_RADII : planetRadius(body);
-      const squash = body === 'moon' ? 1 : polarRatio(body);
-      const labels = measured(
-        placeNameLayer,
-        names.map(({ name, point }) => {
-          const element = document.createElement('span');
-          element.className = 'empire-label place-name';
-          element.textContent = name;
-          return { element, point };
-        }),
-      );
-      placeNames = {
-        body,
-        labels: labels.map((label, index) => {
-          const { point, km } = elementAt(names, index);
-          const [x, y, z] = geoToVector(point, radius);
-          label.position.set(x, y * squash, z);
-          return { ...label, km };
-        }),
-      };
       needsRender = true;
     },
     onMarkerPick(listener) {

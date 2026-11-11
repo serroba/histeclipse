@@ -5,6 +5,7 @@
  */
 
 import { element } from './dom';
+import './welcome.css';
 
 const KEY = 'histeclipse.welcomed';
 

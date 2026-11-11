@@ -5,6 +5,7 @@
  */
 
 import type { MoonInShadow } from '../eclipses/moonInShadow';
+import './moonView.css';
 
 const SVG = 'http://www.w3.org/2000/svg';
 /** Earth radii from the shadow's axis to the edge of the picture. */

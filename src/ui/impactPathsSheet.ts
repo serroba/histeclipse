@@ -3,11 +3,10 @@
  * from above, with each crater's track drawn like a ship's route from where it struck to where it
  * lies today. Picking a crater makes its track bold and sends a dot along it, strike to today,
  * with the date it has reached. Behind a switch, the same tracks in a 3D box with time as depth,
- * today on top, and a plane at the slider's moment.
- *
- * phoria2 draws both, loaded only when the sheet first opens; each view is built the first time it
- * is shown. DOM and WebGL glue, covered by the Playwright suite; the paths are in
- * `data/impactPaths.ts`, the dot's places from `placeThen`, as the globe draws them.
+ * today on top, and a plane at the slider's moment. phoria2 draws both, loaded only when the
+ * sheet first opens; each view is built the first time it is shown. DOM and WebGL glue, covered
+ * by the Playwright suite; the paths are in `data/impactPaths.ts`, the dot's places from
+ * `placeThen`, as the globe draws them.
  */
 
 import type * as Phoria2 from 'phoria2';
@@ -26,6 +25,7 @@ import type { CratersShape, CratersView } from '../state/viewState';
 import { errorMessage } from '../util/errors';
 import type { Ring } from '../util/polygons';
 import { element } from './dom';
+import './stageSheet.css';
 
 export interface ImpactPathsSheet {
   readonly dialog: HTMLDialogElement;

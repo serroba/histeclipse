@@ -26,7 +26,14 @@ const on: ViewState = {
 const ICE = { ma: 0.06, scale: 'ice' } as const;
 
 /** A context that records what the feature asks of the app (#380): no globe, no page. */
-function fakeContext(options: { readonly failing?: boolean } = {}) {
+function fakeContext(
+  options: {
+    readonly failing?: boolean;
+    readonly missing?: string;
+    readonly files?: Record<string, unknown>;
+    readonly cardOpen?: boolean;
+  } = {},
+) {
   const drawn: unknown[] = [];
   const settled: unknown[] = [];
   const cards: MarkerCardContent[] = [];
@@ -38,11 +45,12 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
     'claims.json': claims,
     'pictures.json': pictures,
     'index.json': index,
+    ...options.files,
   };
   const context = {
     base: '/',
     fetchJson: (url: string) =>
-      options.failing === true
+      options.failing === true || (options.missing !== undefined && url.endsWith(options.missing))
         ? Promise.reject(new Error('offline'))
         : Promise.resolve(new Response(JSON.stringify(files[url.split('/').at(-1) ?? '']))),
     globe: {
@@ -51,7 +59,7 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
     },
     notify,
     showCard: (card: MarkerCardContent) => cards.push(card),
-    cardOpen: () => true,
+    cardOpen: () => options.cardOpen ?? true,
     openTree,
     change,
     refresh,
@@ -160,6 +168,86 @@ describe('the humans as a feature', () => {
     expect(openTree).toHaveBeenCalledTimes(1);
     shown.pick?.('no-such-find');
     expect(cards).toHaveLength(2);
+  });
+
+  it('says so when the pictures cannot be loaded, and opens no card for a find let go', async () => {
+    const { context, cards, refresh, notify } = fakeContext({ missing: 'pictures.json' });
+    const shown = await loaded(context, refresh);
+    const id = claims.claims[0]?.id;
+    if (id === undefined) throw new Error('no find');
+    shown.pick?.(id);
+    shown.unpick?.();
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledWith('Could not load the finds’ pictures: offline');
+    });
+    expect(cards).toHaveLength(1);
+  });
+
+  it('says so when the dispersal model cannot be loaded', async () => {
+    const { context, refresh, notify } = fakeContext({ missing: 'index.json' });
+    const shown = await loaded(context, refresh);
+    shown.deep?.({ ...on, dispersal: 'b' }, ICE);
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledWith('Could not load the dispersal model: offline');
+    });
+    expect(humansFeature.watches(on)).toEqual([]);
+  });
+
+  it('loads once though asked again while loading, and opens no card before', async () => {
+    const { context, cards, refresh } = fakeContext();
+    const shown = humansFeature.mount(context);
+    shown.deep?.({ ...on, dispersal: 'a' }, ICE);
+    shown.deep?.({ ...on, dispersal: 'a' }, ICE);
+    shown.pick?.(claims.claims[0]?.id ?? '');
+    expect(cards).toHaveLength(0);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('lists the claims with no question, at a moment that has them', async () => {
+    const { context, refresh } = fakeContext();
+    const shown = await loaded(context, refresh);
+    const moments = [0.001, 0.01, 0.03, 0.045, 0.06, 0.1, 0.2, 0.3, 0.5];
+    const lists = moments.map(
+      (ma) =>
+        (shown.deep?.({ ...on, ma }, { ma, scale: 'ice' })?.note ?? []).filter(
+          (block) => typeof block !== 'string' && 'list' in block,
+        ).length,
+    );
+    expect(Math.max(...lists)).toBeGreaterThan(0);
+  });
+
+  it('opens no card for a find let go when its picture comes, and the next card has it', async () => {
+    const { context, cards, refresh } = fakeContext();
+    const shown = await loaded(context, refresh);
+    const id = claims.claims[0]?.id ?? '';
+    shown.pick?.(id);
+    shown.unpick?.();
+    // The pictures are in: the next card has them at once.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(cards).toHaveLength(1);
+    shown.pick?.(id);
+    expect(cards).toHaveLength(2);
+  });
+
+  it('opens no card again when the reader closed it before the picture came', async () => {
+    const { context, cards, refresh } = fakeContext({ cardOpen: false });
+    const shown = await loaded(context, refresh);
+    shown.pick?.(claims.claims[0]?.id ?? '');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(cards).toHaveLength(1);
+  });
+
+  it('says so when the model has no such scenario', async () => {
+    const { context, refresh, notify } = fakeContext({
+      files: { 'index.json': { ...index, scenarios: [] } },
+    });
+    const shown = await loaded(context, refresh);
+    shown.deep?.({ ...on, dispersal: 'a' }, ICE);
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledWith('Could not load the dispersal model: no scenario a');
+    });
   });
 
   it('says so when the finds cannot be loaded', async () => {

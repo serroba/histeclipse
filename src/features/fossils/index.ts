@@ -19,6 +19,7 @@ import type { MarkerCardContent } from '../../ui/markerCard';
 import { errorMessage } from '../../util/errors';
 import type { Feature } from '../feature';
 import { fossilLayer } from './fossilLayer';
+import './fossils.css';
 
 /** The note under the bar: a key for each group found, what was found, and the source. */
 function note(at: FossilsAt): DeepNotePart[] {

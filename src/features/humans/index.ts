@@ -95,21 +95,18 @@ export const humansFeature: Feature = {
 
     /** A find's card, with a way to its species' place on the tree of life. */
     function cardFor(id: string): MarkerCardContent | null {
-      if (claims === null) return null;
-      const card = claimCard(claims, id, pictures);
-      if (card === null) return null;
-      const species = claims.claims.find((each) => each.id === id)?.species;
-      return species === undefined
-        ? card
-        : {
-            ...card,
-            action: {
-              label: 'Its species on the tree of life',
-              run: () => {
-                context.openTree((tree) => tree.ours.humans[species]);
-              },
-            },
-          };
+      const species = claims?.claims.find((each) => each.id === id)?.species;
+      const card = claims === null ? null : claimCard(claims, id, pictures);
+      if (card === null || species === undefined) return null;
+      return {
+        ...card,
+        action: {
+          label: 'Its species on the tree of life',
+          run: () => {
+            context.openTree((tree) => tree.ours.humans[species]);
+          },
+        },
+      };
     }
 
     return {

@@ -19,6 +19,7 @@ import type { TreeView } from '../state/viewState';
 import { elementAt, valueAt } from '../util/arrays';
 import { errorMessage } from '../util/errors';
 import { element } from './dom';
+import './stageSheet.css';
 
 export interface TreeSheet {
   readonly dialog: HTMLDialogElement;

@@ -9,6 +9,7 @@
 
 import { celsiusText, legendGradient, scaleTicks, TEMPERATURE_STOPS } from './deepTimeBar';
 import { element } from './dom';
+import './deepGlance.css';
 
 export interface DeepGlanceView {
   /** How long ago, in words, and the period. */

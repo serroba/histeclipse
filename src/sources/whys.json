@@ -2,8 +2,8 @@
   "earth": {
     "title": "Earth today",
     "what": "The planet as satellites see it now: land, sea and cloudless colour.",
-    "sources": ["blueMarble"],
-    "how": "Today’s imagery, whatever the date shown: the ancient Earth’s own colours are not known."
+    "sources": ["blueMarble", "nsidcSeaIce"],
+    "how": "Today’s imagery, whatever the date shown: the ancient Earth’s own colours are not known. The imagery shows no sea ice, so today’s (NSIDC, the 1981–2010 mean of March and of September) is laid over it, by the time of year: the north’s ice widest in March and least in September, the south’s the other way round. The time of year is counted in tropical years, so a Julian date long drifted from the seasons still gets its own season. Travelling the years, it is blended towards the ice age’s by how far the sea had fallen. A stand-in for any past year: two maps a year can only sketch the season, and 1981–2010 is neither the Little Ice Age nor today."
   },
   "moons": {
     "title": "The planets’ moons",
@@ -296,7 +296,7 @@
   "ice-surface": {
     "title": "The ice ages’ Earth",
     "what": "Today’s land and sea floor, with the coast at the sea level of the moment and the ice sheets of the time.",
-    "sources": ["etopo1", "paleomist", "batchelor", "bintanja", "spratt"],
+    "sources": ["etopo1", "paleomist", "batchelor", "bintanja", "spratt", "nsidcSeaIce"],
     "how": "Sea level from the reconstruction picked, laid on today’s depths (not on the land as it was); ice from PaleoMIST every 2,500 years, with Batchelor et al.’s outlines at their time slices.",
     "others": "Sea level by Bintanja & van de Wal or by Spratt & Lisiecki: pick whose to follow."
   },

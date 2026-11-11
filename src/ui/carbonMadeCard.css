@@ -1,0 +1,96 @@
+/* How carbon-14 is made, as a card (#382: CSS beside the code it styles). */
+
+.famous-dialog.carbon-made-dialog {
+  width: min(640px, calc(100% - 24px));
+  /* Opaque: the chart would read through a see-through sheet. */
+  background: rgb(10 16 32);
+}
+
+.famous-dialog.carbon-made-dialog > :not(header) {
+  margin-inline: 18px;
+}
+
+.carbon-made-pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 8px 0;
+}
+
+.carbon-made-picker {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 13px;
+}
+
+.carbon-made-picker legend {
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.carbon-made-choice {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.carbon-made-notes {
+  margin: 4px 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.carbon-made-chart {
+  /* Full width less the sheet's margins either side. */
+  width: calc(100% - 36px);
+  height: auto;
+}
+
+.carbon-made-grid {
+  stroke: rgb(255 255 255 / 0.1);
+  stroke-width: 1;
+}
+
+.carbon-made-line {
+  fill: none;
+  stroke: #b79cff;
+  stroke-width: 2;
+}
+
+.carbon-made-today {
+  fill: none;
+  stroke: var(--ink-muted);
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}
+
+.carbon-made-heading {
+  margin: 14px 0 4px;
+  font-size: 14px;
+}
+
+.carbon-made-path {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  font-size: 14px;
+}
+
+.carbon-made-path li + li {
+  margin-top: 4px;
+}
+
+.carbon-made-watch {
+  margin: 4px 0 8px;
+}
+
+.carbon-made-watches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}

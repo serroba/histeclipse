@@ -29,6 +29,7 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { impactLayer } from './globe/impactLayer';
+import { placeNameLayer } from './globe/placeNameLayer';
 import { geoToVector } from './globe/geo';
 import {
   PLANET_NAMES,
@@ -129,7 +130,7 @@ import { element } from './ui/dom';
 import { createEclipseCard } from './ui/eclipseCard';
 import type { BodyKey } from './ui/bodyBar';
 import { keyGradient, keyTicks, loadColourKeys } from './data/planetKeys';
-import { isNamedBody, loadPlaceNames, type NamedBody, type PlaceNames } from './data/planetNames';
+import { isNamedBody, loadPlaceNames, type PlaceNames } from './data/planetNames';
 import { loadMoonOrbits, moonPosition, type MoonName, type MoonOrbits } from './astro/moonOrbits';
 import { FEATURES } from './features';
 import { RESTING, type DeepMoment, type FeatureContext } from './features/feature';
@@ -146,7 +147,7 @@ import { cachedPassages, type Anchor, type Passage } from './text/passages';
 import { indexPassages } from './text/wordSearch';
 import { uiIcon } from './ui/icons';
 import { createWelcome } from './ui/welcome';
-import { loadSeaIce, type SeaIceIndex, seaIceMix, seaIcePair } from './data/seaIce';
+import { loadSeaIce, type SeaIceIndex, seaIceMaps, seaIceMix, seaIceSeason } from './data/seaIce';
 import { createMarkerCard } from './ui/markerCard';
 import { createTabletPanel } from './ui/tabletPanel';
 import { candidateYear, checkAll, type Verdict, verdictMoment } from './tablets/check';
@@ -1776,6 +1777,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     focus: store.get().focus,
   });
   // Drawn on the globe as layers of their own (#379).
+  const placeNamesOnGlobe = globe.addLayer(placeNameLayer);
   const impactsOnGlobe = globe.addLayer(impactLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureContext: FeatureContext = {
@@ -2885,6 +2887,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function showHoloceneEarth(state: ViewState): void {
     if (!travelling || state.mode !== 'globe') {
       holoceneSea = null;
+      showSeaIce(state, null);
       globe.setShelf(null);
       globe.setIce(null);
       return;
@@ -2894,6 +2897,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const shelf = shelves();
     const coastline = levels === null ? null : coastlineAt(levels, state.coast, ka);
     holoceneSea = coastline;
+    showSeaIce(state, null);
     globe.setShelf(
       coastline === null || shelf === null
         ? null
@@ -2962,13 +2966,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return { drawn: true, oldestKa, standIn: null };
   }
 
-  // Sea ice: its index loads the first time the ice-age scale is shown.
+  // Sea ice: its index loads the first time a globe of Earth is shown.
   let seaIceIndex: SeaIceIndex | null = null;
   let seaIceLoading: Promise<SeaIceIndex> | null = null;
 
-  /** On the ice-age scale, sea ice blended from today's towards the chosen model's. */
-  function showSeaIce(state: ViewState, ma: number): SeaIceView | null {
-    if (state.deepScale !== 'ice') {
+  /**
+   * Sea ice blended from today's towards the chosen model's: on the ice-age scale, and in the
+   * years (ma null) by the time of year, at the travelled year's sea level or else today's.
+   */
+  function showSeaIce(state: ViewState, ma: number | null): SeaIceView | null {
+    if (ma !== null && state.deepScale !== 'ice') {
       globe.setSeaIce(null);
       return null;
     }
@@ -2988,27 +2995,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
       return { model: state.seaIce, mix: null };
     }
-    const pair = seaIcePair(seaIceIndex, state.seaIce);
+    const maps = seaIceMaps(seaIceIndex, state.seaIce, `${base}data/seaice/`);
     const levels = seaLevels();
-    const now = levels === null ? null : coastlineAt(levels, state.coast, ma * 1000);
-    if (pair === null || levels === null || now === null) {
+    const ago = ma === null || levels === null ? null : coastlineAt(levels, state.coast, ma * 1000);
+    const at = ma === null ? holoceneSea : ago;
+    if (maps === null || (ma !== null && at === null)) {
       globe.setSeaIce(null);
       return { model: state.seaIce, mix: null };
     }
     // How far the sea had fallen towards its glacial low, by the same source.
-    const source: CoastSource = COAST_SOURCES.find((id) => id === now.series.id) ?? state.coast;
-    const glacial = coastlineAt(levels, source, LAST_GLACIAL_MAXIMUM_MA * 1000);
-    const mix = seaIceMix(now.seaLevel, glacial?.seaLevel ?? -120);
-    const folder = `${base}data/seaice/`;
-    globe.setSeaIce({
-      todayMost: folder + pair.today.most,
-      todayYearRound: folder + pair.today.yearRound,
-      pastMost: folder + pair.past.most,
-      pastYearRound: folder + pair.past.yearRound,
-      mix,
-      columns: seaIceIndex.columns,
-      rows: seaIceIndex.rows,
-    });
+    const source: CoastSource = COAST_SOURCES.find((id) => id === at?.series.id) ?? state.coast;
+    const glacial =
+      levels === null ? null : coastlineAt(levels, source, LAST_GLACIAL_MAXIMUM_MA * 1000);
+    const mix = at === null ? 0 : seaIceMix(at.seaLevel, glacial?.seaLevel ?? -120);
+    const season = ma === null ? seaIceSeason(momentJulianDay(state.time)) : null;
+    globe.setSeaIce({ ...maps, mix, season });
     return { model: state.seaIce, mix };
   }
 
@@ -3567,7 +3568,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The IAU's place names on the rocky bodies (#334), loaded the first time one is in view.
   let placeNames: PlaceNames | null = null;
   let placeNamesAsked = false;
-  let namesShown: NamedBody | null = null;
   /** Name the features of the body in view, if it has names; take away any others. */
   function showPlaceNames(body: string | null): void {
     const named = body !== null && isNamedBody(body) ? body : null;
@@ -3584,11 +3584,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
         },
       );
     }
-    if (namesShown !== null && namesShown !== named) globe.setPlaceNames(namesShown, null);
-    namesShown = named !== null && placeNames !== null ? named : null;
-    if (namesShown !== null && placeNames !== null) {
-      globe.setPlaceNames(namesShown, placeNames[namesShown]);
-    }
+    placeNamesOnGlobe.update(
+      named !== null && placeNames !== null ? { body: named, names: placeNames[named] } : null,
+    );
   }
 
   // The colour keys (#334): the height views', and the enhanced-colour views' swatches,

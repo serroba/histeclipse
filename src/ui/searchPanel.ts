@@ -11,6 +11,7 @@ import type { Anchor, PassageKind } from '../text/passages';
 import { searchWords, snippet, type Hit, type WordIndex } from '../text/wordSearch';
 import { element } from './dom';
 import { uiIcon } from './icons';
+import './searchPanel.css';
 
 const KINDS: Readonly<Record<PassageKind, string>> = {
   why: 'How the site shows it',

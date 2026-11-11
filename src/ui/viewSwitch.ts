@@ -9,6 +9,7 @@ import { MOON_NAMES } from '../globe/moonLook';
 import type { Body, Mode, Viewpoint } from '../state/viewState';
 import { element } from './dom';
 import { uiIcon, type UiIcon } from './icons';
+import './switches.css';
 
 export type ViewChoice = Viewpoint | 'sky';
 

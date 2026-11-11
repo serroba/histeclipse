@@ -11,6 +11,7 @@
 
 import { seaLevelAt, type SeaLevelIndex, type SeaLevelSeries } from '../data/seaLevel';
 import { element } from './dom';
+import './seaLevelChart.css';
 
 const SVG = 'http://www.w3.org/2000/svg';
 

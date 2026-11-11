@@ -1,0 +1,344 @@
+/* A wide sheet with a 3D view (phoria2) and its legend: the tree of life (#300), the impacts'
+ * paths through time (#304) and life through time (#358), each importing this file (#382). The
+ * tree adds its picked taxon's trail of links. */
+.famous-dialog.stage-sheet {
+  /* Above Layers, which can open it. */
+  z-index: 4;
+  /* Opaque, as Layers is: the bar and labels behind would read through. */
+  background: rgb(10 16 32);
+  width: min(760px, calc(100% - 32px));
+  max-height: calc(100vh - 32px);
+  /* Taller than the screen on a phone: it scrolls, rather than spilling over the time bar. */
+  overflow-y: auto;
+}
+
+.stage-sheet .famous-header h2 {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+}
+
+.stage-body {
+  padding: 0 18px 16px;
+}
+
+.stage-frame {
+  position: relative;
+}
+
+.stage-canvas {
+  display: block;
+  width: 100%;
+  height: min(52vh, 460px);
+  border-radius: 12px;
+  background: rgb(4 8 18);
+  touch-action: none;
+}
+
+.stage-legend {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+.stage-status {
+  color: var(--ink-muted);
+}
+
+.stage-focus h3 {
+  margin: 12px 0 4px;
+  font-size: 16px;
+}
+
+.tree-lineage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+.tree-lineage li:not(:last-child)::after {
+  content: '›';
+  margin: 0 5px;
+  color: var(--ink-muted);
+}
+
+.tree-crumb {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tree-crumb:hover,
+.tree-crumb:focus-visible {
+  text-decoration: underline;
+}
+
+.stage-note {
+  margin: 10px 0 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.tree-label-focus {
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: #fff;
+  color: #0a1020;
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .famous-dialog.stage-sheet {
+    width: 100%;
+    max-height: 88vh;
+  }
+
+  .stage-canvas {
+    height: 46vh;
+  }
+}
+
+/* Impacts through time (#322): Map | 3D, a line on how to read the view, the dating key, the
+ * continents' names for bearings, and where the picked crater struck. */
+.stage-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-bottom: 8px;
+}
+
+.stage-switch {
+  display: inline-flex;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.stage-switch-option {
+  padding: 4px 14px;
+  border: 0;
+  background: none;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.stage-switch-option[aria-pressed='true'] {
+  background: rgb(255 183 94 / 0.18);
+  color: var(--ink);
+}
+
+.stage-how {
+  flex: 1 1 260px;
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.stage-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+
+.stage-key-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-left: 6px;
+  border-radius: 2px;
+}
+
+.stage-key-swatch.is-tight {
+  background: #ff8a3d;
+}
+
+.stage-key-swatch.is-loose {
+  background: #8a93a8;
+}
+
+.stage-continent {
+  color: rgb(200 215 240 / 0.55);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+.stage-pin {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgb(10 16 32 / 0.85);
+  color: #ffd2b0;
+  font-size: 12px;
+}
+
+/* Life through time (#358): the playhead's controls under the view, and the colour groups' key. */
+.lineages-clock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin-top: 8px;
+}
+
+.lineages-play {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: rgb(255 183 94 / 0.18);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.lineages-slider {
+  flex: 1 1 200px;
+  accent-color: #ffb75e;
+}
+
+.lineages-moment {
+  flex: 1 0 100%;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lineage-swatch-other {
+  background: #8a93a8;
+}
+
+.lineages-tick {
+  color: rgb(200 215 240 / 0.6);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.lineage-swatch-0 {
+  background: #ff8a3d;
+}
+
+.lineage-swatch-1 {
+  background: #4cc9f0;
+}
+
+.lineage-swatch-2 {
+  background: #90be6d;
+}
+
+.lineage-swatch-3 {
+  background: #f15bb5;
+}
+
+.lineage-swatch-4 {
+  background: #ffd166;
+}
+
+.lineage-swatch-5 {
+  background: #a26cf0;
+}
+
+.lineage-swatch-6 {
+  background: #43aa8b;
+}
+
+.lineage-swatch-7 {
+  background: #f94144;
+}
+
+/* The tree as a fan (#358): wide, the fan beside the map of the moment, stacked on a phone. */
+.famous-dialog.lineages-sheet {
+  width: min(1080px, calc(100% - 32px));
+}
+
+.lineages-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  gap: 12px;
+  align-items: start;
+}
+
+.lineages-fan {
+  display: block;
+  width: 100%;
+  height: min(68vh, 640px);
+  border-radius: 12px;
+  background: #040812;
+  touch-action: none;
+}
+
+.lineages-map-frame {
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+}
+
+.lineages-map {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  background: #0a1428;
+}
+
+.lineages-map-caption {
+  margin: 6px 0 8px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.lineages-tip {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  gap: 2px;
+  max-width: 220px;
+  padding: 6px 9px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgb(10 16 32 / 0.94);
+  color: var(--ink-muted);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.lineages-tip[hidden] {
+  display: none;
+}
+
+.lineages-tip strong {
+  color: var(--ink);
+}
+
+@media (max-width: 760px) {
+  .lineages-stage {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .lineages-fan {
+    height: min(92vw, 60vh);
+  }
+}
+
+/* One view of a 3D sheet: its canvas and the labels drawn over it, shown or hidden as one. */
+.stage-view {
+  position: relative;
+}
+
+.stage-view[hidden] {
+  display: none;
+}

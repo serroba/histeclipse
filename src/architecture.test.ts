@@ -98,7 +98,7 @@ const KNOWN_CYCLE_EDGES: readonly string[] = [
 ];
 
 /** Methods on the `Globe` interface in `globe/scene.ts`: new things drawn are layers (#379). */
-const GLOBE_METHODS = 49;
+const GLOBE_METHODS = 48;
 
 describe('the shape of src', () => {
   it('no folder imports its way back into itself, beyond the cycles already known', () => {
@@ -163,6 +163,30 @@ describe('the largest files only shrink', () => {
     expect(
       limit - lines,
       `src/${file} is ${String(lines)} lines: lower its LINE_LIMITS entry in eslint.boundaries.js to ${String(lines)}`,
+    ).toBeLessThanOrEqual(SLACK);
+  });
+});
+
+/**
+ * Lines in `src/style.css` (#382): a component's rules go in a `.css` file beside it, imported
+ * by it, so this may only come down, to the page-wide rules and the shared tokens.
+ */
+const STYLE_CSS_LINES = 1259;
+
+describe('style.css only shrinks', () => {
+  const lines = lineCount(readFileSync(join(SRC, 'style.css'), 'utf8'));
+
+  it('takes no new rules: put them in a .css file beside the code they style', () => {
+    expect(
+      lines,
+      `src/style.css is ${String(lines)} lines, over ${String(STYLE_CSS_LINES)}`,
+    ).toBeLessThanOrEqual(STYLE_CSS_LINES);
+  });
+
+  it('has its limit follow it down', () => {
+    expect(
+      STYLE_CSS_LINES - lines,
+      `src/style.css is ${String(lines)} lines: set STYLE_CSS_LINES to ${String(lines)}`,
     ).toBeLessThanOrEqual(SLACK);
   });
 });

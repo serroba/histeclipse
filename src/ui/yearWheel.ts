@@ -6,6 +6,7 @@
 
 import type { YearRange } from '../time/yearRange';
 import { element } from './dom';
+import './yearWheel.css';
 
 /** The height of one row (px), as the stylesheet draws it. */
 const ROW = 40;

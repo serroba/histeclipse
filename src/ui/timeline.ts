@@ -15,6 +15,7 @@ import { yearRange } from '../time/yearRange';
 import { errorMessage } from '../util/errors';
 import { element } from './dom';
 import { createYearWheel } from './yearWheel';
+import './timeline.css';
 
 const HINT = 'Type a year as a number, and pick its era or calendar beside it';
 

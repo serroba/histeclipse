@@ -8,6 +8,7 @@ import type { WhyId } from '../sources/registry';
 import type { Layer } from '../state/viewState';
 import { element } from './dom';
 import { uiIcon, type UiIcon } from './icons';
+import './deepChips.css';
 
 /** A feature's chip, as the features declare it. */
 export interface DeepChip {

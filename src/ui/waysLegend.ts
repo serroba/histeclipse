@@ -9,6 +9,7 @@
 import { WAY_COLOURS } from '../globe/empireCanvas';
 import { WAY_NAMES, WAYS, type Shown, type WaysAt } from '../data/waysOfLife';
 import { element } from './dom';
+import './waysLegend.css';
 
 export interface WaysLegend {
   readonly root: HTMLElement;
