@@ -29,7 +29,7 @@ import './holoceneChart.css';
 const DRAW_MS = 9000;
 /** The Holocene's start, 11,700 years before 2000. */
 const HOLOCENE_STARTS = -9700;
-const MARGIN = { top: 26, right: 64, bottom: 34, left: 40 } as const;
+const MARGIN = { top: 26, right: 14, bottom: 34, left: 40 } as const;
 
 const STYLE: Readonly<Record<SeriesId, { colour: string; label: string }>> = {
   epica: { colour: '#6f7f99', label: 'Antarctica (ice core)' },
@@ -38,12 +38,12 @@ const STYLE: Readonly<Record<SeriesId, { colour: string; label: string }>> = {
   hadcrut5: { colour: '#ff8a3d', label: 'Global, measured' },
 };
 
-/** The x axis' marks: a year and what it is called. */
-const TICKS: readonly (readonly [number, string])[] = [
-  [-798_050, '800,000 years ago'],
-  [-398_050, '400,000'],
-  [-18_050, '20,000'],
-  [-8050, '10,000'],
+/** The x axis' marks: a year, what it is called, and whether only a wide chart has room. */
+const TICKS: readonly (readonly [number, string, boolean?])[] = [
+  [-798_050, '800k years ago'],
+  [-398_050, '400k', true],
+  [-18_050, '20k'],
+  [-8050, '10k'],
   [1, '1 CE'],
   [1850, '1850'],
   [2000, '2000'],
@@ -130,7 +130,8 @@ export function createHoloceneChart(
       );
       left += panel.share;
     }
-    for (const [year, name] of TICKS) {
+    for (const [year, name, wide] of TICKS) {
+      if (wide === true && w < 520) continue;
       plot.append(
         svg(
           'text',
@@ -153,7 +154,8 @@ export function createHoloceneChart(
         y: y(corridor.high),
         height: y(corridor.low) - y(corridor.high),
       }),
-      svg('text', { x: x(CORRIDOR_FROM) + 4, y: y(corridor.high) - 6 }, 'Holocene corridor'),
+      // Under the band: the lines run along its top.
+      svg('text', { x: x(CORRIDOR_FROM) + 4, y: y(corridor.low) + 14 }, 'Holocene corridor'),
     );
     plot.append(
       corridorBand,
@@ -190,7 +192,8 @@ export function createHoloceneChart(
       svg('circle', { cx: x(latest.year), cy: y(latest.celsius), r: 4 }),
       svg(
         'text',
-        { x: x(latest.year) + 7, y: y(latest.celsius) + 4 },
+        // Above and to the left of the point, which is at the chart's right edge.
+        { x: x(latest.year), y: y(latest.celsius) - 10, 'text-anchor': 'end' },
         `${String(latest.year)}: +${latest.celsius.toFixed(1)} °C`,
       ),
     );
