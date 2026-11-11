@@ -55,6 +55,7 @@ export default defineConfig({
         'src/story/sunCore.ts',
         'src/story/airShower.ts',
         'src/story/leafScene.ts',
+        'src/story/boundaryWheel.ts',
         'src/story/storyScene.ts',
         'src/ui/**',
       ],

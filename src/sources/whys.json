@@ -356,5 +356,19 @@
     "what": "The site’s texts found by their words, or by their meaning, each opening the view of the place and time it is about.",
     "sources": ["bgeSmall", "onnxRuntime"],
     "how": "Every text the site shows is cut into passages, each tied to the bodies, places and years it is about. Words are matched as typed, ranked by BM25. Search by meaning, once turned on, runs a small English model, bge-small-en-v1.5, in your browser: it turns the question into 384 numbers that stand for its meaning, and the passages, turned into numbers the same way beforehand, are ranked by how alike they are; the two lists are then merged. The model and its runtime are downloaded from this site once, about 48 MB; nothing typed leaves the browser. A model of meaning can be wrong: it ranks by likeness, not by truth, so each passage found says where it comes from."
+  },
+  "boundaries": {
+    "title": "Planetary boundaries",
+    "what": "The nine Earth-system processes that keep the planet in a Holocene-like state, each with a boundary to human pressure, and where each control variable stood in the Planetary Health Check 2026: inside its safe operating space, in the zone of increasing risk, or in the high-risk zone. Beside it, the assessment the report compares itself with, Richardson et al. (2023).",
+    "sources": ["planetaryHealthCheck2026", "richardson2023"],
+    "how": "The values are the report's Table 7.1, typed by hand, for both assessments; each boundary's status in words is the report's own, and the site checks that its drawing agrees with every one. Each wedge reaches from the variable's reference value (0) through its boundary (1) to its high-risk line (2), beyond that eased so the strongest transgressions stay in view; each assessment is drawn against its own boundaries. Ranges (extinction rates, HANPP) and judgements (novel entities, with no numbers past its boundary) are drawn faded past their sure part. The 2023 values are taken as the 2026 report reprints them. The scene and its colours are this site's own, after the report's description of its diagrams.",
+    "others": "Where the two assessments differ, the site shows both rather than choose. Global phosphorus: the 2026 table gives 4.4 Tg/yr, inside the boundary, where 2023 gave 22.6, yet the report's text still calls both nutrient boundaries strongly transgressed and lists no new data for them. Forest cover rose from 60% to 64%, and its boundary from 75% to 78%, through a corrected method, the report says, not forest recovering. Ocean acidification crossed its boundary for the first time in 2026, by a hair (Ω 2.85 against 2.86), with four data products where 2023 had one. Aerosols over South Asia are measured against a boundary proposed in 2026, not yet counted in the global status.",
+    "certainty": [
+      "Firm: CO₂ concentration, the ozone column and aragonite saturation, measured directly.",
+      "Modelled from observations: radiative forcing, freshwater disturbance, nutrient flows, forest cover.",
+      "Estimated within wide ranges: extinction rates and the energy taken from ecosystems.",
+      "Judged, with no numbers past the boundary: novel entities."
+    ],
+    "reading": ["planetaryHealthCheck2026", "richardson2023"]
   }
 }

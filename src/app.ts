@@ -281,6 +281,8 @@ import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
 import { createTreeSheet } from './ui/treeSheet';
 import { createImpactPathsSheet } from './ui/impactPathsSheet';
 import { createLineagesSheet } from './ui/lineagesSheet';
+import { createBoundariesSheet } from './ui/boundariesSheet';
+import { loadPlanetaryBoundaries } from './data/planetaryBoundaries';
 import { loadLineages, type LineageGroup, type Lineages } from './data/lineages';
 import { loadTreeOfLife, type TreeOfLife } from './data/treeOfLife';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
@@ -463,6 +465,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
     return treeOfLife;
   };
+  // The planetary boundaries' story (#434): its data and scene load when it first opens.
+  const boundariesSheet = createBoundariesSheet(
+    (boundaries) => {
+      store.set((state) => ({ ...state, boundaries }));
+    },
+    () => loadPlanetaryBoundaries(`${base}data/planetary-boundaries.json`, fetchJson),
+    `${base}textures/earth-blue-marble-2048.jpg`,
+    whySheet.mark('boundaries', 'Planetary boundaries'),
+  );
   const treeSheet = createTreeSheet(
     (tree) => {
       store.set((state) => ({ ...state, tree }));
@@ -713,20 +724,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
         showDeepTime(store.get());
       },
       onPlates(on) {
-        store.set((state) => {
-          const layers = new Set(state.layers);
-          if (on) layers.add('plates');
-          else layers.delete('plates');
-          return { ...state, layers };
-        });
+        store.set((state) => ({ ...state, layers: withLayer(state.layers, 'plates', on) }));
       },
       onAir(on) {
-        store.set((state) => {
-          const layers = new Set(state.layers);
-          if (on) layers.add('air');
-          else layers.delete('air');
-          return { ...state, layers };
-        });
+        store.set((state) => ({ ...state, layers: withLayer(state.layers, 'air', on) }));
       },
       onCo2Archive() {
         loadArchive();
@@ -736,12 +737,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         showDeepTime(store.get());
       },
       onImpacts(on) {
-        store.set((state) => {
-          const layers = new Set(state.layers);
-          if (on) layers.add('impacts');
-          else layers.delete('impacts');
-          return { ...state, layers };
-        });
+        store.set((state) => ({ ...state, layers: withLayer(state.layers, 'impacts', on) }));
       },
       onLayer(layer, on) {
         store.set((state) => ({ ...state, layers: withLayer(state.layers, layer, on) }));
@@ -767,12 +763,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         store.set((state) => ({ ...state, ...choice }));
       },
       onTemperature(on) {
-        store.set((state) => {
-          const layers = new Set(state.layers);
-          if (on) layers.add('temperature');
-          else layers.delete('temperature');
-          return { ...state, layers };
-        });
+        store.set((state) => ({ ...state, layers: withLayer(state.layers, 'temperature', on) }));
       },
     },
     // The features' chips (#380), where the fossils' chip stood.
@@ -1658,6 +1649,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     store.set((state) => ({ ...state, time: momentAt(julianDayNumber(jd)) }));
   });
 
+  const hudTools = [boundariesSheet.button, searchPanel.button, fullView];
   // Earth's spans and its map's layers; away from Earth they rest (#329).
   const hudActions = element('div', { class: 'hud-actions' }, historySpan.root, layersPanel.button);
   const bottom = element(
@@ -1683,6 +1675,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     treeSheet.dialog,
     impactPathsSheet.dialog,
     lineagesSheet.dialog,
+    boundariesSheet.dialog,
     whySheet.dialog,
     element(
       'header',
@@ -1694,7 +1687,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         {},
         element('a', { class: 'home', href: base, title: 'Back to the start' }, 'histeclipse'),
       ),
-      element('div', { class: 'hud-tools' }, searchPanel.button, fullView),
+      element('div', { class: 'hud-tools' }, ...hudTools),
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
       termNote,
@@ -4376,6 +4369,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     treeSheet.show(state.tree);
     impactPathsSheet.show(state.craters, state.ma ?? 0, state.cratersIn);
     lineagesSheet.show(state.lineages);
+    boundariesSheet.show(state.boundaries);
     whySheet.show(
       state.why,
       state.why === 'here'

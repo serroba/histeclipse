@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "about": "The nine Planetary Boundaries and their control variables, as Table 7.1 of the Planetary Health Check 2026 gives them (current, reference, boundary and high-risk values), beside the assessment it compares itself with, Richardson et al. (2023). Each boundary's status in words is the report's own.",
+  "assessments": [
+    { "id": "phc2026", "name": "Planetary Health Check 2026", "short": "2026", "source": "planetaryHealthCheck2026" },
+    { "id": "richardson2023", "name": "Richardson et al. (2023)", "short": "2023", "source": "richardson2023" }
+  ],
+  "boundaries": [
+    {
+      "id": "climate",
+      "name": "Climate change",
+      "stated": "strongly",
+      "summary": "Atmospheric CO₂ and the radiative forcing humans add both exceed their boundaries: rising temperatures, extreme weather, sea-level rise.",
+      "variables": [
+        {
+          "id": "co2",
+          "name": "Atmospheric CO₂",
+          "unit": "ppm",
+          "direction": "up",
+          "scale": "linear",
+          "values": {
+            "phc2026": { "current": { "low": 426, "high": 426 }, "reference": 280, "boundary": 350, "highRisk": 450 },
+            "richardson2023": { "current": { "low": 417, "high": 417 }, "reference": 280, "boundary": 350, "highRisk": 450 }
+          }
+        },
+        {
+          "id": "forcing",
+          "name": "Radiative forcing",
+          "unit": "W/m²",
+          "direction": "up",
+          "scale": "linear",
+          "values": {
+            "phc2026": { "current": { "low": 3.1, "high": 3.1 }, "reference": 0, "boundary": 1, "highRisk": 1.5 },
+            "richardson2023": { "current": { "low": 2.91, "high": 2.91 }, "reference": 0, "boundary": 1, "highRisk": 1.5 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "biosphere",
+      "name": "Biosphere integrity",
+      "stated": "strongly",
+      "summary": "Species are going extinct far faster than the background rate, and humans take a large share of the energy plants capture: both in the high-risk zone.",
+      "variables": [
+        {
+          "id": "extinctions",
+          "name": "Extinctions",
+          "unit": "E/MSY",
+          "direction": "up",
+          "scale": "log",
+          "note": "Extinctions per million species-years. A range in 2026 (100–1000), and “more than 100” in 2023: the report blurs its wedge's end.",
+          "values": {
+            "phc2026": { "current": { "low": 100, "high": 1000 }, "reference": 1, "boundary": 10, "highRisk": 100 },
+            "richardson2023": { "current": { "low": 100, "high": null }, "reference": 1, "boundary": 10, "highRisk": 100 }
+          }
+        },
+        {
+          "id": "hanpp",
+          "name": "Energy taken from ecosystems",
+          "unit": "% HANPP",
+          "direction": "up",
+          "scale": "linear",
+          "note": "Human appropriation of net primary production, as a share of the pre-industrial. Several estimates in 2026, 21–30%.",
+          "values": {
+            "phc2026": { "current": { "low": 21, "high": 30 }, "reference": 0, "boundary": 10, "highRisk": 20 },
+            "richardson2023": { "current": { "low": 30, "high": 30 }, "reference": 1.9, "boundary": 10, "highRisk": 20 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "land",
+      "name": "Land system change",
+      "stated": "transgressed",
+      "summary": "Forest cover across the forest biomes has fallen below the safe level, through farming, logging and, increasingly, heat, drought and fire.",
+      "variables": [
+        {
+          "id": "forest",
+          "name": "Forest cover",
+          "unit": "% of original",
+          "direction": "down",
+          "scale": "linear",
+          "note": "64% in 2026 against 60% in 2023, and a boundary of 78% against 75%: a corrected method and more complete data, the report says, not forest recovering.",
+          "values": {
+            "phc2026": { "current": { "low": 64, "high": 64 }, "reference": 100, "boundary": 78, "highRisk": 54 },
+            "richardson2023": { "current": { "low": 60, "high": 60 }, "reference": 100, "boundary": 75, "highRisk": 54 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "freshwater",
+      "name": "Freshwater change",
+      "stated": "transgressed",
+      "summary": "Humans have disturbed both the water in rivers (blue) and the water in soils (green) beyond safe levels.",
+      "variables": [
+        {
+          "id": "blue",
+          "name": "Blue water",
+          "unit": "% of land disturbed",
+          "direction": "up",
+          "scale": "linear",
+          "note": "The share of land where river flow departs from its pre-industrial range.",
+          "values": {
+            "phc2026": { "current": { "low": 22.6, "high": 22.6 }, "reference": 10.3, "boundary": 12.9, "highRisk": 50 },
+            "richardson2023": { "current": { "low": 18.2, "high": 18.2 }, "reference": 9.4, "boundary": 10.2, "highRisk": 50 }
+          }
+        },
+        {
+          "id": "green",
+          "name": "Green water",
+          "unit": "% of land disturbed",
+          "direction": "up",
+          "scale": "linear",
+          "note": "The share of land where soil moisture departs from its pre-industrial range.",
+          "values": {
+            "phc2026": { "current": { "low": 22, "high": 22 }, "reference": 9.8, "boundary": 12.4, "highRisk": 50 },
+            "richardson2023": { "current": { "low": 15.8, "high": 15.8 }, "reference": 9.8, "boundary": 11.1, "highRisk": 50 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "nutrients",
+      "name": "Nitrogen and phosphorus",
+      "stated": "strongly",
+      "summary": "Fertiliser has pushed nitrogen and phosphorus flows far beyond safe levels: polluted water, algal blooms, dead zones.",
+      "variables": [
+        {
+          "id": "phosphorusGlobal",
+          "name": "Phosphorus to the ocean",
+          "unit": "Tg/yr",
+          "direction": "up",
+          "scale": "linear",
+          "note": "The 2026 table gives 4.4 Tg/yr, inside the boundary of 11, where 2023 gave 22.6; the report's text still calls both nutrient boundaries strongly transgressed, and lists no new data for them. Shown as the table gives it.",
+          "values": {
+            "phc2026": { "current": { "low": 4.4, "high": 4.4 }, "reference": 0, "boundary": 11, "highRisk": 100 },
+            "richardson2023": { "current": { "low": 22.6, "high": 22.6 }, "reference": 0, "boundary": 11, "highRisk": 100 }
+          }
+        },
+        {
+          "id": "phosphorusRegional",
+          "name": "Mined phosphorus on fields",
+          "unit": "Tg/yr",
+          "direction": "up",
+          "scale": "linear",
+          "values": {
+            "phc2026": { "current": { "low": 18.2, "high": 18.2 }, "reference": 0, "boundary": 6.2, "highRisk": 11.2 },
+            "richardson2023": { "current": { "low": 17.5, "high": 17.5 }, "reference": 0, "boundary": 6.2, "highRisk": 11.2 }
+          }
+        },
+        {
+          "id": "nitrogen",
+          "name": "Nitrogen fixed for farming",
+          "unit": "Tg/yr",
+          "direction": "up",
+          "scale": "linear",
+          "values": {
+            "phc2026": { "current": { "low": 165, "high": 165 }, "reference": 0, "boundary": 62, "highRisk": 82 },
+            "richardson2023": { "current": { "low": 190, "high": 190 }, "reference": 0, "boundary": 62, "highRisk": 82 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ocean",
+      "name": "Ocean acidification",
+      "stated": "transgressed",
+      "summary": "Assessed as transgressed for the first time: the ocean takes up our CO₂ and turns harder on shells and skeletons, most of all in the Arctic and Southern Oceans.",
+      "variables": [
+        {
+          "id": "aragonite",
+          "name": "Aragonite saturation",
+          "unit": "Ω",
+          "direction": "down",
+          "scale": "linear",
+          "note": "Just past its boundary in 2026 (2.85 against 2.86), with four data products where 2023 had one.",
+          "values": {
+            "phc2026": { "current": { "low": 2.85, "high": 2.85 }, "reference": 3.57, "boundary": 2.86, "highRisk": 2.5 },
+            "richardson2023": { "current": { "low": 2.81, "high": 2.81 }, "reference": 3.44, "boundary": 2.75, "highRisk": 2.41 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "aerosols",
+      "name": "Aerosol loading",
+      "stated": "within",
+      "summary": "Within the boundary globally, and improving; but over South Asia, above a proposed regional boundary that may disturb the monsoon.",
+      "variables": [
+        {
+          "id": "aodDifference",
+          "name": "North–south aerosol difference",
+          "unit": "AOD",
+          "direction": "up",
+          "scale": "linear",
+          "values": {
+            "phc2026": { "current": { "low": 0.07, "high": 0.07 }, "reference": 0.04, "boundary": 0.1, "highRisk": 0.25 },
+            "richardson2023": { "current": { "low": 0.076, "high": 0.076 }, "reference": 0.03, "boundary": 0.1, "highRisk": 0.25 }
+          }
+        },
+        {
+          "id": "aodSouthAsia",
+          "name": "Aerosols over South Asia",
+          "unit": "AOD",
+          "direction": "up",
+          "scale": "linear",
+          "proposed": true,
+          "note": "A proposed regional boundary, new in 2026, with no reference value given: drawn from zero. It does not count towards the global status.",
+          "values": {
+            "phc2026": { "current": { "low": 0.32, "high": 0.32 }, "reference": null, "boundary": 0.25, "highRisk": 0.5 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ozone",
+      "name": "Stratospheric ozone",
+      "stated": "within",
+      "summary": "Back within the boundary, thanks to the controls on CFCs, though below mid-20th-century levels and perhaps recovering more slowly.",
+      "variables": [
+        {
+          "id": "ozone",
+          "name": "Ozone column",
+          "unit": "DU",
+          "direction": "down",
+          "scale": "linear",
+          "values": {
+            "phc2026": { "current": { "low": 285.7, "high": 285.7 }, "reference": 292, "boundary": 277, "highRisk": 263 },
+            "richardson2023": { "current": { "low": 284.6, "high": 284.6 }, "reference": 290, "boundary": 276, "highRisk": 261 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "novel",
+      "name": "Novel entities",
+      "stated": "strongly",
+      "summary": "Synthetic chemicals, plastics and PFASs are released faster than they can be tested; the report places this in the high-risk zone, though no zone has a number yet.",
+      "variables": [
+        {
+          "id": "untested",
+          "name": "Chemicals released untested",
+          "unit": "%",
+          "direction": "up",
+          "scale": "linear",
+          "note": "The boundary is zero: none released without adequate safety testing. The zones beyond it have no numbers; the report places the current state in the high-risk zone, its wedge's end blurred.",
+          "values": {
+            "phc2026": { "current": null, "placed": "high", "reference": 0, "boundary": 0, "highRisk": null },
+            "richardson2023": { "current": null, "placed": "high", "reference": 0, "boundary": 0, "highRisk": null }
+          }
+        }
+      ]
+    }
+  ]
+}

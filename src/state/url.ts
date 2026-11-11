@@ -40,9 +40,9 @@ import { WHY_VIEWS, type WhyView } from '../sources/registry';
 import { calendarDate, calendarDateOf, julianDay, type Calendar } from '../time/julianDay';
 import { SKY_CULTURES, type SkyCulture } from '../data/skyCultures';
 import { SUN_LAYERS, type SunLayer } from '../data/sunImages';
-import { COAST_SOURCES, type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
+import { COAST_SOURCES, DEFAULT_COAST } from '../deepTime/coastline';
 import { LINEAGE_GROUPS } from '../data/lineages';
-import { DEFAULT_SEA_ICE_MODEL, SEA_ICE_MODELS, type SeaIceModel } from '../data/seaIce';
+import { DEFAULT_SEA_ICE_MODEL, SEA_ICE_MODELS } from '../data/seaIce';
 import {
   DEFAULT_TEMPERATURE_MODEL,
   TEMPERATURE_MODELS,
@@ -61,6 +61,8 @@ import { astronomicalYear } from '../time/year';
 import { errorMessage } from '../util/errors';
 import {
   PLANET_LIGHTS,
+  BOUNDARY_CHAPTERS,
+  type BoundaryChapter,
   DISPERSAL_SCENARIOS,
   CAMERA_DISTANCE_RANGE,
   BORDER_SOURCES,
@@ -82,7 +84,6 @@ import {
   defaultViewState,
   type Body,
   type EclipseKind,
-  type Figures,
   type GeoPoint,
   type GlobeCamera,
   type Layer,
@@ -152,7 +153,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     layers: read('layers', parseLayers, defaults.layers),
     selection: read<Selection | null>('sel', parseSelection, defaults.selection),
     look: read('look', parseLook, defaults.look),
-    figures: read('figures', parseFigures, defaults.figures),
+    figures: read('figures', (raw) => oneOf(raw, FIGURES, 'figures'), defaults.figures),
     years: read('years', parseYears, defaults.years),
     sunLayer: read('sun', parseSunLayer, defaults.sunLayer),
     planetLight: read('light', (raw) => oneOf(raw, PLANET_LIGHTS, 'light'), defaults.planetLight),
@@ -161,13 +162,13 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     seenIn: read<string | null>('seen', parseSeenIn, defaults.seenIn),
     ma: read<number | null>('ma', parseMa, defaults.ma),
     deepScale: read('scale', parseDeepScale, defaults.deepScale),
-    coast: read('coast', parseCoast, defaults.coast),
+    coast: read('coast', (raw) => oneOf(raw, COAST_SOURCES, 'coast'), defaults.coast),
     dispersal: read(
       'dispersal',
       (raw) => oneOf(raw, DISPERSAL_SCENARIOS, 'dispersal'),
       defaults.dispersal,
     ),
-    seaIce: read('seaice', parseSeaIce, defaults.seaIce),
+    seaIce: read('seaice', (raw) => oneOf(raw, SEA_ICE_MODELS, 'seaice'), defaults.seaIce),
     temperatureModel: read('temp', parseTemperatureModel, defaults.temperatureModel),
     impact: read('impact', (raw) => oneOf(raw, IMPACT_MODELS, 'impact'), defaults.impact),
     land: read('land', (raw) => oneOf(raw, LAND_MODELS, 'land'), defaults.land),
@@ -181,6 +182,11 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
       defaults.cratersIn,
     ),
     lineages: read<LineagesView | null>('lineages', parseLineagesView, defaults.lineages),
+    boundaries: read<BoundaryChapter | null>(
+      'boundaries',
+      (raw) => oneOf(raw, BOUNDARY_CHAPTERS, 'boundaries'),
+      defaults.boundaries,
+    ),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -232,6 +238,7 @@ export function serializeViewState(state: ViewState): string {
     const { group, pick } = state.lineages;
     params.set('lineages', pick === null ? group : `${group}:${String(pick)}`);
   }
+  if (state.boundaries !== null) params.set('boundaries', state.boundaries);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
@@ -240,20 +247,8 @@ function parseMode(raw: string): Mode {
   return oneOf(raw, MODES, 'mode');
 }
 
-function parseFigures(raw: string): Figures {
-  return oneOf(raw, FIGURES, 'figures');
-}
-
 function parseTemperatureModel(raw: string): TemperatureModel {
   return oneOf(raw, TEMPERATURE_MODELS, 'temp');
-}
-
-function parseCoast(raw: string): CoastSource {
-  return oneOf(raw, COAST_SOURCES, 'coast');
-}
-
-function parseSeaIce(raw: string): SeaIceModel {
-  return oneOf(raw, SEA_ICE_MODELS, 'seaice');
 }
 
 function parseDeepScale(raw: string): DeepScale {
