@@ -6,6 +6,7 @@
 
 import type { ImpactMark } from '../data/impacts';
 import { SURFACE_PRIORITY, type LayerFactory } from './layerHost';
+import './impactLayer.css';
 
 export const impactLayer: LayerFactory<readonly ImpactMark[] | null> = (host) => {
   const layer = document.createElement('div');

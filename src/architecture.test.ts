@@ -166,3 +166,27 @@ describe('the largest files only shrink', () => {
     ).toBeLessThanOrEqual(SLACK);
   });
 });
+
+/**
+ * Lines in `src/style.css` (#382): a component's rules go in a `.css` file beside it, imported
+ * by it, so this may only come down, to the page-wide rules and the shared tokens.
+ */
+const STYLE_CSS_LINES = 5245;
+
+describe('style.css only shrinks', () => {
+  const lines = lineCount(readFileSync(join(SRC, 'style.css'), 'utf8'));
+
+  it('takes no new rules: put them in a .css file beside the code they style', () => {
+    expect(
+      lines,
+      `src/style.css is ${String(lines)} lines, over ${String(STYLE_CSS_LINES)}`,
+    ).toBeLessThanOrEqual(STYLE_CSS_LINES);
+  });
+
+  it('has its limit follow it down', () => {
+    expect(
+      STYLE_CSS_LINES - lines,
+      `src/style.css is ${String(lines)} lines: set STYLE_CSS_LINES to ${String(lines)}`,
+    ).toBeLessThanOrEqual(SLACK);
+  });
+});

@@ -14,6 +14,7 @@ import {
 import { errorMessage } from '../../util/errors';
 import { RESTING, type Feature } from '../feature';
 import { genomeLayer } from './genomeLayer';
+import './genomes.css';
 
 export const genomesFeature: Feature = {
   id: 'genomes',
