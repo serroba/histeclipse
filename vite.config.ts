@@ -41,7 +41,7 @@ export default defineConfig({
         'src/globe/impactLayer.ts',
         'src/features/fossils/fossilLayer.ts',
         'src/features/genomes/genomeLayer.ts',
-        'src/globe/humanSiteLayer.ts',
+        'src/features/humans/humanSiteLayer.ts',
         'src/globe/placeNameLayer.ts',
         'src/globe/moonNameLayer.ts',
         'src/globe/magneticNorthLayer.ts',
