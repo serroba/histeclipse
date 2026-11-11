@@ -95,6 +95,10 @@ export type PlanetLight = (typeof PLANET_LIGHTS)[number];
 export type Layer = (typeof LAYERS)[number];
 
 /** A dispersal model's scenario shaded with the Humans layer, or none. */
+/** The planetary boundaries' story's chapters (#434), in order. */
+export const BOUNDARY_CHAPTERS = ['safe', 'pressure', 'compare'] as const;
+export type BoundaryChapter = (typeof BOUNDARY_CHAPTERS)[number];
+
 export const DISPERSAL_SCENARIOS = ['off', 'a', 'b'] as const;
 export type DispersalScenario = (typeof DISPERSAL_SCENARIOS)[number];
 
@@ -211,6 +215,8 @@ export interface ViewState {
    * group within it picked out (its PBDB number); null when closed.
    */
   readonly lineages: LineagesView | null;
+  /** The planetary boundaries' story open (#434), at a chapter; null when closed. */
+  readonly boundaries: BoundaryChapter | null;
 }
 
 /** What the lineages through time show: a fossil group, and one of its names picked out. */
@@ -326,5 +332,6 @@ export function defaultViewState(now: Date): ViewState {
     craters: null,
     cratersIn: 'map',
     lineages: null,
+    boundaries: null,
   };
 }

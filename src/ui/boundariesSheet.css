@@ -1,0 +1,115 @@
+/* The planetary boundaries' story (#434): its chapters, the 3D wheel, its caption and the table
+   of values (#382: CSS beside the code it styles). */
+
+.boundary-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.boundary-tab,
+.boundary-play {
+  min-height: 36px;
+  padding: 4px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.boundary-tab[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: rgb(255 255 255 / 0.08);
+  color: #fff;
+}
+
+.boundary-play {
+  color: var(--ink-muted);
+}
+
+.boundary-stage {
+  position: relative;
+  height: min(56vh, 480px);
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgb(4 8 18);
+  touch-action: none;
+}
+
+.boundary-stage > canvas {
+  display: block;
+}
+
+.boundary-caption {
+  margin: 10px 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.story-label.is-count {
+  font-size: 13px;
+}
+
+.story-label.is-flag {
+  background: rgb(255 122 26 / 0.9);
+}
+
+.boundary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.boundary-table th,
+.boundary-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--panel-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.boundary-table thead th {
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.boundary-row th {
+  padding-top: 10px;
+  color: #fff;
+  font-weight: 600;
+}
+
+.boundary-summary {
+  color: var(--ink-muted);
+  font-weight: 400;
+}
+
+.boundary-note td {
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.boundary-table td.is-safe {
+  color: rgb(110 210 140);
+}
+
+.boundary-table td.is-increasing {
+  color: rgb(242 177 52);
+}
+
+.boundary-table td.is-high {
+  color: rgb(255 110 100);
+}
+
+@media (max-width: 600px) {
+  /* The legend's one line on a phone is the comparison's key; the caption gives the zones. */
+  .boundary-stage .story-chain:not(:has(li.is-now:not([hidden]))) {
+    display: none;
+  }
+}

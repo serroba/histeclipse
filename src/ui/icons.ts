@@ -181,6 +181,12 @@ const UI_PATHS = {
   search: ['M10.5 4a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13z', 'M15.3 15.3L20 20'],
   // Stacked sheets.
   layers: ['M12 3l9 5-9 5-9-5z', 'M3 12.5l9 5 9-5', 'M3 16.5l9 5 9-5'],
+  // The planetary boundaries (#434): Earth, its safe ring, and the wedges out from it.
+  boundaries: [
+    'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z',
+    'M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z',
+    'M12 3v6M12 15v6M3 12h6M15 12h6',
+  ],
   // Four corners pushed out.
   fullView: ['M4 9V4h5', 'M15 4h5v5', 'M20 15v5h-5', 'M9 20H4v-5'],
   // The diamond ring: the last bead of sunlight on the Moon's rim, at totality.
