@@ -29,6 +29,7 @@ import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { humanSiteLayer } from './globe/humanSiteLayer';
 import { impactLayer } from './globe/impactLayer';
+import { dateCellsLayer, rocksLayer, waysLayer } from './globe/historyPaintLayers';
 import { magneticNorthLayer } from './globe/magneticNorthLayer';
 import { moonNameLayer } from './globe/moonNameLayer';
 import { placeNameLayer } from './globe/placeNameLayer';
@@ -92,6 +93,7 @@ import { changed, createStore } from './state/store';
 import { parseViewState, serializeViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import {
+  awayFromEarth,
   DEFAULT_CAMERA,
   DEFAULT_LOOK,
   defaultViewState,
@@ -318,7 +320,7 @@ import {
   plateText,
 } from './data/plateMasks';
 import { loadShelf, type ShelfIndex } from './data/shelf';
-import { deepSpeedFor } from './deepTime/playSpeed';
+import { deepSpeedFor, prefetchFrames } from './deepTime/playSpeed';
 import { COAST_SOURCES, coastlineAt, type Coastline, type CoastSource } from './deepTime/coastline';
 import {
   mapModel,
@@ -362,13 +364,6 @@ const PRESENT_YEAR = new Date().getUTCFullYear();
 /** The year “before present” counts back from, as radiocarbon dates do. */
 const BP_ZERO_YEAR = 1950;
 
-/**
- * Maps loaded ahead while deep time plays: at 20 Myr a second, about a second's worth; more at
- * a faster speed, so the globe keeps up.
- */
-function prefetchFrames(maPerSecond: number): number {
-  return Math.max(4, Math.ceil((4 * maPerSecond) / 20));
-}
 /** The elevation maps reach back this far (their index says for certain once loaded). */
 const MAPS_REACH_MA = 540;
 
@@ -1815,6 +1810,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const placeNamesOnGlobe = globe.addLayer(placeNameLayer);
   const moonNamesOnGlobe = globe.addLayer(moonNameLayer);
   const magneticNorthOnGlobe = globe.addLayer(magneticNorthLayer);
+  const rocksOnGlobe = globe.addLayer(rocksLayer);
+  const waysOnGlobe = globe.addLayer(waysLayer);
+  const datesOnGlobe = globe.addLayer(dateCellsLayer);
   const impactsOnGlobe = globe.addLayer(impactLayer);
   const humanSitesOnGlobe = globe.addLayer(humanSiteLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
@@ -3398,7 +3396,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     datesAction = null;
     if (!on || travelling) {
       datesSaid = on ? RESTING : null;
-      globe.setDateCells(null);
+      datesOnGlobe.update(null);
       return;
     }
     if (datesHeat === null) {
@@ -3422,7 +3420,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const heat = datesHeat;
     const year = state.time.date.year;
     const near = datesNear(heat, year);
-    globe.setDateCells(near === null ? null : { cells: near.cells, cellDegrees: heat.cellDegrees });
+    datesOnGlobe.update(
+      near === null ? null : { cells: near.cells, cellDegrees: heat.cellDegrees },
+    );
     datesSaid = datesNote(near, null);
     const place = state.location;
     if (place === null || near === null) return;
@@ -3470,7 +3470,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     // Today's rocks say nothing of the year a trip shows: they rest with the markers.
     if (!on || travelling) {
       rocksSaid = on ? RESTING : null;
-      globe.setRocks(null);
+      rocksOnGlobe.update(null);
       return;
     }
     if (rocks === null) {
@@ -3491,7 +3491,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }
       return;
     }
-    globe.setRocks(rocks);
+    rocksOnGlobe.update(rocks);
     const rock = state.location === null ? null : rockAt(rocks, state.location);
     rocksSaid =
       state.location === null
@@ -3562,7 +3562,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (!on) {
       waysSaid = null;
       waysShownYear = null;
-      globe.setWays(null);
+      waysOnGlobe.update(null);
       waysLegend.render(null);
       return;
     }
@@ -3590,7 +3590,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     // Repainting the map is slow: only when the moment rated changes, as the years go by.
     if (at.year === waysShownYear) return;
     waysShownYear = at.year;
-    globe.setWays(at.regions);
+    waysOnGlobe.update(at.regions);
   }
   let waysShownYear: number | null = null;
 
@@ -4686,11 +4686,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     sync.adopt(restored);
     store.set(() => restored);
   });
-}
-
-/** Orbiting another body in the years: the bars and panels speak of it, not of Earth. */
-function awayFromEarth(state: ViewState): boolean {
-  return state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
 }
 
 function round(value: number, digits: number): number {

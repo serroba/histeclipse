@@ -69,7 +69,27 @@ export interface LayerHost {
    * and given room in `priority` order (see SURFACE_PRIORITY).
    */
   surfaceLabels(priority: number, layer: HTMLElement): SurfaceLabels;
+  /**
+   * A place on the history map painted over Earth's surface, under the states, painted in
+   * `order` (see HISTORY_PAINT_ORDER) whenever any part of the map changes.
+   */
+  historyPaint(order: number): HistoryPaint;
 }
+
+/** Paints a layer's part of the history map; `statesOver` when the states are drawn on top. */
+export type HistoryPainter = (canvas: HTMLCanvasElement, statesOver: boolean) => void;
+
+export interface HistoryPaint {
+  /** Paint this from now on (the whole map is painted again); null takes it away. */
+  show(painter: HistoryPainter | null): void;
+}
+
+/** The order the history map's parts are painted in, lower first; the states go over them all. */
+export const HISTORY_PAINT_ORDER = {
+  rocks: 0,
+  ways: 10,
+  dates: 20,
+} as const;
 
 /** A marker or name pinned to Earth's surface. */
 export interface SurfacePin {

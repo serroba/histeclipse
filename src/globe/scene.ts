@@ -109,6 +109,7 @@ import { isMoonBody, moonsInView } from './moonLook';
 import {
   SURFACE_PRIORITY,
   type GlobeLayer,
+  type HistoryPainter,
   type LayerFactory,
   type LayerHost,
   type NameLabel,
@@ -116,20 +117,14 @@ import {
 import { createMoonMeshes } from './moonMeshes';
 import { createPlanetMeshes } from './planetMeshes';
 import type { ArrivalGrid } from '../data/dispersal';
-import type { RockUnit } from '../data/rocks';
-import type { WayRegion } from '../data/waysOfLife';
 import type { IceOutlines } from '../data/iceOutlines';
-import type { DateCell } from '../data/radiocarbonDates';
 import type { OhmYear } from '../data/ohmBorders';
 import {
   clearOverlay,
   createEmpireCanvas,
   paintBorders,
-  paintDateCells,
   paintIceOutlines,
-  paintRocks,
   paintSettled,
-  paintWays,
   paintTerritories,
 } from './empireCanvas';
 import {
@@ -410,14 +405,6 @@ export interface Globe {
   setSettled(
     settled: { readonly scenario: string; readonly grid: ArrivalGrid; readonly ka: number } | null,
   ): void;
-  /** Shade the rocks at the surface by age, under everything else; null hides them. */
-  setRocks(units: readonly RockUnit[] | null): void;
-  /** Shade cells by how many radiocarbon dates fall in the step shown; null hides them. */
-  setDateCells(
-    dates: { readonly cells: readonly DateCell[]; readonly cellDegrees: number } | null,
-  ): void;
-  /** Shade regions by their most widespread way of life, under any states; null hides them. */
-  setWays(regions: readonly WayRegion[] | null): void;
   /** Set Mars's, Jupiter's and Saturn's moons going round them (#335); null takes them away. */
   setMoonOrbits(orbits: MoonOrbits | null): void;
   /** Wrap a moon in a mission's map, fetched once: the latest asked for each moon wins. */
@@ -1496,25 +1483,19 @@ export function createGlobe(
   const labelSizes = new Map<string, { readonly width: number; readonly height: number }>();
   // States that appeared or went lately, by name: named on the map for a while.
   const recentStates = new Map<string, { readonly change: StateChange; readonly at: number }>();
-  let historyOverlay: {
-    readonly rocks: readonly RockUnit[] | null;
-    readonly ways: readonly WayRegion[] | null;
-    readonly dates: { readonly cells: readonly DateCell[]; readonly cellDegrees: number } | null;
-    readonly empires: EmpireLayer | null;
-  } = { rocks: null, ways: null, dates: null, empires: null };
+  // The history map: the layers' parts (rocks, ways, dates, #379) in order, the states over them.
+  const historySlots: { readonly order: number; painter: HistoryPainter | null }[] = [];
+  let empiresShown: EmpireLayer | null = null;
   function paintHistoryOverlay(): void {
     const uniforms = earth.material.uniforms;
-    const { rocks, ways, dates, empires } = historyOverlay;
-    const on = rocks !== null || ways !== null || dates !== null || empires !== null;
+    const empires = empiresShown;
+    const painters = historySlots.flatMap(({ painter }) => (painter === null ? [] : [painter]));
+    const on = painters.length > 0 || empires !== null;
     uniforms['empiresActive'] = { value: on ? 1 : 0 };
     needsRender = true;
     if (!on) return;
     clearOverlay(empiresCanvas);
-    if (rocks !== null) paintRocks(empiresCanvas, rocks, empires === null ? 1 : 0.45);
-    if (ways !== null) paintWays(empiresCanvas, ways, empires === null ? 1 : 0.45);
-    if (dates !== null) {
-      paintDateCells(empiresCanvas, dates.cells, dates.cellDegrees, empires === null ? 1 : 0.6);
-    }
+    for (const paint of painters) paint(empiresCanvas, empires !== null);
     if (empires !== null) {
       paintTerritories(empiresCanvas, empires.territories);
       if (empires.ohm !== null) paintBorders(empiresCanvas, empires.ohm.borders);
@@ -2272,6 +2253,17 @@ export function createGlobe(
     },
     layOutNames,
     pickable,
+    historyPaint(order) {
+      const slot = { order, painter: null as HistoryPainter | null };
+      historySlots.push(slot);
+      historySlots.sort((a, b) => a.order - b.order);
+      return {
+        show(painter) {
+          slot.painter = painter;
+          paintHistoryOverlay();
+        },
+      };
+    },
     surfaceLabels(priority, layer) {
       const slot: (typeof surfaceSlots)[number] = { priority, labels: [] };
       surfaceSlots.push(slot);
@@ -2879,25 +2871,8 @@ export function createGlobe(
       markerPickListeners.add(listener);
       return () => markerPickListeners.delete(listener);
     },
-    setRocks(units) {
-      if ((units === null ? 'off' : 'on') === container.dataset['rocks']) return;
-      historyOverlay = { ...historyOverlay, rocks: units };
-      container.dataset['rocks'] = units === null ? 'off' : 'on';
-      paintHistoryOverlay();
-    },
-    setDateCells(dates) {
-      const key = dates === null ? 'off' : String(dates.cells.length);
-      historyOverlay = { ...historyOverlay, dates };
-      container.dataset['dateCells'] = key;
-      paintHistoryOverlay();
-    },
-    setWays(regions) {
-      historyOverlay = { ...historyOverlay, ways: regions };
-      container.dataset['ways'] = regions === null ? 'off' : String(regions.length);
-      paintHistoryOverlay();
-    },
     setEmpires(layer) {
-      historyOverlay = { ...historyOverlay, empires: layer };
+      empiresShown = layer;
       paintHistoryOverlay();
       // The names already made, by class, size and name: kept from year to year, so a name
       // that stays stays where it is, shown, rather than being made anew and hidden a frame.
