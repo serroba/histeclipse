@@ -4,6 +4,7 @@
  */
 
 import { element } from './dom';
+import './scrubber.css';
 
 export interface ScrubberView {
   /** Minutes from greatest eclipse. */

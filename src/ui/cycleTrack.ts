@@ -9,6 +9,7 @@
 
 import type { CycleMark } from '../astro/planetCycle';
 import { element } from './dom';
+import './historyTrack.css';
 import './cycleTrack.css';
 
 /** Hours a second the cycle can play at: an hour or six for the moons, a day or more for the
