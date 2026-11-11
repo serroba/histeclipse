@@ -53,6 +53,7 @@ export default defineConfig({
         'src/globe/showerAnimation.ts',
         'src/sky/skyScene.ts',
         'src/sky/skyLabels.ts',
+        'src/features/sky/index.ts',
         'src/story/sunCore.ts',
         'src/story/airShower.ts',
         'src/story/leafScene.ts',
