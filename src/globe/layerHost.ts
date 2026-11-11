@@ -4,7 +4,7 @@
  * New things drawn on the globe are layers; the globe's own `set…` methods only shrink.
  */
 
-import type { PerspectiveCamera, Quaternion, Scene, Vector3 } from 'three';
+import type { Group, PerspectiveCamera, Quaternion, Scene, Vector3 } from 'three';
 
 import './nameLabels.css';
 
@@ -42,6 +42,8 @@ export interface LayerHost {
   };
   /** Where the Sun is in the scene. */
   sunPosition(): Vector3;
+  /** Earth's spin axis in deep time, its poles marked; what is added to it shows with it. */
+  readonly spinAxis: Group;
   /** Where a planet's moon is in the scene, written into `target`. */
   moonPosition(moon: MoonName, target: Vector3): Vector3;
   /** Ask to fly to a body, as a tap on it does. */

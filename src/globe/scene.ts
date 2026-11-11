@@ -6,6 +6,7 @@
 
 import { createImpactAnimation, type ImpactAnimation, type ImpactSpec } from './impactAnimation';
 import { BODY_RADIUS } from './bodyRadius';
+import { labelTexture } from './labelTexture';
 import { createC14Glow } from './c14Glow';
 import {
   createShowerAnimation,
@@ -371,8 +372,6 @@ export interface Globe {
    * a plain disc.
    */
   setSunImage(image: SunImageRequest | null): void;
-  /** Mark the pole a compass pointed to in deep time; null when it is not known. */
-  setMagneticNorth(where: 'north' | 'south' | 'either' | null): void;
   /** Glow where cosmic rays make carbon-14, a rate per 5° of latitude (1 for today's over the
    * poles); null hides it. */
   setC14Glow(profile: readonly number[] | null): void;
@@ -1225,29 +1224,6 @@ export function createGlobe(
     label.position.set(0, y, 0);
     spinAxis.add(label);
   }
-  // Where a compass pointed: magnetic north at the north pole, or the south when the field was
-  // reversed; when it reversed too often to say, a note at the north pole instead.
-  const magneticLabels = {
-    north: ['Magnetic north', 1.62],
-    south: ['Magnetic north', -1.62],
-    either: ['Magnetic north: either pole, reversing often', 1.62],
-  } as const;
-  const magneticNorth = new Map(
-    Object.entries(magneticLabels).map(([where, [text, y]]) => {
-      const label = new Sprite(
-        new SpriteMaterial({
-          map: labelTexture(text, 1280, 'rgba(255, 150, 120, 0.95)'),
-          transparent: true,
-          depthWrite: false,
-        }),
-      );
-      label.scale.set(2.25, 2.25 / 10, 1);
-      label.position.set(0, y, 0);
-      label.visible = false;
-      spinAxis.add(label);
-      return [where, label] as const;
-    }),
-  );
   spinAxis.visible = false;
   scene.add(spinAxis);
 
@@ -2280,6 +2256,7 @@ export function createGlobe(
     focus: () => focus,
     bodyFrame: namedFrame,
     sunPosition: () => sun.position,
+    spinAxis,
     moonPosition: (moon, target) => moonSystems.meshes[moon].getWorldPosition(target),
     requestBody,
     spaceToScene() {
@@ -2587,11 +2564,6 @@ export function createGlobe(
       c14Glow.set(profile);
       container.dataset['c14Glow'] =
         profile === null ? 'off' : profile.map((value) => value.toFixed(2)).join(' ');
-      needsRender = true;
-    },
-    setMagneticNorth(where) {
-      for (const [key, label] of magneticNorth) label.visible = key === where;
-      container.dataset['magneticNorth'] = where ?? 'unknown';
       needsRender = true;
     },
     setSunImage(image) {
@@ -3190,30 +3162,6 @@ export function createGlobe(
 }
 
 /** A soft radial glow for the Sun, drawn once into a small canvas. */
-/** A short label on a transparent canvas, four times as wide as it is tall. */
-function labelTexture(
-  text: string,
-  width = 512,
-  colour = 'rgba(225, 235, 255, 0.95)',
-): CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = 128;
-  const context = canvas.getContext('2d');
-  if (context !== null) {
-    context.font = '600 44px system-ui, sans-serif';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.shadowColor = 'rgba(0, 0, 0, 0.9)';
-    context.shadowBlur = 8;
-    context.fillStyle = colour;
-    context.fillText(text, canvas.width / 2, canvas.height / 2);
-  }
-  const texture = new CanvasTexture(canvas);
-  texture.colorSpace = SRGBColorSpace;
-  return texture;
-}
-
 function glowTexture(): CanvasTexture {
   const size = 128;
   const canvas = document.createElement('canvas');

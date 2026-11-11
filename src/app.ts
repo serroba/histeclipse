@@ -29,6 +29,7 @@ import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { humanSiteLayer } from './globe/humanSiteLayer';
 import { impactLayer } from './globe/impactLayer';
+import { magneticNorthLayer } from './globe/magneticNorthLayer';
 import { moonNameLayer } from './globe/moonNameLayer';
 import { placeNameLayer } from './globe/placeNameLayer';
 import { geoToVector } from './globe/geo';
@@ -41,7 +42,7 @@ import {
   type PlanetView,
 } from './globe/planetLook';
 import { loadPolarity, type PolarityScale } from './data/polarity';
-import { fieldAt, POLARITY_RECORD_MA } from './deepTime/earthState';
+import { magneticNorthAt } from './deepTime/earthState';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
 import { DATABLE_YEARS } from './data/radiocarbonProduction';
 import {
@@ -1811,6 +1812,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // Drawn on the globe as layers of their own (#379).
   const placeNamesOnGlobe = globe.addLayer(placeNameLayer);
   const moonNamesOnGlobe = globe.addLayer(moonNameLayer);
+  const magneticNorthOnGlobe = globe.addLayer(magneticNorthLayer);
   const impactsOnGlobe = globe.addLayer(impactLayer);
   const humanSitesOnGlobe = globe.addLayer(humanSiteLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
@@ -2440,17 +2442,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
     );
   }
-  /** The pole a compass pointed to then, as the globe marks it. */
-  function magneticNorthAt(ma: number): 'north' | 'south' | 'either' | null {
-    if (ma > POLARITY_RECORD_MA) return null;
-    const { polarity: field } = fieldAt(ma, polarity);
-    return field === 'normal' ? 'north' : field === 'reversed' ? 'south' : 'either';
-  }
 
   function showDeepTime(state: ViewState): void {
     const { ma } = state;
     bottom.dataset['deep'] = ma === null ? 'off' : 'on';
-    globe.setMagneticNorth(ma === null ? null : magneticNorthAt(ma));
+    magneticNorthOnGlobe.update(ma === null ? null : magneticNorthAt(ma, polarity));
     if (ma !== null) wantPolarity();
     if (ma === null) {
       historySpan.render('years');
