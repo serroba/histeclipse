@@ -4,12 +4,19 @@
  * with the report's own notes where they differ. The sheet follows the view, so a link opens it
  * at the same chapter.
  *
- * The scene's code and the data load the first time the sheet opens. DOM glue, covered by the
- * Playwright suite; the numbers are in `data/planetaryBoundaries.ts`, the scene in
- * `story/boundaryWheel.ts`.
+ * It opens on the Holocene (#453): a chart of temperature over 800,000 years, the stable band
+ * the boundaries are set to keep the planet in. The other chapters are the wheel's.
+ *
+ * The scenes' code and the data load the first time the sheet opens; the wheel's WebGL only
+ * when one of its chapters is first shown. DOM glue, covered by the Playwright suite; the
+ * numbers are in `data/planetaryBoundaries.ts` and `data/holoceneTemperature.ts`, the scenes in
+ * `story/boundaryWheel.ts` and `story/holoceneChart.ts`.
  */
 
+import type { Fetch } from '../data/fetchJson';
+import { loadHoloceneTemperature, type HoloceneTemperature } from '../data/holoceneTemperature';
 import {
+  loadPlanetaryBoundaries,
   statusOf,
   valueText,
   variableReach,
@@ -19,7 +26,9 @@ import {
   type Zone,
 } from '../data/planetaryBoundaries';
 import { BOUNDARY_CHAPTERS, type BoundaryChapter } from '../state/viewState';
-import type { BoundaryWheel } from '../story/boundaryWheel';
+import type { BoundaryWheel, createBoundaryWheel } from '../story/boundaryWheel';
+import type { createHoloceneChart } from '../story/holoceneChart';
+import type { StoryScene } from '../story/storyScene';
 import { errorMessage } from '../util/errors';
 import { element } from './dom';
 import { uiIcon } from './icons';
@@ -35,12 +44,15 @@ export interface BoundariesSheet {
 }
 
 const CHAPTER_NAMES: Readonly<Record<BoundaryChapter, string>> = {
+  holocene: 'Holocene',
   safe: 'Safe space',
   pressure: 'Pressure',
   compare: '2023 vs 2026',
 };
 
 const CAPTIONS: Readonly<Record<BoundaryChapter, string>> = {
+  holocene:
+    'For 800,000 years temperature swung with the ice ages: at the last one’s depth, about 20,000 years ago, the globe was some 7 °C colder (Antarctica, faint, swung about twice as far). Then for 10,000 years before industry it kept within about a degree: the Holocene corridor (green), in which farming and cities arose. In 2025 it was 1.4 °C above 1850–1900, out of the corridor. The records differ on the corridor’s slow trend: the reanalysis drawn here has it warming slightly, others cooling.',
   safe: 'Nine processes keep Earth in the stable state of the last 11,700 years, the Holocene, in which farming and cities arose. Each has a boundary to human pressure: inside it (green), the risk of destabilising the planet stays low. Here every one is at its pre-industrial or Holocene-like level.',
   pressure:
     'Each wedge grows to its value in the Planetary Health Check 2026. Past the dark green ring a boundary is crossed, and the risk grows (amber); past the orange line it is high (red). Seven of the nine are crossed; only aerosols, globally, and the ozone layer are within.',
@@ -129,8 +141,9 @@ function valuesTable(data: PlanetaryBoundaries): HTMLElement {
 export function createBoundariesSheet(
   /** Asked to open at a chapter, or to close: the view decides. */
   onRequest: (chapter: BoundaryChapter | null) => void,
-  /** The data, loaded the first time it is needed. */
-  load: () => Promise<PlanetaryBoundaries>,
+  /** Where a data file is served, and how to fetch it: loaded the first time the sheet opens. */
+  dataUrl: (file: string) => string,
+  fetchJson: Fetch,
   earthTextureUrl: string,
   /** The book that says where the numbers come from. */
   why: HTMLElement,
@@ -156,6 +169,10 @@ export function createBoundariesSheet(
   const caption = element('p', { class: 'boundary-caption', 'data-testid': 'boundary-caption' });
   const status = element('p', { class: 'stage-status', role: 'status' }, 'Loading…');
   const stage = element('div', { class: 'boundary-stage', 'data-testid': 'boundary-stage' });
+  const chartStage = element('div', {
+    class: 'boundary-stage holocene-stage',
+    'data-testid': 'holocene-stage',
+  });
   const table = element('div', { class: 'boundary-values' });
   const dialog = element(
     'dialog',
@@ -180,6 +197,7 @@ export function createBoundariesSheet(
         play,
         again,
       ),
+      chartStage,
       stage,
       status,
       caption,
@@ -199,7 +217,15 @@ export function createBoundariesSheet(
           { href: 'https://doi.org/10.1126/sciadv.adh2458' },
           'Richardson et al. (2023)',
         ),
-        '. The drawing is this site’s own.',
+        '. Temperature: ',
+        element('a', { href: 'https://doi.org/10.1594/PANGAEA.683655' }, 'EPICA Dome C'),
+        ' (Jouzel et al. 2007, CC BY 3.0), ',
+        element('a', { href: 'https://doi.org/10.1038/s41586-021-03984-4' }, 'Osman et al. (2021)'),
+        ', ',
+        element('a', { href: 'https://doi.org/10.1038/s41561-019-0400-0' }, 'PAGES 2k (2019)'),
+        ' and ',
+        element('a', { href: 'https://doi.org/10.1029/2019JD032361' }, 'HadCRUT5'),
+        ' (Met Office, Open Government Licence v3), as the report’s Figure 1 cites them. The drawings are this site’s own.',
       ),
     ),
   );
@@ -216,7 +242,7 @@ export function createBoundariesSheet(
     element('span', { class: 'icon-label' }, 'Boundaries'),
   );
   button.addEventListener('click', () => {
-    onRequest(dialog.open ? null : 'safe');
+    onRequest(dialog.open ? null : 'holocene');
   });
   close.addEventListener('click', () => {
     onRequest(null);
@@ -226,63 +252,93 @@ export function createBoundariesSheet(
   });
 
   const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  interface Loaded {
+    readonly boundaries: PlanetaryBoundaries;
+    readonly temperature: HoloceneTemperature;
+    readonly makeWheel: typeof createBoundaryWheel;
+    readonly makeChart: typeof createHoloceneChart;
+  }
+  let loaded: Loaded | null = null;
   let wheel: BoundaryWheel | null = null;
+  let chart: StoryScene<'holocene'> | null = null;
   let starting: Promise<void> | null = null;
-  let wanted: BoundaryChapter | null = null;
   let shown: BoundaryChapter | null = null;
   let playing = true;
+
+  /** The scene of the chapter shown: the chart or the wheel. */
+  const current = () => (shown === 'holocene' ? chart : wheel);
 
   function setPlaying(next: boolean): void {
     playing = next;
     play.textContent = next ? 'Pause' : 'Play';
-    wheel?.setPlaying(next);
+    current()?.setPlaying(next);
   }
   play.addEventListener('click', () => {
     setPlaying(!playing);
   });
   again.addEventListener('click', () => {
-    wheel?.restart();
+    current()?.restart();
     setPlaying(true);
   });
 
-  /** Turn the wheel to `chapter` and start it, or show it complete for less motion. */
+  /** Turn to `chapter`, on the chart or the wheel, and start it, or show it complete. */
   function turnTo(chapter: BoundaryChapter): void {
-    if (wheel === null) return;
-    wheel.setChapter(chapter);
+    if (loaded === null) return;
+    const { boundaries, temperature, makeWheel, makeChart } = loaded;
+    chartStage.hidden = chapter !== 'holocene';
+    stage.hidden = chapter === 'holocene';
+    let scene: Pick<StoryScene<string>, 'restart' | 'settle'>;
+    if (chapter === 'holocene') {
+      wheel?.setPlaying(false);
+      chart ??= makeChart(chartStage, temperature);
+      scene = chart;
+    } else {
+      chart?.setPlaying(false);
+      // Made once a wheel chapter is first shown, its stage then laid out.
+      wheel ??= makeWheel(stage, { data: boundaries, earthTextureUrl });
+      wheel.setChapter(chapter);
+      scene = wheel;
+    }
     if (lessMotion.matches) {
-      wheel.settle();
+      scene.settle();
       playing = false;
       play.textContent = 'Play';
     } else {
-      wheel.restart();
+      scene.restart();
       setPlaying(true);
     }
   }
 
   async function start(): Promise<void> {
-    const [data, { createBoundaryWheel }] = await Promise.all([
-      load(),
-      import('../story/boundaryWheel'),
-    ]);
-    table.replaceChildren(valuesTable(data));
+    const [boundaries, temperature, { createBoundaryWheel }, { createHoloceneChart }] =
+      await Promise.all([
+        loadPlanetaryBoundaries(dataUrl('planetary-boundaries.json'), fetchJson),
+        loadHoloceneTemperature(dataUrl('holocene-temperature.json'), fetchJson),
+        import('../story/boundaryWheel'),
+        import('../story/holoceneChart'),
+      ]);
+    table.replaceChildren(valuesTable(boundaries));
     status.hidden = true;
-    // The sheet may have closed while it loaded.
-    if (!dialog.open || wheel !== null) return;
-    wheel = createBoundaryWheel(stage, { data, earthTextureUrl });
+    loaded = {
+      boundaries,
+      temperature,
+      makeWheel: createBoundaryWheel,
+      makeChart: createHoloceneChart,
+    };
   }
 
   function show(chapter: BoundaryChapter | null): void {
     // Called on every render: act only when the chapter changes.
     if (chapter === shown) return;
     shown = chapter;
-    wanted = chapter;
     button.setAttribute('aria-expanded', String(chapter !== null));
     if (chapter === null) {
       if (dialog.open) dialog.close();
       // The WebGL context goes with the sheet; it is made again on opening.
       wheel?.dispose();
+      chart?.dispose();
       wheel = null;
-      starting = null;
+      chart = null;
       return;
     }
     for (const { chapter: each, tab } of tabs)
@@ -290,13 +346,14 @@ export function createBoundariesSheet(
     caption.textContent = CAPTIONS[chapter];
     // Not modal: the globe stays in reach, as the other sheets leave it.
     if (!dialog.open) dialog.show();
-    if (wheel !== null) {
+    if (loaded !== null) {
       turnTo(chapter);
       return;
     }
     starting ??= start().then(
       () => {
-        if (wanted !== null) turnTo(wanted);
+        // The sheet may have closed, or turned, while it loaded.
+        if (shown !== null) turnTo(shown);
       },
       (error: unknown) => {
         starting = null;

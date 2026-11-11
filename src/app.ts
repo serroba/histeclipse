@@ -282,7 +282,6 @@ import { createTreeSheet } from './ui/treeSheet';
 import { createImpactPathsSheet } from './ui/impactPathsSheet';
 import { createLineagesSheet } from './ui/lineagesSheet';
 import { createBoundariesSheet } from './ui/boundariesSheet';
-import { loadPlanetaryBoundaries } from './data/planetaryBoundaries';
 import { loadLineages, type LineageGroup, type Lineages } from './data/lineages';
 import { loadTreeOfLife, type TreeOfLife } from './data/treeOfLife';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
@@ -470,7 +469,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     (boundaries) => {
       store.set((state) => ({ ...state, boundaries }));
     },
-    () => loadPlanetaryBoundaries(`${base}data/planetary-boundaries.json`, fetchJson),
+    (file) => `${base}data/${file}`,
+    (url) => fetch(url),
     `${base}textures/earth-blue-marble-2048.jpg`,
     whySheet.mark('boundaries', 'Planetary boundaries'),
   );
