@@ -729,8 +729,11 @@ export const EARTH_FRAGMENT = /* glsl */ `
       // maps have none (Krapp's sea and ice sheets), the relief shows.
       float sea = 1.0 - smoothstep(-blur, blur, coast);
       float shore = 1.0 - smoothstep(blur, 3.0 * blur, abs(coast));
+      // A land-only map's 1° cells reach the coast drawn here (its edge values carry over into
+      // the empty cells), but colour the sea only where a map covers it fully.
       vec4 temp = temperatureLayer(uv);
-      color = mix(color, temp.rgb * (1.0 - 0.3 * sea) * (1.0 - 0.55 * shore), smoothstep(0.3, 0.7, temp.a));
+      float cover = smoothstep(0.0, 0.2, temp.a) * mix(1.0, step(0.999, temp.a), sea);
+      color = mix(color, temp.rgb * (1.0 - 0.3 * sea) * (1.0 - 0.55 * shore), cover);
     }
     color = seaIceOver(color, uv, 1.0 - smoothstep(-blur, blur, coast));
     if (iceActive > 0.5) {

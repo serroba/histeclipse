@@ -17,7 +17,7 @@ test('the last ice age shows on the land as cold, against today, or as it was', 
     await showDeepDetails(page);
   });
   await test.step('Then the land is coloured by its change from today', async () => {
-    await expect(globe).toHaveAttribute('data-temperature', /krapp\/22\.png .*krapp\/22\.png$/);
+    await expect(globe).toHaveAttribute('data-temperature', /krapp\/20\.png .*krapp\/22\.png$/);
     await expect(globe).toHaveAttribute('data-temperature-change', 'true');
     await expect(page.locator('.temperature-heading')).toContainText(
       'how much warmer or colder than today',

@@ -1720,7 +1720,8 @@ test('deep time narrows to the ice ages, in thousands of years', async ({ page }
   await expect(page.locator('.hud-date')).toHaveText('21,000 years ago');
   await expect(page.getByTestId('ice-note')).toBeVisible();
   await expect(page.getByLabel('Thousands of years ago')).toHaveValue('-21');
-  await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toBeDisabled();
+  // The ice ages have temperature maps of their own (#457).
+  await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toBeEnabled();
   // Both ice-age reconstructions read the glacial maximum.
   const legend = page.getByTestId('sea-legend');
   await expect(legend.locator('[data-series="bintanja-2008"]')).toContainText('−123 m');
