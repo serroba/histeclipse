@@ -42,3 +42,11 @@ export function deepSpeedFor(scale: DeepScale, wanted: number | undefined): numb
     ? wanted
     : DEFAULT_DEEP_SPEED[scale];
 }
+
+/**
+ * Maps loaded ahead while deep time plays: at 20 Myr a second, about a second's worth; more at
+ * a faster speed, so the globe keeps up.
+ */
+export function prefetchFrames(maPerSecond: number): number {
+  return Math.max(4, Math.ceil((4 * maPerSecond) / 20));
+}
