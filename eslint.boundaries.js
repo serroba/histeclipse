@@ -44,13 +44,12 @@ export const MAX_LINES = 400;
  * The files longer than MAX_LINES when it came in: each may only shrink, to MAX_LINES and off this
  * list. New work goes into a feature (#380) or a globe layer (#379), or a new file, instead.
  * `src/architecture.test.ts` asks for a limit to come down once it is 50 lines above its file.
- * Two are mostly content, not code (the sources registry, the deep-time milestones): theirs is to
- * move into data files.
+ * Some are mostly content, not code (the deep-time milestones): theirs is to move into data
+ * files, as the sources registry's did (#383).
  */
 export const LINE_LIMITS = {
   'app.ts': 4893,
   'globe/scene.ts': 3484,
-  'sources/registry.ts': 1617,
   'ui/deepTimeBar.ts': 1453,
   'sky/skyScene.ts': 1281,
   'ui/lineagesSheet.ts': 1105,
