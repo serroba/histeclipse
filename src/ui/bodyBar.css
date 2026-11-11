@@ -67,3 +67,44 @@
   display: block;
   font-size: 11px;
 }
+
+/* Away from Earth: the bar says what the body in view is doing, and Earth's own parts rest
+   (the year's eclipses but on the Moon, Seen from, the ways-of-life key and the states'
+   ticker); so do Earth's spans and Layers in the date panel (#329). */
+.body-bar {
+  margin: 0;
+  padding: 0 4px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.body-bar[hidden] {
+  display: none;
+}
+
+.body-bar-name {
+  color: var(--ink);
+}
+
+.body-bar-picture {
+  display: block;
+  font-size: 12px;
+}
+
+.body-bar-picture[hidden] {
+  display: none;
+}
+
+/* A moon's story (#335): a few lines, scrolled within, so the bar stays a bar on a phone. */
+.body-bar-about {
+  display: block;
+  max-height: 6.4em;
+  margin: 2px 0;
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.body-bar-about[hidden] {
+  display: none;
+}

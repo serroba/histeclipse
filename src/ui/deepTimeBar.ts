@@ -61,6 +61,7 @@ import { createMilestonePanel } from './milestonePanel';
 import { createPeriodBands } from './periodBands';
 import { createPolarityStrip } from './polarityStrip';
 import { createSeaLevelChart } from './seaLevelChart';
+import './deepTimeBar.css';
 
 /** Each step button moves by one elevation map, or on the ice-age scale by 5,000 years. */
 export const STEP_MA = 5;
@@ -282,7 +283,6 @@ export interface DeepTimeView {
   readonly temperature: TemperatureView;
   /** Whether a second reconstruction's continents are outlined, and what to say of them. */
   readonly plates: boolean;
-  /** The ice-core gases: off, on while they load (null), or on with them. */
   /**
    * The air: off, or on with the ice-core gases (on the ice-age scale) or the gases of the last
    * 540 million years (on that scale), each null while it loads.
@@ -318,12 +318,12 @@ export interface DeepTimeView {
   readonly platesText: string | null;
   /** The ice-age coastline; null before the ice ages. */
   readonly coastline: CoastlineView | null;
+  /** The sea ice; null off the ice-age scale. */
+  readonly seaIce: SeaIceView | null;
   /**
    * Whether ice is drawn at the moment shown, how far back the ice maps reach (ka), and, beyond
    * them, which map stands in.
    */
-  /** The sea ice; null off the ice-age scale. */
-  readonly seaIce: SeaIceView | null;
   readonly ice: {
     readonly drawn: boolean;
     readonly oldestKa: number | null;

@@ -267,3 +267,13 @@
     text-overflow: ellipsis;
   }
 }
+
+/* The eclipse row fades out where more chips lie beyond the edge. */
+.eclipse-list[data-more='true'] {
+  mask-image: linear-gradient(to right, black calc(100% - 48px), transparent);
+}
+
+/* The year's form, which the year wheel (#376) opens above. */
+.year-form {
+  position: relative;
+}

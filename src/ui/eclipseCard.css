@@ -107,3 +107,8 @@
   flex: 1;
   min-width: 0;
 }
+
+.eclipse-hint {
+  color: var(--ink-muted);
+  font-style: italic;
+}
