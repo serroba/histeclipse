@@ -147,7 +147,6 @@ import {
   periodsText,
   type NamedPeriods,
 } from './data/namedPeriods';
-import { loadPlateMotion, motionText, type PlateMotion } from './data/plateMotion';
 import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
 import { approachOf, impactorText } from './data/impactScaling';
@@ -164,6 +163,7 @@ import { mountFamous } from './features/famous';
 import { mountShower } from './features/shower';
 import { mountCarbonMade } from './features/carbonMade';
 import { mountIceAges } from './features/iceAges';
+import { mountDeepSurfaces } from './features/deepSurfaces';
 import { phoneLook, type BodiesSeen } from './sky/aim';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
@@ -171,9 +171,6 @@ import { layerWhy, onScreen, type WhyId } from './sources/registry';
 import { createZoomRail } from './ui/zoomRail';
 import { createWaysLegend } from './ui/waysLegend';
 import { loadWaysOfLife, waysAt, waysNote, type WaysOfLife } from './data/waysOfLife';
-import { loadAtmosphere, type Atmosphere } from './data/atmosphere';
-import { loadCo2Archive, type Co2Archive } from './data/co2Archive';
-import { loadDeepAir, type DeepAir } from './data/deepAir';
 import {
   impactDetails,
   impactsAt,
@@ -185,12 +182,6 @@ import {
   type Impacts,
   type ImpactsMode,
 } from './data/impacts';
-import {
-  loadPlateMasks,
-  type PlateMaskIndex,
-  platesBeyondText,
-  plateText,
-} from './data/plateMasks';
 import { deepSpeedFor, prefetchFrames } from './deepTime/playSpeed';
 import { createTemperatureLayer } from './features/temperature/temperatureLayer';
 import { playhead } from './deepTime/playhead';
@@ -479,7 +470,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         store.set((state) => ({ ...state, layers: withLayer(state.layers, 'air', on) }));
       },
       onCo2Archive() {
-        loadArchive();
+        surfaces.loadArchive();
       },
       onImpactsMode(mode) {
         impactsMode = mode;
@@ -1128,6 +1119,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const rocksOnGlobe = globe.addLayer(rocksLayer);
   const waysOnGlobe = globe.addLayer(waysLayer);
   const datesOnGlobe = globe.addLayer(dateCellsLayer);
+  // Deep time's climate and continents (#444): the temperature, the plates and how far they
+  // moved, and the air.
+  const surfaces = mountDeepSurfaces({
+    ...partContext,
+    globe,
+    redraw: () => {
+      showDeepTime(store.get());
+    },
+  });
   // The ice ages' Earth (#444): the sea's level and the land it left bare, the ice sheets and
   // their outlines, the sea ice, and the Holocene's while travelling through the years.
   const iceAges = mountIceAges({
@@ -1657,8 +1657,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   // Deep time: Earth's surface from the elevation maps, which load a few at a time as needed.
   let paleoIndex: Promise<PaleoDemIndex> | null = null;
-  let platesLoading: Promise<PlateMaskIndex> | null = null;
-  let platesIndex: PlateMaskIndex | null = null;
   // How far back the elevation maps reach, until their index says.
   let oldest = MAPS_REACH_MA;
   let playing = false;
@@ -1698,9 +1696,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setSketch(null);
       globe.setDeepTime(null);
       globe.setTemperature(null);
+      surfaces.off();
       iceAges.off(state);
       for (const { shown } of mounted) shown.deep?.(state, null);
-      globe.setPlates(null);
       return;
     }
     const period = periodAt(ma);
@@ -1714,7 +1712,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe.setUncharted(uncharted);
     // Before the maps, a sketch of the hypotheses chosen; invented land only beyond the plates.
     const choices = { impact: state.impact, land: state.land, snowball: state.snowball };
-    const reconstructed = ma <= (platesIndex?.frames.at(-1)?.ma ?? PLATES_REACH_MA);
+    const reconstructed = ma <= (surfaces.platesReach() ?? PLATES_REACH_MA);
     const sketch = uncharted ? sketchAt(ma, choices, reconstructed) : null;
     globe.setSketch(sketch);
     deepBar.render({
@@ -1727,12 +1725,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       speed: deepSpeedFor(state.deepScale, deepSpeeds[state.deepScale]),
       scale,
       ...iceAges.bar(state, ma),
-      plateMotion: plateMotionText(state, ma),
       chips: deepChips(state, { ma, scale }),
       impacts: showImpacts(state),
-      air: showAir(state),
+      ...surfaces.bar(state, ma),
       temperature: temperatureLayer.view(state, { ma, ice, uncharted }),
-      ...showPlates(state, ma),
       sketch: sketch === null ? null : { sketch, choices },
     });
     glance.render({
@@ -1784,110 +1780,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function spanOf(scale: DeepScale): number {
     if (scale === 'ice') return ICE_AGES_MA;
     return scale === 'eons' ? EARTH_AGE_MA : oldest;
-  }
-
-  /** A second reconstruction's continents, outlined, while the layer is on. */
-  function showPlates(
-    state: ViewState,
-    ma: number,
-  ): { readonly plates: boolean; readonly platesText: string | null } {
-    if (!state.layers.has('plates')) {
-      globe.setPlates(null);
-      return { plates: false, platesText: null };
-    }
-    if (platesIndex === null) {
-      if (platesLoading === null) {
-        platesLoading = loadPlateMasks(`${base}data/plates/index.json`, fetchJson);
-        platesLoading.then(
-          (index) => {
-            platesIndex = index;
-            showDeepTime(store.get());
-          },
-          (error: unknown) => {
-            platesLoading = null;
-            notify(`Could not load the continent outlines: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return { plates: true, platesText: null };
-    }
-    const reach = platesIndex.frames.at(-1)?.ma ?? 0;
-    if (ma > reach) {
-      globe.setPlates(null);
-      return { plates: true, platesText: platesBeyondText(reach) };
-    }
-    const { younger, older, mix } = framesAround(platesIndex.frames, ma);
-    globe.setPlates({
-      younger: `${base}data/plates/${younger.file}`,
-      older: `${base}data/plates/${older.file}`,
-      mix,
-      columns: platesIndex.columns,
-      rows: platesIndex.rows,
-      turnYounger: younger.turn ?? 0,
-      turnOlder: older.turn ?? 0,
-    });
-    return { plates: true, platesText: plateText(mix < 0.5 ? younger : older) };
-  }
-
-  // The ice-core gases: loaded the first time the layer is turned on.
-  let atmosphere: Atmosphere | null = null;
-  let atmosphereLoading: Promise<Atmosphere> | null = null;
-
-  // The gases of the last 540 million years: loaded the first time Air is on at that scale.
-  let deepAir: DeepAir | null = null;
-  let deepAirLoading: Promise<DeepAir> | null = null;
-
-  function showAir(state: ViewState): DeepTimeView['air'] {
-    if (state.deepScale === 'eons' || !state.layers.has('air')) return { on: false };
-    if (state.deepScale === 'all') {
-      if (deepAir === null && deepAirLoading === null) {
-        deepAirLoading = loadDeepAir(`${base}data/air-deep.json`, fetchJson);
-        deepAirLoading.then(
-          (loaded) => {
-            deepAir = loaded;
-            showDeepTime(store.get());
-          },
-          (error: unknown) => {
-            deepAirLoading = null;
-            notify(`Could not load the deep-time gases: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return { on: true, atmosphere, deep: deepAir, archive: co2Archive };
-    }
-    if (atmosphere === null && atmosphereLoading === null) {
-      atmosphereLoading = loadAtmosphere(`${base}data/atmosphere.json`, fetchJson);
-      atmosphereLoading.then(
-        (loaded) => {
-          atmosphere = loaded;
-          showDeepTime(store.get());
-        },
-        (error: unknown) => {
-          atmosphereLoading = null;
-          notify(`Could not load the ice-core gases: ${errorMessage(error)}`);
-        },
-      );
-    }
-    return { on: true, atmosphere, deep: deepAir, archive: co2Archive };
-  }
-
-  // The Paleo-CO2 Data Archive: loaded the first time the reader picks its estimates.
-  let co2Archive: Co2Archive | null = null;
-  let co2ArchiveLoading: Promise<Co2Archive> | null = null;
-
-  function loadArchive(): void {
-    if (co2Archive !== null || co2ArchiveLoading !== null) return;
-    co2ArchiveLoading = loadCo2Archive(`${base}data/air-co2-archive.json`, fetchJson);
-    co2ArchiveLoading.then(
-      (loaded) => {
-        co2Archive = loaded;
-        showDeepTime(store.get());
-      },
-      (error: unknown) => {
-        co2ArchiveLoading = null;
-        notify(`Could not load the Paleo-CO₂ Data Archive: ${errorMessage(error)}`);
-      },
-    );
   }
 
   // Impact craters and deposits: loaded the first time the layer is turned on, in either time.
@@ -2015,31 +1907,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
           }),
     });
   });
-
-  // How far the plates have moved: the file loads the first time the ice-age scale is shown.
-  let plateMotion: PlateMotion | null = null;
-  let plateMotionLoading: Promise<PlateMotion> | null = null;
-
-  function plateMotionText(state: ViewState, ma: number): string | null {
-    if (state.deepScale !== 'ice') return null;
-    if (plateMotion === null) {
-      if (plateMotionLoading === null) {
-        plateMotionLoading = loadPlateMotion(`${base}data/plates-motion.json`, fetchJson);
-        plateMotionLoading.then(
-          (loaded) => {
-            plateMotion = loaded;
-            showDeepTime(store.get());
-          },
-          (error: unknown) => {
-            plateMotionLoading = null;
-            notify(`Could not load how far the plates moved: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return null;
-    }
-    return motionText(plateMotion, ma);
-  }
 
   /** The header in deep time: how long ago, and the period by the ICS chart. */
   function showDeepTimeText(ma: number): void {
