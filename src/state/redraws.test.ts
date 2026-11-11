@@ -48,6 +48,7 @@ const WATCHES: Record<string, { watch: Watch; fields: readonly (keyof ViewState)
       'coast',
       'seaIce',
       'temperatureModel',
+      'temperatureShow',
       'dispersal',
       'impact',
       'land',

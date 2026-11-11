@@ -7,7 +7,7 @@
  * DOM glue, covered by the Playwright suite.
  */
 
-import { celsiusText, legendGradient, scaleTicks, TEMPERATURE_STOPS } from './deepTimeBar';
+import { celsiusText, legendGradient, scaleTicks, TEMPERATURE_STOPS } from './temperatureLegend';
 import { element } from './dom';
 import './deepGlance.css';
 

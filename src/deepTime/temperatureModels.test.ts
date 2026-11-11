@@ -22,11 +22,11 @@ describe('the temperature models', () => {
   });
 
   it('draw with the model asked for, or stand the other in', () => {
-    const both = { scotese, cesm };
+    const both = { krapp: null, scotese, cesm };
     expect(mapModel('cesm', both, 100)).toEqual({ model: 'cesm', instead: null });
     expect(mapModel('cesm', both, 300)).toEqual({ model: 'scotese', instead: 'cesm' });
     expect(mapModel('scotese', both, 300)).toEqual({ model: 'scotese', instead: null });
-    expect(mapModel('cesm', { scotese: null, cesm: null }, 100)).toBeNull();
-    expect(mapModel('scotese', { scotese, cesm }, 600)).toBeNull();
+    expect(mapModel('cesm', { krapp: null, scotese: null, cesm: null }, 100)).toBeNull();
+    expect(mapModel('scotese', both, 600)).toBeNull();
   });
 });

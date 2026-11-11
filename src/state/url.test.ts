@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { LINEAGE_GROUPS } from '../data/lineages';
 import { SEA_ICE_MODELS } from '../data/seaIce';
 import { COAST_SOURCES } from '../deepTime/coastline';
-import { TEMPERATURE_MODELS } from '../deepTime/temperatureModels';
+import { TEMPERATURE_MODELS, TEMPERATURE_SHOWS } from '../deepTime/temperatureModels';
 import { IMPACT_MODELS, LAND_MODELS, SNOWBALL_MODELS } from '../deepTime/sketch';
 
 import { calendarDateOf, daysInMonth, type Calendar } from '../time/julianDay';
@@ -81,7 +81,8 @@ describe('parseViewState', () => {
       coast: 'bintanja-2008',
       dispersal: 'off',
       seaIce: 'mpi-esm1-2-lr',
-      temperatureModel: 'scotese',
+      temperatureModel: 'krapp',
+      temperatureShow: 'change',
       impact: 'early',
       land: 'dhuime',
       snowball: 'hard',
@@ -141,6 +142,8 @@ describe('parseViewState', () => {
 
   it('reads whose temperature maps colour the globe, writing it only when not the default', () => {
     expect(parseViewState('temp=cesm', NOW).state.temperatureModel).toBe('cesm');
+    expect(parseViewState('tshow=actual', NOW).state.temperatureShow).toBe('actual');
+    expect(parseViewState('tshow=nowhere', NOW).state.temperatureShow).toBe('change');
     const sketch = parseViewState('impact=young&land=flooded&snowball=slush', NOW).state;
     expect([sketch.impact, sketch.land, sketch.snowball]).toEqual(['young', 'flooded', 'slush']);
   });
@@ -479,6 +482,7 @@ describe('serializeViewState', () => {
     dispersal: fc.constantFrom(...DISPERSAL_SCENARIOS),
     seaIce: fc.constantFrom(...SEA_ICE_MODELS),
     temperatureModel: fc.constantFrom(...TEMPERATURE_MODELS),
+    temperatureShow: fc.constantFrom(...TEMPERATURE_SHOWS),
     impact: fc.constantFrom(...IMPACT_MODELS),
     land: fc.constantFrom(...LAND_MODELS),
     snowball: fc.constantFrom(...SNOWBALL_MODELS),

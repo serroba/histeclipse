@@ -16,6 +16,8 @@ const IndexSchema = v.pipe(
     schemaVersion: v.literal(1),
     credit: v.pipe(v.string(), v.minLength(1)),
     source: v.pipe(v.string(), v.url()),
+    /** What the maps cover: the whole globe (the default), or ice-free land only. */
+    coverage: v.optional(v.picklist(['global', 'land']), 'global'),
     columns: v.pipe(v.number(), v.integer(), v.minValue(2)),
     rows: v.pipe(v.number(), v.integer(), v.minValue(2)),
     coldest: celsius,
@@ -23,7 +25,8 @@ const IndexSchema = v.pipe(
     frames: v.pipe(
       v.array(
         v.strictObject({
-          ma: v.pipe(v.number(), v.integer(), v.minValue(0)),
+          // Whole millions of years for the deep-time models; thousands of years for Krapp's.
+          ma: v.pipe(v.number(), v.minValue(0)),
           file: v.pipe(v.string(), v.regex(/^\d+\.png$/)),
           /** Area-weighted global mean, °C. */
           mean: celsius,

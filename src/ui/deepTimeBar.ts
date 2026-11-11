@@ -27,11 +27,7 @@ import type { IceStandIn } from '../data/iceSheets';
 import { SEA_ICE_MODELS, type SeaIceModel } from '../data/seaIce';
 import type { SeaLevelIndex } from '../data/seaLevel';
 import { COAST_SOURCES, type CoastSource } from '../deepTime/coastline';
-import {
-  TEMPERATURE_MODEL_LABELS,
-  TEMPERATURE_MODELS,
-  type TemperatureModel,
-} from '../deepTime/temperatureModels';
+import type { TemperatureModel, TemperatureShow } from '../deepTime/temperatureModels';
 import {
   IMPACT_MODELS,
   IMPACTS,
@@ -48,6 +44,7 @@ import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import type { DeepScale, Layer } from '../state/viewState';
 import type { WhyId } from '../sources/registry';
 import { element } from './dom';
+import { createTemperatureLegend, type TemperatureView } from './temperatureLegend';
 import { createDeepChips, type DeepChip, type DeepChipView } from './deepChips';
 import { bookIcon, uiIcon } from './icons';
 import { createGasChart } from './gasChart';
@@ -67,104 +64,6 @@ const COAST_LABELS: Readonly<Record<CoastSource, string>> = {
   'bintanja-2008': 'Bintanja & van de Wal 2008',
   'spratt-2016': 'Spratt & Lisiecki 2016',
 };
-
-/** One model's global mean at the moment shown and today, °C; `mean` null beyond its reach. */
-export interface TemperatureReading {
-  readonly model: TemperatureModel;
-  readonly mean: number | null;
-  readonly today: number | null;
-  /** How far back its maps reach, Ma. */
-  readonly reach: number;
-}
-
-export interface TemperatureView {
-  readonly on: boolean;
-  /** The model asked for, and the one colouring the globe (null while the maps load). */
-  readonly wanted: TemperatureModel;
-  readonly shown: TemperatureModel | null;
-  /** Every model loaded so far, in a fixed order. */
-  readonly readings: readonly TemperatureReading[];
-  /** What the site says about the map shown, if anything. */
-  readonly note: string | null;
-}
-
-/** The legend's stops, °C, matching the globe's shader. */
-export const TEMPERATURE_STOPS: readonly (readonly [number, string])[] = [
-  [-40, '#313695'],
-  [-20, '#4575b4'],
-  [-5, '#91bfdb'],
-  [5, '#e0f3f8'],
-  [15, '#fee090'],
-  [22, '#fdae61'],
-  [28, '#f46d43'],
-  [35, '#d73027'],
-  [45, '#a50026'],
-];
-
-/** What each colour of the scale stands for: a stop's temperature, and what it is like. */
-export const TEMPERATURE_KEY: readonly { readonly celsius: number; readonly label: string }[] = [
-  { celsius: -40, label: 'ice-cap cold' },
-  { celsius: -20, label: 'bitter cold' },
-  { celsius: -5, label: 'below freezing' },
-  { celsius: 5, label: 'cool' },
-  { celsius: 15, label: 'mild (today’s global mean)' },
-  { celsius: 22, label: 'warm' },
-  { celsius: 28, label: 'hot (tropical)' },
-  { celsius: 35, label: 'very hot' },
-  { celsius: 45, label: 'extreme heat' },
-];
-
-/** The ticks under the scale: each temperature and how far along it is placed, 0 to 1. */
-export function scaleTicks(
-  stops: readonly (readonly [number, string])[],
-  ticks: readonly number[],
-): readonly { readonly celsius: number; readonly at: number }[] {
-  const first = stops[0]?.[0] ?? 0;
-  const last = stops.at(-1)?.[0] ?? 1;
-  return ticks.map((celsius) => ({ celsius, at: (celsius - first) / (last - first) }));
-}
-
-/** "−40 °C", with a true minus sign. */
-export function celsiusText(celsius: number): string {
-  return `${celsius < 0 ? '−' : ''}${String(Math.abs(celsius))} °C`;
-}
-
-/** A CSS gradient through the stops, placed by temperature. */
-export function legendGradient(stops: readonly (readonly [number, string])[]): string {
-  const first = stops[0]?.[0] ?? 0;
-  const last = stops.at(-1)?.[0] ?? 1;
-  const placed = stops.map(
-    ([celsius, colour]) => `${colour} ${((100 * (celsius - first)) / (last - first)).toFixed(1)}%`,
-  );
-  return `linear-gradient(to right, ${placed.join(', ')})`;
-}
-
-/** "Global mean: Scotese 2022 32.9 °C (today 14.6 °C) · CESM, Li et al. 2023 25.5 °C …". */
-export function temperatureText(view: TemperatureView): string {
-  if (view.readings.length === 0) return 'Loading temperature maps…';
-  const each = view.readings.map(({ model, mean, today, reach }) => {
-    const label = TEMPERATURE_MODEL_LABELS[model];
-    if (mean === null) return `${label} — covers the last ${String(reach)} million years`;
-    const now = today === null ? '' : ` (today ${today.toFixed(1)} °C)`;
-    return `${label} ${mean.toFixed(1)} °C${now}`;
-  });
-  return `Global mean: ${each.join(' · ')}`;
-}
-
-/** Which model colours the globe, any stand-in, and the coarse model's limits. */
-export function temperatureMapText(view: TemperatureView): string {
-  if (view.shown === null) return '';
-  const shown = TEMPERATURE_MODEL_LABELS[view.shown];
-  const stand =
-    view.shown === view.wanted
-      ? ''
-      : ` ${TEMPERATURE_MODEL_LABELS[view.wanted]} does not reach this far.`;
-  const limits =
-    view.shown === 'cesm'
-      ? ' Its grid is about 3.75° and its geography its own, so its warm and cold patches do not follow these coasts exactly.'
-      : ' A HadCM3L climate model adjusted to rock and isotope records.';
-  return `The globe shows ${shown}.${stand}${limits}`;
-}
 
 /** Over the ice ages: the sea level the coastlines follow, and whose. */
 export interface CoastlineView {
@@ -351,6 +250,7 @@ export function createDeepTimeBar(
     onCoast(coast: CoastSource): void;
     onSeaIce(model: SeaIceModel): void;
     onTemperatureModel(model: TemperatureModel): void;
+    onTemperatureShow(show: TemperatureShow): void;
     onSketch(choice: Partial<SketchChoices>): void;
   },
   chips: readonly DeepChip[] = [],
@@ -484,7 +384,7 @@ export function createDeepTimeBar(
       {},
       iceWhy,
       ' ',
-      'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time. Sea floor laid dry is sandy; ice sheets are white. The continents are drawn where they are today (how far they have moved is below), and the temperature maps are 5 million years apart.',
+      'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time. Sea floor laid dry is sandy; ice sheets are white. The continents are drawn where they are today (how far they have moved is below), and the temperature maps, of land only, are 2,000 years apart.',
     ),
     iceLine,
     outlineLine,
@@ -585,62 +485,19 @@ export function createDeepTimeBar(
     uiIcon('temperature'),
     element('span', { class: 'icon-label' }, 'Temperature'),
   );
-  const legendScale = element('span', { class: 'temperature-scale', 'aria-hidden': 'true' });
-  legendScale.style.background = legendGradient(TEMPERATURE_STOPS);
-  const legendMean = element('span', { 'data-testid': 'temperature-mean' });
-  const legendNote = element('p', { class: 'temperature-note', hidden: '' });
-  const legendMap = element('span', { 'data-testid': 'temperature-map' });
-  const modelPicker = element(
-    'select',
-    { class: 'deep-coast', 'aria-label': 'Temperature model' },
-    ...TEMPERATURE_MODELS.map((model) =>
-      element('option', { value: model }, TEMPERATURE_MODEL_LABELS[model]),
-    ),
-  );
   const swatch = (background: string) => {
     const box = element('span', { class: 'colour-swatch', 'aria-hidden': 'true' });
     box.style.background = background;
     return box;
   };
-  // The scale, its ticks in °C under it, and each colour named: what the globe's colours mean.
-  const ticks = element(
-    'div',
-    { class: 'temperature-ticks', 'aria-hidden': 'true' },
-    ...scaleTicks(TEMPERATURE_STOPS, [-40, -20, 0, 15, 30, 45]).map(({ celsius, at }) => {
-      const tick = element('span', {}, celsiusText(celsius));
-      tick.style.left = `${(at * 100).toFixed(1)}%`;
-      return tick;
-    }),
-  );
-  const named = element(
-    'ul',
-    { class: 'colour-key temperature-key', 'data-testid': 'temperature-key' },
-    ...TEMPERATURE_KEY.map(({ celsius, label }) => {
-      const colour = TEMPERATURE_STOPS.find(([stop]) => stop === celsius)?.[1] ?? '#888';
-      return element(
-        'li',
-        {},
-        swatch(colour),
-        `${celsiusText(celsius)}${celsius === -40 ? ' or colder' : celsius === 45 ? ' or hotter' : ''}: ${label}`,
-      );
-    }),
-  );
-  const legend = element(
-    'div',
-    { class: 'temperature-legend', hidden: '' },
-    element(
-      'p',
-      { class: 'temperature-heading' },
-      'Colours: the average temperature at the surface over a year ',
-      temperatureWhy,
-    ),
-    legendScale,
-    ticks,
-    named,
-    element('p', {}, legendMean),
-    element('p', {}, legendMap, ' ', element('label', {}, 'Colour by ', modelPicker)),
-    legendNote,
-  );
+  const legend = createTemperatureLegend(temperatureWhy, {
+    onModel: (model) => {
+      handlers.onTemperatureModel(model);
+    },
+    onShow: (show) => {
+      handlers.onTemperatureShow(show);
+    },
+  });
   // Poles, field, tilt and day: folded away, so the bar stays small on a phone.
   const facts = element('dl', { class: 'deep-facts-list' });
   const factsPanel = element(
@@ -714,7 +571,7 @@ export function createDeepTimeBar(
     sketchNote,
     coastNote,
     seaLevel.legend,
-    legend,
+    legend.root,
     platesNote,
     ...featureChips.notes,
     impactsNote,
@@ -1137,10 +994,6 @@ export function createDeepTimeBar(
   younger.addEventListener('click', () => {
     if (current !== null) handlers.onMa(Math.max(0, current.ma - step()), true);
   });
-  modelPicker.addEventListener('change', () => {
-    const model = TEMPERATURE_MODELS.find((option) => option === modelPicker.value);
-    if (model !== undefined) handlers.onTemperatureModel(model);
-  });
   sketchPickers.impact.addEventListener('change', () => {
     const impact = IMPACT_MODELS.find((option) => option === sketchPickers.impact.value);
     if (impact !== undefined) handlers.onSketch({ impact });
@@ -1245,8 +1098,8 @@ export function createDeepTimeBar(
         : `${String(view.scale === 'eons' ? EONS_STEP_MA : STEP_MA)} million years`;
       older.setAttribute('aria-label', `${stepWords} earlier`);
       younger.setAttribute('aria-label', `${stepWords} later`);
-      // The temperature maps are 5 million years apart: nothing to show between ice ages.
-      temperatureButton.disabled = ice || uncharted;
+      // On the ice-age scale only the ice ages' own maps draw (#457); before the maps, none.
+      temperatureButton.disabled = uncharted;
       slider.setAttribute('aria-valuetext', formatMa(view.ma));
       when.textContent = formatMa(view.ma);
       period.textContent = view.period === null ? '' : periodShort(view.period);
@@ -1294,12 +1147,7 @@ export function createDeepTimeBar(
       );
       const { temperature } = view;
       temperatureButton.setAttribute('aria-pressed', String(temperature.on));
-      legend.hidden = !temperature.on;
-      legendMean.textContent = temperatureText(temperature);
-      legendMap.textContent = temperatureMapText(temperature);
-      modelPicker.value = temperature.wanted;
-      legendNote.hidden = temperature.note === null;
-      legendNote.textContent = temperature.note ?? '';
+      legend.render(temperature);
       play.textContent = view.playing ? '❚❚' : '▶';
       play.setAttribute('aria-label', view.playing ? 'Pause' : 'Play');
       if (speedsOf !== view.scale) {
