@@ -10,6 +10,7 @@ import { astronomicalYear, formatYear } from '../time/year';
 import type { Coastline } from '../deepTime/coastline';
 import { YEAR_SPEEDS, type YearSpeed } from '../time/yearPlay';
 import { element } from './dom';
+import './historyTrack.css';
 
 export interface HistoryView {
   /** Astronomical years: the one shown, and the track's ends. */

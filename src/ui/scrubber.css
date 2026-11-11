@@ -1,0 +1,50 @@
+/* Time within an eclipse. */
+.scrubber {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(760px, 100%);
+  padding: 6px 12px 6px 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+}
+
+.scrubber[hidden] {
+  display: none;
+}
+
+.scrubber-play {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.06);
+  color: var(--ink);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.scrubber-range {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  accent-color: var(--accent);
+}
+
+.scrubber-time {
+  flex: none;
+  min-width: 15ch;
+  color: var(--ink-muted);
+  font-size: 13px;
+  text-align: right;
+}
+
+@media (max-width: 600px) {
+  .scrubber-time {
+    min-width: 0;
+    font-size: 12px;
+  }
+}
