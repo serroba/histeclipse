@@ -23,11 +23,7 @@ import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { impactLayer } from './globe/impactLayer';
 import { geoToVector } from './globe/geo';
-import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
-import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruptions';
-import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
 import { createDatingCard } from './ui/datingCard';
-import { createRadiocarbonStrip } from './ui/radiocarbonStrip';
 import { createGlobe } from './globe/scene';
 import {
   DEEP_TIME,
@@ -78,8 +74,6 @@ import { createMarkerCard } from './ui/markerCard';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createLayersPanel } from './ui/layersPanel';
 import { cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
-import { blankText, createHistoryTrack, STATES_HINT, STATES_WAIT } from './ui/historyTrack';
-import { yearPlayhead, type YearSpeed } from './time/yearPlay';
 import { labelPoint, territoriesIn } from './data/empires';
 import { createEmpireEclipses, SEARCH_YEARS } from './eclipses/empireEclipses';
 import { CULTURE_INFO } from './data/skyCultures';
@@ -87,7 +81,6 @@ import { createViewSwitch } from './ui/viewSwitch';
 import { type DeepTimeView } from './ui/deepTimeBar';
 import type { DeepChipView } from './ui/deepChips';
 import { formatMa, periodAt, periodWords } from './deepTime/periods';
-import { yearOfMa } from './data/iceSheets';
 import { countryRings, loadNamedPeriods } from './data/namedPeriods';
 import { rockAt } from './data/rocks';
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
@@ -112,6 +105,7 @@ import { mountDates } from './features/dates';
 import { mountPeriods } from './features/periods';
 import { mountEmpires } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
+import { mountYears } from './features/years';
 import { PRESENT_YEAR } from './time/present';
 import { phoneLook, type BodiesSeen } from './sky/aim';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
@@ -133,7 +127,6 @@ import {
 } from './data/impacts';
 import { createTemperatureLayer } from './features/temperature/temperatureLayer';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
-import { createPeriodBands, yearTicks } from './ui/periodBands';
 import { errorMessage } from './util/errors';
 
 const MINUTES_PER_DAY = 1440;
@@ -506,26 +499,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
   showControls.addEventListener('click', togglePanels);
   const card = createEclipseCard(whySheet.mark('eclipses', 'Eclipse'));
-  // The Holocene track: the years played by, from as far back as ΔT reaches to the present.
-  let historySpeed: YearSpeed = 50;
-  let historyPlaying = false;
-  let historyFrame = 0;
-  let historyTick = 0;
-  let historyHead = yearPlayhead();
-  // The Holocene's ages under its slider; a tap goes to an age's start.
-  const historyBands = createPeriodBands(
-    (ma) => {
-      stopHistory();
-      setYear(Math.max(historyFirst(), yearOfMa(ma)));
-    },
-    // In the years, a moment is its year (the ends without the CE everyone assumes); the
-    // round marks are every other millennium.
-    {
-      words: (ma) => formatYear(astronomicalYear(yearOfMa(ma))),
-      short: (ma) => formatYear(astronomicalYear(yearOfMa(ma))).replace(/ CE$/, ''),
-      marks: yearTicks,
-    },
-  );
   // Carbon-14 in the air under the years' slider (#270), its curves loaded once the layer is on.
   const datingCard = createDatingCard();
   // The shower's story (#269, #317): its stage, and its chapters in 3D over the globe.
@@ -547,34 +520,23 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showEmpires(store.get());
     },
   });
-  const radiocarbonStrip = createRadiocarbonStrip(
-    whySheet.mark('radiocarbon', 'Carbon-14 in the air'),
-    (curve, name) => {
-      datingCard.open(curve, name);
+  // The years (#446): the track, playing them, travelling through them, and carbon-14 in the air.
+  const years = mountYears({
+    ...partContext,
+    globe,
+    datingCard,
+    firstYear: () => deltaT.firstYear,
+    travelChanged: (now) => {
+      dates.show(now);
+      showImpacts(now);
+      if (lastTerrestrial !== null) showFeatures(now, lastTerrestrial);
+      rocks.show(now);
+      showEmpires(now);
+      iceAges.showHolocene(now);
     },
-  );
-  const historyTrack = createHistoryTrack(
-    {
-      onYear(year) {
-        stopHistory();
-        setYear(year);
-      },
-      onPlay(play) {
-        if (play) startHistory();
-        else stopHistory();
-      },
-      onSpeed(speed) {
-        historySpeed = speed;
-        showHistory(store.get());
-      },
-      onEndTravel() {
-        stopHistory();
-        setTravel(false);
-      },
-    },
-    historyBands.root,
-    radiocarbonStrip.root,
-  );
+    statesSaid: () => empires.said(),
+    holoceneText: () => iceAges.holoceneText(),
+  });
   // Away from Earth and the Moon, the bar's time is the body's own cycle as Earth sees it (#447).
   const cycle = mountCycle({
     ...partContext,
@@ -583,189 +545,20 @@ export async function startApp(root: HTMLElement): Promise<void> {
     moment: () => bodiesAt,
     universalTime: (jdTT) => deltaT.universalTime(jdTT),
     hideHistory(hidden) {
-      historyTrack.root.hidden = hidden;
-      historyTrack.extras.hidden = hidden;
+      years.track.root.hidden = hidden;
+      years.track.extras.hidden = hidden;
     },
-    stopHistory,
+    stopHistory: () => {
+      years.stop();
+    },
   });
-
-  let radiocarbon: Radiocarbon | null = null;
-  let radiocarbonAsked = false;
-  // The eruptions the ice cores record (HolVol), under the curve; loaded with it.
-  let eruptions: Eruptions | null = null;
-  let eruptionsAsked = false;
-  /** The strip, for the years shown, from the curve of the hemisphere one stands in. */
-  function showRadiocarbon(state: ViewState): void {
-    const on = state.layers.has('radiocarbon') && state.mode === 'globe' && state.ma === null;
-    if (!on) {
-      radiocarbonStrip.render(null);
-      return;
-    }
-    if (radiocarbon === null) {
-      radiocarbonStrip.render(null);
-      if (radiocarbonAsked) return;
-      radiocarbonAsked = true;
-      loadRadiocarbon(`${base}data/radiocarbon.json`, fetchJson).then(
-        (loaded) => {
-          radiocarbon = loaded;
-          showRadiocarbon(store.get());
-        },
-        (error: unknown) => {
-          radiocarbonAsked = false;
-          notify(`Could not load the radiocarbon curves: ${errorMessage(error)}`);
-        },
-      );
-      return;
-    }
-    if (eruptions === null && !eruptionsAsked) {
-      eruptionsAsked = true;
-      loadEruptions(`${base}data/eruptions.json`, fetchJson).then(
-        (loaded) => {
-          eruptions = loaded;
-          showRadiocarbon(store.get());
-        },
-        (error: unknown) => {
-          eruptionsAsked = false;
-          notify(`Could not load the eruptions: ${errorMessage(error)}`);
-        },
-      );
-    }
-    const south = (state.location?.latitude ?? 1) < 0;
-    const first = historyFirst();
-    radiocarbonStrip.render({
-      curve: south ? radiocarbon.curves.shcal20 : radiocarbon.curves.intcal20,
-      name: south ? 'SHCal20' : 'IntCal20',
-      first,
-      last: PRESENT_YEAR,
-      events: RADIOCARBON_EVENTS,
-      eruptions: eruptions === null ? null : eruptionsBetween(eruptions, first, PRESENT_YEAR),
-    });
-  }
-  /**
-   * The travel view, on as the years play and until the reader leaves it: even light, states
-   * and ways of life, the year's ice and sea; markers of single finds and events resting.
-   */
-  function setTravel(open: boolean): void {
-    if (open === travelling) return;
-    travelling = open;
-    globe.setEvenLight(open);
-    // The trip is about peoples and states: their borders, and how people lived where no
-    // state is drawn, come on with it, and go with it if it brought them.
-    const { layers } = store.get();
-    if (open) {
-      travelBrought = TRAVEL_LAYERS.filter((layer) => !layers.has(layer));
-      if (travelBrought.length > 0) {
-        store.set((state) => ({
-          ...state,
-          layers: new Set([...state.layers, ...travelBrought]),
-        }));
-      }
-    } else if (travelBrought.length > 0) {
-      const brought = new Set<Layer>(travelBrought);
-      travelBrought = [];
-      store.set((state) => ({
-        ...state,
-        layers: new Set([...state.layers].filter((layer) => !brought.has(layer))),
-      }));
-    }
-    const now = store.get();
-    dates.show(now);
-    showImpacts(now);
-    if (lastTerrestrial !== null) showFeatures(now, lastTerrestrial);
-    rocks.show(now);
-    showEmpires(now);
-    iceAges.showHolocene(now);
-    showHistory(now);
-  }
-  // While the track is open, the globe is lit evenly and the markers of single finds and
-  // events rest: at years a second they flicker past without meaning.
-  let travelling = false;
-  const TRAVEL_LAYERS: readonly Layer[] = ['empires', 'ways'];
-  let travelBrought: readonly Layer[] = [];
-
-  function historyFirst(): number {
-    return Math.ceil(deltaT.firstYear) + 1;
-  }
-
-  function setYear(year: number): void {
-    store.set((state) => ({
-      ...state,
-      time: moveToYear(state.time, astronomicalYear(year)),
-      selection: null,
-    }));
-  }
-
-  function startHistory(): void {
-    if (store.get().time.date.year >= PRESENT_YEAR) setYear(historyFirst());
-    historyPlaying = true;
-    setTravel(true);
-    historyHead = yearPlayhead();
-    historyTick = performance.now();
-    historyFrame = requestAnimationFrame(tickHistory);
-    showHistory(store.get());
-  }
-
-  // A new year at most every 80 ms: each brings its eclipses and borders to load.
-  const HISTORY_STEP_SECONDS = 0.08;
-  function tickHistory(now: number): void {
-    if (!historyPlaying) return;
-    const seconds = (now - historyTick) / 1000;
-    if (seconds >= HISTORY_STEP_SECONDS) {
-      historyTick = now;
-      const year = store.get().time.date.year;
-      const next = historyHead.step(year, historySpeed, seconds, PRESENT_YEAR);
-      if (next !== year) setYear(next);
-      if (next >= PRESENT_YEAR) {
-        stopHistory();
-        return;
-      }
-    }
-    historyFrame = requestAnimationFrame(tickHistory);
-  }
-
-  function stopHistory(): void {
-    if (!historyPlaying) return;
-    historyPlaying = false;
-    cancelAnimationFrame(historyFrame);
-    showHistory(store.get());
-  }
-
-  function showHistory(state: ViewState): void {
-    showRadiocarbon(state);
-    // Unclamped: the years run past 1950, where deep time's present stops.
-    const maOf = (year: number): number => (1950 - year) / 1e6;
-    historyBands.render({
-      oldest: maOf(historyFirst()),
-      ma: maOf(state.time.date.year),
-      youngest: maOf(PRESENT_YEAR),
-      playing: historyPlaying,
-    });
-    historyTrack.render({
-      year: state.time.date.year,
-      first: historyFirst(),
-      last: PRESENT_YEAR,
-      playing: historyPlaying,
-      travelling,
-      speed: historySpeed,
-      // What changed whenever states are on; while travelling, what to expect until then.
-      changes: state.layers.has('empires')
-        ? empires.said() === '' && travelling
-          ? STATES_WAIT
-          : empires.said()
-        : travelling
-          ? STATES_HINT
-          : '',
-      blank: state.layers.has('empires') ? blankText(state.layers.has('ways')) : null,
-      earth: iceAges.holoceneText(),
-    });
-  }
 
   // The borders of past states (#446), a century's file at a time, and what changed.
   const empires = mountEmpires({
     ...partContext,
     globe,
     noted: () => {
-      showHistory(store.get());
+      years.show(store.get());
     },
     drawn: () => {
       if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get()));
@@ -804,7 +597,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
     },
     [famous.button, records.button],
-    [historyTrack.extras, cycle.extras],
+    [years.track.extras, cycle.extras],
   );
   const scrubber = createScrubber((offsetMinutes) => {
     const selected = selectedEclipse(store.get());
@@ -831,7 +624,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       { class: 'holocene-bar' },
       bodies.bar,
       waysLegend.root,
-      historyTrack.root,
+      years.track.root,
       cycle.root,
       timeline.root,
     ),
@@ -939,7 +732,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const historyLayer = {
     ...partContext,
     globe,
-    travelling: () => travelling,
+    travelling: () => years.travelling(),
     refresh: () => {
       showEmpires(store.get());
     },
@@ -952,7 +745,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   });
   const ways = mountWays({ ...historyLayer, legend: waysLegend });
-  const dates = mountDates({ ...historyLayer, radiocarbonCurves, datingCard });
+  const dates = mountDates({
+    ...historyLayer,
+    radiocarbonCurves: () => years.curves(),
+    datingCard,
+  });
   // Deep time's climate and continents (#444): the temperature, the plates and how far they
   // moved, and the air.
   const surfaces = mountDeepSurfaces({
@@ -967,12 +764,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const iceAges = mountIceAges({
     ...partContext,
     globe,
-    travelling: () => travelling,
+    travelling: () => years.travelling(),
     redraw: () => {
       deepTime.show(store.get());
     },
     holoceneShown: (state) => {
-      showHistory(state);
+      years.show(state);
     },
   });
   const impactsOnGlobe = globe.addLayer(impactLayer);
@@ -997,7 +794,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     change: (update) => {
       store.set(update);
     },
-    travelling: () => travelling,
+    travelling: () => years.travelling(),
     refresh: () => {
       const now = store.get();
       showTime(now);
@@ -1442,7 +1239,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ma !== null && state.deepScale === 'all' && ma > deepTime.oldest() ? 'eons' : state.deepScale;
     const on =
       state.layers.has('impacts') && state.mode === 'globe' && (ma === null || scale !== 'eons');
-    if (!on || (travelling && ma === null)) {
+    if (!on || (years.travelling() && ma === null)) {
       impactsSaid = on ? RESTING : null;
       impactsOnGlobe.update(null);
       return { on: false };
@@ -1558,16 +1355,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     dateText.textContent = formatMa(ma);
     timeText.textContent = '';
     detailText.textContent = period === null ? 'Deep time' : periodWords(period);
-  }
-
-  /** The curves, for carrying a date across one: loaded once, with or without their layer. */
-  function radiocarbonCurves(): Promise<Radiocarbon> {
-    return radiocarbon === null
-      ? loadRadiocarbon(`${base}data/radiocarbon.json`, fetchJson).then((loaded) => {
-          radiocarbon = loaded;
-          return loaded;
-        })
-      : Promise.resolve(radiocarbon);
   }
 
   // The layers drawn on each span, as the Layers panel has them, for what is on screen now.
@@ -1849,8 +1636,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     // Deep time, or an eclipse picked, ends a trip through the years.
     if (state.ma !== null || state.selection !== null) {
-      stopHistory();
-      setTravel(false);
+      years.stop();
+      years.setTravel(false);
     }
     // With an eclipse open, its own player runs the time; the years' slider makes way.
     zoomRail.render(
@@ -1880,7 +1667,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     // The time changed elsewhere (the year typed, the slider) ends the cycle's play.
     cycle.render(state);
-    if (redraws(HISTORY, state, previous)) showHistory(state);
+    if (redraws(HISTORY, state, previous)) years.show(state);
     if (state.location !== previous?.location) globe.setLocation(state.location);
     if (state.view !== previous?.view) globe.setViewpoint(state.view);
     if (redraws(VIEW_SWITCH, state, previous)) {
