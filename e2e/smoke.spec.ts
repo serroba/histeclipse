@@ -44,6 +44,21 @@ test('draws the Earth, not an empty canvas', LIVE, async ({ page }) => {
   expect(png.byteLength).toBeGreaterThan(60_000);
 });
 
+test('the years draw today’s sea ice, by the time of year', async ({ page }) => {
+  const globe = page.getByTestId('globe');
+  // Mid-March: the north’s March ice (and the south's least), at today’s sea level.
+  await page.goto('./?t=2025-03-16T12:00');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute(
+    'data-sea-ice',
+    /^1\.00 .*seaice\/mpi-esm1-2-lr-most\.png 0\.00$/,
+  );
+  // Mid-September: the north’s September ice.
+  await page.goto('./?t=2025-09-15T12:00');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute('data-sea-ice', /^0\.00 /);
+});
+
 test('a shared link reproduces the view it describes', LIVE, async ({ page }) => {
   await page.goto(SHARED_LINK);
   await globeRendered(page);

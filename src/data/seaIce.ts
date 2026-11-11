@@ -57,6 +57,33 @@ export function seaIcePair(
   return today === undefined || past === undefined ? null : { today, past };
 }
 
+/** The four maps of today's and a model's sea ice, as paths under `folder`, with their grid. */
+export interface SeaIceMaps {
+  readonly todayMost: string;
+  readonly todayYearRound: string;
+  readonly pastMost: string;
+  readonly pastYearRound: string;
+  readonly columns: number;
+  readonly rows: number;
+}
+
+export function seaIceMaps(
+  index: SeaIceIndex,
+  model: SeaIceModel,
+  folder: string,
+): SeaIceMaps | null {
+  const pair = seaIcePair(index, model);
+  if (pair === null) return null;
+  return {
+    todayMost: folder + pair.today.most,
+    todayYearRound: folder + pair.today.yearRound,
+    pastMost: folder + pair.past.most,
+    pastYearRound: folder + pair.past.yearRound,
+    columns: index.columns,
+    rows: index.rows,
+  };
+}
+
 /**
  * How far from today's sea ice towards the glacial maximum's, 0 to 1: the share of the sea's fall
  * from today's level to its glacial low, by the same source. Above today's level, 0.
@@ -64,4 +91,18 @@ export function seaIcePair(
 export function seaIceMix(level: number, glacialLevel: number): number {
   if (glacialLevel >= 0) return 0;
   return Math.min(1, Math.max(0, level / glacialLevel));
+}
+
+/** The middle of March 2000, the mean of the March map (12:00 UT on the 16th), as a Julian day. */
+const MID_MARCH_2000 = 2_451_620;
+/** The mean tropical year, in days: the seasons keep to it, not to any calendar's year. */
+const TROPICAL_YEAR = 365.242_19;
+
+/**
+ * The time of year for the sea ice, 0 to 1: 1 in the middle of March, when the north has its
+ * March ice, and 0 in the middle of September. Counted in tropical years from March 2000, so a
+ * Julian date that has drifted from the seasons still gets its own season.
+ */
+export function seaIceSeason(jd: number): number {
+  return 0.5 + 0.5 * Math.cos((2 * Math.PI * (jd - MID_MARCH_2000)) / TROPICAL_YEAR);
 }

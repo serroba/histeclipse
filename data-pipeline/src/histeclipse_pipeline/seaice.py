@@ -1,6 +1,6 @@
 """Sea ice today and at the Last Glacial Maximum, for the ice-age globe.
 
-Today: NSIDC's Sea Ice Index (G02135, version 4; Fetterer et al., doi:10.7265/N5K072F8), the
+Today: NSIDC's Sea Ice Index (G02135, version 4; Fetterer et al., doi:10.7265/a98x-0f50), the
 monthly sea-ice concentration grids for March and September 1981-2010, averaged. NOAA@NSIDC data,
 free to use with credit. The grids are 25 km on NSIDC's polar stereographic projections (Hughes
 1980 ellipsoid, true scale at 70°), read here from their uncompressed GeoTIFFs.
@@ -43,7 +43,7 @@ STEPS_PER_PERCENT = 2.5
 NSIDC_URL = "https://noaadata.apps.nsidc.org/NOAA/G02135/{pole}/monthly/geotiff/{month:02d}_{name}/{p}_{year}{month:02d}_concentration_v4.0.tif"
 NSIDC_YEARS = range(1981, 2011)
 NSIDC_CREDIT = (
-    "NSIDC Sea Ice Index, version 4 (Fetterer et al., doi:10.7265/N5K072F8), NOAA@NSIDC: "
+    "NSIDC Sea Ice Index, version 4 (Fetterer et al., doi:10.7265/a98x-0f50), NOAA@NSIDC: "
     "March and September concentration, 1981-2010 mean"
 )
 PMIP_CREDIT = (
