@@ -8,6 +8,7 @@
 import { basisNote, formatRange } from '../deepTime/milestoneText';
 import { anchorMa, type Milestone, milestonesNear, nextMilestone } from '../deepTime/milestones';
 import { element } from './dom';
+import './milestonePanel.css';
 
 /** A milestone counts as near the moment shown within this share of the span shown. */
 export const NEAR_SHARE = 2.5 / 540;

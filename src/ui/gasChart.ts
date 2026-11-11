@@ -8,6 +8,7 @@
 
 import type { Gas } from '../data/atmosphere';
 import { element } from './dom';
+import './gasChart.css';
 
 const SVG = 'http://www.w3.org/2000/svg';
 const WIDTH = 1000;

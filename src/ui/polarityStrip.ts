@@ -9,6 +9,7 @@
 
 import type { PolaritySpan } from '../deepTime/earthState';
 import { element } from './dom';
+import './polarityStrip.css';
 
 export interface PolarityStrip {
   readonly root: HTMLElement;
