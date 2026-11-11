@@ -98,7 +98,7 @@ const KNOWN_CYCLE_EDGES: readonly string[] = [
 ];
 
 /** Methods on the `Globe` interface in `globe/scene.ts`: new things drawn are layers (#379). */
-const GLOBE_METHODS = 44;
+const GLOBE_METHODS = 43;
 
 describe('the shape of src', () => {
   it('no folder imports its way back into itself, beyond the cycles already known', () => {

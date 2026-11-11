@@ -47,6 +47,7 @@ export default defineConfig({
         'src/globe/magneticNorthLayer.ts',
         'src/globe/labelTexture.ts',
         'src/globe/historyPaintLayers.ts',
+        'src/globe/iceOutlineLayer.ts',
         'src/globe/impactAnimation.ts',
         'src/globe/showerAnimation.ts',
         'src/sky/skyScene.ts',

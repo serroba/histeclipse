@@ -109,21 +109,22 @@ import { isMoonBody, moonsInView } from './moonLook';
 import {
   SURFACE_PRIORITY,
   type GlobeLayer,
+  DEEP_PAINT_ORDER,
+  type DeepPainter,
   type HistoryPainter,
   type LayerFactory,
   type LayerHost,
   type NameLabel,
 } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
+import { createPaintSlots } from './paintSlots';
 import { createPlanetMeshes } from './planetMeshes';
 import type { ArrivalGrid } from '../data/dispersal';
-import type { IceOutlines } from '../data/iceOutlines';
 import type { OhmYear } from '../data/ohmBorders';
 import {
   clearOverlay,
   createEmpireCanvas,
   paintBorders,
-  paintIceOutlines,
   paintSettled,
   paintTerritories,
 } from './empireCanvas';
@@ -416,8 +417,6 @@ export interface Globe {
   addLayer<Input>(factory: LayerFactory<Input>): GlobeLayer<Input>;
   /** Called when someone taps a marker that has a card, with its key (such as `impact:47`). */
   onMarkerPick(listener: (key: string) => void): () => void;
-  /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
-  setIceOutlines(outlines: IceOutlines | null): void;
   /**
    * Deep time: draw Earth's surface from two elevation maps blended by `mix` instead of
    * today's imagery; null returns to today's Earth.
@@ -1484,12 +1483,12 @@ export function createGlobe(
   // States that appeared or went lately, by name: named on the map for a while.
   const recentStates = new Map<string, { readonly change: StateChange; readonly at: number }>();
   // The history map: the layers' parts (rocks, ways, dates, #379) in order, the states over them.
-  const historySlots: { readonly order: number; painter: HistoryPainter | null }[] = [];
+  const historySlots = createPaintSlots<HistoryPainter>(paintHistoryOverlay);
   let empiresShown: EmpireLayer | null = null;
   function paintHistoryOverlay(): void {
     const uniforms = earth.material.uniforms;
     const empires = empiresShown;
-    const painters = historySlots.flatMap(({ painter }) => (painter === null ? [] : [painter]));
+    const painters = historySlots.painters();
     const on = painters.length > 0 || empires !== null;
     uniforms['empiresActive'] = { value: on ? 1 : 0 };
     needsRender = true;
@@ -1520,20 +1519,18 @@ export function createGlobe(
   }
   // Deep time's overlay, on the states' map (never shown then): a dispersal model's settled
   // land, and the ice-sheet outlines over it.
-  let deepOverlay: {
-    readonly outlines: IceOutlines | null;
-    readonly settled: { readonly grid: ArrivalGrid; readonly ka: number } | null;
-  } = { outlines: null, settled: null };
+  // The deep-time map: the land people had reached, and the layers' parts (#379), in order.
+  const deepSlots = createPaintSlots<DeepPainter>(paintDeepOverlay);
+  const settledPaint = deepSlots.add(DEEP_PAINT_ORDER.settled);
   function paintDeepOverlay(): void {
     const uniforms = earth.material.uniforms;
-    const { outlines, settled } = deepOverlay;
-    const on = outlines !== null || settled !== null;
+    const painters = deepSlots.painters();
+    const on = painters.length > 0;
     uniforms['iceOutlinesActive'] = { value: on ? 1 : 0 };
     needsRender = true;
     if (!on) return;
     clearOverlay(empiresCanvas);
-    if (settled !== null) paintSettled(empiresCanvas, settled.grid, settled.ka);
-    if (outlines !== null) paintIceOutlines(empiresCanvas, outlines);
+    for (const paint of painters) paint(empiresCanvas);
     empiresTexture.needsUpdate = true;
     uniforms['overlayMap'] = { value: empiresTexture };
   }
@@ -2253,17 +2250,8 @@ export function createGlobe(
     },
     layOutNames,
     pickable,
-    historyPaint(order) {
-      const slot = { order, painter: null as HistoryPainter | null };
-      historySlots.push(slot);
-      historySlots.sort((a, b) => a.order - b.order);
-      return {
-        show(painter) {
-          slot.painter = painter;
-          paintHistoryOverlay();
-        },
-      };
-    },
+    deepPaint: (order) => deepSlots.add(order),
+    historyPaint: (order) => historySlots.add(order),
     surfaceLabels(priority, layer) {
       const slot: (typeof surfaceSlots)[number] = { priority, labels: [] };
       surfaceSlots.push(slot);
@@ -2816,24 +2804,19 @@ export function createGlobe(
       uniforms['sketchLevel'] = { value: levelForShare(sketchField.shares, sketch.land) };
       uniforms['sketchIceEdge'] = { value: sketch.iceEdge };
     },
-    setIceOutlines(outlines) {
-      // Painting the map is slow: not again for the slice already shown, as time plays on.
-      if ((outlines?.name ?? 'off') === container.dataset['iceOutlines']) return;
-      container.dataset['iceOutlines'] = outlines === null ? 'off' : outlines.name;
-      deepOverlay = { ...deepOverlay, outlines };
-      paintDeepOverlay();
-    },
     setSettled(settled) {
       // Whole thousands of years only: the model's own step.
       const ka = settled === null ? null : Math.round(settled.ka);
       const key = settled === null ? 'off' : `${settled.scenario} ${String(ka)}`;
       if (key === container.dataset['settled']) return;
       container.dataset['settled'] = key;
-      deepOverlay = {
-        ...deepOverlay,
-        settled: settled === null || ka === null ? null : { grid: settled.grid, ka },
-      };
-      paintDeepOverlay();
+      settledPaint.show(
+        settled === null || ka === null
+          ? null
+          : (canvas) => {
+              paintSettled(canvas, settled.grid, ka);
+            },
+      );
     },
     addLayer(factory) {
       const layer = factory(host);

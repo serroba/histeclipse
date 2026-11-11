@@ -10,6 +10,7 @@ import './nameLabels.css';
 
 import type { MoonName, MoonPlanet } from '../astro/moonOrbits';
 import type { GeoPoint } from '../core/geo';
+import type { PaintSlot } from './paintSlots';
 import type { NamedBody } from '../data/planetNames';
 import type { Body } from '../state/viewState';
 
@@ -73,16 +74,25 @@ export interface LayerHost {
    * A place on the history map painted over Earth's surface, under the states, painted in
    * `order` (see HISTORY_PAINT_ORDER) whenever any part of the map changes.
    */
-  historyPaint(order: number): HistoryPaint;
+  historyPaint(order: number): PaintSlot<HistoryPainter>;
+  /**
+   * A place on the deep-time map painted over Earth's surface, painted in `order` (see
+   * DEEP_PAINT_ORDER) whenever any part of it changes.
+   */
+  deepPaint(order: number): PaintSlot<DeepPainter>;
 }
+
+/** Paints a layer's part of the deep-time map. */
+export type DeepPainter = (canvas: HTMLCanvasElement) => void;
+
+/** The order the deep-time map's parts are painted in, lower first. */
+export const DEEP_PAINT_ORDER = {
+  settled: 0,
+  iceOutlines: 10,
+} as const;
 
 /** Paints a layer's part of the history map; `statesOver` when the states are drawn on top. */
 export type HistoryPainter = (canvas: HTMLCanvasElement, statesOver: boolean) => void;
-
-export interface HistoryPaint {
-  /** Paint this from now on (the whole map is painted again); null takes it away. */
-  show(painter: HistoryPainter | null): void;
-}
 
 /** The order the history map's parts are painted in, lower first; the states go over them all. */
 export const HISTORY_PAINT_ORDER = {
