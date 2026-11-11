@@ -1,0 +1,44 @@
+/* Impact craters and deposits (#382: CSS beside the code it styles): a ring sized by diameter,
+   centred on the place, the largest named beside it; tap for a card. */
+.empire-label.impact-mark {
+  width: var(--size);
+  height: var(--size);
+  box-sizing: border-box;
+  padding: 0;
+  border: 2px solid rgb(255 150 60);
+  border-radius: 50%;
+  background: rgb(255 150 60 / 0.25);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.impact-mark .impact-name {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 4px);
+  transform: translateY(-50%);
+}
+
+.empire-label.impact-mark.is-deposit {
+  border-style: dotted;
+  background: none;
+}
+
+/* An age that spans the moment: it may not have struck yet. */
+.empire-label.impact-mark.is-uncertain {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.empire-label.impact-mark:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.empire-label.impact-mark[hidden] {
+  display: none;
+}
