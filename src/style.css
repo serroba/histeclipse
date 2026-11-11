@@ -932,21 +932,6 @@ body {
   flex-shrink: 0;
 }
 
-.deep-details {
-  min-height: 0;
-}
-
-/* The details scroll inside the bar, which never grows past part of the screen: with several
-   layers' notes open they once took most of it, and the globe went off the top (#163). */
-.deep-details {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: clamp(120px, 25vh, 260px);
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
 .deep-time[data-sheet='folded'] .deep-details {
   display: none;
 }
@@ -954,79 +939,6 @@ body {
 /* While a finger drags the sheet, the details show as tall as it has pulled them. */
 .deep-time[data-sheet='dragging'] .deep-details {
   overflow: hidden;
-}
-
-/* A grip along the bar's top edge: tap it, or swipe the bar, to fold or open the details. */
-.deep-handle {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 32px;
-  margin: -8px 0 -8px;
-  border: none;
-  background: transparent;
-  cursor: grab;
-  /* The handle's own drags move the sheet, not the page. */
-  touch-action: none;
-}
-
-.deep-handle-grip {
-  width: 44px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgb(255 255 255 / 0.35);
-}
-
-@media (max-width: 600px) {
-  .deep-details {
-    max-height: 34vh;
-  }
-}
-
-.deep-controls {
-  display: flex;
-  /* With sea level shown the track is taller; the buttons stay level with the slider. */
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.deep-track {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-}
-
-.deep-slider {
-  width: 100%;
-  min-width: 0;
-  height: 44px;
-  accent-color: #7fcf9a;
-  cursor: pointer;
-}
-
-/* Milestone ticks under the slider's track, inset by about the thumb's radius. */
-.deep-marks {
-  position: absolute;
-  right: 9px;
-  bottom: 6px;
-  left: 9px;
-  height: 7px;
-  pointer-events: none;
-}
-
-@media (max-width: 600px) {
-  .deep-label .deep-when {
-    display: none;
-  }
-}
-
-.deep-mark {
-  position: absolute;
-  width: 2px;
-  height: 100%;
-  border-radius: 1px;
-  background: var(--mark, #c9d4e6);
-  transform: translateX(-1px);
 }
 
 .milestone-cosmos {
@@ -1051,74 +963,6 @@ body {
 
 .milestone-humans {
   --mark: #c9a3e6;
-}
-
-.deep-label {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
-  margin: 0;
-  padding: 0 8px;
-  font-size: 14px;
-}
-
-.deep-period {
-  color: var(--ink-muted);
-}
-
-/* Small beside the date: the speed is chosen now and then, the slider used all the time. */
-.deep-label .deep-speed {
-  min-height: 36px;
-  padding: 0 4px;
-  font-size: 12px;
-}
-
-/* 540 Myr | Ice ages: one segmented control, the chosen span lit. */
-.deep-scale {
-  display: inline-flex;
-  margin-left: auto;
-  border: 1px solid var(--panel-border);
-  border-radius: 22px;
-  overflow: hidden;
-}
-
-.deep-scale-label {
-  align-self: center;
-  padding: 0 4px 0 10px;
-  color: var(--ink-muted);
-  font-size: 12px;
-}
-
-.eclipse-hint {
-  color: var(--ink-muted);
-  font-style: italic;
-}
-
-.deep-scale-option {
-  min-height: 44px;
-  padding: 0 12px;
-  border: 0;
-  background: transparent;
-  color: var(--ink-muted);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.deep-scale-option[aria-pressed='true'] {
-  background: rgb(127 207 154 / 0.18);
-  color: var(--ink);
-}
-
-/* With the span switch taking the free space, the layer buttons sit beside it. */
-.deep-scale + .deep-layer {
-  margin-left: 0;
-}
-
-.deep-layer:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 /* Dated finds of humans and their relatives: a dot and the date; disputed ones in italics.
@@ -1163,175 +1007,6 @@ body {
   font-style: italic;
 }
 
-.humans-note ul {
-  margin: 0 0 6px;
-  padding-left: 18px;
-}
-
-.humans-note li.is-later {
-  opacity: 0.7;
-}
-
-.humans-question {
-  color: var(--ink);
-  font-weight: 600;
-}
-
-.deep-note {
-  margin: 0;
-  padding: 0 8px;
-  color: var(--ink-muted);
-  font-size: 13px;
-}
-
-.deep-note[hidden] {
-  display: none;
-}
-
-.deep-note p {
-  margin: 0 0 4px;
-}
-
-.plates-swatch {
-  display: inline-block;
-  width: 14px;
-  height: 3px;
-  border-radius: 2px;
-  background: #ff6bd6;
-  vertical-align: middle;
-}
-
-.deep-coast {
-  min-height: 32px;
-  border: 1px solid var(--panel-border);
-  border-radius: 8px;
-  background: rgb(10 16 32 / 0.9);
-  color: var(--ink);
-  font: inherit;
-}
-
-.deep-layer {
-  min-height: 44px;
-  margin-left: auto;
-  padding: 0 14px;
-  border: 1px solid var(--panel-border);
-  border-radius: 22px;
-  background: transparent;
-  color: var(--ink-muted);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.deep-layer[aria-pressed='true'] {
-  border-color: #f4a261;
-  color: var(--ink);
-}
-
-.temperature-legend {
-  padding: 0 8px;
-  font-size: 13px;
-}
-
-.temperature-legend[hidden] {
-  display: none;
-}
-
-.temperature-legend p {
-  margin: 4px 0 0;
-  color: var(--ink-muted);
-}
-
-.temperature-legend .temperature-heading {
-  margin: 0 0 4px;
-  color: var(--ink);
-}
-
-.temperature-scale {
-  display: block;
-  height: 10px;
-  border-radius: 4px;
-}
-
-/* °C under the scale, each centred on its place; the ends kept inside the bar. */
-.temperature-ticks {
-  position: relative;
-  height: 16px;
-  margin: 2px 0 4px;
-  color: var(--ink-muted);
-  font-size: 11px;
-}
-
-.temperature-ticks span {
-  position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-  white-space: nowrap;
-}
-
-.temperature-ticks span:first-child {
-  transform: none;
-}
-
-.temperature-ticks span:last-child {
-  transform: translateX(-100%);
-}
-
-/* The colours named, in columns where there is room. */
-.colour-key.temperature-key {
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  margin: 0 0 4px;
-  font-size: 12px;
-}
-
-.temperature-note {
-  font-style: italic;
-}
-
-.deep-facts {
-  padding: 0 8px;
-  font-size: 13px;
-}
-
-.deep-facts summary {
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  color: var(--ink-muted);
-  cursor: pointer;
-}
-
-/* Open, the facts scroll inside the bar rather than pushing it over the globe. */
-.deep-facts-list {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 6px 12px;
-  max-height: 30vh;
-  margin: 0 0 6px;
-  overflow-y: auto;
-  line-height: 1.4;
-}
-
-.deep-facts-list dt {
-  font-weight: 600;
-}
-
-.deep-facts-list dd {
-  margin: 0;
-  color: var(--ink-muted);
-}
-
-@media (max-width: 600px) {
-  .deep-facts-list {
-    grid-template-columns: 1fr;
-    gap: 2px;
-  }
-
-  .deep-facts-list dd {
-    margin-bottom: 6px;
-  }
-}
-
 /* On phones the header's first row holds the time switch and Layers: the buttons tighten up,
    and the Layers panel becomes a sheet along the bottom. */
 @media (max-width: 600px) {
@@ -1340,97 +1015,11 @@ body {
   }
 }
 
-/* The eclipse row fades out where more chips lie beyond the edge. */
-.eclipse-list[data-more='true'] {
-  mask-image: linear-gradient(to right, black calc(100% - 48px), transparent);
-}
-
 .hud-detail abbr,
 .hud-time[title] {
   text-decoration: underline dotted rgb(255 255 255 / 0.35);
   text-underline-offset: 3px;
   cursor: help;
-}
-
-/* Folded panels in the deep-time bar show an arrow that turns as they open. */
-.deep-facts summary {
-  list-style: none;
-}
-
-.deep-facts summary::-webkit-details-marker {
-  display: none;
-}
-
-.deep-facts summary::before {
-  margin-right: 6px;
-  font-size: 11px;
-  transition: transform 0.15s;
-  content: '▶';
-}
-
-.deep-facts[open] summary::before {
-  transform: rotate(90deg);
-}
-
-.colour-key {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 4px 12px;
-  margin: 0 0 6px;
-  padding: 0;
-  list-style: none;
-  color: var(--ink-muted);
-  line-height: 1.35;
-}
-
-.colour-key li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.colour-swatch {
-  flex: none;
-  width: 28px;
-  height: 12px;
-  border: 1px solid var(--panel-border);
-  border-radius: 3px;
-}
-
-.colour-tick {
-  flex: none;
-  width: 3px;
-  height: 12px;
-  margin: 0 12px 0 13px;
-  border-radius: 1px;
-  background: var(--mark, #c9d4e6);
-}
-
-.colour-key-heading {
-  margin: 4px 0;
-  color: var(--ink-muted);
-  font-size: 12px;
-}
-
-.deep-folds {
-  display: flex;
-  flex-wrap: wrap;
-  column-gap: 8px;
-}
-
-.deep-folds > details {
-  flex: 1 1 auto;
-}
-
-/* Open, a fold takes the whole row. */
-.deep-folds > details[open] {
-  flex-basis: 100%;
-}
-
-/* Open, the key scrolls inside the bar rather than covering the globe. */
-.colour-key-body {
-  max-height: 22vh;
-  overflow-y: auto;
 }
 
 .sky-options[hidden] {
@@ -1522,61 +1111,9 @@ body {
   display: none;
 }
 
-/* The deep bar's "How do we know?": the book and the question, among the chips. */
-.deep-evidence {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.deep-evidence[hidden] {
-  display: none;
-}
-
 /* "Why here?": the globe asking for a tap. */
 #app.is-asking-here .globe {
   cursor: help;
-}
-
-/* Away from Earth: the bar says what the body in view is doing, and Earth's own parts rest
-   (the year's eclipses but on the Moon, Seen from, the ways-of-life key and the states'
-   ticker); so do Earth's spans and Layers in the date panel (#329). */
-.body-bar {
-  margin: 0;
-  padding: 0 4px;
-  color: var(--ink-muted);
-  font-size: 13px;
-}
-
-.body-bar[hidden] {
-  display: none;
-}
-
-.body-bar-name {
-  color: var(--ink);
-}
-
-.body-bar-picture {
-  display: block;
-  font-size: 12px;
-}
-
-.body-bar-picture[hidden] {
-  display: none;
-}
-
-/* A moon's story (#335): a few lines, scrolled within, so the bar stays a bar on a phone. */
-.body-bar-about {
-  display: block;
-  max-height: 6.4em;
-  margin: 2px 0;
-  overflow-y: auto;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.body-bar-about[hidden] {
-  display: none;
 }
 
 /* Away from Earth the year still decides where the bodies are, so the slider stays; Earth's
@@ -1625,32 +1162,6 @@ button:has(> .icon-label) > .icon {
   }
 }
 
-@media (max-width: 600px) {
-  /* The chips packed from the start, so as many as fit share a line. */
-  .deep-label {
-    justify-content: flex-start;
-    gap: 6px;
-  }
-
-  .deep-label .deep-layer {
-    margin-left: 0;
-  }
-}
-
-/* Something to do with a marker, such as playing an impact. */
-.marker-card-action {
-  min-height: 40px;
-  margin-top: 10px;
-  padding: 0 16px;
-  border: 1px solid rgb(247 201 90 / 0.6);
-  border-radius: 20px;
-  background: rgb(247 201 90 / 0.12);
-  color: var(--ink);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-}
-
 /* One grid for the date panel (#232): every row meets the same two edges. The time switch
    stretches beside Layers, its spans sharing the pill, and the viewpoints share their row. */
 .hud-actions {
@@ -1665,11 +1176,6 @@ button:has(> .icon-label) > .icon {
     right: 12px;
     max-width: none;
   }
-}
-
-/* The milestones' ticks stay on the chapters' row, above the strip (20 px and its margin). */
-.deep-track:has(> .polarity-strip) > .deep-marks {
-  bottom: 29px;
 }
 
 .bottom[data-away='true'] .radiocarbon-strip {
@@ -1749,9 +1255,4 @@ button:has(> .icon-label) > .icon {
 
 .moon-name[hidden] {
   display: none;
-}
-
-/* The year's form, which the year wheel (#376) opens above. */
-.year-form {
-  position: relative;
 }
