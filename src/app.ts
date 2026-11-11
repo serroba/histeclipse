@@ -1671,14 +1671,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     store.set((state) => ({ ...state, time: momentAt(julianDayNumber(jd)) }));
   });
 
+  const hudTools = [boundariesSheet.button, searchPanel.button, fullView];
   // Earth's spans and its map's layers; away from Earth they rest (#329).
-  const hudActions = element(
-    'div',
-    { class: 'hud-actions' },
-    historySpan.root,
-    layersPanel.button,
-    boundariesSheet.button,
-  );
+  const hudActions = element('div', { class: 'hud-actions' }, historySpan.root, layersPanel.button);
   const bottom = element(
     'div',
     { class: 'bottom', 'data-deep': 'off' },
@@ -1714,7 +1709,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         {},
         element('a', { class: 'home', href: base, title: 'Back to the start' }, 'histeclipse'),
       ),
-      element('div', { class: 'hud-tools' }, searchPanel.button, fullView),
+      element('div', { class: 'hud-tools' }, ...hudTools),
       element('p', { class: 'hud-when' }, dateText, ' ', timeText),
       detailText,
       termNote,

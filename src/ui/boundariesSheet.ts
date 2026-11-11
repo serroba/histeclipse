@@ -207,7 +207,7 @@ export function createBoundariesSheet(
     'button',
     {
       type: 'button',
-      class: 'layers-open',
+      class: 'boundaries-open',
       'aria-haspopup': 'dialog',
       'aria-expanded': 'false',
       title: 'Planetary boundaries: the state of the planet in 2026',
