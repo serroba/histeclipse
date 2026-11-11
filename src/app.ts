@@ -22,10 +22,7 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { impactLayer } from './globe/impactLayer';
-import { magneticNorthLayer } from './globe/magneticNorthLayer';
 import { geoToVector } from './globe/geo';
-import { loadPolarity, type PolarityScale } from './data/polarity';
-import { magneticNorthAt } from './deepTime/earthState';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
 import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruptions';
 import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
@@ -50,10 +47,6 @@ import {
   DEFAULT_CAMERA,
   DEFAULT_LOOK,
   defaultViewState,
-  type DeepScale,
-  EARTH_AGE_MA,
-  ICE_AGES_MA,
-  LAST_GLACIAL_MAXIMUM_MA,
   type Layer,
   withLayer,
   roundMa,
@@ -84,7 +77,6 @@ import { createWelcome } from './ui/welcome';
 import { createMarkerCard } from './ui/markerCard';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createLayersPanel } from './ui/layersPanel';
-import { createDeepGlance } from './ui/deepGlance';
 import { cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
 import { blankText, createHistoryTrack, STATES_HINT, STATES_WAIT } from './ui/historyTrack';
 import { yearPlayhead, type YearSpeed } from './time/yearPlay';
@@ -92,17 +84,10 @@ import { labelPoint, territoriesIn } from './data/empires';
 import { createEmpireEclipses, SEARCH_YEARS } from './eclipses/empireEclipses';
 import { CULTURE_INFO } from './data/skyCultures';
 import { createViewSwitch } from './ui/viewSwitch';
-import { createDeepTimeBar, type DeepTimeView } from './ui/deepTimeBar';
+import { type DeepTimeView } from './ui/deepTimeBar';
 import type { DeepChipView } from './ui/deepChips';
 import { formatMa, periodAt, periodWords } from './deepTime/periods';
-import {
-  framesAhead,
-  framesAround,
-  loadPaleoDemIndex,
-  oldestMa,
-  type PaleoDemIndex,
-} from './data/paleoDem';
-import { HOLOCENE_MA, maOfYear, yearOfMa } from './data/iceSheets';
+import { yearOfMa } from './data/iceSheets';
 import { countryRings, loadNamedPeriods } from './data/namedPeriods';
 import { rockAt } from './data/rocks';
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
@@ -126,6 +111,7 @@ import { mountWays } from './features/ways';
 import { mountDates } from './features/dates';
 import { mountPeriods } from './features/periods';
 import { mountEmpires } from './features/empires';
+import { mountDeepTime } from './features/deepTime';
 import { PRESENT_YEAR } from './time/present';
 import { phoneLook, type BodiesSeen } from './sky/aim';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
@@ -145,13 +131,9 @@ import {
   type Impacts,
   type ImpactsMode,
 } from './data/impacts';
-import { deepSpeedFor, prefetchFrames } from './deepTime/playSpeed';
 import { createTemperatureLayer } from './features/temperature/temperatureLayer';
-import { playhead } from './deepTime/playhead';
-import { PLATES_REACH_MA, sketchAt } from './deepTime/sketch';
 import { createTimeline, type Eclipse, type SeenView, type YearEclipses } from './ui/timeline';
 import { createPeriodBands, yearTicks } from './ui/periodBands';
-import { createSpanSwitch, type Span } from './ui/spanSwitch';
 import { errorMessage } from './util/errors';
 
 const MINUTES_PER_DAY = 1440;
@@ -163,9 +145,6 @@ const STRIKES_AT_ONCE = 4;
 const ZOOM_RAIL_ROOM = 180;
 /** The year “before present” counts back from, as radiocarbon dates do. */
 const BP_ZERO_YEAR = 1950;
-
-/** The elevation maps reach back this far (their index says for certain once loaded). */
-const MAPS_REACH_MA = 540;
 
 export async function startApp(root: HTMLElement): Promise<void> {
   const base = import.meta.env.BASE_URL;
@@ -223,7 +202,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     notify,
     why: (id, label) => whySheet.mark(id, label),
     goToDeepTime(ma, layer, where) {
-      enterDeepTime(ma, 'all');
+      deepTime.enterDeepTime(ma, 'all');
       // The layer on to mark it, and the globe turned to face it where it lay then.
       store.set((state) => ({ ...state, layers: withLayer(state.layers, layer, true) }));
       globe.flyTo(where);
@@ -295,10 +274,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => ({ ...state, borders }));
     },
     (span, ma) => {
-      if (ma === undefined || span === 'years') goToSpan(span);
-      else if (store.get().ma === null) enterDeepTime(ma, span);
+      if (ma === undefined || span === 'years') deepTime.goToSpan(span);
+      else if (store.get().ma === null) deepTime.enterDeepTime(ma, span);
       else {
-        setScale(span);
+        deepTime.setScale(span);
         store.set((state) => ({ ...state, ma: roundMa(ma) }));
       }
     },
@@ -341,147 +320,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   });
   const waysLegend = createWaysLegend(whySheet.mark('ways', 'Ways of life'));
-  // The eclipse picked before entering deep time, picked again on leaving it.
-  let selectionBeforeDeep: ViewState['selection'] = null;
-  function leaveDeepTime(): void {
-    stopPlay();
-    const selection = selectionBeforeDeep;
-    selectionBeforeDeep = null;
-    store.set((state) => {
-      // Within the Holocene's years, the same moment, now as a year; else the year left.
-      // (If deep time is still where it was entered, the very date left comes back.)
-      const { ma } = state;
-      const time =
-        ma !== null && ma <= HOLOCENE_MA && ma !== roundMa(maOfYear(state.time.date.year))
-          ? moveToYear(state.time, astronomicalYear(yearOfMa(ma)))
-          : state.time;
-      // Layers stay on: one set for all of time, each drawing on its own spans.
-      return { ...state, ma: null, time, selection: state.selection ?? selection };
-    });
-  }
-  /** Go to a span, keeping the moment: the years are the Holocene's, the rest deep time. */
-  /**
-   * Picking a span is a fresh start: deep time's spans open at their oldest moment, ready to
-   * play forward; the years come back to the date left. (A link with ma= opens where it points.)
-   */
-  function goToSpan(span: Span): void {
-    const { ma } = store.get();
-    if (span === 'years') {
-      if (ma !== null) leaveDeepTime();
-    } else if (ma === null) {
-      enterDeepTime(spanOf(span), span);
-    } else {
-      stopPlay();
-      sync.step();
-      store.set((state) => ({ ...state, deepScale: span, ma: roundMa(spanOf(span)) }));
-    }
-  }
-  /** Go into deep time at `ma`, on the span that reaches it. */
-  function enterDeepTime(ma: number, deepScale?: DeepScale): void {
-    selectionBeforeDeep = store.get().selection;
-    sync.step();
-    // Deep time shows the whole Earth: the globe, with no eclipse picked.
-    store.set((state) => ({
-      ...state,
-      ma: roundMa(ma),
-      ...(deepScale === undefined ? {} : { deepScale }),
-      mode: 'globe',
-      view: 'free',
-      // The Sun, Moon and planets are left out of deep time, so the view centres on Earth.
-      focus: 'earth',
-      selection: null,
-    }));
-  }
-  function setScale(deepScale: DeepScale): void {
-    stopPlay();
-    store.set((state) => {
-      const ma = state.ma ?? 0;
-      return {
-        ...state,
-        deepScale,
-        // From further back than the ice ages, open them at the last glacial maximum; from
-        // before the elevation maps, the 540 Myr scale opens at their oldest.
-        ma:
-          deepScale === 'ice' && ma > ICE_AGES_MA
-            ? LAST_GLACIAL_MAXIMUM_MA
-            : deepScale === 'all' && ma > oldest
-              ? oldest
-              : state.ma,
-      };
-    });
-  }
-  const deepBar = createDeepTimeBar(
-    {
-      why(id, label) {
-        return whySheet.mark(id, label);
-      },
-      explain(id) {
-        store.set((state) => ({ ...state, why: id }));
-      },
-      onMa(ma, jump) {
-        stopPlay();
-        if (jump) sync.step();
-        store.set((state) => ({ ...state, ma: roundMa(ma) }));
-      },
-      onPlay(play) {
-        if (play) startPlay();
-        else stopPlay();
-      },
-      onSpeed(maPerSecond) {
-        deepSpeeds = { ...deepSpeeds, [store.get().deepScale]: maPerSecond };
-        showDeepTime(store.get());
-      },
-      onPlates(on) {
-        store.set((state) => ({ ...state, layers: withLayer(state.layers, 'plates', on) }));
-      },
-      onAir(on) {
-        store.set((state) => ({ ...state, layers: withLayer(state.layers, 'air', on) }));
-      },
-      onCo2Archive() {
-        surfaces.loadArchive();
-      },
-      onImpactsMode(mode) {
-        impactsMode = mode;
-        showDeepTime(store.get());
-      },
-      onImpacts(on) {
-        store.set((state) => ({ ...state, layers: withLayer(state.layers, 'impacts', on) }));
-      },
-      onLayer(layer, on) {
-        store.set((state) => ({ ...state, layers: withLayer(state.layers, layer, on) }));
-      },
-      onSeaLevel(on) {
-        store.set((state) => {
-          const layers = new Set(state.layers);
-          if (on) layers.add('sealevel');
-          else layers.delete('sealevel');
-          return { ...state, layers };
-        });
-      },
-      onCoast(coast) {
-        store.set((state) => ({ ...state, coast }));
-      },
-      onSeaIce(seaIce) {
-        store.set((state) => ({ ...state, seaIce }));
-      },
-      onTemperatureModel(temperatureModel) {
-        store.set((state) => ({ ...state, temperatureModel }));
-      },
-      onTemperatureShow(temperatureShow) {
-        store.set((state) => ({ ...state, temperatureShow }));
-      },
-      onSketch(choice) {
-        store.set((state) => ({ ...state, ...choice }));
-      },
-      onTemperature(on) {
-        store.set((state) => ({ ...state, layers: withLayer(state.layers, 'temperature', on) }));
-      },
-    },
-    // The features' chips (#380), where the fossils' chip stood.
-    FEATURES.flatMap((feature) =>
-      feature.deepChip === undefined ? [] : [{ layer: feature.id, ...feature.deepChip }],
-    ),
-  );
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
   // The globe draws at once and takes its maps as they arrive; nothing below waits on them.
   // It sizes itself once its container is on the page.
@@ -490,6 +328,54 @@ export async function startApp(root: HTMLElement): Promise<void> {
     textureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
     moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
     focus: store.get().focus,
+  });
+  // Deep time (#445): its span and moment, playing through it, its bar and glance, Earth's
+  // surface from the elevation maps and magnetic north.
+  // The temperature maps in deep time (#457).
+  const temperatureLayer = createTemperatureLayer({
+    dataUrl: (path) => `${base}data/${path}`,
+    fetchJson,
+    globe,
+    notify,
+    arrived: () => {
+      deepTime.show(store.get());
+    },
+  });
+
+  const deepTime = mountDeepTime({
+    ...partContext,
+    globe,
+    chips: FEATURES.flatMap((feature) =>
+      feature.deepChip === undefined ? [] : [{ layer: feature.id, ...feature.deepChip }],
+    ),
+    step: () => {
+      sync.step();
+    },
+    marked: (on) => {
+      bottom.dataset['deep'] = on ? 'on' : 'off';
+    },
+    header: (ma) => {
+      showDeepTimeText(ma);
+    },
+    bar: (state, moment) => ({
+      ...iceAges.bar(state, moment.ma),
+      chips: deepChips(state, moment),
+      impacts: showImpacts(state),
+      ...surfaces.bar(state, moment.ma),
+    }),
+    temperature: temperatureLayer,
+    off: (state) => {
+      surfaces.off();
+      iceAges.off(state);
+      for (const { shown } of mounted) shown.deep?.(state, null);
+    },
+    platesReach: () => surfaces.platesReach(),
+    loadArchive: () => {
+      surfaces.loadArchive();
+    },
+    impactsMode: (mode) => {
+      impactsMode = mode;
+    },
   });
   // A tablet's records checked against the sky, and looked at from Babylon (#447).
   const records = mountRecords({
@@ -619,16 +505,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     'Show controls',
   );
   showControls.addEventListener('click', togglePanels);
-  const glance = createDeepGlance(
-    (play) => {
-      if (play) startPlay();
-      else stopPlay();
-    },
-    (ma) => {
-      stopPlay();
-      store.set((state) => ({ ...state, ma: roundMa(ma) }));
-    },
-  );
   const card = createEclipseCard(whySheet.mark('eclipses', 'Eclipse'));
   // The Holocene track: the years played by, from as far back as ΔT reaches to the present.
   let historySpeed: YearSpeed = 50;
@@ -636,11 +512,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let historyFrame = 0;
   let historyTick = 0;
   let historyHead = yearPlayhead();
-  // How far back time reaches, one choice for all of it: going deeper is zooming out, to the
-  // same moment.
-  const historySpan = createSpanSwitch((span) => {
-    goToSpan(span);
-  });
   // The Holocene's ages under its slider; a tap goes to an age's start.
   const historyBands = createPeriodBands(
     (ma) => {
@@ -944,7 +815,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   const hudTools = [boundariesSheet.button, searchPanel.button, fullView];
   // Earth's spans and its map's layers; away from Earth they rest (#329).
-  const hudActions = element('div', { class: 'hud-actions' }, historySpan.root, layersPanel.button);
+  const hudActions = element(
+    'div',
+    { class: 'hud-actions' },
+    deepTime.spanSwitch,
+    layersPanel.button,
+  );
   const bottom = element(
     'div',
     { class: 'bottom', 'data-deep': 'off' },
@@ -959,7 +835,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       cycle.root,
       timeline.root,
     ),
-    deepBar.root,
+    deepTime.bar,
   );
   root.replaceChildren(
     globeContainer,
@@ -1005,7 +881,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ),
     ),
     notices,
-    glance.root,
+    deepTime.glance,
     showControls,
     bottom,
     famous.dialog,
@@ -1046,7 +922,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** Open a passage's anchor: its view laid over the reader's, as a step back can undo. */
   function openAnchor(anchor: Anchor): void {
     const next = parseViewState(anchorQuery(anchor, serializeViewState(store.get())), new Date());
-    stopPlay();
+    deepTime.stopPlay();
     sync.step();
     store.set(() => next.state);
   }
@@ -1059,7 +935,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   parsed.warnings.forEach(notify);
 
   // Drawn on the globe as layers of their own (#379).
-  const magneticNorthOnGlobe = globe.addLayer(magneticNorthLayer);
   // History's maps (#446): rocks, ways of life and dated squares, their layers in this order.
   const historyLayer = {
     ...partContext,
@@ -1071,9 +946,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   };
   const rocks = mountRocks({
     ...historyLayer,
-    oldest: () => oldest,
+    oldest: () => deepTime.oldest(),
     enterDeepTime: (ma, scale) => {
-      enterDeepTime(ma, scale);
+      deepTime.enterDeepTime(ma, scale);
     },
   });
   const ways = mountWays({ ...historyLayer, legend: waysLegend });
@@ -1084,7 +959,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ...partContext,
     globe,
     redraw: () => {
-      showDeepTime(store.get());
+      deepTime.show(store.get());
     },
   });
   // The ice ages' Earth (#444): the sea's level and the land it left bare, the ice sheets and
@@ -1094,7 +969,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe,
     travelling: () => travelling,
     redraw: () => {
-      showDeepTime(store.get());
+      deepTime.show(store.get());
     },
     holoceneShown: (state) => {
       showHistory(state);
@@ -1126,7 +1001,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     refresh: () => {
       const now = store.get();
       showTime(now);
-      if (now.ma !== null) showDeepTime(now);
+      if (now.ma !== null) deepTime.show(now);
       showEmpires(now);
     },
   };
@@ -1417,16 +1292,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const DELTA_T_MEANING =
     'ΔT: how far Earth’s slowing spin has put clock time behind a perfectly even time. It decides where on Earth an ancient eclipse fell; the ± is how uncertain it is.';
 
-  const temperatureLayer = createTemperatureLayer({
-    dataUrl: (path) => `${base}data/${path}`,
-    fetchJson,
-    globe,
-    notify,
-    arrived: () => {
-      showDeepTime(store.get());
-    },
-  });
-
   const empireEclipses = createEmpireEclipses({
     territory: (name, shown) => empires.territoryOf(name, shown),
     async eclipses(year) {
@@ -1560,133 +1425,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
   }
 
-  // Deep time: Earth's surface from the elevation maps, which load a few at a time as needed.
-  let paleoIndex: Promise<PaleoDemIndex> | null = null;
-  // How far back the elevation maps reach, until their index says.
-  let oldest = MAPS_REACH_MA;
-  let playing = false;
-  let playFrame = 0;
-  let lastTick = 0;
-  let head = playhead();
-
-  // Every reversal of the last 83 Ma: small, loaded the first time deep time shows.
-  let polarity: PolarityScale | null = null;
-  let polarityAsked = false;
-  function wantPolarity(): void {
-    if (polarityAsked) return;
-    polarityAsked = true;
-    loadPolarity(`${base}data/polarity.json`, fetchJson).then(
-      (loaded) => {
-        polarity = loaded;
-        showDeepTime(store.get());
-      },
-      (error: unknown) => {
-        polarityAsked = false;
-        notify(`Could not load the magnetic reversals: ${errorMessage(error)}`);
-      },
-    );
-  }
-
-  function showDeepTime(state: ViewState): void {
-    const { ma } = state;
-    bottom.dataset['deep'] = ma === null ? 'off' : 'on';
-    magneticNorthOnGlobe.update(ma === null ? null : magneticNorthAt(ma, polarity));
-    if (ma !== null) wantPolarity();
-    if (ma === null) {
-      historySpan.render('years');
-      stopPlay();
-      deepBar.render(null);
-      glance.render(null);
-      globe.setUncharted(false);
-      globe.setSketch(null);
-      globe.setDeepTime(null);
-      globe.setTemperature(null);
-      surfaces.off();
-      iceAges.off(state);
-      for (const { shown } of mounted) shown.deep?.(state, null);
-      return;
-    }
-    const period = periodAt(ma);
-    showDeepTimeText(ma);
-    // A link to before the elevation maps opens on the scale that reaches it.
-    const scale = state.deepScale === 'all' && ma > oldest ? 'eons' : state.deepScale;
-    historySpan.render(scale);
-    const ice = scale === 'ice';
-    // Before the elevation maps reach, no map: a sketch of the chosen hypotheses instead.
-    const uncharted = ma > oldest;
-    globe.setUncharted(uncharted);
-    // Before the maps, a sketch of the hypotheses chosen; invented land only beyond the plates.
-    const choices = { impact: state.impact, land: state.land, snowball: state.snowball };
-    const reconstructed = ma <= (surfaces.platesReach() ?? PLATES_REACH_MA);
-    const sketch = uncharted ? sketchAt(ma, choices, reconstructed) : null;
-    globe.setSketch(sketch);
-    deepBar.render({
-      ma,
-      oldest: spanOf(scale),
-      mapsReach: oldest,
-      period,
-      polarity,
-      playing,
-      speed: deepSpeedFor(state.deepScale, deepSpeeds[state.deepScale]),
-      scale,
-      ...iceAges.bar(state, ma),
-      chips: deepChips(state, { ma, scale }),
-      impacts: showImpacts(state),
-      ...surfaces.bar(state, ma),
-      temperature: temperatureLayer.view(state, { ma, ice, uncharted }),
-      sketch: sketch === null ? null : { sketch, choices },
-    });
-    glance.render({
-      when: formatMa(ma),
-      period: period === null ? 'Deep time' : periodWords(period),
-      ma,
-      oldest: spanOf(scale),
-      playing,
-      temperature: temperatureLayer.drawn(state, { ma, ice, uncharted }),
-    });
-    temperatureLayer.show(state, { ma, ice, uncharted }, playing ? playSpeed() : null);
-    paleoIndex ??= loadPaleoDemIndex(`${base}data/paleodem/index.json`, fetchJson);
-    paleoIndex.then(
-      (index) => {
-        if (oldestMa(index) !== oldest) {
-          oldest = oldestMa(index);
-          showDeepTime(store.get());
-          return;
-        }
-        if (store.get().ma !== ma) return;
-        // On the ice-age scale, today's map: the next is 5 million years back.
-        const { younger, older, mix } = framesAround(index.frames, ice ? 0 : ma);
-        // Playing, the next maps load ahead, so the globe keeps up with the years.
-        if (playing && !ice) {
-          globe.prefetch(
-            framesAhead(index.frames, ma, prefetchFrames(playSpeed())).map(
-              (frame) => `${base}data/paleodem/${frame.file}`,
-            ),
-          );
-        }
-        globe.setDeepTime({
-          younger: `${base}data/paleodem/${younger.file}`,
-          older: `${base}data/paleodem/${older.file}`,
-          mix,
-          columns: index.columns,
-          rows: index.rows,
-          seaDepth: index.seaDepth,
-          landHeight: index.landHeight,
-        });
-      },
-      (error: unknown) => {
-        paleoIndex = null;
-        notify(`Could not load Earth's past surface: ${errorMessage(error)}`);
-      },
-    );
-  }
-
-  /** How far back each scale's time line reaches, Ma. */
-  function spanOf(scale: DeepScale): number {
-    if (scale === 'ice') return ICE_AGES_MA;
-    return scale === 'eons' ? EARTH_AGE_MA : oldest;
-  }
-
   // Impact craters and deposits: loaded the first time the layer is turned on, in either time.
   let impacts: Impacts | null = null;
   let impactsLoading: Promise<Impacts> | null = null;
@@ -1701,7 +1439,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function showImpacts(state: ViewState): DeepTimeView['impacts'] {
     const { ma } = state;
     const scale =
-      ma !== null && state.deepScale === 'all' && ma > oldest ? 'eons' : state.deepScale;
+      ma !== null && state.deepScale === 'all' && ma > deepTime.oldest() ? 'eons' : state.deepScale;
     const on =
       state.layers.has('impacts') && state.mode === 'globe' && (ma === null || scale !== 'eons');
     if (!on || (travelling && ma === null)) {
@@ -1718,7 +1456,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
             impacts = loaded;
             const now = store.get();
             if (now.ma !== null) {
-              showDeepTime(now);
+              deepTime.show(now);
               return;
             }
             showImpacts(now);
@@ -1755,8 +1493,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   function strikeAsItPasses(state: ViewState, data: Impacts, ma: number, placeMa: number): void {
     const from = strikeFrom;
-    strikeFrom = playing ? ma : null;
-    if (from === null || !playing || lessMotion.matches || state.focus !== 'earth') return;
+    strikeFrom = deepTime.playing() ? ma : null;
+    if (from === null || !deepTime.playing() || lessMotion.matches || state.focus !== 'earth')
+      return;
     // Of those passed since the last frame, the greatest few that can be seen.
     const seen = strikesPassed(data, from, ma)
       .map((impact) => ({ impact, place: placeThen(data, impact, placeMa) }))
@@ -1819,51 +1558,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     dateText.textContent = formatMa(ma);
     timeText.textContent = '';
     detailText.textContent = period === null ? 'Deep time' : periodWords(period);
-  }
-
-  /** Play towards the present; from today, start again at the oldest map. */
-  // The speed picked for each span, this visit; each starts at its own default.
-  let deepSpeeds: Partial<Record<DeepScale, number>> = {};
-  /** How fast deep time plays now, millions of years a second, by the span shown. */
-  function playSpeed(): number {
-    const { deepScale } = store.get();
-    return deepSpeedFor(deepScale, deepSpeeds[deepScale]);
-  }
-
-  function startPlay(): void {
-    if (playing) return;
-    playing = true;
-    if ((store.get().ma ?? 0) <= 0) {
-      store.set((state) => ({ ...state, ma: spanOf(state.deepScale) }));
-    }
-    lastTick = performance.now();
-    head = playhead();
-    playFrame = requestAnimationFrame(tick);
-    showDeepTime(store.get());
-  }
-
-  function tick(now: number): void {
-    const seconds = (now - lastTick) / 1000;
-    lastTick = now;
-    const ma = store.get().ma;
-    if (ma === null) {
-      stopPlay();
-      return;
-    }
-    const next = head.step(ma, playSpeed(), seconds);
-    store.set((state) => ({ ...state, ma: next }));
-    if (next <= 0) {
-      stopPlay();
-      return;
-    }
-    playFrame = requestAnimationFrame(tick);
-  }
-
-  function stopPlay(): void {
-    if (!playing) return;
-    playing = false;
-    cancelAnimationFrame(playFrame);
-    showDeepTime(store.get());
   }
 
   /** The curves, for carrying a date across one: loaded once, with or without their layer. */
@@ -2132,7 +1826,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         }
       }
     }
-    if (redraws(DEEP_TIME, state, previous)) showDeepTime(state);
+    if (redraws(DEEP_TIME, state, previous)) deepTime.show(state);
     if (redraws(SKY, state, previous)) {
       if (state.mode === 'sky' || previous?.mode === 'sky' || previous === null) {
         globeContainer.hidden = state.mode === 'sky';
