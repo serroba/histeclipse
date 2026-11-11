@@ -22,22 +22,11 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarP
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
 import { impactLayer } from './globe/impactLayer';
-import { dateCellsLayer, rocksLayer, waysLayer } from './globe/historyPaintLayers';
 import { magneticNorthLayer } from './globe/magneticNorthLayer';
 import { geoToVector } from './globe/geo';
 import { loadPolarity, type PolarityScale } from './data/polarity';
 import { magneticNorthAt } from './deepTime/earthState';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
-import {
-  datesHere,
-  datesNear,
-  datesNote,
-  loadDatesHeat,
-  loadDatesTile,
-  tileKeyOf,
-  type DatesHeat,
-  type DatesTile,
-} from './data/radiocarbonDates';
 import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruptions';
 import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
 import { createDatingCard } from './ui/datingCard';
@@ -140,14 +129,8 @@ import {
   type PaleoDemIndex,
 } from './data/paleoDem';
 import { HOLOCENE_MA, maOfYear, yearOfMa } from './data/iceSheets';
-import {
-  countryRings,
-  loadNamedPeriods,
-  periodsHere,
-  periodsText,
-  type NamedPeriods,
-} from './data/namedPeriods';
-import { loadRocks, rockAt, rockText, rockUnits, type RockUnit, type Rocks } from './data/rocks';
+import { countryRings, loadNamedPeriods } from './data/namedPeriods';
+import { rockAt } from './data/rocks';
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
 import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet, type HereView, type WhyMoment } from './ui/whySheet';
@@ -164,13 +147,17 @@ import { mountShower } from './features/shower';
 import { mountCarbonMade } from './features/carbonMade';
 import { mountIceAges } from './features/iceAges';
 import { mountDeepSurfaces } from './features/deepSurfaces';
+import { mountRocks } from './features/rocks';
+import { mountWays } from './features/ways';
+import { mountDates } from './features/dates';
+import { mountPeriods } from './features/periods';
 import { phoneLook, type BodiesSeen } from './sky/aim';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
 import { layerWhy, onScreen, type WhyId } from './sources/registry';
 import { createZoomRail } from './ui/zoomRail';
 import { createWaysLegend } from './ui/waysLegend';
-import { loadWaysOfLife, waysAt, waysNote, type WaysOfLife } from './data/waysOfLife';
+import { waysAt } from './data/waysOfLife';
 import {
   impactDetails,
   impactsAt,
@@ -280,6 +267,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
   // The tree of life and life through time: their sheets, and the ways to open them.
   const treeOfLife = mountTreeOfLife(partContext);
+  // Named periods for the place picked (#446).
+  const namedPeriods = mountPeriods({
+    ...partContext,
+    refresh: () => {
+      showEmpires(store.get());
+    },
+  });
   // The sky view (#448): loaded the first time it is opened.
   const sky = mountSky({
     ...partContext,
@@ -304,8 +298,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     async () => {
       const [loaded, periods] = await Promise.all([
         impacts ?? impactsLoading ?? loadImpacts(`${base}data/impacts.json`, fetchJson),
-        namedPeriods?.data ??
-          namedPeriodsLoading ??
+        namedPeriods.loaded() ??
+          namedPeriods.loading() ??
           loadNamedPeriods(`${base}data/periods.json`, fetchJson),
       ]);
       return { impacts: loaded, coasts: countryRings(periods) };
@@ -838,10 +832,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       }));
     }
     const now = store.get();
-    showDates(now);
+    dates.show(now);
     showImpacts(now);
     if (lastTerrestrial !== null) showFeatures(now, lastTerrestrial);
-    showRocks(now);
+    rocks.show(now);
     showEmpires(now);
     iceAges.showHolocene(now);
     showHistory(now);
@@ -1116,9 +1110,24 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   // Drawn on the globe as layers of their own (#379).
   const magneticNorthOnGlobe = globe.addLayer(magneticNorthLayer);
-  const rocksOnGlobe = globe.addLayer(rocksLayer);
-  const waysOnGlobe = globe.addLayer(waysLayer);
-  const datesOnGlobe = globe.addLayer(dateCellsLayer);
+  // History's maps (#446): rocks, ways of life and dated squares, their layers in this order.
+  const historyLayer = {
+    ...partContext,
+    globe,
+    travelling: () => travelling,
+    refresh: () => {
+      showEmpires(store.get());
+    },
+  };
+  const rocks = mountRocks({
+    ...historyLayer,
+    oldest: () => oldest,
+    enterDeepTime: (ma, scale) => {
+      enterDeepTime(ma, scale);
+    },
+  });
+  const ways = mountWays({ ...historyLayer, legend: waysLegend });
+  const dates = mountDates({ ...historyLayer, radiocarbonCurves, datingCard });
   // Deep time's climate and continents (#444): the temperature, the plates and how far they
   // moved, and the air.
   const surfaces = mountDeepSurfaces({
@@ -1961,14 +1970,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     showDeepTime(store.get());
   }
 
-  // Archaeological radiocarbon dates (p3k14c): the counts load with the layer, a place's tile
-  // when it is picked.
-  let datesHeat: DatesHeat | null = null;
-  let datesHeatLoading: Promise<DatesHeat> | null = null;
-  const datesTiles = new Map<string, Promise<DatesTile | null>>();
-  let datesSaid: string | null = null;
-  let datesAction: { readonly label: string; readonly run: () => void } | null = null;
-
   /** The curves, for carrying a date across one: loaded once, with or without their layer. */
   function radiocarbonCurves(): Promise<Radiocarbon> {
     return radiocarbon === null
@@ -1978,223 +1979,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
         })
       : Promise.resolve(radiocarbon);
   }
-
-  function datesTile(heat: DatesHeat, place: GeoPoint): Promise<DatesTile | null> {
-    const key = tileKeyOf(heat, place);
-    let tile = datesTiles.get(key);
-    if (tile === undefined) {
-      // A place with no dates nearby has no tile: none to fetch, nothing to say.
-      tile = loadDatesTile(`${base}data/radiocarbon-dates/tiles/${key}.json`, fetchJson).catch(
-        () => null,
-      );
-      datesTiles.set(key, tile);
-    }
-    return tile;
-  }
-
-  /** In historical time with the layer on: the squares with dates, and the place's, if picked. */
-  function showDates(state: ViewState): void {
-    const on = state.layers.has('dates') && state.ma === null;
-    datesAction = null;
-    if (!on || travelling) {
-      datesSaid = on ? RESTING : null;
-      datesOnGlobe.update(null);
-      return;
-    }
-    if (datesHeat === null) {
-      datesSaid = 'Loading the radiocarbon dates…';
-      if (datesHeatLoading === null) {
-        datesHeatLoading = loadDatesHeat(`${base}data/radiocarbon-dates/heat.json`, fetchJson);
-        datesHeatLoading.then(
-          (loaded) => {
-            datesHeat = loaded;
-            showDates(store.get());
-            showEmpires(store.get());
-          },
-          (error: unknown) => {
-            datesHeatLoading = null;
-            notify(`Could not load the radiocarbon dates: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return;
-    }
-    const heat = datesHeat;
-    const year = state.time.date.year;
-    const near = datesNear(heat, year);
-    datesOnGlobe.update(
-      near === null ? null : { cells: near.cells, cellDegrees: heat.cellDegrees },
-    );
-    datesSaid = datesNote(near, null);
-    const place = state.location;
-    if (place === null || near === null) return;
-    void datesTile(heat, place).then((tile) => {
-      const now = store.get();
-      // Only if the view still shows this place and year.
-      if (now.location !== place || now.time.date.year !== year || !now.layers.has('dates')) return;
-      const here = tile === null ? { samples: [], sites: [] } : datesHere(heat, tile, place, year);
-      datesSaid = datesNote(near, here);
-      // The date nearest the middle of the step, to carry across the curve.
-      const middle = here.samples[Math.floor(here.samples.length / 2)];
-      datesAction =
-        middle === undefined
-          ? null
-          : {
-              label: 'How was a date here found?',
-              run: () => {
-                void radiocarbonCurves().then((curves) => {
-                  const south = place.latitude < 0;
-                  const what = [middle.material, middle.period].filter((word) => word !== '');
-                  datingCard.open(
-                    south ? curves.curves.shcal20 : curves.curves.intcal20,
-                    south ? 'SHCal20' : 'IntCal20',
-                    middle.age,
-                    middle.error,
-                    `${middle.lab || 'A sample'} from ${middle.site || 'an unnamed site'}${middle.country === '' ? '' : `, ${middle.country}`}${what.length === 0 ? '' : ` (${what.join(', ')})`}: ${String(middle.age)} ± ${String(middle.error)} radiocarbon years, from p3k14c.`,
-                  );
-                });
-              },
-            };
-      showEmpires(store.get());
-    });
-  }
-
-  // Rocks at the surface: their file loads the first time the layer is turned on.
-  let rocks: readonly RockUnit[] | null = null;
-  let rocksLoading: Promise<Rocks> | null = null;
-  let rocksSaid: string | null = null;
-  let rocksAction: { readonly label: string; readonly run: () => void } | null = null;
-
-  /** In historical time with the layer on, the rocks by age, and the rock at the place picked. */
-  function showRocks(state: ViewState): void {
-    const on = state.layers.has('rocks') && state.ma === null;
-    rocksAction = null;
-    // Today's rocks say nothing of the year a trip shows: they rest with the markers.
-    if (!on || travelling) {
-      rocksSaid = on ? RESTING : null;
-      rocksOnGlobe.update(null);
-      return;
-    }
-    if (rocks === null) {
-      rocksSaid = 'Loading the rocks…';
-      if (rocksLoading === null) {
-        rocksLoading = loadRocks(`${base}data/rocks.json`, fetchJson);
-        rocksLoading.then(
-          (data) => {
-            rocks = rockUnits(data);
-            showRocks(store.get());
-            showEmpires(store.get());
-          },
-          (error: unknown) => {
-            rocksLoading = null;
-            notify(`Could not load the rocks: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return;
-    }
-    rocksOnGlobe.update(rocks);
-    const rock = state.location === null ? null : rockAt(rocks, state.location);
-    rocksSaid =
-      state.location === null
-        ? 'Pick a place on the globe to see its rock, and when it formed.'
-        : rockText(rock);
-    if (rock !== null) {
-      // The middle of the rock's age range, on the span that reaches it.
-      const ma = (rock.topMa + rock.bottomMa) / 2;
-      const scale: DeepScale = ma <= ICE_AGES_MA ? 'ice' : ma <= oldest ? 'all' : 'eons';
-      rocksAction = {
-        label: `See the Earth as it was then, ${formatMa(ma)}`,
-        run: () => {
-          enterDeepTime(ma, scale);
-        },
-      };
-    }
-  }
-
-  // Named periods: their file loads the first time the layer is turned on.
-  let namedPeriods: {
-    readonly data: NamedPeriods;
-    readonly rings: ReturnType<typeof countryRings>;
-  } | null = null;
-  let namedPeriodsLoading: Promise<NamedPeriods> | null = null;
-  let periodsSaid: string | null = null;
-
-  /** In historical time with the layer on, the periods named for the place picked. */
-  function showPeriods(state: ViewState): void {
-    const on = state.layers.has('periods') && state.ma === null;
-    if (!on) {
-      periodsSaid = null;
-      return;
-    }
-    if (namedPeriods === null) {
-      periodsSaid = 'Loading the named periods…';
-      if (namedPeriodsLoading === null) {
-        namedPeriodsLoading = loadNamedPeriods(`${base}data/periods.json`, fetchJson);
-        namedPeriodsLoading.then(
-          (data) => {
-            namedPeriods = { data, rings: countryRings(data) };
-            showPeriods(store.get());
-            showEmpires(store.get());
-          },
-          (error: unknown) => {
-            namedPeriodsLoading = null;
-            notify(`Could not load the named periods: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return;
-    }
-    const year = state.time.date.year;
-    const here =
-      state.location === null
-        ? null
-        : periodsHere(namedPeriods.data, namedPeriods.rings, state.location, year);
-    periodsSaid = periodsText(here, formatYear(astronomicalYear(year)));
-  }
-
-  // Ways of life: their file loads the first time the layer is turned on.
-  let waysOfLife: WaysOfLife | null = null;
-  let waysLoading: Promise<WaysOfLife> | null = null;
-  let waysSaid: string | null = null;
-
-  /** In historical time with the layer on, the regions by their most widespread way of life. */
-  function showWays(state: ViewState): void {
-    const on = state.layers.has('ways') && state.ma === null;
-    if (!on) {
-      waysSaid = null;
-      waysShownYear = null;
-      waysOnGlobe.update(null);
-      waysLegend.render(null);
-      return;
-    }
-    if (waysOfLife === null) {
-      waysSaid = 'Loading the ways of life…';
-      if (waysLoading === null) {
-        waysLoading = loadWaysOfLife(`${base}data/ways-of-life.json`, fetchJson);
-        waysLoading.then(
-          (data) => {
-            waysOfLife = data;
-            showWays(store.get());
-            showEmpires(store.get());
-          },
-          (error: unknown) => {
-            waysLoading = null;
-            notify(`Could not load the ways of life: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return;
-    }
-    const at = waysAt(waysOfLife, state.time.date.year);
-    waysSaid = waysNote(at, (year) => formatYear(astronomicalYear(year)));
-    waysLegend.render(at);
-    // Repainting the map is slow: only when the moment rated changes, as the years go by.
-    if (at.year === waysShownYear) return;
-    waysShownYear = at.year;
-    waysOnGlobe.update(at.regions);
-  }
-  let waysShownYear: number | null = null;
 
   // The layers drawn on each span, as the Layers panel has them, for what is on screen now.
   const layerSpans = new Map(
@@ -2258,13 +2042,21 @@ export async function startApp(root: HTMLElement): Promise<void> {
   let statesDrawn: { readonly year: number; readonly territories: readonly Territory[] } | null =
     null;
 
+  /** The rock at a place, once the rocks are in; undefined until then. */
+  function rockOf(place: GeoPoint): ReturnType<typeof rockAt> | undefined {
+    const units = rocks.units();
+    return units === null ? undefined : rockAt(units, place);
+  }
+
   /** What each layer on the map has at the place picked: "Why here?". */
   function hereView(state: ViewState): HereView | null {
     if (state.location === null || state.ma !== null) return null;
     const year = state.time.date.year;
     const words = (y: number): string => formatYear(astronomicalYear(y));
     const shownYear = cliopatriaYear(year, PRESENT_YEAR);
-    const ways = state.layers.has('ways') && waysOfLife !== null ? waysAt(waysOfLife, year) : null;
+    const waysOfLife = ways.data();
+    const waysThen =
+      state.layers.has('ways') && waysOfLife !== null ? waysAt(waysOfLife, year) : null;
     return {
       place: placeText(state.location),
       facts: hereFacts({
@@ -2277,9 +2069,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
               asOf: shownYear === year ? null : words(shownYear),
             }
           : null,
-        ways: ways === null ? null : { at: ways, momentText: words(ways.year) },
-        rock:
-          state.layers.has('rocks') && rocks !== null ? rockAt(rocks, state.location) : undefined,
+        ways: waysThen === null ? null : { at: waysThen, momentText: words(waysThen.year) },
+        rock: state.layers.has('rocks') ? rockOf(state.location) : undefined,
       }),
     };
   }
@@ -2320,12 +2111,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
       [...state.layers].join(','),
       state.borders,
       statesDrawn?.year ?? '',
-      waysOfLife === null ? 0 : 1,
-      rocks === null ? 0 : 1,
+      ways.data() === null ? 0 : 1,
+      rocks.units() === null ? 0 : 1,
     ].join('|');
   }
 
   function showEmpires(state: ViewState): void {
+    const waysSaid = ways.said();
+    const periodsSaid = namedPeriods.said();
+    const rocksSaid = rocks.said();
+    const datesSaid = dates.said();
+    const rocksAction = rocks.action();
+    const datesAction = dates.action();
     const carbonSaid = carbonMade.said();
     const carbonAction = carbonMade.action();
     // Past states belong to historical time, not deep time.
@@ -2497,10 +2294,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (previous !== null && state.focus !== previous.focus) globe.setFocus(state.focus);
     bodies.render(state, previous);
     if (redraws(EARTH_LAYERS, state, previous)) {
-      showDates(state);
-      showWays(state);
-      showRocks(state);
-      showPeriods(state);
+      dates.show(state);
+      ways.show(state);
+      rocks.show(state);
+      namedPeriods.show(state);
       showImpacts(state);
       carbonMade.show(state);
       showEmpires(state);
