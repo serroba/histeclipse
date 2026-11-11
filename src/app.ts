@@ -29,7 +29,6 @@ import { geoToVector } from './globe/geo';
 import { loadPolarity, type PolarityScale } from './data/polarity';
 import { magneticNorthAt } from './deepTime/earthState';
 import { loadRadiocarbon, type Radiocarbon } from './data/radiocarbon';
-import { DATABLE_YEARS } from './data/radiocarbonProduction';
 import {
   datesHere,
   datesNear,
@@ -41,24 +40,8 @@ import {
   type DatesTile,
 } from './data/radiocarbonDates';
 import { eruptionsBetween, loadEruptions, type Eruptions } from './data/eruptions';
-import { dipoleAt, loadDipole, type DipoleSeries } from './data/dipoleMoment';
-import type { ShowerState } from './globe/showerAnimation';
-import { captionOf, landing, SHOWER_STORY, SUN_STORY, type ShowerStep } from './globe/showerSteps';
-import type { AirShower } from './story/airShower';
-import type { LeafScene } from './story/leafScene';
-import type { SunCore } from './story/sunCore';
-import { createShowerStage } from './ui/showerStage';
-import { onLand, type ElevationGrid } from './data/landSea';
-import { loadElevationGrid } from './ui/elevationImage';
 import { RADIOCARBON_EVENTS } from './data/radiocarbonEvents';
 import { createDatingCard } from './ui/datingCard';
-import {
-  createCarbonMadeCard,
-  glowOf,
-  THEN_ID,
-  THEN_UNKNOWN,
-  thenField,
-} from './ui/carbonMadeCard';
 import { createRadiocarbonStrip } from './ui/radiocarbonStrip';
 import { createGlobe, type StateChange } from './globe/scene';
 import {
@@ -116,7 +99,7 @@ import { createMarkerCard } from './ui/markerCard';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
 import { createLayersPanel } from './ui/layersPanel';
 import { createDeepGlance } from './ui/deepGlance';
-import { CARBON_LIMIT, cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
+import { cliopatriaYear, LAYER_GROUPS } from './state/layerCatalog';
 import {
   blankText,
   changesText,
@@ -204,6 +187,8 @@ import { mountBodies } from './features/bodies';
 import { mountRecords } from './features/records';
 import { mountCycle } from './features/cycle';
 import { mountFamous } from './features/famous';
+import { mountShower } from './features/shower';
+import { mountCarbonMade } from './features/carbonMade';
 import { phoneLook, type BodiesSeen } from './sky/aim';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
@@ -748,318 +733,25 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
   // Carbon-14 in the air under the years' slider (#270), its curves loaded once the layer is on.
   const datingCard = createDatingCard();
-  // Where cosmic rays make carbon-14 (#269): a glow over the globe, for the field and Sun picked
-  // in its card.
-  const carbonMadeCard = createCarbonMadeCard(
-    () => {
-      showCarbonMade(store.get());
+  // The shower's story (#269, #317): its stage, and its chapters in 3D over the globe.
+  const shower = mountShower({
+    ...partContext,
+    globe,
+    closeLayers: () => {
+      layersPanel.dialog.close();
+    },
+  });
+  // Where cosmic rays make carbon-14 (#269): a glow over the globe, and its card.
+  const carbonMade = mountCarbonMade({
+    ...partContext,
+    globe,
+    watchShower: (dipole, fromSun) => {
+      shower.watch(dipole, fromSun);
+    },
+    refresh: () => {
       showEmpires(store.get());
     },
-    (made, fromSun) => {
-      watchShower(made.field.dipole, fromSun);
-    },
-  );
-  // The stage the shower plays on: its caption, its steps, and controls; the panels step aside.
-  const showerStage = createShowerStage((command) => {
-    globe.controlShower(command);
-    if (command === 'stop') {
-      showerStage.close();
-      closeStory3d();
-    }
   });
-
-  // The story's chapters in 3D (#317), over the globe: the Sun's in one scene, the air's in
-  // another, the plant's in a third, each loaded the first time one of its steps shows, one at a time; a scene's WebGL
-  // context is let go when the story leaves it or closes. Should one fail to load, the stage
-  // draws the steps flat, as before.
-  const SCENE_OF: Readonly<Record<ShowerStep, 'sun' | 'air' | 'leaf'>> = {
-    fusion: 'sun',
-    escape: 'sun',
-    journey: 'sun',
-    rays: 'air',
-    shower: 'air',
-    capture: 'air',
-    dioxide: 'leaf',
-    fall: 'leaf',
-    plant: 'leaf',
-  };
-  const STEPS_IN_3D: ReadonlySet<ShowerStep> = new Set(Object.keys(SCENE_OF) as ShowerStep[]);
-  const storyContainer = element('div', {
-    class: 'story-3d',
-    'data-testid': 'story-3d',
-    hidden: '',
-  });
-  type Story3d =
-    | { readonly kind: 'sun'; readonly scene: SunCore }
-    | { readonly kind: 'air'; readonly scene: AirShower }
-    | { readonly kind: 'leaf'; readonly scene: LeafScene };
-  let story3d: Story3d | null = null;
-  let story3dLoading: 'sun' | 'air' | 'leaf' | null = null;
-  let story3dFailed = false;
-  /** The step the 3D scene last showed, to start a chapter afresh on coming to it. */
-  let story3dStep: ShowerStep | null = null;
-  let story3dLatest: {
-    readonly state: ShowerState;
-    readonly reduced: boolean;
-    readonly caption: string;
-  } | null = null;
-  /** The shower the scenes draw: where, under what field, over land or sea, from the Sun. */
-  let story3dShower: {
-    readonly place: GeoPoint;
-    readonly dipole: number;
-    readonly water: boolean;
-    readonly fromSun: boolean;
-  } | null = null;
-  showerStage.setDrawnIn3d(STEPS_IN_3D);
-
-  /** Load a scene's code and make it, if the story still wants it once it has loaded. */
-  function loadStory3d(kind: 'sun' | 'air' | 'leaf'): void {
-    story3dLoading = kind;
-    const earthTextureUrl = `${base}textures/earth-blue-marble-2048.jpg`;
-    const wanted = (): boolean =>
-      story3dLoading === kind &&
-      showerStage.isOpen &&
-      story3dLatest !== null &&
-      SCENE_OF[story3dLatest.state.step] === kind;
-    const made: Promise<Story3d | null> =
-      kind === 'sun'
-        ? import('./story/sunCore').then(({ createSunCore }) =>
-            wanted() ? { kind, scene: createSunCore(storyContainer, { earthTextureUrl }) } : null,
-          )
-        : kind === 'air'
-          ? import('./story/airShower').then(({ createAirShower }) => {
-              if (!wanted()) return null;
-              if (story3dShower === null) throw new Error('no shower to draw yet');
-              const { place, dipole, water } = story3dShower;
-              return {
-                kind,
-                scene: createAirShower(storyContainer, { earthTextureUrl, place, dipole, water }),
-              };
-            })
-          : import('./story/leafScene').then(({ createLeafScene }) => {
-              if (!wanted()) return null;
-              if (story3dShower === null) throw new Error('no shower to draw yet');
-              const { water, fromSun } = story3dShower;
-              return { kind, scene: createLeafScene(storyContainer, { water, fromSun }) };
-            });
-    made
-      .then((scene) => {
-        if (story3dLoading === kind) story3dLoading = null;
-        story3d = scene ?? story3d;
-        if (story3dLatest !== null) {
-          const latest = story3dLatest;
-          showStory3d(latest.state, latest.reduced, latest.caption);
-        }
-      })
-      .catch((error: unknown) => {
-        story3dLoading = null;
-        story3dFailed = true;
-        storyContainer.hidden = true;
-        showerStage.setDrawnIn3d(new Set());
-        if (story3dLatest !== null) showerStage.render(story3dLatest.state, story3dLatest.caption);
-        notify(`Could not draw the story in 3D, so it is drawn flat: ${errorMessage(error)}`);
-      });
-  }
-
-  function showStory3d(state: ShowerState, reduced: boolean, caption: string): void {
-    story3dLatest = { state, reduced, caption };
-    const before = story3dStep;
-    story3dStep = state.step;
-    const kind = SCENE_OF[state.step];
-    if (story3dFailed) {
-      storyContainer.hidden = true;
-      story3d?.scene.setPlaying(false);
-      return;
-    }
-    storyContainer.hidden = false;
-    if (story3d?.kind !== kind) {
-      // The other scene, if one is up, gives way; this one starts afresh once it has loaded.
-      story3d?.scene.dispose();
-      story3d = null;
-      story3dStep = null;
-      if (story3dLoading !== kind) loadStory3d(kind);
-      return;
-    }
-    if (before !== state.step) {
-      const { step } = state;
-      if (story3d.kind === 'sun') {
-        story3d.scene.setChapter(step === 'escape' || step === 'journey' ? step : 'fusion');
-      } else if (story3d.kind === 'air') {
-        story3d.scene.setChapter(step === 'shower' || step === 'capture' ? step : 'rays');
-      } else {
-        story3d.scene.setChapter(step === 'fall' || step === 'plant' ? step : 'dioxide');
-      }
-      if (reduced) story3d.scene.settle();
-      else story3d.scene.restart();
-    }
-    if (!reduced) story3d.scene.setPlaying(state.playing);
-  }
-
-  function closeStory3d(): void {
-    story3d?.scene.dispose();
-    story3d = null;
-    story3dLoading = null;
-    story3dStep = null;
-    story3dLatest = null;
-    storyContainer.hidden = true;
-  }
-
-  // Today's land and sea, to say whether the carbon lands on land or water; asked for once.
-  let elevations: Promise<ElevationGrid | null> | null = null;
-  function landAndSea(): Promise<ElevationGrid | null> {
-    elevations ??= loadShelf(`${base}data/shelf/index.json`, fetchJson)
-      .then((index) => loadElevationGrid(`${base}data/shelf/${index.file}`, index))
-      .catch((error: unknown) => {
-        elevations = null;
-        notify(`Could not load today's coasts: ${errorMessage(error)}`);
-        return null;
-      });
-    return elevations;
-  }
-
-  /**
-   * Play a cosmic-ray shower over the meridian in view: seen from the side as the rays come in,
-   * then close up as one bursts, under the field picked. It ends on a plant where it lands on
-   * land, and on algae where it lands on water.
-   */
-  function watchShower(dipole: number, fromSun: boolean): void {
-    const story = fromSun ? SUN_STORY : SHOWER_STORY;
-    /** Turn to a body: the Sun for its steps, Earth for the shower's. */
-    const focusOn = (body: 'sun' | 'earth'): void => {
-      if (store.get().focus !== body)
-        store.set((state) => ({ ...state, focus: body, view: 'free' }));
-    };
-    focusOn('earth');
-    layersPanel.dialog.close();
-    // Over the place picked, if it is far enough from the equator for rays to get through
-    // today; else at 60° along the meridian in view.
-    const picked = store.get().location;
-    const place =
-      picked !== null && Math.abs(picked.latitude) >= 35
-        ? { latitude: picked.latitude, longitude: picked.longitude }
-        : { latitude: 60, longitude: store.get().camera.target.longitude };
-    const { longitude } = place;
-    /** Where the camera stands for each step, whichever way the reader came to it. */
-    const frame = (step: ShowerStep): void => {
-      if (step === 'fusion' || step === 'escape' || step === 'journey') {
-        // The Sun, close up, while its part of the story is drawn on the stage.
-        focusOn('sun');
-        return;
-      }
-      focusOn('earth');
-      if (step === 'rays') {
-        // From the side, so the rays are seen coming in from space.
-        globe.flyTo({ latitude: 20, longitude: longitude - 90 });
-        globe.zoomTo(4.4);
-      } else if (step === 'fall' || step === 'plant') {
-        // A little toward the equator, to follow it falling to where it lands.
-        globe.flyTo({ latitude: place.latitude - 1.5, longitude });
-        globe.zoomTo(1.35);
-      } else {
-        // In close over the strike, for the shower and what it makes.
-        globe.flyTo(place);
-        globe.zoomTo(1.35);
-      }
-    };
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    frame(fromSun ? 'fusion' : 'rays');
-    showerStage.open(reduced, story);
-    // Once the globe has turned to it, and today's coasts have said where it lands.
-    const turned = new Promise((done) => window.setTimeout(done, 1000));
-    void Promise.all([landAndSea(), turned]).then(([grid]) => {
-      const water = grid !== null && !onLand(grid, landing(place));
-      story3dShower = { place, dipole, water, fromSun };
-      let framed: ShowerStep | null = null;
-      globe.playShower({
-        place,
-        dipole,
-        water,
-        fromSun,
-        onState(state) {
-          if (state.step !== framed) {
-            framed = state.step;
-            frame(state.step);
-          }
-          const caption = captionOf(state.step, dipole, water, fromSun);
-          showerStage.render(state, caption);
-          showStory3d(state, reduced, caption);
-        },
-      });
-      // Under reduced motion, each step waits for the reader, its picture complete.
-      if (reduced) globe.controlShower('settle');
-    });
-  }
-  let carbonMadeSaid: string | null = null;
-  let carbonMadeAction: { readonly label: string; readonly run: () => void } | null = null;
-
-  // The dipole's strength through the years radiocarbon reaches (GGF100k), loaded with the layer.
-  let dipole: DipoleSeries | null = null;
-  let dipoleAsked = false;
-
-  /** The field at the moment shown, or null until it loads or beyond its reach. */
-  function fieldThen(state: ViewState): ReturnType<typeof thenField> | null {
-    if (dipole === null) {
-      if (!dipoleAsked) {
-        dipoleAsked = true;
-        loadDipole(`${base}data/dipole.json`, fetchJson).then(
-          (loaded) => {
-            dipole = loaded;
-            showCarbonMade(store.get());
-            showEmpires(store.get());
-          },
-          (error: unknown) => {
-            dipoleAsked = false;
-            notify(`Could not load the field's strength: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return null;
-    }
-    // Thousands of years before 1950, as the model counts.
-    const ka = state.ma === null ? (1950 - state.time.date.year) / 1000 : state.ma * 1000;
-    const strength = dipoleAt(dipole, ka);
-    return strength === null ? null : thenField(strength);
-  }
-
-  /** The glow, on the spans and years radiocarbon reaches; what the layer says, and its card. */
-  function showCarbonMade(state: ViewState): void {
-    const layerOn = state.layers.has('carbonMade') && state.mode === 'globe';
-    const span = state.ma === null ? 'years' : state.deepScale;
-    const here = span === 'years' || span === 'ice';
-    const reached = state.ma === null || state.ma * 1e6 <= DATABLE_YEARS;
-    carbonMadeAction =
-      layerOn && here
-        ? {
-            label: 'How is it made?',
-            run: () => {
-              carbonMadeCard.open();
-            },
-          }
-        : null;
-    if (!layerOn || !here || !reached) {
-      carbonMadeSaid = layerOn && here ? CARBON_LIMIT : null;
-      globe.setC14Glow(null);
-      return;
-    }
-    carbonMadeCard.setThen(fieldThen(state));
-    const made = carbonMadeCard.current();
-    globe.setC14Glow(glowOf(made));
-    const sun = made.sun.label.toLowerCase();
-    if (made.field.id !== THEN_ID) {
-      carbonMadeSaid =
-        state.ma === null
-          ? `${made.field.label} field, ${sun}: most is made over the poles.`
-          : `Drawn for the field picked (${made.field.label.toLowerCase()}), not that of the moment shown.`;
-      return;
-    }
-    const strength = made.field.dipole.toFixed(1);
-    carbonMadeSaid =
-      made.field !== THEN_UNKNOWN
-        ? made.field.dipole < 4
-          ? `The field at the moment shown is weak, ${strength} × 10²² A m² (GGF100k; today’s is 7.8): more is made, and nearer the equator. Other models put this low far lower (Korte et al. 2019).`
-          : `The field at the moment shown, ${strength} × 10²² A m² (GGF100k), ${sun}: most is made over the poles.`
-        : `The field at the moment shown is not known yet; today’s is drawn, ${sun}.`;
-  }
   const radiocarbonStrip = createRadiocarbonStrip(
     whySheet.mark('radiocarbon', 'Carbon-14 in the air'),
     (curve, name) => {
@@ -1414,9 +1106,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     layersPanel.dialog,
     markerCard.dialog,
     datingCard.dialog,
-    carbonMadeCard.dialog,
-    storyContainer,
-    showerStage.root,
+    carbonMade.dialog,
+    shower.container,
+    shower.stage,
   );
 
   // Full view hides the panels for a clear view; Show controls, Escape, or a tap on open sky or
@@ -3064,6 +2756,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   function showEmpires(state: ViewState): void {
+    const carbonSaid = carbonMade.said();
+    const carbonAction = carbonMade.action();
     // Past states belong to historical time, not deep time.
     const on = state.layers.has('empires') && state.ma === null;
     layersPanel.render({
@@ -3083,7 +2777,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           const text = shown.said?.() ?? null;
           return text === null ? [] : [[feature.id, text] as const];
         }),
-        ...(carbonMadeSaid === null ? [] : [['carbonMade', carbonMadeSaid] as const]),
+        ...(carbonSaid === null ? [] : [['carbonMade', carbonSaid] as const]),
       ]),
       actions: new Map([
         [
@@ -3113,7 +2807,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
         ] as const,
         ...(rocksAction === null ? [] : [['rocks', rocksAction] as const]),
         ...(datesAction === null ? [] : [['dates', datesAction] as const]),
-        ...(carbonMadeAction === null ? [] : [['carbonMade', carbonMadeAction] as const]),
+        ...(carbonAction === null ? [] : [['carbonMade', carbonAction] as const]),
       ]),
     });
     const source = state.borders;
@@ -3238,7 +2932,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showRocks(state);
       showPeriods(state);
       showImpacts(state);
-      showCarbonMade(state);
+      carbonMade.show(state);
       showEmpires(state);
     } else if (previous !== null && state.focus !== previous.focus) {
       // The Layers panel is Earth's: it shuts on going to another body.

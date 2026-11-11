@@ -60,6 +60,8 @@ export default defineConfig({
         'src/features/records/index.ts',
         'src/features/cycle/index.ts',
         'src/features/famous/index.ts',
+        'src/features/shower/index.ts',
+        'src/features/carbonMade/index.ts',
         'src/story/sunCore.ts',
         'src/story/airShower.ts',
         'src/story/leafScene.ts',
