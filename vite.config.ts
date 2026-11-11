@@ -39,7 +39,7 @@ export default defineConfig({
         'src/globe/layerHost.ts',
         'src/features/volcanoes/volcanoLayer.ts',
         'src/globe/impactLayer.ts',
-        'src/globe/fossilLayer.ts',
+        'src/features/fossils/fossilLayer.ts',
         'src/features/genomes/genomeLayer.ts',
         'src/globe/humanSiteLayer.ts',
         'src/globe/impactAnimation.ts',

@@ -54,14 +54,14 @@ describe('the spacecraft as a feature', () => {
 
   it('draws nothing while its layer is off, and offers its icon in the globe view', () => {
     const { context, drawn, rail } = fakeContext({ planetsLoaded: true });
-    spacecraftFeature.mount(context).show(off, JD_2010);
+    spacecraftFeature.mount(context).show?.(off, JD_2010);
     expect(drawn).toEqual([null]);
     expect(rail).toEqual([[true, false]]);
   });
 
   it('in deep time they are neither offered nor drawn', () => {
     const { context, drawn, rail } = fakeContext({ planetsLoaded: true });
-    spacecraftFeature.mount(context).show({ ...on, ma: 100 }, JD_2010);
+    spacecraftFeature.mount(context).show?.({ ...on, ma: 100 }, JD_2010);
     expect(drawn).toEqual([null]);
     expect(rail).toEqual([[false, true]]);
   });
@@ -69,15 +69,15 @@ describe('the spacecraft as a feature', () => {
   it('loads the record and paths once, then draws the craft in flight and opens a card on a tap', async () => {
     const { context, drawn, cards, refresh, loadPlanets } = fakeContext({ planetsLoaded: false });
     const craft = spacecraftFeature.mount(context);
-    craft.show(on, JD_2010);
-    craft.show(on, JD_2010);
+    craft.show?.(on, JD_2010);
+    craft.show?.(on, JD_2010);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalledTimes(1);
     });
     expect(loadPlanets).toHaveBeenCalled();
     expect(drawn).toEqual([]);
 
-    craft.show(on, JD_2010);
+    craft.show?.(on, JD_2010);
     const flying = drawn[0] as readonly { id: string; km: readonly number[] }[];
     expect(flying.length).toBeGreaterThan(5);
     expect(flying.every(({ km }) => km.every(Number.isFinite))).toBe(true);
@@ -93,11 +93,11 @@ describe('the spacecraft as a feature', () => {
   it('says so when the record cannot be loaded, and tries again next time', async () => {
     const { context, notify } = fakeContext({ planetsLoaded: true, failing: true });
     const craft = spacecraftFeature.mount(context);
-    craft.show(on, JD_2010);
+    craft.show?.(on, JD_2010);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the spacecraft: offline');
     });
-    craft.show(on, JD_2010);
+    craft.show?.(on, JD_2010);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledTimes(2);
     });

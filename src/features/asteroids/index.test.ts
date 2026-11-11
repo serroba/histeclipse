@@ -47,14 +47,14 @@ describe('the asteroid belt as a feature', () => {
 
   it('draws nothing while its layer is off, and offers its icon in the globe view', () => {
     const { context, drawn, rail } = fakeContext(true);
-    asteroidsFeature.mount(context).show(off, J2000);
+    asteroidsFeature.mount(context).show?.(off, J2000);
     expect(drawn).toEqual([null]);
     expect(rail).toEqual([[true, false]]);
   });
 
   it('in deep time it is neither offered nor drawn', () => {
     const { context, drawn, rail } = fakeContext(true);
-    asteroidsFeature.mount(context).show({ ...on, ma: 100 }, J2000);
+    asteroidsFeature.mount(context).show?.({ ...on, ma: 100 }, J2000);
     expect(drawn).toEqual([null]);
     expect(rail).toEqual([[false, true]]);
   });
@@ -62,14 +62,14 @@ describe('the asteroid belt as a feature', () => {
   it('loads the orbits once, then draws every asteroid from Earth and opens a card on a tap', async () => {
     const { context, drawn, cards, refresh } = fakeContext(true);
     const belt = asteroidsFeature.mount(context);
-    belt.show(on, J2000);
-    belt.show(on, J2000);
+    belt.show?.(on, J2000);
+    belt.show?.(on, J2000);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalledTimes(1);
     });
     expect(drawn).toEqual([]);
 
-    belt.show(on, J2000);
+    belt.show?.(on, J2000);
     const shown = drawn[0] as readonly { number: string; km: readonly number[] }[];
     expect(shown).toHaveLength(Object.keys(data.asteroids).length);
     expect(shown.every(({ km }) => km.every(Number.isFinite))).toBe(true);
@@ -83,11 +83,11 @@ describe('the asteroid belt as a feature', () => {
   it('asks for the planets, and waits for them, before placing the belt', async () => {
     const { context, drawn, refresh, loadPlanets } = fakeContext(false);
     const belt = asteroidsFeature.mount(context);
-    belt.show(on, J2000);
+    belt.show?.(on, J2000);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalled();
     });
-    belt.show(on, J2000);
+    belt.show?.(on, J2000);
     expect(loadPlanets).toHaveBeenCalled();
     expect(drawn).toEqual([]);
   });
@@ -96,11 +96,11 @@ describe('the asteroid belt as a feature', () => {
     const { context, notify } = fakeContext(true);
     const failing = { ...context, fetchJson: () => Promise.reject(new Error('offline')) };
     const belt = asteroidsFeature.mount(failing);
-    belt.show(on, J2000);
+    belt.show?.(on, J2000);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the asteroids: offline');
     });
-    belt.show(on, J2000);
+    belt.show?.(on, J2000);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledTimes(2);
     });

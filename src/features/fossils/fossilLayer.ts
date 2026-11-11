@@ -4,8 +4,8 @@
  * `globe.addLayer(fossilLayer)`.
  */
 
-import type { FossilCell } from '../data/fossils';
-import { SURFACE_PRIORITY, type LayerFactory } from './layerHost';
+import type { FossilCell } from '../../data/fossils';
+import { SURFACE_PRIORITY, type LayerFactory } from '../../globe/layerHost';
 
 export const fossilLayer: LayerFactory<readonly FossilCell[] | null> = (host) => {
   const layer = document.createElement('div');

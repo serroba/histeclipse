@@ -28,7 +28,6 @@ import {
 import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from './eclipses/lunarPhases';
 import { shadowAt } from './eclipses/solar';
 import { angularDistance, longitudeUncertainty, shiftLongitude } from './eclipses/visibility';
-import { fossilLayer } from './globe/fossilLayer';
 import { humanSiteLayer } from './globe/humanSiteLayer';
 import { impactLayer } from './globe/impactLayer';
 import { geoToVector } from './globe/geo';
@@ -135,7 +134,7 @@ import { keyGradient, keyTicks, loadColourKeys } from './data/planetKeys';
 import { isNamedBody, loadPlaceNames, type NamedBody, type PlaceNames } from './data/planetNames';
 import { loadMoonOrbits, moonPosition, type MoonName, type MoonOrbits } from './astro/moonOrbits';
 import { FEATURES } from './features';
-import { RESTING, type FeatureContext } from './features/feature';
+import { RESTING, type DeepMoment, type FeatureContext } from './features/feature';
 import { moonAbout, moonLine } from './text/moonFacts';
 import { isMoonBody, MOON_MAPS, MOON_NAMES, MOON_VIEWS, moonPlanet } from './globe/moonLook';
 import { createCycleTrack, type CycleMoment, type CycleSpeed } from './ui/cycleTrack';
@@ -213,6 +212,7 @@ import {
   type SeaIceView,
   type TemperatureView,
 } from './ui/deepTimeBar';
+import type { DeepChipView } from './ui/deepChips';
 import { formatMa, periodAt, periodWords } from './deepTime/periods';
 import {
   framesAhead,
@@ -277,7 +277,6 @@ import { loadWaysOfLife, waysAt, waysNote, type WaysOfLife } from './data/waysOf
 import { loadAtmosphere, type Atmosphere } from './data/atmosphere';
 import { loadCo2Archive, type Co2Archive } from './data/co2Archive';
 import { loadDeepAir, type DeepAir } from './data/deepAir';
-import { fossilCard, fossilsAt, loadFossils, type Fossils } from './data/fossils';
 import {
   impactDetails,
   impactsAt,
@@ -693,105 +692,106 @@ export async function startApp(root: HTMLElement): Promise<void> {
       };
     });
   }
-  const deepBar = createDeepTimeBar({
-    why(id, label) {
-      return whySheet.mark(id, label);
+  const deepBar = createDeepTimeBar(
+    {
+      why(id, label) {
+        return whySheet.mark(id, label);
+      },
+      explain(id) {
+        store.set((state) => ({ ...state, why: id }));
+      },
+      onMa(ma, jump) {
+        stopPlay();
+        if (jump) sync.step();
+        store.set((state) => ({ ...state, ma: roundMa(ma) }));
+      },
+      onPlay(play) {
+        if (play) startPlay();
+        else stopPlay();
+      },
+      onSpeed(maPerSecond) {
+        deepSpeeds = { ...deepSpeeds, [store.get().deepScale]: maPerSecond };
+        showDeepTime(store.get());
+      },
+      onPlates(on) {
+        store.set((state) => {
+          const layers = new Set(state.layers);
+          if (on) layers.add('plates');
+          else layers.delete('plates');
+          return { ...state, layers };
+        });
+      },
+      onDispersal(dispersal) {
+        store.set((state) => ({ ...state, dispersal }));
+      },
+      onAir(on) {
+        store.set((state) => {
+          const layers = new Set(state.layers);
+          if (on) layers.add('air');
+          else layers.delete('air');
+          return { ...state, layers };
+        });
+      },
+      onCo2Archive() {
+        loadArchive();
+      },
+      onImpactsMode(mode) {
+        impactsMode = mode;
+        showDeepTime(store.get());
+      },
+      onImpacts(on) {
+        store.set((state) => {
+          const layers = new Set(state.layers);
+          if (on) layers.add('impacts');
+          else layers.delete('impacts');
+          return { ...state, layers };
+        });
+      },
+      onLayer(layer, on) {
+        store.set((state) => ({ ...state, layers: withLayer(state.layers, layer, on) }));
+      },
+      onHumans(on) {
+        store.set((state) => {
+          const layers = new Set(state.layers);
+          if (on) layers.add('humans');
+          else layers.delete('humans');
+          return { ...state, layers };
+        });
+      },
+      onSeaLevel(on) {
+        store.set((state) => {
+          const layers = new Set(state.layers);
+          if (on) layers.add('sealevel');
+          else layers.delete('sealevel');
+          return { ...state, layers };
+        });
+      },
+      onCoast(coast) {
+        store.set((state) => ({ ...state, coast }));
+      },
+      onSeaIce(seaIce) {
+        store.set((state) => ({ ...state, seaIce }));
+      },
+      onTemperatureModel(temperatureModel) {
+        store.set((state) => ({ ...state, temperatureModel }));
+      },
+      onSketch(choice) {
+        store.set((state) => ({ ...state, ...choice }));
+      },
+      onTemperature(on) {
+        store.set((state) => {
+          const layers = new Set(state.layers);
+          if (on) layers.add('temperature');
+          else layers.delete('temperature');
+          return { ...state, layers };
+        });
+      },
     },
-    explain(id) {
-      store.set((state) => ({ ...state, why: id }));
-    },
-    onMa(ma, jump) {
-      stopPlay();
-      if (jump) sync.step();
-      store.set((state) => ({ ...state, ma: roundMa(ma) }));
-    },
-    onPlay(play) {
-      if (play) startPlay();
-      else stopPlay();
-    },
-    onSpeed(maPerSecond) {
-      deepSpeeds = { ...deepSpeeds, [store.get().deepScale]: maPerSecond };
-      showDeepTime(store.get());
-    },
-    onPlates(on) {
-      store.set((state) => {
-        const layers = new Set(state.layers);
-        if (on) layers.add('plates');
-        else layers.delete('plates');
-        return { ...state, layers };
-      });
-    },
-    onDispersal(dispersal) {
-      store.set((state) => ({ ...state, dispersal }));
-    },
-    onAir(on) {
-      store.set((state) => {
-        const layers = new Set(state.layers);
-        if (on) layers.add('air');
-        else layers.delete('air');
-        return { ...state, layers };
-      });
-    },
-    onCo2Archive() {
-      loadArchive();
-    },
-    onImpactsMode(mode) {
-      impactsMode = mode;
-      showDeepTime(store.get());
-    },
-    onImpacts(on) {
-      store.set((state) => {
-        const layers = new Set(state.layers);
-        if (on) layers.add('impacts');
-        else layers.delete('impacts');
-        return { ...state, layers };
-      });
-    },
-    onFossils(on) {
-      store.set((state) => {
-        const layers = new Set(state.layers);
-        if (on) layers.add('fossils');
-        else layers.delete('fossils');
-        return { ...state, layers };
-      });
-    },
-    onHumans(on) {
-      store.set((state) => {
-        const layers = new Set(state.layers);
-        if (on) layers.add('humans');
-        else layers.delete('humans');
-        return { ...state, layers };
-      });
-    },
-    onSeaLevel(on) {
-      store.set((state) => {
-        const layers = new Set(state.layers);
-        if (on) layers.add('sealevel');
-        else layers.delete('sealevel');
-        return { ...state, layers };
-      });
-    },
-    onCoast(coast) {
-      store.set((state) => ({ ...state, coast }));
-    },
-    onSeaIce(seaIce) {
-      store.set((state) => ({ ...state, seaIce }));
-    },
-    onTemperatureModel(temperatureModel) {
-      store.set((state) => ({ ...state, temperatureModel }));
-    },
-    onSketch(choice) {
-      store.set((state) => ({ ...state, ...choice }));
-    },
-    onTemperature(on) {
-      store.set((state) => {
-        const layers = new Set(state.layers);
-        if (on) layers.add('temperature');
-        else layers.delete('temperature');
-        return { ...state, layers };
-      });
-    },
-  });
+    // The features' chips (#380), where the fossils' chip stood.
+    FEATURES.flatMap((feature) =>
+      feature.deepChip === undefined ? [] : [{ layer: feature.id, ...feature.deepChip }],
+    ),
+  );
   const sunSwitch = createSunSwitch(
     (sunLayer) => {
       store.set((state) => ({ ...state, sunLayer }));
@@ -1799,7 +1799,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   // Drawn on the globe as layers of their own (#379).
   const impactsOnGlobe = globe.addLayer(impactLayer);
-  const fossilsOnGlobe = globe.addLayer(fossilLayer);
   const humanSitesOnGlobe = globe.addLayer(humanSiteLayer);
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureContext: FeatureContext = {
@@ -1817,16 +1816,27 @@ export async function startApp(root: HTMLElement): Promise<void> {
     loadPlanets: () => {
       void loadPlanets();
     },
+    openLineages: openLineagesAt,
     travelling: () => travelling,
     refresh: () => {
       const now = store.get();
       showTime(now);
+      if (now.ma !== null) showDeepTime(now);
       showEmpires(now);
     },
   };
   const mounted = FEATURES.map((feature) => ({ feature, shown: feature.mount(featureContext) }));
   function showFeatures(state: ViewState, jdTT: number): void {
-    for (const { shown } of mounted) shown.show(state, jdTT);
+    for (const { shown } of mounted) shown.show?.(state, jdTT);
+  }
+  /** Deep time's chips, from the features that have one (#380). */
+  function deepChips(state: ViewState, moment: DeepMoment): Map<Layer, DeepChipView> {
+    const chips = new Map<Layer, DeepChipView>();
+    for (const { feature, shown } of mounted) {
+      const chip = shown.deep?.(state, moment) ?? null;
+      if (chip !== null) chips.set(feature.id, chip);
+    }
+    return chips;
   }
   const [deltaT, lunarCatalog, solarCatalog] = await Promise.all([
     DeltaT.load(`${base}data/delta-t.json`, (url) => fetch(url)),
@@ -2442,7 +2452,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.setIceOutlines(null);
       humanSitesOnGlobe.update(null);
       globe.setSettled(null);
-      fossilsOnGlobe.update(null);
+      for (const { shown } of mounted) shown.deep?.(state, null);
       globe.setPlates(null);
       return;
     }
@@ -2474,7 +2484,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       iceOutlines: showIceOutlines(state, ma),
       plateMotion: plateMotionText(state, ma),
       humans: showHumans(state, ma),
-      fossils: showFossils(state, ma),
+      chips: deepChips(state, { ma, scale }),
       impacts: showImpacts(state),
       air: showAir(state),
       seaIce: showSeaIce(state, ma),
@@ -2782,59 +2792,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
   }
 
-  // The genera's pictures: loaded the first time a fossil cell's card opens.
-  let fossilPictures: Pictures | null = null;
-  let fossilPicturesLoading: Promise<Pictures> | null = null;
-  let fossilShown: string | null = null;
-
-  function fossilCardFor(
-    key: string,
-    pictures: Pictures | null,
-  ): ReturnType<typeof fossilCard> | null {
-    const { ma } = store.get();
-    if (fossils === null || ma === null) return null;
-    const at = fossilsAt(fossils, ma);
-    const cell = at.cells.find(
-      (each) => `fossil:${each.group}:${String(each.latitude)}:${String(each.longitude)}` === key,
-    );
-    if (cell === undefined) return null;
-    const genus = cell.genera[0]?.[0];
-    return {
-      ...fossilCard(fossils, cell, at, pictures),
-      ...(genus === undefined
-        ? {}
-        : {
-            action: {
-              label: `${genus} on the tree through time`,
-              run: () => {
-                openLineagesAt(cell.group, genus);
-              },
-            },
-          }),
-    };
-  }
-
-  function showFossilCard(key: string): void {
-    const card = fossilCardFor(key, fossilPictures);
-    if (card === null) return;
-    fossilShown = key;
-    markerCard.show(card);
-    if (fossilPictures !== null || fossilPicturesLoading !== null) return;
-    fossilPicturesLoading = loadPictures(`${base}data/fossil-pictures.json`, fetchJson);
-    fossilPicturesLoading.then(
-      (loaded) => {
-        fossilPictures = loaded;
-        // Its picture, if its card is still the one open.
-        const again = fossilShown === null ? null : fossilCardFor(fossilShown, loaded);
-        if (markerCard.dialog.open && again !== null) markerCard.show(again);
-      },
-      (error: unknown) => {
-        fossilPicturesLoading = null;
-        notify(`Could not load the fossils’ pictures: ${errorMessage(error)}`);
-      },
-    );
-  }
-
   // The finds' pictures: loaded the first time a find's card opens.
   let humanPictures: Pictures | null = null;
   let humanPicturesLoading: Promise<Pictures> | null = null;
@@ -2889,17 +2846,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     for (const { shown } of mounted) shown.unpick?.();
     const picked = mounted.find(({ feature }) => feature.picks === kind);
     if (picked !== undefined) {
-      if (id !== undefined) picked.shown.pick?.(id);
+      picked.shown.pick?.(key.slice(key.indexOf(':') + 1));
       return;
     }
     humanShown = null;
-    fossilShown = null;
     if (kind === 'human' && id !== undefined) {
       showHumanCard(id);
-      return;
-    }
-    if (kind === 'fossil') {
-      showFossilCard(key);
       return;
     }
     const impact = impacts?.impacts.find((each) => String(each.id) === id);
@@ -2927,37 +2879,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
           }),
     });
   });
-
-  // Fossils: loaded the first time the layer is turned on.
-  let fossils: Fossils | null = null;
-  let fossilsLoading: Promise<Fossils> | null = null;
-
-  /** On the 540 Myr span with Fossils on, the finds of the moment where they lay then. */
-  function showFossils(state: ViewState, ma: number): DeepTimeView['fossils'] {
-    if (state.deepScale !== 'all' || !state.layers.has('fossils')) {
-      fossilsOnGlobe.update(null);
-      return { on: false };
-    }
-    if (fossils === null) {
-      if (fossilsLoading === null) {
-        fossilsLoading = loadFossils(`${base}data/fossils.json`, fetchJson);
-        fossilsLoading.then(
-          (loaded) => {
-            fossils = loaded;
-            showDeepTime(store.get());
-          },
-          (error: unknown) => {
-            fossilsLoading = null;
-            notify(`Could not load the fossils: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return { on: true, at: null };
-    }
-    const at = fossilsAt(fossils, ma);
-    fossilsOnGlobe.update(at.cells);
-    return { on: true, at };
-  }
 
   // The curated human finds: loaded the first time the layer is turned on.
   let humanClaims: HumanClaims | null = null;
@@ -4551,7 +4472,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       // Each feature is shown again, at the moment shown, when what it watches changes.
       for (const { feature, shown } of mounted) {
         if (changed(feature.watches(previous), feature.watches(state))) {
-          shown.show(state, lastTerrestrial);
+          shown.show?.(state, lastTerrestrial);
         }
       }
     }
