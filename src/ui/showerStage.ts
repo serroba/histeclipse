@@ -17,6 +17,7 @@ import {
 import { element } from './dom';
 import { reactionDiagram } from './reactionDiagram';
 import { sunDiagram } from './sunDiagram';
+import './showerStage.css';
 
 const STEP_NAMES: Readonly<Record<ShowerStep, string>> = {
   fusion: 'Fusion',

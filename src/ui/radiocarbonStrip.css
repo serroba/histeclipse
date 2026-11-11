@@ -1,0 +1,87 @@
+/* Carbon-14 in the air under the years' slider (#270): a line, the Hallstatt plateau shaded,
+   Miyake events as ticks; inset as the chapters are, so a share of it is a share of the slider. */
+.radiocarbon-strip {
+  margin: 3px 9px 0;
+}
+
+.radiocarbon-strip[hidden] {
+  display: none;
+}
+
+.radiocarbon-plot {
+  position: relative;
+  height: 22px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.04);
+}
+
+.radiocarbon-line {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.radiocarbon-line polyline {
+  fill: none;
+  stroke: #9fd4a8;
+  stroke-width: 1.5;
+}
+
+.radiocarbon-marks > span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+
+.radiocarbon-plateau {
+  background: rgb(247 201 90 / 0.18);
+  border-inline: 1px dashed rgb(247 201 90 / 0.5);
+}
+
+.radiocarbon-event {
+  width: 2px;
+  background: #f7c95a;
+  transform: translateX(-1px);
+}
+
+/* Eruptions in the ice cores (#274), under the curve: one tick each, taller for more sulfur. */
+.radiocarbon-eruptions {
+  display: block;
+  width: 100%;
+  height: 14px;
+  margin-top: 1px;
+}
+
+.radiocarbon-eruptions .eruption {
+  stroke: rgb(232 135 90 / 0.75);
+  stroke-width: 1;
+}
+
+.radiocarbon-eruptions .eruption.is-named {
+  stroke: #ffb27d;
+  stroke-width: 2;
+}
+
+.radiocarbon-caption {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--ink-muted);
+}
+
+/* The button that opens "How was this dated?" (#270). */
+.radiocarbon-date {
+  margin-left: auto;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgb(159 212 168 / 0.5);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}

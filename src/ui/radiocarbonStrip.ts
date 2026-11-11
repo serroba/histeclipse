@@ -13,6 +13,7 @@ import { yearOfCalBP } from '../data/radiocarbon';
 import type { RadiocarbonEvent } from '../data/radiocarbonEvents';
 import { eruptionText, LARGEST_SULFUR, type Eruption } from '../data/eruptions';
 import { element } from './dom';
+import './radiocarbonStrip.css';
 
 const NS = 'http://www.w3.org/2000/svg';
 /** Points along the line, at most: plenty for a strip a few hundred pixels wide. */

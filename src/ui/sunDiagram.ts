@@ -8,6 +8,7 @@
  */
 
 import type { ShowerStep } from '../globe/showerSteps';
+import './sunDiagram.css';
 
 const NS = 'http://www.w3.org/2000/svg';
 

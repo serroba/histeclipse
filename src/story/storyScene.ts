@@ -30,6 +30,7 @@ import { LineMaterial, type LineMaterialParameters } from 'three/addons/lines/Li
 import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
 import { css, PALETTE } from './palette';
+import './storyScene.css';
 
 /** What the app asks of a story scene, whichever it is. */
 export interface StoryScene<Chapter extends string> {
