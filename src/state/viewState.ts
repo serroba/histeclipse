@@ -16,7 +16,12 @@ import type { SkyCulture } from '../data/skyCultures';
 import { type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
 import type { LineageGroup } from '../data/lineages';
 import { DEFAULT_SEA_ICE_MODEL, type SeaIceModel } from '../data/seaIce';
-import { DEFAULT_TEMPERATURE_MODEL, type TemperatureModel } from '../deepTime/temperatureModels';
+import {
+  DEFAULT_TEMPERATURE_MODEL,
+  DEFAULT_TEMPERATURE_SHOW,
+  type TemperatureModel,
+  type TemperatureShow,
+} from '../deepTime/temperatureModels';
 import {
   DEFAULT_IMPACT_MODEL,
   DEFAULT_LAND_MODEL,
@@ -192,6 +197,8 @@ export interface ViewState {
   readonly seaIce: SeaIceModel;
   /** Whose temperature maps colour the deep-time globe. */
   readonly temperatureModel: TemperatureModel;
+  /** What its colours show: the change from today (where the map allows) or °C (#457). */
+  readonly temperatureShow: TemperatureShow;
   /** Before the reconstructions: which hypotheses the sketched surface follows. */
   readonly impact: ImpactModel;
   readonly land: LandModel;
@@ -324,6 +331,7 @@ export function defaultViewState(now: Date): ViewState {
     dispersal: 'off',
     seaIce: DEFAULT_SEA_ICE_MODEL,
     temperatureModel: DEFAULT_TEMPERATURE_MODEL,
+    temperatureShow: DEFAULT_TEMPERATURE_SHOW,
     impact: DEFAULT_IMPACT_MODEL,
     land: DEFAULT_LAND_MODEL,
     snowball: DEFAULT_SNOWBALL_MODEL,

@@ -30,6 +30,7 @@ from histeclipse_pipeline.icesheets import fetch_icesheets
 from histeclipse_pipeline.ics import fetch_chart
 from histeclipse_pipeline.impacts import fetch_impacts
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
+from histeclipse_pipeline.krapp import fetch_krapp
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table, write_table
 from histeclipse_pipeline.macrostrat import fetch_rocks
@@ -507,6 +508,12 @@ def paleotemp(args: Arguments) -> int:  # pragma: no cover - needs network acces
     return _say(f"wrote {count} temperature images to {args.out}")
 
 
+def krapp(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write land temperature maps for the last 800,000 years as small images."""
+    count = fetch_krapp(args.out)
+    return _say(f"wrote {count} ice-age temperature images to {args.out}")
+
+
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
 #: with a margin each side for the months that straddle the ends.
 BABYLON_YEARS = (-749, 101)
@@ -770,6 +777,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "paleotemp": (
         paleotemp,
         "write surface temperature maps for 100 steps since 540 Ma (Scotese 2022)",
+        "output directory",
+    ),
+    "krapp": (
+        krapp,
+        "write land temperature maps for the last 800,000 years (Krapp et al. 2021)",
         "output directory",
     ),
     "calendars": (

@@ -950,6 +950,13 @@
     "url": "https://doi.org/10.5281/zenodo.5460860",
     "licence": "CC BY 4.0"
   },
+  "krapp2021": {
+    "name": "Krapp et al. 2021",
+    "kind": "model",
+    "cite": "Krapp, M., Beyer, R. M., Edmundson, S. L., Valdes, P. J., Manica, A. (2021), A statistics-based reconstruction of high-resolution global terrestrial climate for the last 800,000 years, Scientific Data 8, 228; data: pastclim release, Krapp2021_bio01_v1.4.0, Zenodo record 8415273",
+    "url": "https://doi.org/10.1038/s41597-021-01009-3",
+    "licence": "CC BY 4.0"
+  },
   "scotese2022": {
     "name": "Scotese 2022",
     "kind": "model",
