@@ -154,3 +154,22 @@
   flex: none;
   color: var(--ink-muted);
 }
+
+.borders-select {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.05);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.borders-select[hidden] {
+  display: none;
+}
+
+.borders-select option {
+  background: #10162a;
+}

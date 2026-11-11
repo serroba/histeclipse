@@ -700,17 +700,17 @@ test(
   async ({ page }) => {
     // Two whole page loads, the second up to 30 s on a busy machine.
     test.slow();
-    let missing = 1;
     // Each request for the page itself, rather than each load event: on the live site a reload
     // can start before the first page's load event, which then never fires (#306).
     let loads = 0;
     page.on('request', (request) => {
       if (request.isNavigationRequest() && request.frame() === page.mainFrame()) loads += 1;
     });
-    await test.step('Given the sky’s code gone from the server once, as after a deploy', async () => {
+    await test.step('Given the sky’s code gone for the page opened before a deploy', async () => {
+      // Every request from the first page fails (the chunk's preload and its import), as on the
+      // server after a deploy; the reloaded page, the new build, finds it.
       await page.route('**/assets/skyScene-*.js', async (route) => {
-        if (missing > 0) {
-          missing -= 1;
+        if (loads < 2) {
           await route.fulfill({ status: 404, body: 'gone' });
         } else {
           await route.continue();

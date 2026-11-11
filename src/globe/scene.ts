@@ -1,12 +1,12 @@
 /**
  * The WebGL globe: Earth lit by the Sun at a given moment, with orbit controls.
- *
  * Rendering-only code. The math it relies on lives in tested modules (`geo.ts`,
  * `astro/sun.ts`); this file is exercised by the Playwright suite in a real browser.
  */
 
 import { createImpactAnimation, type ImpactAnimation, type ImpactSpec } from './impactAnimation';
 import { BODY_RADIUS } from './bodyRadius';
+import { labelTexture } from './labelTexture';
 import { createC14Glow } from './c14Glow';
 import {
   createShowerAnimation,
@@ -102,34 +102,30 @@ import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { SOLAR_NORTH_POLE_J2000 } from './sunImage';
 import { labelPoint, namedByBoth, type Territory } from '../data/empires';
 import type { NamedBody } from '../data/planetNames';
-import { MOONS, type MoonName, type MoonOrbits } from '../astro/moonOrbits';
+import type { MoonName, MoonOrbits, MoonPlanet } from '../astro/moonOrbits';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius } from './planetLook';
-import { isMoonBody, MOON_NAMES, moonPlanet } from './moonLook';
+import { isMoonBody, moonsInView } from './moonLook';
 import {
   SURFACE_PRIORITY,
   type GlobeLayer,
+  DEEP_PAINT_ORDER,
+  type DeepPainter,
+  type HistoryPainter,
   type LayerFactory,
   type LayerHost,
   type NameLabel,
 } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
+import { createPaintSlots } from './paintSlots';
 import { createPlanetMeshes } from './planetMeshes';
 import type { ArrivalGrid } from '../data/dispersal';
-import type { RockUnit } from '../data/rocks';
-import type { WayRegion } from '../data/waysOfLife';
-import type { IceOutlines } from '../data/iceOutlines';
-import type { DateCell } from '../data/radiocarbonDates';
 import type { OhmYear } from '../data/ohmBorders';
 import {
   clearOverlay,
   createEmpireCanvas,
   paintBorders,
-  paintDateCells,
-  paintIceOutlines,
-  paintRocks,
   paintSettled,
-  paintWays,
   paintTerritories,
 } from './empireCanvas';
 import {
@@ -140,6 +136,7 @@ import {
   SOLAR_SHADOW,
 } from './solarShaders';
 import { SEA_ICE } from './seaIceShader';
+import './spaceMarkers.css';
 
 /** How far out the place pin floats, in Earth radii, so it shows above the ground. */
 const PIN_HEIGHT = 1.004;
@@ -371,8 +368,6 @@ export interface Globe {
    * a plain disc.
    */
   setSunImage(image: SunImageRequest | null): void;
-  /** Mark the pole a compass pointed to in deep time; null when it is not known. */
-  setMagneticNorth(where: 'north' | 'south' | 'either' | null): void;
   /** Glow where cosmic rays make carbon-14, a rate per 5° of latitude (1 for today's over the
    * poles); null hides it. */
   setC14Glow(profile: readonly number[] | null): void;
@@ -411,14 +406,6 @@ export interface Globe {
   setSettled(
     settled: { readonly scenario: string; readonly grid: ArrivalGrid; readonly ka: number } | null,
   ): void;
-  /** Shade the rocks at the surface by age, under everything else; null hides them. */
-  setRocks(units: readonly RockUnit[] | null): void;
-  /** Shade cells by how many radiocarbon dates fall in the step shown; null hides them. */
-  setDateCells(
-    dates: { readonly cells: readonly DateCell[]; readonly cellDegrees: number } | null,
-  ): void;
-  /** Shade regions by their most widespread way of life, under any states; null hides them. */
-  setWays(regions: readonly WayRegion[] | null): void;
   /** Set Mars's, Jupiter's and Saturn's moons going round them (#335); null takes them away. */
   setMoonOrbits(orbits: MoonOrbits | null): void;
   /** Wrap a moon in a mission's map, fetched once: the latest asked for each moon wins. */
@@ -430,8 +417,6 @@ export interface Globe {
   addLayer<Input>(factory: LayerFactory<Input>): GlobeLayer<Input>;
   /** Called when someone taps a marker that has a card, with its key (such as `impact:47`). */
   onMarkerPick(listener: (key: string) => void): () => void;
-  /** Outline one time slice's ice sheets (Batchelor et al. 2019) in deep time; null hides them. */
-  setIceOutlines(outlines: IceOutlines | null): void;
   /**
    * Deep time: draw Earth's surface from two elevation maps blended by `mix` instead of
    * today's imagery; null returns to today's Earth.
@@ -1225,29 +1210,6 @@ export function createGlobe(
     label.position.set(0, y, 0);
     spinAxis.add(label);
   }
-  // Where a compass pointed: magnetic north at the north pole, or the south when the field was
-  // reversed; when it reversed too often to say, a note at the north pole instead.
-  const magneticLabels = {
-    north: ['Magnetic north', 1.62],
-    south: ['Magnetic north', -1.62],
-    either: ['Magnetic north: either pole, reversing often', 1.62],
-  } as const;
-  const magneticNorth = new Map(
-    Object.entries(magneticLabels).map(([where, [text, y]]) => {
-      const label = new Sprite(
-        new SpriteMaterial({
-          map: labelTexture(text, 1280, 'rgba(255, 150, 120, 0.95)'),
-          transparent: true,
-          depthWrite: false,
-        }),
-      );
-      label.scale.set(2.25, 2.25 / 10, 1);
-      label.position.set(0, y, 0);
-      label.visible = false;
-      spinAxis.add(label);
-      return [where, label] as const;
-    }),
-  );
   spinAxis.visible = false;
   scene.add(spinAxis);
 
@@ -1520,25 +1482,19 @@ export function createGlobe(
   const labelSizes = new Map<string, { readonly width: number; readonly height: number }>();
   // States that appeared or went lately, by name: named on the map for a while.
   const recentStates = new Map<string, { readonly change: StateChange; readonly at: number }>();
-  let historyOverlay: {
-    readonly rocks: readonly RockUnit[] | null;
-    readonly ways: readonly WayRegion[] | null;
-    readonly dates: { readonly cells: readonly DateCell[]; readonly cellDegrees: number } | null;
-    readonly empires: EmpireLayer | null;
-  } = { rocks: null, ways: null, dates: null, empires: null };
+  // The history map: the layers' parts (rocks, ways, dates, #379) in order, the states over them.
+  const historySlots = createPaintSlots<HistoryPainter>(paintHistoryOverlay);
+  let empiresShown: EmpireLayer | null = null;
   function paintHistoryOverlay(): void {
     const uniforms = earth.material.uniforms;
-    const { rocks, ways, dates, empires } = historyOverlay;
-    const on = rocks !== null || ways !== null || dates !== null || empires !== null;
+    const empires = empiresShown;
+    const painters = historySlots.painters();
+    const on = painters.length > 0 || empires !== null;
     uniforms['empiresActive'] = { value: on ? 1 : 0 };
     needsRender = true;
     if (!on) return;
     clearOverlay(empiresCanvas);
-    if (rocks !== null) paintRocks(empiresCanvas, rocks, empires === null ? 1 : 0.45);
-    if (ways !== null) paintWays(empiresCanvas, ways, empires === null ? 1 : 0.45);
-    if (dates !== null) {
-      paintDateCells(empiresCanvas, dates.cells, dates.cellDegrees, empires === null ? 1 : 0.6);
-    }
+    for (const paint of painters) paint(empiresCanvas, empires !== null);
     if (empires !== null) {
       paintTerritories(empiresCanvas, empires.territories);
       if (empires.ohm !== null) paintBorders(empiresCanvas, empires.ohm.borders);
@@ -1546,27 +1502,6 @@ export function createGlobe(
     empiresTexture.needsUpdate = true;
     uniforms['overlayMap'] = { value: empiresTexture };
   }
-  // The names of the moons of the planet in view (#335), each beside its moon.
-  const moonNameLayer = document.createElement('div');
-  moonNameLayer.className = 'empire-labels moon-names';
-  moonNameLayer.dataset['testid'] = 'moon-names';
-  moonNameLayer.hidden = true;
-  container.append(moonNameLayer);
-  const moonLabels = Object.values(MOONS)
-    .flat()
-    .map((name) => {
-      // A name to tap to fly to its moon.
-      const element = document.createElement('button');
-      element.type = 'button';
-      element.className = 'moon-name';
-      element.textContent = MOON_NAMES[name];
-      element.hidden = true;
-      element.addEventListener('click', () => {
-        requestBody(name);
-      });
-      moonNameLayer.append(element);
-      return { name, element, width: 0, height: 0 };
-    });
   const markerPickListeners = new Set<(key: string) => void>();
   // The layers added (#379), and what they lay out after each frame: declared before the first.
   const afterRenders: (() => void)[] = [];
@@ -1584,20 +1519,18 @@ export function createGlobe(
   }
   // Deep time's overlay, on the states' map (never shown then): a dispersal model's settled
   // land, and the ice-sheet outlines over it.
-  let deepOverlay: {
-    readonly outlines: IceOutlines | null;
-    readonly settled: { readonly grid: ArrivalGrid; readonly ka: number } | null;
-  } = { outlines: null, settled: null };
+  // The deep-time map: the land people had reached, and the layers' parts (#379), in order.
+  const deepSlots = createPaintSlots<DeepPainter>(paintDeepOverlay);
+  const settledPaint = deepSlots.add(DEEP_PAINT_ORDER.settled);
   function paintDeepOverlay(): void {
     const uniforms = earth.material.uniforms;
-    const { outlines, settled } = deepOverlay;
-    const on = outlines !== null || settled !== null;
+    const painters = deepSlots.painters();
+    const on = painters.length > 0;
     uniforms['iceOutlinesActive'] = { value: on ? 1 : 0 };
     needsRender = true;
     if (!on) return;
     clearOverlay(empiresCanvas);
-    if (settled !== null) paintSettled(empiresCanvas, settled.grid, settled.ka);
-    if (outlines !== null) paintIceOutlines(empiresCanvas, outlines);
+    for (const paint of painters) paint(empiresCanvas);
     empiresTexture.needsUpdate = true;
     uniforms['overlayMap'] = { value: empiresTexture };
   }
@@ -2095,7 +2028,7 @@ export function createGlobe(
       placeMarkers();
       for (const object of hidden) object.visible = true;
       placeEmpireLabels();
-      placeMoonNames();
+      showMoonPaths();
       for (const place of afterRenders) place();
       if (earthMapped) container.dataset['rendered'] = 'true';
     }
@@ -2150,7 +2083,7 @@ export function createGlobe(
   }
 
   /** Where a named body is, how it is turned, and its radius, in the scene's units. */
-  function namedFrame(body: NamedBody): {
+  function namedFrame(body: NamedBody | MoonPlanet): {
     position: Vector3;
     rotation: Quaternion;
     radius: number;
@@ -2206,83 +2139,10 @@ export function createGlobe(
     layer.dataset['named'] = String(count);
   }
 
-  const moonWorld = new Vector3();
-  /** Name the moons of the planet in view, those in front of it or beside it, on screen. */
-  function placeMoonNames(): void {
-    // A moon in view shows its planet's moons, itself among them.
-    const planet = isMoonBody(focus)
-      ? moonPlanet(focus)
-      : focus === 'mars' || focus === 'jupiter' || focus === 'saturn'
-        ? focus
-        : null;
-    moonSystems.showPaths(planet);
+  /** Draw the paths of the moons of the planet in view, or of the moon in view's planet. */
+  function showMoonPaths(): void {
+    moonSystems.showPaths(moonsInView(focus));
     container.dataset['moonPaths'] = String(moonSystems.pathsShown());
-    if (moonNameLayer.hidden === true) return;
-    const viewWidth = container.clientWidth;
-    const viewHeight = container.clientHeight;
-    const centre = planet === null ? null : bodyMeshes[planet].position;
-    const radius = planet === null ? 0 : planetRadius(planet);
-    // The planet's disc on screen, to hide the moons behind it.
-    let disc: { x: number; y: number; r: number; distance: number } | null = null;
-    if (planet !== null && centre !== null) {
-      projected.copy(centre).project(camera);
-      const distance = camera.position.distanceTo(centre);
-      disc = {
-        x: ((projected.x + 1) / 2) * viewWidth,
-        y: ((1 - projected.y) / 2) * viewHeight,
-        r: apparentRadiusPixels({
-          radius,
-          distance,
-          verticalFovDegrees: camera.fov,
-          viewportHeight: viewHeight,
-        }),
-        distance,
-      };
-    }
-    const planetShown = planet !== null && bodyMeshes[planet].visible;
-    const placed: { x: number; y: number; w: number; h: number }[] = [];
-    let count = 0;
-    for (const label of moonLabels) {
-      const { name, element } = label;
-      // Not the moon in view itself: it fills the screen.
-      const mine =
-        planet !== null && name !== focus && (MOONS[planet] as readonly string[]).includes(name);
-      let visible = mine && disc !== null && planetShown;
-      let x = 0;
-      let y = 0;
-      if (visible && disc !== null) {
-        moonSystems.meshes[name].getWorldPosition(moonWorld);
-        const distance = camera.position.distanceTo(moonWorld);
-        projected.copy(moonWorld).project(camera);
-        x = ((projected.x + 1) / 2) * viewWidth;
-        y = ((1 - projected.y) / 2) * viewHeight;
-        const behind = distance > disc.distance && Math.hypot(x - disc.x, y - disc.y) < disc.r;
-        const { width, height } = label;
-        // The name starts just right of the moon.
-        const box = { x, y: y - height / 2, w: width, h: height };
-        visible =
-          projected.z < 1 &&
-          !behind &&
-          box.x >= 0 &&
-          box.x + width <= viewWidth &&
-          box.y >= 0 &&
-          box.y + height <= viewHeight &&
-          placed.every(
-            (other) =>
-              box.x > other.x + other.w ||
-              other.x > box.x + box.w ||
-              box.y > other.y + other.h ||
-              other.y > box.y + box.h,
-          );
-        if (visible) placed.push(box);
-      }
-      element.hidden = !visible;
-      if (!visible) continue;
-      count += 1;
-      element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(0, -50%)`;
-    }
-    moonNameLayer.dataset['planet'] = planet ?? '';
-    moonNameLayer.dataset['shown'] = String(count);
   }
 
   const projected = new Vector3();
@@ -2374,6 +2234,9 @@ export function createGlobe(
     focus: () => focus,
     bodyFrame: namedFrame,
     sunPosition: () => sun.position,
+    spinAxis,
+    moonPosition: (moon, target) => moonSystems.meshes[moon].getWorldPosition(target),
+    requestBody,
     spaceToScene() {
       if (earthFixedToJ2000 === null) return null;
       const toScene = transpose(earthFixedToJ2000);
@@ -2387,6 +2250,8 @@ export function createGlobe(
     },
     layOutNames,
     pickable,
+    deepPaint: (order) => deepSlots.add(order),
+    historyPaint: (order) => historySlots.add(order),
     surfaceLabels(priority, layer) {
       const slot: (typeof surfaceSlots)[number] = { priority, labels: [] };
       surfaceSlots.push(slot);
@@ -2681,11 +2546,6 @@ export function createGlobe(
         profile === null ? 'off' : profile.map((value) => value.toFixed(2)).join(' ');
       needsRender = true;
     },
-    setMagneticNorth(where) {
-      for (const [key, label] of magneticNorth) label.visible = key === where;
-      container.dataset['magneticNorth'] = where ?? 'unknown';
-      needsRender = true;
-    },
     setSunImage(image) {
       sunImageWanted = image;
       if (image === null) {
@@ -2944,24 +2804,19 @@ export function createGlobe(
       uniforms['sketchLevel'] = { value: levelForShare(sketchField.shares, sketch.land) };
       uniforms['sketchIceEdge'] = { value: sketch.iceEdge };
     },
-    setIceOutlines(outlines) {
-      // Painting the map is slow: not again for the slice already shown, as time plays on.
-      if ((outlines?.name ?? 'off') === container.dataset['iceOutlines']) return;
-      container.dataset['iceOutlines'] = outlines === null ? 'off' : outlines.name;
-      deepOverlay = { ...deepOverlay, outlines };
-      paintDeepOverlay();
-    },
     setSettled(settled) {
       // Whole thousands of years only: the model's own step.
       const ka = settled === null ? null : Math.round(settled.ka);
       const key = settled === null ? 'off' : `${settled.scenario} ${String(ka)}`;
       if (key === container.dataset['settled']) return;
       container.dataset['settled'] = key;
-      deepOverlay = {
-        ...deepOverlay,
-        settled: settled === null || ka === null ? null : { grid: settled.grid, ka },
-      };
-      paintDeepOverlay();
+      settledPaint.show(
+        settled === null || ka === null
+          ? null
+          : (canvas) => {
+              paintSettled(canvas, settled.grid, ka);
+            },
+      );
     },
     addLayer(factory) {
       const layer = factory(host);
@@ -2993,47 +2848,14 @@ export function createGlobe(
       moonSystems.setOrbits(orbits);
       // A link to a moon waits for its orbit; the bodies may not be placed again, time at rest.
       settleFocus();
-      moonNameLayer.hidden = orbits === null;
-      if (orbits !== null && moonLabels.every(({ width }) => width === 0)) {
-        // Measured once, unseen: read every size, then hide them all, one layout for the lot.
-        for (const { element } of moonLabels) {
-          element.style.visibility = 'hidden';
-          element.hidden = false;
-        }
-        for (const label of moonLabels) {
-          label.width = label.element.offsetWidth;
-          label.height = label.element.offsetHeight;
-        }
-        for (const { element } of moonLabels) {
-          element.hidden = true;
-          element.style.visibility = '';
-        }
-      }
       needsRender = true;
     },
     onMarkerPick(listener) {
       markerPickListeners.add(listener);
       return () => markerPickListeners.delete(listener);
     },
-    setRocks(units) {
-      if ((units === null ? 'off' : 'on') === container.dataset['rocks']) return;
-      historyOverlay = { ...historyOverlay, rocks: units };
-      container.dataset['rocks'] = units === null ? 'off' : 'on';
-      paintHistoryOverlay();
-    },
-    setDateCells(dates) {
-      const key = dates === null ? 'off' : String(dates.cells.length);
-      historyOverlay = { ...historyOverlay, dates };
-      container.dataset['dateCells'] = key;
-      paintHistoryOverlay();
-    },
-    setWays(regions) {
-      historyOverlay = { ...historyOverlay, ways: regions };
-      container.dataset['ways'] = regions === null ? 'off' : String(regions.length);
-      paintHistoryOverlay();
-    },
     setEmpires(layer) {
-      historyOverlay = { ...historyOverlay, empires: layer };
+      empiresShown = layer;
       paintHistoryOverlay();
       // The names already made, by class, size and name: kept from year to year, so a name
       // that stays stays where it is, shown, rather than being made anew and hidden a frame.
@@ -3298,30 +3120,6 @@ export function createGlobe(
 }
 
 /** A soft radial glow for the Sun, drawn once into a small canvas. */
-/** A short label on a transparent canvas, four times as wide as it is tall. */
-function labelTexture(
-  text: string,
-  width = 512,
-  colour = 'rgba(225, 235, 255, 0.95)',
-): CanvasTexture {
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = 128;
-  const context = canvas.getContext('2d');
-  if (context !== null) {
-    context.font = '600 44px system-ui, sans-serif';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.shadowColor = 'rgba(0, 0, 0, 0.9)';
-    context.shadowBlur = 8;
-    context.fillStyle = colour;
-    context.fillText(text, canvas.width / 2, canvas.height / 2);
-  }
-  const texture = new CanvasTexture(canvas);
-  texture.colorSpace = SRGBColorSpace;
-  return texture;
-}
-
 function glowTexture(): CanvasTexture {
   const size = 128;
   const canvas = document.createElement('canvas');

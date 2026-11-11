@@ -52,64 +52,6 @@ body {
   height: 100%;
 }
 
-/* Markers for bodies too small to see at true scale: a ring at the body's true place. */
-.space-markers {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.space-marker {
-  position: absolute;
-  top: 0;
-  left: 0;
-  /* A finger-sized target centred on the body; tapping it flies there. */
-  width: 44px;
-  height: 44px;
-  margin: -22px 0 0 -22px;
-  border-radius: 50%;
-  font-size: 0.75rem;
-  color: var(--ink-muted);
-  white-space: nowrap;
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-.space-marker:hover span {
-  color: var(--ink);
-}
-
-.space-marker::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: calc(var(--radius, 3px) * 2 + 8px);
-  height: calc(var(--radius, 3px) * 2 + 8px);
-  border: 1px solid rgb(150 180 255 / 0.55);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.space-marker:not(.is-tiny)::before {
-  display: none;
-}
-
-.space-marker.is-sun::before {
-  border-color: rgb(255 210 140 / 0.7);
-}
-
-.space-marker span {
-  position: absolute;
-  left: calc(50% + var(--radius, 3px) + 8px);
-  top: calc(50% - var(--radius, 3px) - 4px);
-}
-
-.space-marker[hidden] {
-  display: none;
-}
-
 .hud {
   position: absolute;
   top: 16px;
@@ -174,25 +116,6 @@ body {
 
 .hud-actions {
   margin-top: 8px;
-}
-
-.borders-select {
-  min-height: 44px;
-  padding: 0 10px;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: rgb(255 255 255 / 0.05);
-  color: var(--ink);
-  font: inherit;
-  font-size: 14px;
-}
-
-.borders-select[hidden] {
-  display: none;
-}
-
-.borders-select option {
-  background: #10162a;
 }
 
 .empire-labels {
@@ -274,28 +197,6 @@ body {
 
 .empire-label[hidden],
 .empire-credit[hidden] {
-  display: none;
-}
-
-.sun-caption {
-  max-width: 34em;
-  margin: 4px 0 0;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--ink-muted);
-}
-
-.sun-caption-lead {
-  display: block;
-}
-
-.sun-caption-more summary {
-  width: fit-content;
-  padding: 6px 0;
-  cursor: pointer;
-}
-
-.sun-panel[hidden] {
   display: none;
 }
 
@@ -718,70 +619,6 @@ body {
   display: block;
   width: 100%;
   height: 100%;
-}
-
-.sky-labels {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.sky-label {
-  position: absolute;
-  top: 0;
-  left: 0;
-  margin: -0.6em 0 0 -1em;
-  white-space: nowrap;
-}
-
-.sky-label[hidden] {
-  display: none;
-}
-
-.sky-label.is-compass {
-  color: rgb(232 236 245 / 0.75);
-  font-size: 13px;
-  font-weight: 600;
-  text-shadow: 0 0 4px #000;
-}
-
-/* Planets are named plainly, in warm white, to set them apart from the figures. */
-.sky-label.is-planet {
-  margin: -1.6em 0 0 0.4em;
-  color: rgb(255 236 200 / 0.9);
-  font-size: 12px;
-  font-weight: 600;
-  text-shadow: 0 0 3px #000;
-}
-
-/* Bodies a tablet record names: a gold ring on the body, its name beside it. */
-.sky-label.is-mark {
-  margin: 0.9em 0 0 1.1em;
-  color: rgb(255 214 140 / 0.95);
-  font-size: 12px;
-  font-weight: 600;
-  text-shadow: 0 0 3px #000;
-}
-
-.sky-label.is-mark::before {
-  position: absolute;
-  top: calc(-0.9em - 13px);
-  left: calc(-1.1em - 13px);
-  width: 24px;
-  height: 24px;
-  border: 1.5px solid rgb(255 214 140 / 0.9);
-  border-radius: 50%;
-  content: '';
-}
-
-/* Hints, not headlines: faint, so the stars stay the point. */
-.sky-label.is-constellation {
-  color: rgb(150 180 255 / 0.7);
-  font-size: 12px;
-  font-style: italic;
-  letter-spacing: 0.04em;
-  text-shadow: 0 0 3px #000;
 }
 
 .famous-dialog {
@@ -1212,47 +1049,4 @@ button:has(> .icon-label) > .icon {
 
 .story-3d canvas {
   display: block;
-}
-
-/* The moons of the planet in view (#335): a dot on the moon, its name beside it, as moons too
-   small to see still need finding. */
-.moon-name {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 0;
-  border: 0;
-  background: none;
-  color: rgb(255 255 255 / 0.9);
-  font: inherit;
-  font-size: 0.72rem;
-  font-weight: 500;
-  white-space: nowrap;
-  cursor: pointer;
-  pointer-events: auto;
-  text-shadow:
-    0 0 3px rgb(0 0 0 / 0.9),
-    0 1px 2px rgb(0 0 0 / 0.8);
-}
-
-.moon-name::before {
-  content: '';
-  width: 5px;
-  height: 5px;
-  margin-left: -2.5px;
-  border-radius: 50%;
-  background: rgb(255 255 255 / 0.85);
-}
-
-.moon-name:hover,
-.moon-name:focus-visible {
-  color: #fff;
-  text-decoration: underline;
-}
-
-.moon-name[hidden] {
-  display: none;
 }

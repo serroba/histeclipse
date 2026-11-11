@@ -7,6 +7,7 @@ import {
   MOON_VIEWS,
   moonPlanet,
   moonRadius,
+  moonsInView,
 } from './moonLook';
 import { pickedView } from './planetLook';
 import { EARTH_RADIUS_KM } from './spaceFrame';
@@ -22,6 +23,15 @@ describe('the moons drawn: whose they are and how big', () => {
     expect(moonPlanet('deimos')).toBe('mars');
     expect(moonPlanet('callisto')).toBe('jupiter');
     expect(moonPlanet('iapetus')).toBe('saturn');
+  });
+
+  it('Given the body in view, Then the moons named are its own, or its planet’s', () => {
+    expect(moonsInView('jupiter')).toBe('jupiter');
+    expect(moonsInView('mars')).toBe('mars');
+    expect(moonsInView('saturn')).toBe('saturn');
+    expect(moonsInView('titan')).toBe('saturn');
+    expect(moonsInView('earth')).toBeNull();
+    expect(moonsInView('moon')).toBeNull();
   });
 
   it('Given Ganymede, Then its radius is in Earth radii, the scene’s unit', () => {

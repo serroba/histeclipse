@@ -335,3 +335,8 @@ export function defaultViewState(now: Date): ViewState {
     boundaries: null,
   };
 }
+
+/** Orbiting another body in the years: the bars and panels speak of it, not of Earth. */
+export function awayFromEarth(state: ViewState): boolean {
+  return state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
+}
