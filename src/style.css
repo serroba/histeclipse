@@ -1632,47 +1632,6 @@ body {
   overscroll-behavior: contain;
 }
 
-/* A marker's card: its picture, what the source says, and where to read more. */
-.marker-card-body {
-  padding: 0 18px 16px;
-}
-
-.marker-card-image {
-  margin: 0 0 10px;
-}
-
-.marker-card-image img {
-  display: block;
-  max-width: 100%;
-  max-height: 180px;
-  border-radius: 8px;
-}
-
-.marker-card-image figcaption,
-.marker-card-note {
-  color: var(--ink-muted);
-  font-size: 12px;
-}
-
-.marker-card-facts {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 4px 12px;
-  margin: 0 0 10px;
-}
-
-.marker-card-facts dt {
-  color: var(--ink-muted);
-}
-
-.marker-card-facts dd {
-  margin: 0;
-}
-
-.marker-card-links a {
-  color: var(--accent);
-}
-
 .famous-dialog::backdrop {
   background: rgb(0 0 0 / 0.45);
 }
@@ -1758,77 +1717,6 @@ body {
   font-size: 13px;
 }
 
-/* Search: the box, and each passage found with its places and times. */
-.search-box {
-  padding: 0 18px 8px;
-}
-
-.search-input {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  background: rgb(255 255 255 / 0.06);
-  color: var(--ink);
-  font: inherit;
-  font-size: 16px;
-}
-
-.search-meaning {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin: 0 18px 8px;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.search-meaning-box {
-  width: 18px;
-  height: 18px;
-  margin: 1px 0 0;
-  accent-color: var(--accent);
-}
-
-.search-meaning-note {
-  color: var(--ink-muted);
-  font-size: 11px;
-}
-
-.search-snippet {
-  color: var(--ink-muted);
-  font-size: 13px;
-}
-
-.search-anchors {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 0 10px 8px;
-}
-
-.search-anchor {
-  min-height: 32px;
-  padding: 0 10px;
-  border: 1px solid var(--panel-border);
-  border-radius: 16px;
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.famous-debated {
-  padding: 0 6px;
-  border: 1px solid rgb(255 183 94 / 0.5);
-  border-radius: 6px;
-  color: var(--accent);
-  font-size: 12px;
-}
-
 .famous-card-title {
   font-weight: 600;
   color: #f7c95a;
@@ -1897,66 +1785,11 @@ body {
   min-width: 0;
 }
 
-.moon-view {
-  flex: none;
-  width: 128px;
-  height: 128px;
-  border-radius: 12px;
-  background: radial-gradient(circle, #0b1226 0%, #050812 75%);
-}
-
-.moon-view-penumbra {
-  fill: rgb(150 170 210 / 0.06);
-  stroke: rgb(150 170 210 / 0.35);
-  stroke-width: 0.012;
-  stroke-dasharray: 0.05 0.04;
-}
-
-.moon-view-umbra {
-  fill: rgb(150 170 210 / 0.1);
-  stroke: rgb(150 170 210 / 0.55);
-  stroke-width: 0.014;
-}
-
-.moon-view-path {
-  stroke: rgb(255 255 255 / 0.25);
-  stroke-width: 0.01;
-  stroke-dasharray: 0.04 0.05;
-}
-
-.moon-view-moon {
-  fill: #ddd8cb;
-}
-
-.moon-view-moon-penumbra {
-  fill: rgb(0 0 0 / 0.22);
-}
-
-.moon-view-moon-umbra {
-  fill: #2a1610;
-  opacity: 0.94;
-}
-
-.moon-view.is-total .moon-view-moon-umbra {
-  fill: #a8492a;
-  opacity: 0.92;
-}
-
-.moon-view-label {
-  fill: var(--ink-muted);
-  font-size: 0.16px;
-}
-
 @media (max-width: 600px) {
   /* Four views on one row, so the panel leaves the screen to the globe and the sky. */
   .view-switch button {
     padding: 0 9px;
     font-size: 12px;
-  }
-
-  .moon-view {
-    width: 96px;
-    height: 96px;
   }
 }
 
