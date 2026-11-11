@@ -171,7 +171,7 @@ describe('the largest files only shrink', () => {
  * Lines in `src/style.css` (#382): a component's rules go in a `.css` file beside it, imported
  * by it, so this may only come down, to the page-wide rules and the shared tokens.
  */
-const STYLE_CSS_LINES = 4147;
+const STYLE_CSS_LINES = 3593;
 
 describe('style.css only shrinks', () => {
   const lines = lineCount(readFileSync(join(SRC, 'style.css'), 'utf8'));
