@@ -48,7 +48,7 @@ export const MAX_LINES = 400;
  * files, as the sources registry's did (#383).
  */
 export const LINE_LIMITS = {
-  'app.ts': 4535,
+  'app.ts': 4470,
   'globe/scene.ts': 3163,
   'ui/deepTimeBar.ts': 1318,
   'sky/skyScene.ts': 1267,
