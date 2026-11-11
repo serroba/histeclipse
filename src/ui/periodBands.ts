@@ -12,6 +12,7 @@ import { bandsFor, type Band } from '../deepTime/chart';
 import { formatMa } from '../deepTime/periods';
 import { astronomicalYear, formatYear } from '../time/year';
 import { element } from './dom';
+import './periodBands.css';
 
 export interface AxisView {
   /** The slider runs from `oldest` Ma to `youngest` (today, unless it ends a little later). */

@@ -1,0 +1,99 @@
+/* The milestones near the moment shown, in deep time (#382: CSS beside the code it styles). The
+   kinds' colours stay in style.css: the deep-time bar's ticks use them too. */
+.deep-milestone-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.deep-milestones {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+}
+
+.deep-milestones summary {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  overflow: hidden;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+
+.deep-milestones.is-empty summary {
+  color: var(--ink-muted);
+}
+
+/* Open, the cards scroll inside the bar rather than pushing it over the globe. */
+.milestone-cards {
+  display: grid;
+  gap: 10px;
+  max-height: 32vh;
+  margin-bottom: 6px;
+  overflow-y: auto;
+}
+
+.milestone {
+  padding-left: 10px;
+  border-left: 3px solid var(--mark);
+  line-height: 1.4;
+}
+
+.milestone h3 {
+  margin: 0 0 2px;
+  font-size: 14px;
+}
+
+.milestone p {
+  margin: 0 0 4px;
+  color: var(--ink-muted);
+}
+
+.milestone-note {
+  font-style: italic;
+}
+
+.milestone-estimates {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.milestone-estimates a {
+  color: var(--ink);
+}
+
+.milestone-basis {
+  color: var(--ink-muted);
+}
+
+/* The milestone steps say which way they go: one word each, not a bare arrow. */
+.step.milestone-step {
+  flex: none;
+  width: auto;
+  padding: 0 8px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* The milestones near here open, like the other folds, with an arrow that turns. */
+.deep-milestones summary {
+  list-style: none;
+}
+
+.deep-milestones summary::-webkit-details-marker {
+  display: none;
+}
+
+.deep-milestones summary::before {
+  flex: none;
+  margin-right: 6px;
+  font-size: 11px;
+  transition: transform 0.15s;
+  content: '▶';
+}
+
+.deep-milestones[open] summary::before {
+  transform: rotate(90deg);
+}
