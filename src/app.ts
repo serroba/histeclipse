@@ -39,7 +39,6 @@ import { FEATURES } from './features';
 import { RESTING, type DeepMoment, type FeatureContext } from './features/feature';
 import { anchorQuery } from './text/anchors';
 import { type Anchor } from './text/passages';
-import { uiIcon } from './ui/icons';
 import { createWelcome } from './ui/welcome';
 import { createMarkerCard } from './ui/markerCard';
 import { createViewSwitch } from './ui/viewSwitch';
@@ -47,7 +46,6 @@ import { type DeepTimeView } from './ui/deepTimeBar';
 import type { DeepChipView } from './ui/deepChips';
 import { periodAt } from './deepTime/periods';
 import { countryRings, loadNamedPeriods } from './data/namedPeriods';
-import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from './data/timezones';
 import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet } from './ui/whySheet';
 import { createImpactPathsSheet } from './ui/impactPathsSheet';
@@ -76,6 +74,9 @@ import { hereVersion, hereView, whyMoment, type HereData } from './features/whyH
 import { createSourcesList } from './features/whyHere/sources';
 import { mountMoment } from './features/moment';
 import { mountLayersPanel } from './features/layersPanel';
+import { createPanels } from './features/shell/panels';
+import { keepCentred } from './features/shell/layout';
+import { openOverRegion } from './features/shell/firstView';
 import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment/observer';
 import { barYear } from './features/eclipses/years';
 import { phoneLook } from './sky/aim';
@@ -98,8 +99,6 @@ import { errorMessage } from './util/errors';
 const STRIKE_IN_VIEW = 70;
 /** Strikes started in one frame at most, the greatest first, when time runs fast past several. */
 const STRIKES_AT_ONCE = 4;
-/** Pixels the zoom rail needs between the panels: its buttons, a short track and its reading. */
-const ZOOM_RAIL_ROOM = 180;
 /** The year “before present” counts back from, as radiocarbon dates do. */
 const BP_ZERO_YEAR = 1950;
 
@@ -111,6 +110,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const parsed = parseViewState(openedSearch, now);
   const store = createStore<ViewState>(parsed.state);
   const fetchJson = (url: string): Promise<Response> => fetch(url);
+  // Full view: the panels hidden for a clear view, and the ways to bring them back.
+  const panels = createPanels(root);
 
   const viewSwitch = createViewSwitch((choice) => {
     if (choice === 'sky') {
@@ -188,7 +189,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     deltaTUncertainty: (jdUT) => deltaT.uncertaintySeconds(jdUT),
     namedPlace,
     moonReady: () => moonEphemeris !== null,
-    togglePanels,
+    togglePanels: panels.toggle,
     marks: (state) => records.marks(state),
   });
   // The impacts' paths through time (#304): the craters and today's coasts, loaded when opened,
@@ -422,13 +423,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   const notices = element('ul', { class: 'notices', role: 'status', 'aria-live': 'polite' });
   // The panels hide for a clear view, by this button or a tap on empty space; it brings them back.
-  const fullView = element(
-    'button',
-    { type: 'button', class: 'full-view', 'aria-label': 'Hide the panels for a full view' },
-    uiIcon('fullView', 16),
-    element('span', { class: 'icon-label' }, 'Full view'),
-  );
-  fullView.addEventListener('click', togglePanels);
   // The site's texts (#391, #392): search, and what is written about here.
   const texts = mountTexts({
     ...partContext,
@@ -436,12 +430,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       openAnchor(anchor);
     },
   });
-  const showControls = element(
-    'button',
-    { type: 'button', class: 'show-controls' },
-    'Show controls',
-  );
-  showControls.addEventListener('click', togglePanels);
   // Carbon-14 in the air under the years' slider (#270), its curves loaded once the layer is on.
   const datingCard = createDatingCard();
   // The shower's story (#269, #317): its stage, and its chapters in 3D over the globe.
@@ -523,7 +511,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     timelineExtras: [years.track.extras, cycle.extras],
   });
 
-  const hudTools = [boundariesSheet.button, texts.search.button, fullView];
+  const hudTools = [boundariesSheet.button, texts.search.button, panels.fullView];
   // Earth's spans and its map's layers; away from Earth they rest (#329).
   const hudActions = element(
     'div',
@@ -592,7 +580,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ),
     notices,
     deepTime.glance,
-    showControls,
+    panels.showControls,
     bottom,
     famous.dialog,
     texts.search.dialog,
@@ -605,22 +593,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     shower.stage,
   );
 
-  // Full view hides the panels for a clear view; Show controls, Escape, or a tap on open sky or
-  // empty space brings them back. A tap on open sky clears them too, as does one on the globe or
-  // the space around it in deep time; in historical time a tap on the globe picks a place.
-  function togglePanels(): void {
-    const hidden = root.dataset['panels'] !== 'hidden';
-    root.dataset['panels'] = hidden ? 'hidden' : 'shown';
-    if (!hidden) fullView.focus();
-    else showControls.focus();
-  }
-
-  function showPanels(): void {
-    if (root.dataset['panels'] === 'hidden') togglePanels();
-  }
-
   window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') showPanels();
+    if (event.key === 'Escape') panels.show();
     // "/" opens search, unless it is being typed somewhere.
     const typing =
       event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;
@@ -998,39 +972,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // Write the canonical, fully explicit URL straight away so it can be shared as is.
   sync.flush();
 
-  // Keep the globe centred in the space the panels leave free. The date panel counts when it
-  // spans most of the width (on phones, and on wide screens once it fills with controls); a
-  // narrow one sits beside the globe.
+  // Keep the globe centred in the space the panels leave free.
   const top = root.querySelector('.hud');
   if (top !== null) {
-    const update = (): void => {
-      const spans = top.getBoundingClientRect().width > window.innerWidth * 0.55;
-      const insets = {
-        top: spans ? top.getBoundingClientRect().bottom : 0,
-        bottom: bottom.getBoundingClientRect().height,
-      };
-      globe.setInsets(insets.top, insets.bottom);
-      sky.setInsets(insets.top, insets.bottom);
-      // The zoom rail sits at the right, between the panels that reach it: the date panel only
-      // when it spans the width (a narrow one, beside the globe, leaves the right edge free).
-      root.style.setProperty('--free-top', `${String(insets.top)}px`);
-      root.style.setProperty('--free-bottom', `${String(insets.bottom)}px`);
-      const free = window.innerHeight - insets.top - insets.bottom;
-      zoomRail.root.classList.toggle('is-cramped', free < ZOOM_RAIL_ROOM);
-      // Deep time's sheet stops short of the date panel where the two share columns (#237).
-      const panel = top.getBoundingClientRect();
-      const sheet = bottom.querySelector('.deep-time')?.getBoundingClientRect();
-      const shared =
-        sheet !== undefined &&
-        sheet.width > 0 &&
-        panel.right > sheet.left &&
-        panel.left < sheet.right;
-      root.style.setProperty('--hud-clear', `${String(shared ? panel.bottom + 8 : 0)}px`);
-    };
-    const observer = new ResizeObserver(update);
-    observer.observe(top);
-    observer.observe(bottom);
-    window.addEventListener('resize', update);
+    keepCentred({
+      root,
+      top,
+      bottom,
+      zoomRail: zoomRail.root,
+      onInsets: (above, below) => {
+        globe.setInsets(above, below);
+        sky.setInsets(above, below);
+      },
+    });
   }
 
   globe.onBodyClick((focus) => {
@@ -1039,13 +993,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
   globe.onEmptyTap(() => {
     // In deep time, empty space is like the globe: a tap clears the panels, or brings them back.
     // In historical time a tap on the globe picks a place, so empty space only brings them back.
-    if (store.get().ma !== null) togglePanels();
-    else showPanels();
+    if (store.get().ma !== null) panels.toggle();
+    else panels.show();
   });
   globe.onPlacePick((place) => {
     // Deep time has no place to stand: a tap on the globe clears the panels, or brings them back.
     if (store.get().ma !== null) {
-      togglePanels();
+      panels.toggle();
       return;
     }
     const location = { latitude: round(place.latitude, 4), longitude: round(place.longitude, 4) };
@@ -1061,31 +1015,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
           : eclipseMomentAt(selected, location),
     }));
   });
-  // A first visit whose link names no view of its own opens over the reader's region, from the
-  // browser's time zone: read here, matched to the tz database's places, sent nowhere. The globe
-  // turns there only if the reader has not moved it meanwhile.
-  if (leavesViewOpen(openedSearch)) {
-    const zone = browserTimeZone();
-    const opened = store.get().camera;
-    if (zone !== null) {
-      loadTimeZones(`${base}data/timezones.json`, fetchJson).then(
-        (zones) => {
-          const place = placeOfZone(zones, zone);
-          const state = store.get();
-          // The scene reports the camera it opened with: only a real move counts as moving it.
-          const moved =
-            Math.abs(state.camera.target.latitude - opened.target.latitude) > 0.01 ||
-            Math.abs(state.camera.target.longitude - opened.target.longitude) > 0.01 ||
-            Math.abs(state.camera.distance - opened.distance) > 0.01;
-          if (place === null || moved || state.focus !== 'earth') return;
-          globe.flyTo(place);
-        },
-        () => {
-          // Without the table the globe keeps its usual first view.
-        },
-      );
-    }
-  }
+  // A first visit whose link names no view of its own opens over the reader's region.
+  openOverRegion({
+    search: openedSearch,
+    base,
+    fetchJson,
+    store,
+    flyTo: (place) => {
+      globe.flyTo(place);
+    },
+  });
   /**
    * Play an impact at its place: turn the globe to it, come in close, and let it fall. The
    * approach is a study's where one exists, else the most likely angle, assumed.
