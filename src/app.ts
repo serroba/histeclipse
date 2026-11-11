@@ -75,6 +75,16 @@ import {
 } from './ui/carbonMadeCard';
 import { createRadiocarbonStrip } from './ui/radiocarbonStrip';
 import { createGlobe, type StateChange } from './globe/scene';
+import {
+  DEEP_TIME,
+  EARTH_LAYERS,
+  HISTORY,
+  ORBITS,
+  redraws,
+  SELECTION,
+  SKY,
+  SUN,
+} from './state/redraws';
 import { changed, createStore } from './state/store';
 import { parseViewState, serializeViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
@@ -4476,62 +4486,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
         }
       }
     }
-    if (
-      state.ma !== previous?.ma ||
-      state.time !== previous.time ||
-      state.years !== previous.years ||
-      state.layers !== previous.layers ||
-      state.deepScale !== previous.deepScale ||
-      state.coast !== previous.coast ||
-      state.seaIce !== previous.seaIce ||
-      state.temperatureModel !== previous.temperatureModel ||
-      state.dispersal !== previous.dispersal ||
-      state.impact !== previous.impact ||
-      state.land !== previous.land ||
-      state.snowball !== previous.snowball
-    ) {
-      showDeepTime(state);
-    }
-    if (
-      state.mode !== previous?.mode ||
-      state.time !== previous.time ||
-      state.location !== previous.location ||
-      state.look !== previous.look ||
-      state.figures !== previous.figures ||
-      state.culture !== previous.culture ||
-      state.focus !== previous.focus ||
-      state.camera !== previous.camera
-    ) {
+    if (redraws(DEEP_TIME, state, previous)) showDeepTime(state);
+    if (redraws(SKY, state, previous)) {
       if (state.mode === 'sky' || previous?.mode === 'sky' || previous === null) showSky(state);
     }
     if (previous !== null && state.focus !== previous.focus) globe.setFocus(state.focus);
     // The orbits come and go as the view moves out and in, or turns to the Sun or a planet.
-    if (
-      lastTerrestrial !== null &&
-      (state.layers !== previous?.layers ||
-        state.camera !== previous.camera ||
-        state.focus !== previous.focus ||
-        state.mode !== previous.mode ||
-        state.ma !== previous.ma)
-    ) {
+    if (lastTerrestrial !== null && redraws(ORBITS, state, previous)) {
       showOrbits(state, lastTerrestrial);
     }
-    if (
-      state.focus !== previous?.focus ||
-      state.mode !== previous.mode ||
-      state.sunLayer !== previous.sunLayer
-    ) {
-      showSun(state);
-    }
-    if (
-      state.layers !== previous?.layers ||
-      state.mode !== previous.mode ||
-      state.borders !== previous.borders ||
-      state.ma !== previous.ma ||
-      state.deepScale !== previous.deepScale ||
-      state.time.date.year !== previous.time.date.year ||
-      state.location !== previous.location
-    ) {
+    if (redraws(SUN, state, previous)) showSun(state);
+    if (redraws(EARTH_LAYERS, state, previous)) {
       showDates(state);
       showWays(state);
       showRocks(state);
@@ -4539,7 +4504,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showImpacts(state);
       showCarbonMade(state);
       showEmpires(state);
-    } else if (state.focus !== previous.focus) {
+    } else if (previous !== null && state.focus !== previous.focus) {
       // The Layers panel is Earth's: it shuts on going to another body.
       showEmpires(state);
     }
@@ -4576,14 +4541,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     );
     // The time changed elsewhere (the year typed, the slider) ends the cycle's play.
     if (cyclePlaying && state.time !== cycleShown) stopCycle();
-    if (
-      state.time.date.year !== previous?.time.date.year ||
-      state.layers !== previous.layers ||
-      // Which hemisphere's radiocarbon curve.
-      state.location !== previous.location
-    ) {
-      showHistory(state);
-    }
+    if (redraws(HISTORY, state, previous)) showHistory(state);
     if (state.location !== previous?.location) globe.setLocation(state.location);
     if (state.view !== previous?.view) globe.setViewpoint(state.view);
     if (
@@ -4598,14 +4556,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     // Tablets are dated in the Babylonian calendar: their check shows with it.
     tabletPanel.button.hidden = state.years !== 'babylonian';
-    if (
-      state.selection !== previous?.selection ||
-      state.layers !== previous.layers ||
-      state.location !== previous.location ||
-      state.seenIn !== previous.seenIn
-    ) {
+    if (redraws(SELECTION, state, previous)) {
       renderSelection(state);
-    } else if (state.time !== previous.time) {
+    } else if (previous !== null && state.time !== previous.time) {
       renderMoment(state);
     }
     sync.update(state);
