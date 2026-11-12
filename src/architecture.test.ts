@@ -102,7 +102,6 @@ const KNOWN_CYCLE_EDGES: readonly string[] = [
   // Source ids, keys of the sources registry, used by the data (#380 moves them down).
   'data -> sources',
   'deepTime -> sources',
-  'sources -> data',
   // The view state builds its unions from the domain's types; the registry names its layers.
   'sources -> state',
   'state -> data',

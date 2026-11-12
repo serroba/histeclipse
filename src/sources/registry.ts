@@ -67,6 +67,16 @@ export type WhyId = keyof typeof WHYS;
 export type WhyView = WhyId | 'all' | 'here';
 export const WHY_VIEWS: readonly WhyView[] = [...(Object.keys(WHYS) as WhyId[]), 'all', 'here'];
 
+/** What one layer has at the place picked, for "Why here?", and the why of its source. */
+export interface HereFact {
+  /** What layer the fact is from. */
+  readonly title: string;
+  readonly text: string;
+  /** The why of where it comes from. */
+  readonly why: WhyId;
+  readonly link?: { readonly label: string; readonly href: string };
+}
+
 /** A source's DOI, when its link is one. */
 export function doiOf(source: Source): string | null {
   const match = /^https:\/\/doi\.org\/(.+)$/.exec(source.url);
