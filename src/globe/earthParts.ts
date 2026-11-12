@@ -28,6 +28,7 @@ export interface EarthPart<Uniforms extends PartUniforms = PartUniforms> {
 /** Where each part is called, lower first; gaps leave room for parts between. */
 export const EARTH_PART_ORDER = {
   lunarOverlay: 30,
+  eclipsePath: 40,
 } as const;
 
 /** What the Earth shader has worked out at a point of the ground, for the parts. */

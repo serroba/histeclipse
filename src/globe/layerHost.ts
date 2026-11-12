@@ -4,7 +4,15 @@
  * New things drawn on the globe are layers; the globe's own `set…` methods only shrink.
  */
 
-import type { Group, PerspectiveCamera, Quaternion, Scene, Vector3 } from 'three';
+import type {
+  Camera,
+  Group,
+  PerspectiveCamera,
+  Quaternion,
+  Scene,
+  Vector3,
+  WebGLRenderTarget,
+} from 'three';
 
 import './nameLabels.css';
 
@@ -86,6 +94,8 @@ export interface LayerHost {
    * their `value`s, then ask for a frame.
    */
   earthPart<Uniforms extends PartUniforms>(part: EarthPart<Uniforms>): Uniforms;
+  /** Draw `scene`, as `camera` sees it, into `target` now, not on screen: a texture to draw with. */
+  renderToTexture(target: WebGLRenderTarget, scene: Scene, camera: Camera): void;
   /**
    * A place on the history map painted over Earth's surface, under the states, painted in
    * `order` (see HISTORY_PAINT_ORDER) whenever any part of the map changes.
