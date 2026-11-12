@@ -28,6 +28,8 @@ import numpy.typing as npt
 from PIL import Image
 
 from histeclipse_pipeline.sky import Json, verified
+from histeclipse_pipeline.today_ice import CREDIT as TODAY_ICE_CREDIT
+from histeclipse_pipeline.today_ice import Mask, fetch_today_ice, with_today
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -43,9 +45,13 @@ MEMBER_SHA256 = "b062ca18cf87dd86f1d266bc453c0e719eb42798cc3a87edeb4d98df82c68db
 SOURCE = "https://doi.org/10.1594/PANGAEA.905800"
 CREDIT = (
     "PaleoMIST 1.0, Gowan et al. (2021), Nature Communications 12, 1199; PANGAEA, CC BY 4.0; "
-    "ice thickness from the 0.25° global grid, packed into 8-bit images for this site"
+    "ice thickness from the 0.25° global grid, packed into 8-bit images for this site; "
+    f"{TODAY_ICE_CREDIT}"
 )
 METRES_PER_STEP = 16
+#: The 0.25° grid, node-registered: 180° W to 180° E, 90° N to 90° S.
+COLUMNS = 1441
+ROWS = 721
 #: The zip's end lies within this many bytes of its end (its central directory included).
 _TAIL = 1 << 20
 #: A 32-bit field at its largest means the real value is in the zip64 records.
@@ -176,19 +182,23 @@ def file_name(ka: float) -> str:
     return f"{round(ka * 1000)}.png"
 
 
-def write_icesheets(frames: Iterator[Frame], folder: Path) -> int:
-    """Write one PNG per time step and ``index.json``; return the number of images."""
+def write_icesheets(frames: Iterator[Frame], folder: Path, today: Mask | None = None) -> int:
+    """Write one PNG per time step and ``index.json``; return the number of images.
+
+    With ``today``, each frame's ice reaches at least today's to the coast (``today_ice.py``).
+    """
     folder.mkdir(parents=True, exist_ok=True)
     entries: list[Json] = []
     shape = (0, 0)
     for frame in frames:
         shape = frame.thickness.shape
-        _ = (folder / file_name(frame.ka)).write_bytes(to_png(frame.thickness))
+        thickness = frame.thickness if today is None else with_today(frame.thickness, today)
+        _ = (folder / file_name(frame.ka)).write_bytes(to_png(thickness))
         entries.append(
             {
                 "ka": frame.ka,
                 "file": file_name(frame.ka),
-                "ice": round(ice_share(frame.thickness), 4),
+                "ice": round(ice_share(thickness), 4),
             }
         )
     index: dict[str, Json] = {
@@ -228,4 +238,4 @@ def fetch_icesheets(folder: Path) -> int:  # pragma: no cover - needs network ac
     with urllib.request.urlopen(request, timeout=60) as response:  # noqa: S310  # pyright: ignore[reportAny]
         total = int(str(response.headers["Content-Length"]))  # pyright: ignore[reportAny]
     data = verified(read_member(_fetch_range, total, MEMBER), MEMBER_SHA256, "PaleoMIST grid")
-    return write_icesheets(read_frames(data), folder)
+    return write_icesheets(read_frames(data), folder, fetch_today_ice(COLUMNS, ROWS))

@@ -236,7 +236,9 @@ export function createBoundariesSheet(
         element('a', { href: 'https://doi.org/10.1594/PANGAEA.905800' }, 'PaleoMIST 1.0'),
         ' (Gowan et al. 2021, CC BY 4.0) with ',
         element('a', { href: 'https://osf.io/7jen3/' }, 'Batchelor et al. (2019)'),
-        '’s outlines (no licence stated); sea level from ',
+        '’s outlines (no licence stated) and today’s ice to the coast from ',
+        element('a', { href: 'https://www.naturalearthdata.com' }, 'Natural Earth'),
+        ' (public domain); sea level from ',
         element(
           'a',
           { href: 'https://doi.org/10.1038/nature07158' },

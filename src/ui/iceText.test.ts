@@ -6,7 +6,7 @@ import { iceOutlineText } from './iceOutlineText';
 describe('iceText', () => {
   it('credits the ice maps where they reach, and says where they do not', () => {
     expect(iceText({ drawn: true, oldestKa: 80, standIn: null })).toBe(
-      'Ice sheets: PaleoMIST 1.0 (Gowan et al. 2021), every 2,500 years over the last 80,000 years.',
+      'Ice sheets: PaleoMIST 1.0 (Gowan et al. 2021), every 2,500 years over the last 80,000 years, with today’s ice to the coast (Natural Earth).',
     );
     expect(iceText({ drawn: false, oldestKa: 80, standIn: null })).toMatch(
       /^Ice sheets: no openly licensed maps reach back beyond 80,000 years;/,

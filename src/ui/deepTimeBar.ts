@@ -131,7 +131,7 @@ export function iceText(view: DeepTimeView['ice']): string {
     return `Ice sheets: a stand-in. No openly licensed maps reach back beyond ${reach}, so this is ${then}, when sea level was similar (${metres(frameLevel)}, against ${metres(level)} at the moment shown). Sea level tracks how much ice there was, not where: the ice sheets’ shapes may have differed.`;
   }
   return view.drawn
-    ? `Ice sheets: PaleoMIST 1.0 (Gowan et al. 2021), every 2,500 years over the last ${reach}.`
+    ? `Ice sheets: PaleoMIST 1.0 (Gowan et al. 2021), every 2,500 years over the last ${reach}, with today’s ice to the coast (Natural Earth).`
     : `Ice sheets: no openly licensed maps reach back beyond ${reach}; sea level and the bared shelves still show each glacial cycle.`;
 }
 
