@@ -21,11 +21,8 @@
  *   (absent), `ohm` (OpenHistoricalMap) or `both`.
  * - `seen` names a past state, as Cliopatria names it (`Neo-Babylonian Empire`): the year bar
  *   marks which eclipses could be seen from its territory. Absent means anywhere.
- * - `ma` switches the globe to deep time: Earth's surface that many million years ago (0 to
- *   4,568, to a thousandth). Absent means historical time, given by `t`.
- * - `impact`, `land` and `snowball` pick the hypotheses the deep-time globe sketches before
- *   the reconstructions reach: when the Moon-forming impact struck, how much of the surface
- *   was land, and how far a snowball's ice reached. Absent means the first of each.
+ * - Deep time's parameters (`ma`, `scale` and how its globe is drawn) are in
+ *   `slices/deep.ts`, with its fields (#381).
  * - `culture` is whose constellations the sky view draws: `modern` (absent) or a sky culture
  *   such as `babylonian_mulapin` or `chinese`.
  * - `loc` (observer), `sel` (selected eclipse), `view` (an attached viewpoint; absent means
@@ -40,39 +37,20 @@ import { WHY_VIEWS } from '../sources/registry';
 import { calendarDate, calendarDateOf, julianDay, type Calendar } from '../time/julianDay';
 import { SKY_CULTURES, type SkyCulture } from '../data/skyCultures';
 import { SUN_LAYERS, type SunLayer } from '../data/sunImages';
-import { COAST_SOURCES, DEFAULT_COAST } from '../deepTime/coastline';
 import { LINEAGE_GROUPS } from '../data/lineages';
-import { DEFAULT_SEA_ICE_MODEL, SEA_ICE_MODELS } from '../data/seaIce';
-import {
-  DEFAULT_TEMPERATURE_MODEL,
-  DEFAULT_TEMPERATURE_SHOW,
-  TEMPERATURE_MODELS,
-  TEMPERATURE_SHOWS,
-} from '../deepTime/temperatureModels';
-import {
-  DEFAULT_IMPACT_MODEL,
-  DEFAULT_LAND_MODEL,
-  DEFAULT_SNOWBALL_MODEL,
-  IMPACT_MODELS,
-  LAND_MODELS,
-  SNOWBALL_MODELS,
-} from '../deepTime/sketch';
 import { YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
 import { errorMessage } from '../util/errors';
+import { oneOf, readSlice, writeSlice } from './slice';
+import { DEEP_PARAMS } from './slices/deep';
 import {
   PLANET_LIGHTS,
   BOUNDARY_CHAPTERS,
-  DISPERSAL_SCENARIOS,
   CAMERA_DISTANCE_RANGE,
   BORDER_SOURCES,
   DEFAULT_LOOK,
   type BorderSource,
   FIGURES,
-  DEEP_SCALES,
-  type DeepScale,
-  MA_RANGE,
-  roundMa,
   SKY_FOV_RANGE,
   ECLIPSE_KINDS,
   LAYERS,
@@ -163,16 +141,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     culture: read('culture', parseCulture, defaults.culture),
     borders: read('borders', parseBorders, defaults.borders),
     seenIn: read<string | null>('seen', parseSeenIn, defaults.seenIn),
-    ma: read<number | null>('ma', parseMa, defaults.ma),
-    deepScale: read('scale', parseDeepScale, defaults.deepScale),
-    coast: pick('coast', COAST_SOURCES, defaults.coast),
-    dispersal: pick('dispersal', DISPERSAL_SCENARIOS, defaults.dispersal),
-    seaIce: pick('seaice', SEA_ICE_MODELS, defaults.seaIce),
-    temperatureModel: pick('temp', TEMPERATURE_MODELS, defaults.temperatureModel),
-    temperatureShow: pick('tshow', TEMPERATURE_SHOWS, defaults.temperatureShow),
-    impact: pick('impact', IMPACT_MODELS, defaults.impact),
-    land: pick('land', LAND_MODELS, defaults.land),
-    snowball: pick('snowball', SNOWBALL_MODELS, defaults.snowball),
+    ...readSlice(DEEP_PARAMS, defaults, read),
     why: pick('why', WHY_VIEWS, defaults.why),
     tree: read<TreeView | null>('tree', parseTree, defaults.tree),
     craters: read<CratersView | null>('craters', parseCraters, defaults.craters),
@@ -209,19 +178,9 @@ export function serializeViewState(state: ViewState): string {
   if (state.culture !== 'modern') params.set('culture', state.culture);
   if (state.borders !== 'cliopatria') params.set('borders', state.borders);
   if (state.seenIn !== null) params.set('seen', state.seenIn);
-  if (state.ma !== null) params.set('ma', formatMa(state.ma));
-  if (state.deepScale !== 'all') params.set('scale', state.deepScale);
-  if (state.coast !== DEFAULT_COAST) params.set('coast', state.coast);
-  if (state.dispersal !== 'off') params.set('dispersal', state.dispersal);
-  if (state.seaIce !== DEFAULT_SEA_ICE_MODEL) params.set('seaice', state.seaIce);
-  if (state.temperatureModel !== DEFAULT_TEMPERATURE_MODEL) {
-    params.set('temp', state.temperatureModel);
-  }
-  if (state.temperatureShow !== DEFAULT_TEMPERATURE_SHOW)
-    params.set('tshow', state.temperatureShow);
-  if (state.impact !== DEFAULT_IMPACT_MODEL) params.set('impact', state.impact);
-  if (state.land !== DEFAULT_LAND_MODEL) params.set('land', state.land);
-  if (state.snowball !== DEFAULT_SNOWBALL_MODEL) params.set('snowball', state.snowball);
+  writeSlice(DEEP_PARAMS, state, (key, value) => {
+    params.set(key, value);
+  });
   if (state.why !== null) params.set('why', state.why);
   if (state.tree !== null) params.set('tree', formatTree(state.tree));
   if (state.craters !== null) {
@@ -239,10 +198,6 @@ export function serializeViewState(state: ViewState): string {
 
 function parseMode(raw: string): Mode {
   return oneOf(raw, MODES, 'mode');
-}
-
-function parseDeepScale(raw: string): DeepScale {
-  return oneOf(raw, DEEP_SCALES, 'scale');
 }
 
 function parseBorders(raw: string): BorderSource {
@@ -279,22 +234,6 @@ function parseLineagesView(raw: string): LineagesView {
 
 function formatTree(tree: TreeView): string {
   return tree === 'all' ? 'all' : `ott${String(tree.ott)}`;
-}
-
-function parseMa(raw: string): number {
-  const ma = Number(raw);
-  if (raw.trim() === '' || !Number.isFinite(ma)) throw new Error('is not a number');
-  if (ma < MA_RANGE.min || ma > MA_RANGE.max) {
-    throw new Error(
-      `must be between ${String(MA_RANGE.min)} and ${String(MA_RANGE.max)} million years ago`,
-    );
-  }
-  return roundMa(ma);
-}
-
-/** Millions of years to a thousandth (a thousand years), without trailing zeros: 250, 0.021. */
-function formatMa(ma: number): string {
-  return String(roundMa(ma));
 }
 
 /** A state's name: any text, trimmed, of a sensible length. Whether it exists depends on the year. */
@@ -461,14 +400,6 @@ function numbers(raw: string, count: number): number[] {
     if (!Number.isFinite(value)) throw new Error(`${JSON.stringify(part)} is not a number`);
     return value;
   });
-}
-
-function oneOf<const T extends string>(raw: string, options: readonly T[], what: string): T {
-  const match = options.find((option) => option === raw);
-  if (match === undefined) {
-    throw new Error(`unknown ${what}; expected one of ${options.join(', ')}`);
-  }
-  return match;
 }
 
 /** Wrap into (−180, 180]. Values already in range are returned untouched, to avoid float noise. */
