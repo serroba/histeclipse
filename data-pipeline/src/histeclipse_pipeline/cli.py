@@ -19,6 +19,7 @@ from histeclipse_pipeline.deep_air import fetch_deep_air
 from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
 from histeclipse_pipeline.dipole import fetch_dipole
 from histeclipse_pipeline.dispersal import fetch_dispersal
+from histeclipse_pipeline.drought import fetch_drought
 from histeclipse_pipeline.empires import (
     fetch_cliopatria,
     merge_unchanged,
@@ -27,7 +28,9 @@ from histeclipse_pipeline.empires import (
 )
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.eruptions import fetch_eruptions
+from histeclipse_pipeline.extremes import fetch_extremes
 from histeclipse_pipeline.fossils import fetch_fossils
+from histeclipse_pipeline.holocene_stacks import fetch_holocene_stacks
 from histeclipse_pipeline.holocene_temperature import fetch_holocene_temperature
 from histeclipse_pipeline.iceoutlines import fetch_outlines
 from histeclipse_pipeline.icesheets import fetch_icesheets
@@ -68,6 +71,7 @@ from histeclipse_pipeline.planets import (
     write_planet_vectors,
 )
 from histeclipse_pipeline.polarity import fetch_polarity
+from histeclipse_pipeline.precipitation import fetch_precipitation
 from histeclipse_pipeline.radiocarbon import fetch_radiocarbon
 from histeclipse_pipeline.saturn_rings import fetch_saturn_rings
 from histeclipse_pipeline.seaice import fetch_seaice
@@ -551,6 +555,12 @@ def holocene_temperature(args: Arguments) -> int:  # pragma: no cover - needs ne
     return _say(f"wrote {points} temperature points to {args.out}")
 
 
+def holocene_stacks(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Holocene's proxy stacks, reanalysis and seasonal correction, side by side."""
+    points = fetch_holocene_stacks(args.out)
+    return _say(f"wrote {points} Holocene temperature points to {args.out}")
+
+
 def paleotemp(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write surface temperature maps for 100 steps since 540 Ma as small images."""
     count = fetch_paleotemp(args.out)
@@ -585,6 +595,24 @@ def ssp_pathways(args: Arguments) -> int:  # pragma: no cover - needs network ac
     """Write the SSP pathways to 2100: CO2 emissions, concentration and forcing."""
     points = fetch_pathways(args.out)
     return _say(f"wrote {points} SSP pathway points to {args.out}")
+
+
+def precipitation(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write precipitation trends and land means from GPCC and GPCP."""
+    count = fetch_precipitation(args.out)
+    return _say(f"wrote {count} precipitation trend maps to {args.out}")
+
+
+def extremes(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write trends in the hottest and wettest day of the year (HadEX3)."""
+    count = fetch_extremes(args.out)
+    return _say(f"wrote {count} extremes trend maps to {args.out}")
+
+
+def drought(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the drought index's trend and land means (SPEIbase)."""
+    count = fetch_drought(args.out)
+    return _say(f"wrote {count} drought trend map to {args.out}")
 
 
 def ar6_sealevel(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -895,6 +923,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write temperature from 800 ka to today (EPICA, LGMR, PAGES 2k, HadCRUT5)",
         "output JSON file",
     ),
+    "holocene-stacks": (
+        holocene_stacks,
+        "write the Holocene temperature conundrum (Temp12k, LGMR, Bova et al. 2021)",
+        "output JSON file (public/data/holocene-stacks/index.json)",
+    ),
     "paleotemp": (
         paleotemp,
         "write surface temperature maps for 100 steps since 540 Ma (Scotese 2022)",
@@ -923,6 +956,21 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "ssp-pathways": (
         ssp_pathways,
         "write the SSP pathways to 2100: CO2 emissions, CO2 and forcing (RCMIP; IPCC AR6)",
+        "output directory",
+    ),
+    "precipitation": (
+        precipitation,
+        "write precipitation trends since 1951 and 1980 and land means (GPCC, GPCP)",
+        "output directory",
+    ),
+    "extremes": (
+        extremes,
+        "write trends in the hottest and wettest day of the year since 1951 (HadEX3)",
+        "output directory",
+    ),
+    "drought": (
+        drought,
+        "write the 12-month drought index's trend since 1951 and land means (SPEIbase)",
         "output directory",
     ),
     "ar6-sealevel": (
