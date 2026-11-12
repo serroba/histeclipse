@@ -33,6 +33,7 @@ from histeclipse_pipeline.empires import (
     parse_polities,
     write_empires,
 )
+from histeclipse_pipeline.energy_imbalance import fetch_imbalance
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.eruptions import fetch_eruptions
 from histeclipse_pipeline.extremes import fetch_extremes
@@ -706,6 +707,12 @@ def ocean_oxygen(args: Arguments) -> int:  # pragma: no cover - needs network ac
     return _say(f"wrote {points} ocean-oxygen points to {args.out}")
 
 
+def energy_imbalance(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Earth's energy imbalance measured from space (CERES EBAF)."""
+    count = fetch_imbalance(args.out)
+    return _say(f"wrote {count} months of energy imbalance to {args.out}")
+
+
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
 #: with a margin each side for the months that straddle the ends.
 BABYLON_YEARS = (-749, 101)
@@ -1110,6 +1117,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         ocean_oxygen,
         "write the ocean's oxygen inventory since 2004 and its trend map (GOBAI-O2 v2.3)",
         "output directory",
+    ),
+    "energy-imbalance": (
+        energy_imbalance,
+        "write the Earth's energy imbalance since 2000, measured from space (CERES EBAF)",
+        "output directory (public/data/ocean-heat)",
     ),
     "calendars": (
         calendars,
