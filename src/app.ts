@@ -58,7 +58,7 @@ import { mountPeriods } from './features/periods';
 import { mountEmpires } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
 import { mountYears } from './features/years';
-import { mountEclipses } from './features/eclipses';
+import { LUNAR_OVERLAY_PART, mountEclipses } from './features/eclipses';
 import { mountTexts } from './features/texts';
 import {
   createAsking,
@@ -266,6 +266,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     textureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
     moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
     focus: store.get().focus,
+    // The features' parts of the Earth shader (#379).
+    earthParts: [LUNAR_OVERLAY_PART],
   });
   // The planetary boundaries' story (#434), and the globe that follows its chart (#475).
   const boundaries = mountBoundaries({ ...partContext, globe });
