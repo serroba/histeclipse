@@ -103,15 +103,12 @@ import {
   LAST_GLACIAL_MAXIMUM_MA,
   type BorderSource,
   type Layer,
-  SKY_FOV_RANGE,
-  type SkyLook,
   withLayer,
   roundMa,
   momentJulianDay,
   type GeoPoint,
   type ViewState,
 } from './state/viewState';
-import { eclipseNote, planetNote, skyCaption } from './sky/caption';
 import {
   loadPlanetEphemeris,
   ORBIT_DAYS,
@@ -125,12 +122,11 @@ import {
   type PlanetName,
 } from './astro/planets';
 import type { SkyPlanet } from './sky/skyScene';
-import { moonSunlight, observerPosition, sunVisible, topocentric } from './sky/bodies';
-import { earthVelocity, horizonMatrix, horizontalOf } from './sky/horizon';
+import { observerPosition, topocentric } from './sky/bodies';
+import { horizonMatrix, horizontalOf } from './sky/horizon';
 import { LOWEST_LOOK, roundLook } from './sky/look';
 import { longTermEarthFixedToJ2000 } from './astro/longTermPrecession';
 import type { Vector3 } from './astro/matrix';
-import type { SkyMark, SkyScene, SkyTap } from './sky/skyScene';
 import { DeltaT } from './time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from './time/format';
 import {
@@ -171,7 +167,6 @@ import { BABYLON, directionOf, starsByNumber, type TabletSky } from './tablets/t
 import { bodyName, computedText, recordBodies } from './tablets/verdictText';
 import { VAT_4956 } from './tablets/vat4956';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './ui/scrubber';
-import { createAimSwitch, type AimTarget } from './ui/aimSwitch';
 import { createSunSwitch } from './ui/sunSwitch';
 import { createPlanetSwitch } from './ui/planetSwitch';
 import { createLayersPanel } from './ui/layersPanel';
@@ -207,18 +202,8 @@ import {
   type OhmCentury,
   type OhmIndex,
 } from './data/ohmBorders';
-import { createCultureSwitch } from './ui/cultureSwitch';
-import {
-  CULTURE_INFO,
-  cultureFigures,
-  loadCultureIndex,
-  loadHipStars,
-  withFigureStars,
-  type SkyCulture,
-} from './data/skyCultures';
-import type { Figure } from './sky/look';
+import { CULTURE_INFO } from './data/skyCultures';
 import { loadSunImages, type SunImages } from './data/sunImages';
-import { createFigureSwitch } from './ui/figureSwitch';
 import { createViewSwitch, lookBack } from './ui/viewSwitch';
 import {
   type CoastlineView,
@@ -280,6 +265,9 @@ import { createImpactPathsSheet } from './ui/impactPathsSheet';
 import { createBoundariesSheet } from './ui/boundariesSheet';
 import type { PartContext } from './features/part';
 import { mountTreeOfLife } from './features/treeOfLife';
+import { mountSky } from './features/sky';
+import { phoneLook, type BodiesSeen } from './sky/aim';
+import type { SkyMark } from './sky/skyScene';
 import { PERIOD_EVIDENCE } from './sources/periodEvidence';
 import { hereFacts, placeText } from './sources/here';
 import { layerWhy, onScreen, type WhyId } from './sources/registry';
@@ -319,16 +307,8 @@ import { elementAt } from './util/arrays';
 import { errorMessage } from './util/errors';
 
 const MINUTES_PER_DAY = 1440;
-/** Field of view (degrees) when turning to the Sun or Moon: close enough to see the disc. */
-const AIM_FOV = 12;
-/** A planet tapped in the sky: a point at any zoom, so a few degrees, its neighbours in view. */
-const PLANET_SKY_FOV = 4;
-/** How long the sky takes to turn and close in on a tapped body, ms, before going to it. */
-const SKY_GLIDE_MS = 900;
 /** Within this many radii of the body in focus, its sharper map is fetched (#258). */
 const SHARP_WITHIN = 2.5;
-/** How high an upright phone looks on entering the sky, degrees: the horizon low in view. */
-const PHONE_SKY_ALTITUDE = 12;
 /** Degrees from the centre of the globe in view within which a strike is played as time runs. */
 const STRIKE_IN_VIEW = 70;
 /** Strikes started in one frame at most, the greatest first, when time runs fast past several. */
@@ -385,17 +365,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   });
 
-  /**
-   * On a phone held upright the sky shows less from top to bottom (#253), and the panels cover
-   * much of it: an untouched look is lowered so the horizon is in view. A look the reader chose,
-   * or a link's, stays as it is.
-   */
-  function phoneLook(look: SkyLook): SkyLook {
-    const untouched = look.altitude === DEFAULT_LOOK.altitude && look.fov === DEFAULT_LOOK.fov;
-    if (!untouched || window.innerHeight <= window.innerWidth) return look;
-    return { ...look, altitude: PHONE_SKY_ALTITUDE };
-  }
-
   const viewSwitch = createViewSwitch((choice) => {
     if (choice === 'sky') {
       // Stand where the link says, or else on the spot in the middle of the globe; during an
@@ -407,29 +376,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
           mode: 'sky',
           location: observerOf(state),
           ma: null,
-          look: phoneLook(state.look),
+          look: phoneLook(state.look, DEFAULT_LOOK, window.innerHeight > window.innerWidth),
         };
         const selected = selectedEclipse(state);
         if (selected === undefined) return next;
-        const look = aimAt(next, isSolar(selected) ? 'sun' : 'moon');
+        const look = sky.aimAt(next, isSolar(selected) ? 'sun' : 'moon');
         return look === null || look.altitude <= -1 ? next : { ...next, look };
       });
     } else {
       store.set((state) => ({ ...state, mode: 'globe', view: choice }));
     }
-  });
-  const cultureSwitch = createCultureSwitch(base, (culture) => {
-    // See the sky from where that culture watched it; the date stays as it is.
-    const place = CULTURE_INFO[culture].place;
-    store.set((state) => ({
-      ...state,
-      culture,
-      location:
-        place === null ? state.location : { latitude: place.latitude, longitude: place.longitude },
-    }));
-  });
-  const figureSwitch = createFigureSwitch((figures) => {
-    store.set((state) => ({ ...state, figures }));
   });
   // The orbits, offered where they mean something: far out, or on the Sun or a planet.
   // Why anything is on screen: the book marks beside things, and the panel they open.
@@ -469,6 +425,26 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
   // The tree of life and life through time: their sheets, and the ways to open them.
   const treeOfLife = mountTreeOfLife(partContext);
+  // The sky view (#448): loaded the first time it is opened.
+  const sky = mountSky({
+    ...partContext,
+    bodiesSeen,
+    planetsSeen,
+    loadPlanets,
+    deltaTUncertainty: (jdUT) => deltaT.uncertaintySeconds(jdUT),
+    namedPlace,
+    moonReady: () => moonEphemeris !== null,
+    togglePanels,
+    marks(state) {
+      // A tablet record's marks stay while the sky is seen from Babylon.
+      const atBabylon =
+        state.location !== null &&
+        state.location.latitude === BABYLON.latitude &&
+        state.location.longitude === BABYLON.longitude;
+      if (recordShown !== null && (state.mode !== 'sky' || !atBabylon)) clearRecord();
+      return recordMarks(state);
+    },
+  });
   // The impacts' paths through time (#304): the craters and today's coasts, loaded when opened,
   // from what the layers already loaded where they have.
   const impactPathsSheet = createImpactPathsSheet(
@@ -709,25 +685,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const planetSwitch = createPlanetSwitch((planetLight) => {
     store.set((state) => ({ ...state, planetLight }));
   });
-  const aimSwitch = createAimSwitch((target) => {
-    store.set((state) => {
-      const look = aimAt(state, target);
-      return look === null ? state : { ...state, look };
-    });
-  });
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
-  const skyContainer = element('div', { class: 'sky', 'data-testid': 'sky', hidden: '' });
-  const skyText = element('p', { class: 'sky-caption' });
-  // Which constellations, and whose: folded on phones, where they would cover the sky itself.
-  const skyOptions = element(
-    'details',
-    { class: 'sky-options', hidden: '' },
-    element('summary', {}, 'Constellations and whose sky ', whySheet.mark('sky', 'The night sky')),
-    figureSwitch.root,
-    cultureSwitch.root,
-  );
-  skyOptions.open = !window.matchMedia('(max-width: 600px)').matches;
-  const skyEclipse = element('p', { class: 'sky-eclipse', 'data-testid': 'sky-eclipse' });
   // A tablet record being looked at: what it says, whether it fits, and the way back to the list.
   const recordText = element('span', { class: 'tablet-record-text' });
   const recordMark = element('span', { class: 'tablet-mark' });
@@ -1598,7 +1556,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
   root.replaceChildren(
     globeContainer,
-    skyContainer,
+    sky.container,
     zoomRail.root,
     ...treeOfLife.elements,
     impactPathsSheet.dialog,
@@ -1621,12 +1579,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       welcome.root,
       hudActions,
       viewSwitch.root,
-      aimSwitch.root,
-      skyOptions,
+      ...sky.controls,
       sunSwitch.root,
       planetSwitch.root,
-      skyText,
-      skyEclipse,
+      ...sky.captions,
       recordBanner,
       // Sources and what is written about here share a line, each a full row once open.
       element(
@@ -1768,7 +1724,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       moonEphemeris = ephemeris;
       showTime(store.get());
       viewSwitch.render(store.get().mode, store.get().view, true, store.get().focus);
-      showSky(store.get());
+      sky.render(store.get());
     },
     (error: unknown) => {
       notify(`Could not load the Moon's orbit: ${errorMessage(error)}`);
@@ -2067,51 +2023,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const deltaTWhy = whySheet.mark('delta-t', 'ΔT');
   const DELTA_T_MEANING =
     'ΔT: how far Earth’s slowing spin has put clock time behind a perfectly even time. It decides where on Earth an ancient eclipse fell; the ± is how uncertain it is.';
-
-  // The sky view, its code and its 9,000 stars load the first time someone opens it.
-  let skyScene: SkyScene | null = null;
-  let skyLoading = false;
-  let panelInsets = { top: 0, bottom: 0 };
-  function openSky(): void {
-    if (skyScene !== null || skyLoading) return;
-    skyLoading = true;
-    Promise.all([
-      import('./sky/skyScene'),
-      loadSky(`${base}data/sky.json`, (url) => fetch(url)),
-      loadHipStars(`${base}data/hip-stars.json`, (url) => fetch(url)),
-      loadPlanets(),
-    ]).then(
-      ([{ createSkyScene }, plainSky, hipStars]) => {
-        const state = store.get();
-        // Other cultures' figures use a few faint stars beyond the catalogue; add them.
-        const { sky, index } = withFigureStars(plainSky, hipStars);
-        hipIndex = index;
-        skyScene = createSkyScene(skyContainer, {
-          sky,
-          look: state.look,
-          figures: state.figures,
-          moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
-        });
-        skyScene.setInsets(panelInsets.top, panelInsets.bottom);
-        skyScene.onTap((tapped) => {
-          // Open sky picks nothing: a tap there clears the panels, or brings them back (#253).
-          if (tapped === null) {
-            togglePanels();
-            return;
-          }
-          zoomToBody(tapped);
-        });
-        skyScene.onLookChange((look) => {
-          store.set((current) => ({ ...current, look }));
-        });
-        showSky(state);
-      },
-      (error: unknown) => {
-        skyLoading = false;
-        notify(`Could not load the stars: ${errorMessage(error)}`);
-      },
-    );
-  }
 
   // Borders of past states load a century at a time, the first time the layer is on.
   let empireIndex: Promise<EmpireIndex> | null = null;
@@ -3870,42 +3781,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
   }
 
-  // Each culture's figures load the first time someone picks it.
-  let hipIndex: ReadonlyMap<number, number> | null = null;
-  const cultureFiles = new Map<SkyCulture, Promise<readonly Figure[]>>();
-  function showCulture(state: ViewState): void {
-    cultureSwitch.render(state.culture, state.mode === 'sky');
-    if (skyScene === null || hipIndex === null) return;
-    const culture = state.culture;
-    if (culture === 'modern') {
-      skyScene.setCulture(null);
-      return;
-    }
-    const index = hipIndex;
-    let figures = cultureFiles.get(culture);
-    if (figures === undefined) {
-      const request = loadCultureIndex(`${base}skycultures/${culture}/index.json`, (url) =>
-        fetch(url),
-      ).then((file) => cultureFigures(culture, file, index));
-      // A failure is reported once per request, however many renders were waiting on it.
-      request.catch((error: unknown) => {
-        if (cultureFiles.get(culture) !== request) return;
-        cultureFiles.delete(culture);
-        notify(`Could not load the ${culture} sky: ${errorMessage(error)}`);
-      });
-      cultureFiles.set(culture, request);
-      figures = request;
-    }
-    figures.then(
-      (loaded) => {
-        if (store.get().culture === culture) skyScene?.setCulture(loaded);
-      },
-      () => {
-        // Reported above.
-      },
-    );
-  }
-
   /** The name of a culture's observing site, if the observer stands right there. */
   /** The name of where the observer stands: a famous eclipse's place, or a culture's site. */
   function placeName(place: GeoPoint, famousHere: FamousEclipse | undefined): string | null {
@@ -3936,7 +3811,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   /** Where the Sun or Moon stands, from Earth's centre and from the observer, in km. */
-  function bodiesSeen(state: ViewState) {
+  function bodiesSeen(state: ViewState): BodiesSeen | null {
     const place = observerOf(state);
     const jdUT = momentJulianDay(state.time);
     let jdTT;
@@ -3996,7 +3871,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function clearRecord(): void {
     recordShown = null;
     recordBanner.hidden = true;
-    skyScene?.setMarks([]);
+    sky.setMarks([]);
   }
 
   /** The bodies the record names, where they stand from Babylon at the moment shown. */
@@ -4042,105 +3917,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }));
   }
 
-  // A body tapped in the sky: the view turns to it and closes in, then goes to it up close. The
-  // look is kept, so the way back to the sky faces the body.
-  let skyGlide = 0;
-  function zoomToBody({ body, azimuth, altitude, radius }: SkyTap): void {
-    const look = roundLook({
-      azimuth,
-      altitude: Math.max(LOWEST_LOOK, altitude),
-      fov: radius > 0 ? Math.max(SKY_FOV_RANGE.min, radius * 4) : PLANET_SKY_FOV,
-    });
-    const glide = (skyGlide += 1);
-    store.set((state) => ({ ...state, look }));
-    void skyScene?.glideTo(look, SKY_GLIDE_MS).then(() => {
-      // Another tap, a drag or leaving the sky meanwhile cancels the way there.
-      if (glide !== skyGlide || store.get().mode !== 'sky') return;
-      const { look: now } = store.get();
-      if (now.azimuth !== look.azimuth || now.altitude !== look.altitude || now.fov !== look.fov)
-        return;
-      store.set((state) => ({ ...state, mode: 'globe', focus: body, view: 'free' }));
-    });
-  }
-
-  function aimAt(state: ViewState, target: AimTarget): ViewState['look'] | null {
-    const seen = bodiesSeen(state);
-    if (seen === null) return null;
-    const body: Vector3 | null = target === 'sun' ? seen.sun : seen.moon;
-    if (body === null) return null;
-    const horizon = horizonMatrix(seen.place, seen.jdUT, seen.jdTT);
-    const { azimuth, altitude } = horizontalOf(horizon, topocentric(body, seen.observer));
-    return roundLook({
-      azimuth,
-      altitude: Math.max(LOWEST_LOOK, altitude),
-      fov: Math.min(state.look.fov, AIM_FOV),
-    });
-  }
-
-  function showSky(state: ViewState): void {
-    const inSky = state.mode === 'sky';
-    globeContainer.hidden = inSky;
-    skyText.hidden = !inSky;
-    skyOptions.hidden = !inSky;
-    skyEclipse.hidden = true;
-    figureSwitch.render(state.figures, inSky, state.culture === 'modern');
-    cultureSwitch.render(state.culture, inSky);
-    aimSwitch.render(inSky, moonEphemeris !== null);
-    const atBabylon =
-      state.location !== null &&
-      state.location.latitude === BABYLON.latitude &&
-      state.location.longitude === BABYLON.longitude;
-    if (recordShown !== null && (!inSky || !atBabylon)) clearRecord();
-    if (!inSky) {
-      skyScene?.setVisible(false);
-      return;
-    }
-    openSky();
-    const seen = bodiesSeen(state);
-    if (seen === null) return;
-    const { place, jdUT, jdTT } = seen;
-    const planetCaveat = planetNote(state.time.date.year);
-    skyText.textContent = [
-      skyCaption({
-        place,
-        placeName: namedPlace(place),
-        azimuth: state.look.azimuth,
-        uncertaintySeconds: deltaT.uncertaintySeconds(jdUT),
-      }),
-      planetCaveat,
-    ]
-      .filter((part) => part !== '')
-      .join(' ');
-    const horizon = horizonMatrix(place, jdUT, jdTT);
-    const sunHere = topocentric(seen.sun, seen.observer);
-    const moonHere = seen.moon === null ? null : topocentric(seen.moon, seen.observer);
-    skyEclipse.textContent =
-      seen.moon === null || moonHere === null
-        ? ''
-        : eclipseNote({
-            sunVisible: sunVisible(sunHere, moonHere),
-            sunAltitude: horizontalOf(horizon, sunHere).altitude,
-            moonSunlight: moonSunlight(seen.moon, seen.sun),
-            moonAltitude: horizontalOf(horizon, moonHere).altitude,
-          });
-    skyEclipse.hidden = skyEclipse.textContent === '';
-    if (skyScene === null) return;
-    skyScene.setLook(state.look);
-    skyScene.setFigures(state.figures);
-    skyScene.setMarks(recordMarks(state));
-    showCulture(state);
-    skyScene.setMoment({
-      horizon,
-      jdTT,
-      sun: seen.sun,
-      moon: seen.moon,
-      observer: seen.observer,
-      planets: planetsSeen(jdTT, seen.sun, seen.observer),
-      velocity: earthVelocity((jd) => sunPositionJ2000(julianDayNumber(jd)), jdTT),
-    });
-    skyScene.setVisible(true);
-  }
-
   function render(state: ViewState, previous: ViewState | null): void {
     // Asked once: a failed load is reported once rather than on every move of the camera.
     if (planetsLoading === null && wantPlanets(state)) {
@@ -4161,7 +3937,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     }
     if (redraws(DEEP_TIME, state, previous)) showDeepTime(state);
     if (redraws(SKY, state, previous)) {
-      if (state.mode === 'sky' || previous?.mode === 'sky' || previous === null) showSky(state);
+      if (state.mode === 'sky' || previous?.mode === 'sky' || previous === null) {
+        globeContainer.hidden = state.mode === 'sky';
+        sky.render(state);
+      }
     }
     if (previous !== null && state.focus !== previous.focus) globe.setFocus(state.focus);
     // The orbits come and go as the view moves out and in, or turns to the Sun or a planet.
@@ -4248,17 +4027,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
   if (top !== null) {
     const update = (): void => {
       const spans = top.getBoundingClientRect().width > window.innerWidth * 0.55;
-      panelInsets = {
+      const insets = {
         top: spans ? top.getBoundingClientRect().bottom : 0,
         bottom: bottom.getBoundingClientRect().height,
       };
-      globe.setInsets(panelInsets.top, panelInsets.bottom);
-      skyScene?.setInsets(panelInsets.top, panelInsets.bottom);
+      globe.setInsets(insets.top, insets.bottom);
+      sky.setInsets(insets.top, insets.bottom);
       // The zoom rail sits at the right, between the panels that reach it: the date panel only
       // when it spans the width (a narrow one, beside the globe, leaves the right edge free).
-      root.style.setProperty('--free-top', `${String(panelInsets.top)}px`);
-      root.style.setProperty('--free-bottom', `${String(panelInsets.bottom)}px`);
-      const free = window.innerHeight - panelInsets.top - panelInsets.bottom;
+      root.style.setProperty('--free-top', `${String(insets.top)}px`);
+      root.style.setProperty('--free-bottom', `${String(insets.bottom)}px`);
+      const free = window.innerHeight - insets.top - insets.bottom;
       zoomRail.root.classList.toggle('is-cramped', free < ZOOM_RAIL_ROOM);
       // Deep time's sheet stops short of the date panel where the two share columns (#237).
       const panel = top.getBoundingClientRect();
