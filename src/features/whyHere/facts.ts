@@ -8,7 +8,7 @@ import type { Territory } from '../../data/empires';
 import { rockAt, type RockUnit } from '../../data/rocks';
 import { waysAt, type WaysOfLife } from '../../data/waysOfLife';
 import { periodAt } from '../../deepTime/periods';
-import { hereFacts, placeText } from '../../sources/here';
+import { hereFacts, placeText } from './here';
 import { PERIOD_EVIDENCE } from '../../sources/periodEvidence';
 import type { WhyId } from '../../sources/registry';
 import { cliopatriaYear } from '../../state/layerCatalog';
