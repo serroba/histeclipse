@@ -4,6 +4,8 @@
  */
 
 import type { Matrix3 } from '../astro/matrix';
+import type { Texture } from 'three';
+
 import type { PlanetName } from '../astro/planets';
 
 /** Where the Moon and Sun are at the current moment, from Earth's centre. */
@@ -20,20 +22,13 @@ export interface SpaceBodies {
 }
 
 /** A small image to show at once and a sharp one to follow. */
-export interface ImagePair {
-  readonly small: string;
-  readonly large: string;
-}
-
-/**
- * SDO's view of the Sun in one channel: a map of the whole surface (see `data/sunImages.ts`),
- * and the newest frame, whose limb is at `diskRadius` of its width, north up, west right.
- */
-export interface SunImageRequest {
-  readonly key: string;
-  readonly map: ImagePair;
-  readonly disc: ImagePair;
-  /** Multiplies the images' colours: a warm white for the grey visible-light ones. */
+/** SDO's view of the Sun in one channel, loaded: see `features/bodies/sunImageLayer.ts`. */
+export interface SunImageTextures {
+  /** The map of the whole surface. */
+  readonly surface: Texture;
+  /** The newest frame, for the corona; its limb is at `diskRadius` of its width. */
+  readonly disc: Texture;
+  /** Multiplies the images' colours. */
   readonly tint: readonly [number, number, number];
   readonly diskRadius: number;
   /** How much the Sun darkens toward the limb as the camera sees it (u in 1 − u(1 − μ)). */

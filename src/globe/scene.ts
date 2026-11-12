@@ -125,12 +125,10 @@ import { EARTH_VERTEX, earthFragment } from './earthShader';
 import type {
   DeepTimeSurface,
   IceSurface,
-  ImagePair,
   PlateSurface,
   SeaIceSurface,
   ShelfSurface,
   SpaceBodies,
-  SunImageRequest,
   SurfaceSketch,
   TemperatureSurface,
 } from './surfaces';
@@ -187,11 +185,6 @@ export interface Globe {
   onEmptyTap(listener: () => void): () => void;
   /** Called when someone taps a place on Earth while looking at it: where to stand. */
   onPlacePick(listener: (place: GeoPoint) => void): () => void;
-  /**
-   * Dress the Sun in an SDO image: a small frame at once, then the sharp one. Null returns it to
-   * a plain disc.
-   */
-  setSunImage(image: SunImageRequest | null): void;
   /** Glow where cosmic rays make carbon-14, a rate per 5° of latitude (1 for today's over the
    * poles); null hides it. */
   setC14Glow(profile: readonly number[] | null): void;
@@ -542,9 +535,6 @@ export function createGlobe(
   );
   corona.visible = false;
   scene.add(corona);
-  // Maps and frames of the Sun already loaded, by URL, and the channel asked for last.
-  const sunTextures = new Map<string, Texture>();
-  let sunImageWanted: SunImageRequest | null = null;
   const glow = new Sprite(
     new SpriteMaterial({
       map: glowTexture(),
@@ -924,19 +914,6 @@ export function createGlobe(
     const opacity = imaged ? Math.min(1, Math.max(0, (facing - 0.75) / 0.2)) : 0;
     coronaUniforms.opacity.value = opacity;
     corona.visible = opacity > 0;
-  }
-
-  function loadSunTexture(url: string, wraps = false): Promise<Texture> {
-    const cached = sunTextures.get(url);
-    if (cached !== undefined) return Promise.resolve(cached);
-    return new TextureLoader().loadAsync(url).then((texture) => {
-      texture.colorSpace = SRGBColorSpace;
-      // A map's left and right edges meet on the far side.
-      if (wraps) texture.wrapS = RepeatWrapping;
-      texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      sunTextures.set(url, texture);
-      return texture;
-    });
   }
 
   function bodyReady(body: Body): boolean {
@@ -1507,6 +1484,19 @@ export function createGlobe(
       };
     },
     measure: settleSizes,
+    maxAnisotropy: renderer.capabilities.getMaxAnisotropy(),
+    showSunImage(image) {
+      sunUniforms.hasMap.value = image === null ? 0 : 1;
+      if (image !== null) {
+        sunUniforms.surface.value = image.surface;
+        sunUniforms.map.value = image.disc;
+        sunUniforms.tint.value.set(...image.tint);
+        sunUniforms.diskRadius.value = image.diskRadius;
+        sunUniforms.limbDarkening.value = image.limbDarkening;
+        placeCorona();
+      }
+      needsRender = true;
+    },
     renderToTexture(target, drawn, seenBy) {
       renderer.setRenderTarget(target);
       renderer.render(drawn, seenBy);
@@ -1728,46 +1718,6 @@ export function createGlobe(
       container.dataset['c14Glow'] =
         profile === null ? 'off' : profile.map((value) => value.toFixed(2)).join(' ');
       needsRender = true;
-    },
-    setSunImage(image) {
-      sunImageWanted = image;
-      if (image === null) {
-        sunUniforms.hasMap.value = 0;
-        container.dataset['sunImage'] = 'none';
-        needsRender = true;
-        return;
-      }
-      const show = (size: keyof ImagePair): void => {
-        // A later request (another channel) wins over a slow one.
-        if (sunImageWanted !== image) return;
-        sunUniforms.surface.value = sunTextures.get(image.map[size]) ?? null;
-        sunUniforms.map.value = sunTextures.get(image.disc[size]) ?? null;
-        sunUniforms.hasMap.value = 1;
-        sunUniforms.tint.value.set(...image.tint);
-        sunUniforms.diskRadius.value = image.diskRadius;
-        sunUniforms.limbDarkening.value = image.limbDarkening;
-        placeCorona();
-        container.dataset['sunImage'] = size;
-        container.dataset['sunLayer'] = image.key;
-        needsRender = true;
-      };
-      const load = (size: keyof ImagePair): Promise<unknown> =>
-        Promise.all([loadSunTexture(image.map[size], true), loadSunTexture(image.disc[size])]);
-      if (sunTextures.has(image.map.large) && sunTextures.has(image.disc.large)) {
-        show('large');
-        return;
-      }
-      load('small')
-        .then(() => {
-          show('small');
-          return load('large');
-        })
-        .then(() => {
-          show('large');
-        })
-        .catch(() => {
-          if (sunImageWanted === image) container.dataset['sunImage'] = 'error';
-        });
     },
     prefetch(urls) {
       for (const url of urls) {
