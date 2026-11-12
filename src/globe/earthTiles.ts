@@ -5,7 +5,7 @@
  * the tile as its day map: day and night, the shelf, the ice, the states and the temperature
  * all come out as on the globe beneath, only the ground sharper. Only the tiles the camera sees
  * are fetched (`tileGrid.ts`), a few at a time; each fades in once it arrives, and those not
- * seen for longest are let go past a fixed number, their textures freed.
+ * seen for longest are let go past the number the device keeps (`tileLimits.ts`), textures freed.
  *
  * Of the levels in the manifest, the coarsest is drawn until its pixels would each span more than
  * `STRETCH` of the screen's: then the next (#569), so the finer tiles are fetched only close in.
@@ -40,14 +40,8 @@ import {
   type TileKey,
   type TileLevel,
 } from './tileGrid';
+import type { TileLimits } from './tileLimits';
 
-/** Within this many Earth radii of the centre (about 3,200 km up), tiles are drawn. */
-const TILES_WITHIN = 1.5;
-/** Tiles drawn at once, at most, and kept with their textures, at most (~2.4 MB each). */
-const MAX_SHOWN = 32;
-const MAX_KEPT = 48;
-/** Tiles fetched at once, at most. */
-const MAX_LOADING = 6;
 const FADE_MS = 400;
 /**
  * The patches' height above the globe's sphere: 64 m for level 4 and 64 m more for each finer
@@ -84,12 +78,17 @@ export interface EarthTileLayer {
 
 export interface EarthTileOptions {
   readonly anisotropy: number;
+  /**
+   * How far out tiles are drawn, and how many are drawn, kept and fetched at once (#578); null
+   * where the graphics take on none.
+   */
+  readonly limits: TileLimits | null;
   /** The drawing's height in device pixels. */
   readonly pixels: () => number;
   /** A tile arrived: draw a frame. */
   readonly requestRender: () => void;
-  /** How many tiles are drawn and how many were fetched, for whoever needs to know. */
-  readonly report: (shown: number, fetched: number) => void;
+  /** How many tiles are drawn, were fetched and are kept, for whoever needs to know. */
+  readonly report: (shown: number, fetched: number, kept: number) => void;
 }
 
 /** A patch of the unit sphere over one tile, its texture coordinates the globe's own. */
@@ -180,17 +179,22 @@ interface Wanted {
   readonly coarser: TileLevel | null;
 }
 
-/** The tiles to draw, or null when the camera is too far for any. */
-export function wantedTiles(tiles: EarthTiles, view: TileCamera, pixels: number): Wanted | null {
+/** The tiles to draw, or null when the camera is too far for any or the device takes none. */
+export function wantedTiles(
+  tiles: EarthTiles,
+  view: TileCamera,
+  pixels: number,
+  limits: TileLimits | null,
+): Wanted | null {
   const distance = Math.hypot(...view.eye);
-  if (distance > TILES_WITHIN) return null;
+  if (limits === null || distance > limits.within) return null;
   const pixelAngle = (view.verticalFovDegrees * Math.PI) / 180 / Math.max(pixels, 1);
   const level = levelFor(tiles.levels, tiles.tileSize, distance - 1, pixelAngle, STRETCH);
   if (level === null) return null;
   const index = tiles.levels.indexOf(level);
   return {
     level,
-    keys: tilesInView(level, view, MAX_SHOWN),
+    keys: tilesInView(level, view, limits.shown),
     coarser: index > 0 ? (tiles.levels[index - 1] ?? null) : null,
   };
 }
@@ -229,13 +233,13 @@ export function drawPlan(
   return { beneath: [...beneath.values()], tiles };
 }
 
-/** Past MAX_KEPT, let go those not seen for longest, other than those wanted now. */
-function trim(kept: Map<string, Tile>, wanted: ReadonlySet<string>): void {
-  if (kept.size <= MAX_KEPT) return;
+/** Past `most` kept, let go those not seen for longest, other than those wanted now. */
+export function trim(kept: Map<string, Tile>, wanted: ReadonlySet<string>, most: number): void {
+  if (kept.size <= most) return;
   const oldest = [...kept.entries()]
     .filter(([id]) => !wanted.has(id))
     .sort(([, a], [, b]) => a.lastSeen - b.lastSeen);
-  for (const [id, tile] of oldest.slice(0, kept.size - MAX_KEPT)) {
+  for (const [id, tile] of oldest.slice(0, kept.size - most)) {
     kept.delete(id);
     if (tile.mesh !== null) disposePatch(tile.mesh);
   }
@@ -263,6 +267,8 @@ function reveal(tile: Tile, now: number, over: boolean): { shown: boolean; fadin
 }
 
 export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions): EarthTileLayer {
+  const { limits } = options;
+  const atOnce = limits?.loading ?? 0;
   let manifest: { readonly tiles: EarthTiles; readonly folder: string } | null = null;
   const kept = new Map<string, Tile>();
   let loading = 0;
@@ -307,7 +313,7 @@ export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions
   ): { shown: boolean; fading: boolean } {
     const id = tileId(key);
     let tile = kept.get(id);
-    if (tile === undefined && fetch && manifest !== null && loading < MAX_LOADING) {
+    if (tile === undefined && fetch && manifest !== null && loading < atOnce) {
       tile = { key, mesh: null, alpha: { value: 0 }, shownAt: null, lastSeen: now };
       kept.set(id, tile);
       load(manifest.folder, manifest.tiles, tile);
@@ -324,7 +330,7 @@ export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions
       const drawnBefore = hideAll(kept);
       const wanted =
         on && manifest !== null
-          ? wantedTiles(manifest.tiles, cameraOnEarth(earth, camera), options.pixels())
+          ? wantedTiles(manifest.tiles, cameraOnEarth(earth, camera), options.pixels(), limits)
           : null;
       const plan = drawPlan(
         wanted,
@@ -340,8 +346,8 @@ export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions
         fading ||= seen.fading;
       }
       const ids = new Set([...plan.beneath, ...plan.tiles.map(({ key }) => key)].map(tileId));
-      if (wanted !== null) trim(kept, ids);
-      options.report(shown, fetched);
+      if (wanted !== null) trim(kept, ids, limits?.kept ?? 0);
+      options.report(shown, fetched, kept.size);
       return fading;
     },
   };

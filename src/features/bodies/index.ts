@@ -61,6 +61,7 @@ export interface BodiesContext extends PartContext {
     Globe,
     | 'addLayer'
     | 'maxTextureSize'
+    | 'tileLimits'
     | 'setEarthTiles'
     | 'setBodyMap'
     | 'sharpenPlanet'

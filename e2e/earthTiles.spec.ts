@@ -1,10 +1,27 @@
+import type { Page } from '@playwright/test';
+
 import { collectProblems, expect, globeRendered, GPU, test } from './support';
 
 /**
  * Close up, Earth's full-size Blue Marble comes in tiles (#568): only those in view, and none at
  * the usual distance. Very close in, the 500 m map's tiles instead (#569), and only there.
- * Phones keep the 4096 map and fetch no tiles.
+ * Phones take them too, fewer at once (#578); graphics that cannot hold the
+ * 4096 map take none, and the camera stops at 1.05 radii.
  */
+
+/** The most tiles a phone draws at once (`src/globe/tileLimits.ts`). */
+const PHONE_SHOWN = 12;
+
+/** The tiles asked for, by path under the tiles' folder. */
+function tileRequests(page: Page): string[] {
+  const tiles: string[] = [];
+  page.on('request', (request) => {
+    const match = /\/textures\/earth-tiles\/(.+)$/.exec(request.url());
+    if (match?.[1] !== undefined) tiles.push(match[1]);
+  });
+  return tiles;
+}
+
 test(
   'close up, Earth’s map comes in tiles, only those in view, the sharpest only very close in; from afar, none',
   GPU,
@@ -13,18 +30,14 @@ test(
     test.slow();
     const problems = collectProblems(page);
     const phone = info.project.name === 'mobile';
-    const tiles: string[] = [];
-    page.on('request', (request) => {
-      const match = /\/textures\/earth-tiles\/(.+)$/.exec(request.url());
-      if (match?.[1] !== undefined) tiles.push(match[1]);
-    });
+    const tiles = tileRequests(page);
     const globe = page.getByTestId('globe');
     await test.step('Given Earth at the usual distance', async () => {
       await page.goto('./?t=2024-04-08T12:00Z');
       await globeRendered(page);
     });
     await test.step('Then no tile is fetched, nor their list', async () => {
-      await expect(globe).toHaveAttribute('data-earth-tiles', '0/0');
+      await expect(globe).toHaveAttribute('data-earth-tiles', '0/0/0');
       expect(tiles).toEqual([]);
     });
     await test.step('When they come down to 50 km over the Nile', async () => {
@@ -32,26 +45,20 @@ test(
       await globeRendered(page);
       await expect(globe).toHaveAttribute('data-sharp', 'earth', { timeout: 30_000 });
     });
-    await test.step('Then only the 500 m tile beneath is fetched and drawn, on a phone none', async () => {
-      if (phone) {
-        expect(tiles).toEqual([]);
-        return;
-      }
-      await expect(globe).toHaveAttribute('data-earth-tiles', '1/1', { timeout: 30_000 });
+    await test.step('Then only the 500 m tile beneath is fetched and drawn, on a phone too', async () => {
+      await expect(globe).toHaveAttribute('data-earth-tiles', '1/1/1', { timeout: 30_000 });
       // 30° N 31° E: level 5's 38th tile east of 180° W and 11th south of the pole, 5.625° a side.
       expect(tiles).toEqual(['manifest.json', '5/37/10.webp']);
     });
-    await test.step('When they rise to 1,900 km over the corner of four tiles', async () => {
+    // A phone takes tiles from nearer in (1.3 radii), where its tall view holds fewer.
+    const height = phone ? '1.2' : '1.3';
+    await test.step('When they rise over the corner of four tiles', async () => {
       tiles.length = 0;
-      await page.goto('./?t=2024-04-08T12:00Z&cam=22.5,22.5,1.3');
+      await page.goto(`./?t=2024-04-08T12:00Z&cam=22.5,22.5,${height}`);
       await globeRendered(page);
     });
     await test.step('Then those four and their neighbours in view, and no others', async () => {
-      if (phone) {
-        expect(tiles).toEqual([]);
-        return;
-      }
-      await expect(globe).toHaveAttribute('data-earth-tiles', /^([4-9]|1[0-6])\/\1$/, {
+      await expect(globe).toHaveAttribute('data-earth-tiles', /^([4-9]|1[0-6])\/\1\/\1$/, {
         timeout: 30_000,
       });
       const fetched = tiles.filter((tile) => tile !== 'manifest.json');
@@ -61,6 +68,7 @@ test(
         expect.arrayContaining(['4/17/5.webp', '4/18/5.webp', '4/17/6.webp']),
       );
       expect(fetched).toContain('4/18/6.webp');
+      if (phone) expect(fetched.length).toBeLessThanOrEqual(PHONE_SHOWN);
       // The view is some 40° across at most: within two tiles of the corner, never the far side.
       for (const tile of fetched) {
         const [, x = -1, y = -1] = tile.split(/[/.]/).map(Number);
@@ -73,6 +81,43 @@ test(
     expect(problems).toEqual([]);
   },
 );
+
+test('graphics that cannot hold the 4096 map get no tiles, and stop at 1.05 radii', async ({
+  page,
+}) => {
+  test.slow();
+  // Graphics that hold textures 2048 pixels wide at most, as the oldest phones' do.
+  await page.addInitScript(() => {
+    for (const context of [WebGLRenderingContext, WebGL2RenderingContext]) {
+      const get = Object.getOwnPropertyDescriptor(context.prototype, 'getParameter')?.value as (
+        this: WebGLRenderingContext,
+        name: number,
+      ) => unknown;
+      context.prototype.getParameter = function (this: WebGLRenderingContext, name: number) {
+        return name === this.MAX_TEXTURE_SIZE ? 2048 : get.call(this, name);
+      };
+    }
+  });
+  const tiles = tileRequests(page);
+  const canvas = page.getByTestId('globe').locator('canvas');
+  await test.step('Given a link 50 km over the Nile', async () => {
+    await page.goto('./?t=2024-04-08T12:00Z&cam=30,31,1.008');
+    await globeRendered(page);
+  });
+  await test.step('Then the camera comes no nearer than 1.05 radii, about 320 km up', async () => {
+    await expect(page).toHaveURL(/cam=-?\d+\.\d{4},-?\d+\.\d{4},1\.050/);
+  });
+  await test.step('When they zoom in all the way', async () => {
+    await canvas.hover();
+    for (let step = 0; step < 20; step += 1) await page.mouse.wheel(0, -400);
+  });
+  await test.step('Then it stays at 1.05 radii, the zoom rail’s end, and no tile is fetched', async () => {
+    await expect(page).toHaveURL(/cam=-?\d+\.\d{4},-?\d+\.\d{4},1\.050/);
+    await expect(page.getByRole('slider', { name: 'Distance' })).toHaveValue('0');
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-earth-tiles', '0/0/0');
+    expect(tiles).toEqual([]);
+  });
+});
 
 test('the camera comes down to about 50 km above Earth, and no nearer the Moon than before', async ({
   page,
