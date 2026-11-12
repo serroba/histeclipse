@@ -1,6 +1,8 @@
 /**
  * Checks on the shape of `src` that only ratchet one way (#383, part of #384). Each number or
- * list here may only shrink: lower it in the PR that earns it, and the test asks you to.
+ * list here may only shrink. A count may sit below its limit: lower the limit only when the test
+ * asks, once the count is well below it, so that PRs working side by side do not all edit the
+ * same line (#479).
  */
 
 /// <reference types="node" />
@@ -112,6 +114,20 @@ const APP_LETS = 0;
  */
 const APP_CONDITIONALS = 4;
 
+/** How far below its limit a count may fall before the limit must come down with it (#479). */
+const COUNT_SLACK = 3;
+
+/** A count kept at most its limit, and the limit brought down once the count is well below. */
+function ratchet(count: number, limit: number, what: string, name: string): void {
+  expect(count, `${what} is ${String(count)}, over ${name} (${String(limit)})`).toBeLessThanOrEqual(
+    limit,
+  );
+  expect(
+    limit - count,
+    `${what} is ${String(count)}: lower ${name} to ${String(count)}`,
+  ).toBeLessThanOrEqual(COUNT_SLACK);
+}
+
 describe('the shape of src', () => {
   it('no folder imports its way back into itself, beyond the cycles already known', () => {
     const graph = folderGraph();
@@ -148,7 +164,7 @@ describe('the shape of src', () => {
   it("startApp's shared variables only come down", () => {
     const app = sources['./app.ts'] ?? '';
     const lets = app.split('\n').filter((line) => /^ {2}let /.test(line)).length;
-    expect(lets, `startApp has ${String(lets)} top-level lets; set APP_LETS to it`).toBe(APP_LETS);
+    ratchet(lets, APP_LETS, "startApp's top-level lets", 'APP_LETS');
   });
 
   it("startApp's conditionals only come down", () => {
@@ -157,19 +173,14 @@ describe('the shape of src', () => {
       .filter((line) => !/^\s*(\/\/|\*|\/\*)/.test(line))
       .join('\n');
     const conditionals = [...code.matchAll(/\bif \(|[^?]\?\s/g)].length;
-    expect(
-      conditionals,
-      `app.ts has ${String(conditionals)} ifs and ternaries; set APP_CONDITIONALS to it`,
-    ).toBe(APP_CONDITIONALS);
+    ratchet(conditionals, APP_CONDITIONALS, "app.ts's ifs and ternaries", 'APP_CONDITIONALS');
   });
 
   it('the Globe interface does not grow: draw new things with globe.addLayer', () => {
     const scene = sources['./globe/scene.ts'] ?? '';
     const body = /^export interface Globe \{\n([\s\S]*?)^\}/m.exec(scene)?.[1] ?? '';
     const methods = body.split('\n').filter((line) => /^ {2}[a-zA-Z]+[(<]/.test(line)).length;
-    expect(methods, `Globe has ${String(methods)} methods; set GLOBE_METHODS to it`).toBe(
-      GLOBE_METHODS,
-    );
+    ratchet(methods, GLOBE_METHODS, "Globe's methods", 'GLOBE_METHODS');
   });
 });
 
