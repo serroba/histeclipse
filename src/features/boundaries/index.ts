@@ -8,7 +8,7 @@
 import type { Globe } from '../../globe/scene';
 import { createBoundariesSheet } from '../../ui/boundariesSheet';
 import type { MountedPart, PartContext } from '../part';
-import type { GlobeCamera } from '../../state/viewState';
+import type { BoundaryChapter, GlobeCamera } from '../../state/viewState';
 import {
   borrowedOf,
   FACING,
@@ -32,6 +32,7 @@ const BESIDE = 0.35;
 
 export function mountBoundaries(context: BoundariesContext): BoundariesPart {
   const { base, store, globe } = context;
+  let shown: BoundaryChapter | null | undefined;
   // What the story took from the reader's view, while it has the globe.
   let borrowed: Borrowed | null = null;
   // And where the reader's camera was, to turn it back there.
@@ -100,7 +101,10 @@ export function mountBoundaries(context: BoundariesContext): BoundariesPart {
     elements: [sheet.dialog],
     button: sheet.button,
     render(state) {
-      sheet.show(state.boundaries);
+      // Shown on every draw: act only when the chapter changes.
+      if (state.boundaries === shown) return;
+      shown = state.boundaries;
+      sheet.show(shown);
       besideGlobe();
     },
   };

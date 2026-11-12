@@ -38,6 +38,14 @@ export const SKY: Watch = (s) => [
   s.camera,
 ];
 
+/** The sky as shown: what `SKY` reads while in it, and nothing while away from it. */
+export const SKY_SHOWN: Watch = (s) => (s.mode === 'sky' ? SKY(s) : [s.mode]);
+
+/** The body in focus, its view from where, and the place picked: the globe's own fields. */
+export const FOCUS: Watch = (s) => [s.focus];
+export const VIEWPOINT: Watch = (s) => [s.view];
+export const LOCATION: Watch = (s) => [s.location];
+
 /** The orbits drawn: they come and go as the view moves out and in, or turns elsewhere. */
 export const ORBITS: Watch = (s) => [s.layers, s.camera, s.focus, s.mode, s.ma];
 
@@ -55,6 +63,9 @@ export const EARTH_LAYERS: Watch = (s) => [
   s.location,
 ];
 
+/** The Layers panel and the borders: Earth's layers, and it shuts on going to another body. */
+export const LAYERS_PANEL: Watch = (s) => [...EARTH_LAYERS(s), s.focus];
+
 /** The history track: its year, the layers on it, and (for radiocarbon) the hemisphere. */
 export const HISTORY: Watch = (s) => [s.time.date.year, s.layers, s.location];
 
@@ -70,4 +81,50 @@ export const FOUND_THE_WAY_IN: Watch = (s) => [s.selection, s.location, s.mode, 
 /** Whether what `watch` reads differs between the two states; always, with none before. */
 export function redraws(watch: Watch, state: ViewState, previous: ViewState | null): boolean {
   return previous === null || changed(watch(previous), watch(state));
+}
+
+/**
+ * Whether the moment shown must be worked out again: its time or calendar changed, or deep time
+ * was left for the years. Otherwise only the layers that watch what changed are shown again.
+ */
+export function momentChanged(state: ViewState, previous: ViewState | null): boolean {
+  if (previous === null) return true;
+  const leftDeepTime = previous.ma !== null && state.ma === null;
+  return state.time !== previous.time || state.years !== previous.years || leftDeepTime;
+}
+
+/** The moment kept from the view before. */
+export function momentKept(state: ViewState, previous: ViewState | null): previous is ViewState {
+  return previous !== null && !momentChanged(state, previous);
+}
+
+/** When something on the page is drawn again, given the view now and before. */
+export type When = (state: ViewState, previous: ViewState | null) => boolean;
+
+/** Drawn first, and again whenever what `watch` reads changes. */
+export function on(watch: Watch): When {
+  return (state, previous) => redraws(watch, state, previous);
+}
+
+/** Drawn only when what `watch` reads changes: not first, as the page opens. */
+export function onChange(watch: Watch): When {
+  return (state, previous) => previous !== null && changed(watch(previous), watch(state));
+}
+
+/** Something on the page, drawn in its turn (#474). */
+export interface Drawn {
+  /** When it is drawn again; every time, if left out. */
+  readonly when?: When;
+  draw(state: ViewState, previous: ViewState | null): void;
+}
+
+/** Draw each in order, those whose `when` says so. */
+export function drawAll(
+  drawn: readonly Drawn[],
+  state: ViewState,
+  previous: ViewState | null,
+): void {
+  for (const each of drawn) {
+    if (each.when?.(state, previous) ?? true) each.draw(state, previous);
+  }
 }
