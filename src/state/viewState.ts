@@ -5,7 +5,7 @@
 
 import type { GeoPoint } from '../core/geo';
 import { DEEP_SCALES, EARTH_AGE_MA, roundMa, type DeepScale } from '../deepTime/scale';
-import { ECLIPSE_KINDS, type EclipseKind, type Selection } from '../eclipses/kind';
+import { ECLIPSE_KINDS, type EclipseKind, type Selection } from '../data/eclipseKind';
 import { defaultCalendarFor, type Moment } from '../time/moment';
 
 // Defined below state, where the domain needs them; re-exported for the layers above (#378).
