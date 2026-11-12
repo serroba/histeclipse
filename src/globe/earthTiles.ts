@@ -179,15 +179,15 @@ interface Wanted {
   readonly coarser: TileLevel | null;
 }
 
-/** The tiles to draw, or null when the camera is too far for any. */
+/** The tiles to draw, or null when the camera is too far for any or the device takes none. */
 export function wantedTiles(
   tiles: EarthTiles,
   view: TileCamera,
   pixels: number,
-  limits: TileLimits,
+  limits: TileLimits | null,
 ): Wanted | null {
   const distance = Math.hypot(...view.eye);
-  if (distance > limits.within) return null;
+  if (limits === null || distance > limits.within) return null;
   const pixelAngle = (view.verticalFovDegrees * Math.PI) / 180 / Math.max(pixels, 1);
   const level = levelFor(tiles.levels, tiles.tileSize, distance - 1, pixelAngle, STRETCH);
   if (level === null) return null;
@@ -267,6 +267,8 @@ function reveal(tile: Tile, now: number, over: boolean): { shown: boolean; fadin
 }
 
 export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions): EarthTileLayer {
+  const { limits } = options;
+  const atOnce = limits?.loading ?? 0;
   let manifest: { readonly tiles: EarthTiles; readonly folder: string } | null = null;
   const kept = new Map<string, Tile>();
   let loading = 0;
@@ -311,12 +313,7 @@ export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions
   ): { shown: boolean; fading: boolean } {
     const id = tileId(key);
     let tile = kept.get(id);
-    if (
-      tile === undefined &&
-      fetch &&
-      manifest !== null &&
-      loading < (options.limits?.loading ?? 0)
-    ) {
+    if (tile === undefined && fetch && manifest !== null && loading < atOnce) {
       tile = { key, mesh: null, alpha: { value: 0 }, shownAt: null, lastSeen: now };
       kept.set(id, tile);
       load(manifest.folder, manifest.tiles, tile);
@@ -326,15 +323,13 @@ export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions
 
   return {
     enable(tiles, folder) {
-      if (options.limits === null) return;
       manifest ??= { tiles, folder };
       options.requestRender();
     },
     update(camera, on, now) {
       const drawnBefore = hideAll(kept);
-      const { limits } = options;
       const wanted =
-        on && manifest !== null && limits !== null
+        on && manifest !== null
           ? wantedTiles(manifest.tiles, cameraOnEarth(earth, camera), options.pixels(), limits)
           : null;
       const plan = drawPlan(
@@ -351,7 +346,7 @@ export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions
         fading ||= seen.fading;
       }
       const ids = new Set([...plan.beneath, ...plan.tiles.map(({ key }) => key)].map(tileId));
-      if (wanted !== null && limits !== null) trim(kept, ids, limits.kept);
+      if (wanted !== null) trim(kept, ids, limits?.kept ?? 0);
       options.report(shown, fetched, kept.size);
       return fading;
     },
