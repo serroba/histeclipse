@@ -315,14 +315,29 @@
     "sources": ["krapp2021", "scotese2022", "cesm"],
     "how": "Over the last 800,000 years, Krapp et al. (2021): annual mean temperature on land every 1,000 years, of which the site keeps every other, a statistical emulator of 72 HadCM3 climate-model runs driven by CO₂, Earth’s orbit and the ice sheets, averaged by the site to a 1° grid; the sea and the ice sheets have none and keep their relief colours. Its maps are on today’s geography, so a place can be set beside itself today: by default the colours show that change, blue colder and red warmer; within about a degree of today the land is left uncoloured, so a scale's pale middle is not taken for ice. Further back, maps every 5 million years, packed into images and blended between them.",
     "others": "Krapp et al. is a model emulator, not proxy measurements: the ice cores and reconstructions in the boundaries story’s Holocene chapter are the measured side. Its mean is over ice-free land only, and a different land at each moment: at an ice age's height the ice-covered land is left out and the bared shelves come in, so the mean understates the cold (about 4 °C below today at the last glacial maximum, where places by the ice were near 20 °C colder) and cannot be set beside the others' global means. Scotese 2022 and CESM (Li et al. 2023) disagree, at times by several degrees: pick whose to colour by.",
-    "reading": ["judd2024", "westerhold2020"]
+    "reading": [
+      "judd2024",
+      "westerhold2020",
+      "ottoBliesner2021",
+      "pmipAtlas",
+      "haywood2020",
+      "ar6Fig713",
+      "dowsett2016"
+    ]
   },
   "sealevel": {
     "title": "Sea level",
     "what": "Sea level through time, as each reconstruction has it, on a chart.",
     "sources": ["bintanja", "spratt", "miller", "vanDerMeer"],
-    "reading": ["ar6SeaLevel", "noaaLsa", "frederikse2020"],
-    "others": "Each reconstruction is drawn side by side; they differ, the more so further back."
+    "others": "Each reconstruction is drawn side by side; they differ, the more so further back.",
+    "reading": [
+      "dutton2015",
+      "dumitru2019",
+      "ar6SeaLevel",
+      "noaaLsa",
+      "frederikse2020",
+      "garner2021"
+    ]
   },
   "plates": {
     "title": "Plates",
@@ -380,6 +395,9 @@
       "hadcrut5",
       "krapp2021",
       "berkeleyEarth",
+      "gistemp4",
+      "noaaGlobalTemp",
+      "era5",
       "paleomist",
       "batchelor",
       "bintanja",
@@ -400,9 +418,13 @@
       "planetaryHealthCheck2026",
       "richardson2023",
       "osman2021",
-      "igcc2025",
-      "iap2024",
-      "nceiOceanHeat",
+      "gpcc2025",
+      "gpcpV23",
+      "hadex3",
+      "speibase",
+      "matthes2017",
+      "steinhilber2012",
+      "evolv2k",
       "rapidMoc",
       "caesar2018",
       "rahmstorf2015",
@@ -411,7 +433,12 @@
       "kilbourne2022",
       "terhaar2025",
       "globalCarbonBudget2026",
-      "jones2023"
+      "jones2023",
+      "lee2021",
+      "ar6Ch4Data",
+      "igcc2025",
+      "iap2024",
+      "nceiOceanHeat"
     ]
   }
 }
