@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import manifest from '../../public/textures/earth-tiles/manifest.json' with { type: 'json' };
 import { loadEarthTiles, type EarthTiles } from '../data/earthTiles';
-import { wantedTiles } from './earthTiles';
+import { trim, wantedTiles } from './earthTiles';
 import { geoToVector } from './geo';
 import { tileAt, tileId, type TileCamera } from './tileGrid';
 import { DESKTOP_TILES, PHONE_TILES, tileLimits, TILES_NEED_TEXTURE } from './tileLimits';
@@ -121,5 +121,37 @@ describe('the tiles a phone asks for', () => {
     const level = wantedTiles(TILES, camera, PIXEL_7.height * 2, PHONE_TILES)?.level;
     if (level === undefined) throw new Error('no level');
     expect(phone[0]).toBe(tileId(tileAt(level, geoToVector({ latitude: 5, longitude: 5 }))));
+  });
+});
+
+describe('the tiles a phone keeps', () => {
+  type Kept = Parameters<typeof trim>[0];
+  /** `count` tiles along the equator of level 4, the first seen longest ago. */
+  function seen(count: number): Kept {
+    const kept: Kept = new Map();
+    for (let x = 0; x < count; x += 1) {
+      const key = { z: 4, x, y: 8 };
+      kept.set(tileId(key), { key, mesh: null, alpha: { value: 1 }, shownAt: 0, lastSeen: x });
+    }
+    return kept;
+  }
+
+  it('lets go those seen longest ago past its 16, never those in view', () => {
+    const kept = seen(30);
+    // In view now: three of the oldest.
+    const wanted = new Set(['4/0/8', '4/1/8', '4/2/8']);
+    trim(kept, wanted, PHONE_TILES.kept);
+    expect(kept.size).toBe(PHONE_TILES.kept);
+    for (const id of wanted) expect(kept.has(id)).toBe(true);
+    // The 13 seen most recently stay with them; those between go.
+    expect([...kept.keys()].filter((id) => !wanted.has(id))).toEqual(
+      Array.from({ length: 13 }, (_, i) => `4/${String(17 + i)}/8`),
+    );
+  });
+
+  it('keeps everything while within its 16', () => {
+    const kept = seen(PHONE_TILES.kept);
+    trim(kept, new Set(), PHONE_TILES.kept);
+    expect(kept.size).toBe(PHONE_TILES.kept);
   });
 });

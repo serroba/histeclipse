@@ -234,7 +234,7 @@ export function drawPlan(
 }
 
 /** Past `most` kept, let go those not seen for longest, other than those wanted now. */
-function trim(kept: Map<string, Tile>, wanted: ReadonlySet<string>, most: number): void {
+export function trim(kept: Map<string, Tile>, wanted: ReadonlySet<string>, most: number): void {
   if (kept.size <= most) return;
   const oldest = [...kept.entries()]
     .filter(([id]) => !wanted.has(id))

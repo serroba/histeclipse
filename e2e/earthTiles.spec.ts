@@ -9,9 +9,8 @@ import { collectProblems, expect, globeRendered, GPU, test } from './support';
  * 4096 map take none, and the camera stops at 1.05 radii.
  */
 
-/** The most tiles a phone draws at once and keeps (`src/globe/tileLimits.ts`). */
+/** The most tiles a phone draws at once (`src/globe/tileLimits.ts`). */
 const PHONE_SHOWN = 12;
-const PHONE_KEPT = 16;
 
 /** The tiles asked for, by path under the tiles' folder. */
 function tileRequests(page: Page): string[] {
@@ -21,13 +20,6 @@ function tileRequests(page: Page): string[] {
     if (match?.[1] !== undefined) tiles.push(match[1]);
   });
   return tiles;
-}
-
-/** How many tiles are drawn, were fetched and are kept, as the globe reports them. */
-async function tileCounts(page: Page): Promise<[shown: number, fetched: number, kept: number]> {
-  const counts = (await page.getByTestId('globe').getAttribute('data-earth-tiles')) ?? '0/0/0';
-  const [shown = 0, fetched = 0, kept = 0] = counts.split('/').map(Number);
-  return [shown, fetched, kept];
 }
 
 test(
@@ -89,52 +81,6 @@ test(
     expect(problems).toEqual([]);
   },
 );
-
-test('a phone keeps no more tiles than its budget, letting go those it saw longest ago', async ({
-  page,
-}, info) => {
-  test.skip(info.project.name !== 'mobile', 'the phone’s budget');
-  test.slow();
-  // Each drag waits on new tiles, which CI draws in software: more than the slow test's 90 s.
-  test.setTimeout(240_000);
-  const problems = collectProblems(page);
-  const tiles = tileRequests(page);
-  const canvas = page.getByTestId('globe').locator('canvas');
-  await test.step('Given Earth from 1,300 km over New Zealand’s South Island', async () => {
-    await page.goto('./?t=2024-04-08T12:00Z&cam=-43.5,170.5,1.2');
-    await globeRendered(page);
-    await expect
-      .poll(async () => (await tileCounts(page))[0], { timeout: 30_000 })
-      .toBeGreaterThan(0);
-  });
-  const box = await canvas.boundingBox();
-  if (box === null) throw new Error('no canvas');
-  const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-  for (let drag = 1; drag <= 6; drag += 1) {
-    await test.step(`When they drag the globe round, ${String(drag)} of 6`, async () => {
-      // Left to right, clear of the zoom rail on the right.
-      await page.mouse.move(box.x + box.width * 0.1, middle.y);
-      await page.mouse.down();
-      await page.mouse.move(box.x + box.width * 0.7, middle.y, { steps: 8 });
-      await page.mouse.up();
-      // The view now holds other tiles: wait for some to be drawn.
-      await expect
-        .poll(async () => (await tileCounts(page))[0], { timeout: 30_000 })
-        .toBeGreaterThan(0);
-      const [shown, , kept] = await tileCounts(page);
-      expect(shown).toBeLessThanOrEqual(PHONE_SHOWN);
-      expect(kept).toBeLessThanOrEqual(PHONE_KEPT);
-    });
-  }
-  await test.step('Then more were fetched than it keeps, and it kept no more than 16', async () => {
-    const fetched = tiles.filter((tile) => tile !== 'manifest.json');
-    expect(fetched.length).toBeGreaterThan(PHONE_KEPT);
-    const [, counted, kept] = await tileCounts(page);
-    expect(counted).toBe(fetched.length);
-    expect(kept).toBeLessThanOrEqual(PHONE_KEPT);
-  });
-  expect(problems).toEqual([]);
-});
 
 test('graphics that cannot hold the 4096 map get no tiles, and stop at 1.05 radii', async ({
   page,
