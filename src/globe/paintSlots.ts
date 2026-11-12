@@ -13,6 +13,8 @@ export interface PaintSlots<Painter> {
   add(order: number): PaintSlot<Painter>;
   /** The painters shown, in order. */
   painters(): readonly Painter[];
+  /** Whether the place painted in `order` paints anything now. */
+  shows(order: number): boolean;
 }
 
 /** Places on a map, painted again by `repaint` when any of them changes. */
@@ -32,6 +34,9 @@ export function createPaintSlots<Painter>(repaint: () => void): PaintSlots<Paint
     },
     painters() {
       return slots.flatMap(({ painter }) => (painter === null ? [] : [painter]));
+    },
+    shows(order) {
+      return slots.some((slot) => slot.order === order && slot.painter !== null);
     },
   };
 }
