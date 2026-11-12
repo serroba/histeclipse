@@ -100,6 +100,12 @@ def test_rejects_what_it_cannot_read() -> None:
         _ = read_netcdf3(record)
 
 
+def test_reads_a_record_variable_when_there_is_one_record() -> None:
+    one = bytearray(netcdf3({"time": 0, "x": 2}, {"t": (("time", "x"), np.array([3.0, 4.0]))}))
+    one[4:8] = struct.pack(">I", 1)
+    assert read_netcdf3(bytes(one))["t"].tolist() == [[3.0, 4.0]]
+
+
 def test_rejects_a_header_out_of_order() -> None:
     data = model()
     # The variables' tag, 11, swapped for an attribute's.

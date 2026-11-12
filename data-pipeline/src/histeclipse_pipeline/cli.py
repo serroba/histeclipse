@@ -7,9 +7,11 @@ from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.aadr import fetch_genomes
 from histeclipse_pipeline.amoc import fetch_amoc
+from histeclipse_pipeline.ar6_sealevel import fetch_ar6_sealevel
 from histeclipse_pipeline.archaeoglobe import fetch_ways
 from histeclipse_pipeline.asteroids import fetch_asteroids
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
+from histeclipse_pipeline.carbon_budget import fetch_carbon_budget
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
 from histeclipse_pipeline.cenogrid import fetch_cenogrid
 from histeclipse_pipeline.cesm import fetch_cesm
@@ -17,6 +19,7 @@ from histeclipse_pipeline.deep_air import fetch_deep_air
 from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
 from histeclipse_pipeline.dipole import fetch_dipole
 from histeclipse_pipeline.dispersal import fetch_dispersal
+from histeclipse_pipeline.drought import fetch_drought
 from histeclipse_pipeline.empires import (
     fetch_cliopatria,
     merge_unchanged,
@@ -25,7 +28,9 @@ from histeclipse_pipeline.empires import (
 )
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.eruptions import fetch_eruptions
+from histeclipse_pipeline.extremes import fetch_extremes
 from histeclipse_pipeline.fossils import fetch_fossils
+from histeclipse_pipeline.holocene_stacks import fetch_holocene_stacks
 from histeclipse_pipeline.holocene_temperature import fetch_holocene_temperature
 from histeclipse_pipeline.iceoutlines import fetch_outlines
 from histeclipse_pipeline.icesheets import fetch_icesheets
@@ -38,6 +43,8 @@ from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table,
 from histeclipse_pipeline.macrostrat import fetch_rocks
 from histeclipse_pipeline.measured_warming import fetch_measured_warming
 from histeclipse_pipeline.moon_orbits import fetch_moon_orbits
+from histeclipse_pipeline.natural_forcing import fetch_natural_forcing
+from histeclipse_pipeline.ocean_heat import fetch_ocean_heat
 from histeclipse_pipeline.ohm import fetch_ohm
 from histeclipse_pipeline.p3k14c import fetch_p3k14c
 from histeclipse_pipeline.paleo_co2 import fetch_co2_archive
@@ -65,10 +72,12 @@ from histeclipse_pipeline.planets import (
     write_planet_vectors,
 )
 from histeclipse_pipeline.polarity import fetch_polarity
+from histeclipse_pipeline.precipitation import fetch_precipitation
 from histeclipse_pipeline.radiocarbon import fetch_radiocarbon
 from histeclipse_pipeline.saturn_rings import fetch_saturn_rings
 from histeclipse_pipeline.seaice import fetch_seaice
 from histeclipse_pipeline.sealevel import fetch_sealevel
+from histeclipse_pipeline.sealevel_modern import fetch_budget, fetch_modern
 from histeclipse_pipeline.shelf import fetch_shelf
 from histeclipse_pipeline.sky import (
     constellations,
@@ -82,11 +91,15 @@ from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.solar_images import fetch_images
 from histeclipse_pipeline.spacecraft import fetch_spacecraft
 from histeclipse_pipeline.spacecraft_paths import fetch_spacecraft_paths
+from histeclipse_pipeline.ssp_pathways import fetch_pathways
+from histeclipse_pipeline.temperature_records import fetch_temperature_records
 from histeclipse_pipeline.time_tree import fetch_time_trees
 from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
 from histeclipse_pipeline.volcanoes import fetch_volcanoes
+from histeclipse_pipeline.warm_past import fetch_warm_past
+from histeclipse_pipeline.warming_levels import fetch_warming_levels
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -403,6 +416,13 @@ def p3k14c(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"calibrated {count} dates into {args.out}")
 
 
+def natural_forcing(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Sun's irradiance (CMIP6, Steinhilber 2012) and volcanic sulfur (eVolv2k)."""
+    counts = fetch_natural_forcing(args.out)
+    written = ", ".join(f"{count} {name}" for name, count in counts.items())
+    return _say(f"wrote {written} to {args.out}")
+
+
 def eruptions(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the Holocene's eruptions as the ice cores record them (HolVol)."""
     count = fetch_eruptions(args.out)
@@ -437,6 +457,12 @@ def deep_air(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write CO2 and O2 over the last 540 million years (Foster 2017; Mills 2023)."""
     count = fetch_deep_air(args.out)
     return _say(f"wrote {count} CO2 estimates, the CO2 fit and the O2 estimate to {args.out}")
+
+
+def carbon_budget(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Global Carbon Budget and each country's emissions and warming (CC BY 4.0)."""
+    years, countries = fetch_carbon_budget(args.out)
+    return _say(f"wrote {years} years of the budget and {countries} countries to {args.out}")
 
 
 def co2_archive(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -512,10 +538,28 @@ def sealevel(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {points} sea-level points to {args.out}")
 
 
+def sealevel_modern(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write measured sea level since 1900 and the altimetry trend map (AR6, NOAA)."""
+    points = fetch_modern(args.out)
+    return _say(f"wrote {points} measured sea-level points and the trend map to {args.out}")
+
+
+def sealevel_budget(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write Frederikse et al.'s sea-level budget, for checking only: not for public/."""
+    years = fetch_budget(args.out)
+    return _say(f"wrote {years} years of the sea-level budget to {args.out}")
+
+
 def holocene_temperature(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write temperature from 800,000 years ago to today, from four records side by side."""
     points = fetch_holocene_temperature(args.out)
     return _say(f"wrote {points} temperature points to {args.out}")
+
+
+def holocene_stacks(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Holocene's proxy stacks, reanalysis and seasonal correction, side by side."""
+    points = fetch_holocene_stacks(args.out)
+    return _say(f"wrote {points} Holocene temperature points to {args.out}")
 
 
 def paleotemp(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -530,6 +574,12 @@ def krapp(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} ice-age temperature images to {args.out}")
 
 
+def temperature_records(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write global mean temperature since 1850 from five records side by side."""
+    points = fetch_temperature_records(args.out)
+    return _say(f"wrote {points} temperature-record points to {args.out}")
+
+
 def amoc(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the AMOC as measured (RAPID) and as reconstructed, each source apart."""
     points = fetch_amoc(args.out)
@@ -540,6 +590,54 @@ def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs networ
     """Write measured land warming since 1850 (Berkeley Earth) as small images."""
     count = fetch_measured_warming(args.out)
     return _say(f"wrote {count} measured-warming images to {args.out}")
+
+
+def ssp_pathways(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the SSP pathways to 2100: CO2 emissions, concentration and forcing."""
+    points = fetch_pathways(args.out)
+    return _say(f"wrote {points} SSP pathway points to {args.out}")
+
+
+def precipitation(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write precipitation trends and land means from GPCC and GPCP."""
+    count = fetch_precipitation(args.out)
+    return _say(f"wrote {count} precipitation trend maps to {args.out}")
+
+
+def extremes(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write trends in the hottest and wettest day of the year (HadEX3)."""
+    count = fetch_extremes(args.out)
+    return _say(f"wrote {count} extremes trend maps to {args.out}")
+
+
+def drought(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the drought index's trend and land means (SPEIbase)."""
+    count = fetch_drought(args.out)
+    return _say(f"wrote {count} drought trend map to {args.out}")
+
+
+def ar6_sealevel(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write sea level projected to 2150 by IPCC AR6, global curves and 1° maps."""
+    count = fetch_ar6_sealevel(args.out)
+    return _say(f"wrote AR6 sea-level curves and {count} maps to {args.out}")
+
+
+def warm_past(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write temperature change maps of the Last Interglacial and mid-Pliocene."""
+    count = fetch_warm_past(args.out)
+    return _say(f"wrote {count} warm-past temperature-change images to {args.out}")
+
+
+def warming_levels(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write projected temperature and rain change at 1.5-4 °C of warming (IPCC AR6)."""
+    count = fetch_warming_levels(args.out)
+    return _say(f"wrote {count} warming-level images to {args.out}")
+
+
+def ocean_heat(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write ocean heat content (IAP, NOAA NCEI) and the Earth's heat inventory (IGCC)."""
+    count = fetch_ocean_heat(args.out)
+    return _say(f"wrote {count} ocean-heat points to {args.out}")
 
 
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
@@ -717,6 +815,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write archaeological radiocarbon dates, calibrated and counted by cell (p3k14c)",
         "output folder (public/data/radiocarbon-dates)",
     ),
+    "natural-forcing": (
+        natural_forcing,
+        "write solar irradiance (CMIP6, Steinhilber 2012) and volcanic sulfur (eVolv2k v4)",
+        "output folder (public/data/natural-forcing)",
+    ),
     "eruptions": (
         eruptions,
         "write the Holocene's eruptions as the ice cores record them (HolVol)",
@@ -746,6 +849,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         deep_air,
         "write CO2 and O2 over the last 540 million years (Foster 2017; Mills 2023)",
         "output JSON file",
+    ),
+    "carbon-budget": (
+        carbon_budget,
+        "write the Global Carbon Budget and each country's emissions and warming (CC BY 4.0)",
+        "output directory",
     ),
     "co2-archive": (
         co2_archive,
@@ -807,10 +915,25 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write global sea level through time from four reconstructions",
         "output directory",
     ),
+    "sealevel-modern": (
+        sealevel_modern,
+        "write measured sea level since 1900 and its trend map (IPCC AR6, NOAA LSA)",
+        "output directory",
+    ),
+    "sealevel-budget": (
+        sealevel_budget,
+        "write Frederikse et al. 2020's budget (all rights reserved: keep it out of public/)",
+        "output JSON file",
+    ),
     "holocene-temperature": (
         holocene_temperature,
         "write temperature from 800 ka to today (EPICA, LGMR, PAGES 2k, HadCRUT5)",
         "output JSON file",
+    ),
+    "holocene-stacks": (
+        holocene_stacks,
+        "write the Holocene temperature conundrum (Temp12k, LGMR, Bova et al. 2021)",
+        "output JSON file (public/data/holocene-stacks/index.json)",
     ),
     "paleotemp": (
         paleotemp,
@@ -822,6 +945,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write land temperature maps for the last 800,000 years (Krapp et al. 2021)",
         "output directory",
     ),
+    "temperature-records": (
+        temperature_records,
+        "write global temperature since 1850 (GISTEMP, NOAAGlobalTemp, ERA5, HadCRUT5, Berkeley)",
+        "output directory",
+    ),
     "amoc": (
         amoc,
         "write the AMOC measured at 26.5°N (RAPID) beside reconstructions that disagree",
@@ -830,6 +958,46 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "measured-warming": (
         measured_warming,
         "write measured land warming since 1850 against 1850-1900 (Berkeley Earth)",
+        "output directory",
+    ),
+    "ssp-pathways": (
+        ssp_pathways,
+        "write the SSP pathways to 2100: CO2 emissions, CO2 and forcing (RCMIP; IPCC AR6)",
+        "output directory",
+    ),
+    "precipitation": (
+        precipitation,
+        "write precipitation trends since 1951 and 1980 and land means (GPCC, GPCP)",
+        "output directory",
+    ),
+    "extremes": (
+        extremes,
+        "write trends in the hottest and wettest day of the year since 1951 (HadEX3)",
+        "output directory",
+    ),
+    "drought": (
+        drought,
+        "write the 12-month drought index's trend since 1951 and land means (SPEIbase)",
+        "output directory",
+    ),
+    "ar6-sealevel": (
+        ar6_sealevel,
+        "write sea level projected to 2150 by SSP (IPCC AR6, Garner et al. 2021)",
+        "output directory",
+    ),
+    "warm-past": (
+        warm_past,
+        "write temperature change at the Last Interglacial and mid-Pliocene (PMIP4, PlioMIP2)",
+        "output directory (public/data/warmpast)",
+    ),
+    "warming-levels": (
+        warming_levels,
+        "write projected temperature and rain change at 1.5-4 °C of warming (IPCC AR6)",
+        "output directory",
+    ),
+    "ocean-heat": (
+        ocean_heat,
+        "write ocean heat content since 1955 (IAP, NCEI) and the heat inventory (IGCC 2025)",
         "output directory",
     ),
     "calendars": (

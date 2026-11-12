@@ -91,15 +91,10 @@ function reaches(graph: Map<string, Set<string>>, from: string, to: string): boo
 }
 
 /**
- * The imports between folders that close a cycle today: each is a way back to a folder that
- * reaches this one. Remove an entry when its imports go; never add one.
+ * The imports between folders that close a cycle: none since #490. An import that would close
+ * one goes the other way, or what it needs moves down to where both sides can reach it.
  */
-const KNOWN_CYCLE_EDGES: readonly string[] = [
-  // Within the domain (#490): the data files lean on deep time, which leans back on the data's
-  // loaders and tables. (astro, time, eclipses, sources and state have left the tangle.)
-  'data -> deepTime',
-  'deepTime -> data',
-];
+const KNOWN_CYCLE_EDGES: readonly string[] = [];
 
 /** Methods on the `Globe` interface in `globe/scene.ts`: new things drawn are layers (#379). */
 const GLOBE_METHODS = 43;

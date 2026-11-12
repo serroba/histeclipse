@@ -12,6 +12,34 @@
     "cite": "Allwood et al. (2006), Stromatolite reef from the Early Archaean era of Australia, Nature 441, 714–718",
     "url": "https://doi.org/10.1038/nature04764"
   },
+  "ar6AnnexIII": {
+    "name": "IPCC AR6 WG1 Annex III extended data",
+    "kind": "dataset",
+    "cite": "Smith, C., Hall, B., Dentener, F., Ahn, J., Collins, W., Jones, C., Meinshausen, M., Dlugokencky, E., Keeling, R., Krummel, P., Mühle, J., Nicholls, Z., Simpson, I. (2021), IPCC Working Group 1 (WG1) Sixth Assessment Report (AR6) Annex III Extended Data, v1.0, Zenodo; effective radiative forcing 1750–2500, best estimate with 5th and 95th percentiles, historical and for each SSP (tables A3.4a–e). Abstract: greenhouse-gas abundances and effective radiative forcing, historical and projected, for every year, given in abridged form in Annex III of the IPCC’s Sixth Assessment Report",
+    "url": "https://doi.org/10.5281/zenodo.5705391",
+    "licence": "CC BY 4.0"
+  },
+  "ar6Ch4Data": {
+    "name": "IPCC AR6 WGI Chapter 4 figure data (Figures 4.31, 4.32)",
+    "kind": "dataset",
+    "cite": "Fischer, E. (2023), Chapter 4 of the Working Group I Contribution to the IPCC Sixth Assessment Report – data for Figure 4.31 v20230531 (doi:10.5285/8fa708d0474d4a3caa5c9f645a89d282) and for Figure 4.32 v20230531 (doi:10.5285/0192ae3037794e0eb93b022c5140f399), NERC EDS Centre for Environmental Data Analysis; CMIP6 multi-model mean change in annual temperature and precipitation at 1.5, 2, 3 and 4 °C of global warming against 1850–1900, with the report’s robustness hatching",
+    "url": "https://doi.org/10.5285/8fa708d0474d4a3caa5c9f645a89d282",
+    "licence": "CC BY 4.0"
+  },
+  "ar6Fig713": {
+    "name": "IPCC AR6 Figure 7.13 input data",
+    "kind": "dataset",
+    "cite": "Lunt, D. (2023), Chapter 7 of the Working Group I Contribution to the IPCC Sixth Assessment Report – Input data for Figure 7.13 (v20220118), NERC EDS Centre for Environmental Data Analysis; the mid-Pliocene PlioMIP2 17-model ensemble-mean near-surface air temperature change from pre-industrial. Report chapter: Forster, P., Storelvmo, T., et al. (2021), The Earth’s Energy Budget, Climate Feedbacks, and Climate Sensitivity, in Climate Change 2021: The Physical Science Basis, Cambridge University Press, 923–1054, doi:10.1017/9781009157896.009",
+    "url": "https://doi.org/10.5285/4dbd3ccb85d747188586735133f1d3d9",
+    "licence": "CC BY 4.0"
+  },
+  "ar6SeaLevel": {
+    "name": "IPCC AR6 global mean sea level",
+    "kind": "dataset",
+    "cite": "Palmer, M. D., Savita, A., Boeira Dias, F., Domingues, C. M., et al. (2023), Chapter 9 of the Working Group I Contribution to the IPCC Sixth Assessment Report - data for Cross-Chapter Box 9.1, Figure 1 (v20230523), NERC EDS Centre for Environmental Data Analysis: the assessed global mean sea level from tide gauges (1900–2010) and satellite altimetry (1993–2019), with 1-sigma uncertainty, against 1995–2014. Report: Fox-Kemper, B., Hewitt, H. T., Xiao, C., et al. (2021), Ocean, Cryosphere and Sea Level Change, in Climate Change 2021: The Physical Science Basis, Cambridge University Press, 1211–1362, doi:10.1017/9781009157896.011",
+    "url": "https://doi.org/10.5285/c622adfeb4cc4ae181dc4cca82c2311c",
+    "licence": "CC BY 4.0"
+  },
   "archaeoglobe": {
     "name": "ArchaeoGLOBE",
     "kind": "dataset",
@@ -94,6 +122,13 @@
     "kind": "paper",
     "cite": "Boucot, Chen & Scotese (2013), Phanerozoic Paleoclimate: an atlas of lithologic indicators of climate, SEPM Concepts in Sedimentology and Paleontology 11",
     "url": "https://doi.org/10.2110/sepmcsp.11"
+  },
+  "bova2021": {
+    "name": "Bova et al. 2021",
+    "kind": "paper",
+    "cite": "Bova, S., Rosenthal, Y., Liu, Z., Godad, S. P., Yan, M. (2021), Seasonal origin of the thermal maxima at the Holocene and the last interglacial, Nature 589, 548–553; data: the 40°S–40°N sea-surface stacks from the paper’s Source Data for Fig. 3; the single cores at NOAA NCEI Paleoclimatology, study 31752, https://doi.org/10.25921/496t-9n92, accessed 12 November 2026",
+    "url": "https://doi.org/10.1038/s41586-020-03155-x",
+    "licence": "None stated for the Source Data; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
   },
   "bowring1999": {
     "name": "Bowring & Williams 1999",
@@ -241,11 +276,37 @@
     "cite": "Morrison, Stephenson, Hohenkerk & Zawilski (2021), Addendum 2020 to \"Measurement of the Earth’s rotation: 720 BC to AD 2015\", Proceedings of the Royal Society A 477",
     "url": "https://doi.org/10.1098/rspa.2020.0776"
   },
+  "dowsett2016": {
+    "name": "PRISM4, Dowsett et al. 2016",
+    "kind": "paper",
+    "cite": "Dowsett, H., Dolan, A., Rowley, D., Moucha, R., Forte, A. M., Mitrovica, J. X., et al. (2016), The PRISM4 (mid-Piacenzian) paleoenvironmental reconstruction, Climate of the Past 12, 1519–1538: the boundary conditions (geography, ice, vegetation) of the PlioMIP2 runs",
+    "url": "https://doi.org/10.5194/cp-12-1519-2016",
+    "licence": "CC BY 3.0"
+  },
+  "dumitru2019": {
+    "name": "Dumitru et al. 2019",
+    "kind": "paper",
+    "cite": "Dumitru, O. A., Austermann, J., Polyak, V. J., Fornós, J. J., Asmerom, Y., Ginés, J., Ginés, A. & Onac, B. P. (2019), Constraints on global mean sea level during Pliocene warmth, Nature 574, 233–236: mid-Piacenzian global mean sea level 16.2 m above present (5.6–19.2 m, 68%), from phreatic overgrowths on speleothems in Mallorca",
+    "url": "https://doi.org/10.1038/s41586-019-1543-2"
+  },
+  "dutton2015": {
+    "name": "Dutton et al. 2015",
+    "kind": "paper",
+    "cite": "Dutton, A., Carlson, A. E., Long, A. J., Milne, G. A., Clark, P. U., DeConto, R., Horton, B. P., Rahmstorf, S. & Raymo, M. E. (2015), Sea-level rise due to polar ice-sheet mass loss during past warm periods, Science 349, aaa4019: peak global mean sea level 6–9 m above present in marine isotope stage 5e (the Last Interglacial); no precise Pliocene estimate, because of dynamic topography",
+    "url": "https://doi.org/10.1126/science.aaa4019"
+  },
   "elpmpp02": {
     "name": "ELP/MPP02",
     "kind": "model",
     "cite": "Chapront & Francou (2003), The lunar theory ELP revisited, Astronomy & Astrophysics 404, 735; via the astronomia library (MIT)",
     "url": "https://doi.org/10.1051/0004-6361:20030529"
+  },
+  "era5": {
+    "name": "ERA5",
+    "kind": "dataset",
+    "cite": "Hersbach, H., Bell, B., Berrisford, P., et al. (2020), The ERA5 global reanalysis, Quarterly Journal of the Royal Meteorological Society 146, 1999–2049; data: Copernicus Climate Change Service (C3S), ERA5 hourly data on single levels from 1940 to present (doi:10.24381/cds.adbb2d47), daily global mean 2 m temperature as published by C3S Climate Pulse. A reanalysis: a weather model fitted to observations, giving a complete global field from 1940. Contains modified Copernicus Climate Change Service information",
+    "url": "https://doi.org/10.1002/qj.3803",
+    "licence": "CC BY 4.0"
   },
   "esaJuice": {
     "name": "ESA: Juice",
@@ -266,6 +327,13 @@
     "cite": "Evans & Mitchell (2011), Assembly and breakup of the core of Paleoproterozoic–Mesoproterozoic supercontinent Nuna, Geology 39, 443–446",
     "url": "https://doi.org/10.1130/G31654.1"
   },
+  "evolv2k": {
+    "name": "eVolv2k v4 (Toohey & Sigl)",
+    "kind": "dataset",
+    "cite": "Toohey, M. & Sigl, M. (2017), Volcanic stratospheric sulfur injections and aerosol optical depth from 500 BCE to 1900 CE, Earth System Science Data 9, 809–831, doi:10.5194/essd-9-809-2017; data: Sigl, M. & Toohey, M. (2024), Volcanic stratospheric sulfur injections from 500 BCE to 1900 CE, eVolv2k_version4, PANGAEA, accessed 12 November 2026",
+    "url": "https://doi.org/10.1594/PANGAEA.971968",
+    "licence": "CC BY 4.0"
+  },
   "farquhar2000": {
     "name": "Farquhar, Bao & Thiemens 2000",
     "kind": "paper",
@@ -285,12 +353,26 @@
     "url": "https://doi.org/10.1038/ncomms14845",
     "licence": "CC BY 4.0"
   },
+  "frederikse2020": {
+    "name": "Frederikse et al. 2020",
+    "kind": "paper",
+    "cite": "Frederikse, T., Landerer, F., Caron, L., Adhikari, S., Parkes, D., Humphrey, V. W., Dangendorf, S., Hogarth, P., Zanna, L., Cheng, L., Wu, Y.-H. (2020), The causes of sea-level rise since 1900, Nature 584, 393–397: global mean sea level from tide gauges, 1900–2018, with its budget of thermal expansion, glaciers, the Greenland and Antarctic ice sheets and water stored on land; data supplement: Zenodo record 3862995, doi:10.5281/zenodo.3862995",
+    "url": "https://doi.org/10.1038/s41586-020-2591-3",
+    "licence": "Data supplement: (c) 2020 All Rights Reserved; not redistributed by this site"
+  },
   "galileoMoonMaps": {
     "name": "Galileo and Voyager maps of Jupiter’s moons",
     "kind": "imagery",
     "cite": "USGS Astrogeology: Io Galileo SSI/Voyager colour merged global mosaic (1 km); Europa (500 m), Ganymede (1 km) and Callisto (1 km) Voyager–Galileo SSI global mosaics",
     "url": "https://astrogeology.usgs.gov/search/map/europa_voyager_galileo_ssi_global_mosaic_500m",
     "licence": "NASA/JPL/USGS, public domain"
+  },
+  "garner2021": {
+    "name": "IPCC AR6 Sea Level Projections",
+    "kind": "dataset",
+    "cite": "Garner, G. G., Hermans, T., Kopp, R. E., Slangen, A. B. A., Edwards, T. L., Levermann, A., Nowicki, S., Palmer, M. D., Smith, C., Fox-Kemper, B., Hewitt, H. T., Xiao, C., et al. (2021), IPCC AR6 Sea Level Projections, version 20210809, Zenodo; the projections assessed in Fox-Kemper, B., Hewitt, H. T., Xiao, C., et al. (2021), Ocean, Cryosphere and Sea Level Change, Climate Change 2021: The Physical Science Basis, IPCC AR6 WGI chapter 9, doi:10.1017/9781009157896.011; made with FACTS v1.0 (Kopp, R. E., Garner, G. G., Hermans, T. H. J., et al. (2023), Geoscientific Model Development 16, 7461–7489, doi:10.5194/gmd-16-7461-2023). Global and regional (1° grid) sea-level change to 2150 against 1995–2014, for each SSP scenario at medium confidence (the likely range) and low confidence (adding poorly understood ice-sheet processes)",
+    "url": "https://doi.org/10.5281/zenodo.5914709",
+    "licence": "CC BY 4.0"
   },
   "gcat": {
     "name": "GCAT (General Catalog of Artificial Space Objects)",
@@ -305,6 +387,27 @@
     "cite": "Panovska, S., Constable, C. G. & Korte, M. (2018). Extending global continuous geomagnetic field reconstructions on timescales beyond human civilization. Geochemistry, Geophysics, Geosystems 19, 4757–4772; dipole moment from the model archive, EarthRef ERDA 2382 (no licence stated)",
     "url": "https://doi.org/10.1029/2018GC007966"
   },
+  "gidden2019": {
+    "name": "Gidden et al. 2019",
+    "kind": "paper",
+    "cite": "Gidden, M. J., Riahi, K., Smith, S. J., Fujimori, S., et al. (2019), Global emissions pathways under different socioeconomic scenarios for use in CMIP6: a dataset of harmonized emissions trajectories through the end of the century, Geoscientific Model Development 12, 1443–1475. Abstract: the SSP scenarios’ emissions, harmonised with the historical record and downscaled, as the inputs of the CMIP6 projections",
+    "url": "https://doi.org/10.5194/gmd-12-1443-2019",
+    "licence": "CC BY 4.0"
+  },
+  "gistemp4": {
+    "name": "GISTEMP v4",
+    "kind": "dataset",
+    "cite": "GISTEMP Team (2026), GISS Surface Temperature Analysis (GISTEMP), version 4, NASA Goddard Institute for Space Studies, https://data.giss.nasa.gov/gistemp/; Lenssen, N., Schmidt, G. A., Hendrickson, M., Jacobs, P., Menne, M., Ruedy, R. (2024), A GISTEMPv4 observational uncertainty ensemble, Journal of Geophysical Research: Atmospheres 129, e2023JD040179; uncertainty: Lenssen et al. (2019), JGR Atmospheres 124, 6307–6326, doi:10.1029/2018JD029522. Global land-ocean temperature anomalies from 1880, from GHCN v4 stations and ERSST v5 sea surface temperatures, interpolated up to 1,200 km from stations",
+    "url": "https://doi.org/10.1029/2023JD040179",
+    "licence": "No licence stated; NASA asks that the web page and paper be cited"
+  },
+  "globalCarbonBudget2026": {
+    "name": "Global Carbon Budget 2026",
+    "kind": "dataset",
+    "cite": "Global Carbon Project (2026), Supplemental data of Global Carbon Budget 2026 (v0.1), ICOS Carbon Portal; budget paper: Friedlingstein, P., et al. (2026), Global Carbon Budget 2026, Earth System Science Data (in review)",
+    "url": "https://doi.org/10.18160/GCP-2026",
+    "licence": "CC BY 4.0"
+  },
   "godwin1962": {
     "name": "Godwin 1962",
     "kind": "paper",
@@ -316,6 +419,20 @@
     "kind": "paper",
     "cite": "Gough (1981), Solar interior structure and luminosity variations, Solar Physics 74, 21–34",
     "url": "https://doi.org/10.1007/BF00151270"
+  },
+  "gpcc2025": {
+    "name": "GPCC Precipitation Analysis Monthly",
+    "kind": "dataset",
+    "cite": "Rustemeier, E., Finger, P., Schirmeister, Z., Ziese, M. (2025), GPCC Precipitation Analysis Monthly Version 2025 at 2.5°: Monthly Land-Surface Precipitation Analysis for every Month from Rain-Gauges built on GTS-based and Historical Data, Global Precipitation Climatology Centre (GPCC) at Deutscher Wetterdienst; 1891–2024 used",
+    "url": "https://doi.org/10.5676/DWD_GPCC/MONTHLY_V2025_250",
+    "licence": "CC BY 4.0"
+  },
+  "gpcpV23": {
+    "name": "GPCP Monthly Precipitation v2.3",
+    "kind": "dataset",
+    "cite": "Adler, R., Sapiano, M., Wang, J.-J., NOAA CDR Program (2016), NOAA Climate Data Record (CDR) of Precipitation – GPCP Monthly, Version 2.3, NOAA National Centers for Environmental Information; described in Adler, R. F., Sapiano, M. R. P., Huffman, G. J., et al. (2018), The Global Precipitation Climatology Project (GPCP) Monthly Analysis (New Version 2.3) and a Review of 2017 Global Precipitation, Atmosphere 9, 138; as kept by NOAA PSL, 1979–2025 used",
+    "url": "https://doi.org/10.7289/V56971M6",
+    "licence": "Public, no restrictions on use (NOAA CDR open data policy)"
   },
   "gplates": {
     "name": "GPlates Web Service",
@@ -349,6 +466,21 @@
     "cite": "Morice, C. P., Kennedy, J. J., Rayner, N. A., et al. (2021), An updated assessment of near-surface temperature change from 1850: the HadCRUT5 data set, Journal of Geophysical Research: Atmospheres 126, e2019JD032361; data: HadCRUT.5.1.0.0, Met Office Hadley Centre and Climatic Research Unit, University of East Anglia",
     "url": "https://doi.org/10.1029/2019JD032361",
     "licence": "Open Government Licence v3"
+  },
+  "hadex3": {
+    "name": "HadEX3",
+    "kind": "dataset",
+    "cite": "Dunn, R. J. H., Alexander, L. V., Donat, M. G., et al. (2020), Development of an Updated Global Land In Situ-Based Data Set of Temperature and Precipitation Extremes: HadEX3, Journal of Geophysical Research: Atmospheres 125, e2019JD032263; data: HadEX3 v3.0.4 (TXx, Rx1day), Met Office Hadley Centre, © British Crown Copyright",
+    "url": "https://doi.org/10.1029/2019JD032263",
+    "licence": "Open Government Licence v3; some station data non-commercial only (WMO Resolution 40)",
+    "nonCommercial": true
+  },
+  "haywood2020": {
+    "name": "PlioMIP2, Haywood et al. 2020",
+    "kind": "paper",
+    "cite": "Haywood, A. M., Tindall, J. C., Dowsett, H. J., Dolan, A. M., Foley, K. M., Hunter, S. J., et al. (2020), The Pliocene Model Intercomparison Project Phase 2: large-scale climate features and climate sensitivity, Climate of the Past 16, 2095–2123: a multi-model mean warming of 3.2 °C (1.7–5.2 °C) over pre-industrial",
+    "url": "https://doi.org/10.5194/cp-16-2095-2020",
+    "licence": "CC BY 4.0"
   },
   "helioviewer": {
     "name": "Helioviewer",
@@ -393,6 +525,13 @@
     "cite": "Dated finds of our species and its relatives, each with the paper that dates it, and rival dates side by side; compiled for this site",
     "url": "https://github.com/serroba/histeclipse/blob/main/public/data/humans/claims.json"
   },
+  "iap2024": {
+    "name": "IAP ocean heat content (Cheng et al.)",
+    "kind": "dataset",
+    "cite": "Cheng, L., Pan, Y., Tan, Z., Zheng, H., Zhu, Y., Wei, W., Du, J., Yuan, H., Li, G., Ye, H., Gouretski, V., Li, Y., Trenberth, K. E., Abraham, J., Jin, Y., Reseghetti, F., Lin, X., Zhang, B., Chen, G., Mann, M. E., Zhu, J. (2024), IAPv4 ocean temperature and ocean heat content gridded dataset, Earth System Science Data 16, 3517–3546; data: IAP v4.2 global ocean heat content, monthly from 1940, 0–700 m and 0–2000 m with 95% ranges, against 2006–2015, update of January 2026. An objective analysis of every in-situ temperature profile, with corrected instrument biases and gaps filled using covariances from climate models; the authors count it reliable from 1955",
+    "url": "https://doi.org/10.5194/essd-16-3517-2024",
+    "licence": "None stated; freely available from the Institute of Atmospheric Physics, CAS"
+  },
   "iauGazetteer": {
     "name": "Gazetteer of Planetary Nomenclature",
     "kind": "dataset",
@@ -413,6 +552,13 @@
     "cite": "International Earth Rotation and Reference Systems Service: the length of today’s day",
     "url": "https://www.iers.org"
   },
+  "igcc2025": {
+    "name": "Indicators of Global Climate Change 2025",
+    "kind": "dataset",
+    "cite": "Forster, P. M., Walsh, T., Smith, C., et al. (2026), Indicators of Global Climate Change 2025: annual update of key indicators of the state of the climate system and human influence, Earth System Science Data 18, 3889–3933 (doi:10.5194/essd-18-3889-2026); data: Smith, C., Walsh, T., Gillett, N., et al. (2026), Indicators of Global Climate Change 2025, IGCC-2025a, Zenodo. The Earth heat inventory: heat gained since 1971 by the ocean (by layer, to 2024), land, ice and atmosphere (to 2020), carrying on the GCOS inventory of von Schuckmann et al. (2023, Earth System Science Data 15, 1675); the ocean holds about 90% of it",
+    "url": "https://doi.org/10.5281/zenodo.21494229",
+    "licence": "CC BY 4.0"
+  },
   "impactEarth": {
     "name": "Impact Earth Database",
     "kind": "catalogue",
@@ -431,6 +577,13 @@
     "kind": "reference",
     "cite": "JAXA, “Martian Moons eXploration (MMX)” (mission page)",
     "url": "https://www.mmx.jaxa.jp/en/"
+  },
+  "jones2023": {
+    "name": "Jones et al. 2023",
+    "kind": "dataset",
+    "cite": "Jones, M. W., Peters, G. P., Gasser, T., Andrew, R. M., Schwingshackl, C., Gütschow, J., Houghton, R. A., Friedlingstein, P., Pongratz, J. & Le Quéré, C. (2023). National contributions to climate change due to historical emissions of carbon dioxide, methane, and nitrous oxide since 1850. Scientific Data 10, 155; data: version 2025.1 (Zenodo, doi:10.5281/zenodo.16640595)",
+    "url": "https://doi.org/10.5281/zenodo.16640595",
+    "licence": "CC BY 4.0"
   },
   "jouzel2007": {
     "name": "EPICA Dome C, Jouzel et al. 2007",
@@ -472,6 +625,13 @@
     "kind": "model",
     "cite": "Judd, Tierney, Lunt, Montañez, Huber, Wing & Valdes (2024), A 485-million-year history of Earth's surface temperature, Science 385, eadk3705; GMST percentiles by stage from github.com/EJJudd/PhanDA (5_Outputs, revision 49ff875)",
     "url": "https://doi.org/10.1126/science.adk3705"
+  },
+  "kaufman2020": {
+    "name": "Kaufman et al. 2020 (Temperature 12k)",
+    "kind": "dataset",
+    "cite": "Kaufman, D., McKay, N., Routson, C., Erb, M., Dätwyler, C., Sommer, P. S., Heiri, O., Davis, B. (2020), Holocene global mean surface temperature, a multi-method reconstruction approach, Scientific Data 7, 201; data: figshare, https://doi.org/10.6084/m9.figshare.c.4796823, and NOAA NCEI Paleoclimatology, study 29712, https://doi.org/10.25921/vzys-1280, accessed 12 November 2026",
+    "url": "https://doi.org/10.1038/s41597-020-0530-7",
+    "licence": "CC0 1.0 (the data, on figshare); the article CC BY 4.0"
   },
   "kent2015": {
     "name": "Kent et al. 2015",
@@ -553,6 +713,13 @@
     "cite": "Lavigne, F., et al. (2013). Source of the great A.D. 1257 mystery eruption unveiled, Samalas volcano, Rinjani Volcanic Complex, Indonesia. PNAS 110, 16742–16747",
     "url": "https://doi.org/10.1073/pnas.1307520110"
   },
+  "lee2021": {
+    "name": "Lee et al. 2021 (IPCC AR6 WGI Chapter 4)",
+    "kind": "paper",
+    "cite": "Lee, J.-Y., Marotzke, J., Bala, G., Cao, L., Corti, S., Dunne, J. P., Engelbrecht, F., Fischer, E., Fyfe, J. C., Jones, C., Maycock, A., Mutemi, J., Ndiaye, O., Panickal, S., Zhou, T. (2021), Future Global Climate: Scenario-Based Projections and Near-Term Information, in Climate Change 2021: The Physical Science Basis, Contribution of Working Group I to the Sixth Assessment Report of the IPCC, Cambridge University Press, 553–672; Table 4.5 for when each warming level is crossed",
+    "url": "https://doi.org/10.1017/9781009157896.006",
+    "licence": "© IPCC (the report; its figures’ data are CC BY 4.0)"
+  },
   "lemen2012": {
     "name": "Lemen et al. 2012",
     "kind": "paper",
@@ -612,11 +779,25 @@
     "url": "https://doi.org/10.1017/RDC.2020.68",
     "licence": "CC BY 4.0"
   },
+  "matthes2017": {
+    "name": "CMIP6 solar forcing (Matthes et al. 2017)",
+    "kind": "dataset",
+    "cite": "Matthes, K., Funke, B., Andersson, M. E., Barnard, L., Beer, J., Charbonneau, P., Clilverd, M. A., Dudok de Wit, T., Haberreiter, M., Hendry, A., Jackman, C. H., Kretzschmar, M., Kruschke, T., Kunze, M., Langematz, U., Marsh, D. R., Maycock, A. C., Misios, S., Rodger, C. J., Scaife, A. A., Seppälä, A., Shangguan, M., Sinnhuber, M., Tourpali, K., Usoskin, I., van de Kamp, M., Verronen, P. T. & Versick, S. (2017), Solar forcing for CMIP6 (v3.2), Geoscientific Model Development 10, 2247–2302; data: SOLARIS-HEPPA CMIP6 solar forcing v3.2, monthly reference scenario (input4MIPs SOLARIS-HEPPA-CMIP-3-2), https://www.solarisheppa.kit.edu/85.php, accessed 12 November 2026",
+    "url": "https://doi.org/10.5194/gmd-10-2247-2017",
+    "licence": "CC BY-SA 4.0 (as the data file states); our annual means derived from it are shared under the same licence"
+  },
   "meeus": {
     "name": "Meeus, Astronomical Algorithms",
     "kind": "paper",
     "cite": "Meeus (1998), Astronomical Algorithms, 2nd edition, Willmann-Bell: the Sun (ch. 25), nutation (ch. 22) and sidereal time (ch. 12)",
     "url": "https://search.worldcat.org/search?q=Meeus+Astronomical+Algorithms+2nd+edition"
+  },
+  "meinshausen2020": {
+    "name": "Meinshausen et al. 2020",
+    "kind": "paper",
+    "cite": "Meinshausen, M., Nicholls, Z. R. J., Lewis, J., Gidden, M. J., et al. (2020), The shared socio-economic pathway (SSP) greenhouse gas concentrations and their extensions to 2500, Geoscientific Model Development 13, 3571–3605. Abstract: the greenhouse-gas concentrations of the SSP scenarios to 2100 and on to 2500, computed from the harmonised emissions, which CMIP6’s climate models were run with",
+    "url": "https://doi.org/10.5194/gmd-13-3571-2020",
+    "licence": "CC BY 4.0"
   },
   "merdith2021": {
     "name": "Merdith et al. 2021",
@@ -824,6 +1005,27 @@
     "url": "https://www.naturalearthdata.com",
     "licence": "Public domain"
   },
+  "nceiOceanHeat": {
+    "name": "NOAA NCEI ocean heat content (Levitus et al.)",
+    "kind": "dataset",
+    "cite": "Levitus, S., Antonov, J. I., Boyer, T. P., Baranova, O. K., Garcia, H. E., Locarnini, R. A., Mishonov, A. V., Reagan, J. R., Seidov, D., Yarosh, E. S., Zweng, M. M. (2012), World ocean heat content and thermosteric sea level change (0–2000 m), 1955–2010, Geophysical Research Letters 39, L10603 (doi:10.1029/2012GL051106); data: NOAA NCEI, Global ocean heat and salt content (NCEI Accession 0164586), world-ocean heat content, yearly for 0–700 m and 5-year running means for 0–2000 m, with standard errors, against the World Ocean Atlas 2009 climatology for 1955–2006, updated quarterly. Objective analysis of the World Ocean Database's profiles, anomalies left near zero where data are sparse",
+    "url": "https://doi.org/10.7289/V53F4MVP",
+    "licence": "Public domain (US government work)"
+  },
+  "noaaGlobalTemp": {
+    "name": "NOAAGlobalTemp v6.1",
+    "kind": "dataset",
+    "cite": "Huang, B., Yin, X., Menne, M. J., Vose, R., NOAA Global Surface Temperature Dataset (NOAAGlobalTemp), Version 6.1.0, NOAA National Centers for Environmental Information; Yin, X., Huang, B., Menne, M., et al. (2024), NOAAGlobalTemp Version 6: An AI-Based Global Surface Temperature Dataset, Bulletin of the American Meteorological Society 105, E2184–E2193, doi:10.1175/BAMS-D-24-0012.1. Global land-ocean temperature anomalies from 1850, merging GHCN v4 land stations and ERSST v6 sea surface temperatures, with gaps filled by an artificial neural network",
+    "url": "https://doi.org/10.25921/vvaa-wq11",
+    "licence": "No licence stated; NOAA NCEI asks to be cited"
+  },
+  "noaaLsa": {
+    "name": "NOAA Laboratory for Satellite Altimetry",
+    "kind": "dataset",
+    "cite": "NOAA/NESDIS/STAR Laboratory for Satellite Altimetry, Sea Level Rise: global mean sea level and the map of sea-level trends from TOPEX/Poseidon, Jason-1, Jason-2, Jason-3 and Sentinel-6MF since late 1992 (files of March 2025, through February 2025); annual signal removed, inverted barometer applied, no glacial isostatic adjustment. Altimetry data are provided by NOAA Laboratory for Satellite Altimetry",
+    "url": "https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/",
+    "licence": "Public domain (US government work); NOAA asks for the acknowledgement “Altimetry data are provided by NOAA Laboratory for Satellite Altimetry”"
+  },
   "nsidcSeaIce": {
     "name": "NSIDC Sea Ice Index",
     "kind": "dataset",
@@ -891,6 +1093,13 @@
     "cite": "Osman, M. B., Tierney, J. E., Zhu, J., Tardif, R., Hakim, G. J., King, J., Poulsen, C. J. (2021), Globally resolved surface temperatures since the Last Glacial Maximum, Nature 599, 239–244; data: Last Glacial Maximum Reanalysis (LGMR), NOAA NCEI Paleoclimatology, study 33112, https://www.ncei.noaa.gov/access/paleo-search/study/33112, accessed 12 November 2026",
     "url": "https://doi.org/10.1038/s41586-021-03984-4",
     "licence": "None stated; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
+  },
+  "ottoBliesner2021": {
+    "name": "PMIP4 lig127k, Otto-Bliesner et al. 2021",
+    "kind": "paper",
+    "cite": "Otto-Bliesner, B. L., Brady, E. C., Zhao, A., Brierley, C. M., Axford, Y., Capron, E., et al. (2021), Large-scale features of Last Interglacial climate: results from evaluating the lig127k simulations for the Coupled Model Intercomparison Project (CMIP6)–Paleoclimate Modeling Intercomparison Project (PMIP4), Climate of the Past 17, 63–94",
+    "url": "https://doi.org/10.5194/cp-17-63-2021",
+    "licence": "CC BY 4.0"
   },
   "p3k14c": {
     "name": "p3k14c",
@@ -962,6 +1171,13 @@
     "url": "https://doi.org/10.5194/cp-17-1065-2021",
     "licence": "CC BY 4.0 (CMIP6 data licence register)"
   },
+  "pmipAtlas": {
+    "name": "PMIP for AR6 Interactive Atlas",
+    "kind": "model",
+    "cite": "Brierley, C. & Zhao, A. (2022), pmip4/PMIP_for_AR6_Interactive_Atlas v1.0, Zenodo: each CMIP6-PMIP4 model’s change in near-surface air temperature from its pre-industrial control, lig127k (16 models) and midPliocene-eoi400 (5 models), on a common 1° grid; method in Zhao, A., Brierley, C. M., et al. (2022), Analysing the PMIP4-CMIP6 collection: a workflow and tool (pmip_p2fvar_analyzer v1), Geoscientific Model Development 15, 2475–2488. The model output itself is CMIP6’s, CC BY 4.0",
+    "url": "https://doi.org/10.5281/zenodo.5931114",
+    "licence": "MIT (repository licence; Zenodo lists “other (open)”)"
+  },
   "postberg2023": {
     "name": "Postberg et al. 2023",
     "kind": "paper",
@@ -987,6 +1203,19 @@
     "cite": "Moat, B. I., Smeed, D. A., Rayner, D., Johns, W. E., Smith, R. H., Volkov, D. L., Elipot, S., Petit, T., Kajtar, J. B., Baringer, M. O., Collins, J. (2026), Atlantic meridional overturning circulation observed by the RAPID-MOCHA-WBTS array at 26N from 2004 to 2024 (v2024.1a), British Oceanographic Data Centre. The overturning measured continuously since April 2004 by moored instruments from the Bahamas to Africa, with Florida Strait cable transports and ERA5 Ekman transport. Data from the RAPID AMOC monitoring project are funded by the Natural Environment Research Council, the National Science Foundation and NOAA, and are freely available from rapid.ac.uk",
     "url": "https://doi.org/10.5285/48d0bf43-0598-ceb2-e063-7086abc062f1",
     "licence": "Open Government Licence v3.0"
+  },
+  "rcmip": {
+    "name": "RCMIP protocol",
+    "kind": "dataset",
+    "cite": "Nicholls, Z., Lewis, J. (2021), Reduced Complexity Model Intercomparison Project (RCMIP) protocol, v4.0.0, Zenodo; with Nicholls, Z. R. J., Meinshausen, M., Lewis, J., et al. (2020), Reduced Complexity Model Intercomparison Project Phase 1: introduction and evaluation of global-mean temperature response, Geoscientific Model Development 13, 5175–5190; annual global emissions, concentrations and effective radiative forcing, historical and for each SSP. Abstract: the inputs RCMIP gave simple climate models so that their runs can be compared, gathered from CMIP6’s emissions and concentrations",
+    "url": "https://doi.org/10.5281/zenodo.4589727",
+    "licence": "CC BY 4.0"
+  },
+  "riahi2017": {
+    "name": "Riahi et al. 2017",
+    "kind": "paper",
+    "cite": "Riahi, K., van Vuuren, D. P., Kriegler, E., Edmonds, J., et al. (2017), The Shared Socioeconomic Pathways and their energy, land use, and greenhouse gas emissions implications: An overview, Global Environmental Change 42, 153–168. Abstract: the five SSP narratives of how society might develop, and the energy, land-use and emissions scenarios that integrated assessment models built from them",
+    "url": "https://doi.org/10.1016/j.gloenvcha.2016.05.009"
   },
   "richardson2023": {
     "name": "Richardson et al. 2023",
@@ -1054,6 +1283,13 @@
     "url": "https://rhodesmill.org/skyfield/",
     "licence": "MIT"
   },
+  "speibase": {
+    "name": "SPEIbase",
+    "kind": "dataset",
+    "cite": "Beguería, S., Vicente-Serrano, S. M., Reig-Gracia, F., Latorre Garcés, B. (2024), SPEIbase v.2.10, Digital.CSIC (12-month SPEI from CRU TS 4.08, 1901–2023); the index: Vicente-Serrano, S. M., Beguería, S., López-Moreno, J. I. (2010), A Multiscalar Drought Index Sensitive to Global Warming: The Standardized Precipitation Evapotranspiration Index, Journal of Climate 23, 1696–1718",
+    "url": "https://doi.org/10.20350/digitalCSIC/16497",
+    "licence": "ODbL 1.0"
+  },
   "spratt": {
     "name": "Spratt & Lisiecki 2016",
     "kind": "paper",
@@ -1065,6 +1301,13 @@
     "kind": "paper",
     "cite": "Steinberger & Torsvik (2008), Absolute plate motions and true polar wander in the absence of hotspot tracks, Nature 452, 620–623",
     "url": "https://doi.org/10.1038/nature06824"
+  },
+  "steinhilber2012": {
+    "name": "Steinhilber et al. 2012",
+    "kind": "dataset",
+    "cite": "Steinhilber, F., Abreu, J. A., Beer, J., Brunner, I., Christl, M., Fischer, H., Heikkilä, U., Kubik, P. W., Mann, M., McCracken, K. G., Miller, H., Miyahara, H., Oerter, H. & Wilhelms, F. (2012), 9,400 years of cosmic radiation and solar activity from ice cores and tree rings, Proceedings of the National Academy of Sciences 109, 5967–5971; data: NOAA NCEI Paleoclimatology, study 12894, doi:10.25921/ytyh-f437, https://www.ncei.noaa.gov/access/paleo-search/study/12894, accessed 12 November 2026",
+    "url": "https://doi.org/10.1073/pnas.1118965109",
+    "licence": "None stated; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
   },
   "stix2003": {
     "name": "Stix 2003",
