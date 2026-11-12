@@ -8,7 +8,7 @@
 import type { Globe } from '../../globe/scene';
 import type { PartContext } from '../part';
 import { PRESENT_YEAR } from '../../time/present';
-import { type StateChange } from '../../globe/scene';
+import { empiresLayer, type StateChange } from './empireLayer';
 import { type BorderSource, type ViewState } from '../../state/viewState';
 import { cliopatriaYear } from '../../state/layerCatalog';
 import { changesText } from '../../ui/historyTrack';
@@ -36,7 +36,7 @@ import { errorMessage } from '../../util/errors';
 
 /** What the borders ask of the rest of the page. */
 export interface EmpiresContext extends PartContext {
-  readonly globe: Pick<Globe, 'setEmpires'>;
+  readonly globe: Pick<Globe, 'addLayer'>;
   /** What changed was noted: the years' track says it. */
   noted(): void;
   /** New borders were drawn: "Why here?" may say more. */
@@ -60,7 +60,8 @@ export interface EmpiresPart {
 }
 
 export function mountEmpires(context: EmpiresContext): EmpiresPart {
-  const { base, fetchJson, globe } = context;
+  const { base, fetchJson } = context;
+  const statesOnGlobe = context.globe.addLayer(empiresLayer);
   // What the track last said of the states (nothing until they change), and what was drawn
   // then, to tell what changed.
   let statesSaid = '';
@@ -165,7 +166,7 @@ export function mountEmpires(context: EmpiresContext): EmpiresPart {
     if (key === empiresShown) return;
     empiresShown = key;
     if (!on) {
-      globe.setEmpires(null);
+      statesOnGlobe.update(null);
       return;
     }
     ohmIndex ??= loadOhmIndex(`${base}data/ohm/index.json`, fetchJson);
@@ -196,7 +197,7 @@ export function mountEmpires(context: EmpiresContext): EmpiresPart {
           ...drawn.map((territory) => ({ ...labelPoint(territory), name: territory.name })),
           ...(lines?.labels ?? []),
         ]);
-        globe.setEmpires({ territories: drawn, ohm: lines, changes });
+        statesOnGlobe.update({ territories: drawn, ohm: lines, changes });
       },
       (error: unknown) => {
         empiresShown = null;
