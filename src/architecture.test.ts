@@ -56,6 +56,25 @@ function folderGraph(): Map<string, Set<string>> {
   return graph;
 }
 
+/** The feature a path is in (`features/<name>/…`), or null outside the feature folders. */
+function featureOf(path: string): string | null {
+  const [top, name, rest] = path.replace(/^\.\//, '').split('/');
+  return top === 'features' && rest !== undefined ? (name ?? null) : null;
+}
+
+/** What a source imports, each resolved to a path under `src` without its extension. */
+function importsOf(path: string, text: string): string[] {
+  return [...text.matchAll(IMPORT)].map((match) => resolve(path, match[1] ?? match[2] ?? ''));
+}
+
+/** The folders that hold the page's pieces: a piece one feature alone uses belongs in it. */
+const PIECES = ['ui', 'globe', 'story', 'sky', 'tablets'];
+
+/** Pieces one feature alone uses that stay outside it, and why (#487). Never add one lightly. */
+const SHARED_ON_PURPOSE: Readonly<Record<string, string>> = {
+  './story/seeded': "the story's own tests use it too",
+};
+
 function reaches(graph: Map<string, Set<string>>, from: string, to: string): boolean {
   const seen = new Set<string>();
   const queue = [from];
@@ -159,6 +178,49 @@ describe('the shape of src', () => {
         .map((target) => `${path} -> ${target}`);
     });
     expect(across, 'pass what one feature needs of another through its context').toEqual([]);
+  });
+
+  it("outside a feature, only its index is imported: the rest is the feature's own (#487)", () => {
+    const reaching = Object.entries(sources).flatMap(([path, text]) =>
+      importsOf(path, text)
+        .filter((target) => {
+          const [top, name, inner] = target.replace(/^\.\//, '').split('/');
+          return (
+            top === 'features' &&
+            inner !== undefined &&
+            inner !== 'index' &&
+            featureOf(path) !== (name ?? null)
+          );
+        })
+        .map((target) => `${path} -> ${target}`),
+    );
+    expect(reaching, "export it from the feature's index.ts, and import that").toEqual([]);
+  });
+
+  it('a piece of the page that one feature alone uses lives in that feature (#487)', () => {
+    const users = new Map<string, Set<string | null>>();
+    for (const [path, text] of Object.entries(sources)) {
+      for (const target of importsOf(path, text)) {
+        const owners = users.get(target) ?? new Set<string | null>();
+        owners.add(featureOf(path));
+        users.set(target, owners);
+      }
+    }
+    const single = [...users]
+      .filter(([target, owners]) => {
+        const [only] = owners;
+        return (
+          PIECES.includes(folderOf(target)) &&
+          owners.size === 1 &&
+          only !== null &&
+          only !== undefined
+        );
+      })
+      .map(([target]) => target)
+      .sort();
+    expect(single, 'move it into the feature that uses it, with its CSS and tests').toEqual(
+      Object.keys(SHARED_ON_PURPOSE).sort(),
+    );
   });
 
   it("startApp's shared variables only come down", () => {
