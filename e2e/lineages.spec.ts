@@ -6,6 +6,8 @@
  * and listed, with a way to its fossils on the globe.
  */
 
+import type { Page } from '@playwright/test';
+
 import { collectProblems, expect, globeRendered, openLayers, test } from './support';
 
 const GENERA = /^[1-9]\d{3,}$/;
@@ -131,6 +133,68 @@ test('a fossil’s card leads to its genus through time', async ({ page }) => {
     if (/lineages=[a-z]+:\d+/.test(page.url())) {
       await expect(page.getByTestId('lineages-focus').getByRole('heading')).toHaveText(genus);
     }
+  });
+  expect(problems).toEqual([]);
+});
+
+/** Move the pointer over `points` in turn until the tooltip shows; where it did, or null. */
+async function pointUntilTip(
+  page: Page,
+  points: readonly (readonly [number, number])[],
+): Promise<readonly [number, number] | null> {
+  const tip = page.locator('.lineages-tip');
+  for (const [x, y] of points) {
+    await page.mouse.move(x, y);
+    if (await tip.isVisible()) return [x, y];
+  }
+  return null;
+}
+
+test('pointing at a line on the fan or a dot on the map names its genus; a click picks it', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const focus = page.getByTestId('lineages-focus');
+  const tip = page.locator('.lineages-tip');
+  await test.step('Given the dinosaurs through time, Tyrannosaurus picked', async () => {
+    await page.goto('./?lineages=dinosaurs:38613');
+    await globeRendered(page);
+    await expect(focus.getByRole('heading')).toHaveText('Tyrannosaurus', DRAWN);
+  });
+  let named = '';
+  let onFan: readonly [number, number] | null = null;
+  await test.step('When they point round the fan, Then a genus is named', async () => {
+    const box = await page.getByTestId('lineages-canvas').boundingBox();
+    if (box === null) throw new Error('The fan is not laid out');
+    const points: (readonly [number, number])[] = [];
+    for (let r = 0.1; r < 0.45; r += 0.02) {
+      for (let a = 0; a < 2 * Math.PI; a += 0.05) {
+        points.push([
+          box.x + box.width / 2 + r * box.width * Math.cos(a),
+          box.y + box.height / 2 + r * box.height * Math.sin(a),
+        ]);
+      }
+    }
+    onFan = await pointUntilTip(page, points);
+    expect(onFan).not.toBeNull();
+    named = (await tip.locator('strong').textContent()) ?? '';
+  });
+  await test.step('When they click there, Then that genus is picked', async () => {
+    const [x, y] = onFan ?? [0, 0];
+    await page.mouse.click(x, y);
+    await expect(focus.getByRole('heading')).toHaveText(named);
+  });
+  await test.step('When they point across the map, Then a genus is named there too', async () => {
+    const box = await page.getByTestId('lineages-map').boundingBox();
+    if (box === null) throw new Error('The map is not laid out');
+    const points: (readonly [number, number])[] = [];
+    for (let y = 0.1; y < 0.9; y += 0.03) {
+      for (let x = 0.02; x < 0.98; x += 0.015) {
+        points.push([box.x + x * box.width, box.y + y * box.height]);
+      }
+    }
+    expect(await pointUntilTip(page, points)).not.toBeNull();
   });
   expect(problems).toEqual([]);
 });

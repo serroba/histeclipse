@@ -322,7 +322,8 @@
       "pmipAtlas",
       "haywood2020",
       "ar6Fig713",
-      "dowsett2016"
+      "dowsett2016",
+      "jra3q"
     ]
   },
   "sealevel": {
@@ -336,6 +337,7 @@
       "ar6SeaLevel",
       "noaaLsa",
       "frederikse2020",
+      "kopp2016",
       "garner2021"
     ]
   },
@@ -425,6 +427,7 @@
       "matthes2017",
       "steinhilber2012",
       "evolv2k",
+      "holvol",
       "rapidMoc",
       "caesar2018",
       "rahmstorf2015",
@@ -446,6 +449,10 @@
       "igcc2025",
       "iap2024",
       "nceiOceanHeat",
+      "imbie",
+      "glambie",
+      "hugonnet2021",
+      "rutgersSnow",
       "ceresEbaf"
     ]
   }

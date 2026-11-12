@@ -28,8 +28,9 @@ thermal expansion, land water), is read by :func:`fetch_budget`. Its Zenodo supp
 them where it is pointed, for checking against the open series. (NASA PO.DAAC re-issues the
 same numbers as JPL_RECON_GMSL, but only behind an Earthdata login.)
 
-Kopp et al. (2016)'s 2,000-year curve is left out for now: NOAA archives only its proxy
-database, and the curve itself is in the PNAS supplement, which cannot be downloaded by script.
+Kopp et al. (2016)'s curve of the last 3,000 years is in ``sealevel_common_era``: NOAA archives
+only its proxy database, and the PNAS supplement cannot be downloaded by script, so it is read
+from the authors' own code repository.
 
 NOAA updates its files as new passes arrive; their checksums are pinned, so an update stops
 the fetch until it is looked at and re-pinned.

@@ -2,7 +2,15 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import { EARTH_AGE_MA } from './scale';
-import { anchorMa, MILESTONES, milestonesNear, nextMilestone, STANDING_MA } from './milestones';
+import {
+  anchorMa,
+  BASES,
+  MILESTONE_KINDS,
+  MILESTONES,
+  milestonesNear,
+  nextMilestone,
+  STANDING_MA,
+} from './milestones';
 
 describe('MILESTONES', () => {
   it('runs oldest first, each with sound estimates', () => {
@@ -16,6 +24,25 @@ describe('MILESTONES', () => {
         expect(min).toBeGreaterThanOrEqual(0);
         expect(max).toBeLessThanOrEqual(EARTH_AGE_MA);
         expect(url).toMatch(/^https:\/\//);
+      }
+    }
+  });
+
+  it('Given the milestones read from their file, Then each has the shape its type says', () => {
+    const words = (value: unknown) => typeof value === 'string' && value.trim() !== '';
+    for (const milestone of MILESTONES) {
+      const { id, title, description, kind, note, estimates, ...rest } = milestone;
+      expect(rest, id).toEqual({});
+      expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
+      expect(words(title) && words(description), id).toBe(true);
+      expect(MILESTONE_KINDS, id).toContain(kind);
+      expect(note === undefined || words(note), id).toBe(true);
+      for (const estimate of estimates) {
+        const { label, min, max, basis, source, url, ...more } = estimate;
+        expect(more, id).toEqual({});
+        expect(words(label) && words(source) && words(url), id).toBe(true);
+        expect(Number.isFinite(min) && Number.isFinite(max), id).toBe(true);
+        expect(BASES, id).toContain(basis);
       }
     }
   });

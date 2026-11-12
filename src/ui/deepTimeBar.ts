@@ -9,18 +9,10 @@ import { polaritySpans } from '../deepTime/earthState';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { type Period, periodShort } from '../deepTime/periods';
 import { formatMa } from '../time/format';
-import { gasText, type Atmosphere } from '../data/atmosphere';
+import type { Atmosphere } from '../data/atmosphere';
 import { IMPACTS_MODES, type ImpactsMode } from '../data/impacts';
-import {
-  co2Text,
-  NITROGEN_NOTE,
-  O2_TODAY,
-  o2Text,
-  PREINDUSTRIAL_CO2,
-  type DeepAir,
-} from '../data/deepAir';
-import { archiveDots, archiveText, studiesNear, type Co2Archive } from '../data/co2Archive';
-import { createBandChart } from './bandChart';
+import type { DeepAir } from '../data/deepAir';
+import type { Co2Archive } from '../data/co2Archive';
 import type { PolarityScale } from '../data/polarity';
 import type { IceStandIn } from '../data/iceSheets';
 import { SEA_ICE_MODELS, type SeaIceModel } from '../data/seaIce';
@@ -49,11 +41,12 @@ import { iceOutlineText } from './iceOutlineText';
 import { createTemperatureLegend, type TemperatureView } from './temperatureLegend';
 import { createDeepChips, type DeepChip, type DeepChipView } from './deepChips';
 import { bookIcon, uiIcon } from './icons';
-import { createGasChart } from './gasChart';
 import { createMilestonePanel } from './milestonePanel';
 import { createPeriodBands } from './periodBands';
 import { createPolarityStrip } from './polarityStrip';
 import { createSeaLevelChart } from './seaLevelChart';
+import { attachFoldingSheet } from './foldingSheet';
+import { createDeepAirNote } from './deepAirNote';
 import './deepTimeBar.css';
 
 /** Each step button moves by one elevation map, or on the ice-age scale by 5,000 years. */
@@ -410,12 +403,15 @@ export function createDeepTimeBar(
     uiIcon('air'),
     element('span', { class: 'icon-label' }, 'Air'),
   );
-  const airNote = element('div', {
-    class: 'deep-note air-note',
-    hidden: '',
-    'data-testid': 'air-note',
+  const air = createDeepAirNote({
+    why: airWhy,
+    onCo2Archive: () => {
+      handlers.onCo2Archive();
+    },
+    redraw: () => {
+      if (current !== null) bar.render(current);
+    },
   });
-  const gasCharts = { co2: createGasChart(), ch4: createGasChart() };
   // The features' chips (#380): each a button and a note, made once.
   const featureChips = createDeepChips(
     chips,
@@ -553,7 +549,7 @@ export function createDeepTimeBar(
     platesNote,
     ...featureChips.notes,
     impactsNote,
-    airNote,
+    air.root,
     milestones.root,
     // One open at a time (they share a name), so the bar doesn't grow over the globe.
     element('div', { class: 'deep-folds' }, colourKey, sketchSources, factsPanel),
@@ -586,375 +582,13 @@ export function createDeepTimeBar(
     ),
     details,
   );
-  // Open or folded as the reader last left it; at first, folded on a phone, open elsewhere.
-  const SHEET_KEY = 'histeclipse.deepSheet';
-  function remembered(): string | null {
-    try {
-      return localStorage.getItem(SHEET_KEY);
-    } catch {
-      return null;
-    }
-  }
-  let open =
-    (remembered() ?? (window.matchMedia('(max-width: 600px)').matches ? 'folded' : 'open')) ===
-    'open';
-  function setOpen(value: boolean, keep = true): void {
-    if (keep) {
-      try {
-        localStorage.setItem(SHEET_KEY, value ? 'open' : 'folded');
-      } catch {
-        // Not kept, as in a private window: the sheet still works.
-      }
-    }
-    open = value;
-    root.dataset['sheet'] = value ? 'open' : 'folded';
-    handle.setAttribute('aria-expanded', String(value));
-    handle.setAttribute('aria-label', value ? 'Hide the details' : 'Show the details');
-  }
-  setOpen(open, false);
-  handle.addEventListener('click', () => {
-    landSettle();
-    setOpen(!open);
+  attachFoldingSheet({
+    root,
+    handle,
+    details,
+    storageKey: 'histeclipse.deepSheet',
+    ignore: 'input, select, .deep-controls',
   });
-  // The details follow a finger dragged up or down the bar, and settle open or folded when it
-  // lifts: by a flick's direction, else by whether they are more than half open. Not on the
-  // slider or a picker, whose own drags are left alone; and a drag down inside the details
-  // scrolls them until they are at their top. A mouse can drag the handle the same way.
-  /** Pixels a finger moves before a drag counts, so taps stay taps. */
-  const DRAG_SLOP = 8;
-  /** A release faster than this, in pixels a millisecond, settles the way it was going. */
-  const FLICK = 0.5;
-  const SETTLE_MS = 200;
-  /** A gesture shorter than this is a flick, judged by its whole length and time. */
-  const FLICK_MS = 250;
-  /** Held still this long before lifting, the finger has no speed left. */
-  const STILL_MS = 100;
-  interface Drag {
-    readonly x: number;
-    readonly y: number;
-    readonly t: number;
-    readonly scrolled: number;
-    /** Set once the move is a drag: the details' height then, and opened in full. */
-    from: number | null;
-    full: number;
-    last: { readonly y: number; readonly t: number };
-    speed: number;
-  }
-  let drag: Drag | null = null;
-  // A settle under way, finished at once if a new drag starts before it lands: else the new
-  // drag would start from the state before it, and the old settle land after the new one.
-  let settling: { readonly timer: number; readonly opening: boolean } | null = null;
-  function landSettle(): void {
-    if (settling === null) return;
-    window.clearTimeout(settling.timer);
-    details.style.transition = '';
-    details.style.height = '';
-    setOpen(settling.opening);
-    settling = null;
-  }
-  function begin(x: number, y: number, t: number): void {
-    drag = {
-      x,
-      y,
-      t,
-      scrolled: details.scrollTop,
-      from: null,
-      full: 0,
-      last: { y, t },
-      speed: 0,
-    };
-  }
-  function follow(x: number, y: number, t: number): boolean {
-    const now = drag;
-    if (now === null) return false;
-    const dy = y - now.y;
-    if (now.from === null) {
-      if (Math.abs(dy) < DRAG_SLOP || Math.abs(dy) < Math.abs(x - now.x)) return false;
-      // Down inside details scrolled away from their top is a scroll, not a fold.
-      if (dy > 0 && now.scrolled > 0) {
-        drag = null;
-        return false;
-      }
-      landSettle();
-      // Measure once: how tall the details are now, and opened in full (up to their limit).
-      now.from = open ? details.getBoundingClientRect().height : 0;
-      root.dataset['sheet'] = 'dragging';
-      details.style.height = 'auto';
-      const limit = Number.parseFloat(getComputedStyle(details).maxHeight);
-      now.full = Math.min(details.scrollHeight, Number.isFinite(limit) ? limit : Infinity);
-    }
-    const height = Math.min(now.full, Math.max(0, now.from - dy));
-    details.style.height = `${String(height)}px`;
-    const elapsed = t - now.last.t;
-    if (elapsed > 0) now.speed = (y - now.last.y) / elapsed;
-    now.last = { y, t };
-    return true;
-  }
-  function release(t: number): void {
-    const now = drag;
-    drag = null;
-    // A tap, not a drag: the handle's click, or nothing.
-    if (now === null) return;
-    if (now.from === null) return;
-    const height = details.getBoundingClientRect().height;
-    const speed =
-      t - now.t < FLICK_MS
-        ? (now.last.y - now.y) / Math.max(1, now.last.t - now.t)
-        : t - now.last.t > STILL_MS
-          ? 0
-          : now.speed;
-    const opening = speed < -FLICK ? true : speed > FLICK ? false : height > now.full / 2;
-    details.style.transition = `height ${String(SETTLE_MS)}ms ease-out`;
-    details.style.height = `${String(opening ? now.full : 0)}px`;
-    settling = { timer: window.setTimeout(landSettle, SETTLE_MS), opening };
-  }
-  root.addEventListener(
-    'touchstart',
-    (event) => {
-      const touch = event.touches[0];
-      const target = event.target instanceof Element ? event.target : null;
-      if (
-        event.touches.length === 1 &&
-        touch !== undefined &&
-        (target?.closest('input, select, .deep-controls') ?? null) === null
-      ) {
-        begin(touch.clientX, touch.clientY, event.timeStamp);
-      } else drag = null;
-    },
-    { passive: true },
-  );
-  root.addEventListener(
-    'touchmove',
-    (event) => {
-      const touch = event.touches[0];
-      if (touch === undefined) return;
-      // Once it is a drag, the sheet moves and the page and the details stay put.
-      if (follow(touch.clientX, touch.clientY, event.timeStamp) && event.cancelable) {
-        event.preventDefault();
-      }
-    },
-    { passive: false },
-  );
-  for (const type of ['touchend', 'touchcancel'] as const) {
-    root.addEventListener(
-      type,
-      (event) => {
-        release(event.timeStamp);
-      },
-      { passive: true },
-    );
-  }
-  // A mouse drags by the handle; a click on it still toggles.
-  let dragged = false;
-  handle.addEventListener('pointerdown', (event) => {
-    if (event.pointerType !== 'mouse') return;
-    dragged = false;
-    handle.setPointerCapture(event.pointerId);
-    begin(event.clientX, event.clientY, event.timeStamp);
-  });
-  handle.addEventListener('pointermove', (event) => {
-    if (event.pointerType === 'mouse' && follow(event.clientX, event.clientY, event.timeStamp)) {
-      dragged = true;
-    }
-  });
-  handle.addEventListener('pointerup', (event) => {
-    if (event.pointerType === 'mouse') release(event.timeStamp);
-  });
-  handle.addEventListener(
-    'click',
-    (event) => {
-      // The click that ends a mouse drag is not a tap.
-      if (dragged) event.stopImmediatePropagation();
-      dragged = false;
-    },
-    { capture: true },
-  );
-
-  const deepCharts = {
-    co2: createBandChart({ low: 100, high: 6000, log: true, testId: 'deep-co2-chart' }),
-    o2: createBandChart({ low: 0, high: 45, log: false, testId: 'deep-o2-chart' }),
-  };
-
-  // Whose CO2 estimates the dots show (Foster et al.'s compilation, or the archive's, by method):
-  // the reader's choice, kept while the bar is open.
-  const co2Source = element(
-    'select',
-    { class: 'deep-coast', 'aria-label': 'CO₂ estimates from' },
-    element('option', { value: 'foster' }, 'Foster et al. 2017 compilation'),
-    element('option', { value: 'archive' }, 'Paleo-CO₂ Data Archive (2025)'),
-  );
-  const co2Method = element('select', { class: 'deep-coast', 'aria-label': 'CO₂ method' });
-  const co2Methods = element('label', { hidden: '' }, ' Method ', co2Method);
-  const co2Picker = element(
-    'p',
-    { class: 'co2-picker' },
-    element('label', {}, 'Dots: estimates from ', co2Source),
-    co2Methods,
-  );
-  /** The archive's estimates near the moment, with their studies, when the reader picks it. */
-  const archiveNote = element('p', { 'data-testid': 'co2-archive', hidden: '' });
-  let methodsListed: Co2Archive | null = null;
-  const pickedMethod = () => (co2Method.value === '' ? null : Number(co2Method.value));
-  for (const picker of [co2Source, co2Method]) {
-    picker.addEventListener('change', () => {
-      if (co2Source.value === 'archive') handlers.onCo2Archive();
-      if (current !== null) bar.render(current);
-    });
-  }
-
-  /** The Paleo-CO2 Data Archive's dots and words, once it has loaded. */
-  function archiveDotsAndWords(archive: Co2Archive | null, ma: number) {
-    co2Methods.hidden = archive === null;
-    archiveNote.hidden = false;
-    if (archive === null) {
-      archiveNote.replaceChildren('Loading the Paleo-CO₂ Data Archive…');
-      return { dots: [], key: 'archive-loading' };
-    }
-    if (methodsListed !== archive) {
-      methodsListed = archive;
-      co2Method.replaceChildren(
-        element('option', { value: '' }, 'All methods'),
-        ...archive.methods.map((name, at) => element('option', { value: String(at) }, name)),
-      );
-    }
-    const method = pickedMethod();
-    const studies = studiesNear(archive, ma, 5, method).slice(0, 6);
-    archiveNote.replaceChildren(
-      `${archiveText(archive, ma, 5, method)} `,
-      ...(studies.length === 0
-        ? []
-        : [
-            'Studies: ',
-            ...studies.flatMap(({ label, doi, count }, at) => [
-              ...(at === 0 ? [] : [' · ']),
-              doi === null
-                ? `${label} (${String(count)})`
-                : element('a', { href: `https://doi.org/${doi}` }, `${label} (${String(count)})`),
-            ]),
-            '. ',
-          ]),
-      element('a', { href: archive.source }, 'Paleo-CO₂ Data Archive'),
-      ' (CC BY 4.0).',
-    );
-    return { dots: archiveDots(archive, method), key: `archive ${co2Method.value}` };
-  }
-
-  /** On the 540 Myr scale: CO2 and O2 with their ranges, and nitrogen in words. */
-  function renderDeepAir(
-    deep: DeepAir | null,
-    archive: Co2Archive | null,
-    oldest: number,
-    ma: number,
-  ): void {
-    if (deep === null) {
-      airNote.replaceChildren(airWhy, ' ', element('p', {}, 'Air: loading…'));
-      return;
-    }
-    const fromArchive = co2Source.value === 'archive';
-    if (!fromArchive) {
-      co2Methods.hidden = true;
-      archiveNote.hidden = true;
-    }
-    const picked = fromArchive
-      ? archiveDotsAndWords(archive, ma)
-      : {
-          dots: deep.co2.proxies.flatMap(({ estimates }) =>
-            estimates.map(([at, value]) => [at, value] as const),
-          ),
-          key: 'foster',
-        };
-    deepCharts.co2.render(
-      {
-        bands: [
-          deep.co2.fit.map(([at, , low95, , , high95]) => [at, low95, high95] as const),
-          deep.co2.fit.map(([at, , , low68, high68]) => [at, low68, high68] as const),
-        ],
-        line: deep.co2.fit.map(([at, best]) => [at, best] as const),
-        dots: picked.dots,
-        key: picked.key,
-        reference: PREINDUSTRIAL_CO2,
-      },
-      oldest,
-      ma,
-    );
-    deepCharts.o2.render(
-      {
-        bands: [deep.o2.points.map(([at, , low, high]) => [at, low, high] as const)],
-        line: deep.o2.points.map(([at, best]) => [at, best] as const),
-        dots: [],
-        reference: O2_TODAY,
-      },
-      oldest,
-      ma,
-    );
-    airNote.replaceChildren(
-      airWhy,
-      ' ',
-      element(
-        'p',
-        { 'data-testid': 'deep-co2' },
-        `${co2Text(deep, ma)} `,
-        element('a', { href: `https://doi.org/${deep.co2.doi}` }, 'Foster, Royer & Lunt 2017'),
-      ),
-      co2Picker,
-      archiveNote,
-      deepCharts.co2.root,
-      element(
-        'p',
-        { 'data-testid': 'deep-o2' },
-        `${o2Text(deep, ma)} `,
-        element('a', { href: `https://doi.org/${deep.o2.doi}` }, 'Mills et al. 2023'),
-      ),
-      deepCharts.o2.root,
-      element(
-        'p',
-        { 'data-testid': 'deep-n2' },
-        `${NITROGEN_NOTE.text} `,
-        ...NITROGEN_NOTE.sources.flatMap(({ label, doi }, index) => [
-          ...(index === 0 ? [] : [' · ']),
-          element('a', { href: `https://doi.org/${doi}` }, label),
-        ]),
-      ),
-      element(
-        'p',
-        {},
-        'Shaded: the likely and possible range (CO₂, on a log scale, 100–6,000 ppm), or the range of the methods combined (O₂, 0–45%); dots: single CO₂ estimates; dashed: the 1750 level of CO₂, and today’s O₂.',
-      ),
-    );
-  }
-
-  function renderAir(air: DeepTimeView['air'], scale: DeepScale, oldest: number, ma: number): void {
-    airNote.hidden = !air.on;
-    if (!air.on) return;
-    if (scale !== 'ice') {
-      renderDeepAir(air.deep, air.archive, oldest, ma);
-      return;
-    }
-    const oldestKa = oldest * 1000;
-    const ka = ma * 1000;
-    if (air.atmosphere === null) {
-      airNote.replaceChildren(airWhy, ' ', element('p', {}, 'Air: loading…'));
-      return;
-    }
-    airNote.replaceChildren(
-      airWhy,
-      ' ',
-      ...air.atmosphere.gases.flatMap((gas) => {
-        const chart = gasCharts[gas.id];
-        chart.render(gas, oldestKa, ka);
-        return [
-          element(
-            'p',
-            { 'data-testid': `gas-${gas.id}` },
-            `${gasText(gas, ka)} `,
-            element('a', { href: `https://doi.org/${gas.doi}` }, gas.credit),
-          ),
-          chart.root,
-        ];
-      }),
-      element('p', {}, 'Dashed: the 1750 level. From air trapped in Antarctic ice.'),
-    );
-  }
 
   let current: DeepTimeView | null = null;
   // The span the ticks were placed for.
@@ -1116,7 +750,7 @@ export function createDeepTimeBar(
       // The ice cores on the ice-age scale; the proxies' 540 million years on that one.
       airButton.hidden = view.scale === 'eons';
       airButton.setAttribute('aria-pressed', String(view.air.on));
-      renderAir(view.air, view.scale, view.oldest, view.ma);
+      air.render(view.air, view.scale, view.oldest, view.ma);
       platesNote.hidden = !view.plates;
       platesWords.textContent = view.platesText ?? 'Loading the continent outlines…';
       seaLevel.render(
