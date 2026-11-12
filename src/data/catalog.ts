@@ -14,9 +14,9 @@ import {
   type JulianDay,
 } from '../time/julianDay';
 import { formatYear, type AstronomicalYear } from '../time/year';
-import { CatalogError, getJson, type Fetch } from './fetchJson';
+import { CatalogError, getJson, type Fetch } from '../util/fetchJson';
 
-export { CatalogError, type Fetch } from './fetchJson';
+export { CatalogError, type Fetch } from '../util/fetchJson';
 
 export const finite = v.pipe(v.number(), v.finite());
 export const integer = v.pipe(v.number(), v.integer());

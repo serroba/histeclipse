@@ -11,7 +11,7 @@
  */
 
 import { framesAhead, framesAround } from '../../data/paleoDem';
-import type { Fetch } from '../../data/fetchJson';
+import type { Fetch } from '../../util/fetchJson';
 import { loadPaleoTempIndex, type PaleoTempIndex } from '../../data/paleoTemp';
 import type { Globe } from '../../globe/scene';
 import type { ViewState } from '../../state/viewState';

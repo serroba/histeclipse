@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import bce600 from '../../public/data/ohm/-600.json';
 import index from '../../public/data/ohm/index.json';
-import type { Fetch } from './fetchJson';
+import type { Fetch } from '../util/fetchJson';
 import { loadOhmCentury, loadOhmIndex, ohmIn } from './ohmBorders';
 
 const serve =

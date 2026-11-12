@@ -9,7 +9,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 /** A GCAT date: "1977", "1979-05", "1977-08-22" or "1977-08-22T08:24", "?" if unsure. */
 const When = v.pipe(v.string(), v.regex(/^\d{4}(-\d{2}(-\d{2}(T\d{2}:\d{2})?)?)?\??$/));

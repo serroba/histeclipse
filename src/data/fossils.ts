@@ -7,7 +7,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 import { pictureFor, type Pictures } from './pictures';
 
 const integer = v.pipe(v.number(), v.integer());

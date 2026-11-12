@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import served from '../../public/data/sun-images.json' with { type: 'json' };
-import type { Fetch } from './fetchJson';
+import type { Fetch } from '../util/fetchJson';
 import { frameSpan, loadSunImages, SUN_LAYERS } from './sunImages';
 
 const serve =

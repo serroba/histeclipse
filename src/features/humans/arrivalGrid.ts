@@ -6,7 +6,7 @@
  */
 
 import type { ArrivalGrid } from '../../data/dispersal';
-import type { Fetch } from '../../data/fetchJson';
+import type { Fetch } from '../../util/fetchJson';
 
 /** Read a scenario's image into its arrival times. */
 export async function loadArrivalGrid(url: string, fetchImage: Fetch): Promise<ArrivalGrid> {

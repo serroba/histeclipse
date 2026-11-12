@@ -6,7 +6,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const metres = v.array(v.pipe(v.number(), v.minValue(-500), v.maxValue(500)));
 

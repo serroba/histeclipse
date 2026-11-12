@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import index from '../../public/data/sealevel/index.json';
-import type { Fetch } from './fetchJson';
+import type { Fetch } from '../util/fetchJson';
 import { loadSeaLevel, seaLevelAt, type SeaLevelSeries } from './seaLevel';
 
 const serve =

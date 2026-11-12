@@ -12,7 +12,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from '../../data/fetchJson';
+import { getJson, type Fetch } from '../../util/fetchJson';
 import { MEAN_ORBIT_ENTRIES, moonPosition } from '../../astro/moonOrbits';
 
 const AsteroidSchema = v.strictObject({

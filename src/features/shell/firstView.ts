@@ -4,7 +4,7 @@
  * globe turns there only if the reader has not moved it meanwhile.
  */
 
-import type { Fetch } from '../../data/fetchJson';
+import type { Fetch } from '../../util/fetchJson';
 import { browserTimeZone, leavesViewOpen, loadTimeZones, placeOfZone } from '../../data/timezones';
 import type { Store } from '../../state/store';
 import type { GeoPoint, ViewState } from '../../state/viewState';

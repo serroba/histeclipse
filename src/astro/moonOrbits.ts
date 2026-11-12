@@ -12,7 +12,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from '../data/fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 export const MOONS = {
   mars: ['phobos', 'deimos'],

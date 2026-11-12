@@ -9,7 +9,7 @@ import * as v from 'valibot';
 
 import { astronomicalYear, toHistoricalYear } from '../time/year';
 import { elementAt } from '../util/arrays';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const index = v.pipe(v.number(), v.integer(), v.minValue(0));
 

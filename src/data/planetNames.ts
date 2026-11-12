@@ -6,7 +6,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const NameSchema = v.pipe(
   v.tuple([

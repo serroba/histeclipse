@@ -13,7 +13,7 @@
 import * as v from 'valibot';
 
 import { elementAt, valueAt } from '../util/arrays';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 export const LINEAGE_GROUPS = ['trilobites', 'ammonoids', 'dinosaurs', 'mammals'] as const;
 export type LineageGroup = (typeof LINEAGE_GROUPS)[number];

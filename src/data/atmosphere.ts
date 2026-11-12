@@ -8,7 +8,7 @@
 import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const GasSchema = v.strictObject({
   id: v.picklist(['co2', 'ch4']),

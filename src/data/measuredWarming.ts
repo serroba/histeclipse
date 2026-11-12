@@ -7,7 +7,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const WarmingSchema = v.strictObject({
   schemaVersion: v.literal(1),

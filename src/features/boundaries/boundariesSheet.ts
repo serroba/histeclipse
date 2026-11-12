@@ -14,7 +14,7 @@
  * `story/boundaryWheel.ts` and `story/holoceneChart.ts`.
  */
 
-import type { Fetch } from '../../data/fetchJson';
+import type { Fetch } from '../../util/fetchJson';
 import { loadHoloceneTemperature, type HoloceneTemperature } from '../../data/holoceneTemperature';
 import {
   loadPlanetaryBoundaries,

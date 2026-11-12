@@ -7,7 +7,7 @@
 import * as v from 'valibot';
 
 import { valueAt } from '../util/arrays';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const DipoleSchema = v.pipe(
   v.strictObject({
