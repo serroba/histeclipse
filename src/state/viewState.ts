@@ -19,14 +19,8 @@ import { DISPLAY_DEFAULTS, type DisplayState } from './slices/display';
 import { HISTORY_DEFAULTS, type HistoryState } from './slices/history';
 import { SHEETS_DEFAULTS, type SheetsState } from './slices/sheets';
 
-export {
-  FIGURES,
-  PLANET_LIGHTS,
-  type DisplayState,
-  type Figures,
-  type PlanetLight,
-} from './slices/display';
-export { BORDER_SOURCES, type BorderSource, type HistoryState } from './slices/history';
+export { FIGURES, PLANET_LIGHTS, type Figures, type PlanetLight } from './slices/display';
+export { BORDER_SOURCES, type BorderSource } from './slices/history';
 export {
   BOUNDARY_CHAPTERS,
   CRATERS_SHAPES,
@@ -34,7 +28,6 @@ export {
   type CratersShape,
   type CratersView,
   type LineagesView,
-  type SheetsState,
   type TreeView,
 } from './slices/sheets';
 
