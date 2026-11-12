@@ -64,6 +64,7 @@ from histeclipse_pipeline.passage_vectors import (
     write_test_vectors,
 )
 from histeclipse_pipeline.periodo import fetch_periods
+from histeclipse_pipeline.permafrost import fetch_permafrost
 from histeclipse_pipeline.phanda import fetch_phanda
 from histeclipse_pipeline.pictures import fetch_pictures
 from histeclipse_pipeline.planet_keys import fetch_planet_keys
@@ -685,6 +686,12 @@ def snow_cover(args: Arguments) -> int:  # pragma: no cover - needs network acce
     return _say(f"wrote {count} years of snow cover to {args.out}")
 
 
+def permafrost(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write GTN-P borehole temperatures and the ESA CCI northern permafrost extent."""
+    count = fetch_permafrost(args.out)
+    return _say(f"wrote {count} permafrost borehole-years and extent-years to {args.out}")
+
+
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
 #: with a margin each side for the months that straddle the ends.
 BABYLON_YEARS = (-749, 101)
@@ -1073,6 +1080,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "snow-cover": (
         snow_cover,
         "write Northern Hemisphere snow-cover extent by month since 1966 (Rutgers)",
+        "output directory",
+    ),
+    "permafrost": (
+        permafrost,
+        "write permafrost borehole temperatures (GTN-P) and northern extent (ESA CCI)",
         "output directory",
     ),
     "calendars": (
