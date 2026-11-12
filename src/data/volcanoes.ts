@@ -9,7 +9,7 @@ import * as v from 'valibot';
 
 import { astronomicalYear, formatYear } from '../time/year';
 import type { GeoPoint } from '../core/geo';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const integer = v.pipe(v.number(), v.integer());
 

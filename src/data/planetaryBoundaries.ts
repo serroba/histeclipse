@@ -11,7 +11,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 /** Where a reach eases to, beyond the high-risk line. */
 export const MAX_REACH = 3.2;

@@ -7,7 +7,7 @@
 import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const index = v.pipe(v.number(), v.integer(), v.minValue(0));
 const ppm = v.pipe(v.number(), v.minValue(0));

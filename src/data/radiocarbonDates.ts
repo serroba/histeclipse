@@ -11,7 +11,7 @@ import * as v from 'valibot';
 
 import type { GeoPoint } from '../core/geo';
 import { valueAt } from '../util/arrays';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const Integer = v.pipe(v.number(), v.integer());
 

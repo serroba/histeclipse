@@ -11,7 +11,7 @@
 import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 export const SUN_LAYERS = ['visible', 'magnetogram', '304', '171', '193', '131'] as const;
 export type SunLayer = (typeof SUN_LAYERS)[number];

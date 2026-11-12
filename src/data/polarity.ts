@@ -8,7 +8,7 @@
 import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const PolaritySchema = v.strictObject({
   schemaVersion: v.literal(1),

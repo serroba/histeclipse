@@ -4,7 +4,7 @@ import served from '../../public/data/hip-stars.json';
 import skyServed from '../../public/data/sky.json';
 import babylonian from '../../public/skycultures/babylonian_mulapin/index.json';
 import chinese from '../../public/skycultures/chinese/index.json';
-import type { Fetch } from './fetchJson';
+import type { Fetch } from '../util/fetchJson';
 import { loadSky } from './sky';
 import {
   CULTURE_INFO,

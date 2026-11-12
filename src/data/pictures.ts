@@ -6,7 +6,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const wikimedia = v.pipe(v.string(), v.url(), v.startsWith('https://'));
 

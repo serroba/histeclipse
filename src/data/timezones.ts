@@ -9,7 +9,7 @@
 import * as v from 'valibot';
 
 import type { GeoPoint } from '../core/geo';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const TimeZonesSchema = v.strictObject({
   schemaVersion: v.literal(1),

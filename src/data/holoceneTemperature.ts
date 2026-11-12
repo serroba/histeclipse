@@ -12,7 +12,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const Point = v.tuple([v.number(), v.number(), v.nullable(v.number()), v.nullable(v.number())]);
 

@@ -9,7 +9,7 @@ import { defaultCalendarFor } from '../time/moment';
 import type { Selection } from '../eclipses/kind';
 import { calendarDateOf, julianDay, type CalendarDate } from '../time/julianDay';
 import { astronomicalYear } from '../time/year';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const DATE = /^(-?\d{1,5})-(\d{2})-(\d{2})$/;
 

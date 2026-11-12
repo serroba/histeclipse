@@ -23,7 +23,7 @@ import type { LayerChoice } from '../state/layerCatalog';
 import { BODIES, LAST_GLACIAL_MAXIMUM_MA, type Body, type Span } from '../state/viewState';
 import type { MoonFacts } from './moonFacts';
 import type { Why, WhyId } from '../sources/registry';
-import { getJson, type Fetch } from '../data/fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const PASSAGE_KINDS = ['why', 'moon', 'eclipse', 'landing'] as const;
 export type PassageKind = (typeof PASSAGE_KINDS)[number];

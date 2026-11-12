@@ -9,7 +9,7 @@
 import * as v from 'valibot';
 
 import { valueAt } from '../util/arrays';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const REGIONS = ['iceland', 'located', 'north', 'south', 'tropics'] as const;
 type EruptionRegion = (typeof REGIONS)[number];

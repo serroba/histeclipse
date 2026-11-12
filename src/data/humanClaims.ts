@@ -7,7 +7,7 @@
 import * as v from 'valibot';
 
 import type { GeoPoint } from '../core/geo';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 import { pictureFor, type Pictures } from './pictures';
 
 const ka = v.pipe(v.number(), v.minValue(0));

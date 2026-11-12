@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import index from '../../public/data/plates/index.json';
-import type { Fetch } from './fetchJson';
+import type { Fetch } from '../util/fetchJson';
 import { framesAround } from './paleoDem';
 import { loadPlateMasks, platesBeyondText, plateText } from './plateMasks';
 

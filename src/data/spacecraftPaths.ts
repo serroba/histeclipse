@@ -9,7 +9,7 @@
 import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 /** Days since JD 2400000 (TT), and km on each axis. */
 const PointSchema = v.tuple([v.number(), v.number(), v.number(), v.number()]);

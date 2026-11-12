@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import served from '../../public/data/sky.json';
-import type { Fetch } from './fetchJson';
+import type { Fetch } from '../util/fetchJson';
 import { loadSky, type Sky } from './sky';
 
 const serve =

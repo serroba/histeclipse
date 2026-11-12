@@ -95,29 +95,22 @@ function reaches(graph: Map<string, Set<string>>, from: string, to: string): boo
  * reaches this one. Remove an entry when its imports go; never add one.
  */
 const KNOWN_CYCLE_EDGES: readonly string[] = [
-  // Within the domain: the data files lean on the calendars, eclipses and deep time, which lean
-  // back on the data's loaders and tables.
-  'astro -> data',
-  'astro -> time',
+  // Within the domain (#490): the data files lean on eclipses and deep time, which lean back on
+  // the data's loaders and tables. (astro and time left the tangle when fetchJson moved to util.)
   'data -> deepTime',
   'data -> eclipses',
-  'data -> time',
   'deepTime -> data',
   'eclipses -> data',
-  'eclipses -> time',
-  'time -> data',
   // Source ids, keys of the sources registry, used by the data (#380 moves them down).
   'data -> sources',
   'deepTime -> sources',
   'sources -> data',
   // The view state builds its unions from the domain's types; the registry names its layers.
   'sources -> state',
-  'state -> astro',
   'state -> data',
   'state -> deepTime',
   'state -> eclipses',
   'state -> sources',
-  'state -> time',
 ];
 
 /** Methods on the `Globe` interface in `globe/scene.ts`: new things drawn are layers (#379). */

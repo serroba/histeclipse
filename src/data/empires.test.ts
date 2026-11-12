@@ -4,7 +4,7 @@ import bce500 from '../../public/data/empires/-500.json';
 import bce600 from '../../public/data/empires/-600.json';
 import bce800 from '../../public/data/empires/-800.json';
 import index from '../../public/data/empires/index.json';
-import type { Fetch } from './fetchJson';
+import type { Fetch } from '../util/fetchJson';
 import {
   centuryFor,
   labelPoint,

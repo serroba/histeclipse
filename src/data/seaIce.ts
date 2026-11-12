@@ -9,7 +9,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 export const SEA_ICE_MODELS = ['mpi-esm1-2-lr', 'miroc-es2l', 'awi-esm-1-1-lr'] as const;
 export type SeaIceModel = (typeof SEA_ICE_MODELS)[number];

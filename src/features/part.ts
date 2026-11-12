@@ -5,7 +5,7 @@
  * Layers have their own contract, `Feature` (#380).
  */
 
-import type { Fetch } from '../data/fetchJson';
+import type { Fetch } from '../util/fetchJson';
 import type { Place } from '../data/lineages';
 import type { WhyId } from '../sources/registry';
 import type { Watch } from '../state/redraws';

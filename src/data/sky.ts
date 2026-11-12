@@ -5,7 +5,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from './fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 
 const finite = v.pipe(v.number(), v.finite());
 const column = <const Item extends v.GenericSchema>(item: Item) => v.array(item);

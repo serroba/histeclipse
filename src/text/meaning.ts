@@ -10,7 +10,7 @@
 
 import * as v from 'valibot';
 
-import { getJson, type Fetch } from '../data/fetchJson';
+import { getJson, type Fetch } from '../util/fetchJson';
 import type { Passage } from './passages';
 import type { Hit } from './wordSearch';
 
