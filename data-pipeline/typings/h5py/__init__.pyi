@@ -12,7 +12,11 @@ class AsStrWrapper:
 
 class Dataset:
     def __getitem__(
-        self, key: tuple[()] | int | slice[int, int, None]
+        self,
+        key: tuple[()]
+        | int
+        | slice[int, int, None]
+        | tuple[int | slice[int | None, int | None, None], ...],
     ) -> npt.NDArray[np.float32]: ...
     def asstr(self) -> AsStrWrapper: ...
 
@@ -24,7 +28,11 @@ class File:
         self,
         name: str,
         *,
-        data: npt.NDArray[np.float32] | npt.NDArray[np.float64] | npt.NDArray[np.bytes_],
+        data: npt.NDArray[np.float32]
+        | npt.NDArray[np.float64]
+        | npt.NDArray[np.int16]
+        | npt.NDArray[np.int32]
+        | npt.NDArray[np.bytes_],
     ) -> Dataset: ...
     def __enter__(self) -> Self: ...
     def __exit__(
