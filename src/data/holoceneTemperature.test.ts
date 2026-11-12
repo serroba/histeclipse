@@ -3,15 +3,19 @@ import { describe, expect, it } from 'vitest';
 import json from '../../public/data/holocene-temperature.json';
 import {
   bandPath,
+  chartDateText,
   completePoints,
   corridorOf,
+  DRAW_MS,
   glacialLow,
   latestYear,
   linePath,
   loadHoloceneTemperature,
   PANELS,
+  reachedAt,
   seriesOf,
   xOf,
+  yearOf,
   yOf,
   type HoloceneTemperature,
   type TemperatureSeries,
@@ -85,6 +89,36 @@ describe('the chart’s scales', () => {
     expect(xOf(2030)).toBeCloseTo(1, 9);
     expect(xOf(3000)).toBe(1);
     expect(xOf(1900)).toBeGreaterThan(xOf(1800));
+  });
+
+  it('draw the ice ages slowest, so the globe beside can follow them', () => {
+    expect(DRAW_MS).toBe(22_000);
+    expect(reachedAt(-5)).toBe(0);
+    expect(reachedAt(0)).toBe(0);
+    expect(reachedAt(6000)).toBeCloseTo(0.16);
+    expect(reachedAt(12_000)).toBeCloseTo(0.32);
+    expect(reachedAt(19_000)).toBeCloseTo(0.72);
+    expect(reachedAt(DRAW_MS)).toBe(1);
+    expect(reachedAt(DRAW_MS + 1)).toBe(1);
+  });
+
+  it('read back the year at a point across them', () => {
+    for (const year of [-800_000, -400_000, -20_000, -8050, 1, 1750, 1850, 2025, 2030]) {
+      expect(yearOf(xOf(year))).toBeCloseTo(year, 6);
+    }
+    expect(yearOf(-0.1)).toBe(-800_000);
+    expect(yearOf(1.5)).toBe(2030);
+  });
+
+  it('name the cursor’s year: thousands of years ago, then BCE, CE and the year', () => {
+    expect(chartDateText(-798_050)).toBe('800,000 years ago');
+    expect(chartDateText(-18_050)).toBe('20,000 years ago');
+    expect(chartDateText(-9700)).toBe('12,000 years ago');
+    expect(chartDateText(-3012)).toBe('3,000 BCE');
+    expect(chartDateText(0)).toBe('1 BCE');
+    expect(chartDateText(20)).toBe('1 CE');
+    expect(chartDateText(1234)).toBe('1200 CE');
+    expect(chartDateText(1903.6)).toBe('1904');
   });
 
   it('put warm at the top and clamp what falls outside', () => {

@@ -6,6 +6,7 @@ import { defaultViewState, withLayer, type ViewState } from '../../state/viewSta
 import {
   createTemperatureLayer,
   framesToFetch,
+  towardsNow,
   type TemperatureLayerContext,
 } from './temperatureLayer';
 import {
@@ -58,7 +59,7 @@ const INDEXES: Readonly<Record<TemperatureModel, PaleoTempIndex>> = {
 };
 
 /** A layer over fake maps: what the globe was asked, and what failed to load. */
-function setUp(failing: readonly string[] = []) {
+function setUp(failing: readonly string[] = [], clock?: () => number) {
   const surfaces: (TemperatureSurface | null)[] = [];
   const prefetched: string[][] = [];
   const notices: string[] = [];
@@ -78,6 +79,7 @@ function setUp(failing: readonly string[] = []) {
     },
     notify: (message) => notices.push(message),
     arrived,
+    ...(clock === undefined ? {} : { clock }),
   };
   return { layer: createTemperatureLayer(context), surfaces, prefetched, notices, arrived };
 }
@@ -88,8 +90,8 @@ const deep = { ma: 0.021, ice: false, uncharted: false };
 const ice = { ...deep, ice: true };
 
 /** Ask once so every model's maps start loading, and let them arrive. */
-async function loaded(failing: readonly string[] = []) {
-  const set = setUp(failing);
+async function loaded(failing: readonly string[] = [], clock?: () => number) {
+  const set = setUp(failing, clock);
   set.layer.view(on, deep);
   await vi.waitFor(() => {
     expect(set.arrived).toHaveBeenCalledTimes(3 - failing.length);
@@ -155,6 +157,28 @@ describe('the temperature layer', () => {
     expect(framesToFetch(INDEXES.krapp, 0.01)).toBe(20);
     expect(framesToFetch(INDEXES.scotese, 0.01)).toBe(4);
     expect(framesToFetch({ ...INDEXES.cesm, frames: [] }, 1)).toBe(4);
+  });
+
+  it('fetches ahead too while the moment is carried towards the present, as by a story', async () => {
+    let now = 1000;
+    const { layer, prefetched } = await loaded([], () => now);
+    layer.show(on, { ...ice, ma: 0.4 }, null);
+    expect(prefetched).toEqual([]);
+    now += 100;
+    layer.show(on, { ...ice, ma: 0.39 }, null);
+    // 0.1 Myr a second: the maps ahead, the nearer first.
+    expect(prefetched.at(-1)).toEqual(['/data/krapp/2.png', '/data/krapp/0.png']);
+  });
+
+  it('tells how fast the moment moves towards the present, if it does', () => {
+    const at = (ma: number, ms: number) => ({ ma, at: ms });
+    expect(towardsNow(null, at(0.4, 0))).toBeNull();
+    expect(towardsNow(at(0.4, 0), at(0.39, 100))).toBeCloseTo(0.1);
+    // Standing, going back, at the same instant, or after a pause: not moving.
+    expect(towardsNow(at(0.4, 0), at(0.4, 100))).toBeNull();
+    expect(towardsNow(at(0.4, 0), at(0.41, 100))).toBeNull();
+    expect(towardsNow(at(0.4, 100), at(0.39, 100))).toBeNull();
+    expect(towardsNow(at(0.4, 0), at(0.39, 600))).toBeNull();
   });
 
   it('gives the note of the map nearer the moment', async () => {

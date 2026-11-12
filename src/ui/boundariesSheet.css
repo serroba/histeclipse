@@ -130,3 +130,14 @@
   cursor: pointer;
   pointer-events: auto;
 }
+
+/* While the Holocene chapter has the globe beside the sheet (#475): deep time's bar keeps to the
+ * space left of the sheet, its details folded, so the globe has the rest. */
+.is-beside-story .bottom {
+  right: var(--story-right, 0);
+}
+
+.is-beside-story .deep-time .deep-handle,
+.is-beside-story .deep-time .deep-details {
+  display: none;
+}

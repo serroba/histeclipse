@@ -450,8 +450,8 @@ export interface Globe {
    * Moon's position if it has not loaded yet; 'free' returns to the last orbiting camera.
    */
   setViewpoint(viewpoint: Viewpoint): void;
-  /** Pixels covered by panels at the top and bottom; the globe is centred between them. */
-  setInsets(top: number, bottom: number): void;
+  /** Pixels panels cover at the top, the bottom and the right; the globe centres in the rest. */
+  setInsets(insets: Partial<Readonly<{ top: number; bottom: number; right: number }>>): void;
   /** Turn the globe smoothly so `target` faces the camera, keeping the distance. */
   flyTo(target: GeoPoint): void;
   setCamera(camera: GlobeCamera): void;
@@ -1806,7 +1806,7 @@ export function createGlobe(
     if (viewpoint === 'free') placeCamera(focusCamera);
   }
 
-  let insets = { top: 0, bottom: 0 };
+  let insets = { top: 0, bottom: 0, right: 0 };
   // Field of view on the narrower side; attached viewpoints narrow it to frame a body.
   let narrowFov = NARROW_SIDE_FOV_DEGREES;
   let viewpoint: Viewpoint = 'free';
@@ -1898,8 +1898,8 @@ export function createGlobe(
   function resize(): void {
     const { clientWidth, clientHeight } = container;
     // Shift the projection so the globe sits centred in the space the panels leave free.
-    const shift = (insets.bottom - insets.top) / 2;
-    camera.setViewOffset(clientWidth, clientHeight, 0, shift, clientWidth, clientHeight);
+    const [x, y] = [insets.right / 2, (insets.bottom - insets.top) / 2];
+    camera.setViewOffset(clientWidth, clientHeight, x, y, clientWidth, clientHeight);
     renderer.setSize(clientWidth, clientHeight, false);
     camera.aspect = clientWidth / Math.max(clientHeight, 1);
     // Fix the field of view on the narrower side, so a camera distance frames the globe the
@@ -2383,10 +2383,10 @@ export function createGlobe(
       }
       needsRender = true;
     },
-    setInsets(top, bottom) {
-      if (top === insets.top && bottom === insets.bottom) return;
-      insets = { top, bottom };
-      resize();
+    setInsets(next) {
+      const was = JSON.stringify(insets);
+      insets = { ...insets, ...next };
+      if (JSON.stringify(insets) !== was) resize();
     },
     setSolarPath(path) {
       const uniforms = earth.material.uniforms;

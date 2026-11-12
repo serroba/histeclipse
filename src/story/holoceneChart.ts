@@ -5,19 +5,24 @@
  *
  * The site's own drawing of the records the Planetary Health Check 2026's Figure 1 cites. The
  * Antarctic core is drawn faint and named as Antarctic: it swings about twice as far as the
- * globe. SVG drawn at the stage's own size, so its words stay legible on a phone. DOM glue,
+ * globe. SVG drawn at the stage's own size, so its words stay legible on a phone. As it draws, a
+ * cursor names the year the line has reached and `onYear` hears it: the globe follows (#475). DOM glue,
  * covered by the Playwright suite; the scales and numbers are in `data/holoceneTemperature.ts`.
  */
 
 import {
   bandPath,
+  chartDateText,
   completePoints,
   CORRIDOR_FROM,
   corridorOf,
+  DRAW_MS,
   latestYear,
   linePath,
   PANELS,
+  reachedAt,
   xOf,
+  yearOf,
   yOf,
   type HoloceneTemperature,
   type SeriesId,
@@ -25,8 +30,6 @@ import {
 import type { StoryScene } from './storyScene';
 import './holoceneChart.css';
 
-/** How long the line takes to cross the chart, ms. */
-const DRAW_MS = 9000;
 /** The Holocene's start, 11,700 years before 2000. */
 const HOLOCENE_STARTS = -9700;
 const MARGIN = { top: 26, right: 14, bottom: 34, left: 40 } as const;
@@ -62,13 +65,14 @@ function svg<K extends keyof SVGElementTagNameMap>(
   return node;
 }
 
-const ease = (x: number) => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
 const within = (t: number, from: number, to: number) =>
   Math.min(1, Math.max(0, (t - from) / (to - from)));
 
 export function createHoloceneChart(
   container: HTMLElement,
   data: HoloceneTemperature,
+  /** The year the line has reached, as it changes. */
+  onYear: (year: number) => void = () => undefined,
 ): StoryScene<'holocene'> {
   const corridor = corridorOf(data);
   const latest = latestYear(data);
@@ -84,7 +88,15 @@ export function createHoloceneChart(
   let playing = true;
   let last: number | null = null;
   let frame = 0;
-  let parts: { clip: SVGRectElement; corridor: SVGGElement; now: SVGGElement } | null = null;
+  let parts: {
+    clip: SVGRectElement;
+    corridor: SVGGElement;
+    now: SVGGElement;
+    cursor: SVGGElement;
+    cursorLine: SVGLineElement;
+    cursorText: SVGTextElement;
+  } | null = null;
+  let reportedYear: number | null = null;
   let size = { width: 0, height: 0 };
 
   /** Lay the chart out at the stage's size. */
@@ -197,9 +209,13 @@ export function createHoloceneChart(
         `${String(latest.year)}: +${latest.celsius.toFixed(1)} °C`,
       ),
     );
+    const cursorLine = svg('line', { y1: 0, y2: h });
+    const cursorText = svg('text', { y: h - 8 });
+    const cursor = svg('g', { class: 'cursor', 'data-testid': 'holocene-cursor' });
+    cursor.append(cursorLine, cursorText);
     const defs = svg('defs', {});
     defs.append(clipPath);
-    plot.append(defs, lines, now);
+    plot.append(defs, lines, cursor, now);
 
     // The key, low on the right: after the ice ages no line comes down that far.
     const legend = svg('g', {
@@ -222,7 +238,7 @@ export function createHoloceneChart(
     });
     plot.append(legend);
     root.replaceChildren(plot);
-    parts = { clip, corridor: corridorBand, now };
+    parts = { clip, corridor: corridorBand, now, cursor, cursorLine, cursorText };
     show();
     container.dataset['rendered'] = 'true';
   }
@@ -231,12 +247,26 @@ export function createHoloceneChart(
   function show(): void {
     if (parts === null) return;
     const w = size.width - MARGIN.left - MARGIN.right;
-    const reached = ease(progress);
+    const reached = reachedAt(progress * DRAW_MS);
     parts.clip.setAttribute('width', String(reached * w + 2));
     // The corridor shows once the line has come into the Holocene; today once the line is there.
     parts.corridor.style.opacity = String(within(reached, xOf(HOLOCENE_STARTS), xOf(-3000)));
     parts.now.style.opacity = String(within(reached, 0.995, 1));
     container.dataset['complete'] = String(progress >= 1);
+    // The cursor, where the line has reached, until it reaches today.
+    const year = Math.min(yearOf(reached), latest.year);
+    const at = String(reached * w);
+    parts.cursorLine.setAttribute('x1', at);
+    parts.cursorLine.setAttribute('x2', at);
+    parts.cursorText.setAttribute('x', String(reached * w + (reached > 0.5 ? -6 : 6)));
+    parts.cursorText.setAttribute('text-anchor', reached > 0.5 ? 'end' : 'start');
+    parts.cursorText.textContent = chartDateText(year);
+    parts.cursor.style.opacity = progress >= 1 ? '0' : '1';
+    container.dataset['year'] = String(Math.round(year));
+    if (year !== reportedYear) {
+      reportedYear = year;
+      onYear(year);
+    }
   }
 
   function tick(time: number): void {
@@ -301,6 +331,7 @@ export function createHoloceneChart(
       delete dataset['complete'];
       delete dataset['playing'];
       delete dataset['chapter'];
+      delete dataset['year'];
     },
   };
 }

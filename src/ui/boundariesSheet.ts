@@ -5,7 +5,8 @@
  * at the same chapter.
  *
  * It opens on the Holocene (#453): a chart of temperature over 800,000 years, the stable band
- * the boundaries are set to keep the planet in. The other chapters are the wheel's.
+ * the boundaries are set to keep the planet in. The other chapters are the wheel's. As the
+ * chart draws, `onYear` hears the year its line has reached, and null on leaving it (#475).
  *
  * The scenes' code and the data load the first time the sheet opens; the wheel's WebGL only
  * when one of its chapters is first shown. DOM glue, covered by the Playwright suite; the
@@ -147,6 +148,8 @@ export function createBoundariesSheet(
   earthTextureUrl: string,
   /** The book that says where the numbers come from. */
   why: HTMLElement,
+  /** The year the Holocene chart's line has reached; null when it is no longer shown. */
+  onYear: (year: number | null) => void = () => undefined,
 ): BoundariesSheet {
   const close = element(
     'button',
@@ -290,10 +293,11 @@ export function createBoundariesSheet(
     let scene: Pick<StoryScene<string>, 'restart' | 'settle'>;
     if (chapter === 'holocene') {
       wheel?.setPlaying(false);
-      chart ??= makeChart(chartStage, temperature);
+      chart ??= makeChart(chartStage, temperature, onYear);
       scene = chart;
     } else {
       chart?.setPlaying(false);
+      onYear(null);
       // Made once a wheel chapter is first shown, its stage then laid out.
       wheel ??= makeWheel(stage, { data: boundaries, earthTextureUrl });
       wheel.setChapter(chapter);
@@ -339,6 +343,7 @@ export function createBoundariesSheet(
       chart?.dispose();
       wheel = null;
       chart = null;
+      onYear(null);
       return;
     }
     for (const { chapter: each, tab } of tabs)
