@@ -40,6 +40,14 @@ export function choice<const T extends string>(
   };
 }
 
+/** A field that is one of a fixed list, or null (closed, none) and left out of links. */
+export function choiceOrNull<const T extends string>(
+  key: string,
+  options: readonly T[],
+): Param<T | null> {
+  return { key, parse: (raw) => oneOf(raw, options, key), format: (value) => value };
+}
+
 /** Reads a field's parameter, or keeps the fallback when the link lacks it or it cannot be read. */
 export type Reader = <T>(key: string, parse: (raw: string) => T, fallback: T) => T;
 

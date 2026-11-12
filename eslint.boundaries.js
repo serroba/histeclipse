@@ -61,7 +61,6 @@ export const LINE_LIMITS = {
   'features/shower/sunCore.ts': 713,
   'globe/showerAnimation.ts': 618,
   'features/shower/leafScene.ts': 520,
-  'state/url.ts': 420,
   'time/calendars.ts': 481,
   'ui/whySheet.ts': 435,
 };

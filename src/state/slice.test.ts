@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { choice, oneOf, readSlice, writeSlice, type Params, type Reader } from './slice';
 import { DEEP_DEFAULTS, DEEP_PARAMS, type DeepState } from './slices/deep';
+import { DISPLAY_PARAMS } from './slices/display';
+import { HISTORY_PARAMS } from './slices/history';
+import { SHEETS_DEFAULTS, SHEETS_PARAMS } from './slices/sheets';
 
 interface Toy {
   readonly colour: 'red' | 'blue';
@@ -97,5 +100,36 @@ describe("deep time's slice", () => {
     expect(readSlice(DEEP_PARAMS, DEEP_DEFAULTS, readerOf('ma=9999', warnings)).ma).toBeNull();
     expect(readSlice(DEEP_PARAMS, DEEP_DEFAULTS, readerOf('ma=x', warnings)).ma).toBeNull();
     expect(warnings).toHaveLength(2);
+  });
+});
+
+describe('the slices together', () => {
+  // The parameters url.ts writes itself, around the slices.
+  const CORE = ['v', 'mode', 't', 'cal', 'loc', 'cam', 'view', 'focus', 'layers', 'sel', 'look'];
+
+  it('give every parameter its own key, apart from the core ones', () => {
+    const keys = [DISPLAY_PARAMS, HISTORY_PARAMS, DEEP_PARAMS, SHEETS_PARAMS].flatMap((params) =>
+      Object.values<{ key: string }>(params).map((param) => param.key),
+    );
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(keys.filter((key) => CORE.includes(key))).toEqual([]);
+  });
+
+  it("write a sheet's view so that it reads back", () => {
+    const open = {
+      ...SHEETS_DEFAULTS,
+      why: 'all' as const,
+      tree: { ott: 770315 },
+      craters: { id: 12 },
+      cratersIn: 'box' as const,
+      lineages: { group: 'dinosaurs' as const, pick: 38613 },
+      boundaries: 'safe' as const,
+    };
+    const query = written(SHEETS_PARAMS, open);
+    expect(query).toBe(
+      'why=all&tree=ott770315&craters=12&cratersin=box&lineages=dinosaurs%3A38613&boundaries=safe',
+    );
+    expect(readSlice(SHEETS_PARAMS, SHEETS_DEFAULTS, readerOf(query))).toEqual(open);
+    expect(written(SHEETS_PARAMS, SHEETS_DEFAULTS)).toBe('');
   });
 });
