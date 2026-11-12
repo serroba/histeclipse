@@ -91,13 +91,17 @@ class _Reader:
 
 
 def read_netcdf3(data: bytes) -> dict[str, Grid]:
-    """Read every fixed-size numeric variable of a classic (or 64-bit offset) NetCDF-3 file."""
+    """Read every numeric variable of a classic (or 64-bit offset) NetCDF-3 file.
+
+    Record variables are read only when the file holds a single record.
+    """
     if data[:3] != b"CDF" or data[3] not in {1, 2}:
         msg = "not a classic NetCDF-3 file"
         raise ValueError(msg)
     offset_size = 4 if data[3] == 1 else 8
     reader = _Reader(data)
-    reader.position = 8  # the magic and the record count
+    reader.position = 4
+    records = reader.integer()
     tag, count = reader.integer(), reader.integer()
     if tag not in {0, _DIMENSION}:
         msg = f"expected dimensions, found tag {tag}"
@@ -120,8 +124,13 @@ def read_netcdf3(data: bytes) -> dict[str, Grid]:
         _ = reader.integer()  # vsize
         begin = reader.integer(offset_size)
         if 0 in shape:
-            msg = f"{name} is a record variable, which this reader does not read"
-            raise ValueError(msg)
+            # With a single record, a record variable's one slice lies whole at its offset.
+            if records != 1:
+                msg = (
+                    f"{name} is a record variable, which this reader reads only in one-record files"
+                )
+                raise ValueError(msg)
+            shape = tuple(1 if size == 0 else size for size in shape)
         if dtype == ">S1":
             continue
         length = math.prod(shape)
