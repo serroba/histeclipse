@@ -11,6 +11,7 @@ class AsStrWrapper:
     def __getitem__(self, key: tuple[()]) -> Sequence[str]: ...
 
 class Dataset:
+    attrs: dict[str, object]
     def __getitem__(
         self,
         key: tuple[()]
