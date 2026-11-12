@@ -1,14 +1,14 @@
 /**
  * The bottom bar in deep time: drag through 540 million years (oldest on the left, so time runs
- * left to right), step 5 million years at a time, or play towards the present.
- * Mobile first: 44 px targets, like the year bar it replaces.
+ * left to right), step 5 million years at a time, or play towards the present; 44 px targets.
  */
 
 import { MAP_KEY, MILESTONE_KEY } from '../deepTime/colourKey';
 import { earthFacts } from '../deepTime/earthFacts';
 import { polaritySpans } from '../deepTime/earthState';
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
-import { formatMa, type Period, periodShort } from '../deepTime/periods';
+import { type Period, periodShort } from '../deepTime/periods';
+import { formatMa } from '../time/format';
 import { gasText, type Atmosphere } from '../data/atmosphere';
 import { IMPACTS_MODES, type ImpactsMode } from '../data/impacts';
 import {
