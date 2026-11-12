@@ -70,7 +70,6 @@ export interface BodiesContext extends PartContext {
     | 'setMoonMap'
     | 'showMoonView'
     | 'showPlanetView'
-    | 'setSunImage'
     | 'setSaturnRings'
     | 'setOrbits'
   >;
