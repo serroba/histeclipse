@@ -8,7 +8,7 @@
 import type { PartContext } from '../part';
 import { type ViewState } from '../../state/viewState';
 import { element } from '../../ui/dom';
-import { createSearchPanel } from '../../ui/searchPanel';
+import { createSearchPanel } from './searchPanel';
 import { anchorLabel } from '../../text/anchors';
 import { loadMeaningSearch } from '../../text/meaningLoader';
 import { nearby } from '../../text/nearby';

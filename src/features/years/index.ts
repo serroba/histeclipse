@@ -11,7 +11,7 @@ import type { PartContext } from '../part';
 import { loadRadiocarbon, type Radiocarbon } from '../../data/radiocarbon';
 import { eruptionsBetween, loadEruptions, type Eruptions } from '../../data/eruptions';
 import { RADIOCARBON_EVENTS } from '../../data/radiocarbonEvents';
-import { createRadiocarbonStrip } from '../../ui/radiocarbonStrip';
+import { createRadiocarbonStrip } from './radiocarbonStrip';
 import { type Layer, type ViewState } from '../../state/viewState';
 import { astronomicalYear, formatYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';

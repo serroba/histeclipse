@@ -6,8 +6,8 @@
 
 import { loadLineages, type LineageGroup, type Lineages } from '../../data/lineages';
 import { loadTreeOfLife, type TreeOfLife } from '../../data/treeOfLife';
-import { createLineagesSheet } from '../../ui/lineagesSheet';
-import { createTreeSheet } from '../../ui/treeSheet';
+import { createLineagesSheet } from './lineagesSheet';
+import { createTreeSheet } from './treeSheet';
 import { errorMessage } from '../../util/errors';
 import type { MountedPart, PartContext } from '../part';
 

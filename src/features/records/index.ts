@@ -13,13 +13,13 @@ import { LOWEST_LOOK, roundLook } from '../../sky/look';
 import type { SkyMark } from '../../sky/skyScene';
 import { momentAt } from '../../eclipses/describe';
 import { momentJulianDay, type ViewState } from '../../state/viewState';
-import { candidateYear, checkAll, type Verdict, verdictMoment } from '../../tablets/check';
+import { candidateYear, checkAll, type Verdict, verdictMoment } from './check';
 import { BABYLON, directionOf, starsByNumber, type TabletSky } from '../../tablets/tabletSky';
-import { bodyName, computedText, recordBodies } from '../../tablets/verdictText';
-import { VAT_4956 } from '../../tablets/vat4956';
+import { bodyName, computedText, recordBodies } from './verdictText';
+import { VAT_4956 } from './vat4956';
 import { julianDayNumber, type JulianDay } from '../../time/julianDay';
 import { element } from '../../ui/dom';
-import { createTabletPanel } from '../../ui/tabletPanel';
+import { createTabletPanel } from './tabletPanel';
 import type { PartContext } from '../part';
 import './records.css';
 
