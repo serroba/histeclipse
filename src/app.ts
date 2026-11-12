@@ -35,7 +35,7 @@ import { awayFromEarth, withLayer, type GeoPoint, type ViewState } from './state
 import { DeltaT } from './time/deltaT';
 import { element } from './ui/dom';
 import { FEATURES } from './features';
-import { mountFeatures } from './features/mounted';
+import { deepChipsOf, mountFeatures } from './features/mounted';
 import { RESTING, type FeatureContext } from './features/feature';
 import { anchorQuery } from './text/anchors';
 import { type Anchor } from './text/passages';
@@ -83,6 +83,7 @@ import { createPanels } from './features/shell/panels';
 import { keepCentred } from './features/shell/layout';
 import { openOverRegion } from './features/shell/firstView';
 import { listenForInput } from './features/shell/input';
+import { createNotices } from './features/shell/notices';
 import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment/observer';
 import { createZoomRail } from './ui/zoomRail';
 import { railView } from './ui/railView';
@@ -117,6 +118,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const fetchJson = (url: string): Promise<Response> => fetch(url);
   // Full view: the panels hidden for a clear view, and the ways to bring them back.
   const panels = createPanels(root);
+  // What went wrong, told once each.
+  const notices = createNotices();
+  const { notify } = notices;
 
   const viewSwitch = createViewSwitch((choice) => {
     input.choose(choice);
@@ -312,9 +316,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const deepTime = mountDeepTime({
     ...partContext,
     globe,
-    chips: FEATURES.flatMap((feature) =>
-      feature.deepChip === undefined ? [] : [{ layer: feature.id, ...feature.deepChip }],
-    ),
+    chips: deepChipsOf(FEATURES),
+
     step: () => {
       sync.step();
     },
@@ -407,7 +410,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const welcome = createWelcome(window.location.search === '', () => {
     famous.button.click();
   });
-  const notices = element('ul', { class: 'notices', role: 'status', 'aria-live': 'polite' });
   // The panels hide for a clear view, by this button or a tap on empty space; it brings them back.
   // The site's texts (#391, #392): search, and what is written about here.
   const texts = mountTexts({
@@ -446,8 +448,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     travelChanged: (now) => {
       dates.show(now);
       showImpacts(now);
-      const terrestrial = moment.terrestrial();
-      if (terrestrial !== null) features.show(now, terrestrial);
+      features.show(now, moment.terrestrial());
       rocks.show(now);
       showLayers(now);
       iceAges.showHolocene(now);
@@ -521,6 +522,41 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ),
     deepTime.bar,
   );
+  const hud = element(
+    'header',
+    { class: 'hud' },
+    // The name leads home: today on the globe, as a first visit opens (welcome too, until the
+    // visitor has dismissed it).
+    element(
+      'h1',
+      {},
+      element('a', { class: 'home', href: base, title: 'Back to the start' }, 'histeclipse'),
+    ),
+    element('div', { class: 'hud-tools' }, ...hudTools),
+    element('p', { class: 'hud-when' }, moment.dateText, ' ', moment.timeText),
+    moment.detailText,
+    moment.termNote,
+    welcome.root,
+    hudActions,
+    viewSwitch.root,
+    ...sky.controls,
+    ...bodies.switches,
+    ...sky.captions,
+    records.banner,
+    // Sources and what is written about here share a line, each a full row once open.
+    element(
+      'div',
+      { class: 'hud-more' },
+      element(
+        'details',
+        { class: 'credits' },
+        element('summary', {}, 'Sources'),
+        // What is on screen now, each with the book that says why, and its sources' links.
+        sources.list,
+      ),
+      texts.here,
+    ),
+  );
   root.replaceChildren(
     globeContainer,
     sky.container,
@@ -529,42 +565,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     impactPathsSheet.dialog,
     boundariesSheet.dialog,
     whySheet.dialog,
-    element(
-      'header',
-      { class: 'hud' },
-      // The name leads home: today on the globe, as a first visit opens (welcome too, until the
-      // visitor has dismissed it).
-      element(
-        'h1',
-        {},
-        element('a', { class: 'home', href: base, title: 'Back to the start' }, 'histeclipse'),
-      ),
-      element('div', { class: 'hud-tools' }, ...hudTools),
-      element('p', { class: 'hud-when' }, moment.dateText, ' ', moment.timeText),
-      moment.detailText,
-      moment.termNote,
-      welcome.root,
-      hudActions,
-      viewSwitch.root,
-      ...sky.controls,
-      ...bodies.switches,
-      ...sky.captions,
-      records.banner,
-      // Sources and what is written about here share a line, each a full row once open.
-      element(
-        'div',
-        { class: 'hud-more' },
-        element(
-          'details',
-          { class: 'credits' },
-          element('summary', {}, 'Sources'),
-          // What is on screen now, each with the book that says why, and its sources' links.
-          sources.list,
-        ),
-        texts.here,
-      ),
-    ),
-    notices,
+    hud,
+    notices.list,
     deepTime.glance,
     panels.showControls,
     bottom,
@@ -587,11 +589,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     store.set(() => next.state);
   }
 
-  function notify(message: string): void {
-    // A failure asked again (each time the view is drawn) says so once.
-    if ([...notices.children].some((notice) => notice.textContent === message)) return;
-    notices.append(element('li', {}, message));
-  }
   parsed.warnings.forEach(notify);
 
   // Drawn on the globe as layers of their own (#379).
@@ -927,19 +924,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
   sync.flush();
 
   // Keep the globe centred in the space the panels leave free.
-  const top = root.querySelector('.hud');
-  if (top !== null) {
-    keepCentred({
-      root,
-      top,
-      bottom,
-      zoomRail: zoomRail.root,
-      onInsets: (above, below) => {
-        globe.setInsets(above, below);
-        sky.setInsets(above, below);
-      },
-    });
-  }
+  keepCentred({
+    root,
+    top: hud,
+    bottom,
+    zoomRail: zoomRail.root,
+    onInsets: (above, below) => {
+      globe.setInsets(above, below);
+      sky.setInsets(above, below);
+    },
+  });
 
   // The keyboard, a tap on the globe or around it, a body clicked, the camera moved (#474).
   const input = listenForInput({

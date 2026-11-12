@@ -106,6 +106,12 @@ const GLOBE_METHODS = 43;
  */
 const APP_LETS = 5;
 
+/**
+ * The decisions `startApp` makes itself: its `if`s and ternaries (#474). The parts decide what
+ * is theirs, and pure functions what the input means; this only comes down.
+ */
+const APP_CONDITIONALS = 20;
+
 describe('the shape of src', () => {
   it('no folder imports its way back into itself, beyond the cycles already known', () => {
     const graph = folderGraph();
@@ -143,6 +149,18 @@ describe('the shape of src', () => {
     const app = sources['./app.ts'] ?? '';
     const lets = app.split('\n').filter((line) => /^ {2}let /.test(line)).length;
     expect(lets, `startApp has ${String(lets)} top-level lets; set APP_LETS to it`).toBe(APP_LETS);
+  });
+
+  it("startApp's conditionals only come down", () => {
+    const code = (sources['./app.ts'] ?? '')
+      .split('\n')
+      .filter((line) => !/^\s*(\/\/|\*|\/\*)/.test(line))
+      .join('\n');
+    const conditionals = [...code.matchAll(/\bif \(|[^?]\?\s/g)].length;
+    expect(
+      conditionals,
+      `app.ts has ${String(conditionals)} ifs and ternaries; set APP_CONDITIONALS to it`,
+    ).toBe(APP_CONDITIONALS);
   });
 
   it('the Globe interface does not grow: draw new things with globe.addLayer', () => {

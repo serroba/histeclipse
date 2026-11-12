@@ -6,12 +6,12 @@
 
 import { changed } from '../state/store';
 import type { Layer, ViewState } from '../state/viewState';
-import type { DeepChipView } from '../ui/deepChips';
+import type { DeepChip, DeepChipView } from '../ui/deepChips';
 import type { DeepMoment, Feature, FeatureContext } from './feature';
 
 export interface Features {
-  /** The moment shown: `jdTT` in Terrestrial Time. */
-  show(state: ViewState, jdTT: number): void;
+  /** The moment shown: `jdTT` in Terrestrial Time, or null before it is known. */
+  show(state: ViewState, jdTT: number | null): void;
   /** The moment kept: each feature shown again only if what it watches changed. */
   redraw(state: ViewState, previous: ViewState | null, jdTT: number | null): void;
   /** Deep time shown: the chips of those that have one, by layer. */
@@ -24,10 +24,18 @@ export interface Features {
   said(): (readonly [Layer, string | null])[];
 }
 
+/** The chips in deep time's bar, of the features that have one, in their order. */
+export function deepChipsOf(features: readonly Feature[]): DeepChip[] {
+  return features.flatMap((feature) =>
+    feature.deepChip === undefined ? [] : [{ layer: feature.id, ...feature.deepChip }],
+  );
+}
+
 export function mountFeatures(features: readonly Feature[], context: FeatureContext): Features {
   const mounted = features.map((feature) => ({ feature, shown: feature.mount(context) }));
   return {
     show(state, jdTT) {
+      if (jdTT === null) return;
       for (const { shown } of mounted) shown.show?.(state, jdTT);
     },
     redraw(state, previous, jdTT) {

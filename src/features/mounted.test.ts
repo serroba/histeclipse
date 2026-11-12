@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defaultViewState, type ViewState } from '../state/viewState';
 import type { Feature, FeatureContext, FeatureInstance } from './feature';
-import { mountFeatures } from './mounted';
+import { deepChipsOf, mountFeatures } from './mounted';
 
 const base = defaultViewState(new Date(Date.UTC(2024, 3, 8)));
 
@@ -38,6 +38,8 @@ describe('the features as mounted together', () => {
     expect(asteroids.shown.show).toHaveBeenCalledWith(moved, 2);
     vi.clearAllMocks();
     features.redraw(moved, base, null);
+    features.redraw(moved, null, 2);
+    features.show(base, null);
     expect(asteroids.shown.show).not.toHaveBeenCalled();
   });
 
@@ -62,5 +64,14 @@ describe('the features as mounted together', () => {
       ['fossils', 'fossils said'],
       ['asteroids', 'asteroids said'],
     ]);
+  });
+});
+
+describe("deep time's chips", () => {
+  it('come from the features that have one, in their order', () => {
+    const chip = { label: 'Fossils', icon: 'fossils', why: 'fossils' } as const;
+    const withChip = { ...fake('fossils', () => []).feature, deepChip: chip } as Feature;
+    const without = fake('asteroids', () => []).feature;
+    expect(deepChipsOf([without, withChip])).toEqual([{ layer: 'fossils', ...chip }]);
   });
 });
