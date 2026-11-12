@@ -8,7 +8,7 @@ import { famousDate, loadFamousEclipses, type FamousEclipse } from '../../data/f
 import { eclipseMomentAt, eclipseSelection, findSelected } from '../../eclipses/describe';
 import type { GeoPoint } from '../../state/viewState';
 import type { AstronomicalYear } from '../../time/year';
-import { createFamousPanel } from '../../ui/famousPanel';
+import { createFamousPanel } from './famousPanel';
 import type { Eclipse } from '../../ui/timeline';
 import { errorMessage } from '../../util/errors';
 import type { PartContext } from '../part';

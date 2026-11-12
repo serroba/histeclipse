@@ -11,7 +11,7 @@ import {
   type Impacts,
   type ImpactsMode,
 } from '../../data/impacts';
-import { impactLayer } from '../../globe/impactLayer';
+import { impactLayer } from './impactLayer';
 import type { Globe } from '../../globe/scene';
 import type { ViewState } from '../../state/viewState';
 import type { DeepTimeView } from '../../ui/deepTimeBar';

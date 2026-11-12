@@ -17,7 +17,7 @@ import {
   type JulianDay,
 } from '../../time/julianDay';
 import { astronomicalYear, formatYear } from '../../time/year';
-import { createCycleTrack, type CycleMoment, type CycleSpeed } from '../../ui/cycleTrack';
+import { createCycleTrack, type CycleMoment, type CycleSpeed } from './cycleTrack';
 import type { PartContext } from '../part';
 import { cycleBody } from './body';
 

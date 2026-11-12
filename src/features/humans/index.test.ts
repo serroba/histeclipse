@@ -10,7 +10,7 @@ import type { FeatureContext } from '../feature';
 import { humansFeature } from '.';
 
 // The arrival grids are images read through a canvas: a small grid stands in for them here.
-vi.mock('../../globe/arrivalGrid', () => ({
+vi.mock('./arrivalGrid', () => ({
   loadArrivalGrid: () =>
     Promise.resolve({ columns: 2, rows: 1, arrival: new Uint8Array([100, 50]) }),
 }));

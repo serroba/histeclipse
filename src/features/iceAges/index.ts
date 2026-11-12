@@ -7,7 +7,7 @@
 
 import type { Globe } from '../../globe/scene';
 import type { PartContext } from '../part';
-import { iceOutlineLayer } from '../../globe/iceOutlineLayer';
+import { iceOutlineLayer } from './iceOutlineLayer';
 import {
   ICE_AGES_MA,
   LAST_GLACIAL_MAXIMUM_MA,

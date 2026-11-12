@@ -28,8 +28,8 @@ import {
 import { loadColourKeys } from '../../data/planetKeys';
 import { isNamedBody, loadPlaceNames, type PlaceNames } from '../../data/planetNames';
 import { isMoonBody, MOON_MAPS, MOON_NAMES, MOON_VIEWS, moonPlanet } from '../../globe/moonLook';
-import { moonNameLayer } from '../../globe/moonNameLayer';
-import { placeNameLayer } from '../../globe/placeNameLayer';
+import { moonNameLayer } from './moonNameLayer';
+import { placeNameLayer } from './placeNameLayer';
 import {
   PLANET_NAMES,
   PLANET_VIEWS,
@@ -44,8 +44,8 @@ import { ORBITS, redraws, SUN } from '../../state/redraws';
 import type { ViewState } from '../../state/viewState';
 import { moonAbout, moonLine } from '../../text/moonFacts';
 import type { JulianDay } from '../../time/julianDay';
-import { createBodyBar, type BodyKey } from '../../ui/bodyBar';
-import { createPlanetSwitch } from '../../ui/planetSwitch';
+import { createBodyBar, type BodyKey } from './bodyBar';
+import { createPlanetSwitch } from './planetSwitch';
 import { lookBack } from '../../ui/viewSwitch';
 import type { ZoomRail } from '../../ui/zoomRail';
 import { errorMessage } from '../../util/errors';

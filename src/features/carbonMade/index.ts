@@ -9,13 +9,7 @@ import { DATABLE_YEARS } from '../../data/radiocarbonProduction';
 import type { Globe } from '../../globe/scene';
 import { CARBON_LIMIT } from '../../state/layerCatalog';
 import type { ViewState } from '../../state/viewState';
-import {
-  createCarbonMadeCard,
-  glowOf,
-  THEN_ID,
-  THEN_UNKNOWN,
-  thenField,
-} from '../../ui/carbonMadeCard';
+import { createCarbonMadeCard, glowOf, THEN_ID, THEN_UNKNOWN, thenField } from './carbonMadeCard';
 import { errorMessage } from '../../util/errors';
 import type { PartContext } from '../part';
 

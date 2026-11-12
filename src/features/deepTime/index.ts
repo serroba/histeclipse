@@ -6,7 +6,7 @@
  */
 
 import { deepChoices } from './choices';
-import { magneticNorthLayer } from '../../globe/magneticNorthLayer';
+import { magneticNorthLayer } from './magneticNorthLayer';
 import { loadPolarity, type PolarityScale } from '../../data/polarity';
 import { magneticNorthAt } from '../../deepTime/earthState';
 import {
@@ -19,7 +19,7 @@ import {
 } from '../../state/viewState';
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
-import { createDeepGlance } from '../../ui/deepGlance';
+import { createDeepGlance } from './deepGlance';
 import { createDeepTimeBar } from '../../ui/deepTimeBar';
 import { formatMa, periodAt, periodWords } from '../../deepTime/periods';
 import {

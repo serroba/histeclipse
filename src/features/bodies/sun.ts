@@ -6,7 +6,7 @@
 import { loadSunImages, type SunImages } from '../../data/sunImages';
 import type { Globe } from '../../globe/scene';
 import type { ViewState } from '../../state/viewState';
-import { createSunSwitch } from '../../ui/sunSwitch';
+import { createSunSwitch } from './sunSwitch';
 import { errorMessage } from '../../util/errors';
 import type { PartContext } from '../part';
 

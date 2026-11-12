@@ -15,13 +15,13 @@ const sheets = vi.hoisted(() => ({
   lineages: { show: vi.fn(), onGlobe: null as OnGlobe | null },
 }));
 const loads = vi.hoisted(() => ({ tree: vi.fn(), lineages: vi.fn() }));
-vi.mock('../../ui/treeSheet', () => ({
+vi.mock('./treeSheet', () => ({
   createTreeSheet: (request: (view: unknown) => void) => {
     sheets.tree.request = request;
     return { dialog: 'tree-dialog', show: sheets.tree.show };
   },
 }));
-vi.mock('../../ui/lineagesSheet', () => ({
+vi.mock('./lineagesSheet', () => ({
   createLineagesSheet: (
     _request: unknown,
     _load: unknown,
