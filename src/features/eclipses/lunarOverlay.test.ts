@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { assembleEarthParts, MAX_SAMPLERS, samplerCount } from '../../globe/earthParts';
-import { earthFragment } from '../../globe/scene';
+import { earthFragment } from '../../globe/earthShader';
 import type { LayerHost } from '../../globe/layerHost';
 import { lunarOverlayLayer } from './lunarOverlay';
 import { LUNAR_OVERLAY_PART } from './lunarOverlayPart';

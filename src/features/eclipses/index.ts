@@ -6,10 +6,21 @@
 
 import type { Globe } from '../../globe/scene';
 import type { PartContext } from '../part';
+import { eclipsePathLayer } from './eclipsePath';
 import { lunarOverlayLayer } from './lunarOverlay';
+import { moonShadowLayer } from './moonShadow';
+import { ECLIPSE_PATH_PART } from './eclipsePathPart';
+import { LUNAR_OVERLAY_PART } from './lunarOverlayPart';
+import { MOON_SHADOW_PART } from './moonShadowPart';
+import type { EarthPart } from '../../globe/earthParts';
 
-// The part of the Earth shader the eclipses draw with, built into the globe when it is made.
-export { LUNAR_OVERLAY_PART } from './lunarOverlayPart';
+/** The parts of the Earth shader the eclipses draw with, built into the globe when it is made. */
+export const ECLIPSE_EARTH_PARTS: readonly EarthPart[] = [
+  LUNAR_OVERLAY_PART,
+  ECLIPSE_PATH_PART,
+  MOON_SHADOW_PART,
+];
+
 import type { EmpireCentury, Territory } from '../../data/empires';
 import { redraws, SELECTION } from '../../state/redraws';
 import { createSeen } from './seen';
@@ -46,7 +57,7 @@ const MINUTES_PER_DAY = 1440;
 
 /** What the eclipses ask of the rest of the page. */
 export interface EclipsesContext extends PartContext {
-  readonly globe: Pick<Globe, 'setSolarShadow' | 'setSolarPath' | 'flyTo' | 'addLayer'>;
+  readonly globe: Pick<Globe, 'flyTo' | 'addLayer'>;
   /** The catalogues and ΔT, which load before the page shows a moment. */
   readonly catalogs: () => { readonly lunar: LunarCatalog; readonly solar: SolarCatalog };
   readonly deltaT: () => DeltaT;
@@ -77,6 +88,8 @@ export interface EclipsesPart {
 export function mountEclipses(context: EclipsesContext): EclipsesPart {
   const { store, globe } = context;
   const lunarOverlay = globe.addLayer(lunarOverlayLayer);
+  const eclipsePath = globe.addLayer(eclipsePathLayer);
+  const moonShadow = globe.addLayer(moonShadowLayer);
   const seen = createSeen({
     store,
     notify: (message) => {
@@ -161,7 +174,7 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
   function renderMoment(state: ViewState): void {
     const selected = selectedEclipse(state);
     if (selected === undefined) {
-      globe.setSolarShadow(null);
+      moonShadow.update(null);
       lunarOverlay.update(null);
       scrubber.render(null);
       card.render(undefined, 0, null);
@@ -176,7 +189,7 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
     });
 
     const showShadow = isSolar(selected) && state.layers.has('solar');
-    globe.setSolarShadow(
+    moonShadow.update(
       showShadow
         ? shadowAt(
             selected.elements,
@@ -234,7 +247,7 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
       selected !== undefined && isSolar(selected) && state.layers.has('solar') ? selected : null;
     if (solarPath !== pathShownFor) {
       pathShownFor = solarPath;
-      globe.setSolarPath(
+      eclipsePath.update(
         solarPath === null
           ? null
           : {

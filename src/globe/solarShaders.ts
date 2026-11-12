@@ -24,34 +24,6 @@ export const SOLAR_COMMON = /* glsl */ `
   }
 `;
 
-/** Darkens the globe under the Moon's shadow at one instant. Needs SOLAR_COMMON. */
-export const SOLAR_SHADOW = /* glsl */ `
-  uniform float solarActive;
-  uniform vec4 shadowAxis;   // x, y, d (radians), mu (radians, ΔT applied)
-  uniform vec4 shadowCones;  // l1, l2, tan f1, tan f2
-
-  // The Moon's shadow uses the night side's own palette, so it reads as "night in daytime":
-  // the umbra is fully night-dark, and the penumbra deepens toward it as more of the Sun is
-  // covered.
-  vec3 solarShadowLayer(vec3 color, vec3 night, float latitude, float longitude) {
-    vec3 observer = observerInPlane(latitude, longitude, shadowAxis.z, shadowAxis.w);
-    if (observer.z <= 0.0) return color;
-    float penumbra = shadowCones.x - observer.z * shadowCones.z;
-    float umbra = shadowCones.y - observer.z * shadowCones.w;
-    float axisDistance = length(shadowAxis.xy - observer.xy);
-    float magnitude = clamp((penumbra - axisDistance) / (penumbra + umbra), 0.0, 1.0);
-    // Exaggerated on purpose, so the shadow reads as night in daytime. The brightness is
-    // chosen perceptually and then linearised (gamma 2.2): the output is sRGB-encoded, so a
-    // linear dimming that looks dark on paper looks faint on screen.
-    float perceived = 1.0 - 0.9 * pow(magnitude, 0.6);
-    vec3 shaded = max(color * pow(perceived, 2.2), night);
-    // The umbra itself is full night.
-    float core = 1.0 - smoothstep(abs(umbra) * 0.6, abs(umbra) * 1.15, axisDistance);
-    shaded = mix(shaded, night, core);
-    return mix(color, shaded, solarActive);
-  }
-`;
-
 /** Paints the eclipse path into an equirectangular texture. Needs SOLAR_COMMON. */
 export const SOLAR_PATH_FRAGMENT = /* glsl */ `
   uniform vec4 coefficientsX;
@@ -111,29 +83,6 @@ export const SOLAR_PATH_FRAGMENT = /* glsl */ `
     float east = step(closest(latitude, longitude, muShifts.z).x, 0.0);
     // R, G, B: in the path for ΔT, ΔT − σ, ΔT + σ. A: deepest partial eclipse (nominal ΔT).
     gl_FragColor = vec4(step(nominal.x, 0.0), west, east, clamp(nominal.y, 0.0, 1.0));
-  }
-`;
-
-/** Draws the path texture over the globe. Needs a `solarPath` sampler and `solarPathActive`. */
-export const SOLAR_PATH_LAYER = /* glsl */ `
-  uniform sampler2D solarPath;
-  uniform float solarPathActive;
-
-  vec3 solarPathLayer(vec3 color, vec2 uv) {
-    vec4 path = texture2D(solarPath, uv);
-    float certain = path.r * path.g * path.b;
-    float possible = max(max(path.r, path.g), path.b);
-    float uncertain = possible - certain;
-    float hatch = step(0.55, fract((gl_FragCoord.x - gl_FragCoord.y) / 10.0));
-    vec3 tint = vec3(0.98, 0.83, 0.42);
-    vec3 painted = mix(color, color * 0.75 + tint * 0.25, certain * 0.6);
-    painted = mix(painted, color * 0.75 + tint * 0.22, uncertain * hatch * 0.85);
-    // The limits of the partial eclipse: a thin, dashed, pale-blue line, so it can't be mistaken
-    // for the path of totality.
-    float limit = smoothstep(0.0, 0.002, path.a) * (1.0 - smoothstep(0.004, 0.008, path.a));
-    float dash = step(0.5, fract((gl_FragCoord.x + gl_FragCoord.y) / 14.0));
-    painted = mix(painted, vec3(0.62, 0.78, 1.0), limit * dash * 0.7);
-    return mix(color, painted, solarPathActive);
   }
 `;
 

@@ -6,7 +6,7 @@
 
 import type { Page } from '@playwright/test';
 
-import { collectProblems, expect, globeRendered, openLayers, test } from './support';
+import { collectProblems, expect, globeRendered, GPU, openLayers, test } from './support';
 
 const track = 'Holocene';
 
@@ -185,81 +185,83 @@ test('the Holocene reaches back to 9700 BCE, its ΔT growing uncertain', async (
   expect(problems).toEqual([]);
 });
 
-test('while travelling, the states are shaded over the evenly lit globe, not only named', async ({
-  page,
-}) => {
-  // It waits for the globe to settle by comparing screenshots, twice: on a runner that renders
-  // in software, each takes a second or more, past the usual budget.
-  test.slow();
-  const globe = page.getByTestId('globe');
-  // The globe alone, names and panels set aside, once it has settled where the panels leave it.
-  const ground = async () => {
-    const shot = () =>
-      globe.screenshot({
-        style: '.empire-labels, .hud, .bottom, .layers-dialog { visibility: hidden !important; }',
-      });
-    let last = await shot();
-    for (let tries = 0; tries < 20; tries += 1) {
-      await page.waitForTimeout(250);
-      const next = await shot();
-      if (next.equals(last)) return next;
-      last = next;
-    }
-    return last;
-  };
-  await test.step('Given 1113 CE with the track open, which brings the states', async () => {
-    await page.goto('./?t=1113-06-01T12:00&layers=lunar,solar&cam=20.0000,0.0000,3.00');
-    await globeRendered(page);
-    await openTrack(page);
-    await expect(globe).toHaveAttribute('data-light', 'even');
-    await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
-    // The bar below changes with the states (it offers "Seen from"); out of the way, the globe
-    // keeps one place for both pictures.
-    await page.addStyleTag({ content: '.bottom { display: none !important; }' });
-  });
-  const shaded = await ground();
-  await test.step('When they turn States and empires off', async () => {
-    await openLayers(page);
-    await page.getByRole('checkbox', { name: 'States and empires' }).uncheck();
-    await expect(globe).toHaveAttribute('data-empires', 'off');
-    // The panel closed again, so the globe sits where it did.
-    await page.locator('.layers-dialog').getByRole('button', { name: 'Close' }).click();
-    await expect(page.locator('.layers-dialog')).toBeHidden();
-  });
-  await test.step('Then the globe looks different: the states were painted on it', async () => {
-    const plain = await ground();
-    // The share of the picture whose colour moved clearly: the states cover much of it.
-    const changed = await page.evaluate(
-      async ([before, after]) => {
-        const pixels = async (png: string) => {
-          const image = new Image();
-          image.src = `data:image/png;base64,${png}`;
-          await image.decode();
-          const canvas = document.createElement('canvas');
-          canvas.width = image.width;
-          canvas.height = image.height;
-          const context = canvas.getContext('2d');
-          if (context === null) throw new Error('no 2D canvas');
-          context.drawImage(image, 0, 0);
-          return context.getImageData(0, 0, image.width, image.height).data;
-        };
-        const [a, b] = await Promise.all([pixels(before), pixels(after)]);
-        let moved = 0;
-        for (let at = 0; at < a.length; at += 4) {
-          const step = Math.max(
-            Math.abs((a[at] ?? 0) - (b[at] ?? 0)),
-            Math.abs((a[at + 1] ?? 0) - (b[at + 1] ?? 0)),
-            Math.abs((a[at + 2] ?? 0) - (b[at + 2] ?? 0)),
-          );
-          if (step > 24) moved += 1;
-        }
-        return moved / (a.length / 4);
-      },
-      [shaded.toString('base64'), plain.toString('base64')] as const,
-    );
-    expect(changed).toBeGreaterThan(0.05);
-  });
-});
+test(
+  'while travelling, the states are shaded over the evenly lit globe, not only named',
+  GPU,
+  async ({ page }) => {
+    // It waits for the globe to settle by comparing screenshots, twice: on a runner that renders
+    // in software, each takes a second or more, past the usual budget.
+    test.slow();
+    const globe = page.getByTestId('globe');
+    // The globe alone, names and panels set aside, once it has settled where the panels leave it.
+    const ground = async () => {
+      const shot = () =>
+        globe.screenshot({
+          style: '.empire-labels, .hud, .bottom, .layers-dialog { visibility: hidden !important; }',
+        });
+      let last = await shot();
+      for (let tries = 0; tries < 20; tries += 1) {
+        await page.waitForTimeout(250);
+        const next = await shot();
+        if (next.equals(last)) return next;
+        last = next;
+      }
+      return last;
+    };
+    await test.step('Given 1113 CE with the track open, which brings the states', async () => {
+      await page.goto('./?t=1113-06-01T12:00&layers=lunar,solar&cam=20.0000,0.0000,3.00');
+      await globeRendered(page);
+      await openTrack(page);
+      await expect(globe).toHaveAttribute('data-light', 'even');
+      await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
+      // The bar below changes with the states (it offers "Seen from"); out of the way, the globe
+      // keeps one place for both pictures.
+      await page.addStyleTag({ content: '.bottom { display: none !important; }' });
+    });
+    const shaded = await ground();
+    await test.step('When they turn States and empires off', async () => {
+      await openLayers(page);
+      await page.getByRole('checkbox', { name: 'States and empires' }).uncheck();
+      await expect(globe).toHaveAttribute('data-empires', 'off');
+      // The panel closed again, so the globe sits where it did.
+      await page.locator('.layers-dialog').getByRole('button', { name: 'Close' }).click();
+      await expect(page.locator('.layers-dialog')).toBeHidden();
+    });
+    await test.step('Then the globe looks different: the states were painted on it', async () => {
+      const plain = await ground();
+      // The share of the picture whose colour moved clearly: the states cover much of it.
+      const changed = await page.evaluate(
+        async ([before, after]) => {
+          const pixels = async (png: string) => {
+            const image = new Image();
+            image.src = `data:image/png;base64,${png}`;
+            await image.decode();
+            const canvas = document.createElement('canvas');
+            canvas.width = image.width;
+            canvas.height = image.height;
+            const context = canvas.getContext('2d');
+            if (context === null) throw new Error('no 2D canvas');
+            context.drawImage(image, 0, 0);
+            return context.getImageData(0, 0, image.width, image.height).data;
+          };
+          const [a, b] = await Promise.all([pixels(before), pixels(after)]);
+          let moved = 0;
+          for (let at = 0; at < a.length; at += 4) {
+            const step = Math.max(
+              Math.abs((a[at] ?? 0) - (b[at] ?? 0)),
+              Math.abs((a[at + 1] ?? 0) - (b[at + 1] ?? 0)),
+              Math.abs((a[at + 2] ?? 0) - (b[at + 2] ?? 0)),
+            );
+            if (step > 24) moved += 1;
+          }
+          return moved / (a.length / 4);
+        },
+        [shaded.toString('base64'), plain.toString('base64')] as const,
+      );
+      expect(changed).toBeGreaterThan(0.05);
+    });
+  },
+);
 
 test('travelling shows the ice sheets and the sea level of the year, and they go with the track', async ({
   page,

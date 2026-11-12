@@ -146,16 +146,27 @@ export function tilesInView(level: TileLevel, camera: TileCamera, limit: number)
 
 /**
  * The level to draw for a camera `altitude` above the ground (Earth radii), with screen pixels
- * `pixelAngle` radians apart: the coarsest whose pixels are no larger on the ground than the
- * screen's straight below, else the finest there is. Levels come finest last.
+ * `pixelAngle` radians apart: the coarsest whose pixels, on the ground, span no more than
+ * `stretch` of the screen's straight below, else the finest there is. Levels come finest last.
+ * A `stretch` above 1 keeps a coarser level, a little soft, until a finer one is worth fetching.
  */
-export function levelFor(
-  levels: readonly TileLevel[],
+export function levelFor<Level extends TileLevel>(
+  levels: readonly Level[],
   tileSize: number,
   altitude: number,
   pixelAngle: number,
-): TileLevel | null {
-  const onGround = altitude * pixelAngle;
+  stretch = 1,
+): Level | null {
+  const onGround = altitude * pixelAngle * stretch;
   const fine = levels.find((level) => Math.PI / (level.rows * tileSize) <= onGround);
   return fine ?? levels.at(-1) ?? null;
+}
+
+/** The tile of the coarser `level` that holds `key`, a tile of a finer one. */
+export function parentTile(level: TileLevel, key: TileKey, of: TileLevel): TileKey {
+  return {
+    z: level.z,
+    x: Math.floor((key.x * level.columns) / of.columns),
+    y: Math.floor((key.y * level.rows) / of.rows),
+  };
 }

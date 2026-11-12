@@ -7,10 +7,51 @@
       "z": 4,
       "columns": 32,
       "rows": 16,
-      "source": {
-        "url": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/april/world.topo.bathy.200404.3x21600x10800.jpg",
-        "sha256": "7d3a8c58de56782a68156c67dd171074e210a7feec9283987622e569fa338f6a"
-      }
+      "sources": [
+        {
+          "url": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/april/world.topo.bathy.200404.3x21600x10800.jpg",
+          "sha256": "7d3a8c58de56782a68156c67dd171074e210a7feec9283987622e569fa338f6a"
+        }
+      ]
+    },
+    {
+      "z": 5,
+      "columns": 64,
+      "rows": 32,
+      "sources": [
+        {
+          "url": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/april/world.topo.bathy.200404.3x21600x21600.A1.jpg",
+          "sha256": "431bca4ed4f9c29b407b60b740a754c8d7e4c2471c3b8adae9bdc95c2d3e0904"
+        },
+        {
+          "url": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/april/world.topo.bathy.200404.3x21600x21600.B1.jpg",
+          "sha256": "c5f2d35fa23a35beef1274f3e0adb38874a8efc3b6c8df2be6daae090cd5deee"
+        },
+        {
+          "url": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/april/world.topo.bathy.200404.3x21600x21600.C1.jpg",
+          "sha256": "98ac189f609e6775197f8fac86e0c4ff2b6e5f75ce6c51131b23b08acea1ad0d"
+        },
+        {
+          "url": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/april/world.topo.bathy.200404.3x21600x21600.D1.jpg",
+          "sha256": "dd413312521b6c7610c53359a5370c7df663dd1932b00391a32a90566873f363"
+        },
+        {
+          "url": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/april/world.topo.bathy.200404.3x21600x21600.A2.jpg",
+          "sha256": "fe014d6a646dc3940067d4fe633cd202ad0fa41152e998c8f0df5b24922129fa"
+        },
+        {
+          "url": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/april/world.topo.bathy.200404.3x21600x21600.B2.jpg",
+          "sha256": "6a4845c0aef98241808e989ad9320b19de71d52279c13bb8fd8d370ca063b3f2"
+        },
+        {
+          "url": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/april/world.topo.bathy.200404.3x21600x21600.C2.jpg",
+          "sha256": "c21975fed9abf8f0a6907cdb50f92e650a53b8075b6d2c645cf231352d9688e9"
+        },
+        {
+          "url": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/april/world.topo.bathy.200404.3x21600x21600.D2.jpg",
+          "sha256": "2ffe83405c7f070ed18a60e7710ab1e1268606c69e35a8942e0b9388bd089f7c"
+        }
+      ]
     }
   ]
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { PaleoTempIndex } from '../../data/paleoTemp';
-import type { TemperatureSurface } from '../../globe/scene';
+import type { TemperatureSurface } from '../../globe/surfaces';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import {
   createTemperatureLayer,

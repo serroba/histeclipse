@@ -64,6 +64,12 @@ describe('the parts of the Earth shader', () => {
     expect(() => assembleEarthParts([wrong])).toThrow(/must declare vec3 lunar/);
   });
 
+  it('Given a part declaring a uniform the Earth shader shares, Then it is refused', () => {
+    expect(() =>
+      assembleEarthParts([part('shadow', 50, {}, 'uniform vec3 moonPosition;')]),
+    ).toThrow(/declares moonPosition/);
+  });
+
   it('Given a uniform the shader or another part has, Then it is refused', () => {
     expect(() =>
       assembleEarthParts(

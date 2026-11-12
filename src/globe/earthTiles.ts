@@ -7,6 +7,11 @@
  * are fetched (`tileGrid.ts`), a few at a time; each fades in once it arrives, and those not
  * seen for longest are let go past a fixed number, their textures freed.
  *
+ * Of the levels in the manifest, the coarsest is drawn until its pixels would each span more than
+ * `STRETCH` of the screen's: then the next (#569), so the finer tiles are fetched only close in.
+ * Until a finer tile arrives, the coarser one over the same ground stays drawn if it is kept, and
+ * the finer one then shows at once over it, where with nothing beneath it fades in.
+ *
  * WebGL glue, covered by the Playwright suite; which tiles are seen is unit-tested.
  */
 
@@ -27,6 +32,7 @@ import {
 import { tilePath, type EarthTiles } from '../data/earthTiles';
 import {
   levelFor,
+  parentTile,
   tileId,
   tileRect,
   tilesInView,
@@ -43,8 +49,14 @@ const MAX_KEPT = 48;
 /** Tiles fetched at once, at most. */
 const MAX_LOADING = 6;
 const FADE_MS = 400;
-/** The patches' height above the globe's sphere: 64 m, under everything drawn over the ground. */
+/**
+ * The patches' height above the globe's sphere: 64 m for level 4 and 64 m more for each finer
+ * level, so a finer tile always lies over a coarser one (whose flat facets sag up to 120 m
+ * between corners), and all under everything drawn over the ground (12 km and up).
+ */
 const LIFT = 1e-5;
+/** A level is drawn until each of its pixels spans this many of the screen's. */
+const STRETCH = 4;
 /** Each patch's segments each way: four to each of the globe's own, so their corners meet. */
 const SEGMENTS = 16;
 
@@ -84,7 +96,7 @@ export interface EarthTileOptions {
 function patchGeometry(level: TileLevel, key: TileKey): SphereGeometry {
   const [u, v, width, height] = tileRect(level, key);
   const geometry = new SphereGeometry(
-    1 + LIFT,
+    1 + LIFT * Math.max(1, level.z - 3),
     SEGMENTS,
     SEGMENTS,
     u * 2 * Math.PI,
@@ -160,17 +172,94 @@ function cameraOnEarth(earth: EarthMesh, camera: PerspectiveCamera): TileCamera 
   };
 }
 
-/** The tiles to draw, nearest first, or null when the camera is too far for any. */
-function wantedTiles(
-  tiles: EarthTiles,
-  view: TileCamera,
-  pixels: number,
-): readonly TileKey[] | null {
+interface Wanted {
+  readonly level: TileLevel;
+  /** The tiles of `level` in view, nearest first. */
+  readonly keys: readonly TileKey[];
+  /** The next coarser level, whose tiles stand in for those of `level` not yet arrived. */
+  readonly coarser: TileLevel | null;
+}
+
+/** The tiles to draw, or null when the camera is too far for any. */
+export function wantedTiles(tiles: EarthTiles, view: TileCamera, pixels: number): Wanted | null {
   const distance = Math.hypot(...view.eye);
   if (distance > TILES_WITHIN) return null;
   const pixelAngle = (view.verticalFovDegrees * Math.PI) / 180 / Math.max(pixels, 1);
-  const level = levelFor(tiles.levels, tiles.tileSize, distance - 1, pixelAngle);
-  return level === null ? null : tilesInView(level, view, MAX_SHOWN);
+  const level = levelFor(tiles.levels, tiles.tileSize, distance - 1, pixelAngle, STRETCH);
+  if (level === null) return null;
+  const index = tiles.levels.indexOf(level);
+  return {
+    level,
+    keys: tilesInView(level, view, MAX_SHOWN),
+    coarser: index > 0 ? (tiles.levels[index - 1] ?? null) : null,
+  };
+}
+
+interface DrawPlan {
+  /** The coarser tiles to draw beneath those not yet arrived: kept ones only, never fetched. */
+  readonly beneath: readonly TileKey[];
+  /** The tiles wanted, each with whether a coarser one is (or was last frame) drawn beneath. */
+  readonly tiles: readonly { readonly key: TileKey; readonly over: boolean }[];
+}
+
+/**
+ * What to draw this frame of what is `wanted`, given which tiles are `ready` (arrived) and which
+ * were drawn the frame before: so no ground goes back to the globe's map while a finer tile is
+ * on its way, and a finer tile replaces the coarser one at once rather than fading in.
+ */
+export function drawPlan(
+  wanted: Wanted | null,
+  ready: (key: TileKey) => boolean,
+  drawnBefore: ReadonlySet<string>,
+): DrawPlan {
+  if (wanted === null) return { beneath: [], tiles: [] };
+  const { level, coarser, keys } = wanted;
+  const parentOf = (key: TileKey): TileKey | null =>
+    coarser === null ? null : parentTile(coarser, key, level);
+  const beneath = new Map<string, TileKey>();
+  for (const key of keys) {
+    const parent = parentOf(key);
+    if (parent !== null && !ready(key) && ready(parent)) beneath.set(tileId(parent), parent);
+  }
+  const tiles = keys.map((key) => {
+    const parent = parentOf(key);
+    const id = parent === null ? null : tileId(parent);
+    return { key, over: id !== null && (beneath.has(id) || drawnBefore.has(id)) };
+  });
+  return { beneath: [...beneath.values()], tiles };
+}
+
+/** Past MAX_KEPT, let go those not seen for longest, other than those wanted now. */
+function trim(kept: Map<string, Tile>, wanted: ReadonlySet<string>): void {
+  if (kept.size <= MAX_KEPT) return;
+  const oldest = [...kept.entries()]
+    .filter(([id]) => !wanted.has(id))
+    .sort(([, a], [, b]) => a.lastSeen - b.lastSeen);
+  for (const [id, tile] of oldest.slice(0, kept.size - MAX_KEPT)) {
+    kept.delete(id);
+    if (tile.mesh !== null) disposePatch(tile.mesh);
+  }
+}
+
+/** Hide every tile kept; return those that were drawn. */
+function hideAll(kept: ReadonlyMap<string, Tile>): Set<string> {
+  const drawn = new Set<string>();
+  for (const [id, tile] of kept) {
+    if (tile.mesh === null) continue;
+    if (tile.mesh.visible) drawn.add(id);
+    tile.mesh.visible = false;
+  }
+  return drawn;
+}
+
+/** Draw a tile in view if it has arrived, fading it in unless `over` a coarser one. */
+function reveal(tile: Tile, now: number, over: boolean): { shown: boolean; fading: boolean } {
+  tile.lastSeen = now;
+  if (tile.mesh === null) return { shown: false, fading: false };
+  tile.shownAt ??= over ? now - FADE_MS : now;
+  tile.alpha.value = Math.min(1, (now - tile.shownAt) / FADE_MS);
+  tile.mesh.visible = true;
+  return { shown: true, fading: tile.alpha.value < 1 };
 }
 
 export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions): EarthTileLayer {
@@ -206,34 +295,24 @@ export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions
     );
   }
 
-  /** Past MAX_KEPT, let go those not seen for longest, other than those wanted now. */
-  function trim(wanted: ReadonlySet<string>): void {
-    if (kept.size <= MAX_KEPT) return;
-    const oldest = [...kept.entries()]
-      .filter(([id]) => !wanted.has(id))
-      .sort(([, a], [, b]) => a.lastSeen - b.lastSeen);
-    for (const [id, tile] of oldest.slice(0, kept.size - MAX_KEPT)) {
-      kept.delete(id);
-      if (tile.mesh !== null) disposePatch(tile.mesh);
-    }
-  }
-
-  /** Show a tile in view, fetching it if it is not kept; whether it is still fading in. */
-  function show(key: TileKey, now: number): { shown: boolean; fading: boolean } {
+  /**
+   * Show a tile in view, fetching it if it is not kept (and `fetch`); whether it is drawn, and
+   * still fading in. Over a coarser tile already drawn (`over`), it shows at once.
+   */
+  function show(
+    key: TileKey,
+    now: number,
+    fetch: boolean,
+    over = false,
+  ): { shown: boolean; fading: boolean } {
     const id = tileId(key);
     let tile = kept.get(id);
-    if (tile === undefined && manifest !== null && loading < MAX_LOADING) {
+    if (tile === undefined && fetch && manifest !== null && loading < MAX_LOADING) {
       tile = { key, mesh: null, alpha: { value: 0 }, shownAt: null, lastSeen: now };
       kept.set(id, tile);
       load(manifest.folder, manifest.tiles, tile);
     }
-    if (tile === undefined) return { shown: false, fading: false };
-    tile.lastSeen = now;
-    if (tile.mesh === null) return { shown: false, fading: false };
-    tile.shownAt ??= now;
-    tile.alpha.value = Math.min(1, (now - tile.shownAt) / FADE_MS);
-    tile.mesh.visible = true;
-    return { shown: true, fading: tile.alpha.value < 1 };
+    return tile === undefined ? { shown: false, fading: false } : reveal(tile, now, over);
   }
 
   return {
@@ -242,19 +321,26 @@ export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions
       options.requestRender();
     },
     update(camera, on, now) {
-      for (const tile of kept.values()) if (tile.mesh !== null) tile.mesh.visible = false;
-      const keys =
+      const drawnBefore = hideAll(kept);
+      const wanted =
         on && manifest !== null
           ? wantedTiles(manifest.tiles, cameraOnEarth(earth, camera), options.pixels())
           : null;
+      const plan = drawPlan(
+        wanted,
+        (key) => (kept.get(tileId(key))?.mesh ?? null) !== null,
+        drawnBefore,
+      );
       let shown = 0;
       let fading = false;
-      for (const key of keys ?? []) {
-        const seen = show(key, now);
+      for (const parent of plan.beneath) if (show(parent, now, false).shown) shown += 1;
+      for (const { key, over } of plan.tiles) {
+        const seen = show(key, now, true, over);
         if (seen.shown) shown += 1;
         fading ||= seen.fading;
       }
-      if (keys !== null) trim(new Set(keys.map(tileId)));
+      const ids = new Set([...plan.beneath, ...plan.tiles.map(({ key }) => key)].map(tileId));
+      if (wanted !== null) trim(kept, ids);
       options.report(shown, fetched);
       return fading;
     },
