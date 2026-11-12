@@ -14,13 +14,14 @@
     "preview": "vite preview",
     "typecheck": "tsc -b",
     "lint": "eslint . --max-warnings=0",
+    "lint:css": "stylelint \"src/**/*.css\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "coverage": "vitest run --coverage",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm coverage && pnpm build"
+    "check": "pnpm format:check && pnpm lint && pnpm lint:css && pnpm typecheck && pnpm coverage && pnpm build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -33,6 +34,7 @@
     "fast-check": "^4.10.2",
     "globals": "^17.13.0",
     "prettier": "^3.9.10",
+    "stylelint": "^18.0.0",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.72.1",
     "vite": "^8.3.5",
