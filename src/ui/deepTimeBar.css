@@ -1,12 +1,9 @@
 /* The bottom bar in deep time: its slider, ticks, layer controls, notes, keys and facts. */
 
-.deep-details {
-  min-height: 0;
-}
-
 /* The details scroll inside the bar, which never grows past part of the screen: with several
    layers' notes open they once took most of it, and the globe went off the top (#163). */
 .deep-details {
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -212,6 +209,8 @@
   min-height: 44px;
   color: var(--ink-muted);
   cursor: pointer;
+  /* Folded panels in the deep-time bar show an arrow that turns as they open. */
+  list-style: none;
 }
 
 /* Open, the facts scroll inside the bar rather than pushing it over the globe. */
@@ -243,11 +242,6 @@
   .deep-facts-list dd {
     margin-bottom: 6px;
   }
-}
-
-/* Folded panels in the deep-time bar show an arrow that turns as they open. */
-.deep-facts summary {
-  list-style: none;
 }
 
 .deep-facts summary::-webkit-details-marker {

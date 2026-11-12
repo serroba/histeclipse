@@ -20,6 +20,7 @@ pnpm check        # everything CI runs: format, lint, typecheck, tests + coverag
 | `pnpm coverage`     | Tests with coverage thresholds enforced (95%)                              |
 | `pnpm test:e2e`     | Playwright smoke tests (desktop + mobile) against a local production build |
 | `pnpm lint`         | ESLint with typescript-eslint `strictTypeChecked`, zero warnings           |
+| `pnpm lint:css`     | Stylelint: CSS mistakes, selectors written twice, specificity (#489)       |
 | `pnpm typecheck`    | `tsc -b` with `strict` plus every additional strictness flag               |
 | `pnpm format:check` | Prettier                                                                   |
 

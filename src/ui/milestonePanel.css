@@ -19,6 +19,8 @@
   overflow: hidden;
   cursor: pointer;
   text-overflow: ellipsis;
+  /* The milestones near here open, like the other folds, with an arrow that turns. */
+  list-style: none;
 }
 
 .deep-milestones.is-empty summary {
@@ -75,11 +77,6 @@
   color: var(--ink-muted);
   font-size: 13px;
   white-space: nowrap;
-}
-
-/* The milestones near here open, like the other folds, with an arrow that turns. */
-.deep-milestones summary {
-  list-style: none;
 }
 
 .deep-milestones summary::-webkit-details-marker {

@@ -107,14 +107,13 @@ body {
   color: var(--ink-muted);
 }
 
+/* One grid for the date panel (#232): every row meets the same two edges. The time switch
+   stretches beside Layers, its spans sharing the pill, and the viewpoints share their row. */
 .hud-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 4px 12px;
-}
-
-.hud-actions {
   margin-top: 8px;
 }
 
@@ -227,10 +226,13 @@ body {
 }
 
 @media (max-width: 600px) {
+  /* On a phone the panel spans the screen, as the bar along the bottom does. */
   .hud {
     top: 12px;
+    right: 12px;
     left: 12px;
-    padding: 10px 14px;
+    max-width: none;
+    padding: 10px 12px;
   }
 
   .hud-when {
@@ -337,15 +339,12 @@ body {
 @media (max-width: 600px) {
   .holocene-bar .year-controls {
     flex: 1 1 100%;
+    column-gap: 4px;
   }
 }
 
 /* On a phone the era keeps room for its name; the speed and the ⓘ take what is left. */
 @media (max-width: 600px) {
-  .holocene-bar .year-controls {
-    column-gap: 4px;
-  }
-
   /* The era a fixed width, so it never squeezes to a letter; the year takes what is left. */
   .holocene-bar .era-select {
     flex: none;
@@ -622,12 +621,6 @@ body {
   background: radial-gradient(circle at 65% 45%, #14182a 46%, #f7c95a 48%);
 }
 
-@media (max-width: 600px) {
-  .hud {
-    padding: 10px 12px;
-  }
-}
-
 .bottom[data-deep='on'] > :not(.deep-time) {
   display: none;
 }
@@ -642,16 +635,13 @@ body {
   border-radius: 16px;
   background: var(--panel);
   backdrop-filter: blur(14px);
+  /* It never reaches up to the date panel above it (--hud-clear, measured by the page): the
+     details give way first, so the bar and its chips stay whole. */
+  max-height: calc(100dvh - var(--hud-clear, 0px) - 12px - env(safe-area-inset-bottom));
 }
 
 .deep-time[hidden] {
   display: none;
-}
-
-/* The sheet never reaches up to the date panel above it (--hud-clear, measured by the page):
-   the details give way first, so the bar and its chips stay whole. */
-.deep-time {
-  max-height: calc(100dvh - var(--hud-clear, 0px) - 12px - env(safe-area-inset-bottom));
 }
 
 .deep-time > :not(.deep-details) {
@@ -754,22 +744,6 @@ button:has(> .icon-label) > .icon {
   button:has(> .icon-label:not(.icon-label-kept)) {
     min-width: 44px;
     padding: 0;
-  }
-}
-
-/* One grid for the date panel (#232): every row meets the same two edges. The time switch
-   stretches beside Layers, its spans sharing the pill, and the viewpoints share their row. */
-.hud-actions {
-  flex-wrap: nowrap;
-}
-
-/* On a phone the panel spans the screen, as the bar along the bottom does; the Sun's channels
-   flow two or three to a row, stretched to both edges, so they take no more of the Sun than
-   they must. */
-@media (max-width: 600px) {
-  .hud {
-    right: 12px;
-    max-width: none;
   }
 }
 
