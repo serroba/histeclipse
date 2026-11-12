@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.aadr import fetch_genomes
 from histeclipse_pipeline.amoc import fetch_amoc
+from histeclipse_pipeline.ar6_sealevel import fetch_ar6_sealevel
 from histeclipse_pipeline.archaeoglobe import fetch_ways
 from histeclipse_pipeline.asteroids import fetch_asteroids
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
@@ -93,6 +94,7 @@ from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
 from histeclipse_pipeline.volcanoes import fetch_volcanoes
 from histeclipse_pipeline.warm_past import fetch_warm_past
+from histeclipse_pipeline.warming_levels import fetch_warming_levels
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -585,10 +587,22 @@ def ssp_pathways(args: Arguments) -> int:  # pragma: no cover - needs network ac
     return _say(f"wrote {points} SSP pathway points to {args.out}")
 
 
+def ar6_sealevel(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write sea level projected to 2150 by IPCC AR6, global curves and 1° maps."""
+    count = fetch_ar6_sealevel(args.out)
+    return _say(f"wrote AR6 sea-level curves and {count} maps to {args.out}")
+
+
 def warm_past(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write temperature change maps of the Last Interglacial and mid-Pliocene."""
     count = fetch_warm_past(args.out)
     return _say(f"wrote {count} warm-past temperature-change images to {args.out}")
+
+
+def warming_levels(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write projected temperature and rain change at 1.5-4 °C of warming (IPCC AR6)."""
+    count = fetch_warming_levels(args.out)
+    return _say(f"wrote {count} warming-level images to {args.out}")
 
 
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
@@ -911,10 +925,20 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write the SSP pathways to 2100: CO2 emissions, CO2 and forcing (RCMIP; IPCC AR6)",
         "output directory",
     ),
+    "ar6-sealevel": (
+        ar6_sealevel,
+        "write sea level projected to 2150 by SSP (IPCC AR6, Garner et al. 2021)",
+        "output directory",
+    ),
     "warm-past": (
         warm_past,
         "write temperature change at the Last Interglacial and mid-Pliocene (PMIP4, PlioMIP2)",
         "output directory (public/data/warmpast)",
+    ),
+    "warming-levels": (
+        warming_levels,
+        "write projected temperature and rain change at 1.5-4 °C of warming (IPCC AR6)",
+        "output directory",
     ),
     "calendars": (
         calendars,

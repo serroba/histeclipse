@@ -330,7 +330,14 @@
     "what": "Sea level through time, as each reconstruction has it, on a chart.",
     "sources": ["bintanja", "spratt", "miller", "vanDerMeer"],
     "others": "Each reconstruction is drawn side by side; they differ, the more so further back.",
-    "reading": ["dutton2015", "dumitru2019", "ar6SeaLevel", "noaaLsa", "frederikse2020"]
+    "reading": [
+      "dutton2015",
+      "dumitru2019",
+      "ar6SeaLevel",
+      "noaaLsa",
+      "frederikse2020",
+      "garner2021"
+    ]
   },
   "plates": {
     "title": "Plates",
@@ -423,6 +430,8 @@
       "terhaar2025",
       "globalCarbonBudget2026",
       "jones2023",
+      "lee2021",
+      "ar6Ch4Data",
       "ar6AnnexIII",
       "rcmip",
       "meinshausen2020",
