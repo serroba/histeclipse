@@ -43,7 +43,9 @@ export const MAX_LINES = 400;
 /**
  * The files longer than MAX_LINES when it came in: each may only shrink, to MAX_LINES and off this
  * list. New work goes into a feature (#380) or a globe layer (#379), or a new file, instead.
- * `src/architecture.test.ts` asks for a limit to come down once it is 50 lines above its file.
+ * `src/architecture.test.ts` asks for a limit to come down once it is 50 lines above its file:
+ * lower it then, not in every PR that shortens the file, so PRs side by side do not all edit
+ * the same line (#479).
  * Some are mostly content, not code (the deep-time milestones): theirs is to move into data
  * files, as the sources registry's did (#383).
  */
