@@ -6,7 +6,7 @@ import {
   MAX_SAMPLERS,
   samplerCount,
 } from './earthParts';
-import { earthFragment } from './scene';
+import { earthFragment } from './earthShader';
 
 describe('the Earth shader', () => {
   it('samples no more textures than every WebGL GPU allows a shader', () => {

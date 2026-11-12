@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ShadowGeometry } from '../../eclipses/solar';
 import { assembleEarthParts, MAX_SAMPLERS, samplerCount } from '../../globe/earthParts';
 import type { LayerHost } from '../../globe/layerHost';
-import { earthFragment } from '../../globe/scene';
+import { earthFragment } from '../../globe/earthShader';
 import { ECLIPSE_EARTH_PARTS } from '.';
 import { moonShadowLayer } from './moonShadow';
 import { MOON_SHADOW_PART } from './moonShadowPart';

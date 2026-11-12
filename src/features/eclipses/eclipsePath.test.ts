@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { SIDEREAL_DEGREES_PER_SECOND } from '../../eclipses/solar';
 import { assembleEarthParts, MAX_SAMPLERS, samplerCount } from '../../globe/earthParts';
 import type { LayerHost } from '../../globe/layerHost';
-import { earthFragment } from '../../globe/scene';
+import { earthFragment } from '../../globe/earthShader';
 import { eclipsePathLayer, type SolarPath } from './eclipsePath';
 import { ECLIPSE_PATH_PART } from './eclipsePathPart';
 import { LUNAR_OVERLAY_PART } from './lunarOverlayPart';
