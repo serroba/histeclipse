@@ -1,11 +1,11 @@
 name: macOS nightly
 
-# The desktop e2e suite on macOS, once a day on main and on demand. A Mac's GPU limits differ
-# from Linux's: a shader once passed on Linux and drew a black globe there, as ANGLE over Metal
-# allows 16 textures a shader and headless Chromium on Linux 32 (#110). The Earth shader's texture
-# count is now checked in the unit tests (earthShader.test.ts) and when the globe starts, so this
-# no longer gates pull requests: it ran in each from #110 until it was moved here, and in 71 runs
-# never failed where Linux passed, while waiting a median 14 minutes for a runner.
+# The whole desktop e2e suite on macOS, once a day on main and on demand. A Mac's GPU limits
+# differ from Linux's: a shader once passed on Linux and drew a black globe there, as ANGLE over
+# Metal allows 16 textures a shader and headless Chromium on Linux 32 (#110). Pull requests run
+# only the tests tagged @gpu on a Mac (ci.yml), which draw every shader once: the rest of the suite
+# checks what does not depend on the GPU, and Linux runs it in each pull request.
+
 on:
   schedule:
     - cron: '41 4 * * *'

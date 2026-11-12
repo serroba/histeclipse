@@ -1,6 +1,6 @@
 // The eclipses: picking one, its path, shadow and card, the scrubber, and the famous list.
 
-import { collectProblems, expect, globeRendered, skyRendered, test } from './support';
+import { collectProblems, expect, globeRendered, GPU, skyRendered, test } from './support';
 
 test('picking an eclipse jumps to it and puts it in the link', async ({ page }) => {
   await page.goto('./?t=-620-01-01T12:00');
@@ -29,7 +29,7 @@ test('a link to an eclipse restores it, with visibility from the chosen place', 
   await expect(page.getByTestId('globe')).toHaveAttribute('data-lunar-overlay', 'on');
 });
 
-test('the Moon-up region follows time and shows only during the eclipse', async ({ page }) => {
+test('the Moon-up region follows time and shows only during the eclipse', GPU, async ({ page }) => {
   await page.goto('./?t=-620-04-22T02:08&sel=lunar:-0620-04-22');
   await globeRendered(page);
   const globe = page.getByTestId('globe');
@@ -121,7 +121,7 @@ test("stepping and typing years lists that year's eclipses", async ({ page }) =>
   await expect(page).toHaveURL(/t=-0620-03-14T12:00Z/);
 });
 
-test('picking a solar eclipse draws its path and the Moon’s shadow', async ({ page }) => {
+test('picking a solar eclipse draws its path and the Moon’s shadow', GPU, async ({ page }) => {
   await page.goto('./?t=2024-01-01T00:00&loc=32.7767,-96.797');
   await globeRendered(page);
   await page.getByRole('button', { name: /8 Apr\s*Total solar/ }).click();
@@ -254,7 +254,7 @@ test('famous eclipse rows are large enough to tap', async ({ page }) => {
   }
 });
 
-test('eclipse shadows render on the Moon and on Earth without errors', async ({ page }) => {
+test('eclipse shadows render on the Moon and on Earth without errors', GPU, async ({ page }) => {
   const problems = collectProblems(page);
   // Totality of 14 March 2025, orbiting the Moon: Earth's shadow is drawn on it.
   await page.goto('./?t=2025-03-14T06:59&cam=0,0,3&focus=moon');
