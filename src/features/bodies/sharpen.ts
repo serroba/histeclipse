@@ -1,8 +1,8 @@
 /**
  * Close up, a sharper map for the body in focus, fetched once (#258); over Earth, closer still,
- * its full-size map in tiles (#568). Earth's largest map and its tiles only where the graphics
- * hold the large map and the screen is not a phone's, whose memory they would strain: there
- * the 4096 map is as sharp as it gets.
+ * its full-size map in tiles (#568). Earth's largest map only where the graphics hold it and the
+ * screen is not a phone's, whose memory it would strain: there the 4096 map. Its tiles wherever
+ * the graphics take them on, phones too, within the device's limits (`tileLimits.ts`, #578).
  */
 
 import { loadEarthTiles } from '../../data/earthTiles';
@@ -18,7 +18,10 @@ export const SHARP_WITHIN = 2.5;
 export interface SharpenContext {
   readonly base: string;
   readonly fetchJson: Fetch;
-  readonly globe: Pick<Globe, 'maxTextureSize' | 'setBodyMap' | 'setEarthTiles' | 'sharpenPlanet'>;
+  readonly globe: Pick<
+    Globe,
+    'maxTextureSize' | 'setBodyMap' | 'setEarthTiles' | 'sharpenPlanet' | 'tileLimits'
+  >;
 }
 
 /** Sharpen the body in focus if the view is close enough: as the view changes. */
@@ -51,7 +54,7 @@ export function createSharpener({
     if (focus === 'earth' || focus === 'moon') {
       const sizes = SHARP_MAPS[focus];
       globe.setBodyMap(focus, `${base}${largeMaps ? sizes.large : sizes.small}`);
-      if (focus === 'earth' && largeMaps) tileEarth();
+      if (focus === 'earth' && globe.tileLimits !== null) tileEarth();
       return;
     }
     if (focus === 'sun' || isMoonBody(focus)) return;

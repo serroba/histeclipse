@@ -120,6 +120,8 @@ import { ATMOSPHERE_FRAGMENT, ATMOSPHERE_VERTEX, MOON_FRAGMENT, MOON_VERTEX } fr
 import { CORONA_FRAGMENT, CORONA_VERTEX, SUN_FRAGMENT, SUN_VERTEX } from './sunShaders';
 import { controlSpeeds } from './controlSpeeds';
 import { createEarthTileLayer } from './earthTiles';
+import { glowTexture } from './sunGlow';
+import { tileLimits, type TileLimits } from './tileLimits';
 import type { EarthTiles } from '../data/earthTiles';
 import { EARTH_VERTEX, earthFragment } from './earthShader';
 import type {
@@ -218,6 +220,8 @@ export interface Globe {
   setBodyMap(body: 'earth' | 'moon', url: string): void;
   /** The widest texture the graphics can hold, pixels. */
   readonly maxTextureSize: number;
+  /** What the device takes on of Earth's tiles (#578); null for none, and no nearer than 1.05. */
+  readonly tileLimits: TileLimits | null;
   /** Close up, Earth's full-size map in tiles from now on, from their manifest (#568). */
   setEarthTiles(tiles: EarthTiles, folder: string): void;
   /**
@@ -433,13 +437,16 @@ export function createGlobe(
     }),
   );
   scene.add(earth, atmosphere);
-  // Close up, Earth's full-size map in tiles over its own (#568); how many show, for tests.
+  // Close up, Earth's full-size map in tiles over its own (#568), as many as the device takes on
+  // (#578); how many are drawn, were fetched and are kept, for tests.
+  const { maxTextureSize } = renderer.capabilities;
+  const limits = tileLimits(maxTextureSize, matchMedia('(pointer: coarse)').matches);
   const earthTiles = createEarthTileLayer(earth, {
     anisotropy: renderer.capabilities.getMaxAnisotropy(),
+    limits,
     pixels: () => renderer.domElement.height,
     requestRender: () => (needsRender = true),
-    report: (shown, fetched) =>
-      (container.dataset['earthTiles'] = `${String(shown)}/${String(fetched)}`),
+    report: (...counts) => (container.dataset['earthTiles'] = counts.join('/')),
   });
 
   // Deep time: Earth's spin axis, its ends marked as the poles of the time shown. The maps
@@ -973,7 +980,7 @@ export function createGlobe(
   function orbitFocus(): void {
     const radius = BODY_RADIUS[focus];
     controls.target.copy(bodyFrame(focus).position);
-    controls.minDistance = nearestDistance(focus) * radius;
+    controls.minDistance = nearestDistance(focus, limits !== null) * radius;
     controls.maxDistance = Math.min(CAMERA_DISTANCE_RANGE.max * radius, CAMERA_DISTANCE_RANGE.max);
     controls.enabled = true;
     controls.update();
@@ -985,7 +992,7 @@ export function createGlobe(
   controls.dampingFactor = 0.08;
   controls.rotateSpeed = 0.5;
   controls.zoomSpeed = 0.8;
-  controls.minDistance = CAMERA_DISTANCE_RANGE.min;
+  controls.minDistance = nearestDistance('earth', limits !== null);
   controls.maxDistance = CAMERA_DISTANCE_RANGE.max;
 
   const listeners = new Set<(camera: GlobeCamera) => void>();
@@ -1523,7 +1530,8 @@ export function createGlobe(
 
   return {
     canvas: renderer.domElement,
-    maxTextureSize: renderer.capabilities.maxTextureSize,
+    maxTextureSize,
+    tileLimits: limits,
     setEarthTiles: (tiles, folder) => {
       earthTiles.enable(tiles, folder);
     },
@@ -2148,6 +2156,9 @@ export function createGlobe(
     },
     onCameraChange(listener) {
       listeners.add(listener);
+      // A link nearer than this device lets the camera come (#578): say where it stopped.
+      const held = focusCamera.distance < nearestDistance(focus, limits !== null);
+      if (held && viewpoint === 'free' && bodyReady(focus)) listener(relativeCamera());
       return () => listeners.delete(listener);
     },
     dispose() {
@@ -2165,31 +2176,6 @@ export function createGlobe(
       renderer.domElement.remove();
     },
   };
-}
-
-/** A soft radial glow for the Sun, drawn once into a small canvas. */
-function glowTexture(): CanvasTexture {
-  const size = 128;
-  const canvas = document.createElement('canvas');
-  canvas.width = size;
-  canvas.height = size;
-  const context = canvas.getContext('2d');
-  if (context !== null) {
-    const gradient = context.createRadialGradient(
-      size / 2,
-      size / 2,
-      0,
-      size / 2,
-      size / 2,
-      size / 2,
-    );
-    gradient.addColorStop(0, 'rgba(255, 244, 214, 1)');
-    gradient.addColorStop(0.15, 'rgba(255, 220, 150, 0.6)');
-    gradient.addColorStop(1, 'rgba(255, 200, 120, 0)');
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, size, size);
-  }
-  return new CanvasTexture(canvas);
 }
 
 function setLabel(marker: HTMLElement, name: string): void {

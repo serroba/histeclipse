@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import manifest from '../../public/textures/earth-tiles/manifest.json' with { type: 'json' };
 import { loadEarthTiles, type EarthTiles } from '../data/earthTiles';
 import { drawPlan, wantedTiles } from './earthTiles';
+import { DESKTOP_TILES } from './tileLimits';
 import { geoToVector } from './geo';
 import { tileId, type TileCamera, type TileKey } from './tileGrid';
 
@@ -28,13 +29,13 @@ const PIXELS = 1440;
 
 describe('the level of Earth’s tiles drawn', () => {
   it('is none from afar: the default view fetches nothing', () => {
-    expect(wantedTiles(served, over(30, 31, 3), PIXELS)).toBeNull();
-    expect(wantedTiles(served, over(30, 31, 1.6), PIXELS)).toBeNull();
+    expect(wantedTiles(served, over(30, 31, 3), PIXELS, DESKTOP_TILES)).toBeNull();
+    expect(wantedTiles(served, over(30, 31, 1.6), PIXELS, DESKTOP_TILES)).toBeNull();
   });
 
   it('is the full Blue Marble (level 4) down to some 900 km up', () => {
     for (const distance of [1.5, 1.3, 1.16]) {
-      const wanted = wantedTiles(served, over(30, 31, distance), PIXELS);
+      const wanted = wantedTiles(served, over(30, 31, distance), PIXELS, DESKTOP_TILES);
       expect(wanted?.level.z).toBe(4);
       expect(wanted?.coarser).toBeNull();
     }
@@ -42,22 +43,22 @@ describe('the level of Earth’s tiles drawn', () => {
 
   it('is the 500 m map (level 5) closer in, over level 4 until each tile arrives', () => {
     for (const distance of [1.14, 1.05, 1.008]) {
-      const wanted = wantedTiles(served, over(30, 31, distance), PIXELS);
+      const wanted = wantedTiles(served, over(30, 31, distance), PIXELS, DESKTOP_TILES);
       expect(wanted?.level.z).toBe(5);
       expect(wanted?.coarser?.z).toBe(4);
     }
     // 50 km over the Nile: the one tile beneath, 5.625° a side.
-    const nile = wantedTiles(served, over(30, 31, 1.008), PIXELS);
+    const nile = wantedTiles(served, over(30, 31, 1.008), PIXELS, DESKTOP_TILES);
     expect(nile?.keys.map(tileId)).toEqual(['5/37/10']);
   });
 
   it('turns to level 5 farther out on a sharper screen, nearer on a coarser one', () => {
-    expect(wantedTiles(served, over(30, 31, 1.2), 2160)?.level.z).toBe(5);
-    expect(wantedTiles(served, over(30, 31, 1.1), 720)?.level.z).toBe(4);
+    expect(wantedTiles(served, over(30, 31, 1.2), 2160, DESKTOP_TILES)?.level.z).toBe(5);
+    expect(wantedTiles(served, over(30, 31, 1.1), 720, DESKTOP_TILES)?.level.z).toBe(4);
   });
 
   it('asks for few enough level 5 tiles to draw them all where it turns to them', () => {
-    const wanted = wantedTiles(served, over(45, 10, 1.14), PIXELS);
+    const wanted = wantedTiles(served, over(45, 10, 1.14), PIXELS, DESKTOP_TILES);
     expect(wanted?.keys.length).toBeGreaterThan(4);
     expect(wanted?.keys.length).toBeLessThan(32);
   });
@@ -65,7 +66,7 @@ describe('the level of Earth’s tiles drawn', () => {
 
 describe('what is drawn while level 5 arrives', () => {
   const near = (): ReturnType<typeof wantedTiles> =>
-    wantedTiles(served, over(50.6, 5.6, 1.03), PIXELS);
+    wantedTiles(served, over(50.6, 5.6, 1.03), PIXELS, DESKTOP_TILES);
   const keys = (list: readonly TileKey[]): string[] => list.map(tileId).sort();
 
   it('is level 4 beneath the level 5 tiles not yet arrived, if it has arrived itself', () => {
@@ -89,7 +90,7 @@ describe('what is drawn while level 5 arrives', () => {
 
   it('is never a level 4 tile not yet fetched, nor anything beneath level 4', () => {
     expect(drawPlan(near(), () => false, new Set()).beneath).toEqual([]);
-    const far = wantedTiles(served, over(45, 10, 1.3), PIXELS);
+    const far = wantedTiles(served, over(45, 10, 1.3), PIXELS, DESKTOP_TILES);
     expect(drawPlan(far, () => false, new Set(['3/0/0'])).beneath).toEqual([]);
     expect(drawPlan(null, () => true, new Set())).toEqual({ beneath: [], tiles: [] });
   });

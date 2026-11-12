@@ -25,13 +25,13 @@ export interface RailScale {
   readonly far: number;
 }
 
-/** The rail for `body`, over the distances the camera allows round it (as the scene sets them). */
-export function railScale(body: Body): RailScale {
+/** The rail for `body`, over the distances the camera allows round it, from `near` on this device. */
+export function railScale(body: Body, near: number): RailScale {
   const radius = BODY_RADIUS[body];
   return {
     body,
     radiusKm: radius * EARTH_RADIUS_KM,
-    near: nearestDistance(body),
+    near,
     // The scene caps the distance at the same number of Earth radii, whatever the body.
     far: Math.min(CAMERA_DISTANCE_RANGE.max, CAMERA_DISTANCE_RANGE.max / radius),
   };
@@ -139,6 +139,8 @@ export interface RailView {
   /** The body in focus, whose radii the distance is in. */
   readonly body: Body;
   readonly distance: number;
+  /** The nearest the camera comes to the body on this device, in its radii. */
+  readonly near: number;
 }
 
 export interface ZoomRail {
@@ -212,7 +214,7 @@ export function createZoomRail(handlers: {
   /** Centre on Earth again. */
   onEarth(): void;
 }): ZoomRail {
-  let scale = railScale('earth');
+  let scale = railScale('earth', nearestDistance('earth', true));
   let shown = 3;
   const home = element(
     'button',
@@ -374,8 +376,8 @@ export function createZoomRail(handlers: {
       zooming = view !== null;
       sync();
       if (view === null) return;
-      if (view.body !== scale.body) {
-        scale = railScale(view.body);
+      if (view.body !== scale.body || view.near !== scale.near) {
+        scale = railScale(view.body, view.near);
         placeStops();
       }
       home.hidden = view.body === 'earth';
