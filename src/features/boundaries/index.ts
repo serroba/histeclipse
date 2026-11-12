@@ -2,10 +2,13 @@
  * The planetary boundaries' story (#434) as a part of the page: its sheet, whose data and scenes
  * load when it first opens, and the globe beside it (#475). While the Holocene chapter's chart
  * draws, the globe follows it through the ice ages, and is given back on leaving the chapter. On
- * a wide screen the sheet covers the right of the page, so the globe centres in the rest.
+ * a wide screen the sheet covers the right of the page, so the globe centres in the rest. From
+ * 1850 the globe shows the measured warming, Berkeley Earth's, in place of the ice-age maps (#485).
  */
 
+import { loadMeasuredWarming, type MeasuredWarming } from '../../data/measuredWarming';
 import type { Globe } from '../../globe/scene';
+import { errorMessage } from '../../util/errors';
 import { createBoundariesSheet } from '../../ui/boundariesSheet';
 import type { MountedPart, PartContext } from '../part';
 import type { BoundaryChapter, GlobeCamera } from '../../state/viewState';
@@ -15,11 +18,12 @@ import {
   FACING_DISTANCE,
   givenBack,
   globeAt,
+  measuredAt,
   type Borrowed,
 } from './holoceneGlobe';
 
 export interface BoundariesContext extends PartContext {
-  readonly globe: Pick<Globe, 'flyTo' | 'zoomTo' | 'setInsets'>;
+  readonly globe: Pick<Globe, 'flyTo' | 'zoomTo' | 'setInsets' | 'setTemperature'>;
 }
 
 export interface BoundariesPart extends MountedPart {
@@ -37,6 +41,37 @@ export function mountBoundaries(context: BoundariesContext): BoundariesPart {
   let borrowed: Borrowed | null = null;
   // And where the reader's camera was, to turn it back there.
   let cameraBefore: GlobeCamera | null = null;
+  // The measured warming since 1850 (#485), loaded when the story first has the globe.
+  let warming: MeasuredWarming | null = null;
+  let warmingLoading: Promise<MeasuredWarming> | null = null;
+  let measuredShown = false;
+
+  function loadWarming(): void {
+    if (warming !== null || warmingLoading !== null) return;
+    warmingLoading = loadMeasuredWarming(`${base}data/warming/index.json`, context.fetchJson);
+    warmingLoading.then(
+      (index) => {
+        warming = index;
+      },
+      (error: unknown) => {
+        warmingLoading = null;
+        context.notify(`Could not load the measured warming: ${errorMessage(error)}`);
+      },
+    );
+  }
+
+  /** From 1850, the measured warming on the globe, over the Temperature layer's maps. */
+  function showMeasured(year: number): void {
+    const surface =
+      warming === null ? null : measuredAt(warming, year, (file) => `${base}data/warming/${file}`);
+    if (surface !== null) {
+      globe.setTemperature(surface);
+      measuredShown = true;
+    } else if (measuredShown) {
+      // Back before 1850: the Temperature layer draws Krapp's maps again as the view changes.
+      measuredShown = false;
+    }
+  }
 
   /** The globe to the chart's year; or, with null, back to the reader. */
   function follow(year: number | null): void {
@@ -44,6 +79,11 @@ export function mountBoundaries(context: BoundariesContext): BoundariesPart {
       if (borrowed === null) return;
       const back = borrowed;
       borrowed = null;
+      if (measuredShown) {
+        // Cleared first: the reader's view draws its own temperature, if any, as it comes back.
+        globe.setTemperature(null);
+        measuredShown = false;
+      }
       store.set((state) => givenBack(state, back));
       if (cameraBefore !== null) {
         globe.flyTo(cameraBefore.target);
@@ -54,8 +94,10 @@ export function mountBoundaries(context: BoundariesContext): BoundariesPart {
     }
     const from = borrowed ?? borrowedOf(store.get());
     store.set((state) => globeAt(state, from, year));
+    showMeasured(year);
     if (borrowed === null) {
       borrowed = from;
+      loadWarming();
       cameraBefore = store.get().camera;
       globe.flyTo(FACING);
       globe.zoomTo(FACING_DISTANCE);

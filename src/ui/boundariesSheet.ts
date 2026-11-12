@@ -53,7 +53,7 @@ const CHAPTER_NAMES: Readonly<Record<BoundaryChapter, string>> = {
 
 const CAPTIONS: Readonly<Record<BoundaryChapter, string>> = {
   holocene:
-    'For 800,000 years temperature swung with the ice ages: at the last one’s depth, about 20,000 years ago, the globe was some 7 °C colder (Antarctica, faint, swung about twice as far). Then for 10,000 years before industry it kept within about a degree: the Holocene corridor (green), in which farming and cities arose. In 2025 it was 1.4 °C above 1850–1900, out of the corridor. The records differ on the corridor’s slow trend: the reanalysis drawn here has it warming slightly, others cooling.',
+    'For 800,000 years temperature swung with the ice ages: at the last one’s depth, about 20,000 years ago, the globe was some 7 °C colder (Antarctica, faint, swung about twice as far). Then for 10,000 years before industry it kept within about a degree: the Holocene corridor (green), in which farming and cities arose. In 2025 it was 1.4 °C above 1850–1900, out of the corridor. The records differ on the corridor’s slow trend: the reanalysis drawn here has it warming slightly, others cooling. The globe follows the line: the ice sheets and the coast of the time, and land coloured blue where colder and orange to red where warmer, left uncoloured within about a degree. From 1850 the colours are measured warming since 1850–1900; land has warmed faster than the globe, some 2 °C.',
   safe: 'Nine processes keep Earth in the stable state of the last 11,700 years, the Holocene, in which farming and cities arose. Each has a boundary to human pressure: inside it (green), the risk of destabilising the planet stays low. Here every one is at its pre-industrial or Holocene-like level.',
   pressure:
     'Each wedge grows to its value in the Planetary Health Check 2026. Past the dark green ring a boundary is crossed, and the risk grows (amber); past the orange line it is high (red). Seven of the nine are crossed; only aerosols, globally, and the ozone layer are within.',
@@ -228,7 +228,31 @@ export function createBoundariesSheet(
         element('a', { href: 'https://doi.org/10.1038/s41561-019-0400-0' }, 'PAGES 2k (2019)'),
         ' (both from NOAA NCEI, accessed 12 November 2026; no licence stated, cited as NOAA asks) and ',
         element('a', { href: 'https://doi.org/10.1029/2019JD032361' }, 'HadCRUT5'),
-        ' (Met Office, Open Government Licence v3), as the report’s Figure 1 cites them. The drawings are this site’s own.',
+        ' (Met Office, Open Government Licence v3), as the report’s Figure 1 cites them. On the globe as the chart draws: land temperature from ',
+        element('a', { href: 'https://doi.org/10.1038/s41597-021-01009-3' }, 'Krapp et al. (2021)'),
+        ' (CC BY 4.0) and, from 1850, ',
+        element('a', { href: 'https://doi.org/10.5194/essd-12-3469-2020' }, 'Berkeley Earth'),
+        ' (Rohde & Hausfather 2020; CC BY-NC 4.0); ice sheets from ',
+        element('a', { href: 'https://doi.org/10.1594/PANGAEA.905800' }, 'PaleoMIST 1.0'),
+        ' (Gowan et al. 2021, CC BY 4.0) with ',
+        element('a', { href: 'https://osf.io/7jen3/' }, 'Batchelor et al. (2019)'),
+        '’s outlines (no licence stated); sea level from ',
+        element(
+          'a',
+          { href: 'https://doi.org/10.1038/nature07158' },
+          'Bintanja & van de Wal (2008)',
+        ),
+        ' (via NOAA, no licence stated), laid on NOAA’s ',
+        element(
+          'a',
+          { href: 'https://www.ncei.noaa.gov/products/etopo-global-relief-model' },
+          'ETOPO1',
+        ),
+        ' depths (public domain); sea ice from the ',
+        element('a', { href: 'https://doi.org/10.7265/a98x-0f50' }, 'NSIDC Sea Ice Index'),
+        ' (free to use, cited) and the ',
+        element('a', { href: 'https://doi.org/10.5194/cp-17-1065-2021' }, 'PMIP4'),
+        ' glacial runs (CC BY 4.0). The drawings are this site’s own.',
       ),
     ),
   );

@@ -50,6 +50,13 @@
     "cite": "Bereiter et al. (2015), Antarctic CO₂ composite (EPICA Dome C, Lüthi et al. 2008), Geophysical Research Letters; NOAA WDC Paleoclimatology",
     "url": "https://doi.org/10.1002/2014GL061957"
   },
+  "berkeleyEarth": {
+    "name": "Berkeley Earth",
+    "kind": "dataset",
+    "cite": "Rohde, R. A., Hausfather, Z. (2020), The Berkeley Earth Land/Ocean Temperature Record, Earth System Science Data 12, 3469–3479; data: Berkeley Earth gridded land temperatures (Complete_TAVG_LatLong1, 1° monthly anomalies), release of 9 January 2025",
+    "url": "https://doi.org/10.5194/essd-12-3469-2020",
+    "licence": "CC BY-NC 4.0"
+  },
   "bgeSmall": {
     "name": "bge-small-en-v1.5",
     "kind": "model",
@@ -921,6 +928,13 @@
     "cite": "Tauxe, L., Shaar, R., Jonestrask, L., et al. (2016). PmagPy: software package for paleomagnetic data analysis and a bridge to the Magnetics Information Consortium (MagIC) database. Geochemistry, Geophysics, Geosystems 17, 2450–2463",
     "url": "https://doi.org/10.1002/2016GC006307",
     "licence": "BSD-3-Clause"
+  },
+  "pmip4Lgm": {
+    "name": "PMIP4 Last Glacial Maximum runs",
+    "kind": "model",
+    "cite": "Kageyama, M., Harrison, S. P., Kapsch, M.-L., et al. (2021), The PMIP4 Last Glacial Maximum experiments: preliminary results and comparison with the PMIP3 simulations, Climate of the Past 17, 1065–1089; data: sea-ice concentration (siconc) of the CMIP6 lgm runs of MPI-ESM1-2-LR, MIROC-ES2L and AWI-ESM-1-1-LR",
+    "url": "https://doi.org/10.5194/cp-17-1065-2021",
+    "licence": "CC BY 4.0 (CMIP6 data licence register)"
   },
   "postberg2023": {
     "name": "Postberg et al. 2023",
