@@ -7,6 +7,7 @@
 import type { Globe } from '../../globe/scene';
 import type { PartContext } from '../part';
 import type { EmpireCentury, Territory } from '../../data/empires';
+import { redraws, SELECTION } from '../../state/redraws';
 import { createSeen } from './seen';
 import { barYear, timeInYear, westernYearsOf } from './years';
 import { greatestEclipseUT } from '../../data/catalog';
@@ -63,12 +64,10 @@ export interface EclipsesPart {
   readonly selected: (state: ViewState) => Eclipse | undefined;
   /** The bar, the path and the moment, for the eclipse picked. */
   readonly renderSelection: (state: ViewState) => void;
-  /** Everything that changes with the moment shown. */
-  readonly renderMoment: (state: ViewState) => void;
-  /** List the eclipses of the bar's year, if it changed. */
-  readonly loadYear: (state: ViewState) => void;
   /** An eclipse was picked elsewhere: the globe turns to it, or to the place given. */
   readonly flyToPicked: (place: GeoPoint | null) => void;
+  /** The view changed: the bar's year listed, and the eclipse picked or its moment drawn. */
+  readonly render: (state: ViewState, previous: ViewState | null) => void;
 }
 
 export function mountEclipses(context: EclipsesContext): EclipsesPart {
@@ -304,11 +303,14 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
     scrubber: scrubber.root,
     selected: selectedEclipse,
     renderSelection,
-    renderMoment,
-    loadYear,
     flyToPicked: (place) => {
       flyToSelection = true;
       flyTarget = place;
+    },
+    render(state, previous) {
+      loadYear(state);
+      if (redraws(SELECTION, state, previous)) renderSelection(state);
+      else if (previous !== null && state.time !== previous.time) renderMoment(state);
     },
   };
 }

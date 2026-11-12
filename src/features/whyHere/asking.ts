@@ -27,12 +27,12 @@ export interface AskingContext {
 
 export interface Asking {
   /** Whether a tap on the globe asks. */
-  on(): boolean;
+  readonly on: () => boolean;
   /** The zoom rail's button: ask, or stop asking. */
-  toggle(): void;
+  readonly toggle: () => void;
   /** The sheet changed by hand: closing it stops the asking too. */
-  sheetChanged(why: ViewState['why']): void;
-  render(state: ViewState): void;
+  readonly sheetChanged: (why: ViewState['why']) => void;
+  readonly render: (state: ViewState) => void;
 }
 
 export function createAsking(context: AskingContext): Asking {
@@ -40,14 +40,14 @@ export function createAsking(context: AskingContext): Asking {
   let asking = false;
   return {
     on: () => asking,
-    toggle() {
+    toggle: () => {
       asking = !asking;
       store.set((state) => ({ ...state, why: whyAsked(asking, state.why) }));
     },
-    sheetChanged(why) {
+    sheetChanged: (why) => {
       asking &&= why !== null;
     },
-    render(state) {
+    render: (state) => {
       context.zoomRail.setWhyHere(hereOffered(state), asking);
       context.root.classList.toggle('is-asking-here', asking && state.ma === null);
     },

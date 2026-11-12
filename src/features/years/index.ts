@@ -48,6 +48,8 @@ export interface YearsPart {
   readonly travelling: () => boolean;
   /** The calibration curves, loaded once. */
   readonly curves: () => Promise<Radiocarbon>;
+  /** Deep time, or an eclipse picked, ends a trip through the years. */
+  readonly settle: (state: ViewState) => void;
 }
 
 export function mountYears(context: YearsContext): YearsPart {
@@ -283,5 +285,10 @@ export function mountYears(context: YearsContext): YearsPart {
     setTravel,
     travelling: () => travelling,
     curves: radiocarbonCurves,
+    settle(state) {
+      if (state.ma === null && state.selection === null) return;
+      stopHistory();
+      setTravel(false);
+    },
   };
 }
