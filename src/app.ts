@@ -6,7 +6,6 @@
 
 import { LunarCatalog } from './data/lunarCatalog';
 import { SolarCatalog } from './data/solarCatalog';
-import { eclipseMomentAt, isSolar } from './eclipses/describe';
 import { angularDistance } from './eclipses/visibility';
 import { impactLayer } from './globe/impactLayer';
 import { createDatingCard } from './ui/datingCard';
@@ -32,13 +31,7 @@ import {
 import { createStore } from './state/store';
 import { parseViewState, serializeViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
-import {
-  awayFromEarth,
-  DEFAULT_LOOK,
-  withLayer,
-  type GeoPoint,
-  type ViewState,
-} from './state/viewState';
+import { awayFromEarth, withLayer, type GeoPoint, type ViewState } from './state/viewState';
 import { DeltaT } from './time/deltaT';
 import { element } from './ui/dom';
 import { FEATURES } from './features';
@@ -89,8 +82,8 @@ import { mountLayersPanel } from './features/layersPanel';
 import { createPanels } from './features/shell/panels';
 import { keepCentred } from './features/shell/layout';
 import { openOverRegion } from './features/shell/firstView';
+import { listenForInput } from './features/shell/input';
 import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment/observer';
-import { phoneLook } from './sky/aim';
 import { createZoomRail } from './ui/zoomRail';
 import { railView } from './ui/railView';
 import { createWaysLegend } from './ui/waysLegend';
@@ -126,26 +119,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const panels = createPanels(root);
 
   const viewSwitch = createViewSwitch((choice) => {
-    if (choice === 'sky') {
-      // Stand where the link says, or else on the spot in the middle of the globe; during an
-      // eclipse, face it.
-      store.set((state) => {
-        // The sky is drawn for historical time: leaving for it leaves deep time too.
-        const next: ViewState = {
-          ...state,
-          mode: 'sky',
-          location: observerOf(state),
-          ma: null,
-          look: phoneLook(state.look, DEFAULT_LOOK, window.innerHeight > window.innerWidth),
-        };
-        const selected = eclipses.selected(state);
-        if (selected === undefined) return next;
-        const look = sky.aimAt(next, isSolar(selected) ? 'sun' : 'moon');
-        return look === null || look.altitude <= -1 ? next : { ...next, look };
-      });
-    } else {
-      store.set((state) => ({ ...state, mode: 'globe', view: choice }));
-    }
+    input.choose(choice);
   });
   // The orbits, offered where they mean something: far out, or on the Sun or a planet.
   // Why anything is on screen: the book marks beside things, and the panel they open.
@@ -605,16 +579,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     shower.stage,
   );
 
-  window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') panels.show();
-    // "/" opens search, unless it is being typed somewhere.
-    const typing =
-      event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;
-    if (event.key === '/' && !typing && !event.ctrlKey && !event.metaKey) {
-      event.preventDefault();
-      texts.search.open();
-    }
-  });
   /** Open a passage's anchor: its view laid over the reader's, as a step back can undo. */
   function openAnchor(anchor: Anchor): void {
     const next = parseViewState(anchorQuery(anchor, serializeViewState(store.get())), new Date());
@@ -977,33 +941,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     });
   }
 
-  globe.onBodyClick((focus) => {
-    store.set((state) => ({ ...state, focus, view: 'free' }));
-  });
-  globe.onEmptyTap(() => {
-    // In deep time, empty space is like the globe: a tap clears the panels, or brings them back.
-    // In historical time a tap on the globe picks a place, so empty space only brings them back.
-    if (store.get().ma !== null) panels.toggle();
-    else panels.show();
-  });
-  globe.onPlacePick((place) => {
-    // Deep time has no place to stand: a tap on the globe clears the panels, or brings them back.
-    if (store.get().ma !== null) {
-      panels.toggle();
-      return;
-    }
-    const location = { latitude: round(place.latitude, 4), longitude: round(place.longitude, 4) };
-    // During a solar eclipse, show the moment it is deepest at the place picked.
-    const selected = eclipses.selected(store.get());
-    store.set((state) => ({
-      ...state,
-      location,
-      ...(asking.on() ? { why: 'here' as const } : {}),
-      time:
-        selected === undefined || !isSolar(selected)
-          ? state.time
-          : eclipseMomentAt(selected, location),
-    }));
+  // The keyboard, a tap on the globe or around it, a body clicked, the camera moved (#474).
+  const input = listenForInput({
+    store,
+    globe,
+    panels,
+    openSearch: () => {
+      texts.search.open();
+    },
+    asking: () => asking.on(),
+    selected: (state) => eclipses.selected(state),
+    sky: { observer: observerOf, aimAt: (state, target) => sky.aimAt(state, target) },
   });
   // A first visit whose link names no view of its own opens over the reader's region.
   openOverRegion({
@@ -1035,9 +983,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       });
     }, 1000);
   }
-  globe.onCameraChange((camera) => {
-    store.set((state) => ({ ...state, camera }));
-  });
   window.addEventListener('pagehide', () => {
     sync.flush();
   });
@@ -1047,9 +992,4 @@ export async function startApp(root: HTMLElement): Promise<void> {
     sync.adopt(restored);
     store.set(() => restored);
   });
-}
-
-function round(value: number, digits: number): number {
-  const scale = 10 ** digits;
-  return Math.round(value * scale) / scale;
 }
