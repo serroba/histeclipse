@@ -169,3 +169,13 @@ describe('citing a source', () => {
     expect(bibtexUrl(SOURCES.macrostrat)).toBeNull();
   });
 });
+
+describe('sources.json', () => {
+  // A new source goes in its place by id, not at the end, so two branches adding sources rarely
+  // touch the same lines (#479). The whys keep their order: the search's passages and their
+  // vectors are built in it.
+  it('lists its sources in order of their ids', () => {
+    const ids = Object.keys(SOURCES);
+    expect(ids).toEqual([...ids].sort());
+  });
+});
