@@ -79,6 +79,7 @@ from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.solar_images import fetch_images
 from histeclipse_pipeline.spacecraft import fetch_spacecraft
 from histeclipse_pipeline.spacecraft_paths import fetch_spacecraft_paths
+from histeclipse_pipeline.ssp_pathways import fetch_pathways
 from histeclipse_pipeline.time_tree import fetch_time_trees
 from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
@@ -521,6 +522,12 @@ def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs networ
     return _say(f"wrote {count} measured-warming images to {args.out}")
 
 
+def ssp_pathways(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the SSP pathways to 2100: CO2 emissions, concentration and forcing."""
+    points = fetch_pathways(args.out)
+    return _say(f"wrote {points} SSP pathway points to {args.out}")
+
+
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
 #: with a margin each side for the months that straddle the ends.
 BABYLON_YEARS = (-749, 101)
@@ -794,6 +801,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "measured-warming": (
         measured_warming,
         "write measured land warming since 1850 against 1850-1900 (Berkeley Earth)",
+        "output directory",
+    ),
+    "ssp-pathways": (
+        ssp_pathways,
+        "write the SSP pathways to 2100: CO2 emissions, CO2 and forcing (RCMIP; IPCC AR6)",
         "output directory",
     ),
     "calendars": (
