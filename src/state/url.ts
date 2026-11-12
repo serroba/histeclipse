@@ -11,20 +11,10 @@
  *   a distance in its radii.
  * - `look` is where the observer at `loc` faces in the sky view: azimuth from north through
  *   east, altitude, and field of view, in degrees. It is written whenever `mode=sky`.
- * - `figures` picks the constellation figures the sky view draws: `famous` (absent), `all`
- *   or `none`.
- * - `years` is the calendar the year bar counts in: `western` (absent), `hebrew`, `islamic`,
- *   `egyptian` or `roman`. It changes how years are listed, not the moment in `t`.
- * - `sun` is the channel of light the Sun is drawn in, close up: `visible` (absent),
- *   `magnetogram`, `304`, `171`, `193` or `131`.
- * - `borders` is whose borders of past states the empires layer draws: `cliopatria`
- *   (absent), `ohm` (OpenHistoricalMap) or `both`.
- * - `seen` names a past state, as Cliopatria names it (`Neo-Babylonian Empire`): the year bar
- *   marks which eclipses could be seen from its territory. Absent means anywhere.
- * - Deep time's parameters (`ma`, `scale` and how its globe is drawn) are in
- *   `slices/deep.ts`, with its fields (#381).
- * - `culture` is whose constellations the sky view draws: `modern` (absent) or a sky culture
- *   such as `babylonian_mulapin` or `chinese`.
+ * - The rest are in the view state's slices, each with its fields (#381): how things are shown
+ *   (`slices/display.ts`), the history layers (`slices/history.ts`), deep time
+ *   (`slices/deep.ts`) and the sheets a link opens (`slices/sheets.ts`). They are written in
+ *   that order, and only when not at their defaults.
  * - `loc` (observer), `sel` (selected eclipse), `view` (an attached viewpoint; absent means
  *   free) and `focus` are optional; everything else is always written out, so a link keeps its meaning
  *   even if defaults change later.
@@ -33,24 +23,17 @@
  * show, so a mangled link still opens something sensible.
  */
 
-import { WHY_VIEWS } from '../sources/registry';
 import { calendarDate, calendarDateOf, julianDay, type Calendar } from '../time/julianDay';
-import { SKY_CULTURES, type SkyCulture } from '../data/skyCultures';
-import { SUN_LAYERS, type SunLayer } from '../data/sunImages';
-import { LINEAGE_GROUPS } from '../data/lineages';
-import { YEAR_CALENDARS, type YearCalendar } from '../time/calendars';
 import { astronomicalYear } from '../time/year';
 import { errorMessage } from '../util/errors';
 import { oneOf, readSlice, writeSlice } from './slice';
 import { DEEP_PARAMS } from './slices/deep';
+import { DISPLAY_PARAMS } from './slices/display';
+import { HISTORY_PARAMS } from './slices/history';
+import { SHEETS_PARAMS } from './slices/sheets';
 import {
-  PLANET_LIGHTS,
-  BOUNDARY_CHAPTERS,
   CAMERA_DISTANCE_RANGE,
-  BORDER_SOURCES,
   DEFAULT_LOOK,
-  type BorderSource,
-  FIGURES,
   SKY_FOV_RANGE,
   ECLIPSE_KINDS,
   LAYERS,
@@ -71,10 +54,6 @@ import {
   type SkyLook,
   type Viewpoint,
   type ViewState,
-  type TreeView,
-  type CratersView,
-  type LineagesView,
-  CRATERS_SHAPES,
 } from './viewState';
 
 export const URL_VERSION = 1;
@@ -112,9 +91,6 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
       return fallback;
     }
   }
-  /** One of a fixed list, named by the parameter. */
-  const pick = <const T extends string, F>(name: string, options: readonly T[], fallback: T | F) =>
-    read<T | F>(name, (raw) => oneOf(raw, options, name), fallback);
 
   const version = params.getAll('v').at(-1) ?? null;
   if (version !== null && version !== String(URL_VERSION)) {
@@ -134,20 +110,10 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     layers: read('layers', parseLayers, defaults.layers),
     selection: read<Selection | null>('sel', parseSelection, defaults.selection),
     look: read('look', parseLook, defaults.look),
-    figures: pick('figures', FIGURES, defaults.figures),
-    years: read('years', parseYears, defaults.years),
-    sunLayer: read('sun', parseSunLayer, defaults.sunLayer),
-    planetLight: pick('light', PLANET_LIGHTS, defaults.planetLight),
-    culture: read('culture', parseCulture, defaults.culture),
-    borders: read('borders', parseBorders, defaults.borders),
-    seenIn: read<string | null>('seen', parseSeenIn, defaults.seenIn),
+    ...readSlice(DISPLAY_PARAMS, defaults, read),
+    ...readSlice(HISTORY_PARAMS, defaults, read),
     ...readSlice(DEEP_PARAMS, defaults, read),
-    why: pick('why', WHY_VIEWS, defaults.why),
-    tree: read<TreeView | null>('tree', parseTree, defaults.tree),
-    craters: read<CratersView | null>('craters', parseCraters, defaults.craters),
-    cratersIn: pick('cratersin', CRATERS_SHAPES, defaults.cratersIn),
-    lineages: read<LineagesView | null>('lineages', parseLineagesView, defaults.lineages),
-    boundaries: pick('boundaries', BOUNDARY_CHAPTERS, defaults.boundaries),
+    ...readSlice(SHEETS_PARAMS, defaults, read),
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
@@ -171,88 +137,18 @@ export function serializeViewState(state: ViewState): string {
   if (state.mode === 'sky' || !sameLook(state.look, DEFAULT_LOOK)) {
     params.set('look', formatLook(state.look));
   }
-  if (state.figures !== 'famous') params.set('figures', state.figures);
-  if (state.years !== 'western') params.set('years', state.years);
-  if (state.sunLayer !== 'visible') params.set('sun', state.sunLayer);
-  if (state.planetLight !== 'look') params.set('light', state.planetLight);
-  if (state.culture !== 'modern') params.set('culture', state.culture);
-  if (state.borders !== 'cliopatria') params.set('borders', state.borders);
-  if (state.seenIn !== null) params.set('seen', state.seenIn);
-  writeSlice(DEEP_PARAMS, state, (key, value) => {
+  const set = (key: string, value: string): void => {
     params.set(key, value);
-  });
-  if (state.why !== null) params.set('why', state.why);
-  if (state.tree !== null) params.set('tree', formatTree(state.tree));
-  if (state.craters !== null) {
-    params.set('craters', state.craters === 'all' ? 'all' : String(state.craters.id));
+  };
+  for (const slice of [DISPLAY_PARAMS, HISTORY_PARAMS, DEEP_PARAMS, SHEETS_PARAMS]) {
+    writeSlice<object>(slice, state, set);
   }
-  if (state.cratersIn !== 'map') params.set('cratersin', state.cratersIn);
-  if (state.lineages !== null) {
-    const { group, pick } = state.lineages;
-    params.set('lineages', pick === null ? group : `${group}:${String(pick)}`);
-  }
-  if (state.boundaries !== null) params.set('boundaries', state.boundaries);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }
 
 function parseMode(raw: string): Mode {
   return oneOf(raw, MODES, 'mode');
-}
-
-function parseBorders(raw: string): BorderSource {
-  return oneOf(raw, BORDER_SOURCES, 'borders');
-}
-
-/** `tree=all`, or `tree=ott` and an Open Tree of Life id, as Open Tree writes them. */
-function parseTree(raw: string): TreeView {
-  if (raw === 'all') return 'all';
-  const match = /^ott(\d{1,10})$/.exec(raw);
-  if (match === null)
-    throw new Error('expected all, or ott and an Open Tree id, such as ott770315');
-  return { ott: Number(match[1]) };
-}
-
-/** `craters=all`, or `craters=` and an Impact Earth Database id. */
-function parseCraters(raw: string): CratersView {
-  if (raw === 'all') return 'all';
-  if (!/^\d{1,6}$/.test(raw)) throw new Error('expected all, or a crater’s id, such as 12');
-  return { id: Number(raw) };
-}
-
-/** `lineages=` and a fossil group, then `:` and a PBDB number to pick one of its names out. */
-function parseLineagesView(raw: string): LineagesView {
-  const [group, pick, ...rest] = raw.split(':');
-  const known = LINEAGE_GROUPS.find((each) => each === group);
-  if (known === undefined || rest.length > 0 || (pick !== undefined && !/^\d{1,7}$/.test(pick))) {
-    throw new Error(
-      `expected ${LINEAGE_GROUPS.join(', ')}, then perhaps : and a PBDB number, such as dinosaurs:38613`,
-    );
-  }
-  return { group: known, pick: pick === undefined ? null : Number(pick) };
-}
-
-function formatTree(tree: TreeView): string {
-  return tree === 'all' ? 'all' : `ott${String(tree.ott)}`;
-}
-
-/** A state's name: any text, trimmed, of a sensible length. Whether it exists depends on the year. */
-function parseSeenIn(raw: string): string {
-  const name = raw.trim();
-  if (name.length === 0 || name.length > 120) throw new Error('expected the name of a past state');
-  return name;
-}
-
-function parseCulture(raw: string): SkyCulture {
-  return oneOf(raw, SKY_CULTURES, 'culture');
-}
-
-function parseSunLayer(raw: string): SunLayer {
-  return oneOf(raw, SUN_LAYERS, 'sun');
-}
-
-function parseYears(raw: string): YearCalendar {
-  return oneOf(raw, YEAR_CALENDARS, 'years');
 }
 
 function parseLook(raw: string): SkyLook {

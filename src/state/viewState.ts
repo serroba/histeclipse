@@ -12,14 +12,31 @@ import { defaultCalendarFor, type Moment } from '../time/moment';
 export type { DeepScale, EclipseKind, GeoPoint, Moment, Selection };
 export { DEEP_SCALES, defaultCalendarFor, EARTH_AGE_MA, ECLIPSE_KINDS, roundMa };
 import { MOONS } from '../astro/moonOrbits';
-import type { SkyCulture } from '../data/skyCultures';
-import type { LineageGroup } from '../data/lineages';
-import type { WhyView } from '../sources/registry';
-import type { SunLayer } from '../data/sunImages';
-import type { YearCalendar } from '../time/calendars';
 import { calendarDateOf, julianDay, julianDayNumber, type JulianDay } from '../time/julianDay';
 import { astronomicalYear } from '../time/year';
 import { DEEP_DEFAULTS, type DeepState } from './slices/deep';
+import { DISPLAY_DEFAULTS, type DisplayState } from './slices/display';
+import { HISTORY_DEFAULTS, type HistoryState } from './slices/history';
+import { SHEETS_DEFAULTS, type SheetsState } from './slices/sheets';
+
+export {
+  FIGURES,
+  PLANET_LIGHTS,
+  type DisplayState,
+  type Figures,
+  type PlanetLight,
+} from './slices/display';
+export { BORDER_SOURCES, type BorderSource, type HistoryState } from './slices/history';
+export {
+  BOUNDARY_CHAPTERS,
+  CRATERS_SHAPES,
+  type BoundaryChapter,
+  type CratersShape,
+  type CratersView,
+  type LineagesView,
+  type SheetsState,
+  type TreeView,
+} from './slices/sheets';
 
 export {
   DEEP_DEFAULTS,
@@ -32,9 +49,6 @@ export {
 export const MODES = ['globe', 'sky'] as const;
 export type Mode = (typeof MODES)[number];
 
-/** Whose borders of past states the empires layer shows. */
-export const BORDER_SOURCES = ['cliopatria', 'ohm', 'both'] as const;
-
 /** How far the time bar reaches: the Holocene's years, or one of deep time's scales. */
 export type Span = 'years' | DeepScale;
 export const SPAN_LABELS: Readonly<Record<Span, string>> = {
@@ -43,7 +57,6 @@ export const SPAN_LABELS: Readonly<Record<Span, string>> = {
   all: '540 Myr',
   eons: '4.6 Gyr',
 };
-export type BorderSource = (typeof BORDER_SOURCES)[number];
 
 export const LAYERS = [
   'lunar',
@@ -85,16 +98,8 @@ export const LAYERS = [
   // Deep time: fossils of four groups of animals, where they lay then.
   'fossils',
 ] as const;
-/** How a planet is shown close up: as it looks, or another way where a mission gives one:
- * Venus's ground by radar, Mercury's minerals in enhanced colour, Jupiter recently. */
-export const PLANET_LIGHTS = ['look', 'radar', 'minerals', 'recent', 'height', 'haze'] as const;
-export type PlanetLight = (typeof PLANET_LIGHTS)[number];
 
 export type Layer = (typeof LAYERS)[number];
-
-/** The planetary boundaries' story's chapters (#434), in order; the Holocene's first (#453). */
-export const BOUNDARY_CHAPTERS = ['holocene', 'safe', 'pressure', 'compare'] as const;
-export type BoundaryChapter = (typeof BOUNDARY_CHAPTERS)[number];
 
 /** A dispersal model's scenario shaded with the Humans layer, or none. */
 
@@ -129,10 +134,6 @@ export const BODIES = [
 ] as const;
 export type Body = (typeof BODIES)[number];
 
-/** Which constellation figures the sky view draws: the best-known ones, all 88, or none. */
-export const FIGURES = ['famous', 'all', 'none'] as const;
-export type Figures = (typeof FIGURES)[number];
-
 /**
  * The orbiting camera, relative to the body in focus: the point on its surface under the camera
  * (on the Moon in selenographic coordinates; on the Sun in J2000 right ascension and
@@ -154,7 +155,7 @@ export interface SkyLook {
 }
 
 /** The view: what a link names. Each slice's fields live in its file in `slices/` (#381). */
-export interface ViewState extends DeepState {
+export interface ViewState extends DisplayState, HistoryState, DeepState, SheetsState {
   readonly mode: Mode;
   readonly time: Moment;
   readonly location: GeoPoint | null;
@@ -164,56 +165,7 @@ export interface ViewState extends DeepState {
   readonly layers: ReadonlySet<Layer>;
   readonly selection: Selection | null;
   readonly look: SkyLook;
-  readonly figures: Figures;
-  /** The calendar the year bar counts in. */
-  readonly years: YearCalendar;
-  /** The channel of light the Sun is shown in, close up. */
-  readonly sunLayer: SunLayer;
-  /** How a planet is shown close up (#239): as it looks, or by another light where it has one. */
-  readonly planetLight: PlanetLight;
-  /** Whose constellations the sky view draws. */
-  readonly culture: SkyCulture;
-  /** Whose borders the empires layer draws. */
-  readonly borders: BorderSource;
-  /** A past state (by its name in Cliopatria) whose eclipses the year bar picks out, if any. */
-  readonly seenIn: string | null;
-  /** The why panel open: what it explains, or every source; null when closed. */
-  readonly why: WhyView | null;
-  /**
-   * The tree of life open (#300): the whole tree, or the node an Open Tree of Life id names, its
-   * line back to the root lit; null when closed.
-   */
-  readonly tree: TreeView | null;
-  /**
-   * The impacts' paths through time open (#304): all of them, or one crater's (its Impact Earth
-   * Database id) picked out; null when closed.
-   */
-  readonly craters: CratersView | null;
-  /** How the impacts' paths are drawn (#322): on a flat map, or in a 3D box with time as depth. */
-  readonly cratersIn: CratersShape;
-  /**
-   * A fossil group's genera through time and place open (#358): the group, and the genus or
-   * group within it picked out (its PBDB number); null when closed.
-   */
-  readonly lineages: LineagesView | null;
-  /** The planetary boundaries' story open (#434), at a chapter; null when closed. */
-  readonly boundaries: BoundaryChapter | null;
 }
-
-/** What the lineages through time show: a fossil group, and one of its names picked out. */
-export interface LineagesView {
-  readonly group: LineageGroup;
-  readonly pick: number | null;
-}
-
-export const CRATERS_SHAPES = ['map', 'box'] as const;
-export type CratersShape = (typeof CRATERS_SHAPES)[number];
-
-/** What the impacts' paths show: all of them, or one crater's picked out. */
-export type CratersView = 'all' | { readonly id: number };
-
-/** What the tree of life shows: all of it, or one taxon's place in it (its Open Tree id). */
-export type TreeView = 'all' | { readonly ott: number };
 
 // In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
 // so Saturn (up to ~11 AU away) fits in view; the scene caps other bodies at the same reach.
@@ -290,20 +242,10 @@ export function defaultViewState(now: Date): ViewState {
     layers: DEFAULT_LAYERS,
     selection: null,
     look: DEFAULT_LOOK,
-    figures: 'famous',
-    years: 'western',
-    sunLayer: 'visible',
-    planetLight: 'look',
-    culture: 'modern',
-    borders: 'cliopatria',
-    seenIn: null,
+    ...DISPLAY_DEFAULTS,
+    ...HISTORY_DEFAULTS,
     ...DEEP_DEFAULTS,
-    why: null,
-    tree: null,
-    craters: null,
-    cratersIn: 'map',
-    lineages: null,
-    boundaries: null,
+    ...SHEETS_DEFAULTS,
   };
 }
 
