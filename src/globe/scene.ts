@@ -51,6 +51,7 @@ import {
   UnsignedByteType,
   Vector2,
   Vector3,
+  Vector4,
   WebGLRenderer,
   ZeroFactor,
 } from 'three';
@@ -60,6 +61,7 @@ import { apply, multiply, transpose, type Matrix3 } from '../astro/matrix';
 import {
   CAMERA_DISTANCE_RANGE,
   DEFAULT_CAMERA,
+  nearestDistance,
   type Body,
   type GeoPoint,
   type GlobeCamera,
@@ -114,16 +116,11 @@ import { createPlanetMeshes } from './planetMeshes';
 import type { ArrivalGrid } from '../data/dispersal';
 import { clearOverlay, createEmpireCanvas, paintSettled } from './empireCanvas';
 import { temperatureUniforms } from './temperatureShader';
-import {
-  ATMOSPHERE_FRAGMENT,
-  ATMOSPHERE_VERTEX,
-  CORONA_FRAGMENT,
-  CORONA_VERTEX,
-  MOON_FRAGMENT,
-  MOON_VERTEX,
-  SUN_FRAGMENT,
-  SUN_VERTEX,
-} from './bodyShaders';
+import { ATMOSPHERE_FRAGMENT, ATMOSPHERE_VERTEX, MOON_FRAGMENT, MOON_VERTEX } from './bodyShaders';
+import { CORONA_FRAGMENT, CORONA_VERTEX, SUN_FRAGMENT, SUN_VERTEX } from './sunShaders';
+import { controlSpeeds } from './controlSpeeds';
+import { createEarthTileLayer } from './earthTiles';
+import type { EarthTiles } from '../data/earthTiles';
 import { EARTH_VERTEX, earthFragment } from './earthShader';
 import type {
   DeepTimeSurface,
@@ -221,6 +218,8 @@ export interface Globe {
   setBodyMap(body: 'earth' | 'moon', url: string): void;
   /** The widest texture the graphics can hold, pixels. */
   readonly maxTextureSize: number;
+  /** Close up, Earth's full-size map in tiles from now on, from their manifest (#568). */
+  setEarthTiles(tiles: EarthTiles, folder: string): void;
   /**
    * Shade where a dispersal model has people settled `ka` thousand years ago, under any ice
    * outlines; null hides it.
@@ -360,6 +359,8 @@ export function createGlobe(
   empiresTexture.colorSpace = SRGBColorSpace;
   const earthUniforms = {
     dayMap: { value: texture },
+    dayRect: { value: new Vector4(0, 0, 1, 1) },
+    dayAlpha: { value: 1 },
     paleoYounger: { value: null as Texture | null },
     paleoOlder: { value: null as Texture | null },
     paleoMix: { value: 0 },
@@ -432,6 +433,14 @@ export function createGlobe(
     }),
   );
   scene.add(earth, atmosphere);
+  // Close up, Earth's full-size map in tiles over its own (#568); how many show, for tests.
+  const earthTiles = createEarthTileLayer(earth, {
+    anisotropy: renderer.capabilities.getMaxAnisotropy(),
+    pixels: () => renderer.domElement.height,
+    requestRender: () => (needsRender = true),
+    report: (shown, fetched) =>
+      (container.dataset['earthTiles'] = `${String(shown)}/${String(fetched)}`),
+  });
 
   // Deep time: Earth's spin axis, its ends marked as the poles of the time shown. The maps
   // put the poles of their time at the top and bottom, so the axis is the globe's own.
@@ -964,7 +973,7 @@ export function createGlobe(
   function orbitFocus(): void {
     const radius = BODY_RADIUS[focus];
     controls.target.copy(bodyFrame(focus).position);
-    controls.minDistance = CAMERA_DISTANCE_RANGE.min * radius;
+    controls.minDistance = nearestDistance(focus) * radius;
     controls.maxDistance = Math.min(CAMERA_DISTANCE_RANGE.max * radius, CAMERA_DISTANCE_RANGE.max);
     controls.enabled = true;
     controls.update();
@@ -1232,13 +1241,14 @@ export function createGlobe(
       needsRender = true;
       if (progress === 1) zoomFlight = null;
     }
-    // Wheel steps scale the distance; take bigger steps far out so the Sun is a few spins away.
-    controls.zoomSpeed =
-      camera.position.distanceTo(controls.target) < 10 * BODY_RADIUS[focus] ? 0.8 : 2.5;
+    const speeds = controlSpeeds(camera.position.distanceTo(controls.target), BODY_RADIUS[focus]);
+    controls.zoomSpeed = speeds.zoom;
+    controls.rotateSpeed = speeds.rotate;
     // update() keeps damping going after the pointer is released; it reports movement via 'change'.
     if (controls.enabled) controls.update();
     if (needsRender) {
       needsRender = false;
+      if (earthTiles.update(camera, !deepTime && earth.visible, now)) needsRender = true;
       shadeSun();
       // In deep time the Sun, Moon and planets are where they are today, which says nothing
       // about then: they are left out, markers too.
@@ -1514,6 +1524,9 @@ export function createGlobe(
   return {
     canvas: renderer.domElement,
     maxTextureSize: renderer.capabilities.maxTextureSize,
+    setEarthTiles: (tiles, folder) => {
+      earthTiles.enable(tiles, folder);
+    },
     setSunDirection([x, y, z]) {
       sunDirection.set(x, y, z).normalize();
       needsRender = true;

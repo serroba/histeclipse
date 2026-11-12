@@ -140,6 +140,16 @@ describe('parseViewState', () => {
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('focus=');
   });
 
+  it('reads a camera 50 km above Earth, to a thousandth of its radius near the ground', () => {
+    const { state, warnings } = parseViewState('cam=30,31,1.008', NOW);
+    expect(warnings).toEqual([]);
+    expect(state.camera.distance).toBe(1.008);
+    expect(serializeViewState(state)).toContain('cam=30.0000,31.0000,1.008');
+    // Farther out, two decimals as before.
+    expect(serializeViewState(parseViewState('cam=30,31,1.5', NOW).state)).toContain(',1.50');
+    expect(parseViewState('cam=0,0,1.005', NOW).warnings).toHaveLength(1);
+  });
+
   it('reads whose temperature maps colour the globe, writing it only when not the default', () => {
     expect(parseViewState('temp=cesm', NOW).state.temperatureModel).toBe('cesm');
     expect(parseViewState('tshow=actual', NOW).state.temperatureShow).toBe('actual');
