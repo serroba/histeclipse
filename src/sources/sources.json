@@ -19,6 +19,13 @@
     "url": "https://doi.org/10.5285/8fa708d0474d4a3caa5c9f645a89d282",
     "licence": "CC BY 4.0"
   },
+  "ar6Fig713": {
+    "name": "IPCC AR6 Figure 7.13 input data",
+    "kind": "dataset",
+    "cite": "Lunt, D. (2023), Chapter 7 of the Working Group I Contribution to the IPCC Sixth Assessment Report – Input data for Figure 7.13 (v20220118), NERC EDS Centre for Environmental Data Analysis; the mid-Pliocene PlioMIP2 17-model ensemble-mean near-surface air temperature change from pre-industrial. Report chapter: Forster, P., Storelvmo, T., et al. (2021), The Earth’s Energy Budget, Climate Feedbacks, and Climate Sensitivity, in Climate Change 2021: The Physical Science Basis, Cambridge University Press, 923–1054, doi:10.1017/9781009157896.009",
+    "url": "https://doi.org/10.5285/4dbd3ccb85d747188586735133f1d3d9",
+    "licence": "CC BY 4.0"
+  },
   "ar6SeaLevel": {
     "name": "IPCC AR6 global mean sea level",
     "kind": "dataset",
@@ -255,6 +262,25 @@
     "cite": "Morrison, Stephenson, Hohenkerk & Zawilski (2021), Addendum 2020 to \"Measurement of the Earth’s rotation: 720 BC to AD 2015\", Proceedings of the Royal Society A 477",
     "url": "https://doi.org/10.1098/rspa.2020.0776"
   },
+  "dowsett2016": {
+    "name": "PRISM4, Dowsett et al. 2016",
+    "kind": "paper",
+    "cite": "Dowsett, H., Dolan, A., Rowley, D., Moucha, R., Forte, A. M., Mitrovica, J. X., et al. (2016), The PRISM4 (mid-Piacenzian) paleoenvironmental reconstruction, Climate of the Past 12, 1519–1538: the boundary conditions (geography, ice, vegetation) of the PlioMIP2 runs",
+    "url": "https://doi.org/10.5194/cp-12-1519-2016",
+    "licence": "CC BY 3.0"
+  },
+  "dumitru2019": {
+    "name": "Dumitru et al. 2019",
+    "kind": "paper",
+    "cite": "Dumitru, O. A., Austermann, J., Polyak, V. J., Fornós, J. J., Asmerom, Y., Ginés, J., Ginés, A. & Onac, B. P. (2019), Constraints on global mean sea level during Pliocene warmth, Nature 574, 233–236: mid-Piacenzian global mean sea level 16.2 m above present (5.6–19.2 m, 68%), from phreatic overgrowths on speleothems in Mallorca",
+    "url": "https://doi.org/10.1038/s41586-019-1543-2"
+  },
+  "dutton2015": {
+    "name": "Dutton et al. 2015",
+    "kind": "paper",
+    "cite": "Dutton, A., Carlson, A. E., Long, A. J., Milne, G. A., Clark, P. U., DeConto, R., Horton, B. P., Rahmstorf, S. & Raymo, M. E. (2015), Sea-level rise due to polar ice-sheet mass loss during past warm periods, Science 349, aaa4019: peak global mean sea level 6–9 m above present in marine isotope stage 5e (the Last Interglacial); no precise Pliocene estimate, because of dynamic topography",
+    "url": "https://doi.org/10.1126/science.aaa4019"
+  },
   "elpmpp02": {
     "name": "ELP/MPP02",
     "kind": "model",
@@ -377,6 +403,13 @@
     "cite": "Morice, C. P., Kennedy, J. J., Rayner, N. A., et al. (2021), An updated assessment of near-surface temperature change from 1850: the HadCRUT5 data set, Journal of Geophysical Research: Atmospheres 126, e2019JD032361; data: HadCRUT.5.1.0.0, Met Office Hadley Centre and Climatic Research Unit, University of East Anglia",
     "url": "https://doi.org/10.1029/2019JD032361",
     "licence": "Open Government Licence v3"
+  },
+  "haywood2020": {
+    "name": "PlioMIP2, Haywood et al. 2020",
+    "kind": "paper",
+    "cite": "Haywood, A. M., Tindall, J. C., Dowsett, H. J., Dolan, A. M., Foley, K. M., Hunter, S. J., et al. (2020), The Pliocene Model Intercomparison Project Phase 2: large-scale climate features and climate sensitivity, Climate of the Past 16, 2095–2123: a multi-model mean warming of 3.2 °C (1.7–5.2 °C) over pre-industrial",
+    "url": "https://doi.org/10.5194/cp-16-2095-2020",
+    "licence": "CC BY 4.0"
   },
   "helioviewer": {
     "name": "Helioviewer",
@@ -941,6 +974,13 @@
     "url": "https://doi.org/10.1038/s41586-021-03984-4",
     "licence": "None stated; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
   },
+  "ottoBliesner2021": {
+    "name": "PMIP4 lig127k, Otto-Bliesner et al. 2021",
+    "kind": "paper",
+    "cite": "Otto-Bliesner, B. L., Brady, E. C., Zhao, A., Brierley, C. M., Axford, Y., Capron, E., et al. (2021), Large-scale features of Last Interglacial climate: results from evaluating the lig127k simulations for the Coupled Model Intercomparison Project (CMIP6)–Paleoclimate Modeling Intercomparison Project (PMIP4), Climate of the Past 17, 63–94",
+    "url": "https://doi.org/10.5194/cp-17-63-2021",
+    "licence": "CC BY 4.0"
+  },
   "p3k14c": {
     "name": "p3k14c",
     "kind": "dataset",
@@ -1010,6 +1050,13 @@
     "cite": "Kageyama, M., Harrison, S. P., Kapsch, M.-L., et al. (2021), The PMIP4 Last Glacial Maximum experiments: preliminary results and comparison with the PMIP3 simulations, Climate of the Past 17, 1065–1089; data: sea-ice concentration (siconc) of the CMIP6 lgm runs of MPI-ESM1-2-LR, MIROC-ES2L and AWI-ESM-1-1-LR",
     "url": "https://doi.org/10.5194/cp-17-1065-2021",
     "licence": "CC BY 4.0 (CMIP6 data licence register)"
+  },
+  "pmipAtlas": {
+    "name": "PMIP for AR6 Interactive Atlas",
+    "kind": "model",
+    "cite": "Brierley, C. & Zhao, A. (2022), pmip4/PMIP_for_AR6_Interactive_Atlas v1.0, Zenodo: each CMIP6-PMIP4 model’s change in near-surface air temperature from its pre-industrial control, lig127k (16 models) and midPliocene-eoi400 (5 models), on a common 1° grid; method in Zhao, A., Brierley, C. M., et al. (2022), Analysing the PMIP4-CMIP6 collection: a workflow and tool (pmip_p2fvar_analyzer v1), Geoscientific Model Development 15, 2475–2488. The model output itself is CMIP6’s, CC BY 4.0",
+    "url": "https://doi.org/10.5281/zenodo.5931114",
+    "licence": "MIT (repository licence; Zenodo lists “other (open)”)"
   },
   "postberg2023": {
     "name": "Postberg et al. 2023",
