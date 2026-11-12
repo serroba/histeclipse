@@ -98,6 +98,13 @@
     "cite": "Bintanja & van de Wal (2008), Nature 454; NOAA World Data Service",
     "url": "https://doi.org/10.1038/nature07158"
   },
+  "biskaborn2019": {
+    "name": "GTN-P permafrost borehole temperatures (Biskaborn et al.)",
+    "kind": "dataset",
+    "cite": "Biskaborn, B. K., Smith, S. L., Noetzli, J., Matthes, H., Vieira, G., Streletskiy, D. A., Schoeneich, P., Romanovsky, V. E., Lewkowicz, A. G., Abramov, A., Allard, M., Boike, J., Cable, W. L., Christiansen, H. H., Delaloye, R., Diekmann, B., Drozdov, D. S., Etzelmüller, B., Grosse, G., Guglielmin, M., Ingeman-Nielsen, T., Isaksen, K., Ishikawa, M., Johansson, M., Johannsson, H., Joo, A., Kaverin, D., Kholodov, A. L., Konstantinov, P., Kröger, S., Lambiel, C., Lanckman, J.-P., Luo, D., Malkova, G., Meiklejohn, I., Moskalenko, N. G., Oliva, M., Ramos, M., Sannel, A. B. K., Sergeev, D. V., Seybold, C., Skryabin, P., Vasiliev, A., Wu, Q., Yoshikawa, K., Zheleznyak, M., Lantuit, H. (2019), Permafrost is warming at a global scale, Nature Communications 10, 264 (doi:10.1038/s41467-018-08240-4); data: GTN-P (2018), GTN-P global mean annual ground temperature data for permafrost near the depth of zero annual amplitude (2007–2016), PANGAEA. The mean annual ground temperature of 154 boreholes of the Global Terrestrial Network for Permafrost, near the depth the seasons no longer reach (mostly 10–20 m), each year from 2007 to 2016; the paper finds permafrost warmed by 0.29 ± 0.12 °C over the decade, most in the continuous zone and in Antarctica",
+    "url": "https://doi.org/10.1594/PANGAEA.884711",
+    "licence": "CC BY 3.0"
+  },
   "blackburn2013": {
     "name": "Blackburn et al. 2013",
     "kind": "paper",
@@ -1183,6 +1190,13 @@
     "cite": "PeriodO, a gazetteer of period definitions, matched to countries by Wikidata identifiers",
     "url": "https://perio.do",
     "licence": "CC0"
+  },
+  "permafrostCci": {
+    "name": "ESA CCI Permafrost extent",
+    "kind": "dataset",
+    "cite": "Westermann, S., Barboux, C., Bartsch, A., Delaloye, R., Grosse, G., Heim, B., Hugelius, G., Irrgang, A., Kääb, A. M., Matthes, H., Miesner, F., Nitze, I., Pellet, C., Seifert, F. M., Strozzi, T., Wegmüller, U., Wieczorek, M., Wiesmann, A. (2025), ESA Permafrost Climate Change Initiative (Permafrost_cci): Permafrost extent for the Northern Hemisphere, v5.0, NERC EDS Centre for Environmental Data Analysis. The share of each 0.01° cell north of 25° N underlain by permafrost, each year from 1997 to 2023, from the CryoGrid ground-temperature model driven by MODIS land-surface temperature from 2003 and by bias-corrected ERA5 air temperature alone before; an ensemble of seven runs, so shares move in sevenths",
+    "url": "https://doi.org/10.5285/d235665772ec4b558e9a89ac85595e71",
+    "licence": "ESA CCI data policy: free and open for any use, crediting the ESA Climate Change Initiative, the Permafrost_cci project and the dataset"
   },
   "planetaryHealthCheck2026": {
     "name": "Planetary Health Check 2026",
