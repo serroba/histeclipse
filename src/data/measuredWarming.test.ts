@@ -18,6 +18,18 @@ describe('the measured warming maps', () => {
     expect(warming.frames[0]?.year).toBe(1850);
   });
 
+  it('estimate the baseline where its records were too few, about a third of the land', async () => {
+    const { estimated } = await index();
+    expect(estimated.from).toBe('1951–1980');
+    expect(estimated.share).toBeGreaterThan(0.2);
+    expect(estimated.share).toBeLessThan(0.4);
+    // 1951–1980 was some 0.3 to 0.6 °C warmer than 1850–1900, band by band.
+    for (const { shift } of estimated.bands) {
+      expect(shift).toBeGreaterThan(0.2);
+      expect(shift).toBeLessThan(0.8);
+    }
+  });
+
   it('show land some 2 °C warmer in the last five years than in 1850–1900', async () => {
     const last = (await index()).frames.at(-1);
     expect(last?.year).toBeGreaterThanOrEqual(2024);
