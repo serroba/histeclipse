@@ -45,6 +45,7 @@ from histeclipse_pipeline.measured_warming import fetch_measured_warming
 from histeclipse_pipeline.moon_orbits import fetch_moon_orbits
 from histeclipse_pipeline.natural_forcing import fetch_natural_forcing
 from histeclipse_pipeline.ocean_heat import fetch_ocean_heat
+from histeclipse_pipeline.ocean_heat_map import fetch_ocean_heat_map
 from histeclipse_pipeline.ohm import fetch_ohm
 from histeclipse_pipeline.p3k14c import fetch_p3k14c
 from histeclipse_pipeline.paleo_co2 import fetch_co2_archive
@@ -640,6 +641,12 @@ def ocean_heat(args: Arguments) -> int:  # pragma: no cover - needs network acce
     return _say(f"wrote {count} ocean-heat points to {args.out}")
 
 
+def ocean_heat_map(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write maps of where the ocean has gained heat since 1960 (IAP v4.2, gridded)."""
+    count = fetch_ocean_heat_map(args.out)
+    return _say(f"wrote {count} ocean-heat trend maps to {args.out}")
+
+
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
 #: with a margin each side for the months that straddle the ends.
 BABYLON_YEARS = (-749, 101)
@@ -998,6 +1005,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "ocean-heat": (
         ocean_heat,
         "write ocean heat content since 1955 (IAP, NCEI) and the heat inventory (IGCC 2025)",
+        "output directory",
+    ),
+    "ocean-heat-map": (
+        ocean_heat_map,
+        "write trend maps of ocean heat content, 0-700 m and 0-2000 m, in W/m² (IAP v4.2)",
         "output directory",
     ),
     "calendars": (
