@@ -13,28 +13,21 @@ export type { DeepScale, EclipseKind, GeoPoint, Moment, Selection };
 export { DEEP_SCALES, defaultCalendarFor, EARTH_AGE_MA, ECLIPSE_KINDS, roundMa };
 import { MOONS } from '../astro/moonOrbits';
 import type { SkyCulture } from '../data/skyCultures';
-import { type CoastSource, DEFAULT_COAST } from '../deepTime/coastline';
 import type { LineageGroup } from '../data/lineages';
-import { DEFAULT_SEA_ICE_MODEL, type SeaIceModel } from '../data/seaIce';
-import {
-  DEFAULT_TEMPERATURE_MODEL,
-  DEFAULT_TEMPERATURE_SHOW,
-  type TemperatureModel,
-  type TemperatureShow,
-} from '../deepTime/temperatureModels';
-import {
-  DEFAULT_IMPACT_MODEL,
-  DEFAULT_LAND_MODEL,
-  DEFAULT_SNOWBALL_MODEL,
-  type ImpactModel,
-  type LandModel,
-  type SnowballModel,
-} from '../deepTime/sketch';
 import type { WhyView } from '../sources/registry';
 import type { SunLayer } from '../data/sunImages';
 import type { YearCalendar } from '../time/calendars';
 import { calendarDateOf, julianDay, julianDayNumber, type JulianDay } from '../time/julianDay';
 import { astronomicalYear } from '../time/year';
+import { DEEP_DEFAULTS, type DeepState } from './slices/deep';
+
+export {
+  DEEP_DEFAULTS,
+  DISPERSAL_SCENARIOS,
+  MA_RANGE,
+  type DeepState,
+  type DispersalScenario,
+} from './slices/deep';
 
 export const MODES = ['globe', 'sky'] as const;
 export type Mode = (typeof MODES)[number];
@@ -104,8 +97,6 @@ export const BOUNDARY_CHAPTERS = ['holocene', 'safe', 'pressure', 'compare'] as 
 export type BoundaryChapter = (typeof BOUNDARY_CHAPTERS)[number];
 
 /** A dispersal model's scenario shaded with the Humans layer, or none. */
-export const DISPERSAL_SCENARIOS = ['off', 'a', 'b'] as const;
-export type DispersalScenario = (typeof DISPERSAL_SCENARIOS)[number];
 
 /**
  * How the camera is placed: orbiting Earth freely, or attached to the bodies (standing on Earth
@@ -162,7 +153,8 @@ export interface SkyLook {
   readonly fov: number;
 }
 
-export interface ViewState {
+/** The view: what a link names. Each slice's fields live in its file in `slices/` (#381). */
+export interface ViewState extends DeepState {
   readonly mode: Mode;
   readonly time: Moment;
   readonly location: GeoPoint | null;
@@ -185,24 +177,6 @@ export interface ViewState {
   readonly borders: BorderSource;
   /** A past state (by its name in Cliopatria) whose eclipses the year bar picks out, if any. */
   readonly seenIn: string | null;
-  /** Deep time: millions of years ago the globe shows Earth's surface for; null for history. */
-  readonly ma: number | null;
-  /** Which span the deep-time bar runs over. */
-  readonly deepScale: DeepScale;
-  /** Whose sea level the ice-age coastlines follow. */
-  readonly coast: CoastSource;
-  /** Timmermann & Friedrich's dispersal model shaded with Humans: off, early or late exit. */
-  readonly dispersal: DispersalScenario;
-  /** Which climate model's ice-age sea ice the globe blends towards. */
-  readonly seaIce: SeaIceModel;
-  /** Whose temperature maps colour the deep-time globe. */
-  readonly temperatureModel: TemperatureModel;
-  /** What its colours show: the change from today (where the map allows) or °C (#457). */
-  readonly temperatureShow: TemperatureShow;
-  /** Before the reconstructions: which hypotheses the sketched surface follows. */
-  readonly impact: ImpactModel;
-  readonly land: LandModel;
-  readonly snowball: SnowballModel;
   /** The why panel open: what it explains, or every source; null when closed. */
   readonly why: WhyView | null;
   /**
@@ -278,8 +252,6 @@ export const DEFAULT_CAMERA: GlobeCamera = {
   distance: 4.5,
 };
 
-export const MA_RANGE = { min: 0, max: EARTH_AGE_MA } as const;
-
 /** The ice-age scale: the Quaternary, 2.58 million years, rounded up to whole hundred thousands. */
 export const ICE_AGES_MA = 2.6;
 /** Where the ice-age scale opens from further back: the last glacial maximum. */
@@ -325,16 +297,7 @@ export function defaultViewState(now: Date): ViewState {
     culture: 'modern',
     borders: 'cliopatria',
     seenIn: null,
-    ma: null,
-    deepScale: 'all',
-    coast: DEFAULT_COAST,
-    dispersal: 'off',
-    seaIce: DEFAULT_SEA_ICE_MODEL,
-    temperatureModel: DEFAULT_TEMPERATURE_MODEL,
-    temperatureShow: DEFAULT_TEMPERATURE_SHOW,
-    impact: DEFAULT_IMPACT_MODEL,
-    land: DEFAULT_LAND_MODEL,
-    snowball: DEFAULT_SNOWBALL_MODEL,
+    ...DEEP_DEFAULTS,
     why: null,
     tree: null,
     craters: null,
