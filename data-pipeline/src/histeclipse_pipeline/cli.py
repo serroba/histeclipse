@@ -41,6 +41,7 @@ from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table,
 from histeclipse_pipeline.macrostrat import fetch_rocks
 from histeclipse_pipeline.measured_warming import fetch_measured_warming
 from histeclipse_pipeline.moon_orbits import fetch_moon_orbits
+from histeclipse_pipeline.natural_forcing import fetch_natural_forcing
 from histeclipse_pipeline.ohm import fetch_ohm
 from histeclipse_pipeline.p3k14c import fetch_p3k14c
 from histeclipse_pipeline.paleo_co2 import fetch_co2_archive
@@ -409,6 +410,13 @@ def p3k14c(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"calibrated {count} dates into {args.out}")
 
 
+def natural_forcing(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Sun's irradiance (CMIP6, Steinhilber 2012) and volcanic sulfur (eVolv2k)."""
+    counts = fetch_natural_forcing(args.out)
+    written = ", ".join(f"{count} {name}" for name, count in counts.items())
+    return _say(f"wrote {written} to {args.out}")
+
+
 def eruptions(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the Holocene's eruptions as the ice cores record them (HolVol)."""
     count = fetch_eruptions(args.out)
@@ -764,6 +772,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         p3k14c,
         "write archaeological radiocarbon dates, calibrated and counted by cell (p3k14c)",
         "output folder (public/data/radiocarbon-dates)",
+    ),
+    "natural-forcing": (
+        natural_forcing,
+        "write solar irradiance (CMIP6, Steinhilber 2012) and volcanic sulfur (eVolv2k v4)",
+        "output folder (public/data/natural-forcing)",
     ),
     "eruptions": (
         eruptions,
