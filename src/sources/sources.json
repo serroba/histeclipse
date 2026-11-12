@@ -12,6 +12,13 @@
     "cite": "Allwood et al. (2006), Stromatolite reef from the Early Archaean era of Australia, Nature 441, 714–718",
     "url": "https://doi.org/10.1038/nature04764"
   },
+  "ar6Ch4Data": {
+    "name": "IPCC AR6 WGI Chapter 4 figure data (Figures 4.31, 4.32)",
+    "kind": "dataset",
+    "cite": "Fischer, E. (2023), Chapter 4 of the Working Group I Contribution to the IPCC Sixth Assessment Report – data for Figure 4.31 v20230531 (doi:10.5285/8fa708d0474d4a3caa5c9f645a89d282) and for Figure 4.32 v20230531 (doi:10.5285/0192ae3037794e0eb93b022c5140f399), NERC EDS Centre for Environmental Data Analysis; CMIP6 multi-model mean change in annual temperature and precipitation at 1.5, 2, 3 and 4 °C of global warming against 1850–1900, with the report’s robustness hatching",
+    "url": "https://doi.org/10.5285/8fa708d0474d4a3caa5c9f645a89d282",
+    "licence": "CC BY 4.0"
+  },
   "archaeoglobe": {
     "name": "ArchaeoGLOBE",
     "kind": "dataset",
@@ -526,6 +533,13 @@
     "kind": "paper",
     "cite": "Lavigne, F., et al. (2013). Source of the great A.D. 1257 mystery eruption unveiled, Samalas volcano, Rinjani Volcanic Complex, Indonesia. PNAS 110, 16742–16747",
     "url": "https://doi.org/10.1073/pnas.1307520110"
+  },
+  "lee2021": {
+    "name": "Lee et al. 2021 (IPCC AR6 WGI Chapter 4)",
+    "kind": "paper",
+    "cite": "Lee, J.-Y., Marotzke, J., Bala, G., Cao, L., Corti, S., Dunne, J. P., Engelbrecht, F., Fischer, E., Fyfe, J. C., Jones, C., Maycock, A., Mutemi, J., Ndiaye, O., Panickal, S., Zhou, T. (2021), Future Global Climate: Scenario-Based Projections and Near-Term Information, in Climate Change 2021: The Physical Science Basis, Contribution of Working Group I to the Sixth Assessment Report of the IPCC, Cambridge University Press, 553–672; Table 4.5 for when each warming level is crossed",
+    "url": "https://doi.org/10.1017/9781009157896.006",
+    "licence": "© IPCC (the report; its figures’ data are CC BY 4.0)"
   },
   "lemen2012": {
     "name": "Lemen et al. 2012",
