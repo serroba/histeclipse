@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "tileSize": 675,
+  "path": "{z}/{x}/{y}.webp",
+  "levels": [
+    {
+      "z": 4,
+      "columns": 32,
+      "rows": 16,
+      "source": {
+        "url": "https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-topography-bathymetry/april/world.topo.bathy.200404.3x21600x10800.jpg",
+        "sha256": "7d3a8c58de56782a68156c67dd171074e210a7feec9283987622e569fa338f6a"
+      }
+    }
+  ]
+}
