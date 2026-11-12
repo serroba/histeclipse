@@ -88,3 +88,20 @@ export async function pickSpan(page: Page, span: string): Promise<void> {
     .getByRole('button', { name: span, exact: true })
     .click();
 }
+
+/** Wait until the sky view has drawn. */
+export async function skyRendered(page: Page): Promise<void> {
+  await expect(page.getByTestId('sky')).toHaveAttribute('data-rendered', 'true');
+}
+
+/** The middle of the space the panels leave free, at `x` (by default the middle). */
+export async function freeSpot(page: Page, x?: number): Promise<{ x: number; y: number }> {
+  const top = (await page.locator('.hud').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
+  const bottom = (await page.locator('.bottom').boundingBox()) ?? { y: 0 };
+  const viewport = page.viewportSize() ?? { width: 0, height: 0 };
+  const narrow = viewport.width <= 600;
+  const from = narrow ? top.y + top.height : 0;
+  // On wide screens the date panel sits at the left, so aim between it and the right edge.
+  const left = narrow ? 0 : top.x + top.width;
+  return { x: x ?? (left + viewport.width) / 2, y: (from + bottom.y) / 2 };
+}
