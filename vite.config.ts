@@ -78,6 +78,7 @@ export default defineConfig({
         'src/features/whyHere/sources.ts',
         'src/features/moment/index.ts',
         'src/features/layersPanel/index.ts',
+        'src/features/impacts/index.ts',
         'src/features/shell/**',
         'src/story/sunCore.ts',
         'src/story/airShower.ts',

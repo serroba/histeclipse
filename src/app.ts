@@ -6,8 +6,6 @@
 
 import { LunarCatalog } from './data/lunarCatalog';
 import { SolarCatalog } from './data/solarCatalog';
-import { angularDistance } from './eclipses/visibility';
-import { impactLayer } from './globe/impactLayer';
 import { createDatingCard } from './ui/datingCard';
 import { createGlobe } from './globe/scene';
 import {
@@ -31,20 +29,18 @@ import {
 import { createStore } from './state/store';
 import { parseViewState, serializeViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
-import { awayFromEarth, withLayer, type GeoPoint, type ViewState } from './state/viewState';
+import { awayFromEarth, withLayer, type ViewState } from './state/viewState';
 import { DeltaT } from './time/deltaT';
 import { element } from './ui/dom';
 import { FEATURES } from './features';
 import { deepChipsOf, mountFeatures } from './features/mounted';
-import { RESTING, type FeatureContext } from './features/feature';
+import type { FeatureContext } from './features/feature';
 import { anchorQuery } from './text/anchors';
 import { type Anchor } from './text/passages';
 import { createWelcome } from './ui/welcome';
 import { createMarkerCard } from './ui/markerCard';
 import { createViewSwitch } from './ui/viewSwitch';
-import { type DeepTimeView } from './ui/deepTimeBar';
 import { countryRings, loadNamedPeriods } from './data/namedPeriods';
-import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet } from './ui/whySheet';
 import { createImpactPathsSheet } from './ui/impactPathsSheet';
 import type { PartContext } from './features/part';
@@ -88,25 +84,8 @@ import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment
 import { createZoomRail } from './ui/zoomRail';
 import { railView } from './ui/railView';
 import { createWaysLegend } from './ui/waysLegend';
-import {
-  impactDetails,
-  impactsAt,
-  impactsText,
-  placeThen,
-  loadImpacts,
-  strikesPassed,
-  type Impact,
-  type Impacts,
-  type ImpactsMode,
-} from './data/impacts';
+import { mountImpacts } from './features/impacts';
 import { createTemperatureLayer } from './features/temperature/temperatureLayer';
-import { errorMessage } from './util/errors';
-/** Degrees from the centre of the globe in view within which a strike is played as time runs. */
-const STRIKE_IN_VIEW = 70;
-/** Strikes started in one frame at most, the greatest first, when time runs fast past several. */
-const STRIKES_AT_ONCE = 4;
-/** The year “before present” counts back from, as radiocarbon dates do. */
-const BP_ZERO_YEAR = 1950;
 
 export async function startApp(root: HTMLElement): Promise<void> {
   const base = import.meta.env.BASE_URL;
@@ -182,7 +161,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     async () => {
       const [loaded, periods] = await Promise.all([
-        impacts ?? impactsLoading ?? loadImpacts(`${base}data/impacts.json`, fetchJson),
+        impacts.load(),
         namedPeriods.loaded() ??
           namedPeriods.loading() ??
           loadNamedPeriods(`${base}data/periods.json`, fetchJson),
@@ -214,7 +193,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ['periods', namedPeriods.said()],
       ['rocks', rocks.said()],
       ['dates', dates.said()],
-      ['impacts', impactsSaid],
+      ['impacts', impacts.said()],
       ...features.said(),
       ['carbonMade', carbonMade.said()],
     ],
@@ -322,7 +301,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     bar: (state, moment) => ({
       ...iceAges.bar(state, moment.ma),
       chips: features.deep(state, moment),
-      impacts: showImpacts(state),
+      impacts: impacts.show(state),
       ...surfaces.bar(state, moment.ma),
     }),
     temperature: temperatureLayer,
@@ -336,7 +315,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       surfaces.loadArchive();
     },
     impactsMode: (mode) => {
-      impactsMode = mode;
+      impacts.setMode(mode);
     },
   });
   // A tablet's records checked against the sky, and looked at from Babylon (#447).
@@ -439,7 +418,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     firstYear: () => deltaT.firstYear,
     travelChanged: (now) => {
       dates.show(now);
-      showImpacts(now);
+      impacts.show(now);
       features.show(now, moment.terrestrial());
       rocks.show(now);
       showLayers(now);
@@ -628,7 +607,24 @@ export async function startApp(root: HTMLElement): Promise<void> {
       years.show(state);
     },
   });
-  const impactsOnGlobe = globe.addLayer(impactLayer);
+  // Impact craters and deposits (#474): their layer is added here, in the globe's order.
+  const impacts = mountImpacts({
+    ...partContext,
+    globe,
+    strikesOn: globeContainer,
+    showCard: (card) => {
+      markerCard.show(card);
+    },
+    oldest: () => deepTime.oldest(),
+    playing: () => deepTime.playing(),
+    travelling: () => years.travelling(),
+    redrawDeep: (state) => {
+      deepTime.show(state);
+    },
+    refreshLayers: (state) => {
+      showLayers(state);
+    },
+  });
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureContext: FeatureContext = {
     base,
@@ -672,126 +668,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The famous list is a convenience: if it fails to load, everything else still works.
   famous.load();
 
-  // Impact craters and deposits: loaded the first time the layer is turned on, in either time.
-  let impacts: Impacts | null = null;
-  let impactsLoading: Promise<Impacts> | null = null;
-  let impactsSaid: string | null = null;
-  // In deep time: each impact around its time, or every one that had struck by then.
-  let impactsMode: ImpactsMode = 'around';
-
-  /**
-   * With Impacts on, the craters that may have struck by the moment shown, where they lay then:
-   * on today's Earth in historical time, on the elevation maps' reconstruction in deep time.
-   */
-  function showImpacts(state: ViewState): DeepTimeView['impacts'] {
-    const { ma } = state;
-    const scale =
-      ma !== null && state.deepScale === 'all' && ma > deepTime.oldest() ? 'eons' : state.deepScale;
-    const on =
-      state.layers.has('impacts') && state.mode === 'globe' && (ma === null || scale !== 'eons');
-    if (!on || (years.travelling() && ma === null)) {
-      impactsSaid = on ? RESTING : null;
-      impactsOnGlobe.update(null);
-      return { on: false };
-    }
-    if (impacts === null) {
-      impactsSaid = 'Loading the impact craters…';
-      if (impactsLoading === null) {
-        impactsLoading = loadImpacts(`${base}data/impacts.json`, fetchJson);
-        impactsLoading.then(
-          (loaded) => {
-            impacts = loaded;
-            const now = store.get();
-            if (now.ma !== null) {
-              deepTime.show(now);
-              return;
-            }
-            showImpacts(now);
-            showLayers(now);
-          },
-          (error: unknown) => {
-            impactsLoading = null;
-            notify(`Could not load the impact craters: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return { on: true, text: null, mode: impactsMode };
-    }
-    if (ma === null) {
-      // In historical time, today's places; a crater younger than the year shown is not there.
-      const since = Math.max(0, BP_ZERO_YEAR - state.time.date.year) / 1e6;
-      const marks = impactsAt(impacts, since, true);
-      impactsOnGlobe.update(marks);
-      impactsSaid = impactsText(impacts, marks, null);
-      return { on: true, text: impactsSaid, mode: impactsMode };
-    }
-    // On the ice-age scale the map is today's, so the craters are where they are today.
-    const placeMa = scale === 'ice' ? 0 : ma;
-    const marks = impactsAt(impacts, ma, false, placeMa, impactsMode);
-    impactsOnGlobe.update(marks);
-    strikeAsItPasses(state, impacts, ma, placeMa);
-    impactsSaid = null;
-    return { on: true, text: impactsText(impacts, marks, ma, impactsMode), mode: impactsMode };
-  }
-
-  // As deep time plays, each crater strikes when the time passes it (#242, #314): several at
-  // once, only on the side of the globe in view, and never for a reader who asks for less motion.
-  let strikeFrom: number | null = null;
-  const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  function strikeAsItPasses(state: ViewState, data: Impacts, ma: number, placeMa: number): void {
-    const from = strikeFrom;
-    strikeFrom = deepTime.playing() ? ma : null;
-    if (from === null || !deepTime.playing() || lessMotion.matches || state.focus !== 'earth')
-      return;
-    // Of those passed since the last frame, the greatest few that can be seen.
-    const seen = strikesPassed(data, from, ma)
-      .map((impact) => ({ impact, place: placeThen(data, impact, placeMa) }))
-      .filter(
-        (each): each is { impact: Impact; place: GeoPoint } =>
-          each.place !== null && angularDistance(each.place, state.camera.target) < STRIKE_IN_VIEW,
-      )
-      .sort((a, b) => (b.impact.diameterKm ?? 0) - (a.impact.diameterKm ?? 0));
-    for (const { impact, place } of seen.slice(0, STRIKES_AT_ONCE).reverse()) {
-      const approach = approachOf(impact.name);
-      // The latest few struck, for whoever needs to know one did: they follow fast as time runs.
-      const struck = (globeContainer.dataset['strikes'] ?? '').split('|').filter(Boolean);
-      globeContainer.dataset['strikes'] = [...struck, impact.name].slice(-12).join('|');
-      globe.playImpact({
-        place,
-        craterKm: impact.diameterKm ?? 0,
-        fromAzimuth: approach.fromAzimuth,
-        angleDegrees: approach.angleDegrees,
-      });
-    }
-  }
-
+  // A marker tapped: a feature's, or a crater's.
   globe.onMarkerPick((key) => {
-    if (features.pick(key)) return;
-    const [kind, id] = key.split(':');
-    const impact = impacts?.impacts.find((each) => String(each.id) === id);
-    if (kind !== 'impact' || impact === undefined) return;
-    const details = impactDetails(impact);
-    // Where it lies at the moment shown: today's place, or where the plates had it.
-    const place = impacts === null ? null : placeThen(impacts, impact, store.get().ma ?? 0);
-    const craterKm = impact.diameterKm;
-    markerCard.show({
-      title: details.title,
-      facts:
-        craterKm === null
-          ? details.facts
-          : [...details.facts, ['Impactor', impactorText(impact.name, craterKm)]],
-      links: [details.link],
-      ...(place === null || craterKm === null
-        ? {}
-        : {
-            action: {
-              label: 'Play the impact (an illustration)',
-              run: () => {
-                playImpact(impact.name, place, craterKm);
-              },
-            },
-          }),
-    });
+    [features, impacts].some((part) => part.pick(key));
   });
 
   /** Away from Earth: Earth's own bits rest, and the body in view shows. */
@@ -857,7 +736,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { when: on(EARTH_LAYERS), draw: ways.show },
     { when: on(EARTH_LAYERS), draw: rocks.show },
     { when: on(EARTH_LAYERS), draw: namedPeriods.show },
-    { when: on(EARTH_LAYERS), draw: showImpacts },
+    { when: on(EARTH_LAYERS), draw: impacts.show },
     { when: on(EARTH_LAYERS), draw: carbonMade.show },
     { when: on(LAYERS_PANEL), draw: showLayers },
     { draw: years.settle },
@@ -949,26 +828,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.flyTo(place);
     },
   });
-  /**
-   * Play an impact at its place: turn the globe to it, come in close, and let it fall. The
-   * approach is a study's where one exists, else the most likely angle, assumed.
-   */
-  function playImpact(name: string, place: GeoPoint, craterKm: number): void {
-    const approach = approachOf(name);
-    if (store.get().focus !== 'earth')
-      store.set((state) => ({ ...state, focus: 'earth', view: 'free' }));
-    globe.flyTo(place);
-    globe.zoomTo(Math.min(store.get().camera.distance, 2.2));
-    // Once the globe has turned to it.
-    window.setTimeout(() => {
-      globe.playImpact({
-        place,
-        craterKm,
-        fromAzimuth: approach.fromAzimuth,
-        angleDegrees: approach.angleDegrees,
-      });
-    }, 1000);
-  }
   window.addEventListener('pagehide', () => {
     sync.flush();
   });

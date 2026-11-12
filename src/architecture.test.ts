@@ -104,13 +104,13 @@ const GLOBE_METHODS = 43;
  * Variables `startApp` keeps at its top level, which any of its functions may change (#442).
  * The parts of the page keep their own; this only comes down, to none.
  */
-const APP_LETS = 5;
+const APP_LETS = 0;
 
 /**
  * The decisions `startApp` makes itself: its `if`s and ternaries (#474). The parts decide what
  * is theirs, and pure functions what the input means; this only comes down.
  */
-const APP_CONDITIONALS = 20;
+const APP_CONDITIONALS = 4;
 
 describe('the shape of src', () => {
   it('no folder imports its way back into itself, beyond the cycles already known', () => {
