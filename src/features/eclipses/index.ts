@@ -9,7 +9,7 @@ import type { PartContext } from '../part';
 import { lunarOverlayLayer } from './lunarOverlay';
 
 // The part of the Earth shader the eclipses draw with, built into the globe when it is made.
-export { LUNAR_OVERLAY_PART } from './lunarOverlay';
+export { LUNAR_OVERLAY_PART } from './lunarOverlayPart';
 import type { EmpireCentury, Territory } from '../../data/empires';
 import { redraws, SELECTION } from '../../state/redraws';
 import { createSeen } from './seen';

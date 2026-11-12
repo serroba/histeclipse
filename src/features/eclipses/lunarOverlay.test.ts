@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { assembleEarthParts, MAX_SAMPLERS, samplerCount } from '../../globe/earthParts';
 import { earthFragment } from '../../globe/scene';
 import type { LayerHost } from '../../globe/layerHost';
-import { LUNAR_OVERLAY_PART, lunarOverlayLayer } from './lunarOverlay';
+import { lunarOverlayLayer } from './lunarOverlay';
+import { LUNAR_OVERLAY_PART } from './lunarOverlayPart';
 
 describe('the lunar overlay, a part of the Earth shader', () => {
   it('Given the Earth shader built with it, Then it is called there, within the texture budget', () => {
