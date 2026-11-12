@@ -63,6 +63,7 @@ import { apply, multiply, transpose, type Matrix3 } from '../astro/matrix';
 import {
   CAMERA_DISTANCE_RANGE,
   DEFAULT_CAMERA,
+  nearestDistance,
   type Body,
   type GeoPoint,
   type GlobeCamera,
@@ -118,6 +119,13 @@ import {
 } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
 import { createPaintSlots } from './paintSlots';
+import {
+  assembleEarthParts,
+  checkSamplers,
+  EARTH_FRAGMENT_STRUCT,
+  type AssembledParts,
+  type EarthPart,
+} from './earthParts';
 import { createPlanetMeshes } from './planetMeshes';
 import type { ArrivalGrid } from '../data/dispersal';
 import { clearOverlay, createEmpireCanvas, paintSettled } from './empireCanvas';
@@ -129,6 +137,10 @@ import {
   SOLAR_SHADOW,
 } from './solarShaders';
 import { SEA_ICE } from './seaIceShader';
+import { CORONA_FRAGMENT, CORONA_VERTEX, SUN_FRAGMENT, SUN_VERTEX } from './sunShaders';
+import { controlSpeeds } from './controlSpeeds';
+import { createEarthTileLayer } from './earthTiles';
+import type { EarthTiles } from '../data/earthTiles';
 import { TEMPERATURE_GLSL, temperatureUniforms } from './temperatureShader';
 import './spaceMarkers.css';
 
@@ -155,15 +167,6 @@ const LABEL_MAX_RADIUS_PIXELS = 60;
 const OCCLUDING_RADIUS_PIXELS = 10;
 /** Markers closer than this on screen (pixels) are shown as one. */
 const MERGE_PIXELS = 40;
-
-/** Where an eclipsed Moon was overhead, nominally and at ±1σ of ΔT. */
-interface LunarOverlay {
-  readonly sublunar: Vector3Tuple;
-  readonly west: Vector3Tuple;
-  readonly east: Vector3Tuple;
-  /** 0 to 1: fainter during the barely visible penumbral phase. */
-  readonly strength: number;
-}
 
 /** A solar eclipse's path: its elements, the ΔT to draw it for, and ΔT's uncertainty. */
 interface SolarPath {
@@ -305,8 +308,6 @@ export interface Globe {
   setSolarPath(path: SolarPath | null): void;
   /** Darken the ground under the Moon's shadow at the current moment; null hides it. */
   setSolarShadow(shadow: ShadowGeometry | null): void;
-  /** Shade where the eclipsed Moon was above the horizon; null hides the overlay. */
-  setLunarOverlay(overlay: LunarOverlay | null): void;
   /**
    * Place the Moon and Sun at their true sizes and distances. When the camera is far out, it
    * keeps its place among the stars as time moves, so Earth spins and the Moon orbits in view.
@@ -362,6 +363,8 @@ export interface Globe {
   setBodyMap(body: 'earth' | 'moon', url: string): void;
   /** The widest texture the graphics can hold, pixels. */
   readonly maxTextureSize: number;
+  /** Close up, Earth's full-size map in tiles from now on, from their manifest (#568). */
+  setEarthTiles(tiles: EarthTiles, folder: string): void;
   /**
    * Shade where a dispersal model has people settled `ka` thousand years ago, under any ice
    * outlines; null hides it.
@@ -454,14 +457,17 @@ const PATH_VERTEX = /* glsl */ `
 
 // Day side lit by the Sun, a twilight band down to about −6° (civil twilight), a dim blue night
 // side (no city lights: they would be anachronistic for most of history), and a faint warm glow
-// along the terminator.
-export const EARTH_FRAGMENT = /* glsl */ `
+// along the terminator. The parts features bring (#379) are called over the lit ground, in order.
+const EARTH_HEAD = /* glsl */ `
   #include <logdepthbuf_pars_fragment>
   ${SOLAR_COMMON}
   ${SOLAR_SHADOW}
   ${SOLAR_PATH_LAYER}
   ${OCCULTATION}
   uniform sampler2D dayMap;
+  // Where the day map lies on the globe's map, and how opaque: a tile's part of it (#568).
+  uniform vec4 dayRect;
+  uniform float dayAlpha;
   // Deep time: two elevation maps (bytes 0–127 sea floor, 128–255 land) and the blend between.
   uniform sampler2D paleoYounger;
   uniform sampler2D paleoOlder;
@@ -503,37 +509,12 @@ export const EARTH_FRAGMENT = /* glsl */ `
   uniform vec3 sunPosition;
   uniform float sunRadius;
   uniform vec3 sunDirection;
-  uniform float lunarActive;
-  uniform vec3 moonCenter;
-  uniform vec3 moonWest;
-  uniform vec3 moonEast;
   varying vec2 vUv;
   varying vec3 vNormal;
+`;
 
-  // Copper, the colour of a totally eclipsed Moon.
-  const vec3 ECLIPSE_TINT = vec3(1.0, 0.42, 0.22);
-
-  // The map stays readable: where the eclipsed Moon was up, the ground is shown as if lit by
-  // a copper Moon; the uncertain band is hatched; a ring marks where it stood overhead.
-  vec3 lunarLayer(vec3 color, vec3 surface, vec3 normal) {
-    float upCenter = step(0.0, dot(normal, moonCenter));
-    float upWest = step(0.0, dot(normal, moonWest));
-    float upEast = step(0.0, dot(normal, moonEast));
-    float certain = upWest * upEast * upCenter;
-    float uncertain = max(max(upWest, upEast), upCenter) - certain;
-    vec3 moonlit = surface * vec3(0.62, 0.42, 0.34) + ECLIPSE_TINT * 0.035;
-    vec3 tinted = mix(color, max(color, moonlit), certain);
-    float hatch = step(0.55, fract((gl_FragCoord.x + gl_FragCoord.y) / 10.0));
-    tinted = mix(tinted, max(color, moonlit * 0.8), uncertain * hatch);
-    float edge = 1.0 - smoothstep(0.0, 0.004, abs(dot(normal, moonCenter)));
-    tinted += ECLIPSE_TINT * edge * 0.35;
-    float angle = dot(normal, moonCenter);
-    float ring = smoothstep(0.99925, 0.9994, angle) * (1.0 - smoothstep(0.99955, 0.9997, angle));
-    float dot_ = smoothstep(0.99985, 0.99992, angle);
-    tinted = mix(tinted, vec3(1.0, 0.72, 0.52), max(ring, dot_));
-    return mix(color, tinted, lunarActive);
-  }
-
+// The ground, the light, and the drawings before the parts, up to where they are called.
+const EARTH_BODY = /* glsl */ `
   // The elevation maps are node-registered (the first and last columns are both 180°), so a
   // texture coordinate is moved half a pixel to land on the nodes.
   float paleoElevation(sampler2D map, vec2 uv) {
@@ -711,7 +692,7 @@ export const EARTH_FRAGMENT = /* glsl */ `
   // Travelling through the Holocene: today's Earth, with the shelf a lower sea left bare (in
   // the sand tint the ice ages use) and the ice sheets that still lay on the land.
   vec3 holoceneSurface(vec2 uv) {
-    vec3 color = texture2D(dayMap, uv).rgb;
+    vec3 color = texture2D(dayMap, (uv - dayRect.xy) / dayRect.zw).rgb;
     float sea = 1.0;
     if (shelfActive > 0.5) {
       vec2 at = (uv * (shelfGrid - 1.0) + 0.5) / shelfGrid;
@@ -762,10 +743,13 @@ export const EARTH_FRAGMENT = /* glsl */ `
     float terminator = exp(-pow(sunAltitude / 0.05, 2.0));
     color += vec3(1.0, 0.5, 0.18) * terminator * 0.12;
     color = empiresLayer(color, daylight);
-    color = lunarLayer(color, surface, normal);
     float latitude = asin(clamp(normal.y, -1.0, 1.0));
     float longitude = atan(-normal.z, normal.x);
-    color = solarPathLayer(color, vUv);
+    EarthFragment f = EarthFragment(surface, night, normal, vUv, daylight, latitude, longitude);
+`;
+
+// After the parts: deep time's even light, and what goes over it.
+const EARTH_TAIL = /* glsl */ `    color = solarPathLayer(color, vUv);
     // A selected solar eclipse draws its shadow from the catalog's Besselian elements, which
     // match its path exactly; otherwise the Moon's shadow comes straight from the geometry.
     if (solarActive < 0.5 && moonRadius > 0.0) {
@@ -784,10 +768,14 @@ export const EARTH_FRAGMENT = /* glsl */ `
     // the evenly lit ground (in deep time none of them is on).
     color = mix(color, empiresLayer(color, 1.0), evenLight);
     color = iceOutlinesLayer(color);
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(color, dayAlpha);
     #include <colorspace_fragment>
   }
 `;
+
+export function earthFragment(parts: Pick<AssembledParts, 'glsl' | 'calls'>): string {
+  return `${EARTH_HEAD}${EARTH_FRAGMENT_STRUCT}\n${parts.glsl}\n${EARTH_BODY}    ${parts.calls}\n${EARTH_TAIL}`;
+}
 
 const MOON_VERTEX = /* glsl */ `
   #include <common>
@@ -826,94 +814,6 @@ const MOON_FRAGMENT = /* glsl */ `
     float sunlight = sunlightAt(vWorldPosition, sunPosition, sunRadius, vec3(0.0), earthRadius);
     vec3 copper = vec3(0.55, 0.16, 0.06) * 0.22 * pow(1.0 - sunlight, 3.0);
     gl_FragColor = vec4(albedo * facing * (sunlight + copper), 1.0);
-    #include <colorspace_fragment>
-  }
-`;
-
-const SUN_VERTEX = /* glsl */ `
-  #include <common>
-  #include <logdepthbuf_pars_vertex>
-  varying vec3 vNormal;
-  varying vec3 vWorldPosition;
-  void main() {
-    vNormal = normal;
-    vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    #include <logdepthbuf_vertex>
-  }
-`;
-
-// The whole surface wears SDO's map, stitched from frames days apart, turned so the side facing
-// Earth is the newest frame's (sunImage.ts is the tested reference). The map is the surface
-// seen face-on; visible light darkens toward the limb as the camera sees it, so the disc looks
-// round from any side.
-const SUN_FRAGMENT = /* glsl */ `
-  #include <common>
-  #include <logdepthbuf_pars_fragment>
-  uniform sampler2D surface;
-  uniform float hasMap;
-  uniform vec3 toEarth;
-  uniform vec3 north;
-  uniform vec3 tint;
-  uniform float limbDarkening;
-  varying vec3 vNormal;
-  varying vec3 vWorldPosition;
-
-  void main() {
-    #include <logdepthbuf_fragment>
-    vec3 plain = vec3(1.0, 0.96, 0.86);
-    vec3 n = normalize(vNormal);
-    vec3 meridian = normalize(toEarth - dot(toEarth, north) * north);
-    vec3 west = cross(north, meridian);
-    float latitude = asin(clamp(dot(n, north), -1.0, 1.0));
-    float longitude = atan(dot(n, west), dot(n, meridian));
-    vec2 uv = vec2(0.5 + longitude / PI2, 0.5 + latitude / PI);
-    // On the far side's meridian u jumps from 1 back to 0, which would pick the coarsest
-    // mipmap along a seam. A copy of u that jumps on the near side instead gives the right
-    // footprint there; use whichever changes less across the pixel.
-    float shifted = fract(uv.x + 0.5);
-    vec2 dx = dFdx(uv);
-    vec2 dy = dFdy(uv);
-    float dxShifted = dFdx(shifted);
-    float dyShifted = dFdy(shifted);
-    if (abs(dxShifted) < abs(dx.x)) dx.x = dxShifted;
-    if (abs(dyShifted) < abs(dy.x)) dy.x = dyShifted;
-    float towardCamera = clamp(dot(n, normalize(cameraPosition - vWorldPosition)), 0.0, 1.0);
-    float darkening = 1.0 - limbDarkening * (1.0 - towardCamera);
-    vec3 seen = textureGrad(surface, uv, dx, dy).rgb * tint * darkening;
-    gl_FragColor = vec4(mix(plain, seen, hasMap), 1.0);
-    #include <colorspace_fragment>
-  }
-`;
-
-const CORONA_VERTEX = /* glsl */ `
-  #include <common>
-  #include <logdepthbuf_pars_vertex>
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    #include <logdepthbuf_vertex>
-  }
-`;
-
-// What the image shows beyond the limb (the corona, prominences), on a plane across the line of
-// sight. It is only right seen from near Earth's side, so it fades as the camera swings away.
-const CORONA_FRAGMENT = /* glsl */ `
-  #include <logdepthbuf_pars_fragment>
-  uniform sampler2D map;
-  uniform float diskRadius;
-  uniform float opacity;
-  uniform vec3 tint;
-  varying vec2 vUv;
-
-  void main() {
-    #include <logdepthbuf_fragment>
-    float r = length(vUv - 0.5);
-    if (r < diskRadius * 0.995) discard;
-    // Fade out before the frame's square edge.
-    float edge = 1.0 - smoothstep(0.38, 0.49, r);
-    gl_FragColor = vec4(texture2D(map, vUv).rgb * tint * opacity * edge, 1.0);
     #include <colorspace_fragment>
   }
 `;
@@ -978,6 +878,8 @@ export function createGlobe(
     readonly textureUrl: string;
     readonly moonTextureUrl: string;
     readonly focus: Body;
+    /** The features' parts of the Earth shader (#379), built into it once. */
+    readonly earthParts?: readonly EarthPart[];
   },
 ): Globe {
   // preserveDrawingBuffer lets the page (and tests) read the rendered image back.
@@ -1012,10 +914,6 @@ export function createGlobe(
   // Shared by the Earth and Moon shaders; set with the bodies each moment.
   const moonPosition = new Vector3();
   const sunPosition = new Vector3(1e5, 0, 0);
-  const lunarActive = { value: 0 };
-  const moonCenter = new Vector3(1, 0, 0);
-  const moonWest = new Vector3(1, 0, 0);
-  const moonEast = new Vector3(1, 0, 0);
   // The eclipse path, painted once per eclipse into a map-shaped texture the Earth samples.
   const pathTarget = new WebGLRenderTarget(1024, 512, {
     minFilter: LinearFilter,
@@ -1045,69 +943,72 @@ export function createGlobe(
   const empiresCanvas = createEmpireCanvas();
   const empiresTexture = new CanvasTexture(empiresCanvas);
   empiresTexture.colorSpace = SRGBColorSpace;
+  const earthUniforms = {
+    dayMap: { value: texture },
+    dayRect: { value: new Vector4(0, 0, 1, 1) },
+    dayAlpha: { value: 1 },
+    paleoYounger: { value: null as Texture | null },
+    paleoOlder: { value: null as Texture | null },
+    paleoMix: { value: 0 },
+    paleoActive: { value: 0 },
+    ...temperatureUniforms(),
+    shelfMap: { value: null as Texture | null },
+    shelfActive: { value: 0 },
+    shelfGrid: { value: new Vector2(3601, 1801) },
+    shelfRange: { value: new Vector2(-200, 55) },
+    seaLevel: { value: 0 },
+    seaIceTodayMost: { value: null as Texture | null },
+    seaIceTodayYearRound: { value: null as Texture | null },
+    seaIcePastMost: { value: null as Texture | null },
+    seaIcePastYearRound: { value: null as Texture | null },
+    seaIceMix: { value: 0 },
+    seaIceActive: { value: 0 },
+    seaIceSeason: { value: -1 },
+    seaIceGrid: { value: new Vector2(361, 181) },
+    iceYounger: { value: null as Texture | null },
+    iceOlder: { value: null as Texture | null },
+    iceMix: { value: 0 },
+    iceActive: { value: 0 },
+    iceGrid: { value: new Vector2(1441, 721) },
+    iceStep: { value: 16 },
+    plateYounger: { value: null as Texture | null },
+    plateOlder: { value: null as Texture | null },
+    plateMix: { value: 0 },
+    plateActive: { value: 0 },
+    plateGrid: { value: new Vector2(1441, 721) },
+    plateTurn: { value: new Vector2(0, 0) },
+    uncharted: { value: 0 },
+    sketchKind: { value: 0 },
+    sketchLevel: { value: 2 },
+    sketchIceEdge: { value: 90 },
+    evenLight,
+    paleoGrid: { value: new Vector2(361, 181) },
+    seaDepth: { value: 11_000 },
+    landHeight: { value: 6_500 },
+    overlayMap: { value: empiresTexture as Texture },
+    empiresActive: { value: 0 },
+    iceOutlinesActive: { value: 0 },
+    sunDirection: { value: sunDirection },
+    solarActive: { value: 0 },
+    shadowAxis: { value: new Vector4() },
+    shadowCones: { value: new Vector4() },
+    solarPath: { value: pathTarget.texture },
+    solarPathActive: { value: 0 },
+    moonPosition: { value: moonPosition },
+    moonRadius: { value: 0 },
+    sunPosition: { value: sunPosition },
+    sunRadius: { value: SUN_RADIUS_EARTH_RADII },
+  };
+  // The features' parts of the shader (#379), built in once: the shader is not made again.
+  const parts = assembleEarthParts(options.earthParts ?? [], new Set(Object.keys(earthUniforms)));
+  const earthShader = earthFragment(parts);
+  checkSamplers(earthShader);
   const earth = new Mesh(
     new SphereGeometry(1, 128, 64),
     new ShaderMaterial({
-      uniforms: {
-        dayMap: { value: texture },
-        paleoYounger: { value: null as Texture | null },
-        paleoOlder: { value: null as Texture | null },
-        paleoMix: { value: 0 },
-        paleoActive: { value: 0 },
-        ...temperatureUniforms(),
-        shelfMap: { value: null as Texture | null },
-        shelfActive: { value: 0 },
-        shelfGrid: { value: new Vector2(3601, 1801) },
-        shelfRange: { value: new Vector2(-200, 55) },
-        seaLevel: { value: 0 },
-        seaIceTodayMost: { value: null as Texture | null },
-        seaIceTodayYearRound: { value: null as Texture | null },
-        seaIcePastMost: { value: null as Texture | null },
-        seaIcePastYearRound: { value: null as Texture | null },
-        seaIceMix: { value: 0 },
-        seaIceActive: { value: 0 },
-        seaIceSeason: { value: -1 },
-        seaIceGrid: { value: new Vector2(361, 181) },
-        iceYounger: { value: null as Texture | null },
-        iceOlder: { value: null as Texture | null },
-        iceMix: { value: 0 },
-        iceActive: { value: 0 },
-        iceGrid: { value: new Vector2(1441, 721) },
-        iceStep: { value: 16 },
-        plateYounger: { value: null as Texture | null },
-        plateOlder: { value: null as Texture | null },
-        plateMix: { value: 0 },
-        plateActive: { value: 0 },
-        plateGrid: { value: new Vector2(1441, 721) },
-        plateTurn: { value: new Vector2(0, 0) },
-        uncharted: { value: 0 },
-        sketchKind: { value: 0 },
-        sketchLevel: { value: 2 },
-        sketchIceEdge: { value: 90 },
-        evenLight,
-        paleoGrid: { value: new Vector2(361, 181) },
-        seaDepth: { value: 11_000 },
-        landHeight: { value: 6_500 },
-        overlayMap: { value: empiresTexture as Texture },
-        empiresActive: { value: 0 },
-        iceOutlinesActive: { value: 0 },
-        sunDirection: { value: sunDirection },
-        lunarActive: lunarActive,
-        moonCenter: { value: moonCenter },
-        moonWest: { value: moonWest },
-        moonEast: { value: moonEast },
-        solarActive: { value: 0 },
-        shadowAxis: { value: new Vector4() },
-        shadowCones: { value: new Vector4() },
-        solarPath: { value: pathTarget.texture },
-        solarPathActive: { value: 0 },
-        moonPosition: { value: moonPosition },
-        moonRadius: { value: 0 },
-        sunPosition: { value: sunPosition },
-        sunRadius: { value: SUN_RADIUS_EARTH_RADII },
-      },
+      uniforms: { ...earthUniforms, ...parts.uniforms },
       vertexShader: EARTH_VERTEX,
-      fragmentShader: EARTH_FRAGMENT,
+      fragmentShader: earthShader,
     }),
   );
   const atmosphere = new Mesh(
@@ -1123,6 +1024,14 @@ export function createGlobe(
     }),
   );
   scene.add(earth, atmosphere);
+  // Close up, Earth's full-size map in tiles over its own (#568); how many show, for tests.
+  const earthTiles = createEarthTileLayer(earth, {
+    anisotropy: renderer.capabilities.getMaxAnisotropy(),
+    pixels: () => renderer.domElement.height,
+    requestRender: () => (needsRender = true),
+    report: (shown, fetched) =>
+      (container.dataset['earthTiles'] = `${String(shown)}/${String(fetched)}`),
+  });
 
   // Deep time: Earth's spin axis, its ends marked as the poles of the time shown. The maps
   // put the poles of their time at the top and bottom, so the axis is the globe's own.
@@ -1655,7 +1564,7 @@ export function createGlobe(
   function orbitFocus(): void {
     const radius = BODY_RADIUS[focus];
     controls.target.copy(bodyFrame(focus).position);
-    controls.minDistance = CAMERA_DISTANCE_RANGE.min * radius;
+    controls.minDistance = nearestDistance(focus) * radius;
     controls.maxDistance = Math.min(CAMERA_DISTANCE_RANGE.max * radius, CAMERA_DISTANCE_RANGE.max);
     controls.enabled = true;
     controls.update();
@@ -1923,13 +1832,14 @@ export function createGlobe(
       needsRender = true;
       if (progress === 1) zoomFlight = null;
     }
-    // Wheel steps scale the distance; take bigger steps far out so the Sun is a few spins away.
-    controls.zoomSpeed =
-      camera.position.distanceTo(controls.target) < 10 * BODY_RADIUS[focus] ? 0.8 : 2.5;
+    const speeds = controlSpeeds(camera.position.distanceTo(controls.target), BODY_RADIUS[focus]);
+    controls.zoomSpeed = speeds.zoom;
+    controls.rotateSpeed = speeds.rotate;
     // update() keeps damping going after the pointer is released; it reports movement via 'change'.
     if (controls.enabled) controls.update();
     if (needsRender) {
       needsRender = false;
+      if (earthTiles.update(camera, !deepTime && earth.visible, now)) needsRender = true;
       shadeSun();
       // In deep time the Sun, Moon and planets are where they are today, which says nothing
       // about then: they are left out, markers too.
@@ -2188,11 +2098,21 @@ export function createGlobe(
       };
     },
     measure: settleSizes,
+    earthPart(part) {
+      const uniforms = parts.byPart.get(part);
+      if (uniforms === undefined) {
+        throw new Error(`The Earth part "${part.name}" was not given to the globe`);
+      }
+      return uniforms as ReturnType<typeof part.uniforms>;
+    },
   };
 
   return {
     canvas: renderer.domElement,
     maxTextureSize: renderer.capabilities.maxTextureSize,
+    setEarthTiles: (tiles, folder) => {
+      earthTiles.enable(tiles, folder);
+    },
     setSunDirection([x, y, z]) {
       sunDirection.set(x, y, z).normalize();
       needsRender = true;
@@ -2384,16 +2304,6 @@ export function createGlobe(
         };
       }
       container.dataset['solarShadow'] = shadow === null ? 'off' : 'on';
-      needsRender = true;
-    },
-    setLunarOverlay(overlay) {
-      lunarActive.value = overlay === null ? 0 : overlay.strength;
-      if (overlay !== null) {
-        moonCenter.set(...overlay.sublunar).normalize();
-        moonWest.set(...overlay.west).normalize();
-        moonEast.set(...overlay.east).normalize();
-      }
-      container.dataset['lunarOverlay'] = overlay === null ? 'off' : 'on';
       needsRender = true;
     },
     setFocus(body) {

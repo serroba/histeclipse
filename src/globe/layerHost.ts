@@ -11,6 +11,7 @@ import './nameLabels.css';
 import type { MoonName, MoonPlanet } from '../astro/moonOrbits';
 import type { GeoPoint } from '../core/geo';
 import type { PaintSlot } from './paintSlots';
+import type { EarthPart, PartUniforms } from './earthParts';
 import type { NamedBody } from '../data/planetNames';
 import type { Body } from '../state/viewState';
 
@@ -80,6 +81,11 @@ export interface LayerHost {
    * (`visibility: hidden`) and in the page first.
    */
   measure(labels: readonly SurfaceLabel[]): void;
+  /**
+   * The uniforms of a part of the Earth shader (#379), which the globe was given when made: set
+   * their `value`s, then ask for a frame.
+   */
+  earthPart<Uniforms extends PartUniforms>(part: EarthPart<Uniforms>): Uniforms;
   /**
    * A place on the history map painted over Earth's surface, under the states, painted in
    * `order` (see HISTORY_PAINT_ORDER) whenever any part of the map changes.

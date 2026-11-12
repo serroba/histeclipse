@@ -216,6 +216,26 @@ describe('the shape of src', () => {
     ratchet(conditionals, APP_CONDITIONALS, "app.ts's ifs and ternaries", 'APP_CONDITIONALS');
   });
 
+  it('a part of the Earth shader is light: its GLSL and uniforms, loaded with the globe (#379)', () => {
+    // The globe builds its shader from the parts once, as it starts, so each part is in the
+    // first download: it brings only what the shader needs. Its layer, and anything it loads,
+    // goes in a module of its own.
+    const parts = Object.entries(sources).filter(([, text]) =>
+      /^export const \w+: EarthPart</m.test(text),
+    );
+    expect(parts.length, 'the parts were found').toBeGreaterThan(0);
+    // Every specifier: `from '…'`, a bare `import '…'`, and `import('…')`.
+    const SPECIFIER = /(?:\bfrom|\bimport)\s*\(?\s*['"]([^'"]+)['"]/g;
+    const heavy = parts.flatMap(([path, text]) =>
+      [...text.matchAll(SPECIFIER)]
+        .map((match) => match[1] ?? '')
+        .map((specifier) => (specifier.startsWith('.') ? resolve(path, specifier) : specifier))
+        .filter((target) => target !== 'three' && !target.startsWith('./globe/'))
+        .map((target) => `${path} -> ${target}`),
+    );
+    expect(heavy, 'a part imports only three and the globe').toEqual([]);
+  });
+
   it('the Globe interface does not grow: draw new things with globe.addLayer', () => {
     const scene = sources['./globe/scene.ts'] ?? '';
     const body = /^export interface Globe \{\n([\s\S]*?)^\}/m.exec(scene)?.[1] ?? '';

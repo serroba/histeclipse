@@ -11,7 +11,7 @@
 import { MOON_NAMES } from '../globe/moonLook';
 import { BODY_RADIUS } from '../globe/bodyRadius';
 import { EARTH_RADIUS_KM } from '../globe/spaceFrame';
-import { CAMERA_DISTANCE_RANGE, type Body } from '../state/viewState';
+import { CAMERA_DISTANCE_RANGE, nearestDistance, type Body } from '../state/viewState';
 import { element } from './dom';
 import { bookIcon, uiIcon } from './icons';
 import './zoomRail.css';
@@ -31,7 +31,7 @@ export function railScale(body: Body): RailScale {
   return {
     body,
     radiusKm: radius * EARTH_RADIUS_KM,
-    near: CAMERA_DISTANCE_RANGE.min,
+    near: nearestDistance(body),
     // The scene caps the distance at the same number of Earth radii, whatever the body.
     far: Math.min(CAMERA_DISTANCE_RANGE.max, CAMERA_DISTANCE_RANGE.max / radius),
   };

@@ -26,6 +26,7 @@ from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
 from histeclipse_pipeline.dipole import fetch_dipole
 from histeclipse_pipeline.dispersal import fetch_dispersal
 from histeclipse_pipeline.drought import fetch_drought
+from histeclipse_pipeline.earth_tiles import fetch_earth_tiles
 from histeclipse_pipeline.empires import (
     fetch_cliopatria,
     merge_unchanged,
@@ -65,6 +66,7 @@ from histeclipse_pipeline.passage_vectors import (
     write_test_vectors,
 )
 from histeclipse_pipeline.periodo import fetch_periods
+from histeclipse_pipeline.permafrost import fetch_permafrost
 from histeclipse_pipeline.phanda import fetch_phanda
 from histeclipse_pipeline.pictures import fetch_pictures
 from histeclipse_pipeline.planet_keys import fetch_planet_keys
@@ -343,6 +345,12 @@ def planet_maps(args: Arguments) -> int:  # pragma: no cover - needs network acc
     """Write the bodies' maps from their missions, for the close-up view (public/textures)."""
     count = fetch_planet_maps(args.out, Path(".cache/planet-maps"), args.only)
     return _say(f"wrote {count} maps to {args.out}")
+
+
+def earth_tiles(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Cut Earth's full-size Blue Marble into tiles for the closest views (public/textures)."""
+    written = fetch_earth_tiles(args.out, Path(".cache/planet-maps"))
+    return _say(f"wrote {written / 1e6:.1f} MB of tiles to {args.out}")
 
 
 def moon_orbits(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -686,6 +694,12 @@ def snow_cover(args: Arguments) -> int:  # pragma: no cover - needs network acce
     return _say(f"wrote {count} years of snow cover to {args.out}")
 
 
+def permafrost(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write GTN-P borehole temperatures and the ESA CCI northern permafrost extent."""
+    count = fetch_permafrost(args.out)
+    return _say(f"wrote {count} permafrost borehole-years and extent-years to {args.out}")
+
+
 def ocean_heat_map(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write maps of where the ocean has gained heat since 1960 (IAP v4.2, gridded)."""
     count = fetch_ocean_heat_map(args.out)
@@ -811,6 +825,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         planet_maps,
         "write the bodies' maps from their missions (MESSENGER, Viking, Cassini, BMNG, LRO)",
         "output folder (public/textures)",
+    ),
+    "earth-tiles": (
+        earth_tiles,
+        "cut Earth's full-size Blue Marble into tiles fetched only for the ground in view",
+        "output folder (public/textures/earth-tiles)",
     ),
     "moon-orbits": (
         moon_orbits,
@@ -1080,6 +1099,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "snow-cover": (
         snow_cover,
         "write Northern Hemisphere snow-cover extent by month since 1966 (Rutgers)",
+        "output directory",
+    ),
+    "permafrost": (
+        permafrost,
+        "write permafrost borehole temperatures (GTN-P) and northern extent (ESA CCI)",
         "output directory",
     ),
     "ocean-heat-map": (
