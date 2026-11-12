@@ -624,7 +624,7 @@
     "kind": "dataset",
     "cite": "Matthes, K., Funke, B., Andersson, M. E., Barnard, L., Beer, J., Charbonneau, P., Clilverd, M. A., Dudok de Wit, T., Haberreiter, M., Hendry, A., Jackman, C. H., Kretzschmar, M., Kruschke, T., Kunze, M., Langematz, U., Marsh, D. R., Maycock, A. C., Misios, S., Rodger, C. J., Scaife, A. A., Seppälä, A., Shangguan, M., Sinnhuber, M., Tourpali, K., Usoskin, I., van de Kamp, M., Verronen, P. T. & Versick, S. (2017), Solar forcing for CMIP6 (v3.2), Geoscientific Model Development 10, 2247–2302; data: SOLARIS-HEPPA CMIP6 solar forcing v3.2, monthly reference scenario (input4MIPs SOLARIS-HEPPA-CMIP-3-2), https://www.solarisheppa.kit.edu/85.php, accessed 12 November 2026",
     "url": "https://doi.org/10.5194/gmd-10-2247-2017",
-    "licence": "CC BY-SA 4.0 (as the data file states)"
+    "licence": "CC BY-SA 4.0 (as the data file states); our annual means derived from it are shared under the same licence"
   },
   "meeus": {
     "name": "Meeus, Astronomical Algorithms",

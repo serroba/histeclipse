@@ -56,7 +56,7 @@ CMIP6_SOURCE = "https://doi.org/10.5194/gmd-10-2247-2017"
 CMIP6_PAGE = "https://www.solarisheppa.kit.edu/85.php"
 CMIP6_CREDIT = (
     "CMIP6 solar forcing v3.2 (Matthes et al. 2017, Geosci. Model Dev.), SOLARIS-HEPPA, "
-    "CC BY-SA 4.0"
+    "CC BY-SA 4.0; these annual means are shared under the same licence"
 )
 #: The historical reconstruction; later years are the forecast "reference scenario".
 CMIP6_YEARS = (1850, 2014)
