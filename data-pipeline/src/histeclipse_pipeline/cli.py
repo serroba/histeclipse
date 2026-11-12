@@ -90,6 +90,7 @@ from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
 from histeclipse_pipeline.volcanoes import fetch_volcanoes
+from histeclipse_pipeline.warm_past import fetch_warm_past
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -569,6 +570,12 @@ def ar6_sealevel(args: Arguments) -> int:  # pragma: no cover - needs network ac
     return _say(f"wrote AR6 sea-level curves and {count} maps to {args.out}")
 
 
+def warm_past(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write temperature change maps of the Last Interglacial and mid-Pliocene."""
+    count = fetch_warm_past(args.out)
+    return _say(f"wrote {count} warm-past temperature-change images to {args.out}")
+
+
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
 #: with a margin each side for the months that straddle the ends.
 BABYLON_YEARS = (-749, 101)
@@ -878,6 +885,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         ar6_sealevel,
         "write sea level projected to 2150 by SSP (IPCC AR6, Garner et al. 2021)",
         "output directory",
+    ),
+    "warm-past": (
+        warm_past,
+        "write temperature change at the Last Interglacial and mid-Pliocene (PMIP4, PlioMIP2)",
+        "output directory (public/data/warmpast)",
     ),
     "calendars": (
         calendars,
