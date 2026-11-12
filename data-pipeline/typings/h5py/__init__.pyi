@@ -7,7 +7,11 @@ import numpy.typing as npt
 
 class Dataset:
     def __getitem__(
-        self, key: tuple[()] | int | slice[int, int, None]
+        self,
+        key: tuple[()]
+        | int
+        | slice[int, int, None]
+        | tuple[int | slice[int | None, int | None, None], ...],
     ) -> npt.NDArray[np.float32]: ...
 
 class File:
@@ -15,7 +19,13 @@ class File:
     def __getitem__(self, name: str) -> Dataset: ...
     def __contains__(self, name: str) -> bool: ...
     def create_dataset(
-        self, name: str, *, data: npt.NDArray[np.float32] | npt.NDArray[np.float64]
+        self,
+        name: str,
+        *,
+        data: npt.NDArray[np.float32]
+        | npt.NDArray[np.float64]
+        | npt.NDArray[np.int16]
+        | npt.NDArray[np.int32],
     ) -> Dataset: ...
     def __enter__(self) -> Self: ...
     def __exit__(

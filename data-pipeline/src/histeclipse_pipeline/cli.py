@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.aadr import fetch_genomes
+from histeclipse_pipeline.ar6_sealevel import fetch_ar6_sealevel
 from histeclipse_pipeline.archaeoglobe import fetch_ways
 from histeclipse_pipeline.asteroids import fetch_asteroids
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
@@ -521,6 +522,12 @@ def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs networ
     return _say(f"wrote {count} measured-warming images to {args.out}")
 
 
+def ar6_sealevel(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write sea level projected to 2150 by IPCC AR6, global curves and 1° maps."""
+    count = fetch_ar6_sealevel(args.out)
+    return _say(f"wrote AR6 sea-level curves and {count} maps to {args.out}")
+
+
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
 #: with a margin each side for the months that straddle the ends.
 BABYLON_YEARS = (-749, 101)
@@ -794,6 +801,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "measured-warming": (
         measured_warming,
         "write measured land warming since 1850 against 1850-1900 (Berkeley Earth)",
+        "output directory",
+    ),
+    "ar6-sealevel": (
+        ar6_sealevel,
+        "write sea level projected to 2150 by SSP (IPCC AR6, Garner et al. 2021)",
         "output directory",
     ),
     "calendars": (
