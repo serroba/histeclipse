@@ -21,6 +21,7 @@ import { julianDayNumber, type JulianDay } from '../../time/julianDay';
 import { element } from '../../ui/dom';
 import { createTabletPanel } from '../../ui/tabletPanel';
 import type { PartContext } from '../part';
+import './records.css';
 
 /** The sky's field of view, degrees, when it turns to a record's body. */
 const RECORD_FOV = 40;

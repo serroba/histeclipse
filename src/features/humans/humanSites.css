@@ -1,0 +1,43 @@
+/* Dated finds of humans and their relatives: a dot and the name, coloured by species. */
+
+/* Dated finds of humans and their relatives: a dot and the date; disputed ones in italics.
+   Each is a button, to tap for its card. */
+.empire-label.human-site {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.empire-label.human-site:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Dated finds of humans and their relatives: a dot and the date; disputed ones in italics. */
+.human-site::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: rgb(247 201 90);
+  vertical-align: middle;
+}
+
+.human-site.is-neanderthal::before {
+  background: rgb(120 200 255);
+}
+
+.human-site.is-denisovan::before {
+  background: rgb(220 140 255);
+}
+
+.human-site.is-disputed {
+  font-style: italic;
+}

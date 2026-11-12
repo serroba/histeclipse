@@ -1,0 +1,42 @@
+/* A tablet record in the sky: what it says, whether it fits, and the way back. */
+
+/* A tablet record in the sky: what it says, whether it fits, and the way back. */
+.tablet-record {
+  margin: 8px 0 4px;
+  padding: 8px 10px;
+  border: 1px solid rgb(255 214 140 / 0.4);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.tablet-record[hidden] {
+  display: none;
+}
+
+.tablet-record p {
+  margin: 0 0 6px;
+}
+
+.tablet-record .tablet-mark {
+  white-space: normal;
+}
+
+.tablet-record-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tablet-record-back,
+.tablet-record-close {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}

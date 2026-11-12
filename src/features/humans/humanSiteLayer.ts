@@ -6,6 +6,7 @@
 
 import type { HumanSite } from '../../data/humanClaims';
 import { SURFACE_PRIORITY, type LayerFactory } from '../../globe/layerHost';
+import './humanSites.css';
 
 export const humanSiteLayer: LayerFactory<readonly HumanSite[] | null> = (host) => {
   const layer = document.createElement('div');

@@ -30,6 +30,7 @@ import { element } from '../../ui/dom';
 import { createFigureSwitch } from '../../ui/figureSwitch';
 import { errorMessage } from '../../util/errors';
 import type { MountedPart, PartContext } from '../part';
+import './sky.css';
 
 /** How long the sky takes to turn and close in on a tapped body, ms, before going to it. */
 const SKY_GLIDE_MS = 900;
