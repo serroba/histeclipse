@@ -575,7 +575,7 @@ def krapp(args: Arguments) -> int:  # pragma: no cover - needs network access
 
 
 def temperature_records(args: Arguments) -> int:  # pragma: no cover - needs network access
-    """Write global mean temperature since 1850 from five records side by side."""
+    """Write global mean temperature since 1850 from six records side by side."""
     points = fetch_temperature_records(args.out)
     return _say(f"wrote {points} temperature-record points to {args.out}")
 
@@ -947,7 +947,7 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     ),
     "temperature-records": (
         temperature_records,
-        "write global temperature since 1850 (GISTEMP, NOAAGlobalTemp, ERA5, HadCRUT5, Berkeley)",
+        "write global temperature since 1850 (GISTEMP, NOAA, ERA5, JRA-3Q, HadCRUT5, Berkeley)",
         "output directory",
     ),
     "amoc": (

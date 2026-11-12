@@ -620,6 +620,13 @@
     "url": "https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html",
     "licence": "NASA/JPL, public domain"
   },
+  "jra3q": {
+    "name": "JRA-3Q",
+    "kind": "dataset",
+    "cite": "Kosaka, Y., Kobayashi, S., Harada, Y., et al. (2024), The JRA-3Q Reanalysis, Journal of the Meteorological Society of Japan 102, 49–109; data: Japan Meteorological Agency, JRA-3Q, annual global mean 2 m temperature as computed and published by the Copernicus Climate Change Service (C3S/ECMWF) in its Global Climate Highlights 2025 (Figure 3 data: analysis over land, background forecast over sea). JMA’s third reanalysis, from September 1947: a weather model fitted to observations",
+    "url": "https://doi.org/10.2151/jmsj.2024-004",
+    "licence": "Reproduced with the source acknowledged, as the C3S website allows; JMA asks for JRA-3Q to be cited and acknowledged, and supplies its own JRA-3Q downloads for non-commercial use"
+  },
   "judd2024": {
     "name": "PhanDA (Judd et al. 2024)",
     "kind": "model",
