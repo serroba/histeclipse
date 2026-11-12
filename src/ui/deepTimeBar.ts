@@ -21,7 +21,6 @@ import {
 } from '../data/deepAir';
 import { archiveDots, archiveText, studiesNear, type Co2Archive } from '../data/co2Archive';
 import { createBandChart } from './bandChart';
-import type { IceOutlines } from '../data/iceOutlines';
 import type { PolarityScale } from '../data/polarity';
 import type { IceStandIn } from '../data/iceSheets';
 import { SEA_ICE_MODELS, type SeaIceModel } from '../data/seaIce';
@@ -44,6 +43,9 @@ import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import type { DeepScale, Layer } from '../state/viewState';
 import type { WhyId } from '../sources/registry';
 import { element } from './dom';
+import type { IceOutlines } from '../data/iceOutlines';
+import type { StoryDate } from '../deepTime/storyDate';
+import { iceOutlineText } from './iceOutlineText';
 import { createTemperatureLegend, type TemperatureView } from './temperatureLegend';
 import { createDeepChips, type DeepChip, type DeepChipView } from './deepChips';
 import { bookIcon, uiIcon } from './icons';
@@ -133,34 +135,10 @@ export function iceText(view: DeepTimeView['ice']): string {
     : `Ice sheets: no openly licensed maps reach back beyond ${reach}; sea level and the bared shelves still show each glacial cycle.`;
 }
 
-/** How a span of thousands of years ago reads: in thousands, or in millions from 1,000 ka. */
-function kaSpan(fromKa: number, toKa: number): string {
-  if (toKa >= 1000) {
-    const ma = (ka: number) => (ka / 1000).toLocaleString('en', { maximumFractionDigits: 2 });
-    return `${ma(fromKa)}–${ma(toKa)} million years ago`;
-  }
-  const years = (ka: number) => (ka * 1000).toLocaleString('en');
-  return `${years(fromKa)}–${years(toKa)} years ago`;
-}
-
-/** What the bar says about Batchelor et al.'s outlines of the time slice shown, if any. */
-export function iceOutlineText(outlines: IceOutlines | null): string | null {
-  if (outlines === null) return null;
-  const credit = 'Batchelor et al. (2019)';
-  const compare = 'Where the white ice and the outlines differ, the reconstructions disagree.';
-  if (outlines.min.length === 0 && outlines.max.length === 0) {
-    return `Outlines: ${credit}’s best estimate for the Last Glacial Maximum, about 26,500 years ago. ${compare}`;
-  }
-  const point = /^(\d+) ka$/.exec(outlines.name);
-  const when =
-    point?.[1] === undefined
-      ? `${outlines.name} (${kaSpan(outlines.fromKa, outlines.toKa)})`
-      : `about ${(Number(point[1]) * 1000).toLocaleString('en')} years ago`;
-  return `Outlines: ${credit}, ${when}: their best estimate (solid gold), minimum (dotted blue) and maximum (dashed red) of the ice sheets at their largest. ${compare}`;
-}
-
 export interface DeepTimeView {
   readonly ma: number;
+  /** A story's own date for the moment, while it has the globe (#492); null for the bar's. */
+  readonly story: StoryDate | null;
   /** The oldest moment the maps reach, Ma. */
   readonly oldest: number;
   readonly period: Period | null;
@@ -1101,8 +1079,9 @@ export function createDeepTimeBar(
       // On the ice-age scale only the ice ages' own maps draw (#457); before the maps, none.
       temperatureButton.disabled = uncharted;
       slider.setAttribute('aria-valuetext', formatMa(view.ma));
-      when.textContent = formatMa(view.ma);
-      period.textContent = view.period === null ? '' : periodShort(view.period);
+      when.textContent = view.story?.when ?? formatMa(view.ma);
+      const named = view.period === null ? '' : periodShort(view.period);
+      period.textContent = view.story?.what ?? named;
       facts.replaceChildren(
         ...earthFacts(view.ma, view.polarity).flatMap(({ label, text }) => [
           element('dt', {}, label),

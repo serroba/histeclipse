@@ -8,11 +8,13 @@ import type { DeepScale, ViewState } from '../../state/viewState';
 import type { DeepTimeView } from '../../ui/deepTimeBar';
 import type { ImpactsMode } from '../../data/impacts';
 import type { Span } from '../../ui/spanSwitch';
+import type { StoryDate } from '../../deepTime/storyDate';
 
 /** What deep time's own fields of the bar leave to the layers and surfaces. */
 export type Gathered = Omit<
   DeepTimeView,
   | 'ma'
+  | 'story'
   | 'oldest'
   | 'mapsReach'
   | 'period'
@@ -50,8 +52,10 @@ export interface DeepTimeContext extends PartContext {
   step(): void;
   /** The page is in deep time, or not. */
   marked(on: boolean): void;
-  /** The header says the moment: how long ago, and the period. */
-  header(ma: number): void;
+  /** The header says the moment: how long ago, and the period; or the date a story lends. */
+  header(ma: number, story: StoryDate | null): void;
+  /** The date a story lends deep time while it has the globe (#492), if any. */
+  storyDate(): StoryDate | null;
   /** The layers' and surfaces' part of the bar for the moment, drawing them. */
   bar(state: ViewState, moment: DeepMoment): Gathered;
   /** The temperature maps: what the bar says of them, and the globe coloured by them. */

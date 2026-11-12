@@ -7,6 +7,7 @@
  */
 
 import { loadMeasuredWarming, type MeasuredWarming } from '../../data/measuredWarming';
+import type { StoryDate } from '../../deepTime/storyDate';
 import type { Globe } from '../../globe/scene';
 import { errorMessage } from '../../util/errors';
 import { createBoundariesSheet } from '../../ui/boundariesSheet';
@@ -19,6 +20,7 @@ import {
   givenBack,
   globeAt,
   measuredAt,
+  storyDateAt,
   type Borrowed,
 } from './holoceneGlobe';
 
@@ -29,6 +31,8 @@ export interface BoundariesContext extends PartContext {
 export interface BoundariesPart extends MountedPart {
   /** The button that opens it, for the header's tools. */
   readonly button: HTMLButtonElement;
+  /** While the story has the globe, the date it lends deep time's header and bar (#492). */
+  readonly storyDate: () => StoryDate | null;
 }
 
 /** A sheet starting further right than this share of the page sits beside the globe. */
@@ -45,6 +49,8 @@ export function mountBoundaries(context: BoundariesContext): BoundariesPart {
   let warming: MeasuredWarming | null = null;
   let warmingLoading: Promise<MeasuredWarming> | null = null;
   let measuredShown = false;
+  // The chart's year, while the story has the globe.
+  let storyYear: number | null = null;
 
   function loadWarming(): void {
     if (warming !== null || warmingLoading !== null) return;
@@ -79,6 +85,7 @@ export function mountBoundaries(context: BoundariesContext): BoundariesPart {
       if (borrowed === null) return;
       const back = borrowed;
       borrowed = null;
+      storyYear = null;
       if (measuredShown) {
         // Cleared first: the reader's view draws its own temperature, if any, as it comes back.
         globe.setTemperature(null);
@@ -93,6 +100,8 @@ export function mountBoundaries(context: BoundariesContext): BoundariesPart {
       return;
     }
     const from = borrowed ?? borrowedOf(store.get());
+    // Before the view changes: deep time reads it as it draws.
+    storyYear = year;
     store.set((state) => globeAt(state, from, year));
     showMeasured(year);
     if (borrowed === null) {
@@ -142,6 +151,7 @@ export function mountBoundaries(context: BoundariesContext): BoundariesPart {
     watches: (state) => [state.boundaries],
     elements: [sheet.dialog],
     button: sheet.button,
+    storyDate: () => (storyYear === null ? null : storyDateAt(storyYear)),
     render(state) {
       // Shown on every draw: act only when the chapter changes.
       if (state.boundaries === shown) return;

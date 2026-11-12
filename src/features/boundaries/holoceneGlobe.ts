@@ -5,7 +5,9 @@
  * the story only borrows what it changes.
  */
 
+import { chartDateText } from '../../data/holoceneTemperature';
 import { maOfYear } from '../../data/iceSheets';
+import type { StoryDate } from '../../deepTime/storyDate';
 import { warmingAt, type MeasuredWarming } from '../../data/measuredWarming';
 import type { TemperatureSurface } from '../../globe/scene';
 import type { GeoPoint } from '../../core/geo';
@@ -58,20 +60,6 @@ export function globeAt(state: ViewState, borrowed: Borrowed, year: number): Vie
     year < MAPS_END_YEAR,
   );
   const ma = roundMa(maOfYear(year));
-  // Nothing the story shows has changed: the same view, so nothing is drawn again.
-  if (
-    state.mode === 'globe' &&
-    state.view === 'free' &&
-    state.focus === 'earth' &&
-    state.selection === null &&
-    state.ma === ma &&
-    state.deepScale === 'ice' &&
-    state.temperatureModel === 'krapp' &&
-    state.temperatureShow === 'change' &&
-    sameLayers(state.layers, layers)
-  ) {
-    return state;
-  }
   return {
     ...state,
     mode: 'globe',
@@ -84,10 +72,6 @@ export function globeAt(state: ViewState, borrowed: Borrowed, year: number): Vie
     temperatureModel: 'krapp',
     temperatureShow: 'change',
   };
-}
-
-function sameLayers(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
-  return a.size === b.size && [...a].every((layer) => b.has(layer));
 }
 
 /**
@@ -110,5 +94,16 @@ export function measuredAt(
     coldest: warming.coldest,
     warmest: warming.warmest,
     change: true,
+  };
+}
+
+/**
+ * The date the story lends deep time's header and bar at `year` (#492): the chart cursor's own
+ * words, and from 1850 what the globe shows then; before, the period's name stays.
+ */
+export function storyDateAt(year: number): StoryDate {
+  return {
+    when: chartDateText(year),
+    what: year < MAPS_END_YEAR ? null : 'Industrial era · measured warming, 5-year mean',
   };
 }

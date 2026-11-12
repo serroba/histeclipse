@@ -51,13 +51,20 @@ test('the boundaries open on the Holocene, then grow to 2026 and compare with 20
       'data-temperature',
       /warming\/2024\.png/,
     );
+    // Deep time counts in thousands of years; the story lends its header and bar the year (#492).
+    await expect(page.locator('.hud-date')).toHaveText('2025');
+    await expect(page.locator('.hud-detail')).toHaveText(
+      'Industrial era · measured warming, 5-year mean',
+    );
+    await expect(page.getByTestId('deep-when')).toHaveText('2025');
   });
   await test.step('When they turn to the safe space', async () => {
     await sheet.getByRole('button', { name: 'Safe space' }).click();
   });
   await test.step('Then the nine are drawn round Earth, at pre-industrial levels', async () => {
     await expect(page).toHaveURL(/boundaries=safe/);
-    // The globe is given back as it was: today, in the years.
+    // The globe is given back as it was: today, in the years, the date its own again.
+    await expect(page.locator('.hud-date')).not.toHaveText('2025');
     await expect(page).not.toHaveURL(/[?&]ma=/);
     await expect(page).not.toHaveURL(/scale=ice/);
     await expect(page).not.toHaveURL(/layers=[^&]*sealevel/);

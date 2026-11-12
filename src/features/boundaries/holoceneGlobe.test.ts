@@ -4,7 +4,14 @@ import { astronomicalYear } from '../../time/year';
 import { defaultViewState, type ViewState } from '../../state/viewState';
 import warmingJson from '../../../public/data/warming/index.json';
 import type { MeasuredWarming } from '../../data/measuredWarming';
-import { borrowedOf, givenBack, globeAt, MAPS_END_YEAR, measuredAt } from './holoceneGlobe';
+import {
+  borrowedOf,
+  givenBack,
+  globeAt,
+  MAPS_END_YEAR,
+  measuredAt,
+  storyDateAt,
+} from './holoceneGlobe';
 
 const reader: ViewState = {
   ...defaultViewState(new Date(Date.UTC(2026, 10, 12))),
@@ -58,13 +65,6 @@ describe('the Holocene chapter’s globe', () => {
     expect(after).toEqual({ ...reader, boundaries: null, figures: 'all' });
   });
 
-  it('keeps the same view, not a copy, where nothing it shows has changed', () => {
-    const borrowed = borrowedOf(reader);
-    const at = globeAt(reader, borrowed, 1900);
-    expect(globeAt(at, borrowed, 1950)).toBe(at);
-    expect(globeAt(at, borrowed, -18_050)).not.toBe(at);
-  });
-
   it('shows the measured warming from 1850, blended between its 5-year maps', () => {
     const warming = warmingJson as MeasuredWarming;
     const url = (file: string) => `/data/warming/${file}`;
@@ -75,6 +75,14 @@ describe('the Holocene chapter’s globe', () => {
       mix: 0.6,
       change: true,
       coldest: warming.coldest,
+    });
+  });
+
+  it('lends the chart cursor’s date, and from 1850 says the warming is measured', () => {
+    expect(storyDateAt(-18_050)).toEqual({ when: '20,000 years ago', what: null });
+    expect(storyDateAt(1975)).toEqual({
+      when: '1975',
+      what: 'Industrial era · measured warming, 5-year mean',
     });
   });
 });

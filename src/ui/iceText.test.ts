@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { iceOutlineText, iceText, seaIceText } from './deepTimeBar';
+import { iceText, seaIceText } from './deepTimeBar';
+import { iceOutlineText } from './iceOutlineText';
 
 describe('iceText', () => {
   it('credits the ice maps where they reach, and says where they do not', () => {

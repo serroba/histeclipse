@@ -142,6 +142,8 @@ describe('the temperature layer', () => {
     const older = { ...deep, ma: 100 };
     expect(layer.view(on, older)).toMatchObject({ wanted: 'krapp', shown: 'scotese' });
     expect(layer.drawn(on, { ...ice, ma: 2 })).toBe(false);
+    // Coloured at the ice ages' last glacial maximum, then cleared beyond their reach.
+    layer.show(on, ice, null);
     layer.show(on, { ...ice, ma: 2 }, null);
     expect(surfaces.at(-1)).toBeNull();
     // On the ice-age scale even Scotese asked for gives way to the ice ages' maps.
@@ -197,6 +199,18 @@ describe('the temperature layer', () => {
     const { layer, surfaces } = setUp();
     expect(layer.view(on, deep)).toMatchObject({ on: true, shown: null, readings: [] });
     layer.show(on, deep, null);
+    // Cleared once at first, so the globe says it is off.
     expect(surfaces).toEqual([null]);
+    layer.show(on, deep, null);
+    expect(surfaces).toEqual([null]);
+  });
+
+  it('clears only what it drew, once, so another surface on the globe stays', async () => {
+    const { layer, surfaces } = await loaded();
+    layer.show(on, ice, null);
+    expect(surfaces).toHaveLength(1);
+    layer.show(off, ice, null);
+    layer.show(off, ice, null);
+    expect(surfaces.slice(1)).toEqual([null]);
   });
 });
