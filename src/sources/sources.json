@@ -95,6 +95,13 @@
     "cite": "Boucot, Chen & Scotese (2013), Phanerozoic Paleoclimate: an atlas of lithologic indicators of climate, SEPM Concepts in Sedimentology and Paleontology 11",
     "url": "https://doi.org/10.2110/sepmcsp.11"
   },
+  "bova2021": {
+    "name": "Bova et al. 2021",
+    "kind": "paper",
+    "cite": "Bova, S., Rosenthal, Y., Liu, Z., Godad, S. P., Yan, M. (2021), Seasonal origin of the thermal maxima at the Holocene and the last interglacial, Nature 589, 548–553; data: the 40°S–40°N sea-surface stacks from the paper’s Source Data for Fig. 3; the single cores at NOAA NCEI Paleoclimatology, study 31752, https://doi.org/10.25921/496t-9n92, accessed 12 November 2026",
+    "url": "https://doi.org/10.1038/s41586-020-03155-x",
+    "licence": "None stated for the Source Data; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
+  },
   "bowring1999": {
     "name": "Bowring & Williams 1999",
     "kind": "paper",
@@ -452,6 +459,13 @@
     "cite": "JPL Solar System Dynamics, Small-Body Database Query API: the main belt’s asteroids 100 km across or more, their names and diameters",
     "url": "https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html",
     "licence": "NASA/JPL, public domain"
+  },
+  "kaufman2020": {
+    "name": "Kaufman et al. 2020 (Temperature 12k)",
+    "kind": "dataset",
+    "cite": "Kaufman, D., McKay, N., Routson, C., Erb, M., Dätwyler, C., Sommer, P. S., Heiri, O., Davis, B. (2020), Holocene global mean surface temperature, a multi-method reconstruction approach, Scientific Data 7, 201; data: figshare, https://doi.org/10.6084/m9.figshare.c.4796823, and NOAA NCEI Paleoclimatology, study 29712, https://doi.org/10.25921/vzys-1280, accessed 12 November 2026",
+    "url": "https://doi.org/10.1038/s41597-020-0530-7",
+    "licence": "CC0 1.0 (the data, on figshare); the article CC BY 4.0"
   },
   "kent2015": {
     "name": "Kent et al. 2015",
