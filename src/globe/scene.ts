@@ -51,7 +51,6 @@ import {
   UnsignedByteType,
   Vector2,
   Vector3,
-  Vector4,
   WebGLRenderer,
   ZeroFactor,
 } from 'three';
@@ -67,7 +66,6 @@ import {
   type Viewpoint,
 } from '../state/viewState';
 import { LAND_NOISE_GRID, landNoise, levelForShare, shareAtOrAbove } from '../deepTime/landScheme';
-import type { ShadowGeometry } from '../eclipses/solar';
 import {
   cameraFromPosition,
   cameraPosition,
@@ -121,7 +119,7 @@ import {
 import { createPlanetMeshes } from './planetMeshes';
 import type { ArrivalGrid } from '../data/dispersal';
 import { clearOverlay, createEmpireCanvas, paintSettled } from './empireCanvas';
-import { OCCULTATION, SOLAR_COMMON, SOLAR_SHADOW } from './solarShaders';
+import { OCCULTATION } from './solarShaders';
 import { SEA_ICE } from './seaIceShader';
 import { TEMPERATURE_GLSL, temperatureUniforms } from './temperatureShader';
 import './spaceMarkers.css';
@@ -279,8 +277,6 @@ interface SurfaceSketch {
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
   setSunDirection(direction: Vector3Tuple): void;
-  /** Darken the ground under the Moon's shadow at the current moment; null hides it. */
-  setSolarShadow(shadow: ShadowGeometry | null): void;
   /**
    * Place the Moon and Sun at their true sizes and distances. When the camera is far out, it
    * keeps its place among the stars as time moves, so Earth spins and the Moon orbits in view.
@@ -422,9 +418,6 @@ const EARTH_VERTEX = /* glsl */ `
 // along the terminator. The parts features bring (#379) are called over the lit ground, in order.
 const EARTH_HEAD = /* glsl */ `
   #include <logdepthbuf_pars_fragment>
-  ${SOLAR_COMMON}
-  ${SOLAR_SHADOW}
-  ${OCCULTATION}
   uniform sampler2D dayMap;
   // Deep time: two elevation maps (bytes 0–127 sea floor, 128–255 land) and the blend between.
   uniform sampler2D paleoYounger;
@@ -707,17 +700,7 @@ const EARTH_BODY = /* glsl */ `
 `;
 
 // After the parts: deep time's even light, and what goes over it.
-const EARTH_TAIL = /* glsl */ `    // A selected solar eclipse draws its shadow from the catalog's Besselian elements, which
-    // match its path exactly; otherwise the Moon's shadow comes straight from the geometry.
-    if (solarActive < 0.5 && moonRadius > 0.0) {
-      // On the unit sphere, the surface point is its normal.
-      float sunlight = sunlightAt(normal, sunPosition, sunRadius, moonPosition, moonRadius);
-      float perceived = 1.0 - 0.9 * pow(1.0 - sunlight, 0.6);
-      vec3 shaded = max(color * pow(perceived, 2.2), night);
-      color = mix(shaded, night, step(sunlight, 0.0));
-    }
-    color = solarShadowLayer(color, night, latitude, longitude);
-    // Deep time: no one can say what hour it was, and days were shorter, so there is no night
+const EARTH_TAIL = /* glsl */ `    // Deep time: no one can say what hour it was, and days were shorter, so there is no night
     // side. A soft light from the viewer keeps the globe round.
     float facing = max(dot(normal, normalize(cameraPosition)), 0.0);
     color = mix(color, surface * (0.6 + 0.45 * facing), evenLight);
@@ -1007,9 +990,6 @@ export function createGlobe(
     empiresActive: { value: 0 },
     iceOutlinesActive: { value: 0 },
     sunDirection: { value: sunDirection },
-    solarActive: { value: 0 },
-    shadowAxis: { value: new Vector4() },
-    shadowCones: { value: new Vector4() },
     moonPosition: { value: moonPosition },
     moonRadius: { value: 0 },
     sunPosition: { value: sunPosition },
@@ -2257,23 +2237,6 @@ export function createGlobe(
       const was = JSON.stringify(insets);
       insets = { ...insets, ...next };
       if (JSON.stringify(insets) !== was) resize();
-    },
-    setSolarShadow(shadow) {
-      const uniforms = earth.material.uniforms;
-      if (shadow === null) {
-        uniforms['solarActive'] = { value: 0 };
-      } else {
-        const toRadians = Math.PI / 180;
-        uniforms['solarActive'] = { value: 1 };
-        uniforms['shadowAxis'] = {
-          value: new Vector4(shadow.x, shadow.y, shadow.d * toRadians, shadow.mu * toRadians),
-        };
-        uniforms['shadowCones'] = {
-          value: new Vector4(shadow.l1, shadow.l2, shadow.tanF1, shadow.tanF2),
-        };
-      }
-      container.dataset['solarShadow'] = shadow === null ? 'off' : 'on';
-      needsRender = true;
     },
     setFocus(body) {
       if (body === focus && viewpoint === 'free') return;

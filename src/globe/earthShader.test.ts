@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { assembleEarthParts, MAX_SAMPLERS, samplerCount } from './earthParts';
+import {
+  assembleEarthParts,
+  EARTH_SHARED_UNIFORMS,
+  MAX_SAMPLERS,
+  samplerCount,
+} from './earthParts';
 import { earthFragment } from './scene';
 
 describe('the Earth shader', () => {
@@ -9,6 +14,13 @@ describe('the Earth shader', () => {
     // headless browser in the end-to-end suite allows 32, so it would not catch a seventeenth.
     // The features' parts are checked with it where they are made, and when the globe is.
     expect(samplerCount(earthFragment(assembleEarthParts([])))).toBeLessThanOrEqual(MAX_SAMPLERS);
+  });
+
+  it('declares every uniform it shares with the parts', () => {
+    const shader = earthFragment(assembleEarthParts([]));
+    for (const name of EARTH_SHARED_UNIFORMS) {
+      expect(shader, name).toMatch(new RegExp(String.raw`\buniform\s+\w+\s+${name}\s*;`));
+    }
   });
 
   it('Given parts, Then it declares them and passes the colour through each, in order', () => {

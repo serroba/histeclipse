@@ -29,7 +29,21 @@ export interface EarthPart<Uniforms extends PartUniforms = PartUniforms> {
 export const EARTH_PART_ORDER = {
   lunarOverlay: 30,
   eclipsePath: 40,
+  moonShadow: 50,
 } as const;
+
+/**
+ * The globe's own uniforms a part may read, set as the bodies move: where the Sun and Moon are in
+ * the scene, their radii (Earth radii; the Moon's 0 until it is placed), and the direction to the
+ * Sun. A part declares none of them; the Earth shader does.
+ */
+export const EARTH_SHARED_UNIFORMS = [
+  'sunDirection',
+  'sunPosition',
+  'sunRadius',
+  'moonPosition',
+  'moonRadius',
+] as const;
 
 /** What the Earth shader has worked out at a point of the ground, for the parts. */
 export const EARTH_FRAGMENT_STRUCT = /* glsl */ `
@@ -91,6 +105,14 @@ export function assembleEarthParts(
     if (!signature.test(part.glsl)) {
       throw new Error(
         `Earth part "${part.name}" must declare vec3 ${part.name}(vec3 color, EarthFragment f)`,
+      );
+    }
+    const redeclared = EARTH_SHARED_UNIFORMS.find((name) =>
+      new RegExp(String.raw`\buniform\s+\w+\s+${name}\s*;`).test(part.glsl),
+    );
+    if (redeclared !== undefined) {
+      throw new Error(
+        `Earth part "${part.name}" declares ${redeclared}: the Earth shader does, for every part`,
       );
     }
     const own = part.uniforms();
