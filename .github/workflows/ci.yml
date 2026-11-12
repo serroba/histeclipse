@@ -96,17 +96,14 @@ jobs:
             test-results/
           retention-days: 14
 
-  # A Mac's GPU limits differ from Linux's: a shader once passed here and drew a black globe there.
-  # One worker fills the Mac runner (a second made each test twice as slow), so it is split in
-  # two to finish alongside the Linux shards.
-  e2e-macos:
-    name: End-to-end on macOS (desktop, ${{ matrix.shard }}/2)
+  # A Mac's GPU limits differ from Linux's: a shader once passed here and drew a black globe there
+  # (#110). The tests tagged @gpu draw every shader once (the globe's, the sky's, the 3D stories'
+  # and the 3D charts'), so a shader that fails to compile on a Mac fails here; the whole suite
+  # runs on a Mac nightly (macos-nightly.yml). One worker fills the Mac runner.
+  e2e-macos-gpu:
+    name: End-to-end on macOS (desktop, every shader)
     runs-on: macos-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2]
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -124,13 +121,11 @@ jobs:
           path: public/models/*/onnx
           key: models-${{ hashFiles('models.lock.json') }}
       - run: pnpm exec playwright install chromium
-      - run: pnpm test:e2e --project=desktop --shard="$SHARD/2"
-        env:
-          SHARD: ${{ matrix.shard }}
+      - run: pnpm test:e2e --project=desktop --grep @gpu
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-report-macos-${{ matrix.shard }}
+          name: playwright-report-macos-gpu
           path: |
             playwright-report/
             test-results/
@@ -214,7 +209,7 @@ jobs:
   ci-ok:
     name: CI OK
     if: always()
-    needs: [web, e2e, e2e-macos, pipeline, plates, workflows]
+    needs: [web, e2e, e2e-macos-gpu, pipeline, plates, workflows]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:

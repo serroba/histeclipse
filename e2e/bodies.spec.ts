@@ -1,6 +1,6 @@
 // The Sun, the Moon and the planets: far out, up close, and the Sun's kinds of light.
 
-import { collectProblems, expect, globeRendered, test } from './support';
+import { collectProblems, expect, globeRendered, GPU, test } from './support';
 
 test('zooming out shows the Moon and Sun at their true places, labelled', async ({ page }) => {
   // 8 April 2024, mid-eclipse, seen from 150 Earth radii off to the side: the Moon is a dot
@@ -105,7 +105,7 @@ test('a link centred on the Moon opens there, and Earth is one click back', asyn
   await expect(page).not.toHaveURL(/focus=/);
 });
 
-test('close to the Sun, SDO’s images show it in six kinds of light', async ({ page }) => {
+test('close to the Sun, SDO’s images show it in six kinds of light', GPU, async ({ page }) => {
   // Seen from Earth's side on 8 May 2024: the antisolar direction in the Sun's frame.
   await page.goto('./?t=2024-05-08T12:00&focus=sun&cam=-17.2,-134.2,4');
   await globeRendered(page);
@@ -215,7 +215,7 @@ test('close to the Sun, the caption says what the light shows; how it was made i
   }
 });
 
-test('far out, the planets appear, and clicking one flies to it', async ({ page }) => {
+test('far out, the planets appear, and clicking one flies to it', GPU, async ({ page }) => {
   const problems = collectProblems(page);
   // Two and a half AU out, over the north side of the Solar System.
   await page.goto('./?t=2020-12-21T18:00&cam=60,0,60000');

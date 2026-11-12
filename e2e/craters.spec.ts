@@ -5,7 +5,7 @@
  * crater back to the globe at its strike.
  */
 
-import { collectProblems, expect, globeRendered, openLayers, test } from './support';
+import { collectProblems, expect, globeRendered, GPU, openLayers, test } from './support';
 
 const CRATERS = /^[1-9]\d{2,}$/;
 // Drawing the paths beside the globe takes seconds on runners that render in software.
@@ -41,39 +41,43 @@ test('Layers opens every crater’s path through time, in 3D', async ({ page }) 
   expect(problems).toEqual([]);
 });
 
-test('a crater’s path says how far its plate carried it, and leads to the globe at its strike', async ({
-  page,
-}) => {
-  test.slow();
-  const problems = collectProblems(page);
-  const focus = page.getByTestId('craters-focus');
-  await test.step('Given a link to Chicxulub’s path', async () => {
-    await page.goto('./?ma=66&craters=26');
-    await globeRendered(page);
-  });
-  await test.step('Then it is picked out, with its age, width and how far it travelled', async () => {
-    await expect(focus.getByRole('heading')).toHaveText('Chicxulub', DRAWN);
-    await expect(focus).toContainText('180 km across');
-    await expect(focus).toContainText(/Carried about [\d,]+ km by its plate since it struck/);
-  });
-  await test.step('And a dot follows its journey on the map, saying the date it has reached', async () => {
-    await expect(page.getByTestId('craters-map')).toBeVisible();
-    await expect(page.locator('.stage-pin', { hasText: 'Chicxulub: struck here' })).toBeVisible();
-    await expect(
-      page.locator('.tree-label-focus', { hasText: /million years ago|Today/ }),
-    ).toBeVisible();
-  });
-  await test.step('When they go to see it on the globe', async () => {
-    await focus.getByRole('button', { name: /See it on the globe, 66 million years ago/ }).click();
-  });
-  await test.step('Then deep time opens at its strike, Impacts on, the paths closed', async () => {
-    await expect(page).toHaveURL(/ma=66\.038/);
-    await expect(page).toHaveURL(/layers=[a-z,]*impacts/);
-    await expect(page).not.toHaveURL(/craters=/);
-    await expect(page.getByTestId('globe')).toHaveAttribute('data-impacts', /^[1-9]\d*$/);
-  });
-  expect(problems).toEqual([]);
-});
+test(
+  'a crater’s path says how far its plate carried it, and leads to the globe at its strike',
+  GPU,
+  async ({ page }) => {
+    test.slow();
+    const problems = collectProblems(page);
+    const focus = page.getByTestId('craters-focus');
+    await test.step('Given a link to Chicxulub’s path', async () => {
+      await page.goto('./?ma=66&craters=26');
+      await globeRendered(page);
+    });
+    await test.step('Then it is picked out, with its age, width and how far it travelled', async () => {
+      await expect(focus.getByRole('heading')).toHaveText('Chicxulub', DRAWN);
+      await expect(focus).toContainText('180 km across');
+      await expect(focus).toContainText(/Carried about [\d,]+ km by its plate since it struck/);
+    });
+    await test.step('And a dot follows its journey on the map, saying the date it has reached', async () => {
+      await expect(page.getByTestId('craters-map')).toBeVisible();
+      await expect(page.locator('.stage-pin', { hasText: 'Chicxulub: struck here' })).toBeVisible();
+      await expect(
+        page.locator('.tree-label-focus', { hasText: /million years ago|Today/ }),
+      ).toBeVisible();
+    });
+    await test.step('When they go to see it on the globe', async () => {
+      await focus
+        .getByRole('button', { name: /See it on the globe, 66 million years ago/ })
+        .click();
+    });
+    await test.step('Then deep time opens at its strike, Impacts on, the paths closed', async () => {
+      await expect(page).toHaveURL(/ma=66\.038/);
+      await expect(page).toHaveURL(/layers=[a-z,]*impacts/);
+      await expect(page).not.toHaveURL(/craters=/);
+      await expect(page.getByTestId('globe')).toHaveAttribute('data-impacts', /^[1-9]\d*$/);
+    });
+    expect(problems).toEqual([]);
+  },
+);
 
 test('the 3D box is a switch away, and the link keeps it', async ({ page }) => {
   test.slow();

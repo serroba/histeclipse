@@ -9,6 +9,7 @@ import {
   collectProblems,
   expect,
   globeRendered,
+  GPU,
   openLayers,
   showDeepDetails,
   test,
@@ -88,25 +89,27 @@ test('in deep time, impacts show around their time, or all that had struck by th
   expect(problems).toEqual([]);
 });
 
-test('as deep time plays, the craters show as they strike, not only once it stops', async ({
-  page,
-}) => {
-  const problems = collectProblems(page);
-  const deep = page.getByRole('navigation', { name: 'Deep time' });
-  await test.step('Given 120 million years ago with Impacts on', async () => {
-    await page.goto('./?ma=120&layers=impacts');
-    await globeRendered(page);
-  });
-  await test.step('When they play deep time towards today', async () => {
-    await deep.getByRole('button', { name: 'Play', exact: true }).click();
-    await expect(deep.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
-  });
-  await test.step('Then, while it plays, craters are on the globe', async () => {
-    await expect(page.locator('.impact-mark:visible').first()).toBeVisible();
-    await expect(deep.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
-  });
-  expect(problems).toEqual([]);
-});
+test(
+  'as deep time plays, the craters show as they strike, not only once it stops',
+  GPU,
+  async ({ page }) => {
+    const problems = collectProblems(page);
+    const deep = page.getByRole('navigation', { name: 'Deep time' });
+    await test.step('Given 120 million years ago with Impacts on', async () => {
+      await page.goto('./?ma=120&layers=impacts');
+      await globeRendered(page);
+    });
+    await test.step('When they play deep time towards today', async () => {
+      await deep.getByRole('button', { name: 'Play', exact: true }).click();
+      await expect(deep.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+    });
+    await test.step('Then, while it plays, craters are on the globe', async () => {
+      await expect(page.locator('.impact-mark:visible').first()).toBeVisible();
+      await expect(deep.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+    });
+    expect(problems).toEqual([]);
+  },
+);
 
 test('a crater’s card estimates its impactor, and plays the impact as an illustration', async ({
   page,
