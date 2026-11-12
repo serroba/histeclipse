@@ -422,6 +422,13 @@
     "url": "https://doi.org/10.18160/GCP-2026",
     "licence": "CC BY 4.0"
   },
+  "gobaiO2": {
+    "name": "GOBAI-O₂ ocean oxygen (Sharp et al.)",
+    "kind": "dataset",
+    "cite": "Sharp, J. D., Fassbender, A. J., Carter, B. R., Johnson, G. C., Schultz, C., Dunne, J. P. (2022, revised 2025), GOBAI-O₂: A Global Gridded Monthly Dataset of Ocean Interior Dissolved Oxygen Concentrations Based on Shipboard and Autonomous Observations, version 2.3 (NCEI Accession 0259304), NOAA National Centers for Environmental Information; method: Sharp, J. D., Fassbender, A. J., Carter, B. R., Johnson, G. C., Schultz, C., Dunne, J. P. (2023), GOBAI-O₂: temporally and spatially resolved fields of ocean interior dissolved oxygen over nearly 2 decades, Earth System Science Data 15, 4481–4518, doi:10.5194/essd-15-4481-2023. Dissolved oxygen from 2004 to 2024 on a 1° grid, 64.5°S to 79.5°N and down to 2,000 dbar, made by neural networks trained on shipboard and Biogeochemical-Argo float oxygen and applied to Argo’s gridded temperature and salinity, with each cell’s uncertainty; data: the annual means, from which this site sums the oxygen inventory by layer and maps its trend",
+    "url": "https://doi.org/10.25921/z72m-yz67",
+    "licence": "CC0 1.0"
+  },
   "godwin1962": {
     "name": "Godwin 1962",
     "kind": "paper",
