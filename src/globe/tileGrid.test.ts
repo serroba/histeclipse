@@ -4,6 +4,7 @@ import { geoToVector } from './geo';
 import {
   hitSphere,
   levelFor,
+  parentTile,
   tileAt,
   tileId,
   tileRect,
@@ -147,5 +148,25 @@ describe('the level drawn', () => {
     expect(levelFor(levels, 675, 0.008, pixel)?.z).toBe(6);
     expect(levelFor([FULL], 675, 0.008, pixel)).toBe(FULL);
     expect(levelFor([], 675, 0.008, pixel)).toBeNull();
+  });
+
+  it('keeps a coarser level until its pixels span `stretch` of the screen’s', () => {
+    const sharper: TileLevel = { z: 5, columns: 64, rows: 32 };
+    const both = [FULL, sharper];
+    // 1,900 km up, a screen pixel spans some 1.1 km: level 4's 1.85 km is soft, but within 4.
+    expect(levelFor(both, 675, 0.3, pixel)).toBe(sharper);
+    expect(levelFor(both, 675, 0.3, pixel, 4)).toBe(FULL);
+    // 400 km up, some 230 m: past 4, so level 5.
+    expect(levelFor(both, 675, 0.063, pixel, 4)).toBe(sharper);
+  });
+});
+
+describe('the tile beneath', () => {
+  it('is the coarser level’s tile over the same ground', () => {
+    const sharper: TileLevel = { z: 5, columns: 64, rows: 32 };
+    expect(parentTile(FULL, { z: 5, x: 37, y: 10 }, sharper)).toEqual({ z: 4, x: 18, y: 5 });
+    expect(parentTile(FULL, { z: 5, x: 36, y: 11 }, sharper)).toEqual({ z: 4, x: 18, y: 5 });
+    expect(parentTile(FULL, { z: 5, x: 63, y: 31 }, sharper)).toEqual({ z: 4, x: 31, y: 15 });
+    expect(parentTile(FULL, { z: 5, x: 0, y: 0 }, sharper)).toEqual({ z: 4, x: 0, y: 0 });
   });
 });
