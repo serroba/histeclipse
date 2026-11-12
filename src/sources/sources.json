@@ -280,6 +280,13 @@
     "cite": "Chapront & Francou (2003), The lunar theory ELP revisited, Astronomy & Astrophysics 404, 735; via the astronomia library (MIT)",
     "url": "https://doi.org/10.1051/0004-6361:20030529"
   },
+  "era5": {
+    "name": "ERA5",
+    "kind": "dataset",
+    "cite": "Hersbach, H., Bell, B., Berrisford, P., et al. (2020), The ERA5 global reanalysis, Quarterly Journal of the Royal Meteorological Society 146, 1999–2049; data: Copernicus Climate Change Service (C3S), ERA5 hourly data on single levels from 1940 to present (doi:10.24381/cds.adbb2d47), daily global mean 2 m temperature as published by C3S Climate Pulse. A reanalysis: a weather model fitted to observations, giving a complete global field from 1940. Contains modified Copernicus Climate Change Service information",
+    "url": "https://doi.org/10.1002/qj.3803",
+    "licence": "CC BY 4.0"
+  },
   "esaJuice": {
     "name": "ESA: Juice",
     "kind": "reference",
@@ -351,6 +358,13 @@
     "kind": "dataset",
     "cite": "Panovska, S., Constable, C. G. & Korte, M. (2018). Extending global continuous geomagnetic field reconstructions on timescales beyond human civilization. Geochemistry, Geophysics, Geosystems 19, 4757–4772; dipole moment from the model archive, EarthRef ERDA 2382 (no licence stated)",
     "url": "https://doi.org/10.1029/2018GC007966"
+  },
+  "gistemp4": {
+    "name": "GISTEMP v4",
+    "kind": "dataset",
+    "cite": "GISTEMP Team (2026), GISS Surface Temperature Analysis (GISTEMP), version 4, NASA Goddard Institute for Space Studies, https://data.giss.nasa.gov/gistemp/; Lenssen, N., Schmidt, G. A., Hendrickson, M., Jacobs, P., Menne, M., Ruedy, R. (2024), A GISTEMPv4 observational uncertainty ensemble, Journal of Geophysical Research: Atmospheres 129, e2023JD040179; uncertainty: Lenssen et al. (2019), JGR Atmospheres 124, 6307–6326, doi:10.1029/2018JD029522. Global land-ocean temperature anomalies from 1880, from GHCN v4 stations and ERSST v5 sea surface temperatures, interpolated up to 1,200 km from stations",
+    "url": "https://doi.org/10.1029/2023JD040179",
+    "licence": "No licence stated; NASA asks that the web page and paper be cited"
   },
   "globalCarbonBudget2026": {
     "name": "Global Carbon Budget 2026",
@@ -898,6 +912,13 @@
     "cite": "Natural Earth 1:110m country outlines",
     "url": "https://www.naturalearthdata.com",
     "licence": "Public domain"
+  },
+  "noaaGlobalTemp": {
+    "name": "NOAAGlobalTemp v6.1",
+    "kind": "dataset",
+    "cite": "Huang, B., Yin, X., Menne, M. J., Vose, R., NOAA Global Surface Temperature Dataset (NOAAGlobalTemp), Version 6.1.0, NOAA National Centers for Environmental Information; Yin, X., Huang, B., Menne, M., et al. (2024), NOAAGlobalTemp Version 6: An AI-Based Global Surface Temperature Dataset, Bulletin of the American Meteorological Society 105, E2184–E2193, doi:10.1175/BAMS-D-24-0012.1. Global land-ocean temperature anomalies from 1850, merging GHCN v4 land stations and ERSST v6 sea surface temperatures, with gaps filled by an artificial neural network",
+    "url": "https://doi.org/10.25921/vvaa-wq11",
+    "licence": "No licence stated; NOAA NCEI asks to be cited"
   },
   "noaaLsa": {
     "name": "NOAA Laboratory for Satellite Altimetry",

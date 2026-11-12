@@ -85,6 +85,7 @@ from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.solar_images import fetch_images
 from histeclipse_pipeline.spacecraft import fetch_spacecraft
 from histeclipse_pipeline.spacecraft_paths import fetch_spacecraft_paths
+from histeclipse_pipeline.temperature_records import fetch_temperature_records
 from histeclipse_pipeline.time_tree import fetch_time_trees
 from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
@@ -559,6 +560,12 @@ def krapp(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} ice-age temperature images to {args.out}")
 
 
+def temperature_records(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write global mean temperature since 1850 from five records side by side."""
+    points = fetch_temperature_records(args.out)
+    return _say(f"wrote {points} temperature-record points to {args.out}")
+
+
 def amoc(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the AMOC as measured (RAPID) and as reconstructed, each source apart."""
     points = fetch_amoc(args.out)
@@ -875,6 +882,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "krapp": (
         krapp,
         "write land temperature maps for the last 800,000 years (Krapp et al. 2021)",
+        "output directory",
+    ),
+    "temperature-records": (
+        temperature_records,
+        "write global temperature since 1850 (GISTEMP, NOAAGlobalTemp, ERA5, HadCRUT5, Berkeley)",
         "output directory",
     ),
     "amoc": (
