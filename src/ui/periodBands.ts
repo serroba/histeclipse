@@ -9,7 +9,7 @@
  */
 
 import { bandsFor, type Band } from '../deepTime/chart';
-import { formatMa } from '../deepTime/periods';
+import { formatMa } from '../time/format';
 import { astronomicalYear, formatYear } from '../time/year';
 import { element } from './dom';
 import './periodBands.css';
