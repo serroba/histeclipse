@@ -4,7 +4,7 @@
  * says under it and offers, as the other parts tell it.
  */
 
-import { layerWhy } from '../../sources/registry';
+import { layerWhy } from '../../state/whysOnScreen';
 import type { DeepScale, Layer, ViewState } from '../../state/viewState';
 import { awayFromEarth, roundMa, withLayer } from '../../state/viewState';
 import { PRESENT_YEAR } from '../../time/present';

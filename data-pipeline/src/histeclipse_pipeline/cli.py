@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.aadr import fetch_genomes
+from histeclipse_pipeline.amoc import fetch_amoc
 from histeclipse_pipeline.archaeoglobe import fetch_ways
 from histeclipse_pipeline.asteroids import fetch_asteroids
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
@@ -71,6 +72,7 @@ from histeclipse_pipeline.radiocarbon import fetch_radiocarbon
 from histeclipse_pipeline.saturn_rings import fetch_saturn_rings
 from histeclipse_pipeline.seaice import fetch_seaice
 from histeclipse_pipeline.sealevel import fetch_sealevel
+from histeclipse_pipeline.sealevel_modern import fetch_budget, fetch_modern
 from histeclipse_pipeline.shelf import fetch_shelf
 from histeclipse_pipeline.sky import (
     constellations,
@@ -514,6 +516,18 @@ def sealevel(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {points} sea-level points to {args.out}")
 
 
+def sealevel_modern(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write measured sea level since 1900 and the altimetry trend map (AR6, NOAA)."""
+    points = fetch_modern(args.out)
+    return _say(f"wrote {points} measured sea-level points and the trend map to {args.out}")
+
+
+def sealevel_budget(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write Frederikse et al.'s sea-level budget, for checking only: not for public/."""
+    years = fetch_budget(args.out)
+    return _say(f"wrote {years} years of the sea-level budget to {args.out}")
+
+
 def holocene_temperature(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write temperature from 800,000 years ago to today, from four records side by side."""
     points = fetch_holocene_temperature(args.out)
@@ -530,6 +544,12 @@ def krapp(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write land temperature maps for the last 800,000 years as small images."""
     count = fetch_krapp(args.out)
     return _say(f"wrote {count} ice-age temperature images to {args.out}")
+
+
+def amoc(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the AMOC as measured (RAPID) and as reconstructed, each source apart."""
+    points = fetch_amoc(args.out)
+    return _say(f"wrote {points} AMOC points to {args.out}")
 
 
 def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -821,6 +841,16 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write global sea level through time from four reconstructions",
         "output directory",
     ),
+    "sealevel-modern": (
+        sealevel_modern,
+        "write measured sea level since 1900 and its trend map (IPCC AR6, NOAA LSA)",
+        "output directory",
+    ),
+    "sealevel-budget": (
+        sealevel_budget,
+        "write Frederikse et al. 2020's budget (all rights reserved: keep it out of public/)",
+        "output JSON file",
+    ),
     "holocene-temperature": (
         holocene_temperature,
         "write temperature from 800 ka to today (EPICA, LGMR, PAGES 2k, HadCRUT5)",
@@ -834,6 +864,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "krapp": (
         krapp,
         "write land temperature maps for the last 800,000 years (Krapp et al. 2021)",
+        "output directory",
+    ),
+    "amoc": (
+        amoc,
+        "write the AMOC measured at 26.5°N (RAPID) beside reconstructions that disagree",
         "output directory",
     ),
     "measured-warming": (
