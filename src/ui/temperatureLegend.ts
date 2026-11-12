@@ -76,8 +76,9 @@ export const CHANGE_STOPS: Stops = [
   // Uncoloured: within about a degree of today the globe keeps its land's own colours.
   [0, 'transparent'],
   [1, '#fee090'],
-  [4, '#fdae61'],
-  [10, '#d73027'],
+  [2, '#fdae61'],
+  [4, '#d73027'],
+  [10, '#a50026'],
 ];
 
 export const CHANGE_KEY: readonly { readonly celsius: number; readonly label: string }[] = [

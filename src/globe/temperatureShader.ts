@@ -55,9 +55,12 @@ export const TEMPERATURE_GLSL = /* glsl */ `
     c = mix(c, srgb(vec3(0.455, 0.678, 0.820)), smoothstep(-10.0, -4.0, delta));
     c = mix(c, srgb(vec3(0.671, 0.851, 0.914)), smoothstep(-4.0, -1.0, delta));
     // No pale middle: near today the layer fades out instead, so neither side reads as ice.
+    // Warmer: yellow by 1 °C, orange by 2, red by 4 (#497), so the tropics' warming and the
+    // Arctic's, twice as much, look different.
     c = mix(c, srgb(vec3(0.996, 0.878, 0.565)), step(0.0, delta));
-    c = mix(c, srgb(vec3(0.992, 0.682, 0.380)), smoothstep(1.0, 4.0, delta));
-    return mix(c, srgb(vec3(0.843, 0.188, 0.153)), smoothstep(4.0, 10.0, delta));
+    c = mix(c, srgb(vec3(0.992, 0.682, 0.380)), smoothstep(1.0, 2.0, delta));
+    c = mix(c, srgb(vec3(0.843, 0.188, 0.153)), smoothstep(2.0, 4.0, delta));
+    return mix(c, srgb(vec3(0.647, 0.0, 0.149)), smoothstep(4.0, 10.0, delta));
   }
 
   // The layer's colour at uv, and how much of it covers the surface there.
