@@ -273,7 +273,8 @@ function formatGeoPoint({ latitude, longitude }: GeoPoint): string {
 }
 
 function formatCamera({ target, distance }: GlobeCamera): string {
-  return `${formatGeoPoint(target)},${fixed(distance, 2)}`;
+  // A third decimal near the ground, where a hundredth of Earth's radius is 64 km (#568).
+  return `${formatGeoPoint(target)},${fixed(distance, distance < 1.1 ? 3 : 2)}`;
 }
 
 function formatSelection({ kind, date }: Selection): string {
