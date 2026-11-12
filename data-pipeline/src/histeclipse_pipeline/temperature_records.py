@@ -1,4 +1,4 @@
-"""Global mean surface temperature since 1850, from five records shown side by side.
+"""Global mean surface temperature since 1850, from six records shown side by side.
 
 The IPCC never relies on one record, and these disagree a little, most in the early years and
 the polar gaps: the site shows the spread rather than picking one. Each series is a list of
@@ -21,19 +21,29 @@ the source gives none in its annual file.
 - Berkeley Earth Land/Ocean (Rohde & Hausfather 2020): annual means, with air temperature
   over sea ice, and their 95% range, relative to 1951-1980, from 1850; CC BY-NC 4.0. Its
   summary file ends in 2024.
+- JRA-3Q (Japan Meteorological Agency; Kosaka et al. 2024), a second reanalysis, from 1948
+  (JRA-3Q starts in September 1947). JMA's own downloads need registration, so the annual
+  global means are read from the Copernicus Climate Change Service's Global Climate Highlights
+  2025 (Figure 3's data), where C3S computed them: 2 m temperature from JRA-3Q's analysis over
+  land and its background forecast over sea, as ERA5 does. C3S gives every dataset there
+  relative to 1850-1900 after setting all six to the same 1991-2020 mean, which only adds a
+  constant: taking off the column's own 1991-2020 mean gives JRA-3Q's 1991-2020 anomalies.
+  C3S allows its web content to be reproduced with the source acknowledged; JMA asks for
+  JRA-3Q to be cited and acknowledged.
 
 Every series is put on the 1850-1900 baseline. The three that cover it (HadCRUT5, Berkeley
-Earth, NOAAGlobalTemp) lose their own 1850-1900 mean. GISTEMP starts in 1880 and ERA5 in 1940,
-so, as AR6 does for records that start late, each is shifted to agree with the mean of those
-three over a period it shares with them: 1880-1900 for GISTEMP, 1991-2020 for ERA5. The shift
-and the period used are written with each series.
+Earth, NOAAGlobalTemp) lose their own 1850-1900 mean. GISTEMP starts in 1880, ERA5 in 1940 and
+JRA-3Q in 1948, so, as AR6 does for records that start late, each is shifted to agree with the
+mean of those three over a period it shares with them: 1880-1900 for GISTEMP, 1991-2020 for ERA5
+and JRA-3Q. The shift and the period used are written with each series.
 
 ``spread`` gives, for each year, the lowest and highest of the records that have that year,
 and how many there are.
 
 GISTEMP, NOAAGlobalTemp, ERA5 and HadCRUT5 are living files, updated each month (NOAA's file
 name changes with it, and the old one is removed): re-running this command needs the new URL
-and hash pinned, after looking at what changed.
+and hash pinned, after looking at what changed. JRA-3Q's file is C3S's yearly report, fixed
+once published: a later year needs the next report's file.
 """
 
 import json
@@ -57,6 +67,12 @@ BASELINE = (1850, 1900)
 #: The periods over which the late-starting records are matched to the full ones.
 GISTEMP_MATCH = (1880, 1900)
 ERA5_MATCH = (1991, 2020)
+JRA3Q_MATCH = (1991, 2020)
+#: When the JRA-3Q file below was downloaded.
+JRA3Q_ACCESSED = "2026-11-13"
+#: The column C3S gives JRA-3Q in, and the value it writes where a dataset has no year.
+JRA3Q_COLUMN = "JRA-3Q"
+MISSING = -999.0
 
 
 @dataclass(frozen=True)
@@ -88,6 +104,11 @@ HADCRUT = Source(HADCRUT5.url, HADCRUT5.sha256)
 BERKELEY = Source(
     "https://berkeley-earth-temperature.s3.us-west-1.amazonaws.com/Global/Land_and_Ocean_summary.txt",
     "8f4b3f37846f0aacc270a3cf0090c1d94e857c8b2c7b8d8cdb081134781e819f",
+)
+
+JRA3Q = Source(
+    "https://climate.copernicus.eu/sites/default/files/custom-uploads/GCH-2025/fig3/GCH2025_Fig3_annual_global_temperature_anomalies_preindustrial_data.csv",
+    "f9edb27d2b8d79424626fc6a6c4a0fb4097e5dc361dfd5469dfd7337a5f9d677",
 )
 
 #: One point: year, anomaly, and the 95% range where there is one (°C).
@@ -281,6 +302,43 @@ def berkeley(text: str) -> Record:
     )
 
 
+def jra3q(text: str) -> Record:
+    """JRA-3Q's annual means from C3S's table, put back on their own 1991-2020 mean."""
+    lines = text.splitlines()
+    at_header = next(i for i, line in enumerate(lines) if line.strip().startswith("Year,"))
+    at = [cell.strip() for cell in lines[at_header].split(",")].index(JRA3Q_COLUMN)
+    given: list[Row] = []
+    for line in lines[at_header + 1 :]:
+        cells = [cell.strip() for cell in line.split(",")]
+        if len(cells) <= at or not cells[0]:
+            continue
+        value = float(cells[at])
+        if value != MISSING:
+            given.append((int(cells[0]), value, None, None))
+    rows = _complete(given)
+    offset = period_mean(rows, JRA3Q_MATCH)
+    return Record(
+        id="jra3q",
+        name="JRA-3Q (JMA)",
+        kind="reanalysis",
+        source_id="jra3q",
+        credit=(
+            "Japan Meteorological Agency, JRA-3Q reanalysis (Kosaka et al. 2024, J. Meteor. Soc. "
+            "Japan 102, 49-109, doi:10.2151/jmsj.2024-004); annual global 2 m temperature as "
+            "computed and published by the Copernicus Climate Change Service (C3S/ECMWF), Global "
+            f"Climate Highlights 2025, Figure 3 data, accessed {JRA3Q_ACCESSED}; reproduced with "
+            "the source acknowledged, as C3S allows; edited (put on its own 1991-2020 mean)"
+        ),
+        source=JRA3Q.url,
+        own_baseline="1991-2020",
+        rows=[(year, value - offset, None, None) for year, value, _, _ in rows],
+        note=(
+            "A reanalysis, from 1948; no range given. Computed by C3S: analysis over land, "
+            "background forecast over sea."
+        ),
+    )
+
+
 def period_mean(rows: list[Row], period: tuple[int, int]) -> float:
     """Mean anomaly over ``period`` (inclusive), which ``rows`` must cover year by year."""
     first, last = period
@@ -406,7 +464,7 @@ def _download(source: Source, what: str) -> bytes:  # pragma: no cover - needs n
 
 
 def fetch_temperature_records(folder: Path) -> int:  # pragma: no cover - needs network access
-    """Download the five records (each checked against its pinned checksum) and write them."""
+    """Download the six records (each checked against its pinned checksum) and write them."""
     text = {
         name: _download(source, name).decode("utf-8", errors="replace")
         for name, source in {
@@ -416,6 +474,7 @@ def fetch_temperature_records(folder: Path) -> int:  # pragma: no cover - needs 
             "ERA5 daily global series": ERA5,
             "HadCRUT5 annual global series": HADCRUT,
             "Berkeley Earth Land/Ocean summary": BERKELEY,
+            "JRA-3Q annual global series (C3S)": JRA3Q,
         }.items()
     }
     series = on_baseline(
@@ -430,6 +489,7 @@ def fetch_temperature_records(folder: Path) -> int:  # pragma: no cover - needs 
                 GISTEMP_MATCH,
             ),
             (era5(text["ERA5 daily global series"]), ERA5_MATCH),
+            (jra3q(text["JRA-3Q annual global series (C3S)"]), JRA3Q_MATCH),
         ],
     )
     return write_temperature_records(series, folder)

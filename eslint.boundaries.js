@@ -46,16 +46,13 @@ export const MAX_LINES = 400;
  * `src/architecture.test.ts` asks for a limit to come down once it is 50 lines above its file:
  * lower it then, not in every PR that shortens the file, so PRs side by side do not all edit
  * the same line (#479).
- * Some are mostly content, not code (the deep-time milestones): theirs is to move into data
- * files, as the sources registry's did (#383).
  */
 export const LINE_LIMITS = {
   'app.ts': 840,
   'globe/scene.ts': 2946,
-  'ui/deepTimeBar.ts': 1145,
+  'ui/deepTimeBar.ts': 779,
   'sky/skyScene.ts': 971,
-  'features/treeOfLife/lineagesSheet.ts': 1105,
-  'deepTime/milestones.ts': 1016,
+  'features/treeOfLife/lineagesSheet.ts': 583,
   'ui/impactPathsSheet.ts': 744,
   'features/shower/airShower.ts': 719,
   'features/shower/sunCore.ts': 713,
@@ -120,7 +117,7 @@ export const FUNCTION_LIMITS = {
   'features/sky/index.ts': 1,
   'features/temperature/temperatureLayer.ts': 1,
   'features/texts/searchPanel.ts': 1,
-  'features/treeOfLife/lineagesSheet.ts': 3,
+  'features/treeOfLife/lineagesSheet.ts': 1,
   'features/treeOfLife/treeSheet.ts': 1,
   'features/years/index.ts': 1,
   'features/years/radiocarbonStrip.ts': 1,
@@ -136,7 +133,7 @@ export const FUNCTION_LIMITS = {
   'story/storyScene.ts': 1,
   'text/wordpiece.ts': 1,
   'ui/datingCard.ts': 1,
-  'ui/deepTimeBar.ts': 4,
+  'ui/deepTimeBar.ts': 3,
   'ui/historyTrack.ts': 1,
   'ui/impactPathsSheet.ts': 3,
   'ui/periodBands.ts': 2,

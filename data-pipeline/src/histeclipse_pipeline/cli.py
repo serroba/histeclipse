@@ -15,6 +15,12 @@ from histeclipse_pipeline.carbon_budget import fetch_carbon_budget
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
 from histeclipse_pipeline.cenogrid import fetch_cenogrid
 from histeclipse_pipeline.cesm import fetch_cesm
+from histeclipse_pipeline.cryosphere import (
+    fetch_glaciers,
+    fetch_imbie,
+    fetch_seaice_trend,
+    fetch_snow_cover,
+)
 from histeclipse_pipeline.deep_air import fetch_deep_air
 from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
 from histeclipse_pipeline.dipole import fetch_dipole
@@ -78,6 +84,7 @@ from histeclipse_pipeline.radiocarbon import fetch_radiocarbon
 from histeclipse_pipeline.saturn_rings import fetch_saturn_rings
 from histeclipse_pipeline.seaice import fetch_seaice
 from histeclipse_pipeline.sealevel import fetch_sealevel
+from histeclipse_pipeline.sealevel_common_era import fetch_common_era
 from histeclipse_pipeline.sealevel_modern import fetch_budget, fetch_modern
 from histeclipse_pipeline.shelf import fetch_shelf
 from histeclipse_pipeline.sky import (
@@ -98,6 +105,7 @@ from histeclipse_pipeline.time_tree import fetch_time_trees
 from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
+from histeclipse_pipeline.volcanic_aod import fetch_volcanic_aod
 from histeclipse_pipeline.volcanoes import fetch_volcanoes
 from histeclipse_pipeline.warm_past import fetch_warm_past
 from histeclipse_pipeline.warming_levels import fetch_warming_levels
@@ -424,6 +432,13 @@ def natural_forcing(args: Arguments) -> int:  # pragma: no cover - needs network
     return _say(f"wrote {written} to {args.out}")
 
 
+def volcanic_aod(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write volcanic stratospheric aerosol optical depth at 550 nm (HolVol)."""
+    counts = fetch_volcanic_aod(args.out)
+    written = ", ".join(f"{count} {name} years" for name, count in counts.items())
+    return _say(f"wrote {written} to {args.out}")
+
+
 def eruptions(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the Holocene's eruptions as the ice cores record them (HolVol)."""
     count = fetch_eruptions(args.out)
@@ -545,6 +560,12 @@ def sealevel_modern(args: Arguments) -> int:  # pragma: no cover - needs network
     return _say(f"wrote {points} measured sea-level points and the trend map to {args.out}")
 
 
+def sealevel_2000y(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write Kopp et al. 2016's global sea level, 1000 BCE to 2010 CE, with its 1-sigma range."""
+    points = fetch_common_era(args.out)
+    return _say(f"wrote {points} points of Common Era sea level to {args.out}")
+
+
 def sealevel_budget(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write Frederikse et al.'s sea-level budget, for checking only: not for public/."""
     years = fetch_budget(args.out)
@@ -576,7 +597,7 @@ def krapp(args: Arguments) -> int:  # pragma: no cover - needs network access
 
 
 def temperature_records(args: Arguments) -> int:  # pragma: no cover - needs network access
-    """Write global mean temperature since 1850 from five records side by side."""
+    """Write global mean temperature since 1850 from six records side by side."""
     points = fetch_temperature_records(args.out)
     return _say(f"wrote {points} temperature-record points to {args.out}")
 
@@ -639,6 +660,30 @@ def ocean_heat(args: Arguments) -> int:  # pragma: no cover - needs network acce
     """Write ocean heat content (IAP, NOAA NCEI) and the Earth's heat inventory (IGCC)."""
     count = fetch_ocean_heat(args.out)
     return _say(f"wrote {count} ocean-heat points to {args.out}")
+
+
+def imbie(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the ice sheets' mass balance since the 1970s (IMBIE)."""
+    count = fetch_imbie(args.out)
+    return _say(f"wrote {count} region-years of ice-sheet mass balance to {args.out}")
+
+
+def glaciers(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write glacier mass change by region, 2000-2023 (GlaMBIE, Hugonnet et al.)."""
+    count = fetch_glaciers(args.out)
+    return _say(f"wrote {count} glacier regions to {args.out}")
+
+
+def seaice_trend(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write sea-ice extent by year for each pole's months of most and least ice (NSIDC)."""
+    count = fetch_seaice_trend(args.out)
+    return _say(f"wrote {count} sea-ice extents to {args.out}")
+
+
+def snow_cover(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write Northern Hemisphere snow-cover extent by month since 1966 (Rutgers)."""
+    count = fetch_snow_cover(args.out)
+    return _say(f"wrote {count} years of snow cover to {args.out}")
 
 
 def ocean_heat_map(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -827,6 +872,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write solar irradiance (CMIP6, Steinhilber 2012) and volcanic sulfur (eVolv2k v4)",
         "output folder (public/data/natural-forcing)",
     ),
+    "volcanic-aod": (
+        volcanic_aod,
+        "write volcanic stratospheric aerosol optical depth at 550 nm, annual (HolVol)",
+        "output folder (public/data/natural-forcing)",
+    ),
     "eruptions": (
         eruptions,
         "write the Holocene's eruptions as the ice cores record them (HolVol)",
@@ -927,6 +977,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write measured sea level since 1900 and its trend map (IPCC AR6, NOAA LSA)",
         "output directory",
     ),
+    "sealevel-2000y": (
+        sealevel_2000y,
+        "write global sea level over the last 3,000 years (Kopp et al. 2016)",
+        "output directory",
+    ),
     "sealevel-budget": (
         sealevel_budget,
         "write Frederikse et al. 2020's budget (all rights reserved: keep it out of public/)",
@@ -954,7 +1009,7 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     ),
     "temperature-records": (
         temperature_records,
-        "write global temperature since 1850 (GISTEMP, NOAAGlobalTemp, ERA5, HadCRUT5, Berkeley)",
+        "write global temperature since 1850 (GISTEMP, NOAA, ERA5, JRA-3Q, HadCRUT5, Berkeley)",
         "output directory",
     ),
     "amoc": (
@@ -1005,6 +1060,26 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "ocean-heat": (
         ocean_heat,
         "write ocean heat content since 1955 (IAP, NCEI) and the heat inventory (IGCC 2025)",
+        "output directory",
+    ),
+    "imbie": (
+        imbie,
+        "write Greenland's and Antarctica's mass balance since the 1970s (IMBIE)",
+        "output directory",
+    ),
+    "glaciers": (
+        glaciers,
+        "write glacier mass change by region 2000-2023 (GlaMBIE, Hugonnet et al. 2021)",
+        "output directory",
+    ),
+    "seaice-trend": (
+        seaice_trend,
+        "write sea-ice extent by year in each pole's months of most and least ice (NSIDC)",
+        "output directory",
+    ),
+    "snow-cover": (
+        snow_cover,
+        "write Northern Hemisphere snow-cover extent by month since 1966 (Rutgers)",
         "output directory",
     ),
     "ocean-heat-map": (

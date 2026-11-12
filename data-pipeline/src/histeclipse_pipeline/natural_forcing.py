@@ -26,8 +26,8 @@ by side rather than merged:
   ISO column (astronomical, with a year 0). Where the file's two year columns disagree beyond
   that offset (Ilopango: 432 against 433), both are kept in ``yearMismatches``.
 
-The eVolv2k aerosol optical depth (on WDC-Climate) needs an account, and HolVol's (PANGAEA) is
-a 100 MB netCDF-3 file, so neither is read here; the sulfur injections are their input.
+The eVolv2k aerosol optical depth (on WDC-Climate) needs an account, so it is not read; HolVol's
+(PANGAEA) is read by ``volcanic_aod.py``. The sulfur injections are the input to both.
 """
 
 import datetime as dt
