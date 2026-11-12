@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.aadr import fetch_genomes
+from histeclipse_pipeline.amoc import fetch_amoc
 from histeclipse_pipeline.archaeoglobe import fetch_ways
 from histeclipse_pipeline.asteroids import fetch_asteroids
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
@@ -515,6 +516,12 @@ def krapp(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} ice-age temperature images to {args.out}")
 
 
+def amoc(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the AMOC as measured (RAPID) and as reconstructed, each source apart."""
+    points = fetch_amoc(args.out)
+    return _say(f"wrote {points} AMOC points to {args.out}")
+
+
 def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write measured land warming since 1850 (Berkeley Earth) as small images."""
     count = fetch_measured_warming(args.out)
@@ -789,6 +796,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "krapp": (
         krapp,
         "write land temperature maps for the last 800,000 years (Krapp et al. 2021)",
+        "output directory",
+    ),
+    "amoc": (
+        amoc,
+        "write the AMOC measured at 26.5°N (RAPID) beside reconstructions that disagree",
         "output directory",
     ),
     "measured-warming": (
