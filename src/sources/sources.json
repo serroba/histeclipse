@@ -525,6 +525,13 @@
     "cite": "Dated finds of our species and its relatives, each with the paper that dates it, and rival dates side by side; compiled for this site",
     "url": "https://github.com/serroba/histeclipse/blob/main/public/data/humans/claims.json"
   },
+  "iap2024": {
+    "name": "IAP ocean heat content (Cheng et al.)",
+    "kind": "dataset",
+    "cite": "Cheng, L., Pan, Y., Tan, Z., Zheng, H., Zhu, Y., Wei, W., Du, J., Yuan, H., Li, G., Ye, H., Gouretski, V., Li, Y., Trenberth, K. E., Abraham, J., Jin, Y., Reseghetti, F., Lin, X., Zhang, B., Chen, G., Mann, M. E., Zhu, J. (2024), IAPv4 ocean temperature and ocean heat content gridded dataset, Earth System Science Data 16, 3517–3546; data: IAP v4.2 global ocean heat content, monthly from 1940, 0–700 m and 0–2000 m with 95% ranges, against 2006–2015, update of January 2026. An objective analysis of every in-situ temperature profile, with corrected instrument biases and gaps filled using covariances from climate models; the authors count it reliable from 1955",
+    "url": "https://doi.org/10.5194/essd-16-3517-2024",
+    "licence": "None stated; freely available from the Institute of Atmospheric Physics, CAS"
+  },
   "iauGazetteer": {
     "name": "Gazetteer of Planetary Nomenclature",
     "kind": "dataset",
@@ -544,6 +551,13 @@
     "kind": "dataset",
     "cite": "International Earth Rotation and Reference Systems Service: the length of today’s day",
     "url": "https://www.iers.org"
+  },
+  "igcc2025": {
+    "name": "Indicators of Global Climate Change 2025",
+    "kind": "dataset",
+    "cite": "Forster, P. M., Walsh, T., Smith, C., et al. (2026), Indicators of Global Climate Change 2025: annual update of key indicators of the state of the climate system and human influence, Earth System Science Data 18, 3889–3933 (doi:10.5194/essd-18-3889-2026); data: Smith, C., Walsh, T., Gillett, N., et al. (2026), Indicators of Global Climate Change 2025, IGCC-2025a, Zenodo. The Earth heat inventory: heat gained since 1971 by the ocean (by layer, to 2024), land, ice and atmosphere (to 2020), carrying on the GCOS inventory of von Schuckmann et al. (2023, Earth System Science Data 15, 1675); the ocean holds about 90% of it",
+    "url": "https://doi.org/10.5281/zenodo.21494229",
+    "licence": "CC BY 4.0"
   },
   "impactEarth": {
     "name": "Impact Earth Database",
@@ -990,6 +1004,13 @@
     "cite": "Natural Earth 1:110m country outlines",
     "url": "https://www.naturalearthdata.com",
     "licence": "Public domain"
+  },
+  "nceiOceanHeat": {
+    "name": "NOAA NCEI ocean heat content (Levitus et al.)",
+    "kind": "dataset",
+    "cite": "Levitus, S., Antonov, J. I., Boyer, T. P., Baranova, O. K., Garcia, H. E., Locarnini, R. A., Mishonov, A. V., Reagan, J. R., Seidov, D., Yarosh, E. S., Zweng, M. M. (2012), World ocean heat content and thermosteric sea level change (0–2000 m), 1955–2010, Geophysical Research Letters 39, L10603 (doi:10.1029/2012GL051106); data: NOAA NCEI, Global ocean heat and salt content (NCEI Accession 0164586), world-ocean heat content, yearly for 0–700 m and 5-year running means for 0–2000 m, with standard errors, against the World Ocean Atlas 2009 climatology for 1955–2006, updated quarterly. Objective analysis of the World Ocean Database's profiles, anomalies left near zero where data are sparse",
+    "url": "https://doi.org/10.7289/V53F4MVP",
+    "licence": "Public domain (US government work)"
   },
   "noaaGlobalTemp": {
     "name": "NOAAGlobalTemp v6.1",
