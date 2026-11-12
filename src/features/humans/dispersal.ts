@@ -10,7 +10,7 @@ import {
   type ArrivalGrid,
   type DispersalIndex,
 } from '../../data/dispersal';
-import { loadArrivalGrid } from '../../globe/arrivalGrid';
+import { loadArrivalGrid } from './arrivalGrid';
 import type { DispersalScenario } from '../../state/viewState';
 import { errorMessage } from '../../util/errors';
 import type { FeatureContext } from '../feature';

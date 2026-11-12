@@ -9,7 +9,7 @@ import { keyGradient, keyTicks, type loadColourKeys } from '../../data/planetKey
 import type { PlanetView } from '../../globe/planetLook';
 import { topocentric } from '../../sky/bodies';
 import type { SkyPlanet } from '../../sky/skyScene';
-import type { BodyKey } from '../../ui/bodyBar';
+import type { BodyKey } from './bodyBar';
 
 const KM_PER_AU = 149_597_870.7;
 

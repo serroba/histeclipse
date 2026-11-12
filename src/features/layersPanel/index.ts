@@ -8,7 +8,7 @@ import { layerWhy } from '../../sources/registry';
 import type { DeepScale, Layer, ViewState } from '../../state/viewState';
 import { awayFromEarth, roundMa, withLayer } from '../../state/viewState';
 import { PRESENT_YEAR } from '../../time/present';
-import { createLayersPanel } from '../../ui/layersPanel';
+import { createLayersPanel } from './layersPanel';
 import type { Span } from '../../ui/spanSwitch';
 import type { PartContext } from '../part';
 

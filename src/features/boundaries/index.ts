@@ -10,7 +10,7 @@ import { loadMeasuredWarming, type MeasuredWarming } from '../../data/measuredWa
 import type { StoryDate } from '../../deepTime/storyDate';
 import type { Globe } from '../../globe/scene';
 import { errorMessage } from '../../util/errors';
-import { createBoundariesSheet } from '../../ui/boundariesSheet';
+import { createBoundariesSheet } from './boundariesSheet';
 import type { MountedPart, PartContext } from '../part';
 import type { BoundaryChapter, GlobeCamera } from '../../state/viewState';
 import {

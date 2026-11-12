@@ -16,12 +16,12 @@ import {
   type ShowerStep,
 } from '../../globe/showerSteps';
 import type { GeoPoint } from '../../state/viewState';
-import type { AirShower } from '../../story/airShower';
-import type { LeafScene } from '../../story/leafScene';
-import type { SunCore } from '../../story/sunCore';
+import type { AirShower } from './airShower';
+import type { LeafScene } from './leafScene';
+import type { SunCore } from './sunCore';
 import { element } from '../../ui/dom';
-import { loadElevationGrid } from '../../ui/elevationImage';
-import { createShowerStage } from '../../ui/showerStage';
+import { loadElevationGrid } from './elevationImage';
+import { createShowerStage } from './showerStage';
 import { errorMessage } from '../../util/errors';
 import type { PartContext } from '../part';
 import './shower.css';
@@ -108,11 +108,11 @@ export function mountShower(context: ShowerContext): ShowerPart {
       SCENE_OF[story3dLatest.state.step] === kind;
     const made: Promise<Story3d | null> =
       kind === 'sun'
-        ? import('../../story/sunCore').then(({ createSunCore }) =>
+        ? import('./sunCore').then(({ createSunCore }) =>
             wanted() ? { kind, scene: createSunCore(storyContainer, { earthTextureUrl }) } : null,
           )
         : kind === 'air'
-          ? import('../../story/airShower').then(({ createAirShower }) => {
+          ? import('./airShower').then(({ createAirShower }) => {
               if (!wanted()) return null;
               if (story3dShower === null) throw new Error('no shower to draw yet');
               const { place, dipole, water } = story3dShower;
@@ -121,7 +121,7 @@ export function mountShower(context: ShowerContext): ShowerPart {
                 scene: createAirShower(storyContainer, { earthTextureUrl, place, dipole, water }),
               };
             })
-          : import('../../story/leafScene').then(({ createLeafScene }) => {
+          : import('./leafScene').then(({ createLeafScene }) => {
               if (!wanted()) return null;
               if (story3dShower === null) throw new Error('no shower to draw yet');
               const { water, fromSun } = story3dShower;
