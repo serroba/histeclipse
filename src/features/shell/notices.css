@@ -1,0 +1,31 @@
+/* What went wrong, told once each: a short list over the globe. */
+
+.notices {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  max-width: min(360px, calc(100% - 32px));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notices li {
+  margin-bottom: 8px;
+  padding: 10px 14px;
+  border: 1px solid rgb(255 183 94 / 0.35);
+  border-radius: 10px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .notices {
+    top: auto;
+    right: 12px;
+    bottom: 36px;
+    left: 12px;
+    max-width: none;
+  }
+}

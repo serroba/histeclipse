@@ -1,0 +1,36 @@
+/* Full view: the button that hides the panels, and "Show controls" that brings them back. */
+
+/* "Show controls": only while the panels are hidden. */
+.show-controls {
+  display: none;
+  position: absolute;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  left: 50%;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--panel-border);
+  border-radius: 22px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  transform: translateX(-50%);
+  cursor: pointer;
+}
+
+.full-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  pointer-events: auto;
+}

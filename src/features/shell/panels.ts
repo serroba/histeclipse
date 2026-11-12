@@ -7,6 +7,7 @@
 
 import { element } from '../../ui/dom';
 import { uiIcon } from '../../ui/icons';
+import './panels.css';
 
 export interface Panels {
   /** The HUD's Full view button. */

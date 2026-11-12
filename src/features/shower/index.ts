@@ -24,6 +24,7 @@ import { loadElevationGrid } from '../../ui/elevationImage';
 import { createShowerStage } from '../../ui/showerStage';
 import { errorMessage } from '../../util/errors';
 import type { PartContext } from '../part';
+import './shower.css';
 
 /** What the shower asks of the rest of the page. */
 export interface ShowerContext extends PartContext {

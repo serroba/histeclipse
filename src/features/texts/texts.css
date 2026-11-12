@@ -1,0 +1,50 @@
+/* What is written about here: each passage a line, its place a tap away. */
+
+.here-text {
+  font-size: 11px;
+  color: var(--ink-muted);
+}
+
+/* What is written about here: each passage a line, its place and time under it. */
+.here-list {
+  display: grid;
+  gap: 2px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.here-item {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.here-item:hover,
+.here-item:focus-visible {
+  background: rgb(255 255 255 / 0.06);
+}
+
+.here-empty {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.here-text summary {
+  width: fit-content;
+  /* A taller tap target than the line it sits on, without making the panel taller. */
+  margin: -10px 0;
+  padding: 10px 12px 10px 0;
+  cursor: pointer;
+  pointer-events: auto;
+}

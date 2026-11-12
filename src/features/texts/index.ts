@@ -14,6 +14,7 @@ import { loadMeaningSearch } from '../../text/meaningLoader';
 import { nearby } from '../../text/nearby';
 import { cachedPassages, type Anchor, type Passage } from '../../text/passages';
 import { indexPassages } from '../../text/wordSearch';
+import './texts.css';
 
 /** What the texts ask of the rest of the page. */
 export interface TextsContext extends PartContext {
