@@ -35,7 +35,6 @@ import {
   PLANET_VIEWS,
   pickedView,
   planetView,
-  SHARP_MAPS,
   type PlanetView,
 } from '../../globe/planetLook';
 import type { Globe } from '../../globe/scene';
@@ -53,10 +52,8 @@ import type { PartContext } from '../part';
 import { createMoon } from './moon';
 import { createPlanets } from './planets';
 import { viewKey, type LoadedKeys } from './seen';
+import { createSharpener, SHARP_WITHIN } from './sharpen';
 import { createSunCloseUp } from './sun';
-
-/** Within this many radii of the body in focus, its sharper map is fetched (#258). */
-const SHARP_WITHIN = 2.5;
 
 /** What the bodies ask of the rest of the page. */
 export interface BodiesContext extends PartContext {
@@ -64,6 +61,7 @@ export interface BodiesContext extends PartContext {
     Globe,
     | 'addLayer'
     | 'maxTextureSize'
+    | 'setEarthTiles'
     | 'setBodyMap'
     | 'sharpenPlanet'
     | 'setMoonOrbits'
@@ -146,22 +144,7 @@ export function mountBodies(context: BodiesContext): BodiesPart {
   const LOOKED_BACK =
     'So Voyager 1 saw it in 1990, from beyond Neptune: the “Pale Blue Dot” (NASA/JPL, PIA00452); and Cassini from Saturn in 2013, “The Day the Earth Smiled” (NASA/JPL-Caltech/SSI, PIA17171).';
 
-  /**
-   * Close up, a sharper map for the body in focus, fetched once (#258): Earth's largest only
-   * where the graphics hold it and the screen is not a phone's, whose memory it would strain.
-   */
-  const largeMaps = globe.maxTextureSize >= 8192 && !window.matchMedia('(pointer: coarse)').matches;
-  function sharpenClose(state: ViewState): void {
-    if (state.mode !== 'globe' || state.ma !== null || state.camera.distance > SHARP_WITHIN) return;
-    const { focus } = state;
-    if (focus === 'earth' || focus === 'moon') {
-      const sizes = SHARP_MAPS[focus];
-      globe.setBodyMap(focus, `${base}${largeMaps ? sizes.large : sizes.small}`);
-      return;
-    }
-    if (focus === 'sun' || isMoonBody(focus)) return;
-    globe.sharpenPlanet(focus);
-  }
+  const sharpenClose = createSharpener(context);
 
   // The moons of Mars, Jupiter and Saturn (#335), loaded the first time one of them is in view.
   let moonOrbitsAsked = false;
