@@ -30,6 +30,7 @@ from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.eruptions import fetch_eruptions
 from histeclipse_pipeline.extremes import fetch_extremes
 from histeclipse_pipeline.fossils import fetch_fossils
+from histeclipse_pipeline.holocene_stacks import fetch_holocene_stacks
 from histeclipse_pipeline.holocene_temperature import fetch_holocene_temperature
 from histeclipse_pipeline.iceoutlines import fetch_outlines
 from histeclipse_pipeline.icesheets import fetch_icesheets
@@ -553,6 +554,12 @@ def holocene_temperature(args: Arguments) -> int:  # pragma: no cover - needs ne
     return _say(f"wrote {points} temperature points to {args.out}")
 
 
+def holocene_stacks(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Holocene's proxy stacks, reanalysis and seasonal correction, side by side."""
+    points = fetch_holocene_stacks(args.out)
+    return _say(f"wrote {points} Holocene temperature points to {args.out}")
+
+
 def paleotemp(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write surface temperature maps for 100 steps since 540 Ma as small images."""
     count = fetch_paleotemp(args.out)
@@ -908,6 +915,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         holocene_temperature,
         "write temperature from 800 ka to today (EPICA, LGMR, PAGES 2k, HadCRUT5)",
         "output JSON file",
+    ),
+    "holocene-stacks": (
+        holocene_stacks,
+        "write the Holocene temperature conundrum (Temp12k, LGMR, Bova et al. 2021)",
+        "output JSON file (public/data/holocene-stacks/index.json)",
     ),
     "paleotemp": (
         paleotemp,
