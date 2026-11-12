@@ -10,6 +10,7 @@ from histeclipse_pipeline.amoc import fetch_amoc
 from histeclipse_pipeline.archaeoglobe import fetch_ways
 from histeclipse_pipeline.asteroids import fetch_asteroids
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
+from histeclipse_pipeline.carbon_budget import fetch_carbon_budget
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
 from histeclipse_pipeline.cenogrid import fetch_cenogrid
 from histeclipse_pipeline.cesm import fetch_cesm
@@ -91,6 +92,7 @@ from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
 from histeclipse_pipeline.volcanoes import fetch_volcanoes
+from histeclipse_pipeline.warm_past import fetch_warm_past
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -443,6 +445,12 @@ def deep_air(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} CO2 estimates, the CO2 fit and the O2 estimate to {args.out}")
 
 
+def carbon_budget(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Global Carbon Budget and each country's emissions and warming (CC BY 4.0)."""
+    years, countries = fetch_carbon_budget(args.out)
+    return _say(f"wrote {years} years of the budget and {countries} countries to {args.out}")
+
+
 def co2_archive(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write CO2 estimates by method from the Paleo-CO2 Data Archive (CC BY 4.0)."""
     count, empty = fetch_co2_archive(args.out)
@@ -574,6 +582,12 @@ def drought(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the drought index's trend and land means (SPEIbase)."""
     count = fetch_drought(args.out)
     return _say(f"wrote {count} drought trend map to {args.out}")
+
+
+def warm_past(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write temperature change maps of the Last Interglacial and mid-Pliocene."""
+    count = fetch_warm_past(args.out)
+    return _say(f"wrote {count} warm-past temperature-change images to {args.out}")
 
 
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
@@ -781,6 +795,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write CO2 and O2 over the last 540 million years (Foster 2017; Mills 2023)",
         "output JSON file",
     ),
+    "carbon-budget": (
+        carbon_budget,
+        "write the Global Carbon Budget and each country's emissions and warming (CC BY 4.0)",
+        "output directory",
+    ),
     "co2-archive": (
         co2_archive,
         "write CO2 estimates by method from the Paleo-CO2 Data Archive (CC BY 4.0)",
@@ -890,6 +909,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         drought,
         "write the 12-month drought index's trend since 1951 and land means (SPEIbase)",
         "output directory",
+    ),
+    "warm-past": (
+        warm_past,
+        "write temperature change at the Last Interglacial and mid-Pliocene (PMIP4, PlioMIP2)",
+        "output directory (public/data/warmpast)",
     ),
     "calendars": (
         calendars,
