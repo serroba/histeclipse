@@ -47,15 +47,15 @@ export const TEMPERATURE_GLSL = /* glsl */ `
     return mix(c, srgb(vec3(0.647, 0.0, 0.149)), smoothstep(35.0, 45.0, celsius));
   }
 
-  // The change from today, °C: blue colder, near-white the same, red warmer. The legend's
-  // CHANGE_STOPS draw the same.
+  // The change from today, °C: blue colder, red warmer; near today, uncoloured (below). The
+  // legend's CHANGE_STOPS draw the same.
   vec3 changeColour(float delta) {
     vec3 c = srgb(vec3(0.192, 0.212, 0.584));
     c = mix(c, srgb(vec3(0.271, 0.459, 0.706)), smoothstep(-20.0, -10.0, delta));
-    c = mix(c, srgb(vec3(0.569, 0.749, 0.859)), smoothstep(-10.0, -4.0, delta));
-    c = mix(c, srgb(vec3(0.878, 0.953, 0.973)), smoothstep(-4.0, -1.0, delta));
-    c = mix(c, srgb(vec3(0.969, 0.969, 0.969)), smoothstep(-1.0, 0.0, delta));
-    c = mix(c, srgb(vec3(0.996, 0.878, 0.565)), smoothstep(0.0, 1.0, delta));
+    c = mix(c, srgb(vec3(0.455, 0.678, 0.820)), smoothstep(-10.0, -4.0, delta));
+    c = mix(c, srgb(vec3(0.671, 0.851, 0.914)), smoothstep(-4.0, -1.0, delta));
+    // No pale middle: near today the layer fades out instead, so neither side reads as ice.
+    c = mix(c, srgb(vec3(0.996, 0.878, 0.565)), step(0.0, delta));
     c = mix(c, srgb(vec3(0.992, 0.682, 0.380)), smoothstep(1.0, 4.0, delta));
     return mix(c, srgb(vec3(0.843, 0.188, 0.153)), smoothstep(4.0, 10.0, delta));
   }
@@ -65,7 +65,10 @@ export const TEMPERATURE_GLSL = /* glsl */ `
     // x then, y today, z where then has data, w where today has.
     vec4 t = paleoTemperature(uv);
     if (tempChange < 0.5) return vec4(temperatureColour(t.x), t.z);
-    return vec4(changeColour(t.x - t.y), min(t.z, t.w));
+    // Within about a degree of today the land keeps its own colours: the scale's near-white
+    // middle read as ice on the Holocene's ice-free continents. The colour comes in by 1.5 °C.
+    float delta = t.x - t.y;
+    return vec4(changeColour(delta), min(t.z, t.w) * smoothstep(0.5, 1.5, abs(delta)));
   }
 `;
 
