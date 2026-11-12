@@ -77,6 +77,7 @@ from histeclipse_pipeline.radiocarbon import fetch_radiocarbon
 from histeclipse_pipeline.saturn_rings import fetch_saturn_rings
 from histeclipse_pipeline.seaice import fetch_seaice
 from histeclipse_pipeline.sealevel import fetch_sealevel
+from histeclipse_pipeline.sealevel_common_era import fetch_common_era
 from histeclipse_pipeline.sealevel_modern import fetch_budget, fetch_modern
 from histeclipse_pipeline.shelf import fetch_shelf
 from histeclipse_pipeline.sky import (
@@ -544,6 +545,12 @@ def sealevel_modern(args: Arguments) -> int:  # pragma: no cover - needs network
     return _say(f"wrote {points} measured sea-level points and the trend map to {args.out}")
 
 
+def sealevel_2000y(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write Kopp et al. 2016's global sea level, 1000 BCE to 2010 CE, with its 1-sigma range."""
+    points = fetch_common_era(args.out)
+    return _say(f"wrote {points} points of Common Era sea level to {args.out}")
+
+
 def sealevel_budget(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write Frederikse et al.'s sea-level budget, for checking only: not for public/."""
     years = fetch_budget(args.out)
@@ -918,6 +925,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "sealevel-modern": (
         sealevel_modern,
         "write measured sea level since 1900 and its trend map (IPCC AR6, NOAA LSA)",
+        "output directory",
+    ),
+    "sealevel-2000y": (
+        sealevel_2000y,
+        "write global sea level over the last 3,000 years (Kopp et al. 2016)",
         "output directory",
     ),
     "sealevel-budget": (

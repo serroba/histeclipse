@@ -657,6 +657,13 @@
     "cite": "Kivelson, M. G., Khurana, K. K., Russell, C. T., Volwerk, M., Walker, R. J. & Zimmer, C. (2000). Galileo magnetometer measurements: a stronger case for a subsurface ocean at Europa. Science 289, 1340–1343",
     "url": "https://doi.org/10.1126/science.289.5483.1340"
   },
+  "kopp2016": {
+    "name": "Kopp et al. 2016",
+    "kind": "paper",
+    "cite": "Kopp, R. E., Kemp, A. C., Bittermann, K., Horton, B. P., Donnelly, J. P., Gehrels, W. R., Hay, C. C., Mitrovica, J. X., Morrow, E. D., Rahmstorf, S. (2016), Temperature-driven global sea-level variability in the Common Era, Proceedings of the National Academy of Sciences 113, E1434–E1441: global sea level from 1000 BCE to 2010 CE with its 1-sigma uncertainty, from a Gaussian-process model of proxy relative sea-level records and tide gauges (model ML2,1); the series as published with the authors’ SESL code, github.com/bobkopp/SESL (Data/GLMW-1ts.mat)",
+    "url": "https://doi.org/10.1073/pnas.1517056113",
+    "licence": "GPL-3.0 (the SESL repository’s licence); our series derived from it is shared under the same licence"
+  },
   "korte2011": {
     "name": "Korte et al. 2011",
     "kind": "paper",
