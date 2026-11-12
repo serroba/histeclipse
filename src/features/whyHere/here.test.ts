@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Territory } from '../data/empires';
-import type { RockUnit } from '../data/rocks';
-import type { WaysAt } from '../data/waysOfLife';
+import type { Territory } from '../../data/empires';
+import type { RockUnit } from '../../data/rocks';
+import type { WaysAt } from '../../data/waysOfLife';
 import { hereFacts, placeText, statesHere, type HereInput } from './here';
 
 /** A square of `size` degrees round a point. */
