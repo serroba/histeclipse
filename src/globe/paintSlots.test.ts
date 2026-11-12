@@ -23,6 +23,18 @@ describe('places on a painted map', () => {
     expect(slots.painters()).toEqual(['ways']);
   });
 
+  it('Given the states shown, then taken away, Then the map says whether they paint', () => {
+    const slots = createPaintSlots<string>(() => undefined);
+    slots.add(0).show('rocks');
+    const states = slots.add(100);
+    expect(slots.shows(100)).toBe(false);
+    states.show('states');
+    expect(slots.shows(100)).toBe(true);
+    expect(slots.shows(50)).toBe(false);
+    states.show(null);
+    expect(slots.shows(100)).toBe(false);
+  });
+
   it('Given any part shown or taken away, Then the whole map is painted again', () => {
     let painted = 0;
     const slots = createPaintSlots<string>(() => {

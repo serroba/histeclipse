@@ -150,7 +150,8 @@ body {
 }
 
 /* A state that has just appeared glows gold, then settles; one that has gone is struck
-   through and fades. The time matches STATE_CHANGE_MS in globe/scene.ts. */
+   through and fades. The time matches STATE_CHANGE_MS in features/empires/empireLayer.ts.
+*/
 .empire-label.is-new {
   animation: state-new 4s ease-out forwards;
 }

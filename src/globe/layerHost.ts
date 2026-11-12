@@ -71,6 +71,16 @@ export interface LayerHost {
    */
   surfaceLabels(priority: number, layer: HTMLElement): SurfaceLabels;
   /**
+   * A place for labels on Earth's surface that the layer makes and keeps itself, laid out with
+   * the others in `priority` order: set them now (placed at once) and again when they change.
+   */
+  surfaceSlot(priority: number): { set(labels: readonly SurfaceLabel[]): void };
+  /**
+   * Read each label's size, then hide them all: one layout for the lot. Show each unseen
+   * (`visibility: hidden`) and in the page first.
+   */
+  measure(labels: readonly SurfaceLabel[]): void;
+  /**
    * A place on the history map painted over Earth's surface, under the states, painted in
    * `order` (see HISTORY_PAINT_ORDER) whenever any part of the map changes.
    */
@@ -91,7 +101,10 @@ export const DEEP_PAINT_ORDER = {
   iceOutlines: 10,
 } as const;
 
-/** Paints a layer's part of the history map; `statesOver` when the states are drawn on top. */
+/**
+ * Paints a layer's part of the history map; `statesOver` when the states are drawn on top (their
+ * own painter ignores it).
+ */
 export type HistoryPainter = (canvas: HTMLCanvasElement, statesOver: boolean) => void;
 
 /** The order the history map's parts are painted in, lower first; the states go over them all. */
@@ -99,7 +112,17 @@ export const HISTORY_PAINT_ORDER = {
   rocks: 0,
   ways: 10,
   dates: 20,
+  states: 100,
 } as const;
+
+/** A label pinned to Earth's surface, at `position` (scene units), with its size measured. */
+export interface SurfaceLabel {
+  readonly element: HTMLElement;
+  readonly position: Vector3;
+  /** Approximate size on screen, pixels, for keeping names apart. */
+  width: number;
+  height: number;
+}
 
 /** A marker or name pinned to Earth's surface. */
 interface SurfacePin {

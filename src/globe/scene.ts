@@ -100,14 +100,13 @@ import {
 } from './spaceFrame';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { SOLAR_NORTH_POLE_J2000 } from './sunImage';
-import { labelPoint, namedByBoth, type Territory } from '../data/empires';
 import type { NamedBody } from '../data/planetNames';
 import type { MoonName, MoonOrbits, MoonPlanet } from '../astro/moonOrbits';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
 import { PLANET_NAMES, planetRadius } from './planetLook';
 import { isMoonBody, moonsInView } from './moonLook';
 import {
-  SURFACE_PRIORITY,
+  HISTORY_PAINT_ORDER,
   type GlobeLayer,
   DEEP_PAINT_ORDER,
   type DeepPainter,
@@ -115,19 +114,13 @@ import {
   type LayerFactory,
   type LayerHost,
   type NameLabel,
+  type SurfaceLabel,
 } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
 import { createPaintSlots } from './paintSlots';
 import { createPlanetMeshes } from './planetMeshes';
 import type { ArrivalGrid } from '../data/dispersal';
-import type { OhmYear } from '../data/ohmBorders';
-import {
-  clearOverlay,
-  createEmpireCanvas,
-  paintBorders,
-  paintSettled,
-  paintTerritories,
-} from './empireCanvas';
+import { clearOverlay, createEmpireCanvas, paintSettled } from './empireCanvas';
 import {
   OCCULTATION,
   SOLAR_COMMON,
@@ -212,34 +205,6 @@ interface SunImageRequest {
   /** How much the Sun darkens toward the limb as the camera sees it (u in 1 − u(1 − μ)). */
   readonly limbDarkening: number;
 }
-
-/** Past states to draw: Cliopatria's filled territories, OpenHistoricalMap's border lines, or both. */
-interface EmpireLayer {
-  readonly territories: readonly Territory[];
-  readonly ohm: OhmYear | null;
-  /** States that appeared or went since the year drawn before, to name on the map a while. */
-  readonly changes?: readonly StateChange[];
-}
-
-/** A state that appeared or went, and where its name goes. */
-export interface StateChange {
-  readonly name: string;
-  readonly kind: 'new' | 'gone';
-  readonly point: { readonly latitude: number; readonly longitude: number };
-  /** How large it is drawn: the larger ones are named first. */
-  readonly area: number;
-}
-
-/**
- * How many states are named as new or gone at once, the largest first: as the years fly by in
- * a busy century, more would light up most of the map and read as flicker.
- */
-const STATE_CHANGES_SHOWN = 4;
-/** A state's name at this size or larger (its larger states) is placed before the markers. */
-const MAJOR_STATE_SIZE = 14;
-
-/** How long a state that appeared or went stays named as such, ms (its CSS animation's too). */
-const STATE_CHANGE_MS = 4000;
 
 /** Two elevation maps (URLs of greyscale images, see `data/paleoDem.ts`) and the blend between. */
 interface DeepTimeSurface {
@@ -397,11 +362,6 @@ export interface Globe {
   setBodyMap(body: 'earth' | 'moon', url: string): void;
   /** The widest texture the graphics can hold, pixels. */
   readonly maxTextureSize: number;
-  /**
-   * Lay past states and empires over the ground, with the names of the largest; null hides
-   * the layer.
-   */
-  setEmpires(layer: EmpireLayer | null): void;
   /**
    * Shade where a dispersal model has people settled `ka` thousand years ago, under any ice
    * outlines; null hides it.
@@ -1438,42 +1398,18 @@ export function createGlobe(
   const markerLayer = document.createElement('div');
   markerLayer.className = 'space-markers';
   container.append(markerLayer);
-  // Names of the largest territories shown, placed on the globe each frame.
-  const empireLabelLayer = document.createElement('div');
-  empireLabelLayer.className = 'empire-labels';
-  container.append(empireLabelLayer);
-  interface GlobeLabel {
-    element: HTMLElement;
-    position: Vector3;
-    /** Approximate size on screen, pixels, for keeping names apart. */
-    width: number;
-    height: number;
-  }
-  /** A state's name; `major` for the larger states' and those just come or gone. */
-  let empireLabels: (GlobeLabel & { readonly id: string; readonly major: boolean })[] = [];
-  // Historical time's overlay, on the states' map: ways of life, and the states over them.
-  // The sizes of the states' names already laid out, by class, size and name: as the years
-  // play, most names come back step after step.
-  const labelSizes = new Map<string, { readonly width: number; readonly height: number }>();
-  // States that appeared or went lately, by name: named on the map for a while.
-  const recentStates = new Map<string, { readonly change: StateChange; readonly at: number }>();
   // The history map: the layers' parts (rocks, ways, dates, #379) in order, the states over them.
   const historySlots = createPaintSlots<HistoryPainter>(paintHistoryOverlay);
-  let empiresShown: EmpireLayer | null = null;
   function paintHistoryOverlay(): void {
     const uniforms = earth.material.uniforms;
-    const empires = empiresShown;
     const painters = historySlots.painters();
-    const on = painters.length > 0 || empires !== null;
+    const on = painters.length > 0;
     uniforms['empiresActive'] = { value: on ? 1 : 0 };
     needsRender = true;
     if (!on) return;
     clearOverlay(empiresCanvas);
-    for (const paint of painters) paint(empiresCanvas, empires !== null);
-    if (empires !== null) {
-      paintTerritories(empiresCanvas, empires.territories);
-      if (empires.ohm !== null) paintBorders(empiresCanvas, empires.ohm.borders);
-    }
+    const statesOver = historySlots.shows(HISTORY_PAINT_ORDER.states);
+    for (const paint of painters) paint(empiresCanvas, statesOver);
     empiresTexture.needsUpdate = true;
     uniforms['overlayMap'] = { value: empiresTexture };
   }
@@ -1481,7 +1417,7 @@ export function createGlobe(
   // The layers added (#379), and what they lay out after each frame: declared before the first.
   const afterRenders: (() => void)[] = [];
   /** Labels on Earth's surface from the layers, each slot laid out in its priority's place. */
-  const surfaceSlots: { readonly priority: number; labels: readonly GlobeLabel[] }[] = [];
+  const surfaceSlots: { readonly priority: number; labels: readonly SurfaceLabel[] }[] = [];
   const layers: GlobeLayer<never>[] = [];
   /** Taps on `[data-pick]` inside `layer` reach the marker-pick listeners. */
   function pickable(layer: HTMLElement): void {
@@ -1514,7 +1450,7 @@ export function createGlobe(
   function measured(
     layer: HTMLElement,
     entries: readonly { readonly element: HTMLElement; readonly point: GeoPoint }[],
-  ): GlobeLabel[] {
+  ): SurfaceLabel[] {
     const labels = entries.map(({ element, point }) => {
       element.style.visibility = 'hidden';
       layer.append(element);
@@ -1528,7 +1464,7 @@ export function createGlobe(
    * Read every label's size, then hide them all: one layout for the lot. Hiding one between
    * reads would make the browser lay the page out again for the next, label after label.
    */
-  function settleSizes(labels: readonly GlobeLabel[]): void {
+  function settleSizes(labels: readonly SurfaceLabel[]): void {
     for (const entry of labels) {
       entry.width = entry.element.offsetWidth;
       entry.height = entry.element.offsetHeight;
@@ -2002,7 +1938,7 @@ export function createGlobe(
       renderer.render(scene, camera);
       placeMarkers();
       for (const object of hidden) object.visible = true;
-      placeEmpireLabels();
+      placeSurfaceLabels();
       showMoonPaths();
       for (const place of afterRenders) place();
       if (earthMapped) container.dataset['rendered'] = 'true';
@@ -2010,7 +1946,7 @@ export function createGlobe(
     frame = requestAnimationFrame(loop);
   }
 
-  function placeEmpireLabels(): void {
+  function placeSurfaceLabels(): void {
     const eye = camera.position.clone().normalize();
     // Only names on the near side of Earth, and only while it fills enough of the view.
     const near = focus === 'earth' && camera.position.length() < 12;
@@ -2022,15 +1958,8 @@ export function createGlobe(
     // again, for every label.
     const viewWidth = container.clientWidth;
     const viewHeight = container.clientHeight;
-    const slots = [
-      { priority: SURFACE_PRIORITY.majorStates, labels: empireLabels.filter(({ major }) => major) },
-      {
-        priority: SURFACE_PRIORITY.minorStates,
-        labels: empireLabels.filter(({ major }) => !major),
-      },
-      // Those of the layers on the host (#379), each in its place.
-      ...surfaceSlots,
-    ].sort((a, b) => a.priority - b.priority);
+    // The layers' labels (#379), each slot in its place.
+    const slots = [...surfaceSlots].sort((a, b) => a.priority - b.priority);
     for (const { element, position, width, height } of slots.flatMap(({ labels }) => labels)) {
       projected.copy(position).project(camera);
       const shown =
@@ -2235,18 +2164,30 @@ export function createGlobe(
           layer.replaceChildren();
           slot.labels = pins === null ? [] : measured(layer, pins);
           // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-          placeEmpireLabels();
+          placeSurfaceLabels();
           needsRender = true;
         },
         move(points) {
           points.forEach((point, index) => {
             slot.labels[index]?.position.set(...geoToVector(point, 1.01));
           });
-          placeEmpireLabels();
+          placeSurfaceLabels();
           needsRender = true;
         },
       };
     },
+    surfaceSlot(priority) {
+      const slot: (typeof surfaceSlots)[number] = { priority, labels: [] };
+      surfaceSlots.push(slot);
+      return {
+        set(labels) {
+          slot.labels = labels;
+          placeSurfaceLabels();
+          needsRender = true;
+        },
+      };
+    },
+    measure: settleSizes,
   };
 
   return {
@@ -2830,141 +2771,6 @@ export function createGlobe(
     onMarkerPick(listener) {
       markerPickListeners.add(listener);
       return () => markerPickListeners.delete(listener);
-    },
-    setEmpires(layer) {
-      empiresShown = layer;
-      paintHistoryOverlay();
-      // The names already made, by class, size and name: kept from year to year, so a name
-      // that stays stays where it is, shown, rather than being made anew and hidden a frame.
-      const previous = empireLabels;
-      const before = new Map(previous.map((entry) => [entry.id, entry]));
-      const shownBefore = new Set(
-        previous.filter(({ element }) => element.hidden === false).map(({ id }) => id),
-      );
-      empireLabels = [];
-      if (layer === null) recentStates.clear();
-      if (layer !== null) {
-        const now = performance.now();
-        for (const change of layer.changes ?? [])
-          recentStates.set(change.name, { change, at: now });
-        const present = new Set([
-          ...layer.territories.map(({ name }) => name),
-          ...(layer.ohm?.labels ?? []).map(({ name }) => name),
-        ]);
-        // Those that came or went lately first, so their names win a place; the animation
-        // carries on from where it was, though the names are made anew each year.
-        for (const [name, { change, at }] of recentStates) {
-          if (now - at > STATE_CHANGE_MS || present.has(name) !== (change.kind === 'new')) {
-            recentStates.delete(name);
-          }
-        }
-        // The largest few; the rest are named as usual, if at all.
-        const changed = [...recentStates.entries()]
-          .sort((a, b) => b[1].change.area - a[1].change.area)
-          .slice(0, STATE_CHANGES_SHOWN)
-          .map(([name, { change, at }]) => ({
-            name,
-            point: change.point,
-            size: 13,
-            kind: `empire-label is-${change.kind}`,
-            delay: -Math.round(now - at),
-          }));
-        const named = new Set(changed.map(({ name }) => name));
-        // Names of the larger states first; as the camera comes closer, more fit between them.
-        // Those shown the year before keep their place ahead of the rest, so names don't trade
-        // places as borders shift a little from year to year.
-        const wasShown = (name: string, size: number) =>
-          shownBefore.has(`empire-label|${String(size)}|${name}`);
-        const sizeOf = (area: number) => Math.round(10 + Math.min(6, Math.sqrt(area) / 4));
-        const ranked = layer.territories
-          .map((territory) => ({ territory, label: labelPoint(territory) }))
-          .filter(({ territory }) => !named.has(territory.name))
-          .sort((a, b) => b.label.area - a.label.area)
-          .slice(0, 80)
-          .sort(
-            (a, b) =>
-              Number(wasShown(b.territory.name, sizeOf(b.label.area))) -
-              Number(wasShown(a.territory.name, sizeOf(a.label.area))),
-          )
-          .map(({ territory, label }) => ({
-            name: territory.name,
-            point: label,
-            size: sizeOf(label.area),
-          }));
-        // A state OpenHistoricalMap names too, near where Cliopatria does, is named once, marked
-        // as named by both (#163).
-        const ohmLabels = layer.ohm?.labels ?? [];
-        const both = namedByBoth(
-          ranked.map(({ name, point }) => ({
-            name,
-            latitude: point.latitude,
-            longitude: point.longitude,
-          })),
-          ohmLabels,
-        );
-        const cliopatriaNames = ranked.map((label) => ({
-          ...label,
-          kind: both.shared.has(label.name) ? 'empire-label is-both' : 'empire-label',
-        }));
-        // OpenHistoricalMap's names, set apart in italics, after Cliopatria's.
-        const ohmNames = ohmLabels
-          .filter(({ name }, index) => !named.has(name) && !both.repeated.has(index))
-          .slice(0, 120)
-          .map((label) => ({
-            name: label.name,
-            point: label,
-            size: 11,
-            kind: 'empire-label is-ohm',
-          }));
-        const made = [...changed, ...cliopatriaNames, ...ohmNames].map((label) => {
-          const { name, point, size, kind } = label;
-          const id = `${kind}|${String(size)}|${name}`;
-          const kept = before.get(id);
-          if (kept !== undefined) {
-            before.delete(id);
-            kept.position.set(...geoToVector(point, 1.01));
-            return { ...kept, key: null };
-          }
-          const element = document.createElement('span');
-          element.className = kind;
-          element.textContent = name;
-          element.style.fontSize = `${String(size)}px`;
-          if ('delay' in label) element.style.animationDelay = `${String(label.delay)}ms`;
-          const known = labelSizes.get(`${kind}|${String(size)}|${name}`);
-          // A name not seen before is laid out once, unseen, so its real size is known for
-          // keeping names apart; one seen before keeps its size, and costs no layout.
-          if (known === undefined) element.style.visibility = 'hidden';
-          else element.hidden = true;
-          empireLabelLayer.append(element);
-          return {
-            id,
-            // The larger states, and those just come or gone (which carry a delay).
-            major: size >= MAJOR_STATE_SIZE || 'delay' in label,
-            element,
-            position: new Vector3(...geoToVector(point, 1.01)),
-            width: known?.width ?? 0,
-            height: known?.height ?? 0,
-            key: known === undefined ? id : null,
-          };
-        });
-        const fresh = made.filter((entry) => entry.key !== null);
-        settleSizes(fresh);
-        for (const { key, width, height } of fresh) {
-          if (key !== null) labelSizes.set(key, { width, height });
-        }
-        empireLabels = made;
-      }
-      // Names no longer wanted go; the rest are placed now, before the frame is painted.
-      const kept = new Set(empireLabels.map(({ element }) => element));
-      for (const { element } of previous) if (!kept.has(element)) element.remove();
-      placeEmpireLabels();
-      container.dataset['empires'] = layer === null ? 'off' : String(layer.territories.length);
-      container.dataset['statesChanged'] = String(
-        empireLabels.filter(({ element }) => /\bis-(new|gone)\b/.test(element.className)).length,
-      );
-      container.dataset['ohmBorders'] =
-        layer?.ohm === null || layer === null ? 'off' : String(layer.ohm.borders.length);
-      needsRender = true;
     },
     onPlacePick(listener) {
       placeListeners.add(listener);
