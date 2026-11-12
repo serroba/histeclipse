@@ -97,7 +97,7 @@ function reaches(graph: Map<string, Set<string>>, from: string, to: string): boo
 const KNOWN_CYCLE_EDGES: readonly string[] = [];
 
 /** Methods on the `Globe` interface in `globe/scene.ts`: new things drawn are layers (#379). */
-const GLOBE_METHODS = 39;
+const GLOBE_METHODS = 40;
 
 /**
  * Variables `startApp` keeps at its top level, which any of its functions may change (#442).

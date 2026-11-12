@@ -156,7 +156,14 @@ export interface ViewState extends DisplayState, HistoryState, DeepState, Sheets
 
 // In the focused body's radii. For Earth, ~12.8 times the Sun's distance (23,455 Earth radii),
 // so Saturn (up to ~11 AU away) fits in view; the scene caps other bodies at the same reach.
-export const CAMERA_DISTANCE_RANGE = { min: 1.05, max: 300_000 } as const;
+// The nearest is Earth's, about 50 km up, where its tiles show the ground at 1.85 km a pixel
+// (#568); the other bodies stop at `nearestDistance`.
+export const CAMERA_DISTANCE_RANGE = { min: 1.008, max: 300_000 } as const;
+
+/** The nearest the camera comes to `body`, in its radii: Earth's tiles let it come closest. */
+export function nearestDistance(body: Body): number {
+  return body === 'earth' ? CAMERA_DISTANCE_RANGE.min : 1.05;
+}
 export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'solar']);
 
 /**

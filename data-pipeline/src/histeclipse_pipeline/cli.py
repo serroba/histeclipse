@@ -26,6 +26,7 @@ from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
 from histeclipse_pipeline.dipole import fetch_dipole
 from histeclipse_pipeline.dispersal import fetch_dispersal
 from histeclipse_pipeline.drought import fetch_drought
+from histeclipse_pipeline.earth_tiles import fetch_earth_tiles
 from histeclipse_pipeline.empires import (
     fetch_cliopatria,
     merge_unchanged,
@@ -343,6 +344,12 @@ def planet_maps(args: Arguments) -> int:  # pragma: no cover - needs network acc
     """Write the bodies' maps from their missions, for the close-up view (public/textures)."""
     count = fetch_planet_maps(args.out, Path(".cache/planet-maps"), args.only)
     return _say(f"wrote {count} maps to {args.out}")
+
+
+def earth_tiles(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Cut Earth's full-size Blue Marble into tiles for the closest views (public/textures)."""
+    written = fetch_earth_tiles(args.out, Path(".cache/planet-maps"))
+    return _say(f"wrote {written / 1e6:.1f} MB of tiles to {args.out}")
 
 
 def moon_orbits(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -811,6 +818,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         planet_maps,
         "write the bodies' maps from their missions (MESSENGER, Viking, Cassini, BMNG, LRO)",
         "output folder (public/textures)",
+    ),
+    "earth-tiles": (
+        earth_tiles,
+        "cut Earth's full-size Blue Marble into tiles fetched only for the ground in view",
+        "output folder (public/textures/earth-tiles)",
     ),
     "moon-orbits": (
         moon_orbits,
