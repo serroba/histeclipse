@@ -347,7 +347,7 @@ def planet_maps(args: Arguments) -> int:  # pragma: no cover - needs network acc
 
 
 def earth_tiles(args: Arguments) -> int:  # pragma: no cover - needs network access
-    """Cut Earth's full-size Blue Marble into tiles for the closest views (public/textures)."""
+    """Cut Earth's Blue Marble, full size and at 500 m, into tiles for the closest views."""
     written = fetch_earth_tiles(args.out, Path(".cache/planet-maps"))
     return _say(f"wrote {written / 1e6:.1f} MB of tiles to {args.out}")
 
@@ -821,7 +821,7 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     ),
     "earth-tiles": (
         earth_tiles,
-        "cut Earth's full-size Blue Marble into tiles fetched only for the ground in view",
+        "cut Earth's Blue Marble (full size and 500 m) into tiles fetched only for the view",
         "output folder (public/textures/earth-tiles)",
     ),
     "moon-orbits": (

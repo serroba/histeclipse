@@ -2,9 +2,10 @@ import { collectProblems, expect, globeRendered, test } from './support';
 
 /**
  * Close up, Earth's full-size Blue Marble comes in tiles (#568): only those in view, and none at
- * the usual distance. Phones keep the 4096 map and fetch no tiles.
+ * the usual distance. Very close in, the 500 m map's tiles instead (#569), and only there.
+ * Phones keep the 4096 map and fetch no tiles.
  */
-test('close up, Earth’s full-size map comes in tiles, only those in view; from afar, none', async ({
+test('close up, Earth’s map comes in tiles, only those in view, the sharpest only very close in; from afar, none', async ({
   page,
 }, info) => {
   // The scene is heavy, and CI draws it in software.
@@ -30,14 +31,14 @@ test('close up, Earth’s full-size map comes in tiles, only those in view; from
     await globeRendered(page);
     await expect(globe).toHaveAttribute('data-sharp', 'earth', { timeout: 30_000 });
   });
-  await test.step('Then only the tile beneath is fetched and drawn, on a phone none', async () => {
+  await test.step('Then only the 500 m tile beneath is fetched and drawn, on a phone none', async () => {
     if (phone) {
       expect(tiles).toEqual([]);
       return;
     }
     await expect(globe).toHaveAttribute('data-earth-tiles', '1/1', { timeout: 30_000 });
-    // 30° N 31° E: the 19th tile east of 180° W and the 6th south of the pole, 11.25° a side.
-    expect(tiles).toEqual(['manifest.json', '4/18/5.webp']);
+    // 30° N 31° E: level 5's 38th tile east of 180° W and 11th south of the pole, 5.625° a side.
+    expect(tiles).toEqual(['manifest.json', '5/37/10.webp']);
   });
   await test.step('When they rise to 1,900 km over the corner of four tiles', async () => {
     tiles.length = 0;
@@ -53,6 +54,8 @@ test('close up, Earth’s full-size map comes in tiles, only those in view; from
       timeout: 30_000,
     });
     const fetched = tiles.filter((tile) => tile !== 'manifest.json');
+    // From this high, the full Blue Marble's tiles: none of the 500 m map's.
+    expect(fetched.every((tile) => tile.startsWith('4/'))).toBe(true);
     expect(fetched).toEqual(expect.arrayContaining(['4/17/5.webp', '4/18/5.webp', '4/17/6.webp']));
     expect(fetched).toContain('4/18/6.webp');
     // The view is some 40° across at most: within two tiles of the corner, never the far side.
