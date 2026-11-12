@@ -21,7 +21,8 @@ import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
 import { createDeepGlance } from './deepGlance';
 import { createDeepTimeBar } from '../../ui/deepTimeBar';
-import { formatMa, periodAt, periodWords } from '../../deepTime/periods';
+import { periodAt, periodWords } from '../../deepTime/periods';
+import { formatMa } from '../../time/format';
 import {
   framesAhead,
   framesAround,

@@ -17,7 +17,8 @@ import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from '../
 import { type JulianDay } from '../../time/julianDay';
 import { formatInCalendar } from '../../time/calendars';
 import { element } from '../../ui/dom';
-import { formatMa, periodAt, periodWords } from '../../deepTime/periods';
+import { periodAt, periodWords } from '../../deepTime/periods';
+import { formatMa } from '../../time/format';
 import type { StoryDate } from '../../deepTime/storyDate';
 import { errorMessage } from '../../util/errors';
 import './moment.css';
