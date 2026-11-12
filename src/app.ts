@@ -4,7 +4,6 @@
  * modules it calls.
  */
 
-import { loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
 import { LunarCatalog } from './data/lunarCatalog';
 import { SolarCatalog } from './data/solarCatalog';
 import { eclipseMomentAt, isSolar } from './eclipses/describe';
@@ -72,6 +71,7 @@ import { mountEclipses } from './features/eclipses';
 import { mountTexts } from './features/texts';
 import { hereVersion, hereView, whyMoment, type HereData } from './features/whyHere/facts';
 import { createSourcesList } from './features/whyHere/sources';
+import { createAsking } from './features/whyHere/asking';
 import { mountMoment } from './features/moment';
 import { mountLayersPanel } from './features/layersPanel';
 import { createPanels } from './features/shell/panels';
@@ -140,8 +140,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The panel follows the view, so the link names the why open and opens it again.
   const whySheet = createWhySheet(
     (why) => {
-      // Closing "Here" by hand leaves the asking too.
-      if (why === null) askingHere = false;
+      asking.sheetChanged(why);
       store.set((state) => ({ ...state, why }));
     },
     () => hereView(store.get(), hereData()),
@@ -183,12 +182,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The sky view (#448): loaded the first time it is opened.
   const sky = mountSky({
     ...partContext,
-    bodiesSeen: (state) => bodiesSeen(state, (jd) => deltaT.terrestrialTime(jd), moonEphemeris),
+    bodiesSeen: (state) => bodiesSeen(state, (jd) => deltaT.terrestrialTime(jd), bodies.moon()),
     planetsSeen: (jdTT, sun, observer) => bodies.planetsSeen(jdTT, sun, observer),
     loadPlanets: () => bodies.loadPlanets(),
     deltaTUncertainty: (jdUT) => deltaT.uncertaintySeconds(jdUT),
     namedPlace,
-    moonReady: () => moonEphemeris !== null,
+    moonReady: () => bodies.moon() !== null,
     togglePanels: panels.toggle,
     marks: (state) => records.marks(state),
   });
@@ -216,8 +215,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     whySheet.mark('impacts', 'Impact craters'),
   );
-  // "Why here?": while on, a tap on the globe says what each layer has there.
-  let askingHere = false;
   // The Sources list: the whys of what is on screen now.
   const sources = createSourcesList(whySheet);
   // The Layers panel (#451): what each layer says and offers, as the parts have it now.
@@ -277,11 +274,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.zoomTo(distance);
     },
     onWhyHere() {
-      askingHere = !askingHere;
-      store.set((state) => ({
-        ...state,
-        why: askingHere ? 'here' : state.why === 'here' ? null : state.why,
-      }));
+      asking.toggle();
     },
     onOrbits() {
       store.set((state) => ({
@@ -305,6 +298,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => ({ ...state, focus: 'earth', view: 'free' }));
     },
   });
+  // "Why here?": while on, a tap on the globe says what each layer has there.
+  const asking = createAsking({ store, zoomRail, root });
   const waysLegend = createWaysLegend(whySheet.mark('ways', 'Ways of life'));
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
   // The globe draws at once and takes its maps as they arrive; nothing below waits on them.
@@ -366,7 +361,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // A tablet's records checked against the sky, and looked at from Babylon (#447).
   const records = mountRecords({
     ...partContext,
-    moon: () => moonEphemeris,
+    moon: () => bodies.moon(),
     loadPlanets: () => bodies.loadPlanets(),
     deltaTSeconds: (jd) => deltaT.seconds(jd),
     setSkyMarks: (marks) => {
@@ -393,9 +388,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ...partContext,
     globe,
     zoomRail,
-    moon: () => moonEphemeris,
     refresh: () => {
       moment.show(store.get());
+    },
+    moonArrived: () => {
+      const now = store.get();
+      moment.show(now);
+      viewSwitch.render(now.mode, now.view, true, now.focus);
+      sky.render(now);
     },
   });
   // The moment shown (#451): the header's date line, and what is placed by the moment.
@@ -404,7 +404,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe,
     now,
     deltaT: () => deltaT,
-    moon: () => moonEphemeris,
+    moon: () => bodies.moon(),
     planetPositions: (jdTT) => bodies.planetPositions(jdTT),
     atMoment: (state, terrestrial) => {
       bodies.setMoment(terrestrial);
@@ -676,7 +676,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     cardOpen: () => markerCard.dialog.open,
     planets: () => bodies.planets(),
-    moon: () => moonEphemeris,
+    moon: () => bodies.moon(),
     loadPlanets: () => {
       void bodies.loadPlanets();
     },
@@ -714,18 +714,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const sync = createUrlSync(browserUrlWriter(window.location, window.history));
 
   // The Moon's theory is a separate chunk; until it arrives the space view shows only the Sun.
-  let moonEphemeris: MoonEphemeris | null = null;
-  loadMoonEphemeris().then(
-    (ephemeris) => {
-      moonEphemeris = ephemeris;
-      moment.show(store.get());
-      viewSwitch.render(store.get().mode, store.get().view, true, store.get().focus);
-      sky.render(store.get());
-    },
-    (error: unknown) => {
-      notify(`Could not load the Moon's orbit: ${errorMessage(error)}`);
-    },
-  );
+  bodies.loadMoon();
 
   // The famous list is a convenience: if it fails to load, everything else still works.
   famous.load();
@@ -928,11 +917,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     texts.show(state);
     showBody(state);
     bodies.sharpen(state);
-    zoomRail.setWhyHere(
-      state.mode === 'globe' && state.focus === 'earth' && state.ma === null,
-      askingHere,
-    );
-    root.classList.toggle('is-asking-here', askingHere && state.ma === null);
+    asking.render(state);
     if (redraws(treeOfLife.watches, state, previous)) treeOfLife.render(state);
     impactPathsSheet.show(state.craters, state.ma ?? 0, state.cratersIn);
     boundariesSheet.show(state.boundaries);
@@ -950,7 +935,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     if (state.location !== previous?.location) globe.setLocation(state.location);
     if (state.view !== previous?.view) globe.setViewpoint(state.view);
     if (redraws(VIEW_SWITCH, state, previous)) {
-      viewSwitch.render(state.mode, state.view, moonEphemeris !== null, state.focus);
+      viewSwitch.render(state.mode, state.view, bodies.moon() !== null, state.focus);
     }
     if (state.years !== previous?.years || barYear(state) !== barYear(previous)) {
       eclipses.loadYear(state);
@@ -1008,7 +993,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     store.set((state) => ({
       ...state,
       location,
-      ...(askingHere ? { why: 'here' as const } : {}),
+      ...(asking.on() ? { why: 'here' as const } : {}),
       time:
         selected === undefined || !isSolar(selected)
           ? state.time

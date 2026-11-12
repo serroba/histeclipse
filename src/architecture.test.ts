@@ -104,7 +104,7 @@ const GLOBE_METHODS = 43;
  * Variables `startApp` keeps at its top level, which any of its functions may change (#442).
  * The parts of the page keep their own; this only comes down, to none.
  */
-const APP_LETS = 7;
+const APP_LETS = 5;
 
 describe('the shape of src', () => {
   it('no folder imports its way back into itself, beyond the cycles already known', () => {
