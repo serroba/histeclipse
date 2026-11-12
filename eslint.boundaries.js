@@ -46,8 +46,6 @@ export const MAX_LINES = 400;
  * `src/architecture.test.ts` asks for a limit to come down once it is 50 lines above its file:
  * lower it then, not in every PR that shortens the file, so PRs side by side do not all edit
  * the same line (#479).
- * Some are mostly content, not code (the deep-time milestones): theirs is to move into data
- * files, as the sources registry's did (#383).
  */
 export const LINE_LIMITS = {
   'app.ts': 840,
@@ -55,7 +53,6 @@ export const LINE_LIMITS = {
   'ui/deepTimeBar.ts': 1145,
   'sky/skyScene.ts': 971,
   'features/treeOfLife/lineagesSheet.ts': 1105,
-  'deepTime/milestones.ts': 1016,
   'ui/impactPathsSheet.ts': 744,
   'features/shower/airShower.ts': 719,
   'features/shower/sunCore.ts': 713,
