@@ -11,9 +11,16 @@ pre-industrial, so it is measured here from 1850-1900, the baseline the boundari
 chart uses. Each frame is the mean of the five years ending at its year, every five years from
 1850, and the last year in the file: 5-year means, so a single hot or cold year does not jump
 out. A year counts where all twelve months have data; a frame where at least four of its five
-years do; the baseline where at least 40 of its 51 years do (where it has fewer, as over
-Antarctica, the cell has no data and stays uncoloured). Cells under half land are left out:
-the site colours land only, as Krapp's maps do.
+years do; the baseline where at least 40 of its 51 years do. Cells under half land are left
+out: the site colours land only, as Krapp's maps do.
+
+Much land has too few records in 1850-1900 for a baseline of its own (#497): two thirds of
+the tropics, much of Australia and Antarctica. Left without one, it would show as unchanged.
+There the cell is measured from 1951-1980, which the field covers on nearly all land, and
+shifted back by how much warmer 1951-1980 was than 1850-1900 in its 15° band of latitude (a
+cos-latitude weighted mean over the cells that have both), or over all land where its band has
+none. That shift, some 0.3 to 0.6 °C, is the one estimate; the warming since is measured. Only
+inland Antarctica, without 25 years of 1951-1980, is left without data.
 
 The images are packed as Krapp's are, on the same node-registered 1° grid (``krapp.regrid``),
 so the globe's shader reads them the same way and shows the change as R - G:
@@ -27,10 +34,12 @@ so the globe's shader reads them the same way and shows the change as R - G:
 import io
 import json
 import urllib.request
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import h5py
 import numpy as np
+import numpy.typing as npt
 
 from histeclipse_pipeline.krapp import Grid, bounds, land_mean, regrid, to_png
 from histeclipse_pipeline.paleotemp import COLUMNS, ROWS
@@ -56,6 +65,12 @@ CREDIT = (
 BASELINE = (1850, 1900)
 #: Of the baseline's 51 years, how many a cell needs.
 BASELINE_YEARS = 40
+#: Where a cell has no baseline of its own: the later period it is measured from instead.
+LATER = (1951, 1980)
+#: Of the later period's 30 years, how many a cell needs.
+LATER_YEARS = 25
+#: The bands of latitude whose mean shift from the later period to the baseline is used, °.
+BAND_DEGREES = 15
 FIRST_FRAME = 1850
 STEP_YEARS = 5
 #: Of a frame's five years, how many a cell needs.
@@ -93,20 +108,66 @@ def frame_years(last: int) -> list[int]:
     return years if years[-1] == last else [*years, last]
 
 
-def frames(annual: Mapping[int, Grid], land: Grid) -> tuple[Grid, list[tuple[int, Grid]]]:
+@dataclass(frozen=True)
+class Baseline:
+    """Each cell's 1850-1900 mean, measured or estimated, and how much is estimated."""
+
+    #: °C, as the field's anomalies; NaN where neither period has enough data, or not land.
+    values: Grid
+    #: True where the cell's own 1850-1900 records were too few, and the baseline is estimated.
+    estimated: npt.NDArray[np.bool_]
+    #: Each band's shift (south edge, °; °C), and the land's, for bands with no cells of both.
+    shifts: list[tuple[int, float]]
+    land_shift: float
+
+
+def _weighted_mean(values: Grid, weights: Grid) -> float | None:
+    known = np.isfinite(values)
+    if not known.any():
+        return None
+    return float(np.average(values[known], weights=weights[known]))
+
+
+def baseline(annual: Mapping[int, Grid], land: Grid, latitude: Grid) -> Baseline:
+    """Each land cell's 1850-1900 baseline: its own, or 1951-1980's shifted back by its band's."""
+    first, last = BASELINE
+    early = mean_of((annual[year] for year in range(first, last + 1)), BASELINE_YEARS)
+    start, end = LATER
+    later = mean_of((annual[year] for year in range(start, end + 1)), LATER_YEARS)
+    on_land = land >= LAND
+    early = np.where(on_land, early, np.nan)
+    later = np.where(on_land, later, np.nan)
+    shift = later - early  # NaN unless the cell has both
+    rows = np.broadcast_to(latitude[:, None], shift.shape)
+    weights = np.cos(np.radians(rows))
+    land_shift = _weighted_mean(shift, weights)
+    if land_shift is None:
+        msg = "no land cell has both 1850-1900 and 1951-1980"
+        raise ValueError(msg)
+    shifts: list[tuple[int, float]] = []
+    band_shift = np.full(shift.shape, land_shift)
+    for south in range(-90, 90, BAND_DEGREES):
+        band = (rows >= south) & (rows < south + BAND_DEGREES)
+        mean = _weighted_mean(np.where(band, shift, np.nan), weights)
+        if mean is not None:
+            shifts.append((south, round(mean, 2)))
+            band_shift = np.where(band, mean, band_shift)
+    estimated = np.isnan(early) & np.isfinite(later)
+    values = np.where(estimated, later - band_shift, early)
+    return Baseline(values, np.asarray(estimated), shifts, round(land_shift, 2))
+
+
+def frames(annual: Mapping[int, Grid], base: Baseline) -> tuple[Grid, list[tuple[int, Grid]]]:
     """Measure each frame's 5-year mean from the baseline; the baseline's own coverage too.
 
-    Returns the baseline (0 where it has data, NaN elsewhere) and each frame's anomalies, land
-    cells only, still on the source's cells.
+    Returns 0 where there is a baseline (NaN elsewhere) and each frame's anomalies, land cells
+    only, still on the source's cells.
     """
-    first, last = BASELINE
-    baseline = mean_of((annual[year] for year in range(first, last + 1)), BASELINE_YEARS)
-    baseline = np.where(land >= LAND, baseline, np.nan)
     out: list[tuple[int, Grid]] = []
     for year in frame_years(max(annual)):
         span = [annual[each] for each in range(year - STEP_YEARS + 1, year + 1) if each in annual]
-        out.append((year, mean_of(span, FRAME_YEARS) - baseline))
-    return np.where(np.isfinite(baseline), 0.0, np.nan), out
+        out.append((year, mean_of(span, FRAME_YEARS) - base.values))
+    return np.where(np.isfinite(base.values), 0.0, np.nan), out
 
 
 def read_annual(opened: h5py.File) -> dict[int, Grid]:
@@ -129,11 +190,15 @@ def read_annual(opened: h5py.File) -> dict[int, Grid]:
 def write_warming(
     baseline: Grid,
     measured: Iterable[tuple[int, Grid]],
-    latitude: Grid,
-    longitude: Grid,
+    base: Baseline,
+    axes: tuple[Grid, Grid],
     folder: Path,
 ) -> int:
-    """Regrid the baseline and frames onto the 1° nodes; write a PNG per frame and the index."""
+    """Regrid the baseline and frames onto the 1° nodes; write a PNG per frame and the index.
+
+    ``axes`` are the source's cell centres: latitude, then longitude.
+    """
+    latitude, longitude = axes
     zero = regrid(baseline, latitude, longitude)
     grids = [(year, regrid(grid, latitude, longitude)) for year, grid in measured]
     coldest, warmest = bounds([zero, *(grid for _, grid in grids)])
@@ -141,9 +206,24 @@ def write_warming(
     for year, grid in grids:
         _ = (folder / file_name(year)).write_bytes(to_png(grid, zero, coldest, warmest))
     means = [(year, land_mean(grid)) for year, grid in grids]
-    body = json.dumps(index_file(means, coldest, warmest), separators=(",", ":"))
-    _ = (folder / "index.json").write_text(body + "\n")
+    index = index_file(means, coldest, warmest, estimate_of(base, latitude))
+    _ = (folder / "index.json").write_text(json.dumps(index, separators=(",", ":")) + "\n")
     return len(grids)
+
+
+def estimate_of(base: Baseline, latitude: Grid) -> dict[str, Json]:
+    """Describe the estimated baseline: measured from when, over how much land, shifted how far."""
+    start, end = LATER
+    rows = np.broadcast_to(latitude[:, None], base.values.shape)
+    weights = np.cos(np.radians(rows))
+    flags = np.where(np.isfinite(base.values), base.estimated.astype(np.float64), np.nan)
+    share = _weighted_mean(flags, weights) or 0.0
+    return {
+        "from": f"{start}\u2013{end}",
+        "share": round(share, 2),
+        "bands": [{"south": south, "shift": shift} for south, shift in base.shifts],
+        "landShift": base.land_shift,
+    }
 
 
 def build(data: bytes, folder: Path) -> int:
@@ -152,8 +232,10 @@ def build(data: bytes, folder: Path) -> int:
         latitude = np.asarray(opened["latitude"][()], dtype=np.float64)
         longitude = np.asarray(opened["longitude"][()], dtype=np.float64)
         land = np.asarray(opened["land_mask"][()], dtype=np.float64)
-        baseline, measured = frames(read_annual(opened), land)
-    return write_warming(baseline, measured, latitude, longitude, folder)
+        annual = read_annual(opened)
+    base = baseline(annual, land, latitude)
+    zero, measured = frames(annual, base)
+    return write_warming(zero, measured, base, (latitude, longitude), folder)
 
 
 def fetch_measured_warming(folder: Path) -> int:  # pragma: no cover - needs network access
@@ -172,7 +254,9 @@ def file_name(year: int) -> str:
     return f"{year}.png"
 
 
-def index_file(frames: list[tuple[int, float]], coldest: float, warmest: float) -> dict[str, Json]:
+def index_file(
+    frames: list[tuple[int, float]], coldest: float, warmest: float, estimated: dict[str, Json]
+) -> dict[str, Json]:
     """Build the manifest the web app reads: credit, baseline, encoding, grid and frames."""
     first, last = BASELINE
     return {
@@ -181,6 +265,7 @@ def index_file(frames: list[tuple[int, float]], coldest: float, warmest: float) 
         "source": SOURCE,
         "licence": "CC BY-NC 4.0",
         "baseline": f"{first}\u2013{last}",
+        "estimated": estimated,
         "years": STEP_YEARS,
         "coverage": "land",
         "columns": COLUMNS,

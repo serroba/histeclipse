@@ -15,6 +15,17 @@ const WarmingSchema = v.strictObject({
   source: v.string(),
   licence: v.string(),
   baseline: v.string(),
+  /**
+   * Where a cell had too few records in the baseline (#497): measured from a later period and
+   * shifted back by its band of latitude's difference, or the land's where its band has none.
+   */
+  estimated: v.strictObject({
+    from: v.string(),
+    /** The share of the land, by area, whose baseline is estimated so. */
+    share: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
+    bands: v.array(v.strictObject({ south: v.number(), shift: v.number() })),
+    landShift: v.number(),
+  }),
   /** How many years each frame averages, ending at its year. */
   years: v.pipe(v.number(), v.integer(), v.minValue(1)),
   coverage: v.literal('land'),
