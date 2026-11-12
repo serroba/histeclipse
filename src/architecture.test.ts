@@ -100,6 +100,12 @@ const KNOWN_CYCLE_EDGES: readonly string[] = [
 /** Methods on the `Globe` interface in `globe/scene.ts`: new things drawn are layers (#379). */
 const GLOBE_METHODS = 43;
 
+/**
+ * Variables `startApp` keeps at its top level, which any of its functions may change (#442).
+ * The parts of the page keep their own; this only comes down, to none.
+ */
+const APP_LETS = 7;
+
 describe('the shape of src', () => {
   it('no folder imports its way back into itself, beyond the cycles already known', () => {
     const graph = folderGraph();
@@ -111,6 +117,32 @@ describe('the shape of src', () => {
     expect(inCycles, 'a new cycle between folders: import downwards instead').toEqual(
       [...KNOWN_CYCLE_EDGES].sort(),
     );
+  });
+
+  it('no feature imports another: they meet through the page, in app.ts (#442)', () => {
+    const across = Object.entries(sources).flatMap(([path, text]) => {
+      const [top, feature] = path.replace(/^\.\//, '').split('/');
+      if (top !== 'features' || feature === undefined || !path.includes(`/${feature}/`)) return [];
+      return [...text.matchAll(IMPORT)]
+        .map((match) => resolve(path, match[1] ?? match[2] ?? ''))
+        .filter((target) => {
+          const [, , other] = target.split('/');
+          return (
+            target.startsWith('./features/') &&
+            other !== undefined &&
+            other !== feature &&
+            target.split('/').length > 3
+          );
+        })
+        .map((target) => `${path} -> ${target}`);
+    });
+    expect(across, 'pass what one feature needs of another through its context').toEqual([]);
+  });
+
+  it("startApp's shared variables only come down", () => {
+    const app = sources['./app.ts'] ?? '';
+    const lets = app.split('\n').filter((line) => /^ {2}let /.test(line)).length;
+    expect(lets, `startApp has ${String(lets)} top-level lets; set APP_LETS to it`).toBe(APP_LETS);
   });
 
   it('the Globe interface does not grow: draw new things with globe.addLayer', () => {
