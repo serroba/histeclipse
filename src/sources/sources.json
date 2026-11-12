@@ -12,6 +12,13 @@
     "cite": "Allwood et al. (2006), Stromatolite reef from the Early Archaean era of Australia, Nature 441, 714–718",
     "url": "https://doi.org/10.1038/nature04764"
   },
+  "ar6SeaLevel": {
+    "name": "IPCC AR6 global mean sea level",
+    "kind": "dataset",
+    "cite": "Palmer, M. D., Savita, A., Boeira Dias, F., Domingues, C. M., et al. (2023), Chapter 9 of the Working Group I Contribution to the IPCC Sixth Assessment Report - data for Cross-Chapter Box 9.1, Figure 1 (v20230523), NERC EDS Centre for Environmental Data Analysis: the assessed global mean sea level from tide gauges (1900–2010) and satellite altimetry (1993–2019), with 1-sigma uncertainty, against 1995–2014. Report: Fox-Kemper, B., Hewitt, H. T., Xiao, C., et al. (2021), Ocean, Cryosphere and Sea Level Change, in Climate Change 2021: The Physical Science Basis, Cambridge University Press, 1211–1362, doi:10.1017/9781009157896.011",
+    "url": "https://doi.org/10.5285/c622adfeb4cc4ae181dc4cca82c2311c",
+    "licence": "CC BY 4.0"
+  },
   "archaeoglobe": {
     "name": "ArchaeoGLOBE",
     "kind": "dataset",
@@ -285,6 +292,13 @@
     "url": "https://doi.org/10.1038/ncomms14845",
     "licence": "CC BY 4.0"
   },
+  "frederikse2020": {
+    "name": "Frederikse et al. 2020",
+    "kind": "paper",
+    "cite": "Frederikse, T., Landerer, F., Caron, L., Adhikari, S., Parkes, D., Humphrey, V. W., Dangendorf, S., Hogarth, P., Zanna, L., Cheng, L., Wu, Y.-H. (2020), The causes of sea-level rise since 1900, Nature 584, 393–397: global mean sea level from tide gauges, 1900–2018, with its budget of thermal expansion, glaciers, the Greenland and Antarctic ice sheets and water stored on land; data supplement: Zenodo record 3862995, doi:10.5281/zenodo.3862995",
+    "url": "https://doi.org/10.1038/s41586-020-2591-3",
+    "licence": "Data supplement: (c) 2020 All Rights Reserved; not redistributed by this site"
+  },
   "galileoMoonMaps": {
     "name": "Galileo and Voyager maps of Jupiter’s moons",
     "kind": "imagery",
@@ -311,6 +325,13 @@
     "cite": "The GlaMBIE Team (2025), Community estimate of global glacier mass changes from 2000 to 2023, Nature 639, 382–388; data: GlaMBIE (2024), Glacier Mass Balance Intercomparison Exercise (GlaMBIE) Dataset 1.0.0, World Glacier Monitoring Service, Zurich: each of the 19 glacier regions’ mass change per year, 2000–2023, combined and by kind of observation (altimetry, gravimetry, DEM differencing and the glaciological method)",
     "url": "https://doi.org/10.5904/wgms-glambie-2024-07",
     "licence": "None stated; open access on condition of correct citation (WGMS)"
+  },
+  "globalCarbonBudget2026": {
+    "name": "Global Carbon Budget 2026",
+    "kind": "dataset",
+    "cite": "Global Carbon Project (2026), Supplemental data of Global Carbon Budget 2026 (v0.1), ICOS Carbon Portal; budget paper: Friedlingstein, P., et al. (2026), Global Carbon Budget 2026, Earth System Science Data (in review)",
+    "url": "https://doi.org/10.18160/GCP-2026",
+    "licence": "CC BY 4.0"
   },
   "godwin1962": {
     "name": "Godwin 1962",
@@ -451,6 +472,13 @@
     "kind": "reference",
     "cite": "JAXA, “Martian Moons eXploration (MMX)” (mission page)",
     "url": "https://www.mmx.jaxa.jp/en/"
+  },
+  "jones2023": {
+    "name": "Jones et al. 2023",
+    "kind": "dataset",
+    "cite": "Jones, M. W., Peters, G. P., Gasser, T., Andrew, R. M., Schwingshackl, C., Gütschow, J., Houghton, R. A., Friedlingstein, P., Pongratz, J. & Le Quéré, C. (2023). National contributions to climate change due to historical emissions of carbon dioxide, methane, and nitrous oxide since 1850. Scientific Data 10, 155; data: version 2025.1 (Zenodo, doi:10.5281/zenodo.16640595)",
+    "url": "https://doi.org/10.5281/zenodo.16640595",
+    "licence": "CC BY 4.0"
   },
   "jouzel2007": {
     "name": "EPICA Dome C, Jouzel et al. 2007",
@@ -843,6 +871,13 @@
     "cite": "Natural Earth 1:110m country outlines",
     "url": "https://www.naturalearthdata.com",
     "licence": "Public domain"
+  },
+  "noaaLsa": {
+    "name": "NOAA Laboratory for Satellite Altimetry",
+    "kind": "dataset",
+    "cite": "NOAA/NESDIS/STAR Laboratory for Satellite Altimetry, Sea Level Rise: global mean sea level and the map of sea-level trends from TOPEX/Poseidon, Jason-1, Jason-2, Jason-3 and Sentinel-6MF since late 1992 (files of March 2025, through February 2025); annual signal removed, inverted barometer applied, no glacial isostatic adjustment. Altimetry data are provided by NOAA Laboratory for Satellite Altimetry",
+    "url": "https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/",
+    "licence": "Public domain (US government work); NOAA asks for the acknowledgement “Altimetry data are provided by NOAA Laboratory for Satellite Altimetry”"
   },
   "nsidcSeaIce": {
     "name": "NSIDC Sea Ice Index",

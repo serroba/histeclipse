@@ -76,6 +76,8 @@ test('rewrites a shared link into its full, explicit form', async ({ page }) => 
 });
 
 test('dragging the globe updates the camera in the URL', async ({ page }) => {
+  // On CI's software-rendered phone, drawing the globe takes most of 30 s before the drag starts.
+  test.slow();
   await page.goto('./?cam=0,0,3');
   await globeRendered(page);
   const globe = page.getByTestId('globe');

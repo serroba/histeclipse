@@ -321,6 +321,7 @@
     "title": "Sea level",
     "what": "Sea level through time, as each reconstruction has it, on a chart.",
     "sources": ["bintanja", "spratt", "miller", "vanDerMeer"],
+    "reading": ["ar6SeaLevel", "noaaLsa", "frederikse2020"],
     "others": "Each reconstruction is drawn side by side; they differ, the more so further back."
   },
   "plates": {
@@ -409,7 +410,9 @@
       "thornalley2018",
       "caesar2021",
       "kilbourne2022",
-      "terhaar2025"
+      "terhaar2025",
+      "globalCarbonBudget2026",
+      "jones2023"
     ]
   }
 }
