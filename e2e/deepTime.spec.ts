@@ -4,6 +4,7 @@ import {
   collectProblems,
   expect,
   globeRendered,
+  GPU,
   openSources,
   pickSpan,
   showDeepDetails,
@@ -65,67 +66,69 @@ test('leaving deep time brings back the date and the eclipse that was picked', a
   expect(problems).toEqual([]);
 });
 
-test('deep time shows Pangaea 250 million years ago, steps, plays and returns', async ({
-  page,
-}) => {
-  const problems = collectProblems(page);
-  // Far enough out to see the Moon, which deep time leaves out.
-  await page.goto('./?t=2024-06-21T12:00&cam=0,20,400');
-  await globeRendered(page);
-  const globe = page.getByTestId('globe');
-  const moon = page.locator('.space-marker[data-body="moon"]');
-  await expect(moon).toBeVisible();
-  await pickSpan(page, '540 Myr');
-  await showDeepDetails(page);
-  await page.getByRole('slider', { name: 'Millions of years ago' }).fill('-250');
-  await expect(page).toHaveURL(/&ma=250(&|$)/);
-  await expect(page.locator('.hud-date')).toHaveText('250 million years ago');
-  await expect(page.getByTestId('deep-period')).toHaveText('Triassic · Mesozoic');
-  await expect(globe).toHaveAttribute('data-deep-time', /245\.png .*250\.png$/);
-  // No day and night, and no Sun or Moon: their places today say nothing about then.
-  await expect(globe).toHaveAttribute('data-light', 'even');
-  await expect(moon).toBeHidden();
-  // Poles, field, tilt and day, folded away until asked for.
-  const facts = page.getByTestId('deep-facts');
-  await expect(facts.getByText('Magnetic field', { exact: true })).toBeHidden();
-  await facts.getByText('Poles, magnetic field, tilt, day and Sun').click();
-  await expect(facts.locator('dd').nth(0)).toContainText('spin axis then');
-  await expect(facts.locator('dd').nth(1)).toContainText('Reversing often');
-  await expect(facts.locator('dd').nth(2)).toContainText('22.1° and 24.5°');
-  await expect(facts.locator('dd').nth(3)).toContainText('23.5 h 70 Ma');
-  // What the map's colours and the milestone ticks mean, folded away too.
-  const key = page.getByTestId('deep-key');
-  await expect(key.getByText('Ice sheets and sea ice')).toBeHidden();
-  await key.getByText('What the colours mean').click();
-  await expect(key.getByText('Ice sheets and sea ice')).toBeVisible();
-  await expect(key.getByText('Extinctions')).toBeVisible();
-  // One fold at a time: opening the key closed the facts.
-  await expect(facts).not.toHaveAttribute('open', '');
-  await openSources(page);
-  await expect(page.getByRole('link', { name: 'PALEOMAP PaleoDEMs' })).toBeVisible();
-  // The year bar gives way to the deep-time bar.
-  await expect(page.getByLabel('Year', { exact: true })).toBeHidden();
+test(
+  'deep time shows Pangaea 250 million years ago, steps, plays and returns',
+  GPU,
+  async ({ page }) => {
+    const problems = collectProblems(page);
+    // Far enough out to see the Moon, which deep time leaves out.
+    await page.goto('./?t=2024-06-21T12:00&cam=0,20,400');
+    await globeRendered(page);
+    const globe = page.getByTestId('globe');
+    const moon = page.locator('.space-marker[data-body="moon"]');
+    await expect(moon).toBeVisible();
+    await pickSpan(page, '540 Myr');
+    await showDeepDetails(page);
+    await page.getByRole('slider', { name: 'Millions of years ago' }).fill('-250');
+    await expect(page).toHaveURL(/&ma=250(&|$)/);
+    await expect(page.locator('.hud-date')).toHaveText('250 million years ago');
+    await expect(page.getByTestId('deep-period')).toHaveText('Triassic · Mesozoic');
+    await expect(globe).toHaveAttribute('data-deep-time', /245\.png .*250\.png$/);
+    // No day and night, and no Sun or Moon: their places today say nothing about then.
+    await expect(globe).toHaveAttribute('data-light', 'even');
+    await expect(moon).toBeHidden();
+    // Poles, field, tilt and day, folded away until asked for.
+    const facts = page.getByTestId('deep-facts');
+    await expect(facts.getByText('Magnetic field', { exact: true })).toBeHidden();
+    await facts.getByText('Poles, magnetic field, tilt, day and Sun').click();
+    await expect(facts.locator('dd').nth(0)).toContainText('spin axis then');
+    await expect(facts.locator('dd').nth(1)).toContainText('Reversing often');
+    await expect(facts.locator('dd').nth(2)).toContainText('22.1° and 24.5°');
+    await expect(facts.locator('dd').nth(3)).toContainText('23.5 h 70 Ma');
+    // What the map's colours and the milestone ticks mean, folded away too.
+    const key = page.getByTestId('deep-key');
+    await expect(key.getByText('Ice sheets and sea ice')).toBeHidden();
+    await key.getByText('What the colours mean').click();
+    await expect(key.getByText('Ice sheets and sea ice')).toBeVisible();
+    await expect(key.getByText('Extinctions')).toBeVisible();
+    // One fold at a time: opening the key closed the facts.
+    await expect(facts).not.toHaveAttribute('open', '');
+    await openSources(page);
+    await expect(page.getByRole('link', { name: 'PALEOMAP PaleoDEMs' })).toBeVisible();
+    // The year bar gives way to the deep-time bar.
+    await expect(page.getByLabel('Year', { exact: true })).toBeHidden();
 
-  // Five million years earlier is before the end-Permian extinction (251.902 Ma).
-  await page.getByRole('button', { name: '5 million years earlier' }).click();
-  await expect(page).toHaveURL(/&ma=255(&|$)/);
-  await expect(page.getByTestId('deep-period')).toHaveText('Permian · Paleozoic');
+    // Five million years earlier is before the end-Permian extinction (251.902 Ma).
+    await page.getByRole('button', { name: '5 million years earlier' }).click();
+    await expect(page).toHaveURL(/&ma=255(&|$)/);
+    await expect(page.getByTestId('deep-period')).toHaveText('Permian · Paleozoic');
 
-  // Playing runs towards the present.
-  await page.getByRole('button', { name: 'Play' }).click();
-  await expect(page).not.toHaveURL(/&ma=255(&|$)/);
-  await page.getByRole('button', { name: 'Pause' }).click();
-  const ma = Number(new URL(page.url()).searchParams.get('ma'));
-  expect(ma).toBeLessThan(255);
+    // Playing runs towards the present.
+    await page.getByRole('button', { name: 'Play' }).click();
+    await expect(page).not.toHaveURL(/&ma=255(&|$)/);
+    await page.getByRole('button', { name: 'Pause' }).click();
+    const ma = Number(new URL(page.url()).searchParams.get('ma'));
+    expect(ma).toBeLessThan(255);
 
-  await pickSpan(page, 'Years');
-  await expect(page).not.toHaveURL(/ma=/);
-  await expect(globe).toHaveAttribute('data-deep-time', 'off');
-  await expect(globe).toHaveAttribute('data-light', 'sun');
-  await expect(moon).toBeVisible();
-  await expect(page.getByLabel('Year', { exact: true })).toBeVisible();
-  expect(problems).toEqual([]);
-});
+    await pickSpan(page, 'Years');
+    await expect(page).not.toHaveURL(/ma=/);
+    await expect(globe).toHaveAttribute('data-deep-time', 'off');
+    await expect(globe).toHaveAttribute('data-light', 'sun');
+    await expect(moon).toBeVisible();
+    await expect(page.getByLabel('Year', { exact: true })).toBeVisible();
+    expect(problems).toEqual([]);
+  },
+);
 
 test('deep time steps through milestones and shows each estimate with its source', async ({
   page,
@@ -165,66 +168,68 @@ test('deep time steps through milestones and shows each estimate with its source
   expect(problems).toEqual([]);
 });
 
-test('deep time colours the globe by temperature, with the global mean and its caveats', async ({
-  page,
-}) => {
-  const problems = collectProblems(page);
-  await page.goto('./?ma=250');
-  await globeRendered(page);
-  await showDeepDetails(page);
-  const globe = page.getByTestId('globe');
-  const toggle = page.getByRole('button', { name: 'Temperature', exact: true });
-  await expect(toggle).toHaveAttribute('aria-pressed', 'false');
-  await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
-  await expect(page).toHaveURL(/layers=[^&]*temperature/);
-  await expect(globe).toHaveAttribute(
-    'data-temperature',
-    /paleotemp\/245\.png .*paleotemp\/250\.png$/,
-  );
-  // The key says what the colours stand for: each one named, at its temperature.
-  const key = page.getByTestId('temperature-key');
-  await expect(page.locator('.temperature-heading')).toHaveText(
-    'Colours: the average temperature at the surface over a year',
-  );
-  await expect(key.getByRole('listitem')).toHaveCount(9);
-  await expect(key).toContainText('−40 °C or colder: ice-cap cold');
-  await expect(key).toContainText('15 °C: mild (today’s global mean)');
-  await expect(key).toContainText('45 °C or hotter: extreme heat');
-  // The hothouse after the end-Permian extinction, against today's world.
-  // Every model's mean, side by side: the two deep-time ones part by seven degrees here, and the
-  // ice ages' own (#457), the default, stands down beyond its 800,000 years.
-  await expect(page.getByTestId('temperature-mean')).toHaveText(
-    'Mean: Krapp et al. 2021, land — covers the last 798,000 years · Scotese 2022 32.9 °C (today 14.6 °C) · CESM, Li et al. 2023 25.5 °C (today 13.2 °C)',
-  );
-  await expect(page.getByTestId('temperature-map')).toContainText(
-    'The globe shows Scotese 2022. Krapp et al. 2021 does not reach this far.',
-  );
-  // Colour by the second model instead.
-  await page.getByLabel('Temperature model').selectOption('cesm');
-  await expect(page).toHaveURL(/temp=cesm/);
-  await expect(globe).toHaveAttribute('data-temperature', /cesm\/240\.png .*cesm\/250\.png$/);
-  await expect(page.getByTestId('temperature-map')).toContainText('about 3.75°');
-  // Beyond its reach Scotese's maps stand in, and the bar says so.
-  await page.getByRole('button', { name: '5 million years earlier' }).click();
-  await expect(globe).toHaveAttribute(
-    'data-temperature',
-    /paleotemp\/250\.png .*paleotemp\/255\.png$/,
-  );
-  await expect(page.getByTestId('temperature-map')).toContainText('does not reach this far');
-  await page.getByLabel('Temperature model').selectOption('scotese');
-  await expect(page.locator('.temperature-note')).toBeHidden();
+test(
+  'deep time colours the globe by temperature, with the global mean and its caveats',
+  GPU,
+  async ({ page }) => {
+    const problems = collectProblems(page);
+    await page.goto('./?ma=250');
+    await globeRendered(page);
+    await showDeepDetails(page);
+    const globe = page.getByTestId('globe');
+    const toggle = page.getByRole('button', { name: 'Temperature', exact: true });
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await expect(page).toHaveURL(/layers=[^&]*temperature/);
+    await expect(globe).toHaveAttribute(
+      'data-temperature',
+      /paleotemp\/245\.png .*paleotemp\/250\.png$/,
+    );
+    // The key says what the colours stand for: each one named, at its temperature.
+    const key = page.getByTestId('temperature-key');
+    await expect(page.locator('.temperature-heading')).toHaveText(
+      'Colours: the average temperature at the surface over a year',
+    );
+    await expect(key.getByRole('listitem')).toHaveCount(9);
+    await expect(key).toContainText('−40 °C or colder: ice-cap cold');
+    await expect(key).toContainText('15 °C: mild (today’s global mean)');
+    await expect(key).toContainText('45 °C or hotter: extreme heat');
+    // The hothouse after the end-Permian extinction, against today's world.
+    // Every model's mean, side by side: the two deep-time ones part by seven degrees here, and the
+    // ice ages' own (#457), the default, stands down beyond its 800,000 years.
+    await expect(page.getByTestId('temperature-mean')).toHaveText(
+      'Mean: Krapp et al. 2021, land — covers the last 798,000 years · Scotese 2022 32.9 °C (today 14.6 °C) · CESM, Li et al. 2023 25.5 °C (today 13.2 °C)',
+    );
+    await expect(page.getByTestId('temperature-map')).toContainText(
+      'The globe shows Scotese 2022. Krapp et al. 2021 does not reach this far.',
+    );
+    // Colour by the second model instead.
+    await page.getByLabel('Temperature model').selectOption('cesm');
+    await expect(page).toHaveURL(/temp=cesm/);
+    await expect(globe).toHaveAttribute('data-temperature', /cesm\/240\.png .*cesm\/250\.png$/);
+    await expect(page.getByTestId('temperature-map')).toContainText('about 3.75°');
+    // Beyond its reach Scotese's maps stand in, and the bar says so.
+    await page.getByRole('button', { name: '5 million years earlier' }).click();
+    await expect(globe).toHaveAttribute(
+      'data-temperature',
+      /paleotemp\/250\.png .*paleotemp\/255\.png$/,
+    );
+    await expect(page.getByTestId('temperature-map')).toContainText('does not reach this far');
+    await page.getByLabel('Temperature model').selectOption('scotese');
+    await expect(page.locator('.temperature-note')).toBeHidden();
 
-  // The 65 Ma map stands out, and the site says so.
-  await page.goto('./?ma=65&layers=temperature');
-  await globeRendered(page);
-  await expect(page.locator('.temperature-note')).toContainText('does not say why');
+    // The 65 Ma map stands out, and the site says so.
+    await page.goto('./?ma=65&layers=temperature');
+    await globeRendered(page);
+    await expect(page.locator('.temperature-note')).toContainText('does not say why');
 
-  await page.getByRole('button', { name: 'Temperature', exact: true }).click();
-  await expect(globe).toHaveAttribute('data-temperature', 'off');
-  await expect(page.locator('.temperature-legend')).toBeHidden();
-  expect(problems).toEqual([]);
-});
+    await page.getByRole('button', { name: 'Temperature', exact: true }).click();
+    await expect(globe).toHaveAttribute('data-temperature', 'off');
+    await expect(page.locator('.temperature-legend')).toBeHidden();
+    expect(problems).toEqual([]);
+  },
+);
 
 test('deep time charts sea level by four reconstructions, side by side', async ({ page }) => {
   const problems = collectProblems(page);
@@ -278,7 +283,7 @@ for (const rate of [60, 120]) {
   });
 }
 
-test('deep time narrows to the ice ages, in thousands of years', async ({ page }) => {
+test('deep time narrows to the ice ages, in thousands of years', GPU, async ({ page }) => {
   const problems = collectProblems(page);
   await page.goto('./?ma=250&layers=sealevel');
   await globeRendered(page);
@@ -357,7 +362,7 @@ test('deep time draws recent coasts from NOAA’s depths on the 540 Myr scale to
   expect(problems).toEqual([]);
 });
 
-test('deep time outlines a second reconstruction’s continents', async ({ page }) => {
+test('deep time outlines a second reconstruction’s continents', GPU, async ({ page }) => {
   const problems = collectProblems(page);
   await page.goto('./?ma=252');
   await globeRendered(page);
@@ -417,53 +422,55 @@ test('before the reconstructions, the reader picks whose hypotheses the globe sk
   expect(problems).toEqual([]);
 });
 
-test('deep time reaches back 4.6 billion years, sketching hypotheses before the maps', async ({
-  page,
-}) => {
-  const problems = collectProblems(page);
-  await page.goto('./?ma=250');
-  await globeRendered(page);
-  await showDeepDetails(page);
-  const globe = page.getByTestId('globe');
-  await page.getByRole('button', { name: '4.6 Gyr' }).click();
-  await expect(page).toHaveURL(/scale=eons/);
-  await expect(page.getByTestId('uncharted-note')).toBeHidden();
+test(
+  'deep time reaches back 4.6 billion years, sketching hypotheses before the maps',
+  GPU,
+  async ({ page }) => {
+    const problems = collectProblems(page);
+    await page.goto('./?ma=250');
+    await globeRendered(page);
+    await showDeepDetails(page);
+    const globe = page.getByTestId('globe');
+    await page.getByRole('button', { name: '4.6 Gyr' }).click();
+    await expect(page).toHaveURL(/scale=eons/);
+    await expect(page.getByTestId('uncharted-note')).toBeHidden();
 
-  // Before the elevation maps reach, no map: a sketch of a hypothesis, which says so.
-  await page.goto('./?ma=3000&scale=eons');
-  await globeRendered(page);
-  await showDeepDetails(page);
-  await expect(page.locator('.hud-date')).toHaveText('3,000 million years ago');
-  await expect(page.locator('.hud-detail')).toHaveText('Mesoarchean era · Archean eon');
-  await expect(globe).toHaveAttribute('data-uncharted', 'true');
-  await expect(page.getByTestId('sketch-headline')).toContainText('Sketch, not a map');
-  await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toBeDisabled();
+    // Before the elevation maps reach, no map: a sketch of a hypothesis, which says so.
+    await page.goto('./?ma=3000&scale=eons');
+    await globeRendered(page);
+    await showDeepDetails(page);
+    await expect(page.locator('.hud-date')).toHaveText('3,000 million years ago');
+    await expect(page.locator('.hud-detail')).toHaveText('Mesoarchean era · Archean eon');
+    await expect(globe).toHaveAttribute('data-uncharted', 'true');
+    await expect(page.getByTestId('sketch-headline')).toContainText('Sketch, not a map');
+    await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toBeDisabled();
 
-  // Milestones reach back too: the next older is the Late Heavy Bombardment's oldest view.
-  await page.getByRole('button', { name: 'Earlier milestone' }).click();
-  await expect(page).toHaveURL(/&ma=4200(&|$)/);
-  const milestones = page.getByTestId('deep-milestones');
-  await milestones.locator('summary').click();
-  await expect(milestones.locator('[data-milestone="late-heavy-bombardment"]')).toContainText(
-    'Boehnke & Harrison 2016',
-  );
+    // Milestones reach back too: the next older is the Late Heavy Bombardment's oldest view.
+    await page.getByRole('button', { name: 'Earlier milestone' }).click();
+    await expect(page).toHaveURL(/&ma=4200(&|$)/);
+    const milestones = page.getByTestId('deep-milestones');
+    await milestones.locator('summary').click();
+    await expect(milestones.locator('[data-milestone="late-heavy-bombardment"]')).toContainText(
+      'Boehnke & Harrison 2016',
+    );
 
-  // Back to the 540 Myr scale: it opens at the elevation maps' oldest.
-  // The Plates layer fills in one reconstruction's continents where the masks reach, 1.8 Gyr.
-  await page.goto('./?ma=1500&scale=eons&layers=plates');
-  await globeRendered(page);
-  await expect(globe).toHaveAttribute('data-uncharted', 'true');
-  await expect(globe).toHaveAttribute('data-plates', /plates\/1495\.png .*plates\/1500\.png$/);
-  await expect(page.getByTestId('plates-note')).toContainText('No surface map reaches this far');
-  await expect(page.getByTestId('uncharted-note')).toBeVisible();
-  await expect(page.getByTestId('sketch-note')).toBeHidden();
-  await page.goto('./?ma=3000&scale=eons&layers=plates');
-  await globeRendered(page);
-  await expect(globe).toHaveAttribute('data-plates', 'off');
-  await expect(page.getByTestId('plates-note')).toContainText('reach back 1,800 million years');
+    // Back to the 540 Myr scale: it opens at the elevation maps' oldest.
+    // The Plates layer fills in one reconstruction's continents where the masks reach, 1.8 Gyr.
+    await page.goto('./?ma=1500&scale=eons&layers=plates');
+    await globeRendered(page);
+    await expect(globe).toHaveAttribute('data-uncharted', 'true');
+    await expect(globe).toHaveAttribute('data-plates', /plates\/1495\.png .*plates\/1500\.png$/);
+    await expect(page.getByTestId('plates-note')).toContainText('No surface map reaches this far');
+    await expect(page.getByTestId('uncharted-note')).toBeVisible();
+    await expect(page.getByTestId('sketch-note')).toBeHidden();
+    await page.goto('./?ma=3000&scale=eons&layers=plates');
+    await globeRendered(page);
+    await expect(globe).toHaveAttribute('data-plates', 'off');
+    await expect(page.getByTestId('plates-note')).toContainText('reach back 1,800 million years');
 
-  await page.getByRole('button', { name: '540 Myr' }).click();
-  await expect(page).toHaveURL(/&ma=540(&|$)/);
-  await expect(globe).toHaveAttribute('data-uncharted', 'false');
-  expect(problems).toEqual([]);
-});
+    await page.getByRole('button', { name: '540 Myr' }).click();
+    await expect(page).toHaveURL(/&ma=540(&|$)/);
+    await expect(globe).toHaveAttribute('data-uncharted', 'false');
+    expect(problems).toEqual([]);
+  },
+);

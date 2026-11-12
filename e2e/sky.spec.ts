@@ -2,7 +2,15 @@
 
 import type { Page } from '@playwright/test';
 
-import { collectProblems, expect, freeSpot, globeRendered, skyRendered, test } from './support';
+import {
+  collectProblems,
+  expect,
+  freeSpot,
+  globeRendered,
+  GPU,
+  skyRendered,
+  test,
+} from './support';
 
 const BABYLON_NIGHT_3000_BCE = './?mode=sky&t=-2999-03-20T19:00&loc=32.5422,44.4209';
 
@@ -35,22 +43,26 @@ test('the Sky button stands you where the globe is looking, and back again', asy
   expect(problems).toEqual([]);
 });
 
-test('a night in 3000 BCE is full of stars, and the Sun hides them by day', async ({ page }) => {
-  await page.goto(BABYLON_NIGHT_3000_BCE);
-  await skyRendered(page);
-  const sky = page.getByTestId('sky');
-  await expect(sky).toHaveAttribute('data-sun-altitude', /^-\d\d/);
-  const seen = Number(await sky.getAttribute('data-stars-seen'));
-  expect(seen).toBeGreaterThan(2000);
-  // The Southern Cross's neighbours stood over Babylon then; the hint names them.
-  await expect(page.getByText('Centaurus', { exact: true })).toBeVisible();
-  // ΔT is uncertain by about half an hour then, and the page says what that means.
-  await expect(page.getByText(/the sky may be turned up to ±7\.\d°/)).toBeVisible();
+test(
+  'a night in 3000 BCE is full of stars, and the Sun hides them by day',
+  GPU,
+  async ({ page }) => {
+    await page.goto(BABYLON_NIGHT_3000_BCE);
+    await skyRendered(page);
+    const sky = page.getByTestId('sky');
+    await expect(sky).toHaveAttribute('data-sun-altitude', /^-\d\d/);
+    const seen = Number(await sky.getAttribute('data-stars-seen'));
+    expect(seen).toBeGreaterThan(2000);
+    // The Southern Cross's neighbours stood over Babylon then; the hint names them.
+    await expect(page.getByText('Centaurus', { exact: true })).toBeVisible();
+    // ΔT is uncertain by about half an hour then, and the page says what that means.
+    await expect(page.getByText(/the sky may be turned up to ±7\.\d°/)).toBeVisible();
 
-  await page.goto('./?mode=sky&t=2025-03-20T09:00&loc=32.5422,44.4209');
-  await skyRendered(page);
-  await expect(sky).toHaveAttribute('data-stars-seen', '0');
-});
+    await page.goto('./?mode=sky&t=2025-03-20T09:00&loc=32.5422,44.4209');
+    await skyRendered(page);
+    await expect(sky).toHaveAttribute('data-stars-seen', '0');
+  },
+);
 
 test('dragging and zooming the sky turn the view, and the link follows', async ({ page }) => {
   await page.goto(BABYLON_NIGHT_3000_BCE);
@@ -105,7 +117,7 @@ test('from the central line in 2024 the Moon hides the whole Sun; farther north 
   await expect(sky).toHaveAttribute('data-stars-seen', '0');
 });
 
-test('the Moon turns red in the umbra during a lunar eclipse', async ({ page }) => {
+test('the Moon turns red in the umbra during a lunar eclipse', GPU, async ({ page }) => {
   await page.goto('./?mode=sky&t=2022-11-08T10:59&loc=40.7,-74');
   await skyRendered(page);
   await expect(page.getByTestId('sky')).toHaveAttribute('data-moon-sunlight', '0.000');

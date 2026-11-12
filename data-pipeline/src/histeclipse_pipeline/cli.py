@@ -53,6 +53,7 @@ from histeclipse_pipeline.measured_warming import fetch_measured_warming
 from histeclipse_pipeline.moon_orbits import fetch_moon_orbits
 from histeclipse_pipeline.natural_forcing import fetch_natural_forcing
 from histeclipse_pipeline.ocean_heat import fetch_ocean_heat
+from histeclipse_pipeline.ocean_oxygen import fetch_ocean_oxygen
 from histeclipse_pipeline.ohm import fetch_ohm
 from histeclipse_pipeline.p3k14c import fetch_p3k14c
 from histeclipse_pipeline.paleo_co2 import fetch_co2_archive
@@ -348,7 +349,7 @@ def planet_maps(args: Arguments) -> int:  # pragma: no cover - needs network acc
 
 
 def earth_tiles(args: Arguments) -> int:  # pragma: no cover - needs network access
-    """Cut Earth's full-size Blue Marble into tiles for the closest views (public/textures)."""
+    """Cut Earth's Blue Marble, full size and at 500 m, into tiles for the closest views."""
     written = fetch_earth_tiles(args.out, Path(".cache/planet-maps"))
     return _say(f"wrote {written / 1e6:.1f} MB of tiles to {args.out}")
 
@@ -700,6 +701,12 @@ def permafrost(args: Arguments) -> int:  # pragma: no cover - needs network acce
     return _say(f"wrote {count} permafrost borehole-years and extent-years to {args.out}")
 
 
+def ocean_oxygen(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the ocean's oxygen inventory since 2004 and its trend map (GOBAI-O2)."""
+    points = fetch_ocean_oxygen(args.out)
+    return _say(f"wrote {points} ocean-oxygen points to {args.out}")
+
+
 def energy_imbalance(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the Earth's energy imbalance measured from space (CERES EBAF)."""
     count = fetch_imbalance(args.out)
@@ -828,7 +835,7 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     ),
     "earth-tiles": (
         earth_tiles,
-        "cut Earth's full-size Blue Marble into tiles fetched only for the ground in view",
+        "cut Earth's Blue Marble (full size and 500 m) into tiles fetched only for the view",
         "output folder (public/textures/earth-tiles)",
     ),
     "moon-orbits": (
@@ -1104,6 +1111,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "permafrost": (
         permafrost,
         "write permafrost borehole temperatures (GTN-P) and northern extent (ESA CCI)",
+        "output directory",
+    ),
+    "ocean-oxygen": (
+        ocean_oxygen,
+        "write the ocean's oxygen inventory since 2004 and its trend map (GOBAI-O2 v2.3)",
         "output directory",
     ),
     "energy-imbalance": (
