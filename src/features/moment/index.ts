@@ -19,6 +19,7 @@ import { formatInCalendar } from '../../time/calendars';
 import { element } from '../../ui/dom';
 import { formatMa, periodAt, periodWords } from '../../deepTime/periods';
 import { errorMessage } from '../../util/errors';
+import './moment.css';
 
 /** What the moment asks of the rest of the page. */
 export interface MomentContext extends PartContext {

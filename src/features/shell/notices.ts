@@ -1,6 +1,7 @@
 /** What went wrong, told to the reader once each (#474). */
 
 import { element } from '../../ui/dom';
+import './notices.css';
 
 export interface Notices {
   readonly list: HTMLElement;

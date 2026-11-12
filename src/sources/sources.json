@@ -1,192 +1,74 @@
 {
-  "blueMarble": {
-    "name": "NASA Blue Marble",
-    "kind": "imagery",
-    "cite": "NASA Earth Observatory, Blue Marble: Next Generation (Stöckli et al. 2005)",
-    "url": "https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/",
-    "licence": "NASA, public domain"
+  "aadr": {
+    "name": "Allen Ancient DNA Resource",
+    "kind": "dataset",
+    "cite": "Allen Ancient DNA Resource v66.p1 (Mallick et al. 2024, Scientific Data 11, 182; Reich lab)",
+    "url": "https://doi.org/10.7910/DVN/FFIDCW",
+    "licence": "CC0 1.0"
   },
-  "de441": {
-    "name": "JPL DE441",
-    "kind": "model",
-    "cite": "Park, Folkner, Williams & Boggs (2021), The JPL Planetary and Lunar Ephemerides DE440 and DE441, Astronomical Journal 161, 105",
-    "url": "https://doi.org/10.3847/1538-3881/abd414",
-    "licence": "NASA/JPL, public domain"
+  "allwood2006": {
+    "name": "Allwood et al. 2006",
+    "kind": "paper",
+    "cite": "Allwood et al. (2006), Stromatolite reef from the Early Archaean era of Australia, Nature 441, 714–718",
+    "url": "https://doi.org/10.1038/nature04764"
   },
-  "skyfield": {
-    "name": "Skyfield",
+  "archaeoglobe": {
+    "name": "ArchaeoGLOBE",
+    "kind": "dataset",
+    "cite": "ArchaeoGLOBE Project (2019), Archaeological assessment reveals Earth’s early transformation through land use, Science 365, 897; Harvard Dataverse",
+    "url": "https://doi.org/10.1126/science.aax1192",
+    "licence": "CC0 1.0"
+  },
+  "archinal2018": {
+    "name": "Archinal et al. 2018",
     "kind": "model",
-    "cite": "Rhodes, Skyfield: high precision research-grade positions for planets and Earth satellites",
-    "url": "https://rhodesmill.org/skyfield/",
+    "cite": "Archinal, B. A., Acton, C. H., A’Hearn, M. F., et al. (2018). Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015. Celestial Mechanics and Dynamical Astronomy 130, 22",
+    "url": "https://doi.org/10.1007/s10569-017-9805-5"
+  },
+  "bahcall2005": {
+    "name": "Bahcall et al. 2005",
+    "kind": "paper",
+    "cite": "Bahcall, J. N., Serenelli, A. M. & Basu, S. (2005). New solar opacities, abundances, helioseismology, and neutrino fluxes. The Astrophysical Journal 621, L85–L88",
+    "url": "https://doi.org/10.1086/428929"
+  },
+  "barber2003": {
+    "name": "Barber 2003",
+    "kind": "paper",
+    "cite": "Barber, J. (2003). Photosystem II: the engine of life. Quarterly Reviews of Biophysics 36, 71–89",
+    "url": "https://doi.org/10.1017/S0033583502003839"
+  },
+  "batchelor": {
+    "name": "Batchelor et al. 2019",
+    "kind": "paper",
+    "cite": "Batchelor et al. (2019), The configuration of Northern Hemisphere ice sheets through the Quaternary, Nature Communications 10, 3713; shapefiles on OSF",
+    "url": "https://osf.io/7jen3/",
+    "licence": "No licence stated"
+  },
+  "bereiter": {
+    "name": "Bereiter et al. 2015",
+    "kind": "paper",
+    "cite": "Bereiter et al. (2015), Antarctic CO₂ composite (EPICA Dome C, Lüthi et al. 2008), Geophysical Research Letters; NOAA WDC Paleoclimatology",
+    "url": "https://doi.org/10.1002/2014GL061957"
+  },
+  "berkeleyEarth": {
+    "name": "Berkeley Earth",
+    "kind": "dataset",
+    "cite": "Rohde, R. A., Hausfather, Z. (2020), The Berkeley Earth Land/Ocean Temperature Record, Earth System Science Data 12, 3469–3479; data: Berkeley Earth gridded land temperatures (Complete_TAVG_LatLong1, 1° monthly anomalies), release of 9 January 2025",
+    "url": "https://doi.org/10.5194/essd-12-3469-2020",
+    "licence": "CC BY-NC 4.0"
+  },
+  "bgeSmall": {
+    "name": "bge-small-en-v1.5",
+    "kind": "model",
+    "cite": "Xiao, Liu, Zhang & Muennighoff (2023), C-Pack: Packaged Resources To Advance General Chinese Embedding, arXiv:2309.07597; the Beijing Academy of Artificial Intelligence’s small English embedding model, bge-small-en-v1.5, as ONNX quantised to 8 bits (Xenova)",
+    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5",
     "licence": "MIT"
   },
-  "deltaTSplines": {
-    "name": "Morrison et al. 2021",
+  "bintanja": {
+    "name": "Bintanja & van de Wal 2008",
     "kind": "paper",
-    "cite": "Morrison, Stephenson, Hohenkerk & Zawilski (2021), Addendum 2020 to \"Measurement of the Earth’s rotation: 720 BC to AD 2015\", Proceedings of the Royal Society A 477",
-    "url": "https://doi.org/10.1098/rspa.2020.0776"
-  },
-  "deltaTLongTerm": {
-    "name": "Stephenson et al. 2016",
-    "kind": "paper",
-    "cite": "Stephenson, Morrison & Hohenkerk (2016), Measurement of the Earth’s rotation: 720 BC to AD 2015, Proceedings of the Royal Society A 472",
-    "url": "https://doi.org/10.1098/rspa.2016.0404"
-  },
-  "vsop87": {
-    "name": "VSOP87",
-    "kind": "model",
-    "cite": "Bretagnon & Francou (1988), Planetary theories in rectangular and spherical variables: VSOP87 solutions, Astronomy & Astrophysics 202, 309; via the astronomia library (MIT)",
-    "url": "https://ui.adsabs.harvard.edu/abs/1988A&A...202..309B"
-  },
-  "meeus": {
-    "name": "Meeus, Astronomical Algorithms",
-    "kind": "paper",
-    "cite": "Meeus (1998), Astronomical Algorithms, 2nd edition, Willmann-Bell: the Sun (ch. 25), nutation (ch. 22) and sidereal time (ch. 12)",
-    "url": "https://search.worldcat.org/search?q=Meeus+Astronomical+Algorithms+2nd+edition"
-  },
-  "elpmpp02": {
-    "name": "ELP/MPP02",
-    "kind": "model",
-    "cite": "Chapront & Francou (2003), The lunar theory ELP revisited, Astronomy & Astrophysics 404, 735; via the astronomia library (MIT)",
-    "url": "https://doi.org/10.1051/0004-6361:20030529"
-  },
-  "vondrak": {
-    "name": "Vondrák et al. 2011",
-    "kind": "paper",
-    "cite": "Vondrák, Capitaine & Wallace (2011), New precession expressions, valid for long time intervals, Astronomy & Astrophysics 534, A22",
-    "url": "https://doi.org/10.1051/0004-6361/201117274"
-  },
-  "morrison2004": {
-    "name": "Morrison & Stephenson 2004",
-    "kind": "paper",
-    "cite": "Morrison & Stephenson (2004), Historical values of the Earth’s clock error ΔT and the calculation of eclipses, Journal for the History of Astronomy 35, 327–336",
-    "url": "https://doi.org/10.1177/002182860403500305"
-  },
-  "iers": {
-    "name": "IERS",
-    "kind": "dataset",
-    "cite": "International Earth Rotation and Reference Systems Service: the length of today’s day",
-    "url": "https://www.iers.org"
-  },
-  "wells1963": {
-    "name": "Wells 1963",
-    "kind": "paper",
-    "cite": "Wells (1963), Coral growth and geochronometry, Nature 197, 948–950",
-    "url": "https://doi.org/10.1038/197948a0"
-  },
-  "williams2000": {
-    "name": "Williams 2000",
-    "kind": "paper",
-    "cite": "Williams (2000), Geological constraints on the Precambrian history of Earth’s rotation and the Moon’s orbit, Reviews of Geophysics 38, 37–59",
-    "url": "https://doi.org/10.1029/1999RG900016"
-  },
-  "deWinter2020": {
-    "name": "de Winter et al. 2020",
-    "kind": "paper",
-    "cite": "de Winter et al. (2020), Subdaily-scale chemical variability in a Torreites sanchezi rudist shell, Paleoceanography and Paleoclimatology 35",
-    "url": "https://doi.org/10.1029/2019PA003723"
-  },
-  "laskar2004": {
-    "name": "Laskar et al. 2004",
-    "kind": "model",
-    "cite": "Laskar et al. (2004), A long-term numerical solution for the insolation quantities of the Earth, Astronomy & Astrophysics 428, 261–285",
-    "url": "https://doi.org/10.1051/0004-6361:20041335"
-  },
-  "laskar1993": {
-    "name": "Laskar, Joutel & Robutel 1993",
-    "kind": "paper",
-    "cite": "Laskar, Joutel & Robutel (1993), Stabilization of the Earth’s obliquity by the Moon, Nature 361, 615–617",
-    "url": "https://doi.org/10.1038/361615a0"
-  },
-  "gough1981": {
-    "name": "Gough 1981",
-    "kind": "paper",
-    "cite": "Gough (1981), Solar interior structure and luminosity variations, Solar Physics 74, 21–34",
-    "url": "https://doi.org/10.1007/BF00151270"
-  },
-  "saganMullen1972": {
-    "name": "Sagan & Mullen 1972",
-    "kind": "paper",
-    "cite": "Sagan & Mullen (1972), Earth and Mars: evolution of atmospheres and surface temperatures, Science 177, 52–56",
-    "url": "https://doi.org/10.1126/science.177.4043.52"
-  },
-  "tarduno2010": {
-    "name": "Tarduno et al. 2010",
-    "kind": "paper",
-    "cite": "Tarduno et al. (2010), Geodynamo, solar wind, and magnetopause 3.4 to 3.45 billion years ago, Science 327, 1238–1240",
-    "url": "https://doi.org/10.1126/science.1183445"
-  },
-  "tarduno2015": {
-    "name": "Tarduno et al. 2015",
-    "kind": "paper",
-    "cite": "Tarduno et al. (2015), A Hadean to Paleoarchean geodynamo recorded by single zircon crystals, Science 349, 521–524",
-    "url": "https://doi.org/10.1126/science.aaa9114"
-  },
-  "torsvik2012": {
-    "name": "Torsvik et al. 2012",
-    "kind": "paper",
-    "cite": "Torsvik et al. (2012), Phanerozoic polar wander, palaeogeography and dynamics, Earth-Science Reviews 114, 325–368",
-    "url": "https://doi.org/10.1016/j.earscirev.2012.06.007"
-  },
-  "torsvikCocks": {
-    "name": "Torsvik & Cocks, Earth History and Palaeogeography",
-    "kind": "paper",
-    "cite": "Torsvik & Cocks (2016), Earth History and Palaeogeography, Cambridge University Press: a textbook, period by period",
-    "url": "https://doi.org/10.1017/9781316225523"
-  },
-  "boucot2013": {
-    "name": "Boucot, Chen & Scotese 2013",
-    "kind": "paper",
-    "cite": "Boucot, Chen & Scotese (2013), Phanerozoic Paleoclimate: an atlas of lithologic indicators of climate, SEPM Concepts in Sedimentology and Paleontology 11",
-    "url": "https://doi.org/10.2110/sepmcsp.11"
-  },
-  "montanez2013": {
-    "name": "Montañez & Poulsen 2013",
-    "kind": "paper",
-    "cite": "Montañez & Poulsen (2013), The Late Paleozoic Ice Age: an evolving paradigm, Annual Review of Earth and Planetary Sciences 41, 629–656",
-    "url": "https://doi.org/10.1146/annurev.earth.031208.100118"
-  },
-  "seton2020": {
-    "name": "Seton et al. 2020",
-    "kind": "dataset",
-    "cite": "Seton et al. (2020), A global data set of present-day oceanic crustal age and seafloor spreading parameters, Geochemistry, Geophysics, Geosystems 21",
-    "url": "https://doi.org/10.1029/2020GC009214"
-  },
-  "steinberger2008": {
-    "name": "Steinberger & Torsvik 2008",
-    "kind": "paper",
-    "cite": "Steinberger & Torsvik (2008), Absolute plate motions and true polar wander in the absence of hotspot tracks, Nature 452, 620–623",
-    "url": "https://doi.org/10.1038/nature06824"
-  },
-  "merdith2021": {
-    "name": "Merdith et al. 2021",
-    "kind": "model",
-    "cite": "Merdith et al. (2021), Extending full-plate tectonic models into deep time, Earth-Science Reviews 214, 103477",
-    "url": "https://doi.org/10.1016/j.earscirev.2020.103477"
-  },
-  "muller2019": {
-    "name": "Müller et al. 2019",
-    "kind": "model",
-    "cite": "Müller et al. (2019), A global plate model including lithospheric deformation along major rifts and orogens since the Triassic, Tectonics 38",
-    "url": "https://doi.org/10.1029/2018TC005462"
-  },
-  "gplatesPortal": {
-    "name": "GPlates Portal",
-    "kind": "model",
-    "cite": "The GPlates Portal (EarthByte): reconstructions to explore in the browser",
-    "url": "https://portal.gplates.org"
-  },
-  "finnegan2011": {
-    "name": "Finnegan et al. 2011",
-    "kind": "paper",
-    "cite": "Finnegan et al. (2011), The magnitude and duration of Late Ordovician–Early Silurian glaciation, Science 331, 903–906",
-    "url": "https://doi.org/10.1126/science.1200803"
-  },
-  "burgess2014": {
-    "name": "Burgess, Bowring & Shen 2014",
-    "kind": "paper",
-    "cite": "Burgess, Bowring & Shen (2014), High-precision timeline for Earth’s most severe extinction, PNAS 111, 3316–3321",
-    "url": "https://doi.org/10.1073/pnas.1317692111"
+    "cite": "Bintanja & van de Wal (2008), Nature 454; NOAA World Data Service",
+    "url": "https://doi.org/10.1038/nature07158"
   },
   "blackburn2013": {
     "name": "Blackburn et al. 2013",
@@ -194,23 +76,112 @@
     "cite": "Blackburn et al. (2013), Zircon U-Pb geochronology links the end-Triassic extinction with the Central Atlantic Magmatic Province, Science 340, 941–945",
     "url": "https://doi.org/10.1126/science.1234204"
   },
-  "zachos2001": {
-    "name": "Zachos et al. 2001",
+  "bleeker2003": {
+    "name": "Bleeker 2003",
     "kind": "paper",
-    "cite": "Zachos et al. (2001), Trends, rhythms, and aberrations in global climate 65 Ma to present, Science 292, 686–693",
-    "url": "https://doi.org/10.1126/science.1059412"
+    "cite": "Bleeker (2003), The late Archean record: a puzzle in ca. 35 pieces, Lithos 71, 99–134",
+    "url": "https://doi.org/10.1016/j.lithos.2003.07.003"
   },
-  "hu2016": {
-    "name": "Hu et al. 2016",
-    "kind": "paper",
-    "cite": "Hu et al. (2016), The timing of India-Asia collision onset: facts, theories, controversies, Earth-Science Reviews 160, 264–299",
-    "url": "https://doi.org/10.1016/j.earscirev.2016.07.014"
+  "blueMarble": {
+    "name": "NASA Blue Marble",
+    "kind": "imagery",
+    "cite": "NASA Earth Observatory, Blue Marble: Next Generation (Stöckli et al. 2005)",
+    "url": "https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/",
+    "licence": "NASA, public domain"
   },
-  "odea2016": {
-    "name": "O’Dea et al. 2016",
+  "boucot2013": {
+    "name": "Boucot, Chen & Scotese 2013",
     "kind": "paper",
-    "cite": "O’Dea et al. (2016), Formation of the Isthmus of Panama, Science Advances 2",
-    "url": "https://doi.org/10.1126/sciadv.1600883"
+    "cite": "Boucot, Chen & Scotese (2013), Phanerozoic Paleoclimate: an atlas of lithologic indicators of climate, SEPM Concepts in Sedimentology and Paleontology 11",
+    "url": "https://doi.org/10.2110/sepmcsp.11"
+  },
+  "bowring1999": {
+    "name": "Bowring & Williams 1999",
+    "kind": "paper",
+    "cite": "Bowring & Williams (1999), Priscoan (4.00–4.03 Ga) orthogneisses from northwestern Canada, Contributions to Mineralogy and Petrology 134, 3–16",
+    "url": "https://doi.org/10.1007/s004100050465"
+  },
+  "brehm2022": {
+    "name": "Brehm et al. 2022",
+    "kind": "paper",
+    "cite": "Brehm, N., Christl, M., Knowles, T. D. J., et al. (2022). Tree-rings reveal two strong solar proton events in 7176 and 5259 BCE. Nature Communications 13, 1196",
+    "url": "https://doi.org/10.1038/s41467-022-28804-9"
+  },
+  "burgess2014": {
+    "name": "Burgess, Bowring & Shen 2014",
+    "kind": "paper",
+    "cite": "Burgess, Bowring & Shen (2014), High-precision timeline for Earth’s most severe extinction, PNAS 111, 3316–3321",
+    "url": "https://doi.org/10.1073/pnas.1317692111"
+  },
+  "cao2024": {
+    "name": "Cao et al. 2024",
+    "kind": "model",
+    "cite": "Cao et al. (2024), a 1.8 Ga plate model, Geoscience Frontiers 15, 101922; Zenodo",
+    "url": "https://doi.org/10.5281/zenodo.13628813",
+    "licence": "CC BY 4.0"
+  },
+  "cassiniJupiter": {
+    "name": "Cassini map of Jupiter",
+    "kind": "imagery",
+    "cite": "NASA/JPL/Space Science Institute, “Cassini’s Best Maps of Jupiter (Cylindrical Map)”, from the flyby of December 2000, NASA Photojournal PIA07782 (2006)",
+    "url": "https://science.nasa.gov/photojournal/cassinis-best-maps-of-jupiter-cylindrical-map/",
+    "licence": "NASA, public domain"
+  },
+  "cassiniMoonMaps": {
+    "name": "Cassini maps of Saturn’s moons",
+    "kind": "imagery",
+    "cite": "Cassini ISS global mosaics: Enceladus (110 m, USGS Astrogeology); Tethys, Dione, Rhea and Iapetus (DLR, Roatsch and others, via USGS Astrogeology); Mimas (NASA Photojournal PIA14926, 2012); Titan in near infrared (PIA19658, 2015, via USGS)",
+    "url": "https://astrogeology.usgs.gov/search/map/tethys_cassini_global_mosaic_293m",
+    "licence": "NASA/JPL-Caltech/Space Science Institute/DLR/USGS, public domain"
+  },
+  "cassiniRingPanorama": {
+    "name": "Cassini’s Panoramic Rings",
+    "kind": "imagery",
+    "cite": "NASA/JPL/Space Science Institute, “Panoramic Rings”, Cassini’s natural-colour view of the lit side of Saturn’s rings (2004), NASA Photojournal PIA06175",
+    "url": "https://science.nasa.gov/photojournal/panoramic-rings/",
+    "licence": "NASA/JPL, public domain"
+  },
+  "cassiniSaturn": {
+    "name": "Cassini map of Saturn",
+    "kind": "imagery",
+    "cite": "Li, L., West, R., Jiang, X. & Knowles, B. (2023). Cassini ISS Global Maps of Jupiter and Saturn, colour map of Saturn from 11 August 2011. NASA Planetary Data System",
+    "url": "https://doi.org/10.17189/rkkb-6y30",
+    "licence": "NASA, public domain"
+  },
+  "cassiniTitanRadar": {
+    "name": "Cassini radar map of Titan",
+    "kind": "imagery",
+    "cite": "Cassini SAR Team (JPL) and USGS Astrogeology, Titan Cassini SAR – HiSAR global mosaic, 351 m (flybys to T104, preliminary, 2015)",
+    "url": "https://astrogeology.usgs.gov/search/map/titan_cassini_sar_hisar_global_mosaic_351m",
+    "licence": "NASA/JPL-Caltech/ASI/USGS; no use constraints, cite its authors"
+  },
+  "cesm": {
+    "name": "CESM, Li et al. 2023",
+    "kind": "model",
+    "cite": "Li, Hu et al. (2023), Paleoceanography and Paleoclimatology 38, CESM1.2.2 runs",
+    "url": "https://doi.org/10.5281/zenodo.7322003",
+    "licence": "CC BY 4.0"
+  },
+  "clementineMoon": {
+    "name": "Clementine colour-ratio map of the Moon",
+    "kind": "imagery",
+    "cite": "NASA/DoD/USGS, Moon Clementine UVVIS warped color ratio mosaic, 200 m (from Clementine, 1994), USGS Astrogeology",
+    "url": "https://astrogeology.usgs.gov/search/map/moon_clementine_uvvis_warped_color_ratio_mosaic_200m",
+    "licence": "NASA/USGS, public domain"
+  },
+  "cliopatria": {
+    "name": "Cliopatria",
+    "kind": "dataset",
+    "cite": "Cliopatria v0.2.1, Seshat Global History Databank",
+    "url": "https://github.com/Seshat-Global-History-Databank/cliopatria",
+    "licence": "CC BY 4.0"
+  },
+  "co2pip": {
+    "name": "Paleo-CO₂ Data Archive",
+    "kind": "dataset",
+    "cite": "Paleo-CO₂ Data Archive v1.12 (CO2PIP community; CenCO2PIP Consortium 2023, Science), Zenodo",
+    "url": "https://doi.org/10.5281/zenodo.15546408",
+    "licence": "CC BY 4.0"
   },
   "collins2005": {
     "name": "Collins, Melosh & Marcus 2005",
@@ -224,92 +195,6 @@
     "cite": "Collins et al. (2020), A steeply-inclined trajectory for the Chicxulub impact, Nature Communications 11",
     "url": "https://doi.org/10.1038/s41467-020-15269-x"
   },
-  "wilde2001": {
-    "name": "Wilde et al. 2001",
-    "kind": "paper",
-    "cite": "Wilde, Valley, Peck & Graham (2001), Evidence from detrital zircons for the existence of continental crust and oceans on the Earth 4.4 Gyr ago, Nature 409, 175–178",
-    "url": "https://doi.org/10.1038/35051550"
-  },
-  "bowring1999": {
-    "name": "Bowring & Williams 1999",
-    "kind": "paper",
-    "cite": "Bowring & Williams (1999), Priscoan (4.00–4.03 Ga) orthogneisses from northwestern Canada, Contributions to Mineralogy and Petrology 134, 3–16",
-    "url": "https://doi.org/10.1007/s004100050465"
-  },
-  "allwood2006": {
-    "name": "Allwood et al. 2006",
-    "kind": "paper",
-    "cite": "Allwood et al. (2006), Stromatolite reef from the Early Archaean era of Australia, Nature 441, 714–718",
-    "url": "https://doi.org/10.1038/nature04764"
-  },
-  "bleeker2003": {
-    "name": "Bleeker 2003",
-    "kind": "paper",
-    "cite": "Bleeker (2003), The late Archean record: a puzzle in ca. 35 pieces, Lithos 71, 99–134",
-    "url": "https://doi.org/10.1016/j.lithos.2003.07.003"
-  },
-  "farquhar2000": {
-    "name": "Farquhar, Bao & Thiemens 2000",
-    "kind": "paper",
-    "cite": "Farquhar, Bao & Thiemens (2000), Atmospheric influence of Earth’s earliest sulfur cycle, Science 289, 756–758",
-    "url": "https://doi.org/10.1126/science.289.5480.756"
-  },
-  "zhao2002": {
-    "name": "Zhao et al. 2002",
-    "kind": "paper",
-    "cite": "Zhao et al. (2002), Review of global 2.1–1.8 Ga orogens: implications for a pre-Rodinia supercontinent, Earth-Science Reviews 59, 125–162",
-    "url": "https://doi.org/10.1016/S0012-8252(02)00073-9"
-  },
-  "evans2011": {
-    "name": "Evans & Mitchell 2011",
-    "kind": "paper",
-    "cite": "Evans & Mitchell (2011), Assembly and breakup of the core of Paleoproterozoic–Mesoproterozoic supercontinent Nuna, Geology 39, 443–446",
-    "url": "https://doi.org/10.1130/G31654.1"
-  },
-  "li2008": {
-    "name": "Li et al. 2008",
-    "kind": "paper",
-    "cite": "Li et al. (2008), Assembly, configuration, and break-up history of Rodinia: a synthesis, Precambrian Research 160, 179–210",
-    "url": "https://doi.org/10.1016/j.precamres.2007.04.021"
-  },
-  "hoffman1998": {
-    "name": "Hoffman et al. 1998",
-    "kind": "paper",
-    "cite": "Hoffman, Kaufman, Halverson & Schrag (1998), A Neoproterozoic snowball Earth, Science 281, 1342–1346",
-    "url": "https://doi.org/10.1126/science.281.5381.1342"
-  },
-  "hoffman2017": {
-    "name": "Hoffman et al. 2017",
-    "kind": "paper",
-    "cite": "Hoffman et al. (2017), Snowball Earth climate dynamics and Cryogenian geology-geobiology, Science Advances 3",
-    "url": "https://doi.org/10.1126/sciadv.1600983"
-  },
-  "sdo": {
-    "name": "NASA SDO",
-    "kind": "imagery",
-    "cite": "NASA Solar Dynamics Observatory, AIA and HMI science teams, images of 2024 via Helioviewer",
-    "url": "https://sdo.gsfc.nasa.gov/",
-    "licence": "NASA, public domain"
-  },
-  "lemen2012": {
-    "name": "Lemen et al. 2012",
-    "kind": "paper",
-    "cite": "Lemen, J. R., Title, A. M., Akin, D. J., Boerner, P. F., et al. (2012). The Atmospheric Imaging Assembly (AIA) on the Solar Dynamics Observatory (SDO). Solar Physics 275, 17–40",
-    "url": "https://doi.org/10.1007/s11207-011-9776-8"
-  },
-  "archinal2018": {
-    "name": "Archinal et al. 2018",
-    "kind": "model",
-    "cite": "Archinal, B. A., Acton, C. H., A’Hearn, M. F., et al. (2018). Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015. Celestial Mechanics and Dynamical Astronomy 130, 22",
-    "url": "https://doi.org/10.1007/s10569-017-9805-5"
-  },
-  "paleBlueDot": {
-    "name": "Voyager 1: Pale Blue Dot",
-    "kind": "imagery",
-    "cite": "NASA/JPL, “Solar System Portrait – Earth as ‘Pale Blue Dot’”, Voyager 1, 14 February 1990, NASA Photojournal PIA00452",
-    "url": "https://science.nasa.gov/photojournal/solar-system-portrait-earth-as-pale-blue-dot/",
-    "licence": "NASA, public domain"
-  },
   "dayEarthSmiled": {
     "name": "Cassini: The Day the Earth Smiled",
     "kind": "imagery",
@@ -317,355 +202,36 @@
     "url": "https://science.nasa.gov/photojournal/the-day-the-earth-smiled-sneak-preview/",
     "licence": "NASA, public domain"
   },
-  "intcal20": {
-    "name": "IntCal20",
-    "kind": "dataset",
-    "cite": "Reimer, P. J., et al. (2020). The IntCal20 Northern Hemisphere radiocarbon age calibration curve (0–55 cal kBP). Radiocarbon 62, 725–757",
-    "url": "https://doi.org/10.1017/RDC.2020.41",
-    "licence": "CC BY 4.0"
-  },
-  "shcal20": {
-    "name": "SHCal20",
-    "kind": "dataset",
-    "cite": "Hogg, A. G., et al. (2020). SHCal20 Southern Hemisphere calibration, 0–55,000 years cal BP. Radiocarbon 62, 759–778",
-    "url": "https://doi.org/10.1017/RDC.2020.59",
-    "licence": "CC BY 4.0"
-  },
-  "kovaltsov2012": {
-    "name": "Kovaltsov et al. 2012",
-    "kind": "paper",
-    "cite": "Kovaltsov, G. A., Mishev, A. & Usoskin, I. G. (2012). A new model of cosmogenic production of radiocarbon 14C in the atmosphere. Earth and Planetary Science Letters 337–338, 114–120",
-    "url": "https://doi.org/10.1016/j.epsl.2012.05.036"
-  },
-  "usoskin2005": {
-    "name": "Usoskin et al. 2005",
-    "kind": "paper",
-    "cite": "Usoskin, I. G., Alanko-Huotari, K., Kovaltsov, G. A. & Mursula, K. (2005). Heliospheric modulation of cosmic rays: monthly reconstruction for 1951–2004. Journal of Geophysical Research 110, A12108",
-    "url": "https://doi.org/10.1029/2005JA011250"
-  },
-  "korte2011": {
-    "name": "Korte et al. 2011",
-    "kind": "paper",
-    "cite": "Korte, M., Constable, C., Donadini, F. & Holme, R. (2011). Reconstructing the Holocene geomagnetic field. Earth and Planetary Science Letters 312, 497–505",
-    "url": "https://doi.org/10.1016/j.epsl.2011.10.031"
-  },
-  "mitalasSills1992": {
-    "name": "Mitalas & Sills 1992",
-    "kind": "paper",
-    "cite": "Mitalas, R. & Sills, K. R. (1992). On the photon diffusion time scale for the Sun. The Astrophysical Journal 401, 759",
-    "url": "https://doi.org/10.1086/172103"
-  },
-  "stix2003": {
-    "name": "Stix 2003",
-    "kind": "paper",
-    "cite": "Stix, M. (2003). On the time scale of energy transport in the Sun. Solar Physics 212, 3–6",
-    "url": "https://doi.org/10.1023/A:1022952621810"
-  },
-  "bahcall2005": {
-    "name": "Bahcall et al. 2005",
-    "kind": "paper",
-    "cite": "Bahcall, J. N., Serenelli, A. M. & Basu, S. (2005). New solar opacities, abundances, helioseismology, and neutrino fluxes. The Astrophysical Journal 621, L85–L88",
-    "url": "https://doi.org/10.1086/428929"
-  },
-  "prsa2016": {
-    "name": "Prša et al. 2016",
-    "kind": "paper",
-    "cite": "Prša, A., et al. (2016). Nominal values for selected solar and planetary quantities: IAU 2015 Resolution B3. The Astronomical Journal 152, 41",
-    "url": "https://doi.org/10.3847/0004-6256/152/2/41"
-  },
-  "barber2003": {
-    "name": "Barber 2003",
-    "kind": "paper",
-    "cite": "Barber, J. (2003). Photosystem II: the engine of life. Quarterly Reviews of Biophysics 36, 71–89",
-    "url": "https://doi.org/10.1017/S0033583502003839"
-  },
-  "ggf100k": {
-    "name": "GGF100k",
-    "kind": "dataset",
-    "cite": "Panovska, S., Constable, C. G. & Korte, M. (2018). Extending global continuous geomagnetic field reconstructions on timescales beyond human civilization. Geochemistry, Geophysics, Geosystems 19, 4757–4772; dipole moment from the model archive, EarthRef ERDA 2382 (no licence stated)",
-    "url": "https://doi.org/10.1029/2018GC007966"
-  },
-  "korte2019": {
-    "name": "Korte et al. 2019",
-    "kind": "paper",
-    "cite": "Korte, M., Brown, M. C., Panovska, S. & Wardinski, I. (2019). Robust characteristics of the Laschamp and Mono Lake geomagnetic excursions: results from global field models. Frontiers in Earth Science 7, 86",
-    "url": "https://doi.org/10.3389/feart.2019.00086",
-    "licence": "CC BY 4.0"
-  },
-  "marine20": {
-    "name": "Marine20",
-    "kind": "dataset",
-    "cite": "Heaton, T. J., et al. (2020). Marine20—the marine radiocarbon age calibration curve (0–55,000 cal BP). Radiocarbon 62, 779–820",
-    "url": "https://doi.org/10.1017/RDC.2020.68",
-    "licence": "CC BY 4.0"
-  },
-  "godwin1962": {
-    "name": "Godwin 1962",
-    "kind": "paper",
-    "cite": "Godwin, H. (1962). Half-life of radiocarbon. Nature 195, 984",
-    "url": "https://doi.org/10.1038/195984a0"
-  },
-  "p3k14c": {
-    "name": "p3k14c",
-    "kind": "dataset",
-    "cite": "Bird, D., et al. (2022). p3k14c, a synthetic global database of archaeological radiocarbon dates. Scientific Data 9, 27; data release 2025.07 (people3k/p3k14c)",
-    "url": "https://doi.org/10.1038/s41597-022-01118-7",
-    "licence": "CC0 1.0"
-  },
-  "holvol": {
-    "name": "HolVol",
-    "kind": "dataset",
-    "cite": "Sigl, M., Toohey, M., McConnell, J. R., Cole-Dai, J. & Severi, M. (2022). Volcanic stratospheric sulfur injections and aerosol optical depth during the Holocene (past 11 500 years) from a bipolar ice-core array. Earth System Science Data 14, 3167–3196; data: HolVol v1.0, PANGAEA, doi:10.1594/PANGAEA.928646",
-    "url": "https://doi.org/10.5194/essd-14-3167-2022",
-    "licence": "CC BY 4.0"
-  },
-  "sigl2015": {
-    "name": "Sigl et al. 2015",
-    "kind": "paper",
-    "cite": "Sigl, M., et al. (2015). Timing and climate forcing of volcanic eruptions for the past 2,500 years. Nature 523, 543–549",
-    "url": "https://doi.org/10.1038/nature14565"
-  },
-  "lavigne2013": {
-    "name": "Lavigne et al. 2013",
-    "kind": "paper",
-    "cite": "Lavigne, F., et al. (2013). Source of the great A.D. 1257 mystery eruption unveiled, Samalas volcano, Rinjani Volcanic Complex, Indonesia. PNAS 110, 16742–16747",
-    "url": "https://doi.org/10.1073/pnas.1307520110"
-  },
-  "vanDerPlicht2020": {
-    "name": "van der Plicht et al. 2020",
-    "kind": "paper",
-    "cite": "van der Plicht, J., Bronk Ramsey, C., Heaton, T. J., Scott, E. M. & Talamo, S. (2020). Recent developments in calibration for archaeological and environmental samples. Radiocarbon 62, 1095–1117",
-    "url": "https://doi.org/10.1017/RDC.2020.22",
-    "licence": "CC BY 4.0"
-  },
-  "oppenheimer2017": {
-    "name": "Oppenheimer et al. 2017",
-    "kind": "paper",
-    "cite": "Oppenheimer, C., et al. (2017). Multi-proxy dating the ‘Millennium Eruption’ of Changbaishan to late 946 CE. Quaternary Science Reviews 158, 164–171",
-    "url": "https://doi.org/10.1016/j.quascirev.2016.12.024",
-    "licence": "CC BY 4.0"
-  },
-  "stuiverPolach1977": {
-    "name": "Stuiver & Polach 1977",
-    "kind": "paper",
-    "cite": "Stuiver, M. & Polach, H. A. (1977). Discussion: reporting of 14C data. Radiocarbon 19, 355–363",
-    "url": "https://doi.org/10.1017/S0033822200003672"
-  },
-  "miyake2012": {
-    "name": "Miyake et al. 2012",
-    "kind": "paper",
-    "cite": "Miyake, F., Nagaya, K., Masuda, K. & Nakamura, T. (2012). A signature of cosmic-ray increase in AD 774–775 from tree rings in Japan. Nature 486, 240–242",
-    "url": "https://doi.org/10.1038/nature11123"
-  },
-  "miyake2013": {
-    "name": "Miyake et al. 2013",
-    "kind": "paper",
-    "cite": "Miyake, F., Masuda, K. & Nakamura, T. (2013). Another rapid event in the carbon-14 content of tree rings. Nature Communications 4, 1748",
-    "url": "https://doi.org/10.1038/ncomms2783"
-  },
-  "oHare2019": {
-    "name": "O’Hare et al. 2019",
-    "kind": "paper",
-    "cite": "O’Hare, P., Mekhaldi, F., Adolphi, F., et al. (2019). Multiradionuclide evidence for an extreme solar proton event around 2,610 B.P. (∼660 BC). PNAS 116, 5961–5966",
-    "url": "https://doi.org/10.1073/pnas.1815725116"
-  },
-  "brehm2022": {
-    "name": "Brehm et al. 2022",
-    "kind": "paper",
-    "cite": "Brehm, N., Christl, M., Knowles, T. D. J., et al. (2022). Tree-rings reveal two strong solar proton events in 7176 and 5259 BCE. Nature Communications 13, 1196",
-    "url": "https://doi.org/10.1038/s41467-022-28804-9"
-  },
-  "kuitems2022": {
-    "name": "Kuitems et al. 2022",
-    "kind": "paper",
-    "cite": "Kuitems, M., Wallace, B. L., Lindsay, C., et al. (2022). Evidence for European presence in the Americas in AD 1021. Nature 601, 388–391",
-    "url": "https://doi.org/10.1038/s41586-021-03972-8"
-  },
-  "moonKit": {
-    "name": "NASA CGI Moon Kit",
-    "kind": "imagery",
-    "cite": "NASA Scientific Visualization Studio, CGI Moon Kit (2019): the Lunar Reconnaissance Orbiter Camera’s colour mosaic of the Moon",
-    "url": "https://svs.gsfc.nasa.gov/4720",
-    "licence": "NASA, public domain"
-  },
-  "messengerMap": {
-    "name": "MESSENGER map of Mercury",
-    "kind": "imagery",
-    "cite": "NASA/JHU APL/Carnegie Institution of Washington, “A Global View from Orbit”, MESSENGER mosaic of Mercury, NASA Photojournal PIA15063 (2011)",
-    "url": "https://science.nasa.gov/photojournal/a-global-view-from-orbit/",
-    "licence": "NASA, public domain"
-  },
-  "vikingMap": {
-    "name": "Viking colour mosaic of Mars",
-    "kind": "imagery",
-    "cite": "NASA/JPL/USGS Astrogeology Science Center, Mars Viking Global Color Mosaic 925 m, from Viking Orbiter images of 1976–80",
-    "url": "https://astrogeology.usgs.gov/search/map/mars_viking_global_color_mosaic_925m",
-    "licence": "USGS, public domain"
-  },
-  "cassiniJupiter": {
-    "name": "Cassini map of Jupiter",
-    "kind": "imagery",
-    "cite": "NASA/JPL/Space Science Institute, “Cassini’s Best Maps of Jupiter (Cylindrical Map)”, from the flyby of December 2000, NASA Photojournal PIA07782 (2006)",
-    "url": "https://science.nasa.gov/photojournal/cassinis-best-maps-of-jupiter-cylindrical-map/",
-    "licence": "NASA, public domain"
-  },
-  "messengerColour": {
-    "name": "MESSENGER enhanced-colour map",
-    "kind": "imagery",
-    "cite": "NASA/Johns Hopkins University Applied Physics Laboratory/Carnegie Institution of Washington, “Enhanced Color Mercury Map”, MESSENGER MDIS, NASA Photojournal PIA17386",
-    "url": "https://science.nasa.gov/photojournal/enhanced-color-mercury-map",
-    "licence": "NASA, public domain"
-  },
-  "opalJupiter": {
-    "name": "Hubble OPAL map of Jupiter, 2024",
-    "kind": "imagery",
-    "cite": "NASA/ESA/STScI, Outer Planet Atmospheres Legacy (OPAL), PI A. Simon: Jupiter global map, 19–20 November 2024 (doi:10.17909/T9G593); Simon, A. A., Wong, M. H. & Orton, G. S. (2015). First results from the Hubble OPAL program: Jupiter in 2015. ApJ 812, 55",
-    "url": "https://archive.stsci.edu/hlsp/opal",
-    "licence": "CC BY 4.0"
-  },
-  "magellanVenus": {
-    "name": "Magellan map of Venus",
-    "kind": "imagery",
-    "cite": "NASA/JPL/USGS, Venus Magellan C3-MDIR colorized topographic global mosaic, 6,600 m (from Magellan radar, 1990–94), USGS Astrogeology",
-    "url": "https://astrogeology.usgs.gov/search/map/venus_magellan_c3_mdir_colorized_topographic_mosaic_6600m",
-    "licence": "NASA/USGS, public domain"
-  },
-  "molaMars": {
-    "name": "MOLA map of Mars’s heights",
-    "kind": "imagery",
-    "cite": "NASA/JPL/GSFC/USGS, Mars MGS MOLA global color shaded relief, 463 m (from the Mars Orbiter Laser Altimeter, Smith et al. 2001), USGS Astrogeology",
-    "url": "https://astrogeology.usgs.gov/search/map/mars_mgs_mola_global_color_shaded_relief_463m",
-    "licence": "NASA/USGS, public domain"
-  },
-  "clementineMoon": {
-    "name": "Clementine colour-ratio map of the Moon",
-    "kind": "imagery",
-    "cite": "NASA/DoD/USGS, Moon Clementine UVVIS warped color ratio mosaic, 200 m (from Clementine, 1994), USGS Astrogeology",
-    "url": "https://astrogeology.usgs.gov/search/map/moon_clementine_uvvis_warped_color_ratio_mosaic_200m",
-    "licence": "NASA/USGS, public domain"
-  },
-  "lucey2000": {
-    "name": "Lucey, Blewett & Jolliff 2000",
-    "kind": "paper",
-    "cite": "Lucey, P. G., Blewett, D. T. & Jolliff, B. L. (2000). Lunar iron and titanium abundance algorithms based on final processing of Clementine ultraviolet-visible images. Journal of Geophysical Research: Planets 105, 20297–20305",
-    "url": "https://doi.org/10.1029/1999JE001117"
-  },
-  "molaHeights": {
-    "name": "MOLA heights of Mars (MEGDR)",
-    "kind": "dataset",
-    "cite": "Smith, D. E. et al., MGS MOLA Mission Experiment Gridded Data Record (MEGDR), 4 pixels a degree, MGS-M-MOLA-5-MEGDR-L3-V1.0, NASA Planetary Data System Geosciences Node",
-    "url": "https://pds-geosciences.wustl.edu/missions/mgs/megdr.html",
-    "licence": "NASA, public domain"
-  },
-  "lolaHeights": {
-    "name": "LOLA heights of the Moon (LDEM)",
-    "kind": "dataset",
-    "cite": "Smith, D. E. et al., LRO LOLA gridded data record LDEM_4, 4 pixels a degree, LRO-L-LOLA-4-GDR-V1.0, NASA Planetary Data System Geosciences Node",
-    "url": "https://pds-geosciences.wustl.edu/missions/lro/lola.htm",
-    "licence": "NASA, public domain"
-  },
-  "jplSatellites": {
-    "name": "JPL’s ephemerides of the planets’ moons",
-    "kind": "dataset",
-    "cite": "JPL Solar System Dynamics: the satellite ephemerides through Horizons (Mars MAR099, Jupiter JUP365, Saturn SAT441; Jacobson and others), their mean elements’ Laplace planes, and the satellites’ mean radii",
-    "url": "https://ssd.jpl.nasa.gov/sats/",
+  "de441": {
+    "name": "JPL DE441",
+    "kind": "model",
+    "cite": "Park, Folkner, Williams & Boggs (2021), The JPL Planetary and Lunar Ephemerides DE440 and DE441, Astronomical Journal 161, 105",
+    "url": "https://doi.org/10.3847/1538-3881/abd414",
     "licence": "NASA/JPL, public domain"
   },
-  "nasaPhobos": {
-    "name": "NASA: Phobos",
-    "kind": "reference",
-    "cite": "NASA, “Phobos” (moon overview)",
-    "url": "https://science.nasa.gov/mars/moons/phobos/"
+  "deWinter2020": {
+    "name": "de Winter et al. 2020",
+    "kind": "paper",
+    "cite": "de Winter et al. (2020), Subdaily-scale chemical variability in a Torreites sanchezi rudist shell, Paleoceanography and Paleoclimatology 35",
+    "url": "https://doi.org/10.1029/2019PA003723"
   },
-  "nasaDeimos": {
-    "name": "NASA: Deimos",
-    "kind": "reference",
-    "cite": "NASA, “Deimos” (moon overview)",
-    "url": "https://science.nasa.gov/mars/moons/deimos/"
+  "deltaTLongTerm": {
+    "name": "Stephenson et al. 2016",
+    "kind": "paper",
+    "cite": "Stephenson, Morrison & Hohenkerk (2016), Measurement of the Earth’s rotation: 720 BC to AD 2015, Proceedings of the Royal Society A 472",
+    "url": "https://doi.org/10.1098/rspa.2016.0404"
   },
-  "nasaIo": {
-    "name": "NASA: Io",
-    "kind": "reference",
-    "cite": "NASA, “Io” (moon overview)",
-    "url": "https://science.nasa.gov/jupiter/moons/io/"
+  "deltaTSplines": {
+    "name": "Morrison et al. 2021",
+    "kind": "paper",
+    "cite": "Morrison, Stephenson, Hohenkerk & Zawilski (2021), Addendum 2020 to \"Measurement of the Earth’s rotation: 720 BC to AD 2015\", Proceedings of the Royal Society A 477",
+    "url": "https://doi.org/10.1098/rspa.2020.0776"
   },
-  "nasaEuropa": {
-    "name": "NASA: Europa",
-    "kind": "reference",
-    "cite": "NASA, “Europa” (moon overview)",
-    "url": "https://science.nasa.gov/jupiter/moons/europa/"
-  },
-  "nasaGanymede": {
-    "name": "NASA: Ganymede",
-    "kind": "reference",
-    "cite": "NASA, “Ganymede” (moon overview)",
-    "url": "https://science.nasa.gov/jupiter/moons/ganymede/"
-  },
-  "nasaCallisto": {
-    "name": "NASA: Callisto",
-    "kind": "reference",
-    "cite": "NASA, “Callisto” (moon overview)",
-    "url": "https://science.nasa.gov/jupiter/moons/callisto/"
-  },
-  "nasaMimas": {
-    "name": "NASA: Mimas",
-    "kind": "reference",
-    "cite": "NASA, “Mimas” (moon overview)",
-    "url": "https://science.nasa.gov/saturn/moons/mimas/"
-  },
-  "nasaEnceladus": {
-    "name": "NASA: Enceladus",
-    "kind": "reference",
-    "cite": "NASA, “Enceladus” (moon overview)",
-    "url": "https://science.nasa.gov/saturn/moons/enceladus/"
-  },
-  "nasaTethys": {
-    "name": "NASA: Tethys",
-    "kind": "reference",
-    "cite": "NASA, “Tethys” (moon overview)",
-    "url": "https://science.nasa.gov/saturn/moons/tethys/"
-  },
-  "nasaDione": {
-    "name": "NASA: Dione",
-    "kind": "reference",
-    "cite": "NASA, “Dione” (moon overview)",
-    "url": "https://science.nasa.gov/saturn/moons/dione/"
-  },
-  "nasaRhea": {
-    "name": "NASA: Rhea",
-    "kind": "reference",
-    "cite": "NASA, “Rhea” (moon overview)",
-    "url": "https://science.nasa.gov/saturn/moons/rhea/"
-  },
-  "nasaTitan": {
-    "name": "NASA: Titan",
-    "kind": "reference",
-    "cite": "NASA, “Titan” (moon overview)",
-    "url": "https://science.nasa.gov/saturn/moons/titan/"
-  },
-  "nasaHyperion": {
-    "name": "NASA: Hyperion",
-    "kind": "reference",
-    "cite": "NASA, “Hyperion” (moon overview)",
-    "url": "https://science.nasa.gov/saturn/moons/hyperion/"
-  },
-  "nasaIapetus": {
-    "name": "NASA: Iapetus",
-    "kind": "reference",
-    "cite": "NASA, “Iapetus” (moon overview)",
-    "url": "https://science.nasa.gov/saturn/moons/iapetus/"
-  },
-  "nasaEuropaClipper": {
-    "name": "NASA: Europa Clipper",
-    "kind": "reference",
-    "cite": "NASA, “Europa Clipper” (mission page)",
-    "url": "https://science.nasa.gov/mission/europa-clipper/"
-  },
-  "nasaDragonfly": {
-    "name": "NASA: Dragonfly",
-    "kind": "reference",
-    "cite": "NASA, “Dragonfly” (mission page)",
-    "url": "https://science.nasa.gov/mission/dragonfly/"
+  "elpmpp02": {
+    "name": "ELP/MPP02",
+    "kind": "model",
+    "cite": "Chapront & Francou (2003), The lunar theory ELP revisited, Astronomy & Astrophysics 404, 735; via the astronomia library (MIT)",
+    "url": "https://doi.org/10.1051/0004-6361:20030529"
   },
   "esaJuice": {
     "name": "ESA: Juice",
@@ -673,47 +239,37 @@
     "cite": "ESA, “Juice” (mission page)",
     "url": "https://www.esa.int/Science_Exploration/Space_Science/Juice"
   },
-  "jaxaMmx": {
-    "name": "JAXA: Martian Moons eXploration (MMX)",
-    "kind": "reference",
-    "cite": "JAXA, “Martian Moons eXploration (MMX)” (mission page)",
-    "url": "https://www.mmx.jaxa.jp/en/"
+  "etopo1": {
+    "name": "ETOPO1",
+    "kind": "dataset",
+    "cite": "ETOPO1 global relief (Amante & Eakins 2009, NOAA NGDC), via NOAA ERDDAP",
+    "url": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
+    "licence": "NOAA, public domain"
   },
-  "kivelson2000": {
-    "name": "Kivelson et al. 2000",
+  "evans2011": {
+    "name": "Evans & Mitchell 2011",
     "kind": "paper",
-    "cite": "Kivelson, M. G., Khurana, K. K., Russell, C. T., Volwerk, M., Walker, R. J. & Zimmer, C. (2000). Galileo magnetometer measurements: a stronger case for a subsurface ocean at Europa. Science 289, 1340–1343",
-    "url": "https://doi.org/10.1126/science.289.5483.1340"
+    "cite": "Evans & Mitchell (2011), Assembly and breakup of the core of Paleoproterozoic–Mesoproterozoic supercontinent Nuna, Geology 39, 443–446",
+    "url": "https://doi.org/10.1130/G31654.1"
   },
-  "saur2015": {
-    "name": "Saur et al. 2015",
+  "farquhar2000": {
+    "name": "Farquhar, Bao & Thiemens 2000",
     "kind": "paper",
-    "cite": "Saur, J. et al. (2015). The search for a subsurface ocean in Ganymede with Hubble Space Telescope observations of its auroral ovals. Journal of Geophysical Research: Space Physics 120, 1715–1737",
-    "url": "https://doi.org/10.1002/2014JA020778"
+    "cite": "Farquhar, Bao & Thiemens (2000), Atmospheric influence of Earth’s earliest sulfur cycle, Science 289, 756–758",
+    "url": "https://doi.org/10.1126/science.289.5480.756"
   },
-  "lainey2024": {
-    "name": "Lainey et al. 2024",
+  "finnegan2011": {
+    "name": "Finnegan et al. 2011",
     "kind": "paper",
-    "cite": "Lainey, V., Rambaux, N., Tobie, G., Cooper, N., Zhang, Q., Noyelles, B. & Baillié, K. (2024). A recently formed ocean inside Saturn’s moon Mimas. Nature 626, 280–282",
-    "url": "https://doi.org/10.1038/s41586-023-06975-9"
+    "cite": "Finnegan et al. (2011), The magnitude and duration of Late Ordovician–Early Silurian glaciation, Science 331, 903–906",
+    "url": "https://doi.org/10.1126/science.1200803"
   },
-  "waite2017": {
-    "name": "Waite et al. 2017",
+  "foster": {
+    "name": "Foster, Royer & Lunt 2017",
     "kind": "paper",
-    "cite": "Waite, J. H. et al. (2017). Cassini finds molecular hydrogen in the Enceladus plume: evidence for hydrothermal processes. Science 356, 155–159",
-    "url": "https://doi.org/10.1126/science.aai8703"
-  },
-  "postberg2023": {
-    "name": "Postberg et al. 2023",
-    "kind": "paper",
-    "cite": "Postberg, F. et al. (2023). Detection of phosphates originating from Enceladus’s ocean. Nature 618, 489–493",
-    "url": "https://doi.org/10.1038/s41586-023-05987-9"
-  },
-  "stofan2007": {
-    "name": "Stofan et al. 2007",
-    "kind": "paper",
-    "cite": "Stofan, E. R. et al. (2007). The lakes of Titan. Nature 445, 61–64",
-    "url": "https://doi.org/10.1038/nature05438"
+    "cite": "Foster, Royer & Lunt (2017), Future climate forcing potentially without precedent in the last 420 million years, Nature Communications 8, 14845",
+    "url": "https://doi.org/10.1038/ncomms14845",
+    "licence": "CC BY 4.0"
   },
   "galileoMoonMaps": {
     "name": "Galileo and Voyager maps of Jupiter’s moons",
@@ -722,41 +278,6 @@
     "url": "https://astrogeology.usgs.gov/search/map/europa_voyager_galileo_ssi_global_mosaic_500m",
     "licence": "NASA/JPL/USGS, public domain"
   },
-  "cassiniMoonMaps": {
-    "name": "Cassini maps of Saturn’s moons",
-    "kind": "imagery",
-    "cite": "Cassini ISS global mosaics: Enceladus (110 m, USGS Astrogeology); Tethys, Dione, Rhea and Iapetus (DLR, Roatsch and others, via USGS Astrogeology); Mimas (NASA Photojournal PIA14926, 2012); Titan in near infrared (PIA19658, 2015, via USGS)",
-    "url": "https://astrogeology.usgs.gov/search/map/tethys_cassini_global_mosaic_293m",
-    "licence": "NASA/JPL-Caltech/Space Science Institute/DLR/USGS, public domain"
-  },
-  "cassiniTitanRadar": {
-    "name": "Cassini radar map of Titan",
-    "kind": "imagery",
-    "cite": "Cassini SAR Team (JPL) and USGS Astrogeology, Titan Cassini SAR – HiSAR global mosaic, 351 m (flybys to T104, preliminary, 2015)",
-    "url": "https://astrogeology.usgs.gov/search/map/titan_cassini_sar_hisar_global_mosaic_351m",
-    "licence": "NASA/JPL-Caltech/ASI/USGS; no use constraints, cite its authors"
-  },
-  "vikingPhobosMap": {
-    "name": "Viking map of Phobos",
-    "kind": "imagery",
-    "cite": "Phobos Viking global mosaic, 5 m (Viking orbiter images, mosaicked by P. Stooke, controlled by DLR), USGS Astrogeology",
-    "url": "https://astrogeology.usgs.gov/search/map/phobos_viking_global_mosaic_5m",
-    "licence": "NASA/USGS, public domain"
-  },
-  "voyagerRings": {
-    "name": "Voyager 2’s occultation of Saturn’s rings",
-    "kind": "dataset",
-    "cite": "Voyager 2 photopolarimeter, stellar occultation of delta Scorpii by Saturn’s rings (1981), normal optical depth every 10 km, 72,000–142,500 km: PDS Ring-Moon Systems Node, VG_2801, PS1P01",
-    "url": "https://pds-rings.seti.org/holdings/volumes/VG_28xx/VG_2801/",
-    "licence": "NASA, public domain"
-  },
-  "cassiniRingPanorama": {
-    "name": "Cassini’s Panoramic Rings",
-    "kind": "imagery",
-    "cite": "NASA/JPL/Space Science Institute, “Panoramic Rings”, Cassini’s natural-colour view of the lit side of Saturn’s rings (2004), NASA Photojournal PIA06175",
-    "url": "https://science.nasa.gov/photojournal/panoramic-rings/",
-    "licence": "NASA/JPL, public domain"
-  },
   "gcat": {
     "name": "GCAT (General Catalog of Artificial Space Objects)",
     "kind": "catalogue",
@@ -764,90 +285,35 @@
     "url": "https://planet4589.org/space/gcat/",
     "licence": "CC BY 4.0"
   },
-  "nssdcaChronology": {
-    "name": "NSSDCA Chronology of Lunar and Planetary Exploration",
-    "kind": "catalogue",
-    "cite": "Williams, D. R., Chronology of Lunar and Planetary Exploration, NASA Space Science Data Coordinated Archive",
-    "url": "https://nssdc.gsfc.nasa.gov/planetary/chronology.html",
-    "licence": "NASA, public domain"
-  },
-  "jplHorizonsCraft": {
-    "name": "JPL Horizons: spacecraft",
+  "ggf100k": {
+    "name": "GGF100k",
     "kind": "dataset",
-    "cite": "JPL Solar System Dynamics, Horizons System: the trajectories of the spacecraft it holds",
-    "url": "https://ssd.jpl.nasa.gov/horizons/",
-    "licence": "NASA/JPL, public domain"
+    "cite": "Panovska, S., Constable, C. G. & Korte, M. (2018). Extending global continuous geomagnetic field reconstructions on timescales beyond human civilization. Geochemistry, Geophysics, Geosystems 19, 4757–4772; dipole moment from the model archive, EarthRef ERDA 2382 (no licence stated)",
+    "url": "https://doi.org/10.1029/2018GC007966"
   },
-  "jplSbdb": {
-    "name": "JPL Small-Body Database",
-    "kind": "dataset",
-    "cite": "JPL Solar System Dynamics, Small-Body Database Query API: the main belt’s asteroids 100 km across or more, their names and diameters",
-    "url": "https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html",
-    "licence": "NASA/JPL, public domain"
-  },
-  "jplHorizonsAsteroids": {
-    "name": "JPL Horizons: asteroids",
-    "kind": "dataset",
-    "cite": "JPL Solar System Dynamics, Horizons System: the asteroids’ positions from 1600 to 2500, to which their orbits are fitted",
-    "url": "https://ssd.jpl.nasa.gov/horizons/",
-    "licence": "NASA/JPL, public domain"
-  },
-  "iauGazetteer": {
-    "name": "Gazetteer of Planetary Nomenclature",
-    "kind": "dataset",
-    "cite": "IAU Working Group for Planetary System Nomenclature, Gazetteer of Planetary Nomenclature, USGS Astrogeology Science Center: the names, centres and sizes of the features of Mercury, Venus, the Moon and Mars (downloaded 2026-11-09)",
-    "url": "https://planetarynames.wr.usgs.gov/",
-    "licence": "USGS, public domain"
-  },
-  "lolaMoon": {
-    "name": "LOLA map of the Moon’s heights",
-    "kind": "imagery",
-    "cite": "NASA/GSFC/USGS, Moon LRO LOLA color shaded relief, 388 m (from the Lunar Orbiter Laser Altimeter, Smith et al. 2010), USGS Astrogeology",
-    "url": "https://astrogeology.usgs.gov/search/map/moon_lro_lola_color_shaded_relief_388m",
-    "licence": "NASA/USGS, public domain"
-  },
-  "cassiniSaturn": {
-    "name": "Cassini map of Saturn",
-    "kind": "imagery",
-    "cite": "Li, L., West, R., Jiang, X. & Knowles, B. (2023). Cassini ISS Global Maps of Jupiter and Saturn, colour map of Saturn from 11 August 2011. NASA Planetary Data System",
-    "url": "https://doi.org/10.17189/rkkb-6y30",
-    "licence": "NASA, public domain"
-  },
-  "kirschvink1997": {
-    "name": "Kirschvink et al. 1997",
+  "godwin1962": {
+    "name": "Godwin 1962",
     "kind": "paper",
-    "cite": "Kirschvink, J. L., Ripperdan, R. L. & Evans, D. A. (1997). Evidence for a large-scale reorganization of Early Cambrian continental masses by inertial interchange true polar wander. Science 277, 541–545",
-    "url": "https://doi.org/10.1126/science.277.5325.541"
+    "cite": "Godwin, H. (1962). Half-life of radiocarbon. Nature 195, 984",
+    "url": "https://doi.org/10.1038/195984a0"
   },
-  "torsvik1998": {
-    "name": "Torsvik, Meert & Smethurst 1998",
+  "gough1981": {
+    "name": "Gough 1981",
     "kind": "paper",
-    "cite": "Torsvik, T. H., Meert, J. G. & Smethurst, M. A. (1998). Polar wander and the Cambrian (technical comment). Science 279, 9",
-    "url": "https://doi.org/10.1126/science.279.5347.9a"
+    "cite": "Gough (1981), Solar interior structure and luminosity variations, Solar Physics 74, 21–34",
+    "url": "https://doi.org/10.1007/BF00151270"
   },
-  "kent2015": {
-    "name": "Kent et al. 2015",
-    "kind": "paper",
-    "cite": "Kent, D. V., Kjarsgaard, B. A., Gee, J. S., Muttoni, G. & Heaman, L. M. (2015). Tracking the Late Jurassic apparent (or true) polar shift in U-Pb-dated kimberlites from cratonic North America (Superior Province of Canada). Geochemistry, Geophysics, Geosystems 16, 983–994",
-    "url": "https://doi.org/10.1002/2015GC005734"
+  "gplates": {
+    "name": "GPlates Web Service",
+    "kind": "model",
+    "cite": "GPlates Web Service (EarthByte), reconstructing places on the PALEOMAP model",
+    "url": "https://gws.gplates.org"
   },
-  "muttoniKent2019": {
-    "name": "Muttoni & Kent 2019",
-    "kind": "paper",
-    "cite": "Muttoni, G. & Kent, D. V. (2019). Jurassic monster polar shift confirmed by sequential paleopoles from Adria, promontory of Africa. Journal of Geophysical Research: Solid Earth 124, 3288–3306",
-    "url": "https://doi.org/10.1029/2018JB017199"
-  },
-  "sagerKoppers2000": {
-    "name": "Sager & Koppers 2000",
-    "kind": "paper",
-    "cite": "Sager, W. W. & Koppers, A. A. P. (2000). Late Cretaceous polar wander of the Pacific plate: evidence of a rapid true polar wander event. Science 287, 455–459",
-    "url": "https://doi.org/10.1126/science.287.5452.455"
-  },
-  "mitchell2021": {
-    "name": "Mitchell et al. 2021",
-    "kind": "paper",
-    "cite": "Mitchell, R. N., Thissen, C. J., Evans, D. A. D., Slotznick, S. P., Coccioni, R., Yamazaki, T. & Kirschvink, J. L. (2021). A Late Cretaceous true polar wander oscillation. Nature Communications 12, 3629",
-    "url": "https://doi.org/10.1038/s41467-021-23803-8"
+  "gplatesPortal": {
+    "name": "GPlates Portal",
+    "kind": "model",
+    "cite": "The GPlates Portal (EarthByte): reconstructions to explore in the browser",
+    "url": "https://portal.gplates.org"
   },
   "gts2020Polarity": {
     "name": "GTS 2020: Geomagnetic Polarity Time Scale",
@@ -855,12 +321,20 @@
     "cite": "Ogg, J. G. (2020). Geomagnetic Polarity Time Scale. In Gradstein, Ogg, Schmitz & Ogg (eds.), Geologic Time Scale 2020, 159–192. Elsevier",
     "url": "https://doi.org/10.1016/B978-0-12-824360-2.00005-X"
   },
-  "pmagpy": {
-    "name": "PmagPy",
-    "kind": "model",
-    "cite": "Tauxe, L., Shaar, R., Jonestrask, L., et al. (2016). PmagPy: software package for paleomagnetic data analysis and a bridge to the Magnetics Information Consortium (MagIC) database. Geochemistry, Geophysics, Geosystems 17, 2450–2463",
-    "url": "https://doi.org/10.1002/2016GC006307",
-    "licence": "BSD-3-Clause"
+  "gvp": {
+    "name": "Global Volcanism Program",
+    "kind": "catalogue",
+    "cite": "Global Volcanism Program, Smithsonian Institution: Volcanoes of the World, Holocene volcanoes and eruptions",
+    "url": "https://volcano.si.edu",
+    "licence": "Non-commercial use with credit",
+    "nonCommercial": true
+  },
+  "hadcrut5": {
+    "name": "HadCRUT5",
+    "kind": "dataset",
+    "cite": "Morice, C. P., Kennedy, J. J., Rayner, N. A., et al. (2021), An updated assessment of near-surface temperature change from 1850: the HadCRUT5 data set, Journal of Geophysical Research: Atmospheres 126, e2019JD032361; data: HadCRUT.5.1.0.0, Met Office Hadley Centre and Climatic Research Unit, University of East Anglia",
+    "url": "https://doi.org/10.1029/2019JD032361",
+    "licence": "Open Government Licence v3"
   },
   "helioviewer": {
     "name": "Helioviewer",
@@ -874,102 +348,43 @@
     "cite": "The Hipparcos main catalogue (ESA 1997; Perryman et al.), via NASA’s HEASARC",
     "url": "https://heasarc.gsfc.nasa.gov/W3Browse/all/hipparcos.html"
   },
-  "cliopatria": {
-    "name": "Cliopatria",
+  "hoffman1998": {
+    "name": "Hoffman et al. 1998",
+    "kind": "paper",
+    "cite": "Hoffman, Kaufman, Halverson & Schrag (1998), A Neoproterozoic snowball Earth, Science 281, 1342–1346",
+    "url": "https://doi.org/10.1126/science.281.5381.1342"
+  },
+  "hoffman2017": {
+    "name": "Hoffman et al. 2017",
+    "kind": "paper",
+    "cite": "Hoffman et al. (2017), Snowball Earth climate dynamics and Cryogenian geology-geobiology, Science Advances 3",
+    "url": "https://doi.org/10.1126/sciadv.1600983"
+  },
+  "holvol": {
+    "name": "HolVol",
     "kind": "dataset",
-    "cite": "Cliopatria v0.2.1, Seshat Global History Databank",
-    "url": "https://github.com/Seshat-Global-History-Databank/cliopatria",
+    "cite": "Sigl, M., Toohey, M., McConnell, J. R., Cole-Dai, J. & Severi, M. (2022). Volcanic stratospheric sulfur injections and aerosol optical depth during the Holocene (past 11 500 years) from a bipolar ice-core array. Earth System Science Data 14, 3167–3196; data: HolVol v1.0, PANGAEA, doi:10.1594/PANGAEA.928646",
+    "url": "https://doi.org/10.5194/essd-14-3167-2022",
     "licence": "CC BY 4.0"
   },
-  "ohm": {
-    "name": "OpenHistoricalMap",
+  "hu2016": {
+    "name": "Hu et al. 2016",
+    "kind": "paper",
+    "cite": "Hu et al. (2016), The timing of India-Asia collision onset: facts, theories, controversies, Earth-Science Reviews 160, 264–299",
+    "url": "https://doi.org/10.1016/j.earscirev.2016.07.014"
+  },
+  "humanFinds": {
+    "name": "The site’s list of finds",
     "kind": "dataset",
-    "cite": "© OpenHistoricalMap contributors, vector tiles at zoom 2, fetched 2026-11-01",
-    "url": "https://www.openhistoricalmap.org/copyright",
-    "licence": "CC0"
+    "cite": "Dated finds of our species and its relatives, each with the paper that dates it, and rival dates side by side; compiled for this site",
+    "url": "https://github.com/serroba/histeclipse/blob/main/public/data/humans/claims.json"
   },
-  "archaeoglobe": {
-    "name": "ArchaeoGLOBE",
+  "iauGazetteer": {
+    "name": "Gazetteer of Planetary Nomenclature",
     "kind": "dataset",
-    "cite": "ArchaeoGLOBE Project (2019), Archaeological assessment reveals Earth’s early transformation through land use, Science 365, 897; Harvard Dataverse",
-    "url": "https://doi.org/10.1126/science.aax1192",
-    "licence": "CC0 1.0"
-  },
-  "periodo": {
-    "name": "PeriodO",
-    "kind": "dataset",
-    "cite": "PeriodO, a gazetteer of period definitions, matched to countries by Wikidata identifiers",
-    "url": "https://perio.do",
-    "licence": "CC0"
-  },
-  "naturalEarth": {
-    "name": "Natural Earth",
-    "kind": "dataset",
-    "cite": "Natural Earth 1:110m country outlines",
-    "url": "https://www.naturalearthdata.com",
-    "licence": "Public domain"
-  },
-  "aadr": {
-    "name": "Allen Ancient DNA Resource",
-    "kind": "dataset",
-    "cite": "Allen Ancient DNA Resource v66.p1 (Mallick et al. 2024, Scientific Data 11, 182; Reich lab)",
-    "url": "https://doi.org/10.7910/DVN/FFIDCW",
-    "licence": "CC0 1.0"
-  },
-  "macrostrat": {
-    "name": "Macrostrat",
-    "kind": "dataset",
-    "cite": "Macrostrat (Peters et al.), world geologic map units",
-    "url": "https://macrostrat.org",
-    "licence": "CC BY 4.0"
-  },
-  "impactEarth": {
-    "name": "Impact Earth Database",
-    "kind": "catalogue",
-    "cite": "Impact Earth Database, Western University (Osinski et al. 2022, Earth-Science Reviews 232, 104112)",
-    "url": "https://impact.uwo.ca"
-  },
-  "gplates": {
-    "name": "GPlates Web Service",
-    "kind": "model",
-    "cite": "GPlates Web Service (EarthByte), reconstructing places on the PALEOMAP model",
-    "url": "https://gws.gplates.org"
-  },
-  "gvp": {
-    "name": "Global Volcanism Program",
-    "kind": "catalogue",
-    "cite": "Global Volcanism Program, Smithsonian Institution: Volcanoes of the World, Holocene volcanoes and eruptions",
-    "url": "https://volcano.si.edu",
-    "licence": "Non-commercial use with credit",
-    "nonCommercial": true
-  },
-  "paleodem": {
-    "name": "PALEOMAP PaleoDEMs",
-    "kind": "model",
-    "cite": "Scotese & Wright (2018), PALEOMAP Paleodigital Elevation Models (PaleoDEMS) for the Phanerozoic",
-    "url": "https://doi.org/10.5281/zenodo.5460860",
-    "licence": "CC BY 4.0"
-  },
-  "krapp2021": {
-    "name": "Krapp et al. 2021",
-    "kind": "model",
-    "cite": "Krapp, M., Beyer, R. M., Edmundson, S. L., Valdes, P. J., Manica, A. (2021), A statistics-based reconstruction of high-resolution global terrestrial climate for the last 800,000 years, Scientific Data 8, 228; data: pastclim release, Krapp2021_bio01_v1.4.0, Zenodo record 8415273",
-    "url": "https://doi.org/10.1038/s41597-021-01009-3",
-    "licence": "CC BY 4.0"
-  },
-  "scotese2022": {
-    "name": "Scotese 2022",
-    "kind": "model",
-    "cite": "Scotese (2022), Global Mean Surface Temperatures for 100 Phanerozoic Time Intervals, after Scotese et al. (2021) and Valdes, Scotese & Lunt (2021)",
-    "url": "https://doi.org/10.5281/zenodo.5718392",
-    "licence": "CC BY 4.0"
-  },
-  "cesm": {
-    "name": "CESM, Li et al. 2023",
-    "kind": "model",
-    "cite": "Li, Hu et al. (2023), Paleoceanography and Paleoclimatology 38, CESM1.2.2 runs",
-    "url": "https://doi.org/10.5281/zenodo.7322003",
-    "licence": "CC BY 4.0"
+    "cite": "IAU Working Group for Planetary System Nomenclature, Gazetteer of Planetary Nomenclature, USGS Astrogeology Science Center: the names, centres and sizes of the features of Mercury, Venus, the Moon and Mars (downloaded 2026-11-09)",
+    "url": "https://planetarynames.wr.usgs.gov/",
+    "licence": "USGS, public domain"
   },
   "ics": {
     "name": "ICS chart v2026/06",
@@ -978,79 +393,165 @@
     "url": "https://stratigraphy.org/chart",
     "licence": "CC BY 4.0"
   },
-  "paleomist": {
-    "name": "PaleoMIST 1.0",
-    "kind": "model",
-    "cite": "Gowan et al. (2021), A new global ice sheet reconstruction for the past 80 000 years, Nature Communications 12, 1199; PANGAEA",
-    "url": "https://doi.org/10.1594/PANGAEA.905800",
-    "licence": "CC BY 4.0"
-  },
-  "batchelor": {
-    "name": "Batchelor et al. 2019",
-    "kind": "paper",
-    "cite": "Batchelor et al. (2019), The configuration of Northern Hemisphere ice sheets through the Quaternary, Nature Communications 10, 3713; shapefiles on OSF",
-    "url": "https://osf.io/7jen3/",
-    "licence": "No licence stated"
-  },
-  "etopo1": {
-    "name": "ETOPO1",
+  "iers": {
+    "name": "IERS",
     "kind": "dataset",
-    "cite": "ETOPO1 global relief (Amante & Eakins 2009, NOAA NGDC), via NOAA ERDDAP",
-    "url": "https://www.ncei.noaa.gov/products/etopo-global-relief-model",
-    "licence": "NOAA, public domain"
+    "cite": "International Earth Rotation and Reference Systems Service: the length of today’s day",
+    "url": "https://www.iers.org"
   },
-  "bintanja": {
-    "name": "Bintanja & van de Wal 2008",
-    "kind": "paper",
-    "cite": "Bintanja & van de Wal (2008), Nature 454; NOAA World Data Service",
-    "url": "https://doi.org/10.1038/nature07158"
+  "impactEarth": {
+    "name": "Impact Earth Database",
+    "kind": "catalogue",
+    "cite": "Impact Earth Database, Western University (Osinski et al. 2022, Earth-Science Reviews 232, 104112)",
+    "url": "https://impact.uwo.ca"
   },
-  "spratt": {
-    "name": "Spratt & Lisiecki 2016",
-    "kind": "paper",
-    "cite": "Spratt & Lisiecki (2016), A Late Pleistocene sea level stack, Climate of the Past 12; NOAA World Data Service",
-    "url": "https://doi.org/10.5194/cp-12-1079-2016"
-  },
-  "miller": {
-    "name": "Miller et al. 2020",
-    "kind": "paper",
-    "cite": "Miller et al. (2020), Cenozoic sea-level and cryospheric evolution, Science Advances 6; PANGAEA",
-    "url": "https://doi.org/10.1594/PANGAEA.923139",
-    "licence": "CC BY 4.0"
-  },
-  "vanDerMeer": {
-    "name": "van der Meer et al. 2022",
-    "kind": "paper",
-    "cite": "van der Meer et al. (2022), Gondwana Research 111, Supplementary Table 1",
-    "url": "https://doi.org/10.1016/j.gr.2022.07.014",
-    "licence": "CC BY 4.0"
-  },
-  "cao2024": {
-    "name": "Cao et al. 2024",
-    "kind": "model",
-    "cite": "Cao et al. (2024), a 1.8 Ga plate model, Geoscience Frontiers 15, 101922; Zenodo",
-    "url": "https://doi.org/10.5281/zenodo.13628813",
-    "licence": "CC BY 4.0"
-  },
-  "humanFinds": {
-    "name": "The site’s list of finds",
+  "intcal20": {
+    "name": "IntCal20",
     "kind": "dataset",
-    "cite": "Dated finds of our species and its relatives, each with the paper that dates it, and rival dates side by side; compiled for this site",
-    "url": "https://github.com/serroba/histeclipse/blob/main/public/data/humans/claims.json"
+    "cite": "Reimer, P. J., et al. (2020). The IntCal20 Northern Hemisphere radiocarbon age calibration curve (0–55 cal kBP). Radiocarbon 62, 725–757",
+    "url": "https://doi.org/10.1017/RDC.2020.41",
+    "licence": "CC BY 4.0"
   },
-  "timmermann": {
-    "name": "Timmermann & Friedrich 2016",
-    "kind": "model",
-    "cite": "Timmermann & Friedrich (2016), Late Pleistocene climate drivers of early human migration, Nature 538, 92; ICCP climate data server",
-    "url": "https://climatedata.ibs.re.kr/data/human-dispersal-simulation/arrival-time",
-    "licence": "CC BY-NC 4.0",
-    "nonCommercial": true
+  "jaxaMmx": {
+    "name": "JAXA: Martian Moons eXploration (MMX)",
+    "kind": "reference",
+    "cite": "JAXA, “Martian Moons eXploration (MMX)” (mission page)",
+    "url": "https://www.mmx.jaxa.jp/en/"
   },
-  "bereiter": {
-    "name": "Bereiter et al. 2015",
+  "jouzel2007": {
+    "name": "EPICA Dome C, Jouzel et al. 2007",
+    "kind": "dataset",
+    "cite": "Jouzel, J., Masson-Delmotte, V., Cattani, O., et al. (2007), Orbital and millennial Antarctic climate variability over the past 800,000 years, Science 317, 793–796; data: Jouzel, J., Masson-Delmotte, V. (2007), EPICA Dome C Ice Core 800KYr deuterium data and temperature estimates, PANGAEA",
+    "url": "https://doi.org/10.1594/PANGAEA.683655",
+    "licence": "CC BY 3.0"
+  },
+  "jplHorizonsAsteroids": {
+    "name": "JPL Horizons: asteroids",
+    "kind": "dataset",
+    "cite": "JPL Solar System Dynamics, Horizons System: the asteroids’ positions from 1600 to 2500, to which their orbits are fitted",
+    "url": "https://ssd.jpl.nasa.gov/horizons/",
+    "licence": "NASA/JPL, public domain"
+  },
+  "jplHorizonsCraft": {
+    "name": "JPL Horizons: spacecraft",
+    "kind": "dataset",
+    "cite": "JPL Solar System Dynamics, Horizons System: the trajectories of the spacecraft it holds",
+    "url": "https://ssd.jpl.nasa.gov/horizons/",
+    "licence": "NASA/JPL, public domain"
+  },
+  "jplSatellites": {
+    "name": "JPL’s ephemerides of the planets’ moons",
+    "kind": "dataset",
+    "cite": "JPL Solar System Dynamics: the satellite ephemerides through Horizons (Mars MAR099, Jupiter JUP365, Saturn SAT441; Jacobson and others), their mean elements’ Laplace planes, and the satellites’ mean radii",
+    "url": "https://ssd.jpl.nasa.gov/sats/",
+    "licence": "NASA/JPL, public domain"
+  },
+  "jplSbdb": {
+    "name": "JPL Small-Body Database",
+    "kind": "dataset",
+    "cite": "JPL Solar System Dynamics, Small-Body Database Query API: the main belt’s asteroids 100 km across or more, their names and diameters",
+    "url": "https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html",
+    "licence": "NASA/JPL, public domain"
+  },
+  "kent2015": {
+    "name": "Kent et al. 2015",
     "kind": "paper",
-    "cite": "Bereiter et al. (2015), Antarctic CO₂ composite (EPICA Dome C, Lüthi et al. 2008), Geophysical Research Letters; NOAA WDC Paleoclimatology",
-    "url": "https://doi.org/10.1002/2014GL061957"
+    "cite": "Kent, D. V., Kjarsgaard, B. A., Gee, J. S., Muttoni, G. & Heaman, L. M. (2015). Tracking the Late Jurassic apparent (or true) polar shift in U-Pb-dated kimberlites from cratonic North America (Superior Province of Canada). Geochemistry, Geophysics, Geosystems 16, 983–994",
+    "url": "https://doi.org/10.1002/2015GC005734"
+  },
+  "kirschvink1997": {
+    "name": "Kirschvink et al. 1997",
+    "kind": "paper",
+    "cite": "Kirschvink, J. L., Ripperdan, R. L. & Evans, D. A. (1997). Evidence for a large-scale reorganization of Early Cambrian continental masses by inertial interchange true polar wander. Science 277, 541–545",
+    "url": "https://doi.org/10.1126/science.277.5325.541"
+  },
+  "kivelson2000": {
+    "name": "Kivelson et al. 2000",
+    "kind": "paper",
+    "cite": "Kivelson, M. G., Khurana, K. K., Russell, C. T., Volwerk, M., Walker, R. J. & Zimmer, C. (2000). Galileo magnetometer measurements: a stronger case for a subsurface ocean at Europa. Science 289, 1340–1343",
+    "url": "https://doi.org/10.1126/science.289.5483.1340"
+  },
+  "korte2011": {
+    "name": "Korte et al. 2011",
+    "kind": "paper",
+    "cite": "Korte, M., Constable, C., Donadini, F. & Holme, R. (2011). Reconstructing the Holocene geomagnetic field. Earth and Planetary Science Letters 312, 497–505",
+    "url": "https://doi.org/10.1016/j.epsl.2011.10.031"
+  },
+  "korte2019": {
+    "name": "Korte et al. 2019",
+    "kind": "paper",
+    "cite": "Korte, M., Brown, M. C., Panovska, S. & Wardinski, I. (2019). Robust characteristics of the Laschamp and Mono Lake geomagnetic excursions: results from global field models. Frontiers in Earth Science 7, 86",
+    "url": "https://doi.org/10.3389/feart.2019.00086",
+    "licence": "CC BY 4.0"
+  },
+  "kovaltsov2012": {
+    "name": "Kovaltsov et al. 2012",
+    "kind": "paper",
+    "cite": "Kovaltsov, G. A., Mishev, A. & Usoskin, I. G. (2012). A new model of cosmogenic production of radiocarbon 14C in the atmosphere. Earth and Planetary Science Letters 337–338, 114–120",
+    "url": "https://doi.org/10.1016/j.epsl.2012.05.036"
+  },
+  "krapp2021": {
+    "name": "Krapp et al. 2021",
+    "kind": "model",
+    "cite": "Krapp, M., Beyer, R. M., Edmundson, S. L., Valdes, P. J., Manica, A. (2021), A statistics-based reconstruction of high-resolution global terrestrial climate for the last 800,000 years, Scientific Data 8, 228; data: pastclim release, Krapp2021_bio01_v1.4.0, Zenodo record 8415273",
+    "url": "https://doi.org/10.1038/s41597-021-01009-3",
+    "licence": "CC BY 4.0"
+  },
+  "kuitems2022": {
+    "name": "Kuitems et al. 2022",
+    "kind": "paper",
+    "cite": "Kuitems, M., Wallace, B. L., Lindsay, C., et al. (2022). Evidence for European presence in the Americas in AD 1021. Nature 601, 388–391",
+    "url": "https://doi.org/10.1038/s41586-021-03972-8"
+  },
+  "lainey2024": {
+    "name": "Lainey et al. 2024",
+    "kind": "paper",
+    "cite": "Lainey, V., Rambaux, N., Tobie, G., Cooper, N., Zhang, Q., Noyelles, B. & Baillié, K. (2024). A recently formed ocean inside Saturn’s moon Mimas. Nature 626, 280–282",
+    "url": "https://doi.org/10.1038/s41586-023-06975-9"
+  },
+  "laskar1993": {
+    "name": "Laskar, Joutel & Robutel 1993",
+    "kind": "paper",
+    "cite": "Laskar, Joutel & Robutel (1993), Stabilization of the Earth’s obliquity by the Moon, Nature 361, 615–617",
+    "url": "https://doi.org/10.1038/361615a0"
+  },
+  "laskar2004": {
+    "name": "Laskar et al. 2004",
+    "kind": "model",
+    "cite": "Laskar et al. (2004), A long-term numerical solution for the insolation quantities of the Earth, Astronomy & Astrophysics 428, 261–285",
+    "url": "https://doi.org/10.1051/0004-6361:20041335"
+  },
+  "lavigne2013": {
+    "name": "Lavigne et al. 2013",
+    "kind": "paper",
+    "cite": "Lavigne, F., et al. (2013). Source of the great A.D. 1257 mystery eruption unveiled, Samalas volcano, Rinjani Volcanic Complex, Indonesia. PNAS 110, 16742–16747",
+    "url": "https://doi.org/10.1073/pnas.1307520110"
+  },
+  "lemen2012": {
+    "name": "Lemen et al. 2012",
+    "kind": "paper",
+    "cite": "Lemen, J. R., Title, A. M., Akin, D. J., Boerner, P. F., et al. (2012). The Atmospheric Imaging Assembly (AIA) on the Solar Dynamics Observatory (SDO). Solar Physics 275, 17–40",
+    "url": "https://doi.org/10.1007/s11207-011-9776-8"
+  },
+  "li2008": {
+    "name": "Li et al. 2008",
+    "kind": "paper",
+    "cite": "Li et al. (2008), Assembly, configuration, and break-up history of Rodinia: a synthesis, Precambrian Research 160, 179–210",
+    "url": "https://doi.org/10.1016/j.precamres.2007.04.021"
+  },
+  "lolaHeights": {
+    "name": "LOLA heights of the Moon (LDEM)",
+    "kind": "dataset",
+    "cite": "Smith, D. E. et al., LRO LOLA gridded data record LDEM_4, 4 pixels a degree, LRO-L-LOLA-4-GDR-V1.0, NASA Planetary Data System Geosciences Node",
+    "url": "https://pds-geosciences.wustl.edu/missions/lro/lola.htm",
+    "licence": "NASA, public domain"
+  },
+  "lolaMoon": {
+    "name": "LOLA map of the Moon’s heights",
+    "kind": "imagery",
+    "cite": "NASA/GSFC/USGS, Moon LRO LOLA color shaded relief, 388 m (from the Lunar Orbiter Laser Altimeter, Smith et al. 2010), USGS Astrogeology",
+    "url": "https://astrogeology.usgs.gov/search/map/moon_lro_lola_color_shaded_relief_388m",
+    "licence": "NASA/USGS, public domain"
   },
   "loulergue": {
     "name": "Loulergue et al. 2008",
@@ -1058,11 +559,64 @@
     "cite": "Loulergue et al. (2008), methane from EPICA Dome C, Nature 453; NOAA WDC Paleoclimatology",
     "url": "https://doi.org/10.1038/nature06950"
   },
-  "foster": {
-    "name": "Foster, Royer & Lunt 2017",
+  "lucey2000": {
+    "name": "Lucey, Blewett & Jolliff 2000",
     "kind": "paper",
-    "cite": "Foster, Royer & Lunt (2017), Future climate forcing potentially without precedent in the last 420 million years, Nature Communications 8, 14845",
-    "url": "https://doi.org/10.1038/ncomms14845",
+    "cite": "Lucey, P. G., Blewett, D. T. & Jolliff, B. L. (2000). Lunar iron and titanium abundance algorithms based on final processing of Clementine ultraviolet-visible images. Journal of Geophysical Research: Planets 105, 20297–20305",
+    "url": "https://doi.org/10.1029/1999JE001117"
+  },
+  "macrostrat": {
+    "name": "Macrostrat",
+    "kind": "dataset",
+    "cite": "Macrostrat (Peters et al.), world geologic map units",
+    "url": "https://macrostrat.org",
+    "licence": "CC BY 4.0"
+  },
+  "magellanVenus": {
+    "name": "Magellan map of Venus",
+    "kind": "imagery",
+    "cite": "NASA/JPL/USGS, Venus Magellan C3-MDIR colorized topographic global mosaic, 6,600 m (from Magellan radar, 1990–94), USGS Astrogeology",
+    "url": "https://astrogeology.usgs.gov/search/map/venus_magellan_c3_mdir_colorized_topographic_mosaic_6600m",
+    "licence": "NASA/USGS, public domain"
+  },
+  "marine20": {
+    "name": "Marine20",
+    "kind": "dataset",
+    "cite": "Heaton, T. J., et al. (2020). Marine20—the marine radiocarbon age calibration curve (0–55,000 cal BP). Radiocarbon 62, 779–820",
+    "url": "https://doi.org/10.1017/RDC.2020.68",
+    "licence": "CC BY 4.0"
+  },
+  "meeus": {
+    "name": "Meeus, Astronomical Algorithms",
+    "kind": "paper",
+    "cite": "Meeus (1998), Astronomical Algorithms, 2nd edition, Willmann-Bell: the Sun (ch. 25), nutation (ch. 22) and sidereal time (ch. 12)",
+    "url": "https://search.worldcat.org/search?q=Meeus+Astronomical+Algorithms+2nd+edition"
+  },
+  "merdith2021": {
+    "name": "Merdith et al. 2021",
+    "kind": "model",
+    "cite": "Merdith et al. (2021), Extending full-plate tectonic models into deep time, Earth-Science Reviews 214, 103477",
+    "url": "https://doi.org/10.1016/j.earscirev.2020.103477"
+  },
+  "messengerColour": {
+    "name": "MESSENGER enhanced-colour map",
+    "kind": "imagery",
+    "cite": "NASA/Johns Hopkins University Applied Physics Laboratory/Carnegie Institution of Washington, “Enhanced Color Mercury Map”, MESSENGER MDIS, NASA Photojournal PIA17386",
+    "url": "https://science.nasa.gov/photojournal/enhanced-color-mercury-map",
+    "licence": "NASA, public domain"
+  },
+  "messengerMap": {
+    "name": "MESSENGER map of Mercury",
+    "kind": "imagery",
+    "cite": "NASA/JHU APL/Carnegie Institution of Washington, “A Global View from Orbit”, MESSENGER mosaic of Mercury, NASA Photojournal PIA15063 (2011)",
+    "url": "https://science.nasa.gov/photojournal/a-global-view-from-orbit/",
+    "licence": "NASA, public domain"
+  },
+  "miller": {
+    "name": "Miller et al. 2020",
+    "kind": "paper",
+    "cite": "Miller et al. (2020), Cenozoic sea-level and cryospheric evolution, Science Advances 6; PANGAEA",
+    "url": "https://doi.org/10.1594/PANGAEA.923139",
     "licence": "CC BY 4.0"
   },
   "mills": {
@@ -1072,11 +626,223 @@
     "url": "https://doi.org/10.1146/annurev-earth-032320-095425",
     "licence": "CC BY 4.0"
   },
-  "co2pip": {
-    "name": "Paleo-CO₂ Data Archive",
+  "mitalasSills1992": {
+    "name": "Mitalas & Sills 1992",
+    "kind": "paper",
+    "cite": "Mitalas, R. & Sills, K. R. (1992). On the photon diffusion time scale for the Sun. The Astrophysical Journal 401, 759",
+    "url": "https://doi.org/10.1086/172103"
+  },
+  "mitchell2021": {
+    "name": "Mitchell et al. 2021",
+    "kind": "paper",
+    "cite": "Mitchell, R. N., Thissen, C. J., Evans, D. A. D., Slotznick, S. P., Coccioni, R., Yamazaki, T. & Kirschvink, J. L. (2021). A Late Cretaceous true polar wander oscillation. Nature Communications 12, 3629",
+    "url": "https://doi.org/10.1038/s41467-021-23803-8"
+  },
+  "miyake2012": {
+    "name": "Miyake et al. 2012",
+    "kind": "paper",
+    "cite": "Miyake, F., Nagaya, K., Masuda, K. & Nakamura, T. (2012). A signature of cosmic-ray increase in AD 774–775 from tree rings in Japan. Nature 486, 240–242",
+    "url": "https://doi.org/10.1038/nature11123"
+  },
+  "miyake2013": {
+    "name": "Miyake et al. 2013",
+    "kind": "paper",
+    "cite": "Miyake, F., Masuda, K. & Nakamura, T. (2013). Another rapid event in the carbon-14 content of tree rings. Nature Communications 4, 1748",
+    "url": "https://doi.org/10.1038/ncomms2783"
+  },
+  "molaHeights": {
+    "name": "MOLA heights of Mars (MEGDR)",
     "kind": "dataset",
-    "cite": "Paleo-CO₂ Data Archive v1.12 (CO2PIP community; CenCO2PIP Consortium 2023, Science), Zenodo",
-    "url": "https://doi.org/10.5281/zenodo.15546408",
+    "cite": "Smith, D. E. et al., MGS MOLA Mission Experiment Gridded Data Record (MEGDR), 4 pixels a degree, MGS-M-MOLA-5-MEGDR-L3-V1.0, NASA Planetary Data System Geosciences Node",
+    "url": "https://pds-geosciences.wustl.edu/missions/mgs/megdr.html",
+    "licence": "NASA, public domain"
+  },
+  "molaMars": {
+    "name": "MOLA map of Mars’s heights",
+    "kind": "imagery",
+    "cite": "NASA/JPL/GSFC/USGS, Mars MGS MOLA global color shaded relief, 463 m (from the Mars Orbiter Laser Altimeter, Smith et al. 2001), USGS Astrogeology",
+    "url": "https://astrogeology.usgs.gov/search/map/mars_mgs_mola_global_color_shaded_relief_463m",
+    "licence": "NASA/USGS, public domain"
+  },
+  "montanez2013": {
+    "name": "Montañez & Poulsen 2013",
+    "kind": "paper",
+    "cite": "Montañez & Poulsen (2013), The Late Paleozoic Ice Age: an evolving paradigm, Annual Review of Earth and Planetary Sciences 41, 629–656",
+    "url": "https://doi.org/10.1146/annurev.earth.031208.100118"
+  },
+  "moonKit": {
+    "name": "NASA CGI Moon Kit",
+    "kind": "imagery",
+    "cite": "NASA Scientific Visualization Studio, CGI Moon Kit (2019): the Lunar Reconnaissance Orbiter Camera’s colour mosaic of the Moon",
+    "url": "https://svs.gsfc.nasa.gov/4720",
+    "licence": "NASA, public domain"
+  },
+  "morrison2004": {
+    "name": "Morrison & Stephenson 2004",
+    "kind": "paper",
+    "cite": "Morrison & Stephenson (2004), Historical values of the Earth’s clock error ΔT and the calculation of eclipses, Journal for the History of Astronomy 35, 327–336",
+    "url": "https://doi.org/10.1177/002182860403500305"
+  },
+  "muller2019": {
+    "name": "Müller et al. 2019",
+    "kind": "model",
+    "cite": "Müller et al. (2019), A global plate model including lithospheric deformation along major rifts and orogens since the Triassic, Tectonics 38",
+    "url": "https://doi.org/10.1029/2018TC005462"
+  },
+  "muttoniKent2019": {
+    "name": "Muttoni & Kent 2019",
+    "kind": "paper",
+    "cite": "Muttoni, G. & Kent, D. V. (2019). Jurassic monster polar shift confirmed by sequential paleopoles from Adria, promontory of Africa. Journal of Geophysical Research: Solid Earth 124, 3288–3306",
+    "url": "https://doi.org/10.1029/2018JB017199"
+  },
+  "nasaCallisto": {
+    "name": "NASA: Callisto",
+    "kind": "reference",
+    "cite": "NASA, “Callisto” (moon overview)",
+    "url": "https://science.nasa.gov/jupiter/moons/callisto/"
+  },
+  "nasaDeimos": {
+    "name": "NASA: Deimos",
+    "kind": "reference",
+    "cite": "NASA, “Deimos” (moon overview)",
+    "url": "https://science.nasa.gov/mars/moons/deimos/"
+  },
+  "nasaDione": {
+    "name": "NASA: Dione",
+    "kind": "reference",
+    "cite": "NASA, “Dione” (moon overview)",
+    "url": "https://science.nasa.gov/saturn/moons/dione/"
+  },
+  "nasaDragonfly": {
+    "name": "NASA: Dragonfly",
+    "kind": "reference",
+    "cite": "NASA, “Dragonfly” (mission page)",
+    "url": "https://science.nasa.gov/mission/dragonfly/"
+  },
+  "nasaEnceladus": {
+    "name": "NASA: Enceladus",
+    "kind": "reference",
+    "cite": "NASA, “Enceladus” (moon overview)",
+    "url": "https://science.nasa.gov/saturn/moons/enceladus/"
+  },
+  "nasaEuropa": {
+    "name": "NASA: Europa",
+    "kind": "reference",
+    "cite": "NASA, “Europa” (moon overview)",
+    "url": "https://science.nasa.gov/jupiter/moons/europa/"
+  },
+  "nasaEuropaClipper": {
+    "name": "NASA: Europa Clipper",
+    "kind": "reference",
+    "cite": "NASA, “Europa Clipper” (mission page)",
+    "url": "https://science.nasa.gov/mission/europa-clipper/"
+  },
+  "nasaGanymede": {
+    "name": "NASA: Ganymede",
+    "kind": "reference",
+    "cite": "NASA, “Ganymede” (moon overview)",
+    "url": "https://science.nasa.gov/jupiter/moons/ganymede/"
+  },
+  "nasaHyperion": {
+    "name": "NASA: Hyperion",
+    "kind": "reference",
+    "cite": "NASA, “Hyperion” (moon overview)",
+    "url": "https://science.nasa.gov/saturn/moons/hyperion/"
+  },
+  "nasaIapetus": {
+    "name": "NASA: Iapetus",
+    "kind": "reference",
+    "cite": "NASA, “Iapetus” (moon overview)",
+    "url": "https://science.nasa.gov/saturn/moons/iapetus/"
+  },
+  "nasaIo": {
+    "name": "NASA: Io",
+    "kind": "reference",
+    "cite": "NASA, “Io” (moon overview)",
+    "url": "https://science.nasa.gov/jupiter/moons/io/"
+  },
+  "nasaMimas": {
+    "name": "NASA: Mimas",
+    "kind": "reference",
+    "cite": "NASA, “Mimas” (moon overview)",
+    "url": "https://science.nasa.gov/saturn/moons/mimas/"
+  },
+  "nasaPhobos": {
+    "name": "NASA: Phobos",
+    "kind": "reference",
+    "cite": "NASA, “Phobos” (moon overview)",
+    "url": "https://science.nasa.gov/mars/moons/phobos/"
+  },
+  "nasaRhea": {
+    "name": "NASA: Rhea",
+    "kind": "reference",
+    "cite": "NASA, “Rhea” (moon overview)",
+    "url": "https://science.nasa.gov/saturn/moons/rhea/"
+  },
+  "nasaTethys": {
+    "name": "NASA: Tethys",
+    "kind": "reference",
+    "cite": "NASA, “Tethys” (moon overview)",
+    "url": "https://science.nasa.gov/saturn/moons/tethys/"
+  },
+  "nasaTitan": {
+    "name": "NASA: Titan",
+    "kind": "reference",
+    "cite": "NASA, “Titan” (moon overview)",
+    "url": "https://science.nasa.gov/saturn/moons/titan/"
+  },
+  "naturalEarth": {
+    "name": "Natural Earth",
+    "kind": "dataset",
+    "cite": "Natural Earth 1:110m country outlines",
+    "url": "https://www.naturalearthdata.com",
+    "licence": "Public domain"
+  },
+  "nsidcSeaIce": {
+    "name": "NSIDC Sea Ice Index",
+    "kind": "dataset",
+    "cite": "Fetterer, F., Knowles, K., Meier, W. N., Savoie, M., Windnagel, A. K. & Stafford, T. (2025), Sea Ice Index (G02135, Version 4) [Data Set], National Snow and Ice Data Center, Boulder, Colorado",
+    "url": "https://doi.org/10.7265/a98x-0f50",
+    "licence": "None stated; free to use on condition of citing it (NSIDC data use policy)"
+  },
+  "nssdcaChronology": {
+    "name": "NSSDCA Chronology of Lunar and Planetary Exploration",
+    "kind": "catalogue",
+    "cite": "Williams, D. R., Chronology of Lunar and Planetary Exploration, NASA Space Science Data Coordinated Archive",
+    "url": "https://nssdc.gsfc.nasa.gov/planetary/chronology.html",
+    "licence": "NASA, public domain"
+  },
+  "oHare2019": {
+    "name": "O’Hare et al. 2019",
+    "kind": "paper",
+    "cite": "O’Hare, P., Mekhaldi, F., Adolphi, F., et al. (2019). Multiradionuclide evidence for an extreme solar proton event around 2,610 B.P. (∼660 BC). PNAS 116, 5961–5966",
+    "url": "https://doi.org/10.1073/pnas.1815725116"
+  },
+  "odea2016": {
+    "name": "O’Dea et al. 2016",
+    "kind": "paper",
+    "cite": "O’Dea et al. (2016), Formation of the Isthmus of Panama, Science Advances 2",
+    "url": "https://doi.org/10.1126/sciadv.1600883"
+  },
+  "ohm": {
+    "name": "OpenHistoricalMap",
+    "kind": "dataset",
+    "cite": "© OpenHistoricalMap contributors, vector tiles at zoom 2, fetched 2026-11-01",
+    "url": "https://www.openhistoricalmap.org/copyright",
+    "licence": "CC0"
+  },
+  "onnxRuntime": {
+    "name": "ONNX Runtime Web",
+    "kind": "model",
+    "cite": "Microsoft, ONNX Runtime: runs the embedding model in the browser (onnxruntime-web 1.31.1)",
+    "url": "https://onnxruntime.ai/",
+    "licence": "MIT"
+  },
+  "opalJupiter": {
+    "name": "Hubble OPAL map of Jupiter, 2024",
+    "kind": "imagery",
+    "cite": "NASA/ESA/STScI, Outer Planet Atmospheres Legacy (OPAL), PI A. Simon: Jupiter global map, 19–20 November 2024 (doi:10.17909/T9G593); Simon, A. A., Wong, M. H. & Orton, G. S. (2015). First results from the Hubble OPAL program: Jupiter in 2015. ApJ 812, 55",
+    "url": "https://archive.stsci.edu/hlsp/opal",
     "licence": "CC BY 4.0"
   },
   "openTree": {
@@ -1086,6 +852,55 @@
     "url": "https://tree.opentreeoflife.org",
     "licence": "CC0 1.0"
   },
+  "oppenheimer2017": {
+    "name": "Oppenheimer et al. 2017",
+    "kind": "paper",
+    "cite": "Oppenheimer, C., et al. (2017). Multi-proxy dating the ‘Millennium Eruption’ of Changbaishan to late 946 CE. Quaternary Science Reviews 158, 164–171",
+    "url": "https://doi.org/10.1016/j.quascirev.2016.12.024",
+    "licence": "CC BY 4.0"
+  },
+  "osman2021": {
+    "name": "Osman et al. 2021",
+    "kind": "dataset",
+    "cite": "Osman, M. B., Tierney, J. E., Zhu, J., Tardif, R., Hakim, G. J., King, J., Poulsen, C. J. (2021), Globally resolved surface temperatures since the Last Glacial Maximum, Nature 599, 239–244; data: Last Glacial Maximum Reanalysis (LGMR), NOAA NCEI Paleoclimatology, study 33112, https://www.ncei.noaa.gov/access/paleo-search/study/33112, accessed 12 November 2026",
+    "url": "https://doi.org/10.1038/s41586-021-03984-4",
+    "licence": "None stated; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
+  },
+  "p3k14c": {
+    "name": "p3k14c",
+    "kind": "dataset",
+    "cite": "Bird, D., et al. (2022). p3k14c, a synthetic global database of archaeological radiocarbon dates. Scientific Data 9, 27; data release 2025.07 (people3k/p3k14c)",
+    "url": "https://doi.org/10.1038/s41597-022-01118-7",
+    "licence": "CC0 1.0"
+  },
+  "pages2k2019": {
+    "name": "PAGES 2k Consortium 2019",
+    "kind": "dataset",
+    "cite": "PAGES 2k Consortium: Neukom, R., Barboza, L. A., Erb, M. P., et al. (2019), Consistent multidecadal variability in global temperature reconstructions and simulations over the Common Era, Nature Geoscience 12, 643–649; data: NOAA NCEI Paleoclimatology, study 26872, https://www.ncei.noaa.gov/access/paleo-search/study/26872, accessed 12 November 2026",
+    "url": "https://doi.org/10.1038/s41561-019-0400-0",
+    "licence": "None stated; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
+  },
+  "paleBlueDot": {
+    "name": "Voyager 1: Pale Blue Dot",
+    "kind": "imagery",
+    "cite": "NASA/JPL, “Solar System Portrait – Earth as ‘Pale Blue Dot’”, Voyager 1, 14 February 1990, NASA Photojournal PIA00452",
+    "url": "https://science.nasa.gov/photojournal/solar-system-portrait-earth-as-pale-blue-dot/",
+    "licence": "NASA, public domain"
+  },
+  "paleodem": {
+    "name": "PALEOMAP PaleoDEMs",
+    "kind": "model",
+    "cite": "Scotese & Wright (2018), PALEOMAP Paleodigital Elevation Models (PaleoDEMS) for the Phanerozoic",
+    "url": "https://doi.org/10.5281/zenodo.5460860",
+    "licence": "CC BY 4.0"
+  },
+  "paleomist": {
+    "name": "PaleoMIST 1.0",
+    "kind": "model",
+    "cite": "Gowan et al. (2021), A new global ice sheet reconstruction for the past 80 000 years, Nature Communications 12, 1199; PANGAEA",
+    "url": "https://doi.org/10.1594/PANGAEA.905800",
+    "licence": "CC BY 4.0"
+  },
   "pbdb": {
     "name": "Paleobiology Database",
     "kind": "dataset",
@@ -1093,26 +908,12 @@
     "url": "https://paleobiodb.org",
     "licence": "CC BY 4.0"
   },
-  "bgeSmall": {
-    "name": "bge-small-en-v1.5",
-    "kind": "model",
-    "cite": "Xiao, Liu, Zhang & Muennighoff (2023), C-Pack: Packaged Resources To Advance General Chinese Embedding, arXiv:2309.07597; the Beijing Academy of Artificial Intelligence’s small English embedding model, bge-small-en-v1.5, as ONNX quantised to 8 bits (Xenova)",
-    "url": "https://huggingface.co/BAAI/bge-small-en-v1.5",
-    "licence": "MIT"
-  },
-  "onnxRuntime": {
-    "name": "ONNX Runtime Web",
-    "kind": "model",
-    "cite": "Microsoft, ONNX Runtime: runs the embedding model in the browser (onnxruntime-web 1.31.1)",
-    "url": "https://onnxruntime.ai/",
-    "licence": "MIT"
-  },
-  "nsidcSeaIce": {
-    "name": "NSIDC Sea Ice Index",
+  "periodo": {
+    "name": "PeriodO",
     "kind": "dataset",
-    "cite": "Fetterer, F., Knowles, K., Meier, W. N., Savoie, M., Windnagel, A. K. & Stafford, T. (2025), Sea Ice Index (G02135, Version 4) [Data Set], National Snow and Ice Data Center, Boulder, Colorado",
-    "url": "https://doi.org/10.7265/a98x-0f50",
-    "licence": "None stated; free to use on condition of citing it (NSIDC data use policy)"
+    "cite": "PeriodO, a gazetteer of period definitions, matched to countries by Wikidata identifiers",
+    "url": "https://perio.do",
+    "licence": "CC0"
   },
   "planetaryHealthCheck2026": {
     "name": "Planetary Health Check 2026",
@@ -1120,6 +921,32 @@
     "cite": "Caesar, L., Sakschewski, B., et al., eds. Kitzmann, N. H., Rockström, J. (2026), Planetary Health Check 2026: A Scientific Assessment of the State of the Planet, Planetary Boundaries Science (PBScience), Potsdam Institute for Climate Impact Research",
     "url": "https://doi.org/10.48485/pik.2026.25",
     "licence": "CC BY 4.0"
+  },
+  "pmagpy": {
+    "name": "PmagPy",
+    "kind": "model",
+    "cite": "Tauxe, L., Shaar, R., Jonestrask, L., et al. (2016). PmagPy: software package for paleomagnetic data analysis and a bridge to the Magnetics Information Consortium (MagIC) database. Geochemistry, Geophysics, Geosystems 17, 2450–2463",
+    "url": "https://doi.org/10.1002/2016GC006307",
+    "licence": "BSD-3-Clause"
+  },
+  "pmip4Lgm": {
+    "name": "PMIP4 Last Glacial Maximum runs",
+    "kind": "model",
+    "cite": "Kageyama, M., Harrison, S. P., Kapsch, M.-L., et al. (2021), The PMIP4 Last Glacial Maximum experiments: preliminary results and comparison with the PMIP3 simulations, Climate of the Past 17, 1065–1089; data: sea-ice concentration (siconc) of the CMIP6 lgm runs of MPI-ESM1-2-LR, MIROC-ES2L and AWI-ESM-1-1-LR",
+    "url": "https://doi.org/10.5194/cp-17-1065-2021",
+    "licence": "CC BY 4.0 (CMIP6 data licence register)"
+  },
+  "postberg2023": {
+    "name": "Postberg et al. 2023",
+    "kind": "paper",
+    "cite": "Postberg, F. et al. (2023). Detection of phosphates originating from Enceladus’s ocean. Nature 618, 489–493",
+    "url": "https://doi.org/10.1038/s41586-023-05987-9"
+  },
+  "prsa2016": {
+    "name": "Prša et al. 2016",
+    "kind": "paper",
+    "cite": "Prša, A., et al. (2016). Nominal values for selected solar and planetary quantities: IAU 2015 Resolution B3. The Astronomical Journal 152, 41",
+    "url": "https://doi.org/10.3847/0004-6256/152/2/41"
   },
   "richardson2023": {
     "name": "Richardson et al. 2023",
@@ -1129,46 +956,219 @@
     "licence": "CC BY-NC 4.0",
     "nonCommercial": true
   },
-  "jouzel2007": {
-    "name": "EPICA Dome C, Jouzel et al. 2007",
-    "kind": "dataset",
-    "cite": "Jouzel, J., Masson-Delmotte, V., Cattani, O., et al. (2007), Orbital and millennial Antarctic climate variability over the past 800,000 years, Science 317, 793–796; data: Jouzel, J., Masson-Delmotte, V. (2007), EPICA Dome C Ice Core 800KYr deuterium data and temperature estimates, PANGAEA",
-    "url": "https://doi.org/10.1594/PANGAEA.683655",
-    "licence": "CC BY 3.0"
+  "saganMullen1972": {
+    "name": "Sagan & Mullen 1972",
+    "kind": "paper",
+    "cite": "Sagan & Mullen (1972), Earth and Mars: evolution of atmospheres and surface temperatures, Science 177, 52–56",
+    "url": "https://doi.org/10.1126/science.177.4043.52"
   },
-  "osman2021": {
-    "name": "Osman et al. 2021",
-    "kind": "dataset",
-    "cite": "Osman, M. B., Tierney, J. E., Zhu, J., Tardif, R., Hakim, G. J., King, J., Poulsen, C. J. (2021), Globally resolved surface temperatures since the Last Glacial Maximum, Nature 599, 239–244; data: Last Glacial Maximum Reanalysis (LGMR), NOAA NCEI Paleoclimatology, study 33112, https://www.ncei.noaa.gov/access/paleo-search/study/33112, accessed 12 November 2026",
-    "url": "https://doi.org/10.1038/s41586-021-03984-4",
-    "licence": "None stated; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
+  "sagerKoppers2000": {
+    "name": "Sager & Koppers 2000",
+    "kind": "paper",
+    "cite": "Sager, W. W. & Koppers, A. A. P. (2000). Late Cretaceous polar wander of the Pacific plate: evidence of a rapid true polar wander event. Science 287, 455–459",
+    "url": "https://doi.org/10.1126/science.287.5452.455"
   },
-  "pages2k2019": {
-    "name": "PAGES 2k Consortium 2019",
-    "kind": "dataset",
-    "cite": "PAGES 2k Consortium: Neukom, R., Barboza, L. A., Erb, M. P., et al. (2019), Consistent multidecadal variability in global temperature reconstructions and simulations over the Common Era, Nature Geoscience 12, 643–649; data: NOAA NCEI Paleoclimatology, study 26872, https://www.ncei.noaa.gov/access/paleo-search/study/26872, accessed 12 November 2026",
-    "url": "https://doi.org/10.1038/s41561-019-0400-0",
-    "licence": "None stated; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
+  "saur2015": {
+    "name": "Saur et al. 2015",
+    "kind": "paper",
+    "cite": "Saur, J. et al. (2015). The search for a subsurface ocean in Ganymede with Hubble Space Telescope observations of its auroral ovals. Journal of Geophysical Research: Space Physics 120, 1715–1737",
+    "url": "https://doi.org/10.1002/2014JA020778"
   },
-  "hadcrut5": {
-    "name": "HadCRUT5",
-    "kind": "dataset",
-    "cite": "Morice, C. P., Kennedy, J. J., Rayner, N. A., et al. (2021), An updated assessment of near-surface temperature change from 1850: the HadCRUT5 data set, Journal of Geophysical Research: Atmospheres 126, e2019JD032361; data: HadCRUT.5.1.0.0, Met Office Hadley Centre and Climatic Research Unit, University of East Anglia",
-    "url": "https://doi.org/10.1029/2019JD032361",
-    "licence": "Open Government Licence v3"
-  },
-  "berkeleyEarth": {
-    "name": "Berkeley Earth",
-    "kind": "dataset",
-    "cite": "Rohde, R. A., Hausfather, Z. (2020), The Berkeley Earth Land/Ocean Temperature Record, Earth System Science Data 12, 3469–3479; data: Berkeley Earth gridded land temperatures (Complete_TAVG_LatLong1, 1° monthly anomalies), release of 9 January 2025",
-    "url": "https://doi.org/10.5194/essd-12-3469-2020",
-    "licence": "CC BY-NC 4.0"
-  },
-  "pmip4Lgm": {
-    "name": "PMIP4 Last Glacial Maximum runs",
+  "scotese2022": {
+    "name": "Scotese 2022",
     "kind": "model",
-    "cite": "Kageyama, M., Harrison, S. P., Kapsch, M.-L., et al. (2021), The PMIP4 Last Glacial Maximum experiments: preliminary results and comparison with the PMIP3 simulations, Climate of the Past 17, 1065–1089; data: sea-ice concentration (siconc) of the CMIP6 lgm runs of MPI-ESM1-2-LR, MIROC-ES2L and AWI-ESM-1-1-LR",
-    "url": "https://doi.org/10.5194/cp-17-1065-2021",
-    "licence": "CC BY 4.0 (CMIP6 data licence register)"
+    "cite": "Scotese (2022), Global Mean Surface Temperatures for 100 Phanerozoic Time Intervals, after Scotese et al. (2021) and Valdes, Scotese & Lunt (2021)",
+    "url": "https://doi.org/10.5281/zenodo.5718392",
+    "licence": "CC BY 4.0"
+  },
+  "sdo": {
+    "name": "NASA SDO",
+    "kind": "imagery",
+    "cite": "NASA Solar Dynamics Observatory, AIA and HMI science teams, images of 2024 via Helioviewer",
+    "url": "https://sdo.gsfc.nasa.gov/",
+    "licence": "NASA, public domain"
+  },
+  "seton2020": {
+    "name": "Seton et al. 2020",
+    "kind": "dataset",
+    "cite": "Seton et al. (2020), A global data set of present-day oceanic crustal age and seafloor spreading parameters, Geochemistry, Geophysics, Geosystems 21",
+    "url": "https://doi.org/10.1029/2020GC009214"
+  },
+  "shcal20": {
+    "name": "SHCal20",
+    "kind": "dataset",
+    "cite": "Hogg, A. G., et al. (2020). SHCal20 Southern Hemisphere calibration, 0–55,000 years cal BP. Radiocarbon 62, 759–778",
+    "url": "https://doi.org/10.1017/RDC.2020.59",
+    "licence": "CC BY 4.0"
+  },
+  "sigl2015": {
+    "name": "Sigl et al. 2015",
+    "kind": "paper",
+    "cite": "Sigl, M., et al. (2015). Timing and climate forcing of volcanic eruptions for the past 2,500 years. Nature 523, 543–549",
+    "url": "https://doi.org/10.1038/nature14565"
+  },
+  "skyfield": {
+    "name": "Skyfield",
+    "kind": "model",
+    "cite": "Rhodes, Skyfield: high precision research-grade positions for planets and Earth satellites",
+    "url": "https://rhodesmill.org/skyfield/",
+    "licence": "MIT"
+  },
+  "spratt": {
+    "name": "Spratt & Lisiecki 2016",
+    "kind": "paper",
+    "cite": "Spratt & Lisiecki (2016), A Late Pleistocene sea level stack, Climate of the Past 12; NOAA World Data Service",
+    "url": "https://doi.org/10.5194/cp-12-1079-2016"
+  },
+  "steinberger2008": {
+    "name": "Steinberger & Torsvik 2008",
+    "kind": "paper",
+    "cite": "Steinberger & Torsvik (2008), Absolute plate motions and true polar wander in the absence of hotspot tracks, Nature 452, 620–623",
+    "url": "https://doi.org/10.1038/nature06824"
+  },
+  "stix2003": {
+    "name": "Stix 2003",
+    "kind": "paper",
+    "cite": "Stix, M. (2003). On the time scale of energy transport in the Sun. Solar Physics 212, 3–6",
+    "url": "https://doi.org/10.1023/A:1022952621810"
+  },
+  "stofan2007": {
+    "name": "Stofan et al. 2007",
+    "kind": "paper",
+    "cite": "Stofan, E. R. et al. (2007). The lakes of Titan. Nature 445, 61–64",
+    "url": "https://doi.org/10.1038/nature05438"
+  },
+  "stuiverPolach1977": {
+    "name": "Stuiver & Polach 1977",
+    "kind": "paper",
+    "cite": "Stuiver, M. & Polach, H. A. (1977). Discussion: reporting of 14C data. Radiocarbon 19, 355–363",
+    "url": "https://doi.org/10.1017/S0033822200003672"
+  },
+  "tarduno2010": {
+    "name": "Tarduno et al. 2010",
+    "kind": "paper",
+    "cite": "Tarduno et al. (2010), Geodynamo, solar wind, and magnetopause 3.4 to 3.45 billion years ago, Science 327, 1238–1240",
+    "url": "https://doi.org/10.1126/science.1183445"
+  },
+  "tarduno2015": {
+    "name": "Tarduno et al. 2015",
+    "kind": "paper",
+    "cite": "Tarduno et al. (2015), A Hadean to Paleoarchean geodynamo recorded by single zircon crystals, Science 349, 521–524",
+    "url": "https://doi.org/10.1126/science.aaa9114"
+  },
+  "timmermann": {
+    "name": "Timmermann & Friedrich 2016",
+    "kind": "model",
+    "cite": "Timmermann & Friedrich (2016), Late Pleistocene climate drivers of early human migration, Nature 538, 92; ICCP climate data server",
+    "url": "https://climatedata.ibs.re.kr/data/human-dispersal-simulation/arrival-time",
+    "licence": "CC BY-NC 4.0",
+    "nonCommercial": true
+  },
+  "torsvik1998": {
+    "name": "Torsvik, Meert & Smethurst 1998",
+    "kind": "paper",
+    "cite": "Torsvik, T. H., Meert, J. G. & Smethurst, M. A. (1998). Polar wander and the Cambrian (technical comment). Science 279, 9",
+    "url": "https://doi.org/10.1126/science.279.5347.9a"
+  },
+  "torsvik2012": {
+    "name": "Torsvik et al. 2012",
+    "kind": "paper",
+    "cite": "Torsvik et al. (2012), Phanerozoic polar wander, palaeogeography and dynamics, Earth-Science Reviews 114, 325–368",
+    "url": "https://doi.org/10.1016/j.earscirev.2012.06.007"
+  },
+  "torsvikCocks": {
+    "name": "Torsvik & Cocks, Earth History and Palaeogeography",
+    "kind": "paper",
+    "cite": "Torsvik & Cocks (2016), Earth History and Palaeogeography, Cambridge University Press: a textbook, period by period",
+    "url": "https://doi.org/10.1017/9781316225523"
+  },
+  "usoskin2005": {
+    "name": "Usoskin et al. 2005",
+    "kind": "paper",
+    "cite": "Usoskin, I. G., Alanko-Huotari, K., Kovaltsov, G. A. & Mursula, K. (2005). Heliospheric modulation of cosmic rays: monthly reconstruction for 1951–2004. Journal of Geophysical Research 110, A12108",
+    "url": "https://doi.org/10.1029/2005JA011250"
+  },
+  "vanDerMeer": {
+    "name": "van der Meer et al. 2022",
+    "kind": "paper",
+    "cite": "van der Meer et al. (2022), Gondwana Research 111, Supplementary Table 1",
+    "url": "https://doi.org/10.1016/j.gr.2022.07.014",
+    "licence": "CC BY 4.0"
+  },
+  "vanDerPlicht2020": {
+    "name": "van der Plicht et al. 2020",
+    "kind": "paper",
+    "cite": "van der Plicht, J., Bronk Ramsey, C., Heaton, T. J., Scott, E. M. & Talamo, S. (2020). Recent developments in calibration for archaeological and environmental samples. Radiocarbon 62, 1095–1117",
+    "url": "https://doi.org/10.1017/RDC.2020.22",
+    "licence": "CC BY 4.0"
+  },
+  "vikingMap": {
+    "name": "Viking colour mosaic of Mars",
+    "kind": "imagery",
+    "cite": "NASA/JPL/USGS Astrogeology Science Center, Mars Viking Global Color Mosaic 925 m, from Viking Orbiter images of 1976–80",
+    "url": "https://astrogeology.usgs.gov/search/map/mars_viking_global_color_mosaic_925m",
+    "licence": "USGS, public domain"
+  },
+  "vikingPhobosMap": {
+    "name": "Viking map of Phobos",
+    "kind": "imagery",
+    "cite": "Phobos Viking global mosaic, 5 m (Viking orbiter images, mosaicked by P. Stooke, controlled by DLR), USGS Astrogeology",
+    "url": "https://astrogeology.usgs.gov/search/map/phobos_viking_global_mosaic_5m",
+    "licence": "NASA/USGS, public domain"
+  },
+  "vondrak": {
+    "name": "Vondrák et al. 2011",
+    "kind": "paper",
+    "cite": "Vondrák, Capitaine & Wallace (2011), New precession expressions, valid for long time intervals, Astronomy & Astrophysics 534, A22",
+    "url": "https://doi.org/10.1051/0004-6361/201117274"
+  },
+  "voyagerRings": {
+    "name": "Voyager 2’s occultation of Saturn’s rings",
+    "kind": "dataset",
+    "cite": "Voyager 2 photopolarimeter, stellar occultation of delta Scorpii by Saturn’s rings (1981), normal optical depth every 10 km, 72,000–142,500 km: PDS Ring-Moon Systems Node, VG_2801, PS1P01",
+    "url": "https://pds-rings.seti.org/holdings/volumes/VG_28xx/VG_2801/",
+    "licence": "NASA, public domain"
+  },
+  "vsop87": {
+    "name": "VSOP87",
+    "kind": "model",
+    "cite": "Bretagnon & Francou (1988), Planetary theories in rectangular and spherical variables: VSOP87 solutions, Astronomy & Astrophysics 202, 309; via the astronomia library (MIT)",
+    "url": "https://ui.adsabs.harvard.edu/abs/1988A&A...202..309B"
+  },
+  "waite2017": {
+    "name": "Waite et al. 2017",
+    "kind": "paper",
+    "cite": "Waite, J. H. et al. (2017). Cassini finds molecular hydrogen in the Enceladus plume: evidence for hydrothermal processes. Science 356, 155–159",
+    "url": "https://doi.org/10.1126/science.aai8703"
+  },
+  "wells1963": {
+    "name": "Wells 1963",
+    "kind": "paper",
+    "cite": "Wells (1963), Coral growth and geochronometry, Nature 197, 948–950",
+    "url": "https://doi.org/10.1038/197948a0"
+  },
+  "wilde2001": {
+    "name": "Wilde et al. 2001",
+    "kind": "paper",
+    "cite": "Wilde, Valley, Peck & Graham (2001), Evidence from detrital zircons for the existence of continental crust and oceans on the Earth 4.4 Gyr ago, Nature 409, 175–178",
+    "url": "https://doi.org/10.1038/35051550"
+  },
+  "williams2000": {
+    "name": "Williams 2000",
+    "kind": "paper",
+    "cite": "Williams (2000), Geological constraints on the Precambrian history of Earth’s rotation and the Moon’s orbit, Reviews of Geophysics 38, 37–59",
+    "url": "https://doi.org/10.1029/1999RG900016"
+  },
+  "zachos2001": {
+    "name": "Zachos et al. 2001",
+    "kind": "paper",
+    "cite": "Zachos et al. (2001), Trends, rhythms, and aberrations in global climate 65 Ma to present, Science 292, 686–693",
+    "url": "https://doi.org/10.1126/science.1059412"
+  },
+  "zhao2002": {
+    "name": "Zhao et al. 2002",
+    "kind": "paper",
+    "cite": "Zhao et al. (2002), Review of global 2.1–1.8 Ga orogens: implications for a pre-Rodinia supercontinent, Earth-Science Reviews 59, 125–162",
+    "url": "https://doi.org/10.1016/S0012-8252(02)00073-9"
   }
 }

@@ -200,33 +200,6 @@ body {
   display: none;
 }
 
-.sky-eclipse {
-  margin: 4px 0 0;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--accent);
-}
-
-.notices {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  max-width: min(360px, calc(100% - 32px));
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.notices li {
-  margin-bottom: 8px;
-  padding: 10px 14px;
-  border: 1px solid rgb(255 183 94 / 0.35);
-  border-radius: 10px;
-  background: var(--panel);
-  backdrop-filter: blur(14px);
-  font-size: 13px;
-}
-
 .hud-more {
   display: flex;
   flex-wrap: wrap;
@@ -238,8 +211,7 @@ body {
   flex-basis: 100%;
 }
 
-.credits,
-.here-text {
+.credits {
   font-size: 11px;
   color: var(--ink-muted);
 }
@@ -264,14 +236,6 @@ body {
   .hud-when {
     font-size: 18px;
   }
-
-  .notices {
-    top: auto;
-    right: 12px;
-    bottom: 36px;
-    left: 12px;
-    max-width: none;
-  }
 }
 
 /* Full view hides the panels; a tap on open sky or empty space (or, in deep time, on the globe)
@@ -281,25 +245,6 @@ body {
 #app[data-panels='hidden'] .notices,
 #app[data-panels='hidden'] .zoom-rail {
   display: none;
-}
-
-/* "Show controls": only while the panels are hidden. */
-.show-controls {
-  display: none;
-  position: absolute;
-  bottom: calc(16px + env(safe-area-inset-bottom));
-  left: 50%;
-  min-height: 44px;
-  padding: 0 18px;
-  border: 1px solid var(--panel-border);
-  border-radius: 22px;
-  background: var(--panel);
-  backdrop-filter: blur(14px);
-  color: var(--ink);
-  font: inherit;
-  font-size: 14px;
-  transform: translateX(-50%);
-  cursor: pointer;
 }
 
 #app[data-panels='hidden'] .show-controls {
@@ -320,8 +265,7 @@ body {
   gap: 6px;
 }
 
-.search-open,
-.full-view {
+.search-open {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -337,44 +281,12 @@ body {
   pointer-events: auto;
 }
 
-/* What is written about here: each passage a line, its place and time under it. */
-.here-list {
-  display: grid;
-  gap: 2px;
-  margin: 6px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.here-item {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  padding: 4px 8px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-.here-item:hover,
-.here-item:focus-visible {
-  background: rgb(255 255 255 / 0.06);
-}
-
-.here-meta,
-.here-empty {
+.here-meta {
   color: var(--ink-muted);
   font-size: 11px;
 }
 
-.credits summary,
-.here-text summary {
+.credits summary {
   width: fit-content;
   /* A taller tap target than the line it sits on, without making the panel taller. */
   margin: -10px 0;
@@ -594,31 +506,8 @@ body {
 }
 
 .hud-actions[hidden],
-.sky-caption[hidden],
-.sky-eclipse[hidden] {
+.sky-caption[hidden] {
   display: none;
-}
-
-.sky {
-  position: absolute;
-  inset: 0;
-  background: #02040a;
-  cursor: grab;
-  touch-action: none;
-}
-
-.sky:active {
-  cursor: grabbing;
-}
-
-.sky[hidden] {
-  display: none;
-}
-
-.sky canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
 
 .famous-dialog {
@@ -802,48 +691,6 @@ body {
   --mark: #c9a3e6;
 }
 
-/* Dated finds of humans and their relatives: a dot and the date; disputed ones in italics.
-   Each is a button, to tap for its card. */
-.empire-label.human-site {
-  padding: 0;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-weight: 600;
-  color: #fff;
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-.empire-label.human-site:focus-visible {
-  outline: 2px solid #fff;
-  outline-offset: 2px;
-}
-
-/* Dated finds of humans and their relatives: a dot and the date; disputed ones in italics. */
-.human-site::before {
-  content: '';
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  margin-right: 5px;
-  border-radius: 50%;
-  background: rgb(247 201 90);
-  vertical-align: middle;
-}
-
-.human-site.is-neanderthal::before {
-  background: rgb(120 200 255);
-}
-
-.human-site.is-denisovan::before {
-  background: rgb(220 140 255);
-}
-
-.human-site.is-disputed {
-  font-style: italic;
-}
-
 /* On phones the header's first row holds the time switch and Layers: the buttons tighten up,
    and the Layers panel becomes a sheet along the bottom. */
 @media (max-width: 600px) {
@@ -857,95 +704,6 @@ body {
   text-decoration: underline dotted rgb(255 255 255 / 0.35);
   text-underline-offset: 3px;
   cursor: help;
-}
-
-.sky-options[hidden] {
-  display: none;
-}
-
-.sky-options > summary {
-  display: flex;
-  align-items: center;
-  min-height: 36px;
-  color: var(--ink-muted);
-  font-size: 14px;
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-.sky-options > summary {
-  list-style: none;
-}
-
-.sky-options > summary::-webkit-details-marker {
-  display: none;
-}
-
-.sky-options > summary::before {
-  margin-right: 6px;
-  font-size: 11px;
-  transition: transform 0.15s;
-  content: '▶';
-}
-
-.sky-options[open] > summary::before {
-  transform: rotate(90deg);
-}
-
-/* A tablet record in the sky: what it says, whether it fits, and the way back. */
-.tablet-record {
-  margin: 8px 0 4px;
-  padding: 8px 10px;
-  border: 1px solid rgb(255 214 140 / 0.4);
-  border-radius: 10px;
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.tablet-record[hidden] {
-  display: none;
-}
-
-.tablet-record p {
-  margin: 0 0 6px;
-}
-
-.tablet-record .tablet-mark {
-  white-space: normal;
-}
-
-.tablet-record-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.tablet-record-back,
-.tablet-record-close {
-  min-height: 36px;
-  padding: 0 14px;
-  border: 1px solid var(--panel-border);
-  border-radius: 999px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-/* What a tapped term means, under the line it is on. */
-.term-note {
-  max-width: 46ch;
-  margin: 4px 0 6px;
-  padding: 6px 10px;
-  border-left: 2px solid var(--accent);
-  color: var(--ink-muted);
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.term-note[hidden] {
-  display: none;
 }
 
 /* "Why here?": the globe asking for a tap. */
@@ -1027,26 +785,4 @@ button:has(> .icon-label) > .icon {
 .is-explaining #app .show-controls,
 .is-explaining #app .deep-glance {
   display: none;
-}
-
-/* The story's chapters in 3D (#317): over the globe, under the stage; drag to turn it. */
-.story-3d {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  background: #02040a;
-  cursor: grab;
-  touch-action: none;
-}
-
-.story-3d:active {
-  cursor: grabbing;
-}
-
-.story-3d[hidden] {
-  display: none;
-}
-
-.story-3d canvas {
-  display: block;
 }

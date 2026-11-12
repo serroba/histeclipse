@@ -1,0 +1,23 @@
+/* The story's chapters in 3D (#317): over the globe, under the panels. */
+
+/* The story's chapters in 3D (#317): over the globe, under the stage; drag to turn it. */
+.story-3d {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: #02040a;
+  cursor: grab;
+  touch-action: none;
+}
+
+.story-3d:active {
+  cursor: grabbing;
+}
+
+.story-3d[hidden] {
+  display: none;
+}
+
+.story-3d canvas {
+  display: block;
+}

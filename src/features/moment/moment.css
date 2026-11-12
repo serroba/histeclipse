@@ -1,0 +1,16 @@
+/* What a tapped term means, under the line it is on. */
+
+/* What a tapped term means, under the line it is on. */
+.term-note {
+  max-width: 46ch;
+  margin: 4px 0 6px;
+  padding: 6px 10px;
+  border-left: 2px solid var(--accent);
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.term-note[hidden] {
+  display: none;
+}
