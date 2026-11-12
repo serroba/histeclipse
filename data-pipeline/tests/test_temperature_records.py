@@ -82,6 +82,38 @@ def test_reads_berkeley_annual_means_with_their_half_width() -> None:
     assert _rounded(record.rows) == [(1850, -0.436, -0.606, -0.266)]
 
 
+def test_reads_jra3q_from_the_c3s_table_on_its_own_1991_2020_mean() -> None:
+    lines = [
+        "Annual global-average temperature (degrees C) relative to 1850-1900 reference level",
+        "Datasets normalised so that all have the same 1991-2020 average",
+        " ",
+        "Year,ERA5,JRA-3Q,Berkeley Earth",
+        " 1947,      0.25,   -999.0000,      0.30,",
+    ]
+    # 1991-2020 read 0.88 on average (0.78 and 0.98 in turn); 2025 is 0.6 above it.
+    lines += [
+        f" {year},      0.9,   {0.78 if year % 2 else 0.98:.4f},      0.9,"
+        for year in range(1991, 2021)
+    ]
+    lines += [
+        " 2025,      1.47,      1.4800,      1.40,",
+        f" {t.LAST_YEAR + 1}, 1.6, 1.7, 1.5,",
+        "",
+    ]
+    record = t.jra3q("\n".join(lines))
+    assert record.rows[0][0] == 1991
+    assert _rounded(record.rows)[0] == (1991, -0.1, None, None)
+    assert _rounded(record.rows)[-1] == (2025, 0.6, None, None)
+    assert len(record.rows) == 31  # the missing year and the incomplete one are dropped
+    assert (record.own_baseline, record.source_id, record.kind) == (
+        "1991-2020",
+        "jra3q",
+        "reanalysis",
+    )
+    assert "Copernicus Climate Change Service" in record.credit
+    assert "doi:10.2151/jmsj.2024-004" in record.credit
+
+
 def _record(rows: list[t.Row], name: str = "r") -> t.Record:
     return t.Record(
         id=name,

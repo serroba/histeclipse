@@ -401,6 +401,13 @@
     "url": "https://doi.org/10.1029/2023JD040179",
     "licence": "No licence stated; NASA asks that the web page and paper be cited"
   },
+  "glambie": {
+    "name": "GlaMBIE",
+    "kind": "dataset",
+    "cite": "The GlaMBIE Team (2025), Community estimate of global glacier mass changes from 2000 to 2023, Nature 639, 382–388; data: GlaMBIE (2024), Glacier Mass Balance Intercomparison Exercise (GlaMBIE) Dataset 1.0.0, World Glacier Monitoring Service, Zurich: each of the 19 glacier regions’ mass change per year, 2000–2023, combined and by kind of observation (altimetry, gravimetry, DEM differencing and the glaciological method)",
+    "url": "https://doi.org/10.5904/wgms-glambie-2024-07",
+    "licence": "None stated; open access on condition of correct citation (WGMS)"
+  },
   "globalCarbonBudget2026": {
     "name": "Global Carbon Budget 2026",
     "kind": "dataset",
@@ -526,6 +533,12 @@
     "cite": "Hu et al. (2016), The timing of India-Asia collision onset: facts, theories, controversies, Earth-Science Reviews 160, 264–299",
     "url": "https://doi.org/10.1016/j.earscirev.2016.07.014"
   },
+  "hugonnet2021": {
+    "name": "Hugonnet et al. 2021",
+    "kind": "paper",
+    "cite": "Hugonnet, R., McNabb, R., Berthier, E., Menounos, B., Nuth, C., Girod, L., Farinotti, D., Huss, M., Dussaillant, I., Brun, F., Kääb, A. (2021), Accelerated global glacier mass loss in the early twenty-first century, Nature 592, 726–731; its regional five-year elevation changes, 2000–2020, as submitted to GlaMBIE",
+    "url": "https://doi.org/10.1038/s41586-021-03436-z"
+  },
   "humanFinds": {
     "name": "The site’s list of finds",
     "kind": "dataset",
@@ -565,6 +578,13 @@
     "cite": "Forster, P. M., Walsh, T., Smith, C., et al. (2026), Indicators of Global Climate Change 2025: annual update of key indicators of the state of the climate system and human influence, Earth System Science Data 18, 3889–3933 (doi:10.5194/essd-18-3889-2026); data: Smith, C., Walsh, T., Gillett, N., et al. (2026), Indicators of Global Climate Change 2025, IGCC-2025a, Zenodo. The Earth heat inventory: heat gained since 1971 by the ocean (by layer, to 2024), land, ice and atmosphere (to 2020), carrying on the GCOS inventory of von Schuckmann et al. (2023, Earth System Science Data 15, 1675); the ocean holds about 90% of it",
     "url": "https://doi.org/10.5281/zenodo.21494229",
     "licence": "CC BY 4.0"
+  },
+  "imbie": {
+    "name": "IMBIE",
+    "kind": "dataset",
+    "cite": "Otosaka, I. N., Shepherd, A., Amory, C., Horwath, M., et al. (2026), Mass balance of the Greenland and Antarctic ice sheets from the 1970s to 2023, Scientific Data 13, 1301; data: Mass balance of the Greenland and Antarctic Ice Sheets from the 1970s to 2023, version 1.0, NERC EDS UK Polar Data Centre: the Ice Sheet Mass Balance Inter-comparison Exercise’s reconciled mass balance from altimetry, gravimetry and the input-output method, monthly, with one-sigma uncertainties",
+    "url": "https://doi.org/10.5285/128c5e33-5224-4197-82f0-19dcc95b80a0",
+    "licence": "Open Government Licence v3.0"
   },
   "impactEarth": {
     "name": "Impact Earth Database",
@@ -627,6 +647,13 @@
     "url": "https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html",
     "licence": "NASA/JPL, public domain"
   },
+  "jra3q": {
+    "name": "JRA-3Q",
+    "kind": "dataset",
+    "cite": "Kosaka, Y., Kobayashi, S., Harada, Y., et al. (2024), The JRA-3Q Reanalysis, Journal of the Meteorological Society of Japan 102, 49–109; data: Japan Meteorological Agency, JRA-3Q, annual global mean 2 m temperature as computed and published by the Copernicus Climate Change Service (C3S/ECMWF) in its Global Climate Highlights 2025 (Figure 3 data: analysis over land, background forecast over sea). JMA’s third reanalysis, from September 1947: a weather model fitted to observations",
+    "url": "https://doi.org/10.2151/jmsj.2024-004",
+    "licence": "Reproduced with the source acknowledged, as the C3S website allows; JMA asks for JRA-3Q to be cited and acknowledged, and supplies its own JRA-3Q downloads for non-commercial use"
+  },
   "judd2024": {
     "name": "PhanDA (Judd et al. 2024)",
     "kind": "model",
@@ -663,6 +690,13 @@
     "kind": "paper",
     "cite": "Kivelson, M. G., Khurana, K. K., Russell, C. T., Volwerk, M., Walker, R. J. & Zimmer, C. (2000). Galileo magnetometer measurements: a stronger case for a subsurface ocean at Europa. Science 289, 1340–1343",
     "url": "https://doi.org/10.1126/science.289.5483.1340"
+  },
+  "kopp2016": {
+    "name": "Kopp et al. 2016",
+    "kind": "paper",
+    "cite": "Kopp, R. E., Kemp, A. C., Bittermann, K., Horton, B. P., Donnelly, J. P., Gehrels, W. R., Hay, C. C., Mitrovica, J. X., Morrow, E. D., Rahmstorf, S. (2016), Temperature-driven global sea-level variability in the Common Era, Proceedings of the National Academy of Sciences 113, E1434–E1441: global sea level from 1000 BCE to 2010 CE with its 1-sigma uncertainty, from a Gaussian-process model of proxy relative sea-level records and tide gauges (model ML2,1); the series as published with the authors’ SESL code, github.com/bobkopp/SESL (Data/GLMW-1ts.mat)",
+    "url": "https://doi.org/10.1073/pnas.1517056113",
+    "licence": "GPL-3.0 (the SESL repository’s licence); our series derived from it is shared under the same licence"
   },
   "korte2011": {
     "name": "Korte et al. 2011",
@@ -1231,6 +1265,13 @@
     "url": "https://doi.org/10.1126/sciadv.adh2458",
     "licence": "CC BY-NC 4.0",
     "nonCommercial": true
+  },
+  "rutgersSnow": {
+    "name": "Rutgers Global Snow Lab",
+    "kind": "dataset",
+    "cite": "Robinson, D. A., Estilow, T. W., NOAA CDR Program (2012), NOAA Climate Data Record (CDR) of Northern Hemisphere (NH) Snow Cover Extent (SCE), Version 1, NOAA National Centers for Environmental Information; Estilow, T. W., Young, A. H., Robinson, D. A. (2015), A long-term Northern Hemisphere snow cover extent data record for climate studies and monitoring, Earth System Science Data 7, 137–142; monthly extents over land from the Rutgers University Global Snow Lab, from November 1966",
+    "url": "https://doi.org/10.7289/V5N014G9",
+    "licence": "None stated; free to use with citation (NOAA Climate Data Record)"
   },
   "saganMullen1972": {
     "name": "Sagan & Mullen 1972",
