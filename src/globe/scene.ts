@@ -33,7 +33,6 @@ import {
   Mesh,
   MeshBasicMaterial,
   OneFactor,
-  OrthographicCamera,
   PerspectiveCamera,
   PlaneGeometry,
   Quaternion,
@@ -54,7 +53,6 @@ import {
   Vector3,
   Vector4,
   WebGLRenderer,
-  WebGLRenderTarget,
   ZeroFactor,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -69,13 +67,8 @@ import {
   type GlobeCamera,
   type Viewpoint,
 } from '../state/viewState';
-import type { BesselianElements } from '../data/solarCatalog';
 import { LAND_NOISE_GRID, landNoise, levelForShare, shareAtOrAbove } from '../deepTime/landScheme';
-import {
-  ELEMENTS_HALF_SPAN_HOURS,
-  SIDEREAL_DEGREES_PER_SECOND,
-  type ShadowGeometry,
-} from '../eclipses/solar';
+import type { ShadowGeometry } from '../eclipses/solar';
 import {
   cameraFromPosition,
   cameraPosition,
@@ -129,13 +122,7 @@ import {
 import { createPlanetMeshes } from './planetMeshes';
 import type { ArrivalGrid } from '../data/dispersal';
 import { clearOverlay, createEmpireCanvas, paintSettled } from './empireCanvas';
-import {
-  OCCULTATION,
-  SOLAR_COMMON,
-  SOLAR_PATH_FRAGMENT,
-  SOLAR_PATH_LAYER,
-  SOLAR_SHADOW,
-} from './solarShaders';
+import { OCCULTATION, SOLAR_COMMON, SOLAR_SHADOW } from './solarShaders';
 import { SEA_ICE } from './seaIceShader';
 import { CORONA_FRAGMENT, CORONA_VERTEX, SUN_FRAGMENT, SUN_VERTEX } from './sunShaders';
 import { controlSpeeds } from './controlSpeeds';
@@ -167,13 +154,6 @@ const LABEL_MAX_RADIUS_PIXELS = 60;
 const OCCLUDING_RADIUS_PIXELS = 10;
 /** Markers closer than this on screen (pixels) are shown as one. */
 const MERGE_PIXELS = 40;
-
-/** A solar eclipse's path: its elements, the ΔT to draw it for, and ΔT's uncertainty. */
-interface SolarPath {
-  readonly elements: BesselianElements;
-  readonly deltaTSeconds: number;
-  readonly uncertaintySeconds: number;
-}
 
 /** Where the Moon and Sun are at the current moment, from Earth's centre. */
 interface SpaceBodies {
@@ -304,8 +284,6 @@ interface SurfaceSketch {
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
   setSunDirection(direction: Vector3Tuple): void;
-  /** Draw where the umbra passed (computed once per eclipse); null hides it. */
-  setSolarPath(path: SolarPath | null): void;
   /** Darken the ground under the Moon's shadow at the current moment; null hides it. */
   setSolarShadow(shadow: ShadowGeometry | null): void;
   /**
@@ -446,15 +424,6 @@ const EARTH_VERTEX = /* glsl */ `
   }
 `;
 
-// A full-screen quad: position is already in clip space.
-const PATH_VERTEX = /* glsl */ `
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
-    gl_Position = vec4(position.xy, 0.0, 1.0);
-  }
-`;
-
 // Day side lit by the Sun, a twilight band down to about −6° (civil twilight), a dim blue night
 // side (no city lights: they would be anachronistic for most of history), and a faint warm glow
 // along the terminator. The parts features bring (#379) are called over the lit ground, in order.
@@ -462,7 +431,6 @@ const EARTH_HEAD = /* glsl */ `
   #include <logdepthbuf_pars_fragment>
   ${SOLAR_COMMON}
   ${SOLAR_SHADOW}
-  ${SOLAR_PATH_LAYER}
   ${OCCULTATION}
   uniform sampler2D dayMap;
   // Where the day map lies on the globe's map, and how opaque: a tile's part of it (#568).
@@ -749,8 +717,7 @@ const EARTH_BODY = /* glsl */ `
 `;
 
 // After the parts: deep time's even light, and what goes over it.
-const EARTH_TAIL = /* glsl */ `    color = solarPathLayer(color, vUv);
-    // A selected solar eclipse draws its shadow from the catalog's Besselian elements, which
+const EARTH_TAIL = /* glsl */ `    // A selected solar eclipse draws its shadow from the catalog's Besselian elements, which
     // match its path exactly; otherwise the Moon's shadow comes straight from the geometry.
     if (solarActive < 0.5 && moonRadius > 0.0) {
       // On the unit sphere, the surface point is its normal.
@@ -915,31 +882,6 @@ export function createGlobe(
   const moonPosition = new Vector3();
   const sunPosition = new Vector3(1e5, 0, 0);
   // The eclipse path, painted once per eclipse into a map-shaped texture the Earth samples.
-  const pathTarget = new WebGLRenderTarget(1024, 512, {
-    minFilter: LinearFilter,
-    magFilter: LinearFilter,
-    depthBuffer: false,
-  });
-  const pathMaterial = new ShaderMaterial({
-    uniforms: {
-      coefficientsX: { value: new Vector4() },
-      coefficientsY: { value: new Vector4() },
-      coefficientsD: { value: new Vector4() },
-      coefficientsMu: { value: new Vector4() },
-      coefficientsL1: { value: new Vector4() },
-      coefficientsL2: { value: new Vector4() },
-      tangents: { value: new Vector2() },
-      muShifts: { value: new Vector3() },
-      halfSpanHours: { value: ELEMENTS_HALF_SPAN_HOURS },
-    },
-    vertexShader: PATH_VERTEX,
-    fragmentShader: `${SOLAR_COMMON}${SOLAR_PATH_FRAGMENT}`,
-    depthTest: false,
-  });
-  const pathScene = new Scene();
-  pathScene.add(new Mesh(new PlaneGeometry(2, 2), pathMaterial));
-  const pathCamera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
-
   const empiresCanvas = createEmpireCanvas();
   const empiresTexture = new CanvasTexture(empiresCanvas);
   empiresTexture.colorSpace = SRGBColorSpace;
@@ -992,8 +934,6 @@ export function createGlobe(
     solarActive: { value: 0 },
     shadowAxis: { value: new Vector4() },
     shadowCones: { value: new Vector4() },
-    solarPath: { value: pathTarget.texture },
-    solarPathActive: { value: 0 },
     moonPosition: { value: moonPosition },
     moonRadius: { value: 0 },
     sunPosition: { value: sunPosition },
@@ -2098,6 +2038,11 @@ export function createGlobe(
       };
     },
     measure: settleSizes,
+    renderToTexture(target, drawn, seenBy) {
+      renderer.setRenderTarget(target);
+      renderer.render(drawn, seenBy);
+      renderer.setRenderTarget(null);
+    },
     earthPart(part) {
       const uniforms = parts.byPart.get(part);
       if (uniforms === undefined) {
@@ -2248,46 +2193,6 @@ export function createGlobe(
       const was = JSON.stringify(insets);
       insets = { ...insets, ...next };
       if (JSON.stringify(insets) !== was) resize();
-    },
-    setSolarPath(path) {
-      const uniforms = earth.material.uniforms;
-      if (path === null) {
-        uniforms['solarPathActive'] = { value: 0 };
-        container.dataset['solarPath'] = 'off';
-        needsRender = true;
-        return;
-      }
-      const vector = (values: readonly number[], scale = 1): Vector4 =>
-        new Vector4(
-          (values[0] ?? 0) * scale,
-          (values[1] ?? 0) * scale,
-          (values[2] ?? 0) * scale,
-          (values[3] ?? 0) * scale,
-        );
-      const toRadians = Math.PI / 180;
-      const { elements } = path;
-      const u = pathMaterial.uniforms;
-      u['coefficientsX'] = { value: vector(elements.x) };
-      u['coefficientsY'] = { value: vector(elements.y) };
-      u['coefficientsD'] = { value: vector(elements.d, toRadians) };
-      u['coefficientsMu'] = { value: vector(elements.mu, toRadians) };
-      u['coefficientsL1'] = { value: vector(elements.l1) };
-      u['coefficientsL2'] = { value: vector(elements.l2) };
-      u['tangents'] = { value: new Vector2(elements.tanF1, elements.tanF2) };
-      const shift = (seconds: number): number => seconds * SIDEREAL_DEGREES_PER_SECOND * toRadians;
-      u['muShifts'] = {
-        value: new Vector3(
-          shift(path.deltaTSeconds),
-          shift(path.deltaTSeconds - path.uncertaintySeconds),
-          shift(path.deltaTSeconds + path.uncertaintySeconds),
-        ),
-      };
-      renderer.setRenderTarget(pathTarget);
-      renderer.render(pathScene, pathCamera);
-      renderer.setRenderTarget(null);
-      uniforms['solarPathActive'] = { value: 1 };
-      container.dataset['solarPath'] = 'on';
-      needsRender = true;
     },
     setSolarShadow(shadow) {
       const uniforms = earth.material.uniforms;
@@ -2798,8 +2703,6 @@ export function createGlobe(
       observer.disconnect();
       controls.dispose();
       renderer.dispose();
-      pathTarget.dispose();
-      pathMaterial.dispose();
       texture.dispose();
       moonTexture.dispose();
       c14Glow.dispose();

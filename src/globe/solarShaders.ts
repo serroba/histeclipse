@@ -114,29 +114,6 @@ export const SOLAR_PATH_FRAGMENT = /* glsl */ `
   }
 `;
 
-/** Draws the path texture over the globe. Needs a `solarPath` sampler and `solarPathActive`. */
-export const SOLAR_PATH_LAYER = /* glsl */ `
-  uniform sampler2D solarPath;
-  uniform float solarPathActive;
-
-  vec3 solarPathLayer(vec3 color, vec2 uv) {
-    vec4 path = texture2D(solarPath, uv);
-    float certain = path.r * path.g * path.b;
-    float possible = max(max(path.r, path.g), path.b);
-    float uncertain = possible - certain;
-    float hatch = step(0.55, fract((gl_FragCoord.x - gl_FragCoord.y) / 10.0));
-    vec3 tint = vec3(0.98, 0.83, 0.42);
-    vec3 painted = mix(color, color * 0.75 + tint * 0.25, certain * 0.6);
-    painted = mix(painted, color * 0.75 + tint * 0.22, uncertain * hatch * 0.85);
-    // The limits of the partial eclipse: a thin, dashed, pale-blue line, so it can't be mistaken
-    // for the path of totality.
-    float limit = smoothstep(0.0, 0.002, path.a) * (1.0 - smoothstep(0.004, 0.008, path.a));
-    float dash = step(0.5, fract((gl_FragCoord.x + gl_FragCoord.y) / 14.0));
-    painted = mix(painted, vec3(0.62, 0.78, 1.0), limit * dash * 0.7);
-    return mix(color, painted, solarPathActive);
-  }
-`;
-
 /**
  * The share of the Sun's disc a point sees past a dark sphere: the GLSL twin of
  * `astro/occultation.ts`, which is the tested reference.

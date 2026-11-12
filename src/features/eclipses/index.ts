@@ -6,9 +6,11 @@
 
 import type { Globe } from '../../globe/scene';
 import type { PartContext } from '../part';
+import { eclipsePathLayer } from './eclipsePath';
 import { lunarOverlayLayer } from './lunarOverlay';
 
 // The part of the Earth shader the eclipses draw with, built into the globe when it is made.
+export { ECLIPSE_PATH_PART } from './eclipsePathPart';
 export { LUNAR_OVERLAY_PART } from './lunarOverlayPart';
 import type { EmpireCentury, Territory } from '../../data/empires';
 import { redraws, SELECTION } from '../../state/redraws';
@@ -46,7 +48,7 @@ const MINUTES_PER_DAY = 1440;
 
 /** What the eclipses ask of the rest of the page. */
 export interface EclipsesContext extends PartContext {
-  readonly globe: Pick<Globe, 'setSolarShadow' | 'setSolarPath' | 'flyTo' | 'addLayer'>;
+  readonly globe: Pick<Globe, 'setSolarShadow' | 'flyTo' | 'addLayer'>;
   /** The catalogues and ΔT, which load before the page shows a moment. */
   readonly catalogs: () => { readonly lunar: LunarCatalog; readonly solar: SolarCatalog };
   readonly deltaT: () => DeltaT;
@@ -77,6 +79,7 @@ export interface EclipsesPart {
 export function mountEclipses(context: EclipsesContext): EclipsesPart {
   const { store, globe } = context;
   const lunarOverlay = globe.addLayer(lunarOverlayLayer);
+  const eclipsePath = globe.addLayer(eclipsePathLayer);
   const seen = createSeen({
     store,
     notify: (message) => {
@@ -234,7 +237,7 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
       selected !== undefined && isSolar(selected) && state.layers.has('solar') ? selected : null;
     if (solarPath !== pathShownFor) {
       pathShownFor = solarPath;
-      globe.setSolarPath(
+      eclipsePath.update(
         solarPath === null
           ? null
           : {
