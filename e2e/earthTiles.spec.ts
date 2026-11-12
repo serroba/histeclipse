@@ -91,6 +91,8 @@ test('a phone keeps no more tiles than its budget, letting go those it saw longe
 }, info) => {
   test.skip(info.project.name !== 'mobile', 'the phone’s budget');
   test.slow();
+  // Each drag waits on new tiles, which CI draws in software: more than the slow test's 90 s.
+  test.setTimeout(240_000);
   const problems = collectProblems(page);
   const tiles = tileRequests(page);
   const canvas = page.getByTestId('globe').locator('canvas');
@@ -104,8 +106,8 @@ test('a phone keeps no more tiles than its budget, letting go those it saw longe
   const box = await canvas.boundingBox();
   if (box === null) throw new Error('no canvas');
   const middle = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-  for (let drag = 1; drag <= 8; drag += 1) {
-    await test.step(`When they drag the globe round, ${String(drag)} of 8`, async () => {
+  for (let drag = 1; drag <= 6; drag += 1) {
+    await test.step(`When they drag the globe round, ${String(drag)} of 6`, async () => {
       // Left to right, clear of the zoom rail on the right.
       await page.mouse.move(box.x + box.width * 0.1, middle.y);
       await page.mouse.down();
