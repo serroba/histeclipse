@@ -1,30 +1,8 @@
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 
-import { LAYERS, type Layer, type Span } from '../state/viewState';
 import { PERIOD_EVIDENCE } from './periodEvidence';
-import {
-  bibtexUrl,
-  citation,
-  doiOf,
-  layerWhy,
-  onScreen,
-  SOURCES,
-  WHYS,
-  type Scene,
-  type SourceId,
-} from './registry';
-
-const scene = (over: Partial<Scene>): Scene => ({
-  mode: 'globe',
-  span: 'years',
-  focus: 'earth',
-  layers: new Set<Layer>(),
-  borders: 'cliopatria',
-  eclipse: false,
-  drawsOn: () => true,
-  ...over,
-});
+import { bibtexUrl, citation, doiOf, SOURCES, WHYS, type SourceId } from './registry';
 
 /** A source's shape, as `Source` declares it: sources.json is content, checked here (#383). */
 const SourceSchema = v.strictObject({
@@ -61,14 +39,6 @@ describe('the registry’s content', () => {
 });
 
 describe('where everything comes from', () => {
-  it('gives every layer a why, whatever the borders’ source', () => {
-    for (const layer of LAYERS) {
-      for (const borders of ['cliopatria', 'ohm', 'both'] as const) {
-        expect(WHYS).toHaveProperty(layerWhy(layer, borders));
-      }
-    }
-  });
-
   it('rests every why on sources the registry knows, with a sentence on what it shows', () => {
     for (const why of Object.values(WHYS)) {
       expect(why.sources.length).toBeGreaterThan(0);
@@ -106,49 +76,6 @@ describe('where everything comes from', () => {
       for (const id of entry.sources) used.add(id);
     }
     for (const id of Object.keys(SOURCES)) expect(used).toContain(id);
-  });
-});
-
-describe('what is on screen now', () => {
-  it('starts from the ground and the sky’s bodies in the years', () => {
-    expect(onScreen(scene({}))).toEqual(['earth', 'bodies']);
-  });
-
-  it('adds the layers that draw on the span, and leaves those resting out', () => {
-    const layers = new Set<Layer>(['empires', 'ways', 'temperature']);
-    const drawsOn = (layer: Layer, span: Span): boolean =>
-      layer === 'temperature' ? span !== 'years' : span === 'years';
-    expect(onScreen(scene({ layers, drawsOn }))).toEqual([
-      'earth',
-      'bodies',
-      'empires-cliopatria',
-      'ways',
-    ]);
-    expect(onScreen(scene({ layers, drawsOn, span: 'all' }))).toEqual([
-      'deep-surface',
-      'deep-evidence',
-      'temperature',
-    ]);
-  });
-
-  it('names both sources of borders when comparing them', () => {
-    const layers = new Set<Layer>(['empires']);
-    expect(onScreen(scene({ layers, borders: 'both' }))).toContain('empires-ohm');
-    expect(onScreen(scene({ layers, borders: 'both' }))).toContain('empires-cliopatria');
-  });
-
-  it('adds the eclipses with one picked and its shadows on', () => {
-    const layers = new Set<Layer>(['solar', 'lunar']);
-    expect(onScreen(scene({ layers, eclipse: true }))).toContain('eclipses');
-    expect(onScreen(scene({ layers, eclipse: false }))).not.toContain('eclipses');
-  });
-
-  it('follows the view: the ice ages’ Earth, the Sun close up, the sky', () => {
-    expect(onScreen(scene({ span: 'ice' }))[0]).toBe('ice-surface');
-    expect(onScreen(scene({ focus: 'sun' }))[0]).toBe('sun');
-    expect(onScreen(scene({ focus: 'mars' })).slice(0, 2)).toEqual(['close-up', 'bodies']);
-    expect(onScreen(scene({ focus: 'moon', span: 'ice' }))[0]).toBe('ice-surface');
-    expect(onScreen(scene({ mode: 'sky' }))).toEqual(['sky', 'bodies']);
   });
 });
 

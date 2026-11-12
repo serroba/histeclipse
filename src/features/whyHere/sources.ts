@@ -3,7 +3,8 @@
  * only when that changes.
  */
 
-import { onScreen, type WhyId } from '../../sources/registry';
+import type { WhyId } from '../../sources/registry';
+import { onScreen } from '../../state/whysOnScreen';
 import { LAYER_GROUPS } from '../../state/layerCatalog';
 import type { ViewState } from '../../state/viewState';
 import { element } from '../../ui/dom';

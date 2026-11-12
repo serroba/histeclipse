@@ -314,7 +314,8 @@
     "what": "The surface coloured by its temperature, or over the last 800,000 years by its change from today, and each model’s mean.",
     "sources": ["krapp2021", "scotese2022", "cesm"],
     "how": "Over the last 800,000 years, Krapp et al. (2021): annual mean temperature on land every 1,000 years, of which the site keeps every other, a statistical emulator of 72 HadCM3 climate-model runs driven by CO₂, Earth’s orbit and the ice sheets, averaged by the site to a 1° grid; the sea and the ice sheets have none and keep their relief colours. Its maps are on today’s geography, so a place can be set beside itself today: by default the colours show that change, blue colder and red warmer; within about a degree of today the land is left uncoloured, so a scale's pale middle is not taken for ice. Further back, maps every 5 million years, packed into images and blended between them.",
-    "others": "Krapp et al. is a model emulator, not proxy measurements: the ice cores and reconstructions in the boundaries story’s Holocene chapter are the measured side. Its mean is over ice-free land only, and a different land at each moment: at an ice age's height the ice-covered land is left out and the bared shelves come in, so the mean understates the cold (about 4 °C below today at the last glacial maximum, where places by the ice were near 20 °C colder) and cannot be set beside the others' global means. Scotese 2022 and CESM (Li et al. 2023) disagree, at times by several degrees: pick whose to colour by."
+    "others": "Krapp et al. is a model emulator, not proxy measurements: the ice cores and reconstructions in the boundaries story’s Holocene chapter are the measured side. Its mean is over ice-free land only, and a different land at each moment: at an ice age's height the ice-covered land is left out and the bared shelves come in, so the mean understates the cold (about 4 °C below today at the last glacial maximum, where places by the ice were near 20 °C colder) and cannot be set beside the others' global means. Scotese 2022 and CESM (Li et al. 2023) disagree, at times by several degrees: pick whose to colour by.",
+    "reading": ["judd2024", "westerhold2020"]
   },
   "sealevel": {
     "title": "Sea level",
@@ -401,7 +402,14 @@
       "imbie",
       "glambie",
       "hugonnet2021",
-      "rutgersSnow"
+      "rutgersSnow",
+      "rapidMoc",
+      "caesar2018",
+      "rahmstorf2015",
+      "thornalley2018",
+      "caesar2021",
+      "kilbourne2022",
+      "terhaar2025"
     ]
   }
 }
