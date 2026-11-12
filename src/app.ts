@@ -25,9 +25,10 @@ import {
 import { createStore } from './state/store';
 import { parseViewState, serializeViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
-import { awayFromEarth, withLayer, type ViewState } from './state/viewState';
+import { awayFromEarth, toggledLayer, withLayer, type ViewState } from './state/viewState';
 import { DeltaT } from './time/deltaT';
 import { element } from './ui/dom';
+import { layOutPage } from './ui/pageLayout';
 import { FEATURES } from './features';
 import { deepChipsOf, mountFeatures } from './features/mounted';
 import type { FeatureContext } from './features/feature';
@@ -205,15 +206,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
           },
         },
       ],
-      [
-        'impacts',
-        {
-          label: 'Their paths through time, in 3D',
-          run: () => {
-            store.set((state) => ({ ...state, craters: 'all' }));
-          },
-        },
-      ],
+      ['impacts', impacts.action()],
       [
         'humans',
         treeOfLife.action('Our species on the tree of life', (tree) => tree.ours.humans['sapiens']),
@@ -234,22 +227,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       asking.toggle();
     },
     onOrbits() {
-      store.set((state) => ({
-        ...state,
-        layers: withLayer(state.layers, 'orbits', !state.layers.has('orbits')),
-      }));
+      store.set((state) => toggledLayer(state, 'orbits'));
     },
     onSpacecraft() {
-      store.set((state) => ({
-        ...state,
-        layers: withLayer(state.layers, 'spacecraft', !state.layers.has('spacecraft')),
-      }));
+      store.set((state) => toggledLayer(state, 'spacecraft'));
     },
     onAsteroids() {
-      store.set((state) => ({
-        ...state,
-        layers: withLayer(state.layers, 'asteroids', !state.layers.has('asteroids')),
-      }));
+      store.set((state) => toggledLayer(state, 'asteroids'));
     },
     onEarth() {
       store.set((state) => ({ ...state, focus: 'earth', view: 'free' }));
@@ -469,88 +453,53 @@ export async function startApp(root: HTMLElement): Promise<void> {
     timelineExtras: [years.track.extras, cycle.extras],
   });
 
-  const hudTools = [boundaries.button, texts.search.button, panels.fullView];
-  // Earth's spans and its map's layers; away from Earth they rest (#329).
-  const hudActions = element(
-    'div',
-    { class: 'hud-actions' },
-    deepTime.spanSwitch,
-    layersPanel.button,
-  );
-  const bottom = element(
-    'div',
-    { class: 'bottom', 'data-deep': 'off' },
-    eclipses.card,
-    eclipses.scrubber,
-    element(
-      'div',
-      { class: 'holocene-bar' },
-      bodies.bar,
-      waysLegend.root,
-      years.track.root,
-      cycle.root,
-      eclipses.timeline,
-    ),
-    deepTime.bar,
-  );
-  const hud = element(
-    'header',
-    { class: 'hud' },
-    // The name leads home: today on the globe, as a first visit opens (welcome too, until the
-    // visitor has dismissed it).
-    element(
-      'h1',
-      {},
-      element('a', { class: 'home', href: base, title: 'Back to the start' }, 'histeclipse'),
-    ),
-    element('div', { class: 'hud-tools' }, ...hudTools),
-    element('p', { class: 'hud-when' }, moment.dateText, ' ', moment.timeText),
-    moment.detailText,
-    moment.termNote,
-    welcome.root,
-    hudActions,
-    viewSwitch.root,
-    ...sky.controls,
-    ...bodies.switches,
-    ...sky.captions,
-    records.banner,
-    // Sources and what is written about here share a line, each a full row once open.
-    element(
-      'div',
-      { class: 'hud-more' },
-      element(
-        'details',
-        { class: 'credits' },
-        element('summary', {}, 'Sources'),
-        // What is on screen now, each with the book that says why, and its sources' links.
-        sources.list,
-      ),
-      texts.here,
-    ),
-  );
-  root.replaceChildren(
-    globeContainer,
-    sky.container,
-    zoomRail.root,
-    ...treeOfLife.elements,
-    impactPathsSheet.dialog,
-    ...boundaries.elements,
-    whySheet.dialog,
-    hud,
-    notices.list,
-    deepTime.glance,
-    panels.showControls,
-    bottom,
-    famous.dialog,
-    texts.search.dialog,
-    records.dialog,
-    layersPanel.dialog,
-    markerCard.dialog,
-    datingCard.dialog,
-    carbonMade.dialog,
-    shower.container,
-    shower.stage,
-  );
+  // The page's frame (#442): each part's elements, where they go.
+  const { hud, hudActions, bottom } = layOutPage(root, {
+    under: [
+      globeContainer,
+      sky.container,
+      zoomRail.root,
+      ...treeOfLife.elements,
+      impactPathsSheet.dialog,
+      ...boundaries.elements,
+      whySheet.dialog,
+    ],
+    header: {
+      home: base,
+      tools: [boundaries.button, texts.search.button, panels.fullView],
+      date: moment.dateText,
+      time: moment.timeText,
+      detail: moment.detailText,
+      termNote: moment.termNote,
+      welcome: welcome.root,
+      actions: [deepTime.spanSwitch, layersPanel.button],
+      viewSwitch: viewSwitch.root,
+      skyControls: sky.controls,
+      bodySwitches: bodies.switches,
+      skyCaptions: sky.captions,
+      recordsBanner: records.banner,
+      sources: sources.list,
+      textsHere: texts.here,
+    },
+    between: [notices.list, deepTime.glance, panels.showControls],
+    bottom: {
+      eclipseCard: eclipses.card,
+      eclipseScrubber: eclipses.scrubber,
+      holocene: [bodies.bar, waysLegend.root, years.track.root, cycle.root, eclipses.timeline],
+      deepBar: deepTime.bar,
+    },
+    over: [
+      famous.dialog,
+      texts.search.dialog,
+      records.dialog,
+      layersPanel.dialog,
+      markerCard.dialog,
+      datingCard.dialog,
+      carbonMade.dialog,
+      shower.container,
+      shower.stage,
+    ],
+  });
 
   /** Open a passage's anchor: its view laid over the reader's, as a step back can undo. */
   function openAnchor(anchor: Anchor): void {

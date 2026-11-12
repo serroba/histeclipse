@@ -48,7 +48,7 @@ export const MAX_LINES = 400;
  * the same line (#479).
  */
 export const LINE_LIMITS = {
-  'app.ts': 840,
+  'app.ts': 789,
   'globe/scene.ts': 2147,
   'ui/deepTimeBar.ts': 779,
   'sky/skyScene.ts': 971,

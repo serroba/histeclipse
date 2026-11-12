@@ -60,6 +60,8 @@ export interface ImpactsPart {
   readonly load: () => Promise<Impacts>;
   /** A marker tapped: whether it was a crater, and if so, its card. */
   readonly pick: (key: string) => boolean;
+  /** What the Layers panel offers under the layer: the craters' paths through time, in 3D. */
+  readonly action: () => { readonly label: string; readonly run: () => void };
 }
 
 export function mountImpacts(context: ImpactsContext): ImpactsPart {
@@ -184,5 +186,11 @@ export function mountImpacts(context: ImpactsContext): ImpactsPart {
       context.showCard(impactCard(impacts, impact, store.get().ma ?? 0, play));
       return true;
     },
+    action: () => ({
+      label: 'Their paths through time, in 3D',
+      run: () => {
+        store.set((state) => ({ ...state, craters: 'all' }));
+      },
+    }),
   };
 }
