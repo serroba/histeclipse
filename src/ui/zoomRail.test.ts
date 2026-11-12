@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CAMERA_DISTANCE_RANGE } from '../state/viewState';
+import { CAMERA_DISTANCE_RANGE, defaultViewState } from '../state/viewState';
 import {
   distanceAt,
   distanceText,
@@ -9,6 +9,7 @@ import {
   snappedDistance,
   stopsFor,
 } from './zoomRail';
+import { railView } from './railView';
 
 const earth = railScale('earth');
 
@@ -68,5 +69,16 @@ describe('the zoom rail', () => {
     expect(snappedDistance(at + 0.05, earth)).toBe(planets.distance);
     expect(snappedDistance(at - 0.05, earth)).toBe(planets.distance);
     expect(snappedDistance(0.6, earth)).toBeCloseTo(distanceAt(0.6, earth));
+  });
+});
+
+describe('the rail for the view', () => {
+  const base = defaultViewState(new Date(Date.UTC(2024, 3, 8)));
+  it('shows on the globe looked at freely, in the years, from the body in focus', () => {
+    const free = { ...base, view: 'free' as const, focus: 'moon' as const };
+    expect(railView(free)).toEqual({ body: 'moon', distance: base.camera.distance });
+    expect(railView({ ...free, mode: 'sky' })).toBeNull();
+    expect(railView({ ...free, view: 'moon-from-earth' })).toBeNull();
+    expect(railView({ ...free, ma: 66 })).toBeNull();
   });
 });

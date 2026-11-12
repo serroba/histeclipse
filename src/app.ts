@@ -4,47 +4,45 @@
  * modules it calls.
  */
 
-import { loadMoonEphemeris, type MoonEphemeris } from './astro/moon';
 import { LunarCatalog } from './data/lunarCatalog';
 import { SolarCatalog } from './data/solarCatalog';
-import { eclipseMomentAt, isSolar } from './eclipses/describe';
 import { angularDistance } from './eclipses/visibility';
 import { impactLayer } from './globe/impactLayer';
 import { createDatingCard } from './ui/datingCard';
 import { createGlobe } from './globe/scene';
 import {
   DEEP_TIME,
+  drawAll,
   EARTH_LAYERS,
+  FOCUS,
   FOUND_THE_WAY_IN,
   HISTORY,
-  redraws,
-  SELECTION,
-  SKY,
+  LAYERS_PANEL,
+  LOCATION,
+  momentChanged,
+  momentKept,
+  on,
+  onChange,
+  SKY_SHOWN,
   VIEW_SWITCH,
+  VIEWPOINT,
+  type Drawn,
 } from './state/redraws';
-import { changed, createStore } from './state/store';
+import { createStore } from './state/store';
 import { parseViewState, serializeViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
-import {
-  awayFromEarth,
-  DEFAULT_LOOK,
-  type Layer,
-  withLayer,
-  type GeoPoint,
-  type ViewState,
-} from './state/viewState';
+import { awayFromEarth, withLayer, type GeoPoint, type ViewState } from './state/viewState';
 import { DeltaT } from './time/deltaT';
 import { element } from './ui/dom';
 import { FEATURES } from './features';
-import { RESTING, type DeepMoment, type FeatureContext } from './features/feature';
+import { deepChipsOf, mountFeatures } from './features/mounted';
+import { RESTING, type FeatureContext } from './features/feature';
 import { anchorQuery } from './text/anchors';
 import { type Anchor } from './text/passages';
 import { createWelcome } from './ui/welcome';
 import { createMarkerCard } from './ui/markerCard';
 import { createViewSwitch } from './ui/viewSwitch';
 import { type DeepTimeView } from './ui/deepTimeBar';
-import type { DeepChipView } from './ui/deepChips';
-import { periodAt } from './deepTime/periods';
 import { countryRings, loadNamedPeriods } from './data/namedPeriods';
 import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet } from './ui/whySheet';
@@ -70,17 +68,25 @@ import { mountDeepTime } from './features/deepTime';
 import { mountYears } from './features/years';
 import { mountEclipses } from './features/eclipses';
 import { mountTexts } from './features/texts';
-import { hereVersion, hereView, whyMoment, type HereData } from './features/whyHere/facts';
+import {
+  hereVersion,
+  hereView,
+  whyMoment,
+  whyVersion,
+  type HereData,
+} from './features/whyHere/facts';
 import { createSourcesList } from './features/whyHere/sources';
+import { createAsking } from './features/whyHere/asking';
 import { mountMoment } from './features/moment';
 import { mountLayersPanel } from './features/layersPanel';
 import { createPanels } from './features/shell/panels';
 import { keepCentred } from './features/shell/layout';
 import { openOverRegion } from './features/shell/firstView';
+import { listenForInput } from './features/shell/input';
+import { createNotices } from './features/shell/notices';
 import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment/observer';
-import { barYear } from './features/eclipses/years';
-import { phoneLook } from './sky/aim';
 import { createZoomRail } from './ui/zoomRail';
+import { railView } from './ui/railView';
 import { createWaysLegend } from './ui/waysLegend';
 import {
   impactDetails,
@@ -112,36 +118,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const fetchJson = (url: string): Promise<Response> => fetch(url);
   // Full view: the panels hidden for a clear view, and the ways to bring them back.
   const panels = createPanels(root);
+  // What went wrong, told once each.
+  const notices = createNotices();
+  const { notify } = notices;
 
   const viewSwitch = createViewSwitch((choice) => {
-    if (choice === 'sky') {
-      // Stand where the link says, or else on the spot in the middle of the globe; during an
-      // eclipse, face it.
-      store.set((state) => {
-        // The sky is drawn for historical time: leaving for it leaves deep time too.
-        const next: ViewState = {
-          ...state,
-          mode: 'sky',
-          location: observerOf(state),
-          ma: null,
-          look: phoneLook(state.look, DEFAULT_LOOK, window.innerHeight > window.innerWidth),
-        };
-        const selected = eclipses.selected(state);
-        if (selected === undefined) return next;
-        const look = sky.aimAt(next, isSolar(selected) ? 'sun' : 'moon');
-        return look === null || look.altitude <= -1 ? next : { ...next, look };
-      });
-    } else {
-      store.set((state) => ({ ...state, mode: 'globe', view: choice }));
-    }
+    input.choose(choice);
   });
   // The orbits, offered where they mean something: far out, or on the Sun or a planet.
   // Why anything is on screen: the book marks beside things, and the panel they open.
   // The panel follows the view, so the link names the why open and opens it again.
   const whySheet = createWhySheet(
     (why) => {
-      // Closing "Here" by hand leaves the asking too.
-      if (why === null) askingHere = false;
+      asking.sheetChanged(why);
       store.set((state) => ({ ...state, why }));
     },
     () => hereView(store.get(), hereData()),
@@ -183,12 +172,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The sky view (#448): loaded the first time it is opened.
   const sky = mountSky({
     ...partContext,
-    bodiesSeen: (state) => bodiesSeen(state, (jd) => deltaT.terrestrialTime(jd), moonEphemeris),
+    bodiesSeen: (state) => bodiesSeen(state, (jd) => deltaT.terrestrialTime(jd), bodies.moon()),
     planetsSeen: (jdTT, sun, observer) => bodies.planetsSeen(jdTT, sun, observer),
     loadPlanets: () => bodies.loadPlanets(),
     deltaTUncertainty: (jdUT) => deltaT.uncertaintySeconds(jdUT),
     namedPlace,
-    moonReady: () => moonEphemeris !== null,
+    moonReady: () => bodies.moon() !== null,
     togglePanels: panels.toggle,
     marks: (state) => records.marks(state),
   });
@@ -216,8 +205,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     whySheet.mark('impacts', 'Impact craters'),
   );
-  // "Why here?": while on, a tap on the globe says what each layer has there.
-  let askingHere = false;
   // The Sources list: the whys of what is on screen now.
   const sources = createSourcesList(whySheet);
   // The Layers panel (#451): what each layer says and offers, as the parts have it now.
@@ -238,7 +225,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ['rocks', rocks.said()],
       ['dates', dates.said()],
       ['impacts', impactsSaid],
-      ...mounted.map(({ feature, shown }) => [feature.id, shown.said?.() ?? null] as const),
+      ...features.said(),
       ['carbonMade', carbonMade.said()],
     ],
     actions: () => [
@@ -277,11 +264,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.zoomTo(distance);
     },
     onWhyHere() {
-      askingHere = !askingHere;
-      store.set((state) => ({
-        ...state,
-        why: askingHere ? 'here' : state.why === 'here' ? null : state.why,
-      }));
+      asking.toggle();
     },
     onOrbits() {
       store.set((state) => ({
@@ -305,6 +288,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => ({ ...state, focus: 'earth', view: 'free' }));
     },
   });
+  // "Why here?": while on, a tap on the globe says what each layer has there.
+  const asking = createAsking({ store, zoomRail, root });
   const waysLegend = createWaysLegend(whySheet.mark('ways', 'Ways of life'));
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
   // The globe draws at once and takes its maps as they arrive; nothing below waits on them.
@@ -331,9 +316,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const deepTime = mountDeepTime({
     ...partContext,
     globe,
-    chips: FEATURES.flatMap((feature) =>
-      feature.deepChip === undefined ? [] : [{ layer: feature.id, ...feature.deepChip }],
-    ),
+    chips: deepChipsOf(FEATURES),
+
     step: () => {
       sync.step();
     },
@@ -345,7 +329,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     bar: (state, moment) => ({
       ...iceAges.bar(state, moment.ma),
-      chips: deepChips(state, moment),
+      chips: features.deep(state, moment),
       impacts: showImpacts(state),
       ...surfaces.bar(state, moment.ma),
     }),
@@ -353,7 +337,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     off: (state) => {
       surfaces.off();
       iceAges.off(state);
-      for (const { shown } of mounted) shown.deep?.(state, null);
+      features.deepOff(state);
     },
     platesReach: () => surfaces.platesReach(),
     loadArchive: () => {
@@ -366,7 +350,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // A tablet's records checked against the sky, and looked at from Babylon (#447).
   const records = mountRecords({
     ...partContext,
-    moon: () => moonEphemeris,
+    moon: () => bodies.moon(),
     loadPlanets: () => bodies.loadPlanets(),
     deltaTSeconds: (jd) => deltaT.seconds(jd),
     setSkyMarks: (marks) => {
@@ -393,9 +377,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ...partContext,
     globe,
     zoomRail,
-    moon: () => moonEphemeris,
     refresh: () => {
       moment.show(store.get());
+    },
+    moonArrived: () => {
+      const now = store.get();
+      moment.show(now);
+      viewSwitch.render(now.mode, now.view, true, now.focus);
+      sky.render(now);
     },
   });
   // The moment shown (#451): the header's date line, and what is placed by the moment.
@@ -404,13 +393,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe,
     now,
     deltaT: () => deltaT,
-    moon: () => moonEphemeris,
+    moon: () => bodies.moon(),
     planetPositions: (jdTT) => bodies.planetPositions(jdTT),
     atMoment: (state, terrestrial) => {
       bodies.setMoment(terrestrial);
       showBody(state);
       bodies.showOrbits(state, terrestrial);
-      showFeatures(state, terrestrial);
+      features.show(state, terrestrial);
     },
     subsolar: (point) => {
       root.dataset['subsolar'] = point;
@@ -421,7 +410,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const welcome = createWelcome(window.location.search === '', () => {
     famous.button.click();
   });
-  const notices = element('ul', { class: 'notices', role: 'status', 'aria-live': 'polite' });
   // The panels hide for a clear view, by this button or a tap on empty space; it brings them back.
   // The site's texts (#391, #392): search, and what is written about here.
   const texts = mountTexts({
@@ -460,8 +448,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     travelChanged: (now) => {
       dates.show(now);
       showImpacts(now);
-      const terrestrial = moment.terrestrial();
-      if (terrestrial !== null) showFeatures(now, terrestrial);
+      features.show(now, moment.terrestrial());
       rocks.show(now);
       showLayers(now);
       iceAges.showHolocene(now);
@@ -535,6 +522,41 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ),
     deepTime.bar,
   );
+  const hud = element(
+    'header',
+    { class: 'hud' },
+    // The name leads home: today on the globe, as a first visit opens (welcome too, until the
+    // visitor has dismissed it).
+    element(
+      'h1',
+      {},
+      element('a', { class: 'home', href: base, title: 'Back to the start' }, 'histeclipse'),
+    ),
+    element('div', { class: 'hud-tools' }, ...hudTools),
+    element('p', { class: 'hud-when' }, moment.dateText, ' ', moment.timeText),
+    moment.detailText,
+    moment.termNote,
+    welcome.root,
+    hudActions,
+    viewSwitch.root,
+    ...sky.controls,
+    ...bodies.switches,
+    ...sky.captions,
+    records.banner,
+    // Sources and what is written about here share a line, each a full row once open.
+    element(
+      'div',
+      { class: 'hud-more' },
+      element(
+        'details',
+        { class: 'credits' },
+        element('summary', {}, 'Sources'),
+        // What is on screen now, each with the book that says why, and its sources' links.
+        sources.list,
+      ),
+      texts.here,
+    ),
+  );
   root.replaceChildren(
     globeContainer,
     sky.container,
@@ -543,42 +565,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     impactPathsSheet.dialog,
     boundariesSheet.dialog,
     whySheet.dialog,
-    element(
-      'header',
-      { class: 'hud' },
-      // The name leads home: today on the globe, as a first visit opens (welcome too, until the
-      // visitor has dismissed it).
-      element(
-        'h1',
-        {},
-        element('a', { class: 'home', href: base, title: 'Back to the start' }, 'histeclipse'),
-      ),
-      element('div', { class: 'hud-tools' }, ...hudTools),
-      element('p', { class: 'hud-when' }, moment.dateText, ' ', moment.timeText),
-      moment.detailText,
-      moment.termNote,
-      welcome.root,
-      hudActions,
-      viewSwitch.root,
-      ...sky.controls,
-      ...bodies.switches,
-      ...sky.captions,
-      records.banner,
-      // Sources and what is written about here share a line, each a full row once open.
-      element(
-        'div',
-        { class: 'hud-more' },
-        element(
-          'details',
-          { class: 'credits' },
-          element('summary', {}, 'Sources'),
-          // What is on screen now, each with the book that says why, and its sources' links.
-          sources.list,
-        ),
-        texts.here,
-      ),
-    ),
-    notices,
+    hud,
+    notices.list,
     deepTime.glance,
     panels.showControls,
     bottom,
@@ -593,16 +581,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     shower.stage,
   );
 
-  window.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') panels.show();
-    // "/" opens search, unless it is being typed somewhere.
-    const typing =
-      event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement;
-    if (event.key === '/' && !typing && !event.ctrlKey && !event.metaKey) {
-      event.preventDefault();
-      texts.search.open();
-    }
-  });
   /** Open a passage's anchor: its view laid over the reader's, as a step back can undo. */
   function openAnchor(anchor: Anchor): void {
     const next = parseViewState(anchorQuery(anchor, serializeViewState(store.get())), new Date());
@@ -611,11 +589,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     store.set(() => next.state);
   }
 
-  function notify(message: string): void {
-    // A failure asked again (each time the view is drawn) says so once.
-    if ([...notices.children].some((notice) => notice.textContent === message)) return;
-    notices.append(element('li', {}, message));
-  }
   parsed.warnings.forEach(notify);
 
   // Drawn on the globe as layers of their own (#379).
@@ -676,7 +649,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     cardOpen: () => markerCard.dialog.open,
     planets: () => bodies.planets(),
-    moon: () => moonEphemeris,
+    moon: () => bodies.moon(),
     loadPlanets: () => {
       void bodies.loadPlanets();
     },
@@ -693,19 +666,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showLayers(now);
     },
   };
-  const mounted = FEATURES.map((feature) => ({ feature, shown: feature.mount(featureContext) }));
-  function showFeatures(state: ViewState, jdTT: number): void {
-    for (const { shown } of mounted) shown.show?.(state, jdTT);
-  }
-  /** Deep time's chips, from the features that have one (#380). */
-  function deepChips(state: ViewState, moment: DeepMoment): Map<Layer, DeepChipView> {
-    const chips = new Map<Layer, DeepChipView>();
-    for (const { feature, shown } of mounted) {
-      const chip = shown.deep?.(state, moment) ?? null;
-      if (chip !== null) chips.set(feature.id, chip);
-    }
-    return chips;
-  }
+  const features = mountFeatures(FEATURES, featureContext);
   const [deltaT, lunarCatalog, solarCatalog] = await Promise.all([
     DeltaT.load(`${base}data/delta-t.json`, (url) => fetch(url)),
     LunarCatalog.load(`${base}data/lunar/`, (url) => fetch(url)),
@@ -714,18 +675,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const sync = createUrlSync(browserUrlWriter(window.location, window.history));
 
   // The Moon's theory is a separate chunk; until it arrives the space view shows only the Sun.
-  let moonEphemeris: MoonEphemeris | null = null;
-  loadMoonEphemeris().then(
-    (ephemeris) => {
-      moonEphemeris = ephemeris;
-      moment.show(store.get());
-      viewSwitch.render(store.get().mode, store.get().view, true, store.get().focus);
-      sky.render(store.get());
-    },
-    (error: unknown) => {
-      notify(`Could not load the Moon's orbit: ${errorMessage(error)}`);
-    },
-  );
+  bodies.loadMoon();
 
   // The famous list is a convenience: if it fails to load, everything else still works.
   famous.load();
@@ -824,13 +774,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   globe.onMarkerPick((key) => {
+    if (features.pick(key)) return;
     const [kind, id] = key.split(':');
-    for (const { shown } of mounted) shown.unpick?.();
-    const picked = mounted.find(({ feature }) => feature.picks === kind);
-    if (picked !== undefined) {
-      picked.shown.pick?.(key.slice(key.indexOf(':') + 1));
-      return;
-    }
     const impact = impacts?.impacts.find((each) => String(each.id) === id);
     if (kind !== 'impact' || impact === undefined) return;
     const details = impactDetails(impact);
@@ -873,147 +818,134 @@ export async function startApp(root: HTMLElement): Promise<void> {
     return { drawn: empires.drawn(), waysOfLife: ways.data(), rocks: rocks.units() };
   }
 
+  /** The sky, entered or left: the globe makes way for it. */
+  function showSky(state: ViewState): void {
+    globeContainer.hidden = state.mode === 'sky';
+    sky.render(state);
+  }
+
+  /** The sheets the view names open: the impacts' paths, the boundaries, and the why. */
+  function showSheets(state: ViewState): void {
+    impactPathsSheet.show(state.craters, state.ma ?? 0, state.cratersIn);
+    boundariesSheet.show(state.boundaries);
+    whySheet.show(state.why, whyVersion(state, hereData));
+  }
+
+  /** The views offered: the Moon's own once its theory has arrived. */
+  function showViewSwitch(state: ViewState): void {
+    viewSwitch.render(state.mode, state.view, bodies.moon() !== null, state.focus);
+  }
+
   /** The Layers panel, and the borders it turns on. */
   function showLayers(state: ViewState): void {
     layersPanel.show(state);
     empires.show(state);
   }
 
-  function render(state: ViewState, previous: ViewState | null): void {
-    const leftDeepTime = previous !== null && previous.ma !== null && state.ma === null;
-    if (state.time !== previous?.time || state.years !== previous.years || leftDeepTime) {
-      moment.show(state);
-    } else if (moment.terrestrial() !== null) {
-      const terrestrial = moment.terrestrial() ?? 0;
-      // Each feature is shown again, at the moment shown, when what it watches changes.
-      for (const { feature, shown } of mounted) {
-        if (changed(feature.watches(previous), feature.watches(state))) {
-          shown.show?.(state, terrestrial);
-        }
-      }
-    }
-    if (redraws(DEEP_TIME, state, previous)) deepTime.show(state);
-    if (redraws(SKY, state, previous)) {
-      if (state.mode === 'sky' || previous?.mode === 'sky' || previous === null) {
-        globeContainer.hidden = state.mode === 'sky';
-        sky.render(state);
-      }
-    }
-    if (previous !== null && state.focus !== previous.focus) globe.setFocus(state.focus);
-    bodies.render(state, previous);
-    if (redraws(EARTH_LAYERS, state, previous)) {
-      dates.show(state);
-      ways.show(state);
-      rocks.show(state);
-      namedPeriods.show(state);
-      showImpacts(state);
-      carbonMade.show(state);
-      showLayers(state);
-    } else if (previous !== null && state.focus !== previous.focus) {
-      // The Layers panel is Earth's: it shuts on going to another body.
-      showLayers(state);
-    }
-    // Deep time, or an eclipse picked, ends a trip through the years.
-    if (state.ma !== null || state.selection !== null) {
-      years.stop();
-      years.setTravel(false);
-    }
-    // With an eclipse open, its own player runs the time; the years' slider makes way.
-    zoomRail.render(
-      state.mode === 'globe' && state.view === 'free' && state.ma === null
-        ? { body: state.focus, distance: state.camera.distance }
-        : null,
-    );
-    sources.show(state);
-    texts.show(state);
-    showBody(state);
-    bodies.sharpen(state);
-    zoomRail.setWhyHere(
-      state.mode === 'globe' && state.focus === 'earth' && state.ma === null,
-      askingHere,
-    );
-    root.classList.toggle('is-asking-here', askingHere && state.ma === null);
-    if (redraws(treeOfLife.watches, state, previous)) treeOfLife.render(state);
-    impactPathsSheet.show(state.craters, state.ma ?? 0, state.cratersIn);
-    boundariesSheet.show(state.boundaries);
-    whySheet.show(
-      state.why,
-      state.why === 'here'
-        ? hereVersion(state, hereData())
-        : state.why === 'deep-evidence' && state.ma !== null
-          ? (periodAt(state.ma)?.name ?? '')
-          : '',
-    );
+  // What is drawn as the view changes, in this order (#474): each when what it watches changes.
+  const drawn: readonly Drawn[] = [
+    // The moment worked out again shows every feature; kept, those whose watches changed.
+    { when: momentChanged, draw: moment.show },
+    {
+      when: momentKept,
+      draw: (state, was) => {
+        features.redraw(state, was, moment.terrestrial());
+      },
+    },
+    { when: on(DEEP_TIME), draw: deepTime.show },
+    { when: on(SKY_SHOWN), draw: showSky },
+    {
+      when: onChange(FOCUS),
+      draw: (state) => {
+        globe.setFocus(state.focus);
+      },
+    },
+    { draw: bodies.render },
+    { when: on(EARTH_LAYERS), draw: dates.show },
+    { when: on(EARTH_LAYERS), draw: ways.show },
+    { when: on(EARTH_LAYERS), draw: rocks.show },
+    { when: on(EARTH_LAYERS), draw: namedPeriods.show },
+    { when: on(EARTH_LAYERS), draw: showImpacts },
+    { when: on(EARTH_LAYERS), draw: carbonMade.show },
+    { when: on(LAYERS_PANEL), draw: showLayers },
+    { draw: years.settle },
+    {
+      draw: (state) => {
+        zoomRail.render(railView(state));
+      },
+    },
+    { draw: sources.show },
+    { draw: texts.show },
+    { draw: showBody },
+    { draw: bodies.sharpen },
+    { draw: asking.render },
+    {
+      when: on(treeOfLife.watches),
+      draw: (state) => {
+        treeOfLife.render(state);
+      },
+    },
+    { draw: showSheets },
     // The time changed elsewhere (the year typed, the slider) ends the cycle's play.
-    cycle.render(state);
-    if (redraws(HISTORY, state, previous)) years.show(state);
-    if (state.location !== previous?.location) globe.setLocation(state.location);
-    if (state.view !== previous?.view) globe.setViewpoint(state.view);
-    if (redraws(VIEW_SWITCH, state, previous)) {
-      viewSwitch.render(state.mode, state.view, moonEphemeris !== null, state.focus);
-    }
-    if (state.years !== previous?.years || barYear(state) !== barYear(previous)) {
-      eclipses.loadYear(state);
-    }
-    records.render(state);
-    if (redraws(SELECTION, state, previous)) {
-      eclipses.renderSelection(state);
-    } else if (previous !== null && state.time !== previous.time) {
-      eclipses.renderMoment(state);
-    }
-    sync.update(state);
-  }
-
+    { draw: cycle.render },
+    { when: on(HISTORY), draw: years.show },
+    {
+      when: on(LOCATION),
+      draw: (state) => {
+        globe.setLocation(state.location);
+      },
+    },
+    {
+      when: on(VIEWPOINT),
+      draw: (state) => {
+        globe.setViewpoint(state.view);
+      },
+    },
+    { when: on(VIEW_SWITCH), draw: showViewSwitch },
+    { draw: records.render },
+    { draw: eclipses.render },
+    {
+      draw: (state) => {
+        sync.update(state);
+      },
+    },
+    {
+      when: onChange(FOUND_THE_WAY_IN),
+      draw: () => {
+        welcome.dismiss();
+      },
+    },
+  ];
   store.subscribe((state, previous) => {
-    render(state, previous);
-    if (redraws(FOUND_THE_WAY_IN, state, previous)) welcome.dismiss();
+    drawAll(drawn, state, previous);
   });
-  render(store.get(), null);
+  drawAll(drawn, store.get(), null);
   // Write the canonical, fully explicit URL straight away so it can be shared as is.
   sync.flush();
 
   // Keep the globe centred in the space the panels leave free.
-  const top = root.querySelector('.hud');
-  if (top !== null) {
-    keepCentred({
-      root,
-      top,
-      bottom,
-      zoomRail: zoomRail.root,
-      onInsets: (above, below) => {
-        globe.setInsets(above, below);
-        sky.setInsets(above, below);
-      },
-    });
-  }
+  keepCentred({
+    root,
+    top: hud,
+    bottom,
+    zoomRail: zoomRail.root,
+    onInsets: (above, below) => {
+      globe.setInsets(above, below);
+      sky.setInsets(above, below);
+    },
+  });
 
-  globe.onBodyClick((focus) => {
-    store.set((state) => ({ ...state, focus, view: 'free' }));
-  });
-  globe.onEmptyTap(() => {
-    // In deep time, empty space is like the globe: a tap clears the panels, or brings them back.
-    // In historical time a tap on the globe picks a place, so empty space only brings them back.
-    if (store.get().ma !== null) panels.toggle();
-    else panels.show();
-  });
-  globe.onPlacePick((place) => {
-    // Deep time has no place to stand: a tap on the globe clears the panels, or brings them back.
-    if (store.get().ma !== null) {
-      panels.toggle();
-      return;
-    }
-    const location = { latitude: round(place.latitude, 4), longitude: round(place.longitude, 4) };
-    // During a solar eclipse, show the moment it is deepest at the place picked.
-    const selected = eclipses.selected(store.get());
-    store.set((state) => ({
-      ...state,
-      location,
-      ...(askingHere ? { why: 'here' as const } : {}),
-      time:
-        selected === undefined || !isSolar(selected)
-          ? state.time
-          : eclipseMomentAt(selected, location),
-    }));
+  // The keyboard, a tap on the globe or around it, a body clicked, the camera moved (#474).
+  const input = listenForInput({
+    store,
+    globe,
+    panels,
+    openSearch: () => {
+      texts.search.open();
+    },
+    asking: () => asking.on(),
+    selected: (state) => eclipses.selected(state),
+    sky: { observer: observerOf, aimAt: (state, target) => sky.aimAt(state, target) },
   });
   // A first visit whose link names no view of its own opens over the reader's region.
   openOverRegion({
@@ -1045,9 +977,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       });
     }, 1000);
   }
-  globe.onCameraChange((camera) => {
-    store.set((state) => ({ ...state, camera }));
-  });
   window.addEventListener('pagehide', () => {
     sync.flush();
   });
@@ -1057,9 +986,4 @@ export async function startApp(root: HTMLElement): Promise<void> {
     sync.adopt(restored);
     store.set(() => restored);
   });
-}
-
-function round(value: number, digits: number): number {
-  const scale = 10 ** digits;
-  return Math.round(value * scale) / scale;
 }

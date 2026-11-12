@@ -6,7 +6,7 @@ import { loadRocks, rockUnits } from '../../data/rocks';
 import { loadWaysOfLife } from '../../data/waysOfLife';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import { astronomicalYear } from '../../time/year';
-import { hereVersion, hereView, whyMoment, type HereData } from './facts';
+import { hereVersion, hereView, whyMoment, whyVersion, type HereData } from './facts';
 
 const serve = (body: unknown) => (): Promise<Response> => Promise.resolve(Response.json(body));
 
@@ -80,5 +80,14 @@ describe('whyMoment', () => {
     expect(jurassic?.lines).toHaveLength(2);
     // Before the Earth, no period, and so nothing to say.
     expect(whyMoment('deep-evidence', { ...base, ma: 10_000 })).toBeNull();
+  });
+});
+
+describe('whyVersion', () => {
+  it('follows "Here" and deep time\'s period, and is empty for every other why', () => {
+    expect(whyVersion({ ...here, why: 'here' }, () => nothing)).toBe(hereVersion(here, nothing));
+    expect(whyVersion({ ...base, why: 'deep-evidence', ma: 150 }, () => nothing)).toBe('Jurassic');
+    expect(whyVersion({ ...base, why: 'deep-evidence' }, () => nothing)).toBe('');
+    expect(whyVersion({ ...base, why: 'ways' }, () => nothing)).toBe('');
   });
 });

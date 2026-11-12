@@ -65,6 +65,16 @@ export function hereVersion(state: ViewState, data: HereData): string {
   ].join('|');
 }
 
+/**
+ * What the open why depends on, so the sheet is written again only when that changes: "Here"'s
+ * place and layers, or deep time's period for its evidence.
+ */
+export function whyVersion(state: ViewState, here: () => HereData): string {
+  if (state.why === 'here') return hereVersion(state, here());
+  if (state.why === 'deep-evidence' && state.ma !== null) return periodAt(state.ma)?.name ?? '';
+  return '';
+}
+
 /** What a why says of the moment shown: deep time's map, the period's own evidence. */
 export function whyMoment(id: WhyId, state: ViewState): WhyMoment | null {
   if (id !== 'deep-evidence' || state.ma === null) return null;

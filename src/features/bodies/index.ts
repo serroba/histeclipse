@@ -50,6 +50,7 @@ import { lookBack } from '../../ui/viewSwitch';
 import type { ZoomRail } from '../../ui/zoomRail';
 import { errorMessage } from '../../util/errors';
 import type { PartContext } from '../part';
+import { createMoon } from './moon';
 import { createPlanets } from './planets';
 import { viewKey, type LoadedKeys } from './seen';
 import { createSunCloseUp } from './sun';
@@ -74,8 +75,8 @@ export interface BodiesContext extends PartContext {
     | 'setOrbits'
   >;
   readonly zoomRail: Pick<ZoomRail, 'setOrbits'>;
-  /** The Moon's ephemeris, once loaded. */
-  moon(): MoonEphemeris | null;
+  /** The Moon's theory has arrived: show what needs it again. */
+  moonArrived(): void;
   /** Show the moment again: the planets have loaded. */
   refresh(): void;
 }
@@ -104,6 +105,10 @@ export interface BodiesPart {
   ) => Readonly<Record<PlanetName, readonly [number, number, number]>> | null;
   /** The planets as an observer sees them. */
   readonly planetsSeen: (jdTT: JulianDay, sun: Vector3, observer: Vector3) => SkyPlanet[];
+  /** The Moon's ephemeris, once loaded. */
+  readonly moon: () => MoonEphemeris | null;
+  /** Load the Moon's theory: once the page is up, as it is a chunk of its own. */
+  readonly loadMoon: () => void;
 }
 
 export function mountBodies(context: BodiesContext): BodiesPart {
@@ -123,6 +128,7 @@ export function mountBodies(context: BodiesContext): BodiesPart {
     store.set((state) => ({ ...state, planetLight }));
   });
   const sun = createSunCloseUp(context);
+  const theMoon = createMoon(context);
   const planets = createPlanets({
     base,
     globe,
@@ -305,7 +311,7 @@ export function mountBodies(context: BodiesContext): BodiesPart {
             },
       );
     } else if (focus === 'moon') {
-      const moonKm = context.moon()?.position(jdTT) ?? null;
+      const moonKm = theMoon.ephemeris()?.position(jdTT) ?? null;
       // The view picked (#239): the usual map, or a mission's other one, fetched the first time.
       const view = planetView('moon', state.planetLight);
       const { map, sharp, caption } = view;
@@ -384,5 +390,7 @@ export function mountBodies(context: BodiesContext): BodiesPart {
     loadPlanets: planets.load,
     planetPositions: planets.positions,
     planetsSeen: planets.seen,
+    moon: theMoon.ephemeris,
+    loadMoon: theMoon.load,
   };
 }
