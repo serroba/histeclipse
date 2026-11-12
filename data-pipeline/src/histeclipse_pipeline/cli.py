@@ -70,6 +70,7 @@ from histeclipse_pipeline.radiocarbon import fetch_radiocarbon
 from histeclipse_pipeline.saturn_rings import fetch_saturn_rings
 from histeclipse_pipeline.seaice import fetch_seaice
 from histeclipse_pipeline.sealevel import fetch_sealevel
+from histeclipse_pipeline.sealevel_modern import fetch_budget, fetch_modern
 from histeclipse_pipeline.shelf import fetch_shelf
 from histeclipse_pipeline.sky import (
     constellations,
@@ -513,6 +514,18 @@ def sealevel(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {points} sea-level points to {args.out}")
 
 
+def sealevel_modern(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write measured sea level since 1900 and the altimetry trend map (AR6, NOAA)."""
+    points = fetch_modern(args.out)
+    return _say(f"wrote {points} measured sea-level points and the trend map to {args.out}")
+
+
+def sealevel_budget(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write Frederikse et al.'s sea-level budget, for checking only: not for public/."""
+    years = fetch_budget(args.out)
+    return _say(f"wrote {years} years of the sea-level budget to {args.out}")
+
+
 def holocene_temperature(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write temperature from 800,000 years ago to today, from four records side by side."""
     points = fetch_holocene_temperature(args.out)
@@ -813,6 +826,16 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         sealevel,
         "write global sea level through time from four reconstructions",
         "output directory",
+    ),
+    "sealevel-modern": (
+        sealevel_modern,
+        "write measured sea level since 1900 and its trend map (IPCC AR6, NOAA LSA)",
+        "output directory",
+    ),
+    "sealevel-budget": (
+        sealevel_budget,
+        "write Frederikse et al. 2020's budget (all rights reserved: keep it out of public/)",
+        "output JSON file",
     ),
     "holocene-temperature": (
         holocene_temperature,
