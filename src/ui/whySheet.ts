@@ -17,7 +17,7 @@ import {
   type WhyId,
   type WhyView,
 } from '../sources/registry';
-import type { HereFact } from '../sources/here';
+import type { HereFact } from '../sources/registry';
 import { element } from './dom';
 import { bookIcon, KIND_NAMES, kindIcon } from './icons';
 import './whySheet.css';
