@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 class Dataset:
+    attrs: dict[str, object]
     def __getitem__(
         self, key: tuple[()] | int | slice[int, int, None]
     ) -> npt.NDArray[np.float32]: ...

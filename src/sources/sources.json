@@ -303,6 +303,20 @@
     "cite": "Gough (1981), Solar interior structure and luminosity variations, Solar Physics 74, 21–34",
     "url": "https://doi.org/10.1007/BF00151270"
   },
+  "gpcc2025": {
+    "name": "GPCC Precipitation Analysis Monthly",
+    "kind": "dataset",
+    "cite": "Rustemeier, E., Finger, P., Schirmeister, Z., Ziese, M. (2025), GPCC Precipitation Analysis Monthly Version 2025 at 2.5°: Monthly Land-Surface Precipitation Analysis for every Month from Rain-Gauges built on GTS-based and Historical Data, Global Precipitation Climatology Centre (GPCC) at Deutscher Wetterdienst; 1891–2024 used",
+    "url": "https://doi.org/10.5676/DWD_GPCC/MONTHLY_V2025_250",
+    "licence": "CC BY 4.0"
+  },
+  "gpcpV23": {
+    "name": "GPCP Monthly Precipitation v2.3",
+    "kind": "dataset",
+    "cite": "Adler, R., Sapiano, M., Wang, J.-J., NOAA CDR Program (2016), NOAA Climate Data Record (CDR) of Precipitation – GPCP Monthly, Version 2.3, NOAA National Centers for Environmental Information; described in Adler, R. F., Sapiano, M. R. P., Huffman, G. J., et al. (2018), The Global Precipitation Climatology Project (GPCP) Monthly Analysis (New Version 2.3) and a Review of 2017 Global Precipitation, Atmosphere 9, 138; as kept by NOAA PSL, 1979–2025 used",
+    "url": "https://doi.org/10.7289/V56971M6",
+    "licence": "Public, no restrictions on use (NOAA CDR open data policy)"
+  },
   "gplates": {
     "name": "GPlates Web Service",
     "kind": "model",
@@ -335,6 +349,14 @@
     "cite": "Morice, C. P., Kennedy, J. J., Rayner, N. A., et al. (2021), An updated assessment of near-surface temperature change from 1850: the HadCRUT5 data set, Journal of Geophysical Research: Atmospheres 126, e2019JD032361; data: HadCRUT.5.1.0.0, Met Office Hadley Centre and Climatic Research Unit, University of East Anglia",
     "url": "https://doi.org/10.1029/2019JD032361",
     "licence": "Open Government Licence v3"
+  },
+  "hadex3": {
+    "name": "HadEX3",
+    "kind": "dataset",
+    "cite": "Dunn, R. J. H., Alexander, L. V., Donat, M. G., et al. (2020), Development of an Updated Global Land In Situ-Based Data Set of Temperature and Precipitation Extremes: HadEX3, Journal of Geophysical Research: Atmospheres 125, e2019JD032263; data: HadEX3 v3.0.4 (TXx, Rx1day), Met Office Hadley Centre, © British Crown Copyright",
+    "url": "https://doi.org/10.1029/2019JD032263",
+    "licence": "Open Government Licence v3; some station data non-commercial only (WMO Resolution 40)",
+    "nonCommercial": true
   },
   "helioviewer": {
     "name": "Helioviewer",
@@ -1013,6 +1035,13 @@
     "cite": "Rhodes, Skyfield: high precision research-grade positions for planets and Earth satellites",
     "url": "https://rhodesmill.org/skyfield/",
     "licence": "MIT"
+  },
+  "speibase": {
+    "name": "SPEIbase",
+    "kind": "dataset",
+    "cite": "Beguería, S., Vicente-Serrano, S. M., Reig-Gracia, F., Latorre Garcés, B. (2024), SPEIbase v.2.10, Digital.CSIC (12-month SPEI from CRU TS 4.08, 1901–2023); the index: Vicente-Serrano, S. M., Beguería, S., López-Moreno, J. I. (2010), A Multiscalar Drought Index Sensitive to Global Warming: The Standardized Precipitation Evapotranspiration Index, Journal of Climate 23, 1696–1718",
+    "url": "https://doi.org/10.20350/digitalCSIC/16497",
+    "licence": "ODbL 1.0"
   },
   "spratt": {
     "name": "Spratt & Lisiecki 2016",
