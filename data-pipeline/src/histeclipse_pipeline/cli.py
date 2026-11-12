@@ -36,6 +36,7 @@ from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.eruptions import fetch_eruptions
 from histeclipse_pipeline.extremes import fetch_extremes
 from histeclipse_pipeline.fossils import fetch_fossils
+from histeclipse_pipeline.holocene_stacks import fetch_holocene_stacks
 from histeclipse_pipeline.holocene_temperature import fetch_holocene_temperature
 from histeclipse_pipeline.iceoutlines import fetch_outlines
 from histeclipse_pipeline.icesheets import fetch_icesheets
@@ -95,6 +96,7 @@ from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.solar_images import fetch_images
 from histeclipse_pipeline.spacecraft import fetch_spacecraft
 from histeclipse_pipeline.spacecraft_paths import fetch_spacecraft_paths
+from histeclipse_pipeline.ssp_pathways import fetch_pathways
 from histeclipse_pipeline.temperature_records import fetch_temperature_records
 from histeclipse_pipeline.time_tree import fetch_time_trees
 from histeclipse_pipeline.timezones import fetch_timezones
@@ -559,6 +561,12 @@ def holocene_temperature(args: Arguments) -> int:  # pragma: no cover - needs ne
     return _say(f"wrote {points} temperature points to {args.out}")
 
 
+def holocene_stacks(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Holocene's proxy stacks, reanalysis and seasonal correction, side by side."""
+    points = fetch_holocene_stacks(args.out)
+    return _say(f"wrote {points} Holocene temperature points to {args.out}")
+
+
 def paleotemp(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write surface temperature maps for 100 steps since 540 Ma as small images."""
     count = fetch_paleotemp(args.out)
@@ -587,6 +595,12 @@ def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs networ
     """Write measured land warming since 1850 (Berkeley Earth) as small images."""
     count = fetch_measured_warming(args.out)
     return _say(f"wrote {count} measured-warming images to {args.out}")
+
+
+def ssp_pathways(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the SSP pathways to 2100: CO2 emissions, concentration and forcing."""
+    points = fetch_pathways(args.out)
+    return _say(f"wrote {points} SSP pathway points to {args.out}")
 
 
 def precipitation(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -939,6 +953,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write temperature from 800 ka to today (EPICA, LGMR, PAGES 2k, HadCRUT5)",
         "output JSON file",
     ),
+    "holocene-stacks": (
+        holocene_stacks,
+        "write the Holocene temperature conundrum (Temp12k, LGMR, Bova et al. 2021)",
+        "output JSON file (public/data/holocene-stacks/index.json)",
+    ),
     "paleotemp": (
         paleotemp,
         "write surface temperature maps for 100 steps since 540 Ma (Scotese 2022)",
@@ -962,6 +981,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "measured-warming": (
         measured_warming,
         "write measured land warming since 1850 against 1850-1900 (Berkeley Earth)",
+        "output directory",
+    ),
+    "ssp-pathways": (
+        ssp_pathways,
+        "write the SSP pathways to 2100: CO2 emissions, CO2 and forcing (RCMIP; IPCC AR6)",
         "output directory",
     ),
     "precipitation": (

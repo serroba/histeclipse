@@ -12,6 +12,13 @@
     "cite": "Allwood et al. (2006), Stromatolite reef from the Early Archaean era of Australia, Nature 441, 714–718",
     "url": "https://doi.org/10.1038/nature04764"
   },
+  "ar6AnnexIII": {
+    "name": "IPCC AR6 WG1 Annex III extended data",
+    "kind": "dataset",
+    "cite": "Smith, C., Hall, B., Dentener, F., Ahn, J., Collins, W., Jones, C., Meinshausen, M., Dlugokencky, E., Keeling, R., Krummel, P., Mühle, J., Nicholls, Z., Simpson, I. (2021), IPCC Working Group 1 (WG1) Sixth Assessment Report (AR6) Annex III Extended Data, v1.0, Zenodo; effective radiative forcing 1750–2500, best estimate with 5th and 95th percentiles, historical and for each SSP (tables A3.4a–e). Abstract: greenhouse-gas abundances and effective radiative forcing, historical and projected, for every year, given in abridged form in Annex III of the IPCC’s Sixth Assessment Report",
+    "url": "https://doi.org/10.5281/zenodo.5705391",
+    "licence": "CC BY 4.0"
+  },
   "ar6Ch4Data": {
     "name": "IPCC AR6 WGI Chapter 4 figure data (Figures 4.31, 4.32)",
     "kind": "dataset",
@@ -115,6 +122,13 @@
     "kind": "paper",
     "cite": "Boucot, Chen & Scotese (2013), Phanerozoic Paleoclimate: an atlas of lithologic indicators of climate, SEPM Concepts in Sedimentology and Paleontology 11",
     "url": "https://doi.org/10.2110/sepmcsp.11"
+  },
+  "bova2021": {
+    "name": "Bova et al. 2021",
+    "kind": "paper",
+    "cite": "Bova, S., Rosenthal, Y., Liu, Z., Godad, S. P., Yan, M. (2021), Seasonal origin of the thermal maxima at the Holocene and the last interglacial, Nature 589, 548–553; data: the 40°S–40°N sea-surface stacks from the paper’s Source Data for Fig. 3; the single cores at NOAA NCEI Paleoclimatology, study 31752, https://doi.org/10.25921/496t-9n92, accessed 12 November 2026",
+    "url": "https://doi.org/10.1038/s41586-020-03155-x",
+    "licence": "None stated for the Source Data; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
   },
   "bowring1999": {
     "name": "Bowring & Williams 1999",
@@ -373,6 +387,13 @@
     "cite": "Panovska, S., Constable, C. G. & Korte, M. (2018). Extending global continuous geomagnetic field reconstructions on timescales beyond human civilization. Geochemistry, Geophysics, Geosystems 19, 4757–4772; dipole moment from the model archive, EarthRef ERDA 2382 (no licence stated)",
     "url": "https://doi.org/10.1029/2018GC007966"
   },
+  "gidden2019": {
+    "name": "Gidden et al. 2019",
+    "kind": "paper",
+    "cite": "Gidden, M. J., Riahi, K., Smith, S. J., Fujimori, S., et al. (2019), Global emissions pathways under different socioeconomic scenarios for use in CMIP6: a dataset of harmonized emissions trajectories through the end of the century, Geoscientific Model Development 12, 1443–1475. Abstract: the SSP scenarios’ emissions, harmonised with the historical record and downscaled, as the inputs of the CMIP6 projections",
+    "url": "https://doi.org/10.5194/gmd-12-1443-2019",
+    "licence": "CC BY 4.0"
+  },
   "gistemp4": {
     "name": "GISTEMP v4",
     "kind": "dataset",
@@ -611,6 +632,13 @@
     "cite": "Judd, Tierney, Lunt, Montañez, Huber, Wing & Valdes (2024), A 485-million-year history of Earth's surface temperature, Science 385, eadk3705; GMST percentiles by stage from github.com/EJJudd/PhanDA (5_Outputs, revision 49ff875)",
     "url": "https://doi.org/10.1126/science.adk3705"
   },
+  "kaufman2020": {
+    "name": "Kaufman et al. 2020 (Temperature 12k)",
+    "kind": "dataset",
+    "cite": "Kaufman, D., McKay, N., Routson, C., Erb, M., Dätwyler, C., Sommer, P. S., Heiri, O., Davis, B. (2020), Holocene global mean surface temperature, a multi-method reconstruction approach, Scientific Data 7, 201; data: figshare, https://doi.org/10.6084/m9.figshare.c.4796823, and NOAA NCEI Paleoclimatology, study 29712, https://doi.org/10.25921/vzys-1280, accessed 12 November 2026",
+    "url": "https://doi.org/10.1038/s41597-020-0530-7",
+    "licence": "CC0 1.0 (the data, on figshare); the article CC BY 4.0"
+  },
   "kent2015": {
     "name": "Kent et al. 2015",
     "kind": "paper",
@@ -769,6 +797,13 @@
     "kind": "paper",
     "cite": "Meeus (1998), Astronomical Algorithms, 2nd edition, Willmann-Bell: the Sun (ch. 25), nutation (ch. 22) and sidereal time (ch. 12)",
     "url": "https://search.worldcat.org/search?q=Meeus+Astronomical+Algorithms+2nd+edition"
+  },
+  "meinshausen2020": {
+    "name": "Meinshausen et al. 2020",
+    "kind": "paper",
+    "cite": "Meinshausen, M., Nicholls, Z. R. J., Lewis, J., Gidden, M. J., et al. (2020), The shared socio-economic pathway (SSP) greenhouse gas concentrations and their extensions to 2500, Geoscientific Model Development 13, 3571–3605. Abstract: the greenhouse-gas concentrations of the SSP scenarios to 2100 and on to 2500, computed from the harmonised emissions, which CMIP6’s climate models were run with",
+    "url": "https://doi.org/10.5194/gmd-13-3571-2020",
+    "licence": "CC BY 4.0"
   },
   "merdith2021": {
     "name": "Merdith et al. 2021",
@@ -1167,6 +1202,19 @@
     "cite": "Moat, B. I., Smeed, D. A., Rayner, D., Johns, W. E., Smith, R. H., Volkov, D. L., Elipot, S., Petit, T., Kajtar, J. B., Baringer, M. O., Collins, J. (2026), Atlantic meridional overturning circulation observed by the RAPID-MOCHA-WBTS array at 26N from 2004 to 2024 (v2024.1a), British Oceanographic Data Centre. The overturning measured continuously since April 2004 by moored instruments from the Bahamas to Africa, with Florida Strait cable transports and ERA5 Ekman transport. Data from the RAPID AMOC monitoring project are funded by the Natural Environment Research Council, the National Science Foundation and NOAA, and are freely available from rapid.ac.uk",
     "url": "https://doi.org/10.5285/48d0bf43-0598-ceb2-e063-7086abc062f1",
     "licence": "Open Government Licence v3.0"
+  },
+  "rcmip": {
+    "name": "RCMIP protocol",
+    "kind": "dataset",
+    "cite": "Nicholls, Z., Lewis, J. (2021), Reduced Complexity Model Intercomparison Project (RCMIP) protocol, v4.0.0, Zenodo; with Nicholls, Z. R. J., Meinshausen, M., Lewis, J., et al. (2020), Reduced Complexity Model Intercomparison Project Phase 1: introduction and evaluation of global-mean temperature response, Geoscientific Model Development 13, 5175–5190; annual global emissions, concentrations and effective radiative forcing, historical and for each SSP. Abstract: the inputs RCMIP gave simple climate models so that their runs can be compared, gathered from CMIP6’s emissions and concentrations",
+    "url": "https://doi.org/10.5281/zenodo.4589727",
+    "licence": "CC BY 4.0"
+  },
+  "riahi2017": {
+    "name": "Riahi et al. 2017",
+    "kind": "paper",
+    "cite": "Riahi, K., van Vuuren, D. P., Kriegler, E., Edmonds, J., et al. (2017), The Shared Socioeconomic Pathways and their energy, land use, and greenhouse gas emissions implications: An overview, Global Environmental Change 42, 153–168. Abstract: the five SSP narratives of how society might develop, and the energy, land-use and emissions scenarios that integrated assessment models built from them",
+    "url": "https://doi.org/10.1016/j.gloenvcha.2016.05.009"
   },
   "richardson2023": {
     "name": "Richardson et al. 2023",
