@@ -11,6 +11,7 @@ from histeclipse_pipeline.ar6_sealevel import fetch_ar6_sealevel
 from histeclipse_pipeline.archaeoglobe import fetch_ways
 from histeclipse_pipeline.asteroids import fetch_asteroids
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
+from histeclipse_pipeline.carbon_budget import fetch_carbon_budget
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
 from histeclipse_pipeline.cenogrid import fetch_cenogrid
 from histeclipse_pipeline.cesm import fetch_cesm
@@ -441,6 +442,12 @@ def deep_air(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} CO2 estimates, the CO2 fit and the O2 estimate to {args.out}")
 
 
+def carbon_budget(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Global Carbon Budget and each country's emissions and warming (CC BY 4.0)."""
+    years, countries = fetch_carbon_budget(args.out)
+    return _say(f"wrote {years} years of the budget and {countries} countries to {args.out}")
+
+
 def co2_archive(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write CO2 estimates by method from the Paleo-CO2 Data Archive (CC BY 4.0)."""
     count, empty = fetch_co2_archive(args.out)
@@ -766,6 +773,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         deep_air,
         "write CO2 and O2 over the last 540 million years (Foster 2017; Mills 2023)",
         "output JSON file",
+    ),
+    "carbon-budget": (
+        carbon_budget,
+        "write the Global Carbon Budget and each country's emissions and warming (CC BY 4.0)",
+        "output directory",
     ),
     "co2-archive": (
         co2_archive,

@@ -9,7 +9,7 @@ import type { PartContext } from '../part';
 import { RESTING } from '../feature';
 import { rocksLayer } from '../../globe/historyPaintLayers';
 import { type DeepScale, ICE_AGES_MA, type ViewState } from '../../state/viewState';
-import { formatMa } from '../../deepTime/periods';
+import { formatMa } from '../../time/format';
 import {
   loadRocks,
   rockAt,
