@@ -67,13 +67,14 @@ export const TEMPERATURE_KEY: readonly { readonly celsius: number; readonly labe
   { celsius: 45, label: 'extreme heat' },
 ];
 
-/** The change from today, °C, matching the shader: blue colder, white the same, red warmer. */
+/** The change from today, °C, matching the shader: blue colder, red warmer, uncoloured near today. */
 export const CHANGE_STOPS: Stops = [
   [-20, '#313695'],
   [-10, '#4575b4'],
-  [-4, '#91bfdb'],
-  [-1, '#e0f3f8'],
-  [0, '#f7f7f7'],
+  [-4, '#74add1'],
+  [-1, '#abd9e9'],
+  // Uncoloured: within about a degree of today the globe keeps its land's own colours.
+  [0, 'transparent'],
   [1, '#fee090'],
   [4, '#fdae61'],
   [10, '#d73027'],
@@ -83,7 +84,7 @@ export const CHANGE_KEY: readonly { readonly celsius: number; readonly label: st
   { celsius: -20, label: 'under an ice age’s cold' },
   { celsius: -10, label: 'much colder' },
   { celsius: -4, label: 'colder' },
-  { celsius: 0, label: 'as today' },
+  { celsius: 0, label: 'as today: not coloured' },
   { celsius: 4, label: 'warmer' },
   { celsius: 10, label: 'much warmer' },
 ];
