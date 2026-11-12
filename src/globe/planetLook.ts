@@ -16,7 +16,7 @@ import { elementAt } from '../util/arrays';
 import { EARTH_RADIUS_KM } from './spaceFrame';
 import type { KeyedBody, SwatchedBody } from '../data/planetKeys';
 
-export interface PlanetShape {
+interface PlanetShape {
   /** Equatorial and polar radii, km. */
   readonly equatorialKm: number;
   readonly polarKm: number;
@@ -25,7 +25,7 @@ export interface PlanetShape {
   readonly poleDec: number;
 }
 
-export const PLANET_SHAPES: Readonly<Record<PlanetName, PlanetShape>> = {
+const PLANET_SHAPES: Readonly<Record<PlanetName, PlanetShape>> = {
   mercury: { equatorialKm: 2440.53, polarKm: 2438.26, poleRa: 281.0103, poleDec: 61.4155 },
   venus: { equatorialKm: 6051.8, polarKm: 6051.8, poleRa: 272.76, poleDec: 67.16 },
   // The report's Mars terms include a 700-century wobble (0.42° in RA, 1.59° in Dec): evaluated
@@ -68,9 +68,7 @@ export function poleVector(planet: PlanetName): [number, number, number] {
  * System III, the turning of their interiors: their clouds drift against it. Mercury's and
  * Mars's small periodic terms (well under a tenth of a degree) are left out.
  */
-export const ROTATION: Readonly<
-  Record<PlanetName, { readonly w0: number; readonly rate: number }>
-> = {
+const ROTATION: Readonly<Record<PlanetName, { readonly w0: number; readonly rate: number }>> = {
   mercury: { w0: 329.5988, rate: 6.1385108 },
   venus: { w0: 160.2, rate: -1.4813688 },
   // With the same long-period term (0.58°) evaluated at J2000, as for the pole.
@@ -127,18 +125,18 @@ export function bodyAxes(
 }
 
 /** A band of colour between two latitudes (degrees, south to north). */
-export interface Band {
+interface Band {
   readonly south: number;
   readonly north: number;
   readonly colour: string;
 }
 
-export interface PlanetColours {
+interface PlanetColours {
   readonly base: string;
   readonly bands: readonly Band[];
 }
 
-export const PLANET_COLOURS: Readonly<Record<PlanetName, PlanetColours>> = {
+const PLANET_COLOURS: Readonly<Record<PlanetName, PlanetColours>> = {
   mercury: { base: '#8c8680', bands: [] },
   venus: { base: '#e6d8b8', bands: [] },
   mars: {

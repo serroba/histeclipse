@@ -12,10 +12,10 @@ import { errorMessage } from '../../util/errors';
 import type { MountedPart, PartContext } from '../part';
 
 /** Finds a node of the tree, or none for the whole tree. */
-export type TreePick = (tree: TreeOfLife) => number | undefined;
+type TreePick = (tree: TreeOfLife) => number | undefined;
 
 /** A button's label and what it does, as cards and the Layers panel take them. */
-export interface Action {
+interface Action {
   readonly label: string;
   readonly run: () => void;
 }

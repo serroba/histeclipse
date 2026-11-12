@@ -3,6 +3,6 @@
  * import from here only (#487).
  */
 
-export { createAsking, type Asking } from './asking';
+export { createAsking } from './asking';
 export { hereVersion, hereView, whyMoment, whyVersion, type HereData } from './facts';
 export { createSourcesList } from './sources';

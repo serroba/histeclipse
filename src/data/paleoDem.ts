@@ -39,7 +39,6 @@ const IndexSchema = v.strictObject({
 });
 
 export type PaleoDemIndex = v.InferOutput<typeof IndexSchema>;
-export type PaleoFrame = PaleoDemIndex['frames'][number];
 
 export async function loadPaleoDemIndex(url: string, fetchJson: Fetch): Promise<PaleoDemIndex> {
   return getJson(fetchJson, url, IndexSchema);

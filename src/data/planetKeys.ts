@@ -49,7 +49,6 @@ const KeysSchema = v.strictObject({
 });
 
 export type ColourKey = v.InferOutput<typeof KeySchema>;
-export type SwatchKey = v.InferOutput<typeof SwatchKeySchema>;
 export type ColourKeys = v.InferOutput<typeof KeysSchema>['keys'];
 export type SwatchKeys = v.InferOutput<typeof KeysSchema>['swatches'];
 export type KeyedBody = keyof ColourKeys;

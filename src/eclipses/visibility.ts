@@ -13,7 +13,7 @@
 import type { GeoPoint } from '../core/geo';
 
 const RADIANS = Math.PI / 180;
-export const SECONDS_PER_DEGREE_OF_ROTATION = 86_164.0905 / 360;
+const SECONDS_PER_DEGREE_OF_ROTATION = 86_164.0905 / 360;
 
 export type Visibility = 'visible' | 'hidden' | 'uncertain';
 

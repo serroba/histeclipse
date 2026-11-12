@@ -14,11 +14,11 @@ import './cycleTrack.css';
 
 /** Hours a second the cycle can play at: an hour or six for the moons, a day or more for the
  * planets. */
-export const CYCLE_SPEEDS = [1, 6, 24, 120, 240, 720] as const;
+const CYCLE_SPEEDS = [1, 6, 24, 120, 240, 720] as const;
 export type CycleSpeed = (typeof CYCLE_SPEEDS)[number];
 
 /** Each moment's words, and what it means. */
-export const MARK_WORDS: Readonly<Record<CycleMark, readonly [string, string]>> = {
+const MARK_WORDS: Readonly<Record<CycleMark, readonly [string, string]>> = {
   behind: ['Behind the Sun', 'Conjunction: beyond the Sun, lost in its glare'],
   opposite: ['Opposite the Sun', 'Opposition: near its closest and brightest, up all night'],
   between: ['Between us and the Sun', 'Inferior conjunction: closest, its dark side towards us'],
@@ -29,7 +29,7 @@ export const MARK_WORDS: Readonly<Record<CycleMark, readonly [string, string]>> 
 };
 
 /** A speed as written: "6 hours/s", "1 day/s", "10 days/s". */
-export function speedWords(hours: CycleSpeed): string {
+function speedWords(hours: CycleSpeed): string {
   if (hours < 24) return `${String(hours)} ${hours === 1 ? 'hour' : 'hours'}/s`;
   const days = hours / 24;
   return `${String(days)} ${days === 1 ? 'day' : 'days'}/s`;
@@ -42,7 +42,7 @@ export interface CycleMoment {
   readonly date: string;
 }
 
-export interface CycleView {
+interface CycleView {
   /** What the bar runs over, as in "Mars’s cycle, as seen from Earth", and its slider's name. */
   readonly title: string;
   readonly slider: string;

@@ -83,8 +83,8 @@ export function reachedAt(ms: number): number {
 }
 
 /** The temperatures the chart shows, °C. */
-export const T_MIN = -10;
-export const T_MAX = 4;
+const T_MIN = -10;
+const T_MAX = 4;
 
 /** Where the corridor starts: 10,000 years before 1950. */
 export const CORRIDOR_FROM = -8050;

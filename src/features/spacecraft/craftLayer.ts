@@ -30,7 +30,7 @@ export interface SceneCraft {
 }
 
 /** A craft as the layer draws it: scene positions, now and back along its trail. */
-export interface CraftDrawn {
+interface CraftDrawn {
   readonly at: readonly [number, number, number];
   readonly trail: readonly (readonly [number, number, number])[];
   readonly approximate: boolean;
@@ -41,12 +41,12 @@ const MOST_TRAIL = 32;
 const FLOWN = [0.5, 0.85, 1] as const;
 const APPROXIMATE = [1, 0.7, 0.28] as const;
 
-export interface CraftLayer {
+interface CraftLayer {
   /** Draw these craft; null hides them all. */
   set(craft: readonly CraftDrawn[] | null): void;
 }
 
-export function createCraftLayer(scene: Scene): CraftLayer {
+function createCraftLayer(scene: Scene): CraftLayer {
   const group = new Group();
   group.visible = false;
   scene.add(group);

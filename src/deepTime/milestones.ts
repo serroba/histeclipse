@@ -13,7 +13,7 @@
 export type MilestoneKind = 'cosmos' | 'life' | 'extinction' | 'continents' | 'climate' | 'humans';
 export type Basis = 'stated' | 'stage' | 'secondary';
 
-export interface Estimate {
+interface Estimate {
   readonly label: string;
   readonly min: number;
   readonly max: number;

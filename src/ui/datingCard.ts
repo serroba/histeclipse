@@ -27,14 +27,14 @@ const NS = 'http://www.w3.org/2000/svg';
 /** Ranges holding less than this share are left out of the words (they still shade the chart). */
 const LISTED_SHARE = 0.005;
 
-export const DATING_EXAMPLES = [
+const DATING_EXAMPLES = [
   { label: 'On a steep stretch', age: 3500, sigma: 25 },
   { label: 'On the Hallstatt plateau', age: 2450, sigma: 25 },
   { label: 'Where the curve wiggles', age: 1250, sigma: 25 },
 ] as const;
 
 /** Real eruptions, as their sources report them: a radiocarbon age to calibrate, or a spike. */
-export const REAL_EXAMPLES: readonly {
+const REAL_EXAMPLES: readonly {
   readonly label: string;
   /** A radiocarbon age and its 1σ to calibrate, or null where a spike dates it instead. */
   readonly age: number | null;

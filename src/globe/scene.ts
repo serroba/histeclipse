@@ -164,7 +164,7 @@ const OCCLUDING_RADIUS_PIXELS = 10;
 const MERGE_PIXELS = 40;
 
 /** Where an eclipsed Moon was overhead, nominally and at ±1σ of ΔT. */
-export interface LunarOverlay {
+interface LunarOverlay {
   readonly sublunar: Vector3Tuple;
   readonly west: Vector3Tuple;
   readonly east: Vector3Tuple;
@@ -173,14 +173,14 @@ export interface LunarOverlay {
 }
 
 /** A solar eclipse's path: its elements, the ΔT to draw it for, and ΔT's uncertainty. */
-export interface SolarPath {
+interface SolarPath {
   readonly elements: BesselianElements;
   readonly deltaTSeconds: number;
   readonly uncertaintySeconds: number;
 }
 
 /** Where the Moon and Sun are at the current moment, from Earth's centre. */
-export interface SpaceBodies {
+interface SpaceBodies {
   /** Rotation from Earth-fixed axes to J2000 equatorial axes. */
   readonly earthFixedToJ2000: Matrix3;
   /** Geocentric J2000 positions in km; the Moon is null until its ephemeris loads. */
@@ -193,7 +193,7 @@ export interface SpaceBodies {
 }
 
 /** A small image to show at once and a sharp one to follow. */
-export interface ImagePair {
+interface ImagePair {
   readonly small: string;
   readonly large: string;
 }
@@ -202,7 +202,7 @@ export interface ImagePair {
  * SDO's view of the Sun in one channel: a map of the whole surface (see `data/sunImages.ts`),
  * and the newest frame, whose limb is at `diskRadius` of its width, north up, west right.
  */
-export interface SunImageRequest {
+interface SunImageRequest {
   readonly key: string;
   readonly map: ImagePair;
   readonly disc: ImagePair;
@@ -214,7 +214,7 @@ export interface SunImageRequest {
 }
 
 /** Past states to draw: Cliopatria's filled territories, OpenHistoricalMap's border lines, or both. */
-export interface EmpireLayer {
+interface EmpireLayer {
   readonly territories: readonly Territory[];
   readonly ohm: OhmYear | null;
   /** States that appeared or went since the year drawn before, to name on the map a while. */
@@ -242,7 +242,7 @@ const MAJOR_STATE_SIZE = 14;
 const STATE_CHANGE_MS = 4000;
 
 /** Two elevation maps (URLs of greyscale images, see `data/paleoDem.ts`) and the blend between. */
-export interface DeepTimeSurface {
+interface DeepTimeSurface {
   readonly younger: string;
   readonly older: string;
   /** 0 shows `younger`, 1 `older`. */
@@ -269,7 +269,7 @@ export interface TemperatureSurface {
 }
 
 /** On the ice-age scale: today's coasts and shelves, cut at the sea level of the moment. */
-export interface ShelfSurface {
+interface ShelfSurface {
   readonly url: string;
   readonly columns: number;
   readonly rows: number;
@@ -281,7 +281,7 @@ export interface ShelfSurface {
 }
 
 /** On the ice-age scale: ice thickness, two maps either side of the moment, blended. */
-export interface IceSurface {
+interface IceSurface {
   readonly younger: string;
   readonly older: string;
   /** 0 shows `younger`, 1 `older`. */
@@ -295,7 +295,7 @@ export interface IceSurface {
  * Sea ice: today's and an ice-age model's, each as the most ice in the year and the ice that
  * lasts all year, blended `mix` of the way from today's to the ice age's.
  */
-export interface SeaIceSurface {
+interface SeaIceSurface {
   readonly todayMost: string;
   readonly todayYearRound: string;
   readonly pastMost: string;
@@ -308,7 +308,7 @@ export interface SeaIceSurface {
 }
 
 /** A second reconstruction's continents: two masks either side of the moment, blended. */
-export interface PlateSurface {
+interface PlateSurface {
   readonly younger: string;
   readonly older: string;
   /** 0 shows `younger`, 1 `older`. */
@@ -324,7 +324,7 @@ export interface PlateSurface {
  * Before any reconstruction: what a hypothesis says the surface was like, drawn as a sketch.
  * Land, if any, has invented shapes and places; only its share of the surface is the source's.
  */
-export interface SurfaceSketch {
+interface SurfaceSketch {
   /** A molten surface, or an ocean with that share of the surface as land. */
   readonly kind: 'magma' | 'ocean';
   /** Share of the whole surface that is land, 0..1. */

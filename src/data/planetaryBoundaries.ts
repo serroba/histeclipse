@@ -88,7 +88,6 @@ export type PlanetaryBoundaries = v.InferOutput<typeof BoundariesSchema>;
 export type Boundary = PlanetaryBoundaries['boundaries'][number];
 export type ControlVariable = Boundary['variables'][number];
 export type AssessmentId = v.InferOutput<typeof AssessmentId>;
-export type Values = v.InferOutput<typeof ValuesSchema>;
 
 export async function loadPlanetaryBoundaries(
   url: string,

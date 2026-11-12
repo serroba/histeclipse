@@ -32,7 +32,7 @@ const ChartSchema = v.strictObject({
 });
 
 export type Chart = v.InferOutput<typeof ChartSchema>;
-export type ChartUnit = Chart['units'][number];
+type ChartUnit = Chart['units'][number];
 
 export const CHART: Chart = v.parse(ChartSchema, chartJson);
 

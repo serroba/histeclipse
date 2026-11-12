@@ -56,7 +56,7 @@ import { viewKey, type LoadedKeys } from './seen';
 import { createSunCloseUp } from './sun';
 
 /** Within this many radii of the body in focus, its sharper map is fetched (#258). */
-export const SHARP_WITHIN = 2.5;
+const SHARP_WITHIN = 2.5;
 
 /** What the bodies ask of the rest of the page. */
 export interface BodiesContext extends PartContext {

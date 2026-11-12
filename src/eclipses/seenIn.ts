@@ -34,8 +34,8 @@ const PENUMBRA_STEP_HOURS = 5 / 60;
 const CENTRE_STEP_HOURS = 10 / 3600;
 const MOON_STEP_MINUTES = 10;
 
-export type SeenPhase = 'total' | 'annular' | 'partial' | 'penumbral' | 'none';
-export type SeenVerdict = 'seen' | 'maybe' | 'not';
+type SeenPhase = 'total' | 'annular' | 'partial' | 'penumbral' | 'none';
+type SeenVerdict = 'seen' | 'maybe' | 'not';
 
 export interface SeenIn {
   /** Seen for ΔT − σ, ΔT and ΔT + σ ("seen"), for some of them ("maybe"), or for none. */

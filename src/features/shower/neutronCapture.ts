@@ -9,8 +9,8 @@
  * Lengths are in femtometres (10⁻¹⁵ m).
  */
 
-export type Point = readonly [x: number, y: number, z: number];
-export type Nucleon = 'proton' | 'neutron';
+type Point = readonly [x: number, y: number, z: number];
+type Nucleon = 'proton' | 'neutron';
 
 /** Mass excesses, keV (AME2020): what each weighs beyond its mass number in atomic mass units. */
 const EXCESS_KEV = {
@@ -37,7 +37,7 @@ export function nuclearRadius(massNumber: number): number {
 }
 
 /** One nucleon's place in the nucleus, and what it is. */
-export interface Slot {
+interface Slot {
   readonly at: Point;
   readonly kind: Nucleon;
 }

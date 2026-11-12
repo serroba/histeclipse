@@ -12,7 +12,7 @@ import { YEAR_SPEEDS, type YearSpeed } from '../time/yearPlay';
 import { element } from './dom';
 import './historyTrack.css';
 
-export interface HistoryView {
+interface HistoryView {
   /** Astronomical years: the one shown, and the track's ends. */
   readonly year: number;
   readonly first: number;

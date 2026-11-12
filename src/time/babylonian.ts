@@ -95,7 +95,7 @@ function leapMonthName(year: number): string | null {
 }
 
 /** Where a year's leap month comes from: tablets, a reconstruction, or the cycle. */
-export type LeapSource = 'attested' | 'reconstructed' | 'cycle' | 'cycle run back';
+type LeapSource = 'attested' | 'reconstructed' | 'cycle' | 'cycle run back';
 
 function leapSourceOf(year: number): LeapSource {
   const recorded = leapMonthOf(bceOf(year));

@@ -25,9 +25,7 @@ const LIGHT_DAYS_PER_AU = 499.004_783_836 / 86_400;
  * row holds until the next one. Jupiter and Saturn drift in the remote past, where VSOP87's
  * long-period terms lose accuracy; since 1000 BCE every planet is within half an arcminute.
  */
-export const PLANET_UNCERTAINTY: Readonly<
-  Record<PlanetName, readonly (readonly [number, number])[]>
-> = {
+const PLANET_UNCERTAINTY: Readonly<Record<PlanetName, readonly (readonly [number, number])[]>> = {
   mercury: [[-4000, 0.5]],
   venus: [[-4000, 0.5]],
   mars: [[-4000, 0.5]],

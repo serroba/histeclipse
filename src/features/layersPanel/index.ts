@@ -13,7 +13,7 @@ import type { Span } from '../../ui/spanSwitch';
 import type { PartContext } from '../part';
 
 /** A button's label and what it does. */
-export interface LayerAction {
+interface LayerAction {
   readonly label: string;
   readonly run: () => void;
 }

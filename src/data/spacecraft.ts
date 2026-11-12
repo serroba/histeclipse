@@ -68,7 +68,6 @@ const SpacecraftSchema = v.strictObject({
 
 export type Craft = v.InferOutput<typeof CraftSchema>;
 export type CraftPhase = Craft['phases'][number];
-export type NeverLeft = v.InferOutput<typeof NeverLeftSchema>;
 export type Spacecraft = v.InferOutput<typeof SpacecraftSchema>;
 
 export async function loadSpacecraft(url: string, fetchJson: Fetch): Promise<Spacecraft> {

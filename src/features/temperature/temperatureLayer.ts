@@ -41,7 +41,7 @@ export interface TemperatureLayerContext {
 }
 
 /** Where the moment is drawn: which scale, and whether before the elevation maps reach. */
-export interface TemperatureMoment {
+interface TemperatureMoment {
   readonly ma: number;
   readonly ice: boolean;
   readonly uncharted: boolean;

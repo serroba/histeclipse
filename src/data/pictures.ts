@@ -34,7 +34,6 @@ const PicturesSchema = v.strictObject({
 });
 
 export type Pictures = v.InferOutput<typeof PicturesSchema>;
-export type PictureEntry = Pictures['pictures'][string];
 
 export async function loadPictures(url: string, fetchJson: Fetch): Promise<Pictures> {
   return getJson(fetchJson, url, PicturesSchema);

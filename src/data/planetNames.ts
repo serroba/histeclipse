@@ -39,7 +39,7 @@ export type PlaceName = v.InferOutput<typeof NameSchema>;
 export type PlaceNames = v.InferOutput<typeof NamesSchema>['names'];
 export type NamedBody = keyof PlaceNames;
 
-export const NAMED_BODIES: readonly NamedBody[] = ['mercury', 'venus', 'moon', 'mars'];
+const NAMED_BODIES: readonly NamedBody[] = ['mercury', 'venus', 'moon', 'mars'];
 
 export function isNamedBody(body: string): body is NamedBody {
   return (NAMED_BODIES as readonly string[]).includes(body);

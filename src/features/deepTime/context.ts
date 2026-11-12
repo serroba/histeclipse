@@ -11,7 +11,7 @@ import type { Span } from '../../ui/spanSwitch';
 import type { StoryDate } from '../../deepTime/storyDate';
 
 /** What deep time's own fields of the bar leave to the layers and surfaces. */
-export type Gathered = Omit<
+type Gathered = Omit<
   DeepTimeView,
   | 'ma'
   | 'story'
@@ -27,14 +27,14 @@ export type Gathered = Omit<
 >;
 
 /** Where the moment is drawn: which scale, and whether before the elevation maps reach. */
-export interface TemperatureMoment {
+interface TemperatureMoment {
   readonly ma: number;
   readonly ice: boolean;
   readonly uncharted: boolean;
 }
 
 /** The temperature layer (features/temperature), as deep time asks of it. */
-export interface DeepTemperature {
+interface DeepTemperature {
   view(state: ViewState, moment: TemperatureMoment): DeepTimeView['temperature'];
   drawn(state: ViewState, moment: TemperatureMoment): boolean;
   show(state: ViewState, moment: TemperatureMoment, maPerSecond: number | null): void;

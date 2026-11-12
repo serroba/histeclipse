@@ -15,7 +15,7 @@ const LAYER_SPANS = new Map(
 );
 
 /** The whys of what is on screen: the mode, the span, the body, the layers, an eclipse. */
-export function whysOnScreen(state: ViewState): WhyId[] {
+function whysOnScreen(state: ViewState): WhyId[] {
   return onScreen({
     mode: state.mode,
     span: state.ma === null ? 'years' : state.deepScale,

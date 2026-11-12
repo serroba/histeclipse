@@ -16,7 +16,7 @@ import {
 import { element } from '../../ui/dom';
 import './deepGlance.css';
 
-export interface DeepGlanceView {
+interface DeepGlanceView {
   /** How long ago, in words, and the period. */
   readonly when: string;
   readonly period: string;

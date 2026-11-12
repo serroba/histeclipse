@@ -102,12 +102,12 @@ export const HISTORY_PAINT_ORDER = {
 } as const;
 
 /** A marker or name pinned to Earth's surface. */
-export interface SurfacePin {
+interface SurfacePin {
   readonly element: HTMLElement;
   readonly point: GeoPoint;
 }
 
-export interface SurfaceLabels {
+interface SurfaceLabels {
   /** Replace this layer's pins (measured once, laid out from the next frame); null clears them. */
   show(pins: readonly SurfacePin[] | null): void;
   /**
@@ -141,7 +141,7 @@ export interface GlobeLayer<Input> {
 export type LayerFactory<Input> = (host: LayerHost) => GlobeLayer<Input>;
 
 /** A name to show for a thing drawn: its key, its text, what a tap picks, and where it is. */
-export interface Named {
+interface Named {
   readonly key: string;
   readonly name: string;
   readonly pick: string;

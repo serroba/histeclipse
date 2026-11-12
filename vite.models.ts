@@ -30,7 +30,7 @@ async function sha256Of(path: string): Promise<string | null> {
   }
 }
 
-export async function fetchModels(root: string): Promise<void> {
+async function fetchModels(root: string): Promise<void> {
   const raw = await readFile(join(root, 'models.lock.json'), 'utf8');
   const { embedding } = JSON.parse(raw) as { embedding: Lock };
   for (const name of embedding.site) {

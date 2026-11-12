@@ -72,9 +72,6 @@ export function periodShort(period: Period): string {
 /** Below this, moments read in years: the scale of the ice ages. */
 const ICE_AGE_WORDS_MA = 3;
 
-export const PERIOD_SOURCE =
-  'International Chronostratigraphic Chart v2026/06, International Commission on Stratigraphy';
-
 /** The period `ma` million years ago falls in (a base belongs to its period); null beyond the oldest. */
 export function periodAt(ma: number): Period | null {
   return PERIODS.find((period) => ma <= period.base) ?? null;

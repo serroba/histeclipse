@@ -9,7 +9,7 @@ import './famousPanel.css';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-export function famousDateLabel(eclipse: FamousEclipse): string {
+function famousDateLabel(eclipse: FamousEclipse): string {
   const [year, month, day] = famousDateParts(eclipse);
   return `${String(day)} ${MONTHS[month - 1] ?? ''} ${formatYear(astronomicalYear(year))}`;
 }

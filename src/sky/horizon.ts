@@ -71,7 +71,7 @@ export function airmass(apparentAltitude: number): number {
 }
 
 /** Magnitudes lost per air mass in a clear, dark-site sky. */
-export const EXTINCTION_PER_AIRMASS = 0.2;
+const EXTINCTION_PER_AIRMASS = 0.2;
 
 /** A star's magnitude as seen through the atmosphere: dimmer toward the horizon. */
 export function apparentMagnitude(vmag: number, apparentAltitude: number): number {

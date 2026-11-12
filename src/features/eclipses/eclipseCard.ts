@@ -31,7 +31,7 @@ export interface EclipseCard {
 }
 
 /** Where the eclipse is seen from, and the place's name when it is a known one. */
-export interface Observer {
+interface Observer {
   readonly point: GeoPoint;
   readonly name: string | null;
 }
@@ -46,7 +46,7 @@ function pickVerb(): string {
   return window.matchMedia('(pointer: coarse)').matches ? 'Tap' : 'Click';
 }
 
-export function formatPoint({ latitude, longitude }: GeoPoint): string {
+function formatPoint({ latitude, longitude }: GeoPoint): string {
   const lat = `${Math.abs(latitude).toFixed(1)}°${latitude >= 0 ? 'N' : 'S'}`;
   const lon = `${Math.abs(longitude).toFixed(1)}°${longitude >= 0 ? 'E' : 'W'}`;
   return `${lat} ${lon}`;
@@ -66,7 +66,7 @@ const PHASE_TEXT: Record<LocalPhase, string> = {
 };
 
 /** ΔT uncertainty in plain words; negligible for the telescopic era. */
-export function uncertaintyText(uncertaintySeconds: number, shiftDegrees: number): string {
+function uncertaintyText(uncertaintySeconds: number, shiftDegrees: number): string {
   if (shiftDegrees < 0.05) {
     return `ΔT is known to ±${formatDuration(uncertaintySeconds)} here, so positions are not in doubt.`;
   }

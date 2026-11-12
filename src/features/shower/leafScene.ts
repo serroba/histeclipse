@@ -43,7 +43,7 @@ import { RED_NM } from './sunlightJourney';
 import { clamp01, ease as EASE, within } from '../../story/timing';
 
 /** The chapters this scene plays. */
-export type LeafChapter = 'dioxide' | 'fall' | 'plant';
+type LeafChapter = 'dioxide' | 'fall' | 'plant';
 
 export interface LeafSceneOptions {
   /** Whether it lands on the sea, where an alga takes it in, rather than on land. */

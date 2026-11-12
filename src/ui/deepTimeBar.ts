@@ -57,10 +57,10 @@ import { createSeaLevelChart } from './seaLevelChart';
 import './deepTimeBar.css';
 
 /** Each step button moves by one elevation map, or on the ice-age scale by 5,000 years. */
-export const STEP_MA = 5;
-export const ICE_STEP_MA = 0.005;
+const STEP_MA = 5;
+const ICE_STEP_MA = 0.005;
 /** Over all of Earth's history, a step is 50 million years. */
-export const EONS_STEP_MA = 50;
+const EONS_STEP_MA = 50;
 
 const COAST_LABELS: Readonly<Record<CoastSource, string>> = {
   'bintanja-2008': 'Bintanja & van de Wal 2008',
@@ -110,7 +110,7 @@ export function seaIceText(view: SeaIceView): string {
   return `Sea ice: a stand-in, ${share} of the way from today’s (NSIDC) to the Last Glacial Maximum’s (${model} model), by how far the sea had fallen. ${key}`;
 }
 
-export const SEA_ICE_LABELS: Readonly<Record<SeaIceModel, string>> = {
+const SEA_ICE_LABELS: Readonly<Record<SeaIceModel, string>> = {
   'mpi-esm1-2-lr': 'MPI-ESM1-2-LR',
   'miroc-es2l': 'MIROC-ES2L',
   'awi-esm-1-1-lr': 'AWI-ESM-1-1-LR',

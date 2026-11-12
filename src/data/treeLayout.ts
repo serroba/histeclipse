@@ -33,7 +33,7 @@ export const TREE_CLADES = [
   'Homo',
 ] as const;
 
-export type TreeClade = (typeof TREE_CLADES)[number] | 'other';
+type TreeClade = (typeof TREE_CLADES)[number] | 'other';
 
 export interface TreeLayout {
   /** Each node's place on the disc: `x` and `z` in -1..1, the root at 0. */

@@ -43,7 +43,7 @@ const FossilsSchema = v.strictObject({
 });
 
 export type Fossils = v.InferOutput<typeof FossilsSchema>;
-export type FossilGroup = Fossils['groups'][number]['id'];
+type FossilGroup = Fossils['groups'][number]['id'];
 
 export async function loadFossils(url: string, fetchJson: Fetch): Promise<Fossils> {
   return getJson(fetchJson, url, FossilsSchema);

@@ -39,7 +39,6 @@ const SolarEclipseSchema = v.strictObject({
 
 export type BesselianElements = v.InferOutput<typeof BesselianElementsSchema>;
 export type SolarEclipse = v.InferOutput<typeof SolarEclipseSchema>;
-export type SolarEclipseKind = SolarEclipse['kind'];
 export type SolarCatalog = EclipseCatalog<SolarEclipse>;
 
 export const SolarCatalog = {

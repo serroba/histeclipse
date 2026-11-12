@@ -51,7 +51,7 @@ import {
 import { clamp01, ease, within } from '../../story/timing';
 
 /** The chapters the wheel draws: all but the Holocene's, which is a chart (#453). */
-export type WheelChapter = Exclude<BoundaryChapter, 'holocene'>;
+type WheelChapter = Exclude<BoundaryChapter, 'holocene'>;
 export type BoundaryWheel = StoryScene<WheelChapter>;
 
 export interface BoundaryWheelOptions {
@@ -60,7 +60,7 @@ export interface BoundaryWheelOptions {
 }
 
 /** The zones' colours: safe green, the boundary's dark green, amber, the high-risk line, red. */
-export const ZONE_COLOURS = {
+const ZONE_COLOURS = {
   safe: 0x3fae6a,
   boundary: 0x1d6b3e,
   increasing: 0xf2b134,
@@ -70,12 +70,12 @@ export const ZONE_COLOURS = {
 } as const;
 
 /** The radius of a reach: Earth is 1; the reference sits just off it. */
-export function radiusOf(reach: number): number {
+function radiusOf(reach: number): number {
   return 1.35 + reach * 0.95;
 }
 
 /** The colour at a reach: green inside the boundary, through amber, to red and then purple. */
-export function colourAt(reach: number): Color {
+function colourAt(reach: number): Color {
   const at = (from: number, to: number, x: number) =>
     new Color(from).lerp(new Color(to), clamp01(x));
   if (reach <= 1) return at(ZONE_COLOURS.safe, ZONE_COLOURS.safe, 0);

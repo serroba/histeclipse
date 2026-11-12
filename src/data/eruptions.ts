@@ -12,7 +12,7 @@ import { valueAt } from '../util/arrays';
 import { getJson, type Fetch } from './fetchJson';
 
 const REGIONS = ['iceland', 'located', 'north', 'south', 'tropics'] as const;
-export type EruptionRegion = (typeof REGIONS)[number];
+type EruptionRegion = (typeof REGIONS)[number];
 
 const EruptionsSchema = v.pipe(
   v.strictObject({
@@ -48,7 +48,7 @@ export async function loadEruptions(url: string, fetchJson: Fetch): Promise<Erup
 }
 
 /** Eruptions the sources name, by the ice cores' year and latitude. */
-export const NAMED_ERUPTIONS: readonly {
+const NAMED_ERUPTIONS: readonly {
   readonly year: number;
   readonly latitude: number;
   readonly name: string;
