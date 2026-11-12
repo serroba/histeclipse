@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatMa, PERIODS, periodAt, periodShort, periodWords } from './periods';
+import { formatMa } from '../time/format';
+import { PERIODS, periodAt, periodShort, periodWords } from './periods';
 
 describe('geological periods', () => {
   it('run youngest to oldest without gaps', () => {

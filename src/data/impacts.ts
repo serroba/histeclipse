@@ -7,7 +7,7 @@
 
 import * as v from 'valibot';
 
-import { formatMa } from '../deepTime/periods';
+import { formatMa } from '../time/format';
 import type { GeoPoint } from '../core/geo';
 import { getJson, type Fetch } from '../util/fetchJson';
 

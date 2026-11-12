@@ -330,7 +330,7 @@
     "what": "Sea level through time, as each reconstruction has it, on a chart.",
     "sources": ["bintanja", "spratt", "miller", "vanDerMeer"],
     "others": "Each reconstruction is drawn side by side; they differ, the more so further back.",
-    "reading": ["dutton2015", "dumitru2019"]
+    "reading": ["dutton2015", "dumitru2019", "ar6SeaLevel", "noaaLsa", "frederikse2020"]
   },
   "plates": {
     "title": "Plates",
@@ -404,6 +404,19 @@
       "Estimated within wide ranges: extinction rates and the energy taken from ecosystems.",
       "Judged, with no numbers past the boundary: novel entities."
     ],
-    "reading": ["planetaryHealthCheck2026", "richardson2023", "osman2021"]
+    "reading": [
+      "planetaryHealthCheck2026",
+      "richardson2023",
+      "osman2021",
+      "rapidMoc",
+      "caesar2018",
+      "rahmstorf2015",
+      "thornalley2018",
+      "caesar2021",
+      "kilbourne2022",
+      "terhaar2025",
+      "globalCarbonBudget2026",
+      "jones2023"
+    ]
   }
 }
