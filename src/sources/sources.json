@@ -299,6 +299,13 @@
     "cite": "Evans & Mitchell (2011), Assembly and breakup of the core of Paleoproterozoic–Mesoproterozoic supercontinent Nuna, Geology 39, 443–446",
     "url": "https://doi.org/10.1130/G31654.1"
   },
+  "evolv2k": {
+    "name": "eVolv2k v4 (Toohey & Sigl)",
+    "kind": "dataset",
+    "cite": "Toohey, M. & Sigl, M. (2017), Volcanic stratospheric sulfur injections and aerosol optical depth from 500 BCE to 1900 CE, Earth System Science Data 9, 809–831, doi:10.5194/essd-9-809-2017; data: Sigl, M. & Toohey, M. (2024), Volcanic stratospheric sulfur injections from 500 BCE to 1900 CE, eVolv2k_version4, PANGAEA, accessed 12 November 2026",
+    "url": "https://doi.org/10.1594/PANGAEA.971968",
+    "licence": "CC BY 4.0"
+  },
   "farquhar2000": {
     "name": "Farquhar, Bao & Thiemens 2000",
     "kind": "paper",
@@ -672,6 +679,13 @@
     "cite": "Heaton, T. J., et al. (2020). Marine20—the marine radiocarbon age calibration curve (0–55,000 cal BP). Radiocarbon 62, 779–820",
     "url": "https://doi.org/10.1017/RDC.2020.68",
     "licence": "CC BY 4.0"
+  },
+  "matthes2017": {
+    "name": "CMIP6 solar forcing (Matthes et al. 2017)",
+    "kind": "dataset",
+    "cite": "Matthes, K., Funke, B., Andersson, M. E., Barnard, L., Beer, J., Charbonneau, P., Clilverd, M. A., Dudok de Wit, T., Haberreiter, M., Hendry, A., Jackman, C. H., Kretzschmar, M., Kruschke, T., Kunze, M., Langematz, U., Marsh, D. R., Maycock, A. C., Misios, S., Rodger, C. J., Scaife, A. A., Seppälä, A., Shangguan, M., Sinnhuber, M., Tourpali, K., Usoskin, I., van de Kamp, M., Verronen, P. T. & Versick, S. (2017), Solar forcing for CMIP6 (v3.2), Geoscientific Model Development 10, 2247–2302; data: SOLARIS-HEPPA CMIP6 solar forcing v3.2, monthly reference scenario (input4MIPs SOLARIS-HEPPA-CMIP-3-2), https://www.solarisheppa.kit.edu/85.php, accessed 12 November 2026",
+    "url": "https://doi.org/10.5194/gmd-10-2247-2017",
+    "licence": "CC BY-SA 4.0 (as the data file states); our annual means derived from it are shared under the same licence"
   },
   "meeus": {
     "name": "Meeus, Astronomical Algorithms",
@@ -1147,6 +1161,13 @@
     "kind": "paper",
     "cite": "Steinberger & Torsvik (2008), Absolute plate motions and true polar wander in the absence of hotspot tracks, Nature 452, 620–623",
     "url": "https://doi.org/10.1038/nature06824"
+  },
+  "steinhilber2012": {
+    "name": "Steinhilber et al. 2012",
+    "kind": "dataset",
+    "cite": "Steinhilber, F., Abreu, J. A., Beer, J., Brunner, I., Christl, M., Fischer, H., Heikkilä, U., Kubik, P. W., Mann, M., McCracken, K. G., Miller, H., Miyahara, H., Oerter, H. & Wilhelms, F. (2012), 9,400 years of cosmic radiation and solar activity from ice cores and tree rings, Proceedings of the National Academy of Sciences 109, 5967–5971; data: NOAA NCEI Paleoclimatology, study 12894, doi:10.25921/ytyh-f437, https://www.ncei.noaa.gov/access/paleo-search/study/12894, accessed 12 November 2026",
+    "url": "https://doi.org/10.1073/pnas.1118965109",
+    "licence": "None stated; NOAA NCEI asks users to cite the publication, the online resource and the date accessed"
   },
   "stix2003": {
     "name": "Stix 2003",
