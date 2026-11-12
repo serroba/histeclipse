@@ -1,8 +1,4 @@
-/**
- * Wires the view state (from the URL) to the globe, the timeline, the scrubber and the card.
- * Browser-only glue, covered by the Playwright suite. Logic worth unit testing lives in the
- * modules it calls.
- */
+/** The page's wiring (#442): builds each part and lends it what it needs; e2e covers it. */
 
 import { LunarCatalog } from './data/lunarCatalog';
 import { SolarCatalog } from './data/solarCatalog';
@@ -65,27 +61,29 @@ import { mountYears } from './features/years';
 import { mountEclipses } from './features/eclipses';
 import { mountTexts } from './features/texts';
 import {
+  createAsking,
+  createSourcesList,
   hereVersion,
   hereView,
   whyMoment,
   whyVersion,
   type HereData,
-} from './features/whyHere/facts';
-import { createSourcesList } from './features/whyHere/sources';
-import { createAsking } from './features/whyHere/asking';
+} from './features/whyHere';
 import { mountMoment } from './features/moment';
 import { mountLayersPanel } from './features/layersPanel';
-import { createPanels } from './features/shell/panels';
-import { keepCentred } from './features/shell/layout';
-import { openOverRegion } from './features/shell/firstView';
-import { listenForInput } from './features/shell/input';
-import { createNotices } from './features/shell/notices';
-import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment/observer';
+import {
+  createNotices,
+  createPanels,
+  keepCentred,
+  listenForInput,
+  openOverRegion,
+} from './features/shell';
+import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment';
 import { createZoomRail } from './ui/zoomRail';
 import { railView } from './ui/railView';
 import { createWaysLegend } from './ui/waysLegend';
 import { mountImpacts } from './features/impacts';
-import { createTemperatureLayer } from './features/temperature/temperatureLayer';
+import { createTemperatureLayer } from './features/temperature';
 
 export async function startApp(root: HTMLElement): Promise<void> {
   const base = import.meta.env.BASE_URL;

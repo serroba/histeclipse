@@ -23,6 +23,9 @@ import { errorMessage } from '../../util/errors';
 import './moment.css';
 
 /** What the moment asks of the rest of the page. */
+// Where the observer stands and what they see: the page uses these too (#487).
+export { bodiesSeen, namedPlace, observerOf, placeName } from './observer';
+
 export interface MomentContext extends PartContext {
   readonly globe: Pick<Globe, 'setSunDirection' | 'setSpace'>;
   /** When the page was opened: "today", where a moment beyond ΔT goes instead. */
