@@ -5,21 +5,12 @@
  * Pure; the panel that shows it is `ui/whySheet.ts`.
  */
 
-import type { Territory } from '../data/empires';
-import type { RockUnit } from '../data/rocks';
-import { WAY_NAMES, type WaysAt } from '../data/waysOfLife';
-import type { GeoPoint } from '../state/viewState';
-import { insideWrapped } from '../util/polygons';
-import type { WhyId } from './registry';
-
-export interface HereFact {
-  /** What layer the fact is from. */
-  readonly title: string;
-  readonly text: string;
-  /** The why of where it comes from. */
-  readonly why: WhyId;
-  readonly link?: { readonly label: string; readonly href: string };
-}
+import type { Territory } from '../../data/empires';
+import type { RockUnit } from '../../data/rocks';
+import { WAY_NAMES, type WaysAt } from '../../data/waysOfLife';
+import type { GeoPoint } from '../../state/viewState';
+import { insideWrapped } from '../../util/polygons';
+import type { HereFact } from '../../sources/registry';
 
 /** A place in words: 36.4°N 43.2°E. */
 export function placeText(place: GeoPoint): string {

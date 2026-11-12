@@ -19,6 +19,13 @@
     "url": "https://doi.org/10.5285/8fa708d0474d4a3caa5c9f645a89d282",
     "licence": "CC BY 4.0"
   },
+  "ar6SeaLevel": {
+    "name": "IPCC AR6 global mean sea level",
+    "kind": "dataset",
+    "cite": "Palmer, M. D., Savita, A., Boeira Dias, F., Domingues, C. M., et al. (2023), Chapter 9 of the Working Group I Contribution to the IPCC Sixth Assessment Report - data for Cross-Chapter Box 9.1, Figure 1 (v20230523), NERC EDS Centre for Environmental Data Analysis: the assessed global mean sea level from tide gauges (1900–2010) and satellite altimetry (1993–2019), with 1-sigma uncertainty, against 1995–2014. Report: Fox-Kemper, B., Hewitt, H. T., Xiao, C., et al. (2021), Ocean, Cryosphere and Sea Level Change, in Climate Change 2021: The Physical Science Basis, Cambridge University Press, 1211–1362, doi:10.1017/9781009157896.011",
+    "url": "https://doi.org/10.5285/c622adfeb4cc4ae181dc4cca82c2311c",
+    "licence": "CC BY 4.0"
+  },
   "archaeoglobe": {
     "name": "ArchaeoGLOBE",
     "kind": "dataset",
@@ -119,6 +126,20 @@
     "kind": "paper",
     "cite": "Burgess, Bowring & Shen (2014), High-precision timeline for Earth’s most severe extinction, PNAS 111, 3316–3321",
     "url": "https://doi.org/10.1073/pnas.1317692111"
+  },
+  "caesar2018": {
+    "name": "Caesar et al. 2018",
+    "kind": "paper",
+    "cite": "Caesar, L., Rahmstorf, S., Robinson, A., Feulner, G., Saba, V. (2018), Observed fingerprint of a weakening Atlantic Ocean overturning circulation, Nature 556, 191–196. An AMOC index from sea-surface temperature, the subpolar gyre's minus the globe's, 1871–2016, calibrated at 3.8 ± 0.5 Sv per K; it reads a weakening of some 3 ± 1 Sv since the mid-twentieth century; data: the index as compiled by Caesar et al. (2021)",
+    "url": "https://doi.org/10.1038/s41586-018-0006-5",
+    "licence": "None stated"
+  },
+  "caesar2021": {
+    "name": "Caesar et al. 2021",
+    "kind": "paper",
+    "cite": "Caesar, L., McCarthy, G. D., Thornalley, D. J. R., Cahill, N., Rahmstorf, S. (2021), Current Atlantic Meridional Overturning Circulation weakest in last millennium, Nature Geoscience 14, 118–120. Brings together published proxy records of the AMOC back to AD 400 and finds its recent decades the weakest of the millennium; data: their proxy compilation (GitHub ncahill89/AMOC-Analysis, commit c1ca72b)",
+    "url": "https://doi.org/10.1038/s41561-021-00699-z",
+    "licence": "None stated (the data repository has no licence)"
   },
   "cao2024": {
     "name": "Cao et al. 2024",
@@ -277,6 +298,13 @@
     "cite": "Foster, Royer & Lunt (2017), Future climate forcing potentially without precedent in the last 420 million years, Nature Communications 8, 14845",
     "url": "https://doi.org/10.1038/ncomms14845",
     "licence": "CC BY 4.0"
+  },
+  "frederikse2020": {
+    "name": "Frederikse et al. 2020",
+    "kind": "paper",
+    "cite": "Frederikse, T., Landerer, F., Caron, L., Adhikari, S., Parkes, D., Humphrey, V. W., Dangendorf, S., Hogarth, P., Zanna, L., Cheng, L., Wu, Y.-H. (2020), The causes of sea-level rise since 1900, Nature 584, 393–397: global mean sea level from tide gauges, 1900–2018, with its budget of thermal expansion, glaciers, the Greenland and Antarctic ice sheets and water stored on land; data supplement: Zenodo record 3862995, doi:10.5281/zenodo.3862995",
+    "url": "https://doi.org/10.1038/s41586-020-2591-3",
+    "licence": "Data supplement: (c) 2020 All Rights Reserved; not redistributed by this site"
   },
   "galileoMoonMaps": {
     "name": "Galileo and Voyager maps of Jupiter’s moons",
@@ -460,11 +488,23 @@
     "url": "https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html",
     "licence": "NASA/JPL, public domain"
   },
+  "judd2024": {
+    "name": "PhanDA (Judd et al. 2024)",
+    "kind": "model",
+    "cite": "Judd, Tierney, Lunt, Montañez, Huber, Wing & Valdes (2024), A 485-million-year history of Earth's surface temperature, Science 385, eadk3705; GMST percentiles by stage from github.com/EJJudd/PhanDA (5_Outputs, revision 49ff875)",
+    "url": "https://doi.org/10.1126/science.adk3705"
+  },
   "kent2015": {
     "name": "Kent et al. 2015",
     "kind": "paper",
     "cite": "Kent, D. V., Kjarsgaard, B. A., Gee, J. S., Muttoni, G. & Heaman, L. M. (2015). Tracking the Late Jurassic apparent (or true) polar shift in U-Pb-dated kimberlites from cratonic North America (Superior Province of Canada). Geochemistry, Geophysics, Geosystems 16, 983–994",
     "url": "https://doi.org/10.1002/2015GC005734"
+  },
+  "kilbourne2022": {
+    "name": "Kilbourne et al. 2022",
+    "kind": "paper",
+    "cite": "Kilbourne, K. H., Wanamaker, A. D., Moffa-Sanchez, P., Reynolds, D. J., Amrhein, D. E., Butler, P. G., Gebbie, G., Goes, M., Jansen, M. F., Little, C. M., Mette, M., Moreno-Chamarro, E., Ortega, P., Otto-Bliesner, B. L., Rossby, T., Scourse, J., Whitney, N. M. (2022), Atlantic circulation change still uncertain, Nature Geoscience 15, 165–167. A reply to Caesar et al. (2021): the proxies disagree among themselves and with models, so whether the AMOC has weakened over recent centuries remains poorly constrained",
+    "url": "https://doi.org/10.1038/s41561-022-00896-4"
   },
   "kirschvink1997": {
     "name": "Kirschvink et al. 1997",
@@ -812,6 +852,13 @@
     "url": "https://www.naturalearthdata.com",
     "licence": "Public domain"
   },
+  "noaaLsa": {
+    "name": "NOAA Laboratory for Satellite Altimetry",
+    "kind": "dataset",
+    "cite": "NOAA/NESDIS/STAR Laboratory for Satellite Altimetry, Sea Level Rise: global mean sea level and the map of sea-level trends from TOPEX/Poseidon, Jason-1, Jason-2, Jason-3 and Sentinel-6MF since late 1992 (files of March 2025, through February 2025); annual signal removed, inverted barometer applied, no glacial isostatic adjustment. Altimetry data are provided by NOAA Laboratory for Satellite Altimetry",
+    "url": "https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/",
+    "licence": "Public domain (US government work); NOAA asks for the acknowledgement “Altimetry data are provided by NOAA Laboratory for Satellite Altimetry”"
+  },
   "nsidcSeaIce": {
     "name": "NSIDC Sea Ice Index",
     "kind": "dataset",
@@ -962,6 +1009,20 @@
     "cite": "Prša, A., et al. (2016). Nominal values for selected solar and planetary quantities: IAU 2015 Resolution B3. The Astronomical Journal 152, 41",
     "url": "https://doi.org/10.3847/0004-6256/152/2/41"
   },
+  "rahmstorf2015": {
+    "name": "Rahmstorf et al. 2015",
+    "kind": "paper",
+    "cite": "Rahmstorf, S., Box, J. E., Feulner, G., Mann, M. E., Robinson, A., Rutherford, S., Schaffernicht, E. J. (2015), Exceptional twentieth-century slowdown in Atlantic Ocean overturning circulation, Nature Climate Change 5, 475–480. An AMOC index from proxy temperatures, the subpolar gyre's against the northern hemisphere's, AD 900–1995, which finds the twentieth-century weakening without precedent in the millennium; data: the index as compiled by Caesar et al. (2021)",
+    "url": "https://doi.org/10.1038/nclimate2554",
+    "licence": "None stated"
+  },
+  "rapidMoc": {
+    "name": "RAPID AMOC at 26°N",
+    "kind": "dataset",
+    "cite": "Moat, B. I., Smeed, D. A., Rayner, D., Johns, W. E., Smith, R. H., Volkov, D. L., Elipot, S., Petit, T., Kajtar, J. B., Baringer, M. O., Collins, J. (2026), Atlantic meridional overturning circulation observed by the RAPID-MOCHA-WBTS array at 26N from 2004 to 2024 (v2024.1a), British Oceanographic Data Centre. The overturning measured continuously since April 2004 by moored instruments from the Bahamas to Africa, with Florida Strait cable transports and ERA5 Ekman transport. Data from the RAPID AMOC monitoring project are funded by the Natural Environment Research Council, the National Science Foundation and NOAA, and are freely available from rapid.ac.uk",
+    "url": "https://doi.org/10.5285/48d0bf43-0598-ceb2-e063-7086abc062f1",
+    "licence": "Open Government Licence v3.0"
+  },
   "richardson2023": {
     "name": "Richardson et al. 2023",
     "kind": "paper",
@@ -1070,6 +1131,21 @@
     "cite": "Tarduno et al. (2015), A Hadean to Paleoarchean geodynamo recorded by single zircon crystals, Science 349, 521–524",
     "url": "https://doi.org/10.1126/science.aaa9114"
   },
+  "terhaar2025": {
+    "name": "Terhaar et al. 2025",
+    "kind": "paper",
+    "cite": "Terhaar, J., Vogt, L., Foukal, N. P. (2025), Atlantic overturning inferred from air-sea heat fluxes indicates no decline since the 1960s, Nature Communications 16, 222. Shows across 24 CMIP6 models that subpolar sea-surface temperature cannot robustly reconstruct the AMOC while air-sea heat flux can; from ERA5 and JRA-55 heat fluxes, the decadal AMOC at 26.5°N has not weakened from 1963 to 2017; data: the paper's Source Data (Fig. 9a), copied unrounded",
+    "url": "https://doi.org/10.1038/s41467-024-55297-5",
+    "licence": "CC BY-NC-ND 4.0",
+    "nonCommercial": true
+  },
+  "thornalley2018": {
+    "name": "Thornalley et al. 2018",
+    "kind": "paper",
+    "cite": "Thornalley, D. J. R., Oppo, D. W., Ortega, P., Robson, J. I., Brierley, C. M., Davis, R., Hall, I. R., Moffa-Sanchez, P., Rose, N. L., Spooner, P. T., Yashayaev, I., Keigwin, L. D. (2018), Anomalously weak Labrador Sea convection and Atlantic overturning during the past 150 years, Nature 556, 227–230. Sediment cores give a subsurface-temperature AMOC proxy back to AD 400, weakest in the last 150 years; data: the proxy as compiled by Caesar et al. (2021)",
+    "url": "https://doi.org/10.1038/s41586-018-0007-4",
+    "licence": "None stated"
+  },
   "timmermann": {
     "name": "Timmermann & Friedrich 2016",
     "kind": "model",
@@ -1160,6 +1236,13 @@
     "kind": "paper",
     "cite": "Wells (1963), Coral growth and geochronometry, Nature 197, 948–950",
     "url": "https://doi.org/10.1038/197948a0"
+  },
+  "westerhold2020": {
+    "name": "CENOGRID (Westerhold et al. 2020)",
+    "kind": "dataset",
+    "cite": "Westerhold, Marwan, Drury, Liebrand, Agnini, Anagnostou, Barnet, Bohaty, De Vleeschouwer, Florindo, Frederichs, Hodell, Holbourn, Kroon, Lauretano, Littler, Lourens, Lyle, Pälike, Röhl, Tian, Wilkens, Wilson & Zachos (2020), An astronomically dated record of Earth's climate and its predictability over the last 66 million years, Science 369, 1383–1387, doi:10.1126/science.aba6853; data: Westerhold (2020), S34. Binned and LOESS smoothed Cenozoic deep-sea benthic foraminifer stable carbon and oxygen isotope reference splice, PANGAEA, in the CENOGRID series doi:10.1594/PANGAEA.917503",
+    "url": "https://doi.org/10.1594/PANGAEA.917717",
+    "licence": "CC BY 4.0"
   },
   "wilde2001": {
     "name": "Wilde et al. 2001",
