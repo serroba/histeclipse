@@ -61,6 +61,7 @@ import { apply, multiply, transpose, type Matrix3 } from '../astro/matrix';
 import {
   CAMERA_DISTANCE_RANGE,
   DEFAULT_CAMERA,
+  nearestDistance,
   type Body,
   type GeoPoint,
   type GlobeCamera,
@@ -123,6 +124,10 @@ import type { ArrivalGrid } from '../data/dispersal';
 import { clearOverlay, createEmpireCanvas, paintSettled } from './empireCanvas';
 import { OCCULTATION, SOLAR_COMMON, SOLAR_SHADOW } from './solarShaders';
 import { SEA_ICE } from './seaIceShader';
+import { CORONA_FRAGMENT, CORONA_VERTEX, SUN_FRAGMENT, SUN_VERTEX } from './sunShaders';
+import { controlSpeeds } from './controlSpeeds';
+import { createEarthTileLayer } from './earthTiles';
+import type { EarthTiles } from '../data/earthTiles';
 import { TEMPERATURE_GLSL, temperatureUniforms } from './temperatureShader';
 import './spaceMarkers.css';
 
@@ -336,6 +341,8 @@ export interface Globe {
   setBodyMap(body: 'earth' | 'moon', url: string): void;
   /** The widest texture the graphics can hold, pixels. */
   readonly maxTextureSize: number;
+  /** Close up, Earth's full-size map in tiles from now on, from their manifest (#568). */
+  setEarthTiles(tiles: EarthTiles, folder: string): void;
   /**
    * Shade where a dispersal model has people settled `ka` thousand years ago, under any ice
    * outlines; null hides it.
@@ -426,6 +433,9 @@ const EARTH_HEAD = /* glsl */ `
   ${SOLAR_SHADOW}
   ${OCCULTATION}
   uniform sampler2D dayMap;
+  // Where the day map lies on the globe's map, and how opaque: a tile's part of it (#568).
+  uniform vec4 dayRect;
+  uniform float dayAlpha;
   // Deep time: two elevation maps (bytes 0–127 sea floor, 128–255 land) and the blend between.
   uniform sampler2D paleoYounger;
   uniform sampler2D paleoOlder;
@@ -650,7 +660,7 @@ const EARTH_BODY = /* glsl */ `
   // Travelling through the Holocene: today's Earth, with the shelf a lower sea left bare (in
   // the sand tint the ice ages use) and the ice sheets that still lay on the land.
   vec3 holoceneSurface(vec2 uv) {
-    vec3 color = texture2D(dayMap, uv).rgb;
+    vec3 color = texture2D(dayMap, (uv - dayRect.xy) / dayRect.zw).rgb;
     float sea = 1.0;
     if (shelfActive > 0.5) {
       vec2 at = (uv * (shelfGrid - 1.0) + 0.5) / shelfGrid;
@@ -725,7 +735,7 @@ const EARTH_TAIL = /* glsl */ `    // A selected solar eclipse draws its shadow 
     // the evenly lit ground (in deep time none of them is on).
     color = mix(color, empiresLayer(color, 1.0), evenLight);
     color = iceOutlinesLayer(color);
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(color, dayAlpha);
     #include <colorspace_fragment>
   }
 `;
@@ -771,94 +781,6 @@ const MOON_FRAGMENT = /* glsl */ `
     float sunlight = sunlightAt(vWorldPosition, sunPosition, sunRadius, vec3(0.0), earthRadius);
     vec3 copper = vec3(0.55, 0.16, 0.06) * 0.22 * pow(1.0 - sunlight, 3.0);
     gl_FragColor = vec4(albedo * facing * (sunlight + copper), 1.0);
-    #include <colorspace_fragment>
-  }
-`;
-
-const SUN_VERTEX = /* glsl */ `
-  #include <common>
-  #include <logdepthbuf_pars_vertex>
-  varying vec3 vNormal;
-  varying vec3 vWorldPosition;
-  void main() {
-    vNormal = normal;
-    vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    #include <logdepthbuf_vertex>
-  }
-`;
-
-// The whole surface wears SDO's map, stitched from frames days apart, turned so the side facing
-// Earth is the newest frame's (sunImage.ts is the tested reference). The map is the surface
-// seen face-on; visible light darkens toward the limb as the camera sees it, so the disc looks
-// round from any side.
-const SUN_FRAGMENT = /* glsl */ `
-  #include <common>
-  #include <logdepthbuf_pars_fragment>
-  uniform sampler2D surface;
-  uniform float hasMap;
-  uniform vec3 toEarth;
-  uniform vec3 north;
-  uniform vec3 tint;
-  uniform float limbDarkening;
-  varying vec3 vNormal;
-  varying vec3 vWorldPosition;
-
-  void main() {
-    #include <logdepthbuf_fragment>
-    vec3 plain = vec3(1.0, 0.96, 0.86);
-    vec3 n = normalize(vNormal);
-    vec3 meridian = normalize(toEarth - dot(toEarth, north) * north);
-    vec3 west = cross(north, meridian);
-    float latitude = asin(clamp(dot(n, north), -1.0, 1.0));
-    float longitude = atan(dot(n, west), dot(n, meridian));
-    vec2 uv = vec2(0.5 + longitude / PI2, 0.5 + latitude / PI);
-    // On the far side's meridian u jumps from 1 back to 0, which would pick the coarsest
-    // mipmap along a seam. A copy of u that jumps on the near side instead gives the right
-    // footprint there; use whichever changes less across the pixel.
-    float shifted = fract(uv.x + 0.5);
-    vec2 dx = dFdx(uv);
-    vec2 dy = dFdy(uv);
-    float dxShifted = dFdx(shifted);
-    float dyShifted = dFdy(shifted);
-    if (abs(dxShifted) < abs(dx.x)) dx.x = dxShifted;
-    if (abs(dyShifted) < abs(dy.x)) dy.x = dyShifted;
-    float towardCamera = clamp(dot(n, normalize(cameraPosition - vWorldPosition)), 0.0, 1.0);
-    float darkening = 1.0 - limbDarkening * (1.0 - towardCamera);
-    vec3 seen = textureGrad(surface, uv, dx, dy).rgb * tint * darkening;
-    gl_FragColor = vec4(mix(plain, seen, hasMap), 1.0);
-    #include <colorspace_fragment>
-  }
-`;
-
-const CORONA_VERTEX = /* glsl */ `
-  #include <common>
-  #include <logdepthbuf_pars_vertex>
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    #include <logdepthbuf_vertex>
-  }
-`;
-
-// What the image shows beyond the limb (the corona, prominences), on a plane across the line of
-// sight. It is only right seen from near Earth's side, so it fades as the camera swings away.
-const CORONA_FRAGMENT = /* glsl */ `
-  #include <logdepthbuf_pars_fragment>
-  uniform sampler2D map;
-  uniform float diskRadius;
-  uniform float opacity;
-  uniform vec3 tint;
-  varying vec2 vUv;
-
-  void main() {
-    #include <logdepthbuf_fragment>
-    float r = length(vUv - 0.5);
-    if (r < diskRadius * 0.995) discard;
-    // Fade out before the frame's square edge.
-    float edge = 1.0 - smoothstep(0.38, 0.49, r);
-    gl_FragColor = vec4(texture2D(map, vUv).rgb * tint * opacity * edge, 1.0);
     #include <colorspace_fragment>
   }
 `;
@@ -965,6 +887,8 @@ export function createGlobe(
   empiresTexture.colorSpace = SRGBColorSpace;
   const earthUniforms = {
     dayMap: { value: texture },
+    dayRect: { value: new Vector4(0, 0, 1, 1) },
+    dayAlpha: { value: 1 },
     paleoYounger: { value: null as Texture | null },
     paleoOlder: { value: null as Texture | null },
     paleoMix: { value: 0 },
@@ -1040,6 +964,14 @@ export function createGlobe(
     }),
   );
   scene.add(earth, atmosphere);
+  // Close up, Earth's full-size map in tiles over its own (#568); how many show, for tests.
+  const earthTiles = createEarthTileLayer(earth, {
+    anisotropy: renderer.capabilities.getMaxAnisotropy(),
+    pixels: () => renderer.domElement.height,
+    requestRender: () => (needsRender = true),
+    report: (shown, fetched) =>
+      (container.dataset['earthTiles'] = `${String(shown)}/${String(fetched)}`),
+  });
 
   // Deep time: Earth's spin axis, its ends marked as the poles of the time shown. The maps
   // put the poles of their time at the top and bottom, so the axis is the globe's own.
@@ -1572,7 +1504,7 @@ export function createGlobe(
   function orbitFocus(): void {
     const radius = BODY_RADIUS[focus];
     controls.target.copy(bodyFrame(focus).position);
-    controls.minDistance = CAMERA_DISTANCE_RANGE.min * radius;
+    controls.minDistance = nearestDistance(focus) * radius;
     controls.maxDistance = Math.min(CAMERA_DISTANCE_RANGE.max * radius, CAMERA_DISTANCE_RANGE.max);
     controls.enabled = true;
     controls.update();
@@ -1840,13 +1772,14 @@ export function createGlobe(
       needsRender = true;
       if (progress === 1) zoomFlight = null;
     }
-    // Wheel steps scale the distance; take bigger steps far out so the Sun is a few spins away.
-    controls.zoomSpeed =
-      camera.position.distanceTo(controls.target) < 10 * BODY_RADIUS[focus] ? 0.8 : 2.5;
+    const speeds = controlSpeeds(camera.position.distanceTo(controls.target), BODY_RADIUS[focus]);
+    controls.zoomSpeed = speeds.zoom;
+    controls.rotateSpeed = speeds.rotate;
     // update() keeps damping going after the pointer is released; it reports movement via 'change'.
     if (controls.enabled) controls.update();
     if (needsRender) {
       needsRender = false;
+      if (earthTiles.update(camera, !deepTime && earth.visible, now)) needsRender = true;
       shadeSun();
       // In deep time the Sun, Moon and planets are where they are today, which says nothing
       // about then: they are left out, markers too.
@@ -2122,6 +2055,9 @@ export function createGlobe(
   return {
     canvas: renderer.domElement,
     maxTextureSize: renderer.capabilities.maxTextureSize,
+    setEarthTiles: (tiles, folder) => {
+      earthTiles.enable(tiles, folder);
+    },
     setSunDirection([x, y, z]) {
       sunDirection.set(x, y, z).normalize();
       needsRender = true;
