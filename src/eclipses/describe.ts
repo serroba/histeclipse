@@ -5,7 +5,7 @@ import type { LunarEclipse } from '../data/lunarCatalog';
 import type { SolarEclipse } from '../data/solarCatalog';
 import type { GeoPoint } from '../core/geo';
 import type { Moment } from '../time/moment';
-import type { Selection } from './kind';
+import type { Selection } from '../data/eclipseKind';
 import {
   calendarDate,
   historicalCalendar,

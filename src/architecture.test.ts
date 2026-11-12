@@ -95,12 +95,10 @@ function reaches(graph: Map<string, Set<string>>, from: string, to: string): boo
  * reaches this one. Remove an entry when its imports go; never add one.
  */
 const KNOWN_CYCLE_EDGES: readonly string[] = [
-  // Within the domain (#490): the data files lean on eclipses and deep time, which lean back on
-  // the data's loaders and tables. (astro and time left the tangle when fetchJson moved to util.)
+  // Within the domain (#490): the data files lean on deep time, which leans back on the data's
+  // loaders and tables. (astro, time and eclipses have left the tangle.)
   'data -> deepTime',
-  'data -> eclipses',
   'deepTime -> data',
-  'eclipses -> data',
   // Source ids, keys of the sources registry, used by the data (#380 moves them down).
   'data -> sources',
   'deepTime -> sources',
@@ -109,7 +107,6 @@ const KNOWN_CYCLE_EDGES: readonly string[] = [
   'sources -> state',
   'state -> data',
   'state -> deepTime',
-  'state -> eclipses',
   'state -> sources',
 ];
 
