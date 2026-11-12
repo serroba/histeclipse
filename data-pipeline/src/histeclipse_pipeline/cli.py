@@ -6,10 +6,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.aadr import fetch_genomes
+from histeclipse_pipeline.amoc import fetch_amoc
 from histeclipse_pipeline.archaeoglobe import fetch_ways
 from histeclipse_pipeline.asteroids import fetch_asteroids
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
+from histeclipse_pipeline.cenogrid import fetch_cenogrid
 from histeclipse_pipeline.cesm import fetch_cesm
 from histeclipse_pipeline.deep_air import fetch_deep_air
 from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
@@ -49,6 +51,7 @@ from histeclipse_pipeline.passage_vectors import (
     write_test_vectors,
 )
 from histeclipse_pipeline.periodo import fetch_periods
+from histeclipse_pipeline.phanda import fetch_phanda
 from histeclipse_pipeline.pictures import fetch_pictures
 from histeclipse_pipeline.planet_keys import fetch_planet_keys
 from histeclipse_pipeline.planet_maps import fetch_planet_maps
@@ -444,6 +447,18 @@ def co2_archive(args: Arguments) -> int:  # pragma: no cover - needs network acc
     return _say(f"wrote {count} CO2 estimates to {args.out}{skipped}")
 
 
+def cenogrid(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Cenozoic benthic δ18O and δ13C record (CENOGRID, CC BY 4.0), thinned."""
+    count = fetch_cenogrid(args.out)
+    return _say(f"wrote {count} CENOGRID points to {args.out}")
+
+
+def phanda(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write Phanerozoic GMST by stage with its percentiles (PhanDA, Judd et al. 2024)."""
+    count = fetch_phanda(args.out)
+    return _say(f"wrote {count} PhanDA stages to {args.out}")
+
+
 def icesheets(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write ice-sheet thickness every 2,500 years over the last 80,000 (PaleoMIST 1.0)."""
     count = fetch_icesheets(args.out)
@@ -520,6 +535,12 @@ def temperature_records(args: Arguments) -> int:  # pragma: no cover - needs net
     """Write global mean temperature since 1850 from five records side by side."""
     points = fetch_temperature_records(args.out)
     return _say(f"wrote {points} temperature-record points to {args.out}")
+
+
+def amoc(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the AMOC as measured (RAPID) and as reconstructed, each source apart."""
+    points = fetch_amoc(args.out)
+    return _say(f"wrote {points} AMOC points to {args.out}")
 
 
 def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -738,6 +759,16 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write CO2 estimates by method from the Paleo-CO2 Data Archive (CC BY 4.0)",
         "output JSON file",
     ),
+    "cenogrid": (
+        cenogrid,
+        "write the Cenozoic benthic isotope record, thinned (CENOGRID, CC BY 4.0)",
+        "output JSON file (public/data/cenogrid/index.json)",
+    ),
+    "phanda": (
+        phanda,
+        "write Phanerozoic GMST by stage with its percentiles (PhanDA, Judd et al. 2024)",
+        "output JSON file (public/data/phanda/index.json)",
+    ),
     "icesheets": (
         icesheets,
         "write ice-sheet thickness every 2,500 years since 80 ka (PaleoMIST 1.0)",
@@ -801,6 +832,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "temperature-records": (
         temperature_records,
         "write global temperature since 1850 (GISTEMP, NOAAGlobalTemp, ERA5, HadCRUT5, Berkeley)",
+        "output directory",
+    ),
+    "amoc": (
+        amoc,
+        "write the AMOC measured at 26.5°N (RAPID) beside reconstructions that disagree",
         "output directory",
     ),
     "measured-warming": (
