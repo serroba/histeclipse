@@ -475,6 +475,12 @@
     "url": "https://ssd-api.jpl.nasa.gov/doc/sbdb_query.html",
     "licence": "NASA/JPL, public domain"
   },
+  "judd2024": {
+    "name": "PhanDA (Judd et al. 2024)",
+    "kind": "model",
+    "cite": "Judd, Tierney, Lunt, Montañez, Huber, Wing & Valdes (2024), A 485-million-year history of Earth's surface temperature, Science 385, eadk3705; GMST percentiles by stage from github.com/EJJudd/PhanDA (5_Outputs, revision 49ff875)",
+    "url": "https://doi.org/10.1126/science.adk3705"
+  },
   "kent2015": {
     "name": "Kent et al. 2015",
     "kind": "paper",
@@ -1175,6 +1181,13 @@
     "kind": "paper",
     "cite": "Wells (1963), Coral growth and geochronometry, Nature 197, 948–950",
     "url": "https://doi.org/10.1038/197948a0"
+  },
+  "westerhold2020": {
+    "name": "CENOGRID (Westerhold et al. 2020)",
+    "kind": "dataset",
+    "cite": "Westerhold, Marwan, Drury, Liebrand, Agnini, Anagnostou, Barnet, Bohaty, De Vleeschouwer, Florindo, Frederichs, Hodell, Holbourn, Kroon, Lauretano, Littler, Lourens, Lyle, Pälike, Röhl, Tian, Wilkens, Wilson & Zachos (2020), An astronomically dated record of Earth's climate and its predictability over the last 66 million years, Science 369, 1383–1387, doi:10.1126/science.aba6853; data: Westerhold (2020), S34. Binned and LOESS smoothed Cenozoic deep-sea benthic foraminifer stable carbon and oxygen isotope reference splice, PANGAEA, in the CENOGRID series doi:10.1594/PANGAEA.917503",
+    "url": "https://doi.org/10.1594/PANGAEA.917717",
+    "licence": "CC BY 4.0"
   },
   "wilde2001": {
     "name": "Wilde et al. 2001",
