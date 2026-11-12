@@ -97,6 +97,7 @@ from histeclipse_pipeline.time_tree import fetch_time_trees
 from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
+from histeclipse_pipeline.volcanic_aod import fetch_volcanic_aod
 from histeclipse_pipeline.volcanoes import fetch_volcanoes
 from histeclipse_pipeline.warm_past import fetch_warm_past
 from histeclipse_pipeline.warming_levels import fetch_warming_levels
@@ -420,6 +421,13 @@ def natural_forcing(args: Arguments) -> int:  # pragma: no cover - needs network
     """Write the Sun's irradiance (CMIP6, Steinhilber 2012) and volcanic sulfur (eVolv2k)."""
     counts = fetch_natural_forcing(args.out)
     written = ", ".join(f"{count} {name}" for name, count in counts.items())
+    return _say(f"wrote {written} to {args.out}")
+
+
+def volcanic_aod(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write volcanic stratospheric aerosol optical depth at 550 nm (HolVol)."""
+    counts = fetch_volcanic_aod(args.out)
+    written = ", ".join(f"{count} {name} years" for name, count in counts.items())
     return _say(f"wrote {written} to {args.out}")
 
 
@@ -818,6 +826,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "natural-forcing": (
         natural_forcing,
         "write solar irradiance (CMIP6, Steinhilber 2012) and volcanic sulfur (eVolv2k v4)",
+        "output folder (public/data/natural-forcing)",
+    ),
+    "volcanic-aod": (
+        volcanic_aod,
+        "write volcanic stratospheric aerosol optical depth at 550 nm, annual (HolVol)",
         "output folder (public/data/natural-forcing)",
     ),
     "eruptions": (
