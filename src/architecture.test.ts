@@ -7,8 +7,10 @@
 
 /// <reference types="node" />
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
+import { ESLint } from 'eslint';
+import tseslint from 'typescript-eslint';
 import { describe, expect, it } from 'vitest';
 
 // Read from disk on each run, not through `import.meta.glob`: Vitest's module cache can keep an
@@ -312,4 +314,82 @@ describe('style.css only shrinks', () => {
       `src/style.css is ${String(lines)} lines: set STYLE_CSS_LINES to ${String(lines)}`,
     ).toBeLessThanOrEqual(SLACK);
   });
+});
+
+/** A number set in eslint.boundaries.js. */
+function boundaryNumber(name: string): number {
+  const config = readFileSync(join(SRC, '..', 'eslint.boundaries.js'), 'utf8');
+  return Number(new RegExp(`export const ${name} = (\\d+);`).exec(config)?.[1] ?? Number.NaN);
+}
+
+/** The files with functions over the limits, and how many, as eslint.boundaries.js lists them. */
+function functionLimits(): Record<string, number> {
+  const config = readFileSync(join(SRC, '..', 'eslint.boundaries.js'), 'utf8');
+  const block = /export const FUNCTION_LIMITS = \{([\s\S]*?)\};/.exec(config)?.[1] ?? '';
+  return Object.fromEntries(
+    [...block.matchAll(/'([^']+)':\s*(\d+)/g)].map((match) => [match[1] ?? '', Number(match[2])]),
+  );
+}
+
+/** How far below its count a file may fall before the count must come down with it. */
+const FUNCTION_SLACK = 1;
+
+describe('long and tangled functions only come down (#489)', () => {
+  const limits = functionLimits();
+
+  it('has limits to check', () => {
+    expect(Object.keys(limits).length).toBeGreaterThan(0);
+    expect(boundaryNumber('MAX_FUNCTION_LINES')).toBeGreaterThan(0);
+    expect(boundaryNumber('MAX_COMPLEXITY')).toBeGreaterThan(0);
+  });
+
+  it('each listed file keeps no more functions over the limits than it had', async () => {
+    const eslint = new ESLint({
+      cwd: join(SRC, '..'),
+      overrideConfigFile: true,
+      overrideConfig: [
+        {
+          files: ['**/*.ts'],
+          languageOptions: { parser: tseslint.parser },
+          rules: {
+            'max-lines-per-function': [
+              'error',
+              {
+                max: boundaryNumber('MAX_FUNCTION_LINES'),
+                skipBlankLines: true,
+                skipComments: true,
+                IIFEs: true,
+              },
+            ],
+            complexity: ['error', boundaryNumber('MAX_COMPLEXITY')],
+          },
+        },
+      ],
+    });
+    const results = await eslint.lintFiles(Object.keys(limits).map((file) => `src/${file}`));
+    const counts = new Map(
+      results.map((result) => [
+        relative(SRC, result.filePath).split('\\').join('/'),
+        result.messages.filter(
+          (message) =>
+            message.ruleId === 'max-lines-per-function' || message.ruleId === 'complexity',
+        ).length,
+      ]),
+    );
+    const report = (file: string, limit: number): string =>
+      `${file}: ${String(counts.get(file) ?? 0)} (limit ${String(limit)})`;
+    const entries = Object.entries(limits);
+    expect(
+      entries
+        .filter(([file, limit]) => (counts.get(file) ?? 0) > limit)
+        .map(([f, l]) => report(f, l)),
+      "a function grew past the limits: split it, rather than raising its file's count",
+    ).toEqual([]);
+    expect(
+      entries
+        .filter(([file, limit]) => limit - (counts.get(file) ?? 0) > FUNCTION_SLACK)
+        .map(([f, l]) => report(f, l)),
+      'lower these FUNCTION_LIMITS counts in eslint.boundaries.js (and remove those at 0)',
+    ).toEqual([]);
+  }, 120_000);
 });

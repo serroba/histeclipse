@@ -66,6 +66,88 @@ export const LINE_LIMITS = {
   'ui/whySheet.ts': 435,
 };
 
+/**
+ * Most lines of code a function in `src` may have, blank lines and comments aside (#489): a file
+ * can stay short while one function in it does too much.
+ */
+export const MAX_FUNCTION_LINES = 80;
+
+/** Most paths through a function in `src` (#489): more, and it decides too much on its own. */
+export const MAX_COMPLEXITY = 15;
+
+/**
+ * The files with functions over those limits when they came in, and how many: a count may only
+ * come down, and the entry goes at none. `src/architecture.test.ts` counts them; lint holds
+ * every other file to the limits. Lower a count when the test asks, not in every PR (#479).
+ */
+export const FUNCTION_LIMITS = {
+  'app.ts': 1,
+  'data/impacts.ts': 1,
+  'data/lineages.ts': 1,
+  'features/bodies/bodyBar.ts': 1,
+  'features/bodies/index.ts': 3,
+  'features/bodies/moonNameLayer.ts': 2,
+  'features/bodies/placeNameLayer.ts': 1,
+  'features/bodies/planets.ts': 1,
+  'features/boundaries/boundariesSheet.ts': 1,
+  'features/boundaries/boundaryWheel.ts': 1,
+  'features/boundaries/holoceneChart.ts': 2,
+  'features/boundaries/index.ts': 1,
+  'features/carbonMade/carbonMadeCard.ts': 1,
+  'features/carbonMade/index.ts': 2,
+  'features/cycle/cycleTrack.ts': 1,
+  'features/cycle/index.ts': 1,
+  'features/dates/index.ts': 1,
+  'features/deepSurfaces/index.ts': 1,
+  'features/deepTime/deepGlance.ts': 1,
+  'features/deepTime/index.ts': 3,
+  'features/eclipses/index.ts': 1,
+  'features/eclipses/seen.ts': 1,
+  'features/empires/index.ts': 1,
+  'features/famous/famousPanel.ts': 1,
+  'features/fossils/index.ts': 1,
+  'features/humans/index.ts': 1,
+  'features/iceAges/index.ts': 2,
+  'features/impacts/index.ts': 1,
+  'features/layersPanel/layersPanel.ts': 2,
+  'features/moment/index.ts': 1,
+  'features/records/index.ts': 1,
+  'features/records/tabletPanel.ts': 1,
+  'features/shower/airShower.ts': 3,
+  'features/shower/index.ts': 2,
+  'features/shower/leafScene.ts': 2,
+  'features/shower/showerStage.ts': 1,
+  'features/shower/sunCore.ts': 1,
+  'features/sky/index.ts': 1,
+  'features/temperature/temperatureLayer.ts': 1,
+  'features/texts/searchPanel.ts': 1,
+  'features/treeOfLife/lineagesSheet.ts': 3,
+  'features/treeOfLife/treeSheet.ts': 1,
+  'features/years/index.ts': 1,
+  'features/years/radiocarbonStrip.ts': 1,
+  'globe/impactAnimation.ts': 1,
+  'globe/moonMeshes.ts': 1,
+  'globe/planetMeshes.ts': 1,
+  'globe/scene.ts': 6,
+  'globe/showerAnimation.ts': 3,
+  'globe/showerSteps.ts': 1,
+  'sky/skyScene.ts': 1,
+  'state/url.ts': 1,
+  'state/urlSync.ts': 1,
+  'story/storyScene.ts': 1,
+  'text/wordpiece.ts': 1,
+  'ui/datingCard.ts': 1,
+  'ui/deepTimeBar.ts': 4,
+  'ui/historyTrack.ts': 1,
+  'ui/impactPathsSheet.ts': 3,
+  'ui/periodBands.ts': 2,
+  'ui/seaLevelChart.ts': 1,
+  'ui/timeline.ts': 1,
+  'ui/whySheet.ts': 2,
+  'ui/yearWheel.ts': 2,
+  'ui/zoomRail.ts': 1,
+};
+
 const ROOT_FILES = new Set(TIERS[TIERS.length - 1]);
 
 /**
@@ -100,6 +182,20 @@ function rule(names) {
  */
 const maxLines = (max) => ['error', { max, skipBlankLines: false, skipComments: false }];
 
+/**
+ * The function limits as lint rules (#489).
+ * @returns {import('eslint').Linter.RulesRecord}
+ */
+function functionRules() {
+  return {
+    'max-lines-per-function': [
+      'error',
+      { max: MAX_FUNCTION_LINES, skipBlankLines: true, skipComments: true, IIFEs: true },
+    ],
+    complexity: ['error', MAX_COMPLEXITY],
+  };
+}
+
 /** @param {number} tier */
 const above = (tier) => TIERS.slice(tier + 1).flat();
 
@@ -131,4 +227,9 @@ export const boundaries = [
     files: [`src/${file}`],
     rules: { 'max-lines': maxLines(max) },
   })),
+  {
+    files: ['src/**/*.ts'],
+    ignores: ['src/**/*.test.ts', ...Object.keys(FUNCTION_LIMITS).map((file) => `src/${file}`)],
+    rules: functionRules(),
+  },
 ];
