@@ -1,7 +1,8 @@
 /**
  * The manifest of Earth's tiles (`public/textures/earth-tiles/manifest.json`), written by the
  * pipeline's `earth-tiles` command (#568): the levels of the pyramid there are, each with the
- * map it was cut from, pinned by checksum, and where a tile's file is.
+ * maps it was cut from, pinned by checksum, and where a tile's file is. Level 4 is the full Blue
+ * Marble (1.85 km a pixel), level 5 NASA's 500 m map halved (0.93 km, #569).
  */
 
 import * as v from 'valibot';
@@ -16,10 +17,16 @@ const LevelSchema = v.pipe(
     z: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(10)),
     columns: count,
     rows: count,
-    source: v.strictObject({
-      url: v.pipe(v.string(), v.url()),
-      sha256: v.pipe(v.string(), v.regex(/^[0-9a-f]{64}$/)),
-    }),
+    // The maps the level was cut from: one for level 4, NASA's eight 500 m tiles for level 5.
+    sources: v.pipe(
+      v.array(
+        v.strictObject({
+          url: v.pipe(v.string(), v.url()),
+          sha256: v.pipe(v.string(), v.regex(/^[0-9a-f]{64}$/)),
+        }),
+      ),
+      v.minLength(1),
+    ),
   }),
   v.check(
     ({ z, columns, rows }) => columns === 2 ** (z + 1) && rows === 2 ** z,
