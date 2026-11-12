@@ -288,16 +288,16 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ...partContext,
     globe,
     chips: deepChipsOf(FEATURES),
-
     step: () => {
       sync.step();
     },
     marked: (on) => {
       bottom.dataset['deep'] = on ? 'on' : 'off';
     },
-    header: (ma) => {
-      moment.deepHeader(ma);
+    header: (ma, story) => {
+      moment.deepHeader(ma, story);
     },
+    storyDate: boundaries.storyDate,
     bar: (state, moment) => ({
       ...iceAges.bar(state, moment.ma),
       chips: features.deep(state, moment),

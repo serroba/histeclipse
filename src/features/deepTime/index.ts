@@ -205,7 +205,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       return;
     }
     const period = periodAt(ma);
-    context.header(ma);
+    const story = context.storyDate();
+    context.header(ma, story);
     // A link to before the elevation maps opens on the scale that reaches it.
     const scale = state.deepScale === 'all' && ma > oldest ? 'eons' : state.deepScale;
     historySpan.render(scale);
@@ -220,6 +221,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     globe.setSketch(sketch);
     deepBar.render({
       ma,
+      story,
       oldest: spanOf(scale),
       mapsReach: oldest,
       period,
@@ -232,8 +234,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       sketch: sketch === null ? null : { sketch, choices },
     });
     glance.render({
-      when: formatMa(ma),
-      period: period === null ? 'Deep time' : periodWords(period),
+      when: story?.when ?? formatMa(ma),
+      period: story?.what ?? (period === null ? 'Deep time' : periodWords(period)),
       ma,
       oldest: spanOf(scale),
       playing,

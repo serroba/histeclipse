@@ -83,6 +83,10 @@ export function createTemperatureLayer(context: TemperatureLayerContext): Temper
   const { dataUrl, fetchJson, globe, notify, arrived } = context;
   const clock = context.clock ?? (() => performance.now());
   let lastSeen: Seen | null = null;
+  // Whether this layer may have coloured the globe: it clears only what it drew (and once at
+  // first, so the globe says it is off), so a story's own surface (the boundaries' measured
+  // warming, #492) stays while deep time draws again.
+  let colouring = true;
   let loading: Readonly<Record<TemperatureModel, Promise<PaleoTempIndex> | null>> = {
     krapp: null,
     scotese: null,
@@ -170,7 +174,8 @@ export function createTemperatureLayer(context: TemperatureLayerContext): Temper
     show(state, moment, maPerSecond) {
       const drawn = drawnModel(state, moment);
       if (drawn === null) {
-        globe.setTemperature(null);
+        if (colouring) globe.setTemperature(null);
+        colouring = false;
         return;
       }
       const { index } = drawn;
@@ -186,6 +191,7 @@ export function createTemperatureLayer(context: TemperatureLayerContext): Temper
           ),
         );
       }
+      colouring = true;
       globe.setTemperature({
         younger: url(younger.file),
         older: url(older.file),

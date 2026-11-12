@@ -18,6 +18,7 @@ import { type JulianDay } from '../../time/julianDay';
 import { formatInCalendar } from '../../time/calendars';
 import { element } from '../../ui/dom';
 import { formatMa, periodAt, periodWords } from '../../deepTime/periods';
+import type { StoryDate } from '../../deepTime/storyDate';
 import { errorMessage } from '../../util/errors';
 import './moment.css';
 
@@ -45,8 +46,8 @@ export interface MomentPart {
   readonly termNote: HTMLElement;
   /** Show the moment, the header and what is placed by it. */
   readonly show: (state: ViewState) => void;
-  /** The header in deep time. */
-  readonly deepHeader: (ma: number) => void;
+  /** The header in deep time, with the date a story lends, if any. */
+  readonly deepHeader: (ma: number, story?: StoryDate | null) => void;
   /** The moment last shown, in Terrestrial Time; null before the first. */
   readonly terrestrial: () => JulianDay | null;
 }
@@ -143,12 +144,15 @@ export function mountMoment(context: MomentContext): MomentPart {
   const DELTA_T_MEANING =
     'ΔT: how far Earth’s slowing spin has put clock time behind a perfectly even time. It decides where on Earth an ancient eclipse fell; the ± is how uncertain it is.';
 
-  /** The header in deep time: how long ago, and the period by the ICS chart. */
-  function showDeepTimeText(ma: number): void {
+  /**
+   * The header in deep time: how long ago, and the period by the ICS chart; or, while a story
+   * has the globe, the date it lends (#492).
+   */
+  function showDeepTimeText(ma: number, story: StoryDate | null = null): void {
     const period = periodAt(ma);
-    dateText.textContent = formatMa(ma);
+    dateText.textContent = story?.when ?? formatMa(ma);
     timeText.textContent = '';
-    detailText.textContent = period === null ? 'Deep time' : periodWords(period);
+    detailText.textContent = story?.what ?? (period === null ? 'Deep time' : periodWords(period));
   }
 
   return {
