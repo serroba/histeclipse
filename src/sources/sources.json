@@ -319,6 +319,13 @@
     "cite": "Panovska, S., Constable, C. G. & Korte, M. (2018). Extending global continuous geomagnetic field reconstructions on timescales beyond human civilization. Geochemistry, Geophysics, Geosystems 19, 4757–4772; dipole moment from the model archive, EarthRef ERDA 2382 (no licence stated)",
     "url": "https://doi.org/10.1029/2018GC007966"
   },
+  "globalCarbonBudget2026": {
+    "name": "Global Carbon Budget 2026",
+    "kind": "dataset",
+    "cite": "Global Carbon Project (2026), Supplemental data of Global Carbon Budget 2026 (v0.1), ICOS Carbon Portal; budget paper: Friedlingstein, P., et al. (2026), Global Carbon Budget 2026, Earth System Science Data (in review)",
+    "url": "https://doi.org/10.18160/GCP-2026",
+    "licence": "CC BY 4.0"
+  },
   "godwin1962": {
     "name": "Godwin 1962",
     "kind": "paper",
@@ -445,6 +452,13 @@
     "kind": "reference",
     "cite": "JAXA, “Martian Moons eXploration (MMX)” (mission page)",
     "url": "https://www.mmx.jaxa.jp/en/"
+  },
+  "jones2023": {
+    "name": "Jones et al. 2023",
+    "kind": "dataset",
+    "cite": "Jones, M. W., Peters, G. P., Gasser, T., Andrew, R. M., Schwingshackl, C., Gütschow, J., Houghton, R. A., Friedlingstein, P., Pongratz, J. & Le Quéré, C. (2023). National contributions to climate change due to historical emissions of carbon dioxide, methane, and nitrous oxide since 1850. Scientific Data 10, 155; data: version 2025.1 (Zenodo, doi:10.5281/zenodo.16640595)",
+    "url": "https://doi.org/10.5281/zenodo.16640595",
+    "licence": "CC BY 4.0"
   },
   "jouzel2007": {
     "name": "EPICA Dome C, Jouzel et al. 2007",
