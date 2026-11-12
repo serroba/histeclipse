@@ -84,6 +84,7 @@ from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
 from histeclipse_pipeline.vectors import moon_vectors, sample_times, sun_vectors, write_vectors
 from histeclipse_pipeline.volcanoes import fetch_volcanoes
+from histeclipse_pipeline.warm_past import fetch_warm_past
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
@@ -521,6 +522,12 @@ def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs networ
     return _say(f"wrote {count} measured-warming images to {args.out}")
 
 
+def warm_past(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write temperature change maps of the Last Interglacial and mid-Pliocene."""
+    count = fetch_warm_past(args.out)
+    return _say(f"wrote {count} warm-past temperature-change images to {args.out}")
+
+
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
 #: with a margin each side for the months that straddle the ends.
 BABYLON_YEARS = (-749, 101)
@@ -795,6 +802,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         measured_warming,
         "write measured land warming since 1850 against 1850-1900 (Berkeley Earth)",
         "output directory",
+    ),
+    "warm-past": (
+        warm_past,
+        "write temperature change at the Last Interglacial and mid-Pliocene (PMIP4, PlioMIP2)",
+        "output directory (public/data/warmpast)",
     ),
     "calendars": (
         calendars,
