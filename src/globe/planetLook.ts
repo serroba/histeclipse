@@ -372,3 +372,6 @@ export const SHARP_MAPS = {
   },
   moon: { large: 'textures/moon-lroc-4096.jpg', small: 'textures/moon-lroc-4096.jpg' },
 } as const;
+
+/** Earth's full-size map in tiles, closer still, and their manifest's folder (#568). */
+export const EARTH_TILES = 'textures/earth-tiles/';

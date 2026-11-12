@@ -29,6 +29,9 @@ export const EARTH_VERTEX = /* glsl */ `
 const EARTH_HEAD = /* glsl */ `
   #include <logdepthbuf_pars_fragment>
   uniform sampler2D dayMap;
+  // Where the day map lies on the globe's map, and how opaque: a tile's part of it (#568).
+  uniform vec4 dayRect;
+  uniform float dayAlpha;
   // Deep time: two elevation maps (bytes 0–127 sea floor, 128–255 land) and the blend between.
   uniform sampler2D paleoYounger;
   uniform sampler2D paleoOlder;
@@ -253,7 +256,7 @@ const EARTH_BODY = /* glsl */ `
   // Travelling through the Holocene: today's Earth, with the shelf a lower sea left bare (in
   // the sand tint the ice ages use) and the ice sheets that still lay on the land.
   vec3 holoceneSurface(vec2 uv) {
-    vec3 color = texture2D(dayMap, uv).rgb;
+    vec3 color = texture2D(dayMap, (uv - dayRect.xy) / dayRect.zw).rgb;
     float sea = 1.0;
     if (shelfActive > 0.5) {
       vec2 at = (uv * (shelfGrid - 1.0) + 0.5) / shelfGrid;
@@ -318,7 +321,7 @@ const EARTH_TAIL = /* glsl */ `    // Deep time: no one can say what hour it was
     // the evenly lit ground (in deep time none of them is on).
     color = mix(color, empiresLayer(color, 1.0), evenLight);
     color = iceOutlinesLayer(color);
-    gl_FragColor = vec4(color, 1.0);
+    gl_FragColor = vec4(color, dayAlpha);
     #include <colorspace_fragment>
   }
 `;
