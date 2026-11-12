@@ -3,7 +3,17 @@ import { subsolarPoint } from '../src/astro/sun';
 import { parseViewState } from '../src/state/url';
 import { momentJulianDay } from '../src/state/viewState';
 import { DeltaT } from '../src/time/deltaT';
-import { collectProblems, expect, freeSpot, globeRendered, LIVE, pickSpan, test } from './support';
+import {
+  collectProblems,
+  expect,
+  freeSpot,
+  globeRendered,
+  GPU,
+  LIVE,
+  LIVE_GPU,
+  pickSpan,
+  test,
+} from './support';
 
 // Commit SHA the deployment is expected to serve. Empty or unset skips the release check.
 const expectedVersion = process.env['EXPECTED_VERSION'] ?? '';
@@ -23,7 +33,7 @@ test('loads the globe without errors or failed requests', LIVE, async ({ page })
   expect(problems).toEqual([]);
 });
 
-test('draws the Earth, not an empty canvas', LIVE, async ({ page }) => {
+test('draws the Earth, not an empty canvas', LIVE_GPU, async ({ page }) => {
   await page.goto('./');
   await globeRendered(page);
   // A screenshot captures what is on screen without reading the WebGL buffer back. An empty
@@ -32,7 +42,7 @@ test('draws the Earth, not an empty canvas', LIVE, async ({ page }) => {
   expect(png.byteLength).toBeGreaterThan(60_000);
 });
 
-test('the years draw today’s sea ice, by the time of year', async ({ page }) => {
+test('the years draw today’s sea ice, by the time of year', GPU, async ({ page }) => {
   const globe = page.getByTestId('globe');
   // Mid-March: the north’s March ice (and the south's least), at today’s sea level.
   await page.goto('./?t=2025-03-16T12:00');

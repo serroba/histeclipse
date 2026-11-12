@@ -10,6 +10,13 @@ export { expect };
  * release). The daily live run, like CI, runs everything.
  */
 export const LIVE = { tag: '@live' };
+/**
+ * The tests that between them draw every shader once: the globe's, the sky's, the 3D stories'
+ * and the 3D charts'. They run on a Mac in every pull request, where a shader can fail to compile
+ * that compiles on Linux (#110); the rest of the suite runs there nightly.
+ */
+export const GPU = { tag: '@gpu' };
+export const LIVE_GPU = { tag: ['@live', '@gpu'] };
 
 export interface DisplayOptions {
   /** Frames per second the display gives, exactly; null for the browser's own. */

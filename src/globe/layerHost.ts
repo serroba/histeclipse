@@ -20,6 +20,7 @@ import type { MoonName, MoonPlanet } from '../astro/moonOrbits';
 import type { GeoPoint } from '../core/geo';
 import type { PaintSlot } from './paintSlots';
 import type { EarthPart, PartUniforms } from './earthParts';
+import type { SunImageTextures } from './surfaces';
 import type { NamedBody } from '../data/planetNames';
 import type { Body } from '../state/viewState';
 
@@ -96,6 +97,10 @@ export interface LayerHost {
   earthPart<Uniforms extends PartUniforms>(part: EarthPart<Uniforms>): Uniforms;
   /** Draw `scene`, as `camera` sees it, into `target` now, not on screen: a texture to draw with. */
   renderToTexture(target: WebGLRenderTarget, scene: Scene, camera: Camera): void;
+  /** The most anisotropic filtering the GPU offers, for textures a layer loads. */
+  readonly maxAnisotropy: number;
+  /** Show these images on the Sun, and the corona from its newest frame; null shows it plain. */
+  showSunImage(image: SunImageTextures | null): void;
   /**
    * A place on the history map painted over Earth's surface, under the states, painted in
    * `order` (see HISTORY_PAINT_ORDER) whenever any part of the map changes.

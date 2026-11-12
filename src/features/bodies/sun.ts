@@ -7,6 +7,7 @@ import { loadSunImages, type SunImages } from '../../data/sunImages';
 import type { Globe } from '../../globe/scene';
 import type { ViewState } from '../../state/viewState';
 import { createSunSwitch } from './sunSwitch';
+import { sunImageLayer } from './sunImageLayer';
 import { errorMessage } from '../../util/errors';
 import type { PartContext } from '../part';
 
@@ -17,9 +18,10 @@ export interface SunCloseUp {
 }
 
 export function createSunCloseUp(
-  context: PartContext & { readonly globe: Pick<Globe, 'setSunImage'> },
+  context: PartContext & { readonly globe: Pick<Globe, 'addLayer'> },
 ): SunCloseUp {
   const { base, fetchJson, store, globe } = context;
+  const sunImage = globe.addLayer(sunImageLayer);
   const sunSwitch = createSunSwitch(
     (sunLayer) => {
       store.set((state) => ({ ...state, sunLayer }));
@@ -33,7 +35,7 @@ export function createSunCloseUp(
     const close = state.mode === 'globe' && state.focus === 'sun';
     sunSwitch.render(state.sunLayer, close);
     if (!close) {
-      globe.setSunImage(null);
+      sunImage.update(null);
       return;
     }
     if (sunImages === null) {
@@ -54,7 +56,7 @@ export function createSunCloseUp(
     }
     const image = sunImages.layers.find(({ key }) => key === state.sunLayer);
     if (image === undefined) return;
-    globe.setSunImage({
+    sunImage.update({
       key: image.key,
       map: { small: `${base}${image.map['512']}`, large: `${base}${image.map['4096']}` },
       disc: { small: `${base}${image.disc['512']}`, large: `${base}${image.disc['2048']}` },
