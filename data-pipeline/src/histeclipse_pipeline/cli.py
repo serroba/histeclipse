@@ -34,6 +34,7 @@ from histeclipse_pipeline.krapp import fetch_krapp
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table, write_table
 from histeclipse_pipeline.macrostrat import fetch_rocks
+from histeclipse_pipeline.measured_warming import fetch_measured_warming
 from histeclipse_pipeline.moon_orbits import fetch_moon_orbits
 from histeclipse_pipeline.ohm import fetch_ohm
 from histeclipse_pipeline.p3k14c import fetch_p3k14c
@@ -514,6 +515,12 @@ def krapp(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} ice-age temperature images to {args.out}")
 
 
+def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write measured land warming since 1850 (Berkeley Earth) as small images."""
+    count = fetch_measured_warming(args.out)
+    return _say(f"wrote {count} measured-warming images to {args.out}")
+
+
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
 #: with a margin each side for the months that straddle the ends.
 BABYLON_YEARS = (-749, 101)
@@ -782,6 +789,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "krapp": (
         krapp,
         "write land temperature maps for the last 800,000 years (Krapp et al. 2021)",
+        "output directory",
+    ),
+    "measured-warming": (
+        measured_warming,
+        "write measured land warming since 1850 against 1850-1900 (Berkeley Earth)",
         "output directory",
     ),
     "calendars": (

@@ -44,9 +44,13 @@ test('the boundaries open on the Holocene, then grow to 2026 and compare with 20
     await expect(chart.getByTestId('holocene-corridor')).toBeVisible();
     await expect(chart).toContainText('2025: +1.4 °C');
     await expect(page.getByTestId('boundary-caption')).toContainText('within about a degree');
-    // Krapp's maps end before industry: their colours are off at today.
+    // Krapp's maps end before industry: from 1850 the globe shows the measured warming (#485).
     await expect(page).toHaveURL(/ma=0(&|$)/);
     await expect(page).not.toHaveURL(/layers=[^&]*temperature/);
+    await expect(page.getByTestId('globe')).toHaveAttribute(
+      'data-temperature',
+      /warming\/2024\.png/,
+    );
   });
   await test.step('When they turn to the safe space', async () => {
     await sheet.getByRole('button', { name: 'Safe space' }).click();

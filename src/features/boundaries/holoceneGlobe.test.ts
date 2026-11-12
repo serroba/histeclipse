@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { astronomicalYear } from '../../time/year';
 import { defaultViewState, type ViewState } from '../../state/viewState';
-import { borrowedOf, givenBack, globeAt, MAPS_END_YEAR } from './holoceneGlobe';
+import warmingJson from '../../../public/data/warming/index.json';
+import type { MeasuredWarming } from '../../data/measuredWarming';
+import { borrowedOf, givenBack, globeAt, MAPS_END_YEAR, measuredAt } from './holoceneGlobe';
 
 const reader: ViewState = {
   ...defaultViewState(new Date(Date.UTC(2026, 10, 12))),
@@ -54,5 +56,25 @@ describe('the Holocene chapter’s globe', () => {
     };
     const after = givenBack(during, borrowed);
     expect(after).toEqual({ ...reader, boundaries: null, figures: 'all' });
+  });
+
+  it('keeps the same view, not a copy, where nothing it shows has changed', () => {
+    const borrowed = borrowedOf(reader);
+    const at = globeAt(reader, borrowed, 1900);
+    expect(globeAt(at, borrowed, 1950)).toBe(at);
+    expect(globeAt(at, borrowed, -18_050)).not.toBe(at);
+  });
+
+  it('shows the measured warming from 1850, blended between its 5-year maps', () => {
+    const warming = warmingJson as MeasuredWarming;
+    const url = (file: string) => `/data/warming/${file}`;
+    expect(measuredAt(warming, MAPS_END_YEAR - 1, url)).toBeNull();
+    expect(measuredAt(warming, 2002, url)).toMatchObject({
+      younger: '/data/warming/2005.png',
+      older: '/data/warming/2000.png',
+      mix: 0.6,
+      change: true,
+      coldest: warming.coldest,
+    });
   });
 });

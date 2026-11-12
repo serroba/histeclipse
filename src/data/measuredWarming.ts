@@ -1,0 +1,66 @@
+/**
+ * Measured warming on land since 1850 (`public/data/warming/`, #485): Berkeley Earth's gridded
+ * land temperatures, as 5-year means every five years against 1850–1900, written by the
+ * pipeline's `measured-warming` command. Packed as Krapp et al.'s ice-age maps are, so the
+ * globe's Temperature shader shows them as the change: R the frame, G the baseline (0 °C).
+ */
+
+import * as v from 'valibot';
+
+import { getJson, type Fetch } from './fetchJson';
+
+const WarmingSchema = v.strictObject({
+  schemaVersion: v.literal(1),
+  credit: v.string(),
+  source: v.string(),
+  licence: v.string(),
+  baseline: v.string(),
+  /** How many years each frame averages, ending at its year. */
+  years: v.pipe(v.number(), v.integer(), v.minValue(1)),
+  coverage: v.literal('land'),
+  columns: v.pipe(v.number(), v.integer(), v.minValue(2)),
+  rows: v.pipe(v.number(), v.integer(), v.minValue(2)),
+  coldest: v.number(),
+  warmest: v.number(),
+  frames: v.pipe(
+    v.array(
+      v.strictObject({
+        year: v.pipe(v.number(), v.integer()),
+        file: v.string(),
+        /** The mean over land with data, °C against the baseline. */
+        mean: v.number(),
+      }),
+    ),
+    v.minLength(1),
+  ),
+});
+
+export type MeasuredWarming = v.InferOutput<typeof WarmingSchema>;
+export type WarmingFrame = MeasuredWarming['frames'][number];
+
+export async function loadMeasuredWarming(url: string, fetchJson: Fetch): Promise<MeasuredWarming> {
+  return getJson(fetchJson, url, WarmingSchema);
+}
+
+/**
+ * The frames either side of `year`, and how far towards the earlier one: 0 shows the later
+ * (younger) frame, 1 the earlier, as the globe blends its maps. Before the first frame, the
+ * first; after the last, the last.
+ */
+export function warmingAt(
+  index: MeasuredWarming,
+  year: number,
+): { younger: WarmingFrame; older: WarmingFrame; mix: number } {
+  let older: WarmingFrame | undefined;
+  for (const frame of [...index.frames].sort((a, b) => a.year - b.year)) {
+    if (frame.year >= year) {
+      if (older === undefined || frame.year === year) {
+        return { younger: frame, older: frame, mix: 0 };
+      }
+      return { younger: frame, older, mix: (frame.year - year) / (frame.year - older.year) };
+    }
+    older = frame;
+  }
+  if (older === undefined) throw new Error('No measured-warming frames');
+  return { younger: older, older, mix: 0 };
+}
