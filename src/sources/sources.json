@@ -204,6 +204,13 @@
     "url": "https://astrogeology.usgs.gov/search/map/titan_cassini_sar_hisar_global_mosaic_351m",
     "licence": "NASA/JPL-Caltech/ASI/USGS; no use constraints, cite its authors"
   },
+  "ceresEbaf": {
+    "name": "CERES EBAF top-of-atmosphere fluxes (NASA)",
+    "kind": "dataset",
+    "cite": "Loeb, N. G., Doelling, D. R., Wang, H., Su, W., Nguyen, C., Corbett, J. G., Liang, L., Mitrescu, C., Rose, F. G., Kato, S. (2018), Clouds and the Earth's Radiant Energy System (CERES) Energy Balanced and Filled (EBAF) Top-of-Atmosphere (TOA) Edition-4.0 Data Product, Journal of Climate 31, 895–918 (doi:10.1175/JCLI-D-17-0208.1); data: NASA Langley Research Center, CERES EBAF-TOA Edition 4.2.1 (doi:10.5067/TERRA-AQUA-NOAA20/CERES/EBAF-TOA_L3B004.2.1), read from the obs4MIPs copy prepared by NASA GISS (version of 20 February 2026). Monthly net flux at the top of the atmosphere on a 1° grid since March 2000, from the CERES instruments on Terra, Aqua and NOAA-20: the Earth's energy imbalance measured from space. Its changes are measured; its level is set so that July 2005 to June 2015 matches the heat the ocean, land, ice and air took up (0.71 W/m²)",
+    "url": "https://doi.org/10.5067/TERRA-AQUA-NOAA20/CERES/EBAF-TOA_L3B004.2.1",
+    "licence": "CC BY 4.0"
+  },
   "cesm": {
     "name": "CESM, Li et al. 2023",
     "kind": "model",
