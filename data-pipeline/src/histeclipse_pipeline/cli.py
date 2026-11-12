@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from histeclipse_pipeline.aadr import fetch_genomes
 from histeclipse_pipeline.amoc import fetch_amoc
+from histeclipse_pipeline.ar6_sealevel import fetch_ar6_sealevel
 from histeclipse_pipeline.archaeoglobe import fetch_ways
 from histeclipse_pipeline.asteroids import fetch_asteroids
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
@@ -88,6 +89,7 @@ from histeclipse_pipeline.solar import find_solar_eclipses
 from histeclipse_pipeline.solar_images import fetch_images
 from histeclipse_pipeline.spacecraft import fetch_spacecraft
 from histeclipse_pipeline.spacecraft_paths import fetch_spacecraft_paths
+from histeclipse_pipeline.temperature_records import fetch_temperature_records
 from histeclipse_pipeline.time_tree import fetch_time_trees
 from histeclipse_pipeline.timezones import fetch_timezones
 from histeclipse_pipeline.tree_of_life import fetch_tree_of_life
@@ -562,6 +564,12 @@ def krapp(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} ice-age temperature images to {args.out}")
 
 
+def temperature_records(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write global mean temperature since 1850 from five records side by side."""
+    points = fetch_temperature_records(args.out)
+    return _say(f"wrote {points} temperature-record points to {args.out}")
+
+
 def amoc(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the AMOC as measured (RAPID) and as reconstructed, each source apart."""
     points = fetch_amoc(args.out)
@@ -590,6 +598,12 @@ def drought(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the drought index's trend and land means (SPEIbase)."""
     count = fetch_drought(args.out)
     return _say(f"wrote {count} drought trend map to {args.out}")
+
+
+def ar6_sealevel(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write sea level projected to 2150 by IPCC AR6, global curves and 1° maps."""
+    count = fetch_ar6_sealevel(args.out)
+    return _say(f"wrote AR6 sea-level curves and {count} maps to {args.out}")
 
 
 def warm_past(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -898,6 +912,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write land temperature maps for the last 800,000 years (Krapp et al. 2021)",
         "output directory",
     ),
+    "temperature-records": (
+        temperature_records,
+        "write global temperature since 1850 (GISTEMP, NOAAGlobalTemp, ERA5, HadCRUT5, Berkeley)",
+        "output directory",
+    ),
     "amoc": (
         amoc,
         "write the AMOC measured at 26.5°N (RAPID) beside reconstructions that disagree",
@@ -921,6 +940,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "drought": (
         drought,
         "write the 12-month drought index's trend since 1951 and land means (SPEIbase)",
+        "output directory",
+    ),
+    "ar6-sealevel": (
+        ar6_sealevel,
+        "write sea level projected to 2150 by SSP (IPCC AR6, Garner et al. 2021)",
         "output directory",
     ),
     "warm-past": (
