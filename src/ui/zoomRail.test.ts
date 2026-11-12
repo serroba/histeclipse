@@ -40,6 +40,14 @@ describe('the zoom rail', () => {
     expect(railScale('moon').far).toBe(CAMERA_DISTANCE_RANGE.max);
   });
 
+  it('comes down to about 50 km over Earth, and as near as before to the other bodies', () => {
+    expect(earth.near).toBe(1.008);
+    expect((earth.near - 1) * earth.radiusKm).toBeCloseTo(51, 0);
+    for (const body of ['moon', 'sun', 'mars', 'jupiter', 'titan'] as const) {
+      expect(railScale(body).near).toBe(1.05);
+    }
+  });
+
   it('gives each body the stops within reach, its own first', () => {
     const labels = (body: Parameters<typeof railScale>[0]): string[] =>
       stopsFor(railScale(body)).map((stop) => stop.label);
