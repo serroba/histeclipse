@@ -742,7 +742,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { draw: years.settle },
     {
       draw: (state) => {
-        zoomRail.render(railView(state));
+        zoomRail.render(railView(state, globe.tileLimits !== null));
       },
     },
     { draw: sources.show },
