@@ -394,6 +394,12 @@
       "Estimated within wide ranges: extinction rates and the energy taken from ecosystems.",
       "Judged, with no numbers past the boundary: novel entities."
     ],
-    "reading": ["planetaryHealthCheck2026", "richardson2023", "osman2021"]
+    "reading": [
+      "planetaryHealthCheck2026",
+      "richardson2023",
+      "osman2021",
+      "globalCarbonBudget2026",
+      "jones2023"
+    ]
   }
 }
