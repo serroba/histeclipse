@@ -11,6 +11,12 @@ from histeclipse_pipeline.asteroids import fetch_asteroids
 from histeclipse_pipeline.atmosphere import fetch_atmosphere
 from histeclipse_pipeline.catalog import write_lunar_catalog, write_solar_catalog
 from histeclipse_pipeline.cesm import fetch_cesm
+from histeclipse_pipeline.cryosphere import (
+    fetch_glaciers,
+    fetch_imbie,
+    fetch_seaice_trend,
+    fetch_snow_cover,
+)
 from histeclipse_pipeline.deep_air import fetch_deep_air
 from histeclipse_pipeline.delta_t import delta_t_table, write_delta_t_table
 from histeclipse_pipeline.dipole import fetch_dipole
@@ -521,6 +527,30 @@ def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs networ
     return _say(f"wrote {count} measured-warming images to {args.out}")
 
 
+def imbie(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the ice sheets' mass balance since the 1970s (IMBIE)."""
+    count = fetch_imbie(args.out)
+    return _say(f"wrote {count} region-years of ice-sheet mass balance to {args.out}")
+
+
+def glaciers(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write glacier mass change by region, 2000-2023 (GlaMBIE, Hugonnet et al.)."""
+    count = fetch_glaciers(args.out)
+    return _say(f"wrote {count} glacier regions to {args.out}")
+
+
+def seaice_trend(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write sea-ice extent by year for each pole's months of most and least ice (NSIDC)."""
+    count = fetch_seaice_trend(args.out)
+    return _say(f"wrote {count} sea-ice extents to {args.out}")
+
+
+def snow_cover(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write Northern Hemisphere snow-cover extent by month since 1966 (Rutgers)."""
+    count = fetch_snow_cover(args.out)
+    return _say(f"wrote {count} years of snow cover to {args.out}")
+
+
 #: Babylonian months from Nabonassar (747 BCE) to 100 CE; Chinese years from 720 BCE to 2100 CE,
 #: with a margin each side for the months that straddle the ends.
 BABYLON_YEARS = (-749, 101)
@@ -794,6 +824,26 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "measured-warming": (
         measured_warming,
         "write measured land warming since 1850 against 1850-1900 (Berkeley Earth)",
+        "output directory",
+    ),
+    "imbie": (
+        imbie,
+        "write Greenland's and Antarctica's mass balance since the 1970s (IMBIE)",
+        "output directory",
+    ),
+    "glaciers": (
+        glaciers,
+        "write glacier mass change by region 2000-2023 (GlaMBIE, Hugonnet et al. 2021)",
+        "output directory",
+    ),
+    "seaice-trend": (
+        seaice_trend,
+        "write sea-ice extent by year in each pole's months of most and least ice (NSIDC)",
+        "output directory",
+    ),
+    "snow-cover": (
+        snow_cover,
+        "write Northern Hemisphere snow-cover extent by month since 1966 (Rutgers)",
         "output directory",
     ),
     "calendars": (
