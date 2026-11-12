@@ -9,7 +9,7 @@
 import { collectProblems, expect, globeRendered, test } from './support';
 
 // The scene loads with the sheet and plays its chapters; software rendering on CI is slow.
-const PLAYED = { timeout: 20_000 };
+const PLAYED = { timeout: 45_000 };
 
 test('the boundaries open on the Holocene, then grow to 2026 and compare with 2023', async ({
   page,
@@ -26,20 +26,37 @@ test('the boundaries open on the Holocene, then grow to 2026 and compare with 20
   await test.step('When they open the boundaries', async () => {
     await page.getByRole('button', { name: 'Boundaries', exact: true }).click();
   });
-  await test.step('Then temperature is drawn through the ice ages into the Holocene corridor', async () => {
+  await test.step('Then the globe follows the chart through the ice ages (#475)', async () => {
     await expect(page).toHaveURL(/boundaries=holocene/);
     await expect(sheet).toBeVisible();
     await expect(chart).toHaveAttribute('data-rendered', 'true', PLAYED);
+    await expect(chart.getByTestId('holocene-cursor')).toContainText('years ago');
+    // On the ice-age scale, with the sea level and the temperature as the change from today.
+    await expect(page).toHaveURL(/scale=ice/);
+    await expect(page).toHaveURL(/layers=[^&]*temperature/);
+    await expect(page).toHaveURL(/layers=[^&]*sealevel/);
+    const globe = page.getByTestId('globe');
+    await expect(globe).toHaveAttribute('data-temperature-change', 'true', PLAYED);
+    await expect(globe).not.toHaveAttribute('data-ice', 'off', PLAYED);
+  });
+  await test.step('And temperature is drawn into the Holocene corridor, the globe at today', async () => {
     await expect(chart).toHaveAttribute('data-complete', 'true', PLAYED);
     await expect(chart.getByTestId('holocene-corridor')).toBeVisible();
     await expect(chart).toContainText('2025: +1.4 °C');
     await expect(page.getByTestId('boundary-caption')).toContainText('within about a degree');
+    // Krapp's maps end before industry: their colours are off at today.
+    await expect(page).toHaveURL(/ma=0(&|$)/);
+    await expect(page).not.toHaveURL(/layers=[^&]*temperature/);
   });
   await test.step('When they turn to the safe space', async () => {
     await sheet.getByRole('button', { name: 'Safe space' }).click();
   });
   await test.step('Then the nine are drawn round Earth, at pre-industrial levels', async () => {
     await expect(page).toHaveURL(/boundaries=safe/);
+    // The globe is given back as it was: today, in the years.
+    await expect(page).not.toHaveURL(/[?&]ma=/);
+    await expect(page).not.toHaveURL(/scale=ice/);
+    await expect(page).not.toHaveURL(/layers=[^&]*sealevel/);
     await expect(chart).toBeHidden();
     await expect(stage).toHaveAttribute('data-rendered', 'true', PLAYED);
     await expect(stage).toHaveAttribute('data-crossed', '0');

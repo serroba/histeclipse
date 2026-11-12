@@ -68,6 +68,7 @@ export default defineConfig({
         'src/features/ways/index.ts',
         'src/features/dates/index.ts',
         'src/features/periods/index.ts',
+        'src/features/boundaries/index.ts',
         'src/features/empires/index.ts',
         'src/features/deepTime/index.ts',
         'src/features/years/index.ts',

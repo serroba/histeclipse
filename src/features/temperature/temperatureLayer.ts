@@ -6,7 +6,8 @@
  * On the ice-age scale only Krapp et al.'s maps draw: they are 1,000 or 2,000 years apart on
  * today's geography, where the others' nearest are 5 million years apart and would show today's
  * climate through every ice age. Beyond its 800,000 years the ice-age scale shows none, as
- * before it came.
+ * before it came. Moving towards the present, by play or carried by a story, it fetches the
+ * maps ahead.
  */
 
 import { framesAhead, framesAround } from '../../data/paleoDem';
@@ -35,6 +36,8 @@ export interface TemperatureLayerContext {
   readonly notify: (message: string) => void;
   /** A model's maps arrived: draw again. */
   readonly arrived: () => void;
+  /** Milliseconds, for how fast the moment moves; `performance.now` unless a test sets it. */
+  readonly clock?: () => number;
 }
 
 /** Where the moment is drawn: which scale, and whether before the elevation maps reach. */
@@ -53,6 +56,23 @@ export interface TemperatureLayer {
   show(state: ViewState, moment: TemperatureMoment, maPerSecond: number | null): void;
 }
 
+/** A moment shown, and when. */
+export interface Seen {
+  readonly ma: number;
+  readonly at: number;
+}
+
+/**
+ * How fast the moment moves towards the present, Myr a second, from the last moment shown: as
+ * deep time plays, or a story such as the boundaries' Holocene (#475) carries the globe along.
+ * Null when it stands, goes back, or last moved more than half a second ago.
+ */
+export function towardsNow(last: Seen | null, now: Seen): number | null {
+  if (last === null || now.ma >= last.ma) return null;
+  const seconds = (now.at - last.at) / 1000;
+  return seconds > 0 && seconds <= 0.5 ? (last.ma - now.ma) / seconds : null;
+}
+
 /** Enough maps ahead for four seconds of play, and at least four. */
 export function framesToFetch(index: PaleoTempIndex, maPerSecond: number): number {
   const step = (index.frames[1]?.ma ?? 1) - (index.frames[0]?.ma ?? 0);
@@ -61,6 +81,8 @@ export function framesToFetch(index: PaleoTempIndex, maPerSecond: number): numbe
 
 export function createTemperatureLayer(context: TemperatureLayerContext): TemperatureLayer {
   const { dataUrl, fetchJson, globe, notify, arrived } = context;
+  const clock = context.clock ?? (() => performance.now());
+  let lastSeen: Seen | null = null;
   let loading: Readonly<Record<TemperatureModel, Promise<PaleoTempIndex> | null>> = {
     krapp: null,
     scotese: null,
@@ -154,9 +176,12 @@ export function createTemperatureLayer(context: TemperatureLayerContext): Temper
       const { index } = drawn;
       const url = (file: string) => dataUrl(`${TEMPERATURE_MODEL_FOLDERS[drawn.model]}/${file}`);
       const { younger, older, mix } = framesAround(index.frames, moment.ma);
-      if (maPerSecond !== null) {
+      const seen = { ma: moment.ma, at: clock() };
+      const moving = maPerSecond ?? towardsNow(lastSeen, seen);
+      lastSeen = seen;
+      if (moving !== null) {
         globe.prefetch(
-          framesAhead(index.frames, moment.ma, framesToFetch(index, maPerSecond)).map((frame) =>
+          framesAhead(index.frames, moment.ma, framesToFetch(index, moving)).map((frame) =>
             url(frame.file),
           ),
         );

@@ -66,3 +66,14 @@
 .holocene-chart .legend text {
   font-size: 10px;
 }
+
+/* Where the line has reached, and the globe with it (#475). */
+.holocene-chart .cursor line {
+  stroke: rgb(255 255 255 / 0.55);
+  stroke-width: 1;
+}
+
+.holocene-chart .cursor text {
+  fill: var(--ink);
+  font-size: 12px;
+}

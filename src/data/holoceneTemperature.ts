@@ -54,13 +54,33 @@ export interface Panel {
   readonly to: number;
   readonly share: number;
   readonly name: string;
+  /**
+   * How long the chart takes to draw it, ms (#475): the globe follows the line, so the ice ages
+   * go slowly enough for their maps to come and their swings to be seen.
+   */
+  readonly ms: number;
 }
 
 export const PANELS: readonly Panel[] = [
-  { from: -800_000, to: -20_000, share: 0.32, name: 'Ice ages' },
-  { from: -20_000, to: 1750, share: 0.4, name: 'Holocene' },
-  { from: 1750, to: 2030, share: 0.28, name: 'Industrial era' },
+  { from: -800_000, to: -20_000, share: 0.32, name: 'Ice ages', ms: 12_000 },
+  { from: -20_000, to: 1750, share: 0.4, name: 'Holocene', ms: 7000 },
+  { from: 1750, to: 2030, share: 0.28, name: 'Industrial era', ms: 3000 },
 ];
+
+/** How long the line takes to cross the chart, ms. */
+export const DRAW_MS = PANELS.reduce((sum, panel) => sum + panel.ms, 0);
+
+/** How far across the chart the line has reached `ms` after it started, 0 to 1. */
+export function reachedAt(ms: number): number {
+  let left = 0;
+  let start = 0;
+  for (const panel of PANELS) {
+    if (ms < start + panel.ms) return left + (panel.share * Math.max(0, ms - start)) / panel.ms;
+    left += panel.share;
+    start += panel.ms;
+  }
+  return 1;
+}
 
 /** The temperatures the chart shows, °C. */
 export const T_MIN = -10;
@@ -80,6 +100,36 @@ export function xOf(year: number): number {
     left += panel.share;
   }
   return 1;
+}
+
+/** The year at `x` across the chart, 0 at its left edge to 1 at its right: `xOf` undone. */
+export function yearOf(x: number): number {
+  let left = 0;
+  let end = 0;
+  for (const panel of PANELS) {
+    if (x <= left + panel.share) {
+      const within = Math.max(0, (x - left) / panel.share);
+      return panel.from + within * (panel.to - panel.from);
+    }
+    left += panel.share;
+    end = panel.to;
+  }
+  return end;
+}
+
+/** A year on the chart as its cursor names it: thousands of years ago, then BCE and CE. */
+export function chartDateText(year: number): string {
+  if (year < -9000) {
+    const thousands = Math.round((1950 - year) / 1000);
+    return `${thousands.toLocaleString('en')},000 years ago`;
+  }
+  if (year < 1) {
+    const bce = 1 - year;
+    const shown = bce < 100 ? Math.round(bce) : Math.round(bce / 100) * 100;
+    return `${shown.toLocaleString('en')} BCE`;
+  }
+  if (year < 1700) return `${String(Math.max(1, Math.round(year / 100) * 100))} CE`;
+  return String(Math.round(year));
 }
 
 /** Where `celsius` falls down the chart, 0 at its top to 1 at its foot. */

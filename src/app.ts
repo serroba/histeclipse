@@ -47,8 +47,8 @@ import { countryRings, loadNamedPeriods } from './data/namedPeriods';
 import { approachOf, impactorText } from './data/impactScaling';
 import { createWhySheet } from './ui/whySheet';
 import { createImpactPathsSheet } from './ui/impactPathsSheet';
-import { createBoundariesSheet } from './ui/boundariesSheet';
 import type { PartContext } from './features/part';
+import { mountBoundaries } from './features/boundaries';
 import { mountTreeOfLife } from './features/treeOfLife';
 import { mountSky } from './features/sky';
 import { mountBodies } from './features/bodies';
@@ -150,16 +150,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       globe.flyTo(where);
     },
   };
-  // The planetary boundaries' story (#434): its data and scene load when it first opens.
-  const boundariesSheet = createBoundariesSheet(
-    (boundaries) => {
-      store.set((state) => ({ ...state, boundaries }));
-    },
-    (file) => `${base}data/${file}`,
-    (url) => fetch(url),
-    `${base}textures/earth-blue-marble-2048.jpg`,
-    whySheet.mark('boundaries', 'Planetary boundaries'),
-  );
   // The tree of life and life through time: their sheets, and the ways to open them.
   const treeOfLife = mountTreeOfLife(partContext);
   // Named periods for the place picked (#446).
@@ -300,6 +290,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
     focus: store.get().focus,
   });
+  // The planetary boundaries' story (#434), and the globe that follows its chart (#475).
+  const boundaries = mountBoundaries({ ...partContext, globe });
   // Deep time (#445): its span and moment, playing through it, its bar and glance, Earth's
   // surface from the elevation maps and magnetic north.
   // The temperature maps in deep time (#457).
@@ -498,7 +490,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     timelineExtras: [years.track.extras, cycle.extras],
   });
 
-  const hudTools = [boundariesSheet.button, texts.search.button, panels.fullView];
+  const hudTools = [boundaries.button, texts.search.button, panels.fullView];
   // Earth's spans and its map's layers; away from Earth they rest (#329).
   const hudActions = element(
     'div',
@@ -563,7 +555,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     zoomRail.root,
     ...treeOfLife.elements,
     impactPathsSheet.dialog,
-    boundariesSheet.dialog,
+    ...boundaries.elements,
     whySheet.dialog,
     hud,
     notices.list,
@@ -827,7 +819,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** The sheets the view names open: the impacts' paths, the boundaries, and the why. */
   function showSheets(state: ViewState): void {
     impactPathsSheet.show(state.craters, state.ma ?? 0, state.cratersIn);
-    boundariesSheet.show(state.boundaries);
+    boundaries.render(state);
     whySheet.show(state.why, whyVersion(state, hereData));
   }
 
@@ -930,7 +922,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     bottom,
     zoomRail: zoomRail.root,
     onInsets: (above, below) => {
-      globe.setInsets(above, below);
+      globe.setInsets({ top: above, bottom: below });
       sky.setInsets(above, below);
     },
   });
