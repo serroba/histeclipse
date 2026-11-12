@@ -8,7 +8,7 @@ import { scaleEnd, scalePolarity, type PolarityScale } from '../data/polarity';
 import { elementAt } from '../util/arrays';
 
 /** Polarity of the magnetic field: as today (normal), swapped, or swapping often. */
-export type Polarity = 'normal' | 'reversed' | 'mixed';
+type Polarity = 'normal' | 'reversed' | 'mixed';
 
 export interface PolarityInterval {
   readonly polarity: Polarity;

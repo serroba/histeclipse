@@ -26,7 +26,7 @@ import {
   type TabletSky,
 } from '../../tablets/tabletSky';
 
-export type Relation = 'in front of' | 'behind' | 'above' | 'below' | 'near';
+type Relation = 'in front of' | 'behind' | 'above' | 'below' | 'near';
 
 /**
  * When in the Babylonian day an observation was made: at dusk (half an hour after sunset, for
@@ -46,7 +46,7 @@ interface Dated {
   readonly text: string;
 }
 
-export interface PositionObservation extends Dated {
+interface PositionObservation extends Dated {
   readonly kind: 'position';
   readonly watch: Watch;
   readonly body: Exclude<Body, { readonly star: number }>;
@@ -56,7 +56,7 @@ export interface PositionObservation extends Dated {
   readonly cubits?: number;
 }
 
-export interface LunarSixObservation extends Dated {
+interface LunarSixObservation extends Dated {
   readonly kind: 'lunar six';
   readonly six: LunarSix;
   /** The interval in UŠ. */
@@ -64,7 +64,7 @@ export interface LunarSixObservation extends Dated {
 }
 
 /** A fact about the calendar itself: whether the year before had a second Addaru. */
-export interface LeapObservation extends Dated {
+interface LeapObservation extends Dated {
   readonly kind: 'leap';
   readonly previousLeap: string;
 }
@@ -114,7 +114,7 @@ export function momentOf(
 }
 
 /** The computed value of a position, in cubits, signed so that positive agrees with the text. */
-export function positionCubits(
+function positionCubits(
   sky: TabletSky,
   observation: PositionObservation,
   moment: JulianDay,

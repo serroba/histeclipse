@@ -27,7 +27,7 @@ export type CycleMark =
   | 'perihelion'
   | 'aphelion';
 
-export interface CycleEvent {
+interface CycleEvent {
   readonly mark: CycleMark;
   /** TT Julian Day. */
   readonly jdTT: number;

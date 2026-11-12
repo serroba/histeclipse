@@ -11,7 +11,7 @@ import { elementAt } from '../util/arrays';
 import { getJson, type Fetch } from './fetchJson';
 
 export const WAYS = ['foraging', 'pastoralism', 'extensive', 'intensive', 'urban'] as const;
-export type Way = (typeof WAYS)[number];
+type Way = (typeof WAYS)[number];
 
 const Level = v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(3));
 

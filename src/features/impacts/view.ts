@@ -16,11 +16,11 @@ import type { DeepScale, GeoPoint, ViewState } from '../../state/viewState';
 import type { MarkerCardContent } from '../../ui/markerCard';
 
 /** Degrees from the centre of the globe in view within which a strike is played as time runs. */
-export const STRIKE_IN_VIEW = 70;
+const STRIKE_IN_VIEW = 70;
 /** Strikes started in one frame at most, the greatest first, when time runs fast past several. */
 export const STRIKES_AT_ONCE = 4;
 /** The year “before present” counts back from, as radiocarbon dates do. */
-export const BP_ZERO_YEAR = 1950;
+const BP_ZERO_YEAR = 1950;
 
 /** The span the craters are drawn on: the whole span, past the elevation maps, is the eons'. */
 export function impactsScale(state: ViewState, oldest: number): DeepScale {

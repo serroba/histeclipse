@@ -9,17 +9,6 @@ export const IDENTITY: Matrix3 = [
   [0, 0, 1],
 ];
 
-/** Rotation by `angle` radians about x (y toward z). */
-export function rotationX(angle: number): Matrix3 {
-  const c = Math.cos(angle);
-  const s = Math.sin(angle);
-  return [
-    [1, 0, 0],
-    [0, c, -s],
-    [0, s, c],
-  ];
-}
-
 /** Rotation by `angle` radians about y (z toward x). */
 export function rotationY(angle: number): Matrix3 {
   const c = Math.cos(angle);

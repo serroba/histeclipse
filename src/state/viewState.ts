@@ -21,13 +21,7 @@ import { calendarDateOf, julianDay, julianDayNumber, type JulianDay } from '../t
 import { astronomicalYear } from '../time/year';
 import { DEEP_DEFAULTS, type DeepState } from './slices/deep';
 
-export {
-  DEEP_DEFAULTS,
-  DISPERSAL_SCENARIOS,
-  MA_RANGE,
-  type DeepState,
-  type DispersalScenario,
-} from './slices/deep';
+export { DISPERSAL_SCENARIOS, type DispersalScenario } from './slices/deep';
 
 export const MODES = ['globe', 'sky'] as const;
 export type Mode = (typeof MODES)[number];
@@ -231,7 +225,7 @@ export const RETIRED_LAYERS: readonly string[] = ['terminator', 'places'];
  * Radiocarbon dates shade squares in oranges and pinks that read as ways of life or as states'
  * fills (#163).
  */
-export const GROUND_FILLS: readonly Layer[] = ['rocks', 'ways', 'dates'];
+const GROUND_FILLS: readonly Layer[] = ['rocks', 'ways', 'dates'];
 
 /** The layers with one turned on or off; turning a ground fill on turns the other off. */
 export function withLayer(layers: ReadonlySet<Layer>, layer: Layer, on: boolean): Set<Layer> {

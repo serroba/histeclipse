@@ -6,7 +6,7 @@
 import { element } from '../../ui/dom';
 import './scrubber.css';
 
-export interface ScrubberView {
+interface ScrubberView {
   /** Minutes from greatest eclipse. */
   readonly offsetMinutes: number;
   /** "18:42 UT" */
@@ -20,7 +20,7 @@ export interface Scrubber {
 
 export const SCRUB_RANGE_MINUTES = 180;
 /** Simulated minutes per real second it can play at: the six hours in two minutes to six seconds. */
-export const ECLIPSE_SPEEDS = [3, 12, 30, 60] as const;
+const ECLIPSE_SPEEDS = [3, 12, 30, 60] as const;
 const DEFAULT_SPEED = 12;
 
 export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubber {

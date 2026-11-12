@@ -21,11 +21,11 @@ export type Particle = 'proton' | 'neutron' | 'pion' | 'muon' | 'electromagnetic
 /** The air above sea level, g/cm²: 1013.25 hPa over standard gravity. */
 export const SEA_LEVEL_DEPTH = 1033;
 /** How fast the air thins with height: its depth falls by e every this many km. */
-export const SCALE_HEIGHT_KM = 7;
+const SCALE_HEIGHT_KM = 7;
 /** How much air a proton crosses between collisions with its nuclei, g/cm² (PDG: air). */
-export const INTERACTION_LENGTH = 90.1;
+const INTERACTION_LENGTH = 90.1;
 /** How much air a gamma ray or an electron crosses between its splittings, g/cm² (PDG: air). */
-export const RADIATION_LENGTH = 36.62;
+const RADIATION_LENGTH = 36.62;
 /** Where the drawing begins, km up: where the proton is seen coming in. */
 export const TOP_KM = 30;
 /** Where most carbon-14 is made, km up (the upper troposphere and lower stratosphere). */

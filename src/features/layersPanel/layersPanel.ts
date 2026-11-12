@@ -18,7 +18,7 @@ import { element } from '../../ui/dom';
 import { uiIcon, type UiIcon } from '../../ui/icons';
 import './layersPanel.css';
 
-export interface LayersView {
+interface LayersView {
   readonly layers: ReadonlySet<Layer>;
   readonly borders: BorderSource;
   /** Astronomical year shown. */

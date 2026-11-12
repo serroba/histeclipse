@@ -135,7 +135,7 @@ export function tileKeyOf(heat: DatesHeat, place: GeoPoint): string {
   return `${String(Math.floor(place.latitude / size) * size)}_${String(Math.floor(place.longitude / size) * size)}`;
 }
 
-export interface DatedSample {
+interface DatedSample {
   /** Its cell's south-west corner. */
   readonly latitude: number;
   readonly longitude: number;

@@ -11,7 +11,7 @@ import { element } from './dom';
 import './milestonePanel.css';
 
 /** A milestone counts as near the moment shown within this share of the span shown. */
-export const NEAR_SHARE = 2.5 / 540;
+const NEAR_SHARE = 2.5 / 540;
 
 export interface MilestonePanel {
   readonly root: HTMLElement;

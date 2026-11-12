@@ -25,7 +25,7 @@ export interface EmpireEclipseSources {
   uncertainty(eclipse: Eclipse): number;
 }
 
-export interface Found {
+interface Found {
   readonly year: number;
   readonly eclipse: Eclipse;
   readonly seen: SeenIn;

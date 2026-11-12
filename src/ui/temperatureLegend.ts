@@ -15,7 +15,7 @@ import {
 import { element } from './dom';
 
 /** One model's mean at the moment shown and today, °C; `mean` null beyond its reach. */
-export interface TemperatureReading {
+interface TemperatureReading {
   readonly model: TemperatureModel;
   readonly mean: number | null;
   readonly today: number | null;

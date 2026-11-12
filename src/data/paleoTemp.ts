@@ -46,7 +46,6 @@ const IndexSchema = v.pipe(
 );
 
 export type PaleoTempIndex = v.InferOutput<typeof IndexSchema>;
-export type PaleoTempFrame = PaleoTempIndex['frames'][number];
 
 export async function loadPaleoTempIndex(url: string, fetchJson: Fetch): Promise<PaleoTempIndex> {
   return getJson(fetchJson, url, IndexSchema);

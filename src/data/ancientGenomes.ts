@@ -34,7 +34,7 @@ export async function loadAncientGenomes(url: string, fetchJson: Fetch): Promise
 }
 
 /** Years either side of the year shown that count as "near then". */
-export const GENOME_WINDOW = 250;
+const GENOME_WINDOW = 250;
 
 /** A region's genomes near the year shown. */
 export interface GenomeCell {

@@ -16,7 +16,7 @@ import './seaLevelChart.css';
 const SVG = 'http://www.w3.org/2000/svg';
 
 /** Fixed per source, never by rank. */
-export const SERIES_COLOURS: Readonly<Record<string, string>> = {
+const SERIES_COLOURS: Readonly<Record<string, string>> = {
   'van-der-meer-2022': '#3987e5',
   'miller-2020': '#d95926',
   'bintanja-2008': '#199e70',

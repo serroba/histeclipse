@@ -63,7 +63,7 @@ import {
 import { clamp01, ease as EASE, within } from '../../story/timing';
 
 /** The chapters this scene plays. */
-export type SunChapter = 'fusion' | 'escape' | 'journey';
+type SunChapter = 'fusion' | 'escape' | 'journey';
 
 export interface SunCoreOptions {
   /** Earth's map, the one the globe wears, for the light to arrive at. */

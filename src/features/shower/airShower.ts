@@ -80,7 +80,7 @@ import {
 import { clamp01, ease as EASE } from '../../story/timing';
 
 /** The chapters this scene plays. */
-export type AirChapter = 'rays' | 'shower' | 'capture';
+type AirChapter = 'rays' | 'shower' | 'capture';
 
 export interface AirShowerOptions {
   /** Earth's map, the one the globe wears. */

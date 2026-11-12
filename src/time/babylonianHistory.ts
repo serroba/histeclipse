@@ -16,7 +16,7 @@
  * Years here are the year BCE in which a Babylonian year began (in spring).
  */
 
-export type LeapKind = 'Addaru II' | 'Ululu II';
+type LeapKind = 'Addaru II' | 'Ululu II';
 
 export interface LeapMonth {
   readonly kind: LeapKind;
@@ -25,8 +25,8 @@ export interface LeapMonth {
 }
 
 /** Years BCE from which Parker & Dubberstein's leap months are used: 626–367. */
-export const LEAPS_FROM_BCE = 626;
-export const LEAPS_UNTIL_BCE = 367;
+const LEAPS_FROM_BCE = 626;
+const LEAPS_UNTIL_BCE = 367;
 
 /**
  * Plate I, periods 7–20: for each nineteen-year period (by the year BCE it begins), the years of
@@ -74,7 +74,7 @@ export function leapMonthOf(bce: number): LeapMonth | null | undefined {
 
 // --- Reigns ---------------------------------------------------------------------------------
 
-export interface Reign {
+interface Reign {
   readonly king: string;
   /** The year BCE of his accession year, where it was counted: year 0, before his year 1. */
   readonly accession?: number;
@@ -91,7 +91,7 @@ export interface Reign {
  * A Babylonian year can hold a king's last year and his successors' accession years. From
  * Alexander on, the accession year was dropped: the rest of the year became year 1.
  */
-export const TABLET_REIGNS: readonly Reign[] = [
+const TABLET_REIGNS: readonly Reign[] = [
   { king: 'Nabopolassar', accession: 626, first: 625, last: 605 },
   { king: 'Nebuchadnezzar II', accession: 605, first: 604, last: 562 },
   { king: 'Amel-Marduk', accession: 562, first: 561, last: 560 },

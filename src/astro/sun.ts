@@ -40,7 +40,7 @@ function normalizeLongitude(angle: number): number {
 }
 
 /** Nutation in longitude and true obliquity of the ecliptic, in degrees (Meeus ch. 22). */
-export function nutationAndObliquity(jdTT: JulianDay): {
+function nutationAndObliquity(jdTT: JulianDay): {
   readonly nutationInLongitude: number;
   readonly trueObliquity: number;
 } {

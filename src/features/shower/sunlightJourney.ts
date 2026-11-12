@@ -8,11 +8,11 @@
 /** The speed of light, km/s (exact, by definition of the metre). */
 export const LIGHT_KM_S = 299_792.458;
 /** The astronomical unit, km (exact, IAU 2012): Earth's mean distance from the Sun. */
-export const AU_KM = 149_597_870.7;
+const AU_KM = 149_597_870.7;
 /** The Sun's radius, km (IAU 2015 nominal). */
-export const SUN_RADIUS_KM = 695_700;
+const SUN_RADIUS_KM = 695_700;
 /** Earth's equatorial radius, km (IAU 2015 nominal). */
-export const EARTH_RADIUS_KM = 6378.1;
+const EARTH_RADIUS_KM = 6378.1;
 
 /** How long light takes from the Sun to Earth, s: about 499. */
 export const TRAVEL_S = AU_KM / LIGHT_KM_S;

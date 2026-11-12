@@ -24,7 +24,7 @@ const VectorsIndexSchema = v.strictObject({
   passagesSha256: v.pipe(v.string(), v.regex(/^[0-9a-f]{64}$/)),
   ids: v.array(v.string()),
 });
-export type VectorsIndex = v.InferOutput<typeof VectorsIndexSchema>;
+type VectorsIndex = v.InferOutput<typeof VectorsIndexSchema>;
 
 export interface PassageVectors {
   readonly index: VectorsIndex;

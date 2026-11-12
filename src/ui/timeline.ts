@@ -38,7 +38,7 @@ export type SeenView =
       readonly marks: ReadonlyMap<Eclipse, SeenIn>;
     };
 
-export interface SeenControls {
+interface SeenControls {
   /** Whether to offer the picker: with the empires layer on, or a state already picked. */
   readonly shown: boolean;
   /** States on the map in the year shown, to pick from. */
@@ -55,13 +55,13 @@ const SEEN_WORDS: Record<SeenIn['phase'], string> = {
 };
 
 /** What a chip says about how an eclipse looked from the state picked. */
-export function seenLabel(seen: SeenIn): string {
+function seenLabel(seen: SeenIn): string {
   if (seen.verdict === 'not') return 'not seen';
   if (seen.verdict === 'maybe') return 'maybe seen (ΔT)';
   return `seen, ${SEEN_WORDS[seen.phase]}`;
 }
 
-export interface TimelineView {
+interface TimelineView {
   /** The year in `calendar`; western years are astronomical (0 is 1 BCE). */
   readonly year: number;
   readonly calendar: YearCalendar;

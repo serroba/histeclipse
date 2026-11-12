@@ -44,7 +44,7 @@ const ImpactsSchema = v.strictObject({
 
 export type Impacts = v.InferOutput<typeof ImpactsSchema>;
 export type Impact = Impacts['impacts'][number];
-export type ImpactKind = Impact['kind'];
+type ImpactKind = Impact['kind'];
 
 export async function loadImpacts(url: string, fetchJson: Fetch): Promise<Impacts> {
   return getJson(fetchJson, url, ImpactsSchema);
@@ -89,7 +89,7 @@ export const IMPACTS_MODES: readonly ImpactsMode[] = ['around', 'struck'];
 /** How near its dated age a moment must be for an impact to show around its time, Ma. */
 export const AROUND_MA = 2.5;
 /** An impact dated only to a span wider than this, Ma, is marked as loosely dated. */
-export const WIDE_SPAN_MA = 10;
+const WIDE_SPAN_MA = 10;
 
 /**
  * The impacts to mark `ma` million years ago, where each lay then (or at `placeMa`, for a map of

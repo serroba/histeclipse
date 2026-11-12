@@ -108,11 +108,7 @@ function glowTexture(): CanvasTexture {
 }
 
 /** The direction the impactor came from, as a unit vector in Earth-fixed coordinates. */
-export function approachDirection(
-  place: GeoPoint,
-  fromAzimuth: number,
-  angleDegrees: number,
-): Vector3 {
+function approachDirection(place: GeoPoint, fromAzimuth: number, angleDegrees: number): Vector3 {
   const up = new Vector3(...geoToVector(place)).normalize();
   const pole = new Vector3(0, 1, 0);
   const east = new Vector3().crossVectors(pole, up);

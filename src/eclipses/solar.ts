@@ -54,7 +54,7 @@ function polynomial(coefficients: readonly number[], hours: number): number {
 }
 
 /** Hours from the elements' reference time t0. */
-export function hoursFromT0(elements: BesselianElements, jdTT: JulianDay): number {
+function hoursFromT0(elements: BesselianElements, jdTT: JulianDay): number {
   return (jdTT - elements.t0) * 24;
 }
 

@@ -2,17 +2,9 @@
 
 import * as v from 'valibot';
 
-import {
-  EclipseCatalog,
-  finite,
-  geoPoint,
-  integer,
-  julianDayTT,
-  type CatalogIndex,
-  type Fetch,
-} from './catalog';
+import { EclipseCatalog, finite, geoPoint, integer, julianDayTT, type Fetch } from './catalog';
 
-export { CatalogError, greatestEclipseUT, yearOf, type Fetch } from './catalog';
+export { CatalogError, yearOf, type Fetch } from './catalog';
 
 const LunarEclipseSchema = v.strictObject({
   /** Greatest eclipse, Terrestrial Time. Subtract `deltaT` seconds for Universal Time. */
@@ -29,8 +21,6 @@ const LunarEclipseSchema = v.strictObject({
 });
 
 export type LunarEclipse = v.InferOutput<typeof LunarEclipseSchema>;
-export type LunarEclipseKind = LunarEclipse['kind'];
-export type LunarCatalogIndex = CatalogIndex;
 export type LunarCatalog = EclipseCatalog<LunarEclipse>;
 
 export const LunarCatalog = {

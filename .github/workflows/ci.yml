@@ -37,6 +37,8 @@ jobs:
       - run: pnpm lint
       # Mistakes in the CSS beside each component (#489).
       - run: pnpm lint:css
+      # Unused files, exports and dependencies (#489).
+      - run: pnpm knip
       - run: pnpm typecheck
       - run: pnpm coverage
       - run: pnpm build

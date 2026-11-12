@@ -65,7 +65,7 @@ const DetailsSchema = v.strictObject({
 });
 
 export type Volcanoes = v.InferOutput<typeof VolcanoesSchema>;
-export type Volcano = Volcanoes['volcanoes'][number];
+type Volcano = Volcanoes['volcanoes'][number];
 export type VolcanoDetails = v.InferOutput<typeof DetailsSchema>;
 
 export async function loadVolcanoes(url: string, fetchJson: Fetch): Promise<Volcanoes> {
@@ -99,7 +99,7 @@ export interface VolcanoMark {
 }
 
 /** How near the year shown an eruption's date must be, years, unless its own ± is wider. */
-export const NEAR_YEARS = 25;
+const NEAR_YEARS = 25;
 
 /**
  * The volcanoes with eruptions dated within `NEAR_YEARS` of `year`, or whose dating's ± reaches

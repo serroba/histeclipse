@@ -5,9 +5,9 @@ import { calendarDateOf, julianDay } from './julianDay';
 import { astronomicalYear, type Era } from './year';
 
 /** 9700 BCE, the Holocene's start, as far back as ΔT reaches (astronomical year). */
-export const FIRST_YEAR = -9699;
+const FIRST_YEAR = -9699;
 /** The last year ΔT and the eclipse catalogues reach. */
-export const LAST_YEAR = 3000;
+const LAST_YEAR = 3000;
 
 export interface YearRange {
   readonly min: number;

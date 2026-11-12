@@ -43,7 +43,7 @@ import { choice, type Params } from '../slice';
 export const DISPERSAL_SCENARIOS = ['off', 'a', 'b'] as const;
 export type DispersalScenario = (typeof DISPERSAL_SCENARIOS)[number];
 
-export const MA_RANGE = { min: 0, max: EARTH_AGE_MA } as const;
+const MA_RANGE = { min: 0, max: EARTH_AGE_MA } as const;
 
 export interface DeepState {
   /** Deep time: millions of years ago the globe shows Earth's surface for; null for history. */

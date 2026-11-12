@@ -24,7 +24,7 @@ function svg<K extends keyof SVGElementTagNameMap>(
   return node;
 }
 
-export interface BandSeries {
+interface BandSeries {
   /** Each band: [Ma, low, high] rows, youngest first; the first band is the widest. */
   readonly bands: readonly (readonly (readonly [number, number, number])[])[];
   /** The best value: [Ma, value] rows. */

@@ -41,7 +41,7 @@ export function earthFixedToJ2000(jdUT: JulianDay, jdTT: JulianDay): Matrix3 {
 }
 
 /** Kilometres per astronomical unit (IAU 2012). */
-export const KM_PER_AU = 149_597_870.7;
+const KM_PER_AU = 149_597_870.7;
 
 /** The Sun's geocentric position in km, J2000 equatorial frame (aberration included). */
 export function sunPositionJ2000(jdTT: JulianDay): Vector3 {

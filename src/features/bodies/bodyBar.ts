@@ -10,7 +10,7 @@
 import { element } from '../../ui/dom';
 import './bodyBar.css';
 
-export interface BodyView {
+interface BodyView {
   readonly name: string;
   readonly text: string;
   /** What the body is pictured with, when and by whom; none where nothing need be said. */
@@ -23,7 +23,7 @@ export interface BodyView {
 
 export type BodyKey = HeightKey | RockKey;
 
-export interface HeightKey {
+interface HeightKey {
   /** The colours as a CSS gradient, left to right. */
   readonly gradient: string;
   /** Heights labelled under it: the words, and the share of the way across. */
@@ -32,7 +32,7 @@ export interface HeightKey {
   readonly note: string;
 }
 
-export interface RockKey {
+interface RockKey {
   /** Each kind of rock, the place its colour was read at, and the colour. */
   readonly swatches: readonly {
     readonly kind: string;

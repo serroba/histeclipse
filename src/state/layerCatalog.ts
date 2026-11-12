@@ -243,7 +243,7 @@ interface BorderSpan {
 }
 
 /** Cliopatria's latest year. Its borders then stand for the years since, up to the present. */
-export const CLIOPATRIA_LATEST = 2024;
+const CLIOPATRIA_LATEST = 2024;
 
 /** The years each source of borders covers: Cliopatria 3400 BCE–2024, its files' reach. */
 const BORDER_SPANS: Readonly<Record<'cliopatria' | 'ohm', BorderSpan>> = {

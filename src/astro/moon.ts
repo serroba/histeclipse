@@ -15,7 +15,7 @@ import type { ElpData } from 'astronomia/elp';
 
 import type { JulianDay } from '../time/julianDay';
 import { elementAt } from '../util/arrays';
-import { secularCorrectionAt, type SecularCorrection } from './secularFit';
+import type { SecularCorrection } from './secularFit';
 
 const J2000 = 2_451_545;
 const DAYS_PER_CENTURY = 36_525;
@@ -35,7 +35,7 @@ export interface MoonEphemeris {
 }
 
 /** ELP/MPP02 data with the mean longitude corrected by `correction`. */
-export function correctedData(data: ElpData, correction: SecularCorrection): ElpData {
+function correctedData(data: ElpData, correction: SecularCorrection): ElpData {
   // W1's constant and linear terms stay; the T², T³ and T⁴ terms get the correction.
   return {
     ...data,
@@ -78,5 +78,3 @@ export async function loadMoonEphemeris(): Promise<MoonEphemeris> {
 export function centuriesSinceJ2000(jdTT: number): number {
   return (jdTT - J2000) / DAYS_PER_CENTURY;
 }
-
-export { secularCorrectionAt };

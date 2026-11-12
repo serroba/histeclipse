@@ -51,7 +51,7 @@ interface Disposable {
 }
 
 /** A line in a legend: plain words, or a name (in its colour) and what it is. */
-export type LegendEntry =
+type LegendEntry =
   string | { readonly name: string; readonly about: string; readonly colour?: number };
 
 /** The tools a scene builds itself with. */

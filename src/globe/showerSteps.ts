@@ -65,10 +65,10 @@ export const SUN_STORY: Story = {
  * that make carbon-14 are stiffer (Kovaltsov et al. 2012: half the production is from rays
  * above 4–10 GeV per nucleon, about 5–11 GV for a proton).
  */
-export const LET_IN_GV = 2;
+const LET_IN_GV = 2;
 
 /** How far the carbon dioxide falls toward the equator from where it was made, degrees. */
-export const FALL_DEGREES = 2.9;
+const FALL_DEGREES = 2.9;
 
 /** Where the carbon dioxide reaches the ground: a little toward the equator from `place`. */
 export function landing(place: GeoPoint): GeoPoint {

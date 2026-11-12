@@ -30,7 +30,7 @@ export const BABYLON: GeoPoint = { latitude: 32.5355, longitude: 44.4275 };
 export const DEGREES_PER_CUBIT = 2.2;
 export const FINGERS_PER_CUBIT = 24;
 /** Minutes of time in one UŠ. */
-export const MINUTES_PER_US = 4;
+const MINUTES_PER_US = 4;
 /** Where the Sun's and the Moon's upper limbs touch the horizon, refraction allowed for. */
 const RISING_ALTITUDE = -0.8333;
 const RADIANS = Math.PI / 180;
@@ -111,7 +111,7 @@ export function offsetBetween(
 }
 
 /** Altitude (degrees) of the Sun or Moon's centre above the observer's horizon. */
-export function altitudeOf(sky: TabletSky, body: 'sun' | 'moon', jdUT: JulianDay): number {
+function altitudeOf(sky: TabletSky, body: 'sun' | 'moon', jdUT: JulianDay): number {
   const jdTT = terrestrial(sky, jdUT);
   const [, , up] = apply(horizonMatrix(sky.place, jdUT, jdTT), directionOf(sky, body, jdUT));
   return Math.asin(up) / RADIANS;
@@ -153,7 +153,7 @@ export function nextCrossing(
 }
 
 /** Local midnight beginning a civil date (a fixed day), as a UT Julian Day at the observer. */
-export function localMidnight(sky: TabletSky, fixedDay: number): JulianDay {
+function localMidnight(sky: TabletSky, fixedDay: number): JulianDay {
   return julianDayNumber(fixedDay + 1_721_424.5 - sky.place.longitude / 360);
 }
 

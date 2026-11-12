@@ -37,12 +37,12 @@ const MOST = 1024;
 const COLOUR = 0xb8ac98;
 
 /** An asteroid as the layer draws it: where it is, in scene units, and how wide it is, km. */
-export interface AsteroidDrawn {
+interface AsteroidDrawn {
   readonly at: readonly [number, number, number];
   readonly diameterKm: number;
 }
 
-export interface AsteroidLayer {
+interface AsteroidLayer {
   /** Draw these asteroids; null hides them all. */
   set(asteroids: readonly AsteroidDrawn[] | null): void;
 }
@@ -53,7 +53,7 @@ function sizeClass(diameterKm: number): number {
   return index === -1 ? SIZES.length - 1 : index;
 }
 
-export function createAsteroidLayer(scene: Scene): AsteroidLayer {
+function createAsteroidLayer(scene: Scene): AsteroidLayer {
   const group = new Group();
   group.visible = false;
   scene.add(group);

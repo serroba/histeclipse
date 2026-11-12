@@ -77,7 +77,7 @@ import {
   CRATERS_SHAPES,
 } from './viewState';
 
-export const URL_VERSION = 1;
+const URL_VERSION = 1;
 
 export interface ParseResult {
   readonly state: ViewState;

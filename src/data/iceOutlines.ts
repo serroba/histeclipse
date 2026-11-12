@@ -38,7 +38,7 @@ const OutlinesSchema = v.strictObject({
 
 export type IceOutlineIndex = v.InferOutput<typeof OutlinesSchema>;
 
-export type Ring = readonly (readonly [number, number])[];
+type Ring = readonly (readonly [number, number])[];
 
 /** One time slice's hypotheses, in degrees; a hypothesis the authors did not give is empty. */
 export interface IceOutlines {

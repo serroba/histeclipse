@@ -13,7 +13,7 @@ import type { Shown, WayRegion } from '../data/waysOfLife';
 import type { IceOutlines } from '../data/iceOutlines';
 import { heatLevel, type DateCell } from '../data/radiocarbonDates';
 
-export const EMPIRE_MAP_WIDTH = 4096;
+const EMPIRE_MAP_WIDTH = 4096;
 
 export function createEmpireCanvas(): HTMLCanvasElement {
   const canvas = document.createElement('canvas');

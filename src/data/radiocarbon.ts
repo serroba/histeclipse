@@ -45,7 +45,6 @@ const RadiocarbonSchema = v.strictObject({
 
 export type Radiocarbon = v.InferOutput<typeof RadiocarbonSchema>;
 export type CalibrationCurve = Radiocarbon['curves']['intcal20'];
-export type Hemisphere = keyof Radiocarbon['curves'];
 
 export async function loadRadiocarbon(url: string, fetchJson: Fetch): Promise<Radiocarbon> {
   return getJson(fetchJson, url, RadiocarbonSchema);
