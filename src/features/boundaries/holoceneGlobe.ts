@@ -9,7 +9,7 @@ import { chartDateText } from '../../data/holoceneTemperature';
 import { maOfYear } from '../../data/iceSheets';
 import type { StoryDate } from '../../deepTime/storyDate';
 import { warmingAt, type MeasuredWarming } from '../../data/measuredWarming';
-import type { TemperatureSurface } from '../../globe/scene';
+import type { TemperatureSurface } from '../../globe/surfaces';
 import type { GeoPoint } from '../../core/geo';
 import { roundMa, withLayer, type ViewState } from '../../state/viewState';
 
