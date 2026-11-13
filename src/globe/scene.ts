@@ -46,6 +46,7 @@ import { createSpinAxis, PlacePin } from './earthMarks';
 import { createEarthMeshes, MOON_RGB, plainTexture } from './earthMesh';
 import { EarthOverlays } from './earthOverlays';
 import { CameraRig } from './cameraRig';
+import { delegate } from './delegate';
 import { Stage } from '../stage/stage';
 import { tileLimits } from './tileLimits';
 import './spaceMarkers.css';
@@ -388,6 +389,30 @@ export function createGlobe(
   };
 
   return {
+    // What each part answers as it is (#603).
+    ...delegate(rig, ['setInsets', 'setFocus', 'setViewpoint', 'flyTo', 'zoomTo']),
+    ...delegate(picking, ['onBodyClick', 'onEmptyTap', 'onMarkerPick', 'onPlacePick']),
+    ...delegate(maps, [
+      'showPlanetView',
+      'showMoonView',
+      'setSaturnRings',
+      'sharpenPlanet',
+      'setBodyMap',
+      'setMoonMap',
+    ]),
+    ...delegate(surfaces, [
+      'prefetch',
+      'setEvenLight',
+      'setTemperature',
+      'setShelf',
+      'setIce',
+      'setSeaIce',
+      'setPlates',
+      'setUncharted',
+      'setSketch',
+    ]),
+    ...delegate(playback, ['playImpact', 'playShower', 'controlShower']),
+    ...delegate(overlays, ['setSettled']),
     canvas: renderer.domElement,
     maxTextureSize,
     tileLimits: limits,
@@ -413,77 +438,21 @@ export function createGlobe(
       rig.afterBodiesMove();
       stage.invalidate();
     },
-    setInsets(next) {
-      rig.setInsets(next);
-    },
-    setFocus(body) {
-      rig.setFocus(body);
-    },
-    onBodyClick: (listener) => picking.onBodyClick(listener),
-    onEmptyTap: (listener) => picking.onEmptyTap(listener),
-    showPlanetView: (planet, view) => {
-      maps.showPlanetView(planet, view);
-    },
-    showMoonView: (view) => {
-      maps.showMoonView(view);
-    },
-    setSaturnRings: (url) => {
-      maps.setSaturnRings(url);
-    },
-    sharpenPlanet: (planet) => {
-      maps.sharpenPlanet(planet);
-    },
-    setBodyMap: (body, url) => {
-      maps.setBodyMap(body, url);
-    },
     setC14Glow(profile) {
       c14Glow.set(profile);
       container.dataset['c14Glow'] =
         profile === null ? 'off' : profile.map((value) => value.toFixed(2)).join(' ');
       stage.invalidate();
     },
-    prefetch: (urls) => {
-      surfaces.prefetch(urls);
-    },
-    setEvenLight: (on) => {
-      surfaces.setEvenLight(on);
-    },
     setDeepTime(surface) {
       surfaces.setDeepTime(surface);
       spinAxis.visible = surfaces.deepTime;
       stage.invalidate();
     },
-    setTemperature: (surface) => {
-      surfaces.setTemperature(surface);
-    },
-    setShelf: (surface) => {
-      surfaces.setShelf(surface);
-    },
-    setIce: (surface) => {
-      surfaces.setIce(surface);
-    },
-    setSeaIce: (surface) => {
-      surfaces.setSeaIce(surface);
-    },
-    setPlates: (surface) => {
-      surfaces.setPlates(surface);
-    },
-    setUncharted: (blank) => {
-      surfaces.setUncharted(blank);
-    },
-    setSketch: (sketch) => {
-      surfaces.setSketch(sketch);
-    },
-    setSettled(settled) {
-      overlays.setSettled(settled);
-    },
     addLayer(factory) {
       const layer = factory(host);
       layers.push(layer);
       return layer;
-    },
-    setMoonMap: (moon, url) => {
-      maps.setMoonMap(moon, url);
     },
     setMoonOrbits(orbits) {
       moonSystems.setOrbits(orbits);
@@ -491,32 +460,12 @@ export function createGlobe(
       rig.settleFocus();
       stage.invalidate();
     },
-    onMarkerPick: (listener) => picking.onMarkerPick(listener),
-    onPlacePick: (listener) => picking.onPlacePick(listener),
     setLocation(place) {
       pin.set(place);
       stage.invalidate();
     },
-    setViewpoint(next) {
-      rig.setViewpoint(next);
-    },
-    flyTo(target) {
-      rig.flyTo(target);
-    },
     setCamera(state) {
       rig.place(state);
-    },
-    playImpact: (spec) => {
-      playback.playImpact(spec);
-    },
-    playShower: (spec) => {
-      playback.playShower(spec);
-    },
-    controlShower: (command) => {
-      playback.controlShower(command);
-    },
-    zoomTo(distance) {
-      rig.zoomTo(distance);
     },
     onCameraChange(listener) {
       return rig.onChange(listener);
