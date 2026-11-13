@@ -55,6 +55,25 @@ export function apparentRadiusPixels(options: {
 }
 
 /** A body's marker on screen, in pixels. */
+/** A box on screen, pixels from the top left. */
+export interface Box {
+  readonly x: number;
+  readonly y: number;
+  readonly w: number;
+  readonly h: number;
+}
+
+/** Whether `box` overlaps none of `placed`. */
+export function clearOf(box: Box, placed: readonly Box[]): boolean {
+  return placed.every(
+    (other) =>
+      box.x > other.x + other.w ||
+      other.x > box.x + box.w ||
+      box.y > other.y + other.h ||
+      other.y > box.y + box.h,
+  );
+}
+
 export interface ScreenMarker {
   readonly name: string;
   readonly x: number;

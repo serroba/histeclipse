@@ -57,23 +57,18 @@ import { apply, multiply, transpose, type Matrix3 } from '../astro/matrix';
 import { type Body, type GeoPoint, type GlobeCamera, type Viewpoint } from '../state/viewState';
 import { geoToVector, vectorToGeo, type Vector3Tuple } from './geo';
 import {
-  apparentRadiusPixels,
-  hiddenBehind,
-  mergeMarkers,
   MOON_RADIUS_EARTH_RADII,
   sceneFromKm,
   toScene,
   sceneRotation,
   SUN_RADIUS_EARTH_RADII,
-  type ScreenDisc,
-  type ScreenMarker,
 } from './spaceFrame';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { SOLAR_NORTH_POLE_J2000 } from './sunImage';
 import type { NamedBody } from '../data/planetNames';
 import type { MoonName, MoonOrbits, MoonPlanet } from '../astro/moonOrbits';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
-import { PLANET_NAMES, planetRadius } from './planetLook';
+import { planetRadius } from './planetLook';
 import { isMoonBody, moonsInView } from './moonLook';
 import {
   HISTORY_PAINT_ORDER,
@@ -83,10 +78,9 @@ import {
   type HistoryPainter,
   type LayerFactory,
   type LayerHost,
-  type NameLabel,
-  type SurfaceLabel,
 } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
+import { ScreenLabels, settleSizes } from './screenLabels';
 import { createPaintSlots } from './paintSlots';
 import { assembleEarthParts, checkSamplers, type EarthPart } from './earthParts';
 import { createPlanetMeshes } from './planetMeshes';
@@ -119,14 +113,6 @@ const PIN_HEIGHT = 1.004;
 
 /** A press that moves less than this (pixels) is a click on a body, not a drag. */
 const CLICK_SLOP_PIXELS = 6;
-/** Bodies smaller than this on screen (radius, pixels) get a marker ring. */
-const MARKER_RADIUS_PIXELS = 3;
-/** Bodies larger than this on screen (radius, pixels) are plain to see and go unlabelled. */
-const LABEL_MAX_RADIUS_PIXELS = 60;
-/** Discs at least this large on screen (radius, pixels) hide the markers of planets behind. */
-const OCCLUDING_RADIUS_PIXELS = 10;
-/** Markers closer than this on screen (pixels) are shown as one. */
-const MERGE_PIXELS = 40;
 
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
@@ -495,6 +481,13 @@ export function createGlobe(
   scene.add(sun);
   const planets = createPlanetMeshes(scene);
   const moonSystems = createMoonMeshes(scene);
+  const bodyMeshes: Record<Body, Mesh> = {
+    earth,
+    moon,
+    sun,
+    ...planets.meshes,
+    ...moonSystems.meshes,
+  };
   // Maps asked for, by address; the planets wearing their sharp map; and the bodies sharpened,
   // for whoever needs to know (#258).
   // Each planet's view (#239), its maps by address once fetched, and those close up enough for
@@ -598,9 +591,18 @@ export function createGlobe(
     return [sun, corona, moon, orbits, ...Object.values(planets.meshes)];
   }
 
-  const markerLayer = document.createElement('div');
-  markerLayer.className = 'space-markers';
-  container.append(markerLayer);
+  // What is written over the picture (#379): the bodies' markers, and the layers' names.
+  const labels = new ScreenLabels({
+    container,
+    camera,
+    meshes: bodyMeshes,
+    focus: () => rig.focus,
+    insets: () => rig.insets,
+    requestBody,
+    invalidate: () => {
+      needsRender = true;
+    },
+  });
   // The history map: the layers' parts (rocks, ways, dates, #379) in order, the states over them.
   const historySlots = createPaintSlots<HistoryPainter>(paintHistoryOverlay);
   function paintHistoryOverlay(): void {
@@ -619,8 +621,6 @@ export function createGlobe(
   const markerPickListeners = new Set<(key: string) => void>();
   // The layers added (#379), and what they lay out after each frame: declared before the first.
   const afterRenders: (() => void)[] = [];
-  /** Labels on Earth's surface from the layers, each slot laid out in its priority's place. */
-  const surfaceSlots: { readonly priority: number; labels: readonly SurfaceLabel[] }[] = [];
   const layers: GlobeLayer<never>[] = [];
   /** Taps on `[data-pick]` inside `layer` reach the marker-pick listeners. */
   function pickable(layer: HTMLElement): void {
@@ -649,64 +649,14 @@ export function createGlobe(
     uniforms['overlayMap'] = { value: empiresTexture };
   }
 
-  /** Labels laid out once, unseen, so their real sizes are known for keeping them apart. */
-  function measured(
-    layer: HTMLElement,
-    entries: readonly { readonly element: HTMLElement; readonly point: GeoPoint }[],
-  ): SurfaceLabel[] {
-    const labels = entries.map(({ element, point }) => {
-      element.style.visibility = 'hidden';
-      layer.append(element);
-      return { element, position: new Vector3(...geoToVector(point, 1.01)), width: 0, height: 0 };
-    });
-    settleSizes(labels);
-    return labels;
-  }
-
-  /**
-   * Read every label's size, then hide them all: one layout for the lot. Hiding one between
-   * reads would make the browser lay the page out again for the next, label after label.
-   */
-  function settleSizes(labels: readonly SurfaceLabel[]): void {
-    for (const entry of labels) {
-      entry.width = entry.element.offsetWidth;
-      entry.height = entry.element.offsetHeight;
-    }
-    for (const entry of labels) {
-      entry.element.hidden = true;
-      entry.element.style.visibility = '';
-    }
-  }
-  const markers = {
-    earth: spaceMarker(markerLayer, 'Earth', 'earth'),
-    moon: spaceMarker(markerLayer, 'Moon', 'moon'),
-    sun: spaceMarker(markerLayer, 'Sun', 'sun'),
-    mercury: spaceMarker(markerLayer, PLANET_NAMES.mercury, 'mercury'),
-    venus: spaceMarker(markerLayer, PLANET_NAMES.venus, 'venus'),
-    mars: spaceMarker(markerLayer, PLANET_NAMES.mars, 'mars'),
-    jupiter: spaceMarker(markerLayer, PLANET_NAMES.jupiter, 'jupiter'),
-    saturn: spaceMarker(markerLayer, PLANET_NAMES.saturn, 'saturn'),
-  };
   let earthFixedToJ2000: Matrix3 | null = null;
   // The Sun's frame is J2000, so a camera orbiting the Sun does not spin with Earth.
   const sunFrame = new Quaternion();
   // The Moon's map has longitude 0 at the mesh's +Z (see above); geoToVector puts it at +X.
   const moonMapTurn = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2);
-  const bodyMeshes: Record<Body, Mesh> = {
-    earth,
-    moon,
-    sun,
-    ...planets.meshes,
-    ...moonSystems.meshes,
-  };
   const bodyClickListeners = new Set<(body: Body) => void>();
   const placeListeners = new Set<(place: GeoPoint) => void>();
   const emptyTapListeners = new Set<() => void>();
-  for (const [body, marker] of Object.entries(markers)) {
-    marker.addEventListener('click', () => {
-      requestBody(body as Body);
-    });
-  }
 
   // A click (a press that barely moves) on a body asks to fly to it.
   const raycaster = new Raycaster();
@@ -914,54 +864,14 @@ export function createGlobe(
       const hidden = surfaces.deepTime ? hiddenInDeepTime().filter((object) => object.visible) : [];
       for (const object of hidden) object.visible = false;
       renderer.render(scene, camera);
-      placeMarkers();
+      labels.placeMarkers();
       for (const object of hidden) object.visible = true;
-      placeSurfaceLabels();
+      labels.placeSurfaceLabels();
       showMoonPaths();
       for (const place of afterRenders) place();
       if (earthMapped) container.dataset['rendered'] = 'true';
     }
     frame = requestAnimationFrame(loop);
-  }
-
-  function placeSurfaceLabels(): void {
-    const eye = camera.position.clone().normalize();
-    // Only names on the near side of Earth, and only while it fills enough of the view.
-    const near = rig.focus === 'earth' && camera.position.length() < 12;
-    // Labels come largest first; a smaller state's name gives way where it would overlap.
-    // The larger states' names go before the markers, so a crowd of small counts can't take
-    // their places; the smaller names come after, where room is left (#163).
-    const placed: { x: number; y: number; w: number; h: number }[] = [];
-    // Read once: read after a label is moved, the size makes the browser lay the page out
-    // again, for every label.
-    const viewWidth = container.clientWidth;
-    const viewHeight = container.clientHeight;
-    // The layers' labels (#379), each slot in its place.
-    const slots = [...surfaceSlots].sort((a, b) => a.priority - b.priority);
-    for (const { element, position, width, height } of slots.flatMap(({ labels }) => labels)) {
-      projected.copy(position).project(camera);
-      const shown =
-        near && position.dot(eye) > 0.25 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1;
-      const x = ((projected.x + 1) / 2) * viewWidth;
-      const centre = ((1 - projected.y) / 2) * viewHeight;
-      // Where it would overlap, a name may move a line up or down before it gives way.
-      const y = [0, -1, 1, -2, 2]
-        .map((step) => centre + step * height)
-        .find((candidate) => {
-          const box = { x: x - width / 2, y: candidate - height / 2, w: width, h: height };
-          return placed.every(
-            (other) =>
-              box.x > other.x + other.w ||
-              other.x > box.x + box.w ||
-              box.y > other.y + other.h ||
-              other.y > box.y + box.h,
-          );
-        });
-      element.hidden = !shown || y === undefined;
-      if (y === undefined || element.hidden) continue;
-      placed.push({ x: x - width / 2, y: y - height / 2, w: width, h: height });
-      element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(-50%, -50%)`;
-    }
   }
 
   /** Where a named body is, how it is turned, and its radius, in the scene's units. */
@@ -983,123 +893,10 @@ export function createGlobe(
     };
   }
 
-  /** Show each name, in order, where it is on screen, clear of the panels and of those shown. */
-  function layOutNames(
-    names: readonly { readonly scene: Vector3; readonly label: NameLabel | undefined }[],
-    layer: HTMLElement,
-  ): void {
-    const viewWidth = container.clientWidth;
-    const viewHeight = container.clientHeight;
-    const placed: { x: number; y: number; w: number; h: number }[] = [];
-    let count = 0;
-    for (const { scene: at, label } of names) {
-      if (label === undefined) continue;
-      projected.copy(at).project(camera);
-      const x = ((projected.x + 1) / 2) * viewWidth;
-      const y = ((1 - projected.y) / 2) * viewHeight;
-      const box = { x, y: y - label.height / 2, w: label.width, h: label.height };
-      const visible =
-        projected.z < 1 &&
-        box.x >= 0 &&
-        box.x + box.w <= viewWidth &&
-        // Clear of the panels above and below the view, where a name could not be tapped.
-        box.y >= rig.insets.top &&
-        box.y + box.h <= viewHeight - rig.insets.bottom &&
-        placed.every(
-          (other) =>
-            box.x > other.x + other.w ||
-            other.x > box.x + box.w ||
-            box.y > other.y + other.h ||
-            other.y > box.y + box.h,
-        );
-      label.element.hidden = !visible;
-      if (!visible) continue;
-      placed.push(box);
-      count += 1;
-      label.element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(0, -50%)`;
-    }
-    layer.dataset['named'] = String(count);
-  }
-
   /** Draw the paths of the moons of the planet in view, or of the moon in view's planet. */
   function showMoonPaths(): void {
     moonSystems.showPaths(moonsInView(rig.focus));
     container.dataset['moonPaths'] = String(moonSystems.pathsShown());
-  }
-
-  const projected = new Vector3();
-  function placeMarkers(): void {
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    const bodies = [
-      { marker: markers.earth, mesh: earth, radius: 1, shown: true, name: 'Earth' },
-      {
-        marker: markers.moon,
-        mesh: moon,
-        radius: MOON_RADIUS_EARTH_RADII,
-        shown: moon.visible,
-        name: 'Moon',
-      },
-      {
-        marker: markers.sun,
-        mesh: sun,
-        radius: SUN_RADIUS_EARTH_RADII,
-        shown: sun.visible,
-        name: 'Sun',
-      },
-      ...PLANETS.map((planet) => ({
-        marker: markers[planet],
-        mesh: bodyMeshes[planet],
-        radius: planetRadius(planet),
-        shown: bodyMeshes[planet].visible,
-        name: PLANET_NAMES[planet],
-      })),
-    ];
-    const onScreen: (ScreenMarker & { readonly marker: HTMLElement })[] = [];
-    const discs: ScreenDisc[] = [];
-    for (const { marker, mesh, radius, shown, name } of bodies) {
-      projected.copy(mesh.position).project(camera);
-      const distance = camera.position.distanceTo(mesh.position);
-      // Only bodies in front of the camera get a marker.
-      const visible =
-        shown && projected.z < 1 && Math.abs(projected.x) < 1.2 && Math.abs(projected.y) < 1.2;
-      marker.hidden = !visible;
-      if (!visible) continue;
-      const pixels = apparentRadiusPixels({
-        radius,
-        distance,
-        verticalFovDegrees: camera.fov,
-        viewportHeight: height,
-      });
-      const x = ((projected.x + 1) / 2) * width;
-      const y = ((1 - projected.y) / 2) * height;
-      discs.push({ name, x, y, distance, radius: pixels });
-      // A body that fills much of the view needs no label.
-      if (pixels > LABEL_MAX_RADIUS_PIXELS) {
-        marker.hidden = true;
-        continue;
-      }
-      marker.classList.toggle('is-tiny', pixels < MARKER_RADIUS_PIXELS);
-      marker.style.setProperty('--radius', `${String(Math.max(pixels, MARKER_RADIUS_PIXELS))}px`);
-      marker.style.transform = `translate(${String(x)}px, ${String(y)}px)`;
-      onScreen.push({ marker, name, x, y });
-    }
-    // Planets behind a nearer body's disc get no marker. Earth, Moon and Sun always keep
-    // theirs: they are how you click your way back. From far out bodies line up on screen,
-    // and one marker for them reads better than several.
-    const planetNames = new Set<string>(Object.values(PLANET_NAMES));
-    const behind = new Set(
-      [...hiddenBehind(discs, OCCLUDING_RADIUS_PIXELS)].filter((name) => planetNames.has(name)),
-    );
-    const labels = mergeMarkers(
-      onScreen.filter(({ name }) => !behind.has(name)),
-      MERGE_PIXELS,
-    );
-    for (const { marker, name } of onScreen) {
-      const label = labels.get(name) ?? null;
-      marker.hidden = label === null;
-      if (label !== null) setLabel(marker, label);
-    }
   }
 
   const observer = new ResizeObserver(resize);
@@ -1130,41 +927,12 @@ export function createGlobe(
     afterRender(place) {
       afterRenders.push(place);
     },
-    layOutNames,
+    layOutNames: labels.layOutNames,
     pickable,
     deepPaint: (order) => deepSlots.add(order),
     historyPaint: (order) => historySlots.add(order),
-    surfaceLabels(priority, layer) {
-      const slot: (typeof surfaceSlots)[number] = { priority, labels: [] };
-      surfaceSlots.push(slot);
-      return {
-        show(pins) {
-          layer.replaceChildren();
-          slot.labels = pins === null ? [] : measured(layer, pins);
-          // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-          placeSurfaceLabels();
-          needsRender = true;
-        },
-        move(points) {
-          points.forEach((point, index) => {
-            slot.labels[index]?.position.set(...geoToVector(point, 1.01));
-          });
-          placeSurfaceLabels();
-          needsRender = true;
-        },
-      };
-    },
-    surfaceSlot(priority) {
-      const slot: (typeof surfaceSlots)[number] = { priority, labels: [] };
-      surfaceSlots.push(slot);
-      return {
-        set(labels) {
-          slot.labels = labels;
-          placeSurfaceLabels();
-          needsRender = true;
-        },
-      };
-    },
+    surfaceLabels: labels.surfaceLabels,
+    surfaceSlot: labels.surfaceSlot,
     measure: settleSizes,
     maxAnisotropy: renderer.capabilities.getMaxAnisotropy(),
     showSunImage(image) {
@@ -1550,26 +1318,8 @@ export function createGlobe(
       shower?.dispose();
       for (const impact of impacts) impact.dispose();
       for (const layer of layers) layer.dispose?.();
-      markerLayer.remove();
+      labels.dispose();
       renderer.domElement.remove();
     },
   };
-}
-
-function setLabel(marker: HTMLElement, name: string): void {
-  const label = marker.querySelector('span');
-  if (label !== null && label.textContent !== name) label.textContent = name;
-}
-
-/** A ring and name marking where a body is; sized to the body, never smaller than a dot. */
-function spaceMarker(layer: HTMLElement, name: string, body: string): HTMLElement {
-  const marker = document.createElement('div');
-  marker.className = `space-marker is-${body}`;
-  marker.dataset['body'] = body;
-  marker.hidden = true;
-  const label = document.createElement('span');
-  label.textContent = name;
-  marker.append(label);
-  layer.append(marker);
-  return marker;
 }

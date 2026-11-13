@@ -27,7 +27,7 @@ import type { Body } from '../state/viewState';
 export type Triple = readonly [number, number, number];
 
 /** A name on screen that a tap picks, measured once. */
-export interface NameLabel {
+interface NameLabel {
   readonly element: HTMLButtonElement;
   readonly width: number;
   readonly height: number;

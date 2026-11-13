@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { apply, rotationZ, type Vector3 } from '../astro/matrix';
 import { geoToVector } from './geo';
 import {
+  clearOf,
   hiddenBehind,
   apparentRadiusPixels,
   attachedPose,
@@ -216,5 +217,20 @@ describe('bodies hidden behind others', () => {
       10,
     );
     expect([...hidden]).toEqual(['Saturn']);
+  });
+});
+
+describe('boxes kept clear on screen', () => {
+  const box = { x: 10, y: 10, w: 20, h: 10 };
+  it('is clear of nothing placed, and of boxes beside, above or below', () => {
+    expect(clearOf(box, [])).toBe(true);
+    expect(clearOf(box, [{ x: 31, y: 10, w: 5, h: 5 }])).toBe(true);
+    expect(clearOf(box, [{ x: 0, y: 0, w: 9, h: 40 }])).toBe(true);
+    expect(clearOf(box, [{ x: 10, y: 21, w: 20, h: 5 }])).toBe(true);
+    expect(clearOf(box, [{ x: 10, y: 0, w: 20, h: 9 }])).toBe(true);
+  });
+  it('is not clear of a box it overlaps, or one it touches', () => {
+    expect(clearOf(box, [{ x: 25, y: 15, w: 20, h: 10 }])).toBe(false);
+    expect(clearOf(box, [{ x: 30, y: 10, w: 5, h: 5 }])).toBe(false);
   });
 });
