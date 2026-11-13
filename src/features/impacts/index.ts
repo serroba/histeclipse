@@ -12,7 +12,7 @@ import {
   type ImpactsMode,
 } from '../../data/impacts';
 import { impactLayer } from './impactLayer';
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { ViewState } from '../../state/viewState';
 import type { DeepTimeView } from '../../ui/deepTimeBar';
 import type { MarkerCardContent } from '../../ui/markerCard';

@@ -16,7 +16,7 @@ import {
   type PlanetEphemeris,
   type PlanetName,
 } from '../../astro/planets';
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { SkyPlanet } from '../../sky/skyScene';
 import type { ViewState } from '../../state/viewState';
 import type { JulianDay } from '../../time/julianDay';

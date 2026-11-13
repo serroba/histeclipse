@@ -4,7 +4,7 @@
  * turned on.
  */
 
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import type { WaysLegend } from '../../ui/waysLegend';
 import { waysLayer } from '../../globe/historyPaintLayers';

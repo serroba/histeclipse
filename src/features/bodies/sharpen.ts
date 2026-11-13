@@ -8,7 +8,7 @@
 import { loadEarthTiles } from '../../data/earthTiles';
 import { isMoonBody } from '../../globe/moonLook';
 import { EARTH_TILES, SHARP_MAPS } from '../../globe/planetLook';
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { ViewState } from '../../state/viewState';
 import type { Fetch } from '../../util/fetchJson';
 

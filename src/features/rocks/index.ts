@@ -4,7 +4,7 @@
  * Their file loads the first time the layer is turned on.
  */
 
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import { RESTING } from '../feature';
 import { rocksLayer } from '../../globe/historyPaintLayers';

@@ -8,7 +8,7 @@
 
 import { loadMeasuredWarming, type MeasuredWarming } from '../../data/measuredWarming';
 import type { StoryDate } from '../../deepTime/storyDate';
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import { errorMessage } from '../../util/errors';
 import { createBoundariesSheet } from './boundariesSheet';
 import type { MountedPart, PartContext } from '../part';

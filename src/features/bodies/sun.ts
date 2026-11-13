@@ -4,7 +4,7 @@
  */
 
 import { loadSunImages, type SunImages } from '../../data/sunImages';
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { ViewState } from '../../state/viewState';
 import { createSunSwitch } from './sunSwitch';
 import { sunImageLayer } from './sunImageLayer';

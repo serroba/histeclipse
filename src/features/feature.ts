@@ -12,7 +12,7 @@
 import type { MoonEphemeris } from '../astro/moon';
 import type { PlanetEphemeris } from '../astro/planets';
 import type { Fetch } from '../util/fetchJson';
-import type { Globe } from '../globe/scene';
+import type { Globe } from '../globe/globe';
 import type { DeepScale, Layer, ViewState } from '../state/viewState';
 import type { LineageGroup } from '../data/lineages';
 import type { TreeOfLife } from '../data/treeOfLife';

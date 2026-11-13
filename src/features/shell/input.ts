@@ -5,7 +5,7 @@
  */
 
 import { eclipseMomentAt, isSolar } from '../../eclipses/describe';
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import { phoneLook } from '../../sky/aim';
 import type { Store } from '../../state/store';
 import { DEFAULT_LOOK, type GeoPoint, type SkyLook, type ViewState } from '../../state/viewState';

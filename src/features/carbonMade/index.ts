@@ -6,7 +6,7 @@
 
 import { dipoleAt, loadDipole, type DipoleSeries } from '../../data/dipoleMoment';
 import { DATABLE_YEARS } from '../../data/radiocarbonProduction';
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import { CARBON_LIMIT } from '../../state/layerCatalog';
 import type { ViewState } from '../../state/viewState';
 import { createCarbonMadeCard, glowOf, THEN_ID, THEN_UNKNOWN, thenField } from './carbonMadeCard';

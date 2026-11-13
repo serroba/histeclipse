@@ -6,7 +6,7 @@
 
 import { onLand, type ElevationGrid } from '../../data/landSea';
 import { loadShelf } from '../../data/shelf';
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { ShowerState } from '../../globe/showerAnimation';
 import {
   captionOf,

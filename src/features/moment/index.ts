@@ -4,7 +4,7 @@
  * Moon and the planets placed for the moment. Where the observer stands is `observer.ts`.
  */
 
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import type { PlanetName } from '../../astro/planets';
 import { type MoonEphemeris } from '../../astro/moon';
