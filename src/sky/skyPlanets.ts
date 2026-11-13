@@ -22,14 +22,14 @@ import { skyLabel } from './skyLabels';
 import { STAR_FRAGMENT, STAR_VERTEX } from './skyShaders';
 
 /** Planet colours as the eye sees them: Mars ruddy, Saturn pale gold, the rest near white. */
-const PLANET_COLOURS: Readonly<Record<string, readonly [number, number, number]>> = {
-  Mercury: [1, 0.95, 0.88],
-  Venus: [1, 0.98, 0.9],
-  Mars: [1, 0.62, 0.42],
-  Jupiter: [1, 0.96, 0.86],
-  Saturn: [1, 0.9, 0.68],
-};
-const PLANET_NAMES = Object.keys(PLANET_COLOURS);
+const PLANET_COLOURS: readonly (readonly [string, readonly [number, number, number]])[] = [
+  ['Mercury', [1, 0.95, 0.88]],
+  ['Venus', [1, 0.98, 0.9]],
+  ['Mars', [1, 0.62, 0.42]],
+  ['Jupiter', [1, 0.96, 0.86]],
+  ['Saturn', [1, 0.9, 0.68]],
+];
+const PLANET_NAMES = PLANET_COLOURS.map(([name]) => name);
 /** Planets nearer than this on screen, in pixels, share a name. */
 const SHARED_NAME_PIXELS = 24;
 
@@ -77,9 +77,7 @@ export class SkyPlanets {
     readonly dataset: DOMStringMap;
   }) {
     this.#dataset = world.dataset;
-    const colours = new Float32Array(
-      PLANET_NAMES.flatMap((name) => [...(PLANET_COLOURS[name] ?? [1, 1, 1])]),
-    );
+    const colours = new Float32Array(PLANET_COLOURS.flatMap(([, colour]) => [...colour]));
     const geometry = new BufferGeometry();
     geometry.setAttribute('position', this.#positionAttribute);
     geometry.setAttribute('color', new BufferAttribute(colours, 3));
@@ -113,10 +111,9 @@ export class SkyPlanets {
     // A planet behind the Moon's or the Sun's disc is hidden, point and name.
     const covers = (body: Vec3 | null, radiusKm: number, direction: Vec3): boolean =>
       body !== null && angleBetween(body, direction) < angularRadius(radiusKm, body);
-    PLANET_NAMES.forEach((name, index) => {
-      const planet = planets.find((entry) => entry.name === name);
-      const entry = this.labels[index];
-      if (entry === undefined) return;
+    this.labels.forEach((entry, index) => {
+      const { name } = entry;
+      const planet = planets.find((each) => each.name === name);
       if (planet === undefined) {
         this.#magnitudes[index] = 99;
         entry.shown = false;

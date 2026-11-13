@@ -20,7 +20,6 @@ import {
   BufferAttribute,
   BufferGeometry,
   Color,
-  LineSegments,
   Mesh,
   type Object3D,
   PerspectiveCamera,
@@ -47,15 +46,7 @@ import {
   horizontal,
   limitingMagnitude,
 } from './horizon';
-import {
-  COMPASS,
-  figureSegments,
-  lookBetween,
-  lookDirection,
-  type Figure,
-  roundLook,
-  shownConstellations,
-} from './look';
+import { COMPASS, lookBetween, lookDirection, type Figure, roundLook } from './look';
 import {
   CLIP_COS,
   pixelsPerDegree,
@@ -65,7 +56,7 @@ import {
   type ProjectionFrame,
   toPixels,
 } from './projection';
-import { createSkyLabelLayer, overlaps, skyLabel } from './skyLabels';
+import { createSkyLabelLayer, skyLabel } from './skyLabels';
 import {
   lookDirectionAt,
   STAR_RADIUS,
@@ -73,6 +64,7 @@ import {
   SUN_DISTANCE,
   toScene,
 } from './skyFrame';
+import { SkyFigures } from './skyFigures';
 import { SkyMoon } from './skyMoon';
 import { SkyPlanets, type SkyPlanet } from './skyPlanets';
 import { starColor } from './starColor';
@@ -81,8 +73,6 @@ import {
   GLOW_FRAGMENT,
   GLOW_VERTEX,
   GROUND_FRAGMENT,
-  LINE_FRAGMENT,
-  LINE_VERTEX,
   SKY_FRAGMENT,
   STAR_FRAGMENT,
   STAR_VERTEX,
@@ -156,8 +146,6 @@ export interface SkyScene {
 
 /** The proper-motion positions only need recomputing after this many days. */
 const MOTION_STEP_DAYS = 365.25;
-/** Each figure line is drawn in this many pieces, so it can follow its curve on screen. */
-const LINE_PIECES = 8;
 
 export function createSkyScene(
   container: HTMLElement,
@@ -236,22 +224,6 @@ export function createSkyScene(
   stars.frustumCulled = false;
   stars.renderOrder = 1;
 
-  const lineOpacity = { value: 0.35 };
-  const lineGeometry = new BufferGeometry();
-  const lines = new LineSegments(
-    lineGeometry,
-    new ShaderMaterial({
-      uniforms: { ...projection, opacity: lineOpacity },
-      vertexShader: LINE_VERTEX,
-      fragmentShader: LINE_FRAGMENT,
-      transparent: true,
-      depthTest: false,
-      depthWrite: false,
-    }),
-  );
-  lines.frustumCulled = false;
-  lines.renderOrder = 2;
-
   const sunRadius = SUN_DISTANCE * Math.tan(SUN_ANGULAR_RADIUS);
   const sun = new Mesh(
     // Fine enough to stay round when the view closes in on it.
@@ -327,10 +299,27 @@ export function createSkyScene(
     labelLayer,
     dataset: container.dataset,
   });
+  // Labels: the compass along the horizon, and the names of the figures drawn.
+  let markLabels: { label: HTMLElement; position: Vector3 }[] = [];
+  const compassLabels = COMPASS.map(([name, azimuth]) => {
+    const label = skyLabel(labelLayer, name, 'is-compass');
+    const position = new Vector3(...toScene(lookDirectionAt(azimuth, 0))).multiplyScalar(40);
+    return { label, position };
+  });
+  const figures = new SkyFigures({
+    projection,
+    labelLayer,
+    stars: starPositions,
+    modern: sky.constellations,
+    figures: options.figures,
+    invalidate: () => {
+      stage.invalidate();
+    },
+  });
   const everything: Object3D[] = [
     dome,
     stars,
-    lines,
+    figures.lines,
     planets.points,
     sun,
     sunGlow,
@@ -342,49 +331,7 @@ export function createSkyScene(
   for (const object of everything) object.frustumCulled = false;
   scene.add(...everything);
 
-  // Labels: the compass along the horizon, and the names of the figures drawn.
-  let markLabels: { label: HTMLElement; position: Vector3 }[] = [];
-  const compassLabels = COMPASS.map(([name, azimuth]) => {
-    const label = skyLabel(labelLayer, name, 'is-compass');
-    const position = new Vector3(...toScene(lookDirectionAt(azimuth, 0))).multiplyScalar(40);
-    return { label, position };
-  });
-  // The figures in use: the modern constellations, or another culture's.
-  let catalogue: readonly Figure[] = sky.constellations;
-  let nameLabels = makeNameLabels();
-  let namesBySize = bySize();
-  function bySize(): { label: HTMLElement; position: Vector3 }[] {
-    return [...nameLabels.values()].sort(
-      (a, b) => b.figure.lines.flat().length - a.figure.lines.flat().length,
-    );
-  }
-  function makeNameLabels(): Map<
-    number,
-    { figure: Figure; label: HTMLElement; position: Vector3 }
-  > {
-    return new Map(
-      catalogue.map((figure, index) => [
-        // Serpens is named twice under one id, so key by position in the list.
-        index,
-        {
-          figure,
-          label: skyLabel(
-            labelLayer,
-            figure.native === undefined || figure.native === ''
-              ? figure.name
-              : `${figure.name} · ${figure.native}`,
-            'is-constellation',
-          ),
-          position: new Vector3(),
-        },
-      ]),
-    );
-  }
-
   let look = options.look;
-  let figures = options.figures;
-  let shown: readonly Figure[] = [];
-  let segments: [number, number][] = [];
   let visible = false;
   // Earth's velocity at the moment shown, for annual aberration.
   let motion: Vec3 = [0, 0, 0];
@@ -430,56 +377,6 @@ export function createSkyScene(
       );
       starJ2000.set(direction, index * 3);
     }
-  }
-
-  function rebuildFigures(): void {
-    shown = shownConstellations(catalogue, figures);
-    segments = figureSegments(shown);
-    lineGeometry.setAttribute(
-      'position',
-      new BufferAttribute(new Float32Array(segments.length * LINE_PIECES * 6), 3),
-    );
-    placeFigures();
-  }
-
-  function placeFigures(): void {
-    const attribute = lineGeometry.getAttribute('position');
-    if (!(attribute instanceof BufferAttribute)) return;
-    const target = attribute.array;
-    // Straight lines between stars curve on a stereographic view, so each is drawn in pieces
-    // along its chord; the shader puts every point back on the sphere.
-    segments.forEach(([from, to], index) => {
-      for (let piece = 0; piece < LINE_PIECES; piece++) {
-        const base = (index * LINE_PIECES + piece) * 6;
-        for (const [offset, t] of [
-          [0, piece / LINE_PIECES],
-          [3, (piece + 1) / LINE_PIECES],
-        ] as const) {
-          for (let axis = 0; axis < 3; axis++) {
-            const a = starPositions[from * 3 + axis] ?? 0;
-            const b = starPositions[to * 3 + axis] ?? 0;
-            target[base + offset + axis] = a + (b - a) * t;
-          }
-        }
-      }
-    });
-    attribute.needsUpdate = true;
-    // Names sit at the middle of their figure's stars, so they travel with them.
-    for (const { figure, position } of nameLabels.values()) {
-      position.set(0, 0, 0);
-      for (const star of figure.lines.flat()) {
-        position.x += starPositions[star * 3] ?? 0;
-        position.y += starPositions[star * 3 + 1] ?? 0;
-        position.z += starPositions[star * 3 + 2] ?? 0;
-      }
-      if (position.lengthSq() > 0) position.setLength(40);
-    }
-    for (const entry of nameLabels.values()) {
-      entry.label.dataset['shown'] = String(
-        shown.includes(entry.figure) && entry.figure.lines.length > 0,
-      );
-    }
-    stage.invalidate();
   }
 
   function applyLook(): void {
@@ -552,27 +449,16 @@ export function createSkyScene(
       placeLabel(label, position, shown, width, height);
     }
     planets.shareNames(screenPoint, width, height);
-    for (const { label, position } of namesBySize) {
-      // Names of figures low in the haze or below the horizon are left out.
-      const show = label.dataset['shown'] === 'true' && position.y > 40 * 0.03;
-      placeLabel(label, position, show, width, height);
-    }
-    const candidates = namesBySize.filter(({ label }) => label.hidden === false);
-    const boxes = candidates.map(({ label }) => label.getBoundingClientRect());
-    // Planets keep their names; then bigger figures first. A name that would overlap one
-    // already placed is left out.
-    const placed: DOMRect[] = planets.labels
-      .filter(({ label }) => label.hidden === false)
-      .map(({ label }) => label.getBoundingClientRect());
-    candidates.forEach(({ label }, index) => {
-      const box = boxes[index];
-      if (box === undefined) return;
-      if (placed.some((other) => overlaps(box, other))) {
-        label.hidden = true;
-      } else {
-        placed.push(box);
-      }
-    });
+    figures.placeNames(
+      (label, position, show) => {
+        placeLabel(label, position, show, width, height);
+      },
+      // Planets keep their names: a figure's name that would overlap one is left out.
+      () =>
+        planets.labels
+          .filter(({ label }) => label.hidden === false)
+          .map(({ label }) => label.getBoundingClientRect()),
+    );
   }
 
   stage.add({
@@ -645,7 +531,6 @@ export function createSkyScene(
   });
 
   stage.observeResize();
-  rebuildFigures();
   applyLook();
 
   return {
@@ -702,7 +587,7 @@ export function createSkyScene(
           seen++;
       }
       starPositionAttribute.needsUpdate = true;
-      placeFigures();
+      figures.place();
 
       const [sx, sy, sz] = toScene(sunSeen);
       sunDirection.value.set(sx, sy, sz);
@@ -719,8 +604,7 @@ export function createSkyScene(
       moon.place({ horizon, sunJ2000, moonJ2000, sunHere, moonHere, sunHigh, motion });
       container.dataset['sunVisible'] = sunShare.toFixed(4);
       starUniforms.limit.value = limit;
-      // Figures stay faintly visible by day, as a guide to where things are.
-      lineOpacity.value = 0.12 + 0.28 * (1 - Math.min(1, Math.max(0, (sunHigh + 18) / 18)));
+      figures.setSunAltitude(sunHigh);
       container.dataset['sunAltitude'] = sunHigh.toFixed(2);
       container.dataset['starsSeen'] = String(seen);
       planets.place({
@@ -750,18 +634,10 @@ export function createSkyScene(
       });
     },
     setFigures(next) {
-      if (next === figures) return;
-      figures = next;
-      rebuildFigures();
+      figures.setFigures(next);
     },
     setCulture(next) {
-      const wanted = next ?? sky.constellations;
-      if (wanted === catalogue) return;
-      catalogue = wanted;
-      for (const { label } of nameLabels.values()) label.remove();
-      nameLabels = makeNameLabels();
-      namesBySize = bySize();
-      rebuildFigures();
+      figures.setCulture(next);
     },
     setMarks(marks) {
       for (const { label } of markLabels) label.remove();
