@@ -21,7 +21,7 @@ import type { Figures, SkyLook } from '../state/viewState';
 import type { JulianDay } from '../time/julianDay';
 import { eclipsedLimit, sunVisible, topocentric } from './bodies';
 import { aberrate, apparentDirection, horizontal, limitingMagnitude } from './horizon';
-import { COMPASS, lookBetween, lookDirection, type Figure, roundLook } from './look';
+import { lookBetween, lookDirection, type Figure, roundLook } from './look';
 import {
   CLIP_COS,
   pixelsPerDegree,
@@ -31,11 +31,12 @@ import {
   type ProjectionFrame,
   toPixels,
 } from './projection';
-import { createSkyLabelLayer, skyLabel } from './skyLabels';
-import { lookDirectionAt, toScene } from './skyFrame';
+import { createSkyLabelLayer } from './skyLabels';
+import { toScene } from './skyFrame';
 import { SkyFigures } from './skyFigures';
 import { SkyMoon } from './skyMoon';
 import { SkyPlanets, type SkyPlanet } from './skyPlanets';
+import { SkyNames, type SkyMark } from './skyNames';
 import { SkyStars } from './skyStars';
 import { pickBody, type SkyBody, type SkyTap } from './skyTap';
 import { SkySun } from './skySun';
@@ -62,13 +63,7 @@ export type { SkyPlanet } from './skyPlanets';
 
 export type { SkyBody, SkyTap } from './skyTap';
 
-/** A body to point out, by name, where it stands. */
-export interface SkyMark {
-  readonly name: string;
-  /** Degrees from north through east, and above the horizon. */
-  readonly azimuth: number;
-  readonly altitude: number;
-}
+export type { SkyMark } from './skyNames';
 
 export interface SkyScene {
   setVisible(visible: boolean): void;
@@ -141,13 +136,7 @@ export function createSkyScene(
     labelLayer,
     dataset: container.dataset,
   });
-  // Labels: the compass along the horizon, and the names of the figures drawn.
-  let markLabels: { label: HTMLElement; position: Vector3 }[] = [];
-  const compassLabels = COMPASS.map(([name, azimuth]) => {
-    const label = skyLabel(labelLayer, name, 'is-compass');
-    const position = new Vector3(...toScene(lookDirectionAt(azimuth, 0))).multiplyScalar(40);
-    return { label, position };
-  });
+  const names = new SkyNames({ layer: labelLayer, screenPoint, dataset: container.dataset });
   const figures = new SkyFigures({
     projection,
     labelLayer,
@@ -231,53 +220,14 @@ export function createSkyScene(
     inView.copy(position).applyMatrix4(camera.matrixWorldInverse);
     return project(view, [inView.x, inView.y, inView.z]);
   }
-  function placeLabel(
-    label: HTMLElement,
-    position: Vector3,
-    show: boolean,
-    width: number,
-    height: number,
-  ): void {
-    const ndc = show ? screenPoint(position) : null;
-    const onScreen = ndc !== null && Math.abs(ndc[0]) < 1.1 && Math.abs(ndc[1]) < 1.1;
-    label.hidden = !onScreen;
-    if (!onScreen) return;
-    const [x, y] = toPixels(ndc, width, height);
-    label.style.transform = `translate(${String(x)}px, ${String(y)}px)`;
-  }
-
   function placeLabels(): void {
-    // Writes, then one read pass, then writes: the browser lays the page out once a frame.
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    for (const { label, position } of compassLabels) {
-      placeLabel(label, position, true, width, height);
-    }
-    // Where the Sun's disc is on screen, in pixels, for whoever needs to find it.
-    const sunAt = sun.disc.visible ? screenPoint(sun.disc.position) : null;
-    container.dataset['sunAt'] =
-      sunAt === null
-        ? 'off'
-        : toPixels(sunAt, width, height)
-            .map((v) => v.toFixed(0))
-            .join(',');
-    for (const { label, position } of markLabels) {
-      placeLabel(label, position, true, width, height);
-    }
-    for (const { label, position, shown } of planets.labels) {
-      placeLabel(label, position, shown, width, height);
-    }
-    planets.shareNames(screenPoint, width, height);
-    figures.placeNames(
-      (label, position, show) => {
-        placeLabel(label, position, show, width, height);
-      },
-      // Planets keep their names: a figure's name that would overlap one is left out.
-      () =>
-        planets.labels
-          .filter(({ label }) => label.hidden === false)
-          .map(({ label }) => label.getBoundingClientRect()),
-    );
+    names.place({
+      width: container.clientWidth,
+      height: container.clientHeight,
+      sun: sun.disc.visible ? sun.disc.position : null,
+      planets,
+      figures,
+    });
   }
 
   stage.add({
@@ -420,11 +370,7 @@ export function createSkyScene(
       figures.setCulture(next);
     },
     setMarks(marks) {
-      for (const { label } of markLabels) label.remove();
-      markLabels = marks.map(({ name, azimuth, altitude }) => ({
-        label: skyLabel(labelLayer, name, 'is-mark'),
-        position: new Vector3(...toScene(lookDirectionAt(azimuth, altitude))).multiplyScalar(40),
-      }));
+      names.setMarks(marks);
       placeLabels();
     },
     setInsets(top, bottom) {
