@@ -619,7 +619,7 @@ def amoc(args: Arguments) -> int:  # pragma: no cover - needs network access
 
 
 def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs network access
-    """Write measured land warming since 1850 (Berkeley Earth) as small images."""
+    """Write measured warming on land and sea since 1850 (Berkeley Earth) as small images."""
     count = fetch_measured_warming(args.out)
     return _say(f"wrote {count} measured-warming images to {args.out}")
 
@@ -1052,7 +1052,7 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     ),
     "measured-warming": (
         measured_warming,
-        "write measured land warming since 1850 against 1850-1900 (Berkeley Earth)",
+        "write measured warming on land and sea since 1850 against 1850-1900 (Berkeley Earth)",
         "output directory",
     ),
     "ssp-pathways": (

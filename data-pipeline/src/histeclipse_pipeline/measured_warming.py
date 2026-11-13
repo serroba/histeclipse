@@ -1,10 +1,12 @@
-"""Measured warming on land since 1850, from Berkeley Earth's gridded land temperatures (#485).
+"""Measured warming on land and sea since 1850, from Berkeley Earth's gridded field (#485, #587).
 
-Berkeley Earth's land-only field (``Complete_TAVG_LatLong1.nc``; Rohde & Hausfather 2020, *The
-Berkeley Earth Land/Ocean Temperature Record*, Earth System Science Data 12, 3469,
-doi:10.5194/essd-12-3469-2020): monthly air temperature anomalies from 1750 on a 1° grid of
-cells, against 1951-1980, with each cell's land fraction. Licensed CC BY-NC 4.0, for
-non-commercial use, as this site is.
+Berkeley Earth's land-and-ocean field (``Land_and_Ocean_LatLong1.nc``; Rohde & Hausfather 2020,
+*The Berkeley Earth Land/Ocean Temperature Record*, Earth System Science Data 12, 3469,
+doi:10.5194/essd-12-3469-2020): monthly surface temperature anomalies from 1850 on a 1° grid of
+cells, against 1951-1980, with each cell's land fraction. Over land it is the air temperature;
+over the sea, the water's surface temperature (from HadSST4); over sea ice, the air's, the
+version Berkeley Earth recommends. Licensed CC BY-NC 4.0, for non-commercial use, as this
+site is.
 
 The site shows it after Krapp et al.'s ice-age maps (``krapp.py``), whose present is
 pre-industrial, so it is measured here from 1850-1900, the baseline the boundaries story's
@@ -12,15 +14,17 @@ chart uses. Each frame is the mean of the five years ending at its year, every f
 1850, and the last year in the file: 5-year means, so a single hot or cold year does not jump
 out. A year counts where all twelve months have data; a frame where at least four of its five
 years do; the baseline where at least 40 of its 51 years do. Cells under half land are left
-out: the site colours land only, as Krapp's maps do.
+out: in early years, much of the sea, away from the ships' tracks, has no data either.
 
 Much land has too few records in 1850-1900 for a baseline of its own (#497): two thirds of
-the tropics, much of Australia and Antarctica. Left without one, it would show as unchanged.
-There the cell is measured from 1951-1980, which the field covers on nearly all land, and
-shifted back by how much warmer 1951-1980 was than 1850-1900 in its 15° band of latitude (a
-cos-latitude weighted mean over the cells that have both), or over all land where its band has
-none. That shift, some 0.3 to 0.6 °C, is the one estimate; the warming since is measured. Only
-inland Antarctica, without 25 years of 1951-1980, is left without data.
+the tropics, much of Australia and Antarctica; and so has much of the sea. Left without one,
+a cell would show as unchanged. There the cell is measured from 1951-1980, which the field
+covers nearly everywhere, and shifted back by how much warmer 1951-1980 was than 1850-1900 in
+its 15° band of latitude (a cos-latitude weighted mean over the cells that have both), or over
+its whole surface where its band has none. Land and sea are shifted apart, each by its own
+cells, as the sea warmed more slowly. That shift, some 0.3 to 0.6 °C, is the one estimate; the
+warming since is measured. Only inland Antarctica, without 25 years of 1951-1980, is left
+without data. A cell counts as land from half land up, else as sea.
 
 The images are packed as Krapp's are, on the same node-registered 1° grid (``krapp.regrid``),
 so the globe's shader reads them the same way and shows the change as R - G:
@@ -52,15 +56,15 @@ if TYPE_CHECKING:
 SOURCE = "https://berkeleyearth.org/data/"
 FILE_URL = (
     "https://berkeley-earth-temperature.s3.us-west-1.amazonaws.com/Global/Gridded/"
-    "Complete_TAVG_LatLong1.nc"
+    "Land_and_Ocean_LatLong1.nc"
 )
 #: The release of 9 January 2025, through December 2024. A newer release changes it.
-FILE_SHA256 = "4b78118b5552cc4987a7c575b042a0ea92de55d7c01f47783edb81d082c40664"
+FILE_SHA256 = "ac5d960eab0868472f43a50362d325e1a2200005936b6c123d78f5180c86e468"
 CREDIT = (
     "Berkeley Earth (Rohde & Hausfather 2020, The Berkeley Earth Land/Ocean Temperature "
-    "Record, Earth System Science Data 12, 3469), gridded land temperatures, release of "
-    "9 January 2025, CC BY-NC 4.0; 5-year means against 1850-1900, land only, averaged onto a "
-    "1° grid and packed into 8-bit images for this site"
+    "Record, Earth System Science Data 12, 3469), gridded land and ocean temperatures, air "
+    "temperature over sea ice, release of 9 January 2025, CC BY-NC 4.0; 5-year means against "
+    "1850-1900, averaged onto a 1° grid and packed into 8-bit images for this site"
 )
 BASELINE = (1850, 1900)
 #: Of the baseline's 51 years, how many a cell needs.
@@ -77,8 +81,10 @@ STEP_YEARS = 5
 FRAME_YEARS = 4
 #: Months in a year: a year counts only when it has them all.
 MONTHS = 12
-#: A cell counts as land from this fraction up.
+#: A cell counts as land from this fraction up; below, as sea.
 LAND = 0.5
+#: The two surfaces, shifted apart where a baseline is estimated.
+SURFACES = ("land", "sea")
 
 
 def annual_mean(months: Grid) -> Grid:
@@ -109,16 +115,28 @@ def frame_years(last: int) -> list[int]:
 
 
 @dataclass(frozen=True)
+class Shift:
+    """How much warmer 1951-1980 was than 1850-1900 on one surface, land or sea."""
+
+    surface: str
+    #: Each band's shift (south edge, °; °C).
+    bands: list[tuple[int, float]]
+    #: The whole surface's, for bands with no cells of both.
+    overall: float
+
+
+@dataclass(frozen=True)
 class Baseline:
     """Each cell's 1850-1900 mean, measured or estimated, and how much is estimated."""
 
-    #: °C, as the field's anomalies; NaN where neither period has enough data, or not land.
+    #: °C, as the field's anomalies; NaN where neither period has enough data.
     values: Grid
     #: True where the cell's own 1850-1900 records were too few, and the baseline is estimated.
     estimated: npt.NDArray[np.bool_]
-    #: Each band's shift (south edge, °; °C), and the land's, for bands with no cells of both.
-    shifts: list[tuple[int, float]]
-    land_shift: float
+    #: True where the cell is land, else sea.
+    land: npt.NDArray[np.bool_]
+    #: The land's shift, then the sea's.
+    shifts: list[Shift]
 
 
 def _weighted_mean(values: Grid, weights: Grid) -> float | None:
@@ -128,45 +146,61 @@ def _weighted_mean(values: Grid, weights: Grid) -> float | None:
     return float(np.average(values[known], weights=weights[known]))
 
 
+def _shift(surface: str, both: Grid, rows: Grid, weights: Grid) -> tuple[Shift, Grid]:
+    """One surface's shift from 1950-1980 to 1850-1900, by band, and as a value for each cell.
+
+    ``both`` is 1951-1980 less 1850-1900 on this surface's cells with both, NaN elsewhere.
+    """
+    overall = _weighted_mean(both, weights)
+    if overall is None:
+        msg = f"no {surface} cell has both 1850-1900 and 1951-1980"
+        raise ValueError(msg)
+    bands: list[tuple[int, float]] = []
+    by_cell = np.full(both.shape, overall)
+    for south in range(-90, 90, BAND_DEGREES):
+        band = (rows >= south) & (rows < south + BAND_DEGREES)
+        mean = _weighted_mean(np.where(band, both, np.nan), weights)
+        if mean is not None:
+            bands.append((south, round(mean, 2)))
+            by_cell = np.where(band, mean, by_cell)
+    return Shift(surface, bands, round(overall, 2)), np.asarray(by_cell, dtype=np.float64)
+
+
 def baseline(annual: Mapping[int, Grid], land: Grid, latitude: Grid) -> Baseline:
-    """Each land cell's 1850-1900 baseline: its own, or 1951-1980's shifted back by its band's."""
+    """Each cell's 1850-1900 baseline: its own, or 1951-1980's shifted back by its band's.
+
+    Land and sea are shifted apart, each by its own cells.
+    """
     first, last = BASELINE
     early = mean_of((annual[year] for year in range(first, last + 1)), BASELINE_YEARS)
     start, end = LATER
     later = mean_of((annual[year] for year in range(start, end + 1)), LATER_YEARS)
-    on_land = land >= LAND
-    early = np.where(on_land, early, np.nan)
-    later = np.where(on_land, later, np.nan)
-    shift = later - early  # NaN unless the cell has both
-    rows = np.broadcast_to(latitude[:, None], shift.shape)
+    both = later - early  # NaN unless the cell has both
+    rows = np.broadcast_to(latitude[:, None], both.shape)
     weights = np.cos(np.radians(rows))
-    land_shift = _weighted_mean(shift, weights)
-    if land_shift is None:
-        msg = "no land cell has both 1850-1900 and 1951-1980"
-        raise ValueError(msg)
-    shifts: list[tuple[int, float]] = []
-    band_shift = np.full(shift.shape, land_shift)
-    for south in range(-90, 90, BAND_DEGREES):
-        band = (rows >= south) & (rows < south + BAND_DEGREES)
-        mean = _weighted_mean(np.where(band, shift, np.nan), weights)
-        if mean is not None:
-            shifts.append((south, round(mean, 2)))
-            band_shift = np.where(band, mean, band_shift)
+    on_land = np.asarray(land >= LAND)
     estimated = np.isnan(early) & np.isfinite(later)
-    values = np.where(estimated, later - band_shift, early)
-    return Baseline(values, np.asarray(estimated), shifts, round(land_shift, 2))
+    values = early
+    shifts: list[Shift] = []
+    for surface, cells in zip(SURFACES, (on_land, ~on_land), strict=True):
+        shift, by_cell = _shift(surface, np.where(cells, both, np.nan), rows, weights)
+        shifts.append(shift)
+        values = np.where(cells & estimated, later - by_cell, values)
+    return Baseline(values, np.asarray(estimated), on_land, shifts)
 
 
 def frames(annual: Mapping[int, Grid], base: Baseline) -> tuple[Grid, list[tuple[int, Grid]]]:
     """Measure each frame's 5-year mean from the baseline; the baseline's own coverage too.
 
-    Returns 0 where there is a baseline (NaN elsewhere) and each frame's anomalies, land cells
-    only, still on the source's cells.
+    Returns 0 where there is a baseline (NaN elsewhere) and each frame's anomalies, still on
+    the source's cells; a frame only where the file has enough of its years.
     """
     out: list[tuple[int, Grid]] = []
     for year in frame_years(max(annual)):
         span = [annual[each] for each in range(year - STEP_YEARS + 1, year + 1) if each in annual]
-        out.append((year, mean_of(span, FRAME_YEARS) - base.values))
+        # The file's first years cannot fill a frame: 1850's would hold 1850 alone.
+        if len(span) >= FRAME_YEARS:
+            out.append((year, mean_of(span, FRAME_YEARS) - base.values))
     return np.where(np.isfinite(base.values), 0.0, np.nan), out
 
 
@@ -212,17 +246,30 @@ def write_warming(
 
 
 def estimate_of(base: Baseline, latitude: Grid) -> dict[str, Json]:
-    """Describe the estimated baseline: measured from when, over how much land, shifted how far."""
+    """Describe the estimated baseline: from when, over how much of land and sea, how far."""
     start, end = LATER
     rows = np.broadcast_to(latitude[:, None], base.values.shape)
     weights = np.cos(np.radians(rows))
     flags = np.where(np.isfinite(base.values), base.estimated.astype(np.float64), np.nan)
-    share = _weighted_mean(flags, weights) or 0.0
+
+    def share(cells: npt.NDArray[np.bool_]) -> float:
+        return round(_weighted_mean(np.where(cells, flags, np.nan), weights) or 0.0, 2)
+
+    surfaces: list[Json] = []
+    for shift in base.shifts:
+        cells = base.land if shift.surface == "land" else ~base.land
+        surfaces.append(
+            {
+                "surface": shift.surface,
+                "share": share(cells),
+                "bands": [{"south": south, "shift": value} for south, value in shift.bands],
+                "shift": shift.overall,
+            }
+        )
     return {
         "from": f"{start}\u2013{end}",
-        "share": round(share, 2),
-        "bands": [{"south": south, "shift": shift} for south, shift in base.shifts],
-        "landShift": base.land_shift,
+        "share": share(np.ones(base.land.shape, dtype=np.bool_)),
+        "surfaces": surfaces,
     }
 
 
@@ -239,14 +286,14 @@ def build(data: bytes, folder: Path) -> int:
 
 
 def fetch_measured_warming(folder: Path) -> int:  # pragma: no cover - needs network access
-    """Download the land field (checked against its pinned checksum) and write the images."""
+    """Download the land-and-ocean field (checked against its pinned checksum); write the images."""
     request = urllib.request.Request(FILE_URL, headers={"User-Agent": "histeclipse-pipeline"})
     with urllib.request.urlopen(request, timeout=900) as response:  # noqa: S310  # pyright: ignore[reportAny]
         body: object = response.read()  # pyright: ignore[reportAny]
     if not isinstance(body, bytes):
         msg = f"{FILE_URL}: expected bytes"
         raise TypeError(msg)
-    return build(verified(body, FILE_SHA256, "Berkeley Earth land field"), folder)
+    return build(verified(body, FILE_SHA256, "Berkeley Earth land and ocean field"), folder)
 
 
 def file_name(year: int) -> str:
@@ -267,7 +314,7 @@ def index_file(
         "baseline": f"{first}\u2013{last}",
         "estimated": estimated,
         "years": STEP_YEARS,
-        "coverage": "land",
+        "coverage": "land and sea",
         "columns": COLUMNS,
         "rows": ROWS,
         "coldest": coldest,

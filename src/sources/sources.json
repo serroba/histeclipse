@@ -81,7 +81,7 @@
   "berkeleyEarth": {
     "name": "Berkeley Earth",
     "kind": "dataset",
-    "cite": "Rohde, R. A., Hausfather, Z. (2020), The Berkeley Earth Land/Ocean Temperature Record, Earth System Science Data 12, 3469–3479; data: Berkeley Earth gridded land temperatures (Complete_TAVG_LatLong1, 1° monthly anomalies), release of 9 January 2025",
+    "cite": "Rohde, R. A., Hausfather, Z. (2020), The Berkeley Earth Land/Ocean Temperature Record, Earth System Science Data 12, 3469–3479; data: Berkeley Earth gridded land and ocean temperatures (Land_and_Ocean_LatLong1, 1° monthly anomalies, air temperature over sea ice), release of 9 January 2025",
     "url": "https://doi.org/10.5194/essd-12-3469-2020",
     "licence": "CC BY-NC 4.0"
   },
