@@ -12,22 +12,7 @@
  * projects its vertices with `skyProject`, and the camera only supplies the view matrix.
  */
 
-import type { CanvasTexture } from 'three';
-import {
-  AdditiveBlending,
-  BackSide,
-  DoubleSide,
-  Color,
-  Mesh,
-  type Object3D,
-  PerspectiveCamera,
-  PlaneGeometry,
-  ShaderMaterial,
-  SphereGeometry,
-  Vector2,
-  Vector3,
-  WebGLRenderer,
-} from 'three';
+import { type Object3D, PerspectiveCamera, Vector2, Vector3, WebGLRenderer } from 'three';
 
 import { Stage } from '../stage/stage';
 import type { Matrix3, Vector3 as Vec3 } from '../astro/matrix';
@@ -47,21 +32,13 @@ import {
   toPixels,
 } from './projection';
 import { createSkyLabelLayer, skyLabel } from './skyLabels';
-import { lookDirectionAt, SUN_ANGULAR_RADIUS, SUN_DISTANCE, toScene } from './skyFrame';
+import { lookDirectionAt, toScene } from './skyFrame';
 import { SkyFigures } from './skyFigures';
 import { SkyMoon } from './skyMoon';
 import { SkyPlanets, type SkyPlanet } from './skyPlanets';
 import { SkyStars } from './skyStars';
-import {
-  DOME_VERTEX,
-  GLOW_FRAGMENT,
-  GLOW_VERTEX,
-  GROUND_FRAGMENT,
-  SKY_FRAGMENT,
-  SUN_FRAGMENT,
-  SUN_VERTEX,
-} from './skyShaders';
-import { coronaTexture, glowTexture } from './skyTextures';
+import { SkySun } from './skySun';
+import { createSkyDome } from './skyDome';
 import { attachSkyGestures } from './skyGestures';
 
 export interface SkyMoment {
@@ -151,21 +128,8 @@ export function createSkyScene(
     skyViewport: { value: new Vector2(1, 1) },
   };
 
-  const sunDirection = { value: new Vector3(0, -1, 0) };
-  const sunAltitude = { value: -90 };
-  const sunlight = { value: 1 };
-  const dome = new Mesh(
-    new SphereGeometry(500, 64, 32),
-    new ShaderMaterial({
-      uniforms: { ...projection, sunDirection, sunAltitude, sunlight },
-      vertexShader: DOME_VERTEX,
-      fragmentShader: SKY_FRAGMENT,
-      side: BackSide,
-      depthTest: false,
-      depthWrite: false,
-    }),
-  );
-  dome.renderOrder = 0;
+  const sun = new SkySun(projection, () => look.fov);
+  const { dome, ground } = createSkyDome(projection, sun.light);
 
   const stars = new SkyStars({
     stars: sky.stars,
@@ -173,54 +137,9 @@ export function createSkyScene(
     pixelRatio: renderer.getPixelRatio(),
   });
 
-  const sunRadius = SUN_DISTANCE * Math.tan(SUN_ANGULAR_RADIUS);
-  const sun = new Mesh(
-    // Fine enough to stay round when the view closes in on it.
-    new SphereGeometry(sunRadius, 96, 48),
-    new ShaderMaterial({
-      uniforms: { ...projection, color: { value: new Color(0xfff6e0) } },
-      vertexShader: SUN_VERTEX,
-      fragmentShader: SUN_FRAGMENT,
-      depthTest: false,
-      depthWrite: false,
-    }),
-  );
-  sun.renderOrder = 3;
-  const sunGlowOpacity = { value: 1 };
-  let sunGlowShare = 1;
-  /**
-   * The glare round the Sun, by how much of it is showing; and faded as the view closes in, as
-   * it spans some 4° and would cover a narrow view, hiding the disc it surrounds.
-   */
-  function showSunGlow(): void {
-    const close = Math.min(1, Math.max(0.1, (look.fov - 2) / 10));
-    sunGlowOpacity.value = Math.min(1, sunGlowShare * 4) * close;
-  }
-  const sunGlow = glowDisc(glowTexture(), (sunRadius * 14) / SUN_DISTANCE, sunGlowOpacity);
-  sunGlow.renderOrder = 3;
-  // The corona: only seen when the Moon hides the whole bright disc.
-  const corona = glowDisc(coronaTexture(), (sunRadius * 9) / SUN_DISTANCE, { value: 1 });
-  corona.renderOrder = 3;
-  corona.visible = false;
-  function glowDisc(map: CanvasTexture, extent: number, opacity: { value: number }): Mesh {
-    return new Mesh(
-      new PlaneGeometry(1, 1),
-      new ShaderMaterial({
-        uniforms: { ...projection, map: { value: map }, extent: { value: extent }, opacity },
-        vertexShader: GLOW_VERTEX,
-        fragmentShader: GLOW_FRAGMENT,
-        blending: AdditiveBlending,
-        depthTest: false,
-        depthWrite: false,
-        transparent: true,
-        side: DoubleSide,
-      }),
-    );
-  }
-
   const moon = new SkyMoon({
     projection,
-    sunDirection,
+    sunDirection: sun.light.sunDirection,
     textureUrl: options.moonTextureUrl,
     dataset: container.dataset,
     invalidate: () => {
@@ -228,21 +147,6 @@ export function createSkyScene(
     },
   });
 
-  const ground = new Mesh(
-    new SphereGeometry(50, 64, 32),
-    new ShaderMaterial({
-      uniforms: { ...projection, sunAltitude, sunlight },
-      vertexShader: DOME_VERTEX,
-      fragmentShader: GROUND_FRAGMENT,
-      side: BackSide,
-      depthTest: false,
-      depthWrite: false,
-      // three.js draws transparent objects after opaque ones whatever their renderOrder, so the
-      // ground must be "transparent" to be drawn last, over the Sun's glow below the horizon.
-      transparent: true,
-    }),
-  );
-  ground.renderOrder = 4;
   const planets = new SkyPlanets({
     uniforms: stars.uniforms,
     labelLayer,
@@ -270,9 +174,9 @@ export function createSkyScene(
     stars.points,
     figures.lines,
     planets.points,
-    sun,
-    sunGlow,
-    corona,
+    sun.disc,
+    sun.glow,
+    sun.corona,
     moon.mesh,
     ground,
   ];
@@ -313,7 +217,7 @@ export function createSkyScene(
     camera.updateMatrixWorld();
     stage.resize();
     stars.setFieldOfView(look.fov);
-    showSunGlow();
+    sun.showGlow();
     stage.invalidate();
   }
 
@@ -361,7 +265,7 @@ export function createSkyScene(
       placeLabel(label, position, true, width, height);
     }
     // Where the Sun's disc is on screen, in pixels, for whoever needs to find it.
-    const sunAt = sun.visible ? screenPoint(sun.position) : null;
+    const sunAt = sun.disc.visible ? screenPoint(sun.disc.position) : null;
     container.dataset['sunAt'] =
       sunAt === null
         ? 'off'
@@ -413,7 +317,9 @@ export function createSkyScene(
     const height = container.clientHeight;
     const perDegree = pixelsPerDegree(view, width);
     const candidates: { body: SkyBody; position: Vector3; radius: number }[] = [
-      ...(sun.visible ? [{ body: 'sun' as const, position: sun.position, radius: 0.27 }] : []),
+      ...(sun.disc.visible
+        ? [{ body: 'sun' as const, position: sun.disc.position, radius: 0.27 }]
+        : []),
       ...(moon.mesh.visible
         ? [{ body: 'moon' as const, position: moon.mesh.position, radius: moon.angularRadius }]
         : []),
@@ -493,18 +399,7 @@ export function createSkyScene(
       const seen = stars.place({ jdTT, horizon, motion, limit });
       figures.place();
 
-      const [sx, sy, sz] = toScene(sunSeen);
-      sunDirection.value.set(sx, sy, sz);
-      sunAltitude.value = sunHigh;
-      sun.position.set(sx, sy, sz).multiplyScalar(SUN_DISTANCE);
-      sunGlow.position.copy(sun.position);
-      sun.visible = sunHigh > -1;
-      sunGlow.visible = sun.visible && sunShare > 0;
-      sunGlowShare = sunShare;
-      showSunGlow();
-      sunlight.value = sunShare;
-      corona.position.copy(sun.position);
-      corona.visible = sun.visible && sunShare < 0.002;
+      sun.place({ seen: sunSeen, altitude: sunHigh, share: sunShare });
       moon.place({ horizon, sunJ2000, moonJ2000, sunHere, moonHere, sunHigh, motion });
       container.dataset['sunVisible'] = sunShare.toFixed(4);
       figures.setSunAltitude(sunHigh);
