@@ -65,7 +65,9 @@ const projected = new Vector3();
  * the larger states' names first, so a crowd of small counts can't take their places, the
  * smaller after, where room is left (#163). Only names on the near side, and none unless `near`;
  * at most `most` from each slot, and none from the slots from `leftOut` on: while the globe
- * turns, each name shown costs a frame's time (#631). Returns how many it shows, of how many.
+ * turns, each name shown costs a frame's time (#631). Returns how many it shows, of how
+ * many, and how many in view were left out so: none, and nothing need be drawn again once
+ * the globe stops.
  */
 export function layOutSurface(
   slots: readonly SurfaceSlot[],
@@ -77,21 +79,23 @@ export function layOutSurface(
     readonly leftOut: number;
     readonly most: number;
   },
-): NamesShown {
+): NamesShown & { readonly leftOut: number } {
   const eye = camera.position.clone().normalize();
   const placed: Box[] = [];
   let total = 0;
+  let leftOut = 0;
   for (const { priority, labels } of [...slots].sort((a, b) => a.priority - b.priority)) {
     let left = priority < view.leftOut ? view.most : 0;
     total += labels.length;
     for (const { element, position, width, height } of labels) {
       projected.copy(position).project(camera);
-      const shown =
+      const inView =
         view.near &&
-        left > 0 &&
         position.dot(eye) > 0.25 &&
         Math.abs(projected.x) < 1 &&
         Math.abs(projected.y) < 1;
+      if (inView && left <= 0) leftOut += 1;
+      const shown = inView && left > 0;
       const x = ((projected.x + 1) / 2) * view.width;
       // A name out of view is hidden without looking for room: most are, behind Earth.
       const centre = ((1 - projected.y) / 2) * view.height;
@@ -101,5 +105,5 @@ export function layOutSurface(
     }
   }
   // Each name shown was given room once, so `placed` counts them without asking the page.
-  return { shown: placed.length, total };
+  return { shown: placed.length, total, leftOut };
 }

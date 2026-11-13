@@ -164,7 +164,7 @@ describe('layOutSurface', () => {
       { priority: 0, labels: states },
       { priority: 40, labels: [impact] },
     ];
-    layOutSurface(slots, camera(), { ...view, most: 2 });
+    expect(layOutSurface(slots, camera(), { ...view, most: 2 }).leftOut).toBe(1);
     expect(states.map(({ element }) => element.hidden)).toEqual([false, false, true]);
     expect(impact.element.hidden).toBe(false);
   });
@@ -174,11 +174,25 @@ describe('layOutSurface', () => {
       { priority: 0, labels: [name(1, 0.3, 0), name(1, 0, 0), name(-1, 0, 0)] },
       { priority: 40, labels: [name(1, 0, 0.3)] },
     ];
-    expect(layOutSurface(slots, camera(), view)).toEqual({ shown: 3, total: 4 });
+    expect(layOutSurface(slots, camera(), view)).toEqual({ shown: 3, total: 4, leftOut: 0 });
     expect(layOutSurface(slots, camera(), { ...view, near: false })).toEqual({
       shown: 0,
       total: 4,
+      leftOut: 0,
     });
+  });
+
+  it('counts the names in view left out, and not those out of view or with no room', () => {
+    const states = [name(1, 0, 0), name(1, 0, 0), name(-1, 0, 0)];
+    const minor = [name(1, 0.3, 0), name(-1, 0.3, 0)];
+    const slots = [
+      { priority: 0, labels: states },
+      { priority: 60, labels: minor },
+    ];
+    // Still: every name in view placed or given way for want of room, none left out.
+    expect(layOutSurface(slots, camera(), view).leftOut).toBe(0);
+    // Turning: one state in view past the cap, and the minor name in view.
+    expect(layOutSurface(slots, camera(), { ...view, most: 1, leftOut: 60 }).leftOut).toBe(2);
   });
 
   it('shows none unless near', () => {

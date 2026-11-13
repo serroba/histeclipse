@@ -210,12 +210,14 @@ export class ScreenLabels {
 
   /** Each frame: the names on Earth's surface; while the camera moves, fewer of them. */
   placeSurfaceLabels(): void {
-    this.#turning = this.#motion.turning(this.#world.camera, performance.now());
-    this.#layOutSurface();
+    const now = performance.now();
+    this.#turning = this.#motion.turning(this.#world.camera, now);
+    // Once it settles, a frame to show what turning left out; none if it left nothing out.
+    this.#motion.settleLater(now, this.#layOutSurface() > 0);
   }
 
   /** Lay out the layers' names on Earth's surface, on the near side only. */
-  #layOutSurface(): void {
+  #layOutSurface(): number {
     const { camera } = this.#world;
     // Only while Earth is in focus and fills enough of the view.
     const near = this.#world.focus() === 'earth' && camera.position.length() < 12;
@@ -223,7 +225,9 @@ export class ScreenLabels {
     const leftOut = this.#turning ? SURFACE_PRIORITY.minorStates : Infinity;
     const most = this.#turning ? TURNING_NAMES : Infinity;
     const view = { width: this.#width, height: this.#height, near, leftOut, most };
-    noteScreenNames(layOutSurface(this.#surfaceSlots, camera, view), this.#turning);
+    const names = layOutSurface(this.#surfaceSlots, camera, view);
+    noteScreenNames(names, this.#turning);
+    return names.leftOut;
   }
 
   /** Ring and name each body small on screen; one name for those that line up. */

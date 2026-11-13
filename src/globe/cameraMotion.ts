@@ -26,7 +26,7 @@ export class CameraMotion {
 
   readonly #onSettled: () => void;
 
-  /** `onSettled` asks for a frame once the view has settled (see `turning`). */
+  /** `onSettled` asks for a frame once the view has settled (see `settleLater`). */
   constructor(onSettled: () => void = () => undefined) {
     this.#onSettled = onSettled;
   }
@@ -52,16 +52,21 @@ export class CameraMotion {
     return Math.max(0, this.#lastMove + SETTLE_MS - now);
   }
 
-  /**
-   * Whether the view counts as turning at `now`: moved within `SETTLE_MS`. While it does, one
-   * wake is set for when it settles: one frame then, not a frame after every frame, which on a
-   * slow phone doubled the frames drawn while the view moved.
-   */
+  /** Whether the view counts as turning at `now`: moved within `SETTLE_MS`. */
   turning(camera: Camera, now: number): boolean {
-    const wait = this.settlesIn(camera, now);
+    return this.settlesIn(camera, now) > 0;
+  }
+
+  /**
+   * Looking at `now`, after `turning`: one wake for when the view settles, if `needed`, as when
+   * turning left names out; none otherwise. One frame then, not a frame after every frame, and
+   * none at all where nothing waits to be shown: on a slow phone each one is a whole frame more,
+   * after every move of a drag that only moves the view's edges (#631).
+   */
+  settleLater(now: number, needed: boolean): void {
     clearTimeout(this.#wake);
-    if (wait > 0) this.#wake = setTimeout(this.#onSettled, wait);
-    return wait > 0;
+    const wait = this.#lastMove + SETTLE_MS - now;
+    if (needed && wait > 0) this.#wake = setTimeout(this.#onSettled, wait);
   }
 
   /** No wake to come. */
