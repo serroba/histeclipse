@@ -36,6 +36,7 @@ export default defineConfig({
         'src/features/humans/arrivalGrid.ts',
         'src/globe/planetMeshes.ts',
         'src/globe/moonMeshes.ts',
+        'src/globe/sunMeshes.ts',
         'src/features/spacecraft/craftLayer.ts',
         'src/features/asteroids/beltLayer.ts',
         'src/text/embedder.ts',
