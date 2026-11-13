@@ -169,6 +169,18 @@ describe('layOutSurface', () => {
     expect(impact.element.hidden).toBe(false);
   });
 
+  it('says how many names it shows, of how many the slots have', () => {
+    const slots = [
+      { priority: 0, labels: [name(1, 0.3, 0), name(1, 0, 0), name(-1, 0, 0)] },
+      { priority: 40, labels: [name(1, 0, 0.3)] },
+    ];
+    expect(layOutSurface(slots, camera(), view)).toEqual({ shown: 3, total: 4 });
+    expect(layOutSurface(slots, camera(), { ...view, near: false })).toEqual({
+      shown: 0,
+      total: 4,
+    });
+  });
+
   it('shows none unless near', () => {
     const front = name(1, 0, 0);
     layOutSurface([{ priority: 0, labels: [front] }], camera(), { ...view, near: false });

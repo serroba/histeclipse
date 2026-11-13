@@ -7,6 +7,7 @@
 
 import { type Camera, Vector3 } from 'three';
 
+import type { NamesShown } from '../util/screenNames';
 import type { SurfaceLabel } from './layerHost';
 import { type Box, clearOf } from './spaceFrame';
 
@@ -64,7 +65,7 @@ const projected = new Vector3();
  * the larger states' names first, so a crowd of small counts can't take their places, the
  * smaller after, where room is left (#163). Only names on the near side, and none unless `near`;
  * at most `most` from each slot, and none from the slots from `leftOut` on: while the globe
- * turns, each name shown costs a frame's time (#631).
+ * turns, each name shown costs a frame's time (#631). Returns how many it shows, of how many.
  */
 export function layOutSurface(
   slots: readonly SurfaceSlot[],
@@ -76,11 +77,13 @@ export function layOutSurface(
     readonly leftOut: number;
     readonly most: number;
   },
-): void {
+): NamesShown {
   const eye = camera.position.clone().normalize();
   const placed: Box[] = [];
+  let total = 0;
   for (const { priority, labels } of [...slots].sort((a, b) => a.priority - b.priority)) {
     let left = priority < view.leftOut ? view.most : 0;
+    total += labels.length;
     for (const { element, position, width, height } of labels) {
       projected.copy(position).project(camera);
       const shown =
@@ -97,4 +100,6 @@ export function layOutSurface(
       placeLabel(element, y === null ? null : translation(x, y, 'translate(-50%, -50%)'));
     }
   }
+  // Each name shown was given room once, so `placed` counts them without asking the page.
+  return { shown: placed.length, total };
 }

@@ -8,6 +8,7 @@ import { Vector3, type Object3D, type PerspectiveCamera } from 'three';
 
 import { PLANETS, type PlanetName } from '../astro/planets';
 import type { Body, GeoPoint } from '../state/viewState';
+import { noteScreenNames } from '../util/screenNames';
 import { CameraMotion } from './cameraMotion';
 import { geoToVector } from './geo';
 import { layOutSurface, placeLabel, type SurfaceSlot, translation } from './labelWrites';
@@ -220,7 +221,7 @@ export class ScreenLabels {
     const leftOut = this.#turning ? SURFACE_PRIORITY.minorStates : Infinity;
     const most = this.#turning ? TURNING_NAMES : Infinity;
     const view = { width: this.#width, height: this.#height, near, leftOut, most };
-    layOutSurface(this.#surfaceSlots, camera, view);
+    noteScreenNames(layOutSurface(this.#surfaceSlots, camera, view), this.#turning);
   }
 
   /** Ring and name each body small on screen; one name for those that line up. */
