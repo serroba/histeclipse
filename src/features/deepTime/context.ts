@@ -1,6 +1,6 @@
 /** What deep time asks of the rest of the page, and what it gives it (#445). */
 
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import type { DeepMoment } from '../feature';
 import type { DeepChip } from '../../ui/deepChips';

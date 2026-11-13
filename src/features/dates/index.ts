@@ -4,7 +4,7 @@
  * date there was found. The counts load with the layer, a place's tile when it is picked.
  */
 
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import { RESTING } from '../feature';
 import type { DatingCard } from '../../ui/datingCard';

@@ -4,7 +4,7 @@
  * up, the card); which a past state could see is `seen.ts`.
  */
 
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import { eclipsePathLayer } from './eclipsePath';
 import { lunarOverlayLayer } from './lunarOverlay';

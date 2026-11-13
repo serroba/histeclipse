@@ -5,7 +5,7 @@
  * territory, for the eclipses seen within it.
  */
 
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import { PRESENT_YEAR } from '../../time/present';
 import { empiresLayer, type StateChange } from './empireLayer';

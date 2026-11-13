@@ -5,7 +5,7 @@
  * Earth. Each map's index loads the first time it is needed.
  */
 
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import { iceOutlineLayer } from './iceOutlineLayer';
 import {

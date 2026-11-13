@@ -5,7 +5,7 @@
  * cores record, loaded once the layer is on.
  */
 
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { DatingCard } from '../../ui/datingCard';
 import type { PartContext } from '../part';
 import { loadRadiocarbon, type Radiocarbon } from '../../data/radiocarbon';

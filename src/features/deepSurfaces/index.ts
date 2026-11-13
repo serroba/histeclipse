@@ -5,7 +5,7 @@
  * temperature maps are a layer of their own, in features/temperature.
  */
 
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import type { ViewState } from '../../state/viewState';
 import type { DeepTimeView } from '../../ui/deepTimeBar';

@@ -96,7 +96,7 @@ function reaches(graph: Map<string, Set<string>>, from: string, to: string): boo
  */
 const KNOWN_CYCLE_EDGES: readonly string[] = [];
 
-/** Methods on the `Globe` interface in `globe/scene.ts`: new things drawn are layers (#379). */
+/** Methods on the `Globe` interface in `globe/globe.ts`: new things drawn are layers (#379). */
 const GLOBE_METHODS = 39;
 
 /**
@@ -237,8 +237,9 @@ describe('the shape of src', () => {
   });
 
   it('the Globe interface does not grow: draw new things with globe.addLayer', () => {
-    const scene = sources['./globe/scene.ts'] ?? '';
-    const body = /^export interface Globe \{\n([\s\S]*?)^\}/m.exec(scene)?.[1] ?? '';
+    const contract = sources['./globe/globe.ts'] ?? '';
+    const body = /^export interface Globe \{\n([\s\S]*?)^\}/m.exec(contract)?.[1] ?? '';
+    expect(body, 'the Globe interface was found in globe/globe.ts').not.toBe('');
     const methods = body.split('\n').filter((line) => /^ {2}[a-zA-Z]+[(<]/.test(line)).length;
     ratchet(methods, GLOBE_METHODS, "Globe's methods", 'GLOBE_METHODS');
   });

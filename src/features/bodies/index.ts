@@ -37,7 +37,7 @@ import {
   planetView,
   type PlanetView,
 } from '../../globe/planetLook';
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { SkyPlanet } from '../../sky/skyScene';
 import { ORBITS, redraws, SUN } from '../../state/redraws';
 import type { ViewState } from '../../state/viewState';

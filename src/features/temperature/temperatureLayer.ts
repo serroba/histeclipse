@@ -13,7 +13,7 @@
 import { framesAhead, framesAround } from '../../data/paleoDem';
 import type { Fetch } from '../../util/fetchJson';
 import { loadPaleoTempIndex, type PaleoTempIndex } from '../../data/paleoTemp';
-import type { Globe } from '../../globe/scene';
+import type { Globe } from '../../globe/globe';
 import type { ViewState } from '../../state/viewState';
 import type { TemperatureView } from '../../ui/temperatureLegend';
 import { errorMessage } from '../../util/errors';
