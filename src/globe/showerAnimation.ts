@@ -31,6 +31,8 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 import type { GeoPoint } from '../state/viewState';
 import { playbackClock } from '../util/playbackClock';
 import { geoToVector } from './geo';
+import { curve, localFrame } from './motion';
+import { easeOut, through } from '../util/timing';
 import {
   BURST_DELAY,
   landing,
@@ -205,31 +207,6 @@ function plantTexture(): CanvasTexture {
   return new CanvasTexture(canvas);
 }
 
-const clamp = (t: number): number => Math.min(1, Math.max(0, t));
-const ease = (t: number): number => 1 - (1 - t) ** 3;
-/** How far through [from, from + length] ms `t` is, 0 to 1. */
-const through = (t: number, from: number, length: number): number => clamp((t - from) / length);
-
-/** A point on the quadratic curve from `a` through control `c` to `b`. */
-function curve(a: Vector3, c: Vector3, b: Vector3, t: number): Vector3 {
-  const u = 1 - t;
-  return a
-    .clone()
-    .multiplyScalar(u * u)
-    .add(c.clone().multiplyScalar(2 * u * t))
-    .add(b.clone().multiplyScalar(t * t));
-}
-
-/** Up, east and north at a place on the unit globe. */
-function frame(place: GeoPoint): { up: Vector3; east: Vector3; north: Vector3 } {
-  const up = new Vector3(...geoToVector(place)).normalize();
-  const east = new Vector3().crossVectors(new Vector3(0, 1, 0), up);
-  if (east.lengthSq() < 1e-9) east.set(1, 0, 0);
-  east.normalize();
-  const north = new Vector3().crossVectors(up, east).normalize();
-  return { up, east, north };
-}
-
 export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
   // A millisecond short of the end, so the last step's picture holds.
   const story = spec.fromSun ? SUN_STORY : SHOWER_STORY;
@@ -347,8 +324,8 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
   }
 
   const rayColor = new Color(0.75, 0.9, 1);
-  const polar = frame(spec.place);
-  const equator = frame({ latitude: 0, longitude: spec.place.longitude });
+  const polar = localFrame(spec.place);
+  const equator = localFrame({ latitude: 0, longitude: spec.place.longitude });
   const away = turnedAway(spec.dipole);
 
   // The ray near the pole: in from far out, a little curved, to a strike high in the air.
@@ -498,13 +475,13 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
       // The rays, the one at the pole quickening in, the other bent away or let in.
       for (const [i, ray] of rays.entries()) {
         const going = through(t, i * 200, AT.shower - 400);
-        const at = curve(ray.from, ray.bend, ray.to, ease(going));
+        const at = curve(ray.from, ray.bend, ray.to, easeOut(going));
         ray.head.visible = t < AT.shower + 300;
         // The track stays a while, fading, so the bend can be seen.
         ray.tail.visible = t < AT.capture;
         ray.tail.material.opacity = 0.85 * (1 - through(t, AT.shower + 300, 1500));
         ray.head.position.copy(at);
-        setTrack(ray.tail, ease(going));
+        setTrack(ray.tail, easeOut(going));
         ray.label.visible = t > 300 && t < AT.shower;
         pin(
           ray.label,
@@ -517,11 +494,11 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
       // The shower: a flash at the strike, then the cone spreading down and fading.
       const bursting = through(t, AT.shower + BURST_DELAY, 1400);
       flash.visible = t >= AT.shower + BURST_DELAY && bursting < 1;
-      flash.scale.setScalar(0.02 + 0.09 * ease(bursting));
+      flash.scale.setScalar(0.02 + 0.09 * easeOut(bursting));
       flash.material.opacity = 1 - bursting;
       shower.visible = t >= AT.shower + BURST_DELAY && t < AT.dioxide;
       for (const [i, end] of ends.entries()) {
-        const tip = strike.clone().lerp(end, ease(bursting));
+        const tip = strike.clone().lerp(end, easeOut(bursting));
         showerPositions.setXYZ(i * 2, strike.x, strike.y, strike.z);
         showerPositions.setXYZ(i * 2 + 1, tip.x, tip.y, tip.z);
       }
@@ -530,7 +507,7 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
       // The neutron finds the nitrogen, which turns to carbon-14; the proton flies off.
       const finding = through(t, AT.capture, 1000);
       neutron.visible = t >= AT.capture && finding < 1;
-      neutron.position.copy(strike.clone().lerp(meet, ease(finding)));
+      neutron.position.copy(strike.clone().lerp(meet, easeOut(finding)));
       labels.neutron.visible = neutron.visible;
       pin(labels.neutron, neutron.position, polar.up, polar.east, 0.008);
       nitrogen.visible = t >= AT.shower && t < SHOWER_MS;
@@ -549,16 +526,16 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
       const centre = meet
         .clone()
         .lerp(leaf, falling ** 1.4)
-        .lerp(leaf, ease(taking));
+        .lerp(leaf, easeOut(taking));
       nitrogen.position.copy(centre);
       // Taken in, the atoms shrink into the leaf.
-      const shrink = 1 - 0.85 * ease(taking);
+      const shrink = 1 - 0.85 * easeOut(taking);
       nitrogen.scale.setScalar((turned ? 0.024 : 0.02) * shrink);
       for (const [i, oxygen] of oxygens.entries()) {
         oxygen.visible = t >= AT.dioxide && t < SHOWER_MS;
         const from = oxygenFrom[i] ?? meet;
         const offset = (oxygenTo[i] ?? new Vector3()).clone().multiplyScalar(shrink);
-        oxygen.position.copy(from.clone().lerp(centre.clone().add(offset), ease(joining)));
+        oxygen.position.copy(from.clone().lerp(centre.clone().add(offset), easeOut(joining)));
         oxygen.scale.setScalar(0.017 * shrink);
       }
       // Its labels: the atoms until they join, then the molecule as it falls.
@@ -583,7 +560,7 @@ export function createShowerAnimation(spec: ShowerSpec): ShowerAnimation {
       // It comes down over 1.6 s, then rests at the leaf a moment as the leaf takes it in.
       const arriving = through(t, AT.plant, 1600);
       photon.visible = spec.fromSun && t >= AT.plant && t < AT.plant + 3000;
-      photon.position.copy(skyward.clone().lerp(leaf, ease(arriving)));
+      photon.position.copy(skyward.clone().lerp(leaf, easeOut(arriving)));
       labels.photon.visible = photon.visible;
       pin(labels.photon, photon.position, polar.up, polar.east, 0.008);
       pin(labels.plant, ground, polar.up, polar.north.clone().negate(), 0.008);

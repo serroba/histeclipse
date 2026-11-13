@@ -43,7 +43,7 @@ import type { Line2 } from 'three/addons/lines/Line2.js';
 import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
 import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
 
-import { geoToVector } from '../../globe/geo';
+import { curve, localFrame } from '../../globe/motion';
 import { rayLabels, turnedAway } from '../../globe/showerSteps';
 import type { GeoPoint } from '../../state/viewState';
 import {
@@ -77,7 +77,7 @@ import {
   type StoryKit,
   type StoryScene,
 } from '../../story/storyScene';
-import { clamp01, ease as EASE } from '../../story/timing';
+import { clamp01, ease as EASE } from '../../util/timing';
 
 /** The chapters this scene plays. */
 type AirChapter = 'rays' | 'shower' | 'capture';
@@ -178,24 +178,6 @@ function thinningAir(): ShaderMaterial {
   });
 }
 
-/** A point on the quadratic curve from `a` through control `c` to `b`. */
-function curve(a: Vector3, c: Vector3, b: Vector3, t: number): Vector3 {
-  const u = 1 - t;
-  return a
-    .clone()
-    .multiplyScalar(u * u)
-    .addScaledVector(c, 2 * u * t)
-    .addScaledVector(b, t * t);
-}
-
-/** Up and east at a place on the unit globe. */
-function frameAt(place: GeoPoint): { up: Vector3; east: Vector3 } {
-  const up = new Vector3(...geoToVector(place)).normalize();
-  const east = new Vector3().crossVectors(new Vector3(0, 1, 0), up);
-  if (east.lengthSq() < 1e-9) east.set(1, 0, 0);
-  return { up, east: east.normalize() };
-}
-
 const vector = ([x, y, z]: Point): Vector3 => new Vector3(x, y, z);
 
 export function createAirShower(container: HTMLElement, options: AirShowerOptions): AirShower {
@@ -241,8 +223,8 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
 
   // The field: a dipole about the spin axis (r = L cos² latitude), in the rays' meridian and
   // others round the axis, fainter for a weaker field; none without one.
-  const polar = frameAt(options.place);
-  const equator = frameAt({ latitude: 0, longitude: options.place.longitude });
+  const polar = localFrame(options.place);
+  const equator = localFrame({ latitude: 0, longitude: options.place.longitude });
   const fieldColour = new Color(0.55, 0.85, 1);
   const fieldStrength = Math.min(1, options.dipole / 7.8);
   const fieldLines: Line2[] = [];
@@ -641,7 +623,7 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
   // The cameras' ways: beside Earth, seeing the rays' meridian face on; then down the proton's
   // path into the column and round to its side.
   // A little round from face on, so the place struck is on Earth's face, not its edge.
-  const side = frameAt({ latitude: 18, longitude: options.place.longitude - 60 }).up;
+  const side = localFrame({ latitude: 18, longitude: options.place.longitude - 60 }).up;
   // A little below the rays, so the stage under the scene leaves them in view.
   const raysTarget = polar.up
     .clone()
