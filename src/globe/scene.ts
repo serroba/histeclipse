@@ -286,12 +286,12 @@ export function createGlobe(
     },
   });
 
-  // Each frame: what plays on Earth, then the camera. Around each drawing: the tiles, the Sun's
-  // shade and what deep time leaves out; then what is placed over the picture.
+  // Each frame: what plays, the camera; around each drawing: tiles, shade, what is placed over it.
   stage.add(playback);
   stage.add(rig);
   let hidden: Object3D[] = [];
   stage.add({
+    resize: labels.resize,
     beforeRender(now) {
       const more = earthTiles.update(camera, !surfaces.deepTime && earth.visible, now);
       // 1 when the camera looks at the Sun from Earth's side, as SDO did; −1 from behind.
