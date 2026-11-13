@@ -1,47 +1,18 @@
-import { type BufferAttribute, Vector2 } from 'three';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type BufferAttribute } from 'three';
+import { describe, expect, it, vi } from 'vitest';
+import { fakeContainer, projectionUniforms, useFakeDocument } from '../test/fakes';
 import type { Figure } from './look';
 import { SkyFigures } from './skyFigures';
 
-interface FakeLabel {
-  className: string;
-  textContent: string;
-  hidden: boolean;
-  dataset: Record<string, string>;
-  remove: () => void;
-  getBoundingClientRect: () => DOMRect;
-}
-
-let made: FakeLabel[] = [];
+const page = useFakeDocument();
+const made = page.made;
 /** Where each name lands on screen, by its text: a box 50 by 10 from there. */
-let at: Record<string, number> = {};
-
-beforeEach(() => {
-  made = [];
-  at = {};
-  // Labels are plain records here: no DOM in unit tests.
-  vi.stubGlobal('document', {
-    createElement: () => {
-      const label: FakeLabel = {
-        className: '',
-        textContent: '',
-        hidden: true,
-        dataset: {},
-        remove: vi.fn(),
-        getBoundingClientRect: () => {
-          const x = at[label.textContent] ?? 0;
-          return { left: x, right: x + 50, top: 0, bottom: 10 } as DOMRect;
-        },
-      };
-      made.push(label);
-      return label;
-    },
-  });
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+function layOut(at: Record<string, number>): void {
+  for (const label of made) {
+    const x = at[label.textContent] ?? 0;
+    label.box = { left: x, right: x + 50, top: 0, bottom: 10 };
+  }
+}
 
 // Three stars up high, and one star that is below the horizon.
 const STARS = new Float32Array([0, 100, 0, 10, 100, 0, 0, 100, 10, 0, -100, 0]);
@@ -52,13 +23,8 @@ const LOW: Figure = { name: 'Crux', rank: 1, lines: [[3, 3]] };
 function figures(start: 'famous' | 'all' | 'none' = 'all') {
   const invalidate = vi.fn();
   const sky = new SkyFigures({
-    projection: {
-      skyScale: { value: new Vector2(1, 1) },
-      skyShift: { value: new Vector2() },
-      skyClip: { value: 0 },
-      skyViewport: { value: new Vector2(1, 1) },
-    },
-    labelLayer: { append: vi.fn() } as unknown as HTMLElement,
+    projection: projectionUniforms(),
+    labelLayer: fakeContainer(),
     stars: STARS,
     modern: [BIG, SMALL, LOW],
     figures: start,
@@ -104,13 +70,8 @@ describe('SkyFigures', () => {
   it('draws a star missing from the catalogue at the centre, not as nothing', () => {
     const invalidate = vi.fn();
     const sky = new SkyFigures({
-      projection: {
-        skyScale: { value: new Vector2(1, 1) },
-        skyShift: { value: new Vector2() },
-        skyClip: { value: 0 },
-        skyViewport: { value: new Vector2(1, 1) },
-      },
-      labelLayer: { append: vi.fn() } as unknown as HTMLElement,
+      projection: projectionUniforms(),
+      labelLayer: fakeContainer(),
       stars: STARS,
       modern: [{ name: 'Lost', rank: 1, lines: [[1, 99]] }],
       figures: 'all',
@@ -134,7 +95,7 @@ describe('SkyFigures', () => {
 
   it('places the biggest names first, leaves out overlaps and those low in the sky', () => {
     const { sky } = figures();
-    at = { Orion: 0, 'Lyra · Lyre': 30, Crux: 200 };
+    layOut({ Orion: 0, 'Lyra · Lyre': 30, Crux: 200 });
     const place = vi.fn((label: HTMLElement, _position: unknown, show: boolean) => {
       label.hidden = !show;
     });
@@ -150,7 +111,7 @@ describe('SkyFigures', () => {
 
   it('leaves out a name that would overlap a planet’s', () => {
     const { sky } = figures();
-    at = { Orion: 0 };
+    layOut({ Orion: 0 });
     sky.placeNames(
       (label, _position, show) => {
         label.hidden = !show;

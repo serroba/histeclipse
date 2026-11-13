@@ -1,22 +1,14 @@
 import type { Vector3 } from 'three';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { IDENTITY, type Vector3 as Vec3 } from '../astro/matrix';
+import { fakeContainer, useFakeDocument } from '../test/fakes';
 import { SkyPlanets } from './skyPlanets';
 
-beforeEach(() => {
-  // Labels are plain records here: no DOM in unit tests.
-  vi.stubGlobal('document', {
-    createElement: () => ({ className: '', textContent: '', hidden: true }),
-  });
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+useFakeDocument();
 
 function planets() {
   const dataset: DOMStringMap = {};
-  const layer = { append: vi.fn() } as unknown as HTMLElement;
+  const layer = fakeContainer();
   return { made: new SkyPlanets({ uniforms: {}, labelLayer: layer, dataset }), dataset };
 }
 

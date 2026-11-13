@@ -1,42 +1,11 @@
 import { Vector3 } from 'three';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { fakeContainer, fakeElement, useFakeDocument } from '../test/fakes';
 import type { SkyFigures } from './skyFigures';
 import { SkyNames } from './skyNames';
 import type { PlanetLabel, SkyPlanets } from './skyPlanets';
 
-interface FakeLabel {
-  className: string;
-  textContent: string;
-  hidden: boolean;
-  style: { transform?: string };
-  remove: () => void;
-  getBoundingClientRect: () => DOMRect;
-}
-
-let made: FakeLabel[] = [];
-
-beforeEach(() => {
-  made = [];
-  // Labels are plain records here: no DOM in unit tests.
-  vi.stubGlobal('document', {
-    createElement: () => {
-      const label: FakeLabel = {
-        className: '',
-        textContent: '',
-        hidden: true,
-        style: {},
-        remove: vi.fn(),
-        getBoundingClientRect: () => ({ left: 1 }) as DOMRect,
-      };
-      made.push(label);
-      return label;
-    },
-  });
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+const page = useFakeDocument();
 
 /** Straight ahead is the scene's −z here: things in front land at their x and y, the rest behind. */
 const screenPoint = (position: Vector3): readonly [number, number] | null =>
@@ -44,7 +13,7 @@ const screenPoint = (position: Vector3): readonly [number, number] | null =>
 
 function names() {
   const dataset: DOMStringMap = {};
-  const layer = { append: vi.fn() } as unknown as HTMLElement;
+  const layer = fakeContainer();
   return { sky: new SkyNames({ layer, screenPoint, dataset }), dataset };
 }
 
@@ -59,7 +28,7 @@ function others(planetLabels: PlanetLabel[] = []) {
   };
 }
 
-const byText = (text: string) => made.find(({ textContent }) => textContent === text);
+const byText = page.byText;
 
 describe('SkyNames', () => {
   it('names the compass points along the horizon, the one ahead shown', () => {
@@ -97,19 +66,13 @@ describe('SkyNames', () => {
 
   it('places the planets’ names, then lets them share, then the figures’ clear of them', () => {
     const { sky } = names();
-    const venus = {
-      className: '',
-      textContent: 'Venus',
-      hidden: true,
-      style: {},
-      getBoundingClientRect: () => ({ left: 0 }) as DOMRect,
-    };
+    const venus = Object.assign(fakeElement(), { textContent: 'Venus', hidden: true });
     const label = venus as unknown as HTMLElement;
     const { planets, figures, shareNames, placeNames } = others([
       { name: 'Venus', label, position: new Vector3(0, 10, -40), shown: true },
       {
         name: 'Mars',
-        label: { hidden: true, style: {} } as unknown as HTMLElement,
+        label: Object.assign(fakeElement(), { hidden: true }) as unknown as HTMLElement,
         position: new Vector3(0, 0, -40),
         shown: false,
       },
@@ -122,7 +85,7 @@ describe('SkyNames', () => {
       () => DOMRect[],
     ];
     expect(kept()).toHaveLength(1);
-    const far = { hidden: false, style: {} } as unknown as HTMLElement;
+    const far = fakeElement() as unknown as HTMLElement;
     place(far, new Vector3(100, 0, -40), true);
     expect(far.hidden).toBe(true);
   });

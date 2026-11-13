@@ -236,6 +236,18 @@ describe('the shape of src', () => {
     expect(heavy, 'a part imports only three and the globe').toEqual([]);
   });
 
+  it("the tests' stand-ins for the page are for tests only (#627)", () => {
+    const reaching = Object.entries(sources)
+      .filter(([path]) => folderOf(path) !== 'test')
+      .flatMap(([path, text]) =>
+        [...text.matchAll(IMPORT)]
+          .map((match) => resolve(path, match[1] ?? match[2] ?? ''))
+          .filter((target) => target.startsWith('./test/'))
+          .map((target) => `${path} -> ${target}`),
+      );
+    expect(reaching, 'only *.test.ts files import src/test').toEqual([]);
+  });
+
   it('the Globe interface does not grow: draw new things with globe.addLayer', () => {
     const contract = sources['./globe/globe.ts'] ?? '';
     const body = /^export interface Globe \{\n([\s\S]*?)^\}/m.exec(contract)?.[1] ?? '';

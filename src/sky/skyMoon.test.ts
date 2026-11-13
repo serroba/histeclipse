@@ -1,7 +1,8 @@
-import { type Texture, Vector2, Vector3 } from 'three';
+import { type Texture, Vector3 } from 'three';
 import type * as Three from 'three';
 import { describe, expect, it, vi } from 'vitest';
 import { IDENTITY } from '../astro/matrix';
+import { projectionUniforms } from '../test/fakes';
 import { SkyMoon } from './skyMoon';
 
 const loaded: (() => void)[] = [];
@@ -23,12 +24,7 @@ function moon() {
   const dataset: DOMStringMap = {};
   const invalidate = vi.fn();
   const made = new SkyMoon({
-    projection: {
-      skyScale: { value: new Vector2(1, 1) },
-      skyShift: { value: new Vector2() },
-      skyClip: { value: 0 },
-      skyViewport: { value: new Vector2(1, 1) },
-    },
+    projection: projectionUniforms(),
     sunDirection: { value: new Vector3(0, -1, 0) },
     textureUrl: 'moon.jpg',
     dataset,

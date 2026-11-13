@@ -7,8 +7,9 @@
 
 /** Lowest first. */
 export const TIERS = [
-  // Shared vocabulary and helpers; imports nothing from the rest of `src`.
-  ['core', 'util'],
+  // Shared vocabulary and helpers; imports nothing from the rest of `src`. `test` holds the
+  // unit tests' stand-ins for the page (#627), imported by tests only.
+  ['core', 'util', 'test'],
   // The domain: astronomy, calendars, eclipses, deep time, the data files and their parsing.
   ['astro', 'time', 'eclipses', 'deepTime', 'data'],
   // What the reader is looking at, and where each thing shown comes from.

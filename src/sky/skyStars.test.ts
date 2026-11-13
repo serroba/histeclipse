@@ -1,8 +1,8 @@
-import { Vector2 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { IDENTITY, type Vector3 as Vec3 } from '../astro/matrix';
 import type { Sky } from '../data/sky';
 import type { JulianDay } from '../time/julianDay';
+import { projectionUniforms } from '../test/fakes';
 import { SkyStars } from './skyStars';
 
 const J2000 = 2_451_545 as JulianDay;
@@ -24,12 +24,7 @@ const CATALOGUE: Sky['stars'] = {
 function stars() {
   return new SkyStars({
     stars: CATALOGUE,
-    projection: {
-      skyScale: { value: new Vector2(1, 1) },
-      skyShift: { value: new Vector2() },
-      skyClip: { value: 0 },
-      skyViewport: { value: new Vector2(1, 1) },
-    },
+    projection: projectionUniforms(),
     pixelRatio: 2,
   });
 }
@@ -77,12 +72,7 @@ describe('SkyStars', () => {
         vmag: [1],
         bv: [],
       },
-      projection: {
-        skyScale: { value: new Vector2(1, 1) },
-        skyShift: { value: new Vector2() },
-        skyClip: { value: 0 },
-        skyViewport: { value: new Vector2(1, 1) },
-      },
+      projection: projectionUniforms(),
       pixelRatio: 1,
     });
     // The second star falls back to RA 0, Dec 0, magnitude 99: on the horizon, never counted.
