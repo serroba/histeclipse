@@ -129,9 +129,11 @@ describe('Stage', () => {
 
   it('does not ask for another frame once stopped during one', () => {
     const { made } = stage();
-    made.add({ afterRender: () => {
+    made.add({
+      afterRender: () => {
         made.stop();
-      } });
+      },
+    });
     made.start(true);
     expect(pending).toBeNull();
   });
