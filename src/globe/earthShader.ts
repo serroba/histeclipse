@@ -235,9 +235,11 @@ const EARTH_BODY = /* glsl */ `
       float sea = 1.0 - smoothstep(-blur, blur, coast);
       float shore = 1.0 - smoothstep(blur, 3.0 * blur, abs(coast));
       // A land-only map's 1° cells reach the coast drawn here (its edge values carry over into
-      // the empty cells), but colour the sea only where a map covers it fully.
-      vec4 temp = temperatureLayer(uv);
-      float cover = smoothstep(0.0, 0.2, temp.a) * mix(1.0, step(0.999, temp.a), sea);
+      // the empty cells), but colour the sea only where a map has data in full: a land map's
+      // blend into its empty sea cells is not the sea's (#587).
+      float data;
+      vec4 temp = temperatureLayer(uv, sea, data);
+      float cover = smoothstep(0.0, 0.2, temp.a) * mix(1.0, step(0.999, data), sea);
       color = mix(color, temp.rgb * (1.0 - 0.3 * sea) * (1.0 - 0.55 * shore), cover);
     }
     color = seaIceOver(color, uv, 1.0 - smoothstep(-blur, blur, coast));

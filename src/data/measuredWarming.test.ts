@@ -10,31 +10,37 @@ async function index(): Promise<MeasuredWarming> {
 }
 
 describe('the measured warming maps', () => {
-  it('are Berkeley Earth’s, of land, against 1850–1900, credited with their licence', async () => {
+  it('are Berkeley Earth’s, of land and sea, against 1850–1900, credited with their licence', async () => {
     const warming = await index();
     expect(warming.baseline).toBe('1850–1900');
     expect(warming.licence).toBe('CC BY-NC 4.0');
     expect(warming.credit).toMatch(/^Berkeley Earth \(Rohde & Hausfather 2020/);
-    expect(warming.frames[0]?.year).toBe(1850);
+    expect(warming.coverage).toBe('land and sea');
+    // The file starts in 1850: the first 5-year mean is 1851–1855's.
+    expect(warming.frames[0]?.year).toBe(1855);
   });
 
-  it('estimate the baseline where its records were too few, about a third of the land', async () => {
+  it('estimate the baseline where its records were too few, land and sea apart', async () => {
     const { estimated } = await index();
     expect(estimated.from).toBe('1951–1980');
     expect(estimated.share).toBeGreaterThan(0.2);
-    expect(estimated.share).toBeLessThan(0.4);
-    // 1951–1980 was some 0.3 to 0.6 °C warmer than 1850–1900, band by band.
-    for (const { shift } of estimated.bands) {
+    expect(estimated.share).toBeLessThan(0.5);
+    const [land, sea] = estimated.surfaces;
+    expect([land?.surface, sea?.surface]).toEqual(['land', 'sea']);
+    // On land 1951–1980 was some 0.3 to 0.6 °C warmer than 1850–1900, band by band; the sea
+    // warmed less.
+    for (const { shift } of land?.bands ?? []) {
       expect(shift).toBeGreaterThan(0.2);
       expect(shift).toBeLessThan(0.8);
     }
+    expect(sea?.shift).toBeLessThan(land?.shift ?? 0);
   });
 
-  it('show land some 2 °C warmer in the last five years than in 1850–1900', async () => {
+  it('show the globe some 1.3 °C warmer in the last five years than in 1850–1900', async () => {
     const last = (await index()).frames.at(-1);
     expect(last?.year).toBeGreaterThanOrEqual(2024);
-    expect(last?.mean).toBeGreaterThan(1.8);
-    expect(last?.mean).toBeLessThan(2.5);
+    expect(last?.mean).toBeGreaterThan(1.1);
+    expect(last?.mean).toBeLessThan(1.6);
   });
 
   it('reject a file of another shape', async () => {

@@ -63,15 +63,23 @@ export const TEMPERATURE_GLSL = /* glsl */ `
     return mix(c, srgb(vec3(0.647, 0.0, 0.149)), smoothstep(4.0, 10.0, delta));
   }
 
-  // The layer's colour at uv, and how much of it covers the surface there.
-  vec4 temperatureLayer(vec2 uv) {
+  // The layer's colour at uv, and how much of it covers the surface there; \`data\`, how much
+  // of the maps has data there, whatever the colour's fade. \`sea\`, 0 on land to 1 at sea.
+  vec4 temperatureLayer(vec2 uv, float sea, out float data) {
     // x then, y today, z where then has data, w where today has.
     vec4 t = paleoTemperature(uv);
-    if (tempChange < 0.5) return vec4(temperatureColour(t.x), t.z);
+    if (tempChange < 0.5) {
+      data = t.z;
+      return vec4(temperatureColour(t.x), t.z);
+    }
+    data = min(t.z, t.w);
     // Within about a degree of today the land keeps its own colours: the scale's near-white
     // middle read as ice on the Holocene's ice-free continents. The colour comes in by 1.5 °C.
+    // The sea, slower to warm (some 1 °C since 1850-1900 against land's 2), by 0.75 °C: sea ice
+    // is its own layer, so a pale sea is not read as ice (#587).
     float delta = t.x - t.y;
-    return vec4(changeColour(delta), min(t.z, t.w) * smoothstep(0.5, 1.5, abs(delta)));
+    float fade = smoothstep(mix(0.5, 0.25, sea), mix(1.5, 0.75, sea), abs(delta));
+    return vec4(changeColour(delta), data * fade);
   }
 `;
 

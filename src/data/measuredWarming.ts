@@ -1,6 +1,7 @@
 /**
- * Measured warming on land since 1850 (`public/data/warming/`, #485): Berkeley Earth's gridded
- * land temperatures, as 5-year means every five years against 1850–1900, written by the
+ * Measured warming on land and sea since 1850 (`public/data/warming/`, #485, #587): Berkeley
+ * Earth's gridded land and ocean temperatures, as 5-year means every five years against
+ * 1850–1900, written by the
  * pipeline's `measured-warming` command. Packed as Krapp et al.'s ice-age maps are, so the
  * globe's Temperature shader shows them as the change: R the frame, G the baseline (0 °C).
  */
@@ -17,18 +18,25 @@ const WarmingSchema = v.strictObject({
   baseline: v.string(),
   /**
    * Where a cell had too few records in the baseline (#497): measured from a later period and
-   * shifted back by its band of latitude's difference, or the land's where its band has none.
+   * shifted back by its band of latitude's difference, or its surface's where its band has none.
+   * Land and sea are shifted apart, each by its own cells.
    */
   estimated: v.strictObject({
     from: v.string(),
-    /** The share of the land, by area, whose baseline is estimated so. */
+    /** The share of the cells with a baseline, by area, whose baseline is estimated so. */
     share: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
-    bands: v.array(v.strictObject({ south: v.number(), shift: v.number() })),
-    landShift: v.number(),
+    surfaces: v.array(
+      v.strictObject({
+        surface: v.picklist(['land', 'sea']),
+        share: v.pipe(v.number(), v.minValue(0), v.maxValue(1)),
+        bands: v.array(v.strictObject({ south: v.number(), shift: v.number() })),
+        shift: v.number(),
+      }),
+    ),
   }),
   /** How many years each frame averages, ending at its year. */
   years: v.pipe(v.number(), v.integer(), v.minValue(1)),
-  coverage: v.literal('land'),
+  coverage: v.literal('land and sea'),
   columns: v.pipe(v.number(), v.integer(), v.minValue(2)),
   rows: v.pipe(v.number(), v.integer(), v.minValue(2)),
   coldest: v.number(),
@@ -38,7 +46,7 @@ const WarmingSchema = v.strictObject({
       v.strictObject({
         year: v.pipe(v.number(), v.integer()),
         file: v.string(),
-        /** The mean over land with data, °C against the baseline. */
+        /** The mean over land and sea with data, °C against the baseline. */
         mean: v.number(),
       }),
     ),
