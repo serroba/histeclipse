@@ -49,7 +49,7 @@ export const MAX_LINES = 400;
  */
 export const LINE_LIMITS = {
   'app.ts': 789,
-  'globe/scene.ts': 2147,
+  'globe/scene.ts': 1846,
   'ui/deepTimeBar.ts': 779,
   'sky/skyScene.ts': 971,
   'features/treeOfLife/lineagesSheet.ts': 583,
@@ -124,7 +124,7 @@ export const FUNCTION_LIMITS = {
   'globe/impactAnimation.ts': 1,
   'globe/moonMeshes.ts': 1,
   'globe/planetMeshes.ts': 1,
-  'globe/scene.ts': 4,
+  'globe/scene.ts': 1,
   'globe/showerAnimation.ts': 3,
   'globe/showerSteps.ts': 1,
   'sky/skyScene.ts': 1,
