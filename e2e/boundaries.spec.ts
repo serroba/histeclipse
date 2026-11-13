@@ -145,6 +145,13 @@ test('a link opens the comparison complete for less motion, with the report’s 
     const chart = page.getByTestId('holocene-stage');
     await expect(chart).toHaveAttribute('data-complete', 'true');
     await expect(chart).toHaveAttribute('data-playing', 'false');
+    // Held still, the chart names its year once, before the warming has loaded: the globe
+    // still shows today's measured warming (#591).
+    await expect(page.getByTestId('globe')).toHaveAttribute(
+      'data-temperature',
+      /warming\/2024\.png/,
+      PLAYED,
+    );
   });
   expect(problems).toEqual([]);
 });
