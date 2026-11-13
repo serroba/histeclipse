@@ -1,71 +1,24 @@
 import { PerspectiveCamera } from 'three';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { fakeContainer, fakeRenderer, useManualFrames } from '../test/fakes';
 import { Stage } from './stage';
-import type { StageRenderer } from './stage';
 
-/** Frames run by hand: `next(now)` runs the one asked for. */
-let pending: ((now: number) => void) | null = null;
-let observed: (() => void) | null = null;
-const disconnect = vi.fn();
-
-beforeEach(() => {
-  pending = null;
-  observed = null;
-  vi.stubGlobal('requestAnimationFrame', (callback: (now: number) => void) => {
-    pending = callback;
-    return 7;
-  });
-  vi.stubGlobal('cancelAnimationFrame', () => {
-    pending = null;
-  });
-  vi.stubGlobal(
-    'ResizeObserver',
-    class {
-      constructor(callback: () => void) {
-        observed = callback;
-      }
-      observe = vi.fn();
-      disconnect = disconnect;
-    },
-  );
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
-
-function next(now: number): void {
-  const run = pending;
-  pending = null;
-  run?.(now);
-}
-
-function fakes(width = 300, height = 200) {
-  const renderer = {
-    domElement: { canvas: true } as unknown as HTMLCanvasElement,
-    setSize: vi.fn(),
-    render: vi.fn(),
-    dispose: vi.fn(),
-  } satisfies StageRenderer;
-  const append = vi.fn();
-  const container = {
-    append,
-    clientWidth: width,
-    clientHeight: height,
-  } as unknown as HTMLElement;
-  return { renderer, container, append };
-}
+const frames = useManualFrames();
+const next = (now: number): void => {
+  frames.next(now);
+};
 
 function stage(styleSize = false, width = 300, height = 200) {
-  const { renderer, container, append } = fakes(width, height);
+  const renderer = fakeRenderer();
+  const container = fakeContainer(width, height);
   const made = new Stage(container, { renderer, camera: new PerspectiveCamera(), styleSize });
-  return { made, renderer, append };
+  return { made, renderer, container };
 }
 
 describe('Stage', () => {
   it('puts its canvas in the container', () => {
-    const { renderer, append } = stage();
-    expect(append).toHaveBeenCalledWith(renderer.domElement);
+    const { renderer, container } = stage();
+    expect(container.children).toEqual([renderer.domElement]);
   });
 
   it('draws the first frame, then only when something changed', () => {
@@ -120,7 +73,7 @@ describe('Stage', () => {
     made.start(true);
     expect(renderer.render).toHaveBeenCalledTimes(1);
     made.stop();
-    expect(pending).toBeNull();
+    expect(frames.pending()).toBe(false);
     made.start();
     made.invalidate();
     next(4);
@@ -135,7 +88,7 @@ describe('Stage', () => {
       },
     });
     made.start(true);
-    expect(pending).toBeNull();
+    expect(frames.pending()).toBe(false);
   });
 
   it('sizes the canvas to its container and tells the parts', () => {
@@ -144,7 +97,7 @@ describe('Stage', () => {
     made.add({ resize });
     made.observeResize();
     expect(renderer.setSize).not.toHaveBeenCalled();
-    observed?.();
+    frames.resize();
     expect(renderer.setSize).toHaveBeenCalledWith(640, 480, false);
     expect(resize).toHaveBeenCalledWith(640, 480);
     made.resize();
@@ -176,8 +129,8 @@ describe('Stage', () => {
     made.observeResize();
     made.start();
     made.dispose();
-    expect(pending).toBeNull();
-    expect(disconnect).toHaveBeenCalled();
+    expect(frames.pending()).toBe(false);
+    expect(frames.disconnected()).toBe(1);
     expect(dispose).toHaveBeenCalled();
     expect(renderer.dispose).toHaveBeenCalled();
     stage().made.dispose();

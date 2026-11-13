@@ -1,6 +1,7 @@
-import { CanvasTexture, type ShaderMaterial, Vector2 } from 'three';
+import { CanvasTexture, type ShaderMaterial } from 'three';
 import { describe, expect, it, vi } from 'vitest';
 import { createSkyDome } from './skyDome';
+import { projectionUniforms } from '../test/fakes';
 import { SkySun } from './skySun';
 
 // The glare's and the corona's textures are drawn on a canvas: not in unit tests.
@@ -9,12 +10,7 @@ vi.mock('./skyTextures', () => ({
   coronaTexture: () => new CanvasTexture(undefined),
 }));
 
-const PROJECTION = {
-  skyScale: { value: new Vector2(1, 1) },
-  skyShift: { value: new Vector2() },
-  skyClip: { value: 0 },
-  skyViewport: { value: new Vector2(1, 1) },
-};
+const PROJECTION = projectionUniforms();
 
 function sun(fov = 60) {
   const view = { fov };
