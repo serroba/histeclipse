@@ -58,6 +58,8 @@ export function mountBoundaries(context: BoundariesContext): BoundariesPart {
     warmingLoading.then(
       (index) => {
         warming = index;
+        // A chart held still (less motion) names its year once, before this has loaded (#591).
+        if (storyYear !== null) showMeasured(storyYear);
       },
       (error: unknown) => {
         warmingLoading = null;
