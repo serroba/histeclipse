@@ -31,6 +31,7 @@ import {
   type Viewpoint,
 } from '../state/viewState';
 import type { Matrix3 } from '../astro/matrix';
+import type { StagePart } from '../stage/stage';
 
 const FLIGHT_MS = 900;
 /** A zoom from one stop to another, however far: eased in log distance, so it reads as one move. */
@@ -54,7 +55,7 @@ export interface CameraRigOptions {
   readonly tiled: boolean;
 }
 
-export class CameraRig {
+export class CameraRig implements StagePart {
   #viewpoint: Viewpoint = 'free';
   #pendingViewpoint: Viewpoint | null = null;
   #focus: Body;
@@ -105,8 +106,8 @@ export class CameraRig {
     return this.#projection.insets;
   }
 
-  /** Advance the flights and the controls by a frame. */
-  step(now: number): void {
+  /** Advance the flights and the controls by a frame; it asks for drawings itself, so false. */
+  step(now: number): boolean {
     if (this.#view !== null) this.#stepView(now, this.#view);
     else if (this.#turn !== null) this.#stepTurn(now, this.#turn);
     if (this.#zoom !== null && this.#view === null) this.#stepZoom(now, this.#zoom);
@@ -117,6 +118,7 @@ export class CameraRig {
     controls.rotateSpeed = speeds.rotate;
     // update() keeps damping going after the pointer is released; it reports movement via 'change'.
     if (controls.enabled) controls.update();
+    return false;
   }
 
   setFocus(body: Body): void {

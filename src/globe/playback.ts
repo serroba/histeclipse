@@ -13,6 +13,7 @@ import {
   type ShowerSpec,
 } from './showerAnimation';
 import { rayLabels } from './showerSteps';
+import type { StagePart } from '../stage/stage';
 
 /** Impacts that play at once, at most; deep time running fast can pass several in a frame. */
 const MAX_IMPACTS = 8;
@@ -28,7 +29,7 @@ export interface PlaybackWorld {
   invalidate(): void;
 }
 
-export class Playback {
+export class Playback implements StagePart {
   readonly #world: PlaybackWorld;
   // The impacts playing, oldest first, and how many have played out.
   readonly #impacts = new Set<ImpactAnimation>();
