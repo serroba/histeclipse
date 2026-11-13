@@ -61,7 +61,6 @@ import {
 } from './airCascade';
 import {
   capture,
-  element,
   makeUp,
   nuclearRadius,
   NUCLEON_FM,
@@ -77,7 +76,24 @@ import {
   type StoryKit,
   type StoryScene,
 } from '../../story/storyScene';
-import { clamp01, ease as EASE } from '../../util/timing';
+import {
+  AIR_MS,
+  CAPTURE_MS,
+  captureBeat,
+  captureCamera,
+  fieldLine,
+  firstNamed,
+  flashAt,
+  kindsNamed,
+  nucleusWords,
+  rayBeat,
+  RAYS_MS,
+  raysCamera,
+  showerBeat,
+  showerCamera,
+  starField,
+  tremble,
+} from './airTimeline';
 
 /** The chapters this scene plays. */
 type AirChapter = 'rays' | 'shower' | 'capture';
@@ -95,28 +111,10 @@ export interface AirShowerOptions {
 
 export type AirShower = StoryScene<AirChapter>;
 
-/** How long the rays take to come in, ms. */
-const RAYS_MS = 3600;
-/** How long the proton takes from the top of the column to its first collision, ms. */
-const ENTER_MS = 900;
-/** How long the front takes from the first collision to the last track's end, ms. */
-const CASCADE_MS = 3400;
-/** How long the neutron followed takes to slow, ms, once the front has gone by. */
-const SLOW_MS = 1000;
-/** The whole of the shower chapter, ms. */
-const AIR_MS = ENTER_MS + CASCADE_MS + SLOW_MS;
-/** The reaction's moments, ms: the neutron arrives, and the proton leaves. */
-const ARRIVE_MS = 1800;
-const LEAVE_MS = 2500;
-/** How long the proton takes to fly out of the frame, ms; the reaction is whole after it. */
-const FLY_MS = 1400;
-const CAPTURE_MS = LEAVE_MS + FLY_MS;
 /** The colours the stage's captions name: nitrogen blue, carbon-14 violet, the proton yellow. */
 const NITROGEN = new Color(PALETTE.nitrogen);
 const CARBON = new Color(PALETTE.carbon14);
 const FREED = new Color(PALETTE.freedProton);
-/** The camera's move from beside the incoming proton to the side of the column, ms. */
-const SWING_MS = 2200;
 /** How wide the column of air is drawn, km either side. */
 const COLUMN_KM = 9;
 
@@ -206,16 +204,8 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
   for (const item of [earthGeometry, airGeometry, earthMap, earthMaterial, airMaterial]) own(item);
   space.add(new Mesh(earthGeometry, earthMaterial), new Mesh(airGeometry, airMaterial));
 
-  const starPositions: number[] = [];
-  for (let i = 0; i < 1400; i += 1) {
-    // Spread evenly over a far sphere, the same sky every time.
-    const z = 1 - (2 * (i + 0.5)) / 1400;
-    const angle = i * 2.399963;
-    const across = Math.sqrt(1 - z * z);
-    starPositions.push(across * Math.cos(angle) * 80, z * 80, across * Math.sin(angle) * 80);
-  }
   const starGeometry = new BufferGeometry();
-  starGeometry.setAttribute('position', new Float32BufferAttribute(starPositions, 3));
+  starGeometry.setAttribute('position', new Float32BufferAttribute(starField(1400, 80), 3));
   const starMaterial = new PointsMaterial({ color: 0x9fb4d8, size: 1.4, sizeAttenuation: false });
   own(starGeometry);
   own(starMaterial);
@@ -232,18 +222,7 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
     for (let meridian = 0; meridian < 6; meridian += 1) {
       const out = equator.up.clone().applyAxisAngle(new Vector3(0, 1, 0), (meridian * Math.PI) / 3);
       for (const shell of [1.35, 1.8, 2.6, 3.8]) {
-        const reach = Math.acos(Math.sqrt(1 / shell));
-        const points: Vector3[] = [];
-        for (let i = 0; i <= 64; i += 1) {
-          const latitude = -reach + (2 * reach * i) / 64;
-          const r = shell * Math.cos(latitude) ** 2;
-          points.push(
-            out
-              .clone()
-              .multiplyScalar(r * Math.cos(latitude))
-              .add(new Vector3(0, r * Math.sin(latitude), 0)),
-          );
-        }
+        const points = fieldLine(out, shell);
         const drawn = line(points, fieldColour, meridian % 3 === 0 ? 1.6 : 1, space);
         drawn.material.opacity = (meridian % 3 === 0 ? 0.55 : 0.12) * fieldStrength;
         fieldLines.push(drawn);
@@ -306,9 +285,8 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
   function placeRays(t: number): number {
     let along = 0;
     for (const ray of rays) {
-      const progress = clamp01((t - ray.delay) / (RAYS_MS - 800));
+      const { progress, index, bursting } = rayBeat(t, ray.delay, TRACK_POINTS);
       along = Math.max(along, progress);
-      const index = Math.round(progress * (TRACK_POINTS - 1));
       const at = ray.points[index] ?? ray.to;
       ray.track.geometry.instanceCount = index;
       ray.head.position.copy(at);
@@ -317,7 +295,6 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
       // Named from the start, where it will come in from, so a scene paused there says which is
       // which.
       ray.label.visible = true;
-      const bursting = clamp01((t - ray.delay - (RAYS_MS - 800)) / 700);
       ray.flash.visible = ray.strikes && bursting > 0 && bursting < 1;
       ray.flash.position.copy(ray.to);
       ray.flash.scale.setScalar(0.05 + 0.35 * bursting);
@@ -452,26 +429,24 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
 
   /** The shower at `t` ms into its chapter; returns the real time since the first collision, µs. */
   function placeShower(t: number): number {
-    const entering = clamp01(t / ENTER_MS);
+    const { entering, front, descent, slowing } = showerBeat(
+      t,
+      enters.distanceTo(first),
+      cascade.length,
+    );
     proton.position.copy(enters).lerp(first, entering);
     proton.visible = entering < 1;
     protonLabel.position.copy(proton.position);
     protonLabel.visible = entering < 1;
-    // The front, in km gone since the first collision, the proton's own way in before it.
-    const front =
-      t < ENTER_MS
-        ? -enters.distanceTo(first) * (1 - entering)
-        : cascade.length * clamp01((t - ENTER_MS) / CASCADE_MS);
     showerGeometry.instanceCount = reached(drawn, front);
-    firstLabel.visible = front >= 0 && t < ENTER_MS + CASCADE_MS * 0.45;
+    firstLabel.visible = firstNamed(front, t);
     for (const [i, flash] of flashes.entries()) {
-      const age = (front - (collisionTimes[i] ?? 0)) / 2.5;
-      flash.visible = age >= 0 && age < 1;
-      flash.scale.setScalar(0.6 + 2.4 * age);
-      flash.material.opacity = 1 - age;
+      const shown = flashAt(front - (collisionTimes[i] ?? 0));
+      flash.visible = shown.visible;
+      flash.scale.setScalar(shown.scale);
+      flash.material.opacity = shown.opacity;
     }
     // The front goes straight down at nearly the speed of light: the clock tells its height.
-    const descent = Math.min(FIRST_COLLISION_KM, Math.max(0, front));
     frontLabel.visible = front >= 0 && descent < FIRST_COLLISION_KM;
     frontLabel.position.set(COLUMN_KM * 0.45, FIRST_COLLISION_KM - descent, 0);
     const micro = microseconds(descent);
@@ -479,10 +454,9 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
     for (const { object, sample } of kindLabels) {
       if (sample === undefined) continue;
       const shown = front >= (sample.start + sample.end) / 2;
-      object.visible = shown && t < ENTER_MS + CASCADE_MS + SLOW_MS * 0.3;
+      object.visible = shown && kindsNamed(t);
       object.position.copy(vector(sample.from)).lerp(vector(sample.to), 0.5);
     }
-    const slowing = clamp01((t - ENTER_MS - CASCADE_MS) / SLOW_MS);
     const born = front >= neutronBorn;
     const steps = Math.round(slowing * (neutronPoints.length - 1));
     neutronTrail.visible = born;
@@ -553,9 +527,7 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
 
   /** The reaction at `t` ms into its chapter; returns the stage it is at. */
   function placeCapture(t: number): Stage {
-    const stage: Stage = t < ARRIVE_MS ? 'nitrogen' : t < LEAVE_MS ? 'compound' : 'carbon';
-    const arriving = EASE(clamp01(t / ARRIVE_MS));
-    const flying = 1 - (1 - clamp01((t - LEAVE_MS) / FLY_MS)) ** 3;
+    const { stage, arriving, flying, flash, carbon } = captureBeat(t);
     const leaving = homes[reaction.leaves] ?? new Vector3();
     const flown = leaving.clone().lerp(leavingTo, flying);
     // The carbon-14 recoils the other way, a fourteenth as far: momentum shared equally.
@@ -566,12 +538,7 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
     for (const [index, mesh] of nucleons.entries()) {
       const home = homes[index] ?? new Vector3();
       // Each nucleon trembles in place, the more so for an instant once the neutron is in.
-      const shake = 0.06 + (stage === 'compound' ? 0.18 : 0);
-      const wobble = new Vector3(
-        Math.sin(t / 90 + index * 1.7),
-        Math.sin(t / 110 + index * 2.3),
-        Math.sin(t / 100 + index * 3.1),
-      ).multiplyScalar(shake);
+      const wobble = tremble(t, index, stage);
       if (index === reaction.arrives) {
         mesh.position.copy(arrivingFrom).lerp(home, arriving);
         if (arriving === 1) mesh.position.add(wobble).add(recoil);
@@ -597,18 +564,12 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
       leavingGlow.position.copy(outgoing.position);
       leavingLabel.position.copy(outgoing.position);
     }
-    const flash = clamp01((t - ARRIVE_MS) / 600);
     burst.visible = flash > 0 && flash < 1;
     burst.scale.setScalar(4 + 10 * flash);
     burst.material.opacity = 1 - flash;
     halo.position.copy(recoil);
-    halo.material.color.copy(NITROGEN).lerp(CARBON, clamp01((t - LEAVE_MS) / 600));
-    const { protons, neutrons } = makeUp(stage);
-    const name =
-      stage === 'compound'
-        ? 'nitrogen-15, for an instant'
-        : `${element(protons)}-${String(protons + neutrons)}`;
-    nucleusLabel.element.textContent = `${name}: ${String(protons)} protons, ${String(neutrons)} neutrons`;
+    halo.material.color.copy(NITROGEN).lerp(CARBON, carbon);
+    nucleusLabel.element.textContent = nucleusWords(stage);
     nucleusLabel.position.set(0, nuclearRadius(15) + 1, 0).add(recoil);
     reactionItems[1]?.classList.toggle('is-now', stage !== 'carbon');
     reactionItems[2]?.classList.toggle('is-now', stage === 'carbon');
@@ -660,27 +621,24 @@ function build(kit: StoryKit<AirChapter>, options: AirShowerOptions): StoryChapt
     camera(chapter, t) {
       const fit = 1 / Math.min(1, camera.aspect);
       if (chapter === 'rays') {
-        const p = EASE(clamp01(t / RAYS_MS));
-        const distance = (6.2 - 1.4 * p) * fit ** 1.2;
+        const { turn, distance } = raysCamera(t, fit);
         camera.position
           .copy(side)
-          .applyAxisAngle(new Vector3(0, 1, 0), 0.25 - 0.4 * p)
+          .applyAxisAngle(new Vector3(0, 1, 0), turn)
           .multiplyScalar(distance)
           .add(raysTarget);
         controls.target.copy(raysTarget);
       } else if (chapter === 'capture') {
         // From far, the nucleus a speck, in close as the neutron comes; then a little after the
         // proton.
-        const p = EASE(clamp01(t / ARRIVE_MS));
-        // Less so on a narrow screen, where the nucleus would go off its edge.
-        const after = EASE(clamp01((t - LEAVE_MS) / FLY_MS)) * Math.min(1, camera.aspect);
+        const { inward, after } = captureCamera(t, camera.aspect);
         camera.position
           .set(-6, 5, 80)
-          .lerp(new Vector3(-5, 6, 26 * fit), p)
+          .lerp(new Vector3(-5, 6, 26 * fit), inward)
           .add(new Vector3(4 * after, 0, 4 * after));
         controls.target.set(3 * after, 0, 0);
       } else {
-        const p = EASE(clamp01(t / SWING_MS));
+        const p = showerCamera(t);
         const beside = new Vector3(5, 12, 38 * fit ** 1.1);
         camera.position.copy(swingFrom).lerp(beside, p);
         controls.target.copy(first).lerp(showerTarget, p);
