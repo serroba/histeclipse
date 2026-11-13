@@ -30,7 +30,9 @@ import {
 
 import type { GeoPoint } from '../state/viewState';
 import { frameClock } from '../util/frameClock';
+import { clamp01, easeOut } from '../util/timing';
 import { geoToVector } from './geo';
+import { localFrame } from './motion';
 
 export interface ImpactSpec {
   readonly place: GeoPoint;
@@ -109,12 +111,7 @@ function glowTexture(): CanvasTexture {
 
 /** The direction the impactor came from, as a unit vector in Earth-fixed coordinates. */
 function approachDirection(place: GeoPoint, fromAzimuth: number, angleDegrees: number): Vector3 {
-  const up = new Vector3(...geoToVector(place)).normalize();
-  const pole = new Vector3(0, 1, 0);
-  const east = new Vector3().crossVectors(pole, up);
-  if (east.lengthSq() < 1e-9) east.set(1, 0, 0);
-  east.normalize();
-  const north = new Vector3().crossVectors(up, east).normalize();
+  const { up, east, north } = localFrame(place);
   const azimuth = (fromAzimuth * Math.PI) / 180;
   const elevation = (angleDegrees * Math.PI) / 180;
   const level = north
@@ -123,9 +120,6 @@ function approachDirection(place: GeoPoint, fromAzimuth: number, angleDegrees: n
     .add(east.clone().multiplyScalar(Math.sin(azimuth)));
   return level.multiplyScalar(Math.cos(elevation)).add(up.multiplyScalar(Math.sin(elevation)));
 }
-
-const ease = (t: number): number => 1 - (1 - t) ** 3;
-const clamp = (t: number): number => Math.min(1, Math.max(0, t));
 
 export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
   // Timed by the frames' own clock, from the first frame it is drawn in; a frame that comes very
@@ -209,25 +203,25 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
       // Time as for an impact Chicxulub's size: a smaller one runs through it faster.
       const t = clock.tick(now) / pace;
       // The approach, quickening as it falls.
-      const falling = clamp(t / APPROACH);
+      const falling = clamp01(t / APPROACH);
       const at = origin.clone().lerp(ground, falling ** 1.6);
       head.position.copy(at);
       head.visible = falling < 1;
       trail.visible = falling < 1;
       setTrail(at, sizes.trail * (1 - falling * 0.5));
       // The flash.
-      const flashing = clamp((t - APPROACH) / FLASH);
+      const flashing = clamp01((t - APPROACH) / FLASH);
       flash.visible = t >= APPROACH && flashing < 1;
-      flash.scale.setScalar(sizes.flash * (0.07 + 0.93 * ease(flashing)));
+      flash.scale.setScalar(sizes.flash * (0.07 + 0.93 * easeOut(flashing)));
       flash.material.opacity = 1 - flashing;
       // The ring spreading and fading.
-      const spreading = clamp((t - APPROACH) / RING);
+      const spreading = clamp01((t - APPROACH) / RING);
       blast.visible = t >= APPROACH && spreading < 1;
-      blast.scale.setScalar(Math.max(0.001, blastRadius * ease(spreading)));
+      blast.scale.setScalar(Math.max(0.001, blastRadius * easeOut(spreading)));
       blast.material.opacity = 0.9 * (1 - spreading);
       // The crater, settling in after the flash and fading at the end.
-      const settled = clamp((t - APPROACH - FLASH) / 600);
-      const leaving = clamp((t - (TOTAL - 800)) / 800);
+      const settled = clamp01((t - APPROACH - FLASH) / 600);
+      const leaving = clamp01((t - (TOTAL - 800)) / 800);
       crater.material.opacity = 0.95 * settled * (1 - leaving);
       return t < TOTAL;
     },
