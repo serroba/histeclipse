@@ -53,7 +53,7 @@ export const LINE_LIMITS = {
   'app.ts': 789,
   'globe/scene.ts': 878,
   'ui/deepTimeBar.ts': 779,
-  'sky/skyScene.ts': 788,
+  'sky/skyScene.ts': 664,
   'features/treeOfLife/lineagesSheet.ts': 583,
   'ui/impactPathsSheet.ts': 744,
   'features/shower/airShower.ts': 719,
