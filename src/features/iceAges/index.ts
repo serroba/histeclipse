@@ -22,7 +22,8 @@ import {
   seaIceSeason,
 } from '../../data/seaIce';
 import { earthText } from '../../ui/historyTrack';
-import { type CoastlineView, type DeepTimeView, type SeaIceView } from '../../ui/deepTimeBar';
+import type { CoastlineView, SeaIceView } from '../../ui/deepBarModel';
+import type { DeepTimeView } from '../../ui/deepTimeBar';
 import { framesAround } from '../../data/paleoDem';
 import { loadSeaLevel, type SeaLevelIndex } from '../../data/seaLevel';
 import {

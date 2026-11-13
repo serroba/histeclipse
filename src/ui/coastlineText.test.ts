@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { coastlineText } from './deepTimeBar';
+import { coastlineText } from './deepBarModel';
 
 describe('coastlineText', () => {
   it('says the sea level and whose', () => {
