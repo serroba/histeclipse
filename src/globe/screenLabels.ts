@@ -8,9 +8,10 @@ import { Vector3, type Object3D, type PerspectiveCamera } from 'three';
 
 import { PLANETS, type PlanetName } from '../astro/planets';
 import type { Body, GeoPoint } from '../state/viewState';
+import { CameraMotion } from './cameraMotion';
 import { geoToVector } from './geo';
-import { placeLabel, roomFor, translation } from './labelWrites';
-import type { LayerHost, SurfaceLabel } from './layerHost';
+import { layOutSurface, placeLabel, type SurfaceSlot, translation } from './labelWrites';
+import { type LayerHost, SURFACE_PRIORITY, type SurfaceLabel } from './layerHost';
 import { PLANET_NAMES, planetRadius } from './planetLook';
 import {
   apparentRadiusPixels,
@@ -32,11 +33,8 @@ const LABEL_MAX_RADIUS_PIXELS = 60;
 const OCCLUDING_RADIUS_PIXELS = 10;
 /** Markers closer than this on screen (pixels) are shown as one. */
 const MERGE_PIXELS = 40;
-
-interface SurfaceSlot {
-  readonly priority: number;
-  labels: readonly SurfaceLabel[];
-}
+/** At most this many names from each layer on Earth's surface while the globe turns (#631). */
+const TURNING_NAMES = 30;
 
 /** The bodies that get a marker. */
 type Marked = 'earth' | 'moon' | 'sun' | PlanetName;
@@ -111,9 +109,16 @@ export class ScreenLabels {
   /** The view's size, told on resize: read each frame, it forced style and layout (#631). */
   #width: number;
   #height: number;
+  readonly #motion: CameraMotion;
+  /** Whether the camera moved lately: then fewer names are shown (#631). */
+  #turning = false;
 
   constructor(world: ScreenLabelsWorld) {
     this.#world = world;
+    // Once the view settles, a frame to show every name again.
+    this.#motion = new CameraMotion(() => {
+      world.invalidate();
+    });
     this.#width = world.container.clientWidth;
     this.#height = world.container.clientHeight;
     const layer = document.createElement('div');
@@ -146,14 +151,14 @@ export class ScreenLabels {
         layer.replaceChildren();
         slot.labels = pins === null ? [] : measured(layer, pins);
         // Placed now, not at the next frame: as time plays, that frame may lay them out again.
-        this.placeSurfaceLabels();
+        this.#layOutSurface();
         this.#world.invalidate();
       },
       move: (points) => {
         points.forEach((point, index) => {
           slot.labels[index]?.position.set(...geoToVector(point, 1.01));
         });
-        this.placeSurfaceLabels();
+        this.#layOutSurface();
         this.#world.invalidate();
       },
     };
@@ -166,7 +171,7 @@ export class ScreenLabels {
     return {
       set: (labels) => {
         slot.labels = labels;
-        this.placeSurfaceLabels();
+        this.#layOutSurface();
         this.#world.invalidate();
       },
     };
@@ -202,28 +207,22 @@ export class ScreenLabels {
     layer.dataset['named'] = String(count);
   };
 
-  /** Lay out the layers' names on Earth's surface, largest first, on the near side only. */
+  /** Each frame: the names on Earth's surface; while the camera moves, fewer of them. */
   placeSurfaceLabels(): void {
+    this.#turning = this.#motion.turning(this.#world.camera, performance.now());
+    this.#layOutSurface();
+  }
+
+  /** Lay out the layers' names on Earth's surface, on the near side only. */
+  #layOutSurface(): void {
     const { camera } = this.#world;
-    const eye = camera.position.clone().normalize();
-    // Only names on the near side of Earth, and only while it fills enough of the view.
+    // Only while Earth is in focus and fills enough of the view.
     const near = this.#world.focus() === 'earth' && camera.position.length() < 12;
-    // Labels come largest first; a smaller state's name gives way where it would overlap.
-    // The larger states' names go before the markers, so a crowd of small counts can't take
-    // their places; the smaller names come after, where room is left (#163).
-    const placed: Box[] = [];
-    // The layers' labels (#379), each slot in its place.
-    const slots = [...this.#surfaceSlots].sort((a, b) => a.priority - b.priority);
-    for (const { element, position, width, height } of slots.flatMap(({ labels }) => labels)) {
-      const projected = this.#projected.copy(position).project(camera);
-      const shown =
-        near && position.dot(eye) > 0.25 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1;
-      const x = ((projected.x + 1) / 2) * this.#width;
-      // A name out of view is hidden without looking for room: most are, behind Earth.
-      const centre = ((1 - projected.y) / 2) * this.#height;
-      const y = shown ? roomFor(x, centre, width, height, placed) : null;
-      placeLabel(element, y === null ? null : translation(x, y, 'translate(-50%, -50%)'));
-    }
+    // While it turns, only the larger states' names, and a few of each layer's (#631).
+    const leftOut = this.#turning ? SURFACE_PRIORITY.minorStates : Infinity;
+    const most = this.#turning ? TURNING_NAMES : Infinity;
+    const view = { width: this.#width, height: this.#height, near, leftOut, most };
+    layOutSurface(this.#surfaceSlots, camera, view);
   }
 
   /** Ring and name each body small on screen; one name for those that line up. */
@@ -256,6 +255,7 @@ export class ScreenLabels {
   };
 
   dispose(): void {
+    this.#motion.dispose();
     this.#layer.remove();
   }
 
