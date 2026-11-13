@@ -4,16 +4,11 @@
  * `astro/sun.ts`); this file is exercised by the Playwright suite in a real browser.
  */
 
-import { createImpactAnimation, type ImpactAnimation, type ImpactSpec } from './impactAnimation';
+import type { ImpactSpec } from './impactAnimation';
+import { Playback } from './playback';
 import { labelTexture } from './labelTexture';
 import { createC14Glow } from './c14Glow';
-import {
-  createShowerAnimation,
-  type ShowerAnimation,
-  type ShowerCommand,
-  type ShowerSpec,
-} from './showerAnimation';
-import { rayLabels } from './showerSteps';
+import { type ShowerCommand, type ShowerSpec } from './showerAnimation';
 import {
   AdditiveBlending,
   BackSide,
@@ -234,9 +229,6 @@ export interface Globe {
   readonly canvas: HTMLCanvasElement;
   dispose(): void;
 }
-
-/** Impacts that play at once, at most; deep time running fast can pass several in a frame. */
-const MAX_IMPACTS = 8;
 
 /** Stand-ins until the maps arrive: the Blue Marble's open ocean and the Moon's mean grey. */
 const OCEAN_RGB = [11, 28, 66] as const;
@@ -720,12 +712,16 @@ export function createGlobe(
   let needsRender = true;
   let frame = 0;
 
-  // The impacts playing, oldest first, several at once as deep time runs (#314), and how many
-  // have played out.
-  const impacts = new Set<ImpactAnimation>();
-  let impactsPlayed = 0;
-  let shower: ShowerAnimation | null = null;
-  let showersPlayed = 0;
+  // The impacts and the shower playing on Earth (#314).
+  const playback = new Playback({
+    earth,
+    pin: pin.material,
+    dataset: container.dataset,
+    resolution: () => renderer.getSize(new Vector2()),
+    invalidate: () => {
+      needsRender = true;
+    },
+  });
 
   function resize(): void {
     renderer.setSize(container.clientWidth, container.clientHeight, false);
@@ -733,22 +729,7 @@ export function createGlobe(
   }
 
   function loop(now: number): void {
-    for (const impact of impacts) {
-      needsRender = true;
-      if (impact.update(now)) continue;
-      impact.dispose();
-      impacts.delete(impact);
-      // How many have played out, for whoever needs to know one did, however briefly it showed.
-      impactsPlayed += 1;
-      container.dataset['impactsPlayed'] = String(impactsPlayed);
-      container.dataset['impactPlaying'] = String(impacts.size > 0);
-    }
-    if (shower !== null) {
-      const size = renderer.getSize(new Vector2());
-      shower.setResolution(size.x, size.y);
-      // Only while it plays, or just after a control: paused or held, it draws nothing new.
-      if (shower.update(now)) needsRender = true;
-    }
+    if (playback.step(now)) needsRender = true;
     rig.step(now);
     if (needsRender) {
       needsRender = false;
@@ -1081,69 +1062,14 @@ export function createGlobe(
     setCamera(state) {
       rig.place(state);
     },
-    playImpact(spec) {
-      // Beyond a handful at once, the oldest makes way.
-      const [oldest] = impacts;
-      if (oldest !== undefined && impacts.size >= MAX_IMPACTS) {
-        oldest.dispose();
-        impacts.delete(oldest);
-      }
-      const impact = createImpactAnimation(spec);
-      impacts.add(impact);
-      earth.add(impact.group);
-      container.dataset['impactPlaying'] = 'true';
-      needsRender = true;
+    playImpact: (spec) => {
+      playback.playImpact(spec);
     },
-    playShower(spec) {
-      shower?.dispose();
-      // Every step it has shown, in order: a slow frame can pass a step's start, never a step.
-      const shown: string[] = [];
-      let counted = false;
-      shower = createShowerAnimation({
-        ...spec,
-        onState(state) {
-          container.dataset['showerStep'] = state.step;
-          container.dataset['showerPlaying'] = String(state.playing);
-          if (shown.at(-1) !== state.step) shown.push(state.step);
-          container.dataset['showerSteps'] = shown.join(' ');
-          // How many have played to their end, for whoever needs to know one did.
-          if (state.ended && !counted) {
-            counted = true;
-            showersPlayed += 1;
-            container.dataset['showersPlayed'] = String(showersPlayed);
-          }
-          spec.onState(state);
-        },
-      });
-      earth.add(shower.group);
-      // The place's pin, a big ball close up, would hide the plant: it rests while the shower
-      // plays. Its material only, so the place still counts for the attached viewpoints.
-      pin.material.visible = false;
-      container.dataset['pinShown'] = 'false';
-      // What the rays' labels say, for whoever needs to read them.
-      const words = rayLabels(spec.dipole);
-      container.dataset['showerLabels'] = `${words.polar} | ${words.equator}`;
-      container.dataset['showerGround'] = spec.water ? 'water' : 'land';
-      needsRender = true;
+    playShower: (spec) => {
+      playback.playShower(spec);
     },
-    controlShower(command) {
-      if (shower === null) return;
-      if (command !== 'stop') {
-        shower.command(command);
-        // Said at once, not at the next frame, which a busy device may be slow to draw.
-        if (command === 'pause' || command === 'settle')
-          container.dataset['showerPlaying'] = 'false';
-        if (command === 'play' || command === 'replay') container.dataset['showerPlaying'] = 'true';
-        needsRender = true;
-        return;
-      }
-      shower.dispose();
-      shower = null;
-      // The place's pin comes back once the shower is taken away.
-      pin.material.visible = true;
-      container.dataset['pinShown'] = 'true';
-      container.dataset['showerStep'] = 'done';
-      needsRender = true;
+    controlShower: (command) => {
+      playback.controlShower(command);
     },
     zoomTo(distance) {
       rig.zoomTo(distance);
@@ -1159,8 +1085,7 @@ export function createGlobe(
       texture.dispose();
       moonTexture.dispose();
       c14Glow.dispose();
-      shower?.dispose();
-      for (const impact of impacts) impact.dispose();
+      playback.dispose();
       for (const layer of layers) layer.dispose?.();
       labels.dispose();
       renderer.domElement.remove();
