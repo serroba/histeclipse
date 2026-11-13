@@ -27,6 +27,7 @@ export default defineConfig({
         'src/telemetry/start.ts',
         'src/app.ts',
         'src/globe/scene.ts',
+        'src/globe/screenLabels.ts',
         'src/globe/solarShaders.ts',
         'src/globe/sunShaders.ts',
         'src/globe/earthTiles.ts',
