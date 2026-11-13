@@ -81,8 +81,8 @@ describe('CameraMotion.settlesIn', () => {
   });
 });
 
-describe('CameraMotion.turning', () => {
-  it('turns while moving, and wakes once, when it has settled', () => {
+describe('CameraMotion.turning and settleLater', () => {
+  it('turns while moving, and wakes once, when it has settled, if asked to', () => {
     vi.useFakeTimers();
     try {
       const wake = vi.fn();
@@ -92,13 +92,34 @@ describe('CameraMotion.turning', () => {
       looking.position.x += 1;
       looking.updateMatrixWorld();
       expect(motion.turning(looking, 100)).toBe(true);
+      motion.settleLater(100, true);
       vi.advanceTimersByTime(SETTLE_MS - 1);
       expect(wake).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1);
       expect(wake).toHaveBeenCalledTimes(1);
       expect(motion.turning(looking, 100 + SETTLE_MS)).toBe(false);
+      motion.settleLater(100 + SETTLE_MS, true);
       vi.advanceTimersByTime(SETTLE_MS * 2);
       expect(wake).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('sets no wake where nothing waits to be shown, and drops one set before', () => {
+    vi.useFakeTimers();
+    try {
+      const wake = vi.fn();
+      const motion = new CameraMotion(wake);
+      const looking = camera();
+      motion.turning(looking, 0);
+      motion.settleLater(0, true);
+      looking.position.x += 1;
+      looking.updateMatrixWorld();
+      motion.turning(looking, 50);
+      motion.settleLater(50, false);
+      vi.advanceTimersByTime(SETTLE_MS * 2);
+      expect(wake).not.toHaveBeenCalled();
     } finally {
       vi.useRealTimers();
     }
@@ -110,6 +131,7 @@ describe('CameraMotion.turning', () => {
       const wake = vi.fn();
       const motion = new CameraMotion(wake);
       motion.turning(camera(), 0);
+      motion.settleLater(0, true);
       motion.dispose();
       vi.advanceTimersByTime(SETTLE_MS);
       expect(wake).not.toHaveBeenCalled();
