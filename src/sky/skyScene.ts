@@ -17,14 +17,11 @@ import {
   AdditiveBlending,
   BackSide,
   DoubleSide,
-  BufferAttribute,
-  BufferGeometry,
   Color,
   Mesh,
   type Object3D,
   PerspectiveCamera,
   PlaneGeometry,
-  Points,
   ShaderMaterial,
   SphereGeometry,
   Vector2,
@@ -34,18 +31,11 @@ import {
 
 import { Stage } from '../stage/stage';
 import type { Matrix3, Vector3 as Vec3 } from '../astro/matrix';
-import { starDirection } from '../astro/stars';
 import type { Sky } from '../data/sky';
 import type { Figures, SkyLook } from '../state/viewState';
 import type { JulianDay } from '../time/julianDay';
 import { eclipsedLimit, sunVisible, topocentric } from './bodies';
-import {
-  aberrate,
-  apparentDirection,
-  apparentMagnitude,
-  horizontal,
-  limitingMagnitude,
-} from './horizon';
+import { aberrate, apparentDirection, horizontal, limitingMagnitude } from './horizon';
 import { COMPASS, lookBetween, lookDirection, type Figure, roundLook } from './look';
 import {
   CLIP_COS,
@@ -57,25 +47,17 @@ import {
   toPixels,
 } from './projection';
 import { createSkyLabelLayer, skyLabel } from './skyLabels';
-import {
-  lookDirectionAt,
-  STAR_RADIUS,
-  SUN_ANGULAR_RADIUS,
-  SUN_DISTANCE,
-  toScene,
-} from './skyFrame';
+import { lookDirectionAt, SUN_ANGULAR_RADIUS, SUN_DISTANCE, toScene } from './skyFrame';
 import { SkyFigures } from './skyFigures';
 import { SkyMoon } from './skyMoon';
 import { SkyPlanets, type SkyPlanet } from './skyPlanets';
-import { starColor } from './starColor';
+import { SkyStars } from './skyStars';
 import {
   DOME_VERTEX,
   GLOW_FRAGMENT,
   GLOW_VERTEX,
   GROUND_FRAGMENT,
   SKY_FRAGMENT,
-  STAR_FRAGMENT,
-  STAR_VERTEX,
   SUN_FRAGMENT,
   SUN_VERTEX,
 } from './skyShaders';
@@ -144,15 +126,11 @@ export interface SkyScene {
   onLookChange(listener: (look: SkyLook) => void): () => void;
 }
 
-/** The proper-motion positions only need recomputing after this many days. */
-const MOTION_STEP_DAYS = 365.25;
-
 export function createSkyScene(
   container: HTMLElement,
   options: { sky: Sky; look: SkyLook; figures: Figures; moonTextureUrl: string },
 ): SkyScene {
   const { sky } = options;
-  const count = sky.stars.hr.length;
 
   const renderer = new WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -189,40 +167,11 @@ export function createSkyScene(
   );
   dome.renderOrder = 0;
 
-  // Stars: positions change with time; magnitudes and colours are fixed.
-  const starPositions = new Float32Array(count * 3);
-  const starColors = new Float32Array(count * 3);
-  const magnitudes = new Float32Array(count);
-  sky.stars.vmag.forEach((vmag, index) => {
-    magnitudes[index] = vmag;
-    const [r, g, b] = starColor(sky.stars.bv[index] ?? null);
-    starColors.set([r, g, b], index * 3);
+  const stars = new SkyStars({
+    stars: sky.stars,
+    projection,
+    pixelRatio: renderer.getPixelRatio(),
   });
-  const starGeometry = new BufferGeometry();
-  const starPositionAttribute = new BufferAttribute(starPositions, 3);
-  starGeometry.setAttribute('position', starPositionAttribute);
-  starGeometry.setAttribute('color', new BufferAttribute(starColors, 3));
-  starGeometry.setAttribute('magnitude', new BufferAttribute(magnitudes, 1));
-  const starUniforms = {
-    ...projection,
-    limit: { value: 6.5 },
-    pixelRatio: { value: renderer.getPixelRatio() },
-    zoom: { value: 1 },
-  };
-  const stars = new Points(
-    starGeometry,
-    new ShaderMaterial({
-      uniforms: starUniforms,
-      vertexShader: STAR_VERTEX,
-      fragmentShader: STAR_FRAGMENT,
-      blending: AdditiveBlending,
-      depthTest: false,
-      depthWrite: false,
-      transparent: true,
-    }),
-  );
-  stars.frustumCulled = false;
-  stars.renderOrder = 1;
 
   const sunRadius = SUN_DISTANCE * Math.tan(SUN_ANGULAR_RADIUS);
   const sun = new Mesh(
@@ -295,7 +244,7 @@ export function createSkyScene(
   );
   ground.renderOrder = 4;
   const planets = new SkyPlanets({
-    uniforms: starUniforms,
+    uniforms: stars.uniforms,
     labelLayer,
     dataset: container.dataset,
   });
@@ -309,7 +258,7 @@ export function createSkyScene(
   const figures = new SkyFigures({
     projection,
     labelLayer,
-    stars: starPositions,
+    stars: stars.positions,
     modern: sky.constellations,
     figures: options.figures,
     invalidate: () => {
@@ -318,7 +267,7 @@ export function createSkyScene(
   });
   const everything: Object3D[] = [
     dome,
-    stars,
+    stars.points,
     figures.lines,
     planets.points,
     sun,
@@ -354,30 +303,7 @@ export function createSkyScene(
     glide = null;
     ended?.done();
   }
-  // J2000 directions after proper motion, recomputed when time has moved far enough.
-  const starJ2000 = new Float64Array(count * 3);
-  let motionEpoch: number | null = null;
   const listeners = new Set<(look: SkyLook) => void>();
-
-  function updateMotion(jdTT: JulianDay): void {
-    if (motionEpoch !== null && Math.abs(jdTT - motionEpoch) < MOTION_STEP_DAYS) return;
-    motionEpoch = jdTT;
-    const { ra, dec, pmRa, pmDec, parallax, radialVelocity } = sky.stars;
-    for (let index = 0; index < count; index++) {
-      const direction = starDirection(
-        {
-          ra: ra[index] ?? 0,
-          dec: dec[index] ?? 0,
-          pmRa: pmRa[index] ?? 0,
-          pmDec: pmDec[index] ?? 0,
-          parallax: parallax[index] ?? null,
-          radialVelocity: radialVelocity[index] ?? null,
-        },
-        jdTT,
-      );
-      starJ2000.set(direction, index * 3);
-    }
-  }
 
   function applyLook(): void {
     const [x, y, z] = toScene(lookDirection({ ...look, altitude: Math.min(look.altitude, 89.9) }));
@@ -386,7 +312,7 @@ export function createSkyScene(
     // Labels are placed from the view matrix, so keep it current between renders.
     camera.updateMatrixWorld();
     stage.resize();
-    starUniforms.zoom.value = Math.min(2, Math.max(1, Math.sqrt(60 / look.fov)));
+    stars.setFieldOfView(look.fov);
     showSunGlow();
     stage.invalidate();
   }
@@ -556,7 +482,6 @@ export function createSkyScene(
       planets: seenPlanets,
       velocity,
     }) {
-      updateMotion(jdTT);
       motion = velocity;
       const sunHere = topocentric(sunJ2000, observer);
       const sunSeen = apparentDirection(horizon, aberrate(sunHere, motion));
@@ -565,28 +490,7 @@ export function createSkyScene(
       // How much of the Sun the Moon leaves, if the Sun is up to be seen.
       const sunShare = moonHere === null || sunHigh < -1 ? 1 : sunVisible(sunHere, moonHere);
       const limit = eclipsedLimit(limitingMagnitude(sunHigh), sunShare);
-      let seen = 0;
-      for (let index = 0; index < count; index++) {
-        const direction = apparentDirection(
-          horizon,
-          aberrate(
-            [
-              starJ2000[index * 3] ?? 0,
-              starJ2000[index * 3 + 1] ?? 0,
-              starJ2000[index * 3 + 2] ?? 0,
-            ],
-            motion,
-          ),
-        );
-        const [x, y, z] = toScene(direction);
-        starPositions[index * 3] = x * STAR_RADIUS;
-        starPositions[index * 3 + 1] = y * STAR_RADIUS;
-        starPositions[index * 3 + 2] = z * STAR_RADIUS;
-        const altitude = (Math.asin(Math.max(-1, Math.min(1, direction[2]))) * 180) / Math.PI;
-        if (altitude > 0 && apparentMagnitude(sky.stars.vmag[index] ?? 99, altitude) < limit)
-          seen++;
-      }
-      starPositionAttribute.needsUpdate = true;
+      const seen = stars.place({ jdTT, horizon, motion, limit });
       figures.place();
 
       const [sx, sy, sz] = toScene(sunSeen);
@@ -603,7 +507,6 @@ export function createSkyScene(
       corona.visible = sun.visible && sunShare < 0.002;
       moon.place({ horizon, sunJ2000, moonJ2000, sunHere, moonHere, sunHigh, motion });
       container.dataset['sunVisible'] = sunShare.toFixed(4);
-      starUniforms.limit.value = limit;
       figures.setSunAltitude(sunHigh);
       container.dataset['sunAltitude'] = sunHigh.toFixed(2);
       container.dataset['starsSeen'] = String(seen);
