@@ -204,4 +204,22 @@ describe("Earth's surfaces", () => {
     expect(dataset['sketch']).toBe('off');
     expect(drawn()).toBe(3);
   });
+
+  it('outlines the plates once their masks arrive, and takes the ice sheets away', async () => {
+    const { host, loads, uniforms, dataset } = surfaces();
+    host.setPlates({ ...pair('p1', 'p2'), turnYounger: 1, turnOlder: 2 });
+    loads.arrive('p1');
+    loads.arrive('p2');
+    await settle();
+    expect(uniforms['plateActive']?.value).toBe(1);
+    expect(dataset['plates']).toBe('p1 p2');
+    host.setIce({ ...pair('i1', 'i2'), metresPerStep: 16 });
+    loads.arrive('i1');
+    loads.arrive('i2');
+    await settle();
+    expect(dataset['ice']).toBe('i1 i2');
+    host.setIce(null);
+    expect(uniforms['iceActive']?.value).toBe(0);
+    expect(dataset['ice']).toBe('off');
+  });
 });

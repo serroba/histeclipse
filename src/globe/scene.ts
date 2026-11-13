@@ -27,7 +27,6 @@ import {
   MeshBasicMaterial,
   PerspectiveCamera,
   Quaternion,
-  Raycaster,
   Scene,
   ShaderMaterial,
   SphereGeometry,
@@ -46,7 +45,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import { apply, multiply, transpose, type Matrix3 } from '../astro/matrix';
 import { type Body, type GeoPoint, type GlobeCamera, type Viewpoint } from '../state/viewState';
-import { geoToVector, vectorToGeo, type Vector3Tuple } from './geo';
+import { geoToVector, type Vector3Tuple } from './geo';
 import {
   MOON_RADIUS_EARTH_RADII,
   sceneFromKm,
@@ -69,6 +68,7 @@ import {
   type LayerHost,
 } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
+import { Picking } from './picking';
 import { createSunMeshes } from './sunMeshes';
 import { BodyMaps } from './bodyMaps';
 import { ScreenLabels, settleSizes } from './screenLabels';
@@ -99,9 +99,6 @@ import './spaceMarkers.css';
 
 /** How far out the place pin floats, in Earth radii, so it shows above the ground. */
 const PIN_HEIGHT = 1.004;
-
-/** A press that moves less than this (pixels) is a click on a body, not a drag. */
-const CLICK_SLOP_PIXELS = 6;
 
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
@@ -479,19 +476,9 @@ export function createGlobe(
     empiresTexture.needsUpdate = true;
     uniforms['overlayMap'] = { value: empiresTexture };
   }
-  const markerPickListeners = new Set<(key: string) => void>();
   // The layers added (#379), and what they lay out after each frame: declared before the first.
   const afterRenders: (() => void)[] = [];
   const layers: GlobeLayer<never>[] = [];
-  /** Taps on `[data-pick]` inside `layer` reach the marker-pick listeners. */
-  function pickable(layer: HTMLElement): void {
-    layer.addEventListener('click', (event) => {
-      const marker = event.target instanceof Element ? event.target.closest('[data-pick]') : null;
-      const key = marker?.getAttribute('data-pick');
-      if (key === null || key === undefined) return;
-      for (const listener of markerPickListeners) listener(key);
-    });
-  }
   // Deep time's overlay, on the states' map (never shown then): a dispersal model's settled
   // land, and the ice-sheet outlines over it.
   // The deep-time map: the land people had reached, and the layers' parts (#379), in order.
@@ -515,71 +502,19 @@ export function createGlobe(
   const sunFrame = new Quaternion();
   // The Moon's map has longitude 0 at the mesh's +Z (see above); geoToVector puts it at +X.
   const moonMapTurn = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2);
-  const bodyClickListeners = new Set<(body: Body) => void>();
-  const placeListeners = new Set<(place: GeoPoint) => void>();
-  const emptyTapListeners = new Set<() => void>();
 
-  // A click (a press that barely moves) on a body asks to fly to it.
-  const raycaster = new Raycaster();
-  let press: { x: number; y: number } | null = null;
-  renderer.domElement.addEventListener('pointerdown', (event) => {
-    press = { x: event.clientX, y: event.clientY };
+  // Picking with the pointer: before the orbit controls, which listen to the same events.
+  const picking = new Picking({
+    canvas: renderer.domElement,
+    camera,
+    meshes: bodyMeshes,
+    deepTime: () => surfaces.deepTime,
+    focus: () => rig.focus,
+    viewpoint: () => rig.viewpoint,
+    release: () => rig.release(),
   });
-  // Dragging or zooming an attached viewpoint releases it: the camera flies to orbit the body
-  // it was looking at, from the observer's side, so the bodies can be turned again.
-  renderer.domElement.addEventListener('pointermove', (event) => {
-    if (press === null) return;
-    if (Math.hypot(event.clientX - press.x, event.clientY - press.y) > CLICK_SLOP_PIXELS) {
-      releaseViewpoint();
-    }
-  });
-  renderer.domElement.addEventListener('wheel', releaseViewpoint, { passive: true });
-  renderer.domElement.addEventListener('pointerup', (event) => {
-    if (press === null) return;
-    const moved = Math.hypot(event.clientX - press.x, event.clientY - press.y);
-    press = null;
-    if (moved > CLICK_SLOP_PIXELS) return;
-    const bounds = renderer.domElement.getBoundingClientRect();
-    raycaster.setFromCamera(
-      new Vector2(
-        ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
-        -((event.clientY - bounds.top) / bounds.height) * 2 + 1,
-      ),
-      camera,
-    );
-    const visible = Object.values(bodyMeshes).filter(
-      (mesh) => mesh.visible && !(surfaces.deepTime && mesh !== earth),
-    );
-    const hit = raycaster.intersectObjects(visible, false)[0];
-    const body = (Object.keys(bodyMeshes) as Body[]).find((key) => bodyMeshes[key] === hit?.object);
-    if (
-      body === 'earth' &&
-      hit !== undefined &&
-      rig.focus === 'earth' &&
-      rig.viewpoint === 'free'
-    ) {
-      // On the Earth already in view, a tap picks the place to stand.
-      const { x, y, z } = earth.worldToLocal(hit.point.clone());
-      const place = vectorToGeo([x, y, z]);
-      for (const listener of placeListeners) listener(place);
-      return;
-    }
-    if (body !== undefined) {
-      requestBody(body);
-      return;
-    }
-    // Markers are HTML on top of the canvas, so a tap here missed them too.
-    for (const listener of emptyTapListeners) listener();
-  });
-
-  function releaseViewpoint(): void {
-    const body = rig.release();
-    if (body !== null) for (const listener of bodyClickListeners) listener(body);
-  }
-
   function requestBody(body: Body): void {
-    if (body === rig.focus && rig.viewpoint === 'free') return;
-    for (const listener of bodyClickListeners) listener(body);
+    picking.requestBody(body);
   }
 
   /** Where a body is and how its surface coordinates turn into the scene's axes. */
@@ -717,7 +652,9 @@ export function createGlobe(
       afterRenders.push(place);
     },
     layOutNames: labels.layOutNames,
-    pickable,
+    pickable: (layer) => {
+      picking.pickable(layer);
+    },
     deepPaint: (order) => deepSlots.add(order),
     historyPaint: (order) => historySlots.add(order),
     surfaceLabels: labels.surfaceLabels,
@@ -848,14 +785,8 @@ export function createGlobe(
     setFocus(body) {
       rig.setFocus(body);
     },
-    onBodyClick(listener) {
-      bodyClickListeners.add(listener);
-      return () => bodyClickListeners.delete(listener);
-    },
-    onEmptyTap(listener) {
-      emptyTapListeners.add(listener);
-      return () => emptyTapListeners.delete(listener);
-    },
+    onBodyClick: (listener) => picking.onBodyClick(listener),
+    onEmptyTap: (listener) => picking.onEmptyTap(listener),
     showPlanetView: (planet, view) => {
       maps.showPlanetView(planet, view);
     },
@@ -937,14 +868,8 @@ export function createGlobe(
       rig.settleFocus();
       needsRender = true;
     },
-    onMarkerPick(listener) {
-      markerPickListeners.add(listener);
-      return () => markerPickListeners.delete(listener);
-    },
-    onPlacePick(listener) {
-      placeListeners.add(listener);
-      return () => placeListeners.delete(listener);
-    },
+    onMarkerPick: (listener) => picking.onMarkerPick(listener),
+    onPlacePick: (listener) => picking.onPlacePick(listener),
     setLocation(place) {
       pin.visible = place !== null;
       if (place !== null) pin.position.set(...geoToVector(place, PIN_HEIGHT));
