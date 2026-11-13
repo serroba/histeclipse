@@ -9,6 +9,7 @@ import { Vector3, type Object3D, type PerspectiveCamera } from 'three';
 import { PLANETS, type PlanetName } from '../astro/planets';
 import type { Body, GeoPoint } from '../state/viewState';
 import { geoToVector } from './geo';
+import { placeLabel, roomFor, translation } from './labelWrites';
 import type { LayerHost, SurfaceLabel } from './layerHost';
 import { PLANET_NAMES, planetRadius } from './planetLook';
 import {
@@ -107,9 +108,14 @@ export class ScreenLabels {
   /** Labels on Earth's surface from the layers, each slot laid out in its priority's place. */
   readonly #surfaceSlots: SurfaceSlot[] = [];
   readonly #projected = new Vector3();
+  /** The view's size, told on resize: read each frame, it forced style and layout (#631). */
+  #width: number;
+  #height: number;
 
   constructor(world: ScreenLabelsWorld) {
     this.#world = world;
+    this.#width = world.container.clientWidth;
+    this.#height = world.container.clientHeight;
     const layer = document.createElement('div');
     layer.className = 'space-markers';
     world.container.append(layer);
@@ -168,10 +174,10 @@ export class ScreenLabels {
 
   /** Show each name, in order, where it is on screen, clear of the panels and of those shown. */
   readonly layOutNames: LayerHost['layOutNames'] = (names, layer) => {
-    const { container, camera } = this.#world;
+    const { camera } = this.#world;
     const insets = this.#world.insets();
-    const viewWidth = container.clientWidth;
-    const viewHeight = container.clientHeight;
+    const viewWidth = this.#width;
+    const viewHeight = this.#height;
     const placed: Box[] = [];
     let count = 0;
     for (const { scene: at, label } of names) {
@@ -188,18 +194,17 @@ export class ScreenLabels {
         box.y >= insets.top &&
         box.y + box.h <= viewHeight - insets.bottom &&
         clearOf(box, placed);
-      label.element.hidden = !visible;
+      placeLabel(label.element, visible ? translation(x, y, 'translate(0, -50%)') : null);
       if (!visible) continue;
       placed.push(box);
       count += 1;
-      label.element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(0, -50%)`;
     }
     layer.dataset['named'] = String(count);
   };
 
   /** Lay out the layers' names on Earth's surface, largest first, on the near side only. */
   placeSurfaceLabels(): void {
-    const { container, camera } = this.#world;
+    const { camera } = this.#world;
     const eye = camera.position.clone().normalize();
     // Only names on the near side of Earth, and only while it fills enough of the view.
     const near = this.#world.focus() === 'earth' && camera.position.length() < 12;
@@ -207,28 +212,17 @@ export class ScreenLabels {
     // The larger states' names go before the markers, so a crowd of small counts can't take
     // their places; the smaller names come after, where room is left (#163).
     const placed: Box[] = [];
-    // Read once: read after a label is moved, the size makes the browser lay the page out
-    // again, for every label.
-    const viewWidth = container.clientWidth;
-    const viewHeight = container.clientHeight;
     // The layers' labels (#379), each slot in its place.
     const slots = [...this.#surfaceSlots].sort((a, b) => a.priority - b.priority);
     for (const { element, position, width, height } of slots.flatMap(({ labels }) => labels)) {
       const projected = this.#projected.copy(position).project(camera);
       const shown =
         near && position.dot(eye) > 0.25 && Math.abs(projected.x) < 1 && Math.abs(projected.y) < 1;
-      const x = ((projected.x + 1) / 2) * viewWidth;
-      const centre = ((1 - projected.y) / 2) * viewHeight;
-      // Where it would overlap, a name may move a line up or down before it gives way.
-      const y = [0, -1, 1, -2, 2]
-        .map((step) => centre + step * height)
-        .find((candidate) =>
-          clearOf({ x: x - width / 2, y: candidate - height / 2, w: width, h: height }, placed),
-        );
-      element.hidden = !shown || y === undefined;
-      if (y === undefined || element.hidden) continue;
-      placed.push({ x: x - width / 2, y: y - height / 2, w: width, h: height });
-      element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(-50%, -50%)`;
+      const x = ((projected.x + 1) / 2) * this.#width;
+      // A name out of view is hidden without looking for room: most are, behind Earth.
+      const centre = ((1 - projected.y) / 2) * this.#height;
+      const y = shown ? roomFor(x, centre, width, height, placed) : null;
+      placeLabel(element, y === null ? null : translation(x, y, 'translate(-50%, -50%)'));
     }
   }
 
@@ -255,6 +249,12 @@ export class ScreenLabels {
     }
   }
 
+  /** The view's new size, CSS pixels. */
+  readonly resize = (width: number, height: number): void => {
+    this.#width = width;
+    this.#height = height;
+  };
+
   dispose(): void {
     this.#layer.remove();
   }
@@ -264,9 +264,9 @@ export class ScreenLabels {
     readonly markers: (ScreenMarker & { readonly marker: HTMLElement })[];
     readonly discs: ScreenDisc[];
   } {
-    const { container, camera, meshes } = this.#world;
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    const { camera, meshes } = this.#world;
+    const width = this.#width;
+    const height = this.#height;
     const bodies = [
       { body: 'earth', radius: 1, shown: true, name: 'Earth' },
       { body: 'moon', radius: MOON_RADIUS_EARTH_RADII, shown: meshes.moon.visible, name: 'Moon' },
