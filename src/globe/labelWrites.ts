@@ -5,6 +5,9 @@
  * hundreds of names on (the states, the impacts) that was most of a frame's time on a phone.
  */
 
+import { type Camera, Vector3 } from 'three';
+
+import type { SurfaceLabel } from './layerHost';
 import { type Box, clearOf } from './spaceFrame';
 
 /** The transform last written to each element, so the same one is not written again. */
@@ -46,4 +49,56 @@ export function roomFor(
     }
   }
   return null;
+}
+
+/** A layer's names on Earth's surface, given room in `priority` order (SURFACE_PRIORITY). */
+export interface SurfaceSlot {
+  readonly priority: number;
+  labels: readonly SurfaceLabel[];
+}
+
+const projected = new Vector3();
+
+/**
+ * Lay out the names on Earth's surface as `camera` sees them, slot by slot in priority order:
+ * the larger states' names first, so a crowd of small counts can't take their places, the
+ * smaller after, where room is left (#163). Only names on the near side, and none unless `near`;
+ * at most `most` from each slot, and none from the slots from `leftOut` on: while the globe
+ * turns, each name shown costs a frame's time (#631). Returns how many names in view were left
+ * out so: none, and nothing need be drawn again once the globe stops.
+ */
+export function layOutSurface(
+  slots: readonly SurfaceSlot[],
+  camera: Camera,
+  view: {
+    readonly width: number;
+    readonly height: number;
+    readonly near: boolean;
+    readonly leftOut: number;
+    readonly most: number;
+  },
+): number {
+  const eye = camera.position.clone().normalize();
+  const placed: Box[] = [];
+  let leftOut = 0;
+  for (const { priority, labels } of [...slots].sort((a, b) => a.priority - b.priority)) {
+    let left = priority < view.leftOut ? view.most : 0;
+    for (const { element, position, width, height } of labels) {
+      projected.copy(position).project(camera);
+      const inView =
+        view.near &&
+        position.dot(eye) > 0.25 &&
+        Math.abs(projected.x) < 1 &&
+        Math.abs(projected.y) < 1;
+      if (inView && left <= 0) leftOut += 1;
+      const shown = inView && left > 0;
+      const x = ((projected.x + 1) / 2) * view.width;
+      // A name out of view is hidden without looking for room: most are, behind Earth.
+      const centre = ((1 - projected.y) / 2) * view.height;
+      const y = shown ? roomFor(x, centre, width, height, placed) : null;
+      if (y !== null) left -= 1;
+      placeLabel(element, y === null ? null : translation(x, y, 'translate(-50%, -50%)'));
+    }
+  }
+  return leftOut;
 }

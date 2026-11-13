@@ -1,6 +1,7 @@
+import { PerspectiveCamera, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { fakeElement } from '../test/fakes';
-import { placeLabel, roomFor, translation } from './labelWrites';
+import { layOutSurface, placeLabel, roomFor, translation } from './labelWrites';
 import type { Box } from './spaceFrame';
 
 /** An element whose writes are counted: its transform and its hidden flag. */
@@ -101,5 +102,89 @@ describe('roomFor', () => {
   it('places a name beside another, clear of it', () => {
     const placed: Box[] = [{ x: 0, y: 45, w: 40, h: 10 }];
     expect(roomFor(100, 50, 40, 10, placed)).toBe(50);
+  });
+});
+
+describe('layOutSurface', () => {
+  /** A camera 3 Earth radii out over (0°, 0°), looking at Earth's centre. */
+  function camera(): PerspectiveCamera {
+    const looking = new PerspectiveCamera(40, 1, 0.1, 100);
+    looking.position.set(3, 0, 0);
+    looking.lookAt(0, 0, 0);
+    looking.updateMatrixWorld();
+    return looking;
+  }
+  const view = { width: 400, height: 400, near: true, leftOut: Infinity, most: Infinity };
+  /** A name 40 by 10 pixels at `position`, on Earth's surface. */
+  function name(x: number, y: number, z: number) {
+    const { element } = counted();
+    return { element, position: new Vector3(x, y, z).normalize(), width: 40, height: 10 };
+  }
+
+  it('shows the names on the near side, and hides those behind Earth', () => {
+    const front = name(1, 0, 0);
+    const back = name(-1, 0, 0);
+    layOutSurface([{ priority: 0, labels: [front, back] }], camera(), view);
+    expect(front.element.hidden).toBe(false);
+    expect(front.element.style.transform).toBe('translate(200px, 200px) translate(-50%, -50%)');
+    expect(back.element.hidden).toBe(true);
+  });
+
+  it('gives room first to the slot with the lower priority, whatever the order given', () => {
+    const minor = name(1, 0, 0);
+    const major = name(1, 0, 0);
+    const slots = [
+      { priority: 60, labels: [minor] },
+      { priority: 0, labels: [major] },
+    ];
+    layOutSurface(slots, camera(), view);
+    expect(major.element.style.transform).toBe('translate(200px, 200px) translate(-50%, -50%)');
+    // Its place taken, and a line up or down touching it, the minor name goes two lines up.
+    expect(minor.element.style.transform).toBe('translate(200px, 180px) translate(-50%, -50%)');
+  });
+
+  it('hides the slots from leftOut on, and those only', () => {
+    const major = name(1, 0.2, 0);
+    const minor = name(1, -0.2, 0);
+    const slots = [
+      { priority: 0, labels: [major] },
+      { priority: 60, labels: [minor] },
+    ];
+    layOutSurface(slots, camera(), { ...view, leftOut: 60 });
+    expect(major.element.hidden).toBe(false);
+    expect(minor.element.hidden).toBe(true);
+    layOutSurface(slots, camera(), view);
+    expect(minor.element.hidden).toBe(false);
+  });
+
+  it('shows at most `most` names from each slot, the first that find room', () => {
+    const states = [name(1, 0.3, 0), name(1, 0, 0), name(1, -0.3, 0)];
+    const impact = name(1, 0, 0.3);
+    const slots = [
+      { priority: 0, labels: states },
+      { priority: 40, labels: [impact] },
+    ];
+    expect(layOutSurface(slots, camera(), { ...view, most: 2 })).toBe(1);
+    expect(states.map(({ element }) => element.hidden)).toEqual([false, false, true]);
+    expect(impact.element.hidden).toBe(false);
+  });
+
+  it('counts the names in view left out, and not those out of view or with no room', () => {
+    const states = [name(1, 0, 0), name(1, 0, 0), name(-1, 0, 0)];
+    const minor = [name(1, 0.3, 0), name(-1, 0.3, 0)];
+    const slots = [
+      { priority: 0, labels: states },
+      { priority: 60, labels: minor },
+    ];
+    // Still: every name in view placed or given way for want of room, none left out.
+    expect(layOutSurface(slots, camera(), view)).toBe(0);
+    // Turning: one state in view past the cap, and the minor name in view.
+    expect(layOutSurface(slots, camera(), { ...view, most: 1, leftOut: 60 })).toBe(2);
+  });
+
+  it('shows none unless near', () => {
+    const front = name(1, 0, 0);
+    layOutSurface([{ priority: 0, labels: [front] }], camera(), { ...view, near: false });
+    expect(front.element.hidden).toBe(true);
   });
 });
