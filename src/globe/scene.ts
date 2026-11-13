@@ -9,6 +9,7 @@ import { Playback } from './playback';
 import { labelTexture } from './labelTexture';
 import { createC14Glow } from './c14Glow';
 import { type ShowerCommand, type ShowerSpec } from './showerAnimation';
+import type { Quaternion } from 'three';
 import {
   AdditiveBlending,
   BackSide,
@@ -18,11 +19,9 @@ import {
   DataTexture,
   Group,
   LinearFilter,
-  Matrix4,
   Mesh,
   MeshBasicMaterial,
   PerspectiveCamera,
-  Quaternion,
   ShaderMaterial,
   SphereGeometry,
   Sprite,
@@ -38,19 +37,13 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-import { apply, multiply, transpose, type Matrix3 } from '../astro/matrix';
 import { type Body, type GeoPoint, type GlobeCamera, type Viewpoint } from '../state/viewState';
 import { geoToVector, type Vector3Tuple } from './geo';
-import {
-  MOON_RADIUS_EARTH_RADII,
-  sceneFromKm,
-  sceneRotation,
-  SUN_RADIUS_EARTH_RADII,
-} from './spaceFrame';
+import { MOON_RADIUS_EARTH_RADII, SUN_RADIUS_EARTH_RADII } from './spaceFrame';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import type { NamedBody } from '../data/planetNames';
 import type { MoonName, MoonOrbits, MoonPlanet } from '../astro/moonOrbits';
-import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
+import { ORBITING, type Orbiting, type PlanetName } from '../astro/planets';
 import { planetRadius } from './planetLook';
 import { isMoonBody, moonsInView } from './moonLook';
 import {
@@ -77,6 +70,7 @@ import { temperatureUniforms } from './temperatureShader';
 import { EarthSurfaces, surfaceUniforms } from './earthSurfaces';
 import { ATMOSPHERE_FRAGMENT, ATMOSPHERE_VERTEX, MOON_FRAGMENT, MOON_VERTEX } from './bodyShaders';
 import { createEarthTileLayer } from './earthTiles';
+import { BodiesInSpace } from './bodiesInSpace';
 import { CameraRig } from './cameraRig';
 import { Stage } from '../stage/stage';
 import { tileLimits, type TileLimits } from './tileLimits';
@@ -433,10 +427,22 @@ export function createGlobe(
     { earth: earthMap, moon: moonMap, plainEarth: texture, plainMoon: moonTexture },
   );
   const orbitLoops = createOrbitLoops(scene);
-  const orbits = orbitLoops.group;
+  // Where the Sun, the Moon, the planets and their moons are, placed for each moment.
+  const space = new BodiesInSpace({
+    sunMeshes,
+    moon,
+    planets,
+    moonSystems,
+    orbits: orbitLoops.group,
+    meshes: bodyMeshes,
+    sunPosition,
+    moonPosition,
+    earthUniforms: earth.material.uniforms,
+    dataset: container.dataset,
+  });
 
   function hiddenInDeepTime(): Object3D[] {
-    return [sun, corona, moon, orbits, ...Object.values(planets.meshes)];
+    return [sun, corona, moon, orbitLoops.group, ...Object.values(planets.meshes)];
   }
 
   // What is written over the picture (#379): the bodies' markers, and the layers' names.
@@ -487,12 +493,6 @@ export function createGlobe(
     uniforms['overlayMap'] = { value: empiresTexture };
   }
 
-  let earthFixedToJ2000: Matrix3 | null = null;
-  // The Sun's frame is J2000, so a camera orbiting the Sun does not spin with Earth.
-  const sunFrame = new Quaternion();
-  // The Moon's map has longitude 0 at the mesh's +Z (see above); geoToVector puts it at +X.
-  const moonMapTurn = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2);
-
   // Picking with the pointer: before the orbit controls, which listen to the same events.
   const picking = new Picking({
     canvas: renderer.domElement,
@@ -507,19 +507,8 @@ export function createGlobe(
     picking.requestBody(body);
   }
 
-  /** Where a body is and how its surface coordinates turn into the scene's axes. */
   function bodyFrame(body: Body): { position: Vector3; rotation: Quaternion } {
-    if (body === 'moon') {
-      return { position: moon.position, rotation: moon.quaternion.clone().multiply(moonMapTurn) };
-    }
-    if (body === 'sun') return { position: sun.position, rotation: sunFrame };
-    // Planets, like the Sun, are orbited in J2000 axes, so the camera does not spin with Earth.
-    // The planets' moons ride with their planet: where they are in the scene is their world's.
-    if (isMoonBody(body)) {
-      return { position: bodyMeshes[body].getWorldPosition(new Vector3()), rotation: sunFrame };
-    }
-    if (body !== 'earth') return { position: bodyMeshes[body].position, rotation: sunFrame };
-    return { position: new Vector3(), rotation: new Quaternion() };
+    return space.frame(body);
   }
 
   function bodyReady(body: Body): boolean {
@@ -625,11 +614,7 @@ export function createGlobe(
     spinAxis,
     moonPosition: (moon, target) => moonSystems.meshes[moon].getWorldPosition(target),
     requestBody,
-    spaceToScene() {
-      if (earthFixedToJ2000 === null) return null;
-      const toScene = transpose(earthFixedToJ2000);
-      return (km) => sceneFromKm(apply(toScene, [km[0], km[1], km[2]]));
-    },
+    spaceToScene: () => space.spaceToScene(),
     requestRender() {
       stage.invalidate();
     },
@@ -684,57 +669,9 @@ export function createGlobe(
     },
     setSpace(bodies) {
       // Keep a far camera still among the stars: carry it along by the rotation Earth made
-      // since the last moment (old Earth-fixed -> J2000 -> new Earth-fixed).
-      rig.beforeBodiesMove(
-        earthFixedToJ2000 === null
-          ? null
-          : sceneRotation(multiply(transpose(bodies.earthFixedToJ2000), earthFixedToJ2000)),
-      );
-      earthFixedToJ2000 = bodies.earthFixedToJ2000;
-      const toEarthFixed = transpose(bodies.earthFixedToJ2000);
-      const [r0, r1, r2] = sceneRotation(toEarthFixed);
-      sunFrame.setFromRotationMatrix(new Matrix4().set(...r0, 0, ...r1, 0, ...r2, 0, 0, 0, 0, 1));
-      sunMeshes.place(new Vector3(...sceneFromKm(apply(toEarthFixed, bodies.sunKm))), sunFrame);
-      sunPosition.copy(sun.position);
-      orbits.position.copy(sun.position);
-      orbits.quaternion.copy(sunFrame);
-      if (bodies.moonKm === null) {
-        moon.visible = false;
-      } else {
-        moon.position.set(...sceneFromKm(apply(toEarthFixed, bodies.moonKm)));
-        moon.lookAt(0, 0, 0);
-        moon.visible = true;
-        moonPosition.copy(moon.position);
-        earth.material.uniforms['moonRadius'] = { value: MOON_RADIUS_EARTH_RADII };
-      }
-      const planetsKm = bodies.planetsKm;
-      planets.place(
-        planetsKm === null
-          ? null
-          : (Object.fromEntries(
-              PLANETS.map((planet) => [
-                planet,
-                new Vector3(...sceneFromKm(apply(toEarthFixed, planetsKm[planet]))),
-              ]),
-            ) as Record<PlanetName, Vector3>),
-        sun.position,
-        sunFrame,
-        planetsKm === null ? undefined : { jdTT: bodies.jdTT, km: planetsKm },
-      );
-      moonSystems.place(
-        bodies.jdTT,
-        planetsKm === null
-          ? null
-          : {
-              mars: bodyMeshes.mars.position,
-              jupiter: bodyMeshes.jupiter.position,
-              saturn: bodyMeshes.saturn.position,
-            },
-        sun.position,
-        sunFrame,
-      );
-      container.dataset['planets'] = planetsKm === null ? 'off' : 'on';
-      container.dataset['space'] = moon.visible ? 'moon' : 'sun';
+      // since the last moment.
+      rig.beforeBodiesMove(space.turnSince(bodies.earthFixedToJ2000));
+      space.place(bodies);
       rig.afterBodiesMove();
       stage.invalidate();
     },
