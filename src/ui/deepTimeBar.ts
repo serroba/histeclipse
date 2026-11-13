@@ -10,7 +10,6 @@ import { anchorMa, MILESTONES } from '../deepTime/milestones';
 import { type Period, periodShort } from '../deepTime/periods';
 import { formatMa } from '../time/format';
 import type { Atmosphere } from '../data/atmosphere';
-import { IMPACTS_MODES, type ImpactsMode } from '../data/impacts';
 import type { DeepAir } from '../data/deepAir';
 import type { Co2Archive } from '../data/co2Archive';
 import type { PolarityScale } from '../data/polarity';
@@ -145,8 +144,6 @@ export interface DeepTimeView {
   /** How far back the elevation maps reach, Ma; before it the globe is blank. */
   readonly mapsReach: number;
   readonly temperature: TemperatureView;
-  /** Whether a second reconstruction's continents are outlined, and what to say of them. */
-  readonly plates: boolean;
   /**
    * The air: off, or on with the ice-core gases (on the ice-age scale) or the gases of the last
    * 540 million years (on that scale), each null while it loads.
@@ -160,13 +157,11 @@ export interface DeepTimeView {
         /** The Paleo-CO2 Data Archive, once asked for (null until it loads). */
         readonly archive: Co2Archive | null;
       };
-  /** The features' chips (#380), by layer: whether each is offered and on, and its note. */
+  /**
+   * The chips (#380, #605), by layer: the features', the plates' and the impacts'; whether each
+   * is offered and on, and its note.
+   */
   readonly chips: ReadonlyMap<Layer, DeepChipView>;
-  /** Impact craters and deposits: off, on while they load (null), or on with what to say. */
-  readonly impacts:
-    | { readonly on: false }
-    | { readonly on: true; readonly text: string | null; readonly mode: ImpactsMode };
-  readonly platesText: string | null;
   /** The ice-age coastline; null before the ice ages. */
   readonly coastline: CoastlineView | null;
   /** The sea ice; null off the ice-age scale. */
@@ -209,12 +204,8 @@ export function createDeepTimeBar(
     onSpeed(maPerSecond: number): void;
     onTemperature(on: boolean): void;
     onSeaLevel(on: boolean): void;
-    onPlates(on: boolean): void;
-    /** A feature's chip pressed: its layer on or off. */
+    /** A chip pressed: its layer on or off. */
     onLayer(layer: Layer, on: boolean): void;
-    onImpacts(on: boolean): void;
-    /** Show each impact around its time, or every one that had struck by then. */
-    onImpactsMode(mode: ImpactsMode): void;
     onAir(on: boolean): void;
     /** The reader asked for the Paleo-CO2 Data Archive's estimates: load them. */
     onCo2Archive(): void;
@@ -332,11 +323,9 @@ export function createDeepTimeBar(
   // The books beside each note, made once: the notes that are drawn again keep them first.
   const iceWhy = handlers.why('ice-surface', 'The ice ages’ Earth');
   const coastWhy = handlers.why('ice-surface', 'The coast and sea level');
-  const platesWhy = handlers.why('plates', 'Plates');
   const temperatureWhy = handlers.why('temperature', 'Temperature');
   const factsWhy = handlers.why('earth-facts', 'Poles, magnetic field, tilt, day and Sun');
   const airWhy = handlers.why('air', 'Air');
-  const impactsWhy = handlers.why('impacts', 'Impact craters');
   // What the map rests on, asked plainly, first among the chips: a reconstruction should say so.
   const evidenceButton = element(
     'button',
@@ -381,22 +370,6 @@ export function createDeepTimeBar(
   );
   const when = element('strong', { class: 'deep-when', 'data-testid': 'deep-when' });
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
-  const platesButton = element(
-    'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', title: 'Plates' },
-    uiIcon('plates'),
-    element('span', { class: 'icon-label' }, 'Plates'),
-  );
-  const platesWords = element('span', {});
-  const platesNote = element(
-    'p',
-    { class: 'deep-note', hidden: '', 'data-testid': 'plates-note' },
-    platesWhy,
-    ' ',
-    element('span', { class: 'plates-swatch', 'aria-hidden': 'true' }),
-    ' ',
-    platesWords,
-  );
   const airButton = element(
     'button',
     { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '', title: 'Air' },
@@ -412,7 +385,7 @@ export function createDeepTimeBar(
       if (current !== null) bar.render(current);
     },
   });
-  // The features' chips (#380): each a button and a note, made once.
+  // The chips (#380, #605): the plates', the features', the impacts'; each a button and a note.
   const featureChips = createDeepChips(
     chips,
     (id, label) => handlers.why(id, label),
@@ -420,28 +393,6 @@ export function createDeepTimeBar(
       handlers.onLayer(layer, on);
     },
   );
-  const impactsButton = element(
-    'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '', title: 'Impacts' },
-    uiIcon('impacts'),
-    element('span', { class: 'icon-label' }, 'Impacts'),
-  );
-  const impactsMode = element(
-    'select',
-    { class: 'deep-coast', 'aria-label': 'Show impacts' },
-    element('option', { value: 'around' }, 'each around its time'),
-    element('option', { value: 'struck' }, 'all that had struck by then'),
-  );
-  impactsMode.addEventListener('change', () => {
-    const mode = IMPACTS_MODES.find((each) => each === impactsMode.value);
-    if (mode !== undefined) handlers.onImpactsMode(mode);
-  });
-  const impactsPicker = element('label', { class: 'impacts-picker' }, 'Show impacts ', impactsMode);
-  const impactsNote = element('p', {
-    class: 'deep-note impacts-note',
-    hidden: '',
-    'data-testid': 'impacts-note',
-  });
   const seaLevelButton = element(
     'button',
     { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', title: 'Sea level' },
@@ -546,9 +497,7 @@ export function createDeepTimeBar(
     coastNote,
     seaLevel.legend,
     legend.root,
-    platesNote,
     ...featureChips.notes,
-    impactsNote,
     air.root,
     milestones.root,
     // One open at a time (they share a name), so the bar doesn't grow over the globe.
@@ -575,9 +524,7 @@ export function createDeepTimeBar(
       evidenceButton,
       seaLevelButton,
       temperatureButton,
-      platesButton,
       ...featureChips.buttons,
-      impactsButton,
       airButton,
     ),
     details,
@@ -631,12 +578,6 @@ export function createDeepTimeBar(
   });
   airButton.addEventListener('click', () => {
     handlers.onAir(!(current?.air.on ?? false));
-  });
-  impactsButton.addEventListener('click', () => {
-    handlers.onImpacts(!(current?.impacts.on ?? false));
-  });
-  platesButton.addEventListener('click', () => {
-    handlers.onPlates(!(current?.plates ?? false));
   });
   seaLevelButton.addEventListener('click', () => {
     handlers.onSeaLevel(!(current?.seaLevel.on ?? false));
@@ -724,35 +665,13 @@ export function createDeepTimeBar(
       );
       milestones.render(view.ma, view.oldest);
       seaLevelButton.setAttribute('aria-pressed', String(view.seaLevel.on));
-      platesButton.setAttribute('aria-pressed', String(view.plates));
       // The maps of the 540 Myr and 4.6 Gyr spans are reconstructions; the ice ages', today's land.
       evidenceButton.hidden = view.scale === 'ice';
       featureChips.render(view.chips);
-      // Impacts are placed on the elevation maps' reconstruction: not before them.
-      impactsButton.hidden = view.scale === 'eons';
-      impactsButton.setAttribute('aria-pressed', String(view.impacts.on));
-      impactsNote.hidden = !view.impacts.on;
-      if (view.impacts.on) {
-        impactsMode.value = view.impacts.mode;
-        impactsNote.replaceChildren(
-          impactsWhy,
-          ' ',
-          impactsPicker,
-          ' ',
-          view.impacts.text ?? 'Impacts: loading…',
-          ' Source: ',
-          element('a', { href: 'https://impact.uwo.ca' }, 'the Impact Earth Database'),
-          '; places then from the PALEOMAP model by the ',
-          element('a', { href: 'https://gws.gplates.org' }, 'GPlates Web Service'),
-          '.',
-        );
-      }
       // The ice cores on the ice-age scale; the proxies' 540 million years on that one.
       airButton.hidden = view.scale === 'eons';
       airButton.setAttribute('aria-pressed', String(view.air.on));
       air.render(view.air, view.scale, view.oldest, view.ma);
-      platesNote.hidden = !view.plates;
-      platesWords.textContent = view.platesText ?? 'Loading the continent outlines…';
       seaLevel.render(
         view.seaLevel.on ? view.seaLevel.index : null,
         view.ma * 1000,

@@ -6,7 +6,6 @@ import type { DeepMoment } from '../feature';
 import type { DeepChip } from '../../ui/deepChips';
 import type { DeepScale, ViewState } from '../../state/viewState';
 import type { DeepTimeView } from '../../ui/deepTimeBar';
-import type { ImpactsMode } from '../../data/impacts';
 import type { Span } from '../../ui/spanSwitch';
 import type { StoryDate } from '../../deepTime/storyDate';
 
@@ -46,7 +45,7 @@ export interface DeepTimeContext extends PartContext {
     Globe,
     'addLayer' | 'setUncharted' | 'setSketch' | 'setDeepTime' | 'setTemperature' | 'prefetch'
   >;
-  /** The features' chips in the bar (#380). */
+  /** The chips in the bar (#380, #605), in their order. */
   readonly chips: readonly DeepChip[];
   /** A jump in time: the link's history takes a step. */
   step(): void;
@@ -65,7 +64,6 @@ export interface DeepTimeContext extends PartContext {
   /** How far back the plates reach, Ma, once known. */
   platesReach(): number | undefined;
   loadArchive(): void;
-  impactsMode(mode: ImpactsMode): void;
 }
 
 export interface DeepTimePart {

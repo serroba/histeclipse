@@ -8,7 +8,9 @@
 import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import type { ViewState } from '../../state/viewState';
+import type { DeepChipView } from '../../ui/deepChips';
 import type { DeepTimeView } from '../../ui/deepTimeBar';
+import { platesChip } from './platesChip';
 import { framesAround } from '../../data/paleoDem';
 import { loadPlateMotion, motionText, type PlateMotion } from '../../data/plateMotion';
 import { loadAtmosphere, type Atmosphere } from '../../data/atmosphere';
@@ -22,6 +24,8 @@ import {
 } from '../../data/plateMasks';
 import { errorMessage } from '../../util/errors';
 
+export { PLATES_CHIP } from './platesChip';
+
 /** What deep time's climate and continents ask of the rest of the page. */
 export interface DeepSurfacesContext extends PartContext {
   readonly globe: Pick<Globe, 'setPlates'>;
@@ -34,7 +38,7 @@ export interface DeepSurfacesPart {
   readonly bar: (
     state: ViewState,
     ma: number,
-  ) => Pick<DeepTimeView, 'plateMotion' | 'air' | 'plates' | 'platesText'>;
+  ) => Pick<DeepTimeView, 'plateMotion' | 'air'> & { readonly plates: DeepChipView };
   /** How far back the plates reach, Ma, once their index has loaded. */
   readonly platesReach: () => number | undefined;
   /** Load the Paleo-CO2 Data Archive. */
@@ -178,11 +182,14 @@ export function mountDeepSurfaces(context: DeepSurfacesContext): DeepSurfacesPar
   }
 
   return {
-    bar: (state, ma) => ({
-      plateMotion: plateMotionText(state, ma),
-      air: showAir(state),
-      ...showPlates(state, ma),
-    }),
+    bar: (state, ma) => {
+      const { plates, platesText } = showPlates(state, ma);
+      return {
+        plateMotion: plateMotionText(state, ma),
+        air: showAir(state),
+        plates: platesChip(plates, platesText),
+      };
+    },
     platesReach: () => platesIndex?.frames.at(-1)?.ma,
     loadArchive,
     off() {
