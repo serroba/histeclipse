@@ -92,6 +92,7 @@ export default defineConfig({
         'src/features/shower/leafScene.ts',
         'src/features/boundaries/boundaryWheel.ts',
         'src/features/boundaries/holoceneChart.ts',
+        'src/features/boundaries/chartScrubber.ts',
         'src/story/storyScene.ts',
         'src/ui/**',
         // The page's own pieces, moved from ui/ into the one feature that uses each (#487).
