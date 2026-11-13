@@ -51,7 +51,7 @@ export const MAX_LINES = 400;
  */
 export const LINE_LIMITS = {
   'app.ts': 789,
-  'globe/scene.ts': 918,
+  'globe/scene.ts': 878,
   'ui/deepTimeBar.ts': 779,
   'sky/skyScene.ts': 971,
   'features/treeOfLife/lineagesSheet.ts': 583,
