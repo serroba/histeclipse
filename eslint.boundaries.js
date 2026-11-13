@@ -13,6 +13,8 @@ export const TIERS = [
   ['astro', 'time', 'eclipses', 'deepTime', 'data'],
   // What the reader is looking at, and where each thing shown comes from.
   ['state', 'sources'],
+  // The frame every 3D view draws in (#603).
+  ['stage'],
   // Drawing it.
   ['globe', 'sky', 'story', 'tablets'],
   // The page around it, what is reported about it, and the site's texts to search.
