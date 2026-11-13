@@ -82,6 +82,18 @@ export function reachedAt(ms: number): number {
   return 1;
 }
 
+/** When the line reaches `x` across the chart, ms: `reachedAt` read back, so a reader can set it. */
+export function msAt(x: number): number {
+  let left = 0;
+  let start = 0;
+  for (const panel of PANELS) {
+    if (x < left + panel.share) return start + (panel.ms * Math.max(0, x - left)) / panel.share;
+    left += panel.share;
+    start += panel.ms;
+  }
+  return DRAW_MS;
+}
+
 /** The temperatures the chart shows, °C. */
 const T_MIN = -10;
 const T_MAX = 4;

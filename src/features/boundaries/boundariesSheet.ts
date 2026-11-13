@@ -53,7 +53,7 @@ const CHAPTER_NAMES: Readonly<Record<BoundaryChapter, string>> = {
 
 const CAPTIONS: Readonly<Record<BoundaryChapter, string>> = {
   holocene:
-    'For 800,000 years temperature swung with the ice ages: at the last one’s depth, about 20,000 years ago, the globe was some 7 °C colder (Antarctica, faint, swung about twice as far). Then for 10,000 years before industry it kept within about a degree: the Holocene corridor (green), in which farming and cities arose. In 2025 it was 1.4 °C above 1850–1900, out of the corridor. The records differ on the corridor’s slow trend: the reanalysis drawn here has it warming slightly, others cooling. The globe follows the line: the ice sheets and the coast of the time, and land coloured blue where colder and orange to red where warmer, left uncoloured within about a degree. From 1850 the colours are measured warming since 1850–1900, on land and at sea: land has warmed some 2 °C, the far north most, the oceans about 1 °C, so at sea the colour comes in from about half a degree. Where records then were too few, as over much of the tropics and the seas away from the ships’ tracks, the warming is measured from 1951–1980 and shifted back by its latitude’s difference; inland Antarctica, with no records that long, is left plain, as is the sea before 1850.',
+    'For 800,000 years temperature swung with the ice ages: at the last one’s depth, about 20,000 years ago, the globe was some 7 °C colder (Antarctica, faint, swung about twice as far). Then for 10,000 years before industry it kept within about a degree: the Holocene corridor (green), in which farming and cities arose. In 2025 it was 1.4 °C above 1850–1900, out of the corridor. The records differ on the corridor’s slow trend: the reanalysis drawn here has it warming slightly, others cooling. The globe follows the line: the ice sheets and the coast of the time, and land coloured blue where colder and orange to red where warmer, left uncoloured within about a degree. Drag along the chart, or use the arrow keys, to take the globe and the time bar to any year. From 1850 the colours are measured warming since 1850–1900, on land and at sea: land has warmed some 2 °C, the far north most, the oceans about 1 °C, so at sea the colour comes in from about half a degree. Where records then were too few, as over much of the tropics and the seas away from the ships’ tracks, the warming is measured from 1951–1980 and shifted back by its latitude’s difference; inland Antarctica, with no records that long, is left plain, as is the sea before 1850.',
   safe: 'Nine processes keep Earth in the stable state of the last 11,700 years, the Holocene, in which farming and cities arose. Each has a boundary to human pressure: inside it (green), the risk of destabilising the planet stays low. Here every one is at its pre-industrial or Holocene-like level.',
   pressure:
     'Each wedge grows to its value in the Planetary Health Check 2026. Past the dark green ring a boundary is crossed, and the risk grows (amber); past the orange line it is high (red). Seven of the nine are crossed; only aerosols, globally, and the ozone layer are within.',
@@ -319,7 +319,7 @@ export function createBoundariesSheet(
     let scene: Pick<StoryScene<string>, 'restart' | 'settle'>;
     if (chapter === 'holocene') {
       wheel?.setPlaying(false);
-      chart ??= makeChart(chartStage, temperature, onYear);
+      chart ??= makeChart(chartStage, temperature, onYear, setPlaying);
       scene = chart;
     } else {
       chart?.setPlaying(false);

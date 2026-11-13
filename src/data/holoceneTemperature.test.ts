@@ -12,6 +12,7 @@ import {
   linePath,
   loadHoloceneTemperature,
   PANELS,
+  msAt,
   reachedAt,
   seriesOf,
   xOf,
@@ -100,6 +101,15 @@ describe('the chart’s scales', () => {
     expect(reachedAt(19_000)).toBeCloseTo(0.72);
     expect(reachedAt(DRAW_MS)).toBe(1);
     expect(reachedAt(DRAW_MS + 1)).toBe(1);
+  });
+
+  it('read back when the line reaches a point, so a reader can drag it there', () => {
+    for (const ms of [0, 3000, 12_000, 15_500, 19_000, 21_000]) {
+      expect(msAt(reachedAt(ms))).toBeCloseTo(ms, 6);
+    }
+    expect(msAt(-0.2)).toBe(0);
+    expect(msAt(1)).toBe(DRAW_MS);
+    expect(msAt(1.5)).toBe(DRAW_MS);
   });
 
   it('read back the year at a point across them', () => {
