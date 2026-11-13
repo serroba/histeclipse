@@ -6,7 +6,9 @@
  * The site's own drawing of the records the Planetary Health Check 2026's Figure 1 cites. The
  * Antarctic core is drawn faint and named as Antarctic: it swings about twice as far as the
  * globe. SVG drawn at the stage's own size, so its words stay legible on a phone. As it draws, a
- * cursor names the year the line has reached and `onYear` hears it: the globe follows (#475). DOM glue,
+ * cursor names the year the line has reached and `onYear` hears it: the globe follows (#475). The
+ * chart is a slider too: drag along it, or use the arrow keys, and the cursor, the globe and deep
+ * time's bar go to that year, the whole line drawn, until it plays on from there. DOM glue,
  * covered by the Playwright suite; the scales and numbers are in `data/holoceneTemperature.ts`.
  */
 
@@ -19,6 +21,7 @@ import {
   DRAW_MS,
   latestYear,
   linePath,
+  msAt,
   PANELS,
   reachedAt,
   xOf,
@@ -28,6 +31,7 @@ import {
   type SeriesId,
 } from '../../data/holoceneTemperature';
 import type { StoryScene } from '../../story/storyScene';
+import { makeScrubbable } from './chartScrubber';
 import './holoceneChart.css';
 
 /** The Holocene's start, 11,700 years before 2000. */
@@ -73,19 +77,22 @@ export function createHoloceneChart(
   data: HoloceneTemperature,
   /** The year the line has reached, as it changes. */
   onYear: (year: number) => void = () => undefined,
+  /** Told when the chart stops playing of itself: the reader has taken the cursor. */
+  onPlaying: (playing: boolean) => void = () => undefined,
 ): StoryScene<'holocene'> {
   const corridor = corridorOf(data);
   const latest = latestYear(data);
   const root = svg('svg', {
     class: 'holocene-chart',
-    role: 'img',
-    'aria-label': `Temperature over 800,000 years. The ice ages swing by about 7 °C globally; for the 10,000 years before industry it kept within ${(corridor.high - corridor.low).toFixed(1)} °C; in ${String(latest.year)} it was ${latest.celsius.toFixed(1)} °C above 1850–1900.`,
+    'aria-label': `Year on a chart of temperature over 800,000 years. The ice ages swing by about 7 °C globally; for the 10,000 years before industry it kept within ${(corridor.high - corridor.low).toFixed(1)} °C; in ${String(latest.year)} it was ${latest.celsius.toFixed(1)} °C above 1850–1900.`,
   });
   container.append(root);
 
   let progress = 0;
   let clock = 0;
   let playing = true;
+  // Where the reader has put the cursor, 0 to 1 across, while the whole line shows; else null.
+  let chosen: number | null = null;
   let last: number | null = null;
   let frame = 0;
   let parts: {
@@ -247,11 +254,12 @@ export function createHoloceneChart(
   function show(): void {
     if (parts === null) return;
     const w = size.width - MARGIN.left - MARGIN.right;
-    const reached = reachedAt(progress * DRAW_MS);
-    parts.clip.setAttribute('width', String(reached * w + 2));
+    const reached = chosen ?? reachedAt(progress * DRAW_MS);
+    const drawn = chosen === null ? reached : 1;
+    parts.clip.setAttribute('width', String(drawn * w + 2));
     // The corridor shows once the line has come into the Holocene; today once the line is there.
-    parts.corridor.style.opacity = String(within(reached, xOf(HOLOCENE_STARTS), xOf(-3000)));
-    parts.now.style.opacity = String(within(reached, 0.995, 1));
+    parts.corridor.style.opacity = String(within(drawn, xOf(HOLOCENE_STARTS), xOf(-3000)));
+    parts.now.style.opacity = String(within(drawn, 0.995, 1));
     container.dataset['complete'] = String(progress >= 1);
     // The cursor, where the line has reached, until it reaches today.
     const year = Math.min(yearOf(reached), latest.year);
@@ -261,8 +269,10 @@ export function createHoloceneChart(
     parts.cursorText.setAttribute('x', String(reached * w + (reached > 0.5 ? -6 : 6)));
     parts.cursorText.setAttribute('text-anchor', reached > 0.5 ? 'end' : 'start');
     parts.cursorText.textContent = chartDateText(year);
-    parts.cursor.style.opacity = progress >= 1 ? '0' : '1';
+    parts.cursor.style.opacity = progress >= 1 && chosen === null ? '0' : '1';
     container.dataset['year'] = String(Math.round(year));
+    root.setAttribute('aria-valuenow', String(Math.round(reached * 100)));
+    root.setAttribute('aria-valuetext', chartDateText(year));
     if (year !== reportedYear) {
       reportedYear = year;
       onYear(year);
@@ -289,6 +299,31 @@ export function createHoloceneChart(
     }
   }
 
+  makeScrubbable(
+    root,
+    () => ({ left: MARGIN.left, width: size.width - MARGIN.left - MARGIN.right }),
+    () => chosen ?? reachedAt(progress * DRAW_MS),
+    (x) => {
+      // Held where the reader puts it; Play draws on from there.
+      onPlaying(false);
+      playing = false;
+      cancelAnimationFrame(frame);
+      frame = 0;
+      chosen = x;
+      clock = msAt(x);
+      progress = clock / DRAW_MS;
+      container.dataset['playing'] = 'false';
+      container.dataset['chosen'] = 'true';
+      show();
+    },
+  );
+
+  /** The line drawn only as far as the cursor again, as it plays. */
+  function unchoose(): void {
+    chosen = null;
+    delete container.dataset['chosen'];
+  }
+
   const resized = new ResizeObserver(() => {
     if (container.clientWidth !== size.width || container.clientHeight !== size.height) draw();
   });
@@ -302,11 +337,13 @@ export function createHoloceneChart(
       // One chapter: nothing to turn to.
     },
     setPlaying(next) {
+      if (next) unchoose();
       playing = next && progress < 1;
       container.dataset['playing'] = String(playing);
       if (playing) run();
     },
     restart() {
+      unchoose();
       clock = 0;
       progress = 0;
       playing = true;
@@ -315,6 +352,7 @@ export function createHoloceneChart(
       run();
     },
     settle() {
+      unchoose();
       clock = DRAW_MS;
       progress = 1;
       playing = false;
@@ -332,6 +370,7 @@ export function createHoloceneChart(
       delete dataset['playing'];
       delete dataset['chapter'];
       delete dataset['year'];
+      delete dataset['chosen'];
     },
   };
 }

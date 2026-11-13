@@ -58,6 +58,28 @@ test('the boundaries open on the Holocene, then grow to 2026 and compare with 20
     );
     await expect(page.getByTestId('deep-when')).toHaveText('2025');
   });
+  await test.step('When they drag the chart back into the ice ages', async () => {
+    const slider = sheet.getByRole('slider', { name: /Year on a chart of temperature/ });
+    const box = await slider.boundingBox();
+    if (box === null) throw new Error('the chart has no box');
+    await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.2, box.y + box.height / 2, { steps: 4 });
+    await page.mouse.up();
+  });
+  await test.step('Then the cursor, the globe and the time bar go to that year', async () => {
+    await expect(chart).toHaveAttribute('data-chosen', 'true');
+    await expect(chart.getByTestId('holocene-cursor')).toContainText('years ago');
+    await expect(sheet.getByRole('button', { name: 'Play' })).toBeVisible();
+    await expect(page.locator('.hud-date')).toContainText('years ago');
+    await expect(page.getByTestId('deep-when')).not.toHaveText('2025');
+    await expect(page).toHaveURL(/layers=[^&]*temperature/);
+  });
+  await test.step('And the End key takes them back to today', async () => {
+    await page.keyboard.press('End');
+    await expect(chart).toHaveAttribute('data-year', '2025');
+    await expect(page.locator('.hud-date')).toHaveText('2025');
+  });
   await test.step('When they turn to the safe space', async () => {
     await sheet.getByRole('button', { name: 'Safe space' }).click();
   });
