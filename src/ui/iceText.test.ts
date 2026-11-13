@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { iceText, seaIceText } from './deepTimeBar';
+import { iceText, seaIceText } from './deepBarModel';
 import { iceOutlineText } from './iceOutlineText';
 
 describe('iceText', () => {
