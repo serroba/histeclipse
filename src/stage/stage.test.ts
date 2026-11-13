@@ -141,9 +141,11 @@ describe('Stage', () => {
     const resize = vi.fn();
     made.add({ resize });
     made.observeResize();
+    expect(renderer.setSize).not.toHaveBeenCalled();
+    observed?.();
     expect(renderer.setSize).toHaveBeenCalledWith(640, 480, false);
     expect(resize).toHaveBeenCalledWith(640, 480);
-    observed?.();
+    made.resize();
     expect(renderer.setSize).toHaveBeenCalledTimes(2);
   });
 

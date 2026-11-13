@@ -312,6 +312,7 @@ export function createStoryScene<Chapter extends string>(
     },
   });
   stage.observeResize();
+  stage.resize();
   container.dataset['chapter'] = chapter;
   container.dataset['playing'] = 'true';
   stage.start();

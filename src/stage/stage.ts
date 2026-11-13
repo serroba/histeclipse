@@ -75,13 +75,12 @@ export class Stage<C extends Camera = Camera> {
     this.#dirty = true;
   }
 
-  /** Keep the canvas the container's size from now on, sizing it once now. */
+  /** Keep the canvas the container's size from now on, as the container changes. */
   observeResize(): void {
     this.#observer ??= new ResizeObserver(() => {
       this.resize();
     });
     this.#observer.observe(this.#container);
-    this.resize();
   }
 
   /** Start the frames: the first on the next animation frame, or now when `immediately`. */
