@@ -9,11 +9,10 @@ import { Playback } from './playback';
 import { labelTexture } from './labelTexture';
 import { createC14Glow } from './c14Glow';
 import { type ShowerCommand, type ShowerSpec } from './showerAnimation';
-import type { Quaternion } from 'three';
+import type { IUniform, Quaternion } from 'three';
 import {
   AdditiveBlending,
   BackSide,
-  CanvasTexture,
   Color,
   CylinderGeometry,
   DataTexture,
@@ -46,31 +45,22 @@ import type { MoonName, MoonOrbits, MoonPlanet } from '../astro/moonOrbits';
 import { ORBITING, type Orbiting, type PlanetName } from '../astro/planets';
 import { planetRadius } from './planetLook';
 import { isMoonBody, moonsInView } from './moonLook';
-import {
-  HISTORY_PAINT_ORDER,
-  type GlobeLayer,
-  DEEP_PAINT_ORDER,
-  type DeepPainter,
-  type HistoryPainter,
-  type LayerFactory,
-  type LayerHost,
-} from './layerHost';
+import { type GlobeLayer, type LayerFactory, type LayerHost } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
 import { createOrbitLoops } from './orbitLoops';
 import { Picking } from './picking';
 import { createSunMeshes } from './sunMeshes';
 import { BodyMaps } from './bodyMaps';
 import { ScreenLabels, settleSizes } from './screenLabels';
-import { createPaintSlots } from './paintSlots';
 import { assembleEarthParts, checkSamplers, type EarthPart } from './earthParts';
 import { createPlanetMeshes } from './planetMeshes';
 import type { ArrivalGrid } from '../data/dispersal';
-import { clearOverlay, createEmpireCanvas, paintSettled } from './empireCanvas';
 import { temperatureUniforms } from './temperatureShader';
 import { EarthSurfaces, surfaceUniforms } from './earthSurfaces';
 import { ATMOSPHERE_FRAGMENT, ATMOSPHERE_VERTEX, MOON_FRAGMENT, MOON_VERTEX } from './bodyShaders';
 import { createEarthTileLayer } from './earthTiles';
 import { BodiesInSpace } from './bodiesInSpace';
+import { EarthOverlays } from './earthOverlays';
 import { CameraRig } from './cameraRig';
 import { Stage } from '../stage/stage';
 import { tileLimits, type TileLimits } from './tileLimits';
@@ -266,10 +256,14 @@ export function createGlobe(
   // Shared by the Earth and Moon shaders; set with the bodies each moment.
   const moonPosition = new Vector3();
   const sunPosition = new Vector3(1e5, 0, 0);
-  // The eclipse path, painted once per eclipse into a map-shaped texture the Earth samples.
-  const empiresCanvas = createEmpireCanvas();
-  const empiresTexture = new CanvasTexture(empiresCanvas);
-  empiresTexture.colorSpace = SRGBColorSpace;
+  // The maps painted over Earth's surface: history's and deep time's (#379).
+  const overlays = new EarthOverlays({
+    uniforms: (): Record<string, IUniform> => earth.material.uniforms,
+    invalidate: () => {
+      stage.invalidate();
+    },
+    dataset: container.dataset,
+  });
   const earthUniforms = {
     dayMap: { value: texture },
     dayRect: { value: new Vector4(0, 0, 1, 1) },
@@ -277,7 +271,7 @@ export function createGlobe(
     ...surfaceUniforms(),
     ...temperatureUniforms(),
     evenLight,
-    overlayMap: { value: empiresTexture as Texture },
+    overlayMap: { value: overlays.texture as Texture },
     empiresActive: { value: 0 },
     iceOutlinesActive: { value: 0 },
     sunDirection: { value: sunDirection },
@@ -457,41 +451,9 @@ export function createGlobe(
       stage.invalidate();
     },
   });
-  // The history map: the layers' parts (rocks, ways, dates, #379) in order, the states over them.
-  const historySlots = createPaintSlots<HistoryPainter>(paintHistoryOverlay);
-  function paintHistoryOverlay(): void {
-    const uniforms = earth.material.uniforms;
-    const painters = historySlots.painters();
-    const on = painters.length > 0;
-    uniforms['empiresActive'] = { value: on ? 1 : 0 };
-    stage.invalidate();
-    if (!on) return;
-    clearOverlay(empiresCanvas);
-    const statesOver = historySlots.shows(HISTORY_PAINT_ORDER.states);
-    for (const paint of painters) paint(empiresCanvas, statesOver);
-    empiresTexture.needsUpdate = true;
-    uniforms['overlayMap'] = { value: empiresTexture };
-  }
   // The layers added (#379), and what they lay out after each frame: declared before the first.
   const afterRenders: (() => void)[] = [];
   const layers: GlobeLayer<never>[] = [];
-  // Deep time's overlay, on the states' map (never shown then): a dispersal model's settled
-  // land, and the ice-sheet outlines over it.
-  // The deep-time map: the land people had reached, and the layers' parts (#379), in order.
-  const deepSlots = createPaintSlots<DeepPainter>(paintDeepOverlay);
-  const settledPaint = deepSlots.add(DEEP_PAINT_ORDER.settled);
-  function paintDeepOverlay(): void {
-    const uniforms = earth.material.uniforms;
-    const painters = deepSlots.painters();
-    const on = painters.length > 0;
-    uniforms['iceOutlinesActive'] = { value: on ? 1 : 0 };
-    stage.invalidate();
-    if (!on) return;
-    clearOverlay(empiresCanvas);
-    for (const paint of painters) paint(empiresCanvas);
-    empiresTexture.needsUpdate = true;
-    uniforms['overlayMap'] = { value: empiresTexture };
-  }
 
   // Picking with the pointer: before the orbit controls, which listen to the same events.
   const picking = new Picking({
@@ -625,8 +587,8 @@ export function createGlobe(
     pickable: (layer) => {
       picking.pickable(layer);
     },
-    deepPaint: (order) => deepSlots.add(order),
-    historyPaint: (order) => historySlots.add(order),
+    deepPaint: (order) => overlays.deep.add(order),
+    historyPaint: (order) => overlays.history.add(order),
     surfaceLabels: labels.surfaceLabels,
     surfaceSlot: labels.surfaceSlot,
     measure: settleSizes,
@@ -737,18 +699,7 @@ export function createGlobe(
       surfaces.setSketch(sketch);
     },
     setSettled(settled) {
-      // Whole thousands of years only: the model's own step.
-      const ka = settled === null ? null : Math.round(settled.ka);
-      const key = settled === null ? 'off' : `${settled.scenario} ${String(ka)}`;
-      if (key === container.dataset['settled']) return;
-      container.dataset['settled'] = key;
-      settledPaint.show(
-        settled === null || ka === null
-          ? null
-          : (canvas) => {
-              paintSettled(canvas, settled.grid, ka);
-            },
-      );
+      overlays.setSettled(settled);
     },
     addLayer(factory) {
       const layer = factory(host);
