@@ -13,8 +13,6 @@
 import {
   aliveAt,
   ancestry,
-  isGenus,
-  isWithin,
   LINEAGE_GROUPS,
   type LineageGroup,
   type Lineages,
@@ -27,6 +25,15 @@ import { element } from '../../ui/dom';
 import { drawFan, genusAtFan, litPath } from './lineagesFan';
 import { createMomentMap } from './lineagesMap';
 import { arrange, type Loaded, type Moment } from './lineagesTree';
+import {
+  capital,
+  momentWords,
+  pickedKind,
+  playStep,
+  span,
+  tipKind,
+  zoomAbout as zoomedAbout,
+} from './lineagesWords';
 import '../../ui/stageSheet.css';
 
 export interface LineagesSheet {
@@ -41,8 +48,6 @@ const GROUP_NAMES: Readonly<Record<LineageGroup, string>> = {
   dinosaurs: 'Dinosaurs',
   mammals: 'Mammals',
 };
-/** Seconds to play a group from its first line to its last. */
-const PLAY_SECONDS = 24;
 /** Where the pointer is over a canvas, and the genus under it, for the tooltip. */
 interface Hover {
   readonly x: number;
@@ -220,9 +225,9 @@ export function createLineagesSheet(
     }
     const seconds = lastFrame === 0 ? 0 : Math.min(0.1, (time - lastFrame) / 1000);
     lastFrame = time;
-    const next = at - ((current.oldest - current.youngest) / PLAY_SECONDS) * seconds;
-    if (next <= current.youngest) playing = false;
-    setMoment(next);
+    const step = playStep(at, current.oldest, current.youngest, seconds);
+    playing = step.playing;
+    setMoment(step.at);
   }
 
   function setMoment(ma: number): void {
@@ -233,11 +238,10 @@ export function createLineagesSheet(
     play.setAttribute('aria-label', playing ? 'Pause' : 'Play');
     const data = current;
     living = data.genera.filter((index) => aliveAt(elementAt(data.lineages.nodes, index), at));
-    const when = at < 0.5 ? 'Today' : `${String(Math.round(at))} million years ago`;
-    const genera = living.length === 1 ? '1 genus' : `${living.length.toLocaleString('en')} genera`;
-    moment.textContent = `${when} · ${genera} living`;
+    const words = momentWords(at, living.length);
+    moment.textContent = words.line;
     canvas.dataset['ma'] = at.toFixed(1);
-    mapCaption.textContent = `The world ${when === 'Today' ? 'today' : when}, and where the ${genera} then living were found: filled in these 5 million years, a ring where last found`;
+    mapCaption.textContent = words.caption;
     map.load(at);
     draw();
     if (playing && frameRequest === 0) frameRequest = requestAnimationFrame(tick);
@@ -290,13 +294,10 @@ export function createLineagesSheet(
       return;
     }
     const node = elementAt(data.lineages.nodes, over.index);
-    const kind = isGenus(node)
-      ? `${familyOf(data.lineages, node.index) || 'Genus'} · ${String(node.species)} species`
-      : `${capital(rankWord(node.rank))} of ${String(generaWithin(data, node.index))} genera`;
     tip.replaceChildren(
       element('strong', {}, node.name),
       element('span', {}, capital(span(node.first, node.last))),
-      element('span', {}, kind),
+      element('span', {}, tipKind(data.lineages, data.genera, node)),
     );
     const box = stage.getBoundingClientRect();
     const source = (hover === null ? mapCanvas : canvas).getBoundingClientRect();
@@ -311,18 +312,9 @@ export function createLineagesSheet(
   let pinch = 0;
 
   function zoomAbout(x: number, y: number, factor: number): void {
-    const next = Math.min(40, Math.max(1, zoom * factor));
-    const applied = next / zoom;
-    const middleX = canvas.clientWidth / 2;
-    const middleY = canvas.clientHeight / 2;
     // Keep the point under the pointer where it is.
-    panX = x - middleX - (x - middleX - panX) * applied;
-    panY = y - middleY - (y - middleY - panY) * applied;
-    zoom = next;
-    if (zoom === 1) {
-      panX = 0;
-      panY = 0;
-    }
+    const middle = { x: canvas.clientWidth / 2, y: canvas.clientHeight / 2 };
+    ({ zoom, panX, panY } = zoomedAbout({ zoom, panX, panY }, x, y, factor, middle));
     draw();
   }
 
@@ -464,9 +456,7 @@ export function createLineagesSheet(
       },
       'Its page in the Paleobiology Database',
     );
-    const kind = isGenus(node)
-      ? `Genus, ${String(node.species)} species named`
-      : `${capital(rankWord(node.rank))} of ${String(generaWithin(data, index))} genera here`;
+    const kind = pickedKind(data.lineages, data.genera, node);
     focus.replaceChildren(
       element('h3', {}, node.name),
       element('p', { class: 'stage-note' }, `${kind}. ${capital(span(node.first, node.last))}.`),
@@ -552,32 +542,4 @@ export function createLineagesSheet(
 function local(event: MouseEvent, target: HTMLElement): { x: number; y: number } {
   const box = target.getBoundingClientRect();
   return { x: event.clientX - box.left, y: event.clientY - box.top };
-}
-
-function span(first: number, last: number): string {
-  const from = `${formatMa(first)} million years ago`;
-  return last <= 0 ? `from ${from} to today` : `from ${from} to ${formatMa(last)}`;
-}
-
-function formatMa(ma: number): string {
-  return ma >= 10 ? String(Math.round(ma)) : String(Math.round(ma * 10) / 10);
-}
-
-function capital(text: string): string {
-  return text.charAt(0).toUpperCase() + text.slice(1);
-}
-
-function rankWord(rank: string): string {
-  return rank === 'clade' ? 'group' : rank;
-}
-
-/** The nearest family above a genus, or its parent's name if none is a family. */
-function familyOf(lineages: Lineages, index: number): string {
-  const line = ancestry(lineages, index);
-  const family = [...line].reverse().find((node) => node.rank === 'family');
-  return family?.name ?? line.at(-2)?.name ?? '';
-}
-
-function generaWithin(data: Loaded, index: number): number {
-  return data.genera.filter((genus) => isWithin(data.lineages, genus, index)).length;
 }
