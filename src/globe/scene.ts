@@ -15,7 +15,6 @@ import {
   BufferGeometry,
   CanvasTexture,
   Color,
-  CustomBlending,
   CylinderGeometry,
   DataTexture,
   Float32BufferAttribute,
@@ -26,9 +25,7 @@ import {
   Matrix4,
   Mesh,
   MeshBasicMaterial,
-  OneFactor,
   PerspectiveCamera,
-  PlaneGeometry,
   Quaternion,
   Raycaster,
   Scene,
@@ -44,7 +41,6 @@ import {
   Vector3,
   Vector4,
   WebGLRenderer,
-  ZeroFactor,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -54,12 +50,10 @@ import { geoToVector, vectorToGeo, type Vector3Tuple } from './geo';
 import {
   MOON_RADIUS_EARTH_RADII,
   sceneFromKm,
-  toScene,
   sceneRotation,
   SUN_RADIUS_EARTH_RADII,
 } from './spaceFrame';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
-import { SOLAR_NORTH_POLE_J2000 } from './sunImage';
 import type { NamedBody } from '../data/planetNames';
 import type { MoonName, MoonOrbits, MoonPlanet } from '../astro/moonOrbits';
 import { ORBITING, PLANETS, type Orbiting, type PlanetName } from '../astro/planets';
@@ -75,6 +69,7 @@ import {
   type LayerHost,
 } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
+import { createSunMeshes } from './sunMeshes';
 import { BodyMaps } from './bodyMaps';
 import { ScreenLabels, settleSizes } from './screenLabels';
 import { createPaintSlots } from './paintSlots';
@@ -85,9 +80,7 @@ import { clearOverlay, createEmpireCanvas, paintSettled } from './empireCanvas';
 import { temperatureUniforms } from './temperatureShader';
 import { EarthSurfaces, surfaceUniforms } from './earthSurfaces';
 import { ATMOSPHERE_FRAGMENT, ATMOSPHERE_VERTEX, MOON_FRAGMENT, MOON_VERTEX } from './bodyShaders';
-import { CORONA_FRAGMENT, CORONA_VERTEX, SUN_FRAGMENT, SUN_VERTEX } from './sunShaders';
 import { createEarthTileLayer } from './earthTiles';
-import { glowTexture } from './sunGlow';
 import { CameraRig } from './cameraRig';
 import { tileLimits, type TileLimits } from './tileLimits';
 import type { EarthTiles } from '../data/earthTiles';
@@ -414,62 +407,8 @@ export function createGlobe(
   moon.visible = false;
   scene.add(moon);
 
-  const sunUniforms = {
-    // The map of the whole surface, and the newest frame, for the corona.
-    surface: { value: null as Texture | null },
-    map: { value: null as Texture | null },
-    hasMap: { value: 0 },
-    toEarth: { value: new Vector3(1, 0, 0) },
-    north: { value: new Vector3(0, 1, 0) },
-    diskRadius: { value: 0.4 },
-    tint: { value: new Vector3(1, 1, 1) },
-    // Visible light's limb-darkening coefficient.
-    limbDarkening: { value: 0 },
-  };
-  const sun = new Mesh(
-    new SphereGeometry(SUN_RADIUS_EARTH_RADII, 128, 64),
-    new ShaderMaterial({
-      uniforms: sunUniforms,
-      vertexShader: SUN_VERTEX,
-      fragmentShader: SUN_FRAGMENT,
-    }),
-  );
-  const coronaUniforms = {
-    map: sunUniforms.map,
-    diskRadius: sunUniforms.diskRadius,
-    tint: sunUniforms.tint,
-    opacity: { value: 0 },
-  };
-  const corona = new Mesh(
-    new PlaneGeometry(1, 1),
-    new ShaderMaterial({
-      uniforms: coronaUniforms,
-      vertexShader: CORONA_VERTEX,
-      fragmentShader: CORONA_FRAGMENT,
-      // Add light without touching the canvas's alpha, which lets the page's sky show through.
-      blending: CustomBlending,
-      blendSrc: OneFactor,
-      blendDst: OneFactor,
-      blendSrcAlpha: ZeroFactor,
-      blendDstAlpha: OneFactor,
-      transparent: true,
-      depthWrite: false,
-    }),
-  );
-  corona.visible = false;
-  scene.add(corona);
-  const glow = new Sprite(
-    new SpriteMaterial({
-      map: glowTexture(),
-      blending: AdditiveBlending,
-      depthWrite: false,
-      transparent: true,
-    }),
-  );
-  glow.scale.setScalar(SUN_RADIUS_EARTH_RADII * 8);
-  sun.add(glow);
-  sun.visible = false;
-  scene.add(sun);
+  const sunMeshes = createSunMeshes(scene);
+  const { sun, corona } = sunMeshes;
   const planets = createPlanetMeshes(scene);
   const moonSystems = createMoonMeshes(scene);
   const bodyMeshes: Record<Body, Mesh> = {
@@ -658,33 +597,6 @@ export function createGlobe(
     return { position: new Vector3(), rotation: new Quaternion() };
   }
 
-  /** Stand the corona's plane across the line from Earth, north up, sized to the frame. */
-  function placeCorona(): void {
-    const toEarth = sunUniforms.toEarth.value;
-    const north = sunUniforms.north.value;
-    const up = north.clone().addScaledVector(toEarth, -north.dot(toEarth)).normalize();
-    const right = new Vector3().crossVectors(toEarth.clone().negate(), up);
-    corona.quaternion.setFromRotationMatrix(new Matrix4().makeBasis(right, up, toEarth));
-    corona.position.copy(sun.position);
-    // The limb is diskRadius of the frame's width.
-    const width = SUN_RADIUS_EARTH_RADII / sunUniforms.diskRadius.value;
-    corona.scale.set(width, width, 1);
-  }
-
-  /** Close to the Sun its glow would wash out the image; the corona shows from Earth's side. */
-  function shadeSun(): void {
-    const imaged = sunUniforms.hasMap.value > 0 && sun.visible;
-    const toCamera = camera.position.clone().sub(sun.position);
-    const radii = toCamera.length() / SUN_RADIUS_EARTH_RADII;
-    glow.material.opacity = imaged ? Math.min(1, Math.max(0, (radii - 12) / 40)) : 1;
-    const facing = toCamera.normalize().dot(sunUniforms.toEarth.value);
-    // 1 when the camera looks at the Sun from Earth's side, as SDO did; −1 from behind.
-    container.dataset['sunFacing'] = facing.toFixed(3);
-    const opacity = imaged ? Math.min(1, Math.max(0, (facing - 0.75) / 0.2)) : 0;
-    coronaUniforms.opacity.value = opacity;
-    corona.visible = opacity > 0;
-  }
-
   function bodyReady(body: Body): boolean {
     if (isMoonBody(body)) return moonSystems.ready();
     return body === 'earth' || bodyMeshes[body].visible;
@@ -734,7 +646,8 @@ export function createGlobe(
     if (needsRender) {
       needsRender = false;
       if (earthTiles.update(camera, !surfaces.deepTime && earth.visible, now)) needsRender = true;
-      shadeSun();
+      // 1 when the camera looks at the Sun from Earth's side, as SDO did; −1 from behind.
+      container.dataset['sunFacing'] = sunMeshes.shade(camera).toFixed(3);
       // In deep time the Sun, Moon and planets are where they are today, which says nothing
       // about then: they are left out, markers too.
       const hidden = surfaces.deepTime ? hiddenInDeepTime().filter((object) => object.visible) : [];
@@ -812,15 +725,7 @@ export function createGlobe(
     measure: settleSizes,
     maxAnisotropy: renderer.capabilities.getMaxAnisotropy(),
     showSunImage(image) {
-      sunUniforms.hasMap.value = image === null ? 0 : 1;
-      if (image !== null) {
-        sunUniforms.surface.value = image.surface;
-        sunUniforms.map.value = image.disc;
-        sunUniforms.tint.value.set(...image.tint);
-        sunUniforms.diskRadius.value = image.diskRadius;
-        sunUniforms.limbDarkening.value = image.limbDarkening;
-        placeCorona();
-      }
+      sunMeshes.showImage(image);
       needsRender = true;
     },
     renderToTexture(target, drawn, seenBy) {
@@ -893,16 +798,10 @@ export function createGlobe(
       const toEarthFixed = transpose(bodies.earthFixedToJ2000);
       const [r0, r1, r2] = sceneRotation(toEarthFixed);
       sunFrame.setFromRotationMatrix(new Matrix4().set(...r0, 0, ...r1, 0, ...r2, 0, 0, 0, 0, 1));
-      sun.position.set(...sceneFromKm(apply(toEarthFixed, bodies.sunKm)));
-      sun.visible = true;
+      sunMeshes.place(new Vector3(...sceneFromKm(apply(toEarthFixed, bodies.sunKm))), sunFrame);
       sunPosition.copy(sun.position);
       orbits.position.copy(sun.position);
       orbits.quaternion.copy(sunFrame);
-      // The image's frame: toward Earth, and the Sun's rotation axis, in scene axes.
-      sunUniforms.toEarth.value.copy(sun.position).negate().normalize();
-      // sunFrame turns J2000 vectors written in scene axes, like every position here.
-      sunUniforms.north.value.set(...toScene(SOLAR_NORTH_POLE_J2000)).applyQuaternion(sunFrame);
-      placeCorona();
       if (bodies.moonKm === null) {
         moon.visible = false;
       } else {
