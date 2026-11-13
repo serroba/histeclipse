@@ -56,7 +56,7 @@ export const LINE_LIMITS = {
   'ui/deepTimeBar.ts': 621,
   'features/treeOfLife/lineagesSheet.ts': 583,
   'ui/impactPathsSheet.ts': 627,
-  'features/shower/airShower.ts': 719,
+  'features/shower/airShower.ts': 659,
   'features/shower/sunCore.ts': 713,
   'globe/showerAnimation.ts': 618,
   'features/shower/leafScene.ts': 520,
