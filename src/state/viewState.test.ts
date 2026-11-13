@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { awayFromEarth, defaultViewState, withLayer, type Layer } from './viewState';
+import { awayFromEarth, defaultViewState, toggledLayer, withLayer, type Layer } from './viewState';
 
 describe('withLayer', () => {
   const layers = (...names: Layer[]) => new Set<Layer>(names);
@@ -16,6 +16,15 @@ describe('withLayer', () => {
     expect([...withLayer(layers('rocks', 'ways'), 'ways', false)]).toEqual(['rocks']);
     expect([...withLayer(layers('empires', 'ways'), 'dates', true)]).toEqual(['empires', 'dates']);
     expect([...withLayer(layers('dates', 'genomes'), 'rocks', true)]).toEqual(['genomes', 'rocks']);
+  });
+});
+
+describe('toggledLayer', () => {
+  it('Given a layer off, Then it turns on; given it on, Then it turns off', () => {
+    const state = defaultViewState(new Date('2024-04-08T18:00:00Z'));
+    const on = toggledLayer(state, 'orbits');
+    expect(on.layers.has('orbits')).toBe(true);
+    expect(toggledLayer(on, 'orbits').layers.has('orbits')).toBe(false);
   });
 });
 
