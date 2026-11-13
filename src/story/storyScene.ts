@@ -17,7 +17,7 @@ import {
   type Object3D,
   MeshStandardMaterial,
   PerspectiveCamera,
-  Scene,
+  type Scene,
   Sprite,
   SpriteMaterial,
   type Vector3,
@@ -29,6 +29,7 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { LineMaterial, type LineMaterialParameters } from 'three/addons/lines/LineMaterial.js';
 import { CSS2DObject, CSS2DRenderer } from 'three/addons/renderers/CSS2DRenderer.js';
 
+import { Stage } from '../stage/stage';
 import { css, PALETTE } from './palette';
 import './storyScene.css';
 
@@ -148,13 +149,17 @@ export function createStoryScene<Chapter extends string>(
   const renderer = new WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(PALETTE.night);
-  container.append(renderer.domElement);
+  const stage = new Stage(container, {
+    renderer,
+    camera: new PerspectiveCamera(40, 1, options.near, options.far),
+    styleSize: true,
+  });
   const labels = new CSS2DRenderer();
   labels.domElement.className = 'story-labels';
   container.append(labels.domElement);
 
-  const scene = new Scene();
-  const camera = new PerspectiveCamera(40, 1, options.near, options.far);
+  const { scene } = stage;
+  const { camera } = stage;
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
 
@@ -163,7 +168,6 @@ export function createStoryScene<Chapter extends string>(
   const lineMaterials: LineMaterial[] = [];
   const marked = new Set<string>();
   const shownDuring: { chapter: Chapter; thing: Object3D | HTMLElement }[] = [];
-  let dirty = true;
 
   const kit: StoryKit<Chapter> = {
     container,
@@ -175,7 +179,7 @@ export function createStoryScene<Chapter extends string>(
       return item;
     },
     invalidate() {
-      dirty = true;
+      stage.invalidate();
     },
     mark(key, value) {
       marked.add(key);
@@ -261,12 +265,11 @@ export function createStoryScene<Chapter extends string>(
   let playing = true;
   let byStory = true;
   let last = performance.now();
-  let frame = 0;
   controls.addEventListener('start', () => {
     byStory = false;
   });
   controls.addEventListener('change', () => {
-    dirty = true;
+    stage.invalidate();
   });
 
   function storyCamera(at: number): void {
@@ -274,54 +277,52 @@ export function createStoryScene<Chapter extends string>(
     camera.lookAt(controls.target);
   }
 
-  function resize(): void {
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    if (width === 0 || height === 0) return;
-    renderer.setSize(width, height);
-    labels.setSize(width, height);
-    for (const material of lineMaterials) material.resolution.set(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-    dirty = true;
-  }
-  const observer = new ResizeObserver(resize);
-  observer.observe(container);
-  resize();
-
-  function draw(now: number): void {
-    const dt = Math.min(100, now - last);
-    last = now;
-    if (playing) {
-      t += dt;
-      dirty = true;
-    }
-    if (byStory) storyCamera(t);
-    controls.update();
-    chapters.frame?.(t, dt, playing);
-    if (dirty) {
-      dirty = false;
+  // The story: its time and camera each frame, and its things placed for each drawing.
+  stage.add({
+    step(now) {
+      const dt = Math.min(100, now - last);
+      last = now;
+      if (playing) t += dt;
+      if (byStory) storyCamera(t);
+      controls.update();
+      chapters.frame?.(t, dt, playing);
+      return playing;
+    },
+    beforeRender() {
       for (const { chapter: shownIn, thing } of shownDuring) {
         if (thing instanceof HTMLElement) thing.hidden = shownIn !== chapter;
         else thing.visible = shownIn === chapter;
       }
       chapters.place(chapter, t);
-      renderer.render(scene, camera);
+      return undefined;
+    },
+    afterRender() {
       labels.render(scene, camera);
       container.dataset['rendered'] = 'true';
-    }
-    frame = requestAnimationFrame(draw);
-  }
+    },
+    resize(width, height) {
+      labels.setSize(width, height);
+      for (const material of lineMaterials) material.resolution.set(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    },
+    dispose() {
+      controls.dispose();
+      for (const item of owned) item.dispose();
+    },
+  });
+  stage.observeResize();
+  stage.resize();
   container.dataset['chapter'] = chapter;
   container.dataset['playing'] = 'true';
-  frame = requestAnimationFrame(draw);
+  stage.start();
 
   return {
     setChapter(next) {
       chapters.turn?.(next, chapter);
       chapter = next;
       container.dataset['chapter'] = next;
-      dirty = true;
+      stage.invalidate();
     },
     setPlaying(next) {
       playing = next;
@@ -332,7 +333,7 @@ export function createStoryScene<Chapter extends string>(
       t = 0;
       chapters.restart?.();
       byStory = true;
-      dirty = true;
+      stage.invalidate();
     },
     settle() {
       t = chapters.ends[chapter];
@@ -340,14 +341,10 @@ export function createStoryScene<Chapter extends string>(
       byStory = false;
       playing = false;
       container.dataset['playing'] = 'false';
-      dirty = true;
+      stage.invalidate();
     },
     dispose() {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      controls.dispose();
-      for (const item of owned) item.dispose();
-      renderer.dispose();
+      stage.dispose();
       renderer.forceContextLoss();
       container.replaceChildren();
       for (const key of ['chapter', 'rendered', 'playing', ...marked]) {
