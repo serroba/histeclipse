@@ -80,6 +80,7 @@ import {
   type LayerHost,
 } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
+import { BodyMaps } from './bodyMaps';
 import { ScreenLabels, settleSizes } from './screenLabels';
 import { createPaintSlots } from './paintSlots';
 import { assembleEarthParts, checkSamplers, type EarthPart } from './earthParts';
@@ -283,8 +284,6 @@ export function createGlobe(
   const moonMap = loader.loadAsync(options.moonTextureUrl);
   const texture = plainTexture(OCEAN_RGB);
   const moonTexture = plainTexture(MOON_RGB);
-  // `rendered` waits for the Earth's map, so it still means "the globe is drawn as it looks".
-  let earthMapped = false;
 
   const sunDirection = new Vector3(1, 0, 0);
   // 1 in deep time: the globe lit evenly, with no day and night.
@@ -488,91 +487,22 @@ export function createGlobe(
     ...planets.meshes,
     ...moonSystems.meshes,
   };
-  // Maps asked for, by address; the planets wearing their sharp map; and the bodies sharpened,
-  // for whoever needs to know (#258).
-  // Each planet's view (#239), its maps by address once fetched, and those close up enough for
-  // their sharper map.
-  const planetViews = new Map<
-    PlanetName,
-    { readonly map: string; readonly sharp: string | null } | null
-  >();
-  const planetTextures = new Map<string, Promise<Texture>>();
-  const sharpWanted = new Set<PlanetName>();
-  function planetTexture(url: string): Promise<Texture> {
-    let texture = planetTextures.get(url);
-    if (texture === undefined) {
-      texture = new TextureLoader().loadAsync(url).then((map) => {
-        map.colorSpace = SRGBColorSpace;
-        map.anisotropy = renderer.capabilities.getMaxAnisotropy();
-        return map;
-      });
-      // Asked again the next time, if it failed; what the planet wears stays meanwhile.
-      texture.catch(() => planetTextures.delete(url));
-      planetTextures.set(url, texture);
-    }
-    return texture;
-  }
-  // The Moon's usual map (the plain grey, then its first map, then the sharp one), and the
-  // view it is shown as instead, if any (#239).
-  let moonStandard: Texture = moonTexture;
-  let moonView: { readonly map: string; readonly sharp: string | null } | null = null;
-  function setMoonStandard(map: Texture): void {
-    moonStandard.dispose();
-    moonStandard = map;
-    if (moonView === null) moon.material.uniforms['map'] = { value: map };
-    needsRender = true;
-  }
-  function showMoonView(
-    view: { readonly map: string; readonly sharp: string | null } | null,
-  ): void {
-    moonView = view;
-    if (view === null) {
-      moon.material.uniforms['map'] = { value: moonStandard };
-      // Which the Moon wears, for whoever needs to know a view took.
-      container.dataset['moonMap'] = 'usual';
-      needsRender = true;
-      return;
-    }
-    planetTexture(sharpened.has('moon') && view.sharp !== null ? view.sharp : view.map).then(
-      (map) => {
-        if (moonView !== view) return;
-        moon.material.uniforms['map'] = { value: map };
-        container.dataset['moonMap'] = 'view';
+  // What the bodies wear: their first maps, the sharper ones, and the views (#239, #258).
+  const maps = new BodyMaps(
+    {
+      dataset: container.dataset,
+      earth: earth.material.uniforms,
+      moon: moon.material.uniforms,
+      planets,
+      moons: moonSystems,
+      anisotropy: renderer.capabilities.getMaxAnisotropy(),
+      load: (url) => new TextureLoader().loadAsync(url),
+      invalidate: () => {
         needsRender = true;
       },
-      () => undefined,
-    );
-  }
-  /** Dress a planet as its view asks: the sharp map close up, else the first, else its colours. */
-  function applyPlanetView(planet: PlanetName): void {
-    const view = planetViews.get(planet) ?? null;
-    if (view === null) {
-      planets.setMap(planet, null);
-      needsRender = true;
-      return;
-    }
-    const sharpUrl = sharpWanted.has(planet) ? view.sharp : null;
-    const sharp = sharpUrl !== null;
-    const url = sharpUrl ?? view.map;
-    planetTexture(url).then(
-      (map) => {
-        // Only if the planet still wants this view.
-        if (planetViews.get(planet) !== view) return;
-        planets.setMap(planet, map);
-        container.dataset['planetMap'] = planet;
-        if (sharp) markSharp(planet);
-        needsRender = true;
-      },
-      () => undefined,
-    );
-  }
-  const bodyMapsAsked = new Set<string>();
-  const moonMapsWanted = new Map<MoonName, string | null>();
-  const sharpened = new Set<string>();
-  function markSharp(body: string): void {
-    sharpened.add(body);
-    container.dataset['sharp'] = [...sharpened].sort().join(' ');
-  }
+    },
+    { earth: earthMap, moon: moonMap, plainEarth: texture, plainMoon: moonTexture },
+  );
   // The planets' orbits, and Earth's: drawn about the Sun in J2000 axes, turned with them.
   const orbits = new Group();
   orbits.visible = false;
@@ -790,41 +720,6 @@ export function createGlobe(
   let needsRender = true;
   let frame = 0;
 
-  // A map that fails to load leaves its plain colour: the globe still works, only plainer.
-  earthMap.then(
-    (map) => {
-      // A sharp map that came first (a link opened close up) stays.
-      if (sharpened.has('earth')) {
-        map.dispose();
-        earthMapped = true;
-        return;
-      }
-      map.colorSpace = SRGBColorSpace;
-      map.anisotropy = renderer.capabilities.getMaxAnisotropy();
-      earth.material.uniforms['dayMap'] = { value: map };
-      texture.dispose();
-      earthMapped = true;
-      needsRender = true;
-    },
-    (error: unknown) => {
-      console.warn("Could not load the Earth's map:", error);
-      earthMapped = true;
-      needsRender = true;
-    },
-  );
-  moonMap.then(
-    (map) => {
-      if (sharpened.has('moon')) {
-        map.dispose();
-        return;
-      }
-      map.colorSpace = SRGBColorSpace;
-      setMoonStandard(map);
-    },
-    (error: unknown) => {
-      console.warn("Could not load the Moon's map:", error);
-    },
-  );
   // The impacts playing, oldest first, several at once as deep time runs (#314), and how many
   // have played out.
   const impacts = new Set<ImpactAnimation>();
@@ -869,7 +764,7 @@ export function createGlobe(
       labels.placeSurfaceLabels();
       showMoonPaths();
       for (const place of afterRenders) place();
-      if (earthMapped) container.dataset['rendered'] = 'true';
+      if (maps.earthMapped) container.dataset['rendered'] = 'true';
     }
     frame = requestAnimationFrame(loop);
   }
@@ -1081,53 +976,20 @@ export function createGlobe(
       emptyTapListeners.add(listener);
       return () => emptyTapListeners.delete(listener);
     },
-    showPlanetView(planet, view) {
-      planetViews.set(planet, view);
-      applyPlanetView(planet);
+    showPlanetView: (planet, view) => {
+      maps.showPlanetView(planet, view);
     },
-    showMoonView,
-    setSaturnRings(url) {
-      if (bodyMapsAsked.has(url)) return;
-      bodyMapsAsked.add(url);
-      planetTexture(url).then(
-        (strip) => {
-          planets.setRings(strip);
-          container.dataset['rings'] = 'measured';
-          needsRender = true;
-        },
-        () => undefined,
-      );
+    showMoonView: (view) => {
+      maps.showMoonView(view);
     },
-    sharpenPlanet(planet) {
-      if (sharpWanted.has(planet)) return;
-      sharpWanted.add(planet);
-      applyPlanetView(planet);
+    setSaturnRings: (url) => {
+      maps.setSaturnRings(url);
     },
-    setBodyMap(body, url) {
-      if (bodyMapsAsked.has(url)) return;
-      bodyMapsAsked.add(url);
-      new TextureLoader()
-        .loadAsync(url)
-        .then((map) => {
-          map.colorSpace = SRGBColorSpace;
-          map.anisotropy = renderer.capabilities.getMaxAnisotropy();
-          if (body === 'moon') {
-            setMoonStandard(map);
-            markSharp(body);
-            // A view shown instead takes its own sharper map too.
-            if (moonView !== null) showMoonView(moonView);
-            return;
-          }
-          const uniforms = earth.material.uniforms;
-          const previous = uniforms['dayMap']?.value as Texture | undefined;
-          uniforms['dayMap'] = { value: map };
-          previous?.dispose();
-          markSharp(body);
-          needsRender = true;
-        })
-        .catch(() => {
-          bodyMapsAsked.delete(url);
-        });
+    sharpenPlanet: (planet) => {
+      maps.sharpenPlanet(planet);
+    },
+    setBodyMap: (body, url) => {
+      maps.setBodyMap(body, url);
     },
     setC14Glow(profile) {
       c14Glow.set(profile);
@@ -1186,26 +1048,8 @@ export function createGlobe(
       layers.push(layer);
       return layer;
     },
-    setMoonMap(moon, url) {
-      if (moonMapsWanted.get(moon) === url) return;
-      moonMapsWanted.set(moon, url);
-      if (url === null) {
-        // Its painted colour: as Titan looks, all haze.
-        moonSystems.setMap(moon, null);
-        container.dataset['moonMap'] = `${moon} painted`;
-        needsRender = true;
-        return;
-      }
-      planetTexture(url).then(
-        (map) => {
-          // Only if the moon still wants this map: a sharper one may have been asked since.
-          if (moonMapsWanted.get(moon) !== url) return;
-          moonSystems.setMap(moon, map);
-          container.dataset['moonMap'] = moon;
-          needsRender = true;
-        },
-        () => undefined,
-      );
+    setMoonMap: (moon, url) => {
+      maps.setMoonMap(moon, url);
     },
     setMoonOrbits(orbits) {
       moonSystems.setOrbits(orbits);
