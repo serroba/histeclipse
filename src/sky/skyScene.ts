@@ -37,6 +37,7 @@ import { SkyFigures } from './skyFigures';
 import { SkyMoon } from './skyMoon';
 import { SkyPlanets, type SkyPlanet } from './skyPlanets';
 import { SkyStars } from './skyStars';
+import { pickBody, type SkyBody, type SkyTap } from './skyTap';
 import { SkySun } from './skySun';
 import { createSkyDome } from './skyDome';
 import { attachSkyGestures } from './skyGestures';
@@ -59,19 +60,7 @@ export interface SkyMoment {
 
 export type { SkyPlanet } from './skyPlanets';
 
-/** The bodies a tap can pick out of the sky. */
-export type SkyBody = 'sun' | 'moon' | 'mercury' | 'venus' | 'mars' | 'jupiter' | 'saturn';
-
-/** A body tapped, where it stands, and how large it looks (radius, degrees; 0 for a point). */
-export interface SkyTap {
-  readonly body: SkyBody;
-  readonly azimuth: number;
-  readonly altitude: number;
-  readonly radius: number;
-}
-
-/** A tap this near a body picks it, pixels from its centre (or its disc's edge): a fingertip. */
-const BODY_TAP_PIXELS = 24;
+export type { SkyBody, SkyTap } from './skyTap';
 
 /** A body to point out, by name, where it stands. */
 export interface SkyMark {
@@ -315,8 +304,7 @@ export function createSkyScene(
     const box = renderer.domElement.getBoundingClientRect();
     const width = container.clientWidth;
     const height = container.clientHeight;
-    const perDegree = pixelsPerDegree(view, width);
-    const candidates: { body: SkyBody; position: Vector3; radius: number }[] = [
+    const bodies: { body: SkyBody; position: Vector3; radius: number }[] = [
       ...(sun.disc.visible
         ? [{ body: 'sun' as const, position: sun.disc.position, radius: 0.27 }]
         : []),
@@ -331,19 +319,13 @@ export function createSkyScene(
           radius: 0,
         })),
     ];
-    let best: { tapped: SkyTap; share: number } | null = null;
-    for (const { body, position, radius } of candidates) {
+    const targets = bodies.flatMap(({ body, position, radius }) => {
       const ndc = screenPoint(position);
-      if (ndc === null) continue;
+      if (ndc === null) return [];
       const [x, y] = toPixels(ndc, width, height);
-      const reach = Math.max(BODY_TAP_PIXELS, radius * perDegree + BODY_TAP_PIXELS / 3);
-      const share = Math.hypot(clientX - box.left - x, clientY - box.top - y) / reach;
-      if (share >= 1 || (best !== null && share >= best.share)) continue;
-      // Scene axes back to the horizon's: east, north, up.
-      const { azimuth, altitude } = horizontal([position.x, -position.z, position.y]);
-      best = { tapped: { body, azimuth, altitude, radius }, share };
-    }
-    return best?.tapped ?? null;
+      return [{ body, x, y, radius, scene: position }];
+    });
+    return pickBody(targets, clientX - box.left, clientY - box.top, pixelsPerDegree(view, width));
   }
   function setLookFromInput(next: SkyLook): void {
     endGlide();
