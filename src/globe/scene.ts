@@ -6,25 +6,18 @@
 
 import type { ImpactSpec } from './impactAnimation';
 import { Playback } from './playback';
-import { labelTexture } from './labelTexture';
 import { createC14Glow } from './c14Glow';
 import { type ShowerCommand, type ShowerSpec } from './showerAnimation';
 import type { IUniform, Quaternion } from 'three';
 import {
   AdditiveBlending,
   BackSide,
-  Color,
-  CylinderGeometry,
   DataTexture,
-  Group,
   LinearFilter,
   Mesh,
-  MeshBasicMaterial,
   PerspectiveCamera,
   ShaderMaterial,
   SphereGeometry,
-  Sprite,
-  SpriteMaterial,
   SRGBColorSpace,
   TextureLoader,
   type Object3D,
@@ -37,7 +30,7 @@ import {
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import { type Body, type GeoPoint, type GlobeCamera, type Viewpoint } from '../state/viewState';
-import { geoToVector, type Vector3Tuple } from './geo';
+import type { Vector3Tuple } from './geo';
 import { MOON_RADIUS_EARTH_RADII, SUN_RADIUS_EARTH_RADII } from './spaceFrame';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import type { NamedBody } from '../data/planetNames';
@@ -60,6 +53,7 @@ import { EarthSurfaces, surfaceUniforms } from './earthSurfaces';
 import { ATMOSPHERE_FRAGMENT, ATMOSPHERE_VERTEX, MOON_FRAGMENT, MOON_VERTEX } from './bodyShaders';
 import { createEarthTileLayer } from './earthTiles';
 import { BodiesInSpace } from './bodiesInSpace';
+import { createSpinAxis, PlacePin } from './earthMarks';
 import { EarthOverlays } from './earthOverlays';
 import { CameraRig } from './cameraRig';
 import { Stage } from '../stage/stage';
@@ -77,9 +71,6 @@ import type {
   TemperatureSurface,
 } from './surfaces';
 import './spaceMarkers.css';
-
-/** How far out the place pin floats, in Earth radii, so it shows above the ground. */
-const PIN_HEIGHT = 1.004;
 
 export interface Globe {
   /** Direction from Earth's center to the Sun, in the globe frame. */
@@ -337,37 +328,13 @@ export function createGlobe(
     report: (...counts) => (container.dataset['earthTiles'] = counts.join('/')),
   });
 
-  // Deep time: Earth's spin axis, its ends marked as the poles of the time shown. The maps
-  // put the poles of their time at the top and bottom, so the axis is the globe's own.
-  const spinAxis = new Group();
-  spinAxis.add(
-    new Mesh(
-      new CylinderGeometry(0.004, 0.004, 2.6, 8),
-      new MeshBasicMaterial({ color: new Color(0.85, 0.9, 1), transparent: true, opacity: 0.7 }),
-    ),
-  );
-  // The spin axis's poles: fixed by the reconstruction, the continents moving beneath them.
-  for (const [text, y] of [
-    ['North pole (spin axis)', 1.42],
-    ['South pole (spin axis)', -1.42],
-  ] as const) {
-    const label = new Sprite(
-      new SpriteMaterial({ map: labelTexture(text, 768), transparent: true, depthWrite: false }),
-    );
-    label.scale.set(1.35, 1.35 / 6, 1);
-    label.position.set(0, y, 0);
-    spinAxis.add(label);
-  }
-  spinAxis.visible = false;
+  // Deep time: Earth's spin axis, its ends marked as the poles of the time shown.
+  const spinAxis = createSpinAxis();
   scene.add(spinAxis);
 
   // The chosen place: a small pin standing on the ground.
-  const pin = new Mesh(
-    new SphereGeometry(0.012, 16, 8),
-    new MeshBasicMaterial({ color: new Color(1, 0.72, 0.3) }),
-  );
-  pin.visible = false;
-  earth.add(pin);
+  const pin = new PlacePin(container.dataset);
+  earth.add(pin.mesh);
 
   // Where cosmic rays make carbon-14, when asked.
   const c14Glow = createC14Glow();
@@ -485,9 +452,7 @@ export function createGlobe(
     world: {
       frame: bodyFrame,
       ready: bodyReady,
-      // The pin floats a little above the ground; the place is on it.
-      place: () =>
-        pin.visible ? pin.getWorldPosition(new Vector3()).divideScalar(PIN_HEIGHT) : null,
+      place: () => pin.place(),
       moonVisible: () => moon.visible,
       invalidate: () => {
         stage.invalidate();
@@ -501,7 +466,7 @@ export function createGlobe(
   // The impacts and the shower playing on Earth (#314).
   const playback = new Playback({
     earth,
-    pin: pin.material,
+    pin: pin.mesh.material,
     dataset: container.dataset,
     resolution: () => renderer.getSize(new Vector2()),
     invalidate: () => {
@@ -718,10 +683,7 @@ export function createGlobe(
     onMarkerPick: (listener) => picking.onMarkerPick(listener),
     onPlacePick: (listener) => picking.onPlacePick(listener),
     setLocation(place) {
-      pin.visible = place !== null;
-      if (place !== null) pin.position.set(...geoToVector(place, PIN_HEIGHT));
-      container.dataset['location'] =
-        place === null ? '' : `${place.latitude.toFixed(2)},${place.longitude.toFixed(2)}`;
+      pin.set(place);
       stage.invalidate();
     },
     setViewpoint(next) {
