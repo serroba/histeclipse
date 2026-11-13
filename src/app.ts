@@ -51,7 +51,7 @@ import { mountFamous } from './features/famous';
 import { mountShower } from './features/shower';
 import { mountCarbonMade } from './features/carbonMade';
 import { mountIceAges } from './features/iceAges';
-import { mountDeepSurfaces } from './features/deepSurfaces';
+import { mountDeepSurfaces, PLATES_CHIP } from './features/deepSurfaces';
 import { mountRocks } from './features/rocks';
 import { mountWays } from './features/ways';
 import { mountDates } from './features/dates';
@@ -83,7 +83,7 @@ import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment
 import { createZoomRail } from './ui/zoomRail';
 import { railView } from './ui/railView';
 import { createWaysLegend } from './ui/waysLegend';
-import { mountImpacts } from './features/impacts';
+import { IMPACTS_CHIP, mountImpacts } from './features/impacts';
 import { createTemperatureLayer } from './features/temperature';
 
 export async function startApp(root: HTMLElement): Promise<void> {
@@ -271,7 +271,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const deepTime = mountDeepTime({
     ...partContext,
     globe,
-    chips: deepChipsOf(FEATURES),
+    chips: [PLATES_CHIP, ...deepChipsOf(FEATURES), IMPACTS_CHIP],
     step: () => {
       sync.step();
     },
@@ -282,12 +282,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
       moment.deepHeader(ma, story);
     },
     storyDate: boundaries.storyDate,
-    bar: (state, moment) => ({
-      ...iceAges.bar(state, moment.ma),
-      chips: features.deep(state, moment),
-      impacts: impacts.show(state),
-      ...surfaces.bar(state, moment.ma),
-    }),
+    bar: (state, moment) => {
+      const { plates, ...surfaced } = surfaces.bar(state, moment.ma);
+      const chips = new Map(features.deep(state, moment));
+      chips.set('plates', plates);
+      chips.set('impacts', impacts.chip(state, moment.scale));
+      return { ...iceAges.bar(state, moment.ma), ...surfaced, chips };
+    },
     temperature: temperatureLayer,
     off: (state) => {
       surfaces.off();
@@ -297,9 +298,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     platesReach: () => surfaces.platesReach(),
     loadArchive: () => {
       surfaces.loadArchive();
-    },
-    impactsMode: (mode) => {
-      impacts.setMode(mode);
     },
   });
   // A tablet's records checked against the sky, and looked at from Babylon (#447).

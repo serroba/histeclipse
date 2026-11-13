@@ -13,9 +13,7 @@ type Handlers = Parameters<typeof createDeepTimeBar>[0];
 /** The handlers that only change what the view shows. */
 export type Choices = Pick<
   Handlers,
-  | 'onPlates'
   | 'onAir'
-  | 'onImpacts'
   | 'onLayer'
   | 'onSeaLevel'
   | 'onCoast'
@@ -31,14 +29,8 @@ export function deepChoices(store: Pick<Store<ViewState>, 'set'>): Choices {
     store.set((state) => ({ ...state, layers: withLayer(state.layers, id, on) }));
   };
   return {
-    onPlates: (on) => {
-      layer('plates', on);
-    },
     onAir: (on) => {
       layer('air', on);
-    },
-    onImpacts: (on) => {
-      layer('impacts', on);
     },
     onLayer: (id, on) => {
       layer(id, on);

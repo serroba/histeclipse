@@ -13,8 +13,9 @@ import {
 } from '../../data/impacts';
 import { impactLayer } from './impactLayer';
 import type { Globe } from '../../globe/globe';
-import type { ViewState } from '../../state/viewState';
-import type { DeepTimeView } from '../../ui/deepTimeBar';
+import type { DeepScale, ViewState } from '../../state/viewState';
+import type { DeepChipView } from '../../ui/deepChips';
+import { impactsChip, type ImpactsView } from './chip';
 import type { MarkerCardContent } from '../../ui/markerCard';
 import { errorMessage } from '../../util/errors';
 import { RESTING } from '../feature';
@@ -31,6 +32,8 @@ import {
   struckList,
   type ImpactPlay,
 } from './view';
+
+export { IMPACTS_CHIP } from './chip';
 
 export interface ImpactsContext extends PartContext {
   readonly globe: Pick<Globe, 'addLayer' | 'playImpact' | 'flyTo' | 'zoomTo'>;
@@ -51,11 +54,11 @@ export interface ImpactsContext extends PartContext {
 
 export interface ImpactsPart {
   /** Draw the craters for the view, and say how the layer stands in deep time's bar. */
-  readonly show: (state: ViewState) => DeepTimeView['impacts'];
+  readonly show: (state: ViewState) => ImpactsView;
+  /** Its chip in deep time's bar, drawing the craters for the view. */
+  readonly chip: (state: ViewState, scale: DeepScale) => DeepChipView;
   /** What the Layers panel says under the layer. */
   readonly said: () => string | null;
-  /** In deep time: each impact around its time, or every one that had struck by then. */
-  readonly setMode: (mode: ImpactsMode) => void;
   /** The craters, loaded once. */
   readonly load: () => Promise<Impacts>;
   /** A marker tapped: whether it was a crater, and if so, its card. */
@@ -116,7 +119,7 @@ export function mountImpacts(context: ImpactsContext): ImpactsPart {
     );
   }
 
-  function show(state: ViewState): DeepTimeView['impacts'] {
+  function show(state: ViewState): ImpactsView {
     const { ma } = state;
     const scale = impactsScale(state, context.oldest());
     const on = impactsOn(state, scale);
@@ -175,10 +178,12 @@ export function mountImpacts(context: ImpactsContext): ImpactsPart {
 
   return {
     show,
+    chip: (state, scale) =>
+      impactsChip(show(state), scale, (next) => {
+        mode = next;
+        context.redrawDeep(store.get());
+      }),
     said: () => said,
-    setMode: (next) => {
-      mode = next;
-    },
     load,
     pick: (key) => {
       const impact = pickedImpact(impacts, key);

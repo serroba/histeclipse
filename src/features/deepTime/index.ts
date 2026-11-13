@@ -136,12 +136,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       onCo2Archive() {
         context.loadArchive();
       },
-      onImpactsMode(mode) {
-        context.impactsMode(mode);
-        showDeepTime(store.get());
-      },
     },
-    // The features' chips (#380), where the fossils' chip stood.
+    // The chips (#380, #605): the plates', the features', the impacts'.
     context.chips,
   );
   const glance = createDeepGlance(
