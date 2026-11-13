@@ -60,7 +60,7 @@ import {
   type StoryKit,
   type StoryScene,
 } from '../../story/storyScene';
-import { clamp01, ease as EASE, within } from '../../story/timing';
+import { clamp01, ease as EASE, within } from '../../util/timing';
 
 /** The chapters this scene plays. */
 type SunChapter = 'fusion' | 'escape' | 'journey';

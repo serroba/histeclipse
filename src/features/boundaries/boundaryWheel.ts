@@ -48,7 +48,7 @@ import {
   type StoryKit,
   type StoryScene,
 } from '../../story/storyScene';
-import { clamp01, ease, within } from '../../story/timing';
+import { clamp01, ease, within } from '../../util/timing';
 
 /** The chapters the wheel draws: all but the Holocene's, which is a chart (#453). */
 type WheelChapter = Exclude<BoundaryChapter, 'holocene'>;

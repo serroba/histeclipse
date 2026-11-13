@@ -40,7 +40,7 @@ import { PALETTE } from '../../story/palette';
 import { createStoryScene } from '../../story/storyScene';
 import type { StoryChapters, StoryKit, StoryScene } from '../../story/storyScene';
 import { RED_NM } from './sunlightJourney';
-import { clamp01, ease as EASE, within } from '../../story/timing';
+import { clamp01, ease as EASE, within } from '../../util/timing';
 
 /** The chapters this scene plays. */
 type LeafChapter = 'dioxide' | 'fall' | 'plant';
