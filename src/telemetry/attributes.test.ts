@@ -1,6 +1,12 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { cachedViewAttributes, gpuAttributes, type GlProbe, viewAttributes } from './attributes';
+import {
+  cachedViewAttributes,
+  gpuAttributes,
+  type GlProbe,
+  probeGpu,
+  viewAttributes,
+} from './attributes';
 
 const NOW = new Date('2026-11-07T03:05:00Z');
 
@@ -18,6 +24,7 @@ describe('viewAttributes', () => {
       'app.layers': 'lunar,solar',
       'app.layer_count': 2,
       'app.selection': 'none',
+      'app.names': 'html',
     });
     expect(attributes).not.toHaveProperty('app.ma');
     expect(attributes).not.toHaveProperty('app.selection.year');
@@ -100,5 +107,23 @@ describe('gpuAttributes', () => {
     expect(
       gpuAttributes(probe(true, { 0x9246: 'llvmpipe (LLVM 15.0.7, 256 bits)' }), 1)['gpu.software'],
     ).toBe(true);
+  });
+});
+
+describe('probeGpu', () => {
+  it('reads the GPU from a throwaway context, then releases it', () => {
+    const loseContext = vi.fn();
+    const canvas = {
+      getContext: () => ({
+        getParameter: (name: number) => (name === 0x1f01 ? 'Mozilla' : undefined),
+        getExtension: (name: string) => (name === 'WEBGL_lose_context' ? { loseContext } : null),
+      }),
+    };
+    expect(probeGpu(canvas, 2)).toMatchObject({ 'gpu.webgl2': true, 'gpu.renderer': 'Mozilla' });
+    expect(loseContext).toHaveBeenCalledOnce();
+  });
+
+  it('flags a canvas with no WebGL 2', () => {
+    expect(probeGpu({ getContext: () => null }, 1)['gpu.webgl2']).toBe(false);
   });
 });
