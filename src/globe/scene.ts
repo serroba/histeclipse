@@ -23,7 +23,6 @@ import {
   MeshBasicMaterial,
   PerspectiveCamera,
   Quaternion,
-  Scene,
   ShaderMaterial,
   SphereGeometry,
   Sprite,
@@ -79,6 +78,7 @@ import { EarthSurfaces, surfaceUniforms } from './earthSurfaces';
 import { ATMOSPHERE_FRAGMENT, ATMOSPHERE_VERTEX, MOON_FRAGMENT, MOON_VERTEX } from './bodyShaders';
 import { createEarthTileLayer } from './earthTiles';
 import { CameraRig } from './cameraRig';
+import { Stage } from '../stage/stage';
 import { tileLimits, type TileLimits } from './tileLimits';
 import type { EarthTiles } from '../data/earthTiles';
 import { EARTH_VERTEX, earthFragment } from './earthShader';
@@ -250,11 +250,13 @@ export function createGlobe(
   });
   renderer.setClearColor(0x000000, 0);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  container.append(renderer.domElement);
-
-  const scene = new Scene();
-  // With a logarithmic depth buffer one camera spans metres above the ground to past the Sun.
-  const camera = new PerspectiveCamera(35, 1, 1e-4, 1e6);
+  const stage = new Stage(container, {
+    renderer,
+    // With a logarithmic depth buffer one camera spans metres above the ground to past the Sun.
+    camera: new PerspectiveCamera(35, 1, 1e-4, 1e6),
+    styleSize: false,
+  });
+  const { scene, camera } = stage;
 
   // The maps are the largest downloads; the globe draws at once in plain colours and takes
   // each map as it arrives, so nothing else waits on them. Both load side by side.
@@ -330,7 +332,7 @@ export function createGlobe(
         return loaded;
       }),
     invalidate: () => {
-      needsRender = true;
+      stage.invalidate();
     },
   });
   // Close up, Earth's full-size map in tiles over its own (#568), as many as the device takes on
@@ -341,7 +343,9 @@ export function createGlobe(
     anisotropy: renderer.capabilities.getMaxAnisotropy(),
     limits,
     pixels: () => renderer.domElement.height,
-    requestRender: () => (needsRender = true),
+    requestRender: () => {
+      stage.invalidate();
+    },
     report: (...counts) => (container.dataset['earthTiles'] = counts.join('/')),
   });
 
@@ -423,7 +427,7 @@ export function createGlobe(
       anisotropy: renderer.capabilities.getMaxAnisotropy(),
       load: (url) => new TextureLoader().loadAsync(url),
       invalidate: () => {
-        needsRender = true;
+        stage.invalidate();
       },
     },
     { earth: earthMap, moon: moonMap, plainEarth: texture, plainMoon: moonTexture },
@@ -444,7 +448,7 @@ export function createGlobe(
     insets: () => rig.insets,
     requestBody,
     invalidate: () => {
-      needsRender = true;
+      stage.invalidate();
     },
   });
   // The history map: the layers' parts (rocks, ways, dates, #379) in order, the states over them.
@@ -454,7 +458,7 @@ export function createGlobe(
     const painters = historySlots.painters();
     const on = painters.length > 0;
     uniforms['empiresActive'] = { value: on ? 1 : 0 };
-    needsRender = true;
+    stage.invalidate();
     if (!on) return;
     clearOverlay(empiresCanvas);
     const statesOver = historySlots.shows(HISTORY_PAINT_ORDER.states);
@@ -475,7 +479,7 @@ export function createGlobe(
     const painters = deepSlots.painters();
     const on = painters.length > 0;
     uniforms['iceOutlinesActive'] = { value: on ? 1 : 0 };
-    needsRender = true;
+    stage.invalidate();
     if (!on) return;
     clearOverlay(empiresCanvas);
     for (const paint of painters) paint(empiresCanvas);
@@ -535,15 +539,13 @@ export function createGlobe(
         pin.visible ? pin.getWorldPosition(new Vector3()).divideScalar(PIN_HEIGHT) : null,
       moonVisible: () => moon.visible,
       invalidate: () => {
-        needsRender = true;
+        stage.invalidate();
       },
     },
     focus: options.focus,
     start: options.camera,
     tiled: limits !== null,
   });
-  let needsRender = true;
-  let frame = 0;
 
   // The impacts and the shower playing on Earth (#314).
   const playback = new Playback({
@@ -552,37 +554,35 @@ export function createGlobe(
     dataset: container.dataset,
     resolution: () => renderer.getSize(new Vector2()),
     invalidate: () => {
-      needsRender = true;
+      stage.invalidate();
     },
   });
 
-  function resize(): void {
-    renderer.setSize(container.clientWidth, container.clientHeight, false);
-    rig.resize();
-  }
-
-  function loop(now: number): void {
-    if (playback.step(now)) needsRender = true;
-    rig.step(now);
-    if (needsRender) {
-      needsRender = false;
-      if (earthTiles.update(camera, !surfaces.deepTime && earth.visible, now)) needsRender = true;
+  // Each frame: what plays on Earth, then the camera. Around each drawing: the tiles, the Sun's
+  // shade and what deep time leaves out; then what is placed over the picture.
+  stage.add(playback);
+  stage.add(rig);
+  let hidden: Object3D[] = [];
+  stage.add({
+    beforeRender(now) {
+      const more = earthTiles.update(camera, !surfaces.deepTime && earth.visible, now);
       // 1 when the camera looks at the Sun from Earth's side, as SDO did; −1 from behind.
       container.dataset['sunFacing'] = sunMeshes.shade(camera).toFixed(3);
       // In deep time the Sun, Moon and planets are where they are today, which says nothing
       // about then: they are left out, markers too.
-      const hidden = surfaces.deepTime ? hiddenInDeepTime().filter((object) => object.visible) : [];
+      hidden = surfaces.deepTime ? hiddenInDeepTime().filter((object) => object.visible) : [];
       for (const object of hidden) object.visible = false;
-      renderer.render(scene, camera);
+      return more;
+    },
+    afterRender() {
       labels.placeMarkers();
       for (const object of hidden) object.visible = true;
       labels.placeSurfaceLabels();
       showMoonPaths();
       for (const place of afterRenders) place();
       if (maps.earthMapped) container.dataset['rendered'] = 'true';
-    }
-    frame = requestAnimationFrame(loop);
-  }
+    },
+  });
 
   /** Where a named body is, how it is turned, and its radius, in the scene's units. */
   function namedFrame(body: NamedBody | MoonPlanet): {
@@ -609,11 +609,10 @@ export function createGlobe(
     container.dataset['moonPaths'] = String(moonSystems.pathsShown());
   }
 
-  const observer = new ResizeObserver(resize);
-  observer.observe(container);
-  resize();
+  stage.observeResize();
+  stage.resize();
   rig.place(options.camera);
-  loop(performance.now());
+  stage.start(true);
 
   // What layers get (#379): the scene, the container and a few services.
   const host: LayerHost = {
@@ -632,7 +631,7 @@ export function createGlobe(
       return (km) => sceneFromKm(apply(toScene, [km[0], km[1], km[2]]));
     },
     requestRender() {
-      needsRender = true;
+      stage.invalidate();
     },
     afterRender(place) {
       afterRenders.push(place);
@@ -649,7 +648,7 @@ export function createGlobe(
     maxAnisotropy: renderer.capabilities.getMaxAnisotropy(),
     showSunImage(image) {
       sunMeshes.showImage(image);
-      needsRender = true;
+      stage.invalidate();
     },
     renderToTexture(target, drawn, seenBy) {
       renderer.setRenderTarget(target);
@@ -674,14 +673,14 @@ export function createGlobe(
     },
     setSunDirection([x, y, z]) {
       sunDirection.set(x, y, z).normalize();
-      needsRender = true;
+      stage.invalidate();
     },
     setOrbits(paths) {
       orbitLoops.set(paths);
       // The moons' orbits go with the planets' (#335).
       moonSystems.showAllPaths(paths !== null);
       container.dataset['orbits'] = paths === null ? 'off' : String(ORBITING.length);
-      needsRender = true;
+      stage.invalidate();
     },
     setSpace(bodies) {
       // Keep a far camera still among the stars: carry it along by the rotation Earth made
@@ -737,7 +736,7 @@ export function createGlobe(
       container.dataset['planets'] = planetsKm === null ? 'off' : 'on';
       container.dataset['space'] = moon.visible ? 'moon' : 'sun';
       rig.afterBodiesMove();
-      needsRender = true;
+      stage.invalidate();
     },
     setInsets(next) {
       rig.setInsets(next);
@@ -766,7 +765,7 @@ export function createGlobe(
       c14Glow.set(profile);
       container.dataset['c14Glow'] =
         profile === null ? 'off' : profile.map((value) => value.toFixed(2)).join(' ');
-      needsRender = true;
+      stage.invalidate();
     },
     prefetch: (urls) => {
       surfaces.prefetch(urls);
@@ -777,7 +776,7 @@ export function createGlobe(
     setDeepTime(surface) {
       surfaces.setDeepTime(surface);
       spinAxis.visible = surfaces.deepTime;
-      needsRender = true;
+      stage.invalidate();
     },
     setTemperature: (surface) => {
       surfaces.setTemperature(surface);
@@ -826,7 +825,7 @@ export function createGlobe(
       moonSystems.setOrbits(orbits);
       // A link to a moon waits for its orbit; the bodies may not be placed again, time at rest.
       rig.settleFocus();
-      needsRender = true;
+      stage.invalidate();
     },
     onMarkerPick: (listener) => picking.onMarkerPick(listener),
     onPlacePick: (listener) => picking.onPlacePick(listener),
@@ -835,7 +834,7 @@ export function createGlobe(
       if (place !== null) pin.position.set(...geoToVector(place, PIN_HEIGHT));
       container.dataset['location'] =
         place === null ? '' : `${place.latitude.toFixed(2)},${place.longitude.toFixed(2)}`;
-      needsRender = true;
+      stage.invalidate();
     },
     setViewpoint(next) {
       rig.setViewpoint(next);
@@ -862,14 +861,11 @@ export function createGlobe(
       return rig.onChange(listener);
     },
     dispose() {
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      rig.dispose();
-      renderer.dispose();
+      // The frames, the parts (what plays, the camera) and the renderer.
+      stage.dispose();
       texture.dispose();
       moonTexture.dispose();
       c14Glow.dispose();
-      playback.dispose();
       for (const layer of layers) layer.dispose?.();
       labels.dispose();
       renderer.domElement.remove();
