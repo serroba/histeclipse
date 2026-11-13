@@ -16,6 +16,8 @@ export interface DeepChip {
   readonly label: string;
   readonly icon: UiIcon;
   readonly why: WhyId;
+  /** What the note's book is labelled, where it differs from the button's `label`. */
+  readonly whyLabel?: string;
 }
 
 /**
@@ -154,7 +156,7 @@ export function createDeepChips(
       hidden: '',
       'data-testid': `${chip.layer}-note`,
     });
-    return { chip, button, note, book: why(chip.why, chip.label) };
+    return { chip, button, note, book: why(chip.why, chip.whyLabel ?? chip.label) };
   });
   return {
     buttons: parts.map(({ button }) => button),

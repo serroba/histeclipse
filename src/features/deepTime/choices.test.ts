@@ -12,9 +12,9 @@ function fresh() {
 describe('deepChoices', () => {
   it('turns each of deep time’s layers on and off', () => {
     const { store, choices } = fresh();
-    choices.onPlates(true);
+    choices.onLayer('plates', true);
     choices.onAir(true);
-    choices.onImpacts(true);
+    choices.onLayer('impacts', true);
     choices.onSeaLevel(true);
     choices.onTemperature(true);
     choices.onLayer('fossils', true);
@@ -29,7 +29,7 @@ describe('deepChoices', () => {
       expect(store.get().layers.has(layer)).toBe(true);
     }
     choices.onSeaLevel(false);
-    choices.onPlates(false);
+    choices.onLayer('plates', false);
     expect(store.get().layers.has('sealevel')).toBe(false);
     expect(store.get().layers.has('plates')).toBe(false);
   });

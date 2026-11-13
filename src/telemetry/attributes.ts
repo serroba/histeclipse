@@ -20,6 +20,8 @@ export function viewAttributes(search: string, now: Date): Attributes {
     'app.layers': layers.join(','),
     'app.layer_count': layers.length,
     'app.selection': state.selection?.kind ?? 'none',
+    // How names are drawn over the globe: HTML today; WebGL is the experiment in #633.
+    'app.names': 'html',
   };
   if (state.ma === null) {
     attributes['app.span'] = 'years';
@@ -85,5 +87,23 @@ export function gpuAttributes(webgl2: GlProbe | null, pixelRatio: number): Attri
     // GPU; flag it so render timings can be read without it.
     attributes['gpu.software'] = SOFTWARE_RENDERERS.test(renderer);
   }
+  return attributes;
+}
+
+/** A canvas, as far as the probe uses one; a real one satisfies it. */
+export interface ProbeCanvas {
+  getContext(kind: 'webgl2'): GlProbe | null;
+}
+
+function losable(extension: unknown): extension is { loseContext(): void } {
+  return typeof extension === 'object' && extension !== null && 'loseContext' in extension;
+}
+
+/** Asks a throwaway WebGL 2 context what the GPU offers, then releases it. */
+export function probeGpu(canvas: ProbeCanvas, pixelRatio: number): Attributes {
+  const gl = canvas.getContext('webgl2');
+  const attributes = gpuAttributes(gl, pixelRatio);
+  const lose = gl?.getExtension('WEBGL_lose_context');
+  if (losable(lose)) lose.loseContext();
   return attributes;
 }
