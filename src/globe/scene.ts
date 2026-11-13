@@ -10,21 +10,15 @@ import { createC14Glow } from './c14Glow';
 import { type ShowerCommand, type ShowerSpec } from './showerAnimation';
 import type { IUniform, Quaternion } from 'three';
 import {
-  AdditiveBlending,
-  BackSide,
-  DataTexture,
   LinearFilter,
   Mesh,
   PerspectiveCamera,
   ShaderMaterial,
   SphereGeometry,
-  SRGBColorSpace,
   TextureLoader,
   type Object3D,
-  type Texture,
   Vector2,
   Vector3,
-  Vector4,
   WebGLRenderer,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -45,21 +39,20 @@ import { Picking } from './picking';
 import { createSunMeshes } from './sunMeshes';
 import { BodyMaps } from './bodyMaps';
 import { ScreenLabels, settleSizes } from './screenLabels';
-import { assembleEarthParts, checkSamplers, type EarthPart } from './earthParts';
+import type { EarthPart } from './earthParts';
 import { createPlanetMeshes } from './planetMeshes';
 import type { ArrivalGrid } from '../data/dispersal';
-import { temperatureUniforms } from './temperatureShader';
-import { EarthSurfaces, surfaceUniforms } from './earthSurfaces';
-import { ATMOSPHERE_FRAGMENT, ATMOSPHERE_VERTEX, MOON_FRAGMENT, MOON_VERTEX } from './bodyShaders';
+import { EarthSurfaces } from './earthSurfaces';
+import { MOON_FRAGMENT, MOON_VERTEX } from './bodyShaders';
 import { createEarthTileLayer } from './earthTiles';
 import { BodiesInSpace } from './bodiesInSpace';
 import { createSpinAxis, PlacePin } from './earthMarks';
+import { createEarthMeshes, MOON_RGB, plainTexture } from './earthMesh';
 import { EarthOverlays } from './earthOverlays';
 import { CameraRig } from './cameraRig';
 import { Stage } from '../stage/stage';
 import { tileLimits, type TileLimits } from './tileLimits';
 import type { EarthTiles } from '../data/earthTiles';
-import { EARTH_VERTEX, earthFragment } from './earthShader';
 import type {
   DeepTimeSurface,
   IceSurface,
@@ -192,18 +185,6 @@ export interface Globe {
   dispose(): void;
 }
 
-/** Stand-ins until the maps arrive: the Blue Marble's open ocean and the Moon's mean grey. */
-const OCEAN_RGB = [11, 28, 66] as const;
-const MOON_RGB = [128, 126, 122] as const;
-
-/** A one-pixel texture of one colour (sRGB bytes). */
-function plainTexture([red, green, blue]: readonly [number, number, number]): DataTexture {
-  const texture = new DataTexture(new Uint8Array([red, green, blue, 255]), 1, 1);
-  texture.colorSpace = SRGBColorSpace;
-  texture.needsUpdate = true;
-  return texture;
-}
-
 export function createGlobe(
   container: HTMLElement,
   options: {
@@ -238,7 +219,6 @@ export function createGlobe(
   const loader = new TextureLoader();
   const earthMap = loader.loadAsync(options.textureUrl);
   const moonMap = loader.loadAsync(options.moonTextureUrl);
-  const texture = plainTexture(OCEAN_RGB);
   const moonTexture = plainTexture(MOON_RGB);
 
   const sunDirection = new Vector3(1, 0, 0);
@@ -255,45 +235,10 @@ export function createGlobe(
     },
     dataset: container.dataset,
   });
-  const earthUniforms = {
-    dayMap: { value: texture },
-    dayRect: { value: new Vector4(0, 0, 1, 1) },
-    dayAlpha: { value: 1 },
-    ...surfaceUniforms(),
-    ...temperatureUniforms(),
-    evenLight,
-    overlayMap: { value: overlays.texture as Texture },
-    empiresActive: { value: 0 },
-    iceOutlinesActive: { value: 0 },
-    sunDirection: { value: sunDirection },
-    moonPosition: { value: moonPosition },
-    moonRadius: { value: 0 },
-    sunPosition: { value: sunPosition },
-    sunRadius: { value: SUN_RADIUS_EARTH_RADII },
-  };
-  // The features' parts of the shader (#379), built in once: the shader is not made again.
-  const parts = assembleEarthParts(options.earthParts ?? [], new Set(Object.keys(earthUniforms)));
-  const earthShader = earthFragment(parts);
-  checkSamplers(earthShader);
-  const earth = new Mesh(
-    new SphereGeometry(1, 128, 64),
-    new ShaderMaterial({
-      uniforms: { ...earthUniforms, ...parts.uniforms },
-      vertexShader: EARTH_VERTEX,
-      fragmentShader: earthShader,
-    }),
-  );
-  const atmosphere = new Mesh(
-    new SphereGeometry(1.04, 96, 48),
-    new ShaderMaterial({
-      uniforms: { sunDirection: { value: sunDirection }, evenLight },
-      vertexShader: ATMOSPHERE_VERTEX,
-      fragmentShader: ATMOSPHERE_FRAGMENT,
-      side: BackSide,
-      blending: AdditiveBlending,
-      transparent: true,
-      depthWrite: false,
-    }),
+  const { earth, atmosphere, plainMap, parts } = createEarthMeshes(
+    { sunDirection, evenLight, moonPosition, sunPosition },
+    overlays.texture,
+    options.earthParts ?? [],
   );
   scene.add(earth, atmosphere);
   // Deep time's surfaces and the rest beyond today's imagery (#379).
@@ -385,7 +330,7 @@ export function createGlobe(
         stage.invalidate();
       },
     },
-    { earth: earthMap, moon: moonMap, plainEarth: texture, plainMoon: moonTexture },
+    { earth: earthMap, moon: moonMap, plainEarth: plainMap, plainMoon: moonTexture },
   );
   const orbitLoops = createOrbitLoops(scene);
   // Where the Sun, the Moon, the planets and their moons are, placed for each moment.
@@ -713,7 +658,7 @@ export function createGlobe(
     dispose() {
       // The frames, the parts (what plays, the camera) and the renderer.
       stage.dispose();
-      texture.dispose();
+      plainMap.dispose();
       moonTexture.dispose();
       c14Glow.dispose();
       for (const layer of layers) layer.dispose?.();
