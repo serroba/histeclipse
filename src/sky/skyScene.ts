@@ -26,7 +26,6 @@ import {
   PerspectiveCamera,
   PlaneGeometry,
   Points,
-  Scene,
   ShaderMaterial,
   SphereGeometry,
   SRGBColorSpace,
@@ -36,6 +35,7 @@ import {
   WebGLRenderer,
 } from 'three';
 
+import { Stage } from '../stage/stage';
 import { apply, type Matrix3, type Vector3 as Vec3 } from '../astro/matrix';
 import { starDirection } from '../astro/stars';
 import type { Sky } from '../data/sky';
@@ -201,12 +201,14 @@ export function createSkyScene(
 
   const renderer = new WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  container.append(renderer.domElement);
+  const stage = new Stage(container, {
+    renderer,
+    // Only its position and turn are used: the projection is the shaders' (see projection.ts).
+    camera: new PerspectiveCamera(60, 1, 0.1, 1000),
+    styleSize: false,
+  });
   const labelLayer = createSkyLabelLayer(container);
-
-  const scene = new Scene();
-  // Only its position and turn are used: the projection is the shaders' (see projection.ts).
-  const camera = new PerspectiveCamera(60, 1, 0.1, 1000);
+  const { scene, camera } = stage;
   let view: ProjectionFrame = projectionFrame(90, 1, 1);
   // Shared by every material in the sky: one update moves them all.
   const projection = {
@@ -329,7 +331,7 @@ export function createSkyScene(
   }
 
   const moonTexture = new TextureLoader().load(options.moonTextureUrl, () => {
-    needsRender = true;
+    stage.invalidate();
   });
   moonTexture.colorSpace = SRGBColorSpace;
   const moonUniforms = {
@@ -474,8 +476,6 @@ export function createSkyScene(
   // Earth's velocity at the moment shown, for annual aberration.
   let motion: Vec3 = [0, 0, 0];
   let insets = { top: 0, bottom: 0 };
-  let needsRender = true;
-  let frame = 0;
   // A glide under way: from where, to where, over how long, and when it started (by the frames'
   // own clock, from the first frame it is drawn in).
   let glide: {
@@ -566,7 +566,7 @@ export function createSkyScene(
         shown.includes(entry.figure) && entry.figure.lines.length > 0,
       );
     }
-    needsRender = true;
+    stage.invalidate();
   }
 
   function applyLook(): void {
@@ -575,15 +575,14 @@ export function createSkyScene(
     camera.lookAt(x, y, z);
     // Labels are placed from the view matrix, so keep it current between renders.
     camera.updateMatrixWorld();
-    resize();
+    stage.resize();
     starUniforms.zoom.value = Math.min(2, Math.max(1, Math.sqrt(60 / look.fov)));
     showSunGlow();
-    needsRender = true;
+    stage.invalidate();
   }
 
-  function resize(): void {
-    const { clientWidth, clientHeight } = container;
-    renderer.setSize(clientWidth, clientHeight, false);
+  /** The projection for the container's size, the panels' insets and the field of view. */
+  function fitView(clientWidth: number, clientHeight: number): void {
     // The field of view is on the narrower side, as on the globe, and what we look at sits in
     // the middle of the space the panels leave. A tall phone shows no more than it can without
     // bending the sky like a fisheye (#253).
@@ -595,7 +594,6 @@ export function createSkyScene(
     projection.skyScale.value.set(view.scaleX, view.scaleY);
     projection.skyShift.value.set(0, view.shiftY);
     renderer.getDrawingBufferSize(projection.skyViewport.value);
-    needsRender = true;
   }
 
   const inView = new Vector3();
@@ -765,21 +763,23 @@ export function createSkyScene(
     container.dataset['planets'] = report.join(' ');
   }
 
-  function loop(now: number): void {
-    frame = requestAnimationFrame(loop);
-    if (glide !== null) {
-      glide.start ??= now;
-      const progress = Math.min(1, (now - glide.start) / glide.ms);
-      look = lookBetween(glide.from, glide.to, 1 - (1 - progress) ** 3);
-      applyLook();
-      if (progress === 1) endGlide();
-    }
-    if (!needsRender) return;
-    needsRender = false;
-    renderer.render(scene, camera);
-    placeLabels();
-    container.dataset['rendered'] = 'true';
-  }
+  stage.add({
+    step(now) {
+      if (glide !== null) {
+        glide.start ??= now;
+        const progress = Math.min(1, (now - glide.start) / glide.ms);
+        look = lookBetween(glide.from, glide.to, 1 - (1 - progress) ** 3);
+        applyLook();
+        if (progress === 1) endGlide();
+      }
+      return false;
+    },
+    afterRender() {
+      placeLabels();
+      container.dataset['rendered'] = 'true';
+    },
+    resize: fitView,
+  });
 
   const tapListeners = new Set<(tapped: SkyTap | null) => void>();
   /** The body under a point of the page, nearest first, or null. */
@@ -833,7 +833,7 @@ export function createSkyScene(
     },
   });
 
-  new ResizeObserver(resize).observe(container);
+  stage.observeResize();
   rebuildFigures();
   applyLook();
 
@@ -843,11 +843,11 @@ export function createSkyScene(
       visible = next;
       container.hidden = !next;
       if (next) {
-        resize();
-        needsRender = true;
-        frame = requestAnimationFrame(loop);
+        stage.resize();
+        stage.invalidate();
+        stage.start();
       } else {
-        cancelAnimationFrame(frame);
+        stage.stop();
         endGlide();
       }
     },
@@ -905,7 +905,7 @@ export function createSkyScene(
       container.dataset['sunAltitude'] = sunHigh.toFixed(2);
       container.dataset['starsSeen'] = String(seen);
       placePlanets(horizon, planets, limit, sunHigh > -1 ? sunHere : null, moonHere);
-      needsRender = true;
+      stage.invalidate();
     },
     setLook(next) {
       // While gliding, the look the link held when it began, or the one it ends on, is the
@@ -920,7 +920,7 @@ export function createSkyScene(
       endGlide();
       return new Promise((resolve) => {
         glide = { from: look, to: next, ms, start: null, done: resolve };
-        needsRender = true;
+        stage.invalidate();
       });
     },
     setFigures(next) {
@@ -948,7 +948,7 @@ export function createSkyScene(
     setInsets(top, bottom) {
       if (top === insets.top && bottom === insets.bottom) return;
       insets = { top, bottom };
-      resize();
+      stage.resize();
     },
     onTap(listener) {
       tapListeners.add(listener);
