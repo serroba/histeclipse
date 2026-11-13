@@ -110,12 +110,16 @@ export class ScreenLabels {
   /** The view's size, told on resize: read each frame, it forced style and layout (#631). */
   #width: number;
   #height: number;
-  readonly #motion = new CameraMotion();
-  /** Whether the camera moved since the last frame: then fewer names are shown (#631). */
+  readonly #motion: CameraMotion;
+  /** Whether the camera moved lately: then fewer names are shown (#631). */
   #turning = false;
 
   constructor(world: ScreenLabelsWorld) {
     this.#world = world;
+    // Once the view settles, a frame to show every name again.
+    this.#motion = new CameraMotion(() => {
+      world.invalidate();
+    });
     this.#width = world.container.clientWidth;
     this.#height = world.container.clientHeight;
     const layer = document.createElement('div');
@@ -206,9 +210,7 @@ export class ScreenLabels {
 
   /** Each frame: the names on Earth's surface; while the camera moves, fewer of them. */
   placeSurfaceLabels(): void {
-    this.#turning = this.#motion.moved(this.#world.camera);
-    // One more frame once it stops, to show them all.
-    if (this.#turning) this.#world.invalidate();
+    this.#turning = this.#motion.turning(this.#world.camera, performance.now());
     this.#layOutSurface();
   }
 
@@ -254,6 +256,7 @@ export class ScreenLabels {
   };
 
   dispose(): void {
+    this.#motion.dispose();
     this.#layer.remove();
   }
 
