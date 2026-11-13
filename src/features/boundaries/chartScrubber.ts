@@ -1,18 +1,16 @@
 /**
  * A chart as a slider: drag along it, or use the arrow keys, and `onScrub` hears how far across
  * the plot the reader has chosen, 0 to 1. The Holocene chart takes the globe to that year. DOM
- * glue, covered by the Playwright suite.
+ * glue, covered by the Playwright suite; the keys' steps are in `scrubKeys.ts`.
  */
+
+import { scrubKey } from './scrubKeys';
 
 /** Where the plot sits within the chart, px from its left. */
 export interface PlotSpan {
   readonly left: number;
   readonly width: number;
 }
-
-/** A small step, about the width of a pixel or two on a wide chart; with Shift or Page keys, more. */
-const STEP = 0.004;
-const LEAP = 0.05;
 
 const clamp = (x: number) => Math.min(1, Math.max(0, x));
 
@@ -43,20 +41,9 @@ export function makeScrubbable(
     if (chart.hasPointerCapture(event.pointerId)) onScrub(at(event));
   });
   chart.addEventListener('keydown', (event) => {
-    const step = event.shiftKey ? LEAP : STEP;
-    const keys: Readonly<Record<string, number>> = {
-      ArrowLeft: current() - step,
-      ArrowDown: current() - step,
-      ArrowRight: current() + step,
-      ArrowUp: current() + step,
-      PageDown: current() - LEAP,
-      PageUp: current() + LEAP,
-      Home: 0,
-      End: 1,
-    };
-    const next = keys[event.key];
-    if (next === undefined) return;
+    const next = scrubKey(event.key, event.shiftKey, current());
+    if (next === null) return;
     event.preventDefault();
-    onScrub(clamp(next));
+    onScrub(next);
   });
 }
