@@ -6,7 +6,7 @@
  */
 
 /// <reference types="node" />
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 import { ESLint } from 'eslint';
@@ -286,6 +286,55 @@ describe('the largest files only shrink', () => {
       limit - lines,
       `src/${file} is ${String(lines)} lines: lower its LINE_LIMITS entry in eslint.boundaries.js to ${String(lines)}`,
     ).toBeLessThanOrEqual(SLACK);
+  });
+});
+
+/** Files the unit tests do not reach, in coverage.untested.js (#625): their number only falls. */
+const UNTESTED_FILES = 133;
+/** And their lines: lowered when the files shrink by more than UNTESTED_SLACK. */
+const UNTESTED_LINES = 26_274;
+/** Lines the untested files may shrink by before UNTESTED_LINES must come down with them. */
+const UNTESTED_SLACK = 200;
+
+/** The files coverage.untested.js names, as paths from the repository's root. */
+function untested(): string[] {
+  const list = readFileSync(join(SRC, '..', 'coverage.untested.js'), 'utf8');
+  const block = /export const UNTESTED = \[([\s\S]*?)\];/.exec(list)?.[1] ?? '';
+  return [...block.matchAll(/'([^']+)'/g)].map((match) => match[1] ?? '');
+}
+
+describe('the code the unit tests do not reach only shrinks (#625)', () => {
+  const files = untested();
+
+  it('names files, one by one, each still there', () => {
+    expect(files.length, 'coverage.untested.js was read').toBeGreaterThan(0);
+    expect(
+      files.filter((file) => file.includes('*')),
+      'no patterns',
+    ).toEqual([]);
+    expect(
+      files.filter((file) => !existsSync(join(SRC, '..', file))),
+      'take files that are gone off coverage.untested.js',
+    ).toEqual([]);
+  });
+
+  it('has no more files than before: a new file gets tests', () => {
+    ratchet(files.length, UNTESTED_FILES, 'Untested files', 'UNTESTED_FILES');
+  });
+
+  it('has no more lines than before: logic goes in tested modules', () => {
+    const lines = files.reduce(
+      (sum, file) => sum + lineCount(readFileSync(join(SRC, '..', file), 'utf8')),
+      0,
+    );
+    expect(
+      lines,
+      `untested files have ${String(lines)} lines, over UNTESTED_LINES`,
+    ).toBeLessThanOrEqual(UNTESTED_LINES);
+    expect(
+      UNTESTED_LINES - lines,
+      `untested files have ${String(lines)} lines: lower UNTESTED_LINES to ${String(lines)}`,
+    ).toBeLessThanOrEqual(UNTESTED_SLACK);
   });
 });
 

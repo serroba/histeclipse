@@ -13,6 +13,7 @@
     "vite.models.ts",
     "eslint.config.js",
     "eslint.boundaries.js",
+    "coverage.untested.js",
     "stylelint.config.mjs"
   ]
 }
