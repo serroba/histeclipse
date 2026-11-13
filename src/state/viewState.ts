@@ -196,6 +196,11 @@ export function withLayer(layers: ReadonlySet<Layer>, layer: Layer, on: boolean)
   next.add(layer);
   return next;
 }
+/** The view with `layer` turned the other way: off if it was on, on if it was off. */
+export function toggledLayer(state: ViewState, layer: Layer): ViewState {
+  return { ...state, layers: withLayer(state.layers, layer, !state.layers.has(layer)) };
+}
+
 export const DEFAULT_CAMERA: GlobeCamera = {
   target: { latitude: 20, longitude: 0 },
   // With a 40° field of view on the narrower side, the whole globe fits with a margin.
