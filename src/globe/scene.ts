@@ -12,16 +12,12 @@ import { type ShowerCommand, type ShowerSpec } from './showerAnimation';
 import {
   AdditiveBlending,
   BackSide,
-  BufferGeometry,
   CanvasTexture,
   Color,
   CylinderGeometry,
   DataTexture,
-  Float32BufferAttribute,
   Group,
   LinearFilter,
-  LineBasicMaterial,
-  LineLoop,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
@@ -68,6 +64,7 @@ import {
   type LayerHost,
 } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
+import { createOrbitLoops } from './orbitLoops';
 import { Picking } from './picking';
 import { createSunMeshes } from './sunMeshes';
 import { BodyMaps } from './bodyMaps';
@@ -431,19 +428,8 @@ export function createGlobe(
     },
     { earth: earthMap, moon: moonMap, plainEarth: texture, plainMoon: moonTexture },
   );
-  // The planets' orbits, and Earth's: drawn about the Sun in J2000 axes, turned with them.
-  const orbits = new Group();
-  orbits.visible = false;
-  scene.add(orbits);
-  let orbitLoops: LineLoop<BufferGeometry, LineBasicMaterial>[] = [];
-  const ORBIT_COLOURS: Readonly<Record<Orbiting, string>> = {
-    mercury: '#b8b2a8',
-    venus: '#e3c98f',
-    earth: '#6fa8ff',
-    mars: '#d9774b',
-    jupiter: '#d8b48a',
-    saturn: '#e6d29a',
-  };
+  const orbitLoops = createOrbitLoops(scene);
+  const orbits = orbitLoops.group;
 
   function hiddenInDeepTime(): Object3D[] {
     return [sun, corona, moon, orbits, ...Object.values(planets.meshes)];
@@ -691,36 +677,10 @@ export function createGlobe(
       needsRender = true;
     },
     setOrbits(paths) {
-      for (const loop of orbitLoops) {
-        orbits.remove(loop);
-        loop.geometry.dispose();
-        loop.material.dispose();
-      }
-      orbitLoops = [];
-      orbits.visible = paths !== null;
+      orbitLoops.set(paths);
       // The moons' orbits go with the planets' (#335).
       moonSystems.showAllPaths(paths !== null);
       container.dataset['orbits'] = paths === null ? 'off' : String(ORBITING.length);
-      if (paths === null) {
-        needsRender = true;
-        return;
-      }
-      for (const body of ORBITING) {
-        const points = paths[body].flatMap(([x = 0, y = 0, z = 0]) => sceneFromKm([x, y, z]));
-        const geometry = new BufferGeometry();
-        geometry.setAttribute('position', new Float32BufferAttribute(points, 3));
-        const loop = new LineLoop(
-          geometry,
-          new LineBasicMaterial({
-            color: ORBIT_COLOURS[body],
-            transparent: true,
-            opacity: 0.55,
-            depthWrite: false,
-          }),
-        );
-        orbitLoops.push(loop);
-        orbits.add(loop);
-      }
       needsRender = true;
     },
     setSpace(bodies) {
