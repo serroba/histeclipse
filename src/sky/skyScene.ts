@@ -28,28 +28,22 @@ import {
   Points,
   ShaderMaterial,
   SphereGeometry,
-  SRGBColorSpace,
-  TextureLoader,
   Vector2,
   Vector3,
   WebGLRenderer,
 } from 'three';
 
 import { Stage } from '../stage/stage';
-import { apply, type Matrix3, type Vector3 as Vec3 } from '../astro/matrix';
+import type { Matrix3, Vector3 as Vec3 } from '../astro/matrix';
 import { starDirection } from '../astro/stars';
 import type { Sky } from '../data/sky';
 import type { Figures, SkyLook } from '../state/viewState';
 import type { JulianDay } from '../time/julianDay';
-import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import {
   angleBetween,
   angularRadius,
-  EARTH_RADIUS_KM,
   eclipsedLimit,
-  illuminatedFraction,
   MOON_RADIUS_KM,
-  moonSunlight,
   SUN_RADIUS_KM,
   sunVisible,
   topocentric,
@@ -80,6 +74,14 @@ import {
   toPixels,
 } from './projection';
 import { createSkyLabelLayer, overlaps, skyLabel } from './skyLabels';
+import {
+  lookDirectionAt,
+  STAR_RADIUS,
+  SUN_ANGULAR_RADIUS,
+  SUN_DISTANCE,
+  toScene,
+} from './skyFrame';
+import { SkyMoon } from './skyMoon';
 import { starColor } from './starColor';
 import {
   DOME_VERTEX,
@@ -88,8 +90,6 @@ import {
   GROUND_FRAGMENT,
   LINE_FRAGMENT,
   LINE_VERTEX,
-  MOON_FRAGMENT,
-  MOON_VERTEX,
   SKY_FRAGMENT,
   STAR_FRAGMENT,
   STAR_VERTEX,
@@ -176,21 +176,10 @@ export interface SkyScene {
   onLookChange(listener: (look: SkyLook) => void): () => void;
 }
 
-const STAR_RADIUS = 100;
-const SUN_DISTANCE = 80;
-// The Moon sits in front of the Sun, so it is drawn nearer; only its angular size matters.
-const MOON_DISTANCE = 70;
-const EARTH_SHADOW_RADIUS_KM = EARTH_RADIUS_KM * EARTH_SHADOW_ENLARGEMENT;
-const SUN_ANGULAR_RADIUS = (0.2666 * Math.PI) / 180;
 /** The proper-motion positions only need recomputing after this many days. */
 const MOTION_STEP_DAYS = 365.25;
 /** Each figure line is drawn in this many pieces, so it can follow its curve on screen. */
 const LINE_PIECES = 8;
-
-/** From the horizon frame (x east, y north, z up) to scene axes (x east, y up, z south). */
-function toScene([east, north, up]: Vec3): [number, number, number] {
-  return [east, up, -north];
-}
 
 export function createSkyScene(
   container: HTMLElement,
@@ -330,41 +319,15 @@ export function createSkyScene(
     );
   }
 
-  const moonTexture = new TextureLoader().load(options.moonTextureUrl, () => {
-    stage.invalidate();
-  });
-  moonTexture.colorSpace = SRGBColorSpace;
-  const moonUniforms = {
-    ...projection,
-    map: { value: moonTexture },
+  const moon = new SkyMoon({
+    projection,
     sunDirection,
-    moonCentre: { value: new Vector3() },
-    moonKm: { value: new Vector3() },
-    kmPerUnit: { value: 1 },
-    antiSun: { value: new Vector3() },
-    umbraSlope: { value: 0 },
-    penumbraSlope: { value: 0 },
-    earthRadius: { value: EARTH_SHADOW_RADIUS_KM },
-    sunAngularRadius: { value: SUN_ANGULAR_RADIUS },
-    night: { value: 1 },
-  };
-  // As on the globe: turn the map's longitude 0 (at +X) to +Z, which lookAt() aims at us.
-  const moonGeometry = new SphereGeometry(1, 96, 48);
-  moonGeometry.rotateY(-Math.PI / 2);
-  const moon = new Mesh(
-    moonGeometry,
-    new ShaderMaterial({
-      uniforms: moonUniforms,
-      vertexShader: MOON_VERTEX,
-      fragmentShader: MOON_FRAGMENT,
-      depthTest: false,
-      depthWrite: false,
-      // Drawn after the Sun and its glow, which it covers in an eclipse.
-      transparent: true,
-    }),
-  );
-  moon.renderOrder = 3.5;
-  moon.visible = false;
+    textureUrl: options.moonTextureUrl,
+    dataset: container.dataset,
+    invalidate: () => {
+      stage.invalidate();
+    },
+  });
 
   const ground = new Mesh(
     new SphereGeometry(50, 64, 32),
@@ -416,7 +379,7 @@ export function createSkyScene(
     sun,
     sunGlow,
     corona,
-    moon,
+    moon.mesh,
     ground,
   ];
   // The camera's frustum is a pinhole's and does not match what the shaders put on screen.
@@ -677,45 +640,6 @@ export function createSkyScene(
     });
   }
 
-  function placeMoon(
-    horizon: Matrix3,
-    sunJ2000: Vec3,
-    moonJ2000: Vec3 | null,
-    sunHere: Vec3,
-    moonHere: Vec3 | null,
-    sunHigh: number,
-  ): void {
-    if (moonJ2000 === null || moonHere === null) {
-      moon.visible = false;
-      return;
-    }
-    const seen = apparentDirection(horizon, aberrate(moonHere, motion));
-    const high = horizontal(seen).altitude;
-    moon.visible = high > -1;
-    const [mx, my, mz] = toScene(seen);
-    const radius = MOON_DISTANCE * Math.tan(angularRadius(MOON_RADIUS_KM, moonHere));
-    moon.position.set(mx, my, mz).multiplyScalar(MOON_DISTANCE);
-    moon.scale.setScalar(radius);
-    // The near side faces us (the map's longitude 0 is the mesh's +Z), north toward the pole.
-    moon.up.set(...toScene(apply(horizon, [0, 0, 1])));
-    moon.lookAt(0, 0, 0);
-
-    // Earth's shadow, in the scene's axes but in km: the horizon frame is a turn of J2000.
-    const inScene = (vector: Vec3): Vector3 => new Vector3(...toScene(apply(horizon, vector)));
-    const sunDistance = Math.hypot(...sunJ2000);
-    moonUniforms.moonCentre.value.copy(moon.position);
-    moonUniforms.moonKm.value.copy(inScene(moonJ2000));
-    moonUniforms.kmPerUnit.value = MOON_RADIUS_KM / radius;
-    moonUniforms.antiSun.value.copy(inScene(unit(sunJ2000))).negate();
-    moonUniforms.umbraSlope.value = (SUN_RADIUS_KM - EARTH_SHADOW_RADIUS_KM) / sunDistance;
-    moonUniforms.penumbraSlope.value = (SUN_RADIUS_KM + EARTH_SHADOW_RADIUS_KM) / sunDistance;
-    moonUniforms.night.value = 1 - Math.min(1, Math.max(0, (sunHigh + 12) / 12));
-
-    container.dataset['moonAltitude'] = high.toFixed(2);
-    container.dataset['moonPhase'] = illuminatedFraction(moonHere, sunHere).toFixed(3);
-    container.dataset['moonSunlight'] = moonSunlight(moonJ2000, sunJ2000).toFixed(3);
-  }
-
   function placePlanets(
     horizon: Matrix3,
     planets: readonly SkyPlanet[],
@@ -788,11 +712,10 @@ export function createSkyScene(
     const width = container.clientWidth;
     const height = container.clientHeight;
     const perDegree = pixelsPerDegree(view, width);
-    const moonRadius = (Math.atan(moon.scale.x / MOON_DISTANCE) * 180) / Math.PI;
     const candidates: { body: SkyBody; position: Vector3; radius: number }[] = [
       ...(sun.visible ? [{ body: 'sun' as const, position: sun.position, radius: 0.27 }] : []),
-      ...(moon.visible
-        ? [{ body: 'moon' as const, position: moon.position, radius: moonRadius }]
+      ...(moon.mesh.visible
+        ? [{ body: 'moon' as const, position: moon.mesh.position, radius: moon.angularRadius }]
         : []),
       ...planetLabels
         .filter(({ shown }) => shown)
@@ -897,7 +820,7 @@ export function createSkyScene(
       sunlight.value = sunShare;
       corona.position.copy(sun.position);
       corona.visible = sun.visible && sunShare < 0.002;
-      placeMoon(horizon, sunJ2000, moonJ2000, sunHere, moonHere, sunHigh);
+      moon.place({ horizon, sunJ2000, moonJ2000, sunHere, moonHere, sunHigh, motion });
       container.dataset['sunVisible'] = sunShare.toFixed(4);
       starUniforms.limit.value = limit;
       // Figures stay faintly visible by day, as a guide to where things are.
@@ -959,13 +882,4 @@ export function createSkyScene(
       return () => listeners.delete(listener);
     },
   };
-}
-
-function lookDirectionAt(azimuth: number, altitude: number): Vec3 {
-  return lookDirection({ azimuth, altitude, fov: 60 });
-}
-
-function unit(vector: Vec3): Vec3 {
-  const length = Math.hypot(...vector);
-  return [vector[0] / length, vector[1] / length, vector[2] / length];
 }
