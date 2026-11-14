@@ -1,8 +1,9 @@
 /**
- * How fast the launches play at a moment (#702): fast between departures, so the 67 years fit in
- * under five minutes; slow from half a day before a craft leaves Earth's orbit to three days
- * after, so it can be seen going (a trip to the Moon takes about three days); and easing from
- * one to the other over a day and a half, geometrically, so the change reads as a glide.
+ * How fast the launches play at a moment (#702): the pace picked between departures (50 days a
+ * second unless changed, slow enough to follow a cruise, #710); slow from half a day before a
+ * craft leaves Earth's orbit to three days after, so it can be seen going (a trip to the Moon
+ * takes about three days); and easing from one to the other over a day and a half,
+ * geometrically, so the change reads as a glide.
  */
 
 import type { Craft } from '../../data/spacecraft';
