@@ -173,3 +173,92 @@
 .borders-select option {
   background: #10162a;
 }
+
+/* The layers on, beside Layers (#728): chips to take one off, outlined where it draws nothing. */
+.active-layers[hidden] {
+  display: none;
+}
+
+.active-layers {
+  flex-basis: 100%;
+}
+
+.active-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.active-chip {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 4px 0 12px;
+  border: 1px solid rgb(150 180 255 / 0.5);
+  border-radius: 16px;
+  background: rgb(150 180 255 / 0.14);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.active-chip[data-draws='false'] {
+  border-style: dashed;
+  background: transparent;
+  color: var(--ink-muted);
+}
+
+.active-go,
+.active-remove {
+  min-width: 28px;
+  min-height: 28px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 14px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.active-go {
+  color: rgb(150 180 255);
+  text-decoration: underline;
+}
+
+/* The chips take a row of their own under the spans and Layers. */
+.hud-actions:has(> .active-layers:not([hidden])) {
+  flex-wrap: wrap;
+}
+
+/* In the Layers sheet the chips show only on a phone, where the date panel has no room. */
+.active-layers-sheet {
+  display: none;
+  padding: 0 18px 8px;
+}
+
+@media (max-width: 600px) {
+  .hud-actions > .active-layers {
+    display: none;
+  }
+
+  .active-layers-sheet:not([hidden]) {
+    display: block;
+  }
+
+  /* How many layers are on, on the Layers button. */
+  .layers-open[data-on]::after {
+    content: attr(data-on) / '';
+    min-width: 18px;
+    height: 18px;
+    margin-left: 4px;
+    border-radius: 9px;
+    background: rgb(150 180 255 / 0.35);
+    font-size: 11px;
+    line-height: 18px;
+    text-align: center;
+  }
+}

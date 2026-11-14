@@ -474,7 +474,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       detail: moment.detailText,
       termNote: moment.termNote,
       welcome: welcome.root,
-      actions: [deepTime.spanSwitch, layersPanel.button],
+      actions: [deepTime.spanSwitch, layersPanel.button, layersPanel.chips],
       viewSwitch: viewSwitch.root,
       skyControls: sky.controls,
       bodySwitches: bodies.switches,

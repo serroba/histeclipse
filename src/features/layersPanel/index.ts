@@ -8,6 +8,8 @@ import { layerWhy } from '../../state/whysOnScreen';
 import type { DeepScale, Layer, ViewState } from '../../state/viewState';
 import { awayFromEarth, layerTurned, roundMa } from '../../state/viewState';
 import { PRESENT_YEAR } from '../../time/present';
+import { activeLayers } from '../../state/activeLayers';
+import { createActiveChips } from './activeChips';
 import { createLayersPanel } from './layersPanel';
 import type { Span } from '../../ui/spanSwitch';
 import type { PartContext } from '../part';
@@ -35,6 +37,8 @@ export interface LayersPanelContext extends PartContext {
 export interface LayersPanelPart {
   readonly button: HTMLElement;
   readonly dialog: HTMLDialogElement;
+  /** The layers on, as chips beside Layers (#728). */
+  readonly chips: HTMLElement;
   readonly show: (state: ViewState) => void;
 }
 
@@ -47,6 +51,25 @@ function present<T>(entries: Iterable<readonly [Layer, T | null]>): Map<Layer, T
 
 export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
   const { store } = context;
+  /** Go to a span a layer draws on, at a moment of the layer's own if it has one. */
+  const goTo = (span: Span, ma?: number): void => {
+    if (ma === undefined || span === 'years') context.goToSpan(span);
+    else if (store.get().ma === null) context.enterDeepTime(ma, span);
+    else {
+      context.setScale(span);
+      store.set((state) => ({ ...state, ma: roundMa(ma) }));
+    }
+  };
+  const chipActions = {
+    onRemove: (layer: Layer) => {
+      store.set((state) => layerTurned(state, layer, false));
+    },
+    onGoTo: goTo,
+  };
+  // Beside Layers on wide screens; on a phone, where the date panel has no room for them, at the
+  // top of the Layers sheet, with their number on its button.
+  const chips = createActiveChips(chipActions);
+  const sheetChips = createActiveChips(chipActions);
   const panel = createLayersPanel(
     (layer, on) => {
       store.set((state) => layerTurned(state, layer, on));
@@ -54,20 +77,21 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
     (borders) => {
       store.set((state) => ({ ...state, borders }));
     },
-    (span, ma) => {
-      if (ma === undefined || span === 'years') context.goToSpan(span);
-      else if (store.get().ma === null) context.enterDeepTime(ma, span);
-      else {
-        context.setScale(span);
-        store.set((state) => ({ ...state, ma: roundMa(ma) }));
-      }
-    },
+    goTo,
     (layer, label) => context.why(() => layerWhy(layer, store.get().borders), label),
   );
+  sheetChips.root.classList.add('active-layers-sheet');
+  panel.dialog.querySelector('header')?.after(sheetChips.root);
   return {
     button: panel.button,
     dialog: panel.dialog,
+    chips: chips.root,
     show(state) {
+      const active = activeLayers(state);
+      chips.render(active);
+      sheetChips.render(active);
+      if (active.length === 0) delete panel.button.dataset['on'];
+      else panel.button.dataset['on'] = String(active.length);
       panel.render({
         layers: state.layers,
         borders: state.borders,
