@@ -9,9 +9,11 @@
 
 import { PLANETS } from '../../astro/planets';
 import { sunPositionJ2000 } from '../../astro/precession';
-import { craftCard } from '../../data/craftCard';
+import { craftCard, writtenDate } from '../../data/craftCard';
+import { fromACraft } from '../../explore/related';
 import { loadSpacecraft, type Craft } from '../../data/spacecraft';
-import { missionNamed, missions, type Mission } from '../../data/spacecraftMission';
+import { missionNamed, missions, missionView, type Mission } from '../../data/spacecraftMission';
+import type { RelatedStep } from '../../ui/markerCard';
 import { loadSpacecraftPaths } from '../../data/spacecraftPaths';
 import type { JulianDay } from '../../time/julianDay';
 import { errorMessage } from '../../util/errors';
@@ -71,12 +73,26 @@ export const spacecraftFeature: Feature = {
     const sites = context.globe.addLayer(landingSites);
     // Kept from frame to frame: the trails ask for the same places as the time plays (#702).
     const where = remembered(geocentric(context));
+    /** The mission followed, by its id, as last shown. */
+    let followed: string | null = null;
     let loaded: {
       readonly craft: readonly Craft[];
       readonly missions: readonly Mission[];
       readonly wheres: CraftWheres;
     } | null = null;
     let asked = false;
+
+    /** From a craft (#731): its mission's journey, unless that is the one followed. */
+    function follow(own: Mission): RelatedStep[] {
+      const start = own.craft[0]?.launch;
+      if (start === undefined) return [];
+      return fromACraft(own.title, own.id === followed, writtenDate(start)).map((step) => ({
+        ...step,
+        run: () => {
+          context.openAnchor({ body: own.aboutEarth ? 'earth' : 'sun', view: missionView(own) });
+        },
+      }));
+    }
 
     return {
       show(state, jdTT) {
@@ -113,6 +129,7 @@ export const spacecraftFeature: Feature = {
         }
         const mission =
           state.mission === null ? null : missionNamed(loaded.missions, state.mission);
+        followed = mission?.id ?? null;
         const shown = shownAt(loaded, where, mission, jdTT);
         // Not at the centre of the body in view: close up, its landers are marked on it (#716).
         drawn.update(
@@ -127,7 +144,9 @@ export const spacecraftFeature: Feature = {
       pick(id) {
         const craft = loaded?.craft.find((each) => each.id === id);
         if (craft !== undefined && loaded !== null) {
-          context.showCard(craftCard(craft, loaded.wheres.approximate(craft)));
+          const card = craftCard(craft, loaded.wheres.approximate(craft));
+          const own = missionNamed(loaded.missions, craft.id);
+          context.showCard(own === null ? card : { ...card, related: follow(own) });
         }
       },
     };

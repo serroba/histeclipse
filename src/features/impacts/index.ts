@@ -8,6 +8,8 @@ import {
   loadImpacts,
   impactsAt,
   impactsText,
+  placeThen,
+  type Impact,
   type Impacts,
   type ImpactsMode,
 } from '../../data/impacts';
@@ -16,7 +18,8 @@ import type { Globe } from '../../globe/globe';
 import type { DeepScale, ViewState } from '../../state/viewState';
 import type { DeepChipView } from '../../ui/deepChips';
 import { impactsChip, type ImpactsView } from './chip';
-import type { MarkerCardContent } from '../../ui/markerCard';
+import type { MarkerCardContent, RelatedStep } from '../../ui/markerCard';
+import { whenItStruck } from '../../explore/related';
 import { errorMessage } from '../../util/errors';
 import { RESTING } from '../feature';
 import type { PartContext } from '../part';
@@ -65,6 +68,27 @@ export interface ImpactsPart {
   readonly pick: (key: string) => boolean;
   /** What the Layers panel offers under the layer: the craters' paths through time, in 3D. */
   readonly action: () => { readonly label: string; readonly run: () => void };
+}
+
+/** From a crater (#731): the Earth when it struck, facing where the plates had it. */
+function struckFrom(
+  data: Impacts,
+  impact: Impact,
+  shownMa: number | null,
+  parts: Pick<PartContext, 'goToDeepTime'>,
+): RelatedStep[] {
+  const step = whenItStruck(impact.olderMa, impact.youngerMa, shownMa);
+  const where = step === null ? null : placeThen(data, impact, step.ma);
+  if (step === null || where === null) return [];
+  return [
+    {
+      label: step.label,
+      explain: step.explain,
+      run: () => {
+        parts.goToDeepTime(step.ma, 'impacts', where);
+      },
+    },
+  ];
 }
 
 export function mountImpacts(context: ImpactsContext): ImpactsPart {
@@ -188,7 +212,9 @@ export function mountImpacts(context: ImpactsContext): ImpactsPart {
     pick: (key) => {
       const impact = pickedImpact(impacts, key);
       if (impacts === null || impact === undefined) return false;
-      context.showCard(impactCard(impacts, impact, store.get().ma ?? 0, play));
+      const shownMa = store.get().ma;
+      const card = impactCard(impacts, impact, shownMa ?? 0, play);
+      context.showCard({ ...card, related: struckFrom(impacts, impact, shownMa, context) });
       return true;
     },
     action: () => ({

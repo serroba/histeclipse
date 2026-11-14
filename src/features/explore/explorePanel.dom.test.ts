@@ -139,4 +139,13 @@ describe('Explore', () => {
     panel.button.click();
     expect(layers.open).toBe(false);
   });
+
+  it('Given it is closed, When Close is pressed or the same destination is marked again, Then nothing changes', () => {
+    const { panel } = mount();
+    document.querySelector<HTMLButtonElement>('.famous-close')?.click();
+    expect(panel.dialog.open).toBe(false);
+    panel.render('moon-landings');
+    panel.render('moon-landings');
+    expect(document.querySelectorAll('[aria-current]')).toHaveLength(1);
+  });
 });

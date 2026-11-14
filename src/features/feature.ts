@@ -18,6 +18,7 @@ import type { LineageGroup } from '../data/lineages';
 import type { TreeOfLife } from '../data/treeOfLife';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
 import type { MarkerCardContent } from '../ui/markerCard';
+import type { Anchor } from '../text/passages';
 import type { ZoomRail } from '../ui/zoomRail';
 
 /** Said in the Layers panel of a layer whose markers rest while the years play. */
@@ -35,6 +36,8 @@ export interface FeatureContext {
   notify(message: string): void;
   /** Open the card for a marker. */
   showCard(card: MarkerCardContent): void;
+  /** Open a view laid over the reader's, as a step Back undoes: a related discovery (#731). */
+  openAnchor(anchor: Anchor): void;
   /** Whether a marker's card is open. */
   cardOpen(): boolean;
   /** The planets' theory, once loaded; `loadPlanets` asks for it. */

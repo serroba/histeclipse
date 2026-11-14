@@ -17,7 +17,8 @@ import {
 import { loadPictures, type Pictures } from '../../data/pictures';
 import { DISPERSAL_SCENARIOS } from '../../state/viewState';
 import type { DeepNoteBlock, DeepNotePart } from '../../ui/deepChips';
-import type { MarkerCardContent } from '../../ui/markerCard';
+import type { MarkerCardContent, RelatedStep } from '../../ui/markerCard';
+import { destinationNear, fromAFind } from '../../explore/related';
 import { errorMessage } from '../../util/errors';
 import type { Feature } from '../feature';
 import { createDispersal, dispersalText, type DispersalShown } from './dispersal';
@@ -86,6 +87,7 @@ export const humansFeature: Feature = {
     let pictures: Pictures | null = null;
     let picturesLoading = false;
     let shown: string | null = null;
+    let dispersalOn = false;
 
     function pickModel(value: string): void {
       const dispersalPicked = DISPERSAL_SCENARIOS.find((scenario) => scenario === value);
@@ -106,11 +108,41 @@ export const humansFeature: Feature = {
             context.openTree((tree) => tree.ours.humans[species]);
           },
         },
+        related: findSteps(claims?.claims.find((each) => each.id === id)?.place ?? null),
       };
+    }
+
+    /** From a find (#731): the dispersal models, and ancient DNA where it was found. */
+    function findSteps(place: { latitude: number; longitude: number } | null): RelatedStep[] {
+      const { spread, dna } = fromAFind(dispersalOn);
+      const near = place === null ? null : destinationNear('ancient-dna', place);
+      return [
+        ...(spread === null
+          ? []
+          : [
+              {
+                ...spread,
+                run: () => {
+                  context.change((state) => ({ ...state, dispersal: 'a' }));
+                },
+              },
+            ]),
+        ...(near === null
+          ? []
+          : [
+              {
+                ...dna,
+                run: () => {
+                  context.openAnchor(near);
+                },
+              },
+            ]),
+      ];
     }
 
     return {
       deep(state, moment) {
+        dispersalOn = state.dispersal !== 'off';
         // People are a matter of the last few hundred thousand years: the ice-age scale's.
         const on = state.deepScale === 'ice' && state.layers.has('humans');
         if (moment === null || !on) {

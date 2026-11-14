@@ -41,6 +41,7 @@ function fakeContext(
   const notify = vi.fn();
   const openTree = vi.fn();
   const change = vi.fn();
+  const openAnchor = vi.fn();
   const files: Record<string, unknown> = {
     'claims.json': claims,
     'pictures.json': pictures,
@@ -62,9 +63,10 @@ function fakeContext(
     cardOpen: () => options.cardOpen ?? true,
     openTree,
     change,
+    openAnchor,
     refresh,
   } as unknown as FeatureContext;
-  return { context, drawn, settled, cards, refresh, notify, openTree, change };
+  return { context, drawn, settled, cards, refresh, notify, openTree, change, openAnchor };
 }
 
 /** The note's words, picker and lists aside. */
@@ -168,6 +170,36 @@ describe('the humans as a feature', () => {
     expect(openTree).toHaveBeenCalledTimes(1);
     shown.pick?.('no-such-find');
     expect(cards).toHaveLength(2);
+  });
+
+  it('leads from a find to the dispersal models and to ancient DNA where it was found (#731)', async () => {
+    const { context, cards, refresh, change, openAnchor } = fakeContext();
+    const shown = await loaded(context, refresh);
+    const find = claims.claims.find((each) => 'species' in each && each.place !== null);
+    if (find === undefined) throw new Error('no placed find');
+    shown.pick?.(find.id);
+    const related = cards[0]?.related ?? [];
+    expect(related.map((step) => step.label)).toEqual([
+      'People spreading out of Africa',
+      'Ancient DNA near here',
+    ]);
+    related[0]?.run();
+    const update = change.mock.calls[0]?.[0] as (state: ViewState) => ViewState;
+    expect(update(on).dispersal).toBe('a');
+    related[1]?.run();
+    expect(openAnchor).toHaveBeenCalledWith(
+      expect.objectContaining({ view: expect.stringContaining('explore=ancient-dna') as unknown }),
+    );
+    // With a model drawn, the dispersal is not offered again.
+    shown.deep?.({ ...on, dispersal: 'b' }, ICE);
+    shown.pick?.(find.id);
+    expect(cards.at(-1)?.related?.map((step) => step.label)).toEqual(['Ancient DNA near here']);
+    // A claim with no one place leads nowhere near.
+    const unplaced = claims.claims.find((each) => each.place === null);
+    if (unplaced === undefined) throw new Error('no unplaced claim');
+    const before = cards.length;
+    shown.pick?.(unplaced.id);
+    expect(cards.slice(before).flatMap((card) => card.related ?? [])).toEqual([]);
   });
 
   it('says so when the pictures cannot be loaded, and opens no card for a find let go', async () => {

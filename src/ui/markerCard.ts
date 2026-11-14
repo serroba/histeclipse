@@ -16,6 +16,15 @@ export interface MarkerCardContent {
   readonly note?: string;
   /** Something to do with it, such as playing an impact: the card closes first, to show it. */
   readonly action?: { readonly label: string; readonly run: () => void };
+  /** A few next views (#731), each saying where it goes: the card closes first. */
+  readonly related?: readonly RelatedStep[];
+}
+
+/** A next view from a card: what it is, where it goes (and any change of time), and going. */
+export interface RelatedStep {
+  readonly label: string;
+  readonly explain: string;
+  readonly run: () => void;
 }
 
 export interface MarkerCard {
@@ -49,6 +58,27 @@ function picture(image: NonNullable<MarkerCardContent['image']>): HTMLElement {
     figure.remove();
   });
   return figure;
+}
+
+/** Related (#731): each next view, and where it goes. */
+function relatedList(steps: readonly RelatedStep[], close: () => void): HTMLElement {
+  return element(
+    'section',
+    { class: 'marker-card-related', 'aria-label': 'Related' },
+    element('h3', {}, 'Related'),
+    element(
+      'ul',
+      {},
+      ...steps.map((step) => {
+        const go = element('button', { type: 'button' }, step.label);
+        go.addEventListener('click', () => {
+          close();
+          step.run();
+        });
+        return element('li', {}, go, element('span', {}, step.explain));
+      }),
+    ),
+  );
 }
 
 export function createMarkerCard(): MarkerCard {
@@ -87,7 +117,7 @@ export function createMarkerCard(): MarkerCard {
 
   return {
     dialog,
-    show({ title: text, facts, links, image, note, action }) {
+    show({ title: text, facts, links, image, note, action, related }) {
       title.textContent = text;
       const shown = links.filter((link) => safeLink(link.href));
       body.replaceChildren(
@@ -102,6 +132,13 @@ export function createMarkerCard(): MarkerCard {
         ),
         ...(note === undefined ? [] : [element('p', { class: 'marker-card-note' }, note)]),
         ...(action === undefined ? [] : [actionButton(action)]),
+        ...(related === undefined || related.length === 0
+          ? []
+          : [
+              relatedList(related, () => {
+                dialog.close();
+              }),
+            ]),
         ...(shown.length === 0
           ? []
           : [
