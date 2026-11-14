@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from html import escape
 import math
 import os
 from datetime import datetime
@@ -32,6 +33,10 @@ def measure(run: dict, jobs: list[dict]) -> dict | None:
         return None
     first = min(job["started_at"] for job in required)
     browsers = [job for job in required if "balanced acceptance" in job["name"] or job["name"] == GPU_JOB]
+    acceptance = [job for job in browsers if "balanced acceptance" in job["name"]]
+    if len(acceptance) != 2:
+        return None
+    acceptance_times = [seconds(job["started_at"], job["completed_at"]) for job in acceptance]
     return {
         "id": run["id"],
         "wall": seconds(first, aggregate["completed_at"]),
@@ -39,6 +44,9 @@ def measure(run: dict, jobs: list[dict]) -> dict | None:
         "browser_minutes": sum(seconds(job["started_at"], job["completed_at"]) for job in browsers) / 60,
         "runner_minutes": sum(seconds(job["started_at"], job["completed_at"]) for job in required) / 60,
         "attempt": run.get("run_attempt", 1),
+        "acceptance_gap": abs(acceptance_times[0] - acceptance_times[1]),
+        "job_seconds": {job["name"]: seconds(job["started_at"], job["completed_at"])
+                        for job in required if job["conclusion"] == "success"},
     }
 
 
@@ -80,6 +88,13 @@ def main() -> None:
                   f"**{sample['browser_minutes']:.1f}** browser runner-minutes.", ""]
     else:
         lines += ["This run is incomplete, unsuccessful, selective, or uses the older matrix; excluded from the latency cohort.", ""]
+    if sample is not None:
+        lines += [f"Linux acceptance job gap: **{sample['acceptance_gap']:.0f} s** (setup, suite and cleanup included).", "",
+                  "| Required job | Seconds |", "| --- | ---: |"]
+        for name, duration in sorted(sample["job_seconds"].items()):
+            label = escape(name).replace("|", "&#124;").replace("`", "&#96;")
+            lines.append(f"| {label} | {duration:.0f} |")
+        lines.append("")
     lines += [f"Comparable successful PR runs in the last 20: **{len(rows)}**. " +
               (f"Nearest-rank p95: **{p95:.0f} s**." if p95 is not None else "No p95 yet."), "",
               "A sample under 20 is preliminary; do not claim long-term p95 from one green run.",

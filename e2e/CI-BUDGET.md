@@ -111,3 +111,11 @@ full-suite latency cohort so a fast documentation run cannot make the browser SL
 The tree navigation case has a new scenario name when adopting the PR fixture, so it receives
 the default cost instead of inheriting the old full-dataset estimate. Refresh its measured cost
 once three successful main-run samples are available.
+
+## Partition drift and cost diagnosis
+
+The [14 November investigation](CI-BALANCE.md) records the recent weight refresh, held-out
+validation and runner-cost decomposition. Run `evaluate_e2e_balance.py` before a refresh to
+separate fit improvements from actual wall-clock results. The timing reporter now records
+worker slots and attempt start times; the CI budget report includes per-job duration and the
+observed Linux job gap. No worker count, coverage boundary or timing threshold changed.

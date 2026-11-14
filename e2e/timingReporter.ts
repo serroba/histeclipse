@@ -15,6 +15,9 @@ function scenario(test: TestCase, root: string) {
     durationMs: test.results.reduce((sum, result) => sum + result.duration, 0),
     attempts: test.results.map((result) => ({
       retry: result.retry,
+      startedAt: result.startTime.toISOString(),
+      workerIndex: result.workerIndex,
+      parallelIndex: result.parallelIndex,
       status: result.status,
       durationMs: result.duration,
     })),
@@ -106,6 +109,7 @@ export default class TimingReporter implements Reporter {
           partition: process.env['SHARD'] ?? null,
           startedAt: result.startTime.toISOString(),
           wallTimeMs: result.duration,
+          workers: this.config.workers,
           status: result.status,
           tests,
         },
