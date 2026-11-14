@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { anchorMa, MILESTONES } from '../deepTime/milestones';
+import { anchorMa, MILESTONES, nextMilestone } from '../deepTime/milestones';
 import { createMilestonePanel } from './milestonePanel';
 
 const [first] = MILESTONES;
@@ -30,5 +30,36 @@ describe('the milestone panel', () => {
     expect(panel.root.querySelector('summary')?.textContent).toBe('Milestones: none near here');
     panel.render(at, 540);
     expect(panel.root.querySelector('article')).not.toBe(before);
+  });
+
+  it('steps to the milestone before or after the moment shown', () => {
+    // One with milestones on both sides, so both buttons are live.
+    const middle = MILESTONES.find(
+      (one) =>
+        nextMilestone(anchorMa(one), 1, 540) !== null &&
+        nextMilestone(anchorMa(one), -1, 540) !== null,
+    );
+    if (middle === undefined) throw new Error('no milestone between two others');
+    const ma = anchorMa(middle);
+    const onMa = vi.fn();
+    const panel = createMilestonePanel({ onMa });
+    panel.render(ma, 540);
+    const [earlier, later] = panel.root.querySelectorAll('button');
+    earlier?.click();
+    later?.click();
+    const before = nextMilestone(ma, 1, 540);
+    const after = nextMilestone(ma, -1, 540);
+    if (before === null || after === null) throw new Error('unreachable');
+    expect(onMa.mock.calls).toEqual([[anchorMa(before)], [anchorMa(after)]]);
+  });
+
+  it('says where an estimate’s number comes from, when not stated outright', () => {
+    const quoted = MILESTONES.find(({ estimates }) =>
+      estimates.some(({ basis }) => basis === 'stage'),
+    );
+    if (quoted === undefined) throw new Error('no milestone dated by a stage');
+    const panel = createMilestonePanel({ onMa: () => undefined });
+    panel.render(anchorMa(quoted), 540);
+    expect(panel.root.textContent).toContain('the source names a geological stage');
   });
 });
