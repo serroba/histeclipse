@@ -6,7 +6,7 @@
 
 import { layerWhy } from '../../state/whysOnScreen';
 import type { DeepScale, Layer, ViewState } from '../../state/viewState';
-import { awayFromEarth, roundMa, withLayer } from '../../state/viewState';
+import { awayFromEarth, layerTurned, roundMa } from '../../state/viewState';
 import { PRESENT_YEAR } from '../../time/present';
 import { createLayersPanel } from './layersPanel';
 import type { Span } from '../../ui/spanSwitch';
@@ -49,7 +49,7 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
   const { store } = context;
   const panel = createLayersPanel(
     (layer, on) => {
-      store.set((state) => ({ ...state, layers: withLayer(state.layers, layer, on) }));
+      store.set((state) => layerTurned(state, layer, on));
     },
     (borders) => {
       store.set((state) => ({ ...state, borders }));

@@ -200,13 +200,17 @@ export function withLayer(layers: ReadonlySet<Layer>, layer: Layer, on: boolean)
   return next;
 }
 /**
- * The view with `layer` turned the other way: off if it was on, on if it was off. Eclipses off
- * let go of the one picked (#634).
+ * The view with `layer` turned on or off, wherever that is done (the Layers panel, an icon on
+ * the zoom rail). Eclipses off let go of the one picked (#634).
  */
-export function toggledLayer(state: ViewState, layer: Layer): ViewState {
-  const on = !state.layers.has(layer);
+export function layerTurned(state: ViewState, layer: Layer, on: boolean): ViewState {
   const selection = layer === 'eclipses' && !on ? null : state.selection;
   return { ...state, selection, layers: withLayer(state.layers, layer, on) };
+}
+
+/** The view with `layer` turned the other way: off if it was on, on if it was off. */
+export function toggledLayer(state: ViewState, layer: Layer): ViewState {
+  return layerTurned(state, layer, !state.layers.has(layer));
 }
 
 /** The view with an eclipse picked, and so the eclipses on (#634). */

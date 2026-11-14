@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   awayFromEarth,
   defaultViewState,
+  layerTurned,
   toggledLayer,
   withEclipse,
   withLayer,
@@ -47,6 +48,9 @@ describe('toggledLayer', () => {
     expect(toggledLayer(off, 'eclipses').selection).toBeNull();
     // Another layer leaves the eclipse picked.
     expect(toggledLayer(picked, 'orbits').selection).toBe(picked.selection);
+    // The same from the Layers panel, which says on or off rather than turning it over.
+    expect(layerTurned(picked, 'eclipses', false).selection).toBeNull();
+    expect(layerTurned(picked, 'eclipses', true).selection).toBe(picked.selection);
   });
 });
 

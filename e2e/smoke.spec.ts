@@ -82,7 +82,7 @@ test('rewrites a shared link into its full, explicit form', async ({ page }) => 
   await page.goto(SHARED_LINK);
   await globeRendered(page);
   await expect(page).toHaveURL(
-    /\?v=1&mode=globe&t=-0620-04-22T07:20Z&cal=julian&loc=32\.5422,44\.4209&cam=30\.0000,40\.0000,3\.00&layers=lunar,solar&sel=lunar:-0620-04-22$/,
+    /\?v=1&mode=globe&t=-0620-04-22T07:20Z&cal=julian&loc=32\.5422,44\.4209&cam=30\.0000,40\.0000,3\.00&layers=eclipses&sel=lunar:-0620-04-22$/,
   );
 });
 
@@ -401,7 +401,7 @@ test('empty space beside the globe never hides the panels; Escape brings them ba
 
 test('Back and Forward restore the eclipse and view @acceptance @mobile', async ({ page }) => {
   const problems = collectProblems(page);
-  await page.goto('./?t=2024-04-08T18:17');
+  await page.goto('./?t=2024-04-08T18:17&layers=eclipses');
   await globeRendered(page);
   await page
     .getByRole('button', { name: /Total solar/ })
@@ -425,7 +425,7 @@ test('Back and Forward restore the eclipse and view @acceptance @mobile', async 
 test('Back restores the rendered camera after zooming an eclipse @acceptance', async ({ page }) => {
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');
-  await page.goto('./?t=2024-04-08T18:17&cam=0,0,4.5');
+  await page.goto('./?t=2024-04-08T18:17&cam=0,0,4.5&layers=eclipses');
   await globeRendered(page);
   await expect(globe).toHaveAttribute('data-distance', '4.50');
   await page

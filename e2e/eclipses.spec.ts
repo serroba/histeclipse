@@ -1,9 +1,17 @@
 // The eclipses: picking one, its path, shadow and card, the scrubber, and the famous list.
 
-import { collectProblems, expect, globeRendered, GPU, skyRendered, test } from './support';
+import {
+  collectProblems,
+  expect,
+  globeRendered,
+  GPU,
+  openLayers,
+  skyRendered,
+  test,
+} from './support';
 
 test('picking an eclipse jumps to it and puts it in the link', async ({ page }) => {
-  await page.goto('./?t=-620-01-01T12:00');
+  await page.goto('./?t=-620-01-01T12:00&layers=eclipses');
   await globeRendered(page);
   await page.getByRole('button', { name: /22 Apr/ }).click();
 
@@ -82,15 +90,37 @@ test('the eclipse card keeps background one tap away', async ({ page }) => {
   await expect(page.locator('.famous-card-summary')).toBeVisible();
 });
 
-test('hiding the lunar layer hides the overlay but keeps the selection', async ({ page }) => {
-  await page.goto('./?t=-620-04-22T02:08&sel=lunar:-0620-04-22&layers=');
-  await globeRendered(page);
-  await expect(page.getByTestId('globe')).toHaveAttribute('data-lunar-overlay', 'off');
-  await expect(page).toHaveURL(/sel=lunar:-0620-04-22/);
+test('turning the eclipses off hides the row and the overlay and lets go of the eclipse', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const row = page.locator('.eclipse-row');
+  await test.step('Given a lunar eclipse picked, its overlay on the globe', async () => {
+    await page.goto('./?t=-620-04-22T02:08&sel=lunar:-0620-04-22');
+    await globeRendered(page);
+    await expect(globe).toHaveAttribute('data-lunar-overlay', 'on');
+    await expect(row).toBeVisible();
+  });
+  await test.step('When they turn off Eclipses', async () => {
+    await openLayers(page);
+    await page.getByRole('checkbox', { name: 'Eclipses', exact: true }).uncheck();
+  });
+  await test.step('Then the overlay, the card and the eclipse row are gone', async () => {
+    await expect(globe).toHaveAttribute('data-lunar-overlay', 'off');
+    await expect(page.getByRole('heading', { name: 'Partial lunar eclipse' })).toBeHidden();
+    await expect(row).toBeHidden();
+  });
+  await test.step('And the link lets go of the eclipse', async () => {
+    await expect(page).not.toHaveURL(/sel=/);
+    await expect(page).toHaveURL(/layers=/);
+    await expect(page).not.toHaveURL(/layers=[^&]*eclipses/);
+  });
+  expect(problems).toEqual([]);
 });
 
 test("stepping and typing years lists that year's eclipses", async ({ page }) => {
-  await page.goto('./?t=2024-03-14T12:00');
+  await page.goto('./?t=2024-03-14T12:00&layers=eclipses');
   await globeRendered(page);
   const year = page.getByLabel('Year', { exact: true });
   const era = page.getByLabel('Era', { exact: true });
@@ -125,7 +155,7 @@ test(
   'picking a solar eclipse draws its path and the Moon’s shadow @acceptance',
   GPU,
   async ({ page }) => {
-    await page.goto('./?t=2024-01-01T00:00&loc=32.7767,-96.797');
+    await page.goto('./?t=2024-01-01T00:00&loc=32.7767,-96.797&layers=eclipses');
     await globeRendered(page);
     await page.getByRole('button', { name: /8 Apr\s*Total solar/ }).click();
 
@@ -164,7 +194,7 @@ test('play animates the eclipse forward in time @acceptance', async ({ page }) =
 });
 
 test('famous eclipses: pick one and land on it with its history', async ({ page }) => {
-  await page.goto('./?t=2024-01-01T00:00');
+  await page.goto('./?t=2024-01-01T00:00&layers=eclipses');
   await globeRendered(page);
   await page.getByRole('button', { name: 'Famous eclipses' }).click();
   const dialog = page.getByRole('dialog', { name: 'Famous eclipses' });
@@ -187,7 +217,7 @@ test('a famous solar eclipse opens at its deepest where it was seen, and every v
   page,
 }) => {
   const problems = collectProblems(page);
-  await page.goto('./?t=2024-01-01T00:00');
+  await page.goto('./?t=2024-01-01T00:00&layers=eclipses');
   await globeRendered(page);
   await page.getByRole('button', { name: 'Famous eclipses' }).click();
   await page
@@ -221,7 +251,7 @@ test('famous eclipses say how firmly each record is tied to its eclipse', async 
 });
 
 test('famous eclipses: debated entries say so, and the list closes', async ({ page }) => {
-  await page.goto('./');
+  await page.goto('./?layers=eclipses');
   await globeRendered(page);
   await page.getByRole('button', { name: 'Famous eclipses' }).click();
   const dialog = page.getByRole('dialog', { name: 'Famous eclipses' });
@@ -247,7 +277,7 @@ test('a link to a famous eclipse shows its history', async ({ page }) => {
 });
 
 test('famous eclipse rows are large enough to tap @mobile', async ({ page }) => {
-  await page.goto('./');
+  await page.goto('./?layers=eclipses');
   await globeRendered(page);
   await page.getByRole('button', { name: 'Famous eclipses' }).click();
   const dialog = page.getByRole('dialog', { name: 'Famous eclipses' });
