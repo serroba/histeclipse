@@ -900,6 +900,11 @@ test('a link to a moon frames the moon, even when its orbits arrive after the pl
   });
   await test.step('Then, once the orbits are in, the camera is at Titan, not Earth', async () => {
     await expect(globe).toHaveAttribute('data-framed', 'titan', { timeout: 30_000 });
+    // And where the link put it: over Titan's north pole, 3 radii out (#373). The camera reports
+    // itself once placed, and the address follows within half a second: check after that.
+    await expect(globe).toHaveAttribute('data-distance', '3.00');
+    await page.waitForTimeout(1500);
+    expect(new URL(page.url()).searchParams.get('cam')).toBe('90.0000,0.0000,3.00');
   });
   expect(problems).toEqual([]);
 });

@@ -269,7 +269,10 @@ function formatMoment({ date, minuteOfDay }: Moment): string {
 }
 
 function formatGeoPoint({ latitude, longitude }: GeoPoint): string {
-  return `${fixed(latitude, 4)},${fixed(longitude, 4)}`;
+  const lat = fixed(latitude, 4);
+  // At a pole every longitude is the same point: write 0, so a link to the pole stays as it
+  // was, not some longitude a camera a hair off the pole happens to report (#373).
+  return `${lat},${Math.abs(Number(lat)) === 90 ? fixed(0, 4) : fixed(longitude, 4)}`;
 }
 
 function formatCamera({ target, distance }: GlobeCamera): string {

@@ -127,6 +127,22 @@ describe('parseViewState', () => {
     expect(parseViewState('loc=10,-180', NOW).state.location?.longitude).toBe(180);
   });
 
+  it('writes a camera at a pole with longitude 0, whatever a camera a hair off it reports (#373)', () => {
+    const { state } = parseViewState('?t=2025-01-10T12:00&focus=titan&cam=90,0,3', NOW);
+    const offPole = { latitude: 89.999_99, longitude: -21.9531 };
+    const north = serializeViewState({ ...state, camera: { ...state.camera, target: offPole } });
+    expect(north).toContain('cam=90.0000,0.0000,3.00');
+    const south = { latitude: -89.999_99, longitude: 140 };
+    expect(serializeViewState({ ...state, camera: { ...state.camera, target: south } })).toContain(
+      'cam=-90.0000,0.0000,3.00',
+    );
+    // Near a pole, but not on it as written, the longitude still means something.
+    const near = { latitude: 89.9, longitude: -21.9531 };
+    expect(serializeViewState({ ...state, camera: { ...state.camera, target: near } })).toContain(
+      'cam=89.9000,-21.9531,3.00',
+    );
+  });
+
   it('leaves the free view out of links, so older links read the same', () => {
     const { state } = parseViewState('', NOW);
     expect(state.view).toBe('free');
@@ -450,15 +466,17 @@ describe('serializeViewState', () => {
       return date(year, month, Math.min(day, last), calendar);
     });
 
+  // Points as links write them: at a pole, longitude 0, since every longitude is that point (#373).
+  const geoPoints = fc
+    .record({ latitude: rounded(-90, 90, 4), longitude: rounded(-179.9999, 180, 4) })
+    .map((point) => (Math.abs(point.latitude) === 90 ? { ...point, longitude: 0 } : point));
+
   const viewStates: fc.Arbitrary<ViewState> = fc.record({
     mode: fc.constantFrom('globe' as const, 'sky' as const),
     time: fc.record({ date: calendarDay, minuteOfDay: fc.integer({ min: 0, max: 1439 }) }),
-    location: fc.option(
-      fc.record({ latitude: rounded(-90, 90, 4), longitude: rounded(-179.9999, 180, 4) }),
-      { nil: null },
-    ),
+    location: fc.option(geoPoints, { nil: null }),
     camera: fc.record({
-      target: fc.record({ latitude: rounded(-90, 90, 4), longitude: rounded(-179.9999, 180, 4) }),
+      target: geoPoints,
       distance: rounded(1.1, 300_000, 2),
     }),
     view: fc.constantFrom(...VIEWPOINTS),
