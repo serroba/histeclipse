@@ -181,7 +181,22 @@ describe('Stage', () => {
     expect(renderer.setSize).toHaveBeenCalledWith(640, 480, false);
     expect(resize).toHaveBeenCalledWith(640, 480);
     made.resize();
+    expect(renderer.setSize).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the canvas when its size is unchanged, but still tells the parts', () => {
+    const { made, renderer, container } = stage(false, 640, 480);
+    const resize = vi.fn();
+    made.add({ resize });
+    made.resize();
+    made.resize();
+    made.resize();
+    expect(renderer.setSize).toHaveBeenCalledTimes(1);
+    expect(resize).toHaveBeenCalledTimes(3);
+    Object.defineProperty(container, 'clientWidth', { value: 320 });
+    made.resize();
     expect(renderer.setSize).toHaveBeenCalledTimes(2);
+    expect(renderer.setSize).toHaveBeenLastCalledWith(320, 480, false);
   });
 
   it('leaves a container with no size alone when it sets the CSS size', () => {

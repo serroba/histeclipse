@@ -42,6 +42,8 @@ export class Stage<C extends Camera = Camera> {
   readonly #styleSize: boolean;
   readonly #parts: StagePart[] = [];
   #observer: ResizeObserver | null = null;
+  /** The size last given to the renderer, if any. */
+  #size: { width: number; height: number } | null = null;
   #dirty = true;
   #frame: number | null = null;
   #running = false;
@@ -71,7 +73,12 @@ export class Stage<C extends Camera = Camera> {
     const width = this.#container.clientWidth;
     const height = this.#container.clientHeight;
     if (this.#styleSize && (width === 0 || height === 0)) return;
-    this.renderer.setSize(width, height, this.#styleSize);
+    // Setting a canvas's size reallocates its drawing buffer even when the size is the same, and
+    // the sky resizes on every turn of the view, for its projection (#671): only a new size.
+    if (this.#size?.width !== width || this.#size.height !== height) {
+      this.renderer.setSize(width, height, this.#styleSize);
+      this.#size = { width, height };
+    }
     for (const part of this.#parts) part.resize?.(width, height);
     this.invalidate();
   }
