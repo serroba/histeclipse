@@ -19,8 +19,9 @@ test('the reader finds every layer in one panel, grouped by what it shows', asyn
     const people = panel.getByRole('group', { name: 'People' });
     await expect(people.getByRole('checkbox', { name: 'States and empires' })).not.toBeChecked();
     const sky = panel.getByRole('group', { name: 'Sky and events' });
-    await expect(sky.getByRole('checkbox', { name: 'Eclipse shadows' })).toBeChecked();
-    await expect(sky.getByRole('checkbox', { name: 'Moon in Earth’s shadow' })).toBeChecked();
+    await expect(sky.getByRole('checkbox', { name: 'Eclipses', exact: true })).not.toBeChecked();
+    await expect(sky.getByRole('checkbox', { name: 'Eclipse shadows' })).toHaveCount(0);
+    await expect(sky.getByRole('checkbox', { name: 'Moon in Earth’s shadow' })).toHaveCount(0);
   });
   await test.step('And closing the panel leaves the globe as it was', async () => {
     await page
@@ -99,20 +100,27 @@ test('a layer says when its data begins, and draws once the time reaches it', as
   });
 });
 
-test('eclipse shadows can be switched off, and the link keeps that', async ({ page }) => {
+test('eclipses can be switched off, letting go of the eclipse, and the link keeps that', async ({
+  page,
+}) => {
   const globe = page.getByTestId('globe');
+  const row = page.locator('.eclipse-row');
   await test.step('Given the 2024 total solar eclipse, its shadow on the globe', async () => {
     await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
     await globeRendered(page);
     await expect(globe).toHaveAttribute('data-solar-shadow', 'on');
+    await expect(row).toBeVisible();
   });
-  await test.step('When they turn off Eclipse shadows', async () => {
+  await test.step('When they turn off Eclipses', async () => {
     await openLayers(page);
-    await page.getByRole('checkbox', { name: 'Eclipse shadows' }).uncheck();
+    await page.getByRole('checkbox', { name: 'Eclipses', exact: true }).uncheck();
   });
-  await test.step('Then the shadow is gone, and the link says so', async () => {
+  await test.step('Then the shadow and the eclipse row are gone, and the link says so', async () => {
     await expect(globe).toHaveAttribute('data-solar-shadow', 'off');
-    await expect(page).not.toHaveURL(/layers=[^&]*solar/);
+    await expect(row).toBeHidden();
+    await expect(page).not.toHaveURL(/sel=/);
+    await expect(page).toHaveURL(/layers=/);
+    await expect(page).not.toHaveURL(/layers=[^&]*eclipses/);
   });
 });
 
@@ -288,8 +296,8 @@ test('the Layers rows, Layers, Full view and Famous eclipses wear icons too', as
   test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
   const phone = info.project.name === 'mobile';
   const panel = page.getByRole('dialog', { name: 'Layers' });
-  await test.step('Given the years', async () => {
-    await page.goto('./?t=2026-01-10T12:00');
+  await test.step('Given the years, with the eclipses on', async () => {
+    await page.goto('./?t=2026-01-10T12:00&layers=eclipses');
     await globeRendered(page);
   });
   await test.step('Then Layers and Full view wear icons, words beside them, or on a phone not', async () => {

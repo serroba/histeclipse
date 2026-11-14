@@ -54,7 +54,7 @@ test('a historian follows the eclipses seen from one empire @acceptance', async 
   const problems = collectProblems(page);
   const seen = page.getByLabel('Seen from', { exact: true });
   await test.step('Given the globe in 763 BCE', async () => {
-    await page.goto('./?t=-762-06-15T12:00&cam=35,43,3');
+    await page.goto('./?t=-762-06-15T12:00&cam=35,43,3&layers=eclipses');
     await globeRendered(page);
   });
   await test.step('When they turn on states and empires and pick Assyria', async () => {
@@ -333,7 +333,7 @@ test('away from Earth, the bar speaks of the body in view, and Earth’s own par
     await expect(views.getByRole('button', { name: 'Earth from Jupiter' })).toBeVisible();
   });
   await test.step('When they look at the Moon on a full-Moon day', async () => {
-    await page.goto('./?t=2025-11-05T12:00&cam=0,180,3&focus=moon');
+    await page.goto('./?t=2025-11-05T12:00&cam=0,180,3&focus=moon&layers=eclipses');
     await globeRendered(page);
   });
   await test.step('Then the bar gives its phase and distance, the year’s eclipses, and its book opens the sources', async () => {

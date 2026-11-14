@@ -178,18 +178,12 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
     name: 'Sky and events',
     layers: [
       {
-        id: 'solar',
-        label: 'Eclipse shadows',
-        about: 'The Moon’s shadow and path on Earth, for a solar eclipse.',
+        id: 'eclipses',
+        label: 'Eclipses',
+        about:
+          'The year’s eclipses in the bar, the famous ones and the records. For one picked: the Moon’s shadow and path on Earth, or where the eclipsed Moon was up, with its scrubber and card.',
         spans: ['years'],
-        reach: 'With a solar eclipse picked, in the years.',
-      },
-      {
-        id: 'lunar',
-        label: 'Moon in Earth’s shadow',
-        about: 'Where on Earth an eclipsed Moon was up, for a lunar eclipse.',
-        spans: ['years'],
-        reach: 'With a lunar eclipse picked, in the years.',
+        reach: 'In the years.',
       },
       {
         id: 'orbits',

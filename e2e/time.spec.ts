@@ -12,7 +12,7 @@ test('the top row picks how far back time reaches; famous eclipses sit with the 
   const problems = collectProblems(page);
   const spans = page.getByRole('group', { name: 'Time span' });
   await test.step('Given a reader in 2024', async () => {
-    await page.goto('./?t=2024-04-08T18:17');
+    await page.goto('./?t=2024-04-08T18:17&layers=eclipses');
     await globeRendered(page);
   });
   await test.step('Then the top row offers four spans, with Years on', async () => {

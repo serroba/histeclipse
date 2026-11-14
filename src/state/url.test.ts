@@ -32,6 +32,7 @@ import {
   defaultViewState,
   momentFromDate,
   momentJulianDay,
+  withEclipse,
   type Layer,
   type ViewState,
 } from './viewState';
@@ -40,7 +41,7 @@ const NOW = new Date(Date.UTC(2026, 9, 31, 18, 45, 30));
 
 const BABYLON_ECLIPSE =
   'v=1&mode=globe&t=-0620-04-22T07:20Z&cal=julian&loc=32.5422,44.4209' +
-  '&cam=30.0000,40.0000,3.00&view=moon-from-earth&layers=lunar,solar&sel=lunar:-0620-04-22';
+  '&cam=30.0000,40.0000,3.00&view=moon-from-earth&layers=eclipses&sel=lunar:-0620-04-22';
 
 const date = (year: number, month: number, day: number, calendar: Calendar) =>
   calendarDateOf(astronomicalYear(year), month, day, calendar);
@@ -66,7 +67,7 @@ describe('parseViewState', () => {
       camera: { target: { latitude: 30, longitude: 40 }, distance: 3 },
       view: 'moon-from-earth',
       focus: 'earth',
-      layers: new Set(['lunar', 'solar']),
+      layers: new Set(['eclipses']),
       selection: { kind: 'lunar', date: date(-620, 4, 22, 'julian') },
       look: DEFAULT_LOOK,
       figures: 'famous',
@@ -481,6 +482,9 @@ describe('serializeViewState', () => {
     .record({ latitude: rounded(-90, 90, 4), longitude: rounded(-179.9999, 180, 4) })
     .map((point) => (Math.abs(point.latitude) === 90 ? { ...point, longitude: 0 } : point));
 
+  const withSelectionOn = (state: ViewState): ViewState =>
+    state.selection === null ? state : withEclipse(state, state.selection);
+
   const viewStates: fc.Arbitrary<ViewState> = fc.record({
     mode: fc.constantFrom('globe' as const, 'sky' as const),
     time: fc.record({ date: calendarDay, minuteOfDay: fc.integer({ min: 0, max: 1439 }) }),
@@ -552,7 +556,8 @@ describe('serializeViewState', () => {
 
   it('round-trips every view state through a link', () => {
     fc.assert(
-      fc.property(viewStates, (state) => {
+      // A view with an eclipse picked has the eclipses on (#634), as a link reads it.
+      fc.property(viewStates.map(withSelectionOn), (state) => {
         const { state: parsed, warnings } = parseViewState(serializeViewState(state), NOW);
         expect(warnings).toEqual([]);
         expect(parsed).toEqual(state);
@@ -567,16 +572,27 @@ describe('view state helpers', () => {
     expect(momentJulianDay(moment)).toBe(2_451_545);
   });
 
-  it('defaults to both eclipse layers', () => {
-    expect([...DEFAULT_LAYERS]).toEqual(['lunar', 'solar']);
+  it('opens with no layers on a first visit (#634)', () => {
+    expect([...DEFAULT_LAYERS]).toEqual([]);
+    expect([...parseViewState('', NOW).state.layers]).toEqual([]);
   });
 
-  it('opens old links naming retired layers, without them', () => {
+  it('opens old links naming retired layers, without them, and their eclipse layers as one', () => {
     const { state, warnings } = parseViewState(
       '?layers=lunar,solar,terminator,places,empires',
       NOW,
     );
     expect(warnings).toEqual([]);
-    expect([...state.layers]).toEqual(['lunar', 'solar', 'empires']);
+    expect([...state.layers]).toEqual(['eclipses', 'empires']);
+    expect([...parseViewState('?layers=solar', NOW).state.layers]).toEqual(['eclipses']);
+  });
+
+  it('turns the eclipses on for a link that picks one, whatever its layers say (#634)', () => {
+    const picked = parseViewState('?layers=empires&sel=solar:2024-04-08', NOW).state;
+    expect(picked.layers.has('eclipses')).toBe(true);
+    expect(picked.layers.has('empires')).toBe(true);
+    expect(parseViewState('?layers=&sel=solar:2024-04-08', NOW).state.layers.has('eclipses')).toBe(
+      true,
+    );
   });
 });

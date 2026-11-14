@@ -70,6 +70,6 @@ describe('the layers', () => {
   });
 
   it('has nothing to say for layers drawn at any time', () => {
-    expect(layerNote('solar', -9000, 'cliopatria', 2026)).toBeNull();
+    expect(layerNote('eclipses', -9000, 'cliopatria', 2026)).toBeNull();
   });
 });

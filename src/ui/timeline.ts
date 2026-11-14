@@ -68,6 +68,9 @@ interface TimelineView {
   readonly eclipses: YearEclipses;
   readonly selected: Eclipse | undefined;
   readonly seen: SeenControls;
+  /** Whether the eclipses are on (#634): off, the row of eclipses, the ways into them
+   * (the famous ones, the records) and "Seen from" go, and the year's controls stay. */
+  readonly on: boolean;
 }
 
 export interface Timeline {
@@ -186,11 +189,12 @@ export function createTimeline(
     seenNext,
     seenStatus,
   );
+  const eclipseRow = element('div', { class: 'eclipse-row' }, ...events, list);
   const root = element(
     'nav',
     { class: 'timeline', 'aria-label': 'Year and eclipses' },
     element('div', { class: 'year-controls' }, previous, form, next, ...beside),
-    element('div', { class: 'eclipse-row' }, ...events, list),
+    eclipseRow,
     seenRow,
   );
   seenSelect.addEventListener('change', () => {
@@ -293,7 +297,9 @@ export function createTimeline(
         wheel.render(view.year, yearRange(calendar, 'CE'));
       }
       hint.textContent = HINT;
+      eclipseRow.hidden = !view.on;
       renderSeen(view.seen);
+      if (!view.on) seenRow.hidden = true;
       const marks = view.seen.view.status === 'ready' ? view.seen.view.marks : null;
       const listing = view.eclipses;
       if (listing.status === 'loading') {

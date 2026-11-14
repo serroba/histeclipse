@@ -46,8 +46,10 @@ export const SPAN_LABELS: Readonly<Record<Span, string>> = {
 };
 
 export const LAYERS = [
-  'lunar',
-  'solar',
+  // Eclipses (#634): the year's in the bar, and the one picked: the Moon's shadow and path,
+  // where the eclipsed Moon is up, the scrubber and the card. `lunar` and `solar` in older
+  // links read as this.
+  'eclipses',
   // The orbits of Earth and the planets, seen from far out or from the Sun or a planet.
   'orbits',
   // Every craft sent beyond Earth orbit, flying as the time plays (#350).
@@ -168,7 +170,8 @@ export const CAMERA_DISTANCE_RANGE = { min: 1.008, max: 300_000 } as const;
 export function nearestDistance(body: Body, tiled: boolean): number {
   return body === 'earth' && tiled ? CAMERA_DISTANCE_RANGE.min : 1.05;
 }
-export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>(['lunar', 'solar']);
+/** None on a first visit (#634): readers turn layers on from the Layers panel. */
+export const DEFAULT_LAYERS: ReadonlySet<Layer> = new Set<Layer>();
 
 /**
  * Layers that once were and no longer are: old links naming them still open, without them.
@@ -196,9 +199,23 @@ export function withLayer(layers: ReadonlySet<Layer>, layer: Layer, on: boolean)
   next.add(layer);
   return next;
 }
+/**
+ * The view with `layer` turned on or off, wherever that is done (the Layers panel, an icon on
+ * the zoom rail). Eclipses off let go of the one picked (#634).
+ */
+export function layerTurned(state: ViewState, layer: Layer, on: boolean): ViewState {
+  const selection = layer === 'eclipses' && !on ? null : state.selection;
+  return { ...state, selection, layers: withLayer(state.layers, layer, on) };
+}
+
 /** The view with `layer` turned the other way: off if it was on, on if it was off. */
 export function toggledLayer(state: ViewState, layer: Layer): ViewState {
-  return { ...state, layers: withLayer(state.layers, layer, !state.layers.has(layer)) };
+  return layerTurned(state, layer, !state.layers.has(layer));
+}
+
+/** The view with an eclipse picked, and so the eclipses on (#634). */
+export function withEclipse(state: ViewState, selection: Selection): ViewState {
+  return { ...state, selection, layers: withLayer(state.layers, 'eclipses', true) };
 }
 
 export const DEFAULT_CAMERA: GlobeCamera = {
