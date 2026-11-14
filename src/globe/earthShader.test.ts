@@ -16,6 +16,17 @@ describe('the Earth shader', () => {
     expect(samplerCount(earthFragment(assembleEarthParts([])))).toBeLessThanOrEqual(MAX_SAMPLERS);
   });
 
+  it('Given Travel view, Then it draws only the ice the photo lacks; deep time all of it', () => {
+    const shader = earthFragment(assembleEarthParts([]));
+    const travel = shader.slice(shader.indexOf('vec3 holoceneSurface('));
+    const holocene = travel.slice(0, travel.indexOf('\n  }\n'));
+    expect(holocene).toMatch(/iceAt\(iceYounger, uv\)\.g/);
+    expect(holocene).not.toMatch(/iceFrom\(/);
+    expect(shader.slice(0, shader.indexOf('vec3 holoceneSurface('))).toMatch(
+      /iceFrom\(iceYounger, uv\)/,
+    );
+  });
+
   it('declares every uniform it shares with the parts', () => {
     const shader = earthFragment(assembleEarthParts([]));
     for (const name of EARTH_SHARED_UNIFORMS) {

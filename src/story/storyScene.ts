@@ -282,8 +282,11 @@ export function createStoryScene<Chapter extends string>(
       const dt = Math.min(100, now - last);
       last = now;
       if (playing) t += dt;
+      // One owner for the camera at a time. While the story holds it, the controls must not
+      // also move it: a story camera beyond their distance limits (an upright screen backs off
+      // farther) would be pulled in, put back, and woken again every frame (#667).
       if (byStory) storyCamera(t);
-      controls.update();
+      else controls.update();
       chapters.frame?.(t, dt, playing);
       return playing;
     },

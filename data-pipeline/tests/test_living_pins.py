@@ -112,3 +112,7 @@ def test_a_server_that_fails_once_is_tried_again() -> None:
 
     assert check_pin(PIN, flaky).status == "same"
     assert len(calls) == 2
+
+
+def test_era5_changes_daily_so_it_is_left_out() -> None:
+    assert temperature_records.ERA5.url not in {pin.url for pin in LIVING_PINS}

@@ -123,7 +123,6 @@ export const UNTESTED = [
   'src/ui/icons.ts',
   'src/ui/impactPathsSheet.ts',
   'src/ui/markerCard.ts',
-  'src/ui/milestonePanel.ts',
   'src/ui/pageLayout.ts',
   'src/ui/periodBands.ts',
   'src/ui/polarityStrip.ts',

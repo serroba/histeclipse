@@ -9,9 +9,12 @@ The archive is a 3.7 GB zip; only its global 0.25° grid is needed, so that one 
 out of it with HTTP range requests (the zip's central directory, then the member) and checked
 against a pinned checksum.
 
-Each time step becomes a greyscale PNG of ice thickness, 16 m a step (0 is no ice, 255 is
-4,080 m or more), north at the top, node-registered from 180° W to 180° E like the other
-deep-time maps.
+Each time step becomes a PNG of ice thickness, 16 m a step (0 is no ice, 255 is 4,080 m or
+more), north at the top, node-registered from 180° W to 180° E like the other deep-time maps.
+The red channel is the step's ice. The green channel is the ice to draw over today's photo,
+when travelling through the Holocene (#665): the step's ice where today has none, and none
+where today has ice, because the photo already shows that ice, sharper than a 28 km grid.
+Today's ice is the youngest step's, which comes first.
 """
 
 import io
@@ -162,10 +165,17 @@ def encode(thickness: Thickness) -> npt.NDArray[np.uint8]:
     return steps.astype(np.uint8)
 
 
-def to_png(thickness: Thickness) -> bytes:
-    """Write thickness as an optimised 8-bit greyscale PNG."""
+def channels(thickness: Thickness, today: Thickness) -> npt.NDArray[np.uint8]:
+    """Pack a step as red: its ice; green: its ice where today has none; blue: nothing."""
+    steps = encode(thickness)
+    over_photo = np.where(encode(today) > 0, 0, steps).astype(np.uint8)
+    return np.stack([steps, over_photo, np.zeros_like(steps)], axis=-1)
+
+
+def to_png(thickness: Thickness, today: Thickness) -> bytes:
+    """Write a step as an optimised 8-bit RGB PNG (see :func:`channels`)."""
     out = io.BytesIO()
-    Image.fromarray(encode(thickness), mode="L").save(out, format="PNG", optimize=True)
+    Image.fromarray(channels(thickness, today), mode="RGB").save(out, format="PNG", optimize=True)
     return out.getvalue()
 
 
@@ -190,10 +200,16 @@ def write_icesheets(frames: Iterator[Frame], folder: Path, today: Mask | None = 
     folder.mkdir(parents=True, exist_ok=True)
     entries: list[Json] = []
     shape = (0, 0)
+    present: Thickness | None = None
     for frame in frames:
         shape = frame.thickness.shape
         thickness = frame.thickness if today is None else with_today(frame.thickness, today)
-        _ = (folder / file_name(frame.ka)).write_bytes(to_png(thickness))
+        if present is None:
+            if frame.ka != 0.0:
+                msg = f"the first step must be today's, not {frame.ka} ka"
+                raise ValueError(msg)
+            present = thickness
+        _ = (folder / file_name(frame.ka)).write_bytes(to_png(thickness, present))
         entries.append(
             {
                 "ka": frame.ka,

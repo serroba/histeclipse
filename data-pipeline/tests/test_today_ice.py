@@ -80,5 +80,6 @@ def test_writes_frames_with_today_ice_filled(tmp_path: Path) -> None:
     frames = [Frame(0.0, np.zeros((5, 9)))]
     assert write_icesheets(iter(frames), tmp_path, mask) == 1
     with Image.open(tmp_path / "0.png") as image:
-        assert image.getpixel((0, 0)) == FLOOR / 16
-        assert image.getpixel((1, 0)) == 0
+        # Today's ice is in the step (red), and left to the photo (green).
+        assert image.getpixel((0, 0)) == (FLOOR // 16, 0, 0)
+        assert image.getpixel((1, 0)) == (0, 0, 0)
