@@ -59,11 +59,18 @@ export default defineConfig<DisplayOptions>({
     },
   ],
   ...(remoteBaseURL === undefined && {
-    webServer: {
-      command: 'pnpm build && pnpm preview --port 4173 --strictPort',
-      url: localBaseURL,
-      // Never reuse a server that is already running: it may be serving an older build.
-      reuseExistingServer: false,
-    },
+    webServer: [
+      {
+        command: 'pnpm build && pnpm preview --port 4173 --strictPort',
+        url: localBaseURL,
+        // Never reuse a server that is already running: it may be serving an older build.
+        reuseExistingServer: false,
+      },
+      {
+        command: 'pnpm exec vite --config vite.components.config.ts',
+        url: 'http://127.0.0.1:4174/e2e/components/sheet.html',
+        reuseExistingServer: false,
+      },
+    ],
   }),
 });

@@ -10,6 +10,7 @@
   },
   "include": [
     "vite.config.ts",
+    "vite.components.config.ts",
     "vite.models.ts",
     "vite.csp.ts",
     "eslint.config.js",
