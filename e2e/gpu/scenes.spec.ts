@@ -70,6 +70,36 @@ async function frameCount(page: Page): Promise<number> {
   return page.evaluate(() => Number(Reflect.get(window, '__renderAuditFrames')));
 }
 
+/** Count completed animation frames in `window.__renderAuditFrames`, from before the page loads. */
+async function countFrames(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const request = window.requestAnimationFrame.bind(window);
+    let completed = 0;
+    Object.defineProperty(window, '__renderAuditFrames', { get: () => completed });
+    window.requestAnimationFrame = (callback) =>
+      request((now) => {
+        completed++;
+        callback(now);
+      });
+  });
+}
+
+// #667: on an upright screen the rays chapter's first camera stood beyond the controls' reach;
+// each frame the controls pulled it in and the story put it back, and the paused story never rested.
+test('air: paused at its start on an upright screen, the story comes to rest', async ({ page }) => {
+  await countFrames(page);
+  await page.goto('./e2e/gpu/index.html?scene=air');
+  const stage = page.locator('#scene');
+  await expect(stage).toHaveAttribute('data-rendered', 'true');
+  await stage.evaluate((node) => {
+    Object.assign((node as HTMLElement).style, { width: '200px', height: '440px' });
+  });
+  await page.getByRole('button', { name: 'rays', exact: true }).click();
+  await page.getByRole('button', { name: 'Restart paused', exact: true }).click();
+  await expect(stage).toHaveAttribute('data-playing', 'false');
+  await idleSample(page);
+});
+
 for (const [scene, chapters] of [
   ['earth', []],
   ['sun', ['fusion', 'escape', 'journey']],
@@ -78,16 +108,7 @@ for (const [scene, chapters] of [
   ['water', ['dioxide', 'fall', 'plant']],
 ] as const) {
   test(`${scene}: production scene materials render without shader errors`, async ({ page }) => {
-    await page.addInitScript(() => {
-      const request = window.requestAnimationFrame.bind(window);
-      let completed = 0;
-      Object.defineProperty(window, '__renderAuditFrames', { get: () => completed });
-      window.requestAnimationFrame = (callback) =>
-        request((now) => {
-          completed++;
-          callback(now);
-        });
-    });
+    await countFrames(page);
     const problems: string[] = [];
     page.on('pageerror', (error) => problems.push(error.message));
     page.on('console', (message) => {
