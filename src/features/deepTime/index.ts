@@ -32,6 +32,7 @@ import {
 } from '../../data/paleoDem';
 import { HOLOCENE_MA, maOfYear, yearOfMa } from '../../data/iceSheets';
 import { deepSpeedFor, prefetchFrames } from '../../deepTime/playSpeed';
+import { animationLoop } from '../../util/animationLoop';
 import { playhead } from '../../deepTime/playhead';
 import { PLATES_REACH_MA, sketchAt } from '../../deepTime/sketch';
 import { createSpanSwitch, type Span } from '../../ui/spanSwitch';
@@ -162,8 +163,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
   // How far back the elevation maps reach, until their index says.
   let oldest = MAPS_REACH_MA;
   let playing = false;
-  let playFrame = 0;
-  let lastTick = 0;
+  const playFrames = animationLoop(tick);
   let head = playhead();
 
   // Every reversal of the last 83 Ma: small, loaded the first time deep time shows.
@@ -296,15 +296,12 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     if ((store.get().ma ?? 0) <= 0) {
       store.set((state) => ({ ...state, ma: spanOf(state.deepScale) }));
     }
-    lastTick = performance.now();
     head = playhead();
-    playFrame = requestAnimationFrame(tick);
+    playFrames.start();
     showDeepTime(store.get());
   }
 
-  function tick(now: number): void {
-    const seconds = (now - lastTick) / 1000;
-    lastTick = now;
+  function tick(seconds: number): void {
     const ma = store.get().ma;
     if (ma === null) {
       stopPlay();
@@ -316,13 +313,12 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       stopPlay();
       return;
     }
-    playFrame = requestAnimationFrame(tick);
   }
 
   function stopPlay(): void {
     if (!playing) return;
     playing = false;
-    cancelAnimationFrame(playFrame);
+    playFrames.stop();
     showDeepTime(store.get());
   }
 

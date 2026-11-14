@@ -7,11 +7,11 @@ or cross-feature wiring. Do not add a full-application scenario for every regres
 
 ## Projects
 
-| Project         | Runs                                 | Why                                                                                                                |
-| --------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `desktop`       | everything                           | Chrome on a laptop screen                                                                                          |
-| `mobile`        | everything                           | Chrome on a Pixel 7: touch, a narrow screen                                                                        |
-| `desktop-120hz` | journeys, time, layers, ice, history | frames at exactly 120 Hz, as on a fast Mac or phone: animation that counts frames instead of time goes wrong there |
+| Project         | Runs                                          | Why                                                                                                                |
+| --------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `desktop`       | everything                                    | Chrome on a laptop screen                                                                                          |
+| `mobile`        | everything                                    | Chrome on a Pixel 7: touch, a narrow screen                                                                        |
+| `desktop-120hz` | two focused history/deep-time playback checks | frames at exactly 120 Hz, as on a fast Mac or phone: animation that counts frames instead of time goes wrong there |
 
 CI also runs the `desktop` project on macOS, whose GPU limits differ from Linux's (a shader
 once passed on Linux and drew a black globe on a Mac). After each deploy, the scenarios tagged
@@ -84,3 +84,13 @@ render a small view model, dispatch real DOM events and assert accessible names,
 states and callbacks. Test that rerendering uses the latest callback rather than a stale closure.
 Use real browsers for layout, touch, pointer capture, CSS visibility and GPU output: a simulated
 DOM cannot prove these. Do not globally enable a DOM environment or start WebGL for UI tests.
+
+## Deterministic playback
+
+Both time players use `util/animationLoop.ts`. Its scheduler is injectable;
+`features/scheduledPlayback.test.ts` drives explicit timestamps through the real deep-time and
+historical playheads at 30, 60, 120, 144 and 240 Hz. It also covers pause/resume, cancellation,
+stale queued frames, reentrant restart and the historical 80 ms throttle. Existing playhead
+tests cover stalled-frame caps; `globe/earthSurfaces.test.ts` resolves texture loads out of order
+and after layers turn off. Keep browser checks for play controls actually reaching the rendered
+scene; do not use real-time E2E waits to enumerate speeds or refresh rates.

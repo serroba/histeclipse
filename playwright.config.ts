@@ -43,11 +43,12 @@ export default defineConfig<DisplayOptions>({
   projects: [
     { name: 'desktop', use: { ...device('Desktop Chrome') } },
     { name: 'mobile', use: { ...device('Pixel 7') } },
-    // The journeys and the time features again, on a 120 Hz display: animation that counts
-    // frames instead of time shows up there (deep time once stalled at 120 Hz).
+    // Only two scheduling/wiring checks repeat at 120 Hz. Pace and edge cases run with
+    // explicit frame timestamps in scheduledPlayback.test.ts, not whole spec files.
     {
       name: 'desktop-120hz',
-      testMatch: /(journeys|time|layers|ice|history)\.spec\.ts$/,
+      testMatch: /(history|playback)\.spec\.ts$/,
+      grep: /playing history moves through the years and names the states that come and go|deep time has speeds in the units of its span, and plays at the one picked/,
       use: { ...device('Desktop Chrome'), refreshRate: 120 },
     },
   ],
