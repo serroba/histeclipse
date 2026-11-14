@@ -13,6 +13,35 @@
     <link rel="preload" href="/data/delta-t.json" as="fetch" crossorigin />
     <link rel="preload" href="/data/lunar/index.json" as="fetch" crossorigin />
     <link rel="preload" href="/data/solar/index.json" as="fetch" crossorigin />
+    <!-- And what the link's first view reads next (#222), from its t=, ma= and mode=. A guess
+         that misses costs one unused fetch; the app still reads what it needs. -->
+    <script id="boot-preloads">
+      (function () {
+        var query = new URLSearchParams(location.search);
+        var files = ['famous-eclipses.json'];
+        if (query.has('ma')) {
+          files.push('polarity.json', 'paleodem/index.json');
+        } else {
+          files.push('seaice/index.json', 'sealevel/index.json');
+          if (query.get('mode') === 'sky') files.push('sky.json', 'hip-stars.json');
+        }
+        // The eclipse catalogues' century for the year shown (they cover -3999 to 3000).
+        var written = /^(-?\d{4,})-/.exec(query.get('t') || '');
+        var year = written ? Number(written[1]) : new Date().getUTCFullYear();
+        if (year >= -3999 && year <= 3000) {
+          var century = Math.floor(year / 100) * 100;
+          files.push('lunar/' + century + '.json', 'solar/' + century + '.json');
+        }
+        files.forEach(function (file) {
+          var link = document.createElement('link');
+          link.rel = 'preload';
+          link.as = 'fetch';
+          link.crossOrigin = 'anonymous';
+          link.href = 'data/' + file;
+          document.head.appendChild(link);
+        });
+      })();
+    </script>
     <title>histeclipse</title>
   </head>
   <body>
