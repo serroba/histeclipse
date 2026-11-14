@@ -105,3 +105,7 @@ unselected job may be skipped, but any selected job skipped/failed/cancelled, mi
 malformed plan or failed selector prevents CI from passing. Unit tests exercise every nonempty
 combination of selected jobs and negative gate outcomes. Selective PRs are excluded from the
 full-suite latency cohort so a fast documentation run cannot make the browser SLO look better.
+
+The tree navigation case has a new scenario name when adopting the PR fixture, so it receives
+the default cost instead of inheriting the old full-dataset estimate. Refresh its measured cost
+once three successful main-run samples are available.

@@ -14,7 +14,7 @@ const NODES = /^[1-9]\d{3,}$/;
 const DRAWN = { timeout: 20_000 };
 
 test(
-  'from our species to the mammals, and the whole tree, then back to the globe @acceptance',
+  'tree navigation follows our species to mammals and back to the globe @acceptance',
   GPU,
   async ({ page }) => {
     // PRs exercise the production sheet with a small real subtree. Nightly/default runs
