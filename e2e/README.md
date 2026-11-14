@@ -24,17 +24,17 @@ to their user agent, so analytics can leave them out.
 
 What a reader does from landing to leaving, across features (`journeys.spec.ts`):
 
-| Journey                                                               | Covers                                                          |
-| --------------------------------------------------------------------- | --------------------------------------------------------------- |
-| A newcomer starts with a famous eclipse and looks at the sky that day | welcome, famous eclipses, eclipse card, Sky view, Orbit         |
-| A historian follows the eclipses seen from one empire                 | Layers, states and empires, Seen from, stepping, shared link    |
-| A reader travels into the ice ages and back to the day they left      | time switch, deep time, Ice ages, Play to the present, Holocene |
-| A link someone shares opens exactly what they saw                     | link state, famous eclipse, both sources of borders             |
-| A link to a destination opens its view                                | destinations (#726), deep time, Humans, the link's `explore`    |
-| A visitor explores human origins by topic, and Back returns           | Explore (#727), topics, destinations, history step              |
-| A visitor who wandered from a destination fits the topic              | Fit this topic (#729), the line under the date                  |
-| From a crater's card, a related discovery and Back                    | Related on cards (#731), deep time, history                     |
-| A reader goes to a time by typing it, and Back returns                | Go to a time (#730), years and ages, the date as its button     |
+| Journey                                                               | Covers                                                           |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| A newcomer starts exploring, picks a famous eclipse, looks at the sky | welcome, Explore, famous eclipses, eclipse card, Sky view, Orbit |
+| A historian follows the eclipses seen from one empire                 | Layers, states and empires, Seen from, stepping, shared link     |
+| A reader travels into the ice ages and back to the day they left      | time switch, deep time, Ice ages, Play to the present, Holocene  |
+| A link someone shares opens exactly what they saw                     | link state, famous eclipse, both sources of borders              |
+| A link to a destination opens its view                                | destinations (#726), deep time, Humans, the link's `explore`     |
+| A visitor explores human origins by topic, and Back returns           | Explore (#727), topics, destinations, history step               |
+| A visitor who wandered from a destination fits the topic              | Fit this topic (#729), the line under the date                   |
+| From a crater's card, a related discovery and Back                    | Related on cards (#731), deep time, history                      |
+| A reader goes to a time by typing it, and Back returns                | Go to a time (#730), years and ages, the date as its button      |
 
 The reference journeys of #724 (`navigation.spec.ts`; human origins is a journey above):
 

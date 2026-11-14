@@ -368,7 +368,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // A first visit (no link to follow, never welcomed before) gets one line on what this is and
   // where to start; it goes for good once closed, followed, or once something is picked.
   const welcome = createWelcome(window.location.search === '', () => {
-    famous.button.click();
+    explore.button.click();
   });
   // The panels hide for a clear view, by this button or a tap on empty space; it brings them back.
   // The site's texts (#391, #392): search, and what is written about here.
@@ -377,7 +377,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     openAnchor,
   });
   // Explore (#727): destinations by topic, opened as the texts' anchors are.
-  const explore = mountExplore({ opener, search: texts.search });
+  const explore = mountExplore({ opener, search: texts.search, famous: famous.button });
   // Carbon-14 in the air under the years' slider (#270), its curves loaded once the layer is on.
   const datingCard = createDatingCard();
   // The shower's story (#269, #317): its stage, and its chapters in 3D over the globe.
