@@ -60,7 +60,7 @@ describe('the ozone layer as a feature', () => {
     shown.show?.(inYear(2006), JD);
     expect(caps.at(-1)).toBe(26.6);
     expect(panels.at(-1)).toMatchObject({
-      text: expect.stringContaining('spring of 2006') as unknown,
+      text: '2006: 26.6 million km², lowest 98 DU.',
     });
     // The same year again draws nothing new.
     const drawn = caps.length;

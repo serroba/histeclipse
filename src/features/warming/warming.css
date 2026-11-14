@@ -1,0 +1,120 @@
+/* The temperature records' panel (#526), in the column beside the globe (ui/globePanels). */
+.records-panel {
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgb(10 16 32 / 0.88);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.records-panel[hidden] {
+  display: none;
+}
+
+.records-figure {
+  margin: 0 0 6px;
+}
+
+.records-figure figcaption {
+  margin-bottom: 2px;
+  color: var(--ink-muted);
+}
+
+.records-chart {
+  display: block;
+  width: 100%;
+  height: 64px;
+  overflow: visible;
+}
+
+.records-band {
+  fill: rgb(150 180 255 / 0.18);
+}
+
+.records-zero {
+  stroke: rgb(150 180 255 / 0.5);
+  stroke-dasharray: 4 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.records-line {
+  fill: none;
+  stroke: var(--record);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.records-line.is-reanalysis {
+  stroke-dasharray: 6 3;
+}
+
+.records-cursor {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+/* One colour per record, in the chart and its key. */
+.records-panel .is-hadcrut5 {
+  --record: #7fb3ff;
+}
+
+.records-panel .is-berkeley {
+  --record: #ffb75e;
+}
+
+.records-panel .is-noaaglobaltemp {
+  --record: #7fcf9a;
+}
+
+.records-panel .is-gistemp {
+  --record: #ef8a7a;
+}
+
+.records-panel .is-era5 {
+  --record: #c9a3e6;
+}
+
+.records-panel .is-jra3q {
+  --record: #e3d97a;
+}
+
+.records-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.records-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 3px;
+  margin-right: 4px;
+  vertical-align: middle;
+  background: var(--record);
+}
+
+.records-said,
+.records-credit {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.records-credit {
+  margin-top: 4px;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+@media (max-width: 600px) {
+  /* On a phone, room for the globe: the chart, its key and the credits. */
+  .records-said {
+    display: none;
+  }
+}

@@ -7,6 +7,7 @@
 
 import type { LayerFactory } from '../../globe/layerHost';
 import { element } from '../../ui/dom';
+import { joinGlobePanels } from '../../ui/globePanels';
 import { CHART_HEIGHT, CHART_WIDTH, type OzoneCharts } from './chartModel';
 import './ozone.css';
 
@@ -70,7 +71,7 @@ export const ozonePanel: LayerFactory<OzoneView | null> = (host) => {
       'NASA Ozone Watch; NOAA Ozone Depleting Gas Index (Montzka, Dutton, Vimont). Dashed: the Montreal Protocol, 1987.',
     ),
   );
-  host.container.append(root);
+  joinGlobePanels(host.container, root, 1);
   let drawnFor: OzoneCharts | null = null;
   return {
     update(view) {

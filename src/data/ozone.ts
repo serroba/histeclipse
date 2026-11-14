@@ -97,3 +97,12 @@ export function ozoneText(history: OzoneHistory, at: number): string {
   const { areaMkm2, minimumDU } = found.hole;
   return `The Antarctic ozone hole in the spring of ${String(at)}: ${areaMkm2.toFixed(1)} million km² on average, its lowest ozone ${String(Math.round(minimumDU))} Dobson units. Drawn as a cap of that area round the pole, not its shape.`;
 }
+
+/** The year in a few words, for the chart's panel. */
+export function ozoneLine(history: OzoneHistory, at: number): string {
+  const found = holeIn(history, at);
+  if (found.kind === 'outside') return `No record for ${String(at)}.`;
+  if (found.kind === 'missing') return `${String(at)}: not measured.`;
+  const { areaMkm2, minimumDU } = found.hole;
+  return `${String(at)}: ${areaMkm2.toFixed(1)} million km², lowest ${String(Math.round(minimumDU))} DU.`;
+}

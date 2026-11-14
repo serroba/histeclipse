@@ -40,6 +40,8 @@ export function keepCentred({ root, top, bottom, zoomRail, onInsets }: Layout): 
       panel.right > sheet.left &&
       panel.left < sheet.right;
     root.style.setProperty('--hud-clear', `${String(shared ? panel.bottom + 8 : 0)}px`);
+    // The panels beside the globe stop short of the date panel, at the left (#526).
+    root.style.setProperty('--hud-bottom', `${String(panel.bottom)}px`);
   };
   const observer = new ResizeObserver(update);
   observer.observe(top);

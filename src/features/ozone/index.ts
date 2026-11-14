@@ -5,7 +5,7 @@
  * layer; a year the record lacks is said, not drawn.
  */
 
-import { holeIn, loadOzone, ozoneText, type OzoneHistory } from '../../data/ozone';
+import { holeIn, loadOzone, ozoneLine, ozoneText, type OzoneHistory } from '../../data/ozone';
 import { errorMessage } from '../../util/errors';
 import type { Feature } from '../feature';
 import { ozoneCharts } from './chartModel';
@@ -66,7 +66,7 @@ export const ozoneFeature: Feature = {
         const found = holeIn(history, year);
         cap.update(found.kind === 'hole' ? found.hole.areaMkm2 : null);
         said = ozoneText(history, year);
-        panel.update({ charts: ozoneCharts(history, year), text: said });
+        panel.update({ charts: ozoneCharts(history, year), text: ozoneLine(history, year) });
       },
       said: () => said,
     };

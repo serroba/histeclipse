@@ -2,7 +2,14 @@ import { readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
-import { capEdgeLatitude, holeIn, loadOzone, ozoneText, type OzoneHistory } from './ozone';
+import {
+  capEdgeLatitude,
+  holeIn,
+  loadOzone,
+  ozoneLine,
+  ozoneText,
+  type OzoneHistory,
+} from './ozone';
 
 const file = readFileSync(new URL('../../public/data/ozone/history.json', import.meta.url), 'utf8');
 const fetchFile = (): Promise<Response> => Promise.resolve(new Response(file));
@@ -44,5 +51,12 @@ describe('the ozone record', () => {
     const ozone = await history();
     const empty = { ...ozone, hole: { ...ozone.hole, rows: [] } };
     expect(holeIn(empty, 2000)).toEqual({ kind: 'outside', first: 0, last: 0 });
+  });
+
+  it('Given a year, Then a short line for the panel', async () => {
+    const ozone = await history();
+    expect(ozoneLine(ozone, 2006)).toBe('2006: 26.6 million km², lowest 98 DU.');
+    expect(ozoneLine(ozone, 1995)).toBe('1995: not measured.');
+    expect(ozoneLine(ozone, 1900)).toBe('No record for 1900.');
   });
 });
