@@ -363,11 +363,14 @@ export function createSkyScene(
         stage.invalidate();
       });
     },
+    // Each redraws itself: the moment is no longer set again after them (#666).
     setFigures(next) {
       figures.setFigures(next);
+      stage.invalidate();
     },
     setCulture(next) {
       figures.setCulture(next);
+      stage.invalidate();
     },
     setMarks(marks) {
       names.setMarks(marks);

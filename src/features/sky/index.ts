@@ -19,6 +19,7 @@ import { moonSunlight, sunVisible, topocentric } from '../../sky/bodies';
 import { eclipseNote, planetNote, skyCaption } from './caption';
 import { earthVelocity, horizonMatrix, horizontalOf } from '../../sky/horizon';
 import type { Figure } from '../../sky/look';
+import { momentKey, sameMoment, type MomentKey } from '../../sky/momentKey';
 import type { SkyMark, SkyPlanet, SkyScene, SkyTap } from '../../sky/skyScene';
 import type { Vector3 } from '../../astro/matrix';
 import { SKY } from '../../state/redraws';
@@ -198,6 +199,44 @@ export function mountSky(context: SkyContext): SkyPart {
     );
   }
 
+  /** A moment worked out for the sky: where the bodies stand, and what the eclipse note says. */
+  interface Moment {
+    readonly key: MomentKey;
+    readonly seen: BodiesSeen;
+    readonly horizon: ReturnType<typeof horizonMatrix>;
+    readonly eclipseText: string;
+  }
+  // Kept while only the look, the figures or the marks change (#666): a drag or a glide turns
+  // the view, and neither the Moon's series nor every star needs placing again for that.
+  let moment: Moment | null = null;
+  // The moment the scene was last given, and the scene it was given to.
+  let shownMoment: Moment | null = null;
+  let shownIn: SkyScene | null = null;
+
+  function momentOf(state: ViewState): Moment | null {
+    const key = momentKey(state, context.moonReady());
+    if (moment !== null && sameMoment(moment.key, key)) return moment;
+    const seen = context.bodiesSeen(state);
+    if (seen === null) {
+      moment = null;
+      return null;
+    }
+    const horizon = horizonMatrix(seen.place, seen.jdUT, seen.jdTT);
+    const sunHere = topocentric(seen.sun, seen.observer);
+    const moonHere = seen.moon === null ? null : topocentric(seen.moon, seen.observer);
+    const eclipseText =
+      seen.moon === null || moonHere === null
+        ? ''
+        : eclipseNote({
+            sunVisible: sunVisible(sunHere, moonHere),
+            sunAltitude: horizontalOf(horizon, sunHere).altitude,
+            moonSunlight: moonSunlight(seen.moon, seen.sun),
+            moonAltitude: horizontalOf(horizon, moonHere).altitude,
+          });
+    moment = { key, seen, horizon, eclipseText };
+    return moment;
+  }
+
   function render(state: ViewState): void {
     const inSky = state.mode === 'sky';
     text.hidden = !inSky;
@@ -212,9 +251,9 @@ export function mountSky(context: SkyContext): SkyPart {
       return;
     }
     open();
-    const seen = context.bodiesSeen(state);
-    if (seen === null) return;
-    const { place, jdUT, jdTT } = seen;
+    const now = momentOf(state);
+    if (now === null) return;
+    const { place, jdUT, jdTT, sun, moon, observer } = now.seen;
     text.textContent = [
       skyCaption({
         place,
@@ -226,33 +265,26 @@ export function mountSky(context: SkyContext): SkyPart {
     ]
       .filter((part) => part !== '')
       .join(' ');
-    const horizon = horizonMatrix(place, jdUT, jdTT);
-    const sunHere = topocentric(seen.sun, seen.observer);
-    const moonHere = seen.moon === null ? null : topocentric(seen.moon, seen.observer);
-    eclipse.textContent =
-      seen.moon === null || moonHere === null
-        ? ''
-        : eclipseNote({
-            sunVisible: sunVisible(sunHere, moonHere),
-            sunAltitude: horizontalOf(horizon, sunHere).altitude,
-            moonSunlight: moonSunlight(seen.moon, seen.sun),
-            moonAltitude: horizontalOf(horizon, moonHere).altitude,
-          });
-    eclipse.hidden = eclipse.textContent === '';
+    eclipse.textContent = now.eclipseText;
+    eclipse.hidden = now.eclipseText === '';
     if (scene === null) return;
     scene.setLook(state.look);
     scene.setFigures(state.figures);
     scene.setMarks(marks);
     showCulture(state);
-    scene.setMoment({
-      horizon,
-      jdTT,
-      sun: seen.sun,
-      moon: seen.moon,
-      observer: seen.observer,
-      planets: context.planetsSeen(jdTT, seen.sun, seen.observer),
-      velocity: earthVelocity((jd) => sunPositionJ2000(julianDayNumber(jd)), jdTT),
-    });
+    if (shownMoment !== now || shownIn !== scene) {
+      scene.setMoment({
+        horizon: now.horizon,
+        jdTT,
+        sun,
+        moon,
+        observer,
+        planets: context.planetsSeen(jdTT, sun, observer),
+        velocity: earthVelocity((jd) => sunPositionJ2000(julianDayNumber(jd)), jdTT),
+      });
+      shownMoment = now;
+      shownIn = scene;
+    }
     scene.setVisible(true);
   }
 
