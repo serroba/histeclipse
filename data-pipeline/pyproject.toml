@@ -102,3 +102,5 @@ typeCheckingMode = "all"
 pythonVersion = "3.14"
 include = ["src", "tests"]
 stubPath = "typings"
+
+# Temporary CI Python-scope probe; this PR will not be merged.
