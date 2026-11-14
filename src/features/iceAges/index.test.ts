@@ -38,9 +38,11 @@ const ice = {
 };
 const outlines = {
   ...credit,
+  // Delta-encoded rings (#221).
+  schemaVersion: 2,
   scale: 100,
   slices: [
-    { name: 'MIS 6', fromKa: 132, toKa: 190, min: [], best: [[0, 0, 100, 0, 0, 100]], max: [] },
+    { name: 'MIS 6', fromKa: 132, toKa: 190, min: [], best: [[0, 0, 100, 0, -100, 100]], max: [] },
   ],
 };
 const source = (id: string, era: 'today' | 'lgm') => ({

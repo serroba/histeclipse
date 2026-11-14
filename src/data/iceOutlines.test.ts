@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { iceOutlinesAt, loadIceOutlines, type IceOutlineIndex } from './iceOutlines';
 
-const ring = [-10000, 5000, -6000, 5000, -6000, 7000];
+// Delta-encoded (#221): (−100°, 50°), then +40° east, then +20° north.
+const ring = [-10000, 5000, 4000, 0, 0, 2000];
 const index: IceOutlineIndex = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   credit: 'Batchelor et al. (2019)',
   source: 'https://osf.io/7jen3/',
   scale: 100,
