@@ -390,11 +390,16 @@ test('Back steps through what the reader did, and Forward returns @acceptance @m
   const problems = collectProblems(page);
   await page.goto('./?t=2024-04-08T18:17');
   await globeRendered(page);
+  const distance = () => Number(new URL(page.url()).searchParams.get('cam')?.split(',')[2]);
+  const opened = distance();
   await page
     .getByRole('button', { name: /Total solar/ })
     .first()
     .click();
   await expect(page).toHaveURL(/sel=solar:2024-04-08/);
+  // Zooming in after the pick belongs to the pick's entry in history.
+  await page.getByRole('group', { name: 'Zoom' }).getByRole('button', { name: 'Zoom in' }).click();
+  await expect.poll(distance, { timeout: 20_000 }).toBeLessThan(opened);
   await page.getByRole('button', { name: 'Sky', exact: true }).click();
   await expect(page).toHaveURL(/mode=sky/);
   // Back: from the sky to the globe, the eclipse still picked; again: before the pick.
@@ -404,6 +409,11 @@ test('Back steps through what the reader did, and Forward returns @acceptance @m
   await page.goBack();
   await expect(page).not.toHaveURL(/sel=/);
   await expect(page.locator('.hud')).toBeVisible();
+  // And the camera glides back out to where it was before the pick (#581).
+  await expect.poll(distance, { timeout: 20_000 }).toBeCloseTo(opened, 1);
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-distance', opened.toPrecision(3), {
+    timeout: 20_000,
+  });
   await page.goForward();
   await expect(page).toHaveURL(/sel=solar:2024-04-08/);
   expect(problems).toEqual([]);

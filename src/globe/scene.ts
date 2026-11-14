@@ -465,7 +465,7 @@ export function createGlobe(
       stage.invalidate();
     },
     setCamera(state) {
-      rig.place(state);
+      rig.glideTo(state);
     },
     onCameraChange(listener) {
       return rig.onChange(listener);

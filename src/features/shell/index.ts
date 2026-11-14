@@ -4,6 +4,7 @@
  */
 
 export { openOverRegion } from './firstView';
+export { followHistory } from './history';
 export { listenForInput } from './input';
 export { keepCentred } from './layout';
 export { createNotices } from './notices';
