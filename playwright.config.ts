@@ -30,7 +30,9 @@ export default defineConfig<DisplayOptions>({
   // A render on a busy machine (a full run's workers, or software WebGL) can take more than
   // the default 5 s; a check that fails still fails, only later (#306).
   expect: { timeout: 10_000 },
-  reporter: isCI ? [['github'], ['list'], ['html', { open: 'never' }]] : 'list',
+  reporter: isCI
+    ? [['github'], ['list'], ['html', { open: 'never' }], ['./e2e/timingReporter.ts']]
+    : 'list',
   use: {
     baseURL: remoteBaseURL ?? localBaseURL,
     trace: 'retain-on-failure',
