@@ -16,10 +16,10 @@ export default defineConfig({
     chunkSizeWarningLimit: 700,
   },
   test: {
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'e2e/**/*.unit.ts'],
     coverage: {
       provider: 'v8',
-      include: ['src/**/*.ts'],
+      include: ['src/**/*.ts', 'e2e/virtualDisplay.ts'],
       // Browser/WebGL glue the Playwright suite covers (#625): see coverage.untested.js.
       exclude: ['src/**/*.test.ts', ...UNTESTED],
       thresholds: {

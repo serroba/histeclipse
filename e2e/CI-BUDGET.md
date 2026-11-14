@@ -37,6 +37,13 @@ Playwright discovery verify that the two selections are disjoint and their union
 executions. Timing estimates are summed attempt costs, not predicted wall time. Refresh the
 estimates when reports show sustained imbalance; do not encode timings in application code.
 
+## Synthetic display consistency
+
+The virtual 120 Hz display batches callbacks by frame and gives them the same clock as
+`performance.now()`. Cancellation removes pending work. Unit tests cover these fixture semantics;
+a slow renderer must not make an animation's clock start ahead of its synthetic RAF timestamps.
+This is test infrastructure only, not a change to production timekeeping.
+
 ## Keep measuring
 
 The read-only **CI metrics** job runs after **CI OK**, outside its required gate. It reports:
