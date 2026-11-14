@@ -4,8 +4,7 @@
  * and dispose every scene answers to. A scene supplies only what it draws: for each chapter,
  * where things are at a moment, where the story's camera is, and when the chapter is complete.
  *
- * The loop draws only when something moved. Dragging takes the camera from the story; a
- * restart, or turning to another chapter's start, hands it back.
+ * Idle chapters sleep. Dragging takes the camera; restarting returns it to the story.
  *
  * Three.js glue, loaded with the scenes and covered by the Playwright suite.
  */
@@ -328,6 +327,7 @@ export function createStoryScene<Chapter extends string>(
       playing = next;
       last = performance.now();
       container.dataset['playing'] = String(next);
+      stage.invalidate();
     },
     restart() {
       t = 0;

@@ -27,6 +27,17 @@ function chapters<Chapter extends string>(
     });
     buttons.append(button);
   }
+  for (const [label, playing] of [
+    ['Play', true],
+    ['Pause', false],
+  ] as const) {
+    const button = document.createElement('button');
+    button.textContent = label;
+    button.addEventListener('click', () => {
+      story.setPlaying(playing);
+    });
+    buttons.append(button);
+  }
   story.settle();
 }
 
@@ -57,6 +68,14 @@ if (kind === 'sun') {
     moonTextureUrl: '/textures/moon-lroc-4096.jpg',
     earthParts: ECLIPSE_EARTH_PARTS,
   });
+  const move = document.createElement('button');
+  move.textContent = 'Move';
+  let opposite = false;
+  move.addEventListener('click', () => {
+    opposite = !opposite;
+    globe.flyTo({ latitude: opposite ? 30 : -30, longitude: opposite ? 90 : -90 });
+  });
+  buttons.append(move);
   globe.setEvenLight(true);
   globe.setC14Glow(Array.from({ length: 19 }, (_, index) => 0.2 + index / 24));
 }
