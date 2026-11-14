@@ -84,7 +84,7 @@ grows without bound across repeats. Use a DevTools allocation profile when a fin
 ## Earth intermediate-map comparison (#689)
 
 `pnpm exec playwright test --config playwright.perf.config.ts --project=desktop earthMap.perf.ts`
-compares the previous 8192 map with the candidate 4096 map in the same production application.
+compares the existing 8192 map with an experimental 4096 map in the same production application.
 Only the intermediate-map response is replaced; the tile manifest, tile images, camera, date and
 viewport are unchanged. Three interleaved trials per map capture synchronous large-bitmap
 `texSubImage2D` call durations (including other large maps; inspect the raw list), and screenshots
@@ -96,3 +96,5 @@ The separate **Earth map comparison** workflow can run this diagnostic on a real
 also runs when the comparison itself changes in a PR. It adds no timing threshold or scenario
 to the required CI gate. Its artifact contains screenshots, amplified differences and raw metrics.
 Keep the 8192 source asset available for comparisons while evaluating the visual trade-off.
+
+Results and the decision to retain the 8192 map: [EARTH-MAP.md](EARTH-MAP.md).

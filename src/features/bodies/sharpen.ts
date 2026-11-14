@@ -1,7 +1,7 @@
 /**
  * Close up, a sharper map for the body in focus, fetched once (#258); over Earth, closer still,
- * its full-size map in tiles (#568). Earth's intermediate map is capped at 4096 (#689), with tiles
- * supplying finer detail wherever
+ * its full-size map in tiles (#568). Earth's largest map only where the graphics hold it and the
+ * screen is not a phone's, whose memory it would strain: there the 4096 map. Its tiles wherever
  * the graphics take them on, phones too, within the device's limits (`tileLimits.ts`, #578).
  */
 

@@ -98,12 +98,12 @@ test('Earth intermediate map: 8192 versus 4096 with the same close-up tiles', as
       const page = await context.newPage();
       await page.addInitScript(installProbe);
       await page.addInitScript(uploadProbe);
-      await page.route('**/textures/earth-blue-marble-4096.jpg', async (route) => {
+      await page.route('**/textures/earth-blue-marble-8192.jpg', async (route) => {
         const response = await route.fetch({
           url: route
             .request()
             .url()
-            .replace('4096.jpg', `${String(width)}.jpg`),
+            .replace('8192.jpg', `${String(width)}.jpg`),
         });
         await route.fulfill({ response });
       });
