@@ -2,7 +2,7 @@
 
 import { collectProblems, expect, globeRendered, test } from './support';
 
-test('a reader asks a question in their own words and finds the record it means', async ({
+test('a reader asks a question in their own words and finds the record it means @acceptance', async ({
   page,
   baseURL,
 }) => {

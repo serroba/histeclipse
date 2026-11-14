@@ -67,7 +67,7 @@ test('leaving deep time brings back the date and the eclipse that was picked', a
 });
 
 test(
-  'deep time shows Pangaea 250 million years ago, steps, plays and returns',
+  'deep time shows Pangaea 250 million years ago, steps, plays and returns @acceptance',
   GPU,
   async ({ page }) => {
     const problems = collectProblems(page);
@@ -169,7 +169,7 @@ test('deep time steps through milestones and shows each estimate with its source
 });
 
 test(
-  'deep time colours the globe by temperature, with the global mean and its caveats',
+  'deep time colours the globe by temperature, with the global mean and its caveats @acceptance',
   GPU,
   async ({ page }) => {
     const problems = collectProblems(page);
@@ -381,7 +381,7 @@ test('deep time outlines a second reconstruction’s continents', GPU, async ({ 
   expect(problems).toEqual([]);
 });
 
-test('before the reconstructions, the reader picks whose hypotheses the globe sketches', async ({
+test('before the reconstructions, the reader picks whose hypotheses the globe sketches @acceptance', async ({
   page,
 }) => {
   const problems = collectProblems(page);

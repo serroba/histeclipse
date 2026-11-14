@@ -62,7 +62,7 @@ async function press(page: Page, x: number, y: number) {
   };
 }
 
-test('on a phone the deep-time bar folds to its controls, and swipes open and shut', async ({
+test('on a phone the deep-time bar folds to its controls, and swipes open and shut @mobile', async ({
   page,
 }, info) => {
   test.skip(info.project.name !== 'mobile', 'phone layout');
@@ -127,7 +127,7 @@ test('the handle folds and opens the details, on any screen', async ({ page }) =
   });
 });
 
-test('on a phone the details follow the finger, and settle open or folded when it lifts', async ({
+test('on a phone the details follow the finger, and settle open or folded when it lifts @mobile', async ({
   page,
 }, info) => {
   test.skip(info.project.name !== 'mobile', 'phone layout');
@@ -179,7 +179,7 @@ test('on a phone the details follow the finger, and settle open or folded when i
   expect(problems).toEqual([]);
 });
 
-test('on a desktop, the handle can be dragged with the mouse as well as clicked', async ({
+test('on a desktop, the handle can be dragged with the mouse as well as clicked @acceptance', async ({
   page,
 }, info) => {
   test.skip(info.project.name !== 'desktop', 'mouse');
@@ -206,7 +206,7 @@ test('on a desktop, the handle can be dragged with the mouse as well as clicked'
   });
 });
 
-test('a second swipe straight after the first goes the way it was swiped', async ({
+test('a second swipe straight after the first goes the way it was swiped @mobile', async ({
   page,
 }, info) => {
   test.skip(info.project.name !== 'mobile', 'phone layout');
@@ -228,7 +228,7 @@ test('a second swipe straight after the first goes the way it was swiped', async
   });
 });
 
-test('deep time’s sheet never reaches up over the date panel', async ({ page }, info) => {
+test('deep time’s sheet never reaches up over the date panel @mobile', async ({ page }, info) => {
   test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
   for (const link of ['./?ma=0.021&scale=ice', './?ma=250&scale=all', './?ma=3000&scale=eons']) {
     await test.step(`Given ${link}`, async () => {

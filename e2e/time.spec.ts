@@ -37,7 +37,7 @@ test('the top row picks how far back time reaches; famous eclipses sit with the 
   expect(problems).toEqual([]);
 });
 
-test('a deeper span opens at its oldest moment, and coming back returns to the date and eclipse left', async ({
+test('a deeper span opens at its oldest moment, and coming back returns to the date and eclipse left @acceptance', async ({
   page,
 }) => {
   const problems = collectProblems(page);
@@ -219,7 +219,9 @@ test('at a span’s oldest moment, the thumb covers no label', async ({ page }) 
   });
 });
 
-test('the year turns on a wheel kept to the era, and can still be typed', async ({ page }) => {
+test('the year turns on a wheel kept to the era, and can still be typed @acceptance @mobile', async ({
+  page,
+}) => {
   const problems = collectProblems(page);
   const year = page.getByLabel('Year', { exact: true });
   const wheel = page.getByRole('group', { name: 'Turn to a year' });

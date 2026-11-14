@@ -1,3 +1,4 @@
+import { animationLoop } from '../../util/animationLoop';
 /**
  * The years as a part of the page (#446): the Holocene's track, from as far back as ΔT reaches
  * to the present, with its ages under the slider; playing the years by, and the travel view
@@ -57,8 +58,7 @@ export function mountYears(context: YearsContext): YearsPart {
   // The Holocene track: the years played by, from as far back as ΔT reaches to the present.
   let historySpeed: YearSpeed = 50;
   let historyPlaying = false;
-  let historyFrame = 0;
-  let historyTick = 0;
+  const historyFrames = animationLoop(tickHistory, 0.08);
   let historyHead = yearPlayhead();
   // The Holocene's ages under its slider; a tap goes to an age's start.
   const historyBands = createPeriodBands(
@@ -208,33 +208,22 @@ export function mountYears(context: YearsContext): YearsPart {
     historyPlaying = true;
     setTravel(true);
     historyHead = yearPlayhead();
-    historyTick = performance.now();
-    historyFrame = requestAnimationFrame(tickHistory);
+    historyFrames.start();
     showHistory(store.get());
   }
 
-  // A new year at most every 80 ms: each brings its eclipses and borders to load.
-  const HISTORY_STEP_SECONDS = 0.08;
-  function tickHistory(now: number): void {
-    if (!historyPlaying) return;
-    const seconds = (now - historyTick) / 1000;
-    if (seconds >= HISTORY_STEP_SECONDS) {
-      historyTick = now;
-      const year = store.get().time.date.year;
-      const next = historyHead.step(year, historySpeed, seconds, PRESENT_YEAR);
-      if (next !== year) setYear(next);
-      if (next >= PRESENT_YEAR) {
-        stopHistory();
-        return;
-      }
-    }
-    historyFrame = requestAnimationFrame(tickHistory);
+  // A new year at most every 80 ms: the scheduler accumulates time between updates.
+  function tickHistory(seconds: number): void {
+    const year = store.get().time.date.year;
+    const next = historyHead.step(year, historySpeed, seconds, PRESENT_YEAR);
+    if (next !== year) setYear(next);
+    if (next >= PRESENT_YEAR) stopHistory();
   }
 
   function stopHistory(): void {
     if (!historyPlaying) return;
     historyPlaying = false;
-    cancelAnimationFrame(historyFrame);
+    historyFrames.stop();
     showHistory(store.get());
   }
 

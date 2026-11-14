@@ -20,7 +20,7 @@ async function openSkyOptions(page: Page): Promise<void> {
   if ((await options.getAttribute('open')) === null) await options.locator('> summary').click();
 }
 
-test('the Sky button stands you where the globe is looking, and back again', async ({
+test('the Sky button stands you where the globe is looking, and back again @acceptance @mobile', async ({
   page,
 }, info) => {
   const problems = collectProblems(page);
@@ -64,7 +64,9 @@ test(
   },
 );
 
-test('dragging and zooming the sky turn the view, and the link follows', async ({ page }) => {
+test('dragging and zooming the sky turn the view, and the link follows @acceptance', async ({
+  page,
+}) => {
   await page.goto(BABYLON_NIGHT_3000_BCE);
   await skyRendered(page);
   const box = await page.getByTestId('sky').boundingBox();
@@ -98,7 +100,7 @@ test('the constellation switch draws all 88 figures, and the link keeps it', asy
   await expect(page.locator('.sky-label.is-constellation:visible')).toHaveCount(0);
 });
 
-test('from the central line in 2024 the Moon hides the whole Sun; farther north it does not', async ({
+test('from the central line in 2024 the Moon hides the whole Sun; farther north it does not @acceptance', async ({
   page,
 }) => {
   await page.goto('./?mode=sky&t=2024-04-08T18:17&loc=25.29,-104.14');
@@ -117,15 +119,19 @@ test('from the central line in 2024 the Moon hides the whole Sun; farther north 
   await expect(sky).toHaveAttribute('data-stars-seen', '0');
 });
 
-test('the Moon turns red in the umbra during a lunar eclipse', GPU, async ({ page }) => {
-  await page.goto('./?mode=sky&t=2022-11-08T10:59&loc=40.7,-74');
-  await skyRendered(page);
-  await expect(page.getByTestId('sky')).toHaveAttribute('data-moon-sunlight', '0.000');
-  await expect(page.getByTestId('sky-eclipse')).toContainText('darkest shadow');
-  await page.getByRole('button', { name: 'Moon', exact: true }).click();
-  // Setting in the west at dawn, as New Yorkers saw it.
-  await expect(page).toHaveURL(/look=2\d\d\.\d,[0-9]\.\d,/);
-});
+test(
+  'the Moon turns red in the umbra during a lunar eclipse @acceptance',
+  GPU,
+  async ({ page }) => {
+    await page.goto('./?mode=sky&t=2022-11-08T10:59&loc=40.7,-74');
+    await skyRendered(page);
+    await expect(page.getByTestId('sky')).toHaveAttribute('data-moon-sunlight', '0.000');
+    await expect(page.getByTestId('sky-eclipse')).toContainText('darkest shadow');
+    await page.getByRole('button', { name: 'Moon', exact: true }).click();
+    // Setting in the west at dawn, as New Yorkers saw it.
+    await expect(page).toHaveURL(/look=2\d\d\.\d,[0-9]\.\d,/);
+  },
+);
 
 test('tapping the globe picks where to stand, and the sky faces the eclipse from there', async ({
   page,
@@ -187,7 +193,7 @@ test('a tap on open sky clears the panels, as on the globe; another brings them 
   });
 });
 
-test('on a phone held upright the sky opens low, with the horizon in view', async ({
+test('on a phone held upright the sky opens low, with the horizon in view @mobile', async ({
   page,
 }, info) => {
   test.skip(info.project.name !== 'mobile', 'about an upright phone');

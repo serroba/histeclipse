@@ -122,7 +122,9 @@ const PIXEL = Buffer.from(
   'base64',
 );
 
-test('a find opens its card: its claim, its source, its rivals and a picture', async ({ page }) => {
+test('a find opens its card: its claim, its source, its rivals and a picture @acceptance', async ({
+  page,
+}) => {
   const problems = collectProblems(page);
   const card = page.getByTestId('marker-card');
   await page.route(/^https:\/\/(upload|thumb)\.wikimedia\.org\//, (route) =>

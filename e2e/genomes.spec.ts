@@ -35,7 +35,9 @@ test('ancient genomes are counted by region around the year shown, with the sour
   expect(problems).toEqual([]);
 });
 
-test('a region of genomes opens its card: labels, papers and the source', async ({ page }) => {
+test('a region of genomes opens its card: labels, papers and the source @acceptance', async ({
+  page,
+}) => {
   const problems = collectProblems(page);
   const card = page.getByTestId('marker-card');
   await test.step('Given 2500 BCE in Europe, with Ancient genomes on', async () => {

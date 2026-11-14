@@ -12,7 +12,7 @@ const NODES = /^[1-9]\d{3,}$/;
 const DRAWN = { timeout: 20_000 };
 
 test(
-  'from our species to the mammals, and the whole tree, then back to the globe',
+  'from our species to the mammals, and the whole tree, then back to the globe @acceptance',
   GPU,
   async ({ page }) => {
     // The globe and then eight thousand taxa, drawn in software on CI's runners.

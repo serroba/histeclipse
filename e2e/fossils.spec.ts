@@ -40,7 +40,9 @@ const PIXEL = Buffer.from(
   'base64',
 );
 
-test('a cell of fossils opens its card: its genera, linked to the PBDB', async ({ page }) => {
+test('a cell of fossils opens its card: its genera, linked to the PBDB @acceptance', async ({
+  page,
+}) => {
   const problems = collectProblems(page);
   const card = page.getByTestId('marker-card');
   await page.route(/^https:\/\/(upload|thumb)\.wikimedia\.org\//, (route) =>

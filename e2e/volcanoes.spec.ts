@@ -12,7 +12,9 @@ const PIXEL = Buffer.from(
   'base64',
 );
 
-test('the eruptions of 1815 include Tambora, and a volcano opens its card', async ({ page }) => {
+test('the eruptions of 1815 include Tambora, and a volcano opens its card @acceptance', async ({
+  page,
+}) => {
   const problems = collectProblems(page);
   const card = page.getByTestId('marker-card');
   await page.route('https://volcano.si.edu/**', (route) =>

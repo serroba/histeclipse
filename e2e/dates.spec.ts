@@ -6,7 +6,7 @@
 
 import { collectProblems, expect, globeRendered, openLayers, openSources, test } from './support';
 
-test('radiocarbon dates shade where remains were dated, and a place’s card dates one', async ({
+test('radiocarbon dates shade where remains were dated, and a place’s card dates one @acceptance', async ({
   page,
 }) => {
   test.slow();

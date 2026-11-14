@@ -14,7 +14,9 @@ import {
   test,
 } from './support';
 
-test('the Sources list names what is on screen now, and each book opens why', async ({ page }) => {
+test('the Sources list names what is on screen now, and each book opens why @acceptance', async ({
+  page,
+}) => {
   const problems = collectProblems(page);
   const list = page.getByTestId('sources-list');
   const sheet = page.getByRole('dialog', { name: 'Ways of life' });
@@ -194,7 +196,10 @@ test('in deep time, the map says how we know what Earth looked like', async ({ p
   expect(problems).toEqual([]);
 });
 
-test('a source can be cited, and a why shared by its link', async ({ page, context }, info) => {
+test('a source can be cited, and a why shared by its link @acceptance', async ({
+  page,
+  context,
+}, info) => {
   test.skip(info.project.name === 'desktop-120hz', 'not about frames');
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const sheet = page.getByRole('dialog', { name: 'Ways of life' });

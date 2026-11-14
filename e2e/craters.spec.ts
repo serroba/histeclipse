@@ -11,7 +11,7 @@ const CRATERS = /^[1-9]\d{2,}$/;
 // Drawing the paths beside the globe takes seconds on runners that render in software.
 const DRAWN = { timeout: 20_000 };
 
-test('Layers opens every crater’s path through time, in 3D', async ({ page }) => {
+test('Layers opens every crater’s path through time, in 3D @acceptance', async ({ page }) => {
   // The deep-time globe, then the paths, drawn in software on CI's runners.
   test.slow();
   const problems = collectProblems(page);

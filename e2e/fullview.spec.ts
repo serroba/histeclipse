@@ -6,7 +6,7 @@
 
 import { collectProblems, expect, globeRendered, test } from './support';
 
-test('in deep time a tap on the globe clears the panels, and the strip says when', async ({
+test('in deep time a tap on the globe clears the panels, and the strip says when @mobile', async ({
   page,
 }) => {
   const problems = collectProblems(page);
