@@ -73,6 +73,8 @@ export const LAYERS = [
   'volcanoes',
   // The Antarctic ozone hole each spring since 1979, and the gases that made it (#722).
   'ozone',
+  // Global surface temperature since 1850, every record side by side (#526).
+  'warming',
   // Deep time only: the surface coloured by temperature, and sea level through time.
   'temperature',
   'sealevel',

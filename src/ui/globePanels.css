@@ -1,0 +1,28 @@
+/* The column of small panels beside the globe: bottom left, clear of the page's panels. */
+.globe-panels {
+  position: fixed;
+  bottom: calc(var(--free-bottom, 0px) + 12px);
+  left: 16px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  width: min(300px, calc(100% - 96px));
+  /* Below the date panel, which also sits at the left. */
+  max-height: calc(100vh - var(--free-bottom, 0px) - var(--hud-bottom, 0px) - 24px);
+  overflow-y: auto;
+  pointer-events: none;
+}
+
+.globe-panels > * {
+  pointer-events: auto;
+}
+
+@media (max-width: 600px) {
+  /* On a phone, at most half the globe's room: the column scrolls past that. */
+  .globe-panels {
+    right: 72px;
+    width: auto;
+    max-height: calc((100vh - var(--free-bottom, 0px) - var(--hud-bottom, 0px)) / 2);
+  }
+}
