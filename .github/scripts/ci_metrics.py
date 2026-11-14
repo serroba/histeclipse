@@ -24,6 +24,10 @@ def measure(run: dict, jobs: list[dict]) -> dict | None:
     if aggregate is None or aggregate["conclusion"] != "success":
         return None
     required = [job for job in jobs if job["name"] not in {"CI metrics", "Folders touched (report only)"}]
+    # Selective PRs are a different cohort: skipped browser jobs must not look like fast runs.
+    if any(job.get("conclusion") != "success" for job in required
+           if "balanced acceptance" in job["name"] or job["name"] == GPU_JOB):
+        return None
     if any(not job.get("completed_at") for job in required):
         return None
     first = min(job["started_at"] for job in required)
@@ -75,7 +79,7 @@ def main() -> None:
         lines += [f"This run: **{sample['wall']:.0f} s** required span; **{sample['queue']:.0f} s** initial queue; "
                   f"**{sample['browser_minutes']:.1f}** browser runner-minutes.", ""]
     else:
-        lines += ["This run is incomplete, unsuccessful, or uses the older matrix; excluded from the latency cohort.", ""]
+        lines += ["This run is incomplete, unsuccessful, selective, or uses the older matrix; excluded from the latency cohort.", ""]
     lines += [f"Comparable successful PR runs in the last 20: **{len(rows)}**. " +
               (f"Nearest-rank p95: **{p95:.0f} s**." if p95 is not None else "No p95 yet."), "",
               "A sample under 20 is preliminary; do not claim long-term p95 from one green run.",
