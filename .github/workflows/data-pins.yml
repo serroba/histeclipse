@@ -1,0 +1,66 @@
+name: Living data pins
+
+# Some pipeline sources are living files, updated in place by their publishers; each download is
+# pinned by SHA-256, so their pins go stale (#560). Weekly, this checks every living pin and keeps
+# one issue up to date: opened (or its report refreshed) while any pin has drifted, closed once
+# all match again. Re-pinning stays a deliberate, reviewed change.
+on:
+  schedule:
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: data-pins
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check living data pins
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write # open, refresh or close the one drift issue
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - name: Check the pins
+        id: pins
+        working-directory: data-pipeline
+        run: |
+          uv sync --locked
+          # Exit 1 means drift (reported in the issue); anything else is a failure of the check.
+          status=0
+          uv run --locked histeclipse-pipeline check-pins --out "$RUNNER_TEMP/pins.md" || status=$?
+          if [ "$status" -gt 1 ]; then exit "$status"; fi
+          echo "drifted=$status" >> "$GITHUB_OUTPUT"
+      - name: Keep the issue up to date
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DRIFTED: ${{ steps.pins.outputs.drifted }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Living data files have drifted from their pins"
+          number=$(gh issue list --state open --search "\"$title\" in:title" --json number,title \
+            --jq "map(select(.title == \"$title\")) | first | .number // empty")
+          if [ "$DRIFTED" = "1" ]; then
+            {
+              cat "$RUNNER_TEMP/pins.md"
+              echo
+              echo "Checked by the [Living data pins workflow]($RUN_URL). See #560 for the policy;"
+              echo "this issue is updated weekly and closed once every pin matches again."
+            } > "$RUNNER_TEMP/body.md"
+            if [ -n "$number" ]; then
+              gh issue edit "$number" --body-file "$RUNNER_TEMP/body.md"
+            else
+              gh issue create --title "$title" --body-file "$RUNNER_TEMP/body.md"
+            fi
+          elif [ -n "$number" ]; then
+            gh issue close "$number" --comment "Every living pin matches again ([run]($RUN_URL))."
+          fi

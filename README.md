@@ -71,6 +71,7 @@ Positions come from [JPL DE441](https://ssd.jpl.nasa.gov/planets/eph_export.html
 - PRs merge by squash only, after the `CI OK` check passes and the branch is up to date with `main`.
 - Dependencies are pinned to exact versions. pnpm refuses package versions younger than 7 days (`minimumReleaseAge`), and uv excludes releases newer than 7 days (`exclude-newer`), and Dependabot uses the same cooldown.
 - GitHub Actions are pinned to commit SHAs and audited with [zizmor](https://github.com/zizmorcore/zizmor).
+- The data pipeline's downloads are pinned by SHA-256, so a changed upstream file is never used unseen. Files their publishers update in place (temperature records, sea level, ocean heat, sea ice, snow) are re-pinned by hand after looking at what changed; a weekly workflow runs the pipeline's `check-pins` command and keeps one issue open while any of them has drifted.
 
 ## Data sources and credits
 

@@ -46,6 +46,7 @@ from histeclipse_pipeline.ics import fetch_chart
 from histeclipse_pipeline.impacts import fetch_impacts
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.krapp import fetch_krapp
+from histeclipse_pipeline.living_pins import check_living_pins, drifted, report
 from histeclipse_pipeline.lunar import find_lunar_eclipses
 from histeclipse_pipeline.lunisolar import babylonian_table, chinese_year_table, write_table
 from histeclipse_pipeline.macrostrat import fetch_rocks
@@ -612,6 +613,15 @@ def temperature_records(args: Arguments) -> int:  # pragma: no cover - needs net
     return _say(f"wrote {points} temperature-record points to {args.out}")
 
 
+def check_pins(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Report which living files' pins have drifted; fail if any has (#560)."""
+    checks = check_living_pins()
+    text = report(checks)
+    _ = args.out.write_text(text, encoding="utf-8")
+    print(text)  # noqa: T201
+    return 1 if drifted(checks) else 0
+
+
 def amoc(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the AMOC as measured (RAPID) and as reconstructed, each source apart."""
     points = fetch_amoc(args.out)
@@ -1044,6 +1054,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         temperature_records,
         "write global temperature since 1850 (GISTEMP, NOAA, ERA5, JRA-3Q, HadCRUT5, Berkeley)",
         "output directory",
+    ),
+    "check-pins": (
+        check_pins,
+        "report which living files (updated in place upstream) no longer match their pins",
+        "file to write the Markdown report to",
     ),
     "amoc": (
         amoc,
