@@ -117,9 +117,14 @@ const EARTH_BODY = /* glsl */ `
   ${TEMPERATURE_GLSL}
 
   // Node-registered like the other deep-time maps; a byte per iceStep metres, 0 for no ice.
-  float iceFrom(sampler2D map, vec2 uv) {
+  // Red is the step's ice; green the part today's photo lacks, drawn when travelling (#665).
+  vec2 iceAt(sampler2D map, vec2 uv) {
     vec2 at = (uv * (iceGrid - 1.0) + 0.5) / iceGrid;
-    return texture2D(map, at).r * 255.0 * iceStep;
+    return texture2D(map, at).rg * 255.0 * iceStep;
+  }
+
+  float iceFrom(sampler2D map, vec2 uv) {
+    return iceAt(map, uv).r;
   }
 
   // No map before the elevation maps reach: a plain globe, with a graticule every 30 degrees so
@@ -273,7 +278,8 @@ const EARTH_BODY = /* glsl */ `
     // The sea-ice maps are empty over today's land; the shelf, where loaded, masks the bared.
     color = seaIceOver(color, uv, sea);
     if (iceActive > 0.5) {
-      float thickness = mix(iceFrom(iceYounger, uv), iceFrom(iceOlder, uv), iceMix);
+      // Only the ice the photo lacks: the glaciers today keeps, the photo shows sharper (#665).
+      float thickness = mix(iceAt(iceYounger, uv).g, iceAt(iceOlder, uv).g, iceMix);
       float iceBlur = max(fwidth(thickness), 1.0);
       float covered = smoothstep(8.0 - iceBlur, 8.0 + iceBlur, thickness);
       vec3 ice = mix(srgb(vec3(0.78, 0.87, 0.95)), srgb(vec3(0.97, 0.98, 1.0)), smoothstep(0.0, 2000.0, thickness));

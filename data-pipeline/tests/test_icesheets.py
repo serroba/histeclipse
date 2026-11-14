@@ -2,7 +2,7 @@ import io
 import json
 import struct
 import zipfile
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import h5py
 import numpy as np
@@ -14,6 +14,7 @@ from histeclipse_pipeline.icesheets import (
     METRES_PER_STEP,
     Frame,
     _zip64,  # pyright: ignore[reportPrivateUsage]
+    channels,
     encode,
     file_name,
     find_member,
@@ -22,9 +23,6 @@ from histeclipse_pipeline.icesheets import (
     read_member,
     write_icesheets,
 )
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def archive(members: dict[str, bytes], *, compress: bool = True) -> bytes:
@@ -144,4 +142,64 @@ def test_writes_images_and_an_index(tmp_path: Path) -> None:
     assert (index["rows"], index["columns"], index["metresPerStep"]) == (5, 9, METRES_PER_STEP)
     assert index["frames"][1] == {"ka": 2.5, "file": "2500.png", "ice": 1.0}
     with Image.open(tmp_path / "2500.png") as image:
-        assert image.getpixel((0, 0)) == 63
+        assert image.getpixel((0, 0)) == (63, 63, 0)
+
+
+def test_over_todays_photo_a_step_draws_only_the_ice_today_has_not() -> None:
+    today = np.array([[0.0, 500.0, 0.0]])
+    then = np.array([[1000.0, 2000.0, 0.0]])
+    packed = channels(then, today)
+    assert packed[..., 0].tolist() == [[63, 125, 0]]
+    # The glacier today keeps is left to the photo; the ice since gone is drawn.
+    assert packed[..., 1].tolist() == [[63, 0, 0]]
+    assert packed[..., 2].tolist() == [[0, 0, 0]]
+
+
+def test_the_first_step_written_must_be_todays(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="today's"):
+        _ = write_icesheets(iter([Frame(2.5, np.zeros((5, 9)))]), tmp_path)
+
+
+#: The committed images (public/data/icesheets), north at the top, 0.25° a cell.
+ICESHEETS = Path(__file__).parents[2] / "public" / "data" / "icesheets"
+#: Their rows and columns, as index.json gives them.
+ICE_GRID = (721, 1441)
+
+
+def _committed(ka_file: str) -> npt.NDArray[np.uint8]:
+    with Image.open(ICESHEETS / ka_file) as image:
+        return np.asarray(image.convert("RGB"))
+
+
+def _area(
+    image: npt.NDArray[np.uint8], lat: tuple[float, float], lon: tuple[float, float]
+) -> npt.NDArray[np.uint8]:
+    rows, columns = ICE_GRID
+    top = round((90 - lat[1]) / 180 * (rows - 1))
+    bottom = round((90 - lat[0]) / 180 * (rows - 1))
+    west = round((lon[0] + 180) / 360 * (columns - 1))
+    east = round((lon[1] + 180) / 360 * (columns - 1))
+    return image[top : bottom + 1, west : east + 1]
+
+
+@pytest.mark.parametrize("ka_file", ["0.png", "2500.png"])
+def test_near_today_the_mountain_glaciers_are_left_to_the_photo(ka_file: str) -> None:
+    image = _committed(ka_file)
+    for lat, lon in (((-56.0, -5.0), (-80.0, -60.0)), ((-47.0, -40.0), (166.0, 175.0))):
+        area = _area(image, lat, lon)
+        assert (area[..., 0] > 0).sum() > 0, "the glaciers are in the step's ice"
+        assert (area[..., 1] > 0).sum() == 0, "and none of them is drawn over the photo"
+
+
+def test_the_committed_images_are_the_grid_index_json_names() -> None:
+    index = json.loads((ICESHEETS / "index.json").read_text())  # pyright: ignore[reportAny]
+    assert (index["rows"], index["columns"]) == ICE_GRID
+    assert _committed("0.png").shape == (*ICE_GRID, 3)
+
+
+def test_the_holocenes_retreating_ice_sheets_are_still_drawn_over_the_photo() -> None:
+    image = _committed("10000.png")
+    laurentide = _area(image, (45.0, 75.0), (-110.0, -60.0))
+    fennoscandian = _area(image, (55.0, 72.0), (5.0, 35.0))
+    assert (laurentide[..., 1] > 0).sum() > 10_000
+    assert (fennoscandian[..., 1] > 0).sum() > 500
