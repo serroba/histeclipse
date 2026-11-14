@@ -7,7 +7,7 @@
 
 import * as v from 'valibot';
 
-import chartJson from '../../public/data/ics-chart.json';
+import chartJson from '../../public/data/ics-chart.json' with { type: 'json' };
 
 const Ma = v.pipe(v.number(), v.minValue(0));
 
