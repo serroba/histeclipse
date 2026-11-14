@@ -28,41 +28,42 @@ put new calculation/presentation permutations at their faster boundary.
 
 ## Selected execution counts
 
-| File               | Desktop | Mobile | 120 Hz |
-| ------------------ | ------: | -----: | -----: |
-| air.spec.ts        |       1 |      1 |      0 |
-| bodies.spec.ts     |       3 |      0 |      0 |
-| boundaries.spec.ts |       1 |      0 |      0 |
-| calendars.spec.ts  |       1 |      0 |      0 |
-| carbon.spec.ts     |       1 |      0 |      0 |
-| craters.spec.ts    |       1 |      0 |      0 |
-| dates.spec.ts      |       1 |      0 |      0 |
-| deepTime.spec.ts   |       3 |      0 |      0 |
-| earthTiles.spec.ts |       1 |      0 |      0 |
-| eclipses.spec.ts   |       3 |      1 |      0 |
-| fossils.spec.ts    |       1 |      0 |      0 |
-| fullview.spec.ts   |       0 |      1 |      0 |
-| genomes.spec.ts    |       1 |      0 |      0 |
-| history.spec.ts    |       2 |      0 |      1 |
-| humans.spec.ts     |       1 |      0 |      0 |
-| ice.spec.ts        |       1 |      0 |      0 |
-| impacts.spec.ts    |       1 |      0 |      0 |
-| journeys.spec.ts   |       4 |      3 |      0 |
-| layers.spec.ts     |       2 |      3 |      0 |
-| lineages.spec.ts   |       1 |      0 |      0 |
-| meaning.spec.ts    |       1 |      0 |      0 |
-| periods.spec.ts    |       1 |      0 |      0 |
-| playback.spec.ts   |       0 |      0 |      1 |
-| rocks.spec.ts      |       1 |      0 |      0 |
-| search.spec.ts     |       2 |      1 |      0 |
-| sheet.spec.ts      |       1 |      4 |      0 |
-| sky.spec.ts        |       4 |      2 |      0 |
-| smoke.spec.ts      |       9 |      5 |      0 |
-| sources.spec.ts    |       2 |      0 |      0 |
-| time.spec.ts       |       2 |      1 |      0 |
-| tree.spec.ts       |       1 |      0 |      0 |
-| volcanoes.spec.ts  |       1 |      0 |      0 |
-| ways.spec.ts       |       1 |      0 |      0 |
+| File                    | Desktop | Mobile | 120 Hz |
+| ----------------------- | ------: | -----: | -----: |
+| air.spec.ts             |       1 |      1 |      0 |
+| bodies.spec.ts          |       3 |      0 |      0 |
+| boundaries.spec.ts      |       1 |      0 |      0 |
+| calendars.spec.ts       |       1 |      0 |      0 |
+| carbon.spec.ts          |       1 |      0 |      0 |
+| craters.spec.ts         |       1 |      0 |      0 |
+| dates.spec.ts           |       1 |      0 |      0 |
+| deepTime.spec.ts        |       3 |      0 |      0 |
+| earthTiles.spec.ts      |       1 |      0 |      0 |
+| eclipses.spec.ts        |       3 |      1 |      0 |
+| fossils.spec.ts         |       1 |      0 |      0 |
+| fullview.spec.ts        |       0 |      1 |      0 |
+| genomes.spec.ts         |       1 |      0 |      0 |
+| history.spec.ts         |       2 |      0 |      1 |
+| humans.spec.ts          |       1 |      0 |      0 |
+| ice.spec.ts             |       1 |      0 |      0 |
+| impacts.spec.ts         |       1 |      0 |      0 |
+| journeys.spec.ts        |       4 |      3 |      0 |
+| layers.spec.ts          |       2 |      3 |      0 |
+| lineages.spec.ts        |       1 |      0 |      0 |
+| meaning.spec.ts         |       1 |      0 |      0 |
+| periods.spec.ts         |       1 |      0 |      0 |
+| playback.spec.ts        |       0 |      0 |      1 |
+| rocks.spec.ts           |       1 |      0 |      0 |
+| search.spec.ts          |       2 |      1 |      0 |
+| sheet.spec.ts           |       1 |      3 |      0 |
+| sheet.component.spec.ts |       0 |      1 |      0 |
+| sky.spec.ts             |       4 |      2 |      0 |
+| smoke.spec.ts           |       9 |      5 |      0 |
+| sources.spec.ts         |       2 |      0 |      0 |
+| time.spec.ts            |       2 |      1 |      0 |
+| tree.spec.ts            |       1 |      0 |      0 |
+| volcanoes.spec.ts       |       1 |      0 |      0 |
+| ways.spec.ts            |       1 |      0 |      0 |
 
 Use `E2E_SCOPE=acceptance pnpm test:e2e --list` to audit the selection. Timings are recorded per
 attempt; counts alone are not a runtime guarantee. Measure Actions job duration and runner-minutes
@@ -86,3 +87,18 @@ production data. Existing real-data layout/property and ancestry tests remain.
 Without `E2E_SCOPE=acceptance` (the default/nightly suite), the same journey uses the full dataset
 and asserts thousands of rendered nodes; the second full-data shared-link/source journey also
 remains. The fixture is not shipped in the application or used by production data loaders.
+
+## Folding-sheet pilot
+
+The detailed finger-following/slow-drag/flick geometry scenario runs against the real
+`createDeepTimeBar` factory and production CSS on a test-only source fixture server. Its host
+provides fixed content and no-op application callbacks. It asserts that no canvas is mounted
+and no datasets, textures or models are requested. The production application is still built
+and previewed separately, under its CSP; its ordinary swipe-open/close journey remains selected.
+
+The original detailed full-application scenario remains in the extended mobile suite.
+`foldingSheet.test.ts` checks flick, half-height and stillness boundaries with explicit times;
+`foldingSheet.dom.test.ts` checks event routing, ignored controls, scrolling and interrupted
+settling with fake timers and geometry. Native browser geometry and touch dispatch remain in
+the component scenario. This is a one-scenario pilot: measure the full job, including fixture
+server startup, before expanding it to other controls.

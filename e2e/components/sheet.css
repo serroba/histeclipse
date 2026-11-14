@@ -1,0 +1,14 @@
+/* Host layout and fixed content; the bar and folding rules come from production CSS. */
+body {
+  margin: 0;
+}
+.deep-time {
+  position: fixed;
+  left: 12px;
+  bottom: 12px;
+  width: calc(100% - 24px);
+}
+.sheet-fixture-content {
+  min-height: 400px;
+  flex-shrink: 0;
+}

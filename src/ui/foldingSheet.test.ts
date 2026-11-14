@@ -24,4 +24,22 @@ describe('where a dragged sheet settles', () => {
     expect(settlesOpen(drag({ y: 50, t: 500 }, -1), 1000, 250)).toBe(true);
     expect(settlesOpen(drag({ y: 250, t: 500 }, 1), 1000, 150)).toBe(false);
   });
+  it('uses the half-open boundary when there is no flick', () => {
+    const held = drag({ y: 100, t: 500 });
+    expect(settlesOpen(held, 1000, 200)).toBe(false);
+    expect(settlesOpen(held, 1000, 200.1)).toBe(true);
+  });
+
+  it('requires speed beyond the flick threshold, not exactly at it', () => {
+    expect(settlesOpen(drag({ y: 200, t: 990 }, -0.5), 1000, 100)).toBe(false);
+    expect(settlesOpen(drag({ y: 200, t: 990 }, -0.501), 1000, 100)).toBe(true);
+    expect(settlesOpen(drag({ y: 200, t: 990 }, 0.5), 1000, 300)).toBe(true);
+    expect(settlesOpen(drag({ y: 200, t: 990 }, 0.501), 1000, 300)).toBe(false);
+  });
+
+  it('drops the last movement speed after the stillness interval', () => {
+    const paused = drag({ y: 250, t: 500 }, -1);
+    expect(settlesOpen(paused, 600, 50)).toBe(true);
+    expect(settlesOpen(paused, 601, 50)).toBe(false);
+  });
 });

@@ -6,6 +6,8 @@
     "e2e/timingReporter.ts",
     "e2e/gpu/harness.ts",
     "playwright.perf.config.ts",
-    "e2e/perf/*.perf.ts"
+    "e2e/perf/*.perf.ts",
+    "vite.components.config.ts",
+    "e2e/components/*.ts"
   ]
 }
