@@ -38,6 +38,14 @@ function chapters<Chapter extends string>(
     });
     buttons.append(button);
   }
+  // Back to the chapter's first moment, paused there: where its camera stands farthest out.
+  const restart = document.createElement('button');
+  restart.textContent = 'Restart paused';
+  restart.addEventListener('click', () => {
+    story.restart();
+    story.setPlaying(false);
+  });
+  buttons.append(restart);
   story.settle();
 }
 
