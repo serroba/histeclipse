@@ -27,13 +27,13 @@ sample, not a claim that the retry rate or p95 is now established. The 88 browse
 The first shortened run assigned 39 executions to each Linux shard but took 3m 43s versus
 4m 55s: file order left more expensive desktop and mobile checks together. CI now discovers the
 current acceptance tests and partitions them using `.github/scripts/partition_e2e.py`, with
-versioned per-project/file estimates in `.github/e2e-costs.json`. Assignment is deterministic,
+versioned per-scenario estimates in `.github/e2e-costs.json`. Assignment is deterministic,
 longest-first, and new tests receive a default cost rather than disappearing. Two workers per
 runner remain; no extra runners are needed.
 
 The script uses Playwright's public `--test-list` interface. It never combines that selection
 with native `--shard` (which would partition again and omit tests). Unit tests and actual
-Playwright discovery verify that the two selections are disjoint and their union is all 78
+Playwright discovery verify that the two selections are disjoint and their union is all selected
 executions. Timing estimates are summed attempt costs, not predicted wall time. Refresh the
 estimates when reports show sustained imbalance; do not encode timings in application code.
 
@@ -62,3 +62,23 @@ Existing `@live` post-deploy checks remain focused on hosting/caching/release be
 regression suites still run nightly/on demand during migration; not every extended E2E has
 been replaced. Follow [ACCEPTANCE.md](ACCEPTANCE.md) when adding coverage so the required suite
 does not grow by another complete desktop/mobile cross-product.
+
+## Refreshing partition estimates
+
+The current estimates use five successful main runs: 43569497849, 43568198198, 43568023559,
+43566613486 and 43565142894. Scenario keys include the project, file and nested titles; file
+line numbers and transient Playwright IDs do not affect assignments. Medians use at least three
+successful, non-retried attempts per scenario. Flaky runs remain visible in timing reports,
+but are not treated as normal execution costs. Renamed/new scenarios get the 10 s default.
+
+Download both `timings-ci-1` and `timings-ci-2` artifacts for each run, extract their
+`timings.json` files into separate directories, then run:
+
+```sh
+python .github/scripts/refresh_e2e_costs.py /path/to/cohort/*/*/timings.json \
+  --output .github/e2e-costs.json
+```
+
+The refresh rejects non-Linux input, duplicate scenarios within a run and an empty usable cohort.
+Scenario medians improve the assignment model; actual two-worker makespan and retries still
+need checking on subsequent CI runs before claiming a speed-up.
