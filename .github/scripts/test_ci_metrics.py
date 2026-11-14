@@ -21,6 +21,8 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(row["browser_minutes"], 6)
         self.assertAlmostEqual(row["runner_minutes"], 6 + 2 / 60)
         self.assertEqual(row["attempt"], 2)
+        self.assertEqual(row["acceptance_gap"], 0)
+        self.assertEqual(row["job_seconds"][GPU_JOB], 120)
 
     def test_failed_incomplete_and_old_matrices_do_not_enter_cohort(self):
         self.assertIsNone(measure(self.run, [job("CI OK")]))
@@ -33,6 +35,12 @@ class MetricsTest(unittest.TestCase):
                      job("End-to-end (balanced acceptance, 2/2)", conclusion="skipped"),
                      job("CI OK")]
         self.assertIsNone(measure(self.run, selective))
+
+    def test_gap_uses_job_duration_and_missing_partition_is_not_comparable(self):
+        rows = [job("End-to-end (balanced acceptance, 1/2)", end="2026-11-14T00:01:10Z"),
+                job("End-to-end (balanced acceptance, 2/2)"), job(GPU_JOB), job("CI OK")]
+        self.assertEqual(measure(self.run, rows)["acceptance_gap"], 60)
+        self.assertIsNone(measure(self.run, rows[1:]))
 
     def test_nearest_rank_small_and_full_samples(self):
         self.assertIsNone(percentile([], 0.95))
