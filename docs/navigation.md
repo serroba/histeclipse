@@ -197,8 +197,10 @@ Each journey must work by keyboard and touch (#732).
 └──────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-- Explore opens on the left, the detail sheet on the right; Layers replaces Explore on the left
-  (never both). The globe keeps the centre.
+- Explore and Layers take the same side (the right, as Layers does today) and only one of them
+  is open at a time; the detail sheet takes the left. The globe keeps the centre. (As built in
+  #727: in the header's tools Explore keeps its word; Boundaries and Full view show their icons
+  alone, so the row leaves the site's name clear.)
 - The span switch moves into Time as presets; layer chips sit under the time bar in every span.
 - Layer explanations move to each chip's Why, not under the bar.
 

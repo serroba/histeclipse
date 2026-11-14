@@ -1,0 +1,147 @@
+/* Explore (#727): a panel on the side Layers takes, leaving the globe in reach; on a phone, a
+   sheet from the bottom. */
+.famous-dialog.explore-dialog {
+  position: fixed;
+  inset: 16px 16px auto auto;
+  z-index: 3;
+  width: min(380px, calc(100% - 32px));
+  max-height: calc(100vh - 32px);
+  margin: 0;
+  overflow: auto;
+  /* Opaque: labels and the year bar would read through a see-through sheet. */
+  background: rgb(10 16 32);
+}
+
+.explore-open[aria-expanded='true'] {
+  border-color: rgb(150 180 255 / 0.85);
+  color: var(--ink);
+}
+
+.explore-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 18px 10px;
+}
+
+.explore-topic {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.explore-topic[aria-selected='true'] {
+  border-color: rgb(150 180 255 / 0.85);
+  background: rgb(150 180 255 / 0.2);
+  color: var(--ink);
+}
+
+.explore-list {
+  margin: 0;
+  padding: 0 18px;
+  list-style: none;
+}
+
+.explore-item {
+  padding: 10px 0;
+  border-top: 1px solid var(--panel-border);
+}
+
+.explore-go {
+  display: block;
+  width: 100%;
+  min-height: 36px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.explore-go::after {
+  /* Decoration only: left out of the button's name. */
+  content: ' ›' / '';
+  color: var(--ink-muted);
+}
+
+.explore-go[aria-current='true'] {
+  color: var(--accent);
+}
+
+.explore-about {
+  margin: 0 0 6px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.explore-questions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.explore-question {
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: rgb(150 180 255);
+  font: inherit;
+  font-size: 13px;
+  font-style: italic;
+  text-align: left;
+  cursor: pointer;
+}
+
+.explore-search {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: calc(100% - 36px);
+  min-height: 44px;
+  margin: 8px 18px 16px;
+  padding: 0 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 22px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .famous-dialog.explore-dialog {
+    inset: auto 0 0;
+    width: 100%;
+    max-height: 70vh;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* With Explore in the header's tools, Boundaries and Full view show their icons alone, the words
+   kept for screen readers and tooltips, so the row leaves the site's name clear. */
+.hud-tools :is(.boundaries-open, .full-view) > .icon-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.hud-tools :is(.boundaries-open, .full-view) {
+  padding: 0 8px;
+}

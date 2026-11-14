@@ -214,7 +214,11 @@ export function createLayersPanel(
   button.addEventListener('click', () => {
     // Not modal: the globe and the date stay in reach while layers are chosen.
     if (dialog.open) shut();
-    else dialog.show();
+    else {
+      // Explore takes the same side (#727): one of them at a time.
+      document.querySelector<HTMLDialogElement>('dialog.explore-dialog[open]')?.close();
+      dialog.show();
+    }
     button.setAttribute('aria-expanded', String(dialog.open));
   });
   close.addEventListener('click', shut);
