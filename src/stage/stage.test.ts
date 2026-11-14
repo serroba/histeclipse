@@ -171,6 +171,33 @@ describe('Stage', () => {
     expect(renderer.render).toHaveBeenCalledTimes(1);
   });
 
+  it('covered, steps its parts but draws nothing until uncovered', () => {
+    const { made, renderer } = stage();
+    let moving = true;
+    const step = vi.fn(() => moving);
+    made.add({ step });
+    made.start(true);
+    expect(renderer.render).toHaveBeenCalledTimes(1);
+    made.cover(true);
+    next(1);
+    next(2);
+    expect(step).toHaveBeenCalledTimes(3);
+    expect(renderer.render).toHaveBeenCalledTimes(1);
+    // Still, once nothing moves: no frames polled while covered.
+    moving = false;
+    next(3);
+    expect(frames.pending()).toBe(false);
+    made.invalidate();
+    next(4);
+    expect(frames.pending()).toBe(false);
+    expect(renderer.render).toHaveBeenCalledTimes(1);
+    // Uncovered, it draws what changed meanwhile.
+    made.cover(false);
+    next(5);
+    expect(renderer.render).toHaveBeenCalledTimes(2);
+    expect(frames.pending()).toBe(false);
+  });
+
   it('sizes the canvas to its container and tells the parts', () => {
     const { made, renderer } = stage(false, 640, 480);
     const resize = vi.fn();

@@ -97,6 +97,12 @@ export function mountShower(context: ShowerContext): ShowerPart {
   } | null = null;
   showerStage.setDrawnIn3d(STEPS_IN_3D);
 
+  /** Show the 3D story over the globe, which draws nothing under it meanwhile (#339). */
+  function showStory(shown: boolean): void {
+    storyContainer.hidden = !shown;
+    globe.controlShower(shown ? 'cover' : 'uncover');
+  }
+
   /** Load a scene's code and make it, if the story still wants it once it has loaded. */
   function loadStory3d(kind: 'sun' | 'air' | 'leaf'): void {
     story3dLoading = kind;
@@ -139,7 +145,7 @@ export function mountShower(context: ShowerContext): ShowerPart {
       .catch((error: unknown) => {
         story3dLoading = null;
         story3dFailed = true;
-        storyContainer.hidden = true;
+        showStory(false);
         showerStage.setDrawnIn3d(new Set());
         if (story3dLatest !== null) showerStage.render(story3dLatest.state, story3dLatest.caption);
         context.notify(
@@ -154,11 +160,11 @@ export function mountShower(context: ShowerContext): ShowerPart {
     story3dStep = state.step;
     const kind = SCENE_OF[state.step];
     if (story3dFailed) {
-      storyContainer.hidden = true;
+      showStory(false);
       story3d?.scene.setPlaying(false);
       return;
     }
-    storyContainer.hidden = false;
+    showStory(true);
     if (story3d?.kind !== kind) {
       // The other scene, if one is up, gives way; this one starts afresh once it has loaded.
       story3d?.scene.dispose();
@@ -188,7 +194,7 @@ export function mountShower(context: ShowerContext): ShowerPart {
     story3dLoading = null;
     story3dStep = null;
     story3dLatest = null;
-    storyContainer.hidden = true;
+    showStory(false);
   }
 
   // Today's land and sea, to say whether the carbon lands on land or water; asked for once.

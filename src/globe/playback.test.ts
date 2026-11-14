@@ -60,14 +60,16 @@ function playback() {
   const pin = new MeshBasicMaterial();
   const dataset: Record<string, string> = {};
   let drawn = 0;
+  const covers: boolean[] = [];
   const play = new Playback({
     earth,
     pin,
     dataset: dataset,
     resolution: () => ({ x: 900, y: 700 }),
     invalidate: () => (drawn += 1),
+    cover: (covered) => covers.push(covered),
   });
-  return { play, earth, pin, dataset, drawn: () => drawn };
+  return { play, earth, pin, dataset, drawn: () => drawn, covers };
 }
 
 const impact = (ends: number) => ({ ends }) as unknown as ImpactSpec;
@@ -157,6 +159,19 @@ describe('a cosmic-ray shower', () => {
     expect(showers[1]?.disposed).toBe(true);
     expect(pin.visible).toBe(true);
     expect(dataset['showerStep']).toBe('done');
+    play.dispose();
+  });
+
+  it('covers the globe while the 3D story tells the shower, and stopping uncovers it', () => {
+    const { play, covers } = playback();
+    play.playShower(shower());
+    play.controlShower('cover');
+    play.controlShower('pause');
+    expect(showers[0]?.commands).toEqual(['pause']);
+    play.controlShower('uncover');
+    play.controlShower('cover');
+    play.controlShower('stop');
+    expect(covers).toEqual([true, false, true, false]);
     play.dispose();
   });
 

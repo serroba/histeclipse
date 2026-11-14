@@ -47,6 +47,7 @@ export class Stage<C extends Camera = Camera> {
   #dirty = true;
   #frame: number | null = null;
   #running = false;
+  #covered = false;
 
   constructor(container: HTMLElement, options: StageOptions<C>) {
     this.#container = container;
@@ -99,6 +100,16 @@ export class Stage<C extends Camera = Camera> {
     else this.#requestFrame();
   }
 
+  /**
+   * Whether something opaque covers the view (the story over the globe, #339): its parts go on
+   * stepping, as their clocks may matter, but nothing is drawn until it is uncovered.
+   */
+  cover(covered: boolean): void {
+    if (covered === this.#covered) return;
+    this.#covered = covered;
+    if (!covered) this.invalidate();
+  }
+
   /** Stop the frames; `start` takes them up again. */
   stop(): void {
     this.#running = false;
@@ -130,12 +141,14 @@ export class Stage<C extends Camera = Camera> {
         moving = true;
       }
     }
-    if (this.#dirty) {
-      this.#dirty = false;
-      for (const part of this.#parts) if (part.beforeRender?.(now) === true) this.#dirty = true;
-      this.renderer.render(this.scene, this.camera);
-      for (const part of this.#parts) part.afterRender?.();
-    }
-    if (moving || this.#dirty) this.#requestFrame();
+    if (this.#dirty && !this.#covered) this.#draw(now);
+    if (moving || (this.#dirty && !this.#covered)) this.#requestFrame();
   };
+
+  #draw(now: number): void {
+    this.#dirty = false;
+    for (const part of this.#parts) if (part.beforeRender?.(now) === true) this.#dirty = true;
+    this.renderer.render(this.scene, this.camera);
+    for (const part of this.#parts) part.afterRender?.();
+  }
 }
