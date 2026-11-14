@@ -49,7 +49,6 @@ export const UNTESTED = [
   'src/features/humans/arrivalGrid.ts',
   'src/features/humans/humanSiteLayer.ts',
   'src/features/iceAges/iceOutlineLayer.ts',
-  'src/features/iceAges/index.ts',
   'src/features/impacts/impactLayer.ts',
   'src/features/impacts/index.ts',
   'src/features/layersPanel/index.ts',
