@@ -1,0 +1,66 @@
+/* Ocean heat's panel (#589), in the column beside the globe (ui/globePanels). */
+.ocean-heat-panel {
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgb(10 16 32 / 0.88);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.ocean-heat-panel[hidden] {
+  display: none;
+}
+
+.ocean-heat-title,
+.ocean-heat-said,
+.ocean-heat-note,
+.ocean-heat-credit {
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.ocean-heat-title {
+  color: var(--ink-muted);
+}
+
+.ocean-heat-pick {
+  width: 100%;
+  min-height: 32px;
+  margin-bottom: 6px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 0.05);
+  color: var(--ink);
+  font: inherit;
+}
+
+.ocean-heat-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 6px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+/* Its own diverging scale, as the map is painted: blue losing, pale none, deep red gaining. */
+.ocean-heat-scale {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, rgb(40 80 200), rgb(235 230 220) 50%, rgb(190 40 20));
+}
+
+.ocean-heat-note,
+.ocean-heat-credit {
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+@media (max-width: 600px) {
+  .ocean-heat-note,
+  .ocean-heat-said {
+    display: none;
+  }
+}

@@ -5,6 +5,7 @@ import { fossilsFeature } from './fossils';
 import { genomesFeature } from './genomes';
 import { humansFeature } from './humans';
 import { spacecraftFeature } from './spacecraft';
+import { oceanHeatFeature } from './oceanHeat';
 import { ozoneFeature } from './ozone';
 import { warmingFeature } from './warming';
 import { volcanoesFeature } from './volcanoes';
@@ -16,6 +17,7 @@ export const FEATURES: readonly Feature[] = [
   volcanoesFeature,
   ozoneFeature,
   warmingFeature,
+  oceanHeatFeature,
   genomesFeature,
   // Before the fossils: its chip comes first in the deep-time bar, as it did.
   humansFeature,
