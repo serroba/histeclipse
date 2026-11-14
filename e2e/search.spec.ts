@@ -62,3 +62,27 @@ test('a reader searches with the keyboard for a landing and flies to the Moon @a
   });
   expect(problems).toEqual([]);
 });
+
+test('a reader searches for a mission and follows its journey (#712)', async ({ page }) => {
+  const problems = collectProblems(page);
+  const dialog = page.getByRole('dialog', { name: 'Search' });
+  await test.step('Given the globe today', async () => {
+    await page.goto('./?cam=0,0,3');
+    await globeRendered(page);
+  });
+  await test.step('When they search for Voyager 2', async () => {
+    await page.getByRole('button', { name: 'Search the texts' }).click();
+    await dialog.getByRole('searchbox').fill('Voyager 2');
+  });
+  await test.step('Then its mission is found, and opening it follows its journey from the start', async () => {
+    await dialog.locator('[data-passage="mission:d00574"] .search-hit').click();
+    await expect(dialog).toBeHidden();
+    await expect(page).toHaveURL(/mission=d00574/);
+    await expect(page).toHaveURL(/focus=sun/);
+    await expect(page).toHaveURL(/t=1977-08-20T19:37Z/);
+    const journey = page.getByRole('group', { name: 'Voyager 2: its journey' });
+    await expect(journey).toBeVisible({ timeout: 30_000 });
+    await expect(journey.getByRole('listitem')).toHaveCount(5);
+  });
+  expect(problems).toEqual([]);
+});
