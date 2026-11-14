@@ -12,6 +12,7 @@ import {
   destinationsIn,
   TOPICS,
 } from './destinations';
+import { frameSpan, showsFrame } from './frame';
 import source from './destinations.ts?raw';
 
 const NOW = new Date('2026-11-15T00:00:00Z');
@@ -59,6 +60,11 @@ describe('destinations', () => {
     (id) => {
       const state = arrive(id, READER);
       expect(state.explore).toBe(id);
+      // It lands inside its own time, on the span that draws it (#729).
+      const frame = destinationById(id)?.frame;
+      if (frame === undefined) throw new Error(`${id}: no frame`);
+      expect(showsFrame(state, frame), `${id} lands in its frame`).toBe(true);
+      expect(spanOf(state)).toBe(frameSpan(frame));
       const view = new URLSearchParams(destinationById(id)?.view);
       for (const layer of (view.get('layers') ?? '').split(',').filter(Boolean)) {
         expect(SPANS_OF.get(layer as never), `${id}: ${layer}`).toContain(spanOf(state));
@@ -114,6 +120,12 @@ describe('the registry loads nothing', () => {
   it('Given its source, Then it fetches no data and imports only types and the anchor link maths', () => {
     expect(source).not.toMatch(/fetch|import\(/);
     const imports = [...source.matchAll(/from '([^']+)'/g)].map((match) => match[1]);
-    expect(imports).toEqual(['../state/viewState', '../text/anchors', '../text/passages']);
+    expect(imports).toEqual([
+      '../state/viewState',
+      '../time/present',
+      '../text/anchors',
+      './frame',
+      '../text/passages',
+    ]);
   });
 });

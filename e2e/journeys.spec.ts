@@ -76,6 +76,25 @@ test('a visitor explores human origins by topic, without choosing a span, and Ba
   expect(problems).toEqual([]);
 });
 
+test('a visitor who wandered from Ancient Australia fits the topic and is back at its age (#729)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await test.step('Given Ancient Australia, left for 250 million years ago', async () => {
+    await page.goto('./?explore=ancient-australia&ma=250&scale=all&cam=-46,122,3&layers=plates');
+    await expect(page.locator('.hud-date')).toHaveText('250 million years ago');
+  });
+  await test.step('When they fit the topic', async () => {
+    await page.getByRole('button', { name: /^Fit this topic/ }).click();
+  });
+  await test.step('Then its age is back, and Fit goes until they leave again', async () => {
+    await expect(page.locator('.hud-date')).toHaveText('100 million years ago');
+    await expect(page.getByRole('button', { name: /^Fit this topic/ })).toBeHidden();
+    await expect(page.locator('.explore-context')).toContainText('Ancient Australia');
+  });
+  expect(problems).toEqual([]);
+});
+
 test('a link to a destination opens its view, and the link keeps naming it (#726)', async ({
   page,
 }) => {

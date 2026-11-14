@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createStore } from '../state/store';
 import { defaultViewState, type ViewState } from '../state/viewState';
-import { anchorOpener } from './open';
+import { viewOpener } from './open';
 
 describe('opening an anchor', () => {
   it('Given a reader today, When an anchor opens, Then playing stops, a step is made, and the view is the anchor’s', () => {
@@ -11,7 +11,7 @@ describe('opening an anchor', () => {
     const step = vi.fn(() => calls.push('step'));
     const stopPlay = vi.fn(() => calls.push('stop'));
     store.subscribe(() => calls.push('set'));
-    anchorOpener({ store, deepTime: { stopPlay }, sync: () => ({ step }) })({
+    viewOpener({ store, deepTime: { stopPlay }, sync: () => ({ step }) }).anchor({
       body: 'earth',
       view: 'ma=100&explore=x1',
     });

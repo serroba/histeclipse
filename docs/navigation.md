@@ -125,10 +125,11 @@ Decisions:
 ## 4. Links and history
 
 - A link keeps describing the **resulting state**, as today; old links read exactly as before.
-- Arriving at a destination adds `explore=<id>` to the link, so "Fit this topic" and the Explore
-  highlight survive reload and sharing. It is dropped as soon as the reader moves outside the
-  destination's frame by hand (changing span or picking another destination), so a link never
-  claims a context it no longer shows.
+- Arriving at a destination adds `explore=<id>`, so the line under the date ("Exploring Human
+  origins") and Fit this topic survive reload and sharing. It stays while the reader explores
+  from there, by hand, in time or space: it says where they arrived from, and Fit this topic
+  shows whenever the view has left the destination's time. Opening a search result or another
+  destination replaces it. (As built in #729; this replaces dropping it on a change of span.)
 - Arriving is a **step** (`urlSync.step()`): Back returns to the view before, including time and
   selection. Scrubbing and layer toggles keep replacing the current entry, as now.
 

@@ -12,6 +12,8 @@ interface HeaderParts {
   readonly tools: readonly Node[];
   readonly date: Node;
   readonly time: Node;
+  /** Under the date: the destination arrived at, and fitting its time (#729). */
+  readonly context: Node;
   readonly detail: Node;
   readonly termNote: Node;
   readonly welcome: Node;
@@ -66,6 +68,7 @@ function header(parts: HeaderParts, hudActions: HTMLElement): HTMLElement {
     ),
     element('div', { class: 'hud-tools' }, ...parts.tools),
     element('p', { class: 'hud-when' }, parts.date, ' ', parts.time),
+    parts.context,
     parts.detail,
     parts.termNote,
     parts.welcome,
