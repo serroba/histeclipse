@@ -50,8 +50,9 @@ describe('Stage', () => {
     expect(calls).toEqual(['step a', 'step b', 'before a', 'render', 'after a', 'after b']);
     calls.length = 0;
     next(2);
-    expect(calls).toEqual(['step a', 'step b']);
+    expect(calls).toEqual([]);
     moving = true;
+    made.invalidate();
     next(3);
     expect(renderer.render).toHaveBeenCalledTimes(2);
   });
@@ -89,6 +90,85 @@ describe('Stage', () => {
     });
     made.start(true);
     expect(frames.pending()).toBe(false);
+  });
+
+  it('does no idle polling over ten seconds of display opportunities, then wakes once', () => {
+    const { made, renderer } = stage();
+    const step = vi.fn(() => false);
+    const requested = vi.spyOn(globalThis, 'requestAnimationFrame');
+    made.add({ step });
+    made.start(true);
+    for (let frame = 1; frame <= 600; frame++) next((frame * 1000) / 60);
+    expect(step).toHaveBeenCalledTimes(1);
+    expect(renderer.render).toHaveBeenCalledTimes(1);
+    expect(frames.pending()).toBe(false);
+    made.invalidate();
+    made.invalidate();
+    made.invalidate();
+    next(11_000);
+    expect(requested).toHaveBeenCalledTimes(1);
+    expect(step).toHaveBeenCalledTimes(2);
+    expect(renderer.render).toHaveBeenCalledTimes(2);
+    expect(frames.pending()).toBe(false);
+  });
+
+  it('preserves an invalidation made after drawing for one more frame', () => {
+    const { made, renderer } = stage();
+    let once = true;
+    made.add({
+      afterRender: () => {
+        if (once) {
+          once = false;
+          made.invalidate();
+        }
+      },
+    });
+    made.start(true);
+    expect(frames.pending()).toBe(true);
+    next(1);
+    expect(renderer.render).toHaveBeenCalledTimes(2);
+    expect(frames.pending()).toBe(false);
+  });
+
+  it('keeps moving parts alive and sleeps when they finish', () => {
+    const { made, renderer } = stage();
+    let moving = true;
+    made.add({ step: () => moving });
+    made.start(true);
+    next(1);
+    next(2);
+    expect(renderer.render).toHaveBeenCalledTimes(3);
+    moving = false;
+    next(3);
+    expect(frames.pending()).toBe(false);
+  });
+
+  it('defers hidden work and wakes when the view is shown and resized', () => {
+    const { made, renderer, container } = stage();
+    container.hidden = true;
+    made.start(true);
+    made.invalidate();
+    expect(frames.pending()).toBe(false);
+    expect(renderer.render).not.toHaveBeenCalled();
+    container.hidden = false;
+    made.resize();
+    next(1);
+    expect(renderer.render).toHaveBeenCalledTimes(1);
+    made.invalidate();
+    container.hidden = true;
+    next(2);
+    expect(renderer.render).toHaveBeenCalledTimes(1);
+    expect(frames.pending()).toBe(false);
+  });
+
+  it('does not wake after disposal when a late resource invalidates', () => {
+    const { made, renderer } = stage();
+    made.start(true);
+    made.dispose();
+    made.invalidate();
+    next(10);
+    expect(frames.pending()).toBe(false);
+    expect(renderer.render).toHaveBeenCalledTimes(1);
   });
 
   it('sizes the canvas to its container and tells the parts', () => {

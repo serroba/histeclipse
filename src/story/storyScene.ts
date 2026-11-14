@@ -328,6 +328,7 @@ export function createStoryScene<Chapter extends string>(
       playing = next;
       last = performance.now();
       container.dataset['playing'] = String(next);
+      stage.invalidate();
     },
     restart() {
       t = 0;

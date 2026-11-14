@@ -10,7 +10,7 @@ import type { Camera, WebGLRenderer } from 'three';
 
 /** Something a view shows or keeps up to date, joining in at the moments of each frame. */
 export interface StagePart {
-  /** Every frame, before anything is drawn: true when this frame needs drawing. */
+  /** While awake, before drawing: true while moving, to draw and request another frame. */
   step?(now: number): boolean;
   /** Before a drawing: true when the frame after needs drawing too (a map still arriving). */
   beforeRender?(now: number): boolean | undefined;
@@ -43,7 +43,7 @@ export class Stage<C extends Camera = Camera> {
   readonly #parts: StagePart[] = [];
   #observer: ResizeObserver | null = null;
   #dirty = true;
-  #frame = 0;
+  #frame: number | null = null;
   #running = false;
 
   constructor(container: HTMLElement, options: StageOptions<C>) {
@@ -63,6 +63,7 @@ export class Stage<C extends Camera = Camera> {
   /** Draw on the next frame. */
   invalidate(): void {
     this.#dirty = true;
+    this.#requestFrame();
   }
 
   /** Size the canvas to its container, and tell the parts. */
@@ -72,7 +73,7 @@ export class Stage<C extends Camera = Camera> {
     if (this.#styleSize && (width === 0 || height === 0)) return;
     this.renderer.setSize(width, height, this.#styleSize);
     for (const part of this.#parts) part.resize?.(width, height);
-    this.#dirty = true;
+    this.invalidate();
   }
 
   /** Keep the canvas the container's size from now on, as the container changes. */
@@ -88,13 +89,14 @@ export class Stage<C extends Camera = Camera> {
     if (this.#running) return;
     this.#running = true;
     if (immediately) this.#tick(performance.now());
-    else this.#frame = requestAnimationFrame(this.#tick);
+    else this.#requestFrame();
   }
 
   /** Stop the frames; `start` takes them up again. */
   stop(): void {
     this.#running = false;
-    cancelAnimationFrame(this.#frame);
+    if (this.#frame !== null) cancelAnimationFrame(this.#frame);
+    this.#frame = null;
   }
 
   /** Stop, and let go of the parts and the renderer. */
@@ -105,14 +107,28 @@ export class Stage<C extends Camera = Camera> {
     this.renderer.dispose();
   }
 
+  /** Coalesce wake-ups; a hidden container resumes through its resize observer or next update. */
+  #requestFrame(): void {
+    if (this.#running && this.#frame === null && this.#container.hidden === false)
+      this.#frame = requestAnimationFrame(this.#tick);
+  }
+
   readonly #tick = (now: number): void => {
-    for (const part of this.#parts) if (part.step?.(now) === true) this.#dirty = true;
+    this.#frame = null;
+    if (!this.#running || this.#container.hidden !== false) return;
+    let moving = false;
+    for (const part of this.#parts) {
+      if (part.step?.(now) === true) {
+        this.#dirty = true;
+        moving = true;
+      }
+    }
     if (this.#dirty) {
       this.#dirty = false;
       for (const part of this.#parts) if (part.beforeRender?.(now) === true) this.#dirty = true;
       this.renderer.render(this.scene, this.camera);
       for (const part of this.#parts) part.afterRender?.();
     }
-    if (this.#running) this.#frame = requestAnimationFrame(this.#tick);
+    if (moving || this.#dirty) this.#requestFrame();
   };
 }
