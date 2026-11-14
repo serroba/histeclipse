@@ -88,7 +88,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
     ],
   },
   {
-    name: 'Earth and life',
+    name: 'Earth',
     layers: [
       {
         id: 'rocks',
@@ -104,14 +104,6 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
         about: 'A second reconstruction’s continents, outlined over the first.',
         spans: DEEP,
         reach: 'Back to 1,800 million years ago.',
-      },
-      {
-        id: 'fossils',
-        label: 'Fossils',
-        about:
-          'Fossils of four groups of animals from the Paleobiology Database, where they lay then.',
-        spans: ['all'],
-        reach: 'Counted by 5 million years over the last 540 million.',
       },
       {
         id: 'impacts',
@@ -132,7 +124,20 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
     ],
   },
   {
-    name: 'Climate and air',
+    name: 'Life',
+    layers: [
+      {
+        id: 'fossils',
+        label: 'Fossils',
+        about:
+          'Fossils of four groups of animals from the Paleobiology Database, where they lay then.',
+        spans: ['all'],
+        reach: 'Counted by 5 million years over the last 540 million.',
+      },
+    ],
+  },
+  {
+    name: 'Climate',
     layers: [
       {
         id: 'temperature',
@@ -175,7 +180,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
     ],
   },
   {
-    name: 'Sky and events',
+    name: 'Space',
     layers: [
       {
         id: 'eclipses',

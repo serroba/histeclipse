@@ -18,7 +18,7 @@ test('the reader finds every layer in one panel, grouped by what it shows', asyn
     const panel = page.getByRole('dialog', { name: 'Layers' });
     const people = panel.getByRole('group', { name: 'People' });
     await expect(people.getByRole('checkbox', { name: 'States and empires' })).not.toBeChecked();
-    const sky = panel.getByRole('group', { name: 'Sky and events' });
+    const sky = panel.getByRole('group', { name: 'Space' });
     await expect(sky.getByRole('checkbox', { name: 'Eclipses', exact: true })).not.toBeChecked();
     await expect(sky.getByRole('checkbox', { name: 'Eclipse shadows' })).toHaveCount(0);
     await expect(sky.getByRole('checkbox', { name: 'Moon in Earth’s shadow' })).toHaveCount(0);
@@ -359,4 +359,27 @@ test('the date panel’s rows line up on both edges, and on a phone it spans the
       expect(Math.abs(hud.x - (width - hud.x - hud.width))).toBeLessThanOrEqual(1);
     });
   }
+});
+
+test('the layers on show as chips beside Layers: one off its span offers where it draws, and taking one off moves nothing (#728) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const on = page.getByRole('group', { name: 'Layers on' });
+  await test.step('Given 100 million years ago with plates and humans on', async () => {
+    await page.goto('./?ma=100&scale=all&layers=plates,humans&cam=-46,122,3');
+    await expect(page.locator('.hud-date')).toHaveText('100 million years ago');
+  });
+  await test.step('When plates are taken off, Then time and camera stay', async () => {
+    await on.getByRole('button', { name: 'Turn off Plates' }).click();
+    await expect(on.locator('[data-layer="plates"]')).toHaveCount(0);
+    await expect(page).toHaveURL(/ma=100/);
+    await expect(page).toHaveURL(/cam=-46/);
+  });
+  await test.step('When they go to where humans draw, Then the ice ages open at the earliest Homo sapiens', async () => {
+    await on.getByRole('button', { name: 'Go to the earliest Homo sapiens' }).click();
+    await expect(page.locator('.hud-date')).toHaveText('315,000 years ago');
+    await expect(on.locator('[data-layer="humans"]')).toHaveAttribute('data-draws', 'true');
+  });
+  expect(problems).toEqual([]);
 });

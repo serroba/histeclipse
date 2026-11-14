@@ -74,8 +74,11 @@ Rules:
 - **Spans become range presets inside Time** (Years · Ice ages · 540 Myr · 4.6 Gyr), not the first
   thing in the header. The renderer each needs (historical vs deep) stays; picking a destination
   selects it.
-- **Active layers are always visible** as small removable chips near the time control, in every
-  span. They replace the deep-time chips; the full catalogue stays in Layers.
+- **Active layers are always visible** as small removable chips, in every span. As built in
+  #728 they sit beside Layers, in a row of their own under the spans: each turns its layer off,
+  and one outside its data is outlined, says its reach in its tooltip, and offers **Go to …**
+  where it draws. The deep-time bar's chips stay for now as that bar's way to turn its layers on
+  (with their notes); folding them into these is left for the Time control (#730).
 - **Destinations and layers are different things.** A destination may turn layers on; turning a
   layer on is never how a subject is found.
 - One **detail sheet** at a time (mission, rock, fossil counts, about here): it owns the side on
@@ -101,7 +104,7 @@ type Topic = 'space' | 'earth' | 'life' | 'people' | 'climate';
 
 Decisions:
 
-- **Topics and layer groups are separate on purpose.** Topics (Space, Earth, Life, People,
+- **Topics and layer groups are separate on purpose** (groups renamed in #728). Topics (Space, Earth, Life, People,
   Climate) organise _destinations_ in Explore. The Layers panel keeps grouping by what is drawn,
   but its group names are aligned with the topic words so the two read as one vocabulary:
   People → **People**; Earth and life → **Earth** and **Life**; Climate and air → **Climate**; Sky
