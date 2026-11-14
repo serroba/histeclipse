@@ -87,6 +87,11 @@
   min-width: 0;
 }
 
+/* The eclipses off (#634): the row goes, the year's controls stay. */
+.eclipse-row[hidden] {
+  display: none;
+}
+
 .eclipse-list {
   display: flex;
   flex: 1;

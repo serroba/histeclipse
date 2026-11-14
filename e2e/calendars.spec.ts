@@ -3,7 +3,7 @@
 import { collectProblems, expect, globeRendered, openLayers, openSources, test } from './support';
 
 test('with a long calendar picked, every control in the bar stays within it', async ({ page }) => {
-  await page.goto('./?t=2024-01-01T00:00');
+  await page.goto('./?t=2024-01-01T00:00&layers=eclipses');
   await globeRendered(page);
   const bar = page.locator('.timeline');
   for (const calendar of ['babylonian', 'egyptian']) {
@@ -74,10 +74,10 @@ test('the Babylonian calendar dates Jerusalem’s capture to 2 Addaru, 16 March 
 
 test('VAT 4956 can be checked against two candidate years, record by record', async ({ page }) => {
   const problems = collectProblems(page);
-  await page.goto('./?t=-567-04-23T12:00&years=babylonian');
+  await page.goto('./?t=-567-04-23T12:00&years=babylonian&layers=eclipses');
   await globeRendered(page);
   // The check shows with the Babylonian calendar only.
-  await page.goto('./?t=-567-04-23T12:00');
+  await page.goto('./?t=-567-04-23T12:00&layers=eclipses');
   await globeRendered(page);
   await expect(page.getByRole('button', { name: 'Check a tablet' })).toBeHidden();
   await page.getByLabel('Era', { exact: true }).selectOption('babylonian');
@@ -111,7 +111,7 @@ test('VAT 4956 can be checked against two candidate years, record by record', as
 test('Ptolemy’s eclipse of 721 BCE is listed on 29 Thoth in year 27 of Nabonassar', async ({
   page,
 }) => {
-  await page.goto('./?t=-720-03-19T12:00&years=egyptian');
+  await page.goto('./?t=-720-03-19T12:00&years=egyptian&layers=eclipses');
   await globeRendered(page);
   await expect(page.getByLabel('Year', { exact: true })).toHaveValue('27');
   await expect(page.getByLabel('Era', { exact: true })).toHaveValue('egyptian');

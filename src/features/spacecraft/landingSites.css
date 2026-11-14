@@ -1,0 +1,50 @@
+/* Where craft came down (#716): a small dot on the site, the craft's name beside it, as the
+   craft in space are named; a tap opens its card. */
+.landing-sites {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.landing-site {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 1px 0 1px 12px;
+  border: 0;
+  background: none;
+  color: rgb(255 226 170 / 0.95);
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 500;
+  white-space: nowrap;
+  text-shadow:
+    0 0 3px rgb(0 0 0 / 0.9),
+    0 1px 2px rgb(0 0 0 / 0.8);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.landing-site::before {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border: 1px solid rgb(0 0 0 / 0.6);
+  border-radius: 50%;
+  background: rgb(255 190 90);
+  content: '';
+}
+
+.landing-site:hover,
+.landing-site:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.landing-site[hidden] {
+  display: none;
+}

@@ -73,6 +73,8 @@ describe('the craft in flight at a moment, and where', () => {
     expect(orbiter?.km).toEqual([0, AU, 0]);
     expect(orbiter?.at).toBe('Mars');
     expect(orbiter?.approximate).toBe(true);
+    // It is there: no stray trail across space (#716).
+    expect(orbiter?.trail).toEqual([]);
   });
 
   it('Given a craft still about Earth, or not yet launched, Then it is not drawn', () => {

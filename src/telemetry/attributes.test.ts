@@ -11,7 +11,7 @@ import {
 const NOW = new Date('2026-11-07T03:05:00Z');
 
 describe('viewAttributes', () => {
-  it('reads the live site default view', () => {
+  it('reads an older default view, its two eclipse layers now one (#634)', () => {
     const attributes = viewAttributes(
       '?v=1&mode=globe&t=2026-11-07T03:05Z&cal=gregorian&cam=20.0000,0.0000,4.50&layers=lunar,solar',
       NOW,
@@ -21,8 +21,8 @@ describe('viewAttributes', () => {
       'app.span': 'years',
       'app.year': 2026,
       'app.calendar': 'gregorian',
-      'app.layers': 'lunar,solar',
-      'app.layer_count': 2,
+      'app.layers': 'eclipses',
+      'app.layer_count': 1,
       'app.selection': 'none',
       'app.names': 'html',
     });

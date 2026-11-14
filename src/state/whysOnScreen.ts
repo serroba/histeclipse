@@ -62,15 +62,12 @@ export function onScreen(scene: Scene): WhyId[] {
       ? ['empires-cliopatria', 'empires-ohm']
       : [scene.borders === 'ohm' ? 'empires-ohm' : 'empires-cliopatria'];
   const eclipses: WhyId[] =
-    scene.eclipse && scene.span === 'years' && (layers('solar') || layers('lunar'))
-      ? ['eclipses']
-      : [];
+    scene.eclipse && scene.span === 'years' && layers('eclipses') ? ['eclipses'] : [];
   return [...ground, ...eclipses, ...borders, ...LAYER_WHYS.filter(layers)];
 }
 
 /** The why for a layer's row in the Layers panel. */
 export function layerWhy(layer: Layer, borders: BorderSource): WhyId {
   if (layer === 'empires') return borders === 'ohm' ? 'empires-ohm' : 'empires-cliopatria';
-  if (layer === 'solar' || layer === 'lunar') return 'eclipses';
   return layer;
 }

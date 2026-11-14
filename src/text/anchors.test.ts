@@ -32,7 +32,7 @@ describe('anchors as links', () => {
     expect(state.ma).toBeNull();
     expect(state.why).toBeNull();
     expect(state.time.date.year).toBe(-1222);
-    expect([...state.layers].sort()).toEqual(['empires', 'lunar', 'solar']);
+    expect([...state.layers].sort()).toEqual(['eclipses', 'empires']);
   });
 
   it('Given a reader following a mission, When another passage opens, Then the mission is let go; a mission’s own, followed (#712)', () => {

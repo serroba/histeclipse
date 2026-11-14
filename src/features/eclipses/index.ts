@@ -41,7 +41,7 @@ import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from '../../eclipses/lu
 import { shadowAt } from '../../eclipses/solar';
 import { longitudeUncertainty, shiftLongitude } from '../../eclipses/visibility';
 import { geoToVector } from '../../globe/geo';
-import { momentJulianDay, type GeoPoint, type ViewState } from '../../state/viewState';
+import { momentJulianDay, withEclipse, type GeoPoint, type ViewState } from '../../state/viewState';
 import type { DeltaT } from '../../time/deltaT';
 import { formatTimeOfDay } from '../../time/format';
 import { julianDayNumber } from '../../time/julianDay';
@@ -107,9 +107,8 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
     goTo: (eclipse) => {
       flyToSelection = true;
       store.set((state) => ({
-        ...state,
+        ...withEclipse(state, eclipseSelection(eclipse)),
         time: eclipseMomentAt(eclipse, state.location),
-        selection: eclipseSelection(eclipse),
       }));
     },
   });
@@ -130,9 +129,8 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
       onSelect(eclipse) {
         flyToSelection = true;
         store.set((state) => ({
-          ...state,
+          ...withEclipse(state, eclipseSelection(eclipse)),
           time: eclipseMomentAt(eclipse, state.location),
-          selection: eclipseSelection(eclipse),
         }));
       },
       onSeenIn(seenIn) {
@@ -166,8 +164,10 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
   let listing: YearEclipses = { status: 'loading' };
   let pathShownFor: SolarEclipse | null = null;
 
+  /** The eclipse picked, while the eclipses are on (#634): off, none is shown. */
   function selectedEclipse(state: ViewState): Eclipse | undefined {
-    return listing.status === 'ready' ? findSelected(listing.eclipses, state.selection) : undefined;
+    if (!state.layers.has('eclipses') || listing.status !== 'ready') return undefined;
+    return findSelected(listing.eclipses, state.selection);
   }
 
   /** Everything that changes with the moment shown: scrubber, shadow, Moon-up region, card. */
@@ -188,7 +188,7 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
       timeLabel: formatTimeOfDay(state.time),
     });
 
-    const showShadow = isSolar(selected) && state.layers.has('solar');
+    const showShadow = isSolar(selected) && state.layers.has('eclipses');
     moonShadow.update(
       showShadow
         ? shadowAt(
@@ -202,7 +202,7 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
     // Where the eclipsed Moon is up now: the point under the Moon drifts west as Earth turns,
     // and the region only shows while the eclipse is actually happening.
     const phase = isSolar(selected) ? 'none' : lunarPhaseAt(selected, offset);
-    if (!isSolar(selected) && phase !== 'none' && state.layers.has('lunar')) {
+    if (!isSolar(selected) && phase !== 'none' && state.layers.has('eclipses')) {
       const [latitude, longitude] = selected.sublunar;
       const now = shiftLongitude(
         { latitude, longitude },
@@ -239,12 +239,13 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
       eclipses: listing,
       selected,
       seen: { shown: seen.shown(state), options: seen.options(), view: seen.view() },
+      on: state.layers.has('eclipses'),
     });
     const uncertainty =
       selected === undefined ? 0 : context.deltaT().uncertaintySeconds(greatestEclipseUT(selected));
 
     const solarPath =
-      selected !== undefined && isSolar(selected) && state.layers.has('solar') ? selected : null;
+      selected !== undefined && isSolar(selected) && state.layers.has('eclipses') ? selected : null;
     if (solarPath !== pathShownFor) {
       pathShownFor = solarPath;
       eclipsePath.update(

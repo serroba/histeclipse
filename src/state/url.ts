@@ -43,6 +43,7 @@ import {
   VIEWPOINTS,
   defaultCalendarFor,
   defaultViewState,
+  withEclipse,
   type Body,
   type EclipseKind,
   type GeoPoint,
@@ -117,6 +118,10 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
   };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
+  }
+  // A link that picks an eclipse turns the eclipses on (#634).
+  if (state.selection !== null && !state.layers.has('eclipses')) {
+    return { state: withEclipse(state, state.selection), warnings };
   }
   return { state, warnings };
 }
@@ -229,13 +234,16 @@ function parseCamera(raw: string): GlobeCamera {
   return { target, distance };
 }
 
+/** Layers that became one (#634): the eclipses' shadows and the Moon's, now `eclipses`. */
+const MERGED_LAYERS: Readonly<Record<string, Layer>> = { lunar: 'eclipses', solar: 'eclipses' };
+
 function parseLayers(raw: string): ReadonlySet<Layer> {
   if (raw === '') return new Set();
   return new Set(
     raw
       .split(',')
       .filter((name) => !RETIRED_LAYERS.includes(name))
-      .map((name) => oneOf(name, LAYERS, 'layer')),
+      .map((name) => MERGED_LAYERS[name] ?? oneOf(name, LAYERS, 'layer')),
   );
 }
 
