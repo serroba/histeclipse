@@ -458,5 +458,10 @@
       "gobaiO2",
       "ceresEbaf"
     ]
+  },
+  "ozone": {
+    "title": "The ozone hole",
+    "what": "The Antarctic ozone hole each spring since 1979, and the ozone-depleting gases over Antarctica since 1992. On the globe a cap of the hole's mean area round the South Pole stands for it: the real hole wanders and stretches off the pole. 1995 had no satellite to measure it and is left empty. The Montreal Protocol (1987) is marked.",
+    "sources": ["nasaOzoneWatch", "noaaOdgi"]
   }
 }

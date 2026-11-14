@@ -56,6 +56,7 @@ const LAYER_ICONS: Readonly<Record<Layer, UiIcon>> = {
   fossils: 'fossils',
   impacts: 'impacts',
   volcanoes: 'volcanoes',
+  ozone: 'ozone',
   temperature: 'temperature',
   sealevel: 'seaLevel',
   air: 'air',

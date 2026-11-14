@@ -55,6 +55,7 @@ The reference journeys of #724 (`navigation.spec.ts`; human origins is a journey
 | `history.spec.ts`   | Travelling through the Holocene: playing the years, states coming and going                             |
 | `ice.spec.ts`       | Ice sheets in the ice ages: Batchelor et al.'s outlines and their range                                 |
 | `fullview.spec.ts`  | Full view: clearing the panels, and deep time's strip                                                   |
+| `ozone.spec.ts`     | The ozone hole: each spring's cap on the globe and the record beside it (#722)                          |
 | `chart.spec.ts`     | Geological time along the slider: the chart's units in its colours                                      |
 | `air.spec.ts`       | The air in the ice ages: CO₂ and methane against 1750                                                   |
 | `ways.spec.ts`      | Ways of life: ArchaeoGLOBE's regions by how people lived                                                |

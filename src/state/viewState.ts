@@ -71,6 +71,8 @@ export const LAYERS = [
   'impacts',
   // Volcanoes erupting near the year shown (Smithsonian GVP).
   'volcanoes',
+  // The Antarctic ozone hole each spring since 1979, and the gases that made it (#722).
+  'ozone',
   // Deep time only: the surface coloured by temperature, and sea level through time.
   'temperature',
   'sealevel',
