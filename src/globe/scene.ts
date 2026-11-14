@@ -283,6 +283,7 @@ export function createGlobe(
     invalidate: () => {
       stage.invalidate();
     },
+    cover: stage.cover.bind(stage),
   });
 
   // Each frame: what plays, the camera; around each drawing: tiles, shade, what is placed over it.

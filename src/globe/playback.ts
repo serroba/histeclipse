@@ -27,7 +27,15 @@ export interface PlaybackWorld {
   /** The drawing's size, pixels, for the shower's lines. */
   resolution(): { readonly x: number; readonly y: number };
   invalidate(): void;
+  /** Whether something opaque covers the globe: it keeps stepping, but draws nothing (#339). */
+  cover(covered: boolean): void;
 }
+
+/**
+ * What the shower can be told: its own commands; stop; and cover or uncover, as the 3D story
+ * comes over the globe and leaves it. Covered, the shower only keeps the story's time.
+ */
+export type ShowerControl = ShowerCommand | 'stop' | 'cover' | 'uncover';
 
 export class Playback implements StagePart {
   readonly #world: PlaybackWorld;
@@ -115,8 +123,12 @@ export class Playback implements StagePart {
   }
 
   /** Play, pause, step through or replay the shower, or stop it and take it away. */
-  controlShower(command: ShowerCommand | 'stop'): void {
+  controlShower(command: ShowerControl): void {
     const { dataset } = this.#world;
+    if (command === 'cover' || command === 'uncover') {
+      this.#world.cover(command === 'cover');
+      return;
+    }
     if (this.#shower === null) return;
     if (command !== 'stop') {
       this.#shower.command(command);
@@ -128,6 +140,8 @@ export class Playback implements StagePart {
     }
     this.#shower.dispose();
     this.#shower = null;
+    // Nothing covers a globe with no story left to tell.
+    this.#world.cover(false);
     // The place's pin comes back once the shower is taken away.
     this.#world.pin.visible = true;
     dataset['pinShown'] = 'true';

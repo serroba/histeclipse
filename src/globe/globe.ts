@@ -11,7 +11,8 @@ import type { Body, GeoPoint, GlobeCamera, Viewpoint } from '../state/viewState'
 import type { Vector3Tuple } from './geo';
 import type { ImpactSpec } from './impactAnimation';
 import type { GlobeLayer, LayerFactory } from './layerHost';
-import type { ShowerCommand, ShowerSpec } from './showerAnimation';
+import type { ShowerControl } from './playback';
+import type { ShowerSpec } from './showerAnimation';
 import type {
   DeepTimeSurface,
   IceSurface,
@@ -57,8 +58,11 @@ export interface Globe {
   /** Play a cosmic-ray shower making carbon-14, reporting its state through `onState`; it
    * holds on its last picture until stopped. */
   playShower(spec: ShowerSpec): void;
-  /** Play, pause, step through or replay the shower, or stop it and take it away. */
-  controlShower(command: ShowerCommand | 'stop'): void;
+  /**
+   * Play, pause, step through or replay the shower, or stop it and take it away; cover the
+   * globe while the 3D story draws it, the globe only keeping its time (#339), or uncover it.
+   */
+  controlShower(command: ShowerControl): void;
   /**
    * Show a planet as one of its views (#239): a mission's map, fetched the first time it is
    * asked for, or null for its painted colours. Maps are kept, so switching back is instant.
