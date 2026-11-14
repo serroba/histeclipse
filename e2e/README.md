@@ -36,6 +36,13 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 | From a crater's card, a related discovery and Back                    | Related on cards (#731), deep time, history                     |
 | A reader goes to a time by typing it, and Back returns                | Go to a time (#730), years and ages, the date as its button     |
 
+The reference journeys of #724 (`navigation.spec.ts`; human origins is a journey above):
+
+| Journey                                                                     | Covers                                                  |
+| --------------------------------------------------------------------------- | ------------------------------------------------------- |
+| A visitor finds the Moon landings by topic and comes down with Eagle        | Explore, a destination on the Moon, its line, Back      |
+| A visitor explores ancient Australia: an age, its fossils, the climate then | Explore, fossils, Related, Go to a time, Fit this topic |
+
 ## Features
 
 | File                | Feature                                                                                                 |
