@@ -46,4 +46,19 @@ describe('places on a painted map', () => {
     rocks.show(null);
     expect(painted).toBe(2);
   });
+
+  it('Given a part already away, When it is taken away again, Then nothing is painted', () => {
+    let painted = 0;
+    const slots = createPaintSlots<string>(() => {
+      painted += 1;
+    });
+    const dates = slots.add(2);
+    // As the years play with the dates off, each year takes them away again (#692).
+    for (let year = 0; year < 50; year += 1) dates.show(null);
+    expect(painted).toBe(0);
+    dates.show('dates');
+    dates.show(null);
+    dates.show(null);
+    expect(painted).toBe(2);
+  });
 });
