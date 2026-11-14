@@ -12,8 +12,10 @@ the living pins, from the modules' own constants so there is one copy of each, a
 issue up to date, so drift is seen before a re-run fails.
 
 Not listed: files fixed once published (dated releases, archives with a DOI, C3S's yearly
-report for JRA-3Q), and IAP's gridded ocean heat (``ocean-heat-map``), whose pin is a set of
-decade archives and a month manifest that its own command checks.
+report for JRA-3Q); IAP's gridded ocean heat (``ocean-heat-map``), whose pin is a set of
+decade archives and a month manifest that its own command checks; and ERA5's Climate Pulse
+series, which changes every day, so it would always show as drifted. It is re-pinned whenever
+``temperature-records`` is refreshed, with the other records.
 """
 
 import hashlib
@@ -81,12 +83,6 @@ LIVING_PINS: tuple[LivingPin, ...] = (
         "temperature-records",
         temperature_records.NOAA.url,
         temperature_records.NOAA.sha256,
-    ),
-    LivingPin(
-        "ERA5 (Climate Pulse)",
-        "temperature-records",
-        temperature_records.ERA5.url,
-        temperature_records.ERA5.sha256,
     ),
     LivingPin(
         "Berkeley Earth summary",
