@@ -386,7 +386,7 @@ test('the layers on show as chips beside Layers: one off its span offers where i
     await expect(page).toHaveURL(/cam=-46/);
   });
   await test.step('When they go to where humans draw, Then the ice ages open at the earliest Homo sapiens', async () => {
-    await on.getByRole('button', { name: 'Go to the earliest Homo sapiens' }).click();
+    await on.getByRole('button', { name: 'Humans: go to the earliest Homo sapiens' }).click();
     await expect(page.locator('.hud-date')).toHaveText('315,000 years ago');
     await expect(on.locator('[data-layer="humans"]')).toHaveAttribute('data-draws', 'true');
   });

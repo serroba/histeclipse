@@ -54,7 +54,7 @@
 }
 
 /* Related (#731): a few next views, each saying where it goes. */
-.marker-card-related h3 {
+.marker-card-related-title {
   margin: 14px 0 4px;
   color: var(--ink-muted);
   font-size: 12px;

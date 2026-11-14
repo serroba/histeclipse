@@ -65,7 +65,8 @@ function relatedList(steps: readonly RelatedStep[], close: () => void): HTMLElem
   return element(
     'section',
     { class: 'marker-card-related', 'aria-label': 'Related' },
-    element('h3', {}, 'Related'),
+    // A label, not a heading: the card's one heading is its title.
+    element('p', { class: 'marker-card-related-title', 'aria-hidden': 'true' }, 'Related'),
     element(
       'ul',
       {},
