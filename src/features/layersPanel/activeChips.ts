@@ -32,7 +32,13 @@ function chip(active: ActiveLayer, actions: ActiveChipActions): HTMLElement {
   if (goTo !== null) {
     const go = element(
       'button',
-      { type: 'button', class: 'active-go', title: active.reach },
+      {
+        type: 'button',
+        class: 'active-go',
+        title: active.reach,
+        // Named for its layer: the Layers panel's own row offers the same way.
+        'aria-label': `${active.label}: go to ${goTo.label}`,
+      },
       `Go to ${goTo.label}`,
     );
     go.addEventListener('click', () => {

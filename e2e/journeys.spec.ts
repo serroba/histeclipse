@@ -95,6 +95,30 @@ test('a visitor who wandered from Ancient Australia fits the topic and is back a
   expect(problems).toEqual([]);
 });
 
+test('from a crater’s card, a related discovery goes to the Earth when it struck, and Back returns (#731)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const card = page.getByTestId('marker-card');
+  await test.step('Given Chicxulub on today’s globe', async () => {
+    await page.goto('./?t=2024-04-08T18:17Z&layers=impacts&cam=21.3,-89.5,3');
+    await globeRendered(page);
+  });
+  await test.step('When they open its card, Then Related says where it goes', async () => {
+    await page.getByRole('button', { name: 'Chicxulub: details' }).click();
+    const related = card.getByRole('region', { name: 'Related' });
+    await expect(related).toContainText('Goes to 66 million years ago');
+    await related.getByRole('button', { name: 'Earth when it struck' }).click();
+  });
+  await test.step('Then the Earth of 66 million years ago is shown, and Back returns to 2024', async () => {
+    await expect(card).toBeHidden();
+    await expect(page.locator('.hud-date')).toHaveText('66 million years ago');
+    await page.goBack();
+    await expect(page.locator('.hud-date')).toContainText('2024');
+  });
+  expect(problems).toEqual([]);
+});
+
 test('a link to a destination opens its view, and the link keeps naming it (#726)', async ({
   page,
 }) => {

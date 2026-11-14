@@ -16,6 +16,8 @@ import {
 import { loadPictures, type Pictures } from '../../data/pictures';
 import type { DeepNotePart } from '../../ui/deepChips';
 import type { MarkerCardContent } from '../../ui/markerCard';
+import { fromAFossil } from '../../explore/related';
+import { layerTurned } from '../../state/viewState';
 import { errorMessage } from '../../util/errors';
 import type { Feature } from '../feature';
 import { fossilLayer } from './fossilLayer';
@@ -48,6 +50,7 @@ export const fossilsFeature: Feature = {
     let pictures: Pictures | null = null;
     let picturesLoading = false;
     let shown: string | null = null;
+    let temperatureOn = false;
 
     function cardFor(key: string): MarkerCardContent | null {
       if (fossils === null || at === null) return null;
@@ -58,6 +61,13 @@ export const fossilsFeature: Feature = {
       const genus = cell.genera[0]?.[0];
       return {
         ...fossilCard(fossils, cell, at, pictures),
+        // The climate of its time (#731), at the same moment.
+        related: fromAFossil(temperatureOn).map((step) => ({
+          ...step,
+          run: () => {
+            context.change((state) => layerTurned(state, 'temperature', true));
+          },
+        })),
         ...(genus === undefined
           ? {}
           : {
@@ -73,6 +83,7 @@ export const fossilsFeature: Feature = {
 
     return {
       deep(state, moment) {
+        temperatureOn = state.layers.has('temperature');
         // Fossils are counted by 5 million years: a matter of the 540 Myr span.
         const on = state.deepScale === 'all' && state.layers.has('fossils');
         if (moment === null || !on) {

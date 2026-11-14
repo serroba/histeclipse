@@ -27,6 +27,7 @@ function fakeContext(options: { readonly planetsLoaded: boolean; readonly failin
   const planets = { position: () => [0, AU, 0] } as unknown as PlanetEphemeris;
   const refresh = vi.fn();
   const notify = vi.fn();
+  const openAnchor = vi.fn();
   const loadPlanets = vi.fn();
   const context = {
     base: '/',
@@ -49,12 +50,13 @@ function fakeContext(options: { readonly planetsLoaded: boolean; readonly failin
     },
     notify,
     showCard: (card: MarkerCardContent) => cards.push(card),
+    openAnchor,
     planets: () => (options.planetsLoaded ? planets : null),
     loadPlanets,
     moon: () => null,
     refresh,
   } as unknown as FeatureContext;
-  return { context, drawn, routes, sites, cards, rail, refresh, notify, loadPlanets };
+  return { context, drawn, routes, sites, cards, rail, refresh, notify, loadPlanets, openAnchor };
 }
 
 describe('the spacecraft as a feature', () => {
@@ -116,7 +118,9 @@ describe('the spacecraft as a feature', () => {
   });
 
   it('Given a mission named, Then only its craft are drawn, each with its whole route (#712)', async () => {
-    const { context, drawn, routes, refresh } = fakeContext({ planetsLoaded: true });
+    const { context, drawn, routes, refresh, cards, openAnchor } = fakeContext({
+      planetsLoaded: true,
+    });
     const craft = spacecraftFeature.mount(context);
     const apollo: ViewState = { ...on, mission: 'd00273' };
     // 20 July 1969, 12:00 UT: Columbia in orbit about the Moon, Eagle about to land.
@@ -135,9 +139,20 @@ describe('the spacecraft as a feature', () => {
     expect(lines).toHaveLength(2);
     expect(lines[0]?.points.filter((point) => point !== null).length).toBeGreaterThan(100);
 
-    // Every craft again, without routes.
+    // Its own craft's card offers no way to the mission already followed (#731).
+    craft.pick?.('D00273');
+    expect(cards.at(-1)?.related).toEqual([]);
+
+    // Every craft again, without routes: its card leads to its mission's journey.
     craft.show?.(on, landingDay);
     expect(routes.at(-1)).toBeNull();
+    craft.pick?.('D00273');
+    const [follow] = cards.at(-1)?.related ?? [];
+    expect(follow?.label).toBe('Follow Apollo 11');
+    follow?.run();
+    expect(openAnchor).toHaveBeenCalledWith(
+      expect.objectContaining({ view: expect.stringContaining('mission=d00273') as unknown }),
+    );
   });
 
   it('Given the Moon in view after Apollo 11 landed, Then Eagle is marked on it, and no craft is drawn at its centre (#716)', async () => {

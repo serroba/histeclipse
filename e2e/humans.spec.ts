@@ -73,7 +73,7 @@ test('Humans rests in the years, greyed in Layers, and comes back with the ice a
   await test.step('When they take its way back to the ice ages', async () => {
     await page
       .getByRole('dialog', { name: 'Layers' })
-      .getByRole('button', { name: 'Go to the earliest Homo sapiens' })
+      .getByRole('button', { name: 'Go to the earliest Homo sapiens', exact: true })
       .click();
   });
   await test.step('Then the finds are back on the globe', async () => {

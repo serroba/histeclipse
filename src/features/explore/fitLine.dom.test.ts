@@ -31,4 +31,12 @@ describe('the line under the date', () => {
     fit?.click();
     expect(onFit).toHaveBeenCalledWith(expect.objectContaining({ id: 'ancient-australia' }));
   });
+
+  it('Given no destination, When its hidden Fit is pressed, Then nothing happens', () => {
+    const onFit = vi.fn();
+    const line = createFitLine(onFit);
+    line.render(at(''));
+    line.root.querySelector<HTMLButtonElement>('.explore-fit')?.click();
+    expect(onFit).not.toHaveBeenCalled();
+  });
 });

@@ -24,6 +24,7 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
   const refresh = vi.fn();
   const notify = vi.fn();
   const openLineages = vi.fn();
+  const change = vi.fn();
   const context = {
     base: '/',
     fetchJson: (url: string) =>
@@ -37,9 +38,10 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
     showCard: (card: MarkerCardContent) => cards.push(card),
     cardOpen: () => true,
     openLineages,
+    change,
     refresh,
   } as unknown as FeatureContext;
-  return { context, drawn, cards, refresh, notify, openLineages };
+  return { context, drawn, cards, refresh, notify, openLineages, change };
 }
 
 describe('the fossils as a feature', () => {
@@ -80,7 +82,7 @@ describe('the fossils as a feature', () => {
   });
 
   it('opens a cell’s card, again with its pictures, and leads to the tree of life', async () => {
-    const { context, drawn, cards, refresh, openLineages } = fakeContext();
+    const { context, drawn, cards, refresh, openLineages, change } = fakeContext();
     const shown = fossilsFeature.mount(context);
     shown.deep?.(on, JURASSIC);
     await vi.waitFor(() => {
@@ -96,6 +98,12 @@ describe('the fossils as a feature', () => {
     });
     cards[1]?.action?.run();
     expect(openLineages).toHaveBeenCalledWith(cell.group, expect.any(String));
+    // Related (#731): the climate then, at the same moment.
+    expect(cards[1]?.related?.map((step) => step.label)).toEqual(['The climate then']);
+    cards[1]?.related?.[0]?.run();
+    const update = change.mock.calls[0]?.[0] as (state: typeof on) => typeof on;
+    expect(update(on).layers.has('temperature')).toBe(true);
+    expect(update(on).ma).toBe(on.ma);
     shown.pick?.('no:such:cell');
     expect(cards).toHaveLength(2);
   });

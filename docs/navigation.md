@@ -243,7 +243,17 @@ Each journey must work by keyboard and touch (#732).
   it; presets are a radio group.
 - Every chip is a button with its state in its label ("Humans, drawing; remove").
 
-## 10. Changes to the epic's plan
+## 10. Related discoveries (#731)
+
+Cards end with a short **Related** list, each link saying where it goes and any change of time;
+the card closes first and Back returns. As built: a crater → the Earth when it struck (its dated
+range's middle, within the last 540 million years, facing where the plates had it); a human find
+→ the dispersal models (unless one is drawn) and Ancient DNA near where it was found (3000 BCE, in
+the years); a fossil → the climate then (same moment, temperature on); a craft → its mission's
+journey (unless it is the mission followed). Lineages and the tree of life stay the cards' own
+actions. The relations live in `src/explore/related.ts`.
+
+## 11. Changes to the epic's plan
 
 - **#726** builds `src/explore/` from the layer catalogue's `arrive` and search anchors; it does
   not add a second state model. It adds `explore=<id>` to links (§4).
@@ -257,7 +267,7 @@ Each journey must work by keyboard and touch (#732).
 - Journey 3 (Ancient Australia) is the hardest test of §5 and should be checked first in #729/#730,
   not last.
 
-## 11. Open questions
+## 12. Open questions
 
 1. Should Explore replace the first-visit "Start with a famous eclipse" invitation (eclipses
    becoming a Space destination with its list), or sit beside it? _Default: Explore replaces it;

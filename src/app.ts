@@ -587,6 +587,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       markerCard.show(card);
     },
     cardOpen: () => markerCard.dialog.open,
+    openAnchor,
     planets: () => bodies.planets(),
     moon: () => bodies.moon(),
     loadPlanets: () => {
