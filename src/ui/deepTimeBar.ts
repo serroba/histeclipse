@@ -5,7 +5,6 @@
 
 import { MAP_KEY, MILESTONE_KEY } from '../deepTime/colourKey';
 import { earthFacts } from '../deepTime/earthFacts';
-import { polaritySpans } from '../deepTime/earthState';
 import { type Period, periodShort } from '../deepTime/periods';
 import { formatMa } from '../time/format';
 import type { Atmosphere } from '../data/atmosphere';
@@ -529,7 +528,7 @@ export function createDeepTimeBar(
         );
       }
       bands.render({ oldest: view.oldest, ma: view.ma, playing: view.playing });
-      polarityStrip.render(polaritySpans(view.polarity, view.oldest), view.oldest);
+      polarityStrip.render(view.polarity, view.oldest);
       const shown = notesShown({
         ma: view.ma,
         mapsReach: view.mapsReach,
