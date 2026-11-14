@@ -33,7 +33,7 @@ class ScopeTest(unittest.TestCase):
         for path in ["public/skycultures/greek_almagest/description.md", "public/data/x.json",
                      "src/app.ts", "src/features/iceAges/README.md", "pnpm-lock.yaml", "package.json",
                      "vite.config.ts", ".nvmrc", ".github/workflows/ci.yml", ".github/scripts/ci_scope.py",
-                     "unknown.xyz"]:
+                     "data-pipeline/tests/fixtures/data.json", "data-pipeline/README.md", "unknown.xyz"]:
             self.assertEqual(plan("README.md", path), full(), path)
         self.assertEqual(select([], 0), full())
         self.assertEqual(select([{"filename": "README.md"}], 2), full())

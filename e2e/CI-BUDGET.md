@@ -91,11 +91,13 @@ explicit job plan. The policy is intentionally narrow:
 | Changed paths                                                  | PR jobs retained           |
 | -------------------------------------------------------------- | -------------------------- |
 | Root Markdown, `docs/**/*.md`, `e2e/**/*.md` only              | Documentation formatting   |
-| `data-pipeline/**` outside `plates/`                           | Main Python pipeline       |
-| `data-pipeline/plates/**`                                      | Independent plate pipeline |
+| Python/project inputs under `data-pipeline/` outside `plates/` | Main Python pipeline       |
+| Python/project inputs under `data-pipeline/plates/`            | Independent plate pipeline |
 | A mixture of the above                                         | Union of those jobs        |
 | Any other path, unavailable/incomplete file list, or main push | Full integration suite     |
 
+Python/project inputs are `.py`, `.pyi`, `.toml`, `.lock`, `.ini`, `.cfg` and `.python-version`.
+Other pipeline assets (including JSON fixtures) keep repository-wide formatting checks.
 Runtime Markdown under `public/`, generated data, source, lockfiles outside Python projects,
 shared configuration and workflow/script changes all run the full suite. Documentation formatting
 still checks Markdown on selective PRs. Main pushes always run all integration checks.

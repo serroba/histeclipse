@@ -29,10 +29,12 @@ def select(files: list[dict], expected: int | None) -> dict[str, bool]:
         for path in [file["filename"], *([file["previous_filename"]] if "previous_filename" in file else [])]:
             if documentation(path):
                 plan["docs"] = True
-            elif path.startswith("data-pipeline/plates/"):
-                plan["plates"] = True
             elif path.startswith("data-pipeline/"):
-                plan["pipeline"] = True
+                # Other assets (e.g. JSON fixtures) also need repository-wide formatting checks.
+                if not (path.endswith((".py", ".pyi", ".toml", ".lock", ".ini", ".cfg"))
+                        or Path(path).name == ".python-version"):
+                    return full()
+                plan["plates" if path.startswith("data-pipeline/plates/") else "pipeline"] = True
             else:
                 return full()
     return plan
