@@ -34,6 +34,7 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 | A visitor explores human origins by topic, and Back returns           | Explore (#727), topics, destinations, history step              |
 | A visitor who wandered from a destination fits the topic              | Fit this topic (#729), the line under the date                  |
 | From a crater's card, a related discovery and Back                    | Related on cards (#731), deep time, history                     |
+| A reader goes to a time by typing it, and Back returns                | Go to a time (#730), years and ages, the date as its button     |
 
 ## Features
 

@@ -149,6 +149,21 @@ Decisions:
 - **No single slider** from 4.6 Ga to today; the presets keep their own scales and the boundaries
   between them never imply a continuous reconstruction across them.
 
+As built in #730:
+
+- **Go to a time**: the date in the header is the button that opens it (named "Go to another date
+  or age", the date its description). Typed years ("1969", "44 BCE", "AD 33") and ages ("60 ka",
+  "100 Ma", "3.5 Ga", "today") are read by `src/time/timeEntry.ts`; a bare "−44" is refused,
+  asking for the era. A year of the last 11,700 years opens in the years on the reader's day and
+  hour; an older year or any age opens in deep time on the narrowest range that draws it
+  (`src/explore/timeJump.ts`). Each is a history step; camera and layers stay.
+- The dialog says the moment and range shown, and which layers on have no data there, with
+  their reach.
+- **Range presets**: Years · Ice ages · 540 Myr · 4.6 Gyr keep their place beside Layers, now
+  named "Time range presets". A zoomable range within a preset, and moving the presets and Fit
+  this topic into one panel with the bar, are left for later: each bar keeps its own scale, so no
+  range implies a reconstruction across them.
+
 ## 6. Coverage states
 
 Every active layer chip and every destination shows one of:

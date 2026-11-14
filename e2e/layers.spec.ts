@@ -344,7 +344,7 @@ test('the date panel’s rows line up on both edges, and on a phone it spans the
     await globeRendered(page);
   });
   await test.step('Then the time switch with Layers, and the viewpoints, meet the same edges', async () => {
-    const spans = await page.getByRole('group', { name: 'Time span' }).boundingBox();
+    const spans = await page.getByRole('group', { name: 'Time range presets' }).boundingBox();
     const layers = await page.getByRole('button', { name: 'Layers', exact: true }).boundingBox();
     const views = await page.getByRole('group', { name: 'Viewpoint' }).boundingBox();
     if (spans === null || layers === null || views === null) throw new Error('not laid out');

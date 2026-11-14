@@ -1,5 +1,5 @@
 /**
- * How far the time bar reaches, as one choice wherever time is shown: the Holocene's years,
+ * How far the time bar reaches, as presets of range wherever time is shown (#730): the years,
  * the ice ages, the 540 million years of the elevation maps, or all of Earth's history. Going
  * deeper is zooming out, not switching modes.
  *
@@ -38,7 +38,7 @@ export function createSpanSwitch(onSpan: (span: Span) => void): SpanSwitch {
   });
   const root = element(
     'div',
-    { class: 'time-switch', role: 'group', 'aria-label': 'Time span' },
+    { class: 'time-switch', role: 'group', 'aria-label': 'Time range presets' },
     ...buttons.map(([, button]) => button),
   );
   return {

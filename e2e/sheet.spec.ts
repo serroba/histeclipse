@@ -40,7 +40,9 @@ test('on a phone the deep-time bar folds to its controls, and swipes open and sh
     if (box === null || viewport === null) throw new Error('no layout');
     expect(box.y).toBeGreaterThan(viewport.height * 0.2);
     await expect(
-      page.getByRole('group', { name: 'Time span' }).getByRole('button', { name: 'Years' }),
+      page
+        .getByRole('group', { name: 'Time range presets' })
+        .getByRole('button', { name: 'Years' }),
     ).toBeInViewport();
   });
   await test.step('When they swipe the bar down, it folds again', async () => {

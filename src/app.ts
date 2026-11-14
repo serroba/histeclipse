@@ -468,7 +468,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     header: {
       home: base,
       tools: [explore.button, boundaries.button, texts.search.button, panels.fullView],
-      date: moment.dateText,
+      date: explore.timeTrigger(moment.dateText),
       time: moment.timeText,
       context: explore.context,
       detail: moment.detailText,
@@ -502,7 +502,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       texts.search.dialog,
       records.dialog,
       layersPanel.dialog,
-      explore.dialog,
+      ...explore.dialogs,
       markerCard.dialog,
       datingCard.dialog,
       carbonMade.dialog,
