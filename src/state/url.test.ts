@@ -74,6 +74,7 @@ describe('parseViewState', () => {
       sunLayer: 'visible',
       planetLight: 'look',
       culture: 'modern',
+      mission: null,
       borders: 'cliopatria',
       seenIn: null,
       ma: null,
@@ -288,6 +289,13 @@ describe('parseViewState', () => {
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('culture=');
   });
 
+  it('Given a mission named, Then it is read in lower case and written back (#712)', () => {
+    const { state } = parseViewState('mission=D00271', NOW);
+    expect(state.mission).toBe('d00271');
+    expect(serializeViewState(state)).toContain('&mission=d00271');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('mission=');
+  });
+
   it('reads how a planet is shown close up, writing it only when not as it looks', () => {
     const { state } = parseViewState('light=radar', NOW);
     expect(state.planetLight).toBe('radar');
@@ -351,6 +359,7 @@ describe('parseViewState', () => {
     ['years=mayan', 'years', 'unknown years'],
     ['sun=xray', 'sun', 'unknown sun'],
     ['culture=martian', 'culture', 'unknown culture'],
+    ['mission=voyager', 'mission', 'GCAT id'],
     ['borders=guesswork', 'borders', 'unknown borders'],
     ['seen=%20', 'seen', 'name of a past state'],
     ['ma=5000', 'ma', 'between 0 and 4568'],
@@ -417,6 +426,7 @@ describe('parseViewState', () => {
             'years',
             'sun',
             'culture',
+            'mission',
             'borders',
             'seen',
             'ma',
@@ -496,6 +506,10 @@ describe('serializeViewState', () => {
     sunLayer: fc.constantFrom(...SUN_LAYERS),
     planetLight: fc.constantFrom(...PLANET_LIGHTS),
     culture: fc.constantFrom(...SKY_CULTURES),
+    mission: fc.option(
+      fc.integer({ min: 0, max: 99_999 }).map((n) => `d${String(n).padStart(5, '0')}`),
+      { nil: null },
+    ),
     borders: fc.constantFrom(...BORDER_SOURCES),
     seenIn: fc.option(
       fc.string({ minLength: 1, maxLength: 120 }).filter((name) => name.trim() === name),

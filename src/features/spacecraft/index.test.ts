@@ -7,6 +7,7 @@ import { defaultViewState, withLayer, type ViewState } from '../../state/viewSta
 import type { MarkerCardContent } from '../../ui/markerCard';
 import type { FeatureContext } from '../feature';
 import { spacecraftFeature } from '.';
+import { missionRoutes } from './routeLines';
 
 const AU = 149_597_870.7;
 // 2010: Voyagers, Cassini, New Horizons and others in flight.
@@ -18,6 +19,7 @@ const on: ViewState = { ...off, layers: withLayer(off.layers, 'spacecraft', true
 /** A context that records what the feature asks of the app (#380): no globe, no page. */
 function fakeContext(options: { readonly planetsLoaded: boolean; readonly failing?: boolean }) {
   const drawn: unknown[] = [];
+  const routes: unknown[] = [];
   const cards: MarkerCardContent[] = [];
   const rail: [boolean, boolean][] = [];
   const planets = { position: () => [0, AU, 0] } as unknown as PlanetEphemeris;
@@ -32,7 +34,11 @@ function fakeContext(options: { readonly planetsLoaded: boolean; readonly failin
         : Promise.resolve(
             new Response(JSON.stringify(url.endsWith('spacecraft-paths.json') ? paths : record)),
           ),
-    globe: { addLayer: () => ({ update: (input: unknown) => drawn.push(input) }) },
+    globe: {
+      addLayer: (factory: unknown) => ({
+        update: (input: unknown) => (factory === missionRoutes ? routes : drawn).push(input),
+      }),
+    },
     zoomRail: {
       setSpacecraft: (offered: boolean, shown: boolean) => rail.push([offered, shown]),
     },
@@ -43,13 +49,14 @@ function fakeContext(options: { readonly planetsLoaded: boolean; readonly failin
     moon: () => null,
     refresh,
   } as unknown as FeatureContext;
-  return { context, drawn, cards, rail, refresh, notify, loadPlanets };
+  return { context, drawn, routes, cards, rail, refresh, notify, loadPlanets };
 }
 
 describe('the spacecraft as a feature', () => {
   it('is shown again when the layers change, and not for other changes', () => {
-    expect(spacecraftFeature.watches(on)).toEqual([on.layers]);
-    expect(spacecraftFeature.watches({ ...on, mode: 'sky' })).toEqual([on.layers]);
+    expect(spacecraftFeature.watches(on)).toEqual([on.layers, null]);
+    expect(spacecraftFeature.watches({ ...on, mode: 'sky' })).toEqual([on.layers, null]);
+    expect(spacecraftFeature.watches({ ...on, mission: 'd00273' })).toEqual([on.layers, 'd00273']);
   });
 
   it('draws nothing while its layer is off, and offers its icon in the globe view', () => {
@@ -101,5 +108,30 @@ describe('the spacecraft as a feature', () => {
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it('Given a mission named, Then only its craft are drawn, each with its whole route (#712)', async () => {
+    const { context, drawn, routes, refresh } = fakeContext({ planetsLoaded: true });
+    const craft = spacecraftFeature.mount(context);
+    const apollo: ViewState = { ...on, mission: 'd00273' };
+    // 20 July 1969, 12:00 UT: Columbia in orbit about the Moon, Eagle about to land.
+    const landingDay = 2440423;
+    craft.show?.(apollo, landingDay);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    context.moon = () => ({ position: () => [384_400, 0, 0] }) as never;
+    craft.show?.(apollo, landingDay);
+    const flying = drawn.at(-1) as readonly { name: string; km: readonly number[] }[];
+    expect(flying.map(({ name }) => name)).toEqual(['Apollo 11', 'Apollo 11']);
+    // About Earth as it was then: at the Moon, not carried along Earth's orbit.
+    expect(flying.every(({ km }) => Math.abs(Math.hypot(...km) - 384_400) < 1)).toBe(true);
+    const lines = routes.at(-1) as readonly { points: readonly (readonly number[] | null)[] }[];
+    expect(lines).toHaveLength(2);
+    expect(lines[0]?.points.filter((point) => point !== null).length).toBeGreaterThan(100);
+
+    // Every craft again, without routes.
+    craft.show?.(on, landingDay);
+    expect(routes.at(-1)).toBeNull();
   });
 });

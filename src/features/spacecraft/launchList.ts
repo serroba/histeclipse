@@ -4,11 +4,10 @@
  * capsule or lander riding with its craft counted with it.
  */
 
-import type { Craft } from '../../data/spacecraft';
+import { gcatJd, type Craft } from '../../data/spacecraft';
 import { shortDate } from '../../time/calendars';
 import { calendarDate, historicalCalendar, julianDayNumber } from '../../time/julianDay';
 import type { DayMoment } from '../../ui/dayTrack';
-import { gcatJd } from './approximatePaths';
 
 /** Most craft named on one launch's chip; the rest are counted. */
 const MOST_NAMED = 2;

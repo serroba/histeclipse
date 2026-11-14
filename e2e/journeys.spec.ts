@@ -816,6 +816,27 @@ test('with Spacecraft on, the craft beyond Earth orbit fly where they were, each
     await launches.getByRole('button', { name: 'Stop the launches' }).click();
     await expect(launches.getByRole('button', { name: 'Play the launches' })).toBeVisible();
   });
+  await test.step('When a link names Apollo 11, Then its journey is drawn and the bar plays it (#712)', async () => {
+    await page.goto(
+      './?focus=earth&cam=89,0,200&layers=spacecraft&mission=d00273&t=1969-07-17T16:41Z',
+    );
+    const journey = page.getByRole('group', { name: 'Apollo 11: its journey' });
+    await expect(journey).toBeVisible({ timeout: 30_000 });
+    await expect(journey.getByRole('listitem').nth(2)).toHaveText(
+      /^Eagle: Lands on the Moon 20 Jul 1969, 20:17 UT$/,
+    );
+    await expect
+      .poll(async () => Number(await globe.getAttribute('data-routes')), { timeout: 30_000 })
+      .toBeGreaterThan(100);
+  });
+  await test.step('When they go back to every launch, Then the mission is let go', async () => {
+    await page.getByRole('button', { name: 'All launches' }).click();
+    await expect(page).not.toHaveURL(/mission=/);
+    await expect(
+      page.getByRole('group', { name: /^Every launch beyond Earth orbit/ }),
+    ).toBeVisible();
+    await expect(globe).toHaveAttribute('data-routes', '0');
+  });
   expect(problems).toEqual([]);
 });
 

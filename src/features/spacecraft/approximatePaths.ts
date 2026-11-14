@@ -22,7 +22,7 @@
  * These are the paths as first planned, not as flown: drawn, they are marked approximate.
  */
 
-import type { Craft } from '../../data/spacecraft';
+import { gcatJd, type Craft } from '../../data/spacecraft';
 import { elementAt } from '../../util/arrays';
 import type { CraftWhere } from '../../data/spacecraftPaths';
 import { GM_EARTH, GM_SUN, lambert, propagate, type Vec3 } from '../../astro/transfer';
@@ -48,20 +48,6 @@ const TRANSLUNAR = (170 * Math.PI) / 180;
 const OBLIQUITY = (23.439_291_1 * Math.PI) / 180;
 /** The ecliptic's pole in J2000 equatorial axes: transfers go round it as the planets do. */
 export const ECLIPTIC_POLE: Vec3 = [0, -Math.sin(OBLIQUITY), Math.cos(OBLIQUITY)];
-
-/** JD of a GCAT date: "1977-08-22T08:24", "1979-04-30", "1979-05" (its middle), "1979". */
-export function gcatJd(text: string): number {
-  const plain = text.replace('?', '');
-  const [date = plain, time = '00:00'] = plain.split('T');
-  const [year = '2000', month, day] = date.split('-');
-  const iso =
-    month === undefined
-      ? `${year}-07-02`
-      : day === undefined
-        ? `${year}-${month}-15`
-        : `${year}-${month}-${day}`;
-  return Date.parse(`${iso}T${time}:00Z`) / 86_400_000 + 2_440_587.5;
-}
 
 function unit(a: Vec3): Vec3 {
   const n = Math.hypot(...a);
