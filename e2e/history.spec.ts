@@ -216,7 +216,10 @@ test(
       await expect(globe).toHaveAttribute('data-empires', /^[1-9]\d*$/);
       // The bar below changes with the states (it offers "Seen from"); out of the way, the globe
       // keeps one place for both pictures.
-      await page.addStyleTag({ content: '.bottom { display: none !important; }' });
+      // Through the style object: the site's CSP refuses an injected <style> (#240).
+      await page.locator('.bottom').evaluate((bar) => {
+        (bar as HTMLElement).style.setProperty('display', 'none', 'important');
+      });
     });
     const shaded = await ground();
     await test.step('When they turn States and empires off', async () => {
