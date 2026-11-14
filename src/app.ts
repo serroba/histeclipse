@@ -47,6 +47,7 @@ import { mountSky } from './features/sky';
 import { mountBodies } from './features/bodies';
 import { mountRecords } from './features/records';
 import { mountCycle } from './features/cycle';
+import { mountLaunches } from './features/spacecraft';
 import { mountFamous } from './features/famous';
 import { mountShower } from './features/shower';
 import { mountCarbonMade } from './features/carbonMade';
@@ -411,21 +412,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     statesSaid: () => empires.said(),
     holoceneText: () => iceAges.holoceneText(),
   });
-  // Away from Earth and the Moon, the bar's time is the body's own cycle as Earth sees it (#447).
+  // Away from Earth and the Moon, the bar's time is the body's own cycle as Earth sees it (#447);
+  // with the spacecraft on, it is their launches, the first to today (#702).
   const cycle = mountCycle({
     ...partContext,
     planets: () => bodies.planets(),
     loadPlanets: () => bodies.loadPlanets(),
     moment: () => moment.terrestrial(),
     universalTime: (jdTT) => deltaT.universalTime(jdTT),
-    hideHistory(hidden) {
-      years.track.root.hidden = hidden;
-      years.track.extras.hidden = hidden;
-    },
-    stopHistory: () => {
-      years.stop();
-    },
+    history: { ...years.track, stop: years.stop },
   });
+  const launches = mountLaunches({ ...partContext, history: { ...years.track, stop: years.stop } });
 
   // The borders of past states (#446), a century's file at a time, and what changed.
   const empires = mountEmpires({
@@ -450,7 +447,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     territoryOf: (name, shown) => empires.territoryOf(name, shown),
     centuryFor: (year) => empires.centuryFor(year),
     timelineButtons: [famous.button, records.button],
-    timelineExtras: [years.track.extras, cycle.extras],
+    timelineExtras: [years.track.extras, cycle.extras, launches.extras],
   });
 
   // The page's frame (#442): each part's elements, where they go.
@@ -485,7 +482,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     bottom: {
       eclipseCard: eclipses.card,
       eclipseScrubber: eclipses.scrubber,
-      holocene: [bodies.bar, waysLegend.root, years.track.root, cycle.root, eclipses.timeline],
+      holocene: [
+        bodies.bar,
+        waysLegend.root,
+        years.track.root,
+        cycle.root,
+        launches.root,
+        eclipses.timeline,
+      ],
       deepBar: deepTime.bar,
     },
     over: [
@@ -627,6 +631,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     const away = awayFromEarth(state);
     bottom.dataset['away'] = String(away);
     cycle.show(state);
+    launches.show(state);
     // The Moon keeps the year's eclipses; Earth's other timelines rest there too (#329).
     bottom.dataset['body'] = state.focus;
     hudActions.hidden = away;
@@ -708,6 +713,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { draw: showSheets },
     // The time changed elsewhere (the year typed, the slider) ends the cycle's play.
     { draw: cycle.render },
+    { draw: launches.render },
     { when: on(HISTORY), draw: years.show },
     {
       when: on(LOCATION),
@@ -776,9 +782,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     flyTo: (place) => {
       globe.flyTo(place);
     },
-  });
-  window.addEventListener('pagehide', () => {
-    sync.flush();
   });
   followHistory({ window, store, sync, globe });
 }

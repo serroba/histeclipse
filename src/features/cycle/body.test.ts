@@ -32,4 +32,9 @@ describe('cycleBody', () => {
       ),
     ).toBeNull();
   });
+
+  it('gives way to the launches while the spacecraft are on (#702)', () => {
+    expect(cycleBody(at('mars', { layers: new Set(['spacecraft']) }))).toBeNull();
+    expect(cycleBody(at('sun', { layers: new Set(['spacecraft']) }))).toBeNull();
+  });
 });

@@ -798,6 +798,23 @@ test('with Spacecraft on, the craft beyond Earth orbit fly where they were, each
     await expect(card).toContainText('Set out');
     await expect(card).toContainText('Path');
     await expect(card).toContainText('GCAT, Jonathan McDowell');
+    await page.keyboard.press('Escape');
+    await expect(card).toBeHidden();
+  });
+  await test.step('Then the bar plays the launches instead of Mars’s cycle (#702)', async () => {
+    const launches = page.getByRole('group', { name: /^Every launch beyond Earth orbit/ });
+    await expect(launches).toBeVisible();
+    await expect(page.getByRole('group', { name: /Mars’s cycle/ })).toBeHidden();
+    await expect(launches.getByRole('listitem').first()).toHaveText(/^Luna 1 2 Jan 1959$/);
+  });
+  await test.step('When they go to the first launch and play, Then the days go by, and stop when asked', async () => {
+    const launches = page.getByRole('group', { name: /^Every launch beyond Earth orbit/ });
+    await launches.getByRole('button', { name: /^Luna 1 / }).click();
+    await expect(page).toHaveURL(/t=1959-01-02T/);
+    await launches.getByRole('button', { name: 'Play the launches' }).click();
+    await expect(page).not.toHaveURL(/t=1959-01-02T/, { timeout: 15_000 });
+    await launches.getByRole('button', { name: 'Stop the launches' }).click();
+    await expect(launches.getByRole('button', { name: 'Play the launches' })).toBeVisible();
   });
   expect(problems).toEqual([]);
 });

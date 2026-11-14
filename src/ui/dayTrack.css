@@ -1,4 +1,4 @@
-/* Away from Earth, the body's cycle (#329): ticks under the slider where it turns, and those
+/* Days to play (#329, #350): ticks under the slider where it turns, and those
    moments named in a row of chips that scrolls sideways, as the year's eclipses do. */
 .cycle-ticks {
   position: relative;

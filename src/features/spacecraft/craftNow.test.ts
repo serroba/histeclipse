@@ -4,7 +4,7 @@ import type { Craft, CraftPhase } from '../../data/spacecraft';
 import type { CraftPaths } from '../../data/spacecraftPaths';
 import { elementAt } from '../../util/arrays';
 import { gcatJd, type Geocentric } from './approximatePaths';
-import { craftNow, craftWheres, fromEarth, inFlight } from './craftNow';
+import { craftNow, craftWheres, fromEarth, inFlight, remembered, trailMoments } from './craftNow';
 
 const AU = 149_597_870.7;
 /** A still Sun, 1 AU along x from Earth; the Moon and Mars at fixed places. */
@@ -126,5 +126,48 @@ describe('the craft in flight at a moment, and where', () => {
       approximate: () => true,
     };
     expect(craftNow([far], wheres, geocentric, T)).toEqual([]);
+  });
+});
+
+describe('where the bodies are, for the craft (#702)', () => {
+  it('Given the same body asked for at the same moment, Then it is worked out once', () => {
+    let asked = 0;
+    const once = remembered((body, jd) => {
+      asked += 1;
+      return body === 'Nowhere' ? null : [jd, 0, 0];
+    });
+    expect(once('Sun', 10)).toEqual([10, 0, 0]);
+    expect(once('Sun', 10)).toEqual([10, 0, 0]);
+    expect(once('Sun', 11)).toEqual([11, 0, 0]);
+    expect(once('Mars', 10)).toEqual([10, 0, 0]);
+    expect(asked).toBe(3);
+  });
+
+  it('Given a place not yet known, Then it is asked for again', () => {
+    let loaded = false;
+    const once = remembered(() => (loaded ? [1, 2, 3] : null));
+    expect(once('Mars', 10)).toBeNull();
+    loaded = true;
+    expect(once('Mars', 10)).toEqual([1, 2, 3]);
+  });
+
+  it('Given more places than it keeps, Then it lets them go and keeps on', () => {
+    let asked = 0;
+    const once = remembered((_, jd) => {
+      asked += 1;
+      return [jd, 0, 0];
+    }, 2);
+    once('Sun', 1);
+    once('Sun', 2);
+    once('Sun', 3);
+    once('Sun', 3);
+    expect(asked).toBe(3);
+  });
+
+  it('Given a moment, Then a trail reaches back on a grid of whole steps, the same from frame to frame', () => {
+    expect(trailMoments(100.3, 2.5).slice(0, 3)).toEqual([100, 97.5, 95]);
+    expect(trailMoments(101.2, 2.5).slice(0, 3)).toEqual([100, 97.5, 95]);
+    expect(trailMoments(100, 2.5)[0]).toBe(97.5);
+    expect(trailMoments(100.3, 2.5)).toHaveLength(24);
   });
 });

@@ -253,6 +253,19 @@ export function defaultViewState(now: Date): ViewState {
 }
 
 /** Orbiting another body in the years: the bars and panels speak of it, not of Earth. */
+/**
+ * Whether the bar's time is the launches' (#702): the spacecraft on, in the years' globe, no
+ * eclipse open. It runs the time instead of the years or a body's cycle.
+ */
+export function spacecraftPlays(state: ViewState): boolean {
+  return (
+    state.mode === 'globe' &&
+    state.ma === null &&
+    state.selection === null &&
+    state.layers.has('spacecraft')
+  );
+}
+
 export function awayFromEarth(state: ViewState): boolean {
   return state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
 }
