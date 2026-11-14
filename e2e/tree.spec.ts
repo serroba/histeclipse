@@ -6,7 +6,7 @@
 
 import { collectProblems, expect, globeRendered, GPU, openLayers, test } from './support';
 
-import treeFixture from './fixtures/tree-of-life.json';
+import treeFixture from './fixtures/tree-of-life.json' with { type: 'json' };
 
 const NODES = /^[1-9]\d{3,}$/;
 // Drawing eight thousand taxa beside the globe takes seconds on runners that render in software,

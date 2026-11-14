@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 3
     permissions:
       contents: read
-      pull-requests: read
+      pull-requests: read # list every changed PR file, including rename sources
     outputs:
       web: ${{ steps.select.outputs.web }}
       e2e: ${{ steps.select.outputs.e2e }}
