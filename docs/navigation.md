@@ -111,8 +111,8 @@ Decisions:
   lookup. Missions and landings stay search results; a "Moon landings" destination opens the
   mission list rather than duplicating it.
 - **Where it lives.** Features may not import each other, and destinations point across many
-  features, so the registry lives in `src/explore/` (a new top-level module, importing only from
-  `state/`, `time/` and `text/` types) and holds ids and descriptions only. Each feature still
+  features, so the registry lives in `src/explore/` (a new top-level folder in the `text` tier,
+  importing only `state/` types and `text/` anchors) and holds ids and descriptions only. Each feature still
   loads its data lazily when its layer turns on.
 - **Arrival replaces, it does not merge.** Selecting a destination replaces: time (or age) and
   span, body in focus, camera, selection, and the destination's layers. It **preserves**: display

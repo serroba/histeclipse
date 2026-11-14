@@ -18,8 +18,9 @@ export const TIERS = [
   ['stage'],
   // Drawing it.
   ['globe', 'sky', 'story', 'tablets'],
-  // The page around it, what is reported about it, and the site's texts to search.
-  ['ui', 'telemetry', 'text'],
+  // The page around it, what is reported about it, the site's texts to search, and the
+  // destinations to explore (#726).
+  ['ui', 'telemetry', 'text', 'explore'],
   // Features, each a folder of its own on one contract (#380): domain, drawing and card together.
   ['features'],
   // The wiring: `src/app.ts`, `src/main.ts`.
