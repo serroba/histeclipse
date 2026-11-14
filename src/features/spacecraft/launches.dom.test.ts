@@ -115,7 +115,7 @@ describe('the launches played (#702)', () => {
     expect(on % 1).not.toBeCloseTo(0, 3);
   });
 
-  it('Given the years between departures, Then it plays at the pace picked, whole days at a time', async () => {
+  it('Given the years between departures, Then it plays at 50 days a second, or the pace picked, whole days at a time', async () => {
     const { store, part, button, day } = await setUp();
     // The middle of the longest wait between craft leaving.
     const gap = quietest();
@@ -123,21 +123,21 @@ describe('the launches played (#702)', () => {
     button()?.click();
     frame(0);
     for (let k = 0; k < 4; k += 1) frame(250);
-    expect(day() - gap).toBe(200);
+    expect(day() - gap).toBe(50);
     // A frame after a stall counts as a quarter of a second at most.
     frame(5000);
-    expect(day() - gap).toBe(250);
+    expect(day() - gap).toBe(62);
     button()?.click();
     const speed = part.extras.querySelector('select');
     if (speed !== null) {
-      speed.value = '1200';
+      speed.value = '4800';
       speed.dispatchEvent(new Event('change'));
     }
     const from = day();
     button()?.click();
     frame(10_000);
     frame(250);
-    expect(day() - from).toBe(25);
+    expect(day() - from).toBe(100);
   });
 
   it('Given a moment within the launches, When Play is pressed, Then it carries on from there', async () => {
@@ -167,7 +167,7 @@ describe('the launches played (#702)', () => {
     frame(0);
     for (
       let k = 0;
-      k < 2000 && button()?.getAttribute('aria-label') !== 'Play the launches';
+      k < 4000 && button()?.getAttribute('aria-label') !== 'Play the launches';
       k += 1
     ) {
       frame(250);

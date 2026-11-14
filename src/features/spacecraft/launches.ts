@@ -2,8 +2,9 @@
  * The launches played (#702): with the spacecraft on, the bar's time runs from the record's
  * first launch (Luna 1, January 1959) to today, the planets, the moons and the craft each where
  * they were at every moment. It slows as each craft leaves Earth's orbit, to be seen going, and
- * speeds up between (`launchPace.ts`): at its default pace, the whole of it in under five
- * minutes. The camera stays the reader's, to zoom out from Earth or the Sun as it plays.
+ * speeds up between (`launchPace.ts`): at its default pace, the whole of it in about eleven
+ * minutes, slow enough to follow a cruise (#710). The camera stays the reader's, to zoom out
+ * from Earth or the Sun as it plays.
  */
 
 import { momentAt } from '../../eclipses/describe';
@@ -17,10 +18,11 @@ import { dayPlay } from './dayPlay';
 import { launchMoments } from './launchList';
 import { departures, launchPace } from './launchPace';
 
-/** Hours a second between departures: 50, 100, 200 and 400 days a second. At 200, slowing
- * for each craft leaving, 1959 to now plays in about four and three-quarter minutes. */
+/** Hours a second between departures: 50, 100, 200 and 400 days a second. With the slowing
+ * for each craft leaving, 1959 to now plays in about 11, 7, 4¾ and 3½ minutes; 50 is the
+ * default, where a cruise to Mars takes some four seconds (#710). */
 const LAUNCH_SPEEDS = [1200, 2400, 4800, 9600] as const;
-const DEFAULT_SPEED = 4800;
+const DEFAULT_SPEED = 1200;
 
 /** What the launches ask of the rest of the page. */
 export interface LaunchesContext extends PartContext {
