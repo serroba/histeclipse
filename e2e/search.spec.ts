@@ -43,18 +43,32 @@ test('a reader searches with the keyboard for a landing and flies to the Moon @a
     await expect(dialog.getByRole('searchbox')).toBeFocused();
     await page.keyboard.type('Apollo 11 Eag');
   });
-  await test.step('Then its landings are found', async () => {
+  await test.step('Then the mission is found first, with where Eagle came down (#716)', async () => {
+    const apollo = dialog.locator('[data-passage="mission:d00273"]');
+    await expect(dialog.locator('li').first()).toHaveAttribute('data-passage', 'mission:d00273');
     await expect(
-      dialog.locator('.search-hit').filter({ hasText: 'Apollo 11' }).first(),
+      apollo.getByRole('button', { name: /^Where Eagle came down · The Moon/ }),
     ).toBeVisible();
   });
-  await test.step('When they open Apollo 11', async () => {
-    await dialog.locator('[data-passage="landing:d00274"] .search-hit').click();
+  await test.step('When they open where Eagle came down', async () => {
+    await dialog
+      .locator('[data-passage="mission:d00273"]')
+      .getByRole('button', { name: /^Where Eagle came down/ })
+      .click();
   });
-  await test.step('Then the view is on the Moon, the day it landed', async () => {
+  await test.step('Then the view is on the Moon the day it landed, inside the mission, Eagle marked', async () => {
     await expect(page).toHaveURL(/focus=moon/);
     await expect(page).toHaveURL(/t=1969-07-20T20:17Z/);
     await expect(page).toHaveURL(/layers=[^&]*spacecraft/);
+    await expect(page).toHaveURL(/mission=d00273/);
+    await expect(page.getByRole('group', { name: 'Apollo 11: its journey' })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(
+      page.getByTestId('landing-sites').getByRole('button', { name: 'Apollo 11: Eagle' }),
+    ).toBeVisible({
+      timeout: 30_000,
+    });
   });
   await test.step('And a step back returns to where they were', async () => {
     await page.goBack();

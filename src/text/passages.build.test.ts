@@ -15,7 +15,6 @@ import { LAYER_GROUPS } from '../state/layerCatalog';
 import { MOON_FACTS } from './moonFacts';
 import {
   eclipsePassages,
-  landingPassages,
   missionPassages,
   loadPassages,
   moonPassages,
@@ -26,7 +25,7 @@ import {
 const serve = (body: unknown) => () => Promise.resolve(new Response(JSON.stringify(body)));
 
 describe('the passages file', () => {
-  it('Given the whys, the moons, the famous eclipses, the landings and the missions, Then the file kept is what they make', async () => {
+  it('Given the whys, the moons, the famous eclipses and the missions, Then the file kept is what they make', async () => {
     const famous = await loadFamousEclipses('famous-eclipses.json', serve(eclipses));
     const record = await loadSpacecraft('spacecraft.json', serve(spacecraft));
     const built: Passages = {
@@ -38,7 +37,6 @@ describe('the passages file', () => {
         ),
         ...moonPassages(MOON_FACTS),
         ...eclipsePassages(famous),
-        ...landingPassages(record.craft),
         ...missionPassages(record.craft),
       ],
     };

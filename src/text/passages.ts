@@ -26,7 +26,7 @@ import type { MoonFacts } from './moonFacts';
 import type { Why, WhyId } from '../sources/registry';
 import { getJson, type Fetch } from '../util/fetchJson';
 
-const PASSAGE_KINDS = ['why', 'moon', 'eclipse', 'landing', 'mission'] as const;
+const PASSAGE_KINDS = ['why', 'moon', 'eclipse', 'mission'] as const;
 export type PassageKind = (typeof PASSAGE_KINDS)[number];
 
 const AnchorSchema = v.strictObject({
@@ -40,6 +40,8 @@ const AnchorSchema = v.strictObject({
   ),
   /** The years it covers, astronomical (0 is 1 BCE; deep time in millions of years before). */
   when: v.optional(v.tuple([v.number(), v.number()])),
+  /** What it is, where it says more than its place: "Where Eagle came down". */
+  label: v.optional(v.pipe(v.string(), v.minLength(1))),
   /** The view that shows it: part of a link's query, laid over the view the reader has. */
   view: v.string(),
 });
@@ -196,38 +198,36 @@ const WORLDS: Readonly<Record<string, Body>> = {
 /** A day GCAT is sure of, as a link writes it: "1969-07-20T20:17". */
 const SURE_DAY = /^(\d{4}-\d{2}-\d{2})(T\d{2}:\d{2})?$/;
 
-/** Each craft that came down where the site can show, anchored to where and when. */
-export function landingPassages(craft: readonly Craft[]): Passage[] {
-  return craft.flatMap((one) => {
+/**
+ * Where a launch's craft came down, where the site can show it, as places to open (#716): on
+ * the body, at the site, that day, inside its mission, which the link follows. A lander and what
+ * it carried down (Apollo's science packages) share a site: the lander's is kept.
+ */
+export function landingAnchors(sent: readonly Craft[], mission: string | null): Anchor[] {
+  const landers = [...sent].sort((a, b) => Number(a.part) - Number(b.part));
+  const seen = new Set<string>();
+  return landers.flatMap((one) => {
     const landing = one.landing;
     const body = landing === undefined ? undefined : WORLDS[landing.world];
     if (landing === undefined || body === undefined || landing.lat === null) return [];
     if (landing.lon === null) return [];
     // GCAT writes some longitudes from 0 to 360°, or west past −180°; links take −180 to 180°.
     const lon = ((((landing.lon + 180) % 360) + 360) % 360) - 180;
-    const card = craftCard(one, true);
     const day = landing.date === null ? null : SURE_DAY.exec(landing.date);
     const year = landing.date === null ? null : yearOf(landing.date);
     const at = `${landing.lat.toFixed(4)},${lon.toFixed(4)}`;
+    const key = `${body} ${at} ${landing.date ?? ''}`;
+    if (seen.has(key)) return [];
+    seen.add(key);
     const time = day === null ? '' : `&t=${day[1] ?? ''}${day[2] ?? 'T12:00'}Z`;
+    const following = mission === null ? '' : `&mission=${mission}`;
     return [
       {
-        id: `landing:${one.id.toLowerCase()}`,
-        kind: 'landing',
-        title: card.title === one.name ? card.title : `${card.title}: ${one.name}`,
-        text: card.facts
-          .filter(([fact]) => fact !== 'Path')
-          .map(([fact, value]) => `${fact}: ${value}.`)
-          .join(' '),
-        sources: ['gcat', 'nssdcaChronology'],
-        anchors: [
-          {
-            body,
-            at: [landing.lat, lon] as const,
-            ...(year === null ? {} : { when: [year, year] as const }),
-            view: `focus=${body}&cam=${at},1.80&layers=spacecraft${time}`,
-          },
-        ],
+        body,
+        at: [landing.lat, lon] as const,
+        ...(year === null ? {} : { when: [year, year] as const }),
+        label: `Where ${one.name} came down`,
+        view: `focus=${body}&cam=${at},1.80&layers=spacecraft${following}${time}`,
       },
     ];
   });
@@ -278,9 +278,13 @@ function missionText(mission: Mission): string {
 /**
  * Each mission beyond Earth orbit, by launch (#712): found by search, its link opening the
  * journey, framed on where it went and played from its start. About the Sun or about Earth,
- * across the years it flew.
+ * across the years it flew; and where its craft came down, each a place to open inside it
+ * (#716), so a search for Apollo finds the missions, not their parts.
  */
 export function missionPassages(craft: readonly Craft[]): Passage[] {
+  const byLaunch = new Map<string, Craft[]>();
+  for (const one of craft)
+    byLaunch.set(one.launchTag, [...(byLaunch.get(one.launchTag) ?? []), one]);
   return missions(craft, recordEnd(craft)).map((mission) => ({
     id: `mission:${mission.id}`,
     kind: 'mission',
@@ -293,6 +297,7 @@ export function missionPassages(craft: readonly Craft[]): Passage[] {
         when: [yearOfDay(mission.start), yearOfDay(mission.end)] as const,
         view: missionView(mission),
       },
+      ...landingAnchors(byLaunch.get(mission.craft[0]?.launchTag ?? '') ?? [], mission.id),
     ],
   }));
 }

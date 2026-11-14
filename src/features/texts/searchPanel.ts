@@ -17,7 +17,6 @@ const KINDS: Readonly<Record<PassageKind, string>> = {
   why: 'How the site shows it',
   moon: 'Moon',
   eclipse: 'Eclipse record',
-  landing: 'Landing',
   mission: 'Mission',
 };
 

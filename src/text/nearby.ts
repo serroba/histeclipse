@@ -3,8 +3,8 @@
  * shown. A passage counts on the body in view, inside the disc the camera sees, nearer the
  * middle of the view and nearer the moment the better; one tied to the body alone (a moon's
  * story) counts as if halfway out. One two thousand years from the moment is not here. The
- * whys are left to the Sources list, which already has them; the missions to search and their
- * own view (#712), as one tied to the Sun alone would crowd every view of it.
+ * whys are left to the Sources list, which already has them. A mission counts only where its
+ * craft came down (#716): tied to the Sun or Earth alone, a mission would crowd every view.
  */
 
 import type { Anchor, Passage } from './passages';
@@ -66,9 +66,13 @@ function fit(anchor: Anchor, here: Here): number {
 /** The passages anchored here, best first, each by its best-fitting anchor. */
 export function nearby(passages: readonly Passage[], here: Here, limit = 6): Near[] {
   return passages
-    .filter((passage) => passage.kind !== 'why' && passage.kind !== 'mission')
+    .filter((passage) => passage.kind !== 'why')
     .flatMap((passage) => {
-      const [best] = passage.anchors
+      const anchors =
+        passage.kind === 'mission'
+          ? passage.anchors.filter((anchor) => anchor.at !== undefined)
+          : passage.anchors;
+      const [best] = anchors
         .map((anchor) => ({ anchor, score: fit(anchor, here) }))
         .filter(({ score }) => score >= LEAST_FIT)
         .sort((a, b) => b.score - a.score);
