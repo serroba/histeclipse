@@ -468,5 +468,10 @@
     "title": "Temperature records side by side",
     "what": "Global surface temperature since 1850, as six records measure it: four from thermometers on land and at sea (HadCRUT5, Berkeley Earth, NOAAGlobalTemp, GISTEMP) and two reanalyses, weather models fitted to the observations (ERA5, JRA-3Q, dashed). Each is put on the 1850–1900 baseline, the IPCC's pre-industrial: those that start later are shifted to the mean of the others over years they share, as AR6 does. None is picked: the band shows where they spread, wider in the early years, when fewer places were measured. HadCRUT5 leaves unmeasured regions out, so it warms a little less.",
     "sources": ["hadcrut5", "berkeleyEarth", "noaaGlobalTemp", "gistemp4", "era5", "jra3q"]
+  },
+  "oceanHeat": {
+    "title": "Where the ocean gained heat",
+    "what": "The heat the water column under each square metre of sea gained per second, in W/m², as a trend over 1960–2025 (the top 700 m, or the top 2,000 m) or over the Argo years 2005–2025 (the top 2,000 m), from IAP v4.2's gridded ocean heat content. It is heat content, not temperature, so it has its own scale: blue where heat was lost, orange where it was gained, faded where the trend is not significant at the 10% level. Before the Argo floats (from about 2005) the deep layer and the Southern Ocean were sparsely measured and are filled from model covariances. The 0–2000 m maps include the 0–700 m layer.",
+    "sources": ["iap2024"]
   }
 }
