@@ -4,6 +4,7 @@
  * Moon and the planets placed for the moment. Where the observer stands is `observer.ts`.
  */
 
+import { moonForFrames } from './moonFrames';
 import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import type { PlanetName } from '../../astro/planets';
@@ -97,6 +98,7 @@ export function mountMoment(context: MomentContext): MomentPart {
   }
   // The moment last shown (TT), for the body bar: it works out only the body in view.
   let bodiesAt: JulianDay | null = null;
+  const framesMoon = moonForFrames();
 
   function showTime(state: ViewState): void {
     const universal = momentJulianDay(state.time);
@@ -113,7 +115,7 @@ export function mountMoment(context: MomentContext): MomentPart {
     globe.setSpace({
       earthFixedToJ2000: earthFixedToJ2000(universal, terrestrial),
       sunKm: sunPositionJ2000(terrestrial),
-      moonKm: context.moon()?.position(terrestrial) ?? null,
+      moonKm: framesMoon(context.moon())?.position(terrestrial) ?? null,
       planetsKm: context.planetPositions(terrestrial),
       jdTT: terrestrial,
     });

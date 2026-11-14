@@ -156,6 +156,11 @@ test('a find opens its card: its claim, its source, its rivals and a picture @ac
     await expect(card.locator('.marker-card-image figcaption')).toContainText(
       'via Wikimedia Commons.',
     );
+    // Asked for without a referrer: some hosts (the Smithsonian's) refuse other sites' pages.
+    await expect(card.locator('.marker-card-image img')).toHaveAttribute(
+      'referrerpolicy',
+      'no-referrer',
+    );
   });
   expect(problems).toEqual([]);
 });

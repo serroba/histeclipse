@@ -32,9 +32,13 @@ function safeLink(href: string): boolean {
   }
 }
 
-/** A thumbnail with its credit; gone without a trace if its host will not serve it. */
+/**
+ * A thumbnail with its credit; gone without a trace if its host will not serve it. Asked for
+ * without a referrer: the Smithsonian refuses photos to other sites' pages (403), and the
+ * hosts need not learn which page a reader is on.
+ */
 function picture(image: NonNullable<MarkerCardContent['image']>): HTMLElement {
-  const img = element('img', { src: image.src, alt: image.alt });
+  const img = element('img', { src: image.src, alt: image.alt, referrerpolicy: 'no-referrer' });
   const figure = element(
     'figure',
     { class: 'marker-card-image' },

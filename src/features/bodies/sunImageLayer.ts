@@ -5,7 +5,9 @@
  * lets a later request (another channel) win over a slow one.
  */
 
-import { RepeatWrapping, SRGBColorSpace, TextureLoader, type Texture } from 'three';
+import { RepeatWrapping, SRGBColorSpace, type Texture } from 'three';
+
+import { loadPicture } from '../../globe/pictureTexture';
 
 import type { LayerFactory, LayerHost } from '../../globe/layerHost';
 
@@ -32,7 +34,7 @@ export interface SunImageRequest {
 /** Loads an image as a texture. */
 type LoadTexture = (url: string) => Promise<Texture>;
 
-const loadWithThree: LoadTexture = (url) => new TextureLoader().loadAsync(url);
+const loadWithThree: LoadTexture = (url) => loadPicture(url);
 
 /** The Sun's images, loaded with `load` (three's loader in the page; a fake in tests). */
 export function sunImageLayerWith(load: LoadTexture): LayerFactory<SunImageRequest | null> {
