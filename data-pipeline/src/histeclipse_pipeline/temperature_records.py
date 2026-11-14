@@ -59,7 +59,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 #: When the files pinned below were downloaded.
-ACCESSED = "2026-11-12"
+ACCESSED = "2026-11-14"
 #: The last complete calendar year in those files.
 LAST_YEAR = 2025
 #: The pre-industrial baseline, inclusive.
@@ -85,19 +85,19 @@ class Source:
 
 GISTEMP = Source(
     "https://data.giss.nasa.gov/gistemp/tabledata_v4/GLB.Ts+dSST.csv",
-    "4c64eda288bce32b8d76926278f346ecea1e53506df8ee72a3d5accb0657c416",
+    "a7b1939db2e7e484c798e925e0f07f8184356c52ac0e7ce264adcd0f25e81253",
 )
 GISTEMP_CI = Source(
     "https://data.giss.nasa.gov/gistemp/graphs_v4/graph_data/totalCI_ERA.csv",
     "c7ac791397b9aa82d08a68481881189184dea864858b8dccb8587807ad3ac4e6",
 )
 NOAA = Source(
-    "https://www.ncei.noaa.gov/data/noaa-global-surface-temperature/v6.1/access/timeseries/aravg.ann.land_ocean.90S.90N.v6.1.0.202609.asc",
-    "74539ba18ba28c7c4d68abb008db8e1a1d9ccce2f3de80fa57466b788b3e738c",
+    "https://www.ncei.noaa.gov/data/noaa-global-surface-temperature/v6.1/access/timeseries/aravg.ann.land_ocean.90S.90N.v6.1.0.202610.asc",
+    "b2a17a71ee3fc542c15d0f9eef8ad9843cdf3b12516a847ef0d502f844210d05",
 )
 ERA5 = Source(
     "https://sites.ecmwf.int/data/climatepulse/data/series/era5_daily_series_2t_global.csv",
-    "d76eca855a1c7e1760c5814b39ba195deeee551696edb74b527b1d992988efac",
+    "912ad5fafbebfe8558e76cc264123b382ad696908ee9b3664cf874bb811a2818",
 )
 #: holocene_temperature's pinned HadCRUT5 file, as this module's own Source.
 HADCRUT = Source(HADCRUT5.url, HADCRUT5.sha256)
