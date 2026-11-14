@@ -202,8 +202,8 @@ test('a first visit is welcomed once, with a place to start @acceptance', async 
   await globeRendered(page);
   const welcome = page.getByTestId('welcome');
   await expect(welcome).toBeVisible();
-  await welcome.getByRole('button', { name: 'Start with a famous eclipse' }).click();
-  await expect(page.getByRole('dialog', { name: 'Famous eclipses' })).toBeVisible();
+  await welcome.getByRole('button', { name: 'Start exploring' }).click();
+  await expect(page.getByRole('dialog', { name: 'Explore' })).toBeVisible();
   // Remembered: not again on the next bare visit, and never on a shared link.
   await page.goto('./');
   await globeRendered(page);

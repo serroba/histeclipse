@@ -9,7 +9,11 @@ describe('Explore on the page', () => {
     const openAnchor = vi.fn();
     const query = vi.fn();
     const open = vi.fn();
-    const part = mountExplore({ opener: { anchor: openAnchor, query }, search: { open } });
+    const part = mountExplore({
+      opener: { anchor: openAnchor, query },
+      search: { open },
+      famous: document.createElement('button'),
+    });
     document.body.append(part.button, part.dialog);
     part.button.click();
     document.querySelector<HTMLButtonElement>('[data-destination="moon-landings"]')?.click();
@@ -26,7 +30,11 @@ describe('Explore on the page', () => {
 
   it('Given a reader who arrived at Human origins and then went to today, When they fit the topic, Then only its time comes back', () => {
     const query = vi.fn<(change: (current: string) => string) => void>();
-    const part = mountExplore({ opener: { anchor: vi.fn(), query }, search: { open: vi.fn() } });
+    const part = mountExplore({
+      opener: { anchor: vi.fn(), query },
+      search: { open: vi.fn() },
+      famous: document.createElement('button'),
+    });
     document.body.replaceChildren(part.context);
     part.show({ ...defaultViewState(new Date()), explore: 'human-origins' });
     const fit = part.context.querySelector<HTMLButtonElement>('.explore-fit');
@@ -36,5 +44,21 @@ describe('Explore on the page', () => {
     expect(change('t=2026-01-01T12:00Z&cal=gregorian&cam=1,2,3&layers=empires')).toBe(
       'cam=1,2,3&layers=empires&ma=0.315&scale=ice',
     );
+  });
+
+  it('Given Space, Then Famous eclipses is listed, and picking it opens their list and closes Explore', () => {
+    const famous = document.createElement('button');
+    const listed = vi.fn();
+    famous.addEventListener('click', listed);
+    const part = mountExplore({
+      opener: { anchor: vi.fn(), query: vi.fn() },
+      search: { open: vi.fn() },
+      famous,
+    });
+    document.body.replaceChildren(part.button, ...part.dialogs);
+    part.button.click();
+    document.querySelector<HTMLButtonElement>('[data-destination="famous-eclipses"]')?.click();
+    expect(listed).toHaveBeenCalledOnce();
+    expect(part.dialog.open).toBe(false);
   });
 });

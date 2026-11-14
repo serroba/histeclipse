@@ -1,5 +1,5 @@
 /**
- * One line for a first visit: what the site is and where to start. It goes, and is remembered
+ * One line for a first visit: what the site is and where to start, Explore (#724). It goes, and is remembered
  * in this browser, once closed, followed, or once the visitor has found their own way in;
  * without storage (private windows) it simply shows on bare visits.
  */
@@ -48,11 +48,7 @@ export function createWelcome(
   onStart: () => void,
   storage: Storage | null = localStorageOrNull(),
 ): Welcome {
-  const start = element(
-    'button',
-    { type: 'button', class: 'welcome-start' },
-    'Start with a famous eclipse',
-  );
+  const start = element('button', { type: 'button', class: 'welcome-start' }, 'Start exploring');
   const close = element(
     'button',
     { type: 'button', class: 'welcome-close', 'aria-label': 'Close the welcome' },
@@ -61,7 +57,7 @@ export function createWelcome(
   const root = element(
     'p',
     { class: 'welcome', 'data-testid': 'welcome' },
-    'Where eclipses fell across thousands of years of history, and how the sky looked to the people who saw them. ',
+    'Earth and sky through time: eclipses and missions, ice ages and moving continents, the first people and the states they built. ',
     start,
     close,
   );

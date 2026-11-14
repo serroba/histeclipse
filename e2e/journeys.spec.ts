@@ -15,7 +15,7 @@ import {
   test,
 } from './support';
 
-test('a newcomer starts with a famous eclipse and looks at the sky that day @acceptance @mobile', async ({
+test('a newcomer starts exploring, picks a famous eclipse and looks at the sky that day @acceptance @mobile', async ({
   page,
 }) => {
   const problems = collectProblems(page);
@@ -23,10 +23,11 @@ test('a newcomer starts with a famous eclipse and looks at the sky that day @acc
     await page.goto('./');
     await globeRendered(page);
   });
-  await test.step('When they start with a famous eclipse and pick Thales', async () => {
+  await test.step('When they start exploring, open Famous eclipses under Space and pick Thales', async () => {
+    await page.getByTestId('welcome').getByRole('button', { name: 'Start exploring' }).click();
     await page
-      .getByTestId('welcome')
-      .getByRole('button', { name: 'Start with a famous eclipse' })
+      .getByRole('dialog', { name: 'Explore' })
+      .getByRole('button', { name: 'Famous eclipses', exact: true })
       .click();
     await page
       .getByRole('dialog', { name: 'Famous eclipses' })

@@ -282,12 +282,38 @@ actions. The relations live in `src/explore/related.ts`.
 - Journey 3 (Ancient Australia) is the hardest test of §5 and should be checked first in #729/#730,
   not last.
 
-## 12. Open questions
+## 12. Decisions on the open questions (2026-11-15)
 
-1. Should Explore replace the first-visit "Start with a famous eclipse" invitation (eclipses
-   becoming a Space destination with its list), or sit beside it? _Default: Explore replaces it;
-   famous eclipses become a Space destination._
-2. On desktop, should arriving at a destination keep Explore open (to compare destinations) or close
-   it for the globe? _Default: keep it open, marked current._
-3. Do suggested questions show inside each topic only, or also as a short rotating line on the
-   first visit? _Default: inside topics only._
+1. Explore replaces the first visit's "Start with a famous eclipse": the welcome now offers
+   **Start exploring**, and **Famous eclipses** is listed under Space, opening their list.
+2. On wide screens Explore stays open after a destination is picked, marking it (as built).
+3. Suggested questions show inside each topic only (as built).
+
+## 13. Validation (#732, 2026-11-15)
+
+**Journeys.** The three reference journeys run from Explore with no span chosen, on desktop and on
+a phone (`e2e/navigation.spec.ts`, and human origins in `e2e/journeys.spec.ts`): entry by
+topic, a useful arrival, a change of time (Go to a time, Fit this topic, the mission's own
+interval), a related discovery from a card, and Back to where the visitor was. Shared links
+restore each view, and `?explore=<id>` opens a destination on its own.
+
+**Keyboard and screen readers.** Explore's topics are a tab list (arrow keys, Home, End); every
+panel closes with Escape and gives focus back to the button that opened it; the date is a
+button named for what it does; chips and Related links are named for their layer or subject;
+messages that change (the line under the date, a time that cannot be read) are announced. Each
+is covered by DOM tests in `src/features/explore/` and `src/features/layersPanel/`.
+
+**Weight.** Against `main` before the epic (0a8d96e0), built the same way: the main script grew
+from 226.2 KB to 232.4 KB gzipped (+6.3 KB, 2.8 %), the main stylesheet from 13.3 KB to 14.1 KB.
+A bare first visit makes the same 25 requests (13 of them data) and a deep-time link the same
+22: the destinations, frames and relations are code, and no layer's data loads until it is on.
+No new work runs while the view is idle.
+
+**Tests and CI.** The whole Playwright suite, desktop and mobile, passes against the epic's build
+(484 passed, 12 skipped; only the live-site header test fails, as it does on any local preview).
+CI on a pull request took 3.5–5.2 minutes during the epic, as before it (4.6–4.9).
+
+**Friction left.** Each time range keeps its own bar, so a range within a preset cannot be zoomed;
+the deep-time bar's own chips still switch layers beside the chips by Layers; the Explore
+panel and Layers share one side, so they cannot be compared side by side. Each is noted above
+where it applies.

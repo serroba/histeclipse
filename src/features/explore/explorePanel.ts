@@ -35,14 +35,29 @@ export interface ExplorePanel {
   render(current: string | null): void;
 }
 
+/** An entry that opens a list of its own rather than a view, such as the famous eclipses. */
+interface ExploreEntry {
+  readonly id: string;
+  readonly topic: Topic;
+  readonly label: string;
+  readonly description: string;
+  readonly questions: readonly string[];
+  readonly open: () => void;
+}
+
 export interface ExploreActions {
   readonly onDestination: (destination: Destination) => void;
+  /** Entries beside the destinations, each opening a list of its own (#724). */
+  readonly entries?: readonly ExploreEntry[];
   readonly onSearch: () => void;
   /** Whether the page is narrow, where the panel is a sheet over the globe. */
   readonly narrow: () => boolean;
 }
 
-function destinationCard(destination: Destination, open: () => void): HTMLElement {
+function destinationCard(
+  destination: Pick<Destination, 'id' | 'label' | 'description' | 'questions'>,
+  open: () => void,
+): HTMLElement {
   const go = element(
     'button',
     { type: 'button', class: 'explore-go', 'data-destination': destination.id },
@@ -201,6 +216,14 @@ export function createExplorePanel(actions: ExploreActions): ExplorePanel {
           open(destination);
         }),
       ),
+      ...(actions.entries ?? [])
+        .filter((entry) => entry.topic === topic)
+        .map((entry) =>
+          destinationCard(entry, () => {
+            shut();
+            entry.open();
+          }),
+        ),
     );
     mark();
   }

@@ -20,6 +20,8 @@ export interface ExploreContext {
   readonly opener: ViewOpener;
   /** Search, for a named thing. */
   readonly search: { open(): void };
+  /** The famous eclipses' button: Explore lists them under Space (#724). */
+  readonly famous: HTMLElement;
 }
 
 export interface ExplorePart {
@@ -46,6 +48,19 @@ export function mountExplore(context: ExploreContext): ExplorePart {
       context.search.open();
     },
     narrow: () => window.matchMedia(NARROW).matches,
+    entries: [
+      {
+        id: 'famous-eclipses',
+        topic: 'space',
+        label: 'Famous eclipses',
+        description:
+          'Eclipses that history remembers, from the eclipse of Thales to 2024, each where it was seen.',
+        questions: ['Which eclipse stopped a battle?'],
+        open: () => {
+          context.famous.click();
+        },
+      },
+    ],
   });
   const fit = createFitLine((destination) => {
     context.opener.query((current) => fitQuery(destination.view, current));
