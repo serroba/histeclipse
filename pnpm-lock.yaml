@@ -27,8 +27,8 @@ importers:
         specifier: 1.31.1
         version: 1.31.1
       phoria2:
-        specifier: 1.1.0
-        version: 1.1.0
+        specifier: 1.3.0
+        version: 1.3.0
       three:
         specifier: 0.187.0
         version: 0.187.0
@@ -1388,8 +1388,8 @@ packages:
     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
     engines: {node: '>=8'}
 
-  phoria2@1.1.0:
-    resolution: {integrity: sha512-H8BP/w5uKGEiStF+nEA6Kys1Ul8y0NiKCl/S0nM8R0MFdS4BH7BIzwJAQYluKSGQ3yHLy3AD/Erh26Qo9XQrxw==}
+  phoria2@1.3.0:
+    resolution: {integrity: sha512-YlhmW9gCeuB1KucOvTCn17zCZt8WkU6+mgo2Vyx6wLt9jYtwg8VcEJOg8bOytEFj4StLg/MTkrZNM9Ohegttqw==}
 
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
@@ -2930,7 +2930,7 @@ snapshots:
 
   path-key@3.1.1: {}
 
-  phoria2@1.1.0: {}
+  phoria2@1.3.0: {}
 
   picocolors@1.1.1: {}
 
