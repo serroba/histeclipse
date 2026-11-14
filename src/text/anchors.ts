@@ -51,6 +51,8 @@ const PLACED = [
   'sel',
   // The mission followed (#712): another passage's place leaves it.
   'mission',
+  // The destination arrived from (#726): another anchor's view is not that destination's.
+  'explore',
   'ma',
   'scale',
   'why',
@@ -69,9 +71,11 @@ export function anchorQuery(anchor: Anchor, current: string): string {
   const params = new URLSearchParams(current);
   const anchored = new URLSearchParams(anchor.view);
   for (const key of PLACED) params.delete(key);
-  // A moment of the anchor's own replaces the reader's; deep time has none.
-  if (anchored.has('t') || anchored.has('ma')) params.delete('t');
-  if (anchored.has('t')) params.delete('cal');
+  // A moment of the anchor's own replaces the reader's, and its calendar with it.
+  if (anchored.has('t') || anchored.has('ma')) {
+    params.delete('t');
+    params.delete('cal');
+  }
   for (const [key, value] of anchored) {
     if (key === 'layers') {
       const layers = new Set([...(params.get('layers') ?? '').split(','), ...value.split(',')]);

@@ -15,6 +15,9 @@
  * - `mission` names a launch beyond Earth orbit by its first craft's GCAT id (`d00271`): with
  *   the spacecraft on, only its craft are drawn, with their whole route, and the bar plays
  *   that mission (#712). Absent means every launch.
+ * - `explore` names the destination the view was arrived at from (#726), such as
+ *   `human-origins`; absent when the reader found their own way. A link with it and no view of
+ *   its own (no `t`, `ma` or `cam`) opens that destination.
  */
 
 import { SKY_CULTURES, type SkyCulture } from '../../data/skyCultures';
@@ -43,6 +46,8 @@ export interface DisplayState {
   readonly culture: SkyCulture;
   /** The launch followed, by its first craft's GCAT id, lower case; null for every launch. */
   readonly mission: string | null;
+  /** The destination the view was arrived at from, by its id; null when none. */
+  readonly explore: string | null;
 }
 
 export const DISPLAY_DEFAULTS: DisplayState = {
@@ -52,6 +57,7 @@ export const DISPLAY_DEFAULTS: DisplayState = {
   planetLight: 'look',
   culture: 'modern',
   mission: null,
+  explore: null,
 };
 
 export const DISPLAY_PARAMS: Params<DisplayState> = {
@@ -65,6 +71,16 @@ export const DISPLAY_PARAMS: Params<DisplayState> = {
     parse: (raw) => {
       if (!/^d\d{5}$/i.test(raw)) throw new Error('expected a craft’s GCAT id, such as d00271');
       return raw.toLowerCase();
+    },
+    format: (id) => id,
+  },
+  explore: {
+    key: 'explore',
+    parse: (raw) => {
+      if (!/^[a-z][a-z0-9-]{0,47}$/.test(raw)) {
+        throw new Error('expected a destination’s id, such as human-origins');
+      }
+      return raw;
     },
     format: (id) => id,
   },

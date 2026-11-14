@@ -50,6 +50,22 @@ test('a newcomer starts with a famous eclipse and looks at the sky that day @acc
   expect(problems).toEqual([]);
 });
 
+test('a link to a destination opens its view, and the link keeps naming it (#726)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await test.step('Given a link naming only Human origins', async () => {
+    await page.goto('./?explore=human-origins');
+  });
+  await test.step('Then it opens the ice ages at the first Homo sapiens, the finds on', async () => {
+    await expect(page.locator('.hud-date')).toHaveText('315,000 years ago');
+    await expect(page.getByRole('button', { name: 'Humans', pressed: true })).toBeVisible();
+    await expect(page).toHaveURL(/ma=0\.315/);
+    await expect(page).toHaveURL(/explore=human-origins/);
+  });
+  expect(problems).toEqual([]);
+});
+
 test('a historian follows the eclipses seen from one empire @acceptance', async ({ page }) => {
   const problems = collectProblems(page);
   const seen = page.getByLabel('Seen from', { exact: true });

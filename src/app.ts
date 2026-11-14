@@ -33,6 +33,7 @@ import { FEATURES } from './features';
 import { deepChipsOf, mountFeatures } from './features/mounted';
 import type { FeatureContext } from './features/feature';
 import { anchorQuery } from './text/anchors';
+import { arrivalSearch } from './explore/destinations';
 import { type Anchor } from './text/passages';
 import { createWelcome } from './ui/welcome';
 import { createMarkerCard } from './ui/markerCard';
@@ -91,8 +92,8 @@ import { createTemperatureLayer } from './features/temperature';
 export async function startApp(root: HTMLElement): Promise<void> {
   const base = import.meta.env.BASE_URL;
   const now = new Date();
-  // The link as the reader opened it, before the view is written back into it.
-  const openedSearch = window.location.search;
+  // The link as the reader opened it (a destination's, its view), before the view is written back.
+  const openedSearch = arrivalSearch(window.location.search);
   const parsed = parseViewState(openedSearch, now);
   const store = createStore<ViewState>(parsed.state);
   const fetchJson = (url: string): Promise<Response> => fetch(url);

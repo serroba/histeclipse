@@ -76,6 +76,7 @@ describe('parseViewState', () => {
       planetLight: 'look',
       culture: 'modern',
       mission: null,
+      explore: null,
       borders: 'cliopatria',
       seenIn: null,
       ma: null,
@@ -297,6 +298,14 @@ describe('parseViewState', () => {
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('mission=');
   });
 
+  it('Given a destination named, Then it is read and written back, and absent by default (#726)', () => {
+    const { state, warnings } = parseViewState('explore=human-origins', NOW);
+    expect(warnings).toEqual([]);
+    expect(state.explore).toBe('human-origins');
+    expect(serializeViewState(state)).toContain('&explore=human-origins');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('explore=');
+  });
+
   it('reads how a planet is shown close up, writing it only when not as it looks', () => {
     const { state } = parseViewState('light=radar', NOW);
     expect(state.planetLight).toBe('radar');
@@ -361,6 +370,7 @@ describe('parseViewState', () => {
     ['sun=xray', 'sun', 'unknown sun'],
     ['culture=martian', 'culture', 'unknown culture'],
     ['mission=voyager', 'mission', 'GCAT id'],
+    ['explore=Human_Origins', 'explore', 'destination’s id'],
     ['borders=guesswork', 'borders', 'unknown borders'],
     ['seen=%20', 'seen', 'name of a past state'],
     ['ma=5000', 'ma', 'between 0 and 4568'],
@@ -428,6 +438,7 @@ describe('parseViewState', () => {
             'sun',
             'culture',
             'mission',
+            'explore',
             'borders',
             'seen',
             'ma',
@@ -514,6 +525,7 @@ describe('serializeViewState', () => {
       fc.integer({ min: 0, max: 99_999 }).map((n) => `d${String(n).padStart(5, '0')}`),
       { nil: null },
     ),
+    explore: fc.option(fc.constantFrom('human-origins', 'moon-landings', 'a1'), { nil: null }),
     borders: fc.constantFrom(...BORDER_SOURCES),
     seenIn: fc.option(
       fc.string({ minLength: 1, maxLength: 120 }).filter((name) => name.trim() === name),

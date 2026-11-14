@@ -30,6 +30,7 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 | A historian follows the eclipses seen from one empire                 | Layers, states and empires, Seen from, stepping, shared link    |
 | A reader travels into the ice ages and back to the day they left      | time switch, deep time, Ice ages, Play to the present, Holocene |
 | A link someone shares opens exactly what they saw                     | link state, famous eclipse, both sources of borders             |
+| A link to a destination opens its view                                | destinations (#726), deep time, Humans, the link's `explore`    |
 
 ## Features
 
