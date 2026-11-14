@@ -78,8 +78,9 @@ export interface Hit {
 export function searchWords(index: WordIndex, query: string, limit = 20): Hit[] {
   const asked = words(query);
   const last = asked.at(-1);
-  // The last word may still be being typed: match it as the start of words too.
-  const typing = last !== undefined && /[\p{L}\p{N}]$/u.test(query);
+  // The last word may still be being typed: match it as the start of words too, once it has
+  // two characters. One alone (the "2" of "Voyager 2") would match every year from 2000 (#712).
+  const typing = last !== undefined && last.length > 1 && /[\p{L}\p{N}]$/u.test(query);
   const scores = new Map<number, number>();
   const matched = new Map<number, Set<string>>();
   const count = index.passages.length;

@@ -32,6 +32,15 @@ describe('word search', () => {
     expect(searchWords(index, 'Ugar ')).toEqual([]);
   });
 
+  it('Given a mission by its name and number, Then it comes first, the number not taken for a year (#712)', () => {
+    expect(first('Voyager 2')).toBe('mission:d00574');
+    expect(first('Voyager 1')).toBe('mission:d00578');
+    expect(first('Apollo 11')).toMatch(/^(mission|landing):/);
+    expect(
+      searchWords(index, 'Apollo 11').some(({ passage }) => passage.id === 'mission:d00273'),
+    ).toBe(true);
+  });
+
   it('Given a moon’s name, Then its own story outranks passages that mention it', () => {
     expect(first('Enceladus')).toBe('moon:enceladus');
     expect(first('volcanoes Io')).toBe('moon:io');

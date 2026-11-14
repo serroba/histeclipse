@@ -15,7 +15,8 @@
 import * as v from 'valibot';
 
 import type { Craft } from '../data/spacecraft';
-import { craftCard } from '../data/craftCard';
+import { craftCard, writtenDate } from '../data/craftCard';
+import { missions, missionView, type Mission } from '../data/spacecraftMission';
 import type { FamousEclipse } from '../data/famousEclipses';
 import { MOON_NAMES } from '../globe/moonLook';
 import type { MoonName } from '../astro/moonOrbits';
@@ -25,7 +26,7 @@ import type { MoonFacts } from './moonFacts';
 import type { Why, WhyId } from '../sources/registry';
 import { getJson, type Fetch } from '../util/fetchJson';
 
-const PASSAGE_KINDS = ['why', 'moon', 'eclipse', 'landing'] as const;
+const PASSAGE_KINDS = ['why', 'moon', 'eclipse', 'landing', 'mission'] as const;
 export type PassageKind = (typeof PASSAGE_KINDS)[number];
 
 const AnchorSchema = v.strictObject({
@@ -230,4 +231,68 @@ export function landingPassages(craft: readonly Craft[]): Passage[] {
       },
     ];
   });
+}
+
+/** The record's last date: where a mission still flying is followed to, so the file holds still. */
+function recordEnd(craft: readonly Craft[]): number {
+  let last = 0;
+  for (const { phases } of craft) {
+    for (const [, began, ended] of phases) {
+      for (const when of [began, ended]) {
+        if (when !== null)
+          last = Math.max(
+            last,
+            Date.parse(`${when.replace('?', '').split('T')[0] ?? ''}T00:00:00Z`),
+          );
+      }
+    }
+  }
+  return last / 86_400_000 + 2_440_587.5;
+}
+
+/** A UT JD as the astronomical year it falls in. */
+function yearOfDay(jd: number): number {
+  return new Date((jd - 2_440_587.5) * 86_400_000).getUTCFullYear();
+}
+
+/** A mission's text: its card, then its journey in order. */
+function missionText(mission: Mission): string {
+  const [first] = mission.craft;
+  const card =
+    first === undefined
+      ? []
+      : craftCard(first, true)
+          .facts.filter(
+            ([fact]) => fact !== 'Path' && (mission.craft.length < 2 || fact !== 'Craft'),
+          )
+          .map(([fact, value]) => `${fact}: ${value}.`);
+  const journey = mission.chapters.map(
+    ({ name, jd }) =>
+      `${name}, ${writtenDate(new Date((jd - 2_440_587.5) * 86_400_000).toISOString().slice(0, 10))}`,
+  );
+  const crew =
+    mission.craft.length > 1 ? [`Craft: ${mission.craft.map(({ name }) => name).join(', ')}.`] : [];
+  return [...card, ...crew, `Journey: ${journey.join('; ')}.`].join(' ');
+}
+
+/**
+ * Each mission beyond Earth orbit, by launch (#712): found by search, its link opening the
+ * journey, framed on where it went and played from its start. About the Sun or about Earth,
+ * across the years it flew.
+ */
+export function missionPassages(craft: readonly Craft[]): Passage[] {
+  return missions(craft, recordEnd(craft)).map((mission) => ({
+    id: `mission:${mission.id}`,
+    kind: 'mission',
+    title: mission.title,
+    text: missionText(mission),
+    sources: ['gcat', 'nssdcaChronology'],
+    anchors: [
+      {
+        body: mission.aboutEarth ? 'earth' : 'sun',
+        when: [yearOfDay(mission.start), yearOfDay(mission.end)] as const,
+        view: missionView(mission),
+      },
+    ],
+  }));
 }

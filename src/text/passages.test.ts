@@ -40,6 +40,19 @@ describe('passages anchored to places and times', () => {
     }
   });
 
+  it('Given a mission, Then its link opens its journey: Apollo 11 about Earth, Voyager 2 about the Sun (#712)', () => {
+    const apollo = opened(byId('mission:d00273')).state;
+    expect(apollo.mission).toBe('d00273');
+    expect(apollo.layers.has('spacecraft')).toBe(true);
+    expect(apollo.focus).toBe('earth');
+    expect(apollo.time.date).toMatchObject({ year: 1969, month: 7, day: 17 });
+    const voyager = byId('mission:d00574');
+    expect(voyager.kind).toBe('mission');
+    expect(voyager.text).toContain('Reaches Neptune, 6 June 1989');
+    expect(opened(voyager).state.focus).toBe('sun');
+    expect(passages.filter(({ kind }) => kind === 'mission').length).toBeGreaterThan(200);
+  });
+
   it('Given every passage, Then each source it names is in the registry', () => {
     for (const passage of passages) {
       for (const source of passage.sources) expect(SOURCES, passage.id).toHaveProperty(source);
