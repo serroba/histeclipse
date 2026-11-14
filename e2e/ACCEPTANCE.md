@@ -57,7 +57,7 @@ put new calculation/presentation permutations at their faster boundary.
 | search.spec.ts     |       2 |      1 |      0 |
 | sheet.spec.ts      |       1 |      4 |      0 |
 | sky.spec.ts        |       4 |      2 |      0 |
-| smoke.spec.ts      |       8 |      5 |      0 |
+| smoke.spec.ts      |       9 |      5 |      0 |
 | sources.spec.ts    |       2 |      0 |      0 |
 | time.spec.ts       |       2 |      1 |      0 |
 | tree.spec.ts       |       1 |      0 |      0 |
@@ -67,4 +67,10 @@ put new calculation/presentation permutations at their faster boundary.
 Use `E2E_SCOPE=acceptance pnpm test:e2e --list` to audit the selection. Timings are recorded per
 attempt; counts alone are not a runtime guarantee. Measure Actions job duration and runner-minutes
 before tuning the two shards or expanding acceptance. The baseline Linux matrix scheduled 538
-executions (522 passed, 16 skipped in the sampled run); this selection schedules 79.
+executions (522 passed, 16 skipped in the sampled run); this selection schedules 80.
+
+Back/Forward assurance is split by behaviour: the shared eclipse/Sky history journey remains
+on desktop and mobile; a focused desktop journey checks both the URL and the rendered camera
+after zooming, Back and Forward. Camera interpolation and cross-focus restoration retain their
+unit tests and existing browser regression. The combined journey previously exhausted its 30 s
+total budget on mobile; this split keeps assertions without increasing that timeout.

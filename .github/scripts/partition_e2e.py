@@ -35,7 +35,10 @@ def partition(tests: list[dict], weights: dict, count: int = 2) -> tuple[list[li
     totals = [0.0] * count
 
     def cost(test: dict) -> float:
-        value = weights["costs"].get(f"{test['project']}/{test['file']}", weights["defaultSeconds"])
+        if "scenarioCosts" in weights:
+            value = weights["scenarioCosts"].get(description(test), weights["defaultSeconds"])
+        else:
+            value = weights["costs"].get(f"{test['project']}/{test['file']}", weights["defaultSeconds"])
         if not 0 < value < 3600:
             raise ValueError("Invalid timing estimate")
         return value
