@@ -169,6 +169,37 @@ describe('the camera rig', () => {
     expect(fromMoon).toBeCloseTo(6 * BODY_RADIUS.moon);
   });
 
+  it('Given Back to another body, When its flight is under way, Then it lands at the link’s camera', () => {
+    const { rig, camera } = setUp();
+    rig.place({ target: { latitude: 0, longitude: 0 }, distance: 3 });
+    rig.setFocus('moon');
+    const before = camera.position.clone();
+    rig.glideTo({ target: { latitude: 0, longitude: 0 }, distance: 7 });
+    // Still the flight's to make: no jump to the Moon before its first frame.
+    expect(camera.position.distanceTo(before)).toBeLessThan(1e-9);
+    settle(rig);
+    const fromMoon = camera.position
+      .clone()
+      .sub(new Vector3(60, 0, 0))
+      .length();
+    expect(fromMoon).toBeCloseTo(7 * BODY_RADIUS.moon);
+  });
+
+  it('Given Back to a body still loading, Then the camera waits, and arrives at the link’s', () => {
+    const { rig, camera, loaded } = setUp({ loaded: ['earth'] });
+    rig.place({ target: { latitude: 0, longitude: 0 }, distance: 3 });
+    rig.setFocus('moon');
+    rig.glideTo({ target: { latitude: 0, longitude: 0 }, distance: 5 });
+    loaded.add('moon');
+    rig.settleFocus();
+    settle(rig);
+    const fromMoon = camera.position
+      .clone()
+      .sub(new Vector3(60, 0, 0))
+      .length();
+    expect(fromMoon).toBeCloseTo(5 * BODY_RADIUS.moon);
+  });
+
   it('Given a grab, Then an automatic flight stops where it is', () => {
     const { rig, camera, controls } = setUp();
     rig.place({ target: { latitude: 0, longitude: 0 }, distance: 3 });

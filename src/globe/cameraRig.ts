@@ -157,15 +157,15 @@ export class CameraRig implements StagePart {
     this.#world.invalidate();
   }
 
-  /** Glide to `state` (#581): turn and zoom on Earth, else placed. data-distance: where it is. */
+  /** Glide to `state` (#581): on Earth turn and zoom, else placed; a flight under way lands there. */
   glideTo(state: GlobeCamera): void {
     if (this.#viewpoint !== 'free') return;
-    if (this.#focus !== 'earth' || this.#pendingFocus) {
-      this.place(state);
-      return;
+    if (this.#view !== null || this.#pendingFocus) this.#focusCamera = state;
+    else if (this.#focus !== 'earth') this.place(state);
+    else {
+      this.flyTo(state.target);
+      this.zoomTo(state.distance);
     }
-    this.flyTo(state.target);
-    this.zoomTo(state.distance);
   }
 
   /** Put the camera where a link says, relative to the body in focus. */
