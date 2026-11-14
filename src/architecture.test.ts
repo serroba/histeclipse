@@ -354,7 +354,7 @@ describe('the code the unit tests do not reach only shrinks (#625)', () => {
  * Lines in `src/style.css` (#382): a component's rules go in a `.css` file beside it, imported
  * by it, so this may only come down, to the page-wide rules and the shared tokens.
  */
-const STYLE_CSS_LINES = 789;
+const STYLE_CSS_LINES = 728;
 
 describe('style.css only shrinks', () => {
   const lines = lineCount(readFileSync(join(SRC, 'style.css'), 'utf8'));

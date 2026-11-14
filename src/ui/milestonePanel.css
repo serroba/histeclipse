@@ -94,3 +94,28 @@
 .deep-milestones[open] summary::before {
   transform: rotate(90deg);
 }
+
+/* Each kind of milestone's colour, as its marks and cards use it (moved from style.css, #382). */
+.milestone-cosmos {
+  --mark: #7fd6d0;
+}
+
+.milestone-life {
+  --mark: #7fcf9a;
+}
+
+.milestone-extinction {
+  --mark: #e07a6a;
+}
+
+.milestone-continents {
+  --mark: #d9b46a;
+}
+
+.milestone-climate {
+  --mark: #8fc3ea;
+}
+
+.milestone-humans {
+  --mark: #c9a3e6;
+}

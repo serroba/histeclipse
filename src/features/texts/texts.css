@@ -48,3 +48,9 @@
   cursor: pointer;
   pointer-events: auto;
 }
+
+/* Where and when a passage's anchor is, under its title (moved from style.css, #382). */
+.here-meta {
+  color: var(--ink-muted);
+  font-size: 11px;
+}

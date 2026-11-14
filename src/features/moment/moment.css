@@ -14,3 +14,9 @@
 .term-note[hidden] {
   display: none;
 }
+
+/* The time of day beside the date (moved from style.css, #382). */
+.hud-time {
+  color: var(--accent);
+  font-weight: 500;
+}

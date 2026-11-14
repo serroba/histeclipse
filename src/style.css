@@ -95,11 +95,6 @@ body {
   font-weight: 600;
 }
 
-.hud-time {
-  color: var(--accent);
-  font-weight: 500;
-}
-
 .hud-detail,
 .sky-caption {
   margin: 4px 0 0;
@@ -195,8 +190,7 @@ body {
   }
 }
 
-.empire-label[hidden],
-.empire-credit[hidden] {
+.empire-label[hidden] {
   display: none;
 }
 
@@ -282,11 +276,6 @@ body {
   font-size: 12px;
   cursor: pointer;
   pointer-events: auto;
-}
-
-.here-meta {
-  color: var(--ink-muted);
-  font-size: 11px;
 }
 
 .credits summary {
@@ -656,30 +645,6 @@ body {
 /* While a finger drags the sheet, the details show as tall as it has pulled them. */
 .deep-time[data-sheet='dragging'] .deep-details {
   overflow: hidden;
-}
-
-.milestone-cosmos {
-  --mark: #7fd6d0;
-}
-
-.milestone-life {
-  --mark: #7fcf9a;
-}
-
-.milestone-extinction {
-  --mark: #e07a6a;
-}
-
-.milestone-continents {
-  --mark: #d9b46a;
-}
-
-.milestone-climate {
-  --mark: #8fc3ea;
-}
-
-.milestone-humans {
-  --mark: #c9a3e6;
 }
 
 /* On phones the header's first row holds the time switch and Layers: the buttons tighten up,
