@@ -23,6 +23,8 @@ export interface EmpireLayer {
   readonly ohm: OhmYear | null;
   /** States that appeared or went since the year drawn before, to name on the map a while. */
   readonly changes?: readonly StateChange[];
+  /** What the map shows, as a key (paintKey.ts): the map is repainted only when it changes. */
+  readonly paintKey?: string;
 }
 
 /** A state that appeared or went, and where its name goes. */
@@ -181,6 +183,8 @@ export const empiresLayer: LayerFactory<EmpireLayer | null> = (host) => {
   const labelSizes = new Map<string, { readonly width: number; readonly height: number }>();
   // States that appeared or went lately, by name: named on the map for a while.
   const recentStates = new Map<string, { readonly change: StateChange; readonly at: number }>();
+  // The map last painted, by its key; null when none is.
+  let painted: string | symbol | null = null;
 
   /**
    * The labels for `wanted`, those already made kept (taken out of `before`). A name not seen
@@ -211,14 +215,18 @@ export const empiresLayer: LayerFactory<EmpireLayer | null> = (host) => {
 
   return {
     update(shown) {
-      slot.show(
-        shown === null
-          ? null
-          : (canvas) => {
-              paintTerritories(canvas, shown.territories);
-              if (shown.ohm !== null) paintBorders(canvas, shown.ohm.borders);
-            },
-      );
+      // Repainting the map is slow, the ways of life under it too: only for another map (#692).
+      const key = shown === null ? null : (shown.paintKey ?? Symbol('unkeyed'));
+      if (key === null || key !== painted)
+        slot.show(
+          shown === null
+            ? null
+            : (canvas) => {
+                paintTerritories(canvas, shown.territories);
+                if (shown.ohm !== null) paintBorders(canvas, shown.ohm.borders);
+              },
+        );
+      painted = key;
       const previous = labels;
       const before = new Map(previous.map((entry) => [entry.id, entry]));
       const shownBefore = new Set(

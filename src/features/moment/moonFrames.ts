@@ -5,7 +5,7 @@
  * strays by under a metre (15 cm at worst in 20,000 dates over 4000 BCE–3000 CE, 0.0001″),
  * against the eclipse geometry's hundreds. Playing at an hour a second, ELP runs about once a
  * second. Only the frame-by-frame moment uses it: searches that ask for scattered times keep
- * the exact series.
+ * the exact series, and so does a moment that jumps (travelling through the years).
  */
 
 import type { EquatorialVector, MoonEphemeris } from '../../astro/moon';
@@ -29,8 +29,15 @@ export function moonBetween(exact: MoonEphemeris, step = STEP_DAYS): MoonEphemer
     }
     return position;
   }
+  // The moment asked for last: the grid pays only while time moves on by less than a step or
+  // so a frame. Travelling through the years jumps months a frame, and there four new grid
+  // points a frame would cost four evaluations for one; so one, exactly.
+  let last = Number.NaN;
   return {
     position(jdTT) {
+      const near = Math.abs(jdTT - last) <= 2 * step;
+      last = jdTT;
+      if (!near) return exact.position(jdTT);
       const along = jdTT / step;
       const index = Math.floor(along);
       const x = along - index;

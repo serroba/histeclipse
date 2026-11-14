@@ -5,6 +5,7 @@
  * territory, for the eclipses seen within it.
  */
 
+import { standingKey } from './paintKey';
 import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import { PRESENT_YEAR } from '../../time/present';
@@ -170,12 +171,16 @@ export function mountEmpires(context: EmpiresContext): EmpiresPart {
       return;
     }
     ohmIndex ??= loadOhmIndex(`${base}data/ohm/index.json`, fetchJson);
+    // What the map will show, from each source's file: the layer repaints only when it changes.
+    const paints = { cliopatria: '', ohm: '' };
     const territories =
       source === 'ohm'
         ? Promise.resolve([])
-        : empireCenturyFor(year).then((file) =>
-            file === null ? [] : territoriesIn(file, cliopatriaYear(year, PRESENT_YEAR)),
-          );
+        : empireCenturyFor(year).then((file) => {
+            const at = cliopatriaYear(year, PRESENT_YEAR);
+            paints.cliopatria = standingKey(file, file?.polities ?? [], at);
+            return file === null ? [] : territoriesIn(file, at);
+          });
     const ohm =
       source === 'cliopatria'
         ? Promise.resolve(null)
@@ -185,6 +190,7 @@ export function mountEmpires(context: EmpiresContext): EmpiresPart {
             const file = await centuryFile(ohmCenturies, century, () =>
               loadOhmCentury(`${base}data/ohm/${String(century)}.json`, fetchJson),
             );
+            paints.ohm = standingKey(file, file.borders, year);
             return ohmIn(file, year);
           });
     Promise.all([territories, ohm]).then(
@@ -197,7 +203,8 @@ export function mountEmpires(context: EmpiresContext): EmpiresPart {
           ...drawn.map((territory) => ({ ...labelPoint(territory), name: territory.name })),
           ...(lines?.labels ?? []),
         ]);
-        statesOnGlobe.update({ territories: drawn, ohm: lines, changes });
+        const paintKey = `${source}:${paints.cliopatria}|${paints.ohm}`;
+        statesOnGlobe.update({ territories: drawn, ohm: lines, changes, paintKey });
       },
       (error: unknown) => {
         empiresShown = null;

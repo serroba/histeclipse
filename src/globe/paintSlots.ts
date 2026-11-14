@@ -27,6 +27,8 @@ export function createPaintSlots<Painter>(repaint: () => void): PaintSlots<Paint
       slots.sort((a, b) => a.order - b.order);
       return {
         show(painter) {
+          // Nothing taken away from an empty slot: no repaint, which repaints every slot (#692).
+          if (painter === null && slot.painter === null) return;
           slot.painter = painter;
           repaint();
         },

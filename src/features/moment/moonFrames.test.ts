@@ -29,6 +29,8 @@ describe('moonBetween', () => {
     fc.assert(
       fc.property(fc.double({ min: 260_000, max: 2_817_000, noNaN: true }), (jd) => {
         const between = moonBetween(exact);
+        // A frame before, so this one is worked out between the grid's points.
+        between.position(julianDayNumber(jd - STEP_DAYS / 3));
         const at = julianDayNumber(jd);
         expect(distanceKm(between.position(at), exact.position(at))).toBeLessThan(1e-3);
       }),
@@ -50,6 +52,17 @@ describe('moonBetween', () => {
       between.position(julianDayNumber(start + (frame / 60) * STEP_DAYS));
     }
     expect(asked()).toBeLessThanOrEqual(10);
+  });
+
+  it('asks ELP once a frame, not four times, when each frame jumps far (travelling the years)', () => {
+    const { ephemeris, asked } = counting();
+    const between = moonBetween(ephemeris);
+    // 50 years a second at 60 frames a second: about 300 days a frame.
+    for (let frame = 0; frame < 120; frame += 1) {
+      const at = julianDayNumber(-1_000_000 + frame * 304.4);
+      expect(between.position(at)).toEqual(exact.position(at));
+    }
+    expect(asked()).toBe(120);
   });
 
   it('plays backwards as well as forwards from the positions it keeps', () => {

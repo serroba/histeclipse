@@ -33,11 +33,21 @@ async function rendered(page: Page, testId: 'globe' | 'sky'): Promise<void> {
   });
 }
 
-/** A drag across `target`'s free middle, one pointer move per display frame or so. */
+/**
+ * A drag across `target`, one pointer move per display frame or so. On the globe it starts in the
+ * space the panels leave free, as a reader's finger would; elsewhere two thirds of the way down.
+ */
 async function drag(page: Page, target: Locator, dx: number, dy: number): Promise<void> {
   const box = await target.boundingBox();
   if (box === null) throw new Error('nothing to drag');
-  const from = { x: box.x + box.width / 2, y: box.y + (box.height * 2) / 3 };
+  let from = { x: box.x + box.width / 2, y: box.y + (box.height * 2) / 3 };
+  if ((await target.getAttribute('data-testid')) === 'globe') {
+    const top = await page.locator('.hud').boundingBox();
+    const bottom = await page.locator('.bottom').boundingBox();
+    const above = top === null ? box.y : top.y + top.height;
+    const below = bottom === null ? box.y + box.height : bottom.y;
+    from = { x: box.x + box.width / 2 - dx / 2, y: (above + below) / 2 - dy / 2 };
+  }
   await page.mouse.move(from.x, from.y);
   await page.mouse.down();
   const moves = 60;
@@ -46,6 +56,21 @@ async function drag(page: Page, target: Locator, dx: number, dy: number): Promis
     await page.waitForTimeout(16);
   }
   await page.mouse.up();
+}
+
+const holocene = (page: Page): Locator => page.getByRole('group', { name: 'Holocene' });
+
+/**
+ * 7500 BCE in the years, as a reader travelling through the Holocene sees it: the travel view
+ * on (it brings states and ways of life) at the default 50 years a second, paused.
+ */
+async function travelFrom(page: Page): Promise<void> {
+  await page.goto('./?t=-7499-11-14T05:53Z&cam=-10,-20,3.6');
+  await rendered(page, 'globe');
+  const bar = holocene(page);
+  await bar.getByRole('button', { name: 'Travel through the years' }).click();
+  await bar.getByRole('button', { name: 'Stop travelling' }).click();
+  await expect(bar.getByRole('button', { name: 'Leave the travel view' })).toBeVisible();
 }
 
 interface Scenario {
@@ -170,6 +195,27 @@ const SCENARIOS: Record<string, Scenario> = {
       await expect(page.getByTestId('globe')).toBeVisible();
       await page.waitForTimeout(1000);
     },
+  },
+  'travel view plays the years': {
+    setup: travelFrom,
+    action: async (page) => {
+      await holocene(page).getByRole('button', { name: 'Travel through the years' }).click();
+      await page.waitForTimeout(4000);
+      await holocene(page).getByRole('button', { name: 'Stop travelling' }).click();
+    },
+  },
+  'globe drag while the years play': {
+    setup: travelFrom,
+    action: async (page) => {
+      await holocene(page).getByRole('button', { name: 'Travel through the years' }).click();
+      await page.waitForTimeout(500);
+      await drag(page, page.getByTestId('globe'), -240, 80);
+      await holocene(page).getByRole('button', { name: 'Stop travelling' }).click();
+    },
+  },
+  'globe drag in the travel view, paused': {
+    setup: travelFrom,
+    action: (page) => drag(page, page.getByTestId('globe'), -240, 80),
   },
   'carbon-14 story plays, then pauses': {
     setup: async (page) => {
