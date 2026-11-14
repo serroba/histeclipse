@@ -21,7 +21,12 @@ export interface Panels {
 export function createPanels(root: HTMLElement): Panels {
   const fullView = element(
     'button',
-    { type: 'button', class: 'full-view', 'aria-label': 'Hide the panels for a full view' },
+    {
+      type: 'button',
+      class: 'full-view',
+      'aria-label': 'Hide the panels for a full view',
+      title: 'Full view',
+    },
     uiIcon('fullView', 16),
     element('span', { class: 'icon-label' }, 'Full view'),
   );

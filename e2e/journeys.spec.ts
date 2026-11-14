@@ -50,6 +50,32 @@ test('a newcomer starts with a famous eclipse and looks at the sky that day @acc
   expect(problems).toEqual([]);
 });
 
+test('a visitor explores human origins by topic, without choosing a span, and Back returns @acceptance @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await test.step('Given today on the globe', async () => {
+    await page.goto('./?t=2026-01-01T12:00Z&cam=0,0,3');
+    await globeRendered(page);
+  });
+  await test.step('When they open Explore, choose People and Human origins', async () => {
+    await page.getByRole('button', { name: 'Explore' }).click();
+    const panel = page.getByRole('dialog', { name: 'Explore' });
+    await panel.getByRole('tab', { name: 'People' }).click();
+    await panel.getByRole('button', { name: 'Human origins', exact: true }).click();
+  });
+  await test.step('Then the first Homo sapiens are shown in the ice ages', async () => {
+    await expect(page.locator('.hud-date')).toHaveText('315,000 years ago');
+    await expect(page).toHaveURL(/explore=human-origins/);
+  });
+  await test.step('When they go Back, Then they are where they were', async () => {
+    await page.goBack();
+    await expect(page.locator('.hud-date')).toContainText('2026');
+    await expect(page).not.toHaveURL(/explore=/);
+  });
+  expect(problems).toEqual([]);
+});
+
 test('a link to a destination opens its view, and the link keeps naming it (#726)', async ({
   page,
 }) => {

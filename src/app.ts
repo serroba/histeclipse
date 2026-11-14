@@ -23,7 +23,7 @@ import {
   type Drawn,
 } from './state/redraws';
 import { createStore } from './state/store';
-import { parseViewState, serializeViewState } from './state/url';
+import { parseViewState } from './state/url';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import { awayFromEarth, toggledLayer, withLayer, type ViewState } from './state/viewState';
 import { DeltaT } from './time/deltaT';
@@ -32,9 +32,8 @@ import { layOutPage } from './ui/pageLayout';
 import { FEATURES } from './features';
 import { deepChipsOf, mountFeatures } from './features/mounted';
 import type { FeatureContext } from './features/feature';
-import { anchorQuery } from './text/anchors';
 import { arrivalSearch } from './explore/destinations';
-import { type Anchor } from './text/passages';
+import { anchorOpener } from './explore/open';
 import { createWelcome } from './ui/welcome';
 import { createMarkerCard } from './ui/markerCard';
 import { createViewSwitch } from './ui/viewSwitch';
@@ -74,6 +73,7 @@ import {
 } from './features/whyHere';
 import { mountMoment } from './features/moment';
 import { mountLayersPanel } from './features/layersPanel';
+import { mountExplore } from './features/explore';
 import {
   createNotices,
   createPanels,
@@ -304,6 +304,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       surfaces.loadArchive();
     },
   });
+  // A passage's or a destination's view laid over the reader's, as a step back can undo.
+  const openAnchor = anchorOpener({ store, deepTime, sync: () => sync });
   // A tablet's records checked against the sky, and looked at from Babylon (#447).
   const records = mountRecords({
     ...partContext,
@@ -371,10 +373,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The site's texts (#391, #392): search, and what is written about here.
   const texts = mountTexts({
     ...partContext,
-    openAnchor: (anchor) => {
-      openAnchor(anchor);
-    },
+    openAnchor,
   });
+  // Explore (#727): destinations by topic, opened as the texts' anchors are.
+  const explore = mountExplore({ openAnchor, search: texts.search });
   // Carbon-14 in the air under the years' slider (#270), its curves loaded once the layer is on.
   const datingCard = createDatingCard();
   // The shower's story (#269, #317): its stage, and its chapters in 3D over the globe.
@@ -464,7 +466,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ],
     header: {
       home: base,
-      tools: [boundaries.button, texts.search.button, panels.fullView],
+      tools: [explore.button, boundaries.button, texts.search.button, panels.fullView],
       date: moment.dateText,
       time: moment.timeText,
       detail: moment.detailText,
@@ -498,6 +500,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       texts.search.dialog,
       records.dialog,
       layersPanel.dialog,
+      explore.dialog,
       markerCard.dialog,
       datingCard.dialog,
       carbonMade.dialog,
@@ -505,14 +508,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       shower.stage,
     ],
   });
-
-  /** Open a passage's anchor: its view laid over the reader's, as a step back can undo. */
-  function openAnchor(anchor: Anchor): void {
-    const next = parseViewState(anchorQuery(anchor, serializeViewState(store.get())), new Date());
-    deepTime.stopPlay();
-    sync.step();
-    store.set(() => next.state);
-  }
 
   parsed.warnings.forEach(notify);
 
@@ -665,6 +660,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** The Layers panel, and the borders it turns on. */
   function showLayers(state: ViewState): void {
     layersPanel.show(state);
+    explore.show(state);
     empires.show(state);
   }
 

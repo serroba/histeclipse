@@ -290,7 +290,7 @@ test('the viewpoints and deep time’s chips wear icons: icon and word, or on a 
   );
 });
 
-test('the Layers rows, Layers, Full view and Famous eclipses wear icons too', async ({
+test('the Layers rows, Layers, Explore, Full view and Famous eclipses wear icons too', async ({
   page,
 }, info) => {
   test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
@@ -300,14 +300,22 @@ test('the Layers rows, Layers, Full view and Famous eclipses wear icons too', as
     await page.goto('./?t=2026-01-10T12:00&layers=eclipses');
     await globeRendered(page);
   });
-  await test.step('Then Layers and Full view wear icons, words beside them, or on a phone not', async () => {
-    for (const name of ['Layers', 'Hide the panels for a full view']) {
+  await test.step('Then Layers and Explore wear icons, words beside them, or on a phone not', async () => {
+    for (const name of ['Layers', 'Explore']) {
       const button = page.getByRole('button', { name, exact: true });
       await expect(button.locator('svg')).toHaveCount(1);
       const box = await button.locator('.icon-label').boundingBox();
       if (phone) expect(box?.width ?? 0).toBeLessThanOrEqual(1);
       else expect(box?.width ?? 0).toBeGreaterThan(20);
     }
+  });
+  await test.step('And Full view wears its icon alone beside Explore, its words for screen readers (#727)', async () => {
+    const button = page.getByRole('button', {
+      name: 'Hide the panels for a full view',
+      exact: true,
+    });
+    await expect(button.locator('svg')).toHaveCount(1);
+    expect((await button.locator('.icon-label').boundingBox())?.width ?? 0).toBeLessThanOrEqual(1);
   });
   await test.step('And Famous eclipses keeps its words everywhere, the icon alone not saying what it is', async () => {
     const famous = page.getByRole('button', { name: 'Famous eclipses', exact: true });

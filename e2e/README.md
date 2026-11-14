@@ -31,6 +31,7 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 | A reader travels into the ice ages and back to the day they left      | time switch, deep time, Ice ages, Play to the present, Holocene |
 | A link someone shares opens exactly what they saw                     | link state, famous eclipse, both sources of borders             |
 | A link to a destination opens its view                                | destinations (#726), deep time, Humans, the link's `explore`    |
+| A visitor explores human origins by topic, and Back returns           | Explore (#727), topics, destinations, history step              |
 
 ## Features
 
