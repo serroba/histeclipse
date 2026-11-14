@@ -82,3 +82,32 @@ python .github/scripts/refresh_e2e_costs.py /path/to/cohort/*/*/timings.json \
 The refresh rejects non-Linux input, duplicate scenarios within a run and an empty usable cohort.
 Scenario medians improve the assignment model; actual two-worker makespan and retries still
 need checking on subsequent CI runs before claiming a speed-up.
+
+## Conservative PR job selection
+
+`ci_scope.py` reads the complete PR file list (including both sides of renames) and outputs an
+explicit job plan. The policy is intentionally narrow:
+
+| Changed paths                                                  | PR jobs retained           |
+| -------------------------------------------------------------- | -------------------------- |
+| Root Markdown, `docs/**/*.md`, `e2e/**/*.md` only              | Documentation formatting   |
+| Python/project inputs under `data-pipeline/` outside `plates/` | Main Python pipeline       |
+| Python/project inputs under `data-pipeline/plates/`            | Independent plate pipeline |
+| A mixture of the above                                         | Union of those jobs        |
+| Any other path, unavailable/incomplete file list, or main push | Full integration suite     |
+
+Python/project inputs are `.py`, `.pyi`, `.toml`, `.lock`, `.ini`, `.cfg` and `.python-version`.
+Other pipeline assets (including JSON fixtures) keep repository-wide formatting checks.
+Runtime Markdown under `public/`, generated data, source, lockfiles outside Python projects,
+shared configuration and workflow/script changes all run the full suite. Documentation formatting
+still checks Markdown on selective PRs. Main pushes always run all integration checks.
+
+The aggregate gate checks the selected plan against actual job results: an intentionally
+unselected job may be skipped, but any selected job skipped/failed/cancelled, missing result,
+malformed plan or failed selector prevents CI from passing. Unit tests exercise every nonempty
+combination of selected jobs and negative gate outcomes. Selective PRs are excluded from the
+full-suite latency cohort so a fast documentation run cannot make the browser SLO look better.
+
+The tree navigation case has a new scenario name when adopting the PR fixture, so it receives
+the default cost instead of inheriting the old full-dataset estimate. Refresh its measured cost
+once three successful main-run samples are available.

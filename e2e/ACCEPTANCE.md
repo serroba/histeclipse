@@ -74,3 +74,15 @@ on desktop and mobile; a focused desktop journey checks both the URL and the ren
 after zooming, Back and Forward. Camera interpolation and cross-focus restoration retain their
 unit tests and existing browser regression. The combined journey previously exhausted its 30 s
 total budget on mobile; this split keeps assertions without increasing that timeout.
+
+## Tree-of-life boundary
+
+The PR tree navigation journey intercepts only `data/tree-of-life.json` with an 80-node subtree
+from the production 8,345-node dataset. It retains real identifiers, ancestry, ranks, extinction
+and placement flags, and exercises the real loader, layout, sheet, renderer, selection and URL
+wiring. A unit test validates the fixture schema and compares selected lineages/flags to the
+production data. Existing real-data layout/property and ancestry tests remain.
+
+Without `E2E_SCOPE=acceptance` (the default/nightly suite), the same journey uses the full dataset
+and asserts thousands of rendered nodes; the second full-data shared-link/source journey also
+remains. The fixture is not shipped in the application or used by production data loaders.

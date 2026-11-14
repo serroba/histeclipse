@@ -6,17 +6,25 @@
 
 import { collectProblems, expect, globeRendered, GPU, openLayers, test } from './support';
 
+import treeFixture from './fixtures/tree-of-life.json' with { type: 'json' };
+
 const NODES = /^[1-9]\d{3,}$/;
 // Drawing eight thousand taxa beside the globe takes seconds on runners that render in software,
 // and while it lays them out a tap's answer (the link changing) is as slow to come (#326).
 const DRAWN = { timeout: 20_000 };
 
 test(
-  'from our species to the mammals, and the whole tree, then back to the globe @acceptance',
+  'tree navigation follows our species to mammals and back to the globe @acceptance',
   GPU,
   async ({ page }) => {
-    // The globe and then eight thousand taxa, drawn in software on CI's runners.
-    test.slow();
+    // PRs exercise the production sheet with a small real subtree. Nightly/default runs
+    // retain the full-data journey, including its thousands-of-nodes assertion.
+    const acceptance = process.env['E2E_SCOPE'] === 'acceptance';
+    if (acceptance)
+      await page.route('**/data/tree-of-life.json', (route) =>
+        route.fulfill({ json: treeFixture }),
+      );
+    else test.slow();
     const problems = collectProblems(page);
     const sheet = page.getByRole('dialog', { name: /Tree of life/ });
     await test.step('Given the ice ages with Humans on', async () => {
@@ -29,7 +37,11 @@ test(
     });
     await test.step('Then the tree opens at Homo sapiens, living, its line back to the first cells', async () => {
       await expect(page).toHaveURL(/tree=ott770315/, DRAWN);
-      await expect(page.getByTestId('tree-canvas')).toHaveAttribute('data-nodes', NODES, DRAWN);
+      await expect(page.getByTestId('tree-canvas')).toHaveAttribute(
+        'data-nodes',
+        acceptance ? String(treeFixture.parent.length) : NODES,
+        DRAWN,
+      );
       const focus = page.getByTestId('tree-focus');
       await expect(focus.getByRole('heading')).toHaveText('Homo sapiens');
       await expect(focus.getByRole('list')).toContainText('Primates');

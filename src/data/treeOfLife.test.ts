@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import data from '../../public/data/tree-of-life.json';
+import fixture from '../../e2e/fixtures/tree-of-life.json';
 import { hasFlag, lineage, loadTreeOfLife, namedLineage, type TreeOfLife } from './treeOfLife';
 
 const serve = (body: unknown) => (): Promise<Response> => Promise.resolve(Response.json(body));
@@ -17,6 +18,25 @@ describe('the tree of life (Open Tree of Life, trimmed)', () => {
     await expect(loadTreeOfLife('/t.json', serve(lost))).rejects.toThrow();
     const unlisted = { ...real, rank: [real.ranks.length, ...real.rank.slice(1)] };
     await expect(loadTreeOfLife('/t.json', serve(unlisted))).rejects.toThrow();
+  });
+
+  it('keeps real ancestry and flags in the small PR navigation fixture', async () => {
+    const small = await loadTreeOfLife('/fixture.json', serve(fixture));
+    expect(small.parent.length).toBeLessThan(100);
+    for (const name of [
+      'Homo sapiens',
+      'Homo sapiens neanderthalensis',
+      'Tyrannosaurus',
+      'Triceratops',
+    ]) {
+      const node = small.name.indexOf(name);
+      const source = real.name.indexOf(name);
+      expect(node).toBeGreaterThanOrEqual(0);
+      expect(namedLineage(small, node)).toEqual(namedLineage(real, source));
+      expect(small.ott[node]).toBe(real.ott[source]);
+      expect(small.nodeFlags[node]).toBe(real.nodeFlags[source]);
+    }
+    expect(small.name[small.ours.humans['sapiens'] ?? -1]).toBe('Homo sapiens');
   });
 
   it('places our species among the primates and mammals', () => {

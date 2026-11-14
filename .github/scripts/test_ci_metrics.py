@@ -28,6 +28,12 @@ class MetricsTest(unittest.TestCase):
         self.assertIsNone(measure(self.run, self.jobs[:-1] + [job("CI OK", conclusion="failure")]))
         self.assertIsNone(measure(self.run, self.jobs + [job("Still running", end=None)]))
 
+    def test_selective_runs_with_skipped_browsers_do_not_enter_full_suite_cohort(self):
+        selective = [job(GPU_JOB, conclusion="skipped"),
+                     job("End-to-end (balanced acceptance, 2/2)", conclusion="skipped"),
+                     job("CI OK")]
+        self.assertIsNone(measure(self.run, selective))
+
     def test_nearest_rank_small_and_full_samples(self):
         self.assertIsNone(percentile([], 0.95))
         self.assertEqual(percentile([100, 300, 200], 0.95), 300)
