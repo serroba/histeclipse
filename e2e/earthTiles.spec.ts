@@ -82,7 +82,7 @@ test(
   },
 );
 
-test('graphics that cannot hold the 4096 map get no tiles, and stop at 1.05 radii', async ({
+test('graphics that cannot hold the 4096 map get no tiles, and stop at 1.05 radii @acceptance', async ({
   page,
 }) => {
   test.slow();

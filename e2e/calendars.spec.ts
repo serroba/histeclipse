@@ -23,7 +23,9 @@ test('with a long calendar picked, every control in the bar stays within it', as
   }
 });
 
-test('years can be counted in the Hebrew calendar, and the link keeps it', async ({ page }) => {
+test('years can be counted in the Hebrew calendar, and the link keeps it @acceptance', async ({
+  page,
+}) => {
   await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
   await globeRendered(page);
   const year = page.getByLabel('Year', { exact: true });

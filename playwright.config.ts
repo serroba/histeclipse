@@ -7,6 +7,7 @@ import type { DisplayOptions } from './e2e/support';
 const remoteBaseURL = process.env['BASE_URL'];
 const localBaseURL = 'http://localhost:4173/';
 const isCI = process.env['CI'] !== undefined;
+const acceptance = process.env['E2E_SCOPE'] === 'acceptance';
 
 /**
  * Against the live site, each browser says it is a test, so the site's analytics can tell the
@@ -41,8 +42,12 @@ export default defineConfig<DisplayOptions>({
     timezoneId: 'UTC',
   },
   projects: [
-    { name: 'desktop', use: { ...device('Desktop Chrome') } },
-    { name: 'mobile', use: { ...device('Pixel 7') } },
+    {
+      name: 'desktop',
+      ...(acceptance && { grep: /@acceptance/ }),
+      use: { ...device('Desktop Chrome') },
+    },
+    { name: 'mobile', ...(acceptance && { grep: /@mobile/ }), use: { ...device('Pixel 7') } },
     // Only two scheduling/wiring checks repeat at 120 Hz. Pace and edge cases run with
     // explicit frame timestamps in scheduledPlayback.test.ts, not whole spec files.
     {

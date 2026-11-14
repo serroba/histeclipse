@@ -5,7 +5,7 @@
 
 import { collectProblems, expect, globeRendered, openLayers, openSources, test } from './support';
 
-test('ways of life shade each region by how people lived, at the moment rated nearest', async ({
+test('ways of life shade each region by how people lived, at the moment rated nearest @acceptance', async ({
   page,
 }) => {
   const problems = collectProblems(page);

@@ -5,7 +5,7 @@
 
 import { collectProblems, expect, globeRendered, openLayers, openSources, test } from './support';
 
-test('named periods list the periods for the place picked, each by its source', async ({
+test('named periods list the periods for the place picked, each by its source @acceptance', async ({
   page,
 }) => {
   const problems = collectProblems(page);

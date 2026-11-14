@@ -36,7 +36,7 @@ test('the reader finds every layer in one panel, grouped by what it shows', asyn
   expect(problems).toEqual([]);
 });
 
-test('turning on states and empires draws the year’s states, and the link keeps it', async ({
+test('turning on states and empires draws the year’s states, and the link keeps it @acceptance', async ({
   page,
 }) => {
   const globe = page.getByTestId('globe');
@@ -116,7 +116,9 @@ test('eclipse shadows can be switched off, and the link keeps that', async ({ pa
   });
 });
 
-test('the Layers panel leaves the globe usable while it is open', async ({ page }, info) => {
+test('the Layers panel leaves the globe usable while it is open @mobile', async ({
+  page,
+}, info) => {
   await test.step('Given the Layers panel open', async () => {
     await page.goto('./?t=1500-06-01T12:00&cam=5,20,2.6');
     await globeRendered(page);
@@ -213,7 +215,7 @@ test('with Ways of life on, a key names each colour on the map', async ({ page }
   expect(problems).toEqual([]);
 });
 
-test('one set of layers for all of time: the panel and the bar’s chips switch the same ones', async ({
+test('one set of layers for all of time: the panel and the bar’s chips switch the same ones @acceptance', async ({
   page,
 }) => {
   const problems = collectProblems(page);
@@ -245,7 +247,7 @@ test('one set of layers for all of time: the panel and the bar’s chips switch 
   expect(problems).toEqual([]);
 });
 
-test('the viewpoints and deep time’s chips wear icons: icon and word, or on a phone the icon', async ({
+test('the viewpoints and deep time’s chips wear icons: icon and word, or on a phone the icon @mobile', async ({
   page,
 }, info) => {
   test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
@@ -316,7 +318,7 @@ test('the Layers rows, Layers, Full view and Famous eclipses wear icons too', as
   });
 });
 
-test('the date panel’s rows line up on both edges, and on a phone it spans the screen', async ({
+test('the date panel’s rows line up on both edges, and on a phone it spans the screen @mobile', async ({
   page,
 }, info) => {
   test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');

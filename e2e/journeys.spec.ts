@@ -15,7 +15,9 @@ import {
   test,
 } from './support';
 
-test('a newcomer starts with a famous eclipse and looks at the sky that day', async ({ page }) => {
+test('a newcomer starts with a famous eclipse and looks at the sky that day @acceptance @mobile', async ({
+  page,
+}) => {
   const problems = collectProblems(page);
   await test.step('Given a first visit', async () => {
     await page.goto('./');
@@ -48,7 +50,7 @@ test('a newcomer starts with a famous eclipse and looks at the sky that day', as
   expect(problems).toEqual([]);
 });
 
-test('a historian follows the eclipses seen from one empire', async ({ page }) => {
+test('a historian follows the eclipses seen from one empire @acceptance', async ({ page }) => {
   const problems = collectProblems(page);
   const seen = page.getByLabel('Seen from', { exact: true });
   await test.step('Given the globe in 763 BCE', async () => {
@@ -80,7 +82,9 @@ test('a historian follows the eclipses seen from one empire', async ({ page }) =
   expect(problems).toEqual([]);
 });
 
-test('a reader travels into the ice ages and back to the day they left', async ({ page }) => {
+test('a reader travels into the ice ages and back to the day they left @acceptance @mobile', async ({
+  page,
+}) => {
   const problems = collectProblems(page);
   await test.step('Given a reader at the 2024 eclipse', async () => {
     await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
@@ -109,23 +113,27 @@ test('a reader travels into the ice ages and back to the day they left', async (
   expect(problems).toEqual([]);
 });
 
-test('a link someone shares opens exactly what they saw', LIVE, async ({ page }) => {
-  const problems = collectProblems(page);
-  const shared =
-    './?t=-584-05-28T14:26&sel=solar:-0584-05-28&layers=lunar,solar,empires&borders=both';
-  await test.step('Given a link to the eclipse of Thales with both sources of borders', async () => {
-    await page.goto(shared);
-    await globeRendered(page);
-  });
-  await test.step('Then the eclipse, its history and both sources of borders show', async () => {
-    await expect(page.locator('.famous-card-title')).toHaveText('The eclipse of Thales');
-    await expect(page.getByTestId('globe')).toHaveAttribute('data-empires', /^[1-9]\d*$/);
-    await expect(page.getByTestId('globe')).toHaveAttribute('data-ohm-borders', /^[1-9]\d*$/);
-    await openLayers(page);
-    await expect(page.getByLabel('Borders from')).toHaveValue('both');
-  });
-  expect(problems).toEqual([]);
-});
+test(
+  'a link someone shares opens exactly what they saw @acceptance @mobile',
+  LIVE,
+  async ({ page }) => {
+    const problems = collectProblems(page);
+    const shared =
+      './?t=-584-05-28T14:26&sel=solar:-0584-05-28&layers=lunar,solar,empires&borders=both';
+    await test.step('Given a link to the eclipse of Thales with both sources of borders', async () => {
+      await page.goto(shared);
+      await globeRendered(page);
+    });
+    await test.step('Then the eclipse, its history and both sources of borders show', async () => {
+      await expect(page.locator('.famous-card-title')).toHaveText('The eclipse of Thales');
+      await expect(page.getByTestId('globe')).toHaveAttribute('data-empires', /^[1-9]\d*$/);
+      await expect(page.getByTestId('globe')).toHaveAttribute('data-ohm-borders', /^[1-9]\d*$/);
+      await openLayers(page);
+      await expect(page.getByLabel('Borders from')).toHaveValue('both');
+    });
+    expect(problems).toEqual([]);
+  },
+);
 
 test('from anywhere, the name leads back to the start', async ({ page }) => {
   const problems = collectProblems(page);

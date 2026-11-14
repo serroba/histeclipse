@@ -5,7 +5,7 @@
 
 import { collectProblems, expect, globeRendered, showDeepDetails, test } from './support';
 
-test('the Air layer gives carbon dioxide and methane at the moment, against 1750', async ({
+test('the Air layer gives carbon dioxide and methane at the moment, against 1750 @acceptance @mobile', async ({
   page,
 }) => {
   const problems = collectProblems(page);

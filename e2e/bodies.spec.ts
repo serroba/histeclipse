@@ -61,7 +61,7 @@ test('a link can stand on the Moon looking at Earth', async ({ page }) => {
   await expect(page.getByTestId('globe')).toHaveAttribute('data-solar-shadow', 'on');
 });
 
-test('clicking the Moon flies to it, and the camera then orbits and zooms around it', async ({
+test('clicking the Moon flies to it, and the camera then orbits and zooms around it @acceptance', async ({
   page,
 }) => {
   await page.goto('./?t=2024-04-08T18:17&cam=0,-5,150');
@@ -105,35 +105,39 @@ test('a link centred on the Moon opens there, and Earth is one click back', asyn
   await expect(page).not.toHaveURL(/focus=/);
 });
 
-test('close to the Sun, SDO’s images show it in six kinds of light', GPU, async ({ page }) => {
-  // Seen from Earth's side on 8 May 2024: the antisolar direction in the Sun's frame.
-  await page.goto('./?t=2024-05-08T12:00&focus=sun&cam=-17.2,-134.2,4');
-  await globeRendered(page);
-  const globe = page.getByTestId('globe');
-  // A small frame shows at once; the sharp one follows.
-  await expect(globe).toHaveAttribute('data-sun-image', 'large', { timeout: 30_000 });
-  await expect(globe).toHaveAttribute('data-sun-layer', 'visible');
-  await expect(globe).toHaveAttribute('data-sun-facing', '1.000');
-  // The surface is stitched from frames of three weeks, ending that day.
-  await expect(page.getByTestId('sun-caption')).toContainText('18 Apr 2024 – 08 May 2024');
-  await expect(page.getByTestId('sun-caption')).toContainText('NASA/SDO');
+test(
+  'close to the Sun, SDO’s images show it in six kinds of light @acceptance',
+  GPU,
+  async ({ page }) => {
+    // Seen from Earth's side on 8 May 2024: the antisolar direction in the Sun's frame.
+    await page.goto('./?t=2024-05-08T12:00&focus=sun&cam=-17.2,-134.2,4');
+    await globeRendered(page);
+    const globe = page.getByTestId('globe');
+    // A small frame shows at once; the sharp one follows.
+    await expect(globe).toHaveAttribute('data-sun-image', 'large', { timeout: 30_000 });
+    await expect(globe).toHaveAttribute('data-sun-layer', 'visible');
+    await expect(globe).toHaveAttribute('data-sun-facing', '1.000');
+    // The surface is stitched from frames of three weeks, ending that day.
+    await expect(page.getByTestId('sun-caption')).toContainText('18 Apr 2024 – 08 May 2024');
+    await expect(page.getByTestId('sun-caption')).toContainText('NASA/SDO');
 
-  // From behind, the far side is SDO's too, from earlier frames, not a plain surface.
-  await page.goto('./?t=2024-05-08T12:00&focus=sun&cam=17.2,45.8,4');
-  await expect(globe).toHaveAttribute('data-sun-image', 'large', { timeout: 30_000 });
-  await expect(globe).toHaveAttribute('data-sun-facing', '-1.000');
+    // From behind, the far side is SDO's too, from earlier frames, not a plain surface.
+    await page.goto('./?t=2024-05-08T12:00&focus=sun&cam=17.2,45.8,4');
+    await expect(globe).toHaveAttribute('data-sun-image', 'large', { timeout: 30_000 });
+    await expect(globe).toHaveAttribute('data-sun-facing', '-1.000');
 
-  await page.getByRole('button', { name: '171 Å' }).click();
-  await expect(page).toHaveURL(/sun=171/);
-  await expect(globe).toHaveAttribute('data-sun-layer', '171', { timeout: 30_000 });
-  await expect(page.getByTestId('sun-caption')).toContainText('600,000 °C');
+    await page.getByRole('button', { name: '171 Å' }).click();
+    await expect(page).toHaveURL(/sun=171/);
+    await expect(globe).toHaveAttribute('data-sun-layer', '171', { timeout: 30_000 });
+    await expect(page.getByTestId('sun-caption')).toContainText('600,000 °C');
 
-  // Around Earth, the Sun is a plain disc again and the switch goes away.
-  await page.goto('./?t=2024-05-08T12:00&sun=171');
-  await globeRendered(page);
-  await expect(page.getByRole('group', { name: 'Light' })).toBeHidden();
-  await expect(globe).toHaveAttribute('data-sun-image', 'none');
-});
+    // Around Earth, the Sun is a plain disc again and the switch goes away.
+    await page.goto('./?t=2024-05-08T12:00&sun=171');
+    await globeRendered(page);
+    await expect(page.getByRole('group', { name: 'Light' })).toBeHidden();
+    await expect(globe).toHaveAttribute('data-sun-image', 'none');
+  },
+);
 
 test('the Sun’s channels are named by what they show, the light beneath, and Å explained', async ({
   page,
@@ -215,20 +219,24 @@ test('close to the Sun, the caption says what the light shows; how it was made i
   }
 });
 
-test('far out, the planets appear, and clicking one flies to it', GPU, async ({ page }) => {
-  const problems = collectProblems(page);
-  // Two and a half AU out, over the north side of the Solar System.
-  await page.goto('./?t=2020-12-21T18:00&cam=60,0,60000');
-  await globeRendered(page);
-  const globe = page.getByTestId('globe');
-  await expect(globe).toHaveAttribute('data-planets', 'on');
-  const mars = page.locator('.space-marker[data-body="mars"]');
-  await expect(mars).toBeVisible();
-  await mars.click();
-  await expect(globe).toHaveAttribute('data-focus', 'mars');
-  await expect(page).toHaveURL(/cam=-?\d+\.\d{4},-?\d+\.\d{4},4\.00&focus=mars/);
-  expect(problems).toEqual([]);
-});
+test(
+  'far out, the planets appear, and clicking one flies to it @acceptance',
+  GPU,
+  async ({ page }) => {
+    const problems = collectProblems(page);
+    // Two and a half AU out, over the north side of the Solar System.
+    await page.goto('./?t=2020-12-21T18:00&cam=60,0,60000');
+    await globeRendered(page);
+    const globe = page.getByTestId('globe');
+    await expect(globe).toHaveAttribute('data-planets', 'on');
+    const mars = page.locator('.space-marker[data-body="mars"]');
+    await expect(mars).toBeVisible();
+    await mars.click();
+    await expect(globe).toHaveAttribute('data-focus', 'mars');
+    await expect(page).toHaveURL(/cam=-?\d+\.\d{4},-?\d+\.\d{4},4\.00&focus=mars/);
+    expect(problems).toEqual([]);
+  },
+);
 
 test('a link can centre on Saturn, rings and all', async ({ page }) => {
   await page.goto('./?t=2020-12-21T18:00&focus=saturn&cam=25,120,4');

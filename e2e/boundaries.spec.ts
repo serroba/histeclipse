@@ -120,7 +120,7 @@ test('the boundaries open on the Holocene, then grow to 2026 and compare with 20
   expect(problems).toEqual([]);
 });
 
-test('a link opens the comparison complete for less motion, with the report’s own caveats', async ({
+test('a link opens the comparison complete for less motion, with the report’s own caveats @acceptance', async ({
   page,
 }) => {
   const problems = collectProblems(page);

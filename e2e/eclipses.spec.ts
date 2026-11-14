@@ -47,7 +47,7 @@ test('the Moon-up region follows time and shows only during the eclipse', GPU, a
   await expect(globe).toHaveAttribute('data-lunar-overlay', 'off');
 });
 
-test('a lunar eclipse shows the Moon crossing Earth’s shadow', async ({ page }) => {
+test('a lunar eclipse shows the Moon crossing Earth’s shadow @acceptance', async ({ page }) => {
   await page.goto('./?t=2025-03-14T06:59&sel=lunar:2025-03-14');
   await globeRendered(page);
   const moon = page.getByRole('img', { name: /Moon entirely inside Earth’s umbra/ });
@@ -121,20 +121,24 @@ test("stepping and typing years lists that year's eclipses", async ({ page }) =>
   await expect(page).toHaveURL(/t=-0620-03-14T12:00Z/);
 });
 
-test('picking a solar eclipse draws its path and the Moon’s shadow', GPU, async ({ page }) => {
-  await page.goto('./?t=2024-01-01T00:00&loc=32.7767,-96.797');
-  await globeRendered(page);
-  await page.getByRole('button', { name: /8 Apr\s*Total solar/ }).click();
+test(
+  'picking a solar eclipse draws its path and the Moon’s shadow @acceptance',
+  GPU,
+  async ({ page }) => {
+    await page.goto('./?t=2024-01-01T00:00&loc=32.7767,-96.797');
+    await globeRendered(page);
+    await page.getByRole('button', { name: /8 Apr\s*Total solar/ }).click();
 
-  // Not greatest eclipse (18:17, in Mexico) but mid-totality where the observer stands.
-  await expect(page).toHaveURL(/t=2024-04-08T18:43Z/);
-  await expect(page).toHaveURL(/sel=solar:2024-04-08/);
-  const globe = page.getByTestId('globe');
-  await expect(globe).toHaveAttribute('data-solar-path', 'on');
-  await expect(globe).toHaveAttribute('data-solar-shadow', 'on');
-  await expect(page.getByRole('heading', { name: 'Total solar eclipse' })).toBeVisible();
-  await expect(page.locator('.eclipse-observer')).toContainText('a total eclipse');
-});
+    // Not greatest eclipse (18:17, in Mexico) but mid-totality where the observer stands.
+    await expect(page).toHaveURL(/t=2024-04-08T18:43Z/);
+    await expect(page).toHaveURL(/sel=solar:2024-04-08/);
+    const globe = page.getByTestId('globe');
+    await expect(globe).toHaveAttribute('data-solar-path', 'on');
+    await expect(globe).toHaveAttribute('data-solar-shadow', 'on');
+    await expect(page.getByRole('heading', { name: 'Total solar eclipse' })).toBeVisible();
+    await expect(page.locator('.eclipse-observer')).toContainText('a total eclipse');
+  },
+);
 
 test('the scrubber moves through the eclipse and back into the link', async ({ page }) => {
   await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
@@ -150,7 +154,7 @@ test('the scrubber moves through the eclipse and back into the link', async ({ p
   await expect(page.getByTestId('globe')).toHaveAttribute('data-solar-path', 'on');
 });
 
-test('play animates the eclipse forward in time', async ({ page }) => {
+test('play animates the eclipse forward in time @acceptance', async ({ page }) => {
   await page.goto('./?t=2024-04-08T18:00&sel=solar:2024-04-08');
   await globeRendered(page);
   await page.getByRole('button', { name: 'Play' }).click();
@@ -242,7 +246,7 @@ test('a link to a famous eclipse shows its history', async ({ page }) => {
   await expect(page.getByTestId('globe')).toHaveAttribute('data-solar-path', 'on');
 });
 
-test('famous eclipse rows are large enough to tap', async ({ page }) => {
+test('famous eclipse rows are large enough to tap @mobile', async ({ page }) => {
   await page.goto('./');
   await globeRendered(page);
   await page.getByRole('button', { name: 'Famous eclipses' }).click();

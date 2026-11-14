@@ -15,7 +15,7 @@ import {
   test,
 } from './support';
 
-test('the Impact craters layer marks craters to open, each with its details and source', async ({
+test('the Impact craters layer marks craters to open, each with its details and source @acceptance', async ({
   page,
 }) => {
   const problems = collectProblems(page);

@@ -24,7 +24,7 @@ async function glow(page: Page): Promise<number[]> {
 }
 
 test(
-  'cosmic rays make carbon-14 mostly over the poles, more as the shield weakens',
+  'cosmic rays make carbon-14 mostly over the poles, more as the shield weakens @acceptance',
   GPU,
   async ({ page }) => {
     test.slow();

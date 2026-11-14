@@ -21,7 +21,7 @@ const expectedVersion = process.env['EXPECTED_VERSION'] ?? '';
 // The 621 BCE lunar eclipse from Babylon, as someone might share it.
 const SHARED_LINK = '?t=-620-04-22T07:20&loc=32.5422,44.4209&cam=30,40,3&sel=lunar:-0620-04-22';
 
-test('loads the globe without errors or failed requests', LIVE, async ({ page }) => {
+test('loads the globe without errors or failed requests @acceptance', LIVE, async ({ page }) => {
   const problems = collectProblems(page);
   const response = await page.goto('./');
 
@@ -33,7 +33,7 @@ test('loads the globe without errors or failed requests', LIVE, async ({ page })
   expect(problems).toEqual([]);
 });
 
-test('draws the Earth, not an empty canvas', LIVE_GPU, async ({ page }) => {
+test('draws the Earth, not an empty canvas @acceptance', LIVE_GPU, async ({ page }) => {
   await page.goto('./');
   await globeRendered(page);
   // A screenshot captures what is on screen without reading the WebGL buffer back. An empty
@@ -57,7 +57,7 @@ test('the years draw today’s sea ice, by the time of year', GPU, async ({ page
   await expect(globe).toHaveAttribute('data-sea-ice', /^0\.00 /);
 });
 
-test('a shared link reproduces the view it describes', LIVE, async ({ page }) => {
+test('a shared link reproduces the view it describes @acceptance', LIVE, async ({ page }) => {
   await page.goto(SHARED_LINK);
   await globeRendered(page);
 
@@ -85,7 +85,7 @@ test('rewrites a shared link into its full, explicit form', async ({ page }) => 
   );
 });
 
-test('dragging the globe updates the camera in the URL', async ({ page }) => {
+test('dragging the globe updates the camera in the URL @acceptance', async ({ page }) => {
   // On CI's software-rendered phone, drawing the globe takes most of 30 s before the drag starts.
   test.slow();
   await page.goto('./?cam=0,0,3');
@@ -134,7 +134,10 @@ test('dragging an attached view, even while an eclipse plays, hands over to orbi
   await expect.poll(() => new URL(page.url()).searchParams.get('cam')).not.toBe(landed);
 });
 
-test('a one-finger swipe rotates the globe on touch screens', async ({ page, context }, info) => {
+test('a one-finger swipe rotates the globe on touch screens @mobile', async ({
+  page,
+  context,
+}, info) => {
   test.skip(info.project.name !== 'mobile', 'touch gestures are tested on the phone profile');
   await page.goto('./?cam=0,0,3');
   await globeRendered(page);
@@ -157,7 +160,7 @@ test('a one-finger swipe rotates the globe on touch screens', async ({ page, con
   await expect(page).toHaveURL(/cam=0\.0000,-?\d+\.\d{4},3\.00|cam=-?0\.\d{4},-?\d+\.\d{4},3\.00/);
 });
 
-test('the date panel stays readable on a phone', async ({ page }, info) => {
+test('the date panel stays readable on a phone @mobile', async ({ page }, info) => {
   test.skip(info.project.name !== 'mobile', 'phone layout');
   await page.goto(SHARED_LINK);
   await globeRendered(page);
@@ -170,7 +173,7 @@ test('the date panel stays readable on a phone', async ({ page }, info) => {
   expect(panel.height).toBeLessThan(viewport.height * 0.25);
 });
 
-test('the panels fold away for a full view and come back', async ({ page }) => {
+test('the panels fold away for a full view and come back @acceptance', async ({ page }) => {
   const problems = collectProblems(page);
   await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
   await globeRendered(page);
@@ -192,7 +195,7 @@ test('the panels fold away for a full view and come back', async ({ page }) => {
   expect(problems).toEqual([]);
 });
 
-test('a first visit is welcomed once, with a place to start', async ({ page }) => {
+test('a first visit is welcomed once, with a place to start @acceptance', async ({ page }) => {
   const problems = collectProblems(page);
   await page.goto('./');
   await globeRendered(page);
@@ -232,7 +235,7 @@ test('explains parts of a link it could not use', async ({ page }) => {
   await expect(page.getByRole('status')).toContainText('Ignored t="yesterday"');
 });
 
-test('controls are large enough to tap and stay on screen', async ({ page }) => {
+test('controls are large enough to tap and stay on screen @mobile', async ({ page }) => {
   // With the empires layer on, so the "Seen from" row is measured too.
   await page.goto('./?t=2024-01-01T00:00&layers=lunar,solar,empires');
   await globeRendered(page);
@@ -254,7 +257,7 @@ test('controls are large enough to tap and stay on screen', async ({ page }) => 
   }
 });
 
-test('page fits the viewport without horizontal scroll', async ({ page }) => {
+test('page fits the viewport without horizontal scroll @mobile', async ({ page }) => {
   await page.goto('./');
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -381,7 +384,9 @@ test('empty space beside the globe never hides the panels; Escape brings them ba
   await expect(page.locator('.bottom')).toBeVisible();
 });
 
-test('Back steps through what the reader did, and Forward returns', async ({ page }) => {
+test('Back steps through what the reader did, and Forward returns @acceptance @mobile', async ({
+  page,
+}) => {
   const problems = collectProblems(page);
   await page.goto('./?t=2024-04-08T18:17');
   await globeRendered(page);

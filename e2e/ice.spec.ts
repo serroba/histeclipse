@@ -14,7 +14,7 @@ import {
 } from './support';
 
 test(
-  'the ice ages outline Batchelor et al.’s ice sheets, with their range',
+  'the ice ages outline Batchelor et al.’s ice sheets, with their range @acceptance',
   GPU,
   async ({ page }) => {
     const problems = collectProblems(page);

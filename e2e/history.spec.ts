@@ -18,7 +18,7 @@ async function openTrack(page: Page): Promise<void> {
   await expect(bar.getByRole('button', { name: 'Leave the travel view' })).toBeVisible();
 }
 
-test('playing history moves through the years and names the states that come and go', async ({
+test('playing history moves through the years and names the states that come and go @acceptance', async ({
   page,
 }) => {
   // Several steps each wait up to 20 s for the years to move: on a runner that renders in
@@ -263,7 +263,7 @@ test(
   },
 );
 
-test('travelling shows the ice sheets and the sea level of the year, and they go with the track', async ({
+test('travelling shows the ice sheets and the sea level of the year, and they go with the track @acceptance', async ({
   page,
 }) => {
   const bar = page.getByRole('group', { name: track });

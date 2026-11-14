@@ -2,7 +2,7 @@
 
 import { collectProblems, expect, globeRendered, test } from './support';
 
-test('a reader searches for a record by its place and opens it', async ({ page }) => {
+test('a reader searches for a record by its place and opens it @acceptance', async ({ page }) => {
   const problems = collectProblems(page);
   const dialog = page.getByRole('dialog', { name: 'Search' });
   await test.step('Given the globe today', async () => {
@@ -29,7 +29,7 @@ test('a reader searches for a record by its place and opens it', async ({ page }
   expect(problems).toEqual([]);
 });
 
-test('a reader searches with the keyboard for a landing and flies to the Moon', async ({
+test('a reader searches with the keyboard for a landing and flies to the Moon @acceptance @mobile', async ({
   page,
 }) => {
   const problems = collectProblems(page);

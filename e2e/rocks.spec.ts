@@ -5,7 +5,7 @@
 
 import { collectProblems, expect, globeRendered, openLayers, openSources, test } from './support';
 
-test('the rock at the place picked says when it formed, and goes there in deep time', async ({
+test('the rock at the place picked says when it formed, and goes there in deep time @acceptance', async ({
   page,
 }) => {
   const problems = collectProblems(page);

@@ -94,3 +94,9 @@ stale queued frames, reentrant restart and the historical 80 ms throttle. Existi
 tests cover stalled-frame caps; `globe/earthSurfaces.test.ts` resolves texture loads out of order
 and after layers turn off. Keep browser checks for play controls actually reaching the rendered
 scene; do not use real-time E2E waits to enumerate speeds or refresh rates.
+
+## PR acceptance versus extended regression
+
+CI uses the explicit selection in [ACCEPTANCE.md](ACCEPTANCE.md), with two Linux shards.
+`pnpm test:e2e` still runs the full suite locally; `E2E_SCOPE=acceptance pnpm test:e2e` runs
+what blocks a PR. Nightly live and macOS workflows keep the broader regression suite.
