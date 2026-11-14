@@ -61,6 +61,13 @@ export function changesText(
 
 export const STATES_HINT = 'Turn on States and empires in Layers to watch them come and go.';
 
+/**
+ * What the Layers panel says while travelling (#665): the travel view draws the year's ice and
+ * sea itself, so turning every layer off leaves them.
+ */
+export const TRAVEL_ADDS =
+  'Travel view draws the year’s ice and sea level itself, whatever layers are on. Travel view ✕ takes them away.';
+
 /** What the track says while travelling, before any state has come or gone. */
 export const STATES_WAIT = 'States that appear and go show here as the years go by.';
 
@@ -73,7 +80,7 @@ export function earthText(coastline: Coastline): string {
       : `${String(Math.abs(metres))} m ${metres < 0 ? 'below' : 'above'} today’s`;
   const instead =
     coastline.instead === null ? '' : `, as ${coastline.instead.label} does not reach`;
-  return `Sea level ${level} (${coastline.series.label}${instead}); shelf it left bare is tinted sand. Ice sheets: PaleoMIST (Gowan et al. 2021).`;
+  return `Sea level ${level} (${coastline.series.label}${instead}); shelf it left bare is tinted sand. White: ice of the year where today has none (PaleoMIST, Gowan et al. 2021); today’s glaciers are in the photo.`;
 }
 
 /** Why land may have no state on it: the sources draw states, not every people. */

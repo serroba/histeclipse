@@ -6,6 +6,7 @@
  * reader can change the date with it open and watch the layers change.
  */
 
+import { TRAVEL_ADDS } from '../../ui/historyTrack';
 import { elsewhereNote, LAYER_GROUPS, layerNote } from '../../state/layerCatalog';
 import {
   BORDER_SOURCES,
@@ -33,6 +34,8 @@ interface LayersView {
   readonly said?: ReadonlyMap<Layer, string>;
   /** A step a layer offers from what it shows, such as going to the time a rock formed. */
   readonly actions?: ReadonlyMap<Layer, { readonly label: string; readonly run: () => void }>;
+  /** Whether the travel view is on, which draws the year's ice and sea whatever the layers. */
+  readonly travelling?: boolean;
 }
 
 export interface LayersPanel {
@@ -188,6 +191,11 @@ export function createLayersPanel(
     ),
   );
 
+  const travelNote = element(
+    'p',
+    { class: 'layer-note layers-travel', 'data-testid': 'layers-travel', hidden: '' },
+    TRAVEL_ADDS,
+  );
   const dialog = element(
     'dialog',
     { id: 'layers-panel', class: 'famous-dialog layers-dialog', 'aria-labelledby': 'layers-title' },
@@ -197,6 +205,7 @@ export function createLayersPanel(
       element('h2', { id: 'layers-title' }, 'Layers'),
       close,
     ),
+    travelNote,
     ...groups,
   );
 
@@ -220,8 +229,9 @@ export function createLayersPanel(
   return {
     button,
     dialog,
-    render({ layers, borders, year, present, span, visible, said, actions }) {
+    render({ layers, borders, year, present, span, visible, said, actions, travelling }) {
       runs.clear();
+      travelNote.hidden = travelling !== true;
       const here = (layer: Layer): boolean => choices.get(layer)?.spans.includes(span) ?? true;
       for (const [layer, action] of actionButtons) {
         const choice = choices.get(layer);
