@@ -106,8 +106,9 @@ export class CameraRig implements StagePart {
     return this.#projection.insets;
   }
 
-  /** Advance the flights and the controls by a frame; it asks for drawings itself, so false. */
+  /** Advance flights and damping; keep frames going until the camera comes to rest. */
   step(now: number): boolean {
+    const flying = this.#view !== null || this.#turn !== null || this.#zoom !== null;
     if (this.#view !== null) this.#stepView(now, this.#view);
     else if (this.#turn !== null) this.#stepTurn(now, this.#turn);
     if (this.#zoom !== null && this.#view === null) this.#stepZoom(now, this.#zoom);
@@ -117,8 +118,8 @@ export class CameraRig implements StagePart {
     controls.zoomSpeed = speeds.zoom;
     controls.rotateSpeed = speeds.rotate;
     // update() keeps damping going after the pointer is released; it reports movement via 'change'.
-    if (controls.enabled) controls.update();
-    return false;
+    const moved = controls.enabled && controls.update();
+    return flying || moved;
   }
 
   setFocus(body: Body): void {
@@ -144,6 +145,7 @@ export class CameraRig implements StagePart {
     const to = new Vector3(...geoToVector(target)).normalize();
     const rotation = new Quaternion().setFromUnitVectors(from, to);
     this.#turn = { from, rotation, start: performance.now() };
+    this.#world.invalidate();
   }
 
   /** Glide to `distance` from the body in focus, in its radii, keeping the direction. */
@@ -347,6 +349,7 @@ export class CameraRig implements StagePart {
     this.#controls.enabled = false;
     if (this.#pendingFocus) return;
     this.#view = { from, start: performance.now() };
+    this.#world.invalidate();
   }
 
   #startViewFlight(next: Viewpoint): void {
@@ -357,6 +360,7 @@ export class CameraRig implements StagePart {
     this.#viewpoint = next;
     this.#turn = null;
     this.#view = { from, start: performance.now() };
+    this.#world.invalidate();
     // Orbiting resumes once a flight back to the free view lands.
     this.#controls.enabled = false;
     this.#container.dataset['view'] = next;

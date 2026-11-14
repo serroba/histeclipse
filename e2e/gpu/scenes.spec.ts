@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
@@ -29,6 +31,45 @@ async function hasPicture(page: Page, canvas: Locator): Promise<void> {
   expect(fraction, 'more than 5% of the canvas differs from its background').toBeGreaterThan(0.05);
 }
 
+/** Sample real main-thread task time, while asserting that paused scenes stop RAF polling. */
+async function idleSample(
+  page: Page,
+): Promise<{ callbacks: number; taskMs: number; observedMs: number }> {
+  const session = await page.context().newCDPSession(page);
+  await session.send('Performance.enable');
+  const taskTime = async () => {
+    const snapshot = await session.send('Performance.getMetrics');
+    return snapshot.metrics.find((metric) => metric.name === 'TaskDuration')?.value ?? 0;
+  };
+  let sample = { callbacks: -1, taskMs: 0, observedMs: 0 };
+  try {
+    await expect
+      .poll(
+        async () => {
+          const before = await frameCount(page);
+          const taskBefore = await taskTime();
+          const start = Date.now();
+          await page.waitForTimeout(500);
+          sample = {
+            callbacks: (await frameCount(page)) - before,
+            taskMs: ((await taskTime()) - taskBefore) * 1000,
+            observedMs: Date.now() - start,
+          };
+          return sample.callbacks;
+        },
+        { timeout: 15_000, message: 'idle scenes must stop polling animation frames' },
+      )
+      .toBe(0);
+    return sample;
+  } finally {
+    await session.detach();
+  }
+}
+
+async function frameCount(page: Page): Promise<number> {
+  return page.evaluate(() => Number(Reflect.get(window, '__renderAuditFrames')));
+}
+
 for (const [scene, chapters] of [
   ['earth', []],
   ['sun', ['fusion', 'escape', 'journey']],
@@ -37,6 +78,16 @@ for (const [scene, chapters] of [
   ['water', ['dioxide', 'fall', 'plant']],
 ] as const) {
   test(`${scene}: production scene materials render without shader errors`, async ({ page }) => {
+    await page.addInitScript(() => {
+      const request = window.requestAnimationFrame.bind(window);
+      let completed = 0;
+      Object.defineProperty(window, '__renderAuditFrames', { get: () => completed });
+      window.requestAnimationFrame = (callback) =>
+        request((now) => {
+          completed++;
+          callback(now);
+        });
+    });
     const problems: string[] = [];
     page.on('pageerror', (error) => problems.push(error.message));
     page.on('console', (message) => {
@@ -54,6 +105,33 @@ for (const [scene, chapters] of [
       await expect(stage).toHaveAttribute('data-rendered', 'true');
       await hasPicture(page, canvas);
     }
+    const atRest = await idleSample(page);
+    const before = await frameCount(page);
+    await page
+      .getByRole('button', { name: scene === 'earth' ? 'Move' : 'Play', exact: true })
+      .click();
+    await expect.poll(() => frameCount(page)).toBeGreaterThan(before);
+    if (scene !== 'earth') await page.getByRole('button', { name: 'Pause', exact: true }).click();
+    const afterMotion = await idleSample(page);
+    if (scene === 'earth') {
+      await stage.evaluate((node) => {
+        (node as HTMLElement).hidden = true;
+      });
+      await page.getByRole('button', { name: 'Move', exact: true }).click();
+      await idleSample(page);
+      const hidden = await frameCount(page);
+      await stage.evaluate((node) => {
+        (node as HTMLElement).hidden = false;
+      });
+      await expect.poll(() => frameCount(page)).toBeGreaterThan(hidden);
+      await idleSample(page);
+    }
+    const output = path.join(process.cwd(), 'test-results', `timings-idle-${scene}.json`);
+    mkdirSync(path.dirname(output), { recursive: true });
+    writeFileSync(
+      output,
+      JSON.stringify({ type: 'rendering-idle-audit', scene, atRest, afterMotion }, null, 2),
+    );
     expect(problems).toEqual([]);
   });
 }
