@@ -363,12 +363,21 @@ test('the date panel’s rows line up on both edges, and on a phone it spans the
 
 test('the layers on show as chips beside Layers: one off its span offers where it draws, and taking one off moves nothing (#728) @mobile', async ({
   page,
-}) => {
+}, info) => {
   const problems = collectProblems(page);
+  const phone = info.project.name === 'mobile';
   const on = page.getByRole('group', { name: 'Layers on' });
   await test.step('Given 100 million years ago with plates and humans on', async () => {
     await page.goto('./?ma=100&scale=all&layers=plates,humans&cam=-46,122,3');
     await expect(page.locator('.hud-date')).toHaveText('100 million years ago');
+  });
+  await test.step('Then the chips are beside Layers, or on a phone at the top of its sheet', async () => {
+    if (phone) {
+      await expect(on).toBeHidden();
+      await expect(page.locator('.layers-open')).toHaveAttribute('data-on', '2');
+      await openLayers(page);
+    }
+    await expect(on.locator('.active-chip')).toHaveCount(2);
   });
   await test.step('When plates are taken off, Then time and camera stay', async () => {
     await on.getByRole('button', { name: 'Turn off Plates' }).click();

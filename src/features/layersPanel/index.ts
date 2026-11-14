@@ -60,12 +60,16 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
       store.set((state) => ({ ...state, ma: roundMa(ma) }));
     }
   };
-  const chips = createActiveChips({
-    onRemove: (layer) => {
+  const chipActions = {
+    onRemove: (layer: Layer) => {
       store.set((state) => layerTurned(state, layer, false));
     },
     onGoTo: goTo,
-  });
+  };
+  // Beside Layers on wide screens; on a phone, where the date panel has no room for them, at the
+  // top of the Layers sheet, with their number on its button.
+  const chips = createActiveChips(chipActions);
+  const sheetChips = createActiveChips(chipActions);
   const panel = createLayersPanel(
     (layer, on) => {
       store.set((state) => layerTurned(state, layer, on));
@@ -76,12 +80,18 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
     goTo,
     (layer, label) => context.why(() => layerWhy(layer, store.get().borders), label),
   );
+  sheetChips.root.classList.add('active-layers-sheet');
+  panel.dialog.querySelector('header')?.after(sheetChips.root);
   return {
     button: panel.button,
     dialog: panel.dialog,
     chips: chips.root,
     show(state) {
-      chips.render(activeLayers(state));
+      const active = activeLayers(state);
+      chips.render(active);
+      sheetChips.render(active);
+      if (active.length === 0) delete panel.button.dataset['on'];
+      else panel.button.dataset['on'] = String(active.length);
       panel.render({
         layers: state.layers,
         borders: state.borders,

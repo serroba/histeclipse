@@ -233,3 +233,32 @@
 .hud-actions:has(> .active-layers:not([hidden])) {
   flex-wrap: wrap;
 }
+
+/* In the Layers sheet the chips show only on a phone, where the date panel has no room. */
+.active-layers-sheet {
+  display: none;
+  padding: 0 18px 8px;
+}
+
+@media (max-width: 600px) {
+  .hud-actions > .active-layers {
+    display: none;
+  }
+
+  .active-layers-sheet:not([hidden]) {
+    display: block;
+  }
+
+  /* How many layers are on, on the Layers button. */
+  .layers-open[data-on]::after {
+    content: attr(data-on) / '';
+    min-width: 18px;
+    height: 18px;
+    margin-left: 4px;
+    border-radius: 9px;
+    background: rgb(150 180 255 / 0.35);
+    font-size: 11px;
+    line-height: 18px;
+    text-align: center;
+  }
+}
