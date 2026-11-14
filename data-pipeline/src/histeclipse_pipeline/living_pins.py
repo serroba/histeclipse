@@ -29,6 +29,7 @@ from histeclipse_pipeline import (
     holocene_temperature,
     measured_warming,
     ocean_heat,
+    ozone,
     precipitation,
     sealevel_modern,
     temperature_records,
@@ -130,6 +131,24 @@ LIVING_PINS: tuple[LivingPin, ...] = (
     ),
     *_seaice_pins(),
     LivingPin("Rutgers snow cover", "snow-cover", cryosphere.SNOW.url, cryosphere.SNOW.sha256),
+    LivingPin(
+        "NASA Ozone Watch, the ozone hole",
+        "ozone-history",
+        ozone.OZONE_WATCH_URL,
+        ozone.OZONE_WATCH_SHA256,
+    ),
+    LivingPin(
+        "NOAA ODGI, Antarctica",
+        "ozone-history",
+        ozone.ODGI_ANTARCTIC_URL,
+        ozone.ODGI_ANTARCTIC_SHA256,
+    ),
+    LivingPin(
+        "NOAA ODGI, mid-latitudes",
+        "ozone-history",
+        ozone.ODGI_MIDLATITUDE_URL,
+        ozone.ODGI_MIDLATITUDE_SHA256,
+    ),
 )
 
 Status = Literal["same", "changed", "gone", "unreachable"]

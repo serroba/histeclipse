@@ -57,6 +57,7 @@ from histeclipse_pipeline.ocean_heat import fetch_ocean_heat
 from histeclipse_pipeline.ocean_heat_map import fetch_ocean_heat_map
 from histeclipse_pipeline.ocean_oxygen import fetch_ocean_oxygen
 from histeclipse_pipeline.ohm import fetch_ohm
+from histeclipse_pipeline.ozone import fetch_ozone_history
 from histeclipse_pipeline.p3k14c import fetch_p3k14c
 from histeclipse_pipeline.paleo_co2 import fetch_co2_archive
 from histeclipse_pipeline.paleodem import fetch_paleodem
@@ -712,6 +713,12 @@ def permafrost(args: Arguments) -> int:  # pragma: no cover - needs network acce
     return _say(f"wrote {count} permafrost borehole-years and extent-years to {args.out}")
 
 
+def ozone_history(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the Antarctic ozone hole since 1979 and the ozone-depleting gases (NASA, NOAA)."""
+    years = fetch_ozone_history(args.out)
+    return _say(f"wrote {years} years of the ozone hole and the depleting gases to {args.out}")
+
+
 def ocean_oxygen(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the ocean's oxygen inventory since 2004 and its trend map (GOBAI-O2)."""
     points = fetch_ocean_oxygen(args.out)
@@ -1133,6 +1140,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "permafrost": (
         permafrost,
         "write permafrost borehole temperatures (GTN-P) and northern extent (ESA CCI)",
+        "output directory",
+    ),
+    "ozone-history": (
+        ozone_history,
+        "write the Antarctic ozone hole since 1979 and the ozone-depleting gases (NASA, NOAA)",
         "output directory",
     ),
     "ocean-oxygen": (
