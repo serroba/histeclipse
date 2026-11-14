@@ -118,7 +118,7 @@ describe('isolated span switch', () => {
     const pick = vi.fn();
     const ui = createSpanSwitch(pick);
     expect(ui.root.getAttribute('role')).toBe('group');
-    expect(ui.root.getAttribute('aria-label')).toBe('Time span');
+    expect(ui.root.getAttribute('aria-label')).toBe('Time range presets');
     const buttons = [...ui.root.querySelectorAll('button')];
     expect(buttons.map((button) => button.textContent)).toEqual([
       'Years',

@@ -10,7 +10,7 @@ test('the top row picks how far back time reaches; famous eclipses sit with the 
   page,
 }) => {
   const problems = collectProblems(page);
-  const spans = page.getByRole('group', { name: 'Time span' });
+  const spans = page.getByRole('group', { name: 'Time range presets' });
   await test.step('Given a reader in 2024', async () => {
     await page.goto('./?t=2024-04-08T18:17&layers=eclipses');
     await globeRendered(page);
@@ -41,7 +41,7 @@ test('a deeper span opens at its oldest moment, and coming back returns to the d
   page,
 }) => {
   const problems = collectProblems(page);
-  const spans = page.getByRole('group', { name: 'Time span' });
+  const spans = page.getByRole('group', { name: 'Time range presets' });
   await test.step('Given a reader at the 2024 eclipse', async () => {
     await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
     await globeRendered(page);
@@ -110,7 +110,7 @@ test('a link to deep time opens with its span picked', async ({ page }) => {
     await globeRendered(page);
   });
   await test.step('Then Ice ages is the span shown', async () => {
-    const spans = page.getByRole('group', { name: 'Time span' });
+    const spans = page.getByRole('group', { name: 'Time range presets' });
     await expect(spans.getByRole('button', { name: 'Ice ages' })).toHaveAttribute(
       'aria-pressed',
       'true',

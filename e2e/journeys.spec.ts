@@ -119,6 +119,42 @@ test('from a crater’s card, a related discovery goes to the Earth when it stru
   expect(problems).toEqual([]);
 });
 
+test('a reader goes to a time by typing it: a year, then an age, each in its range, and Back returns (#730) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const go = async (text: string): Promise<void> => {
+    await page.locator('.hud-date-button').click();
+    const dialog = page.getByRole('dialog', { name: 'Go to a time' });
+    await dialog.getByRole('textbox', { name: 'A year or an age' }).fill(text);
+    await dialog.getByRole('button', { name: 'Go' }).click();
+  };
+  await test.step('Given today on the globe', async () => {
+    await page.goto('./?t=2026-03-15T12:00Z&cam=40,12,3');
+    await globeRendered(page);
+  });
+  await test.step('When they go to 44 BCE, Then the years show it, on their day', async () => {
+    await go('44 BCE');
+    await expect(page.locator('.hud-date')).toHaveText(/^15 March 44 BCE$/);
+  });
+  await test.step('When they type what cannot be read, Then it says why and goes nowhere', async () => {
+    await go('-44');
+    await expect(page.getByRole('alert')).toContainText('write 44 BCE');
+    await expect(page.locator('.hud-date')).toHaveText(/44 BCE/);
+    await page.keyboard.press('Escape');
+  });
+  await test.step('When they go to 100 Ma, Then the 540 Myr range shows it', async () => {
+    await go('100 Ma');
+    await expect(page.locator('.hud-date')).toHaveText('100 million years ago');
+    await expect(page).toHaveURL(/ma=100/);
+  });
+  await test.step('When they go Back, Then 44 BCE is back', async () => {
+    await page.goBack();
+    await expect(page.locator('.hud-date')).toHaveText(/44 BCE/);
+  });
+  expect(problems).toEqual([]);
+});
+
 test('a link to a destination opens its view, and the link keeps naming it (#726)', async ({
   page,
 }) => {
@@ -278,7 +314,9 @@ test('links made before one time bar still open what they showed', async ({ page
   await test.step('Then it opens on its span and moment, with its layer, the retired ones dropped', async () => {
     await expect(page.locator('.hud-date')).toHaveText('66 million years ago');
     await expect(
-      page.getByRole('group', { name: 'Time span' }).getByRole('button', { name: '540 Myr' }),
+      page
+        .getByRole('group', { name: 'Time range presets' })
+        .getByRole('button', { name: '540 Myr' }),
     ).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toHaveAttribute(
       'aria-pressed',
@@ -293,7 +331,9 @@ test('links made before one time bar still open what they showed', async ({ page
   await test.step('Then it opens there too', async () => {
     await expect(page.locator('.hud-date')).toHaveText('21,000 years ago');
     await expect(
-      page.getByRole('group', { name: 'Time span' }).getByRole('button', { name: 'Ice ages' }),
+      page
+        .getByRole('group', { name: 'Time range presets' })
+        .getByRole('button', { name: 'Ice ages' }),
     ).toHaveAttribute('aria-pressed', 'true');
   });
   expect(problems).toEqual([]);
@@ -411,7 +451,7 @@ test('away from Earth, the bar speaks of the body in view, and Earth’s own par
     await expect(page.getByRole('slider', { name: 'Day in Jupiter’s cycle' })).toBeVisible();
   });
   await test.step('And the date panel leaves out Earth’s spans, its layers and the Moon from Earth', async () => {
-    await expect(page.getByRole('group', { name: 'Time span' })).toBeHidden();
+    await expect(page.getByRole('group', { name: 'Time range presets' })).toBeHidden();
     await expect(page.getByRole('button', { name: 'Layers', exact: true })).toBeHidden();
     const views = page.getByRole('group', { name: 'Viewpoint' });
     await expect(views.getByRole('button', { name: 'Moon from Earth' })).toBeHidden();
@@ -427,7 +467,7 @@ test('away from Earth, the bar speaks of the body in view, and Earth’s own par
     );
     // The Moon keeps the year's eclipses, but not Earth's spans.
     await expect(page.getByRole('list', { name: 'Eclipses this year' })).toBeVisible();
-    await expect(page.getByRole('group', { name: 'Time span' })).toBeHidden();
+    await expect(page.getByRole('group', { name: 'Time range presets' })).toBeHidden();
     const views = page.getByRole('group', { name: 'Viewpoint' });
     await expect(views.getByRole('button', { name: 'Moon from Earth' })).toBeVisible();
     await body.getByRole('button', { name: 'Why: Sun, Moon and planets' }).click();
