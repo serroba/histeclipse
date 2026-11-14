@@ -15,9 +15,9 @@ import {
   type SkyCulture,
 } from '../../data/skyCultures';
 import { aimLook, tapLook, type BodiesSeen } from '../../sky/aim';
-import { moonSunlight, sunVisible, topocentric } from '../../sky/bodies';
-import { eclipseNote, planetNote, skyCaption } from './caption';
-import { earthVelocity, horizonMatrix, horizontalOf } from '../../sky/horizon';
+import { planetNote, skyCaption } from './caption';
+import { momentCache, type SkyMoment } from './moment';
+import { earthVelocity } from '../../sky/horizon';
 import type { Figure } from '../../sky/look';
 import type { SkyMark, SkyPlanet, SkyScene, SkyTap } from '../../sky/skyScene';
 import type { Vector3 } from '../../astro/matrix';
@@ -198,6 +198,14 @@ export function mountSky(context: SkyContext): SkyPart {
     );
   }
 
+  // Kept while only the look, the figures or the marks change: a drag or a glide (#666).
+  const momentOf = momentCache(
+    (state) => context.bodiesSeen(state),
+    () => context.moonReady(),
+  );
+  // The moment the scene was last given, and the scene.
+  let shown: { moment: SkyMoment; scene: SkyScene } | null = null;
+
   function render(state: ViewState): void {
     const inSky = state.mode === 'sky';
     text.hidden = !inSky;
@@ -212,9 +220,9 @@ export function mountSky(context: SkyContext): SkyPart {
       return;
     }
     open();
-    const seen = context.bodiesSeen(state);
-    if (seen === null) return;
-    const { place, jdUT, jdTT } = seen;
+    const now = momentOf(state);
+    if (now === null) return;
+    const { place, jdUT, jdTT, sun, moon, observer } = now.seen;
     text.textContent = [
       skyCaption({
         place,
@@ -226,33 +234,25 @@ export function mountSky(context: SkyContext): SkyPart {
     ]
       .filter((part) => part !== '')
       .join(' ');
-    const horizon = horizonMatrix(place, jdUT, jdTT);
-    const sunHere = topocentric(seen.sun, seen.observer);
-    const moonHere = seen.moon === null ? null : topocentric(seen.moon, seen.observer);
-    eclipse.textContent =
-      seen.moon === null || moonHere === null
-        ? ''
-        : eclipseNote({
-            sunVisible: sunVisible(sunHere, moonHere),
-            sunAltitude: horizontalOf(horizon, sunHere).altitude,
-            moonSunlight: moonSunlight(seen.moon, seen.sun),
-            moonAltitude: horizontalOf(horizon, moonHere).altitude,
-          });
-    eclipse.hidden = eclipse.textContent === '';
+    eclipse.textContent = now.eclipseText;
+    eclipse.hidden = now.eclipseText === '';
     if (scene === null) return;
     scene.setLook(state.look);
     scene.setFigures(state.figures);
     scene.setMarks(marks);
     showCulture(state);
-    scene.setMoment({
-      horizon,
-      jdTT,
-      sun: seen.sun,
-      moon: seen.moon,
-      observer: seen.observer,
-      planets: context.planetsSeen(jdTT, seen.sun, seen.observer),
-      velocity: earthVelocity((jd) => sunPositionJ2000(julianDayNumber(jd)), jdTT),
-    });
+    if (shown?.moment !== now || shown.scene !== scene) {
+      scene.setMoment({
+        horizon: now.horizon,
+        jdTT,
+        sun,
+        moon,
+        observer,
+        planets: context.planetsSeen(jdTT, sun, observer),
+        velocity: earthVelocity((jd) => sunPositionJ2000(julianDayNumber(jd)), jdTT),
+      });
+      shown = { moment: now, scene };
+    }
     scene.setVisible(true);
   }
 
