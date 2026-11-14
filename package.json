@@ -12,6 +12,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "csp": "node --experimental-strip-types -e \"import('./vite.csp.ts').then((m) => console.log(m.sitePolicy()))\"",
     "typecheck": "tsc -b",
     "lint": "eslint . --max-warnings=0",
     "lint:css": "stylelint \"src/**/*.css\"",

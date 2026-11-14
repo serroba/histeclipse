@@ -11,6 +11,7 @@
   "include": [
     "vite.config.ts",
     "vite.models.ts",
+    "vite.csp.ts",
     "eslint.config.js",
     "eslint.boundaries.js",
     "coverage.untested.js",

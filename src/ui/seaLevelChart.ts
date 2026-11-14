@@ -258,10 +258,7 @@ export function createSeaLevelChart(handlers: { onKa(ka: number): void }): SeaLe
           return element(
             'li',
             { 'data-series': series.id },
-            element('span', {
-              class: 'sea-swatch',
-              style: `background: ${SERIES_COLOURS[series.id] ?? FALLBACK_COLOUR}`,
-            }),
+            swatch(SERIES_COLOURS[series.id] ?? FALLBACK_COLOUR),
             element(
               'a',
               { href: series.url, target: '_blank', rel: 'noopener noreferrer' },
@@ -273,4 +270,11 @@ export function createSeaLevelChart(handlers: { onKa(ka: number): void }): SeaLe
       );
     },
   };
+}
+
+/** A series' colour swatch, coloured through the style object: the CSP allows no style attribute. */
+function swatch(colour: string): HTMLSpanElement {
+  const span = element('span', { class: 'sea-swatch' });
+  span.style.background = colour;
+  return span;
 }
