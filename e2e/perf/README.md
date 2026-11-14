@@ -83,7 +83,7 @@ grows without bound across repeats. Use a DevTools allocation profile when a fin
 
 ## Earth intermediate-map comparison (#689)
 
-`pnpm exec playwright test --config playwright.perf.config.ts --project desktop earthMap.perf.ts`
+`pnpm exec playwright test --config playwright.perf.config.ts --project=desktop earthMap.perf.ts`
 compares the previous 8192 map with the candidate 4096 map in the same production application.
 Only the intermediate-map response is replaced; the tile manifest, tile images, camera, date and
 viewport are unchanged. Three interleaved trials per map capture synchronous large-bitmap

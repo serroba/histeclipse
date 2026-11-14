@@ -36,7 +36,7 @@ jobs:
           key: models-${{ hashFiles('models.lock.json') }}
       - run: pnpm build
       - run: pnpm exec playwright install chromium
-      - run: pnpm exec playwright test --config playwright.perf.config.ts --project desktop earthMap.perf.ts
+      - run: pnpm exec playwright test --config playwright.perf.config.ts --project=desktop earthMap.perf.ts
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
