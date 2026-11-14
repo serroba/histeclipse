@@ -15,11 +15,10 @@ import {
   type SkyCulture,
 } from '../../data/skyCultures';
 import { aimLook, tapLook, type BodiesSeen } from '../../sky/aim';
-import { moonSunlight, sunVisible, topocentric } from '../../sky/bodies';
-import { eclipseNote, planetNote, skyCaption } from './caption';
-import { earthVelocity, horizonMatrix, horizontalOf } from '../../sky/horizon';
+import { planetNote, skyCaption } from './caption';
+import { momentCache, type SkyMoment } from './moment';
+import { earthVelocity } from '../../sky/horizon';
 import type { Figure } from '../../sky/look';
-import { momentKey, sameMoment, type MomentKey } from '../../sky/momentKey';
 import type { SkyMark, SkyPlanet, SkyScene, SkyTap } from '../../sky/skyScene';
 import type { Vector3 } from '../../astro/matrix';
 import { SKY } from '../../state/redraws';
@@ -199,43 +198,13 @@ export function mountSky(context: SkyContext): SkyPart {
     );
   }
 
-  /** A moment worked out for the sky: where the bodies stand, and what the eclipse note says. */
-  interface Moment {
-    readonly key: MomentKey;
-    readonly seen: BodiesSeen;
-    readonly horizon: ReturnType<typeof horizonMatrix>;
-    readonly eclipseText: string;
-  }
-  // Kept while only the look, the figures or the marks change (#666): a drag or a glide turns
-  // the view, and neither the Moon's series nor every star needs placing again for that.
-  let moment: Moment | null = null;
-  // The moment the scene was last given, and the scene it was given to.
-  let shownMoment: Moment | null = null;
-  let shownIn: SkyScene | null = null;
-
-  function momentOf(state: ViewState): Moment | null {
-    const key = momentKey(state, context.moonReady());
-    if (moment !== null && sameMoment(moment.key, key)) return moment;
-    const seen = context.bodiesSeen(state);
-    if (seen === null) {
-      moment = null;
-      return null;
-    }
-    const horizon = horizonMatrix(seen.place, seen.jdUT, seen.jdTT);
-    const sunHere = topocentric(seen.sun, seen.observer);
-    const moonHere = seen.moon === null ? null : topocentric(seen.moon, seen.observer);
-    const eclipseText =
-      seen.moon === null || moonHere === null
-        ? ''
-        : eclipseNote({
-            sunVisible: sunVisible(sunHere, moonHere),
-            sunAltitude: horizontalOf(horizon, sunHere).altitude,
-            moonSunlight: moonSunlight(seen.moon, seen.sun),
-            moonAltitude: horizontalOf(horizon, moonHere).altitude,
-          });
-    moment = { key, seen, horizon, eclipseText };
-    return moment;
-  }
+  // Kept while only the look, the figures or the marks change: a drag or a glide (#666).
+  const momentOf = momentCache(
+    (state) => context.bodiesSeen(state),
+    () => context.moonReady(),
+  );
+  // The moment the scene was last given, and the scene.
+  let shown: { moment: SkyMoment; scene: SkyScene } | null = null;
 
   function render(state: ViewState): void {
     const inSky = state.mode === 'sky';
@@ -272,7 +241,7 @@ export function mountSky(context: SkyContext): SkyPart {
     scene.setFigures(state.figures);
     scene.setMarks(marks);
     showCulture(state);
-    if (shownMoment !== now || shownIn !== scene) {
+    if (shown?.moment !== now || shown.scene !== scene) {
       scene.setMoment({
         horizon: now.horizon,
         jdTT,
@@ -282,8 +251,7 @@ export function mountSky(context: SkyContext): SkyPart {
         planets: context.planetsSeen(jdTT, sun, observer),
         velocity: earthVelocity((jd) => sunPositionJ2000(julianDayNumber(jd)), jdTT),
       });
-      shownMoment = now;
-      shownIn = scene;
+      shown = { moment: now, scene };
     }
     scene.setVisible(true);
   }
