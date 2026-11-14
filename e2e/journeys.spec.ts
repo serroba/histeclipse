@@ -776,9 +776,11 @@ test('with Spacecraft on, the craft beyond Earth orbit fly where they were, each
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');
   const names = page.getByTestId('craft-names');
-  await test.step('Given Mars in January 2025, seen from afar', async () => {
-    await page.goto('./?t=2025-01-10T12:00&cam=25,20,40&focus=mars');
-    await expect(globe).toHaveAttribute('data-focus', 'mars', { timeout: 30_000 });
+  // From above the Sun, the craft about it are in view: close to a world, those at it are not
+  // drawn at its centre (#716).
+  await test.step('Given the Solar System in January 2025, seen from above the Sun', async () => {
+    await page.goto('./?t=2025-01-10T12:00&cam=66.5607,-90,600&focus=sun');
+    await expect(globe).toHaveAttribute('data-focus', 'sun', { timeout: 30_000 });
   });
   await test.step('When they turn the spacecraft on', async () => {
     await page.getByRole('button', { name: 'Spacecraft', exact: true }).click();
@@ -793,7 +795,8 @@ test('with Spacecraft on, the craft beyond Earth orbit fly where they were, each
       .toBeGreaterThan(0);
   });
   await test.step('When they tap a craft’s name, Then its card says when it set out, and credits GCAT', async () => {
-    await names.locator('.craft-name:not([hidden])').first().click();
+    // From the keyboard: from above the Sun, a name may sit under a panel on a wide screen.
+    await names.locator('.craft-name:not([hidden])').first().press('Enter');
     const card = page.getByRole('dialog');
     await expect(card).toContainText('Set out');
     await expect(card).toContainText('Path');
@@ -801,10 +804,10 @@ test('with Spacecraft on, the craft beyond Earth orbit fly where they were, each
     await page.keyboard.press('Escape');
     await expect(card).toBeHidden();
   });
-  await test.step('Then the bar plays the launches instead of Mars’s cycle (#702)', async () => {
+  await test.step('Then the bar plays the launches instead of the Sun’s year (#702)', async () => {
     const launches = page.getByRole('group', { name: /^Every launch beyond Earth orbit/ });
     await expect(launches).toBeVisible();
-    await expect(page.getByRole('group', { name: /Mars’s cycle/ })).toBeHidden();
+    await expect(page.getByRole('group', { name: 'Earth’s year around the Sun' })).toBeHidden();
     await expect(launches.getByRole('listitem').first()).toHaveText(/^Luna 1 2 Jan 1959$/);
   });
   await test.step('When they go to the first launch and play, Then the days go by, and stop when asked', async () => {

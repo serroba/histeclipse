@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import { describe, expect, it } from 'vitest';
 
 import data from '../../public/data/passages.json';
@@ -9,7 +11,7 @@ import { parseViewState } from '../state/url';
 import {
   cachedPassages,
   eclipsePassages,
-  landingPassages,
+  landingAnchors,
   loadPassages,
   type Passage,
 } from './passages';
@@ -80,15 +82,31 @@ describe('passages anchored to places and times', () => {
     expect(state.location?.latitude).toBeCloseTo(35.6017, 4);
   });
 
-  it('Given Apollo 11’s lander, Then it is anchored where it came down on the Moon, that day', () => {
-    const eagle = passages.find(
-      (passage) => passage.kind === 'landing' && passage.text.includes('Craft: Eagle'),
+  it('Given Apollo 11, Then where Eagle came down is a place of its own, opening inside the mission (#716)', () => {
+    const apollo = byId('mission:d00273');
+    expect(apollo.anchors.map(({ label }) => label)).toEqual([undefined, 'Where Eagle came down']);
+    const eagle = apollo.anchors[1];
+    expect(eagle?.body).toBe('moon');
+    expect(eagle?.at?.[0]).toBeCloseTo(0.69, 1);
+    const { state } = opened(apollo, 1);
+    expect(state.focus).toBe('moon');
+    expect(state.mission).toBe('d00273');
+    expect(state.time.date).toMatchObject({ year: 1969, month: 7, day: 20 });
+  });
+
+  it('Given every craft that came down where the site can show, Then its site is a place in its mission', () => {
+    const before = JSON.parse(
+      readFileSync(new URL('./landings.fixture.json', import.meta.url), 'utf8'),
+    ) as readonly { readonly at: readonly [number, number]; readonly body: string }[];
+    const places = new Set(
+      passages
+        .filter(({ kind }) => kind === 'mission')
+        .flatMap(({ anchors }) => anchors.filter(({ at }) => at !== undefined))
+        .map(({ body, at }) => `${body} ${String(at)}`),
     );
-    expect(eagle?.title).toBe('Apollo 11: Eagle');
-    const anchor = eagle?.anchors[0];
-    expect(anchor?.body).toBe('moon');
-    expect(anchor?.at?.[0]).toBeCloseTo(0.69, 1);
-    expect(anchor?.view).toContain('t=1969-07-20T20:17Z');
+    expect(before.length).toBeGreaterThan(80);
+    expect(before.filter(({ body, at }) => !places.has(`${body} ${String(at)}`))).toEqual([]);
+    expect(passages.some(({ id }) => id.startsWith('landing:'))).toBe(false);
   });
 
   it('Given Io, Then its passage is its story, anchored to Io', () => {
@@ -120,27 +138,44 @@ describe('passages from records with gaps', () => {
 
   it('Given landings with no place, on an asteroid, or never down, Then they are left out', () => {
     expect(
-      landingPassages([
-        craft(undefined),
-        down('Eros', 1, 2, '2001-02-12'),
-        down('Luna', null, 2, '1970-01-01'),
-        down('Luna', 1, null, '1970-01-01'),
-      ]),
+      landingAnchors(
+        [
+          craft(undefined),
+          down('Eros', 1, 2, '2001-02-12'),
+          down('Luna', null, 2, '1970-01-01'),
+          down('Luna', 1, null, '1970-01-01'),
+        ],
+        null,
+      ),
     ).toEqual([]);
   });
 
   it('Given landings dated only to a day, a month, or not at all, Then the view says only what is known', () => {
-    const [day, month, none] = landingPassages([
-      down('Mars', 1, 200, '1971-12-02'),
-      down('Venus', 1, -313.2, '1975-06?'),
-      down('Luna', 1, 2, null),
-    ]);
-    expect(day?.anchors[0]?.view).toContain('t=1971-12-02T12:00Z');
-    expect(day?.anchors[0]?.at).toEqual([1, -160]);
-    expect(month?.anchors[0]?.view).not.toContain('t=');
-    expect(month?.anchors[0]?.when).toEqual([1975, 1975]);
-    expect(month?.anchors[0]?.at?.[1]).toBeCloseTo(46.8, 6);
-    expect(none?.anchors[0]?.when).toBeUndefined();
+    const [day, month, none] = landingAnchors(
+      [
+        down('Mars', 1, 200, '1971-12-02'),
+        down('Venus', 1, -313.2, '1975-06?'),
+        down('Luna', 1, 2, null),
+      ],
+      'd00009',
+    );
+    expect(day?.view).toContain('t=1971-12-02T12:00Z');
+    expect(day?.view).toContain('mission=d00009');
+    expect(day?.at).toEqual([1, -160]);
+    expect(month?.view).not.toContain('t=');
+    expect(month?.when).toEqual([1975, 1975]);
+    expect(month?.at?.[1]).toBeCloseTo(46.8, 6);
+    expect(none?.when).toBeUndefined();
+    expect(day?.label).toBe('Where Probe came down');
+  });
+
+  it('Given a lander and what it carried down, at one site, Then the site is one place, named for the lander', () => {
+    const lander = down('Luna', 1, 2, '1970-01-01');
+    const carried = { ...lander, id: 'D10', name: 'Package', part: true };
+    const places = landingAnchors([carried, lander], null);
+    expect(places).toHaveLength(1);
+    expect(places[0]?.label).toBe('Where Probe came down');
+    expect(places[0]?.view).not.toContain('mission=');
   });
 
   it('Given an eclipse with no place, Then it is anchored to its day alone', () => {

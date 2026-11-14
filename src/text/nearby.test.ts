@@ -17,7 +17,8 @@ describe('what is written about here', () => {
       year: 1969,
     };
     const [first] = nearby(passages, here);
-    expect(first?.passage.title).toMatch(/^Apollo 11: /);
+    expect(first?.passage.title).toBe('Apollo 11');
+    expect(first?.anchor.label).toBe('Where Eagle came down');
     expect(first?.anchor.body).toBe('moon');
   });
 

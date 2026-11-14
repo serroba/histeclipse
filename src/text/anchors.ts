@@ -36,7 +36,8 @@ export function anchorLabel(anchor: Anchor): string {
             ? formatYear(astronomicalYear(from))
             : `${formatYear(astronomicalYear(from))} – ${formatYear(astronomicalYear(to))}`,
         ];
-  return [body.charAt(0).toUpperCase() + body.slice(1), ...where, ...when].join(' · ');
+  const said = [body.charAt(0).toUpperCase() + body.slice(1), ...where, ...when].join(' · ');
+  return anchor.label === undefined ? said : `${anchor.label} · ${said}`;
 }
 
 /** What the reader is looking at stays; where they look, and what is open, the anchor says. */
