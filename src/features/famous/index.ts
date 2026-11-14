@@ -6,7 +6,7 @@
 
 import { famousDate, loadFamousEclipses, type FamousEclipse } from '../../data/famousEclipses';
 import { eclipseMomentAt, eclipseSelection, findSelected } from '../../eclipses/describe';
-import type { GeoPoint } from '../../state/viewState';
+import { withEclipse, type GeoPoint } from '../../state/viewState';
 import type { AstronomicalYear } from '../../time/year';
 import { createFamousPanel } from './famousPanel';
 import type { Eclipse } from '../../ui/timeline';
@@ -69,9 +69,8 @@ export function mountFamous(context: FamousContext): FamousPart {
           ? state.location
           : { latitude: entry.place.latitude, longitude: entry.place.longitude };
       return {
-        ...state,
+        ...withEclipse(state, eclipseSelection(match)),
         time: eclipseMomentAt(match, location),
-        selection: eclipseSelection(match),
         location,
       };
     });

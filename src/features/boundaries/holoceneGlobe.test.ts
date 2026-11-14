@@ -18,7 +18,7 @@ const reader: ViewState = {
   mode: 'sky',
   focus: 'moon',
   view: 'moon-from-earth',
-  layers: new Set(['lunar', 'empires']),
+  layers: new Set(['eclipses', 'empires']),
   temperatureModel: 'scotese',
   temperatureShow: 'actual',
   selection: {
@@ -43,7 +43,7 @@ describe('the Holocene chapter’s globe', () => {
 
   it('shows the sea level and Krapp’s temperature as the change from today', () => {
     const at = globeAt(reader, borrowedOf(reader), -18_050);
-    expect([...at.layers].sort()).toEqual(['empires', 'lunar', 'sealevel', 'temperature']);
+    expect([...at.layers].sort()).toEqual(['eclipses', 'empires', 'sealevel', 'temperature']);
     expect(at.temperatureModel).toBe('krapp');
     expect(at.temperatureShow).toBe('change');
   });

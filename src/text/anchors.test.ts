@@ -32,7 +32,7 @@ describe('anchors as links', () => {
     expect(state.ma).toBeNull();
     expect(state.why).toBeNull();
     expect(state.time.date.year).toBe(-1222);
-    expect([...state.layers].sort()).toEqual(['empires', 'lunar', 'solar']);
+    expect([...state.layers].sort()).toEqual(['eclipses', 'empires']);
   });
 
   it('Given an anchor with no moment of its own, Then the reader’s moment stays', () => {

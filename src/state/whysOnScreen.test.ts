@@ -53,8 +53,8 @@ describe('what is on screen now', () => {
     expect(onScreen(scene({ layers, borders: 'both' }))).toContain('empires-cliopatria');
   });
 
-  it('adds the eclipses with one picked and its shadows on', () => {
-    const layers = new Set<Layer>(['solar', 'lunar']);
+  it('adds the eclipses with one picked and the layer on', () => {
+    const layers = new Set<Layer>(['eclipses']);
     expect(onScreen(scene({ layers, eclipse: true }))).toContain('eclipses');
     expect(onScreen(scene({ layers, eclipse: false }))).not.toContain('eclipses');
   });
