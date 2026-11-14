@@ -9,6 +9,10 @@
     />
     <meta name="histeclipse-version" content="%VITE_COMMIT_SHA%" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- The app awaits these before it starts (#222): fetch them alongside its code. -->
+    <link rel="preload" href="/data/delta-t.json" as="fetch" crossorigin />
+    <link rel="preload" href="/data/lunar/index.json" as="fetch" crossorigin />
+    <link rel="preload" href="/data/solar/index.json" as="fetch" crossorigin />
     <title>histeclipse</title>
   </head>
   <body>
