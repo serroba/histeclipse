@@ -17,6 +17,7 @@ concurrency:
 
 jobs:
   compare:
+    name: Compare Earth maps on a real GPU
     runs-on: macos-latest
     timeout-minutes: 12
     steps:
