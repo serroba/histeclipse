@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 
 import { UNTESTED } from './coverage.untested.js';
+import { sitePolicy } from './vite.csp.ts';
 import { models } from './vite.models.ts';
 
 export default defineConfig({
@@ -9,6 +10,8 @@ export default defineConfig({
   // site's root, so './' always resolves to the right place.
   base: './',
   plugins: [models()],
+  // The production preview, which the end-to-end suite tests, runs under the site's policy (#240).
+  preview: { headers: { 'Content-Security-Policy': sitePolicy() } },
   build: {
     target: 'es2023',
     sourcemap: true,

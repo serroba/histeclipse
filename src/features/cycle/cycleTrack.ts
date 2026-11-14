@@ -124,12 +124,12 @@ export function createCycleTrack(handlers: {
         slider.min = String(first);
         slider.max = String(last);
         ticks.replaceChildren(
-          ...view.moments.map(({ jd }) =>
-            element('span', {
-              class: 'cycle-tick',
-              style: `left: ${String((100 * (jd - first)) / (last - first))}%`,
-            }),
-          ),
+          ...view.moments.map(({ jd }) => {
+            // Through the style object: the CSP allows no style attribute.
+            const tick = element('span', { class: 'cycle-tick' });
+            tick.style.left = `${String((100 * (jd - first)) / (last - first))}%`;
+            return tick;
+          }),
         );
         buttons = view.moments.map(({ mark, jd, date }) => {
           const [words, meaning] = MARK_WORDS[mark];

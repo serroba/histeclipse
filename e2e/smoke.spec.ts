@@ -3,6 +3,7 @@ import { subsolarPoint } from '../src/astro/sun';
 import { parseViewState } from '../src/state/url';
 import { momentJulianDay } from '../src/state/viewState';
 import { DeltaT } from '../src/time/deltaT';
+import { sitePolicy } from '../vite.csp';
 import {
   collectProblems,
   expect,
@@ -264,6 +265,20 @@ test('page fits the viewport without horizontal scroll @mobile', async ({ page }
   );
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+test(
+  'serves the site’s Content-Security-Policy, as vite.csp.ts writes it @acceptance',
+  LIVE,
+  async ({ page }) => {
+    // Production sends it from a Cloudflare rule: a change to the boot script needs the rule
+    // updated (`pnpm csp` prints it). Report-only while it is being tried, then enforced.
+    const response = await page.goto('./');
+    const headers = response?.headers() ?? {};
+    const sent =
+      headers['content-security-policy'] ?? headers['content-security-policy-report-only'];
+    expect(sent).toBe(sitePolicy());
+  },
+);
 
 test('serves the expected release', LIVE, async ({ page }) => {
   test.skip(expectedVersion === '', 'EXPECTED_VERSION is not set');
