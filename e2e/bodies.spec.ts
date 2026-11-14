@@ -246,3 +246,23 @@ test('a link can centre on Saturn, rings and all', async ({ page }) => {
   await expect(globe).toHaveAttribute('data-focus', 'saturn');
   await expect(page).toHaveURL(/focus=saturn/);
 });
+
+test('Back from Earth to the Moon lands where the link put the camera (#581)', async ({ page }) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  await page.goto('./?t=2025-01-10T12:00&focus=moon&cam=0,0,6');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute('data-framed', 'moon');
+  await expect(globe).toHaveAttribute('data-distance', '6.00', { timeout: 20_000 });
+  await page
+    .getByRole('group', { name: 'Zoom' })
+    .getByRole('button', { name: 'Back to Earth' })
+    .click();
+  await expect(globe).toHaveAttribute('data-framed', 'earth', { timeout: 20_000 });
+  await page.goBack();
+  await expect(page).toHaveURL(/focus=moon/);
+  // Not the focus flight's own distance: the camera the link names.
+  await expect(globe).toHaveAttribute('data-framed', 'moon', { timeout: 20_000 });
+  await expect(globe).toHaveAttribute('data-distance', '6.00', { timeout: 20_000 });
+  expect(problems).toEqual([]);
+});

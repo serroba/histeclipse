@@ -1,6 +1,6 @@
 /**
  * Back and Forward: show the view the address bar now describes, without writing it again, and
- * glide the globe's camera to the one it names (#581). A change of focus flies on its own.
+ * glide the globe's camera to the one it names (#581), landing there after a change of focus.
  */
 
 import { parseViewState } from '../../state/url';
@@ -18,10 +18,10 @@ export function followHistory(options: {
 }): void {
   const { window, store, sync, globe } = options;
   window.addEventListener('popstate', () => {
-    const before = store.get();
     const restored = parseViewState(window.location.search, new Date()).state;
     sync.adopt(restored);
+    // A change of focus starts its flight here; the camera then says where it lands.
     store.set(() => restored);
-    if (restored.focus === before.focus) globe.setCamera(restored.camera);
+    globe.setCamera(restored.camera);
   });
 }

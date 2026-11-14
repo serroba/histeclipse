@@ -47,10 +47,13 @@ describe('Back and Forward', () => {
     expect(glided[0]?.target.latitude).toBeCloseTo(30);
   });
 
-  it('Given an earlier view of another body, Then the focus flies on its own, not the camera', () => {
+  it('Given an earlier view of another body, Then the focus changes first, then the camera says where it lands', () => {
+    const order: string[] = [];
     const { store, glided, back } = setUp(opened);
+    store.subscribe((state) => order.push(`focus ${state.focus}`));
     back({ ...earlier, focus: 'moon' });
+    order.push(`camera ${String(glided.at(-1)?.distance)}`);
     expect(store.get().focus).toBe('moon');
-    expect(glided).toEqual([]);
+    expect(order).toEqual(['focus moon', 'camera 2']);
   });
 });
