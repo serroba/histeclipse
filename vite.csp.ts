@@ -21,7 +21,7 @@ export function inlineScriptHashes(html: string): string[] {
  * The `<style>` elements phoria2 (pinned, see package.json) adds to the page for its charts,
  * tooltips and labels, by hash. A new version that changes them fails the charts' tests.
  */
-export const PHORIA_STYLES = [
+const PHORIA_STYLES = [
   "'sha256-eH7lkNfVWkAJh/3jBhOc8V44p7OapCt1N3xJZ+z4Vtw='",
   "'sha256-6pEzLQ0CbJcgi21pTrRPpxCkuHwfi1rLmPCnvUCrgPc='",
   "'sha256-WPerxgaSYkDXZQaLKQDB+4ewBM5lj6r2v/Zl7rwoRQw='",
