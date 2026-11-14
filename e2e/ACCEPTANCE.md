@@ -28,8 +28,41 @@ put new calculation/presentation permutations at their faster boundary.
 
 ## Selected execution counts
 
-| File | Desktop | Mobile | 120 Hz |
-| ---- | ------: | -----: | -----: |
+| File               | Desktop | Mobile | 120 Hz |
+| ------------------ | ------: | -----: | -----: |
+| air.spec.ts        |       1 |      1 |      0 |
+| bodies.spec.ts     |       3 |      0 |      0 |
+| boundaries.spec.ts |       1 |      0 |      0 |
+| calendars.spec.ts  |       1 |      0 |      0 |
+| carbon.spec.ts     |       1 |      0 |      0 |
+| craters.spec.ts    |       1 |      0 |      0 |
+| dates.spec.ts      |       1 |      0 |      0 |
+| deepTime.spec.ts   |       3 |      0 |      0 |
+| earthTiles.spec.ts |       1 |      0 |      0 |
+| eclipses.spec.ts   |       3 |      1 |      0 |
+| fossils.spec.ts    |       1 |      0 |      0 |
+| fullview.spec.ts   |       0 |      1 |      0 |
+| genomes.spec.ts    |       1 |      0 |      0 |
+| history.spec.ts    |       2 |      0 |      1 |
+| humans.spec.ts     |       1 |      0 |      0 |
+| ice.spec.ts        |       1 |      0 |      0 |
+| impacts.spec.ts    |       1 |      0 |      0 |
+| journeys.spec.ts   |       4 |      3 |      0 |
+| layers.spec.ts     |       2 |      3 |      0 |
+| lineages.spec.ts   |       1 |      0 |      0 |
+| meaning.spec.ts    |       1 |      0 |      0 |
+| periods.spec.ts    |       1 |      0 |      0 |
+| playback.spec.ts   |       0 |      0 |      1 |
+| rocks.spec.ts      |       1 |      0 |      0 |
+| search.spec.ts     |       2 |      1 |      0 |
+| sheet.spec.ts      |       1 |      4 |      0 |
+| sky.spec.ts        |       4 |      2 |      0 |
+| smoke.spec.ts      |       7 |      5 |      0 |
+| sources.spec.ts    |       2 |      0 |      0 |
+| time.spec.ts       |       2 |      1 |      0 |
+| tree.spec.ts       |       1 |      0 |      0 |
+| volcanoes.spec.ts  |       1 |      0 |      0 |
+| ways.spec.ts       |       1 |      0 |      0 |
 
 Use `E2E_SCOPE=acceptance pnpm test:e2e --list` to audit the selection. Timings are recorded per
 attempt; counts alone are not a runtime guarantee. Measure Actions job duration and runner-minutes

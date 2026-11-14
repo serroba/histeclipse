@@ -103,6 +103,7 @@ export default class TimingReporter implements Reporter {
           commit: process.env['GITHUB_SHA'] ?? null,
           platform: process.platform,
           shard: this.config.shard,
+          partition: process.env['SHARD'] ?? null,
           startedAt: result.startTime.toISOString(),
           wallTimeMs: result.duration,
           status: result.status,

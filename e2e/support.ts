@@ -1,3 +1,4 @@
+import { installVirtualDisplay } from './virtualDisplay';
 /** Steps shared by the end-to-end features, and the test they run in. */
 
 import { expect, test as base, type Page } from '@playwright/test';
@@ -35,14 +36,7 @@ export const test = base.extend<DisplayOptions>({
       route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
     );
     if (refreshRate !== null) {
-      await page.addInitScript((hz) => {
-        let time = performance.now();
-        window.requestAnimationFrame = (callback) =>
-          window.setTimeout(() => {
-            time += 1000 / hz;
-            callback(time);
-          }, 1000 / hz);
-      }, refreshRate);
+      await page.addInitScript(installVirtualDisplay, refreshRate);
     }
     await use(page);
   },
