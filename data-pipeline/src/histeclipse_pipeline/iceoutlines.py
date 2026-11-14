@@ -358,18 +358,61 @@ def outline_rings(shp: bytes) -> list[list[Point]]:
     return rings
 
 
-def _flat(ring: list[Point]) -> Json:
+def _flat(ring: list[Point]) -> list[int]:
     return [round(value * ROUNDING) for point in ring for value in point]
 
 
+def delta_encoded(flat: list[int]) -> list[Json]:
+    """Write a flat ring as its first point, then each point's step from the one before.
+
+    The steps are small and repeat, so the file compresses to about half (#221).
+    """
+    steps: list[Json] = [*flat[:2]]
+    steps.extend(flat[at] - flat[at - 2] for at in range(2, len(flat)))
+    return steps
+
+
+def reencoded(version_one: dict[str, Json]) -> dict[str, Json]:
+    """Turn a schema-1 file (absolute integers) into schema 2 (delta-encoded), outlines unchanged.
+
+    The file already published takes the new form without downloading the shapefiles again.
+    """
+    slices = version_one["slices"]
+    if version_one.get("schemaVersion") != 1 or not isinstance(slices, list):
+        msg = "expected a schema-1 outlines file"
+        raise ValueError(msg)
+    out: list[Json] = []
+    for each in slices:
+        if not isinstance(each, dict):
+            msg = "a time slice is not an object"
+            raise TypeError(msg)
+        changed: dict[str, Json] = dict(each)
+        for hypothesis in ("min", "best", "max"):
+            rings = each[hypothesis]
+            if not isinstance(rings, list):
+                msg = f"{hypothesis} is not a list of rings"
+                raise TypeError(msg)
+            changed[hypothesis] = [
+                delta_encoded([int(value) for value in ring if isinstance(value, int)])
+                for ring in rings
+                if isinstance(ring, list)
+            ]
+        out.append(changed)
+    return {**version_one, "schemaVersion": 2, "slices": out}
+
+
 def outlines_file(outlines: dict[tuple[str, Hypothesis], list[list[Point]]]) -> dict[str, Json]:
-    """Build the site's file: each time slice with its hypotheses' rings, as integers."""
+    """Build the site's file: each time slice with its hypotheses' rings, as integers.
+
+    Each ring is flat ``[lon, lat, lon, lat, …]`` times the scale, delta-encoded: its first
+    point, then each point's step from the one before (schema 2, #221).
+    """
 
     def rings(name: str, hypothesis: Hypothesis) -> Json:
-        return [_flat(ring) for ring in outlines.get((name, hypothesis), [])]
+        return [delta_encoded(_flat(ring)) for ring in outlines.get((name, hypothesis), [])]
 
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "credit": CREDIT,
         "source": SOURCE,
         "scale": ROUNDING,

@@ -2,7 +2,8 @@
  * Outlines of the Northern Hemisphere's ice sheets through the Quaternary
  * (`public/data/icesheets/batchelor.json`), from Batchelor et al. (2019), reprojected and
  * simplified by the pipeline's `iceoutlines` command: for 17 time slices a minimum, a best
- * estimate and a maximum extent, and for the Last Glacial Maximum a best estimate.
+ * estimate and a maximum extent, and for the Last Glacial Maximum a best estimate. Each ring is
+ * delta-encoded (schema 2, #221), which halves the file once compressed.
  */
 
 import * as v from 'valibot';
@@ -19,7 +20,8 @@ const Rings = v.array(
 );
 
 const OutlinesSchema = v.strictObject({
-  schemaVersion: v.literal(1),
+  // 2 (#221): each ring delta-encoded, its first point then each step from the one before.
+  schemaVersion: v.literal(2),
   credit: v.pipe(v.string(), v.minLength(1)),
   source: v.pipe(v.string(), v.url()),
   scale: v.pipe(v.number(), v.gtValue(0)),
@@ -66,9 +68,14 @@ export function iceOutlinesAt(index: IceOutlineIndex, ka: number): IceOutlines |
   if (slice === undefined) return null;
   const degrees = (rings: readonly (readonly number[])[]): Ring[] =>
     rings.map((ring) => {
+      // Undo the delta encoding: each point is the one before plus its step.
       const points: [number, number][] = [];
+      let lon = 0;
+      let lat = 0;
       for (let at = 0; at + 1 < ring.length; at += 2) {
-        points.push([elementAt(ring, at) / index.scale, elementAt(ring, at + 1) / index.scale]);
+        lon += elementAt(ring, at);
+        lat += elementAt(ring, at + 1);
+        points.push([lon / index.scale, lat / index.scale]);
       }
       return points;
     });

@@ -2,6 +2,7 @@
 
 import math
 import struct
+from typing import TYPE_CHECKING
 
 import pytest
 from hypothesis import given
@@ -11,14 +12,19 @@ from histeclipse_pipeline import iceoutlines
 from histeclipse_pipeline.iceoutlines import (
     FILES,
     SLICES,
+    delta_encoded,
     from_lon_lat,
     is_geographic,
     outline_rings,
     outlines_file,
     polygon_rings,
+    reencoded,
     to_lon_lat,
     unwrapped,
 )
+
+if TYPE_CHECKING:
+    from histeclipse_pipeline.sky import Json
 
 
 def shapefile(rings: list[list[tuple[float, float]]], kind: int = 5) -> bytes:
@@ -101,13 +107,14 @@ def test_outlines_come_back_in_degrees_with_small_rings_dropped() -> None:
 def test_the_site_file_lists_every_slice_with_its_hypotheses() -> None:
     ring = [(-100.0, 50.0), (-60.0, 50.0), (-60.0, 70.0), (-100.0, 50.0)]
     data = outlines_file({("MIS 6", "best"): [ring]})
-    assert data["schemaVersion"] == 1
+    assert data["schemaVersion"] == 2
     slices = data["slices"]
     assert isinstance(slices, list)
     assert len(slices) == len(SLICES)
     mis6 = next(s for s in slices if isinstance(s, dict) and s["name"] == "MIS 6")
     assert isinstance(mis6, dict)
-    assert mis6["best"] == [[-10000, 5000, -6000, 5000, -6000, 7000, -10000, 5000]]
+    # Delta-encoded: the first point, then each step from the one before.
+    assert mis6["best"] == [[-10000, 5000, 4000, 0, 0, 2000, -4000, -2000]]
     assert mis6["min"] == []
     assert (mis6["fromKa"], mis6["toKa"]) == (132.0, 190.0)
 
@@ -120,3 +127,24 @@ def test_every_file_belongs_to_a_slice_and_slices_run_older() -> None:
     assert starts == sorted(starts)
     assert all(math.isfinite(t.to_ka) and t.to_ka > t.from_ka for t in SLICES)
     assert iceoutlines.CREDIT.startswith("Batchelor et al. (2019)")
+
+
+def test_a_published_file_is_reencoded_without_change_to_its_outlines() -> None:
+    absolute = [-10000, 5000, -6000, 5000, -6000, 7000, -10000, 5000]
+    ring: list[Json] = [*absolute]
+    one: dict[str, Json] = {
+        "schemaVersion": 1,
+        "scale": 100,
+        "slices": [{"name": "MIS 6", "min": [], "best": [ring], "max": []}],
+    }
+    two = reencoded(one)
+    assert two["schemaVersion"] == 2
+    assert two["slices"] == [
+        {"name": "MIS 6", "min": [], "best": [delta_encoded(absolute)], "max": []}
+    ]
+    with pytest.raises(ValueError, match="schema-1"):
+        _ = reencoded(two)
+    with pytest.raises(TypeError, match="time slice"):
+        _ = reencoded({"schemaVersion": 1, "slices": [3]})
+    with pytest.raises(TypeError, match="best"):
+        _ = reencoded({"schemaVersion": 1, "slices": [{"min": [], "best": 3, "max": []}]})
