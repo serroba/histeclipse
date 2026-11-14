@@ -23,6 +23,7 @@ function device(name: string): (typeof devices)[string] {
 
 export default defineConfig<DisplayOptions>({
   testDir: 'e2e',
+  testIgnore: '**/gpu/**',
   // Tests, not files, are shared out among workers and CI's shards: one long file (the smoke
   // tests) would otherwise keep a shard going long after the others.
   fullyParallel: true,

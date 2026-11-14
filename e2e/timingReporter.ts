@@ -87,10 +87,14 @@ export default class TimingReporter implements Reporter {
   onEnd(result: FullResult): void {
     if (this.suite === undefined || this.config === undefined) return;
     const tests = this.suite.allTests().map((test) => scenario(test, this.config?.rootDir ?? ''));
-    const directory = path.join(this.config.rootDir, '..', 'test-results');
+    const directory = path.join(
+      path.dirname(this.config.configFile ?? path.join(process.cwd(), 'playwright.config.ts')),
+      'test-results',
+    );
+    const name = process.env['TIMING_REPORT_NAME'] ?? 'timings';
     mkdirSync(directory, { recursive: true });
     writeFileSync(
-      path.join(directory, 'timings.json'),
+      path.join(directory, `${name}.json`),
       JSON.stringify(
         {
           schemaVersion: 1,
@@ -109,7 +113,7 @@ export default class TimingReporter implements Reporter {
       ) + '\n',
     );
     const markdown = summary(tests, result);
-    writeFileSync(path.join(directory, 'timings.md'), markdown);
+    writeFileSync(path.join(directory, `${name}.md`), markdown);
     const stepSummary = process.env['GITHUB_STEP_SUMMARY'];
     if (stepSummary !== undefined) appendFileSync(stepSummary, markdown);
   }

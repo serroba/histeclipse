@@ -34,7 +34,7 @@ export default defineConfig(
     },
   },
   {
-    files: ['eslint.config.js', 'vite.config.ts', 'playwright.config.ts', 'e2e/**/*.ts'],
+    files: ['eslint.config.js', 'vite.config.ts', 'playwright*.config.ts', 'e2e/**/*.ts'],
     languageOptions: { globals: globals.node },
   },
   ...boundaries,

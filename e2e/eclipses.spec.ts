@@ -258,19 +258,23 @@ test('famous eclipse rows are large enough to tap @mobile', async ({ page }) => 
   }
 });
 
-test('eclipse shadows render on the Moon and on Earth without errors', GPU, async ({ page }) => {
-  const problems = collectProblems(page);
-  // Totality of 14 March 2025, orbiting the Moon: Earth's shadow is drawn on it.
-  await page.goto('./?t=2025-03-14T06:59&cam=0,0,3&focus=moon');
-  await globeRendered(page);
-  await expect(page.getByTestId('globe')).toHaveAttribute('data-focus', 'moon');
-  // 8 April 2024 with no eclipse selected: the Moon's shadow comes from the geometry.
-  await page.goto('./?t=2024-04-08T18:17&cam=25.3,-104.1,1.25&layers=');
-  await globeRendered(page);
-  await expect(page.getByTestId('globe')).toHaveAttribute('data-space', 'moon');
-  // Shader compile errors surface as console errors.
-  expect(problems).toEqual([]);
-});
+test(
+  'eclipse shadows render on the Moon and on Earth without errors @gpu-core',
+  GPU,
+  async ({ page }) => {
+    const problems = collectProblems(page);
+    // Totality of 14 March 2025, orbiting the Moon: Earth's shadow is drawn on it.
+    await page.goto('./?t=2025-03-14T06:59&cam=0,0,3&focus=moon');
+    await globeRendered(page);
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-focus', 'moon');
+    // 8 April 2024 with no eclipse selected: the Moon's shadow comes from the geometry.
+    await page.goto('./?t=2024-04-08T18:17&cam=25.3,-104.1,1.25&layers=');
+    await globeRendered(page);
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-space', 'moon');
+    // Shader compile errors surface as console errors.
+    expect(problems).toEqual([]);
+  },
+);
 
 test('the card names the place an eclipse is seen from, or calls it your spot', async ({
   page,

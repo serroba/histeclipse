@@ -2,5 +2,5 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignore": ["eslint.boundaries.js"],
   "ignoreExportsUsedInFile": false,
-  "entry": ["e2e/timingReporter.ts"]
+  "entry": ["e2e/timingReporter.ts", "e2e/gpu/harness.ts"]
 }
