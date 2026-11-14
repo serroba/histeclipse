@@ -9,6 +9,7 @@ import { SRGBColorSpace, type IUniform, type Texture } from 'three';
 
 import type { MoonName } from '../astro/moonOrbits';
 import type { PlanetName } from '../astro/planets';
+import { loadPicture } from './pictureTexture';
 
 /** A body's view: a mission's map, and a sharper one for close up, if any. */
 export interface MapView {
@@ -29,8 +30,8 @@ export interface BodyMapsWorld {
   readonly moons: { setMap(moon: MoonName, map: Texture | null): void };
   /** The sharpest filtering the graphics allow at a slant. */
   readonly anisotropy: number;
-  /** Load an image. */
-  load(url: string): Promise<Texture>;
+  /** Load an image; by default decoded off the main thread where the browser can (#668). */
+  load?(url: string): Promise<Texture>;
   invalidate(): void;
 }
 
@@ -155,12 +156,15 @@ export class BodyMaps {
     );
   }
 
+  #load(url: string): Promise<Texture> {
+    return this.#world.load === undefined ? loadPicture(url) : this.#world.load(url);
+  }
+
   /** Dress Earth or the Moon in a sharper map, fetched once, for close up (#258). */
   setBodyMap(body: 'earth' | 'moon', url: string): void {
     if (this.#bodyMapsAsked.has(url)) return;
     this.#bodyMapsAsked.add(url);
-    this.#world
-      .load(url)
+    this.#load(url)
       .then((map) => {
         map.colorSpace = SRGBColorSpace;
         map.anisotropy = this.#world.anisotropy;
@@ -210,7 +214,7 @@ export class BodyMaps {
   #texture(url: string): Promise<Texture> {
     let texture = this.#textures.get(url);
     if (texture === undefined) {
-      texture = this.#world.load(url).then((map) => {
+      texture = this.#load(url).then((map) => {
         map.colorSpace = SRGBColorSpace;
         map.anisotropy = this.#world.anisotropy;
         return map;
