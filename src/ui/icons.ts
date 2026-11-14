@@ -146,6 +146,8 @@ const UI_PATHS = {
   // Strata, one bent.
   rocks: ['M3 7c4-2 8 2 12 0s4-1 6-1', 'M3 12c4-2 8 2 12 0s4-1 6-1', 'M3 17h18', 'M3 21h18'],
   // A volcano with its plume.
+  // A globe with a hole round its pole (#722).
+  ozone: ['M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z', 'M7 17.5c1.5-1.5 8.5-1.5 10 0', 'M5 12h14'],
   volcanoes: ['M3 20l6-10h6l6 10z', 'M10 10l1.5 2 1.5-2', 'M12 7c-1-1.5 0-3 1.5-3s2.5 1.5 4 0'],
   // The Sun nearly covered: a bright rim around a dark disc.
   solar: [

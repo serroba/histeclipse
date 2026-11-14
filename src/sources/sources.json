@@ -1029,6 +1029,13 @@
     "cite": "NASA, “Mimas” (moon overview)",
     "url": "https://science.nasa.gov/saturn/moons/mimas/"
   },
+  "nasaOzoneWatch": {
+    "name": "NASA Ozone Watch",
+    "kind": "dataset",
+    "cite": "NASA Ozone Watch, NASA Goddard Space Flight Center (N. Kramarova, P. A. Newman, L. R. Lait): annual Antarctic ozone hole statistics, mean area inside 220 Dobson units (7 September to 13 October) and mean daily minimum (21 September to 16 October), from TOMS, OMI and OMPS, gaps from NASA GMAO MERRA, MERRA-2 and GEOS FP; accessed 15 November 2026",
+    "url": "https://ozonewatch.gsfc.nasa.gov/meteorology/annual_data.html",
+    "licence": "Public domain (a work of the US Government)"
+  },
   "nasaPhobos": {
     "name": "NASA: Phobos",
     "kind": "reference",
@@ -1080,6 +1087,13 @@
     "cite": "NOAA/NESDIS/STAR Laboratory for Satellite Altimetry, Sea Level Rise: global mean sea level and the map of sea-level trends from TOPEX/Poseidon, Jason-1, Jason-2, Jason-3 and Sentinel-6MF since late 1992 (files of March 2025, through February 2025); annual signal removed, inverted barometer applied, no glacial isostatic adjustment. Altimetry data are provided by NOAA Laboratory for Satellite Altimetry",
     "url": "https://www.star.nesdis.noaa.gov/socd/lsa/SeaLevelRise/",
     "licence": "Public domain (US government work); NOAA asks for the acknowledgement “Altimetry data are provided by NOAA Laboratory for Satellite Altimetry”"
+  },
+  "noaaOdgi": {
+    "name": "NOAA Ozone Depleting Gas Index",
+    "kind": "dataset",
+    "cite": "Montzka, S. A., Dutton, G. and Vimont, I.: The NOAA Ozone Depleting Gas Index (ODGI), NOAA Global Monitoring Laboratory, 2024 update: equivalent effective stratospheric chlorine over Antarctica and the mid-latitudes, and the index, 100 at its peak and 0 at 1980's level; accessed 15 November 2026",
+    "url": "https://gml.noaa.gov/odgi/",
+    "licence": "Public domain (a work of the US Government)"
   },
   "nsidcSeaIce": {
     "name": "NSIDC Sea Ice Index",

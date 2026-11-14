@@ -140,6 +140,14 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
     name: 'Climate',
     layers: [
       {
+        id: 'ozone',
+        label: 'The ozone hole',
+        about:
+          'The Antarctic ozone hole each spring (NASA Ozone Watch), as a cap of its area round the pole, with the gases that made it (NOAA) beside the globe.',
+        spans: ['years'],
+        reach: 'Each spring from 1979 to 2025, none measured in 1995; the gases from 1992.',
+      },
+      {
         id: 'temperature',
         label: 'Temperature',
         about: 'The surface coloured by its temperature, model by model.',
