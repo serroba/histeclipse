@@ -1,7 +1,9 @@
 # End-to-end tests
 
 Features are written as scenarios: each test is a story of Given, When and Then steps
-(`test.step`) in plain Playwright. A bug starts as a scenario that fails, then gets fixed.
+(`test.step`) in plain Playwright. Reproduce a bug at the narrowest boundary that catches it:
+pure calculation, feature integration, isolated DOM component, then E2E for browser behaviour
+or cross-feature wiring. Do not add a full-application scenario for every regression.
 
 ## Projects
 
@@ -73,3 +75,12 @@ The report's wall time covers Playwright, not setup or queueing; use Actions job
 for runner cost and workflow timestamps for overall CI latency. Compare execution counts,
 retry rates and p95 latency across representative PR runs before changing shard counts.
 Test selection and retries are unchanged by reporting (#645, epic #644).
+
+## Isolated UI tests
+
+Use `// @vitest-environment happy-dom` only in component test files (for example
+`src/ui/controls.dom.test.ts`). The remaining tests stay in Node. Mount the actual component,
+render a small view model, dispatch real DOM events and assert accessible names, pressed/hidden
+states and callbacks. Test that rerendering uses the latest callback rather than a stale closure.
+Use real browsers for layout, touch, pointer capture, CSS visibility and GPU output: a simulated
+DOM cannot prove these. Do not globally enable a DOM environment or start WebGL for UI tests.
