@@ -42,6 +42,11 @@ export interface DayView {
   readonly playing: boolean;
   /** Hours a second. */
   readonly speed: number;
+  /** Hours a second it can play at, where they differ from the track's own: the same array
+   * until they change. */
+  readonly speeds?: readonly number[];
+  /** Whether the button that leaves it shows. */
+  readonly leave?: boolean;
 }
 
 export interface DayTrack {
@@ -60,6 +65,13 @@ export interface DayTrackOptions {
   /** The Play button's name, playing and not. */
   readonly play: string;
   readonly stop: string;
+  /** The words on a button that leaves what plays, where it has one. */
+  readonly leave?: string;
+}
+
+/** The speed picker's choices. */
+function speedOptions(speeds: readonly number[]): HTMLOptionElement[] {
+  return speeds.map((each) => element('option', { value: String(each) }, speedWords(each)));
 }
 
 /** The track's elements, before anything is drawn on them. */
@@ -72,10 +84,12 @@ function buildTrack(options: DayTrackOptions) {
   const slider = element('input', { type: 'range', class: 'history-slider', step: 'any' });
   const ticks = element('div', { class: 'cycle-ticks', 'aria-hidden': 'true' });
   const moments = element('ol', { class: 'cycle-moments' });
-  const speed = element(
-    'select',
-    { class: 'history-speed', 'aria-label': 'Time a second' },
-    ...options.speeds.map((each) => element('option', { value: String(each) }, speedWords(each))),
+  const speed = element('select', { class: 'history-speed', 'aria-label': 'Time a second' });
+  speed.replaceChildren(...speedOptions(options.speeds));
+  const leave = element(
+    'button',
+    { type: 'button', class: 'day-leave', hidden: '' },
+    options.leave ?? '',
   );
   const extras = element('span', { class: 'history-extras', hidden: '' }, speed);
   const root = element(
@@ -86,10 +100,11 @@ function buildTrack(options: DayTrackOptions) {
       { class: 'history-controls' },
       play,
       element('div', { class: 'history-lane' }, slider, ticks),
+      leave,
     ),
     moments,
   );
-  return { play, slider, ticks, moments, speed, extras, root };
+  return { play, slider, ticks, moments, speed, extras, root, leave };
 }
 
 type TrackElements = ReturnType<typeof buildTrack>;
@@ -145,10 +160,15 @@ export function createDayTrack(
     onDay(jd: number): void;
     onPlay(play: boolean): void;
     onSpeed(hours: number): void;
+    onLeave?(): void;
   },
 ): DayTrack {
   const elements = buildTrack(options);
-  const { play, slider, moments, speed, extras, root } = elements;
+  const { play, slider, moments, speed, extras, root, leave } = elements;
+  let speeds: readonly number[] = options.speeds;
+  leave.addEventListener('click', () => {
+    handlers.onLeave?.();
+  });
   let playing = false;
   play.addEventListener('click', () => {
     handlers.onPlay(!playing);
@@ -157,7 +177,7 @@ export function createDayTrack(
     handlers.onDay(Number(slider.value));
   });
   speed.addEventListener('change', () => {
-    const picked = options.speeds.find((each) => String(each) === speed.value);
+    const picked = speeds.find((each) => String(each) === speed.value);
     if (picked !== undefined) handlers.onSpeed(picked);
   });
   // Drawn again only when the moments change, not each frame as it plays.
@@ -205,7 +225,12 @@ export function createDayTrack(
         'aria-valuetext',
         `${String(Math.round(view.jd - view.first))} days after ${view.since}`,
       );
+      if (view.speeds !== undefined && view.speeds !== speeds) {
+        speeds = view.speeds;
+        speed.replaceChildren(...speedOptions(speeds));
+      }
       speed.value = String(view.speed);
+      leave.hidden = view.leave !== true;
     },
   };
 }

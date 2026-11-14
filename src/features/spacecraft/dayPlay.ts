@@ -55,7 +55,7 @@ export function dayPlay(hooks: DayPlayHooks): DayPlay {
     // A hair either way: sums of many short steps fall a little short.
     const steps = Math.floor((head - at) / size + 1e-6);
     if (steps >= 1) hooks.go(at + steps * size);
-    if (head >= end - 1) {
+    if (head >= end) {
       playing = false;
       hooks.ended();
       return;

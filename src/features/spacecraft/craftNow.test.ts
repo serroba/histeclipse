@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import type { Craft, CraftPhase } from '../../data/spacecraft';
 import type { CraftPaths } from '../../data/spacecraftPaths';
 import { elementAt } from '../../util/arrays';
-import { gcatJd, type Geocentric } from './approximatePaths';
+import { gcatJd } from '../../data/spacecraft';
+import type { Geocentric } from './approximatePaths';
 import { craftNow, craftWheres, fromEarth, inFlight, remembered, trailMoments } from './craftNow';
 
 const AU = 149_597_870.7;

@@ -1,14 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Craft, CraftPhase } from '../../data/spacecraft';
+import { gcatJd, type Craft, type CraftPhase } from '../../data/spacecraft';
 import type { CraftWhere } from '../../data/spacecraftPaths';
-import {
-  approximatePath,
-  ECLIPTIC_POLE,
-  gcatJd,
-  turned,
-  type Geocentric,
-} from './approximatePaths';
+import { approximatePath, ECLIPTIC_POLE, turned, type Geocentric } from './approximatePaths';
 import type { Vec3 } from '../../astro/transfer';
 
 const AU = 149_597_870.7;

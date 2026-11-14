@@ -12,6 +12,9 @@
  * - `light` is how a planet is shown close up: `look` (absent) or another light it has.
  * - `culture` is whose constellations the sky view draws: `modern` (absent) or a sky culture
  *   such as `babylonian_mulapin` or `chinese`.
+ * - `mission` names a launch beyond Earth orbit by its first craft's GCAT id (`d00271`): with
+ *   the spacecraft on, only its craft are drawn, with their whole route, and the bar plays
+ *   that mission (#712). Absent means every launch.
  */
 
 import { SKY_CULTURES, type SkyCulture } from '../../data/skyCultures';
@@ -38,6 +41,8 @@ export interface DisplayState {
   readonly planetLight: PlanetLight;
   /** Whose constellations the sky view draws. */
   readonly culture: SkyCulture;
+  /** The launch followed, by its first craft's GCAT id, lower case; null for every launch. */
+  readonly mission: string | null;
 }
 
 export const DISPLAY_DEFAULTS: DisplayState = {
@@ -46,6 +51,7 @@ export const DISPLAY_DEFAULTS: DisplayState = {
   sunLayer: 'visible',
   planetLight: 'look',
   culture: 'modern',
+  mission: null,
 };
 
 export const DISPLAY_PARAMS: Params<DisplayState> = {
@@ -54,4 +60,12 @@ export const DISPLAY_PARAMS: Params<DisplayState> = {
   sunLayer: choice('sun', SUN_LAYERS, DISPLAY_DEFAULTS.sunLayer),
   planetLight: choice('light', PLANET_LIGHTS, DISPLAY_DEFAULTS.planetLight),
   culture: choice('culture', SKY_CULTURES, DISPLAY_DEFAULTS.culture),
+  mission: {
+    key: 'mission',
+    parse: (raw) => {
+      if (!/^d\d{5}$/i.test(raw)) throw new Error('expected a craft’s GCAT id, such as d00271');
+      return raw.toLowerCase();
+    },
+    format: (id) => id,
+  },
 };

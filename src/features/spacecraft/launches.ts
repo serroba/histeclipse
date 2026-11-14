@@ -4,25 +4,22 @@
  * they were at every moment. It slows as each craft leaves Earth's orbit, to be seen going, and
  * speeds up between (`launchPace.ts`): at its default pace, the whole of it in about eleven
  * minutes, slow enough to follow a cruise (#710). The camera stays the reader's, to zoom out
- * from Earth or the Sun as it plays.
+ * from Earth or the Sun as it plays. With a mission named, the bar plays that one journey
+ * instead, its chapters its moments (#712), and a button goes back to every launch.
  */
 
 import { momentAt } from '../../eclipses/describe';
 import { loadSpacecraft } from '../../data/spacecraft';
+import { missionNamed, missions, type Mission } from '../../data/spacecraftMission';
 import { momentJulianDay, spacecraftPlays, type ViewState } from '../../state/viewState';
 import { julianDayNumber } from '../../time/julianDay';
-import { createDayTrack, type DayMoment, type DayView } from '../../ui/dayTrack';
+import { createDayTrack, type DayView } from '../../ui/dayTrack';
 import { errorMessage } from '../../util/errors';
 import type { PartContext } from '../part';
 import { dayPlay } from './dayPlay';
 import { launchMoments } from './launchList';
-import { departures, launchPace } from './launchPace';
-
-/** Hours a second between departures: 50, 100, 200 and 400 days a second. With the slowing
- * for each craft leaving, 1959 to now plays in about 11, 7, 4¾ and 3½ minutes; 50 is the
- * default, where a cruise to Mars takes some four seconds (#710). */
-const LAUNCH_SPEEDS = [1200, 2400, 4800, 9600] as const;
-const DEFAULT_SPEED = 1200;
+import { departures } from './launchPace';
+import { launchesProgram, missionProgram, today, type Program } from './programs';
 
 /** What the launches ask of the rest of the page. */
 export interface LaunchesContext extends PartContext {
@@ -40,44 +37,52 @@ export interface LaunchesPart {
   readonly render: (state: ViewState) => void;
 }
 
-/** Today, as a UT Julian Day. */
-function today(): number {
-  return Date.now() / 86_400_000 + 2_440_587.5;
-}
-
-/** What the track shows of the launches, at the moment shown. */
-function launchView(
-  state: ViewState,
-  moments: readonly DayMoment[],
-  playing: boolean,
-  speed: number,
-): DayView {
+/** What the track shows of a program, at the moment shown. */
+function programView(state: ViewState, program: Program, playing: boolean, speed: number): DayView {
   return {
-    title: 'Every launch beyond Earth orbit, from the first to today, slowing as each leaves',
-    slider: 'Day since the first launch',
+    title: program.title,
+    slider: program.slider,
     jd: momentJulianDay(state.time),
-    first: moments[0]?.jd ?? today(),
-    last: today(),
-    moments,
-    since: moments[0]?.name ?? 'the first launch',
+    first: program.first,
+    last: program.last(),
+    moments: program.moments,
+    since: program.since,
     playing,
     speed,
+    speeds: program.paces,
+    leave: program.mission,
   };
 }
 
-/** The launches, loaded once asked for; `ready` hears when they are in. */
-function launchesLoader(context: LaunchesContext, ready: () => void) {
-  let launches: { moments: readonly DayMoment[]; departed: readonly number[] } | null = null;
+/**
+ * The launches and the missions, loaded once asked for; `ready` hears when they are in. The
+ * program for a view: the mission it names, worked out once each, or every launch.
+ */
+function programsLoader(context: LaunchesContext, ready: () => void) {
+  let loaded: { launches: Program; missions: readonly Mission[] } | null = null;
+  const made = new Map<string, Program>();
   let asked = false;
   return {
-    get: () => launches?.moments ?? null,
-    departed: () => launches?.departed ?? [],
+    for(state: ViewState): Program | null {
+      if (loaded === null) return null;
+      const mission = state.mission === null ? null : missionNamed(loaded.missions, state.mission);
+      if (mission === null) return loaded.launches;
+      let program = made.get(mission.id);
+      if (program === undefined) {
+        program = missionProgram(mission);
+        made.set(mission.id, program);
+      }
+      return program;
+    },
     load(): void {
       if (asked) return;
       asked = true;
       loadSpacecraft(`${context.base}data/spacecraft.json`, context.fetchJson).then(
-        (record) => {
-          launches = { moments: launchMoments(record.craft), departed: departures(record.craft) };
+        ({ craft }) => {
+          loaded = {
+            launches: launchesProgram(launchMoments(craft), departures(craft)),
+            missions: missions(craft, today()),
+          };
           ready();
         },
         (error: unknown) => {
@@ -89,47 +94,58 @@ function launchesLoader(context: LaunchesContext, ready: () => void) {
   };
 }
 
+/** The bar's track for the launches, its paces given by what plays. */
+function launchTrack(handlers: Parameters<typeof createDayTrack>[1]) {
+  return createDayTrack(
+    {
+      className: 'launch-track',
+      speeds: [],
+      play: 'Play the launches',
+      stop: 'Stop the launches',
+      leave: 'All launches',
+    },
+    handlers,
+  );
+}
+
 export function mountLaunches(context: LaunchesContext): LaunchesPart {
   const { store } = context;
-  let speed: number = DEFAULT_SPEED;
+  // What plays, and at how many hours a second: a new program starts at its own pace.
+  let program: Program | null = null;
+  let speed = 0;
   let shown: ViewState['time'] | null = null;
-  const launches = launchesLoader(context, () => {
+  const programs = programsLoader(context, () => {
     show(store.get());
   });
   const play = dayPlay({
-    pace: (jd) => launchPace(launches.departed(), jd, speed / 24),
+    pace: (jd) => program?.pace(jd, speed) ?? 1,
     at: () => momentJulianDay(store.get().time),
     go: setMoment,
-    end: today,
+    end: () => program?.last() ?? today(),
     ended: () => {
       show(store.get());
     },
   });
-  const track = createDayTrack(
-    {
-      className: 'launch-track',
-      speeds: LAUNCH_SPEEDS,
-      play: 'Play the launches',
-      stop: 'Stop the launches',
+  const track = launchTrack({
+    onDay(jd) {
+      stop();
+      setMoment(jd);
     },
-    {
-      onDay(jd) {
-        stop();
-        setMoment(jd);
-      },
-      onPlay(playing) {
-        if (playing) start();
-        else stop();
-      },
-      onSpeed(next) {
-        speed = next;
-        show(store.get());
-      },
+    onPlay(playing) {
+      if (playing) start();
+      else stop();
     },
-  );
+    onSpeed(next) {
+      speed = next;
+      show(store.get());
+    },
+    onLeave() {
+      stop();
+      store.set((state) => ({ ...state, mission: null }));
+    },
+  });
 
   function show(state: ViewState): void {
-    const moments = launches.get();
     if (!spacecraftPlays(state)) {
       stop();
       track.render(null);
@@ -138,8 +154,14 @@ export function mountLaunches(context: LaunchesContext): LaunchesPart {
     context.history.root.hidden = true;
     context.history.extras.hidden = true;
     context.history.stop();
-    if (moments === null) launches.load();
-    track.render(moments === null ? null : launchView(state, moments, play.playing, speed));
+    const next = programs.for(state);
+    if (next === null) programs.load();
+    if (next !== program) {
+      program = next;
+      speed = next?.fitted ?? 0;
+      stop();
+    }
+    track.render(next === null ? null : programView(state, next, play.playing, speed));
   }
 
   function setMoment(jd: number): void {
@@ -149,11 +171,12 @@ export function mountLaunches(context: LaunchesContext): LaunchesPart {
   }
 
   function start(): void {
-    const first = launches.get()?.[0]?.jd;
-    if (first === undefined) return;
+    if (program === null) return;
     const at = momentJulianDay(store.get().time);
-    // Outside the launches' years, or at their end, play starts at the first.
-    if (at < first - 1 || at >= today() - 1) setMoment(first);
+    // Outside its days, or at their end, play starts at the first.
+    if (at < program.first - program.slack || at >= program.last() - program.slack) {
+      setMoment(program.first);
+    }
     play.start();
     show(store.get());
   }

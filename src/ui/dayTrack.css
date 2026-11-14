@@ -57,3 +57,22 @@
 .cycle-moment-date {
   color: var(--ink-muted);
 }
+
+/* Following one mission (#712): back to every launch, beside the slider. */
+.day-leave {
+  flex: none;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 22px;
+  background: rgb(255 255 255 / 0.04);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.day-leave[hidden] {
+  display: none;
+}

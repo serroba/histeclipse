@@ -62,8 +62,11 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-async function setUp(layers: ViewState['layers'] = new Set(['spacecraft'])) {
-  const store = createStore<ViewState>({ ...defaultViewState(TODAY), layers });
+async function setUp(
+  layers: ViewState['layers'] = new Set(['spacecraft']),
+  more: Partial<ViewState> = {},
+) {
+  const store = createStore<ViewState>({ ...defaultViewState(TODAY), layers, ...more });
   const history = { root: document.createElement('div'), extras: document.createElement('span') };
   const stopHistory = vi.fn();
   const notify = vi.fn();
@@ -188,5 +191,74 @@ describe('the launches played (#702)', () => {
     const { store, part } = await setUp();
     store.set((state) => ({ ...state, ma: 66 }));
     expect(part.root.hidden).toBe(true);
+  });
+
+  it('Given a mission named, Then the bar plays its journey: its chapters, at its own pace (#712)', async () => {
+    const { part, button, day } = await setUp(new Set(['spacecraft']), { mission: 'd00273' });
+    expect(part.root.getAttribute('aria-label')).toBe('Apollo 11: its journey');
+    const chapters = [...part.root.querySelectorAll('.cycle-moment-name')].map(
+      (name) => name.textContent,
+    );
+    expect(chapters).toEqual([
+      'Leaves Earth',
+      'Reaches the Moon',
+      'Eagle: Lands on the Moon',
+      'Columbia: Back at Earth',
+      'Columbia: Home',
+    ]);
+    expect(part.root.querySelector('.cycle-moment-date')?.textContent).toBe(
+      '17 Jul 1969, 16:41 UT',
+    );
+    // A week in some 45 seconds or more: three hours a second, with slower and faster beside.
+    const speed = part.extras.querySelector('select');
+    expect([...(speed?.options ?? [])].map((option) => option.text)).toEqual([
+      '2 hours/s',
+      '3 hours/s',
+      '6 hours/s',
+      '12 hours/s',
+    ]);
+    expect(speed?.value).toBe('3');
+    button()?.click();
+    const left = 2_440_420.195; // 1969-07-17T16:41 UT
+    expect(day()).toBeCloseTo(left, 3);
+    frame(0);
+    for (let k = 0; k < 4; k += 1) frame(250);
+    // Three hours on, a minute at a time.
+    expect((day() - left) * 24).toBeCloseTo(3, 1);
+  });
+
+  it('Given a mission played to its end, Then it stops there, and plays again from its start', async () => {
+    const { part, button, day } = await setUp(new Set(['spacecraft']), { mission: 'd00273' });
+    button()?.click();
+    frame(0);
+    for (
+      let k = 0;
+      k < 400 && button()?.getAttribute('aria-label') !== 'Play the launches';
+      k += 1
+    ) {
+      frame(250);
+    }
+    expect(button()?.getAttribute('aria-label')).toBe('Play the launches');
+    const home = [...part.root.querySelectorAll('.cycle-moment')].at(-1);
+    expect(home?.getAttribute('aria-current')).toBe('true');
+    button()?.click();
+    expect(day()).toBeCloseTo(2_440_420.195, 3);
+  });
+
+  it('Given a mission, When All launches is pressed, Then every launch plays again', async () => {
+    const { store, part } = await setUp(new Set(['spacecraft']), { mission: 'd00273' });
+    const leave = part.root.querySelector<HTMLButtonElement>('.day-leave');
+    expect(leave?.hidden).toBe(false);
+    expect(leave?.textContent).toBe('All launches');
+    leave?.click();
+    expect(store.get().mission).toBeNull();
+    expect(part.root.getAttribute('aria-label')).toMatch(/^Every launch/);
+    expect(leave?.hidden).toBe(true);
+    expect(part.extras.querySelector('select')?.value).toBe('1200');
+  });
+
+  it('Given a mission the record does not have, Then every launch plays', async () => {
+    const { part } = await setUp(new Set(['spacecraft']), { mission: 'd99999' });
+    expect(part.root.getAttribute('aria-label')).toMatch(/^Every launch/);
   });
 });

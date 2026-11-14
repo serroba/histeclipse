@@ -23,9 +23,9 @@ const view = (more: Partial<DayView> = {}): DayView => ({
 });
 
 function track() {
-  const handlers = { onDay: vi.fn(), onPlay: vi.fn(), onSpeed: vi.fn() };
+  const handlers = { onDay: vi.fn(), onPlay: vi.fn(), onSpeed: vi.fn(), onLeave: vi.fn() };
   const ui = createDayTrack(
-    { className: 'launch-track', speeds: [240, 2400], play: 'Play', stop: 'Stop' },
+    { className: 'launch-track', speeds: [240, 2400], play: 'Play', stop: 'Stop', leave: 'Back' },
     handlers,
   );
   document.body.append(ui.root, ui.extras);
@@ -106,5 +106,35 @@ describe('days to play in the bar', () => {
     ui.render(view({ jd: 160 }));
     const slider = ui.root.querySelector('.history-slider');
     expect(slider?.getAttribute('aria-valuetext')).toBe('60 days after Luna 1');
+  });
+
+  it('Given paces of its own, Then the speed picker offers those, until they change', () => {
+    const { ui, handlers } = track();
+    const speeds = [1, 3, 6];
+    ui.render(view({ speeds, speed: 3 }));
+    const speed = ui.extras.querySelector('select');
+    expect([...(speed?.options ?? [])].map((option) => option.text)).toEqual([
+      '1 hour/s',
+      '3 hours/s',
+      '6 hours/s',
+    ]);
+    expect(speed?.value).toBe('3');
+    if (speed !== null) {
+      speed.value = '6';
+      speed.dispatchEvent(new Event('change'));
+    }
+    expect(handlers.onSpeed).toHaveBeenLastCalledWith(6);
+  });
+
+  it('Given something to leave, Then its button shows, and says so when pressed', () => {
+    const { ui, handlers } = track();
+    const leave = ui.root.querySelector<HTMLButtonElement>('.day-leave');
+    ui.render(view());
+    expect(leave?.hidden).toBe(true);
+    ui.render(view({ leave: true }));
+    expect(leave?.hidden).toBe(false);
+    expect(leave?.textContent).toBe('Back');
+    leave?.click();
+    expect(handlers.onLeave).toHaveBeenCalledTimes(1);
   });
 });

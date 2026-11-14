@@ -6,8 +6,7 @@
  * geometrically, so the change reads as a glide.
  */
 
-import type { Craft } from '../../data/spacecraft';
-import { gcatJd } from './approximatePaths';
+import { gcatJd, type Craft } from '../../data/spacecraft';
 
 /** Days a second while a craft leaves. */
 export const DEPARTING_PACE = 6;

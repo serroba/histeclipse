@@ -83,3 +83,17 @@ export function destinations(craft: Craft): readonly string[] {
   }
   return out;
 }
+
+/** JD of a GCAT date: "1977-08-22T08:24", "1979-04-30", "1979-05" (its middle), "1979". */
+export function gcatJd(text: string): number {
+  const plain = text.replace('?', '');
+  const [date = plain, time = '00:00'] = plain.split('T');
+  const [year = '2000', month, day] = date.split('-');
+  const iso =
+    month === undefined
+      ? `${year}-07-02`
+      : day === undefined
+        ? `${year}-${month}-15`
+        : `${year}-${month}-${day}`;
+  return Date.parse(`${iso}T${time}:00Z`) / 86_400_000 + 2_440_587.5;
+}

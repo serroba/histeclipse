@@ -6,9 +6,9 @@
  * path places at that moment, is left out.
  */
 
-import type { Craft } from '../../data/spacecraft';
+import { gcatJd, type Craft } from '../../data/spacecraft';
 import { craftAt, type CraftPaths, type CraftWhere } from '../../data/spacecraftPaths';
-import { approximatePath, gcatJd, type Geocentric } from './approximatePaths';
+import { approximatePath, type Geocentric } from './approximatePaths';
 import type { Vec3 } from '../../astro/transfer';
 
 export interface CraftNow {
@@ -23,6 +23,28 @@ export interface CraftNow {
   /** At a world (the Moon, a planet) rather than on its way. */
   readonly at: string | null;
 }
+
+/** A craft's whole route through a mission followed (#712). */
+export interface CraftRoute {
+  readonly id: string;
+  /** Oldest first, from Earth's centre (J2000 km); null where its path does not place it,
+   * breaking the line. */
+  readonly points: readonly (Vec3 | null)[];
+  readonly approximate: boolean;
+}
+
+/** How a mission followed is drawn (#712). */
+export interface Followed {
+  /** From leaving Earth to its last moment, TT (as near as a minute is to UT). */
+  readonly from: number;
+  readonly to: number;
+  /** Never about the Sun: every point drawn about Earth as it was then, the Moon where it was
+   * from Earth, rather than among the planets as seen from Earth now. */
+  readonly aboutEarth: boolean;
+}
+
+/** Points along a followed craft's route. */
+const ROUTE_POINTS = 240;
 
 /** Points in a trail, and how far back it reaches, days: about the Sun, and near Earth. */
 const TRAIL_POINTS = 24;
@@ -130,29 +152,72 @@ export function trailMoments(jdTT: number, step: number): readonly number[] {
   return Array.from({ length: TRAIL_POINTS }, (_, k) => (newest - k) * step);
 }
 
-/** The craft in flight at a moment, where each is, and where each had just been. */
+/**
+ * Each craft's whole route through a mission followed, seen at `jdTT`: at the same moments
+ * every frame, so the bodies' places along it are kept.
+ */
+export function craftRoutes(
+  craft: readonly Craft[],
+  wheres: CraftWheres,
+  geocentric: Geocentric,
+  jdTT: number,
+  followed: Followed,
+): readonly CraftRoute[] {
+  const { from, to, aboutEarth } = followed;
+  return craft.map((each) => ({
+    id: each.id,
+    approximate: wheres.approximate(each),
+    points: Array.from({ length: ROUTE_POINTS + 1 }, (_, k) => {
+      const then = from + ((to - from) * k) / ROUTE_POINTS;
+      const where = wheres.where(each, then);
+      if (where === null || ('at' in where && where.at === 'Earth')) return null;
+      return fromEarth(where, then, geocentric, aboutEarth ? then : jdTT);
+    }),
+  }));
+}
+
+/** Where a craft had just been, newest first, back along its path from where it is now. */
+function trailOf(
+  craft: Craft,
+  where: CraftWhere,
+  wheres: CraftWheres,
+  geocentric: Geocentric,
+  jdTT: number,
+  aboutEarth: boolean,
+): Vec3[] {
+  const near = 'centre' in where && where.centre === 'Earth';
+  const step = (near ? TRAIL_DAYS_NEAR : TRAIL_DAYS_FAR) / TRAIL_POINTS;
+  const trail: Vec3[] = [];
+  for (const then of trailMoments(jdTT, step)) {
+    const before = wheres.where(craft, then);
+    const point =
+      before === null ? null : fromEarth(before, then, geocentric, aboutEarth ? then : jdTT);
+    if (point === null) break;
+    trail.push(point);
+  }
+  return trail;
+}
+
+/**
+ * The craft in flight at a moment, where each is, and where each had just been; following a
+ * mission about Earth, each point about Earth as it was then.
+ */
 export function craftNow(
   craft: readonly Craft[],
   wheres: CraftWheres,
   geocentric: Geocentric,
   jdTT: number,
+  followed: Followed | null = null,
 ): readonly CraftNow[] {
   const out: CraftNow[] = [];
+  const aboutEarth = followed?.aboutEarth === true;
   for (const each of craft) {
     if (!inFlight(each, jdTT)) continue;
     const where = wheres.where(each, jdTT);
     if (where === null || ('at' in where && where.at === 'Earth')) continue;
     const km = fromEarth(where, jdTT, geocentric);
     if (km === null) continue;
-    const near = 'centre' in where && where.centre === 'Earth';
-    const step = (near ? TRAIL_DAYS_NEAR : TRAIL_DAYS_FAR) / TRAIL_POINTS;
-    const trail: Vec3[] = [];
-    for (const then of trailMoments(jdTT, step)) {
-      const before = wheres.where(each, then);
-      const point = before === null ? null : fromEarth(before, then, geocentric, jdTT);
-      if (point === null) break;
-      trail.push(point);
-    }
+    const trail = trailOf(each, where, wheres, geocentric, jdTT, aboutEarth);
     out.push({
       id: each.id,
       name: each.mission ?? each.name,
