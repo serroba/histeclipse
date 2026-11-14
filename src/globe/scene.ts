@@ -390,7 +390,7 @@ export function createGlobe(
 
   return {
     // What each part answers as it is (#603).
-    ...delegate(rig, ['setInsets', 'setFocus', 'setViewpoint', 'flyTo', 'zoomTo']),
+    ...delegate(rig, ['setInsets', 'setFocus', 'setViewpoint', 'flyTo', 'zoomTo', 'glideTo']),
     ...delegate(picking, ['onBodyClick', 'onEmptyTap', 'onMarkerPick', 'onPlacePick']),
     ...delegate(maps, [
       'showPlanetView',

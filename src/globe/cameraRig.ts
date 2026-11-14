@@ -155,6 +155,17 @@ export class CameraRig implements StagePart {
     this.#world.invalidate();
   }
 
+  /** Glide to `state` (#581): on Earth a turn and a zoom together; elsewhere, placed at once. */
+  glideTo(state: GlobeCamera): void {
+    if (this.#viewpoint !== 'free') return;
+    if (this.#focus !== 'earth' || this.#pendingFocus) {
+      this.place(state);
+      return;
+    }
+    this.flyTo(state.target);
+    this.zoomTo(state.distance);
+  }
+
   /** Put the camera where a link says, relative to the body in focus. */
   place(state: GlobeCamera): void {
     this.#focusCamera = state;
@@ -261,6 +272,8 @@ export class CameraRig implements StagePart {
     controls.addEventListener('change', () => {
       this.#world.invalidate();
       const state = this.#relativeCamera();
+      // Where the camera really is (#581); a link's cam= says where it should be.
+      this.#container.dataset['distance'] = state.distance.toPrecision(3);
       for (const listener of this.#listeners) listener(state);
     });
   }

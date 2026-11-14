@@ -145,6 +145,30 @@ describe('the camera rig', () => {
     expect(Math.abs(facing.x)).toBeLessThan(1e-6);
   });
 
+  it('Given Back to an earlier view of Earth, Then the camera glides there and says so', () => {
+    const { rig, camera, controls, container } = setUp();
+    rig.place({ target: { latitude: 0, longitude: 0 }, distance: 1.5 });
+    rig.glideTo({ target: { latitude: 0, longitude: 90 }, distance: 3 });
+    // A glide, not a jump: the first frame has not arrived yet.
+    expect(camera.position.length()).toBeCloseTo(1.5);
+    settle(rig);
+    expect(camera.position.length()).toBeCloseTo(3);
+    expect(Math.abs(camera.position.clone().normalize().x)).toBeLessThan(1e-6);
+    controls.emit('change');
+    expect(container.dataset['distance']).toBe('3.00');
+  });
+
+  it('Given a camera around the Moon, When Back names another, Then it is placed at once', () => {
+    const { rig, camera } = setUp({ focus: 'moon' });
+    rig.place({ target: { latitude: 0, longitude: 0 }, distance: 4 });
+    rig.glideTo({ target: { latitude: 0, longitude: 0 }, distance: 6 });
+    const fromMoon = camera.position
+      .clone()
+      .sub(new Vector3(60, 0, 0))
+      .length();
+    expect(fromMoon).toBeCloseTo(6 * BODY_RADIUS.moon);
+  });
+
   it('Given a grab, Then an automatic flight stops where it is', () => {
     const { rig, camera, controls } = setUp();
     rig.place({ target: { latitude: 0, longitude: 0 }, distance: 3 });
