@@ -51,7 +51,7 @@ import {
 import { errorMessage } from '../../util/errors';
 
 /** What the ice ages ask of the rest of the page. */
-export interface IceAgesContext extends PartContext {
+export interface IceAgesContext extends Pick<PartContext, 'base' | 'fetchJson' | 'notify'> {
   readonly globe: Pick<Globe, 'addLayer' | 'setShelf' | 'setIce' | 'setSeaIce'>;
   /** Whether the reader is travelling through the years. */
   travelling(): boolean;
