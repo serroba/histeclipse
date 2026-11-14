@@ -390,7 +390,7 @@ export function createGlobe(
 
   return {
     // What each part answers as it is (#603).
-    ...delegate(rig, ['setInsets', 'setFocus', 'setViewpoint', 'flyTo', 'zoomTo', 'glideTo']),
+    ...delegate(rig, ['setInsets', 'setFocus', 'setViewpoint', 'flyTo', 'zoomTo']),
     ...delegate(picking, ['onBodyClick', 'onEmptyTap', 'onMarkerPick', 'onPlacePick']),
     ...delegate(maps, [
       'showPlanetView',
@@ -465,7 +465,7 @@ export function createGlobe(
       stage.invalidate();
     },
     setCamera(state) {
-      rig.place(state);
+      rig.glideTo(state);
     },
     onCameraChange(listener) {
       return rig.onChange(listener);

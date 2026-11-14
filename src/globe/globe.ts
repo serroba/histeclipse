@@ -133,9 +133,8 @@ export interface Globe {
   setInsets(insets: Partial<Readonly<{ top: number; bottom: number; right: number }>>): void;
   /** Turn the globe smoothly so `target` faces the camera, keeping the distance. */
   flyTo(target: GeoPoint): void;
-  setCamera(camera: GlobeCamera): void;
   /** Glide to `camera`, relative to the body in focus, as Back and Forward ask (#581). */
-  glideTo(camera: GlobeCamera): void;
+  setCamera(camera: GlobeCamera): void;
   /** Glide to `distance` from the body in focus, in its radii, keeping the direction. */
   zoomTo(distance: number): void;
   /** Play an impact at its place: the approach, the flash, the ring, the crater. */

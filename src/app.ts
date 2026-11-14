@@ -75,6 +75,7 @@ import { mountLayersPanel } from './features/layersPanel';
 import {
   createNotices,
   createPanels,
+  followHistory,
   keepCentred,
   listenForInput,
   openOverRegion,
@@ -778,12 +779,5 @@ export async function startApp(root: HTMLElement): Promise<void> {
   window.addEventListener('pagehide', () => {
     sync.flush();
   });
-  // Back and Forward: show the view the address bar now describes, without writing it again.
-  window.addEventListener('popstate', () => {
-    const before = store.get();
-    const restored = parseViewState(window.location.search, new Date()).state;
-    sync.adopt(restored);
-    store.set(() => restored);
-    if (restored.focus === before.focus) globe.glideTo(restored.camera); // #581
-  });
+  followHistory({ window, store, sync, globe });
 }
