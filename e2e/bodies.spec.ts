@@ -106,7 +106,7 @@ test('a link centred on the Moon opens there, and Earth is one click back', asyn
 });
 
 test(
-  'close to the Sun, SDO’s images show it in six kinds of light @acceptance',
+  'close to the Sun, SDO’s images show it in six kinds of light @acceptance @gpu-core',
   GPU,
   async ({ page }) => {
     // Seen from Earth's side on 8 May 2024: the antisolar direction in the Sun's frame.
@@ -220,7 +220,7 @@ test('close to the Sun, the caption says what the light shows; how it was made i
 });
 
 test(
-  'far out, the planets appear, and clicking one flies to it @acceptance',
+  'far out, the planets appear, and clicking one flies to it @acceptance @gpu-core',
   GPU,
   async ({ page }) => {
     const problems = collectProblems(page);

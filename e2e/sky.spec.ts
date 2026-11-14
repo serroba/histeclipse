@@ -44,7 +44,7 @@ test('the Sky button stands you where the globe is looking, and back again @acce
 });
 
 test(
-  'a night in 3000 BCE is full of stars, and the Sun hides them by day',
+  'a night in 3000 BCE is full of stars, and the Sun hides them by day @gpu-core',
   GPU,
   async ({ page }) => {
     await page.goto(BABYLON_NIGHT_3000_BCE);
@@ -120,7 +120,7 @@ test('from the central line in 2024 the Moon hides the whole Sun; farther north 
 });
 
 test(
-  'the Moon turns red in the umbra during a lunar eclipse @acceptance',
+  'the Moon turns red in the umbra during a lunar eclipse @acceptance @gpu-core',
   GPU,
   async ({ page }) => {
     await page.goto('./?mode=sky&t=2022-11-08T10:59&loc=40.7,-74');

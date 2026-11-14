@@ -93,7 +93,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: timings-ci-${{ matrix.shard }}
-          path: test-results/timings.*
+          path: test-results/timings*
           retention-days: 30
           if-no-files-found: warn
       - if: failure()
@@ -105,12 +105,11 @@ jobs:
             test-results/
           retention-days: 14
 
-  # A Mac's GPU limits differ from Linux's: a shader once passed here and drew a black globe there
-  # (#110). The tests tagged @gpu draw every shader once (the globe's, the sky's, the 3D stories'
-  # and the 3D charts'), so a shader that fails to compile on a Mac fails here; the whole suite
-  # runs on a Mac nightly (macos-nightly.yml). One worker fills the Mac runner.
+  # Actual Mac GPU checks: five production smoke cases, then scene factories mounted alone.
+  # Chapter completion is explicit, so testing shaders does not wait through whole narratives.
+  # The full production regression suite still runs on macOS nightly.
   e2e-macos-gpu:
-    name: End-to-end on macOS (desktop, every shader)
+    name: GPU on macOS (production smoke and scene components)
     runs-on: macos-latest
     timeout-minutes: 15
     steps:
@@ -130,13 +129,17 @@ jobs:
           path: public/models/*/onnx
           key: models-${{ hashFiles('models.lock.json') }}
       - run: pnpm exec playwright install chromium
-      - run: pnpm test:e2e --project=desktop --grep @gpu
+      - run: pnpm test:e2e --project=desktop --grep @gpu-core
+      - run: pnpm exec playwright test --config playwright.gpu.config.ts
+        env:
+          TIMING_REPORT_NAME: timings-components
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/gpu-components
       # Timings survive passing and failing runs; traces remain failure-only.
       - if: ${{ !cancelled() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: timings-ci-macos-gpu
-          path: test-results/timings.*
+          path: test-results/timings*
           retention-days: 30
           if-no-files-found: warn
       - if: failure()
