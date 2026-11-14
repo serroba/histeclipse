@@ -1,6 +1,6 @@
 /** Search by meaning: the model in the reader's browser, served from this site alone (#393). */
 
-import { collectProblems, expect, globeRendered, test } from './support';
+import { collectProblems, expect, globeRendered, LIVE_TELEMETRY_HOSTS, test } from './support';
 
 test('a reader asks a question in their own words and finds the record it means @acceptance', async ({
   page,
@@ -11,9 +11,11 @@ test('a reader asks a question in their own words and finds the record it means 
   const elsewhere: string[] = [];
   page.on('request', (request) => {
     const host = new URL(request.url()).host;
+    // The live site's telemetry goes elsewhere; the model and its runtime must not.
     if (
       baseURL !== undefined &&
       host !== new URL(baseURL).host &&
+      !LIVE_TELEMETRY_HOSTS.includes(host) &&
       !request.url().startsWith('data:')
     ) {
       elsewhere.push(request.url());

@@ -19,6 +19,15 @@ export const LIVE = { tag: '@live' };
 export const GPU = { tag: '@gpu' };
 export const LIVE_GPU = { tag: ['@live', '@gpu'] };
 
+/**
+ * What the live site sends elsewhere, and only the live site: telemetry to Honeycomb (stubbed
+ * below) and the analytics beacon Cloudflare's edge adds to the page. Nothing a feature needs.
+ */
+export const LIVE_TELEMETRY_HOSTS: readonly string[] = [
+  'api.honeycomb.io',
+  'static.cloudflareinsights.com',
+];
+
 export interface DisplayOptions {
   /** Frames per second the display gives, exactly; null for the browser's own. */
   readonly refreshRate: number | null;
