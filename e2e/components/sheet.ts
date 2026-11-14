@@ -25,6 +25,9 @@ const bar = createDeepTimeBar({
   onTemperatureShow: nothing,
   onSketch: nothing,
 });
+const period = bar.root.querySelector<HTMLElement>('.deep-period');
+if (period === null) throw new Error('The production bar has no period label');
+period.textContent = 'Pleistocene';
 const details = bar.root.querySelector<HTMLElement>('.deep-details');
 if (details === null) throw new Error('The production bar has no folding details');
 const content = document.createElement('div');

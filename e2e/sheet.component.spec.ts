@@ -25,10 +25,10 @@ test('the mounted sheet follows a finger and settles after slow drags and flicks
     await page.goto('http://127.0.0.1:4174/e2e/components/sheet.html');
     await expect(details).toBeHidden();
     await expect(page.locator('canvas')).toHaveCount(0);
-    const label = await bar.locator('.deep-label').boundingBox();
+    const label = await bar.getByTestId('deep-period').boundingBox();
     if (label === null) throw new Error('no label');
-    x = label.x + 20;
-    y = label.y + 10;
+    x = label.x + label.width / 2;
+    y = label.y + label.height / 2;
   });
   await test.step('When a finger drags the bar up a little, and holds', async () => {
     const finger = await press(page, x, y);
@@ -53,9 +53,9 @@ test('the mounted sheet follows a finger and settles after slow drags and flicks
     await expect(details).toBeVisible();
   });
   await test.step('When a quick flick goes down, not far', async () => {
-    const label = await bar.locator('.deep-label').boundingBox();
+    const label = await bar.getByTestId('deep-period').boundingBox();
     if (label === null) throw new Error('no label');
-    await swipe(page, label.x + 20, label.y + 10, 80, 2);
+    await swipe(page, label.x + label.width / 2, label.y + label.height / 2, 80, 2);
   });
   await test.step('Then they fold, the way the flick went', async () => {
     await expect(bar).toHaveAttribute('data-sheet', 'folded');
