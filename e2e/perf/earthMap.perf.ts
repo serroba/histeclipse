@@ -123,6 +123,7 @@ test('Earth intermediate map: 8192 versus 4096 with the same close-up tiles', as
               '0/0/0',
             );
           const png = await canvas.screenshot();
+          writeFileSync(`${output}/${String(width)}-${String(distance)}.png`, png);
           screenshots.set(`${String(width)}-${String(distance)}`, png.toString('base64'));
           await info.attach(`${String(width)}-${String(distance)}`, {
             body: png,
@@ -146,6 +147,10 @@ test('Earth intermediate map: 8192 versus 4096 with the same close-up tiles', as
       page,
       screenshots.get(`8192-${String(distance)}`) ?? '',
       screenshots.get(`4096-${String(distance)}`) ?? '',
+    );
+    writeFileSync(
+      `${output}/difference-x4-${String(distance)}.png`,
+      Buffer.from(difference.differencePng, 'base64'),
     );
     await info.attach(`difference-x4-${String(distance)}`, {
       body: Buffer.from(difference.differencePng, 'base64'),
