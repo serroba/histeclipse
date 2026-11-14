@@ -48,6 +48,8 @@ const PLACED = [
   'loc',
   'look',
   'sel',
+  // The mission followed (#712): another passage's place leaves it.
+  'mission',
   'ma',
   'scale',
   'why',
