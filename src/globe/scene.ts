@@ -192,7 +192,6 @@ export function createGlobe(
       planets,
       moons: moonSystems,
       anisotropy: renderer.capabilities.getMaxAnisotropy(),
-      load: (url) => new TextureLoader().loadAsync(url),
       invalidate: () => {
         stage.invalidate();
       },
