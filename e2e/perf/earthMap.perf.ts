@@ -32,8 +32,22 @@ function uploadProbe(): void {
   }
 }
 
-async function ready(page: Page): Promise<void> {
+async function ready(page: Page, width: number): Promise<void> {
   await expect(page.getByTestId('globe')).toHaveAttribute('data-sharp', 'earth');
+  // A map can finish fetching after a long quiet interval, with its first draw still queued.
+  await expect
+    .poll(
+      () =>
+        page.evaluate(
+          (wanted) =>
+            (Reflect.get(window, '__mapUploads') as Upload[]).some(
+              (upload) => upload.width === wanted,
+            ),
+          width,
+        ),
+      { timeout: 30_000, message: 'the selected map has actually reached WebGL' },
+    )
+    .toBe(true);
   expect(await untilQuiet(page, 30_000), 'maps, camera and tiles settle').toBe(true);
 }
 
@@ -110,13 +124,13 @@ test('Earth intermediate map: 8192 versus 4096 with the same close-up tiles', as
       const problems: string[] = [];
       page.on('pageerror', (error) => problems.push(error.message));
       await page.goto('/?t=2024-04-08T12:00Z&cam=30,31,2.4');
-      await ready(page);
+      await ready(page, width);
       const uploads = await page.evaluate(() => Reflect.get(window, '__mapUploads') as Upload[]);
       const canvas = page.getByTestId('globe').locator('canvas').first();
       if (repeat === 0) {
         for (const distance of [2.4, 1.6, 1.3, 1.008]) {
           await page.goto(`/?t=2024-04-08T12:00Z&cam=30,31,${String(distance)}`);
-          await ready(page);
+          await ready(page, width);
           if (distance < 1.5)
             await expect(page.getByTestId('globe')).not.toHaveAttribute(
               'data-earth-tiles',
