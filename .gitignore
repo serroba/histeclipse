@@ -16,8 +16,9 @@ __pycache__/
 test-results/
 playwright-report/
 
-# Downloaded ephemeris excerpts (hundreds of MB)
-.cache/
+# Downloaded sources, each checkout its own (hundreds of MB). No trailing slash: a link named
+# .cache is ignored too, not only a folder (#708).
+.cache
 
 # Local env files (e.g. VITE_HONEYCOMB_INGEST_KEY in .env.local)
 *.local
