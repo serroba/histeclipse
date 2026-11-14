@@ -7,6 +7,7 @@ import { defaultViewState, withLayer, type ViewState } from '../../state/viewSta
 import type { MarkerCardContent } from '../../ui/markerCard';
 import type { FeatureContext } from '../feature';
 import { spacecraftFeature } from '.';
+import { landingSites } from './landingSites';
 import { missionRoutes } from './routeLines';
 
 const AU = 149_597_870.7;
@@ -20,6 +21,7 @@ const on: ViewState = { ...off, layers: withLayer(off.layers, 'spacecraft', true
 function fakeContext(options: { readonly planetsLoaded: boolean; readonly failing?: boolean }) {
   const drawn: unknown[] = [];
   const routes: unknown[] = [];
+  const sites: unknown[] = [];
   const cards: MarkerCardContent[] = [];
   const rail: [boolean, boolean][] = [];
   const planets = { position: () => [0, AU, 0] } as unknown as PlanetEphemeris;
@@ -36,7 +38,10 @@ function fakeContext(options: { readonly planetsLoaded: boolean; readonly failin
           ),
     globe: {
       addLayer: (factory: unknown) => ({
-        update: (input: unknown) => (factory === missionRoutes ? routes : drawn).push(input),
+        update: (input: unknown) =>
+          (factory === missionRoutes ? routes : factory === landingSites ? sites : drawn).push(
+            input,
+          ),
       }),
     },
     zoomRail: {
@@ -49,7 +54,7 @@ function fakeContext(options: { readonly planetsLoaded: boolean; readonly failin
     moon: () => null,
     refresh,
   } as unknown as FeatureContext;
-  return { context, drawn, routes, cards, rail, refresh, notify, loadPlanets };
+  return { context, drawn, routes, sites, cards, rail, refresh, notify, loadPlanets };
 }
 
 describe('the spacecraft as a feature', () => {
@@ -133,5 +138,28 @@ describe('the spacecraft as a feature', () => {
     // Every craft again, without routes.
     craft.show?.(on, landingDay);
     expect(routes.at(-1)).toBeNull();
+  });
+
+  it('Given the Moon in view after Apollo 11 landed, Then Eagle is marked on it, and no craft is drawn at its centre (#716)', async () => {
+    const { context, drawn, sites, refresh } = fakeContext({ planetsLoaded: true });
+    const craft = spacecraftFeature.mount(context);
+    const onMoon: ViewState = { ...on, focus: 'moon' };
+    const afterLanding = 2440424; // 21 July 1969, 12:00 UT
+    craft.show?.(onMoon, afterLanding);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    context.moon = () => ({ position: () => [384_400, 0, 0] }) as never;
+    craft.show?.(onMoon, afterLanding);
+    const flying = drawn.at(-1) as readonly { at: string | null }[];
+    expect(flying.some(({ at }) => at === 'Luna')).toBe(false);
+    const marked = sites.at(-1) as { body: string; sites: readonly { id: string }[] };
+    expect(marked.body).toBe('moon');
+    expect(marked.sites.some(({ id }) => id === 'D00274')).toBe(true);
+    // From afar, craft at the Moon are drawn there again.
+    craft.show?.(on, afterLanding);
+    expect((drawn.at(-1) as readonly { at: string | null }[]).some(({ at }) => at === 'Luna')).toBe(
+      true,
+    );
   });
 });

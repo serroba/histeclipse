@@ -3,7 +3,8 @@
  * record and Horizons's paths loaded the first time it is on, each craft's approximate path
  * worked out once, as it flies; each drawn where it was at the moment shown, named, a tap on a
  * name opening its card. With a mission named (#712), only its craft, each with its whole route,
- * a mission about Earth drawn about Earth as it was at each moment.
+ * a mission about Earth drawn about Earth as it was at each moment. Close up on a world, its
+ * landers are marked where they came down, and craft at it are not drawn at its centre (#716).
  */
 
 import { PLANETS } from '../../astro/planets';
@@ -26,6 +27,7 @@ import {
   type CraftWheres,
 } from './craftNow';
 import { today } from './programs';
+import { bodyOfWorld, landedOn, landingSites } from './landingSites';
 import { missionRoutes } from './routeLines';
 
 export { mountLaunches } from './launches';
@@ -66,6 +68,7 @@ export const spacecraftFeature: Feature = {
   mount(context) {
     const drawn = context.globe.addLayer(craftInFlight);
     const routes = context.globe.addLayer(missionRoutes);
+    const sites = context.globe.addLayer(landingSites);
     // Kept from frame to frame: the trails ask for the same places as the time plays (#702).
     const where = remembered(geocentric(context));
     let loaded: {
@@ -82,6 +85,7 @@ export const spacecraftFeature: Feature = {
         if (!offered || !state.layers.has('spacecraft')) {
           drawn.update(null);
           routes.update(null);
+          sites.update(null);
           return;
         }
         if (context.planets() === null) context.loadPlanets();
@@ -110,8 +114,15 @@ export const spacecraftFeature: Feature = {
         const mission =
           state.mission === null ? null : missionNamed(loaded.missions, state.mission);
         const shown = shownAt(loaded, where, mission, jdTT);
-        drawn.update(shown.craft);
+        // Not at the centre of the body in view: close up, its landers are marked on it (#716).
+        drawn.update(
+          shown.craft.filter(({ at }) => at === null || bodyOfWorld(at) !== state.focus),
+        );
         routes.update(shown.routes);
+        sites.update({
+          body: state.focus,
+          sites: landedOn(mission?.craft ?? loaded.craft, state.focus, jdTT),
+        });
       },
       pick(id) {
         const craft = loaded?.craft.find((each) => each.id === id);

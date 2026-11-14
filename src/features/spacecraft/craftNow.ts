@@ -176,7 +176,8 @@ export function craftRoutes(
   }));
 }
 
-/** Where a craft had just been, newest first, back along its path from where it is now. */
+/** Where a craft had just been, newest first, back along its path from where it is now; none
+ * while it is at a world. */
 function trailOf(
   craft: Craft,
   where: CraftWhere,
@@ -185,6 +186,9 @@ function trailOf(
   jdTT: number,
   aboutEarth: boolean,
 ): Vec3[] {
+  // At a world (in orbit, landed) it is there: a trail would be the world's own path, placed
+  // among the planets as seen from Earth now, a stray line across space close up (#716).
+  if ('at' in where) return [];
   const near = 'centre' in where && where.centre === 'Earth';
   const step = (near ? TRAIL_DAYS_NEAR : TRAIL_DAYS_FAR) / TRAIL_POINTS;
   const trail: Vec3[] = [];
