@@ -179,6 +179,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The Layers panel (#451): what each layer says and offers, as the parts have it now.
   const layersPanel = mountLayersPanel({
     ...partContext,
+    travelling: () => years.travelling(),
     goToSpan: (span) => {
       deepTime.goToSpan(span);
     },

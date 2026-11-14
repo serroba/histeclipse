@@ -28,6 +28,8 @@ export interface LayersPanelContext extends PartContext {
   said(): Iterable<readonly [Layer, string | null]>;
   /** What each layer offers, if anything. */
   actions(): Iterable<readonly [Layer, LayerAction | null]>;
+  /** Whether the travel view is on. */
+  travelling(): boolean;
 }
 
 export interface LayersPanelPart {
@@ -75,6 +77,7 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
         visible: state.mode === 'globe' && !awayFromEarth(state),
         said: present(context.said()),
         actions: present(context.actions()),
+        travelling: context.travelling(),
       });
     },
   };

@@ -119,8 +119,24 @@ test('travelling lights the whole globe and rests the markers, which return with
       'Turn on States and empires in Layers to watch them come and go.',
     );
   });
+  await test.step('And Layers says the year’s ice and sea come with the travel view, not a layer (#665)', async () => {
+    await openLayers(page);
+    await expect(page.getByTestId('layers-travel')).toHaveText(
+      'Travel view draws the year’s ice and sea level itself, whatever layers are on. Travel view ✕ takes them away.',
+    );
+    await page
+      .getByRole('dialog', { name: 'Layers' })
+      .getByRole('button', { name: 'Close' })
+      .click();
+  });
   await test.step('When they close it, night, the craters and their own layers come back', async () => {
     await bar.getByRole('button', { name: 'Leave the travel view' }).click();
+    await openLayers(page);
+    await expect(page.getByTestId('layers-travel')).toBeHidden();
+    await page
+      .getByRole('dialog', { name: 'Layers' })
+      .getByRole('button', { name: 'Close' })
+      .click();
     await expect(globe).toHaveAttribute('data-light', 'sun');
     await expect(globe).toHaveAttribute('data-impacts', /^[1-9]\d*$/);
     await expect(page).not.toHaveURL(/layers=[a-z,]*empires/);
@@ -283,7 +299,7 @@ test('travelling shows the ice sheets and the sea level of the year, and they go
     await expect(globe).toHaveAttribute('data-ice', /icesheets\/(7500|10000)\.png/);
     await expect(globe).toHaveAttribute('data-sea-level', /^-\d+\.\d$/);
     await expect(page.getByTestId('history-earth')).toHaveText(
-      /^Sea level \d+ m below today’s \(.+\); shelf it left bare is tinted sand\. Ice sheets: PaleoMIST/,
+      /^Sea level \d+ m below today’s \(.+\); shelf it left bare is tinted sand\. White: ice of the year where today has none \(PaleoMIST/,
     );
   });
   await test.step('When they close it, today’s Earth is back', async () => {

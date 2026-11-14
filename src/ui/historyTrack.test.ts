@@ -36,7 +36,7 @@ describe('earthText', () => {
     expect(
       earthText({ seaLevel: -35.4, series: series('Bintanja & van de Wal 2008'), instead: null }),
     ).toBe(
-      'Sea level 35 m below today’s (Bintanja & van de Wal 2008); shelf it left bare is tinted sand. Ice sheets: PaleoMIST (Gowan et al. 2021).',
+      'Sea level 35 m below today’s (Bintanja & van de Wal 2008); shelf it left bare is tinted sand. White: ice of the year where today has none (PaleoMIST, Gowan et al. 2021); today’s glaciers are in the photo.',
     );
     expect(earthText({ seaLevel: 0.2, series: series('A'), instead: null })).toContain(
       'Sea level about today’s (A);',
