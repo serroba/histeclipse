@@ -94,4 +94,14 @@ describe('what is written about here', () => {
     expect(found).toHaveLength(3);
     expect(found.every((n) => n.passage.kind !== 'why')).toBe(true);
   });
+
+  it('Given the Sun in the years craft flew, Then no mission crowds in: they are found by search (#712)', () => {
+    const found = nearby(passages, {
+      body: 'sun',
+      target: { latitude: 0, longitude: 0 },
+      distance: 2000,
+      year: 1980,
+    });
+    expect(found.filter(({ passage }) => passage.kind === 'mission')).toEqual([]);
+  });
 });

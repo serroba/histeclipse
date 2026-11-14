@@ -35,6 +35,21 @@ describe('anchors as links', () => {
     expect([...state.layers].sort()).toEqual(['eclipses', 'empires']);
   });
 
+  it('Given a reader following a mission, When another passage opens, Then the mission is let go; a mission’s own, followed (#712)', () => {
+    const following = 'mode=globe&focus=sun&layers=spacecraft&mission=d00574';
+    const moon = parseViewState(anchorQuery({ body: 'io', view: 'focus=io' }, following), NOW);
+    expect(moon.state.mission).toBeNull();
+    expect(moon.state.layers.has('spacecraft')).toBe(true);
+    const apollo = parseViewState(
+      anchorQuery(
+        { body: 'earth', view: 'focus=earth&layers=spacecraft&mission=d00273' },
+        following,
+      ),
+      NOW,
+    );
+    expect(apollo.state.mission).toBe('d00273');
+  });
+
   it('Given an anchor with no moment of its own, Then the reader’s moment stays', () => {
     const { state } = parseViewState(anchorQuery({ body: 'io', view: 'focus=io' }, reader), NOW);
     expect(state.focus).toBe('io');
