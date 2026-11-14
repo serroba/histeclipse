@@ -50,7 +50,7 @@ describe('where craft came down (#716)', () => {
 });
 
 /** A globe with the Moon at the scene's origin, a camera `distance` out along +X. */
-function moonHost(distance: number) {
+function moonHost(distance: number, focus = 'moon', drawn = true) {
   const container = document.createElement('div');
   Object.defineProperty(container, 'clientWidth', { value: 800 });
   Object.defineProperty(container, 'clientHeight', { value: 600 });
@@ -63,12 +63,12 @@ function moonHost(distance: number) {
   const host = {
     container,
     camera,
-    focus: () => 'moon',
+    focus: () => focus,
     bodyFrame: () => ({
       position: new Vector3(),
       rotation: new Quaternion(),
       radius: MOON_RADIUS_EARTH_RADII,
-      shown: true,
+      shown: drawn,
     }),
     pickable,
     requestRender: vi.fn(),
@@ -122,5 +122,65 @@ describe('the landing sites on the body in view', () => {
     expect(
       container.querySelector<HTMLElement>('[data-testid="landing-sites"]')?.dataset['marked'],
     ).toBe('0');
+  });
+
+  it('Given two sites where their names would cross, Then the first keeps its name', () => {
+    const { host, container, render } = moonHost(MOON_RADIUS_EARTH_RADII * 3);
+    landingSites(host).update({
+      body: 'moon',
+      sites: [near, { id: 'D3', name: 'Beside it', latitude: 0.1, longitude: 0.1 }],
+    });
+    render();
+    const shown = [...container.querySelectorAll<HTMLElement>('.landing-site')].map(
+      (mark) => mark.hidden,
+    );
+    // happy-dom lays nothing out, so every name is as wide as nothing: they still meet.
+    expect(shown).toEqual([false, true]);
+  });
+
+  it('Given a site off the edge of the view, another body in view, or the Moon not drawn, Then it is not named', () => {
+    const edge = { id: 'D4', name: 'Limb', latitude: 0, longitude: 80 };
+    const close = moonHost(MOON_RADIUS_EARTH_RADII * 1.2);
+    landingSites(close.host).update({ body: 'moon', sites: [edge] });
+    close.render();
+    expect(close.container.querySelector<HTMLElement>('.landing-site')?.hidden).toBe(true);
+    for (const other of [
+      moonHost(MOON_RADIUS_EARTH_RADII * 3, 'mars'),
+      moonHost(MOON_RADIUS_EARTH_RADII * 3, 'moon', false),
+    ]) {
+      landingSites(other.host).update({ body: 'moon', sites: [near] });
+      other.render();
+      expect(other.container.querySelector<HTMLElement>('.landing-site')?.hidden).toBe(true);
+    }
+  });
+
+  it('Given the same sites again, Then they are kept; nothing twice, nothing again', () => {
+    const { host, container, render } = moonHost(MOON_RADIUS_EARTH_RADII * 3);
+    const layer = landingSites(host);
+    render();
+    layer.update({ body: 'moon', sites: [near] });
+    const first = container.querySelector('.landing-site');
+    layer.update({ body: 'moon', sites: [near] });
+    expect(container.querySelector('.landing-site')).toBe(first);
+    layer.update(null);
+    layer.update(null);
+    render();
+    expect(container.querySelectorAll('.landing-site')).toHaveLength(0);
+  });
+});
+
+describe('landers with gaps in their record', () => {
+  it('Given a lander with no date of landing, Then it counts from its launch', () => {
+    const [probe] = craft;
+    if (probe === undefined) throw new Error('no craft');
+    const undated = {
+      ...probe,
+      id: 'D99',
+      part: false,
+      launch: '1970-01-01',
+      landing: { world: 'Luna', lat: 1, lon: 2, date: null, site: '-' },
+    };
+    expect(landedOn([undated], 'moon', gcatJd('1969-12-31'))).toEqual([]);
+    expect(landedOn([undated], 'moon', gcatJd('1970-01-02'))).toHaveLength(1);
   });
 });

@@ -46,7 +46,8 @@ export function landedOn(craft: readonly Craft[], body: string, jdUT: number): L
       return [];
     }
     if (bodyOfWorld(landing.world) !== body) return [];
-    if (gcatJd(landing.date ?? each.launch) > jdUT) return [];
+    const landed = gcatJd(landing.date ?? each.launch);
+    if (landed > jdUT) return [];
     // GCAT writes some longitudes from 0 to 360°, or west past −180°.
     const longitude =
       Math.abs(landing.lon) <= 180
@@ -62,7 +63,7 @@ export function landedOn(craft: readonly Craft[], body: string, jdUT: number): L
         name,
         latitude: landing.lat,
         longitude,
-        jd: gcatJd(landing.date ?? each.launch),
+        jd: landed,
       },
     ];
   });
@@ -106,27 +107,27 @@ function clear(box: Box, placed: readonly Box[]): boolean {
  * every one measured while unseen, in one layout, then hidden until placed.
  */
 function siteMarks(layer: HTMLElement, sites: readonly LandingSite[], radius: number) {
-  const elements = sites.map(({ id, name }) => {
+  const marks = sites.map(({ id, name, latitude, longitude }) => {
     const element = document.createElement('button');
     element.type = 'button';
     element.className = 'landing-site';
     element.dataset['pick'] = `craft:${id}`;
     element.textContent = name;
     element.style.visibility = 'hidden';
-    return element;
-  });
-  layer.replaceChildren(...elements);
-  const widths = elements.map((element) => element.offsetWidth);
-  return sites.map(({ latitude, longitude }, index) => {
-    const element = elements[index] ?? document.createElement('button');
-    element.hidden = true;
-    element.style.visibility = '';
     return {
       element,
-      width: widths[index] ?? 0,
+      width: 0,
       position: new Vector3(...geoToVector({ latitude, longitude }, radius)),
     };
   });
+  layer.replaceChildren(...marks.map(({ element }) => element));
+  // Every width read, then every mark hidden: one layout for the lot.
+  for (const mark of marks) mark.width = mark.element.offsetWidth;
+  for (const { element } of marks) {
+    element.hidden = true;
+    element.style.visibility = '';
+  }
+  return marks;
 }
 
 export const landingSites: LayerFactory<SitesShown | null> = (host) => {
