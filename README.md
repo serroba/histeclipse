@@ -121,3 +121,5 @@ Positions come from [JPL DE441](https://ssd.jpl.nasa.gov/planets/eph_export.html
 ## License
 
 [MIT](LICENSE)
+
+<!-- Temporary CI documentation-scope probe; this PR will not be merged. -->
