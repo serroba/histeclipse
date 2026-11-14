@@ -72,6 +72,8 @@ export function createMilestonePanel(handlers: { onMa(ma: number): void }): Mile
 
   let ma = 0;
   let oldest = Infinity;
+  // The milestones whose cards are shown, by id; null before the first render.
+  let shownIds: string | null = null;
   earlier.addEventListener('click', () => {
     const milestone = nextMilestone(ma, 1, oldest);
     if (milestone !== null) handlers.onMa(anchorMa(milestone));
@@ -89,6 +91,11 @@ export function createMilestonePanel(handlers: { onMa(ma: number): void }): Mile
       earlier.disabled = nextMilestone(ma, 1, oldest) === null;
       later.disabled = nextMilestone(ma, -1, oldest) === null;
       const near = milestonesNear(ma, NEAR_SHARE * oldest);
+      // As deep time plays the same milestones stay near for many frames: build their cards
+      // only when the set changes (#670).
+      const ids = near.map(({ id }) => id).join(' ');
+      if (ids === shownIds) return;
+      shownIds = ids;
       summary.textContent =
         near.length === 0
           ? 'Milestones: none near here'

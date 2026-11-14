@@ -4,17 +4,20 @@
  * draw, and faint where the record does not reach. Its words are for screen readers and the
  * tooltip; the deep-time notes say the same at the moment shown.
  *
- * DOM glue, covered by the Playwright suite; the spans are worked out in `deepTime/earthState`.
+ * DOM glue, covered by the Playwright suite; the spans are worked out in `deepTime/earthState`,
+ * once per scale and span shown: they do not depend on the moment, which changes every frame as
+ * deep time plays (#670).
  */
 
-import type { PolaritySpan } from '../deepTime/earthState';
+import type { PolarityScale } from '../data/polarity';
+import { polaritySpans, type PolaritySpan } from '../deepTime/earthState';
 import { element } from './dom';
 import './polarityStrip.css';
 
 export interface PolarityStrip {
   readonly root: HTMLElement;
-  /** Draw the spans along a slider from `oldest` Ma (at the left) to today. */
-  render(spans: readonly PolaritySpan[], oldest: number): void;
+  /** Draw the field's spans, from `scale` where it has loaded, from `oldest` Ma to today. */
+  render(scale: PolarityScale | null, oldest: number): void;
 }
 
 const WORDS: Readonly<Record<PolaritySpan['polarity'], string>> = {
@@ -43,13 +46,16 @@ export function createPolarityStrip(): PolarityStrip {
     ),
     bar,
   );
-  let drawn = '';
+  // The scale and span last drawn.
+  let drawnScale: PolarityScale | null = null;
+  let drawnSpan = Number.NaN;
   return {
     root,
-    render(spans, oldest) {
-      const key = `${String(oldest)}:${String(spans.length)}`;
-      if (key === drawn) return;
-      drawn = key;
+    render(scale, oldest) {
+      if (scale === drawnScale && oldest === drawnSpan) return;
+      drawnScale = scale;
+      drawnSpan = oldest;
+      const spans = polaritySpans(scale, oldest);
       bar.replaceChildren(
         ...spans.map(({ young, old, polarity }) => {
           const span = element('span', {
