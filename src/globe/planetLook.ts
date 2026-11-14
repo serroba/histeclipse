@@ -363,11 +363,10 @@ export function pickedView(views: readonly PlanetView[], key: string): PlanetVie
   return views.find((view) => view.key === key) ?? elementAt(views, 0);
 }
 
-/** Earth's and the Moon's maps fetched only close up (#258): Earth's in two sizes, the larger
- * for screens whose graphics allow it, the smaller for phones. */
+/** Close-up maps (#258): cap Earth's intermediate map at 4096; tiles supply finer detail (#689). */
 export const SHARP_MAPS = {
   earth: {
-    large: 'textures/earth-blue-marble-8192.jpg',
+    large: 'textures/earth-blue-marble-4096.jpg',
     small: 'textures/earth-blue-marble-4096.jpg',
   },
   moon: { large: 'textures/moon-lroc-4096.jpg', small: 'textures/moon-lroc-4096.jpg' },
