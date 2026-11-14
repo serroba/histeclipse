@@ -15,7 +15,9 @@ import { errorMessage } from '../../util/errors';
 import type { Feature, FeatureContext } from '../feature';
 import type { Geocentric } from './approximatePaths';
 import { craftInFlight } from './craftLayer';
-import { craftNow, craftWheres, type CraftWheres } from './craftNow';
+import { craftNow, craftWheres, remembered, type CraftWheres } from './craftNow';
+
+export { mountLaunches } from './launches';
 
 /** Where the Sun, the Moon and the planets are from Earth's centre, for the craft. */
 function geocentric(context: FeatureContext): Geocentric {
@@ -35,7 +37,8 @@ export const spacecraftFeature: Feature = {
   watches: (state) => [state.layers],
   mount(context) {
     const drawn = context.globe.addLayer(craftInFlight);
-    const where = geocentric(context);
+    // Kept from frame to frame: the trails ask for the same places as the time plays (#702).
+    const where = remembered(geocentric(context));
     let loaded: { readonly record: Spacecraft; readonly wheres: CraftWheres } | null = null;
     let asked = false;
 

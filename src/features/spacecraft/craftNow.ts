@@ -98,6 +98,38 @@ export function inFlight(craft: Craft, jdTT: number): boolean {
   return gcatJd(first[1]) <= jdTT && (last[2] === null || jdTT < gcatJd(last[2]));
 }
 
+/** Most places kept by `remembered`: a few seconds' play of trails, at any pace. */
+const MOST_REMEMBERED = 4096;
+
+/**
+ * Where the bodies are, each body at each moment worked out once and kept (#702): the craft's
+ * trails reach back to the same moments, on a grid of days, so a hundred craft in flight, frame
+ * after frame, ask for only a few new places. A place not yet known (the planets still loading)
+ * is asked again; past the most kept, all are let go and kept anew.
+ */
+export function remembered(geocentric: Geocentric, most = MOST_REMEMBERED): Geocentric {
+  const known = new Map<string, Vec3>();
+  return (body, jdTT) => {
+    const key = `${body} ${String(jdTT)}`;
+    const kept = known.get(key);
+    if (kept !== undefined) return kept;
+    const where = geocentric(body, jdTT);
+    if (where === null) return null;
+    if (known.size >= most) known.clear();
+    known.set(key, where);
+    return where;
+  };
+}
+
+/**
+ * The moments a trail reaches back to from `jdTT`, newest first: on a grid of whole steps, so
+ * they are the same moments frame after frame, and the bodies' places at them are kept.
+ */
+export function trailMoments(jdTT: number, step: number): readonly number[] {
+  const newest = Math.ceil(jdTT / step) - 1;
+  return Array.from({ length: TRAIL_POINTS }, (_, k) => (newest - k) * step);
+}
+
 /** The craft in flight at a moment, where each is, and where each had just been. */
 export function craftNow(
   craft: readonly Craft[],
@@ -115,8 +147,7 @@ export function craftNow(
     const near = 'centre' in where && where.centre === 'Earth';
     const step = (near ? TRAIL_DAYS_NEAR : TRAIL_DAYS_FAR) / TRAIL_POINTS;
     const trail: Vec3[] = [];
-    for (let k = 1; k <= TRAIL_POINTS; k += 1) {
-      const then = jdTT - k * step;
+    for (const then of trailMoments(jdTT, step)) {
       const before = wheres.where(each, then);
       const point = before === null ? null : fromEarth(before, then, geocentric, jdTT);
       if (point === null) break;

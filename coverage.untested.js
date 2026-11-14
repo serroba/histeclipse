@@ -28,7 +28,6 @@ export const UNTESTED = [
   'src/features/boundaries/index.ts',
   'src/features/carbonMade/carbonMadeCard.ts',
   'src/features/carbonMade/index.ts',
-  'src/features/cycle/cycleTrack.ts',
   'src/features/cycle/index.ts',
   'src/features/dates/index.ts',
   'src/features/deepSurfaces/index.ts',

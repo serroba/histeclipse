@@ -9,6 +9,8 @@ import type { GlobeCamera, ViewState } from '../../state/viewState';
 function setUp(opened: ViewState) {
   const store = createStore(opened);
   const listeners: (() => void)[] = [];
+  const leaving: (() => void)[] = [];
+  let flushed = 0;
   const location = { search: '' };
   const adopted: ViewState[] = [];
   const glided: GlobeCamera[] = [];
@@ -17,17 +19,27 @@ function setUp(opened: ViewState) {
       location,
       addEventListener: (type: string, listener: () => void) => {
         if (type === 'popstate') listeners.push(listener);
+        if (type === 'pagehide') leaving.push(listener);
       },
     } as never,
     store,
-    sync: { adopt: (state) => adopted.push(state) },
+    sync: {
+      adopt: (state) => adopted.push(state),
+      flush: () => {
+        flushed += 1;
+      },
+    },
     globe: { setCamera: (camera) => glided.push(camera) },
   });
   const back = (state: ViewState) => {
     location.search = `?${serializeViewState(state)}`;
     for (const listener of listeners) listener();
   };
-  return { store, adopted, glided, back };
+  const leave = () => {
+    for (const listener of leaving) listener();
+    return flushed;
+  };
+  return { store, adopted, glided, back, leave };
 }
 
 describe('Back and Forward', () => {
@@ -55,5 +67,10 @@ describe('Back and Forward', () => {
     order.push(`camera ${String(glided.at(-1)?.distance)}`);
     expect(store.get().focus).toBe('moon');
     expect(order).toEqual(['focus moon', 'camera 2']);
+  });
+
+  it('Given the page going away, Then the view it was left at is written', () => {
+    const { leave } = setUp(opened);
+    expect(leave()).toBe(1);
   });
 });

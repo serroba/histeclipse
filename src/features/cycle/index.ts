@@ -17,9 +17,25 @@ import {
   type JulianDay,
 } from '../../time/julianDay';
 import { astronomicalYear, formatYear } from '../../time/year';
-import { createCycleTrack, type CycleMoment, type CycleSpeed } from './cycleTrack';
+import { createDayTrack, type DayMoment, type DayView } from '../../ui/dayTrack';
 import type { PartContext } from '../part';
 import { cycleBody } from './body';
+import type { CycleMark } from '../../astro/planetCycle';
+
+/** Hours a second the cycle can play at: an hour or six for the moons, a day or more for the
+ * planets. */
+const CYCLE_SPEEDS = [1, 6, 24, 120, 240, 720] as const;
+
+/** Each moment's words, and what it means. */
+const MARK_WORDS: Readonly<Record<CycleMark, readonly [string, string]>> = {
+  behind: ['Behind the Sun', 'Conjunction: beyond the Sun, lost in its glare'],
+  opposite: ['Opposite the Sun', 'Opposition: near its closest and brightest, up all night'],
+  between: ['Between us and the Sun', 'Inferior conjunction: closest, its dark side towards us'],
+  evening: ['Best in the evening', 'Greatest elongation east of the Sun: highest after sunset'],
+  morning: ['Best in the morning', 'Greatest elongation west of the Sun: highest before sunrise'],
+  perihelion: ['Earth nearest the Sun', 'Perihelion: the Sun looks its largest'],
+  aphelion: ['Earth farthest from the Sun', 'Aphelion: the Sun looks its smallest'],
+};
 
 /** What the cycle asks of the rest of the page. */
 export interface CycleContext extends PartContext {
@@ -30,9 +46,9 @@ export interface CycleContext extends PartContext {
   moment(): JulianDay | null;
   /** Universal Time at a moment in Terrestrial Time. */
   universalTime(jdTT: JulianDay): JulianDay;
-  /** The years' own track gives way while a cycle, or an eclipse's player, runs the time. */
-  hideHistory(hidden: boolean): void;
-  stopHistory(): void;
+  /** The years' own track, and its speed beside the date: they give way while a cycle, or an
+   * eclipse's player, runs the time, and stop playing. */
+  readonly history: { readonly root: HTMLElement; readonly extras: HTMLElement; stop(): void };
 }
 
 export interface CyclePart {
@@ -50,29 +66,60 @@ function cycleDate(jd: JulianDay): string {
   return `${shortDate('western', jd)} ${formatYear(astronomicalYear(year))}`;
 }
 
+/** What the track shows of a body's cycle, at `jd` (UT). */
+function cycleView(
+  body: PlanetName | 'sun',
+  moments: readonly DayMoment[],
+  jd: number,
+  playing: boolean,
+  speed: number,
+): DayView {
+  const planet = body === 'sun' ? null : PLANET_NAMES[body];
+  return {
+    title:
+      planet === null ? 'Earth’s year around the Sun' : `${planet}’s cycle, as seen from Earth`,
+    slider: planet === null ? 'Day in Earth’s year' : `Day in ${planet}’s cycle`,
+    jd,
+    first: moments[0]?.jd ?? jd,
+    last: moments.at(-1)?.jd ?? jd,
+    moments,
+    since: (moments[0]?.name ?? 'the cycle’s start').toLowerCase(),
+    playing,
+    speed,
+  };
+}
+
 export function mountCycle(context: CycleContext): CyclePart {
   const { store } = context;
-  const track = createCycleTrack({
-    onDay(jd) {
-      stop();
-      setMoment(jd);
+  const track = createDayTrack(
+    {
+      className: 'cycle-track',
+      speeds: CYCLE_SPEEDS,
+      play: 'Play the cycle',
+      stop: 'Stop the cycle',
     },
-    onPlay(play) {
-      if (play) start();
-      else stop();
+    {
+      onDay(jd) {
+        stop();
+        setMoment(jd);
+      },
+      onPlay(play) {
+        if (play) start();
+        else stop();
+      },
+      onSpeed(next) {
+        speed = next;
+        show(store.get());
+      },
     },
-    onSpeed(next) {
-      speed = next;
-      show(store.get());
-    },
-  });
+  );
   let cycle: {
     readonly body: PlanetName | 'sun';
     readonly at: BodyCycle;
-    readonly moments: readonly CycleMoment[];
+    readonly moments: readonly DayMoment[];
   } | null = null;
   let playing = false;
-  let speed: CycleSpeed = 240;
+  let speed = 240;
   let frame = 0;
   let tick = 0;
   // Where play has got to, UT, unrounded; shown a whole day at a time, so the time of day (and
@@ -83,7 +130,9 @@ export function mountCycle(context: CycleContext): CyclePart {
   function show(state: ViewState): void {
     const body = cycleBody(state);
     // With an eclipse open its own player runs the time; on a planet or the Sun, the cycle.
-    context.hideHistory(state.selection !== null || body !== null);
+    const hidden = state.selection !== null || body !== null;
+    context.history.root.hidden = hidden;
+    context.history.extras.hidden = hidden;
     const theory = context.planets();
     const jdTT = context.moment();
     if (body === null || theory === null || jdTT === null) {
@@ -92,7 +141,7 @@ export function mountCycle(context: CycleContext): CyclePart {
       track.render(null);
       return;
     }
-    context.stopHistory();
+    context.history.stop();
     if (cycle?.body !== body || jdTT < cycle.at.start || jdTT >= cycle.at.end) {
       const at = body === 'sun' ? sunCycle(theory, jdTT) : planetCycle(theory, body, jdTT);
       cycle = {
@@ -100,21 +149,12 @@ export function mountCycle(context: CycleContext): CyclePart {
         at,
         moments: at.events.map(({ mark, jdTT: when }) => {
           const jd = context.universalTime(julianDayNumber(when));
-          return { mark, jd, date: cycleDate(jd) };
+          const [name, meaning] = MARK_WORDS[mark];
+          return { name, meaning, jd, date: cycleDate(jd) };
         }),
       };
     }
-    track.render({
-      title:
-        body === 'sun'
-          ? 'Earth’s year around the Sun'
-          : `${PLANET_NAMES[body]}’s cycle, as seen from Earth`,
-      slider: body === 'sun' ? 'Day in Earth’s year' : `Day in ${PLANET_NAMES[body]}’s cycle`,
-      jd: momentJulianDay(state.time),
-      moments: cycle.moments,
-      playing,
-      speed,
-    });
+    track.render(cycleView(body, cycle.moments, momentJulianDay(state.time), playing, speed));
   }
   function setMoment(jd: number): void {
     const time = momentAt(julianDayNumber(jd));

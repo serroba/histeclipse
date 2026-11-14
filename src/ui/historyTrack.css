@@ -1,5 +1,5 @@
 /* The Holocene's years to play and scrub (#382: CSS beside the code it styles); the body's
-   cycle (`cycleTrack.ts`) is built on the same track. */
+   cycle and the launches (`dayTrack.ts`) are built on the same track. */
 
 .history-track {
   display: flex;
