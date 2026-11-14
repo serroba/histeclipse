@@ -33,7 +33,7 @@ import { FEATURES } from './features';
 import { deepChipsOf, mountFeatures } from './features/mounted';
 import type { FeatureContext } from './features/feature';
 import { arrivalSearch } from './explore/destinations';
-import { anchorOpener } from './explore/open';
+import { viewOpener } from './explore/open';
 import { createWelcome } from './ui/welcome';
 import { createMarkerCard } from './ui/markerCard';
 import { createViewSwitch } from './ui/viewSwitch';
@@ -305,7 +305,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   });
   // A passage's or a destination's view laid over the reader's, as a step back can undo.
-  const openAnchor = anchorOpener({ store, deepTime, sync: () => sync });
+  const opener = viewOpener({ store, deepTime, sync: () => sync });
+  const openAnchor = opener.anchor;
   // A tablet's records checked against the sky, and looked at from Babylon (#447).
   const records = mountRecords({
     ...partContext,
@@ -376,7 +377,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     openAnchor,
   });
   // Explore (#727): destinations by topic, opened as the texts' anchors are.
-  const explore = mountExplore({ openAnchor, search: texts.search });
+  const explore = mountExplore({ opener, search: texts.search });
   // Carbon-14 in the air under the years' slider (#270), its curves loaded once the layer is on.
   const datingCard = createDatingCard();
   // The shower's story (#269, #317): its stage, and its chapters in 3D over the globe.
@@ -469,6 +470,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       tools: [explore.button, boundaries.button, texts.search.button, panels.fullView],
       date: moment.dateText,
       time: moment.timeText,
+      context: explore.context,
       detail: moment.detailText,
       termNote: moment.termNote,
       welcome: welcome.root,

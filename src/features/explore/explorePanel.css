@@ -145,3 +145,35 @@
 .hud-tools :is(.boundaries-open, .full-view) {
   padding: 0 8px;
 }
+
+/* Under the date: the destination arrived at, and Fit this topic (#729). */
+.explore-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 2px 0 6px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.explore-context[hidden],
+.explore-fit[hidden] {
+  display: none;
+}
+
+.explore-context-name::before {
+  content: 'Exploring ';
+}
+
+.explore-fit {
+  min-height: 28px;
+  padding: 0 12px;
+  border: 1px solid rgb(150 180 255 / 0.5);
+  border-radius: 14px;
+  background: rgb(150 180 255 / 0.1);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}

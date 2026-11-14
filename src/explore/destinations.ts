@@ -7,7 +7,9 @@
  */
 
 import type { Body } from '../state/viewState';
+import { PRESENT_YEAR } from '../time/present';
 import { anchorQuery } from '../text/anchors';
+import type { TimeFrame } from './frame';
 import type { Anchor } from '../text/passages';
 
 /** What Explore groups destinations by; a destination may sit under several. */
@@ -27,6 +29,8 @@ export interface Destination {
   readonly body: Body;
   /** The view it opens: a link's query, as a search anchor's `view`. */
   readonly view: string;
+  /** The time worth seeing it over (#729); its view's moment lies inside. */
+  readonly frame: TimeFrame;
 }
 
 export const DESTINATIONS: readonly Destination[] = [
@@ -38,6 +42,7 @@ export const DESTINATIONS: readonly Destination[] = [
       'Apollo 11 coming down in the Sea of Tranquillity, 20 July 1969; search finds every other mission and landing.',
     questions: ['Where did people first walk on the Moon?'],
     body: 'moon',
+    frame: { kind: 'years', from: 1969, to: 1972 },
     view: 'focus=moon&cam=0.6875,23.4333,1.80&layers=spacecraft&mission=d00273&t=1969-07-20T20:17Z',
   },
   {
@@ -48,6 +53,7 @@ export const DESTINATIONS: readonly Destination[] = [
       'Every craft sent beyond Earth orbit, from Luna 1 in January 1959, flying among the planets as time plays.',
     questions: ['What was the first craft to leave Earth?'],
     body: 'sun',
+    frame: { kind: 'years', from: 1959, to: PRESENT_YEAR },
     view: 'focus=sun&cam=66.5607,-90.0000,301.05&layers=spacecraft,orbits&t=1959-01-02T16:41Z',
   },
   {
@@ -58,6 +64,7 @@ export const DESTINATIONS: readonly Destination[] = [
       'Dated finds of our species and its relatives, from Jebel Irhoud about 315,000 years ago, with competing dates side by side.',
     questions: ['Where were the first Homo sapiens?', 'When did people leave Africa?'],
     body: 'earth',
+    frame: { kind: 'ma', from: 0.32, to: 0.04 },
     view: 'ma=0.315&scale=ice&layers=humans&cam=10.0000,5.0000,3.00',
   },
   {
@@ -68,6 +75,7 @@ export const DESTINATIONS: readonly Destination[] = [
       'Dated ancient genomes counted by region around the year shown, here 3000 BCE, as herders spread across the steppe.',
     questions: ['Where has ancient DNA been read from people of 5,000 years ago?'],
     body: 'earth',
+    frame: { kind: 'years', from: -4999, to: -999 },
     view: 't=-2999-06-01T12:00Z&layers=genomes&cam=50.0000,40.0000,3.00',
   },
   {
@@ -78,6 +86,7 @@ export const DESTINATIONS: readonly Destination[] = [
       'Borders of states through history; here the Roman Empire at its largest, in 117 CE, and its neighbours.',
     questions: ['How far did the Roman Empire reach?'],
     body: 'earth',
+    frame: { kind: 'years', from: -3399, to: PRESENT_YEAR },
     view: 't=0117-08-01T12:00Z&layers=empires&cam=40.0000,20.0000,3.00',
   },
   {
@@ -89,6 +98,7 @@ export const DESTINATIONS: readonly Destination[] = [
     questions: ['Where was Australia when dinosaurs lived?'],
     body: 'earth',
     // Where the plates had central Australia (Gosses Bluff) 100 million years ago (PALEOMAP).
+    frame: { kind: 'ma', from: 120, to: 80 },
     view: 'ma=100&scale=all&layers=plates,fossils&cam=-46.3300,122.8100,3.00',
   },
   {
@@ -99,6 +109,7 @@ export const DESTINATIONS: readonly Destination[] = [
       'Pangaea 250 million years ago, the continents in one, and the plates that carried them apart.',
     questions: ['What did Earth look like when the continents were one?'],
     body: 'earth',
+    frame: { kind: 'ma', from: 300, to: 180 },
     view: 'ma=250&scale=all&layers=plates&cam=0.0000,20.0000,3.00',
   },
   {
@@ -109,6 +120,7 @@ export const DESTINATIONS: readonly Destination[] = [
       'The last dinosaurs, 70 million years ago: where their fossils and their neighbours’ have been found and recorded.',
     questions: ['Where have the last dinosaurs been found?'],
     body: 'earth',
+    frame: { kind: 'ma', from: 80, to: 66 },
     view: 'ma=70&scale=all&layers=fossils&cam=40.0000,-100.0000,3.00',
   },
   {
@@ -119,6 +131,7 @@ export const DESTINATIONS: readonly Destination[] = [
       'The Last Glacial Maximum, 21,000 years ago: ice sheets over North America and Europe, and the sea about 120 m lower.',
     questions: ['How far did the ice reach 21,000 years ago?'],
     body: 'earth',
+    frame: { kind: 'ma', from: 0.03, to: 0.015 },
     view: 'ma=0.021&scale=ice&layers=sealevel&cam=55.0000,-40.0000,3.00',
   },
   {
@@ -129,6 +142,7 @@ export const DESTINATIONS: readonly Destination[] = [
       'The Paleocene–Eocene Thermal Maximum, 56 million years ago: one of the warmest times since the dinosaurs.',
     questions: ['How warm has Earth been?'],
     body: 'earth',
+    frame: { kind: 'ma', from: 60, to: 50 },
     view: 'ma=56&scale=all&layers=temperature&cam=20.0000,0.0000,3.00',
   },
 ];

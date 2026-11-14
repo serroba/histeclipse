@@ -1,6 +1,7 @@
 /**
  * Opening a view from a link's worth of it (#726): a search anchor's or a destination's, laid
- * over the reader's view as `anchorQuery` says, as a step that Back undoes.
+ * over the reader's view as `anchorQuery` says, or the reader's link changed, as fitting a
+ * subject's time does (#729); each a step that Back undoes.
  */
 
 import { parseViewState, serializeViewState } from '../state/url';
@@ -9,18 +10,31 @@ import type { ViewState } from '../state/viewState';
 import { anchorQuery } from '../text/anchors';
 import type { Anchor } from '../text/passages';
 
-export function anchorOpener(options: {
+/** Ways to open a view: an anchor's, or any change to the reader's link. */
+export interface ViewOpener {
+  readonly anchor: (anchor: Anchor) => void;
+  /** Open the link `change` makes of the reader's. */
+  readonly query: (change: (current: string) => string) => void;
+}
+
+export function viewOpener(options: {
   readonly store: Pick<Store<ViewState>, 'get' | 'set'>;
   /** Deep time's player: stopped, or it would carry the view on from where it was. */
   readonly deepTime: { stopPlay(): void };
   /** The link's writer, once there is one: the change is a step of its own in history. */
   readonly sync: () => { step(): void };
-}): (anchor: Anchor) => void {
+}): ViewOpener {
   const { store, deepTime, sync } = options;
-  return (anchor) => {
-    const next = parseViewState(anchorQuery(anchor, serializeViewState(store.get())), new Date());
+  const query = (change: (current: string) => string): void => {
+    const next = parseViewState(change(serializeViewState(store.get())), new Date());
     deepTime.stopPlay();
     sync().step();
     store.set(() => next.state);
+  };
+  return {
+    anchor: (anchor) => {
+      query((current) => anchorQuery(anchor, current));
+    },
+    query,
   };
 }
