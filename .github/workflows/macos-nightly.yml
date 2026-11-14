@@ -49,6 +49,14 @@ jobs:
       - run: pnpm test:e2e --project=desktop --shard="$SHARD/2"
         env:
           SHARD: ${{ matrix.shard }}
+      # Timings survive passing and failing runs; traces remain failure-only.
+      - if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: timings-macos-nightly-${{ matrix.shard }}
+          path: test-results/timings.*
+          retention-days: 30
+          if-no-files-found: warn
       - if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

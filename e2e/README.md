@@ -59,3 +59,17 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 
 `support.ts` holds the shared steps and the `test` every file imports, which takes the
 project's refresh rate.
+
+## Timing baseline
+
+CI writes `test-results/timings.json` and `timings.md` for each browser job, even
+on test failures. The small `timings-*` artifacts are retained for 30 days; the Actions
+job summary lists project counts and the 20 slowest scenarios, including retry cost.
+The JSON records every selected scenario, its project, outcome and each attempt.
+Use run ID, run attempt, shard and platform to group reports without mixing reruns.
+
+Summed attempt duration includes parallel work: it is not wall time or runner-minutes.
+The report's wall time covers Playwright, not setup or queueing; use Actions job timestamps
+for runner cost and workflow timestamps for overall CI latency. Compare execution counts,
+retry rates and p95 latency across representative PR runs before changing shard counts.
+Test selection and retries are unchanged by reporting (#645, epic #644).
