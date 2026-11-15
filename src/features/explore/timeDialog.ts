@@ -145,13 +145,11 @@ export function createTimeDialog(onEntry: (entry: TimeEntry) => void, present: n
     render(state) {
       const date = state.ma === null ? formatDate(state.time) : formatMa(state.ma);
       showing.textContent = `Showing ${date}, in ${RANGES[spanShown(state)]}.`;
-      const missing = activeLayers(state).filter((layer) => !layer.draws);
-      gaps.hidden = missing.length === 0;
-      gaps.replaceChildren(
-        ...missing.map((layer) =>
-          element('li', {}, `${layer.label}: nothing here. ${layer.reach}`),
-        ),
+      const missing = activeLayers(state).flatMap((layer) =>
+        layer.why === null ? [] : [`${layer.label}: ${layer.why}. ${layer.reach}`],
       );
+      gaps.hidden = missing.length === 0;
+      gaps.replaceChildren(...missing.map((line) => element('li', {}, line)));
     },
   };
 }

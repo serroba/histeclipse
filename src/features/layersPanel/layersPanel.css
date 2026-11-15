@@ -234,6 +234,12 @@
   flex-wrap: wrap;
 }
 
+/* Why a layer has no data now, in words a phone shows (#751). */
+.active-why {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
 /* In the Layers sheet the chips show only on a phone, where the date panel has no room. */
 .active-layers-sheet {
   display: none;

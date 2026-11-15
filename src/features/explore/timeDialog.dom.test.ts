@@ -69,7 +69,7 @@ describe('Go to a time', () => {
     );
     const gaps = time.dialog.querySelector<HTMLElement>('.time-gaps');
     expect(gaps?.hidden).toBe(false);
-    expect(gaps?.textContent).toMatch(/^Humans: nothing here\./);
+    expect(gaps?.textContent).toMatch(/^Humans: on Ice ages\./);
     time.render(at('ma=100&scale=all'));
     expect(time.dialog.textContent).toContain('Showing 100 million years ago, in the last 540');
     expect(gaps?.hidden).toBe(true);
