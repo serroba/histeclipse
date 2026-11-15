@@ -59,6 +59,23 @@ const MOON_COLOURS: Readonly<Record<MoonName, string>> = {
 /** Points along each drawn orbit. */
 const PATH_POINTS = 128;
 
+/** How far a drawn path may stray before it is drawn again: a share of the orbit's size. */
+const PATH_STRAY = 0.005;
+
+/**
+ * Days a moon's path, as drawn, holds (#783): its shape turns only as its pericentre and node
+ * do, by its eccentricity and the sine of its tilt to its plane, so a path strays by PATH_STRAY
+ * of its size in this long (Mimas 6 days, Phobos 19, most moons months). A day at the least.
+ * It was a day for every moon: at 50 days a second, every path drawn again every frame.
+ */
+function pathHolds(orbit: MoonOrbits[MoonName]): number {
+  const radians = Math.PI / 180;
+  const turning =
+    orbit.eccentricity * Math.abs(orbit.pericentre[1] * radians) +
+    Math.sin(orbit.inclination * radians) * Math.abs(orbit.node[1] * radians);
+  return turning === 0 ? Infinity : Math.max(1, PATH_STRAY / turning);
+}
+
 export interface MoonMeshes {
   readonly meshes: Readonly<Record<MoonName, Mesh>>;
   /** The orbits to place the moons by; null hides them. */
@@ -201,12 +218,12 @@ export function createMoonMeshes(scene: Scene): MoonMeshes {
         const path = paths.get(name);
         if (path === undefined) continue;
         path.visible = (allPaths || pathsOf === planet) && orbits !== null && placedAt !== null;
-        // A path a day old is still the moon's path, near enough.
+        // A path is drawn again once its orbit has turned enough to show (#783).
         if (
           path.visible &&
           orbits !== null &&
           placedAt !== null &&
-          Math.abs((drawnAt.get(name) ?? -Infinity) - placedAt) > 1
+          Math.abs((drawnAt.get(name) ?? -Infinity) - placedAt) > pathHolds(orbits[name])
         ) {
           drawPath(name, placedAt, orbits[name]);
         }
