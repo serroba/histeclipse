@@ -55,7 +55,12 @@ function mount() {
     notify,
     why: (id) => ({ id }) as unknown as HTMLElement,
     goToDeepTime,
-    timeline: { travelling: () => false, playing: () => false, oldest: () => 540 },
+    timeline: {
+      travelling: () => false,
+      playing: () => false,
+      oldest: () => 540,
+      earthFace: (jd) => jd,
+    },
     deltaT: () => {
       throw new Error('no ΔT here');
     },

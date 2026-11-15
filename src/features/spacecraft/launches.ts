@@ -35,6 +35,8 @@ export interface LaunchesPart {
   readonly show: (state: ViewState) => void;
   /** The time changed elsewhere (the year typed, the slider): play stops. */
   readonly render: (state: ViewState) => void;
+  /** The moment Earth's face is turned to at `jd` (UT JD), whole days while it plays fast. */
+  readonly earthFace: (jd: number) => number;
 }
 
 /** What the track shows of a program, at the moment shown. */
@@ -192,5 +194,6 @@ export function mountLaunches(context: LaunchesContext): LaunchesPart {
     render(state) {
       if (play.playing && state.time !== shown) stop();
     },
+    earthFace: (jd) => play.face(jd),
   };
 }

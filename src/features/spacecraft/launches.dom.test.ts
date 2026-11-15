@@ -77,7 +77,12 @@ async function setUp(
     notify,
     why: () => document.createElement('button'),
     goToDeepTime: vi.fn(),
-    timeline: { travelling: () => false, playing: () => false, oldest: () => 540 },
+    timeline: {
+      travelling: () => false,
+      playing: () => false,
+      oldest: () => 540,
+      earthFace: (jd) => jd,
+    },
     deltaT: () => {
       throw new Error('no ΔT here');
     },
@@ -129,7 +134,7 @@ describe('the launches played (#702)', () => {
     expect(on % 1).not.toBeCloseTo(0, 3);
   });
 
-  it('Given the years between departures, Then it plays at 50 days a second, or the pace picked, whole days at a time', async () => {
+  it('Given the years between departures, Then it plays at 50 days a second, or the pace picked', async () => {
     const { store, part, button, day } = await setUp();
     // The middle of the longest wait between craft leaving.
     const gap = quietest();
@@ -137,10 +142,10 @@ describe('the launches played (#702)', () => {
     button()?.click();
     frame(0);
     for (let k = 0; k < 4; k += 1) frame(250);
-    expect(day() - gap).toBe(50);
+    expect(day() - gap).toBeCloseTo(50, 2);
     // A frame after a stall counts as a quarter of a second at most.
     frame(5000);
-    expect(day() - gap).toBe(62);
+    expect(day() - gap).toBeCloseTo(62.5, 2);
     button()?.click();
     const speed = part.extras.querySelector('select');
     if (speed !== null) {
@@ -151,7 +156,42 @@ describe('the launches played (#702)', () => {
     button()?.click();
     frame(10_000);
     frame(250);
-    expect(day() - from).toBe(100);
+    expect(day() - from).toBeCloseTo(100, 2);
+  });
+
+  for (const hertz of [60, 120]) {
+    it(`Given it playing fast on a ${String(hertz)} Hz screen, Then every frame moves the planets and the craft on, and Earth's face keeps to whole days (#770)`, async () => {
+      const { store, part, button, day } = await setUp();
+      const gap = quietest();
+      store.set((state) => ({ ...state, time: momentAt(julianDayNumber(gap)) }));
+      // Before it plays, Earth faces the moment itself.
+      expect(part.earthFace(gap + 0.3)).toBe(gap + 0.3);
+      button()?.click();
+      frame(0);
+      const days = [day()];
+      for (let k = 0; k < hertz; k += 1) {
+        frame(1000 / hertz);
+        days.push(day());
+      }
+      const moves = days.slice(1).map((jd, index) => jd - (days[index] ?? jd));
+      expect(Math.min(...moves)).toBeGreaterThan(0);
+      expect(day() - gap).toBeCloseTo(50, 1);
+      for (const jd of days) {
+        expect(Math.abs(part.earthFace(jd) - jd)).toBeLessThanOrEqual(0.5);
+        expect((part.earthFace(jd) - gap) % 1).toBeCloseTo(0, 6);
+      }
+      // Stopped, Earth faces the moment shown again.
+      button()?.click();
+      expect(part.earthFace(day())).toBe(day());
+    });
+  }
+
+  it('Given a mission played at hours a second, Then Earth turns with the moment (#770)', async () => {
+    const { part, button, day } = await setUp(new Set(['spacecraft']), { mission: 'd00273' });
+    button()?.click();
+    frame(0);
+    frame(250);
+    expect(part.earthFace(day())).toBe(day());
   });
 
   it('Given a moment within the launches, When Play is pressed, Then it carries on from there', async () => {

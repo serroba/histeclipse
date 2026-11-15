@@ -105,12 +105,16 @@ export interface Timeline {
   playing(): boolean;
   /** The oldest elevation map, in millions of years. */
   oldest(): number;
+  /** The moment (UT JD) Earth's face is shown turned to at `jd`: while the launches play fast,
+   * a whole day from where they started, so the globe holds still as the planets go on (#770). */
+  earthFace(jd: number): number;
 }
 
 /** The parts that keep time's playing. */
 interface TimeKeepers {
   readonly years: { travelling(): boolean };
   readonly deepTime: { playing(): boolean; oldest(): number };
+  readonly launches: { earthFace(jd: number): number };
 }
 
 /**
@@ -127,6 +131,7 @@ export function lateTimeline(defaultOldest: number): {
       travelling: () => keepers?.years.travelling() ?? false,
       playing: () => keepers?.deepTime.playing() ?? false,
       oldest: () => keepers?.deepTime.oldest() ?? defaultOldest,
+      earthFace: (jd) => keepers?.launches.earthFace(jd) ?? jd,
     },
     bind: (bound) => {
       keepers = bound;

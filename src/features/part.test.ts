@@ -3,26 +3,29 @@ import { describe, expect, it } from 'vitest';
 import { lateDeltaT, lateEphemerides, lateTimeline } from './part';
 
 describe('the timeline the parts ask of', () => {
-  it('Given nothing bound yet, Then nothing travels or plays and the maps reach their default', () => {
+  it('Given nothing bound yet, Then nothing travels or plays, the maps reach their default and Earth faces the moment', () => {
     const { timeline } = lateTimeline(540);
-    expect([timeline.travelling(), timeline.playing(), timeline.oldest()]).toEqual([
-      false,
-      false,
-      540,
-    ]);
+    expect([
+      timeline.travelling(),
+      timeline.playing(),
+      timeline.oldest(),
+      timeline.earthFace(2_451_545.3),
+    ]).toEqual([false, false, 540, 2_451_545.3]);
   });
 
-  it('Given the years and deep time bound, Then it asks them', () => {
+  it('Given the years, deep time and the launches bound, Then it asks them', () => {
     const late = lateTimeline(540);
     late.bind({
       years: { travelling: () => true },
       deepTime: { playing: () => true, oldest: () => 1800 },
+      launches: { earthFace: (jd) => Math.round(jd) },
     });
-    expect([late.timeline.travelling(), late.timeline.playing(), late.timeline.oldest()]).toEqual([
-      true,
-      true,
-      1800,
-    ]);
+    expect([
+      late.timeline.travelling(),
+      late.timeline.playing(),
+      late.timeline.oldest(),
+      late.timeline.earthFace(2_451_545.3),
+    ]).toEqual([true, true, 1800, 2_451_545]);
   });
 });
 

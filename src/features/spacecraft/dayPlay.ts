@@ -1,16 +1,18 @@
 /**
  * Playing days by (#702): the moment moves on with the time that passed, not the frames drawn,
- * at the pace asked for at each moment, and stops at the end. A day or more a second steps
- * whole days, so Earth's turning holds still as the years go by; slower steps whole minutes, the
- * finest time kept, so a craft leaving glides. A frame after a stall (a hidden tab) counts as a
- * quarter of a second at most.
+ * at the pace asked for at each moment, and stops at the end. Every frame moves it on, to the
+ * minute, the finest time kept, so the planets and the craft glide at any pace (#770). Earth's
+ * face alone keeps to whole days from where play started while it plays a day or more a second,
+ * so the globe holds still as the years go by instead of spinning a blur. A frame after a stall
+ * (a hidden tab) counts as a quarter of a second at most.
  */
 
 const LONGEST_FRAME = 0.25;
 /** Seconds of play worked out at one pace, at most. */
 const SUBSTEP = 1 / 120;
-/** At this many days a second or more, whole days a step. */
-const WHOLE_DAYS = 20;
+const MINUTE = 1 / 1440;
+/** At this many days a second or more, Earth's face keeps to whole days. */
+const STILL_FACE = 1;
 
 export interface DayPlayHooks {
   /** Days a second at a moment (UT Julian Day). */
@@ -30,14 +32,19 @@ export interface DayPlay {
   start(): void;
   /** Stop; false if it was not playing. */
   stop(): boolean;
+  /** The moment Earth's face is shown turned to at `jd`: while playing a day or more a second,
+   * the whole day nearest from where play started; else `jd`. */
+  face(jd: number): number;
 }
 
 export function dayPlay(hooks: DayPlayHooks): DayPlay {
   let playing = false;
   let frame = 0;
   let tick = 0;
-  // Where play has got to, unrounded: shown a whole step at a time.
+  // Where play has got to, unrounded: shown a minute at a time; where it started; how fast.
   let head = 0;
+  let from = 0;
+  let pace = 0;
 
   function step(now: number): void {
     if (!playing) return;
@@ -46,15 +53,13 @@ export function dayPlay(hooks: DayPlayHooks): DayPlay {
     const end = hooks.end();
     const at = hooks.at();
     // In short steps, each at its own pace, so a long frame cannot pass a slow stretch by.
-    let pace = hooks.pace(head);
     for (let left = seconds; left > 0 && head < end; left -= SUBSTEP) {
       pace = hooks.pace(head);
       head = Math.min(head + pace * Math.min(left, SUBSTEP), end);
     }
-    const size = pace >= WHOLE_DAYS ? 1 : 1 / 1440;
     // A hair either way: sums of many short steps fall a little short.
-    const steps = Math.floor((head - at) / size + 1e-6);
-    if (steps >= 1) hooks.go(at + steps * size);
+    const minutes = Math.floor((head - at) / MINUTE + 1e-3);
+    if (minutes >= 1) hooks.go(at + minutes * MINUTE);
     if (head >= end) {
       playing = false;
       hooks.ended();
@@ -70,6 +75,8 @@ export function dayPlay(hooks: DayPlayHooks): DayPlay {
     start() {
       playing = true;
       head = hooks.at();
+      from = head;
+      pace = hooks.pace(head);
       tick = performance.now();
       frame = requestAnimationFrame(step);
     },
@@ -78,6 +85,9 @@ export function dayPlay(hooks: DayPlayHooks): DayPlay {
       playing = false;
       cancelAnimationFrame(frame);
       return true;
+    },
+    face(jd) {
+      return playing && pace >= STILL_FACE ? from + Math.round(jd - from) : jd;
     },
   };
 }
