@@ -80,6 +80,25 @@ interface Scenario {
   readonly action: (page: Page) => Promise<void>;
 }
 
+/** Play the launches from a moment at their default pace for 6 s, about the Sun. */
+function launches(name: string, from: string): Record<string, Scenario> {
+  const track = (page: Page): Locator => page.locator('.launch-track');
+  return {
+    [name]: {
+      setup: async (page) => {
+        await page.goto(`./?focus=sun&layers=spacecraft&cam=90,0,1400&t=${from}`);
+        await expect(track(page)).toBeVisible({ timeout: 30_000 });
+      },
+      action: async (page) => {
+        const play = track(page).locator('button.history-play');
+        await play.click();
+        await page.waitForTimeout(6000);
+        await play.click();
+      },
+    },
+  };
+}
+
 const SCENARIOS: Record<string, Scenario> = {
   'globe idle': {
     setup: async (page) => {
@@ -111,6 +130,10 @@ const SCENARIOS: Record<string, Scenario> = {
       await page.waitForTimeout(2500);
     },
   },
+  // The launches at their own pace, about the Sun (#764): August 1966's three departures, and
+  // Chang'e 2 leaving the Moon in June 2011, whose trail reached back into its stay (#765).
+  ...launches('launches play through August 1966', '1966-07-25T12:00Z'),
+  ...launches('launches play past Chang’e 2 leaving the Moon', '2011-05-20T12:00Z'),
   'eclipse plays, then pauses': {
     setup: async (page) => {
       await page.goto(THALES);

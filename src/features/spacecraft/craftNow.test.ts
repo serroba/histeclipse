@@ -5,7 +5,15 @@ import type { CraftPaths } from '../../data/spacecraftPaths';
 import { elementAt } from '../../util/arrays';
 import { gcatJd } from '../../data/spacecraft';
 import type { Geocentric } from './approximatePaths';
-import { craftNow, craftWheres, fromEarth, inFlight, remembered, trailMoments } from './craftNow';
+import {
+  craftNow,
+  craftWheres,
+  fromEarth,
+  inFlight,
+  remembered,
+  trailMoments,
+  type CraftWheres,
+} from './craftNow';
 
 const AU = 149_597_870.7;
 /** A still Sun, 1 AU along x from Earth; the Moon and Mars at fixed places. */
@@ -92,6 +100,28 @@ describe('the craft in flight at a moment, and where', () => {
     expect(fromEarth({ at: 'Luna' }, T, geocentric)).toEqual([384_400, 0, 0]);
     expect(fromEarth({ at: 'Uranus' }, T, geocentric)).toBeNull();
     expect(fromEarth({ centre: 'Sun', km: [AU, 0, 0] }, T, () => null)).toBeNull();
+  });
+
+  it('Given a craft just gone from Mars, Then its trail ends where it left, never asking where Mars was (#765)', () => {
+    const left = T - 5;
+    const asked: string[] = [];
+    const counting: Geocentric = (body, jdTT) => {
+      asked.push(body);
+      return geocentric(body, jdTT);
+    };
+    const leaving: CraftWheres = {
+      where: (_, jdTT) => (jdTT < left ? { at: 'Mars' } : { centre: 'Sun', km: [2 * AU, 0, 0] }),
+      approximate: () => true,
+    };
+    const [gone] = craftNow(
+      [craft('D6', [['Sun', '2000-01-01', null, 'O', '-']])],
+      leaving,
+      counting,
+      T,
+    );
+    // A 2.5-day grid: two points since it left, then the stay.
+    expect(gone?.trail).toHaveLength(2);
+    expect(asked).not.toContain('Mars');
   });
 
   it('Given a craft with no record of its start, Then it is not in flight', () => {
