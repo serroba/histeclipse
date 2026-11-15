@@ -12,7 +12,7 @@ import { subsolarPoint } from '../../astro/sun';
 import { geoToVector } from '../../globe/geo';
 import { defaultViewState, momentJulianDay, type ViewState } from '../../state/viewState';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from '../../time/format';
-import { type JulianDay } from '../../time/julianDay';
+import { julianDayNumber, type JulianDay } from '../../time/julianDay';
 import { formatInCalendar } from '../../time/calendars';
 import { element } from '../../ui/dom';
 import { periodAt, periodWords } from '../../deepTime/periods';
@@ -102,10 +102,13 @@ export function mountMoment(context: MomentContext): MomentPart {
       store.set({ ...state, time: defaultViewState(context.now).time, selection: null });
       return;
     }
-    const sun = subsolarPoint(universal, terrestrial);
+    // Earth's face, and day and night on it, may keep to whole days while time plays fast: its
+    // turning at that moment, the Sun and the rest where they are at this one.
+    const face = julianDayNumber(context.timeline.earthFace(universal));
+    const sun = subsolarPoint(face, terrestrial);
     globe.setSunDirection(geoToVector(sun));
     globe.setSpace({
-      earthFixedToJ2000: earthFixedToJ2000(universal, terrestrial),
+      earthFixedToJ2000: earthFixedToJ2000(face, terrestrial),
       sunKm: sunPositionJ2000(terrestrial),
       moonKm: framesMoon(context.ephemerides.moon())?.position(terrestrial) ?? null,
       planetsKm: context.ephemerides.planetPositions(terrestrial),

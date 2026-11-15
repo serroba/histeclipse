@@ -643,7 +643,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     empires.show(state);
   }
 
-  time.bind({ years, deepTime });
+  time.bind({ years, deepTime, launches });
   ephemerides.bind(bodies);
   redraws.answer('moment', moment.show);
   redraws.answer('deepTime', deepTime.show);

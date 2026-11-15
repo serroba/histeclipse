@@ -101,7 +101,12 @@ function harness() {
     globe,
     notify: vi.fn(),
     redraw: vi.fn(),
-    timeline: { travelling: vi.fn(() => false), playing: () => false, oldest: () => 540 },
+    timeline: {
+      travelling: vi.fn(() => false),
+      playing: () => false,
+      oldest: () => 540,
+      earthFace: (jd) => jd,
+    },
     holoceneShown: vi.fn(),
   } satisfies IceAgesContext;
   const part = mountIceAges(context);
