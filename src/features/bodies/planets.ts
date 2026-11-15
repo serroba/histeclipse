@@ -4,6 +4,7 @@
  * sees it.
  */
 
+import { keptPlanets } from '../../astro/keptMoments';
 import type { EquatorialVector } from '../../astro/moon';
 import type { Vector3 } from '../../astro/matrix';
 import {
@@ -60,7 +61,9 @@ export function createPlanets(context: {
   let planets: PlanetEphemeris | null = null;
   let planetsLoading: Promise<PlanetEphemeris> | null = null;
   function loadPlanets(): Promise<PlanetEphemeris> {
-    planetsLoading ??= loadPlanetEphemeris().then((theory) => {
+    planetsLoading ??= loadPlanetEphemeris().then((exact) => {
+      // Each planet's last few moments kept: the bodies and the craft at them ask alike (#766).
+      const theory = keptPlanets(exact);
       planets = theory;
       // Saturn's rings as measured (#336): Voyager's optical depths, Cassini's colour.
       globe.setSaturnRings(`${base}textures/planets/saturn-rings.png`);

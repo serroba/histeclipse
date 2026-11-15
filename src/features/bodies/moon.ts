@@ -3,6 +3,7 @@
  * space view shows only the Sun, and the sky no Moon.
  */
 
+import { keptMoon } from '../../astro/keptMoments';
 import { loadMoonEphemeris, type MoonEphemeris } from '../../astro/moon';
 import { errorMessage } from '../../util/errors';
 
@@ -28,7 +29,8 @@ export function createMoon(
     load: () => {
       loader().then(
         (loaded) => {
-          ephemeris = loaded;
+          // Its last few moments kept: the moment and the craft at the Moon ask alike (#766).
+          ephemeris = keptMoon(loaded);
           context.moonArrived();
         },
         (error: unknown) => {
