@@ -206,7 +206,8 @@ function trailOf(
 
 /**
  * The craft in flight at a moment, where each is, and where each had just been; following a
- * mission about Earth, each point about Earth as it was then.
+ * mission about Earth, each point about Earth as it was then. `now` places the bodies at the
+ * moment itself, as they are drawn (#783): a craft at the Moon sits on the Moon shown.
  */
 export function craftNow(
   craft: readonly Craft[],
@@ -214,6 +215,7 @@ export function craftNow(
   geocentric: Geocentric,
   jdTT: number,
   followed: Followed | null = null,
+  now: Geocentric = geocentric,
 ): readonly CraftNow[] {
   const out: CraftNow[] = [];
   const aboutEarth = followed?.aboutEarth === true;
@@ -221,7 +223,7 @@ export function craftNow(
     if (!inFlight(each, jdTT)) continue;
     const where = wheres.where(each, jdTT);
     if (where === null || ('at' in where && where.at === 'Earth')) continue;
-    const km = fromEarth(where, jdTT, geocentric);
+    const km = fromEarth(where, jdTT, now);
     if (km === null) continue;
     const trail = trailOf(each, where, wheres, geocentric, jdTT, aboutEarth);
     out.push({

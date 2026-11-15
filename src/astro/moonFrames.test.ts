@@ -3,8 +3,8 @@ import { Moon } from 'astronomia/elp';
 import fc from 'fast-check';
 import { describe, expect, it, vi } from 'vitest';
 
-import { createMoonEphemeris, type MoonEphemeris } from '../../astro/moon';
-import { julianDayNumber } from '../../time/julianDay';
+import { createMoonEphemeris, type MoonEphemeris } from './moon';
+import { julianDayNumber } from '../time/julianDay';
 import { moonBetween, moonForFrames, STEP_DAYS } from './moonFrames';
 
 const exact = createMoonEphemeris(data, Moon);

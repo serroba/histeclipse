@@ -5,6 +5,7 @@
  * first time it is needed.
  */
 
+import { moonForFrames } from '../../astro/moonFrames';
 import { type MoonEphemeris } from '../../astro/moon';
 import {
   loadMoonOrbits,
@@ -105,6 +106,8 @@ export interface BodiesPart {
   readonly planetsSeen: (jdTT: JulianDay, sun: Vector3, observer: Vector3) => SkyPlanet[];
   /** The Moon's ephemeris, once loaded. */
   readonly moon: () => MoonEphemeris | null;
+  /** The Moon for the moment shown, frame after frame, on a grid of exact places (#783). */
+  readonly moonAt: (jdTT: JulianDay) => readonly [number, number, number] | null;
   /** Load the Moon's theory: once the page is up, as it is a chunk of its own. */
   readonly loadMoon: () => void;
 }
@@ -349,6 +352,8 @@ export function mountBodies(context: BodiesContext): BodiesPart {
     return [planet[0] + x, planet[1] + y, planet[2] + z];
   }
 
+  // One Moon on a grid for all that draw the moment: the bodies, the scene, the craft (#783).
+  const framesMoon = moonForFrames();
   return {
     bar: bodyBar.root,
     switches: [sun.switch, planetSwitch.root],
@@ -374,6 +379,7 @@ export function mountBodies(context: BodiesContext): BodiesPart {
     planetPositions: planets.positions,
     planetsSeen: planets.seen,
     moon: theMoon.ephemeris,
+    moonAt: (jdTT) => framesMoon(theMoon.ephemeris())?.position(jdTT) ?? null,
     loadMoon: theMoon.load,
   };
 }

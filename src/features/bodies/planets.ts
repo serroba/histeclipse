@@ -4,6 +4,7 @@
  * sees it.
  */
 
+import { gridBetween } from '../../astro/gridBetween';
 import { keptPlanets } from '../../astro/keptMoments';
 import type { EquatorialVector } from '../../astro/moon';
 import type { Vector3 } from '../../astro/matrix';
@@ -28,6 +29,7 @@ import { seenPlanet } from './seen';
 /** Earth radii (or the focused body's): beyond this the space view loads the planets. */
 const PLANETS_SHOWN_BEYOND = 1000;
 
+type Triple = readonly [number, number, number];
 export interface Planets {
   /** The planets' theory, once loaded. */
   readonly theory: () => PlanetEphemeris | null;
@@ -123,14 +125,36 @@ export function createPlanets(context: {
     );
   }
 
+  // Each planet frame after frame on a grid of exact places (#783): hourly while time stands or
+  // creeps, close to the series; a day or two apart while it plays days a second, where the
+  // worst a planet strays is some 200 km for Mercury on its one-day grid, 40 for the rest.
+  let framesOf: { theory: PlanetEphemeris; at: Record<PlanetName, (jd: number) => Triple> } | null =
+    null;
   function planetPositions(
     jdTT: JulianDay,
   ): Readonly<Record<PlanetName, readonly [number, number, number]>> | null {
     if (planets === null) return null;
     const theory = planets;
-    return Object.fromEntries(
-      PLANETS.map((planet) => [planet, theory.position(planet, jdTT)]),
-    ) as Record<PlanetName, readonly [number, number, number]>;
+    if (framesOf?.theory !== theory) {
+      framesOf = {
+        theory,
+        at: Object.fromEntries(
+          PLANETS.map((planet) => [
+            planet,
+            gridBetween(
+              (jd) => theory.position(planet, jd as JulianDay),
+              1 / 24,
+              planet === 'mercury' ? 1 : 2,
+            ),
+          ]),
+        ) as Record<PlanetName, (jd: number) => Triple>,
+      };
+    }
+    const at = framesOf.at;
+    return Object.fromEntries(PLANETS.map((planet) => [planet, at[planet](jdTT)])) as Record<
+      PlanetName,
+      Triple
+    >;
   }
   // Planets from Earth's centre for the moment last shown: turning the view or moving the
   // observer reuses them rather than summing the series again.

@@ -58,6 +58,11 @@ export function lateDeltaT(): { readonly deltaT: () => DeltaT; bind(table: Delta
 export interface Ephemerides {
   /** The Moon's theory, once loaded (it loads with the page). */
   moon(): MoonEphemeris | null;
+  /**
+   * The Moon for the moment shown, frame after frame (#672, #783): on a grid of exact places,
+   * shared by all that draw it at that moment; null until the theory has loaded.
+   */
+  moonAt(jdTT: JulianDay): Triple | null;
   /** The planets' theory, once loaded; `loadPlanets` asks for it. */
   planets(): PlanetEphemeris | null;
   loadPlanets(): Promise<PlanetEphemeris>;
@@ -85,6 +90,7 @@ export function lateEphemerides(): {
   return {
     ephemerides: {
       moon: () => bodies?.moon() ?? null,
+      moonAt: (jdTT) => bodies?.moonAt(jdTT) ?? null,
       planets: () => bodies?.planets() ?? null,
       loadPlanets: () => ready.then((bound) => bound.loadPlanets()),
       planetPositions: (jdTT) => bodies?.planetPositions(jdTT) ?? null,
