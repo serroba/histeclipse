@@ -1,5 +1,6 @@
 /** The page's wiring (#442): builds each part and lends it what it needs; e2e covers it. */
 
+import { retryingFetch } from './util/fetchJson';
 import { LunarCatalog } from './data/lunarCatalog';
 import { SolarCatalog } from './data/solarCatalog';
 import { createDatingCard } from './ui/datingCard';
@@ -99,7 +100,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const store = createStore<ViewState>(parsed.state);
   // Parts ask each other to redraw by name, answered once each is mounted (#606).
   const redraws = createRedrawRequests(store);
-  const fetchJson = (url: string): Promise<Response> => fetch(url);
+  // A server error is asked once more, past the browser's copy of it.
+  const fetchJson = retryingFetch((url, init) => fetch(url, init));
   // Full view: the panels hidden for a clear view, and the ways to bring them back.
   const panels = createPanels(root);
   // What went wrong, told once each.
@@ -583,9 +585,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   };
   const features = mountFeatures(FEATURES, featureContext);
   const [deltaT, lunarCatalog, solarCatalog] = await Promise.all([
-    DeltaT.load(`${base}data/delta-t.json`, (url) => fetch(url)),
-    LunarCatalog.load(`${base}data/lunar/`, (url) => fetch(url)),
-    SolarCatalog.load(`${base}data/solar/`, (url) => fetch(url)),
+    DeltaT.load(`${base}data/delta-t.json`, fetchJson),
+    LunarCatalog.load(`${base}data/lunar/`, fetchJson),
+    SolarCatalog.load(`${base}data/solar/`, fetchJson),
   ]);
   clock.bind(deltaT);
   const sync = createUrlSync(browserUrlWriter(window.location, window.history));
