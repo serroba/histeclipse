@@ -16,8 +16,6 @@ import { errorMessage } from '../../util/errors';
 /** What it asks of the rest of the page. */
 export interface WaysContext extends PartContext {
   readonly globe: Pick<Globe, 'addLayer'>;
-  /** Whether the reader is travelling through the years: today's maps rest then. */
-  travelling(): boolean;
   /** Say it again in the Layers panel: what it says has changed. */
   refresh(): void;
   /** The key under the years. */

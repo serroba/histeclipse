@@ -29,7 +29,7 @@ function fakeContext(options: { readonly failing?: boolean; readonly travelling?
     globe: { addLayer: () => ({ update: (input: unknown) => drawn.push(input) }) },
     notify,
     showCard: (card: MarkerCardContent) => cards.push(card),
-    travelling: () => options.travelling === true,
+    timeline: { travelling: () => options.travelling === true },
     refresh,
   } as unknown as FeatureContext;
   return { context, drawn, cards, refresh, notify };

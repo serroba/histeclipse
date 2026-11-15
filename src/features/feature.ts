@@ -18,6 +18,7 @@ import type { LineageGroup } from '../data/lineages';
 import type { TreeOfLife } from '../data/treeOfLife';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
 import type { MarkerCardContent } from '../ui/markerCard';
+import type { Timeline } from './part';
 import type { Anchor } from '../text/passages';
 import type { ZoomRail } from '../ui/zoomRail';
 
@@ -51,8 +52,8 @@ export interface FeatureContext {
   openTree(pick: (tree: TreeOfLife) => number | undefined): void;
   /** Change what the reader is looking at, as one of the feature's own choices does. */
   change(update: (state: ViewState) => ViewState): void;
-  /** Whether the reader is travelling through the years: markers of single events rest then. */
-  travelling(): boolean;
+  /** Where the reader is in time's playing (#606): markers of single events rest while travelling. */
+  readonly timeline: Timeline;
   /** Show the moment and the Layers panel again: data the feature waited for has arrived. */
   refresh(): void;
 }

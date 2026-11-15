@@ -33,7 +33,7 @@ export const genomesFeature: Feature = {
     return {
       show(state) {
         const on = state.layers.has('genomes') && state.ma === null;
-        const resting = context.travelling();
+        const resting = context.timeline.travelling();
         year = state.time.date.year;
         const key = `${String(on)}:${String(resting)}:${String(genomes !== null)}:${String(year)}`;
         if (key === drawnFor) return;

@@ -37,7 +37,7 @@ function fakeContext(options: { readonly failing?: boolean; readonly travelling?
       cards.push(card);
     },
     cardOpen: () => cardOpen,
-    travelling: () => options.travelling === true,
+    timeline: { travelling: () => options.travelling === true },
     refresh,
   } as unknown as FeatureContext;
   return { context, drawn, cards, refresh, notify };

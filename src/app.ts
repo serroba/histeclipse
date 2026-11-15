@@ -41,7 +41,7 @@ import { createViewSwitch } from './ui/viewSwitch';
 import { countryRings, loadNamedPeriods } from './data/namedPeriods';
 import { createWhySheet } from './ui/whySheet';
 import { createImpactPathsSheet } from './ui/impactPathsSheet';
-import type { PartContext } from './features/part';
+import { lateTimeline, type PartContext } from './features/part';
 import { mountBoundaries } from './features/boundaries';
 import { mountTreeOfLife } from './features/treeOfLife';
 import { mountSky } from './features/sky';
@@ -120,12 +120,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
     () => hereView(store.get(), hereData()),
     (id) => whyMoment(id, store.get()),
   );
+  // Time's playing, kept by the years and deep time and asked of by the parts (#606).
+  const time = lateTimeline(540);
   // What the app lends the parts of the page (#443).
   const partContext: PartContext = {
     base,
     fetchJson,
     store,
     notify,
+    timeline: time.timeline,
     why: (id, label) => whySheet.mark(id, label),
     goToDeepTime(ma, layer, where) {
       deepTime.enterDeepTime(ma, 'all');
@@ -182,7 +185,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The Layers panel (#451): what each layer says and offers, as the parts have it now.
   const layersPanel = mountLayersPanel({
     ...partContext,
-    travelling: () => years.travelling(),
     goToSpan: (span) => {
       deepTime.goToSpan(span);
     },
@@ -511,12 +513,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const historyLayer = {
     ...partContext,
     globe,
-    travelling: () => years.travelling(),
     refresh: redraws.ask('layers'),
   };
   const rocks = mountRocks({
     ...historyLayer,
-    oldest: () => deepTime.oldest(),
     enterDeepTime: (ma, scale) => {
       deepTime.enterDeepTime(ma, scale);
     },
@@ -539,7 +539,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const iceAges = mountIceAges({
     ...partContext,
     globe,
-    travelling: () => years.travelling(),
     redraw: redraws.ask('deepTime'),
     holoceneShown: redraws.askWith('years'),
   });
@@ -551,9 +550,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     showCard: (card) => {
       markerCard.show(card);
     },
-    oldest: () => deepTime.oldest(),
-    playing: () => deepTime.playing(),
-    travelling: () => years.travelling(),
     redrawDeep: redraws.askWith('deepTime'),
     refreshLayers: redraws.askWith('layers'),
   });
@@ -564,6 +560,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe,
     zoomRail,
     notify,
+    timeline: time.timeline,
     showCard: (card) => {
       markerCard.show(card);
     },
@@ -579,7 +576,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     change: (update) => {
       store.set(update);
     },
-    travelling: () => years.travelling(),
     refresh: () => {
       const now = store.get();
       moment.show(now);
@@ -648,6 +644,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     empires.show(state);
   }
 
+  time.bind({ years, deepTime });
   redraws.answer('moment', moment.show);
   redraws.answer('deepTime', deepTime.show);
   redraws.answer('years', years.show);

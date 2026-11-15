@@ -101,7 +101,7 @@ function harness() {
     globe,
     notify: vi.fn(),
     redraw: vi.fn(),
-    travelling: vi.fn(() => false),
+    timeline: { travelling: vi.fn(() => false), playing: () => false, oldest: () => 540 },
     holoceneShown: vi.fn(),
   } satisfies IceAgesContext;
   const part = mountIceAges(context);
@@ -282,7 +282,7 @@ describe('ice-age feature integration, without a DOM or WebGL', () => {
 
   it('travels through historical years with their ice and sea level, then clears them on stopping', async () => {
     const h = harness();
-    h.context.travelling.mockReturnValue(true);
+    h.context.timeline.travelling.mockReturnValue(true);
     const past = defaultViewState(new Date('-018050-03-16T12:00:00Z'));
     h.part.showHolocene(past);
     expect(h.context.holoceneShown).toHaveBeenCalledWith(past);
@@ -293,7 +293,7 @@ describe('ice-age feature integration, without a DOM or WebGL', () => {
       expect.objectContaining({ older: '/assets/data/icesheets/20000.png', mix: 1 }),
     );
     expect(h.part.holoceneText()).toContain('120 m below');
-    h.context.travelling.mockReturnValue(false);
+    h.context.timeline.travelling.mockReturnValue(false);
     h.part.showHolocene(base);
     expect(h.part.holoceneText()).toBeNull();
     expect(h.globe.setShelf).toHaveBeenLastCalledWith(null);
@@ -302,7 +302,7 @@ describe('ice-age feature integration, without a DOM or WebGL', () => {
 
   it('does not show historical land ice or shelves in sky mode, even while travelling', () => {
     const h = harness();
-    h.context.travelling.mockReturnValue(true);
+    h.context.timeline.travelling.mockReturnValue(true);
     h.part.showHolocene({ ...base, mode: 'sky' });
     expect(h.globe.setShelf).toHaveBeenLastCalledWith(null);
     expect(h.globe.setIce).toHaveBeenLastCalledWith(null);
