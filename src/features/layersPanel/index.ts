@@ -8,7 +8,9 @@ import { layerWhy } from '../../state/whysOnScreen';
 import type { DeepScale, Layer, ViewState } from '../../state/viewState';
 import { awayFromEarth, layerTurned, roundMa } from '../../state/viewState';
 import { PRESENT_YEAR } from '../../time/present';
-import { activeLayers } from '../../state/activeLayers';
+import { activeLayers, type GoTo } from '../../state/activeLayers';
+import { astronomicalYear } from '../../time/year';
+import { moveToYear } from '../../time/yearInput';
 import { createActiveChips } from './activeChips';
 import { createLayersPanel } from './layersPanel';
 import type { Span } from '../../ui/spanSwitch';
@@ -26,6 +28,8 @@ export interface LayersPanelContext extends PartContext {
   goToSpan(span: Span): void;
   enterDeepTime(ma: number, deepScale: DeepScale): void;
   setScale(deepScale: DeepScale): void;
+  /** Make the next change a step of its own in history: going to a layer's data. */
+  step(): void;
   /** What each layer says under it, if anything, as the parts have it now. */
   said(): Iterable<readonly [Layer, string | null]>;
   /** What each layer offers, if anything. */
@@ -62,7 +66,16 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
     onRemove: (layer: Layer) => {
       store.set((state) => layerTurned(state, layer, false));
     },
-    onGoTo: goTo,
+    // Where its data is: a year in the years, or a span at a moment of its own (#751).
+    onGoTo: (to: GoTo) => {
+      if (to.year === undefined) {
+        goTo(to.span, to.ma);
+        return;
+      }
+      const year = astronomicalYear(to.year);
+      context.step();
+      store.set((state) => ({ ...state, time: moveToYear(state.time, year) }));
+    },
   };
   // Beside Layers on wide screens; on a phone, where the date panel has no room for them, at the
   // top of the Layers sheet, with their number on its button.

@@ -184,6 +184,14 @@ Every active layer chip and every destination shows one of:
 | Outside its place | The layer's note ("no finds near here")      | None (the map says so)   |
 | Loading / failed  | Chip with spinner / "could not load" + retry | Retry                    |
 
+As built in #751: a layer may declare in the catalogue the times its data covers (`covers`:
+years, millions of years, known gaps), and `src/state/activeLayers.ts` works out each layer's
+coverage at the moment shown: **available**, **other span**, **outside** its record, or a known
+**gap** (the ozone hole in 1995). The chip says why in visible words, not only a tooltip, and
+offers Go to its nearest data (a year, or a span at a moment of its own); Go to a time lists the
+same words. Available does not claim data at every place. Loading and failed states, which need
+each feature to report its load, are the next step of #751.
+
 ## 7. The three journeys
 
 | Step        | Moon landing                                                | Human origins                                                             | Ancient Australia                                                                 |

@@ -23,5 +23,14 @@ test('the ozone hole shows each spring on the globe, with its record beside it, 
     await page.getByRole('button', { name: 'Go', exact: true }).click();
     await expect(globe).toHaveAttribute('data-ozone', 'off');
   });
+  await test.step('Then its chip says so in words, and takes them to the next year measured (#751)', async () => {
+    const phone = (page.viewportSize()?.width ?? 1000) < 600;
+    if (phone) await page.getByRole('button', { name: 'Layers' }).click();
+    const chip = page.getByRole('group', { name: 'Layers on' }).locator('[data-layer="ozone"]');
+    await expect(chip).toHaveAttribute('data-coverage', 'gap');
+    await expect(chip).toContainText('none in 1995 CE');
+    await chip.getByRole('button', { name: /go to 1996 CE/ }).click();
+    await expect(globe).not.toHaveAttribute('data-ozone', 'off');
+  });
   expect(problems).toEqual([]);
 });

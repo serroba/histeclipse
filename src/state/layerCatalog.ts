@@ -4,6 +4,7 @@
  * when the moment shown lies outside its data.
  */
 
+import { PRESENT_YEAR } from '../time/present';
 import { astronomicalYear, formatYear } from '../time/year';
 import { SPAN_LABELS, type BorderSource, type Layer, type Span } from './viewState';
 
@@ -17,6 +18,19 @@ export interface LayerChoice {
   readonly reach: string;
   /** Where going to its span lands, when somewhere is better than the span's present end. */
   readonly arrive?: { readonly ma: number; readonly label: string };
+  /**
+   * The times its data covers within its spans (#751), as its files reach: astronomical years in
+   * the years, the oldest million years ago it reaches in deep time, and years it has none for.
+   * Absent where the layer covers all of its spans.
+   */
+  readonly covers?: Coverage;
+}
+
+/** The times a layer's data covers (#751). */
+export interface Coverage {
+  readonly years?: readonly [number, number];
+  readonly oldestMa?: number;
+  readonly gaps?: readonly number[];
 }
 
 export interface LayerGroup {
@@ -49,6 +63,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
           'How people lived by region, as archaeologists rated it (ArchaeoGLOBE): foraging, herding, farming, towns.',
         spans: ['years'],
         reach: 'From 10,000 years ago to 1850 CE, rated at ten moments.',
+        covers: { years: [-7999, 1850] },
       },
       {
         id: 'periods',
@@ -65,6 +80,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
           'Where archaeologists have dated remains by carbon-14 (p3k14c), calibrated and counted by square and 250 years: where dates were measured, not how many people lived. Pick a place to see how one was dated.',
         spans: ['years'],
         reach: 'From 10,550 BCE (12,500 years before 1950) to 1950.',
+        covers: { years: [-10549, 1950] },
       },
       {
         id: 'genomes',
@@ -104,6 +120,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
         about: 'A second reconstruction’s continents, outlined over the first.',
         spans: DEEP,
         reach: 'Back to 1,800 million years ago.',
+        covers: { oldestMa: 1800 },
       },
       {
         id: 'impacts',
@@ -146,6 +163,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
           'The Antarctic ozone hole each spring (NASA Ozone Watch), as a cap of its area round the pole, with the gases that made it (NOAA) beside the globe.',
         spans: ['years'],
         reach: 'Each spring from 1979 to 2025, none measured in 1995; the gases from 1992.',
+        covers: { years: [1979, 2025], gaps: [1995] },
       },
       {
         id: 'warming',
@@ -154,6 +172,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
           'Global surface temperature since 1850, six records side by side beside the globe (HadCRUT5, Berkeley Earth, NOAAGlobalTemp, GISTEMP, ERA5, JRA-3Q), and how far apart they are.',
         spans: ['years'],
         reach: 'From 1850 to 2025, on the 1850–1900 baseline; each record from its own start.',
+        covers: { years: [1850, 2025] },
       },
       {
         id: 'oceanHeat',
@@ -170,6 +189,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
         about: 'The surface coloured by its temperature, model by model.',
         spans: ['all', 'eons'],
         reach: 'Maps every 5 million years, back 540 million years.',
+        covers: { oldestMa: 540 },
       },
       {
         id: 'sealevel',
@@ -193,6 +213,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
           'How much radiocarbon the air held each year, under the years’ slider: its sudden spikes and its plateaus, and why a radiocarbon date is a range.',
         spans: ['years'],
         reach: 'The calibration curves reach back 55,000 years, to 1950.',
+        covers: { years: [-53049, 1950] },
       },
       {
         id: 'carbonMade',
@@ -230,6 +251,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
           'Every craft sent beyond Earth orbit since 1959, where it was at the moment shown, flying as the time plays; a tap on its name for its story.',
         spans: ['years'],
         reach: 'In the years, from Luna 1 in January 1959 to today.',
+        covers: { years: [1959, PRESENT_YEAR] },
       },
       {
         id: 'asteroids',
