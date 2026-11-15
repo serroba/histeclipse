@@ -10,6 +10,7 @@ import type { MoonEphemeris } from '../astro/moon';
 import type { Vector3 } from '../astro/matrix';
 import type { PlanetEphemeris, PlanetName } from '../astro/planets';
 import type { SkyPlanet } from '../sky/skyScene';
+import type { DeltaT } from '../time/deltaT';
 import type { JulianDay } from '../time/julianDay';
 import type { Place } from '../data/lineages';
 import type { WhyId } from '../sources/registry';
@@ -34,6 +35,23 @@ export interface PartContext {
   readonly timeline: Timeline;
   /** The Moon's and the planets' theories, kept by the bodies (#606). */
   readonly ephemerides: Ephemerides;
+  /** ΔT, the table that turns the clock's time into the Earth's turning (#606): loaded before
+   * anything is drawn, so a part asks for it only once it draws. */
+  deltaT(): DeltaT;
+}
+
+/** ΔT as the parts are given it before it has loaded: asked for then, it says so. */
+export function lateDeltaT(): { readonly deltaT: () => DeltaT; bind(table: DeltaT): void } {
+  let table: DeltaT | null = null;
+  return {
+    deltaT: () => {
+      if (table === null) throw new Error('ΔT asked for before it loaded');
+      return table;
+    },
+    bind: (loaded) => {
+      table = loaded;
+    },
+  };
 }
 
 /** The Moon's and the planets' theories, as the bodies keep them once mounted (#606). */

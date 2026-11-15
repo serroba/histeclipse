@@ -42,7 +42,6 @@ export interface CycleContext extends PartContext {
   /** The moment shown, in Terrestrial Time, once there is one. */
   moment(): JulianDay | null;
   /** Universal Time at a moment in Terrestrial Time. */
-  universalTime(jdTT: JulianDay): JulianDay;
   /** The years' own track, and its speed beside the date: they give way while a cycle, or an
    * eclipse's player, runs the time, and stop playing. */
   readonly history: { readonly root: HTMLElement; readonly extras: HTMLElement; stop(): void };
@@ -145,7 +144,7 @@ export function mountCycle(context: CycleContext): CyclePart {
         body,
         at,
         moments: at.events.map(({ mark, jdTT: when }) => {
-          const jd = context.universalTime(julianDayNumber(when));
+          const jd = context.deltaT().universalTime(julianDayNumber(when));
           const [name, meaning] = MARK_WORDS[mark];
           return { name, meaning, jd, date: cycleDate(jd) };
         }),

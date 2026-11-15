@@ -29,7 +29,6 @@ export interface YearsContext extends PartContext {
   /** The card that carries a date across a curve. */
   readonly datingCard: Pick<DatingCard, 'open'>;
   /** The first year ΔT reaches. */
-  firstYear(): number;
   /** The travel view came or went: what rests while travelling shows again. */
   travelChanged(state: ViewState): void;
   /** What the borders last said changed: nothing until they change. */
@@ -192,7 +191,7 @@ export function mountYears(context: YearsContext): YearsPart {
   let travelBrought: readonly Layer[] = [];
 
   function historyFirst(): number {
-    return Math.ceil(context.firstYear()) + 1;
+    return Math.ceil(context.deltaT().firstYear) + 1;
   }
 
   function setYear(year: number): void {

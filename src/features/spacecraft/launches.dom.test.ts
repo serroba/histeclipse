@@ -78,6 +78,9 @@ async function setUp(
     why: () => document.createElement('button'),
     goToDeepTime: vi.fn(),
     timeline: { travelling: () => false, playing: () => false, oldest: () => 540 },
+    deltaT: () => {
+      throw new Error('no ΔT here');
+    },
     ephemerides: {
       moon: () => null,
       planets: () => null,
