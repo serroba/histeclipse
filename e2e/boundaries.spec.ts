@@ -155,3 +155,33 @@ test('a link opens the comparison complete for less motion, with the report’s 
   });
   expect(problems).toEqual([]);
 });
+
+test('on a phone the boundaries story lets the reader choose the chart or the globe, which it keeps driving @mobile', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'a phone, where the sheet hides the globe');
+  const problems = collectProblems(page);
+  const sheet = page.getByTestId('boundaries-sheet');
+  await test.step('Given the story open on the Holocene', async () => {
+    await page.goto('./?t=2026-01-01T12:00Z');
+    await globeRendered(page);
+    await page.getByRole('button', { name: 'Boundaries', exact: true }).click();
+    await expect(sheet.getByTestId('holocene-stage')).toBeVisible();
+  });
+  await test.step('When they choose the globe, Then the sheet folds to its chapters and the globe shows', async () => {
+    await sheet.getByRole('button', { name: 'Globe', exact: true }).click();
+    await expect(sheet.getByTestId('holocene-stage')).toBeHidden();
+    await expect(sheet.getByRole('button', { name: 'Holocene' })).toBeVisible();
+    const folded = await sheet.boundingBox();
+    expect(folded?.height ?? 900).toBeLessThan(300);
+  });
+  await test.step('When they choose the chart again, Then it is back; closed and opened, it starts on the chart', async () => {
+    await sheet.getByRole('button', { name: 'Chart', exact: true }).click();
+    await expect(sheet.getByTestId('holocene-stage')).toBeVisible();
+    await sheet.getByRole('button', { name: 'Globe', exact: true }).click();
+    await sheet.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('button', { name: 'Boundaries', exact: true }).click();
+    await expect(sheet.getByTestId('holocene-stage')).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});
