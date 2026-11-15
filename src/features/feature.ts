@@ -9,8 +9,6 @@
  * state and URL by feature (#381) and the CSS by component (#382).
  */
 
-import type { MoonEphemeris } from '../astro/moon';
-import type { PlanetEphemeris } from '../astro/planets';
 import type { Fetch } from '../util/fetchJson';
 import type { Globe } from '../globe/globe';
 import type { DeepScale, Layer, ViewState } from '../state/viewState';
@@ -18,7 +16,7 @@ import type { LineageGroup } from '../data/lineages';
 import type { TreeOfLife } from '../data/treeOfLife';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
 import type { MarkerCardContent } from '../ui/markerCard';
-import type { Timeline } from './part';
+import type { Ephemerides, Timeline } from './part';
 import type { Anchor } from '../text/passages';
 import type { ZoomRail } from '../ui/zoomRail';
 
@@ -41,11 +39,8 @@ export interface FeatureContext {
   openAnchor(anchor: Anchor): void;
   /** Whether a marker's card is open. */
   cardOpen(): boolean;
-  /** The planets' theory, once loaded; `loadPlanets` asks for it. */
-  planets(): PlanetEphemeris | null;
-  loadPlanets(): void;
-  /** The Moon's ephemeris, once loaded (it loads with the app). */
-  moon(): MoonEphemeris | null;
+  /** The Moon's and the planets' theories (#606). */
+  readonly ephemerides: Ephemerides;
   /** Open the tree of life through time at a genus (#358). */
   openLineages(group: LineageGroup, genus: string): void;
   /** Open the tree of life at the node `pick` finds in it. */

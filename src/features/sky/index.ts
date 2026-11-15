@@ -19,8 +19,7 @@ import { planetNote, skyCaption } from './caption';
 import { momentCache, type SkyMoment } from './moment';
 import { earthVelocity } from '../../sky/horizon';
 import type { Figure } from '../../sky/look';
-import type { SkyMark, SkyPlanet, SkyScene, SkyTap } from '../../sky/skyScene';
-import type { Vector3 } from '../../astro/matrix';
+import type { SkyMark, SkyScene, SkyTap } from '../../sky/skyScene';
 import { SKY } from '../../state/redraws';
 import type { GeoPoint, SkyLook, ViewState } from '../../state/viewState';
 import { julianDayNumber, type JulianDay } from '../../time/julianDay';
@@ -39,16 +38,10 @@ const SKY_GLIDE_MS = 900;
 export interface SkyContext extends PartContext {
   /** The Sun and the Moon from the observer at the moment shown, or null if it can't be had. */
   bodiesSeen(state: ViewState): BodiesSeen | null;
-  /** The planets as the observer sees them, once their theory has loaded. */
-  planetsSeen(jdTT: JulianDay, sun: Vector3, observer: Vector3): SkyPlanet[];
-  /** Load the planets' theory, if it hasn't been. */
-  loadPlanets(): Promise<unknown>;
   /** ΔT's uncertainty at a moment, seconds. */
   deltaTUncertainty(jdUT: JulianDay): number;
   /** A place's name, where it has one. */
   namedPlace(place: GeoPoint): string | null;
-  /** Whether the Moon's ephemeris has loaded. */
-  moonReady(): boolean;
   /** A tap on open sky clears the panels, or brings them back (#253). */
   togglePanels(): void;
   /** The marks the sky shows at the moment: a tablet record's bodies, if one is being looked at. */
@@ -117,7 +110,7 @@ export function mountSky(context: SkyContext): SkyPart {
       import('../../sky/skyScene'),
       loadSky(`${base}data/sky.json`, fetchJson),
       loadHipStars(`${base}data/hip-stars.json`, fetchJson),
-      context.loadPlanets(),
+      context.ephemerides.loadPlanets(),
     ]).then(
       ([{ createSkyScene }, plainSky, hipStars]) => {
         const state = store.get();
@@ -201,7 +194,7 @@ export function mountSky(context: SkyContext): SkyPart {
   // Kept while only the look, the figures or the marks change: a drag or a glide (#666).
   const momentOf = momentCache(
     (state) => context.bodiesSeen(state),
-    () => context.moonReady(),
+    () => context.ephemerides.moon() !== null,
   );
   // The moment the scene was last given, and the scene.
   let shown: { moment: SkyMoment; scene: SkyScene } | null = null;
@@ -213,7 +206,7 @@ export function mountSky(context: SkyContext): SkyPart {
     eclipse.hidden = true;
     figureSwitch.render(state.figures, inSky, state.culture === 'modern');
     cultureSwitch.render(state.culture, inSky);
-    aimSwitch.render(inSky, context.moonReady());
+    aimSwitch.render(inSky, context.ephemerides.moon() !== null);
     const marks = context.marks(state);
     if (!inSky) {
       scene?.setVisible(false);
@@ -248,7 +241,7 @@ export function mountSky(context: SkyContext): SkyPart {
         sun,
         moon,
         observer,
-        planets: context.planetsSeen(jdTT, sun, observer),
+        planets: context.ephemerides.planetsSeen(jdTT, sun, observer),
         velocity: earthVelocity((jd) => sunPositionJ2000(julianDayNumber(jd)), jdTT),
       });
       shown = { moment: now, scene };

@@ -56,6 +56,13 @@ function mount() {
     why: (id) => ({ id }) as unknown as HTMLElement,
     goToDeepTime,
     timeline: { travelling: () => false, playing: () => false, oldest: () => 540 },
+    ephemerides: {
+      moon: () => null,
+      planets: () => null,
+      loadPlanets: () => Promise.reject(new Error('none')),
+      planetPositions: () => null,
+      planetsSeen: () => [],
+    },
   };
   return { part: mountTreeOfLife(context), store, notify, goToDeepTime };
 }

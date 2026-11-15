@@ -39,9 +39,11 @@ function geocentric(context: FeatureContext): Geocentric {
   return (body, jdTT) => {
     const jd = jdTT as JulianDay;
     if (body === 'Sun') return sunPositionJ2000(jd);
-    if (body === 'Moon') return context.moon()?.position(jd) ?? null;
+    if (body === 'Moon') return context.ephemerides.moon()?.position(jd) ?? null;
     const planet = PLANETS.find((name) => name === body.toLowerCase());
-    return planet === undefined ? null : (context.planets()?.position(planet, jd) ?? null);
+    return planet === undefined
+      ? null
+      : (context.ephemerides.planets()?.position(planet, jd) ?? null);
   };
 }
 
@@ -104,7 +106,7 @@ export const spacecraftFeature: Feature = {
           sites.update(null);
           return;
         }
-        if (context.planets() === null) context.loadPlanets();
+        if (context.ephemerides.planets() === null) void context.ephemerides.loadPlanets();
         if (loaded === null) {
           if (asked) return;
           asked = true;
