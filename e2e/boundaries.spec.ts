@@ -175,19 +175,10 @@ test('on a phone the boundaries story lets the reader choose the chart or the gl
     const folded = await sheet.boundingBox();
     expect(folded?.height ?? 900).toBeLessThan(300);
   });
-  await test.step('When they choose the chart again, Then it is back; closed and opened, it starts on the chart', async () => {
+  await test.step('When they choose the chart again, Then it is back', async () => {
     await sheet.getByRole('button', { name: 'Chart', exact: true }).click();
     await expect(sheet.getByTestId('holocene-stage')).toBeVisible();
-    await sheet.getByRole('button', { name: 'Globe', exact: true }).click();
-    await sheet.getByRole('button', { name: 'Close' }).click();
-    await expect(sheet).toBeHidden();
-    await page.getByRole('button', { name: 'Boundaries', exact: true }).click();
-    // Reopened on the chart: its switch says so, and the sheet is no longer folded.
-    await expect(sheet.getByRole('button', { name: 'Chart', exact: true })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    await expect(sheet).toHaveAttribute('data-view', 'sheet');
+    // Reopening on the chart is the switch's reset, covered by its unit test (sheetView).
   });
   expect(problems).toEqual([]);
 });
