@@ -42,7 +42,6 @@ import { shadowAt } from '../../eclipses/solar';
 import { longitudeUncertainty, shiftLongitude } from '../../eclipses/visibility';
 import { geoToVector } from '../../globe/geo';
 import { momentJulianDay, withEclipse, type GeoPoint, type ViewState } from '../../state/viewState';
-import type { DeltaT } from '../../time/deltaT';
 import { formatTimeOfDay } from '../../time/format';
 import { julianDayNumber } from '../../time/julianDay';
 import { yearSpan } from '../../time/calendars';
@@ -60,7 +59,6 @@ export interface EclipsesContext extends PartContext {
   readonly globe: Pick<Globe, 'flyTo' | 'addLayer'>;
   /** The catalogues and ΔT, which load before the page shows a moment. */
   readonly catalogs: () => { readonly lunar: LunarCatalog; readonly solar: SolarCatalog };
-  readonly deltaT: () => DeltaT;
   readonly famous: () => readonly FamousEclipse[];
   /** The name of where the observer stands: a famous eclipse's place, or a culture's site. */
   readonly placeName: (place: GeoPoint, famousHere: FamousEclipse | undefined) => string | null;

@@ -22,7 +22,7 @@ import type { Figure } from '../../sky/look';
 import type { SkyMark, SkyScene, SkyTap } from '../../sky/skyScene';
 import { SKY } from '../../state/redraws';
 import type { GeoPoint, SkyLook, ViewState } from '../../state/viewState';
-import { julianDayNumber, type JulianDay } from '../../time/julianDay';
+import { julianDayNumber } from '../../time/julianDay';
 import { createAimSwitch, type AimTarget } from './aimSwitch';
 import { createCultureSwitch } from './cultureSwitch';
 import { element } from '../../ui/dom';
@@ -38,8 +38,6 @@ const SKY_GLIDE_MS = 900;
 export interface SkyContext extends PartContext {
   /** The Sun and the Moon from the observer at the moment shown, or null if it can't be had. */
   bodiesSeen(state: ViewState): BodiesSeen | null;
-  /** ΔT's uncertainty at a moment, seconds. */
-  deltaTUncertainty(jdUT: JulianDay): number;
   /** A place's name, where it has one. */
   namedPlace(place: GeoPoint): string | null;
   /** A tap on open sky clears the panels, or brings them back (#253). */
@@ -221,7 +219,7 @@ export function mountSky(context: SkyContext): SkyPart {
         place,
         placeName: context.namedPlace(place),
         azimuth: state.look.azimuth,
-        uncertaintySeconds: context.deltaTUncertainty(jdUT),
+        uncertaintySeconds: context.deltaT().uncertaintySeconds(jdUT),
       }),
       planetNote(state.time.date.year),
     ]

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { lateEphemerides, lateTimeline } from './part';
+import { lateDeltaT, lateEphemerides, lateTimeline } from './part';
 
 describe('the timeline the parts ask of', () => {
   it('Given nothing bound yet, Then nothing travels or plays and the maps reach their default', () => {
@@ -48,5 +48,15 @@ describe('the ephemerides the parts ask of', () => {
     expect(ephemerides.planets()).toBe(planets);
     expect(ephemerides.planetPositions(2451545 as never)).toEqual({});
     expect(ephemerides.planetsSeen(2451545 as never, [0, 0, 0], [0, 0, 0])).toEqual([]);
+  });
+});
+
+describe('ΔT the parts ask for', () => {
+  it('Given it not yet loaded, Then asking says so; once bound, Then it is the table', () => {
+    const late = lateDeltaT();
+    expect(() => late.deltaT()).toThrow('ΔT asked for before it loaded');
+    const table = { firstYear: -9700 } as never;
+    late.bind(table);
+    expect(late.deltaT()).toBe(table);
   });
 });

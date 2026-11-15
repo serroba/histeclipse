@@ -11,7 +11,6 @@ import { earthFixedToJ2000, sunPositionJ2000 } from '../../astro/precession';
 import { subsolarPoint } from '../../astro/sun';
 import { geoToVector } from '../../globe/geo';
 import { defaultViewState, momentJulianDay, type ViewState } from '../../state/viewState';
-import type { DeltaT } from '../../time/deltaT';
 import { formatCalendar, formatDate, formatDuration, formatTimeOfDay } from '../../time/format';
 import { type JulianDay } from '../../time/julianDay';
 import { formatInCalendar } from '../../time/calendars';
@@ -30,7 +29,6 @@ export interface MomentContext extends PartContext {
   readonly globe: Pick<Globe, 'setSunDirection' | 'setSpace'>;
   /** When the page was opened: "today", where a moment beyond ΔT goes instead. */
   readonly now: Date;
-  readonly deltaT: () => DeltaT;
   /** The moment shown changed: what is placed by it shows again. */
   atMoment(state: ViewState, terrestrial: JulianDay): void;
   /** The point under the Sun, as the page's data says it for the tests. */

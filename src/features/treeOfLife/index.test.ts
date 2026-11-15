@@ -56,6 +56,9 @@ function mount() {
     why: (id) => ({ id }) as unknown as HTMLElement,
     goToDeepTime,
     timeline: { travelling: () => false, playing: () => false, oldest: () => 540 },
+    deltaT: () => {
+      throw new Error('no ΔT here');
+    },
     ephemerides: {
       moon: () => null,
       planets: () => null,

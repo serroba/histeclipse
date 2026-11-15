@@ -41,7 +41,7 @@ import { createViewSwitch } from './ui/viewSwitch';
 import { countryRings, loadNamedPeriods } from './data/namedPeriods';
 import { createWhySheet } from './ui/whySheet';
 import { createImpactPathsSheet } from './ui/impactPathsSheet';
-import { lateEphemerides, lateTimeline, type PartContext } from './features/part';
+import { lateDeltaT, lateEphemerides, lateTimeline, type PartContext } from './features/part';
 import { mountBoundaries } from './features/boundaries';
 import { mountTreeOfLife } from './features/treeOfLife';
 import { mountSky } from './features/sky';
@@ -124,6 +124,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const time = lateTimeline(540);
   // The Moon's and the planets' theories, kept by the bodies and asked of by the parts (#606).
   const ephemerides = lateEphemerides();
+  // ΔT, loaded with the catalogues before anything is drawn (#606).
+  const clock = lateDeltaT();
   // What the app lends the parts of the page (#443).
   const partContext: PartContext = {
     base,
@@ -132,6 +134,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     notify,
     timeline: time.timeline,
     ephemerides: ephemerides.ephemerides,
+    deltaT: clock.deltaT,
     why: (id, label) => whySheet.mark(id, label),
     goToDeepTime(ma, layer, where) {
       deepTime.enterDeepTime(ma, 'all');
@@ -150,8 +153,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The sky view (#448): loaded the first time it is opened.
   const sky = mountSky({
     ...partContext,
-    bodiesSeen: (state) => bodiesSeen(state, (jd) => deltaT.terrestrialTime(jd), bodies.moon()),
-    deltaTUncertainty: (jdUT) => deltaT.uncertaintySeconds(jdUT),
+    bodiesSeen: (state) =>
+      bodiesSeen(state, (jd) => clock.deltaT().terrestrialTime(jd), bodies.moon()),
     namedPlace,
     togglePanels: panels.toggle,
     marks: (state) => records.marks(state),
@@ -311,7 +314,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // A tablet's records checked against the sky, and looked at from Babylon (#447).
   const records = mountRecords({
     ...partContext,
-    deltaTSeconds: (jd) => deltaT.seconds(jd),
     setSkyMarks: (marks) => {
       sky.setMarks(marks);
     },
@@ -349,7 +351,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ...partContext,
     globe,
     now,
-    deltaT: () => deltaT,
     atMoment: (state, terrestrial) => {
       bodies.setMoment(terrestrial);
       showBody(state);
@@ -397,7 +398,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ...partContext,
     globe,
     datingCard,
-    firstYear: () => deltaT.firstYear,
     travelChanged: (now) => {
       dates.show(now);
       impacts.show(now);
@@ -414,7 +414,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const cycle = mountCycle({
     ...partContext,
     moment: () => moment.terrestrial(),
-    universalTime: (jdTT) => deltaT.universalTime(jdTT),
     history: { ...years.track, stop: years.stop },
   });
   const launches = mountLaunches({ ...partContext, history: { ...years.track, stop: years.stop } });
@@ -434,7 +433,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ...partContext,
     globe,
     catalogs: () => ({ lunar: lunarCatalog, solar: solarCatalog }),
-    deltaT: () => deltaT,
     famous: () => famous.list(),
     placeName,
     territoryOf: (name, shown) => empires.territoryOf(name, shown),
@@ -579,6 +577,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     LunarCatalog.load(`${base}data/lunar/`, (url) => fetch(url)),
     SolarCatalog.load(`${base}data/solar/`, (url) => fetch(url)),
   ]);
+  clock.bind(deltaT);
   const sync = createUrlSync(browserUrlWriter(window.location, window.history));
 
   // The Moon's theory is a separate chunk; until it arrives the space view shows only the Sun.

@@ -16,7 +16,7 @@ import { candidateYear, checkAll, type Verdict, verdictMoment } from './check';
 import { BABYLON, directionOf, starsByNumber, type TabletSky } from '../../tablets/tabletSky';
 import { bodyName, computedText, recordBodies } from './verdictText';
 import { VAT_4956 } from './vat4956';
-import { julianDayNumber, type JulianDay } from '../../time/julianDay';
+import { julianDayNumber } from '../../time/julianDay';
 import { element } from '../../ui/dom';
 import { createTabletPanel } from './tabletPanel';
 import type { PartContext } from '../part';
@@ -28,7 +28,6 @@ const RECORD_FOV = 40;
 /** What the records ask of the rest of the page. */
 export interface RecordsContext extends PartContext {
   /** ΔT at a moment, seconds. */
-  deltaTSeconds(jdUT: JulianDay): number;
   /** Point out bodies in the sky, or none. */
   setSkyMarks(marks: readonly SkyMark[]): void;
 }
@@ -58,7 +57,7 @@ export function mountRecords(context: RecordsContext): RecordsPart {
       moon: loadedMoon,
       planets,
       stars: starsByNumber(catalogue.stars),
-      deltaT: (jd) => context.deltaTSeconds(jd),
+      deltaT: (jd) => context.deltaT().seconds(jd),
       place: BABYLON,
     }));
     tabletSkyLoading.catch(() => {
@@ -137,7 +136,7 @@ export function mountRecords(context: RecordsContext): RecordsPart {
       : `✗ does not fit: computed ${computedText(verdict)}`;
     banner.hidden = false;
     const body = observation.kind === 'position' ? observation.body : 'moon';
-    const jdTT = julianDayNumber(moment + context.deltaTSeconds(moment) / 86_400);
+    const jdTT = julianDayNumber(moment + context.deltaT().seconds(moment) / 86_400);
     const { azimuth, altitude } = horizontalOf(
       horizonMatrix(BABYLON, moment, jdTT),
       directionOf(sky, body, moment),
@@ -170,7 +169,7 @@ export function mountRecords(context: RecordsContext): RecordsPart {
       if (shown === null) return [];
       const { sky, verdict } = shown;
       const jdUT = momentJulianDay(state.time);
-      const jdTT = julianDayNumber(jdUT + context.deltaTSeconds(jdUT) / 86_400);
+      const jdTT = julianDayNumber(jdUT + context.deltaT().seconds(jdUT) / 86_400);
       const horizon = horizonMatrix(BABYLON, jdUT, jdTT);
       return recordBodies(verdict.observation).map((body) => ({
         name: bodyName(body),
