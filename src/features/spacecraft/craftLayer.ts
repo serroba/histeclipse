@@ -46,6 +46,14 @@ interface CraftLayer {
   set(craft: readonly CraftDrawn[] | null): void;
 }
 
+/** Send the first `count` items of an attribute to the GPU on the next draw. */
+function uploaded(attribute: Float32BufferAttribute, count: number): void {
+  attribute.clearUpdateRanges();
+  if (count === 0) return;
+  attribute.addUpdateRange(0, count * attribute.itemSize);
+  attribute.needsUpdate = true;
+}
+
 function createCraftLayer(scene: Scene): CraftLayer {
   const group = new Group();
   group.visible = false;
@@ -56,17 +64,19 @@ function createCraftLayer(scene: Scene): CraftLayer {
   const dots = new BufferGeometry();
   dots.setAttribute('position', dotPositions);
   dots.setAttribute('color', dotColours);
-  group.add(
-    new Points(
-      dots,
-      new PointsMaterial({
-        size: 5,
-        sizeAttenuation: false,
-        vertexColors: true,
-        depthWrite: false,
-      }),
-    ),
+  // The craft and their trails reach across the view, so they are never culled: no bounding
+  // sphere to work out over the whole buffer every frame (#768).
+  const dotPoints = new Points(
+    dots,
+    new PointsMaterial({
+      size: 5,
+      sizeAttenuation: false,
+      vertexColors: true,
+      depthWrite: false,
+    }),
   );
+  dotPoints.frustumCulled = false;
+  group.add(dotPoints);
 
   const segments = MOST_CRAFT * MOST_TRAIL;
   const trailPositions = new Float32BufferAttribute(new Float32Array(segments * 2 * 3), 3);
@@ -74,12 +84,12 @@ function createCraftLayer(scene: Scene): CraftLayer {
   const trails = new BufferGeometry();
   trails.setAttribute('position', trailPositions);
   trails.setAttribute('color', trailColours);
-  group.add(
-    new LineSegments(
-      trails,
-      new LineBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false }),
-    ),
+  const trailLines = new LineSegments(
+    trails,
+    new LineBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false }),
   );
+  trailLines.frustumCulled = false;
+  group.add(trailLines);
 
   return {
     set(craft) {
@@ -107,11 +117,11 @@ function createCraftLayer(scene: Scene): CraftLayer {
       });
       dots.setDrawRange(0, shown.length);
       trails.setDrawRange(0, vertex);
-      for (const attribute of [dotPositions, dotColours, trailPositions, trailColours]) {
-        attribute.needsUpdate = true;
-      }
-      dots.computeBoundingSphere();
-      trails.computeBoundingSphere();
+      // Only what is drawn is sent to the GPU, not the whole buffer (#768).
+      uploaded(dotPositions, shown.length);
+      uploaded(dotColours, shown.length);
+      uploaded(trailPositions, vertex);
+      uploaded(trailColours, vertex);
     },
   };
 }
