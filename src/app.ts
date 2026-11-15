@@ -24,6 +24,7 @@ import {
 } from './state/redraws';
 import { createStore } from './state/store';
 import { parseViewState } from './state/url';
+import { createRedrawRequests } from './state/redrawRequests';
 import { browserUrlWriter, createUrlSync } from './state/urlSync';
 import { awayFromEarth, toggledLayer, withLayer, type ViewState } from './state/viewState';
 import { DeltaT } from './time/deltaT';
@@ -96,6 +97,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const openedSearch = arrivalSearch(window.location.search);
   const parsed = parseViewState(openedSearch, now);
   const store = createStore<ViewState>(parsed.state);
+  // Parts ask each other to redraw by name, answered once each is mounted (#606).
+  const redraws = createRedrawRequests(store);
   const fetchJson = (url: string): Promise<Response> => fetch(url);
   // Full view: the panels hidden for a clear view, and the ways to bring them back.
   const panels = createPanels(root);
@@ -136,9 +139,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // Named periods for the place picked (#446).
   const namedPeriods = mountPeriods({
     ...partContext,
-    refresh: () => {
-      showLayers(store.get());
-    },
+    refresh: redraws.ask('layers'),
   });
   // The sky view (#448): loaded the first time it is opened.
   const sky = mountSky({
@@ -267,9 +268,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     fetchJson,
     globe,
     notify,
-    arrived: () => {
-      deepTime.show(store.get());
-    },
+    arrived: redraws.ask('deepTime'),
   });
 
   const deepTime = mountDeepTime({
@@ -337,9 +336,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ...partContext,
     globe,
     zoomRail,
-    refresh: () => {
-      moment.show(store.get());
-    },
+    refresh: redraws.ask('moment'),
     moonArrived: () => {
       const now = store.get();
       moment.show(now);
@@ -395,9 +392,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     watchShower: (dipole, fromSun) => {
       shower.watch(dipole, fromSun);
     },
-    refresh: () => {
-      showLayers(store.get());
-    },
+    refresh: redraws.ask('layers'),
   });
   // The years (#446): the track, playing them, travelling through them, and carbon-14 in the air.
   const years = mountYears({
@@ -432,9 +427,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const empires = mountEmpires({
     ...partContext,
     globe,
-    noted: () => {
-      years.show(store.get());
-    },
+    noted: redraws.ask('years'),
     drawn: () => {
       if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get(), hereData()));
     },
@@ -519,9 +512,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ...partContext,
     globe,
     travelling: () => years.travelling(),
-    refresh: () => {
-      showLayers(store.get());
-    },
+    refresh: redraws.ask('layers'),
   };
   const rocks = mountRocks({
     ...historyLayer,
@@ -541,9 +532,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const surfaces = mountDeepSurfaces({
     ...partContext,
     globe,
-    redraw: () => {
-      deepTime.show(store.get());
-    },
+    redraw: redraws.ask('deepTime'),
   });
   // The ice ages' Earth (#444): the sea's level and the land it left bare, the ice sheets and
   // their outlines, the sea ice, and the Holocene's while travelling through the years.
@@ -551,12 +540,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ...partContext,
     globe,
     travelling: () => years.travelling(),
-    redraw: () => {
-      deepTime.show(store.get());
-    },
-    holoceneShown: (state) => {
-      years.show(state);
-    },
+    redraw: redraws.ask('deepTime'),
+    holoceneShown: redraws.askWith('years'),
   });
   // Impact craters and deposits (#474): their layer is added here, in the globe's order.
   const impacts = mountImpacts({
@@ -569,12 +554,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     oldest: () => deepTime.oldest(),
     playing: () => deepTime.playing(),
     travelling: () => years.travelling(),
-    redrawDeep: (state) => {
-      deepTime.show(state);
-    },
-    refreshLayers: (state) => {
-      showLayers(state);
-    },
+    redrawDeep: redraws.askWith('deepTime'),
+    refreshLayers: redraws.askWith('layers'),
   });
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureContext: FeatureContext = {
@@ -666,6 +647,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     explore.show(state);
     empires.show(state);
   }
+
+  redraws.answer('moment', moment.show);
+  redraws.answer('deepTime', deepTime.show);
+  redraws.answer('years', years.show);
+  redraws.answer('layers', showLayers);
 
   // What is drawn as the view changes, in this order (#474): each when what it watches changes.
   const drawn: readonly Drawn[] = [
