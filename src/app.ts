@@ -209,6 +209,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ...features.said(),
       ['carbonMade', carbonMade.said()],
     ],
+    // How each layer's load stands (#751): the features on the contract report theirs.
+    loads: () => features.loads(),
     actions: () => [
       [
         'fossils',

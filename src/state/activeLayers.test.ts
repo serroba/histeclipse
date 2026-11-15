@@ -54,6 +54,25 @@ describe('the layers on, and whether they have data now (#751)', () => {
     expect(activeLayers(at('ma=1000&scale=eons&layers=plates'))[0]?.coverage).toBe('available');
   });
 
+  it('Given a layer loading or failed where its record has data, Then it says so, and a failed one offers to try again', () => {
+    const retry = (): void => undefined;
+    const state = at('t=2006-10-01T12:00Z&layers=ozone');
+    const [loading] = activeLayers(state, new Map([['ozone', { state: 'loading' }]]));
+    expect(loading).toMatchObject({ coverage: 'loading', draws: false, why: 'loading…' });
+    expect(loading?.retry).toBeNull();
+    const [failed] = activeLayers(state, new Map([['ozone', { state: 'failed', retry }]]));
+    expect(failed).toMatchObject({ coverage: 'failed', draws: false, why: 'could not load' });
+    expect(failed?.retry).toBe(retry);
+  });
+
+  it('Given a layer loading where its record has none, Then the record speaks first', () => {
+    const loads = new Map([['ozone', { state: 'loading' }]] as const);
+    const [gap] = activeLayers(at('t=1995-10-01T12:00Z&layers=ozone'), loads);
+    expect(gap?.coverage).toBe('gap');
+    const [deep] = activeLayers(at('ma=100&scale=all&layers=ozone'), loads);
+    expect(deep?.coverage).toBe('other-span');
+  });
+
   it('Given the span shown, Then the years or the deep scale', () => {
     expect(spanShown({ ma: null, deepScale: 'eons' })).toBe('years');
     expect(spanShown({ ma: 3, deepScale: 'eons' })).toBe('eons');

@@ -189,8 +189,9 @@ years, millions of years, known gaps), and `src/state/activeLayers.ts` works out
 coverage at the moment shown: **available**, **other span**, **outside** its record, or a known
 **gap** (the ozone hole in 1995). The chip says why in visible words, not only a tooltip, and
 offers Go to its nearest data (a year, or a span at a moment of its own); Go to a time lists the
-same words. Available does not claim data at every place. Loading and failed states, which need
-each feature to report its load, are the next step of #751.
+same words. Available does not claim data at every place. Where its record has data, a feature
+on the contract may also report its load (`load()`): **loading** (the chip is busy) or **failed**
+("could not load", with Try again); the ozone layer reports its own, and the rest follow.
 
 ## 7. The three journeys
 

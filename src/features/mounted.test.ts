@@ -12,6 +12,7 @@ function fake(id: Feature['id'], watches: (s: ViewState) => readonly unknown[], 
     pick: vi.fn(),
     unpick: vi.fn(),
     said: vi.fn(() => `${id} said`),
+    ...(id === 'fossils' && { load: () => ({ state: 'loading' }) }),
   };
   const feature = {
     id,
@@ -63,6 +64,13 @@ describe('the features as mounted together', () => {
     expect(features.said()).toEqual([
       ['fossils', 'fossils said'],
       ['asteroids', 'asteroids said'],
+    ]);
+  });
+
+  it('says how each one’s load stands, none where it does not report one (#751)', () => {
+    expect(features.loads()).toEqual([
+      ['fossils', { state: 'loading' }],
+      ['asteroids', null],
     ]);
   });
 });

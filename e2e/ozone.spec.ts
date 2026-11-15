@@ -34,3 +34,30 @@ test('the ozone hole shows each spring on the globe, with its record beside it, 
   });
   expect(problems).toEqual([]);
 });
+
+test('when the ozone record does not load, its chip says so, and Try again draws it (#751) @mobile', async ({
+  page,
+}) => {
+  const globe = page.getByTestId('globe');
+  let fail = true;
+  await page.route('**/data/ozone/history.json', (route) =>
+    fail ? route.fulfill({ status: 503, body: 'down' }) : route.fallback(),
+  );
+  await test.step('Given the spring of 2006 with the ozone hole on, and its record unreachable', async () => {
+    await page.goto('./?t=2006-10-01T12:00Z&layers=ozone&cam=-70,40,3');
+    await globeRendered(page);
+  });
+  const phone = (page.viewportSize()?.width ?? 1000) < 600;
+  if (phone) await page.getByRole('button', { name: 'Layers' }).click();
+  const chip = page.getByRole('group', { name: 'Layers on' }).locator('[data-layer="ozone"]');
+  await test.step('Then its chip says it could not load, in words', async () => {
+    await expect(chip).toHaveAttribute('data-coverage', 'failed');
+    await expect(chip).toContainText('could not load');
+  });
+  await test.step('When the record is back and they try again, Then the hole is drawn', async () => {
+    fail = false;
+    await chip.getByRole('button', { name: /try again/ }).click();
+    await expect(globe).toHaveAttribute('data-ozone', '26.6');
+    await expect(chip).toHaveAttribute('data-coverage', 'available');
+  });
+});
