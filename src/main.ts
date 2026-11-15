@@ -86,9 +86,18 @@ async function boot(appRoot: HTMLElement): Promise<void> {
 }
 
 boot(root).catch((error: unknown) => {
+  const box = document.createElement('div');
+  box.className = 'fatal';
   const message = document.createElement('p');
-  message.className = 'fatal';
   message.textContent = `Something went wrong while loading: ${errorMessage(error)}`;
-  root.replaceChildren(message);
+  // A passing failure (a server's 503) should not leave the page stuck: one tap loads it again.
+  const again = document.createElement('button');
+  again.type = 'button';
+  again.textContent = 'Try again';
+  again.addEventListener('click', () => {
+    window.location.reload();
+  });
+  box.append(message, again);
+  root.replaceChildren(box);
   console.error(error);
 });
