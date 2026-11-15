@@ -373,7 +373,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     openAnchor,
   });
   // Explore (#727): destinations by topic, opened as the texts' anchors are.
-  const explore = mountExplore({ opener, search: texts.search, famous: famous.button });
+  const explore = mountExplore({
+    opener,
+    search: texts.search,
+    famous: famous.button,
+    tree: treeOfLife,
+  });
   // Carbon-14 in the air under the years' slider (#270), its curves loaded once the layer is on.
   const datingCard = createDatingCard();
   // The shower's story (#269, #317): its stage, and its chapters in 3D over the globe.

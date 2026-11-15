@@ -95,3 +95,27 @@ test('a visitor explores ancient Australia: an age, its fossils, the climate the
   });
   expect(problems).toEqual([]);
 });
+
+test('a visitor finds the warming records through All subjects, without knowing a layer’s name (#750) @acceptance @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await test.step('Given today on the globe', async () => {
+    await page.goto('./?t=2016-10-01T12:00Z&cam=0,0,3');
+    await globeRendered(page);
+  });
+  await test.step('When they open Explore, choose Climate and Warming since 1850 under All subjects', async () => {
+    await page.getByRole('button', { name: 'Explore' }).click();
+    const panel = page.getByRole('dialog', { name: 'Explore' });
+    await panel.getByRole('tab', { name: 'Climate' }).click();
+    await expect(panel.getByRole('heading', { name: 'All subjects' })).toBeVisible();
+    await panel.getByRole('button', { name: 'Warming since 1850', exact: true }).click();
+  });
+  await test.step('Then the records are on, side by side, at the year shown', async () => {
+    await expect(page).toHaveURL(/layers=[a-zA-Z,]*warming/);
+    await expect(
+      page.getByRole('region', { name: 'Temperature records side by side' }),
+    ).toContainText('2016:');
+  });
+  expect(problems).toEqual([]);
+});

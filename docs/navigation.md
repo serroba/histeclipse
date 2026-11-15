@@ -125,6 +125,15 @@ Decisions:
 - **Coverage is stated, never invented.** A destination only offers a view its data supports; its
   arrival shows each active layer's reach (see §6).
 
+**All subjects (#750).** Under each topic Explore shows **Start here** (the curated destinations
+and entries: famous eclipses under Space, the tree of life under Life) and then **All subjects**:
+every layer, read from the layer catalogue that Layers uses (`src/explore/subjects.ts`), so a layer
+added to the catalogue is discoverable without a second list. A test holds that every layer is a
+subject under one topic. Picking a subject turns its layer on and, where it draws nothing on the
+span shown, goes where its data is: its own moment, or a span's (the ice ages at the Last Glacial
+Maximum, 540 Myr at 66 Ma, Earth's history at 2.5 Ga). That is an explicit navigation, like a
+destination; a layer toggle in Layers still never moves time.
+
 ## 4. Links and history
 
 - A link keeps describing the **resulting state**, as today; old links read exactly as before.
