@@ -40,9 +40,16 @@ export async function loadSpacecraftPaths(url: string, fetchJson: Fetch): Promis
 }
 
 const JD_BASE = 2_400_000;
+/** Each path's dates read once (#767): a craft's place is asked for every frame. */
+const ISO_JDS = new Map<string, number>();
+
 /** JD (TT) of midnight starting an ISO date. */
 function isoJd(iso: string): number {
-  return Date.parse(`${iso}T00:00:00Z`) / 86_400_000 + 2_440_587.5;
+  const known = ISO_JDS.get(iso);
+  if (known !== undefined) return known;
+  const jd = Date.parse(`${iso}T00:00:00Z`) / 86_400_000 + 2_440_587.5;
+  ISO_JDS.set(iso, jd);
+  return jd;
 }
 
 /** Where a craft is at a moment: about the Sun or Earth (ICRF, km), or at a world. */
