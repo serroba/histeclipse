@@ -13,7 +13,8 @@ describe("the Moon's theory", () => {
     await vi.waitFor(() => {
       expect(arrived).toHaveBeenCalledOnce();
     });
-    expect(moon.ephemeris()).toBe(theory);
+    // The theory, its last few moments kept (#766).
+    expect(moon.ephemeris()?.position(0 as never)).toEqual([0, 0, 0]);
     expect(notify).not.toHaveBeenCalled();
   });
 
