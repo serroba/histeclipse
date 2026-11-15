@@ -47,19 +47,21 @@ measures three phases:
    callback (capped at 15 s; `quiet: false` means it never came to rest).
 3. **rest**: two seconds more, which should be empty.
 
-| Scenario                              | Active phase                                                 |
-| ------------------------------------- | ------------------------------------------------------------ |
-| globe idle                            | 3 s of nothing                                               |
-| globe drag                            | a one-second mouse drag, a move every frame or so            |
-| globe flight out to the Moon and back | the zoom rail out to the Moon's orbit, then back to Earth    |
-| eclipse plays, then pauses            | the eclipse of Thales at 60 min/s for 4 s                    |
-| eclipse scrubbed by keyboard          | 60 ArrowRight presses on the eclipse's time slider           |
-| deep time plays, then pauses          | 250 Ma at 5 Myr/s for 4 s                                    |
-| sky idle                              | 3 s of the night sky over Babylon in 3000 BCE                |
-| sky drag                              | a one-second drag across that sky                            |
-| sky glide to the Sun, on to the globe | a tap on the Sun: the sky's glide, then the globe takes over |
-| globe to sky and back                 | Sky, 2 s there, Orbit, 1 s back on the globe                 |
-| carbon-14 story plays, then pauses    | Replay of the air-shower story for 4 s, then Pause           |
+| Scenario                                      | Active phase                                                    |
+| --------------------------------------------- | --------------------------------------------------------------- |
+| globe idle                                    | 3 s of nothing                                                  |
+| globe drag                                    | a one-second mouse drag, a move every frame or so               |
+| globe flight out to the Moon and back         | the zoom rail out to the Moon's orbit, then back to Earth       |
+| eclipse plays, then pauses                    | the eclipse of Thales at 60 min/s for 4 s                       |
+| eclipse scrubbed by keyboard                  | 60 ArrowRight presses on the eclipse's time slider              |
+| deep time plays, then pauses                  | 250 Ma at 5 Myr/s for 4 s                                       |
+| sky idle                                      | 3 s of the night sky over Babylon in 3000 BCE                   |
+| sky drag                                      | a one-second drag across that sky                               |
+| sky glide to the Sun, on to the globe         | a tap on the Sun: the sky's glide, then the globe takes over    |
+| launches play through August 1966             | the launches about the Sun from 25 July 1966, 6 s at their pace |
+| launches play past Chang’e 2 leaving the Moon | the same from 20 May 2011, past Chang’e 2 leaving the Moon      |
+| globe to sky and back                         | Sky, 2 s there, Orbit, 1 s back on the globe                    |
+| carbon-14 story plays, then pauses            | Replay of the air-shower story for 4 s, then Pause              |
 
 ## What is counted
 

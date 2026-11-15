@@ -177,7 +177,7 @@ export function craftRoutes(
 }
 
 /** Where a craft had just been, newest first, back along its path from where it is now; none
- * while it is at a world. */
+ * while it is at a world, and ending where it left one. */
 function trailOf(
   craft: Craft,
   where: CraftWhere,
@@ -194,8 +194,10 @@ function trailOf(
   const trail: Vec3[] = [];
   for (const then of trailMoments(jdTT, step)) {
     const before = wheres.where(craft, then);
-    const point =
-      before === null ? null : fromEarth(before, then, geocentric, aboutEarth ? then : jdTT);
+    // Back into a stay at a world, it ends where it left: further back would trace the world's
+    // own path, the stray line #716 left out, and cost the world's place at each point (#765).
+    if (before === null || 'at' in before) break;
+    const point = fromEarth(before, then, geocentric, aboutEarth ? then : jdTT);
     if (point === null) break;
     trail.push(point);
   }
