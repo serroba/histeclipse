@@ -7,12 +7,8 @@ import { MAP_KEY, MILESTONE_KEY } from '../deepTime/colourKey';
 import { earthFacts } from '../deepTime/earthFacts';
 import { type Period, periodShort } from '../deepTime/periods';
 import { formatMa } from '../time/format';
-import type { Atmosphere } from '../data/atmosphere';
-import type { DeepAir } from '../data/deepAir';
-import type { Co2Archive } from '../data/co2Archive';
 import type { PolarityScale } from '../data/polarity';
 import type { SeaIceModel } from '../data/seaIce';
-import type { SeaLevelIndex } from '../data/seaLevel';
 import type { CoastSource } from '../deepTime/coastline';
 import {
   type CoastlineView,
@@ -33,15 +29,20 @@ import type { WhyId } from '../sources/registry';
 import { element } from './dom';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { StoryDate } from '../deepTime/storyDate';
-import { createTemperatureLegend, type TemperatureView } from './temperatureLegend';
+import type { TemperatureView } from './temperatureLegend';
 import { createDeepChips, type DeepChip, type DeepChipView } from './deepChips';
-import { bookIcon, uiIcon } from './icons';
+import { bookIcon } from './icons';
 import { createMilestonePanel } from './milestonePanel';
 import { createPeriodBands } from './periodBands';
 import { createPolarityStrip } from './polarityStrip';
-import { createSeaLevelChart } from './seaLevelChart';
 import { attachFoldingSheet } from './foldingSheet';
-import { createDeepAirNote } from './deepAirNote';
+import {
+  type AirView,
+  createAirChip,
+  createSeaLevelChip,
+  createTemperatureChip,
+  type SeaLevelView,
+} from './deepBarChips';
 import { createDeepIceNotes } from './deepIceNotes';
 import { createDeepSketchNote } from './deepSketchNote';
 import './deepTimeBar.css';
@@ -67,15 +68,7 @@ export interface DeepTimeView {
    * The air: off, or on with the ice-core gases (on the ice-age scale) or the gases of the last
    * 540 million years (on that scale), each null while it loads.
    */
-  readonly air:
-    | { readonly on: false }
-    | {
-        readonly on: true;
-        readonly atmosphere: Atmosphere | null;
-        readonly deep: DeepAir | null;
-        /** The Paleo-CO2 Data Archive, once asked for (null until it loads). */
-        readonly archive: Co2Archive | null;
-      };
+  readonly air: AirView;
   /**
    * The chips (#380, #605), by layer: the features', the plates' and the impacts'; whether each
    * is offered and on, and its note.
@@ -92,8 +85,7 @@ export interface DeepTimeView {
   /** Batchelor et al.'s outlines of the time slice shown, on the ice-age scale; null if none. */
   readonly iceOutlines: IceOutlines | null;
   /** Sea level: off, on while the reconstructions load (null), or on with them. */
-  readonly seaLevel:
-    { readonly on: false } | { readonly on: true; readonly index: SeaLevelIndex | null };
+  readonly seaLevel: SeaLevelView;
   /** Before the reconstructions: the hypotheses sketched, and whose; null where a map reaches. */
   readonly sketch: { readonly sketch: Sketch; readonly choices: SketchChoices } | null;
 }
@@ -196,14 +188,11 @@ export function createDeepTimeBar(
   });
   const when = element('strong', { class: 'deep-when', 'data-testid': 'deep-when' });
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
-  const airButton = element(
-    'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', hidden: '', title: 'Air' },
-    uiIcon('air'),
-    element('span', { class: 'icon-label' }, 'Air'),
-  );
-  const air = createDeepAirNote({
-    why: airWhy,
+  // The bar's own chips (#605): each a button and a live note, made in deepBarChips.ts.
+  const air = createAirChip(airWhy, {
+    onAir: (on) => {
+      handlers.onAir(on);
+    },
     onCo2Archive: () => {
       handlers.onCo2Archive();
     },
@@ -219,29 +208,18 @@ export function createDeepTimeBar(
       handlers.onLayer(layer, on);
     },
   );
-  const seaLevelButton = element(
-    'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', title: 'Sea level' },
-    uiIcon('seaLevel'),
-    element('span', { class: 'icon-label' }, 'Sea level'),
-  );
-  const seaLevel = createSeaLevelChart({
-    onKa(ka) {
+  const seaLevel = createSeaLevelChip({
+    onSeaLevel: (on) => {
+      handlers.onSeaLevel(on);
+    },
+    onKa: (ka) => {
       handlers.onMa(ka / 1000, true);
     },
   });
-  const temperatureButton = element(
-    'button',
-    { type: 'button', class: 'deep-layer', 'aria-pressed': 'false', title: 'Temperature' },
-    uiIcon('temperature'),
-    element('span', { class: 'icon-label' }, 'Temperature'),
-  );
-  const swatch = (background: string) => {
-    const box = element('span', { class: 'colour-swatch', 'aria-hidden': 'true' });
-    box.style.background = background;
-    return box;
-  };
-  const legend = createTemperatureLegend(temperatureWhy, {
+  const temperature = createTemperatureChip(temperatureWhy, {
+    onTemperature: (on) => {
+      handlers.onTemperature(on);
+    },
     onModel: (model) => {
       handlers.onTemperatureModel(model);
     },
@@ -249,6 +227,11 @@ export function createDeepTimeBar(
       handlers.onTemperatureShow(show);
     },
   });
+  const swatch = (background: string) => {
+    const box = element('span', { class: 'colour-swatch', 'aria-hidden': 'true' });
+    box.style.background = background;
+    return box;
+  };
   // Poles, field, tilt and day: folded away, so the bar stays small on a phone.
   const facts = element('dl', { class: 'deep-facts-list' });
   const factsPanel = element(
@@ -322,9 +305,9 @@ export function createDeepTimeBar(
     sketch.note,
     iceNotes.coast,
     seaLevel.legend,
-    legend.root,
+    temperature.legend,
     ...featureChips.notes,
-    air.root,
+    air.note,
     milestones.root,
     // One open at a time (they share a name), so the bar doesn't grow over the globe.
     element('div', { class: 'deep-folds' }, colourKey, sketch.sources, factsPanel),
@@ -348,10 +331,10 @@ export function createDeepTimeBar(
       // Beside the moment, not the slider: on a phone the slider needs the whole row.
       speed,
       evidenceButton,
-      seaLevelButton,
-      temperatureButton,
+      seaLevel.button,
+      temperature.button,
       ...featureChips.buttons,
-      airButton,
+      air.button,
     ),
     details,
   );
@@ -379,15 +362,6 @@ export function createDeepTimeBar(
   });
   play.addEventListener('click', () => {
     handlers.onPlay(!(current?.playing ?? false));
-  });
-  airButton.addEventListener('click', () => {
-    handlers.onAir(!(current?.air.on ?? false));
-  });
-  seaLevelButton.addEventListener('click', () => {
-    handlers.onSeaLevel(!(current?.seaLevel.on ?? false));
-  });
-  temperatureButton.addEventListener('click', () => {
-    handlers.onTemperature(!(current?.temperature.on ?? false));
   });
 
   const bar: DeepTimeBar = {
@@ -425,8 +399,6 @@ export function createDeepTimeBar(
       const step = stepWords(view.scale);
       older.setAttribute('aria-label', `${step} earlier`);
       younger.setAttribute('aria-label', `${step} later`);
-      // On the ice-age scale only the ice ages' own maps draw (#457); before the maps, none.
-      temperatureButton.disabled = uncharted;
       slider.setAttribute('aria-valuetext', formatMa(view.ma));
       when.textContent = view.story?.when ?? formatMa(view.ma);
       const named = view.period === null ? '' : periodShort(view.period);
@@ -438,22 +410,12 @@ export function createDeepTimeBar(
         ]),
       );
       milestones.render(view.ma, view.oldest);
-      seaLevelButton.setAttribute('aria-pressed', String(view.seaLevel.on));
       // The maps of the 540 Myr and 4.6 Gyr spans are reconstructions; the ice ages', today's land.
       evidenceButton.hidden = view.scale === 'ice';
       featureChips.render(view.chips);
-      // The ice cores on the ice-age scale; the proxies' 540 million years on that one.
-      airButton.hidden = view.scale === 'eons';
-      airButton.setAttribute('aria-pressed', String(view.air.on));
       air.render(view.air, view.scale, view.oldest, view.ma);
-      seaLevel.render(
-        view.seaLevel.on ? view.seaLevel.index : null,
-        view.ma * 1000,
-        view.oldest * 1000,
-      );
-      const { temperature } = view;
-      temperatureButton.setAttribute('aria-pressed', String(temperature.on));
-      legend.render(temperature);
+      seaLevel.render(view.seaLevel, view.ma, view.oldest);
+      temperature.render(view.temperature, uncharted);
       play.textContent = view.playing ? '❚❚' : '▶';
       play.setAttribute('aria-label', view.playing ? 'Pause' : 'Play');
       if (speedsOf !== view.scale) {

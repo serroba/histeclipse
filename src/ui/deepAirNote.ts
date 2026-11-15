@@ -17,14 +17,14 @@ import {
 } from '../data/deepAir';
 import type { DeepScale } from '../state/viewState';
 import { createBandChart } from './bandChart';
-import type { DeepTimeView } from './deepTimeBar';
+import type { AirView } from './deepBarChips';
 import { element } from './dom';
 import { createGasChart } from './gasChart';
 
 export interface DeepAirNote {
   readonly root: HTMLElement;
   /** Say what the air was at `ma`, on the scale shown; hidden while the air is off. */
-  render(air: DeepTimeView['air'], scale: DeepScale, oldest: number, ma: number): void;
+  render(air: AirView, scale: DeepScale, oldest: number, ma: number): void;
 }
 
 /** Dots for the CO2 chart: their points, and a key that changes when they do. */
