@@ -48,6 +48,9 @@ export function createProjection(
 ): Projection {
   let insets: Insets = { top: 0, bottom: 0, right: 0 };
   let narrowFov = 40;
+  // The field asked for last, free or not: the camera's pose sets it every frame, and reading
+  // the container's size forces a layout, so an unchanged one is left as it is (#783).
+  let applied: { fov: number; free: boolean } | null = null;
 
   function applyFov(free: boolean): void {
     const size = { width: container.clientWidth, height: container.clientHeight };
@@ -57,6 +60,7 @@ export function createProjection(
   }
 
   function resize(free: boolean): void {
+    applied = { fov: narrowFov, free };
     const { clientWidth, clientHeight } = container;
     // Shift the projection so the globe sits centred in the space the panels leave free.
     const [x, y] = [insets.right / 2, (insets.bottom - insets.top) / 2];
@@ -75,6 +79,8 @@ export function createProjection(
       return narrowFov;
     },
     setFov(next, free) {
+      if (applied?.fov === next && applied.free === free) return;
+      applied = { fov: next, free };
       narrowFov = next;
       applyFov(free);
     },
