@@ -55,6 +55,7 @@ function mount() {
     notify,
     why: (id) => ({ id }) as unknown as HTMLElement,
     goToDeepTime,
+    timeline: { travelling: () => false, playing: () => false, oldest: () => 540 },
   };
   return { part: mountTreeOfLife(context), store, notify, goToDeepTime };
 }

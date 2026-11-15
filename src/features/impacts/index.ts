@@ -43,12 +43,6 @@ export interface ImpactsContext extends PartContext {
   /** Where the latest strikes are written, for whoever needs to know one did. */
   readonly strikesOn: HTMLElement;
   showCard(card: MarkerCardContent): void;
-  /** The oldest elevation map, in millions of years. */
-  oldest(): number;
-  /** Whether deep time is playing. */
-  playing(): boolean;
-  /** Whether the reader is travelling through the years: the layer rests meanwhile. */
-  travelling(): boolean;
   /** The craters have loaded in deep time: draw it again. */
   redrawDeep(state: ViewState): void;
   /** The craters have loaded in the years: the Layers panel says so. */
@@ -145,9 +139,9 @@ export function mountImpacts(context: ImpactsContext): ImpactsPart {
 
   function show(state: ViewState): ImpactsView {
     const { ma } = state;
-    const scale = impactsScale(state, context.oldest());
+    const scale = impactsScale(state, context.timeline.oldest());
     const on = impactsOn(state, scale);
-    if (!on || (context.travelling() && ma === null)) {
+    if (!on || (context.timeline.travelling() && ma === null)) {
       said = on ? RESTING : null;
       onGlobe.update(null);
       return { on: false };
@@ -175,7 +169,7 @@ export function mountImpacts(context: ImpactsContext): ImpactsPart {
   // once, only on the side of the globe in view, and never for a reader who asks for less motion.
   function strikeAsItPasses(state: ViewState, data: Impacts, ma: number, placeMa: number): void {
     const from = strikeFrom;
-    const playing = context.playing();
+    const playing = context.timeline.playing();
     strikeFrom = playing ? ma : null;
     if (from === null || !playing || lessMotion.matches || state.focus !== 'earth') return;
     for (const { impact, place } of strikesToPlay(data, from, ma, placeMa, state.camera.target)) {

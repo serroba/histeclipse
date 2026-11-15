@@ -51,10 +51,11 @@ import {
 import { errorMessage } from '../../util/errors';
 
 /** What the ice ages ask of the rest of the page. */
-export interface IceAgesContext extends Pick<PartContext, 'base' | 'fetchJson' | 'notify'> {
+export interface IceAgesContext extends Pick<
+  PartContext,
+  'base' | 'fetchJson' | 'notify' | 'timeline'
+> {
   readonly globe: Pick<Globe, 'addLayer' | 'setShelf' | 'setIce' | 'setSeaIce'>;
-  /** Whether the reader is travelling through the years. */
-  travelling(): boolean;
   /** Show deep time again: a map's index has arrived. */
   redraw(): void;
   /** The Holocene's Earth was drawn: the years' track says what it shows. */
@@ -179,7 +180,7 @@ export function mountIceAges(context: IceAgesContext): IceAgesPart {
    * today's Earth: the shelf the lower sea left bare, and the ice that still lay on the land.
    */
   function showHoloceneEarth(state: ViewState): void {
-    if (!context.travelling() || state.mode !== 'globe') {
+    if (!context.timeline.travelling() || state.mode !== 'globe') {
       holoceneSea = null;
       showSeaIce(state, null);
       globe.setShelf(null);

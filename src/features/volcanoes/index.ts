@@ -39,7 +39,7 @@ export const volcanoesFeature: Feature = {
     return {
       show(state) {
         const on = state.layers.has('volcanoes') && state.mode === 'globe' && state.ma === null;
-        const resting = context.travelling();
+        const resting = context.timeline.travelling();
         const year = state.time.date.year;
         const key = `${String(on)}:${String(resting)}:${String(volcanoes !== null)}:${String(year)}`;
         if (key === drawnFor) return;

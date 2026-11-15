@@ -26,8 +26,6 @@ import { errorMessage } from '../../util/errors';
 /** What it asks of the rest of the page. */
 export interface DatesContext extends PartContext {
   readonly globe: Pick<Globe, 'addLayer'>;
-  /** Whether the reader is travelling through the years: today's maps rest then. */
-  travelling(): boolean;
   /** Say it again in the Layers panel: what it says has changed. */
   refresh(): void;
   /** The calibration curves, loaded once. */
@@ -72,7 +70,7 @@ export function mountDates(context: DatesContext): DatesPart {
   function showDates(state: ViewState): void {
     const on = state.layers.has('dates') && state.ma === null;
     datesAction = null;
-    if (!on || context.travelling()) {
+    if (!on || context.timeline.travelling()) {
       datesSaid = on ? RESTING : null;
       datesOnGlobe.update(null);
       return;

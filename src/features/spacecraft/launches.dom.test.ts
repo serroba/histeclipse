@@ -77,6 +77,7 @@ async function setUp(
     notify,
     why: () => document.createElement('button'),
     goToDeepTime: vi.fn(),
+    timeline: { travelling: () => false, playing: () => false, oldest: () => 540 },
     history: { ...history, stop: stopHistory },
   });
   store.subscribe((state) => {

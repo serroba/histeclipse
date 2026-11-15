@@ -23,12 +23,8 @@ import { errorMessage } from '../../util/errors';
 /** What it asks of the rest of the page. */
 export interface RocksContext extends PartContext {
   readonly globe: Pick<Globe, 'addLayer'>;
-  /** Whether the reader is travelling through the years: today's maps rest then. */
-  travelling(): boolean;
   /** Say it again in the Layers panel: what it says has changed. */
   refresh(): void;
-  /** How far back the elevation maps reach, Ma. */
-  oldest(): number;
   enterDeepTime(ma: number, scale: DeepScale): void;
 }
 
@@ -56,7 +52,7 @@ export function mountRocks(context: RocksContext): RocksPart {
     const on = state.layers.has('rocks') && state.ma === null;
     rocksAction = null;
     // Today's rocks say nothing of the year a trip shows: they rest with the markers.
-    if (!on || context.travelling()) {
+    if (!on || context.timeline.travelling()) {
       rocksSaid = on ? RESTING : null;
       rocksOnGlobe.update(null);
       return;
@@ -88,7 +84,8 @@ export function mountRocks(context: RocksContext): RocksPart {
     if (rock !== null) {
       // The middle of the rock's age range, on the span that reaches it.
       const ma = (rock.topMa + rock.bottomMa) / 2;
-      const scale: DeepScale = ma <= ICE_AGES_MA ? 'ice' : ma <= context.oldest() ? 'all' : 'eons';
+      const scale: DeepScale =
+        ma <= ICE_AGES_MA ? 'ice' : ma <= context.timeline.oldest() ? 'all' : 'eons';
       rocksAction = {
         label: `See the Earth as it was then, ${formatMa(ma)}`,
         run: () => {
