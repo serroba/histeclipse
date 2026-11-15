@@ -342,3 +342,47 @@
 .stage-view[hidden] {
   display: none;
 }
+
+/* Chart or globe (features/boundaries/sheetView.ts): only on a phone, where the sheet hides the globe. With the
+   globe chosen the sheet folds to its header and the controls kept, at the top. */
+.sheet-view {
+  display: none;
+  gap: 4px;
+  margin: 0 0 8px;
+}
+
+.sheet-view-option {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.sheet-view-option[aria-pressed='true'] {
+  border-color: rgb(150 180 255 / 0.85);
+  background: rgb(150 180 255 / 0.2);
+  color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  .sheet-view {
+    display: inline-flex;
+  }
+
+  .famous-dialog.stage-sheet[data-view='globe'] {
+    inset: 0 0 auto;
+    max-height: none;
+    margin: 0;
+    overflow: visible;
+    border-radius: 0 0 18px 18px;
+  }
+
+  .stage-sheet[data-view='globe'] .stage-body > :not(.stage-keep) {
+    display: none;
+  }
+}
