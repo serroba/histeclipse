@@ -9,7 +9,7 @@ import type { EquatorialVector } from '../../astro/moon';
 import type { Vector3 } from '../../astro/matrix';
 import {
   loadPlanetEphemeris,
-  ORBIT_DAYS,
+  orbitsDue,
   ORBITING,
   orbitPath,
   PLANETS,
@@ -81,8 +81,8 @@ export function createPlanets(context: {
       : state.camera.distance > PLANETS_SHOWN_BEYOND;
   }
 
-  // Each orbit as last drawn, and the day it was centred on: drawn again only once the body has
-  // gone a quarter of the way round, as summing the series 128 times a body takes a while.
+  // Each orbit as last drawn, and the day it was centred on: drawn again only once its line has
+  // gone stale, one a frame (`orbitsDue`), as summing the series 128 times a body takes a while.
   let orbitCache: Partial<Record<Orbiting, { jdTT: number; path: readonly EquatorialVector[] }>> =
     {};
   let orbitsDrawn: string | null = null;
@@ -101,12 +101,15 @@ export function createPlanets(context: {
       return;
     }
     let changed = orbitsDrawn === null;
-    for (const body of ORBITING) {
-      const cached = orbitCache[body];
-      if (cached === undefined || Math.abs(jdTT - cached.jdTT) > ORBIT_DAYS[body] / 4) {
-        orbitCache = { ...orbitCache, [body]: { jdTT, path: orbitPath(theory, body, jdTT) } };
-        changed = true;
-      }
+    const centredOn = Object.fromEntries(
+      ORBITING.flatMap((body) => {
+        const cached = orbitCache[body];
+        return cached === undefined ? [] : [[body, cached.jdTT] as const];
+      }),
+    );
+    for (const body of orbitsDue(centredOn, jdTT)) {
+      orbitCache = { ...orbitCache, [body]: { jdTT, path: orbitPath(theory, body, jdTT) } };
+      changed = true;
     }
     if (!changed) return;
     orbitsDrawn = 'on';

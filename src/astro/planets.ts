@@ -195,6 +195,32 @@ export const ORBIT_DAYS: Readonly<Record<Orbiting, number>> = {
 };
 
 /**
+ * How long an orbit as drawn holds, days: an orbit's shape moves less in 25 years than the
+ * line's own sampling (about 6‰ of its radius, for every planet), so a line drawn then still
+ * passes through the planet now. It once was a quarter of a revolution: Mercury's was drawn
+ * again every 22 days, twice a second as the launches played (#764).
+ */
+const ORBIT_HOLDS_DAYS = 25 * 365.25;
+
+/**
+ * Which orbit to draw again at `jdTT`, given the day each was last centred on: all of them the
+ * first time, else at most one a frame, the first whose line has gone stale (a quarter of a
+ * revolution and 25 years), so lines that go stale together are drawn over successive frames.
+ */
+export function orbitsDue(
+  centredOn: Readonly<Partial<Record<Orbiting, number>>>,
+  jdTT: number,
+): readonly Orbiting[] {
+  const never = ORBITING.filter((body) => centredOn[body] === undefined);
+  if (never.length > 0) return never;
+  const stale = ORBITING.find((body) => {
+    const away = Math.abs(jdTT - (centredOn[body] ?? jdTT));
+    return away > Math.max(ORBIT_DAYS[body] / 4, ORBIT_HOLDS_DAYS);
+  });
+  return stale === undefined ? [] : [stale];
+}
+
+/**
  * One revolution of a body around the Sun, centred on `jdTT`: `samples` heliocentric positions
  * (km, J2000 equator) from half a period before to half after, from the same theory that places
  * the body, so it sits on its path.
