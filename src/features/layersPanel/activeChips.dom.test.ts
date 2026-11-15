@@ -48,6 +48,24 @@ describe('the chips of the layers on', () => {
     expect(onGoTo).toHaveBeenCalledWith({ span: 'years', year: 1996, label: '1996 CE' });
   });
 
+  it('Given a layer that could not load, Then its chip says so and tries again; one loading is busy', () => {
+    const retry = vi.fn();
+    const chips = createActiveChips({ onRemove: vi.fn(), onGoTo: vi.fn() });
+    const now = at('t=2006-10-01T12:00Z&layers=ozone');
+    chips.render(activeLayers(now, new Map([['ozone', { state: 'failed', retry }]])));
+    const failed = chips.root.querySelector('[data-layer="ozone"]');
+    expect(failed?.getAttribute('data-coverage')).toBe('failed');
+    expect(failed?.querySelector('.active-why')?.textContent).toBe('could not load');
+    failed?.querySelector<HTMLButtonElement>('[aria-label="The ozone hole: try again"]')?.click();
+    expect(retry).toHaveBeenCalledOnce();
+    chips.render(activeLayers(now, new Map([['ozone', { state: 'loading' }]])));
+    const loading = chips.root.querySelector('[data-layer="ozone"]');
+    expect(loading?.getAttribute('aria-busy')).toBe('true');
+    expect(loading?.textContent).toContain('loading…');
+    chips.render(activeLayers(now));
+    expect(chips.root.querySelector('[data-layer="ozone"]')?.hasAttribute('aria-busy')).toBe(false);
+  });
+
   it('Given the same layers again, Then the chips are kept, not rebuilt', () => {
     const chips = createActiveChips({ onRemove: vi.fn(), onGoTo: vi.fn() });
     chips.render(activeLayers(deep));

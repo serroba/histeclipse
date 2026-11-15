@@ -11,6 +11,7 @@
 
 import type { Fetch } from '../util/fetchJson';
 import type { Globe } from '../globe/globe';
+import type { LayerLoad } from '../state/activeLayers';
 import type { DeepScale, Layer, ViewState } from '../state/viewState';
 import type { LineageGroup } from '../data/lineages';
 import type { TreeOfLife } from '../data/treeOfLife';
@@ -74,6 +75,11 @@ export interface FeatureInstance {
   unpick?(): void;
   /** What the Layers panel says under its layer, if anything. */
   said?(): string | null;
+  /**
+   * How its layer's load stands (#751), while loading or failed, else null; a failed load offers
+   * to try again. It asks `refresh` when this changes, so the chips say it.
+   */
+  load?(): LayerLoad | null;
 }
 
 export interface Feature {

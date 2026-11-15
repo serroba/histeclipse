@@ -8,7 +8,7 @@ import { layerWhy } from '../../state/whysOnScreen';
 import type { DeepScale, Layer, ViewState } from '../../state/viewState';
 import { awayFromEarth, layerTurned, roundMa } from '../../state/viewState';
 import { PRESENT_YEAR } from '../../time/present';
-import { activeLayers, type GoTo } from '../../state/activeLayers';
+import { activeLayers, type GoTo, type LayerLoad } from '../../state/activeLayers';
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
 import { createActiveChips } from './activeChips';
@@ -34,6 +34,8 @@ export interface LayersPanelContext extends PartContext {
   said(): Iterable<readonly [Layer, string | null]>;
   /** What each layer offers, if anything. */
   actions(): Iterable<readonly [Layer, LayerAction | null]>;
+  /** How each layer's load stands, where loading or failed (#751). */
+  loads(): Iterable<readonly [Layer, LayerLoad | null]>;
 }
 
 export interface LayersPanelPart {
@@ -98,7 +100,7 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
     dialog: panel.dialog,
     chips: chips.root,
     show(state) {
-      const active = activeLayers(state);
+      const active = activeLayers(state, present(context.loads()));
       chips.render(active);
       sheetChips.render(active);
       if (active.length === 0) delete panel.button.dataset['on'];

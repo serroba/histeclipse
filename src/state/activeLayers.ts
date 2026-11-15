@@ -2,8 +2,9 @@
  * The layers on, as the chips beside Layers show them (#728): each by name, and whether it has
  * data at the moment shown (#751): available, drawn on another span, outside the times its data
  * covers, or a year it has none for; with what it reaches and where its data is. Available does
- * not claim data at every place. Turning a layer on or off never moves time or the camera;
- * going to where its data is, is a choice of its own.
+ * not claim data at every place. A layer whose data is still loading, or could not load, says so
+ * and offers to try again: its feature reports how its load stands. Turning a layer on or off
+ * never moves time or the camera; going to where its data is, is a choice of its own.
  */
 
 import { formatMa } from '../time/format';
@@ -12,7 +13,11 @@ import { LAYER_GROUPS, type Coverage as Covers, type LayerChoice } from './layer
 import { LAYERS, SPAN_LABELS, type Layer, type Span, type ViewState } from './viewState';
 
 /** Whether a layer on has data at the moment shown (#751). */
-type Coverage = 'available' | 'other-span' | 'outside' | 'gap';
+type Coverage = 'available' | 'other-span' | 'outside' | 'gap' | 'loading' | 'failed';
+
+/** How a layer's load stands, as its feature reports it, while it is loading or has failed. */
+export type LayerLoad =
+  { readonly state: 'loading' } | { readonly state: 'failed'; readonly retry: () => void };
 
 /** Where to go for a layer's data: a span (at a moment of its own there), or a year. */
 export interface GoTo {
@@ -35,6 +40,8 @@ export interface ActiveLayer {
   readonly reach: string;
   /** Where its data is, where it has none here. */
   readonly goTo: GoTo | null;
+  /** Try its load again, where it failed. */
+  readonly retry: (() => void) | null;
 }
 
 const CHOICES: ReadonlyMap<Layer, LayerChoice> = new Map(
@@ -53,6 +60,13 @@ const yearWords = (year: number): string => formatYear(astronomicalYear(year));
 type Within = Pick<ActiveLayer, 'coverage' | 'why' | 'goTo'>;
 
 const AVAILABLE: Within = { coverage: 'available', why: null, goTo: null };
+
+/** Where it has data here by its record, how its load stands, if loading or failed. */
+function loaded(load: LayerLoad | undefined): Pick<ActiveLayer, 'coverage' | 'why' | 'retry'> {
+  if (load === undefined) return { ...AVAILABLE, retry: null };
+  if (load.state === 'loading') return { coverage: 'loading', why: 'loading…', retry: null };
+  return { coverage: 'failed', why: 'could not load', retry: load.retry };
+}
 
 /** In the years: outside the years its data covers, or a year it has none for. */
 function withinYears(covers: Covers, year: number): Within {
@@ -88,10 +102,16 @@ function withinMa(covers: Covers, ma: number, span: Span): Within {
   };
 }
 
-/** The layers on, in the catalogue's order, each with whether it has data here. */
-export function activeLayers(state: Moment): ActiveLayer[] {
+/**
+ * The layers on, in the catalogue's order, each with whether it has data here: by its span and
+ * record first (no load can bring data where there is none), then by how its load stands.
+ */
+export function activeLayers(
+  state: Moment,
+  loads: ReadonlyMap<Layer, LayerLoad> = new Map(),
+): ActiveLayer[] {
   const span = spanShown(state);
-  return LAYERS.filter((layer) => state.layers.has(layer)).flatMap((layer) => {
+  return LAYERS.filter((layer) => state.layers.has(layer)).flatMap((layer): ActiveLayer[] => {
     const choice = CHOICES.get(layer);
     if (choice === undefined) return [];
     const base = { layer, label: choice.label, reach: choice.reach };
@@ -103,7 +123,9 @@ export function activeLayers(state: Moment): ActiveLayer[] {
         label: choice.arrive?.label ?? SPAN_LABELS[to],
       };
       const only = choice.spans.map((each) => SPAN_LABELS[each]).join(', ');
-      return [{ ...base, coverage: 'other-span', draws: false, why: `on ${only}`, goTo }];
+      return [
+        { ...base, coverage: 'other-span', draws: false, why: `on ${only}`, goTo, retry: null },
+      ];
     }
     const covers = choice.covers;
     // On a span it draws on: the years when no deep time is shown, else deep time.
@@ -113,6 +135,8 @@ export function activeLayers(state: Moment): ActiveLayer[] {
         : state.ma === null
           ? withinYears(covers, state.time.date.year)
           : withinMa(covers, state.ma, span);
-    return [{ ...base, ...within, draws: within.coverage === 'available' }];
+    if (within.coverage !== 'available') return [{ ...base, ...within, draws: false, retry: null }];
+    const load = loaded(loads.get(layer));
+    return [{ ...base, ...load, goTo: null, draws: load.coverage === 'available' }];
   });
 }

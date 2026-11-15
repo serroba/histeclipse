@@ -2,7 +2,8 @@
  * The layers on, beside Layers (#728): a chip for each, to see what is drawn and take a layer
  * off without opening the catalogue. One with no data at the moment shown (#751) is outlined,
  * says why in words a phone shows ("none in 1995 CE", "on Ice ages"), not only in a tooltip, and
- * offers to go where its data is; turning layers off never moves time.
+ * offers to go where its data is, or, where its data could not load, to try again; turning layers
+ * off never moves time.
  */
 
 import type { ActiveLayer, GoTo } from '../../state/activeLayers';
@@ -30,7 +31,16 @@ function chip(active: ActiveLayer, actions: ActiveChipActions): HTMLElement {
   });
   const parts: HTMLElement[] = [element('span', { class: 'active-name' }, active.label)];
   if (active.why !== null) parts.push(element('span', { class: 'active-why' }, active.why));
-  const { goTo } = active;
+  const { goTo, retry } = active;
+  if (retry !== null) {
+    const again = element(
+      'button',
+      { type: 'button', class: 'active-go', 'aria-label': `${active.label}: try again` },
+      'Try again',
+    );
+    again.addEventListener('click', retry);
+    parts.push(again);
+  }
   if (goTo !== null) {
     const go = element(
       'button',
@@ -55,6 +65,7 @@ function chip(active: ActiveLayer, actions: ActiveChipActions): HTMLElement {
       'data-layer': active.layer,
       'data-draws': String(active.draws),
       'data-coverage': active.coverage,
+      ...(active.coverage === 'loading' && { 'aria-busy': 'true' }),
       title: active.draws ? active.label : `${active.label}: not drawn here. ${active.reach}`,
     },
     ...parts,
