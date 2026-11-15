@@ -139,10 +139,14 @@ export function approximatePath(
     return null;
   }
 
+  // Each phase's span as numbers, read once rather than at every moment asked (#767).
+  const spans = phases.map(([, began, ended]): readonly [number, number] => [
+    began === null ? Infinity : gcatJd(began),
+    ended === null ? Infinity : gcatJd(ended),
+  ]);
   return (jdTT) => {
-    const index = phases.findIndex(([, began, ended]) => {
-      if (began === null) return false;
-      return gcatJd(began) <= jdTT && (ended === null || jdTT < gcatJd(ended));
+    const index = spans.findIndex(([began, ended]) => {
+      return began <= jdTT && jdTT < ended;
     });
     const phase = phases[index];
     if (phase === undefined) return null;

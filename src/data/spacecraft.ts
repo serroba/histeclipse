@@ -84,8 +84,19 @@ export function destinations(craft: Craft): readonly string[] {
   return out;
 }
 
+/** Each GCAT date read once (#767): the launches ask for the same few thousand every frame. */
+const GCAT_JDS = new Map<string, number>();
+
 /** JD of a GCAT date: "1977-08-22T08:24", "1979-04-30", "1979-05" (its middle), "1979". */
 export function gcatJd(text: string): number {
+  const known = GCAT_JDS.get(text);
+  if (known !== undefined) return known;
+  const jd = readGcatJd(text);
+  GCAT_JDS.set(text, jd);
+  return jd;
+}
+
+function readGcatJd(text: string): number {
   const plain = text.replace('?', '');
   const [date = plain, time = '00:00'] = plain.split('T');
   const [year = '2000', month, day] = date.split('-');
