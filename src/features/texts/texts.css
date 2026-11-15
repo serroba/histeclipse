@@ -54,3 +54,16 @@
   color: var(--ink-muted);
   font-size: 11px;
 }
+
+/* After a failed load, a way to ask again without closing "About here". */
+.here-retry {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
