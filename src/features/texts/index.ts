@@ -30,6 +30,13 @@ export interface TextsPart {
   readonly show: (state: ViewState) => void;
 }
 
+/** What "About here" says when the texts did not load, with a way to ask again. */
+export function failedNotice(retry: () => void): HTMLElement {
+  const again = element('button', { type: 'button', class: 'here-retry' }, 'Try again');
+  again.addEventListener('click', retry);
+  return element('li', { class: 'here-empty' }, 'Could not load the texts. ', again);
+}
+
 export function mountTexts(context: TextsContext): TextsPart {
   const { base, fetchJson, store } = context;
   // The site's texts as passages, asked for once, by search or by what is written about here.
@@ -52,8 +59,8 @@ export function mountTexts(context: TextsContext): TextsPart {
     hereList,
   );
   let herePassages: readonly Passage[] | null = null;
-  hereText.addEventListener('toggle', () => {
-    if (!hereText.open || herePassages !== null) return;
+  /** Load the texts for "About here"; a failure says so and offers to try again. */
+  function loadHere(): void {
     hereList.replaceChildren(element('li', { class: 'here-empty' }, 'Loading…'));
     passages().then(
       (loaded) => {
@@ -61,11 +68,13 @@ export function mountTexts(context: TextsContext): TextsPart {
         showHere(store.get());
       },
       () => {
-        hereList.replaceChildren(
-          element('li', { class: 'here-empty' }, 'Could not load the texts.'),
-        );
+        hereList.replaceChildren(failedNotice(loadHere));
       },
     );
+  }
+  hereText.addEventListener('toggle', () => {
+    if (!hereText.open || herePassages !== null) return;
+    loadHere();
   });
 
   let hereShown: string | null = null;
