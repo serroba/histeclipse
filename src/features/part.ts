@@ -6,6 +6,11 @@
  */
 
 import type { Fetch } from '../util/fetchJson';
+import type { MoonEphemeris } from '../astro/moon';
+import type { Vector3 } from '../astro/matrix';
+import type { PlanetEphemeris, PlanetName } from '../astro/planets';
+import type { SkyPlanet } from '../sky/skyScene';
+import type { JulianDay } from '../time/julianDay';
 import type { Place } from '../data/lineages';
 import type { WhyId } from '../sources/registry';
 import type { Watch } from '../state/redraws';
@@ -27,6 +32,51 @@ export interface PartContext {
   goToDeepTime(ma: number, layer: Layer, where: Place): void;
   /** Where the reader is in time's playing, asked of whichever part keeps it (#606). */
   readonly timeline: Timeline;
+  /** The Moon's and the planets' theories, kept by the bodies (#606). */
+  readonly ephemerides: Ephemerides;
+}
+
+/** The Moon's and the planets' theories, as the bodies keep them once mounted (#606). */
+export interface Ephemerides {
+  /** The Moon's theory, once loaded (it loads with the page). */
+  moon(): MoonEphemeris | null;
+  /** The planets' theory, once loaded; `loadPlanets` asks for it. */
+  planets(): PlanetEphemeris | null;
+  loadPlanets(): Promise<PlanetEphemeris>;
+  /** Each planet's place from Earth's centre, J2000 km, once the theory has loaded. */
+  planetPositions(jdTT: JulianDay): Readonly<Record<PlanetName, Triple>> | null;
+  /** The planets as an observer sees them. */
+  planetsSeen(jdTT: JulianDay, sun: Vector3, observer: Vector3): SkyPlanet[];
+}
+
+type Triple = readonly [number, number, number];
+
+/**
+ * The ephemerides as parts are given them before the bodies are mounted: asked before then, no
+ * theory has loaded; a load asked for waits for the bodies.
+ */
+export function lateEphemerides(): {
+  readonly ephemerides: Ephemerides;
+  bind(bodies: Ephemerides): void;
+} {
+  let bodies: Ephemerides | null = null;
+  let mounted: (bound: Ephemerides) => void = () => undefined;
+  const ready = new Promise<Ephemerides>((resolve) => {
+    mounted = resolve;
+  });
+  return {
+    ephemerides: {
+      moon: () => bodies?.moon() ?? null,
+      planets: () => bodies?.planets() ?? null,
+      loadPlanets: () => ready.then((bound) => bound.loadPlanets()),
+      planetPositions: (jdTT) => bodies?.planetPositions(jdTT) ?? null,
+      planetsSeen: (jdTT, sun, observer) => bodies?.planetsSeen(jdTT, sun, observer) ?? [],
+    },
+    bind: (bound) => {
+      bodies = bound;
+      mounted(bound);
+    },
+  };
 }
 
 /** What parts ask of time's playing: answered by the years and deep time once mounted (#606). */

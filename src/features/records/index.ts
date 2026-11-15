@@ -5,8 +5,7 @@
  * first time a tablet is checked.
  */
 
-import { loadMoonEphemeris, type MoonEphemeris } from '../../astro/moon';
-import type { PlanetEphemeris } from '../../astro/planets';
+import { loadMoonEphemeris } from '../../astro/moon';
 import { loadSky } from '../../data/sky';
 import { horizonMatrix, horizontalOf } from '../../sky/horizon';
 import { LOWEST_LOOK, roundLook } from '../../sky/look';
@@ -28,9 +27,6 @@ const RECORD_FOV = 40;
 
 /** What the records ask of the rest of the page. */
 export interface RecordsContext extends PartContext {
-  /** The Moon's ephemeris, if it has loaded. */
-  moon(): MoonEphemeris | null;
-  loadPlanets(): Promise<PlanetEphemeris>;
   /** ΔT at a moment, seconds. */
   deltaTSeconds(jdUT: JulianDay): number;
   /** Point out bodies in the sky, or none. */
@@ -53,10 +49,10 @@ export function mountRecords(context: RecordsContext): RecordsPart {
   const { base, fetchJson, store } = context;
   let tabletSkyLoading: Promise<TabletSky> | null = null;
   function tabletSky(): Promise<TabletSky> {
-    const moon = context.moon();
+    const moon = context.ephemerides.moon();
     tabletSkyLoading ??= Promise.all([
       moon === null ? loadMoonEphemeris() : Promise.resolve(moon),
-      context.loadPlanets(),
+      context.ephemerides.loadPlanets(),
       loadSky(`${base}data/sky.json`, fetchJson),
     ]).then(([loadedMoon, planets, catalogue]) => ({
       moon: loadedMoon,

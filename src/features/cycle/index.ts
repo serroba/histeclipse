@@ -5,7 +5,7 @@
  */
 
 import { planetCycle, sunCycle, type BodyCycle } from '../../astro/planetCycle';
-import type { PlanetEphemeris, PlanetName } from '../../astro/planets';
+import type { PlanetName } from '../../astro/planets';
 import { momentAt } from '../../eclipses/describe';
 import { PLANET_NAMES } from '../../globe/planetLook';
 import { momentJulianDay, type ViewState } from '../../state/viewState';
@@ -39,9 +39,6 @@ const MARK_WORDS: Readonly<Record<CycleMark, readonly [string, string]>> = {
 
 /** What the cycle asks of the rest of the page. */
 export interface CycleContext extends PartContext {
-  /** The planets' theory, once loaded, and the way to load it. */
-  planets(): PlanetEphemeris | null;
-  loadPlanets(): Promise<unknown>;
   /** The moment shown, in Terrestrial Time, once there is one. */
   moment(): JulianDay | null;
   /** Universal Time at a moment in Terrestrial Time. */
@@ -133,11 +130,11 @@ export function mountCycle(context: CycleContext): CyclePart {
     const hidden = state.selection !== null || body !== null;
     context.history.root.hidden = hidden;
     context.history.extras.hidden = hidden;
-    const theory = context.planets();
+    const theory = context.ephemerides.planets();
     const jdTT = context.moment();
     if (body === null || theory === null || jdTT === null) {
       if (body === null) stop();
-      else if (theory === null) void context.loadPlanets();
+      else if (theory === null) void context.ephemerides.loadPlanets();
       track.render(null);
       return;
     }

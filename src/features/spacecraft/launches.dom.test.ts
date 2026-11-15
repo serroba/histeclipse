@@ -78,6 +78,13 @@ async function setUp(
     why: () => document.createElement('button'),
     goToDeepTime: vi.fn(),
     timeline: { travelling: () => false, playing: () => false, oldest: () => 540 },
+    ephemerides: {
+      moon: () => null,
+      planets: () => null,
+      loadPlanets: () => Promise.reject(new Error('none')),
+      planetPositions: () => null,
+      planetsSeen: () => [],
+    },
     history: { ...history, stop: stopHistory },
   });
   store.subscribe((state) => {

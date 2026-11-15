@@ -51,9 +51,11 @@ function fakeContext(options: { readonly planetsLoaded: boolean; readonly failin
     notify,
     showCard: (card: MarkerCardContent) => cards.push(card),
     openAnchor,
-    planets: () => (options.planetsLoaded ? planets : null),
-    loadPlanets,
-    moon: () => null,
+    ephemerides: {
+      planets: () => (options.planetsLoaded ? planets : null),
+      loadPlanets,
+      moon: () => null,
+    },
     refresh,
   } as unknown as FeatureContext;
   return { context, drawn, routes, sites, cards, rail, refresh, notify, loadPlanets, openAnchor };
@@ -129,7 +131,7 @@ describe('the spacecraft as a feature', () => {
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalled();
     });
-    context.moon = () => ({ position: () => [384_400, 0, 0] }) as never;
+    context.ephemerides.moon = () => ({ position: () => [384_400, 0, 0] }) as never;
     craft.show?.(apollo, landingDay);
     const flying = drawn.at(-1) as readonly { name: string; km: readonly number[] }[];
     expect(flying.map(({ name }) => name)).toEqual(['Apollo 11', 'Apollo 11']);
@@ -164,7 +166,7 @@ describe('the spacecraft as a feature', () => {
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalled();
     });
-    context.moon = () => ({ position: () => [384_400, 0, 0] }) as never;
+    context.ephemerides.moon = () => ({ position: () => [384_400, 0, 0] }) as never;
     craft.show?.(onMoon, afterLanding);
     const flying = drawn.at(-1) as readonly { at: string | null }[];
     expect(flying.some(({ at }) => at === 'Luna')).toBe(false);

@@ -41,7 +41,7 @@ import { createViewSwitch } from './ui/viewSwitch';
 import { countryRings, loadNamedPeriods } from './data/namedPeriods';
 import { createWhySheet } from './ui/whySheet';
 import { createImpactPathsSheet } from './ui/impactPathsSheet';
-import { lateTimeline, type PartContext } from './features/part';
+import { lateEphemerides, lateTimeline, type PartContext } from './features/part';
 import { mountBoundaries } from './features/boundaries';
 import { mountTreeOfLife } from './features/treeOfLife';
 import { mountSky } from './features/sky';
@@ -122,6 +122,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   );
   // Time's playing, kept by the years and deep time and asked of by the parts (#606).
   const time = lateTimeline(540);
+  // The Moon's and the planets' theories, kept by the bodies and asked of by the parts (#606).
+  const ephemerides = lateEphemerides();
   // What the app lends the parts of the page (#443).
   const partContext: PartContext = {
     base,
@@ -129,6 +131,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     store,
     notify,
     timeline: time.timeline,
+    ephemerides: ephemerides.ephemerides,
     why: (id, label) => whySheet.mark(id, label),
     goToDeepTime(ma, layer, where) {
       deepTime.enterDeepTime(ma, 'all');
@@ -148,11 +151,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const sky = mountSky({
     ...partContext,
     bodiesSeen: (state) => bodiesSeen(state, (jd) => deltaT.terrestrialTime(jd), bodies.moon()),
-    planetsSeen: (jdTT, sun, observer) => bodies.planetsSeen(jdTT, sun, observer),
-    loadPlanets: () => bodies.loadPlanets(),
     deltaTUncertainty: (jdUT) => deltaT.uncertaintySeconds(jdUT),
     namedPlace,
-    moonReady: () => bodies.moon() !== null,
     togglePanels: panels.toggle,
     marks: (state) => records.marks(state),
   });
@@ -311,8 +311,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // A tablet's records checked against the sky, and looked at from Babylon (#447).
   const records = mountRecords({
     ...partContext,
-    moon: () => bodies.moon(),
-    loadPlanets: () => bodies.loadPlanets(),
     deltaTSeconds: (jd) => deltaT.seconds(jd),
     setSkyMarks: (marks) => {
       sky.setMarks(marks);
@@ -352,8 +350,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe,
     now,
     deltaT: () => deltaT,
-    moon: () => bodies.moon(),
-    planetPositions: (jdTT) => bodies.planetPositions(jdTT),
     atMoment: (state, terrestrial) => {
       bodies.setMoment(terrestrial);
       showBody(state);
@@ -417,8 +413,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // with the spacecraft on, it is their launches, the first to today (#702).
   const cycle = mountCycle({
     ...partContext,
-    planets: () => bodies.planets(),
-    loadPlanets: () => bodies.loadPlanets(),
     moment: () => moment.terrestrial(),
     universalTime: (jdTT) => deltaT.universalTime(jdTT),
     history: { ...years.track, stop: years.stop },
@@ -561,16 +555,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     zoomRail,
     notify,
     timeline: time.timeline,
+    ephemerides: ephemerides.ephemerides,
     showCard: (card) => {
       markerCard.show(card);
     },
     cardOpen: () => markerCard.dialog.open,
     openAnchor,
-    planets: () => bodies.planets(),
-    moon: () => bodies.moon(),
-    loadPlanets: () => {
-      void bodies.loadPlanets();
-    },
     openLineages: treeOfLife.openLineagesAt,
     openTree: treeOfLife.openTreeAt,
     change: (update) => {
@@ -645,6 +635,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   }
 
   time.bind({ years, deepTime });
+  ephemerides.bind(bodies);
   redraws.answer('moment', moment.show);
   redraws.answer('deepTime', deepTime.show);
   redraws.answer('years', years.show);

@@ -31,8 +31,8 @@ export const asteroidsFeature: Feature = {
           belt.update(null);
           return;
         }
-        const planets = context.planets();
-        if (planets === null) context.loadPlanets();
+        const planets = context.ephemerides.planets();
+        if (planets === null) void context.ephemerides.loadPlanets();
         if (asteroids === null) {
           if (asked) return;
           asked = true;

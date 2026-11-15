@@ -7,8 +7,6 @@
 import { moonForFrames } from './moonFrames';
 import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
-import type { PlanetName } from '../../astro/planets';
-import { type MoonEphemeris } from '../../astro/moon';
 import { earthFixedToJ2000, sunPositionJ2000 } from '../../astro/precession';
 import { subsolarPoint } from '../../astro/sun';
 import { geoToVector } from '../../globe/geo';
@@ -33,10 +31,6 @@ export interface MomentContext extends PartContext {
   /** When the page was opened: "today", where a moment beyond ΔT goes instead. */
   readonly now: Date;
   readonly deltaT: () => DeltaT;
-  readonly moon: () => MoonEphemeris | null;
-  readonly planetPositions: (
-    jdTT: JulianDay,
-  ) => Readonly<Record<PlanetName, readonly [number, number, number]>> | null;
   /** The moment shown changed: what is placed by it shows again. */
   atMoment(state: ViewState, terrestrial: JulianDay): void;
   /** The point under the Sun, as the page's data says it for the tests. */
@@ -115,8 +109,8 @@ export function mountMoment(context: MomentContext): MomentPart {
     globe.setSpace({
       earthFixedToJ2000: earthFixedToJ2000(universal, terrestrial),
       sunKm: sunPositionJ2000(terrestrial),
-      moonKm: framesMoon(context.moon())?.position(terrestrial) ?? null,
-      planetsKm: context.planetPositions(terrestrial),
+      moonKm: framesMoon(context.ephemerides.moon())?.position(terrestrial) ?? null,
+      planetsKm: context.ephemerides.planetPositions(terrestrial),
       jdTT: terrestrial,
     });
     bodiesAt = terrestrial;

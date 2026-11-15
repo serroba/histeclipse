@@ -32,8 +32,7 @@ function fakeContext(planetsLoaded: boolean) {
     },
     notify,
     showCard: (card: MarkerCardContent) => cards.push(card),
-    planets: () => (planetsLoaded ? planets : null),
-    loadPlanets,
+    ephemerides: { planets: () => (planetsLoaded ? planets : null), loadPlanets },
     refresh,
   } as unknown as FeatureContext;
   return { context, drawn, cards, rail, refresh, notify, loadPlanets };
