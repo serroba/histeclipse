@@ -43,11 +43,16 @@ export const moonNameLayer: LayerFactory<boolean> = (host) => {
 
   const projected = new Vector3();
   const moonWorld = new Vector3();
+  // What was last written, so a frame that changes nothing writes nothing: with no planet in
+  // view, every name hidden, a frame after frame of play costs no style work (#764).
+  let shownBefore = -1;
+  let planetBefore: string | null = null;
   host.afterRender(() => {
     if (layer.hidden === true) return;
     const { camera, container } = host;
     const focus = host.focus();
     const planet = moonsInView(focus);
+    if (planet === null && planetBefore === null && shownBefore === 0) return;
     const viewWidth = container.clientWidth;
     const viewHeight = container.clientHeight;
     const frame = planet === null ? null : host.bodyFrame(planet);
@@ -105,13 +110,17 @@ export const moonNameLayer: LayerFactory<boolean> = (host) => {
           );
         if (visible) placed.push(box);
       }
-      element.hidden = !visible;
+      if (element.hidden === visible) element.hidden = !visible;
       if (!visible) continue;
       count += 1;
       element.style.transform = `translate(${String(x)}px, ${String(y)}px) translate(0, -50%)`;
     }
-    layer.dataset['planet'] = planet ?? '';
-    layer.dataset['shown'] = String(count);
+    if (planet !== planetBefore || count !== shownBefore) {
+      layer.dataset['planet'] = planet ?? '';
+      layer.dataset['shown'] = String(count);
+    }
+    planetBefore = planet;
+    shownBefore = count;
   });
 
   return {
