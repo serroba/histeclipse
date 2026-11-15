@@ -8,6 +8,7 @@ import { loadSpacecraft } from '../../data/spacecraft';
 import { momentAt } from '../../eclipses/describe';
 import { julianDayNumber } from '../../time/julianDay';
 import { departures } from './launchPace';
+import { PLAYBACK_EVENT, type PlaybackSignal } from '../../util/playbackSignal';
 import { mountLaunches } from './launches';
 
 const record = await loadSpacecraft('spacecraft.json', () =>
@@ -132,6 +133,31 @@ describe('the launches played (#702)', () => {
     expect(on).toBeGreaterThan(0.5);
     expect(on).toBeLessThan(5);
     expect(on % 1).not.toBeCloseTo(0, 3);
+  });
+
+  it('Given play started, then stopped, Then each is signalled, with its pace and its slowdowns (#764)', async () => {
+    const signals: PlaybackSignal[] = [];
+    const heard = (event: Event): void => {
+      signals.push((event as CustomEvent<PlaybackSignal>).detail);
+    };
+    window.addEventListener(PLAYBACK_EVENT, heard);
+    const { button } = await setUp();
+    button()?.click();
+    frame(0);
+    // Ten seconds of play: past Luna 1's slow stretch at full pace, and slowed again for Luna 2.
+    for (let k = 0; k < 600; k += 1) frame(1000 / 60);
+    button()?.click();
+    window.removeEventListener(PLAYBACK_EVENT, heard);
+    expect(signals.map(({ phase, kind }) => [phase, kind])).toEqual([
+      ['start', 'launches'],
+      ['stop', 'launches'],
+    ]);
+    const stop = signals[1]?.detail ?? {};
+    expect(stop['reason']).toBe('stopped');
+    expect(stop['fromJd']).toBeCloseTo(LUNA_1, 3);
+    expect(Number(stop['toJd'])).toBeGreaterThan(LUNA_1 + 100);
+    expect(Number(stop['fastestPace'])).toBeGreaterThan(Number(stop['slowestPace']));
+    expect(Number(stop['slowdowns'])).toBeGreaterThan(0);
   });
 
   it('Given the camera out among the planets, When Play is pressed, Then Luna 1 heading for the Moon does not slow it (#769)', async () => {
