@@ -3,6 +3,11 @@
  * sent as one `playback` span with what the player said of itself (its pace, how often it
  * slowed). Long-frame spans (`frameWatch.ts`) name only frames of 100 ms or more; this counts
  * every frame, so stutter below that shows. Bounded: one span a play, at most MOST a page.
+ *
+ * Each frame's main-thread work is timed too: from the frame's start to a message posted from
+ * its animation callback, which runs once the frame's scripts, style, layout and paint are done.
+ * Work under the screen's frame time with frames still slow means the GPU is the limit; work over
+ * it, our own code.
  */
 
 import { PLAYBACK_EVENT, type PlaybackSignal, type PlaybackValue } from '../util/playbackSignal';
@@ -16,6 +21,27 @@ export const MOST = 20;
 export interface FrameClock {
   requestAnimationFrame(run: (now: number) => void): number;
   cancelAnimationFrame(handle: number): void;
+  /** Run `run` as a task of its own, after the frame's work: a `MessageChannel` post. */
+  afterFrame(run: () => void): void;
+  /** Now, on the frames' clock: `performance.now()`. */
+  now(): number;
+}
+
+/** The main-thread work of each frame, summarised: typical, tail, worst, and over a 90 Hz and a
+ * 60 Hz frame's time. */
+export function workStats(work: readonly number[]): Attributes {
+  if (work.length === 0) return {};
+  const sorted = [...work].sort((a, b) => a - b);
+  const at = (share: number): number =>
+    sorted[Math.min(sorted.length - 1, Math.floor(share * sorted.length))] ?? 0;
+  const round = (ms: number): number => Math.round(ms * 10) / 10;
+  return {
+    'playback.work_p50_ms': round(at(0.5)),
+    'playback.work_p95_ms': round(at(0.95)),
+    'playback.work_max_ms': round(sorted.at(-1) ?? 0),
+    'playback.work_over_11ms': work.filter((ms) => ms > 1000 / 90).length,
+    'playback.work_over_17ms': work.filter((ms) => ms > 1000 / 60).length,
+  };
 }
 
 /** The gaps between frames, summarised: how many, typical, tail, worst, and how many were slow. */
@@ -34,6 +60,8 @@ export function frameStats(gaps: readonly number[]): Attributes {
     'playback.gap_p95_ms': round(at(0.95)),
     'playback.gap_p99_ms': round(at(0.99)),
     'playback.gap_max_ms': round(sorted.at(-1) ?? 0),
+    // The shortest gap: about the screen's own frame time (11.1 ms at 90 Hz, 16.7 at 60).
+    'playback.gap_min_ms': round(sorted[0] ?? 0),
     // A gap over 34 ms missed a 60 Hz frame; over 50, two; over 100, a visible stall.
     'playback.gaps_over_34ms': over(34),
     'playback.gaps_over_50ms': over(50),
@@ -51,6 +79,7 @@ export class PlaybackFrames {
     readonly kind: string;
     readonly start: Attributes;
     readonly gaps: number[];
+    readonly work: number[];
     began: number;
     last: number;
     handle: number;
@@ -79,6 +108,7 @@ export class PlaybackFrames {
       kind: signal.kind,
       start: said(signal.detail),
       gaps: [] as number[],
+      work: [] as number[],
       began: Number.NaN,
       last: Number.NaN,
       handle: 0,
@@ -87,6 +117,9 @@ export class PlaybackFrames {
       if (Number.isNaN(play.began)) play.began = now;
       else play.gaps.push(now - play.last);
       play.last = now;
+      this.#clock.afterFrame(() => {
+        if (this.#play === play) play.work.push(this.#clock.now() - now);
+      });
       play.handle = this.#clock.requestAnimationFrame(frame);
     };
     play.handle = this.#clock.requestAnimationFrame(frame);
@@ -109,6 +142,7 @@ export class PlaybackFrames {
           ...detail,
           'playback.seconds': Math.round(play.last - play.began) / 1000,
           ...frameStats(play.gaps),
+          ...workStats(play.work),
           'playback.sent': this.#sent,
         },
       })
@@ -117,13 +151,30 @@ export class PlaybackFrames {
 }
 
 /** The slice of `window` play is watched from. */
-export interface PlaybackPage extends FrameClock, EventTarget {
+export interface PlaybackPage extends EventTarget {
+  requestAnimationFrame(run: (now: number) => void): number;
+  cancelAnimationFrame(handle: number): void;
   readonly document: EventTarget & { readonly visibilityState: string };
 }
 
 /** Sends each play on `page` as a `playback` span from `tracer`. */
 export function startPlaybackWatch(tracer: SpanStarter, page: PlaybackPage): PlaybackFrames {
-  const frames = new PlaybackFrames(tracer, page);
+  const channel = new MessageChannel();
+  const waiting: (() => void)[] = [];
+  channel.port1.onmessage = () => {
+    waiting.shift()?.();
+  };
+  const frames = new PlaybackFrames(tracer, {
+    requestAnimationFrame: (run) => page.requestAnimationFrame(run),
+    cancelAnimationFrame: (handle) => {
+      page.cancelAnimationFrame(handle);
+    },
+    afterFrame: (run) => {
+      waiting.push(run);
+      channel.port2.postMessage(null);
+    },
+    now: () => performance.now(),
+  });
   page.addEventListener(PLAYBACK_EVENT, (event) => {
     if (event instanceof CustomEvent) frames.signalled(event.detail as PlaybackSignal);
   });
