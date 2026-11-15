@@ -4,10 +4,11 @@ import { cachedViewAttributes, probeGpu } from './attributes';
 import type { TelemetryConfig } from './config';
 import { fetchEdgeAttributes } from './edge';
 import { startLongFrames } from './frameWatch';
+import { startPlaybackWatch } from './playback';
 
 /**
  * Starts the Honeycomb browser SDK: page load, data-file fetches, clicks, web vitals, uncaught
- * errors and the longest long animation frames (#636). Every span also carries the view shown
+ * errors, the longest long animation frames (#636) and how smooth each play was (#764). Every span also carries the view shown
  * (from the URL), the GPU's capabilities, and the country Cloudflare places the reader in. The
  * SDK is a separate chunk loaded only when a key is configured, so builds without one (CI, local
  * dev without `.env.local`) ship and run none of it.
@@ -23,6 +24,8 @@ export async function startTelemetry(config: TelemetryConfig): Promise<void> {
   const viewFor = cachedViewAttributes(() => new Date());
   const gpu = probeGpu(document.createElement('canvas'), window.devicePixelRatio);
   const frames = startLongFrames(trace.getTracer('histeclipse'), window);
+  // How smooth each play was, every frame counted, not only the long ones (#764).
+  startPlaybackWatch(trace.getTracer('histeclipse'), window);
   const sdk = new HoneycombWebSDK({
     apiKey: config.apiKey,
     endpoint: config.endpoint,
