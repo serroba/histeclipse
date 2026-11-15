@@ -11,19 +11,14 @@ import type { Atmosphere } from '../data/atmosphere';
 import type { DeepAir } from '../data/deepAir';
 import type { Co2Archive } from '../data/co2Archive';
 import type { PolarityScale } from '../data/polarity';
-import { SEA_ICE_MODELS, type SeaIceModel } from '../data/seaIce';
+import type { SeaIceModel } from '../data/seaIce';
 import type { SeaLevelIndex } from '../data/seaLevel';
-import { COAST_SOURCES, type CoastSource } from '../deepTime/coastline';
+import type { CoastSource } from '../deepTime/coastline';
 import {
-  COAST_LABELS,
-  coastlineText,
   type CoastlineView,
-  iceText,
   type IceView,
   milestoneTicks,
   notesShown,
-  SEA_ICE_LABELS,
-  seaIceText,
   type SeaIceView,
   sliderUnit,
   STEP_MA,
@@ -31,25 +26,13 @@ import {
   stepWords,
 } from './deepBarModel';
 import type { TemperatureModel, TemperatureShow } from '../deepTime/temperatureModels';
-import {
-  IMPACT_MODELS,
-  IMPACTS,
-  LAND_CHOICES,
-  LAND_MODELS,
-  type Sketch,
-  type SketchChoices,
-  type SketchQuestion,
-  SNOWBALL_CHOICES,
-  SNOWBALL_MODELS,
-} from '../deepTime/sketch';
+import type { Sketch, SketchChoices } from '../deepTime/sketch';
 import { DEEP_SPEEDS, deepSpeedText, deepSpeedWords } from '../deepTime/playSpeed';
-import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import type { DeepScale, Layer } from '../state/viewState';
 import type { WhyId } from '../sources/registry';
 import { element } from './dom';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { StoryDate } from '../deepTime/storyDate';
-import { iceOutlineText } from './iceOutlineText';
 import { createTemperatureLegend, type TemperatureView } from './temperatureLegend';
 import { createDeepChips, type DeepChip, type DeepChipView } from './deepChips';
 import { bookIcon, uiIcon } from './icons';
@@ -59,6 +42,8 @@ import { createPolarityStrip } from './polarityStrip';
 import { createSeaLevelChart } from './seaLevelChart';
 import { attachFoldingSheet } from './foldingSheet';
 import { createDeepAirNote } from './deepAirNote';
+import { createDeepIceNotes } from './deepIceNotes';
+import { createDeepSketchNote } from './deepSketchNote';
 import './deepTimeBar.css';
 
 export interface DeepTimeView {
@@ -180,73 +165,9 @@ export function createDeepTimeBar(
     { class: 'deep-note', hidden: '', 'data-testid': 'uncharted-note' },
     'No map: before 540 million years ago no surface map reaches. The Plates layer fills in one reconstruction’s continents back to 1,800 million years. Before that, and for snowball ice, the globe sketches what competing hypotheses say; pick whose below.',
   );
-  // One picker per question a sketch can answer; only those the moment asks are shown.
-  const sketchPickers: Readonly<Record<SketchQuestion, HTMLSelectElement>> = {
-    impact: element(
-      'select',
-      { class: 'deep-coast', 'aria-label': 'Moon-forming impact' },
-      ...IMPACT_MODELS.map((model) => element('option', { value: model }, IMPACTS[model].label)),
-    ),
-    land: element(
-      'select',
-      { class: 'deep-coast', 'aria-label': 'How much land' },
-      ...LAND_MODELS.map((model) => element('option', { value: model }, LAND_CHOICES[model].label)),
-    ),
-    snowball: element(
-      'select',
-      { class: 'deep-coast', 'aria-label': 'Snowball ice' },
-      ...SNOWBALL_MODELS.map((model) =>
-        element('option', { value: model }, SNOWBALL_CHOICES[model].label),
-      ),
-    ),
-  };
-  const SKETCH_QUESTIONS: readonly SketchQuestion[] = ['impact', 'land', 'snowball'];
-  const sketchRow = (question: SketchQuestion, label: string): HTMLElement =>
-    element('p', { hidden: '' }, element('label', {}, label, sketchPickers[question]));
-  const sketchRows: Readonly<Record<SketchQuestion, HTMLElement>> = {
-    impact: sketchRow('impact', 'Moon-forming impact '),
-    land: sketchRow('land', 'How much land '),
-    snowball: sketchRow('snowball', 'Snowball ice '),
-  };
-  // In view: one line and the pickers. What it rests on is folded, so a phone still sees the globe.
-  const sketchHead = element('p', { 'data-testid': 'sketch-headline' });
-  const sketchNote = element(
-    'div',
-    { class: 'deep-note', hidden: '', 'data-testid': 'sketch-note' },
-    sketchHead,
-    ...SKETCH_QUESTIONS.map((question) => sketchRows[question]),
-  );
-  const sketchWords = element('div', {});
-  const sketchSources = element(
-    'details',
-    { class: 'deep-facts', hidden: '', 'data-testid': 'sketch-sources', name: 'deep-fold' },
-    element('summary', {}, 'What the sketch rests on'),
-    element(
-      'div',
-      { class: 'colour-key-body' },
-      element(
-        'p',
-        {},
-        'No surface map reaches before 540 million years ago, and the continent reconstruction stops at 1,800 million. Before that, and for snowball ice, the globe sketches what competing hypotheses say.',
-      ),
-      sketchWords,
-    ),
-  );
-  const coastText = element('span', { 'data-testid': 'coastline' });
-  const iceLine = element('p', { 'data-testid': 'ice-sheets' });
-  const outlineLine = element('p', { 'data-testid': 'ice-outlines', hidden: '' });
-  const motionLine = element('p', { 'data-testid': 'plate-motion', hidden: '' });
-  const seaIceWords = element('span', { 'data-testid': 'sea-ice' });
-  const seaIcePicker = element(
-    'select',
-    { class: 'deep-coast', 'aria-label': 'Ice-age sea ice from' },
-    ...SEA_ICE_MODELS.map((model) => element('option', { value: model }, SEA_ICE_LABELS[model])),
-  );
-  const coastPicker = element(
-    'select',
-    { class: 'deep-coast', 'aria-label': 'Coastline follows' },
-    ...COAST_SOURCES.map((source) => element('option', { value: source }, COAST_LABELS[source])),
-  );
+  const sketch = createDeepSketchNote((choice) => {
+    handlers.onSketch(choice);
+  });
   // The books beside each note, made once: the notes that are drawn again keep them first.
   const iceWhy = handlers.why('ice-surface', 'The ice ages’ Earth');
   const coastWhy = handlers.why('ice-surface', 'The coast and sea level');
@@ -263,38 +184,16 @@ export function createDeepTimeBar(
   evidenceButton.addEventListener('click', () => {
     handlers.explain('deep-evidence');
   });
-  const iceNote = element(
-    'div',
-    { class: 'deep-note', hidden: '', 'data-testid': 'ice-note' },
-    element(
-      'p',
-      {},
-      iceWhy,
-      ' ',
-      'The last 2.6 million years: today’s land and sea floor, with the coast drawn at the sea level of the time. Sea floor laid dry is sandy; ice sheets are white. The continents are drawn where they are today (how far they have moved is below), and the temperature maps, of land only, are 2,000 years apart.',
-    ),
-    iceLine,
-    outlineLine,
-    motionLine,
-    element(
-      'p',
-      {},
-      seaIceWords,
-      ' ',
-      element('label', {}, 'Ice-age model ', seaIcePicker),
-      ' Three climate models (PMIP4) differ; pick one.',
-    ),
-  );
-  const coastNote = element(
-    'p',
-    { class: 'deep-note', hidden: '', 'data-testid': 'coast-note' },
+  const iceNotes = createDeepIceNotes({
+    iceWhy,
     coastWhy,
-    ' ',
-    coastText,
-    ' ',
-    element('label', {}, 'Follow ', coastPicker),
-    ' Drawn on NOAA’s present-day depths (ETOPO1); each source is measured from its own present day.',
-  );
+    onSeaIce: (model) => {
+      handlers.onSeaIce(model);
+    },
+    onCoast: (coast) => {
+      handlers.onCoast(coast);
+    },
+  });
   const when = element('strong', { class: 'deep-when', 'data-testid': 'deep-when' });
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
   const airButton = element(
@@ -418,17 +317,17 @@ export function createDeepTimeBar(
   const details = element(
     'div',
     { class: 'deep-details', id: 'deep-details', 'data-testid': 'deep-details' },
-    iceNote,
+    iceNotes.ice,
     unchartedNote,
-    sketchNote,
-    coastNote,
+    sketch.note,
+    iceNotes.coast,
     seaLevel.legend,
     legend.root,
     ...featureChips.notes,
     air.root,
     milestones.root,
     // One open at a time (they share a name), so the bar doesn't grow over the globe.
-    element('div', { class: 'deep-folds' }, colourKey, sketchSources, factsPanel),
+    element('div', { class: 'deep-folds' }, colourKey, sketch.sources, factsPanel),
   );
   const handle = element(
     'button',
@@ -478,26 +377,6 @@ export function createDeepTimeBar(
     if (current !== null)
       handlers.onMa(stepped(current.ma, current.oldest, current.scale, false), true);
   });
-  sketchPickers.impact.addEventListener('change', () => {
-    const impact = IMPACT_MODELS.find((option) => option === sketchPickers.impact.value);
-    if (impact !== undefined) handlers.onSketch({ impact });
-  });
-  sketchPickers.land.addEventListener('change', () => {
-    const land = LAND_MODELS.find((option) => option === sketchPickers.land.value);
-    if (land !== undefined) handlers.onSketch({ land });
-  });
-  sketchPickers.snowball.addEventListener('change', () => {
-    const snowball = SNOWBALL_MODELS.find((option) => option === sketchPickers.snowball.value);
-    if (snowball !== undefined) handlers.onSketch({ snowball });
-  });
-  seaIcePicker.addEventListener('change', () => {
-    const model = SEA_ICE_MODELS.find((option) => option === seaIcePicker.value);
-    if (model !== undefined) handlers.onSeaIce(model);
-  });
-  coastPicker.addEventListener('change', () => {
-    const source = COAST_SOURCES.find((option) => option === coastPicker.value);
-    if (source !== undefined) handlers.onCoast(source);
-  });
   play.addEventListener('click', () => {
     handlers.onPlay(!(current?.playing ?? false));
   });
@@ -538,35 +417,8 @@ export function createDeepTimeBar(
       const { ice, uncharted } = shown;
       const perMa = sliderUnit(view.scale);
       unchartedNote.hidden = !shown.noMap;
-      sketchNote.hidden = !shown.sketch;
-      sketchSources.hidden = !shown.sketch;
-      if (view.sketch !== null) {
-        const { sketch, choices } = view.sketch;
-        sketchHead.textContent = sketchHeadline(sketch);
-        sketchWords.replaceChildren(
-          ...sketchLines(sketch, choices, view.ma).map((line) => element('p', {}, line)),
-        );
-        for (const question of SKETCH_QUESTIONS) {
-          sketchRows[question].hidden = !sketch.questions.includes(question);
-          sketchPickers[question].value = choices[question];
-        }
-      }
-      iceNote.hidden = !ice;
-      iceLine.textContent = iceText(view.ice);
-      motionLine.hidden = view.plateMotion === null;
-      motionLine.textContent = view.plateMotion ?? '';
-      const outlines = iceOutlineText(view.iceOutlines);
-      outlineLine.hidden = outlines === null;
-      outlineLine.textContent = outlines ?? '';
-      if (view.seaIce !== null) {
-        seaIceWords.textContent = seaIceText(view.seaIce);
-        seaIcePicker.value = view.seaIce.model;
-      }
-      coastNote.hidden = view.coastline === null;
-      if (view.coastline !== null) {
-        coastText.textContent = coastlineText(view.coastline);
-        coastPicker.value = view.coastline.coast;
-      }
+      sketch.render(shown.sketch, view.sketch, view.ma);
+      iceNotes.render(ice, view);
       slider.min = String(-view.oldest * perMa);
       slider.setAttribute('aria-label', ice ? 'Thousands of years ago' : 'Millions of years ago');
       if (document.activeElement !== slider) slider.value = String(-view.ma * perMa);
