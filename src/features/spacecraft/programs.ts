@@ -6,7 +6,7 @@
 
 import type { Mission } from '../../data/spacecraftMission';
 import type { DayMoment } from '../../ui/dayTrack';
-import { launchPace } from './launchPace';
+import { launchPace, seenFrom, type Departure } from './launchPace';
 import { missionMoments, missionPaces } from './missionPlay';
 
 export interface Program {
@@ -23,8 +23,9 @@ export interface Program {
   /** Hours a second it can play at, and the one it starts at. */
   readonly paces: readonly number[];
   readonly fitted: number;
-  /** Days a second at `jd`, at `hours` hours a second picked. */
-  pace(jd: number, hours: number): number;
+  /** Days a second at `jd`, at `hours` hours a second picked, the camera `sight` Earth radii
+   * from the body in focus. */
+  pace(jd: number, hours: number, sight: number): number;
   /** How near its ends, days, play starts again from the first. */
   readonly slack: number;
   /** A mission: the button back to every launch. */
@@ -37,15 +38,22 @@ export function today(): number {
 }
 
 /** Hours a second between departures: 50, 100, 200 and 400 days a second. With the slowing
- * for each craft leaving, 1959 to now plays in about 11, 7, 4¾ and 3½ minutes; 50 is the
- * default, where a cruise to Mars takes some four seconds (#710). */
+ * for each craft seen leaving, 1959 to now plays in about 10¼, 6½, 4½ and 3½ minutes from out
+ * among the planets, or 12¾, 9, 7¼ and 6½ near Earth, where each trip to the Moon slows it too
+ * (#769); 50 is the default, where a cruise to Mars takes some four seconds (#710). */
 const LAUNCH_PACES = [1200, 2400, 4800, 9600] as const;
 
-/** Every launch, from the first to today. */
+/** Every launch, from the first to today, slowing for those seen leaving. */
 export function launchesProgram(
   moments: readonly DayMoment[],
-  departed: readonly number[],
+  departed: readonly Departure[],
 ): Program {
+  // The departures seen, kept while the camera stays put.
+  let seen = { sight: NaN, days: [] as readonly number[] };
+  function seenAt(sight: number): readonly number[] {
+    if (sight !== seen.sight) seen = { sight, days: seenFrom(departed, sight) };
+    return seen.days;
+  }
   return {
     key: 'launches',
     title: 'Every launch beyond Earth orbit, from the first to today, slowing as each leaves',
@@ -56,7 +64,7 @@ export function launchesProgram(
     since: moments[0]?.name ?? 'the first launch',
     paces: LAUNCH_PACES,
     fitted: 1200,
-    pace: (jd, hours) => launchPace(departed, jd, hours / 24),
+    pace: (jd, hours, sight) => launchPace(seenAt(sight), jd, hours / 24),
     slack: 1,
     mission: false,
   };

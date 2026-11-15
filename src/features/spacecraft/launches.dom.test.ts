@@ -16,7 +16,7 @@ const record = await loadSpacecraft('spacecraft.json', () =>
 
 /** The middle of the longest wait between craft leaving Earth's orbit, at midnight. */
 function quietest(): number {
-  const days = departures(record.craft);
+  const days = departures(record.craft).map(({ jd }) => jd);
   let best = 0;
   let middle = 0;
   days.forEach((day, index) => {
@@ -127,6 +127,20 @@ describe('the launches played (#702)', () => {
     expect(on).toBeGreaterThan(0.5);
     expect(on).toBeLessThan(5);
     expect(on % 1).not.toBeCloseTo(0, 3);
+  });
+
+  it('Given the camera out among the planets, When Play is pressed, Then Luna 1 heading for the Moon does not slow it (#769)', async () => {
+    // Some 6½ AU from the Sun: 1,400 of its radii.
+    const { button, day } = await setUp(new Set(['spacecraft']), {
+      focus: 'sun',
+      camera: { target: { latitude: 90, longitude: 0 }, distance: 1400 },
+    });
+    button()?.click();
+    frame(0);
+    frame(250);
+    frame(250);
+    // Half a second at 50 days a second: Luna 1 and Pioneer 4, both for the Moon, go unseen.
+    expect(day() - LUNA_1).toBeCloseTo(25, 0);
   });
 
   it('Given the years between departures, Then it plays at 50 days a second, or the pace picked, whole days at a time', async () => {
