@@ -180,8 +180,14 @@ test('on a phone the boundaries story lets the reader choose the chart or the gl
     await expect(sheet.getByTestId('holocene-stage')).toBeVisible();
     await sheet.getByRole('button', { name: 'Globe', exact: true }).click();
     await sheet.getByRole('button', { name: 'Close' }).click();
+    await expect(sheet).toBeHidden();
     await page.getByRole('button', { name: 'Boundaries', exact: true }).click();
-    await expect(sheet.getByTestId('holocene-stage')).toBeVisible();
+    // Reopened on the chart: its switch says so, and the sheet is no longer folded.
+    await expect(sheet.getByRole('button', { name: 'Chart', exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(sheet).toHaveAttribute('data-view', 'sheet');
   });
   expect(problems).toEqual([]);
 });
