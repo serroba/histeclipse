@@ -38,10 +38,11 @@ What a reader does from landing to leaving, across features (`journeys.spec.ts`)
 
 The reference journeys of #724 (`navigation.spec.ts`; human origins is a journey above):
 
-| Journey                                                                     | Covers                                                  |
-| --------------------------------------------------------------------------- | ------------------------------------------------------- |
-| A visitor finds the Moon landings by topic and comes down with Eagle        | Explore, a destination on the Moon, its line, Back      |
-| A visitor explores ancient Australia: an age, its fossils, the climate then | Explore, fossils, Related, Go to a time, Fit this topic |
+| Journey                                                                     | Covers                                                    |
+| --------------------------------------------------------------------------- | --------------------------------------------------------- |
+| A visitor finds the Moon landings by topic and comes down with Eagle        | Explore, a destination on the Moon, its line, Back        |
+| A visitor explores ancient Australia: an age, its fossils, the climate then | Explore, fossils, Related, Go to a time, Fit this topic   |
+| A visitor finds the warming records through All subjects                    | Explore's All subjects (#750), a climate layer, its panel |
 
 ## Features
 

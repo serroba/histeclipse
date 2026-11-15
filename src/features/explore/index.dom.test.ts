@@ -13,6 +13,7 @@ describe('Explore on the page', () => {
       opener: { anchor: openAnchor, query },
       search: { open },
       famous: document.createElement('button'),
+      tree: { openTreeAt: vi.fn() },
     });
     document.body.append(part.button, part.dialog);
     part.button.click();
@@ -34,6 +35,7 @@ describe('Explore on the page', () => {
       opener: { anchor: vi.fn(), query },
       search: { open: vi.fn() },
       famous: document.createElement('button'),
+      tree: { openTreeAt: vi.fn() },
     });
     document.body.replaceChildren(part.context);
     part.show({ ...defaultViewState(new Date()), explore: 'human-origins' });
@@ -54,11 +56,43 @@ describe('Explore on the page', () => {
       opener: { anchor: vi.fn(), query: vi.fn() },
       search: { open: vi.fn() },
       famous,
+      tree: { openTreeAt: vi.fn() },
     });
     document.body.replaceChildren(part.button, ...part.dialogs);
     part.button.click();
     document.querySelector<HTMLButtonElement>('[data-destination="famous-eclipses"]')?.click();
     expect(listed).toHaveBeenCalledOnce();
     expect(part.dialog.open).toBe(false);
+  });
+
+  it('Given All subjects, Then picking one asks to turn its layer on and go where it draws (#750)', () => {
+    const query = vi.fn<(change: (current: string) => string) => void>();
+    const part = mountExplore({
+      opener: { anchor: vi.fn(), query },
+      search: { open: vi.fn() },
+      famous: document.createElement('button'),
+      tree: { openTreeAt: vi.fn() },
+    });
+    document.body.replaceChildren(part.button, ...part.dialogs);
+    part.button.click();
+    document.querySelector<HTMLButtonElement>('#explore-tab-climate')?.click();
+    document.querySelector<HTMLButtonElement>('[data-layer="ozone"]')?.click();
+    const change = query.mock.calls[0]?.[0] ?? ((current: string) => current);
+    expect(change('t=2006-10-01T12:00Z')).toContain('layers=ozone');
+  });
+
+  it('Given Life, Then the tree of life is listed, and picking it opens the whole tree', () => {
+    const openTreeAt = vi.fn();
+    const part = mountExplore({
+      opener: { anchor: vi.fn(), query: vi.fn() },
+      search: { open: vi.fn() },
+      famous: document.createElement('button'),
+      tree: { openTreeAt },
+    });
+    document.body.replaceChildren(part.button, ...part.dialogs);
+    part.button.click();
+    document.querySelector<HTMLButtonElement>('#explore-tab-life')?.click();
+    document.querySelector<HTMLButtonElement>('[data-destination="tree-of-life"]')?.click();
+    expect(openTreeAt).toHaveBeenCalledOnce();
   });
 });

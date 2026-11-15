@@ -7,6 +7,7 @@
 import { destinationAnchor } from '../../explore/destinations';
 import { fitQuery } from '../../explore/frame';
 import type { ViewOpener } from '../../explore/open';
+import { subjectQuery } from '../../explore/subjects';
 import { jumpQuery } from '../../explore/timeJump';
 import { PRESENT_YEAR } from '../../time/present';
 import type { ViewState } from '../../state/viewState';
@@ -22,6 +23,8 @@ export interface ExploreContext {
   readonly search: { open(): void };
   /** The famous eclipses' button: Explore lists them under Space (#724). */
   readonly famous: HTMLElement;
+  /** The tree of life, opened whole: Explore lists it under Life (#750). */
+  readonly tree: { openTreeAt(pick: () => undefined): void };
 }
 
 export interface ExplorePart {
@@ -48,6 +51,9 @@ export function mountExplore(context: ExploreContext): ExplorePart {
       context.search.open();
     },
     narrow: () => window.matchMedia(NARROW).matches,
+    onSubject: (layer) => {
+      context.opener.query((current) => subjectQuery(layer, current));
+    },
     entries: [
       {
         id: 'famous-eclipses',
@@ -58,6 +64,17 @@ export function mountExplore(context: ExploreContext): ExplorePart {
         questions: ['Which eclipse stopped a battle?'],
         open: () => {
           context.famous.click();
+        },
+      },
+      {
+        id: 'tree-of-life',
+        topic: 'life',
+        label: 'The tree of life',
+        description:
+          'How living things are related, from the Open Tree of Life: open any branch, and from a fossil or a find its place on it.',
+        questions: ['How are we related to other mammals?'],
+        open: () => {
+          context.tree.openTreeAt(() => undefined);
         },
       },
     ],

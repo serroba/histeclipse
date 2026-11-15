@@ -1,6 +1,7 @@
 /**
- * Explore (#727): what there is to see, by topic, without choosing a span first
- * (docs/navigation.md). Topics are tabs; each lists its destinations with what they show and the
+ * Explore (#727): what there is to see, by topic, without choosing a span first: under each topic,
+ * Start here (curated destinations) and All subjects (every layer, from its catalogue, #750;
+ * docs/navigation.md). Topics are tabs; each lists its destinations with what they show and the
  * questions they answer; picking one opens it. Search, for a named thing, is one step away.
  * Like Layers it leaves the globe in reach, and it takes the same side, so one of them is open
  * at a time.
@@ -13,6 +14,8 @@ import {
   type Destination,
   type Topic,
 } from '../../explore/destinations';
+import { subjectsIn, type Subject } from '../../explore/subjects';
+import type { Layer } from '../../state/viewState';
 import { element } from '../../ui/dom';
 import { uiIcon } from '../../ui/icons';
 import './explorePanel.css';
@@ -49,9 +52,32 @@ export interface ExploreActions {
   readonly onDestination: (destination: Destination) => void;
   /** Entries beside the destinations, each opening a list of its own (#724). */
   readonly entries?: readonly ExploreEntry[];
+  /** A subject picked from All subjects: its layer, to turn on and go where it draws (#750). */
+  readonly onSubject?: (layer: Layer) => void;
   readonly onSearch: () => void;
   /** Whether the page is narrow, where the panel is a sheet over the globe. */
   readonly narrow: () => boolean;
+}
+
+/** A heading in a topic's list: Start here, or All subjects. */
+function heading(text: string): HTMLElement {
+  return element('li', { class: 'explore-heading' }, element('h3', {}, text));
+}
+
+/** A subject: its layer's name, what it shows, and how far its data reaches. */
+function subjectRow(subject: Subject, open: () => void): HTMLElement {
+  const go = element(
+    'button',
+    { type: 'button', class: 'explore-subject-go', 'data-layer': subject.layer },
+    subject.label,
+  );
+  go.addEventListener('click', open);
+  return element(
+    'li',
+    { class: 'explore-subject' },
+    go,
+    element('p', { class: 'explore-about' }, subject.about),
+  );
 }
 
 function destinationCard(
@@ -193,6 +219,37 @@ function panelElements(topics: HTMLElement) {
   return { button, close, list, search, dialog };
 }
 
+/** A topic's list: Start here (destinations and entries), then All subjects. */
+function topicItems(
+  topic: Topic,
+  actions: ExploreActions,
+  panel: { open(destination: Destination): void; shut(): void },
+): HTMLElement[] {
+  return [
+    heading('Start here'),
+    ...destinationsIn(topic).map((destination) =>
+      destinationCard(destination, () => {
+        panel.open(destination);
+      }),
+    ),
+    ...(actions.entries ?? [])
+      .filter((entry) => entry.topic === topic)
+      .map((entry) =>
+        destinationCard(entry, () => {
+          panel.shut();
+          entry.open();
+        }),
+      ),
+    heading('All subjects'),
+    ...subjectsIn(topic).map((subject) =>
+      subjectRow(subject, () => {
+        actions.onSubject?.(subject.layer);
+        if (actions.narrow()) panel.shut();
+      }),
+    ),
+  ];
+}
+
 export function createExplorePanel(actions: ExploreActions): ExplorePanel {
   let topic: Topic = 'space';
   let current: string | null = null;
@@ -210,21 +267,7 @@ export function createExplorePanel(actions: ExploreActions): ExplorePanel {
     topic = next;
     tabs.select(topic);
     list.setAttribute('aria-labelledby', `explore-tab-${topic}`);
-    list.replaceChildren(
-      ...destinationsIn(topic).map((destination) =>
-        destinationCard(destination, () => {
-          open(destination);
-        }),
-      ),
-      ...(actions.entries ?? [])
-        .filter((entry) => entry.topic === topic)
-        .map((entry) =>
-          destinationCard(entry, () => {
-            shut();
-            entry.open();
-          }),
-        ),
-    );
+    list.replaceChildren(...topicItems(topic, actions, { open, shut }));
     mark();
   }
 
