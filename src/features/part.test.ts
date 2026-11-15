@@ -34,6 +34,7 @@ describe('the ephemerides the parts ask of', () => {
     const late = lateEphemerides();
     const { ephemerides } = late;
     expect(ephemerides.moon()).toBeNull();
+    expect(ephemerides.moonAt(2451545 as never)).toBeNull();
     expect(ephemerides.planets()).toBeNull();
     expect(ephemerides.planetPositions(2451545 as never)).toBeNull();
     expect(ephemerides.planetsSeen(2451545 as never, [0, 0, 0], [0, 0, 0])).toEqual([]);
@@ -41,6 +42,7 @@ describe('the ephemerides the parts ask of', () => {
     const planets = { name: 'theory' } as never;
     late.bind({
       moon: () => ({ name: 'moon' }) as never,
+      moonAt: () => [1, 2, 3],
       planets: () => planets,
       loadPlanets: () => Promise.resolve(planets),
       planetPositions: () => ({}) as never,
@@ -48,6 +50,7 @@ describe('the ephemerides the parts ask of', () => {
     });
     await expect(loading).resolves.toBe(planets);
     expect(ephemerides.moon()).toEqual({ name: 'moon' });
+    expect(ephemerides.moonAt(2451545 as never)).toEqual([1, 2, 3]);
     expect(ephemerides.planets()).toBe(planets);
     expect(ephemerides.planetPositions(2451545 as never)).toEqual({});
     expect(ephemerides.planetsSeen(2451545 as never, [0, 0, 0], [0, 0, 0])).toEqual([]);

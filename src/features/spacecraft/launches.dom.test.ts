@@ -89,6 +89,7 @@ async function setUp(
     },
     ephemerides: {
       moon: () => null,
+      moonAt: () => null,
       planets: () => null,
       loadPlanets: () => Promise.reject(new Error('none')),
       planetPositions: () => null,

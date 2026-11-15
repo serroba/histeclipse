@@ -47,20 +47,40 @@ function geocentric(context: FeatureContext): Geocentric {
   };
 }
 
+/**
+ * The bodies at the moment shown, as they are drawn (#783): the Moon and the planets on the
+ * grids the scene draws them from, so the craft at them sit on them and no series is summed a
+ * second time for the same moment.
+ */
+function drawnNow(context: FeatureContext): Geocentric {
+  return (body, jdTT) => {
+    const jd = jdTT as JulianDay;
+    if (body === 'Sun') return sunPositionJ2000(jd);
+    if (body === 'Moon') return context.ephemerides.moonAt(jd);
+    const planet = PLANETS.find((name) => name === body.toLowerCase());
+    return planet === undefined
+      ? null
+      : (context.ephemerides.planetPositions(jd)?.[planet] ?? null);
+  };
+}
+
 /** What a moment shows: every craft in flight, or a mission's craft and their routes. */
 function shownAt(
   loaded: { readonly craft: readonly Craft[]; readonly wheres: CraftWheres },
-  where: Geocentric,
+  where: { readonly then: Geocentric; readonly now: Geocentric },
   mission: Mission | null,
   jdTT: number,
 ): { craft: ReturnType<typeof craftNow>; routes: readonly CraftRoute[] | null } {
   if (mission === null) {
-    return { craft: craftNow(loaded.craft, loaded.wheres, where, jdTT), routes: null };
+    return {
+      craft: craftNow(loaded.craft, loaded.wheres, where.then, jdTT, null, where.now),
+      routes: null,
+    };
   }
   const followed = { from: mission.start, to: mission.end, aboutEarth: mission.aboutEarth };
   return {
-    craft: craftNow(mission.craft, loaded.wheres, where, jdTT, followed),
-    routes: craftRoutes(mission.craft, loaded.wheres, where, jdTT, followed),
+    craft: craftNow(mission.craft, loaded.wheres, where.then, jdTT, followed),
+    routes: craftRoutes(mission.craft, loaded.wheres, where.then, jdTT, followed),
   };
 }
 
@@ -74,7 +94,7 @@ export const spacecraftFeature: Feature = {
     const routes = context.globe.addLayer(missionRoutes);
     const sites = context.globe.addLayer(landingSites);
     // Kept from frame to frame: the trails ask for the same places as the time plays (#702).
-    const where = remembered(geocentric(context));
+    const where = { then: remembered(geocentric(context)), now: drawnNow(context) };
     /** The mission followed, by its id, as last shown. */
     let followed: string | null = null;
     let loaded: {
@@ -118,7 +138,7 @@ export const spacecraftFeature: Feature = {
               loaded = {
                 craft: record.craft,
                 missions: missions(record.craft, today()),
-                wheres: craftWheres(paths, where),
+                wheres: craftWheres(paths, where.then),
               };
               context.refresh();
             },

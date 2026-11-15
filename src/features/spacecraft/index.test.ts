@@ -2,7 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import paths from '../../../public/data/spacecraft-paths.json';
 import record from '../../../public/data/spacecraft.json';
-import type { PlanetEphemeris } from '../../astro/planets';
+import type { MoonEphemeris } from '../../astro/moon';
+import { PLANETS, type PlanetEphemeris } from '../../astro/planets';
+import type { JulianDay } from '../../time/julianDay';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import type { MarkerCardContent } from '../../ui/markerCard';
 import type { FeatureContext } from '../feature';
@@ -54,7 +56,15 @@ function fakeContext(options: { readonly planetsLoaded: boolean; readonly failin
     ephemerides: {
       planets: () => (options.planetsLoaded ? planets : null),
       loadPlanets,
-      moon: () => null,
+      moon: () => null as MoonEphemeris | null,
+      // As drawn at the moment: the same stand-ins, as the bodies would have them (#783).
+      moonAt(jdTT: JulianDay) {
+        return this.moon()?.position(jdTT) ?? null;
+      },
+      planetPositions: () =>
+        options.planetsLoaded
+          ? Object.fromEntries(PLANETS.map((planet) => [planet, [0, AU, 0]]))
+          : null,
     },
     refresh,
   } as unknown as FeatureContext;
