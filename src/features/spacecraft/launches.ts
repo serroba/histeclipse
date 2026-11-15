@@ -2,14 +2,16 @@
  * The launches played (#702): with the spacecraft on, the bar's time runs from the record's
  * first launch (Luna 1, January 1959) to today, the planets, the moons and the craft each where
  * they were at every moment. It slows as each craft leaves Earth's orbit, to be seen going, and
- * speeds up between (`launchPace.ts`): at its default pace, the whole of it in about eleven
- * minutes, slow enough to follow a cruise (#710). The camera stays the reader's, to zoom out
+ * speeds up between (`launchPace.ts`); from out among the planets only craft heading beyond the
+ * Moon slow it (#769). At its default pace, the whole of it in about ten and a half minutes
+ * from there, slow enough to follow a cruise (#710). The camera stays the reader's, to zoom out
  * from Earth or the Sun as it plays. With a mission named, the bar plays that one journey
  * instead, its chapters its moments (#712), and a button goes back to every launch.
  */
 
 import { momentAt } from '../../eclipses/describe';
 import { loadSpacecraft } from '../../data/spacecraft';
+import { BODY_RADIUS } from '../../globe/bodyRadius';
 import { missionNamed, missions, type Mission } from '../../data/spacecraftMission';
 import { momentJulianDay, spacecraftPlays, type ViewState } from '../../state/viewState';
 import { julianDayNumber } from '../../time/julianDay';
@@ -37,6 +39,11 @@ export interface LaunchesPart {
   readonly render: (state: ViewState) => void;
   /** The moment Earth's face is turned to at `jd` (UT JD), whole days while it plays fast. */
   readonly earthFace: (jd: number) => number;
+}
+
+/** How far the camera is from the body in focus, Earth radii. */
+function sight(state: ViewState): number {
+  return state.camera.distance * BODY_RADIUS[state.focus];
 }
 
 /** What the track shows of a program, at the moment shown. */
@@ -120,7 +127,7 @@ export function mountLaunches(context: LaunchesContext): LaunchesPart {
     show(store.get());
   });
   const play = dayPlay({
-    pace: (jd) => program?.pace(jd, speed) ?? 1,
+    pace: (jd) => program?.pace(jd, speed, sight(store.get())) ?? 1,
     at: () => momentJulianDay(store.get().time),
     go: setMoment,
     end: () => program?.last() ?? today(),
