@@ -17,6 +17,7 @@ import {
   loadPlanetEphemeris,
   ORBIT_DAYS,
   orbitPath,
+  orbitsDue,
   planetMagnitude,
   planetUncertainty,
   PLANETS,
@@ -152,5 +153,35 @@ describe('orbitPath', () => {
     const derived = helio.map((value, axis) => value - (earthHelio[axis] ?? 0));
     expect(apart(derived, fromEarth)).toBeLessThan(1);
     expect(ORBIT_DAYS.earth).toBeCloseTo(365.256);
+  });
+});
+
+describe('which orbits are drawn again (#764)', () => {
+  const all = { mercury: 0, venus: 0, earth: 0, mars: 0, jupiter: 0, saturn: 0 };
+  it('Given none drawn, Then all; given one never drawn, Then that one', () => {
+    expect(orbitsDue({}, 0)).toEqual(['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn']);
+    expect(orbitsDue({ mercury: 0, venus: 0, earth: 0, jupiter: 0, saturn: 0 }, 0)).toEqual([
+      'mars',
+    ]);
+  });
+
+  it('Given time moved a quarter of Mercury’s year, or 24 years, Then none: the lines still hold', () => {
+    expect(orbitsDue(all, 22)).toEqual([]);
+    expect(orbitsDue(all, -24 * 365.25)).toEqual([]);
+  });
+
+  it('Given 26 years on, Then one a frame, each in turn, until all are drawn again', () => {
+    expect(orbitsDue(all, 26 * 365.25)).toEqual(['mercury']);
+    expect(orbitsDue({ ...all, mercury: 26 * 365.25 }, 26 * 365.25)).toEqual(['venus']);
+    const inner = {
+      mercury: 26 * 365.25,
+      venus: 26 * 365.25,
+      earth: 26 * 365.25,
+      mars: 26 * 365.25,
+    };
+    expect(orbitsDue({ ...all, ...inner }, 26 * 365.25)).toEqual(['jupiter']);
+    const outer = { jupiter: 26 * 365.25, saturn: 26 * 365.25 };
+    expect(orbitsDue({ ...all, ...inner, jupiter: 26 * 365.25 }, 26 * 365.25)).toEqual(['saturn']);
+    expect(orbitsDue({ ...inner, ...outer }, 26 * 365.25)).toEqual([]);
   });
 });
