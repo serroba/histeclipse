@@ -192,6 +192,18 @@ describe("Earth's surfaces", () => {
     expect(dataset['light']).toBe('sun');
   });
 
+  it('keeps the light even while anyone still asks, so two who ask do not undo each other (#823)', () => {
+    const { host, evenLight, dataset } = surfaces();
+    host.setEvenLight(true);
+    host.setEvenLight(true, 'ozone');
+    host.setEvenLight(false);
+    expect(evenLight.value).toBe(1);
+    expect(dataset['light']).toBe('even');
+    host.setEvenLight(false, 'ozone');
+    expect(evenLight.value).toBe(0);
+    expect(dataset['light']).toBe('sun');
+  });
+
   it('draws the plain globe and its sketch', () => {
     const { host, uniforms, dataset, drawn } = surfaces();
     host.setUncharted(true);

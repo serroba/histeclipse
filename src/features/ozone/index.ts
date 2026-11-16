@@ -19,6 +19,7 @@ import {
   type OzoneHistory,
 } from '../../data/ozone';
 import { loadOzoneMaps, mapOf, mapText, omittedText, type OzoneMaps } from '../../data/ozoneMaps';
+import type { ViewState } from '../../state/viewState';
 import { errorMessage } from '../../util/errors';
 import type { Feature, FeatureContext } from '../feature';
 import { ozoneCharts } from './chartModel';
@@ -101,6 +102,16 @@ async function loadRecord(context: FeatureContext): Promise<OzoneRecord> {
 
 export { mountOzoneBar } from './ozoneBar';
 
+/** Whether the ozone layer is drawn: on, on Earth's globe, in the years. */
+function ozoneDrawn(state: ViewState): boolean {
+  return (
+    state.layers.has('ozone') &&
+    state.mode === 'globe' &&
+    state.ma === null &&
+    state.focus === 'earth'
+  );
+}
+
 export const ozoneFeature: Feature = {
   id: 'ozone',
   // On or off with its layer, on Earth's globe, in the years.
@@ -119,6 +130,8 @@ export const ozoneFeature: Feature = {
     let loading = false;
     let failed = false;
     let on = false;
+    /** Whether the globe has been asked to light evenly. */
+    let lit = false;
     let said: string | null = null;
     // What was last shown, so the moments of one year (many a second as time plays) cost nothing.
     let shownFor = '';
@@ -150,11 +163,13 @@ export const ozoneFeature: Feature = {
 
     return {
       show(state) {
-        on =
-          state.layers.has('ozone') &&
-          state.mode === 'globe' &&
-          state.ma === null &&
-          state.focus === 'earth';
+        on = ozoneDrawn(state);
+        // The sun's day and night mean nothing for a daily value at noon UT, and the dark half
+        // hides the layer and the land: the globe is lit evenly while it is on (#823).
+        if (on !== lit) {
+          lit = on;
+          context.globe.setEvenLight(on, 'ozone');
+        }
         const { date } = state.time;
         // A day of a season has its own surface; any other moment, its year's map.
         const day = record === null ? null : shellDayOf(record.shell, date);
