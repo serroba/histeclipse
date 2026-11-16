@@ -39,9 +39,8 @@ describe('the ozone surface on the globe (#804)', () => {
     const { geometry } = mesh ?? {};
     const triangles = Number(container.dataset['ozoneShellTriangles']);
     expect(triangles).toBeGreaterThan(1000);
-    expect(geometry?.getIndex()?.count).toBe(triangles * 3);
+    expect(geometry?.drawRange.count).toBe(triangles * 3);
     expect(geometry?.getAttribute('position').count).toBe(13 * 25 * 2);
-    expect(geometry?.getAttribute('normal').count).toBe(13 * 25 * 2);
     expect(geometry?.getAttribute('color').count).toBe(13 * 25 * 2);
 
     // The same field again: nothing made, nothing asked of the globe.
@@ -50,8 +49,10 @@ describe('the ozone surface on the globe (#804)', () => {
     expect(geometry?.getAttribute('position')).toBe(position);
     expect(requestRender).toHaveBeenCalledOnce();
 
+    // Another day: the same buffers, sent again, and no normals to work out.
     layer.update(field());
-    expect(geometry?.getAttribute('position')).not.toBe(position);
+    expect(geometry?.getAttribute('position')).toBe(position);
+    expect(geometry?.getAttribute('normal')).toBeUndefined();
     layer.update(null);
     expect(mesh?.visible).toBe(false);
     expect(container.dataset['ozoneShell']).toBe('off');
