@@ -32,6 +32,7 @@ import {
   type CraftRoute,
   type CraftWheres,
 } from './craftNow';
+import { easedOrbits, type Eased } from './orbitEase';
 import { today } from './programs';
 import { bodyOfWorld, landedOn, landingSites } from './landingSites';
 import { missionRoutes } from './routeLines';
@@ -71,19 +72,27 @@ function drawnNow(context: FeatureContext): Geocentric {
 /** What a moment shows: every craft in flight, or a mission's craft and their routes. */
 function shownAt(
   loaded: { readonly craft: readonly Craft[]; readonly wheres: CraftWheres },
-  where: { readonly then: Geocentric; readonly now: Geocentric },
+  where: { readonly then: Geocentric; readonly now: Geocentric; readonly eased: Eased },
   mission: Mission | null,
   jdTT: number,
 ): { craft: ReturnType<typeof craftNow>; routes: readonly CraftRoute[] | null } {
   if (mission === null) {
     return {
-      craft: craftNow(loaded.craft, loaded.wheres, where.then, jdTT, null, where.now),
+      craft: craftNow(loaded.craft, loaded.wheres, where.then, jdTT, null, where.now, where.eased),
       routes: null,
     };
   }
   const followed = { from: mission.start, to: mission.end, aboutEarth: mission.aboutEarth };
   return {
-    craft: craftNow(mission.craft, loaded.wheres, where.then, jdTT, followed),
+    craft: craftNow(
+      mission.craft,
+      loaded.wheres,
+      where.then,
+      jdTT,
+      followed,
+      where.then,
+      where.eased,
+    ),
     routes: craftRoutes(mission.craft, loaded.wheres, where.then, jdTT, followed),
   };
 }
@@ -118,7 +127,11 @@ export const spacecraftFeature: Feature = {
     const routes = context.globe.addLayer(missionRoutes);
     const sites = context.globe.addLayer(landingSites);
     // Kept from frame to frame: the trails ask for the same places as the time plays (#702).
-    const where = { then: remembered(geocentric(context)), now: drawnNow(context) };
+    const where = {
+      then: remembered(geocentric(context)),
+      now: drawnNow(context),
+      eased: easedOrbits(),
+    };
     /** The mission followed, by its id, as last shown. */
     let followed: string | null = null;
     let loaded: {
