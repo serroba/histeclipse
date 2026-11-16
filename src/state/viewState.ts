@@ -308,3 +308,12 @@ export function ozonePlays(state: ViewState): boolean {
 export function awayFromEarth(state: ViewState): boolean {
   return state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
 }
+
+/**
+ * Whether a tap on the globe clears the panels, or brings them back, rather than picking a
+ * place (#811): in deep time, which has no place to stand, and in the ozone section, which is
+ * about the whole layer.
+ */
+export function tapClears(state: ViewState): boolean {
+  return state.ma !== null || ozonePlays(state);
+}

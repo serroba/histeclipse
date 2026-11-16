@@ -237,10 +237,7 @@ body {
 
 /* Full view hides the panels; a tap on open sky or empty space (or, in deep time, on the globe)
    brings them back. */
-#app[data-panels='hidden'] .hud,
-#app[data-panels='hidden'] .bottom,
-#app[data-panels='hidden'] .notices,
-#app[data-panels='hidden'] .zoom-rail {
+#app[data-panels='hidden'] :is(.hud, .bottom, .notices, .zoom-rail, .globe-panels) {
   display: none;
 }
 

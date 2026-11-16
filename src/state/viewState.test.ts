@@ -4,6 +4,7 @@ import {
   awayFromEarth,
   defaultViewState,
   layerTurned,
+  tapClears,
   toggledLayer,
   withEclipse,
   withLayer,
@@ -65,5 +66,14 @@ describe('awayFromEarth', () => {
     expect(awayFromEarth({ ...state, mode: 'globe', focus: 'earth', ma: null })).toBe(false);
     expect(awayFromEarth({ ...state, mode: 'sky', focus: 'mars', ma: null })).toBe(false);
     expect(awayFromEarth({ ...state, mode: 'globe', focus: 'mars', ma: 100 })).toBe(false);
+  });
+});
+
+describe('a tap on the globe (#811)', () => {
+  it('clears the panels in deep time and in the ozone section, and picks a place elsewhere', () => {
+    const base = defaultViewState(new Date('2024-04-08T12:00:00Z'));
+    expect(tapClears(base)).toBe(false);
+    expect(tapClears({ ...base, ma: 66 })).toBe(true);
+    expect(tapClears({ ...base, layers: new Set<Layer>(['ozone']) })).toBe(true);
   });
 });

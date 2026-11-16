@@ -8,7 +8,8 @@ import { eclipseMomentAt, isSolar } from '../../eclipses/describe';
 import type { Globe } from '../../globe/globe';
 import { phoneLook } from '../../sky/aim';
 import type { Store } from '../../state/store';
-import { DEFAULT_LOOK, type GeoPoint, type SkyLook, type ViewState } from '../../state/viewState';
+import { DEFAULT_LOOK, tapClears } from '../../state/viewState';
+import type { GeoPoint, SkyLook, ViewState } from '../../state/viewState';
 import type { Eclipse } from '../../ui/timeline';
 import type { ViewChoice } from '../../ui/viewSwitch';
 import type { Panels } from './panels';
@@ -31,12 +32,9 @@ export function keyAction(press: KeyPress): KeyAction {
   return null;
 }
 
-/**
- * A tap on empty space. In deep time it is like the globe: it clears the panels, or brings them
- * back. In historical time a tap on the globe picks a place, so empty space only brings them back.
- */
+/** A tap on empty space: where a globe tap clears the panels it does too, else it only shows them. */
 export function emptyTap(state: ViewState): 'toggle' | 'show' {
-  return state.ma === null ? 'show' : 'toggle';
+  return tapClears(state) ? 'toggle' : 'show';
 }
 
 /** A place picked to four decimals, about ten metres. */
@@ -46,8 +44,7 @@ export function pickedPlace(place: GeoPoint): GeoPoint {
 
 /**
  * A tap on the globe: stand there, open "Here" while asking, and during a solar eclipse show
- * the moment it is deepest there. Deep time has no place to stand: null, and the tap clears the
- * panels or brings them back.
+ * the moment it is deepest there. Where it clears the panels instead (`tapClears`): null.
  */
 export function placePicked(
   state: ViewState,
@@ -55,7 +52,7 @@ export function placePicked(
   asking: boolean,
   selected: Eclipse | undefined,
 ): ViewState | null {
-  if (state.ma !== null) return null;
+  if (tapClears(state)) return null;
   const location = pickedPlace(place);
   const solar = selected !== undefined && isSolar(selected);
   return {
