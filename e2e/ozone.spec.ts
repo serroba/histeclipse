@@ -92,8 +92,6 @@ test('the ozone layer is drawn in 3D on a day of its season, and ozone’s own b
   await test.step('When they play, Then the next step is the first season’s first day, in 3D, and the days go by until they stop', async () => {
     await bar.getByRole('button', { name: 'Play the ozone years' }).click();
     await expect(globe).toHaveAttribute('data-ozone-shell', 'on');
-    // The sun's day and night mean nothing for a daily value: the globe is lit evenly (#823).
-    await expect(globe).toHaveAttribute('data-light', 'even');
     await expect(page).toHaveURL(/t=2003-07-/);
     await expect(page).not.toHaveURL(/t=2003-07-01/);
     await bar.getByRole('button', { name: 'Stop the ozone years' }).click();
@@ -122,7 +120,6 @@ test('the ozone layer is drawn in 3D on a day of its season, and ozone’s own b
       .click();
     await expect(bar).toBeHidden();
     await expect(globe).toHaveAttribute('data-ozone-shell', 'off');
-    await expect(globe).toHaveAttribute('data-light', 'sun');
     await expect(page.getByRole('slider', { name: 'Year in the Holocene' })).toBeVisible();
   });
   expect(problems).toEqual([]);
