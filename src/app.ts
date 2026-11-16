@@ -49,7 +49,7 @@ import { mountSky } from './features/sky';
 import { mountBodies } from './features/bodies';
 import { mountRecords } from './features/records';
 import { mountCycle } from './features/cycle';
-import { mountLaunches } from './features/spacecraft';
+import { mountTimeBars } from './features/timeBars';
 import { mountFamous } from './features/famous';
 import { mountShower } from './features/shower';
 import { mountCarbonMade } from './features/carbonMade';
@@ -428,7 +428,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     moment: () => moment.terrestrial(),
     history: { ...years.track, stop: years.stop },
   });
-  const launches = mountLaunches({ ...partContext, history: { ...years.track, stop: years.stop } });
+  const launches = mountTimeBars({ ...partContext, history: { ...years.track, stop: years.stop } });
 
   // The borders of past states (#446), a century's file at a time, and what changed.
   const empires = mountEmpires({

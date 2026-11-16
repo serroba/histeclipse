@@ -11,7 +11,6 @@ import { LEGEND_DU, ozoneColour } from '../../data/ozoneMaps';
 import { element } from '../../ui/dom';
 import { joinGlobePanels } from '../../ui/globePanels';
 import { CHART_HEIGHT, CHART_WIDTH, type OzoneCharts } from './chartModel';
-import { seasonPlayer, type SeasonView } from './seasonPlayer';
 import './ozone.css';
 
 /** The amount of ozone that marks the hole, Dobson units. */
@@ -64,8 +63,6 @@ export interface OzoneView {
   readonly map: string | null;
   /** The globe shows the layer as a surface (#804), not a map: the key says what its opening is. */
   readonly surface: boolean;
-  /** The year's season of days, if it has one. */
-  readonly season: SeasonView | null;
 }
 
 /** The key to the map's colours: a swatch for each amount of ozone named. */
@@ -95,7 +92,6 @@ export const ozonePanel: LayerFactory<OzoneView | null> = (host) => {
   const mapped = element('p', { class: 'ozone-mapped' });
   const scale = element('div', {}, legend(false));
   const key = element('div', { class: 'ozone-key', hidden: '' }, mapped, scale);
-  const player = seasonPlayer();
   let surface = false;
   const root = element(
     'section',
@@ -103,7 +99,6 @@ export const ozonePanel: LayerFactory<OzoneView | null> = (host) => {
     body,
     said,
     key,
-    player.root,
     element(
       'p',
       { class: 'ozone-credit' },
@@ -115,10 +110,7 @@ export const ozonePanel: LayerFactory<OzoneView | null> = (host) => {
   return {
     update(view) {
       root.hidden = view === null;
-      if (view === null) {
-        player.update(null);
-        return;
-      }
+      if (view === null) return;
       said.textContent = view.text;
       key.hidden = view.map === null;
       mapped.textContent = view.map ?? '';
@@ -126,7 +118,6 @@ export const ozonePanel: LayerFactory<OzoneView | null> = (host) => {
         surface = view.surface;
         scale.replaceChildren(legend(surface));
       }
-      player.update(view.season);
       if (view.charts === drawnFor) return;
       drawnFor = view.charts;
       const { first, last } = view.charts;

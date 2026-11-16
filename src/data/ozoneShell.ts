@@ -53,7 +53,7 @@ const ShellSchema = v.strictObject({
 });
 
 export type OzoneShell = v.InferOutput<typeof ShellSchema>;
-export type ShellSeason = OzoneShell['seasons'][number];
+type ShellSeason = OzoneShell['seasons'][number];
 
 export async function loadOzoneShell(url: string, fetchJson: Fetch): Promise<OzoneShell> {
   return getJson(fetchJson, url, ShellSchema);
@@ -176,7 +176,7 @@ const MONTHS = [
 ];
 
 /** The date of a season's day (UTC): its year, month and day of the month. */
-export function shellDateOf(
+function shellDateOf(
   season: ShellSeason,
   day: number,
 ): { readonly year: number; readonly month: number; readonly day: number } {
@@ -185,7 +185,7 @@ export function shellDateOf(
 }
 
 /** The season of a year, if it has one. */
-export function seasonOf(shell: OzoneShell, year: number): ShellSeason | null {
+function seasonOf(shell: OzoneShell, year: number): ShellSeason | null {
   return shell.seasons.find((each) => each.year === year) ?? null;
 }
 

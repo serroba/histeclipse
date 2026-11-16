@@ -36,7 +36,7 @@ import { today } from './programs';
 import { bodyOfWorld, landedOn, landingSites } from './landingSites';
 import { missionRoutes } from './routeLines';
 
-export { mountLaunches } from './launches';
+export { mountLaunches, type LaunchesContext, type LaunchesPart } from './launches';
 
 /** Where the Sun, the Moon and the planets are from Earth's centre, for the craft. */
 function geocentric(context: FeatureContext): Geocentric {

@@ -57,6 +57,17 @@ export const DESTINATIONS: readonly Destination[] = [
     view: 'focus=sun&cam=66.5607,-90.0000,301.05&layers=spacecraft,orbits&t=1959-01-02T16:41Z',
   },
   {
+    id: 'ozone-hole',
+    label: 'The ozone hole',
+    topics: ['climate'],
+    description:
+      'The ozone layer as a surface round the Earth, the hole an opening over Antarctica on its widest day in 2006; its own bar plays the years it has data for, 1970 to 2025.',
+    questions: ['What does the ozone hole look like?', 'Is the ozone hole closing?'],
+    body: 'earth',
+    frame: { kind: 'years', from: 1970, to: 2025 },
+    view: 'cam=-60.0000,40.0000,3.40&layers=ozone&t=2006-09-22T12:00Z',
+  },
+  {
     id: 'human-origins',
     label: 'Human origins',
     topics: ['people', 'life'],
