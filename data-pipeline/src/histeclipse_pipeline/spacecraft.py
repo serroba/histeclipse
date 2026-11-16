@@ -93,6 +93,33 @@ NSSDCA_DESIGNATION = re.compile(r"^\d{4}-\d{3}[A-Z]+$")
 NSSDCA_IDS = {"1960 ALP 1": "1960-001A"}  # Pioneer 5, round the Sun
 
 
+# The craft in the layer that never left Earth orbit (#795), each a named exception, entered by
+# hand from its row in GCAT's satellite catalogue (satcat.tsv, as updated 2026-11-15): set free
+# from the shuttle on its SDate, its orbit as first measured (ODate, Perigee, Apogee, Inc).
+ABOUT_EARTH: list[dict[str, object]] = [
+    {
+        "id": "S20580",
+        "name": "Hubble Space Telescope",
+        "cospar": "1990-037B",
+        "nssdc": "1990-037B",
+        "launchTag": "1990-037",
+        "launch": "1990-04-24",
+        "owner": "GSFC",
+        "state": "US",
+        "crewed": False,
+        "part": False,
+        "parent": None,
+        "phases": [["Earth", "1990-04-25T12:49?", None, "O", "-"]],
+        "orbit": {
+            "perigeeKm": 611,
+            "apogeeKm": 620,
+            "inclinationDeg": 28.47,
+            "measured": "1990-05-24",
+        },
+    },
+]
+
+
 def gcat_rows(text: str) -> list[dict[str, str]]:
     """Read a GCAT table: its header row starts with '#', its notes with '# '."""
     lines = [line for line in text.splitlines() if not line.startswith("# ")]
@@ -385,6 +412,7 @@ def fetch_spacecraft(path: Path, cache: Path) -> tuple[int, int]:  # pragma: no 
         "schemaVersion": 1,
         "sources": {"gcat": "https://planet4589.org/space/gcat/", "nssdca": CHRONOLOGY},
         "craft": craft,
+        "aboutEarth": ABOUT_EARTH,
         "neverLeft": never,
     }
     path.parent.mkdir(parents=True, exist_ok=True)

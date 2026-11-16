@@ -5,6 +5,8 @@
  * name opening its card. With a mission named (#712), only its craft, each with its whole route,
  * a mission about Earth drawn about Earth as it was at each moment. Close up on a world, its
  * landers are marked where they came down, and craft at it are not drawn at its centre (#716).
+ * A craft that stays about Earth (#795, Hubble) is drawn only with Earth close up: from further
+ * off it would sit on Earth.
  */
 
 import { PLANETS } from '../../astro/planets';
@@ -15,6 +17,7 @@ import { loadSpacecraft, type Craft } from '../../data/spacecraft';
 import { missionNamed, missions, missionView, type Mission } from '../../data/spacecraftMission';
 import type { RelatedStep } from '../../ui/markerCard';
 import { loadSpacecraftPaths } from '../../data/spacecraftPaths';
+import type { ViewState } from '../../state/viewState';
 import type { JulianDay } from '../../time/julianDay';
 import { errorMessage } from '../../util/errors';
 import type { Feature, FeatureContext } from '../feature';
@@ -85,11 +88,31 @@ function shownAt(
   };
 }
 
+/** From further off than this, in Earth's radii, a craft in Earth orbit sits on Earth. */
+const CLOSE_ON_EARTH = 25;
+
+/** Whether Earth is close up: its orbiting craft can be told from it. */
+function closeOnEarth(state: ViewState): boolean {
+  return state.focus === 'earth' && state.camera.distance <= CLOSE_ON_EARTH;
+}
+
+/**
+ * Whether a craft is drawn in a view. Not at the centre of the body in view: close up, its
+ * landers are marked on it (#716). Not in orbit about Earth unless Earth is close up (#795).
+ */
+function drawnIn(
+  state: ViewState,
+  craft: { readonly at: string | null; readonly ring?: true },
+): boolean {
+  if (craft.ring === true && !closeOnEarth(state)) return false;
+  return craft.at === null || bodyOfWorld(craft.at) !== state.focus;
+}
+
 export const spacecraftFeature: Feature = {
   id: 'spacecraft',
   picks: 'craft',
   // On or off with its layer; a mission followed, or every craft.
-  watches: (state) => [state.layers, state.mission],
+  watches: (state) => [state.layers, state.mission, closeOnEarth(state)],
   mount(context) {
     const drawn = context.globe.addLayer(craftInFlight);
     const routes = context.globe.addLayer(missionRoutes);
@@ -145,7 +168,7 @@ export const spacecraftFeature: Feature = {
           ]).then(
             ([record, paths]) => {
               loaded = {
-                craft: record.craft,
+                craft: [...record.craft, ...record.aboutEarth],
                 missions: missions(record.craft, today()),
                 wheres: craftWheres(paths, where.then),
               };
@@ -162,10 +185,7 @@ export const spacecraftFeature: Feature = {
           state.mission === null ? null : missionNamed(loaded.missions, state.mission);
         followed = mission?.id ?? null;
         const shown = shownAt(loaded, where, mission, jdTT);
-        // Not at the centre of the body in view: close up, its landers are marked on it (#716).
-        drawn.update(
-          shown.craft.filter(({ at }) => at === null || bodyOfWorld(at) !== state.focus),
-        );
+        drawn.update(shown.craft.filter((each) => drawnIn(state, each)));
         routes.update(shown.routes);
         sites.update({
           body: state.focus,

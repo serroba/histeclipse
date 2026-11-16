@@ -3,12 +3,14 @@
  * centre (J2000 km), with a trail of where it had just been. Its path is JPL Horizons's where
  * Horizons has it, else its approximate path (`approximatePaths.ts`); a craft at a world (in
  * orbit, landed, passing) is at that world. A craft still about Earth after launch, or one no
- * path places at that moment, is left out.
+ * path places at that moment, is left out. One that stays about Earth by name (#795, Hubble)
+ * goes round its circle (`earthOrbit.ts`), its trail the lap it has just made.
  */
 
 import { gcatJd, type Craft } from '../../data/spacecraft';
 import { craftAt, type CraftPaths, type CraftWhere } from '../../data/spacecraftPaths';
 import { approximatePath, type Geocentric } from './approximatePaths';
+import { circling, lapDays } from './earthOrbit';
 import type { Vec3 } from '../../astro/transfer';
 
 export interface CraftNow {
@@ -22,6 +24,8 @@ export interface CraftNow {
   readonly approximate: boolean;
   /** At a world (the Moon, a planet) rather than on its way. */
   readonly at: string | null;
+  /** In orbit about Earth (#795): its trail is the lap it has just made, a ring. */
+  readonly ring?: true;
 }
 
 /** A craft's whole route through a mission followed (#712). */
@@ -50,6 +54,8 @@ const ROUTE_POINTS = 240;
 const TRAIL_POINTS = 24;
 const TRAIL_DAYS_FAR = 60;
 const TRAIL_DAYS_NEAR = 2;
+/** Points round the lap of a craft in orbit about Earth: enough to look round close up. */
+const RING_POINTS = 60;
 
 /** The site's names for the worlds GCAT names, where it can place them. */
 const WORLD_NAMES: Readonly<Record<string, string>> = {
@@ -74,6 +80,9 @@ export function craftWheres(paths: CraftPaths, geocentric: Geocentric): CraftWhe
     where(craft, jdTT) {
       const published = paths[craft.id];
       if (published !== undefined) return craftAt(published, jdTT);
+      if (craft.orbit !== undefined) {
+        return inFlight(craft, jdTT) ? { centre: 'Earth', km: circling(craft.orbit, jdTT) } : null;
+      }
       let path = approximate.get(craft.id);
       if (path === undefined) {
         path = approximatePath(craft, geocentric);
@@ -147,9 +156,9 @@ export function remembered(geocentric: Geocentric, most = MOST_REMEMBERED): Geoc
  * The moments a trail reaches back to from `jdTT`, newest first: on a grid of whole steps, so
  * they are the same moments frame after frame, and the bodies' places at them are kept.
  */
-export function trailMoments(jdTT: number, step: number): readonly number[] {
+export function trailMoments(jdTT: number, step: number, points = TRAIL_POINTS): readonly number[] {
   const newest = Math.ceil(jdTT / step) - 1;
-  return Array.from({ length: TRAIL_POINTS }, (_, k) => (newest - k) * step);
+  return Array.from({ length: points }, (_, k) => (newest - k) * step);
 }
 
 /**
@@ -190,9 +199,14 @@ function trailOf(
   // among the planets as seen from Earth now, a stray line across space close up (#716).
   if ('at' in where) return [];
   const near = 'centre' in where && where.centre === 'Earth';
-  const step = (near ? TRAIL_DAYS_NEAR : TRAIL_DAYS_FAR) / TRAIL_POINTS;
+  // In orbit about Earth, the lap it has just made, closed: a ring where it goes round (#795).
+  const points = craft.orbit === undefined ? TRAIL_POINTS : RING_POINTS;
+  const step =
+    craft.orbit === undefined
+      ? (near ? TRAIL_DAYS_NEAR : TRAIL_DAYS_FAR) / TRAIL_POINTS
+      : lapDays(craft.orbit) / (RING_POINTS - 1);
   const trail: Vec3[] = [];
-  for (const then of trailMoments(jdTT, step)) {
+  for (const then of trailMoments(jdTT, step, points)) {
     const before = wheres.where(craft, then);
     // Back into a stay at a world, it ends where it left: further back would trace the world's
     // own path, the stray line #716 left out, and cost the world's place at each point (#765).
@@ -233,6 +247,7 @@ export function craftNow(
       trail,
       approximate: wheres.approximate(each),
       at: 'at' in where ? where.at : null,
+      ...(each.orbit === undefined ? {} : { ring: true as const }),
     });
   }
   return out;

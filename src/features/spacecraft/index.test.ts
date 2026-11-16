@@ -84,9 +84,46 @@ function fakeContext(options: {
 
 describe('the spacecraft as a feature', () => {
   it('is shown again when the layers change, and not for other changes', () => {
-    expect(spacecraftFeature.watches(on)).toEqual([on.layers, null]);
-    expect(spacecraftFeature.watches({ ...on, mode: 'sky' })).toEqual([on.layers, null]);
-    expect(spacecraftFeature.watches({ ...on, mission: 'd00273' })).toEqual([on.layers, 'd00273']);
+    expect(spacecraftFeature.watches(on)).toEqual([on.layers, null, true]);
+    expect(spacecraftFeature.watches({ ...on, mode: 'sky' })).toEqual([on.layers, null, true]);
+    expect(spacecraftFeature.watches({ ...on, mission: 'd00273' })).toEqual([
+      on.layers,
+      'd00273',
+      true,
+    ]);
+    // Earth near or far, or another body in view: Hubble comes and goes (#795).
+    const far = { ...on, camera: { ...on.camera, distance: 60 } };
+    expect(spacecraftFeature.watches(far)).toEqual([on.layers, null, false]);
+    expect(spacecraftFeature.watches({ ...on, focus: 'moon' })).toEqual([on.layers, null, false]);
+  });
+
+  it('Given Earth close up after 1990, Then Hubble is drawn about it, with its card; from further off, or before it flew, it is not (#795)', async () => {
+    const { context, drawn, cards, refresh } = fakeContext({ planetsLoaded: true });
+    const craft = spacecraftFeature.mount(context);
+    craft.show?.(on, JD_2010);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(1);
+    });
+    const ids = () => (drawn.at(-1) as readonly { id: string }[]).map(({ id }) => id);
+
+    craft.show?.(on, JD_2010);
+    expect(ids()).toContain('S20580');
+    const hubble = (drawn.at(-1) as readonly { id: string; km: readonly number[] }[]).find(
+      ({ id }) => id === 'S20580',
+    );
+    expect(Math.hypot(...(hubble?.km ?? []))).toBeCloseTo(6378.137 + 615.5, 3);
+
+    craft.show?.({ ...on, camera: { ...on.camera, distance: 60 } }, JD_2010);
+    expect(ids()).not.toContain('S20580');
+    expect(ids().length).toBeGreaterThan(5);
+    craft.show?.({ ...on, focus: 'sun' }, JD_2010);
+    expect(ids()).not.toContain('S20580');
+    // 1985: five years before it flew.
+    craft.show?.(on, JD_2010 - 25 * 365.25);
+    expect(ids()).not.toContain('S20580');
+
+    craft.pick?.('S20580');
+    expect(cards.at(-1)?.title).toBe('Hubble Space Telescope');
   });
 
   it('draws nothing while its layer is off, and offers its icon in the globe view', () => {

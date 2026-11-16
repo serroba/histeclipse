@@ -55,6 +55,19 @@ describe('every craft sent beyond Earth orbit', () => {
     expect(record.neverLeft.length).toBeGreaterThan(40);
   });
 
+  it('Given the craft that stay about Earth, Then Hubble is there with its orbit, and not among those that left (#795)', () => {
+    const [hubble] = record.aboutEarth;
+    expect(hubble?.name).toBe('Hubble Space Telescope');
+    expect(hubble?.id).toBe('S20580');
+    expect(hubble?.orbit).toEqual({
+      perigeeKm: 611,
+      apogeeKm: 620,
+      inclinationDeg: 28.47,
+      measured: '1990-05-24',
+    });
+    expect(record.craft.some(({ orbit }) => orbit !== undefined)).toBe(false);
+  });
+
   it('Given a phase with a date that is not GCAT’s, Then the file is refused', async () => {
     const bad = JSON.parse(file) as { craft: { phases: unknown[][] }[] };
     const phase = bad.craft[0]?.phases[0];

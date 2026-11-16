@@ -27,6 +27,8 @@ export interface SceneCraft {
   readonly approximate: boolean;
   /** At a world, rather than on its way: named after those on their way. */
   readonly at: string | null;
+  /** Its trail is the lap it has just made about Earth (#795): a ring, seen all the way round. */
+  readonly ring?: boolean;
 }
 
 /** A craft as the layer draws it: scene positions, now and back along its trail. */
@@ -34,10 +36,16 @@ interface CraftDrawn {
   readonly at: readonly [number, number, number];
   readonly trail: readonly (readonly [number, number, number])[];
   readonly approximate: boolean;
+  readonly ring: boolean;
 }
 
+/** How clear a trail is at its newest, and a ring at its oldest: a trail fades to nothing. */
+const NEWEST = 0.8;
+const RING_OLDEST = 0.3;
+
 const MOST_CRAFT = 512;
-const MOST_TRAIL = 32;
+/** The most points of a trail drawn: a ring about Earth has the most (#795). */
+const MOST_TRAIL = 64;
 const FLOWN = [0.5, 0.85, 1] as const;
 const APPROXIMATE = [1, 0.7, 0.28] as const;
 
@@ -97,7 +105,8 @@ function createCraftLayer(scene: Scene): CraftLayer {
       if (craft === null) return;
       const shown = craft.slice(0, MOST_CRAFT);
       let vertex = 0;
-      shown.forEach(({ at, trail, approximate }, index) => {
+      shown.forEach(({ at, trail, approximate, ring }, index) => {
+        const oldest = ring ? RING_OLDEST : 0;
         const [r, g, b] = approximate ? APPROXIMATE : FLOWN;
         dotPositions.setXYZ(index, at[0], at[1], at[2]);
         dotColours.setXYZ(index, r, g, b);
@@ -106,8 +115,8 @@ function createCraftLayer(scene: Scene): CraftLayer {
         for (let k = 0; k + 1 < points.length; k += 1) {
           const from = points[k] ?? at;
           const to = points[k + 1] ?? at;
-          const near = 0.8 * (1 - k / points.length);
-          const far = 0.8 * (1 - (k + 1) / points.length);
+          const near = oldest + (NEWEST - oldest) * (1 - k / points.length);
+          const far = oldest + (NEWEST - oldest) * (1 - (k + 1) / points.length);
           trailPositions.setXYZ(vertex, from[0], from[1], from[2]);
           trailColours.setXYZW(vertex, r, g, b, near);
           trailPositions.setXYZ(vertex + 1, to[0], to[1], to[2]);
@@ -145,10 +154,11 @@ export const craftInFlight: LayerFactory<readonly SceneCraft[] | null> = (host) 
         return;
       }
       drawn.set(
-        craft.map(({ km, trail, approximate }) => ({
+        craft.map(({ km, trail, approximate, ring }) => ({
           at: toScene(km),
           trail: trail.map(toScene),
           approximate,
+          ring: ring === true,
         })),
       );
       // Those on their way get room first; those at a world are named after them.

@@ -203,4 +203,39 @@ describe('where the bodies are, for the craft (#702)', () => {
     expect(trailMoments(100, 2.5)[0]).toBe(97.5);
     expect(trailMoments(100.3, 2.5)).toHaveLength(24);
   });
+
+  describe('a craft that stays about Earth (#795)', () => {
+    const orbit = { perigeeKm: 611, apogeeKm: 620, inclinationDeg: 28.47, measured: '1990-05-24' };
+    const hubble = craft('S20580', [['Earth', '1990-04-25T12:49?', null, 'O', '-']], { orbit });
+    const wheres = craftWheres({}, geocentric);
+    const radius = 6378.137 + 615.5;
+
+    it('Given a moment after it was set free, Then it is on its circle about Earth, as approximate', () => {
+      const [now] = craftNow([hubble], wheres, geocentric, gcatJd('2009-05-20'));
+      expect(now?.approximate).toBe(true);
+      expect(now?.ring).toBe(true);
+      expect(now?.at).toBeNull();
+      expect(Math.hypot(...(now?.km ?? [0, 0, 0]))).toBeCloseTo(radius, 6);
+    });
+
+    it('Given a moment before it was set free, Then it is not there', () => {
+      expect(craftNow([hubble], wheres, geocentric, gcatJd('1990-04-20'))).toEqual([]);
+      expect(wheres.where(hubble, gcatJd('1990-04-20'))).toBeNull();
+    });
+
+    it('Given its trail, Then it is the lap it has just made: a ring closed about Earth', () => {
+      const [now] = craftNow([hubble], wheres, geocentric, gcatJd('2009-05-20T07:00'));
+      const trail = now?.trail ?? [];
+      expect(trail).toHaveLength(60);
+      for (const point of trail) expect(Math.hypot(...point)).toBeCloseTo(radius, 6);
+      const here: readonly [number, number, number] = now?.km ?? [0, 0, 0];
+      const oldest = elementAt(trail, trail.length - 1);
+      const back = elementAt(trail, trail.length - 2);
+      // The lap's oldest two points lie either side of where it is now, or on it.
+      const gap = (a: readonly [number, number, number]) =>
+        Math.hypot(a[0] - here[0], a[1] - here[1], a[2] - here[2]);
+      const step = 2 * radius * Math.sin(Math.PI / 59);
+      expect(gap(oldest) + gap(back)).toBeLessThan(step * 1.05);
+    });
+  });
 });
