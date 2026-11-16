@@ -84,6 +84,22 @@ export interface CraftCard {
   readonly note: string;
 }
 
+const ABOUT_EARTH =
+  'Approximate: a circle at that height and tilt, gone round at the pace such a circle is. Where it is along the circle, and which way the circle faces, are not its true ones, and its height has changed since';
+
+const RECORD =
+  'Record: GCAT, Jonathan McDowell, planet4589.org (CC BY 4.0); NASA NSSDCA’s Chronology of Lunar and Planetary Exploration.';
+const RECORD_ABOUT_EARTH =
+  'Record: GCAT’s satellite catalogue, Jonathan McDowell, planet4589.org (CC BY 4.0).';
+
+/** How a craft's path is drawn, in words. */
+function pathWords(craft: Craft, approximate: boolean): string {
+  if (craft.orbit !== undefined) return ABOUT_EARTH;
+  return approximate
+    ? 'Approximate: each leg as the transfer orbit between where it left and where it arrived, as first planned, not as flown'
+    : 'As flown, from JPL Horizons';
+}
+
 /** The card for a craft, and whether its path is Horizons's or approximate. */
 export function craftCard(craft: Craft, approximate: boolean): CraftCard {
   const went = destinations(craft).map((place) => PLACES[place] ?? place);
@@ -105,12 +121,14 @@ export function craftCard(craft: Craft, approximate: boolean): CraftCard {
       `on ${where}${craft.landing.site === '-' ? '' : `, ${craft.landing.site}`}${when}`,
     ]);
   }
-  facts.push([
-    'Path',
-    approximate
-      ? 'Approximate: each leg as the transfer orbit between where it left and where it arrived, as first planned, not as flown'
-      : 'As flown, from JPL Horizons',
-  ]);
+  if (craft.orbit !== undefined) {
+    const { perigeeKm, apogeeKm, inclinationDeg, measured } = craft.orbit;
+    facts.push([
+      'Orbit',
+      `About Earth, ${String(perigeeKm)} to ${String(apogeeKm)} km up, tilted ${String(inclinationDeg)}° to the equator (${writtenDate(measured)})`,
+    ]);
+  }
+  facts.push(['Path', pathWords(craft, approximate)]);
   const links =
     craft.nssdc === null
       ? []
@@ -124,6 +142,6 @@ export function craftCard(craft: Craft, approximate: boolean): CraftCard {
     title: craft.mission ?? craft.name,
     facts,
     links,
-    note: 'Record: GCAT, Jonathan McDowell, planet4589.org (CC BY 4.0); NASA NSSDCA’s Chronology of Lunar and Planetary Exploration.',
+    note: craft.orbit === undefined ? RECORD : RECORD_ABOUT_EARTH,
   };
 }

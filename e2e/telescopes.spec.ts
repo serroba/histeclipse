@@ -1,7 +1,7 @@
 /**
- * Feature: The space telescopes' pictures (#798). A telescope's card shows famous pictures it
- * took, served by the site itself, each opening larger with what it shows, whose it is and its
- * licence.
+ * Feature: The space telescopes. A telescope's card shows famous pictures it took (#798), served
+ * by the site itself, each opening larger with what it shows, whose it is and its licence. The
+ * Hubble Space Telescope goes round Earth (#795), drawn when Earth is close up.
  */
 
 import { collectProblems, expect, test } from './support';
@@ -64,6 +64,34 @@ test('Webb’s card shows the pictures it took, and one opens larger with its cr
     await page.keyboard.press('Escape');
     await expect(view).toBeHidden();
     await expect(card).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});
+
+test('Hubble goes round Earth close up, its card saying how its path is drawn', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const hubble = page.getByRole('button', { name: 'Hubble Space Telescope', exact: true });
+  await test.step('Given Earth close up in 2009 with the spacecraft on, Then Hubble is named about it', async () => {
+    await page.goto('./?focus=earth&cam=-30,60,12&layers=spacecraft&t=2009-05-20T12:00Z');
+    await expect(hubble).toBeVisible({ timeout: 30_000 });
+  });
+  await test.step('When they tap its name, Then its card gives its orbit and says the path is approximate', async () => {
+    await hubble.click();
+    const card = page.getByTestId('marker-card');
+    await expect(card).toContainText('24 April 1990');
+    await expect(card).toContainText('611 to 620 km up, tilted 28.47° to the equator');
+    await expect(card).toContainText('Approximate: a circle at that height and tilt');
+    await page.keyboard.press('Escape');
+  });
+  await test.step('When the view is five years before it flew, Then it is not there', async () => {
+    await page.goto('./?focus=earth&cam=-30,60,12&layers=spacecraft&t=1985-05-20T12:00Z');
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-craft', /\d+/, {
+      timeout: 30_000,
+    });
+    await expect(hubble).toHaveCount(0);
   });
   expect(problems).toEqual([]);
 });

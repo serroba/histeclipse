@@ -4,7 +4,8 @@
  * McDowell's GCAT (CC BY 4.0) and NASA NSSDCA's Chronology of Lunar and Planetary Exploration.
  * Each craft has its phases: a stretch about one body (Earth, the Sun, the Moon, a planet),
  * when it began and ended, how it ended, and where it went next. Dates are GCAT's, to the
- * minute where known, ending in "?" where it is unsure.
+ * minute where known, ending in "?" where it is unsure. With them, by name, a few that stayed
+ * in Earth orbit (#795: the Hubble Space Telescope), from GCAT's satellite catalogue.
  */
 
 import * as v from 'valibot';
@@ -23,7 +24,8 @@ const PhaseSchema = v.tuple([
 ]);
 
 const CraftSchema = v.strictObject({
-  id: v.pipe(v.string(), v.regex(/^D\d+$/)),
+  /** GCAT's id: "D" for a craft beyond Earth orbit, "S" for one in its satellite catalogue. */
+  id: v.pipe(v.string(), v.regex(/^[DS]\d+$/)),
   name: v.pipe(v.string(), v.minLength(1)),
   cospar: v.string(),
   /** NSSDCA's identifier for its page on the craft, or its carrier's; null where it has none. */
@@ -38,6 +40,16 @@ const CraftSchema = v.strictObject({
   phases: v.pipe(v.array(PhaseSchema), v.minLength(1)),
   about: v.optional(v.string()),
   mission: v.optional(v.string()),
+  /** A craft that stays about Earth (#795): its orbit's heights above the ground, km, its tilt
+   * to the equator, degrees, and when they were measured. */
+  orbit: v.optional(
+    v.strictObject({
+      perigeeKm: v.pipe(v.number(), v.minValue(0)),
+      apogeeKm: v.pipe(v.number(), v.minValue(0)),
+      inclinationDeg: v.pipe(v.number(), v.minValue(0), v.maxValue(180)),
+      measured: When,
+    }),
+  ),
   landing: v.optional(
     v.strictObject({
       world: v.string(),
@@ -63,6 +75,8 @@ const SpacecraftSchema = v.strictObject({
     nssdca: v.pipe(v.string(), v.url()),
   }),
   craft: v.array(CraftSchema),
+  /** The craft in the layer that never left Earth orbit (#795), each a named exception. */
+  aboutEarth: v.array(CraftSchema),
   neverLeft: v.array(NeverLeftSchema),
 });
 

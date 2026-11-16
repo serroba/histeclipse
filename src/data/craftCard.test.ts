@@ -94,4 +94,24 @@ describe('a craft’s card', () => {
     // Peregrine, under NSSDCA's own name for it.
     expect(page('Peregrine Mission One')).toMatch(/id=PEREGRN-1$/);
   });
+
+  it('Given Hubble, which stays about Earth, Then its card gives its orbit, says its path is a circle and not its true place, and credits GCAT’s satellite catalogue (#795)', () => {
+    const hubble = record.aboutEarth.find(({ name }) => name === 'Hubble Space Telescope');
+    if (hubble === undefined) throw new Error('no Hubble');
+    const card = craftCard(hubble, true);
+    expect(card.title).toBe('Hubble Space Telescope');
+    const facts = Object.fromEntries(card.facts);
+    expect(facts['Set out']).toBe('24 April 1990');
+    expect(facts['Whose']).toBe('United States (GSFC)');
+    expect(facts['Went to']).toBeUndefined();
+    expect(facts['Orbit']).toBe(
+      'About Earth, 611 to 620 km up, tilted 28.47° to the equator (24 May 1990)',
+    );
+    expect(facts['Path']).toContain('Approximate: a circle at that height and tilt');
+    expect(facts['Path']).toContain('not its true ones');
+    expect(card.links[0]?.href).toContain('id=1990-037B');
+    expect(card.note).toBe(
+      'Record: GCAT’s satellite catalogue, Jonathan McDowell, planet4589.org (CC BY 4.0).',
+    );
+  });
 });

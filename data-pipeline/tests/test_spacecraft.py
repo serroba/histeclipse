@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from histeclipse_pipeline.spacecraft import (
+    ABOUT_EARTH,
     Chronicle,
     chronicles,
     coordinate,
@@ -366,3 +367,17 @@ def test_a_craft_nssdca_never_catalogued_has_no_page() -> None:
     )
     craft, _ = craft_record(gcat(lost), [], [], [])
     assert craft[0]["nssdc"] is None
+
+
+def test_hubble_is_the_craft_that_stays_about_earth_with_its_first_orbit() -> None:
+    [hubble] = ABOUT_EARTH
+    assert hubble["id"] == "S20580"
+    assert hubble["name"] == "Hubble Space Telescope"
+    assert hubble["cospar"] == "1990-037B"
+    assert hubble["phases"] == [["Earth", "1990-04-25T12:49?", None, "O", "-"]]
+    assert hubble["orbit"] == {
+        "perigeeKm": 611,
+        "apogeeKm": 620,
+        "inclinationDeg": 28.47,
+        "measured": "1990-05-24",
+    }

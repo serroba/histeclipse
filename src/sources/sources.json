@@ -398,7 +398,7 @@
   "gcat": {
     "name": "GCAT (General Catalog of Artificial Space Objects)",
     "kind": "catalogue",
-    "cite": "McDowell, J. C., General Catalog of Artificial Space Objects (GCAT), planet4589.org: its deep space catalog, lunar and planetary and heliocentric registers, and lander catalog, as downloaded on 9 November 2026",
+    "cite": "McDowell, J. C., General Catalog of Artificial Space Objects (GCAT), planet4589.org: its deep space catalog, lunar and planetary and heliocentric registers, and lander catalog, as downloaded on 9 November 2026; the Hubble Space Telescope’s row of its satellite catalog, as updated on 15 November 2026",
     "url": "https://planet4589.org/space/gcat/",
     "licence": "CC BY 4.0"
   },
