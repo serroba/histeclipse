@@ -201,6 +201,20 @@ describe('approximate paths, for craft whose trajectory nobody published', () =>
     }
   });
 
+  it('Given months in Earth orbit between two meetings with the Moon, Then it is at Earth, not on one long transfer (#791)', () => {
+    const phases = (back: string): CraftPhase[] => [
+      ['Luna', '2000-01-10', '2000-03-01', 'EN', 'Luna'],
+      ['Earth', '2000-03-01', back, 'EO', 'Luna'],
+      ['Luna', back, null, 'O', '-'],
+    ];
+    // Eighty days as one transfer would swing out past a million km; four days is a flight.
+    expect(approximatePath(craft(phases('2000-05-20')), geocentric)(gcatJd('2000-04-01'))).toEqual({
+      at: 'Earth',
+    });
+    const short = approximatePath(craft(phases('2000-03-05')), geocentric)(gcatJd('2000-03-03'));
+    expect(Math.hypot(...km(short))).toBeLessThan(450_000);
+  });
+
   it('Given a craft that leaves the Moon for L1 with no Sun to place it by, Then it is not drawn', () => {
     const moonOnly: Geocentric = (body, jd) => (body === 'Moon' ? geocentric(body, jd) : null);
     const at = approximatePath(
@@ -237,9 +251,10 @@ describe('every craft the site draws an approximate path for', () => {
       return planet === undefined ? null : planets.position(planet, jd as JulianDay);
     };
     const published: Readonly<Record<string, unknown>> = paths.paths;
-    // About Earth, a tenth of an AU; about the Sun, a little past Saturn. And 100 km/s between
-    // moments, which no craft has reached. The line across the view in #790 was 10¹³ AU long.
-    const FURTHEST = { Earth: 0.1 * AU, Sun: 11 * AU };
+    // About Earth, 2 million km: a little past the L points, and no long loops out of Earth's
+    // reach (#791). About the Sun, a little past Saturn. And 100 km/s between moments, which
+    // no craft has reached. The line across the view in #790 was 10¹³ AU long.
+    const FURTHEST = { Earth: 2e6, Sun: 11 * AU };
     const MOMENTS = 60;
     const wrong: string[] = [];
     let drawn = 0;

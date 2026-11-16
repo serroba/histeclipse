@@ -10,6 +10,9 @@
  *   170° round from where it met the Moon, as a translunar arc is) to the Moon on arrival; and
  *   back, from the Moon on leaving to 6,478 km on reaching Earth. From the Moon out to the
  *   Sun-Earth L1 or L2 point (Chang'e 2, #790): the transfer to where that point is on arrival.
+ *   A leg about Earth that would swing far out past both its ends (weeks or years in Earth
+ *   orbit between meetings with the Moon: Geotail, Hiten, SMART-1) is laps about Earth, which
+ *   one transfer cannot follow: the craft is at Earth, and not drawn (#791).
  * - At the Sun-Earth L1 or L2 point: 1.5 million km sunward or away.
  * - At a world (the Moon, a planet): there. Elsewhere (a comet, an asteroid, a leg with no
  *   world the site can place): nowhere, rather than somewhere made up. Nor a leg from a world
@@ -46,6 +49,16 @@ const PARKING_KM = 6678;
 const ENTRY_KM = 6478;
 const L_POINT_KM = 1.5e6;
 const TRANSLUNAR = (170 * Math.PI) / 180;
+/**
+ * A transfer about Earth goes from one place to another. One that swings out past half as far
+ * again as the farther of the two is not a transfer but weeks of laps about Earth (a craft
+ * kept in Earth orbit between meetings with the Moon), which one orbit cannot follow (#791).
+ * In the record, every flight to or from the Moon of two weeks or less stays within it, and
+ * every one of sixteen days or more does not.
+ */
+const FARTHEST = 1.5;
+/** Moments along a transfer at which its distance from the centre is looked at. */
+const MOMENTS = 32;
 const OBLIQUITY = (23.439_291_1 * Math.PI) / 180;
 /** The ecliptic's pole in J2000 equatorial axes: transfers go round it as the planets do. */
 export const ECLIPTIC_POLE: Vec3 = [0, -Math.sin(OBLIQUITY), Math.cos(OBLIQUITY)];
@@ -177,6 +190,16 @@ export function approximatePath(
   };
 }
 
+/** Whether a transfer goes out past `FARTHEST` times the farther of its two ends on the way. */
+function swingsOut(leg: Leg, r2: Vec3, seconds: number): boolean {
+  const reach = FARTHEST * Math.max(Math.hypot(...leg.r1), Math.hypot(...r2));
+  for (let k = 1; k < MOMENTS; k += 1) {
+    const there = propagate(leg.r1, leg.v1, (k / MOMENTS) * seconds, leg.gm);
+    if (Math.hypot(...there) > reach) return true;
+  }
+  return false;
+}
+
 function solved(
   centre: 'Sun' | 'Earth',
   start: number,
@@ -186,6 +209,9 @@ function solved(
   gm: number,
 ): Leg | null {
   if (r1 === null || r2 === null || end <= start) return null;
-  const found = lambert(r1, r2, (end - start) * 86_400, gm, ECLIPTIC_POLE);
-  return found === null ? null : { centre, start, r1, v1: found.v1, gm };
+  const seconds = (end - start) * 86_400;
+  const found = lambert(r1, r2, seconds, gm, ECLIPTIC_POLE);
+  if (found === null) return null;
+  const leg: Leg = { centre, start, r1, v1: found.v1, gm };
+  return centre === 'Earth' && swingsOut(leg, r2, seconds) ? null : leg;
 }
