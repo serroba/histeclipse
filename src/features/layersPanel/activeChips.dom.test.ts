@@ -37,15 +37,15 @@ describe('the chips of the layers on', () => {
     expect(onRemove).toHaveBeenCalledWith('plates');
   });
 
-  it('Given the ozone hole in 1995, Then its chip says so in words, and goes to 1996', () => {
+  it('Given the ozone hole in 1977, Then its chip says so in words, and goes to 1979, past the next year without', () => {
     const onGoTo = vi.fn();
     const chips = createActiveChips({ onRemove: vi.fn(), onGoTo });
-    chips.render(activeLayers(at('t=1995-10-01T12:00Z&layers=ozone')));
+    chips.render(activeLayers(at('t=1977-10-01T12:00Z&layers=ozone')));
     const ozone = chips.root.querySelector('[data-layer="ozone"]');
     expect(ozone?.getAttribute('data-coverage')).toBe('gap');
-    expect(ozone?.textContent).toContain('none in 1995 CE');
+    expect(ozone?.textContent).toContain('none in 1977 CE');
     ozone?.querySelector<HTMLButtonElement>('.active-go')?.click();
-    expect(onGoTo).toHaveBeenCalledWith({ span: 'years', year: 1996, label: '1996 CE' });
+    expect(onGoTo).toHaveBeenCalledWith({ span: 'years', year: 1979, label: '1979 CE' });
   });
 
   it('Given a layer that could not load, Then its chip says so and tries again; one loading is busy', () => {

@@ -94,14 +94,28 @@ export function ozoneText(history: OzoneHistory, at: number): string {
   if (found.kind === 'missing') {
     return `No satellite measured the ozone hole in ${String(found.year)}: left empty, not filled.`;
   }
+  return `${ozoneWords(history, at)} Drawn as a cap of that area round the pole, not its shape.`;
+}
+
+/** What the record says of a year's hole, however it is drawn. */
+export function ozoneWords(history: OzoneHistory, at: number): string {
+  const found = holeIn(history, at);
+  if (found.kind === 'outside') {
+    return `NASA’s record of the hole runs from ${String(found.first)} to ${String(found.last)}.`;
+  }
+  if (found.kind === 'missing') {
+    return `No satellite measured the hole day by day in ${String(found.year)}: NASA’s record leaves it empty.`;
+  }
   const { areaMkm2, minimumDU } = found.hole;
-  return `The Antarctic ozone hole in the spring of ${String(at)}: ${areaMkm2.toFixed(1)} million km² on average, its lowest ozone ${String(Math.round(minimumDU))} Dobson units. Drawn as a cap of that area round the pole, not its shape.`;
+  return `The Antarctic ozone hole in the spring of ${String(at)}: ${areaMkm2.toFixed(1)} million km² on average, its lowest ozone ${String(Math.round(minimumDU))} Dobson units.`;
 }
 
 /** The year in a few words, for the chart's panel. */
 export function ozoneLine(history: OzoneHistory, at: number): string {
   const found = holeIn(history, at);
-  if (found.kind === 'outside') return `No record for ${String(at)}.`;
+  if (found.kind === 'outside') {
+    return `${String(at)}: outside NASA’s record of the hole, ${String(found.first)} to ${String(found.last)}.`;
+  }
   if (found.kind === 'missing') return `${String(at)}: not measured.`;
   const { areaMkm2, minimumDU } = found.hole;
   return `${String(at)}: ${areaMkm2.toFixed(1)} million km², lowest ${String(Math.round(minimumDU))} DU.`;

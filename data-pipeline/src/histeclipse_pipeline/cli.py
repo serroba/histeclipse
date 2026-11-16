@@ -58,6 +58,7 @@ from histeclipse_pipeline.ocean_heat_map import fetch_ocean_heat_map
 from histeclipse_pipeline.ocean_oxygen import fetch_ocean_oxygen
 from histeclipse_pipeline.ohm import fetch_ohm
 from histeclipse_pipeline.ozone import fetch_ozone_history
+from histeclipse_pipeline.ozone_msr import fetch_ozone_msr
 from histeclipse_pipeline.p3k14c import fetch_p3k14c
 from histeclipse_pipeline.paleo_co2 import fetch_co2_archive
 from histeclipse_pipeline.paleodem import fetch_paleodem
@@ -720,6 +721,12 @@ def ozone_history(args: Arguments) -> int:  # pragma: no cover - needs network a
     return _say(f"wrote {years} years of the ozone hole and the depleting gases to {args.out}")
 
 
+def ozone_msr(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write each October's ozone over the whole Earth since 1970 (MSR-2, Copernicus)."""
+    years = fetch_ozone_msr(args.out, args.kernels.parent / "ozone-msr")
+    return _say(f"wrote {years} Octobers of ozone to {args.out}")
+
+
 def ocean_oxygen(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the ocean's oxygen inventory since 2004 and its trend map (GOBAI-O2)."""
     points = fetch_ocean_oxygen(args.out)
@@ -1154,6 +1161,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         ozone_history,
         "write the Antarctic ozone hole since 1979 and the ozone-depleting gases (NASA, NOAA)",
         "output directory",
+    ),
+    "ozone-msr": (
+        ozone_msr,
+        "write each October's ozone over the whole Earth since 1970 (MSR-2; needs ~/.cdsapirc)",
+        "output directory (public/data/ozone)",
     ),
     "ocean-oxygen": (
         ocean_oxygen,

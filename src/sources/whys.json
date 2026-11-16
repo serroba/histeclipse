@@ -467,8 +467,9 @@
   },
   "ozone": {
     "title": "The ozone hole",
-    "what": "The Antarctic ozone hole each spring since 1979, and the ozone-depleting gases over Antarctica since 1992. On the globe a cap of the hole's mean area round the South Pole stands for it: the real hole wanders and stretches off the pole. 1995 had no satellite to measure it and is left empty. The Montreal Protocol (1987) is marked.",
-    "sources": ["nasaOzoneWatch", "noaaOdgi"]
+    "what": "Ozone over the whole Earth each October since 1970, the Antarctic ozone hole an opening in it; the hole’s area each spring since 1979, and the ozone-depleting gases over Antarctica since 1992. The Montreal Protocol (1987) is marked.",
+    "sources": ["msr2Ozone", "nasaOzoneWatch", "noaaOdgi"],
+    "how": "The globe shows the month’s mean of total ozone in October, when the Antarctic hole is deepest, from the MSR-2 reanalysis: blue at 220 Dobson units through pale grey to red at 400, as the Copernicus Atmosphere Monitoring Service colours it. Under 220, the line that marks the hole, the sheet is left open to the Earth beneath. A reanalysis takes satellite measurements, corrected against ground stations, into a model of the air’s ozone: from 1979 it has no gaps, and where no satellite saw (the polar night) its values are the model’s. Before 1979 it rests on one early instrument that saw less each year: those Octobers are coarser and have gaps, drawn grey, never filled, and 1977 and 1978, with values for under a tenth of the Earth, are left out. Each map is thinned from half a degree to one. While a map is fetched, and if it cannot be, the hole is drawn as a cap of its mean area round the South Pole: the real hole wanders and stretches off the pole. The area beside the globe is NASA’s, the mean of each day’s hole from 7 September to 13 October; a month’s mean map shows a smaller one, since the hole moves from day to day. NASA’s record has no 1995: no satellite measured the hole each day."
   },
   "warming": {
     "title": "Temperature records side by side",
