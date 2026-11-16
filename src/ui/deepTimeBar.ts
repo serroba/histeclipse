@@ -27,6 +27,7 @@ import { DEEP_SPEEDS, deepSpeedText, deepSpeedWords } from '../deepTime/playSpee
 import type { DeepScale, Layer } from '../state/viewState';
 import type { WhyId } from '../sources/registry';
 import { element } from './dom';
+import { createTransport } from './transport';
 import type { IceOutlines } from '../data/iceOutlines';
 import type { StoryDate } from '../deepTime/storyDate';
 import type { TemperatureView } from './temperatureLegend';
@@ -121,11 +122,28 @@ export function createDeepTimeBar(
   },
   chips: readonly DeepChip[] = [],
 ): DeepTimeBar {
-  const play = element(
-    'button',
-    { type: 'button', class: 'step deep-play', 'aria-label': 'Play' },
-    '▶',
+  // The slider's value is minus the time ago, so dragging right moves towards the present: in
+  // millions of years, or thousands on the ice-age scale. Its keys are all players' (`transport.ts`).
+  const transport = createTransport(
+    {
+      play: { className: 'step deep-play' },
+      slider: {
+        class: 'deep-slider',
+        max: '0',
+        'aria-label': 'Millions of years ago',
+      },
+    },
+    {
+      onPlay(play) {
+        handlers.onPlay(play);
+      },
+      onSlide(value) {
+        handlers.onMa(-value / sliderUnit(current?.scale), false);
+      },
+    },
   );
+  const { play, slider } = transport;
+  let current: DeepTimeView | null = null;
   // The span's own speeds, in its own units; offered anew when the span changes.
   const speed = element('select', { class: 'deep-speed', 'aria-label': 'Speed' });
   let speedsOf: DeepScale | null = null;
@@ -142,16 +160,6 @@ export function createDeepTimeBar(
     { type: 'button', class: 'step', 'aria-label': `${String(STEP_MA)} million years later` },
     '›',
   );
-  // The slider's value is minus the time ago, so dragging right moves towards the present: in
-  // millions of years, or thousands on the ice-age scale.
-  const slider = element('input', {
-    type: 'range',
-    class: 'deep-slider',
-    min: '-540',
-    max: '0',
-    step: '1',
-    'aria-label': 'Millions of years ago',
-  });
   const unchartedNote = element(
     'p',
     { class: 'deep-note', hidden: '', 'data-testid': 'uncharted-note' },
@@ -346,12 +354,9 @@ export function createDeepTimeBar(
     ignore: 'input, select, .deep-controls',
   });
 
-  let current: DeepTimeView | null = null;
+  transport.join(root);
   // The span the ticks were placed for.
   let marksSpan = 0;
-  slider.addEventListener('input', () => {
-    handlers.onMa(-Number(slider.value) / sliderUnit(current?.scale), false);
-  });
   older.addEventListener('click', () => {
     if (current !== null)
       handlers.onMa(stepped(current.ma, current.oldest, current.scale, true), true);
@@ -359,9 +364,6 @@ export function createDeepTimeBar(
   younger.addEventListener('click', () => {
     if (current !== null)
       handlers.onMa(stepped(current.ma, current.oldest, current.scale, false), true);
-  });
-  play.addEventListener('click', () => {
-    handlers.onPlay(!(current?.playing ?? false));
   });
 
   const bar: DeepTimeBar = {
@@ -395,7 +397,7 @@ export function createDeepTimeBar(
       iceNotes.render(ice, view);
       slider.min = String(-view.oldest * perMa);
       slider.setAttribute('aria-label', ice ? 'Thousands of years ago' : 'Millions of years ago');
-      if (document.activeElement !== slider) slider.value = String(-view.ma * perMa);
+      transport.render(view.playing, -view.ma * perMa);
       const step = stepWords(view.scale);
       older.setAttribute('aria-label', `${step} earlier`);
       younger.setAttribute('aria-label', `${step} later`);
@@ -416,8 +418,6 @@ export function createDeepTimeBar(
       air.render(view.air, view.scale, view.oldest, view.ma);
       seaLevel.render(view.seaLevel, view.ma, view.oldest);
       temperature.render(view.temperature, uncharted);
-      play.textContent = view.playing ? '❚❚' : '▶';
-      play.setAttribute('aria-label', view.playing ? 'Pause' : 'Play');
       if (speedsOf !== view.scale) {
         speedsOf = view.scale;
         speed.replaceChildren(

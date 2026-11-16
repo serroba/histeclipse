@@ -73,6 +73,7 @@ The reference journeys of #724 (`navigation.spec.ts`; human origins is a journey
 | `periods.spec.ts`   | Named periods: PeriodO's periods for the place picked, each by its source                               |
 | `sources.spec.ts`   | Why this? The sources of what is on screen, each with its book and licence                              |
 | `playback.spec.ts`  | Playing deep time on a slow connection: map after map, loaded ahead                                     |
+| `keys.spec.ts`      | The keys of all that plays: Space plays or pauses, the arrows step, whatever is playing                 |
 | `smoke.spec.ts`     | Everything else: loading, links, eclipses, views, sky, the Sun, deep time                               |
 
 `support.ts` holds the shared steps and the `test` every file imports, which takes the

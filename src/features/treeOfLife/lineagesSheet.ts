@@ -22,6 +22,7 @@ import type { LineagesView } from '../../state/viewState';
 import { elementAt } from '../../util/arrays';
 import { errorMessage } from '../../util/errors';
 import { element } from '../../ui/dom';
+import { createTransport } from '../../ui/transport';
 import { drawFan, genusAtFan, litPath } from './lineagesFan';
 import { createMomentMap } from './lineagesMap';
 import { arrange, type Loaded, type Moment } from './lineagesTree';
@@ -90,24 +91,35 @@ export function createLineagesSheet(
     { class: 'stage-switch', role: 'group', 'aria-label': 'Which animals' },
     ...groupButtons.values(),
   );
-  const play = element(
-    'button',
+  const transport = createTransport(
     {
-      type: 'button',
-      class: 'lineages-play',
-      'aria-label': 'Play',
-      'data-testid': 'lineages-play',
+      play: {
+        className: 'lineages-play',
+        attributes: { 'data-testid': 'lineages-play' },
+      },
+      slider: {
+        class: 'lineages-slider',
+        'aria-label': 'Million years ago',
+        'data-testid': 'lineages-slider',
+        step: '0.5',
+      },
+      over: true,
     },
-    '▶',
+    {
+      onPlay(play) {
+        if (current === null) return;
+        if (play && at <= current.youngest + 0.01) at = current.oldest;
+        playing = play;
+        setMoment(at);
+      },
+      onSlide(value) {
+        playing = false;
+        setMoment(-value);
+      },
+    },
   );
-  const slider = element('input', {
-    type: 'range',
-    class: 'lineages-slider',
-    'aria-label': 'Million years ago',
-    'data-testid': 'lineages-slider',
-    step: '0.5',
-  });
   const moment = element('span', { class: 'lineages-moment', 'aria-live': 'off' });
+  const { play, slider } = transport;
   const clock = element('div', { class: 'lineages-clock' }, play, slider, moment);
   const status = element('p', { class: 'stage-status', role: 'status' }, 'Loading the tree…');
   const legend = element('div', { class: 'stage-legend stage-key' });
@@ -170,6 +182,7 @@ export function createLineagesSheet(
       element('div', { class: 'why-actions' }, whole),
     ),
   );
+  transport.join(dialog);
   close.addEventListener('click', () => {
     onRequest(null);
   });
@@ -206,17 +219,6 @@ export function createLineagesSheet(
     if (now !== null) map.draw(now);
   });
 
-  slider.addEventListener('input', () => {
-    playing = false;
-    setMoment(-Number(slider.value));
-  });
-  play.addEventListener('click', () => {
-    if (current === null) return;
-    if (!playing && at <= current.youngest + 0.01) at = current.oldest;
-    playing = !playing;
-    setMoment(at);
-  });
-
   function tick(time: number): void {
     frameRequest = 0;
     if (!playing || current === null || !dialog.open) {
@@ -233,9 +235,7 @@ export function createLineagesSheet(
   function setMoment(ma: number): void {
     if (current === null) return;
     at = Math.min(current.oldest, Math.max(current.youngest, ma));
-    slider.value = String(-at);
-    play.textContent = playing ? '❚❚' : '▶';
-    play.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+    transport.render(playing, -at);
     const data = current;
     living = data.genera.filter((index) => aliveAt(elementAt(data.lineages.nodes, index), at));
     const words = momentWords(at, living.length);

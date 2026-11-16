@@ -15,6 +15,7 @@ import {
   type Story,
 } from '../../globe/showerSteps';
 import { element } from '../../ui/dom';
+import { createStoryPlay } from '../../ui/transport';
 import { reactionDiagram } from './reactionDiagram';
 import { sunDiagram } from './sunDiagram';
 import './showerStage.css';
@@ -47,7 +48,6 @@ export function createShowerStage(
   onCommand: (command: ShowerCommand | 'stop') => void,
 ): ShowerStage {
   let reduced = false;
-  let playing = true;
   // The chemistry, drawn, for the steps where it happens.
   const diagram = element('div', { class: 'shower-diagram' });
   let drawnFor: ShowerStep | null = null;
@@ -67,12 +67,12 @@ export function createShowerStage(
   const back = button('Back', () => {
     step('back');
   });
-  const toggle = button('Pause', () => {
+  const playButton = createStoryPlay('shower-control', (play) => {
     // The button answers at once; the shower confirms at its next frame.
-    playing = !playing;
-    toggle.textContent = playing ? 'Pause' : 'Play';
-    onCommand(playing ? 'play' : 'pause');
+    playButton.set(play);
+    onCommand(play ? 'play' : 'pause');
   });
+  const toggle = playButton.button;
   const next = button('Next', () => {
     step('next');
   });
@@ -98,28 +98,16 @@ export function createShowerStage(
     if (reduced) onCommand('settle');
   }
 
+  // Space plays or pauses, unless the steps wait for the reader, and the arrows step.
+  playButton.join(root, (direction) => {
+    step(direction < 0 ? 'back' : 'next');
+  });
   document.addEventListener('keydown', (event) => {
-    if (root.hasAttribute('hidden') || event.defaultPrevented) return;
+    if (root.hasAttribute('hidden') || event.defaultPrevented || event.key !== 'Escape') return;
     const target = event.target;
     if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return;
-    const keys: Record<string, () => void> = {
-      ' ': () => {
-        if (!reduced) toggle.click();
-      },
-      ArrowLeft: () => {
-        step('back');
-      },
-      ArrowRight: () => {
-        step('next');
-      },
-      Escape: () => {
-        onCommand('stop');
-      },
-    };
-    const run = keys[event.key];
-    if (run === undefined) return;
     event.preventDefault();
-    run();
+    onCommand('stop');
   });
 
   return {
@@ -151,7 +139,6 @@ export function createShowerStage(
       return !root.hasAttribute('hidden');
     },
     render(state, text) {
-      playing = state.playing;
       caption.textContent = text;
       if (drawnFor !== state.step) {
         drawnFor = state.step;
@@ -161,7 +148,7 @@ export function createShowerStage(
         diagram.replaceChildren(...(drawn === null ? [] : [drawn]));
         diagram.hidden = drawn === null;
       }
-      toggle.textContent = state.playing ? 'Pause' : 'Play';
+      playButton.set(state.playing);
       root.dataset['step'] = state.step;
       root.dataset['playing'] = String(state.playing);
       const index = steps.findIndex(({ step: each }) => each === state.step);

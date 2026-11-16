@@ -14,13 +14,16 @@ export interface PlotSpan {
 
 const clamp = (x: number) => Math.min(1, Math.max(0, x));
 
+/** The cursor a step back (-1) or on (1), a leap with `leap`: for the page's keys. */
+export type ScrubStep = (direction: -1 | 1, leap: boolean) => void;
+
 export function makeScrubbable(
   chart: SVGSVGElement,
   plot: () => PlotSpan,
   /** Where the cursor is now, 0 to 1, for the keys to step from. */
   current: () => number,
   onScrub: (x: number) => void,
-): void {
+): ScrubStep {
   chart.setAttribute('role', 'slider');
   chart.setAttribute('tabindex', '0');
   chart.setAttribute('aria-valuemin', '0');
@@ -46,4 +49,8 @@ export function makeScrubbable(
     event.preventDefault();
     onScrub(next);
   });
+  return (direction, leap) => {
+    const next = scrubKey(direction < 0 ? 'ArrowLeft' : 'ArrowRight', leap, current());
+    if (next !== null) onScrub(next);
+  };
 }

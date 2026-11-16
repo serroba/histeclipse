@@ -14,6 +14,7 @@ import {
   TEMPERATURE_STOPS,
 } from '../../ui/temperatureLegend';
 import { element } from '../../ui/dom';
+import { createTransport } from '../../ui/transport';
 import './deepGlance.css';
 
 interface DeepGlanceView {
@@ -41,21 +42,30 @@ export function createDeepGlance(
   onPlay: (play: boolean) => void,
   onMa: (ma: number) => void,
 ): DeepGlance {
-  const play = element(
-    'button',
-    { type: 'button', class: 'deep-glance-play', 'aria-label': 'Play' },
-    '▶',
+  let oldest = 0;
+  // Space plays or pauses and the arrows step, as on all that plays (`ui/transport.ts`).
+  const transport = createTransport(
+    {
+      play: { className: 'deep-glance-play' },
+      slider: {
+        class: 'deep-glance-slider',
+        min: '0',
+        max: String(STEPS),
+        step: '1',
+        'aria-label': 'Time shown',
+      },
+    },
+    {
+      onPlay,
+      onSlide(step) {
+        // From the span's oldest at the left to the present at the right, as on the bar's slider.
+        onMa(oldest * (1 - step / STEPS));
+      },
+    },
   );
+  const { play, slider } = transport;
   const when = element('strong', { class: 'deep-glance-when' });
   const period = element('span', { class: 'deep-glance-period' });
-  const slider = element('input', {
-    type: 'range',
-    class: 'deep-glance-slider',
-    min: '0',
-    max: String(STEPS),
-    step: '1',
-    'aria-label': 'Time shown',
-  });
   const scale = element('span', { class: 'deep-glance-scale', 'aria-hidden': 'true' });
   scale.style.background = legendGradient(TEMPERATURE_STOPS);
   const ticks = element(
@@ -92,29 +102,18 @@ export function createDeepGlance(
       temperature,
     ),
   );
-  let playing = false;
-  let oldest = 0;
-  slider.addEventListener('input', () => {
-    // From the span's oldest at the left to the present at the right, as on the bar's slider.
-    onMa(oldest * (1 - Number(slider.value) / STEPS));
-  });
-  play.addEventListener('click', () => {
-    onPlay(!playing);
-  });
+  transport.join(root);
   return {
     root,
     render(view) {
       root.hidden = view === null;
       if (view === null) return;
-      playing = view.playing;
-      play.textContent = view.playing ? '❚❚' : '▶';
-      play.setAttribute('aria-label', view.playing ? 'Pause' : 'Play');
       when.textContent = view.when;
       period.textContent = view.period;
       temperature.hidden = !view.temperature;
       oldest = view.oldest;
       const share = view.oldest > 0 ? Math.min(1, Math.max(0, 1 - view.ma / view.oldest)) : 1;
-      if (document.activeElement !== slider) slider.value = String(Math.round(share * STEPS));
+      transport.render(view.playing, Math.round(share * STEPS));
       slider.setAttribute('aria-valuetext', view.when);
     },
   };
