@@ -39,6 +39,10 @@ const VERTEX = /* glsl */ `
   }
 `;
 
+/** How much of the surface shows, 0 to 1: less than all, so the land and the sea show faintly
+ * through it (#817). */
+const SEE_THROUGH = '0.58';
+
 const FRAGMENT = /* glsl */ `
   #include <logdepthbuf_pars_fragment>
   varying vec3 vColour;
@@ -49,7 +53,7 @@ const FRAGMENT = /* glsl */ `
     // Lit from the eye, so its folds show whichever way it is turned; its inner face darker.
     float facing = abs(dot(normalize(vViewNormal), normalize(-vViewPosition)));
     float light = (gl_FrontFacing ? 0.5 : 0.32) + 0.5 * facing;
-    gl_FragColor = vec4(vColour * light, 1.0);
+    gl_FragColor = vec4(vColour * light, ${SEE_THROUGH});
   }
 `;
 
@@ -58,7 +62,13 @@ export const ozoneShellLayer: LayerFactory<ShellField | null> = (host) => {
   const geometry = new BufferGeometry();
   const mesh = new Mesh(
     geometry,
-    new ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, side: DoubleSide }),
+    new ShaderMaterial({
+      vertexShader: VERTEX,
+      fragmentShader: FRAGMENT,
+      side: DoubleSide,
+      transparent: true,
+      depthWrite: false,
+    }),
   );
   mesh.name = 'ozone-shell';
   mesh.visible = false;
