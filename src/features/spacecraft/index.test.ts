@@ -261,6 +261,11 @@ describe('the spacecraft as a feature', () => {
     craft.pick?.('D00273');
     expect(cards).toHaveLength(before + 1);
     expect(cards.at(-1)?.pictures).toBeUndefined();
+
+    // Hubble's card has its own, already loaded.
+    craft.pick?.('S20580');
+    expect(cards.at(-1)?.pictures?.source).toBe('ESA/Hubble');
+    expect(cards.at(-1)?.pictures?.pictures[1]?.title).toBe('The Pillars of Creation');
   });
 
   it('Given the pictures cannot be loaded, Then the card stays as it is, the reader is told, and the next card asks again (#798)', async () => {

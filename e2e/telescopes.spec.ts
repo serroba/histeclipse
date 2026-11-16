@@ -68,7 +68,7 @@ test('Webb’s card shows the pictures it took, and one opens larger with its cr
   expect(problems).toEqual([]);
 });
 
-test('Hubble goes round Earth close up, its card saying how its path is drawn', async ({
+test('Hubble goes round Earth close up, its card saying how its path is drawn and showing its pictures', async ({
   page,
 }) => {
   test.slow();
@@ -84,6 +84,26 @@ test('Hubble goes round Earth close up, its card saying how its path is drawn', 
     await expect(card).toContainText('24 April 1990');
     await expect(card).toContainText('611 to 620 km up, tilted 28.47° to the equator');
     await expect(card).toContainText('Approximate: a circle at that height and tilt');
+  });
+  await test.step('And its card lists eight pictures it took, from ESA/Hubble under CC BY 4.0, one opening larger with its credit', async () => {
+    const card = page.getByTestId('marker-card');
+    const view = page.getByTestId('picture-view');
+    const strip = card.getByRole('region', { name: 'Pictures it took' });
+    await expect(strip.getByRole('button')).toHaveCount(8);
+    await expect(strip).toContainText('ESA/Hubble, CC BY 4.0.');
+    await card.getByRole('button', { name: 'The Crab Nebula: see it larger' }).click();
+    await expect(view.getByRole('heading')).toHaveText('The Crab Nebula');
+    await expect(view).toContainText('recorded in 1054');
+    await expect(view).toContainText('Picture: NASA, ESA and Allison Loll/Jeff Hester');
+    await expect(view.getByRole('link', { name: 'ESA/Hubble' })).toHaveAttribute(
+      'href',
+      'https://esahubble.org/images/heic0515a/',
+    );
+    await expect
+      .poll(() => view.locator('img').evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBe(1280);
+    await page.keyboard.press('Escape');
+    await expect(view).toBeHidden();
     await page.keyboard.press('Escape');
   });
   await test.step('When the view is five years before it flew, Then it is not there', async () => {

@@ -16,9 +16,10 @@ describe('telescope-pictures.json', () => {
   it('gives each telescope, a craft in the record, pictures with a credit, a licence and their files', async () => {
     const all = await loadTelescopePictures('/data/telescope-pictures.json', serve(served));
     const ids = Object.keys(all.telescopes);
-    expect(ids).toContain('D01093');
+    expect(ids).toEqual(['D01093', 'S20580']);
+    const known = [...record.craft, ...record.aboutEarth];
     for (const [id, telescope] of Object.entries(all.telescopes)) {
-      expect(record.craft.some((craft) => craft.id === id)).toBe(true);
+      expect(known.some((craft) => craft.id === id)).toBe(true);
       expect(telescope.licence).toBe('CC BY 4.0');
       expect(telescope.licenceUrl).toBe('https://creativecommons.org/licenses/by/4.0/');
       expect(telescope.pictures.length).toBeGreaterThanOrEqual(6);
@@ -52,6 +53,14 @@ describe('a craft’s pictures', () => {
     const webb = picturesOf(all, 'D01093', '/histeclipse/');
     expect(webb?.heading).toBe('Pictures it took');
     expect(webb?.source).toBe('ESA/Webb');
+    const hubble = picturesOf(all, 'S20580', '/');
+    expect(hubble?.source).toBe('ESA/Hubble');
+    expect(hubble?.pictures).toHaveLength(8);
+    expect(hubble?.pictures[0]).toMatchObject({
+      title: 'The Hubble Ultra Deep Field',
+      released: '21 September 2006',
+      thumb: '/pictures/hubble/heic0611b-thumb.webp',
+    });
     expect(webb?.pictures[0]).toMatchObject({
       title: 'Webb’s First Deep Field',
       released: '12 July 2022',
