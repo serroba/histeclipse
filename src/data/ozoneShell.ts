@@ -126,6 +126,18 @@ export function finerField(field: ShellField, factor: number): ShellField {
   const lowerKm = new Float32Array(rows * columns);
   const upperKm = new Float32Array(rows * columns);
   const du = new Float32Array(rows * columns);
+  // What a point takes from the cells about it, kept in one place: this runs for every point of
+  // every day played, and must not allocate for each (#819).
+  const sum = { weight: 0, lower: 0, upper: 0, ozone: 0 };
+  const take = (row: number, column: number, share: number): void => {
+    const cell = row * field.columns + column;
+    sum.ozone += share * Number(field.du[cell]);
+    const low = Number(field.lowerKm[cell]);
+    if (Number.isNaN(low)) return;
+    sum.weight += share;
+    sum.lower += share * low;
+    sum.upper += share * Number(field.upperKm[cell]);
+  };
   for (let row = 0; row < rows; row += 1) {
     const north = Math.min(Math.floor(row / factor), field.rows - 2);
     const down = row / factor - north;
@@ -133,28 +145,18 @@ export function finerField(field: ShellField, factor: number): ShellField {
       const west = Math.floor(column / factor);
       const east = (west + 1) % field.columns;
       const along = column / factor - west;
-      let weight = 0;
-      let lower = 0;
-      let upper = 0;
-      let ozone = 0;
-      for (const [r, c, share] of [
-        [north, west, (1 - down) * (1 - along)],
-        [north, east, (1 - down) * along],
-        [north + 1, west, down * (1 - along)],
-        [north + 1, east, down * along],
-      ] as const) {
-        const cell = r * field.columns + c;
-        ozone += share * Number(field.du[cell]);
-        const low = Number(field.lowerKm[cell]);
-        if (Number.isNaN(low)) continue;
-        weight += share;
-        lower += share * low;
-        upper += share * Number(field.upperKm[cell]);
-      }
+      sum.weight = 0;
+      sum.lower = 0;
+      sum.upper = 0;
+      sum.ozone = 0;
+      take(north, west, (1 - down) * (1 - along));
+      take(north, east, (1 - down) * along);
+      take(north + 1, west, down * (1 - along));
+      take(north + 1, east, down * along);
       const at = row * columns + column;
-      du[at] = ozone;
-      lowerKm[at] = weight >= 0.5 ? lower / weight : Number.NaN;
-      upperKm[at] = weight >= 0.5 ? upper / weight : Number.NaN;
+      du[at] = sum.ozone;
+      lowerKm[at] = sum.weight >= 0.5 ? sum.lower / sum.weight : Number.NaN;
+      upperKm[at] = sum.weight >= 0.5 ? sum.upper / sum.weight : Number.NaN;
     }
   }
   return { rows, columns, lowerKm, upperKm, du };

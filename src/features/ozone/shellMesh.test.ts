@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { ozoneColour } from '../../data/ozoneMaps';
 import { shellRadius, type ShellField } from '../../data/ozoneShell';
-import { shellMesh } from './shellMesh';
+import { createShellMesher } from './shellMesh';
+
+/** A mesh made by a mesher of its own. */
+const shellMesh = (day: ShellField) => createShellMesher()(day);
 
 /** A field of `rows` by `columns`, the layer from 20 to 26 km everywhere but where `open`. */
 function field(
@@ -111,5 +114,38 @@ describe('the mesh of a day’s ozone surface (#804)', () => {
       expect.closeTo(g / 255, 5),
       expect.closeTo(b / 255, 5),
     ]);
+  });
+
+  it('Given one mesher for many days, Then it fills the same buffers each day and each mesh is as a fresh one’s (#819)', () => {
+    const mesher = createShellMesher();
+    const first = mesher(field(7, 8));
+    const positions = first.positions;
+    const room = first.room;
+    const counted = first.triangles.length;
+    const second = mesher(field(7, 8, (row) => row >= 5));
+    expect(second.positions).toBe(positions);
+    expect(second.room).toBe(room);
+    const fresh = shellMesh(field(7, 8, (row) => row >= 5));
+    expect(second.triangles).toEqual(fresh.triangles);
+    expect(second.triangles.length).toBeLessThan(counted);
+    // The hole closed again: the same as the first day's.
+    expect(mesher(field(7, 8)).triangles).toEqual(shellMesh(field(7, 8)).triangles);
+  });
+
+  it('Given a grid of another size, Then the buffers are made anew to fit it', () => {
+    const mesher = createShellMesher();
+    const small = mesher(field(5, 8));
+    const large = mesher(field(7, 8));
+    expect(large.positions).not.toBe(small.positions);
+    expect(large.positions).toHaveLength(19 * 25 * 2 * 3);
+  });
+
+  it('Given a mesh with far more walls than the room for them, Then the room grows, and keeps every triangle', () => {
+    // A checkerboard of openings: every square that stands has a wall on each side.
+    const board = field(7, 8, (row, column) => (row + column) % 2 === 0);
+    const mesh = shellMesh(board);
+    expect(mesh.triangles.length).toBeGreaterThan(0);
+    expect(mesh.triangles.length % 3).toBe(0);
+    expect(Math.max(...mesh.triangles)).toBeLessThan(mesh.positions.length / 3);
   });
 });
