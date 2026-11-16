@@ -74,3 +74,37 @@
     display: none;
   }
 }
+
+.ozone-key[hidden] {
+  display: none;
+}
+
+.ozone-key {
+  margin: 6px 0;
+}
+
+.ozone-mapped {
+  margin: 0 0 2px;
+  color: var(--ink-muted);
+}
+
+.ozone-scale {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ozone-scale li {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.ozone-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}

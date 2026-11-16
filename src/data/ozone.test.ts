@@ -57,6 +57,6 @@ describe('the ozone record', () => {
     const ozone = await history();
     expect(ozoneLine(ozone, 2006)).toBe('2006: 26.6 million km², lowest 98 DU.');
     expect(ozoneLine(ozone, 1995)).toBe('1995: not measured.');
-    expect(ozoneLine(ozone, 1900)).toBe('No record for 1900.');
+    expect(ozoneLine(ozone, 1900)).toBe('1900: outside NASA’s record of the hole, 1979 to 2025.');
   });
 });

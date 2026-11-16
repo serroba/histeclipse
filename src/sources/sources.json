@@ -959,6 +959,13 @@
     "cite": "Morrison & Stephenson (2004), Historical values of the Earth’s clock error ΔT and the calculation of eclipses, Journal for the History of Astronomy 35, 327–336",
     "url": "https://doi.org/10.1177/002182860403500305"
   },
+  "msr2Ozone": {
+    "name": "MSR-2: Multi-Sensor Reanalysis of total ozone",
+    "kind": "dataset",
+    "cite": "van der A, R. J., Allaart, M. A. F. & Eskes, H. J. (2015). Extended and refined multi sensor reanalysis of total ozone for the period 1970–2012. Atmospheric Measurement Techniques 8, 3021–3035, doi:10.5194/amt-8-3021-2015 (KNMI); as the Copernicus Climate Change Service gives it in its Climate Data Store: Ozone monthly gridded data from 1970 to present derived from satellite observations, doi:10.24381/cds.4ebfe4eb, versions v0023 (1970–2018), v0024 (2019–2021) and v0025 (2022–2025), downloaded on 16 November 2026. October of each year, thinned to one degree for this site. Contains modified Copernicus Climate Change Service information; neither the European Commission nor ECMWF is responsible for any use made of it",
+    "url": "https://doi.org/10.24381/cds.4ebfe4eb",
+    "licence": "CC BY 4.0"
+  },
   "muller2019": {
     "name": "Müller et al. 2019",
     "kind": "model",

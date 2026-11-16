@@ -1,4 +1,7 @@
-/** The ozone hole (#722): each spring's hole on the globe, and the record beside it. */
+/**
+ * The ozone hole (#722): each October's ozone over the whole Earth on the globe, the hole an
+ * opening in it, and the record beside it.
+ */
 
 import { collectProblems, expect, globeRendered, test } from './support';
 
@@ -12,14 +15,17 @@ test('the ozone hole shows each spring on the globe, with its record beside it, 
     await page.goto('./?t=2006-10-01T12:00Z&layers=ozone&cam=-70,40,3');
     await globeRendered(page);
   });
-  await test.step('Then its cap is drawn at its area, and the record is beside the globe', async () => {
-    await expect(globe).toHaveAttribute('data-ozone', '26.6');
+  await test.step('Then that October’s map is drawn, with the key to its colours and the record beside the globe', async () => {
+    await expect(globe).toHaveAttribute('data-ozone', 'map:2006');
     await expect(panel).toBeVisible();
     await expect(panel).toContainText('NASA Ozone Watch');
+    await expect(panel).toContainText('Globe: ozone in October 2006, Dobson units.');
+    await expect(panel).toContainText('Under 220: the hole, left open');
+    await expect(panel).toContainText('MSR-2 reanalysis (KNMI)');
   });
-  await test.step('When they go to 1995, Then nothing is drawn: no satellite measured it', async () => {
+  await test.step('When they go to 1977, Then nothing is drawn: the early instrument saw too little', async () => {
     await page.locator('.hud-date-button').click();
-    await page.getByRole('textbox', { name: 'A year or an age' }).fill('1995');
+    await page.getByRole('textbox', { name: 'A year or an age' }).fill('1977');
     await page.getByRole('button', { name: 'Go', exact: true }).click();
     await expect(globe).toHaveAttribute('data-ozone', 'off');
   });
@@ -28,8 +34,8 @@ test('the ozone hole shows each spring on the globe, with its record beside it, 
     if (phone) await page.getByRole('button', { name: 'Layers' }).click();
     const chip = page.getByRole('group', { name: 'Layers on' }).locator('[data-layer="ozone"]');
     await expect(chip).toHaveAttribute('data-coverage', 'gap');
-    await expect(chip).toContainText('none in 1995 CE');
-    await chip.getByRole('button', { name: /go to 1996 CE/ }).click();
+    await expect(chip).toContainText('none in 1977 CE');
+    await chip.getByRole('button', { name: /go to 1979 CE/ }).click();
     await expect(globe).not.toHaveAttribute('data-ozone', 'off');
   });
   expect(problems).toEqual([]);
@@ -54,10 +60,10 @@ test('when the ozone record does not load, its chip says so, and Try again draws
     await expect(chip).toHaveAttribute('data-coverage', 'failed');
     await expect(chip).toContainText('could not load');
   });
-  await test.step('When the record is back and they try again, Then the hole is drawn', async () => {
+  await test.step('When the record is back and they try again, Then the ozone is drawn', async () => {
     fail = false;
     await chip.getByRole('button', { name: /try again/ }).click();
-    await expect(globe).toHaveAttribute('data-ozone', '26.6');
+    await expect(globe).toHaveAttribute('data-ozone', 'map:2006');
     await expect(chip).toHaveAttribute('data-coverage', 'available');
   });
 });

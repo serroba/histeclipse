@@ -7,7 +7,7 @@ import { oceanHeatLayer } from './oceanHeatLayer';
 import { oceanHeatFeature } from '.';
 
 const loaded = vi.hoisted(() => ({ fail: false, urls: [] as string[] }));
-vi.mock('./loadImage', () => ({
+vi.mock('../../util/loadImage', () => ({
   loadImage: (url: string) => {
     loaded.urls.push(url);
     return loaded.fail

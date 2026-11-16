@@ -30,16 +30,16 @@ describe('the layers on, and whether they have data now (#751)', () => {
     expect(humans?.reach).toMatch(/hundred thousand years/);
   });
 
-  it('Given the ozone hole in 1995, Then it is a known gap, with the next year to go to', () => {
-    const [ozone] = activeLayers(at('t=1995-10-01T12:00Z&layers=ozone'));
-    expect(ozone).toMatchObject({ coverage: 'gap', draws: false, why: 'none in 1995 CE' });
-    expect(ozone?.goTo).toEqual({ span: 'years', year: 1996, label: '1996 CE' });
+  it('Given the ozone hole in 1977, Then it is a known gap, with the next year to go to', () => {
+    const [ozone] = activeLayers(at('t=1977-10-01T12:00Z&layers=ozone'));
+    expect(ozone).toMatchObject({ coverage: 'gap', draws: false, why: 'none in 1977 CE' });
+    expect(ozone?.goTo).toEqual({ span: 'years', year: 1979, label: '1979 CE' });
   });
 
-  it('Given the ozone hole before 1979 or after 2025, Then it is outside, going to its nearest year', () => {
+  it('Given the ozone hole before 1970 or after 2025, Then it is outside, going to its nearest year', () => {
     const [before] = activeLayers(at('t=1900-10-01T12:00Z&layers=ozone'));
-    expect(before).toMatchObject({ coverage: 'outside', why: 'none before 1979 CE' });
-    expect(before?.goTo).toEqual({ span: 'years', year: 1979, label: '1979 CE' });
+    expect(before).toMatchObject({ coverage: 'outside', why: 'none before 1970 CE' });
+    expect(before?.goTo).toEqual({ span: 'years', year: 1970, label: '1970 CE' });
     const [after] = activeLayers(at('t=2026-10-01T12:00Z&layers=ozone'));
     expect(after).toMatchObject({ coverage: 'outside', why: 'none after 2025 CE' });
     const [inside] = activeLayers(at('t=2006-10-01T12:00Z&layers=ozone'));
@@ -67,7 +67,7 @@ describe('the layers on, and whether they have data now (#751)', () => {
 
   it('Given a layer loading where its record has none, Then the record speaks first', () => {
     const loads = new Map([['ozone', { state: 'loading' }]] as const);
-    const [gap] = activeLayers(at('t=1995-10-01T12:00Z&layers=ozone'), loads);
+    const [gap] = activeLayers(at('t=1978-10-01T12:00Z&layers=ozone'), loads);
     expect(gap?.coverage).toBe('gap');
     const [deep] = activeLayers(at('ma=100&scale=all&layers=ozone'), loads);
     expect(deep?.coverage).toBe('other-span');

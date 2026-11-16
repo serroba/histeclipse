@@ -1,15 +1,20 @@
 /**
  * Beside the globe while the Ozone layer is on (#722): the hole's area each spring since 1979
  * and the ozone-depleting gases over Antarctica, as two small charts on one axis of years, the
- * Montreal Protocol and the year shown marked, and the year in words. Whom to credit is under
+ * Montreal Protocol and the year shown marked, and the year in words; with an October's map on
+ * the globe, the key to its colours. Whom to credit is under
  * them; the layer's Why says more.
  */
 
 import type { LayerFactory } from '../../globe/layerHost';
+import { LEGEND_DU, ozoneColour } from '../../data/ozoneMaps';
 import { element } from '../../ui/dom';
 import { joinGlobePanels } from '../../ui/globePanels';
 import { CHART_HEIGHT, CHART_WIDTH, type OzoneCharts } from './chartModel';
 import './ozone.css';
+
+/** The amount of ozone that marks the hole, Dobson units. */
+const HOLE_DU = 220;
 
 const SVG = 'http://www.w3.org/2000/svg';
 
@@ -54,21 +59,42 @@ export interface OzoneView {
   readonly charts: OzoneCharts;
   /** The year shown, in words. */
   readonly text: string;
+  /** What the globe's colours show, when it is an October's map; null for the cap or nothing. */
+  readonly map: string | null;
+}
+
+/** The key to the map's colours: a swatch for each amount of ozone named. */
+function legend(): HTMLElement {
+  const scale = element('ol', { class: 'ozone-scale' });
+  for (const du of LEGEND_DU) {
+    const [r, g, b] = ozoneColour(du);
+    const swatch = element('span', { class: 'ozone-swatch', 'aria-hidden': 'true' });
+    swatch.style.background = `rgb(${String(Math.round(r))} ${String(Math.round(g))} ${String(Math.round(b))})`;
+    scale.append(element('li', {}, swatch, String(du)));
+  }
+  scale.append(
+    element('li', {}, `Under ${String(HOLE_DU)}: the hole, left open`),
+    element('li', {}, 'Grey: no value'),
+  );
+  return scale;
 }
 
 /** The panel; null takes it away. */
 export const ozonePanel: LayerFactory<OzoneView | null> = (host) => {
   const body = element('div', { class: 'ozone-charts' });
   const said = element('p', { class: 'ozone-said', 'aria-live': 'polite' });
+  const mapped = element('p', { class: 'ozone-mapped' });
+  const key = element('div', { class: 'ozone-key', hidden: '' }, mapped, legend());
   const root = element(
     'section',
     { class: 'ozone-panel', 'aria-label': 'The ozone hole and the gases', hidden: '' },
     body,
     said,
+    key,
     element(
       'p',
       { class: 'ozone-credit' },
-      'NASA Ozone Watch; NOAA Ozone Depleting Gas Index (Montzka, Dutton, Vimont). Dashed: the Montreal Protocol, 1987.',
+      'NASA Ozone Watch; NOAA Ozone Depleting Gas Index (Montzka, Dutton, Vimont). Dashed: the Montreal Protocol, 1987. Maps: MSR-2 reanalysis (KNMI), Copernicus Climate Change Service, CC BY 4.0.',
     ),
   );
   joinGlobePanels(host.container, root, 1);
@@ -78,6 +104,8 @@ export const ozonePanel: LayerFactory<OzoneView | null> = (host) => {
       root.hidden = view === null;
       if (view === null) return;
       said.textContent = view.text;
+      key.hidden = view.map === null;
+      mapped.textContent = view.map ?? '';
       if (view.charts === drawnFor) return;
       drawnFor = view.charts;
       const { first, last } = view.charts;

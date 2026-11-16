@@ -83,7 +83,8 @@ function withinYears(covers: Covers, year: number): Within {
   }
   if (covers.gaps?.includes(year) !== true) return AVAILABLE;
   // A gap lies inside the record (the catalogue ends a record at its last year measured).
-  const next = year + 1;
+  let next = year + 1;
+  while (covers.gaps.includes(next)) next += 1;
   return {
     coverage: 'gap',
     why: `none in ${yearWords(year)}`,

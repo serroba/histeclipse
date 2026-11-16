@@ -8,7 +8,7 @@
 import { loadOceanHeat, mapText, type OceanHeat } from '../../data/oceanHeat';
 import { errorMessage } from '../../util/errors';
 import type { Feature } from '../feature';
-import { loadImage } from './loadImage';
+import { loadImage } from '../../util/loadImage';
 import { oceanHeatLayer, type PackedMap } from './oceanHeatLayer';
 import { oceanHeatPanel } from './oceanHeatPanel';
 

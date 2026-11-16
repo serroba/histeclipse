@@ -160,10 +160,11 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
         id: 'ozone',
         label: 'The ozone hole',
         about:
-          'The Antarctic ozone hole each spring (NASA Ozone Watch), as a cap of its area round the pole, with the gases that made it (NOAA) beside the globe.',
+          'Ozone over the whole Earth each October, the Antarctic hole an opening in it (MSR-2 reanalysis, Copernicus), with the hole’s area each spring (NASA Ozone Watch) and the gases that made it (NOAA) beside the globe.',
         spans: ['years'],
-        reach: 'Each spring from 1979 to 2025, none measured in 1995; the gases from 1992.',
-        covers: { years: [1979, 2025], gaps: [1995] },
+        reach:
+          'Each October from 1970 to 2025, none for 1977 and 1978, with gaps before 1979; the hole’s area from 1979, the gases from 1992.',
+        covers: { years: [1970, 2025], gaps: [1977, 1978] },
       },
       {
         id: 'warming',
