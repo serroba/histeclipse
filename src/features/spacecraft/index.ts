@@ -20,6 +20,7 @@ import { errorMessage } from '../../util/errors';
 import type { Feature, FeatureContext } from '../feature';
 import type { Geocentric } from './approximatePaths';
 import { craftInFlight } from './craftLayer';
+import { craftCards } from './craftPictures';
 import {
   craftNow,
   craftRoutes,
@@ -103,7 +104,6 @@ export const spacecraftFeature: Feature = {
       readonly wheres: CraftWheres;
     } | null = null;
     let asked = false;
-
     /** From a craft (#731): its mission's journey, unless that is the one followed. */
     function follow(own: Mission): RelatedStep[] {
       const start = own.craft[0]?.launch;
@@ -115,6 +115,15 @@ export const spacecraftFeature: Feature = {
         },
       }));
     }
+
+    /** A craft's card (#350), a telescope's with its pictures once they have come (#798). */
+    const open = craftCards(context, (id) => {
+      const craft = loaded?.craft.find((each) => each.id === id);
+      if (craft === undefined || loaded === null) return null;
+      const card = craftCard(craft, loaded.wheres.approximate(craft));
+      const own = missionNamed(loaded.missions, craft.id);
+      return own === null ? card : { ...card, related: follow(own) };
+    });
 
     return {
       show(state, jdTT) {
@@ -163,14 +172,7 @@ export const spacecraftFeature: Feature = {
           sites: landedOn(mission?.craft ?? loaded.craft, state.focus, jdTT),
         });
       },
-      pick(id) {
-        const craft = loaded?.craft.find((each) => each.id === id);
-        if (craft !== undefined && loaded !== null) {
-          const card = craftCard(craft, loaded.wheres.approximate(craft));
-          const own = missionNamed(loaded.missions, craft.id);
-          context.showCard(own === null ? card : { ...card, related: follow(own) });
-        }
-      },
+      pick: open,
     };
   },
 };

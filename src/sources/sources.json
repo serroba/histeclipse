@@ -328,6 +328,13 @@
     "cite": "ESA, “Juice” (mission page)",
     "url": "https://www.esa.int/Science_Exploration/Space_Science/Juice"
   },
+  "esaWebbPictures": {
+    "name": "ESA/Webb: pictures by the James Webb Space Telescope",
+    "kind": "imagery",
+    "cite": "ESA/Webb image archive: eight of the telescope’s pictures of 2022, each credited on its card as its page asks (NASA, ESA, CSA, STScI and others). Webb is a mission of NASA, ESA and the Canadian Space Agency. The pictures are made smaller here; the words about them are this site’s",
+    "url": "https://esawebb.org/images/",
+    "licence": "CC BY 4.0"
+  },
   "etopo1": {
     "name": "ETOPO1",
     "kind": "dataset",

@@ -232,7 +232,7 @@
   "spacecraft": {
     "title": "Spacecraft beyond Earth",
     "what": "Every craft sent beyond Earth orbit, from Luna 1 in 1959 to today, where it was at the moment shown, and those that set out but never left.",
-    "sources": ["gcat", "nssdcaChronology", "jplHorizonsCraft"],
+    "sources": ["gcat", "nssdcaChronology", "jplHorizonsCraft", "esaWebbPictures"],
     "how": "The record is Jonathan McDowell’s GCAT: each craft that left Earth orbit (not its rocket stages), with each stretch of its flight about one body, and its landing; NASA NSSDCA’s chronology gives each mission’s objective and outcome, and the craft that set out but never left (failures at launch, probes stranded in Earth orbit). Paths are JPL Horizons’s where it has the craft (about 95), thinned to as few points as draw them within 75,000 km about the Sun, 1,000 km through a flyby, 500 km near Earth; a long stay in orbit is drawn at its world. For the others the path is approximate, drawn amber: each leg as the transfer orbit between where it left and where it arrived, as first planned, not as flown; within about 0.02 AU of Horizons for a direct transfer. A leg to a comet or asteroid, or one that loops back to the world it left, is not drawn."
   },
   "asteroids": {

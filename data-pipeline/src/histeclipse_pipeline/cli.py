@@ -106,6 +106,7 @@ from histeclipse_pipeline.solar_images import fetch_images
 from histeclipse_pipeline.spacecraft import fetch_spacecraft
 from histeclipse_pipeline.spacecraft_paths import fetch_spacecraft_paths
 from histeclipse_pipeline.ssp_pathways import fetch_pathways
+from histeclipse_pipeline.telescope_pictures import fetch_pictures as fetch_telescope_pictures
 from histeclipse_pipeline.temperature_records import fetch_temperature_records
 from histeclipse_pipeline.time_tree import fetch_time_trees
 from histeclipse_pipeline.timezones import fetch_timezones
@@ -769,6 +770,13 @@ def sun_images(args: Arguments) -> int:  # pragma: no cover - needs network acce
     return _say(f"wrote {len(result['layers'])} layers of the Sun to {args.out}")
 
 
+def telescope_pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Fetch the telescopes' pictures into ``public/pictures`` and write their manifest."""
+    result = fetch_telescope_pictures(args.out, args.kernels.parent / "telescope-pictures")
+    count = sum(len(each["pictures"]) for each in result["telescopes"].values())
+    return _say(f"wrote {count} telescope pictures to {args.out}")
+
+
 COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     # name: (handler, help, --out help or None when the command takes no --out)
     "fetch-ephemeris": (fetch_ephemeris, "download DE441 excerpts from JPL", None),
@@ -1170,6 +1178,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "sun-images": (
         sun_images,
         "download SDO images of the Sun for the space view",
+        "the web app's public directory",
+    ),
+    "telescope-pictures": (
+        telescope_pictures,
+        "download the space telescopes' famous pictures (ESA/Webb, CC BY 4.0) for their cards",
         "the web app's public directory",
     ),
 }

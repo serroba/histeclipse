@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "telescopes": {
+    "D01093": {
+      "name": "James Webb Space Telescope",
+      "source": "ESA/Webb",
+      "licence": "CC BY 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "pictures": [
+        {
+          "key": "weic2209a",
+          "title": "Webb’s First Deep Field",
+          "released": "2022-07-12",
+          "about": "The galaxy cluster SMACS 0723, 4.6 billion light-years away, in a patch of sky the size of a grain of sand held at arm’s length. The cluster’s mass bends the light of far older galaxies behind it into arcs. Webb’s first full-colour picture, from 12.5 hours of exposure.",
+          "alt": "Thousands of galaxies on a black sky, some stretched into thin orange arcs around a cluster of pale galaxies, with a few bright stars showing eight spikes.",
+          "credit": "NASA, ESA, CSA, and STScI",
+          "page": "https://esawebb.org/images/weic2209a/",
+          "thumb": "pictures/webb/weic2209a-thumb.webp",
+          "large": "pictures/webb/weic2209a.webp",
+          "width": 1280,
+          "height": 1306
+        },
+        {
+          "key": "weic2205a",
+          "title": "The Cosmic Cliffs in Carina",
+          "released": "2022-07-12",
+          "about": "The edge of a young star-forming region, NGC 3324, in the Carina Nebula, about 7,600 light-years away. The light and winds of hot stars above the frame carve the cloud; its tallest peaks are about 7 light-years high. Infrared light shows stars the dust hides in visible light.",
+          "alt": "A ragged orange-brown wall of gas and dust like a mountain range, under a deep blue sky full of stars.",
+          "credit": "NASA, ESA, CSA, and STScI",
+          "page": "https://esawebb.org/images/weic2205a/",
+          "thumb": "pictures/webb/weic2205a-thumb.webp",
+          "large": "pictures/webb/weic2205a.webp",
+          "width": 1280,
+          "height": 741
+        },
+        {
+          "key": "weic2207b",
+          "title": "The Southern Ring Nebula",
+          "released": "2022-07-12",
+          "about": "NGC 3132, about 2,500 light-years away: shells of gas and dust thrown off by a dying star, here in near-infrared light. Of the two stars at its centre, the fainter made the nebula; Webb’s mid-infrared camera showed it for the first time, wrapped in dust.",
+          "alt": "An oval nebula, pale blue within ragged rings of orange, a bright star at its centre, on a black sky.",
+          "credit": "NASA, ESA, CSA, STScI, and the Webb ERO Production Team",
+          "page": "https://esawebb.org/images/weic2207b/",
+          "thumb": "pictures/webb/weic2207b-thumb.webp",
+          "large": "pictures/webb/weic2207b.webp",
+          "width": 1280,
+          "height": 1192
+        },
+        {
+          "key": "weic2208a",
+          "title": "Stephan’s Quintet",
+          "released": "2022-07-12",
+          "about": "Five galaxies close together on the sky. Four, about 290 million light-years away, pull at one another, trailing tails of gas and stars and driving a shock wave through the group; the fifth, on the left, is far nearer, at 40 million. A mosaic of more than 150 million pixels.",
+          "alt": "Five galaxies, four of them tangled together with red and gold clouds between them, against many faint distant galaxies.",
+          "credit": "NASA, ESA, CSA, and STScI",
+          "page": "https://esawebb.org/images/weic2208a/",
+          "thumb": "pictures/webb/weic2208a-thumb.webp",
+          "large": "pictures/webb/weic2208a.webp",
+          "width": 1280,
+          "height": 1227
+        },
+        {
+          "key": "weic2216a",
+          "title": "The Pillars of Creation",
+          "released": "2022-10-19",
+          "about": "Columns of cool gas and dust in the Eagle Nebula, 6,500 light-years away, made famous by Hubble in 1995. In near-infrared light the pillars turn half transparent, and the newborn stars at their edges show: the red glow at their tips is from stars still forming.",
+          "alt": "Three tall brown and orange columns of dust rising against a blue field crowded with stars.",
+          "credit": "NASA, ESA, CSA, STScI; J. DePasquale, A. Koekemoer, A. Pagan (STScI)",
+          "page": "https://esawebb.org/images/weic2216a/",
+          "thumb": "pictures/webb/weic2216a-thumb.webp",
+          "large": "pictures/webb/weic2216a.webp",
+          "width": 1280,
+          "height": 1280
+        },
+        {
+          "key": "potm2208a",
+          "title": "The heart of the Phantom Galaxy",
+          "released": "2022-08-29",
+          "about": "The spiral galaxy M74, about 32 million light-years away in Pisces, seen face on in mid-infrared light. Filaments of gas and dust wind out along its arms, and its centre, clear of gas, shows the cluster of stars at its core.",
+          "alt": "A spiral of fine grey and white filaments winding around a bright blue centre.",
+          "credit": "ESA/Webb, NASA & CSA, J. Lee and the PHANGS-JWST Team. Acknowledgement: J. Schmidt",
+          "page": "https://esawebb.org/images/potm2208a/",
+          "thumb": "pictures/webb/potm2208a-thumb.webp",
+          "large": "pictures/webb/potm2208a.webp",
+          "width": 1280,
+          "height": 732
+        },
+        {
+          "key": "weic2211a",
+          "title": "The Cartwheel Galaxy",
+          "released": "2022-08-02",
+          "about": "A galaxy about 500 million light-years away in Sculptor, with two smaller companions. A smaller galaxy passed through its middle, and two rings spread from the collision like ripples on a pond; the outer ring has been growing for about 440 million years, forming stars as it goes.",
+          "alt": "A galaxy like a wheel, a bright hub joined by red spokes to a pink and blue rim, with two small galaxies to its left.",
+          "credit": "NASA, ESA, CSA, STScI",
+          "page": "https://esawebb.org/images/weic2211a/",
+          "thumb": "pictures/webb/weic2211a-thumb.webp",
+          "large": "pictures/webb/weic2211a.webp",
+          "width": 1280,
+          "height": 1178
+        },
+        {
+          "key": "weic2214c",
+          "title": "Neptune and its rings",
+          "released": "2022-09-21",
+          "about": "Neptune in near-infrared light, where it is not blue: methane in its air absorbs that light, and only its high clouds of methane ice shine. The clearest view of its rings since Voyager 2 flew past in 1989.",
+          "alt": "A pale glowing globe with bright streaks of cloud, circled by thin faint rings and a few small moons.",
+          "credit": "NASA, ESA, CSA, and STScI",
+          "page": "https://esawebb.org/images/weic2214c/",
+          "thumb": "pictures/webb/weic2214c-thumb.webp",
+          "large": "pictures/webb/weic2214c.webp",
+          "width": 1280,
+          "height": 853
+        }
+      ]
+    }
+  }
+}

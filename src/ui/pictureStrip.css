@@ -1,0 +1,96 @@
+/* Pictures in a card (#798): a strip of squares, and the larger picture over the card. */
+.picture-strip-title {
+  margin: 14px 0 6px;
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.picture-strip ul {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0 0 6px;
+  overflow-x: auto;
+  list-style: none;
+}
+
+.picture-strip button {
+  display: block;
+  padding: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: none;
+  cursor: pointer;
+}
+
+.picture-strip button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.picture-strip img {
+  display: block;
+  width: 96px;
+  height: 96px;
+  border-radius: 7px;
+}
+
+.picture-strip-credit,
+.picture-view-credit {
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.picture-strip-credit a,
+.picture-view-credit a {
+  color: var(--accent);
+}
+
+.famous-dialog.picture-view {
+  width: min(720px, calc(100% - 24px));
+  margin: auto;
+  /* Opaque: the card beneath would read through a see-through sheet. */
+  background: rgb(10 16 32);
+}
+
+.picture-view-body {
+  padding: 0 18px 16px;
+}
+
+.picture-view-body img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 60vh;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+
+.picture-view-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.picture-view-steps button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--panel-border);
+  border-radius: 20px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.picture-view-steps button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
