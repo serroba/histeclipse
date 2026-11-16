@@ -25,56 +25,22 @@ import { ozoneCharts } from './chartModel';
 import {
   HEIGHTS_DRAWN,
   loadOzoneShell,
-  seasonOf,
   shellDate,
-  shellDateOf,
   shellDayOf,
   shellText,
   type OzoneShell,
-  type ShellDayOf,
-  type ShellSeason,
 } from '../../data/ozoneShell';
-import type { ViewState } from '../../state/viewState';
-import { astronomicalYear } from '../../time/year';
 import { ozoneImages } from './ozoneImages';
 import { ozoneSeasons, type ShellDay } from './ozoneSeasons';
 import { ozoneShellLayer } from './ozoneShellLayer';
-import type { SeasonView } from './seasonPlayer';
 import { ozoneLayer, type OzoneDrawn, type OzoneMapImage } from './ozoneLayer';
 import { ozonePanel, type OzoneView } from './ozonePanel';
 
-/** What is shown: on the globe, in words, and beside the globe but for the season's player. */
+/** What is shown: on the globe, in words, and beside the globe. */
 interface Shown {
   readonly drawn: OzoneDrawn;
   readonly said: string;
-  readonly view: Omit<OzoneView, 'season'>;
-}
-
-/** The view moved to a day of a season, at noon, when its surface is. */
-function onDay(state: ViewState, season: ShellSeason, day: number): ViewState {
-  const { year, month, day: dayOfMonth } = shellDateOf(season, day);
-  const date = { year: astronomicalYear(year), month, day: dayOfMonth, calendar: 'gregorian' };
-  return { ...state, time: { date, minuteOfDay: 720 } } as ViewState;
-}
-
-/** The year's season for the player: where the view is in it, and how to go to a day of it. */
-function seasonView(
-  shell: OzoneShell,
-  year: number,
-  day: ShellDayOf | null,
-  context: Pick<FeatureContext, 'change'>,
-): SeasonView | null {
-  const season = seasonOf(shell, year);
-  if (season === null) return null;
-  return {
-    year,
-    day: day?.day ?? null,
-    days: season.days,
-    label: day === null ? `1 July to 31 December ${String(year)}` : shellDate(day),
-    go(to) {
-      context.change((state) => onDay(state, season, to));
-    },
-  };
+  readonly view: OzoneView;
 }
 
 /** What a year shows: on the globe its October's map, else the hole's cap; and in words. */
@@ -132,6 +98,8 @@ async function loadRecord(context: FeatureContext): Promise<OzoneRecord> {
   ]);
   return { history, maps, shell };
 }
+
+export { mountOzoneBar } from './ozoneBar';
 
 export const ozoneFeature: Feature = {
   id: 'ozone',
@@ -213,8 +181,7 @@ export const ozoneFeature: Feature = {
         cap.update(shown.drawn);
         surface.update(shell?.field ?? null);
         said = shown.said;
-        const season = seasonView(record.shell, date.year, day, context);
-        panel.update({ ...shown.view, season });
+        panel.update(shown.view);
       },
       said: () => said,
       load: () => {

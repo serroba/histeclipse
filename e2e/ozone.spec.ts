@@ -68,44 +68,68 @@ test('when the ozone record does not load, its chip says so, and Try again draws
   });
 });
 
-test('the ozone layer is drawn in 3D on a day of its season, and the season plays day by day (#804) @mobile', async ({
+test('the ozone layer is drawn in 3D on a day of its season, and ozone’s own bar plays its years and days (#804, #805) @mobile', async ({
   page,
 }) => {
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');
   const panel = page.getByRole('region', { name: 'The ozone hole and the gases' });
-  await test.step('Given a January day of 2006 with the ozone hole on, Then the year’s map, and a way into its season', async () => {
-    await page.goto('./?t=2006-01-10T12:00Z&layers=ozone&cam=-60,40,3.4');
+  const bar = page.getByRole('group', { name: 'The ozone layer, 1970 to 2025' });
+  await test.step('Given an October of 2002 with the ozone hole on, Then the year’s map, and the bar is ozone’s own, not the years’', async () => {
+    await page.goto('./?t=2002-10-01T12:00Z&layers=ozone&cam=-60,40,3.4');
     await globeRendered(page);
-    await expect(globe).toHaveAttribute('data-ozone', 'map:2006');
+    await expect(globe).toHaveAttribute('data-ozone', 'map:2002');
     await expect(globe).toHaveAttribute('data-ozone-shell', 'off');
+    await expect(bar).toBeVisible();
+    await expect(page.getByRole('slider', { name: 'Year in the Holocene' })).toBeHidden();
+    await expect(bar.getByRole('button', { name: /Montreal Protocol/ })).toBeAttached();
   });
-  await test.step('When they go into the season, Then 1 October’s surface is drawn round the Earth, with an opening', async () => {
-    await panel
-      .getByRole('button', { name: 'The layer in 3D, day by day: 1 July to 31 December 2006' })
-      .click();
+  await test.step('When they play, Then the next step is the first season’s first day, in 3D, and the days go by until they stop', async () => {
+    await bar.getByRole('button', { name: 'Play the ozone years' }).click();
     await expect(globe).toHaveAttribute('data-ozone-shell', 'on');
-    await expect(globe).toHaveAttribute('data-ozone', 'off');
-    await expect(panel).toContainText('1 October 2006');
+    await expect(page).toHaveURL(/t=2003-07-/);
+    await expect(page).not.toHaveURL(/t=2003-07-01/);
+    await bar.getByRole('button', { name: 'Stop the ozone years' }).click();
+    const stopped = await page.locator('.hud-date').textContent();
+    await page.waitForTimeout(500);
+    await expect(page.locator('.hud-date')).toHaveText(stopped ?? '');
+  });
+  await test.step('When they pick the widest hole, Then its day in 2006 is drawn round the Earth, with an opening', async () => {
+    const july = Number(await globe.getAttribute('data-ozone-shell-triangles'));
+    await bar.getByRole('button', { name: /The widest hole/ }).click();
+    await expect(page).toHaveURL(/t=2006-(09|10)-\d\dT12(%3A|:)00/);
     await expect(panel).toContainText('its heights drawn 40 times larger');
     await expect(panel).toContainText('Open: no height holds that much ozone');
     await expect(panel).toContainText('CAMS reanalysis, Copernicus Atmosphere Monitoring Service');
-    await expect(page).toHaveURL(/t=2006-10-01T12(%3A|:)00/);
+    // The hole open: less of the surface than in July.
+    await expect
+      .poll(async () => Number(await globe.getAttribute('data-ozone-shell-triangles')))
+      .toBeLessThan(july);
   });
-  await test.step('And on 1 July, before the hole opens, more of the surface is there than in October', async () => {
-    const triangles = async () => Number(await globe.getAttribute('data-ozone-shell-triangles'));
-    const october = await triangles();
-    await panel.getByRole('slider', { name: 'Day of the season' }).fill('0');
-    await expect(panel).toContainText('1 July 2006');
-    await expect.poll(triangles).toBeGreaterThan(october);
-  });
-  await test.step('When they play the season, Then the days go by, until they pause', async () => {
-    await panel.getByRole('button', { name: 'Play the season' }).click();
-    await expect(panel.locator('.ozone-day')).not.toHaveText('1 July 2006');
-    await panel.getByRole('button', { name: 'Pause' }).click();
-    const day = await panel.locator('.ozone-day').textContent();
-    await page.waitForTimeout(500);
-    await expect(panel.locator('.ozone-day')).toHaveText(day ?? '');
+  await test.step('When the layer goes off, Then the years’ own bar is back', async () => {
+    const phone = (page.viewportSize()?.width ?? 1000) < 600;
+    if (phone) await page.getByRole('button', { name: 'Layers' }).click();
+    await page
+      .getByRole('group', { name: 'Layers on' })
+      .getByRole('button', { name: 'Turn off The ozone hole' })
+      .click();
+    await expect(bar).toBeHidden();
+    await expect(globe).toHaveAttribute('data-ozone-shell', 'off');
+    await expect(page.getByRole('slider', { name: 'Year in the Holocene' })).toBeVisible();
   });
   expect(problems).toEqual([]);
+});
+
+test('Explore leads to the ozone hole: its widest day, with its own bar (#805)', async ({
+  page,
+}) => {
+  await page.goto('./');
+  await globeRendered(page);
+  await page.getByRole('button', { name: 'Explore' }).click();
+  const explore = page.getByRole('dialog', { name: 'Explore' });
+  await explore.getByRole('tab', { name: 'Climate' }).click();
+  await explore.getByRole('button', { name: 'The ozone hole', exact: true }).first().click();
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-ozone-shell', 'on');
+  await expect(page).toHaveURL(/t=2006-09-22/);
+  await expect(page.getByRole('group', { name: 'The ozone layer, 1970 to 2025' })).toBeVisible();
 });

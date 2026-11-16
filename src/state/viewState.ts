@@ -289,6 +289,22 @@ export function spacecraftPlays(state: ViewState): boolean {
   );
 }
 
+/**
+ * Whether the bar's time is ozone's own (#805): the ozone layer on, on Earth's globe in the
+ * years, no eclipse open, and the spacecraft, which run the time first, off. The bar then
+ * reaches only the years ozone has data for.
+ */
+export function ozonePlays(state: ViewState): boolean {
+  return (
+    state.mode === 'globe' &&
+    state.ma === null &&
+    state.selection === null &&
+    state.focus === 'earth' &&
+    state.layers.has('ozone') &&
+    !state.layers.has('spacecraft')
+  );
+}
+
 export function awayFromEarth(state: ViewState): boolean {
   return state.mode === 'globe' && state.focus !== 'earth' && state.ma === null;
 }
