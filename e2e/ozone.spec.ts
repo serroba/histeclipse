@@ -5,6 +5,11 @@
 
 import { collectProblems, expect, globeRendered, test } from './support';
 
+// The 3D surface is drawn over a whole phone screen, and on CI's software WebGL, shared out among
+// workers, a frame can take seconds: a phone's pixel density would multiply that by seven for
+// nothing these checks read.
+test.use({ deviceScaleFactor: 1 });
+
 test('the ozone hole shows each spring on the globe, with its record beside it, and says when a year is missing @acceptance @mobile', async ({
   page,
 }) => {
