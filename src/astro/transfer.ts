@@ -82,25 +82,47 @@ export function lambert(
   return { v1: combine(1 / g, r2, -f / g, r1), v2: combine(gDot / g, r2, -1 / g, r1) };
 }
 
-/** Kepler's problem: where an orbit from `r0` at `v0` carries a body after `seconds`. */
+/**
+ * Kepler's problem: where an orbit from `r0` at `v0` carries a body after `seconds`.
+ *
+ * Kepler's equation in the universal anomaly chi rises with chi: its slope is the body's
+ * distance from the centre. So its root lies between 0 and a chi far enough along, and each of
+ * Newton's steps is kept between the two, halving the gap when one would leave it. Newton's
+ * steps alone leave an orbit that skims its centre (a flight to the Moon from a parking orbit)
+ * for places far outside the solar system (#790).
+ */
 export function propagate(r0: Vec3, v0: Vec3, seconds: number, gm: number): Vec3 {
   const n0 = norm(r0);
   const radial = dot(r0, v0) / n0;
   const alpha = 2 / n0 - dot(v0, v0) / gm;
   const root = Math.sqrt(gm);
-  let chi = root * Math.abs(alpha) * seconds;
-  for (let step = 0; step < 50; step += 1) {
+  /** Kepler's equation at chi, less the time asked for, and its slope there. */
+  const kepler = (chi: number): readonly [number, number] => {
     const z = alpha * chi * chi;
     const [c, s] = stumpff(z);
-    const value =
+    return [
       ((n0 * radial) / root) * chi * chi * c +
-      (1 - alpha * n0) * chi ** 3 * s +
-      n0 * chi -
-      root * seconds;
-    const slope =
-      ((n0 * radial) / root) * chi * (1 - z * s) + (1 - alpha * n0) * chi * chi * c + n0;
-    const change = value / slope;
-    chi -= change;
+        (1 - alpha * n0) * chi ** 3 * s +
+        n0 * chi -
+        root * seconds,
+      ((n0 * radial) / root) * chi * (1 - z * s) + (1 - alpha * n0) * chi * chi * c + n0,
+    ];
+  };
+  // Forwards in time chi is positive, backwards negative: `near` is the end the root is past.
+  const forwards = seconds >= 0;
+  let near = 0;
+  let far = (root * seconds) / n0;
+  while (kepler(far)[0] < 0 === forwards && far !== 0) far *= 2;
+  let chi = far;
+  for (let step = 0; step < 200; step += 1) {
+    const [value, slope] = kepler(chi);
+    if (value < 0 === forwards) near = chi;
+    else far = chi;
+    const newton = chi - value / slope;
+    const inside = forwards ? newton > near && newton < far : newton < near && newton > far;
+    const next = inside ? newton : (near + far) / 2;
+    const change = next - chi;
+    chi = next;
     if (Math.abs(change) < 1e-9) break;
   }
   const z = alpha * chi * chi;

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import paths from '../../../public/data/spacecraft-paths.json';
+import record from '../../../public/data/spacecraft.json';
+import { loadMoonEphemeris } from '../../astro/moon';
+import { loadPlanetEphemeris, PLANETS } from '../../astro/planets';
+import { sunPositionJ2000 } from '../../astro/precession';
+import type { JulianDay } from '../../time/julianDay';
 import { gcatJd, type Craft, type CraftPhase } from '../../data/spacecraft';
 import type { CraftWhere } from '../../data/spacecraftPaths';
 import { approximatePath, ECLIPTIC_POLE, turned, type Geocentric } from './approximatePaths';
@@ -174,6 +180,39 @@ describe('approximate paths, for craft whose trajectory nobody published', () =>
     expect(where[0] * sun[0] + where[1] * sun[1] + where[2] * sun[2]).toBeLessThan(0);
   });
 
+  it('Given a craft that leaves the Moon for L2, Then it flies out to L2, not back to Earth (#790)', () => {
+    const left = gcatJd('2000-03-01');
+    const arrived = gcatJd('2000-05-15');
+    const at = approximatePath(
+      craft([
+        ['Luna', '2000-01-10', '2000-03-01', 'O', 'Luna'],
+        ['Earth', '2000-03-01', '2000-05-15', 'EO', 'SEL2'],
+        ['SEL2', '2000-05-15', null, 'O', '-'],
+      ]),
+      geocentric,
+    );
+    expect(apart(km(at(left)), geocentric('Moon', left) ?? [0, 0, 0])).toBeLessThan(1);
+    // It arrives where it then stays, and is never nearer Earth than the Moon it left.
+    expect(apart(km(at(arrived - 1e-6)), km(at(arrived)))).toBeLessThan(100);
+    for (let jd = left; jd < arrived; jd += 0.5) {
+      const from = Math.hypot(...km(at(jd)));
+      expect(from).toBeGreaterThan(380_000);
+      expect(from).toBeLessThan(2e6);
+    }
+  });
+
+  it('Given a craft that leaves the Moon for L1 with no Sun to place it by, Then it is not drawn', () => {
+    const moonOnly: Geocentric = (body, jd) => (body === 'Moon' ? geocentric(body, jd) : null);
+    const at = approximatePath(
+      craft([
+        ['Luna', '2000-01-10', '2000-03-01', 'O', 'Luna'],
+        ['Earth', '2000-03-01', '2000-05-15', 'EO', 'SEL1'],
+      ]),
+      moonOnly,
+    );
+    expect(at(gcatJd('2000-04-01'))).toEqual({ at: 'Earth' });
+  });
+
   it('Given a leg to a world the site cannot place, or a time outside the record, Then it is nowhere', () => {
     const at = approximatePath(
       craft([
@@ -184,5 +223,53 @@ describe('approximate paths, for craft whose trajectory nobody published', () =>
     );
     expect(at(gcatJd('2000-03-01'))).toBeNull();
     expect(at(START - 10)).toBeNull();
+  });
+});
+
+describe('every craft the site draws an approximate path for', () => {
+  it('Given its whole flight, Then it is never outside the solar system, nor faster than any craft has flown (#790)', async () => {
+    const moon = await loadMoonEphemeris();
+    const planets = await loadPlanetEphemeris();
+    const real: Geocentric = (body, jd) => {
+      if (body === 'Sun') return sunPositionJ2000(jd as JulianDay);
+      if (body === 'Moon') return moon.position(jd as JulianDay);
+      const planet = PLANETS.find((name) => name === body.toLowerCase());
+      return planet === undefined ? null : planets.position(planet, jd as JulianDay);
+    };
+    const published: Readonly<Record<string, unknown>> = paths.paths;
+    // About Earth, a tenth of an AU; about the Sun, a little past Saturn. And 100 km/s between
+    // moments, which no craft has reached. The line across the view in #790 was 10¹³ AU long.
+    const FURTHEST = { Earth: 0.1 * AU, Sun: 11 * AU };
+    const MOMENTS = 60;
+    const wrong: string[] = [];
+    let drawn = 0;
+    for (const each of record.craft as Craft[]) {
+      if (published[each.id] !== undefined) continue;
+      const at = approximatePath(each, real);
+      each.phases.forEach(([, began, ended], index) => {
+        if (began === null || ended === null) return;
+        const start = gcatJd(began);
+        const step = (gcatJd(ended) - start) / MOMENTS;
+        // A phase GCAT gives no length to (an impact on the day of arrival) has no flight.
+        if (step <= 0) return;
+        let before: Vec3 | null = null;
+        for (let k = 0; k < MOMENTS; k += 1) {
+          const where = at(start + (k + 0.5) * step);
+          if (where === null || 'at' in where) {
+            before = null;
+            continue;
+          }
+          drawn += 1;
+          const from = Math.hypot(...where.km);
+          const speed = before === null ? 0 : apart(where.km, before) / (step * 86_400);
+          if (!(from < FURTHEST[where.centre]) || !(speed < 100)) {
+            wrong.push(`${each.id} ${each.name}, phase ${String(index)}`);
+          }
+          before = where.km;
+        }
+      });
+    }
+    expect(drawn).toBeGreaterThan(5000);
+    expect([...new Set(wrong)]).toEqual([]);
   });
 });
