@@ -108,3 +108,46 @@
   height: 10px;
   border-radius: 2px;
 }
+
+.ozone-season[hidden],
+.ozone-season-controls[hidden],
+.ozone-into[hidden] {
+  display: none;
+}
+
+.ozone-season {
+  margin: 6px 0;
+}
+
+.ozone-season-controls {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+.ozone-day {
+  grid-column: 1 / -1;
+  color: var(--ink-muted);
+}
+
+.ozone-days {
+  width: 100%;
+  min-width: 0;
+}
+
+.ozone-play,
+.ozone-into {
+  padding: 4px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.ozone-play:hover,
+.ozone-into:hover {
+  background: rgb(255 255 255 / 0.08);
+}
