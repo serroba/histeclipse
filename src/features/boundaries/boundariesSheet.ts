@@ -35,6 +35,7 @@ import type { StoryScene } from '../../story/storyScene';
 import { errorMessage } from '../../util/errors';
 import { element } from '../../ui/dom';
 import { uiIcon } from '../../ui/icons';
+import { createStoryPlay } from '../../ui/transport';
 import '../../ui/stageSheet.css';
 import './boundariesSheet.css';
 
@@ -169,7 +170,10 @@ export function createBoundariesSheet(
     });
     return { chapter, tab };
   });
-  const play = element('button', { type: 'button', class: 'boundary-play' }, 'Pause');
+  const playButton = createStoryPlay('boundary-play', (next) => {
+    setPlaying(next);
+  });
+  const play = playButton.button;
   const again = element('button', { type: 'button', class: 'boundary-play' }, 'Again');
   const caption = element('p', { class: 'boundary-caption', 'data-testid': 'boundary-caption' });
   const status = element('p', { class: 'stage-status', role: 'status' }, 'Loading…');
@@ -246,21 +250,23 @@ export function createBoundariesSheet(
   }
   let loaded: Loaded | null = null;
   let wheel: BoundaryWheel | null = null;
-  let chart: StoryScene<'holocene'> | null = null;
+  let chart: ReturnType<typeof createHoloceneChart> | null = null;
   let starting: Promise<void> | null = null;
   let shown: BoundaryChapter | null = null;
-  let playing = true;
 
   /** The scene of the chapter shown: the chart or the wheel. */
   const current = () => (shown === 'holocene' ? chart : wheel);
 
   function setPlaying(next: boolean): void {
-    playing = next;
-    play.textContent = next ? 'Pause' : 'Play';
+    playButton.set(next);
     current()?.setPlaying(next);
   }
-  play.addEventListener('click', () => {
-    setPlaying(!playing);
+  // The arrows move the chart's cursor; on the wheel, with no time line, they turn the chapter.
+  playButton.join(dialog, (direction, leap) => {
+    if (shown === null) return;
+    const to = BOUNDARY_CHAPTERS[BOUNDARY_CHAPTERS.indexOf(shown) + direction];
+    if (shown === 'holocene') chart?.step(direction, leap);
+    else if (to !== undefined) onRequest(to);
   });
   again.addEventListener('click', () => {
     current()?.restart();
@@ -288,8 +294,7 @@ export function createBoundariesSheet(
     }
     if (lessMotion.matches) {
       scene.settle();
-      playing = false;
-      play.textContent = 'Play';
+      playButton.set(false);
     } else {
       scene.restart();
       setPlaying(true);

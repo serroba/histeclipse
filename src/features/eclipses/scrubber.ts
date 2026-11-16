@@ -1,9 +1,11 @@
 /**
  * Time within an eclipse: drag to move the shadow, or play it. Covers ±3 hours around greatest
- * eclipse, in one-minute steps, with 44 px controls.
+ * eclipse, in one-minute steps, with 44 px controls. Built from the shared transport, so Space
+ * plays or pauses it and the arrows step a minute (`ui/transport.ts`).
  */
 
 import { element } from '../../ui/dom';
+import { createTransport } from '../../ui/transport';
 import './scrubber.css';
 
 interface ScrubberView {
@@ -24,20 +26,30 @@ const ECLIPSE_SPEEDS = [3, 12, 30, 60] as const;
 const DEFAULT_SPEED = 12;
 
 export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubber {
-  const slider = element('input', {
-    type: 'range',
-    class: 'scrubber-range',
-    min: String(-SCRUB_RANGE_MINUTES),
-    max: String(SCRUB_RANGE_MINUTES),
-    step: '1',
-    'aria-label': 'Time relative to greatest eclipse',
-  });
-  const label = element('output', { class: 'scrubber-time' });
-  const play = element(
-    'button',
-    { type: 'button', class: 'scrubber-play', 'aria-label': 'Play' },
-    '▶',
+  const transport = createTransport(
+    {
+      play: { className: 'scrubber-play' },
+      slider: {
+        class: 'scrubber-range',
+        min: String(-SCRUB_RANGE_MINUTES),
+        max: String(SCRUB_RANGE_MINUTES),
+        step: '1',
+        'aria-label': 'Time relative to greatest eclipse',
+      },
+    },
+    {
+      onPlay(play) {
+        if (play) start();
+        else stop();
+      },
+      onSlide(minutes) {
+        stop();
+        onScrub(minutes);
+      },
+    },
   );
+  const { play, slider } = transport;
+  const label = element('output', { class: 'scrubber-time' });
   const speed = element(
     'select',
     { class: 'scrubber-speed', 'aria-label': 'Speed' },
@@ -47,6 +59,7 @@ export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubb
   );
   speed.value = String(DEFAULT_SPEED);
   const root = element('div', { class: 'scrubber', hidden: '' }, play, slider, label, speed);
+  transport.join(root);
 
   let offset = 0;
   let playing: { frame: number; last: number } | null = null;
@@ -54,8 +67,13 @@ export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubb
   function stop(): void {
     if (playing !== null) cancelAnimationFrame(playing.frame);
     playing = null;
-    play.textContent = '▶';
-    play.setAttribute('aria-label', 'Play');
+    transport.render(false);
+  }
+
+  function start(): void {
+    if (offset >= SCRUB_RANGE_MINUTES) onScrub(-SCRUB_RANGE_MINUTES);
+    transport.render(true);
+    playing = { frame: requestAnimationFrame(tick), last: performance.now() };
   }
 
   function tick(now: number): void {
@@ -74,21 +92,6 @@ export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubb
     playing.frame = requestAnimationFrame(tick);
   }
 
-  slider.addEventListener('input', () => {
-    stop();
-    onScrub(Number(slider.value));
-  });
-  play.addEventListener('click', () => {
-    if (playing !== null) {
-      stop();
-      return;
-    }
-    if (offset >= SCRUB_RANGE_MINUTES) onScrub(-SCRUB_RANGE_MINUTES);
-    play.textContent = '❚❚';
-    play.setAttribute('aria-label', 'Pause');
-    playing = { frame: requestAnimationFrame(tick), last: performance.now() };
-  });
-
   return {
     root,
     render(view) {
@@ -99,7 +102,7 @@ export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubb
       }
       root.hidden = false;
       offset = view.offsetMinutes;
-      slider.value = String(view.offsetMinutes);
+      transport.render(playing !== null, view.offsetMinutes);
       const sign = view.offsetMinutes < 0 ? '−' : '+';
       label.textContent = `${view.timeLabel} (${sign}${String(Math.abs(view.offsetMinutes))} min)`;
     },

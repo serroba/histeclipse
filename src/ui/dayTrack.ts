@@ -8,6 +8,7 @@
  */
 
 import { element } from './dom';
+import { createTransport, type Transport } from './transport';
 import './historyTrack.css';
 import './dayTrack.css';
 
@@ -75,13 +76,8 @@ function speedOptions(speeds: readonly number[]): HTMLOptionElement[] {
 }
 
 /** The track's elements, before anything is drawn on them. */
-function buildTrack(options: DayTrackOptions) {
-  const play = element(
-    'button',
-    { type: 'button', class: 'step history-play', 'aria-label': options.play },
-    '▶',
-  );
-  const slider = element('input', { type: 'range', class: 'history-slider', step: 'any' });
+function buildTrack(options: DayTrackOptions, transport: Transport) {
+  const { play, slider } = transport;
   const ticks = element('div', { class: 'cycle-ticks', 'aria-hidden': 'true' });
   const moments = element('ol', { class: 'cycle-moments' });
   const speed = element('select', { class: 'history-speed', 'aria-label': 'Time a second' });
@@ -163,18 +159,27 @@ export function createDayTrack(
     onLeave?(): void;
   },
 ): DayTrack {
-  const elements = buildTrack(options);
-  const { play, slider, moments, speed, extras, root, leave } = elements;
+  // Space plays or stops and the arrows step a day, as on all that plays (`transport.ts`).
+  const transport = createTransport(
+    {
+      play: { className: 'step history-play', words: { play: options.play, pause: options.stop } },
+      slider: { class: 'history-slider', step: 'any' },
+    },
+    {
+      onPlay(play) {
+        handlers.onPlay(play);
+      },
+      onSlide(jd) {
+        handlers.onDay(jd);
+      },
+    },
+  );
+  const elements = buildTrack(options, transport);
+  const { moments, speed, extras, root, leave } = elements;
+  transport.join(root);
   let speeds: readonly number[] = options.speeds;
   leave.addEventListener('click', () => {
     handlers.onLeave?.();
-  });
-  let playing = false;
-  play.addEventListener('click', () => {
-    handlers.onPlay(!playing);
-  });
-  slider.addEventListener('input', () => {
-    handlers.onDay(Number(slider.value));
   });
   speed.addEventListener('change', () => {
     const picked = speeds.find((each) => String(each) === speed.value);
@@ -216,12 +221,9 @@ export function createDayTrack(
           handlers.onDay(jd);
         });
       }
-      playing = view.playing;
-      play.textContent = view.playing ? '❚❚' : '▶';
-      play.setAttribute('aria-label', view.playing ? options.stop : options.play);
-      if (document.activeElement !== slider) slider.value = String(view.jd);
+      transport.render(view.playing, view.jd);
       markCurrent(view);
-      slider.setAttribute(
+      transport.slider.setAttribute(
         'aria-valuetext',
         `${String(Math.round(view.jd - view.first))} days after ${view.since}`,
       );

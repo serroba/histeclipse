@@ -31,7 +31,7 @@ import {
   type SeriesId,
 } from '../../data/holoceneTemperature';
 import type { StoryScene } from '../../story/storyScene';
-import { makeScrubbable } from './chartScrubber';
+import { makeScrubbable, type ScrubStep } from './chartScrubber';
 import './holoceneChart.css';
 
 /** The Holocene's start, 11,700 years before 2000. */
@@ -79,7 +79,7 @@ export function createHoloceneChart(
   onYear: (year: number) => void = () => undefined,
   /** Told when the chart stops playing of itself: the reader has taken the cursor. */
   onPlaying: (playing: boolean) => void = () => undefined,
-): StoryScene<'holocene'> {
+): StoryScene<'holocene'> & { readonly step: ScrubStep } {
   const corridor = corridorOf(data);
   const latest = latestYear(data);
   const root = svg('svg', {
@@ -299,7 +299,7 @@ export function createHoloceneChart(
     }
   }
 
-  makeScrubbable(
+  const step = makeScrubbable(
     root,
     () => ({ left: MARGIN.left, width: size.width - MARGIN.left - MARGIN.right }),
     () => chosen ?? reachedAt(progress * DRAW_MS),
@@ -336,6 +336,7 @@ export function createHoloceneChart(
     setChapter() {
       // One chapter: nothing to turn to.
     },
+    step,
     setPlaying(next) {
       if (next) unchoose();
       playing = next && progress < 1;

@@ -10,6 +10,7 @@ import { astronomicalYear, formatYear } from '../time/year';
 import type { Coastline } from '../deepTime/coastline';
 import { YEAR_SPEEDS, type YearSpeed } from '../time/yearPlay';
 import { element } from './dom';
+import { createTransport } from './transport';
 import './historyTrack.css';
 
 interface HistoryView {
@@ -104,17 +105,25 @@ export function createHistoryTrack(
   /** Drawn under the ages, lined up with the slider: carbon-14 in the air, when on. */
   strip?: HTMLElement,
 ): HistoryTrack {
-  const play = element(
-    'button',
-    { type: 'button', class: 'step history-play', 'aria-label': 'Travel through the years' },
-    '▶',
+  // Space travels or stops and the arrows step a year, as on all that plays (`transport.ts`).
+  const transport = createTransport(
+    {
+      play: {
+        className: 'step history-play',
+        words: { play: 'Travel through the years', pause: 'Stop travelling' },
+      },
+      slider: { class: 'history-slider', step: '1', 'aria-label': 'Year in the Holocene' },
+    },
+    {
+      onPlay(play) {
+        handlers.onPlay(play);
+      },
+      onSlide(year) {
+        handlers.onYear(year);
+      },
+    },
   );
-  const slider = element('input', {
-    type: 'range',
-    class: 'history-slider',
-    step: '1',
-    'aria-label': 'Year in the Holocene',
-  });
+  const { play, slider } = transport;
   const speed = element(
     'select',
     { class: 'history-speed', 'aria-label': 'Speed' },
@@ -166,13 +175,7 @@ export function createHistoryTrack(
     ),
     notes,
   );
-  let playing = false;
-  play.addEventListener('click', () => {
-    handlers.onPlay(!playing);
-  });
-  slider.addEventListener('input', () => {
-    handlers.onYear(Number(slider.value));
-  });
+  transport.join(root);
   speed.addEventListener('change', () => {
     const picked = YEAR_SPEEDS.find((each) => String(each) === speed.value);
     if (picked !== undefined) handlers.onSpeed(picked);
@@ -181,15 +184,9 @@ export function createHistoryTrack(
     root,
     extras,
     render(view) {
-      playing = view.playing;
-      play.textContent = view.playing ? '❚❚' : '▶';
-      play.setAttribute(
-        'aria-label',
-        view.playing ? 'Stop travelling' : 'Travel through the years',
-      );
       slider.min = String(view.first);
       slider.max = String(view.last);
-      if (document.activeElement !== slider) slider.value = String(view.year);
+      transport.render(view.playing, view.year);
       slider.setAttribute('aria-valuetext', formatYear(astronomicalYear(view.year)));
       speed.value = String(view.speed);
       changes.textContent = view.changes;
