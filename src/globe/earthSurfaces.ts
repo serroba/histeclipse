@@ -128,8 +128,8 @@ export class EarthSurfaces {
     plates: inOrder(),
   };
   #deepTime = false;
-  // Lit evenly outside deep time too, while the Holocene's track is open.
-  #evenLit = false;
+  // Lit evenly outside deep time too, while something asks: the Holocene's track, the ozone layer.
+  readonly #evenLit = new Set<string>();
   #sketchField: ReturnType<typeof sketchTexture> | null = null;
 
   constructor(host: SurfaceHost) {
@@ -141,9 +141,13 @@ export class EarthSurfaces {
     return this.#deepTime;
   }
 
-  /** Light the whole globe evenly, without night, as deep time does; for the Holocene's track. */
-  setEvenLight(on: boolean): void {
-    this.#evenLit = on;
+  /**
+   * Light the whole globe evenly, without night, as deep time does, for as long as anything asks
+   * (`by` names who, so two who ask do not undo each other): the Holocene's track, the ozone layer.
+   */
+  setEvenLight(on: boolean, by = 'travel'): void {
+    if (on) this.#evenLit.add(by);
+    else this.#evenLit.delete(by);
     this.#showLight();
   }
 
@@ -328,7 +332,7 @@ export class EarthSurfaces {
   }
 
   #showLight(): void {
-    const even = this.#deepTime || this.#evenLit;
+    const even = this.#deepTime || this.#evenLit.size > 0;
     this.#host.evenLight.value = even ? 1 : 0;
     this.#host.dataset['light'] = even ? 'even' : 'sun';
     this.#host.invalidate();

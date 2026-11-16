@@ -55,6 +55,7 @@ function fakeContext(options: { readonly failures?: number } = {}) {
   const caps: unknown[] = [];
   const panels: unknown[] = [];
   const surfaces: unknown[] = [];
+  const lights: [boolean, string | undefined][] = [];
   const refresh = vi.fn();
   const notify = vi.fn();
   const context = {
@@ -73,6 +74,7 @@ function fakeContext(options: { readonly failures?: number } = {}) {
           );
     },
     globe: {
+      setEvenLight: (on: boolean, by?: string) => lights.push([on, by]),
       addLayer: (factory: unknown) => ({
         update: (input: unknown) =>
           (factory === ozoneLayer ? caps : factory === ozoneShellLayer ? surfaces : panels).push(
@@ -83,7 +85,7 @@ function fakeContext(options: { readonly failures?: number } = {}) {
     notify,
     refresh,
   } as unknown as FeatureContext;
-  return { context, caps, panels, surfaces, refresh, notify };
+  return { context, caps, panels, surfaces, lights, refresh, notify };
 }
 
 describe('the ozone layer as a feature', () => {
@@ -94,6 +96,21 @@ describe('the ozone layer as a feature', () => {
     expect(caps).toEqual([null]);
     expect(panels).toEqual([null]);
     expect(shown.said?.()).toBeNull();
+  });
+
+  it('Given the layer on, Then the globe is lit evenly, once, and the sun’s day and night return when it goes off or the view leaves Earth (#823)', () => {
+    const { context, lights } = fakeContext();
+    const shown = ozoneFeature.mount(context);
+    shown.show?.(off, JD);
+    expect(lights).toEqual([]);
+    shown.show?.(inYear(2006), JD);
+    shown.show?.(inYear(2007), JD);
+    expect(lights).toEqual([[true, 'ozone']]);
+    shown.show?.({ ...inYear(2007), focus: 'mars' }, JD);
+    expect(lights).toEqual([
+      [true, 'ozone'],
+      [false, 'ozone'],
+    ]);
   });
 
   it('Given it on, Then it loads once, and draws each year’s October once its map has come, the hole’s cap until then, and nothing for years outside', async () => {

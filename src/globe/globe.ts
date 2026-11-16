@@ -109,7 +109,7 @@ export interface Globe {
    */
   setDeepTime(surface: DeepTimeSurface | null): void;
   /** Light the whole globe evenly, without night, as deep time does; for the Holocene's track. */
-  setEvenLight(on: boolean): void;
+  setEvenLight(on: boolean, by?: string): void;
   /** Start loading maps that will be wanted soon (as time plays), so they are there in time. */
   prefetch(urls: readonly string[]): void;
   /** Colour the deep-time surface by temperature; null shows relief alone. */

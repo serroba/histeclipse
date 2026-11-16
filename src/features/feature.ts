@@ -30,7 +30,7 @@ export interface FeatureContext {
   readonly base: string;
   readonly fetchJson: Fetch;
   /** Its layers on the globe; `setSettled` shades a dispersal model's settled land. */
-  readonly globe: Pick<Globe, 'addLayer' | 'setSettled'>;
+  readonly globe: Pick<Globe, 'addLayer' | 'setSettled' | 'setEvenLight'>;
   readonly zoomRail: ZoomRail;
   /** Tell the reader something went wrong. */
   notify(message: string): void;
