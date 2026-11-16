@@ -11,6 +11,7 @@ import { gcatJd, type Craft } from '../../data/spacecraft';
 import { craftAt, type CraftPaths, type CraftWhere } from '../../data/spacecraftPaths';
 import { approximatePath, type Geocentric } from './approximatePaths';
 import { circling, lapDays } from './earthOrbit';
+import type { Eased } from './orbitEase';
 import type { Vec3 } from '../../astro/transfer';
 
 export interface CraftNow {
@@ -218,6 +219,18 @@ function trailOf(
   return trail;
 }
 
+/** Where a craft's dot is drawn: a craft in orbit about Earth at its eased moment, which does not
+ * strobe at fast play (`orbitEase`); the rest where they are. */
+function dotWhere(
+  craft: Craft,
+  where: CraftWhere,
+  wheres: CraftWheres,
+  jdTT: number,
+  shownAt: Eased,
+): CraftWhere {
+  return craft.orbit === undefined ? where : (wheres.where(craft, shownAt(craft, jdTT)) ?? where);
+}
+
 /**
  * The craft in flight at a moment, where each is, and where each had just been; following a
  * mission about Earth, each point about Earth as it was then. `now` places the bodies at the
@@ -230,6 +243,7 @@ export function craftNow(
   jdTT: number,
   followed: Followed | null = null,
   now: Geocentric = geocentric,
+  shownAt: Eased = (_, moment) => moment,
 ): readonly CraftNow[] {
   const out: CraftNow[] = [];
   const aboutEarth = followed?.aboutEarth === true;
@@ -237,7 +251,7 @@ export function craftNow(
     if (!inFlight(each, jdTT)) continue;
     const where = wheres.where(each, jdTT);
     if (where === null || ('at' in where && where.at === 'Earth')) continue;
-    const km = fromEarth(where, jdTT, now);
+    const km = fromEarth(dotWhere(each, where, wheres, jdTT, shownAt), jdTT, now);
     if (km === null) continue;
     const trail = trailOf(each, where, wheres, geocentric, jdTT, aboutEarth);
     out.push({

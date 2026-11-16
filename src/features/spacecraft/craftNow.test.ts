@@ -223,6 +223,16 @@ describe('where the bodies are, for the craft (#702)', () => {
       expect(wheres.where(hubble, gcatJd('1990-04-20'))).toBeNull();
     });
 
+    it('Given an eased moment, Then its dot is drawn at that moment, and its ring still at the true one (#815)', () => {
+      const jd = gcatJd('2009-05-20');
+      const later = jd + 0.01;
+      const [plain] = craftNow([hubble], wheres, geocentric, jd);
+      const [eased] = craftNow([hubble], wheres, geocentric, jd, null, geocentric, () => later);
+      expect(eased?.km).not.toEqual(plain?.km);
+      expect(eased?.km).toEqual(craftNow([hubble], wheres, geocentric, later)[0]?.km);
+      expect(eased?.trail).toEqual(plain?.trail);
+    });
+
     it('Given its trail, Then it is the lap it has just made: a ring closed about Earth', () => {
       const [now] = craftNow([hubble], wheres, geocentric, gcatJd('2009-05-20T07:00'));
       const trail = now?.trail ?? [];
