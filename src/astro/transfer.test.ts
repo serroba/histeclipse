@@ -37,6 +37,27 @@ describe('two-body orbits in universal variables', () => {
     expect(apart(back, start)).toBeLessThan(1e-3);
   });
 
+  it('Given a flight to the Moon that skims Earth at its start, Then every moment of it is on the way there (#790)', () => {
+    // From a parking orbit to the Moon's distance, 170° round, in two and a half days: an
+    // orbit so stretched that Newton's steps alone threw some moments out of the solar system.
+    const angle = (170 * Math.PI) / 180;
+    const r1: Vec3 = [6678, 0, 0];
+    const r2: Vec3 = [384_400 * Math.cos(angle), 384_400 * Math.sin(angle), 0];
+    const found = lambert(r1, r2, 2.5 * DAY, GM_EARTH, UP);
+    const v1 = found?.v1 ?? [0, 0, 0];
+    let last = 0;
+    for (let k = 1; k <= 400; k += 1) {
+      const from = Math.hypot(...propagate(r1, v1, (k / 400) * 2.5 * DAY, GM_EARTH));
+      expect(from).toBeGreaterThan(last);
+      last = from;
+    }
+    expect(apart(propagate(r1, v1, 2.5 * DAY, GM_EARTH), r2)).toBeLessThan(1);
+    // And backwards in time along it is forwards along the same orbit flown the other way.
+    const back = propagate(r1, v1, -DAY, GM_EARTH);
+    expect(apart(back, propagate(r1, [-v1[0], -v1[1], -v1[2]], DAY, GM_EARTH))).toBeLessThan(1);
+    expect(propagate(r1, v1, 0, GM_EARTH)).toEqual(r1);
+  });
+
   it('Given two points on a circular orbit and the time between, Then Lambert finds the circle', () => {
     // A quarter turn at 1 AU, a quarter year apart.
     const year = 2 * Math.PI * Math.sqrt(AU ** 3 / GM_SUN);

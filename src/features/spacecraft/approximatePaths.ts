@@ -8,7 +8,8 @@
  *   left, to where the world it reached was when it arrived (Lambert's problem), prograde.
  * - To the Moon: the transfer about Earth from a parking orbit (6,678 km from Earth's centre,
  *   170° round from where it met the Moon, as a translunar arc is) to the Moon on arrival; and
- *   back, from the Moon on leaving to 6,478 km on reaching Earth.
+ *   back, from the Moon on leaving to 6,478 km on reaching Earth. From the Moon out to the
+ *   Sun-Earth L1 or L2 point (Chang'e 2, #790): the transfer to where that point is on arrival.
  * - At the Sun-Earth L1 or L2 point: 1.5 million km sunward or away.
  * - At a world (the Moon, a planet): there. Elsewhere (a comet, an asteroid, a leg with no
  *   world the site can place): nowhere, rather than somewhere made up. Nor a leg from a world
@@ -102,6 +103,19 @@ export function approximatePath(
     return there === null ? null : [there[0] - sun[0], there[1] - sun[1], there[2] - sun[2]];
   }
 
+  /** The Sun-Earth L1 or L2 point from Earth's centre: 1.5 million km sunward, or away. */
+  function lagrangePoint(point: 'SEL1' | 'SEL2', jd: number): Vec3 | null {
+    const sun = geocentric('Sun', jd);
+    return sun === null ? null : scaled(unit(sun), point === 'SEL1' ? L_POINT_KM : -L_POINT_KM);
+  }
+
+  /** Where a craft leaving the Moon is bound: an L point, or 6,478 km from Earth's centre. */
+  function boundFromMoon(after: string | undefined, moon: Vec3, end: number): Vec3 | null {
+    return after === 'SEL1' || after === 'SEL2'
+      ? lagrangePoint(after, end)
+      : scaled(turned(unit(moon), ECLIPTIC_POLE, TRANSLUNAR), ENTRY_KM);
+  }
+
   function leg(index: number): Leg | null {
     const known = legs.get(index);
     if (known !== undefined) return known;
@@ -133,7 +147,7 @@ export function approximatePath(
     if (before === 'Luna') {
       const moon = geocentric('Moon', start);
       if (moon === null) return null;
-      const r2 = scaled(turned(unit(moon), ECLIPTIC_POLE, TRANSLUNAR), ENTRY_KM);
+      const r2 = boundFromMoon(after, moon, end);
       return solved('Earth', start, end, moon, r2, GM_EARTH);
     }
     return null;
@@ -153,9 +167,8 @@ export function approximatePath(
     const [body] = phase;
     if (WORLDS.has(body)) return { at: body };
     if (body === 'SEL1' || body === 'SEL2') {
-      const sun = geocentric('Sun', jdTT);
-      if (sun === null) return null;
-      return { centre: 'Earth', km: scaled(unit(sun), body === 'SEL1' ? L_POINT_KM : -L_POINT_KM) };
+      const km = lagrangePoint(body, jdTT);
+      return km === null ? null : { centre: 'Earth', km };
     }
     const path = leg(index);
     if (path === null) return body === 'Earth' ? { at: 'Earth' } : null;
