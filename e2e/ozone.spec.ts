@@ -133,3 +133,58 @@ test('Explore leads to the ozone hole: its widest day, with its own bar (#805)',
   await expect(page).toHaveURL(/t=2006-09-22/);
   await expect(page.getByRole('group', { name: 'The ozone layer, 1970 to 2025' })).toBeVisible();
 });
+
+test('in the ozone section a tap on the globe clears the panels, and the panel beside it can be moved (#811) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const panel = page.getByRole('region', { name: 'The ozone hole and the gases' });
+  const grip = page.getByRole('button', { name: 'Move the panels' });
+  const tapGlobe = async () => {
+    const box = await globe.boundingBox();
+    const hud = await page.locator('.hud').boundingBox();
+    if (box === null) throw new Error('no globe');
+    // On the globe, under the date panel where it is shown and clear of the panel beside it.
+    const y = hud === null ? box.height * 0.4 : hud.y + hud.height + 24;
+    await page.mouse.click(box.x + box.width * 0.6, box.y + y);
+  };
+  await test.step('Given the ozone layer on a day of its season', async () => {
+    await page.goto('./?t=2006-09-22T12:00Z&layers=ozone&cam=-60,40,3.4');
+    await globeRendered(page);
+    await expect(panel).toBeVisible();
+  });
+  await test.step('When they drag the grip up, Then the panel follows it', async () => {
+    const before = await panel.boundingBox();
+    const hold = await grip.boundingBox();
+    if (before === null || hold === null) throw new Error('no panel');
+    const x = hold.x + hold.width / 2;
+    const y = hold.y + hold.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x, y - 60, { steps: 4 });
+    await page.mouse.up();
+    const after = await panel.boundingBox();
+    expect(after?.y).toBeCloseTo(before.y - 60, 0);
+  });
+  await test.step('And the arrow keys move it too', async () => {
+    const before = await panel.boundingBox();
+    await grip.press('ArrowDown');
+    const after = await panel.boundingBox();
+    expect(after?.y).toBeCloseTo((before?.y ?? 0) + 24, 0);
+  });
+  await test.step('When they tap the globe, Then the panels clear for a full view, and no place is picked', async () => {
+    await tapGlobe();
+    await expect(page.locator('#app')).toHaveAttribute('data-panels', 'hidden');
+    await expect(page.locator('.hud')).toBeHidden();
+    await expect(page.locator('.bottom')).toBeHidden();
+    await expect(panel).toBeHidden();
+    expect(page.url()).not.toContain('loc=');
+  });
+  await test.step('When they tap it again, Then the panels come back', async () => {
+    await tapGlobe();
+    await expect(page.locator('.hud')).toBeVisible();
+    await expect(panel).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});

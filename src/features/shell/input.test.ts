@@ -26,6 +26,9 @@ describe('a tap on empty space', () => {
     expect(emptyTap(base)).toBe('show');
     expect(emptyTap({ ...base, ma: 66 })).toBe('toggle');
   });
+  it('toggles them in the ozone section, as the globe does there', () => {
+    expect(emptyTap({ ...base, layers: new Set(['ozone']) })).toBe('toggle');
+  });
 });
 
 describe('a place picked', () => {
@@ -35,6 +38,11 @@ describe('a place picked', () => {
   });
   it('is nowhere in deep time: the panels toggle instead', () => {
     expect(placePicked({ ...base, ma: 66 }, place, false, undefined)).toBeNull();
+  });
+  it('is nowhere in the ozone section either', () => {
+    expect(
+      placePicked({ ...base, layers: new Set(['ozone']) }, place, false, undefined),
+    ).toBeNull();
   });
   it('stands there, keeps the time and the why, without an eclipse or "Why here?"', () => {
     const next = placePicked({ ...base, why: 'ways' }, place, false, lunar);
