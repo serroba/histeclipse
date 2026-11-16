@@ -3,7 +3,9 @@
  * each spring since 1979 as a cap of its mean area round the South Pole, and beside the globe
  * the hole's area and the ozone-depleting gases since, the year shown marked. Where the MSR-2
  * reanalysis has the year (1970 on), the globe shows instead that October's ozone over the whole
- * Earth, the hole in its own shape, each year's map fetched when first shown. Loaded with the
+ * Earth, the hole in its own shape, each year's map fetched when first shown. On a day from
+ * July to December of 2003 to 2025, the globe shows that day's ozone layer as a surface round
+ * the Earth (#804), its season fetched when first shown. Loaded with the
  * layer; a year the record lacks is said, not drawn. A load that fails is said on its chip, and
  * tried again only when the reader asks (#751), not at every moment while time plays.
  */
@@ -18,11 +20,62 @@ import {
 } from '../../data/ozone';
 import { loadOzoneMaps, mapOf, mapText, omittedText, type OzoneMaps } from '../../data/ozoneMaps';
 import { errorMessage } from '../../util/errors';
-import type { Feature } from '../feature';
+import type { Feature, FeatureContext } from '../feature';
 import { ozoneCharts } from './chartModel';
+import {
+  HEIGHTS_DRAWN,
+  loadOzoneShell,
+  seasonOf,
+  shellDate,
+  shellDateOf,
+  shellDayOf,
+  shellText,
+  type OzoneShell,
+  type ShellDayOf,
+  type ShellSeason,
+} from '../../data/ozoneShell';
+import type { ViewState } from '../../state/viewState';
+import { astronomicalYear } from '../../time/year';
 import { ozoneImages } from './ozoneImages';
+import { ozoneSeasons, type ShellDay } from './ozoneSeasons';
+import { ozoneShellLayer } from './ozoneShellLayer';
+import type { SeasonView } from './seasonPlayer';
 import { ozoneLayer, type OzoneDrawn, type OzoneMapImage } from './ozoneLayer';
 import { ozonePanel, type OzoneView } from './ozonePanel';
+
+/** What is shown: on the globe, in words, and beside the globe but for the season's player. */
+interface Shown {
+  readonly drawn: OzoneDrawn;
+  readonly said: string;
+  readonly view: Omit<OzoneView, 'season'>;
+}
+
+/** The view moved to a day of a season, at noon, when its surface is. */
+function onDay(state: ViewState, season: ShellSeason, day: number): ViewState {
+  const { year, month, day: dayOfMonth } = shellDateOf(season, day);
+  const date = { year: astronomicalYear(year), month, day: dayOfMonth, calendar: 'gregorian' };
+  return { ...state, time: { date, minuteOfDay: 720 } } as ViewState;
+}
+
+/** The year's season for the player: where the view is in it, and how to go to a day of it. */
+function seasonView(
+  shell: OzoneShell,
+  year: number,
+  day: ShellDayOf | null,
+  context: Pick<FeatureContext, 'change'>,
+): SeasonView | null {
+  const season = seasonOf(shell, year);
+  if (season === null) return null;
+  return {
+    year,
+    day: day?.day ?? null,
+    days: season.days,
+    label: day === null ? `1 July to 31 December ${String(year)}` : shellDate(day),
+    go(to) {
+      context.change((state) => onDay(state, season, to));
+    },
+  };
+}
 
 /** What a year shows: on the globe its October's map, else the hole's cap; and in words. */
 function yearShown(
@@ -30,7 +83,7 @@ function yearShown(
   maps: OzoneMaps,
   map: OzoneMapImage | null,
   year: number,
-): { drawn: OzoneDrawn; said: string; view: OzoneView } {
+): Shown {
   const found = holeIn(history, year);
   const october = map === null ? null : mapOf(maps, year);
   const capped = found.kind === 'hole' ? { capMkm2: found.hole.areaMkm2 } : null;
@@ -44,8 +97,40 @@ function yearShown(
       charts: ozoneCharts(history, year),
       text: ozoneLine(history, year),
       map: october === null ? null : `Globe: ozone in October ${String(year)}, Dobson units.`,
+      surface: false,
     },
   };
+}
+
+/** All the layer loads at once: NASA's and NOAA's record, the maps' index, the surface's. */
+interface OzoneRecord {
+  readonly history: OzoneHistory;
+  readonly maps: OzoneMaps;
+  readonly shell: OzoneShell;
+}
+
+/** What a day of a season shows: its surface round the Earth, nothing painted on the ground. */
+function dayShown(record: OzoneRecord, shell: ShellDay): Shown {
+  const { year } = shell.of.season;
+  return {
+    drawn: null,
+    said: `${shellText(record.shell, shell.of)} ${ozoneWords(record.history, year)}`,
+    view: {
+      charts: ozoneCharts(record.history, year),
+      text: ozoneLine(record.history, year),
+      map: `Globe: the ozone layer on ${shellDate(shell.of)}, coloured by total ozone, Dobson units; its heights drawn ${String(HEIGHTS_DRAWN)} times larger.`,
+      surface: true,
+    },
+  };
+}
+
+async function loadRecord(context: FeatureContext): Promise<OzoneRecord> {
+  const [history, maps, shell] = await Promise.all([
+    loadOzone(`${context.base}data/ozone/history.json`, context.fetchJson),
+    loadOzoneMaps(`${context.base}data/ozone/maps.json`, context.fetchJson),
+    loadOzoneShell(`${context.base}data/ozone/shell.json`, context.fetchJson),
+  ]);
+  return { history, maps, shell };
 }
 
 export const ozoneFeature: Feature = {
@@ -54,13 +139,15 @@ export const ozoneFeature: Feature = {
   watches: (state) => [state.layers, state.mode, state.ma, state.focus],
   mount(context) {
     const cap = context.globe.addLayer(ozoneLayer);
+    const surface = context.globe.addLayer(ozoneShellLayer);
     const panel = context.globe.addLayer(ozonePanel);
-    let history: OzoneHistory | null = null;
-    let maps: OzoneMaps | null = null;
-    const mapImage = ozoneImages(context.base, () => {
+    let record: OzoneRecord | null = null;
+    const again = (): void => {
       shownFor = '';
       context.refresh();
-    });
+    };
+    const mapImage = ozoneImages(context.base, again);
+    const shellDay = ozoneSeasons(context.base, again);
     let loading = false;
     let failed = false;
     let on = false;
@@ -72,13 +159,9 @@ export const ozoneFeature: Feature = {
       if (loading) return;
       loading = true;
       failed = false;
-      Promise.all([
-        loadOzone(`${context.base}data/ozone/history.json`, context.fetchJson),
-        loadOzoneMaps(`${context.base}data/ozone/maps.json`, context.fetchJson),
-      ]).then(
-        ([loaded, index]) => {
-          history = loaded;
-          maps = index;
+      loadRecord(context).then(
+        (loaded) => {
+          record = loaded;
           loading = false;
           context.refresh();
         },
@@ -104,33 +187,38 @@ export const ozoneFeature: Feature = {
           state.mode === 'globe' &&
           state.ma === null &&
           state.focus === 'earth';
-        const year = state.time.date.year;
-        const key = `${String(on)}:${String(history !== null)}:${String(failed)}:${String(year)}`;
+        const { date } = state.time;
+        // A day of a season has its own surface; any other moment, its year's map.
+        const day = record === null ? null : shellDayOf(record.shell, date);
+        const key = `${String(on)}:${String(record !== null)}:${String(failed)}:${String(date.year)}/${String(day?.day)}`;
         if (key === shownFor) return;
         shownFor = key;
         if (!on) {
           said = null;
           cap.update(null);
+          surface.update(null);
           panel.update(null);
           return;
         }
-        if (history === null || maps === null) {
-          if (failed) {
-            said = 'Could not load the ozone record.';
-            return;
-          }
-          said = 'Loading the ozone record…';
-          load();
+        if (record === null) {
+          said = failed ? 'Could not load the ozone record.' : 'Loading the ozone record…';
+          if (!failed) load();
           return;
         }
-        const shown = yearShown(history, maps, mapImage(maps, year), year);
+        const shell = shellDay(record.shell, date);
+        const shown =
+          shell === null
+            ? yearShown(record.history, record.maps, mapImage(record.maps, date.year), date.year)
+            : dayShown(record, shell);
         cap.update(shown.drawn);
+        surface.update(shell?.field ?? null);
         said = shown.said;
-        panel.update(shown.view);
+        const season = seasonView(record.shell, date.year, day, context);
+        panel.update({ ...shown.view, season });
       },
       said: () => said,
       load: () => {
-        if (!on || history !== null) return null;
+        if (!on || record !== null) return null;
         return failed ? { state: 'failed', retry } : { state: 'loading' };
       },
     };

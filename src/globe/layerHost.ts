@@ -55,14 +55,13 @@ export interface LayerHost {
   sunPosition(): Vector3;
   /** Earth's spin axis in deep time, its poles marked; what is added to it shows with it. */
   readonly spinAxis: Group;
+  /** Earth itself: what is added turns with it (Earth radii, as `geoToVector` gives a place). */
+  readonly onEarth: { add: (...objects: Parameters<Scene['add']>) => unknown };
   /** Where a planet's moon is in the scene, written into `target`. */
   moonPosition(moon: MoonName, target: Vector3): Vector3;
   /** Ask to fly to a body, as a tap on it does. */
   requestBody(body: Body): void;
-  /**
-   * From J2000 km from Earth's centre to scene units, for the moment shown; null until the
-   * globe has one.
-   */
+  /** J2000 km from Earth's centre to scene units, for the moment shown; null until there is one. */
   spaceToScene(): ((km: Triple) => Triple) | null;
   /** Draw a new frame soon. */
   requestRender(): void;

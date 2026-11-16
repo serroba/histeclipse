@@ -17,7 +17,7 @@ describe('the ozone panel', () => {
     const root = container.querySelector<HTMLElement>('.ozone-panel');
     expect(root?.hidden).toBe(true);
     const charts = ozoneCharts(record, 2006);
-    panel.update({ charts, text: 'The spring of 2006.', map: null });
+    panel.update({ charts, text: 'The spring of 2006.', map: null, surface: false, season: null });
     const key = root?.querySelector<HTMLElement>('.ozone-key');
     expect(key?.hidden).toBe(true);
     expect(root?.hidden).toBe(false);
@@ -26,7 +26,13 @@ describe('the ozone panel', () => {
     expect(root?.textContent).toContain('The spring of 2006.');
     expect(root?.textContent).toContain('NASA Ozone Watch');
     const figure = root?.querySelector('figure');
-    panel.update({ charts, text: 'Again.', map: 'Globe: ozone in October 2006, Dobson units.' });
+    panel.update({
+      charts,
+      text: 'Again.',
+      map: 'Globe: ozone in October 2006, Dobson units.',
+      surface: false,
+      season: null,
+    });
     // With a map on the globe, the key to its colours: the scale's five amounts, the hole, gaps.
     expect(key?.hidden).toBe(false);
     expect(key?.textContent).toContain('Globe: ozone in October 2006, Dobson units.');
@@ -42,7 +48,25 @@ describe('the ozone panel', () => {
     expect(key?.querySelectorAll('.ozone-swatch')).toHaveLength(5);
     expect(root?.textContent).toContain('MSR-2 reanalysis (KNMI)');
     expect(root?.querySelector('figure')).toBe(figure);
-    panel.update({ charts: ozoneCharts(record, 1900), text: 'Outside.', map: null });
+    // With the surface on the globe, the key says what its opening is, and the season's player
+    // is there; with the map again, the map's key.
+    const season = { year: 2006, day: 86, days: 184, label: '25 September 2006', go: vi.fn() };
+    panel.update({ charts, text: 'A day.', map: 'Globe: the ozone layer.', surface: true, season });
+    expect(key?.textContent).toContain('Open: no height holds that much ozone');
+    expect(key?.textContent).not.toContain('Grey: no value');
+    expect(root?.querySelector<HTMLElement>('.ozone-season')?.hidden).toBe(false);
+    expect(root?.querySelector('.ozone-day')?.textContent).toBe('25 September 2006');
+    expect(root?.textContent).toContain('CAMS reanalysis');
+    panel.update({ charts, text: 'A year.', map: 'A map.', surface: false, season: null });
+    expect(key?.textContent).toContain('Grey: no value');
+    expect(root?.querySelector<HTMLElement>('.ozone-season')?.hidden).toBe(true);
+    panel.update({
+      charts: ozoneCharts(record, 1900),
+      text: 'Outside.',
+      map: null,
+      surface: false,
+      season: null,
+    });
     expect(root?.querySelectorAll('.ozone-cursor')).toHaveLength(0);
     panel.update(null);
     expect(root?.hidden).toBe(true);

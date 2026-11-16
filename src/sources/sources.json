@@ -169,6 +169,13 @@
     "url": "https://doi.org/10.1038/s41561-021-00699-z",
     "licence": "None stated (the data repository has no licence)"
   },
+  "camsEac4": {
+    "name": "CAMS global reanalysis (EAC4)",
+    "kind": "dataset",
+    "cite": "Inness, A., Ades, M., Agustí-Panareda, A., Barré, J., Benedictow, A., Blechschmidt, A.-M., et al. (2019). The CAMS reanalysis of atmospheric composition. Atmospheric Chemistry and Physics 19, 3515–3556, doi:10.5194/acp-19-3515-2019; Copernicus Atmosphere Monitoring Service, Atmosphere Data Store, doi:10.24381/d58bbf47, downloaded on 16 November 2026: ozone on ten pressure levels from 200 to 5 hPa and the total column, each day at 12:00 UTC from 1 July to 31 December, 2003 to 2025, every three degrees. The surface where ozone’s partial pressure is 12 mPa was worked out for this site, after the way the Copernicus Atmosphere Monitoring Service draws the ozone hole (atmosphere.copernicus.eu/monitoring-ozone-layer). Contains modified Copernicus Atmosphere Monitoring Service information; neither the European Commission nor ECMWF is responsible for any use made of it",
+    "url": "https://doi.org/10.24381/d58bbf47",
+    "licence": "CC BY 4.0"
+  },
   "cao2024": {
     "name": "Cao et al. 2024",
     "kind": "model",
