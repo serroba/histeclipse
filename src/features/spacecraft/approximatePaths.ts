@@ -13,6 +13,8 @@
  *   A leg about Earth that would swing far out past both its ends (weeks or years in Earth
  *   orbit between meetings with the Moon: Geotail, Hiten, SMART-1) is laps about Earth, which
  *   one transfer cannot follow: the craft is at Earth, and not drawn (#791).
+ * - From Earth out to the Sun-Earth L1 or L2 point (JWST, Herschel, #813): the same, from the
+ *   parking orbit to where the point is on arrival.
  * - At the Sun-Earth L1 or L2 point: 1.5 million km sunward or away.
  * - At a world (the Moon, a planet): there. Elsewhere (a comet, an asteroid, a leg with no
  *   world the site can place): nowhere, rather than somewhere made up. Nor a leg from a world
@@ -47,6 +49,8 @@ const PLACED: Readonly<Record<string, string>> = {
 const WORLDS = new Set(['Luna', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn']);
 const PARKING_KM = 6678;
 const ENTRY_KM = 6478;
+/** Longest flight out to an L point that one direct transfer follows, days (#813). */
+const DIRECT_DAYS = 45;
 const L_POINT_KM = 1.5e6;
 const TRANSLUNAR = (170 * Math.PI) / 180;
 /**
@@ -95,6 +99,57 @@ interface Leg {
   readonly gm: number;
 }
 
+/** The Sun-Earth L1 or L2 point from Earth's centre: 1.5 million km sunward, or away. */
+function lagrangePoint(geocentric: Geocentric, point: 'SEL1' | 'SEL2', jd: number): Vec3 | null {
+  const sun = geocentric('Sun', jd);
+  return sun === null ? null : scaled(unit(sun), point === 'SEL1' ? L_POINT_KM : -L_POINT_KM);
+}
+
+/** Where a craft leaving the Moon is bound: an L point, or 6,478 km from Earth's centre. */
+function boundFromMoon(
+  geocentric: Geocentric,
+  after: string | undefined,
+  moon: Vec3,
+  end: number,
+): Vec3 | null {
+  return after === 'SEL1' || after === 'SEL2'
+    ? lagrangePoint(geocentric, after, end)
+    : scaled(turned(unit(moon), ECLIPTIC_POLE, TRANSLUNAR), ENTRY_KM);
+}
+
+/**
+ * A leg about Earth, from `start` to `end`: out to the Moon from a parking orbit; back from it;
+ * or straight out to the Sun-Earth L1 or L2 point in a month or so (JWST, Herschel, Planck,
+ * ACE, #813), from a parking orbit to where the point is on arrival. Months on the way to a point
+ * are loops and lunar passes one transfer cannot follow.
+ */
+function earthLeg(
+  geocentric: Geocentric,
+  before: string | undefined,
+  after: string | undefined,
+  start: number,
+  end: number,
+): Leg | null {
+  if (after === 'Luna') {
+    const moon = geocentric('Moon', end);
+    if (moon === null) return null;
+    const r1 = scaled(turned(unit(moon), ECLIPTIC_POLE, -TRANSLUNAR), PARKING_KM);
+    return solved('Earth', start, end, r1, moon, GM_EARTH);
+  }
+  if (before === 'Luna') {
+    const moon = geocentric('Moon', start);
+    if (moon === null) return null;
+    return solved('Earth', start, end, moon, boundFromMoon(geocentric, after, moon, end), GM_EARTH);
+  }
+  if ((after === 'SEL1' || after === 'SEL2') && end - start <= DIRECT_DAYS) {
+    const point = lagrangePoint(geocentric, after, end);
+    if (point === null) return null;
+    const r1 = scaled(turned(unit(point), ECLIPTIC_POLE, -TRANSLUNAR), PARKING_KM);
+    return solved('Earth', start, end, r1, point, GM_EARTH);
+  }
+  return null;
+}
+
 /**
  * The approximate path of a craft: where it was at a moment (TT), about the Sun or Earth, or at
  * a world; null where its record cannot place it. Each leg's orbit is worked out once.
@@ -114,19 +169,6 @@ export function approximatePath(
     const name = PLACED[body];
     const there = name === undefined ? null : geocentric(name, jd);
     return there === null ? null : [there[0] - sun[0], there[1] - sun[1], there[2] - sun[2]];
-  }
-
-  /** The Sun-Earth L1 or L2 point from Earth's centre: 1.5 million km sunward, or away. */
-  function lagrangePoint(point: 'SEL1' | 'SEL2', jd: number): Vec3 | null {
-    const sun = geocentric('Sun', jd);
-    return sun === null ? null : scaled(unit(sun), point === 'SEL1' ? L_POINT_KM : -L_POINT_KM);
-  }
-
-  /** Where a craft leaving the Moon is bound: an L point, or 6,478 km from Earth's centre. */
-  function boundFromMoon(after: string | undefined, moon: Vec3, end: number): Vec3 | null {
-    return after === 'SEL1' || after === 'SEL2'
-      ? lagrangePoint(after, end)
-      : scaled(turned(unit(moon), ECLIPTIC_POLE, TRANSLUNAR), ENTRY_KM);
   }
 
   function leg(index: number): Leg | null {
@@ -150,20 +192,7 @@ export function approximatePath(
       const r2 = heliocentric(after, end);
       return solved('Sun', start, end, r1, r2, GM_SUN);
     }
-    if (body !== 'Earth') return null;
-    if (after === 'Luna') {
-      const moon = geocentric('Moon', end);
-      if (moon === null) return null;
-      const r1 = scaled(turned(unit(moon), ECLIPTIC_POLE, -TRANSLUNAR), PARKING_KM);
-      return solved('Earth', start, end, r1, moon, GM_EARTH);
-    }
-    if (before === 'Luna') {
-      const moon = geocentric('Moon', start);
-      if (moon === null) return null;
-      const r2 = boundFromMoon(after, moon, end);
-      return solved('Earth', start, end, moon, r2, GM_EARTH);
-    }
-    return null;
+    return body === 'Earth' ? earthLeg(geocentric, before, after, start, end) : null;
   }
 
   // Each phase's span as numbers, read once rather than at every moment asked (#767).
@@ -180,7 +209,7 @@ export function approximatePath(
     const [body] = phase;
     if (WORLDS.has(body)) return { at: body };
     if (body === 'SEL1' || body === 'SEL2') {
-      const km = lagrangePoint(body, jdTT);
+      const km = lagrangePoint(geocentric, body, jdTT);
       return km === null ? null : { centre: 'Earth', km };
     }
     const path = leg(index);

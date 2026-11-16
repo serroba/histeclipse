@@ -201,6 +201,31 @@ describe('approximate paths, for craft whose trajectory nobody published', () =>
     }
   });
 
+  it('Given a craft launched for L2, Then it flies out from Earth to L2 in its weeks, rather than staying at Earth (#813)', () => {
+    const left = gcatJd('2000-03-01');
+    const arrived = gcatJd('2000-03-31');
+    const at = approximatePath(
+      craft([
+        ['Earth', '2000-03-01', '2000-03-31', 'EO', 'SEL2'],
+        ['SEL2', '2000-03-31', null, 'O', '-'],
+      ]),
+      geocentric,
+    );
+    expect(Math.hypot(...km(at(left)))).toBeLessThan(7000);
+    const midway = Math.hypot(...km(at((left + arrived) / 2)));
+    expect(midway).toBeGreaterThan(300_000);
+    expect(midway).toBeLessThan(1.6e6);
+    // It reaches the point itself, to stay there.
+    expect(apart(km(at(arrived - 1e-6)), km(at(arrived)))).toBeLessThan(1000);
+    // And a point it cannot place by, with no Sun, is nowhere rather than made up.
+    expect(
+      approximatePath(
+        craft([['Earth', '2000-03-01', '2000-03-31', 'EO', 'SEL1']]),
+        () => null,
+      )(left + 1),
+    ).toEqual({ at: 'Earth' });
+  });
+
   it('Given months in Earth orbit between two meetings with the Moon, Then it is at Earth, not on one long transfer (#791)', () => {
     const phases = (back: string): CraftPhase[] => [
       ['Luna', '2000-01-10', '2000-03-01', 'EN', 'Luna'],
