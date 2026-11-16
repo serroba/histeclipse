@@ -112,6 +112,118 @@
           "height": 853
         }
       ]
+    },
+    "S20580": {
+      "name": "Hubble Space Telescope",
+      "source": "ESA/Hubble",
+      "licence": "CC BY 4.0",
+      "licenceUrl": "https://creativecommons.org/licenses/by/4.0/",
+      "pictures": [
+        {
+          "key": "heic0611b",
+          "title": "The Hubble Ultra Deep Field",
+          "released": "2006-09-21",
+          "about": "Nearly 10,000 galaxies in a patch of sky in Fornax a tenth as wide as the full Moon, from about a million seconds of exposure over 400 orbits in 2003 and 2004. The faintest and reddest are seen as they were when the universe was less than a billion years old.",
+          "alt": "A black sky crowded with small galaxies of every shape, white, blue, orange and red, the smallest only faint specks.",
+          "credit": "NASA, ESA, and S. Beckwith (STScI) and the HUDF Team",
+          "page": "https://esahubble.org/images/heic0611b/",
+          "thumb": "pictures/hubble/heic0611b-thumb.webp",
+          "large": "pictures/hubble/heic0611b.webp",
+          "width": 1280,
+          "height": 1280
+        },
+        {
+          "key": "heic1501a",
+          "title": "The Pillars of Creation",
+          "released": "2015-01-05",
+          "about": "Columns of cold gas and dust in the Eagle Nebula (M16), about 6,500 light-years away, the tallest some four light-years high. Stars form inside them while the light of young stars nearby wears them away. Hubble first pictured them in 1995; this sharper, wider view in visible light was taken in 2014.",
+          "alt": "Three dark brown towers of dust with glowing edges, rising against a blue-green haze and a few bright stars.",
+          "credit": "NASA, ESA/Hubble and the Hubble Heritage Team",
+          "page": "https://esahubble.org/images/heic1501a/",
+          "thumb": "pictures/hubble/heic1501a-thumb.webp",
+          "large": "pictures/hubble/heic1501a.webp",
+          "width": 1280,
+          "height": 1335
+        },
+        {
+          "key": "heic0601a",
+          "title": "The Orion Nebula",
+          "released": "2006-01-11",
+          "about": "The nearest large region where stars are being born, about 1,500 light-years away, with more than 3,000 stars in view. The four massive stars of the Trapezium, at its bright heart, have hollowed out the cloud with their light. A mosaic taken over 105 orbits.",
+          "alt": "Billowing clouds of pink, red and brown gas around a bright white hollow, sprinkled with stars.",
+          "credit": "NASA, ESA, M. Robberto (Space Telescope Science Institute/ESA) and the Hubble Space Telescope Orion Treasury Project Team",
+          "page": "https://esahubble.org/images/heic0601a/",
+          "thumb": "pictures/hubble/heic0601a-thumb.webp",
+          "large": "pictures/hubble/heic0601a.webp",
+          "width": 1280,
+          "height": 1280
+        },
+        {
+          "key": "heic0515a",
+          "title": "The Crab Nebula",
+          "released": "2005-12-01",
+          "about": "What is left of a star whose explosion Chinese and Japanese astronomers recorded in 1054: threads of gas six light-years across, still flying outward, and at the centre a neutron star turning 30 times a second. About 6,500 light-years away; a mosaic of 24 exposures.",
+          "alt": "An oval cloud of tangled orange and green threads around a blue-white glow, on a black sky.",
+          "credit": "NASA, ESA and Allison Loll/Jeff Hester (Arizona State University). Acknowledgement: Davide De Martin (ESA/Hubble)",
+          "page": "https://esahubble.org/images/heic0515a/",
+          "thumb": "pictures/hubble/heic0515a-thumb.webp",
+          "large": "pictures/hubble/heic0515a.webp",
+          "width": 1280,
+          "height": 1280
+        },
+        {
+          "key": "heic0506a",
+          "title": "The Whirlpool Galaxy",
+          "released": "2005-04-25",
+          "about": "The spiral galaxy M51 and its small companion NGC 5195, about 31 million light-years away. The companion’s pull, as it passes behind, is thought to sharpen the spiral arms, pink where new stars are forming. Released for Hubble’s fifteenth year in orbit.",
+          "alt": "A face-on spiral galaxy with two long arms dotted pink and blue, one arm reaching to a smaller yellow galaxy at the right.",
+          "credit": "NASA, ESA, S. Beckwith (STScI), and The Hubble Heritage Team (STScI/AURA)",
+          "page": "https://esahubble.org/images/heic0506a/",
+          "thumb": "pictures/hubble/heic0506a-thumb.webp",
+          "large": "pictures/hubble/heic0506a.webp",
+          "width": 1280,
+          "height": 888
+        },
+        {
+          "key": "opo0328a",
+          "title": "The Sombrero Galaxy",
+          "released": "2004-10-02",
+          "about": "The galaxy M104 seen almost edge-on, about 28 million light-years away and 50,000 light-years across: a bright bulge of old stars crossed by a dark lane of dust. A mosaic of six pictures taken in 2003.",
+          "alt": "A glowing white disc seen from the side, like a wide-brimmed hat, with a dark band of dust along its rim.",
+          "credit": "NASA/ESA and The Hubble Heritage Team (STScI/AURA)",
+          "page": "https://esahubble.org/images/opo0328a/",
+          "thumb": "pictures/hubble/opo0328a-thumb.webp",
+          "large": "pictures/hubble/opo0328a.webp",
+          "width": 1280,
+          "height": 717
+        },
+        {
+          "key": "heic0910h",
+          "title": "The Butterfly Nebula",
+          "released": "2009-09-09",
+          "about": "NGC 6302, about 3,800 light-years away in Scorpius: gas thrown off by a dying star once about five times the Sun’s mass, in two lobes more than two light-years from tip to tip. The star hides behind a ring of dust at the waist. Among the first pictures from the camera astronauts fitted in May 2009.",
+          "alt": "Two ragged wings of pink, white and orange gas spreading from a narrow dark waist, on a black sky.",
+          "credit": "NASA, ESA and the Hubble SM4 ERO Team",
+          "page": "https://esahubble.org/images/heic0910h/",
+          "thumb": "pictures/hubble/heic0910h-thumb.webp",
+          "large": "pictures/hubble/heic0910h.webp",
+          "width": 1280,
+          "height": 1492
+        },
+        {
+          "key": "heic1007a",
+          "title": "Mystic Mountain",
+          "released": "2010-04-23",
+          "about": "A pillar of gas and dust three light-years tall in the Carina Nebula, about 7,500 light-years away, worn by the light of nearby stars. Jets of gas shoot from young stars hidden in its peaks. Released for Hubble’s twentieth year in orbit.",
+          "alt": "A craggy brown and gold tower of dust with wisps streaming from its top, against blue and orange haze.",
+          "credit": "NASA, ESA, M. Livio and the Hubble 20th Anniversary Team (STScI)",
+          "page": "https://esahubble.org/images/heic1007a/",
+          "thumb": "pictures/hubble/heic1007a-thumb.webp",
+          "large": "pictures/hubble/heic1007a.webp",
+          "width": 1280,
+          "height": 1178
+        }
+      ]
     }
   }
 }

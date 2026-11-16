@@ -1182,7 +1182,7 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     ),
     "telescope-pictures": (
         telescope_pictures,
-        "download the space telescopes' famous pictures (ESA/Webb, CC BY 4.0) for their cards",
+        "download the space telescopes' famous pictures (ESA, CC BY 4.0) for their cards",
         "the web app's public directory",
     ),
 }

@@ -1,9 +1,9 @@
 """Famous pictures by the space telescopes, for their cards (#798).
 
-Each picture is taken from the telescope's European outreach site (ESA/Webb), which releases its
-images under CC BY 4.0 with the credit each page gives. The file fetched is pinned by its
-SHA-256, then made into a small square for the card's strip and a larger copy to open, both
-served by the site itself: no reader's browser asks another host for them.
+Each picture is taken from the telescope's European outreach site (ESA/Webb, ESA/Hubble), which
+releases its images under CC BY 4.0 with the credit each page gives. The file fetched is pinned
+by its SHA-256, then made into a small square for the card's strip and a larger copy to open,
+both served by the site itself: no reader's browser asks another host for them.
 
 The words about each picture are the site's own, not the source's.
 """
@@ -203,7 +203,161 @@ WEBB = Telescope(
     ),
 )
 
-TELESCOPES = (WEBB,)
+HUBBLE = Telescope(
+    craft="S20580",
+    name="Hubble Space Telescope",
+    folder="hubble",
+    source="ESA/Hubble",
+    site="https://esahubble.org",
+    files="https://cdn.esahubble.org/archives/images/screen",
+    pictures=(
+        Picture(
+            "heic0611b",
+            "0411989cfab25239ea46087a38d4dc64d1c0bc71624900b654693c4ce9548411",
+            "The Hubble Ultra Deep Field",
+            "2006-09-21",
+            (
+                "Nearly 10,000 galaxies in a patch of sky in Fornax a tenth as wide as the full",
+                "Moon, from about a million seconds of exposure over 400 orbits in 2003 and",
+                "2004. The faintest and reddest are seen as they were when the universe was",
+                "less than a billion years old.",
+            ),
+            (
+                "A black sky crowded with small galaxies of every shape, white, blue, orange",
+                "and red, the smallest only faint specks.",
+            ),
+            "NASA, ESA, and S. Beckwith (STScI) and the HUDF Team",
+        ),
+        Picture(
+            "heic1501a",
+            "285e1f921b1fc258f48532e83dcfd30a7f9bcc704e1af9b0fa2c6468e31bc39d",
+            "The Pillars of Creation",
+            "2015-01-05",
+            (
+                "Columns of cold gas and dust in the Eagle Nebula (M16), about 6,500",
+                "light-years away, the tallest some four light-years high. Stars form inside",
+                "them while the light of young stars nearby wears them away. Hubble first",
+                "pictured them in 1995; this sharper, wider view in visible light was taken in",
+                "2014.",
+            ),
+            (
+                "Three dark brown towers of dust with glowing edges, rising against a",
+                "blue-green haze and a few bright stars.",
+            ),
+            "NASA, ESA/Hubble and the Hubble Heritage Team",
+        ),
+        Picture(
+            "heic0601a",
+            "545d43079d936bbce3ad3dac33145992b504327e74db8f30dd92b8da538d6aec",
+            "The Orion Nebula",
+            "2006-01-11",
+            (
+                "The nearest large region where stars are being born, about 1,500 light-years",
+                "away, with more than 3,000 stars in view. The four massive stars of the",
+                "Trapezium, at its bright heart, have hollowed out the cloud with their light.",
+                "A mosaic taken over 105 orbits.",
+            ),
+            (
+                "Billowing clouds of pink, red and brown gas around a bright white hollow,",
+                "sprinkled with stars.",
+            ),
+            (
+                "NASA, ESA, M. Robberto (Space Telescope Science Institute/ESA) and the Hubble"
+                " Space Telescope Orion Treasury Project Team"
+            ),
+        ),
+        Picture(
+            "heic0515a",
+            "9b9162b9a679c04fe9224dd3338691fa1eb56599e111ebd750f6eafe9d028bdc",
+            "The Crab Nebula",
+            "2005-12-01",
+            (
+                "What is left of a star whose explosion Chinese and Japanese astronomers",
+                "recorded in 1054: threads of gas six light-years across, still flying",
+                "outward, and at the centre a neutron star turning 30 times a second. About",
+                "6,500 light-years away; a mosaic of 24 exposures.",
+            ),
+            (
+                "An oval cloud of tangled orange and green threads around a blue-white glow,",
+                "on a black sky.",
+            ),
+            (
+                "NASA, ESA and Allison Loll/Jeff Hester (Arizona State University)."
+                " Acknowledgement: Davide De Martin (ESA/Hubble)"
+            ),
+        ),
+        Picture(
+            "heic0506a",
+            "626f7d6ba30d186a87b834c089b449e3b77c8defce4fe85ab7edf2078e3633e2",
+            "The Whirlpool Galaxy",
+            "2005-04-25",
+            (
+                "The spiral galaxy M51 and its small companion NGC 5195, about 31 million",
+                "light-years away. The companion\u2019s pull, as it passes behind, is thought to",
+                "sharpen the spiral arms, pink where new stars are forming. Released for",
+                "Hubble\u2019s fifteenth year in orbit.",
+            ),
+            (
+                "A face-on spiral galaxy with two long arms dotted pink and blue, one arm",
+                "reaching to a smaller yellow galaxy at the right.",
+            ),
+            "NASA, ESA, S. Beckwith (STScI), and The Hubble Heritage Team (STScI/AURA)",
+        ),
+        Picture(
+            "opo0328a",
+            "f1af80a18a7d4d584ab4c58d85da035a3c4d599932e9e8566446d1e6a0345e56",
+            "The Sombrero Galaxy",
+            "2004-10-02",
+            (
+                "The galaxy M104 seen almost edge-on, about 28 million light-years away and",
+                "50,000 light-years across: a bright bulge of old stars crossed by a dark lane",
+                "of dust. A mosaic of six pictures taken in 2003.",
+            ),
+            (
+                "A glowing white disc seen from the side, like a wide-brimmed hat, with a dark",
+                "band of dust along its rim.",
+            ),
+            "NASA/ESA and The Hubble Heritage Team (STScI/AURA)",
+        ),
+        Picture(
+            "heic0910h",
+            "06a020f7121fb0639d43016ff9fdaa6b6a8b477e8ceb6bfd351a562dbd6bea6d",
+            "The Butterfly Nebula",
+            "2009-09-09",
+            (
+                "NGC 6302, about 3,800 light-years away in Scorpius: gas thrown off by a dying",
+                "star once about five times the Sun\u2019s mass, in two lobes more than two",
+                "light-years from tip to tip. The star hides behind a ring of dust at the",
+                "waist. Among the first pictures from the camera astronauts fitted in May",
+                "2009.",
+            ),
+            (
+                "Two ragged wings of pink, white and orange gas spreading from a narrow dark",
+                "waist, on a black sky.",
+            ),
+            "NASA, ESA and the Hubble SM4 ERO Team",
+        ),
+        Picture(
+            "heic1007a",
+            "11650df7abf839e4f3c8a4d349ed054d6c353e81723e0ec49006f51de417ad48",
+            "Mystic Mountain",
+            "2010-04-23",
+            (
+                "A pillar of gas and dust three light-years tall in the Carina Nebula, about",
+                "7,500 light-years away, worn by the light of nearby stars. Jets of gas shoot",
+                "from young stars hidden in its peaks. Released for Hubble\u2019s twentieth year",
+                "in orbit.",
+            ),
+            (
+                "A craggy brown and gold tower of dust with wisps streaming from its top,",
+                "against blue and orange haze.",
+            ),
+            "NASA, ESA, M. Livio and the Hubble 20th Anniversary Team (STScI)",
+        ),
+    ),
+)
+
+TELESCOPES = (WEBB, HUBBLE)
 
 
 def page_url(telescope: Telescope, picture: Picture) -> str:

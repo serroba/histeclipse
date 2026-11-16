@@ -322,6 +322,13 @@
     "url": "https://doi.org/10.1002/qj.3803",
     "licence": "CC BY 4.0"
   },
+  "esaHubblePictures": {
+    "name": "ESA/Hubble: pictures by the Hubble Space Telescope",
+    "kind": "imagery",
+    "cite": "ESA/Hubble image archive: eight of the telescope’s pictures of 2003 to 2014, each credited on its card as its page asks (NASA, ESA, STScI, the Hubble Heritage Team and others). Hubble is a project of NASA and ESA. The pictures are made smaller here; the words about them are this site’s",
+    "url": "https://esahubble.org/images/",
+    "licence": "CC BY 4.0"
+  },
   "esaJuice": {
     "name": "ESA: Juice",
     "kind": "reference",

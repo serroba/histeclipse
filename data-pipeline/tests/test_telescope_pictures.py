@@ -36,7 +36,7 @@ def test_every_picture_is_pinned_credited_and_described() -> None:
     keys = [picture.key for telescope in TELESCOPES for picture in telescope.pictures]
     assert len(keys) == len(set(keys))
     for telescope in TELESCOPES:
-        assert re.fullmatch(r"D\d{5}", telescope.craft)
+        assert re.fullmatch(r"[DS]\d{5}", telescope.craft)
         assert len(telescope.pictures) >= 6
         for picture in telescope.pictures:
             assert re.fullmatch(r"[0-9a-f]{64}", picture.sha256)
@@ -70,8 +70,14 @@ def test_the_strip_gets_the_middle_square_and_the_larger_copy_keeps_its_shape() 
 
 
 def test_the_manifest_names_each_telescope_by_its_craft_with_its_licence() -> None:
-    sizes = {picture.key: (1280, 720) for picture in WEBB.pictures}
-    webb = manifest(sizes)["telescopes"]["D01093"]
+    sizes = {picture.key: (1280, 720) for telescope in TELESCOPES for picture in telescope.pictures}
+    telescopes = manifest(sizes)["telescopes"]
+    hubble = telescopes["S20580"]
+    assert hubble["source"] == "ESA/Hubble"
+    assert hubble["licence"] == "CC BY 4.0"
+    assert hubble["pictures"][0]["page"] == "https://esahubble.org/images/heic0611b/"
+    assert hubble["pictures"][0]["thumb"] == "pictures/hubble/heic0611b-thumb.webp"
+    webb = telescopes["D01093"]
     assert webb["licence"] == "CC BY 4.0"
     assert webb["licenceUrl"] == "https://creativecommons.org/licenses/by/4.0/"
     assert len(webb["pictures"]) == len(WEBB.pictures)
