@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import paths from '../../../public/data/spacecraft-paths.json';
 import record from '../../../public/data/spacecraft.json';
+import telescopePictures from '../../../public/data/telescope-pictures.json';
 import type { MoonEphemeris } from '../../astro/moon';
 import { PLANETS, type PlanetEphemeris } from '../../astro/planets';
 import type { JulianDay } from '../../time/julianDay';
@@ -20,7 +21,11 @@ const off = defaultViewState(now);
 const on: ViewState = { ...off, layers: withLayer(off.layers, 'spacecraft', true) };
 
 /** A context that records what the feature asks of the app (#380): no globe, no page. */
-function fakeContext(options: { readonly planetsLoaded: boolean; readonly failing?: boolean }) {
+function fakeContext(options: {
+  readonly planetsLoaded: boolean;
+  readonly failing?: boolean;
+  readonly noPictures?: boolean;
+}) {
   const drawn: unknown[] = [];
   const routes: unknown[] = [];
   const sites: unknown[] = [];
@@ -33,12 +38,17 @@ function fakeContext(options: { readonly planetsLoaded: boolean; readonly failin
   const loadPlanets = vi.fn();
   const context = {
     base: '/',
-    fetchJson: (url: string) =>
-      options.failing === true
-        ? Promise.reject(new Error('offline'))
-        : Promise.resolve(
-            new Response(JSON.stringify(url.endsWith('spacecraft-paths.json') ? paths : record)),
-          ),
+    fetchJson: (url: string) => {
+      const pictures = url.endsWith('telescope-pictures.json');
+      if (options.failing === true || (pictures && options.noPictures === true))
+        return Promise.reject(new Error('offline'));
+      const body = pictures
+        ? telescopePictures
+        : url.endsWith('spacecraft-paths.json')
+          ? paths
+          : record;
+      return Promise.resolve(new Response(JSON.stringify(body)));
+    },
     globe: {
       addLayer: (factory: unknown) => ({
         update: (input: unknown) =>
@@ -52,6 +62,7 @@ function fakeContext(options: { readonly planetsLoaded: boolean; readonly failin
     },
     notify,
     showCard: (card: MarkerCardContent) => cards.push(card),
+    cardOpen: () => cards.length > 0,
     openAnchor,
     ephemerides: {
       planets: () => (options.planetsLoaded ? planets : null),
@@ -188,5 +199,53 @@ describe('the spacecraft as a feature', () => {
     expect((drawn.at(-1) as readonly { at: string | null }[]).some(({ at }) => at === 'Luna')).toBe(
       true,
     );
+  });
+
+  it('Given Webb’s card, Then its pictures are asked for once and shown in it; other craft have none (#798)', async () => {
+    const { context, cards, refresh } = fakeContext({ planetsLoaded: true });
+    const craft = spacecraftFeature.mount(context);
+    craft.show?.(on, JD_2010);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    craft.pick?.('D01093');
+    // At once, as the record has it; again with its pictures once they have come.
+    expect(cards.at(-1)?.title).toBe('James Webb Space Telescope');
+    expect(cards.at(-1)?.pictures).toBeUndefined();
+    await vi.waitFor(() => {
+      expect(cards.at(-1)?.pictures?.pictures).toHaveLength(8);
+    });
+    const shown = cards.at(-1)?.pictures;
+    expect(shown?.licence).toBe('CC BY 4.0');
+    expect(shown?.pictures[0]?.thumb).toBe('/pictures/webb/weic2209a-thumb.webp');
+    expect(shown?.pictures[0]?.released).toBe('12 July 2022');
+
+    const before = cards.length;
+    craft.pick?.('D00273');
+    expect(cards).toHaveLength(before + 1);
+    expect(cards.at(-1)?.pictures).toBeUndefined();
+  });
+
+  it('Given the pictures cannot be loaded, Then the card stays as it is, the reader is told, and the next card asks again (#798)', async () => {
+    const { context, cards, refresh, notify } = fakeContext({
+      planetsLoaded: true,
+      noPictures: true,
+    });
+    const craft = spacecraftFeature.mount(context);
+    craft.show?.(on, JD_2010);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    craft.pick?.('D01093');
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledWith(
+        expect.stringContaining('Could not load the telescopes’ pictures'),
+      );
+    });
+    expect(cards).toHaveLength(1);
+    craft.pick?.('D01093');
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledTimes(2);
+    });
   });
 });

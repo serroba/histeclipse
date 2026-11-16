@@ -1,9 +1,11 @@
 /**
  * The card a marker on the globe opens: a title, what the source says of it, links to read
- * more, and a small picture where the source has one. A dialog (a bottom sheet on phones).
+ * more, and a small picture where the source has one. A dialog (a bottom sheet on phones); a
+ * picture of its own opened larger (#798) is a dialog within it, over it and gone with it.
  */
 
 import { element } from './dom';
+import { createPictureViewer, pictureStrip, type CardPictures } from './pictureStrip';
 import './markerCard.css';
 
 export interface MarkerCardContent {
@@ -12,6 +14,8 @@ export interface MarkerCardContent {
   readonly links: readonly { readonly label: string; readonly href: string }[];
   /** A thumbnail, with whose it is. */
   readonly image?: { readonly src: string; readonly alt: string; readonly credit: string };
+  /** Pictures of its own, such as those a telescope took (#798): a strip, each opening larger. */
+  readonly pictures?: CardPictures;
   /** A word on what the source can and cannot say. */
   readonly note?: string;
   /** Something to do with it, such as playing an impact: the card closes first, to show it. */
@@ -82,6 +86,19 @@ function relatedList(steps: readonly RelatedStep[], close: () => void): HTMLElem
   );
 }
 
+/** Something to do with it: the card closes first, to show it. */
+function actionButton(
+  action: NonNullable<MarkerCardContent['action']>,
+  close: () => void,
+): HTMLButtonElement {
+  const button = element('button', { type: 'button', class: 'marker-card-action' }, action.label);
+  button.addEventListener('click', () => {
+    close();
+    action.run();
+  });
+  return button;
+}
+
 export function createMarkerCard(): MarkerCard {
   const close = element(
     'button',
@@ -90,6 +107,7 @@ export function createMarkerCard(): MarkerCard {
   );
   const title = element('h2', { id: 'marker-card-title' });
   const body = element('div', { class: 'marker-card-body' });
+  const viewer = createPictureViewer();
   const dialog = element(
     'dialog',
     {
@@ -99,6 +117,7 @@ export function createMarkerCard(): MarkerCard {
     },
     element('header', { class: 'famous-header' }, title, close),
     body,
+    viewer.dialog,
   );
   close.addEventListener('click', () => {
     dialog.close();
@@ -107,18 +126,9 @@ export function createMarkerCard(): MarkerCard {
     if (event.target === dialog) dialog.close();
   });
 
-  function actionButton(action: NonNullable<MarkerCardContent['action']>): HTMLButtonElement {
-    const button = element('button', { type: 'button', class: 'marker-card-action' }, action.label);
-    button.addEventListener('click', () => {
-      dialog.close();
-      action.run();
-    });
-    return button;
-  }
-
   return {
     dialog,
-    show({ title: text, facts, links, image, note, action, related }) {
+    show({ title: text, facts, links, image, pictures, note, action, related }) {
       title.textContent = text;
       const shown = links.filter((link) => safeLink(link.href));
       body.replaceChildren(
@@ -131,8 +141,15 @@ export function createMarkerCard(): MarkerCard {
             element('dd', {}, value),
           ]),
         ),
+        ...(pictures === undefined ? [] : [pictureStrip(pictures, viewer)]),
         ...(note === undefined ? [] : [element('p', { class: 'marker-card-note' }, note)]),
-        ...(action === undefined ? [] : [actionButton(action)]),
+        ...(action === undefined
+          ? []
+          : [
+              actionButton(action, () => {
+                dialog.close();
+              }),
+            ]),
         ...(related === undefined || related.length === 0
           ? []
           : [
