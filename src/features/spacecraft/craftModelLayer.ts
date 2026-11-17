@@ -65,12 +65,17 @@ const SEEN_AS_MODEL = 300;
  * halo orbits, hundreds of thousands of km across, are not drawn). Further out, its point marks
  * it again, and the others are there.
  */
+/** Whether the camera is on a craft close enough to see its model, in its radii `distance`. */
+export function seesModel(craft: string | null, distance: number): boolean {
+  return craft !== null && distance < SEEN_AS_MODEL;
+}
+
 export function hiddenBy(
   focused: FocusedCraft | null,
   craft: Pick<SceneCraft, 'id' | 'km'>,
   distance: number,
 ): boolean {
-  if (focused === null || distance >= SEEN_AS_MODEL) return false;
+  if (focused === null || !seesModel(focused.id, distance)) return false;
   const [x, y, z] = focused.km;
   return (
     craft.id === focused.id ||
@@ -115,7 +120,7 @@ export const craftModel: LayerFactory<FocusedCraft | null> = (host) => {
   group.name = 'craft-model';
   const sunlight = new DirectionalLight(0xfff4e0, 2.6);
   sunlight.target = group;
-  scene.add(group, sunlight, new AmbientLight(0x8890a0, 0.45));
+  scene.add(group, sunlight, new AmbientLight(0x8890a0, 0.7));
   const seen = new PerspectiveCamera();
   /** Where the craft is in the view's scene, while it is drawn. */
   const at = new Vector3();
@@ -171,7 +176,7 @@ export const craftModel: LayerFactory<FocusedCraft | null> = (host) => {
       }
       at.set(...toScene(craft.km));
       const sun = host.sunPosition();
-      const rotation = awayFromSun(at, sun, craft.model.away);
+      const rotation = awayFromSun(at, sun);
       group.quaternion.copy(rotation);
       // A directional light shines from its place toward its target: from the Sun's side.
       sunlight.position.copy(sun).sub(at).setLength(1000);

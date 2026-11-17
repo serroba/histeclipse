@@ -103,33 +103,39 @@ function fakeContext(options: {
 
 describe('the spacecraft as a feature', () => {
   it('is shown again when the layers change, and not for other changes', () => {
-    expect(spacecraftFeature.watches(on)).toEqual([on.layers, null, null, true]);
+    expect(spacecraftFeature.watches(on)).toEqual([on.layers, null, null, false, true]);
     expect(spacecraftFeature.watches({ ...on, mode: 'sky' })).toEqual([
       on.layers,
       null,
       null,
+      false,
       true,
     ]);
     expect(spacecraftFeature.watches({ ...on, mission: 'd00273' })).toEqual([
       on.layers,
       'd00273',
       null,
+      false,
       true,
     ]);
-    // A craft gone to (#796).
-    expect(spacecraftFeature.watches({ ...on, craft: 'd01093' })).toEqual([
+    // A craft gone to (#796): far from it, its point; close, its model.
+    const far = { ...on, craft: 'd01093', camera: { ...on.camera, distance: 1200 } };
+    expect(spacecraftFeature.watches(far)).toEqual([on.layers, null, 'd01093', false, true]);
+    expect(spacecraftFeature.watches({ ...far, camera: { ...on.camera, distance: 4 } })).toEqual([
       on.layers,
       null,
       'd01093',
       true,
+      true,
     ]);
     // Earth near or far, or another body in view: Hubble comes and goes (#795).
-    const far = { ...on, camera: { ...on.camera, distance: 60 } };
-    expect(spacecraftFeature.watches(far)).toEqual([on.layers, null, null, false]);
+    const away = { ...on, camera: { ...on.camera, distance: 60 } };
+    expect(spacecraftFeature.watches(away)).toEqual([on.layers, null, null, false, false]);
     expect(spacecraftFeature.watches({ ...on, focus: 'moon' })).toEqual([
       on.layers,
       null,
       null,
+      false,
       false,
     ]);
   });
@@ -368,6 +374,24 @@ describe('the spacecraft as a feature', () => {
     expect(cards.at(-1)?.action?.label).toBe('Leave it');
     cards.at(-1)?.action?.run();
     expect(changes.at(-1)?.({ ...on, craft: 'd01093' }).craft).toBeNull();
+
+    // Hubble too: going to it, the camera is about Earth, its orbit drawn however far out.
+    craft.pick?.('S20580');
+    expect(cards.at(-1)?.action?.label).toBe('Go to it');
+    expect(cards.at(-1)?.facts.at(-1)?.[1]).toContain('solar arrays square to the Sun');
+    cards.at(-1)?.action?.run();
+    expect(changes.at(-1)?.(on)).toMatchObject({ craft: 's20580', focus: 'earth' });
+    const onHubble = { ...on, craft: 's20580', camera: { ...on.camera, distance: 100 } };
+    expect(spacecraftFeature.watches(onHubble).at(-1)).toBe(true);
+    craft.show?.(onHubble, jd2023);
+    const hubble = models.at(-1) as {
+      id: string;
+      km: readonly number[];
+      model: { radius: number };
+    };
+    expect(hubble.id).toBe('S20580');
+    expect(Math.hypot(...hubble.km)).toBeCloseTo(6378.137 + 615.5, 0);
+    expect(hubble.model.radius).toBe(6.6);
 
     // A craft without a model has no way to it, and naming it draws no model.
     craft.pick?.('D00273');
