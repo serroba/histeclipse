@@ -132,6 +132,15 @@ def test_spacecraft_are_found_in_horizons_s_list_by_their_cospar_designation() -
     assert spacecraft_ids(listing) == {"1977-084A": "-31", "2006-001A": "-98"}
 
 
+def test_a_name_too_long_for_its_column_runs_into_the_designation_and_is_still_found() -> None:
+    # Given Webb's line: its name cut off, the designation written straight after it (#796).
+    listing = (
+        "     -170  James Webb Space Telescope (spacecr2021-130A    JWST                 \n"
+        "     -557  Spektr-R Observatory (spacecraft)  2011-037A                         \n"
+    )
+    assert spacecraft_ids(listing) == {"2021-130A": "-170", "2011-037A": "-557"}
+
+
 def test_flybys_of_moons_in_orbit_about_their_planet_are_one_stay_at_the_planet() -> None:
     # Given an orbiter at Saturn, a Titan flyby, and Saturn again.
     phases: list[list[object]] = [
