@@ -1,8 +1,11 @@
 // @vitest-environment happy-dom
+import { readFileSync } from 'node:fs';
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createStore } from '../../state/store';
 import { defaultViewState, type ViewState } from '../../state/viewState';
+import { GW150914_CARD } from './eventCard';
 import type { WaveView, WaveViewOptions } from './waveView';
 import { mountWave, type WaveContext } from '.';
 
@@ -14,17 +17,30 @@ interface Mounted {
   readonly store: ReturnType<typeof createStore<ViewState>>;
   readonly notify: ReturnType<typeof vi.fn>;
   readonly controlShower: ReturnType<typeof vi.fn>;
+  readonly showCard: ReturnType<typeof vi.fn>;
+  readonly fetched: string[];
   readonly part: ReturnType<typeof mountWave>;
 }
 
-function mount(fails = false): Mounted {
+// From the repository's root, where the tests run: in this environment the module's own URL is
+// the page's, not a file's.
+const measured = readFileSync('public/data/gw150914.json', 'utf8');
+
+function mount(fails: 'view' | 'data' | null = null): Mounted {
   const store = createStore<ViewState>(defaultViewState(new Date('2026-01-01T00:00:00Z')));
   const notify = vi.fn();
   const controlShower = vi.fn();
+  const showCard = vi.fn();
   const views: Mounted['views'] = [];
+  const fetched: string[] = [];
   const context: WaveContext = {
     base: '/',
-    fetchJson: () => Promise.reject(new Error('no fetching in tests')),
+    fetchJson: (url) => {
+      fetched.push(url);
+      return Promise.resolve(
+        fails === 'data' ? new Response('', { status: 404 }) : new Response(measured),
+      );
+    },
     store,
     notify,
     why: () => document.createElement('button'),
@@ -47,8 +63,9 @@ function mount(fails = false): Mounted {
       planetsSeen: () => [],
     },
     globe: { controlShower },
+    showCard,
     loadView: () =>
-      fails
+      fails === 'view'
         ? Promise.reject(new Error('no WebGL'))
         : Promise.resolve({
             mountWaveView: (_host: HTMLElement, options: WaveViewOptions) => {
@@ -67,7 +84,7 @@ function mount(fails = false): Mounted {
   store.subscribe((state) => {
     part.render(state);
   });
-  return { views, store, notify, controlShower, part };
+  return { views, store, notify, controlShower, showCard, fetched, part };
 }
 
 const settled = (): Promise<unknown> => new Promise((resolve) => setTimeout(resolve, 0));
@@ -149,10 +166,35 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
   });
 
   it('Given the view cannot be drawn, Then the reader is told and it closes', async () => {
-    const { store, notify } = mount(true);
+    const { store, notify } = mount('view');
     open(store);
     await settled();
     expect(notify).toHaveBeenCalledWith('Could not draw the wave: no WebGL');
     expect(store.get().wave).toBeNull();
+  });
+
+  it('Given the measured wave cannot be fetched, Then the reader is told, and it is asked for again next time', async () => {
+    const { store, notify, fetched } = mount('data');
+    open(store);
+    await settled();
+    expect(notify.mock.calls[0]?.[0]).toMatch(
+      /^Could not draw the wave: GET \/data\/gw150914\.json failed/,
+    );
+    open(store);
+    await settled();
+    expect(fetched).toEqual(['/data/gw150914.json', '/data/gw150914.json']);
+  });
+
+  it('Given it open, Then it plays the measured wave, fetched once, and its card opens from the stage', async () => {
+    const { views, store, showCard, fetched } = mount();
+    open(store);
+    await settled();
+    expect(views[0]?.options.wave.peak).toBeGreaterThan(0.8e-21);
+    click('About GW150914');
+    expect(showCard).toHaveBeenCalledWith(GW150914_CARD);
+    click('Close');
+    open(store);
+    await settled();
+    expect(fetched).toEqual(['/data/gw150914.json']);
   });
 });

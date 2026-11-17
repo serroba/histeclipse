@@ -6,9 +6,9 @@
  * e× = p⊗q + q⊗p for p, q at right angles to n and to each other. Along z, with p = x̂ and
  * q = ŷ, that is Δx = ½(h₊x + h×y), Δy = ½(h×x − h₊y), Δz = 0, h taken at t − z/c.
  *
- * Until the measured signal lands (#830), a stand-in: a Newtonian chirp for two black holes of
- * GW150914's chirp mass (about 30 Suns), rising in pitch and loudness to the merger, then the
- * ringdown of the one black hole they make, at its frequency and damping time.
+ * And a model chirp: a Newtonian one for two black holes of GW150914's chirp mass (about 30 Suns),
+ * rising in pitch and loudness to the merger, then the ringdown of the one black hole they make.
+ * The ring plays the measured wave (`measured.ts`, #830); the model is what its tests play.
  *
  * Pure: no DOM, no three.js.
  */

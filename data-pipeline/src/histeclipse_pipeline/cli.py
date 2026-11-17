@@ -38,6 +38,7 @@ from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.eruptions import fetch_eruptions
 from histeclipse_pipeline.extremes import fetch_extremes
 from histeclipse_pipeline.fossils import fetch_fossils
+from histeclipse_pipeline.gw150914 import fetch_gw150914
 from histeclipse_pipeline.holocene_stacks import fetch_holocene_stacks
 from histeclipse_pipeline.holocene_temperature import fetch_holocene_temperature
 from histeclipse_pipeline.iceoutlines import fetch_outlines
@@ -402,6 +403,12 @@ def spacecraft_paths(args: Arguments) -> int:  # pragma: no cover - needs networ
         Path("../public/data/spacecraft.json"), args.out, Path(".cache/spacecraft-paths")
     )
     return _say(f"wrote the paths of {count} craft to {args.out}")
+
+
+def gw150914(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write GW150914 as LIGO measured it, from GWOSC's Figure 1 files (public/data)."""
+    count = fetch_gw150914(args.out)
+    return _say(f"wrote GW150914's strain, {count} samples a series, to {args.out}")
 
 
 def saturn_rings(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -908,6 +915,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         spacecraft_paths,
         "write the paths JPL Horizons has for the craft beyond Earth orbit",
         "output JSON file (public/data/spacecraft-paths.json)",
+    ),
+    "gw150914": (
+        gw150914,
+        "write GW150914 as LIGO measured it, and its best-fit waveform (GWOSC, Figure 1)",
+        "output JSON file (public/data/gw150914.json)",
     ),
     "saturn-rings": (
         saturn_rings,

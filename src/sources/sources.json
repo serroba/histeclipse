@@ -523,6 +523,13 @@
     "licence": "Non-commercial use with credit",
     "nonCommercial": true
   },
+  "gwoscGw150914": {
+    "name": "GWOSC: GW150914 (Figure 1 data)",
+    "kind": "dataset",
+    "cite": "LIGO Scientific Collaboration and Virgo Collaboration, Gravitational Wave Open Science Center (GWOSC): the data behind Figure 1 of the GW150914 discovery paper, the strain measured at LIGO Hanford and LIGO Livingston (band-passed 35–350 Hz and notched) and the best-fit numerical-relativity waveform each would see, 0.25–0.46 s after 09:50:45 UTC on 14 September 2015, as downloaded on 18 November 2026",
+    "url": "https://gwosc.org/events/GW150914/",
+    "licence": "CC BY 4.0"
+  },
   "hadcrut5": {
     "name": "HadCRUT5",
     "kind": "dataset",

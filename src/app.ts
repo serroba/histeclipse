@@ -399,7 +399,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   });
   // A gravitational wave passing (#829): space stretched and squeezed, over the globe.
-  const wave = mountWave({ ...partContext, globe });
+  const wave = mountWave({ ...partContext, globe, showCard: markerCard.show });
   // Where cosmic rays make carbon-14 (#269): a glow over the globe, and its card.
   const carbonMade = mountCarbonMade({
     ...partContext,
@@ -556,9 +556,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ...partContext,
     globe,
     strikesOn: globeContainer,
-    showCard: (card) => {
-      markerCard.show(card);
-    },
+    showCard: markerCard.show,
     redrawDeep: redraws.askWith('deepTime'),
     refreshLayers: redraws.askWith('layers'),
   });
@@ -571,9 +569,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     notify,
     timeline: time.timeline,
     ephemerides: ephemerides.ephemerides,
-    showCard: (card) => {
-      markerCard.show(card);
-    },
+    showCard: markerCard.show,
     cardOpen: () => markerCard.dialog.open,
     openAnchor,
     openLineages: treeOfLife.openLineagesAt,

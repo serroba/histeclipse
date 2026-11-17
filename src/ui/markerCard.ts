@@ -45,7 +45,7 @@ export interface RelatedStep {
 
 export interface MarkerCard {
   readonly dialog: HTMLDialogElement;
-  show(content: MarkerCardContent): void;
+  readonly show: (content: MarkerCardContent) => void;
 }
 
 /** Only web links leave the page: anything else in a data file is not followed. */
