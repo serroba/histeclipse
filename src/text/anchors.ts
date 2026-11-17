@@ -53,6 +53,8 @@ const PLACED = [
   'mission',
   // The destination arrived from (#726): another anchor's view is not that destination's.
   'explore',
+  // The wave shown passing (#829): it is a place of its own.
+  'wave',
   'ma',
   'scale',
   'why',

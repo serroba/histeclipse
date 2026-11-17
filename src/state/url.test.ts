@@ -77,6 +77,7 @@ describe('parseViewState', () => {
       culture: 'modern',
       mission: null,
       craft: null,
+      wave: null,
       explore: null,
       borders: 'cliopatria',
       seenIn: null,
@@ -301,6 +302,13 @@ describe('parseViewState', () => {
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('craft=');
   });
 
+  it('Given a gravitational wave named, Then it is read in lower case and written back (#829)', () => {
+    const { state } = parseViewState('wave=GW150914', NOW);
+    expect(state.wave).toBe('gw150914');
+    expect(serializeViewState(state)).toContain('wave=gw150914');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('wave=');
+  });
+
   it('Given a mission named, Then it is read in lower case and written back (#712)', () => {
     const { state } = parseViewState('mission=D00271', NOW);
     expect(state.mission).toBe('d00271');
@@ -381,6 +389,7 @@ describe('parseViewState', () => {
     ['culture=martian', 'culture', 'unknown culture'],
     ['mission=voyager', 'mission', 'GCAT id'],
     ['craft=webb', 'craft', 'GCAT id'],
+    ['wave=gw170817', 'wave', 'gravitational wave'],
     ['explore=Human_Origins', 'explore', 'destination’s id'],
     ['borders=guesswork', 'borders', 'unknown borders'],
     ['seen=%20', 'seen', 'name of a past state'],
@@ -450,6 +459,7 @@ describe('parseViewState', () => {
             'culture',
             'mission',
             'craft',
+            'wave',
             'explore',
             'borders',
             'seen',
@@ -543,6 +553,7 @@ describe('serializeViewState', () => {
         .map(([kind, n]) => `${kind}${String(n).padStart(5, '0')}`),
       { nil: null },
     ),
+    wave: fc.option(fc.constant('gw150914' as const), { nil: null }),
     explore: fc.option(fc.constantFrom('human-origins', 'moon-landings', 'a1'), { nil: null }),
     borders: fc.constantFrom(...BORDER_SOURCES),
     seenIn: fc.option(

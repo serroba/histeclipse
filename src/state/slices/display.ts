@@ -19,6 +19,8 @@
  *   camera orbits it, close enough to see it, and `cam` is then in the craft's own size (half
  *   its longest side, its "radius"). `focus` stays the body it is about, which leaving it goes
  *   back to. Absent means a body is in focus.
+ * - `wave` opens a gravitational wave passing (#829): `gw150914`, the first one heard, its
+ *   ring of test masses and the space about it stretched and squeezed. Absent shows none.
  * - `explore` names the destination the view was arrived at from (#726), such as
  *   `human-origins`; absent when the reader found their own way. A link with it and no view of
  *   its own (no `t`, `ma` or `cam`) opens that destination.
@@ -38,6 +40,10 @@ export type Figures = (typeof FIGURES)[number];
 export const PLANET_LIGHTS = ['look', 'radar', 'minerals', 'recent', 'height', 'haze'] as const;
 export type PlanetLight = (typeof PLANET_LIGHTS)[number];
 
+/** The gravitational waves that can be shown passing (#829). */
+const WAVES = ['gw150914'] as const;
+export type Wave = (typeof WAVES)[number];
+
 export interface DisplayState {
   readonly figures: Figures;
   /** The calendar the year bar counts in. */
@@ -52,6 +58,8 @@ export interface DisplayState {
   readonly mission: string | null;
   /** The craft the camera is on (#796), by its GCAT id, lower case; null for a body. */
   readonly craft: string | null;
+  /** The gravitational wave shown passing (#829); null when none. */
+  readonly wave: Wave | null;
   /** The destination the view was arrived at from, by its id; null when none. */
   readonly explore: string | null;
 }
@@ -64,6 +72,7 @@ export const DISPLAY_DEFAULTS: DisplayState = {
   culture: 'modern',
   mission: null,
   craft: null,
+  wave: null,
   explore: null,
 };
 
@@ -88,6 +97,15 @@ export const DISPLAY_PARAMS: Params<DisplayState> = {
       return raw.toLowerCase();
     },
     format: (id) => id,
+  },
+  wave: {
+    key: 'wave',
+    parse: (raw) => {
+      const wave = WAVES.find((name) => name === raw.toLowerCase());
+      if (wave === undefined) throw new Error('expected a gravitational wave, such as gw150914');
+      return wave;
+    },
+    format: (wave) => wave,
   },
   explore: {
     key: 'explore',

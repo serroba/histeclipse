@@ -151,5 +151,5 @@ export interface MountedPart {
   readonly watches: Watch;
   /** What it puts on the page, in order. */
   readonly elements: readonly HTMLElement[];
-  render(state: ViewState): void;
+  readonly render: (state: ViewState) => void;
 }

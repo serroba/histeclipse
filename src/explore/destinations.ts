@@ -57,6 +57,17 @@ export const DESTINATIONS: readonly Destination[] = [
     view: 'focus=sun&cam=66.5607,-90.0000,301.05&layers=spacecraft,orbits&t=1959-01-02T16:41Z',
   },
   {
+    id: 'gravitational-waves',
+    label: 'A gravitational wave',
+    topics: ['space'],
+    description:
+      'GW150914, the first gravitational wave heard, 14 September 2015: a ring of free masses and the space about it stretched and squeezed as it passes.',
+    questions: ['What does a gravitational wave do to space?', 'What did LIGO detect?'],
+    body: 'earth',
+    frame: { kind: 'years', from: 2015, to: 2016 },
+    view: 'cam=30.5630,-90.7740,3.00&t=2015-09-14T09:50Z&wave=gw150914',
+  },
+  {
     id: 'ozone-hole',
     label: 'The ozone hole',
     topics: ['climate'],
