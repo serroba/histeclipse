@@ -24,6 +24,7 @@ import type { Feature, FeatureContext } from '../feature';
 import type { Geocentric } from './approximatePaths';
 import { craftInFlight } from './craftLayer';
 import { craftCards } from './craftPictures';
+import { withModel } from './craftModels';
 import {
   craftNow,
   craftRoutes,
@@ -156,7 +157,7 @@ export const spacecraftFeature: Feature = {
     const open = craftCards(context, (id) => {
       const craft = loaded?.craft.find((each) => each.id === id);
       if (craft === undefined || loaded === null) return null;
-      const card = craftCard(craft, loaded.wheres.approximate(craft));
+      const card = withModel(craftCard(craft, loaded.wheres.approximate(craft)), craft.id);
       const own = missionNamed(loaded.missions, craft.id);
       return own === null ? card : { ...card, related: follow(own) };
     });

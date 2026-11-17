@@ -16,12 +16,24 @@ export interface MarkerCardContent {
   readonly image?: { readonly src: string; readonly alt: string; readonly credit: string };
   /** Pictures of its own, such as those a telescope took (#798): a strip, each opening larger. */
   readonly pictures?: CardPictures;
+  /** A 3D model of it (#797), drawn while the card is open. */
+  readonly model?: CardModel;
   /** A word on what the source can and cannot say. */
   readonly note?: string;
   /** Something to do with it, such as playing an impact: the card closes first, to show it. */
   readonly action?: { readonly label: string; readonly run: () => void };
   /** A few next views (#731), each saying where it goes: the card closes first. */
   readonly related?: readonly RelatedStep[];
+}
+
+/**
+ * A 3D model in a card: what it shows, a word on how it was made, and how to draw it into a box
+ * (giving back how to stop). Shown again with the same model, the card keeps the view it has.
+ */
+export interface CardModel {
+  readonly label: string;
+  readonly caption: string;
+  mount(host: HTMLElement): () => void;
 }
 
 /** A next view from a card: what it is, where it goes (and any change of time), and going. */
@@ -99,6 +111,66 @@ function actionButton(
   return button;
 }
 
+/** Where to read more, if anywhere. */
+function readMore(links: MarkerCardContent['links']): HTMLElement[] {
+  if (links.length === 0) return [];
+  return [
+    element(
+      'p',
+      { class: 'marker-card-links' },
+      'Read more: ',
+      ...links.flatMap((link, index) => [
+        ...(index === 0 ? [] : [' · ']),
+        element('a', { href: link.href, target: '_blank', rel: 'noopener noreferrer' }, link.label),
+      ]),
+    ),
+  ];
+}
+
+/**
+ * The card's 3D model: its figure, drawn once it is in the page and has a width, kept while the
+ * card shows the same model again, and stopped when it shows another or closes.
+ */
+function modelSlot(dialog: HTMLDialogElement): {
+  figure(model: CardModel | undefined): HTMLElement[];
+  draw(): void;
+} {
+  let drawn: {
+    model: CardModel;
+    figure: HTMLElement;
+    host: HTMLElement;
+    stop: (() => void) | null;
+  } | null = null;
+  function stop(): void {
+    drawn?.stop?.();
+    drawn = null;
+  }
+  dialog.addEventListener('close', stop);
+  return {
+    figure(model) {
+      if (model !== undefined && drawn?.model === model) return [drawn.figure];
+      stop();
+      if (model === undefined) return [];
+      const host = element('div', {
+        class: 'marker-card-model-view',
+        role: 'img',
+        'aria-label': model.label,
+      });
+      const figure = element(
+        'figure',
+        { class: 'marker-card-model' },
+        host,
+        element('figcaption', {}, model.caption),
+      );
+      drawn = { model, figure, host, stop: null };
+      return [figure];
+    },
+    draw() {
+      if (drawn !== null && drawn.stop === null) drawn.stop = drawn.model.mount(drawn.host);
+    },
+  };
+}
+
 export function createMarkerCard(): MarkerCard {
   const close = element(
     'button',
@@ -125,14 +197,14 @@ export function createMarkerCard(): MarkerCard {
   dialog.addEventListener('click', (event) => {
     if (event.target === dialog) dialog.close();
   });
-
+  const models = modelSlot(dialog);
   return {
     dialog,
-    show({ title: text, facts, links, image, pictures, note, action, related }) {
+    show({ title: text, facts, links, image, pictures, model, note, action, related }) {
       title.textContent = text;
-      const shown = links.filter((link) => safeLink(link.href));
       body.replaceChildren(
         ...(image === undefined || !safeLink(image.src) ? [] : [picture(image)]),
+        ...models.figure(model),
         element(
           'dl',
           { class: 'marker-card-facts' },
@@ -157,25 +229,10 @@ export function createMarkerCard(): MarkerCard {
                 dialog.close();
               }),
             ]),
-        ...(shown.length === 0
-          ? []
-          : [
-              element(
-                'p',
-                { class: 'marker-card-links' },
-                'Read more: ',
-                ...shown.flatMap((link, index) => [
-                  ...(index === 0 ? [] : [' · ']),
-                  element(
-                    'a',
-                    { href: link.href, target: '_blank', rel: 'noopener noreferrer' },
-                    link.label,
-                  ),
-                ]),
-              ),
-            ]),
+        ...readMore(links.filter((link) => safeLink(link.href))),
       );
       if (!dialog.open) dialog.showModal();
+      models.draw();
     },
   };
 }

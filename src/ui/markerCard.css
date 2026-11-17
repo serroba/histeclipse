@@ -93,3 +93,26 @@
   color: var(--ink-muted);
   font-size: 12px;
 }
+
+/* A 3D model of it (#797): a box the width of the card, dark as space, to drag round. */
+.marker-card-model {
+  margin: 0 0 10px;
+}
+
+.marker-card-model-view {
+  overflow: hidden;
+  border-radius: 8px;
+  background: radial-gradient(circle at 50% 40%, rgb(30 36 56), rgb(6 8 14));
+}
+
+.marker-card-model-view canvas {
+  display: block;
+  max-width: 100%;
+  cursor: grab;
+}
+
+.marker-card-model figcaption {
+  margin-top: 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}

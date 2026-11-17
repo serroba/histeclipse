@@ -68,6 +68,55 @@ test('Webb’s card shows the pictures it took, and one opens larger with its cr
   expect(problems).toEqual([]);
 });
 
+test('Webb’s card shows it in 3D, fetched only then, drawn by WebGL and let go when the card closes @acceptance', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const card = page.getByTestId('marker-card');
+  const model = card.getByRole('img', { name: /James Webb Space Telescope in 3D/ });
+  const fetched: string[] = [];
+  page.on('request', (request) => {
+    if (/\/(webbModel|modelView)-/.test(request.url())) fetched.push(request.url());
+  });
+  await test.step('Given Webb followed, Then nothing of its model has been fetched', async () => {
+    await page.goto(
+      './?focus=earth&cam=89,0,1200&layers=spacecraft&mission=d01093&t=2023-01-01T00:00Z',
+    );
+    await expect(
+      page.getByRole('button', { name: 'James Webb Space Telescope', exact: true }),
+    ).toBeVisible({ timeout: 30_000 });
+    expect(fetched).toEqual([]);
+  });
+  await test.step('When they open its card, Then the model is drawn in WebGL with a word on how it was made', async () => {
+    await page.getByRole('button', { name: 'James Webb Space Telescope', exact: true }).click();
+    await expect(model).toHaveAttribute('data-drawn', 'true', { timeout: 30_000 });
+    expect(fetched.length).toBeGreaterThan(0);
+    const canvas = model.getByTestId('craft-model');
+    expect(
+      await canvas.evaluate((element: HTMLCanvasElement) => element.getContext('webgl2') !== null),
+    ).toBe(true);
+    const box = await canvas.boundingBox();
+    expect(box?.width).toBeGreaterThan(150);
+    await expect(card).toContainText('built here from NASA’s published sizes, at true scale');
+  });
+  await test.step('When they drag it, Then it turns without a problem', async () => {
+    const box = await model.boundingBox();
+    if (box === null) throw new Error('the model has no box');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 + 80, box.y + box.height / 2, { steps: 5 });
+    await page.mouse.up();
+    await expect(card).toBeVisible();
+  });
+  await test.step('When the card closes, Then its canvas is gone', async () => {
+    await page.keyboard.press('Escape');
+    await expect(card).toBeHidden();
+    await expect(page.getByTestId('craft-model')).toHaveCount(0);
+  });
+  expect(problems).toEqual([]);
+});
+
 test('Hubble goes round Earth close up, its card saying how its path is drawn and showing its pictures', async ({
   page,
 }) => {
