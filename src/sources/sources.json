@@ -1088,6 +1088,13 @@
     "cite": "NASA, “Titan” (moon overview)",
     "url": "https://science.nasa.gov/saturn/moons/titan/"
   },
+  "nasaWebbFacts": {
+    "name": "NASA: Webb’s key facts",
+    "kind": "reference",
+    "cite": "NASA Goddard Space Flight Center, James Webb Space Telescope: key facts and the observatory’s parts (the sunshield, 21.197 m by 14.162 m in five layers; the primary mirror, 6.5 m across in 18 hexagonal segments of 1.32 m; the secondary, 0.74 m across)",
+    "url": "https://webb.nasa.gov/content/about/faqs/facts.html",
+    "licence": "NASA, public domain"
+  },
   "naturalEarth": {
     "name": "Natural Earth",
     "kind": "dataset",

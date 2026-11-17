@@ -60,6 +60,7 @@ put new calculation/presentation permutations at their faster boundary.
 | sky.spec.ts             |       4 |      2 |      0 |
 | smoke.spec.ts           |       9 |      5 |      0 |
 | sources.spec.ts         |       2 |      0 |      0 |
+| telescopes.spec.ts      |       1 |      0 |      0 |
 | time.spec.ts            |       2 |      1 |      0 |
 | tree.spec.ts            |       1 |      0 |      0 |
 | volcanoes.spec.ts       |       1 |      0 |      0 |

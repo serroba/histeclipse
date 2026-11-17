@@ -121,7 +121,6 @@ export const UNTESTED = [
   'src/ui/historyTrack.ts',
   'src/ui/icons.ts',
   'src/ui/impactPathsSheet.ts',
-  'src/ui/markerCard.ts',
   'src/ui/pageLayout.ts',
   'src/ui/periodBands.ts',
   'src/ui/polarityStrip.ts',
