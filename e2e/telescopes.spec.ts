@@ -117,6 +117,46 @@ test('Webb’s card shows it in 3D, fetched only then, drawn by WebGL and let go
   expect(problems).toEqual([]);
 });
 
+test('Webb’s card goes to it: the camera orbits its model at L2, the link keeps it, and Back to Earth leaves it (#796) @acceptance', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const card = page.getByTestId('marker-card');
+  const webb = page.getByRole('button', { name: 'James Webb Space Telescope', exact: true });
+  await test.step('Given Webb followed, a year after it reached L2', async () => {
+    await page.goto(
+      './?focus=earth&cam=89,0,1200&layers=spacecraft&mission=d01093&t=2023-01-01T00:00Z',
+    );
+    await expect(webb).toBeVisible({ timeout: 30_000 });
+  });
+  await test.step('When they open its card and go to it, Then the camera orbits Webb, drawn as its model', async () => {
+    await webb.click();
+    await card.getByRole('button', { name: 'Go to it' }).click();
+    await expect(card).toBeHidden();
+    await expect(globe).toHaveAttribute('data-framed', 'craft:d01093', { timeout: 30_000 });
+    await expect(globe).toHaveAttribute('data-craft-model', 'd01093', { timeout: 30_000 });
+    await expect(page).toHaveURL(/[?&]craft=d01093/);
+    // Four of its radii out: some 42 m from a craft 21 m long.
+    await expect(globe).toHaveAttribute('data-distance', '4.00');
+    // Close up its point and name give way to the model.
+    await expect(webb).toHaveCount(0);
+  });
+  await test.step('When the page is loaded again from its link, Then it opens on Webb', async () => {
+    await page.reload();
+    await expect(globe).toHaveAttribute('data-framed', 'craft:d01093', { timeout: 30_000 });
+    await expect(globe).toHaveAttribute('data-craft-model', 'd01093', { timeout: 30_000 });
+  });
+  await test.step('When they go back to Earth, Then the craft is left and Earth is in view', async () => {
+    await page.getByRole('button', { name: 'Back to Earth' }).click();
+    await expect(globe).toHaveAttribute('data-framed', 'earth', { timeout: 30_000 });
+    await expect(page).not.toHaveURL(/craft=/);
+    await expect(globe).not.toHaveAttribute('data-craft-model', /.*/);
+  });
+  expect(problems).toEqual([]);
+});
+
 test('Hubble goes round Earth close up, its card saying how its path is drawn and showing its pictures', async ({
   page,
 }) => {

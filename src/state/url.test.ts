@@ -76,6 +76,7 @@ describe('parseViewState', () => {
       planetLight: 'look',
       culture: 'modern',
       mission: null,
+      craft: null,
       explore: null,
       borders: 'cliopatria',
       seenIn: null,
@@ -291,6 +292,15 @@ describe('parseViewState', () => {
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('culture=');
   });
 
+  it('Given a craft in focus, Then it is read in lower case and written back (#796)', () => {
+    const { state } = parseViewState('craft=D01093&focus=earth', NOW);
+    expect(state.craft).toBe('d01093');
+    expect(state.focus).toBe('earth');
+    expect(serializeViewState(state)).toContain('&craft=d01093');
+    expect(parseViewState('craft=S20580', NOW).state.craft).toBe('s20580');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('craft=');
+  });
+
   it('Given a mission named, Then it is read in lower case and written back (#712)', () => {
     const { state } = parseViewState('mission=D00271', NOW);
     expect(state.mission).toBe('d00271');
@@ -370,6 +380,7 @@ describe('parseViewState', () => {
     ['sun=xray', 'sun', 'unknown sun'],
     ['culture=martian', 'culture', 'unknown culture'],
     ['mission=voyager', 'mission', 'GCAT id'],
+    ['craft=webb', 'craft', 'GCAT id'],
     ['explore=Human_Origins', 'explore', 'destination’s id'],
     ['borders=guesswork', 'borders', 'unknown borders'],
     ['seen=%20', 'seen', 'name of a past state'],
@@ -438,6 +449,7 @@ describe('parseViewState', () => {
             'sun',
             'culture',
             'mission',
+            'craft',
             'explore',
             'borders',
             'seen',
@@ -523,6 +535,12 @@ describe('serializeViewState', () => {
     culture: fc.constantFrom(...SKY_CULTURES),
     mission: fc.option(
       fc.integer({ min: 0, max: 99_999 }).map((n) => `d${String(n).padStart(5, '0')}`),
+      { nil: null },
+    ),
+    craft: fc.option(
+      fc
+        .tuple(fc.constantFrom('d', 's'), fc.integer({ min: 0, max: 99_999 }))
+        .map(([kind, n]) => `${kind}${String(n).padStart(5, '0')}`),
       { nil: null },
     ),
     explore: fc.option(fc.constantFrom('human-origins', 'moon-landings', 'a1'), { nil: null }),

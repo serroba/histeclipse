@@ -1,3 +1,4 @@
+import { planetRadius } from './planetLook';
 import { Group, Mesh, Vector3 } from 'three';
 import { describe, expect, it, vi } from 'vitest';
 import { IDENTITY, type Matrix3 } from '../astro/matrix';
@@ -169,5 +170,28 @@ describe('BodiesInSpace', () => {
     });
     const toScene = world.bodies.spaceToScene();
     expect(toScene?.([0, 0, EARTH_RADIUS_KM])).toEqual([0, 1, -0]);
+  });
+
+  it('says where a named body is for the layers: the Moon by its frame, a planet by its mesh', () => {
+    const world = space();
+    world.bodies.place({
+      earthFixedToJ2000: IDENTITY,
+      sunKm: SUN_KM,
+      moonKm: MOON_KM,
+      planetsKm: null,
+      jdTT: 2_451_545,
+    });
+    const moon = world.bodies.named('moon');
+    expect(moon.position.y).toBeCloseTo(60);
+    expect(moon.radius).toBeCloseTo(1737.4 / EARTH_RADIUS_KM);
+    expect(moon.shown).toBe(true);
+    const mars = world.meshes.mars;
+    mars.position.set(1, 2, 3);
+    mars.visible = false;
+    const named = world.bodies.named('mars');
+    expect(named.position).toBe(mars.position);
+    expect(named.rotation).toBe(mars.quaternion);
+    expect(named.radius).toBe(planetRadius('mars'));
+    expect(named.shown).toBe(false);
   });
 });

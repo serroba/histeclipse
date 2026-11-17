@@ -82,7 +82,7 @@ const WATCHES: Record<string, { watch: Watch; fields: readonly (keyof ViewState)
     watch: LAYERS_PANEL,
     fields: ['layers', 'mode', 'borders', 'ma', 'deepScale', 'location', 'focus'],
   },
-  'the body in focus': { watch: FOCUS, fields: ['focus'] },
+  'the body or craft in focus': { watch: FOCUS, fields: ['focus', 'craft'] },
   'the viewpoint': { watch: VIEWPOINT, fields: ['view'] },
   'the place': { watch: LOCATION, fields: ['location'] },
   'the welcome': {

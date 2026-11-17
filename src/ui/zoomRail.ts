@@ -13,7 +13,7 @@ import { BODY_RADIUS } from '../globe/bodyRadius';
 import { EARTH_RADIUS_KM } from '../globe/spaceFrame';
 import { CAMERA_DISTANCE_RANGE, nearestDistance, type Body } from '../state/viewState';
 import { element } from './dom';
-import { bookIcon, uiIcon } from './icons';
+import { railIcons } from './zoomRailIcons';
 import './zoomRail.css';
 
 /** A rail for one body: its distances in its own radii, as near and as far as the camera goes. */
@@ -141,6 +141,8 @@ export interface RailView {
   readonly distance: number;
   /** The nearest the camera comes to the body on this device, in its radii. */
   readonly near: number;
+  /** On a craft (#796): only the way back to the body, its stops saying nothing of metres. */
+  readonly craft?: true;
 }
 
 export interface ZoomRail {
@@ -155,49 +157,6 @@ export interface ZoomRail {
   setAsteroids(offered: boolean, on: boolean): void;
   /** Whether "Why here?" is offered, and on: a tap on the globe then says what is there. */
   setWhyHere(offered: boolean, on: boolean): void;
-}
-
-/** An orbit around a sun, as a small line icon. */
-function orbitsIcon(): SVGSVGElement {
-  const ns = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(ns, 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('width', '20');
-  svg.setAttribute('height', '20');
-  svg.setAttribute('aria-hidden', 'true');
-  const orbit = document.createElementNS(ns, 'ellipse');
-  for (const [name, value] of [
-    ['cx', '12'],
-    ['cy', '12'],
-    ['rx', '10'],
-    ['ry', '5'],
-    ['transform', 'rotate(-20 12 12)'],
-    ['fill', 'none'],
-    ['stroke', 'currentColor'],
-    ['stroke-width', '1.6'],
-  ] as const) {
-    orbit.setAttribute(name, value);
-  }
-  const sun = document.createElementNS(ns, 'circle');
-  for (const [name, value] of [
-    ['cx', '12'],
-    ['cy', '12'],
-    ['r', '2.6'],
-    ['fill', 'currentColor'],
-  ] as const) {
-    sun.setAttribute(name, value);
-  }
-  const planet = document.createElementNS(ns, 'circle');
-  for (const [name, value] of [
-    ['cx', '20.6'],
-    ['cy', '8.6'],
-    ['r', '1.8'],
-    ['fill', 'currentColor'],
-  ] as const) {
-    planet.setAttribute(name, value);
-  }
-  svg.append(orbit, sun, planet);
-  return svg;
 }
 
 export function createZoomRail(handlers: {
@@ -275,54 +234,7 @@ export function createZoomRail(handlers: {
   }
   placeStops();
   const readout = element('span', { class: 'zoom-readout', 'data-testid': 'zoom-readout' });
-  const orbits = element('button', {
-    type: 'button',
-    class: 'zoom-step zoom-orbits',
-    'aria-label': 'Orbits',
-    'aria-pressed': 'false',
-    title: 'The planets’ orbits round the Sun',
-    hidden: '',
-  });
-  orbits.append(orbitsIcon());
-  orbits.addEventListener('click', () => {
-    handlers.onOrbits();
-  });
-  const spacecraft = element('button', {
-    type: 'button',
-    class: 'zoom-step zoom-spacecraft',
-    'aria-label': 'Spacecraft',
-    'aria-pressed': 'false',
-    title: 'Every craft sent beyond Earth orbit, flying as the time plays',
-    hidden: '',
-  });
-  spacecraft.append(uiIcon('spacecraft', 18));
-  spacecraft.addEventListener('click', () => {
-    handlers.onSpacecraft();
-  });
-  const asteroids = element('button', {
-    type: 'button',
-    class: 'zoom-step zoom-asteroids',
-    'aria-label': 'Asteroid belt',
-    'aria-pressed': 'false',
-    title: 'The asteroid belt: its asteroids 100 km across or more',
-    hidden: '',
-  });
-  asteroids.append(uiIcon('asteroids', 18));
-  asteroids.addEventListener('click', () => {
-    handlers.onAsteroids();
-  });
-  const whyHere = element('button', {
-    type: 'button',
-    class: 'zoom-step zoom-why-here',
-    'aria-label': 'Why here?',
-    'aria-pressed': 'false',
-    title: 'Tap the globe to see what each layer has there, and where it comes from',
-    hidden: '',
-  });
-  whyHere.append(bookIcon(18));
-  whyHere.addEventListener('click', () => {
-    handlers.onWhyHere();
-  });
+  const { orbits, spacecraft, asteroids, whyHere } = railIcons(handlers);
   const zoom = element('div', { class: 'zoom-parts' }, home, zoomIn, track, zoomOut);
   const root = element(
     'div',
@@ -376,11 +288,13 @@ export function createZoomRail(handlers: {
       zooming = view !== null;
       sync();
       if (view === null) return;
+      for (const part of [zoomIn, track, zoomOut, readout]) part.hidden = view.craft === true;
+      home.hidden = view.body === 'earth' && view.craft !== true;
+      if (view.craft === true) return;
       if (view.body !== scale.body || view.near !== scale.near) {
         scale = railScale(view.body, view.near);
         placeStops();
       }
-      home.hidden = view.body === 'earth';
       shown = view.distance;
       if (document.activeElement !== slider) {
         slider.value = String(Math.round(railPosition(view.distance, scale) * 1000));

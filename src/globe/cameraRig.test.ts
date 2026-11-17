@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { BODY_RADIUS } from './bodyRadius';
 import type { CameraWorld, OrbitLike } from './cameraPoses';
 import { CameraRig } from './cameraRig';
+import { craftFocus, focusFrames, type Focus, type FocusFrames } from './focus';
 import { verticalFov } from './projection';
 import type { Matrix3 } from '../astro/matrix';
 import type { Body, GlobeCamera } from '../state/viewState';
@@ -48,10 +49,11 @@ interface Setup {
   readonly positions: Map<Body, Vector3>;
   readonly loaded: Set<Body>;
   readonly state: { moonVisible: boolean; place: Vector3 | null; renders: number };
+  readonly frames: FocusFrames;
 }
 
 function setUp(
-  options: { focus?: Body; start?: GlobeCamera; loaded?: readonly Body[]; tiled?: boolean } = {},
+  options: { focus?: Focus; start?: GlobeCamera; loaded?: readonly Body[]; tiled?: boolean } = {},
 ): Setup {
   const positions = new Map<Body, Vector3>([
     ['earth', new Vector3()],
@@ -60,12 +62,18 @@ function setUp(
   ]);
   const loaded = new Set<Body>(options.loaded ?? ['earth', 'moon', 'sun']);
   const state = { moonVisible: true, place: null as Vector3 | null, renders: 0 };
-  const world: CameraWorld = {
+  const frames = focusFrames({
     frame: (body) => ({
       position: positions.get(body) ?? new Vector3(),
       rotation: new Quaternion(),
     }),
     ready: (body) => loaded.has(body),
+  });
+  const world: CameraWorld = {
+    frame: frames.frame,
+    ready: frames.ready,
+    radius: frames.radius,
+    body: frames.body,
     place: () => state.place,
     moonVisible: () => state.moonVisible,
     invalidate: () => {
@@ -84,7 +92,7 @@ function setUp(
     start: options.start ?? { target: { latitude: 0, longitude: 0 }, distance: 3 },
     tiled: options.tiled ?? false,
   });
-  return { rig, camera, controls, container, positions, loaded, state };
+  return { rig, camera, controls, container, positions, loaded, state, frames };
 }
 
 /** Run the frames until every flight has landed. */
@@ -378,6 +386,95 @@ describe('the camera rig', () => {
     const now = camera.position.clone().sub(new Vector3(0, 60, 0));
     expect(now.distanceTo(offset)).toBeLessThan(1e-9);
     expect(controls.target.y).toBe(60);
+  });
+
+  describe('on a craft (#796)', () => {
+    /** Webb at L2, 235 Earth radii out, 10.6 m (its sunshield's half-length) in radius. */
+    const L2 = new Vector3(0, 0, 235);
+    const WEBB_RADIUS = 10.6 / 6_378_137;
+    const webb = (at = L2, turn = new Quaternion()): Parameters<FocusFrames['hold']>[0] => ({
+      id: 'd01093',
+      about: 'earth',
+      position: at.clone(),
+      rotation: turn,
+      radius: WEBB_RADIUS,
+    });
+
+    it('Given a craft held, When it is asked for, Then the camera flies to it, four of its radii out', () => {
+      const { rig, camera, container, frames, controls } = setUp();
+      rig.place({ target: { latitude: 0, longitude: 0 }, distance: 3 });
+      frames.hold(webb());
+      rig.setFocus(craftFocus('D01093'));
+      settle(rig);
+      expect(container.dataset['framed']).toBe('craft:d01093');
+      expect(camera.position.distanceTo(L2) / WEBB_RADIUS).toBeCloseTo(4, 6);
+      expect(controls.minDistance / WEBB_RADIUS).toBeCloseTo(1.3);
+      // The view speaks of the body it is about.
+      expect(rig.focus).toBe('earth');
+      // A metre-sized craft comes inside the scene's usual near plane.
+      expect(camera.near).toBeLessThan(WEBB_RADIUS);
+    });
+
+    it('Given a craft not held yet, Then the camera waits, and goes once it is', () => {
+      const { rig, container, frames } = setUp();
+      rig.place({ target: { latitude: 0, longitude: 0 }, distance: 3 });
+      rig.setFocus(craftFocus('d01093'));
+      settle(rig);
+      expect(container.dataset['framed']).toBe('earth');
+      frames.hold(webb());
+      rig.afterBodiesMove();
+      expect(container.dataset['framed']).toBe('craft:d01093');
+    });
+
+    it('Given a link to a craft, Then the camera is placed in its radii and its own axes', () => {
+      const { rig, camera, frames } = setUp({ focus: craftFocus('d01093') });
+      // Turned a quarter about the scene's y axis: its own +x is the scene's −z.
+      const turn = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), Math.PI / 2);
+      frames.hold(webb(L2, turn));
+      rig.settleFocus();
+      rig.place({ target: { latitude: 0, longitude: 0 }, distance: 5 });
+      const offset = camera.position.clone().sub(L2).divideScalar(WEBB_RADIUS);
+      expect(offset.length()).toBeCloseTo(5, 6);
+      expect(offset.z).toBeCloseTo(-5, 4);
+    });
+
+    it('Given a camera on a craft, When the craft moves, Then it rides along to the millimetre', () => {
+      const { rig, camera, frames, controls } = setUp({ focus: craftFocus('d01093') });
+      frames.hold(webb());
+      rig.settleFocus();
+      rig.place({ target: { latitude: 30, longitude: 40 }, distance: 4 });
+      const offset = camera.position.clone().sub(L2);
+      const moved = new Vector3(1.3, -0.4, 236.1);
+      rig.beforeBodiesMove(null);
+      frames.hold(webb(moved));
+      rig.afterBodiesMove();
+      const metres = camera.position.clone().sub(moved).sub(offset).length() * 6_378_137;
+      expect(metres).toBeLessThan(1e-3);
+      expect(controls.target.distanceTo(moved)).toBe(0);
+    });
+
+    it('Given a camera on a craft, Then the views that stand on bodies are not offered', () => {
+      const { rig, container, frames } = setUp({ focus: craftFocus('d01093') });
+      frames.hold(webb());
+      rig.settleFocus();
+      rig.setViewpoint('moon-from-earth');
+      settle(rig);
+      expect(container.dataset['view']).toBe('free');
+    });
+
+    it('Given a camera on a craft, When a body is asked for, Then it leaves and the near plane returns', () => {
+      const { rig, camera, frames, container } = setUp({ focus: craftFocus('d01093') });
+      frames.hold(webb());
+      rig.settleFocus();
+      rig.place({ target: { latitude: 0, longitude: 0 }, distance: 4 });
+      rig.step(performance.now());
+      expect(camera.near).toBeLessThan(1e-6);
+      rig.setFocus('earth');
+      settle(rig);
+      rig.step(performance.now() + 30_000);
+      expect(container.dataset['framed']).toBe('earth');
+      expect(camera.near).toBe(1e-4);
+    });
   });
 
   it('Given a listener, Then it hears each move relative to the body in focus', () => {

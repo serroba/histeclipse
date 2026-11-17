@@ -15,6 +15,10 @@
  * - `mission` names a launch beyond Earth orbit by its first craft's GCAT id (`d00271`): with
  *   the spacecraft on, only its craft are drawn, with their whole route, and the bar plays
  *   that mission (#712). Absent means every launch.
+ * - `craft` names the craft the camera is on (#796), by its GCAT id (`d01093`, `s20580`): the
+ *   camera orbits it, close enough to see it, and `cam` is then in the craft's own size (half
+ *   its longest side, its "radius"). `focus` stays the body it is about, which leaving it goes
+ *   back to. Absent means a body is in focus.
  * - `explore` names the destination the view was arrived at from (#726), such as
  *   `human-origins`; absent when the reader found their own way. A link with it and no view of
  *   its own (no `t`, `ma` or `cam`) opens that destination.
@@ -46,6 +50,8 @@ export interface DisplayState {
   readonly culture: SkyCulture;
   /** The launch followed, by its first craft's GCAT id, lower case; null for every launch. */
   readonly mission: string | null;
+  /** The craft the camera is on (#796), by its GCAT id, lower case; null for a body. */
+  readonly craft: string | null;
   /** The destination the view was arrived at from, by its id; null when none. */
   readonly explore: string | null;
 }
@@ -57,6 +63,7 @@ export const DISPLAY_DEFAULTS: DisplayState = {
   planetLight: 'look',
   culture: 'modern',
   mission: null,
+  craft: null,
   explore: null,
 };
 
@@ -70,6 +77,14 @@ export const DISPLAY_PARAMS: Params<DisplayState> = {
     key: 'mission',
     parse: (raw) => {
       if (!/^d\d{5}$/i.test(raw)) throw new Error('expected a craft’s GCAT id, such as d00271');
+      return raw.toLowerCase();
+    },
+    format: (id) => id,
+  },
+  craft: {
+    key: 'craft',
+    parse: (raw) => {
+      if (!/^[ds]\d{5}$/i.test(raw)) throw new Error('expected a craft’s GCAT id, such as d01093');
       return raw.toLowerCase();
     },
     format: (id) => id,

@@ -4,6 +4,7 @@ import { retryingFetch } from './util/fetchJson';
 import { LunarCatalog } from './data/lunarCatalog';
 import { SolarCatalog } from './data/solarCatalog';
 import { createDatingCard } from './ui/datingCard';
+import { focusOf } from './globe/focus';
 import { createGlobe } from './globe/scene';
 import {
   DEEP_TIME,
@@ -253,7 +254,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => toggledLayer(state, 'asteroids'));
     },
     onEarth() {
-      store.set((state) => ({ ...state, focus: 'earth', view: 'free' }));
+      store.set((state) => ({ ...state, focus: 'earth', craft: null, view: 'free' }));
     },
   });
   // "Why here?": while on, a tap on the globe says what each layer has there.
@@ -266,7 +267,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     camera: store.get().camera,
     textureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
     moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
-    focus: store.get().focus,
+    focus: focusOf(store.get()),
     // The features' parts of the Earth shader (#379).
     earthParts: ECLIPSE_EARTH_PARTS,
   });
@@ -667,7 +668,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     {
       when: onChange(FOCUS),
       draw: (state) => {
-        globe.setFocus(state.focus);
+        globe.setFocus(focusOf(state));
       },
     },
     { draw: bodies.render },

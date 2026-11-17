@@ -91,6 +91,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       view: 'free',
       // The Sun, Moon and planets are left out of deep time, so the view centres on Earth.
       focus: 'earth',
+      craft: null,
       selection: null,
     }));
   }

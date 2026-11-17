@@ -4,20 +4,29 @@
  */
 
 import { type Quaternion, Vector3 } from 'three';
-import { BODY_RADIUS } from './bodyRadius';
+import type { Focus, FocusFrame } from './focus';
 import { cameraPosition } from './geo';
 import { attachedPose, earthFromPose, type CameraPose } from './spaceFrame';
-import type { Body, GlobeCamera, Viewpoint } from '../state/viewState';
+import {
+  CAMERA_DISTANCE_RANGE,
+  type Body,
+  type GlobeCamera,
+  type Viewpoint,
+} from '../state/viewState';
 import type { Matrix3 } from '../astro/matrix';
 
 const NARROW_SIDE_FOV_DEGREES = 40;
 
-/** What the camera needs to know of the bodies, which the scene owns. */
+/** What the camera needs to know of the bodies and the craft, which the scene owns. */
 export interface CameraWorld {
-  /** Where a body is and how its surface coordinates turn into the scene's axes. */
-  frame(body: Body): { position: Vector3; rotation: Quaternion };
-  /** Whether a body has loaded, so the camera can go there. */
-  ready(body: Body): boolean;
+  /** Where a body or craft is and how its own coordinates turn into the scene's axes. */
+  frame(focus: Focus): FocusFrame;
+  /** Whether a body has loaded, or a craft is held, so the camera can go there. */
+  ready(focus: Focus): boolean;
+  /** Its radius in scene units: the camera's distance from it is in these. */
+  radius(focus: Focus): number;
+  /** The body the view speaks of: a body itself, or the one a craft is about. */
+  body(focus: Focus): Body;
   /** Where the place picked is, on the ground, or null with none picked. */
   place(): Vector3 | null;
   /** Whether the Moon is placed, which the attached viewpoints look at. */
@@ -40,6 +49,17 @@ export interface OrbitLike {
   update(): boolean;
   dispose(): void;
   addEventListener(type: 'start' | 'change', listener: () => void): void;
+}
+
+/** The orbit controls as the rig starts them: no panning, damped, out to the scene's reach. */
+export function orbitSettings(controls: OrbitLike, nearest: number): void {
+  controls.enablePan = false;
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.rotateSpeed = 0.5;
+  controls.zoomSpeed = 0.8;
+  controls.minDistance = nearest;
+  controls.maxDistance = CAMERA_DISTANCE_RANGE.max;
 }
 
 /** Rotation along the sphere (a slerp), which also handles flying to the opposite side. */
@@ -68,11 +88,11 @@ export function easeInOut(progress: number): number {
   return progress < 0.5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
 }
 
-/** The pose orbiting `body` from `state`, which is in its radii and its surface's axes. */
-export function focusPose(world: CameraWorld, body: Body, state: GlobeCamera): CameraPose {
-  const { position, rotation } = world.frame(body);
+/** The pose orbiting `focus` from `state`, which is in its radii and its own axes. */
+export function focusPose(world: CameraWorld, focus: Focus, state: GlobeCamera): CameraPose {
+  const { position, rotation } = world.frame(focus);
   const eye = new Vector3(
-    ...cameraPosition({ ...state, distance: state.distance * BODY_RADIUS[body] }),
+    ...cameraPosition({ ...state, distance: state.distance * world.radius(focus) }),
   )
     .applyQuaternion(rotation)
     .add(position);
@@ -94,7 +114,7 @@ export function attachedLivePose(
   if (viewpoint === 'earth-from-here') {
     const body = focus === 'earth' ? 'moon' : focus;
     const { position } = world.frame(body);
-    return earthFromPose([position.x, position.y, position.z], BODY_RADIUS[body]);
+    return earthFromPose([position.x, position.y, position.z], world.radius(body));
   }
   // From Earth, stand where the place picked sees the Moon from.
   const moon = world.frame('moon').position;

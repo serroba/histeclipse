@@ -3,6 +3,7 @@
  * code that keeps it (`scene.ts`), so a feature depends on this and not on how it is drawn.
  */
 
+import type { Focus } from './focus';
 import type { MoonName, MoonOrbits } from '../astro/moonOrbits';
 import type { Orbiting, PlanetName } from '../astro/planets';
 import type { ArrivalGrid } from '../data/dispersal';
@@ -42,7 +43,8 @@ export interface Globe {
    * Centre the camera on a body and fly there; it then orbits and zooms around that body. A
    * body that has not loaded yet (the Moon, briefly) is flown to once it has.
    */
-  setFocus(body: Body): void;
+  /** Centre on a body, or on a craft the spacecraft layer holds (#796). */
+  setFocus(focus: Focus): void;
   /**
    * Called when someone clicks a body other than the one in focus, or grabs an attached
    * viewpoint (which hands over to orbiting the body it looks at).

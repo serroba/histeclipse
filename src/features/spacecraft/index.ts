@@ -24,7 +24,8 @@ import type { Feature, FeatureContext } from '../feature';
 import type { Geocentric } from './approximatePaths';
 import { craftInFlight } from './craftLayer';
 import { craftCards } from './craftPictures';
-import { withModel } from './craftModels';
+import { withGoTo, withModel } from './craftModels';
+import { craftModel, focusedCraft, pointsBeside } from './craftModelLayer';
 import {
   craftNow,
   craftRoutes,
@@ -118,15 +119,56 @@ function drawnIn(
   return craft.at === null || bodyOfWorld(craft.at) !== state.focus;
 }
 
+/** The record, its missions and where each craft is: loaded the first time the layer is on. */
+interface Loaded {
+  readonly craft: readonly Craft[];
+  readonly missions: readonly Mission[];
+  readonly wheres: CraftWheres;
+}
+
+/**
+ * Asks for the record and the paths, once; again only after a failure. `done` has them, and the
+ * moment is shown again.
+ */
+function loader(
+  context: FeatureContext,
+  then: Geocentric,
+  done: (loaded: Loaded) => void,
+): () => void {
+  let asked = false;
+  return () => {
+    if (asked) return;
+    asked = true;
+    Promise.all([
+      loadSpacecraft(`${context.base}data/spacecraft.json`, context.fetchJson),
+      loadSpacecraftPaths(`${context.base}data/spacecraft-paths.json`, context.fetchJson),
+    ]).then(
+      ([record, paths]) => {
+        done({
+          craft: [...record.craft, ...record.aboutEarth],
+          missions: missions(record.craft, today()),
+          wheres: craftWheres(paths, then),
+        });
+        context.refresh();
+      },
+      (error: unknown) => {
+        asked = false;
+        context.notify(`Could not load the spacecraft: ${errorMessage(error)}`);
+      },
+    );
+  };
+}
+
 export const spacecraftFeature: Feature = {
   id: 'spacecraft',
   picks: 'craft',
   // On or off with its layer; a mission followed, or every craft.
-  watches: (state) => [state.layers, state.mission, closeOnEarth(state)],
+  watches: (state) => [state.layers, state.mission, state.craft, closeOnEarth(state)],
   mount(context) {
     const drawn = context.globe.addLayer(craftInFlight);
     const routes = context.globe.addLayer(missionRoutes);
     const sites = context.globe.addLayer(landingSites);
+    const model = context.globe.addLayer(craftModel);
     // Kept from frame to frame: the trails ask for the same places as the time plays (#702).
     const where = {
       then: remembered(geocentric(context)),
@@ -135,12 +177,12 @@ export const spacecraftFeature: Feature = {
     };
     /** The mission followed, by its id, as last shown. */
     let followed: string | null = null;
-    let loaded: {
-      readonly craft: readonly Craft[];
-      readonly missions: readonly Mission[];
-      readonly wheres: CraftWheres;
-    } | null = null;
-    let asked = false;
+    let loaded: Loaded | null = null;
+    const load = loader(context, where.then, (all) => {
+      loaded = all;
+    });
+    /** The craft the camera is on (#796), as last shown. */
+    let on: string | null = null;
     /** From a craft (#731): its mission's journey, unless that is the one followed. */
     function follow(own: Mission): RelatedStep[] {
       const start = own.craft[0]?.launch;
@@ -157,7 +199,12 @@ export const spacecraftFeature: Feature = {
     const open = craftCards(context, (id) => {
       const craft = loaded?.craft.find((each) => each.id === id);
       if (craft === undefined || loaded === null) return null;
-      const card = withModel(craftCard(craft, loaded.wheres.approximate(craft)), craft.id);
+      const card = withGoTo(
+        withModel(craftCard(craft, loaded.wheres.approximate(craft)), craft.id),
+        craft.id,
+        on,
+        context,
+      );
       const own = missionNamed(loaded.missions, craft.id);
       return own === null ? card : { ...card, related: follow(own) };
     });
@@ -170,36 +217,24 @@ export const spacecraftFeature: Feature = {
           drawn.update(null);
           routes.update(null);
           sites.update(null);
+          model.update(null);
           return;
         }
         if (context.ephemerides.planets() === null) void context.ephemerides.loadPlanets();
         if (loaded === null) {
-          if (asked) return;
-          asked = true;
-          Promise.all([
-            loadSpacecraft(`${context.base}data/spacecraft.json`, context.fetchJson),
-            loadSpacecraftPaths(`${context.base}data/spacecraft-paths.json`, context.fetchJson),
-          ]).then(
-            ([record, paths]) => {
-              loaded = {
-                craft: [...record.craft, ...record.aboutEarth],
-                missions: missions(record.craft, today()),
-                wheres: craftWheres(paths, where.then),
-              };
-              context.refresh();
-            },
-            (error: unknown) => {
-              asked = false;
-              context.notify(`Could not load the spacecraft: ${errorMessage(error)}`);
-            },
-          );
+          load();
           return;
         }
         const mission =
           state.mission === null ? null : missionNamed(loaded.missions, state.mission);
         followed = mission?.id ?? null;
         const shown = shownAt(loaded, where, mission, jdTT);
-        drawn.update(shown.craft.filter((each) => drawnIn(state, each)));
+        // The craft the camera is on is drawn as its model, close up, not its point (#796).
+        const focused = focusedCraft(state.craft, shown.craft);
+        on = focused === null ? null : state.craft;
+        model.update(focused);
+        const inView = shown.craft.filter((each) => drawnIn(state, each));
+        drawn.update(pointsBeside(focused, inView, state.camera.distance));
         routes.update(shown.routes);
         sites.update({
           body: state.focus,

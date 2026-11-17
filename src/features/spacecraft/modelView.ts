@@ -8,7 +8,6 @@
 import {
   AmbientLight,
   DirectionalLight,
-  Mesh,
   PerspectiveCamera,
   Scene,
   Sphere,
@@ -19,6 +18,8 @@ import {
   type Object3D,
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+import { releaseModel } from './releaseModel';
 
 /** What the view asks of a renderer: WebGL's, or a stand-in in the unit tests. */
 export interface ModelRenderer {
@@ -41,16 +42,6 @@ export interface ModelViewOptions {
 
 function webgl(): ModelRenderer {
   return new WebGLRenderer({ antialias: true, alpha: true });
-}
-
-/** Every geometry and material under `root`, given back. */
-function release(root: Object3D): void {
-  root.traverse((part) => {
-    if (!(part instanceof Mesh)) return;
-    const mesh = part as Mesh;
-    mesh.geometry.dispose();
-    for (const material of [mesh.material].flat()) material.dispose();
-  });
 }
 
 /** The camera's first place: in front, to one side and above, the whole model in view. */
@@ -80,7 +71,7 @@ export function mountModelView(
   try {
     renderer = (options.renderer ?? webgl)();
   } catch {
-    release(model);
+    releaseModel(model);
     host.textContent = 'This browser could not draw the model.';
     return () => undefined;
   }
@@ -138,7 +129,7 @@ export function mountModelView(
     renderer.setAnimationLoop(null);
     watcher.disconnect();
     controls.dispose();
-    release(model);
+    releaseModel(model);
     renderer.dispose();
     renderer.forceContextLoss();
     canvas.remove();

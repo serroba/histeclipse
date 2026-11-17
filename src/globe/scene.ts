@@ -6,7 +6,7 @@
 
 import { Playback } from './playback';
 import { createC14Glow } from './c14Glow';
-import type { IUniform, Quaternion } from 'three';
+import type { IUniform } from 'three';
 import {
   LinearFilter,
   Mesh,
@@ -24,10 +24,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import type { Body, GlobeCamera } from '../state/viewState';
 import { MOON_RADIUS_EARTH_RADII, SUN_RADIUS_EARTH_RADII } from './spaceFrame';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
-import type { NamedBody } from '../data/planetNames';
-import type { MoonPlanet } from '../astro/moonOrbits';
 import { ORBITING } from '../astro/planets';
-import { planetRadius } from './planetLook';
 import { isMoonBody, moonsInView } from './moonLook';
 import type { GlobeLayer, LayerHost } from './layerHost';
 import { createMoonMeshes } from './moonMeshes';
@@ -47,6 +44,7 @@ import { createEarthMeshes, MOON_RGB, plainTexture } from './earthMesh';
 import { EarthOverlays } from './earthOverlays';
 import { CameraRig } from './cameraRig';
 import { delegate } from './delegate';
+import { focusFrames, type Focus } from './focus';
 import { Stage } from '../stage/stage';
 import { tileLimits } from './tileLimits';
 import './spaceMarkers.css';
@@ -58,7 +56,7 @@ export function createGlobe(
     readonly camera: GlobeCamera;
     readonly textureUrl: string;
     readonly moonTextureUrl: string;
-    readonly focus: Body;
+    readonly focus: Focus;
     /** The features' parts of the Earth shader (#379), built into it once. */
     readonly earthParts?: readonly EarthPart[];
   },
@@ -247,22 +245,27 @@ export function createGlobe(
     picking.requestBody(body);
   }
 
-  function bodyFrame(body: Body): { position: Vector3; rotation: Quaternion } {
-    return space.frame(body);
-  }
-
-  function bodyReady(body: Body): boolean {
-    if (isMoonBody(body)) return moonSystems.ready();
-    return body === 'earth' || bodyMeshes[body].visible;
-  }
+  // The bodies, and the craft the spacecraft layer holds (#796): a camera on it rides along.
+  const frames = focusFrames(
+    {
+      frame: (body) => space.frame(body),
+      ready: (body) =>
+        isMoonBody(body) ? moonSystems.ready() : body === 'earth' || bodyMeshes[body].visible,
+    },
+    (move) => {
+      rig.beforeBodiesMove(null);
+      move();
+      rig.afterBodiesMove();
+      stage.invalidate();
+    },
+  );
 
   const rig = new CameraRig({
     camera,
     container,
     controls: new OrbitControls(camera, renderer.domElement),
     world: {
-      frame: bodyFrame,
-      ready: bodyReady,
+      ...frames,
       place: () => pin.place(),
       moonVisible: () => moon.visible,
       invalidate: () => {
@@ -312,25 +315,6 @@ export function createGlobe(
     },
   });
 
-  /** Where a named body is, how it is turned, and its radius, in the scene's units. */
-  function namedFrame(body: NamedBody | MoonPlanet): {
-    position: Vector3;
-    rotation: Quaternion;
-    radius: number;
-    shown: boolean;
-  } {
-    if (body === 'moon') {
-      return { ...bodyFrame('moon'), radius: MOON_RADIUS_EARTH_RADII, shown: moon.visible };
-    }
-    const mesh = bodyMeshes[body];
-    return {
-      position: mesh.position,
-      rotation: mesh.quaternion,
-      radius: planetRadius(body),
-      shown: mesh.visible,
-    };
-  }
-
   /** Draw the paths of the moons of the planet in view, or of the moon in view's planet. */
   function showMoonPaths(): void {
     moonSystems.showPaths(moonsInView(rig.focus));
@@ -348,12 +332,13 @@ export function createGlobe(
     camera,
     container,
     focus: () => rig.focus,
-    bodyFrame: namedFrame,
+    bodyFrame: (body) => space.named(body),
     sunPosition: () => sun.position,
     spinAxis,
     onEarth: earth,
     moonPosition: (moon, target) => moonSystems.meshes[moon].getWorldPosition(target),
     requestBody,
+    holdCraft: frames.hold,
     spaceToScene: () => space.spaceToScene(),
     requestRender() {
       stage.invalidate();
@@ -374,6 +359,12 @@ export function createGlobe(
     showSunImage(image) {
       sunMeshes.showImage(image);
       stage.invalidate();
+    },
+    drawOver(drawn, seenBy) {
+      renderer.autoClear = false;
+      renderer.clearDepth();
+      renderer.render(drawn, seenBy);
+      renderer.autoClear = true;
     },
     renderToTexture(target, drawn, seenBy) {
       renderer.setRenderTarget(target);
