@@ -4,8 +4,8 @@
  * below saying what it is, where the wave is, and how far the drawing is from the truth; and
  * controls to pause, start again and close. The 3D view's code is loaded the first time it opens.
  *
- * The wave is a stand-in for now, a chirp with GW150914's numbers (`strain.ts`); the measured
- * signal comes with #830.
+ * The wave is GW150914 as LIGO measured it (#830): its file is fetched with the view's code, and
+ * the stage opens its card, the event's facts as the discovery paper gives them.
  */
 
 import type { Globe } from '../../globe/globe';
@@ -15,7 +15,11 @@ import { element } from '../../ui/dom';
 import { createStoryPlay } from '../../ui/transport';
 import { errorMessage } from '../../util/errors';
 import type { MountedPart, PartContext } from '../part';
-import { chirp, GW150914_STAND_IN } from './strain';
+import type { MarkerCardContent } from '../../ui/markerCard';
+import { getJson } from '../../util/fetchJson';
+import { GW150914_CARD } from './eventCard';
+import { GW150914_SCHEMA, measuredWave } from './measured';
+import type { Waveform } from './strain';
 import type { WaveView, WaveViewOptions } from './waveView';
 import { SCALE_NOTE } from './wavePlay';
 import './wave.css';
@@ -23,6 +27,8 @@ import './wave.css';
 /** What the wave asks of the rest of the page. */
 export interface WaveContext extends PartContext {
   readonly globe: Pick<Globe, 'controlShower'>;
+  /** Open a card with an event's facts. */
+  readonly showCard: (card: MarkerCardContent) => void;
   /** Loads the 3D view: its own chunk, or a stand-in in the tests. */
   readonly loadView?: () => Promise<{
     mountWaveView(host: HTMLElement, options: WaveViewOptions): WaveView;
@@ -45,6 +51,7 @@ function createStage(
     readonly onPlay: (playing: boolean) => void;
     readonly restart: () => void;
     readonly close: () => void;
+    readonly about: () => void;
   },
 ): Stage {
   const moment = element('p', { class: 'wave-moment', 'data-testid': 'wave-moment' });
@@ -69,6 +76,7 @@ function createStage(
       { class: 'wave-controls' },
       play.button,
       button('Start again', controls.restart),
+      button('About GW150914', controls.about),
       context.why('gravitationalWaves', 'Gravitational waves'),
       button('Close', controls.close),
     ),
@@ -80,6 +88,20 @@ function createStage(
     controls.close();
   });
   return { root, moment, play };
+}
+
+/** The measured wave, fetched the first time it is asked for and kept; asked again if it failed. */
+function measuredLoader(context: PartContext): () => Promise<Waveform> {
+  let measured: Promise<Waveform> | null = null;
+  return () => {
+    measured ??= getJson(context.fetchJson, `${context.base}data/gw150914.json`, GW150914_SCHEMA)
+      .then(measuredWave)
+      .catch((error: unknown) => {
+        measured = null;
+        throw error;
+      });
+    return measured;
+  };
 }
 
 export function mountWave(context: WaveContext): MountedPart {
@@ -103,7 +125,11 @@ export function mountWave(context: WaveContext): MountedPart {
       view?.setPlaying(true);
     },
     close,
+    about: () => {
+      context.showCard(GW150914_CARD);
+    },
   });
+  const loadWave = measuredLoader(context);
 
   let view: WaveView | null = null;
   /** The wave open, or being opened; null when closed. */
@@ -119,11 +145,11 @@ export function mountWave(context: WaveContext): MountedPart {
     play.button.hidden = stillness;
     play.set(!stillness);
     moment.textContent = '';
-    loadView()
-      .then((loaded) => {
+    Promise.all([loadView(), loadWave()])
+      .then(([loaded, measuredWave]) => {
         if (shown !== wave || view !== null) return;
         view = loaded.mountWaveView(container, {
-          wave: chirp(GW150914_STAND_IN),
+          wave: measuredWave,
           stillness,
           covered: () => stage.offsetHeight + 24,
           onMoment: (text) => {

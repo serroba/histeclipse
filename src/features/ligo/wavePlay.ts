@@ -74,7 +74,9 @@ export function momentText(wave: Waveform, t: number): string {
   if (t < wave.start) return 'Space at rest: the wave has not arrived.';
   if (t > wave.end) return 'Space at rest again: the wave has passed.';
   const hertz = Math.round(wave.frequency(t));
-  if (t < -0.0005) return `${(-t).toFixed(3)} s before the merger · ${String(hertz)} Hz`;
-  if (t <= 0.0005) return `The merger · ${String(hertz)} Hz`;
-  return `Ringing down, ${t.toFixed(3)} s after · ${String(hertz)} Hz`;
+  // Where the wave is too faint for its pitch to be read, none is given.
+  const pitch = hertz > 0 ? ` · ${String(hertz)} Hz` : '';
+  if (t < -0.0005) return `${(-t).toFixed(3)} s before the merger${pitch}`;
+  if (t <= 0.0005) return `The merger${pitch}`;
+  return `Ringing down, ${t.toFixed(3)} s after${pitch}`;
 }
