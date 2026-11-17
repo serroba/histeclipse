@@ -246,11 +246,12 @@ def bound(text: str, side: str) -> str | None:
 def spacecraft_ids(text: str) -> dict[str, str]:
     """Read Horizons's list of major bodies: each spacecraft's COSPAR designation to its ID.
 
-    Spacecraft have negative IDs; the designation column holds the COSPAR one.
+    Spacecraft have negative IDs; the designation column holds the COSPAR one. A name too
+    long for its column runs straight into it, with no space between: "(spacecr2021-130A".
     """
     ids: dict[str, str] = {}
     for line in text.splitlines():
-        match = re.match(r"\s*(-\d+)\s+.*?\s((?:19|20)\d\d-\d{3}[A-Z]{1,3})\b", line)
+        match = re.match(r"\s*(-\d+)\s+.*?(?<![\d-])((?:19|20)\d\d-\d{3}[A-Z]{1,3})\b", line)
         if match is not None:
             _ = ids.setdefault(match.group(2), match.group(1))
     return ids
