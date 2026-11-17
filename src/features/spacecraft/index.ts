@@ -25,7 +25,7 @@ import type { Geocentric } from './approximatePaths';
 import { craftInFlight } from './craftLayer';
 import { craftCards } from './craftPictures';
 import { withGoTo, withModel } from './craftModels';
-import { craftModel, focusedCraft, pointsBeside } from './craftModelLayer';
+import { craftModel, focusedCraft, pointsBeside, seesModel } from './craftModelLayer';
 import {
   craftNow,
   craftRoutes,
@@ -102,9 +102,14 @@ function shownAt(
 /** From further off than this, in Earth's radii, a craft in Earth orbit sits on Earth. */
 const CLOSE_ON_EARTH = 25;
 
-/** Whether Earth is close up: its orbiting craft can be told from it. */
+/**
+ * Whether Earth is close up: its orbiting craft can be told from it. On a craft about Earth
+ * (#796), whose own few metres the distance is in, they are drawn too.
+ */
 function closeOnEarth(state: ViewState): boolean {
-  return state.focus === 'earth' && state.camera.distance <= CLOSE_ON_EARTH;
+  return (
+    state.focus === 'earth' && (state.craft !== null || state.camera.distance <= CLOSE_ON_EARTH)
+  );
 }
 
 /**
@@ -163,7 +168,14 @@ export const spacecraftFeature: Feature = {
   id: 'spacecraft',
   picks: 'craft',
   // On or off with its layer; a mission followed, or every craft.
-  watches: (state) => [state.layers, state.mission, state.craft, closeOnEarth(state)],
+  // On a craft, whether it is close enough to be its model, not its point (#796).
+  watches: (state) => [
+    state.layers,
+    state.mission,
+    state.craft,
+    seesModel(state.craft, state.camera.distance),
+    closeOnEarth(state),
+  ],
   mount(context) {
     const drawn = context.globe.addLayer(craftInFlight);
     const routes = context.globe.addLayer(missionRoutes);

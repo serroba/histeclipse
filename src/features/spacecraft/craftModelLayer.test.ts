@@ -67,10 +67,9 @@ function fakeHost(sun = new Vector3(0, 0, -23_455)) {
 }
 
 /** A model of a box 20 m long, its parts given back when let go. */
-function boxModel(made: Mesh[] = [], away: 'y' | 'z' = 'y'): SceneModel {
+function boxModel(made: Mesh[] = []): SceneModel {
   return {
     radius: 10,
-    away,
     about: 'earth',
     pointing: 'Any way',
     load: () =>
@@ -189,7 +188,7 @@ describe('the craft the camera is on, as a model (#796)', () => {
       expect(made).toHaveLength(1);
     });
     const given = vi.spyOn(made[0]?.geometry ?? new BoxGeometry(), 'dispose');
-    layer.update({ id: 'S20580', km: [7000, 0, 0], model: boxModel(made, 'z') });
+    layer.update({ id: 'S20580', km: [7000, 0, 0], model: boxModel(made) });
     // The first is not drawn for the second while the second's parts come.
     expect(frame()).toBeUndefined();
     await vi.waitFor(() => {

@@ -142,6 +142,9 @@ test('Webb’s card goes to it: the camera orbits its model at L2, the link keep
     await expect(globe).toHaveAttribute('data-distance', '4.00');
     // Close up its point and name give way to the model.
     await expect(webb).toHaveCount(0);
+    // The rail offers only the way back: no distance, no stops.
+    await expect(page.getByRole('button', { name: 'Back to Earth' })).toBeVisible();
+    await expect(page.getByTestId('zoom-readout')).toBeHidden();
   });
   await test.step('When the page is loaded again from its link, Then it opens on Webb', async () => {
     await page.reload();
@@ -157,7 +160,7 @@ test('Webb’s card goes to it: the camera orbits its model at L2, the link keep
   expect(problems).toEqual([]);
 });
 
-test('Hubble goes round Earth close up, its card saying how its path is drawn and showing its pictures', async ({
+test('Hubble goes round Earth close up, its card saying how its path is drawn, showing its pictures and going to it', async ({
   page,
 }) => {
   test.slow();
@@ -193,7 +196,16 @@ test('Hubble goes round Earth close up, its card saying how its path is drawn an
       .toBe(1280);
     await page.keyboard.press('Escape');
     await expect(view).toBeHidden();
-    await page.keyboard.press('Escape');
+  });
+  await test.step('When they go to it from its card, Then the camera orbits its model, 615 km over Earth (#796)', async () => {
+    const card = page.getByTestId('marker-card');
+    await expect(card).toContainText('solar arrays square to the Sun');
+    await card.getByRole('button', { name: 'Go to it' }).click();
+    const globe = page.getByTestId('globe');
+    await expect(globe).toHaveAttribute('data-framed', 'craft:s20580', { timeout: 30_000 });
+    await expect(globe).toHaveAttribute('data-craft-model', 's20580', { timeout: 30_000 });
+    await page.getByRole('button', { name: 'Back to Earth' }).click();
+    await expect(globe).toHaveAttribute('data-framed', 'earth', { timeout: 30_000 });
   });
   await test.step('When the view is five years before it flew, Then it is not there', async () => {
     await page.goto('./?focus=earth&cam=-30,60,12&layers=spacecraft&t=1985-05-20T12:00Z');

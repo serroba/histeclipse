@@ -247,10 +247,13 @@ export function createZoomRail(handlers: {
     readout,
   );
   let zooming = false;
+  /** On a craft (#796): only the way back, no stops, no distance. */
+  let onCraft = false;
   // Shown while either part has something to offer.
   function sync(): void {
     zoom.hidden = !zooming;
-    readout.hidden = !zooming;
+    readout.hidden = !zooming || onCraft;
+    for (const part of [zoomIn, track, zoomOut]) part.hidden = onCraft;
     root.hidden = !zooming && orbits.hidden === true && whyHere.hidden === true;
   }
   zoomIn.addEventListener('click', () => {
@@ -286,11 +289,11 @@ export function createZoomRail(handlers: {
     },
     render(view) {
       zooming = view !== null;
+      onCraft = view?.craft === true;
       sync();
       if (view === null) return;
-      for (const part of [zoomIn, track, zoomOut, readout]) part.hidden = view.craft === true;
-      home.hidden = view.body === 'earth' && view.craft !== true;
-      if (view.craft === true) return;
+      home.hidden = view.body === 'earth' && !onCraft;
+      if (onCraft) return;
       if (view.body !== scale.body || view.near !== scale.near) {
         scale = railScale(view.body, view.near);
         placeStops();

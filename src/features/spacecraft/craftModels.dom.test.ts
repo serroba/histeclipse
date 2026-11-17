@@ -2,13 +2,14 @@
 import { Group, Vector3 } from 'three';
 import { describe, expect, it, vi } from 'vitest';
 
-import { lazyModel, modelOf } from './craftModels';
+import { lazyModel, modelOf, sceneModelOf } from './craftModels';
 
 describe('the craft with models (#797)', () => {
-  it('Given Webb, Then it has a model, the same each time; other craft have none', () => {
+  it('Given Webb and Hubble, Then each has a model, the same each time; other craft have none', () => {
     expect(modelOf('D01093')).toBeDefined();
     expect(modelOf('D01093')).toBe(modelOf('D01093'));
-    expect(modelOf('S20580')).toBeUndefined();
+    expect(modelOf('S20580')?.label).toContain('Hubble Space Telescope in 3D');
+    expect(modelOf('D00273')).toBeUndefined();
   });
 
   it('Given its parts have come, Then it is mounted, and stopping stops it', async () => {
@@ -58,11 +59,10 @@ describe('the craft with models (#797)', () => {
     });
   });
 
-  it('Given Webb’s own parts, Then they load and draw it', async () => {
-    const webb = modelOf('D01093');
+  it.each(['D01093', 'S20580'])('Given %s’s own parts, Then they load and draw it', async (id) => {
     const host = document.createElement('div');
     // happy-dom has no WebGL: the view says so, which shows the real parts were loaded.
-    const stop = webb?.mount(host);
+    const stop = modelOf(id)?.mount(host);
     await vi.waitFor(
       () => {
         expect(host.textContent).toBe('This browser could not draw the model.');
@@ -71,4 +71,12 @@ describe('the craft with models (#797)', () => {
     );
     stop?.();
   });
+
+  it.each(['d01093', 's20580'])(
+    'Given %s in the scene, Then its parts load and build it',
+    async (id) => {
+      const build = await sceneModelOf(id)?.load();
+      expect(build?.().children.length).toBeGreaterThan(2);
+    },
+  );
 });

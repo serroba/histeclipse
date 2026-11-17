@@ -329,6 +329,13 @@
     "url": "https://doi.org/10.1002/qj.3803",
     "licence": "CC BY 4.0"
   },
+  "esaHubbleFactSheet": {
+    "name": "ESA/Hubble: Hubble’s fact sheet",
+    "kind": "reference",
+    "cite": "ESA/Hubble, Hubble fact sheet: the telescope’s size (13.2 m long, 4.2 m across), its 2.4 m primary mirror and its two solar panels, each 2.45 m by 7.56 m",
+    "url": "https://esahubble.org/about/general/fact_sheet/",
+    "licence": "CC BY 4.0"
+  },
   "esaHubblePictures": {
     "name": "ESA/Hubble: pictures by the Hubble Space Telescope",
     "kind": "imagery",
