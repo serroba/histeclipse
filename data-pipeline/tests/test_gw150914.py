@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
@@ -15,6 +15,9 @@ from histeclipse_pipeline.gw150914 import (
     quarter_cycle_on,
     resampled,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 STEP = 1 / 16384
 
