@@ -1,0 +1,91 @@
+/* A gravitational wave passing (#829): the 3D view over the globe, under its stage. */
+
+.wave-3d {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  background: #02040a;
+  cursor: grab;
+  touch-action: none;
+}
+
+.wave-3d:active {
+  cursor: grabbing;
+}
+
+.wave-3d[hidden],
+.wave-stage[hidden],
+.wave-control[hidden] {
+  display: none;
+}
+
+.wave-3d canvas {
+  display: block;
+}
+
+/* Its stage: what it is, where the wave is, how far from the truth, and the controls. */
+.wave-stage {
+  position: absolute;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 6;
+  display: grid;
+  gap: 6px;
+  width: min(600px, calc(100% - 32px));
+  padding: 12px 14px;
+  transform: translateX(-50%);
+  border: 1px solid rgb(255 200 97 / 0.45);
+  border-radius: 12px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+}
+
+.wave-title {
+  margin: 0;
+  font-size: 16px;
+}
+
+.wave-about,
+.wave-scale {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--ink-muted);
+}
+
+.wave-moment {
+  min-height: 1.3em;
+  margin: 0;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.wave-scale {
+  color: #ffc861;
+}
+
+.wave-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wave-control {
+  flex: 1;
+  min-width: 64px;
+  min-height: 44px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.05);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* A phone keeps the ring in view: the longer words give way to the moment and the scale. */
+@media (max-width: 520px) and (max-height: 900px) {
+  .wave-about {
+    display: none;
+  }
+}

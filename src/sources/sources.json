@@ -6,6 +6,13 @@
     "url": "https://doi.org/10.7910/DVN/FFIDCW",
     "licence": "CC0 1.0"
   },
+  "abbott2016": {
+    "name": "Abbott et al. 2016 (LIGO and Virgo)",
+    "kind": "paper",
+    "cite": "Abbott, B. P. et al. (LIGO Scientific Collaboration and Virgo Collaboration) (2016), Observation of Gravitational Waves from a Binary Black Hole Merger, Physical Review Letters 116, 061102: GW150914, seen on 14 September 2015 at 09:50:45 UTC by both LIGO detectors; its frequency sweeping up from 35 to 150 Hz in about 8 cycles over 0.2 s, a peak strain of 1.0 × 10⁻²¹, two black holes of about 36 and 29 Suns 410 Mpc away merging into one of 62 that rang down near 250 Hz",
+    "url": "https://doi.org/10.1103/PhysRevLett.116.061102",
+    "licence": "CC BY 3.0"
+  },
   "allwood2006": {
     "name": "Allwood et al. 2006",
     "kind": "paper",

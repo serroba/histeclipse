@@ -482,5 +482,15 @@
     "title": "Where the ocean gained heat",
     "what": "The heat the water column under each square metre of sea gained per second, in W/m², as a trend over 1960–2025 (the top 700 m, or the top 2,000 m) or over the Argo years 2005–2025 (the top 2,000 m), from IAP v4.2's gridded ocean heat content. It is heat content, not temperature, so it has its own scale: blue where heat was lost, orange where it was gained, faded where the trend is not significant at the 10% level. Before the Argo floats (from about 2005) the deep layer and the Southern Ocean were sparsely measured and are filled from model covariances. The 0–2000 m maps include the 0–700 m layer.",
     "sources": ["iap2024"]
+  },
+  "gravitationalWaves": {
+    "title": "Gravitational waves",
+    "what": "How a gravitational wave stretches and squeezes space as it passes: a ring of free masses, and the space about it, as GW150914 came through, the first wave ever heard, on 14 September 2015.",
+    "sources": ["abbott2016"],
+    "how": "A gravitational wave stretches space across its path one way while squeezing it the other, then the other way round, and moves nothing along its path. To first order, a wave coming along z moves a free mass at (x, y) by ½(h₊x + h×y) across and ½(h×x − h₊y) up, where h₊ and h× are its two polarisations (the plus and the cross), taken at the moment the wave reaches it; areas are kept. The ring and its grid are moved by exactly that. The wave is a stand-in until LIGO’s measured signal is drawn: a chirp worked out for two black holes of GW150914’s chirp mass, about 30 Suns, from 35 Hz to the merger at 150 Hz (about 8 cycles in 0.2 s, as the paper reports), its strain rising to the measured peak of 1.0 × 10⁻²¹, then the ringing of the black hole they made, near 250 Hz, dying away in about 4 ms. It is drawn face on, where both polarisations are equally strong. Behind the ring, sheets of points show the space the wave has crossed, each met by it a little earlier: the wave is drawn far slower than light, so that its wavelength (about 3,000 km at 100 Hz) fits the picture.",
+    "certainty": [
+      "Stretched 4 × 10²⁰ times and slowed 100 times, to be seen: over LIGO’s 4 km arms the real change was about 4 × 10⁻¹⁸ m, a four-hundredth of a proton’s width.",
+      "The chirp is the simplest (Newtonian) one for the measured chirp mass, not the relativity worked out for GW150914; the merger and ringdown are joined by eye. LIGO’s measured signal is to replace it."
+    ]
   }
 }
