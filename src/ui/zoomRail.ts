@@ -246,10 +246,8 @@ export function createZoomRail(handlers: {
     whyHere,
     readout,
   );
-  let zooming = false;
-  /** On a craft (#796): only the way back, no stops, no distance. */
-  let onCraft = false;
-  // Shown while either part has something to offer.
+  // Zooming, or on a craft (#796), with only the way back; shown while either part offers some.
+  let [zooming, onCraft] = [false, false];
   function sync(): void {
     zoom.hidden = !zooming;
     readout.hidden = !zooming || onCraft;
@@ -293,7 +291,6 @@ export function createZoomRail(handlers: {
       sync();
       if (view === null) return;
       home.hidden = view.body === 'earth' && !onCraft;
-      if (onCraft) return;
       if (view.body !== scale.body || view.near !== scale.near) {
         scale = railScale(view.body, view.near);
         placeStops();
