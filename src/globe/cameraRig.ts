@@ -5,11 +5,12 @@
  */
 
 import { type PerspectiveCamera, Quaternion, Vector3 } from 'three';
-import { BODY_RADIUS } from './bodyRadius';
+import { isCraft, nearest, nearPlane, type Focus } from './focus';
 import {
   attachedLivePose,
   easeInOut,
   focusPose,
+  orbitSettings,
   turned,
   type CameraWorld,
   type OrbitLike,
@@ -48,7 +49,7 @@ export interface CameraRigOptions {
   readonly container: HTMLElement;
   readonly controls: OrbitLike;
   readonly world: CameraWorld;
-  readonly focus: Body;
+  readonly focus: Focus;
   /** Where the camera starts, relative to `focus`. */
   readonly start: GlobeCamera;
   /** Whether Earth's tiles let the camera come closest (#578). */
@@ -58,7 +59,7 @@ export interface CameraRigOptions {
 export class CameraRig implements StagePart {
   #viewpoint: Viewpoint = 'free';
   #pendingViewpoint: Viewpoint | null = null;
-  #focus: Body;
+  #focus: Focus;
   /** A focus asked for before its body loaded; the camera is placed there once it has. */
   #pendingFocus: boolean;
   /** Where the camera orbits, relative to the body in focus; kept while a viewpoint is attached. */
@@ -94,8 +95,9 @@ export class CameraRig implements StagePart {
     this.#setUpControls();
   }
 
+  /** The body the view speaks of: the one in focus, or the one the craft in focus is about. */
   get focus(): Body {
-    return this.#focus;
+    return this.#world.body(this.#focus);
   }
 
   get viewpoint(): Viewpoint {
@@ -114,7 +116,8 @@ export class CameraRig implements StagePart {
     if (this.#zoom !== null && this.#view === null) this.#stepZoom(now, this.#zoom);
     const controls = this.#controls;
     const distance = this.#camera.position.distanceTo(controls.target);
-    const speeds = controlSpeeds(distance, BODY_RADIUS[this.#focus]);
+    const speeds = controlSpeeds(distance, this.#world.radius(this.#focus));
+    nearPlane(this.#camera, Math.min(distance, this.#camera.position.distanceTo(this.#lookTarget)));
     controls.zoomSpeed = speeds.zoom;
     controls.rotateSpeed = speeds.rotate;
     // update() keeps damping going after the pointer is released; it reports movement via 'change'.
@@ -122,14 +125,16 @@ export class CameraRig implements StagePart {
     return flying || moved;
   }
 
-  setFocus(body: Body): void {
-    if (body === this.#focus && this.#viewpoint === 'free') return;
-    this.#flyToFocus(body);
+  setFocus(focus: Focus): void {
+    if (focus === this.#focus && this.#viewpoint === 'free') return;
+    this.#flyToFocus(focus);
   }
 
   setViewpoint(next: Viewpoint): void {
     if (next === 'free') this.#pendingViewpoint = null;
     if (next === this.#viewpoint) return;
+    // Attached viewpoints stand on bodies: not on a craft.
+    if (next !== 'free' && isCraft(this.#focus)) return;
     if (next !== 'free' && (!this.#world.moonVisible() || !this.#world.ready(this.#focus))) {
       this.#pendingViewpoint = next;
       return;
@@ -152,7 +157,8 @@ export class CameraRig implements StagePart {
   zoomTo(distance: number): void {
     if (this.#viewpoint !== 'free') return;
     const { minDistance, maxDistance, target } = this.#controls;
-    const to = Math.min(Math.max(distance * BODY_RADIUS[this.#focus], minDistance), maxDistance);
+    const radius = this.#world.radius(this.#focus);
+    const to = Math.min(Math.max(distance * radius, minDistance), maxDistance);
     this.#zoom = { from: this.#camera.position.distanceTo(target), to, start: null };
     this.#world.invalidate();
   }
@@ -246,7 +252,7 @@ export class CameraRig implements StagePart {
   onChange(listener: (camera: GlobeCamera) => void): () => void {
     this.#listeners.add(listener);
     // A link nearer than this device lets the camera come (#578): say where it stopped.
-    const held = this.#focusCamera.distance < nearestDistance(this.#focus, this.#tiled);
+    const held = this.#focusCamera.distance < nearest(this.#focus, this.#tiled);
     if (held && this.#viewpoint === 'free' && this.#world.ready(this.#focus)) {
       listener(this.#relativeCamera());
     }
@@ -259,13 +265,7 @@ export class CameraRig implements StagePart {
 
   #setUpControls(): void {
     const controls = this.#controls;
-    controls.enablePan = false;
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
-    controls.rotateSpeed = 0.5;
-    controls.zoomSpeed = 0.8;
-    controls.minDistance = nearestDistance('earth', this.#tiled);
-    controls.maxDistance = CAMERA_DISTANCE_RANGE.max;
+    orbitSettings(controls, nearestDistance('earth', this.#tiled));
     // Grabbing the globe cancels an automatic flight.
     controls.addEventListener('start', () => {
       this.#turn = null;
@@ -286,7 +286,7 @@ export class CameraRig implements StagePart {
       .clone()
       .sub(position)
       .applyQuaternion(rotation.clone().invert())
-      .divideScalar(BODY_RADIUS[this.#focus]);
+      .divideScalar(this.#world.radius(this.#focus));
     return cameraFromPosition([local.x, local.y, local.z]);
   }
 
@@ -303,7 +303,7 @@ export class CameraRig implements StagePart {
   #livePose(): CameraPose {
     const viewpoint = this.#viewpoint;
     if (viewpoint === 'free') return focusPose(this.#world, this.#focus, this.#focusCamera);
-    return attachedLivePose(this.#world, viewpoint, this.#focus);
+    return attachedLivePose(this.#world, viewpoint, this.focus);
   }
 
   #applyPose(pose: CameraPose): void {
@@ -316,9 +316,9 @@ export class CameraRig implements StagePart {
   /** Hand the camera to the orbit controls, centred on the body in focus. */
   #orbitFocus(): void {
     const controls = this.#controls;
-    const radius = BODY_RADIUS[this.#focus];
+    const radius = this.#world.radius(this.#focus);
     controls.target.copy(this.#world.frame(this.#focus).position);
-    controls.minDistance = nearestDistance(this.#focus, this.#tiled) * radius;
+    controls.minDistance = nearest(this.#focus, this.#tiled) * radius;
     controls.maxDistance = Math.min(CAMERA_DISTANCE_RANGE.max * radius, CAMERA_DISTANCE_RANGE.max);
     controls.enabled = true;
     controls.update();
@@ -328,7 +328,7 @@ export class CameraRig implements StagePart {
    * Centre on a body and fly there, arriving a few radii out on the side facing the camera, or
    * for the Sun on the side facing Earth: the side SDO saw last, with the corona around it.
    */
-  #flyToFocus(body: Body): void {
+  #flyToFocus(body: Focus): void {
     const from = this.#currentPose();
     const { position, rotation } = this.#world.frame(body);
     const toward = (body === 'sun' ? new Vector3() : this.#camera.position.clone())

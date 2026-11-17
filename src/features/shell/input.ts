@@ -83,7 +83,11 @@ export function viewChosen(
   selected: Eclipse | undefined,
   entry: SkyEntry,
 ): ViewState {
-  if (choice !== 'sky') return { ...state, mode: 'globe', view: choice };
+  // A view that stands on a body leaves the craft the camera was on (#796).
+  if (choice !== 'sky') {
+    const craft = choice === 'free' ? state.craft : null;
+    return { ...state, mode: 'globe', view: choice, craft };
+  }
   const next: ViewState = {
     ...state,
     mode: 'sky',
@@ -129,7 +133,8 @@ export function listenForInput(context: InputContext): Input {
     }
   });
   globe.onBodyClick((focus) => {
-    store.set((state) => ({ ...state, focus, view: 'free' }));
+    // A body chosen leaves the craft the camera was on (#796).
+    store.set((state) => ({ ...state, focus, craft: null, view: 'free' }));
   });
   globe.onEmptyTap(() => {
     panels[emptyTap(store.get())]();

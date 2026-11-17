@@ -10,6 +10,7 @@ import { defaultViewState, withLayer, type ViewState } from '../../state/viewSta
 import type { MarkerCardContent } from '../../ui/markerCard';
 import type { FeatureContext } from '../feature';
 import { spacecraftFeature } from '.';
+import { craftModel } from './craftModelLayer';
 import { landingSites } from './landingSites';
 import { missionRoutes } from './routeLines';
 
@@ -29,6 +30,7 @@ function fakeContext(options: {
   const drawn: unknown[] = [];
   const routes: unknown[] = [];
   const sites: unknown[] = [];
+  const models: unknown[] = [];
   const cards: MarkerCardContent[] = [];
   const rail: [boolean, boolean][] = [];
   const planets = { position: () => [0, AU, 0] } as unknown as PlanetEphemeris;
@@ -52,9 +54,14 @@ function fakeContext(options: {
     globe: {
       addLayer: (factory: unknown) => ({
         update: (input: unknown) =>
-          (factory === missionRoutes ? routes : factory === landingSites ? sites : drawn).push(
-            input,
-          ),
+          (factory === missionRoutes
+            ? routes
+            : factory === landingSites
+              ? sites
+              : factory === craftModel
+                ? models
+                : drawn
+          ).push(input),
       }),
     },
     zoomRail: {
@@ -79,22 +86,52 @@ function fakeContext(options: {
     },
     refresh,
   } as unknown as FeatureContext;
-  return { context, drawn, routes, sites, cards, rail, refresh, notify, loadPlanets, openAnchor };
+  return {
+    context,
+    drawn,
+    routes,
+    sites,
+    models,
+    cards,
+    rail,
+    refresh,
+    notify,
+    loadPlanets,
+    openAnchor,
+  };
 }
 
 describe('the spacecraft as a feature', () => {
   it('is shown again when the layers change, and not for other changes', () => {
-    expect(spacecraftFeature.watches(on)).toEqual([on.layers, null, true]);
-    expect(spacecraftFeature.watches({ ...on, mode: 'sky' })).toEqual([on.layers, null, true]);
+    expect(spacecraftFeature.watches(on)).toEqual([on.layers, null, null, true]);
+    expect(spacecraftFeature.watches({ ...on, mode: 'sky' })).toEqual([
+      on.layers,
+      null,
+      null,
+      true,
+    ]);
     expect(spacecraftFeature.watches({ ...on, mission: 'd00273' })).toEqual([
       on.layers,
       'd00273',
+      null,
+      true,
+    ]);
+    // A craft gone to (#796).
+    expect(spacecraftFeature.watches({ ...on, craft: 'd01093' })).toEqual([
+      on.layers,
+      null,
+      'd01093',
       true,
     ]);
     // Earth near or far, or another body in view: Hubble comes and goes (#795).
     const far = { ...on, camera: { ...on.camera, distance: 60 } };
-    expect(spacecraftFeature.watches(far)).toEqual([on.layers, null, false]);
-    expect(spacecraftFeature.watches({ ...on, focus: 'moon' })).toEqual([on.layers, null, false]);
+    expect(spacecraftFeature.watches(far)).toEqual([on.layers, null, null, false]);
+    expect(spacecraftFeature.watches({ ...on, focus: 'moon' })).toEqual([
+      on.layers,
+      null,
+      null,
+      false,
+    ]);
   });
 
   it('Given Earth close up after 1990, Then Hubble is drawn about it, with its card; from further off, or before it flew, it is not (#795)', async () => {
@@ -289,5 +326,53 @@ describe('the spacecraft as a feature', () => {
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledTimes(2);
     });
+  });
+
+  it('Given Webb’s card, When “Go to it” is pressed, Then the camera goes to it, drawn as its model, not its point (#796)', async () => {
+    const { context, cards, refresh, drawn, models } = fakeContext({ planetsLoaded: true });
+    const changes: ((state: ViewState) => ViewState)[] = [];
+    const going = {
+      ...context,
+      change: (update: (state: ViewState) => ViewState) => changes.push(update),
+    };
+    const craft = spacecraftFeature.mount(going);
+    // A year after it reached L2.
+    const jd2023 = 2459945.5;
+    craft.show?.(on, jd2023);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    craft.show?.(on, jd2023);
+    expect(models.at(-1)).toBeNull();
+    craft.pick?.('D01093');
+    const go = cards.at(-1)?.action;
+    expect(go?.label).toBe('Go to it');
+    // Which way it is drawn pointing is said to be a convention.
+    expect(cards.at(-1)?.facts.at(-1)?.[1]).toContain('a convention');
+    go?.run();
+    const there = changes.at(-1)?.({ ...on, focus: 'moon', view: 'earth-from-here' });
+    expect(there).toMatchObject({ craft: 'd01093', focus: 'earth', view: 'free' });
+
+    craft.show?.({ ...on, craft: 'd01093' }, jd2023);
+    const held = models.at(-1) as { id: string; km: readonly number[]; model: { radius: number } };
+    expect(held.id).toBe('D01093');
+    // About 1.5 million km out, beyond Earth from the Sun.
+    expect(Math.hypot(...held.km)).toBeGreaterThan(1.2e6);
+    expect(held.model.radius).toBeCloseTo(10.6, 1);
+    const ids = (drawn.at(-1) as readonly { id: string }[]).map(({ id }) => id);
+    expect(ids).not.toContain('D01093');
+    expect(ids.length).toBeGreaterThan(5);
+
+    // Its card then offers the way back.
+    craft.pick?.('D01093');
+    expect(cards.at(-1)?.action?.label).toBe('Leave it');
+    cards.at(-1)?.action?.run();
+    expect(changes.at(-1)?.({ ...on, craft: 'd01093' }).craft).toBeNull();
+
+    // A craft without a model has no way to it, and naming it draws no model.
+    craft.pick?.('D00273');
+    expect(cards.at(-1)?.action).toBeUndefined();
+    craft.show?.({ ...on, craft: 'd00273' }, jd2023);
+    expect(models.at(-1)).toBeNull();
   });
 });

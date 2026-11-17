@@ -4,6 +4,7 @@
  * New things drawn on the globe are layers; the globe's own `set…` methods only shrink.
  */
 
+import type { CraftFrame } from './focus';
 import type {
   Camera,
   Group,
@@ -61,6 +62,8 @@ export interface LayerHost {
   moonPosition(moon: MoonName, target: Vector3): Vector3;
   /** Ask to fly to a body, as a tap on it does. */
   requestBody(body: Body): void;
+  /** Hold a craft where it is now for the camera to orbit (#796), or none. */
+  holdCraft(craft: CraftFrame | null): void;
   /** J2000 km from Earth's centre to scene units, for the moment shown; null until there is one. */
   spaceToScene(): ((km: Triple) => Triple) | null;
   /** Draw a new frame soon. */
@@ -94,6 +97,12 @@ export interface LayerHost {
    * their `value`s, then ask for a frame.
    */
   earthPart<Uniforms extends PartUniforms>(part: EarthPart<Uniforms>): Uniforms;
+  /**
+   * Draw `scene` as `camera` sees it over the frame just drawn, its depth its own: for a craft
+   * close up (#796), in metres, which the scene's Earth radii cannot hold apart. Call it from
+   * `afterRender`, so it lands on the same frame.
+   */
+  drawOver(scene: Scene, camera: Camera): void;
   /** Draw `scene`, as `camera` sees it, into `target` now, not on screen: a texture to draw with. */
   renderToTexture(target: WebGLRenderTarget, scene: Scene, camera: Camera): void;
   /** The most anisotropic filtering the GPU offers, for textures a layer loads. */

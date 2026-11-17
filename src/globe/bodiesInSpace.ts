@@ -14,6 +14,7 @@ import type { Body } from '../state/viewState';
 import type { LayerHost } from './layerHost';
 import type { MoonMeshes } from './moonMeshes';
 import { isMoonBody } from './moonLook';
+import { planetRadius } from './planetLook';
 import type { PlanetMeshes } from './planetMeshes';
 import { MOON_RADIUS_EARTH_RADII, sceneFromKm, sceneRotation } from './spaceFrame';
 import type { SunMeshes } from './sunMeshes';
@@ -128,6 +129,21 @@ export class BodiesInSpace {
     }
     if (body !== 'earth') return { position: meshes[body].position, rotation: this.sunFrame };
     return { position: new Vector3(), rotation: new Quaternion() };
+  }
+
+  /** Where a named body is, how it is turned, its radius in the scene's units, and if drawn. */
+  named(body: Parameters<LayerHost['bodyFrame']>[0]): ReturnType<LayerHost['bodyFrame']> {
+    const { moon, meshes } = this.#world;
+    if (body === 'moon') {
+      return { ...this.frame('moon'), radius: MOON_RADIUS_EARTH_RADII, shown: moon.visible };
+    }
+    const mesh = meshes[body];
+    return {
+      position: mesh.position,
+      rotation: mesh.quaternion,
+      radius: planetRadius(body),
+      shown: mesh.visible,
+    };
   }
 
   /** From geocentric J2000 km to the scene, at the moment shown; null before the first. */

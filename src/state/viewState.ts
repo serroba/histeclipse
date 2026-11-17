@@ -211,7 +211,9 @@ export function withLayer(layers: ReadonlySet<Layer>, layer: Layer, on: boolean)
  */
 export function layerTurned(state: ViewState, layer: Layer, on: boolean): ViewState {
   const selection = layer === 'eclipses' && !on ? null : state.selection;
-  return { ...state, selection, layers: withLayer(state.layers, layer, on) };
+  // The spacecraft off take away the craft the camera was on (#796).
+  const craft = layer === 'spacecraft' && !on ? null : state.craft;
+  return { ...state, selection, craft, layers: withLayer(state.layers, layer, on) };
 }
 
 /** The view with `layer` turned the other way: off if it was on, on if it was off. */

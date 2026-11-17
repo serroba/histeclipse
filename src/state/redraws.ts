@@ -41,8 +41,8 @@ export const SKY: Watch = (s) => [
 /** The sky as shown: what `SKY` reads while in it, and nothing while away from it. */
 export const SKY_SHOWN: Watch = (s) => (s.mode === 'sky' ? SKY(s) : [s.mode]);
 
-/** The body in focus, its view from where, and the place picked: the globe's own fields. */
-export const FOCUS: Watch = (s) => [s.focus];
+/** The body or craft in focus, its view from where, and the place picked: the globe's own. */
+export const FOCUS: Watch = (s) => [s.focus, s.craft];
 export const VIEWPOINT: Watch = (s) => [s.view];
 export const LOCATION: Watch = (s) => [s.location];
 
