@@ -137,7 +137,7 @@ export function createWaveScene(): WaveScene {
     set(wave, ms, atLivingston) {
       if (shown === 'journey') {
         const moment = journeyAt(ms, atLivingston);
-        journey.set(moment);
+        journey.set(wave, moment);
         return { text: journeyText(moment), t: null };
       }
       const t = waveTimeAt(wave, ms);
