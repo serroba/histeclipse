@@ -44,6 +44,10 @@ test('GW150914 opens over the globe, its 3D view drawn and its scale stated, and
     await expect(plot.getByTestId('strain-l1')).toHaveAttribute('d', /^M/);
     await expect(plot.getByTestId('strain-h1')).toHaveAttribute('d', /^M/);
     await expect(plot.getByTestId('strain-clock')).toHaveText(/^09:50:45\.\d{3} UTC$/);
+    await stage.getByRole('button', { name: 'The source' }).click();
+    await expect(view).toHaveAttribute('data-chapter', 'source');
+    await expect(stage).toContainText('not to scale');
+    await expect(plot).toBeHidden();
     await stage.getByRole('button', { name: 'Space' }).click();
     await expect(view).toHaveAttribute('data-chapter', 'space');
   });

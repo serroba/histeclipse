@@ -8,9 +8,12 @@ describe('what the wave view draws, chapter by chapter (#831)', () => {
     const drawn = createWaveScene();
     const visible = (): boolean[] =>
       drawn.scene.children.filter((child) => child.type === 'Group').map((group) => group.visible);
-    expect(visible()).toEqual([true, false]);
+    expect(visible()).toEqual([false, true, false]);
     drawn.show('detector');
-    expect(visible()).toEqual([false, true]);
+    expect(visible()).toEqual([false, false, true]);
+    drawn.show('source');
+    expect(visible()).toEqual([true, false, false]);
+    drawn.set(chirp(GW150914_STAND_IN), -0.02);
     drawn.set(chirp(GW150914_STAND_IN), 0);
     drawn.show('space');
     drawn.set(chirp(GW150914_STAND_IN), 0);
@@ -19,7 +22,7 @@ describe('what the wave view draws, chapter by chapter (#831)', () => {
   });
 
   it('looks at the detector from above, north up the screen', () => {
-    expect(WAVE_CHAPTERS).toEqual(['space', 'detector']);
+    expect(WAVE_CHAPTERS).toEqual(['source', 'space', 'detector']);
     const { from, target } = AIMS.detector;
     expect(from.y).toBeGreaterThan(0.7);
     expect(from.x).toBe(0);

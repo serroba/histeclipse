@@ -92,3 +92,18 @@ describe('the lag between two series', () => {
     expect(lag(later, earlier, 1000, 0.004)).toEqual({ seconds: 0.002, inverted: true });
   });
 });
+
+describe('a wave turning the other way, and series of unequal length', () => {
+  it('reads the pitch either way round', () => {
+    const rate = 2048;
+    const count = 400;
+    const plus = Array.from({ length: count }, (_, i) => Math.cos((2 * Math.PI * 100 * i) / rate));
+    const cross = plus.map((_, i) => -Math.sin((2 * Math.PI * 100 * i) / rate));
+    const wave = measuredWave({ ...data, start: 0, rate, merger: 0.1, plus, cross });
+    expect(wave.frequency(0)).toBeCloseTo(100, 0);
+  });
+
+  it('lines up a short series against a long one', () => {
+    expect(lag([1, 3, 1], [0, 0, 1, 3, 1, 0], 1000, 0.003).seconds).toBeCloseTo(-0.002, 9);
+  });
+});

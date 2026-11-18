@@ -145,3 +145,11 @@ export function chirp(options: ChirpOptions): Waveform {
     },
   };
 }
+
+/** How far an angle turned from `from` to `to`, radians, the short way round: within ±π. */
+export function turnBetween(from: number, to: number): number {
+  const change = to - from;
+  if (change <= -Math.PI) return change + 2 * Math.PI;
+  if (change > Math.PI) return change - 2 * Math.PI;
+  return change;
+}
