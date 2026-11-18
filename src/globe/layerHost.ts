@@ -143,6 +143,8 @@ export const HISTORY_PAINT_ORDER = {
   dates: 20,
   // Where the ocean gained heat (#589): over the sea, under the ozone hole and the states.
   oceanHeat: 40,
+  // The month's sea surface temperature anomaly (#886): over the sea, under the ozone hole.
+  enso: 45,
   // The ozone hole as a cap round the South Pole (#722): over the land's colours, under states.
   ozone: 50,
   states: 100,
