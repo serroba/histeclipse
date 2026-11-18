@@ -187,6 +187,15 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
           'Trends over 1960–2025 (0–700 m, 0–2000 m) and 2005–2025 (0–2000 m), shown in the years.',
       },
       {
+        id: 'enso',
+        label: 'El Niño and La Niña',
+        about:
+          'The tropical Pacific each month since 1950, as NOAA’s two indices measure it (RONI, official since 2026, and ONI before it), side by side beside the globe, and where they disagree.',
+        spans: ['years'],
+        reach: 'From January 1950 to September 2026, a value a month.',
+        covers: { years: [1950, 2026] },
+      },
+      {
         id: 'temperature',
         label: 'Temperature',
         about: 'The surface coloured by its temperature, model by model.',

@@ -155,6 +155,13 @@
     "url": "https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/",
     "licence": "NASA, public domain"
   },
+  "bomEnsoEvents": {
+    "name": "Past El Niño and La Niña events (Bureau of Meteorology)",
+    "kind": "reference",
+    "cite": "Bureau of Meteorology (2026), Australian rainfall during El Niño and La Niña events, each event since 1900 with the strength of its Southern Oscillation Index and sea surface temperature signals, accessed 19 November 2026. Cited for which events the Bureau names; nothing is copied from it",
+    "url": "https://www.bom.gov.au/climate/history/enso/",
+    "licence": "© Commonwealth of Australia, Bureau of Meteorology; no licence stated on the page"
+  },
   "boucot2013": {
     "name": "Boucot, Chen & Scotese 2013",
     "kind": "paper",
@@ -331,6 +338,20 @@
     "kind": "reference",
     "cite": "Cornell University (operator of the National Astronomy and Ionosphere Center until 2011), Cornell Chronicle: the Arecibo telescope’s 305 m dish, 51 m deep, its Gregorian reflectors 137 m above it in a dome 26 m across",
     "url": "https://news.cornell.edu/node/286125"
+  },
+  "cpcOni": {
+    "name": "Oceanic Niño Index (NOAA CPC)",
+    "kind": "dataset",
+    "cite": "NOAA Climate Prediction Center (2026), Oceanic Niño Index (ONI), ERSST v6, oni.ascii.txt, file of 3 November 2026, accessed 19 November 2026; NOAA's official ENSO index until January 2026, still updated. Our summary: the three-month running mean of the Niño 3.4 sea surface temperature anomaly (5°N–5°S, 120°–170°W) against centred 30-year base periods updated every five years. An El Niño (La Niña) episode is five overlapping seasons at or above +0.5 °C (at or below −0.5 °C). Values from 1950",
+    "url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/oni/v6/",
+    "licence": "None stated (US Government work); credited to NOAA CPC"
+  },
+  "cpcRoni": {
+    "name": "Relative Oceanic Niño Index (NOAA CPC)",
+    "kind": "dataset",
+    "cite": "NOAA Climate Prediction Center (2026), Relative Oceanic Niño Index (RONI), ERSST v6, RONI.ascii.txt, file of 3 November 2026, accessed 19 November 2026; adopted as NOAA's official ENSO index from 1 February 2026 (NWS Public Information Statement 26-05). Our summary: the three-month running mean of the Niño 3.4 sea surface temperature anomaly (5°N–5°S, 120°–170°W) against 1991–2020, minus the mean anomaly of the whole tropics (20°N–20°S), rescaled to Niño 3.4's variance, so that the warming of the whole ocean does not read as El Niño. An El Niño (La Niña) episode is five overlapping seasons at or above +0.5 °C (at or below −0.5 °C). Values from 1950; the latest are revised for up to two months",
+    "url": "https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso/roni/",
+    "licence": "None stated (US Government work); credited to NOAA CPC"
   },
   "csiroParkes": {
     "name": "CSIRO: Murriyang, the Parkes radio telescope",
@@ -747,6 +768,13 @@
     "kind": "paper",
     "cite": "Hu et al. (2016), The timing of India-Asia collision onset: facts, theories, controversies, Earth-Science Reviews 160, 264–299",
     "url": "https://doi.org/10.1016/j.earscirev.2016.07.014"
+  },
+  "huang2025ersst6": {
+    "name": "ERSST version 6 (Huang et al.)",
+    "kind": "paper",
+    "cite": "Huang, B., Yin, X., Boyer, T., Liu, C., Menne, M., Rao, Y., Smith, T., Vose, R., Zhang, H. (2025), Extended Reconstructed Sea Surface Temperature, Version 6 (ERSSTv6). Part I: An Artificial Neural Network Approach, Journal of Climate 38, 1105–1121; Part II: Upgrades on Quality Control and Large-Scale Filter, Journal of Climate 38, 1123–1136, doi:10.1175/JCLI-D-24-0185.1. Our summary: NOAA's monthly global sea surface temperature on a 2° grid from 1850, reconstructed from ship and buoy measurements; version 6 fills gaps with an artificial neural network and filters out high-frequency noise. Both of NOAA's ENSO indices are computed from it",
+    "url": "https://doi.org/10.1175/JCLI-D-23-0707.1",
+    "licence": "AMS copyright (journal articles); the dataset is a US Government work"
   },
   "hugonnet2021": {
     "name": "Hugonnet et al. 2021",
