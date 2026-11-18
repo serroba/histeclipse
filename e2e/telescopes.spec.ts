@@ -234,7 +234,15 @@ test('the Telescopes layer shows the great telescopes on the ground from first l
     await expect(card).toContainText('First light');
     await card.getByRole('button', { name: 'Close' }).click();
   });
-  await test.step('When the year is 2026, Then Arecibo has gone and the ELT is being built', async () => {
+  expect(problems).toEqual([]);
+});
+
+// One view a test: leaving a view while it still loads would cancel its requests (#852).
+test('the Telescopes layer takes away those that closed and marks those being built (#848) @acceptance', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await test.step('Given the layer on in 2026, over Chile, Then Arecibo has gone and the ELT is being built', async () => {
     await page.goto('./?layers=telescopes&t=2026-01-01T12:00Z&cam=-24,-70,2.2');
     await expect(
       page.getByRole('button', { name: 'Extremely Large Telescope (being built): details' }),
