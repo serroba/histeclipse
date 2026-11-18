@@ -45,6 +45,8 @@ export interface BoundariesSheet {
   readonly button: HTMLButtonElement;
   /** Open at a chapter, or close (null). */
   show(chapter: BoundaryChapter | null): void;
+  /** Hold the Holocene chart at `year`, paused (#845): the year it shows, or null if not shown. */
+  holdAt(year: number): number | null;
 }
 
 const CHAPTER_NAMES: Readonly<Record<BoundaryChapter, string>> = {
@@ -358,5 +360,14 @@ export function createBoundariesSheet(
     );
   }
 
-  return { dialog, button, show };
+  return {
+    dialog,
+    button,
+    show,
+    holdAt(year) {
+      if (shown !== 'holocene' || chart === null) return null;
+      playButton.set(false);
+      return chart.holdAt(year);
+    },
+  };
 }

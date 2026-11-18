@@ -8,7 +8,8 @@
  * globe. SVG drawn at the stage's own size, so its words stay legible on a phone. As it draws, a
  * cursor names the year the line has reached and `onYear` hears it: the globe follows (#475). The
  * chart is a slider too: drag along it, or use the arrow keys, and the cursor, the globe and deep
- * time's bar go to that year, the whole line drawn, until it plays on from there. DOM glue,
+ * time's bar go to that year, the whole line drawn, until it plays on from there; as it is
+ * when deep time's bar is moved (`holdAt`, #845). DOM glue,
  * covered by the Playwright suite; the scales and numbers are in `data/holoceneTemperature.ts`.
  */
 
@@ -79,7 +80,11 @@ export function createHoloceneChart(
   onYear: (year: number) => void = () => undefined,
   /** Told when the chart stops playing of itself: the reader has taken the cursor. */
   onPlaying: (playing: boolean) => void = () => undefined,
-): StoryScene<'holocene'> & { readonly step: ScrubStep } {
+): StoryScene<'holocene'> & {
+  readonly step: ScrubStep;
+  /** Hold the cursor at `year`, or the nearer end; the year it shows. */
+  readonly holdAt: (year: number) => number;
+} {
   const corridor = corridorOf(data);
   const latest = latestYear(data);
   const root = svg('svg', {
@@ -303,20 +308,22 @@ export function createHoloceneChart(
     root,
     () => ({ left: MARGIN.left, width: size.width - MARGIN.left - MARGIN.right }),
     () => chosen ?? reachedAt(progress * DRAW_MS),
-    (x) => {
-      // Held where the reader puts it; Play draws on from there.
-      onPlaying(false);
-      playing = false;
-      cancelAnimationFrame(frame);
-      frame = 0;
-      chosen = x;
-      clock = msAt(x);
-      progress = clock / DRAW_MS;
-      container.dataset['playing'] = 'false';
-      container.dataset['chosen'] = 'true';
-      show();
-    },
+    hold,
   );
+
+  /** Held where the reader puts it, `x` across (0 to 1); Play draws on from there. */
+  function hold(x: number): void {
+    onPlaying(false);
+    playing = false;
+    cancelAnimationFrame(frame);
+    frame = 0;
+    chosen = x;
+    clock = msAt(x);
+    progress = clock / DRAW_MS;
+    container.dataset['playing'] = 'false';
+    container.dataset['chosen'] = 'true';
+    show();
+  }
 
   /** The line drawn only as far as the cursor again, as it plays. */
   function unchoose(): void {
@@ -337,6 +344,10 @@ export function createHoloceneChart(
       // One chapter: nothing to turn to.
     },
     step,
+    holdAt(year) {
+      hold(Math.min(1, Math.max(0, xOf(year))));
+      return reportedYear ?? year;
+    },
     setPlaying(next) {
       if (next) unchoose();
       playing = next && progress < 1;

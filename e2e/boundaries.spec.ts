@@ -182,3 +182,40 @@ test('on a phone the boundaries story lets the reader choose the chart or the gl
   });
   expect(problems).toEqual([]);
 });
+
+test('with the Holocene chapter open, deep time’s bar can be dragged, and the chart follows it (#845) @acceptance @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const sheet = page.getByTestId('boundaries-sheet');
+  const chart = sheet.getByTestId('holocene-stage');
+  const bar = page.getByRole('slider', { name: 'Thousands of years ago' });
+  await test.step('Given the story open on the Holocene, its chart playing and driving the globe', async () => {
+    await page.goto('./?t=2026-01-01T12:00Z');
+    await globeRendered(page);
+    await page.getByRole('button', { name: 'Boundaries', exact: true }).click();
+    await expect(chart).toHaveAttribute('data-playing', 'true');
+    await expect(page).toHaveURL(/ma=0\.\d+/);
+  });
+  await test.step('When they drag the bar from its middle to a fifth of the way along', async () => {
+    const globeButton = sheet.getByRole('button', { name: 'Globe', exact: true });
+    if (await globeButton.isVisible()) await globeButton.click();
+    await expect(bar).toBeVisible();
+    const box = await bar.boundingBox();
+    if (box === null) throw new Error('the bar has no box');
+    const y = box.y + box.height / 2;
+    await page.mouse.move(box.x + box.width * 0.5, y);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.2, y, { steps: 12 });
+    await page.mouse.up();
+  });
+  await test.step('Then the bar stays where it was put, the globe goes there, and the chart is held', async () => {
+    await expect.poll(async () => Number(await bar.inputValue())).toBeLessThan(-1500);
+    await expect
+      .poll(() => Number(new URL(page.url()).searchParams.get('ma')))
+      .toBeGreaterThan(1.5);
+    await expect(chart).toHaveAttribute('data-playing', 'false');
+    await expect(chart).toHaveAttribute('data-chosen', 'true');
+  });
+  expect(problems).toEqual([]);
+});
