@@ -20,7 +20,7 @@ function inSpace(name: string, caption: string, sun: Vector3, load: ModelLoad): 
 /** An approximation built at true scale: what such a caption starts with. */
 const BUILT = 'An approximation built here at true scale:';
 
-export const WEBB = inSpace(
+const WEBB = inSpace(
   'The James Webb Space Telescope',
   'An approximation built here from NASA’s published sizes, at true scale: the 6.5 m mirror of 18 gold segments and its secondary on three struts, above the 21 m by 14 m sunshield of five layers. The Sun is below, where the sunshield always faces it; in space the mirror is always in shade, so a light from your side shows it.',
   new Vector3(0.25, -1, 0.15),
@@ -30,7 +30,7 @@ export const WEBB = inSpace(
   ),
 );
 
-export const HUBBLE = inSpace(
+const HUBBLE = inSpace(
   'The Hubble Space Telescope',
   'An approximation built here from ESA/Hubble’s published sizes, at true scale: 13.2 m long and 4.2 m across, its 2.4 m mirror inside, its two solar arrays each 2.45 m by 7.56 m, its two antennas, and its aperture door open. The Sun is below, square to the arrays; a light from your side shows the side it does not reach.',
   new Vector3(0.2, -1, 0.1),
@@ -47,7 +47,7 @@ const SIDE = new Vector3(1, -0.1, 0.2);
 /** The Sun square to its solar wings, which turn to follow it. */
 const WINGS = new Vector3(0.2, 0.3, 1);
 
-export const SPACE_MODELS: Readonly<Record<string, LazyModel>> = {
+export const SPACE_MODELS = {
   webb: WEBB,
   hubble: HUBBLE,
   planck: inSpace(
@@ -158,4 +158,7 @@ export const SPACE_MODELS: Readonly<Record<string, LazyModel>> = {
     WINGS,
     from(xray, (m) => m.buildSpektrRg),
   ),
-};
+} as const satisfies Readonly<Record<string, LazyModel>>;
+
+/** A space telescope's id in the record, with its model. */
+export type SpaceId = keyof typeof SPACE_MODELS;

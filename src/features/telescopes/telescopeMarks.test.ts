@@ -87,5 +87,7 @@ describe('the words for a date and a year', () => {
     expect(telescopeCard(named('chandra')).model?.label).toContain(
       'Chandra X-ray Observatory in 3D',
     );
+    // One not yet modelled has none.
+    expect('model' in telescopeCard({ ...named('hale'), id: 'not-modelled' })).toBe(false);
   });
 });

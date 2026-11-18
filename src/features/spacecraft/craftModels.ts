@@ -1,6 +1,6 @@
 /**
- * The craft drawn as 3D models (#797): Webb and Hubble, in their cards and, when the camera goes
- * to them (#796), in the scene. Each model and its view are fetched when first wanted, in chunks
+ * The craft drawn as 3D models (#797, #863): every space telescope (`models/spaceScenes.ts`), in
+ * its card and, when the camera goes to it (#796), in the scene. Each model and its view are fetched when first wanted, in chunks
  * of their own, so the page's start does not grow by them.
  */
 
@@ -8,21 +8,24 @@ import type { Object3D } from 'three';
 
 import type { Body, ViewState } from '../../state/viewState';
 import type { CardModel, MarkerCardContent } from '../../ui/markerCard';
-import { HUBBLE, WEBB } from '../../models/spaceTelescopeModels';
+import { SPACE_SCENES } from '../../models/spaceScenes';
+import { SPACE_MODELS } from '../../models/spaceTelescopeModels';
 
 /** Webb's and Hubble's GCAT ids. */
 const WEBB_ID = 'D01093';
 const HUBBLE_ID = 'S20580';
 
-/** The models for the cards, by GCAT id: the same object each time. */
-const CARD_MODELS: Readonly<Record<string, CardModel>> = { [WEBB_ID]: WEBB, [HUBBLE_ID]: HUBBLE };
+/** The models for the cards, by GCAT id: the same object each time (#797, #863). */
+const CARD_MODELS: ReadonlyMap<string, CardModel> = new Map(
+  [...SPACE_SCENES.values()].map(({ craft, telescope }) => [craft, SPACE_MODELS[telescope]]),
+);
 
 /**
  * A craft's model for its card, if it has one. The same object each time, so a card shown again
  * with the same model keeps the view it has.
  */
 export function modelOf(craft: string): CardModel | undefined {
-  return CARD_MODELS[craft];
+  return CARD_MODELS.get(craft.toUpperCase());
 }
 
 /** A craft's card with its model, if it has one. */
@@ -43,34 +46,29 @@ export interface SceneModel {
   readonly load: () => Promise<() => Object3D>;
 }
 
-const WEBB_SCENE: SceneModel = {
-  // Half the sunshield's 21.197 m, its longest side.
-  radius: 10.5985,
-  // At the Sun–Earth L2 point, 1.5 million km beyond Earth: the view is of Earth's neighbourhood.
-  about: 'earth',
-  pointing:
+/** Which way Webb and Hubble are drawn pointing, and that it is a convention. */
+const POINTING: Readonly<Record<string, string>> = {
+  [WEBB_ID]:
     'Drawn with its sunshield to the Sun, as it always is, and its mirror turned toward the celestial north: a convention, as where it looks at a given moment is not known here',
-  load: () => import('../../models/webbModel').then(({ buildWebb }) => buildWebb),
-};
-
-const HUBBLE_SCENE: SceneModel = {
-  // Half its 13.2 m length.
-  radius: 6.6,
-  about: 'earth',
-  pointing:
+  [HUBBLE_ID]:
     'Drawn with its solar arrays square to the Sun and its aperture turned toward the celestial north, square to the Sun’s line: a convention, as where it is looking at a given moment is not known here; it is never pointed near the Sun',
-  load: () => import('../../models/hubbleModel').then(({ buildHubble }) => buildHubble),
 };
 
-/** The models for the scene, by GCAT id. */
-const SCENE_MODELS: Readonly<Record<string, SceneModel>> = {
-  [WEBB_ID]: WEBB_SCENE,
-  [HUBBLE_ID]: HUBBLE_SCENE,
-};
+/** Which way the others are drawn pointing. */
+const KEPT_TO_THE_SUN =
+  'Drawn with the side it keeps to the Sun toward the Sun, and turned toward the celestial north about that line: a convention, as where it looks at a given moment is not known here';
+
+/** The models for the scene, by GCAT id (#796, #863). */
+const SCENE_MODELS: ReadonlyMap<string, SceneModel> = new Map(
+  [...SPACE_SCENES.values()].map(({ craft, radius, about, build }) => [
+    craft,
+    { radius, about, pointing: POINTING[craft] ?? KEPT_TO_THE_SUN, load: build },
+  ]),
+);
 
 /** The craft the camera can go to and see as a model, by GCAT id in either case. */
 export function sceneModelOf(craft: string): SceneModel | undefined {
-  return SCENE_MODELS[craft.toUpperCase()];
+  return SCENE_MODELS.get(craft.toUpperCase());
 }
 
 /**

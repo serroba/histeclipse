@@ -348,3 +348,31 @@ test('the great telescopes are found from Explore and from search (#851) @accept
   });
   expect(problems).toEqual([]);
 });
+
+test('every space telescope can be gone to: from the list, and by its link (#863) @acceptance', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const list = page.getByRole('dialog', { name: 'Telescopes' });
+  const card = page.getByTestId('marker-card');
+  await test.step('Given the list, When they pick Chandra and go to it, Then the camera orbits its model', async () => {
+    await page.goto('./?layers=telescopes&t=2015-06-01T00:00Z&list=telescopes');
+    await list
+      .getByRole('button', { name: /Chandra/ })
+      .first()
+      .click();
+    await expect(card.getByRole('heading')).toHaveText(/Chandra/);
+    await card.getByRole('button', { name: 'Go to it' }).click();
+    await expect(globe).toHaveAttribute('data-framed', 'craft:s25867', { timeout: 30_000 });
+    await expect(globe).toHaveAttribute('data-craft-model', 's25867', { timeout: 30_000 });
+  });
+  await test.step('When the link names Gaia at L2, or Kepler trailing Earth round the Sun, Then each is drawn as its model', async () => {
+    for (const craft of ['d00937', 'd00874']) {
+      await page.goto(`./?layers=telescopes&t=2015-06-01T00:00Z&craft=${craft}`);
+      await expect(globe).toHaveAttribute('data-craft-model', craft, { timeout: 30_000 });
+    }
+  });
+  expect(problems).toEqual([]);
+});
