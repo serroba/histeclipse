@@ -1,8 +1,8 @@
 import { Box3, Vector3, type Object3D } from 'three';
 import { describe, expect, it } from 'vitest';
 
-import { materials } from './kit';
-import { body, cone, disc, ellipse, panel, wings } from './spaceKit';
+import { body, disc, materials, panel } from './kit';
+import { cone, ellipse, wings } from './spaceKit';
 
 const size = (object: Object3D): Vector3 => {
   object.updateMatrixWorld(true);

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildAlma,
+  ARECIBO,
   buildArecibo,
   buildFast,
   buildLovell,
@@ -12,6 +13,7 @@ import {
   buildVla,
   yPads,
 } from './radioModels';
+import { telescopeModel } from './telescopeModels';
 
 const box = (object: Object3D): Box3 => {
   object.updateMatrixWorld(true);
@@ -42,12 +44,21 @@ describe('the radio telescopes as 3D models (#859)', () => {
     expect(max.y).toBeLessThan(27.4 + 0.41 * 64 + 5);
   });
 
-  it('Given Arecibo, Then its bowl is 305 m across and 51 m deep, its platform 137 m above the rim', () => {
+  it('Given Arecibo, Then its bowl is as wide and deep as published, its platform as high above the rim', () => {
+    const { sourced } = ARECIBO;
     const model = buildArecibo();
     const { min, max } = box(model);
-    expect(min.y).toBeCloseTo(-51, 5);
-    expect(max.y).toBeCloseTo(140, 0);
-    expect(box(model.children.at(0) ?? model).getSize(new Vector3()).x).toBeCloseTo(305, 1);
+    expect(min.y).toBeCloseTo(-sourced.deep, 5);
+    expect(max.y).toBeCloseTo(sourced.platform + 3, 0);
+    expect(box(model.children.at(0) ?? model).getSize(new Vector3()).x).toBeCloseTo(
+      sourced.across,
+      1,
+    );
+    // Its caption gives the same sizes, read in the catalogue without fetching the model.
+    const caption = telescopeModel('arecibo')?.caption ?? '';
+    for (const size of [sourced.across, sourced.deep, sourced.platform]) {
+      expect(caption).toContain(`${String(size)} m`);
+    }
   });
 
   it('Given FAST, Then its bowl is 500 m across, curved to a 315 m radius, its cabin about 140 m above its floor', () => {

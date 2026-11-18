@@ -7,8 +7,7 @@
 
 import { BoxGeometry, Group, Mesh, Vector3 } from 'three';
 
-import { materials, strut, type Materials } from './kit';
-import { body, disc, panel } from './spaceKit';
+import { body, disc, materials, panel, strut, type Materials } from './kit';
 
 /** Two wings out along ±X from a body `across` wide, to `span` in all, at height `y`. */
 function sideWings(span: number, across: number, width: number, y: number, kit: Materials): Group {

@@ -1,41 +1,12 @@
 /**
- * The space telescopes' parts (#861, #862): solar panels and discs, the prism bodies of their
- * buses, tubes, off-axis mirrors, shades. Metres; a space telescope keeps its own axes, +Y along
+ * The space telescopes' parts (#861, #862, #877): shades and hoods, off-axis mirrors, solar
+ * wings; their panels, bodies and discs are the general kit's (`kit.ts`). Metres; a space telescope keeps its own axes, +Y along
  * its spin or its tube, the Sun's direction given with each model (`telescopeModels.ts`).
  */
 
-import { BoxGeometry, CylinderGeometry, Group, Mesh, type Material } from 'three';
+import { CylinderGeometry, Group, Mesh, type Material } from 'three';
 
-import type { Materials } from './kit';
-
-/** A flat panel `width` by `length` (along X and Z), `thickness` thick, centred. */
-export function panel(width: number, length: number, material: Material, thickness = 0.04): Mesh {
-  return new Mesh(new BoxGeometry(width, thickness, length), material);
-}
-
-/** A prism or a cylinder (`sides` 0) `across` wide and `height` tall, standing from y = `base`. */
-export function body(
-  across: number,
-  height: number,
-  material: Material,
-  options: { readonly sides?: number; readonly base?: number; readonly open?: boolean } = {},
-): Mesh {
-  const sides = options.sides ?? 0;
-  const r = across / 2;
-  const made = new Mesh(
-    new CylinderGeometry(r, r, height, sides === 0 ? 32 : sides, 1, options.open ?? false),
-    material,
-  );
-  made.position.y = (options.base ?? 0) + height / 2;
-  return made;
-}
-
-/** A flat disc `diameter` across at height `y`: a solar disc (Planck's, WMAP's) or a shield. */
-export function disc(diameter: number, y: number, material: Material, sides = 48): Mesh {
-  const made = new Mesh(new CylinderGeometry(diameter / 2, diameter / 2, 0.05, sides), material);
-  made.position.y = y;
-  return made;
-}
+import { panel, type Materials } from './kit';
 
 /** A cone from `bottom` across at y = `base` to `top` across, `height` tall: a shield, a hood. */
 export function cone(
