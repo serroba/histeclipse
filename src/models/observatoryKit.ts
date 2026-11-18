@@ -15,7 +15,8 @@ import {
   Vector3,
 } from 'three';
 
-import { dish, strut, type Materials } from './kit';
+import { strut, type Materials } from './kit';
+import { dish } from './radioKit';
 
 /** Where the camera first looks from (`modelView.ts`): a dome is cut away on that side. */
 const OPEN_SIDE = Math.atan2(0.6, 1);

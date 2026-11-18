@@ -6,17 +6,8 @@
 
 import { BoxGeometry, ConeGeometry, CylinderGeometry, Group, Mesh, Vector3 } from 'three';
 
-import {
-  array,
-  bowl,
-  dishWithFeed,
-  ground,
-  groundRing,
-  materials,
-  steerable,
-  strut,
-  type Materials,
-} from './kit';
+import { array, ground, groundRing, materials, strut, type Materials } from './kit';
+import { bowl, dishWithFeed, steerable } from './radioKit';
 
 /** Lovell (Jodrell Bank, Facts & Figures): 76.2 m, f/D 0.30, its axis 50.5 m up, its rail 107.5 m. */
 export function buildLovell(): Group {
@@ -84,16 +75,46 @@ function hungPlatform(
   return group;
 }
 
-/** Arecibo (Cornell, as it ran it): 305 m across, 51 m deep, its reflectors 137 m above; its
- * towers, ring and platform by eye. */
+/** Arecibo's sizes (#877): those Cornell published, as it ran it, and those placed by eye. */
+export const ARECIBO = {
+  sourced: {
+    /** The bowl, 1000 ft across and 167 ft deep. */
+    across: 305,
+    deep: 51,
+    /** The platform's reflectors above the rim. */
+    platform: 137,
+    /** The Gregorian dome, 86 ft across. */
+    dome: 26,
+  },
+  byEye: { ground: 460, ring: 190, towerHeight: 110, platformAcross: 70, domeTall: 20 },
+} as const;
+
+/** Arecibo (Cornell, as it ran it): its bowl, its platform above it and the Gregorian dome under
+ * that; its towers, ring and platform's size by eye. */
 export function buildArecibo(): Group {
+  const { sourced, byEye } = ARECIBO;
   const kit = materials();
   const group = new Group();
-  group.add(bowl(305, 51, kit.dish), groundRing(305, 460, kit));
-  group.add(hungPlatform({ ring: 190, towerHeight: 110, height: 137, platform: 70 }, kit));
-  // The Gregorian dome, 86 ft (26 m) across, under the platform.
-  const dome = new Mesh(new CylinderGeometry(13, 13, 20, 24), kit.dark);
-  dome.position.y = 137 - 16;
+  group.add(
+    bowl(sourced.across, sourced.deep, kit.dish),
+    groundRing(sourced.across, byEye.ground, kit),
+  );
+  group.add(
+    hungPlatform(
+      {
+        ring: byEye.ring,
+        towerHeight: byEye.towerHeight,
+        height: sourced.platform,
+        platform: byEye.platformAcross,
+      },
+      kit,
+    ),
+  );
+  const dome = new Mesh(
+    new CylinderGeometry(sourced.dome / 2, sourced.dome / 2, byEye.domeTall, 24),
+    kit.dark,
+  );
+  dome.position.y = sourced.platform - 16;
   group.add(dome);
   return group;
 }

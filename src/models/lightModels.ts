@@ -6,8 +6,8 @@
 
 import { Group } from 'three';
 
-import { materials } from './kit';
-import { body, cone, disc, ellipse, panel, wings } from './spaceKit';
+import { body, disc, materials, panel } from './kit';
+import { cone, ellipse, wings } from './spaceKit';
 
 /** Planck (ESA): 4.2 m tall and 4.2 m across its solar disc, which faces the Sun below; its
  * 1.9 m by 1.5 m primary in its open baffle at the top; the modules and shields by eye. */
