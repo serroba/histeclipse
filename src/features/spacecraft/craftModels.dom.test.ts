@@ -2,7 +2,8 @@
 import { Group, Vector3 } from 'three';
 import { describe, expect, it, vi } from 'vitest';
 
-import { lazyModel, modelOf, sceneModelOf } from './craftModels';
+import { lazyModel } from '../../models/lazyModel';
+import { modelOf, sceneModelOf } from './craftModels';
 
 describe('the craft with models (#797)', () => {
   it('Given Webb and Hubble, Then each has a model, the same each time; other craft have none', () => {

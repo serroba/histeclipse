@@ -21,7 +21,7 @@ import {
   METRES_PER_SCENE,
   pointsBeside,
 } from './craftModelLayer';
-import { WEBB } from './webbModel';
+import { WEBB } from '../../models/webbModel';
 
 /** A host with a camera, the Sun far down −z, and space in km straight to Earth radii. */
 function fakeHost(sun = new Vector3(0, 0, -23_455)) {

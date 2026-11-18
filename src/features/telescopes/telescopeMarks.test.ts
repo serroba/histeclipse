@@ -81,4 +81,9 @@ describe('the words for a date and a year', () => {
     expect(telescopesText(groundMarks(record, 1900), 1900)).toMatch(/^2 of the great telescopes/);
     expect(telescopesText(groundMarks(record, 2026), 2026)).toMatch(/and 3 being built/);
   });
+
+  it('Given a radio telescope with a model, Then its card carries it; one without has none (#859)', () => {
+    expect(telescopeCard(named('lovell')).model?.label).toContain('Lovell Telescope in 3D');
+    expect('model' in telescopeCard(named('hale'))).toBe(false);
+  });
 });

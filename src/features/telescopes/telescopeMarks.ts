@@ -8,7 +8,9 @@
  */
 
 import { stateIn, type Telescope, type Telescopes } from '../../data/telescopes';
+import { telescopeModel } from '../../models/telescopeModels';
 import { astronomicalYear, formatYear } from '../../time/year';
+import type { CardModel } from '../../ui/markerCard';
 
 type Ground = Extract<Telescope, { kind: 'ground' }>;
 
@@ -97,12 +99,19 @@ function untilText(telescope: Telescope): string {
   return dateText(until);
 }
 
+/** A telescope's model, for its card, if it has one yet (#865). */
+function withModel(id: string): { readonly model?: CardModel } {
+  const model = telescopeModel(id);
+  return model === undefined ? {} : { model };
+}
+
 /** A card's facts, links and the others on its site, for `telescope`. */
 export function telescopeCard(telescope: Telescope): {
   readonly title: string;
   readonly facts: readonly (readonly [string, string])[];
   readonly links: readonly { readonly label: string; readonly href: string }[];
   readonly note: string;
+  readonly model?: CardModel;
 } {
   const where: readonly (readonly [string, string])[] =
     telescope.kind === 'ground'
@@ -129,6 +138,7 @@ export function telescopeCard(telescope: Telescope): {
     ],
     links: telescope.links,
     note: telescope.why,
+    ...withModel(telescope.id),
   };
 }
 

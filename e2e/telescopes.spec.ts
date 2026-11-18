@@ -316,6 +316,11 @@ test('the Telescopes list finds the most significant, filters them, and goes to 
     await expect(page).toHaveURL(/t=1963-/);
     await expect(page).not.toHaveURL(/list=/);
   });
+  await test.step('Then its card shows its model, built from its published sizes (#859)', async () => {
+    const card = page.getByTestId('marker-card');
+    await expect(card.getByRole('img', { name: /Arecibo telescope in 3D/ })).toBeVisible();
+    await expect(card).toContainText('305 m bowl, 51 m deep');
+  });
   expect(problems).toEqual([]);
 });
 

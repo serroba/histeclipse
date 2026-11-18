@@ -25,7 +25,7 @@ import { EARTH_RADIUS_KM } from '../../globe/spaceFrame';
 import { awayFromSun } from './craftAttitude';
 import type { SceneCraft } from './craftLayer';
 import { sceneModelOf, type SceneModel } from './craftModels';
-import { releaseModel } from './releaseModel';
+import { releaseModel } from '../../models/releaseModel';
 
 /** Metres in the scene's unit, an Earth radius. */
 export const METRES_PER_SCENE = EARTH_RADIUS_KM * 1000;

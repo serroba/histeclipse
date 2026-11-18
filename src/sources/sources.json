@@ -308,11 +308,23 @@
     "cite": "Collins et al. (2020), A steeply-inclined trajectory for the Chicxulub impact, Nature Communications 11",
     "url": "https://doi.org/10.1038/s41467-020-15269-x"
   },
+  "cornellArecibo": {
+    "name": "Cornell Chronicle: the Arecibo telescope",
+    "kind": "reference",
+    "cite": "Cornell University (operator of the National Astronomy and Ionosphere Center until 2011), Cornell Chronicle: the Arecibo telescope’s 305 m dish, 51 m deep, its Gregorian reflectors 137 m above it in a dome 26 m across",
+    "url": "https://news.cornell.edu/node/286125"
+  },
   "csiroParkes": {
     "name": "CSIRO: Murriyang, the Parkes radio telescope",
     "kind": "reference",
     "cite": "CSIRO’s pages on Murriyang, its Parkes radio telescope: its opening on 31 October 1961, Apollo 11 and pulsars",
     "url": "https://www.csiro.au/en/about/facilities-collections/ATNF/Parkes-radio-telescope-Murriyang"
+  },
+  "csiroParkesGuide": {
+    "name": "CSIRO: Parkes Radio Telescope Users Guide",
+    "kind": "reference",
+    "cite": "CSIRO Australia Telescope National Facility, Parkes Radio Telescope Users Guide, Table 1.3, antenna properties of Murriyang: its 64 m dish of focal ratio 0.41, its centre 27.4 m up on a 10.7 m concrete tower, its focus 26 m above",
+    "url": "https://www.parkes.atnf.csiro.au/observing/documentation/users_guide/pkug.html"
   },
   "dayEarthSmiled": {
     "name": "Cassini: The Day the Earth Smiled",
@@ -410,6 +422,12 @@
     "cite": "ESA/Webb image archive: eight of the telescope’s pictures of 2022, each credited on its card as its page asks (NASA, ESA, CSA, STScI and others). Webb is a mission of NASA, ESA and the Canadian Space Agency. The pictures are made smaller here; the words about them are this site’s",
     "url": "https://esawebb.org/images/",
     "licence": "CC BY 4.0"
+  },
+  "esoAlmaAntennas": {
+    "name": "ESO and the ALMA Observatory: ALMA’s antennas",
+    "kind": "reference",
+    "cite": "ESO, ALMA antennas, and the ALMA Observatory, how ALMA works: 66 antennas, 54 of 12 m (14.7 m tall) and 12 of 7 m, baselines from 150 m to 16 km",
+    "url": "https://www.eso.org/public/teles-instr/alma/antennas/"
   },
   "esoTelescopes": {
     "name": "ESO: the VLT, ALMA and the ELT",
@@ -734,11 +752,23 @@
     "cite": "JAXA, “Martian Moons eXploration (MMX)” (mission page)",
     "url": "https://www.mmx.jaxa.jp/en/"
   },
+  "jiang2019Fast": {
+    "name": "Jiang et al. (2019), Commissioning progress of the FAST",
+    "kind": "paper",
+    "cite": "Jiang, P., Yue, Y., Gan, H., et al. (2019), Commissioning progress of the FAST, Science China Physics, Mechanics & Astronomy 62, 959502 (doi:10.1007/s11433-018-9376-1), from the National Astronomical Observatories of China: the reflector 500 m across, curved to a 315 m radius, its feed cabin some 140 m above it on six cables. A review of how the telescope was built and brought into use",
+    "url": "https://doi.org/10.1007/s11433-018-9376-1"
+  },
   "jodrellBank": {
     "name": "Jodrell Bank (University of Manchester)",
     "kind": "reference",
     "cite": "The University of Manchester’s Jodrell Bank pages on the Lovell Telescope: its completion in 1957, Sputnik and Luna 9",
     "url": "https://www.jodrellbank.manchester.ac.uk/about/history-and-heritage/"
+  },
+  "jodrellLovellFacts": {
+    "name": "Jodrell Bank: the Lovell Telescope’s facts and figures",
+    "kind": "reference",
+    "cite": "Jodrell Bank Centre for Astrophysics, University of Manchester, The Lovell Telescope: facts and figures, and its anatomy: its 76.2 m bowl of focal ratio 0.30, its elevation axis 50.5 m up, 89.0 m at its highest, on a railway track 107.5 m across, between two towers",
+    "url": "https://www.jb.man.ac.uk/aboutus/lovell/facts.html"
   },
   "jones2023": {
     "name": "Jones et al. 2023",
@@ -1280,6 +1310,12 @@
     "cite": "The National Radio Astronomy Observatory’s pages on the Karl G. Jansky Very Large Array: its dishes, configurations, history and science",
     "url": "https://public.nrao.edu/telescopes/vla/"
   },
+  "nraoVlaSizes": {
+    "name": "NRAO: the VLA’s antennas and configurations",
+    "kind": "reference",
+    "cite": "National Radio Astronomy Observatory, the Very Large Array’s public pages and its Observational Status Summary on resolution: 27 working antennas of 25 m on three arms of nine, some 28.7 m tall, the most compact configuration (D) about 1 km across",
+    "url": "https://science.nrao.edu/facilities/vla/docs/manuals/oss/performance/resolution"
+  },
   "nsfArecibo": {
     "name": "NSF: Arecibo Observatory",
     "kind": "reference",
@@ -1581,6 +1617,12 @@
     "kind": "reference",
     "cite": "The SKA Observatory’s pages on SKA-Low and SKA-Mid and their construction, with SKAO’s and SARAO’s site documents giving the arrays’ centres",
     "url": "https://www.skao.int/en/explore/construction-journey"
+  },
+  "skaoSpecs": {
+    "name": "SKAO: the SKA telescopes’ specifications",
+    "kind": "reference",
+    "cite": "SKA Observatory, SKA-Mid, SKA-Low and the telescope specifications: SKA-Mid’s 133 offset Gregorian dishes of 15 m, over 22 m tall, with MeerKAT’s 64, out to 150 km; SKA-Low’s 512 stations of 256 log-periodic antennas each 2 m tall, out to some 74 km (65 km and 75 km on other SKAO pages)",
+    "url": "https://www.skao.int/en/science-users/118/ska-telescope-specifications"
   },
   "skyfield": {
     "name": "Skyfield",
