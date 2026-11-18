@@ -10,21 +10,26 @@ class PartitionTest(unittest.TestCase):
                                          ("b.spec.ts", "b"), ("c.spec.ts", "c")]]
 
     def test_balanced_complete_disjoint_and_order_independent(self):
-        buckets, totals = partition(self.tests, self.weights)
+        buckets, totals = partition(self.tests, self.weights, 2)
         self.assertEqual(totals, [30, 30])
         keys = [description(test) for bucket in buckets for test in bucket]
         self.assertEqual(len(keys), len(set(keys)))
         self.assertEqual(set(keys), {description(test) for test in self.tests})
-        self.assertEqual(buckets, partition(list(reversed(self.tests)), self.weights)[0])
+        self.assertEqual(buckets, partition(list(reversed(self.tests)), self.weights, 2)[0])
 
     def test_scenarios_in_one_file_have_separate_costs_and_new_tests_keep_default(self):
         tests = [{"project": "desktop", "file": "smoke.spec.ts", "titles": [name]}
                  for name in ["slow", "quick", "new"]]
         weights = {"scenarioCosts": {description(tests[0]): 30, description(tests[1]): 2},
                    "defaultSeconds": 10}
-        buckets, totals = partition(tests, weights)
+        buckets, totals = partition(tests, weights, 2)
         self.assertEqual(totals, [30, 12])
         self.assertEqual(len(buckets[1]), 2)
+
+    def test_four_shards_take_one_slow_test_each_and_share_the_rest(self):
+        buckets, totals = partition(self.tests, self.weights, 4)
+        self.assertEqual(totals, [30, 10, 10, 10])
+        self.assertEqual([len(bucket) for bucket in buckets], [1, 1, 1, 1])
 
     def test_project_and_nested_titles_survive_discovery(self):
         report = {"suites": [{"title": "a.spec.ts", "file": "a.spec.ts", "suites": [
@@ -38,7 +43,7 @@ class PartitionTest(unittest.TestCase):
         for report in [{"suites": []}, {"errors": ["load failure"], "suites": []}]:
             with self.assertRaises(ValueError):
                 discover(report)
-        buckets, totals = partition(self.tests[1:], self.weights)
+        buckets, totals = partition(self.tests[1:], self.weights, 2)
         self.assertEqual(sum(totals), 30)
         self.assertEqual(sum(map(len, buckets)), 3)
 

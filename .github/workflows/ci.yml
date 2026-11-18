@@ -91,18 +91,19 @@ jobs:
       - run: pnpm build
 
   # Acceptance journeys and device-specific checks only; the full suite runs nightly.
-  # Two shards reduce runner-minutes as well as feedback latency.
+  # Four shards keep the required checks near their 300 s target (#883): two left each one at
+  # 5.5 to 7 minutes, a minute of it setting up and building.
   e2e:
     needs: changes
     if: needs.changes.outputs.e2e == 'true'
-    name: End-to-end (balanced acceptance, ${{ matrix.shard }}/2)
+    name: End-to-end (balanced acceptance, ${{ matrix.shard }}/4)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       # Every shard runs to the end, so one failure doesn't hide another.
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -135,7 +136,7 @@ jobs:
       # two-thirds slower, finished no sooner, and made a test flaky.
       - run: |
           pnpm exec playwright test --list --reporter=json > /tmp/discovered-e2e.json
-          python .github/scripts/partition_e2e.py /tmp/discovered-e2e.json --shard "$SHARD" --output /tmp/e2e-tests.txt
+          python .github/scripts/partition_e2e.py /tmp/discovered-e2e.json --shards 4 --shard "$SHARD" --output /tmp/e2e-tests.txt
           pnpm test:e2e --test-list /tmp/e2e-tests.txt
         env:
           SHARD: ${{ matrix.shard }}

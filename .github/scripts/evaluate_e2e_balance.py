@@ -31,8 +31,8 @@ def evaluate(reports: list[dict], weights: dict, workers: int = 2) -> dict:
     if len(grouped) < 4:
         raise ValueError("Need four runs: each held-out run needs three training samples")
     for pair in grouped.values():
-        if len(pair) != 2 or {str(r.get("partition")) for r in pair} != {"1", "2"}:
-            raise ValueError("Each run needs exactly two distinct Linux partitions")
+        if len(pair) < 2 or {str(r.get("partition")) for r in pair} != {str(n) for n in range(1, len(pair) + 1)}:
+            raise ValueError("Each run needs every one of its distinct Linux partitions, two or more")
         if len({(r.get("commit"), r.get("runAttempt")) for r in pair}) != 1:
             raise ValueError("Do not mix commits or workflow attempts within a run")
     estimates(reports)  # Validate platform/schema and duplicate scenarios across each full run.
@@ -47,10 +47,10 @@ def evaluate(reports: list[dict], weights: dict, workers: int = 2) -> dict:
             raise ValueError("Duplicate scenarios in held-out run")
         variants = {}
         for name, model in [("checkedIn", weights), ("refreshed", refreshed)]:
-            buckets, predicted = partition([scenario(t) for t in tests], model)
+            buckets, predicted = partition([scenario(t) for t in tests], model, len(pair))
             work = [sum(lookup[description(t)] for t in bucket) for bucket in buckets]
             variants[name] = {"estimatedWorkSeconds": predicted, "heldOutWorkSeconds": work,
-                              "workGapSeconds": abs(work[0] - work[1]),
+                              "workGapSeconds": max(work) - min(work),
                               "idealisedMaxWorkBoundSeconds": max(work) / workers}
         rows.append({"run": run, "trainingRuns": refreshed["sourceRuns"], "selected": len(tests),
                      "recordedSuiteWallSeconds": [r["wallTimeMs"] / 1000 for r in pair],

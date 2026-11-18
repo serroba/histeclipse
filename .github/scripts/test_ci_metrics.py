@@ -42,6 +42,15 @@ class MetricsTest(unittest.TestCase):
         self.assertEqual(measure(self.run, rows)["acceptance_gap"], 60)
         self.assertIsNone(measure(self.run, rows[1:]))
 
+    def test_four_shards_are_one_matrix_and_their_gap_is_the_widest(self):
+        rows = [job(f"End-to-end (balanced acceptance, {shard}/4)") for shard in (1, 2, 3)]
+        rows.append(job("End-to-end (balanced acceptance, 4/4)", end="2026-11-14T00:01:40Z"))
+        rows += [job(GPU_JOB), job("CI OK")]
+        self.assertEqual(measure(self.run, rows)["acceptance_gap"], 30)
+        self.assertIsNone(measure(self.run, rows[1:]))
+        mixed = rows[:3] + [job("End-to-end (balanced acceptance, 2/2)"), job(GPU_JOB), job("CI OK")]
+        self.assertIsNone(measure(self.run, mixed))
+
     def test_nearest_rank_small_and_full_samples(self):
         self.assertIsNone(percentile([], 0.95))
         self.assertEqual(percentile([100, 300, 200], 0.95), 300)
