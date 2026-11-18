@@ -5,11 +5,23 @@ import json
 from html import escape
 import math
 import os
+import re
 from datetime import datetime
 from pathlib import Path
 from urllib.request import Request, urlopen
 
 GPU_JOB = "GPU on macOS (production smoke and scene components)"
+SHARD = re.compile(r"balanced acceptance, (\d+)/(\d+)\)")
+
+
+def shards(names: set[str]) -> int | None:
+    """How many acceptance shards the matrix has, if every one of them is there."""
+    found = [(int(match[1]), int(match[2])) for name in names if (match := SHARD.search(name))]
+    counts = {count for _, count in found}
+    if len(counts) != 1:
+        return None
+    count = counts.pop()
+    return count if count >= 2 and sorted(shard for shard, _ in found) == list(range(1, count + 1)) else None
 
 
 def seconds(start: str, end: str) -> float:
@@ -19,7 +31,8 @@ def seconds(start: str, end: str) -> float:
 def measure(run: dict, jobs: list[dict]) -> dict | None:
     """Compare only the bounded matrix, with its required aggregate successful."""
     names = {job["name"] for job in jobs}
-    if GPU_JOB not in names or not any("balanced acceptance, 2/2" in name for name in names):
+    count = shards(names)
+    if GPU_JOB not in names or count is None:
         return None
     aggregate = next((job for job in jobs if job["name"] == "CI OK"), None)
     if aggregate is None or aggregate["conclusion"] != "success":
@@ -34,7 +47,7 @@ def measure(run: dict, jobs: list[dict]) -> dict | None:
     first = min(job["started_at"] for job in required)
     browsers = [job for job in required if "balanced acceptance" in job["name"] or job["name"] == GPU_JOB]
     acceptance = [job for job in browsers if "balanced acceptance" in job["name"]]
-    if len(acceptance) != 2:
+    if len(acceptance) != count:
         return None
     acceptance_times = [seconds(job["started_at"], job["completed_at"]) for job in acceptance]
     return {
@@ -44,7 +57,7 @@ def measure(run: dict, jobs: list[dict]) -> dict | None:
         "browser_minutes": sum(seconds(job["started_at"], job["completed_at"]) for job in browsers) / 60,
         "runner_minutes": sum(seconds(job["started_at"], job["completed_at"]) for job in required) / 60,
         "attempt": run.get("run_attempt", 1),
-        "acceptance_gap": abs(acceptance_times[0] - acceptance_times[1]),
+        "acceptance_gap": max(acceptance_times) - min(acceptance_times),
         "job_seconds": {job["name"]: seconds(job["started_at"], job["completed_at"])
                         for job in required if job["conclusion"] == "success"},
     }
