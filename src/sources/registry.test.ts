@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 
@@ -104,5 +106,16 @@ describe('sources.json', () => {
   it('lists its sources in order of their ids', () => {
     const ids = Object.keys(SOURCES);
     expect(ids).toEqual([...ids].sort());
+  });
+});
+
+describe('the telescopes’ sources (#847)', () => {
+  it('rests every telescope on sources the registry knows, and the Telescopes why on all of them', () => {
+    const file = JSON.parse(readFileSync('public/data/telescopes.json', 'utf8')) as {
+      telescopes: { sources: string[] }[];
+    };
+    const cited = new Set(file.telescopes.flatMap((telescope) => telescope.sources));
+    for (const source of cited) expect(SOURCES, source).toHaveProperty(source);
+    expect(new Set(WHYS.telescopes.sources)).toEqual(cited);
   });
 });
