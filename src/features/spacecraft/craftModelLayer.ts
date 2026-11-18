@@ -4,24 +4,16 @@
  * a little fill so its shaded side is not black. Held for the camera to orbit.
  *
  * The scene is in Earth radii, where a depth buffer cannot hold apart parts a few centimetres
- * apart seen from metres away. So the model has a scene of its own, in metres about the craft,
- * seen by a camera matched to the view's each frame and drawn over it with its own depth:
- * nothing can come between the camera and a craft it is this close to. Where the craft is, the
+ * apart seen from metres away. So the model is drawn in metres over the view (`metrePass`,
+ * `globe/metreView.ts`): nothing can come between the camera and a craft it is this close to.
+ * Where the craft is, the
  * camera's place relative to it, is worked out in double precision, so the model stays steady
  * to well under a millimetre at L2, 1.5 million km out.
  */
 
-import {
-  AmbientLight,
-  DirectionalLight,
-  Group,
-  PerspectiveCamera,
-  Scene,
-  Vector3,
-  type Object3D,
-} from 'three';
+import { Vector3, type Object3D } from 'three';
 import type { LayerFactory, Triple } from '../../globe/layerHost';
-import { cameraOnCraft, METRES_PER_SCENE } from '../../globe/metreView';
+import { metrePass } from '../../globe/metreView';
 import { awayFromSun } from './craftAttitude';
 import type { SceneCraft } from './craftLayer';
 import { sceneModelOf, type SceneModel } from './craftModels';
@@ -98,32 +90,15 @@ export function pointsBeside<Craft extends Pick<SceneCraft, 'id' | 'km'>>(
 }
 
 export const craftModel: LayerFactory<FocusedCraft | null> = (host) => {
-  const scene = new Scene();
-  const group = new Group();
-  group.name = 'craft-model';
-  const sunlight = new DirectionalLight(0xfff4e0, 2.6);
-  sunlight.target = group;
-  scene.add(group, sunlight, new AmbientLight(0x8890a0, 0.7));
-  const seen = new PerspectiveCamera();
-  /** Where the craft is in the view's scene, while it is drawn. */
-  const at = new Vector3();
-  let drawing = false;
   /** The model built, and whose. */
   let built: { readonly id: string; readonly object: Object3D } | null = null;
   /** The craft asked for: a model that comes in for another is not drawn. */
   let wanted: string | null = null;
-  let held = false;
-
-  host.afterRender(() => {
-    // Said on the globe, for the end-to-end tests: whose model is drawn, if any.
-    const { dataset } = host.container;
-    if (!drawing || wanted === null || built?.id !== wanted) {
-      delete dataset['craftModel'];
-      return;
-    }
-    cameraOnCraft(host.camera, at, seen);
-    host.drawOver(scene, seen);
-    dataset['craftModel'] = wanted.toLowerCase();
+  const pass = metrePass(host, {
+    name: 'craft-model',
+    dataset: 'craftModel',
+    fill: 0.7,
+    drawn: () => (wanted !== null && built?.id === wanted ? wanted.toLowerCase() : null),
   });
 
   function build(craft: FocusedCraft): void {
@@ -132,11 +107,11 @@ export const craftModel: LayerFactory<FocusedCraft | null> = (host) => {
       (make) => {
         if (wanted !== id || built?.id === id) return;
         if (built !== null) {
-          group.remove(built.object);
+          pass.group.remove(built.object);
           releaseModel(built.object);
         }
         built = { id, object: make() };
-        group.add(built.object);
+        pass.group.add(built.object);
         host.requestRender();
       },
       () => {
@@ -151,31 +126,21 @@ export const craftModel: LayerFactory<FocusedCraft | null> = (host) => {
       const toScene = host.spaceToScene();
       if (craft === null || toScene === null) {
         wanted = null;
-        drawing = false;
-        if (held) host.holdCraft(null);
-        held = false;
+        pass.release();
         host.requestRender();
         return;
       }
-      at.set(...toScene(craft.km));
-      const sun = host.sunPosition();
-      const rotation = awayFromSun(at, sun);
-      group.quaternion.copy(rotation);
-      // A directional light shines from its place toward its target: from the Sun's side.
-      sunlight.position.copy(sun).sub(at).setLength(1000);
+      const at = new Vector3(...toScene(craft.km));
+      pass.place(at, awayFromSun(at, host.sunPosition()));
       if (wanted !== craft.id) {
         wanted = craft.id;
         if (built?.id !== craft.id) build(craft);
       }
-      drawing = true;
-      host.holdCraft({
+      pass.hold({
         id: craft.id.toLowerCase(),
         about: craft.model.about,
-        position: at.clone(),
-        rotation,
-        radius: craft.model.radius / METRES_PER_SCENE,
+        radius: craft.model.radius,
       });
-      held = true;
       host.requestRender();
     },
     dispose() {
