@@ -792,6 +792,13 @@
     "cite": "Lainey, V., Rambaux, N., Tobie, G., Cooper, N., Zhang, Q., Noyelles, B. & Baillié, K. (2024). A recently formed ocean inside Saturn’s moon Mimas. Nature 626, 280–282",
     "url": "https://doi.org/10.1038/s41586-023-06975-9"
   },
+  "lalDetectors": {
+    "name": "LALSuite: LIGO's detector constants",
+    "kind": "reference",
+    "cite": "LIGO Scientific Collaboration, LALSuite, the LAL library's detector constants: where LIGO Livingston (30.5629° N, 90.7742° W) and LIGO Hanford (46.4551° N, 119.4077° W) stand, and their arms' bearings, east of north (Livingston 252.28° and 162.28°, Hanford 324.0° and 234.0°)",
+    "url": "https://lscsoft.docs.ligo.org/lalsuite/lal/group___detector_constants.html",
+    "licence": "GPL-2.0-or-later"
+  },
   "laskar1993": {
     "name": "Laskar, Joutel & Robutel 1993",
     "kind": "paper",

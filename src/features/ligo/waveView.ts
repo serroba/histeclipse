@@ -5,20 +5,12 @@
  * motion; the reader can drag it round and zoom. Loaded the first time the wave is opened.
  */
 
-import {
-  AmbientLight,
-  type Camera,
-  DirectionalLight,
-  PerspectiveCamera,
-  Scene,
-  Vector3,
-  WebGLRenderer,
-} from 'three';
+import { type Camera, PerspectiveCamera, type Scene, WebGLRenderer } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-import { createSpaceGrid, SHEETS, STACK_DEPTH } from './spaceGrid';
 import type { Waveform } from './strain';
-import { mergerMs, momentText, sheets, strainOfSheets, waveTimeAt } from './wavePlay';
+import { mergerMs, momentText, waveTimeAt } from './wavePlay';
+import { AIMS, createWaveScene, type WaveChapter, type WaveScene } from './waveScene';
 
 /** What the view asks of a renderer: WebGL's, or a stand-in in the unit tests. */
 export interface WaveRenderer {
@@ -40,10 +32,14 @@ export interface WaveViewOptions {
   readonly covered?: () => number;
   /** Told where the wave is, in words, whenever that changes. */
   readonly onMoment: (text: string) => void;
+  /** Told the wave's time, s from the merger, every frame drawn. */
+  readonly onTime?: (t: number) => void;
   readonly renderer?: () => WaveRenderer;
 }
 
 export interface WaveView {
+  /** Show space and the ring, or the detector; the camera goes back to the story's. */
+  setChapter(chapter: WaveChapter): void;
   setPlaying(playing: boolean): void;
   restart(): void;
   dispose(): void;
@@ -51,10 +47,6 @@ export interface WaveView {
 
 /** Behind it all: near-black, a little blue, as the other stories. */
 const NIGHT = 0x02040a;
-/** What the camera looks at, just behind the ring, and the way it looks from: nearly face on,
- * a little from above and to one side, so the sheets behind show. */
-const TARGET = new Vector3(0, 0, -STACK_DEPTH * 0.15);
-const FROM = new Vector3(0.2, 0.18, 1).normalize();
 /** How much of the space, in ring radii from its middle, the camera keeps in view. */
 const FRAMED = 1.5;
 const HALF_FOV = (20 * Math.PI) / 180;
@@ -88,103 +80,124 @@ function webgl(): WaveRenderer {
   return new WebGLRenderer({ antialias: true });
 }
 
-/** Draws the wave into `host`, filling it. If WebGL cannot be had, throws: the part says so. */
-/** The scene: the stack of sheets, the ring and its grid, lit. */
-function space(): {
-  readonly scene: Scene;
-  readonly stack: ReturnType<typeof sheets>;
-  readonly grid: ReturnType<typeof createSpaceGrid>;
+/**
+ * The camera: framed above the stage as the view resizes, at the story's place for the chapter
+ * until the reader takes it, and back there when aimed again (`null`: the same chapter).
+ */
+function storyCamera(
+  host: HTMLElement,
+  renderer: WaveRenderer,
+  drawn: Pick<WaveScene, 'scalePoints'>,
+  covered: (() => number) | undefined,
+): {
+  readonly camera: PerspectiveCamera;
+  readonly controls: OrbitControls;
+  aim(chapter: WaveChapter | null): void;
+  dispose(): void;
 } {
-  const scene = new Scene();
-  const stack = sheets(SHEETS, STACK_DEPTH);
-  const grid = createSpaceGrid(stack.depths);
-  const key = new DirectionalLight(0xffffff, 2.2);
-  key.position.set(2, 3, 4);
-  scene.add(grid.group, key, new AmbientLight(0x8890a0, 0.8));
-  return { scene, stack, grid };
-}
-
-export function mountWaveView(host: HTMLElement, options: WaveViewOptions): WaveView {
-  const { wave } = options;
-  const renderer = (options.renderer ?? webgl)();
-  renderer.setClearColor(NIGHT);
-  const { scene, stack, grid } = space();
   const camera = new PerspectiveCamera(40, 1, 0.05, 100);
-  const canvas = renderer.domElement;
-  canvas.setAttribute('data-testid', 'wave-canvas');
-  host.append(canvas);
-  const controls = readerControls(camera, canvas);
-
+  const controls = readerControls(camera, renderer.domElement);
+  let chapter: WaveChapter = 'space';
   let distance = 6;
   let taken = false;
   controls.addEventListener('start', () => {
     taken = true;
   });
+  function place(): void {
+    const { from, target } = AIMS[chapter];
+    camera.position.copy(from).multiplyScalar(distance).add(target);
+    controls.target.copy(target);
+    controls.update();
+  }
   function fit(): void {
     const width = Math.max(1, host.clientWidth);
     const height = Math.max(1, host.clientHeight);
     const pixelRatio = Math.min(window.devicePixelRatio, 2);
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(width, height, true);
-    grid.scalePoints(pixelRatio);
+    drawn.scalePoints(pixelRatio);
     camera.aspect = width / height;
-    const framed = framing(width, height, options.covered?.() ?? 0);
+    const framed = framing(width, height, covered?.() ?? 0);
     camera.setViewOffset(width, height, 0, framed.lift, width, height);
     camera.updateProjectionMatrix();
     distance = framed.distance;
     if (!taken) place();
   }
-  /** The story's own camera. */
-  function place(): void {
-    camera.position.copy(FROM).multiplyScalar(distance).add(TARGET);
-    controls.target.copy(TARGET);
-    controls.update();
-  }
   fit();
-  place();
   const watcher = new ResizeObserver(fit);
   watcher.observe(host);
+  return {
+    camera,
+    controls,
+    aim(next) {
+      chapter = next ?? chapter;
+      taken = false;
+      place();
+    },
+    dispose() {
+      watcher.disconnect();
+      controls.dispose();
+    },
+  };
+}
+
+/** Draws the wave into `host`, filling it. If WebGL cannot be had, throws: the part says so. */
+export function mountWaveView(host: HTMLElement, options: WaveViewOptions): WaveView {
+  const { wave } = options;
+  const renderer = (options.renderer ?? webgl)();
+  renderer.setClearColor(NIGHT);
+  const drawn = createWaveScene();
+  const canvas = renderer.domElement;
+  canvas.setAttribute('data-testid', 'wave-canvas');
+  host.append(canvas);
+  const view = storyCamera(host, renderer, drawn, options.covered);
 
   let playing = !options.stillness;
   let ms = options.stillness ? mergerMs(wave) : 0;
   let last: number | null = null;
   let said = '';
   host.dataset['playing'] = String(playing);
+  host.dataset['chapter'] = 'space';
   renderer.setAnimationLoop((now) => {
     const dt = last === null ? 0 : Math.min(100, now - last);
     last = now;
     if (playing) ms += dt;
     const t = waveTimeAt(wave, ms);
-    grid.set(strainOfSheets(wave, t, stack));
+    drawn.set(wave, t);
+    options.onTime?.(t);
     const text = momentText(wave, t);
     if (text !== said) {
       said = text;
       options.onMoment(text);
     }
-    controls.update();
-    renderer.render(scene, camera);
+    view.controls.update();
+    renderer.render(drawn.scene, view.camera);
     host.dataset['drawn'] = 'true';
   });
 
   return {
+    setChapter(next) {
+      drawn.show(next);
+      host.dataset['chapter'] = next;
+      view.aim(next);
+    },
     setPlaying(next) {
       playing = next;
       host.dataset['playing'] = String(next);
     },
     restart() {
       ms = 0;
-      taken = false;
-      place();
+      view.aim(null);
     },
     dispose() {
       renderer.setAnimationLoop(null);
-      watcher.disconnect();
-      controls.dispose();
-      grid.dispose();
+      view.dispose();
+      drawn.dispose();
       renderer.dispose();
       renderer.forceContextLoss();
       canvas.remove();
-      for (const name of ['playing', 'drawn']) Reflect.deleteProperty(host.dataset, name);
+      for (const name of ['playing', 'drawn', 'chapter'])
+        Reflect.deleteProperty(host.dataset, name);
     },
   };
 }

@@ -93,6 +93,15 @@ describe('the wave passing, drawn (#829)', () => {
     expect(moments).toEqual(['The merger · 150 Hz']);
   });
 
+  it('Given the view, When the detector is chosen, Then it says so and still draws', () => {
+    const { host, fake, view } = mount(false);
+    expect(host.dataset['chapter']).toBe('space');
+    view.setChapter('detector');
+    expect(host.dataset['chapter']).toBe('detector');
+    fake.loop?.(0);
+    expect(fake.renders).toBe(1);
+  });
+
   it('Given the view, When disposed, Then the renderer and its context are let go', () => {
     const { host, fake, view } = mount(false);
     fake.loop?.(0);

@@ -18,6 +18,7 @@ interface Mounted {
   readonly notify: ReturnType<typeof vi.fn>;
   readonly controlShower: ReturnType<typeof vi.fn>;
   readonly showCard: ReturnType<typeof vi.fn>;
+  readonly played: ReturnType<typeof vi.fn>;
   readonly fetched: string[];
   readonly part: ReturnType<typeof mountWave>;
 }
@@ -31,6 +32,7 @@ function mount(fails: 'view' | 'data' | null = null): Mounted {
   const notify = vi.fn();
   const controlShower = vi.fn();
   const showCard = vi.fn();
+  const played = vi.fn();
   const views: Mounted['views'] = [];
   const fetched: string[] = [];
   const context: WaveContext = {
@@ -64,12 +66,17 @@ function mount(fails: 'view' | 'data' | null = null): Mounted {
     },
     globe: { controlShower },
     showCard,
+    audio: () => {
+      played();
+      throw new Error('no sound here');
+    },
     loadView: () =>
       fails === 'view'
         ? Promise.reject(new Error('no WebGL'))
         : Promise.resolve({
             mountWaveView: (_host: HTMLElement, options: WaveViewOptions) => {
               const view = {
+                setChapter: vi.fn(),
                 setPlaying: vi.fn(),
                 restart: vi.fn(),
                 dispose: vi.fn(),
@@ -84,7 +91,7 @@ function mount(fails: 'view' | 'data' | null = null): Mounted {
   store.subscribe((state) => {
     part.render(state);
   });
-  return { views, store, notify, controlShower, showCard, fetched, part };
+  return { views, store, notify, controlShower, showCard, played, fetched, part };
 }
 
 const settled = (): Promise<unknown> => new Promise((resolve) => setTimeout(resolve, 0));
@@ -191,10 +198,54 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     await settled();
     expect(views[0]?.options.wave.peak).toBeGreaterThan(0.8e-21);
     click('About GW150914');
-    expect(showCard).toHaveBeenCalledWith(GW150914_CARD);
+    expect(showCard).toHaveBeenCalledWith(expect.objectContaining(GW150914_CARD));
     click('Close');
     open(store);
     await settled();
     expect(fetched).toEqual(['/data/gw150914.json']);
+  });
+
+  it('Given it open, When Livingston is chosen, Then the detector shows with both detectors plotted, the clock following', async () => {
+    const { views, store } = mount();
+    open(store);
+    await settled();
+    expect(stage().dataset['chapter']).toBe('space');
+    const plot = stage().querySelector<HTMLElement>('.wave-plot');
+    expect(plot?.hidden).toBe(true);
+    click('At Livingston');
+    expect(views[0]?.view.setChapter).toHaveBeenLastCalledWith('detector');
+    expect(stage().dataset['chapter']).toBe('detector');
+    expect(plot?.hidden).toBe(false);
+    expect(plot?.querySelector('[data-testid="strain-h1"]')).not.toBeNull();
+    views[0]?.options.onTime?.(0);
+    expect(plot?.querySelector('[data-testid="strain-clock"]')?.textContent).toMatch(
+      /^09:50:45\.4\d\d UTC$/,
+    );
+    click('Space');
+    expect(views[0]?.view.setChapter).toHaveBeenLastCalledWith('space');
+  });
+
+  it('Given the card opened from the stage, When its action is taken, Then Livingston shows', async () => {
+    const { views, store, showCard } = mount();
+    open(store);
+    await settled();
+    click('About GW150914');
+    const card = showCard.mock.calls[0]?.[0] as { action?: { label: string; run: () => void } };
+    expect(card.action?.label).toBe('See it at Livingston');
+    card.action?.run();
+    expect(views[0]?.view.setChapter).toHaveBeenLastCalledWith('detector');
+  });
+
+  it('Given the sound, Then it plays only when asked, and says so if it cannot', async () => {
+    const { store, played, notify } = mount();
+    click('Hear it');
+    expect(played).not.toHaveBeenCalled();
+    open(store);
+    await settled();
+    expect(played).not.toHaveBeenCalled();
+    expect(stage().textContent).toContain('plays the chirp slowed 10 times and raised two octaves');
+    click('Hear it');
+    expect(played).toHaveBeenCalledTimes(1);
+    expect(notify).toHaveBeenCalledWith('Could not play the sound: no sound here');
   });
 });
