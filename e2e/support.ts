@@ -28,6 +28,12 @@ export const LIVE_TELEMETRY_HOSTS: readonly string[] = [
   'static.cloudflareinsights.com',
 ];
 
+/** Whether `url` is the live site's telemetry: to Honeycomb, Cloudflare's beacon or its posts. */
+function liveTelemetry(url: string): boolean {
+  const { host, pathname } = new URL(url);
+  return LIVE_TELEMETRY_HOSTS.includes(host) || pathname.startsWith('/cdn-cgi/rum');
+}
+
 export interface DisplayOptions {
   /** Frames per second the display gives, exactly; null for the browser's own. */
   readonly refreshRate: number | null;
@@ -57,7 +63,18 @@ export function collectProblems(page: Page): string[] {
     if (message.type() === 'error') problems.push(`console error: ${message.text()}`);
   });
   page.on('pageerror', (error) => problems.push(`uncaught: ${error.message}`));
-  page.on('requestfailed', (request) => problems.push(`request failed: ${request.url()}`));
+  const loaded = new Set<string>();
+  page.on('requestfinished', (request) => loaded.add(request.url()));
+  page.on('requestfailed', (request) => {
+    const url = request.url();
+    const error = request.failure()?.errorText ?? '';
+    if (liveTelemetry(url)) return;
+    // The live site's data may be served stale while revalidated (`stale-while-revalidate`): the
+    // page has its copy, and the browser's check behind it can be dropped, so a test failed or
+    // passed by how old the edge's copy was. Only one already loaded is let pass.
+    if (error === 'net::ERR_ABORTED' && loaded.has(url)) return;
+    problems.push(`request failed: ${url} ${error}`.trim());
+  });
   page.on('response', (response) => {
     if (response.status() >= 400) {
       problems.push(`HTTP ${String(response.status())}: ${response.url()}`);
