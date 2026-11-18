@@ -55,6 +55,7 @@ const PLACED = [
   'explore',
   // The wave shown passing (#829): it is a place of its own.
   'wave',
+  'chapter',
   'ma',
   'scale',
   'why',

@@ -44,18 +44,25 @@ function mount(stillness: boolean): {
   host: HTMLElement;
   fake: StandIn;
   moments: string[];
+  ends: boolean[];
   view: ReturnType<typeof mountWaveView>;
 } {
   const host = document.createElement('div');
   const fake = standIn();
   const moments: string[] = [];
+  const ends: boolean[] = [];
   const view = mountWaveView(host, {
     wave,
     stillness,
+    chapter: 'space',
+    atLivingston: 0.41,
+    onChapterEnd: () => {
+      ends.push(true);
+    },
     onMoment: (text) => moments.push(text),
     renderer: () => fake.renderer,
   });
-  return { host, fake, moments, view };
+  return { host, fake, moments, ends, view };
 }
 
 describe('the wave passing, drawn (#829)', () => {
@@ -91,6 +98,19 @@ describe('the wave passing, drawn (#829)', () => {
     fake.loop?.(5000);
     expect(host.dataset['playing']).toBe('false');
     expect(moments).toEqual(['The merger · 150 Hz']);
+  });
+
+  it('Given a chapter played through, Then it says so once, and again after a restart', () => {
+    const { fake, ends, view } = mount(false);
+    fake.loop?.(0);
+    for (let now = 100; now <= 30_000; now += 100) fake.loop?.(now);
+    expect(ends).toHaveLength(1);
+    view.restart();
+    for (let now = 30_100; now <= 60_000; now += 100) fake.loop?.(now);
+    expect(ends).toHaveLength(2);
+    view.setChapter('journey');
+    fake.loop?.(60_100);
+    expect(ends).toHaveLength(2);
   });
 
   it('Given the view, When the detector is chosen, Then it says so and still draws', () => {

@@ -5,12 +5,19 @@
  * motion; the reader can drag it round and zoom. Loaded the first time the wave is opened.
  */
 
-import { type Camera, PerspectiveCamera, type Scene, WebGLRenderer } from 'three';
+import {
+  type Camera,
+  PerspectiveCamera,
+  type Scene,
+  SRGBColorSpace,
+  TextureLoader,
+  WebGLRenderer,
+} from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import type { Waveform } from './strain';
-import { mergerMs, momentText, waveTimeAt } from './wavePlay';
-import { AIMS, createWaveScene, type WaveChapter, type WaveScene } from './waveScene';
+import type { WaveChapter } from '../../state/slices/display';
+import { createWaveScene, type WaveScene } from './waveScene';
 
 /** What the view asks of a renderer: WebGL's, or a stand-in in the unit tests. */
 export interface WaveRenderer {
@@ -32,13 +39,21 @@ export interface WaveViewOptions {
   readonly covered?: () => number;
   /** Told where the wave is, in words, whenever that changes. */
   readonly onMoment: (text: string) => void;
-  /** Told the wave's time, s from the merger, every frame drawn. */
+  /** Told the wave's time, s from the merger, every frame drawn that plays the wave. */
   readonly onTime?: (t: number) => void;
+  /** The chapter shown first. */
+  readonly chapter: WaveChapter;
+  /** When the merger's wave reached Livingston, s after 09:50:45 UTC: the journey's clock. */
+  readonly atLivingston: number;
+  /** Told when the chapter shown has played through once. */
+  readonly onChapterEnd?: () => void;
+  /** Earth's map, for the journey, fetched once the view is up. */
+  readonly earthMap?: string;
   readonly renderer?: () => WaveRenderer;
 }
 
 export interface WaveView {
-  /** Show space and the ring, or the detector; the camera goes back to the story's. */
+  /** Show a chapter, from its start; the camera goes back to the story's. */
   setChapter(chapter: WaveChapter): void;
   setPlaying(playing: boolean): void;
   restart(): void;
@@ -87,7 +102,7 @@ function webgl(): WaveRenderer {
 function storyCamera(
   host: HTMLElement,
   renderer: WaveRenderer,
-  drawn: Pick<WaveScene, 'scalePoints'>,
+  drawn: Pick<WaveScene, 'scalePoints' | 'aims'>,
   covered: (() => number) | undefined,
 ): {
   readonly camera: PerspectiveCamera;
@@ -104,7 +119,7 @@ function storyCamera(
     taken = true;
   });
   function place(): void {
-    const { from, target, back = 1 } = AIMS[chapter];
+    const { from, target, back = 1 } = drawn.aims[chapter];
     camera.position
       .copy(from)
       .multiplyScalar(distance * back)
@@ -155,23 +170,35 @@ export function mountWaveView(host: HTMLElement, options: WaveViewOptions): Wave
   host.append(canvas);
   const view = storyCamera(host, renderer, drawn, options.covered);
 
-  let playing = !options.stillness;
-  let ms = options.stillness ? mergerMs(wave) : 0;
+  drawn.show(options.chapter);
+  view.aim(options.chapter);
+  if (options.earthMap !== undefined) {
+    new TextureLoader().load(options.earthMap, (map) => {
+      map.colorSpace = SRGBColorSpace;
+      drawn.dressEarth(map);
+    });
+  }
+  const playing = { now: !options.stillness };
+  const startMs = (): number => (options.stillness ? drawn.stillMs(wave) : 0);
+  let ms = startMs();
+  let ended = false;
   let last: number | null = null;
   let said = '';
-  host.dataset['playing'] = String(playing);
-  host.dataset['chapter'] = 'space';
+  host.dataset['playing'] = String(playing.now);
+  host.dataset['chapter'] = options.chapter;
   renderer.setAnimationLoop((now) => {
     const dt = last === null ? 0 : Math.min(100, now - last);
     last = now;
-    if (playing) ms += dt;
-    const t = waveTimeAt(wave, ms);
-    drawn.set(wave, t);
-    options.onTime?.(t);
-    const text = momentText(wave, t);
-    if (text !== said) {
-      said = text;
-      options.onMoment(text);
+    if (playing.now) ms += dt;
+    const shown = drawn.set(wave, ms, options.atLivingston);
+    if (shown.t !== null) options.onTime?.(shown.t);
+    if (shown.text !== said) {
+      said = shown.text;
+      options.onMoment(shown.text);
+    }
+    if (!ended && ms >= drawn.lengthMs(wave)) {
+      ended = true;
+      options.onChapterEnd?.();
     }
     view.controls.update();
     renderer.render(drawn.scene, view.camera);
@@ -182,14 +209,17 @@ export function mountWaveView(host: HTMLElement, options: WaveViewOptions): Wave
     setChapter(next) {
       drawn.show(next);
       host.dataset['chapter'] = next;
+      ms = startMs();
+      ended = false;
       view.aim(next);
     },
     setPlaying(next) {
-      playing = next;
+      playing.now = next;
       host.dataset['playing'] = String(next);
     },
     restart() {
       ms = 0;
+      ended = false;
       view.aim(null);
     },
     dispose() {

@@ -8,7 +8,7 @@
  */
 
 import type { Globe } from '../../globe/globe';
-import type { Wave } from '../../state/slices/display';
+import { WAVE_CHAPTERS, type Wave, type WaveChapter } from '../../state/slices/display';
 import type { ViewState } from '../../state/viewState';
 import type { MarkerCardContent } from '../../ui/markerCard';
 import { element } from '../../ui/dom';
@@ -21,7 +21,6 @@ import { GW150914_SCHEMA, measuredWave, type Gw150914 } from './measured';
 import type { Waveform } from './strain';
 import { createStrainPlot, type StrainPlot } from './strainPlot';
 import { createWaveStage, type WaveStage } from './waveStage';
-import type { WaveChapter } from './waveScene';
 import type { WaveView, WaveViewOptions } from './waveView';
 import './wave.css';
 
@@ -83,22 +82,32 @@ function cover(
   globe.controlShower(on ? 'cover' : 'uncover');
 }
 
-/** How the view is told to draw the measured wave, and tells the stage where it is. */
+/** Earth's map, for the journey: the one the globe's story scenes use. */
+const EARTH_MAP = 'textures/earth-blue-marble-2048.jpg';
+
+/** How the view is told to draw the measured wave, and tells the stage where it is; at the
+ * end of each chapter the story goes on by itself, unless the reader asked for less motion. */
 function viewOptions(
   stage: Pick<WaveStage, 'root' | 'moment'>,
   loaded: Measured,
-  stillness: boolean,
-  plot: () => StrainPlot | null,
+  start: { readonly chapter: WaveChapter; readonly stillness: boolean; readonly base: string },
+  story: { readonly plot: () => StrainPlot | null; readonly step: (direction: 1) => void },
 ): WaveViewOptions {
   return {
     wave: loaded.wave,
-    stillness,
+    chapter: start.chapter,
+    stillness: start.stillness,
+    earthMap: `${start.base}${EARTH_MAP}`,
+    atLivingston: loaded.data.merger,
+    onChapterEnd: () => {
+      if (!start.stillness) story.step(1);
+    },
     covered: () => stage.root.offsetHeight + 24,
     onMoment: (text) => {
       stage.moment.textContent = text;
     },
     onTime: (t) => {
-      plot()?.setTime(loaded.data.merger + t);
+      story.plot()?.setTime(loaded.data.merger + t);
     },
   };
 }
@@ -111,13 +120,12 @@ function stageFor(
     readonly wave: () => Waveform | null;
     readonly close: () => void;
     readonly still: () => boolean;
+    /** Show a chapter: the view follows, as the link does. */
+    readonly goTo: (chapter: WaveChapter) => void;
+    readonly step: (direction: -1 | 1) => void;
   },
 ): WaveStage {
   const hear = soundOf(context);
-  function showChapter(chapter: WaveChapter): void {
-    stage.showChapter(chapter);
-    session.view()?.setChapter(chapter);
-  }
   const stage = createWaveStage(context.why('gravitationalWaves', 'Gravitational waves'), {
     onPlay: (playing) => {
       session.view()?.setPlaying(playing);
@@ -133,19 +141,40 @@ function stageFor(
       context.showCard({
         ...GW150914_CARD,
         action: {
-          label: 'See it at Livingston',
+          label: 'Play the story from its start',
           run: () => {
-            showChapter('detector');
+            session.goTo('source');
+            session.view()?.restart();
           },
         },
       });
     },
-    chapter: showChapter,
+    chapter: session.goTo,
+    step: session.step,
     hear: () => {
       hear(session.wave());
     },
   });
   return stage;
+}
+
+/** The story's chapters: the one shown, and going to another as the link does. */
+function storyChapters(store: PartContext['store']): {
+  now: WaveChapter;
+  readonly goTo: (chapter: WaveChapter) => void;
+  readonly step: (direction: -1 | 1) => void;
+} {
+  const chapters = {
+    now: 'source' as WaveChapter,
+    goTo: (next: WaveChapter): void => {
+      store.set((state) => ({ ...state, waveChapter: next }));
+    },
+    step: (direction: -1 | 1): void => {
+      const next = WAVE_CHAPTERS[WAVE_CHAPTERS.indexOf(chapters.now) + direction];
+      if (next !== undefined) chapters.goTo(next);
+    },
+  };
+  return chapters;
 }
 
 export function mountWave(context: WaveContext): MountedPart {
@@ -162,12 +191,14 @@ export function mountWave(context: WaveContext): MountedPart {
   let plot: StrainPlot | null = null;
   /** The wave open, or being opened; null when closed. */
   let shown: Wave | null = null;
-
+  const chapters = storyChapters(store);
   const stage = stageFor(context, {
     view: () => view,
     wave: () => measured?.wave ?? null,
     close,
     still,
+    goTo: chapters.goTo,
+    step: chapters.step,
   });
 
   function opened(loaded: Measured, made: WaveView): void {
@@ -177,29 +208,32 @@ export function mountWave(context: WaveContext): MountedPart {
     stage.setPlot(plot.root);
   }
 
-  function open(wave: Wave): void {
+  function open(wave: Wave, first: WaveChapter): void {
     shown = wave;
+    chapters.now = first;
     cover(true, [container, stage.root], globe);
     const stillness = still();
     stage.play.button.hidden = stillness;
     stage.play.set(!stillness);
-    stage.showChapter('space');
+    stage.showChapter(first);
     stage.moment.textContent = '';
     Promise.all([loadView(), loadMeasured()])
       .then(([code, loaded]) => {
         if (shown !== wave || view !== null) return;
-        opened(
-          loaded,
-          code.mountWaveView(
-            container,
-            viewOptions(stage, loaded, stillness, () => plot),
-          ),
-        );
+        const start = { chapter: first, stillness, base: context.base };
+        const story = { plot: () => plot, step: chapters.step };
+        opened(loaded, code.mountWaveView(container, viewOptions(stage, loaded, start, story)));
       })
       .catch((error: unknown) => {
         context.notify(`Could not draw the wave: ${errorMessage(error)}`);
         close();
       });
+  }
+
+  function turnTo(chapter: WaveChapter): void {
+    chapters.now = chapter;
+    stage.showChapter(chapter);
+    view?.setChapter(chapter);
   }
 
   function shut(): void {
@@ -210,12 +244,15 @@ export function mountWave(context: WaveContext): MountedPart {
   }
 
   return {
-    watches: (state) => [state.wave],
+    watches: (state) => [state.wave, state.waveChapter],
     elements: [container, stage.root],
     render(state: ViewState) {
-      if (state.wave === shown) return;
+      if (state.wave === shown) {
+        if (shown !== null && state.waveChapter !== chapters.now) turnTo(state.waveChapter);
+        return;
+      }
       if (shown !== null) shut();
-      if (state.wave !== null) open(state.wave);
+      if (state.wave !== null) open(state.wave, state.waveChapter);
     },
   };
 }
