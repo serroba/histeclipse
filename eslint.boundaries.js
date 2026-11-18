@@ -17,7 +17,8 @@ export const TIERS = [
   // The frame every 3D view draws in (#603).
   ['stage'],
   // Drawing it.
-  ['globe', 'sky', 'story', 'tablets'],
+  // And the 3D models of craft and telescopes (#859), built from their published sizes.
+  ['globe', 'sky', 'story', 'tablets', 'models'],
   // The page around it, what is reported about it, the site's texts to search, and the
   // destinations to explore (#726).
   ['ui', 'telemetry', 'text', 'explore'],

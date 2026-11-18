@@ -23,7 +23,7 @@ import {
   type Material,
 } from 'three';
 
-import { elementAt } from '../../util/arrays';
+import { elementAt } from '../util/arrays';
 
 /** NASA's figures, and the few this model adds to place its parts. */
 export const WEBB = {

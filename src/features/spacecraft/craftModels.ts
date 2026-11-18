@@ -8,63 +8,27 @@ import { Vector3, type Object3D } from 'three';
 
 import type { Body, ViewState } from '../../state/viewState';
 import type { CardModel, MarkerCardContent } from '../../ui/markerCard';
-import type { mountModelView } from './modelView';
+import { lazyModel, type ModelLoad as Load } from '../../models/lazyModel';
 
 /** Webb's and Hubble's GCAT ids. */
 const WEBB_ID = 'D01093';
 const HUBBLE_ID = 'S20580';
 
-type Load = () => Promise<{
-  readonly mountModelView: typeof mountModelView;
-  readonly build: () => Object3D;
-}>;
-
 const loadWebb: Load = () =>
-  Promise.all([import('./modelView'), import('./webbModel')]).then(([view, webb]) => ({
-    mountModelView: view.mountModelView,
-    build: webb.buildWebb,
-  }));
+  Promise.all([import('../../models/modelView'), import('../../models/webbModel')]).then(
+    ([view, webb]) => ({
+      mountModelView: view.mountModelView,
+      build: webb.buildWebb,
+    }),
+  );
 
 const loadHubble: Load = () =>
-  Promise.all([import('./modelView'), import('./hubbleModel')]).then(([view, hubble]) => ({
-    mountModelView: view.mountModelView,
-    build: hubble.buildHubble,
-  }));
-
-/** Whether the reader asked for less motion. */
-function still(): boolean {
-  return (
-    typeof window.matchMedia === 'function' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  Promise.all([import('../../models/modelView'), import('../../models/hubbleModel')]).then(
+    ([view, hubble]) => ({
+      mountModelView: view.mountModelView,
+      build: hubble.buildHubble,
+    }),
   );
-}
-
-/**
- * A card's model, mounted once its parts have come; stopping it before then means it is never
- * drawn. `sun` is where the Sun is in the model's own axes.
- */
-export function lazyModel(label: string, caption: string, sun: Vector3, load: Load): CardModel {
-  return {
-    label,
-    caption,
-    mount(host) {
-      let stop: (() => void) | null = null;
-      let gone = false;
-      load().then(
-        ({ mountModelView, build }) => {
-          if (!gone) stop = mountModelView(host, build(), { sun, stillness: still() });
-        },
-        () => {
-          host.textContent = 'The model could not be loaded.';
-        },
-      );
-      return () => {
-        gone = true;
-        stop?.();
-      };
-    },
-  };
-}
 
 const WEBB = lazyModel(
   'The James Webb Space Telescope in 3D: drag to turn it, pinch or scroll to zoom',
@@ -116,7 +80,7 @@ const WEBB_SCENE: SceneModel = {
   about: 'earth',
   pointing:
     'Drawn with its sunshield to the Sun, as it always is, and its mirror turned toward the celestial north: a convention, as where it looks at a given moment is not known here',
-  load: () => import('./webbModel').then(({ buildWebb }) => buildWebb),
+  load: () => import('../../models/webbModel').then(({ buildWebb }) => buildWebb),
 };
 
 const HUBBLE_SCENE: SceneModel = {
@@ -125,7 +89,7 @@ const HUBBLE_SCENE: SceneModel = {
   about: 'earth',
   pointing:
     'Drawn with its solar arrays square to the Sun and its aperture turned toward the celestial north, square to the Sun’s line: a convention, as where it is looking at a given moment is not known here; it is never pointed near the Sun',
-  load: () => import('./hubbleModel').then(({ buildHubble }) => buildHubble),
+  load: () => import('../../models/hubbleModel').then(({ buildHubble }) => buildHubble),
 };
 
 /** The models for the scene, by GCAT id. */
