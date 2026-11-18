@@ -36,6 +36,7 @@ const LAYER_WHYS: readonly (Layer & WhyId)[] = [
   'orbits',
   'spacecraft',
   'asteroids',
+  'telescopes',
   'temperature',
   'sealevel',
   'plates',

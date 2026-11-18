@@ -69,6 +69,7 @@ const LAYER_ICONS: Readonly<Record<Layer, UiIcon>> = {
   orbits: 'orbits',
   spacecraft: 'spacecraft',
   asteroids: 'asteroids',
+  telescopes: 'telescope',
 };
 
 const SOURCE_LABELS: Readonly<Record<BorderSource, string>> = {

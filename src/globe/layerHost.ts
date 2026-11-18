@@ -183,6 +183,7 @@ export const SURFACE_PRIORITY = {
   humans: 10,
   genomes: 20,
   volcanoes: 30,
+  telescopes: 35,
   impacts: 40,
   fossils: 50,
   minorStates: 60,

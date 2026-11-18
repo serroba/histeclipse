@@ -1,0 +1,41 @@
+/* The ground telescopes (#848, #382: CSS beside the code it styles): a gold dish on its site,
+   hollow while it is being built. */
+.empire-label.telescope-mark {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.empire-label.telescope-mark::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid #ffc861;
+  border-radius: 50% 50% 50% 50% / 30% 30% 70% 70%;
+  background: rgb(255 200 97 / 0.85);
+}
+
+.empire-label.telescope-mark.is-building::before {
+  background: transparent;
+}
+
+.empire-label.telescope-mark .impact-name {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 4px);
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+.empire-label.telescope-mark:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}

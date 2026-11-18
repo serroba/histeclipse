@@ -56,6 +56,8 @@ export const LAYERS = [
   'spacecraft',
   // The main belt's asteroids at least 100 km across, going round the Sun (#372).
   'asteroids',
+  // The most significant telescopes, on the ground and in space (#848, epic #852).
+  'telescopes',
   'empires',
   // Dated ancient genomes (AADR), counted by region around the year shown.
   'genomes',

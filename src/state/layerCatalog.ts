@@ -262,6 +262,15 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
         spans: ['years'],
         reach: 'In the years: where each is, closely from 1600 to 2500, roughly beyond.',
       },
+      {
+        id: 'telescopes',
+        label: 'Telescopes',
+        about:
+          'The most significant telescopes: on Earth, each at its site from its first light to its closing, from Herschel’s 40-foot of 1789 to the ELT being built; tap one for its card.',
+        spans: ['years'],
+        reach: 'In the years, from 1789 to today.',
+        covers: { years: [1789, PRESENT_YEAR] },
+      },
     ],
   },
 ];
