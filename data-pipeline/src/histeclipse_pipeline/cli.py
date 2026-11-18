@@ -34,6 +34,7 @@ from histeclipse_pipeline.empires import (
     write_empires,
 )
 from histeclipse_pipeline.energy_imbalance import fetch_imbalance
+from histeclipse_pipeline.enso import fetch_enso
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.eruptions import fetch_eruptions
 from histeclipse_pipeline.extremes import fetch_extremes
@@ -639,6 +640,12 @@ def amoc(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {points} AMOC points to {args.out}")
 
 
+def enso(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write NOAA's two ENSO indices (RONI and ONI) side by side, with their episodes."""
+    count = fetch_enso(args.out)
+    return _say(f"wrote NOAA's ENSO indices, {count} episodes between them, to {args.out}")
+
+
 def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write measured warming on land and sea since 1850 (Berkeley Earth) as small images."""
     count = fetch_measured_warming(args.out)
@@ -1104,6 +1111,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "amoc": (
         amoc,
         "write the AMOC measured at 26.5°N (RAPID) beside reconstructions that disagree",
+        "output directory",
+    ),
+    "enso": (
+        enso,
+        "write NOAA's El Niño indices (RONI and ONI) side by side, with each one's episodes",
         "output directory",
     ),
     "measured-warming": (
