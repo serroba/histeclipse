@@ -215,7 +215,8 @@ describe('where the bodies are, for the craft (#702)', () => {
       expect(now?.approximate).toBe(true);
       expect(now?.ring).toBe(true);
       expect(now?.at).toBeNull();
-      expect(Math.hypot(...(now?.km ?? [0, 0, 0]))).toBeCloseTo(radius, 6);
+      // Between its lowest and highest: Hubble's near-circle (#849).
+      expect(Math.abs(Math.hypot(...(now?.km ?? [0, 0, 0])) - radius)).toBeLessThan(4.6);
     });
 
     it('Given a moment before it was set free, Then it is not there', () => {
@@ -237,15 +238,13 @@ describe('where the bodies are, for the craft (#702)', () => {
       const [now] = craftNow([hubble], wheres, geocentric, gcatJd('2009-05-20T07:00'));
       const trail = now?.trail ?? [];
       expect(trail).toHaveLength(60);
-      for (const point of trail) expect(Math.hypot(...point)).toBeCloseTo(radius, 6);
+      for (const point of trail) expect(Math.abs(Math.hypot(...point) - radius)).toBeLessThan(4.6);
       const here: readonly [number, number, number] = now?.km ?? [0, 0, 0];
       const oldest = elementAt(trail, trail.length - 1);
-      const back = elementAt(trail, trail.length - 2);
-      // The lap's oldest two points lie either side of where it is now, or on it.
-      const gap = (a: readonly [number, number, number]) =>
-        Math.hypot(a[0] - here[0], a[1] - here[1], a[2] - here[2]);
-      const step = 2 * radius * Math.sin(Math.PI / 59);
-      expect(gap(oldest) + gap(back)).toBeLessThan(step * 1.05);
+      // A lap back it was where it is now (#849), but for its plane's swing over that lap: under
+      // half a degree, some 50 km at its height.
+      const gap = Math.hypot(oldest[0] - here[0], oldest[1] - here[1], oldest[2] - here[2]);
+      expect(gap).toBeLessThan(60);
     });
   });
 });

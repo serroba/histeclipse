@@ -107,7 +107,7 @@ describe('a craft’s card', () => {
     expect(facts['Orbit']).toBe(
       'About Earth, 611 to 620 km up, tilted 28.47° to the equator (24 May 1990)',
     );
-    expect(facts['Path']).toContain('Approximate: a circle at that height and tilt');
+    expect(facts['Path']).toContain('Approximate: the ellipse of its lowest and highest points');
     expect(facts['Path']).toContain('not its true ones');
     expect(card.links[0]?.href).toContain('id=1990-037B');
     expect(card.note).toBe(

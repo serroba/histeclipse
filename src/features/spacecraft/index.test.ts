@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import paths from '../../../public/data/spacecraft-paths.json';
 import record from '../../../public/data/spacecraft.json';
 import telescopePictures from '../../../public/data/telescope-pictures.json';
+import telescopes from '../../../public/data/telescopes.json';
 import type { MoonEphemeris } from '../../astro/moon';
 import { PLANETS, type PlanetEphemeris } from '../../astro/planets';
 import type { JulianDay } from '../../time/julianDay';
@@ -11,6 +12,7 @@ import type { MarkerCardContent } from '../../ui/markerCard';
 import type { FeatureContext } from '../feature';
 import { spacecraftFeature } from '.';
 import { craftModel } from './craftModelLayer';
+import { circling } from './earthOrbit';
 import { landingSites } from './landingSites';
 import { missionRoutes } from './routeLines';
 
@@ -46,9 +48,11 @@ function fakeContext(options: {
         return Promise.reject(new Error('offline'));
       const body = pictures
         ? telescopePictures
-        : url.endsWith('spacecraft-paths.json')
-          ? paths
-          : record;
+        : url.endsWith('telescopes.json')
+          ? telescopes
+          : url.endsWith('spacecraft-paths.json')
+            ? paths
+            : record;
       return Promise.resolve(new Response(JSON.stringify(body)));
     },
     globe: {
@@ -140,6 +144,57 @@ describe('the spacecraft as a feature', () => {
     ]);
   });
 
+  it('Given only the Telescopes layer, Then only the space telescopes fly, about Earth and beyond it (#849)', async () => {
+    const { context, drawn, routes, sites, refresh } = fakeContext({ planetsLoaded: true });
+    const telescopesOnly: ViewState = { ...off, layers: withLayer(off.layers, 'telescopes', true) };
+    const craft = spacecraftFeature.mount(context);
+    craft.show?.(telescopesOnly, JD_2010);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    craft.show?.(telescopesOnly, JD_2010);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(2);
+    });
+    craft.show?.(telescopesOnly, JD_2010);
+    const ids = (drawn.at(-1) as readonly { id: string }[]).map(({ id }) => id);
+    const telescopeIds = new Set(
+      telescopes.telescopes.flatMap((t) => ('craft' in t ? [t.craft.toUpperCase()] : [])),
+    );
+    expect(ids.length).toBeGreaterThan(3);
+    for (const id of ids) expect(telescopeIds).toContain(id);
+    // Hubble and Chandra about Earth; in 2010 Swift and Fermi too.
+    expect(ids).toEqual(expect.arrayContaining(['S20580', 'S25867', 'S28485', 'S33053']));
+    expect(routes.at(-1)).toBeNull();
+    expect(sites.at(-1)).toBeNull();
+  });
+
+  it('Given Earth from far off, Then Chandra, far out, is still drawn while Hubble sits on Earth (#849)', async () => {
+    const { context, drawn, refresh } = fakeContext({ planetsLoaded: true });
+    const far: ViewState = { ...on, camera: { ...on.camera, distance: 120 } };
+    const craft = spacecraftFeature.mount(context);
+    craft.show?.(far, JD_2010);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    craft.show?.(far, JD_2010);
+    const ids = (drawn.at(-1) as readonly { id: string }[]).map(({ id }) => id);
+    expect(ids).not.toContain('S20580');
+    const chandra = record.aboutEarth.find((each) => each.id === 'S25867');
+    const out = Math.hypot(
+      ...circling(chandra?.orbit ?? { perigeeKm: 0, apogeeKm: 0, inclinationDeg: 0 }, JD_2010),
+    );
+    // Drawn while the camera is within twelve times its distance from Earth's centre.
+    if (out / 6378.137 >= 10) expect(ids).toContain('S25867');
+    else expect(ids).not.toContain('S25867');
+  });
+
+  it('Given neither layer on, Then nothing flies', () => {
+    const { context, drawn } = fakeContext({ planetsLoaded: true });
+    spacecraftFeature.mount(context).show?.(off, JD_2010);
+    expect(drawn.at(-1)).toBeNull();
+  });
+
   it('Given Earth close up after 1990, Then Hubble is drawn about it, with its card; from further off, or before it flew, it is not (#795)', async () => {
     const { context, drawn, cards, refresh } = fakeContext({ planetsLoaded: true });
     const craft = spacecraftFeature.mount(context);
@@ -154,7 +209,8 @@ describe('the spacecraft as a feature', () => {
     const hubble = (drawn.at(-1) as readonly { id: string; km: readonly number[] }[]).find(
       ({ id }) => id === 'S20580',
     );
-    expect(Math.hypot(...(hubble?.km ?? []))).toBeCloseTo(6378.137 + 615.5, 3);
+    // Between its lowest (611 km) and highest (620 km) (#849).
+    expect(Math.abs(Math.hypot(...(hubble?.km ?? [])) - (6378.137 + 615.5))).toBeLessThan(4.6);
 
     craft.show?.({ ...on, camera: { ...on.camera, distance: 60 } }, JD_2010);
     expect(ids()).not.toContain('S20580');
@@ -390,7 +446,7 @@ describe('the spacecraft as a feature', () => {
       model: { radius: number };
     };
     expect(hubble.id).toBe('S20580');
-    expect(Math.hypot(...hubble.km)).toBeCloseTo(6378.137 + 615.5, 0);
+    expect(Math.abs(Math.hypot(...hubble.km) - (6378.137 + 615.5))).toBeLessThan(4.6);
     expect(hubble.model.radius).toBe(6.6);
 
     // A craft without a model has no way to it, and naming it draws no model.

@@ -92,7 +92,7 @@
    "from": "1999-07-23",
    "until": "operating",
    "orbit": "high Earth",
-   "craft": null,
+   "craft": "s25867",
    "why": "NASA's flagship X-ray mission and third Great Observatory, with the largest, most precisely shaped X-ray mirrors ever built, giving images 25 times sharper than any earlier X-ray telescope.",
    "results": [
     "Traced the separation of dark matter from normal matter in colliding galaxy clusters",
@@ -268,7 +268,7 @@
    "from": "1989-11-18",
    "until": "1993-12-23",
    "orbit": "low Earth",
-   "craft": null,
+   "craft": "s20322",
    "why": "It showed that the cosmic microwave background has a near-perfect blackbody spectrum and produced the first 'baby picture' of the universe, earning the 2006 Nobel Prize in physics.",
    "results": [
     "CMB spectrum a nearly perfect blackbody at 2.725 K",
@@ -346,7 +346,7 @@
    "from": "1999-12-10",
    "until": "operating",
    "orbit": "high Earth",
-   "craft": null,
+   "craft": "s25989",
    "why": "The biggest science satellite ever built in Europe and, in ESA's words, the most powerful X-ray telescope ever placed in orbit.",
    "results": [
     "Used X-ray echoes to map the surroundings of a black hole",
@@ -385,7 +385,7 @@
    "from": "2008-06-11",
    "until": "operating",
    "orbit": "low Earth",
-   "craft": null,
+   "craft": "s33053",
    "why": "It maps the gamma-ray sky from 8 keV to over 300 GeV, scanning the whole sky every three hours.",
    "results": [
     "Discovered the Fermi Bubbles, structures spanning 50,000 light-years",
@@ -423,7 +423,7 @@
    "from": "1991-04-05",
    "until": "2000-06-04",
    "orbit": "low Earth",
-   "craft": null,
+   "craft": "s21225",
    "why": "The second of NASA's Great Observatories and the first great gamma-ray observatory, covering six orders of magnitude in energy (30 keV-30 GeV).",
    "results": [
     "Found that gamma-ray bursts are spread evenly across the sky",
@@ -540,7 +540,7 @@
    "from": "1983-01-25",
    "until": "1983-11-21",
    "orbit": "low Earth",
-   "craft": null,
+   "craft": "s13777",
    "why": "NASA's first infrared space telescope, which made the first all-sky infrared survey and doubled the number of known astronomical sources.",
    "results": [
     "Discovered a disk of dust grains around the star Vega",
@@ -579,7 +579,7 @@
    "from": "1989-08-08",
    "until": "1993-08-15",
    "orbit": "high Earth",
-   "craft": null,
+   "craft": "s20169",
    "why": "The very first space mission for astrometry, measuring the positions of more than 100,000 stars 200 times more accurately than before.",
    "results": [
     "Hipparcos Catalogue of 118,218 stars at the highest precision",
@@ -655,7 +655,7 @@
    "from": "2004-11-20",
    "until": "2026-10-20",
    "orbit": "low Earth",
-   "craft": null,
+   "craft": "s28485",
    "why": "A first-of-its-kind multiwavelength observatory built to catch gamma-ray bursts and slew to their afterglows within about 90 seconds.",
    "results": [
     "First short gamma-ray burst with a detected afterglow (May 2005)",
@@ -694,7 +694,7 @@
    "from": "2012-06-13",
    "until": "operating",
    "orbit": "low Earth",
-   "craft": null,
+   "craft": "s38358",
    "why": "The first telescope in orbit to focus high-energy X-rays (3-79 keV) into images.",
    "results": [
     "First precise measurement of a black hole's spin",

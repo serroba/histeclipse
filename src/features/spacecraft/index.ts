@@ -19,6 +19,7 @@ import type { RelatedStep } from '../../ui/markerCard';
 import { loadSpacecraftPaths } from '../../data/spacecraftPaths';
 import type { ViewState } from '../../state/viewState';
 import type { JulianDay } from '../../time/julianDay';
+import { loadTelescopes } from '../../data/telescopes';
 import { errorMessage } from '../../util/errors';
 import type { Feature, FeatureContext } from '../feature';
 import type { Geocentric } from './approximatePaths';
@@ -101,6 +102,19 @@ function shownAt(
 
 /** From further off than this, in Earth's radii, a craft in Earth orbit sits on Earth. */
 const CLOSE_ON_EARTH = 25;
+/** Earth's radius at the equator, km. */
+const EARTH_RADIUS_KM = 6378.137;
+/**
+ * A craft far out about Earth (Chandra, a third of the way to the Moon, #849) is clear of it from
+ * further off: drawn while the camera is within this many times its own distance from Earth.
+ */
+const CLEAR_OF_EARTH = 12;
+
+/** Whether a craft about Earth, `out` Earth radii from its centre, is drawn clear of it. */
+function nearEnough(state: ViewState, out: number): boolean {
+  if (closeOnEarth(state)) return true;
+  return state.focus === 'earth' && state.camera.distance <= CLEAR_OF_EARTH * out;
+}
 
 /**
  * Whether Earth is close up: its orbiting craft can be told from it. On a craft about Earth
@@ -118,10 +132,50 @@ function closeOnEarth(state: ViewState): boolean {
  */
 function drawnIn(
   state: ViewState,
-  craft: { readonly at: string | null; readonly ring?: true },
+  craft: { readonly at: string | null; readonly ring?: true; readonly km: readonly number[] },
 ): boolean {
-  if (craft.ring === true && !closeOnEarth(state)) return false;
+  if (craft.ring === true && !nearEnough(state, Math.hypot(...craft.km) / EARTH_RADIUS_KM)) {
+    return false;
+  }
   return craft.at === null || bodyOfWorld(craft.at) !== state.focus;
+}
+
+/**
+ * The space telescopes' craft (#849), for the Telescopes layer: with it on and the Spacecraft
+ * layer off, only these fly. `ids` is undefined with neither layer on, 'loading' while the
+ * telescopes' record comes, else their GCAT ids.
+ */
+function telescopeCraft(context: FeatureContext): {
+  ids(state: ViewState): ReadonlySet<string> | 'loading' | undefined;
+} {
+  let ids: ReadonlySet<string> | null = null;
+  let asked = false;
+  return {
+    ids(state) {
+      if (!state.layers.has('telescopes')) return undefined;
+      if (ids !== null) return ids;
+      if (!asked) {
+        asked = true;
+        loadTelescopes(`${context.base}data/telescopes.json`, context.fetchJson).then(
+          (record) => {
+            ids = new Set(
+              record.telescopes.flatMap((telescope) =>
+                telescope.kind === 'space' && telescope.craft !== null
+                  ? [telescope.craft.toUpperCase()]
+                  : [],
+              ),
+            );
+            context.refresh();
+          },
+          (error: unknown) => {
+            asked = false;
+            context.notify(`Could not load the telescopes: ${errorMessage(error)}`);
+          },
+        );
+      }
+      return 'loading';
+    },
+  };
 }
 
 /** The record, its missions and where each craft is: loaded the first time the layer is on. */
@@ -164,6 +218,45 @@ function loader(
   };
 }
 
+/**
+ * Draw the craft flying at `jdTT`: the mission followed, or every craft, or with `only`, just
+ * those (the space telescopes, #849). Says which mission is followed and which craft is focused.
+ */
+function drawFlying(
+  layers: {
+    readonly drawn: ReturnType<typeof craftInFlight>;
+    readonly routes: ReturnType<typeof missionRoutes>;
+    readonly sites: ReturnType<typeof landingSites>;
+    readonly model: ReturnType<typeof craftModel>;
+  },
+  loaded: Loaded,
+  where: Parameters<typeof shownAt>[1],
+  at: {
+    readonly state: ViewState;
+    readonly jdTT: number;
+    readonly only: ReadonlySet<string> | null;
+  },
+): { readonly followed: string | null; readonly on: string | null } {
+  const { state, jdTT, only } = at;
+  const mission =
+    state.mission === null || only !== null ? null : missionNamed(loaded.missions, state.mission);
+  const shown = shownAt(loaded, where, mission, jdTT);
+  // The craft the camera is on is drawn as its model, close up, not its point (#796).
+  const focused = focusedCraft(state.craft, shown.craft);
+  layers.model.update(focused);
+  const inView = shown.craft.filter(
+    (each) => drawnIn(state, each) && (only === null || only.has(each.id)),
+  );
+  layers.drawn.update(pointsBeside(focused, inView, state.camera.distance));
+  layers.routes.update(only === null ? shown.routes : null);
+  layers.sites.update(
+    only === null
+      ? { body: state.focus, sites: landedOn(mission?.craft ?? loaded.craft, state.focus, jdTT) }
+      : null,
+  );
+  return { followed: mission?.id ?? null, on: focused === null ? null : state.craft };
+}
+
 export const spacecraftFeature: Feature = {
   id: 'spacecraft',
   picks: 'craft',
@@ -193,6 +286,7 @@ export const spacecraftFeature: Feature = {
     const load = loader(context, where.then, (all) => {
       loaded = all;
     });
+    const telescopes = telescopeCraft(context);
     /** The craft the camera is on (#796), as last shown. */
     let on: string | null = null;
     /** From a craft (#731): its mission's journey, unless that is the one followed. */
@@ -225,7 +319,9 @@ export const spacecraftFeature: Feature = {
       show(state, jdTT) {
         const offered = state.mode === 'globe' && state.ma === null;
         context.zoomRail.setSpacecraft(offered, state.layers.has('spacecraft'));
-        if (!offered || !state.layers.has('spacecraft')) {
+        // With only the Telescopes layer on, only the space telescopes fly (#849).
+        const only = state.layers.has('spacecraft') ? null : telescopes.ids(state);
+        if (!offered || only === undefined) {
           drawn.update(null);
           routes.update(null);
           sites.update(null);
@@ -237,21 +333,14 @@ export const spacecraftFeature: Feature = {
           load();
           return;
         }
-        const mission =
-          state.mission === null ? null : missionNamed(loaded.missions, state.mission);
-        followed = mission?.id ?? null;
-        const shown = shownAt(loaded, where, mission, jdTT);
-        // The craft the camera is on is drawn as its model, close up, not its point (#796).
-        const focused = focusedCraft(state.craft, shown.craft);
-        on = focused === null ? null : state.craft;
-        model.update(focused);
-        const inView = shown.craft.filter((each) => drawnIn(state, each));
-        drawn.update(pointsBeside(focused, inView, state.camera.distance));
-        routes.update(shown.routes);
-        sites.update({
-          body: state.focus,
-          sites: landedOn(mission?.craft ?? loaded.craft, state.focus, jdTT),
+        if (only === 'loading') return;
+        const flying = drawFlying({ drawn, routes, sites, model }, loaded, where, {
+          state,
+          jdTT,
+          only,
         });
+        followed = flying.followed;
+        on = flying.on;
       },
       pick: open,
     };
