@@ -31,6 +31,10 @@ export interface Materials {
   readonly ground: Material;
   /** A dome's or an enclosure's shell, seen from inside once it is cut away. */
   readonly shell: Material;
+  /** Solar cells. */
+  readonly solar: Material;
+  /** Gold or silver insulation, wrapped round a craft. */
+  readonly foil: Material;
 }
 
 export function materials(): Materials {
@@ -46,6 +50,18 @@ export function materials(): Materials {
     dark: new MeshStandardMaterial({ color: 0x2a2f38, roughness: 0.7 }),
     ground: new MeshStandardMaterial({ color: 0x5b6b4e, roughness: 1, side: DoubleSide }),
     shell: new MeshStandardMaterial({ color: 0xd6d3cc, roughness: 0.8, side: DoubleSide }),
+    solar: new MeshStandardMaterial({
+      color: 0x1d2c5a,
+      roughness: 0.35,
+      metalness: 0.5,
+      side: DoubleSide,
+    }),
+    foil: new MeshStandardMaterial({
+      color: 0xc9a54a,
+      roughness: 0.4,
+      metalness: 0.7,
+      side: DoubleSide,
+    }),
   };
 }
 
