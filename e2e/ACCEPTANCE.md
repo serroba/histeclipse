@@ -32,7 +32,7 @@ put new calculation/presentation permutations at their faster boundary.
 | -------------------------- | ------: | -----: | -----: |
 | air.spec.ts                |       1 |      1 |      0 |
 | bodies.spec.ts             |       3 |      0 |      0 |
-| boundaries.spec.ts         |       1 |      0 |      0 |
+| boundaries.spec.ts         |       2 |      2 |      0 |
 | calendars.spec.ts          |       1 |      0 |      0 |
 | carbon.spec.ts             |       1 |      0 |      0 |
 | craters.spec.ts            |       1 |      0 |      0 |
@@ -61,7 +61,7 @@ put new calculation/presentation permutations at their faster boundary.
 | sky.spec.ts                |       4 |      2 |      0 |
 | smoke.spec.ts              |       9 |      5 |      0 |
 | sources.spec.ts            |       2 |      0 |      0 |
-| telescopes.spec.ts         |       2 |      0 |      0 |
+| telescopes.spec.ts         |       7 |      3 |      0 |
 | time.spec.ts               |       2 |      1 |      0 |
 | tree.spec.ts               |       1 |      0 |      0 |
 | volcanoes.spec.ts          |       1 |      0 |      0 |
@@ -70,7 +70,7 @@ put new calculation/presentation permutations at their faster boundary.
 Use `E2E_SCOPE=acceptance pnpm test:e2e --list` to audit the selection. Timings are recorded per
 attempt; counts alone are not a runtime guarantee. Measure Actions job duration and runner-minutes
 before tuning the two shards or expanding acceptance. The baseline Linux matrix scheduled 538
-executions (522 passed, 16 skipped in the sampled run); this selection schedules 82.
+executions (522 passed, 16 skipped in the sampled run); this selection schedules 113.
 
 Back/Forward assurance is split by behaviour: the shared eclipse/Sky history journey remains
 on desktop and mobile; a focused desktop journey checks both the URL and the rendered camera
