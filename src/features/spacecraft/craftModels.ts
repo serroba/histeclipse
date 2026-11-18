@@ -9,15 +9,10 @@ import type { Object3D } from 'three';
 import type { Body, ViewState } from '../../state/viewState';
 import type { CardModel, MarkerCardContent } from '../../ui/markerCard';
 import { SPACE_SCENES } from '../../models/spaceScenes';
-import { SPACE_MODELS } from '../../models/spaceTelescopeModels';
-
-/** Webb's and Hubble's GCAT ids. */
-const WEBB_ID = 'D01093';
-const HUBBLE_ID = 'S20580';
 
 /** The models for the cards, by GCAT id: the same object each time (#797, #863). */
 const CARD_MODELS: ReadonlyMap<string, CardModel> = new Map(
-  [...SPACE_SCENES.values()].map(({ craft, telescope }) => [craft, SPACE_MODELS[telescope]]),
+  [...SPACE_SCENES.values()].map(({ craft, card }) => [craft, card]),
 );
 
 /**
@@ -46,23 +41,11 @@ export interface SceneModel {
   readonly load: () => Promise<() => Object3D>;
 }
 
-/** Which way Webb and Hubble are drawn pointing, and that it is a convention. */
-const POINTING: Readonly<Record<string, string>> = {
-  [WEBB_ID]:
-    'Drawn with its sunshield to the Sun, as it always is, and its mirror turned toward the celestial north: a convention, as where it looks at a given moment is not known here',
-  [HUBBLE_ID]:
-    'Drawn with its solar arrays square to the Sun and its aperture turned toward the celestial north, square to the Sun’s line: a convention, as where it is looking at a given moment is not known here; it is never pointed near the Sun',
-};
-
-/** Which way the others are drawn pointing. */
-const KEPT_TO_THE_SUN =
-  'Drawn with the side it keeps to the Sun toward the Sun, and turned toward the celestial north about that line: a convention, as where it looks at a given moment is not known here';
-
 /** The models for the scene, by GCAT id (#796, #863). */
 const SCENE_MODELS: ReadonlyMap<string, SceneModel> = new Map(
-  [...SPACE_SCENES.values()].map(({ craft, radius, about, build }) => [
+  [...SPACE_SCENES.values()].map(({ craft, radius, about, pointing, build }) => [
     craft,
-    { radius, about, pointing: POINTING[craft] ?? KEPT_TO_THE_SUN, load: build },
+    { radius, about, pointing, load: build },
   ]),
 );
 
