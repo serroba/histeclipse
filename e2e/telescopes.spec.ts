@@ -175,7 +175,7 @@ test('Hubble goes round Earth close up, its card saying how its path is drawn, s
     const card = page.getByTestId('marker-card');
     await expect(card).toContainText('24 April 1990');
     await expect(card).toContainText('611 to 620 km up, tilted 28.47° to the equator');
-    await expect(card).toContainText('Approximate: a circle at that height and tilt');
+    await expect(card).toContainText('Approximate: the ellipse of its lowest and highest points');
   });
   await test.step('And its card lists eight pictures it took, from ESA/Hubble under CC BY 4.0, one opening larger with its credit', async () => {
     const card = page.getByTestId('marker-card');
@@ -240,6 +240,35 @@ test('the Telescopes layer shows the great telescopes on the ground from first l
       page.getByRole('button', { name: 'Extremely Large Telescope (being built): details' }),
     ).toBeAttached({ timeout: 30_000 });
     await expect(page.getByRole('button', { name: /Arecibo Telescope/ })).toHaveCount(0);
+  });
+  expect(problems).toEqual([]);
+});
+
+test('with the Telescopes layer, the space telescopes go round Earth, and no other craft (#849) @acceptance', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const hubble = page.getByRole('button', { name: 'Hubble Space Telescope', exact: true });
+  const chandra = page.locator('[data-pick="craft:S25867"]');
+  await test.step('Given Earth in 2009 with only the Telescopes layer on, Then Hubble and Chandra are named about it', async () => {
+    await page.goto('./?focus=earth&cam=-30,60,12&layers=telescopes&t=2009-05-20T12:00Z');
+    await expect(hubble).toBeVisible({ timeout: 30_000 });
+    await expect(chandra).toBeAttached();
+    // No craft but telescopes: Voyager 1 is not among them.
+    await expect(page.locator('[data-pick="craft:D00578"]')).toHaveCount(0);
+    await expect(page.locator('[data-pick^="craft:"]')).toHaveCount(9);
+  });
+  await test.step('When ten minutes pass, Then Hubble has gone on round its orbit', async () => {
+    const before = await hubble.boundingBox();
+    await page.goto('./?focus=earth&cam=-30,60,12&layers=telescopes&t=2009-05-20T12:10Z');
+    await expect(hubble).toBeVisible({ timeout: 30_000 });
+    const after = await hubble.boundingBox();
+    const moved = Math.hypot(
+      (after?.x ?? 0) - (before?.x ?? 0),
+      (after?.y ?? 0) - (before?.y ?? 0),
+    );
+    expect(moved).toBeGreaterThan(20);
   });
   expect(problems).toEqual([]);
 });

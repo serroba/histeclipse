@@ -498,7 +498,7 @@
   },
   "telescopes": {
     "title": "Telescopes",
-    "what": "The most significant telescopes, on Earth and in space: about forty, from Herschel’s 40-foot of 1789 to Webb, each where it stood or flew in the years it worked.",
+    "what": "The most significant telescopes, on Earth and in space: about forty, from Herschel’s 40-foot of 1789 to Webb, each where it stood or flew in the years it worked, the space telescopes going round their orbits.",
     "sources": [
       "almaObservatory",
       "birrCastle",
@@ -510,9 +510,11 @@
       "esaTelescopes",
       "esoTelescopes",
       "fashi2026",
+      "gcat",
       "iacGtc",
       "ikiSrg",
       "jodrellBank",
+      "jplHorizonsCraft",
       "keckObservatory",
       "mitTess",
       "mpcObservatoryCodes",
@@ -528,7 +530,7 @@
       "skaObservatory",
       "uchicagoYerkes"
     ],
-    "how": "A telescope is here if it meets one of three criteria: it was the largest of its kind in its time (Herschel’s 40-foot, the Leviathan, Yerkes, Hooker, Hale, Keck, the GTC, Arecibo, FAST, Webb); it was a first in its band of light (the first in space for X-rays that focus to images, the first all-sky surveys in infrared, microwave or gamma rays); or it is known for landmark discoveries (Hubble’s expanding universe at Mount Wilson, the first exoplanets, dark energy, pulsars, the age of the universe). The choice is the site’s own, and a short list: many great telescopes are not in it. Each fact is from the telescope’s operator, or for the historical ones a museum or the estate that keeps them; none from Wikipedia. Dates are as precise as the source gives them: a ground telescope from its first light (or, for radio dishes without one, its completion or opening) to its closing, a space telescope from launch to the end of its science. Sites are from the operators, or the IAU Minor Planet Center’s observatory codes; Herschel’s house in Slough is long demolished, and is placed at the street corner Slough Museum names.",
+    "how": "A telescope is here if it meets one of three criteria: it was the largest of its kind in its time (Herschel’s 40-foot, the Leviathan, Yerkes, Hooker, Hale, Keck, the GTC, Arecibo, FAST, Webb); it was a first in its band of light (the first in space for X-rays that focus to images, the first all-sky surveys in infrared, microwave or gamma rays); or it is known for landmark discoveries (Hubble’s expanding universe at Mount Wilson, the first exoplanets, dark energy, pulsars, the age of the universe). The choice is the site’s own, and a short list: many great telescopes are not in it. Each fact is from the telescope’s operator, or for the historical ones a museum or the estate that keeps them; none from Wikipedia. Dates are as precise as the source gives them: a ground telescope from its first light (or, for radio dishes without one, its completion or opening) to its closing, a space telescope from launch to the end of its science. Sites are from the operators, or the IAU Minor Planet Center’s observatory codes; Herschel’s house in Slough is long demolished, and is placed at the street corner Slough Museum names. In space, each telescope flies while it worked (from launch to the end of its science, or today), as the Spacecraft layer draws it. Out at L2 and round the Sun (Webb, Gaia, Planck, Herschel, WMAP, Euclid, Spektr-RG, Spitzer, Kepler, TESS), as JPL Horizons has it, where it truly was. About Earth (Hubble, Chandra, XMM-Newton, Fermi, Swift, NuSTAR, COBE, Compton, IRAS, Hipparcos), on the ellipse of its orbit as first measured, from GCAT’s satellite catalogue: its lowest and highest points and its tilt, gone round at its own pace, faster near Earth as Kepler’s second law has it (Chandra’s once in some 64 hours, reaching a third of the way to the Moon; Hubble’s in 97 minutes), its plane swinging as Earth’s bulge pulls on it. Where along it the telescope is, which way the ellipse faces, and where in it its lowest point lies are not known here, and are drawn as approximate, amber. As the years play fast, a low orbit is seen as its ring; at an hour a second or slower, the telescope going round it.",
     "certainty": [
       "Sources disagree on some dates, and one is chosen and said: Herschel’s 40-foot was finished in 1787 (Science Museum Group) or 1789 (Royal Museums Greenwich, used); Birr Castle gives the Leviathan as the largest until 1914 or 1917, and no date its observing ended (1914 used); Keck I saw first light in 1990 with 9 of its 36 segments, and began science in 1993; FAST was completed in 2016 and began formal operation in 2020.",
       "Swift ended on 20 October 2026, when drag brought it down to 275 km and it entered safe mode; it is to re-enter the atmosphere. eROSITA, on Spektr-RG, has been in safe mode since 26 February 2022; ART-XC, beside it, works on."

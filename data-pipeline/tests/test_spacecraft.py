@@ -370,7 +370,7 @@ def test_a_craft_nssdca_never_catalogued_has_no_page() -> None:
 
 
 def test_hubble_is_the_craft_that_stays_about_earth_with_its_first_orbit() -> None:
-    [hubble] = ABOUT_EARTH
+    hubble = ABOUT_EARTH[0]
     assert hubble["id"] == "S20580"
     assert hubble["name"] == "Hubble Space Telescope"
     assert hubble["cospar"] == "1990-037B"
@@ -381,3 +381,18 @@ def test_hubble_is_the_craft_that_stays_about_earth_with_its_first_orbit() -> No
         "inclinationDeg": 28.47,
         "measured": "1990-05-24",
     }
+
+
+def test_the_telescopes_in_earth_orbit_follow_hubble_each_with_its_orbit() -> None:
+    ids = [craft["id"] for craft in ABOUT_EARTH]
+    assert ids[0] == "S20580"
+    assert {"S25867", "S25989", "S33053", "S28485", "S38358"} <= set(ids)
+    chandra = next(craft for craft in ABOUT_EARTH if craft["id"] == "S25867")
+    assert chandra["orbit"] == {
+        "perigeeKm": 9999,
+        "apogeeKm": 138826,
+        "inclinationDeg": 28.56,
+        "measured": "1999-08-27",
+    }
+    iras = next(craft for craft in ABOUT_EARTH if craft["id"] == "S13777")
+    assert iras["phases"] == [["Earth", "1983-01-26T03:19", "1983-11-21", "O", "-"]]

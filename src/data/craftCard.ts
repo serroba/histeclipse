@@ -85,7 +85,7 @@ export interface CraftCard {
 }
 
 const ABOUT_EARTH =
-  'Approximate: a circle at that height and tilt, gone round at the pace such a circle is. Where it is along the circle, and which way the circle faces, are not its true ones, and its height has changed since';
+  'Approximate: the ellipse of its lowest and highest points, at that tilt, gone round at its own pace, faster near Earth. Where it is along the ellipse, and which way the ellipse faces, are not its true ones, and its orbit has changed since';
 
 const RECORD =
   'Record: GCAT, Jonathan McDowell, planet4589.org (CC BY 4.0); NASA NSSDCA’s Chronology of Lunar and Planetary Exploration.';

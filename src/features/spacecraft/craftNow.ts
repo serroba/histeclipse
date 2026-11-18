@@ -10,7 +10,7 @@
 import { gcatJd, type Craft } from '../../data/spacecraft';
 import { craftAt, type CraftPaths, type CraftWhere } from '../../data/spacecraftPaths';
 import { approximatePath, type Geocentric } from './approximatePaths';
-import { circling, lapDays } from './earthOrbit';
+import { circling, lapMoments } from './earthOrbit';
 import type { Eased } from './orbitEase';
 import type { Vec3 } from '../../astro/transfer';
 
@@ -201,13 +201,14 @@ function trailOf(
   if ('at' in where) return [];
   const near = 'centre' in where && where.centre === 'Earth';
   // In orbit about Earth, the lap it has just made, closed: a ring where it goes round (#795).
-  const points = craft.orbit === undefined ? TRAIL_POINTS : RING_POINTS;
-  const step =
-    craft.orbit === undefined
-      ? (near ? TRAIL_DAYS_NEAR : TRAIL_DAYS_FAR) / TRAIL_POINTS
-      : lapDays(craft.orbit) / (RING_POINTS - 1);
+  const points = TRAIL_POINTS;
+  const step = (near ? TRAIL_DAYS_NEAR : TRAIL_DAYS_FAR) / TRAIL_POINTS;
   const trail: Vec3[] = [];
-  for (const then of trailMoments(jdTT, step, points)) {
+  const moments =
+    craft.orbit === undefined
+      ? trailMoments(jdTT, step, points)
+      : lapMoments(craft.orbit, jdTT, RING_POINTS);
+  for (const then of moments) {
     const before = wheres.where(craft, then);
     // Back into a stay at a world, it ends where it left: further back would trace the world's
     // own path, the stray line #716 left out, and cost the world's place at each point (#765).

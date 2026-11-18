@@ -116,6 +116,7 @@ describe('the telescopes’ sources (#847)', () => {
     };
     const cited = new Set(file.telescopes.flatMap((telescope) => telescope.sources));
     for (const source of cited) expect(SOURCES, source).toHaveProperty(source);
-    expect(new Set(WHYS.telescopes.sources)).toEqual(cited);
+    // The why cites them all, and what draws the space telescopes' orbits (#849).
+    for (const source of cited) expect(WHYS.telescopes.sources).toContain(source);
   });
 });
