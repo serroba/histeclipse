@@ -18,7 +18,9 @@
  * - `craft` names the craft the camera is on (#796), by its GCAT id (`d01093`, `s20580`): the
  *   camera orbits it, close enough to see it, and `cam` is then in the craft's own size (half
  *   its longest side, its "radius"). `focus` stays the body it is about, which leaving it goes
- *   back to. Absent means a body is in focus.
+ *   back to. Absent means a body is in focus. `site` (`url.ts`) names a telescope on the ground
+ *   the camera is at instead (#864, #876), by its id in the record (`lovell`); links from before
+ *   it say `craft=lovell`, and are still read so.
  * - `wave` opens a gravitational wave passing (#829): `gw150914`, the first one heard, its
  *   ring of test masses and the space about it stretched and squeezed. Absent shows none.
  * - `chapter` is the part of the wave's story shown (#833): `source` (absent), `journey`,
@@ -51,6 +53,34 @@ export type Wave = (typeof WAVES)[number];
 export const WAVE_CHAPTERS = ['source', 'journey', 'space', 'detector'] as const;
 export type WaveChapter = (typeof WAVE_CHAPTERS)[number];
 
+/** What the camera is on, close enough to see it (#796, #864, #876): a craft or a telescope's site. */
+interface CameraOn {
+  readonly kind: 'craft' | 'site';
+  /** A craft's GCAT id, or a telescope's id in the record; lower case. */
+  readonly id: string;
+}
+
+/** A craft's GCAT id: `d…` beyond Earth, `s…` about it. */
+const CRAFT_ID = /^[ds]\d{5}$/i;
+
+/** A telescope's id in the record, as `site` gives it, or an error saying what was expected. */
+export function parseSite(raw: string): string {
+  if (!/^[a-z][a-z-]{1,39}$/i.test(raw)) {
+    throw new Error('expected a craft’s GCAT id, such as d01093, or a telescope’s, such as lovell');
+  }
+  return raw.toLowerCase();
+}
+
+/** The craft the camera is on, by its GCAT id; null at a site or a body. */
+export function craftOn(state: Pick<DisplayState, 'on'>): string | null {
+  return state.on?.kind === 'craft' ? state.on.id : null;
+}
+
+/** The telescope on the ground the camera is at, by its id; null on a craft or a body. */
+export function siteOn(state: Pick<DisplayState, 'on'>): string | null {
+  return state.on?.kind === 'site' ? state.on.id : null;
+}
+
 export interface DisplayState {
   readonly figures: Figures;
   /** The calendar the year bar counts in. */
@@ -63,8 +93,8 @@ export interface DisplayState {
   readonly culture: SkyCulture;
   /** The launch followed, by its first craft's GCAT id, lower case; null for every launch. */
   readonly mission: string | null;
-  /** The craft the camera is on (#796), by its GCAT id, lower case; null for a body. */
-  readonly craft: string | null;
+  /** What the camera is on (#796, #864): a craft or a telescope's site; null for a body. */
+  readonly on: CameraOn | null;
   /** The gravitational wave shown passing (#829); null when none. */
   readonly wave: Wave | null;
   /** The part of the wave's story shown (#833). */
@@ -80,7 +110,7 @@ export const DISPLAY_DEFAULTS: DisplayState = {
   planetLight: 'look',
   culture: 'modern',
   mission: null,
-  craft: null,
+  on: null,
   wave: null,
   waveChapter: 'source',
   explore: null,
@@ -100,18 +130,15 @@ export const DISPLAY_PARAMS: Params<DisplayState> = {
     },
     format: (id) => id,
   },
-  craft: {
+  on: {
     key: 'craft',
     parse: (raw) => {
-      // A craft's GCAT id, or a telescope's on the ground (#864).
-      if (!/^([ds]\d{5}|[a-z][a-z-]{1,39})$/i.test(raw)) {
-        throw new Error(
-          'expected a craft’s GCAT id, such as d01093, or a telescope’s, such as lovell',
-        );
-      }
-      return raw.toLowerCase();
+      if (CRAFT_ID.test(raw)) return { kind: 'craft', id: raw.toLowerCase() };
+      // A telescope on the ground, as links from before `site` named it (#864).
+      return { kind: 'site', id: parseSite(raw) };
     },
-    format: (id) => id,
+    // A site is written as `site` (`url.ts`).
+    format: (on) => (on?.kind === 'craft' ? on.id : null),
   },
   wave: {
     key: 'wave',

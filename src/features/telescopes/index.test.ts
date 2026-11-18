@@ -62,7 +62,7 @@ async function loaded(year: number) {
 
 describe('the Telescopes layer as a feature (#848)', () => {
   it('is shown again when the layers, the view or deep time change', () => {
-    expect(telescopesFeature.watches(on)).toEqual([on.layers, on.mode, on.ma, on.craft]);
+    expect(telescopesFeature.watches(on)).toEqual([on.layers, on.mode, on.ma, on.on]);
   });
 
   it('draws nothing and says nothing while its layer is off', () => {
@@ -109,11 +109,11 @@ describe('the Telescopes layer as a feature (#848)', () => {
 
   it('Given the view at Keck, Then Keck stands there with Subaru beside it; its card goes there (#864)', async () => {
     const { shown, sites, cards, change, drawn } = await loaded(2026);
-    shown.show?.({ ...inYear(2026), craft: 'keck' }, JD);
+    shown.show?.({ ...inYear(2026), on: { kind: 'site' as const, id: 'keck' } }, JD);
     const at = sites.at(-1);
     expect(at?.held.id).toBe('keck');
     expect(at?.near.map(({ id }) => id).sort()).toEqual(['keck', 'subaru']);
-    shown.show?.({ ...inYear(2026), craft: 'd01093' }, JD);
+    shown.show?.({ ...inYear(2026), on: { kind: 'craft' as const, id: 'd01093' } }, JD);
     expect(sites.at(-1)).toBeNull();
     const keck = drawn
       .at(-1)
@@ -123,6 +123,6 @@ describe('the Telescopes layer as a feature (#848)', () => {
     expect(card?.action?.label).toBe('Go to it');
     card?.action?.run();
     const update = change.mock.calls.at(-1)?.[0] as ((state: ViewState) => ViewState) | undefined;
-    expect(update?.(inYear(2026)).craft).toBe('keck');
+    expect(update?.(inYear(2026)).on).toEqual({ kind: 'site', id: 'keck' });
   });
 });

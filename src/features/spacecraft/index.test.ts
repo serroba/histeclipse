@@ -123,12 +123,13 @@ describe('the spacecraft as a feature', () => {
       true,
     ]);
     // A craft gone to (#796): far from it, its point; close, its model.
-    const far = { ...on, craft: 'd01093', camera: { ...on.camera, distance: 1200 } };
-    expect(spacecraftFeature.watches(far)).toEqual([on.layers, null, 'd01093', false, true]);
+    const webb = { kind: 'craft', id: 'd01093' } as const;
+    const far = { ...on, on: webb, camera: { ...on.camera, distance: 1200 } };
+    expect(spacecraftFeature.watches(far)).toEqual([on.layers, null, webb, false, true]);
     expect(spacecraftFeature.watches({ ...far, camera: { ...on.camera, distance: 4 } })).toEqual([
       on.layers,
       null,
-      'd01093',
+      webb,
       true,
       true,
     ]);
@@ -413,9 +414,13 @@ describe('the spacecraft as a feature', () => {
     expect(cards.at(-1)?.facts.at(-1)?.[1]).toContain('a convention');
     go?.run();
     const there = changes.at(-1)?.({ ...on, focus: 'moon', view: 'earth-from-here' });
-    expect(there).toMatchObject({ craft: 'd01093', focus: 'earth', view: 'free' });
+    expect(there).toMatchObject({
+      on: { kind: 'craft', id: 'd01093' },
+      focus: 'earth',
+      view: 'free',
+    });
 
-    craft.show?.({ ...on, craft: 'd01093' }, jd2023);
+    craft.show?.({ ...on, on: { kind: 'craft' as const, id: 'd01093' } }, jd2023);
     const held = models.at(-1) as { id: string; km: readonly number[]; model: { radius: number } };
     expect(held.id).toBe('D01093');
     // About 1.5 million km out, beyond Earth from the Sun.
@@ -429,15 +434,22 @@ describe('the spacecraft as a feature', () => {
     craft.pick?.('D01093');
     expect(cards.at(-1)?.action?.label).toBe('Leave it');
     cards.at(-1)?.action?.run();
-    expect(changes.at(-1)?.({ ...on, craft: 'd01093' }).craft).toBeNull();
+    expect(changes.at(-1)?.({ ...on, on: { kind: 'craft' as const, id: 'd01093' } }).on).toBeNull();
 
     // Hubble too: going to it, the camera is about Earth, its orbit drawn however far out.
     craft.pick?.('S20580');
     expect(cards.at(-1)?.action?.label).toBe('Go to it');
     expect(cards.at(-1)?.facts.at(-1)?.[1]).toContain('solar arrays square to the Sun');
     cards.at(-1)?.action?.run();
-    expect(changes.at(-1)?.(on)).toMatchObject({ craft: 's20580', focus: 'earth' });
-    const onHubble = { ...on, craft: 's20580', camera: { ...on.camera, distance: 100 } };
+    expect(changes.at(-1)?.(on)).toMatchObject({
+      on: { kind: 'craft', id: 's20580' },
+      focus: 'earth',
+    });
+    const onHubble = {
+      ...on,
+      on: { kind: 'craft', id: 's20580' } as const,
+      camera: { ...on.camera, distance: 100 },
+    };
     expect(spacecraftFeature.watches(onHubble).at(-1)).toBe(true);
     craft.show?.(onHubble, jd2023);
     const hubble = models.at(-1) as {
@@ -452,7 +464,7 @@ describe('the spacecraft as a feature', () => {
     // A craft without a model has no way to it, and naming it draws no model.
     craft.pick?.('D00273');
     expect(cards.at(-1)?.action).toBeUndefined();
-    craft.show?.({ ...on, craft: 'd00273' }, jd2023);
+    craft.show?.({ ...on, on: { kind: 'craft' as const, id: 'd00273' } }, jd2023);
     expect(models.at(-1)).toBeNull();
   });
 });

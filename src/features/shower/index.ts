@@ -220,7 +220,7 @@ export function mountShower(context: ShowerContext): ShowerPart {
     /** Turn to a body: the Sun for its steps, Earth for the shower's. */
     const focusOn = (body: 'sun' | 'earth'): void => {
       if (store.get().focus !== body)
-        store.set((state) => ({ ...state, focus: body, craft: null, view: 'free' }));
+        store.set((state) => ({ ...state, focus: body, on: null, view: 'free' }));
     };
     focusOn('earth');
     context.closeLayers();

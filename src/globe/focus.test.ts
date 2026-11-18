@@ -26,8 +26,8 @@ function frames(moved?: (move: () => void) => void) {
 
 describe('what the camera centres on (#796)', () => {
   it('Given a view, Then its focus is the craft named, else the body', () => {
-    expect(focusOf({ focus: 'moon', craft: null })).toBe('moon');
-    expect(focusOf({ focus: 'earth', craft: 'd01093' })).toBe('craft:d01093');
+    expect(focusOf({ focus: 'moon', on: null })).toBe('moon');
+    expect(focusOf({ focus: 'earth', on: { kind: 'craft', id: 'd01093' } })).toBe('craft:d01093');
     expect(craftFocus('S20580')).toBe('craft:s20580');
     expect(isCraft('craft:d01093')).toBe(true);
     expect(isCraft('mars')).toBe(false);

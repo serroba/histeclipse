@@ -100,7 +100,7 @@ export function goTo(state: ViewState, telescope: Telescope): ViewState {
     mode: 'globe',
     view: 'free',
     ma: null,
-    craft: null,
+    on: null,
     list: null,
     layers: withLayer(state.layers, 'telescopes', true),
     time:
@@ -117,5 +117,5 @@ export function goToCraft(state: ViewState, telescope: Telescope): ViewState | n
   const scene = SPACE_SCENES.get(telescope.craft.toUpperCase());
   return scene === undefined
     ? null
-    : { ...state, craft: telescope.craft, focus: scene.about, view: 'free' };
+    : { ...state, on: { kind: 'craft', id: telescope.craft }, focus: scene.about, view: 'free' };
 }

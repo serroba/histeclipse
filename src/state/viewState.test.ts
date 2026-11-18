@@ -56,14 +56,16 @@ describe('toggledLayer', () => {
 
   it('lets go of what the camera is on with the layer that holds it: a craft, or a telescope on the ground (#864)', () => {
     const base = defaultViewState(new Date(Date.UTC(2026, 0, 1)));
-    const onCraft = { ...base, craft: 'd01093' };
-    const onSite = { ...base, craft: 'lovell' };
-    expect(layerTurned(onCraft, 'spacecraft', false).craft).toBeNull();
-    expect(layerTurned(onCraft, 'telescopes', false).craft).toBe('d01093');
-    expect(layerTurned(onSite, 'telescopes', false).craft).toBeNull();
-    expect(layerTurned(onSite, 'spacecraft', false).craft).toBe('lovell');
-    expect(layerTurned(onSite, 'telescopes', true).craft).toBe('lovell');
-    expect(layerTurned(base, 'telescopes', false).craft).toBeNull();
+    const craft = { kind: 'craft', id: 'd01093' } as const;
+    const site = { kind: 'site', id: 'lovell' } as const;
+    const onCraft = { ...base, on: craft };
+    const onSite = { ...base, on: site };
+    expect(layerTurned(onCraft, 'spacecraft', false).on).toBeNull();
+    expect(layerTurned(onCraft, 'telescopes', false).on).toBe(craft);
+    expect(layerTurned(onSite, 'telescopes', false).on).toBeNull();
+    expect(layerTurned(onSite, 'spacecraft', false).on).toBe(site);
+    expect(layerTurned(onSite, 'telescopes', true).on).toBe(site);
+    expect(layerTurned(base, 'telescopes', false).on).toBeNull();
   });
 });
 

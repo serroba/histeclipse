@@ -126,7 +126,7 @@ describe('the telescopes’ list, as a part of the page (#850)', () => {
     const card = cards.at(-1);
     expect(card?.action?.label).toBe('Go to it');
     card?.action?.run();
-    expect(store.get().craft).toBe('s25867');
+    expect(store.get().on).toEqual({ kind: 'craft', id: 's25867' });
     expect(store.get().focus).toBe('earth');
     store.set((state) => ({ ...state, list: 'telescopes' }));
     await settled();
@@ -135,6 +135,6 @@ describe('the telescopes’ list, as a part of the page (#850)', () => {
       ?.click();
     // One on the ground goes to its site, its model standing there (#864).
     cards.at(-1)?.action?.run();
-    expect(store.get().craft).toBe('alma');
+    expect(store.get().on).toEqual({ kind: 'site', id: 'alma' });
   });
 });

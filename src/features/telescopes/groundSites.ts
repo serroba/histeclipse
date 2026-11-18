@@ -19,7 +19,7 @@ function siteOf(telescope: Ground): GroundSite {
   };
 }
 
-/** The ground telescope the view names (`craft`, #864) and those beside it, if it is one. */
+/** The ground telescope the view is at (#864, #876) and those beside it, if it is one. */
 export function heldSite(record: Telescopes, on: string | null): HeldSite | null {
   const ground = record.telescopes.filter(
     (telescope): telescope is Ground => telescope.kind === 'ground',
@@ -32,7 +32,7 @@ export function heldSite(record: Telescopes, on: string | null): HeldSite | null
 
 /** The view at a ground telescope, its model standing there, the camera orbiting it. */
 function atSite(state: ViewState, telescope: Telescope): ViewState {
-  return { ...state, craft: telescope.id, focus: 'earth', view: 'free' };
+  return { ...state, on: { kind: 'site', id: telescope.id }, focus: 'earth', view: 'free' };
 }
 
 /** A ground telescope's card's step to its model at its site, if it has one. */

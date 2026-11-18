@@ -108,7 +108,9 @@ describe('the rail for the view', () => {
     expect(railView({ ...free, view: 'moon-from-earth' }, true)).toBeNull();
     expect(railView({ ...free, ma: 66 }, true)).toBeNull();
     // On a craft its stops say nothing of a few metres (#796).
-    expect(railView({ ...free, craft: 'd01093' }, true)).toMatchObject({ craft: true });
+    expect(railView({ ...free, on: { kind: 'craft', id: 'd01093' } }, true)).toMatchObject({
+      craft: true,
+    });
   });
 
   it('comes down as near over Earth as the device lets the camera', () => {

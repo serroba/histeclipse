@@ -7,6 +7,7 @@
 
 import { loadTelescopes, type Telescope, type Telescopes } from '../../data/telescopes';
 import { errorMessage } from '../../util/errors';
+import { siteOn } from '../../state/viewState';
 import type { Feature, FeatureContext } from '../feature';
 import { groundModel } from './groundModelLayer';
 import { goToSite, heldSite } from './groundSites';
@@ -40,7 +41,7 @@ export const telescopesFeature: Feature = {
   id: 'telescopes',
   picks: 'telescope',
   // On or off with its layer, and only on the globe, in historical time.
-  watches: (state) => [state.layers, state.mode, state.ma, state.craft],
+  watches: (state) => [state.layers, state.mode, state.ma, state.on],
   mount(context) {
     const marksOnGlobe = context.globe.addLayer(telescopeLayer);
     const modelOnGlobe = context.globe.addLayer(groundModel);
@@ -54,7 +55,7 @@ export const telescopesFeature: Feature = {
     return {
       show(state) {
         const on = state.layers.has('telescopes') && state.mode === 'globe' && state.ma === null;
-        modelOnGlobe.update(on && record !== null ? heldSite(record, state.craft) : null);
+        modelOnGlobe.update(on && record !== null ? heldSite(record, siteOn(state)) : null);
         const year = state.time.date.year;
         const key = `${String(on)}:${String(record !== null)}:${String(year)}`;
         if (key === drawnFor) return;

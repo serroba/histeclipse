@@ -42,7 +42,7 @@ export const SKY: Watch = (s) => [
 export const SKY_SHOWN: Watch = (s) => (s.mode === 'sky' ? SKY(s) : [s.mode]);
 
 /** The body or craft in focus, its view from where, and the place picked: the globe's own. */
-export const FOCUS: Watch = (s) => [s.focus, s.craft];
+export const FOCUS: Watch = (s) => [s.focus, s.on];
 export const VIEWPOINT: Watch = (s) => [s.view];
 export const LOCATION: Watch = (s) => [s.location];
 

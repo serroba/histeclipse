@@ -17,7 +17,7 @@ import { loadSpacecraft, type Craft } from '../../data/spacecraft';
 import { missionNamed, missions, missionView, type Mission } from '../../data/spacecraftMission';
 import type { RelatedStep } from '../../ui/markerCard';
 import { loadSpacecraftPaths } from '../../data/spacecraftPaths';
-import type { ViewState } from '../../state/viewState';
+import { craftOn, type ViewState } from '../../state/viewState';
 import type { JulianDay } from '../../time/julianDay';
 import { loadTelescopes } from '../../data/telescopes';
 import { errorMessage } from '../../util/errors';
@@ -121,9 +121,7 @@ function nearEnough(state: ViewState, out: number): boolean {
  * (#796), whose own few metres the distance is in, they are drawn too.
  */
 function closeOnEarth(state: ViewState): boolean {
-  return (
-    state.focus === 'earth' && (state.craft !== null || state.camera.distance <= CLOSE_ON_EARTH)
-  );
+  return state.focus === 'earth' && (state.on !== null || state.camera.distance <= CLOSE_ON_EARTH);
 }
 
 /**
@@ -242,7 +240,7 @@ function drawFlying(
     state.mission === null || only !== null ? null : missionNamed(loaded.missions, state.mission);
   const shown = shownAt(loaded, where, mission, jdTT);
   // The craft the camera is on is drawn as its model, close up, not its point (#796).
-  const focused = focusedCraft(state.craft, shown.craft);
+  const focused = focusedCraft(craftOn(state), shown.craft);
   layers.model.update(focused);
   const inView = shown.craft.filter(
     (each) => drawnIn(state, each) && (only === null || only.has(each.id)),
@@ -254,7 +252,7 @@ function drawFlying(
       ? { body: state.focus, sites: landedOn(mission?.craft ?? loaded.craft, state.focus, jdTT) }
       : null,
   );
-  return { followed: mission?.id ?? null, on: focused === null ? null : state.craft };
+  return { followed: mission?.id ?? null, on: focused === null ? null : craftOn(state) };
 }
 
 export const spacecraftFeature: Feature = {
@@ -265,8 +263,8 @@ export const spacecraftFeature: Feature = {
   watches: (state) => [
     state.layers,
     state.mission,
-    state.craft,
-    seesModel(state.craft, state.camera.distance),
+    state.on,
+    seesModel(state.on?.id ?? null, state.camera.distance),
     closeOnEarth(state),
   ],
   mount(context) {

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 
 import { loadTelescopes, type Telescope, type Telescopes } from '../../data/telescopes';
-import { defaultViewState } from '../../state/viewState';
+import { defaultViewState, type ViewState } from '../../state/viewState';
 import { goToSite, heldSite } from './groundSites';
 
 const raw = readFileSync('public/data/telescopes.json', 'utf8');
@@ -30,12 +30,9 @@ describe('going to a telescope on the ground (#864)', () => {
     const change = vi.fn();
     const step = goToSite(named('fast'), { change });
     step.action?.run();
-    const update = change.mock.calls[0]?.[0] as (state: ReturnType<typeof defaultViewState>) => {
-      craft: string | null;
-      focus: string;
-    };
+    const update = change.mock.calls[0]?.[0] as (state: ViewState) => ViewState;
     const at = update(defaultViewState(new Date('2026-01-01T00:00:00Z')));
-    expect(at.craft).toBe('fast');
+    expect(at.on).toEqual({ kind: 'site', id: 'fast' });
     expect(at.focus).toBe('earth');
     expect(goToSite(named('hubble'), { change })).toEqual({});
     expect(goToSite({ ...named('fast'), id: 'not-modelled' }, { change })).toEqual({});
