@@ -128,4 +128,16 @@ describe('the ground model layer (#864)', () => {
     fake.frame();
     expect(fake.over).toHaveLength(0);
   });
+
+  it('Given another site, Then that one is held, from its first distance, and the first’s models let go', async () => {
+    const fake = fakeHost();
+    const layer = groundModel(fake.host);
+    layer.update({ held: KECK, near: [KECK] });
+    await vi.waitFor(() => {
+      expect((fake.held.at(-1)?.radius ?? 0) * METRES_PER_SCENE).not.toBeCloseTo(50, 0);
+    });
+    layer.update({ held: LOVELL, near: [LOVELL] });
+    expect(fake.held.at(-1)?.id).toBe('lovell');
+    expect((fake.held.at(-1)?.radius ?? 0) * METRES_PER_SCENE).toBeCloseTo(50, 6);
+  });
 });

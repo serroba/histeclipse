@@ -39,7 +39,7 @@ export interface HeldSite {
 }
 
 /** Telescopes within this of the one the camera is at stand beside it (metres). */
-export const NEAR_METRES = 3000;
+const NEAR_METRES = 3000;
 const EARTH_METRES = METRES_PER_SCENE;
 
 /** Metres east and north from `from` to `to`, on the ground: near enough flat at a few km. */

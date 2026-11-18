@@ -31,7 +31,7 @@ export function heldSite(record: Telescopes, on: string | null): HeldSite | null
 }
 
 /** The view at a ground telescope, its model standing there, the camera orbiting it. */
-export function atSite(state: ViewState, telescope: Telescope): ViewState {
+function atSite(state: ViewState, telescope: Telescope): ViewState {
   return { ...state, craft: telescope.id, focus: 'earth', view: 'free' };
 }
 

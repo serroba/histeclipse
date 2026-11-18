@@ -376,3 +376,34 @@ test('every space telescope can be gone to: from the list, and by its link (#863
   });
   expect(problems).toEqual([]);
 });
+
+test('a telescope on the ground is gone to, its model standing at its site (#864) @acceptance', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const list = page.getByRole('dialog', { name: 'Telescopes' });
+  const card = page.getByTestId('marker-card');
+  await test.step('Given the list, When they pick Lovell and go to it, Then the camera is at Jodrell Bank, its model standing there', async () => {
+    await page.goto('./?layers=telescopes&t=2026-06-01T12:00Z&list=telescopes');
+    await list
+      .getByRole('button', { name: /Lovell/ })
+      .first()
+      .click();
+    await card.getByRole('button', { name: 'Go to it' }).click();
+    await expect(globe).toHaveAttribute('data-framed', 'craft:lovell', { timeout: 30_000 });
+    await expect(globe).toHaveAttribute('data-ground-model', 'lovell', { timeout: 30_000 });
+    await expect(page).toHaveURL(/[?&]craft=lovell/);
+  });
+  await test.step('When the page is loaded again from its link, Then it opens there', async () => {
+    await page.reload();
+    await expect(globe).toHaveAttribute('data-ground-model', 'lovell', { timeout: 30_000 });
+  });
+  await test.step('When they go back to Earth, Then the site is left', async () => {
+    await page.getByRole('button', { name: 'Back to Earth' }).click();
+    await expect(globe).toHaveAttribute('data-framed', 'earth', { timeout: 30_000 });
+    await expect(globe).not.toHaveAttribute('data-ground-model', /.*/);
+  });
+  expect(problems).toEqual([]);
+});

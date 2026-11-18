@@ -211,7 +211,7 @@ export function withLayer(layers: ReadonlySet<Layer>, layer: Layer, on: boolean)
  * Whether what the camera is on is a craft, by its GCAT id (`d…` beyond Earth, `s…` about it),
  * or else a telescope on the ground, by its id in the record (#864).
  */
-export function isCraftId(on: string): boolean {
+function isCraftId(on: string): boolean {
   return /^[ds]\d{5}$/i.test(on);
 }
 

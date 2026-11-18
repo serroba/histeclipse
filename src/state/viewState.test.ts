@@ -53,6 +53,18 @@ describe('toggledLayer', () => {
     expect(layerTurned(picked, 'eclipses', false).selection).toBeNull();
     expect(layerTurned(picked, 'eclipses', true).selection).toBe(picked.selection);
   });
+
+  it('lets go of what the camera is on with the layer that holds it: a craft, or a telescope on the ground (#864)', () => {
+    const base = defaultViewState(new Date(Date.UTC(2026, 0, 1)));
+    const onCraft = { ...base, craft: 'd01093' };
+    const onSite = { ...base, craft: 'lovell' };
+    expect(layerTurned(onCraft, 'spacecraft', false).craft).toBeNull();
+    expect(layerTurned(onCraft, 'telescopes', false).craft).toBe('d01093');
+    expect(layerTurned(onSite, 'telescopes', false).craft).toBeNull();
+    expect(layerTurned(onSite, 'spacecraft', false).craft).toBe('lovell');
+    expect(layerTurned(onSite, 'telescopes', true).craft).toBe('lovell');
+    expect(layerTurned(base, 'telescopes', false).craft).toBeNull();
+  });
 });
 
 describe('awayFromEarth', () => {
