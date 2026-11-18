@@ -59,6 +59,7 @@ The reference journeys of #724 (`navigation.spec.ts`; human origins is a journey
 | `ozone.spec.ts`     | The ozone hole: each spring's cap on the globe and the record beside it (#722)                          |
 | `warming.spec.ts`   | Temperature records side by side since 1850, beside the globe (#526)                                    |
 | `oceanHeat.spec.ts` | Where the ocean gained heat: IAP's trend maps on their own scale (#589)                                 |
+| `enso.spec.ts`      | El Niño and La Niña: NOAA's two indices side by side, and where they disagree (#886)                    |
 | `chart.spec.ts`     | Geological time along the slider: the chart's units in its colours                                      |
 | `air.spec.ts`       | The air in the ice ages: CO₂ and methane against 1750                                                   |
 | `ways.spec.ts`      | Ways of life: ArchaeoGLOBE's regions by how people lived                                                |

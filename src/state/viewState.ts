@@ -86,6 +86,8 @@ export const LAYERS = [
   'warming',
   // Where the ocean gained heat since 1960, IAP's trend maps (#589).
   'oceanHeat',
+  // El Niño and La Niña since 1950, NOAA's two indices side by side (#886).
+  'enso',
   // Deep time only: the surface coloured by temperature, and sea level through time.
   'temperature',
   'sealevel',

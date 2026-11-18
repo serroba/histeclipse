@@ -1,0 +1,121 @@
+/* El Niño and La Niña's panel (#886), in the column beside the globe (ui/globePanels). */
+.enso-panel {
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgb(10 16 32 / 0.88);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.enso-panel[hidden] {
+  display: none;
+}
+
+.enso-figure {
+  margin: 0 0 6px;
+}
+
+.enso-figure figcaption {
+  margin-bottom: 2px;
+  color: var(--ink-muted);
+}
+
+.enso-chart {
+  display: block;
+  width: 100%;
+  height: 64px;
+  overflow: visible;
+}
+
+.enso-zero {
+  stroke: rgb(150 180 255 / 0.5);
+  vector-effect: non-scaling-stroke;
+}
+
+.enso-threshold {
+  stroke-dasharray: 4 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.enso-threshold.is-warm {
+  stroke: rgb(255 120 100 / 0.6);
+}
+
+.enso-threshold.is-cool {
+  stroke: rgb(110 160 255 / 0.6);
+}
+
+.enso-line {
+  fill: none;
+  stroke: var(--index);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.enso-cursor {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.enso-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.enso-row span {
+  flex: 0 0 3em;
+  color: var(--ink-muted);
+}
+
+.enso-strip {
+  flex: 1;
+  height: 8px;
+}
+
+.enso-episode.is-elNino {
+  fill: #ef6a5a;
+}
+
+.enso-episode.is-laNina {
+  fill: #5f95ef;
+}
+
+.enso-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.enso-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+  background: var(--index);
+}
+
+.enso-said {
+  margin: 0 0 4px;
+}
+
+.enso-credit {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+/* One colour per index, in the chart and its key. */
+.enso-panel .is-roni {
+  --index: #f2f2f2;
+}
+
+.enso-panel .is-oni {
+  --index: #e3c46a;
+}

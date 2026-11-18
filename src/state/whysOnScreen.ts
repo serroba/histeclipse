@@ -33,6 +33,7 @@ const LAYER_WHYS: readonly (Layer & WhyId)[] = [
   'ozone',
   'warming',
   'oceanHeat',
+  'enso',
   'orbits',
   'spacecraft',
   'asteroids',
