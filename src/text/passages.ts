@@ -106,6 +106,8 @@ const WHY_SHOWS: Readonly<Partial<Record<WhyId, string>>> = {
   eclipses: 'layers=lunar,solar',
   'empires-cliopatria': 'layers=empires',
   'empires-ohm': 'layers=empires&borders=ohm',
+  // The wave's story (#833), from its start, at the moment and over the place it was heard.
+  gravitationalWaves: 'cam=30.5630,-90.7740,3.00&t=2015-09-14T09:50Z&wave=gw150914',
   'ice-surface': SPAN_VIEWS.ice,
   'deep-surface': SPAN_VIEWS.all,
   'deep-evidence': SPAN_VIEWS.all,

@@ -117,7 +117,10 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     const { part } = mount();
     part.render(defaultViewState(new Date('2026-01-01T00:00:00Z')));
     expect(stage().hidden).toBe(true);
-    expect(part.watches({ wave: 'gw150914' } as ViewState)).toEqual(['gw150914']);
+    expect(part.watches({ wave: 'gw150914', waveChapter: 'journey' } as ViewState)).toEqual([
+      'gw150914',
+      'journey',
+    ]);
   });
 
   it('Given the wave named, Then the view opens over a covered globe, saying how far it is stretched', async () => {
@@ -209,7 +212,7 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     const { views, store } = mount();
     open(store);
     await settled();
-    expect(stage().dataset['chapter']).toBe('space');
+    expect(stage().dataset['chapter']).toBe('source');
     const plot = stage().querySelector<HTMLElement>('.wave-plot');
     expect(plot?.hidden).toBe(true);
     click('At Livingston');
@@ -228,15 +231,17 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     expect(stage().textContent).toContain('not to scale');
   });
 
-  it('Given the card opened from the stage, When its action is taken, Then Livingston shows', async () => {
+  it('Given the card opened from the stage, When its action is taken, Then the story plays from its start', async () => {
     const { views, store, showCard } = mount();
-    open(store);
+    store.set((state) => ({ ...state, wave: 'gw150914', waveChapter: 'detector' }));
     await settled();
     click('About GW150914');
     const card = showCard.mock.calls[0]?.[0] as { action?: { label: string; run: () => void } };
-    expect(card.action?.label).toBe('See it at Livingston');
+    expect(card.action?.label).toBe('Play the story from its start');
     card.action?.run();
-    expect(views[0]?.view.setChapter).toHaveBeenLastCalledWith('detector');
+    expect(store.get().waveChapter).toBe('source');
+    expect(views[0]?.view.setChapter).toHaveBeenLastCalledWith('source');
+    expect(views[0]?.view.restart).toHaveBeenCalled();
   });
 
   it('Given the sound, Then it plays only when asked, and says so if it cannot', async () => {
@@ -250,5 +255,34 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     click('Hear it');
     expect(played).toHaveBeenCalledTimes(1);
     expect(notify).toHaveBeenCalledWith('Could not play the sound: no sound here');
+  });
+
+  it('Given the story open, When it is stepped or a chapter ends, Then it goes on, and the link says where', async () => {
+    const { views, store } = mount();
+    open(store);
+    await settled();
+    expect(views[0]?.options.chapter).toBe('source');
+    click('Next');
+    expect(store.get().waveChapter).toBe('journey');
+    expect(views[0]?.view.setChapter).toHaveBeenLastCalledWith('journey');
+    click('Back');
+    click('Back');
+    expect(store.get().waveChapter).toBe('source');
+    views[0]?.options.onChapterEnd?.();
+    expect(store.get().waveChapter).toBe('journey');
+    store.set((state) => ({ ...state, waveChapter: 'detector' }));
+    views[0]?.options.onChapterEnd?.();
+    click('Next');
+    expect(store.get().waveChapter).toBe('detector');
+    expect(views[0]?.options.atLivingston).toBeGreaterThan(0.4);
+    expect(views[0]?.options.earthMap).toBe('/textures/earth-blue-marble-2048.jpg');
+  });
+
+  it('Given a link to a chapter, Then the story opens there', async () => {
+    const { views, store } = mount();
+    store.set((state) => ({ ...state, wave: 'gw150914', waveChapter: 'journey' }));
+    await settled();
+    expect(views[0]?.options.chapter).toBe('journey');
+    expect(stage().dataset['chapter']).toBe('journey');
   });
 });

@@ -1,5 +1,5 @@
 /**
- * Feature: A gravitational wave passing (#829). Opened from a link or from Explore, a ring of
+ * Feature: A gravitational wave passing (#829), told as a story (#833). Opened from a link or from Explore, a ring of
  * free masses and the space about it are drawn stretching and squeezing over the globe, in WebGL,
  * its code and LIGO's measured wave fetched only then; the stage always says how far the drawing is from the truth.
  */
@@ -50,6 +50,21 @@ test('GW150914 opens over the globe, its 3D view drawn and its scale stated, and
     await expect(plot).toBeHidden();
     await stage.getByRole('button', { name: 'Space' }).click();
     await expect(view).toHaveAttribute('data-chapter', 'space');
+  });
+  await test.step('When they step on from the source, Then the journey crosses space and reaches Earth, Livingston first, and the link names each chapter', async () => {
+    await stage.getByRole('button', { name: 'The source' }).click();
+    await expect(page).toHaveURL(/chapter=source|wave=gw150914(?!.*chapter=)/);
+    await stage.getByRole('button', { name: 'Next' }).click();
+    await expect(view).toHaveAttribute('data-chapter', 'journey');
+    await expect(page).toHaveURL(/chapter=journey/);
+    await expect(stage.getByTestId('wave-moment')).toContainText('years to go');
+    await expect(stage.getByTestId('wave-moment')).toContainText('Livingston hears it first', {
+      timeout: 30_000,
+    });
+    await expect(stage.getByTestId('wave-moment')).toContainText(
+      'Hanford hears it, 6.9 ms after Livingston',
+      { timeout: 30_000 },
+    );
   });
   await test.step('When they ask about it, Then its card gives the two black holes and links the paper and its data', async () => {
     await stage.getByRole('button', { name: 'About GW150914' }).click();

@@ -21,6 +21,8 @@
  *   back to. Absent means a body is in focus.
  * - `wave` opens a gravitational wave passing (#829): `gw150914`, the first one heard, its
  *   ring of test masses and the space about it stretched and squeezed. Absent shows none.
+ * - `chapter` is the part of the wave's story shown (#833): `source` (absent), `journey`,
+ *   `space` or `detector`. Only read with a wave.
  * - `explore` names the destination the view was arrived at from (#726), such as
  *   `human-origins`; absent when the reader found their own way. A link with it and no view of
  *   its own (no `t`, `ma` or `cam`) opens that destination.
@@ -44,6 +46,11 @@ export type PlanetLight = (typeof PLANET_LIGHTS)[number];
 const WAVES = ['gw150914'] as const;
 export type Wave = (typeof WAVES)[number];
 
+/** The wave's story, in order (#833): its source, its journey, what it does to space, and how
+ * Livingston heard it. */
+export const WAVE_CHAPTERS = ['source', 'journey', 'space', 'detector'] as const;
+export type WaveChapter = (typeof WAVE_CHAPTERS)[number];
+
 export interface DisplayState {
   readonly figures: Figures;
   /** The calendar the year bar counts in. */
@@ -60,6 +67,8 @@ export interface DisplayState {
   readonly craft: string | null;
   /** The gravitational wave shown passing (#829); null when none. */
   readonly wave: Wave | null;
+  /** The part of the wave's story shown (#833). */
+  readonly waveChapter: WaveChapter;
   /** The destination the view was arrived at from, by its id; null when none. */
   readonly explore: string | null;
 }
@@ -73,6 +82,7 @@ export const DISPLAY_DEFAULTS: DisplayState = {
   mission: null,
   craft: null,
   wave: null,
+  waveChapter: 'source',
   explore: null,
 };
 
@@ -107,6 +117,7 @@ export const DISPLAY_PARAMS: Params<DisplayState> = {
     },
     format: (wave) => wave,
   },
+  waveChapter: choice('chapter', WAVE_CHAPTERS, DISPLAY_DEFAULTS.waveChapter),
   explore: {
     key: 'explore',
     parse: (raw) => {

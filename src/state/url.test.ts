@@ -12,6 +12,7 @@ import { calendarDateOf, daysInMonth, type Calendar } from '../time/julianDay';
 import { SKY_CULTURES } from '../data/skyCultures';
 import { SUN_LAYERS } from '../data/sunImages';
 import { YEAR_CALENDARS } from '../time/calendars';
+import { WAVE_CHAPTERS } from './slices/display';
 import { astronomicalYear } from '../time/year';
 import { parseViewState, serializeViewState } from './url';
 import {
@@ -78,6 +79,7 @@ describe('parseViewState', () => {
       mission: null,
       craft: null,
       wave: null,
+      waveChapter: 'source',
       explore: null,
       borders: 'cliopatria',
       seenIn: null,
@@ -307,6 +309,9 @@ describe('parseViewState', () => {
     expect(state.wave).toBe('gw150914');
     expect(serializeViewState(state)).toContain('wave=gw150914');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('wave=');
+    const journey = parseViewState('wave=gw150914&chapter=journey', NOW).state;
+    expect(journey.waveChapter).toBe('journey');
+    expect(serializeViewState(journey)).toContain('chapter=journey');
   });
 
   it('Given a mission named, Then it is read in lower case and written back (#712)', () => {
@@ -390,6 +395,7 @@ describe('parseViewState', () => {
     ['mission=voyager', 'mission', 'GCAT id'],
     ['craft=webb', 'craft', 'GCAT id'],
     ['wave=gw170817', 'wave', 'gravitational wave'],
+    ['chapter=epilogue', 'chapter', 'unknown chapter'],
     ['explore=Human_Origins', 'explore', 'destination’s id'],
     ['borders=guesswork', 'borders', 'unknown borders'],
     ['seen=%20', 'seen', 'name of a past state'],
@@ -460,6 +466,7 @@ describe('parseViewState', () => {
             'mission',
             'craft',
             'wave',
+            'chapter',
             'explore',
             'borders',
             'seen',
@@ -554,6 +561,7 @@ describe('serializeViewState', () => {
       { nil: null },
     ),
     wave: fc.option(fc.constant('gw150914' as const), { nil: null }),
+    waveChapter: fc.constantFrom(...WAVE_CHAPTERS),
     explore: fc.option(fc.constantFrom('human-origins', 'moon-landings', 'a1'), { nil: null }),
     borders: fc.constantFrom(...BORDER_SOURCES),
     seenIn: fc.option(

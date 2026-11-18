@@ -1,7 +1,8 @@
 /**
- * The stage under the wave (#829, #831): what is shown, where the wave is, how far the drawing
- * is from the truth, and the controls. Two chapters, picked here: space and its ring of masses,
- * or LIGO Livingston with what both detectors measured plotted beneath. The sound is offered,
+ * The stage under the wave (#829, #831, #833): what is shown, where the wave is, how far the
+ * drawing is from the truth, and the controls. The story's chapters, picked here or stepped
+ * through (the arrow keys step too): its source, its journey, space and its ring of masses, and
+ * LIGO Livingston with what both detectors measured plotted beneath. The sound is offered,
  * never played unasked, and says how it was changed to be heard.
  *
  * DOM glue; the part (`index.ts`) says what each control does.
@@ -11,11 +12,13 @@ import { element } from '../../ui/dom';
 import { createStoryPlay, type StoryPlay } from '../../ui/transport';
 import { SOUND_NOTE } from './chirpSound';
 import { SCALE_NOTE } from './wavePlay';
-import type { WaveChapter } from './waveScene';
+import { WAVE_CHAPTERS, type WaveChapter } from '../../state/slices/display';
 
 const ABOUT: Readonly<Record<WaveChapter, string>> = {
   source:
     'Where it came from: two black holes, 36 and 29 times the Sun’s mass, orbiting ever faster until they merge into one of 62. The sheet is the plane of their orbit; the wave they send out spirals through it, two-armed, tighter as they speed up, weaker farther out. Heights show the strain the wave carries, not a dent in space. Near the black holes the wave cannot be worked out this way, and the sheet fades out: that part is not to scale.',
+  journey:
+    'The wave crossed 1.3 billion light-years of space at the speed of light, set out when life on Earth was still almost all single cells. Told here in seconds, then slowed to the millisecond as it sweeps over Earth on 14 September 2015: Livingston (blue) first, Hanford (red) 6.9 ms later. Two detectors cannot say where in the sky it came from, only a wide band of the southern sky; the way drawn is one that fits.',
   space:
     'A ring of free masses, as a gravitational wave from two black holes merging 1.3 billion light-years away comes through it toward you. Space itself stretches one way and squeezes the other, then the other way round, faster and harder as the black holes spiral together, and rings as the one they make settles. Behind the ring, the space the wave has already crossed.',
   detector:
@@ -24,6 +27,7 @@ const ABOUT: Readonly<Record<WaveChapter, string>> = {
 
 const CHAPTER_NAMES: Readonly<Record<WaveChapter, string>> = {
   source: 'The source',
+  journey: 'The journey',
   space: 'Space',
   detector: 'At Livingston',
 };
@@ -34,6 +38,8 @@ export interface StageControls {
   readonly close: () => void;
   readonly about: () => void;
   readonly chapter: (chapter: WaveChapter) => void;
+  /** Step to the chapter before or after the one shown. */
+  readonly step: (direction: -1 | 1) => void;
   readonly hear: () => void;
 }
 
@@ -61,7 +67,7 @@ export function createWaveStage(why: HTMLElement, controls: StageControls): Wave
     play.set(playing);
     controls.onPlay(playing);
   });
-  const chapters = (['source', 'space', 'detector'] as const).map((chapter) => {
+  const chapters = WAVE_CHAPTERS.map((chapter) => {
     const made = button(CHAPTER_NAMES[chapter], () => {
       controls.chapter(chapter);
     });
@@ -84,7 +90,13 @@ export function createWaveStage(why: HTMLElement, controls: StageControls): Wave
     element(
       'div',
       { class: 'wave-controls' },
+      button('Back', () => {
+        controls.step(-1);
+      }),
       play.button,
+      button('Next', () => {
+        controls.step(1);
+      }),
       button('Start again', controls.restart),
       button('Hear it', controls.hear),
       button('About GW150914', controls.about),
@@ -97,7 +109,9 @@ export function createWaveStage(why: HTMLElement, controls: StageControls): Wave
       `“Hear it” plays the chirp ${SOUND_NOTE.charAt(0).toLowerCase()}${SOUND_NOTE.slice(1)}`,
     ),
   );
-  play.join(root, () => undefined);
+  play.join(root, (direction) => {
+    controls.step(direction);
+  });
   document.addEventListener('keydown', (event) => {
     if (root.hasAttribute('hidden') || event.defaultPrevented || event.key !== 'Escape') return;
     event.preventDefault();
