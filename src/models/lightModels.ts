@@ -1,7 +1,7 @@
 /**
  * The space telescopes for light, infrared and microwaves as 3D models (#861), each from the sizes
  * NASA, ESA or its team published, in metres, +Y along its spin or its tube; the Sun's direction
- * is with its caption (`telescopeModels.ts`). What no page sizes is placed by eye, and said so.
+ * is with its caption (`catalogue.ts`). What no page sizes is placed by eye, and said so.
  */
 
 import { Group } from 'three';

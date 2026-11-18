@@ -66,14 +66,11 @@ export function lazyModel(
   };
 }
 
-/** A model's builder, fetched with the view the first time it is shown, in its family's chunk. */
-export function from<Family>(
-  family: () => Promise<Family>,
-  pick: (loaded: Family) => () => Object3D,
-): ModelLoad {
+/** A model's parts with the view that draws them in a card, fetched together. */
+export function withView(build: () => Promise<() => Object3D>): ModelLoad {
   return () =>
-    Promise.all([import('./modelView'), family()]).then(([view, loaded]) => ({
+    Promise.all([import('./modelView'), build()]).then(([view, make]) => ({
       mountModelView: view.mountModelView,
-      build: pick(loaded),
+      build: make,
     }));
 }

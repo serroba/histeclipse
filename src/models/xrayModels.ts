@@ -1,7 +1,7 @@
 /**
  * The space telescopes for X-rays and gamma rays as 3D models (#862), each from the sizes NASA,
  * ESA, IKI or its team published, in metres, +Y along its tube or its line of sight; the Sun's
- * direction is with its caption (`spaceTelescopeModels.ts`). What no page sizes is placed by eye,
+ * direction is with its caption (`catalogue.ts`). What no page sizes is placed by eye,
  * and said so.
  */
 
