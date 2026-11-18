@@ -173,6 +173,8 @@ const UI_PATHS = {
   spacecraft: ['M10 10h4v4h-4z', 'M3 11h7M14 11h7M3 9v4M21 9v4', 'M12 10V6', 'M9 5a3 3 0 0 0 6 0'],
   // A lumpy rock, and two small ones.
   asteroids: ['M6 9l3-4 5 1 3 4-1 4-4 2-4-1-2-3z', 'M18.5 17.5h.01', 'M5 19h.01', 'M20 6h.01'],
+  // A telescope's tube on its tripod (#848).
+  telescope: ['M3 13l13-7 2 4-13 7z', 'M16 6l2-1 2 4-2 1', 'M10 14l-3 7M11 14l3 7'],
   // A decay curve over axes: half gone, then half again.
   radiocarbon: ['M4 4v16h16', 'M6 6c2 6 5 9 9 10.5s4 1.5 5 1.5', 'M10 13.6h.01'],
   // A grid of squares, some filled: dates counted by cell.

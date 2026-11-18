@@ -216,3 +216,30 @@ test('Hubble goes round Earth close up, its card saying how its path is drawn, s
   });
   expect(problems).toEqual([]);
 });
+
+test('the Telescopes layer shows the great telescopes on the ground from first light, each with its card (#848) @acceptance @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const card = page.getByTestId('marker-card');
+  const hale = page.getByRole('button', { name: 'Hale Telescope: details' });
+  await test.step('Given the layer on in 1950, over California', async () => {
+    await page.goto('./?layers=telescopes&t=1950-06-01T12:00Z&cam=34,-117,2.2');
+    await expect(hale).toBeAttached({ timeout: 30_000 });
+    await expect(page.getByRole('button', { name: /Arecibo Telescope/ })).toHaveCount(0);
+  });
+  await test.step('When they tap the Hale Telescope, Then its card says what it is', async () => {
+    await hale.click();
+    await expect(card.getByRole('heading')).toHaveText('Hale Telescope');
+    await expect(card).toContainText('First light');
+    await card.getByRole('button', { name: 'Close' }).click();
+  });
+  await test.step('When the year is 2026, Then Arecibo has gone and the ELT is being built', async () => {
+    await page.goto('./?layers=telescopes&t=2026-01-01T12:00Z&cam=-24,-70,2.2');
+    await expect(
+      page.getByRole('button', { name: 'Extremely Large Telescope (being built): details' }),
+    ).toBeAttached({ timeout: 30_000 });
+    await expect(page.getByRole('button', { name: /Arecibo Telescope/ })).toHaveCount(0);
+  });
+  expect(problems).toEqual([]);
+});

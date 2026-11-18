@@ -8,12 +8,14 @@ import { spacecraftFeature } from './spacecraft';
 import { oceanHeatFeature } from './oceanHeat';
 import { ozoneFeature } from './ozone';
 import { warmingFeature } from './warming';
+import { telescopesFeature } from './telescopes';
 import { volcanoesFeature } from './volcanoes';
 import type { Feature } from './feature';
 
 export const FEATURES: readonly Feature[] = [
   spacecraftFeature,
   asteroidsFeature,
+  telescopesFeature,
   volcanoesFeature,
   ozoneFeature,
   warmingFeature,
