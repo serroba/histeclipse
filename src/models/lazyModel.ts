@@ -12,6 +12,8 @@ import type { mountModelView } from './modelView';
 export interface LazyModel {
   readonly label: string;
   readonly caption: string;
+  /** Where the Sun is in the model's own axes, as it is lit. */
+  readonly sun: Vector3;
   mount(host: HTMLElement): () => void;
 }
 
@@ -41,6 +43,7 @@ export function lazyModel(
   return {
     label,
     caption,
+    sun,
     mount(host) {
       let stop: (() => void) | null = null;
       let gone = false;

@@ -6,7 +6,7 @@ import { loadTelescopes, type Telescope, type Telescopes } from '../../data/tele
 import { defaultViewState } from '../../state/viewState';
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
-import { bandsIn, goTo, listed, rowText, yearToShow } from './telescopeList';
+import { bandsIn, goTo, goToCraft, listed, rowText, yearToShow } from './telescopeList';
 
 const raw: unknown = JSON.parse(readFileSync('public/data/telescopes.json', 'utf8'));
 const record: Telescopes = await loadTelescopes('t.json', () =>
@@ -83,5 +83,16 @@ describe('going to a telescope from the list', () => {
     expect(goTo(in2026, named('chandra')).camera.distance).toBe(45);
     expect(goTo(in2026, named('webb')).camera.distance).toBe(600);
     expect(goTo(in2026, named('spitzer')).focus).toBe('sun');
+  });
+});
+
+describe('going to a space telescope’s model (#863)', () => {
+  it('puts the camera on its craft, about the body it flies by; not for one on the ground', () => {
+    const chandra = goToCraft(in2026, named('chandra'));
+    expect(chandra?.craft).toBe('s25867');
+    expect(chandra?.focus).toBe('earth');
+    expect(chandra?.view).toBe('free');
+    expect(goToCraft(in2026, named('kepler'))?.focus).toBe('sun');
+    expect(goToCraft(in2026, named('alma'))).toBeNull();
   });
 });

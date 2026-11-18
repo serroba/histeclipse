@@ -115,4 +115,24 @@ describe('the telescopes’ list, as a part of the page (#850)', () => {
       document.body.replaceChildren();
     }
   });
+
+  it('Given a space telescope picked, Then its card goes to its model; one on the ground has no such step (#863)', async () => {
+    const { store, dialog, cards } = mount();
+    store.set((state) => ({ ...state, list: 'telescopes' }));
+    await settled();
+    rows(dialog)
+      .find((row) => row.dataset['telescope'] === 'chandra')
+      ?.click();
+    const card = cards.at(-1);
+    expect(card?.action?.label).toBe('Go to it');
+    card?.action?.run();
+    expect(store.get().craft).toBe('s25867');
+    expect(store.get().focus).toBe('earth');
+    store.set((state) => ({ ...state, list: 'telescopes' }));
+    await settled();
+    rows(dialog)
+      .find((row) => row.dataset['telescope'] === 'alma')
+      ?.click();
+    expect(cards.at(-1)?.action).toBeUndefined();
+  });
 });

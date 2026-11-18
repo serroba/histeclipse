@@ -10,6 +10,7 @@ import { BANDS, stateIn, yearOf, type Telescope, type Telescopes } from '../../d
 import { withLayer, type ViewState } from '../../state/viewState';
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
+import { SPACE_SCENES } from '../../models/spaceScenes';
 import { BAND_WORDS } from './telescopeMarks';
 
 export type Kind = 'all' | Telescope['kind'];
@@ -105,4 +106,16 @@ export function goTo(state: ViewState, telescope: Telescope): ViewState {
     time:
       year === state.time.date.year ? state.time : moveToYear(state.time, astronomicalYear(year)),
   };
+}
+
+/**
+ * The camera going to a space telescope's model where it flies (#863), from a view already in a
+ * year it worked (`goTo`): null for one on the ground, or one without a model.
+ */
+export function goToCraft(state: ViewState, telescope: Telescope): ViewState | null {
+  if (telescope.kind === 'ground' || telescope.craft === null) return null;
+  const scene = SPACE_SCENES.get(telescope.craft.toUpperCase());
+  return scene === undefined
+    ? null
+    : { ...state, craft: telescope.craft, focus: scene.about, view: 'free' };
 }

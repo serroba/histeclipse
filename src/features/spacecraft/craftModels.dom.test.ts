@@ -3,6 +3,7 @@ import { Group, Vector3 } from 'three';
 import { describe, expect, it, vi } from 'vitest';
 
 import { lazyModel } from '../../models/lazyModel';
+import { SPACE_SCENES } from '../../models/spaceScenes';
 import { modelOf, sceneModelOf } from './craftModels';
 
 describe('the craft with models (#797)', () => {
@@ -73,11 +74,15 @@ describe('the craft with models (#797)', () => {
     stop?.();
   });
 
-  it.each(['d01093', 's20580'])(
+  it.each([...SPACE_SCENES.keys()].map((craft) => craft.toLowerCase()))(
     'Given %s in the scene, Then its parts load and build it',
     async (id) => {
       const build = await sceneModelOf(id)?.load();
-      expect(build?.().children.length).toBeGreaterThan(2);
+      let parts = 0;
+      build?.().traverse(() => {
+        parts += 1;
+      });
+      expect(parts).toBeGreaterThan(4);
     },
   );
 });
