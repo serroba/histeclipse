@@ -9,6 +9,7 @@ import type { ViewState } from '../../state/viewState';
 import type { MarkerCardContent } from '../../ui/markerCard';
 import { errorMessage } from '../../util/errors';
 import type { MountedPart, PartContext } from '../part';
+import { goToSite } from './groundSites';
 import { goTo, goToCraft } from './telescopeList';
 import { createTelescopeListSheet } from './telescopeListSheet';
 import { telescopeCard } from './telescopeMarks';
@@ -30,7 +31,11 @@ export function mountTelescopeList(context: TelescopeListContext): MountedPart {
       context.showCard({
         ...telescopeCard(telescope),
         ...(going === null
-          ? {}
+          ? goToSite(telescope, {
+              change: (update) => {
+                store.set(update);
+              },
+            })
           : {
               action: {
                 label: 'Go to it',

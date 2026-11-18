@@ -8,6 +8,8 @@
 import { loadTelescopes, type Telescope, type Telescopes } from '../../data/telescopes';
 import { errorMessage } from '../../util/errors';
 import type { Feature, FeatureContext } from '../feature';
+import { groundModel } from './groundModelLayer';
+import { goToSite, heldSite } from './groundSites';
 import { telescopeLayer } from './telescopeLayer';
 import { groundMarks, telescopeCard, telescopesText, type TelescopeMark } from './telescopeMarks';
 import './telescopes.css';
@@ -16,13 +18,14 @@ export { mountTelescopeList } from './listPart';
 
 /** A telescope's card, with the others on its site a step away. */
 function showTelescope(
-  context: Pick<FeatureContext, 'showCard'>,
+  context: Pick<FeatureContext, 'showCard' | 'change'>,
   telescope: Telescope,
   siteMates: readonly Telescope[],
 ): void {
   const others = siteMates.filter((other) => other.id !== telescope.id);
   context.showCard({
     ...telescopeCard(telescope),
+    ...goToSite(telescope, context),
     related: others.map((other) => ({
       label: other.name,
       explain: 'on the same site',
@@ -37,9 +40,10 @@ export const telescopesFeature: Feature = {
   id: 'telescopes',
   picks: 'telescope',
   // On or off with its layer, and only on the globe, in historical time.
-  watches: (state) => [state.layers, state.mode, state.ma],
+  watches: (state) => [state.layers, state.mode, state.ma, state.craft],
   mount(context) {
     const marksOnGlobe = context.globe.addLayer(telescopeLayer);
+    const modelOnGlobe = context.globe.addLayer(groundModel);
     let record: Telescopes | null = null;
     let loading = false;
     let said: string | null = null;
@@ -50,6 +54,7 @@ export const telescopesFeature: Feature = {
     return {
       show(state) {
         const on = state.layers.has('telescopes') && state.mode === 'globe' && state.ma === null;
+        modelOnGlobe.update(on && record !== null ? heldSite(record, state.craft) : null);
         const year = state.time.date.year;
         const key = `${String(on)}:${String(record !== null)}:${String(year)}`;
         if (key === drawnFor) return;

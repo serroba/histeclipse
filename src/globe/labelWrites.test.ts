@@ -130,6 +130,24 @@ describe('layOutSurface', () => {
     expect(back.element.hidden).toBe(true);
   });
 
+  it('close to the ground, hides a name beyond the horizon though it is on the near side (#864)', () => {
+    // Some 3 km up over (0°, 0°), looking north and a little down, both names in its frame.
+    const low = new PerspectiveCamera(90, 1, 1e-6, 10);
+    low.position.set(1.0005, 0, 0);
+    low.lookAt(1.0003, 0.0005, 0);
+    low.updateMatrixWorld();
+    const under = name(1, 0.0003, 0);
+    // 30° north: well within the near side seen from afar, far over the horizon from here.
+    const beyond = name(Math.cos(Math.PI / 6), Math.sin(Math.PI / 6), 0);
+    for (const { position } of [under, beyond]) {
+      const at = position.clone().project(low);
+      expect(Math.max(Math.abs(at.x), Math.abs(at.y))).toBeLessThan(1);
+    }
+    layOutSurface([{ priority: 0, labels: [under, beyond] }], low, view);
+    expect(under.element.hidden).toBe(false);
+    expect(beyond.element.hidden).toBe(true);
+  });
+
   it('gives room first to the slot with the lower priority, whatever the order given', () => {
     const minor = name(1, 0, 0);
     const major = name(1, 0, 0);

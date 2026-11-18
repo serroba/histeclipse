@@ -116,7 +116,7 @@ describe('the telescopes’ list, as a part of the page (#850)', () => {
     }
   });
 
-  it('Given a space telescope picked, Then its card goes to its model; one on the ground has no such step (#863)', async () => {
+  it('Given a space telescope picked, Then its card goes to its model; one on the ground, to its site (#863, #864)', async () => {
     const { store, dialog, cards } = mount();
     store.set((state) => ({ ...state, list: 'telescopes' }));
     await settled();
@@ -133,6 +133,8 @@ describe('the telescopes’ list, as a part of the page (#850)', () => {
     rows(dialog)
       .find((row) => row.dataset['telescope'] === 'alma')
       ?.click();
-    expect(cards.at(-1)?.action).toBeUndefined();
+    // One on the ground goes to its site, its model standing there (#864).
+    cards.at(-1)?.action?.run();
+    expect(store.get().craft).toBe('alma');
   });
 });

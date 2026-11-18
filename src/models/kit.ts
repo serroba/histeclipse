@@ -205,10 +205,14 @@ export function array(places: readonly (readonly [number, number])[], make: () =
   return group;
 }
 
+/** The name of a model's ground, which the globe has its own of (#864). */
+export const GROUND = 'ground';
+
 /** A flat disc of ground `diameter` across, for an array or a bowl to stand on. */
 export function ground(diameter: number, kit: Materials): Mesh {
   const disc = new Mesh(new CylinderGeometry(diameter / 2, diameter / 2, 0.2, 64), kit.ground);
   disc.position.y = -0.1;
+  disc.name = GROUND;
   return disc;
 }
 
@@ -216,6 +220,7 @@ export function ground(diameter: number, kit: Materials): Mesh {
 export function groundRing(inner: number, outer: number, kit: Materials): Mesh {
   const ring = new Mesh(new RingGeometry(inner / 2, outer / 2, 64), kit.ground);
   ring.rotation.x = -Math.PI / 2;
+  ring.name = GROUND;
   return ring;
 }
 
