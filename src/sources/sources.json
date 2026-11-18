@@ -429,11 +429,25 @@
     "cite": "ESO, ALMA antennas, and the ALMA Observatory, how ALMA works: 66 antennas, 54 of 12 m (14.7 m tall) and 12 of 7 m, baselines from 150 m to 16 km",
     "url": "https://www.eso.org/public/teles-instr/alma/antennas/"
   },
+  "esoElt": {
+    "name": "ESO: the Extremely Large Telescope",
+    "kind": "reference",
+    "cite": "ESO, the ELT’s primary mirror, structure and dome: 798 segments 1.45 m across in a 39 m mirror curved to 68.7 m, a structure 50 m tall on a 51 m track with 30 m by 15 m Nasmyth platforms, its secondary 60 m up at the zenith, its dome 93 m across and 80 m tall",
+    "url": "https://elt.eso.org/telescope/structure/",
+    "licence": "CC BY 4.0"
+  },
   "esoTelescopes": {
     "name": "ESO: the VLT, ALMA and the ELT",
     "kind": "reference",
     "cite": "The European Southern Observatory’s pages on the Very Large Telescope, ALMA and the Extremely Large Telescope, with the ELT’s timeline",
     "url": "https://www.eso.org/public/teles-instr/",
+    "licence": "CC BY 4.0"
+  },
+  "esoVlt": {
+    "name": "ESO: the Very Large Telescope and its stations",
+    "kind": "reference",
+    "cite": "ESO, the Very Large Telescope and its Auxiliary Telescopes, and the VLTI station positions: four 8.2 m Unit Telescopes in enclosures 29 m across and 28.5 m tall, where each stands, and the 1.82 m Auxiliary Telescopes in shells 3.9 m across and 6.3 m tall",
+    "url": "https://www.eso.org/public/teles-instr/paranal-observatory/vlt/",
     "licence": "CC BY 4.0"
   },
   "etopo1": {
@@ -588,6 +602,12 @@
     "cite": "The GPlates Portal (EarthByte): reconstructions to explore in the browser",
     "url": "https://portal.gplates.org"
   },
+  "gtcOptics": {
+    "name": "GRANTECAN: the GTC’s optics",
+    "kind": "reference",
+    "cite": "GRANTECAN, the GTC’s optics: 36 segments 1.9 m across, 10.4 m as one mirror, its dome 35 m across and 24 m tall, its building 41 m tall",
+    "url": "https://www.gtc.iac.es/observing/GTCoptics.php"
+  },
   "gts2020Polarity": {
     "name": "GTS 2020: Geomagnetic Polarity Time Scale",
     "kind": "dataset",
@@ -623,6 +643,12 @@
     "url": "https://doi.org/10.1029/2019JD032263",
     "licence": "Open Government Licence v3; some station data non-commercial only (WMO Resolution 40)",
     "nonCommercial": true
+  },
+  "hale1897Yerkes": {
+    "name": "Hale (1897), The Yerkes Observatory of the University of Chicago",
+    "kind": "paper",
+    "cite": "Hale, G. E. (1897), The Yerkes Observatory of the University of Chicago, The Astrophysical Journal 6, 37 (doi:10.1086/140373): the 40-inch refractor’s tube 60 ft long, its column 43 ft tall, its axes and gears, its 90 ft dome and rising floor, as its first director described them",
+    "url": "https://doi.org/10.1086/140373"
   },
   "haywood2020": {
     "name": "PlioMIP2, Haywood et al. 2020",
@@ -746,6 +772,12 @@
     "url": "https://doi.org/10.1017/RDC.2020.41",
     "licence": "CC BY 4.0"
   },
+  "ivezic2019Lsst": {
+    "name": "Ivezić et al. (2019), LSST: from science drivers to reference design",
+    "kind": "paper",
+    "cite": "Ivezić, Ž., Kahn, S. M., Tyson, J. A., et al. (2019), LSST: From Science Drivers to Reference Design and Anticipated Data Products, The Astrophysical Journal 873, 111 (doi:10.3847/1538-4357/ab042c): the 8.4 m primary with its 5 m hole, the telescope on a 15 m pier in a 30 m dome. The survey’s design, as Rubin Observatory was built to carry it out",
+    "url": "https://doi.org/10.3847/1538-4357/ab042c"
+  },
   "jaxaMmx": {
     "name": "JAXA: Martian Moons eXploration (MMX)",
     "kind": "reference",
@@ -831,6 +863,12 @@
     "cite": "Kaufman, D., McKay, N., Routson, C., Erb, M., Dätwyler, C., Sommer, P. S., Heiri, O., Davis, B. (2020), Holocene global mean surface temperature, a multi-method reconstruction approach, Scientific Data 7, 201; data: figshare, https://doi.org/10.6084/m9.figshare.c.4796823, and NOAA NCEI Paleoclimatology, study 29712, https://doi.org/10.25921/vzys-1280, accessed 12 November 2026",
     "url": "https://doi.org/10.1038/s41597-020-0530-7",
     "licence": "CC0 1.0 (the data, on figshare); the article CC BY 4.0"
+  },
+  "keckGuide": {
+    "name": "W. M. Keck Observatory: telescope and instrument guide",
+    "kind": "reference",
+    "cite": "W. M. Keck Observatory, Keck Telescope and Facility Instrument Guide (2002): 36 hexagonal segments 1.8 m across, 10.95 m at most, focal length 17.5 m, the two telescopes 85 m apart",
+    "url": "https://www2.keck.hawaii.edu/observing/kecktelgde/ktelinstupdate.pdf"
   },
   "keckObservatory": {
     "name": "W. M. Keck Observatory",
@@ -976,6 +1014,12 @@
     "kind": "paper",
     "cite": "Lucey, P. G., Blewett, D. T. & Jolliff, B. L. (2000). Lunar iron and titanium abundance algorithms based on final processing of Clementine ultraviolet-visible images. Journal of Geophysical Research: Planets 105, 20297–20305",
     "url": "https://doi.org/10.1029/1999JE001117"
+  },
+  "lyons2022Parsons": {
+    "name": "Lyons (2022), The Family Parsons, of Parsonstown",
+    "kind": "reference",
+    "cite": "Lyons, C. G. (2022), The Family Parsons, of Parsonstown, Trinity College Dublin, Department of Mechanical Engineering: the Leviathan’s walls 70 ft long and 50 ft tall, its tube some 16 m. A history of the family and its engineering",
+    "url": "https://www.tcd.ie/media/tcd/mecheng/pdfs/The_Family_Parsons_of_Parsonstown.pdf"
   },
   "macrostrat": {
     "name": "Macrostrat",
@@ -1133,6 +1177,12 @@
     "cite": "van der A, R. J., Allaart, M. A. F. & Eskes, H. J. (2015). Extended and refined multi sensor reanalysis of total ozone for the period 1970–2012. Atmospheric Measurement Techniques 8, 3021–3035, doi:10.5194/amt-8-3021-2015 (KNMI); as the Copernicus Climate Change Service gives it in its Climate Data Store: Ozone monthly gridded data from 1970 to present derived from satellite observations, doi:10.24381/cds.4ebfe4eb, versions v0023 (1970–2018), v0024 (2019–2021) and v0025 (2022–2025), downloaded on 16 November 2026. October of each year, thinned to one degree for this site. Contains modified Copernicus Climate Change Service information; neither the European Commission nor ECMWF is responsible for any use made of it",
     "url": "https://doi.org/10.24381/cds.4ebfe4eb",
     "licence": "CC BY 4.0"
+  },
+  "mtWilson100Inch": {
+    "name": "Mount Wilson Observatory: building the 100-inch telescope",
+    "kind": "reference",
+    "cite": "Mount Wilson Observatory, Building the 100-inch Telescope: the mirror (101 in, 12 in thick), its plate some 42 ft from it, the 11 ft tube on a closed yoke, the pier 33 ft tall on a base 20 ft by 45 ft, the 54 ft floor and the 100 ft dome",
+    "url": "https://www.mtwilson.edu/building-the-100-inch-telescope/"
   },
   "muller2019": {
     "name": "Müller et al. 2019",
@@ -1440,6 +1490,12 @@
     "url": "https://doi.org/10.1594/PANGAEA.905800",
     "licence": "CC BY 4.0"
   },
+  "palomarHale": {
+    "name": "Caltech: Palomar’s Hale Telescope",
+    "kind": "reference",
+    "cite": "Caltech, Palomar Observatory, the Hale Telescope and the observatory’s history: its 5.1 m mirror, its foci at 16.76 m (f/3.3), 81.3 m and 152 m, its yoke with a horseshoe bearing and its Serrurier truss, its dome 42 m across and 41 m tall",
+    "url": "https://sites.astro.caltech.edu/palomar/about/telescopes/hale.html"
+  },
   "pbdb": {
     "name": "Paleobiology Database",
     "kind": "dataset",
@@ -1547,6 +1603,12 @@
     "kind": "reference",
     "cite": "The NSF–DOE Vera C. Rubin Observatory’s and NSF NOIRLab’s pages: its first photons (15 April 2025), First Look, camera and survey",
     "url": "https://rubinobservatory.org/about"
+  },
+  "rubinTelescopes": {
+    "name": "Rubin Observatory: its telescopes",
+    "kind": "reference",
+    "cite": "NSF–DOE Vera C. Rubin Observatory, Rubin 101, its telescopes: the 8.4 m primary and tertiary in one glass, the 3.4 m secondary",
+    "url": "https://rubinobservatory.org/for-scientists/rubin-101/telescopes"
   },
   "rutgersSnow": {
     "name": "Rutgers Global Snow Lab",

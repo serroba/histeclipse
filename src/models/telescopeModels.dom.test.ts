@@ -9,26 +9,46 @@ vi.mock('./modelView', () => ({ mountModelView }));
 
 const { telescopeModel } = await import('./telescopeModels');
 
-const RADIO = ['lovell', 'parkes', 'arecibo', 'fast', 'vla', 'alma', 'ska-mid', 'ska-low'];
+const GROUND = [
+  'lovell',
+  'parkes',
+  'arecibo',
+  'fast',
+  'vla',
+  'alma',
+  'ska-mid',
+  'ska-low',
+  'hale',
+  'hooker',
+  'yerkes',
+  'herschel-forty-foot',
+  'leviathan',
+  'keck',
+  'subaru',
+  'vlt',
+  'gtc',
+  'rubin',
+  'elt',
+];
 
-describe('the telescopes’ models in their cards (#859)', () => {
-  it('Given a radio telescope, Then it has a model, the same each time, its caption saying what is by eye', () => {
-    for (const id of RADIO) {
+describe('the telescopes’ models in their cards (#859, #860)', () => {
+  it('Given a telescope on the ground, Then it has a model, the same each time, its caption saying what is by eye', () => {
+    for (const id of GROUND) {
       const model = telescopeModel(id);
       expect(model).toBe(telescopeModel(id));
       expect(model?.label).toContain('in 3D');
       expect(model?.caption).toContain('by eye');
     }
-    expect(telescopeModel('hale')).toBeUndefined();
+    expect(telescopeModel('chandra')).toBeUndefined();
   });
 
   it('Given each is shown, Then its own model is built and mounted', async () => {
-    for (const id of RADIO) telescopeModel(id)?.mount(document.createElement('div'));
+    for (const id of GROUND) telescopeModel(id)?.mount(document.createElement('div'));
     await vi.waitFor(() => {
-      expect(mountModelView).toHaveBeenCalledTimes(RADIO.length);
+      expect(mountModelView).toHaveBeenCalledTimes(GROUND.length);
     });
     const built = mountModelView.mock.calls.map(([, model]) => model);
     expect(built.every((model) => model instanceof Object3D)).toBe(true);
-    expect(new Set(built).size).toBe(RADIO.length);
+    expect(new Set(built).size).toBe(GROUND.length);
   });
 });
