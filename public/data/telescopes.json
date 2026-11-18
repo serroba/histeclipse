@@ -34,10 +34,6 @@
     {
      "label": "James Webb Space Telescope (science.nasa.gov)",
      "href": "https://science.nasa.gov/mission/webb/"
-    },
-    {
-     "label": "James Webb Space Telescope (science.nasa.gov)",
-     "href": "https://science.nasa.gov/mission/webb/fact-sheet/"
     }
    ]
   },
@@ -75,10 +71,6 @@
     {
      "label": "Hubble Space Telescope (science.nasa.gov)",
      "href": "https://science.nasa.gov/mission/hubble/"
-    },
-    {
-     "label": "Hubble Space Telescope (science.nasa.gov)",
-     "href": "https://science.nasa.gov/mission/hubble/observatory/"
     }
    ]
   },
@@ -114,10 +106,6 @@
     {
      "label": "Chandra X-ray Observatory (chandra.si.edu)",
      "href": "https://chandra.si.edu/about/"
-    },
-    {
-     "label": "Chandra X-ray Observatory (chandra.si.edu)",
-     "href": "https://chandra.si.edu/about/specs.html"
     }
    ]
   },
@@ -152,10 +140,6 @@
     {
      "label": "Planck (www.esa.int)",
      "href": "https://www.esa.int/Science_Exploration/Space_Science/Planck"
-    },
-    {
-     "label": "Planck (www.esa.int)",
-     "href": "https://www.esa.int/articles/about-us/directorates/science/planck/vital-stats"
     }
    ]
   },
@@ -190,10 +174,6 @@
     {
      "label": "Gaia (www.esa.int)",
      "href": "https://www.esa.int/Science_Exploration/Space_Science/Gaia"
-    },
-    {
-     "label": "Gaia (www.esa.int)",
-     "href": "https://www.esa.int/Science_Exploration/Space_Science/Gaia_factsheet"
     }
    ]
   },
@@ -342,8 +322,8 @@
      "href": "https://www.esa.int/Science_Exploration/Space_Science/Herschel"
     },
     {
-     "label": "Herschel Space Observatory (www.esa.int)",
-     "href": "https://www.esa.int/articles/about-us/directorates/science/herschel/vital-stats"
+     "label": "Herschel Space Observatory (www.cosmos.esa.int)",
+     "href": "https://www.cosmos.esa.int/web/herschel/home"
     }
    ]
   },
@@ -382,8 +362,8 @@
      "href": "https://www.esa.int/Science_Exploration/Space_Science/XMM-Newton"
     },
     {
-     "label": "XMM-Newton (www.esa.int)",
-     "href": "https://www.esa.int/Science_Exploration/Space_Science/XMM-Newton_factsheet"
+     "label": "XMM-Newton (www.cosmos.esa.int)",
+     "href": "https://www.cosmos.esa.int/web/xmm-newton/technical-details-mirrors"
     }
    ]
   },
@@ -614,8 +594,8 @@
      "href": "https://www.cosmos.esa.int/web/hipparcos"
     },
     {
-     "label": "Hipparcos (www.cosmos.esa.int)",
-     "href": "https://www.cosmos.esa.int/web/hipparcos/payload"
+     "label": "Hipparcos (www.esa.int)",
+     "href": "https://www.esa.int/Science_Exploration/Space_Science/Hipparcos_overview"
     }
    ]
   },
@@ -651,10 +631,6 @@
     {
      "label": "Euclid (www.esa.int)",
      "href": "https://www.esa.int/Science_Exploration/Space_Science/Euclid"
-    },
-    {
-     "label": "Euclid (www.esa.int)",
-     "href": "https://www.esa.int/articles/about-us/directorates/science/euclid/euclid-s-instruments"
     }
    ]
   },
@@ -695,8 +671,8 @@
      "href": "https://science.nasa.gov/mission/swift/"
     },
     {
-     "label": "Swift (science.nasa.gov)",
-     "href": "https://science.nasa.gov/missions/swift/nasas-swift-mission-ends/"
+     "label": "Swift (swift.gsfc.nasa.gov)",
+     "href": "https://swift.gsfc.nasa.gov/about_swift/"
     }
    ]
   },
@@ -734,8 +710,8 @@
      "href": "https://www.nustar.caltech.edu/"
     },
     {
-     "label": "NuSTAR (www.nustar.caltech.edu)",
-     "href": "https://www.nustar.caltech.edu/page/optics"
+     "label": "NuSTAR (science.nasa.gov)",
+     "href": "https://science.nasa.gov/mission/nustar/"
     }
    ]
   },
@@ -774,8 +750,8 @@
      "href": "https://www.mpe.mpg.de/eROSITA"
     },
     {
-     "label": "Spektr-RG (eROSITA, ART-XC) (www.mpe.mpg.de)",
-     "href": "https://www.mpe.mpg.de/455799/instrument"
+     "label": "Spektr-RG (eROSITA, ART-XC) (www.mpg.de)",
+     "href": "https://www.mpg.de/21468451/"
     }
    ]
   },
@@ -859,8 +835,8 @@
      "href": "https://www.mtwilson.edu/timeline/"
     },
     {
-     "label": "Hooker Telescope (www.mtwilson.edu)",
-     "href": "https://www.mtwilson.edu/discovering-mount-wilson-chapter-7-first-light-on-the-100-inch-telescope/"
+     "label": "Hooker Telescope (carnegiescience.edu)",
+     "href": "https://carnegiescience.edu/about/history/observatories-history"
     }
    ]
   },
@@ -976,10 +952,6 @@
     {
      "label": "Very Large Telescope (www.eso.org)",
      "href": "https://www.eso.org/public/teles-instr/paranal-observatory/vlt/"
-    },
-    {
-     "label": "Very Large Telescope (www.eso.org)",
-     "href": "https://www.eso.org/sci/facilities/paranal/astroclimate/site.html"
     }
    ]
   },
@@ -1020,8 +992,8 @@
      "href": "https://keckobservatory.org/telescopes/"
     },
     {
-     "label": "Keck Observatory (keckobservatory.org)",
-     "href": "https://keckobservatory.org/first_light_marks_25_years_of_hawaiis_leadership_in_astronomy/"
+     "label": "Keck Observatory (irtf.ifa.hawaii.edu)",
+     "href": "https://irtf.ifa.hawaii.edu/observing/telescopeCoordinates.php"
     }
    ]
   },
@@ -1108,8 +1080,8 @@
      "href": "https://www.rmg.co.uk/collections/objects/rmgc-object-11109"
     },
     {
-     "label": "Herschel's 40-foot telescope (www.rmg.co.uk)",
-     "href": "https://www.rmg.co.uk/stories/space-astronomy/herschel-family-royal-observatory"
+     "label": "Herschel's 40-foot telescope (collection.sciencemuseumgroup.org.uk)",
+     "href": "https://collection.sciencemuseumgroup.org.uk/objects/co56770/original-mirror-for-william-herschels-forty-foot-telescope-1785"
     }
    ]
   },
@@ -1146,10 +1118,6 @@
     {
      "label": "The Leviathan of Parsonstown (birrcastle.com)",
      "href": "https://birrcastle.com/the-great-telescope/"
-    },
-    {
-     "label": "The Leviathan of Parsonstown (birrcastle.com)",
-     "href": "https://birrcastle.com/frequently-asked-questions/"
     }
    ]
   },
@@ -1285,7 +1253,7 @@
     "radio"
    ],
    "size": {
-    "metres": 36.4,
+    "metres": 36400,
     "note": "27 active 25 m dishes (+1 spare) on a Y; A-configuration about 22.6 miles (36.4 km) across; arms 13 and 11 miles"
    },
    "from": "1976-02-18",
@@ -1310,8 +1278,8 @@
      "href": "https://public.nrao.edu/telescopes/vla/"
     },
     {
-     "label": "Very Large Array (public.nrao.edu)",
-     "href": "https://public.nrao.edu/telescopes/vla/science/"
+     "label": "Very Large Array (science.nrao.edu)",
+     "href": "https://science.nrao.edu/facilities/vla"
     }
    ]
   },
@@ -1393,8 +1361,8 @@
      "href": "https://subarutelescope.org/en/about/"
     },
     {
-     "label": "Subaru Telescope (subarutelescope.org)",
-     "href": "https://subarutelescope.org/en/about/history/"
+     "label": "Subaru Telescope (www.nao.ac.jp)",
+     "href": "https://www.nao.ac.jp/study/subaru20/en/topic05.html"
     }
    ]
   },
@@ -1434,8 +1402,8 @@
      "href": "https://rubinobservatory.org/about"
     },
     {
-     "label": "Vera C. Rubin Observatory (rubinobservatory.org)",
-     "href": "https://rubinobservatory.org/about/history"
+     "label": "Vera C. Rubin Observatory (noirlab.edu)",
+     "href": "https://noirlab.edu/public/news/noirlab2521/"
     }
    ]
   },
@@ -1474,8 +1442,8 @@
      "href": "https://elt.eso.org/about/facts/"
     },
     {
-     "label": "Extremely Large Telescope (elt.eso.org)",
-     "href": "https://elt.eso.org/about/location/"
+     "label": "Extremely Large Telescope (www.eso.org)",
+     "href": "https://www.eso.org/public/about-eso/travel/"
     }
    ]
   },
@@ -1508,10 +1476,6 @@
     "skaObservatory"
    ],
    "links": [
-    {
-     "label": "SKA-Low (www.skao.int)",
-     "href": "https://www.skao.int/en/explore/construction-journey"
-    },
     {
      "label": "SKA-Low (www.skao.int)",
      "href": "https://www.skao.int/en/explore/telescopes/ska-low"
@@ -1549,11 +1513,7 @@
    "links": [
     {
      "label": "SKA-Mid (www.skao.int)",
-     "href": "https://www.skao.int/en/explore/construction-journey"
-    },
-    {
-     "label": "SKA-Mid (www.skao.int)",
-     "href": "https://www.skao.int/en/explore/telescopes/ska-low"
+     "href": "https://www.skao.int/en/explore/telescopes/ska-mid"
     }
    ]
   }

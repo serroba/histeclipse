@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   endYear,
   loadTelescopes,
+  notAfter,
   stateIn,
   yearOf,
   type Telescope,
@@ -54,6 +55,15 @@ describe('the telescopes (#847)', () => {
   });
 });
 
+describe('dates of different precision', () => {
+  it('are compared as far as both go', () => {
+    expect(notAfter('2000-01-01', '2000-12-31')).toBe(true);
+    expect(notAfter('2000-12-31', '2000-01-01')).toBe(false);
+    expect(notAfter('2000', '2000-01-01')).toBe(true);
+    expect(notAfter('2001', '2000-12')).toBe(false);
+  });
+});
+
 describe('a telescope in a given year', () => {
   it('is working from first light to its end, inclusive', () => {
     const arecibo = named('arecibo');
@@ -80,6 +90,16 @@ describe('the file, checked as it is read', () => {
     await expect(refused({ ...good, telescopes: [first, first] })).rejects.toThrow('unique');
     await expect(
       refused({ ...good, telescopes: [{ ...first, from: '2000', until: '1990' }] }),
+    ).rejects.toThrow('end after');
+    // Within one year, as precisely as the dates go; and an expected first light too.
+    await expect(
+      refused({ ...good, telescopes: [{ ...first, from: '2000-12-31', until: '2000-01-01' }] }),
+    ).rejects.toThrow('end after');
+    await expect(
+      refused({
+        ...good,
+        telescopes: [{ ...first, from: '2014-12', until: { construction: '2010' } }],
+      }),
     ).rejects.toThrow('end after');
   });
 
