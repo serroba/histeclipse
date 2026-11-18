@@ -11,6 +11,7 @@ import { PRESENT_YEAR } from '../../time/present';
 import { activeLayers, type GoTo, type LayerLoad } from '../../state/activeLayers';
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
+import { LISTS } from '../../state/slices/sheets';
 import { createActiveChips } from './activeChips';
 import { createLayersPanel } from './layersPanel';
 import type { Span } from '../../ui/spanSwitch';
@@ -67,6 +68,11 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
   const chipActions = {
     onRemove: (layer: Layer) => {
       store.set((state) => layerTurned(state, layer, false));
+    },
+    // A layer's list (#850), where it has one.
+    onList: (layer: Layer) => {
+      const list = LISTS.find((each) => each === layer);
+      if (list !== undefined) store.set((state) => ({ ...state, list }));
     },
     // Where its data is: a year in the years, or a span at a moment of its own (#751).
     onGoTo: (to: GoTo) => {

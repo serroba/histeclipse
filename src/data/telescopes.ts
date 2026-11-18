@@ -14,7 +14,7 @@ import * as v from 'valibot';
 
 import { getJson, type Fetch } from '../util/fetchJson';
 
-const BANDS = [
+export const BANDS = [
   'radio',
   'microwave',
   'infrared',

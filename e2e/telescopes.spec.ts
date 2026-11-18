@@ -272,3 +272,41 @@ test('with the Telescopes layer, the space telescopes go round Earth, and no oth
   });
   expect(problems).toEqual([]);
 });
+
+test('the Telescopes list finds the most significant, filters them, and goes to one (#850) @acceptance @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const list = page.getByRole('dialog', { name: 'Telescopes' });
+  await test.step('Given the Telescopes layer on, When they open its list from its chip', async () => {
+    await page.goto('./?layers=telescopes&t=2026-01-01T12:00Z');
+    const open = page.getByRole('button', { name: 'Telescopes: the list' });
+    // On a phone, the chips are at the top of the Layers sheet.
+    if (!(await open.first().isVisible()))
+      await page
+        .getByRole('button', { name: /Layers/ })
+        .first()
+        .click();
+    await open.filter({ visible: true }).first().click();
+    await expect(list).toBeVisible();
+    await expect(list.getByTestId('telescope-list').getByRole('button').first()).toContainText(
+      'James Webb Space Telescope',
+    );
+  });
+  await test.step('When they keep only radio telescopes on Earth, Then Arecibo is among them and Webb is not', async () => {
+    await list.getByRole('button', { name: 'On Earth' }).click();
+    await list.getByRole('button', { name: 'Radio', exact: true }).click();
+    await expect(list.getByRole('button', { name: /Arecibo Telescope/ })).toBeVisible();
+    await expect(list.getByRole('button', { name: /James Webb/ })).toHaveCount(0);
+  });
+  await test.step('When they tap Arecibo, Then the view goes to 1963 with its card open, the list shut', async () => {
+    await list.getByRole('button', { name: /Arecibo Telescope/ }).click();
+    await expect(list).toBeHidden();
+    await expect(page.getByTestId('marker-card').getByRole('heading')).toHaveText(
+      'Arecibo Telescope',
+    );
+    await expect(page).toHaveURL(/t=1963-/);
+    await expect(page).not.toHaveURL(/list=/);
+  });
+  expect(problems).toEqual([]);
+});

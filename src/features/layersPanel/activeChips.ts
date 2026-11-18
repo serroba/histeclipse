@@ -18,6 +18,8 @@ export interface ActiveChips {
 export interface ActiveChipActions {
   readonly onRemove: (layer: Layer) => void;
   readonly onGoTo: (goTo: GoTo) => void;
+  /** Open the layer's list (#850). */
+  readonly onList: (layer: Layer) => void;
 }
 
 function chip(active: ActiveLayer, actions: ActiveChipActions): HTMLElement {
@@ -40,6 +42,17 @@ function chip(active: ActiveLayer, actions: ActiveChipActions): HTMLElement {
     );
     again.addEventListener('click', retry);
     parts.push(again);
+  }
+  if (active.list) {
+    const open = element(
+      'button',
+      { type: 'button', class: 'active-go', 'aria-label': `${active.label}: the list` },
+      'List',
+    );
+    open.addEventListener('click', () => {
+      actions.onList(active.layer);
+    });
+    parts.push(open);
   }
   if (goTo !== null) {
     const go = element(

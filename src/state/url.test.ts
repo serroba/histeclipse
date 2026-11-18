@@ -99,6 +99,7 @@ describe('parseViewState', () => {
       cratersIn: 'map',
       lineages: null,
       boundaries: null,
+      list: null,
     } satisfies ViewState);
   });
 
@@ -200,6 +201,8 @@ describe('parseViewState', () => {
     expect(parseViewState('boundaries=pressure', NOW).state.boundaries).toBe('pressure');
     expect(parseViewState('boundaries=holocene', NOW).state.boundaries).toBe('holocene');
     expect(parseViewState('boundaries=nowhere', NOW).state.boundaries).toBeNull();
+    expect(parseViewState('list=telescopes', NOW).state.list).toBe('telescopes');
+    expect(parseViewState('list=nowhere', NOW).state.list).toBeNull();
     expect(parseViewState('lineages=dinosaurs', NOW).state.lineages).toEqual({
       group: 'dinosaurs',
       pick: null,
@@ -601,6 +604,7 @@ describe('serializeViewState', () => {
       }),
     ),
     boundaries: fc.option(fc.constantFrom(...BOUNDARY_CHAPTERS)),
+    list: fc.option(fc.constant('telescopes' as const)),
   });
 
   it('round-trips every view state through a link', () => {

@@ -42,6 +42,8 @@ export interface ActiveLayer {
   readonly goTo: GoTo | null;
   /** Try its load again, where it failed. */
   readonly retry: (() => void) | null;
+  /** Whether it has a list to find its things in (#850). */
+  readonly list: boolean;
 }
 
 const CHOICES: ReadonlyMap<Layer, LayerChoice> = new Map(
@@ -115,7 +117,7 @@ export function activeLayers(
   return LAYERS.filter((layer) => state.layers.has(layer)).flatMap((layer): ActiveLayer[] => {
     const choice = CHOICES.get(layer);
     if (choice === undefined) return [];
-    const base = { layer, label: choice.label, reach: choice.reach };
+    const base = { layer, label: choice.label, reach: choice.reach, list: choice.list === true };
     const to = choice.spans[0];
     if (!choice.spans.includes(span) && to !== undefined) {
       const goTo: GoTo = {

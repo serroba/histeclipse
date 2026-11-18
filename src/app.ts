@@ -54,6 +54,7 @@ import { mountTimeBars } from './features/timeBars';
 import { mountFamous } from './features/famous';
 import { mountShower } from './features/shower';
 import { mountWave } from './features/ligo';
+import { mountTelescopeList } from './features/telescopes';
 import { mountCarbonMade } from './features/carbonMade';
 import { mountIceAges } from './features/iceAges';
 import { mountDeepSurfaces, PLATES_CHIP } from './features/deepSurfaces';
@@ -400,6 +401,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   // A gravitational wave passing (#829): space stretched and squeezed, over the globe.
   const wave = mountWave({ ...partContext, globe, showCard: markerCard.show });
+  const telescopeList = mountTelescopeList({ ...partContext, showCard: markerCard.show });
   // Where cosmic rays make carbon-14 (#269): a glow over the globe, and its card.
   const carbonMade = mountCarbonMade({
     ...partContext,
@@ -512,6 +514,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       shower.container,
       shower.stage,
       ...wave.elements,
+      ...telescopeList.elements,
     ],
   });
 
@@ -691,6 +694,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { draw: bodies.sharpen },
     { draw: asking.render },
     { when: on(wave.watches), draw: wave.render },
+    { when: on(telescopeList.watches), draw: telescopeList.render },
     { when: on(treeOfLife.watches), draw: treeOfLife.render },
     { draw: showSheets },
     // The time changed elsewhere (the year typed, the slider) ends the cycle's play.
