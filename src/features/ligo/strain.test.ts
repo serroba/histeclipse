@@ -5,6 +5,7 @@ import {
   displacement,
   displacementInPlane,
   GW150914_STAND_IN,
+  turnBetween,
   waveAxes,
   type Polarisations,
   type Triple,
@@ -126,5 +127,13 @@ describe('the stand-in against the paper', () => {
     }
     expect(turns / (2 * Math.PI)).toBeGreaterThan(7.5);
     expect(turns / (2 * Math.PI)).toBeLessThan(9.5);
+  });
+});
+
+describe('how far an angle turned', () => {
+  it('goes the short way round, either way past ±π', () => {
+    expect(turnBetween(0.1, 0.3)).toBeCloseTo(0.2, 12);
+    expect(turnBetween(3, -3)).toBeCloseTo(2 * Math.PI - 6, 12);
+    expect(turnBetween(-3, 3)).toBeCloseTo(6 - 2 * Math.PI, 12);
   });
 });

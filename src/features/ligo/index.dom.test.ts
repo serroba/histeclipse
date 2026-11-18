@@ -223,6 +223,9 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     );
     click('Space');
     expect(views[0]?.view.setChapter).toHaveBeenLastCalledWith('space');
+    click('The source');
+    expect(views[0]?.view.setChapter).toHaveBeenLastCalledWith('source');
+    expect(stage().textContent).toContain('not to scale');
   });
 
   it('Given the card opened from the stage, When its action is taken, Then Livingston shows', async () => {

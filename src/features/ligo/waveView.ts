@@ -104,8 +104,11 @@ function storyCamera(
     taken = true;
   });
   function place(): void {
-    const { from, target } = AIMS[chapter];
-    camera.position.copy(from).multiplyScalar(distance).add(target);
+    const { from, target, back = 1 } = AIMS[chapter];
+    camera.position
+      .copy(from)
+      .multiplyScalar(distance * back)
+      .add(target);
     controls.target.copy(target);
     controls.update();
   }

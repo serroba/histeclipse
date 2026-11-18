@@ -14,6 +14,8 @@ import { SCALE_NOTE } from './wavePlay';
 import type { WaveChapter } from './waveScene';
 
 const ABOUT: Readonly<Record<WaveChapter, string>> = {
+  source:
+    'Where it came from: two black holes, 36 and 29 times the Sun’s mass, orbiting ever faster until they merge into one of 62. The sheet is the plane of their orbit; the wave they send out spirals through it, two-armed, tighter as they speed up, weaker farther out. Heights show the strain the wave carries, not a dent in space. Near the black holes the wave cannot be worked out this way, and the sheet fades out: that part is not to scale.',
   space:
     'A ring of free masses, as a gravitational wave from two black holes merging 1.3 billion light-years away comes through it toward you. Space itself stretches one way and squeezes the other, then the other way round, faster and harder as the black holes spiral together, and rings as the one they make settles. Behind the ring, the space the wave has already crossed.',
   detector:
@@ -21,6 +23,7 @@ const ABOUT: Readonly<Record<WaveChapter, string>> = {
 };
 
 const CHAPTER_NAMES: Readonly<Record<WaveChapter, string>> = {
+  source: 'The source',
   space: 'Space',
   detector: 'At Livingston',
 };
@@ -58,7 +61,7 @@ export function createWaveStage(why: HTMLElement, controls: StageControls): Wave
     play.set(playing);
     controls.onPlay(playing);
   });
-  const chapters = (['space', 'detector'] as const).map((chapter) => {
+  const chapters = (['source', 'space', 'detector'] as const).map((chapter) => {
     const made = button(CHAPTER_NAMES[chapter], () => {
       controls.chapter(chapter);
     });

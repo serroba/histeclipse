@@ -9,7 +9,7 @@
 
 import * as v from 'valibot';
 
-import type { Polarisations, Waveform } from './strain';
+import { turnBetween, type Polarisations, type Waveform } from './strain';
 
 export const DETECTORS = ['H1', 'L1'] as const;
 
@@ -95,10 +95,7 @@ export function measuredWave(data: Gw150914): Waveform {
     if (index < span || index >= angle.length - span || (size[index] ?? 0) < peak * 0.1) return 0;
     let turned = 0;
     for (let step = index - span; step < index + span; step += 1) {
-      let change = (angle[step + 1] ?? 0) - (angle[step] ?? 0);
-      if (change <= -Math.PI) change += 2 * Math.PI;
-      if (change > Math.PI) change -= 2 * Math.PI;
-      turned += change;
+      turned += turnBetween(angle[step] ?? 0, angle[step + 1] ?? 0);
     }
     return Math.abs(turned) / (2 * span) / ((2 * Math.PI) / rate);
   });
