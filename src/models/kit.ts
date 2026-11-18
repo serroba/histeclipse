@@ -1,7 +1,7 @@
 /**
  * The kit the telescopes' models are built with (#859): parts a telescope is made of, each sized
  * in metres from what its operator publishes, so a model is its sizes put together. A model
- * stands with +Y up (the zenith), +Z north, as it would on the ground; a space telescope's model
+ * stands with +Y up (the zenith), +X east and -Z north, as it would on the ground; a space telescope's model
  * keeps its own axes (`webbModel.ts`).
  *
  * Builds objects only: the model view (`modelView.ts`) draws them.
@@ -29,6 +29,8 @@ export interface Materials {
   readonly concrete: Material;
   readonly dark: Material;
   readonly ground: Material;
+  /** A dome's or an enclosure's shell, seen from inside once it is cut away. */
+  readonly shell: Material;
 }
 
 export function materials(): Materials {
@@ -43,6 +45,7 @@ export function materials(): Materials {
     concrete: new MeshStandardMaterial({ color: 0xb8b2a6, roughness: 0.9 }),
     dark: new MeshStandardMaterial({ color: 0x2a2f38, roughness: 0.7 }),
     ground: new MeshStandardMaterial({ color: 0x5b6b4e, roughness: 1, side: DoubleSide }),
+    shell: new MeshStandardMaterial({ color: 0xd6d3cc, roughness: 0.8, side: DoubleSide }),
   };
 }
 
@@ -71,10 +74,20 @@ export function dishDepth(diameter: number, focalRatio: number): number {
   return diameter / (16 * focalRatio);
 }
 
-/** A straight member from `from` to `to`, `thickness` across: a strut, a leg, a cable. */
-export function strut(from: Vector3, to: Vector3, thickness: number, material: Material): Mesh {
+/** A straight member from `from` to `to`, `thickness` across: a strut, a leg, a cable, or with
+ * more `sides` a tube. */
+export function strut(
+  from: Vector3,
+  to: Vector3,
+  thickness: number,
+  material: Material,
+  sides = 6,
+): Mesh {
   const length = from.distanceTo(to);
-  const member = new Mesh(new CylinderGeometry(thickness / 2, thickness / 2, length, 6), material);
+  const member = new Mesh(
+    new CylinderGeometry(thickness / 2, thickness / 2, length, sides),
+    material,
+  );
   member.position.copy(from).add(to).multiplyScalar(0.5);
   member.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), to.clone().sub(from).normalize());
   return member;

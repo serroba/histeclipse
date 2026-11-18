@@ -84,6 +84,6 @@ describe('the words for a date and a year', () => {
 
   it('Given a radio telescope with a model, Then its card carries it; one without has none (#859)', () => {
     expect(telescopeCard(named('lovell')).model?.label).toContain('Lovell Telescope in 3D');
-    expect('model' in telescopeCard(named('hale'))).toBe(false);
+    expect('model' in telescopeCard(named('chandra'))).toBe(false);
   });
 });

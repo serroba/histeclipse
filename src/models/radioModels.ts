@@ -1,6 +1,6 @@
 /**
  * The radio telescopes' models (#859), each from the sizes its operator publishes, in metres,
- * standing with +Y up and +Z north (`kit.ts`). What no page sizes is placed by eye and said so in
+ * standing with +Y up and -Z north (`kit.ts`). What no page sizes is placed by eye and said so in
  * its caption (`telescopeModels.ts`).
  */
 
