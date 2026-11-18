@@ -26,7 +26,7 @@ import type { MoonFacts } from './moonFacts';
 import type { Why, WhyId } from '../sources/registry';
 import { getJson, type Fetch } from '../util/fetchJson';
 
-const PASSAGE_KINDS = ['why', 'moon', 'eclipse', 'mission'] as const;
+const PASSAGE_KINDS = ['why', 'moon', 'eclipse', 'mission', 'story'] as const;
 export type PassageKind = (typeof PASSAGE_KINDS)[number];
 
 const AnchorSchema = v.strictObject({
@@ -139,6 +139,31 @@ export function whyPassages(
       anchors: [{ body: 'earth', view }],
     };
   });
+}
+
+/**
+ * The stories the site plays, each a passage of its own so search finds the story itself, not
+ * only how it is drawn (#842): GW150914, the first gravitational wave heard (#834).
+ */
+export function storyPassages(): Passage[] {
+  return [
+    {
+      id: 'story:gw150914',
+      kind: 'story',
+      title: 'GW150914: LIGO hears the first gravitational wave',
+      text: 'On 14 September 2015 at 09:50:45 UTC, the two LIGO detectors, at Livingston, Louisiana, and 6.9 ms later at Hanford, Washington, heard a gravitational wave for the first time: the chirp of two black holes, 36 and 29 times the Sun’s mass, spiralling together and merging into one of 62, 1.3 billion light-years away. Played as a story in four chapters: the black holes merging and their wave spiralling out through space; its journey to Earth, stretching and squeezing the planet as it passes; a ring of free masses showing what it does to space; and LIGO Livingston’s 4 km arms moved by the strain it measured, beside what both detectors recorded.',
+      sources: ['abbott2016', 'gwoscGw150914'],
+      anchors: [
+        {
+          body: 'earth',
+          at: [30.563, -90.774],
+          when: [2015, 2015],
+          label: 'GW150914, heard at LIGO Livingston and Hanford',
+          view: 'cam=30.5630,-90.7740,3.00&t=2015-09-14T09:50Z&wave=gw150914&chapter=source',
+        },
+      ],
+    },
+  ];
 }
 
 /** Each moon's story, anchored to the moon. */
