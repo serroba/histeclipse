@@ -1253,7 +1253,7 @@
     "radio"
    ],
    "size": {
-    "metres": 36.4,
+    "metres": 36400,
     "note": "27 active 25 m dishes (+1 spare) on a Y; A-configuration about 22.6 miles (36.4 km) across; arms 13 and 11 miles"
    },
    "from": "1976-02-18",
@@ -1478,7 +1478,7 @@
    "links": [
     {
      "label": "SKA-Low (www.skao.int)",
-     "href": "https://www.skao.int/en/explore/construction-journey"
+     "href": "https://www.skao.int/en/explore/telescopes/ska-low"
     }
    ]
   },
@@ -1513,7 +1513,7 @@
    "links": [
     {
      "label": "SKA-Mid (www.skao.int)",
-     "href": "https://www.skao.int/en/explore/construction-journey"
+     "href": "https://www.skao.int/en/explore/telescopes/ska-mid"
     }
    ]
   }

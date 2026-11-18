@@ -75,6 +75,15 @@ const Space = v.strictObject({
   craft: v.nullable(v.pipe(v.string(), v.regex(/^[ds]\d{5}$/))),
 });
 
+/**
+ * Whether date `a` is not after `b`, compared as far as both are precise: `2000-12-31` is after
+ * `2000-01-01`, but `2000` is not after `2000-01-01`.
+ */
+export function notAfter(a: string, b: string): boolean {
+  const shared = Math.min(a.length, b.length);
+  return a.slice(0, shared) <= b.slice(0, shared);
+}
+
 /** Year of a partial date, for comparing them. */
 export function yearOf(date: string): number {
   return Number(date.slice(0, 4));
@@ -100,7 +109,11 @@ const TelescopesSchema = v.pipe(
     'telescope ids must be unique',
   ),
   v.check(
-    (file) => file.telescopes.every((t) => (endYear(t) ?? Infinity) >= yearOf(t.from)),
+    (file) =>
+      file.telescopes.every((t) => {
+        const end = typeof t.until === 'object' ? t.until.construction : t.until;
+        return end === null || end === 'operating' || notAfter(t.from, end);
+      }),
     'a telescope must end after it began',
   ),
 );
