@@ -1,7 +1,10 @@
 /**
- * The wave's journey to Earth (#833): 1.3 billion years crossing space, told in seconds, then
- * its last 60-odd milliseconds as it sweeps across Earth, slowed, Livingston first and Hanford
- * 6.9 ms later.
+ * The wave's journey to Earth (#833, #841): 1.3 billion years crossing space, told in seconds,
+ * then its loudest tenth of a second sweeping across Earth, 100 times slower, Livingston first
+ * and Hanford 6.9 ms later. So far from its source the wave is a plane wave: flat wavefronts
+ * across its path, a wavelength apart (about 3,000 km at 100 Hz, half Earth's radius), so
+ * several crests cross Earth at once. Each place meets the wave as Livingston did, earlier or
+ * later by how far along the path it lies.
  *
  * Which way it came: the paper places GW150914 in a wide band of the southern sky, not at a
  * point. Two detectors fix only the angle between the wave's path and the line between them
@@ -14,7 +17,7 @@
  */
 
 import { DETECTOR_SITES } from './detectorRig';
-import type { Triple } from './strain';
+import type { Polarisations, Triple, Waveform } from './strain';
 
 /** Light's speed, km/s, and Earth's mean radius, km. */
 const LIGHT = 299_792.458;
@@ -69,20 +72,34 @@ export function arrivalDirection(delay = DELAY): Triple {
   return [cosine * b[0] + sine * u[0], cosine * b[1] + sine * u[1], cosine * b[2] + sine * u[2]];
 }
 
+/**
+ * The wave's own time while it arrives, s from when the merger's wave reaches Livingston: from
+ * when its loud part is near, to the ringing's end. Played 100 times slower, as the other
+ * chapters are, so the crests can be followed across Earth.
+ */
+const ARRIVE_FROM = -0.11;
+const ARRIVE_TO = 0.035;
+const SLOWED = 100;
+/** While it travels, the wave's own time runs on by this much, s: from before its first part
+ * (0.17 s before the merger) is within 3 Earth radii of Earth, so Earth is at rest while the
+ * years count down, to its leading part sweeping in as they end. */
+const APPROACH = 0.13;
+
 /** The journey's parts, ms on screen: crossing space, sweeping Earth, then a rest. */
-export const JOURNEY_MS = { travel: 7000, arrive: 6000, rest: 1800 } as const;
+export const JOURNEY_MS = {
+  travel: 6000,
+  arrive: (ARRIVE_TO - ARRIVE_FROM) * SLOWED * 1000,
+  rest: 1500,
+} as const;
 const TOTAL = JOURNEY_MS.travel + JOURNEY_MS.arrive + JOURNEY_MS.rest;
-/** The stretch of the wave's path drawn as it sweeps Earth, Earth radii either side of its
- * middle: about 64 ms of its travel, played over `JOURNEY_MS.arrive`. */
-const SWEEP = 1.6;
 
 export interface JourneyMoment {
   readonly phase: 'travel' | 'arrive' | 'rest';
   /** Years still to go, while it travels. */
   readonly yearsToGo: number;
-  /** Where the front is along its path, Earth radii from Earth's middle: negative before it. */
-  readonly front: number;
-  /** The time, s after 09:50:45 UTC, while it sweeps Earth. */
+  /** The wave's own time, s from when the merger's wave reached Livingston. */
+  readonly waveTime: number;
+  /** The time, s after 09:50:45 UTC, once it is at Earth. */
   readonly utc: number | null;
 }
 
@@ -92,33 +109,76 @@ export function journeyMs(): number {
 }
 
 /**
- * Where the journey is `ms` into it: crossing space, years counting down as the front comes in
- * from far off (not to scale); then sweeping Earth, slowed, the UTC time to the millisecond,
- * timed so the front reaches Livingston at `atLivingston` s after 09:50:45.
+ * Where the journey is `ms` into it: crossing space, years counting down as its leading part
+ * comes in; then sweeping Earth, 100 times slower, the UTC time to the millisecond, the merger's
+ * wave reaching Livingston at `atLivingston` s after 09:50:45.
  */
-export function journeyAt(ms: number, atLivingston: number, k = arrivalDirection()): JourneyMoment {
+export function journeyAt(ms: number, atLivingston: number): JourneyMoment {
   const into = Math.min(Math.max(ms, 0), TOTAL);
   if (into < JOURNEY_MS.travel) {
     const share = into / JOURNEY_MS.travel;
     // Counted down on a log scale, so each power of ten gets its share of the time.
     const yearsToGo = LIGHT_YEARS ** (1 - share) - 1;
-    return { phase: 'travel', yearsToGo, front: -SWEEP - 7 * (1 - share) ** 2, utc: null };
+    return {
+      phase: 'travel',
+      yearsToGo,
+      waveTime: ARRIVE_FROM - APPROACH * (1 - share),
+      utc: null,
+    };
   }
-  const sweep = Math.min(1, (into - JOURNEY_MS.travel) / JOURNEY_MS.arrive);
-  const front = -SWEEP + 2 * SWEEP * sweep;
-  const reach = dot(k, LIVINGSTON);
-  const utc = atLivingston + ((front - reach) * EARTH_KM) / LIGHT;
+  const waveTime = Math.min(ARRIVE_TO, ARRIVE_FROM + (into - JOURNEY_MS.travel) / (1000 * SLOWED));
   return {
     phase: into < JOURNEY_MS.travel + JOURNEY_MS.arrive ? 'arrive' : 'rest',
     yearsToGo: 0,
-    front,
-    utc,
+    waveTime,
+    utc: atLivingston + waveTime,
   };
 }
 
-/** Whether the front has passed a place yet. */
+/** How much later than Livingston the wave reaches a place, s (Earth radii, Earth-fixed). */
+export function laterThanLivingston(place: Triple, k = arrivalDirection()): number {
+  return delayBetween(k, LIVINGSTON, place);
+}
+
+/** Whether the merger's wave has reached a place yet. */
 export function reached(moment: JourneyMoment, place: Triple, k = arrivalDirection()): boolean {
-  return moment.phase !== 'travel' && moment.front >= dot(k, place);
+  return moment.phase !== 'travel' && moment.waveTime >= laterThanLivingston(place, k);
+}
+
+/** How the wave along the path is laid out: values per place (2, or 4 for a texture's RGBA),
+ * and how much each is stretched. */
+export interface PathLayout {
+  readonly stride: number;
+  readonly scale: number;
+}
+
+/**
+ * The wave along its path about Earth at a moment: at each of `bins` places from `from` to `to`
+ * Earth radii along the way it goes (0 at Earth's middle), the h₊ and h× it then has, as it was
+ * when it reached Livingston that much earlier or later; nearest the source first, each pair
+ * `stride` apart and times `scale`.
+ */
+export function pathTable(
+  wave: Waveform,
+  waveTime: number,
+  span: { readonly from: number; readonly to: number; readonly bins: number },
+  k = arrivalDirection(),
+  layout: PathLayout = { stride: 2, scale: 1 },
+): Float32Array {
+  const table = new Float32Array(span.bins * layout.stride);
+  const atLivingston = dot(k, LIVINGSTON);
+  for (let index = 0; index < span.bins; index += 1) {
+    const along = span.from + ((span.to - span.from) * index) / (span.bins - 1);
+    const { plus, cross } = wave.at(waveTime - ((along - atLivingston) * EARTH_KM) / LIGHT);
+    table[layout.stride * index] = plus * layout.scale;
+    table[layout.stride * index + 1] = cross * layout.scale;
+  }
+  return table;
+}
+
+/** The pair at `index` of a table laid out `stride` apart; none past its ends. */
+export function pairAt(table: Float32Array, index: number, stride: number): Polarisations {
+  return { plus: table[stride * index] ?? 0, cross: table[stride * index + 1] ?? 0 };
 }
 
 /** Years as words: "870 million years to go". */
