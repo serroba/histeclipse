@@ -1,4 +1,4 @@
-/** El Niño and La Niña (#886): NOAA's two indices side by side, and where they disagree. */
+/** El Niño and La Niña (#886): NOAA's two indices side by side, where they disagree, and the sea. */
 
 import { collectProblems, expect, globeRendered, test } from './support';
 
@@ -16,6 +16,10 @@ test('the El Niño indices are charted side by side, and a month where they disa
     await expect(panel.getByRole('list', { name: 'The indices' }).getByRole('listitem')).toHaveText(
       ['Relative Oceanic Niño Index (RONI)', 'Oceanic Niño Index (ONI)'],
     );
+  });
+  await test.step('And the month’s sea surface temperature is painted, with its scale', async () => {
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-enso-sst', 'on');
+    await expect(panel).toContainText('blue colder, red warmer, to ±4 °C');
   });
   await test.step('And the month is said with each index’s call, since they disagree', async () => {
     await expect(panel).toContainText('January 2025: the indices disagree. RONI: La Niña');

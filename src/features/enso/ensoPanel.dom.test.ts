@@ -17,7 +17,12 @@ describe('the ENSO panel', () => {
     const root = container.querySelector<HTMLElement>('.enso-panel');
     expect(root?.hidden).toBe(true);
     const at = monthOf(1997, 12);
-    panel.update({ chart: ensoChart(data, at), names, text: 'December 1997.' });
+    panel.update({
+      chart: ensoChart(data, at),
+      names,
+      text: 'December 1997.',
+      sea: 'On the globe, the sea.',
+    });
     expect(root?.hidden).toBe(false);
     expect(root?.querySelectorAll('.enso-line')).toHaveLength(2);
     expect(root?.querySelectorAll('.enso-threshold')).toHaveLength(2);
@@ -31,10 +36,12 @@ describe('the ENSO panel', () => {
       'The tropical Pacific, 1950–2026: °C from normal',
     );
     expect(root?.textContent).toContain('December 1997.');
+    expect(root?.querySelector('.enso-sea')?.textContent).toBe('On the globe, the sea.');
+    expect(root?.querySelector('.enso-scale')).not.toBeNull();
     const svg = root?.querySelector('svg');
-    panel.update({ chart: ensoChart(data, at), names, text: 'Again.' });
+    panel.update({ chart: ensoChart(data, at), names, text: 'Again.', sea: 's' });
     expect(root?.querySelector('svg')).toBe(svg);
-    panel.update({ chart: ensoChart(data, monthOf(1900, 1)), names, text: 'Outside.' });
+    panel.update({ chart: ensoChart(data, monthOf(1900, 1)), names, text: 'Outside.', sea: 's' });
     expect(root?.querySelectorAll('.enso-cursor')).toHaveLength(0);
     panel.update(null);
     expect(root?.hidden).toBe(true);

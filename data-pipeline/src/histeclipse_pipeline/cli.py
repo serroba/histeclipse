@@ -35,6 +35,7 @@ from histeclipse_pipeline.empires import (
 )
 from histeclipse_pipeline.energy_imbalance import fetch_imbalance
 from histeclipse_pipeline.enso import fetch_enso
+from histeclipse_pipeline.enso_sst import fetch_enso_sst
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.eruptions import fetch_eruptions
 from histeclipse_pipeline.extremes import fetch_extremes
@@ -646,6 +647,12 @@ def enso(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote NOAA's ENSO indices, {count} episodes between them, to {args.out}")
 
 
+def enso_sst(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the sea's surface temperature anomaly each month since 1981 (NOAA OISST v2.1)."""
+    count = fetch_enso_sst(args.out, Path(".cache/enso-sst/sst.mon.mean.nc"))
+    return _say(f"wrote {count} monthly sea surface temperature maps to {args.out}")
+
+
 def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write measured warming on land and sea since 1850 (Berkeley Earth) as small images."""
     count = fetch_measured_warming(args.out)
@@ -1116,6 +1123,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "enso": (
         enso,
         "write NOAA's El Niño indices (RONI and ONI) side by side, with each one's episodes",
+        "output directory",
+    ),
+    "enso-sst": (
+        enso_sst,
+        "write each month's sea surface temperature anomaly since 1981 (NOAA OISST v2.1)",
         "output directory",
     ),
     "measured-warming": (

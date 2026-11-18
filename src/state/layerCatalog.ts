@@ -190,7 +190,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
         id: 'enso',
         label: 'El Niño and La Niña',
         about:
-          'The tropical Pacific each month since 1950, as NOAA’s two indices measure it (RONI, official since 2026, and ONI before it), side by side beside the globe, and where they disagree.',
+          'The tropical Pacific each month since 1950, as NOAA’s two indices measure it (RONI, official since 2026, and ONI before it), side by side beside the globe, and where they disagree; on the globe from 1981, the month’s sea surface temperature against normal (OISST).',
         spans: ['years'],
         reach: 'From January 1950 to September 2026, a value a month.',
         covers: { years: [1950, 2026] },

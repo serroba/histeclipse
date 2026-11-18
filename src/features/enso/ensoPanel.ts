@@ -79,6 +79,8 @@ export interface EnsoView {
   /** The indices' names, in the chart's order, for its key. */
   readonly names: readonly { readonly id: string; readonly name: string }[];
   readonly text: string;
+  /** What the globe shows of the sea, or why it shows nothing. */
+  readonly sea: string;
 }
 
 /** The panel; null takes it away. */
@@ -86,6 +88,7 @@ export const ensoPanel: LayerFactory<EnsoView | null> = (host) => {
   const figure = element('figure', { class: 'enso-figure' });
   const key = element('ul', { class: 'enso-key', 'aria-label': 'The indices' });
   const said = element('p', { class: 'enso-said', 'aria-live': 'polite' });
+  const sea = element('p', { class: 'enso-sea' });
   const root = element(
     'section',
     { class: 'enso-panel', 'aria-label': 'El Niño and La Niña', hidden: '' },
@@ -93,9 +96,15 @@ export const ensoPanel: LayerFactory<EnsoView | null> = (host) => {
     key,
     said,
     element(
+      'div',
+      { class: 'enso-legend', 'aria-hidden': 'true' },
+      element('span', { class: 'enso-scale' }),
+    ),
+    sea,
+    element(
       'p',
       { class: 'enso-credit' },
-      'NOAA Climate Prediction Center. Red: El Niño; blue: La Niña, as each index names them.',
+      'NOAA Climate Prediction Center; NOAA OISST v2.1, from NOAA PSL. Red: El Niño; blue: La Niña, as each index names them.',
     ),
   );
   joinGlobePanels(host.container, root, 4);
@@ -105,6 +114,7 @@ export const ensoPanel: LayerFactory<EnsoView | null> = (host) => {
       root.hidden = view === null;
       if (view === null) return;
       said.textContent = view.text;
+      sea.textContent = view.sea;
       const at = String(view.chart.cursorX);
       if (at === drawnFor) return;
       drawnFor = at;

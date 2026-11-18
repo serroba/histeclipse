@@ -769,6 +769,13 @@
     "cite": "Hu et al. (2016), The timing of India-Asia collision onset: facts, theories, controversies, Earth-Science Reviews 160, 264–299",
     "url": "https://doi.org/10.1016/j.earscirev.2016.07.014"
   },
+  "huang2021oisst": {
+    "name": "NOAA OISST v2.1 (Huang et al.)",
+    "kind": "dataset",
+    "cite": "Huang, B., Liu, C., Banzon, V., Freeman, E., Graham, G., Hankins, B., Smith, T., Zhang, H.-M. (2021), Improvements of the Daily Optimum Interpolation Sea Surface Temperature (DOISST) Version 2.1, Journal of Climate 34, 2923–2939; data: NOAA OI SST V2 High Resolution, monthly means, data provided by the NOAA PSL, Boulder, Colorado, USA, from their website at https://psl.noaa.gov, file of 15 November 2026. Our summary: the sea's surface temperature each day since September 1981 on a 0.25° grid, blending satellite (AVHRR), ship, buoy and Argo measurements by optimum interpolation, with sea ice set to the temperature of freezing sea water",
+    "url": "https://doi.org/10.1175/JCLI-D-20-0166.1",
+    "licence": "None stated (US Government work); acknowledged as NOAA PSL asks"
+  },
   "huang2025ersst6": {
     "name": "ERSST version 6 (Huang et al.)",
     "kind": "paper",
