@@ -19,6 +19,12 @@
     "cite": "Allwood et al. (2006), Stromatolite reef from the Early Archaean era of Australia, Nature 441, 714–718",
     "url": "https://doi.org/10.1038/nature04764"
   },
+  "almaObservatory": {
+    "name": "ALMA Observatory",
+    "kind": "reference",
+    "cite": "The Joint ALMA Observatory’s and the ALMA Science Portal’s pages: its antennas, baselines and early science",
+    "url": "https://www.almaobservatory.org/en/about-alma/"
+  },
   "ar6AnnexIII": {
     "name": "IPCC AR6 WG1 Annex III extended data",
     "kind": "dataset",
@@ -105,6 +111,12 @@
     "cite": "Bintanja & van de Wal (2008), Nature 454; NOAA World Data Service",
     "url": "https://doi.org/10.1038/nature07158"
   },
+  "birrCastle": {
+    "name": "Birr Castle: the Great Telescope",
+    "kind": "reference",
+    "cite": "Birr Castle’s pages on the Earl of Rosse’s Great Telescope (the Leviathan of Parsonstown): built in February 1845, the largest in the world from 1845 to 1914 (or to 1917, on another of its pages), now restored",
+    "url": "https://birrcastle.com/the-great-telescope/"
+  },
   "biskaborn2019": {
     "name": "GTN-P permafrost borehole temperatures (Biskaborn et al.)",
     "kind": "dataset",
@@ -176,6 +188,12 @@
     "url": "https://doi.org/10.1038/s41561-021-00699-z",
     "licence": "None stated (the data repository has no licence)"
   },
+  "caltechTelescopes": {
+    "name": "Caltech: NuSTAR, IPAC (IRAS) and Palomar",
+    "kind": "reference",
+    "cite": "Caltech’s pages on NuSTAR, on IRAS (IPAC and IRSA) and on Palomar Observatory’s Hale Telescope",
+    "url": "https://www.nustar.caltech.edu/"
+  },
   "camsEac4": {
     "name": "CAMS global reanalysis (EAC4)",
     "kind": "dataset",
@@ -189,6 +207,18 @@
     "cite": "Cao et al. (2024), a 1.8 Ga plate model, Geoscience Frontiers 15, 101922; Zenodo",
     "url": "https://doi.org/10.5281/zenodo.13628813",
     "licence": "CC BY 4.0"
+  },
+  "carnegieMtWilson": {
+    "name": "Carnegie Science and Mount Wilson Observatory",
+    "kind": "reference",
+    "cite": "Carnegie Science’s and Mount Wilson Observatory’s pages on the Hooker 100-inch and the Hale 200-inch telescopes: their first light and Hubble’s discoveries",
+    "url": "https://www.mtwilson.edu/timeline/"
+  },
+  "casFast": {
+    "name": "Chinese Academy of Sciences: FAST",
+    "kind": "reference",
+    "cite": "The Chinese Academy of Sciences’ and NAOC’s pages on the Five-hundred-meter Aperture Spherical radio Telescope (FAST): its completion on 25 September 2016, its operation and pulsars",
+    "url": "https://english.cas.cn/head/201609/t20160923_168102.shtml"
   },
   "cassiniJupiter": {
     "name": "Cassini map of Jupiter",
@@ -239,6 +269,12 @@
     "url": "https://doi.org/10.5281/zenodo.7322003",
     "licence": "CC BY 4.0"
   },
+  "chandraCxc": {
+    "name": "Chandra X-ray Center (Smithsonian Astrophysical Observatory)",
+    "kind": "reference",
+    "cite": "The Chandra X-ray Center’s pages on the Chandra X-ray Observatory: its mirrors, launch and discoveries",
+    "url": "https://chandra.si.edu/about/"
+  },
   "clementineMoon": {
     "name": "Clementine colour-ratio map of the Moon",
     "kind": "imagery",
@@ -271,6 +307,12 @@
     "kind": "paper",
     "cite": "Collins et al. (2020), A steeply-inclined trajectory for the Chicxulub impact, Nature Communications 11",
     "url": "https://doi.org/10.1038/s41467-020-15269-x"
+  },
+  "csiroParkes": {
+    "name": "CSIRO: Murriyang, the Parkes radio telescope",
+    "kind": "reference",
+    "cite": "CSIRO’s pages on Murriyang, its Parkes radio telescope: its opening on 31 October 1961, Apollo 11 and pulsars",
+    "url": "https://www.csiro.au/en/about/facilities-collections/ATNF/Parkes-radio-telescope-Murriyang"
   },
   "dayEarthSmiled": {
     "name": "Cassini: The Day the Earth Smiled",
@@ -356,11 +398,24 @@
     "cite": "ESA, “Juice” (mission page)",
     "url": "https://www.esa.int/Science_Exploration/Space_Science/Juice"
   },
+  "esaTelescopes": {
+    "name": "ESA: its space telescopes’ pages",
+    "kind": "reference",
+    "cite": "ESA’s pages (esa.int, sci.esa.int and ESA Cosmos) on Hipparcos, XMM-Newton, Herschel, Planck, Gaia and Euclid: their launch and end dates, sizes and results, as read in November 2026",
+    "url": "https://www.esa.int/Science_Exploration/Space_Science/"
+  },
   "esaWebbPictures": {
     "name": "ESA/Webb: pictures by the James Webb Space Telescope",
     "kind": "imagery",
     "cite": "ESA/Webb image archive: eight of the telescope’s pictures of 2022, each credited on its card as its page asks (NASA, ESA, CSA, STScI and others). Webb is a mission of NASA, ESA and the Canadian Space Agency. The pictures are made smaller here; the words about them are this site’s",
     "url": "https://esawebb.org/images/",
+    "licence": "CC BY 4.0"
+  },
+  "esoTelescopes": {
+    "name": "ESO: the VLT, ALMA and the ELT",
+    "kind": "reference",
+    "cite": "The European Southern Observatory’s pages on the Very Large Telescope, ALMA and the Extremely Large Telescope, with the ELT’s timeline",
+    "url": "https://www.eso.org/public/teles-instr/",
     "licence": "CC BY 4.0"
   },
   "etopo1": {
@@ -388,6 +443,12 @@
     "kind": "paper",
     "cite": "Farquhar, Bao & Thiemens (2000), Atmospheric influence of Earth’s earliest sulfur cycle, Science 289, 756–758",
     "url": "https://doi.org/10.1126/science.289.5480.756"
+  },
+  "fashi2026": {
+    "name": "FASHI DR2 (FAST Collaboration, 2026)",
+    "kind": "paper",
+    "cite": "The FAST All Sky HI Survey DR2: the FASHI Catalog and the HI Mass Function, arXiv:2606.31539 (2026): FAST’s position, 106°51′24″ E",
+    "url": "https://arxiv.org/abs/2606.31539"
   },
   "finnegan2011": {
     "name": "Finnegan et al. 2011",
@@ -601,6 +662,12 @@
     "cite": "Dated finds of our species and its relatives, each with the paper that dates it, and rival dates side by side; compiled for this site",
     "url": "https://github.com/serroba/histeclipse/blob/main/public/data/humans/claims.json"
   },
+  "iacGtc": {
+    "name": "IAC: the Gran Telescopio Canarias",
+    "kind": "reference",
+    "cite": "The Instituto de Astrofísica de Canarias’ and GRANTECAN’s pages on the Gran Telescopio Canarias",
+    "url": "https://www.gtc.iac.es/gtc/gtc.php"
+  },
   "iap2024": {
     "name": "IAP ocean heat content (Cheng et al.)",
     "kind": "dataset",
@@ -635,6 +702,12 @@
     "url": "https://doi.org/10.5281/zenodo.21494229",
     "licence": "CC BY 4.0"
   },
+  "ikiSrg": {
+    "name": "IKI: Spektr-RG",
+    "kind": "reference",
+    "cite": "The Space Research Institute (IKI) of the Russian Academy of Sciences, its Spektr-RG pages",
+    "url": "https://www.srg.cosmos.ru/"
+  },
   "imbie": {
     "name": "IMBIE",
     "kind": "dataset",
@@ -660,6 +733,12 @@
     "kind": "reference",
     "cite": "JAXA, “Martian Moons eXploration (MMX)” (mission page)",
     "url": "https://www.mmx.jaxa.jp/en/"
+  },
+  "jodrellBank": {
+    "name": "Jodrell Bank (University of Manchester)",
+    "kind": "reference",
+    "cite": "The University of Manchester’s Jodrell Bank pages on the Lovell Telescope: its completion in 1957, Sputnik and Luna 9",
+    "url": "https://www.jodrellbank.manchester.ac.uk/about/history-and-heritage/"
   },
   "jones2023": {
     "name": "Jones et al. 2023",
@@ -722,6 +801,12 @@
     "cite": "Kaufman, D., McKay, N., Routson, C., Erb, M., Dätwyler, C., Sommer, P. S., Heiri, O., Davis, B. (2020), Holocene global mean surface temperature, a multi-method reconstruction approach, Scientific Data 7, 201; data: figshare, https://doi.org/10.6084/m9.figshare.c.4796823, and NOAA NCEI Paleoclimatology, study 29712, https://doi.org/10.25921/vzys-1280, accessed 12 November 2026",
     "url": "https://doi.org/10.1038/s41597-020-0530-7",
     "licence": "CC0 1.0 (the data, on figshare); the article CC BY 4.0"
+  },
+  "keckObservatory": {
+    "name": "W. M. Keck Observatory",
+    "kind": "reference",
+    "cite": "The W. M. Keck Observatory’s pages on Keck I and Keck II: their segmented mirrors, first light and discoveries",
+    "url": "https://keckobservatory.org/telescopes/"
   },
   "kent2015": {
     "name": "Kent et al. 2015",
@@ -937,6 +1022,12 @@
     "url": "https://doi.org/10.1146/annurev-earth-032320-095425",
     "licence": "CC BY 4.0"
   },
+  "mitTess": {
+    "name": "MIT: TESS",
+    "kind": "reference",
+    "cite": "MIT’s TESS mission pages: its cameras and survey",
+    "url": "https://tess.mit.edu/"
+  },
   "mitalasSills1992": {
     "name": "Mitalas & Sills 1992",
     "kind": "paper",
@@ -994,6 +1085,18 @@
     "cite": "Morrison & Stephenson (2004), Historical values of the Earth’s clock error ΔT and the calculation of eclipses, Journal for the History of Astronomy 35, 327–336",
     "url": "https://doi.org/10.1177/002182860403500305"
   },
+  "mpcObservatoryCodes": {
+    "name": "IAU Minor Planet Center: observatory codes",
+    "kind": "catalogue",
+    "cite": "The IAU Minor Planet Center’s list of observatory codes: the positions of Yerkes, Mount Wilson, Palomar, Jodrell Bank, Arecibo and Rubin, turned into latitude and longitude",
+    "url": "https://www.minorplanetcenter.net/iau/lists/ObsCodesF.html"
+  },
+  "mpeErosita": {
+    "name": "Max Planck Institute for Extraterrestrial Physics: eROSITA",
+    "kind": "reference",
+    "cite": "MPE’s and the Max Planck Society’s pages on eROSITA aboard Spektr-RG: its survey, its catalogue, and its safe mode since 26 February 2022",
+    "url": "https://www.mpe.mpg.de/eROSITA"
+  },
   "msr2Ozone": {
     "name": "MSR-2: Multi-Sensor Reanalysis of total ozone",
     "kind": "dataset",
@@ -1012,6 +1115,12 @@
     "kind": "paper",
     "cite": "Muttoni, G. & Kent, D. V. (2019). Jurassic monster polar shift confirmed by sequential paleopoles from Adria, promontory of Africa. Journal of Geophysical Research: Solid Earth 124, 3288–3306",
     "url": "https://doi.org/10.1029/2018JB017199"
+  },
+  "naojSubaru": {
+    "name": "NAOJ: the Subaru Telescope",
+    "kind": "reference",
+    "cite": "The National Astronomical Observatory of Japan’s pages on the Subaru Telescope: its mirror, first light and discoveries",
+    "url": "https://subarutelescope.org/en/about/"
   },
   "nasaCallisto": {
     "name": "NASA: Callisto",
@@ -1104,6 +1213,13 @@
     "cite": "NASA, “Rhea” (moon overview)",
     "url": "https://science.nasa.gov/saturn/moons/rhea/"
   },
+  "nasaTelescopes": {
+    "name": "NASA: its space telescopes’ mission pages",
+    "kind": "reference",
+    "cite": "NASA Science mission pages, and those of NASA’s Goddard, JPL and MAST archives, for Hubble, Webb, Spitzer, Kepler, TESS, COBE, WMAP, Fermi, Compton (CGRO) and Swift: their launch and end dates, instruments, sizes and landmark results, as read in November 2026",
+    "url": "https://science.nasa.gov/universe/",
+    "licence": "Public domain (U.S. government work)"
+  },
   "nasaTethys": {
     "name": "NASA: Tethys",
     "kind": "reference",
@@ -1157,6 +1273,19 @@
     "cite": "Montzka, S. A., Dutton, G. and Vimont, I.: The NOAA Ozone Depleting Gas Index (ODGI), NOAA Global Monitoring Laboratory, 2024 update: equivalent effective stratospheric chlorine over Antarctica and the mid-latitudes, and the index, 100 at its peak and 0 at 1980's level; accessed 15 November 2026",
     "url": "https://gml.noaa.gov/odgi/",
     "licence": "Public domain (a work of the US Government)"
+  },
+  "nraoVla": {
+    "name": "NRAO: the Very Large Array",
+    "kind": "reference",
+    "cite": "The National Radio Astronomy Observatory’s pages on the Karl G. Jansky Very Large Array: its dishes, configurations, history and science",
+    "url": "https://public.nrao.edu/telescopes/vla/"
+  },
+  "nsfArecibo": {
+    "name": "NSF: Arecibo Observatory",
+    "kind": "reference",
+    "cite": "The U.S. National Science Foundation’s pages on the Arecibo Observatory: its 305 m telescope, its history, and its collapse on 1 December 2020",
+    "url": "https://www.nsf.gov/news/media-toolkits/arecibo",
+    "licence": "Public domain (U.S. government work)"
   },
   "nsidcSeaIce": {
     "name": "NSIDC Sea Ice Index",
@@ -1218,6 +1347,13 @@
     "cite": "Oppenheimer, C., et al. (2017). Multi-proxy dating the ‘Millennium Eruption’ of Changbaishan to late 946 CE. Quaternary Science Reviews 158, 164–171",
     "url": "https://doi.org/10.1016/j.quascirev.2016.12.024",
     "licence": "CC BY 4.0"
+  },
+  "osmSlough": {
+    "name": "OpenStreetMap: Herschel Street, Slough",
+    "kind": "catalogue",
+    "cite": "© OpenStreetMap contributors: the corner of Windsor Road and Herschel Street, Slough, where Slough Museum places Herschel’s demolished Observatory House",
+    "url": "https://www.openstreetmap.org/",
+    "licence": "ODbL 1.0"
   },
   "osman2021": {
     "name": "Osman et al. 2021",
@@ -1364,6 +1500,18 @@
     "licence": "CC BY-NC 4.0",
     "nonCommercial": true
   },
+  "rmgHerschel": {
+    "name": "Royal Museums Greenwich: Herschel’s 40-foot",
+    "kind": "reference",
+    "cite": "Royal Museums Greenwich on William Herschel’s 40-foot telescope at Slough: finished in 1789, its last observations, and its dismantling in 1840",
+    "url": "https://www.rmg.co.uk/collections/objects/rmgc-object-11109"
+  },
+  "rubinObservatory": {
+    "name": "Vera C. Rubin Observatory",
+    "kind": "reference",
+    "cite": "The NSF–DOE Vera C. Rubin Observatory’s and NSF NOIRLab’s pages: its first photons (15 April 2025), First Look, camera and survey",
+    "url": "https://rubinobservatory.org/about"
+  },
   "rutgersSnow": {
     "name": "Rutgers Global Snow Lab",
     "kind": "dataset",
@@ -1388,6 +1536,12 @@
     "kind": "paper",
     "cite": "Saur, J. et al. (2015). The search for a subsurface ocean in Ganymede with Hubble Space Telescope observations of its auroral ovals. Journal of Geophysical Research: Space Physics 120, 1715–1737",
     "url": "https://doi.org/10.1002/2014JA020778"
+  },
+  "scienceMuseumHerschel": {
+    "name": "Science Museum Group: the 40-foot’s mirror",
+    "kind": "reference",
+    "cite": "Science Museum Group Collection, the original mirror for William Herschel’s 40-foot telescope (48 inches)",
+    "url": "https://collection.sciencemuseumgroup.org.uk/objects/co56770/original-mirror-for-william-herschels-forty-foot-telescope-1785"
   },
   "scotese2022": {
     "name": "Scotese 2022",
@@ -1421,6 +1575,12 @@
     "kind": "paper",
     "cite": "Sigl, M., et al. (2015). Timing and climate forcing of volcanic eruptions for the past 2,500 years. Nature 523, 543–549",
     "url": "https://doi.org/10.1038/nature14565"
+  },
+  "skaObservatory": {
+    "name": "SKA Observatory",
+    "kind": "reference",
+    "cite": "The SKA Observatory’s pages on SKA-Low and SKA-Mid and their construction, with SKAO’s and SARAO’s site documents giving the arrays’ centres",
+    "url": "https://www.skao.int/en/explore/construction-journey"
   },
   "skyfield": {
     "name": "Skyfield",
@@ -1525,6 +1685,12 @@
     "kind": "paper",
     "cite": "Torsvik & Cocks (2016), Earth History and Palaeogeography, Cambridge University Press: a textbook, period by period",
     "url": "https://doi.org/10.1017/9781316225523"
+  },
+  "uchicagoYerkes": {
+    "name": "University of Chicago and Yerkes Observatory",
+    "kind": "reference",
+    "cite": "The University of Chicago’s and the Yerkes Future Foundation’s pages on the Yerkes 40-inch refractor: its dedication in 1897 and its history",
+    "url": "https://yerkesobservatory.org/"
   },
   "usoskin2005": {
     "name": "Usoskin et al. 2005",

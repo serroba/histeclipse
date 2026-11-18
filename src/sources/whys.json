@@ -495,5 +495,43 @@
       "Earth is drawn deformed as free space is, 4 × 10²⁰ times over: in truth its width changed by about 10⁻¹⁴ m (10⁻²¹ of 12,700 km), some eight protons across, and Earth, being solid and held together by its own forces, gave even less than free space does. It is drawn so to show what the wave does, not what any instrument could see."
     ],
     "others": "Where in the sky it came from is the least certain part. Two detectors fix only the angle between the wave’s path and the line between them, so the paper places the source in a band of about 600 square degrees, mostly in the southern sky (90% credible), not at a point. The journey draws one way that fits: of all the directions that give the 6.9 ms, the most southern."
+  },
+  "telescopes": {
+    "title": "Telescopes",
+    "what": "The most significant telescopes, on Earth and in space: about forty, from Herschel’s 40-foot of 1789 to Webb, each where it stood or flew in the years it worked.",
+    "sources": [
+      "almaObservatory",
+      "birrCastle",
+      "caltechTelescopes",
+      "carnegieMtWilson",
+      "casFast",
+      "chandraCxc",
+      "csiroParkes",
+      "esaTelescopes",
+      "esoTelescopes",
+      "fashi2026",
+      "iacGtc",
+      "ikiSrg",
+      "jodrellBank",
+      "keckObservatory",
+      "mitTess",
+      "mpcObservatoryCodes",
+      "mpeErosita",
+      "naojSubaru",
+      "nasaTelescopes",
+      "nraoVla",
+      "nsfArecibo",
+      "osmSlough",
+      "rmgHerschel",
+      "rubinObservatory",
+      "scienceMuseumHerschel",
+      "skaObservatory",
+      "uchicagoYerkes"
+    ],
+    "how": "A telescope is here if it meets one of three criteria: it was the largest of its kind in its time (Herschel’s 40-foot, the Leviathan, Yerkes, Hooker, Hale, Keck, the GTC, Arecibo, FAST, Webb); it was a first in its band of light (the first in space for X-rays that focus to images, the first all-sky surveys in infrared, microwave or gamma rays); or it is known for landmark discoveries (Hubble’s expanding universe at Mount Wilson, the first exoplanets, dark energy, pulsars, the age of the universe). The choice is the site’s own, and a short list: many great telescopes are not in it. Each fact is from the telescope’s operator, or for the historical ones a museum or the estate that keeps them; none from Wikipedia. Dates are as precise as the source gives them: a ground telescope from its first light (or, for radio dishes without one, its completion or opening) to its closing, a space telescope from launch to the end of its science. Sites are from the operators, or the IAU Minor Planet Center’s observatory codes; Herschel’s house in Slough is long demolished, and is placed at the street corner Slough Museum names.",
+    "certainty": [
+      "Sources disagree on some dates, and one is chosen and said: Herschel’s 40-foot was finished in 1787 (Science Museum Group) or 1789 (Royal Museums Greenwich, used); Birr Castle gives the Leviathan as the largest until 1914 or 1917, and no date its observing ended (1914 used); Keck I saw first light in 1990 with 9 of its 36 segments, and began science in 1993; FAST was completed in 2016 and began formal operation in 2020.",
+      "Swift ended on 20 October 2026, when drag brought it down to 275 km and it entered safe mode; it is to re-enter the atmosphere. eROSITA, on Spektr-RG, has been in safe mode since 26 February 2022; ART-XC, beside it, works on."
+    ]
   }
 }

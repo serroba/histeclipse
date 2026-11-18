@@ -1,0 +1,1521 @@
+{
+ "schemaVersion": 1,
+ "telescopes": [
+  {
+   "id": "webb",
+   "name": "James Webb Space Telescope",
+   "kind": "space",
+   "operators": [
+    "NASA",
+    "ESA",
+    "CSA"
+   ],
+   "bands": [
+    "optical",
+    "infrared"
+   ],
+   "size": {
+    "metres": 6.5,
+    "note": "Primary mirror diameter, 6.5 m approximately (segmented beryllium)."
+   },
+   "from": "2021-12-25",
+   "until": "operating",
+   "orbit": "L2",
+   "craft": "d01093",
+   "why": "The largest and most powerful observatory ever sent to space.",
+   "results": [
+    "Sees back over 13.5 billion years to the first galaxies born after the Big Bang",
+    "Mid-infrared views of dust and carbon-based molecules in star-forming nebulae"
+   ],
+   "sources": [
+    "nasaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "James Webb Space Telescope (science.nasa.gov)",
+     "href": "https://science.nasa.gov/mission/webb/"
+    }
+   ]
+  },
+  {
+   "id": "hubble",
+   "name": "Hubble Space Telescope",
+   "kind": "space",
+   "operators": [
+    "NASA",
+    "ESA"
+   ],
+   "bands": [
+    "ultraviolet",
+    "optical",
+    "infrared"
+   ],
+   "size": {
+    "metres": 2.4,
+    "note": "Primary mirror, 'nearly 8 foot (2.4 meter)'."
+   },
+   "from": "1990-04-24",
+   "until": "operating",
+   "orbit": "low Earth",
+   "craft": "s20580",
+   "why": "The first large telescope in space for visible and ultraviolet light, and the first designed to be serviced by astronauts in orbit.",
+   "results": [
+    "Discovery of dark energy",
+    "First precision measurement of the expansion rate of the universe",
+    "First exoplanet atmosphere detected and its elements determined"
+   ],
+   "sources": [
+    "nasaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Hubble Space Telescope (science.nasa.gov)",
+     "href": "https://science.nasa.gov/mission/hubble/"
+    }
+   ]
+  },
+  {
+   "id": "chandra",
+   "name": "Chandra X-ray Observatory",
+   "kind": "space",
+   "operators": [
+    "NASA",
+    "Smithsonian Astrophysical Observatory (Chandra X-ray Center)"
+   ],
+   "bands": [
+    "x-ray"
+   ],
+   "size": {
+    "metres": 1.2,
+    "note": "Outer diameter of the High Resolution Mirror Assembly (4 nested pairs of grazing-incidence mirrors)."
+   },
+   "from": "1999-07-23",
+   "until": "operating",
+   "orbit": "high Earth",
+   "craft": null,
+   "why": "NASA's flagship X-ray mission and third Great Observatory, with the largest, most precisely shaped X-ray mirrors ever built, giving images 25 times sharper than any earlier X-ray telescope.",
+   "results": [
+    "Traced the separation of dark matter from normal matter in colliding galaxy clusters",
+    "Observed the region around the supermassive black hole at the centre of the Milky Way",
+    "Imaged the glowing remains of exploded stars and the dispersal of elements"
+   ],
+   "sources": [
+    "chandraCxc"
+   ],
+   "links": [
+    {
+     "label": "Chandra X-ray Observatory (chandra.si.edu)",
+     "href": "https://chandra.si.edu/about/"
+    }
+   ]
+  },
+  {
+   "id": "planck",
+   "name": "Planck",
+   "kind": "space",
+   "operators": [
+    "ESA"
+   ],
+   "bands": [
+    "microwave"
+   ],
+   "size": {
+    "metres": 1.5,
+    "note": "Primary reflector 1.9 x 1.5 m; ESA gives the effective aperture as 1.5 m."
+   },
+   "from": "2009-05-14",
+   "until": "2013-10-03",
+   "orbit": "L2",
+   "craft": "d00880",
+   "why": "ESA calls it the most sophisticated 'time machine' ever launched; it produced the most precise image of the cosmic microwave background.",
+   "results": [
+    "Most precise map of the cosmic microwave background",
+    "Age of the Universe: 13.8 billion years",
+    "Revised cosmic make-up: 4.9% normal matter, 26.8% dark matter"
+   ],
+   "sources": [
+    "esaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Planck (www.esa.int)",
+     "href": "https://www.esa.int/Science_Exploration/Space_Science/Planck"
+    }
+   ]
+  },
+  {
+   "id": "gaia",
+   "name": "Gaia",
+   "kind": "space",
+   "operators": [
+    "ESA"
+   ],
+   "bands": [
+    "optical"
+   ],
+   "size": {
+    "metres": null,
+    "note": "Two telescopes, each with a rectangular primary mirror of about 0.7 m2 collecting area; ESA gives no single diameter."
+   },
+   "from": "2013-12-19",
+   "until": "2025-01-15",
+   "orbit": "L2",
+   "craft": "d00937",
+   "why": "It built the largest and most precise 3D map of the Milky Way, measuring nearly two billion objects.",
+   "results": [
+    "Showed the Milky Way's thick disc began forming 13 billion years ago",
+    "Revealed that our Galaxy merged with another large galaxy about 10 billion years ago",
+    "Measured the acceleration of the Solar System"
+   ],
+   "sources": [
+    "esaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Gaia (www.esa.int)",
+     "href": "https://www.esa.int/Science_Exploration/Space_Science/Gaia"
+    }
+   ]
+  },
+  {
+   "id": "kepler",
+   "name": "Kepler",
+   "kind": "space",
+   "operators": [
+    "NASA"
+   ],
+   "bands": [
+    "optical"
+   ],
+   "size": {
+    "metres": 1.0,
+    "note": "NASA: '3-foot (1-meter) diameter aperture telescope'; the primary mirror itself is 1.4 m (4 ft 7 in)."
+   },
+   "from": "2009-03-07",
+   "until": "2018-10-30",
+   "orbit": "around the Sun",
+   "craft": "d00874",
+   "why": "NASA's first planet-hunting mission and the first to find Earth-size planets in the habitable zones of their stars.",
+   "results": [
+    "More than 2,600 exoplanet discoveries",
+    "Showed the galaxy holds more planets than stars",
+    "First confirmed system with more than one planet transiting the same star (Kepler-9)"
+   ],
+   "sources": [
+    "nasaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Kepler (science.nasa.gov)",
+     "href": "https://science.nasa.gov/mission/kepler/"
+    },
+    {
+     "label": "Kepler (archive.stsci.edu)",
+     "href": "https://archive.stsci.edu/missions-and-data/kepler"
+    }
+   ]
+  },
+  {
+   "id": "spitzer",
+   "name": "Spitzer Space Telescope",
+   "kind": "space",
+   "operators": [
+    "NASA",
+    "JPL-Caltech"
+   ],
+   "bands": [
+    "infrared"
+   ],
+   "size": {
+    "metres": 0.85,
+    "note": "34-inch (85 cm) infrared telescope."
+   },
+   "from": "2003-08-25",
+   "until": "2020-01-30",
+   "orbit": "around the Sun",
+   "craft": "d00824",
+   "why": "The fourth and last of NASA's Great Observatories, and the first telescope to capture light directly from planets outside the solar system.",
+   "results": [
+    "First direct capture of light from extrasolar planets (2005)",
+    "Revealed the TRAPPIST-1 system of seven Earth-size planets (2017)",
+    "Found a huge new ring of Saturn (the Phoebe ring)"
+   ],
+   "sources": [
+    "nasaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Spitzer Space Telescope (science.nasa.gov)",
+     "href": "https://science.nasa.gov/mission/spitzer/"
+    }
+   ]
+  },
+  {
+   "id": "cobe",
+   "name": "COBE",
+   "kind": "space",
+   "operators": [
+    "NASA (Goddard Space Flight Center)"
+   ],
+   "bands": [
+    "infrared",
+    "microwave"
+   ],
+   "size": {
+    "metres": null,
+    "note": "Three instruments (DIRBE, FIRAS, DMR), none with one headline aperture."
+   },
+   "from": "1989-11-18",
+   "until": "1993-12-23",
+   "orbit": "low Earth",
+   "craft": null,
+   "why": "It showed that the cosmic microwave background has a near-perfect blackbody spectrum and produced the first 'baby picture' of the universe, earning the 2006 Nobel Prize in physics.",
+   "results": [
+    "CMB spectrum a nearly perfect blackbody at 2.725 K",
+    "First detection of intrinsic CMB anisotropy, at one part in 100,000",
+    "Detection of the cosmic infrared background"
+   ],
+   "sources": [
+    "nasaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "COBE (lambda.gsfc.nasa.gov)",
+     "href": "https://lambda.gsfc.nasa.gov/product/cobe/"
+    },
+    {
+     "label": "COBE (science.nasa.gov)",
+     "href": "https://science.nasa.gov/mission/cobe/"
+    }
+   ]
+  },
+  {
+   "id": "herschel-space",
+   "name": "Herschel Space Observatory",
+   "kind": "space",
+   "operators": [
+    "ESA"
+   ],
+   "bands": [
+    "infrared"
+   ],
+   "size": {
+    "metres": 3.5,
+    "note": "Primary mirror diameter, 3.5 m."
+   },
+   "from": "2009-05-14",
+   "until": "2013-04-29",
+   "orbit": "L2",
+   "craft": "d00879",
+   "why": "The largest infrared space telescope launched before Webb, four times bigger than any earlier infrared space telescope.",
+   "results": [
+    "Revealed networks of dust and gas filaments where stars form",
+    "Traced water from star-forming clouds to planet-forming discs",
+    "Found Comet Hartley-2's water has nearly the same isotopic ratios as Earth's oceans"
+   ],
+   "sources": [
+    "esaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Herschel Space Observatory (www.esa.int)",
+     "href": "https://www.esa.int/Science_Exploration/Space_Science/Herschel"
+    },
+    {
+     "label": "Herschel Space Observatory (www.cosmos.esa.int)",
+     "href": "https://www.cosmos.esa.int/web/herschel/home"
+    }
+   ]
+  },
+  {
+   "id": "xmm-newton",
+   "name": "XMM-Newton",
+   "kind": "space",
+   "operators": [
+    "ESA"
+   ],
+   "bands": [
+    "x-ray",
+    "optical",
+    "ultraviolet"
+   ],
+   "size": {
+    "metres": 0.7,
+    "note": "Diameter of the largest of 58 nested mirror shells in each of the three X-ray telescopes (700 mm). The Optical Monitor is a 30 cm telescope."
+   },
+   "from": "1999-12-10",
+   "until": "operating",
+   "orbit": "high Earth",
+   "craft": null,
+   "why": "The biggest science satellite ever built in Europe and, in ESA's words, the most powerful X-ray telescope ever placed in orbit.",
+   "results": [
+    "Used X-ray echoes to map the surroundings of a black hole",
+    "First sighting of hot gas sloshing within a galaxy cluster",
+    "Found hot, diffuse gas helping close the gap in the cosmic budget of normal matter"
+   ],
+   "sources": [
+    "esaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "XMM-Newton (www.esa.int)",
+     "href": "https://www.esa.int/Science_Exploration/Space_Science/XMM-Newton"
+    },
+    {
+     "label": "XMM-Newton (www.cosmos.esa.int)",
+     "href": "https://www.cosmos.esa.int/web/xmm-newton/technical-details-mirrors"
+    }
+   ]
+  },
+  {
+   "id": "fermi",
+   "name": "Fermi Gamma-ray Space Telescope",
+   "kind": "space",
+   "operators": [
+    "NASA",
+    "U.S. Department of Energy"
+   ],
+   "bands": [
+    "gamma"
+   ],
+   "size": {
+    "metres": null,
+    "note": "No mirror. Main instrument, the Large Area Telescope (LAT): peak effective area >8,000 cm2 (about 0.8 m2) at normal incidence. This is an area, not a diameter."
+   },
+   "from": "2008-06-11",
+   "until": "operating",
+   "orbit": "low Earth",
+   "craft": null,
+   "why": "It maps the gamma-ray sky from 8 keV to over 300 GeV, scanning the whole sky every three hours.",
+   "results": [
+    "Discovered the Fermi Bubbles, structures spanning 50,000 light-years",
+    "First light seen from a gravitational-wave event (neutron-star merger)",
+    "More than 300 gamma-ray pulsars"
+   ],
+   "sources": [
+    "nasaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Fermi Gamma-ray Space Telescope (science.nasa.gov)",
+     "href": "https://science.nasa.gov/mission/fermi/"
+    },
+    {
+     "label": "Fermi Gamma-ray Space Telescope (fermi.gsfc.nasa.gov)",
+     "href": "https://fermi.gsfc.nasa.gov/"
+    }
+   ]
+  },
+  {
+   "id": "compton",
+   "name": "Compton Gamma Ray Observatory",
+   "kind": "space",
+   "operators": [
+    "NASA"
+   ],
+   "bands": [
+    "gamma"
+   ],
+   "size": {
+    "metres": null,
+    "note": "Four instruments (BATSE, OSSE, COMPTEL, EGRET), none with one headline aperture."
+   },
+   "from": "1991-04-05",
+   "until": "2000-06-04",
+   "orbit": "low Earth",
+   "craft": null,
+   "why": "The second of NASA's Great Observatories and the first great gamma-ray observatory, covering six orders of magnitude in energy (30 keV-30 GeV).",
+   "results": [
+    "Found that gamma-ray bursts are spread evenly across the sky",
+    "Discovered blazars as the main source of the highest-energy cosmic gamma rays",
+    "Mapped the Milky Way in the aluminium-26 gamma-ray line"
+   ],
+   "sources": [
+    "nasaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Compton Gamma Ray Observatory (heasarc.gsfc.nasa.gov)",
+     "href": "https://heasarc.gsfc.nasa.gov/docs/cgro/cgro.html"
+    },
+    {
+     "label": "Compton Gamma Ray Observatory (nssdc.gsfc.nasa.gov)",
+     "href": "https://nssdc.gsfc.nasa.gov/nmc/spacecraft/display.action?id=1991-027B"
+    }
+   ]
+  },
+  {
+   "id": "wmap",
+   "name": "WMAP",
+   "kind": "space",
+   "operators": [
+    "NASA"
+   ],
+   "bands": [
+    "microwave"
+   ],
+   "size": {
+    "metres": 1.4,
+    "note": "Back-to-back primary reflectors of 1.4 x 1.6 m."
+   },
+   "from": "2001-06-30",
+   "until": "2010-08-19",
+   "orbit": "L2",
+   "craft": "d00778",
+   "why": "It produced the first fine-resolution (0.2 degree) full-sky map of the microwave sky and put the 'precision' in precision cosmology.",
+   "results": [
+    "Universe's age determined as 13.77 billion years, to within half a percent",
+    "Curvature of space within 0.4% of flat",
+    "Support for inflation from the pattern of density fluctuations"
+   ],
+   "sources": [
+    "nasaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "WMAP (map.gsfc.nasa.gov)",
+     "href": "https://map.gsfc.nasa.gov/"
+    },
+    {
+     "label": "WMAP (science.nasa.gov)",
+     "href": "https://science.nasa.gov/mission/wmap/"
+    }
+   ]
+  },
+  {
+   "id": "tess",
+   "name": "TESS",
+   "kind": "space",
+   "operators": [
+    "NASA",
+    "MIT"
+   ],
+   "bands": [
+    "optical"
+   ],
+   "size": {
+    "metres": 0.105,
+    "note": "Each of 4 identical wide-field cameras has a 10.5 cm entrance pupil; there is no single primary mirror."
+   },
+   "from": "2018-04-18",
+   "until": "operating",
+   "orbit": "high Earth",
+   "craft": "d00995",
+   "why": "The first spaceborne all-sky transit survey for exoplanets.",
+   "results": [
+    "More than 1,000 confirmed exoplanets",
+    "Nearly 6,000 confirmed or candidate exoplanets mapped by September 2025"
+   ],
+   "sources": [
+    "nasaTelescopes",
+    "mitTess"
+   ],
+   "links": [
+    {
+     "label": "TESS (science.nasa.gov)",
+     "href": "https://science.nasa.gov/mission/tess/"
+    },
+    {
+     "label": "TESS (heasarc.gsfc.nasa.gov)",
+     "href": "https://heasarc.gsfc.nasa.gov/docs/tess/"
+    }
+   ]
+  },
+  {
+   "id": "iras",
+   "name": "IRAS",
+   "kind": "space",
+   "operators": [
+    "NASA",
+    "Netherlands (NIVR)",
+    "United Kingdom (SERC)"
+   ],
+   "bands": [
+    "infrared"
+   ],
+   "size": {
+    "metres": 0.6,
+    "note": "Liquid-helium-cooled 0.6 m Ritchey-Chretien telescope."
+   },
+   "from": "1983-01-25",
+   "until": "1983-11-21",
+   "orbit": "low Earth",
+   "craft": null,
+   "why": "NASA's first infrared space telescope, which made the first all-sky infrared survey and doubled the number of known astronomical sources.",
+   "results": [
+    "Discovered a disk of dust grains around the star Vega",
+    "Found six new comets",
+    "Revealed for the first time the core of the Milky Way"
+   ],
+   "sources": [
+    "caltechTelescopes",
+    "nasaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "IRAS (www.ipac.caltech.edu)",
+     "href": "https://www.ipac.caltech.edu/project/iras"
+    },
+    {
+     "label": "IRAS (lambda.gsfc.nasa.gov)",
+     "href": "https://lambda.gsfc.nasa.gov/data/interfaces/iras/intro.html"
+    }
+   ]
+  },
+  {
+   "id": "hipparcos",
+   "name": "Hipparcos",
+   "kind": "space",
+   "operators": [
+    "ESA"
+   ],
+   "bands": [
+    "optical"
+   ],
+   "size": {
+    "metres": 0.29,
+    "note": "Primary mirror diameter, 290 mm (all-reflective Schmidt)."
+   },
+   "from": "1989-08-08",
+   "until": "1993-08-15",
+   "orbit": "high Earth",
+   "craft": null,
+   "why": "The very first space mission for astrometry, measuring the positions of more than 100,000 stars 200 times more accurately than before.",
+   "results": [
+    "Hipparcos Catalogue of 118,218 stars at the highest precision",
+    "Tycho Catalogue of 1,058,332 stars (Tycho-2: 2,539,913)"
+   ],
+   "sources": [
+    "esaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Hipparcos (www.cosmos.esa.int)",
+     "href": "https://www.cosmos.esa.int/web/hipparcos"
+    },
+    {
+     "label": "Hipparcos (www.esa.int)",
+     "href": "https://www.esa.int/Science_Exploration/Space_Science/Hipparcos_overview"
+    }
+   ]
+  },
+  {
+   "id": "euclid",
+   "name": "Euclid",
+   "kind": "space",
+   "operators": [
+    "ESA",
+    "Euclid Consortium"
+   ],
+   "bands": [
+    "optical",
+    "infrared"
+   ],
+   "size": {
+    "metres": 1.2,
+    "note": "Primary mirror, 1.2 m."
+   },
+   "from": "2023-07-01",
+   "until": "operating",
+   "orbit": "L2",
+   "craft": "d01123",
+   "why": "ESA's dark-Universe survey telescope; its NISP instrument has the largest field of view ever flown in space for an infrared instrument.",
+   "results": [
+    "First major data release covering more than a billion objects",
+    "Discovered 31 of the most ancient quasars, including the two earliest known"
+   ],
+   "sources": [
+    "esaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Euclid (www.esa.int)",
+     "href": "https://www.esa.int/Science_Exploration/Space_Science/Euclid"
+    }
+   ]
+  },
+  {
+   "id": "swift",
+   "name": "Swift",
+   "kind": "space",
+   "operators": [
+    "NASA (Goddard)",
+    "Penn State (mission operations)"
+   ],
+   "bands": [
+    "gamma",
+    "x-ray",
+    "ultraviolet",
+    "optical"
+   ],
+   "size": {
+    "metres": 0.3,
+    "note": "UV/Optical Telescope (UVOT) aperture, 30 cm. The gamma-ray Burst Alert Telescope is a coded-mask instrument with no mirror."
+   },
+   "from": "2004-11-20",
+   "until": "2026-10-20",
+   "orbit": "low Earth",
+   "craft": null,
+   "why": "A first-of-its-kind multiwavelength observatory built to catch gamma-ray bursts and slew to their afterglows within about 90 seconds.",
+   "results": [
+    "First short gamma-ray burst with a detected afterglow (May 2005)",
+    "About 1,800 gamma-ray bursts and 1,400 supernovae observed by its 20th anniversary",
+    "All-sky high-energy X-ray survey"
+   ],
+   "sources": [
+    "nasaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Swift (science.nasa.gov)",
+     "href": "https://science.nasa.gov/mission/swift/"
+    },
+    {
+     "label": "Swift (swift.gsfc.nasa.gov)",
+     "href": "https://swift.gsfc.nasa.gov/about_swift/"
+    }
+   ]
+  },
+  {
+   "id": "nustar",
+   "name": "NuSTAR",
+   "kind": "space",
+   "operators": [
+    "NASA",
+    "Caltech"
+   ],
+   "bands": [
+    "x-ray"
+   ],
+   "size": {
+    "metres": 0.38,
+    "note": "Derived: each of the two optics has a maximum radius of 191 mm (133 nested shells), so about 0.38 m across. Caltech does not state a diameter directly."
+   },
+   "from": "2012-06-13",
+   "until": "operating",
+   "orbit": "low Earth",
+   "craft": null,
+   "why": "The first telescope in orbit to focus high-energy X-rays (3-79 keV) into images.",
+   "results": [
+    "First precise measurement of a black hole's spin",
+    "Contributed to the first-ever picture of a black hole"
+   ],
+   "sources": [
+    "caltechTelescopes",
+    "nasaTelescopes"
+   ],
+   "links": [
+    {
+     "label": "NuSTAR (www.nustar.caltech.edu)",
+     "href": "https://www.nustar.caltech.edu/"
+    },
+    {
+     "label": "NuSTAR (science.nasa.gov)",
+     "href": "https://science.nasa.gov/mission/nustar/"
+    }
+   ]
+  },
+  {
+   "id": "spektr-rg",
+   "name": "Spektr-RG (eROSITA, ART-XC)",
+   "kind": "space",
+   "operators": [
+    "Russia (IKI)",
+    "Germany (MPE)"
+   ],
+   "bands": [
+    "x-ray"
+   ],
+   "size": {
+    "metres": null,
+    "note": "eROSITA: seven mirror modules of 54 nested shells each; ART-XC: seven modules. eROSITA has been in safe mode since 2022-02-26 (MPE), its survey paused; ART-XC works on."
+   },
+   "from": "2019-07-13",
+   "until": "operating",
+   "orbit": "L2",
+   "craft": "d01021",
+   "why": "eROSITA made the first imaging all-sky survey in medium-energy X-rays (up to 10 keV); its first catalogue is the largest collection of X-ray sources ever published.",
+   "results": [
+    "eRASS1 catalogue of about 900,000 X-ray sources, incl. ~710,000 active galactic nuclei and 12,000 galaxy clusters",
+    "More than 1,000 superclusters of galaxies identified",
+    "ART-XC all-sky survey (2021)"
+   ],
+   "sources": [
+    "mpeErosita",
+    "ikiSrg"
+   ],
+   "links": [
+    {
+     "label": "Spektr-RG (eROSITA, ART-XC) (www.mpe.mpg.de)",
+     "href": "https://www.mpe.mpg.de/eROSITA"
+    },
+    {
+     "label": "Spektr-RG (eROSITA, ART-XC) (www.mpg.de)",
+     "href": "https://www.mpg.de/21468451/"
+    }
+   ]
+  },
+  {
+   "id": "hale",
+   "name": "Hale Telescope",
+   "kind": "ground",
+   "operators": [
+    "Caltech (Caltech Optical Observatories)"
+   ],
+   "bands": [
+    "optical"
+   ],
+   "size": {
+    "metres": 5.1,
+    "note": "200-inch (5.1 m) Pyrex primary mirror"
+   },
+   "from": "1949-01-26",
+   "until": "operating",
+   "site": {
+    "name": "Palomar Observatory, Palomar Mountain, San Diego County, California, USA",
+    "latitude": 33.3541,
+    "longitude": -116.8625
+   },
+   "why": "It was the largest effective telescope in the world from 1949 until 1993.",
+   "results": [
+    "First official photographs taken by Edwin Hubble on 26 January 1949",
+    "Maarten Schmidt and collaborators identify the radio-loud objects 3C 273 and 3C 48 (quasars), 1963"
+   ],
+   "sources": [
+    "caltechTelescopes",
+    "carnegieMtWilson",
+    "mpcObservatoryCodes"
+   ],
+   "links": [
+    {
+     "label": "Hale Telescope (sites.astro.caltech.edu)",
+     "href": "https://sites.astro.caltech.edu/palomar/about/telescopes/hale.html"
+    },
+    {
+     "label": "Hale Telescope (carnegiescience.edu)",
+     "href": "https://carnegiescience.edu/about/history/observatories-history"
+    }
+   ]
+  },
+  {
+   "id": "hooker",
+   "name": "Hooker Telescope",
+   "kind": "ground",
+   "operators": [
+    "Carnegie Institution (Mount Wilson Observatory) to 1985",
+    "Mount Wilson Institute (current)"
+   ],
+   "bands": [
+    "optical"
+   ],
+   "size": {
+    "metres": 2.54,
+    "note": "100-inch (2.54 m) mirror"
+   },
+   "from": "1917-11-02",
+   "until": "operating",
+   "site": {
+    "name": "Mount Wilson Observatory, San Gabriel Mountains, California, USA",
+    "latitude": 34.2247,
+    "longitude": -118.0564
+   },
+   "why": "It was the largest telescope in the world from 1917 to 1949.",
+   "results": [
+    "Hubble finds a Cepheid variable in the Andromeda Galaxy (1923), showing galaxies exist beyond the Milky Way",
+    "Hubble correlates galaxy distance with recession velocity, confirming the expanding Universe (1929)",
+    "First stellar diameter (Betelgeuse) measured by Pease and Michelson (1920)"
+   ],
+   "sources": [
+    "carnegieMtWilson",
+    "mpcObservatoryCodes"
+   ],
+   "links": [
+    {
+     "label": "Hooker Telescope (www.mtwilson.edu)",
+     "href": "https://www.mtwilson.edu/timeline/"
+    },
+    {
+     "label": "Hooker Telescope (carnegiescience.edu)",
+     "href": "https://carnegiescience.edu/about/history/observatories-history"
+    }
+   ]
+  },
+  {
+   "id": "arecibo",
+   "name": "Arecibo Telescope",
+   "kind": "ground",
+   "operators": [
+    "Cornell University (1963-2011, for ARPA then NSF)",
+    "University of Central Florida (current manager for NSF)"
+   ],
+   "bands": [
+    "radio"
+   ],
+   "size": {
+    "metres": 305,
+    "note": "305 m (1,000 ft) fixed spherical reflector"
+   },
+   "from": "1963-11-01",
+   "until": "2020-12-01",
+   "site": {
+    "name": "Arecibo, Puerto Rico",
+    "latitude": 18.3442,
+    "longitude": -66.7527
+   },
+   "why": "When inaugurated in 1963 it was the largest single-dish radio telescope in the world.",
+   "results": [
+    "Demonstration of gravitational waves from a binary pulsar (Hulse and Taylor, Nobel 1993)",
+    "First discovery of extrasolar planets (around a pulsar, Wolszczan 1992-93)",
+    "Discovery of millisecond pulsars (Backer 1982)"
+   ],
+   "sources": [
+    "nsfArecibo",
+    "mpcObservatoryCodes"
+   ],
+   "links": [
+    {
+     "label": "Arecibo Telescope (www.nsf.gov)",
+     "href": "https://www.nsf.gov/news/media-toolkits/arecibo"
+    }
+   ]
+  },
+  {
+   "id": "fast",
+   "name": "FAST",
+   "kind": "ground",
+   "operators": [
+    "National Astronomical Observatories, Chinese Academy of Sciences (NAOC)"
+   ],
+   "bands": [
+    "radio"
+   ],
+   "size": {
+    "metres": 500,
+    "note": "500 m active spherical reflector"
+   },
+   "from": "2016-09-25",
+   "until": "operating",
+   "site": {
+    "name": "Dawodang karst depression, Pingtang County, Guizhou Province, China",
+    "latitude": 25.6531,
+    "longitude": 106.8567
+   },
+   "why": "It is by far the largest single-dish radio telescope in the world.",
+   "results": [
+    "224 pulsars discovered by 30 September 2020",
+    "Passed national evaluation and began formal operation on 11 January 2020"
+   ],
+   "sources": [
+    "casFast",
+    "fashi2026"
+   ],
+   "links": [
+    {
+     "label": "FAST (english.cas.cn)",
+     "href": "https://english.cas.cn/head/201609/t20160923_168102.shtml"
+    }
+   ]
+  },
+  {
+   "id": "vlt",
+   "name": "Very Large Telescope",
+   "kind": "ground",
+   "operators": [
+    "European Southern Observatory (ESO)"
+   ],
+   "bands": [
+    "ultraviolet",
+    "optical",
+    "infrared"
+   ],
+   "size": {
+    "metres": 8.2,
+    "note": "4 × 8.2 m Unit Telescopes (Antu, Kueyen, Melipal, Yepun) + 4 movable 1.8 m Auxiliary Telescopes"
+   },
+   "from": "1998-05-25",
+   "until": "operating",
+   "site": {
+    "name": "Paranal Observatory, Cerro Paranal, Atacama Desert, Chile",
+    "latitude": -24.6276,
+    "longitude": -70.4051
+   },
+   "why": "ESO's flagship, combining four 8.2 m telescopes into Europe's most productive ground-based observatory.",
+   "results": [
+    "First image of an extrasolar planet",
+    "Tracking individual stars orbiting the supermassive black hole at the Milky Way's centre",
+    "Observation of the afterglow of the furthest known gamma-ray burst (at the time)"
+   ],
+   "sources": [
+    "esoTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Very Large Telescope (www.eso.org)",
+     "href": "https://www.eso.org/public/teles-instr/paranal-observatory/vlt/"
+    }
+   ]
+  },
+  {
+   "id": "keck",
+   "name": "Keck Observatory",
+   "kind": "ground",
+   "operators": [
+    "W. M. Keck Observatory"
+   ],
+   "bands": [
+    "optical",
+    "infrared"
+   ],
+   "size": {
+    "metres": 10,
+    "note": "2 × 10 m primaries, each 36 hexagonal 1.8 m segments"
+   },
+   "from": "1990-11-24",
+   "until": "operating",
+   "site": {
+    "name": "Maunakea, Hawaii, USA",
+    "latitude": 19.8259,
+    "longitude": -155.4747
+   },
+   "why": "Their segmented 10 m mirrors made them the world's largest optical-infrared telescopes when built, and Keck II was the first large telescope to install adaptive optics (1999).",
+   "results": [
+    "Confirmation of the accelerating expansion of the Universe",
+    "Discovery of a supermassive black hole at the centre of our Galaxy",
+    "Spectrum of the most distant galaxy ever recorded (at the time)"
+   ],
+   "sources": [
+    "keckObservatory"
+   ],
+   "links": [
+    {
+     "label": "Keck Observatory (keckobservatory.org)",
+     "href": "https://keckobservatory.org/telescopes/"
+    },
+    {
+     "label": "Keck Observatory (irtf.ifa.hawaii.edu)",
+     "href": "https://irtf.ifa.hawaii.edu/observing/telescopeCoordinates.php"
+    }
+   ]
+  },
+  {
+   "id": "alma",
+   "name": "ALMA",
+   "kind": "ground",
+   "operators": [
+    "ESO (Europe)",
+    "NRAO / NSF (North America)",
+    "NAOJ (East Asia)",
+    "in cooperation with the Republic of Chile"
+   ],
+   "bands": [
+    "radio",
+    "microwave"
+   ],
+   "size": {
+    "metres": 16000,
+    "note": "66 antennas (54 × 12 m + 12 × 7 m) over baselines from 150 m up to 16 km"
+   },
+   "from": "2011-09-30",
+   "until": "operating",
+   "site": {
+    "name": "Chajnantor Plateau, Atacama Desert, Chile (about 5000 m)",
+    "latitude": -23.029,
+    "longitude": -67.755
+   },
+   "why": "It is the most powerful millimetre/submillimetre telescope on Earth, giving images sharper than Hubble's at its wavelengths.",
+   "results": [
+    "Image of the HL Tau protoplanetary disc that changed theories of planet formation",
+    "Einstein rings imaged in extraordinary detail",
+    "Detection of complex organic molecules in a distant protoplanetary disc"
+   ],
+   "sources": [
+    "almaObservatory",
+    "esoTelescopes"
+   ],
+   "links": [
+    {
+     "label": "ALMA (www.almaobservatory.org)",
+     "href": "https://www.almaobservatory.org/en/about-alma/"
+    },
+    {
+     "label": "ALMA (www.eso.org)",
+     "href": "https://www.eso.org/public/teles-instr/alma/"
+    }
+   ]
+  },
+  {
+   "id": "herschel-forty-foot",
+   "name": "Herschel's 40-foot telescope",
+   "kind": "ground",
+   "operators": [
+    "William Herschel (funded by King George III)"
+   ],
+   "bands": [
+    "optical"
+   ],
+   "size": {
+    "metres": 1.22,
+    "note": "48-inch (about 1.22 m) speculum-metal mirror in a 40 ft tube; size_m converted from 48 in"
+   },
+   "from": "1789",
+   "until": "1815",
+   "site": {
+    "name": "Observatory House, Slough (demolished): about the corner of Windsor Road and Herschel Street",
+    "latitude": 51.5077,
+    "longitude": -0.5955
+   },
+   "why": "For about 50 years it was the largest telescope in the world.",
+   "results": [
+    "Discovery of the sixth and seventh satellites of Saturn",
+    "Made the King's grant pay Caroline Herschel a salary as William's assistant, making her the first woman in England paid as an astronomer"
+   ],
+   "sources": [
+    "rmgHerschel",
+    "scienceMuseumHerschel",
+    "osmSlough"
+   ],
+   "links": [
+    {
+     "label": "Herschel's 40-foot telescope (www.rmg.co.uk)",
+     "href": "https://www.rmg.co.uk/collections/objects/rmgc-object-11109"
+    },
+    {
+     "label": "Herschel's 40-foot telescope (collection.sciencemuseumgroup.org.uk)",
+     "href": "https://collection.sciencemuseumgroup.org.uk/objects/co56770/original-mirror-for-william-herschels-forty-foot-telescope-1785"
+    }
+   ]
+  },
+  {
+   "id": "leviathan",
+   "name": "The Leviathan of Parsonstown",
+   "kind": "ground",
+   "operators": [
+    "William Parsons, 3rd Earl of Rosse"
+   ],
+   "bands": [
+    "optical"
+   ],
+   "size": {
+    "metres": 1.83,
+    "note": "72-inch (1.8 m) speculum-metal mirror in a 54 ft (16.5 m) wooden tube"
+   },
+   "from": "1845-02",
+   "until": "1914",
+   "site": {
+    "name": "Birr Castle Demesne, Birr (formerly Parsonstown), County Offaly, Ireland",
+    "latitude": 53.0967,
+    "longitude": -7.9143
+   },
+   "why": "It was the world's largest-aperture telescope from 1845 until the Hooker telescope opened at Mount Wilson in 1917.",
+   "results": [
+    "Discovered the spiral structure of galaxies, first recorded in the Whirlpool Galaxy (M51)",
+    "Spiral structure then identified in dozens of other 'spiral nebulae'"
+   ],
+   "sources": [
+    "birrCastle"
+   ],
+   "links": [
+    {
+     "label": "The Leviathan of Parsonstown (birrcastle.com)",
+     "href": "https://birrcastle.com/the-great-telescope/"
+    }
+   ]
+  },
+  {
+   "id": "yerkes",
+   "name": "Yerkes 40-inch refractor",
+   "kind": "ground",
+   "operators": [
+    "University of Chicago (1897-2020)",
+    "Yerkes Future Foundation (since 2020)"
+   ],
+   "bands": [
+    "optical"
+   ],
+   "size": {
+    "metres": 1.02,
+    "note": "40-inch (about 1.02 m) objective lens; largest refracting telescope ever used"
+   },
+   "from": "1897-05-21",
+   "until": "operating",
+   "site": {
+    "name": "Yerkes Observatory, Williams Bay, Wisconsin, USA",
+    "latitude": 42.5701,
+    "longitude": -88.5568
+   },
+   "why": "It is the largest refracting (lens) telescope ever used.",
+   "results": [
+    "W. W. Morgan's 1951 discovery of the Milky Way's spiral-arm structure (Yerkes Observatory)",
+    "The 1897 dedication gathering formed the seed of the American Astronomical Society",
+    "Its photographic plate archive is used to study stellar motions and estimate dark matter in the Milky Way"
+   ],
+   "sources": [
+    "uchicagoYerkes",
+    "mpcObservatoryCodes"
+   ],
+   "links": [
+    {
+     "label": "Yerkes 40-inch refractor (yerkesobservatory.org)",
+     "href": "https://yerkesobservatory.org/legacy/"
+    }
+   ]
+  },
+  {
+   "id": "lovell",
+   "name": "Lovell Telescope",
+   "kind": "ground",
+   "operators": [
+    "University of Manchester (Jodrell Bank Observatory)"
+   ],
+   "bands": [
+    "radio"
+   ],
+   "size": {
+    "metres": 76,
+    "note": "76 m (250 ft) fully steerable dish"
+   },
+   "from": "1957",
+   "until": "operating",
+   "site": {
+    "name": "Jodrell Bank Observatory, Cheshire, England",
+    "latitude": 53.2366,
+    "longitude": -2.3086
+   },
+   "why": "When completed in 1957 it was by far the world's largest steerable radio telescope; it is still the third-largest.",
+   "results": [
+    "Tracked the rocket that launched Sputnik 1 within days of completion (October 1957)",
+    "Received the first photograph from the Moon's surface, from Luna 9 (February 1966)",
+    "Key role in pulsar research and tests of General Relativity"
+   ],
+   "sources": [
+    "jodrellBank",
+    "mpcObservatoryCodes"
+   ],
+   "links": [
+    {
+     "label": "Lovell Telescope (www.jodrellbank.manchester.ac.uk)",
+     "href": "https://www.jodrellbank.manchester.ac.uk/about/history-and-heritage/"
+    },
+    {
+     "label": "Lovell Telescope (www.jodrellbank.net)",
+     "href": "https://www.jodrellbank.net/explore/heritage/the-story-of-jodrell-bank/"
+    }
+   ]
+  },
+  {
+   "id": "parkes",
+   "name": "Murriyang (Parkes)",
+   "kind": "ground",
+   "operators": [
+    "CSIRO (Australia Telescope National Facility)"
+   ],
+   "bands": [
+    "radio"
+   ],
+   "size": {
+    "metres": 64,
+    "note": "64 m dish"
+   },
+   "from": "1961-10-31",
+   "until": "operating",
+   "site": {
+    "name": "Parkes Observatory, near Parkes, New South Wales, Australia (Wiradjuri Country)",
+    "latitude": -32.9984,
+    "longitude": 148.2635
+   },
+   "why": "It is one of the largest single-dish telescopes in the southern hemisphere dedicated to astronomy, and has found almost half of all known pulsars.",
+   "results": [
+    "Prime receiving station for Apollo 11; received video of the first Moonwalk (July 1969)",
+    "Almost half of the more than 2000 known pulsars found with it"
+   ],
+   "sources": [
+    "csiroParkes"
+   ],
+   "links": [
+    {
+     "label": "Murriyang (Parkes) (www.csiro.au)",
+     "href": "https://www.csiro.au/en/about/facilities-collections/ATNF/Parkes-radio-telescope-Murriyang"
+    },
+    {
+     "label": "Murriyang (Parkes) (www.parkes.atnf.csiro.au)",
+     "href": "https://www.parkes.atnf.csiro.au/observing/documentation/users_guide/pkug.html"
+    }
+   ]
+  },
+  {
+   "id": "vla",
+   "name": "Very Large Array",
+   "kind": "ground",
+   "operators": [
+    "NSF National Radio Astronomy Observatory (NRAO)"
+   ],
+   "bands": [
+    "radio"
+   ],
+   "size": {
+    "metres": 36400,
+    "note": "27 active 25 m dishes (+1 spare) on a Y; A-configuration about 22.6 miles (36.4 km) across; arms 13 and 11 miles"
+   },
+   "from": "1976-02-18",
+   "until": "operating",
+   "site": {
+    "name": "Plains of San Agustin, near Socorro, New Mexico, USA",
+    "latitude": 34.0787,
+    "longitude": -107.6177
+   },
+   "why": "One of the most productive radio telescopes ever built: 27 dishes on a Y, working as one telescope up to 36 km across.",
+   "results": [
+    "Quickly confirmed the first gravitational lens, discovered optically in 1979",
+    "Revealed for the first time a 'mini-spiral' of hot gas at the Galactic Centre (1983)",
+    "Radar echoes indicating water ice in Mercury's polar craters (1991, 1994)"
+   ],
+   "sources": [
+    "nraoVla"
+   ],
+   "links": [
+    {
+     "label": "Very Large Array (public.nrao.edu)",
+     "href": "https://public.nrao.edu/telescopes/vla/"
+    },
+    {
+     "label": "Very Large Array (science.nrao.edu)",
+     "href": "https://science.nrao.edu/facilities/vla"
+    }
+   ]
+  },
+  {
+   "id": "gtc",
+   "name": "Gran Telescopio Canarias",
+   "kind": "ground",
+   "operators": [
+    "GRANTECAN S.A. (Instituto de Astrofísica de Canarias-led; Spanish State and Canary Islands government)"
+   ],
+   "bands": [
+    "optical",
+    "infrared"
+   ],
+   "size": {
+    "metres": 10.4,
+    "note": "10.4 m segmented primary (36 hexagonal segments, 75.7 m² collecting area)"
+   },
+   "from": "2007-07-14",
+   "until": "operating",
+   "site": {
+    "name": "Observatorio del Roque de los Muchachos, La Palma, Canary Islands, Spain",
+    "latitude": 28.7567,
+    "longitude": -17.8919
+   },
+   "why": "It is the largest optical-infrared telescope in the world.",
+   "results": [
+    "Key role (HiPERCAM) in discovering a ring around the dwarf planet Quaoar (2023)",
+    "Detection of a possible 'fossil fingerprint' of the Universe's first stars in galaxy NGC 1277 (2026)"
+   ],
+   "sources": [
+    "iacGtc"
+   ],
+   "links": [
+    {
+     "label": "Gran Telescopio Canarias (www.gtc.iac.es)",
+     "href": "https://www.gtc.iac.es/gtc/gtc.php"
+    },
+    {
+     "label": "Gran Telescopio Canarias (www.iac.es)",
+     "href": "https://www.iac.es/en/observatorios-de-canarias/telescopes-and-experiments/gran-telescopio-canarias"
+    }
+   ]
+  },
+  {
+   "id": "subaru",
+   "name": "Subaru Telescope",
+   "kind": "ground",
+   "operators": [
+    "National Astronomical Observatory of Japan (NAOJ), NINS"
+   ],
+   "bands": [
+    "optical",
+    "infrared"
+   ],
+   "size": {
+    "metres": 8.2,
+    "note": "8.2 m effective-diameter single-piece primary mirror"
+   },
+   "from": "1999-01",
+   "until": "operating",
+   "site": {
+    "name": "Maunakea summit, Island of Hawaii, USA",
+    "latitude": 19.8256,
+    "longitude": -155.4761
+   },
+   "why": "Its single 8.2 m mirror and wide-field cameras repeatedly set the record for the most distant known galaxy.",
+   "results": [
+    "Broke the 'most distant galaxy' record multiple times; at one point 9 of the 10 most distant known galaxies were Subaru discoveries",
+    "Discovery of Himiko, a giant gas cloud about 12.9 billion light-years away",
+    "Hyper Suprime-Cam survey found about 200 protoclusters of galaxies about 12 billion light-years away"
+   ],
+   "sources": [
+    "naojSubaru"
+   ],
+   "links": [
+    {
+     "label": "Subaru Telescope (subarutelescope.org)",
+     "href": "https://subarutelescope.org/en/about/"
+    },
+    {
+     "label": "Subaru Telescope (www.nao.ac.jp)",
+     "href": "https://www.nao.ac.jp/study/subaru20/en/topic05.html"
+    }
+   ]
+  },
+  {
+   "id": "rubin",
+   "name": "Vera C. Rubin Observatory",
+   "kind": "ground",
+   "operators": [
+    "NSF NOIRLab",
+    "SLAC National Accelerator Laboratory (DOE)"
+   ],
+   "bands": [
+    "optical"
+   ],
+   "size": {
+    "metres": 8.4,
+    "note": "8.4 m Simonyi Survey Telescope with the 3200-megapixel LSST Camera, the largest digital camera ever built"
+   },
+   "from": "2025-04-15",
+   "until": "operating",
+   "site": {
+    "name": "Cerro Pachón, Chile",
+    "latitude": -30.2446,
+    "longitude": -70.7494
+   },
+   "why": "It carries the largest digital camera ever built and is running the 10-year Legacy Survey of Space and Time.",
+   "results": [
+    "2104 never-before-seen asteroids discovered in about 10 hours of First Look observations, including seven near-Earth asteroids",
+    "First Look images (23 June 2025) of the Trifid and Lagoon nebulae and the Virgo Cluster, showing about 10 million galaxies"
+   ],
+   "sources": [
+    "rubinObservatory"
+   ],
+   "links": [
+    {
+     "label": "Vera C. Rubin Observatory (rubinobservatory.org)",
+     "href": "https://rubinobservatory.org/about"
+    },
+    {
+     "label": "Vera C. Rubin Observatory (noirlab.edu)",
+     "href": "https://noirlab.edu/public/news/noirlab2521/"
+    }
+   ]
+  },
+  {
+   "id": "elt",
+   "name": "Extremely Large Telescope",
+   "kind": "ground",
+   "operators": [
+    "European Southern Observatory (ESO)"
+   ],
+   "bands": [
+    "optical",
+    "infrared"
+   ],
+   "size": {
+    "metres": 39,
+    "note": "39 m segmented primary mirror"
+   },
+   "from": "2014-12",
+   "until": {
+    "construction": "2029"
+   },
+   "site": {
+    "name": "Cerro Armazones (3046 m), Atacama Desert, Chile",
+    "latitude": -24.6,
+    "longitude": -70.1917
+   },
+   "why": "When complete it will be the world's biggest eye on the sky.",
+   "results": [],
+   "sources": [
+    "esoTelescopes"
+   ],
+   "links": [
+    {
+     "label": "Extremely Large Telescope (elt.eso.org)",
+     "href": "https://elt.eso.org/about/facts/"
+    },
+    {
+     "label": "Extremely Large Telescope (www.eso.org)",
+     "href": "https://www.eso.org/public/about-eso/travel/"
+    }
+   ]
+  },
+  {
+   "id": "ska-low",
+   "name": "SKA-Low",
+   "kind": "ground",
+   "operators": [
+    "SKA Observatory"
+   ],
+   "bands": [
+    "radio"
+   ],
+   "size": {
+    "metres": 74000,
+    "note": "131,072 antennas in 512 stations, up to 74 km apart; 50–350 MHz"
+   },
+   "from": "2021-07",
+   "until": {
+    "construction": null
+   },
+   "site": {
+    "name": "Inyarrimanha Ilgari Bundara, Murchison, Western Australia",
+    "latitude": -26.8247,
+    "longitude": 116.7644
+   },
+   "why": "Being built as one of the two SKA telescopes: the low-frequency array, in Western Australia.",
+   "results": [],
+   "sources": [
+    "skaObservatory"
+   ],
+   "links": [
+    {
+     "label": "SKA-Low (www.skao.int)",
+     "href": "https://www.skao.int/en/explore/telescopes/ska-low"
+    }
+   ]
+  },
+  {
+   "id": "ska-mid",
+   "name": "SKA-Mid",
+   "kind": "ground",
+   "operators": [
+    "SKA Observatory"
+   ],
+   "bands": [
+    "radio"
+   ],
+   "size": {
+    "metres": 150000,
+    "note": "197 dishes (SKA’s 15 m dishes with MeerKAT’s), up to 150 km apart; 350 MHz–15.4 GHz"
+   },
+   "from": "2021-07",
+   "until": {
+    "construction": null
+   },
+   "site": {
+    "name": "Karoo, Northern Cape, South Africa",
+    "latitude": -30.713,
+    "longitude": 21.443
+   },
+   "why": "Being built as one of the two SKA telescopes: the mid-frequency array of dishes, in South Africa.",
+   "results": [],
+   "sources": [
+    "skaObservatory"
+   ],
+   "links": [
+    {
+     "label": "SKA-Mid (www.skao.int)",
+     "href": "https://www.skao.int/en/explore/telescopes/ska-mid"
+    }
+   ]
+  }
+ ]
+}
