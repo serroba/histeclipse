@@ -13,14 +13,8 @@ import { describe, expect, it, vi } from 'vitest';
 import type { CraftFrame } from '../../globe/focus';
 import type { LayerHost, Triple } from '../../globe/layerHost';
 import { sceneModelOf, type SceneModel } from './craftModels';
-import {
-  cameraOnCraft,
-  craftModel,
-  focusedCraft,
-  hiddenBy,
-  METRES_PER_SCENE,
-  pointsBeside,
-} from './craftModelLayer';
+import { craftModel, focusedCraft, hiddenBy, pointsBeside } from './craftModelLayer';
+import { cameraOnCraft, METRES_PER_SCENE } from '../../globe/metreView';
 import { WEBB } from '../../models/webbModel';
 
 /** A host with a camera, the Sun far down −z, and space in km straight to Earth radii. */

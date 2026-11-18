@@ -103,7 +103,12 @@ export const DISPLAY_PARAMS: Params<DisplayState> = {
   craft: {
     key: 'craft',
     parse: (raw) => {
-      if (!/^[ds]\d{5}$/i.test(raw)) throw new Error('expected a craft’s GCAT id, such as d01093');
+      // A craft's GCAT id, or a telescope's on the ground (#864).
+      if (!/^([ds]\d{5}|[a-z][a-z-]{1,39})$/i.test(raw)) {
+        throw new Error(
+          'expected a craft’s GCAT id, such as d01093, or a telescope’s, such as lovell',
+        );
+      }
       return raw.toLowerCase();
     },
     format: (id) => id,

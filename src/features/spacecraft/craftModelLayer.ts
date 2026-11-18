@@ -21,14 +21,11 @@ import {
   type Object3D,
 } from 'three';
 import type { LayerFactory, Triple } from '../../globe/layerHost';
-import { EARTH_RADIUS_KM } from '../../globe/spaceFrame';
+import { cameraOnCraft, METRES_PER_SCENE } from '../../globe/metreView';
 import { awayFromSun } from './craftAttitude';
 import type { SceneCraft } from './craftLayer';
 import { sceneModelOf, type SceneModel } from './craftModels';
 import { releaseModel } from '../../models/releaseModel';
-
-/** Metres in the scene's unit, an Earth radius. */
-export const METRES_PER_SCENE = EARTH_RADIUS_KM * 1000;
 
 /** The craft the camera is on, as the spacecraft feature has it at the moment shown. */
 export interface FocusedCraft {
@@ -98,20 +95,6 @@ export function pointsBeside<Craft extends Pick<SceneCraft, 'id' | 'km'>>(
     ...kept.filter(({ id }) => id === focused.id),
     ...kept.filter(({ id }) => id !== focused.id),
   ];
-}
-
-/**
- * `seen`, as the view's camera `view` sees it, for a model in metres about a craft at `at`
- * (scene units): the same lens and the same turn, placed relative to the craft in metres.
- */
-export function cameraOnCraft(view: PerspectiveCamera, at: Vector3, seen: PerspectiveCamera): void {
-  seen.copy(view);
-  seen.position.copy(view.position).sub(at).multiplyScalar(METRES_PER_SCENE);
-  const distance = seen.position.length();
-  seen.near = Math.max(0.01, distance / 100);
-  seen.far = distance * 100 + 1000;
-  seen.updateProjectionMatrix();
-  seen.updateMatrixWorld(true);
 }
 
 export const craftModel: LayerFactory<FocusedCraft | null> = (host) => {

@@ -208,13 +208,28 @@ export function withLayer(layers: ReadonlySet<Layer>, layer: Layer, on: boolean)
   return next;
 }
 /**
+ * Whether what the camera is on is a craft, by its GCAT id (`d…` beyond Earth, `s…` about it),
+ * or else a telescope on the ground, by its id in the record (#864).
+ */
+function isCraftId(on: string): boolean {
+  return /^[ds]\d{5}$/i.test(on);
+}
+
+/**
  * The view with `layer` turned on or off, wherever that is done (the Layers panel, an icon on
  * the zoom rail). Eclipses off let go of the one picked (#634).
  */
 export function layerTurned(state: ViewState, layer: Layer, on: boolean): ViewState {
   const selection = layer === 'eclipses' && !on ? null : state.selection;
-  // The spacecraft off take away the craft the camera was on (#796).
-  const craft = layer === 'spacecraft' && !on ? null : state.craft;
+  // The spacecraft off take away the craft the camera was on (#796); the telescopes off, the
+  // telescope on the ground it was at (#864).
+  const gone =
+    !on &&
+    state.craft !== null &&
+    (layer === 'spacecraft'
+      ? isCraftId(state.craft)
+      : layer === 'telescopes' && !isCraftId(state.craft));
+  const craft = gone ? null : state.craft;
   return { ...state, selection, craft, layers: withLayer(state.layers, layer, on) };
 }
 

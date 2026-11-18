@@ -6,6 +6,7 @@ import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
 import type { MarkerCardContent } from '../../ui/markerCard';
 import type { FeatureContext } from '../feature';
+import { groundModel, type HeldSite } from './groundModelLayer';
 import type { TelescopeMark } from './telescopeMarks';
 import { telescopesFeature } from '.';
 
@@ -20,6 +21,8 @@ const JD = 2451545;
 /** A context that records what the feature asks of the app (#380): no globe, no page. */
 function fakeContext(failing = false) {
   const drawn: (readonly TelescopeMark[] | null)[] = [];
+  const sites: (HeldSite | null)[] = [];
+  const change = vi.fn();
   const cards: MarkerCardContent[] = [];
   const refresh = vi.fn();
   const notify = vi.fn();
@@ -30,17 +33,20 @@ function fakeContext(failing = false) {
         ? Promise.reject(new Error('offline'))
         : Promise.resolve(new Response(JSON.stringify(telescopes))),
     globe: {
-      addLayer: () => ({
-        update: (input: readonly TelescopeMark[] | null) => drawn.push(input),
-      }),
+      // The marks first, then the model at a site (#864).
+      addLayer: (factory: unknown) =>
+        factory === groundModel
+          ? { update: (input: HeldSite | null) => sites.push(input) }
+          : { update: (input: readonly TelescopeMark[] | null) => drawn.push(input) },
     },
+    change,
     notify,
     showCard: (card: MarkerCardContent) => cards.push(card),
     cardOpen: () => cards.length > 0,
     timeline: { travelling: () => true },
     refresh,
   } as unknown as FeatureContext;
-  return { context, drawn, cards, refresh, notify };
+  return { context, drawn, sites, cards, refresh, notify, change };
 }
 
 async function loaded(year: number) {
@@ -56,7 +62,7 @@ async function loaded(year: number) {
 
 describe('the Telescopes layer as a feature (#848)', () => {
   it('is shown again when the layers, the view or deep time change', () => {
-    expect(telescopesFeature.watches(on)).toEqual([on.layers, on.mode, on.ma]);
+    expect(telescopesFeature.watches(on)).toEqual([on.layers, on.mode, on.ma, on.craft]);
   });
 
   it('draws nothing and says nothing while its layer is off', () => {
@@ -99,5 +105,24 @@ describe('the Telescopes layer as a feature (#848)', () => {
     expect(shown.said?.()).toBe('Loading the telescopes…');
     shown.show?.(inYear(2000), JD);
     expect(drawn).toHaveLength(0);
+  });
+
+  it('Given the view at Keck, Then Keck stands there with Subaru beside it; its card goes there (#864)', async () => {
+    const { shown, sites, cards, change, drawn } = await loaded(2026);
+    shown.show?.({ ...inYear(2026), craft: 'keck' }, JD);
+    const at = sites.at(-1);
+    expect(at?.held.id).toBe('keck');
+    expect(at?.near.map(({ id }) => id).sort()).toEqual(['keck', 'subaru']);
+    shown.show?.({ ...inYear(2026), craft: 'd01093' }, JD);
+    expect(sites.at(-1)).toBeNull();
+    const keck = drawn
+      .at(-1)
+      ?.find(({ telescopes: there }) => there.some(({ id }) => id === 'keck'));
+    shown.pick?.(keck?.key ?? '');
+    const card = cards.at(-1);
+    expect(card?.action?.label).toBe('Go to it');
+    card?.action?.run();
+    const update = change.mock.calls.at(-1)?.[0] as ((state: ViewState) => ViewState) | undefined;
+    expect(update?.(inYear(2026)).craft).toBe('keck');
   });
 });

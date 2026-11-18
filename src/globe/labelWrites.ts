@@ -89,9 +89,12 @@ export function layOutSurface(
     total += labels.length;
     for (const { element, position, width, height } of labels) {
       projected.copy(position).project(camera);
+      // Near Earth's side the camera faces, and above the horizon from where it is: close to the
+      // ground (a telescope's site, #864) that is only a few degrees round.
       const inView =
         view.near &&
         position.dot(eye) > 0.25 &&
+        position.dot(camera.position) > position.lengthSq() &&
         Math.abs(projected.x) < 1 &&
         Math.abs(projected.y) < 1;
       if (inView && left <= 0) leftOut += 1;

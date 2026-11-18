@@ -14,6 +14,8 @@ export interface LazyModel {
   readonly caption: string;
   /** Where the Sun is in the model's own axes, as it is lit. */
   readonly sun: Vector3;
+  /** Its parts, fetched with the view: for a model drawn elsewhere, as on the globe (#864). */
+  readonly load: ModelLoad;
   mount(host: HTMLElement): () => void;
 }
 
@@ -44,6 +46,7 @@ export function lazyModel(
     label,
     caption,
     sun,
+    load,
     mount(host) {
       let stop: (() => void) | null = null;
       let gone = false;
