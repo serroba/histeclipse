@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, Literal
 
 from histeclipse_pipeline import (
     cryosphere,
+    enso,
     holocene_temperature,
     measured_warming,
     ocean_heat,
@@ -149,6 +150,8 @@ LIVING_PINS: tuple[LivingPin, ...] = (
         ozone.ODGI_MIDLATITUDE_URL,
         ozone.ODGI_MIDLATITUDE_SHA256,
     ),
+    LivingPin("CPC Relative Oceanic Niño Index", "enso", enso.RONI_URL, enso.RONI_SHA256),
+    LivingPin("CPC Oceanic Niño Index", "enso", enso.ONI_URL, enso.ONI_SHA256),
 )
 
 Status = Literal["same", "changed", "gone", "unreachable"]
