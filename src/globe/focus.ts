@@ -18,8 +18,8 @@ export function craftFocus(id: string): CraftFocus {
 }
 
 /** What a view centres on: the craft named, or else the body in focus. */
-export function focusOf(state: Pick<ViewState, 'focus' | 'craft'>): Focus {
-  return state.craft === null ? state.focus : craftFocus(state.craft);
+export function focusOf(state: Pick<ViewState, 'focus' | 'on'>): Focus {
+  return state.on === null ? state.focus : craftFocus(state.on.id);
 }
 
 export function isCraft(focus: Focus): focus is CraftFocus {

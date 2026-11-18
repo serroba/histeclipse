@@ -19,5 +19,5 @@ export function railView(state: ViewState, tiled: boolean): RailView | null {
     distance: state.camera.distance,
     near: nearestDistance(focus, tiled),
   };
-  return state.craft === null ? view : { ...view, craft: true };
+  return state.on === null ? view : { ...view, craft: true };
 }

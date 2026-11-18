@@ -184,7 +184,7 @@ export function mountImpacts(context: ImpactsContext): ImpactsPart {
   /** Play an impact at its place: turn the globe to it, come in close, and let it fall. */
   function play(spec: ImpactPlay): void {
     if (store.get().focus !== 'earth') {
-      store.set((state) => ({ ...state, focus: 'earth', craft: null, view: 'free' }));
+      store.set((state) => ({ ...state, focus: 'earth', on: null, view: 'free' }));
     }
     globe.flyTo(spec.place);
     globe.zoomTo(Math.min(store.get().camera.distance, 2.2));

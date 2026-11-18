@@ -77,7 +77,7 @@ describe('parseViewState', () => {
       planetLight: 'look',
       culture: 'modern',
       mission: null,
-      craft: null,
+      on: null,
       wave: null,
       waveChapter: 'source',
       explore: null,
@@ -300,11 +300,24 @@ describe('parseViewState', () => {
 
   it('Given a craft in focus, Then it is read in lower case and written back (#796)', () => {
     const { state } = parseViewState('craft=D01093&focus=earth', NOW);
-    expect(state.craft).toBe('d01093');
+    expect(state.on).toEqual({ kind: 'craft', id: 'd01093' });
     expect(state.focus).toBe('earth');
     expect(serializeViewState(state)).toContain('&craft=d01093');
-    expect(parseViewState('craft=S20580', NOW).state.craft).toBe('s20580');
+    expect(parseViewState('craft=S20580', NOW).state.on).toEqual({ kind: 'craft', id: 's20580' });
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('craft=');
+  });
+
+  it('Given a telescope on the ground the camera is at, Then it is read from site, and from craft as older links say it, and written as site (#876)', () => {
+    const { state } = parseViewState('site=Lovell', NOW);
+    expect(state.on).toEqual({ kind: 'site', id: 'lovell' });
+    const link = serializeViewState(state);
+    expect(link).toContain('&site=lovell');
+    expect(link).not.toContain('craft=');
+    expect(parseViewState(link, NOW).state.on).toEqual(state.on);
+    const older = parseViewState('craft=herschel-forty-foot', NOW).state;
+    expect(older.on).toEqual({ kind: 'site', id: 'herschel-forty-foot' });
+    expect(serializeViewState(older)).toContain('&site=herschel-forty-foot');
+    expect(parseViewState('site=9x', NOW).warnings.join()).toContain('site=');
   });
 
   it('Given a gravitational wave named, Then it is read in lower case and written back (#829)', () => {
@@ -468,6 +481,7 @@ describe('parseViewState', () => {
             'culture',
             'mission',
             'craft',
+            'site',
             'wave',
             'chapter',
             'explore',
@@ -557,10 +571,18 @@ describe('serializeViewState', () => {
       fc.integer({ min: 0, max: 99_999 }).map((n) => `d${String(n).padStart(5, '0')}`),
       { nil: null },
     ),
-    craft: fc.option(
-      fc
-        .tuple(fc.constantFrom('d', 's'), fc.integer({ min: 0, max: 99_999 }))
-        .map(([kind, n]) => `${kind}${String(n).padStart(5, '0')}`),
+    on: fc.option(
+      fc.oneof(
+        fc
+          .tuple(fc.constantFrom('d', 's'), fc.integer({ min: 0, max: 99_999 }))
+          .map(([kind, n]) => ({
+            kind: 'craft' as const,
+            id: `${kind}${String(n).padStart(5, '0')}`,
+          })),
+        fc
+          .constantFrom('lovell', 'ska-mid', 'herschel-forty-foot')
+          .map((id) => ({ kind: 'site' as const, id })),
+      ),
       { nil: null },
     ),
     wave: fc.option(fc.constant('gw150914' as const), { nil: null }),

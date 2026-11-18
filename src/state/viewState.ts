@@ -19,7 +19,14 @@ import { DISPLAY_DEFAULTS, type DisplayState } from './slices/display';
 import { HISTORY_DEFAULTS, type HistoryState } from './slices/history';
 import { SHEETS_DEFAULTS, type SheetsState } from './slices/sheets';
 
-export { FIGURES, PLANET_LIGHTS, type Figures, type PlanetLight } from './slices/display';
+export {
+  craftOn,
+  FIGURES,
+  PLANET_LIGHTS,
+  siteOn,
+  type Figures,
+  type PlanetLight,
+} from './slices/display';
 export { BORDER_SOURCES, type BorderSource } from './slices/history';
 export {
   BOUNDARY_CHAPTERS,
@@ -208,14 +215,6 @@ export function withLayer(layers: ReadonlySet<Layer>, layer: Layer, on: boolean)
   return next;
 }
 /**
- * Whether what the camera is on is a craft, by its GCAT id (`d…` beyond Earth, `s…` about it),
- * or else a telescope on the ground, by its id in the record (#864).
- */
-function isCraftId(on: string): boolean {
-  return /^[ds]\d{5}$/i.test(on);
-}
-
-/**
  * The view with `layer` turned on or off, wherever that is done (the Layers panel, an icon on
  * the zoom rail). Eclipses off let go of the one picked (#634).
  */
@@ -225,12 +224,14 @@ export function layerTurned(state: ViewState, layer: Layer, on: boolean): ViewSt
   // telescope on the ground it was at (#864).
   const gone =
     !on &&
-    state.craft !== null &&
-    (layer === 'spacecraft'
-      ? isCraftId(state.craft)
-      : layer === 'telescopes' && !isCraftId(state.craft));
-  const craft = gone ? null : state.craft;
-  return { ...state, selection, craft, layers: withLayer(state.layers, layer, on) };
+    ((layer === 'spacecraft' && state.on?.kind === 'craft') ||
+      (layer === 'telescopes' && state.on?.kind === 'site'));
+  return {
+    ...state,
+    selection,
+    on: gone ? null : state.on,
+    layers: withLayer(state.layers, layer, on),
+  };
 }
 
 /** The view with `layer` turned the other way: off if it was on, on if it was off. */

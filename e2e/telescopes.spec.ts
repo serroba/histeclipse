@@ -401,7 +401,7 @@ test('a telescope on the ground is gone to from the list, its model standing at 
     await card.getByRole('button', { name: 'Go to it' }).click();
     await expect(globe).toHaveAttribute('data-framed', 'craft:lovell', { timeout: 30_000 });
     await expect(globe).toHaveAttribute('data-ground-model', 'lovell', { timeout: 30_000 });
-    await expect(page).toHaveURL(/[?&]craft=lovell/);
+    await expect(page).toHaveURL(/[?&]site=lovell/);
   });
   expect(problems).toEqual([]);
 });
@@ -414,7 +414,7 @@ test('a link to a telescope on the ground opens at its site, and Back to Earth l
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');
   await test.step('Given the link to Lovell, Then it opens at Jodrell Bank, its model standing there', async () => {
-    await page.goto('./?layers=telescopes&t=2026-06-01T12:00Z&craft=lovell');
+    await page.goto('./?layers=telescopes&t=2026-06-01T12:00Z&site=lovell');
     await expect(globe).toHaveAttribute('data-ground-model', 'lovell', { timeout: 30_000 });
   });
   await test.step('When they go back to Earth, Then the site is left', async () => {

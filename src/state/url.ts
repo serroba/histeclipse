@@ -28,7 +28,7 @@ import { astronomicalYear } from '../time/year';
 import { errorMessage } from '../util/errors';
 import { oneOf, readSlice, writeSlice } from './slice';
 import { DEEP_PARAMS } from './slices/deep';
-import { DISPLAY_PARAMS } from './slices/display';
+import { DISPLAY_PARAMS, parseSite } from './slices/display';
 import { HISTORY_PARAMS } from './slices/history';
 import { SHEETS_PARAMS } from './slices/sheets';
 import {
@@ -101,7 +101,7 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
   }
 
   const calendar = read<Calendar | null>('cal', parseCalendar, null);
-  const state: ViewState = {
+  let state: ViewState = {
     mode: read('mode', parseMode, defaults.mode),
     time: read('t', (raw) => parseMoment(raw, calendar), defaults.time),
     location: read<GeoPoint | null>('loc', parseGeoPoint, defaults.location),
@@ -116,6 +116,9 @@ export function parseViewState(query: string | URLSearchParams, now: Date): Pars
     ...readSlice(DEEP_PARAMS, defaults, read),
     ...readSlice(SHEETS_PARAMS, defaults, read),
   };
+  // A telescope on the ground the camera is at (#876), in a parameter of its own.
+  const site = read<string | null>('site', parseSite, null);
+  if (site !== null) state = { ...state, on: { kind: 'site', id: site } };
   if (calendar !== null && !params.has('t')) {
     warnings.push('Ignored cal: it only applies together with t');
   }
@@ -148,6 +151,7 @@ export function serializeViewState(state: ViewState): string {
   for (const slice of [DISPLAY_PARAMS, HISTORY_PARAMS, DEEP_PARAMS, SHEETS_PARAMS]) {
     writeSlice<object>(slice, state, set);
   }
+  if (state.on?.kind === 'site') params.set('site', state.on.id);
   // Commas and colons are safe in query values; keeping them literal keeps links readable.
   return params.toString().replaceAll('%2C', ',').replaceAll('%3A', ':');
 }

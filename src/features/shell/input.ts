@@ -85,8 +85,7 @@ export function viewChosen(
 ): ViewState {
   // A view that stands on a body leaves the craft the camera was on (#796).
   if (choice !== 'sky') {
-    const craft = choice === 'free' ? state.craft : null;
-    return { ...state, mode: 'globe', view: choice, craft };
+    return { ...state, mode: 'globe', view: choice, on: choice === 'free' ? state.on : null };
   }
   const next: ViewState = {
     ...state,
@@ -134,7 +133,7 @@ export function listenForInput(context: InputContext): Input {
   });
   globe.onBodyClick((focus) => {
     // A body chosen leaves the craft the camera was on (#796).
-    store.set((state) => ({ ...state, focus, craft: null, view: 'free' }));
+    store.set((state) => ({ ...state, focus, on: null, view: 'free' }));
   });
   globe.onEmptyTap(() => {
     panels[emptyTap(store.get())]();

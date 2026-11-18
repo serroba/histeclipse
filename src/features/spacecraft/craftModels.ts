@@ -72,7 +72,7 @@ export function withGoTo<Card extends MarkerCardContent>(
       ? {
           label: 'Leave it',
           run: () => {
-            context.change((state) => ({ ...state, craft: null }));
+            context.change((state) => ({ ...state, on: null }));
           },
         }
       : {
@@ -80,7 +80,7 @@ export function withGoTo<Card extends MarkerCardContent>(
           run: () => {
             context.change((state) => ({
               ...state,
-              craft: id,
+              on: { kind: 'craft', id },
               focus: model.about,
               view: 'free',
             }));

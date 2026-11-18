@@ -256,7 +256,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       store.set((state) => toggledLayer(state, 'asteroids'));
     },
     onEarth() {
-      store.set((state) => ({ ...state, focus: 'earth', craft: null, view: 'free' }));
+      store.set((state) => ({ ...state, focus: 'earth', on: null, view: 'free' }));
     },
   });
   // "Why here?": while on, a tap on the globe says what each layer has there.

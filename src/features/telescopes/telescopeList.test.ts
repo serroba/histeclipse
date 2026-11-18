@@ -89,7 +89,7 @@ describe('going to a telescope from the list', () => {
 describe('going to a space telescope’s model (#863)', () => {
   it('puts the camera on its craft, about the body it flies by; not for one on the ground', () => {
     const chandra = goToCraft(in2026, named('chandra'));
-    expect(chandra?.craft).toBe('s25867');
+    expect(chandra?.on).toEqual({ kind: 'craft', id: 's25867' });
     expect(chandra?.focus).toBe('earth');
     expect(chandra?.view).toBe('free');
     expect(goToCraft(in2026, named('kepler'))?.focus).toBe('sun');
