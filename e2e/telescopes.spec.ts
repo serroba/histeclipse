@@ -349,9 +349,7 @@ test('the great telescopes are found from Explore and from search (#851) @accept
   expect(problems).toEqual([]);
 });
 
-test('every space telescope can be gone to: from the list, and by its link (#863) @acceptance', async ({
-  page,
-}) => {
+test('a space telescope is gone to from the list (#863) @acceptance', async ({ page }) => {
   test.slow();
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');
@@ -368,16 +366,25 @@ test('every space telescope can be gone to: from the list, and by its link (#863
     await expect(globe).toHaveAttribute('data-framed', 'craft:s25867', { timeout: 30_000 });
     await expect(globe).toHaveAttribute('data-craft-model', 's25867', { timeout: 30_000 });
   });
-  await test.step('When the link names Gaia at L2, or Kepler trailing Earth round the Sun, Then each is drawn as its model', async () => {
-    for (const craft of ['d00937', 'd00874']) {
-      await page.goto(`./?layers=telescopes&t=2015-06-01T00:00Z&craft=${craft}`);
-      await expect(globe).toHaveAttribute('data-craft-model', craft, { timeout: 30_000 });
-    }
-  });
   expect(problems).toEqual([]);
 });
 
-test('a telescope on the ground is gone to, its model standing at its site (#864) @acceptance', async ({
+// Each on its own page, so none leaves another while it is still loading (#858).
+for (const [craft, where] of [
+  ['d00937', 'Gaia at L2'],
+  ['d00874', 'Kepler trailing Earth round the Sun'],
+] as const) {
+  test(`a link to ${where} opens on its model (#863)`, async ({ page }) => {
+    const problems = collectProblems(page);
+    await page.goto(`./?layers=telescopes&t=2015-06-01T00:00Z&craft=${craft}`);
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-craft-model', craft, {
+      timeout: 30_000,
+    });
+    expect(problems).toEqual([]);
+  });
+}
+
+test('a telescope on the ground is gone to from the list, its model standing at its site (#864) @acceptance', async ({
   page,
 }) => {
   test.slow();
@@ -396,8 +403,18 @@ test('a telescope on the ground is gone to, its model standing at its site (#864
     await expect(globe).toHaveAttribute('data-ground-model', 'lovell', { timeout: 30_000 });
     await expect(page).toHaveURL(/[?&]craft=lovell/);
   });
-  await test.step('When the page is loaded again from its link, Then it opens there', async () => {
-    await page.reload();
+  expect(problems).toEqual([]);
+});
+
+// Its own page, so no step leaves another while it is still loading (#858).
+test('a link to a telescope on the ground opens at its site, and Back to Earth leaves it (#864)', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  await test.step('Given the link to Lovell, Then it opens at Jodrell Bank, its model standing there', async () => {
+    await page.goto('./?layers=telescopes&t=2026-06-01T12:00Z&craft=lovell');
     await expect(globe).toHaveAttribute('data-ground-model', 'lovell', { timeout: 30_000 });
   });
   await test.step('When they go back to Earth, Then the site is left', async () => {
