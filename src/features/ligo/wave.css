@@ -83,6 +83,87 @@
   cursor: pointer;
 }
 
+/* The chapters: space, or the detector. */
+.wave-chapters {
+  display: flex;
+  gap: 6px;
+}
+
+.wave-chapter {
+  min-height: 36px;
+}
+
+.wave-chapter[aria-pressed='true'] {
+  border-color: #ffc861;
+  background: rgb(255 200 97 / 0.16);
+}
+
+.wave-plot[hidden] {
+  display: none;
+}
+
+/* What both detectors measured (#831), as the paper's Figure 1 colours them. */
+.strain-plot {
+  margin: 0;
+}
+
+.strain-plot svg {
+  display: block;
+  width: 100%;
+  height: 72px;
+}
+
+.strain-axis {
+  stroke: rgb(255 255 255 / 0.15);
+}
+
+.strain-fit,
+.strain-h1,
+.strain-l1 {
+  fill: none;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.strain-fit {
+  stroke: rgb(255 255 255 / 0.35);
+  stroke-width: 3;
+}
+
+.strain-h1 {
+  stroke: #ff6b5a;
+}
+
+.strain-l1 {
+  stroke: #5ab0ff;
+}
+
+.strain-cursor {
+  stroke: #ffc861;
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.strain-key,
+.wave-sound-note {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.strain-key-l1 {
+  color: #5ab0ff;
+}
+
+.strain-key-h1 {
+  color: #ff6b5a;
+}
+
+.strain-clock {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
 /* A phone keeps the ring in view: the longer words give way to the moment and the scale. */
 @media (max-width: 520px) and (max-height: 900px) {
   .wave-about {

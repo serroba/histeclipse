@@ -36,6 +36,17 @@ test('GW150914 opens over the globe, its 3D view drawn and its scale stated, and
     await expect(stage.getByTestId('wave-scale')).toContainText('Stretched 4 × 10²⁰ times');
     await expect(stage.getByTestId('wave-moment')).toContainText(/merger|at rest/);
   });
+  await test.step('When they choose Livingston, Then the detector is drawn and both detectors’ strain is plotted, the clock running', async () => {
+    await stage.getByRole('button', { name: 'At Livingston' }).click();
+    await expect(view).toHaveAttribute('data-chapter', 'detector');
+    const plot = stage.getByTestId('strain-plot');
+    await expect(plot).toBeVisible();
+    await expect(plot.getByTestId('strain-l1')).toHaveAttribute('d', /^M/);
+    await expect(plot.getByTestId('strain-h1')).toHaveAttribute('d', /^M/);
+    await expect(plot.getByTestId('strain-clock')).toHaveText(/^09:50:45\.\d{3} UTC$/);
+    await stage.getByRole('button', { name: 'Space' }).click();
+    await expect(view).toHaveAttribute('data-chapter', 'space');
+  });
   await test.step('When they ask about it, Then its card gives the two black holes and links the paper and its data', async () => {
     await stage.getByRole('button', { name: 'About GW150914' }).click();
     const card = page.getByTestId('marker-card');
