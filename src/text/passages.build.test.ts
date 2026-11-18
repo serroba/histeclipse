@@ -6,6 +6,10 @@
 
 import { describe, expect, it } from 'vitest';
 
+import telescopes from '../../public/data/telescopes.json';
+import { loadTelescopes } from '../data/telescopes';
+import { telescopePassages } from './telescopePassages';
+
 import eclipses from '../../public/data/famous-eclipses.json';
 import spacecraft from '../../public/data/spacecraft.json';
 import { loadFamousEclipses } from '../data/famousEclipses';
@@ -26,7 +30,7 @@ import {
 const serve = (body: unknown) => () => Promise.resolve(new Response(JSON.stringify(body)));
 
 describe('the passages file', () => {
-  it('Given the whys, the moons, the famous eclipses, the missions and the stories, Then the file kept is what they make', async () => {
+  it('Given the whys, the moons, the famous eclipses, the missions, the stories and the telescopes, Then the file kept is what they make', async () => {
     const famous = await loadFamousEclipses('famous-eclipses.json', serve(eclipses));
     const record = await loadSpacecraft('spacecraft.json', serve(spacecraft));
     const built: Passages = {
@@ -40,6 +44,7 @@ describe('the passages file', () => {
         ...eclipsePassages(famous),
         ...missionPassages(record.craft),
         ...storyPassages(),
+        ...telescopePassages(await loadTelescopes('telescopes.json', serve(telescopes))),
       ],
     };
     const text = `${JSON.stringify(built)}\n`;

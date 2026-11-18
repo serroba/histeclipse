@@ -26,7 +26,7 @@ import type { MoonFacts } from './moonFacts';
 import type { Why, WhyId } from '../sources/registry';
 import { getJson, type Fetch } from '../util/fetchJson';
 
-const PASSAGE_KINDS = ['why', 'moon', 'eclipse', 'mission', 'story'] as const;
+const PASSAGE_KINDS = ['why', 'moon', 'eclipse', 'mission', 'story', 'telescope'] as const;
 export type PassageKind = (typeof PASSAGE_KINDS)[number];
 
 const AnchorSchema = v.strictObject({

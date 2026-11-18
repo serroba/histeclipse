@@ -19,6 +19,7 @@ const KINDS: Readonly<Record<PassageKind, string>> = {
   eclipse: 'Eclipse record',
   mission: 'Mission',
   story: 'A story to play',
+  telescope: 'Telescope',
 };
 
 /** Where the reader's choice to search by meaning is remembered, in this browser only. */

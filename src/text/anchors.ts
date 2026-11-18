@@ -56,6 +56,8 @@ const PLACED = [
   // The wave shown passing (#829): it is a place of its own.
   'wave',
   'chapter',
+  // A layer's list (#850): another anchor's view is not that list.
+  'list',
   'ma',
   'scale',
   'why',

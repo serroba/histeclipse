@@ -46,6 +46,21 @@ export const DESTINATIONS: readonly Destination[] = [
     view: 'cam=30.5630,-90.7740,3.00&t=2015-09-14T09:50Z&wave=gw150914',
   },
   {
+    id: 'great-telescopes',
+    label: 'Great telescopes',
+    topics: ['space'],
+    description:
+      'The most significant telescopes, on Earth from Herschel’s 40-foot of 1789 to the ELT being built, and in space from Hubble to Webb: a list to find each and go to it.',
+    questions: [
+      'What are the largest telescopes?',
+      'Which telescopes are in space?',
+      'Where are the great observatories?',
+    ],
+    body: 'earth',
+    frame: { kind: 'years', from: 1789, to: PRESENT_YEAR },
+    view: 'layers=telescopes&list=telescopes&t=2026-01-01T12:00Z&cam=20.0000,-60.0000,3.40',
+  },
+  {
     id: 'moon-landings',
     label: 'Moon landings',
     topics: ['space'],

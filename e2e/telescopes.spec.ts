@@ -310,3 +310,28 @@ test('the Telescopes list finds the most significant, filters them, and goes to 
   });
   expect(problems).toEqual([]);
 });
+
+test('the great telescopes are found from Explore and from search (#851) @acceptance @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const list = page.getByRole('dialog', { name: 'Telescopes' });
+  await test.step('When they open Explore and pick Great telescopes under Space, Then the layer is on and its list open', async () => {
+    await page.goto('./?t=2026-01-01T12:00Z&cam=0,0,3');
+    await page.getByRole('button', { name: 'Explore' }).click();
+    const panel = page.getByRole('dialog', { name: 'Explore' });
+    await panel.getByRole('button', { name: 'Great telescopes', exact: true }).click();
+    await expect(list).toBeVisible();
+    await expect(page).toHaveURL(/layers=[^&]*telescopes/);
+    await list.getByRole('button', { name: 'Close' }).click();
+    await expect(list).toBeHidden();
+  });
+  await test.step('When they search for Keck, Then the telescope is found, as a telescope', async () => {
+    const results = page.getByRole('dialog', { name: 'Search' });
+    await page.getByRole('button', { name: 'Search the texts' }).click();
+    await results.getByRole('searchbox').fill('Keck');
+    await expect(results).toContainText('Keck Observatory, since 1990');
+    await expect(results).toContainText('Telescope');
+  });
+  expect(problems).toEqual([]);
+});
