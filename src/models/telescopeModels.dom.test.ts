@@ -45,6 +45,13 @@ const SPACE = [
   'iras',
   'hipparcos',
   'euclid',
+  'chandra',
+  'xmm-newton',
+  'fermi',
+  'compton',
+  'swift',
+  'nustar',
+  'spektr-rg',
 ];
 
 describe('the telescopes’ models in their cards (#859, #860)', () => {
@@ -55,7 +62,7 @@ describe('the telescopes’ models in their cards (#859, #860)', () => {
       expect(model?.label).toContain('in 3D');
       expect(model?.caption).toContain('by eye');
     }
-    expect(telescopeModel('chandra')).toBeUndefined();
+    expect(telescopeModel('voyager')).toBeUndefined();
     for (const id of SPACE) expect(telescopeModel(id)?.label).toContain('in 3D');
   });
 
