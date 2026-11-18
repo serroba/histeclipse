@@ -1,7 +1,8 @@
 /**
- * The space telescopes' models for their cards (#797, #861, epic #865), by the telescopes
- * record's ids: Webb and Hubble (also in their craft's cards, `features/spacecraft`), and those
- * for light, infrared and microwaves (`lightModels.ts`). Each keeps its own axes, the Sun where it
+ * The space telescopes' models for their cards (#797, #861, #862, epic #865), by the telescopes
+ * record's ids: Webb and Hubble (also in their craft's cards, `features/spacecraft`), those for
+ * light, infrared and microwaves (`lightModels.ts`) and those for X-rays and gamma rays
+ * (`xrayModels.ts`). Each keeps its own axes, the Sun where it
  * is kept from the craft, its caption saying which parts are placed by eye.
  */
 
@@ -10,6 +11,7 @@ import { Vector3 } from 'three';
 import { from, lazyModel, type LazyModel, type ModelLoad } from './lazyModel';
 
 const light = () => import('./lightModels');
+const xray = () => import('./xrayModels');
 
 function inSpace(name: string, caption: string, sun: Vector3, load: ModelLoad): LazyModel {
   return lazyModel(`${name} in 3D: drag to turn it, pinch or scroll to zoom`, caption, sun, load);
@@ -42,6 +44,8 @@ export const HUBBLE = inSpace(
 const BELOW = new Vector3(0, -1, 0);
 /** The Sun to one side, where a craft keeps its solar array or its shade. */
 const SIDE = new Vector3(1, -0.1, 0.2);
+/** The Sun square to its solar wings, which turn to follow it. */
+const WINGS = new Vector3(0.2, 0.3, 1);
 
 export const SPACE_MODELS: Readonly<Record<string, LazyModel>> = {
   webb: WEBB,
@@ -111,5 +115,47 @@ export const SPACE_MODELS: Readonly<Record<string, LazyModel>> = {
     `${BUILT} 4.5 m tall and 3.1 m across (ESA; its mission paper gives an envelope of 3.74 m by 4.8 m), its 1.2 m telescope above its service module, the sunshield with its solar cells up one side to the Sun, its 70 cm dish. The parts are by eye.`,
     SIDE,
     from(light, (m) => m.buildEuclid),
+  ),
+  chandra: inSpace(
+    'The Chandra X-ray Observatory',
+    `${BUILT} 13.8 m long and 19.5 m across its solar arrays, its 1.2 m mirror assembly of four nested pairs in its spacecraft module, its 10 m optical bench back to its instruments, its sunshade door open at the front, from NASA and the Chandra X-ray Center. The bench’s and the module’s girth and the arrays’ width are by eye.`,
+    WINGS,
+    from(xray, (m) => m.buildChandra),
+  ),
+  'xmm-newton': inSpace(
+    'XMM-Newton',
+    `${BUILT} 10 m long and 16 m across its solar arrays, its three mirror modules and the 2 m Optical Monitor on its service module, its 6.8 m tube to its cameras, from ESA. The girths, and the mirror modules’ size, which no official page gives, are by eye.`,
+    WINGS,
+    from(xray, (m) => m.buildXmm),
+  ),
+  fermi: inSpace(
+    'The Fermi Gamma-ray Space Telescope',
+    `${BUILT} 2.8 m tall and 2.5 m across as launched, 15 m wide with its arrays out, its Large Area Telescope, 1.8 m square, on top of its bus looking up, its burst monitor’s 12.7 cm detectors round it, from NASA (the LAT is 0.72 m deep in its paper, 1 m in the handbook). The bus’s height and the arrays’ width are by eye.`,
+    WINGS,
+    from(xray, (m) => m.buildFermi),
+  ),
+  compton: inSpace(
+    'The Compton Gamma Ray Observatory',
+    `${BUILT} its 9 m by 4.5 m body with EGRET (2.25 m tall, 1.65 m across) and COMPTEL (2.61 m tall, 1.76 m across), OSSE’s four detectors and BATSE’s eight at its corners, 21.3 m across its solar arrays, its 1.52 m dish on a 4.4 m boom, from NASA (another NASA page gives 9.1 m by 4.6 m). The body’s depth and OSSE’s mount are by eye.`,
+    WINGS,
+    from(xray, (m) => m.buildCompton),
+  ),
+  swift: inSpace(
+    'Swift',
+    `${BUILT} BAT’s coded mask of some 2.7 m² held 1 m above its 1.2 m by 0.6 m detector plane, beside the X-ray telescope and the 30 cm UVOT, from NASA. No official page gives the craft’s size: the bus, the tubes and the solar arrays are by eye.`,
+    WINGS,
+    from(xray, (m) => m.buildSwift),
+  ),
+  nustar: inSpace(
+    'NuSTAR',
+    `${BUILT} its two optics, each 38 cm across, 10.14 m from its detectors on a mast of 57 bays, from Caltech and NASA (its press kit gives 10.9 m and 11.4 m for the whole). The bus’s and the solar array’s size are by eye.`,
+    WINGS,
+    from(xray, (m) => m.buildNustar),
+  ),
+  'spektr-rg': inSpace(
+    'Spektr-RG',
+    `${BUILT} eROSITA (1.9 m across, 3.2 m tall, seven mirror modules) and ART-XC (0.9 m across, 3.5 m tall) side by side on their frame atop the Navigator platform, both looking the same way, from IKI and MPE. No official page sizes the platform, the frame or the solar panels: by eye.`,
+    WINGS,
+    from(xray, (m) => m.buildSpektrRg),
   ),
 };

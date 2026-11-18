@@ -82,8 +82,10 @@ describe('the words for a date and a year', () => {
     expect(telescopesText(groundMarks(record, 2026), 2026)).toMatch(/and 3 being built/);
   });
 
-  it('Given a radio telescope with a model, Then its card carries it; one without has none (#859)', () => {
+  it('Given a telescope, Then its card carries its model (#859, #862)', () => {
     expect(telescopeCard(named('lovell')).model?.label).toContain('Lovell Telescope in 3D');
-    expect('model' in telescopeCard(named('chandra'))).toBe(false);
+    expect(telescopeCard(named('chandra')).model?.label).toContain(
+      'Chandra X-ray Observatory in 3D',
+    );
   });
 });

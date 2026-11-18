@@ -66,6 +66,12 @@
     "cite": "Archinal, B. A., Acton, C. H., A’Hearn, M. F., et al. (2018). Report of the IAU Working Group on Cartographic Coordinates and Rotational Elements: 2015. Celestial Mechanics and Dynamical Astronomy 130, 22",
     "url": "https://doi.org/10.1007/s10569-017-9805-5"
   },
+  "atwood2009Lat": {
+    "name": "Atwood et al. (2009), The Large Area Telescope on the Fermi Gamma-ray Space Telescope mission",
+    "kind": "paper",
+    "cite": "Atwood, W. B., Abdo, A. A., Ackermann, M., et al. (2009), The Large Area Telescope on the Fermi Gamma-Ray Space Telescope Mission, The Astrophysical Journal 697, 1071 (doi:10.1088/0004-637X/697/2/1071), with the Fermi Technical Handbook and NASA SVS: the craft 2.8 m tall and 2.5 m across as launched, 15 m wide with its arrays out, the LAT 1.8 m square on top. The LAT’s design and performance",
+    "url": "https://doi.org/10.1088/0004-637X/697/2/1071"
+  },
   "bahcall2005": {
     "name": "Bahcall et al. 2005",
     "kind": "paper",
@@ -281,6 +287,12 @@
     "cite": "The Chandra X-ray Center’s pages on the Chandra X-ray Observatory: its mirrors, launch and discoveries",
     "url": "https://chandra.si.edu/about/"
   },
+  "chandraSpecs": {
+    "name": "Chandra X-ray Center: Chandra’s specifications and spacecraft",
+    "kind": "reference",
+    "cite": "Chandra X-ray Center (Smithsonian Astrophysical Observatory, for NASA), Chandra specifications and spacecraft: 13.8 m long and 19.5 m across its solar arrays, its 10 m optical bench and focal length, its mirror assembly 1.2 m across of four nested pairs 0.833 m long, its sunshade door",
+    "url": "https://chandra.harvard.edu/about/specs.html"
+  },
   "clementineMoon": {
     "name": "Clementine colour-ratio map of the Moon",
     "kind": "imagery",
@@ -441,6 +453,12 @@
     "url": "https://esawebb.org/images/",
     "licence": "CC BY 4.0"
   },
+  "esaXmmSpacecraft": {
+    "name": "ESA: XMM-Newton’s fact sheet and spacecraft",
+    "kind": "reference",
+    "cite": "ESA, XMM-Newton fact sheet and ESA Cosmos’ technical details of the spacecraft: 10 m long and 16 m across, its 6.8 m telescope tube, its three mirror modules and the 2 m Optical Monitor of 30 cm aperture",
+    "url": "https://www.cosmos.esa.int/web/xmm-newton/technical-details-spacecraft"
+  },
   "esoAlmaAntennas": {
     "name": "ESO and the ALMA Observatory: ALMA’s antennas",
     "kind": "reference",
@@ -540,6 +558,12 @@
     "cite": "McDowell, J. C., General Catalog of Artificial Space Objects (GCAT), planet4589.org: its deep space catalog, lunar and planetary and heliocentric registers, and lander catalog, as downloaded on 9 November 2026; the Hubble Space Telescope’s row of its satellite catalog, as updated on 15 November 2026",
     "url": "https://planet4589.org/space/gcat/",
     "licence": "CC BY 4.0"
+  },
+  "gehrels2004Swift": {
+    "name": "Gehrels et al. (2004), The Swift gamma-ray burst mission",
+    "kind": "paper",
+    "cite": "Gehrels, N., Chincarini, G., Giommi, P., et al. (2004), The Swift Gamma-Ray Burst Mission, The Astrophysical Journal 611, 1005 (doi:10.1086/422091), with Bundas’s Swift mission design (NASA NTRS): BAT’s coded mask 1 m above its 1.2 m by 0.6 m detector plane, the 30 cm UVOT. The mission’s design",
+    "url": "https://doi.org/10.1086/422091"
   },
   "ggf100k": {
     "name": "GGF100k",
@@ -668,12 +692,24 @@
     "cite": "Hale, G. E. (1897), The Yerkes Observatory of the University of Chicago, The Astrophysical Journal 6, 37 (doi:10.1086/140373): the 40-inch refractor’s tube 60 ft long, its column 43 ft tall, its axes and gears, its 90 ft dome and rising floor, as its first director described them",
     "url": "https://doi.org/10.1086/140373"
   },
+  "harrison2013Nustar": {
+    "name": "Harrison et al. (2013), The Nuclear Spectroscopic Telescope Array (NuSTAR)",
+    "kind": "paper",
+    "cite": "Harrison, F. A., Craig, W. W., Christensen, F. E., et al. (2013), The Nuclear Spectroscopic Telescope Array (NuSTAR) High-energy X-Ray Mission, The Astrophysical Journal 770, 103 (doi:10.1088/0004-637X/770/2/103), with Caltech’s page on its mast and the NASA/JPL press kit: its optics 10.14 m from its detectors on a 10 m mast of 57 bays. The mission and its first results",
+    "url": "https://doi.org/10.1088/0004-637X/770/2/103"
+  },
   "haywood2020": {
     "name": "PlioMIP2, Haywood et al. 2020",
     "kind": "paper",
     "cite": "Haywood, A. M., Tindall, J. C., Dowsett, H. J., Dolan, A. M., Foley, K. M., Hunter, S. J., et al. (2020), The Pliocene Model Intercomparison Project Phase 2: large-scale climate features and climate sensitivity, Climate of the Past 16, 2095–2123: a multi-model mean warming of 3.2 °C (1.7–5.2 °C) over pre-industrial",
     "url": "https://doi.org/10.5194/cp-16-2095-2020",
     "licence": "CC BY 4.0"
+  },
+  "heasarcCgro": {
+    "name": "NASA HEASARC: the Compton Gamma Ray Observatory",
+    "kind": "reference",
+    "cite": "NASA Goddard Space Flight Center, HEASARC’s Compton Gamma Ray Observatory pages (its instruments, NRA appendix G, COMPTEL) and JPL’s Mission and Spacecraft Library: 9 m by 4.5 m, 21.3 m across its solar arrays, EGRET 2.25 m by 1.65 m, COMPTEL 2.61 m by 1.76 m, BATSE’s eight detectors at the corners, its 1.52 m dish on a 4.4 m boom",
+    "url": "https://heasarc.gsfc.nasa.gov/docs/cgro/epo/vu/overview/gro/instrmnt/instrmnt.html"
   },
   "helioviewer": {
     "name": "Helioviewer",
@@ -1804,6 +1840,13 @@
     "kind": "paper",
     "cite": "Stuiver, M. & Polach, H. A. (1977). Discussion: reporting of 14C data. Radiocarbon 19, 355–363",
     "url": "https://doi.org/10.1017/S0033822200003672"
+  },
+  "sunyaev2021Srg": {
+    "name": "Sunyaev et al. (2021), SRG X-ray orbital observatory",
+    "kind": "paper",
+    "cite": "Sunyaev, R., Arefiev, V., Babyshkin, V., et al. (2021), SRG X-ray orbital observatory, Astronomy & Astrophysics 656, A132 (doi:10.1051/0004-6361/202141179), with Predehl et al. (2021, A&A 647, A1, doi:10.1051/0004-6361/202039313) on eROSITA and Pavlinsky et al. (2021, A&A 650, A42, doi:10.1051/0004-6361/202040265) on ART-XC: eROSITA 1.9 m across and 3.2 m tall, ART-XC 0.9 m across and 3.5 m tall, side by side on the Navigator platform. The observatory and its telescopes",
+    "url": "https://doi.org/10.1051/0004-6361/202141179",
+    "licence": "CC BY 4.0"
   },
   "tarduno2010": {
     "name": "Tarduno et al. 2010",
