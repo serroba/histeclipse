@@ -44,11 +44,23 @@ function webgl(): ModelRenderer {
   return new WebGLRenderer({ antialias: true, alpha: true });
 }
 
-/** The camera's first place: in front, to one side and above, the whole model in view. */
+/** The view's width over its height. */
+const ASPECT = 1 / 0.62;
+
+/**
+ * The camera's first place: in front, to one side and above, the whole model in view as it turns
+ * about its height: far enough that its height fits the view's and its widest turn the view's
+ * width, whether it is flat (Webb) or tall (Kepler).
+ */
 function frame(model: Object3D, camera: PerspectiveCamera): Sphere {
-  const bounds = new Box3().setFromObject(model).getBoundingSphere(new Sphere());
-  // A little inside the sphere's own fit: the model is flat, and fills the box better so.
-  const distance = (0.72 * bounds.radius) / Math.sin(((camera.fov / 2) * Math.PI) / 180);
+  const box = new Box3().setFromObject(model);
+  const bounds = box.getBoundingSphere(new Sphere());
+  const size = box.getSize(new Vector3());
+  const across = Math.hypot(size.x, size.z) / 2;
+  const tall = size.y / 2;
+  const slope = Math.tan(((camera.fov / 2) * Math.PI) / 180);
+  // The nearer the model comes as it turns, the more of the view it takes: allow for its depth.
+  const distance = 1.1 * Math.max(tall / slope + across, across / (slope * ASPECT) + tall);
   camera.position
     .copy(bounds.center)
     .add(new Vector3(0.6, 0.4, 1).normalize().multiplyScalar(distance));
@@ -77,7 +89,7 @@ export function mountModelView(
   }
   const scene = new Scene();
   scene.add(model);
-  const camera = new PerspectiveCamera(35, 1, 0.1, 1000);
+  const camera = new PerspectiveCamera(35, ASPECT, 0.1, 1000);
   const bounds = frame(model, camera);
   const sun = new DirectionalLight(0xfff4e0, 2.6);
   sun.position
@@ -96,7 +108,7 @@ export function mountModelView(
   controls.enableDamping = true;
   controls.enablePan = false;
   controls.minDistance = bounds.radius * 0.6;
-  controls.maxDistance = bounds.radius * 6;
+  controls.maxDistance = Math.max(bounds.radius * 6, camera.position.distanceTo(bounds.center) * 2);
   controls.autoRotate = options.stillness !== true;
   controls.autoRotateSpeed = 0.8;
   controls.addEventListener('start', () => {
@@ -105,7 +117,7 @@ export function mountModelView(
 
   function fit(): void {
     const width = Math.max(160, host.clientWidth);
-    const height = Math.round(width * 0.62);
+    const height = Math.round(width / ASPECT);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height, true);
     camera.aspect = width / height;

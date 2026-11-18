@@ -59,3 +59,15 @@ export function lazyModel(
     },
   };
 }
+
+/** A model's builder, fetched with the view the first time it is shown, in its family's chunk. */
+export function from<Family>(
+  family: () => Promise<Family>,
+  pick: (loaded: Family) => () => Object3D,
+): ModelLoad {
+  return () =>
+    Promise.all([import('./modelView'), family()]).then(([view, loaded]) => ({
+      mountModelView: view.mountModelView,
+      build: pick(loaded),
+    }));
+}

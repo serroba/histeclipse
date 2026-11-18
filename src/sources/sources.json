@@ -85,6 +85,12 @@
     "url": "https://osf.io/7jen3/",
     "licence": "No licence stated"
   },
+  "bennett2003Map": {
+    "name": "Bennett et al. (2003), The Microwave Anisotropy Probe mission",
+    "kind": "paper",
+    "cite": "Bennett, C. L., Bay, M., Halpern, M., et al. (2003), The Microwave Anisotropy Probe Mission, The Astrophysical Journal 583, 1 (doi:10.1086/345346): the observatory 3.8 m tall on its 5.0 m solar array, its back-to-back 1.4 m by 1.6 m primaries. The mission’s design, before its first results",
+    "url": "https://doi.org/10.1086/345346"
+  },
   "bereiter": {
     "name": "Bereiter et al. 2015",
     "kind": "paper",
@@ -390,6 +396,12 @@
     "url": "https://doi.org/10.1002/qj.3803",
     "licence": "CC BY 4.0"
   },
+  "esaHipparcosCatalogue": {
+    "name": "ESA (1997), The Hipparcos and Tycho Catalogues, volume 2",
+    "kind": "reference",
+    "cite": "ESA (1997), The Hipparcos and Tycho Catalogues, volume 2, ESA SP-1200, and ESA Cosmos’ Hipparcos payload page: its 29 cm primary, its three solar panels of 1.69 m by 1.19 m 120° apart, the Sun 43° off its spin axis",
+    "url": "https://www.cosmos.esa.int/documents/532822/546213/vol2_all.pdf/39073ea4-8e7a-4b07-8094-6ce046f0e4db"
+  },
   "esaHubbleFactSheet": {
     "name": "ESA/Hubble: Hubble’s fact sheet",
     "kind": "reference",
@@ -409,6 +421,12 @@
     "kind": "reference",
     "cite": "ESA, “Juice” (mission page)",
     "url": "https://www.esa.int/Science_Exploration/Space_Science/Juice"
+  },
+  "esaPlanckSpacecraft": {
+    "name": "ESA: Planck’s fact sheet and the Planck Legacy Archive",
+    "kind": "reference",
+    "cite": "ESA, Planck fact sheet and the Planck Legacy Archive’s pages on the satellite: 4.2 m tall and 4.2 m across its solar panel, its 1.9 m by 1.5 m primary, its baffle and V-groove shields",
+    "url": "https://sci.esa.int/web/planck/-/47365-fact-sheet"
   },
   "esaTelescopes": {
     "name": "ESA: its space telescopes’ pages",
@@ -772,6 +790,12 @@
     "url": "https://doi.org/10.1017/RDC.2020.41",
     "licence": "CC BY 4.0"
   },
+  "irasSupplement": {
+    "name": "IRAS Explanatory Supplement (Beichman et al. 1988)",
+    "kind": "reference",
+    "cite": "Beichman, C. A., Neugebauer, G., Habing, H. J., Clegg, P. E., and Chester, T. J. (eds., 1988), IRAS Catalogs and Atlases: Explanatory Supplement, NASA RP-1190, chapter II, at NASA/IPAC IRSA: 3.6 m tall, 3.24 m wide and 2.05 m deep with its solar panels out, its 60 cm telescope and its sunshade",
+    "url": "https://irsa.ipac.caltech.edu/IRASdocs/exp.sup/ch2/A.html"
+  },
   "ivezic2019Lsst": {
     "name": "Ivezić et al. (2019), LSST: from science drivers to reference design",
     "kind": "paper",
@@ -881,6 +905,12 @@
     "kind": "paper",
     "cite": "Kent, D. V., Kjarsgaard, B. A., Gee, J. S., Muttoni, G. & Heaman, L. M. (2015). Tracking the Late Jurassic apparent (or true) polar shift in U-Pb-dated kimberlites from cratonic North America (Superior Province of Canada). Geochemistry, Geophysics, Geosystems 16, 983–994",
     "url": "https://doi.org/10.1002/2015GC005734"
+  },
+  "keplerPressKit": {
+    "name": "NASA/JPL: Kepler launch press kit",
+    "kind": "reference",
+    "cite": "NASA and JPL, Kepler launch press kit (February 2009): the spacecraft 4.7 m tall and 2.7 m across, its 0.95 m aperture and 1.4 m primary, its fixed solar array of four panels",
+    "url": "https://www.jpl.nasa.gov/news/press_kits/Kepler-presskit-2-19-smfile.pdf"
   },
   "kilbourne2022": {
     "name": "Kilbourne et al. 2022",
@@ -1062,6 +1092,13 @@
     "url": "https://doi.org/10.5194/gmd-13-3571-2020",
     "licence": "CC BY 4.0"
   },
+  "mellier2025Euclid": {
+    "name": "Euclid Collaboration, Mellier et al. (2025), Euclid I. Overview",
+    "kind": "paper",
+    "cite": "Euclid Collaboration, Mellier, Y., Abdurro’uf, Acevedo Barroso, J. A., et al. (2025), Euclid. I. Overview of the Euclid mission, Astronomy & Astrophysics 697, A1 (doi:10.1051/0004-6361/202450810), with ESA’s fact sheet: 4.5 m tall and 3.1 m across (an envelope of 3.74 m by 4.8 m in the paper), its 1.2 m telescope, its sunshield with its solar cells. The mission, its craft and its survey",
+    "url": "https://doi.org/10.1051/0004-6361/202450810",
+    "licence": "CC BY 4.0"
+  },
   "merdith2021": {
     "name": "Merdith et al. 2021",
     "kind": "model",
@@ -1208,6 +1245,12 @@
     "cite": "NASA, “Callisto” (moon overview)",
     "url": "https://science.nasa.gov/jupiter/moons/callisto/"
   },
+  "nasaCobeSpacecraft": {
+    "name": "NASA LAMBDA: COBE’s mission design and spacecraft",
+    "kind": "reference",
+    "cite": "NASA Goddard Space Flight Center, LAMBDA, COBE mission design, spacecraft and orbit, and NASA Science’s COBE spacecraft page: 5.49 m long and 2.44 m across as launched, 8.53 m across its solar panels, its Sun–Earth shield",
+    "url": "https://lambda.gsfc.nasa.gov/product/cobe/spacecraft_description.html"
+  },
   "nasaDeimos": {
     "name": "NASA: Deimos",
     "kind": "reference",
@@ -1318,6 +1361,12 @@
     "cite": "NASA Goddard Space Flight Center, James Webb Space Telescope: key facts and the observatory’s parts (the sunshield, 21.197 m by 14.162 m in five layers; the primary mirror, 6.5 m across in 18 hexagonal segments of 1.32 m; the secondary, 0.74 m across)",
     "url": "https://webb.nasa.gov/content/about/faqs/facts.html",
     "licence": "NASA, public domain"
+  },
+  "nasaWmapObservatory": {
+    "name": "NASA: the WMAP observatory",
+    "kind": "reference",
+    "cite": "NASA Goddard Space Flight Center, WMAP: the observatory, its sun shield, its gamma-alumina cylinder and its two telescopes",
+    "url": "https://map.gsfc.nasa.gov/mission/observatory.html"
   },
   "naturalEarth": {
     "name": "Natural Earth",
@@ -1517,6 +1566,12 @@
     "url": "https://doi.org/10.5285/d235665772ec4b558e9a89ac85595e71",
     "licence": "ESA CCI data policy: free and open for any use, crediting the ESA Climate Change Initiative, the Permafrost_cci project and the dataset"
   },
+  "pilbratt2010Herschel": {
+    "name": "Pilbratt et al. (2010), Herschel Space Observatory",
+    "kind": "paper",
+    "cite": "Pilbratt, G. L., Riedinger, J. R., Passvogel, T., et al. (2010), Herschel Space Observatory: an ESA facility for far-infrared and submillimetre astronomy, Astronomy & Astrophysics 518, L1 (doi:10.1051/0004-6361/201014759), with ESA’s fact sheet: 7.5 m tall and 4 m by 4 m, its 3.5 m primary, its sunshade. The observatory, its instruments and its first year",
+    "url": "https://doi.org/10.1051/0004-6361/201014759"
+  },
   "planetaryHealthCheck2026": {
     "name": "Planetary Health Check 2026",
     "kind": "paper",
@@ -1557,6 +1612,13 @@
     "cite": "Prša, A., et al. (2016). Nominal values for selected solar and planetary quantities: IAU 2015 Resolution B3. The Astronomical Journal 152, 41",
     "url": "https://doi.org/10.3847/0004-6256/152/2/41"
   },
+  "prusti2016Gaia": {
+    "name": "Gaia Collaboration, Prusti et al. (2016), The Gaia mission",
+    "kind": "paper",
+    "cite": "Gaia Collaboration, Prusti, T., de Bruijne, J. H. J., et al. (2016), The Gaia mission, Astronomy & Astrophysics 595, A1 (doi:10.1051/0004-6361/201629272): its 10.2 m sunshield, its two telescopes of 1.45 m by 0.50 m on their 3 m optical bench, the Sun 45° off its spin axis. The mission, its craft and how it scans the sky",
+    "url": "https://doi.org/10.1051/0004-6361/201629272",
+    "licence": "CC BY 4.0"
+  },
   "rahmstorf2015": {
     "name": "Rahmstorf et al. 2015",
     "kind": "paper",
@@ -1591,6 +1653,12 @@
     "url": "https://doi.org/10.1126/sciadv.adh2458",
     "licence": "CC BY-NC 4.0",
     "nonCommercial": true
+  },
+  "ricker2015Tess": {
+    "name": "Ricker et al. (2015), Transiting Exoplanet Survey Satellite",
+    "kind": "paper",
+    "cite": "Ricker, G. R., Winn, J. N., Vanderspek, R., et al. (2015), Transiting Exoplanet Survey Satellite, Journal of Astronomical Telescopes, Instruments, and Systems 1, 014003 (doi:10.1117/1.JATIS.1.1.014003), with NASA HEASARC’s pages: its four cameras of 10.5 cm on one plate, its 0.7 m dish, its two solar wings. The mission’s design",
+    "url": "https://doi.org/10.1117/1.JATIS.1.1.014003"
   },
   "rmgHerschel": {
     "name": "Royal Museums Greenwich: Herschel’s 40-foot",
@@ -1860,6 +1928,12 @@
     "kind": "paper",
     "cite": "Wells (1963), Coral growth and geochronometry, Nature 197, 948–950",
     "url": "https://doi.org/10.1038/197948a0"
+  },
+  "werner2004Spitzer": {
+    "name": "Werner et al. (2004), The Spitzer Space Telescope mission",
+    "kind": "paper",
+    "cite": "Werner, M. W., Roellig, T. L., Low, F. J., et al. (2004), The Spitzer Space Telescope Mission, The Astrophysical Journal Supplement Series 154, 1 (doi:10.1086/422992): 4.5 m tall and 2.1 m across, its 0.85 m telescope above its bus, its solar array to the Sun. The observatory and its first year",
+    "url": "https://doi.org/10.1086/422992"
   },
   "westerhold2020": {
     "name": "CENOGRID (Westerhold et al. 2020)",

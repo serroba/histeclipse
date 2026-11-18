@@ -1,24 +1,14 @@
 /**
- * The telescopes' models for their cards (#859, #860, epic #865), by the record's ids: each built
- * from its operator's published sizes (`radioModels.ts`, `opticalModels.ts`,
- * `historicalModels.ts`), its caption saying which parts are placed by eye. The same object each time, so a card shown again keeps its view.
+ * The telescopes' models for their cards (#859, #860, #861, epic #865), by the record's ids: each
+ * built from its operator's published sizes (`radioModels.ts`, `opticalModels.ts`,
+ * `historicalModels.ts`; those in space, `spaceTelescopeModels.ts`), its caption saying which
+ * parts are placed by eye. The same object each time, so a card shown again keeps its view.
  */
 
-import { Vector3, type Object3D } from 'three';
+import { Vector3 } from 'three';
 
-import { lazyModel, type LazyModel, type ModelLoad } from './lazyModel';
-
-/** A model's builder, fetched with the view the first time it is shown, in its family's chunk. */
-function from<Family>(
-  family: () => Promise<Family>,
-  pick: (loaded: Family) => () => Object3D,
-): ModelLoad {
-  return () =>
-    Promise.all([import('./modelView'), family()]).then(([view, loaded]) => ({
-      mountModelView: view.mountModelView,
-      build: pick(loaded),
-    }));
-}
+import { from, lazyModel, type LazyModel, type ModelLoad } from './lazyModel';
+import { SPACE_MODELS } from './spaceTelescopeModels';
 
 const radio = () => import('./radioModels');
 const optical = () => import('./opticalModels');
@@ -37,6 +27,7 @@ function standing(name: string, caption: string, load: ModelLoad): LazyModel {
 }
 
 const MODELS: Readonly<Record<string, LazyModel>> = {
+  ...SPACE_MODELS,
   lovell: standing(
     'The Lovell Telescope',
     'its 76.2 m dish (focal ratio 0.3) on its elevation axis 50.5 m up, turning on its 107.5 m rail, from Jodrell Bank’s facts and figures. Its towers’ shape is placed by eye.',

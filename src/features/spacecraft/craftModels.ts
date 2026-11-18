@@ -4,45 +4,15 @@
  * of their own, so the page's start does not grow by them.
  */
 
-import { Vector3, type Object3D } from 'three';
+import type { Object3D } from 'three';
 
 import type { Body, ViewState } from '../../state/viewState';
 import type { CardModel, MarkerCardContent } from '../../ui/markerCard';
-import { lazyModel, type ModelLoad as Load } from '../../models/lazyModel';
+import { HUBBLE, WEBB } from '../../models/spaceTelescopeModels';
 
 /** Webb's and Hubble's GCAT ids. */
 const WEBB_ID = 'D01093';
 const HUBBLE_ID = 'S20580';
-
-const loadWebb: Load = () =>
-  Promise.all([import('../../models/modelView'), import('../../models/webbModel')]).then(
-    ([view, webb]) => ({
-      mountModelView: view.mountModelView,
-      build: webb.buildWebb,
-    }),
-  );
-
-const loadHubble: Load = () =>
-  Promise.all([import('../../models/modelView'), import('../../models/hubbleModel')]).then(
-    ([view, hubble]) => ({
-      mountModelView: view.mountModelView,
-      build: hubble.buildHubble,
-    }),
-  );
-
-const WEBB = lazyModel(
-  'The James Webb Space Telescope in 3D: drag to turn it, pinch or scroll to zoom',
-  'An approximation built here from NASA’s published sizes, at true scale: the 6.5 m mirror of 18 gold segments and its secondary on three struts, above the 21 m by 14 m sunshield of five layers. The Sun is below, where the sunshield always faces it; in space the mirror is always in shade, so a light from your side shows it.',
-  new Vector3(0.25, -1, 0.15),
-  loadWebb,
-);
-
-const HUBBLE = lazyModel(
-  'The Hubble Space Telescope in 3D: drag to turn it, pinch or scroll to zoom',
-  'An approximation built here from ESA/Hubble’s published sizes, at true scale: 13.2 m long and 4.2 m across, its 2.4 m mirror inside, its two solar arrays each 2.45 m by 7.56 m, its two antennas, and its aperture door open. The Sun is below, square to the arrays; a light from your side shows the side it does not reach.',
-  new Vector3(0.2, -1, 0.1),
-  loadHubble,
-);
 
 /** The models for the cards, by GCAT id: the same object each time. */
 const CARD_MODELS: Readonly<Record<string, CardModel>> = { [WEBB_ID]: WEBB, [HUBBLE_ID]: HUBBLE };
