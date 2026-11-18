@@ -230,3 +230,18 @@ describe('cachedPassages', () => {
     expect(calls).toBe(2);
   });
 });
+
+describe('the stories, as passages (#842)', () => {
+  it('finds GW150914’s story first, by its name, LIGO, or what it is, and opens it at its start', async () => {
+    const { storyPassages, whyPassages } = await import('./passages');
+    const { indexPassages, searchWords } = await import('./wordSearch');
+    const { WHYS } = await import('../sources/registry');
+    const index = indexPassages([...whyPassages(WHYS, []), ...storyPassages()]);
+    for (const query of ['ligo', 'gravitational wave', 'GW150914']) {
+      expect(searchWords(index, query)[0]?.passage.id).toBe('story:gw150914');
+    }
+    const [story] = storyPassages();
+    expect(story?.kind).toBe('story');
+    expect(story?.anchors[0]?.view).toContain('wave=gw150914&chapter=source');
+  });
+});
