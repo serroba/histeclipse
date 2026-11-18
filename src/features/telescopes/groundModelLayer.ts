@@ -6,23 +6,12 @@
  * metres (`globe/metreView.ts`), their own ground left out for the globe's.
  */
 
-import {
-  AmbientLight,
-  Box3,
-  DirectionalLight,
-  Group,
-  Matrix4,
-  PerspectiveCamera,
-  Quaternion,
-  Scene,
-  Vector3,
-  type Object3D,
-} from 'three';
+import { Box3, Group, Matrix4, Quaternion, Vector3, type Object3D } from 'three';
 
 import type { GeoPoint } from '../../core/geo';
 import { geoToVector } from '../../globe/geo';
 import type { LayerFactory } from '../../globe/layerHost';
-import { cameraOnCraft, METRES_PER_SCENE } from '../../globe/metreView';
+import { METRES_PER_SCENE, metrePass } from '../../globe/metreView';
 import { GROUND } from '../../models/kit';
 import { releaseModel } from '../../models/releaseModel';
 import { telescopeModel } from '../../models/telescopeModels';
@@ -116,43 +105,35 @@ function siteModels(group: Group, done: (id: string, half: number) => void) {
 }
 
 export const groundModel: LayerFactory<HeldSite | null> = (host) => {
-  const scene = new Scene();
-  const group = new Group();
-  group.name = 'ground-model';
-  const sunlight = new DirectionalLight(0xfff4e0, 2.6);
-  sunlight.target = group;
-  scene.add(group, sunlight, new AmbientLight(0x8890a0, 0.8));
   // Where the site is on Earth, turning with it: its place and turn read from it each frame.
   const anchor = new Group();
   host.onEarth.add(anchor);
-  const seen = new PerspectiveCamera();
-  const at = new Vector3();
-  const turn = new Quaternion();
   let site: HeldSite | null = null;
   let radius = FIRST_RADIUS;
-  let held = false;
+
+  const pass = metrePass(host, {
+    name: 'ground-model',
+    dataset: 'groundModel',
+    fill: 0.8,
+    drawn: () => (site !== null && models.has(site.held.id) ? site.held.id : null),
+    follow() {
+      const before = pass.at.clone();
+      place();
+      // Earth turns as the time plays: the site, and the camera on it, turn with it.
+      if (before.distanceToSquared(pass.at) > 1e-18) hold();
+    },
+  });
 
   function place(): void {
     anchor.updateWorldMatrix(true, false);
-    anchor.getWorldPosition(at);
-    anchor.getWorldQuaternion(turn);
-    group.quaternion.copy(turn);
-    sunlight.position.copy(host.sunPosition()).sub(at).setLength(1000);
+    pass.place(anchor.getWorldPosition(new Vector3()), anchor.getWorldQuaternion(new Quaternion()));
   }
 
   function hold(): void {
-    if (site === null) return;
-    host.holdCraft({
-      id: site.held.id,
-      about: 'earth',
-      position: at.clone(),
-      rotation: turn.clone(),
-      radius: radius / METRES_PER_SCENE,
-    });
-    held = true;
+    if (site !== null) pass.hold({ id: site.held.id, about: 'earth', radius });
   }
 
-  const models = siteModels(group, (id, half) => {
+  const models = siteModels(pass.group, (id, half) => {
     if (id === site?.held.id) {
       radius = half;
       hold();
@@ -160,28 +141,12 @@ export const groundModel: LayerFactory<HeldSite | null> = (host) => {
     host.requestRender();
   });
 
-  host.afterRender(() => {
-    const { dataset } = host.container;
-    if (site === null || !models.has(site.held.id)) {
-      delete dataset['groundModel'];
-      return;
-    }
-    const before = at.clone();
-    place();
-    // Earth turns as the time plays: the site, and the camera on it, turn with it.
-    if (before.distanceToSquared(at) > 1e-18) hold();
-    cameraOnCraft(host.camera, at, seen);
-    host.drawOver(scene, seen);
-    dataset['groundModel'] = site.held.id;
-  });
-
   return {
     update(next) {
       models.keep(new Set(next?.near.map(({ id }) => id) ?? []));
       if (next === null) {
         site = null;
-        if (held) host.holdCraft(null);
-        held = false;
+        pass.release();
         host.requestRender();
         return;
       }
