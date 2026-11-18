@@ -8,11 +8,16 @@
  * - `craters` is `all`, or an Impact Earth Database id; `cratersin` is `map` (absent) or `box`.
  * - `lineages` is a fossil group, then perhaps `:` and a PBDB number (`dinosaurs:38613`).
  * - `boundaries` is the boundaries' story's chapter.
+ * - `list` is a layer's list (#850): `telescopes`, the great telescopes to find and go to.
  */
 
 import { LINEAGE_GROUPS, type LineageGroup } from '../../data/lineages';
 import { WHY_VIEWS, type WhyView } from '../../sources/registry';
 import { choice, choiceOrNull, type Params } from '../slice';
+
+/** The layers with a list of their own to find their things in (#850). */
+export const LISTS = ['telescopes'] as const;
+type List = (typeof LISTS)[number];
 
 /** What the lineages through time show: a fossil group, and one of its names picked out. */
 export interface LineagesView {
@@ -55,6 +60,8 @@ export interface SheetsState {
   readonly lineages: LineagesView | null;
   /** The planetary boundaries' story open (#434), at a chapter; null when closed. */
   readonly boundaries: BoundaryChapter | null;
+  /** A layer's list open (#850); null when closed. */
+  readonly list: List | null;
 }
 
 export const SHEETS_DEFAULTS: SheetsState = {
@@ -64,6 +71,7 @@ export const SHEETS_DEFAULTS: SheetsState = {
   cratersIn: 'map',
   lineages: null,
   boundaries: null,
+  list: null,
 };
 
 export const SHEETS_PARAMS: Params<SheetsState> = {
@@ -86,6 +94,7 @@ export const SHEETS_PARAMS: Params<SheetsState> = {
       view === null ? null : view.pick === null ? view.group : `${view.group}:${String(view.pick)}`,
   },
   boundaries: choiceOrNull('boundaries', BOUNDARY_CHAPTERS),
+  list: choiceOrNull('list', LISTS),
 };
 
 /** `tree=all`, or `tree=ott` and an Open Tree of Life id, as Open Tree writes them. */

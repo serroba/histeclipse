@@ -12,6 +12,8 @@ import { telescopeLayer } from './telescopeLayer';
 import { groundMarks, telescopeCard, telescopesText, type TelescopeMark } from './telescopeMarks';
 import './telescopes.css';
 
+export { mountTelescopeList } from './listPart';
+
 /** A telescope's card, with the others on its site a step away. */
 function showTelescope(
   context: Pick<FeatureContext, 'showCard'>,

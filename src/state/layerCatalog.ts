@@ -24,6 +24,8 @@ export interface LayerChoice {
    * Absent where the layer covers all of its spans.
    */
   readonly covers?: Coverage;
+  /** A list of its own to find its things in (#850): its chip opens it. */
+  readonly list?: true;
 }
 
 /** The times a layer's data covers (#751). */
@@ -270,6 +272,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
         spans: ['years'],
         reach: 'In the years, from 1789 to today.',
         covers: { years: [1789, PRESENT_YEAR] },
+        list: true,
       },
     ],
   },

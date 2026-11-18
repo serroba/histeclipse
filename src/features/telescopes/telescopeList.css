@@ -1,0 +1,29 @@
+/* The telescopes' list (#850): filters as rows of choices above the list. */
+.telescope-filters {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 10px;
+}
+
+.telescope-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.telescope-choice {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.05);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.telescope-choice[aria-pressed='true'] {
+  border-color: #ffc861;
+  background: rgb(255 200 97 / 0.16);
+}

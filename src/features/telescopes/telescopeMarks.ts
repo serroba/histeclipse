@@ -64,7 +64,7 @@ export function groundMarks(record: Telescopes, year: number): TelescopeMark[] {
   });
 }
 
-const BAND_WORDS: Readonly<Record<Telescope['bands'][number], string>> = {
+export const BAND_WORDS: Readonly<Record<Telescope['bands'][number], string>> = {
   radio: 'radio',
   microwave: 'microwaves',
   infrared: 'infrared',
