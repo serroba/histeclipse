@@ -28,6 +28,8 @@ export interface SeaMaps {
   show(on: boolean, at: number): void;
   /** The maps' index once loaded, for the legend. */
   readonly index: () => EnsoSst | null;
+  /** The month's image last asked for, if it has loaded. */
+  readonly current: () => PackedMonth | null;
 }
 
 export function seaMaps(context: SeaMapsContext): SeaMaps {
@@ -96,5 +98,6 @@ export function seaMaps(context: SeaMapsContext): SeaMaps {
       else context.paint(packed);
     },
     index: () => index,
+    current: () => (wanted === null ? null : (kept.get(wanted) ?? null)),
   };
 }

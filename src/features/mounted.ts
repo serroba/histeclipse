@@ -6,6 +6,7 @@
 
 import { changed } from '../state/store';
 import type { LayerLoad } from '../state/activeLayers';
+import type { HereFact } from '../sources/registry';
 import type { Layer, ViewState } from '../state/viewState';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
 import type { DeepMoment, Feature, FeatureContext } from './feature';
@@ -25,6 +26,8 @@ export interface Features {
   said(): (readonly [Layer, string | null])[];
   /** How each feature's layer's load stands, where it is loading or failed (#751). */
   loads(): (readonly [Layer, LayerLoad | null])[];
+  /** What the features have at the place picked, for "Why here?" (#893). */
+  here(state: ViewState): HereFact[];
 }
 
 /** The chips in deep time's bar, of the features that have one, in their order. */
@@ -67,5 +70,6 @@ export function mountFeatures(features: readonly Feature[], context: FeatureCont
     },
     said: () => mounted.map(({ feature, shown }) => [feature.id, shown.said?.() ?? null] as const),
     loads: () => mounted.map(({ feature, shown }) => [feature.id, shown.load?.() ?? null] as const),
+    here: (state) => mounted.flatMap(({ shown }) => shown.here?.(state) ?? []),
   };
 }

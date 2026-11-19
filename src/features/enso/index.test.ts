@@ -14,6 +14,7 @@ import { ensoFeature } from '.';
 vi.mock('../../util/loadImage', () => ({
   loadImage: (url: string) => Promise.resolve({ width: 361, height: 181, url }),
 }));
+vi.mock('./pixels', () => ({ pixelsOf: () => new Uint8ClampedArray(361 * 181 * 4).fill(255) }));
 
 const MAPS = {
   schemaVersion: 1,
@@ -190,6 +191,29 @@ describe('El Niño and La Niña as a feature', () => {
     shown.show?.(inYear(1999), JD);
     await vi.waitFor(() => {
       expect(painted.at(-1)).toMatchObject({ image: { url: '/data/enso-sst/1999-01.png' } });
+    });
+  });
+
+  it('Given a place picked with the layer on, Then what it has there for “Why here?”, once loaded (#893)', async () => {
+    const { context, refresh } = fakeContext();
+    const shown = ensoFeature.mount(context);
+    const place = { ...inYear(1998), location: { latitude: 0, longitude: -120 } };
+    expect(shown.here?.({ ...place, ma: 1 })).toBeNull();
+    expect(shown.here?.(inYear(1998))).toBeNull();
+    expect(shown.here?.(place)).toBeNull();
+    shown.show?.(place, JD);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(3);
+    });
+    shown.show?.(place, JD);
+    await vi.waitFor(() => {
+      expect(shown.here?.(place)).toMatchObject({
+        title: 'El Niño and La Niña',
+        why: 'enso',
+        text: expect.stringMatching(
+          /^The sea’s surface here in January 1998: \+4\.0 °C/,
+        ) as unknown,
+      });
     });
   });
 });

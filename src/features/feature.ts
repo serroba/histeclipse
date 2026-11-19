@@ -19,6 +19,7 @@ import type { DeepChip, DeepChipView } from '../ui/deepChips';
 import type { MarkerCardContent } from '../ui/markerCard';
 import type { Ephemerides, Timeline } from './part';
 import type { Anchor } from '../text/passages';
+import type { HereFact } from '../sources/registry';
 import type { ZoomRail } from '../ui/zoomRail';
 
 /** Said in the Layers panel of a layer whose markers rest while the years play. */
@@ -75,6 +76,8 @@ export interface FeatureInstance {
   unpick?(): void;
   /** What the Layers panel says under its layer, if anything. */
   said?(): string | null;
+  /** What it has at the place picked, for "Why here?" (#893), if anything. */
+  here?(state: ViewState): HereFact | null;
   /**
    * How its layer's load stands (#751), while loading or failed, else null; a failed load offers
    * to try again. It asks `refresh` when this changes, so the chips say it.

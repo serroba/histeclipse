@@ -12,7 +12,10 @@ function fake(id: Feature['id'], watches: (s: ViewState) => readonly unknown[], 
     pick: vi.fn(),
     unpick: vi.fn(),
     said: vi.fn(() => `${id} said`),
-    ...(id === 'fossils' && { load: () => ({ state: 'loading' }) }),
+    ...(id === 'fossils' && {
+      load: () => ({ state: 'loading' }),
+      here: () => ({ title: 'Fossils', text: 'Here.', why: 'fossils' }),
+    }),
   };
   const feature = {
     id,
@@ -72,6 +75,16 @@ describe('the features as mounted together', () => {
       ['fossils', { state: 'loading' }],
       ['asteroids', null],
     ]);
+  });
+});
+
+describe('the facts of the place picked (#893)', () => {
+  it('gathers what each feature has there, none from those that have nothing', () => {
+    const features = mountFeatures(
+      [fake('fossils', () => []).feature, fake('asteroids', () => []).feature],
+      {} as FeatureContext,
+    );
+    expect(features.here(base)).toEqual([{ title: 'Fossils', text: 'Here.', why: 'fossils' }]);
   });
 });
 

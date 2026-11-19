@@ -195,3 +195,78 @@ export function compositeColours(
   }
   return out;
 }
+
+/** Where a place's node is in a packed map's bytes: the 1° grid, 90°N first, 180°W first. */
+export function nodeOffset(latitude: number, longitude: number, columns = 361): number {
+  const row = Math.round(90 - Math.max(-90, Math.min(90, latitude)));
+  const column = Math.round((((longitude + 180) % 360) + 360) % 360);
+  return (row * columns + column) * 4;
+}
+
+/** The season a month (1–12) leans to: October–March December–February, else June–August. */
+export function seasonOf(month: number): Season {
+  return month >= 4 && month <= 9 ? 'jja' : 'djf';
+}
+
+/** One composite read at a place: its value (null without data) and whether it is significant. */
+export interface HereReading {
+  readonly variable: CompositeMap['variable'];
+  readonly phase: CompositeMap['phase'];
+  readonly index: string;
+  readonly value: number | null;
+  readonly significant: boolean;
+}
+
+/** A composite's value and significance at a byte offset of its packed bytes. */
+export function readingAt(
+  pixels: Uint8ClampedArray,
+  offset: number,
+  bound: number,
+): Pick<HereReading, 'value' | 'significant'> {
+  const bytes = new DataView(pixels.buffer, pixels.byteOffset, pixels.byteLength);
+  if (offset + 3 >= pixels.length || bytes.getUint8(offset + 3) === 0) {
+    return { value: null, significant: false };
+  }
+  return {
+    value: compositeOf(bytes.getUint8(offset), bound),
+    significant: bytes.getUint8(offset + 2) > 127,
+  };
+}
+
+const signed = (value: number, digits: number): string =>
+  `${value < 0 ? '−' : '+'}${Math.abs(value).toFixed(digits)}`;
+
+/**
+ * For "Why here?" (#893): what El Niño and La Niña usually bring to a place in a season, by each
+ * index, from the composites: each variable's value, or "no clear signal" where it is not
+ * significant; null where no composite has data there.
+ */
+export function hereText(
+  composites: EnsoComposites,
+  season: Season,
+  readings: readonly HereReading[],
+  indexName: (id: string) => string,
+): string | null {
+  if (readings.every(({ value }) => value === null)) return null;
+  const indices = [...new Set(readings.map(({ index }) => index))];
+  const phases = (['elNino', 'laNina'] as const).map((phase) => {
+    const each = indices.map((index) => {
+      const values = composites.variables.flatMap((variable) => {
+        const found = readings.find(
+          (reading) =>
+            reading.phase === phase && reading.index === index && reading.variable === variable.id,
+        );
+        if (found?.value === undefined || found.value === null) return [];
+        const name = variable.label.toLowerCase();
+        return [
+          found.significant
+            ? `${name} ${signed(found.value, 2)} ${variable.units}`
+            : `${name} no clear signal`,
+        ];
+      });
+      return `by ${indexName(index)}, ${values.join(', ')}`;
+    });
+    return `${PHASE_WORDS[phase]} ${each.join('; ')}`;
+  });
+  return `What El Niño and La Niña have usually brought here in ${SEASON_WORDS[season]}, against the trend: ${phases.join('. ')}.`;
+}

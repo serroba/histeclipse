@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
-import { anomalyOf, loadEnsoSst, mapFile, seaText, sstColours, type EnsoSst } from './ensoSst';
+import {
+  anomalyOf,
+  loadEnsoSst,
+  mapFile,
+  seaHereText,
+  seaText,
+  sstColours,
+  type EnsoSst,
+} from './ensoSst';
 
 const MAPS: EnsoSst = {
   schemaVersion: 1,
@@ -62,5 +70,13 @@ describe('the sea surface temperature maps', () => {
     expect(seaText(MAPS, month(1960, 1))).toBe(
       'The sea’s monthly maps run from September 1981 to October 2026 (NOAA OISST): none for this month.',
     );
+  });
+
+  it('Given a value at a place, Then the sea there in words; nothing on land (#893)', () => {
+    expect(seaHereText(MAPS, -0.62, 'January 2025')).toMatch(
+      /^The sea’s surface here in January 2025: −0\.6 °C against the month’s \S+ mean \(NOAA OISST\)\.$/,
+    );
+    expect(seaHereText(MAPS, 1.25, 'May 1998')).toContain('+1.3 °C');
+    expect(seaHereText(MAPS, null, 'May 1998')).toBeNull();
   });
 });

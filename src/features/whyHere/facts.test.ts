@@ -12,7 +12,7 @@ const serve = (body: unknown) => (): Promise<Response> => Promise.resolve(Respon
 
 const base = defaultViewState(new Date('2026-01-01T00:00:00Z'));
 const athens = { latitude: 37.97, longitude: 23.72 };
-const nothing: HereData = { drawn: null, waysOfLife: null, rocks: null };
+const nothing: HereData = { drawn: null, waysOfLife: null, rocks: null, features: [] };
 const here: ViewState = { ...base, location: athens };
 
 describe('hereView', () => {
@@ -50,11 +50,23 @@ describe('hereView', () => {
       ...here,
       layers: withLayer(withLayer(here.layers, 'ways', true), 'rocks', true),
     };
-    const loaded: HereData = { drawn: null, waysOfLife: ways, rocks: rockUnits(rocks) };
+    const loaded: HereData = {
+      drawn: null,
+      waysOfLife: ways,
+      rocks: rockUnits(rocks),
+      features: [],
+    };
     const both = hereView(on, loaded);
     expect(both?.facts.length).toBeGreaterThan(0);
     expect(hereView(on, nothing)).not.toEqual(both);
     expect(hereVersion(on, loaded)).not.toBe(hereVersion(on, nothing));
+  });
+
+  it('adds what the features have at the place, and is written again when that changes (#893)', () => {
+    const fact = { title: 'El Niño and La Niña', text: 'Wetter.', why: 'enso' } as const;
+    const withFact: HereData = { ...nothing, features: [fact] };
+    expect(hereView(here, withFact)?.facts).toContainEqual(fact);
+    expect(hereVersion(here, withFact)).not.toBe(hereVersion(here, nothing));
   });
 });
 

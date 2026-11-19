@@ -9,11 +9,22 @@
 
 import { ensoText, loadEnso, monthOf, type Enso } from '../../data/enso';
 import { errorMessage } from '../../util/errors';
+import type { ViewState } from '../../state/viewState';
 import type { Feature } from '../feature';
 import { ensoChart } from './chartModel';
 import { ensoMapLayer } from './ensoMapLayer';
 import { ensoPanel } from './ensoPanel';
 import { globeMaps } from './globeMaps';
+
+/** Whether the layer shows: on, on Earth's globe, in the years. */
+function shownOn(state: ViewState): boolean {
+  return (
+    state.layers.has('enso') &&
+    state.mode === 'globe' &&
+    state.ma === null &&
+    state.focus === 'earth'
+  );
+}
 
 export const ensoFeature: Feature = {
   id: 'enso',
@@ -63,11 +74,7 @@ export const ensoFeature: Feature = {
 
     return {
       show(state) {
-        const on =
-          state.layers.has('enso') &&
-          state.mode === 'globe' &&
-          state.ma === null &&
-          state.focus === 'earth';
+        const on = shownOn(state);
         const at = monthOf(state.time.date.year, state.time.date.month);
         const key = `${String(on)}:${String(enso !== null)}:${String(at)}`;
         if (key === shownFor) return;
@@ -92,6 +99,12 @@ export const ensoFeature: Feature = {
         });
       },
       said: () => said,
+      here(state) {
+        if (!shownOn(state) || state.location === null) return null;
+        const at = monthOf(state.time.date.year, state.time.date.month);
+        const text = maps.here(state.location, at);
+        return text === null ? null : { title: 'El Niño and La Niña', text, why: 'enso' };
+      },
     };
   },
 };
