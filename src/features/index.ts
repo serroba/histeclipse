@@ -1,5 +1,6 @@
 /** Every feature on the contract (#380), in the order they are mounted and shown. */
 
+import { amocFeature } from './amoc';
 import { asteroidsFeature } from './asteroids';
 import { fossilsFeature } from './fossils';
 import { genomesFeature } from './genomes';
@@ -25,6 +26,7 @@ export const FEATURES: readonly Feature[] = [
   oceanHeatFeature,
   oceanTempFeature,
   ensoFeature,
+  amocFeature,
   genomesFeature,
   periodsFeature,
   // Before the fossils: its chip comes first in the deep-time bar, as it did.

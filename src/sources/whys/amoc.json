@@ -1,0 +1,16 @@
+{
+  "title": "The Atlantic overturning (AMOC)",
+  "what": "The Atlantic meridional overturning circulation carries warm water north near the surface and cold water south at depth. It has been measured directly only since April 2004, by the RAPID array of moorings across the Atlantic at 26.5°N, shown here as monthly means in sverdrups (a million cubic metres a second). Before that it is inferred, and the inferences disagree on whether it has already weakened: the sea-surface temperature indices of Caesar et al. 2018 and Rahmstorf et al. 2015, and the subsurface proxy of Thornalley et al. 2018, read a decline since the 19th or mid-20th century; Terhaar et al. 2025, inferring it from air-sea heat fluxes in two reanalyses, find none since 1963; Kilbourne et al. 2022 argue the proxies leave the trend uncertain.",
+  "how": "Each source is a row of its own, on its own vertical scale over the years the Years bar shows, with its range where the source gives one (Caesar's and Rahmstorf's 95% or 2-sigma ranges, Thornalley's 2-sigma, Terhaar's standard deviation), and its value for the year shown. The temperature indices are in kelvin or as an index, not in sverdrups, and Terhaar's are anomalies from 1963–2017: none is put on another's scale, so no curve here is an average of them. On the globe, the RAPID line across the Atlantic. RAPID's newest release (v2024-2) revises the same years as the one shown (v2024.1a), which is the file published openly.",
+  "others": "The OSNAP array (Fu et al. 2025) measures the overturning further north, from Labrador through Greenland to Scotland, monthly from 2014 to 2022, and finds it is made mostly east of Greenland, not in the Labrador Sea as models had it; its data are published with all rights reserved, so the site cites it without showing its numbers.",
+  "sources": [
+    "rapidMoc",
+    "caesar2018",
+    "caesar2021",
+    "rahmstorf2015",
+    "thornalley2018",
+    "terhaar2025",
+    "kilbourne2022",
+    "fu2025osnap"
+  ]
+}
