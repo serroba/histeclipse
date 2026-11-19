@@ -59,6 +59,24 @@ describe('what is on screen now', () => {
     expect(onScreen(scene({ layers, eclipse: false }))).not.toContain('eclipses');
   });
 
+  it('lists the layers in their own order, as the chips do, whatever order they were turned on', () => {
+    const layers = new Set<Layer>(['fossils', 'radiocarbon', 'volcanoes', 'empires', 'telescopes']);
+    expect(onScreen(scene({ layers }))).toEqual([
+      'earth',
+      'bodies',
+      'telescopes',
+      'empires-cliopatria',
+      'volcanoes',
+      'radiocarbon',
+      'fossils',
+    ]);
+  });
+
+  it('names every layer drawn: none is left out of the list', () => {
+    const whys = onScreen(scene({ layers: new Set<Layer>(LAYERS), eclipse: true }));
+    for (const layer of LAYERS) expect(whys).toContain(layerWhy(layer, 'cliopatria'));
+  });
+
   it('follows the view: the ice ages’ Earth, the Sun close up, the sky', () => {
     expect(onScreen(scene({ span: 'ice' }))[0]).toBe('ice-surface');
     expect(onScreen(scene({ focus: 'sun' }))[0]).toBe('sun');
