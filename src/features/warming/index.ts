@@ -14,12 +14,13 @@ import {
   type TemperatureRecords,
 } from '../../data/temperatureRecords';
 import { errorMessage } from '../../util/errors';
-import type { Feature } from '../feature';
+import { feature } from '../feature';
 import { recordsChart } from './chartModel';
 import { recordsPanel } from './recordsPanel';
 
-export const warmingFeature: Feature = {
+export const warmingFeature = feature({
   id: 'warming',
+  needs: [],
   watches: (state) => [state.layers, state.mode, state.ma, state.focus],
   mount(context) {
     const panel = context.globe.addLayer(recordsPanel);
@@ -102,4 +103,4 @@ export const warmingFeature: Feature = {
       said: () => said,
     };
   },
-};
+});

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defaultViewState, type ViewState } from '../state/viewState';
-import type { Feature, FeatureContext, FeatureInstance } from './feature';
+import type { Capabilities, Feature, FeatureCore, FeatureInstance } from './feature';
 import { deepChipsOf, mountFeatures } from './mounted';
 
 const base = defaultViewState(new Date(Date.UTC(2024, 3, 8)));
@@ -19,6 +19,7 @@ function fake(id: Feature['id'], watches: (s: ViewState) => readonly unknown[], 
   };
   const feature = {
     id,
+    needs: [],
     watches,
     ...(picks === undefined ? {} : { picks }),
     mount: () => shown as unknown as FeatureInstance,
@@ -29,7 +30,11 @@ function fake(id: Feature['id'], watches: (s: ViewState) => readonly unknown[], 
 describe('the features as mounted together', () => {
   const fossils = fake('fossils', (s) => [s.layers], 'fossil');
   const asteroids = fake('asteroids', (s) => [s.camera], 'asteroid');
-  const features = mountFeatures([fossils.feature, asteroids.feature], {} as FeatureContext);
+  const features = mountFeatures(
+    [fossils.feature, asteroids.feature],
+    {} as FeatureCore,
+    {} as Capabilities,
+  );
 
   it('shows each at the moment, and again only those whose watches changed', () => {
     features.show(base, 1);
@@ -82,7 +87,8 @@ describe('the facts of the place picked (#893)', () => {
   it('gathers what each feature has there, none from those that have nothing', () => {
     const features = mountFeatures(
       [fake('fossils', () => []).feature, fake('asteroids', () => []).feature],
-      {} as FeatureContext,
+      {} as FeatureCore,
+      {} as Capabilities,
     );
     expect(features.here(base)).toEqual([{ title: 'Fossils', text: 'Here.', why: 'fossils' }]);
   });

@@ -21,7 +21,7 @@ import { craftOn, type ViewState } from '../../state/viewState';
 import type { JulianDay } from '../../time/julianDay';
 import { loadTelescopes } from '../../data/telescopes';
 import { errorMessage } from '../../util/errors';
-import type { Feature, FeatureContext } from '../feature';
+import { feature, type FeatureContext } from '../feature';
 import type { Geocentric } from './approximatePaths';
 import { craftInFlight } from './craftLayer';
 import { craftCards } from './craftPictures';
@@ -42,8 +42,12 @@ import { missionRoutes } from './routeLines';
 
 export { mountLaunches, type LaunchesContext, type LaunchesPart } from './launches';
 
+/** What the spacecraft are mounted with: the core, and the capabilities they ask for. */
+type SpacecraftContext = FeatureContext<(typeof NEEDS)[number]>;
+const NEEDS = ['cards', 'anchors', 'ephemerides', 'zoomRail'] as const;
+
 /** Where the Sun, the Moon and the planets are from Earth's centre, for the craft. */
-function geocentric(context: FeatureContext): Geocentric {
+function geocentric(context: SpacecraftContext): Geocentric {
   return (body, jdTT) => {
     const jd = jdTT as JulianDay;
     if (body === 'Sun') return sunPositionJ2000(jd);
@@ -60,7 +64,7 @@ function geocentric(context: FeatureContext): Geocentric {
  * grids the scene draws them from, so the craft at them sit on them and no series is summed a
  * second time for the same moment.
  */
-function drawnNow(context: FeatureContext): Geocentric {
+function drawnNow(context: SpacecraftContext): Geocentric {
   return (body, jdTT) => {
     const jd = jdTT as JulianDay;
     if (body === 'Sun') return sunPositionJ2000(jd);
@@ -143,7 +147,7 @@ function drawnIn(
  * layer off, only these fly. `ids` is undefined with neither layer on, 'loading' while the
  * telescopes' record comes, else their GCAT ids.
  */
-function telescopeCraft(context: FeatureContext): {
+function telescopeCraft(context: SpacecraftContext): {
   ids(state: ViewState): ReadonlySet<string> | 'loading' | undefined;
 } {
   let ids: ReadonlySet<string> | null = null;
@@ -188,7 +192,7 @@ interface Loaded {
  * moment is shown again.
  */
 function loader(
-  context: FeatureContext,
+  context: SpacecraftContext,
   then: Geocentric,
   done: (loaded: Loaded) => void,
 ): () => void {
@@ -255,8 +259,9 @@ function drawFlying(
   return { followed: mission?.id ?? null, on: focused === null ? null : craftOn(state) };
 }
 
-export const spacecraftFeature: Feature = {
+export const spacecraftFeature = feature({
   id: 'spacecraft',
+  needs: NEEDS,
   picks: 'craft',
   // On or off with its layer; a mission followed, or every craft.
   // On a craft, whether it is close enough to be its model, not its point (#796).
@@ -294,7 +299,7 @@ export const spacecraftFeature: Feature = {
       return fromACraft(own.title, own.id === followed, writtenDate(start)).map((step) => ({
         ...step,
         run: () => {
-          context.openAnchor({ body: own.aboutEarth ? 'earth' : 'sun', view: missionView(own) });
+          context.anchors.open({ body: own.aboutEarth ? 'earth' : 'sun', view: missionView(own) });
         },
       }));
     }
@@ -343,4 +348,4 @@ export const spacecraftFeature: Feature = {
       pick: open,
     };
   },
-};
+});

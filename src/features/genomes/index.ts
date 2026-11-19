@@ -12,12 +12,13 @@ import {
   type AncientGenomes,
 } from '../../data/ancientGenomes';
 import { errorMessage } from '../../util/errors';
-import { RESTING, type Feature } from '../feature';
+import { feature, RESTING } from '../feature';
 import { genomeLayer } from './genomeLayer';
 import './genomes.css';
 
-export const genomesFeature: Feature = {
+export const genomesFeature = feature({
   id: 'genomes',
+  needs: ['cards', 'timeline'],
   picks: 'genome',
   // On or off with its layer, in historical time.
   watches: (state) => [state.layers, state.ma],
@@ -67,9 +68,9 @@ export const genomesFeature: Feature = {
       pick(cell) {
         if (genomes === null) return;
         const card = genomeCellCard(genomes, Number(cell), year);
-        if (card !== null) context.showCard(card);
+        if (card !== null) context.cards.show(card);
       },
       said: () => said,
     };
   },
-};
+});

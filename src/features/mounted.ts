@@ -9,7 +9,7 @@ import type { LayerLoad } from '../state/activeLayers';
 import type { HereFact } from '../sources/registry';
 import type { Layer, ViewState } from '../state/viewState';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
-import type { DeepMoment, Feature, FeatureContext } from './feature';
+import type { Capabilities, DeepMoment, Feature, FeatureCore } from './feature';
 
 export interface Features {
   /** The moment shown: `jdTT` in Terrestrial Time, or null before it is known. */
@@ -37,8 +37,15 @@ export function deepChipsOf(features: readonly Feature[]): DeepChip[] {
   );
 }
 
-export function mountFeatures(features: readonly Feature[], context: FeatureContext): Features {
-  const mounted = features.map((feature) => ({ feature, shown: feature.mount(context) }));
+export function mountFeatures(
+  features: readonly Feature[],
+  core: FeatureCore,
+  capabilities: Capabilities,
+): Features {
+  const mounted = features.map((feature) => ({
+    feature,
+    shown: feature.mount(core, capabilities),
+  }));
   return {
     show(state, jdTT) {
       if (jdTT === null) return;

@@ -9,7 +9,7 @@ import { PLANETS, type PlanetEphemeris } from '../../astro/planets';
 import type { JulianDay } from '../../time/julianDay';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import type { MarkerCardContent } from '../../ui/markerCard';
-import type { FeatureContext } from '../feature';
+import type { Capability, FeatureContext } from '../feature';
 import { spacecraftFeature } from '.';
 import { craftModel } from './craftModelLayer';
 import { circling } from './earthOrbit';
@@ -72,9 +72,11 @@ function fakeContext(options: {
       setSpacecraft: (offered: boolean, shown: boolean) => rail.push([offered, shown]),
     },
     notify,
-    showCard: (card: MarkerCardContent) => cards.push(card),
-    cardOpen: () => cards.length > 0,
-    openAnchor,
+    cards: {
+      show: (card: MarkerCardContent) => cards.push(card),
+      open: () => cards.length > 0,
+    },
+    anchors: { open: openAnchor },
     ephemerides: {
       planets: () => (options.planetsLoaded ? planets : null),
       loadPlanets,
@@ -89,7 +91,7 @@ function fakeContext(options: {
           : null,
     },
     refresh,
-  } as unknown as FeatureContext;
+  } as unknown as FeatureContext<Capability>;
   return {
     context,
     drawn,
@@ -148,7 +150,7 @@ describe('the spacecraft as a feature', () => {
   it('Given only the Telescopes layer, Then only the space telescopes fly, about Earth and beyond it (#849)', async () => {
     const { context, drawn, routes, sites, refresh } = fakeContext({ planetsLoaded: true });
     const telescopesOnly: ViewState = { ...off, layers: withLayer(off.layers, 'telescopes', true) };
-    const craft = spacecraftFeature.mount(context);
+    const craft = spacecraftFeature.mount(context, context);
     craft.show?.(telescopesOnly, JD_2010);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalled();
@@ -173,7 +175,7 @@ describe('the spacecraft as a feature', () => {
   it('Given Earth from far off, Then Chandra, far out, is still drawn while Hubble sits on Earth (#849)', async () => {
     const { context, drawn, refresh } = fakeContext({ planetsLoaded: true });
     const far: ViewState = { ...on, camera: { ...on.camera, distance: 120 } };
-    const craft = spacecraftFeature.mount(context);
+    const craft = spacecraftFeature.mount(context, context);
     craft.show?.(far, JD_2010);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalled();
@@ -192,13 +194,13 @@ describe('the spacecraft as a feature', () => {
 
   it('Given neither layer on, Then nothing flies', () => {
     const { context, drawn } = fakeContext({ planetsLoaded: true });
-    spacecraftFeature.mount(context).show?.(off, JD_2010);
+    spacecraftFeature.mount(context, context).show?.(off, JD_2010);
     expect(drawn.at(-1)).toBeNull();
   });
 
   it('Given Earth close up after 1990, Then Hubble is drawn about it, with its card; from further off, or before it flew, it is not (#795)', async () => {
     const { context, drawn, cards, refresh } = fakeContext({ planetsLoaded: true });
-    const craft = spacecraftFeature.mount(context);
+    const craft = spacecraftFeature.mount(context, context);
     craft.show?.(on, JD_2010);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalledTimes(1);
@@ -228,21 +230,21 @@ describe('the spacecraft as a feature', () => {
 
   it('draws nothing while its layer is off, and offers its icon in the globe view', () => {
     const { context, drawn, rail } = fakeContext({ planetsLoaded: true });
-    spacecraftFeature.mount(context).show?.(off, JD_2010);
+    spacecraftFeature.mount(context, context).show?.(off, JD_2010);
     expect(drawn).toEqual([null]);
     expect(rail).toEqual([[true, false]]);
   });
 
   it('in deep time they are neither offered nor drawn', () => {
     const { context, drawn, rail } = fakeContext({ planetsLoaded: true });
-    spacecraftFeature.mount(context).show?.({ ...on, ma: 100 }, JD_2010);
+    spacecraftFeature.mount(context, context).show?.({ ...on, ma: 100 }, JD_2010);
     expect(drawn).toEqual([null]);
     expect(rail).toEqual([[false, true]]);
   });
 
   it('loads the record and paths once, then draws the craft in flight and opens a card on a tap', async () => {
     const { context, drawn, cards, refresh, loadPlanets } = fakeContext({ planetsLoaded: false });
-    const craft = spacecraftFeature.mount(context);
+    const craft = spacecraftFeature.mount(context, context);
     craft.show?.(on, JD_2010);
     craft.show?.(on, JD_2010);
     await vi.waitFor(() => {
@@ -266,7 +268,7 @@ describe('the spacecraft as a feature', () => {
 
   it('says so when the record cannot be loaded, and tries again next time', async () => {
     const { context, notify } = fakeContext({ planetsLoaded: true, failing: true });
-    const craft = spacecraftFeature.mount(context);
+    const craft = spacecraftFeature.mount(context, context);
     craft.show?.(on, JD_2010);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the spacecraft: offline');
@@ -281,7 +283,7 @@ describe('the spacecraft as a feature', () => {
     const { context, drawn, routes, refresh, cards, openAnchor } = fakeContext({
       planetsLoaded: true,
     });
-    const craft = spacecraftFeature.mount(context);
+    const craft = spacecraftFeature.mount(context, context);
     const apollo: ViewState = { ...on, mission: 'd00273' };
     // 20 July 1969, 12:00 UT: Columbia in orbit about the Moon, Eagle about to land.
     const landingDay = 2440423;
@@ -317,7 +319,7 @@ describe('the spacecraft as a feature', () => {
 
   it('Given the Moon in view after Apollo 11 landed, Then Eagle is marked on it, and no craft is drawn at its centre (#716)', async () => {
     const { context, drawn, sites, refresh } = fakeContext({ planetsLoaded: true });
-    const craft = spacecraftFeature.mount(context);
+    const craft = spacecraftFeature.mount(context, context);
     const onMoon: ViewState = { ...on, focus: 'moon' };
     const afterLanding = 2440424; // 21 July 1969, 12:00 UT
     craft.show?.(onMoon, afterLanding);
@@ -340,7 +342,7 @@ describe('the spacecraft as a feature', () => {
 
   it('Given Webb’s card, Then its pictures are asked for once and shown in it; other craft have none (#798)', async () => {
     const { context, cards, refresh } = fakeContext({ planetsLoaded: true });
-    const craft = spacecraftFeature.mount(context);
+    const craft = spacecraftFeature.mount(context, context);
     craft.show?.(on, JD_2010);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalled();
@@ -373,7 +375,7 @@ describe('the spacecraft as a feature', () => {
       planetsLoaded: true,
       noPictures: true,
     });
-    const craft = spacecraftFeature.mount(context);
+    const craft = spacecraftFeature.mount(context, context);
     craft.show?.(on, JD_2010);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalled();
@@ -398,7 +400,7 @@ describe('the spacecraft as a feature', () => {
       ...context,
       change: (update: (state: ViewState) => ViewState) => changes.push(update),
     };
-    const craft = spacecraftFeature.mount(going);
+    const craft = spacecraftFeature.mount(going, going);
     // A year after it reached L2.
     const jd2023 = 2459945.5;
     craft.show?.(on, jd2023);

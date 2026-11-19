@@ -6,7 +6,7 @@ import pictures from '../../../public/data/humans/pictures.json';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import type { DeepChoice, DeepChipView, DeepNoteBlock } from '../../ui/deepChips';
 import type { MarkerCardContent } from '../../ui/markerCard';
-import type { FeatureContext } from '../feature';
+import type { Capability, FeatureContext } from '../feature';
 import { humansFeature } from '.';
 
 // The arrival grids are images read through a canvas: a small grid stands in for them here.
@@ -56,16 +56,18 @@ function fakeContext(
         : Promise.resolve(new Response(JSON.stringify(files[url.split('/').at(-1) ?? '']))),
     globe: {
       addLayer: () => ({ update: (input: unknown) => drawn.push(input) }),
-      setSettled: (input: unknown) => settled.push(input),
     },
     notify,
-    showCard: (card: MarkerCardContent) => cards.push(card),
-    cardOpen: () => options.cardOpen ?? true,
-    openTree,
+    cards: {
+      show: (card: MarkerCardContent) => cards.push(card),
+      open: () => options.cardOpen ?? true,
+    },
+    tree: { openTree },
+    settledLand: { setSettled: (input: unknown) => settled.push(input) },
     change,
-    openAnchor,
+    anchors: { open: openAnchor },
     refresh,
-  } as unknown as FeatureContext;
+  } as unknown as FeatureContext<Capability>;
   return { context, drawn, settled, cards, refresh, notify, openTree, change, openAnchor };
 }
 
@@ -89,8 +91,8 @@ function choice(chip: DeepChipView | null | undefined): DeepChoice | undefined {
   return undefined;
 }
 
-async function loaded(context: FeatureContext, refresh: ReturnType<typeof vi.fn>) {
-  const shown = humansFeature.mount(context);
+async function loaded(context: FeatureContext<Capability>, refresh: ReturnType<typeof vi.fn>) {
+  const shown = humansFeature.mount(context, context);
   shown.deep?.(on, ICE);
   await vi.waitFor(() => {
     expect(refresh).toHaveBeenCalled();
@@ -105,7 +107,7 @@ describe('the humans as a feature', () => {
 
   it('offers its chip on the ice-age span only, off until turned on', () => {
     const { context, drawn, settled } = fakeContext();
-    const shown = humansFeature.mount(context);
+    const shown = humansFeature.mount(context, context);
     const off = { ...on, layers: base.layers };
     expect(shown.deep?.(off, ICE)).toEqual({ offered: true, on: false, note: null });
     expect(shown.deep?.(off, { ma: 150, scale: 'all' })).toEqual({
@@ -120,7 +122,7 @@ describe('the humans as a feature', () => {
 
   it('says it is loading, then marks the finds and gives the competing claims', async () => {
     const { context, drawn, refresh } = fakeContext();
-    const shown = humansFeature.mount(context);
+    const shown = humansFeature.mount(context, context);
     expect(shown.deep?.(on, ICE)?.note).toEqual([{ paragraph: ['Humans: loading…'] }]);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalledTimes(1);
@@ -227,7 +229,7 @@ describe('the humans as a feature', () => {
 
   it('loads once though asked again while loading, and opens no card before', async () => {
     const { context, cards, refresh } = fakeContext();
-    const shown = humansFeature.mount(context);
+    const shown = humansFeature.mount(context, context);
     shown.deep?.({ ...on, dispersal: 'a' }, ICE);
     shown.deep?.({ ...on, dispersal: 'a' }, ICE);
     shown.pick?.(claims.claims[0]?.id ?? '');
@@ -284,7 +286,7 @@ describe('the humans as a feature', () => {
 
   it('says so when the finds cannot be loaded', async () => {
     const { context, notify } = fakeContext({ failing: true });
-    humansFeature.mount(context).deep?.(on, ICE);
+    humansFeature.mount(context, context).deep?.(on, ICE);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the human finds: offline');
     });

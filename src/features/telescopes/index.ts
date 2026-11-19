@@ -8,7 +8,7 @@
 import { loadTelescopes, type Telescope, type Telescopes } from '../../data/telescopes';
 import { errorMessage } from '../../util/errors';
 import { siteOn } from '../../state/viewState';
-import type { Feature, FeatureContext } from '../feature';
+import { feature, type FeatureContext } from '../feature';
 import { groundModel } from './groundModelLayer';
 import { goToSite, heldSite } from './groundSites';
 import { telescopeLayer } from './telescopeLayer';
@@ -19,12 +19,12 @@ export { mountTelescopeList } from './listPart';
 
 /** A telescope's card, with the others on its site a step away. */
 function showTelescope(
-  context: Pick<FeatureContext, 'showCard' | 'change'>,
+  context: Pick<FeatureContext<'cards'>, 'cards' | 'change'>,
   telescope: Telescope,
   siteMates: readonly Telescope[],
 ): void {
   const others = siteMates.filter((other) => other.id !== telescope.id);
-  context.showCard({
+  context.cards.show({
     ...telescopeCard(telescope),
     ...goToSite(telescope, context),
     related: others.map((other) => ({
@@ -37,8 +37,9 @@ function showTelescope(
   });
 }
 
-export const telescopesFeature: Feature = {
+export const telescopesFeature = feature({
   id: 'telescopes',
+  needs: ['cards'],
   picks: 'telescope',
   // On or off with its layer, and only on the globe, in historical time.
   watches: (state) => [state.layers, state.mode, state.ma, state.on],
@@ -96,4 +97,4 @@ export const telescopesFeature: Feature = {
       said: () => said,
     };
   },
-};
+});
