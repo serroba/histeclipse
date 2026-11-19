@@ -1,0 +1,6 @@
+{
+  "title": "Air",
+  "what": "Carbon dioxide and methane from the ice cores, and carbon dioxide and oxygen from proxies over 540 million years.",
+  "sources": ["bereiter", "loulergue", "foster", "mills", "co2pip"],
+  "others": "Proxy estimates scatter widely: each study’s points are shown, by method."
+}

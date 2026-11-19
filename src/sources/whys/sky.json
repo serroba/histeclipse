@@ -1,0 +1,6 @@
+{
+  "title": "The night sky",
+  "what": "The stars as seen from the place picked, at the moment shown.",
+  "sources": ["hipparcos", "vondrak", "meeus", "elpmpp02", "vsop87"],
+  "how": "Each star carried back along its own motion through space, and the sky turned by precession to the date shown."
+}

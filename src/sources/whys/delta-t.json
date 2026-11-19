@@ -1,0 +1,6 @@
+{
+  "title": "ΔT",
+  "what": "How far Earth’s turning had fallen behind a uniform clock by the date shown, and how sure that is. It moves where on Earth an eclipse was seen.",
+  "sources": ["deltaTSplines", "deltaTLongTerm", "morrison2004"],
+  "how": "Splines fitted to ancient and modern observations from 720 BCE to 2015 CE, and a long-term parabola outside them (as Skyfield has them). The ± is an approximate standard error, 0.8 t² seconds for t centuries from 1820, at least a second."
+}

@@ -1,0 +1,6 @@
+{
+  "title": "Plates",
+  "what": "A second reconstruction’s continents, outlined over the first.",
+  "sources": ["cao2024"],
+  "how": "Continent outlines reconstructed with pyGPlates in the model’s paleomagnetic frame, drawn as 0.25° masks."
+}

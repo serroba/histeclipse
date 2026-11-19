@@ -1,0 +1,16 @@
+{
+  "title": "The ice ages’ Earth",
+  "what": "Today’s land and sea floor, with the coast at the sea level of the moment and the ice sheets of the time.",
+  "sources": [
+    "etopo1",
+    "paleomist",
+    "batchelor",
+    "bintanja",
+    "spratt",
+    "nsidcSeaIce",
+    "pmip4Lgm",
+    "naturalEarth"
+  ],
+  "how": "Sea level from the reconstruction picked, laid on today’s depths (not on the land as it was); ice from PaleoMIST every 2,500 years, with Batchelor et al.’s outlines at their time slices. PaleoMIST's grounded ice stops a little short of the coasts and leaves out the floating ice shelves, so today's ice to the coast (Natural Earth's glaciated areas and Antarctic ice shelves) is drawn under it at every moment: between today and 80,000 years ago Antarctica and Greenland always had at least today's ice.",
+  "others": "Sea level by Bintanja & van de Wal or by Spratt & Lisiecki: pick whose to follow."
+}

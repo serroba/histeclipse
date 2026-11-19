@@ -1,0 +1,7 @@
+{
+  "title": "States and empires (OpenHistoricalMap)",
+  "what": "The borders of states and empires in the year shown, and their names.",
+  "sources": ["ohm"],
+  "how": "Borders simplified and split by century for this site.",
+  "others": "Cliopatria draws some borders differently: pick it, or both to compare, in Layers."
+}

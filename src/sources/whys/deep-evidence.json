@@ -1,0 +1,39 @@
+{
+  "title": "How do we know what Earth looked like?",
+  "what": "The globe is a reconstruction: a model of where land and sea, mountains and shelves were, built from evidence that survives in rocks. Some of it is measured, some inferred, some the map-maker’s judgement. This is what it rests on.",
+  "sources": ["paleodem", "torsvik2012", "torsvikCocks", "cao2024", "merdith2021", "muller2019"],
+  "evidence": [
+    {
+      "name": "Rock magnetism",
+      "says": "Iron minerals in lava and sediment lock in the direction of Earth’s field as the rock forms. Their tilt gives the latitude where the rock formed, and they point to the pole of the time. They say nothing about longitude.",
+      "source": "torsvik2012"
+    },
+    {
+      "name": "Matching rocks and fossils",
+      "says": "Mountain belts, rock sequences and the same land plants and animals (Glossopteris, Mesosaurus, Lystrosaurus) on continents now oceans apart show which ones were once joined.",
+      "source": "torsvikCocks"
+    },
+    {
+      "name": "Rocks that record climate",
+      "says": "Glacial deposits, coal, salt and reefs form in particular climates, so they hint at latitude independently of magnetism. Where the two agree, the map is surer: the ice of the late Palaeozoic, for one, lay over the south pole the magnetism finds.",
+      "source": "boucot2013"
+    },
+    {
+      "name": "The ocean floor",
+      "says": "Magnetic stripes and the ages of the sea floor record how oceans opened. But sea floor sinks back into the mantle: none older than about 180 million years survives in place, so older oceans are inferred.",
+      "source": "seton2020"
+    },
+    {
+      "name": "Longitude, by assumption",
+      "says": "Since magnetism cannot give longitude, models fix it another way: hotspot tracks, or the deep mantle’s large hot regions held still beneath the plates, or plates moving as little as they can. Different choices, different maps.",
+      "source": "steinberger2008"
+    }
+  ],
+  "certainty": [
+    "Surer: the latitudes of the larger continents, and which continents were joined.",
+    "Less sure: longitudes; the outlines of small blocks and of oceans now lost; anything before about 180 million years that would rest on sea floor.",
+    "Illustrative: mountain heights and exact coastlines, drawn by the map-maker from rock types and sea-level estimates."
+  ],
+  "others": "Other reconstructions place the continents differently, the more so further back: Cao et al. 2024 (turn on Plates to outline it over this map), Merdith et al. 2021, Müller et al. 2019 (from the Triassic).",
+  "reading": ["torsvikCocks", "torsvik2012", "gplatesPortal", "montanez2013"]
+}

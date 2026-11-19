@@ -1,0 +1,6 @@
+{
+  "title": "Named periods",
+  "what": "The archaeological and historical periods named for the place picked.",
+  "sources": ["periodo", "naturalEarth"],
+  "how": "Periods matched to the country at the place picked by their Wikidata identifiers; each listed with the source that defines it."
+}

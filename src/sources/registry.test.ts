@@ -16,7 +16,7 @@ const SourceSchema = v.strictObject({
   nonCommercial: v.optional(v.literal(true)),
 });
 
-/** A why's shape, as `Why` declares it: whys.json is content, checked here (#383). */
+/** A why's shape, as `Why` declares it: each file in whys/ is content, checked here (#383). */
 const WhySchema = v.strictObject({
   title: v.pipe(v.string(), v.minLength(1)),
   what: v.pipe(v.string(), v.minLength(1)),

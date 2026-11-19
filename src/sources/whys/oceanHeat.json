@@ -1,0 +1,5 @@
+{
+  "title": "Where the ocean gained heat",
+  "what": "The heat the water column under each square metre of sea gained per second, in W/m², as a trend over 1960–2025 (the top 700 m, or the top 2,000 m) or over the Argo years 2005–2025 (the top 2,000 m), from IAP v4.2's gridded ocean heat content. It is heat content, not temperature, so it has its own scale: blue where heat was lost, orange where it was gained, faded where the trend is not significant at the 10% level. Before the Argo floats (from about 2005) the deep layer and the Southern Ocean were sparsely measured and are filled from model covariances. The 0–2000 m maps include the 0–700 m layer.",
+  "sources": ["iap2024"]
+}

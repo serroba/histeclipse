@@ -3,12 +3,12 @@
  * what licence), and for each thing the reader can see, a "why": what it shows, which sources it
  * rests on, and how this site used them. The "Why this?" marks and the Sources panel read these.
  *
- * The data is in sources.json and whys.json; the checks that every layer has its why, and that
+ * The data is in sources.json and, a why a file, in `whys/` (#906); the checks that every layer has its why, and that
  * every entry has the right shape, are in registry.test.ts.
  */
 
 import sourcesJson from './sources.json' with { type: 'json' };
-import whysJson from './whys.json' with { type: 'json' };
+import { WHYS_CONTENT } from './whys';
 
 /** What kind of thing a source is, each shown with its own icon. */
 export type SourceKind = 'paper' | 'dataset' | 'model' | 'imagery' | 'catalogue' | 'reference';
@@ -53,9 +53,9 @@ export interface Why {
   readonly reading?: readonly SourceId[];
 }
 
-// The whys are content, kept in whys.json (#383); registry.test.ts checks each one's shape and
+// The whys are content, a file each in whys/ (#906); registry.test.ts checks each one's shape and
 // that every source it names exists.
-export const WHYS = whysJson as Readonly<Record<keyof typeof whysJson, Why>>;
+export const WHYS = WHYS_CONTENT as Readonly<Record<keyof typeof WHYS_CONTENT, Why>>;
 
 export type WhyId = keyof typeof WHYS;
 
