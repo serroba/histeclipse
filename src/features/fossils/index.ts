@@ -83,6 +83,13 @@ export const fossilsFeature = feature({
     }
 
     return {
+      // The dinosaurs' lines through time, from the layer's row in the Layers panel.
+      action: () => ({
+        label: 'Their tree through time',
+        run: () => {
+          context.change((state) => ({ ...state, lineages: { group: 'dinosaurs', pick: null } }));
+        },
+      }),
       deep(state, moment) {
         temperatureOn = state.layers.has('temperature');
         // Fossils are counted by 5 million years: a matter of the 540 Myr span.

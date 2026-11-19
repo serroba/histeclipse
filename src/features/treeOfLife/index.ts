@@ -14,17 +14,9 @@ import type { MountedPart, PartContext } from '../part';
 /** Finds a node of the tree, or none for the whole tree. */
 type TreePick = (tree: TreeOfLife) => number | undefined;
 
-/** A button's label and what it does, as cards and the Layers panel take them. */
-interface Action {
-  readonly label: string;
-  readonly run: () => void;
-}
-
 export interface TreeOfLifePart extends MountedPart {
   /** Open the tree at the node `pick` finds in it, or the whole tree when it finds none. */
   readonly openTreeAt: (pick: TreePick) => void;
-  /** An action that opens the tree at the node `pick` finds. */
-  readonly action: (label: string, pick: TreePick) => Action;
   /** Open a group's lines with a genus picked out by name, or the group if it has none such. */
   readonly openLineagesAt: (group: LineageGroup, genus: string) => void;
 }
@@ -91,12 +83,6 @@ export function mountTreeOfLife(context: PartContext): TreeOfLifePart {
       lineagesSheet.show(state.lineages);
     },
     openTreeAt,
-    action: (label, pick) => ({
-      label,
-      run: () => {
-        openTreeAt(pick);
-      },
-    }),
     openLineagesAt: (group, genus) => {
       loadGroupLineages(group).then(
         (lineages) => {

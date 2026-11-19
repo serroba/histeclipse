@@ -103,7 +103,7 @@ describe('the tree of life part', () => {
     part.openTreeAt(() => 1);
     await settled();
     expect(store.get().tree).toEqual({ ott: 202 });
-    part.action('Whole tree', () => undefined).run();
+    part.openTreeAt(() => undefined);
     await settled();
     expect(store.get().tree).toBe('all');
     // Loaded once, however often it is asked for.

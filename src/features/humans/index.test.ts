@@ -174,6 +174,14 @@ describe('the humans as a feature', () => {
     expect(cards).toHaveLength(2);
   });
 
+  it('offers our species on the tree of life from its row in the Layers panel', () => {
+    const { context, openTree } = fakeContext();
+    const action = humansFeature.mount(context, context).action?.();
+    expect(action?.label).toBe('Our species on the tree of life');
+    action?.run();
+    expect(openTree).toHaveBeenCalledTimes(1);
+  });
+
   it('leads from a find to the dispersal models and to ancient DNA where it was found (#731)', async () => {
     const { context, cards, refresh, change, openAnchor } = fakeContext();
     const shown = await loaded(context, refresh);

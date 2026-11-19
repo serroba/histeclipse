@@ -13,6 +13,7 @@ function fake(id: Feature['id'], watches: (s: ViewState) => readonly unknown[], 
     unpick: vi.fn(),
     said: vi.fn(() => `${id} said`),
     ...(id === 'fossils' && {
+      action: () => ({ label: 'Go', run: () => undefined }),
       load: () => ({ state: 'loading' }),
       here: () => ({ title: 'Fossils', text: 'Here.', why: 'fossils' }),
     }),
@@ -57,6 +58,12 @@ describe('the features as mounted together', () => {
     expect([...chips.keys()]).toEqual(['fossils']);
     features.deepOff(base);
     expect(asteroids.shown.deep).toHaveBeenLastCalledWith(base, null);
+  });
+
+  it('gathers the step each offers from its row in the Layers panel, or none', () => {
+    const actions = new Map(features.actions());
+    expect(actions.get('fossils')?.label).toBe('Go');
+    expect(actions.get('asteroids')).toBeNull();
   });
 
   it('picks by kind after unpicking all, and says when a key is none of theirs', () => {
