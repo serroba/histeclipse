@@ -22,6 +22,8 @@ import type { MarkerCardContent } from '../ui/markerCard';
 import type { Ephemerides, Timeline } from './part';
 import type { Anchor } from '../text/passages';
 import type { HereFact } from '../sources/registry';
+import type { DatingCard } from '../ui/datingCard';
+import type { Radiocarbon } from '../data/radiocarbon';
 import type { WaysLegend } from '../ui/waysLegend';
 import type { ZoomRail } from '../ui/zoomRail';
 
@@ -73,6 +75,10 @@ export interface Capabilities {
   readonly evenLight: Pick<Globe, 'setEvenLight'>;
   /** Deep time: go to a moment there, on the span that shows it. */
   readonly deepTime: { enter(ma: number, scale: DeepScale): void };
+  /** Radiocarbon's calibration curves, loaded once. */
+  readonly radiocarbon: { curves(): Promise<Radiocarbon> };
+  /** The card that carries a radiocarbon date across a curve. */
+  readonly datingCard: Pick<DatingCard, 'open'>;
   /** The key to the ways of life's shading, under the years. */
   readonly waysKey: Pick<WaysLegend, 'render'>;
 }

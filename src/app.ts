@@ -58,7 +58,6 @@ import { mountTelescopeList } from './features/telescopes';
 import { mountCarbonMade } from './features/carbonMade';
 import { mountIceAges } from './features/iceAges';
 import { mountDeepSurfaces, PLATES_CHIP } from './features/deepSurfaces';
-import { mountDates } from './features/dates';
 import { mountEmpires } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
 import { mountYears } from './features/years';
@@ -196,7 +195,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       deepTime.setScale(scale);
     },
     said: () => [
-      ['dates', dates.said()],
       ['impacts', impacts.said()],
       ...features.said(),
       ['carbonMade', carbonMade.said()],
@@ -205,7 +203,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     loads: () => features.loads(),
     actions: () => [
       ['impacts', impacts.action()],
-      ['dates', dates.action()],
       ['carbonMade', carbonMade.action()],
       // The features on the contract offer their own (#909).
       ...features.actions(),
@@ -392,7 +389,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe,
     datingCard,
     travelChanged: (now) => {
-      dates.show(now);
       impacts.show(now);
       features.show(now, moment.terrestrial());
       showLayers(now);
@@ -495,17 +491,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   parsed.warnings.forEach(notify);
 
   // Drawn on the globe as layers of their own (#379).
-  // History's dated squares (#446); the rocks and the ways of life are features (#909).
-  const historyLayer = {
-    ...partContext,
-    globe,
-    refresh: redraws.ask('layers'),
-  };
-  const dates = mountDates({
-    ...historyLayer,
-    radiocarbonCurves: () => years.curves(),
-    datingCard,
-  });
   // Deep time's climate and continents (#444): the temperature, the plates and how far they
   // moved, and the air.
   const surfaces = mountDeepSurfaces({
@@ -558,6 +543,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     settledLand: globe,
     evenLight: globe,
     deepTime: { enter: deepTime.enterDeepTime },
+    radiocarbon: { curves: () => years.curves() },
+    datingCard,
     waysKey: waysLegend,
   };
   const features = mountFeatures(FEATURES, featureCore, capabilities);
@@ -651,7 +638,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
     },
     { draw: bodies.render },
-    { when: on(EARTH_LAYERS), draw: dates.show },
     { when: on(EARTH_LAYERS), draw: impacts.show },
     { when: on(EARTH_LAYERS), draw: carbonMade.show },
     { when: on(LAYERS_PANEL), draw: showLayers },
