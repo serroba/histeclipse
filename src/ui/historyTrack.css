@@ -150,3 +150,13 @@
     display: inline;
   }
 }
+
+/* Nor, within one age, its name over the thumb while playing. */
+.history-lane .period-axis.is-one-chapter .period-chapter {
+  display: none;
+}
+
+/* Its marks keep their values while playing: there is no age's name to make room for. */
+.period-axis.is-one-chapter.is-playing .period-round-label {
+  visibility: visible;
+}
