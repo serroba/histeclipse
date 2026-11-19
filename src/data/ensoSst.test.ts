@@ -37,12 +37,18 @@ describe('the sea surface temperature maps', () => {
     expect(read.first).toBe('1981-09');
   });
 
-  it('Given a month, Then its file, and none outside the maps', () => {
+  it('Given a month, Then its file; the latest for a year after the last; none further out', () => {
     expect(mapFile(MAPS, month(1997, 12))).toBe('1997-12.png');
     expect(mapFile(MAPS, month(1981, 9))).toBe('1981-09.png');
     expect(mapFile(MAPS, month(2026, 10))).toBe('2026-10.png');
     expect(mapFile(MAPS, month(1981, 8))).toBeNull();
-    expect(mapFile(MAPS, month(2026, 11))).toBeNull();
+    expect(mapFile(MAPS, month(2026, 11))).toBe('2026-10.png');
+    expect(mapFile(MAPS, month(2027, 10))).toBe('2026-10.png');
+    expect(mapFile(MAPS, month(2027, 11))).toBeNull();
+    expect(seaText(MAPS, month(2026, 11))).toContain(
+      'Showing October 2026, the latest month there is.',
+    );
+    expect(seaText(MAPS, month(2026, 10))).not.toContain('latest');
   });
 
   it('Given bytes, Then the anomaly from −bound to +bound', () => {
