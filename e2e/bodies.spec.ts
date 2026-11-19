@@ -71,7 +71,7 @@ test('clicking the Moon flies to it, and the camera then orbits and zooms around
   // Lands four Moon radii out, and the link says so.
   await expect(page).toHaveURL(/cam=-?\d+\.\d{4},-?\d+\.\d{4},4\.00&focus=moon/);
   // Zooming now moves towards the Moon.
-  const canvas = page.getByTestId('globe').locator('canvas');
+  const canvas = page.getByTestId('globe').locator(':scope > canvas');
   await canvas.hover();
   await page.mouse.wheel(0, -400);
   await expect(page).not.toHaveURL(/,4\.00&focus=moon/);
