@@ -122,7 +122,6 @@ export const UNTESTED = [
   'src/ui/pageLayout.ts',
   'src/ui/periodBands.ts',
   'src/ui/polarityStrip.ts',
-  'src/ui/railView.ts',
   'src/ui/seaLevelChart.ts',
   'src/ui/temperatureLegend.ts',
   'src/ui/timeline.ts',

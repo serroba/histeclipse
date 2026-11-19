@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import file from '../../../public/data/enso-composites/index.json';
-import type { PackedMonth } from './ensoMapLayer';
+import type { PackedMonth } from '../../globe/packedMaps';
 import { compositeMaps } from './compositeMaps';
 
 const loaded = vi.hoisted(() => ({ fail: false, urls: [] as string[] }));
