@@ -1,0 +1,6 @@
+{
+  "title": "Eclipses",
+  "what": "The year’s eclipses, their times and magnitudes, and the Moon’s shadow on Earth.",
+  "sources": ["de441", "skyfield", "deltaTSplines", "deltaTLongTerm"],
+  "how": "Computed for this site from JPL DE441 with Skyfield. Where on Earth an eclipse was seen depends on ΔT, which is uncertain by minutes to hours in antiquity: the paths shift east or west with it."
+}

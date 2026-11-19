@@ -1,0 +1,29 @@
+{
+  "title": "Poles, magnetic field, tilt, day and Sun",
+  "what": "What Earth was like then, beyond its map: where its poles were, its magnetic field, its tilt, the length of its day and the Sun’s brightness.",
+  "sources": [
+    "paleodem",
+    "tarduno2010",
+    "tarduno2015",
+    "gts2020Polarity",
+    "pmagpy",
+    "steinberger2008",
+    "torsvik2012",
+    "sagerKoppers2000",
+    "mitchell2021",
+    "kent2015",
+    "muttoniKent2019",
+    "kirschvink1997",
+    "torsvik1998",
+    "laskar2004",
+    "laskar1993",
+    "iers",
+    "wells1963",
+    "williams2000",
+    "deWinter2020",
+    "gough1981",
+    "saganMullen1972"
+  ],
+  "how": "Each fact names its source in its text. The day’s length is read between measurements (corals, a rudist shell, tidal rhythmites), and its ± is the source’s where it gives one. The magnetic field’s reversals of the last 83 million years are GTS 2020’s, as PmagPy carries them; before that, the superchrons, and between them a field reversing too often to draw here. The globe’s poles are the spin axis; magnetic north is marked at the pole a compass pointed to, averaged over thousands of years.",
+  "others": "Where sources disagree (a much larger Precambrian tilt; the faint young Sun paradox) the text says so."
+}

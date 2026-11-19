@@ -1,0 +1,20 @@
+{
+  "title": "Carbon-14 made in the sky",
+  "what": "Where cosmic rays make carbon-14 in the air, and how it reaches living things: the clock a radiocarbon date reads.",
+  "sources": [
+    "kovaltsov2012",
+    "usoskin2005",
+    "korte2011",
+    "ggf100k",
+    "korte2019",
+    "marine20",
+    "intcal20",
+    "godwin1962",
+    "bahcall2005",
+    "mitalasSills1992",
+    "stix2003",
+    "prsa2016",
+    "barber2003"
+  ],
+  "how": "Cosmic rays strike the air high up; neutrons from the shower turn nitrogen-14 into carbon-14. Earth’s magnetic field turns slower rays away, least near the poles, so several times more is made over the poles than over the equator. The rates are Kovaltsov et al.’s model, computed here from their yield function: by their own reckoning about 1.6 atoms per cm² each second on average over 1951–2010. A weaker field or a quieter Sun lets more rays in: with no field, about twice as much. By default the field is that of the moment shown, from the GGF100k model, back 55,000 years: it fell to about a third of today’s in the Laschamp excursion, 41,000 years ago, and models fitted to the excursion alone put it far lower (Korte et al. 2019). The glow is drawn about the spin axis, which the field lines up with when averaged over thousands of years; today it is tilted about 10°. Mixed through the air as carbon dioxide within a few years, carbon-14 enters plants, then animals; the ocean takes it in slowly, so a sea shell reads about 400–600 radiocarbon years older than a plant of the same year (Marine20 against IntCal20, the last 11,000 years). At death the intake stops and half is gone every 5,730 years. After about 50,000 years too little is left to measure. Started from the Sun, the story begins in its core, at about 15 million degrees (Bahcall et al. 2005), where fusion gives off gamma rays; that light takes about 170,000 years to random-walk to the surface (Mitalas & Sills 1992; quick estimates give ten times less, and the energy itself, rather than one photon, takes tens of millions of years, Stix 2003); leaves the surface at 5,772 K (Prša et al. 2016) and reaches Earth in 8 minutes 19 seconds. Chlorophyll absorbs its red light, near 680 nm (Barber 2003), and reflects the green."
+}

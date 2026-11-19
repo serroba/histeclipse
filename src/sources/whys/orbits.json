@@ -1,0 +1,6 @@
+{
+  "title": "Planets’ orbits",
+  "what": "The paths of Earth and the five bright planets around the Sun.",
+  "sources": ["vsop87"],
+  "how": "Each orbit sampled at 128 points around the date shown."
+}

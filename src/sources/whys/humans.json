@@ -1,0 +1,6 @@
+{
+  "title": "Humans",
+  "what": "Dated finds of our species and its relatives, and where a dispersal model has people settled.",
+  "sources": ["humanFinds", "timmermann"],
+  "how": "Each find is shown with the paper that dates it, and rival dates side by side. The dispersal model is one model’s view, not evidence."
+}

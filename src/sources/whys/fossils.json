@@ -1,0 +1,6 @@
+{
+  "title": "Fossils",
+  "what": "Fossils of four groups of animals, counted by 5 million years and 5°, where they lay then.",
+  "sources": ["pbdb", "paleodem"],
+  "how": "Places at their age on the PALEOMAP reconstruction."
+}

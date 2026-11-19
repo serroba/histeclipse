@@ -1,0 +1,6 @@
+{
+  "title": "Search",
+  "what": "The site’s texts found by their words, or by their meaning, each opening the view of the place and time it is about.",
+  "sources": ["bgeSmall", "onnxRuntime"],
+  "how": "Every text the site shows is cut into passages, each tied to the bodies, places and years it is about. Words are matched as typed, ranked by BM25. Search by meaning, once turned on, runs a small English model, bge-small-en-v1.5, in your browser: it turns the question into 384 numbers that stand for its meaning, and the passages, turned into numbers the same way beforehand, are ranked by how alike they are; the two lists are then merged. The model and its runtime are downloaded from this site once, about 48 MB; nothing typed leaves the browser. A model of meaning can be wrong: it ranks by likeness, not by truth, so each passage found says where it comes from."
+}

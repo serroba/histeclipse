@@ -1,0 +1,15 @@
+{
+  "title": "Sea level",
+  "what": "Sea level through time, as each reconstruction has it, on a chart.",
+  "sources": ["bintanja", "spratt", "miller", "vanDerMeer"],
+  "others": "Each reconstruction is drawn side by side; they differ, the more so further back.",
+  "reading": [
+    "dutton2015",
+    "dumitru2019",
+    "ar6SeaLevel",
+    "noaaLsa",
+    "frederikse2020",
+    "kopp2016",
+    "garner2021"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "title": "The Earth then",
+  "what": "Land, sea and mountains as one reconstruction draws them for the moment shown.",
+  "sources": ["paleodem", "ics"],
+  "how": "Elevation grids smoothed to 0.2°, seams repaired, and blended between the maps either side of the moment. The maps put the poles of their time at top and bottom, so “North pole then” and “South pole then” are the map’s own. Period names and dates from the ICS chart.",
+  "others": "Other reconstructions place the continents differently: turn on Plates to outline Cao et al. 2024’s over this one."
+}
