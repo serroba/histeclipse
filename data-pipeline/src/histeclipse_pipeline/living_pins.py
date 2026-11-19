@@ -32,6 +32,7 @@ from histeclipse_pipeline import (
     holocene_temperature,
     measured_warming,
     ocean_heat,
+    ocean_temperature,
     ozone,
     precipitation,
     sealevel_modern,
@@ -156,6 +157,12 @@ LIVING_PINS: tuple[LivingPin, ...] = (
     LivingPin("CPC Oceanic Niño Index", "enso", enso.ONI_URL, enso.ONI_SHA256),
     LivingPin(
         "NOAA OISST v2.1, monthly means", "enso-sst", enso_sst.FILE_URL, enso_sst.FILE_SHA256
+    ),
+    LivingPin(
+        "IAP v4.2 temperature, 2020 on",
+        "ocean-temperature",
+        ocean_temperature.BASE_URL + ocean_temperature.zip_name("2020_2026"),
+        dict(ocean_temperature.DECADES)["2020_2026"],
     ),
     LivingPin(
         "NOAA ERSST v6, monthly means",
