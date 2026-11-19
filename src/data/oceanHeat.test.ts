@@ -18,7 +18,7 @@ describe('the ocean heat maps', () => {
       '0-2000m-2005-2025',
     ]);
     expect(index.maps[1] === undefined ? '' : mapText(index.maps[1])).toBe(
-      '0-2000 m, 1960–2025: on average 0.65 W/m² gained; 83% of the sea significant at 10%.',
+      '0-2000 m, 1960–2025: on average 0.54 W/m² gained; 76% of the sea significant at 10%.',
     );
   });
 

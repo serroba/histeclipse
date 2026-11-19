@@ -248,3 +248,18 @@ def test_needs_today_among_the_frames(tmp_path: Path) -> None:
     grid = np.full((ROWS, COLUMNS), 1.0)
     with pytest.raises(ValueError, match="today"):
         _ = write_krapp([(2, grid)], tmp_path)
+
+
+def test_regrid_from_0_to_360_keeps_the_western_hemisphere_apart() -> None:
+    """A source on 0-360° longitudes: each western node takes only its own cells (#901)."""
+    latitude = np.array([0.0])
+    longitude = np.arange(0.5, 360.0, 1.0)
+    # Each cell holds its own longitude east, so a node's mean says which cells it took.
+    values = longitude[None, :].copy()
+    out = regrid(values, latitude, longitude)
+    row: list[float] = out[90].tolist()  # pyright: ignore[reportAny]
+    # 100° W is 260° E: the cells either side, 259.5 and 260.5.
+    assert row[80] == pytest.approx(260.0)
+    # 0.5° W and 0.5° E are both a reach from the node at 0°.
+    assert row[180] == pytest.approx(180.0)
+    assert row[0] == pytest.approx(180.0)  # 179.5 and 180.5
