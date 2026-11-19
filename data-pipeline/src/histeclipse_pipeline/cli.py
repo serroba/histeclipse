@@ -61,6 +61,7 @@ from histeclipse_pipeline.natural_forcing import fetch_natural_forcing
 from histeclipse_pipeline.ocean_heat import fetch_ocean_heat
 from histeclipse_pipeline.ocean_heat_map import fetch_ocean_heat_map
 from histeclipse_pipeline.ocean_oxygen import fetch_ocean_oxygen
+from histeclipse_pipeline.ocean_temperature import fetch_ocean_temperature
 from histeclipse_pipeline.ohm import fetch_ohm
 from histeclipse_pipeline.ozone import fetch_ozone_history
 from histeclipse_pipeline.ozone_msr import fetch_ozone_msr
@@ -671,6 +672,12 @@ def enso_sst(args: Arguments) -> int:  # pragma: no cover - needs network access
     return _say(f"wrote {count} monthly sea surface temperature maps to {args.out}")
 
 
+def ocean_temperature(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the ocean's temperature at three depths each month since 1940, and the equator."""
+    count = fetch_ocean_temperature(args.out, Path(".cache/iap-temperature"))
+    return _say(f"wrote {count} months of ocean temperature maps and sections to {args.out}")
+
+
 def measured_warming(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write measured warming on land and sea since 1850 (Berkeley Earth) as small images."""
     count = fetch_measured_warming(args.out)
@@ -1252,6 +1259,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         energy_imbalance,
         "write the Earth's energy imbalance since 2000, measured from space (CERES EBAF)",
         "output directory (public/data/ocean-heat)",
+    ),
+    "ocean-temperature": (
+        ocean_temperature,
+        "write the ocean's temperature at 1, 100 and 700 m each month since 1940 (IAP v4.2)",
+        "output directory",
     ),
     "ocean-heat-map": (
         ocean_heat_map,

@@ -1,0 +1,47 @@
+/* Ocean temperature's panel (#590), in the column beside the globe (ui/globePanels). */
+.ocean-temp-panel {
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgb(10 16 32 / 0.88);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.ocean-temp-panel[hidden] {
+  display: none;
+}
+
+.ocean-temp-title,
+.ocean-temp-said,
+.ocean-temp-credit {
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.ocean-temp-title,
+.ocean-temp-credit {
+  color: var(--ink-muted);
+}
+
+.ocean-temp-pick {
+  width: 100%;
+  min-height: 32px;
+  margin-bottom: 6px;
+  font: inherit;
+}
+
+.ocean-temp-scale {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, rgb(35 85 205), rgb(245 243 238), rgb(205 35 25));
+}
+
+.ocean-temp-ends {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--ink-muted);
+  font-size: 11px;
+  text-align: center;
+}

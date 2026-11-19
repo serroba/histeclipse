@@ -22,6 +22,7 @@ import earthFacts from './whys/earth-facts.json' with { type: 'json' };
 import eclipses from './whys/eclipses.json' with { type: 'json' };
 import empiresCliopatria from './whys/empires-cliopatria.json' with { type: 'json' };
 import empiresOhm from './whys/empires-ohm.json' with { type: 'json' };
+import amoc from './whys/amoc.json' with { type: 'json' };
 import enso from './whys/enso.json' with { type: 'json' };
 import fossils from './whys/fossils.json' with { type: 'json' };
 import genomes from './whys/genomes.json' with { type: 'json' };
@@ -32,6 +33,7 @@ import impacts from './whys/impacts.json' with { type: 'json' };
 import lineages from './whys/lineages.json' with { type: 'json' };
 import moons from './whys/moons.json' with { type: 'json' };
 import oceanHeat from './whys/oceanHeat.json' with { type: 'json' };
+import oceanTemp from './whys/oceanTemp.json' with { type: 'json' };
 import orbits from './whys/orbits.json' with { type: 'json' };
 import ozone from './whys/ozone.json' with { type: 'json' };
 import periods from './whys/periods.json' with { type: 'json' };
@@ -90,7 +92,9 @@ export const WHYS_CONTENT = {
   ozone,
   warming,
   oceanHeat,
+  oceanTemp,
   enso,
+  amoc,
   gravitationalWaves,
   telescopes,
 };

@@ -126,7 +126,7 @@ test('Earth intermediate map: 8192 versus 4096 with the same close-up tiles', as
       await page.goto('/?t=2024-04-08T12:00Z&cam=30,31,2.4');
       await ready(page, width);
       const uploads = await page.evaluate(() => Reflect.get(window, '__mapUploads') as Upload[]);
-      const canvas = page.getByTestId('globe').locator('canvas').first();
+      const canvas = page.getByTestId('globe').locator(':scope > canvas').first();
       if (repeat === 0) {
         for (const distance of [2.4, 1.6, 1.3, 1.008]) {
           await page.goto(`/?t=2024-04-08T12:00Z&cam=30,31,${String(distance)}`);

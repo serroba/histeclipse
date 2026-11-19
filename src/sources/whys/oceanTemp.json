@@ -1,0 +1,7 @@
+{
+  "title": "The ocean's temperature by depth",
+  "what": "The ocean's temperature each month since January 1940 at three depths, the surface, 100 m and 700 m, against the same calendar month's mean over 1991–2020, from IAP v4.2's gridded temperature (Cheng et al. 2024). Blue is colder than usual for the month and red warmer, to ±4 °C at the surface and 100 m and ±1 °C at 700 m. At 100 m El Niño shows best: the warm water of the western Pacific slides east along the equator and the thermocline deepens off South America.",
+  "how": "IAP gives each month's temperature anomaly for each 1° cell at 119 depths; the site takes the three, measures each against its calendar month's 1991–2020 mean (IAP's own anomalies are against another period), averages them onto the site's 1° grid and rounds them to 0.1 °C (0.025 °C at 700 m), finer than the deep ocean was measured. The last month there is stands for the months since, said so.",
+  "others": "Before the Argo floats (from about 2005) the deep ocean, and before about 1960 much of the ocean at any depth, was sparsely measured: IAP fills the gaps from climate models' covariances, so the early maps and the deep ones lean on that filling. The surface here is IAP's 1 m level, not the satellite and ship blend of the El Niño layer's sea surface maps (OISST), so the two differ a little.",
+  "sources": ["iap2024"]
+}

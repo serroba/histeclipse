@@ -99,7 +99,7 @@ test('graphics that cannot hold the 4096 map get no tiles, and stop at 1.05 radi
     }
   });
   const tiles = tileRequests(page);
-  const canvas = page.getByTestId('globe').locator('canvas');
+  const canvas = page.getByTestId('globe').locator(':scope > canvas');
   await test.step('Given a link 50 km over the Nile', async () => {
     await page.goto('./?t=2024-04-08T12:00Z&cam=30,31,1.008');
     await globeRendered(page);
@@ -123,7 +123,7 @@ test('the camera comes down to about 50 km above Earth, and no nearer the Moon t
   page,
 }) => {
   test.slow();
-  const canvas = page.getByTestId('globe').locator('canvas');
+  const canvas = page.getByTestId('globe').locator(':scope > canvas');
   await test.step('Given Earth from 130 km up, they zoom in all the way', async () => {
     await page.goto('./?t=2024-04-08T12:00Z&cam=30,31,1.02');
     await globeRendered(page);
