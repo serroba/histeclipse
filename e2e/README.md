@@ -60,6 +60,7 @@ The reference journeys of #724 (`navigation.spec.ts`; human origins is a journey
 | `warming.spec.ts`     | Temperature records side by side since 1850, beside the globe (#526)                                    |
 | `oceanHeat.spec.ts`   | Where the ocean gained heat: IAP's trend maps on their own scale (#589)                                 |
 | `enso.spec.ts`        | El Niño and La Niña: NOAA's two indices side by side, and where they disagree (#886)                    |
+| `amoc.spec.ts`        | The AMOC: each source on its own scale, the dispute said, the array's line (#925)                       |
 | `oceanTemp.spec.ts`   | Ocean temperature: the month at 100 m, and at another depth picked (#590)                               |
 | `yearsWindow.spec.ts` | The Years bar's range: fitted to a layer turned on, picked back, kept in the link (#749)                |
 | `chart.spec.ts`       | Geological time along the slider: the chart's units in its colours                                      |

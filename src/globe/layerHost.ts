@@ -146,6 +146,7 @@ export const HISTORY_PAINT_ORDER = {
   oceanHeat: 40,
   oceanTemp: 43,
   enso: 45,
+  amoc: 47,
   // The ozone hole as a cap round the South Pole (#722): over the land's colours, under states.
   ozone: 50,
   states: 100,

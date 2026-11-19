@@ -22,6 +22,7 @@ import earthFacts from './whys/earth-facts.json' with { type: 'json' };
 import eclipses from './whys/eclipses.json' with { type: 'json' };
 import empiresCliopatria from './whys/empires-cliopatria.json' with { type: 'json' };
 import empiresOhm from './whys/empires-ohm.json' with { type: 'json' };
+import amoc from './whys/amoc.json' with { type: 'json' };
 import enso from './whys/enso.json' with { type: 'json' };
 import fossils from './whys/fossils.json' with { type: 'json' };
 import genomes from './whys/genomes.json' with { type: 'json' };
@@ -93,6 +94,7 @@ export const WHYS_CONTENT = {
   oceanHeat,
   oceanTemp,
   enso,
+  amoc,
   gravitationalWaves,
   telescopes,
 };

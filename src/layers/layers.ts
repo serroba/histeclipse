@@ -5,6 +5,7 @@
  */
 
 import { air } from './air';
+import { amoc } from './amoc';
 import { asteroids } from './asteroids';
 import { carbonMade } from './carbonMade';
 import { dates } from './dates';
@@ -55,6 +56,7 @@ const ALL = [
   oceanHeat,
   oceanTemp,
   enso,
+  amoc,
   temperature,
   sealevel,
   plates,
@@ -99,6 +101,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
       oceanHeat,
       oceanTemp,
       enso,
+      amoc,
       temperature,
       sealevel,
       air,

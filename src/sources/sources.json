@@ -566,6 +566,13 @@
     "url": "https://doi.org/10.1038/s41586-020-2591-3",
     "licence": "Data supplement: (c) 2020 All Rights Reserved; not redistributed by this site"
   },
+  "fu2025osnap": {
+    "name": "OSNAP, the subpolar North Atlantic array (Fu et al.)",
+    "kind": "reference",
+    "cite": "Fu, Y., Lozier, M. S., Bower, A., Burmeister, K., Carrilho Biló, T., Cyr, F., et al. (2025), Characterizing the interannual variability of North Atlantic subpolar overturning, Geophysical Research Letters 52, e2025GL114672, doi:10.1029/2025GL114672; data 2014-2022, doi:10.35090/gatech/78023. Our summary: the Overturning in the Subpolar North Atlantic Program's array, from Labrador to Greenland to Scotland, measured the overturning monthly from 2014 to 2022 and finds it is mostly made in the eastern subpolar basin, not the Labrador Sea, and varies from year to year without a trend in those years. Its data are published with all rights reserved, so the site cites it rather than showing its numbers",
+    "url": "https://doi.org/10.1029/2025GL114672",
+    "licence": "All rights reserved (Georgia Tech repository); cited only"
+  },
   "galileoMoonMaps": {
     "name": "Galileo and Voyager maps of Jupiter’s moons",
     "kind": "imagery",
