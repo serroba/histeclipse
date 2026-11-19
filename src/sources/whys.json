@@ -476,7 +476,19 @@
   "warming": {
     "title": "Temperature records side by side",
     "what": "Global surface temperature since 1850, as six records measure it: four from thermometers on land and at sea (HadCRUT5, Berkeley Earth, NOAAGlobalTemp, GISTEMP) and two reanalyses, weather models fitted to the observations (ERA5, JRA-3Q, dashed). Each is put on the 1850–1900 baseline, the IPCC's pre-industrial: those that start later are shifted to the mean of the others over years they share, as AR6 does. None is picked: the band shows where they spread, wider in the early years, when fewer places were measured. HadCRUT5 leaves unmeasured regions out, so it warms a little less.",
-    "sources": ["hadcrut5", "berkeleyEarth", "noaaGlobalTemp", "gistemp4", "era5", "jra3q"]
+    "sources": [
+      "hadcrut5",
+      "berkeleyEarth",
+      "noaaGlobalTemp",
+      "gistemp4",
+      "era5",
+      "jra3q",
+      "fosterRahmstorf2011",
+      "cpcRoni",
+      "cpcOni"
+    ],
+    "how": "Under the records, from 1950, El Niño (red) and La Niña (blue) as each of NOAA's two indices (RONI and ONI) names them, on a strip each, as in the El Niño and La Niña layer; for the year shown, the episodes each index names in it and their peaks.",
+    "others": "Much of the year-to-year swing in global temperature comes with them: the sharpest jumps, in 1998, 2016 and 2023–24, came during or just after strong El Niños, and the dips with La Niñas. Foster and Rahmstorf (2011) took out the estimated effect of El Niño, volcanic eruptions and the Sun from five records of 1979–2010: the warming was left at much the same rate, steadier and with less noise. The site shows the records as measured and does not adjust them: removing El Niño takes a model, and the choice of model changes the answer."
   },
   "oceanHeat": {
     "title": "Where the ocean gained heat",

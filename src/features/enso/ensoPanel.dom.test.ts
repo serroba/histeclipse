@@ -30,7 +30,7 @@ describe('the ENSO panel', () => {
     expect(root?.querySelectorAll('.enso-episode.is-elNino').length).toBeGreaterThan(10);
     expect(root?.querySelectorAll('.enso-episode.is-laNina').length).toBeGreaterThan(10);
     // One cursor on the chart and one on each strip.
-    expect(root?.querySelectorAll('.enso-cursor')).toHaveLength(3);
+    expect(root?.querySelectorAll('.enso-cursor, .enso-mark')).toHaveLength(3);
     expect(root?.querySelectorAll('.enso-key li')).toHaveLength(2);
     expect(root?.querySelector('figcaption')?.textContent).toBe(
       'The tropical Pacific, 1950–2026: °C from normal',
@@ -42,7 +42,7 @@ describe('the ENSO panel', () => {
     panel.update({ chart: ensoChart(data, at), names, text: 'Again.', sea: 's' });
     expect(root?.querySelector('svg')).toBe(svg);
     panel.update({ chart: ensoChart(data, monthOf(1900, 1)), names, text: 'Outside.', sea: 's' });
-    expect(root?.querySelectorAll('.enso-cursor')).toHaveLength(0);
+    expect(root?.querySelectorAll('.enso-cursor, .enso-mark')).toHaveLength(0);
     panel.update(null);
     expect(root?.hidden).toBe(true);
   });

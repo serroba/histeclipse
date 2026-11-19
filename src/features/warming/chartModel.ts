@@ -1,10 +1,13 @@
 /**
  * The records' chart (#526), worked out apart from the page: every record as a line on one axis
  * of °C above 1850–1900 (one quantity, so one axis), the band between the lowest and highest of
- * them each year, and the year shown.
+ * them each year, and the year shown; under it, from 1950, each ENSO index's El Niño and La Niña
+ * episodes (#890), on the same years.
  */
 
+import type { Enso } from '../../data/enso';
 import type { TemperatureRecords } from '../../data/temperatureRecords';
+import { episodeStrips, type EpisodeStrip } from '../../ui/ensoStrips';
 
 export const CHART_WIDTH = 1000;
 export const CHART_HEIGHT = 300;
@@ -20,9 +23,15 @@ export interface RecordsChart {
   /** Where the zero line (the 1850–1900 mean) is, and the year shown (null outside). */
   readonly zeroY: number;
   readonly cursorX: number | null;
+  /** El Niño and La Niña by each index, on the records' years; none until they load. */
+  readonly strips: readonly EpisodeStrip[];
 }
 
-export function recordsChart(records: TemperatureRecords, year: number): RecordsChart {
+export function recordsChart(
+  records: TemperatureRecords,
+  year: number,
+  enso: Enso | null = null,
+): RecordsChart {
   const first = records.spread[0]?.[0] ?? records.lastYear;
   const last = records.lastYear;
   const x = (at: number): number => ((at - first) / Math.max(1, last - first)) * CHART_WIDTH;
@@ -46,5 +55,8 @@ export function recordsChart(records: TemperatureRecords, year: number): Records
     band: top.length === 0 ? '' : `M${[...top, ...bottom].join('L')}Z`,
     zeroY: y(0),
     cursorX: year < first || year > last ? null : x(year),
+    // A year's value sits at its middle, so a month starts a twelfth of a year in from half a
+    // year before.
+    strips: enso === null ? [] : episodeStrips(enso, (month) => x(month / 12 - 0.5), CHART_WIDTH),
   };
 }
