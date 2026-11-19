@@ -135,3 +135,18 @@
     font-size: 14px;
   }
 }
+
+/* A range within one Holocene age (since 1850, all Meghalayan): its band says nothing, so the
+   track shows the years alone (#749). */
+.history-lane .period-axis.is-one-chapter .period-bands,
+.history-lane .period-axis.is-one-chapter .period-ticks,
+.history-lane .period-axis.is-one-chapter .period-bracket {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  /* A few marks (1900, 1950) have room for their values even on a phone. */
+  .history-lane .period-axis.is-few-marks .period-round-label {
+    display: inline;
+  }
+}

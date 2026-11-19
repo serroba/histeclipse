@@ -304,7 +304,7 @@ describe('the largest files only shrink', () => {
 /** Files the unit tests do not reach, in coverage.untested.js (#625): their number only falls. */
 const UNTESTED_FILES = 123;
 /** And their lines: lowered when the files shrink by more than UNTESTED_SLACK. */
-const UNTESTED_LINES = 24_462;
+const UNTESTED_LINES = 24_261;
 /** Lines the untested files may shrink by before UNTESTED_LINES must come down with them. */
 const UNTESTED_SLACK = 200;
 

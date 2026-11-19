@@ -24,7 +24,8 @@ import { windowOf } from '../../state/yearsWindow';
 import { windowing } from './windowing';
 import { yearOfMa } from '../../data/iceSheets';
 import { PRESENT_YEAR } from '../../time/present';
-import { createPeriodBands, yearTicks } from '../../ui/periodBands';
+import { createPeriodBands } from '../../ui/periodBands';
+import { yearTicks } from './yearTicks';
 import { errorMessage } from '../../util/errors';
 
 /** What the years ask of the rest of the page. */

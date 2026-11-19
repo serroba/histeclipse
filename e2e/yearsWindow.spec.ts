@@ -30,6 +30,11 @@ test('turning on El Niño fits the Years bar to its years, and the range can be 
     const speed = page.getByRole('navigation', { name: 'Year and eclipses' }).getByLabel('Speed');
     await expect(speed.locator('option')).toHaveText(['1 yr/s', '5 yr/s', '20 yr/s']);
   });
+  await test.step('And the track reads as those years: its marks named, no age band within one age', async () => {
+    const track = page.getByRole('group', { name: 'Holocene' });
+    await expect(track.locator('.period-round-label', { hasText: '1900' })).toBeVisible();
+    await expect(track.locator('.period-bands')).toBeHidden();
+  });
   await test.step('When they pick the whole Holocene again', async () => {
     await range.selectOption({ label: 'The Holocene, 9700 BCE–2026' });
   });

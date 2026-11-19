@@ -10,7 +10,6 @@
 
 import { bandsFor, type Band } from '../deepTime/chart';
 import { formatMa } from '../time/format';
-import { astronomicalYear, formatYear } from '../time/year';
 import { element } from './dom';
 import './periodBands.css';
 
@@ -44,7 +43,7 @@ export function roundStep(range: number, count: number): number {
 }
 
 /** No closer to an end than this share of the slider, where the end's own name is. */
-const END_ROOM = 0.16;
+export const END_ROOM = 0.16;
 
 /** Deep time's round marks: in Ma, or ka under a million years. */
 export function deepTicks(oldest: number, youngest: number): Tick[] {
@@ -62,30 +61,6 @@ export function deepTicks(oldest: number, youngest: number): Tick[] {
           ? `${value.toLocaleString('en')} Ma`
           : `${Math.round(value * 1000).toLocaleString('en')} ka`,
     });
-  }
-  return ticks;
-}
-
-/**
- * The years' round marks: round historical years (8000 BCE, 6000 BCE… 2000 CE), which have no
- * year 0, between a slider's ends given in Ma before 1950.
- */
-export function yearTicks(oldest: number, youngest: number): Tick[] {
-  const yearOf = (ma: number): number => 1950 - ma * 1e6;
-  const first = yearOf(oldest);
-  const last = yearOf(youngest);
-  const step = roundStep(last - first, 6);
-  const ticks: Tick[] = [];
-  for (let count = Math.ceil(first / step); count * step <= last; count += 1) {
-    // Counted as historians count: 2000 BCE is astronomical year -1999.
-    const historical = count * step;
-    if (historical === 0) continue;
-    const astronomical = historical < 0 ? historical + 1 : historical;
-    const ma = (1950 - astronomical) / 1e6;
-    const share = (oldest - ma) / (oldest - youngest);
-    if (share < END_ROOM || share > 1 - END_ROOM) continue;
-    // Without the CE everyone assumes, as the track's ends are written.
-    ticks.push({ ma, label: formatYear(astronomicalYear(astronomical)).replace(/ CE$/, '') });
   }
   return ticks;
 }
@@ -331,8 +306,12 @@ export function createPeriodBands(
             return tick;
           }),
         );
+        const listed = marks(oldest, youngest);
+        // One chapter's band says nothing; three marks or fewer have room for values on a phone.
+        root.classList.toggle('is-one-chapter', buttons.length === 1);
+        root.classList.toggle('is-few-marks', listed.length <= 3);
         rounds.replaceChildren(
-          ...marks(oldest, youngest).map((tick) => {
+          ...listed.map((tick) => {
             const mark = element(
               'span',
               { class: 'period-round' },
