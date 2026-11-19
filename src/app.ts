@@ -61,7 +61,6 @@ import { mountDeepSurfaces, PLATES_CHIP } from './features/deepSurfaces';
 import { mountRocks } from './features/rocks';
 import { mountWays } from './features/ways';
 import { mountDates } from './features/dates';
-import { mountPeriods } from './features/periods';
 import { mountEmpires } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
 import { mountYears } from './features/years';
@@ -150,11 +149,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   };
   // The tree of life and life through time: their sheets, and the ways to open them.
   const treeOfLife = mountTreeOfLife(partContext);
-  // Named periods for the place picked (#446).
-  const namedPeriods = mountPeriods({
-    ...partContext,
-    refresh: redraws.ask('layers'),
-  });
   // The sky view (#448): loaded the first time it is opened.
   const sky = mountSky({
     ...partContext,
@@ -176,9 +170,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     async () => {
       const [loaded, periods] = await Promise.all([
         impacts.load(),
-        namedPeriods.loaded() ??
-          namedPeriods.loading() ??
-          loadNamedPeriods(`${base}data/periods.json`, fetchJson),
+        loadNamedPeriods(`${base}data/periods.json`, fetchJson),
       ]);
       return { impacts: loaded, coasts: countryRings(periods) };
     },
@@ -207,7 +199,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     said: () => [
       ['ways', ways.said()],
-      ['periods', namedPeriods.said()],
       ['rocks', rocks.said()],
       ['dates', dates.said()],
       ['impacts', impacts.said()],
@@ -676,7 +667,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { when: on(EARTH_LAYERS), draw: dates.show },
     { when: on(EARTH_LAYERS), draw: ways.show },
     { when: on(EARTH_LAYERS), draw: rocks.show },
-    { when: on(EARTH_LAYERS), draw: namedPeriods.show },
     { when: on(EARTH_LAYERS), draw: impacts.show },
     { when: on(EARTH_LAYERS), draw: carbonMade.show },
     { when: on(LAYERS_PANEL), draw: showLayers },
