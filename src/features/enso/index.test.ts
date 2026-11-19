@@ -1,6 +1,9 @@
+// @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest';
 
+import composites from '../../../public/data/enso-composites/index.json';
 import file from '../../../public/data/enso/index.json';
+import type { LayerFactory, LayerHost } from '../../globe/layerHost';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
@@ -39,6 +42,7 @@ const inYear = (year: number, state = on): ViewState => ({
 const JD = 2451545;
 
 function fakeContext(options: { readonly failing?: boolean } = {}) {
+  const container = document.createElement('div');
   const panels: unknown[] = [];
   const painted: unknown[] = [];
   const refresh = vi.fn();
@@ -48,16 +52,35 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
     fetchJson: (url: string) =>
       options.failing === true
         ? Promise.reject(new Error('offline'))
-        : Promise.resolve(new Response(JSON.stringify(url.includes('enso-sst') ? MAPS : file))),
+        : Promise.resolve(
+            new Response(
+              JSON.stringify(
+                url.includes('enso-sst')
+                  ? MAPS
+                  : url.includes('enso-composites')
+                    ? composites
+                    : file,
+              ),
+            ),
+          ),
     globe: {
-      addLayer: (factory: unknown) => ({
-        update: (input: unknown) => (factory === ensoMapLayer ? painted : panels).push(input),
-      }),
+      addLayer: (factory: LayerFactory<unknown>) => {
+        if (factory === (ensoMapLayer as LayerFactory<unknown>)) {
+          return { update: (input: unknown) => painted.push(input) };
+        }
+        const layer = factory({ container } as unknown as LayerHost);
+        return {
+          update: (input: unknown) => {
+            panels.push(input);
+            layer.update(input);
+          },
+        };
+      },
     },
     notify,
     refresh,
   } as unknown as FeatureContext;
-  return { context, panels, painted, refresh, notify };
+  return { context, container, panels, painted, refresh, notify };
 }
 
 describe('El Niño and La Niña as a feature', () => {
@@ -75,7 +98,7 @@ describe('El Niño and La Niña as a feature', () => {
     shown.show?.(inYear(1998), JD);
     expect(shown.said?.()).toBe('Loading the El Niño indices…');
     await vi.waitFor(() => {
-      expect(refresh).toHaveBeenCalledTimes(2);
+      expect(refresh).toHaveBeenCalledTimes(3);
     });
     shown.show?.(inYear(1998), JD);
     expect(panels.at(-1)).toMatchObject({
@@ -108,8 +131,65 @@ describe('El Niño and La Niña as a feature', () => {
       expect(notify).toHaveBeenCalledWith('Could not load the El Niño indices: offline');
     });
     shown.show?.(inYear(1998), JD);
+    const said = (): number =>
+      notify.mock.calls.filter(
+        ([message]) => message === 'Could not load the El Niño indices: offline',
+      ).length;
     await vi.waitFor(() => {
-      expect(notify).toHaveBeenCalledTimes(2);
+      expect(said()).toBe(2);
+    });
+    expect(notify).toHaveBeenCalledWith(
+      'Could not load the El Niño rain and temperature maps: offline',
+    );
+  });
+
+  it('Given a composite picked, Then it paints instead of the sea, by the index picked, and the sea comes back', async () => {
+    const { context, container, panels, painted, refresh } = fakeContext();
+    const shown = ensoFeature.mount(context);
+    shown.show?.(inYear(1998), JD);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(3);
+    });
+    shown.show?.(inYear(1998), JD);
+    const chooser = container.querySelector<HTMLSelectElement>('.enso-pick');
+    const by = container.querySelector<HTMLSelectElement>('.enso-by');
+    expect(chooser?.options).toHaveLength(9);
+    if (chooser === null || by === null) return;
+    chooser.value = 'temperature-elNino-djf';
+    chooser.dispatchEvent(new Event('change'));
+    shown.show?.(inYear(1998), JD);
+    await vi.waitFor(() => {
+      expect(painted.at(-1)).toMatchObject({
+        bound: 1,
+        image: { url: '/data/enso-composites/temperature-roni-elNino-djf.png' },
+      });
+    });
+    expect(panels.at(-1)).toMatchObject({
+      sea: expect.stringMatching(
+        /^On the globe: Temperature in El Niño’s December–February, by RONI/,
+      ) as unknown,
+      map: { chosen: 'temperature-elNino-djf', scale: 'temperature', ends: '−1 · 0 · +1 °C' },
+    });
+    by.value = 'oni';
+    by.dispatchEvent(new Event('change'));
+    shown.show?.(inYear(1998), JD);
+    await vi.waitFor(() => {
+      expect(painted.at(-1)).toMatchObject({
+        image: { url: '/data/enso-composites/temperature-oni-elNino-djf.png' },
+      });
+    });
+    // Back to the first, already loaded: painted at once.
+    by.value = 'roni';
+    by.dispatchEvent(new Event('change'));
+    shown.show?.(inYear(1999), JD);
+    expect(painted.at(-1)).toMatchObject({
+      image: { url: '/data/enso-composites/temperature-roni-elNino-djf.png' },
+    });
+    chooser.value = 'sea';
+    chooser.dispatchEvent(new Event('change'));
+    shown.show?.(inYear(1999), JD);
+    await vi.waitFor(() => {
+      expect(painted.at(-1)).toMatchObject({ image: { url: '/data/enso-sst/1999-01.png' } });
     });
   });
 });
