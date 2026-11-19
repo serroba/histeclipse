@@ -9,6 +9,7 @@ import type { ViewState } from '../../state/viewState';
 import {
   clampWindow,
   fitFor,
+  layerSpan,
   windowChoices,
   windowValue,
   type WindowChoice,
@@ -25,6 +26,18 @@ import {
 import { astronomicalYear } from '../../time/year';
 import { moveToMonth, moveToYear } from '../../time/yearInput';
 import type { YearPlayhead } from '../../time/yearPlay';
+
+/** The travel view's own layers: borders and how people lived, for a trip through history. */
+const TRAVEL_LAYERS: readonly Layer[] = ['empires', 'ways'];
+
+/**
+ * The layers playing brings, of the travel view's own that are off: none when a layer with
+ * years of its own is on, as El Niño is; the reader came for that, not for borders.
+ */
+export function travelBrings(layers: ReadonlySet<Layer>): Layer[] {
+  if ([...layers].some((layer) => layerSpan(layer) !== null)) return [];
+  return TRAVEL_LAYERS.filter((layer) => !layers.has(layer));
+}
 
 export interface Windowing {
   /** The years the bar shows: the window picked, held to the track, or the whole track. */

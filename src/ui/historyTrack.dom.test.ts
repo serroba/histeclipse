@@ -53,9 +53,9 @@ describe('the Holocene’s track', () => {
     const speed = track.extras.querySelector<HTMLSelectElement>('.history-speed');
     expect(speed?.value).toBe('medium');
     expect([...(speed?.options ?? [])].map((option) => option.textContent)).toEqual([
+      '2 months/s',
       '1 yr/s',
-      '5 yr/s',
-      '20 yr/s',
+      '10 yr/s',
     ]);
     expect(track.root.querySelector<HTMLElement>('.history-notes')?.hidden).toBe(true);
     expect(track.extras.querySelector<HTMLElement>('.history-about')?.hidden).toBe(true);
