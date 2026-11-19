@@ -39,7 +39,8 @@ test('draws the Earth, not an empty canvas @acceptance', LIVE_GPU, async ({ page
   await globeRendered(page);
   // A screenshot captures what is on screen without reading the WebGL buffer back. An empty
   // dark canvas compresses to a few KB of PNG; a textured, lit globe to hundreds of KB.
-  const png = await page.getByTestId('globe').locator('canvas').screenshot();
+  // The globe's own canvas, a child of it: panels beside the globe draw their charts in canvases too.
+  const png = await page.getByTestId('globe').locator(':scope > canvas').screenshot();
   expect(png.byteLength).toBeGreaterThan(60_000);
 });
 

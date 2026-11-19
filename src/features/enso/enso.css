@@ -139,3 +139,33 @@
   font-size: 11px;
   text-align: center;
 }
+
+/* The equatorial Pacific from below (#895): under the chart, the month's section. */
+.enso-section {
+  margin: 0 0 6px;
+}
+
+.enso-section[hidden] {
+  display: none;
+}
+
+.enso-section figcaption {
+  margin-bottom: 2px;
+  color: var(--ink-muted);
+}
+
+.enso-section-canvas {
+  display: block;
+  width: 100%;
+  height: 72px;
+  border-radius: 4px;
+  background: rgb(255 255 255 / 0.04);
+  image-rendering: pixelated;
+}
+
+.enso-section-axis {
+  display: flex;
+  justify-content: space-between;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
