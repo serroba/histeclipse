@@ -53,7 +53,6 @@ export const UNTESTED = [
   'src/features/layersPanel/index.ts',
   'src/features/layersPanel/layersPanel.ts',
   'src/features/moment/index.ts',
-  'src/features/periods/index.ts',
   'src/features/records/index.ts',
   'src/features/records/tabletPanel.ts',
   'src/features/rocks/index.ts',
