@@ -27,40 +27,67 @@ import type { ZoomRail } from '../ui/zoomRail';
 /** Said in the Layers panel of a layer whose markers rest while the years play. */
 export const RESTING = 'Resting while you travel through the years; back when the track closes.';
 
-/** What the app lends a feature. */
-export interface FeatureContext {
+/** What the app lends every feature. It does not grow with the layers: see `Capabilities`. */
+export interface FeatureCore {
   /** Where the site's files are served from, ending in `/`. */
   readonly base: string;
   readonly fetchJson: Fetch;
-  /** Its layers on the globe; `setSettled` shades a dispersal model's settled land. */
-  readonly globe: Pick<Globe, 'addLayer' | 'setSettled' | 'setEvenLight'>;
-  readonly zoomRail: ZoomRail;
+  /** Its layers on the globe. */
+  readonly globe: Pick<Globe, 'addLayer'>;
   /** Tell the reader something went wrong. */
   notify(message: string): void;
-  /** Open the card for a marker. */
-  showCard(card: MarkerCardContent): void;
-  /** Open a view laid over the reader's, as a step Back undoes: a related discovery (#731). */
-  openAnchor(anchor: Anchor): void;
-  /** Whether a marker's card is open. */
-  cardOpen(): boolean;
-  /** The Moon's and the planets' theories (#606). */
-  readonly ephemerides: Ephemerides;
-  /** Open the tree of life through time at a genus (#358). */
-  openLineages(group: LineageGroup, genus: string): void;
-  /** Open the tree of life at the node `pick` finds in it. */
-  openTree(pick: (tree: TreeOfLife) => number | undefined): void;
   /** Change what the reader is looking at, as one of the feature's own choices does. */
   change(update: (state: ViewState) => ViewState): void;
-  /** Where the reader is in time's playing (#606): markers of single events rest while travelling. */
-  readonly timeline: Timeline;
   /** Show the moment and the Layers panel again: data the feature waited for has arrived. */
   refresh(): void;
 }
+
+/**
+ * What a feature may ask for by name (#909), in its `needs`: it is lent those and no others, so
+ * what each feature touches is written down with it. Something one more layer needs of the page
+ * is a capability here, not a field of `FeatureCore`.
+ */
+export interface Capabilities {
+  /** A marker's card: open one, and whether one is open. */
+  readonly cards: {
+    show(card: MarkerCardContent): void;
+    open(): boolean;
+  };
+  /** A view laid over the reader's, as a step Back undoes: a related discovery (#731). */
+  readonly anchors: { open(anchor: Anchor): void };
+  /** The Moon's and the planets' theories (#606). */
+  readonly ephemerides: Ephemerides;
+  /** Where the reader is in time's playing (#606): markers of single events rest while travelling. */
+  readonly timeline: Timeline;
+  /** The rail's own buttons for what is far from Earth. */
+  readonly zoomRail: ZoomRail;
+  /** The tree of life: open it through time at a genus (#358), or at the node `pick` finds. */
+  readonly tree: {
+    openLineages(group: LineageGroup, genus: string): void;
+    openTree(pick: (tree: TreeOfLife) => number | undefined): void;
+  };
+  /** A dispersal model's settled land, shaded on Earth. */
+  readonly settledLand: Pick<Globe, 'setSettled'>;
+  /** Earth lit evenly, with no night side, while a layer needs every part seen. */
+  readonly evenLight: Pick<Globe, 'setEvenLight'>;
+}
+
+export type Capability = keyof Capabilities;
+
+/** What a feature asking for `Needs` is mounted with: the core, and those capabilities. */
+export type FeatureContext<Needs extends Capability = never> = FeatureCore &
+  Pick<Capabilities, Needs>;
 
 /** A moment of deep time, and the span the bar shows it on. */
 export interface DeepMoment {
   readonly ma: number;
   readonly scale: DeepScale;
+}
+
+/** A step a layer offers from what it shows, on its row in the Layers panel. */
+export interface LayerAction {
+  readonly label: string;
+  readonly run: () => void;
 }
 
 /** A feature as mounted. */
@@ -78,6 +105,8 @@ export interface FeatureInstance {
   unpick?(): void;
   /** What the Layers panel says under its layer, if anything. */
   said?(): string | null;
+  /** The step it offers from its row in the Layers panel (#909), if it has one now. */
+  action?(): LayerAction | null;
   /** What it has at the place picked, for "Why here?" (#893), if anything. */
   here?(state: ViewState): HereFact | null;
   /**
@@ -87,8 +116,11 @@ export interface FeatureInstance {
   load?(): LayerLoad | null;
 }
 
-export interface Feature {
+/** A feature as it is written: what it asks for, and how it is mounted with it. */
+export interface FeatureDefinition<Needs extends Capability> {
   readonly id: Layer;
+  /** The capabilities it asks for, by name: `mount` is lent these with the core. */
+  readonly needs: readonly Needs[];
   /**
    * What the feature shows depends on, besides the moment (#381): when any of these changes, it
    * is shown again. Each moment shown shows every feature anyway.
@@ -98,5 +130,24 @@ export interface Feature {
   readonly picks?: string;
   /** Its chip in the deep-time bar, if it has one. */
   readonly deepChip?: Omit<DeepChip, 'layer'>;
-  mount(context: FeatureContext): FeatureInstance;
+  mount(context: FeatureContext<Needs>): FeatureInstance;
+}
+
+/** A feature as the app mounts it: it takes from all the capabilities only those it asked for. */
+export interface Feature extends Omit<FeatureDefinition<Capability>, 'mount'> {
+  mount(core: FeatureCore, capabilities: Capabilities): FeatureInstance;
+}
+
+/** A feature from its definition, lent on mounting the core and the capabilities it names. */
+export function feature<const Needs extends Capability>(
+  definition: FeatureDefinition<Needs>,
+): Feature {
+  return {
+    ...definition,
+    mount(core, capabilities) {
+      const lent: Partial<Capabilities> = {};
+      for (const need of definition.needs) Object.assign(lent, { [need]: capabilities[need] });
+      return definition.mount({ ...core, ...(lent as Pick<Capabilities, Needs>) });
+    },
+  };
 }

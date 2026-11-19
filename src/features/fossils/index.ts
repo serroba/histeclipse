@@ -19,7 +19,7 @@ import type { MarkerCardContent } from '../../ui/markerCard';
 import { fromAFossil } from '../../explore/related';
 import { layerTurned } from '../../state/viewState';
 import { errorMessage } from '../../util/errors';
-import type { Feature } from '../feature';
+import { feature } from '../feature';
 import { fossilLayer } from './fossilLayer';
 import './fossils.css';
 
@@ -36,8 +36,9 @@ function note(at: FossilsAt): DeepNotePart[] {
   ];
 }
 
-export const fossilsFeature: Feature = {
+export const fossilsFeature = feature({
   id: 'fossils',
+  needs: ['cards', 'tree'],
   picks: 'fossil',
   deepChip: { label: 'Fossils', why: 'fossils' },
   // Shown in deep time, by the deep-time view: nothing to watch besides.
@@ -74,7 +75,7 @@ export const fossilsFeature: Feature = {
               action: {
                 label: `${genus} on the tree through time`,
                 run: () => {
-                  context.openLineages(cell.group, genus);
+                  context.tree.openLineages(cell.group, genus);
                 },
               },
             }),
@@ -82,6 +83,13 @@ export const fossilsFeature: Feature = {
     }
 
     return {
+      // The dinosaurs' lines through time, from the layer's row in the Layers panel.
+      action: () => ({
+        label: 'Their tree through time',
+        run: () => {
+          context.change((state) => ({ ...state, lineages: { group: 'dinosaurs', pick: null } }));
+        },
+      }),
       deep(state, moment) {
         temperatureOn = state.layers.has('temperature');
         // Fossils are counted by 5 million years: a matter of the 540 Myr span.
@@ -118,7 +126,7 @@ export const fossilsFeature: Feature = {
         const card = cardFor(key);
         if (card === null) return;
         shown = key;
-        context.showCard(card);
+        context.cards.show(card);
         if (pictures !== null || picturesLoading) return;
         picturesLoading = true;
         loadPictures(`${context.base}data/fossil-pictures.json`, context.fetchJson).then(
@@ -126,7 +134,7 @@ export const fossilsFeature: Feature = {
             pictures = loaded;
             // Its picture, if its card is still the one open.
             const again = shown === null ? null : cardFor(shown);
-            if (context.cardOpen() && again !== null) context.showCard(again);
+            if (context.cards.open() && again !== null) context.cards.show(again);
           },
           (error: unknown) => {
             picturesLoading = false;
@@ -139,4 +147,4 @@ export const fossilsFeature: Feature = {
       },
     };
   },
-};
+});

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defaultViewState, type ViewState } from '../state/viewState';
-import type { Feature, FeatureContext, FeatureInstance } from './feature';
+import type { Capabilities, Feature, FeatureCore, FeatureInstance } from './feature';
 import { deepChipsOf, mountFeatures } from './mounted';
 
 const base = defaultViewState(new Date(Date.UTC(2024, 3, 8)));
@@ -13,12 +13,14 @@ function fake(id: Feature['id'], watches: (s: ViewState) => readonly unknown[], 
     unpick: vi.fn(),
     said: vi.fn(() => `${id} said`),
     ...(id === 'fossils' && {
+      action: () => ({ label: 'Go', run: () => undefined }),
       load: () => ({ state: 'loading' }),
       here: () => ({ title: 'Fossils', text: 'Here.', why: 'fossils' }),
     }),
   };
   const feature = {
     id,
+    needs: [],
     watches,
     ...(picks === undefined ? {} : { picks }),
     mount: () => shown as unknown as FeatureInstance,
@@ -29,7 +31,11 @@ function fake(id: Feature['id'], watches: (s: ViewState) => readonly unknown[], 
 describe('the features as mounted together', () => {
   const fossils = fake('fossils', (s) => [s.layers], 'fossil');
   const asteroids = fake('asteroids', (s) => [s.camera], 'asteroid');
-  const features = mountFeatures([fossils.feature, asteroids.feature], {} as FeatureContext);
+  const features = mountFeatures(
+    [fossils.feature, asteroids.feature],
+    {} as FeatureCore,
+    {} as Capabilities,
+  );
 
   it('shows each at the moment, and again only those whose watches changed', () => {
     features.show(base, 1);
@@ -52,6 +58,12 @@ describe('the features as mounted together', () => {
     expect([...chips.keys()]).toEqual(['fossils']);
     features.deepOff(base);
     expect(asteroids.shown.deep).toHaveBeenLastCalledWith(base, null);
+  });
+
+  it('gathers the step each offers from its row in the Layers panel, or none', () => {
+    const actions = new Map(features.actions());
+    expect(actions.get('fossils')?.label).toBe('Go');
+    expect(actions.get('asteroids')).toBeNull();
   });
 
   it('picks by kind after unpicking all, and says when a key is none of theirs', () => {
@@ -82,7 +94,8 @@ describe('the facts of the place picked (#893)', () => {
   it('gathers what each feature has there, none from those that have nothing', () => {
     const features = mountFeatures(
       [fake('fossils', () => []).feature, fake('asteroids', () => []).feature],
-      {} as FeatureContext,
+      {} as FeatureCore,
+      {} as Capabilities,
     );
     expect(features.here(base)).toEqual([{ title: 'Fossils', text: 'Here.', why: 'fossils' }]);
   });

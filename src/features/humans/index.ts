@@ -20,7 +20,7 @@ import type { DeepNoteBlock, DeepNotePart } from '../../ui/deepChips';
 import type { MarkerCardContent, RelatedStep } from '../../ui/markerCard';
 import { destinationNear, fromAFind } from '../../explore/related';
 import { errorMessage } from '../../util/errors';
-import type { Feature } from '../feature';
+import { feature } from '../feature';
 import { createDispersal, dispersalText, type DispersalShown } from './dispersal';
 import { humanSiteLayer } from './humanSiteLayer';
 
@@ -73,8 +73,9 @@ function note(
   ];
 }
 
-export const humansFeature: Feature = {
+export const humansFeature = feature({
   id: 'humans',
+  needs: ['cards', 'anchors', 'tree', 'settledLand'],
   picks: 'human',
   deepChip: { label: 'Humans', why: 'humans' },
   // Shown in deep time, by the deep-time view: nothing to watch besides.
@@ -105,7 +106,7 @@ export const humansFeature: Feature = {
         action: {
           label: 'Its species on the tree of life',
           run: () => {
-            context.openTree((tree) => tree.ours.humans[species]);
+            context.tree.openTree((tree) => tree.ours.humans[species]);
           },
         },
         related: findSteps(claims?.claims.find((each) => each.id === id)?.place ?? null),
@@ -133,7 +134,7 @@ export const humansFeature: Feature = {
               {
                 ...dna,
                 run: () => {
-                  context.openAnchor(near);
+                  context.anchors.open(near);
                 },
               },
             ]),
@@ -141,6 +142,13 @@ export const humansFeature: Feature = {
     }
 
     return {
+      // Our species on the tree of life, from the layer's row in the Layers panel.
+      action: () => ({
+        label: 'Our species on the tree of life',
+        run: () => {
+          context.tree.openTree((tree) => tree.ours.humans['sapiens']);
+        },
+      }),
       deep(state, moment) {
         dispersalOn = state.dispersal !== 'off';
         // People are a matter of the last few hundred thousand years: the ice-age scale's.
@@ -178,7 +186,7 @@ export const humansFeature: Feature = {
         const card = cardFor(id);
         if (card === null) return;
         shown = id;
-        context.showCard(card);
+        context.cards.show(card);
         if (pictures !== null || picturesLoading) return;
         picturesLoading = true;
         loadPictures(`${context.base}data/humans/pictures.json`, context.fetchJson).then(
@@ -186,7 +194,7 @@ export const humansFeature: Feature = {
             pictures = loaded;
             // Its picture, if its card is still the one open.
             const again = shown === null ? null : cardFor(shown);
-            if (context.cardOpen() && again !== null) context.showCard(again);
+            if (context.cards.open() && again !== null) context.cards.show(again);
           },
           (error: unknown) => {
             picturesLoading = false;
@@ -199,4 +207,4 @@ export const humansFeature: Feature = {
       },
     };
   },
-};
+});

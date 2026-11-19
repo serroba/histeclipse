@@ -9,7 +9,7 @@ import type { LayerFactory, LayerHost } from '../../globe/layerHost';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
-import type { FeatureContext } from '../feature';
+import type { Capability, FeatureContext } from '../feature';
 import { ensoMapLayer } from './ensoMapLayer';
 import { ensoFeature } from '.';
 
@@ -86,14 +86,14 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
     },
     notify,
     refresh,
-  } as unknown as FeatureContext;
+  } as unknown as FeatureContext<Capability>;
   return { context, container, panels, painted, refresh, notify };
 }
 
 describe('El Niño and La Niña as a feature', () => {
   it('Given the layer off, Then no panel and nothing said', () => {
     const { context, panels } = fakeContext();
-    const shown = ensoFeature.mount(context);
+    const shown = ensoFeature.mount(context, context);
     shown.show?.(inYear(1998, off), JD);
     expect(panels).toEqual([null]);
     expect(shown.said?.()).toBeNull();
@@ -101,7 +101,7 @@ describe('El Niño and La Niña as a feature', () => {
 
   it('Given it on, Then it loads once and shows each month, the same month costing nothing, and rests in deep time', async () => {
     const { context, panels, painted, refresh } = fakeContext();
-    const shown = ensoFeature.mount(context);
+    const shown = ensoFeature.mount(context, context);
     shown.show?.(inYear(1998), JD);
     expect(shown.said?.()).toBe('Loading the El Niño indices…');
     await vi.waitFor(() => {
@@ -132,7 +132,7 @@ describe('El Niño and La Niña as a feature', () => {
 
   it('Given the indices do not load, Then it says so and tries again', async () => {
     const { context, notify } = fakeContext({ failing: true });
-    const shown = ensoFeature.mount(context);
+    const shown = ensoFeature.mount(context, context);
     shown.show?.(inYear(1998), JD);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the El Niño indices: offline');
@@ -152,7 +152,7 @@ describe('El Niño and La Niña as a feature', () => {
 
   it('Given a composite picked, Then it paints instead of the sea, by the index picked, and the sea comes back', async () => {
     const { context, container, panels, painted, refresh } = fakeContext();
-    const shown = ensoFeature.mount(context);
+    const shown = ensoFeature.mount(context, context);
     shown.show?.(inYear(1998), JD);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalledTimes(3);
@@ -202,7 +202,7 @@ describe('El Niño and La Niña as a feature', () => {
 
   it('Given a place picked with the layer on, Then what it has there for “Why here?”, once loaded (#893)', async () => {
     const { context, refresh } = fakeContext();
-    const shown = ensoFeature.mount(context);
+    const shown = ensoFeature.mount(context, context);
     const place = { ...inYear(1998), location: { latitude: 0, longitude: -120 } };
     expect(shown.here?.({ ...place, ma: 1 })).toBeNull();
     expect(shown.here?.(inYear(1998))).toBeNull();
@@ -225,7 +225,7 @@ describe('El Niño and La Niña as a feature', () => {
 
   it('Given a month before 1950, Then the indices computed here from ERSST and HadISST, said so, and ERSST’s sea (#894)', async () => {
     const { context, panels, painted, refresh } = fakeContext();
-    const shown = ensoFeature.mount(context);
+    const shown = ensoFeature.mount(context, context);
     const greatOne = inYear(1877);
     shown.show?.(greatOne, JD);
     await vi.waitFor(() => {

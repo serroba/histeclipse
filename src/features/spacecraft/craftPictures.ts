@@ -20,7 +20,7 @@ interface CraftPictures {
   ask(then: () => void): void;
 }
 
-function craftPictures(context: FeatureContext): CraftPictures {
+function craftPictures(context: FeatureContext<'cards'>): CraftPictures {
   let pictures: TelescopePictures | null = null;
   let asked = false;
   return {
@@ -47,7 +47,7 @@ function craftPictures(context: FeatureContext): CraftPictures {
  * come, if its card is still the one open. Nothing for a craft `cardOf` does not know.
  */
 export function craftCards(
-  context: FeatureContext,
+  context: FeatureContext<'cards'>,
   cardOf: (craft: string) => MarkerCardContent | null,
 ): (craft: string) => void {
   const pictures = craftPictures(context);
@@ -61,10 +61,10 @@ export function craftCards(
     const card = withPictures(craft);
     if (card === null) return;
     picked = craft;
-    context.showCard(card);
+    context.cards.show(card);
     pictures.ask(() => {
       const again = picked === null ? null : withPictures(picked);
-      if (context.cardOpen() && again?.pictures !== undefined) context.showCard(again);
+      if (context.cards.open() && again?.pictures !== undefined) context.cards.show(again);
     });
   };
 }

@@ -5,7 +5,7 @@ import { defaultViewState, withLayer, type ViewState } from '../../state/viewSta
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
 import type { MarkerCardContent } from '../../ui/markerCard';
-import { RESTING, type FeatureContext } from '../feature';
+import { RESTING, type Capability, type FeatureContext } from '../feature';
 import { genomesFeature } from '.';
 
 const off = defaultViewState(new Date('2026-01-01T00:00:00Z'));
@@ -28,10 +28,10 @@ function fakeContext(options: { readonly failing?: boolean; readonly travelling?
         : Promise.resolve(new Response(JSON.stringify(genomes))),
     globe: { addLayer: () => ({ update: (input: unknown) => drawn.push(input) }) },
     notify,
-    showCard: (card: MarkerCardContent) => cards.push(card),
+    cards: { show: (card: MarkerCardContent) => cards.push(card) },
     timeline: { travelling: () => options.travelling === true },
     refresh,
-  } as unknown as FeatureContext;
+  } as unknown as FeatureContext<Capability>;
   return { context, drawn, cards, refresh, notify };
 }
 
@@ -42,7 +42,7 @@ describe('the ancient genomes as a feature', () => {
 
   it('draws nothing and says nothing while its layer is off, or in deep time', () => {
     const { context, drawn } = fakeContext();
-    const shown = genomesFeature.mount(context);
+    const shown = genomesFeature.mount(context, context);
     shown.show?.(off, JD);
     shown.show?.({ ...on, ma: 100 }, JD);
     expect(drawn).toEqual([null]);
@@ -51,7 +51,7 @@ describe('the ancient genomes as a feature', () => {
 
   it('rests while the reader travels through the years', () => {
     const { context, drawn } = fakeContext({ travelling: true });
-    const shown = genomesFeature.mount(context);
+    const shown = genomesFeature.mount(context, context);
     shown.show?.(bronzeAge, JD);
     expect(drawn).toEqual([null]);
     expect(shown.said?.()).toBe(RESTING);
@@ -59,7 +59,7 @@ describe('the ancient genomes as a feature', () => {
 
   it('loads once, then counts the genomes near the year by region, each to tap', async () => {
     const { context, drawn, cards, refresh } = fakeContext();
-    const shown = genomesFeature.mount(context);
+    const shown = genomesFeature.mount(context, context);
     shown.show?.(bronzeAge, JD);
     expect(shown.said?.()).toBe('Loading the ancient genomes…');
     await vi.waitFor(() => {
@@ -81,13 +81,13 @@ describe('the ancient genomes as a feature', () => {
 
   it('opens no card before the genomes load', () => {
     const { context, cards } = fakeContext();
-    genomesFeature.mount(context).pick?.('1');
+    genomesFeature.mount(context, context).pick?.('1');
     expect(cards).toEqual([]);
   });
 
   it('says so when the genomes cannot be loaded, and tries again next time', async () => {
     const { context, notify } = fakeContext({ failing: true });
-    const shown = genomesFeature.mount(context);
+    const shown = genomesFeature.mount(context, context);
     shown.show?.(bronzeAge, JD);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the ancient genomes: offline');

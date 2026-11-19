@@ -4,7 +4,7 @@ import pictures from '../../../public/data/fossil-pictures.json';
 import fossils from '../../../public/data/fossils.json';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import type { MarkerCardContent } from '../../ui/markerCard';
-import type { FeatureContext } from '../feature';
+import type { Capability, FeatureContext } from '../feature';
 import { fossilsFeature } from '.';
 
 const base = defaultViewState(new Date('2026-01-01T00:00:00Z'));
@@ -35,12 +35,11 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
           ),
     globe: { addLayer: () => ({ update: (input: unknown) => drawn.push(input) }) },
     notify,
-    showCard: (card: MarkerCardContent) => cards.push(card),
-    cardOpen: () => true,
-    openLineages,
+    cards: { show: (card: MarkerCardContent) => cards.push(card), open: () => true },
+    tree: { openLineages },
     change,
     refresh,
-  } as unknown as FeatureContext;
+  } as unknown as FeatureContext<Capability>;
   return { context, drawn, cards, refresh, notify, openLineages, change };
 }
 
@@ -51,7 +50,7 @@ describe('the fossils as a feature', () => {
 
   it('offers its chip on the 540 Myr span only, off until turned on', () => {
     const { context, drawn } = fakeContext();
-    const shown = fossilsFeature.mount(context);
+    const shown = fossilsFeature.mount(context, context);
     const off = { ...on, layers: base.layers };
     expect(shown.deep?.(off, JURASSIC)).toEqual({ offered: true, on: false, note: null });
     expect(shown.deep?.(off, { ma: 0.02, scale: 'ice' })).toEqual({
@@ -65,7 +64,7 @@ describe('the fossils as a feature', () => {
 
   it('says it is loading, then marks the finds of the moment, with a key and the source', async () => {
     const { context, drawn, refresh } = fakeContext();
-    const shown = fossilsFeature.mount(context);
+    const shown = fossilsFeature.mount(context, context);
     expect(shown.deep?.(on, JURASSIC)?.note).toEqual(['Fossils: loading…']);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalledTimes(1);
@@ -83,7 +82,7 @@ describe('the fossils as a feature', () => {
 
   it('opens a cell’s card, again with its pictures, and leads to the tree of life', async () => {
     const { context, drawn, cards, refresh, openLineages, change } = fakeContext();
-    const shown = fossilsFeature.mount(context);
+    const shown = fossilsFeature.mount(context, context);
     shown.deep?.(on, JURASSIC);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalled();
@@ -108,9 +107,18 @@ describe('the fossils as a feature', () => {
     expect(cards).toHaveLength(2);
   });
 
+  it('offers the dinosaurs’ lines through time from its row in the Layers panel', () => {
+    const { context, change } = fakeContext();
+    const action = fossilsFeature.mount(context, context).action?.();
+    expect(action?.label).toBe('Their tree through time');
+    action?.run();
+    const update = change.mock.calls[0]?.[0] as (state: ViewState) => ViewState;
+    expect(update(on).lineages).toEqual({ group: 'dinosaurs', pick: null });
+  });
+
   it('says so when the fossils cannot be loaded', async () => {
     const { context, notify } = fakeContext({ failing: true });
-    fossilsFeature.mount(context).deep?.(on, JURASSIC);
+    fossilsFeature.mount(context, context).deep?.(on, JURASSIC);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the fossils: offline');
     });

@@ -15,12 +15,13 @@ import {
   type Volcanoes,
 } from '../../data/volcanoes';
 import { errorMessage } from '../../util/errors';
-import { RESTING, type Feature } from '../feature';
+import { feature, RESTING } from '../feature';
 import { volcanoLayer } from './volcanoLayer';
 import './volcanoes.css';
 
-export const volcanoesFeature: Feature = {
+export const volcanoesFeature = feature({
   id: 'volcanoes',
+  needs: ['cards', 'timeline'],
   picks: 'volcano',
   // On or off with its layer, and only on the globe, in historical time.
   watches: (state) => [state.layers, state.mode, state.ma],
@@ -75,14 +76,15 @@ export const volcanoesFeature: Feature = {
         const mark = marks.find((each) => String(each.volcano.number) === number);
         if (mark === undefined) return;
         shown = mark;
-        context.showCard(volcanoCard(mark, details));
+        context.cards.show(volcanoCard(mark, details));
         if (details !== null || detailsLoading) return;
         detailsLoading = true;
         loadVolcanoDetails(`${context.base}data/volcano-details.json`, context.fetchJson).then(
           (loaded) => {
             details = loaded;
             // Its summary and photo, if its card is still the one open.
-            if (shown !== null && context.cardOpen()) context.showCard(volcanoCard(shown, loaded));
+            if (shown !== null && context.cards.open())
+              context.cards.show(volcanoCard(shown, loaded));
           },
           (error: unknown) => {
             detailsLoading = false;
@@ -96,4 +98,4 @@ export const volcanoesFeature: Feature = {
       said: () => said,
     };
   },
-};
+});

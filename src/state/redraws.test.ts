@@ -75,7 +75,7 @@ const WATCHES: Record<string, { watch: Watch; fields: readonly (keyof ViewState)
     watch: EARTH_LAYERS,
     fields: ['layers', 'mode', 'borders', 'ma', 'deepScale', 'location'],
   },
-  history: { watch: HISTORY, fields: ['layers', 'location'] },
+  history: { watch: HISTORY, fields: ['layers', 'location', 'yearsWindow'] },
   'the eclipse picked': { watch: SELECTION, fields: ['selection', 'layers', 'location', 'seenIn'] },
   'the view switch': { watch: VIEW_SWITCH, fields: ['view', 'mode', 'focus'] },
   'the Layers panel': {

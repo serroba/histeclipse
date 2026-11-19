@@ -6,7 +6,7 @@ import shell from '../../../public/data/ozone/shell.json';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
-import type { FeatureContext } from '../feature';
+import type { Capability, FeatureContext } from '../feature';
 import { ozoneLayer } from './ozoneLayer';
 import type * as Seasons from './ozoneSeasons';
 import { ozoneShellLayer } from './ozoneShellLayer';
@@ -73,8 +73,8 @@ function fakeContext(options: { readonly failures?: number } = {}) {
             ),
           );
     },
+    evenLight: { setEvenLight: (on: boolean, by?: string) => lights.push([on, by]) },
     globe: {
-      setEvenLight: (on: boolean, by?: string) => lights.push([on, by]),
       addLayer: (factory: unknown) => ({
         update: (input: unknown) =>
           (factory === ozoneLayer ? caps : factory === ozoneShellLayer ? surfaces : panels).push(
@@ -84,14 +84,14 @@ function fakeContext(options: { readonly failures?: number } = {}) {
     },
     notify,
     refresh,
-  } as unknown as FeatureContext;
+  } as unknown as FeatureContext<Capability>;
   return { context, caps, panels, surfaces, lights, refresh, notify };
 }
 
 describe('the ozone layer as a feature', () => {
   it('Given the layer off, Then nothing is drawn or said', () => {
     const { context, caps, panels } = fakeContext();
-    const shown = ozoneFeature.mount(context);
+    const shown = ozoneFeature.mount(context, context);
     shown.show?.({ ...inYear(2006), layers: off.layers }, JD);
     expect(caps).toEqual([null]);
     expect(panels).toEqual([null]);
@@ -100,7 +100,7 @@ describe('the ozone layer as a feature', () => {
 
   it('Given the layer on, Then the globe is lit evenly, once, and the sun’s day and night return when it goes off or the view leaves Earth (#823)', () => {
     const { context, lights } = fakeContext();
-    const shown = ozoneFeature.mount(context);
+    const shown = ozoneFeature.mount(context, context);
     shown.show?.(off, JD);
     expect(lights).toEqual([]);
     shown.show?.(inYear(2006), JD);
@@ -115,7 +115,7 @@ describe('the ozone layer as a feature', () => {
 
   it('Given it on, Then it loads once, and draws each year’s October once its map has come, the hole’s cap until then, and nothing for years outside', async () => {
     const { context, caps, panels, refresh } = fakeContext();
-    const shown = ozoneFeature.mount(context);
+    const shown = ozoneFeature.mount(context, context);
     shown.show?.(inYear(2006), JD);
     expect(shown.said?.()).toBe('Loading the ozone record…');
     await vi.waitFor(() => {
@@ -188,7 +188,7 @@ describe('the ozone layer as a feature', () => {
 
   it('Given it on, Then its load is said loading until the record arrives, and nothing once drawn', async () => {
     const { context, refresh } = fakeContext();
-    const shown = ozoneFeature.mount(context);
+    const shown = ozoneFeature.mount(context, context);
     expect(shown.load?.()).toBeNull();
     shown.show?.(inYear(2006), JD);
     expect(shown.load?.()).toEqual({ state: 'loading' });
@@ -200,7 +200,7 @@ describe('the ozone layer as a feature', () => {
 
   it('Given the record does not load, Then it says so, waits rather than trying at each moment, and loads when tried again (#751)', async () => {
     const { context, notify, refresh, caps } = fakeContext({ failures: 1 });
-    const shown = ozoneFeature.mount(context);
+    const shown = ozoneFeature.mount(context, context);
     shown.show?.(inYear(2006), JD);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the ozone record: offline');
@@ -226,7 +226,7 @@ describe('the ozone layer as a feature', () => {
 
   it('Given a day from July to December of a year with a season, Then that day’s surface is drawn round the Earth once its season has come, and nothing painted on the ground (#804)', async () => {
     const { context, caps, panels, surfaces, refresh } = fakeContext();
-    const shown = ozoneFeature.mount(context);
+    const shown = ozoneFeature.mount(context, context);
     const september = onDay(on, 2006, 9, 25);
     shown.show?.(september, JD);
     await vi.waitFor(() => {
@@ -266,7 +266,7 @@ describe('the ozone layer as a feature', () => {
 
   it('Given a season that cannot be fetched, Then the year’s map stays (#804)', async () => {
     const { context, caps, surfaces, refresh } = fakeContext();
-    const shown = ozoneFeature.mount(context);
+    const shown = ozoneFeature.mount(context, context);
     const day = onDay(on, 2007, 9, 25);
     shown.show?.(day, JD);
     await vi.waitFor(() => {

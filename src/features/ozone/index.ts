@@ -21,7 +21,7 @@ import {
 import { loadOzoneMaps, mapOf, mapText, omittedText, type OzoneMaps } from '../../data/ozoneMaps';
 import type { ViewState } from '../../state/viewState';
 import { errorMessage } from '../../util/errors';
-import type { Feature, FeatureContext } from '../feature';
+import { feature, type FeatureContext } from '../feature';
 import { ozoneCharts } from './chartModel';
 import {
   HEIGHTS_DRAWN,
@@ -112,8 +112,9 @@ function ozoneDrawn(state: ViewState): boolean {
   );
 }
 
-export const ozoneFeature: Feature = {
+export const ozoneFeature = feature({
   id: 'ozone',
+  needs: ['evenLight'],
   // On or off with its layer, on Earth's globe, in the years.
   watches: (state) => [state.layers, state.mode, state.ma, state.focus],
   mount(context) {
@@ -168,7 +169,7 @@ export const ozoneFeature: Feature = {
         // hides the layer and the land: the globe is lit evenly while it is on (#823).
         if (on !== lit) {
           lit = on;
-          context.globe.setEvenLight(on, 'ozone');
+          context.evenLight.setEvenLight(on, 'ozone');
         }
         const { date } = state.time;
         // A day of a season has its own surface; any other moment, its year's map.
@@ -205,4 +206,4 @@ export const ozoneFeature: Feature = {
       },
     };
   },
-};
+});

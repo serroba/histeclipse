@@ -34,7 +34,7 @@ import { element } from './ui/dom';
 import { layOutPage } from './ui/pageLayout';
 import { FEATURES } from './features';
 import { deepChipsOf, mountFeatures } from './features/mounted';
-import type { FeatureContext } from './features/feature';
+import type { Capabilities, FeatureCore } from './features/feature';
 import { arrivalSearch } from './explore/destinations';
 import { viewOpener } from './explore/open';
 import { createWelcome } from './ui/welcome';
@@ -61,7 +61,6 @@ import { mountDeepSurfaces, PLATES_CHIP } from './features/deepSurfaces';
 import { mountRocks } from './features/rocks';
 import { mountWays } from './features/ways';
 import { mountDates } from './features/dates';
-import { mountPeriods } from './features/periods';
 import { mountEmpires } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
 import { mountYears } from './features/years';
@@ -150,11 +149,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   };
   // The tree of life and life through time: their sheets, and the ways to open them.
   const treeOfLife = mountTreeOfLife(partContext);
-  // Named periods for the place picked (#446).
-  const namedPeriods = mountPeriods({
-    ...partContext,
-    refresh: redraws.ask('layers'),
-  });
   // The sky view (#448): loaded the first time it is opened.
   const sky = mountSky({
     ...partContext,
@@ -176,9 +170,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     async () => {
       const [loaded, periods] = await Promise.all([
         impacts.load(),
-        namedPeriods.loaded() ??
-          namedPeriods.loading() ??
-          loadNamedPeriods(`${base}data/periods.json`, fetchJson),
+        loadNamedPeriods(`${base}data/periods.json`, fetchJson),
       ]);
       return { impacts: loaded, coasts: countryRings(periods) };
     },
@@ -207,7 +199,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     said: () => [
       ['ways', ways.said()],
-      ['periods', namedPeriods.said()],
       ['rocks', rocks.said()],
       ['dates', dates.said()],
       ['impacts', impacts.said()],
@@ -217,23 +208,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     // How each layer's load stands (#751): the features on the contract report theirs.
     loads: () => features.loads(),
     actions: () => [
-      [
-        'fossils',
-        {
-          label: 'Their tree through time',
-          run: () => {
-            store.set((state) => ({ ...state, lineages: { group: 'dinosaurs', pick: null } }));
-          },
-        },
-      ],
       ['impacts', impacts.action()],
-      [
-        'humans',
-        treeOfLife.action('Our species on the tree of life', (tree) => tree.ours.humans['sapiens']),
-      ],
       ['rocks', rocks.action()],
       ['dates', dates.action()],
       ['carbonMade', carbonMade.action()],
+      // The features on the contract offer their own (#909).
+      ...features.actions(),
     ],
   });
   const markerCard = createMarkerCard();
@@ -564,19 +544,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     refreshLayers: redraws.askWith('layers'),
   });
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
-  const featureContext: FeatureContext = {
+  const featureCore: FeatureCore = {
     base,
     fetchJson,
     globe,
-    zoomRail,
     notify,
-    timeline: time.timeline,
-    ephemerides: ephemerides.ephemerides,
-    showCard: markerCard.show,
-    cardOpen: () => markerCard.dialog.open,
-    openAnchor,
-    openLineages: treeOfLife.openLineagesAt,
-    openTree: treeOfLife.openTreeAt,
     change: (update) => {
       store.set(update);
     },
@@ -588,7 +560,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showSheets(now);
     },
   };
-  const features = mountFeatures(FEATURES, featureContext);
+  // What a feature may ask for by name (#909): each is lent only those in its `needs`.
+  const capabilities: Capabilities = {
+    cards: { show: markerCard.show, open: () => markerCard.dialog.open },
+    anchors: { open: openAnchor },
+    ephemerides: ephemerides.ephemerides,
+    timeline: time.timeline,
+    zoomRail,
+    tree: { openLineages: treeOfLife.openLineagesAt, openTree: treeOfLife.openTreeAt },
+    settledLand: globe,
+    evenLight: globe,
+  };
+  const features = mountFeatures(FEATURES, featureCore, capabilities);
   const [deltaT, lunarCatalog, solarCatalog] = await Promise.all([
     DeltaT.load(`${base}data/delta-t.json`, fetchJson),
     LunarCatalog.load(`${base}data/lunar/`, fetchJson),
@@ -684,7 +667,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { when: on(EARTH_LAYERS), draw: dates.show },
     { when: on(EARTH_LAYERS), draw: ways.show },
     { when: on(EARTH_LAYERS), draw: rocks.show },
-    { when: on(EARTH_LAYERS), draw: namedPeriods.show },
     { when: on(EARTH_LAYERS), draw: impacts.show },
     { when: on(EARTH_LAYERS), draw: carbonMade.show },
     { when: on(LAYERS_PANEL), draw: showLayers },
