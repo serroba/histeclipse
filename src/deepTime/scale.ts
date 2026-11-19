@@ -5,6 +5,9 @@
 export const DEEP_SCALES = ['all', 'ice', 'eons'] as const;
 export type DeepScale = (typeof DEEP_SCALES)[number];
 
+/** How far the time bar reaches: the Holocene's years, or one of deep time's scales. */
+export type Span = 'years' | DeepScale;
+
 /** Deep time reaches back to the oldest solids of the Solar System (Connelly et al. 2012). */
 export const EARTH_AGE_MA = 4568;
 

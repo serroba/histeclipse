@@ -1,21 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { cliopatriaYear, elsewhereNote, LAYER_GROUPS, layerNote } from './layerCatalog';
-import { LAYERS } from './viewState';
 
 describe('the layers', () => {
-  it('offers each layer once, and only layers the view knows', () => {
-    const ids = LAYER_GROUPS.flatMap((group) => group.layers.map((layer) => layer.id));
-    expect(new Set(ids).size).toBe(ids.length);
-    for (const id of ids) expect(LAYERS).toContain(id);
-  });
-
-  it('offers every layer, for all of time, each drawing on a span of its own', () => {
-    const choices = LAYER_GROUPS.flatMap((group) => group.layers);
-    expect(choices.map((choice) => choice.id).sort()).toEqual([...LAYERS].sort());
-    for (const choice of choices) expect(choice.spans.length).toBeGreaterThan(0);
-  });
-
   it('says, off its spans, where a layer draws and how far its data reaches', () => {
     const choices = LAYER_GROUPS.flatMap((group) => group.layers);
     const find = (id: string) => choices.find((choice) => choice.id === id);

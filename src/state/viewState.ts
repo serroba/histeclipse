@@ -4,12 +4,12 @@
  */
 
 import type { GeoPoint } from '../core/geo';
-import { DEEP_SCALES, EARTH_AGE_MA, roundMa, type DeepScale } from '../deepTime/scale';
+import { DEEP_SCALES, EARTH_AGE_MA, roundMa, type DeepScale, type Span } from '../deepTime/scale';
 import { ECLIPSE_KINDS, type EclipseKind, type Selection } from '../data/eclipseKind';
 import { defaultCalendarFor, type Moment } from '../time/moment';
 
 // Defined below state, where the domain needs them; re-exported for the layers above (#378).
-export type { DeepScale, EclipseKind, GeoPoint, Moment, Selection };
+export type { DeepScale, EclipseKind, GeoPoint, Moment, Selection, Span };
 export { DEEP_SCALES, defaultCalendarFor, EARTH_AGE_MA, ECLIPSE_KINDS, roundMa };
 import { MOONS } from '../astro/moonOrbits';
 import { calendarDateOf, julianDay, julianDayNumber, type JulianDay } from '../time/julianDay';
@@ -43,8 +43,6 @@ export { DISPERSAL_SCENARIOS, type DispersalScenario } from './slices/deep';
 export const MODES = ['globe', 'sky'] as const;
 export type Mode = (typeof MODES)[number];
 
-/** How far the time bar reaches: the Holocene's years, or one of deep time's scales. */
-export type Span = 'years' | DeepScale;
 export const SPAN_LABELS: Readonly<Record<Span, string>> = {
   years: 'Years',
   ice: 'Ice ages',
@@ -52,60 +50,9 @@ export const SPAN_LABELS: Readonly<Record<Span, string>> = {
   eons: '4.6 Gyr',
 };
 
-export const LAYERS = [
-  // Eclipses (#634): the year's in the bar, and the one picked: the Moon's shadow and path,
-  // where the eclipsed Moon is up, the scrubber and the card. `lunar` and `solar` in older
-  // links read as this.
-  'eclipses',
-  // The orbits of Earth and the planets, seen from far out or from the Sun or a planet.
-  'orbits',
-  // Every craft sent beyond Earth orbit, flying as the time plays (#350).
-  'spacecraft',
-  // The main belt's asteroids at least 100 km across, going round the Sun (#372).
-  'asteroids',
-  // The most significant telescopes, on the ground and in space (#848, epic #852).
-  'telescopes',
-  'empires',
-  // Dated ancient genomes (AADR), counted by region around the year shown.
-  'genomes',
-  // How people lived by region (ArchaeoGLOBE): foraging, herding, farming, towns.
-  'ways',
-  // The rocks at the surface today and how old they are (Macrostrat).
-  'rocks',
-  // Named periods for the place picked (PeriodO), each by its source.
-  'periods',
-  // Archaeological radiocarbon dates (p3k14c), calibrated, by cell and 250 years.
-  'dates',
-  // Impact craters and deposits (Impact Earth), in either time: where they lay then.
-  'impacts',
-  // Volcanoes erupting near the year shown (Smithsonian GVP).
-  'volcanoes',
-  // The Antarctic ozone hole each spring since 1979, and the gases that made it (#722).
-  'ozone',
-  // Global surface temperature since 1850, every record side by side (#526).
-  'warming',
-  // Where the ocean gained heat since 1960, IAP's trend maps (#589).
-  'oceanHeat',
-  // El Niño and La Niña since 1950, NOAA's two indices side by side (#886).
-  'enso',
-  // Deep time only: the surface coloured by temperature, and sea level through time.
-  'temperature',
-  'sealevel',
-  // Deep time: a second reconstruction's continents, outlined.
-  'plates',
-  // Deep time: dated finds of our species and its relatives.
-  'humans',
-  // Deep time: carbon dioxide and methane from the ice cores.
-  'air',
-  // The years: carbon-14 in the air (IntCal20, SHCal20), why a radiocarbon date is a range.
-  'radiocarbon',
-  // Where cosmic rays make carbon-14, by latitude, for a field and a Sun (Kovaltsov et al. 2012).
-  'carbonMade',
-  // Deep time: fossils of four groups of animals, where they lay then.
-  'fossils',
-] as const;
-
-export type Layer = (typeof LAYERS)[number];
+// The layers are described one by one below state (#380), and passed on from here.
+export { LAYERS, type Layer } from '../layers/layers';
+import type { Layer } from '../layers/layers';
 
 /** A dispersal model's scenario shaded with the Humans layer, or none. */
 

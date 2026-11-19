@@ -12,8 +12,9 @@ export const TIERS = [
   ['core', 'util', 'test'],
   // The domain: astronomy, calendars, eclipses, deep time, the data files and their parsing.
   ['astro', 'time', 'eclipses', 'deepTime', 'data'],
-  // What the reader is looking at, and where each thing shown comes from.
-  ['state', 'sources'],
+  // The layers the reader is offered, each described once (#380); what the reader is looking
+  // at, and where each thing shown comes from.
+  ['layers', 'state', 'sources'],
   // The frame every 3D view draws in (#603).
   ['stage'],
   // Drawing it.
