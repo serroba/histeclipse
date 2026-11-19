@@ -1,16 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import rocksFile from '../../../public/data/rocks.json';
-import { loadRocks, rockUnits } from '../../data/rocks';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import { astronomicalYear } from '../../time/year';
 import { hereVersion, hereView, whyMoment, whyVersion, type HereData } from './facts';
 
-const serve = (body: unknown) => (): Promise<Response> => Promise.resolve(Response.json(body));
-
 const base = defaultViewState(new Date('2026-01-01T00:00:00Z'));
 const athens = { latitude: 37.97, longitude: 23.72 };
-const nothing: HereData = { drawn: null, rocks: null, features: [] };
+const nothing: HereData = { drawn: null, features: [] };
 const here: ViewState = { ...base, location: athens };
 
 describe('hereView', () => {
@@ -39,16 +35,6 @@ describe('hereView', () => {
     expect(hereView(ancient, nothing)).not.toBeNull();
   });
 
-  it('reads the rock at the place, once it is in and on', async () => {
-    const rocks = await loadRocks('rocks', serve(rocksFile));
-    const on = { ...here, layers: withLayer(here.layers, 'rocks', true) };
-    const loaded: HereData = { drawn: null, rocks: rockUnits(rocks), features: [] };
-    const both = hereView(on, loaded);
-    expect(both?.facts.length).toBeGreaterThan(0);
-    expect(hereView(on, nothing)).not.toEqual(both);
-    expect(hereVersion(on, loaded)).not.toBe(hereVersion(on, nothing));
-  });
-
   it('adds what the features have at the place, and is written again when that changes (#893)', () => {
     const fact = { title: 'El Niño and La Niña', text: 'Wetter.', why: 'enso' } as const;
     const withFact: HereData = { ...nothing, features: [['enso', fact]] };
@@ -56,20 +42,21 @@ describe('hereView', () => {
     expect(hereVersion(here, withFact)).not.toBe(hereVersion(here, nothing));
   });
 
-  it('keeps the ways of life before the rock, and the other features after it (#909)', async () => {
-    const rocks = await loadRocks('rocks', serve(rocksFile));
-    const on = { ...here, layers: withLayer(here.layers, 'rocks', true) };
+  it('keeps the states, the ways of life and the rock first, the other features after (#909)', () => {
+    const on = { ...here, layers: withLayer(here.layers, 'empires', true) };
     const enso = { title: 'El Niño and La Niña', text: 'Wetter.', why: 'enso' } as const;
     const ways = { title: 'Ways of life', text: 'Farming.', why: 'ways' } as const;
+    const rock = { title: 'Rocks', text: 'Limestone.', why: 'rocks' } as const;
     const view = hereView(on, {
-      drawn: null,
-      rocks: rockUnits(rocks),
+      drawn: { year: 2026, territories: [] },
       features: [
         ['enso', enso],
+        ['rocks', rock],
         ['ways', ways],
       ],
     });
     expect(view?.facts.map(({ title }) => title)).toEqual([
+      'States',
       'Ways of life',
       'Rocks',
       'El Niño and La Niña',

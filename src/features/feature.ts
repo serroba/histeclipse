@@ -71,6 +71,8 @@ export interface Capabilities {
   readonly settledLand: Pick<Globe, 'setSettled'>;
   /** Earth lit evenly, with no night side, while a layer needs every part seen. */
   readonly evenLight: Pick<Globe, 'setEvenLight'>;
+  /** Deep time: go to a moment there, on the span that shows it. */
+  readonly deepTime: { enter(ma: number, scale: DeepScale): void };
   /** The key to the ways of life's shading, under the years. */
   readonly waysKey: Pick<WaysLegend, 'render'>;
 }

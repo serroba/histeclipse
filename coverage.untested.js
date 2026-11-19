@@ -55,7 +55,6 @@ export const UNTESTED = [
   'src/features/moment/index.ts',
   'src/features/records/index.ts',
   'src/features/records/tabletPanel.ts',
-  'src/features/rocks/index.ts',
   'src/features/shell/firstView.ts',
   'src/features/shell/index.ts',
   'src/features/shell/input.ts',

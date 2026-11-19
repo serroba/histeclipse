@@ -6,7 +6,6 @@
  */
 
 import type { Territory } from '../../data/empires';
-import type { RockUnit } from '../../data/rocks';
 import type { GeoPoint } from '../../state/viewState';
 import { insideWrapped } from '../../util/polygons';
 import type { HereFact } from '../../sources/registry';
@@ -36,13 +35,9 @@ export interface HereInput {
     /** The year Cliopatria's borders are of, in words, when not the year shown. */
     readonly asOf: string | null;
   } | null;
-  /** What the ways of life have here, from their feature: after the states, as it was. */
-  readonly ways: HereFact | null;
-  /** The rock unit at the place, if the layer is on and loaded. */
-  readonly rock: RockUnit | null | undefined;
 }
 
-/** What each layer on the map has at the place, from the records it is drawn from. */
+/** What the states have at the place, from the borders they are drawn from. */
 export function hereFacts(input: HereInput): HereFact[] {
   const facts: HereFact[] = [];
   const { states } = input;
@@ -79,18 +74,6 @@ export function hereFacts(input: HereInput): HereFact[] {
       text: 'OpenHistoricalMap’s borders come as lines and names, not areas, so the state under a point is not looked up: see the names nearby.',
       why: 'empires-ohm',
     });
-  }
-  if (input.ways !== null) facts.push(input.ways);
-  if (input.rock !== undefined) {
-    facts.push(
-      input.rock === null
-        ? { title: 'Rocks', text: 'No map unit of Macrostrat’s here.', why: 'rocks' }
-        : {
-            title: 'Rocks',
-            text: `${input.rock.name}: ${input.rock.lith}, from ${String(input.rock.bottomMa)} to ${String(input.rock.topMa)} million years ago.`,
-            why: 'rocks',
-          },
-    );
   }
   return facts;
 }
