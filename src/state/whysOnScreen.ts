@@ -4,6 +4,7 @@
  * whys themselves are in the sources registry.
  */
 
+import { layerEntry } from '../layers/layers';
 import type { WhyId } from '../sources/registry';
 import type { BorderSource, Layer, Span } from './viewState';
 
@@ -73,6 +74,6 @@ export function onScreen(scene: Scene): WhyId[] {
 
 /** The why for a layer's row in the Layers panel. */
 export function layerWhy(layer: Layer, borders: BorderSource): WhyId {
-  if (layer === 'empires') return borders === 'ohm' ? 'empires-ohm' : 'empires-cliopatria';
-  return layer;
+  if (layer === 'empires' && borders === 'ohm') return 'empires-ohm';
+  return layerEntry(layer).why;
 }

@@ -90,7 +90,7 @@ describe('the facts of the place picked (#893)', () => {
 
 describe("deep time's chips", () => {
   it('come from the features that have one, in their order', () => {
-    const chip = { label: 'Fossils', icon: 'fossils', why: 'fossils' } as const;
+    const chip = { label: 'Fossils', why: 'fossils' } as const;
     const withChip = { ...fake('fossils', () => []).feature, deepChip: chip } as Feature;
     const without = fake('asteroids', () => []).feature;
     expect(deepChipsOf([without, withChip])).toEqual([{ layer: 'fossils', ...chip }]);

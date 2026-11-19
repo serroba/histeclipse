@@ -6,6 +6,7 @@
  */
 
 import type { Span } from '../deepTime/scale';
+import type { WhyId } from '../sources/registry';
 
 /** The times a layer's data covers (#751). */
 export interface Coverage {
@@ -32,6 +33,13 @@ export interface LayerEntry<Id extends string = string> {
   readonly covers?: Coverage;
   /** A list of its own to find its things in (#850): its chip opens it. */
   readonly list?: true;
+  /**
+   * Its icon beside its name: path data in the site's style, a 24-unit box drawn in 1.7 strokes
+   * (see `ui/icons`).
+   */
+  readonly icon: readonly string[];
+  /** Where it comes from: its why in the sources registry. */
+  readonly why: WhyId;
 }
 
 /** A layer's entry, its id kept as written: the ids together are the `Layer` type. */

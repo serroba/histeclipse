@@ -7,14 +7,13 @@
 import type { WhyId } from '../sources/registry';
 import type { Layer } from '../state/viewState';
 import { element } from './dom';
-import { uiIcon, type UiIcon } from './icons';
+import { layerIcon } from './icons';
 import './deepChips.css';
 
 /** A feature's chip, as the features declare it. */
 export interface DeepChip {
   readonly layer: Layer;
   readonly label: string;
-  readonly icon: UiIcon;
   readonly why: WhyId;
   /** What the note's book is labelled, where it differs from the button's `label`. */
   readonly whyLabel?: string;
@@ -145,7 +144,7 @@ export function createDeepChips(
         hidden: '',
         title: chip.label,
       },
-      uiIcon(chip.icon),
+      layerIcon(chip.layer, 18),
       element('span', { class: 'icon-label' }, chip.label),
     );
     button.addEventListener('click', () => {

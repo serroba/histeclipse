@@ -11,7 +11,6 @@ import type { DeepChip, DeepChipView, DeepNoteBlock } from '../../ui/deepChips';
 export const IMPACTS_CHIP: DeepChip = {
   layer: 'impacts',
   label: 'Impacts',
-  icon: 'impacts',
   why: 'impacts',
   whyLabel: 'Impact craters',
 };

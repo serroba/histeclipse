@@ -46,7 +46,7 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
 
 describe('the fossils as a feature', () => {
   it('has its chip in the deep-time bar', () => {
-    expect(fossilsFeature.deepChip).toEqual({ label: 'Fossils', icon: 'fossils', why: 'fossils' });
+    expect(fossilsFeature.deepChip).toEqual({ label: 'Fossils', why: 'fossils' });
   });
 
   it('offers its chip on the 540 Myr span only, off until turned on', () => {

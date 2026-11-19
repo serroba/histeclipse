@@ -203,6 +203,8 @@ describe('passages from records with gaps', () => {
       spans: ['all'],
       reach: '',
       arrive: { ma: 250, label: 'the Permian' },
+      icon: [],
+      why: 'temperature',
     };
     const temperature = whyPassages(WHYS, [layer]).find((p) => p.id === 'why:temperature');
     expect(temperature?.anchors[0]?.view).toBe(

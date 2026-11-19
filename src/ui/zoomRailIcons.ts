@@ -4,7 +4,7 @@
  */
 
 import { element } from './dom';
-import { bookIcon, uiIcon } from './icons';
+import { bookIcon, layerIcon } from './icons';
 
 /** An orbit around a sun, as a small line icon. */
 function orbitsIcon(): SVGSVGElement {
@@ -91,7 +91,7 @@ export function railIcons(handlers: {
       'spacecraft',
       'Spacecraft',
       'Every craft sent beyond Earth orbit, flying as the time plays',
-      uiIcon('spacecraft', 18),
+      layerIcon('spacecraft', 18),
       () => {
         handlers.onSpacecraft();
       },
@@ -100,7 +100,7 @@ export function railIcons(handlers: {
       'asteroids',
       'Asteroid belt',
       'The asteroid belt: its asteroids 100 km across or more',
-      uiIcon('asteroids', 18),
+      layerIcon('asteroids', 18),
       () => {
         handlers.onAsteroids();
       },

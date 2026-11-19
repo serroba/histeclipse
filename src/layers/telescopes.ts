@@ -11,4 +11,7 @@ export const telescopes = layer({
   reach: 'In the years, from 1789 to today.',
   covers: { years: [1789, PRESENT_YEAR] },
   list: true,
+  // A telescope's tube on its tripod (#848).
+  icon: ['M3 13l13-7 2 4-13 7z', 'M16 6l2-1 2 4-2 1', 'M10 14l-3 7M11 14l3 7'],
+  why: 'telescopes',
 });
