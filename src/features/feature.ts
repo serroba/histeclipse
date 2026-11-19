@@ -4,9 +4,11 @@
  * `Feature` and `FeatureInstance`: adding one means a folder and a line in `features/index.ts`,
  * not edits across the app.
  *
- * Still central for now: the layer's id (`state/viewState`), its entry in the Layers panel
- * (`state/layerCatalog`), its sources (`sources/registry`) and its styles; they move with the
- * state and URL by feature (#381) and the CSS by component (#382).
+ * What the layer is, as the reader is offered it, is described below the view's state, where the
+ * link, the chips and the search read it (#904): its id, name, spans, icon and why in
+ * `src/layers/<id>.ts`, listed in `src/layers/layers.ts`. Its why's text is
+ * `src/sources/whys/<id>.json` (#906), its sources entries in `sources/sources.json`, and its
+ * styles a `.css` file in its folder (#382).
  */
 
 import type { Fetch } from '../util/fetchJson';
