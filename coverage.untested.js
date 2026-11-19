@@ -117,7 +117,6 @@ export const UNTESTED = [
   'src/ui/deepAirNote.ts',
   'src/ui/deepTimeBar.ts',
   'src/ui/foldingSheet.ts',
-  'src/ui/historyTrack.ts',
   'src/ui/icons.ts',
   'src/ui/impactPathsSheet.ts',
   'src/ui/pageLayout.ts',
