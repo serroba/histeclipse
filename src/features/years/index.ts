@@ -265,12 +265,13 @@ export function mountYears(context: YearsContext): YearsPart {
       travelling,
       ...speedsShown(state),
       ...window.choices(state),
-      // What changed whenever states are on; while travelling, what to expect until then.
+      // What changed whenever states are on; while travelling, what to expect until then, but
+      // not with a subject of its own on (El Niño), which is not about borders.
       changes: state.layers.has('empires')
         ? context.statesSaid() === '' && travelling
           ? STATES_WAIT
           : context.statesSaid()
-        : travelling
+        : travelling && travelBrings(state.layers).length > 0
           ? STATES_HINT
           : '',
       blank: state.layers.has('empires') ? blankText(state.layers.has('ways')) : null,
