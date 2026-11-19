@@ -43,9 +43,25 @@ function numberOf(text: string): number {
   return Number(text.slice(0, 4)) * 12 + Number(text.slice(5, 7)) - 1;
 }
 
+/** How many months past its last the latest is still shown. */
+const LATEST_REACH = 12;
+
 /** The month's map file, `YYYY-MM.png`, or null where there is none. */
 export function mapFile(maps: EnsoSst, at: number): string | null {
-  if (at < numberOf(maps.first) || at > numberOf(maps.last)) return null;
+  const shown = latestFor(numberOf(maps.last), at);
+  if (shown < numberOf(maps.first) || shown > numberOf(maps.last)) return null;
+  return fileOf(shown);
+}
+
+/**
+ * The month to show for `at`: itself, or, in the year after the last there is (today, while the
+ * data catch up), the last; so the layer is never empty for the present.
+ */
+export function latestFor(last: number, at: number): number {
+  return at > last && at - last <= LATEST_REACH ? last : at;
+}
+
+function fileOf(at: number): string {
   const year = Math.floor(at / 12);
   return `${String(year).padStart(4, '0')}-${String(at - year * 12 + 1).padStart(2, '0')}.png`;
 }
@@ -116,8 +132,10 @@ export function seaText(maps: EnsoSst | null, at: number): string {
     return `The sea’s monthly maps run from ${named(maps.first)} to ${named(maps.last)} (${recordName(maps)}): none for this month.`;
   }
   const bound = maps.bound.toFixed(0);
+  const last = numberOf(maps.last);
+  const latest = at > last ? ` Showing ${named(maps.last)}, the latest month there is.` : '';
   const grid = maps.columns > 300 ? '' : `, on its ${String(360 / (maps.columns - 1))}° grid`;
-  return `On the globe, the sea’s surface against its ${maps.baseline.slice(0, 9)} mean for the month: blue colder, red warmer, to ±${bound} °C (${recordName(maps)}${grid}).`;
+  return `On the globe, the sea’s surface against its ${maps.baseline.slice(0, 9)} mean for the month: blue colder, red warmer, to ±${bound} °C (${recordName(maps)}${grid}).${latest}`;
 }
 
 /** For "Why here?" (#893): the sea's surface at a place in the month, or null on land. */
