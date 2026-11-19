@@ -11,6 +11,7 @@ import { oceanTempFeature } from './oceanTemp';
 import { ensoFeature } from './enso';
 import { ozoneFeature } from './ozone';
 import { periodsFeature } from './periods';
+import { rocksFeature } from './rocks';
 import { warmingFeature } from './warming';
 import { telescopesFeature } from './telescopes';
 import { volcanoesFeature } from './volcanoes';
@@ -34,4 +35,5 @@ export const FEATURES: readonly Feature[] = [
   humansFeature,
   fossilsFeature,
   waysFeature,
+  rocksFeature,
 ];

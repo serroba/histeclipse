@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import type { Territory } from '../../data/empires';
-import type { RockUnit } from '../../data/rocks';
 import { hereFacts, placeText, statesHere, type HereInput } from './here';
 
 /** A square of `size` degrees round a point. */
@@ -26,8 +25,6 @@ const base: HereInput = {
   place: here,
   yearText: '500 BCE',
   states: null,
-  ways: null,
-  rock: undefined,
 };
 
 describe('why here', () => {
@@ -71,34 +68,6 @@ describe('why here', () => {
     expect(facts.map(({ why }) => why)).toEqual(['empires-cliopatria', 'empires-ohm']);
     expect(facts[0]?.text).toContain('in 2024 CE');
     expect(facts[1]?.text).toContain('lines and names, not areas');
-  });
-
-  it('places the ways of life after the states, and the rock beneath', () => {
-    const ways = { title: 'Ways of life', text: 'Farming.', why: 'ways' } as const;
-    const rock: RockUnit = {
-      name: 'Cenozoic sediments',
-      lith: 'sedimentary rocks',
-      topMa: 0,
-      bottomMa: 66,
-      colour: '#fff',
-      rings: [],
-    };
-    const facts = hereFacts({
-      ...base,
-      states: { source: 'cliopatria', territories: [persia], asOf: null },
-      ways,
-      rock,
-    });
-    expect(facts.map(({ title }) => title)).toEqual(['States', 'Ways of life', 'Rocks']);
-    expect(facts[1]).toBe(ways);
-    expect(facts[2]?.text).toBe(
-      'Cenozoic sediments: sedimentary rocks, from 66 to 0 million years ago.',
-    );
-  });
-
-  it('says when nothing is mapped here', () => {
-    const [fact] = hereFacts({ ...base, rock: null });
-    expect(fact?.text).toContain('No map unit');
   });
 
   it('says when the borders are still loading', () => {
