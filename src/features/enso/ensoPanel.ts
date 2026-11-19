@@ -7,13 +7,12 @@
 
 import type { LayerFactory } from '../../globe/layerHost';
 import { element } from '../../ui/dom';
+import { stripRows } from '../../ui/ensoStrips';
 import { joinGlobePanels } from '../../ui/globePanels';
 import { CHART_HEIGHT, CHART_WIDTH, type EnsoChart } from './chartModel';
 import './enso.css';
 
 const SVG = 'http://www.w3.org/2000/svg';
-/** The strips' height, in the chart's units. */
-const STRIP_HEIGHT = 40;
 
 function svg<K extends keyof SVGElementTagNameMap>(
   tag: K,
@@ -29,10 +28,10 @@ function across(y: number, kind: string): SVGLineElement {
   return svg('line', { x1: '0', x2: String(CHART_WIDTH), y1: at, y2: at, class: kind });
 }
 
-function cursor(chart: EnsoChart, height: number): SVGLineElement[] {
+function cursor(chart: EnsoChart): SVGLineElement[] {
   if (chart.cursorX === null) return [];
   const at = chart.cursorX.toFixed(1);
-  return [svg('line', { x1: at, x2: at, y1: '0', y2: String(height), class: 'enso-cursor' })];
+  return [svg('line', { x1: at, x2: at, y1: '0', y2: String(CHART_HEIGHT), class: 'enso-cursor' })];
 }
 
 function lines(chart: EnsoChart): SVGSVGElement {
@@ -47,31 +46,9 @@ function lines(chart: EnsoChart): SVGSVGElement {
     across(chart.coolY, 'enso-threshold is-cool'),
     across(chart.zeroY, 'enso-zero'),
     ...chart.lines.map((line) => svg('path', { d: line.d, class: `enso-line is-${line.id}` })),
-    ...cursor(chart, CHART_HEIGHT),
+    ...cursor(chart),
   );
   return root;
-}
-
-function strip(chart: EnsoChart, row: EnsoChart['strips'][number]): HTMLElement {
-  const drawn = svg('svg', {
-    viewBox: `0 0 ${String(CHART_WIDTH)} ${String(STRIP_HEIGHT)}`,
-    preserveAspectRatio: 'none',
-    'aria-hidden': 'true',
-    class: 'enso-strip',
-  });
-  drawn.append(
-    ...row.episodes.map((episode) =>
-      svg('rect', {
-        x: episode.x.toFixed(1),
-        width: episode.width.toFixed(1),
-        y: '0',
-        height: String(STRIP_HEIGHT),
-        class: `enso-episode is-${episode.phase}`,
-      }),
-    ),
-    ...cursor(chart, STRIP_HEIGHT),
-  );
-  return element('div', { class: `enso-row is-${row.id}` }, element('span', {}, row.name), drawn);
 }
 
 export interface EnsoView {
@@ -125,7 +102,7 @@ export const ensoPanel: LayerFactory<EnsoView | null> = (host) => {
           `The tropical Pacific, ${String(Math.floor(view.chart.first / 12))}–${String(Math.floor(view.chart.last / 12))}: °C from normal`,
         ),
         lines(view.chart),
-        ...view.chart.strips.map((row) => strip(view.chart, row)),
+        ...stripRows(view.chart.strips, CHART_WIDTH, view.chart.cursorX),
       );
       key.replaceChildren(
         ...view.names.map(({ id, name }) =>
