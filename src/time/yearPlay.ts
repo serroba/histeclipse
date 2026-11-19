@@ -1,12 +1,8 @@
 /**
- * Playing the Holocene's years by. The years advance with the time that passed, not the frames
- * drawn, so a 120 Hz display goes no faster than a 60 Hz one; and they are kept unrounded, so a
- * fraction of a year a frame still adds up.
+ * Playing the Holocene's years (or months) by, at the speeds of `playSpeeds.ts`. They advance
+ * with the time that passed, not the frames drawn, so a 120 Hz display goes no faster than a
+ * 60 Hz one; and they are kept unrounded, so a fraction of a step a frame still adds up.
  */
-
-/** Years a second the track can play at. */
-export const YEAR_SPEEDS = [10, 50, 200, 1000] as const;
-export type YearSpeed = (typeof YEAR_SPEEDS)[number];
 
 /** A frame after a stall (a hidden tab, a busy machine) counts as this long at most, seconds. */
 const LONGEST_FRAME = 0.25;

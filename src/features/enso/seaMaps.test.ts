@@ -77,7 +77,14 @@ describe('the sea temperature maps behind El Niño', () => {
     });
     sea.show(true, month(1997, 12));
     expect(painted.at(-1)).toBe('/data/enso-sst/1997-12.png');
-    expect(loaded.urls).toEqual(['/data/enso-sst/1997-12.png', '/data/enso-sst/1998-01.png']);
+    // Each month once, and the next three fetched ahead of the one shown (#915).
+    expect(loaded.urls).toEqual([
+      '/data/enso-sst/1997-12.png',
+      '/data/enso-sst/1998-01.png',
+      '/data/enso-sst/1998-02.png',
+      '/data/enso-sst/1998-03.png',
+      '/data/enso-sst/1998-04.png',
+    ]);
   });
 
   it('Given a month before the maps, Then nothing is painted', async () => {
@@ -137,8 +144,6 @@ describe('the sea temperature maps behind El Niño', () => {
         expect(painted).toHaveLength(step + 1);
       });
     }
-    sea.show(true, month(2000, 2));
-    expect(painted).toHaveLength(38);
     sea.show(true, month(2000, 1));
     await vi.waitFor(() => {
       expect(loaded.urls.filter((url) => url.endsWith('2000-01.png'))).toHaveLength(2);

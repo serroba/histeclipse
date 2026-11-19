@@ -17,7 +17,9 @@ import { type Layer, type ViewState } from '../../state/viewState';
 import { astronomicalYear, formatYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
 import { blankText, createHistoryTrack, STATES_HINT, STATES_WAIT } from '../../ui/historyTrack';
-import { yearPlayhead, type YearSpeed } from '../../time/yearPlay';
+import { yearPlayhead } from '../../time/yearPlay';
+import type { PlaySpeed, SpeedLevel } from '../../time/playSpeeds';
+import type { Moment } from '../../time/moment';
 import { windowOf } from '../../state/yearsWindow';
 import { windowing } from './windowing';
 import { yearOfMa } from '../../data/iceSheets';
@@ -57,7 +59,8 @@ export interface YearsPart {
 export function mountYears(context: YearsContext): YearsPart {
   const { base, fetchJson, store } = context;
   // The Holocene track: the years played by, from as far back as ΔT reaches to the present.
-  let historySpeed: YearSpeed = 50;
+  // Slow by default: on El Niño's years a year a second, month by month (#915).
+  let historySpeed: SpeedLevel = 'slow';
   let historyPlaying = false;
   const historyFrames = animationLoop(tickHistory, 0.08);
   let historyHead = yearPlayhead();
@@ -202,6 +205,14 @@ export function mountYears(context: YearsContext): YearsPart {
   // The years the bar shows (#749), and the fit when a layer with a span is turned on.
   const window = windowing(store, () => ({ first: historyFirst(), last: PRESENT_YEAR }));
 
+  function setTime(time: Moment): void {
+    store.set((state) => ({ ...state, time, selection: null }));
+  }
+
+  function speedsShown(state: ViewState): { speeds: PlaySpeed[]; speed: SpeedLevel } {
+    return { speeds: window.speeds(state, historySpeed).speeds, speed: historySpeed };
+  }
+
   function setYear(year: number): void {
     store.set((state) => ({
       ...state,
@@ -211,9 +222,8 @@ export function mountYears(context: YearsContext): YearsPart {
   }
 
   function startHistory(): void {
-    const shown = window.shown(store.get());
-    const year = store.get().time.date.year;
-    if (year >= shown.last || year < shown.first) setYear(shown.first);
+    const from = window.start(store.get());
+    if (from !== null) setTime(from);
     historyPlaying = true;
     setTravel(true);
     historyHead = yearPlayhead();
@@ -223,11 +233,9 @@ export function mountYears(context: YearsContext): YearsPart {
 
   // A new year at most every 80 ms: the scheduler accumulates time between updates.
   function tickHistory(seconds: number): void {
-    const year = store.get().time.date.year;
-    const { last } = window.shown(store.get());
-    const next = historyHead.step(year, historySpeed, seconds, last);
-    if (next !== year) setYear(next);
-    if (next >= last) stopHistory();
+    const { time, done } = window.step(store.get(), historySpeed, seconds, historyHead);
+    if (time !== null) setTime(time);
+    if (done) stopHistory();
   }
 
   function stopHistory(): void {
@@ -255,7 +263,7 @@ export function mountYears(context: YearsContext): YearsPart {
       last: shown.last,
       playing: historyPlaying,
       travelling,
-      speed: historySpeed,
+      ...speedsShown(state),
       ...window.choices(state),
       // What changed whenever states are on; while travelling, what to expect until then.
       changes: state.layers.has('empires')

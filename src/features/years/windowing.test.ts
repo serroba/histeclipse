@@ -4,6 +4,7 @@ import { createStore } from '../../state/store';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
+import { yearPlayhead } from '../../time/yearPlay';
 import { windowing } from './windowing';
 
 const WHOLE = { first: -9699, last: 2026 };
@@ -80,5 +81,83 @@ describe('the Years bar’s window (#749)', () => {
     const { windows, window } = windowing(store, () => WHOLE).choices(store.get());
     expect(window).toBe('1854,2026');
     expect(windows.at(-1)).toEqual({ value: '1854,2026', label: 'El Niño and La Niña, 1854–2026' });
+  });
+
+  it('Given a window, Then its speeds by level, and where playing starts', () => {
+    const store = createStore<ViewState>({
+      ...start(2026),
+      yearsWindow: { first: 1854, last: 2026 },
+    });
+    const bar = windowing(
+      store,
+      () => WHOLE,
+      () => 6,
+    );
+    const { speeds, speed } = bar.speeds(store.get(), 'fast');
+    expect(speeds.map(({ label }) => label)).toEqual(['1 yr/s', '5 yr/s', '20 yr/s']);
+    expect(speed.label).toBe('20 yr/s');
+    // In June 2026, today's month: the end, so it starts again from January 1854.
+    expect(bar.start(store.get())?.date).toMatchObject({ year: 1854, month: 1 });
+    expect(bar.start({ ...store.get(), time: start(1900).time })).toBeNull();
+    expect(bar.start({ ...store.get(), time: start(1500).time })?.date.year).toBe(1854);
+  });
+
+  it('Given a slow speed under a year a second, Then month by month, stopping at today’s month', () => {
+    const narrow = { first: 2016, last: 2026 };
+    const bar = windowing(
+      createStore(start(2026)),
+      () => WHOLE,
+      () => 6,
+    );
+    const head = yearPlayhead();
+    const may = (year: number, month: number): ViewState => {
+      const base = start(year);
+      return {
+        ...base,
+        yearsWindow: narrow,
+        time: { ...base.time, date: { ...base.time.date, month } },
+      };
+    };
+    // Ten years: slow is a month a second; a second moves a month on.
+    const next = bar.step(may(2020, 5), 'slow', 0.25, head);
+    expect(next).toEqual({ time: null, done: false });
+    const later = bar.step(may(2020, 5), 'slow', 0.25, head);
+    expect(later.time).toBeNull();
+    bar.step(may(2020, 5), 'slow', 0.25, head);
+    const moved = bar.step(may(2020, 5), 'slow', 0.25, head);
+    expect(moved.time?.date).toMatchObject({ year: 2020, month: 6 });
+    const end = bar.step(may(2026, 5), 'slow', 0.25, yearPlayhead());
+    expect(end.done).toBe(false);
+    const last = bar.step(may(2026, 6), 'slow', 0.25, yearPlayhead());
+    expect(last).toEqual({ time: null, done: true });
+    // Before year 0, months still count up: December 2 BCE (year -1) then January 1 BCE.
+    const bce = windowing(createStore(start(0)), () => WHOLE).step(
+      { ...may(-1, 12), yearsWindow: { first: -9, last: 1 } },
+      'slow',
+      0.25,
+      (() => {
+        const ahead = yearPlayhead();
+        ahead.step(-1 * 12 + 11, 1, 0.25, 100);
+        ahead.step(-1 * 12 + 11, 1, 0.25, 100);
+        ahead.step(-1 * 12 + 11, 1, 0.25, 100);
+        return ahead;
+      })(),
+    );
+    expect(bce.time?.date).toMatchObject({ year: 0, month: 1 });
+  });
+
+  it('Given a speed of years a second, Then year by year, stopping at the window’s end', () => {
+    const bar = windowing(
+      createStore(start(2000)),
+      () => WHOLE,
+      () => 6,
+    );
+    const state = { ...start(1000), yearsWindow: { first: 1000, last: 1100 } };
+    const moved = bar.step(state, 'fast', 0.25, yearPlayhead());
+    expect(moved.time?.date.year).toBe(1002);
+    expect(moved.done).toBe(false);
+    const end = bar.step({ ...state, time: start(1099).time }, 'fast', 0.25, yearPlayhead());
+    expect(end).toMatchObject({ done: true });
+    expect(end.time?.date.year).toBe(1100);
   });
 });

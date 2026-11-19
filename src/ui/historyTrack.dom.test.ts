@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest';
 
+import { speedsFor } from '../time/playSpeeds';
 import { createHistoryTrack } from './historyTrack';
 
 const VIEW = {
@@ -9,7 +10,8 @@ const VIEW = {
   last: 2026,
   playing: false,
   travelling: false,
-  speed: 50,
+  speeds: speedsFor(172),
+  speed: 'medium' as const,
   windows: [
     { value: 'all', label: 'The Holocene, 9700 BCE–2026' },
     { value: '1854,2026', label: 'El Niño and La Niña, 1854–2026' },
@@ -18,7 +20,7 @@ const VIEW = {
   changes: '',
   blank: null,
   earth: null,
-} as const;
+};
 
 function setUp() {
   const handlers = {
@@ -48,7 +50,13 @@ describe('the Holocene’s track', () => {
     const range = track.extras.querySelector<HTMLSelectElement>('.history-range');
     expect(range?.options).toHaveLength(2);
     expect(range?.value).toBe('1854,2026');
-    expect(track.extras.querySelector<HTMLSelectElement>('.history-speed')?.value).toBe('50');
+    const speed = track.extras.querySelector<HTMLSelectElement>('.history-speed');
+    expect(speed?.value).toBe('medium');
+    expect([...(speed?.options ?? [])].map((option) => option.textContent)).toEqual([
+      '1 yr/s',
+      '5 yr/s',
+      '20 yr/s',
+    ]);
     expect(track.root.querySelector<HTMLElement>('.history-notes')?.hidden).toBe(true);
     expect(track.extras.querySelector<HTMLElement>('.history-about')?.hidden).toBe(true);
   });
@@ -77,9 +85,9 @@ describe('the Holocene’s track', () => {
     range.value = 'all';
     range.dispatchEvent(new Event('change'));
     expect(handlers.onWindow).toHaveBeenCalledWith('all');
-    speed.value = '200';
+    speed.value = 'fast';
     speed.dispatchEvent(new Event('change'));
-    expect(handlers.onSpeed).toHaveBeenCalledWith(200);
+    expect(handlers.onSpeed).toHaveBeenCalledWith('fast');
     speed.value = 'nope';
     speed.dispatchEvent(new Event('change'));
     expect(handlers.onSpeed).toHaveBeenCalledOnce();

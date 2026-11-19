@@ -14,8 +14,17 @@ import {
   type WindowChoice,
   type YearsWindow,
 } from '../../state/yearsWindow';
+import type { Moment } from '../../time/moment';
+import {
+  byMonth,
+  speedAt,
+  speedsFor,
+  type PlaySpeed,
+  type SpeedLevel,
+} from '../../time/playSpeeds';
 import { astronomicalYear } from '../../time/year';
-import { moveToYear } from '../../time/yearInput';
+import { moveToMonth, moveToYear } from '../../time/yearInput';
+import type { YearPlayhead } from '../../time/yearPlay';
 
 export interface Windowing {
   /** The years the bar shows: the window picked, held to the track, or the whole track. */
@@ -30,11 +39,61 @@ export interface Windowing {
   fitNew(state: ViewState, playing: boolean): void;
   /** The windows the picker offers, and the one shown, as its value. */
   choices(state: ViewState): { readonly windows: WindowChoice[]; readonly window: string };
+  /** The speeds for the years shown (#915), and the one at the level picked. */
+  speeds(state: ViewState, level: SpeedLevel): { speeds: PlaySpeed[]; speed: PlaySpeed };
+  /** Where playing starts: the window's start if the moment is at its end or outside it. */
+  start(state: ViewState): Moment | null;
+  /**
+   * One frame of play, `seconds` long, at the level picked: the moment to show next (null if
+   * the same), and whether the window's end is reached. Month by month under a year a second.
+   */
+  step(
+    state: ViewState,
+    level: SpeedLevel,
+    seconds: number,
+    head: YearPlayhead,
+  ): { readonly time: Moment | null; readonly done: boolean };
+}
+
+/** Months since January of year 0. */
+const monthIndex = (year: number, month: number): number => year * 12 + month - 1;
+
+/**
+ * One frame of play in a window: month by month under a year a second, to its last month
+ * (`last`, months since January of year 0); else year by year, to its last year.
+ */
+function playStep(
+  state: ViewState,
+  window: YearsWindow,
+  last: number,
+  { yearsPerSecond }: PlaySpeed,
+  seconds: number,
+  head: YearPlayhead,
+): { readonly time: Moment | null; readonly done: boolean } {
+  const { year, month } = state.time.date;
+  if (byMonth(yearsPerSecond)) {
+    const at = monthIndex(year, month);
+    const next = head.step(at, yearsPerSecond * 12, seconds, last);
+    const time =
+      next === at
+        ? null
+        : moveToMonth(
+            state.time,
+            astronomicalYear(Math.floor(next / 12)),
+            (((next % 12) + 12) % 12) + 1,
+          );
+    return { time, done: next >= last };
+  }
+  const next = head.step(year, yearsPerSecond, seconds, window.last);
+  const time = next === year ? null : moveToYear(state.time, astronomicalYear(next));
+  return { time, done: next >= window.last };
 }
 
 export function windowing(
   store: Pick<Store<ViewState>, 'get' | 'set'>,
   whole: () => YearsWindow,
+  /** Today's month (1–12): playing to the present stops there. */
+  thisMonth: () => number = () => new Date().getUTCMonth() + 1,
 ): Windowing {
   let before: ReadonlySet<Layer> | null = null;
   const shown = (state: ViewState): YearsWindow =>
@@ -52,9 +111,34 @@ export function windowing(
       };
     });
   }
+  /** The last month the window plays to: today's if it ends in the present. */
+  function lastMonth(window: YearsWindow): number {
+    return window.last === whole().last
+      ? monthIndex(window.last, thisMonth())
+      : monthIndex(window.last, 12);
+  }
+  const speedOf = (state: ViewState, level: SpeedLevel): PlaySpeed => {
+    const window = shown(state);
+    return speedAt(window.last - window.first, level);
+  };
   return {
     shown,
     set,
+    speeds(state, level) {
+      const window = shown(state);
+      return { speeds: speedsFor(window.last - window.first), speed: speedOf(state, level) };
+    },
+    start(state) {
+      const window = shown(state);
+      const { year, month } = state.time.date;
+      const at = monthIndex(year, month);
+      if (at < lastMonth(window) && year >= window.first) return null;
+      return moveToMonth(state.time, astronomicalYear(window.first), 1);
+    },
+    step(state, level, seconds, head) {
+      const window = shown(state);
+      return playStep(state, window, lastMonth(window), speedOf(state, level), seconds, head);
+    },
     fitNew(state, playing) {
       const was = before;
       before = state.layers;

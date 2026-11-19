@@ -8,7 +8,7 @@
 
 import { astronomicalYear, formatYear } from '../time/year';
 import type { Coastline } from '../deepTime/coastline';
-import { YEAR_SPEEDS, type YearSpeed } from '../time/yearPlay';
+import { SPEED_LEVELS, type PlaySpeed, type SpeedLevel } from '../time/playSpeeds';
 import { element } from './dom';
 import { createTransport } from './transport';
 import './historyTrack.css';
@@ -21,7 +21,9 @@ interface HistoryView {
   readonly playing: boolean;
   /** Whether the travel view is on: even light, states and ways of life, the year's ice. */
   readonly travelling: boolean;
-  readonly speed: YearSpeed;
+  /** The speeds offered for the years shown (#915), and the level picked. */
+  readonly speeds: readonly PlaySpeed[];
+  readonly speed: SpeedLevel;
   /** The windows of years offered (#749), and the one shown, as their values. */
   readonly windows: readonly { readonly value: string; readonly label: string }[];
   readonly window: string;
@@ -99,7 +101,7 @@ export function createHistoryTrack(
   handlers: {
     onYear(year: number): void;
     onPlay(play: boolean): void;
-    onSpeed(speed: YearSpeed): void;
+    onSpeed(speed: SpeedLevel): void;
     /** Leave the travel view for today's Earth, day and night. */
     onEndTravel(): void;
     /** A window of years picked, by its value. */
@@ -129,13 +131,8 @@ export function createHistoryTrack(
     },
   );
   const { play, slider } = transport;
-  const speed = element(
-    'select',
-    { class: 'history-speed', 'aria-label': 'Speed' },
-    ...YEAR_SPEEDS.map((each) =>
-      element('option', { value: String(each) }, `${each.toLocaleString('en')} yr/s`),
-    ),
-  );
+  const speed = element('select', { class: 'history-speed', 'aria-label': 'Speed' });
+  let speedsListed = '';
   const range = element('select', { class: 'history-range', 'aria-label': 'Years shown' });
   range.addEventListener('change', () => {
     handlers.onWindow(range.value);
@@ -187,7 +184,7 @@ export function createHistoryTrack(
   );
   transport.join(root);
   speed.addEventListener('change', () => {
-    const picked = YEAR_SPEEDS.find((each) => String(each) === speed.value);
+    const picked = SPEED_LEVELS.find((each) => each === speed.value);
     if (picked !== undefined) handlers.onSpeed(picked);
   });
   return {
@@ -198,7 +195,14 @@ export function createHistoryTrack(
       slider.max = String(view.last);
       transport.render(view.playing, view.year);
       slider.setAttribute('aria-valuetext', formatYear(astronomicalYear(view.year)));
-      speed.value = String(view.speed);
+      const speedsShown = view.speeds.map(({ level, label }) => `${level}=${label}`).join('|');
+      if (speedsShown !== speedsListed) {
+        speedsListed = speedsShown;
+        speed.replaceChildren(
+          ...view.speeds.map(({ level, label }) => element('option', { value: level }, label)),
+        );
+      }
+      speed.value = view.speed;
       const listed = view.windows.map(({ value, label }) => `${value}=${label}`).join('|');
       if (listed !== rangeListed) {
         rangeListed = listed;
