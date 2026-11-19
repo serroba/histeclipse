@@ -822,6 +822,13 @@
     "url": "https://doi.org/10.5194/essd-16-3517-2024",
     "licence": "None stated; freely available from the Institute of Atmospheric Physics, CAS"
   },
+  "iapCurrents": {
+    "name": "IAP geostrophic currents (Cheng and Zhu)",
+    "kind": "dataset",
+    "cite": "Cheng, L., Zhu, J. (2016), Benefits of CMIP5 multimodel ensemble in reconstructing historical ocean subsurface temperature variations, Journal of Climate 29, 5393–5416, doi:10.1175/JCLI-D-15-0730.1; data: IAP gridded geostrophic currents, 0–2000 m, monthly, January 1940 to December 2021, 1°, from the Institute of Atmospheric Physics, Chinese Academy of Sciences (files of May 2022, accessed 20 November 2026). Our summary: the eastward and northward velocity in geostrophic balance with the pressure field IAP's ocean temperature and salinity analysis gives, at 41 depths to 2,000 m; it leaves out the wind-driven surface flow and fails near the equator, where the Coriolis force vanishes. The site keeps 1 m and 1,500 m",
+    "url": "https://doi.org/10.1175/JCLI-D-15-0730.1",
+    "licence": "None stated; freely available from the IAP, credited"
+  },
   "iauGazetteer": {
     "name": "Gazetteer of Planetary Nomenclature",
     "kind": "dataset",
