@@ -84,3 +84,22 @@ test('before 1950, El Niño and La Niña by two reconstructions, said to be ours
   });
   expect(problems).toEqual([]);
 });
+
+test('the El Niño panel shows the equatorial Pacific from below, the warm water east in December 1997 (#895)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const panel = page.getByRole('region', { name: 'El Niño and La Niña' });
+  await test.step('Given December 1997 with El Niño and La Niña on', async () => {
+    await page.goto('./?t=1997-12-15T12:00Z&layers=enso&cam=0,-140,3');
+    await globeRendered(page);
+  });
+  await test.step('Then the panel draws the section under the equator for the month', async () => {
+    await expect(panel).toContainText(
+      'Under the equator, December 1997: °C from normal (IAP v4.2)',
+    );
+    await expect(panel.locator('.enso-section-canvas')).toBeVisible();
+    await expect(panel).toContainText('0–400 m');
+  });
+  expect(problems).toEqual([]);
+});

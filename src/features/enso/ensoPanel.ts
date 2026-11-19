@@ -10,7 +10,10 @@ import type { GlobeLayer, LayerFactory, LayerHost } from '../../globe/layerHost'
 import { element } from '../../ui/dom';
 import { stripRows } from '../../ui/ensoStrips';
 import { joinGlobePanels } from '../../ui/globePanels';
+import { monthName } from '../../data/enso';
 import { CHART_HEIGHT, CHART_WIDTH, type EnsoChart } from './chartModel';
+import type { SectionView } from './sectionMaps';
+import { sectionFigure } from './sectionView';
 import './enso.css';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -61,6 +64,8 @@ export interface EnsoView {
   readonly sea: string;
   /** What can be shown on the globe, and what is. */
   readonly map: MapChoice;
+  /** The equatorial Pacific from below (#895), or null. */
+  readonly section: SectionView | null;
 }
 
 /** The maps there are to pick, which is picked and by which index, and its scale. */
@@ -133,6 +138,7 @@ function panel(
   const said = element('p', { class: 'enso-said', 'aria-live': 'polite' });
   const sea = element('p', { class: 'enso-sea' });
   const picks = mapPicks(pick);
+  const below = sectionFigure();
   const scale = element('span', { class: 'enso-scale', 'data-scale': 'sea' });
   const ends = element('span', { class: 'enso-ends' });
   const root = element(
@@ -141,6 +147,7 @@ function panel(
     figure,
     key,
     said,
+    below.root,
     picks.root,
     element('div', { class: 'enso-legend', 'aria-hidden': 'true' }, scale, ends),
     sea,
@@ -160,6 +167,12 @@ function panel(
       sea.textContent = view.sea;
       const choice = view.map;
       picks.update(choice);
+      below.draw(
+        view.section,
+        view.section === null
+          ? ''
+          : `Under the equator, ${monthName(view.section.at)}: °C from normal (IAP v4.2)`,
+      );
       scale.dataset['scale'] = choice.scale;
       ends.textContent = choice.ends;
       const at = String(view.chart.cursorX);

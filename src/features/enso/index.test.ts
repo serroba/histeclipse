@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import composites from '../../../public/data/enso-composites/index.json';
 import early from '../../../public/data/enso/early.json';
+import ocean from '../../../public/data/ocean-temperature/index.json';
 import file from '../../../public/data/enso/index.json';
 import ersstMaps from '../../../public/data/enso-ersst/index.json';
 import type { LayerFactory, LayerHost } from '../../globe/layerHost';
@@ -58,15 +59,17 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
         : Promise.resolve(
             new Response(
               JSON.stringify(
-                url.includes('enso-sst')
-                  ? MAPS
-                  : url.includes('enso-ersst')
-                    ? ersstMaps
-                    : url.includes('enso-composites')
-                      ? composites
-                      : url.includes('early')
-                        ? early
-                        : file,
+                url.includes('ocean-temperature')
+                  ? ocean
+                  : url.includes('enso-sst')
+                    ? MAPS
+                    : url.includes('enso-ersst')
+                      ? ersstMaps
+                      : url.includes('enso-composites')
+                        ? composites
+                        : url.includes('early')
+                          ? early
+                          : file,
               ),
             ),
           ),
@@ -105,7 +108,7 @@ describe('El Niño and La Niña as a feature', () => {
     shown.show?.(inYear(1998), JD);
     expect(shown.said?.()).toBe('Loading the El Niño indices…');
     await vi.waitFor(() => {
-      expect(refresh).toHaveBeenCalledTimes(3);
+      expect(refresh).toHaveBeenCalledTimes(4);
     });
     shown.show?.(inYear(1998), JD);
     expect(panels.at(-1)).toMatchObject({
@@ -121,6 +124,11 @@ describe('El Niño and La Niña as a feature', () => {
         bound: 4,
         image: { url: '/data/enso-sst/1998-01.png' },
       });
+    });
+    // Once the equatorial section has come in too, the same month again costs nothing.
+    await vi.waitFor(() => {
+      shown.show?.(inYear(1998), JD);
+      expect((panels.at(-1) as { section: unknown }).section).not.toBeNull();
     });
     const count = panels.length;
     shown.show?.(inYear(1998), JD);
@@ -155,7 +163,7 @@ describe('El Niño and La Niña as a feature', () => {
     const shown = ensoFeature.mount(context, context);
     shown.show?.(inYear(1998), JD);
     await vi.waitFor(() => {
-      expect(refresh).toHaveBeenCalledTimes(3);
+      expect(refresh).toHaveBeenCalledTimes(4);
     });
     shown.show?.(inYear(1998), JD);
     const chooser = container.querySelector<HTMLSelectElement>('.enso-pick');
@@ -209,7 +217,7 @@ describe('El Niño and La Niña as a feature', () => {
     expect(shown.here?.(place)).toBeNull();
     shown.show?.(place, JD);
     await vi.waitFor(() => {
-      expect(refresh).toHaveBeenCalledTimes(3);
+      expect(refresh).toHaveBeenCalledTimes(4);
     });
     shown.show?.(place, JD);
     await vi.waitFor(() => {
@@ -229,7 +237,7 @@ describe('El Niño and La Niña as a feature', () => {
     const greatOne = inYear(1877);
     shown.show?.(greatOne, JD);
     await vi.waitFor(() => {
-      expect(refresh).toHaveBeenCalledTimes(3);
+      expect(refresh).toHaveBeenCalledTimes(4);
     });
     shown.show?.(greatOne, JD);
     expect(panels.at(-1)).toMatchObject({
@@ -252,7 +260,7 @@ describe('El Niño and La Niña as a feature', () => {
     const november = { ...today, time: { ...today.time, date: { ...today.time.date, month: 11 } } };
     shown.show?.(november, JD);
     await vi.waitFor(() => {
-      expect(refresh).toHaveBeenCalledTimes(3);
+      expect(refresh).toHaveBeenCalledTimes(4);
     });
     shown.show?.(november, JD);
     expect(shown.said?.()).toMatch(/^No index yet for November 2026; the latest, September 2026: /);
@@ -262,6 +270,26 @@ describe('El Niño and La Niña as a feature', () => {
     });
     await vi.waitFor(() => {
       expect(painted.at(-1)).toMatchObject({ image: { url: '/data/enso-sst/2026-10.png' } });
+    });
+  });
+
+  it('Given a month since 1940, Then the panel draws the equatorial Pacific from below (#895)', async () => {
+    const { context, panels } = fakeContext();
+    const shown = ensoFeature.mount(context, context);
+    const place = inYear(1998);
+    for (let tries = 0; tries < 20; tries += 1) {
+      shown.show?.(place, JD);
+      const last = panels.at(-1) as { section?: unknown } | null | undefined;
+      if (last?.section !== null && last?.section !== undefined) break;
+      await new Promise((done) => {
+        setTimeout(done, 10);
+      });
+    }
+    expect(panels.at(-1)).toMatchObject({
+      section: {
+        at: 1998 * 12,
+        packed: { image: { url: '/data/ocean-temperature/section/1998-01.png' } },
+      },
     });
   });
 });

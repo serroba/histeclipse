@@ -25,6 +25,7 @@ import { compositeMaps, type CompositeMaps } from './compositeMaps';
 import type { PackedMonth } from '../../globe/packedMaps';
 import type { MapChoice } from './ensoPanel';
 import { pixelsOf } from './pixels';
+import { sectionMaps, type SectionView } from './sectionMaps';
 import { seaMaps, type SeaMaps } from './seaMaps';
 
 /** The first month OISST's maps hold, September 1981: ERSST's before (#894). */
@@ -87,7 +88,12 @@ export interface GlobeMaps {
   /** Paints what is picked for the month, or nothing when `on` is false. */
   show(on: boolean, at: number): void;
   /** What the panel says of the globe's map, and offers. */
-  view(at: number): { readonly sea: string; readonly map: MapChoice };
+  view(at: number): {
+    readonly sea: string;
+    readonly map: MapChoice;
+    /** The equatorial Pacific from below (#895), from 1940; null before or until loaded. */
+    readonly section: SectionView | null;
+  };
   /**
    * For "Why here?" (#893): the sea at the place in the month, if shown and at sea, and what El
    * Niño and La Niña usually bring there in the season; null if nothing is known yet.
@@ -131,6 +137,7 @@ export function globeMaps(context: GlobeMapsContext): GlobeMaps {
   const ersst = seaMaps({ ...shared, folder: `${context.base}data/enso-ersst/` });
   const seaFor = (at: number): SeaMaps => (at < OISST_FROM ? ersst : oisst);
   const composites = compositeMaps({ ...shared, folder: `${context.base}data/enso-composites/` });
+  const section = sectionMaps({ ...shared, base: context.base });
   return {
     pick(map, index) {
       const listed = composites.index();
@@ -147,6 +154,7 @@ export function globeMaps(context: GlobeMapsContext): GlobeMaps {
       sea.show(on && chosen === null, at);
       if (on) composites.load();
       composites.show(on ? chosen : null, by);
+      section.show(on, at);
     },
     here(place, at) {
       const offset = nodeOffset(place.latitude, place.longitude);
@@ -182,6 +190,7 @@ export function globeMaps(context: GlobeMapsContext): GlobeMaps {
             ? seaText(sea.index(), at)
             : `On the globe: ${compositeText(listed, map, (id) => id.toUpperCase())}`,
         map: choiceOf(listed, chosen, by, sea.index()?.bound ?? null),
+        section: section.view(at),
       };
     },
   };
