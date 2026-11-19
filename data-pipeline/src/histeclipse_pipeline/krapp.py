@@ -91,6 +91,9 @@ def node_weights(centres: Grid, nodes: Grid, *, period: float | None = None) -> 
     """
     distance = np.abs(nodes[:, None] - centres[None, :])
     if period is not None:
+        # Reduced into one period first: a node at 100° W and a cell at 300° E are 400° apart,
+        # and 360 - 400 would be negative, putting the cell "within reach" (#901).
+        distance = np.mod(distance, period)
         distance = np.minimum(distance, period - distance)
     return np.asarray(distance <= _REACH, dtype=np.float64)
 
