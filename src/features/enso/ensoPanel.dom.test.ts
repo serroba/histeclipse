@@ -31,6 +31,7 @@ describe('the ENSO panel', () => {
       text: 'December 1997.',
       sea: 'On the globe, the sea.',
       map: sea,
+      section: null,
     });
     expect(root?.hidden).toBe(false);
     expect(root?.querySelectorAll('.enso-line')).toHaveLength(2);
@@ -50,7 +51,14 @@ describe('the ENSO panel', () => {
     expect(root?.querySelector('.enso-ends')?.textContent).toBe('−4 · 0 · +4 °C');
     expect(root?.querySelector<HTMLSelectElement>('.enso-by')?.hidden).toBe(true);
     const svg = root?.querySelector('svg');
-    panel.update({ chart: ensoChart(data, at), names, text: 'Again.', sea: 's', map: sea });
+    panel.update({
+      chart: ensoChart(data, at),
+      names,
+      text: 'Again.',
+      sea: 's',
+      map: sea,
+      section: null,
+    });
     expect(root?.querySelector('svg')).toBe(svg);
     panel.update({
       chart: ensoChart(data, monthOf(1900, 1)),
@@ -58,6 +66,7 @@ describe('the ENSO panel', () => {
       text: 'Outside.',
       sea: 's',
       map: sea,
+      section: null,
     });
     expect(root?.querySelectorAll('.enso-cursor, .enso-mark')).toHaveLength(0);
     panel.update(null);
@@ -87,6 +96,7 @@ describe('the ENSO panel', () => {
         scale: 'rain',
         ends: '−2 · 0 · +2 mm a day',
       },
+      section: null,
     } as const;
     panel.update(view);
     panel.update(view);
