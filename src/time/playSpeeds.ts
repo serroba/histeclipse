@@ -1,6 +1,7 @@
 /**
- * The Years bar's speeds (#915), set by the years it shows: slow plays them all in about two
- * minutes, medium in thirty seconds, fast in ten, each rounded to a speed easy to read. Under a
+ * The Years bar's speeds (#915), set by the years it shows: slow plays them all in about a
+ * quarter of an hour, medium in two minutes, fast in twenty seconds, each rounded to a speed
+ * easy to read: on El Niño's 1854-2026, 2 months, 1 year and 10 years a second. Under a
  * year a second the speeds are months a second; up to a year a second the years play month by
  * month.
  */
@@ -9,7 +10,7 @@ export const SPEED_LEVELS = ['slow', 'medium', 'fast'] as const;
 export type SpeedLevel = (typeof SPEED_LEVELS)[number];
 
 /** Seconds to play the whole window at each level. */
-const SECONDS: Readonly<Record<SpeedLevel, number>> = { slow: 120, medium: 30, fast: 10 };
+const SECONDS: Readonly<Record<SpeedLevel, number>> = { slow: 900, medium: 120, fast: 20 };
 
 /** The months a second offered under a year a second. */
 const MONTH_STEPS = [1, 2, 3, 6] as const;

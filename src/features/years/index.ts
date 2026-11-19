@@ -21,7 +21,7 @@ import { yearPlayhead } from '../../time/yearPlay';
 import type { PlaySpeed, SpeedLevel } from '../../time/playSpeeds';
 import type { Moment } from '../../time/moment';
 import { windowOf } from '../../state/yearsWindow';
-import { windowing } from './windowing';
+import { travelBrings, windowing } from './windowing';
 import { yearOfMa } from '../../data/iceSheets';
 import { PRESENT_YEAR } from '../../time/present';
 import { createPeriodBands } from '../../ui/periodBands';
@@ -174,7 +174,7 @@ export function mountYears(context: YearsContext): YearsPart {
     // state is drawn, come on with it, and go with it if it brought them.
     const { layers } = store.get();
     if (open) {
-      travelBrought = TRAVEL_LAYERS.filter((layer) => !layers.has(layer));
+      travelBrought = travelBrings(layers);
       if (travelBrought.length > 0) {
         store.set((state) => ({
           ...state,
@@ -196,7 +196,6 @@ export function mountYears(context: YearsContext): YearsPart {
   // While the track is open, the globe is lit evenly and the markers of single finds and
   // events rest: at years a second they flicker past without meaning.
   let travelling = false;
-  const TRAVEL_LAYERS: readonly Layer[] = ['empires', 'ways'];
   let travelBrought: readonly Layer[] = [];
 
   function historyFirst(): number {

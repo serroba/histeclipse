@@ -5,7 +5,7 @@ import { defaultViewState, withLayer, type ViewState } from '../../state/viewSta
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
 import { yearPlayhead } from '../../time/yearPlay';
-import { windowing } from './windowing';
+import { travelBrings, windowing } from './windowing';
 
 const WHOLE = { first: -9699, last: 2026 };
 const start = (year: number): ViewState => {
@@ -94,8 +94,8 @@ describe('the Years bar’s window (#749)', () => {
       () => 6,
     );
     const { speeds, speed } = bar.speeds(store.get(), 'fast');
-    expect(speeds.map(({ label }) => label)).toEqual(['1 yr/s', '5 yr/s', '20 yr/s']);
-    expect(speed.label).toBe('20 yr/s');
+    expect(speeds.map(({ label }) => label)).toEqual(['2 months/s', '1 yr/s', '10 yr/s']);
+    expect(speed.label).toBe('10 yr/s');
     // In June 2026, today's month: the end, so it starts again from January 1854.
     expect(bar.start(store.get())?.date).toMatchObject({ year: 1854, month: 1 });
     expect(bar.start({ ...store.get(), time: start(1900).time })).toBeNull();
@@ -153,11 +153,19 @@ describe('the Years bar’s window (#749)', () => {
       () => 6,
     );
     const state = { ...start(1000), yearsWindow: { first: 1000, last: 1100 } };
+    // A hundred years fast: 5 yr/s, so a quarter-second moves a year on.
     const moved = bar.step(state, 'fast', 0.25, yearPlayhead());
-    expect(moved.time?.date.year).toBe(1002);
+    expect(moved.time?.date.year).toBe(1001);
     expect(moved.done).toBe(false);
     const end = bar.step({ ...state, time: start(1099).time }, 'fast', 0.25, yearPlayhead());
     expect(end).toMatchObject({ done: true });
     expect(end.time?.date.year).toBe(1100);
+  });
+
+  it('Given a layer with years of its own on, Then playing brings no borders or ways of life', () => {
+    expect(travelBrings(new Set())).toEqual(['empires', 'ways']);
+    expect(travelBrings(new Set(['empires'] as const))).toEqual(['ways']);
+    expect(travelBrings(new Set(['enso'] as const))).toEqual([]);
+    expect(travelBrings(new Set(['rocks', 'warming'] as const))).toEqual([]);
   });
 });

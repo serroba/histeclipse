@@ -33,11 +33,11 @@ test('playing history moves through the years and names the states that come and
     // Nothing has changed yet, so the track says nothing, rather than what it would say.
     await expect(bar.getByTestId('history-changes')).toBeHidden();
   });
-  await test.step('When they play slowly, at 100 years a second over the Holocene (#915)', async () => {
+  await test.step('When they play slowly, at 10 years a second over the Holocene (#915)', async () => {
     // Slow enough that the trip to today outlasts the scenario: a faster one can end just as
     // Stop is pressed, and the tap then starts a new trip.
     const speed = page.getByRole('navigation', { name: 'Year and eclipses' }).getByLabel('Speed');
-    await expect(speed.locator('option')).toHaveText(['100 yr/s', '500 yr/s', '1,000 yr/s']);
+    await expect(speed.locator('option')).toHaveText(['10 yr/s', '100 yr/s', '500 yr/s']);
     await speed.selectOption('slow');
     await bar.getByRole('button', { name: 'Travel through the years' }).click();
   });
@@ -321,7 +321,7 @@ test('as the years play, state names stay put on the map, and only a few light u
     await openTrack(page);
     await expect(page.locator('.empire-label:not([hidden])').first()).toBeVisible();
   });
-  await test.step('When they travel slowly, at 100 years a second', async () => {
+  await test.step('When they travel slowly, at 10 years a second', async () => {
     await page
       .getByRole('navigation', { name: 'Year and eclipses' })
       .getByLabel('Speed')

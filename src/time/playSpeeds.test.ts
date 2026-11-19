@@ -21,21 +21,17 @@ describe('the Years bar’s speeds (#915)', () => {
     ]);
   });
 
-  it('Given a window, Then slow, medium and fast in about two minutes, thirty seconds and ten', () => {
-    expect(speedsFor(172).map(({ label }) => label)).toEqual(['1 yr/s', '5 yr/s', '20 yr/s']);
-    expect(speedsFor(11725).map(({ label }) => label)).toEqual([
-      '100 yr/s',
-      '500 yr/s',
-      '1,000 yr/s',
-    ]);
-    expect(speedsFor(10).map(({ label }) => label)).toEqual(['1 month/s', '3 months/s', '1 yr/s']);
+  it('Given a window, Then slow, medium and fast in about a quarter-hour, two minutes and twenty seconds', () => {
+    expect(speedsFor(172).map(({ label }) => label)).toEqual(['2 months/s', '1 yr/s', '10 yr/s']);
+    expect(speedsFor(11725).map(({ label }) => label)).toEqual(['10 yr/s', '100 yr/s', '500 yr/s']);
+    expect(speedsFor(100).map(({ label }) => label)).toEqual(['1 month/s', '6 months/s', '5 yr/s']);
   });
 
   it('Given levels that fall together, Then one speed, and a level gone takes the slower', () => {
-    // Two years: slow and medium both round to a month a second.
-    expect(speedsFor(2).map(({ level }) => level)).toEqual(['slow', 'fast']);
-    expect(speedAt(2, 'medium').level).toBe('slow');
-    expect(speedAt(2, 'fast').yearsPerSecond).toBeCloseTo(2 / 12);
+    // Ten years: slow and medium both round to a month a second.
+    expect(speedsFor(10).map(({ level }) => level)).toEqual(['slow', 'fast']);
+    expect(speedAt(10, 'medium').level).toBe('slow');
+    expect(speedAt(10, 'fast').yearsPerSecond).toBeCloseTo(0.5);
     expect(speedAt(0, 'slow').label).toBe('1 month/s');
   });
 
