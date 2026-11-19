@@ -8,4 +8,7 @@ export const temperature = layer({
   spans: ['all', 'eons'],
   reach: 'Maps every 5 million years, back 540 million years.',
   covers: { oldestMa: 540 },
+  // A thermometer.
+  icon: ['M10 4a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z', 'M12 9v7'],
+  why: 'temperature',
 });

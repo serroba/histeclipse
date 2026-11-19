@@ -1,4 +1,5 @@
 import { layer } from './layer';
+import { sealevel } from './sealevel';
 
 /** El Niño and La Niña since 1950, NOAA's two indices side by side (#886). */
 export const enso = layer({
@@ -10,4 +11,6 @@ export const enso = layer({
   reach:
     'From January 1950 to September 2026 by NOAA’s indices, a value a month; from 1854 to 1949 by ours, from ERSST and HadISST.',
   covers: { years: [1854, 2026] },
+  icon: sealevel.icon,
+  why: 'enso',
 });

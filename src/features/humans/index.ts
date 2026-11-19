@@ -76,7 +76,7 @@ function note(
 export const humansFeature: Feature = {
   id: 'humans',
   picks: 'human',
-  deepChip: { label: 'Humans', icon: 'humans', why: 'humans' },
+  deepChip: { label: 'Humans', why: 'humans' },
   // Shown in deep time, by the deep-time view: nothing to watch besides.
   watches: () => [],
   mount(context) {

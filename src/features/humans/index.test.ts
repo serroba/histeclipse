@@ -100,7 +100,7 @@ async function loaded(context: FeatureContext, refresh: ReturnType<typeof vi.fn>
 
 describe('the humans as a feature', () => {
   it('has its chip in the deep-time bar', () => {
-    expect(humansFeature.deepChip).toEqual({ label: 'Humans', icon: 'humans', why: 'humans' });
+    expect(humansFeature.deepChip).toEqual({ label: 'Humans', why: 'humans' });
   });
 
   it('offers its chip on the ice-age span only, off until turned on', () => {

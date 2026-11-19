@@ -19,8 +19,8 @@ function chips() {
   const why = vi.fn((id: string, label: string) => element('button', { title: id }, label));
   const ui = createDeepChips(
     [
-      { layer: 'humans', label: 'Humans', icon: 'humans', why: 'humans' },
-      { layer: 'fossils', label: 'Fossils', icon: 'fossils', why: 'fossils', whyLabel: 'Finds' },
+      { layer: 'humans', label: 'Humans', why: 'humans' },
+      { layer: 'fossils', label: 'Fossils', why: 'fossils', whyLabel: 'Finds' },
     ],
     why,
     change,

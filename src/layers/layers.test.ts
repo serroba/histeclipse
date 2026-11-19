@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { LAYER_GROUPS, LAYERS } from './layers';
+import { WHYS } from '../sources/registry';
+import { LAYER_GROUPS, layerEntry, LAYERS } from './layers';
 
 describe('the layers', () => {
   const choices = LAYER_GROUPS.flatMap((group) => group.layers);
@@ -18,6 +19,16 @@ describe('the layers', () => {
       expect(choice.label, choice.id).not.toBe('');
       expect(choice.about, choice.id).not.toBe('');
       expect(choice.reach, choice.id).not.toBe('');
+    }
+  });
+
+  it('gives each layer an icon to draw and a why there is', () => {
+    for (const id of LAYERS) {
+      const entry = layerEntry(id);
+      expect(entry.id).toBe(id);
+      expect(entry.icon.length, id).toBeGreaterThan(0);
+      for (const path of entry.icon) expect(path, id).toMatch(/^M/);
+      expect(WHYS, id).toHaveProperty(entry.why);
     }
   });
 

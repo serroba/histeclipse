@@ -12,4 +12,7 @@ export const carbonMade = layer({
     'Where cosmic rays make carbon-14, high in the air: most over the poles, where Earth’s magnetic field shields least. Try another field or Sun, and follow it into living things.',
   spans: ['years', 'ice'],
   reach: `${CARBON_LIMIT} Drawn on the Years and Ice ages spans, for the last 50,000 years.`,
+  // A ray striking from above, and the burst it sets off.
+  icon: ['M5 3l5 8', 'M10 11l-3 5', 'M10 11l1 6', 'M10 11l5 4', 'M3 20h18'],
+  why: 'carbonMade',
 });

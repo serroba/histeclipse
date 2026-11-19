@@ -9,7 +9,6 @@ import type { DeepChip, DeepChipView } from '../../ui/deepChips';
 export const PLATES_CHIP: DeepChip = {
   layer: 'plates',
   label: 'Plates',
-  icon: 'plates',
   why: 'plates',
 };
 

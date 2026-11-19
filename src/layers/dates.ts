@@ -9,4 +9,7 @@ export const dates = layer({
   spans: ['years'],
   reach: 'From 10,550 BCE (12,500 years before 1950) to 1950.',
   covers: { years: [-10549, 1950] },
+  // A grid of squares, some filled: dates counted by cell.
+  icon: ['M4 4h6v6H4z', 'M14 4h6v6h-6z', 'M4 14h6v6H4z', 'M15 15h4v4h-4z'],
+  why: 'dates',
 });

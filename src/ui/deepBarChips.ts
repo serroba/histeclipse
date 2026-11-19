@@ -6,7 +6,7 @@
  * air's gas charts.
  */
 
-import type { DeepScale } from '../state/viewState';
+import type { DeepScale, Layer } from '../state/viewState';
 import type { DeepAir } from '../data/deepAir';
 import type { Atmosphere } from '../data/atmosphere';
 import type { Co2Archive } from '../data/co2Archive';
@@ -14,12 +14,12 @@ import type { SeaLevelIndex } from '../data/seaLevel';
 import type { TemperatureModel, TemperatureShow } from '../deepTime/temperatureModels';
 import { createDeepAirNote } from './deepAirNote';
 import { element } from './dom';
-import { uiIcon, type UiIcon } from './icons';
+import { layerIcon } from './icons';
 import { createSeaLevelChart } from './seaLevelChart';
 import { createTemperatureLegend, type TemperatureView } from './temperatureLegend';
 
-/** A chip's button: its icon and word, pressed while its layer is on. */
-function chipButton(icon: UiIcon, label: string, hidden: boolean): HTMLButtonElement {
+/** A chip's button: its layer's icon and word, pressed while its layer is on. */
+function chipButton(layer: Layer, label: string, hidden: boolean): HTMLButtonElement {
   return element(
     'button',
     {
@@ -29,7 +29,7 @@ function chipButton(icon: UiIcon, label: string, hidden: boolean): HTMLButtonEle
       title: label,
       ...(hidden ? { hidden: '' } : {}),
     },
-    uiIcon(icon),
+    layerIcon(layer, 18),
     element('span', { class: 'icon-label' }, label),
   );
 }
@@ -52,7 +52,7 @@ export function createSeaLevelChip(handlers: {
   /** A moment picked on the chart, thousands of years ago. */
   onKa(ka: number): void;
 }): SeaLevelChip {
-  const button = chipButton('seaLevel', 'Sea level', false);
+  const button = chipButton('sealevel', 'Sea level', false);
   const chart = createSeaLevelChart({
     onKa: (ka) => {
       handlers.onKa(ka);

@@ -39,7 +39,7 @@ function note(at: FossilsAt): DeepNotePart[] {
 export const fossilsFeature: Feature = {
   id: 'fossils',
   picks: 'fossil',
-  deepChip: { label: 'Fossils', icon: 'fossils', why: 'fossils' },
+  deepChip: { label: 'Fossils', why: 'fossils' },
   // Shown in deep time, by the deep-time view: nothing to watch besides.
   watches: () => [],
   mount(context) {

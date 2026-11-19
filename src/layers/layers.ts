@@ -70,6 +70,15 @@ export type LayerChoice = LayerEntry<Layer>;
 
 export const LAYERS: readonly Layer[] = ALL.map((entry) => entry.id);
 
+const ENTRIES: ReadonlyMap<Layer, LayerChoice> = new Map(ALL.map((entry) => [entry.id, entry]));
+
+/** A layer's description. */
+export function layerEntry(id: Layer): LayerChoice {
+  const entry = ENTRIES.get(id);
+  if (entry === undefined) throw new Error(`no layer ${id}`);
+  return entry;
+}
+
 export interface LayerGroup {
   readonly name: string;
   readonly layers: readonly LayerChoice[];

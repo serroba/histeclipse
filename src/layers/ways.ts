@@ -9,4 +9,7 @@ export const ways = layer({
   spans: ['years'],
   reach: 'From 10,000 years ago to 1850 CE, rated at ten moments.',
   covers: { years: [-7999, 1850] },
+  // A hut with a field before it: how people lived.
+  icon: ['M4 12l6-6 6 6', 'M6 10.5V17h8v-6.5', 'M9 17v-3h2v3', 'M17 19h4', 'M3 20h11', 'M18 15v4'],
+  why: 'ways',
 });

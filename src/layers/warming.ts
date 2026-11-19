@@ -1,4 +1,5 @@
 import { layer } from './layer';
+import { temperature } from './temperature';
 
 /** Global surface temperature since 1850, every record side by side (#526). */
 export const warming = layer({
@@ -9,4 +10,6 @@ export const warming = layer({
   spans: ['years'],
   reach: 'From 1850 to 2025, on the 1850–1900 baseline; each record from its own start.',
   covers: { years: [1850, 2025] },
+  icon: temperature.icon,
+  why: 'warming',
 });
