@@ -1,10 +1,10 @@
 /**
- * Which whys are on screen (#490): the ground, the bodies, each layer drawn, the borders and
- * an eclipse, for the Sources list; and the why of each layer's row in the Layers panel. The
+ * Which whys are on screen (#490): the ground, the bodies and each layer drawn, for the
+ * Sources list; and the why of each layer's row in the Layers panel. The
  * whys themselves are in the sources registry.
  */
 
-import { layerEntry } from '../layers/layers';
+import { layerEntry, LAYERS } from '../layers/layers';
 import type { WhyId } from '../sources/registry';
 import type { BorderSource, Layer, Span } from './viewState';
 
@@ -20,34 +20,10 @@ export interface Scene {
   readonly drawsOn: (layer: Layer, span: Span) => boolean;
 }
 
-/** The layers whose why is their own id. */
-const LAYER_WHYS: readonly (Layer & WhyId)[] = [
-  'radiocarbon',
-  'dates',
-  'carbonMade',
-  'ways',
-  'periods',
-  'genomes',
-  'rocks',
-  'impacts',
-  'volcanoes',
-  'ozone',
-  'warming',
-  'oceanHeat',
-  'enso',
-  'orbits',
-  'spacecraft',
-  'asteroids',
-  'telescopes',
-  'temperature',
-  'sealevel',
-  'plates',
-  'humans',
-  'air',
-  'fossils',
-];
-
-/** The whys of what is on screen: the ground first, then the sky's bodies, then each layer. */
+/**
+ * The whys of what is on screen: the ground first, then the sky's bodies, then each layer drawn,
+ * in the layers' own order, as the chips beside Layers list them (#904).
+ */
 export function onScreen(scene: Scene): WhyId[] {
   if (scene.mode === 'sky') return ['sky', 'bodies'];
   const ground: WhyId[] =
@@ -60,16 +36,17 @@ export function onScreen(scene: Scene): WhyId[] {
           : scene.span === 'ice'
             ? ['ice-surface']
             : ['deep-surface', 'deep-evidence'];
-  const layers = (layer: Layer): boolean =>
-    scene.layers.has(layer) && scene.drawsOn(layer, scene.span);
-  const borders: WhyId[] = !layers('empires')
-    ? []
-    : scene.borders === 'both'
-      ? ['empires-cliopatria', 'empires-ohm']
-      : [scene.borders === 'ohm' ? 'empires-ohm' : 'empires-cliopatria'];
-  const eclipses: WhyId[] =
-    scene.eclipse && scene.span === 'years' && layers('eclipses') ? ['eclipses'] : [];
-  return [...ground, ...eclipses, ...borders, ...LAYER_WHYS.filter(layers)];
+  const drawn = LAYERS.filter(
+    (layer) => scene.layers.has(layer) && scene.drawsOn(layer, scene.span),
+  );
+  return [...ground, ...drawn.flatMap((layer) => whysOf(layer, scene))];
+}
+
+/** A layer's whys while it is drawn: its own, both sources of borders compared, an eclipse picked. */
+function whysOf(layer: Layer, scene: Scene): WhyId[] {
+  if (layer === 'eclipses') return scene.eclipse && scene.span === 'years' ? ['eclipses'] : [];
+  if (layer === 'empires' && scene.borders === 'both') return ['empires-cliopatria', 'empires-ohm'];
+  return [layerWhy(layer, scene.borders)];
 }
 
 /** The why for a layer's row in the Layers panel. */
