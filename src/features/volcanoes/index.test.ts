@@ -6,7 +6,7 @@ import { defaultViewState, withLayer, type ViewState } from '../../state/viewSta
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
 import type { MarkerCardContent } from '../../ui/markerCard';
-import { RESTING, type FeatureContext } from '../feature';
+import { RESTING, type Capability, type FeatureContext } from '../feature';
 import { volcanoesFeature } from '.';
 
 const off = defaultViewState(new Date('2026-01-01T00:00:00Z'));
@@ -32,20 +32,22 @@ function fakeContext(options: { readonly failing?: boolean; readonly travelling?
           ),
     globe: { addLayer: () => ({ update: (input: unknown) => drawn.push(input) }) },
     notify,
-    showCard: (card: MarkerCardContent) => {
-      cardOpen = true;
-      cards.push(card);
+    cards: {
+      show: (card: MarkerCardContent) => {
+        cardOpen = true;
+        cards.push(card);
+      },
+      open: () => cardOpen,
     },
-    cardOpen: () => cardOpen,
     timeline: { travelling: () => options.travelling === true },
     refresh,
-  } as unknown as FeatureContext;
+  } as unknown as FeatureContext<Capability>;
   return { context, drawn, cards, refresh, notify };
 }
 
 /** Shown once the eruptions have loaded. */
-async function loaded(context: FeatureContext, refresh: ReturnType<typeof vi.fn>) {
-  const shown = volcanoesFeature.mount(context);
+async function loaded(context: FeatureContext<Capability>, refresh: ReturnType<typeof vi.fn>) {
+  const shown = volcanoesFeature.mount(context, context);
   shown.show?.(in1815, JD);
   await vi.waitFor(() => {
     expect(refresh).toHaveBeenCalled();
@@ -61,7 +63,7 @@ describe('the volcanoes as a feature', () => {
 
   it('draws nothing and says nothing while its layer is off', () => {
     const { context, drawn } = fakeContext();
-    const shown = volcanoesFeature.mount(context);
+    const shown = volcanoesFeature.mount(context, context);
     shown.show?.(off, JD);
     expect(drawn).toEqual([null]);
     expect(shown.said?.()).toBeNull();
@@ -69,7 +71,7 @@ describe('the volcanoes as a feature', () => {
 
   it('rests while the reader travels through the years', () => {
     const { context, drawn } = fakeContext({ travelling: true });
-    const shown = volcanoesFeature.mount(context);
+    const shown = volcanoesFeature.mount(context, context);
     shown.show?.(in1815, JD);
     expect(drawn).toEqual([null]);
     expect(shown.said?.()).toBe(RESTING);
@@ -77,7 +79,7 @@ describe('the volcanoes as a feature', () => {
 
   it('says it is loading, then marks the year’s eruptions, Tambora among them', async () => {
     const { context, drawn, refresh } = fakeContext();
-    const shown = volcanoesFeature.mount(context);
+    const shown = volcanoesFeature.mount(context, context);
     shown.show?.(in1815, JD);
     expect(shown.said?.()).toBe('Loading the eruptions…');
     await vi.waitFor(() => {
@@ -121,7 +123,7 @@ describe('the volcanoes as a feature', () => {
 
   it('says so when the eruptions cannot be loaded, and tries again next time', async () => {
     const { context, notify } = fakeContext({ failing: true });
-    const shown = volcanoesFeature.mount(context);
+    const shown = volcanoesFeature.mount(context, context);
     shown.show?.(in1815, JD);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the eruptions: offline');

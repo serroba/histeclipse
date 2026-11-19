@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import index from '../../../public/data/ocean-heat-map/index.json';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
-import type { FeatureContext } from '../feature';
+import type { Capability, FeatureContext } from '../feature';
 import { oceanHeatLayer } from './oceanHeatLayer';
 import { oceanHeatFeature } from '.';
 
@@ -39,14 +39,14 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
     },
     notify,
     refresh,
-  } as unknown as FeatureContext;
+  } as unknown as FeatureContext<Capability>;
   return { context, painted, panels, refresh, notify };
 }
 
 describe('ocean heat as a feature', () => {
   it('Given it off, Then nothing is loaded or said', () => {
     const { context, painted } = fakeContext();
-    const shown = oceanHeatFeature.mount(context);
+    const shown = oceanHeatFeature.mount(context, context);
     shown.show?.(off, JD);
     expect(painted).toEqual([]);
     expect(shown.said?.()).toBeNull();
@@ -55,7 +55,7 @@ describe('ocean heat as a feature', () => {
   it('Given it on, Then the index loads, the first map is painted once its image loads, and it goes in deep time', async () => {
     loaded.urls.length = 0;
     const { context, painted, panels, refresh } = fakeContext();
-    const shown = oceanHeatFeature.mount(context);
+    const shown = oceanHeatFeature.mount(context, context);
     shown.show?.(on, JD);
     expect(shown.said?.()).toBe('Loading the ocean heat maps…');
     await vi.waitFor(() => {
@@ -78,13 +78,13 @@ describe('ocean heat as a feature', () => {
 
   it('Given the index or a map does not load, Then it says so', async () => {
     const failing = fakeContext({ failing: true });
-    oceanHeatFeature.mount(failing.context).show?.(on, JD);
+    oceanHeatFeature.mount(failing.context, failing.context).show?.(on, JD);
     await vi.waitFor(() => {
       expect(failing.notify).toHaveBeenCalledWith('Could not load the ocean heat maps: offline');
     });
     loaded.fail = true;
     const { context, notify } = fakeContext();
-    oceanHeatFeature.mount(context).show?.(on, JD);
+    oceanHeatFeature.mount(context, context).show?.(on, JD);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the ocean heat map: offline');
     });

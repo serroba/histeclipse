@@ -34,7 +34,7 @@ import { element } from './ui/dom';
 import { layOutPage } from './ui/pageLayout';
 import { FEATURES } from './features';
 import { deepChipsOf, mountFeatures } from './features/mounted';
-import type { FeatureContext } from './features/feature';
+import type { Capabilities, FeatureCore } from './features/feature';
 import { arrivalSearch } from './explore/destinations';
 import { viewOpener } from './explore/open';
 import { createWelcome } from './ui/welcome';
@@ -564,19 +564,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     refreshLayers: redraws.askWith('layers'),
   });
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
-  const featureContext: FeatureContext = {
+  const featureCore: FeatureCore = {
     base,
     fetchJson,
     globe,
-    zoomRail,
     notify,
-    timeline: time.timeline,
-    ephemerides: ephemerides.ephemerides,
-    showCard: markerCard.show,
-    cardOpen: () => markerCard.dialog.open,
-    openAnchor,
-    openLineages: treeOfLife.openLineagesAt,
-    openTree: treeOfLife.openTreeAt,
     change: (update) => {
       store.set(update);
     },
@@ -588,7 +580,18 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showSheets(now);
     },
   };
-  const features = mountFeatures(FEATURES, featureContext);
+  // What a feature may ask for by name (#909): each is lent only those in its `needs`.
+  const capabilities: Capabilities = {
+    cards: { show: markerCard.show, open: () => markerCard.dialog.open },
+    anchors: { open: openAnchor },
+    ephemerides: ephemerides.ephemerides,
+    timeline: time.timeline,
+    zoomRail,
+    tree: { openLineages: treeOfLife.openLineagesAt, openTree: treeOfLife.openTreeAt },
+    settledLand: globe,
+    evenLight: globe,
+  };
+  const features = mountFeatures(FEATURES, featureCore, capabilities);
   const [deltaT, lunarCatalog, solarCatalog] = await Promise.all([
     DeltaT.load(`${base}data/delta-t.json`, fetchJson),
     LunarCatalog.load(`${base}data/lunar/`, fetchJson),

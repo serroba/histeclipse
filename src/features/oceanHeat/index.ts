@@ -7,7 +7,7 @@
 
 import { loadOceanHeat, mapText, type OceanHeat } from '../../data/oceanHeat';
 import { errorMessage } from '../../util/errors';
-import type { Feature } from '../feature';
+import { feature } from '../feature';
 import { loadImage } from '../../util/loadImage';
 import { oceanHeatLayer, type PackedMap } from './oceanHeatLayer';
 import { oceanHeatPanel } from './oceanHeatPanel';
@@ -15,8 +15,9 @@ import { oceanHeatPanel } from './oceanHeatPanel';
 /** The map shown first: the whole column, over the whole record. */
 const FIRST_MAP = '0-2000m-1960-2025';
 
-export const oceanHeatFeature: Feature = {
+export const oceanHeatFeature = feature({
   id: 'oceanHeat',
+  needs: [],
   watches: (state) => [state.layers, state.mode, state.ma, state.focus],
   mount(context) {
     const painted = context.globe.addLayer(oceanHeatLayer);
@@ -98,4 +99,4 @@ export const oceanHeatFeature: Feature = {
       said: () => said,
     };
   },
-};
+});

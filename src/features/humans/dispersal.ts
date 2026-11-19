@@ -36,7 +36,7 @@ export interface Dispersal {
   show(scenario: DispersalScenario | null, ma: number): DispersalShown;
 }
 
-export function createDispersal(context: FeatureContext): Dispersal {
+export function createDispersal(context: FeatureContext<'settledLand'>): Dispersal {
   let index: Promise<DispersalIndex> | null = null;
   /** Each scenario loaded: its arrival times and its name. */
   const grids = new Map<string, { readonly grid: ArrivalGrid; readonly name: string }>();
@@ -69,12 +69,12 @@ export function createDispersal(context: FeatureContext): Dispersal {
     show(scenario, ma) {
       const loaded = scenario === null || scenario === 'off' ? undefined : grids.get(scenario);
       if (scenario === null || scenario === 'off' || loaded === undefined) {
-        context.globe.setSettled(null);
+        context.settledLand.setSettled(null);
         if (scenario !== null && scenario !== 'off') load(scenario);
         return { scenario: scenario ?? 'off', name: null, share: null };
       }
       const ka = ma * 1000;
-      context.globe.setSettled({ scenario, grid: loaded.grid, ka });
+      context.settledLand.setSettled({ scenario, grid: loaded.grid, ka });
       return { scenario, name: loaded.name, share: settledShare(loaded.grid, ka) };
     },
   };

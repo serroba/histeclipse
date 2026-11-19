@@ -4,7 +4,7 @@ import data from '../../../public/data/asteroids.json';
 import type { PlanetEphemeris } from '../../astro/planets';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import type { MarkerCardContent } from '../../ui/markerCard';
-import type { FeatureContext } from '../feature';
+import type { Capability, FeatureContext } from '../feature';
 import { asteroidsFeature } from '.';
 
 const J2000 = 2451545;
@@ -31,10 +31,10 @@ function fakeContext(planetsLoaded: boolean) {
       setAsteroids: (offered: boolean, shown: boolean) => rail.push([offered, shown]),
     },
     notify,
-    showCard: (card: MarkerCardContent) => cards.push(card),
+    cards: { show: (card: MarkerCardContent) => cards.push(card) },
     ephemerides: { planets: () => (planetsLoaded ? planets : null), loadPlanets },
     refresh,
-  } as unknown as FeatureContext;
+  } as unknown as FeatureContext<Capability>;
   return { context, drawn, cards, rail, refresh, notify, loadPlanets };
 }
 
@@ -46,21 +46,21 @@ describe('the asteroid belt as a feature', () => {
 
   it('draws nothing while its layer is off, and offers its icon in the globe view', () => {
     const { context, drawn, rail } = fakeContext(true);
-    asteroidsFeature.mount(context).show?.(off, J2000);
+    asteroidsFeature.mount(context, context).show?.(off, J2000);
     expect(drawn).toEqual([null]);
     expect(rail).toEqual([[true, false]]);
   });
 
   it('in deep time it is neither offered nor drawn', () => {
     const { context, drawn, rail } = fakeContext(true);
-    asteroidsFeature.mount(context).show?.({ ...on, ma: 100 }, J2000);
+    asteroidsFeature.mount(context, context).show?.({ ...on, ma: 100 }, J2000);
     expect(drawn).toEqual([null]);
     expect(rail).toEqual([[false, true]]);
   });
 
   it('loads the orbits once, then draws every asteroid from Earth and opens a card on a tap', async () => {
     const { context, drawn, cards, refresh } = fakeContext(true);
-    const belt = asteroidsFeature.mount(context);
+    const belt = asteroidsFeature.mount(context, context);
     belt.show?.(on, J2000);
     belt.show?.(on, J2000);
     await vi.waitFor(() => {
@@ -81,7 +81,7 @@ describe('the asteroid belt as a feature', () => {
 
   it('asks for the planets, and waits for them, before placing the belt', async () => {
     const { context, drawn, refresh, loadPlanets } = fakeContext(false);
-    const belt = asteroidsFeature.mount(context);
+    const belt = asteroidsFeature.mount(context, context);
     belt.show?.(on, J2000);
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalled();
@@ -94,7 +94,7 @@ describe('the asteroid belt as a feature', () => {
   it('says so when the orbits cannot be loaded, and tries again next time', async () => {
     const { context, notify } = fakeContext(true);
     const failing = { ...context, fetchJson: () => Promise.reject(new Error('offline')) };
-    const belt = asteroidsFeature.mount(failing);
+    const belt = asteroidsFeature.mount(failing, failing);
     belt.show?.(on, J2000);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the asteroids: offline');

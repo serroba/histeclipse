@@ -5,14 +5,15 @@
  */
 
 import { errorMessage } from '../../util/errors';
-import type { Feature } from '../feature';
+import { feature } from '../feature';
 import { asteroidBelt } from './beltLayer';
 import { asteroidCard } from './card';
 import { asteroidPosition, loadAsteroids, type Asteroids } from './orbits';
 import './asteroids.css';
 
-export const asteroidsFeature: Feature = {
+export const asteroidsFeature = feature({
   id: 'asteroids',
+  needs: ['cards', 'ephemerides', 'zoomRail'],
   picks: 'asteroid',
   // On or off with its layer.
   watches: (state) => [state.layers],
@@ -67,9 +68,9 @@ export const asteroidsFeature: Feature = {
       pick(id) {
         const asteroid = asteroids?.asteroids.find((each) => each.number === id);
         if (asteroid !== undefined && asteroids !== null && shownAt !== null) {
-          context.showCard(asteroidCard(asteroid, asteroids.fitted, shownAt));
+          context.cards.show(asteroidCard(asteroid, asteroids.fitted, shownAt));
         }
       },
     };
   },
-};
+});

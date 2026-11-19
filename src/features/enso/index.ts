@@ -10,7 +10,7 @@
 import { ensoText, loadEnso, monthOf, type Enso } from '../../data/enso';
 import { errorMessage } from '../../util/errors';
 import type { ViewState } from '../../state/viewState';
-import type { Feature } from '../feature';
+import { feature } from '../feature';
 import { ensoChart } from './chartModel';
 import { ensoMapLayer } from './ensoMapLayer';
 import { ensoPanel } from './ensoPanel';
@@ -31,8 +31,9 @@ function shownOn(state: ViewState): boolean {
   );
 }
 
-export const ensoFeature: Feature = {
+export const ensoFeature = feature({
   id: 'enso',
+  needs: [],
   watches: (state) => [state.layers, state.mode, state.ma, state.focus],
   mount(context) {
     // What was last shown, so the moments of one month cost nothing.
@@ -118,4 +119,4 @@ export const ensoFeature: Feature = {
       },
     };
   },
-};
+});

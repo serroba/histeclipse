@@ -5,7 +5,7 @@ import { defaultViewState, withLayer, type ViewState } from '../../state/viewSta
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
 import type { MarkerCardContent } from '../../ui/markerCard';
-import type { FeatureContext } from '../feature';
+import type { Capability, FeatureContext } from '../feature';
 import { groundModel, type HeldSite } from './groundModelLayer';
 import type { TelescopeMark } from './telescopeMarks';
 import { telescopesFeature } from '.';
@@ -41,17 +41,19 @@ function fakeContext(failing = false) {
     },
     change,
     notify,
-    showCard: (card: MarkerCardContent) => cards.push(card),
-    cardOpen: () => cards.length > 0,
+    cards: {
+      show: (card: MarkerCardContent) => cards.push(card),
+      open: () => cards.length > 0,
+    },
     timeline: { travelling: () => true },
     refresh,
-  } as unknown as FeatureContext;
+  } as unknown as FeatureContext<Capability>;
   return { context, drawn, sites, cards, refresh, notify, change };
 }
 
 async function loaded(year: number) {
   const fake = fakeContext();
-  const shown = telescopesFeature.mount(fake.context);
+  const shown = telescopesFeature.mount(fake.context, fake.context);
   shown.show?.(inYear(year), JD);
   await vi.waitFor(() => {
     expect(fake.refresh).toHaveBeenCalled();
@@ -67,7 +69,7 @@ describe('the Telescopes layer as a feature (#848)', () => {
 
   it('draws nothing and says nothing while its layer is off', () => {
     const { context, drawn } = fakeContext();
-    const shown = telescopesFeature.mount(context);
+    const shown = telescopesFeature.mount(context, context);
     shown.show?.(off, JD);
     expect(drawn).toEqual([null]);
     expect(shown.said?.()).toBeNull();
@@ -97,7 +99,7 @@ describe('the Telescopes layer as a feature (#848)', () => {
 
   it('tells the reader when the telescopes cannot load, and tries again', async () => {
     const { context, notify, drawn } = fakeContext(true);
-    const shown = telescopesFeature.mount(context);
+    const shown = telescopesFeature.mount(context, context);
     shown.show?.(inYear(2000), JD);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the telescopes: offline');
