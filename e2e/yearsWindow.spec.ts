@@ -26,6 +26,10 @@ test('turning on El Niño fits the Years bar to its years, and the range can be 
       '1854',
     );
   });
+  await test.step('And the speeds are set by those years, the slowest a year a second (#915)', async () => {
+    const speed = page.getByRole('navigation', { name: 'Year and eclipses' }).getByLabel('Speed');
+    await expect(speed.locator('option')).toHaveText(['1 yr/s', '5 yr/s', '20 yr/s']);
+  });
   await test.step('When they pick the whole Holocene again', async () => {
     await range.selectOption({ label: 'The Holocene, 9700 BCE–2026' });
   });

@@ -30,3 +30,17 @@ export function moveToYear(moment: Moment, year: AstronomicalYear): Moment {
     minuteOfDay: moment.minuteOfDay,
   };
 }
+
+/**
+ * The same day of the month and time of day in another month (1–12) of another year, in the
+ * calendar in use then: the 31st becomes the month's last day where it is shorter.
+ */
+export function moveToMonth(moment: Moment, year: AstronomicalYear, month: number): Moment {
+  const { day } = moment.date;
+  const calendar = defaultCalendarFor(year, month, Math.floor(day));
+  const lastDay = daysInMonth(year, month, calendar);
+  return {
+    date: calendarDateOf(year, month, Math.min(Math.floor(day), lastDay), calendar),
+    minuteOfDay: moment.minuteOfDay,
+  };
+}

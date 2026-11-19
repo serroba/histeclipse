@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { calendarDateOf } from './julianDay';
 import { astronomicalYear } from './year';
-import { moveToYear, parseYearNumber } from './yearInput';
+import { moveToMonth, moveToYear, parseYearNumber } from './yearInput';
 
 describe('parseYearNumber', () => {
   it.each([
@@ -50,5 +50,17 @@ describe('moveToYear', () => {
       astronomicalYear(2025),
     );
     expect(moved.date).toEqual(at(2025, 2, 28, 'gregorian'));
+  });
+});
+
+describe('moveToMonth', () => {
+  it('keeps the day and time, held to a shorter month', () => {
+    const moment = {
+      date: { year: astronomicalYear(2024), month: 1, day: 31, calendar: 'gregorian' as const },
+      minuteOfDay: 720,
+    };
+    const moved = moveToMonth(moment, astronomicalYear(2023), 2);
+    expect(moved.date).toMatchObject({ year: 2023, month: 2, day: 28 });
+    expect(moved.minuteOfDay).toBe(720);
   });
 });
