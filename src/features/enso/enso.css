@@ -110,3 +110,32 @@
 .enso-panel .is-oni {
   --index: #e3c46a;
 }
+
+/* What the globe shows (#891, #892): the sea this month, or a composite, and by which index. */
+.enso-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 4px;
+}
+
+.enso-pick,
+.enso-by {
+  max-width: 100%;
+  font: inherit;
+}
+
+.enso-by[hidden] {
+  display: none;
+}
+
+.enso-scale[data-scale='rain'] {
+  background: linear-gradient(to right, rgb(140 81 10), rgb(245 243 238), rgb(1 110 100));
+}
+
+.enso-ends {
+  display: block;
+  color: var(--ink-muted);
+  font-size: 11px;
+  text-align: center;
+}

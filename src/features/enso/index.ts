@@ -2,17 +2,18 @@
  * El Niño and La Niña (#886) on the feature contract (#380): in the years, NOAA's two indices of
  * the tropical Pacific since 1950 side by side beside the globe, the month shown marked, and what
  * each says of it, none picked over the other; and on the globe, from September 1981, that
- * month's sea surface temperature against its 1991–2020 mean (NOAA OISST). Loaded with the layer.
+ * month's sea surface temperature against its 1991–2020 mean (NOAA OISST), or, picked instead,
+ * what El Niño or La Niña usually does to rain or temperature by either index (#891, #892).
+ * Loaded with the layer.
  */
 
 import { ensoText, loadEnso, monthOf, type Enso } from '../../data/enso';
-import { seaText } from '../../data/ensoSst';
 import { errorMessage } from '../../util/errors';
 import type { Feature } from '../feature';
 import { ensoChart } from './chartModel';
 import { ensoMapLayer } from './ensoMapLayer';
 import { ensoPanel } from './ensoPanel';
-import { seaMaps } from './seaMaps';
+import { globeMaps } from './globeMaps';
 
 export const ensoFeature: Feature = {
   id: 'enso',
@@ -20,10 +21,9 @@ export const ensoFeature: Feature = {
   mount(context) {
     // What was last shown, so the moments of one month cost nothing.
     let shownFor = '';
-    const panel = context.globe.addLayer(ensoPanel);
     const painted = context.globe.addLayer(ensoMapLayer);
-    const sea = seaMaps({
-      folder: `${context.base}data/enso-sst/`,
+    const maps = globeMaps({
+      base: context.base,
       fetchJson: context.fetchJson,
       paint: (packed) => {
         painted.update(packed);
@@ -36,6 +36,11 @@ export const ensoFeature: Feature = {
         context.refresh();
       },
     });
+    const panel = context.globe.addLayer(
+      ensoPanel((map, index) => {
+        maps.pick(map, index);
+      }),
+    );
     let enso: Enso | null = null;
     let loading = false;
     let said: string | null = null;
@@ -67,7 +72,7 @@ export const ensoFeature: Feature = {
         const key = `${String(on)}:${String(enso !== null)}:${String(at)}`;
         if (key === shownFor) return;
         shownFor = key;
-        sea.show(on, at);
+        maps.show(on, at);
         if (!on) {
           said = null;
           panel.update(null);
@@ -83,7 +88,7 @@ export const ensoFeature: Feature = {
           chart: ensoChart(enso, at),
           names: enso.indices.map((index) => ({ id: index.id, name: index.label })),
           text: said,
-          sea: seaText(sea.index(), at),
+          ...maps.view(enso, at),
         });
       },
       said: () => said,

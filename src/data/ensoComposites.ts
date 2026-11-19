@@ -49,7 +49,7 @@ const CompositesSchema = v.strictObject({
 export type EnsoComposites = v.InferOutput<typeof CompositesSchema>;
 export type CompositeVariable = EnsoComposites['variables'][number];
 export type CompositeMap = EnsoComposites['maps'][number];
-export type Season = CompositeMap['season'];
+type Season = CompositeMap['season'];
 
 export async function loadEnsoComposites(url: string, fetchJson: Fetch): Promise<EnsoComposites> {
   return getJson(fetchJson, url, CompositesSchema);
@@ -85,16 +85,16 @@ const SEASON_WORDS: Readonly<Record<Season, string>> = {
   jja: 'June–August',
 };
 
-/** A pick in words: `Rain, El Niño, December–February`. */
-export function pickName(pick: CompositePick, variable: CompositeVariable): string {
-  return `${variable.label}, ${PHASE_WORDS[pick.phase]}, ${SEASON_WORDS[pick.season]}`;
-}
-
-/** Every pick there is, variables first, then phases, then seasons. */
-export function picks(composites: EnsoComposites): CompositePick[] {
+/** Every pick there is, named in words (`Rain, El Niño, December–February`): variables first. */
+export function pickOptions(
+  composites: EnsoComposites,
+): { readonly pick: CompositePick; readonly label: string }[] {
   return composites.variables.flatMap((variable) =>
     (['elNino', 'laNina'] as const).flatMap((phase) =>
-      (['djf', 'jja'] as const).map((season) => ({ variable: variable.id, phase, season })),
+      (['djf', 'jja'] as const).map((season) => ({
+        pick: { variable: variable.id, phase, season },
+        label: `${variable.label}, ${PHASE_WORDS[phase]}, ${SEASON_WORDS[season]}`,
+      })),
     ),
   );
 }

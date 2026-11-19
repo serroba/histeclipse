@@ -7,8 +7,7 @@ import {
   compositeOf,
   compositeText,
   loadEnsoComposites,
-  pickName,
-  picks,
+  pickOptions,
   scaleEnds,
   type EnsoComposites,
 } from './ensoComposites';
@@ -30,14 +29,18 @@ describe('El Niño and La Niña composites', () => {
     const pick = { variable: 'rain', phase: 'elNino', season: 'djf' } as const;
     expect(compositeFor(data, pick, 'roni')?.file).toBe('rain-roni-elNino-djf.png');
     expect(compositeFor(data, pick, 'nope')).toBeNull();
-    const [rain] = data.variables;
-    expect(rain && pickName(pick, rain)).toBe('Rain, El Niño, December–February');
-    expect(picks(data)).toHaveLength(8);
-    expect(picks(data)[7]).toEqual({ variable: 'temperature', phase: 'laNina', season: 'jja' });
+    const listed = pickOptions(data);
+    expect(listed[0]).toEqual({ pick, label: 'Rain, El Niño, December–February' });
+    expect(listed).toHaveLength(8);
+    expect(listed[7]?.pick).toEqual({ variable: 'temperature', phase: 'laNina', season: 'jja' });
   });
 
   it('Given a map, Then how many seasons, which, how much is significant, and how the other index differs', () => {
-    const map = compositeFor(data, { variable: 'temperature', phase: 'elNino', season: 'djf' }, 'roni');
+    const map = compositeFor(
+      data,
+      { variable: 'temperature', phase: 'elNino', season: 'djf' },
+      'roni',
+    );
     expect(map).not.toBeNull();
     if (map === null) return;
     const said = compositeText(data, map, upper);
@@ -65,9 +68,9 @@ describe('El Niño and La Niña composites', () => {
     expect(compositeText(one, { ...first, seasons: 0, years: [] }, upper)).toBe(
       'rain in El Niño’s December–February, by A: no such season in the years used.',
     );
-    expect(
-      compositeText(one, { ...first, seasons: 4, years: [1, 2, 3, 4] }, upper),
-    ).toContain('(1, 2, 3, 4)');
+    expect(compositeText(one, { ...first, seasons: 4, years: [1, 2, 3, 4] }, upper)).toContain(
+      '(1, 2, 3, 4)',
+    );
   });
 
   it('Given packed pixels, Then coloured by sign on the variable’s own scale, faded where not significant, none without data', () => {

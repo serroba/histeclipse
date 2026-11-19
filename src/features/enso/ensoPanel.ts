@@ -1,11 +1,12 @@
 /**
  * Beside the globe while El Niño and La Niña is on (#886): NOAA's two indices on one chart, the
  * ±0.5 °C that names an episode, and under it each index's episodes on a strip of its own, so
- * where they disagree shows; the month shown marked; under it what each says of that month, and
- * whom to credit (in full in the layer's Why).
+ * where they disagree shows; the month shown marked; under it what each says of that month, what
+ * the globe shows (the sea this month, or what El Niño or La Niña usually does to rain or
+ * temperature, #891, #892) with its own scale, and whom to credit (in full in the layer's Why).
  */
 
-import type { LayerFactory } from '../../globe/layerHost';
+import type { GlobeLayer, LayerFactory, LayerHost } from '../../globe/layerHost';
 import { element } from '../../ui/dom';
 import { stripRows } from '../../ui/ensoStrips';
 import { joinGlobePanels } from '../../ui/globePanels';
@@ -58,30 +59,95 @@ export interface EnsoView {
   readonly text: string;
   /** What the globe shows of the sea, or why it shows nothing. */
   readonly sea: string;
+  /** What can be shown on the globe, and what is. */
+  readonly map: MapChoice;
 }
 
-/** The panel; null takes it away. */
-export const ensoPanel: LayerFactory<EnsoView | null> = (host) => {
+/** The maps there are to pick, which is picked and by which index, and its scale. */
+export interface MapChoice {
+  readonly options: readonly { readonly value: string; readonly label: string }[];
+  readonly chosen: string;
+  /** The indices a composite can be picked by; none for the sea. */
+  readonly indices: readonly { readonly id: string; readonly name: string }[];
+  readonly by: string;
+  readonly scale: 'sea' | 'rain' | 'temperature';
+  /** The scale's ends in words: `−2 · 0 · +2 mm a day`. */
+  readonly ends: string;
+}
+
+function options(
+  select: HTMLSelectElement,
+  listed: readonly { readonly value: string; readonly label: string }[],
+): void {
+  select.replaceChildren(...listed.map(({ value, label }) => element('option', { value }, label)));
+}
+
+/** The pickers of what the globe shows and by which index; `pick` hears a change. */
+function mapPicks(pick: (map: string, by: string) => void): {
+  readonly root: HTMLElement;
+  readonly update: (choice: MapChoice) => void;
+} {
+  const chooser = element('select', { class: 'enso-pick', 'aria-label': 'On the globe' });
+  const by = element('select', { class: 'enso-by', 'aria-label': 'By which index' });
+  const hear = (): void => {
+    pick(chooser.value, by.value);
+  };
+  chooser.addEventListener('change', hear);
+  by.addEventListener('change', hear);
+  let listed = '';
+  let indicesListed = '';
+  return {
+    root: element('div', { class: 'enso-picks' }, chooser, by),
+    update(choice) {
+      const values = choice.options.map(({ value }) => value).join(',');
+      if (values !== listed) {
+        listed = values;
+        options(chooser, choice.options);
+      }
+      const ids = choice.indices.map(({ id }) => id).join(',');
+      if (ids !== indicesListed) {
+        indicesListed = ids;
+        options(
+          by,
+          choice.indices.map(({ id, name }) => ({ value: id, label: `by ${name}` })),
+        );
+      }
+      chooser.value = choice.chosen;
+      by.value = choice.by;
+      by.hidden = choice.indices.length === 0;
+    },
+  };
+}
+
+/** The panel; `pick` hears the map and index chosen. Null takes it away. */
+export function ensoPanel(pick: (map: string, by: string) => void): LayerFactory<EnsoView | null> {
+  return (host) => panel(host, pick);
+}
+
+function panel(
+  host: LayerHost,
+  pick: (map: string, by: string) => void,
+): GlobeLayer<EnsoView | null> {
   const figure = element('figure', { class: 'enso-figure' });
   const key = element('ul', { class: 'enso-key', 'aria-label': 'The indices' });
   const said = element('p', { class: 'enso-said', 'aria-live': 'polite' });
   const sea = element('p', { class: 'enso-sea' });
+  const picks = mapPicks(pick);
+  const scale = element('span', { class: 'enso-scale', 'data-scale': 'sea' });
+  const ends = element('span', { class: 'enso-ends' });
   const root = element(
     'section',
     { class: 'enso-panel', 'aria-label': 'El Niño and La Niña', hidden: '' },
     figure,
     key,
     said,
-    element(
-      'div',
-      { class: 'enso-legend', 'aria-hidden': 'true' },
-      element('span', { class: 'enso-scale' }),
-    ),
+    picks.root,
+    element('div', { class: 'enso-legend', 'aria-hidden': 'true' }, scale, ends),
     sea,
     element(
       'p',
       { class: 'enso-credit' },
-      'NOAA Climate Prediction Center; NOAA OISST v2.1, from NOAA PSL. Red: El Niño; blue: La Niña, as each index names them.',
+      'NOAA Climate Prediction Center; NOAA OISST v2.1, from NOAA PSL; GPCP v2.3; Berkeley Earth. Red: El Niño; blue: La Niña, as each index names them.',
     ),
   );
   joinGlobePanels(host.container, root, 4);
@@ -92,6 +158,10 @@ export const ensoPanel: LayerFactory<EnsoView | null> = (host) => {
       if (view === null) return;
       said.textContent = view.text;
       sea.textContent = view.sea;
+      const choice = view.map;
+      picks.update(choice);
+      scale.dataset['scale'] = choice.scale;
+      ends.textContent = choice.ends;
       const at = String(view.chart.cursorX);
       if (at === drawnFor) return;
       drawnFor = at;
@@ -111,4 +181,4 @@ export const ensoPanel: LayerFactory<EnsoView | null> = (host) => {
       );
     },
   };
-};
+}

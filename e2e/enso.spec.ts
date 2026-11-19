@@ -1,4 +1,7 @@
-/** El Niño and La Niña (#886): NOAA's two indices side by side, where they disagree, and the sea. */
+/**
+ * El Niño and La Niña (#886): NOAA's two indices side by side, where they disagree, and the sea;
+ * and what El Niño usually does to rain, by either index (#891, #892).
+ */
 
 import { collectProblems, expect, globeRendered, test } from './support';
 
@@ -24,6 +27,17 @@ test('the El Niño indices are charted side by side, and a month where they disa
   await test.step('And the month is said with each index’s call, since they disagree', async () => {
     await expect(panel).toContainText('January 2025: the indices disagree. RONI: La Niña');
     await expect(panel).toContainText('ONI: neither');
+  });
+  await test.step('When they pick El Niño’s rain in December–February, by ONI, Then it is painted on its own scale, its seasons said', async () => {
+    await panel
+      .getByRole('combobox', { name: 'On the globe' })
+      .selectOption({ label: 'Rain, El Niño, December–February' });
+    await panel.getByRole('combobox', { name: 'By which index' }).selectOption({ label: 'by ONI' });
+    await expect(panel).toContainText(
+      /On the globe: Rain in El Niño’s December–February, by ONI: the mean of \d+ seasons/,
+    );
+    await expect(panel).toContainText('mm a day');
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-enso-sst', 'on');
   });
   expect(problems).toEqual([]);
 });
