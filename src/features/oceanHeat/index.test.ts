@@ -66,7 +66,7 @@ describe('ocean heat as a feature', () => {
     });
     expect(loaded.urls).toEqual(['/data/ocean-heat-map/0-2000m-1960-2025.png']);
     expect(panels.at(-1)).toMatchObject({ shown: '0-2000m-1960-2025' });
-    expect(shown.said?.()).toMatch(/^0-2000 m, 1960–2025: on average 0\.65 W\/m² gained/);
+    expect(shown.said?.()).toMatch(/^0-2000 m, 1960–2025: on average 0\.54 W\/m² gained/);
     shown.show?.(on, JD);
     shown.show?.({ ...on, ma: 5 }, JD);
     expect(painted.at(-1)).toBeNull();
