@@ -1,8 +1,9 @@
 /**
  * The sea surface temperature maps behind El Niño and La Niña (#886): their index loaded with the
  * layer, then each month's image as the month shown changes, the last few kept so stepping back
- * and forth costs nothing. While a month's image loads, the one before stays painted, so playing
- * through the months does not flicker; outside the maps (before September 1981) nothing is.
+ * and forth costs nothing, and the next few fetched ahead (#915). While a month's image loads,
+ * the one before stays painted, so playing through the months does not flicker; outside the
+ * maps (before September 1981) nothing is.
  */
 
 import { loadEnsoSst, mapFile, type EnsoSst } from '../../data/ensoSst';
@@ -13,6 +14,8 @@ import type { PackedMonth } from './ensoMapLayer';
 
 /** How many months' images are kept. */
 const KEPT = 36;
+/** How many months after the one shown are fetched ahead, so playing need not wait for them. */
+const AHEAD = 3;
 
 export interface SeaMapsContext {
   readonly folder: string;
@@ -96,6 +99,10 @@ export function seaMaps(context: SeaMapsContext): SeaMaps {
       const packed = kept.get(wanted);
       if (packed === undefined) fetchMonth(index, wanted);
       else context.paint(packed);
+      for (let ahead = 1; ahead <= AHEAD; ahead += 1) {
+        const next = mapFile(index, at + ahead);
+        if (next !== null && next !== wanted && !kept.has(next)) fetchMonth(index, next);
+      }
     },
     index: () => index,
     current: () => (wanted === null ? null : (kept.get(wanted) ?? null)),

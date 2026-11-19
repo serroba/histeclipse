@@ -1,7 +1,8 @@
 /**
  * The Years bar's speeds (#915), set by the years it shows: slow plays them all in about two
  * minutes, medium in thirty seconds, fast in ten, each rounded to a speed easy to read. Under a
- * year a second the speeds are months a second, and the years play month by month.
+ * year a second the speeds are months a second; up to a year a second the years play month by
+ * month.
  */
 
 export const SPEED_LEVELS = ['slow', 'medium', 'fast'] as const;
@@ -67,7 +68,10 @@ export function speedAt(years: number, level: SpeedLevel): PlaySpeed {
   return earlier.at(-1) ?? speeds[0] ?? { level, yearsPerSecond: 1, label: speedLabel(1) };
 }
 
-/** Whether a speed plays month by month: under a year a second. */
+/**
+ * Whether a speed plays month by month: up to a year a second, twelve months a second at most,
+ * so monthly maps (El Niño's) show each month rather than one a year.
+ */
 export function byMonth(yearsPerSecond: number): boolean {
-  return yearsPerSecond < 1;
+  return yearsPerSecond <= 1;
 }

@@ -59,7 +59,8 @@ export interface YearsPart {
 export function mountYears(context: YearsContext): YearsPart {
   const { base, fetchJson, store } = context;
   // The Holocene track: the years played by, from as far back as ΔT reaches to the present.
-  let historySpeed: SpeedLevel = 'medium';
+  // Slow by default: on El Niño's years a year a second, month by month (#915).
+  let historySpeed: SpeedLevel = 'slow';
   let historyPlaying = false;
   const historyFrames = animationLoop(tickHistory, 0.08);
   let historyHead = yearPlayhead();

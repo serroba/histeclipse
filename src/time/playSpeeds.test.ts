@@ -39,7 +39,7 @@ describe('the Years bar’s speeds (#915)', () => {
     expect(speedAt(0, 'slow').label).toBe('1 month/s');
   });
 
-  it('Given a speed, Then month by month under a year a second', () => {
-    expect([1 / 12, 0.5, 1, 20].map(byMonth)).toEqual([true, true, false, false]);
+  it('Given a speed, Then month by month up to a year a second', () => {
+    expect([1 / 12, 0.5, 1, 2, 20].map(byMonth)).toEqual([true, true, true, false, false]);
   });
 });
