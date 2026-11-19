@@ -16,6 +16,7 @@ import { genomes } from './genomes';
 import { humans } from './humans';
 import { impacts } from './impacts';
 import { oceanHeat } from './oceanHeat';
+import { oceanTemp } from './oceanTemp';
 import { orbits } from './orbits';
 import { ozone } from './ozone';
 import { periods } from './periods';
@@ -52,6 +53,7 @@ const ALL = [
   ozone,
   warming,
   oceanHeat,
+  oceanTemp,
   enso,
   temperature,
   sealevel,
@@ -91,7 +93,18 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
   { name: 'Life', layers: [fossils] },
   {
     name: 'Climate',
-    layers: [ozone, warming, oceanHeat, enso, temperature, sealevel, air, radiocarbon, carbonMade],
+    layers: [
+      ozone,
+      warming,
+      oceanHeat,
+      oceanTemp,
+      enso,
+      temperature,
+      sealevel,
+      air,
+      radiocarbon,
+      carbonMade,
+    ],
   },
   { name: 'Space', layers: [eclipses, orbits, spacecraft, asteroids, telescopes] },
 ];

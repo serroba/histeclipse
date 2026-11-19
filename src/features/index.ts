@@ -6,6 +6,7 @@ import { genomesFeature } from './genomes';
 import { humansFeature } from './humans';
 import { spacecraftFeature } from './spacecraft';
 import { oceanHeatFeature } from './oceanHeat';
+import { oceanTempFeature } from './oceanTemp';
 import { ensoFeature } from './enso';
 import { ozoneFeature } from './ozone';
 import { periodsFeature } from './periods';
@@ -22,6 +23,7 @@ export const FEATURES: readonly Feature[] = [
   ozoneFeature,
   warmingFeature,
   oceanHeatFeature,
+  oceanTempFeature,
   ensoFeature,
   genomesFeature,
   periodsFeature,

@@ -22,7 +22,7 @@ import { seaHereText, seaText } from '../../data/ensoSst';
 import type { GeoPoint } from '../../state/viewState';
 import type { Fetch } from '../../util/fetchJson';
 import { compositeMaps, type CompositeMaps } from './compositeMaps';
-import type { PackedMonth } from './ensoMapLayer';
+import type { PackedMonth } from '../../globe/packedMaps';
 import type { MapChoice } from './ensoPanel';
 import { pixelsOf } from './pixels';
 import { seaMaps, type SeaMaps } from './seaMaps';

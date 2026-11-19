@@ -15,7 +15,7 @@ import {
 import { errorMessage } from '../../util/errors';
 import type { Fetch } from '../../util/fetchJson';
 import { loadImage } from '../../util/loadImage';
-import type { PackedMonth } from './ensoMapLayer';
+import type { PackedMonth } from '../../globe/packedMaps';
 
 export interface CompositeMapsContext {
   readonly folder: string;

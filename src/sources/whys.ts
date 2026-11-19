@@ -32,6 +32,7 @@ import impacts from './whys/impacts.json' with { type: 'json' };
 import lineages from './whys/lineages.json' with { type: 'json' };
 import moons from './whys/moons.json' with { type: 'json' };
 import oceanHeat from './whys/oceanHeat.json' with { type: 'json' };
+import oceanTemp from './whys/oceanTemp.json' with { type: 'json' };
 import orbits from './whys/orbits.json' with { type: 'json' };
 import ozone from './whys/ozone.json' with { type: 'json' };
 import periods from './whys/periods.json' with { type: 'json' };
@@ -90,6 +91,7 @@ export const WHYS_CONTENT = {
   ozone,
   warming,
   oceanHeat,
+  oceanTemp,
   enso,
   gravitationalWaves,
   telescopes,

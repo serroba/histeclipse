@@ -2,7 +2,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { LayerHost } from '../../globe/layerHost';
-import { coloured, ensoMapLayer } from './ensoMapLayer';
+import { coloured } from '../../globe/packedMaps';
+import { ensoMapLayer } from './ensoMapLayer';
 
 describe('the painted sea temperature', () => {
   it('Given a month, Then its slot paints it, once per month, and null takes it away', () => {
