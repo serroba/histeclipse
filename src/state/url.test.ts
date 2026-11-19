@@ -83,6 +83,7 @@ describe('parseViewState', () => {
       explore: null,
       borders: 'cliopatria',
       seenIn: null,
+      yearsWindow: null,
       ma: null,
       deepScale: 'all',
       coast: 'bintanja-2008',
@@ -282,6 +283,18 @@ describe('parseViewState', () => {
     expect(state.seenIn).toBe('Neo-Babylonian Empire');
     expect(serializeViewState(state)).toContain('&seen=Neo-Babylonian+Empire');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('seen=');
+  });
+
+  it('reads the years the bar shows, writing them only when not the whole track (#749)', () => {
+    const { state } = parseViewState('yw=1854,2026', NOW);
+    expect(state.yearsWindow).toEqual({ first: 1854, last: 2026 });
+    expect(serializeViewState(state)).toContain('&yw=1854,2026');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('yw=');
+    for (const bad of ['2026,1854', '1854', '1854,2026,1', 'a,b', '1854.5,2026']) {
+      const read = parseViewState(`yw=${bad}`, NOW);
+      expect(read.state.yearsWindow).toBeNull();
+      expect(read.warnings[0]).toContain('expected two whole years');
+    }
   });
 
   it('reads whose borders the empires layer draws, writing it only when not Cliopatria', () => {
@@ -591,6 +604,12 @@ describe('serializeViewState', () => {
     borders: fc.constantFrom(...BORDER_SOURCES),
     seenIn: fc.option(
       fc.string({ minLength: 1, maxLength: 120 }).filter((name) => name.trim() === name),
+      { nil: null },
+    ),
+    yearsWindow: fc.option(
+      fc
+        .tuple(fc.integer({ min: -12000, max: 2000 }), fc.integer({ min: 1, max: 14000 }))
+        .map(([first, width]) => ({ first, last: first + width })),
       { nil: null },
     ),
     // Kept to a thousand years.

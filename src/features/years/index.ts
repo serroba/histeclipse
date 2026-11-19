@@ -18,6 +18,8 @@ import { astronomicalYear, formatYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
 import { blankText, createHistoryTrack, STATES_HINT, STATES_WAIT } from '../../ui/historyTrack';
 import { yearPlayhead, type YearSpeed } from '../../time/yearPlay';
+import { windowOf } from '../../state/yearsWindow';
+import { windowing } from './windowing';
 import { yearOfMa } from '../../data/iceSheets';
 import { PRESENT_YEAR } from '../../time/present';
 import { createPeriodBands, yearTicks } from '../../ui/periodBands';
@@ -97,6 +99,9 @@ export function mountYears(context: YearsContext): YearsPart {
         stopHistory();
         setTravel(false);
       },
+      onWindow(value) {
+        window.set(windowOf(value));
+      },
     },
     historyBands.root,
     radiocarbonStrip.root,
@@ -143,14 +148,14 @@ export function mountYears(context: YearsContext): YearsPart {
       );
     }
     const south = (state.location?.latitude ?? 1) < 0;
-    const first = historyFirst();
+    const { first, last } = window.shown(state);
     radiocarbonStrip.render({
       curve: south ? radiocarbon.curves.shcal20 : radiocarbon.curves.intcal20,
       name: south ? 'SHCal20' : 'IntCal20',
       first,
-      last: PRESENT_YEAR,
+      last,
       events: RADIOCARBON_EVENTS,
-      eruptions: eruptions === null ? null : eruptionsBetween(eruptions, first, PRESENT_YEAR),
+      eruptions: eruptions === null ? null : eruptionsBetween(eruptions, first, last),
     });
   }
   /**
@@ -194,6 +199,9 @@ export function mountYears(context: YearsContext): YearsPart {
     return Math.ceil(context.deltaT().firstYear) + 1;
   }
 
+  // The years the bar shows (#749), and the fit when a layer with a span is turned on.
+  const window = windowing(store, () => ({ first: historyFirst(), last: PRESENT_YEAR }));
+
   function setYear(year: number): void {
     store.set((state) => ({
       ...state,
@@ -203,7 +211,9 @@ export function mountYears(context: YearsContext): YearsPart {
   }
 
   function startHistory(): void {
-    if (store.get().time.date.year >= PRESENT_YEAR) setYear(historyFirst());
+    const shown = window.shown(store.get());
+    const year = store.get().time.date.year;
+    if (year >= shown.last || year < shown.first) setYear(shown.first);
     historyPlaying = true;
     setTravel(true);
     historyHead = yearPlayhead();
@@ -214,9 +224,10 @@ export function mountYears(context: YearsContext): YearsPart {
   // A new year at most every 80 ms: the scheduler accumulates time between updates.
   function tickHistory(seconds: number): void {
     const year = store.get().time.date.year;
-    const next = historyHead.step(year, historySpeed, seconds, PRESENT_YEAR);
+    const { last } = window.shown(store.get());
+    const next = historyHead.step(year, historySpeed, seconds, last);
     if (next !== year) setYear(next);
-    if (next >= PRESENT_YEAR) stopHistory();
+    if (next >= last) stopHistory();
   }
 
   function stopHistory(): void {
@@ -227,22 +238,25 @@ export function mountYears(context: YearsContext): YearsPart {
   }
 
   function showHistory(state: ViewState): void {
+    window.fitNew(state, historyPlaying);
+    const shown = window.shown(state);
     showRadiocarbon(state);
     // Unclamped: the years run past 1950, where deep time's present stops.
     const maOf = (year: number): number => (1950 - year) / 1e6;
     historyBands.render({
-      oldest: maOf(historyFirst()),
+      oldest: maOf(shown.first),
       ma: maOf(state.time.date.year),
-      youngest: maOf(PRESENT_YEAR),
+      youngest: maOf(shown.last),
       playing: historyPlaying,
     });
     historyTrack.render({
       year: state.time.date.year,
-      first: historyFirst(),
-      last: PRESENT_YEAR,
+      first: shown.first,
+      last: shown.last,
       playing: historyPlaying,
       travelling,
       speed: historySpeed,
+      ...window.choices(state),
       // What changed whenever states are on; while travelling, what to expect until then.
       changes: state.layers.has('empires')
         ? context.statesSaid() === '' && travelling

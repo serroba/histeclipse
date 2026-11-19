@@ -22,6 +22,9 @@ interface HistoryView {
   /** Whether the travel view is on: even light, states and ways of life, the year's ice. */
   readonly travelling: boolean;
   readonly speed: YearSpeed;
+  /** The windows of years offered (#749), and the one shown, as their values. */
+  readonly windows: readonly { readonly value: string; readonly label: string }[];
+  readonly window: string;
   /** What the track says about states; a hint when the layer is off. */
   readonly changes: string;
   /** Why land may have no state drawn on it; null with the states off. */
@@ -99,6 +102,8 @@ export function createHistoryTrack(
     onSpeed(speed: YearSpeed): void;
     /** Leave the travel view for today's Earth, day and night. */
     onEndTravel(): void;
+    /** A window of years picked, by its value. */
+    onWindow(value: string): void;
   },
   /** The ages along the slider, as deep time draws its periods. */
   bands: HTMLElement,
@@ -131,6 +136,11 @@ export function createHistoryTrack(
       element('option', { value: String(each) }, `${each.toLocaleString('en')} yr/s`),
     ),
   );
+  const range = element('select', { class: 'history-range', 'aria-label': 'Years shown' });
+  range.addEventListener('change', () => {
+    handlers.onWindow(range.value);
+  });
+  let rangeListed = '';
   const changes = element('p', { class: 'history-changes', 'data-testid': 'history-changes' });
   const blank = element('p', { class: 'history-blank', 'data-testid': 'history-blank' });
   const earth = element('p', { class: 'history-blank', 'data-testid': 'history-earth' });
@@ -157,7 +167,7 @@ export function createHistoryTrack(
     handlers.onEndTravel();
   });
   const notes = element('div', { class: 'history-notes' }, changes, travel);
-  const extras = element('span', { class: 'history-extras' }, speed, about);
+  const extras = element('span', { class: 'history-extras' }, range, speed, about);
   const root = element(
     'div',
     { class: 'history-track', role: 'group', 'aria-label': 'Holocene', id: 'history-track' },
@@ -189,6 +199,14 @@ export function createHistoryTrack(
       transport.render(view.playing, view.year);
       slider.setAttribute('aria-valuetext', formatYear(astronomicalYear(view.year)));
       speed.value = String(view.speed);
+      const listed = view.windows.map(({ value, label }) => `${value}=${label}`).join('|');
+      if (listed !== rangeListed) {
+        rangeListed = listed;
+        range.replaceChildren(
+          ...view.windows.map(({ value, label }) => element('option', { value }, label)),
+        );
+      }
+      range.value = view.window;
       changes.textContent = view.changes;
       changes.hidden = view.changes === '';
       travel.hidden = !view.travelling;

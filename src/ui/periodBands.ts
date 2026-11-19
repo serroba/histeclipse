@@ -84,7 +84,8 @@ export function yearTicks(oldest: number, youngest: number): Tick[] {
     const ma = (1950 - astronomical) / 1e6;
     const share = (oldest - ma) / (oldest - youngest);
     if (share < END_ROOM || share > 1 - END_ROOM) continue;
-    ticks.push({ ma, label: formatYear(astronomicalYear(astronomical)) });
+    // Without the CE everyone assumes, as the track's ends are written.
+    ticks.push({ ma, label: formatYear(astronomicalYear(astronomical)).replace(/ CE$/, '') });
   }
   return ticks;
 }

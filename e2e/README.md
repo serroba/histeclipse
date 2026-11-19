@@ -46,36 +46,37 @@ The reference journeys of #724 (`navigation.spec.ts`; human origins is a journey
 
 ## Features
 
-| File                | Feature                                                                                                 |
-| ------------------- | ------------------------------------------------------------------------------------------------------- |
-| `time.spec.ts`      | Picking the Holocene or deep time                                                                       |
-| `layers.spec.ts`    | The Layers panel: what the globe overlays, and when each layer has data                                 |
-| `sheet.spec.ts`     | The deep-time bar as a sheet: folding and swiping its details                                           |
-| `humans.spec.ts`    | Humans in the ice ages: dated finds, and competing claims side by side                                  |
-| `genomes.spec.ts`   | Ancient genomes: AADR genomes counted by region around the year shown                                   |
-| `history.spec.ts`   | Travelling through the Holocene: playing the years, states coming and going                             |
-| `ice.spec.ts`       | Ice sheets in the ice ages: Batchelor et al.'s outlines and their range                                 |
-| `fullview.spec.ts`  | Full view: clearing the panels, and deep time's strip                                                   |
-| `ozone.spec.ts`     | The ozone hole: each spring's cap on the globe and the record beside it (#722)                          |
-| `warming.spec.ts`   | Temperature records side by side since 1850, beside the globe (#526)                                    |
-| `oceanHeat.spec.ts` | Where the ocean gained heat: IAP's trend maps on their own scale (#589)                                 |
-| `enso.spec.ts`      | El Niño and La Niña: NOAA's two indices side by side, and where they disagree (#886)                    |
-| `chart.spec.ts`     | Geological time along the slider: the chart's units in its colours                                      |
-| `air.spec.ts`       | The air in the ice ages: CO₂ and methane against 1750                                                   |
-| `ways.spec.ts`      | Ways of life: ArchaeoGLOBE's regions by how people lived                                                |
-| `rocks.spec.ts`     | Rocks at the surface: Macrostrat's map, and deep time at a rock's age                                   |
-| `fossils.spec.ts`   | Fossils in deep time: PBDB finds where they lay then                                                    |
-| `tree.spec.ts`      | The tree of life: a taxon's line to the first cells, from a find, Layers or a link                      |
-| `poles.spec.ts`     | Poles and the magnetic field in deep time: the spin axis, magnetic north, and every reversal (GTS 2020) |
-| `impacts.spec.ts`   | Impact craters: today and where they lay, each with a card                                              |
-| `craters.spec.ts`   | Impacts through time: each crater's path as its plate moved, in 3D                                      |
-| `lineages.spec.ts`  | Life through time: each fossil group's genera as a radial tree of time, beside the map of the moment    |
-| `volcanoes.spec.ts` | Volcanic eruptions: GVP's eruptions near the year, each with a card                                     |
-| `periods.spec.ts`   | Named periods: PeriodO's periods for the place picked, each by its source                               |
-| `sources.spec.ts`   | Why this? The sources of what is on screen, each with its book and licence                              |
-| `playback.spec.ts`  | Playing deep time on a slow connection: map after map, loaded ahead                                     |
-| `keys.spec.ts`      | The keys of all that plays: Space plays or pauses, the arrows step, whatever is playing                 |
-| `smoke.spec.ts`     | Everything else: loading, links, eclipses, views, sky, the Sun, deep time                               |
+| File                  | Feature                                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------------------------- |
+| `time.spec.ts`        | Picking the Holocene or deep time                                                                       |
+| `layers.spec.ts`      | The Layers panel: what the globe overlays, and when each layer has data                                 |
+| `sheet.spec.ts`       | The deep-time bar as a sheet: folding and swiping its details                                           |
+| `humans.spec.ts`      | Humans in the ice ages: dated finds, and competing claims side by side                                  |
+| `genomes.spec.ts`     | Ancient genomes: AADR genomes counted by region around the year shown                                   |
+| `history.spec.ts`     | Travelling through the Holocene: playing the years, states coming and going                             |
+| `ice.spec.ts`         | Ice sheets in the ice ages: Batchelor et al.'s outlines and their range                                 |
+| `fullview.spec.ts`    | Full view: clearing the panels, and deep time's strip                                                   |
+| `ozone.spec.ts`       | The ozone hole: each spring's cap on the globe and the record beside it (#722)                          |
+| `warming.spec.ts`     | Temperature records side by side since 1850, beside the globe (#526)                                    |
+| `oceanHeat.spec.ts`   | Where the ocean gained heat: IAP's trend maps on their own scale (#589)                                 |
+| `enso.spec.ts`        | El Niño and La Niña: NOAA's two indices side by side, and where they disagree (#886)                    |
+| `yearsWindow.spec.ts` | The Years bar's range: fitted to a layer turned on, picked back, kept in the link (#749)                |
+| `chart.spec.ts`       | Geological time along the slider: the chart's units in its colours                                      |
+| `air.spec.ts`         | The air in the ice ages: CO₂ and methane against 1750                                                   |
+| `ways.spec.ts`        | Ways of life: ArchaeoGLOBE's regions by how people lived                                                |
+| `rocks.spec.ts`       | Rocks at the surface: Macrostrat's map, and deep time at a rock's age                                   |
+| `fossils.spec.ts`     | Fossils in deep time: PBDB finds where they lay then                                                    |
+| `tree.spec.ts`        | The tree of life: a taxon's line to the first cells, from a find, Layers or a link                      |
+| `poles.spec.ts`       | Poles and the magnetic field in deep time: the spin axis, magnetic north, and every reversal (GTS 2020) |
+| `impacts.spec.ts`     | Impact craters: today and where they lay, each with a card                                              |
+| `craters.spec.ts`     | Impacts through time: each crater's path as its plate moved, in 3D                                      |
+| `lineages.spec.ts`    | Life through time: each fossil group's genera as a radial tree of time, beside the map of the moment    |
+| `volcanoes.spec.ts`   | Volcanic eruptions: GVP's eruptions near the year, each with a card                                     |
+| `periods.spec.ts`     | Named periods: PeriodO's periods for the place picked, each by its source                               |
+| `sources.spec.ts`     | Why this? The sources of what is on screen, each with its book and licence                              |
+| `playback.spec.ts`    | Playing deep time on a slow connection: map after map, loaded ahead                                     |
+| `keys.spec.ts`        | The keys of all that plays: Space plays or pauses, the arrows step, whatever is playing                 |
+| `smoke.spec.ts`       | Everything else: loading, links, eclipses, views, sky, the Sun, deep time                               |
 
 `support.ts` holds the shared steps and the `test` every file imports, which takes the
 project's refresh rate.

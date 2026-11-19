@@ -67,7 +67,7 @@ export const EARTH_LAYERS: Watch = (s) => [
 export const LAYERS_PANEL: Watch = (s) => [...EARTH_LAYERS(s), s.focus];
 
 /** The history track: its year, the layers on it, and (for radiocarbon) the hemisphere. */
-export const HISTORY: Watch = (s) => [s.time.date.year, s.layers, s.location];
+export const HISTORY: Watch = (s) => [s.time.date.year, s.layers, s.location, s.yearsWindow];
 
 /** The eclipse picked, drawn in full. */
 export const SELECTION: Watch = (s) => [s.selection, s.layers, s.location, s.seenIn];
