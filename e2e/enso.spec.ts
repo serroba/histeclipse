@@ -61,3 +61,26 @@ test('why here: in the equatorial Pacific, the sea that month and what El Niño 
   });
   expect(problems).toEqual([]);
 });
+
+test('before 1950, El Niño and La Niña by two reconstructions, said to be ours, and the sea from ERSST (#894)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const panel = page.getByRole('region', { name: 'El Niño and La Niña' });
+  await test.step('Given December 1877, the great El Niño, with the layer on', async () => {
+    await page.goto('./?t=1877-12-15T12:00Z&layers=enso&cam=0,-120,3');
+    await globeRendered(page);
+  });
+  await test.step('Then both reconstructions are charted, and both call it El Niño', async () => {
+    await expect(panel.getByRole('list', { name: 'The indices' }).getByRole('listitem')).toHaveText(
+      ['Relative Niño 3.4 from ERSST v6 (ours)', 'Relative Niño 3.4 from HadISST (ours)'],
+    );
+    await expect(panel).toContainText('December 1877: El Niño by both indices');
+    await expect(panel).toContainText('Before 1950 NOAA publishes no index');
+  });
+  await test.step('And the sea is painted from ERSST, on its 2° grid', async () => {
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-enso-sst', 'on');
+    await expect(panel).toContainText('(NOAA ERSST v6, on its 2° grid)');
+  });
+  expect(problems).toEqual([]);
+});

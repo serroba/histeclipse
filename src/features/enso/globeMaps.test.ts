@@ -1,8 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import composites from '../../../public/data/enso-composites/index.json';
-import file from '../../../public/data/enso/index.json';
-import type { Enso } from '../../data/enso';
 import { globeMaps } from './globeMaps';
 
 vi.mock('../../util/loadImage', () => ({
@@ -33,8 +31,6 @@ const SST = {
   rows: 181,
 };
 
-const enso = file as unknown as Enso;
-
 function setUp(sea = false) {
   const refresh = vi.fn();
   const painted: unknown[] = [];
@@ -58,7 +54,7 @@ describe('what the globe shows of El Niño and La Niña', () => {
     const { maps, refresh } = setUp();
     maps.pick('rain-elNino-djf', '');
     expect(refresh).toHaveBeenCalledOnce();
-    const { map, sea } = maps.view(enso, 0);
+    const { map, sea } = maps.view(0);
     expect(map).toMatchObject({ chosen: 'sea', ends: '', indices: [], by: 'roni', scale: 'sea' });
     expect(map.options).toHaveLength(1);
     expect(sea).toBe('Loading the sea temperature maps…');
@@ -70,17 +66,17 @@ describe('what the globe shows of El Niño and La Niña', () => {
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalled();
     });
-    expect(maps.view(enso, 0).map.options).toHaveLength(9);
+    expect(maps.view(0).map.options).toHaveLength(9);
     maps.pick('nothing', 'oni');
-    expect(maps.view(enso, 0).map).toMatchObject({ chosen: 'sea', by: 'oni' });
+    expect(maps.view(0).map).toMatchObject({ chosen: 'sea', by: 'oni' });
     maps.pick('rain-laNina-jja', '');
-    expect(maps.view(enso, 0).map).toMatchObject({
+    expect(maps.view(0).map).toMatchObject({
       chosen: 'rain-laNina-jja',
       by: 'oni',
       scale: 'rain',
       ends: '−2 · 0 · +2 mm a day',
     });
-    expect(maps.view(enso, 0).sea).toMatch(/^On the globe: Rain in La Niña’s June–August, by ONI/);
+    expect(maps.view(0).sea).toMatch(/^On the globe: Rain in La Niña’s June–August, by ONI/);
   });
 
   it('Given a place, Then the sea there this month and what El Niño and La Niña usually bring, once loaded (#893)', async () => {

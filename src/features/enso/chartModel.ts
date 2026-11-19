@@ -5,7 +5,7 @@
  * seen at a glance; and the month shown.
  */
 
-import { shared, spanOf, type Enso } from '../../data/enso';
+import { spanOf, spanned, type Enso } from '../../data/enso';
 import { episodeStrips, type EpisodeStrip } from '../../ui/ensoStrips';
 
 export const CHART_WIDTH = 1000;
@@ -28,7 +28,7 @@ export interface EnsoChart {
 }
 
 export function ensoChart(enso: Enso, at: number): EnsoChart {
-  const { first, last } = shared(enso);
+  const { first, last } = spanned(enso);
   // A month's middle, so the first and last months each have their width.
   const x = (month: number): number => ((month - first + 0.5) / (last - first + 1)) * CHART_WIDTH;
   const y = (value: number): number =>

@@ -196,10 +196,14 @@ export function compositeColours(
   return out;
 }
 
-/** Where a place's node is in a packed map's bytes: the 1° grid, 90°N first, 180°W first. */
+/**
+ * Where a place's node is in a packed map's bytes: a grid of `columns` from 180°W to 180°E (361
+ * for 1°, 181 for 2°), 90°N first.
+ */
 export function nodeOffset(latitude: number, longitude: number, columns = 361): number {
-  const row = Math.round(90 - Math.max(-90, Math.min(90, latitude)));
-  const column = Math.round((((longitude + 180) % 360) + 360) % 360);
+  const step = 360 / (columns - 1);
+  const row = Math.round((90 - Math.max(-90, Math.min(90, latitude))) / step);
+  const column = Math.round(((((longitude + 180) % 360) + 360) % 360) / step);
   return (row * columns + column) * 4;
 }
 

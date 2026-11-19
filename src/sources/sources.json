@@ -1711,6 +1711,13 @@
     "url": "https://doi.org/10.5285/48d0bf43-0598-ceb2-e063-7086abc062f1",
     "licence": "Open Government Licence v3.0"
   },
+  "rayner2003hadisst": {
+    "name": "HadISST 1.1 (Rayner et al.)",
+    "kind": "paper",
+    "cite": "Rayner, N. A., Parker, D. E., Horton, E. B., Folland, C. K., Alexander, L. V., Rowell, D. P., Kent, E. C., Kaplan, A. (2003), Global analyses of sea surface temperature, sea ice, and night marine air temperature since the late nineteenth century, Journal of Geophysical Research 108 (D14), 4407, doi:10.1029/2002JD002670. Our summary: the Met Office Hadley Centre's monthly sea surface temperature and sea ice on a 1° grid from 1870, reconstructed from ships, buoys and (from 1982) satellites by reduced-space optimal interpolation; a different method and data handling from NOAA's ERSST, so where the two part before 1900, when ships were few, the early sea is uncertain. The file of 2 November 2026, accessed 19 November 2026",
+    "url": "https://doi.org/10.1029/2002JD002670",
+    "licence": "Open Government Licence v3 (© Crown copyright, Met Office)"
+  },
   "rcmip": {
     "name": "RCMIP protocol",
     "kind": "dataset",

@@ -22,6 +22,8 @@ const EpisodeSchema = v.strictObject({
   peak: v.number(),
   peakAt: month,
   ongoing: v.optional(v.literal(true)),
+  /** Runs on past the file's last month (the early indices end in 1949, #894). */
+  cut: v.optional(v.literal(true)),
 });
 
 const IndexSchema = v.strictObject({
@@ -125,6 +127,15 @@ export function readingsAt(enso: Enso, at: number): Reading[] {
   });
 }
 
+/** The months any index has, first to last. */
+export function spanned(enso: Enso): { readonly first: number; readonly last: number } {
+  const spans = enso.indices.map(spanOf);
+  return {
+    first: Math.min(...spans.map(({ first }) => first)),
+    last: Math.max(...spans.map(({ last }) => last)),
+  };
+}
+
 /** The months the files share, first to last. */
 export function shared(enso: Enso): { readonly first: number; readonly last: number } {
   const spans = enso.indices.map(spanOf);
@@ -158,7 +169,7 @@ export function ensoText(enso: Enso, at: number): string {
   const readings = readingsAt(enso, at);
   const { first, last } = shared(enso);
   if (readings.length === 0) {
-    return `NOAA’s indices run from ${monthName(first)} to ${monthName(last)}: none for ${monthName(at)}.`;
+    return `The indices run from ${monthName(first)} to ${monthName(last)}: none for ${monthName(at)}.`;
   }
   const phases = new Set(readings.map(({ phase }) => phase));
   const values = readings.map(({ index, value }) => `${shortName(index)} ${signed(value)} °C`);

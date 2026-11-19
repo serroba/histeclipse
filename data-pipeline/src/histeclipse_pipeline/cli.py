@@ -36,6 +36,7 @@ from histeclipse_pipeline.empires import (
 from histeclipse_pipeline.energy_imbalance import fetch_imbalance
 from histeclipse_pipeline.enso import fetch_enso
 from histeclipse_pipeline.enso_composites import fetch_enso_composites
+from histeclipse_pipeline.enso_early import fetch_enso_early
 from histeclipse_pipeline.enso_sst import fetch_enso_sst
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.eruptions import fetch_eruptions
@@ -656,6 +657,14 @@ def enso_composites(args: Arguments) -> int:  # pragma: no cover - needs network
     return _say(f"wrote {count} El Niño and La Niña composite maps to {args.out}")
 
 
+def enso_early(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write El Niño and La Niña before 1950 from ERSST and HadISST, and the sea from 1854."""
+    episodes, maps = fetch_enso_early(
+        args.out / "enso", args.out / "enso-ersst", Path(".cache/enso-ersst")
+    )
+    return _say(f"wrote {episodes} early episodes and {maps} sea maps under {args.out}")
+
+
 def enso_sst(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the sea's surface temperature anomaly each month since 1981 (NOAA OISST v2.1)."""
     count = fetch_enso_sst(args.out, Path(".cache/enso-sst/sst.mon.mean.nc"))
@@ -1138,6 +1147,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         enso_composites,
         "write what El Niño and La Niña usually do to rain (GPCP) and temperature (Berkeley Earth)",
         "output directory",
+    ),
+    "enso-early": (
+        enso_early,
+        "write El Niño and La Niña before 1950 (ours, from ERSST and HadISST), sea maps from 1854",
+        "data directory (writes enso/early.json and enso-ersst/)",
     ),
     "enso-sst": (
         enso_sst,
