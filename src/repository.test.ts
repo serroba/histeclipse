@@ -11,6 +11,8 @@ function tracked(): { mode: string; path: string }[] {
   const listing = execFileSync('git', ['ls-files', '--stage', '-z'], {
     cwd: ROOT,
     encoding: 'utf8',
+    // The listing outgrew the 1 MB default once the data held thousands of map files (#590).
+    maxBuffer: 64 * 1024 * 1024,
   });
   return listing
     .split('\0')
