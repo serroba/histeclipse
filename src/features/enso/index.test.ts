@@ -2,7 +2,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import composites from '../../../public/data/enso-composites/index.json';
+import early from '../../../public/data/enso/early.json';
 import file from '../../../public/data/enso/index.json';
+import ersstMaps from '../../../public/data/enso-ersst/index.json';
 import type { LayerFactory, LayerHost } from '../../globe/layerHost';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import { astronomicalYear } from '../../time/year';
@@ -58,9 +60,13 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
               JSON.stringify(
                 url.includes('enso-sst')
                   ? MAPS
-                  : url.includes('enso-composites')
-                    ? composites
-                    : file,
+                  : url.includes('enso-ersst')
+                    ? ersstMaps
+                    : url.includes('enso-composites')
+                      ? composites
+                      : url.includes('early')
+                        ? early
+                        : file,
               ),
             ),
           ),
@@ -214,6 +220,28 @@ describe('El Niño and La Niña as a feature', () => {
           /^The sea’s surface here in January 1998: \+4\.0 °C/,
         ) as unknown,
       });
+    });
+  });
+
+  it('Given a month before 1950, Then the indices computed here from ERSST and HadISST, said so, and ERSST’s sea (#894)', async () => {
+    const { context, panels, painted, refresh } = fakeContext();
+    const shown = ensoFeature.mount(context);
+    const greatOne = inYear(1877);
+    shown.show?.(greatOne, JD);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(3);
+    });
+    shown.show?.(greatOne, JD);
+    expect(panels.at(-1)).toMatchObject({
+      names: [
+        { id: 'ersst', name: 'Relative Niño 3.4 from ERSST v6 (ours)' },
+        { id: 'hadisst', name: 'Relative Niño 3.4 from HadISST (ours)' },
+      ],
+      sea: expect.stringContaining('(NOAA ERSST v6, on its 2° grid)') as unknown,
+    });
+    expect(shown.said?.()).toMatch(/^January 1877: .* Before 1950 NOAA publishes no index/);
+    await vi.waitFor(() => {
+      expect(painted.at(-1)).toMatchObject({ image: { url: '/data/enso-ersst/1877-01.png' } });
     });
   });
 });

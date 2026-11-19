@@ -12,7 +12,7 @@ import {
 
 const MAPS: EnsoSst = {
   schemaVersion: 1,
-  credit: 'c',
+  credit: 'NOAA OISST v2.1 (Huang et al. 2021)',
   source: 'https://example.org/',
   paper: 'https://example.org/paper',
   licence: 'l',
@@ -65,18 +65,32 @@ describe('the sea surface temperature maps', () => {
   it('Given the month, Then the legend says the scale, or where the maps run', () => {
     expect(seaText(null, month(2000, 1))).toBe('Loading the sea temperature maps…');
     expect(seaText(MAPS, month(2000, 1))).toBe(
-      'On the globe, the sea’s surface against its 1991–2020 mean for the month: blue colder, red warmer, to ±4 °C (NOAA OISST).',
+      'On the globe, the sea’s surface against its 1991–2020 mean for the month: blue colder, red warmer, to ±4 °C (NOAA OISST v2.1).',
     );
     expect(seaText(MAPS, month(1960, 1))).toBe(
-      'The sea’s monthly maps run from September 1981 to October 2026 (NOAA OISST): none for this month.',
+      'The sea’s monthly maps run from September 1981 to October 2026 (NOAA OISST v2.1): none for this month.',
     );
   });
 
   it('Given a value at a place, Then the sea there in words; nothing on land (#893)', () => {
     expect(seaHereText(MAPS, -0.62, 'January 2025')).toMatch(
-      /^The sea’s surface here in January 2025: −0\.6 °C against the month’s \S+ mean \(NOAA OISST\)\.$/,
+      /^The sea’s surface here in January 2025: −0\.6 °C against the month’s \S+ mean \(NOAA OISST v2\.1\)\.$/,
     );
     expect(seaHereText(MAPS, 1.25, 'May 1998')).toContain('+1.3 °C');
     expect(seaHereText(MAPS, null, 'May 1998')).toBeNull();
+  });
+
+  it('Given ERSST’s 2° maps before OISST’s, Then named, with their grid (#894)', () => {
+    const early = {
+      ...MAPS,
+      credit: 'NOAA ERSST v6 (Huang et al. 2025)',
+      columns: 181,
+      rows: 91,
+      first: '1854-01',
+      last: '1981-08',
+    };
+    expect(seaText(early, month(1877, 12))).toContain('(NOAA ERSST v6, on its 2° grid)');
+    expect(seaText(early, month(1800, 1))).toContain('January 1854 to August 1981 (NOAA ERSST v6)');
+    expect(seaText({ ...early, credit: 'bare' }, month(1800, 1))).toContain('(bare)');
   });
 });

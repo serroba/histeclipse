@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING, Literal
 from histeclipse_pipeline import (
     cryosphere,
     enso,
+    enso_early,
     enso_sst,
     holocene_temperature,
     measured_warming,
@@ -155,6 +156,18 @@ LIVING_PINS: tuple[LivingPin, ...] = (
     LivingPin("CPC Oceanic Niño Index", "enso", enso.ONI_URL, enso.ONI_SHA256),
     LivingPin(
         "NOAA OISST v2.1, monthly means", "enso-sst", enso_sst.FILE_URL, enso_sst.FILE_SHA256
+    ),
+    LivingPin(
+        "NOAA ERSST v6, monthly means",
+        "enso-early",
+        enso_early.ERSST_URL,
+        enso_early.ERSST_SHA256,
+    ),
+    LivingPin(
+        "Met Office HadISST 1.1",
+        "enso-early",
+        enso_early.HADISST_URL,
+        enso_early.HADISST_SHA256,
     ),
 )
 

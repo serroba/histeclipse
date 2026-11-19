@@ -27,8 +27,9 @@ const EnsoSstSchema = v.strictObject({
   files: v.literal('YYYY-MM.png'),
   first: month,
   last: month,
-  columns: v.literal(361),
-  rows: v.literal(181),
+  // 361 by 181 for OISST's 1° maps; 181 by 91 for ERSST's 2° maps before them (#894).
+  columns: v.pipe(v.number(), v.integer(), v.minValue(2)),
+  rows: v.pipe(v.number(), v.integer(), v.minValue(2)),
 });
 
 export type EnsoSst = v.InferOutput<typeof EnsoSstSchema>;
@@ -102,18 +103,25 @@ function named(text: string): string {
   return `${MONTHS[Number(text.slice(5, 7)) - 1] ?? ''} ${text.slice(0, 4)}`;
 }
 
+/** The maps' record by name, from their credit: `NOAA OISST v2.1`, `NOAA ERSST v6`. */
+function recordName(maps: EnsoSst): string {
+  const open = maps.credit.indexOf(' (');
+  return open < 0 ? maps.credit : maps.credit.slice(0, open);
+}
+
 /** What the globe shows of the sea, under the chart: its scale, or why there is no map. */
 export function seaText(maps: EnsoSst | null, at: number): string {
   if (maps === null) return 'Loading the sea temperature maps…';
   if (mapFile(maps, at) === null) {
-    return `The sea’s monthly maps run from ${named(maps.first)} to ${named(maps.last)} (NOAA OISST): none for this month.`;
+    return `The sea’s monthly maps run from ${named(maps.first)} to ${named(maps.last)} (${recordName(maps)}): none for this month.`;
   }
   const bound = maps.bound.toFixed(0);
-  return `On the globe, the sea’s surface against its ${maps.baseline.slice(0, 9)} mean for the month: blue colder, red warmer, to ±${bound} °C (NOAA OISST).`;
+  const grid = maps.columns > 300 ? '' : `, on its ${String(360 / (maps.columns - 1))}° grid`;
+  return `On the globe, the sea’s surface against its ${maps.baseline.slice(0, 9)} mean for the month: blue colder, red warmer, to ±${bound} °C (${recordName(maps)}${grid}).`;
 }
 
 /** For "Why here?" (#893): the sea's surface at a place in the month, or null on land. */
 export function seaHereText(maps: EnsoSst, value: number | null, monthText: string): string | null {
   if (value === null) return null;
-  return `The sea’s surface here in ${monthText}: ${value < 0 ? '−' : '+'}${Math.abs(value).toFixed(1)} °C against the month’s ${maps.baseline.slice(0, 9)} mean (NOAA OISST).`;
+  return `The sea’s surface here in ${monthText}: ${value < 0 ? '−' : '+'}${Math.abs(value).toFixed(1)} °C against the month’s ${maps.baseline.slice(0, 9)} mean (${recordName(maps)}).`;
 }

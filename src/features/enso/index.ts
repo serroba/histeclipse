@@ -16,6 +16,11 @@ import { ensoMapLayer } from './ensoMapLayer';
 import { ensoPanel } from './ensoPanel';
 import { globeMaps } from './globeMaps';
 
+/** January 1950, the first month of NOAA's indices: ours from two reconstructions before. */
+const NOAA_FROM = monthOf(1950, 1);
+const EARLY_NOTE =
+  ' Before 1950 NOAA publishes no index: these are computed here by its RONI method from two reconstructions of the sea, ERSST and HadISST.';
+
 /** Whether the layer shows: on, on Earth's globe, in the years. */
 function shownOn(state: ViewState): boolean {
   return (
@@ -52,16 +57,20 @@ export const ensoFeature: Feature = {
         maps.pick(map, index);
       }),
     );
-    let enso: Enso | null = null;
+    // NOAA's indices from 1950, and ours from two reconstructions before (#894).
+    let enso: { readonly now: Enso; readonly early: Enso } | null = null;
     let loading = false;
     let said: string | null = null;
 
     function load(): void {
       if (loading) return;
       loading = true;
-      loadEnso(`${context.base}data/enso/index.json`, context.fetchJson).then(
-        (loaded) => {
-          enso = loaded;
+      Promise.all([
+        loadEnso(`${context.base}data/enso/index.json`, context.fetchJson),
+        loadEnso(`${context.base}data/enso/early.json`, context.fetchJson),
+      ]).then(
+        ([now, early]) => {
+          enso = { now, early };
           context.refresh();
         },
         (error: unknown) => {
@@ -90,12 +99,14 @@ export const ensoFeature: Feature = {
           load();
           return;
         }
-        said = ensoText(enso, at);
+        const before = at < NOAA_FROM;
+        const shown = before ? enso.early : enso.now;
+        said = `${ensoText(shown, at)}${before ? EARLY_NOTE : ''}`;
         panel.update({
-          chart: ensoChart(enso, at),
-          names: enso.indices.map((index) => ({ id: index.id, name: index.label })),
+          chart: ensoChart(shown, at),
+          names: shown.indices.map((index) => ({ id: index.id, name: index.label })),
           text: said,
-          ...maps.view(enso, at),
+          ...maps.view(at),
         });
       },
       said: () => said,

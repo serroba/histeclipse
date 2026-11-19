@@ -138,7 +138,7 @@ describe('NOAA’s ENSO indices', () => {
 
   it('Given a month outside the files, Then where they run', () => {
     expect(ensoText(ENSO, monthOf(1900, 6))).toBe(
-      'NOAA’s indices run from January 2024 to April 2024: none for June 1900.',
+      'The indices run from January 2024 to April 2024: none for June 1900.',
     );
   });
 
