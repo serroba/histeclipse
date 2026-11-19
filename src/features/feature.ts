@@ -22,6 +22,7 @@ import type { MarkerCardContent } from '../ui/markerCard';
 import type { Ephemerides, Timeline } from './part';
 import type { Anchor } from '../text/passages';
 import type { HereFact } from '../sources/registry';
+import type { WaysLegend } from '../ui/waysLegend';
 import type { ZoomRail } from '../ui/zoomRail';
 
 /** Said in the Layers panel of a layer whose markers rest while the years play. */
@@ -70,6 +71,8 @@ export interface Capabilities {
   readonly settledLand: Pick<Globe, 'setSettled'>;
   /** Earth lit evenly, with no night side, while a layer needs every part seen. */
   readonly evenLight: Pick<Globe, 'setEvenLight'>;
+  /** The key to the ways of life's shading, under the years. */
+  readonly waysKey: Pick<WaysLegend, 'render'>;
 }
 
 export type Capability = keyof Capabilities;

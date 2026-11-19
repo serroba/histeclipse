@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 
 import type { Territory } from '../../data/empires';
 import type { RockUnit } from '../../data/rocks';
-import type { WaysAt } from '../../data/waysOfLife';
 import { hereFacts, placeText, statesHere, type HereInput } from './here';
 
 /** A square of `size` degrees round a point. */
@@ -74,20 +73,8 @@ describe('why here', () => {
     expect(facts[1]?.text).toContain('lines and names, not areas');
   });
 
-  it('gives the ways of life rated here, and the rock beneath', () => {
-    const at: WaysAt = {
-      year: -550,
-      counts: { foraging: 0, pastoralism: 0, extensive: 1, intensive: 0, urban: 0, mixed: 0 },
-      regions: [
-        {
-          name: 'Iranian Plateau',
-          rings: [square(52, 32)],
-          way: 'extensive',
-          ways: ['extensive'],
-          level: 3,
-        },
-      ],
-    };
+  it('places the ways of life after the states, and the rock beneath', () => {
+    const ways = { title: 'Ways of life', text: 'Farming.', why: 'ways' } as const;
     const rock: RockUnit = {
       name: 'Cenozoic sediments',
       lith: 'sedimentary rocks',
@@ -96,25 +83,22 @@ describe('why here', () => {
       colour: '#fff',
       rings: [],
     };
-    const facts = hereFacts({ ...base, ways: { at, momentText: '550 BCE' }, rock });
-    expect(facts.map(({ title }) => title)).toEqual(['Ways of life', 'Rocks']);
-    expect(facts[0]?.text).toBe(
-      'Iranian Plateau: farming, widespread, as archaeologists rated it for 550 BCE.',
-    );
-    expect(facts[1]?.text).toBe(
+    const facts = hereFacts({
+      ...base,
+      states: { source: 'cliopatria', territories: [persia], asOf: null },
+      ways,
+      rock,
+    });
+    expect(facts.map(({ title }) => title)).toEqual(['States', 'Ways of life', 'Rocks']);
+    expect(facts[1]).toBe(ways);
+    expect(facts[2]?.text).toBe(
       'Cenozoic sediments: sedimentary rocks, from 66 to 0 million years ago.',
     );
   });
 
-  it('says when nothing is rated or mapped here', () => {
-    const at: WaysAt = {
-      year: -550,
-      counts: { foraging: 0, pastoralism: 0, extensive: 0, intensive: 0, urban: 0, mixed: 0 },
-      regions: [],
-    };
-    const facts = hereFacts({ ...base, ways: { at, momentText: '550 BCE' }, rock: null });
-    expect(facts[0]?.text).toContain('rates no region here');
-    expect(facts[1]?.text).toContain('No map unit');
+  it('says when nothing is mapped here', () => {
+    const [fact] = hereFacts({ ...base, rock: null });
+    expect(fact?.text).toContain('No map unit');
   });
 
   it('says when the borders are still loading', () => {

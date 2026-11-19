@@ -28,8 +28,8 @@ export interface Features {
   actions(): (readonly [Layer, LayerAction | null])[];
   /** How each feature's layer's load stands, where it is loading or failed (#751). */
   loads(): (readonly [Layer, LayerLoad | null])[];
-  /** What the features have at the place picked, for "Why here?" (#893). */
-  here(state: ViewState): HereFact[];
+  /** What the features have at the place picked, for "Why here?" (#893), each with its layer. */
+  here(state: ViewState): (readonly [Layer, HereFact])[];
 }
 
 /** The chips in deep time's bar, of the features that have one, in their order. */
@@ -81,6 +81,10 @@ export function mountFeatures(
     actions: () =>
       mounted.map(({ feature, shown }) => [feature.id, shown.action?.() ?? null] as const),
     loads: () => mounted.map(({ feature, shown }) => [feature.id, shown.load?.() ?? null] as const),
-    here: (state) => mounted.flatMap(({ shown }) => shown.here?.(state) ?? []),
+    here: (state) =>
+      mounted.flatMap(({ feature, shown }) => {
+        const fact = shown.here?.(state) ?? null;
+        return fact === null ? [] : [[feature.id, fact] as const];
+      }),
   };
 }
