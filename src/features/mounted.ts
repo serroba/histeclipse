@@ -9,7 +9,7 @@ import type { LayerLoad } from '../state/activeLayers';
 import type { HereFact } from '../sources/registry';
 import type { Layer, ViewState } from '../state/viewState';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
-import type { Capabilities, DeepMoment, Feature, FeatureCore } from './feature';
+import type { Capabilities, DeepMoment, Feature, FeatureCore, LayerAction } from './feature';
 
 export interface Features {
   /** The moment shown: `jdTT` in Terrestrial Time, or null before it is known. */
@@ -24,6 +24,8 @@ export interface Features {
   pick(key: string): boolean;
   /** What the Layers panel says under each feature's layer. */
   said(): (readonly [Layer, string | null])[];
+  /** The step each feature offers from its row in the Layers panel (#909). */
+  actions(): (readonly [Layer, LayerAction | null])[];
   /** How each feature's layer's load stands, where it is loading or failed (#751). */
   loads(): (readonly [Layer, LayerLoad | null])[];
   /** What the features have at the place picked, for "Why here?" (#893). */
@@ -76,6 +78,8 @@ export function mountFeatures(
       return picked !== undefined;
     },
     said: () => mounted.map(({ feature, shown }) => [feature.id, shown.said?.() ?? null] as const),
+    actions: () =>
+      mounted.map(({ feature, shown }) => [feature.id, shown.action?.() ?? null] as const),
     loads: () => mounted.map(({ feature, shown }) => [feature.id, shown.load?.() ?? null] as const),
     here: (state) => mounted.flatMap(({ shown }) => shown.here?.(state) ?? []),
   };

@@ -142,6 +142,13 @@ export const humansFeature = feature({
     }
 
     return {
+      // Our species on the tree of life, from the layer's row in the Layers panel.
+      action: () => ({
+        label: 'Our species on the tree of life',
+        run: () => {
+          context.tree.openTree((tree) => tree.ours.humans['sapiens']);
+        },
+      }),
       deep(state, moment) {
         dispersalOn = state.dispersal !== 'off';
         // People are a matter of the last few hundred thousand years: the ice-age scale's.

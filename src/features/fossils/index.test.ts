@@ -107,6 +107,15 @@ describe('the fossils as a feature', () => {
     expect(cards).toHaveLength(2);
   });
 
+  it('offers the dinosaurs’ lines through time from its row in the Layers panel', () => {
+    const { context, change } = fakeContext();
+    const action = fossilsFeature.mount(context, context).action?.();
+    expect(action?.label).toBe('Their tree through time');
+    action?.run();
+    const update = change.mock.calls[0]?.[0] as (state: ViewState) => ViewState;
+    expect(update(on).lineages).toEqual({ group: 'dinosaurs', pick: null });
+  });
+
   it('says so when the fossils cannot be loaded', async () => {
     const { context, notify } = fakeContext({ failing: true });
     fossilsFeature.mount(context, context).deep?.(on, JURASSIC);

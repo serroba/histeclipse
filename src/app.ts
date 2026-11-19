@@ -217,23 +217,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     // How each layer's load stands (#751): the features on the contract report theirs.
     loads: () => features.loads(),
     actions: () => [
-      [
-        'fossils',
-        {
-          label: 'Their tree through time',
-          run: () => {
-            store.set((state) => ({ ...state, lineages: { group: 'dinosaurs', pick: null } }));
-          },
-        },
-      ],
       ['impacts', impacts.action()],
-      [
-        'humans',
-        treeOfLife.action('Our species on the tree of life', (tree) => tree.ours.humans['sapiens']),
-      ],
       ['rocks', rocks.action()],
       ['dates', dates.action()],
       ['carbonMade', carbonMade.action()],
+      // The features on the contract offer their own (#909).
+      ...features.actions(),
     ],
   });
   const markerCard = createMarkerCard();

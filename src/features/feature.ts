@@ -84,6 +84,12 @@ export interface DeepMoment {
   readonly scale: DeepScale;
 }
 
+/** A step a layer offers from what it shows, on its row in the Layers panel. */
+export interface LayerAction {
+  readonly label: string;
+  readonly run: () => void;
+}
+
 /** A feature as mounted. */
 export interface FeatureInstance {
   /** The moment shown changed, or the layers did: `jdTT` is the moment in Terrestrial Time. */
@@ -99,6 +105,8 @@ export interface FeatureInstance {
   unpick?(): void;
   /** What the Layers panel says under its layer, if anything. */
   said?(): string | null;
+  /** The step it offers from its row in the Layers panel (#909), if it has one now. */
+  action?(): LayerAction | null;
   /** What it has at the place picked, for "Why here?" (#893), if anything. */
   here?(state: ViewState): HereFact | null;
   /**
