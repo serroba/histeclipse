@@ -14,6 +14,7 @@ import { periodsFeature } from './periods';
 import { warmingFeature } from './warming';
 import { telescopesFeature } from './telescopes';
 import { volcanoesFeature } from './volcanoes';
+import { waysFeature } from './ways';
 import type { Feature } from './feature';
 
 export const FEATURES: readonly Feature[] = [
@@ -32,4 +33,5 @@ export const FEATURES: readonly Feature[] = [
   // Before the fossils: its chip comes first in the deep-time bar, as it did.
   humansFeature,
   fossilsFeature,
+  waysFeature,
 ];

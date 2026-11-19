@@ -59,7 +59,6 @@ import { mountCarbonMade } from './features/carbonMade';
 import { mountIceAges } from './features/iceAges';
 import { mountDeepSurfaces, PLATES_CHIP } from './features/deepSurfaces';
 import { mountRocks } from './features/rocks';
-import { mountWays } from './features/ways';
 import { mountDates } from './features/dates';
 import { mountEmpires } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
@@ -198,7 +197,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       deepTime.setScale(scale);
     },
     said: () => [
-      ['ways', ways.said()],
       ['rocks', rocks.said()],
       ['dates', dates.said()],
       ['impacts', impacts.said()],
@@ -501,7 +499,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   parsed.warnings.forEach(notify);
 
   // Drawn on the globe as layers of their own (#379).
-  // History's maps (#446): rocks, ways of life and dated squares, their layers in this order.
+  // History's maps (#446): rocks and dated squares; the ways of life are a feature (#909).
   const historyLayer = {
     ...partContext,
     globe,
@@ -513,7 +511,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       deepTime.enterDeepTime(ma, scale);
     },
   });
-  const ways = mountWays({ ...historyLayer, legend: waysLegend });
   const dates = mountDates({
     ...historyLayer,
     radiocarbonCurves: () => years.curves(),
@@ -570,6 +567,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     tree: { openLineages: treeOfLife.openLineagesAt, openTree: treeOfLife.openTreeAt },
     settledLand: globe,
     evenLight: globe,
+    waysKey: waysLegend,
   };
   const features = mountFeatures(FEATURES, featureCore, capabilities);
   const [deltaT, lunarCatalog, solarCatalog] = await Promise.all([
@@ -607,7 +605,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   function hereData(): HereData {
     return {
       drawn: empires.drawn(),
-      waysOfLife: ways.data(),
       rocks: rocks.units(),
       features: features.here(store.get()),
     };
@@ -665,7 +662,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     { draw: bodies.render },
     { when: on(EARTH_LAYERS), draw: dates.show },
-    { when: on(EARTH_LAYERS), draw: ways.show },
     { when: on(EARTH_LAYERS), draw: rocks.show },
     { when: on(EARTH_LAYERS), draw: impacts.show },
     { when: on(EARTH_LAYERS), draw: carbonMade.show },

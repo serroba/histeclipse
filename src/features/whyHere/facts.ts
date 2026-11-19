@@ -6,13 +6,12 @@
 
 import type { Territory } from '../../data/empires';
 import { rockAt, type RockUnit } from '../../data/rocks';
-import { waysAt, type WaysOfLife } from '../../data/waysOfLife';
 import { periodAt } from '../../deepTime/periods';
 import { hereFacts, placeText } from './here';
 import { PERIOD_EVIDENCE } from '../../sources/periodEvidence';
 import type { HereFact, WhyId } from '../../sources/registry';
 import { cliopatriaYear } from '../../state/layerCatalog';
-import type { ViewState } from '../../state/viewState';
+import type { Layer, ViewState } from '../../state/viewState';
 import { PRESENT_YEAR } from '../../time/present';
 import { astronomicalYear, formatYear } from '../../time/year';
 import type { HereView, WhyMoment } from '../../ui/whySheet';
@@ -21,10 +20,9 @@ import type { HereView, WhyMoment } from '../../ui/whySheet';
 export interface HereData {
   /** The states last drawn, and the year they were drawn for. */
   readonly drawn: { readonly year: number; readonly territories: readonly Territory[] } | null;
-  readonly waysOfLife: WaysOfLife | null;
   readonly rocks: readonly RockUnit[] | null;
-  /** What the features on the contract have at the place (#893). */
-  readonly features: readonly HereFact[];
+  /** What the features on the contract have at the place (#893), each with its layer. */
+  readonly features: readonly (readonly [Layer, HereFact])[];
 }
 
 /** What each layer on the map has at the place picked: "Why here?". */
@@ -33,9 +31,10 @@ export function hereView(state: ViewState, data: HereData): HereView | null {
   const year = state.time.date.year;
   const words = (y: number): string => formatYear(astronomicalYear(y));
   const shownYear = cliopatriaYear(year, PRESENT_YEAR);
-  const { drawn, waysOfLife, rocks } = data;
-  const waysThen =
-    state.layers.has('ways') && waysOfLife !== null ? waysAt(waysOfLife, year) : null;
+  const { drawn, rocks } = data;
+  // The ways of life keep their place after the states; the other features' follow the rock.
+  const ways = data.features.find(([layer]) => layer === 'ways')?.[1] ?? null;
+  const others = data.features.flatMap(([layer, fact]) => (layer === 'ways' ? [] : [fact]));
   return {
     place: placeText(state.location),
     facts: hereFacts({
@@ -48,9 +47,9 @@ export function hereView(state: ViewState, data: HereData): HereView | null {
             asOf: shownYear === year ? null : words(shownYear),
           }
         : null,
-      ways: waysThen === null ? null : { at: waysThen, momentText: words(waysThen.year) },
+      ways,
       rock: state.layers.has('rocks') && rocks !== null ? rockAt(rocks, state.location) : undefined,
-    }).concat(data.features),
+    }).concat(others),
   };
 }
 
@@ -62,9 +61,8 @@ export function hereVersion(state: ViewState, data: HereData): string {
     [...state.layers].join(','),
     state.borders,
     data.drawn?.year ?? '',
-    data.waysOfLife === null ? 0 : 1,
     data.rocks === null ? 0 : 1,
-    data.features.map(({ text }) => text).join('/'),
+    data.features.map(([, { text }]) => text).join('/'),
   ].join('|');
 }
 

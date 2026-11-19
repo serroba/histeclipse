@@ -7,7 +7,6 @@
 
 import type { Territory } from '../../data/empires';
 import type { RockUnit } from '../../data/rocks';
-import { WAY_NAMES, type WaysAt } from '../../data/waysOfLife';
 import type { GeoPoint } from '../../state/viewState';
 import { insideWrapped } from '../../util/polygons';
 import type { HereFact } from '../../sources/registry';
@@ -26,8 +25,6 @@ export function statesHere(territories: readonly Territory[], place: GeoPoint): 
   );
 }
 
-const LEVEL_WORDS = { 1: 'present but minimal', 2: 'common', 3: 'widespread' } as const;
-
 export interface HereInput {
   readonly place: GeoPoint;
   /** The year shown, in words. */
@@ -39,8 +36,8 @@ export interface HereInput {
     /** The year Cliopatria's borders are of, in words, when not the year shown. */
     readonly asOf: string | null;
   } | null;
-  /** The ways of life of the moment rated nearest, if the layer is on and loaded. */
-  readonly ways: { readonly at: WaysAt; readonly momentText: string } | null;
+  /** What the ways of life have here, from their feature: after the states, as it was. */
+  readonly ways: HereFact | null;
   /** The rock unit at the place, if the layer is on and loaded. */
   readonly rock: RockUnit | null | undefined;
 }
@@ -83,25 +80,7 @@ export function hereFacts(input: HereInput): HereFact[] {
       why: 'empires-ohm',
     });
   }
-  if (input.ways !== null) {
-    const { at, momentText } = input.ways;
-    const region = at.regions.find((each) =>
-      insideWrapped(each.rings, input.place.longitude, input.place.latitude),
-    );
-    facts.push(
-      region === undefined
-        ? {
-            title: 'Ways of life',
-            text: `ArchaeoGLOBE rates no region here for ${momentText}.`,
-            why: 'ways',
-          }
-        : {
-            title: 'Ways of life',
-            text: `${region.name}: ${region.ways.map((way) => WAY_NAMES[way]).join(' and ')}, ${LEVEL_WORDS[region.level]}, as archaeologists rated it for ${momentText}.`,
-            why: 'ways',
-          },
-    );
-  }
+  if (input.ways !== null) facts.push(input.ways);
   if (input.rock !== undefined) {
     facts.push(
       input.rock === null

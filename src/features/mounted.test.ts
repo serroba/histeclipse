@@ -97,7 +97,9 @@ describe('the facts of the place picked (#893)', () => {
       {} as FeatureCore,
       {} as Capabilities,
     );
-    expect(features.here(base)).toEqual([{ title: 'Fossils', text: 'Here.', why: 'fossils' }]);
+    expect(features.here(base)).toEqual([
+      ['fossils', { title: 'Fossils', text: 'Here.', why: 'fossils' }],
+    ]);
   });
 });
 

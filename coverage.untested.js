@@ -83,7 +83,6 @@ export const UNTESTED = [
   'src/features/treeOfLife/lineagesTree.ts',
   'src/features/treeOfLife/treeSheet.ts',
   'src/features/volcanoes/volcanoLayer.ts',
-  'src/features/ways/index.ts',
   'src/features/whyHere/sources.ts',
   'src/features/years/index.ts',
   'src/features/years/radiocarbonStrip.ts',

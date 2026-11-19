@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import rocksFile from '../../../public/data/rocks.json';
-import waysFile from '../../../public/data/ways-of-life.json';
 import { loadRocks, rockUnits } from '../../data/rocks';
-import { loadWaysOfLife } from '../../data/waysOfLife';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import { astronomicalYear } from '../../time/year';
 import { hereVersion, hereView, whyMoment, whyVersion, type HereData } from './facts';
@@ -12,7 +10,7 @@ const serve = (body: unknown) => (): Promise<Response> => Promise.resolve(Respon
 
 const base = defaultViewState(new Date('2026-01-01T00:00:00Z'));
 const athens = { latitude: 37.97, longitude: 23.72 };
-const nothing: HereData = { drawn: null, waysOfLife: null, rocks: null, features: [] };
+const nothing: HereData = { drawn: null, rocks: null, features: [] };
 const here: ViewState = { ...base, location: athens };
 
 describe('hereView', () => {
@@ -41,21 +39,10 @@ describe('hereView', () => {
     expect(hereView(ancient, nothing)).not.toBeNull();
   });
 
-  it('reads the ways of life and the rock at the place, once they are in and on', async () => {
-    const [ways, rocks] = await Promise.all([
-      loadWaysOfLife('ways', serve(waysFile)),
-      loadRocks('rocks', serve(rocksFile)),
-    ]);
-    const on = {
-      ...here,
-      layers: withLayer(withLayer(here.layers, 'ways', true), 'rocks', true),
-    };
-    const loaded: HereData = {
-      drawn: null,
-      waysOfLife: ways,
-      rocks: rockUnits(rocks),
-      features: [],
-    };
+  it('reads the rock at the place, once it is in and on', async () => {
+    const rocks = await loadRocks('rocks', serve(rocksFile));
+    const on = { ...here, layers: withLayer(here.layers, 'rocks', true) };
+    const loaded: HereData = { drawn: null, rocks: rockUnits(rocks), features: [] };
     const both = hereView(on, loaded);
     expect(both?.facts.length).toBeGreaterThan(0);
     expect(hereView(on, nothing)).not.toEqual(both);
@@ -64,9 +51,29 @@ describe('hereView', () => {
 
   it('adds what the features have at the place, and is written again when that changes (#893)', () => {
     const fact = { title: 'El Niño and La Niña', text: 'Wetter.', why: 'enso' } as const;
-    const withFact: HereData = { ...nothing, features: [fact] };
+    const withFact: HereData = { ...nothing, features: [['enso', fact]] };
     expect(hereView(here, withFact)?.facts).toContainEqual(fact);
     expect(hereVersion(here, withFact)).not.toBe(hereVersion(here, nothing));
+  });
+
+  it('keeps the ways of life before the rock, and the other features after it (#909)', async () => {
+    const rocks = await loadRocks('rocks', serve(rocksFile));
+    const on = { ...here, layers: withLayer(here.layers, 'rocks', true) };
+    const enso = { title: 'El Niño and La Niña', text: 'Wetter.', why: 'enso' } as const;
+    const ways = { title: 'Ways of life', text: 'Farming.', why: 'ways' } as const;
+    const view = hereView(on, {
+      drawn: null,
+      rocks: rockUnits(rocks),
+      features: [
+        ['enso', enso],
+        ['ways', ways],
+      ],
+    });
+    expect(view?.facts.map(({ title }) => title)).toEqual([
+      'Ways of life',
+      'Rocks',
+      'El Niño and La Niña',
+    ]);
   });
 });
 
