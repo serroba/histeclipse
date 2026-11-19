@@ -8,6 +8,7 @@ import {
   compositeColours,
   compositeFor,
   loadEnsoComposites,
+  type CompositeMap,
   type CompositePick,
   type EnsoComposites,
 } from '../../data/ensoComposites';
@@ -32,6 +33,8 @@ export interface CompositeMaps {
   show(pick: CompositePick | null, index: string): void;
   /** The composites' index once loaded. */
   readonly index: () => EnsoComposites | null;
+  /** A map's image if loaded; else it is loaded, without painting, and `refresh` asked. */
+  image(map: CompositeMap): PackedMonth | null;
 }
 
 export function compositeMaps(context: CompositeMapsContext): CompositeMaps {
@@ -41,7 +44,7 @@ export function compositeMaps(context: CompositeMapsContext): CompositeMaps {
   const loading = new Set<string>();
   let wanted: string | null = null;
 
-  function fetchMap(file: string, packed: Omit<PackedMonth, 'image'>): void {
+  function fetchMap(file: string, packed: Omit<PackedMonth, 'image'>, quiet = false): void {
     if (loading.has(file)) return;
     loading.add(file);
     loadImage(`${context.folder}${file}`).then(
@@ -50,12 +53,22 @@ export function compositeMaps(context: CompositeMapsContext): CompositeMaps {
         const loaded = { ...packed, image };
         kept.set(file, loaded);
         if (wanted === file) context.paint(loaded);
+        if (quiet) context.refresh();
       },
       (error: unknown) => {
         loading.delete(file);
         context.notify(`Could not load the El Niño map: ${errorMessage(error)}`);
       },
     );
+  }
+
+  /** How a map is coloured, from its variable's bound and scale. */
+  function describe(map: CompositeMap): Omit<PackedMonth, 'image'> {
+    const bound = index?.variables.find(({ id }) => id === map.variable)?.bound ?? 1;
+    return {
+      bound,
+      colours: (bytes, scaled) => compositeColours(bytes, scaled, map.variable),
+    };
   }
 
   return {
@@ -77,8 +90,7 @@ export function compositeMaps(context: CompositeMapsContext): CompositeMaps {
     },
     show(pick, by) {
       const map = pick === null || index === null ? null : compositeFor(index, pick, by);
-      const variable = index?.variables.find(({ id }) => id === map?.variable);
-      if (map === null || variable === undefined) {
+      if (map === null) {
         wanted = null;
         return;
       }
@@ -89,10 +101,12 @@ export function compositeMaps(context: CompositeMapsContext): CompositeMaps {
         return;
       }
       context.paint(null);
-      fetchMap(map.file, {
-        bound: variable.bound,
-        colours: (bytes, bound) => compositeColours(bytes, bound, variable.id),
-      });
+      fetchMap(map.file, describe(map));
+    },
+    image(map) {
+      const packed = kept.get(map.file);
+      if (packed === undefined) fetchMap(map.file, describe(map), true);
+      return packed ?? null;
     },
     index: () => index,
   };

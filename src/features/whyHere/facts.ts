@@ -10,7 +10,7 @@ import { waysAt, type WaysOfLife } from '../../data/waysOfLife';
 import { periodAt } from '../../deepTime/periods';
 import { hereFacts, placeText } from './here';
 import { PERIOD_EVIDENCE } from '../../sources/periodEvidence';
-import type { WhyId } from '../../sources/registry';
+import type { HereFact, WhyId } from '../../sources/registry';
 import { cliopatriaYear } from '../../state/layerCatalog';
 import type { ViewState } from '../../state/viewState';
 import { PRESENT_YEAR } from '../../time/present';
@@ -23,6 +23,8 @@ export interface HereData {
   readonly drawn: { readonly year: number; readonly territories: readonly Territory[] } | null;
   readonly waysOfLife: WaysOfLife | null;
   readonly rocks: readonly RockUnit[] | null;
+  /** What the features on the contract have at the place (#893). */
+  readonly features: readonly HereFact[];
 }
 
 /** What each layer on the map has at the place picked: "Why here?". */
@@ -48,7 +50,7 @@ export function hereView(state: ViewState, data: HereData): HereView | null {
         : null,
       ways: waysThen === null ? null : { at: waysThen, momentText: words(waysThen.year) },
       rock: state.layers.has('rocks') && rocks !== null ? rockAt(rocks, state.location) : undefined,
-    }),
+    }).concat(data.features),
   };
 }
 
@@ -62,6 +64,7 @@ export function hereVersion(state: ViewState, data: HereData): string {
     data.drawn?.year ?? '',
     data.waysOfLife === null ? 0 : 1,
     data.rocks === null ? 0 : 1,
+    data.features.map(({ text }) => text).join('/'),
   ].join('|');
 }
 

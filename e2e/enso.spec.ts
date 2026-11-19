@@ -41,3 +41,23 @@ test('the El Niño indices are charted side by side, and a month where they disa
   });
   expect(problems).toEqual([]);
 });
+
+test('why here: in the equatorial Pacific, the sea that month and what El Niño and La Niña usually bring (#893)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const here = page.getByRole('dialog', { name: /^Here: / });
+  await test.step('Given a link to the equatorial Pacific in December 1997, with El Niño and La Niña on', async () => {
+    await page.goto('./?t=1997-12-15T12:00Z&loc=0,-120&layers=enso&cam=0,-120,3&why=here');
+    await globeRendered(page);
+  });
+  await test.step('Then "Here" gives the sea that month, warm, and the usual signal by each index', async () => {
+    await expect(here).toContainText(/The sea’s surface here in December 1997: \+\d\.\d °C/);
+    await expect(here).toContainText(
+      'What El Niño and La Niña have usually brought here in December–February',
+    );
+    await expect(here).toContainText(/El Niño by RONI, rain [^,]+, temperature \+\d\.\d\d °C/);
+    await expect(here).toContainText('by ONI');
+  });
+  expect(problems).toEqual([]);
+});

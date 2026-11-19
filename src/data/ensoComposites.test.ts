@@ -6,6 +6,10 @@ import {
   compositeFor,
   compositeOf,
   compositeText,
+  hereText,
+  nodeOffset,
+  readingAt,
+  seasonOf,
   loadEnsoComposites,
   pickOptions,
   scaleEnds,
@@ -85,5 +89,47 @@ describe('El Niño and La Niña composites', () => {
     expect([...rain.slice(8)]).toEqual([0, 0, 0, 0]);
     const warm = compositeColours(packed, 2, 'temperature');
     expect([...warm.slice(4, 7)]).toEqual([...scaleEnds('temperature')[1]]);
+  });
+
+  it('Given a place, Then its node in the packed bytes; months lean to their season', () => {
+    expect(nodeOffset(90, -180)).toBe(0);
+    expect(nodeOffset(0, 0)).toBe((90 * 361 + 180) * 4);
+    expect(nodeOffset(-90, 180, 361)).toBe((180 * 361 + 0) * 4);
+    expect(nodeOffset(100, 179.6)).toBe(359 * 4 + 4);
+    expect([1, 3, 4, 9, 10, 12].map(seasonOf)).toEqual(['djf', 'djf', 'jja', 'jja', 'djf', 'djf']);
+  });
+
+  it('Given bytes, Then the value and its significance there; none without data or past the end', () => {
+    const bytes = new Uint8ClampedArray([255, 128, 255, 255, 0, 128, 0, 255, 9, 9, 9, 0]);
+    expect(readingAt(bytes, 0, 2)).toEqual({ value: 2, significant: true });
+    expect(readingAt(bytes, 4, 2)).toEqual({ value: -2, significant: false });
+    expect(readingAt(bytes, 8, 2)).toEqual({ value: null, significant: false });
+    expect(readingAt(bytes, 12, 2)).toEqual({ value: null, significant: false });
+  });
+
+  it('Given readings at a place, Then each phase by each index, unclear ones said so; null with no data', () => {
+    const reading = (
+      variable: 'rain' | 'temperature',
+      phase: 'elNino' | 'laNina',
+      index: string,
+      value: number | null,
+      significant = true,
+    ) => ({ variable, phase, index, value, significant });
+    expect(
+      hereText(
+        data,
+        'djf',
+        [
+          reading('rain', 'elNino', 'roni', 0.4),
+          reading('temperature', 'elNino', 'roni', 0.81),
+          reading('rain', 'laNina', 'roni', -0.1, false),
+          reading('temperature', 'laNina', 'roni', null),
+        ],
+        upper,
+      ),
+    ).toBe(
+      'What El Niño and La Niña have usually brought here in December–February, against the trend: El Niño by RONI, rain +0.40 mm a day, temperature +0.81 °C. La Niña by RONI, rain no clear signal.',
+    );
+    expect(hereText(data, 'jja', [reading('rain', 'elNino', 'oni', null)], upper)).toBeNull();
   });
 });

@@ -585,6 +585,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       moment.show(now);
       if (now.ma !== null) deepTime.show(now);
       showLayers(now);
+      showSheets(now);
     },
   };
   const features = mountFeatures(FEATURES, featureContext);
@@ -621,7 +622,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   /** What the layers have loaded, for "Why here?" to read. */
   function hereData(): HereData {
-    return { drawn: empires.drawn(), waysOfLife: ways.data(), rocks: rocks.units() };
+    return {
+      drawn: empires.drawn(),
+      waysOfLife: ways.data(),
+      rocks: rocks.units(),
+      features: features.here(store.get()),
+    };
   }
 
   /** The sky, entered or left: the globe makes way for it. */

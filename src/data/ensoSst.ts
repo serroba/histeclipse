@@ -111,3 +111,9 @@ export function seaText(maps: EnsoSst | null, at: number): string {
   const bound = maps.bound.toFixed(0);
   return `On the globe, the sea’s surface against its ${maps.baseline.slice(0, 9)} mean for the month: blue colder, red warmer, to ±${bound} °C (NOAA OISST).`;
 }
+
+/** For "Why here?" (#893): the sea's surface at a place in the month, or null on land. */
+export function seaHereText(maps: EnsoSst, value: number | null, monthText: string): string | null {
+  if (value === null) return null;
+  return `The sea’s surface here in ${monthText}: ${value < 0 ? '−' : '+'}${Math.abs(value).toFixed(1)} °C against the month’s ${maps.baseline.slice(0, 9)} mean (NOAA OISST).`;
+}
