@@ -7,7 +7,8 @@
  * Loaded with the layer.
  */
 
-import { ensoText, loadEnso, monthOf, type Enso } from '../../data/enso';
+import { ensoText, loadEnso, monthName, monthOf, spanned, type Enso } from '../../data/enso';
+import { latestFor } from '../../data/ensoSst';
 import { errorMessage } from '../../util/errors';
 import type { ViewState } from '../../state/viewState';
 import { feature } from '../feature';
@@ -20,6 +21,21 @@ import { globeMaps } from './globeMaps';
 const NOAA_FROM = monthOf(1950, 1);
 const EARLY_NOTE =
   ' Before 1950 NOAA publishes no index: these are computed here by its RONI method from two reconstructions of the sea, ERSST and HadISST.';
+
+/**
+ * What the panel says of a month, and the month it charts: today, while the indices catch up,
+ * the latest month there is, said so; before 1950, whose indices they are.
+ */
+function sayMonth(
+  enso: { readonly now: Enso; readonly early: Enso },
+  at: number,
+): { readonly shown: Enso; readonly month: number; readonly text: string } {
+  const before = at < NOAA_FROM;
+  const shown = before ? enso.early : enso.now;
+  const month = latestFor(spanned(shown).last, at);
+  const waiting = month === at ? '' : `No index yet for ${monthName(at)}; the latest, `;
+  return { shown, month, text: `${waiting}${ensoText(shown, month)}${before ? EARLY_NOTE : ''}` };
+}
 
 /** Whether the layer shows: on, on Earth's globe, in the years. */
 function shownOn(state: ViewState): boolean {
@@ -100,11 +116,10 @@ export const ensoFeature = feature({
           load();
           return;
         }
-        const before = at < NOAA_FROM;
-        const shown = before ? enso.early : enso.now;
-        said = `${ensoText(shown, at)}${before ? EARLY_NOTE : ''}`;
+        const { shown, month, text } = sayMonth(enso, at);
+        said = text;
         panel.update({
-          chart: ensoChart(shown, at),
+          chart: ensoChart(shown, month),
           names: shown.indices.map((index) => ({ id: index.id, name: index.label })),
           text: said,
           ...maps.view(at),

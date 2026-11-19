@@ -244,4 +244,24 @@ describe('El Niño and La Niña as a feature', () => {
       expect(painted.at(-1)).toMatchObject({ image: { url: '/data/enso-ersst/1877-01.png' } });
     });
   });
+
+  it('Given today, past the latest data, Then the latest month is shown and said so, not nothing', async () => {
+    const { context, panels, painted, refresh } = fakeContext();
+    const shown = ensoFeature.mount(context, context);
+    const today = { ...on, time: moveToYear(on.time, astronomicalYear(2026)) };
+    const november = { ...today, time: { ...today.time, date: { ...today.time.date, month: 11 } } };
+    shown.show?.(november, JD);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(3);
+    });
+    shown.show?.(november, JD);
+    expect(shown.said?.()).toMatch(/^No index yet for November 2026; the latest, September 2026: /);
+    expect(panels.at(-1)).toMatchObject({
+      chart: { cursorX: expect.any(Number) as unknown },
+      sea: expect.stringContaining('Showing October 2026, the latest month there is.') as unknown,
+    });
+    await vi.waitFor(() => {
+      expect(painted.at(-1)).toMatchObject({ image: { url: '/data/enso-sst/2026-10.png' } });
+    });
+  });
 });
