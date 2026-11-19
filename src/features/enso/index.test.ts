@@ -247,7 +247,7 @@ describe('El Niño and La Niña as a feature', () => {
 
   it('Given today, past the latest data, Then the latest month is shown and said so, not nothing', async () => {
     const { context, panels, painted, refresh } = fakeContext();
-    const shown = ensoFeature.mount(context);
+    const shown = ensoFeature.mount(context, context);
     const today = { ...on, time: moveToYear(on.time, astronomicalYear(2026)) };
     const november = { ...today, time: { ...today.time, date: { ...today.time.date, month: 11 } } };
     shown.show?.(november, JD);
