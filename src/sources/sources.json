@@ -552,6 +552,13 @@
     "url": "https://doi.org/10.1038/ncomms14845",
     "licence": "CC BY 4.0"
   },
+  "fosterRahmstorf2011": {
+    "name": "Foster & Rahmstorf 2011",
+    "kind": "paper",
+    "cite": "Foster, G., Rahmstorf, S. (2011), Global temperature evolution 1979–2010, Environmental Research Letters 6, 044022, doi:10.1088/1748-9326/6/4/044022. Our summary: five records of global temperature since 1979 (NASA GISS, NOAA NCDC and HadCRU at the surface; RSS and UAH in the lower troposphere) all warm by 0.014–0.018 °C a year. Taking out the estimated effect of El Niño and La Niña, volcanic aerosols and the Sun's variations leaves the warming plainer, at much the same rate, steady over the whole time, with less noise; the lower troposphere responds more to El Niño and volcanoes than the surface",
+    "url": "https://doi.org/10.1088/1748-9326/6/4/044022",
+    "licence": "Open access, IOP Publishing (CC BY-NC-SA 3.0)"
+  },
   "frederikse2020": {
     "name": "Frederikse et al. 2020",
     "kind": "paper",

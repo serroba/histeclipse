@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import file from '../../public/data/enso/index.json';
 import {
   ensoText,
+  ensoYearText,
   episodeAt,
   loadEnso,
   monthName,
@@ -139,5 +140,48 @@ describe('NOAA’s ENSO indices', () => {
     expect(ensoText(ENSO, monthOf(1900, 6))).toBe(
       'NOAA’s indices run from January 2024 to April 2024: none for June 1900.',
     );
+  });
+
+  it('Given a year both indices name alike, Then once, with each index’s peak', () => {
+    const alike: Enso = {
+      ...ENSO,
+      indices: ENSO.indices.map((each) => ({
+        ...each,
+        episodes: [
+          {
+            phase: 'elNino',
+            first: '1997-05',
+            last: '1998-04',
+            peak: each.id === 'roni' ? 2.3 : 2.4,
+            peakAt: '1997-11',
+          },
+          { phase: 'laNina', first: '1998-07', last: '2001-01', peak: -1.6, peakAt: '1999-12' },
+        ],
+        first: '1950-01',
+        values: new Array<number>(900).fill(0),
+      })),
+    };
+    expect(ensoYearText(alike, 1998)).toBe(
+      'In 1998, by both indices: the El Niño of 1997–98 (peak RONI +2.30 °C, ONI +2.40 °C) and the La Niña of 1998–2001 (peak RONI −1.60 °C, ONI −1.60 °C).',
+    );
+    expect(ensoYearText(alike, 1960)).toBe('In 1960, neither El Niño nor La Niña by either index.');
+    expect(ensoYearText(alike, 1949)).toBeNull();
+  });
+
+  it('Given a year the indices name differently, Then index by index; one index alone, by its name', () => {
+    expect(ensoYearText(ENSO, 2024)).toBe(
+      'In 2024: RONI, the La Niña of 2024 (peak −1.10 °C) and the El Niño of 2024, still on (peak +1.20 °C); ONI, the El Niño of 2024, still on (peak +1.50 °C).',
+    );
+    const one: Enso = { ...ENSO, indices: ENSO.indices.slice(1) };
+    expect(ensoYearText(one, 2024)).toBe(
+      'In 2024, by ONI: the El Niño of 2024, still on (peak +1.50 °C).',
+    );
+    const quiet: Enso = { ...one, indices: one.indices.map((each) => ({ ...each, episodes: [] })) };
+    expect(ensoYearText(quiet, 2024)).toBe('In 2024, neither El Niño nor La Niña by ONI.');
+    const apart: Enso = {
+      ...ENSO,
+      indices: [{ ...ENSO.indices[0], episodes: [] } as Enso['indices'][number], ...one.indices],
+    };
+    expect(ensoYearText(apart, 2024)).toMatch(/^In 2024: RONI, neither; ONI, the El Niño/);
   });
 });

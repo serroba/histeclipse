@@ -5,7 +5,8 @@
  * seen at a glance; and the month shown.
  */
 
-import { monthNumber, shared, shortName, spanOf, type Enso, type Phase } from '../../data/enso';
+import { shared, spanOf, type Enso } from '../../data/enso';
+import { episodeStrips, type EpisodeStrip } from '../../ui/ensoStrips';
 
 export const CHART_WIDTH = 1000;
 export const CHART_HEIGHT = 300;
@@ -17,15 +18,7 @@ export interface EnsoChart {
   readonly last: number;
   readonly lines: readonly { readonly id: string; readonly d: string }[];
   /** Each index's episodes, as spans of the chart's width. */
-  readonly strips: readonly {
-    readonly id: string;
-    readonly name: string;
-    readonly episodes: readonly {
-      readonly x: number;
-      readonly width: number;
-      readonly phase: Exclude<Phase, 'neutral'>;
-    }[];
-  }[];
+  readonly strips: readonly EpisodeStrip[];
   readonly zeroY: number;
   /** The thresholds of El Niño (above) and La Niña (below). */
   readonly warmY: number;
@@ -55,19 +48,7 @@ export function ensoChart(enso: Enso, at: number): EnsoChart {
     return { id: index.id, d };
   });
   const monthWidth = CHART_WIDTH / (last - first + 1);
-  const strips = enso.indices.map((index) => ({
-    id: index.id,
-    name: shortName(index),
-    episodes: index.episodes.map((episode) => {
-      const from = monthNumber(episode.first);
-      const to = monthNumber(episode.last);
-      return {
-        x: x(from) - monthWidth / 2,
-        width: (to - from + 1) * monthWidth,
-        phase: episode.phase,
-      };
-    }),
-  }));
+  const strips = episodeStrips(enso, (month) => x(month) - monthWidth / 2, CHART_WIDTH);
   return {
     first,
     last,

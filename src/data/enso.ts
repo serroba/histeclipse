@@ -179,3 +179,73 @@ export function ensoText(enso: Enso, at: number): string {
     .join('; ');
   return `${monthName(at)}: the indices disagree. ${each}.${later}`;
 }
+
+/** Words in a list: `a`, `a and b`, `a, b and c`. */
+function listed(words: readonly string[]): string {
+  return words.length < 2
+    ? words.join('')
+    : `${words.slice(0, -1).join(', ')} and ${words.at(-1) ?? ''}`;
+}
+
+/** An episode's years: `2015–16`, `1998–2001`, or one year. */
+function yearsOf(episode: Episode): string {
+  const from = Number(episode.first.slice(0, 4));
+  const to = Number(episode.last.slice(0, 4));
+  if (from === to) return String(from);
+  const sameCentury = Math.floor(from / 100) === Math.floor(to / 100);
+  return `${String(from)}–${sameCentury ? String(to).slice(2) : String(to)}`;
+}
+
+/** The episodes one index names in a year, as words and peaks. */
+function namedIn(
+  index: EnsoIndex,
+  year: number,
+): { readonly words: string; readonly peak: number }[] {
+  const start = monthOf(year, 1);
+  const end = monthOf(year, 12);
+  return index.episodes
+    .filter((episode) => monthNumber(episode.first) <= end && monthNumber(episode.last) >= start)
+    .map((episode) => ({
+      words: `the ${PHASE_NAMES[episode.phase]} of ${yearsOf(episode)}${episode.ongoing === true ? ', still on' : ''}`,
+      peak: episode.peak,
+    }));
+}
+
+/**
+ * For a year of the temperature records (#890): the El Niño and La Niña episodes each index
+ * names in it, with their peaks; said once where the indices name the same, index by index
+ * where they do not. Null before the indices start.
+ */
+export function ensoYearText(enso: Enso, year: number): string | null {
+  const covering = enso.indices.filter((index) => {
+    const { first, last } = spanOf(index);
+    return first <= monthOf(year, 12) && last >= monthOf(year, 1);
+  });
+  const [only] = covering;
+  if (only === undefined) return null;
+  const said = covering.map((index) => ({ index, items: namedIn(index, year) }));
+  const agreed = new Set(said.map(({ items }) => items.map(({ words }) => words).join('|')));
+  const one = covering.length === 1;
+  if (agreed.size === 1) {
+    if (namedIn(only, year).length === 0) {
+      return `In ${String(year)}, neither El Niño nor La Niña by ${one ? shortName(only) : 'either index'}.`;
+    }
+    const items = namedIn(only, year);
+    const each = items.map(({ words }, at) => {
+      const peaks = said.map(
+        ({ index, items: own }) =>
+          `${one ? '' : `${shortName(index)} `}${signed(own[at]?.peak ?? 0)} °C`,
+      );
+      return `${words} (peak ${peaks.join(', ')})`;
+    });
+    return `In ${String(year)}, by ${one ? shortName(only) : 'both indices'}: ${listed(each)}.`;
+  }
+  const each = said.map(({ index, items }) => {
+    const words =
+      items.length === 0
+        ? 'neither'
+        : listed(items.map(({ words: w, peak }) => `${w} (peak ${signed(peak)} °C)`));
+    return `${shortName(index)}, ${words}`;
+  });
+  return `In ${String(year)}: ${each.join('; ')}.`;
+}
