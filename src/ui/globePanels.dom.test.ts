@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it } from 'vitest';
 
-import { joinGlobePanels, keptOnScreen } from './globePanels';
+import { foldable, joinGlobePanels, keptOnScreen } from './globePanels';
 
 function column(): { readonly column: HTMLElement; readonly grip: HTMLElement } {
   const container = document.createElement('div');
@@ -80,5 +80,69 @@ describe('a column kept on the screen', () => {
   });
   it('holds still on a screen smaller than the column', () => {
     expect(keptOnScreen({ x: 50, y: 0 }, none, box, 200, 700).x).toBe(-16);
+  });
+});
+
+describe('folding a panel beside the globe', () => {
+  const panelNamed = (name: string): HTMLElement => {
+    const panel = document.createElement('section');
+    panel.setAttribute('aria-label', name);
+    panel.append(document.createElement('figure'));
+    return panel;
+  };
+  const memory = (): Storage => {
+    const kept = new Map<string, string>();
+    return {
+      getItem: (key: string) => kept.get(key) ?? null,
+      setItem: (key: string, value: string) => kept.set(key, value),
+    } as unknown as Storage;
+  };
+
+  it('Given a panel, Then a button folds it to its name and unfolds it, and the browser remembers', () => {
+    const storage = memory();
+    const panel = panelNamed('El Niño and La Niña');
+    foldable(panel, storage);
+    const button = panel.querySelector<HTMLButtonElement>('.globe-panel-fold');
+    expect(button?.getAttribute('aria-expanded')).toBe('true');
+    expect(button?.getAttribute('aria-label')).toBe('Fold El Niño and La Niña');
+    button?.click();
+    expect(panel.classList.contains('is-folded')).toBe(true);
+    expect(button?.getAttribute('aria-label')).toBe('Unfold El Niño and La Niña');
+    // Another page in this browser opens it folded.
+    const again = panelNamed('El Niño and La Niña');
+    foldable(again, storage);
+    expect(again.classList.contains('is-folded')).toBe(true);
+    button?.click();
+    expect(panel.classList.contains('is-folded')).toBe(false);
+    const third = panelNamed('El Niño and La Niña');
+    foldable(third, storage);
+    expect(third.classList.contains('is-folded')).toBe(false);
+  });
+
+  it('Given no storage, or storage that throws or holds nonsense, Then it still folds', () => {
+    const throwing = {
+      getItem: () => {
+        throw new Error('blocked');
+      },
+      setItem: () => {
+        throw new Error('blocked');
+      },
+    } as unknown as Storage;
+    const garbled = {
+      getItem: () => '{"not":"a list"}',
+      setItem: () => undefined,
+    } as unknown as Storage;
+    for (const storage of [null, throwing, garbled]) {
+      const panel = panelNamed('Ocean heat');
+      foldable(panel, storage);
+      expect(panel.classList.contains('is-folded')).toBe(false);
+      panel.querySelector<HTMLButtonElement>('.globe-panel-fold')?.click();
+      expect(panel.classList.contains('is-folded')).toBe(true);
+    }
+    const unnamed = document.createElement('section');
+    foldable(unnamed, null);
+    expect(unnamed.querySelector('.globe-panel-fold')?.getAttribute('aria-label')).toBe(
+      'Fold Panel',
+    );
   });
 });

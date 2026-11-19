@@ -71,3 +71,75 @@
 .globe-panels:not(:has(.globe-panels-list > :not([hidden]))) {
   display: none;
 }
+
+/* Each panel folds to its name (#748): a button at its corner, the name on it once folded. */
+.globe-panels-list > * {
+  position: relative;
+}
+
+.globe-panel-fold {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 1;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.globe-panel-fold:hover,
+.globe-panel-fold:focus-visible {
+  color: var(--ink);
+  background: rgb(255 255 255 / 0.08);
+}
+
+/* A chevron: down to fold, right to unfold. */
+.globe-panel-chevron {
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentcolor;
+  border-bottom: 2px solid currentcolor;
+  transform: rotate(45deg) translate(-2px, -2px);
+}
+
+.globe-panel-name {
+  display: none;
+}
+
+.globe-panels-list > .is-folded > :not(.globe-panel-fold) {
+  display: none;
+}
+
+.globe-panels-list > .is-folded .globe-panel-fold {
+  position: static;
+  justify-content: space-between;
+  width: 100%;
+  color: var(--ink);
+}
+
+.globe-panels-list > .is-folded .globe-panel-name {
+  display: inline;
+}
+
+.globe-panels-list > .is-folded .globe-panel-chevron {
+  transform: rotate(-45deg);
+}
+
+/* The first line keeps clear of the button at the corner. */
+.globe-panels-list > :not(.is-folded) > .globe-panel-fold + * {
+  padding-right: 28px;
+}
+
+/* Folded, a panel is one slim line. */
+.globe-panels-list > .is-folded {
+  padding: 2px 4px;
+}

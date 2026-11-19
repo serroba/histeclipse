@@ -145,8 +145,9 @@
 }
 
 @media (max-width: 600px) {
-  /* A few marks (1900, 1950) have room for their values even on a phone. */
-  .history-lane .period-axis.is-few-marks .period-round-label {
+  /* A few marks within one age (1900, 1950) have room for their values even on a phone; the
+     Holocene's three (6000 BCE…) do not. */
+  .period-axis.is-few-marks.is-one-chapter .period-round-label {
     display: inline;
   }
 }
