@@ -13,6 +13,34 @@
     "url": "https://doi.org/10.1103/PhysRevLett.116.061102",
     "licence": "CC BY 3.0"
   },
+  "abbott2017Gw170817": {
+    "name": "Abbott et al. 2017 (LIGO and Virgo), GW170817",
+    "kind": "paper",
+    "cite": "Abbott, B. P. et al. (LIGO Scientific Collaboration and Virgo Collaboration) (2017), GW170817: Observation of Gravitational Waves from a Binary Neutron Star Inspiral, Physical Review Letters 119, 161101: heard on 17 August 2017 at 12:41:04 UTC by both LIGO detectors and Virgo, combined signal-to-noise ratio 32.4 (Hanford 18.8, Livingston 26.4, Virgo 2.0), about 100 s and 3,000 cycles in band from 24 Hz; a chirp mass of 1.188 (+0.004, −0.002) Suns (1.1977 as the detectors measured it), components of 1.36–1.60 and 1.17–1.36 Suns if slowly spinning, 2.74 (+0.04, −0.01) in all; 40 (+8, −14) Mpc away, placed in 28 square degrees; a glitch at Livingston 1.1 s before the merger, modelled and removed; GRB 170817A 1.7 s after the merger; no signal after the merger, a black hole's ringing being near 6 kHz",
+    "url": "https://doi.org/10.1103/PhysRevLett.119.161101",
+    "licence": "CC BY 4.0"
+  },
+  "abbott2017Multimessenger": {
+    "name": "Abbott et al. 2017, multi-messenger observations of GW170817",
+    "kind": "paper",
+    "cite": "Abbott, B. P. et al. (LIGO Scientific Collaboration, Virgo Collaboration and some 70 observatories' teams) (2017), Multi-messenger Observations of a Binary Neutron Star Merger, The Astrophysical Journal Letters 848, L12: the gamma-ray burst GRB 170817A seen by Fermi-GBM and INTEGRAL 1.7 s after the merger; the optical transient SSS17a, now AT 2017gfo, found in NGC 4993 by the 1 m Swope telescope 10.9 hours after it; a blue transient fading within 48 hours, then red and infrared light lasting weeks; X-rays and radio days later",
+    "url": "https://doi.org/10.3847/2041-8213/aa91c9",
+    "licence": "CC BY 3.0"
+  },
+  "abbott2018NeutronStarRadii": {
+    "name": "Abbott et al. 2018, GW170817's neutron-star radii",
+    "kind": "paper",
+    "cite": "Abbott, B. P. et al. (LIGO Scientific Collaboration and Virgo Collaboration) (2018), GW170817: Measurements of Neutron Star Radii and Equation of State, Physical Review Letters 121, 161101: from how the stars' tides shaped the wave, assuming both are made of the same matter and that it can hold up a neutron star of 1.97 Suns, both radii are 11.9 ± 1.4 km (90% credible); without that assumption, 10.8 (+2.0, −1.7) and 10.7 (+2.1, −1.5) km. Only the figures are quoted",
+    "url": "https://doi.org/10.1103/PhysRevLett.121.161101",
+    "licence": "APS default licence (all rights reserved); facts quoted"
+  },
+  "abbott2019Gwtc1": {
+    "name": "Abbott et al. 2019, GWTC-1",
+    "kind": "paper",
+    "cite": "Abbott, B. P. et al. (LIGO Scientific Collaboration and Virgo Collaboration) (2019), GWTC-1: A Gravitational-Wave Transient Catalog of Compact Binary Mergers Observed by LIGO and Virgo during the First and Second Observing Runs, Physical Review X 9, 031040: GW170817's masses re-estimated, 1.46 (+0.12, −0.10) and 1.27 (± 0.09) Suns (medians, 90% credible), chirp mass 1.186 (± 0.001), 40 (+7, −15) Mpc; what it made, 2.8 Suns or less",
+    "url": "https://doi.org/10.1103/PhysRevX.9.031040",
+    "licence": "CC BY 4.0"
+  },
   "allwood2006": {
     "name": "Allwood et al. 2006",
     "kind": "paper",
@@ -704,6 +732,13 @@
     "kind": "dataset",
     "cite": "LIGO Scientific Collaboration and Virgo Collaboration, Gravitational Wave Open Science Center (GWOSC): the data behind Figure 1 of the GW150914 discovery paper, the strain measured at LIGO Hanford and LIGO Livingston (band-passed 35–350 Hz and notched) and the best-fit numerical-relativity waveform each would see, 0.25–0.46 s after 09:50:45 UTC on 14 September 2015, as downloaded on 18 November 2026",
     "url": "https://gwosc.org/events/GW150914/",
+    "licence": "CC BY 4.0"
+  },
+  "gwoscGw170817": {
+    "name": "GWOSC: GW170817",
+    "kind": "dataset",
+    "cite": "LIGO Scientific Collaboration and Virgo Collaboration, Gravitational Wave Open Science Center (GWOSC): GW170817's event page in GWTC-1 (version 3), with its parameters, the strain each detector recorded and the posterior samples, as read on 20 November 2026",
+    "url": "https://gwosc.org/events/GW170817/",
     "licence": "CC BY 4.0"
   },
   "hadcrut5": {

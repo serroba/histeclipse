@@ -18,10 +18,6 @@ export const EXAGGERATION = 4e20;
 const LEAD_MS = 1200;
 const REST_MS = 2200;
 
-/** The words that always go with the drawing: how far from the truth it is. */
-export const SCALE_NOTE =
-  'Stretched 4 × 10²⁰ times and slowed 100 times, to be seen. Over LIGO’s 4 km arms the real change was 4 × 10⁻¹⁸ m, a four-hundredth of a proton’s width.';
-
 /** How long one play of it lasts, ms. */
 export function loopMs(wave: Waveform): number {
   return LEAD_MS + (wave.end - wave.start) * SLOWED * 1000 + REST_MS;

@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createStore } from '../../state/store';
 import { defaultViewState, type ViewState } from '../../state/viewState';
-import { GW150914_CARD } from './eventCard';
+import { GW150914_CARD, GW170817_CARD } from './eventCard';
 import type { WaveView, WaveViewOptions } from './waveView';
 import { mountWave, type WaveContext } from '.';
 
@@ -284,5 +284,47 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     await settled();
     expect(views[0]?.options.chapter).toBe('journey');
     expect(stage().dataset['chapter']).toBe('journey');
+  });
+
+  it('Given GW170817 named (#990), Then its story opens with its neutron stars, its own words and card, and no fetch', async () => {
+    const { views, store, showCard, fetched, played } = mount();
+    store.set((state) => ({ ...state, wave: 'gw170817', waveChapter: 'journey' }));
+    await settled();
+    expect(fetched).toEqual([]);
+    expect(views[0]?.options.bodies.kind).toBe('neutron stars');
+    // Its story has no journey yet: it opens at the source.
+    expect(views[0]?.options.chapter).toBe('source');
+    expect(views[0]?.options.wave.end).toBe(0);
+    expect(views[0]?.options.atLivingston).toBeCloseTo(4.4, 9);
+    expect(stage().querySelector('.wave-title')?.textContent).toContain('neutron stars');
+    expect(stage().dataset['wave']).toBe('gw170817');
+    expect(stage().textContent).toContain('two neutron stars');
+    expect(stage().textContent).toContain('at its own pitch');
+    const shown = [...stage().querySelectorAll<HTMLButtonElement>('.wave-chapter')]
+      .filter((button) => button.hidden === false)
+      .map((button) => button.textContent);
+    expect(shown).toEqual(['The source', 'Space', 'At Livingston']);
+    click('Next');
+    expect(store.get().waveChapter).toBe('space');
+    click('At Livingston');
+    // No measured strain to plot: the plot stays away.
+    expect(stage().querySelector<HTMLElement>('.wave-plot')?.hidden).toBe(true);
+    click('About GW170817');
+    expect(showCard).toHaveBeenCalledWith(expect.objectContaining(GW170817_CARD));
+    click('Hear it');
+    expect(played).toHaveBeenCalledTimes(1);
+  });
+
+  it('Given GW170817 open, When GW150914 is named, Then the black holes and their plot come back', async () => {
+    const { views, store } = mount();
+    store.set((state) => ({ ...state, wave: 'gw170817', waveChapter: 'detector' }));
+    await settled();
+    store.set((state) => ({ ...state, wave: 'gw150914' }));
+    await settled();
+    expect(views[0]?.view.dispose).toHaveBeenCalled();
+    expect(views[1]?.options.bodies.kind).toBe('black holes');
+    expect(views[1]?.options.chapter).toBe('detector');
+    expect(stage().querySelector<HTMLElement>('.wave-plot')?.hidden).toBe(false);
+    expect(stage().querySelector('.wave-title')?.textContent).toContain('GW150914');
   });
 });

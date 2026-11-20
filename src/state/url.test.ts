@@ -337,6 +337,7 @@ describe('parseViewState', () => {
     const { state } = parseViewState('wave=GW150914', NOW);
     expect(state.wave).toBe('gw150914');
     expect(serializeViewState(state)).toContain('wave=gw150914');
+    expect(parseViewState('wave=gw170817', NOW).state.wave).toBe('gw170817');
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('wave=');
     const journey = parseViewState('wave=gw150914&chapter=journey', NOW).state;
     expect(journey.waveChapter).toBe('journey');
@@ -423,7 +424,7 @@ describe('parseViewState', () => {
     ['culture=martian', 'culture', 'unknown culture'],
     ['mission=voyager', 'mission', 'GCAT id'],
     ['craft=9x', 'craft', 'GCAT id'],
-    ['wave=gw170817', 'wave', 'gravitational wave'],
+    ['wave=gw190521', 'wave', 'gravitational wave'],
     ['chapter=epilogue', 'chapter', 'unknown chapter'],
     ['explore=Human_Origins', 'explore', 'destination’s id'],
     ['borders=guesswork', 'borders', 'unknown borders'],
@@ -598,7 +599,7 @@ describe('serializeViewState', () => {
       ),
       { nil: null },
     ),
-    wave: fc.option(fc.constant('gw150914' as const), { nil: null }),
+    wave: fc.option(fc.constantFrom('gw150914' as const, 'gw170817' as const), { nil: null }),
     waveChapter: fc.constantFrom(...WAVE_CHAPTERS),
     explore: fc.option(fc.constantFrom('human-origins', 'moon-landings', 'a1'), { nil: null }),
     borders: fc.constantFrom(...BORDER_SOURCES),

@@ -32,6 +32,7 @@ import iceSurface from './whys/ice-surface.json' with { type: 'json' };
 import impacts from './whys/impacts.json' with { type: 'json' };
 import lineages from './whys/lineages.json' with { type: 'json' };
 import moons from './whys/moons.json' with { type: 'json' };
+import neutronStarMerger from './whys/neutronStarMerger.json' with { type: 'json' };
 import oceanCurrents from './whys/oceanCurrents.json' with { type: 'json' };
 import oceanHeat from './whys/oceanHeat.json' with { type: 'json' };
 import oceanTemp from './whys/oceanTemp.json' with { type: 'json' };
@@ -99,4 +100,5 @@ export const WHYS_CONTENT = {
   oceanCurrents,
   gravitationalWaves,
   telescopes,
+  neutronStarMerger,
 };

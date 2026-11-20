@@ -247,4 +247,16 @@ describe('the stories, as passages (#842)', () => {
     expect(story?.kind).toBe('story');
     expect(story?.anchors[0]?.view).toContain('wave=gw150914&chapter=source');
   });
+
+  it('finds GW170817’s story first, by its name or by neutron stars, and opens it at its start (#990)', async () => {
+    const { storyPassages, whyPassages } = await import('./passages');
+    const { indexPassages, searchWords } = await import('./wordSearch');
+    const { WHYS } = await import('../sources/registry');
+    const index = indexPassages([...whyPassages(WHYS, []), ...storyPassages()]);
+    for (const query of ['GW170817', 'neutron star merger', 'kilonova']) {
+      expect(searchWords(index, query)[0]?.passage.id).toBe('story:gw170817');
+    }
+    const story = storyPassages().find((passage) => passage.id === 'story:gw170817');
+    expect(story?.anchors[0]?.view).toContain('wave=gw170817&chapter=source');
+  });
 });

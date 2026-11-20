@@ -86,3 +86,41 @@ test('GW150914 opens over the globe, its 3D view drawn and its scale stated, and
   });
   expect(problems).toEqual([]);
 });
+
+test('GW170817 opens as two neutron stars, its own story, card and scale, with nothing fetched for its wave @acceptance', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const data: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/data/gw1')) data.push(request.url());
+  });
+  const view = page.getByTestId('wave-3d');
+  const stage = page.getByRole('region', { name: 'A gravitational wave passing' });
+  await test.step('When GW170817 is named in the link, Then its neutron stars are drawn and the stage tells its story', async () => {
+    await page.goto('./?cam=30.5630,-90.7740,3.00&t=2017-08-17T12:41Z&wave=gw170817');
+    await expect(view).toHaveAttribute('data-drawn', 'true', { timeout: 30_000 });
+    await expect(view).toHaveAttribute('data-chapter', 'source');
+    await expect(stage.getByRole('heading')).toHaveText('GW170817: two neutron stars merge');
+    await expect(stage).toContainText('two neutron stars');
+    await expect(stage.getByTestId('wave-scale')).toContainText('under a thousandth');
+    await expect(stage.getByRole('button', { name: 'The journey' })).toBeHidden();
+    await expect(stage.getByTestId('wave-moment')).toContainText(/Hz|merger|at rest/);
+    expect(data).toEqual([]);
+  });
+  await test.step('When they ask about it, Then its card gives the neutron stars, the gamma rays and the kilonova', async () => {
+    await stage.getByRole('button', { name: 'About GW170817' }).click();
+    const card = page.getByTestId('marker-card');
+    await expect(card).toContainText('1.36 to 1.60 and 1.17 to 1.36');
+    await expect(card).toContainText('GRB 170817A');
+    await expect(card).toContainText('AT 2017gfo');
+    await card.getByRole('button', { name: 'Close' }).click();
+  });
+  await test.step('When it is closed, Then the globe shows again', async () => {
+    await stage.getByRole('button', { name: 'Close' }).click();
+    await expect(view).toBeHidden();
+    await expect(page).not.toHaveURL(/wave=/);
+  });
+  expect(problems).toEqual([]);
+});

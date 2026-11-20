@@ -6,9 +6,10 @@
  * e× = p⊗q + q⊗p for p, q at right angles to n and to each other. Along z, with p = x̂ and
  * q = ŷ, that is Δx = ½(h₊x + h×y), Δy = ½(h×x − h₊y), Δz = 0, h taken at t − z/c.
  *
- * And a model chirp: a Newtonian one for two black holes of GW150914's chirp mass (about 30 Suns),
- * rising in pitch and loudness to the merger, then the ringdown of the one black hole they make.
- * The ring plays the measured wave (`measured.ts`, #830); the model is what its tests play.
+ * And a model chirp: a Newtonian one, rising in pitch and loudness to the merger, then perhaps the
+ * ringdown of the one black hole it makes. GW150914's ring plays its measured wave (`measured.ts`,
+ * #830) and the model only in the tests; GW170817's (#990) plays the model, which for two neutron
+ * stars, light and far apart until their last orbits, is close to the truth until they touch.
  *
  * Pure: no DOM, no three.js.
  */
@@ -86,8 +87,9 @@ export interface ChirpOptions {
   readonly from: number;
   /** Where the inspiral gives way to the ringdown, Hz. */
   readonly merger: number;
-  /** The final black hole's ringing: its frequency, Hz, and damping time, s. */
-  readonly ringdown: { readonly frequency: number; readonly damping: number };
+  /** The final black hole's ringing: its frequency, Hz, and damping time, s. Absent when none
+   * was heard: the wave then ends at the merger. */
+  readonly ringdown?: { readonly frequency: number; readonly damping: number };
   /** The strain at the merger. */
   readonly peak: number;
   /** How long the ringdown is followed, in damping times. */
@@ -104,8 +106,35 @@ export const GW150914_STAND_IN: ChirpOptions = {
   peak: 1.0e-21,
 };
 
+/** Light-seconds in a megaparsec. */
+const MPC_SECONDS = 1.029_272e14;
+
 /**
- * A Newtonian chirp, then a ringdown, as seen face on (both polarisations, a quarter cycle
+ * The strain of a Newtonian chirp at `hertz`, seen face on from `megaparsecs` away:
+ * h = 4 (G𝓜/c³)^⅚ (πf)^⅔ c/D, for a chirp mass of `chirpMass` Suns.
+ */
+export function newtonianStrain(chirpMass: number, hertz: number, megaparsecs: number): number {
+  const mass = chirpMass * SUN_SECONDS;
+  return (4 * mass ** (5 / 3) * (Math.PI * hertz) ** (2 / 3)) / (megaparsecs * MPC_SECONDS);
+}
+
+/**
+ * GW170817 as a model (#990; Abbott et al. 2017, PRL 119, 161101): two neutron stars of a chirp
+ * mass of 1.1977 Suns as the detectors measured it (1.188 at the source), 40 Mpc away. They were
+ * heard from 24 Hz for about 100 s, some 3,000 cycles; played here from 250 Hz, their last fifth of
+ * a second, to about 1.5 kHz, where two stars about 12 km across touch. Nothing was heard after:
+ * a black hole's ringing would be near 6 kHz, beyond the detectors' reach. Its strain, Newtonian
+ * and face on (it was seen within about 30° of that), is about 5 × 10⁻²² at the end.
+ */
+export const GW170817_MODEL: ChirpOptions = {
+  chirpMass: 1.1977,
+  from: 250,
+  merger: 1500,
+  peak: newtonianStrain(1.1977, 1500, 40),
+};
+
+/**
+ * A Newtonian chirp, then perhaps a ringdown, as seen face on (both polarisations, a quarter cycle
  * apart). Before the merger, τ = −t s to go: f = (1/π)(5/(256τ))^⅜ (GℳM☉/c³)^−⅝, the phase
  * Φ = −2(τ/5𝓜)^⅝, the amplitude rising as f^⅔. After, the ringing dies as e^(−t/τ).
  */
@@ -118,7 +147,7 @@ export function chirp(options: ChirpOptions): Waveform {
   const phase = (tau: number): number => -2 * (tau / (5 * mass)) ** (5 / 8);
   const pitch = (tau: number): number =>
     (1 / Math.PI) * (5 / (256 * tau)) ** (3 / 8) * mass ** (-5 / 8);
-  const { frequency: ring, damping } = options.ringdown;
+  const { frequency: ring, damping } = options.ringdown ?? { frequency: 0, damping: 0 };
   const end = damping * (options.ringFor ?? 6);
   // The merger's phase, for the ringdown to carry on from.
   const mergerPhase = phase(tMerger);

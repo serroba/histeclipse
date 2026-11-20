@@ -1,7 +1,7 @@
 /**
  * What the wave view draws (#829, #831, #832, #833), chapter by chapter, in the story's order:
- * its source, two black holes orbiting in a sheet of space their wave spirals out through
- * (`sourceSheet.ts`); its journey to Earth (`journeyScene.ts`); what it does to space, the ring
+ * its source, two black holes or two neutron stars orbiting in a sheet of space their wave
+ * spirals out through (`sourceSheet.ts`); its journey to Earth (`journeyScene.ts`); what it does to space, the ring
  * of free masses and the sheets it has crossed (`spaceGrid.ts`); and LIGO Livingston, its arms
  * moved by the strain it measured (`detectorRig.ts`). Each chapter says where the camera looks
  * from, how long it plays and what a still picture of it shows; only the chapter shown is moved
@@ -16,6 +16,7 @@ import type { WaveChapter } from '../../state/slices/display';
 import { bearingDirection, createDetectorRig, DETECTOR_SITES } from './detectorRig';
 import { JOURNEY_MS, journeyAt, journeyMs, journeyText } from './journey';
 import { createJourneyScene } from './journeyScene';
+import type { Bodies } from './events';
 import { createSourceSheet } from './sourceSheet';
 import { createSpaceGrid, SHEETS, STACK_DEPTH } from './spaceGrid';
 import type { Waveform } from './strain';
@@ -104,12 +105,13 @@ export interface WaveScene {
   dispose(): void;
 }
 
-export function createWaveScene(): WaveScene {
+/** The scene for a wave made by `bodies`. */
+export function createWaveScene(bodies: Bodies): WaveScene {
   const scene = new Scene();
   const stack = sheets(SHEETS, STACK_DEPTH);
   const grid = createSpaceGrid(stack.depths);
   const rig = createDetectorRig(DETECTOR_SITES.L1);
-  const source = createSourceSheet();
+  const source = createSourceSheet(bodies);
   const journey = createJourneyScene();
   const key = new DirectionalLight(0xffffff, 2.2);
   key.position.set(2, 3, 4);
