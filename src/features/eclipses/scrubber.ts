@@ -1,12 +1,13 @@
 /**
- * Time within an eclipse: drag to move the shadow, or play it. Covers ±3 hours around greatest
- * eclipse, in one-minute steps, with 44 px controls. Built from the shared transport, so Space
+ * Time within an eclipse: drag to move the shadow, or play it, a new one from its start (#986).
+ * Covers ±3 hours around greatest eclipse, in one-minute steps, with 44 px controls. Built from the shared transport, so Space
  * plays or pauses it and the arrows step a minute (`ui/transport.ts`).
  */
 
 import { fromGreatest } from '../../eclipses/describe';
 import { element } from '../../ui/dom';
 import { createTransport } from '../../ui/transport';
+import { firstPlay } from './firstPlay';
 import './scrubber.css';
 
 interface ScrubberView {
@@ -14,6 +15,7 @@ interface ScrubberView {
   readonly offsetMinutes: number;
   /** "18:42 UT" */
   readonly timeLabel: string;
+  readonly key: string;
 }
 
 export interface Scrubber {
@@ -44,6 +46,7 @@ export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubb
         else stop();
       },
       onSlide(minutes) {
+        first.moved();
         stop();
         onScrub(minutes);
       },
@@ -63,6 +66,7 @@ export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubb
   transport.join(root);
 
   let offset = 0;
+  const first = firstPlay();
   let playing: { frame: number; last: number } | null = null;
 
   function stop(): void {
@@ -72,7 +76,7 @@ export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubb
   }
 
   function start(): void {
-    if (offset >= SCRUB_RANGE_MINUTES) onScrub(-SCRUB_RANGE_MINUTES);
+    first.play(offset, SCRUB_RANGE_MINUTES, onScrub);
     transport.render(true);
     playing = { frame: requestAnimationFrame(tick), last: performance.now() };
   }
@@ -102,6 +106,7 @@ export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubb
         return;
       }
       root.hidden = false;
+      first.show(view.key);
       offset = view.offsetMinutes;
       transport.render(playing !== null, view.offsetMinutes);
       label.textContent = `${view.timeLabel}, ${fromGreatest(view.offsetMinutes)}`;
