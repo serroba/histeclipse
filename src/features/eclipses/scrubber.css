@@ -43,11 +43,23 @@
 }
 
 @media (max-width: 600px) {
-  /* Its words wrap in a narrow column, leaving the slider its room (#954). */
+  /* On a phone the slider has the first row beside ▶; the time and the speed go under it. With
+     all four on one row it shrank to a dot on a 320-px phone (#978, #954). */
+  .scrubber {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .scrubber-range {
+    flex: 1 1 calc(100% - 60px);
+  }
+
   .scrubber-time {
-    flex: 0 1 8.5em;
+    flex: 1 1 0;
     min-width: 0;
+    padding-left: 6px;
     font-size: 12px;
     line-height: 1.2;
+    text-align: left;
   }
 }
