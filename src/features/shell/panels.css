@@ -34,3 +34,10 @@
   cursor: pointer;
   pointer-events: auto;
 }
+
+/* The date panel stops short of the cards below it in its columns (#943), its controls
+   scrolling within, only while they would otherwise run under them. */
+[data-hud-capped] .hud {
+  max-height: var(--hud-max);
+  overflow-y: auto;
+}
