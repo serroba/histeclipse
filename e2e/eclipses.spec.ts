@@ -58,6 +58,8 @@ test('the Moon-up region follows time and shows only during the eclipse', GPU, a
 test('a lunar eclipse shows the Moon crossing Earth’s shadow @acceptance', async ({ page }) => {
   await page.goto('./?t=2025-03-14T06:59&sel=lunar:2025-03-14');
   await globeRendered(page);
+  // The card opens folded (#946): the Moon's view is in the unfolded card.
+  await page.getByRole('button', { name: 'Unfold the eclipse card' }).click();
   const moon = page.getByRole('img', { name: /Moon entirely inside Earth’s umbra/ });
   await expect(moon).toBeVisible();
   await expect(moon).toHaveAttribute('data-phase', 'total');
@@ -83,6 +85,7 @@ test('solar eclipses have no Moon-in-shadow view', async ({ page }) => {
 test('the eclipse card keeps background one tap away', async ({ page }) => {
   await page.goto('./?t=2024-04-08T18:30&sel=solar:2024-04-08');
   await globeRendered(page);
+  await page.getByRole('button', { name: 'Unfold the eclipse card' }).click();
   const more = page.getByText('More about this eclipse');
   await expect(more).toBeVisible();
   await expect(page.locator('.famous-card-summary')).toBeHidden();

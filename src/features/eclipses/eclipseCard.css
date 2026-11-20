@@ -14,9 +14,12 @@
   cursor: pointer;
 }
 
-.eclipse-card[data-folded='true'] .eclipse-text > :not(:first-child),
-.eclipse-card[data-folded='true'] .eclipse-more,
-.eclipse-card[data-folded='true'] .moon-view {
+/* Folded unless unfolded (#946): its titles, and what the reader's place sees or how to pick one. */
+.eclipse-card:not([data-folded='false'])
+  .eclipse-text
+  > :not(:first-child, h2, .eclipse-observer, .eclipse-hint),
+.eclipse-card:not([data-folded='false']) .eclipse-more,
+.eclipse-card:not([data-folded='false']) .moon-view {
   display: none;
 }
 
