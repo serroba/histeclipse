@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const fossils = layer({
   id: 'fossils',
   label: 'Fossils',
+  summary: 'Where fossils of four animal groups lay in their time.',
   about: 'Fossils of four groups of animals from the Paleobiology Database, where they lay then.',
   spans: ['all'],
   reach: 'Counted by 5 million years over the last 540 million.',

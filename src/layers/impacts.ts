@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const impacts = layer({
   id: 'impacts',
   label: 'Impact craters',
+  summary: 'Craters left by asteroids and comets.',
   about:
     'Craters and deposits left by asteroids and comets, from the Impact Earth Database; tap one for its details.',
   spans: ['years', 'ice', 'all'],

@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const ozone = layer({
   id: 'ozone',
   label: 'The ozone hole',
+  summary: 'The ozone layer, and the hole over Antarctica.',
   about:
     'Ozone over the whole Earth each October, the Antarctic hole an opening in it (MSR-2 reanalysis, Copernicus); from 2003 the ozone layer in 3D, day by day from July to December (CAMS reanalysis, Copernicus); with the hole’s area each spring (NASA Ozone Watch) and the gases that made it (NOAA) beside the globe.',
   spans: ['years'],

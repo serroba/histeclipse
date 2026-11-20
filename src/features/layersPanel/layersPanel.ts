@@ -6,6 +6,7 @@
  * reader can change the date with it open and watch the layers change.
  */
 
+import { layerAbout, layerFilter } from './layerRows';
 import { TRAVEL_ADDS } from '../../ui/historyTrack';
 import { elsewhereNote, LAYER_GROUPS, layerNote } from '../../state/layerCatalog';
 import {
@@ -155,7 +156,7 @@ export function createLayersPanel(
             ...(why === undefined ? [] : [why(layer.id, layer.label)]),
             where,
           ),
-          element('p', { class: 'layer-about' }, layer.about),
+          ...layerAbout(layer),
           ...(layer.id === 'empires' ? [source] : []),
           note,
           action,
@@ -180,6 +181,7 @@ export function createLayersPanel(
       element('h2', { id: 'layers-title' }, 'Layers'),
       close,
     ),
+    layerFilter(groups),
     travelNote,
     ...groups,
   );

@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const humans = layer({
   id: 'humans',
   label: 'Humans',
+  summary: 'Finds of our species and its relatives, and how they spread.',
   about:
     'Dated finds of our species and its relatives, with competing dates side by side, and dispersal models.',
   spans: ['ice'],
