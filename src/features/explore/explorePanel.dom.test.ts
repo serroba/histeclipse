@@ -81,7 +81,11 @@ describe('Explore', () => {
     panel.button.click();
     tab('People')?.click();
     document.querySelector<HTMLButtonElement>('[data-destination="human-origins"]')?.click();
-    document.querySelector<HTMLButtonElement>('.explore-question')?.click();
+    document
+      .querySelector('[data-destination="human-origins"]')
+      ?.closest('.explore-item')
+      ?.querySelector<HTMLButtonElement>('.explore-question')
+      ?.click();
     expect(picked.map((destination) => destination.id)).toEqual(['human-origins', 'human-origins']);
     expect(panel.dialog.open).toBe(true);
     panel.render('human-origins');

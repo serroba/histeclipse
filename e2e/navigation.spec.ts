@@ -119,3 +119,33 @@ test('a visitor finds the warming records through All subjects, without knowing 
   });
   expect(problems).toEqual([]);
 });
+
+test('a visitor finds an eclipse first: Explore starts with Thales’, and Layers with Space (#949) @acceptance @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await test.step('Given today on the globe', async () => {
+    await page.goto('./?t=2026-01-01T12:00Z&cam=0,0,3');
+    await globeRendered(page);
+  });
+  await test.step('When they open Explore, Then its first destination under Space is the eclipse of Thales', async () => {
+    await page.getByRole('button', { name: 'Explore' }).click();
+    const panel = page.getByRole('dialog', { name: 'Explore' });
+    await expect(panel.locator('.explore-go:visible').first()).toHaveAttribute(
+      'data-destination',
+      'eclipse-of-thales',
+    );
+    await panel.locator('.explore-go:visible').first().click();
+  });
+  await test.step('Then the eclipse is picked, seen from Anatolia', async () => {
+    await expect(page).toHaveURL(/sel=solar:-0584-05-28/);
+    await expect(page).toHaveURL(/loc=39\.0000,35\.0000/);
+    await expect(page.locator('.eclipse-card')).toContainText('The eclipse of Thales');
+  });
+  await test.step('And in Layers, Space comes first, with Eclipses at its head', async () => {
+    await page.getByRole('button', { name: 'Layers' }).first().click();
+    const layers = page.getByRole('dialog', { name: 'Layers' });
+    await expect(layers.getByRole('checkbox').first()).toHaveAccessibleName(/Eclipses/);
+  });
+  expect(problems).toEqual([]);
+});
