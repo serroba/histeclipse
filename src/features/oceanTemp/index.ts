@@ -1,15 +1,20 @@
 /**
  * Ocean temperature (#590) on the feature contract (#380): in the years, the ocean's temperature
- * at the surface, 100 m or 700 m each month since 1940, painted over the sea, with the depth to
- * pick and its scale beside the globe. Loaded with the layer; a month at a time as the moment
- * moves, the next few fetched ahead.
+ * at the surface, 100 m or 700 m each month since 1940, or at 2,000 to 5,000 m each year (#940),
+ * painted over the sea, with the depth to pick and its scale beside the globe. Loaded with the
+ * layer; a map at a time as the moment moves, the next few fetched ahead.
  */
 
 import {
+  deepFile,
+  deepText,
   depthFile,
   depthName,
+  loadOceanDeep,
   loadOceanTemperature,
   oceanText,
+  type Depth,
+  type OceanDeep,
   type OceanTemperature,
 } from '../../data/oceanTemperature';
 import { HISTORY_PAINT_ORDER } from '../../globe/layerHost';
@@ -31,6 +36,22 @@ function shownOn(state: ViewState): boolean {
     state.focus === 'earth'
   );
 }
+
+/** The monthly maps and the deep yearly ones, loaded together. */
+interface OceanMaps {
+  readonly upper: OceanTemperature;
+  readonly deep: OceanDeep;
+}
+
+/** Every depth to pick, the monthly ones first. */
+const allDepths = (maps: OceanMaps): readonly Depth[] => [
+  ...maps.upper.depths,
+  ...maps.deep.depths,
+];
+
+/** Whether a depth is one of the deep, yearly ones. */
+const isDeep = (maps: OceanMaps, id: string): boolean =>
+  maps.deep.depths.some((each) => each.id === id);
 
 /** Months since January of year 0. */
 const monthOf = (state: ViewState): number => state.time.date.year * 12 + state.time.date.month - 1;
@@ -56,13 +77,20 @@ export const oceanTempFeature = feature({
         again();
       }),
     );
-    const boundOf = (maps: OceanTemperature): number =>
-      maps.depths.find(({ id }) => id === depth)?.bound ?? 1;
-    const maps = monthlyMaps<OceanTemperature>({
-      folder: `${context.base}data/ocean-temperature/`,
-      load: () =>
-        loadOceanTemperature(`${context.base}data/ocean-temperature/index.json`, context.fetchJson),
-      file: (index, at) => depthFile(index, depth, at),
+    const folder = `${context.base}data/ocean-temperature/`;
+    const boundOf = (index: OceanMaps): number =>
+      allDepths(index).find(({ id }) => id === depth)?.bound ?? 1;
+    const maps = monthlyMaps<OceanMaps>({
+      folder,
+      load: async () => {
+        const [upper, deep] = await Promise.all([
+          loadOceanTemperature(`${folder}index.json`, context.fetchJson),
+          loadOceanDeep(`${folder}deep.json`, context.fetchJson),
+        ]);
+        return { upper, deep };
+      },
+      file: (index, at) =>
+        isDeep(index, depth) ? deepFile(index.deep, depth, at) : depthFile(index.upper, depth, at),
       look: (index) => ({ bound: boundOf(index) }),
       names: { map: 'the ocean temperature map', maps: 'the ocean temperature maps' },
       paint: (packed) => {
@@ -88,15 +116,21 @@ export const oceanTempFeature = feature({
           return;
         }
         const index = maps.index();
-        const chosen = index?.depths.find(({ id }) => id === depth) ?? index?.depths[0];
+        const depths = index === null ? [] : allDepths(index);
+        const chosen = depths.find(({ id }) => id === depth) ?? depths[0];
         if (index === null || chosen === undefined) {
           said = 'Loading the ocean temperature maps…';
           panel.update(null);
           return;
         }
-        said = oceanText(index, chosen, at);
+        said = isDeep(index, chosen.id)
+          ? deepText(index.deep, chosen, at)
+          : oceanText(index.upper, chosen, at);
         panel.update({
-          depths: index.depths.map((each) => ({ id: each.id, name: depthName(each) })),
+          depths: depths.map((each) => ({
+            id: each.id,
+            name: isDeep(index, each.id) ? `${depthName(each)}, yearly` : depthName(each),
+          })),
           depth: chosen.id,
           ends: `−${String(chosen.bound)} · 0 · +${String(chosen.bound)} °C`,
           text: said,

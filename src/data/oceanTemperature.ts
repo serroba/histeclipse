@@ -2,7 +2,8 @@
  * The ocean's temperature at three depths each month since 1940 (#590), as `ocean-temperature/`
  * has it: IAP v4.2's gridded temperature, each month against its calendar month's 1991–2020 mean,
  * at the surface, 100 m and 700 m, one image each on the 1° grid (R the anomaly from −bound to
- * +bound, A 255 where there is sea); and a section along the equatorial Pacific (#895).
+ * +bound, A 255 where there is sea); and a section along the equatorial Pacific (#895). Beside
+ * them, `deep.json`: the deep ocean at 2,000 to 5,000 m, a map a year (#940).
  */
 
 import * as v from 'valibot';
@@ -48,6 +49,29 @@ const OceanTemperatureSchema = v.strictObject({
 });
 
 export type OceanTemperature = v.InferOutput<typeof OceanTemperatureSchema>;
+
+const calendarYear = v.pipe(v.number(), v.integer());
+
+const OceanDeepSchema = v.strictObject({
+  schemaVersion: v.literal(1),
+  credit: text,
+  source: v.pipe(v.string(), v.url()),
+  paper: v.pipe(v.string(), v.url()),
+  licence: text,
+  accessed: text,
+  units: v.literal('°C'),
+  baseline: text,
+  encoding: text,
+  files: text,
+  first: calendarYear,
+  last: calendarYear,
+  columns: v.pipe(v.number(), v.integer(), v.minValue(2)),
+  rows: v.pipe(v.number(), v.integer(), v.minValue(2)),
+  depths: v.pipe(v.array(DepthSchema), v.minLength(1)),
+});
+
+/** The deep maps (#940): a map a year at each deep level. */
+export type OceanDeep = v.InferOutput<typeof OceanDeepSchema>;
 export type Depth = OceanTemperature['depths'][number];
 
 export async function loadOceanTemperature(
@@ -55,6 +79,34 @@ export async function loadOceanTemperature(
   fetchJson: Fetch,
 ): Promise<OceanTemperature> {
   return getJson(fetchJson, url, OceanTemperatureSchema);
+}
+
+export async function loadOceanDeep(url: string, fetchJson: Fetch): Promise<OceanDeep> {
+  return getJson(fetchJson, url, OceanDeepSchema);
+}
+
+/** The year a deep map is shown for `at` (months since January of year 0): its own, or the last. */
+export function deepYear(deep: OceanDeep, at: number): number | null {
+  const wanted = Math.floor(at / 12);
+  if (wanted < deep.first) return null;
+  return Math.min(wanted, deep.last);
+}
+
+/** A deep level's map for the year of `at`, `deep/3000m/1997.png`, or null where none. */
+export function deepFile(deep: OceanDeep, depth: string, at: number): string | null {
+  const shown = deepYear(deep, at);
+  return shown === null ? null : `deep/${depth}/${String(shown)}.png`;
+}
+
+/** What the globe shows at a deep level: the year, the scale, and how little was measured. */
+export function deepText(deep: OceanDeep, depth: Depth, at: number): string {
+  const shown = deepYear(deep, at);
+  if (shown === null) {
+    return `The deep maps run from ${String(deep.first)} to ${String(deep.last)} (IAP v4.2): none for this year.`;
+  }
+  const latest =
+    shown === Math.floor(at / 12) ? '' : ` Showing ${String(shown)}, the latest whole year.`;
+  return `At ${depthName(depth)}, the year ${String(shown)}, against the ${deep.baseline.slice(0, 9)} mean: blue colder, red warmer, to ±${String(depth.bound)} °C (IAP v4.2).${latest} Floats do not reach this deep: research ships measure it along a few lines about once a decade, and IAP fills the rest from climate models, so this is a reconstruction more than a measurement.`;
 }
 
 /** A month's number (months since January of year 0) for `YYYY-MM`. */

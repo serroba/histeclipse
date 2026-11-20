@@ -1,4 +1,4 @@
-/** Ocean temperature (#590): the ocean's temperature at a depth each month since 1940. */
+/** Ocean temperature (#590): the ocean's temperature at a depth each month since 1940, and deep each year (#940). */
 
 import { collectProblems, expect, globeRendered, test } from './support';
 
@@ -21,6 +21,12 @@ test('the ocean’s temperature is painted at 100 m for the month, and at anothe
     await expect(panel).toContainText('At 700 m, December 1997');
     await expect(panel).toContainText('−1 · 0 · +1 °C');
     await expect(panel).toContainText('Before the Argo floats (2005)');
+  });
+  await test.step('When they pick 4,000 m, Then the year’s deep map, said to be a reconstruction', async () => {
+    await panel.getByRole('combobox', { name: 'Depth' }).selectOption({ label: '4,000 m, yearly' });
+    await expect(panel).toContainText('At 4,000 m, the year 1997');
+    await expect(panel).toContainText('−0.1 · 0 · +0.1 °C');
+    await expect(panel).toContainText('a reconstruction more than a measurement');
   });
   expect(problems).toEqual([]);
 });
