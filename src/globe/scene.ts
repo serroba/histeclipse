@@ -340,6 +340,7 @@ export function createGlobe(
     moonPosition: (moon, target) => moonSystems.meshes[moon].getWorldPosition(target),
     requestBody,
     holdCraft: frames.hold,
+    holdToSun: space.holdToSun,
     spaceToScene: () => space.spaceToScene(),
     requestRender() {
       stage.invalidate();
@@ -424,8 +425,8 @@ export function createGlobe(
       stage.invalidate();
     },
     setSpace(bodies) {
-      // Keep a far camera still among the stars: carry it by Earth's rotation since the last moment.
-      rig.beforeBodiesMove(space.turnSince(bodies.earthFixedToJ2000));
+      // Keep a far camera still among the stars (or with the Sun, #998): carry it as Earth turned.
+      rig.beforeBodiesMove(space.turnSince(bodies));
       space.place(bodies);
       rig.afterBodiesMove();
       stage.invalidate();

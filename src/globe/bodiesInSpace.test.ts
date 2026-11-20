@@ -1,7 +1,8 @@
 import { planetRadius } from './planetLook';
 import { Group, Mesh, Vector3 } from 'three';
 import { describe, expect, it, vi } from 'vitest';
-import { IDENTITY, type Matrix3 } from '../astro/matrix';
+import { apply, IDENTITY, type Matrix3 } from '../astro/matrix';
+import { sceneFromKm } from './spaceFrame';
 import { PLANETS } from '../astro/planets';
 import type { Body } from '../state/viewState';
 import { BodiesInSpace } from './bodiesInSpace';
@@ -125,7 +126,7 @@ describe('BodiesInSpace', () => {
 
   it('says how Earth turned since the last moment, from the second on', () => {
     const world = space();
-    expect(world.bodies.turnSince(QUARTER)).toBeNull();
+    expect(world.bodies.turnSince({ earthFixedToJ2000: QUARTER, sunKm: SUN_KM })).toBeNull();
     world.bodies.place({
       earthFixedToJ2000: IDENTITY,
       sunKm: SUN_KM,
@@ -133,9 +134,44 @@ describe('BodiesInSpace', () => {
       planetsKm: null,
       jdTT: 0,
     });
-    const turn = world.bodies.turnSince(QUARTER);
+    const turn = world.bodies.turnSince({ earthFixedToJ2000: QUARTER, sunKm: SUN_KM });
     expect(turn).not.toBeNull();
-    expect(world.bodies.turnSince(IDENTITY)).toEqual(IDENTITY);
+    expect(world.bodies.turnSince({ earthFixedToJ2000: IDENTITY, sunKm: SUN_KM })).toEqual(
+      IDENTITY,
+    );
+  });
+
+  it('held to the Sun, turns as the Sun has moved too, so the Sun stays where it was seen (#998)', () => {
+    const world = space();
+    const sunThen: [number, number, number] = [1.5e8, 0, 0];
+    world.bodies.place({
+      earthFixedToJ2000: IDENTITY,
+      sunKm: sunThen,
+      moonKm: null,
+      planetsKm: null,
+      jdTT: 0,
+    });
+    // A month on, the Sun 30° further along the ecliptic, Earth's axes as they were.
+    const angle = Math.PI / 6;
+    const obliquity = (84_381.406 / 3600) * (Math.PI / 180);
+    const sunNow: [number, number, number] = [
+      1.5e8 * Math.cos(angle),
+      1.5e8 * Math.sin(angle) * Math.cos(obliquity),
+      1.5e8 * Math.sin(angle) * Math.sin(obliquity),
+    ];
+    expect(world.bodies.turnSince({ earthFixedToJ2000: IDENTITY, sunKm: sunNow })).toEqual(
+      IDENTITY,
+    );
+    world.bodies.holdToSun(true);
+    const turn = world.bodies.turnSince({ earthFixedToJ2000: IDENTITY, sunKm: sunNow });
+    // A camera where the Sun was seen is carried to where the Sun is now.
+    const carried = apply(turn ?? IDENTITY, sceneFromKm(sunThen));
+    const target = sceneFromKm(sunNow);
+    expect(Math.hypot(...carried.map((c, i) => c - (target[i] ?? 0)))).toBeLessThan(1e-6);
+    world.bodies.holdToSun(false);
+    expect(world.bodies.turnSince({ earthFixedToJ2000: IDENTITY, sunKm: sunNow })).toEqual(
+      IDENTITY,
+    );
   });
 
   it('gives each body its frame: the Moon turned to its map, the rest in J2000', () => {

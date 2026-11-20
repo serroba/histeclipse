@@ -8,6 +8,7 @@
  */
 
 import { type IUniform, Matrix4, type Mesh, type Object3D, Quaternion, Vector3 } from 'three';
+import { sunTurn } from '../astro/eclipticTurn';
 import { apply, type Matrix3, multiply, transpose } from '../astro/matrix';
 import { PLANETS, type PlanetName } from '../astro/planets';
 import type { Body } from '../state/viewState';
@@ -46,6 +47,9 @@ export class BodiesInSpace {
   /** The Moon's map has longitude 0 at the mesh's +Z; geoToVector puts it at +X. */
   readonly #moonMapTurn = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -Math.PI / 2);
   #earthFixedToJ2000: Matrix3 | null = null;
+  /** Where the Sun was at the last moment, J2000 km; and whether a far camera keeps to it. */
+  #sunKm: SpaceBodies['sunKm'] | null = null;
+  #heldToSun = false;
 
   constructor(world: SpaceWorld) {
     this.#world = world;
@@ -53,12 +57,22 @@ export class BodiesInSpace {
 
   /**
    * How Earth turned since the last moment, in the scene's axes (old Earth-fixed → J2000 → new
-   * Earth-fixed), or null before the first: what a far camera is carried along by.
+   * Earth-fixed), or null before the first: what a far camera is carried along by. Held to the
+   * Sun (#998), the camera is also turned about the ecliptic's pole as the Sun has moved, so it
+   * keeps its view of the line from the Sun through Earth.
    */
-  turnSince(next: Matrix3): Matrix3 | null {
+  turnSince(next: Pick<SpaceBodies, 'earthFixedToJ2000' | 'sunKm'>): Matrix3 | null {
     const last = this.#earthFixedToJ2000;
-    return last === null ? null : sceneRotation(multiply(transpose(next), last));
+    if (last === null) return null;
+    const sun = this.#heldToSun ? this.#sunKm : null;
+    const inSpace = sun === null ? last : multiply(sunTurn(sun, next.sunKm), last);
+    return sceneRotation(multiply(transpose(next.earthFixedToJ2000), inSpace));
   }
+
+  /** Whether a far camera turns with the Sun as time moves, not only with Earth (#998). */
+  readonly holdToSun = (on: boolean): void => {
+    this.#heldToSun = on;
+  };
 
   /** Place the Sun, the orbits, the Moon, the planets and their moons for a moment. */
   place(bodies: SpaceBodies): void {
@@ -66,6 +80,7 @@ export class BodiesInSpace {
     const sun = sunMeshes.sun;
     const sunFrame = this.sunFrame;
     this.#earthFixedToJ2000 = bodies.earthFixedToJ2000;
+    this.#sunKm = bodies.sunKm;
     const toEarthFixed = transpose(bodies.earthFixedToJ2000);
     const [r0, r1, r2] = sceneRotation(toEarthFixed);
     sunFrame.setFromRotationMatrix(new Matrix4().set(...r0, 0, ...r1, 0, ...r2, 0, 0, 0, 0, 1));

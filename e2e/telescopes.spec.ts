@@ -460,3 +460,46 @@ test('following Webb with Earth in front of it, its name keeps clear of Earth’
   });
   expect(problems).toEqual([]);
 });
+
+test('following Webb, the far camera turns with the Sun, so its loops keep the look its view opened on (#998)', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  /** The camera's angle from the direction away from the Sun, degrees: from where it is over
+   * Earth and where the Sun is overhead, both in Earth's frame. */
+  const fromAntiSun = async (): Promise<number> => {
+    const [camera, sun] = await Promise.all([
+      globe.getAttribute('data-target'),
+      page.locator('#app').getAttribute('data-subsolar'),
+    ]);
+    const unit = (text: string | null): number[] => {
+      const [lat = 0, lon = 0] = (text ?? '')
+        .split(',')
+        .map((each) => (Number(each) * Math.PI) / 180);
+      return [Math.cos(lat) * Math.cos(lon), Math.cos(lat) * Math.sin(lon), Math.sin(lat)];
+    };
+    const [c, s] = [unit(camera), unit(sun)];
+    const cos = c.reduce((sum, value, i) => sum + value * (s[i] ?? 0), 0);
+    return 180 - (Math.acos(Math.max(-1, Math.min(1, cos))) * 180) / Math.PI;
+  };
+  await test.step('Given Webb followed from its view, beside the Sun–Earth line', async () => {
+    await page.goto(
+      './?focus=earth&cam=39.7745,-80.3880,1000.00&layers=spacecraft&mission=d01093&t=2021-12-26T02:23Z',
+    );
+    await expect(
+      page.locator('.space-name', { hasText: 'James Webb Space Telescope' }),
+    ).toBeVisible({ timeout: 30_000 });
+  });
+  const before = await fromAntiSun();
+  await test.step('When five months pass on its bar', async () => {
+    const slider = page.getByRole('slider', { name: /^Time since .* left Earth$/ });
+    await slider.fill(String(2_459_574.6 + 150));
+    await expect(page).toHaveURL(/t=2022-05-2/);
+  });
+  await test.step('Then the camera keeps its angle to the line from the Sun through Earth', async () => {
+    await expect.poll(fromAntiSun, { timeout: 10_000 }).toBeCloseTo(before, 0);
+  });
+  expect(problems).toEqual([]);
+});

@@ -8,53 +8,25 @@
  * ecliptic's pole by as far as the Sun has moved along the ecliptic from `then` to now.
  */
 
+import { sunTurn } from '../../astro/eclipticTurn';
+import { apply } from '../../astro/matrix';
 import type { Vec3 } from '../../astro/transfer';
+import type { LayerFactory } from '../../globe/layerHost';
 
-/** IAU 2006 obliquity of the ecliptic at J2000, radians. */
-const OBLIQUITY = (84_381.406 / 3600) * (Math.PI / 180);
-/** The ecliptic's north pole, J2000 equatorial. */
-const POLE: Vec3 = [0, -Math.sin(OBLIQUITY), Math.cos(OBLIQUITY)];
 /** The Sun–Earth L1 and L2 points' distance from Earth, km. */
 const L_POINT_KM = 1_500_000;
-
-const dot = (a: Vec3, b: Vec3): number => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const cross = (a: Vec3, b: Vec3): Vec3 => [
-  a[1] * b[2] - a[2] * b[1],
-  a[2] * b[0] - a[0] * b[2],
-  a[0] * b[1] - a[1] * b[0],
-];
-
-/** A direction's angle about the ecliptic's pole: its ecliptic longitude, radians. */
-function longitude(v: Vec3): number {
-  // Ecliptic x is the equinox (equatorial x); ecliptic y lies along the pole crossed with x.
-  const y = cross(POLE, [1, 0, 0]);
-  return Math.atan2(dot(v, y), v[0]);
-}
-
-/** Turn `v` about the ecliptic's pole by `angle` radians (Rodrigues). */
-function turned(v: Vec3, angle: number): Vec3 {
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  const across = cross(POLE, v);
-  const along = dot(POLE, v) * (1 - cos);
-  return [
-    v[0] * cos + across[0] * sin + POLE[0] * along,
-    v[1] * cos + across[1] * sin + POLE[1] * along,
-    v[2] * cos + across[2] * sin + POLE[2] * along,
-  ];
-}
 
 /**
  * Where `point`, from Earth's centre when the Sun was at `sunThen`, is drawn with the Sun held
  * at `sunNow`: turned about the ecliptic's pole as far as the Sun has moved since.
  */
 export function heldToSun(point: Vec3, sunThen: Vec3, sunNow: Vec3): Vec3 {
-  return turned(point, longitude(sunNow) - longitude(sunThen));
+  return apply(sunTurn(sunThen, sunNow), point);
 }
 
 /** The Sun–Earth L1 point (sunward) or L2 point (away from the Sun), from Earth's centre, km. */
 export function lPointAt(point: 'SEL1' | 'SEL2', sun: Vec3): Vec3 {
-  const scale = (point === 'SEL1' ? L_POINT_KM : -L_POINT_KM) / Math.sqrt(dot(sun, sun));
+  const scale = (point === 'SEL1' ? L_POINT_KM : -L_POINT_KM) / Math.hypot(...sun);
   return [sun[0] * scale, sun[1] * scale, sun[2] * scale];
 }
 
@@ -86,3 +58,14 @@ export function lPointMark(at: Vec3): readonly (Vec3 | null)[] {
     [x, y, z + d],
   ];
 }
+
+/**
+ * The far camera held to the Sun while a mission to an L point is followed (#998): its route is
+ * drawn turning with the Sun–Earth line, and the camera turns with it, so the loops keep the look
+ * the mission's view opened on as the year plays.
+ */
+export const sunHold: LayerFactory<boolean> = (host) => ({
+  update(on) {
+    host.holdToSun(on);
+  },
+});
