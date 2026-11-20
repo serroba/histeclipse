@@ -8,6 +8,7 @@ import { airFeature, platesFeature } from './deepSurfaces';
 import { fossilsFeature } from './fossils';
 import { genomesFeature } from './genomes';
 import { humansFeature } from './humans';
+import { iceAgesFeature } from './iceAges';
 import { impactsFeature } from './impacts';
 import { spacecraftFeature } from './spacecraft';
 import { oceanHeatFeature } from './oceanHeat';
@@ -48,4 +49,5 @@ export const FEATURES: readonly Feature[] = [
   carbonMadeFeature,
   platesFeature,
   airFeature,
+  iceAgesFeature,
 ];

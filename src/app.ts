@@ -55,7 +55,7 @@ import { mountFamous } from './features/famous';
 import { mountShower } from './features/shower';
 import { mountWave } from './features/ligo';
 import { mountTelescopeList } from './features/telescopes';
-import { mountIceAges } from './features/iceAges';
+import { createHoloceneNote } from './features/iceAges';
 import { createCo2ArchiveFile, createPlateMasks } from './features/deepSurfaces';
 import { createBorderFiles, createStatesNote } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
@@ -273,7 +273,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     bar: (state, moment) => {
       const chips = features.deep(state, moment);
       return {
-        ...iceAges.bar(state, moment.ma),
+        coastline: null,
+        ice: { drawn: false, oldestKa: null, standIn: null },
+        iceOutlines: null,
+        seaIce: null,
+        seaLevel: { on: false },
         plateMotion: null,
         air: { on: false },
         ...features.deepBar(state, moment),
@@ -282,7 +286,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     temperature: temperatureLayer,
     off: (state) => {
-      iceAges.off(state);
       features.deepOff(state);
     },
     platesReach: () => plateMasks.reach(),
@@ -378,6 +381,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // track last said of the states (nothing until they change).
   const borderFiles = createBorderFiles(base, fetchJson);
   const statesNote = createStatesNote(redraws.ask('years'));
+  const holoceneNote = createHoloceneNote(redraws.ask('years'));
   // The years (#446): the track, playing them, travelling through them, and carbon-14 in the air.
   const years = mountYears({
     ...partContext,
@@ -386,10 +390,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     travelChanged: (now) => {
       features.show(now, moment.terrestrial());
       showLayers(now);
-      iceAges.showHolocene(now);
+      features.deepOff(now);
     },
     statesSaid: () => statesNote.said(),
-    holoceneText: () => iceAges.holoceneText(),
+    holoceneText: () => holoceneNote.said(),
   });
   // Away from Earth and the Moon, the bar's time is the body's own cycle as Earth sees it (#447);
   // with the spacecraft on, it is their launches, the first to today (#702).
@@ -475,14 +479,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   parsed.warnings.forEach(notify);
 
   // Drawn on the globe as layers of their own (#379).
-  // The ice ages' Earth (#444): the sea's level and the land it left bare, the ice sheets and
-  // their outlines, the sea ice, and the Holocene's while travelling through the years.
-  const iceAges = mountIceAges({
-    ...partContext,
-    globe,
-    redraw: redraws.ask('deepTime'),
-    holoceneShown: redraws.askWith('years'),
-  });
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureCore: FeatureCore = {
     base,
@@ -512,6 +508,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     evenLight: globe,
     deepTime: {
       enter: deepTime.enterDeepTime,
+      again: redraws.ask('deepTime'),
       goTo: (ma, layer, where) => {
         partContext.goToDeepTime(ma, layer, where);
       },
@@ -544,6 +541,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
         if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get(), hereData()));
       },
     },
+    iceAgeEarth: globe,
+    holoceneNote,
     plateOutlines: globe,
     plateMasks,
     co2Archive,
