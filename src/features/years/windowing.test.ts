@@ -96,6 +96,8 @@ describe('the Years bar’s window (#749)', () => {
     const { speeds, speed } = bar.speeds(store.get(), 'fast');
     expect(speeds.map(({ label }) => label)).toEqual(['2 months/s', '1 yr/s', '10 yr/s']);
     expect(speed.label).toBe('10 yr/s');
+    // None picked: El Niño's years start slow (#984).
+    expect(bar.speeds(store.get(), null).speed.label).toBe('2 months/s');
     // In June 2026, today's month: the end, so it starts again from January 1854.
     expect(bar.start(store.get())?.date).toMatchObject({ year: 1854, month: 1 });
     expect(bar.start({ ...store.get(), time: start(1900).time })).toBeNull();
