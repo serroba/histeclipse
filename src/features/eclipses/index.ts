@@ -47,6 +47,7 @@ import { julianDayNumber } from '../../time/julianDay';
 import { yearSpan } from '../../time/calendars';
 import { astronomicalYear, formatYear } from '../../time/year';
 import { createEclipseCard } from './eclipseCard';
+import { eclipseFraming } from './framing';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './scrubber';
 import { labelPoint } from '../../data/empires';
 import { createTimeline, type Eclipse, type YearEclipses } from '../../ui/timeline';
@@ -110,8 +111,7 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
       }));
     },
   });
-  // Picking an eclipse also turns the globe toward it (or toward a famous eclipse's place);
-  // opening a shared link does not, because the link already says where the camera should be.
+  // Picking an eclipse turns the globe to frame it (framing.ts); a link names its own camera.
   let flyToSelection = false;
   let flyTarget: GeoPoint | null = null;
 
@@ -260,7 +260,7 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
     if (selected !== undefined && flyToSelection) {
       flyToSelection = false;
       const [latitude, longitude] = isSolar(selected) ? selected.greatest : selected.sublunar;
-      globe.flyTo(flyTarget ?? { latitude, longitude });
+      globe.flyTo(flyTarget ?? eclipseFraming({ latitude, longitude }, state.location));
       flyTarget = null;
     }
     renderMoment(state);
