@@ -79,6 +79,12 @@ export interface Capabilities {
   readonly radiocarbon: { curves(): Promise<Radiocarbon> };
   /** The card that carries a radiocarbon date across a curve. */
   readonly datingCard: Pick<DatingCard, 'open'>;
+  /** The glow over Earth where cosmic rays make carbon-14, by latitude. */
+  readonly carbonGlow: Pick<Globe, 'setC14Glow'>;
+  /** The air shower: play it under a field's dipole, from the Sun's core if `fromSun`. */
+  readonly shower: { watch(dipole: number, fromSun: boolean): void };
+  /** What lies over the whole page: a feature's own dialog is added there. */
+  readonly overPage: { add(element: HTMLElement): void };
   /** The key to the ways of life's shading, under the years. */
   readonly waysKey: Pick<WaysLegend, 'render'>;
 }

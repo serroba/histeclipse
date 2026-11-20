@@ -2,6 +2,7 @@
 
 import { amocFeature } from './amoc';
 import { asteroidsFeature } from './asteroids';
+import { carbonMadeFeature } from './carbonMade';
 import { datesFeature } from './dates';
 import { fossilsFeature } from './fossils';
 import { genomesFeature } from './genomes';
@@ -38,4 +39,5 @@ export const FEATURES: readonly Feature[] = [
   waysFeature,
   rocksFeature,
   datesFeature,
+  carbonMadeFeature,
 ];

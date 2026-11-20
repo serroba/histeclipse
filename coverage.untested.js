@@ -27,7 +27,6 @@ export const UNTESTED = [
   'src/features/boundaries/holoceneChart.ts',
   'src/features/boundaries/index.ts',
   'src/features/carbonMade/carbonMadeCard.ts',
-  'src/features/carbonMade/index.ts',
   'src/features/cycle/index.ts',
   'src/features/deepSurfaces/index.ts',
   'src/features/deepTime/deepGlance.ts',

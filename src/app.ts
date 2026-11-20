@@ -55,7 +55,6 @@ import { mountFamous } from './features/famous';
 import { mountShower } from './features/shower';
 import { mountWave } from './features/ligo';
 import { mountTelescopeList } from './features/telescopes';
-import { mountCarbonMade } from './features/carbonMade';
 import { mountIceAges } from './features/iceAges';
 import { mountDeepSurfaces, PLATES_CHIP } from './features/deepSurfaces';
 import { mountEmpires } from './features/empires';
@@ -194,16 +193,11 @@ export async function startApp(root: HTMLElement): Promise<void> {
     setScale: (scale) => {
       deepTime.setScale(scale);
     },
-    said: () => [
-      ['impacts', impacts.said()],
-      ...features.said(),
-      ['carbonMade', carbonMade.said()],
-    ],
+    said: () => [['impacts', impacts.said()], ...features.said()],
     // How each layer's load stands (#751): the features on the contract report theirs.
     loads: () => features.loads(),
     actions: () => [
       ['impacts', impacts.action()],
-      ['carbonMade', carbonMade.action()],
       // The features on the contract offer their own (#909).
       ...features.actions(),
     ],
@@ -374,15 +368,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // A gravitational wave passing (#829): space stretched and squeezed, over the globe.
   const wave = mountWave({ ...partContext, globe, showCard: markerCard.show });
   const telescopeList = mountTelescopeList({ ...partContext, showCard: markerCard.show });
-  // Where cosmic rays make carbon-14 (#269): a glow over the globe, and its card.
-  const carbonMade = mountCarbonMade({
-    ...partContext,
-    globe,
-    watchShower: (dipole, fromSun) => {
-      shower.watch(dipole, fromSun);
-    },
-    refresh: redraws.ask('layers'),
-  });
   // The years (#446): the track, playing them, travelling through them, and carbon-14 in the air.
   const years = mountYears({
     ...partContext,
@@ -480,7 +465,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ...explore.dialogs,
       markerCard.dialog,
       datingCard.dialog,
-      carbonMade.dialog,
       shower.container,
       shower.stage,
       ...wave.elements,
@@ -545,6 +529,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     deepTime: { enter: deepTime.enterDeepTime },
     radiocarbon: { curves: () => years.curves() },
     datingCard,
+    carbonGlow: globe,
+    shower: { watch: shower.watch },
+    overPage: {
+      add: (element) => {
+        root.append(element);
+      },
+    },
     waysKey: waysLegend,
   };
   const features = mountFeatures(FEATURES, featureCore, capabilities);
@@ -639,7 +630,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     { draw: bodies.render },
     { when: on(EARTH_LAYERS), draw: impacts.show },
-    { when: on(EARTH_LAYERS), draw: carbonMade.show },
     { when: on(LAYERS_PANEL), draw: showLayers },
     { draw: years.settle },
     {
