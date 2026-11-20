@@ -95,7 +95,6 @@ export const FUNCTION_LIMITS = {
   'features/boundaries/holoceneChart.ts': 2,
   'features/boundaries/index.ts': 1,
   'features/carbonMade/carbonMadeCard.ts': 1,
-  'features/carbonMade/index.ts': 2,
   'features/cycle/index.ts': 1,
   'features/deepSurfaces/index.ts': 1,
   'features/deepTime/deepGlance.ts': 1,
