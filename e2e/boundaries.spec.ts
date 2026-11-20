@@ -186,6 +186,9 @@ test('on a phone the boundaries story lets the reader choose the chart or the gl
 test('with the Holocene chapter open, deep time’s bar can be dragged, and the chart follows it (#845) @acceptance @mobile', async ({
   page,
 }) => {
+  // The chart plays and drives the globe in software on CI: 25–32 s on the phone, at the 30 s
+  // timeout, so it failed one run in three; slow, as the story's other drives are.
+  test.slow();
   const problems = collectProblems(page);
   const sheet = page.getByTestId('boundaries-sheet');
   const chart = sheet.getByTestId('holocene-stage');
