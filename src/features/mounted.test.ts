@@ -110,4 +110,16 @@ describe("deep time's chips", () => {
     const without = fake('asteroids', () => []).feature;
     expect(deepChipsOf([without, withChip])).toEqual([{ layer: 'fossils', ...chip }]);
   });
+
+  it('puts a chip that asks to come later after the others, whatever the order mounted (#909)', () => {
+    const fossils = { label: 'Fossils', why: 'fossils' } as const;
+    const impacts = { label: 'Impacts', why: 'impacts' } as const;
+    const first = {
+      ...fake('impacts', () => []).feature,
+      deepChip: impacts,
+      deepChipOrder: 1,
+    } as Feature;
+    const second = { ...fake('fossils', () => []).feature, deepChip: fossils } as Feature;
+    expect(deepChipsOf([first, second]).map(({ layer }) => layer)).toEqual(['fossils', 'impacts']);
+  });
 });

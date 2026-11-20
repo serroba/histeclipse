@@ -138,6 +138,14 @@ describe('the radiocarbon dates as a feature', () => {
     expect(note).toContain(`${String(age)} ± ${String(error)} radiocarbon years, from p3k14c.`);
   });
 
+  it('shades nothing before the years the dates are counted back to', async () => {
+    const early = { ...england, time: moveToYear(england.time, astronomicalYear(-20000)) };
+    const { shown, update, refresh } = await shownAt(early, 1);
+    expect(update).toHaveBeenLastCalledWith(null);
+    expect(shown.said?.()).toBe('Dates are counted back to 10,550 BCE (12,500 years before 1950).');
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
   it('says a place with no dates has none, and offers nothing', async () => {
     const { shown } = await shownAt(ocean, 2);
     expect(shown.action?.()).toBeNull();

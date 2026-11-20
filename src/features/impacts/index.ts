@@ -1,7 +1,7 @@
 /**
- * Impact craters and deposits as a part of the page (#474): loaded the first time the layer is
- * turned on, in either time; drawn where they lay at the moment shown; struck as deep time runs
- * past them; a crater's card, and a play of it.
+ * Impact craters and deposits as a feature (#380, #474, #909): loaded the first time the layer
+ * is turned on, in either time; drawn where they lay at the moment shown; struck as deep time
+ * runs past them; a crater's card, and a play of it.
  */
 
 import {
@@ -14,15 +14,12 @@ import {
   type ImpactsMode,
 } from '../../data/impacts';
 import { impactLayer } from './impactLayer';
-import type { Globe } from '../../globe/globe';
-import type { DeepScale, ViewState } from '../../state/viewState';
-import type { DeepChipView } from '../../ui/deepChips';
-import { impactsChip, type ImpactsView } from './chip';
-import type { MarkerCardContent, RelatedStep } from '../../ui/markerCard';
+import type { ViewState } from '../../state/viewState';
+import { IMPACTS_CHIP, impactsChip, type ImpactsView } from './chip';
+import type { RelatedStep } from '../../ui/markerCard';
 import { whenItStruck } from '../../explore/related';
 import { errorMessage } from '../../util/errors';
-import { RESTING } from '../feature';
-import type { PartContext } from '../part';
+import { feature, RESTING, type FeatureContext, type FeatureInstance } from '../feature';
 import {
   impactCard,
   impactPlay,
@@ -36,40 +33,15 @@ import {
   type ImpactPlay,
 } from './view';
 
-export { IMPACTS_CHIP } from './chip';
-
-export interface ImpactsContext extends PartContext {
-  readonly globe: Pick<Globe, 'addLayer' | 'playImpact' | 'flyTo' | 'zoomTo'>;
-  /** Where the latest strikes are written, for whoever needs to know one did. */
-  readonly strikesOn: HTMLElement;
-  showCard(card: MarkerCardContent): void;
-  /** The craters have loaded in deep time: draw it again. */
-  redrawDeep(state: ViewState): void;
-  /** The craters have loaded in the years: the Layers panel says so. */
-  refreshLayers(state: ViewState): void;
-}
-
-export interface ImpactsPart {
-  /** Draw the craters for the view, and say how the layer stands in deep time's bar. */
-  readonly show: (state: ViewState) => ImpactsView;
-  /** Its chip in deep time's bar, drawing the craters for the view. */
-  readonly chip: (state: ViewState, scale: DeepScale) => DeepChipView;
-  /** What the Layers panel says under the layer. */
-  readonly said: () => string | null;
-  /** The craters, loaded once. */
-  readonly load: () => Promise<Impacts>;
-  /** A marker tapped: whether it was a crater, and if so, its card. */
-  readonly pick: (key: string) => boolean;
-  /** What the Layers panel offers under the layer: the craters' paths through time, in 3D. */
-  readonly action: () => { readonly label: string; readonly run: () => void };
-}
+const NEEDS = ['cards', 'timeline', 'deepTime', 'strikes'] as const;
+type ImpactsContext = FeatureContext<(typeof NEEDS)[number]>;
 
 /** From a crater (#731): the Earth when it struck, facing where the plates had it. */
 function struckFrom(
   data: Impacts,
   impact: Impact,
   shownMa: number | null,
-  parts: Pick<PartContext, 'goToDeepTime'>,
+  deepTime: ImpactsContext['deepTime'],
 ): RelatedStep[] {
   const step = whenItStruck(impact.olderMa, impact.youngerMa, shownMa);
   const where = step === null ? null : placeThen(data, impact, step.ma);
@@ -79,56 +51,34 @@ function struckFrom(
       label: step.label,
       explain: step.explain,
       run: () => {
-        parts.goToDeepTime(step.ma, 'impacts', where);
+        deepTime.goTo(step.ma, 'impacts', where);
       },
     },
   ];
 }
 
-export function mountImpacts(context: ImpactsContext): ImpactsPart {
-  const { store, globe } = context;
-  const onGlobe = globe.addLayer(impactLayer);
+function mountImpacts(context: ImpactsContext): FeatureInstance {
+  const globe = context.strikes;
+  const onGlobe = context.globe.addLayer(impactLayer);
+  // The view last shown: what a crater tapped is read against.
+  let latest: ViewState | null = null;
   const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let impacts: Impacts | null = null;
-  let loading: Promise<Impacts> | null = null;
   let said: string | null = null;
   let mode: ImpactsMode = 'around';
   // Where deep time was in the frame before, while it plays.
   let strikeFrom: number | null = null;
-
-  /** The craters, loaded once: by the layer, or by the paths' sheet, whichever asks first. */
-  function load(): Promise<Impacts> {
-    if (impacts !== null) return Promise.resolve(impacts);
-    if (loading !== null) return loading;
-    const fresh = loadImpacts(`${context.base}data/impacts.json`, context.fetchJson);
-    loading = fresh;
-    fresh.then(
-      (loaded) => {
-        impacts = loaded;
-      },
-      () => {
-        // Asked again, it is fetched again.
-        loading = null;
-      },
-    );
-    return fresh;
-  }
 
   // Whether the layer waits on the craters, to draw once they arrive.
   let waiting = false;
   function loadThenDraw(): void {
     if (waiting) return;
     waiting = true;
-    load().then(
-      () => {
+    loadImpacts(`${context.base}data/impacts.json`, context.fetchJson).then(
+      (loaded) => {
         waiting = false;
-        const now = store.get();
-        if (now.ma !== null) {
-          context.redrawDeep(now);
-          return;
-        }
-        show(now);
-        context.refreshLayers(now);
+        impacts = loaded;
+        context.refresh();
       },
       (error: unknown) => {
         waiting = false;
@@ -138,6 +88,7 @@ export function mountImpacts(context: ImpactsContext): ImpactsPart {
   }
 
   function show(state: ViewState): ImpactsView {
+    latest = state;
     const { ma } = state;
     const scale = impactsScale(state, context.timeline.oldest());
     const on = impactsOn(state, scale);
@@ -173,21 +124,24 @@ export function mountImpacts(context: ImpactsContext): ImpactsPart {
     strikeFrom = playing ? ma : null;
     if (from === null || !playing || lessMotion.matches || state.focus !== 'earth') return;
     for (const { impact, place } of strikesToPlay(data, from, ma, placeMa, state.camera.target)) {
-      context.strikesOn.dataset['strikes'] = struckList(
-        context.strikesOn.dataset['strikes'],
-        impact.name,
-      );
+      globe.on.dataset['strikes'] = struckList(globe.on.dataset['strikes'], impact.name);
       globe.playImpact(impactPlay(impact.name, place, impact.diameterKm ?? 0));
     }
   }
 
   /** Play an impact at its place: turn the globe to it, come in close, and let it fall. */
   function play(spec: ImpactPlay): void {
-    if (store.get().focus !== 'earth') {
-      store.set((state) => ({ ...state, focus: 'earth', on: null, view: 'free' }));
-    }
+    context.change((state) =>
+      state.focus === 'earth' ? state : { ...state, focus: 'earth', on: null, view: 'free' },
+    );
     globe.flyTo(spec.place);
-    globe.zoomTo(Math.min(store.get().camera.distance, 2.2));
+    // How far out the view is now, read as the view is: no nearer than it already is.
+    let distance = 2.2;
+    context.change((state) => {
+      distance = Math.min(state.camera.distance, distance);
+      return state;
+    });
+    globe.zoomTo(distance);
     // Once the globe has turned to it.
     window.setTimeout(() => {
       globe.playImpact(spec);
@@ -195,27 +149,45 @@ export function mountImpacts(context: ImpactsContext): ImpactsPart {
   }
 
   return {
-    show,
-    chip: (state, scale) =>
-      impactsChip(show(state), scale, (next) => {
-        mode = next;
-        context.redrawDeep(store.get());
-      }),
-    said: () => said,
-    load,
-    pick: (key) => {
-      const impact = pickedImpact(impacts, key);
-      if (impacts === null || impact === undefined) return false;
-      const shownMa = store.get().ma;
-      const card = impactCard(impacts, impact, shownMa ?? 0, play);
-      context.showCard({ ...card, related: struckFrom(impacts, impact, shownMa, context) });
-      return true;
+    show(state) {
+      show(state);
     },
+    // Its chip in deep time's bar, drawing the craters for the view.
+    deep: (state, moment) =>
+      moment === null
+        ? null
+        : impactsChip(show(state), moment.scale, (next) => {
+            mode = next;
+            context.refresh();
+          }),
+    said: () => said,
+    pick(id) {
+      const impact = pickedImpact(impacts, `impact:${id}`);
+      if (impacts === null || impact === undefined) return;
+      const shownMa = latest?.ma ?? null;
+      const card = impactCard(impacts, impact, shownMa ?? 0, play);
+      context.cards.show({
+        ...card,
+        related: struckFrom(impacts, impact, shownMa, context.deepTime),
+      });
+    },
+    // What the Layers panel offers under the layer: the craters' paths through time, in 3D.
     action: () => ({
       label: 'Their paths through time, in 3D',
       run: () => {
-        store.set((state) => ({ ...state, craters: 'all' }));
+        context.change((state) => ({ ...state, craters: 'all' }));
       },
     }),
   };
 }
+
+export const impactsFeature = feature({
+  id: 'impacts',
+  needs: NEEDS,
+  watches: (state) => [state.layers, state.mode, state.ma, state.deepScale, state.focus],
+  picks: 'impact',
+  deepChip: IMPACTS_CHIP,
+  // After the others' chips in deep time's bar, as it was.
+  deepChipOrder: 1,
+  mount: mountImpacts,
+});

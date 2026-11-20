@@ -14,7 +14,7 @@
 import type { Fetch } from '../util/fetchJson';
 import type { Globe } from '../globe/globe';
 import type { LayerLoad } from '../state/activeLayers';
-import type { DeepScale, Layer, ViewState } from '../state/viewState';
+import type { DeepScale, GeoPoint, Layer, ViewState } from '../state/viewState';
 import type { LineageGroup } from '../data/lineages';
 import type { TreeOfLife } from '../data/treeOfLife';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
@@ -74,7 +74,13 @@ export interface Capabilities {
   /** Earth lit evenly, with no night side, while a layer needs every part seen. */
   readonly evenLight: Pick<Globe, 'setEvenLight'>;
   /** Deep time: go to a moment there, on the span that shows it. */
-  readonly deepTime: { enter(ma: number, scale: DeepScale): void };
+  readonly deepTime: {
+    enter(ma: number, scale: DeepScale): void;
+    /** On the whole span, with a layer on and the globe facing a place. */
+    goTo(ma: number, layer: Layer, where: GeoPoint): void;
+  };
+  /** A crater's strike: played on the globe turned to it, and written on `on` as it happens. */
+  readonly strikes: Pick<Globe, 'playImpact' | 'flyTo' | 'zoomTo'> & { readonly on: HTMLElement };
   /** Radiocarbon's calibration curves, loaded once. */
   readonly radiocarbon: { curves(): Promise<Radiocarbon> };
   /** The card that carries a radiocarbon date across a curve. */
@@ -147,6 +153,8 @@ export interface FeatureDefinition<Needs extends Capability> {
   readonly picks?: string;
   /** Its chip in the deep-time bar, if it has one. */
   readonly deepChip?: Omit<DeepChip, 'layer'>;
+  /** Where its chip goes among the features': higher is later, and 0 if not said. */
+  readonly deepChipOrder?: number;
   mount(context: FeatureContext<Needs>): FeatureInstance;
 }
 

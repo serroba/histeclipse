@@ -20,6 +20,7 @@ import {
 } from '../../data/radiocarbonDates';
 import { type GeoPoint, type ViewState } from '../../state/viewState';
 import { errorMessage } from '../../util/errors';
+import { carried } from './carried';
 
 /** What the dates near a place and a year say, once the place's tile is in. */
 interface Found {
@@ -74,15 +75,8 @@ function foundHere(
             label: 'How was a date here found?',
             run: () => {
               void context.radiocarbon.curves().then((curves) => {
-                const south = place.latitude < 0;
-                const what = [middle.material, middle.period].filter((word) => word !== '');
-                context.datingCard.open(
-                  south ? curves.curves.shcal20 : curves.curves.intcal20,
-                  south ? 'SHCal20' : 'IntCal20',
-                  middle.age,
-                  middle.error,
-                  `${middle.lab || 'A sample'} from ${middle.site || 'an unnamed site'}${middle.country === '' ? '' : `, ${middle.country}`}${what.length === 0 ? '' : ` (${what.join(', ')})`}: ${String(middle.age)} ± ${String(middle.error)} radiocarbon years, from p3k14c.`,
-                );
+                const { curve, name, note } = carried(middle, place.latitude < 0);
+                context.datingCard.open(curves.curves[curve], name, middle.age, middle.error, note);
               });
             },
           },
