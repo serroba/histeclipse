@@ -33,18 +33,21 @@ export interface Destination {
   readonly frame: TimeFrame;
 }
 
+/** The site's own subject first (#949), and the welcome's first suggestion (#954). */
+const ECLIPSE_OF_THALES: Destination = {
+  id: 'eclipse-of-thales',
+  label: 'The eclipse of Thales',
+  topics: ['space', 'people'],
+  description:
+    'The total eclipse of 28 May 585 BCE, said to have stopped a battle between the Lydians and the Medes: the Moon’s shadow crossing the world, and the Sun nearly covered as seen from Anatolia.',
+  questions: ['What did an ancient eclipse look like?', 'Where could it be seen?'],
+  body: 'earth',
+  frame: { kind: 'years', from: -584, to: -584 },
+  view: 'cam=46.0000,-5.0000,3.40&t=-0584-05-28T16:01Z&cal=julian&loc=39.0000,35.0000&layers=eclipses&sel=solar:-0584-05-28',
+};
+
 export const DESTINATIONS: readonly Destination[] = [
-  {
-    id: 'eclipse-of-thales',
-    label: 'The eclipse of Thales',
-    topics: ['space', 'people'],
-    description:
-      'The total eclipse of 28 May 585 BCE, said to have stopped a battle between the Lydians and the Medes: the Moon’s shadow crossing the world, and the Sun nearly covered as seen from Anatolia.',
-    questions: ['What did an ancient eclipse look like?', 'Where could it be seen?'],
-    body: 'earth',
-    frame: { kind: 'years', from: -584, to: -584 },
-    view: 'cam=46.0000,-5.0000,3.40&t=-0584-05-28T16:01Z&cal=julian&loc=39.0000,35.0000&layers=eclipses&sel=solar:-0584-05-28',
-  },
+  ECLIPSE_OF_THALES,
   {
     id: 'gravitational-waves',
     label: 'A gravitational wave',
@@ -212,6 +215,11 @@ export function destinationAnchor(destination: Destination): Anchor {
     label: destination.label,
     view: `${destination.view}&explore=${destination.id}`,
   };
+}
+
+/** The welcome's first suggestion (#954): an eclipse to see at once. */
+export function welcomeAnchor(): Anchor {
+  return destinationAnchor(ECLIPSE_OF_THALES);
 }
 
 /**

@@ -545,6 +545,24 @@ test('no page says null, undefined or NaN where words should be', async ({ page 
   }
 });
 
+test('a first visit can go straight to an eclipse, its clock in words (#954) @acceptance @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await page.goto('./');
+  await globeRendered(page);
+  await page
+    .getByTestId('welcome')
+    .getByRole('button', { name: 'See the eclipse of Thales' })
+    .click();
+  await expect(page).toHaveURL(/sel=solar:-0584-05-28/);
+  await expect(page.getByTestId('welcome')).toBeHidden();
+  await expect(page.locator('.scrubber-time')).toHaveText(
+    /^\d\d:\d\d UT, (\d+ min (before|after) greatest|at greatest eclipse)$/,
+  );
+  expect(problems).toEqual([]);
+});
+
 test('on a phone the views are named, and the years shown read in full (#953) @mobile', async ({
   page,
 }, info) => {

@@ -39,15 +39,26 @@ export interface Welcome {
   dismiss(): void;
 }
 
+/** Where the welcome's two ways in lead: an eclipse to see at once (#954), or Explore. */
+export interface WelcomeWays {
+  readonly eclipse: () => void;
+  readonly explore: () => void;
+}
+
 /**
  * The welcome line, hidden unless this is a bare visit (`firstVisit`) never welcomed before.
- * `onStart` follows its suggestion.
+ * Each of its two buttons follows one way in.
  */
 export function createWelcome(
   firstVisit: boolean,
-  onStart: () => void,
+  ways: WelcomeWays,
   storage: Storage | null = localStorageOrNull(),
 ): Welcome {
+  const eclipse = element(
+    'button',
+    { type: 'button', class: 'welcome-start' },
+    'See the eclipse of Thales',
+  );
   const start = element('button', { type: 'button', class: 'welcome-start' }, 'Start exploring');
   const close = element(
     'button',
@@ -58,6 +69,8 @@ export function createWelcome(
     'p',
     { class: 'welcome', 'data-testid': 'welcome' },
     'Earth and sky through time: eclipses and missions, ice ages and moving continents, the first people and the states they built. ',
+    eclipse,
+    ' ',
     start,
     close,
   );
@@ -67,9 +80,13 @@ export function createWelcome(
     root.hidden = true;
     remember(storage);
   };
+  eclipse.addEventListener('click', () => {
+    dismiss();
+    ways.eclipse();
+  });
   start.addEventListener('click', () => {
     dismiss();
-    onStart();
+    ways.explore();
   });
   close.addEventListener('click', dismiss);
   return { root, dismiss };

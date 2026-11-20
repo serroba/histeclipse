@@ -8,6 +8,7 @@ import {
   describeSolarEclipse,
   eclipseMoment,
   eclipseMomentAt,
+  fromGreatest,
   eclipseSelection,
   findSelected,
   isSolar,
@@ -173,5 +174,13 @@ describe('eclipseMomentAt', () => {
     expect(eclipseMomentAt(MARCH_2025, { latitude: 0, longitude: 0 })).toEqual(
       eclipseMoment(MARCH_2025),
     );
+  });
+});
+
+describe('fromGreatest (#954)', () => {
+  it('says the moment against greatest eclipse in words', () => {
+    expect(fromGreatest(-83)).toBe('83 min before greatest');
+    expect(fromGreatest(0)).toBe('at greatest eclipse');
+    expect(fromGreatest(95)).toBe('95 min after greatest');
   });
 });
