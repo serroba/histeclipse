@@ -205,6 +205,32 @@ test('on a 320-px phone the date panel’s tools keep clear of the name, and not
   expect(problems).toEqual([]);
 });
 
+test('a phone on its side shows the globe beside a narrow date panel, not under it (#976) @mobile', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'a phone');
+  const problems = collectProblems(page);
+  await page.setViewportSize({ width: 664, height: 390 });
+  await page.goto('./?t=2026-11-20T09:43Z');
+  await globeRendered(page);
+  const hud = await page.locator('.hud').boundingBox();
+  const bottom = await page.locator('.bottom').boundingBox();
+  if (hud === null || bottom === null) throw new Error('no panels');
+  // A column at the left, under half the width: the globe goes beside it, the full height above
+  // the bar (#946's free-left).
+  expect(hud.width).toBeLessThan(664 / 2);
+  const left = await page.evaluate(() =>
+    parseFloat(
+      getComputedStyle(document.getElementById('app') ?? document.body).getPropertyValue(
+        '--free-left',
+      ),
+    ),
+  );
+  expect(left).toBeGreaterThan(0);
+  expect(bottom.y).toBeGreaterThan(390 * 0.6);
+  expect(problems).toEqual([]);
+});
+
 test('on a phone every control is a finger wide, and the panels’ words 12 px at least (#979) @mobile', async ({
   page,
 }, info) => {

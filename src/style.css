@@ -681,8 +681,8 @@ body {
   display: none;
 }
 
-/* Controls with an icon: the icon and the word side by side; on a phone the icon alone, the
-   word kept for screen readers (and the tooltip), so a row of them fits on one line. */
+/* Controls with an icon: the icon and the word side by side; on a phone, upright or on its side
+   (#976), the icon alone, the word kept for screen readers and the tooltip, to fit one line. */
 button:has(> .icon-label):not([hidden]) {
   display: inline-flex;
   gap: 6px;
@@ -694,7 +694,7 @@ button:has(> .icon-label) > .icon {
   flex: none;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 600px), (max-height: 500px) {
   .icon-label:not(.icon-label-kept) {
     position: absolute;
     width: 1px;
