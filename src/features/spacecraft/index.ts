@@ -39,6 +39,7 @@ import { easedOrbits, type Eased } from './orbitEase';
 import { today } from './programs';
 import { bodyOfWorld, landedOn, landingSites } from './landingSites';
 import { missionRoutes } from './routeLines';
+import { lPointRoute } from './turningFrame';
 
 export { mountLaunches, type LaunchesContext, type LaunchesPart } from './launches';
 
@@ -89,7 +90,14 @@ function shownAt(
       routes: null,
     };
   }
-  const followed = { from: mission.start, to: mission.end, aboutEarth: mission.aboutEarth };
+  const followed = {
+    from: mission.start,
+    to: mission.end,
+    aboutEarth: mission.aboutEarth,
+    // Only a mission that stays about Earth: one that went on among the planets is drawn
+    // about the Sun, where the frame would turn its cruise too.
+    turning: mission.aboutEarth && mission.lPoint !== null,
+  };
   return {
     craft: craftNow(
       mission.craft,
@@ -100,7 +108,13 @@ function shownAt(
       where.then,
       where.eased,
     ),
-    routes: craftRoutes(mission.craft, loaded.wheres, where.then, jdTT, followed),
+    routes: [
+      ...craftRoutes(mission.craft, loaded.wheres, where.then, jdTT, followed),
+      ...lPointRoute(
+        mission.aboutEarth ? mission.lPoint : null,
+        sunPositionJ2000(jdTT as JulianDay),
+      ),
+    ],
   };
 }
 
