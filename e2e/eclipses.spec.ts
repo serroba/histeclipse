@@ -377,3 +377,25 @@ test('opened at the reader’s deepest, Thales’s first ▶ plays it from its s
   });
   expect(problems).toEqual([]);
 });
+
+test('on a 320-px phone the eclipse’s slider keeps room to drag, its time and speed under it (#978) @mobile', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'a phone');
+  const problems = collectProblems(page);
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto(
+    './?t=-0584-05-28T16:01Z&cal=julian&loc=39.0000,35.0000&layers=eclipses&sel=solar:-0584-05-28',
+  );
+  const slider = page.getByRole('slider', { name: 'Time relative to greatest eclipse' });
+  await expect(slider).toBeVisible();
+  const box = await slider.boundingBox();
+  expect(box?.width ?? 0).toBeGreaterThanOrEqual(120);
+  const scrubber = await page.locator('.scrubber').boundingBox();
+  const speed = await page.locator('.scrubber-speed').boundingBox();
+  // Nothing runs past the scrubber's own edge.
+  expect((speed?.x ?? 0) + (speed?.width ?? 0)).toBeLessThanOrEqual(
+    (scrubber?.x ?? 0) + (scrubber?.width ?? 0) + 1,
+  );
+  expect(problems).toEqual([]);
+});
