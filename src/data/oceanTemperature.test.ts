@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
+import deepIndex from '../../public/data/ocean-temperature/deep.json';
 import file from '../../public/data/ocean-temperature/index.json';
 import {
+  deepFile,
+  deepText,
+  deepYear,
   depthFile,
   depthName,
+  loadOceanDeep,
   loadOceanTemperature,
   oceanText,
   sectionFile,
   shownMonth,
+  type OceanDeep,
   type OceanTemperature,
 } from './oceanTemperature';
 
@@ -47,6 +53,39 @@ describe('the ocean’s temperature by depth (#590)', () => {
     );
     expect(oceanText(maps, surface, month(1900, 1))).toBe(
       'The maps run from January 1940 to September 2026 (IAP v4.2): none for this month.',
+    );
+  });
+});
+
+describe('the deep ocean, a map a year (#940)', () => {
+  const deepMaps = deepIndex as unknown as OceanDeep;
+  const [twoThousand, , , fiveThousand] = deepMaps.depths;
+
+  it('Given the published deep index, Then four deep levels a year from 1940', async () => {
+    const read = await loadOceanDeep('/d.json', () =>
+      Promise.resolve(new Response(JSON.stringify(deepIndex))),
+    );
+    expect(read.depths.map(({ id }) => id)).toEqual(['2000m', '3000m', '4000m', '5000m']);
+    expect(read.first).toBe(1940);
+  });
+
+  it('Given a month, Then its year’s file; the last year after it; none before the first', () => {
+    expect(deepFile(deepMaps, '3000m', month(1997, 12))).toBe('deep/3000m/1997.png');
+    expect(deepYear(deepMaps, month(2099, 1))).toBe(deepMaps.last);
+    expect(deepFile(deepMaps, '2000m', month(1939, 12))).toBeNull();
+  });
+
+  it('Given a deep level and month, Then the year, the scale, the latest said, and how little was measured', () => {
+    if (twoThousand === undefined || fiveThousand === undefined) throw new Error('no depths');
+    expect(deepText(deepMaps, twoThousand, month(1997, 6))).toMatch(
+      /^At 2,000 m, the year 1997, against the 1991–2020 mean: blue colder, red warmer, to ±0\.2 °C/u,
+    );
+    expect(deepText(deepMaps, fiveThousand, month(1997, 6))).toContain('a reconstruction');
+    expect(deepText(deepMaps, twoThousand, month(2099, 1))).toContain(
+      `Showing ${String(deepMaps.last)}, the latest whole year.`,
+    );
+    expect(deepText(deepMaps, twoThousand, month(1900, 1))).toBe(
+      `The deep maps run from 1940 to ${String(deepMaps.last)} (IAP v4.2): none for this year.`,
     );
   });
 });

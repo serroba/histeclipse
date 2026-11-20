@@ -313,14 +313,19 @@ def base_spans() -> list[str]:
     return [span for span, _ in DECADES if int(span[5:]) >= BASE[0] and int(span[:4]) <= BASE[1]]
 
 
+def months_bytes(paths: Iterable[Path]) -> Iterator[bytes]:
+    """Yield every monthly file of the zips at ``paths``, in order, one at a time."""
+    for path in paths:
+        yield from zip_months(path)
+
+
 def months_in(paths: Iterable[Path]) -> Iterator[Month]:
     """Read every month of the zips at ``paths``, in order."""
-    for path in paths:
-        for data in zip_months(path):
-            yield read_month(data)
+    for data in months_bytes(paths):
+        yield read_month(data)
 
 
-def _cached(name: str, sha256: str, cache: Path) -> Path:  # pragma: no cover - needs network
+def cached_zip(name: str, sha256: str, cache: Path) -> Path:  # pragma: no cover - needs network
     """Download one of IAP's zips into ``cache`` unless there; check it against its pin.
 
     IAP serves plain HTTP only; the URL is the pinned ``BASE_URL`` and the checksum guards it.
@@ -346,7 +351,7 @@ def fetch_ocean_temperature(
     """Download the zips (checked against their pins) and write the maps; count the months."""
     import datetime as dt  # noqa: PLC0415
 
-    paths = {span: _cached(zip_name(span), sha256, cache) for span, sha256 in DECADES}
+    paths = {span: cached_zip(zip_name(span), sha256, cache) for span, sha256 in DECADES}
     usual = normals(months_in(paths[span] for span in base_spans()))
     accessed = dt.datetime.now(tz=dt.UTC).date().isoformat()
     index = write_all(months_in(paths.values()), usual, folder, accessed)

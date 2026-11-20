@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest';
 
+import deepFile from '../../../public/data/ocean-temperature/deep.json';
 import file from '../../../public/data/ocean-temperature/index.json';
 import type { LayerFactory, LayerHost } from '../../globe/layerHost';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
@@ -29,10 +30,12 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
   const notify = vi.fn();
   const context = {
     base: '/',
-    fetchJson: () =>
+    fetchJson: (url: string) =>
       options.failing === true
         ? Promise.reject(new Error('offline'))
-        : Promise.resolve(new Response(JSON.stringify(file))),
+        : Promise.resolve(
+            new Response(JSON.stringify(url.endsWith('deep.json') ? deepFile : file)),
+          ),
     globe: {
       addLayer: (factory: LayerFactory<unknown>) => {
         const layer = factory({
@@ -87,6 +90,19 @@ describe('Ocean temperature as a feature (#590)', () => {
       });
     });
     expect(shown.said?.()).toContain('Before the Argo floats');
+    expect(panels.at(-1)).toMatchObject({
+      depths: expect.arrayContaining([{ id: '4000m', name: '4,000 m, yearly' }]) as unknown,
+    });
+    picker.value = '4000m';
+    picker.dispatchEvent(new Event('change'));
+    shown.show?.(inYear(1998), JD);
+    await vi.waitFor(() => {
+      expect(painted.at(-1)).toMatchObject({
+        bound: 0.1,
+        image: { url: '/data/ocean-temperature/deep/4000m/1998.png' },
+      });
+    });
+    expect(shown.said?.()).toMatch(/^At 4,000 m, the year 1998/);
     const count = panels.length;
     shown.show?.(inYear(1998), JD);
     expect(panels).toHaveLength(count);
