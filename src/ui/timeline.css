@@ -168,6 +168,7 @@
 .seen-controls {
   display: flex;
   flex-basis: 100%;
+  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
   min-width: 0;
@@ -214,11 +215,11 @@
 }
 
 .seen-status {
-  flex: none;
-  overflow: hidden;
+  /* Beside the controls where there is room, else on a line of its own (#952). */
+  flex: 1 1 12em;
+  min-width: 0;
+  padding: 0 4px;
   color: var(--ink-muted);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .eclipse-seen {
@@ -278,4 +279,20 @@
 /* The eclipse row fades out where more chips lie beyond the edge. */
 .eclipse-list[data-more='true'] {
   mask-image: linear-gradient(to right, black calc(100% - 48px), transparent);
+}
+
+/* On a phone the hint takes a line of its own, and the state's list shrinks to keep its steps
+   beside it (#952). */
+@media (max-width: 600px) {
+  .seen-label {
+    flex-basis: 100%;
+  }
+
+  .seen-select {
+    flex: 1 1 0;
+  }
+
+  .seen-status {
+    flex-basis: 100%;
+  }
 }

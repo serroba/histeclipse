@@ -174,7 +174,7 @@ test('a link to a destination opens its view, and the link keeps naming it (#726
 
 test('a historian follows the eclipses seen from one empire @acceptance', async ({ page }) => {
   const problems = collectProblems(page);
-  const seen = page.getByLabel('Seen from', { exact: true });
+  const seen = page.getByLabel('Eclipses seen from', { exact: true });
   await test.step('Given the globe in 763 BCE', async () => {
     await page.goto('./?t=-762-06-15T12:00&cam=35,43,3&layers=eclipses');
     await globeRendered(page);
