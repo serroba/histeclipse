@@ -90,8 +90,8 @@ export function mountFeatures(
     loads: () => mounted.map(({ feature, shown }) => [feature.id, shown.load?.() ?? null] as const),
     here: (state) =>
       mounted.flatMap(({ feature, shown }) => {
-        const fact = shown.here?.(state) ?? null;
-        return fact === null ? [] : [[feature.id, fact] as const];
+        const facts = [shown.here?.(state) ?? []].flat();
+        return facts.map((fact) => [feature.id, fact] as const);
       }),
   };
 }

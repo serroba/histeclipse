@@ -57,7 +57,7 @@ import { mountWave } from './features/ligo';
 import { mountTelescopeList } from './features/telescopes';
 import { mountIceAges } from './features/iceAges';
 import { mountDeepSurfaces, PLATES_CHIP } from './features/deepSurfaces';
-import { mountEmpires } from './features/empires';
+import { createBorderFiles, createStatesNote } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
 import { mountYears } from './features/years';
 import { ECLIPSE_EARTH_PARTS, mountEclipses } from './features/eclipses';
@@ -365,6 +365,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // A gravitational wave passing (#829): space stretched and squeezed, over the globe.
   const wave = mountWave({ ...partContext, globe, showCard: markerCard.show });
   const telescopeList = mountTelescopeList({ ...partContext, showCard: markerCard.show });
+  // Cliopatria's border files, shared by the states' layer and the eclipses; and what the years'
+  // track last said of the states (nothing until they change).
+  const borderFiles = createBorderFiles(base, fetchJson);
+  const statesNote = createStatesNote(redraws.ask('years'));
   // The years (#446): the track, playing them, travelling through them, and carbon-14 in the air.
   const years = mountYears({
     ...partContext,
@@ -375,7 +379,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       showLayers(now);
       iceAges.showHolocene(now);
     },
-    statesSaid: () => empires.said(),
+    statesSaid: () => statesNote.said(),
     holoceneText: () => iceAges.holoceneText(),
   });
   // Away from Earth and the Moon, the bar's time is the body's own cycle as Earth sees it (#447);
@@ -388,15 +392,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const launches = mountTimeBars({ ...partContext, history: { ...years.track, stop: years.stop } });
 
   // The borders of past states (#446), a century's file at a time, and what changed.
-  const empires = mountEmpires({
-    ...partContext,
-    globe,
-    noted: redraws.ask('years'),
-    drawn: () => {
-      if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get(), hereData()));
-    },
-  });
-
   // The eclipses (#447): the year's on the bar, picking one, and the moment shown of it.
   const eclipses = mountEclipses({
     ...partContext,
@@ -404,8 +399,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     catalogs: () => ({ lunar: lunarCatalog, solar: solarCatalog }),
     famous: () => famous.list(),
     placeName,
-    territoryOf: (name, shown) => empires.territoryOf(name, shown),
-    centuryFor: (year) => empires.centuryFor(year),
+    territoryOf: (name, shown) => borderFiles.territoryOf(name, shown),
+    centuryFor: (year) => borderFiles.centuryFor(year),
     timelineButtons: [famous.button, records.button],
     timelineExtras: [years.track.extras, cycle.extras, launches.extras],
   });
@@ -540,6 +535,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
         root.append(element);
       },
     },
+    stateBorders: borderFiles,
+    yearsTrack: statesNote,
+    whyHere: {
+      again: () => {
+        if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get(), hereData()));
+      },
+    },
     waysKey: waysLegend,
   };
   const features = mountFeatures(FEATURES, featureCore, capabilities);
@@ -577,7 +579,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** What the layers have loaded, for "Why here?" to read. */
   function hereData(): HereData {
     return {
-      drawn: empires.drawn(),
       features: features.here(store.get()),
     };
   }
@@ -600,11 +601,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     viewSwitch.render(state.mode, state.view, bodies.moon() !== null, state.focus);
   }
 
-  /** The Layers panel, and the borders it turns on. */
+  /** The Layers panel, and Explore's view of the layers. */
   function showLayers(state: ViewState): void {
     layersPanel.show(state);
     explore.show(state);
-    empires.show(state);
   }
 
   time.bind({ years, deepTime, launches });

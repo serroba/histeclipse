@@ -11,6 +11,7 @@ import { impactsFeature } from './impacts';
 import { spacecraftFeature } from './spacecraft';
 import { oceanHeatFeature } from './oceanHeat';
 import { oceanTempFeature } from './oceanTemp';
+import { empiresFeature } from './empires';
 import { ensoFeature } from './enso';
 import { ozoneFeature } from './ozone';
 import { periodsFeature } from './periods';
@@ -22,7 +23,8 @@ import { waysFeature } from './ways';
 import type { Feature } from './feature';
 
 export const FEATURES: readonly Feature[] = [
-  // First: its markers' layer goes on the globe before the others', as it did.
+  // First, in this order: their names and markers go on the globe before the others', as they did.
+  empiresFeature,
   impactsFeature,
   spacecraftFeature,
   asteroidsFeature,

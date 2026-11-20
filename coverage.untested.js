@@ -38,7 +38,6 @@ export const UNTESTED = [
   'src/features/eclipses/scrubber.ts',
   'src/features/eclipses/seen.ts',
   'src/features/empires/empireLayer.ts',
-  'src/features/empires/index.ts',
   'src/features/famous/famousPanel.ts',
   'src/features/famous/index.ts',
   'src/features/fossils/fossilLayer.ts',

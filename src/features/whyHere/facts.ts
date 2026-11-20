@@ -4,21 +4,15 @@
  * the layers' data comes in as it has loaded.
  */
 
-import type { Territory } from '../../data/empires';
 import { periodAt } from '../../deepTime/periods';
-import { hereFacts, placeText } from './here';
+import { placeText } from './here';
 import { PERIOD_EVIDENCE } from '../../sources/periodEvidence';
 import type { HereFact, WhyId } from '../../sources/registry';
-import { cliopatriaYear } from '../../state/layerCatalog';
 import { LAYERS, type Layer, type ViewState } from '../../state/viewState';
-import { PRESENT_YEAR } from '../../time/present';
-import { astronomicalYear, formatYear } from '../../time/year';
 import type { HereView, WhyMoment } from '../../ui/whySheet';
 
 /** What the layers have loaded, for "Why here?" to read. */
 export interface HereData {
-  /** The states last drawn, and the year they were drawn for. */
-  readonly drawn: { readonly year: number; readonly territories: readonly Territory[] } | null;
   /** What the features on the contract have at the place (#893), each with its layer. */
   readonly features: readonly (readonly [Layer, HereFact])[];
 }
@@ -26,28 +20,9 @@ export interface HereData {
 /** What each layer on the map has at the place picked: "Why here?". */
 export function hereView(state: ViewState, data: HereData): HereView | null {
   if (state.location === null || state.ma !== null) return null;
-  const year = state.time.date.year;
-  const words = (y: number): string => formatYear(astronomicalYear(y));
-  const shownYear = cliopatriaYear(year, PRESENT_YEAR);
-  const { drawn } = data;
-  const states = hereFacts({
-    place: state.location,
-    yearText: words(year),
-    states: state.layers.has('empires')
-      ? {
-          source: state.borders,
-          territories: drawn?.year === year ? drawn.territories : null,
-          asOf: shownYear === year ? null : words(shownYear),
-        }
-      : null,
-  });
-  // In the layers' own order (#909), as the Sources list is: the states' facts are the empires'.
-  const byLayer: readonly (readonly [Layer, HereFact])[] = [
-    ...states.map((fact) => ['empires', fact] as const),
-    ...data.features,
-  ];
+  // In the layers' own order (#909), as the Sources list is.
   const place = (layer: Layer): number => LAYERS.indexOf(layer);
-  const facts = byLayer
+  const facts = data.features
     .map(([layer, fact], index) => ({ fact, at: place(layer), index }))
     .sort((a, b) => a.at - b.at || a.index - b.index)
     .map(({ fact }) => fact);
@@ -60,8 +35,6 @@ export function hereVersion(state: ViewState, data: HereData): string {
     state.location === null ? '' : placeText(state.location),
     state.time.date.year,
     [...state.layers].join(','),
-    state.borders,
-    data.drawn?.year ?? '',
     data.features.map(([, { text }]) => text).join('/'),
   ].join('|');
 }
