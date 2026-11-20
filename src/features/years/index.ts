@@ -21,6 +21,7 @@ import { yearPlayhead } from '../../time/yearPlay';
 import type { PlaySpeed, SpeedLevel } from '../../time/playSpeeds';
 import type { Moment } from '../../time/moment';
 import { windowOf } from '../../state/yearsWindow';
+import { travelTrip } from './travelTrip';
 import { travelBrings, windowing } from './windowing';
 import { yearOfMa } from '../../data/iceSheets';
 import { PRESENT_YEAR } from '../../time/present';
@@ -172,21 +173,14 @@ export function mountYears(context: YearsContext): YearsPart {
     context.globe.setEvenLight(open);
     // The trip is about peoples and states: their borders, and how people lived where no
     // state is drawn, come on with it, and go with it if it brought them.
-    const { layers } = store.get();
-    if (open) {
-      travelBrought = travelBrings(layers);
-      if (travelBrought.length > 0) {
-        store.set((state) => ({
-          ...state,
-          layers: new Set([...state.layers, ...travelBrought]),
-        }));
-      }
-    } else if (travelBrought.length > 0) {
-      const brought = new Set<Layer>(travelBrought);
-      travelBrought = [];
+    // Said the first time; one the reader turns off stays off (#983).
+    const { bring, note } = open ? trip.open(store.get().layers) : { bring: [], note: null };
+    const taken = new Set<Layer>(open ? [] : trip.close());
+    if (note !== null) context.notify(note);
+    if (bring.length > 0 || taken.size > 0) {
       store.set((state) => ({
         ...state,
-        layers: new Set([...state.layers].filter((layer) => !brought.has(layer))),
+        layers: new Set([...state.layers, ...bring].filter((layer) => !taken.has(layer))),
       }));
     }
     const now = store.get();
@@ -196,7 +190,7 @@ export function mountYears(context: YearsContext): YearsPart {
   // While the track is open, the globe is lit evenly and the markers of single finds and
   // events rest: at years a second they flicker past without meaning.
   let travelling = false;
-  let travelBrought: readonly Layer[] = [];
+  const trip = travelTrip();
 
   function historyFirst(): number {
     return Math.ceil(context.deltaT().firstYear) + 1;
@@ -246,6 +240,7 @@ export function mountYears(context: YearsContext): YearsPart {
   }
 
   function showHistory(state: ViewState): void {
+    if (travelling) trip.seen(state.layers);
     window.fitNew(state, historyPlaying);
     const shown = window.shown(state);
     showRadiocarbon(state);
