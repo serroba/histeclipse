@@ -1,0 +1,66 @@
+/* A finger's room, and the smallest words, on a phone (#979). */
+
+/* On a touch screen a small control is found within a 44-px square about its centre, whatever
+   size it is drawn: an invisible box over it. A control larger than that covers its box. */
+@media (pointer: coarse) {
+  :is(
+    .zoom-step,
+    .why-mark,
+    .hud-tools > button,
+    .hud-date-button,
+    .hud-more summary,
+    .viewpoints button,
+    .why-all,
+    .year-controls .step,
+    .hud h1 .home
+  ) {
+    position: relative;
+  }
+
+  :is(
+    .zoom-step,
+    .why-mark,
+    .hud-tools > button,
+    .hud-date-button,
+    .hud-more summary,
+    .viewpoints button,
+    .why-all,
+    .year-controls .step,
+    .hud h1 .home
+  )::after {
+    position: absolute;
+    inset: calc(50% - 22px);
+    content: '';
+  }
+
+  /* The rail's round buttons drawn a finger wide; it is 50 px from the edge, within the column
+     the names in space keep clear of (#997). */
+  body .zoom-step {
+    flex: none;
+    width: 44px;
+    height: 44px;
+  }
+
+  /* The name, a link in a line, holds its box as a block would. */
+  .hud h1 .home {
+    display: inline-block;
+  }
+
+  /* Where the tools' boxes and the date's meet, the tools are found. */
+  .hud-tools {
+    z-index: 1;
+  }
+}
+
+/* On a phone the panels' own words are 12 px at least: the sources, what is written here, the
+   rail's distance, the ages under the slider and its ends, the viewpoints' names. */
+@media (max-width: 600px) {
+  body :is(.credits, .here-text, .zoom-readout, .period-band, .period-scale) {
+    font-size: 12px;
+  }
+
+  body .view-switch.viewpoints .icon-label,
+  body .why-list .why-all {
+    font-size: 12px;
+  }
+}
