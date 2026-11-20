@@ -134,7 +134,11 @@ def _t(latitude: Grid) -> Grid:
 
 
 def polar_xy(grid: PolarGrid, latitude: Grid, longitude: Grid) -> tuple[Grid, Grid]:
-    """Project latitude and longitude (degrees) onto a polar grid: x and y in metres (Snyder)."""
+    """Project latitude and longitude (degrees) onto a polar grid: x and y in metres (Snyder).
+
+    Snyder's south formulas are the north's with latitude, longitude, x and y all negated: in the
+    south x runs towards 90° E (NSIDC's grid has the Antarctic Peninsula at its upper left).
+    """
     sign = 1.0 if grid.north else -1.0
     phi_c = math.radians(TRUE_SCALE_LATITUDE)
     m_c = math.cos(phi_c) / math.sqrt(1 - (HUGHES_E * math.sin(phi_c)) ** 2)
@@ -142,7 +146,7 @@ def polar_xy(grid: PolarGrid, latitude: Grid, longitude: Grid) -> tuple[Grid, Gr
     rho = HUGHES_A * m_c * _t(sign * latitude) / t_c
     lam = np.radians(sign * (longitude - grid.central_longitude))
     return (
-        np.asarray(rho * np.sin(lam), dtype=np.float64),
+        np.asarray(sign * rho * np.sin(lam), dtype=np.float64),
         np.asarray(-sign * rho * np.cos(lam), dtype=np.float64),
     )
 
