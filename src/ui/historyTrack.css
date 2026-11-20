@@ -130,10 +130,12 @@
 }
 
 @media (max-width: 600px) {
-  /* It takes the room left beside the speed, so its name is not cut short (#953). */
+  /* It takes the room left beside the speed, so its name is not cut short (#953); its padding
+     slim, so the two share a row on a 390-px phone (#975). */
   .holocene-bar .history-range {
     flex: 1 1 auto;
     max-width: none;
+    padding: 0 4px;
     font-size: 14px;
   }
 }

@@ -61,13 +61,19 @@ function page(options: { hud: Box; natural: number; cards: { box: Box; deep?: bo
   const onInsets = vi.fn();
   keepCentred({ root, top, bottom, zoomRail, onInsets });
   observed?.();
-  return { root, zoomRail, onInsets };
+  return { root, top, zoomRail, onInsets };
 }
 
 const HUD = { top: 16, left: 16, width: 540, height: 700 };
 const CARD = { top: 360, left: 340, width: 760, height: 540 };
 
 describe('keeping the globe centred, and the panels clear of each other', () => {
+  it('Given the date panel, Then it gets its fold, for a short phone to keep the globe in view (#975)', () => {
+    const { top } = page({ hud: HUD, natural: 700, cards: [] });
+    expect(top.dataset['fold']).toBe('folded');
+    expect(top.querySelector('.hud-fold')).not.toBeNull();
+  });
+
   it('Given a date panel taller than the room above the eclipse card in its columns, Then it stops short of the card and scrolls (#943)', () => {
     const { root } = page({ hud: HUD, natural: 700, cards: [{ box: CARD }] });
     expect(root.hasAttribute('data-hud-capped')).toBe(true);
