@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const ways = layer({
   id: 'ways',
   label: 'Ways of life',
+  summary: 'How people lived: foraging, herding, farming, towns.',
   about:
     'How people lived by region, as archaeologists rated it (ArchaeoGLOBE): foraging, herding, farming, towns.',
   spans: ['years'],

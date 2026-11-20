@@ -3,6 +3,7 @@ import { layer } from './layer';
 export const empires = layer({
   id: 'empires',
   label: 'States and empires',
+  summary: 'The borders of states and empires, year by year.',
   about:
     'Borders from Cliopatria or OpenHistoricalMap, or both to compare: OpenHistoricalMap’s names in italics, and a state both name nearby named once, underlined with dots.',
   spans: ['years'],

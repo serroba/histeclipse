@@ -8,6 +8,7 @@ export const CARBON_LIMIT =
 export const carbonMade = layer({
   id: 'carbonMade',
   label: 'Carbon-14 made in the sky',
+  summary: 'Where cosmic rays make carbon-14, high in the air.',
   about:
     'Where cosmic rays make carbon-14, high in the air: most over the poles, where Earth’s magnetic field shields least. Try another field or Sun, and follow it into living things.',
   spans: ['years', 'ice'],

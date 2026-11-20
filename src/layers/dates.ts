@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const dates = layer({
   id: 'dates',
   label: 'Radiocarbon dates',
+  summary: 'Where archaeologists have dated remains by carbon-14.',
   about:
     'Where archaeologists have dated remains by carbon-14 (p3k14c), calibrated and counted by square and 250 years: where dates were measured, not how many people lived. Pick a place to see how one was dated.',
   spans: ['years'],

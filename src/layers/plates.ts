@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const plates = layer({
   id: 'plates',
   label: 'Plates',
+  summary: 'A second reconstruction’s continents, to compare with the first.',
   about: 'A second reconstruction’s continents, outlined over the first.',
   spans: ['ice', 'all', 'eons'],
   reach: 'Back to 1,800 million years ago.',

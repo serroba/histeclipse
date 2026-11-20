@@ -199,6 +199,7 @@ describe('passages from records with gaps', () => {
     const layer: LayerChoice = {
       id: 'temperature',
       label: 'Temperature',
+      summary: '',
       about: '',
       spans: ['all'],
       reach: '',

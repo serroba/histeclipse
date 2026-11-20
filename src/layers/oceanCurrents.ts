@@ -5,6 +5,7 @@ import { sealevel } from './sealevel';
 export const oceanCurrents = layer({
   id: 'oceanCurrents',
   label: 'Ocean currents',
+  summary: 'The ocean’s currents each month, drawn as drifting streaks.',
   about:
     'The ocean’s currents each month since 1940, near the surface or at 1,500 m, drawn as streaks drifting with the water (IAP): the AMOC’s warm water north in the Gulf Stream, and its cold water south along the deep western boundary.',
   spans: ['years'],

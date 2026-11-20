@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const radiocarbon = layer({
   id: 'radiocarbon',
   label: 'Carbon-14 in the air',
+  summary: 'How much carbon-14 the air held, year by year.',
   about:
     'How much radiocarbon the air held each year, under the years’ slider: its sudden spikes and its plateaus, and why a radiocarbon date is a range.',
   spans: ['years'],

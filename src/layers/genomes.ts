@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const genomes = layer({
   id: 'genomes',
   label: 'Ancient genomes',
+  summary: 'Where ancient DNA has been read, and how old it is.',
   about:
     'Dated ancient DNA from the Allen Ancient DNA Resource (Reich lab), counted by region within 250 years.',
   spans: ['years'],

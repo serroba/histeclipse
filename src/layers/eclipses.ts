@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const eclipses = layer({
   id: 'eclipses',
   label: 'Eclipses',
+  summary: 'The year’s eclipses, and the Moon’s shadow for the one you pick.',
   about:
     'The year’s eclipses in the bar, the famous ones and the records. For one picked: the Moon’s shadow and path on Earth, or where the eclipsed Moon was up, with its scrubber and card.',
   spans: ['years'],

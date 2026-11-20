@@ -5,6 +5,7 @@ import { sealevel } from './sealevel';
 export const oceanTemp = layer({
   id: 'oceanTemp',
   label: 'Ocean temperature',
+  summary: 'The ocean’s temperature each month, from the surface down.',
   about:
     'The ocean’s temperature each month since 1940 at the surface, 100 m or 700 m, and each year from 2,000 to 5,000 m, against the 1991–2020 mean (IAP v4.2): warming going down, and El Niño’s warm water sliding east under the Pacific.',
   spans: ['years'],

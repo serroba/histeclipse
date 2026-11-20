@@ -5,6 +5,7 @@ import { layer } from './layer';
 export const telescopes = layer({
   id: 'telescopes',
   label: 'Telescopes',
+  summary: 'The great telescopes, on the ground and in space.',
   about:
     'The most significant telescopes: on Earth, each at its site from its first light to its closing, from Herschel’s 40-foot of 1789 to the ELT being built; in space, each on its orbit while it worked, about Earth or out at L2 and around the Sun. Tap one for its card.',
   spans: ['years'],
