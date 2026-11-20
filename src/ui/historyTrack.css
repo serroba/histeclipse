@@ -130,8 +130,10 @@
 }
 
 @media (max-width: 600px) {
+  /* It takes the room left beside the speed, so its name is not cut short (#953). */
   .holocene-bar .history-range {
-    max-width: 110px;
+    flex: 1 1 auto;
+    max-width: none;
     font-size: 14px;
   }
 }
