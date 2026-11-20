@@ -100,3 +100,35 @@ test('a reader searches for a mission and follows its journey (#712)', async ({ 
   });
   expect(problems).toEqual([]);
 });
+
+test('a reader opens a searched eclipse and the globe turns to its place (#942) @acceptance', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const dialog = page.getByRole('dialog', { name: 'Search' });
+  await test.step('Given the globe facing the other side of the world', async () => {
+    await page.goto('./?cam=-34,151,3');
+    await globeRendered(page);
+  });
+  await test.step('When they search for Thucydides’ eclipse and open it', async () => {
+    await page.getByRole('button', { name: 'Search the texts' }).click();
+    await dialog.getByRole('searchbox').fill('Peloponnesian War');
+    await dialog.locator('.search-hit').filter({ hasText: 'first summer' }).first().click();
+  });
+  await test.step('Then the rendered camera faces Athens, not only the address bar', async () => {
+    await expect(page).toHaveURL(/cam=37\.97/);
+    await expect
+      .poll(
+        async () => {
+          const [lat = NaN, lon = NaN] = ((await globe.getAttribute('data-target')) ?? '')
+            .split(',')
+            .map(Number);
+          return Math.abs(lat - 38) < 1.5 && Math.abs(lon - 23.7) < 1.5;
+        },
+        { timeout: 20_000 },
+      )
+      .toBe(true);
+  });
+  expect(problems).toEqual([]);
+});

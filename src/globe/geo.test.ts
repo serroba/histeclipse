@@ -2,7 +2,13 @@ import fc from 'fast-check';
 import { SphereGeometry } from 'three';
 import { describe, expect, it } from 'vitest';
 
-import { cameraFromPosition, cameraPosition, geoToVector, vectorToGeo } from './geo';
+import {
+  cameraAttributes,
+  cameraFromPosition,
+  cameraPosition,
+  geoToVector,
+  vectorToGeo,
+} from './geo';
 
 describe('geoToVector', () => {
   it.each([
@@ -76,5 +82,13 @@ describe('camera', () => {
     expect(result.distance).toBeCloseTo(3, 12);
     expect(result.target.latitude).toBeCloseTo(32.5, 9);
     expect(result.target.longitude).toBeCloseTo(44.4, 9);
+  });
+});
+
+describe('the rendered camera’s attributes (#942)', () => {
+  it('Given a camera over Athens, Then it reads its distance and the point it faces', () => {
+    expect(
+      cameraAttributes({ target: { latitude: 37.9715, longitude: 23.7257 }, distance: 3 }),
+    ).toEqual({ distance: '3.00', target: '38.0,23.7' });
   });
 });

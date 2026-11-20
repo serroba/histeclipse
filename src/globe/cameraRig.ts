@@ -19,7 +19,7 @@ import {
   type ZoomFlight,
 } from './cameraPoses';
 import { controlSpeeds } from './controlSpeeds';
-import { cameraFromPosition, geoToVector } from './geo';
+import { cameraAttributes, cameraFromPosition, geoToVector } from './geo';
 import { createProjection, type Insets, type Projection } from './projection';
 import { blendPose, type CameraPose } from './spaceFrame';
 import {
@@ -274,7 +274,7 @@ export class CameraRig implements StagePart {
     controls.addEventListener('change', () => {
       this.#world.invalidate();
       const state = this.#relativeCamera();
-      this.#container.dataset['distance'] = state.distance.toPrecision(3);
+      Object.assign(this.#container.dataset, cameraAttributes(state));
       for (const listener of this.#listeners) listener(state);
     });
   }

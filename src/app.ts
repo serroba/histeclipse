@@ -274,7 +274,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   });
   // A passage's or a destination's view laid over the reader's, as a step back can undo.
-  const opener = viewOpener({ store, deepTime, sync: () => sync });
+  const opener = viewOpener({ store, deepTime, sync: () => sync, globe });
   const openAnchor = opener.anchor;
   // A tablet's records checked against the sky, and looked at from Babylon (#447).
   const records = mountRecords({

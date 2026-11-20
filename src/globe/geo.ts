@@ -39,3 +39,16 @@ export function cameraPosition({ target, distance }: GlobeCamera): Vector3Tuple 
 export function cameraFromPosition(position: Vector3Tuple): GlobeCamera {
   return { target: vectorToGeo(position), distance: Math.hypot(...position) };
 }
+
+/**
+ * The rendered camera, written on the globe's element for tests and tools to read: how far, in
+ * the focused body's radii, and the point it faces (#942: the address bar alone missed a camera
+ * that never moved).
+ */
+export function cameraAttributes(camera: GlobeCamera): { distance: string; target: string } {
+  const { latitude, longitude } = camera.target;
+  return {
+    distance: camera.distance.toPrecision(3),
+    target: `${latitude.toFixed(1)},${longitude.toFixed(1)}`,
+  };
+}
