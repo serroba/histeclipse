@@ -37,7 +37,8 @@ describe('the waves the story tells (#990)', () => {
 
   it('opens a chapter the story has, or else its source', () => {
     expect(openingChapter(WAVE_EVENTS.gw150914, 'journey')).toBe('journey');
-    expect(openingChapter(WAVE_EVENTS.gw170817, 'journey')).toBe('source');
+    expect(openingChapter(WAVE_EVENTS.gw170817, 'journey')).toBe('journey');
+    expect(openingChapter(WAVE_EVENTS.gw150914, 'kilonova')).toBe('source');
     expect(openingChapter(WAVE_EVENTS.gw170817, 'detector')).toBe('detector');
   });
 });

@@ -1,6 +1,7 @@
 /**
  * The journey, drawn (#833, #841): Earth, a unit across its radius, turned as it is Earth-fixed
- * (the map's 0° longitude toward +x, the north pole up), with Livingston and Hanford marked; and
+ * (the map's 0° longitude toward +x, the north pole up), with the detectors that heard it marked
+ * (Livingston and Hanford, and for GW170817 Virgo too, #993); and
  * the space about it as a sheet of free points, drawn as a grid through Earth's middle that
  * holds the wave's path. As the wave passes, every point, and every
  * point of Earth, is moved by it (`strain.ts`): stretched one way across its path and squeezed
@@ -31,15 +32,8 @@ import {
   Vector3,
 } from 'three';
 
-import {
-  arrivalDirection,
-  HANFORD,
-  type JourneyMoment,
-  LIVINGSTON,
-  pairAt,
-  pathTable,
-  reached,
-} from './journey';
+import { directionOf, type JourneyMoment, pairAt, pathTable, placeOf, reached } from './journey';
+import { GW150914_TRIP, type Trip } from './trips';
 import { displacement, type Triple, type Waveform, waveAxes } from './strain';
 import { EXAGGERATION } from './wavePlay';
 
@@ -49,8 +43,8 @@ export function toScene([x, y, z]: Triple): Vector3 {
   return new Vector3(x, z, -y);
 }
 
-/** The colours the plot gives the two: Livingston blue, Hanford red. */
-const MARKS = { L1: 0x5ab0ff, H1: 0xff6b5a } as const;
+/** The colours the plot gives the two, Livingston blue and Hanford red; and Virgo green. */
+const MARKS = { L1: 0x5ab0ff, H1: 0xff6b5a, V1: 0x7ddc6a } as const;
 /** The stretch of path the wave is read along, Earth radii, and how finely. */
 export const PATH = { from: -3, to: 3, bins: 192 } as const;
 /** The sheet of space drawn about Earth: how far out it reaches, Earth radii, its lines each
@@ -182,14 +176,14 @@ function sheetOf(
   return sheet;
 }
 
-export function createJourneyScene(): JourneyScene {
+export function createJourneyScene(trip: Trip = GW150914_TRIP): JourneyScene {
   const owned: { dispose(): void }[] = [];
   const own = <T extends { dispose(): void }>(item: T): T => {
     owned.push(item);
     return item;
   };
   const group = new Group();
-  const k = arrivalDirection();
+  const k = directionOf(trip);
   const heading = toScene(k).normalize();
   const shared = pathUniforms(k);
   own(shared.texture);
@@ -206,15 +200,17 @@ export function createJourneyScene(): JourneyScene {
   const earth = new Mesh(own(new SphereGeometry(1, 96, 64)), earthMaterial);
   group.add(earth);
 
-  const detectors = toScene(LIVINGSTON).add(toScene(HANFORD)).normalize();
+  const detectors = trip.heard
+    .reduce((sum, detector) => sum.add(toScene(placeOf(detector))), new Vector3())
+    .normalize();
   group.add(sheetOf(heading, detectors, shared.uniforms, own));
 
-  const marks = (['L1', 'H1'] as const).map((detector) => {
+  const marks = trip.heard.map((detector) => {
     const material = own(
       new MeshBasicMaterial({ color: new Color(MARKS[detector]).multiplyScalar(0.35) }),
     );
     const mark = new Mesh(own(new SphereGeometry(0.035, 16, 10)), material);
-    const place = detector === 'L1' ? LIVINGSTON : HANFORD;
+    const place = placeOf(detector);
     group.add(mark);
     return { detector, material, place, mark };
   });

@@ -105,7 +105,6 @@ test('GW170817 opens as two neutron stars, its own story, card and scale, with n
     await expect(stage.getByRole('heading')).toHaveText('GW170817: two neutron stars merge');
     await expect(stage).toContainText('two neutron stars');
     await expect(stage.getByTestId('wave-scale')).toContainText('under a thousandth');
-    await expect(stage.getByRole('button', { name: 'The journey' })).toBeHidden();
     await expect(stage.getByTestId('wave-moment')).toContainText(/Hz|merger|at rest/);
     expect(data).toEqual([]);
   });
@@ -116,6 +115,17 @@ test('GW170817 opens as two neutron stars, its own story, card and scale, with n
     await expect(card).toContainText('GRB 170817A');
     await expect(card).toContainText('AT 2017gfo');
     await card.getByRole('button', { name: 'Close' }).click();
+  });
+  await test.step('When they step to the journey, Then Virgo hears it first, then Livingston and Hanford', async () => {
+    await stage.getByRole('button', { name: 'The journey' }).click();
+    await expect(view).toHaveAttribute('data-chapter', 'journey');
+    await expect(stage.getByTestId('wave-moment')).toContainText('million years to go');
+    await expect(stage.getByTestId('wave-moment')).toContainText('Virgo hears it first', {
+      timeout: 30_000,
+    });
+    await expect(stage.getByTestId('wave-moment')).toContainText('Hanford hears it', {
+      timeout: 30_000,
+    });
   });
   await test.step('When they go to the kilonova, Then its glow is drawn, its clock runs in days, and its gold and platinum card keeps detected apart from inferred', async () => {
     await stage.getByRole('button', { name: 'The kilonova' }).click();

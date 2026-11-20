@@ -114,6 +114,7 @@ function viewOptions(
   return {
     wave: loaded.wave,
     bodies: start.event.bodies,
+    journey: start.event.journey,
     chapter: start.chapter,
     stillness: start.stillness,
     earthMap: `${start.base}${EARTH_MAP}`,
