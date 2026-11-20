@@ -1,9 +1,8 @@
 import { animationLoop } from '../../util/animationLoop';
 /**
- * The years as a part of the page (#446): the Holocene's track, from as far back as ΔT reaches
- * to the present, with its ages under the slider; playing the years by, and the travel view
- * that comes with it; and carbon-14 in the air under the slider, with the eruptions the ice
- * cores record, loaded once the layer is on.
+ * The years as a part of the page (#446): the Holocene's track, back as far as ΔT reaches, its
+ * ages under the slider; playing them by, with the travel view; and carbon-14 in the air under
+ * the slider, with the eruptions the ice cores record, loaded once the layer is on.
  */
 
 import type { Globe } from '../../globe/globe';
@@ -60,9 +59,9 @@ export interface YearsPart {
 
 export function mountYears(context: YearsContext): YearsPart {
   const { base, fetchJson, store } = context;
-  // The Holocene track, as far back as ΔT reaches; slow by default (on El Niño's years a year a
-  // second, month by month, #915); where Play went back to, said while it plays (#982).
-  let historySpeed: SpeedLevel = 'slow';
+  // The Holocene track, as far back as ΔT reaches; the speed picked, until then the years' own
+  // (#984); where Play went back to, said while it plays (#982).
+  let historySpeed: SpeedLevel | null = null;
   let historyPlaying = false;
   let playedFrom: { first: number; last: number; present: number } | null = null;
   const historyFrames = animationLoop(tickHistory, 0.08);
@@ -205,7 +204,8 @@ export function mountYears(context: YearsContext): YearsPart {
   }
 
   function speedsShown(state: ViewState): { speeds: PlaySpeed[]; speed: SpeedLevel } {
-    return { speeds: window.speeds(state, historySpeed).speeds, speed: historySpeed };
+    const { speeds, speed } = window.speeds(state, historySpeed);
+    return { speeds, speed: speed.level };
   }
 
   function setYear(year: number): void {
