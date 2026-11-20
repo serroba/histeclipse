@@ -81,3 +81,65 @@ export const GW170817_CARD: MarkerCardContent = {
   ],
   note: 'The ranges are 90% credible intervals. The masses are as in the source frame; with fast spins allowed they range more widely, 0.86 to 2.26 Suns. The radius is from Abbott et al. 2018 (PRL 121, 161101).',
 };
+
+/**
+ * The heavy elements in GW170817's kilonova (#992): what was detected, what was inferred, and
+ * what is expected, kept apart, each with its paper; and the dispute over where most gold is
+ * made, both readings given. Masses in Earths are worked out from the papers' Suns (1 Sun is
+ * 332,946 Earths).
+ */
+export const HEAVY_ELEMENTS_CARD: MarkerCardContent = {
+  title: 'Gold and platinum: what the kilonova made',
+  facts: [
+    [
+      'Flung out',
+      'About 0.065 Suns’ mass, some 20,000 Earths: 0.025 Suns fast (0.3c) and light in its elements, 0.04 Suns slower (0.1c) and heavy. Inferred from its light, and approximate (Kasen et al. 2017)',
+    ],
+    [
+      'Detected',
+      'Strontium, the only element named directly in its spectrum: lines near 350 and 810 nm, 1.5 days after, from 1 to 5 × 10⁻⁵ Suns of it in the glowing outer layers, about 3 to 17 Earths (Watson et al. 2019)',
+    ],
+    [
+      'Inferred',
+      'Lanthanides, the heavy elements whose opacity made its slow, red, weeks-long glow: about 0.04 Suns of them and what is made with them (Kasen et al. 2017)',
+    ],
+    [
+      'Inferred: gold',
+      'About 3 to 13 Earths’ mass of gold, and 1 to 5 of europium, if what was flung out holds heavy elements in the Sun’s proportions (Côté et al. 2018)',
+    ],
+    [
+      'Not seen',
+      'No line of gold or platinum stands out in its spectra: at most, tentatively, a few thousandths of a Sun of platinum and a hundredth of gold (Gillanders et al. 2021)',
+    ],
+    [
+      'Expected',
+      'The rapid neutron capture (r-process) makes heavy elements in three peaks, where nuclei hold a closed shell of 50, 82 or 126 neutrons: near strontium (mass about 80 to 90), near tellurium and xenon (about 130), and near platinum and gold (about 195) (Cowan et al. 2021)',
+    ],
+    [
+      'Seen since',
+      'Tellurium, of the second peak, in the kilonova of GRB 230307A, by JWST in 2023 (Levan et al. 2024)',
+    ],
+  ],
+  links: [
+    { label: 'Kasen et al. 2017 (Nature)', href: 'https://doi.org/10.1038/nature24453' },
+    {
+      label: 'Watson et al. 2019: strontium (Nature)',
+      href: 'https://doi.org/10.1038/s41586-019-1676-3',
+    },
+    { label: 'Côté et al. 2018: the gold (ApJ)', href: 'https://doi.org/10.3847/1538-4357/aaad67' },
+    { label: 'Gillanders et al. 2021 (MNRAS)', href: 'https://doi.org/10.1093/mnras/stab1861' },
+    {
+      label: 'Cowan et al. 2021 (Rev. Mod. Phys.)',
+      href: 'https://doi.org/10.1103/RevModPhys.93.015002',
+    },
+    {
+      label: 'Levan et al. 2024: tellurium (Nature)',
+      href: 'https://doi.org/10.1038/s41586-023-06759-1',
+    },
+    {
+      label: 'Siegel et al. 2019: collapsars (Nature)',
+      href: 'https://doi.org/10.1038/s41586-019-1136-0',
+    },
+  ],
+  note: 'Where most of the gold comes from is disputed. Kasen et al. (2017): if mergers like this one typically fling out 0.01 Suns or more, they could account for all the gold and platinum about us. Siegel et al. (2019): collapsing, fast-spinning massive stars (collapsars) may make more than 80% of these elements, rarer but each making more. Both are open.',
+};

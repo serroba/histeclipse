@@ -171,6 +171,10 @@ function stageFor(
           },
         });
       },
+      more: () => {
+        const { more } = session.event();
+        if (more !== undefined) context.showCard(more.card);
+      },
       chapter: session.goTo,
       step: session.step,
       hear: () => {

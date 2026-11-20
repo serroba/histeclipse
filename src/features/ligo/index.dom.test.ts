@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createStore } from '../../state/store';
 import { defaultViewState, type ViewState } from '../../state/viewState';
-import { GW150914_CARD, GW170817_CARD } from './eventCard';
+import { GW150914_CARD, GW170817_CARD, HEAVY_ELEMENTS_CARD } from './eventCard';
 import type { WaveView, WaveViewOptions } from './waveView';
 import { mountWave, type WaveContext } from '.';
 
@@ -303,7 +303,7 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     const shown = [...stage().querySelectorAll<HTMLButtonElement>('.wave-chapter')]
       .filter((button) => button.hidden === false)
       .map((button) => button.textContent);
-    expect(shown).toEqual(['The source', 'Space', 'At Livingston']);
+    expect(shown).toEqual(['The source', 'Space', 'At Livingston', 'The kilonova']);
     click('Next');
     expect(store.get().waveChapter).toBe('space');
     click('At Livingston');
@@ -326,5 +326,30 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     expect(views[1]?.options.chapter).toBe('detector');
     expect(stage().querySelector<HTMLElement>('.wave-plot')?.hidden).toBe(false);
     expect(stage().querySelector('.wave-title')?.textContent).toContain('GW150914');
+  });
+
+  it('Given GW170817’s kilonova (#992), Then its gold and platinum card is offered there, and only there', async () => {
+    const { views, store, showCard } = mount();
+    const more = (): HTMLButtonElement | undefined =>
+      [...stage().querySelectorAll('button')].find(
+        (made) => made.textContent === 'Gold and platinum',
+      );
+    store.set((state) => ({ ...state, wave: 'gw170817', waveChapter: 'kilonova' }));
+    await settled();
+    expect(views[0]?.options.chapter).toBe('kilonova');
+    expect(stage().textContent).toContain('AT 2017gfo');
+    expect(more()?.hidden).toBe(false);
+    expect(stage().querySelector<HTMLElement>('[data-testid="wave-scale"]')?.hidden).toBe(true);
+    click('Gold and platinum');
+    expect(showCard).toHaveBeenLastCalledWith(HEAVY_ELEMENTS_CARD);
+    click('The source');
+    expect(more()?.hidden).toBe(true);
+    store.set((state) => ({ ...state, wave: 'gw150914', waveChapter: 'source' }));
+    await settled();
+    expect(more()).toBeUndefined();
+    // GW150914 has no second card: its button, hidden, does nothing.
+    const calls = showCard.mock.calls.length;
+    [...stage().querySelectorAll('button')].find((made) => made.textContent === '')?.click();
+    expect(showCard).toHaveBeenCalledTimes(calls);
   });
 });

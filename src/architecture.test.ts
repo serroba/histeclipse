@@ -73,9 +73,7 @@ function importsOf(path: string, text: string): string[] {
 const PIECES = ['ui', 'globe', 'story', 'sky', 'tablets'];
 
 /** Pieces one feature alone uses that stay outside it, and why (#487). Never add one lightly. */
-const SHARED_ON_PURPOSE: Readonly<Record<string, string>> = {
-  './story/seeded': "the story's own tests use it too",
-};
+const SHARED_ON_PURPOSE: Readonly<Record<string, string>> = {};
 
 function reaches(graph: Map<string, Set<string>>, from: string, to: string): boolean {
   const seen = new Set<string>();

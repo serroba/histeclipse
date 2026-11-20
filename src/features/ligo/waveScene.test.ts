@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { WAVE_CHAPTERS } from '../../state/slices/display';
 import { WAVE_EVENTS } from './events';
 import { JOURNEY_MS } from './journey';
+import { KILONOVA_MS, kilonovaMs } from './kilonova';
 import { chirp, GW150914_STAND_IN } from './strain';
 import { mergerMs } from './wavePlay';
 import { aimsFor, createWaveScene } from './waveScene';
@@ -15,7 +16,7 @@ describe('what the wave view draws, chapter by chapter (#831, #833)', () => {
     const drawn = createWaveScene(WAVE_EVENTS.gw150914.bodies);
     const visible = (): boolean[] =>
       drawn.scene.children.filter((child) => child.type === 'Group').map((group) => group.visible);
-    expect(visible()).toEqual([true, false, false, false]);
+    expect(visible()).toEqual([true, false, false, false, false]);
     for (const [index, chapter] of WAVE_CHAPTERS.entries()) {
       drawn.show(chapter);
       expect(visible()).toEqual(WAVE_CHAPTERS.map((_, other) => other === index));
@@ -23,6 +24,18 @@ describe('what the wave view draws, chapter by chapter (#831, #833)', () => {
     }
     drawn.scalePoints(2);
     drawn.dressEarth(new Texture());
+    drawn.dispose();
+  });
+
+  it('keeps the kilonova’s own clock in days, held still a day and a half after (#992)', () => {
+    const drawn = createWaveScene(WAVE_EVENTS.gw170817.bodies);
+    drawn.show('kilonova');
+    expect(drawn.lengthMs(wave)).toBe(KILONOVA_MS.glow + KILONOVA_MS.rest);
+    expect(drawn.stillMs(wave)).toBeCloseTo(kilonovaMs(1.5), 9);
+    expect(drawn.set(wave, drawn.stillMs(wave), 4.4)).toEqual({
+      text: expect.stringContaining('Day 1.5') as string,
+      t: null,
+    });
     drawn.dispose();
   });
 

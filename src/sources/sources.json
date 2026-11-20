@@ -367,6 +367,20 @@
     "cite": "Cornell University (operator of the National Astronomy and Ionosphere Center until 2011), Cornell Chronicle: the Arecibo telescope’s 305 m dish, 51 m deep, its Gregorian reflectors 137 m above it in a dome 26 m across",
     "url": "https://news.cornell.edu/node/286125"
   },
+  "cote2018": {
+    "name": "Côté et al. 2018, the origin of r-process elements in the Milky Way",
+    "kind": "paper",
+    "cite": "Côté, B. et al. (2018), The Origin of r-process Elements in the Milky Way, The Astrophysical Journal 855, 99: GW170817's merger rate fits what galactic chemical evolution needs for mergers to make the Milky Way's europium, if their ejecta follow the Sun's r-process pattern; on the same assumption the event made about 1–5 Earth masses of europium and 3–13 of gold. Only figures are quoted",
+    "url": "https://doi.org/10.3847/1538-4357/aaad67",
+    "licence": "AAS/IOP (all rights reserved); facts quoted"
+  },
+  "cowan2021": {
+    "name": "Cowan et al. 2021, the rapid neutron-capture process",
+    "kind": "paper",
+    "cite": "Cowan, J. J., Sneden, C., Lawler, J. E., Aprahamian, A., Wiescher, M., Langanke, K., Martínez-Pinedo, G. & Thielemann, F.-K. (2021), Origin of the heaviest elements: The rapid neutron-capture process, Reviews of Modern Physics 93, 015002: a review of the r-process, the source of about half the elements heavier than iron; its abundance peaks at mass numbers near 80, 130 and 195 come from nuclei with closed shells of 50, 82 and 126 neutrons. Only facts are quoted",
+    "url": "https://doi.org/10.1103/RevModPhys.93.015002",
+    "licence": "APS default licence (all rights reserved); facts quoted"
+  },
   "cpcOni": {
     "name": "Oceanic Niño Index (NOAA CPC)",
     "kind": "dataset",
@@ -639,6 +653,13 @@
     "kind": "paper",
     "cite": "Gidden, M. J., Riahi, K., Smith, S. J., Fujimori, S., et al. (2019), Global emissions pathways under different socioeconomic scenarios for use in CMIP6: a dataset of harmonized emissions trajectories through the end of the century, Geoscientific Model Development 12, 1443–1475. Abstract: the SSP scenarios’ emissions, harmonised with the historical record and downscaled, as the inputs of the CMIP6 projections",
     "url": "https://doi.org/10.5194/gmd-12-1443-2019",
+    "licence": "CC BY 4.0"
+  },
+  "gillanders2021": {
+    "name": "Gillanders et al. 2021, platinum and gold in AT 2017gfo",
+    "kind": "paper",
+    "cite": "Gillanders, J. H., McCann, M., Sim, S. A., Smartt, S. J. & Ballance, C. P. (2021), Constraints on the presence of platinum and gold in the spectra of the kilonova AT2017gfo, Monthly Notices of the Royal Astronomical Society 506, 3560–3577: with new atomic data for neutral and ionised platinum and gold, no signature of either is prominent in the kilonova's spectra; tentative upper limits of a few 10⁻³ Suns of platinum and 10⁻² of gold",
+    "url": "https://doi.org/10.1093/mnras/stab1861",
     "licence": "CC BY 4.0"
   },
   "gistemp4": {
@@ -1008,6 +1029,13 @@
     "cite": "Judd, Tierney, Lunt, Montañez, Huber, Wing & Valdes (2024), A 485-million-year history of Earth's surface temperature, Science 385, eadk3705; GMST percentiles by stage from github.com/EJJudd/PhanDA (5_Outputs, revision 49ff875)",
     "url": "https://doi.org/10.1126/science.adk3705"
   },
+  "kasen2017": {
+    "name": "Kasen et al. 2017, the heavy elements of GW170817",
+    "kind": "paper",
+    "cite": "Kasen, D., Metzger, B., Barnes, J., Quataert, E. & Ramirez-Ruiz, E. (2017), Origin of the heavy elements in binary neutron-star mergers from a gravitational-wave event, Nature 551, 80–84: models of the kilonova AT 2017gfo read its light as two components, a 'blue' one of about 0.025 Suns at about 0.3c, light r-process elements (mass below about 140), and a 'red' one of about 0.04 Suns at about 0.1c, heavy and lanthanide-rich, most likely a wind from the disk about a remnant that soon became a black hole; if mergers typically fling out 0.01 Suns or more, they could account for all the gold, platinum and many other heavy elements about us. The masses are approximate. Only figures are quoted",
+    "url": "https://doi.org/10.1038/nature24453",
+    "licence": "Springer Nature (all rights reserved); facts quoted"
+  },
   "kaufman2020": {
     "name": "Kaufman et al. 2020 (Temperature 12k)",
     "kind": "dataset",
@@ -1140,6 +1168,13 @@
     "cite": "Lemen, J. R., Title, A. M., Akin, D. J., Boerner, P. F., et al. (2012). The Atmospheric Imaging Assembly (AIA) on the Solar Dynamics Observatory (SDO). Solar Physics 275, 17–40",
     "url": "https://doi.org/10.1007/s11207-011-9776-8"
   },
+  "levan2024": {
+    "name": "Levan et al. 2024, tellurium seen by JWST",
+    "kind": "paper",
+    "cite": "Levan, A. J. et al. (2024), Heavy-element production in a compact object merger observed by JWST, Nature 626, 737–741: JWST spectra of the kilonova of GRB 230307A, 29 and 61 days after the burst, show an emission line at 2.15 microns read as tellurium (mass number 130), and a very red source lit by lanthanides",
+    "url": "https://doi.org/10.1038/s41586-023-06759-1",
+    "licence": "CC BY 4.0"
+  },
   "li2008": {
     "name": "Li et al. 2008",
     "kind": "paper",
@@ -1245,6 +1280,13 @@
     "cite": "NASA/JHU APL/Carnegie Institution of Washington, “A Global View from Orbit”, MESSENGER mosaic of Mercury, NASA Photojournal PIA15063 (2011)",
     "url": "https://science.nasa.gov/photojournal/a-global-view-from-orbit/",
     "licence": "NASA, public domain"
+  },
+  "metzger2020": {
+    "name": "Metzger 2020, Kilonovae (Living Reviews)",
+    "kind": "paper",
+    "cite": "Metzger, B. D. (2020), Kilonovae, Living Reviews in Relativity 23, 1: a review of kilonovae, the light of radioactive r-process nuclei in neutron-star merger ejecta; a light curve peaks near t_peak ≈ 1.6 d (M/0.01 M☉)^½ (v/0.1c)^−½ (κ/1 cm² g⁻¹)^½, at a luminosity near M ė(t_peak), the radioactive heating falling as ė ≈ 2 × 10¹⁰ ε (t/day)^−1.3 erg s⁻¹ g⁻¹; opacities run from about 0.5 cm² g⁻¹ without lanthanides to 10 and more with them",
+    "url": "https://doi.org/10.1007/s41114-019-0024-0",
+    "licence": "CC BY 4.0"
   },
   "miller": {
     "name": "Miller et al. 2020",
@@ -1870,6 +1912,13 @@
     "url": "https://doi.org/10.1017/RDC.2020.59",
     "licence": "CC BY 4.0"
   },
+  "siegel2019": {
+    "name": "Siegel et al. 2019, collapsars as a source of r-process elements",
+    "kind": "paper",
+    "cite": "Siegel, D. M., Barnes, J. & Metzger, B. D. (2019), Collapsars as a major source of r-process elements, Nature 569, 241–244: simulations show the accretion disks of collapsars (the collapse of rapidly rotating massive stars) yield enough r-process elements that, rarer than neutron-star mergers but making more each, they may supply more than 80 per cent of the r-process content of the Universe. Only figures are quoted",
+    "url": "https://doi.org/10.1038/s41586-019-1136-0",
+    "licence": "Springer Nature (all rights reserved); facts quoted"
+  },
   "sigl2015": {
     "name": "Sigl et al. 2015",
     "kind": "paper",
@@ -2063,6 +2112,13 @@
     "kind": "paper",
     "cite": "Waite, J. H. et al. (2017). Cassini finds molecular hydrogen in the Enceladus plume: evidence for hydrothermal processes. Science 356, 155–159",
     "url": "https://doi.org/10.1126/science.aai8703"
+  },
+  "watson2019Strontium": {
+    "name": "Watson et al. 2019, strontium in AT 2017gfo",
+    "kind": "paper",
+    "cite": "Watson, D. et al. (2019), Identification of strontium in the merger of two neutron stars, Nature 574, 497–500: in VLT X-shooter spectra of the kilonova from 1.5 days after the merger, absorption near 350 and 810 nm is the Sr II lines, blue-shifted and broadened by about 0.2c; 1 to 5 × 10⁻⁵ Suns of strontium in the line-forming layers reproduce it. The first element newly made by neutron capture named in such a site. Only figures are quoted",
+    "url": "https://doi.org/10.1038/s41586-019-1676-3",
+    "licence": "Springer Nature (all rights reserved); facts quoted"
   },
   "wells1963": {
     "name": "Wells 1963",

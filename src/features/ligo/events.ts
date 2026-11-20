@@ -14,7 +14,7 @@
 import type { Wave, WaveChapter } from '../../state/slices/display';
 import type { WhyId } from '../../sources/registry';
 import type { MarkerCardContent } from '../../ui/markerCard';
-import { GW150914_CARD, GW170817_CARD } from './eventCard';
+import { GW150914_CARD, GW170817_CARD, HEAVY_ELEMENTS_CARD } from './eventCard';
 import { GW170817_MODEL, type ChirpOptions } from './strain';
 
 /** What made the wave: what is drawn orbiting in the source chapter. */
@@ -59,6 +59,12 @@ export interface WaveEvent {
   };
   readonly bodies: Bodies;
   readonly origin: WaveOrigin;
+  /** A second card, offered in one chapter: GW170817's heavy elements in its kilonova (#992). */
+  readonly more?: {
+    readonly chapter: WaveChapter;
+    readonly label: string;
+    readonly card: MarkerCardContent;
+  };
 }
 
 /** G·M☉, m³/s². */
@@ -120,7 +126,7 @@ export const WAVE_EVENTS: Readonly<Record<Wave, WaveEvent>> = {
     name: 'GW170817',
     card: GW170817_CARD,
     why: 'neutronStarMerger',
-    chapters: ['source', 'space', 'detector'],
+    chapters: ['source', 'space', 'detector', 'kilonova'],
     about: {
       source:
         'Where it came from: two neutron stars, about 1.5 and 1.3 times the Sun’s mass, each only some 24 km across: the collapsed cores of massive stars, as dense as an atom’s nucleus. Shown here are their last fifth of a second, of some 100 s the detectors heard: they go round each other hundreds of times a second, ever faster and closer, each pulled out of round by the other, until they touch and merge. The sheet is the plane of their orbit; the wave they send out spirals through it. Heights show the strain the wave carries, not a dent in space. The stars are drawn at their true size against their distance apart, not to the sheet’s scale, and near them the wave cannot be worked out this way: the sheet fades out there.',
@@ -128,6 +134,8 @@ export const WAVE_EVENTS: Readonly<Record<Wave, WaveEvent>> = {
         'A ring of free masses, as the gravitational wave from two neutron stars merging 130 million light-years away comes through it toward you: space stretches one way and squeezes the other, faster and harder as the stars spiral in, then stops, for what came after the merger was not heard. It is drawn at the same stretch as GW150914, and sways about half as much: ten times nearer, but from stars some twenty-five times lighter.',
       detector:
         'LIGO Livingston, Louisiana (30.56° N, 90.77° W), seen from above, north at the top: two arms 4 km long at right angles. The wave stretched one arm as it shrank the other. Quieter than GW150914, it stayed in the detectors’ band far longer, about 100 s and 3,000 cycles from 24 Hz, so it was heard more clearly: Livingston’s signal-to-noise ratio was 26.4, Hanford’s 18.8, and Virgo’s, in Italy, 2.0. At Livingston a brief burst of noise struck 1.1 s before the merger; it was modelled and taken out. The arms here are moved by a model of the wave, not by the measured strain.',
+      kilonova:
+        'The kilonova, AT 2017gfo: what the merger flung out, glowing as the newly made radioactive nuclei in it decay. As its light is read (Kasen et al. 2017): about 0.025 Suns thrown out toward the poles (blue) at a third of light’s speed, lighter elements whose glow peaked within a day and faded within two; and about 0.04 Suns, slower, about the orbit’s plane (red), rich in lanthanides, heavy elements so opaque that their light came out late, red and infrared, over weeks. Gold and platinum would be made with them, but were not seen; strontium is the one element named in its spectrum. Each point is placed by its speed, so the cloud keeps its shape and is drawn at one size: the clock says how far out it truly is. Each glow is a simple model, drawn against its own peak; the clock runs from an hour to four weeks, faster as it goes.',
     },
     scaleNote:
       'Stretched 4 × 10²⁰ times and slowed 100 times, to be seen, as GW150914. Over LIGO’s 4 km arms the real change, at its largest, was about 2 × 10⁻¹⁸ m, under a thousandth of a proton’s width.',
@@ -148,6 +156,7 @@ export const WAVE_EVENTS: Readonly<Record<Wave, WaveEvent>> = {
     },
     // The inspiral ended at 12:41:04.4 UTC (Abbott et al. 2017).
     origin: { kind: 'model', chirp: GW170817_MODEL, atLivingston: 4.4 },
+    more: { chapter: 'kilonova', label: 'Gold and platinum', card: HEAVY_ELEMENTS_CARD },
   },
 };
 
