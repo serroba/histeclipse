@@ -53,6 +53,30 @@ test('the travel view says which layers it turned on, and one the reader turns o
   expect(problems).toEqual([]);
 });
 
+test('playing from today goes back to the Holocene’s start, and says so (#982) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const bar = page.getByRole('group', { name: track });
+  const note = bar.getByTestId('history-changes');
+  await test.step('Given today, the end of the years shown', async () => {
+    await page.goto(`./?t=${new Date().toISOString().slice(0, 16)}Z`);
+    await globeRendered(page);
+  });
+  await test.step('When they travel, Then it goes back thousands of years, and says from where to where', async () => {
+    await bar.getByRole('button', { name: 'Travel through the years' }).click();
+    await expect(page).toHaveURL(/[?&]t=-9\d{3}-/);
+    await expect(note).toHaveText(/^From \d{4} BCE to today$/);
+  });
+  await test.step('When they stop and play on from there, Then it no longer says it went back', async () => {
+    await bar.getByRole('button', { name: 'Stop travelling' }).click();
+    await bar.getByRole('button', { name: 'Travel through the years' }).click();
+    await expect(note).not.toHaveText(/^From \d/);
+    await bar.getByRole('button', { name: 'Stop travelling' }).click();
+  });
+  expect(problems).toEqual([]);
+});
+
 test('playing history moves through the years and names the states that come and go @acceptance', async ({
   page,
 }) => {

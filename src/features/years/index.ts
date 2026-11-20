@@ -16,7 +16,7 @@ import { createRadiocarbonStrip } from './radiocarbonStrip';
 import { type Layer, type ViewState } from '../../state/viewState';
 import { astronomicalYear, formatYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
-import { blankText, createHistoryTrack, STATES_HINT, STATES_WAIT } from '../../ui/historyTrack';
+import { blankText, createHistoryTrack, trackNote } from '../../ui/historyTrack';
 import { yearPlayhead } from '../../time/yearPlay';
 import type { PlaySpeed, SpeedLevel } from '../../time/playSpeeds';
 import type { Moment } from '../../time/moment';
@@ -60,10 +60,11 @@ export interface YearsPart {
 
 export function mountYears(context: YearsContext): YearsPart {
   const { base, fetchJson, store } = context;
-  // The Holocene track: the years played by, from as far back as ΔT reaches to the present.
-  // Slow by default: on El Niño's years a year a second, month by month (#915).
+  // The Holocene track, as far back as ΔT reaches; slow by default (on El Niño's years a year a
+  // second, month by month, #915); where Play went back to, said while it plays (#982).
   let historySpeed: SpeedLevel = 'slow';
   let historyPlaying = false;
+  let playedFrom: { first: number; last: number; present: number } | null = null;
   const historyFrames = animationLoop(tickHistory, 0.08);
   let historyHead = yearPlayhead();
   // The Holocene's ages under its slider; a tap goes to an age's start.
@@ -217,6 +218,7 @@ export function mountYears(context: YearsContext): YearsPart {
 
   function startHistory(): void {
     const from = window.start(store.get());
+    playedFrom = from && { ...window.shown(store.get()), present: PRESENT_YEAR };
     if (from !== null) setTime(from);
     historyPlaying = true;
     setTravel(true);
@@ -260,15 +262,13 @@ export function mountYears(context: YearsContext): YearsPart {
       travelling,
       ...speedsShown(state),
       ...window.choices(state),
-      // What changed whenever states are on; while travelling, what to expect until then, but
-      // not with a subject of its own on (El Niño), which is not about borders.
-      changes: state.layers.has('empires')
-        ? context.statesSaid() === '' && travelling
-          ? STATES_WAIT
-          : context.statesSaid()
-        : travelling && travelBrings(state.layers).length > 0
-          ? STATES_HINT
-          : '',
+      changes: trackNote({
+        empires: state.layers.has('empires'),
+        said: context.statesSaid(),
+        travelling,
+        brings: travelBrings(state.layers).length > 0,
+        from: historyPlaying ? playedFrom : null,
+      }),
       blank: state.layers.has('empires') ? blankText(state.layers.has('ways')) : null,
       earth: context.holoceneText(),
     });
