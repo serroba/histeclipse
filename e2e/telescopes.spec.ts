@@ -424,3 +424,39 @@ test('a link to a telescope on the ground opens at its site, and Back to Earth l
   });
   expect(problems).toEqual([]);
 });
+
+test('following Webb with Earth in front of it, its name keeps clear of Earth’s and of the zoom rail (#997) @mobile', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'a phone, where the rail takes the right edge');
+  test.slow();
+  const problems = collectProblems(page);
+  const webb = page.locator('.space-name', { hasText: 'James Webb Space Telescope' });
+  await test.step('Given Webb at L2, seen from the Sun’s side, behind Earth', async () => {
+    await page.goto(
+      './?t=2022-07-30T21:54Z&cal=gregorian&cam=18.4000,-150.0000,705.00&layers=spacecraft&mission=d01093',
+    );
+    await expect(webb).toBeVisible();
+  });
+  await test.step('Then no two names overlap, and Webb’s stops short of the rail', async () => {
+    const boxes = await page.evaluate(() =>
+      [...document.querySelectorAll('.space-name:not([hidden]), .space-marker:not([hidden]) span')]
+        .map((each) => each.getBoundingClientRect())
+        .map(({ left, right, top, bottom }) => ({ left, right, top, bottom })),
+    );
+    for (const [i, a] of boxes.entries()) {
+      for (const b of boxes.slice(i + 1)) {
+        const apart =
+          a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top;
+        expect(apart).toBe(true);
+      }
+    }
+    const rail = await page
+      .getByRole('group', { name: 'Zoom' })
+      .getByRole('button', { name: 'Zoom out' })
+      .boundingBox();
+    const name = await webb.boundingBox();
+    expect((name?.x ?? 0) + (name?.width ?? 0)).toBeLessThanOrEqual(rail?.x ?? 0);
+  });
+  expect(problems).toEqual([]);
+});
