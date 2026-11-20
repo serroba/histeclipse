@@ -18,6 +18,41 @@ async function openTrack(page: Page): Promise<void> {
   await expect(bar.getByRole('button', { name: 'Leave the travel view' })).toBeVisible();
 }
 
+test('the travel view says which layers it turned on, and one the reader turns off stays off (#983) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const bar = page.getByRole('group', { name: track });
+  const notice = page.getByRole('status').getByText(/^Travel view turned on /);
+  const panel = page.getByRole('dialog', { name: 'Layers' });
+  await test.step('Given 2000 BCE with no layers', async () => {
+    await page.goto('./?t=-1999-06-01T12:00&layers=');
+    await globeRendered(page);
+  });
+  await test.step('When they travel, Then states and ways of life come on, and it says so', async () => {
+    await bar.getByRole('button', { name: 'Travel through the years' }).click();
+    await bar.getByRole('button', { name: 'Stop travelling' }).click();
+    await expect(page).toHaveURL(/layers=empires,ways/);
+    await expect(notice).toHaveText(
+      'Travel view turned on States and empires and Ways of life. Turn them off in Layers and they stay off.',
+    );
+  });
+  await test.step('When they turn Ways of life off, leave the travel view, and travel again', async () => {
+    await openLayers(page);
+    await panel.getByRole('checkbox', { name: 'Ways of life' }).uncheck();
+    await page.keyboard.press('Escape');
+    await bar.getByRole('button', { name: 'Leave the travel view' }).click();
+    await expect(page).toHaveURL(/layers=(&|$)/);
+    await bar.getByRole('button', { name: 'Travel through the years' }).click();
+    await bar.getByRole('button', { name: 'Stop travelling' }).click();
+  });
+  await test.step('Then only States and empires come back, and it is not said again', async () => {
+    await expect(page).toHaveURL(/layers=empires(&|$)/);
+    await expect(page.getByRole('status').getByText(/^Travel view turned on /)).toHaveCount(1);
+  });
+  expect(problems).toEqual([]);
+});
+
 test('playing from today goes back to the Holocene’s start, and says so (#982) @mobile', async ({
   page,
 }) => {
