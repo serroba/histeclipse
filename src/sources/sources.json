@@ -13,6 +13,13 @@
     "url": "https://doi.org/10.1103/PhysRevLett.116.061102",
     "licence": "CC BY 3.0"
   },
+  "abbott2017Grb": {
+    "name": "Abbott et al. 2017, GW170817 and GRB 170817A",
+    "kind": "paper",
+    "cite": "Abbott, B. P. et al. (LIGO Scientific Collaboration, Virgo Collaboration, Fermi Gamma-ray Burst Monitor and INTEGRAL) (2017), Gravitational Waves and Gamma-Rays from a Binary Neutron Star Merger: GW170817 and GRB 170817A, The Astrophysical Journal Letters 848, L13: the gamma-ray burst arrived (+1.74 ± 0.05) s after the merger, by chance with a probability of 5 × 10⁻⁸; so the speed of gravity differs from light's by between −3 × 10⁻¹⁵ and +7 × 10⁻¹⁶ of it, and binary neutron-star mergers make short gamma-ray bursts",
+    "url": "https://doi.org/10.3847/2041-8213/aa920c",
+    "licence": "CC BY 3.0"
+  },
   "abbott2017Gw170817": {
     "name": "Abbott et al. 2017 (LIGO and Virgo), GW170817",
     "kind": "paper",

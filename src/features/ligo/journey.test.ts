@@ -17,6 +17,8 @@ import {
   reached,
 } from './journey';
 import type { Waveform } from './strain';
+import { GW170817_TRIP } from './trips';
+import { directionFrom, directionOf, journeyParts, placeOf, siderealDegrees } from './journey';
 
 describe('which way GW150914 came (#833)', () => {
   const k = arrivalDirection();
@@ -127,5 +129,57 @@ describe('the wave along its path about Earth (#841)', () => {
     const middle = pairAt(table, 1, 4);
     expect(Math.hypot(middle.plus, middle.cross)).toBeCloseTo(10, 5);
     expect(pairAt(table, 3, 4)).toEqual({ plus: 0, cross: 0 });
+  });
+});
+
+describe('which way GW170817 came, and what was heard when (#993)', () => {
+  const trip = GW170817_TRIP;
+  const k = directionOf(trip);
+  const centre: [number, number, number] = [0, 0, 0];
+  const at = (detector: 'L1' | 'H1' | 'V1'): number => delayBetween(k, centre, placeOf(detector));
+
+  it('reads sidereal time as the almanac does: 280.46° at noon on 1 January 2000', () => {
+    expect(siderealDegrees(new Date('2000-01-01T12:00:00Z'))).toBeCloseTo(280.460_618_37, 6);
+    // A sidereal day is 3 min 56 s shorter than a solar one.
+    const day = siderealDegrees(new Date('2000-01-02T12:00:00Z'));
+    expect(day - 280.460_618_37).toBeCloseTo(0.985_647, 4);
+  });
+
+  it('comes away from the place on Earth the source stood over', () => {
+    const date = new Date('2000-01-01T12:00:00Z');
+    // A source on the equator at the sidereal time's right ascension stands over 0° longitude.
+    const way = directionFrom(280.460_618_37, 0, date);
+    expect(way[0]).toBeCloseTo(-1, 9);
+    expect(Math.hypot(way[1], way[2])).toBeCloseTo(0, 9);
+    expect(directionOf(trip)).toBe(k);
+  });
+
+  it('reaches Virgo first, Livingston 22 ms later and Hanford 3 ms after, as the paper says', () => {
+    expect(trip.heard).toEqual(['V1', 'L1', 'H1']);
+    expect(at('L1') - at('V1')).toBeCloseTo(0.022, 3);
+    expect(at('H1') - at('L1')).toBeCloseTo(0.003, 3);
+    // Livingston 15.5 ms after Earth's middle: when the merger is placed there (`events.ts`).
+    expect(at('L1')).toBeCloseTo(0.0155, 4);
+  });
+
+  it('counts down 130 million years, says who hears it in turn, then the gamma rays', () => {
+    const parts = journeyParts(trip);
+    expect(journeyText(journeyAt(0, 4.4155, trip), trip)).toBe(
+      'Crossing space at the speed of light: 130 million years to go',
+    );
+    const said = new Set<string>();
+    for (let ms = parts.travel; ms < parts.travel + parts.arrive; ms += 5) {
+      said.add(journeyText(journeyAt(ms, 4.4155, trip), trip).replace(/^.* UTC · /, ''));
+    }
+    expect([...said]).toEqual([
+      'reaching Earth',
+      'Virgo hears it first',
+      'Livingston hears it, 21.8 ms after Virgo',
+      'Hanford hears it, 3.3 ms after Livingston',
+    ]);
+    const rest = journeyText(journeyAt(journeyMs(trip) - 1, 4.4155, trip), trip);
+    expect(rest).toMatch(/^12:41:04\.4\d\d UTC · and 1\.7 s behind the wave/);
+    expect(rest).toContain('GRB 170817A');
+    expect(parts.rest).toBeGreaterThan(JOURNEY_MS.rest);
   });
 });

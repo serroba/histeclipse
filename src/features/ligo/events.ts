@@ -16,6 +16,7 @@ import type { WhyId } from '../../sources/registry';
 import type { MarkerCardContent } from '../../ui/markerCard';
 import { GW150914_CARD, GW170817_CARD, HEAVY_ELEMENTS_CARD } from './eventCard';
 import { GW170817_MODEL, type ChirpOptions } from './strain';
+import { GW150914_TRIP, GW170817_TRIP, type Trip } from './trips';
 
 /** What made the wave: what is drawn orbiting in the source chapter. */
 type BodyKind = 'black holes' | 'neutron stars';
@@ -58,6 +59,8 @@ export interface WaveEvent {
     readonly note: string;
   };
   readonly bodies: Bodies;
+  /** Its journey to Earth, for the journey chapter. */
+  readonly journey: Trip;
   readonly origin: WaveOrigin;
   /** A second card, offered in one chapter: GW170817's heavy elements in its kilonova (#992). */
   readonly more?: {
@@ -118,6 +121,7 @@ export const WAVE_EVENTS: Readonly<Record<Wave, WaveEvent>> = {
         final: 62 * BLACK_HOLE_SHARE,
       },
     },
+    journey: GW150914_TRIP,
     origin: { kind: 'measured', file: 'gw150914.json' },
   },
   gw170817: {
@@ -126,10 +130,12 @@ export const WAVE_EVENTS: Readonly<Record<Wave, WaveEvent>> = {
     name: 'GW170817',
     card: GW170817_CARD,
     why: 'neutronStarMerger',
-    chapters: ['source', 'space', 'detector', 'kilonova'],
+    chapters: ['source', 'journey', 'space', 'detector', 'kilonova'],
     about: {
       source:
         'Where it came from: two neutron stars, about 1.5 and 1.3 times the Sun’s mass, each only some 24 km across: the collapsed cores of massive stars, as dense as an atom’s nucleus. Shown here are their last fifth of a second, of some 100 s the detectors heard: they go round each other hundreds of times a second, ever faster and closer, each pulled out of round by the other, until they touch and merge. The sheet is the plane of their orbit; the wave they send out spirals through it. Heights show the strain the wave carries, not a dent in space. The stars are drawn at their true size against their distance apart, not to the sheet’s scale, and near them the wave cannot be worked out this way: the sheet fades out there.',
+      journey:
+        'The wave crossed 130 million light-years at the speed of light, setting out while dinosaurs lived on Earth. Told here in seconds, then 100 times slower as it sweeps over Earth on 17 August 2017, its wavefronts closer together than GW150914’s, its pitch higher. Its host galaxy, NGC 4993, was found, so the way it came is known, from the southern sky, and drawn so. Virgo in Italy (green) heard it first, Livingston (blue) 22 ms later, and Hanford (red) 3 ms after that. And 1.7 s behind it, after 130 million years, came the burst of gamma rays: so gravity and light travel at the same speed, to within a few parts in 10¹⁵. Earth is stretched and squeezed 4 × 10²⁰ times more than it was.',
       space:
         'A ring of free masses, as the gravitational wave from two neutron stars merging 130 million light-years away comes through it toward you: space stretches one way and squeezes the other, faster and harder as the stars spiral in, then stops, for what came after the merger was not heard. It is drawn at the same stretch as GW150914, and sways about half as much: ten times nearer, but from stars some twenty-five times lighter.',
       detector:
@@ -154,8 +160,10 @@ export const WAVE_EVENTS: Readonly<Record<Wave, WaveEvent>> = {
         final: (1.5 * NEUTRON_STAR_KM) / GW170817_APART,
       },
     },
-    // The inspiral ended at 12:41:04.4 UTC (Abbott et al. 2017).
-    origin: { kind: 'model', chirp: GW170817_MODEL, atLivingston: 4.4 },
+    journey: GW170817_TRIP,
+    // The inspiral ended at 12:41:04.4 UTC at Earth's middle (Abbott et al. 2017); from NGC 4993's
+    // way, the wave reached Livingston 15.5 ms after that (`journey.test.ts`).
+    origin: { kind: 'model', chirp: GW170817_MODEL, atLivingston: 4.4155 },
     more: { chapter: 'kilonova', label: 'Gold and platinum', card: HEAVY_ELEMENTS_CARD },
   },
 };

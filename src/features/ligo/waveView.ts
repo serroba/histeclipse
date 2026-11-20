@@ -16,6 +16,7 @@ import {
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import type { Bodies } from './events';
+import type { Trip } from './trips';
 import type { Waveform } from './strain';
 import type { WaveChapter } from '../../state/slices/display';
 import { createWaveScene, type WaveScene } from './waveScene';
@@ -36,6 +37,8 @@ export interface WaveViewOptions {
   readonly wave: Waveform;
   /** What made it: drawn in the source chapter. */
   readonly bodies: Bodies;
+  /** Its journey to Earth: drawn in the journey chapter. */
+  readonly journey: Trip;
   /** Whether the reader asked for less motion: then it settles at the merger and holds. */
   readonly stillness: boolean;
   /** How much of the view's foot the stage covers, px: the ring is framed above it. */
@@ -167,7 +170,7 @@ export function mountWaveView(host: HTMLElement, options: WaveViewOptions): Wave
   const { wave } = options;
   const renderer = (options.renderer ?? webgl)();
   renderer.setClearColor(NIGHT);
-  const drawn = createWaveScene(options.bodies);
+  const drawn = createWaveScene(options.bodies, options.journey);
   const canvas = renderer.domElement;
   canvas.setAttribute('data-testid', 'wave-canvas');
   host.append(canvas);

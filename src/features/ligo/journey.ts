@@ -1,7 +1,8 @@
 /**
- * The wave's journey to Earth (#833, #841): 1.3 billion years crossing space, told in seconds,
- * then its loudest tenth of a second sweeping across Earth, 100 times slower, Livingston first
- * and Hanford 6.9 ms later. So far from its source the wave is a plane wave: flat wavefronts
+ * A wave's journey to Earth (#833, #841, #993), from its trip (`trips.ts`): GW150914's 1.3
+ * billion years crossing space, or GW170817's 130 million, told in seconds; then its loudest part
+ * sweeping across Earth, 100 times slower, each detector hearing it in turn: GW150914 at
+ * Livingston, then Hanford 6.9 ms later; GW170817 at Virgo, Livingston and Hanford. So far from its source the wave is a plane wave: flat wavefronts
  * across its path, a wavelength apart (about 3,000 km at 100 Hz, half Earth's radius), so
  * several crests cross Earth at once. Each place meets the wave as Livingston did, earlier or
  * later by how far along the path it lies.
@@ -9,23 +10,23 @@
  * Which way it came: the paper places GW150914 in a wide band of the southern sky, not at a
  * point. Two detectors fix only the angle between the wave's path and the line between them
  * (6.9 ms of a possible 10.0): any direction on that cone fits. The one drawn is the cone's most
- * southern, a stand-in for the band, and the stage says so.
+ * southern, a stand-in for the band, and the stage says so. GW170817's host galaxy was found,
+ * so its way is known: from where its source stood in the sky at the merger, turned into
+ * Earth-fixed axes by Greenwich sidereal time.
  *
  * Positions are Earth-fixed (x to 0° longitude, z to the north pole), in Earth radii.
  *
  * Pure: no DOM, no three.js.
  */
 
-import { DETECTOR_SITES } from './detectorRig';
 import type { Polarisations, Triple, Waveform } from './strain';
+import { GW150914_TRIP, SITES, type DetectorId, type Trip } from './trips';
 
 /** Light's speed, km/s, and Earth's mean radius, km. */
 const LIGHT = 299_792.458;
 const EARTH_KM = 6371;
-/** How much later Hanford heard it than Livingston, s (Abbott et al. 2016). */
-export const DELAY = 0.0069;
-/** How far the wave came, light-years: 410 Mpc, about 1.3 billion. */
-const LIGHT_YEARS = 1.3e9;
+/** How much later Hanford heard GW150914 than Livingston, s (Abbott et al. 2016). */
+export const DELAY = GW150914_TRIP.delay;
 
 /** A place on a round Earth, Earth-fixed, in Earth radii. */
 export function earthFixed(latitude: number, longitude: number): Triple {
@@ -34,8 +35,13 @@ export function earthFixed(latitude: number, longitude: number): Triple {
   return [Math.cos(lat) * Math.cos(lon), Math.cos(lat) * Math.sin(lon), Math.sin(lat)];
 }
 
-export const LIVINGSTON = earthFixed(DETECTOR_SITES.L1.latitude, DETECTOR_SITES.L1.longitude);
-export const HANFORD = earthFixed(DETECTOR_SITES.H1.latitude, DETECTOR_SITES.H1.longitude);
+/** Where a detector stands, Earth-fixed. */
+export function placeOf(detector: DetectorId): Triple {
+  return earthFixed(SITES[detector].latitude, SITES[detector].longitude);
+}
+
+export const LIVINGSTON = placeOf('L1');
+export const HANFORD = placeOf('H1');
 
 function dot(a: Triple, b: Triple): number {
   return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -72,26 +78,61 @@ export function arrivalDirection(delay = DELAY): Triple {
   return [cosine * b[0] + sine * u[0], cosine * b[1] + sine * u[1], cosine * b[2] + sine * u[2]];
 }
 
+/** Greenwich mean sidereal time at `date`, degrees (IAU 1982, as Meeus gives it). */
+export function siderealDegrees(date: Date): number {
+  const days = date.getTime() / 86_400_000 + 2_440_587.5 - 2_451_545;
+  const centuries = days / 36_525;
+  const degrees = 280.460_618_37 + 360.985_647_366_29 * days + 0.000_387_933 * centuries ** 2;
+  return ((degrees % 360) + 360) % 360;
+}
+
+/** The way a wave from a source at right ascension and declination (degrees) went, Earth-fixed,
+ * at `date`: away from the point on Earth the source stood over. */
+export function directionFrom(rightAscension: number, declination: number, date: Date): Triple {
+  const over = earthFixed(declination, rightAscension - siderealDegrees(date));
+  return [-over[0], -over[1], -over[2]];
+}
+
+const DIRECTIONS = new WeakMap<Trip, Triple>();
+
+/** The way a trip's wave went: from its source if known, else the cone's most southern way. */
+export function directionOf(trip: Trip): Triple {
+  const known = DIRECTIONS.get(trip);
+  if (known !== undefined) return known;
+  const { source } = trip;
+  const way =
+    source === null
+      ? arrivalDirection(trip.delay)
+      : directionFrom(source.rightAscension, source.declination, new Date(source.utc));
+  DIRECTIONS.set(trip, way);
+  return way;
+}
+
 /**
  * The wave's own time while it arrives, s from when the merger's wave reaches Livingston: from
  * when its loud part is near, to the ringing's end. Played 100 times slower, as the other
  * chapters are, so the crests can be followed across Earth.
  */
-const ARRIVE_FROM = -0.11;
-const ARRIVE_TO = 0.035;
 const SLOWED = 100;
-/** While it travels, the wave's own time runs on by this much, s: from before its first part
- * (0.17 s before the merger) is within 3 Earth radii of Earth, so Earth is at rest while the
- * years count down, to its leading part sweeping in as they end. */
-const APPROACH = 0.13;
 
-/** The journey's parts, ms on screen: crossing space, sweeping Earth, then a rest. */
-export const JOURNEY_MS = {
-  travel: 6000,
-  arrive: (ARRIVE_TO - ARRIVE_FROM) * SLOWED * 1000,
-  rest: 1500,
-} as const;
-const TOTAL = JOURNEY_MS.travel + JOURNEY_MS.arrive + JOURNEY_MS.rest;
+/** A journey's parts, ms on screen: crossing space, sweeping Earth, then a rest, longer when
+ * there is something to say after. While it travels, the wave's own time runs on by its window's
+ * `approach`, from before its first part is near Earth, so Earth is at rest while the years
+ * count down, to its leading part sweeping in as they end. */
+export function journeyParts(trip: Trip): {
+  readonly travel: number;
+  readonly arrive: number;
+  readonly rest: number;
+} {
+  return {
+    travel: 6000,
+    arrive: (trip.window.to - trip.window.from) * SLOWED * 1000,
+    rest: trip.after === undefined ? 1500 : 5000,
+  };
+}
+
+/** GW150914's journey's parts. */
+export const JOURNEY_MS = journeyParts(GW150914_TRIP);
 
 export interface JourneyMoment {
   readonly phase: 'travel' | 'arrive' | 'rest';
@@ -103,9 +144,10 @@ export interface JourneyMoment {
   readonly utc: number | null;
 }
 
-/** How long the journey plays, ms. */
-export function journeyMs(): number {
-  return TOTAL;
+/** How long a journey plays, ms. */
+export function journeyMs(trip: Trip = GW150914_TRIP): number {
+  const parts = journeyParts(trip);
+  return parts.travel + parts.arrive + parts.rest;
 }
 
 /**
@@ -113,22 +155,28 @@ export function journeyMs(): number {
  * comes in; then sweeping Earth, 100 times slower, the UTC time to the millisecond, the merger's
  * wave reaching Livingston at `atLivingston` s after 09:50:45.
  */
-export function journeyAt(ms: number, atLivingston: number): JourneyMoment {
-  const into = Math.min(Math.max(ms, 0), TOTAL);
-  if (into < JOURNEY_MS.travel) {
-    const share = into / JOURNEY_MS.travel;
+export function journeyAt(
+  ms: number,
+  atLivingston: number,
+  trip: Trip = GW150914_TRIP,
+): JourneyMoment {
+  const parts = journeyParts(trip);
+  const { from, to, approach } = trip.window;
+  const into = Math.min(Math.max(ms, 0), journeyMs(trip));
+  if (into < parts.travel) {
+    const share = into / parts.travel;
     // Counted down on a log scale, so each power of ten gets its share of the time.
-    const yearsToGo = LIGHT_YEARS ** (1 - share) - 1;
+    const yearsToGo = trip.lightYears ** (1 - share) - 1;
     return {
       phase: 'travel',
       yearsToGo,
-      waveTime: ARRIVE_FROM - APPROACH * (1 - share),
+      waveTime: from - approach * (1 - share),
       utc: null,
     };
   }
-  const waveTime = Math.min(ARRIVE_TO, ARRIVE_FROM + (into - JOURNEY_MS.travel) / (1000 * SLOWED));
+  const waveTime = Math.min(to, from + (into - parts.travel) / (1000 * SLOWED));
   return {
-    phase: into < JOURNEY_MS.travel + JOURNEY_MS.arrive ? 'arrive' : 'rest',
+    phase: into < parts.travel + parts.arrive ? 'arrive' : 'rest',
     yearsToGo: 0,
     waveTime,
     utc: atLivingston + waveTime,
@@ -189,13 +237,28 @@ function years(value: number): string {
   return Math.max(0, Math.round(value)).toLocaleString('en-GB');
 }
 
-/** The journey in words, at a moment. */
-export function journeyText(moment: JourneyMoment, k = arrivalDirection()): string {
+/** Two digits. */
+function two(value: number): string {
+  return String(value).padStart(2, '0');
+}
+
+/** The journey in words, at a moment: the years to go, then the clock and who has heard it. */
+export function journeyText(moment: JourneyMoment, trip: Trip = GW150914_TRIP): string {
   if (moment.phase === 'travel') {
     return `Crossing space at the speed of light: ${years(moment.yearsToGo)} years to go`;
   }
-  const clock = `09:50:${(45 + (moment.utc ?? 0)).toFixed(3).padStart(6, '0')} UTC`;
-  if (reached(moment, HANFORD, k)) return `${clock} · Hanford hears it, 6.9 ms after Livingston`;
-  if (reached(moment, LIVINGSTON, k)) return `${clock} · Livingston hears it first`;
-  return `${clock} · reaching Earth`;
+  const k = directionOf(trip);
+  const { hour, minute, second } = trip.clock;
+  const seconds = (second + (moment.utc ?? 0)).toFixed(3).padStart(6, '0');
+  const clock = `${two(hour)}:${two(minute)}:${seconds} UTC`;
+  if (moment.phase === 'rest' && trip.after !== undefined) return `${clock} · ${trip.after}`;
+  const heard = trip.heard.filter((detector) => reached(moment, placeOf(detector), k));
+  const last = heard.at(-1);
+  if (last === undefined) return `${clock} · reaching Earth`;
+  const name = SITES[last].name;
+  if (heard.length === 1) return `${clock} · ${name} hears it first`;
+  const before = heard.at(-2) ?? last;
+  const gap =
+    (laterThanLivingston(placeOf(last), k) - laterThanLivingston(placeOf(before), k)) * 1000;
+  return `${clock} · ${name} hears it, ${gap.toFixed(1)} ms after ${SITES[before].name}`;
 }

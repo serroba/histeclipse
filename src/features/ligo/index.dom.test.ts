@@ -292,10 +292,10 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     await settled();
     expect(fetched).toEqual([]);
     expect(views[0]?.options.bodies.kind).toBe('neutron stars');
-    // Its story has no journey yet: it opens at the source.
-    expect(views[0]?.options.chapter).toBe('source');
+    expect(views[0]?.options.chapter).toBe('journey');
+    expect(views[0]?.options.journey.heard).toEqual(['V1', 'L1', 'H1']);
     expect(views[0]?.options.wave.end).toBe(0);
-    expect(views[0]?.options.atLivingston).toBeCloseTo(4.4, 9);
+    expect(views[0]?.options.atLivingston).toBeCloseTo(4.4155, 9);
     expect(stage().querySelector('.wave-title')?.textContent).toContain('neutron stars');
     expect(stage().dataset['wave']).toBe('gw170817');
     expect(stage().textContent).toContain('two neutron stars');
@@ -303,7 +303,7 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     const shown = [...stage().querySelectorAll<HTMLButtonElement>('.wave-chapter')]
       .filter((button) => button.hidden === false)
       .map((button) => button.textContent);
-    expect(shown).toEqual(['The source', 'Space', 'At Livingston', 'The kilonova']);
+    expect(shown).toEqual(['The source', 'The journey', 'Space', 'At Livingston', 'The kilonova']);
     click('Next');
     expect(store.get().waveChapter).toBe('space');
     click('At Livingston');

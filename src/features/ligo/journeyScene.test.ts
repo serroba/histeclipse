@@ -10,7 +10,9 @@ import { describe, expect, it } from 'vitest';
 
 import { HANFORD, journeyAt, JOURNEY_MS, LIVINGSTON } from './journey';
 import { createJourneyScene, PATH, sheetSegments, toScene } from './journeyScene';
-import { chirp, GW150914_STAND_IN } from './strain';
+import { chirp, GW150914_STAND_IN, GW170817_MODEL } from './strain';
+import { GW170817_TRIP } from './trips';
+import { journeyMs, placeOf } from './journey';
 
 const wave = chirp(GW150914_STAND_IN);
 
@@ -61,6 +63,35 @@ describe('the journey, drawn (#833, #841)', () => {
     const values = path.image.data as Float32Array;
     expect(Math.max(...values.map(Math.abs))).toBeGreaterThan(0.05);
     scene.dressEarth(new Texture());
+    scene.dispose();
+  });
+
+  it('marks Virgo too for GW170817, and lights all three by the end (#993)', () => {
+    const scene = createJourneyScene(GW170817_TRIP);
+    const marks = scene.group.children
+      .filter((child): child is Mesh => child instanceof Mesh)
+      .filter((mesh) => mesh.position.length() > 0.5 || mesh.geometry.type === 'SphereGeometry')
+      .slice(1);
+    expect(marks).toHaveLength(3);
+    const model = chirp(GW170817_MODEL);
+    const glow = (): number[] =>
+      marks.map((mark) => {
+        const { r, g, b } = (mark.material as MeshBasicMaterial).color;
+        return Math.max(r, g, b);
+      });
+    scene.set(model, journeyAt(0, 4.4155, GW170817_TRIP));
+    const dark = glow();
+    scene.set(model, journeyAt(journeyMs(GW170817_TRIP), 4.4155, GW170817_TRIP));
+    expect(
+      marks[0]?.position
+        .clone()
+        .normalize()
+        .distanceTo(toScene(placeOf('V1'))),
+    ).toBeLessThan(0.01);
+    glow().forEach((lit, index) => {
+      expect(lit).toBeGreaterThan(4 * (dark[index] ?? 1));
+    });
+    expect(scene.detectors.length()).toBeCloseTo(1, 9);
     scene.dispose();
   });
 });

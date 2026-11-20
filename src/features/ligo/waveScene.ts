@@ -14,7 +14,7 @@ import { AmbientLight, DirectionalLight, Scene, type Texture, Vector3 } from 'th
 
 import type { WaveChapter } from '../../state/slices/display';
 import { bearingDirection, createDetectorRig, DETECTOR_SITES } from './detectorRig';
-import { JOURNEY_MS, journeyAt, journeyMs, journeyText } from './journey';
+import { journeyAt, journeyMs, journeyParts, journeyText } from './journey';
 import { KILONOVA_MS, kilonovaDays, kilonovaMs, kilonovaText } from './kilonova';
 import { createKilonovaScene } from './kilonovaScene';
 import { createJourneyScene } from './journeyScene';
@@ -22,6 +22,7 @@ import type { Bodies } from './events';
 import { createSourceSheet } from './sourceSheet';
 import { createSpaceGrid, SHEETS, STACK_DEPTH } from './spaceGrid';
 import type { Waveform } from './strain';
+import type { Trip } from './trips';
 import {
   EXAGGERATION,
   loopMs,
@@ -114,13 +115,14 @@ export interface WaveScene {
 }
 
 /** The scene for a wave made by `bodies`. */
-export function createWaveScene(bodies: Bodies): WaveScene {
+export function createWaveScene(bodies: Bodies, trip: Trip): WaveScene {
   const scene = new Scene();
   const stack = sheets(SHEETS, STACK_DEPTH);
   const grid = createSpaceGrid(stack.depths);
   const rig = createDetectorRig(DETECTOR_SITES.L1);
   const source = createSourceSheet(bodies);
-  const journey = createJourneyScene();
+  const journey = createJourneyScene(trip);
+  const parts = journeyParts(trip);
   const kilonova = createKilonovaScene();
   const key = new DirectionalLight(0xffffff, 2.2);
   key.position.set(2, 3, 4);
@@ -144,12 +146,12 @@ export function createWaveScene(bodies: Bodies): WaveScene {
     aims: aimsFor(journey.heading, journey.detectors),
     show,
     lengthMs(wave) {
-      if (shown === 'journey') return journeyMs();
+      if (shown === 'journey') return journeyMs(trip);
       if (shown === 'kilonova') return KILONOVA_MS.glow + KILONOVA_MS.rest;
       return loopMs(wave);
     },
     stillMs(wave) {
-      if (shown === 'journey') return JOURNEY_MS.travel + JOURNEY_MS.arrive;
+      if (shown === 'journey') return parts.travel + parts.arrive;
       // A day and a half after: the blue at its brightest, strontium seen.
       if (shown === 'kilonova') return kilonovaMs(1.5);
       return mergerMs(wave);
@@ -161,9 +163,9 @@ export function createWaveScene(bodies: Bodies): WaveScene {
         return { text: kilonovaText(days), t: null };
       }
       if (shown === 'journey') {
-        const moment = journeyAt(ms, atLivingston);
+        const moment = journeyAt(ms, atLivingston, trip);
         journey.set(wave, moment);
-        return { text: journeyText(moment), t: null };
+        return { text: journeyText(moment, trip), t: null };
       }
       const t = waveTimeAt(wave, ms);
       if (shown === 'source') source.set(wave, t);

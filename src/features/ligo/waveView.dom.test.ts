@@ -55,6 +55,7 @@ function mount(stillness: boolean): {
   const view = mountWaveView(host, {
     wave,
     bodies: WAVE_EVENTS.gw150914.bodies,
+    journey: WAVE_EVENTS.gw150914.journey,
     stillness,
     chapter: 'space',
     atLivingston: 0.41,
