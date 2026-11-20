@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 import manifest from '../../public/textures/earth-tiles/manifest.json' with { type: 'json' };
 import { loadEarthTiles, type EarthTiles } from '../data/earthTiles';
-import { drawPlan, wantedTiles } from './earthTiles';
+import { drawPlan, wantedTiles } from './tilePlan';
 import { DESKTOP_TILES } from './tileLimits';
 import { geoToVector } from './geo';
 import { tileId, type TileCamera, type TileKey } from './tileGrid';

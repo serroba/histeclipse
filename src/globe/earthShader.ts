@@ -5,6 +5,7 @@
  */
 
 import { EARTH_FRAGMENT_STRUCT, type AssembledParts } from './earthParts';
+import { RELIEF } from './reliefShader';
 import { SEA_ICE } from './seaIceShader';
 import { TEMPERATURE_GLSL } from './temperatureShader';
 
@@ -95,6 +96,7 @@ const EARTH_BODY = /* glsl */ `
 
   const float PI = 3.141592653589793;
   const float EARTH_RADIUS_M = 6371000.0;
+  ${RELIEF}
 
   float paleoHeight(vec2 uv) {
     return mix(paleoElevation(paleoYounger, uv), paleoElevation(paleoOlder, uv), paleoMix);
@@ -187,9 +189,38 @@ const EARTH_BODY = /* glsl */ `
     return mix(color, srgb(vec3(0.42, 0.50, 0.62)), 0.35 * gridLine(uv));
   }
 
-  vec3 paleoSurface(vec2 uv) {
-    // Under a sketch's ice, a reconstruction's continents keep only their outline.
-    if (uncharted > 0.5) return withPlates(sketchSurface(uv), uv, 1.0 - sketchIce(uv));
+  // What the hill shading, the coast and the colours are drawn from: one of two maps' heights.
+  struct Ground {
+    float height;
+    // Metres from the sea of the moment, land positive, and over how much it blends.
+    float coast;
+    float blur;
+    vec3 color;
+    // Metres up per metre east and north, and how many times steeper the shading draws them.
+    vec2 slope;
+    float steeper;
+  };
+
+  Ground tileGround(vec2 uv) {
+    // Close in on the ice-age globe: today's heights from a relief tile, to the metre at 2′ or
+    // 4′ (#1016). Below today's sea level only the open ocean's floor is flooded or laid bare
+    // by the sea of the moment; inland depressions stay land, lakes and inland seas water.
+    Relief relief = reliefAt(uv);
+    float height = relief.height;
+    float floods = max(relief.ocean, step(0.0, height));
+    float coast = mix(max(height, 0.0) + 1.0, height - seaLevel, floods);
+    float blur = max(fwidth(coast), 1.0);
+    float bared = relief.ocean * (1.0 - step(0.0, height));
+    vec3 land = mix(landColour(max(height, 0.0)), srgb(vec3(0.72, 0.68, 0.46)), bared);
+    vec3 color = mix(seaColour(min(height - seaLevel, -1.0)), land, smoothstep(-blur, blur, coast));
+    // Lakes and inland seas as water, as deep as their floor shows (the Black Sea's 2 km, the
+    // Caspian's), and never shallower than a lake reads: their surfaces are not in the heights.
+    color = mix(color, seaColour(min(height, -150.0)), smoothstep(0.4, 0.6, relief.lake));
+    // Cells six times finer than the globe's map are steeper: less is added.
+    return Ground(height, coast, blur, color, relief.slope, 4.0);
+  }
+
+  Ground mapGround(vec2 uv) {
     float height = paleoHeight(uv);
     // Where the coast runs comes from heights averaged over about half a degree (a tent of
     // nine samples): some source grids draw coasts in 0.5–1° steps, and this rounds them off.
@@ -230,7 +261,20 @@ const EARTH_BODY = /* glsl */ `
     float latitude = (uv.y - 0.5) * PI;
     float southNorth = 2.0 * PI * EARTH_RADIUS_M * step_.y;
     float westEast = 2.0 * 2.0 * PI * EARTH_RADIUS_M * step_.x * max(cos(latitude), 0.05);
-    vec3 normal = normalize(vec3(-10.0 * east / westEast, -10.0 * north / southNorth, 1.0));
+    return Ground(height, coast, blur, color, vec2(east / westEast, north / southNorth), 10.0);
+  }
+
+  vec3 paleoSurface(vec2 uv) {
+    // Under a sketch's ice, a reconstruction's continents keep only their outline.
+    if (uncharted > 0.5) return withPlates(sketchSurface(uv), uv, 1.0 - sketchIce(uv));
+    // reliefTile is a uniform, so the slopes' derivatives (fwidth) stay in uniform control flow.
+    Ground ground;
+    if (reliefTile > 0.5) ground = tileGround(uv);
+    else ground = mapGround(uv);
+    float coast = ground.coast;
+    float blur = ground.blur;
+    vec3 color = ground.color;
+    vec3 normal = normalize(vec3(-ground.steeper * ground.slope, 1.0));
     vec3 light = normalize(vec3(-1.0, 1.0, 1.4));
     float shade = dot(normal, light) / light.z;
     if (tempActive > 0.5) {
