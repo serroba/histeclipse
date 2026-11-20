@@ -77,6 +77,33 @@ export const TRAVEL_ADDS =
 /** What the track says while travelling, before any state has come or gone. */
 export const STATES_WAIT = 'States that appear and go show here as the years go by.';
 
+/** What the track's notes say, by what is on and what has happened. */
+export interface NoteFacts {
+  /** States and empires on, and what they last said changed ('' for nothing yet). */
+  readonly empires: boolean;
+  readonly said: string;
+  readonly travelling: boolean;
+  /** Whether the travel view brings layers in (not with a subject of its own, as El Niño). */
+  readonly brings: boolean;
+  /** Play went back to the start of the years shown (#982): from where, to where, and today. */
+  readonly from: { readonly first: number; readonly last: number; readonly present: number } | null;
+}
+
+/**
+ * The line under the track: what changed, once states have; until then, after Play went back to
+ * the start, where it is playing from and to, so the jump of thousands of years is not a
+ * surprise (#982); else what to expect while travelling, or nothing.
+ */
+export function trackNote({ empires, said, travelling, brings, from }: NoteFacts): string {
+  if (empires && said !== '') return said;
+  if (from !== null) {
+    const to = from.last >= from.present ? 'today' : formatYear(astronomicalYear(from.last));
+    return `From ${formatYear(astronomicalYear(from.first))} to ${to}`;
+  }
+  if (empires) return travelling ? STATES_WAIT : '';
+  return travelling && brings ? STATES_HINT : '';
+}
+
 /** The sea level of the year against today's, by its source, and where the ice comes from. */
 export function earthText(coastline: Coastline): string {
   const metres = Math.round(coastline.seaLevel);
