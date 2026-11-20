@@ -227,20 +227,20 @@ export function createEclipseCard(
   why?: HTMLElement,
 ): EclipseCard {
   const root = element('section', { class: 'eclipse-card', 'aria-live': 'polite', hidden: '' });
-  // Folding the card leaves its title, so the globe gets the room; it stays folded as the card
-  // is rebuilt while time moves.
+  // Folded (#946) it leaves its title and the reader's place, so the globe gets the room; it
+  // opens folded, and stays as the reader left it as the card is rebuilt while time moves.
   const fold = element(
     'button',
     {
       type: 'button',
       class: 'eclipse-fold',
-      'aria-expanded': 'true',
-      'aria-label': 'Fold the eclipse card',
+      'aria-expanded': 'false',
+      'aria-label': 'Unfold the eclipse card',
     },
-    '−',
+    '+',
   );
   fold.addEventListener('click', () => {
-    const folded = root.dataset['folded'] !== 'true';
+    const folded = root.dataset['folded'] === 'false';
     root.dataset['folded'] = String(folded);
     fold.setAttribute('aria-expanded', String(!folded));
     fold.setAttribute('aria-label', folded ? 'Unfold the eclipse card' : 'Fold the eclipse card');

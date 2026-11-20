@@ -180,14 +180,17 @@ test('the panels fold away for a full view and come back @acceptance', async ({ 
   const problems = collectProblems(page);
   await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
   await globeRendered(page);
-  // The eclipse card folds to its title and unfolds again.
+  // The eclipse card opens folded to its title and how to see it (#946), unfolds, and folds again.
   const card = page.locator('.eclipse-card');
-  await page.getByRole('button', { name: 'Fold the eclipse card' }).click();
-  await expect(card).toHaveAttribute('data-folded', 'true');
   await expect(card.locator('.eclipse-more')).toBeHidden();
   await expect(card.locator('.eclipse-text > :first-child')).toBeVisible();
+  await expect(card.locator('.eclipse-hint')).toBeVisible();
   await page.getByRole('button', { name: 'Unfold the eclipse card' }).click();
+  await expect(card).toHaveAttribute('data-folded', 'false');
   await expect(card.locator('.eclipse-more')).toBeVisible();
+  await page.getByRole('button', { name: 'Fold the eclipse card' }).click();
+  await expect(card.locator('.eclipse-more')).toBeHidden();
+  await page.getByRole('button', { name: 'Unfold the eclipse card' }).click();
   // Full view hides every panel; one button brings them back.
   await page.getByRole('button', { name: 'Hide the panels for a full view' }).click();
   await expect(page.locator('.hud')).toBeHidden();
