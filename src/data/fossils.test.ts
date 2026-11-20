@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import data from '../../public/data/fossils.json';
-import { fossilCard, fossilsAt, fossilsText, loadFossils, type Fossils } from './fossils';
+import {
+  fossilCard,
+  fossilsAt,
+  fossilsText,
+  loadFossils,
+  nearestFinds,
+  type Fossils,
+} from './fossils';
 import type { Pictures } from './pictures';
 
 const serve = (body: unknown) => (): Promise<Response> => Promise.resolve(Response.json(body));
@@ -90,6 +97,29 @@ describe('fossils', () => {
     // After the end-Cretaceous, a handful only: finds whose dated range straddles it.
     const after = fossilsAt(loaded, 60).totals.find((total) => total.id === 'dinosaurs');
     expect(after?.count).toBeLessThan(10);
+  });
+});
+
+describe('nearestFinds (#948)', () => {
+  it('Given a time with no finds, Then it names the middle of the nearest step with some', () => {
+    expect(nearestFinds(small, 540)).toBe(252.5);
+    expect(nearestFinds(small, 100)).toBe(67.5);
+    expect(nearestFinds(small, 0)).toBe(67.5);
+  });
+
+  it('Given equally near steps either side, Then the older', () => {
+    expect(nearestFinds(small, 160)).toBe(252.5);
+  });
+
+  it('Given no finds at all, Then none', () => {
+    expect(nearestFinds({ ...small, groups: [] }, 100)).toBeNull();
+  });
+
+  it('Given the real file at 540 Ma, Then the nearest finds are in the Cambrian', () => {
+    const nearest = nearestFinds(data as Fossils, 540);
+    expect(nearest).not.toBeNull();
+    expect(nearest ?? 0).toBeLessThan(540);
+    expect(nearest ?? 0).toBeGreaterThan(485);
   });
 });
 

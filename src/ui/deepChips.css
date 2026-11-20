@@ -20,6 +20,18 @@
   margin: 0 0 4px;
 }
 
+/* A jump the note offers (#948): a link's look, a button's job. */
+.deep-note-go {
+  min-height: 32px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: #9ec5ff;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .deep-layer {
   min-height: 44px;
   margin-left: auto;

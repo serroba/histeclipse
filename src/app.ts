@@ -14,7 +14,7 @@ import {
   FOUND_THE_WAY_IN,
   HISTORY,
   LAYERS_PANEL,
-  LOCATION,
+  placePin,
   momentChanged,
   momentKept,
   on,
@@ -638,12 +638,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     { draw: cycle.render },
     { draw: launches.render },
     { when: on(HISTORY), draw: years.show },
-    {
-      when: on(LOCATION),
-      draw: (state) => {
-        globe.setLocation(state.location);
-      },
-    },
+    placePin(globe),
     {
       when: on(VIEWPOINT),
       draw: (state) => {

@@ -95,6 +95,25 @@ export function fossilsAt(data: Fossils, ma: number): FossilsAt {
   return { from: to + data.stepMa, to, cells: cells.sort((a, b) => b.count - a.count), totals };
 }
 
+/**
+ * The middle of the nearest step with any finds to `ma`, the older on a tie (#948): where to go
+ * from a step with none. Null if the file has none at all.
+ */
+export function nearestFinds(data: Fossils, ma: number): number | null {
+  let best: number | null = null;
+  for (const group of data.groups) {
+    for (const [step] of group.counts) {
+      const middle = step + data.stepMa / 2;
+      const nearer =
+        best === null ||
+        Math.abs(middle - ma) < Math.abs(best - ma) ||
+        (Math.abs(middle - ma) === Math.abs(best - ma) && middle > best);
+      if (nearer) best = middle;
+    }
+  }
+  return best;
+}
+
 /** What the bar says of the step's finds. */
 export function fossilsText(at: FossilsAt): string {
   const found = at.totals.filter((total) => total.count > 0);

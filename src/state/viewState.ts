@@ -163,6 +163,11 @@ export function withLayer(layers: ReadonlySet<Layer>, layer: Layer, on: boolean)
   next.add(layer);
   return next;
 }
+/** The place to pin on the globe: none in deep time, whose maps today's place means nothing on (#948). */
+export function pinnedPlace(state: ViewState): GeoPoint | null {
+  return state.ma === null ? state.location : null;
+}
+
 /**
  * The view with `layer` turned on or off, wherever that is done (the Layers panel, an icon on
  * the zoom rail). Eclipses off let go of the one picked (#634).

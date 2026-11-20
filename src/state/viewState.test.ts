@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  pinnedPlace,
   awayFromEarth,
   defaultViewState,
   layerTurned,
@@ -89,5 +90,14 @@ describe('a tap on the globe (#811)', () => {
     expect(tapClears(base)).toBe(false);
     expect(tapClears({ ...base, ma: 66 })).toBe(true);
     expect(tapClears({ ...base, layers: new Set<Layer>(['ozone']) })).toBe(true);
+  });
+});
+
+describe('pinnedPlace (#948)', () => {
+  it('Given a place, Then it is pinned in the years and not in deep time', () => {
+    const place = { latitude: 38, longitude: 23.7 };
+    const years = { ...defaultViewState(new Date('2026-01-01T00:00:00Z')), location: place };
+    expect(pinnedPlace(years)).toEqual(place);
+    expect(pinnedPlace({ ...years, ma: 540 })).toBeNull();
   });
 });

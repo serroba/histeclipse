@@ -85,6 +85,16 @@ describe('isolated layer controls', () => {
     expect(host.querySelector('ul li.item')?.textContent).toBe('First');
   });
 
+  it('renders an action as a button that runs it (#948)', () => {
+    const { ui, host } = chips();
+    const run = vi.fn();
+    ui.render(new Map([['humans', view(['None here. ', { text: 'Go to the nearest', run }])]]));
+    const go = host.querySelector<HTMLButtonElement>('button.deep-note-go');
+    expect(go?.textContent).toBe('Go to the nearest');
+    go?.click();
+    expect(run).toHaveBeenCalledOnce();
+  });
+
   it('keeps a picker mounted while using its latest callback and selected value', () => {
     const { ui, host } = chips();
     const first = vi.fn();

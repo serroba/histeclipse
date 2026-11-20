@@ -6,6 +6,7 @@
  */
 
 import { deepChoices } from './choices';
+import { frameDeepEarth } from './frame';
 import { magneticNorthLayer } from './magneticNorthLayer';
 import { loadPolarity, type PolarityScale } from '../../data/polarity';
 import { magneticNorthAt } from '../../deepTime/earthState';
@@ -72,6 +73,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       if (ma !== null) leaveDeepTime();
     } else if (ma === null) {
       enterDeepTime(spanOf(span), span);
+      if (span !== 'ice') frameDeepEarth(globe, store.get().camera.distance);
     } else {
       stopPlay();
       context.step();

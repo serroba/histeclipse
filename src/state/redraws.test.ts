@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   DEEP_TIME,
@@ -10,6 +10,7 @@ import {
   LAYERS_PANEL,
   LOCATION,
   momentChanged,
+  placePin,
   on,
   onChange,
   ORBITS,
@@ -169,5 +170,22 @@ describe('drawing in order', () => {
     order.length = 0;
     drawAll(drawn, { ...base, focus: 'moon' }, base);
     expect(order).toEqual(['always', 'focus', 'focus changed']);
+  });
+});
+
+describe('the place’s pin (#948)', () => {
+  it('Given a place, Then the pin shows it in the years, hides it in deep time, and redraws on the change', () => {
+    const setLocation = vi.fn();
+    const pin = placePin({ setLocation });
+    const place = { latitude: 38, longitude: 23.7 };
+    const years = { ...defaultViewState(new Date('2026-01-01T00:00:00Z')), location: place };
+    const deep = { ...years, ma: 540 };
+    expect(pin.when?.(years, null)).toBe(true);
+    pin.draw(years, null);
+    expect(setLocation).toHaveBeenLastCalledWith(place);
+    expect(pin.when?.(deep, years)).toBe(true);
+    pin.draw(deep, years);
+    expect(setLocation).toHaveBeenLastCalledWith(null);
+    expect(pin.when?.({ ...deep, ma: 300 }, deep)).toBe(false);
   });
 });
