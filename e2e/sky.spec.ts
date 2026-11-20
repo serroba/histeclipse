@@ -408,3 +408,18 @@ test('in the sky, the date panel stops short of the eclipse card (#943) @mobile'
     .toBe('clear');
   expect(problems).toEqual([]);
 });
+
+test('into the sky for a solar eclipse, the Sun close up, what is left of it in view (#951)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await page.goto(
+    './?t=-0584-05-28T16:01Z&cal=julian&loc=39,35&layers=eclipses&sel=solar:-0584-05-28',
+  );
+  await globeRendered(page);
+  await page.getByRole('button', { name: 'Sky', exact: true }).click();
+  await skyRendered(page);
+  await expect(page).toHaveURL(/look=[\d.]+,[\d.]+,3\.0(&|$)/);
+  await expect(page.getByTestId('sky-eclipse')).toContainText('97%');
+  expect(problems).toEqual([]);
+});

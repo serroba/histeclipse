@@ -562,3 +562,21 @@ test('a first visit can go straight to an eclipse, its clock in words (#954) @ac
   );
   expect(problems).toEqual([]);
 });
+
+test('on a phone the views are named, and the years shown read in full (#953) @mobile', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'a phone’s layout');
+  await page.goto('./?cam=-34,151,4.5');
+  await globeRendered(page);
+  for (const name of ['Orbit', 'Moon from Earth', 'Earth from Moon', 'Sky']) {
+    const label = page
+      .getByRole('group', { name: 'Viewpoint' })
+      .getByRole('button', { name, exact: true })
+      .locator('.icon-label');
+    await expect(label).toBeVisible();
+    expect((await label.boundingBox())?.width ?? 0).toBeGreaterThan(10);
+  }
+  const range = page.getByRole('combobox', { name: 'Years shown' });
+  expect(await range.evaluate((select) => select.scrollWidth <= select.clientWidth + 1)).toBe(true);
+});
