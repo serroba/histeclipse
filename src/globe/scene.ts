@@ -223,6 +223,7 @@ export function createGlobe(
     focus: () => rig.focus,
     insets: () => rig.insets,
     requestBody,
+    place: () => pin.place(),
     invalidate: () => {
       stage.invalidate();
     },

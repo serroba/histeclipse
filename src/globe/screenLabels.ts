@@ -50,6 +50,8 @@ export interface ScreenLabelsWorld {
   insets(): { readonly top: number; readonly bottom: number };
   /** A marker was tapped. */
   requestBody(body: Body): void;
+  /** The place's pin, which names keep clear of (#955); null with no place. */
+  place(): Vector3 | null;
   invalidate(): void;
 }
 
@@ -224,7 +226,8 @@ export class ScreenLabels {
     // While it turns, only the larger states' names, and a few of each layer's (#631).
     const leftOut = this.#turning ? SURFACE_PRIORITY.minorStates : Infinity;
     const most = this.#turning ? TURNING_NAMES : Infinity;
-    const view = { width: this.#width, height: this.#height, near, leftOut, most };
+    const reserved = this.#world.place();
+    const view = { width: this.#width, height: this.#height, near, leftOut, most, reserved };
     const names = layOutSurface(this.#surfaceSlots, camera, view);
     noteScreenNames(names, this.#turning);
     return names.leftOut;

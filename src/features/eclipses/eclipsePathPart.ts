@@ -34,7 +34,10 @@ export const ECLIPSE_PATH_PART: EarthPart<EclipsePathUniforms> = {
     float hatch = step(0.55, fract((gl_FragCoord.x - gl_FragCoord.y) / 10.0));
     vec3 tint = vec3(0.98, 0.83, 0.42);
     vec3 painted = mix(color, color * 0.75 + tint * 0.25, certain * 0.6);
-    painted = mix(painted, color * 0.75 + tint * 0.22, uncertain * hatch * 0.85);
+    painted = mix(painted, color * 0.6 + tint * 0.4, uncertain * hatch * 0.85);
+    // Its edges in gold, which read over the states' colours as the tint alone does not (#955).
+    float edge = clamp(fwidth(possible) * 3.0, 0.0, 1.0);
+    painted = mix(painted, tint, edge * 0.85);
     // The limits of the partial eclipse: a thin, dashed, pale-blue line, so it can't be mistaken
     // for the path of totality.
     float limit = smoothstep(0.0, 0.002, path.a) * (1.0 - smoothstep(0.004, 0.008, path.a));
