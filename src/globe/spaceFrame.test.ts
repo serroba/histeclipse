@@ -106,6 +106,14 @@ describe('mergeMarkers', () => {
 
   it('is empty without markers', () => {
     expect(mergeMarkers([], 40).size).toBe(0);
+    // From far above the Sun, six at one spot: three named, the rest counted (#980).
+    const six = ['Earth', 'Moon', 'Sun', 'Mercury', 'Venus', 'Mars'].map((name) => ({
+      name,
+      x: 100,
+      y: 100,
+    }));
+    expect(mergeMarkers(six, 40).get('Earth')).toBe('Earth, Moon, Sun and 3 more');
+    expect(mergeMarkers(six.slice(0, 4), 40).get('Earth')).toBe('Earth, Moon, Sun and Mercury');
   });
 });
 
