@@ -40,6 +40,8 @@ export type DeepNotePart =
   | { readonly key: string }
   | { readonly text: string; readonly href: string }
   | { readonly text: string; readonly testId: string }
+  /** A button in the note (#948), such as a jump to where the layer has something. */
+  | { readonly text: string; readonly run: () => void }
   | { readonly choose: DeepChoice };
 
 /** A note's part, or a paragraph or list of parts. */
@@ -106,6 +108,7 @@ export function createDeepChips(
     if ('key' in shown) return element('span', { class: shown.key, 'aria-hidden': 'true' });
     if ('href' in shown) return element('a', { href: shown.href }, shown.text);
     if ('testId' in shown) return element('span', { 'data-testid': shown.testId }, shown.text);
+    if ('run' in shown) return actionButton(shown.text, shown.run);
     const id = `${layer}:${shown.choose.name}`;
     const picker = pickers.get(id) ?? createPicker(shown.choose);
     pickers.set(id, picker);
@@ -172,4 +175,11 @@ export function createDeepChips(
       }
     },
   };
+}
+
+/** A note's action: a button that runs `run`. */
+function actionButton(text: string, run: () => void): HTMLButtonElement {
+  const go = element('button', { type: 'button', class: 'deep-note-go' }, text);
+  go.addEventListener('click', run);
+  return go;
 }

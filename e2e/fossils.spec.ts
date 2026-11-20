@@ -3,7 +3,7 @@
  * by 5 million years, where they lay at the time: on the continents of their own age.
  */
 
-import { collectProblems, expect, globeRendered, showDeepDetails, test } from './support';
+import { collectProblems, expect, globeRendered, pickSpan, showDeepDetails, test } from './support';
 
 test('the Fossils layer marks finds of the moment on the land of their time', async ({ page }) => {
   const problems = collectProblems(page);
@@ -65,6 +65,46 @@ test('a cell of fossils opens its card: its genera, linked to the PBDB @acceptan
       /^https:\/\/paleobiodb\.org\/classic\/checkTaxonInfo\?taxon_name=/,
     );
     await expect(card).toContainText('not how many animals lived');
+  });
+  expect(problems).toEqual([]);
+});
+
+test('into deep time from the years: the maps’ land in view, no pin from today, and a way to the nearest fossils (#948) @acceptance', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  await test.step('Given Athens picked, the camera close over it', async () => {
+    await page.goto('./?loc=37.97,23.73&cam=37.97,23.73,3&layers=fossils');
+    await globeRendered(page);
+    await expect(globe).toHaveAttribute('data-location', /\d/);
+  });
+  await test.step('When they go to 540 Myr', async () => {
+    await pickSpan(page, '540 Myr');
+    await expect(page).toHaveURL(/ma=540/);
+  });
+  await test.step('Then the globe turns to the maps’ land and draws back, and today’s pin rests', async () => {
+    await expect
+      .poll(
+        async () => {
+          const [lat = NaN, lon = NaN] = ((await globe.getAttribute('data-target')) ?? '')
+            .split(',')
+            .map(Number);
+          const distance = Number(await globe.getAttribute('data-distance'));
+          return Math.abs(lat + 20) < 3 && Math.abs(lon) < 3 && distance >= 4.4;
+        },
+        { timeout: 20_000 },
+      )
+      .toBe(true);
+    await expect(globe).not.toHaveAttribute('data-location', /\d/);
+  });
+  await test.step('When no fossils are found then, Then the note offers the nearest finds, and goes there', async () => {
+    await showDeepDetails(page);
+    const go = page.getByRole('button', { name: /^Go to the nearest finds, / });
+    await expect(go).toBeVisible();
+    await go.click();
+    await expect.poll(() => Number(new URL(page.url()).searchParams.get('ma'))).toBeLessThan(540);
+    await expect(go).toBeHidden();
   });
   expect(problems).toEqual([]);
 });
