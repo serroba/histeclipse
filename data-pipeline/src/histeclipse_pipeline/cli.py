@@ -58,6 +58,7 @@ from histeclipse_pipeline.macrostrat import fetch_rocks
 from histeclipse_pipeline.measured_warming import fetch_measured_warming
 from histeclipse_pipeline.moon_orbits import fetch_moon_orbits
 from histeclipse_pipeline.natural_forcing import fetch_natural_forcing
+from histeclipse_pipeline.ocean_currents import fetch_ocean_currents
 from histeclipse_pipeline.ocean_deep import fetch_ocean_deep
 from histeclipse_pipeline.ocean_heat import fetch_ocean_heat
 from histeclipse_pipeline.ocean_heat_map import fetch_ocean_heat_map
@@ -679,6 +680,12 @@ def ocean_temperature(args: Arguments) -> int:  # pragma: no cover - needs netwo
     return _say(f"wrote {count} months of ocean temperature maps and sections to {args.out}")
 
 
+def ocean_currents(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the ocean's currents near the surface and at 1,500 m each month since 1940."""
+    count = fetch_ocean_currents(args.out, Path(".cache/ocean-currents"))
+    return _say(f"wrote {count} months of ocean currents to {args.out}")
+
+
 def ocean_deep(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the deep ocean's temperature at 2,000 to 5,000 m each year since 1940."""
     count = fetch_ocean_deep(args.out, Path(".cache/iap-temperature"))
@@ -1270,6 +1277,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "ocean-temperature": (
         ocean_temperature,
         "write the ocean's temperature at 1, 100 and 700 m each month since 1940 (IAP v4.2)",
+        "output directory",
+    ),
+    "ocean-currents": (
+        ocean_currents,
+        "write the ocean's currents near the surface and at 1,500 m each month since 1940 (IAP)",
         "output directory",
     ),
     "ocean-deep": (
