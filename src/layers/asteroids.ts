@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const asteroids = layer({
   id: 'asteroids',
   label: 'Asteroid belt',
+  summary: 'The largest asteroids, circling the Sun between Mars and Jupiter.',
   about:
     'The main belt’s asteroids at least 100 km across, some two hundred, going round the Sun between Mars and Jupiter; the largest named, a tap on a name for its card.',
   spans: ['years'],

@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const volcanoes = layer({
   id: 'volcanoes',
   label: 'Volcanic eruptions',
+  summary: 'Volcanic eruptions near the year shown.',
   about:
     'Eruptions dated near the year shown, sized by explosivity, from the Smithsonian’s Global Volcanism Program; tap one for its details.',
   spans: ['years'],

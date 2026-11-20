@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const rocks = layer({
   id: 'rocks',
   label: 'Rocks at the surface',
+  summary: 'How old the rocks at the surface are.',
   about:
     'How old the rocks at the surface are, from Macrostrat; pick a place to see its rock, then the Earth when it formed.',
   spans: ['years'],

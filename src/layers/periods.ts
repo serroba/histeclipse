@@ -4,6 +4,7 @@ import { layer } from './layer';
 export const periods = layer({
   id: 'periods',
   label: 'Named periods',
+  summary: 'The named periods of history and archaeology for a place.',
   about:
     'The archaeological and historical periods named for the place picked, each by its source (PeriodO).',
   spans: ['years'],

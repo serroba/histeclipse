@@ -5,6 +5,7 @@ import { sealevel } from './sealevel';
 export const amoc = layer({
   id: 'amoc',
   label: 'Atlantic overturning (AMOC)',
+  summary: 'The Atlantic’s great overturning current, and whether it is slowing.',
   about:
     'The Atlantic overturning circulation, measured at 26.5°N since 2004 (RAPID), beside the reconstructions that disagree on whether it has already weakened (Caesar, Rahmstorf, Thornalley, Terhaar), each on its own scale; on the globe, the line the array measures across.',
   spans: ['years'],

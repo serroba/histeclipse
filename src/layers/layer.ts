@@ -18,6 +18,8 @@ export interface Coverage {
 export interface LayerEntry<Id extends string = string> {
   readonly id: Id;
   readonly label: string;
+  /** One plain line for the Layers panel (#950): what it shows, without the sources. */
+  readonly summary: string;
   readonly about: string;
   /** The spans of time it draws on. */
   readonly spans: readonly Span[];

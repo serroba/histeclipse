@@ -5,6 +5,7 @@ import { sealevel } from './sealevel';
 export const enso = layer({
   id: 'enso',
   label: 'El Niño and La Niña',
+  summary: 'El Niño and La Niña: the tropical Pacific warming and cooling.',
   about:
     'The tropical Pacific each month since 1950, as NOAA’s two indices measure it (RONI, official since 2026, and ONI before it), and before then by ours from two reconstructions of the sea, side by side beside the globe, and where they disagree; on the globe from 1981, the month’s sea surface temperature against normal (OISST), or what El Niño and La Niña usually do to rain (GPCP) and temperature (Berkeley Earth), by either index.',
   spans: ['years'],

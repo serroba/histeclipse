@@ -392,3 +392,24 @@ test('the layers on show as chips beside Layers: one off its span offers where i
   });
   expect(problems).toEqual([]);
 });
+
+test('the Layers panel reads in plain lines, the sources one tap away, and narrows to a word (#950) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await page.goto('./?t=2026-01-10T12:00');
+  await globeRendered(page);
+  await openLayers(page);
+  const panel = page.getByRole('dialog', { name: 'Layers' });
+  const enso = panel.locator('.layer-item').filter({ hasText: 'El Niño and La Niña' });
+  await expect(enso.locator('.layer-about')).toHaveText(
+    'El Niño and La Niña: the tropical Pacific warming and cooling.',
+  );
+  await expect(enso.getByText(/RONI/)).toBeHidden();
+  await enso.locator('.layer-more > summary').click();
+  await expect(enso.getByText(/RONI/)).toBeVisible();
+  await panel.getByRole('searchbox', { name: 'Find a layer' }).fill('ozone');
+  await expect(panel.locator('.layer-item:visible')).toHaveCount(1);
+  await expect(panel.locator('.layer-item:visible')).toContainText('The ozone hole');
+  expect(problems).toEqual([]);
+});

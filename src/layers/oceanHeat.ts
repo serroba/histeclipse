@@ -5,6 +5,7 @@ import { sealevel } from './sealevel';
 export const oceanHeat = layer({
   id: 'oceanHeat',
   label: 'Ocean heat',
+  summary: 'Where the ocean has gained heat since 1960.',
   about:
     'Where the ocean has gained heat since 1960, or in the Argo years since 2005, in W/m² (IAP v4.2): heat content, on its own scale, faded where the trend is not significant.',
   spans: ['years'],

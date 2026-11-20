@@ -5,6 +5,7 @@ import { temperature } from './temperature';
 export const warming = layer({
   id: 'warming',
   label: 'Warming since 1850',
+  summary: 'Global temperature since 1850, from six records.',
   about:
     'Global surface temperature since 1850, six records side by side beside the globe (HadCRUT5, Berkeley Earth, NOAAGlobalTemp, GISTEMP, ERA5, JRA-3Q), and how far apart they are.',
   spans: ['years'],

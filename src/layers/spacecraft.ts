@@ -5,6 +5,7 @@ import { layer } from './layer';
 export const spacecraft = layer({
   id: 'spacecraft',
   label: 'Spacecraft',
+  summary: 'Every craft sent beyond Earth orbit, and where it was.',
   about:
     'Every craft sent beyond Earth orbit since 1959, where it was at the moment shown, flying as the time plays; a tap on its name for its story.',
   spans: ['years'],
