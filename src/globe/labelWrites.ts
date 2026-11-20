@@ -31,8 +31,8 @@ export function placeLabel(element: HTMLElement, transform: string | null): void
 
 /**
  * Where a name `width` by `height`, centred at (`x`, `centre`), can go clear of the names
- * `placed`: there, or up to two lines above or below; null where none is clear. Where it goes is
- * added to `placed`.
+ * `placed`: there, or up to two lines above or below, where `over` allows; null where none is
+ * clear. Where it goes is added to `placed`.
  */
 export function roomFor(
   x: number,
@@ -40,9 +40,11 @@ export function roomFor(
   width: number,
   height: number,
   placed: Box[],
+  over: (y: number) => boolean = () => true,
 ): number | null {
   for (const step of [0, -1, 1, -2, 2]) {
     const y = centre + step * height;
+    if (!over(y)) continue;
     const box = { x: x - width / 2, y: y - height / 2, w: width, h: height };
     if (clearOf(box, placed)) {
       placed.push(box);
@@ -81,6 +83,9 @@ export function layOutSurface(
   },
 ): NamesShown & { readonly leftOut: number } {
   const eye = camera.position.clone().normalize();
+  // A name moved to make room stays over Earth (#945): a count pushed off the disc was read as
+  // somewhere in space.
+  const disc = earthDisc(camera, view.width, view.height);
   const placed: Box[] = [];
   let total = 0;
   let leftOut = 0;
@@ -102,11 +107,36 @@ export function layOutSurface(
       const x = ((projected.x + 1) / 2) * view.width;
       // A name out of view is hidden without looking for room: most are, behind Earth.
       const centre = ((1 - projected.y) / 2) * view.height;
-      const y = shown ? roomFor(x, centre, width, height, placed) : null;
+      const over = (at: number): boolean => Math.hypot(x - disc.x, at - disc.y) <= disc.radius;
+      const y = shown ? roomFor(x, centre, width, height, placed, over) : null;
       if (y !== null) left -= 1;
       placeLabel(element, y === null ? null : translation(x, y, 'translate(-50%, -50%)'));
     }
   }
   // Each name shown was given room once, so `placed` counts them without asking the page.
   return { shown: placed.length, total, leftOut };
+}
+
+/** Earth's disc on screen as `camera` sees it, in pixels: its centre and radius. */
+export function earthDisc(
+  camera: Camera,
+  width: number,
+  height: number,
+): { x: number; y: number; radius: number } {
+  const distance = camera.position.length();
+  const eye = camera.position.clone().normalize();
+  // A point on the limb: towards the camera by 1/d, then across, in the camera's up direction.
+  const across = new Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+  across.addScaledVector(eye, -across.dot(eye)).normalize();
+  const limb = eye
+    .clone()
+    .multiplyScalar(1 / distance)
+    .addScaledVector(across, Math.sqrt(Math.max(0, 1 - 1 / distance ** 2)));
+  const toScreen = (point: Vector3): [number, number] => {
+    const at = point.project(camera);
+    return [((at.x + 1) / 2) * width, ((1 - at.y) / 2) * height];
+  };
+  const [x, y] = toScreen(new Vector3());
+  const [limbX, limbY] = toScreen(limb);
+  return { x, y, radius: Math.hypot(limbX - x, limbY - y) };
 }
