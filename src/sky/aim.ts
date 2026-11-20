@@ -13,6 +13,16 @@ import { LOWEST_LOOK, roundLook } from './look';
 
 /** Field of view (degrees) when turning to the Sun or Moon: close enough to see the disc. */
 export const AIM_FOV = 12;
+/**
+ * Field of view (degrees) on entering the sky for a solar eclipse (#951): the Sun half a degree
+ * across fills a sixth of it, so what is left of it, a crescent or a ring, can be seen.
+ */
+export const ECLIPSE_FOV = 3;
+/** The look on entering the sky for an eclipse: a solar one's Sun close up (#951). */
+export function closeUp(look: SkyLook, solar: boolean): SkyLook {
+  return solar ? { ...look, fov: Math.min(look.fov, ECLIPSE_FOV) } : look;
+}
+
 /** A planet tapped in the sky: a point at any zoom, so a few degrees, its neighbours in view. */
 export const PLANET_SKY_FOV = 4;
 /** How high an upright phone looks on entering the sky, degrees: the horizon low in view. */

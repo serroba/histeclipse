@@ -2,7 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import { julianDayNumber } from '../time/julianDay';
 import { DEFAULT_LOOK, SKY_FOV_RANGE } from '../state/viewState';
-import { AIM_FOV, aimLook, PHONE_SKY_ALTITUDE, PLANET_SKY_FOV, phoneLook, tapLook } from './aim';
+import {
+  AIM_FOV,
+  aimLook,
+  closeUp,
+  ECLIPSE_FOV,
+  PHONE_SKY_ALTITUDE,
+  PLANET_SKY_FOV,
+  phoneLook,
+  tapLook,
+} from './aim';
 import { LOWEST_LOOK } from './look';
 
 describe('phoneLook', () => {
@@ -58,5 +67,13 @@ describe('tapLook', () => {
     const look = tapLook({ azimuth: 100, altitude: -80, radius: 0 });
     expect(look.fov).toBe(PLANET_SKY_FOV);
     expect(look.altitude).toBe(LOWEST_LOOK);
+  });
+});
+
+describe('closeUp (#951)', () => {
+  it('Given a solar eclipse, Then the Sun close up; a lunar one keeps its field', () => {
+    const look = { azimuth: 90, altitude: 40, fov: 12 };
+    expect(closeUp(look, true).fov).toBe(ECLIPSE_FOV);
+    expect(closeUp(look, false)).toEqual(look);
   });
 });
