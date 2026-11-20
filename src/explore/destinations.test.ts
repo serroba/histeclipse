@@ -11,6 +11,7 @@ import {
   DESTINATIONS,
   destinationsIn,
   TOPICS,
+  welcomeAnchor,
 } from './destinations';
 import { frameSpan, showsFrame } from './frame';
 import source from './destinations.ts?raw';
@@ -127,5 +128,12 @@ describe('the registry loads nothing', () => {
       './frame',
       '../text/passages',
     ]);
+  });
+});
+
+describe('the welcome’s suggestion (#954)', () => {
+  it('opens the eclipse of Thales, the first destination', () => {
+    expect(welcomeAnchor().view).toContain('explore=eclipse-of-thales');
+    expect(DESTINATIONS[0]?.id).toBe('eclipse-of-thales');
   });
 });

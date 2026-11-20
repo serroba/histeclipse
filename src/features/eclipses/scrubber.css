@@ -43,8 +43,11 @@
 }
 
 @media (max-width: 600px) {
+  /* Its words wrap in a narrow column, leaving the slider its room (#954). */
   .scrubber-time {
+    flex: 0 1 8.5em;
     min-width: 0;
     font-size: 12px;
+    line-height: 1.2;
   }
 }
