@@ -97,6 +97,14 @@ def test_projects_onto_nsidc_polar_grids() -> None:
     x, y = polar_xy(SOUTH, np.array([-70.0]), np.array([0.0]))
     assert x[0] == pytest.approx(0.0, abs=1e-6)
     assert y[0] == pytest.approx(2.2e6, rel=0.02)
+    # East is to the right, as on NSIDC's south grid (#1007): not mirrored.
+    x, y = polar_xy(SOUTH, np.array([-70.0, -70.0, -64.0]), np.array([90.0, -90.0, -57.0]))
+    assert x[0] == pytest.approx(2.2e6, rel=0.02)
+    assert y[0] == pytest.approx(0.0, abs=1e-3)
+    assert x[1] == pytest.approx(-2.2e6, rel=0.02)
+    # The Antarctic Peninsula's tip: upper left.
+    assert x[2] < 0
+    assert y[2] > 0
 
 
 def test_samples_each_hemisphere_from_its_own_grid() -> None:
