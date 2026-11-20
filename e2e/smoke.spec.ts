@@ -231,10 +231,31 @@ test('the welcome goes once the visitor finds their own way in', async ({ page }
   await expect(welcome).toBeHidden();
 });
 
-test('explains parts of a link it could not use', async ({ page }) => {
-  await page.goto('./?t=yesterday');
+test('explains parts of a link it could not use, on screen, clear of the zoom, until dismissed (#944) @mobile', async ({
+  page,
+}) => {
+  await page.goto('./?t=yesterday&view=sky');
   await globeRendered(page);
-  await expect(page.getByRole('status')).toContainText('Ignored t="yesterday"');
+  const status = page.getByRole('status');
+  await expect(status).toContainText('Ignored t="yesterday"');
+  const notice = status.locator('li').filter({ hasText: 'Ignored view="sky"' });
+  await expect(notice).toContainText('earth-from-here');
+  const box = await notice.boundingBox();
+  const viewport = page.viewportSize();
+  if (box === null || viewport === null) throw new Error('the notice has no box');
+  expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+  const zoomIn = await page.getByRole('button', { name: 'Zoom in' }).boundingBox();
+  if (zoomIn !== null) {
+    const clear =
+      box.x + box.width <= zoomIn.x ||
+      zoomIn.x + zoomIn.width <= box.x ||
+      box.y + box.height <= zoomIn.y ||
+      zoomIn.y + zoomIn.height <= box.y;
+    expect(clear, 'the notice leaves Zoom in uncovered').toBe(true);
+  }
+  await notice.getByRole('button', { name: 'Dismiss' }).click();
+  await expect(notice).toBeHidden();
+  await expect(status).toContainText('Ignored t="yesterday"');
 });
 
 test('controls are large enough to tap and stay on screen @mobile', async ({ page }) => {
