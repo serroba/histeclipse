@@ -153,7 +153,7 @@ export function storyPassages(): Passage[] {
       id: 'story:gw150914',
       kind: 'story',
       title: 'GW150914: LIGO hears the first gravitational wave',
-      text: 'On 14 September 2015 at 09:50:45 UTC, the two LIGO detectors, at Livingston, Louisiana, and 6.9 ms later at Hanford, Washington, heard a gravitational wave for the first time: the chirp of two black holes, 36 and 29 times the Sun’s mass, spiralling together and merging into one of 62, 1.3 billion light-years away. Played as a story in four chapters: the black holes merging and their wave spiralling out through space; its journey to Earth, stretching and squeezing the planet as it passes; a ring of free masses showing what it does to space; and LIGO Livingston’s 4 km arms moved by the strain it measured, beside what both detectors recorded.',
+      text: 'On 14 September 2015 at 09:50:45 UTC, the two LIGO detectors, at Livingston, Louisiana, and 6.9 ms later at Hanford, Washington, heard a gravitational wave for the first time, the first direct detection of gravitational waves: the chirp of two black holes, 36 and 29 times the Sun’s mass, spiralling together and merging into one of 62, 1.3 billion light-years away. Played as a story in four chapters: the black holes merging and their wave spiralling out through space; its journey to Earth, stretching and squeezing the planet as it passes; a ring of free masses showing what it does to space; and LIGO Livingston’s 4 km arms moved by the strain it measured, beside what both detectors recorded.',
       sources: ['abbott2016', 'gwoscGw150914'],
       anchors: [
         {

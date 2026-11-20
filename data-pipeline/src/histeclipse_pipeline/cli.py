@@ -43,6 +43,7 @@ from histeclipse_pipeline.eruptions import fetch_eruptions
 from histeclipse_pipeline.extremes import fetch_extremes
 from histeclipse_pipeline.fossils import fetch_fossils
 from histeclipse_pipeline.gw150914 import fetch_gw150914
+from histeclipse_pipeline.gw170817 import fetch_gw170817
 from histeclipse_pipeline.holocene_stacks import fetch_holocene_stacks
 from histeclipse_pipeline.holocene_temperature import fetch_holocene_temperature
 from histeclipse_pipeline.iceoutlines import fetch_outlines
@@ -416,6 +417,12 @@ def gw150914(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write GW150914 as LIGO measured it, from GWOSC's Figure 1 files (public/data)."""
     count = fetch_gw150914(args.out)
     return _say(f"wrote GW150914's strain, {count} samples a series, to {args.out}")
+
+
+def gw170817(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write GW170817 as LIGO and Virgo recorded it, as time-frequency maps (public/data)."""
+    count = fetch_gw170817(args.out, Path(".cache/gw170817"))
+    return _say(f"wrote GW170817's maps, {count} tiles a detector, to {args.out}")
 
 
 def saturn_rings(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -973,6 +980,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         gw150914,
         "write GW150914 as LIGO measured it, and its best-fit waveform (GWOSC, Figure 1)",
         "output JSON file (public/data/gw150914.json)",
+    ),
+    "gw170817": (
+        gw170817,
+        "write GW170817 as LIGO and Virgo recorded it: each detector's time-frequency map",
+        "output JSON file (public/data/gw170817.json)",
     ),
     "saturn-rings": (
         saturn_rings,

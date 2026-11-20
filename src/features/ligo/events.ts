@@ -36,6 +36,8 @@ type WaveOrigin =
       readonly chirp: ChirpOptions;
       /** When the merger's wave reached Livingston, s after the minute of `utc`. */
       readonly atLivingston: number;
+      /** What the detectors recorded, as time-frequency maps, if published (#1000). */
+      readonly recorded?: string;
     };
 
 export interface WaveEvent {
@@ -139,7 +141,7 @@ export const WAVE_EVENTS: Readonly<Record<Wave, WaveEvent>> = {
       space:
         'A ring of free masses, as the gravitational wave from two neutron stars merging 130 million light-years away comes through it toward you: space stretches one way and squeezes the other, faster and harder as the stars spiral in, then stops, for what came after the merger was not heard. It is drawn at the same stretch as GW150914, and sways about half as much: ten times nearer, but from stars some twenty-five times lighter.',
       detector:
-        'LIGO Livingston, Louisiana (30.56° N, 90.77° W), seen from above, north at the top: two arms 4 km long at right angles. The wave stretched one arm as it shrank the other. Quieter than GW150914, it stayed in the detectors’ band far longer, about 100 s and 3,000 cycles from 24 Hz, so it was heard more clearly: Livingston’s signal-to-noise ratio was 26.4, Hanford’s 18.8, and Virgo’s, in Italy, 2.0. At Livingston a brief burst of noise struck 1.1 s before the merger; it was modelled and taken out. The arms here are moved by a model of the wave, not by the measured strain.',
+        'LIGO Livingston, Louisiana (30.56° N, 90.77° W), seen from above, north at the top: two arms 4 km long at right angles. The wave stretched one arm as it shrank the other. Quieter than GW150914, it stayed in the detectors’ band far longer, about 100 s and 3,000 cycles from 24 Hz, so it was heard more clearly: Livingston’s signal-to-noise ratio was 26.4, Hanford’s 18.8, and Virgo’s, in Italy, 2.0. At Livingston a brief burst of noise struck 1.1 s before the merger; it was modelled and taken out. The arms here are moved by a model of the wave. Beneath, what each detector recorded, as time against frequency: the chirp, under the noise in the strain itself, shows as a rising track at Hanford and Livingston.',
       kilonova:
         'The kilonova, AT 2017gfo: what the merger flung out, glowing as the newly made radioactive nuclei in it decay. As its light is read (Kasen et al. 2017): about 0.025 Suns thrown out toward the poles (blue) at a third of light’s speed, lighter elements whose glow peaked within a day and faded within two; and about 0.04 Suns, slower, about the orbit’s plane (red), rich in lanthanides, heavy elements so opaque that their light came out late, red and infrared, over weeks. Gold and platinum would be made with them, but were not seen; strontium is the one element named in its spectrum. Each point is placed by its speed, so the cloud keeps its shape and is drawn at one size: the clock says how far out it truly is. Each glow is a simple model, drawn against its own peak; the clock runs from an hour to four weeks, faster as it goes.',
     },
@@ -163,7 +165,12 @@ export const WAVE_EVENTS: Readonly<Record<Wave, WaveEvent>> = {
     journey: GW170817_TRIP,
     // The inspiral ended at 12:41:04.4 UTC at Earth's middle (Abbott et al. 2017); from NGC 4993's
     // way, the wave reached Livingston 15.5 ms after that (`journey.test.ts`).
-    origin: { kind: 'model', chirp: GW170817_MODEL, atLivingston: 4.4155 },
+    origin: {
+      kind: 'model',
+      chirp: GW170817_MODEL,
+      atLivingston: 4.4155,
+      recorded: 'gw170817.json',
+    },
     more: { chapter: 'kilonova', label: 'Gold and platinum', card: HEAVY_ELEMENTS_CARD },
   },
 };

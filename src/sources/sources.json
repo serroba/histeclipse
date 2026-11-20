@@ -765,7 +765,7 @@
   "gwoscGw170817": {
     "name": "GWOSC: GW170817",
     "kind": "dataset",
-    "cite": "LIGO Scientific Collaboration and Virgo Collaboration, Gravitational Wave Open Science Center (GWOSC): GW170817's event page in GWTC-1 (version 3), with its parameters, the strain each detector recorded and the posterior samples, as read on 20 November 2026",
+    "cite": "LIGO Scientific Collaboration and Virgo Collaboration, Gravitational Wave Open Science Center (GWOSC): GW170817's event page in GWTC-1 (version 3), with its parameters, the posterior samples, and the strain each detector recorded, 32 s at 4,096 samples a second from GPS 1187008867 for LIGO Hanford, LIGO Livingston and Virgo (the HDF5 files H-H1, L-L1 and V-V1_GWOSC_4KHZ_R1-1187008867-32), as downloaded on 21 November 2026; Livingston's glitch is still in its strain",
     "url": "https://gwosc.org/events/GW170817/",
     "licence": "CC BY 4.0"
   },
