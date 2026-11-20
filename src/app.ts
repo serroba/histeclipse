@@ -6,10 +6,10 @@ import { SolarCatalog } from './data/solarCatalog';
 import { createDatingCard } from './ui/datingCard';
 import { focusOf } from './globe/focus';
 import { createGlobe } from './globe/scene';
+import { loadImpacts } from './data/impacts';
 import {
   DEEP_TIME,
   drawAll,
-  EARTH_LAYERS,
   FOCUS,
   FOUND_THE_WAY_IN,
   HISTORY,
@@ -55,13 +55,9 @@ import { mountFamous } from './features/famous';
 import { mountShower } from './features/shower';
 import { mountWave } from './features/ligo';
 import { mountTelescopeList } from './features/telescopes';
-import { mountCarbonMade } from './features/carbonMade';
-import { mountIceAges } from './features/iceAges';
-import { mountDeepSurfaces, PLATES_CHIP } from './features/deepSurfaces';
-import { mountRocks } from './features/rocks';
-import { mountWays } from './features/ways';
-import { mountDates } from './features/dates';
-import { mountEmpires } from './features/empires';
+import { createHoloceneNote } from './features/iceAges';
+import { createCo2ArchiveFile, createPlateMasks } from './features/deepSurfaces';
+import { createBorderFiles, createStatesNote } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
 import { mountYears } from './features/years';
 import { ECLIPSE_EARTH_PARTS, mountEclipses } from './features/eclipses';
@@ -90,8 +86,6 @@ import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment
 import { createZoomRail } from './ui/zoomRail';
 import { railView } from './ui/railView';
 import { createWaysLegend } from './ui/waysLegend';
-import { IMPACTS_CHIP, mountImpacts } from './features/impacts';
-import { createTemperatureLayer } from './features/temperature';
 
 export async function startApp(root: HTMLElement): Promise<void> {
   const base = import.meta.env.BASE_URL;
@@ -169,7 +163,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     async () => {
       const [loaded, periods] = await Promise.all([
-        impacts.load(),
+        loadImpacts(`${base}data/impacts.json`, fetchJson),
         loadNamedPeriods(`${base}data/periods.json`, fetchJson),
       ]);
       return { impacts: loaded, coasts: countryRings(periods) };
@@ -197,21 +191,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     setScale: (scale) => {
       deepTime.setScale(scale);
     },
-    said: () => [
-      ['ways', ways.said()],
-      ['rocks', rocks.said()],
-      ['dates', dates.said()],
-      ['impacts', impacts.said()],
-      ...features.said(),
-      ['carbonMade', carbonMade.said()],
-    ],
+    said: () => features.said(),
     // How each layer's load stands (#751): the features on the contract report theirs.
     loads: () => features.loads(),
     actions: () => [
-      ['impacts', impacts.action()],
-      ['rocks', rocks.action()],
-      ['dates', dates.action()],
-      ['carbonMade', carbonMade.action()],
       // The features on the contract offer their own (#909).
       ...features.actions(),
     ],
@@ -257,11 +240,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const boundaries = mountBoundaries({ ...partContext, globe });
   // Deep time (#445): its span and moment, playing through it, its bar and glance, Earth's
   // surface from the elevation maps and magnetic north.
-  // The temperature maps in deep time (#457).
-  const temperatureLayer = createTemperatureLayer({
-    dataUrl: (path) => `${base}data/${path}`,
-    fetchJson,
-    globe,
+  // Two files deep time itself asks about, shared with the plates' and the air's features.
+  const plateMasks = createPlateMasks(base, fetchJson);
+  const co2Archive = createCo2ArchiveFile(base, fetchJson, {
     notify,
     arrived: redraws.ask('deepTime'),
   });
@@ -269,7 +250,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const deepTime = mountDeepTime({
     ...partContext,
     globe,
-    chips: [PLATES_CHIP, ...deepChipsOf(FEATURES), IMPACTS_CHIP],
+    chips: deepChipsOf(FEATURES),
     step: () => {
       sync.step();
     },
@@ -281,21 +262,15 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     storyDate: boundaries.storyDate,
     bar: (state, moment) => {
-      const { plates, ...surfaced } = surfaces.bar(state, moment.ma);
-      const chips = new Map(features.deep(state, moment));
-      chips.set('plates', plates);
-      chips.set('impacts', impacts.chip(state, moment.scale));
-      return { ...iceAges.bar(state, moment.ma), ...surfaced, chips };
+      const chips = features.deep(state, moment);
+      return { ...features.deepBar(state, moment), chips };
     },
-    temperature: temperatureLayer,
     off: (state) => {
-      surfaces.off();
-      iceAges.off(state);
       features.deepOff(state);
     },
-    platesReach: () => surfaces.platesReach(),
+    platesReach: () => plateMasks.reach(),
     loadArchive: () => {
-      surfaces.loadArchive();
+      co2Archive.load();
     },
   });
   // A passage's or a destination's view laid over the reader's, as a step back can undo.
@@ -382,30 +357,23 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // A gravitational wave passing (#829): space stretched and squeezed, over the globe.
   const wave = mountWave({ ...partContext, globe, showCard: markerCard.show });
   const telescopeList = mountTelescopeList({ ...partContext, showCard: markerCard.show });
-  // Where cosmic rays make carbon-14 (#269): a glow over the globe, and its card.
-  const carbonMade = mountCarbonMade({
-    ...partContext,
-    globe,
-    watchShower: (dipole, fromSun) => {
-      shower.watch(dipole, fromSun);
-    },
-    refresh: redraws.ask('layers'),
-  });
+  // Cliopatria's border files, shared by the states' layer and the eclipses; and what the years'
+  // track last said of the states (nothing until they change).
+  const borderFiles = createBorderFiles(base, fetchJson);
+  const statesNote = createStatesNote(redraws.ask('years'));
+  const holoceneNote = createHoloceneNote(redraws.ask('years'));
   // The years (#446): the track, playing them, travelling through them, and carbon-14 in the air.
   const years = mountYears({
     ...partContext,
     globe,
     datingCard,
     travelChanged: (now) => {
-      dates.show(now);
-      impacts.show(now);
       features.show(now, moment.terrestrial());
-      rocks.show(now);
       showLayers(now);
-      iceAges.showHolocene(now);
+      features.deepOff(now);
     },
-    statesSaid: () => empires.said(),
-    holoceneText: () => iceAges.holoceneText(),
+    statesSaid: () => statesNote.said(),
+    holoceneText: () => holoceneNote.said(),
   });
   // Away from Earth and the Moon, the bar's time is the body's own cycle as Earth sees it (#447);
   // with the spacecraft on, it is their launches, the first to today (#702).
@@ -417,15 +385,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const launches = mountTimeBars({ ...partContext, history: { ...years.track, stop: years.stop } });
 
   // The borders of past states (#446), a century's file at a time, and what changed.
-  const empires = mountEmpires({
-    ...partContext,
-    globe,
-    noted: redraws.ask('years'),
-    drawn: () => {
-      if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get(), hereData()));
-    },
-  });
-
   // The eclipses (#447): the year's on the bar, picking one, and the moment shown of it.
   const eclipses = mountEclipses({
     ...partContext,
@@ -433,8 +392,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     catalogs: () => ({ lunar: lunarCatalog, solar: solarCatalog }),
     famous: () => famous.list(),
     placeName,
-    territoryOf: (name, shown) => empires.territoryOf(name, shown),
-    centuryFor: (year) => empires.centuryFor(year),
+    territoryOf: (name, shown) => borderFiles.territoryOf(name, shown),
+    centuryFor: (year) => borderFiles.centuryFor(year),
     timelineButtons: [famous.button, records.button],
     timelineExtras: [years.track.extras, cycle.extras, launches.extras],
   });
@@ -490,7 +449,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       ...explore.dialogs,
       markerCard.dialog,
       datingCard.dialog,
-      carbonMade.dialog,
       shower.container,
       shower.stage,
       ...wave.elements,
@@ -501,48 +459,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   parsed.warnings.forEach(notify);
 
   // Drawn on the globe as layers of their own (#379).
-  // History's maps (#446): rocks, ways of life and dated squares, their layers in this order.
-  const historyLayer = {
-    ...partContext,
-    globe,
-    refresh: redraws.ask('layers'),
-  };
-  const rocks = mountRocks({
-    ...historyLayer,
-    enterDeepTime: (ma, scale) => {
-      deepTime.enterDeepTime(ma, scale);
-    },
-  });
-  const ways = mountWays({ ...historyLayer, legend: waysLegend });
-  const dates = mountDates({
-    ...historyLayer,
-    radiocarbonCurves: () => years.curves(),
-    datingCard,
-  });
-  // Deep time's climate and continents (#444): the temperature, the plates and how far they
-  // moved, and the air.
-  const surfaces = mountDeepSurfaces({
-    ...partContext,
-    globe,
-    redraw: redraws.ask('deepTime'),
-  });
-  // The ice ages' Earth (#444): the sea's level and the land it left bare, the ice sheets and
-  // their outlines, the sea ice, and the Holocene's while travelling through the years.
-  const iceAges = mountIceAges({
-    ...partContext,
-    globe,
-    redraw: redraws.ask('deepTime'),
-    holoceneShown: redraws.askWith('years'),
-  });
-  // Impact craters and deposits (#474): their layer is added here, in the globe's order.
-  const impacts = mountImpacts({
-    ...partContext,
-    globe,
-    strikesOn: globeContainer,
-    showCard: markerCard.show,
-    redrawDeep: redraws.askWith('deepTime'),
-    refreshLayers: redraws.askWith('layers'),
-  });
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureCore: FeatureCore = {
     base,
@@ -570,6 +486,48 @@ export async function startApp(root: HTMLElement): Promise<void> {
     tree: { openLineages: treeOfLife.openLineagesAt, openTree: treeOfLife.openTreeAt },
     settledLand: globe,
     evenLight: globe,
+    deepTime: {
+      enter: deepTime.enterDeepTime,
+      again: redraws.ask('deepTime'),
+      goTo: (ma, layer, where) => {
+        partContext.goToDeepTime(ma, layer, where);
+      },
+    },
+    strikes: {
+      playImpact: (spec) => {
+        globe.playImpact(spec);
+      },
+      flyTo: (place) => {
+        globe.flyTo(place);
+      },
+      zoomTo: (distance) => {
+        globe.zoomTo(distance);
+      },
+      on: globeContainer,
+    },
+    radiocarbon: { curves: () => years.curves() },
+    datingCard,
+    carbonGlow: globe,
+    shower: { watch: shower.watch },
+    overPage: {
+      add: (element) => {
+        root.append(element);
+      },
+    },
+    stateBorders: borderFiles,
+    yearsTrack: statesNote,
+    whyHere: {
+      again: () => {
+        if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get(), hereData()));
+      },
+    },
+    iceAgeEarth: globe,
+    temperatureMaps: globe,
+    holoceneNote,
+    plateOutlines: globe,
+    plateMasks,
+    co2Archive,
+    waysKey: waysLegend,
   };
   const features = mountFeatures(FEATURES, featureCore, capabilities);
   const [deltaT, lunarCatalog, solarCatalog] = await Promise.all([
@@ -588,7 +546,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   // A marker tapped: a feature's, or a crater's.
   globe.onMarkerPick((key) => {
-    [features, impacts].some((part) => part.pick(key));
+    features.pick(key);
   });
 
   /** Away from Earth: Earth's own bits rest, and the body in view shows. */
@@ -606,9 +564,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** What the layers have loaded, for "Why here?" to read. */
   function hereData(): HereData {
     return {
-      drawn: empires.drawn(),
-      waysOfLife: ways.data(),
-      rocks: rocks.units(),
       features: features.here(store.get()),
     };
   }
@@ -631,11 +586,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     viewSwitch.render(state.mode, state.view, bodies.moon() !== null, state.focus);
   }
 
-  /** The Layers panel, and the borders it turns on. */
+  /** The Layers panel, and Explore's view of the layers. */
   function showLayers(state: ViewState): void {
     layersPanel.show(state);
     explore.show(state);
-    empires.show(state);
   }
 
   time.bind({ years, deepTime, launches });
@@ -664,11 +618,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
     },
     { draw: bodies.render },
-    { when: on(EARTH_LAYERS), draw: dates.show },
-    { when: on(EARTH_LAYERS), draw: ways.show },
-    { when: on(EARTH_LAYERS), draw: rocks.show },
-    { when: on(EARTH_LAYERS), draw: impacts.show },
-    { when: on(EARTH_LAYERS), draw: carbonMade.show },
     { when: on(LAYERS_PANEL), draw: showLayers },
     { draw: years.settle },
     {

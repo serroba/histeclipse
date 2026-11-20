@@ -54,7 +54,7 @@ export const MAX_LINES = 400;
  * the same line (#479).
  */
 export const LINE_LIMITS = {
-  'app.ts': 789,
+  'app.ts': 732,
   'globe/scene.ts': 484,
   'ui/deepTimeBar.ts': 434,
   'features/treeOfLife/lineagesSheet.ts': 545,
@@ -95,10 +95,7 @@ export const FUNCTION_LIMITS = {
   'features/boundaries/holoceneChart.ts': 2,
   'features/boundaries/index.ts': 1,
   'features/carbonMade/carbonMadeCard.ts': 1,
-  'features/carbonMade/index.ts': 2,
   'features/cycle/index.ts': 1,
-  'features/dates/index.ts': 1,
-  'features/deepSurfaces/index.ts': 1,
   'features/deepTime/deepGlance.ts': 1,
   'features/deepTime/index.ts': 3,
   'features/eclipses/index.ts': 1,

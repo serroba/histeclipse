@@ -217,6 +217,13 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     const reconstructed = ma <= (context.platesReach() ?? PLATES_REACH_MA);
     const sketch = uncharted ? sketchAt(ma, choices, reconstructed) : null;
     globe.setSketch(sketch);
+    // The layers' fields of the bar, drawing them: the temperature maps ahead as it plays.
+    const { temperatureDrawn, ...fields } = context.bar(state, {
+      ma,
+      scale,
+      uncharted,
+      maPerSecond: playing ? playSpeed() : null,
+    });
     deepBar.render({
       ma,
       story,
@@ -227,8 +234,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       playing,
       speed: deepSpeedFor(state.deepScale, deepSpeeds[state.deepScale]),
       scale,
-      ...context.bar(state, { ma, scale }),
-      temperature: context.temperature.view(state, { ma, ice, uncharted }),
+      ...fields,
       sketch: sketch === null ? null : { sketch, choices },
     });
     glance.render({
@@ -237,9 +243,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       ma,
       oldest: spanOf(scale),
       playing,
-      temperature: context.temperature.drawn(state, { ma, ice, uncharted }),
+      temperature: temperatureDrawn,
     });
-    context.temperature.show(state, { ma, ice, uncharted }, playing ? playSpeed() : null);
     paleoIndex ??= loadPaleoDemIndex(`${base}data/paleodem/index.json`, fetchJson);
     paleoIndex.then(
       (index) => {

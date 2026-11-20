@@ -9,7 +9,14 @@ import type { LayerLoad } from '../state/activeLayers';
 import type { HereFact } from '../sources/registry';
 import type { Layer, ViewState } from '../state/viewState';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
-import type { Capabilities, DeepMoment, Feature, FeatureCore, LayerAction } from './feature';
+import type {
+  Capabilities,
+  DeepBarFields,
+  DeepMoment,
+  Feature,
+  FeatureCore,
+  LayerAction,
+} from './feature';
 
 export interface Features {
   /** The moment shown: `jdTT` in Terrestrial Time, or null before it is known. */
@@ -18,6 +25,8 @@ export interface Features {
   redraw(state: ViewState, previous: ViewState | null, jdTT: number | null): void;
   /** Deep time shown: the chips of those that have one, by layer. */
   deep(state: ViewState, moment: DeepMoment): Map<Layer, DeepChipView>;
+  /** Deep time shown: the fields of the bar's view the features have, together (#909). */
+  deepBar(state: ViewState, moment: DeepMoment): Required<DeepBarFields>;
   /** Deep time left. */
   deepOff(state: ViewState): void;
   /** A marker tapped: whether it was one of theirs, and if so, picked. */
@@ -28,15 +37,45 @@ export interface Features {
   actions(): (readonly [Layer, LayerAction | null])[];
   /** How each feature's layer's load stands, where it is loading or failed (#751). */
   loads(): (readonly [Layer, LayerLoad | null])[];
-  /** What the features have at the place picked, for "Why here?" (#893). */
-  here(state: ViewState): HereFact[];
+  /** What the features have at the place picked, for "Why here?" (#893), each with its layer. */
+  here(state: ViewState): (readonly [Layer, HereFact])[];
+}
+
+/** Deep time's bar with none of the layers' fields filled: what each says while off. */
+function deepBarOff(state: ViewState): Required<DeepBarFields> {
+  return {
+    air: { on: false },
+    plateMotion: null,
+    coastline: null,
+    ice: { drawn: false, oldestKa: null, standIn: null },
+    iceOutlines: null,
+    seaIce: null,
+    seaLevel: { on: false },
+    temperature: {
+      on: false,
+      wanted: state.temperatureModel,
+      shown: null,
+      show: state.temperatureShow,
+      changing: false,
+      readings: [],
+      note: null,
+    },
+    temperatureDrawn: false,
+  };
 }
 
 /** The chips in deep time's bar, of the features that have one, in their order. */
 export function deepChipsOf(features: readonly Feature[]): DeepChip[] {
-  return features.flatMap((feature) =>
-    feature.deepChip === undefined ? [] : [{ layer: feature.id, ...feature.deepChip }],
-  );
+  return features
+    .filter((feature) => feature.deepChip !== undefined)
+    .map((feature, index) => ({ feature, index }))
+    .sort(
+      (a, b) =>
+        (a.feature.deepChipOrder ?? 0) - (b.feature.deepChipOrder ?? 0) || a.index - b.index,
+    )
+    .flatMap(({ feature }) =>
+      feature.deepChip === undefined ? [] : [{ layer: feature.id, ...feature.deepChip }],
+    );
 }
 
 export function mountFeatures(
@@ -67,6 +106,11 @@ export function mountFeatures(
       }
       return chips;
     },
+    deepBar(state, moment) {
+      const fields = deepBarOff(state);
+      for (const { shown } of mounted) Object.assign(fields, shown.deepBar?.(state, moment));
+      return fields;
+    },
     deepOff(state) {
       for (const { shown } of mounted) shown.deep?.(state, null);
     },
@@ -81,6 +125,10 @@ export function mountFeatures(
     actions: () =>
       mounted.map(({ feature, shown }) => [feature.id, shown.action?.() ?? null] as const),
     loads: () => mounted.map(({ feature, shown }) => [feature.id, shown.load?.() ?? null] as const),
-    here: (state) => mounted.flatMap(({ shown }) => shown.here?.(state) ?? []),
+    here: (state) =>
+      mounted.flatMap(({ feature, shown }) => {
+        const facts = [shown.here?.(state) ?? []].flat();
+        return facts.map((fact) => [feature.id, fact] as const);
+      }),
   };
 }

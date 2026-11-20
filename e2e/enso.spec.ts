@@ -24,6 +24,12 @@ test('the El Niño indices are charted side by side, and a month where they disa
     await expect(page.getByTestId('globe')).toHaveAttribute('data-enso-sst', 'on');
     await expect(panel).toContainText('blue colder, red warmer, to ±4 °C');
   });
+  await test.step('When they fold the panel, Then it is one line with its name, and unfolds again', async () => {
+    await panel.getByRole('button', { name: 'Fold El Niño and La Niña' }).click();
+    await expect(panel.getByRole('list', { name: 'The indices' })).toBeHidden();
+    await panel.getByRole('button', { name: 'Unfold El Niño and La Niña' }).click();
+    await expect(panel.getByRole('list', { name: 'The indices' })).toBeVisible();
+  });
   await test.step('And the month is said with each index’s call, since they disagree', async () => {
     await expect(panel).toContainText('January 2025: the indices disagree. RONI: La Niña');
     await expect(panel).toContainText('ONI: neither');

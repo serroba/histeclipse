@@ -4,54 +4,29 @@
  * the layers' data comes in as it has loaded.
  */
 
-import type { Territory } from '../../data/empires';
-import { rockAt, type RockUnit } from '../../data/rocks';
-import { waysAt, type WaysOfLife } from '../../data/waysOfLife';
 import { periodAt } from '../../deepTime/periods';
-import { hereFacts, placeText } from './here';
+import { placeText } from './here';
 import { PERIOD_EVIDENCE } from '../../sources/periodEvidence';
 import type { HereFact, WhyId } from '../../sources/registry';
-import { cliopatriaYear } from '../../state/layerCatalog';
-import type { ViewState } from '../../state/viewState';
-import { PRESENT_YEAR } from '../../time/present';
-import { astronomicalYear, formatYear } from '../../time/year';
+import { LAYERS, type Layer, type ViewState } from '../../state/viewState';
 import type { HereView, WhyMoment } from '../../ui/whySheet';
 
 /** What the layers have loaded, for "Why here?" to read. */
 export interface HereData {
-  /** The states last drawn, and the year they were drawn for. */
-  readonly drawn: { readonly year: number; readonly territories: readonly Territory[] } | null;
-  readonly waysOfLife: WaysOfLife | null;
-  readonly rocks: readonly RockUnit[] | null;
-  /** What the features on the contract have at the place (#893). */
-  readonly features: readonly HereFact[];
+  /** What the features on the contract have at the place (#893), each with its layer. */
+  readonly features: readonly (readonly [Layer, HereFact])[];
 }
 
 /** What each layer on the map has at the place picked: "Why here?". */
 export function hereView(state: ViewState, data: HereData): HereView | null {
   if (state.location === null || state.ma !== null) return null;
-  const year = state.time.date.year;
-  const words = (y: number): string => formatYear(astronomicalYear(y));
-  const shownYear = cliopatriaYear(year, PRESENT_YEAR);
-  const { drawn, waysOfLife, rocks } = data;
-  const waysThen =
-    state.layers.has('ways') && waysOfLife !== null ? waysAt(waysOfLife, year) : null;
-  return {
-    place: placeText(state.location),
-    facts: hereFacts({
-      place: state.location,
-      yearText: words(year),
-      states: state.layers.has('empires')
-        ? {
-            source: state.borders,
-            territories: drawn?.year === year ? drawn.territories : null,
-            asOf: shownYear === year ? null : words(shownYear),
-          }
-        : null,
-      ways: waysThen === null ? null : { at: waysThen, momentText: words(waysThen.year) },
-      rock: state.layers.has('rocks') && rocks !== null ? rockAt(rocks, state.location) : undefined,
-    }).concat(data.features),
-  };
+  // In the layers' own order (#909), as the Sources list is.
+  const place = (layer: Layer): number => LAYERS.indexOf(layer);
+  const facts = data.features
+    .map(([layer, fact], index) => ({ fact, at: place(layer), index }))
+    .sort((a, b) => a.at - b.at || a.index - b.index)
+    .map(({ fact }) => fact);
+  return { place: placeText(state.location), facts };
 }
 
 /** What "Here" depends on, so it is written again only when that changes. */
@@ -60,11 +35,7 @@ export function hereVersion(state: ViewState, data: HereData): string {
     state.location === null ? '' : placeText(state.location),
     state.time.date.year,
     [...state.layers].join(','),
-    state.borders,
-    data.drawn?.year ?? '',
-    data.waysOfLife === null ? 0 : 1,
-    data.rocks === null ? 0 : 1,
-    data.features.map(({ text }) => text).join('/'),
+    data.features.map(([, { text }]) => text).join('/'),
   ].join('|');
 }
 

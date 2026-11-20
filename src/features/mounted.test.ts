@@ -97,7 +97,35 @@ describe('the facts of the place picked (#893)', () => {
       {} as FeatureCore,
       {} as Capabilities,
     );
-    expect(features.here(base)).toEqual([{ title: 'Fossils', text: 'Here.', why: 'fossils' }]);
+    expect(features.here(base)).toEqual([
+      ['fossils', { title: 'Fossils', text: 'Here.', why: 'fossils' }],
+    ]);
+  });
+});
+
+describe("deep time's bar fields (#909)", () => {
+  it('gathers the fields each feature has, none from those that have none', () => {
+    const air = fake('air', () => []);
+    const plates = fake('plates', () => []);
+    Object.assign(air.shown, { deepBar: () => ({ air: { on: false } }) });
+    Object.assign(plates.shown, { deepBar: () => ({ plateMotion: 'Moved 3 km.' }) });
+    const features = mountFeatures(
+      [air.feature, plates.feature, fake('fossils', () => []).feature],
+      {} as FeatureCore,
+      {} as Capabilities,
+    );
+    const fields = features.deepBar(base, { ma: 1, scale: 'ice' });
+    expect(fields).toMatchObject({ air: { on: false }, plateMotion: 'Moved 3 km.' });
+    // What no feature fills says it is off.
+    expect(fields).toMatchObject({
+      coastline: null,
+      ice: { drawn: false, oldestKa: null, standIn: null },
+      iceOutlines: null,
+      seaIce: null,
+      seaLevel: { on: false },
+      temperature: { on: false, wanted: base.temperatureModel, shown: null },
+      temperatureDrawn: false,
+    });
   });
 });
 
@@ -107,5 +135,17 @@ describe("deep time's chips", () => {
     const withChip = { ...fake('fossils', () => []).feature, deepChip: chip } as Feature;
     const without = fake('asteroids', () => []).feature;
     expect(deepChipsOf([without, withChip])).toEqual([{ layer: 'fossils', ...chip }]);
+  });
+
+  it('puts a chip that asks to come later after the others, whatever the order mounted (#909)', () => {
+    const fossils = { label: 'Fossils', why: 'fossils' } as const;
+    const impacts = { label: 'Impacts', why: 'impacts' } as const;
+    const first = {
+      ...fake('impacts', () => []).feature,
+      deepChip: impacts,
+      deepChipOrder: 1,
+    } as Feature;
+    const second = { ...fake('fossils', () => []).feature, deepChip: fossils } as Feature;
+    expect(deepChipsOf([first, second]).map(({ layer }) => layer)).toEqual(['fossils', 'impacts']);
   });
 });

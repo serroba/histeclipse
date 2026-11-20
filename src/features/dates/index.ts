@@ -1,15 +1,12 @@
 /**
- * Archaeological radiocarbon dates (p3k14c) as a part of the page (#446): in historical time
- * with the layer on, the squares with dates, and the place's, if picked, with a way to see how a
- * date there was found. The counts load with the layer, a place's tile when it is picked.
+ * Archaeological radiocarbon dates (p3k14c) as a feature (#380, #909): in historical time with
+ * the layer on, the squares with dates, and the place's, if picked, with a way to see how a date
+ * there was found. The counts load with the layer, a place's tile when it is picked.
  */
 
-import type { Globe } from '../../globe/globe';
-import type { PartContext } from '../part';
-import { RESTING } from '../feature';
-import type { DatingCard } from '../../ui/datingCard';
+import { feature, RESTING, type FeatureContext, type LayerAction } from '../feature';
+import type { Fetch } from '../../util/fetchJson';
 import { dateCellsLayer } from '../../globe/historyPaintLayers';
-import { type Radiocarbon } from '../../data/radiocarbon';
 import {
   datesHere,
   datesNear,
@@ -18,124 +15,157 @@ import {
   loadDatesTile,
   tileKeyOf,
   type DatesHeat,
+  type DatesNear,
   type DatesTile,
 } from '../../data/radiocarbonDates';
 import { type GeoPoint, type ViewState } from '../../state/viewState';
 import { errorMessage } from '../../util/errors';
+import { carried } from './carried';
 
-/** What it asks of the rest of the page. */
-export interface DatesContext extends PartContext {
-  readonly globe: Pick<Globe, 'addLayer'>;
-  /** Say it again in the Layers panel: what it says has changed. */
-  refresh(): void;
-  /** The calibration curves, loaded once. */
-  radiocarbonCurves(): Promise<Radiocarbon>;
-  /** The card that carries a date across a curve. */
-  readonly datingCard: Pick<DatingCard, 'open'>;
+/** What the dates near a place and a year say, once the place's tile is in. */
+interface Found {
+  readonly place: GeoPoint;
+  readonly year: number;
+  readonly said: string;
+  readonly action: LayerAction | null;
 }
 
-export interface DatesPart {
-  readonly show: (state: ViewState) => void;
-  /** What the Layers panel says under the layer, if anything. */
-  readonly said: () => string | null;
-  /** The Layers panel's way to how a date here was found, once the place's tile is in. */
-  readonly action: () => { readonly label: string; readonly run: () => void } | null;
-}
+type DatesContext = FeatureContext<'radiocarbon' | 'datingCard'>;
 
-export function mountDates(context: DatesContext): DatesPart {
-  const { base, fetchJson, store } = context;
-  const datesOnGlobe = context.globe.addLayer(dateCellsLayer);
-  // Archaeological radiocarbon dates (p3k14c): the counts load with the layer, a place's tile
-  // when it is picked.
-  let datesHeat: DatesHeat | null = null;
-  let datesHeatLoading: Promise<DatesHeat> | null = null;
-  const datesTiles = new Map<string, Promise<DatesTile | null>>();
-  let datesSaid: string | null = null;
-  let datesAction: { readonly label: string; readonly run: () => void } | null = null;
-
-  function datesTile(heat: DatesHeat, place: GeoPoint): Promise<DatesTile | null> {
+/** A place's tile of dates, fetched once a tile; a place with no dates nearby has none. */
+function tilesFrom(
+  base: string,
+  fetchJson: Fetch,
+): (heat: DatesHeat, place: GeoPoint) => Promise<DatesTile | null> {
+  const tiles = new Map<string, Promise<DatesTile | null>>();
+  return (heat, place) => {
     const key = tileKeyOf(heat, place);
-    let tile = datesTiles.get(key);
+    let tile = tiles.get(key);
     if (tile === undefined) {
-      // A place with no dates nearby has no tile: none to fetch, nothing to say.
+      // No tile: none to fetch, nothing to say.
       tile = loadDatesTile(`${base}data/radiocarbon-dates/tiles/${key}.json`, fetchJson).catch(
         () => null,
       );
-      datesTiles.set(key, tile);
+      tiles.set(key, tile);
     }
     return tile;
-  }
-
-  /** In historical time with the layer on: the squares with dates, and the place's, if picked. */
-  function showDates(state: ViewState): void {
-    const on = state.layers.has('dates') && state.ma === null;
-    datesAction = null;
-    if (!on || context.timeline.travelling()) {
-      datesSaid = on ? RESTING : null;
-      datesOnGlobe.update(null);
-      return;
-    }
-    if (datesHeat === null) {
-      datesSaid = 'Loading the radiocarbon dates…';
-      if (datesHeatLoading === null) {
-        datesHeatLoading = loadDatesHeat(`${base}data/radiocarbon-dates/heat.json`, fetchJson);
-        datesHeatLoading.then(
-          (loaded) => {
-            datesHeat = loaded;
-            showDates(store.get());
-            context.refresh();
-          },
-          (error: unknown) => {
-            datesHeatLoading = null;
-            context.notify(`Could not load the radiocarbon dates: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return;
-    }
-    const heat = datesHeat;
-    const year = state.time.date.year;
-    const near = datesNear(heat, year);
-    datesOnGlobe.update(
-      near === null ? null : { cells: near.cells, cellDegrees: heat.cellDegrees },
-    );
-    datesSaid = datesNote(near, null);
-    const place = state.location;
-    if (place === null || near === null) return;
-    void datesTile(heat, place).then((tile) => {
-      const now = store.get();
-      // Only if the view still shows this place and year.
-      if (now.location !== place || now.time.date.year !== year || !now.layers.has('dates')) return;
-      const here = tile === null ? { samples: [], sites: [] } : datesHere(heat, tile, place, year);
-      datesSaid = datesNote(near, here);
-      // The date nearest the middle of the step, to carry across the curve.
-      const middle = here.samples[Math.floor(here.samples.length / 2)];
-      datesAction =
-        middle === undefined
-          ? null
-          : {
-              label: 'How was a date here found?',
-              run: () => {
-                void context.radiocarbonCurves().then((curves) => {
-                  const south = place.latitude < 0;
-                  const what = [middle.material, middle.period].filter((word) => word !== '');
-                  context.datingCard.open(
-                    south ? curves.curves.shcal20 : curves.curves.intcal20,
-                    south ? 'SHCal20' : 'IntCal20',
-                    middle.age,
-                    middle.error,
-                    `${middle.lab || 'A sample'} from ${middle.site || 'an unnamed site'}${middle.country === '' ? '' : `, ${middle.country}`}${what.length === 0 ? '' : ` (${what.join(', ')})`}: ${String(middle.age)} ± ${String(middle.error)} radiocarbon years, from p3k14c.`,
-                  );
-                });
-              },
-            };
-      context.refresh();
-    });
-  }
-
-  return {
-    show: showDates,
-    said: () => datesSaid,
-    action: () => datesAction,
   };
 }
+
+/** What the place's dates say for the year, and the step to how one of them was found. */
+function foundHere(
+  heat: DatesHeat,
+  tile: DatesTile | null,
+  place: GeoPoint,
+  year: number,
+  near: DatesNear,
+  context: DatesContext,
+): Found {
+  const here = tile === null ? { samples: [], sites: [] } : datesHere(heat, tile, place, year);
+  // The date nearest the middle of the step, to carry across the curve.
+  const middle = here.samples[Math.floor(here.samples.length / 2)];
+  return {
+    place,
+    year,
+    said: datesNote(near, here),
+    action:
+      middle === undefined
+        ? null
+        : {
+            label: 'How was a date here found?',
+            run: () => {
+              void context.radiocarbon.curves().then((curves) => {
+                const { curve, name, note } = carried(middle, place.latitude < 0);
+                context.datingCard.open(curves.curves[curve], name, middle.age, middle.error, note);
+              });
+            },
+          },
+  };
+}
+
+export const datesFeature = feature({
+  id: 'dates',
+  needs: ['timeline', 'radiocarbon', 'datingCard'],
+  watches: (state) => [state.layers, state.ma, state.location],
+  mount(context) {
+    const { base, fetchJson } = context;
+    const datesOnGlobe = context.globe.addLayer(dateCellsLayer);
+    let datesHeat: DatesHeat | null = null;
+    let datesHeatLoading: Promise<DatesHeat> | null = null;
+    const datesTile = tilesFrom(base, fetchJson);
+    let datesSaid: string | null = null;
+    let datesAction: LayerAction | null = null;
+    // The view last shown: a tile that arrives late is for it, or for nothing.
+    let latest: ViewState | null = null;
+    // The year whose squares are on the globe: painting them is slow.
+    let near: { readonly year: number; readonly at: DatesNear | null } | null = null;
+    let found: Found | null = null;
+
+    /** In historical time with the layer on: the squares with dates, and the place's, if picked. */
+    function showDates(state: ViewState): void {
+      latest = state;
+      const on = state.layers.has('dates') && state.ma === null;
+      datesAction = null;
+      if (!on || context.timeline.travelling()) {
+        datesSaid = on ? RESTING : null;
+        near = null;
+        datesOnGlobe.update(null);
+        return;
+      }
+      if (datesHeat === null) {
+        datesSaid = 'Loading the radiocarbon dates…';
+        if (datesHeatLoading === null) {
+          datesHeatLoading = loadDatesHeat(`${base}data/radiocarbon-dates/heat.json`, fetchJson);
+          datesHeatLoading.then(
+            (loaded) => {
+              datesHeat = loaded;
+              context.refresh();
+            },
+            (error: unknown) => {
+              datesHeatLoading = null;
+              context.notify(`Could not load the radiocarbon dates: ${errorMessage(error)}`);
+            },
+          );
+        }
+        return;
+      }
+      const heat = datesHeat;
+      const year = state.time.date.year;
+      if (near?.year !== year) {
+        near = { year, at: datesNear(heat, year) };
+        datesOnGlobe.update(
+          near.at === null ? null : { cells: near.at.cells, cellDegrees: heat.cellDegrees },
+        );
+      }
+      const nearNow = near.at;
+      datesSaid = datesNote(nearNow, null);
+      const place = state.location;
+      if (place === null || nearNow === null) return;
+      // The place's dates already found for this year: said again, not asked for again.
+      if (found?.place === place && found.year === year) {
+        datesSaid = found.said;
+        datesAction = found.action;
+        return;
+      }
+      void datesTile(heat, place).then((tile) => {
+        // Only if the view still shows this place and year, and has not been answered yet.
+        if (
+          latest?.location !== place ||
+          latest.time.date.year !== year ||
+          !latest.layers.has('dates') ||
+          (found?.place === place && found.year === year)
+        ) {
+          return;
+        }
+        found = foundHere(heat, tile, place, year, nearNow, context);
+        context.refresh();
+      });
+    }
+
+    return {
+      show: showDates,
+      said: () => datesSaid,
+      action: () => datesAction,
+    };
+  },
+});

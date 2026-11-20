@@ -13,7 +13,7 @@ function choiceIn(note: readonly DeepNoteBlock[] | null): DeepChoice | undefined
 
 describe('the impacts’ chip', () => {
   it('turns the impacts layer on, its book labelled as before', () => {
-    expect(IMPACTS_CHIP).toMatchObject({ layer: 'impacts', label: 'Impacts', why: 'impacts' });
+    expect(IMPACTS_CHIP).toMatchObject({ label: 'Impacts', why: 'impacts' });
     expect(IMPACTS_CHIP.whyLabel).toBe('Impact craters');
   });
 
