@@ -1,4 +1,4 @@
-/** What went wrong, told to the reader once each (#474). */
+/** What went wrong, told to the reader once each (#474), each closed by the reader (#944). */
 
 import { element } from '../../ui/dom';
 import './notices.css';
@@ -14,8 +14,18 @@ export function createNotices(): Notices {
   return {
     list,
     notify: (message) => {
-      if ([...list.children].some((notice) => notice.textContent === message)) return;
-      list.append(element('li', {}, message));
+      const told = [...list.querySelectorAll('.notice-text')];
+      if (told.some((text) => text.textContent === message)) return;
+      const close = element(
+        'button',
+        { type: 'button', class: 'notice-close', 'aria-label': 'Dismiss' },
+        '×',
+      );
+      const notice = element('li', {}, element('span', { class: 'notice-text' }, message), close);
+      close.addEventListener('click', () => {
+        notice.remove();
+      });
+      list.append(notice);
     },
   };
 }
