@@ -26,6 +26,7 @@ interface Mounted {
 // From the repository's root, where the tests run: in this environment the module's own URL is
 // the page's, not a file's.
 const measured = readFileSync('public/data/gw150914.json', 'utf8');
+const recorded = readFileSync('public/data/gw170817.json', 'utf8');
 
 function mount(fails: 'view' | 'data' | null = null): Mounted {
   const store = createStore<ViewState>(defaultViewState(new Date('2026-01-01T00:00:00Z')));
@@ -40,7 +41,9 @@ function mount(fails: 'view' | 'data' | null = null): Mounted {
     fetchJson: (url) => {
       fetched.push(url);
       return Promise.resolve(
-        fails === 'data' ? new Response('', { status: 404 }) : new Response(measured),
+        fails === 'data'
+          ? new Response('', { status: 404 })
+          : new Response(url.endsWith('gw170817.json') ? recorded : measured),
       );
     },
     store,
@@ -286,11 +289,11 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     expect(stage().dataset['chapter']).toBe('journey');
   });
 
-  it('Given GW170817 named (#990), Then its story opens with its neutron stars, its own words and card, and no fetch', async () => {
+  it('Given GW170817 named (#990), Then its story opens with its neutron stars, its own words and card, fetching only what was recorded', async () => {
     const { views, store, showCard, fetched, played } = mount();
     store.set((state) => ({ ...state, wave: 'gw170817', waveChapter: 'journey' }));
     await settled();
-    expect(fetched).toEqual([]);
+    expect(fetched).toEqual(['/data/gw170817.json']);
     expect(views[0]?.options.bodies.kind).toBe('neutron stars');
     expect(views[0]?.options.chapter).toBe('journey');
     expect(views[0]?.options.journey.heard).toEqual(['V1', 'L1', 'H1']);
@@ -307,8 +310,17 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     click('Next');
     expect(store.get().waveChapter).toBe('space');
     click('At Livingston');
-    // No measured strain to plot: the plot stays away.
-    expect(stage().querySelector<HTMLElement>('.wave-plot')?.hidden).toBe(true);
+    // What the three detectors recorded, as time against frequency (#1000).
+    const plot = stage().querySelector<HTMLElement>('.wave-plot');
+    expect(plot?.hidden).toBe(false);
+    for (const detector of ['h1', 'l1', 'v1']) {
+      expect(plot?.querySelector(`[data-testid="recorded-${detector}"]`)).not.toBeNull();
+    }
+    expect(plot?.querySelectorAll('[data-testid="recorded-gate"]')).toHaveLength(1);
+    views[0]?.options.onTime?.(0);
+    expect(plot?.querySelector('[data-testid="strain-clock"]')?.textContent).toMatch(
+      /^12:41:04\.41\d UTC$/,
+    );
     click('About GW170817');
     expect(showCard).toHaveBeenCalledWith(expect.objectContaining(GW170817_CARD));
     click('Hear it');
@@ -351,5 +363,28 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     const calls = showCard.mock.calls.length;
     [...stage().querySelectorAll('button')].find((made) => made.textContent === '')?.click();
     expect(showCard).toHaveBeenCalledTimes(calls);
+  });
+
+  it('Given what GW170817’s detectors recorded cannot be fetched (#1000), Then the story plays without it, and says so', async () => {
+    const { views, store, notify } = mount('data');
+    store.set((state) => ({ ...state, wave: 'gw170817', waveChapter: 'detector' }));
+    await settled();
+    expect(views).toHaveLength(1);
+    expect(notify).toHaveBeenCalledWith(
+      expect.stringContaining('Could not draw what the detectors recorded'),
+    );
+    expect(stage().querySelector<HTMLElement>('.wave-plot')?.hidden).toBe(true);
+    expect(store.get().wave).toBe('gw170817');
+  });
+
+  it('Given GW170817 left for GW150914 before what it recorded has come (#1000), Then GW150914’s plot stays', async () => {
+    const { store } = mount();
+    store.set((state) => ({ ...state, wave: 'gw170817', waveChapter: 'detector' }));
+    store.set((state) => ({ ...state, wave: 'gw150914' }));
+    await settled();
+    await settled();
+    const plot = stage().querySelector<HTMLElement>('.wave-plot');
+    expect(plot?.querySelector('[data-testid="strain-h1"]')).not.toBeNull();
+    expect(plot?.querySelector('[data-testid="recorded-h1"]')).toBeNull();
   });
 });

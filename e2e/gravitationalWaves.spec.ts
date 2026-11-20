@@ -94,7 +94,7 @@ test('GW170817 opens as two neutron stars, its own story, card and scale, with n
   const problems = collectProblems(page);
   const data: string[] = [];
   page.on('request', (request) => {
-    if (request.url().includes('/data/gw1')) data.push(request.url());
+    if (request.url().includes('/data/gw150914')) data.push(request.url());
   });
   const view = page.getByTestId('wave-3d');
   const stage = page.getByRole('region', { name: 'A gravitational wave passing' });
@@ -126,6 +126,15 @@ test('GW170817 opens as two neutron stars, its own story, card and scale, with n
     await expect(stage.getByTestId('wave-moment')).toContainText('Hanford hears it', {
       timeout: 30_000,
     });
+  });
+  await test.step('When they go to Livingston, Then what the three detectors recorded is plotted, time against frequency', async () => {
+    await stage.getByRole('button', { name: 'At Livingston' }).click();
+    await expect(view).toHaveAttribute('data-chapter', 'detector');
+    const plot = stage.getByTestId('strain-plot');
+    await expect(plot).toBeVisible();
+    await expect(plot.getByTestId('recorded-h1')).toBeVisible();
+    await expect(plot.getByTestId('recorded-v1')).toContainText('Virgo');
+    await expect(plot.getByTestId('strain-clock')).toHaveText(/^12:41:\d\d\.\d{3} UTC$/);
   });
   await test.step('When they go to the kilonova, Then its glow is drawn, its clock runs in days, and its gold and platinum card keeps detected apart from inferred', async () => {
     await stage.getByRole('button', { name: 'The kilonova' }).click();

@@ -20,6 +20,8 @@ import { playTone, toneCurves, type ToneContext } from './chirpSound';
 import { openingChapter, WAVE_EVENTS, type WaveEvent } from './events';
 import { GW150914_SCHEMA, measuredWave, type Gw150914 } from './measured';
 import { chirp, type Waveform } from './strain';
+import { GW170817_SCHEMA, mergerSeconds, type Gw170817Recorded } from './recorded';
+import { createRecordedPlot } from './recordedPlot';
 import { createStrainPlot, type StrainPlot } from './strainPlot';
 import { createWaveStage, type WaveStage } from './waveStage';
 import type { WaveView, WaveViewOptions } from './waveView';
@@ -109,7 +111,7 @@ function viewOptions(
     readonly stillness: boolean;
     readonly base: string;
   },
-  story: { readonly plot: () => StrainPlot | null; readonly step: (direction: 1) => void },
+  story: { readonly plot: () => Plot | null; readonly step: (direction: 1) => void },
 ): WaveViewOptions {
   return {
     wave: loaded.wave,
@@ -210,15 +212,53 @@ function storyChapters(
   return chapters;
 }
 
-/** What each measured wave's detectors recorded, plotted once and kept; none for a model. */
-function plotter(): (wave: Wave, data: Gw150914 | null) => StrainPlot | null {
-  const plots = new Map<Wave, StrainPlot>();
-  return (wave, data) => {
-    if (data === null) return null;
-    const plot = plots.get(wave) ?? createStrainPlot(data);
-    plots.set(wave, plot);
-    return plot;
+/** What a plot of what the detectors recorded offers: GW150914's strain, GW170817's maps. */
+type Plot = Pick<StrainPlot, 'root' | 'setTime'>;
+
+/** What each wave's detectors recorded, plotted once and kept: GW150914's strain from its file,
+ * GW170817's maps fetched when its story opens (#1000); none for a model without them. */
+function plotter(
+  context: PartContext,
+  open: () => Wave | null,
+  put: (plot: Plot | null) => void,
+): (event: WaveEvent, data: Gw150914 | null) => void {
+  const plots = new Map<Wave, Plot>();
+  const files = new Map<string, Promise<Gw170817Recorded>>();
+  return (event, data) => {
+    // Shown only while the wave it is for is open.
+    const show = (plot: Plot | null): void => {
+      if (open() === event.id) put(plot);
+    };
+    const kept = plots.get(event.id) ?? (data === null ? null : createStrainPlot(data));
+    if (kept !== null) plots.set(event.id, kept);
+    show(kept);
+    const { origin } = event;
+    if (kept !== null || origin.kind !== 'model' || origin.recorded === undefined) return;
+    // Fetched apart from the wave, so the story plays without it if it cannot be had.
+    const file = origin.recorded;
+    const asked =
+      files.get(file) ?? getJson(context.fetchJson, `${context.base}data/${file}`, GW170817_SCHEMA);
+    files.set(file, asked);
+    asked
+      .then((recorded) => {
+        const plot = createRecordedPlot(recorded, mergerSeconds(recorded));
+        plots.set(event.id, plot);
+        show(plot);
+      })
+      .catch((error: unknown) => {
+        files.delete(file);
+        context.notify(`Could not draw what the detectors recorded: ${errorMessage(error)}`);
+      });
   };
+}
+
+/** The stage made ready for `event`'s story, from `first`. */
+function readied(stage: WaveStage, event: WaveEvent, first: WaveChapter, stillness: boolean): void {
+  stage.setEvent(event);
+  stage.play.button.hidden = stillness;
+  stage.play.set(!stillness);
+  stage.showChapter(first);
+  stage.moment.textContent = '';
 }
 
 export function mountWave(context: WaveContext): MountedPart {
@@ -232,8 +272,15 @@ export function mountWave(context: WaveContext): MountedPart {
   const still = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let view: WaveView | null = null;
   let measured: Measured | null = null;
-  const plotOf = plotter();
-  let plot: StrainPlot | null = null;
+  let plot: Plot | null = null;
+  const plotOf = plotter(
+    context,
+    () => shown,
+    (made) => {
+      plot = made;
+      stage.setPlot(made?.root ?? null);
+    },
+  );
   /** The wave open, or being opened; null when closed. */
   let shown: Wave | null = null;
   /** The wave whose story is told: the one open, or the last. */
@@ -249,31 +296,22 @@ export function mountWave(context: WaveContext): MountedPart {
     step: chapters.step,
   });
 
-  function opened(loaded: Measured, made: WaveView): void {
-    view = made;
-    measured = loaded;
-    plot = plotOf(event.id, loaded.data);
-    stage.setPlot(plot?.root ?? null);
-  }
-
   function open(wave: Wave, asked: WaveChapter): void {
     shown = wave;
     event = WAVE_EVENTS[wave];
     const first = openingChapter(event, asked);
     chapters.now = first;
-    stage.setEvent(event);
     cover(true, [container, stage.root], globe);
     const stillness = still();
-    stage.play.button.hidden = stillness;
-    stage.play.set(!stillness);
-    stage.showChapter(first);
-    stage.moment.textContent = '';
+    readied(stage, event, first, stillness);
     Promise.all([loadView(), loadWave(event)])
       .then(([code, loaded]) => {
         if (shown !== wave || view !== null) return;
         const start = { event, chapter: first, stillness, base: context.base };
         const story = { plot: () => plot, step: chapters.step };
-        opened(loaded, code.mountWaveView(container, viewOptions(stage, loaded, start, story)));
+        view = code.mountWaveView(container, viewOptions(stage, loaded, start, story));
+        measured = loaded;
+        plotOf(event, loaded.data);
       })
       .catch((error: unknown) => {
         context.notify(`Could not draw the wave: ${errorMessage(error)}`);

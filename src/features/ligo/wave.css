@@ -164,6 +164,47 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* What LIGO and Virgo recorded of GW170817 (#1000): time against frequency, as Figure 1. */
+.recorded-panel {
+  position: relative;
+  height: 48px;
+  margin-top: 4px;
+}
+
+.recorded-map,
+.recorded-plot .recorded-panel svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.recorded-map {
+  image-rendering: auto;
+}
+
+.recorded-label {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  z-index: 1;
+  font-size: 11px;
+  color: rgb(255 255 255 / 0.85);
+  text-shadow: 0 0 3px #000;
+}
+
+.recorded-gate {
+  fill: rgb(255 255 255 / 0.12);
+}
+
+.recorded-track {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.35);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+  vector-effect: non-scaling-stroke;
+}
+
 /* A phone keeps the ring in view: the longer words give way to the moment and the scale. */
 @media (max-width: 520px) and (max-height: 900px) {
   .wave-about {
