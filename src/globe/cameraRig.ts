@@ -116,7 +116,7 @@ export class CameraRig implements StagePart {
     if (this.#zoom !== null && this.#view === null) this.#stepZoom(now, this.#zoom);
     const controls = this.#controls;
     const distance = this.#camera.position.distanceTo(controls.target);
-    const speeds = controlSpeeds(distance, this.#world.radius(this.#focus));
+    const speeds = controlSpeeds(distance, this.#world.radius(this.#focus), this.#camera.fov);
     nearPlane(this.#camera, Math.min(distance, this.#camera.position.distanceTo(this.#lookTarget)));
     controls.zoomSpeed = speeds.zoom;
     controls.rotateSpeed = speeds.rotate;
