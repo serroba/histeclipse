@@ -160,8 +160,10 @@ test('picking a state marks the eclipses seen from it, and steps through them', 
   // 763 BCE: the eclipse of the Assyrian eponym list, total in Assyria on 15 June.
   await page.goto('./?t=-762-06-15T12:00&cam=35,43,3&layers=lunar,solar,empires');
   await globeRendered(page);
-  const seen = page.getByLabel('Seen from', { exact: true });
+  const seen = page.getByLabel('Eclipses seen from', { exact: true });
   await expect(seen.locator('option', { hasText: 'Neo-Assyrian Empire' })).toHaveCount(1);
+  // Unpicked, it says what picking a state does, not where the reader stands (#952).
+  await expect(page.getByTestId('seen-status')).toHaveText('Pick a state to mark which it saw');
   await seen.selectOption('Neo-Assyrian Empire');
   await expect(page).toHaveURL(/seen=Neo-Assyrian\+Empire/);
   await expect(page.getByRole('button', { name: /Total solar\s*seen, total/ })).toBeVisible();
@@ -172,7 +174,8 @@ test('picking a state marks the eclipses seen from it, and steps through them', 
   await expect(page).toHaveURL(/sel=lunar:-0762-06-30/);
   await expect(page.locator('.eclipse-chip[aria-pressed="true"]')).toContainText(/seen|maybe/);
 
-  await seen.selectOption('Anywhere');
+  await seen.selectOption('Any state');
   await expect(page).not.toHaveURL(/seen=/);
   await expect(page.locator('.eclipse-seen')).toHaveCount(0);
+  await expect(page.getByTestId('seen-status')).toHaveText('Pick a state to mark which it saw');
 });

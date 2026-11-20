@@ -183,7 +183,7 @@ export function createTimeline(
   const seenRow = element(
     'div',
     { class: 'seen-controls', hidden: '' },
-    element('label', { for: 'seen-select', class: 'seen-label' }, 'Seen from'),
+    element('label', { for: 'seen-select', class: 'seen-label' }, 'Eclipses seen from'),
     seenSelect,
     seenPrevious,
     seenNext,
@@ -217,7 +217,7 @@ export function createTimeline(
     if (seenSelect.dataset['options'] !== wanted) {
       seenSelect.dataset['options'] = wanted;
       seenSelect.replaceChildren(
-        element('option', { value: ANYWHERE }, 'Anywhere'),
+        element('option', { value: ANYWHERE }, 'Any state'),
         ...names.map((name) => element('option', { value: name }, name)),
       );
     }
@@ -225,7 +225,7 @@ export function createTimeline(
     seenPrevious.disabled = picked === null;
     seenNext.disabled = picked === null;
     const view = seen.view;
-    if (view.status === 'off') seenStatus.textContent = '';
+    if (view.status === 'off') seenStatus.textContent = 'Pick a state to mark which it saw';
     else if (view.status === 'loading') seenStatus.textContent = 'Working out what was seen…';
     else if (view.status === 'searching') seenStatus.textContent = 'Searching…';
     else if (view.status === 'absent') seenStatus.textContent = 'Not on the map this year';
