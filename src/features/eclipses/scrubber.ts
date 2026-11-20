@@ -4,6 +4,7 @@
  * plays or pauses it and the arrows step a minute (`ui/transport.ts`).
  */
 
+import { fromGreatest } from '../../eclipses/describe';
 import { element } from '../../ui/dom';
 import { createTransport } from '../../ui/transport';
 import './scrubber.css';
@@ -103,8 +104,7 @@ export function createScrubber(onScrub: (offsetMinutes: number) => void): Scrubb
       root.hidden = false;
       offset = view.offsetMinutes;
       transport.render(playing !== null, view.offsetMinutes);
-      const sign = view.offsetMinutes < 0 ? '−' : '+';
-      label.textContent = `${view.timeLabel} (${sign}${String(Math.abs(view.offsetMinutes))} min)`;
+      label.textContent = `${view.timeLabel}, ${fromGreatest(view.offsetMinutes)}`;
     },
   };
 }

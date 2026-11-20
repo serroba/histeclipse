@@ -118,7 +118,6 @@ export const UNTESTED = [
   'src/ui/timeline.ts',
   'src/ui/viewSwitch.ts',
   'src/ui/waysLegend.ts',
-  'src/ui/welcome.ts',
   'src/ui/whySheet.ts',
   'src/ui/yearWheel.ts',
   'src/ui/zoomRail.ts',

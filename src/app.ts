@@ -35,7 +35,7 @@ import { layOutPage } from './ui/pageLayout';
 import { FEATURES } from './features';
 import { deepChipsOf, mountFeatures } from './features/mounted';
 import type { Capabilities, FeatureCore } from './features/feature';
-import { arrivalSearch } from './explore/destinations';
+import { arrivalSearch, welcomeAnchor } from './explore/destinations';
 import { viewOpener } from './explore/open';
 import { createWelcome } from './ui/welcome';
 import { createMarkerCard } from './ui/markerCard';
@@ -328,8 +328,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
   });
   // A first visit (no link to follow, never welcomed before) gets one line on what this is and
   // where to start; it goes for good once closed, followed, or once something is picked.
-  const welcome = createWelcome(window.location.search === '', () => {
-    explore.button.click();
+  const welcome = createWelcome(window.location.search === '', {
+    eclipse: () => {
+      openAnchor(welcomeAnchor());
+    },
+    explore: () => {
+      explore.button.click();
+    },
   });
   // The panels hide for a clear view, by this button or a tap on empty space; it brings them back.
   // The site's texts (#391, #392): search, and what is written about here.

@@ -102,3 +102,10 @@ export function describeLunarEclipse(eclipse: LunarEclipse): { title: string; de
       : `umbral magnitude ${eclipse.umbralMagnitude.toFixed(2)}`;
   return { title: KIND_NAMES[eclipse.kind], depth };
 }
+
+/** How far a moment is from greatest eclipse, in words (#954): "83 min before greatest". */
+export function fromGreatest(minutes: number): string {
+  const amount = `${String(Math.abs(minutes))} min`;
+  if (minutes === 0) return 'at greatest eclipse';
+  return minutes < 0 ? `${amount} before greatest` : `${amount} after greatest`;
+}
