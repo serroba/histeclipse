@@ -20,6 +20,11 @@
   pointer-events: auto;
 }
 
+/* Left of its dot, where the right is taken (#997): the gap goes on the dot's side. */
+.space-name.is-left {
+  padding: 1px 8px 1px 0;
+}
+
 .space-name:hover,
 .space-name:focus-visible {
   color: #fff;

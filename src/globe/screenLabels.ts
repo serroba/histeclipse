@@ -12,11 +12,11 @@ import { noteScreenNames } from '../util/screenNames';
 import { CameraMotion } from './cameraMotion';
 import { geoToVector } from './geo';
 import { layOutSurface, placeLabel, type SurfaceSlot, translation } from './labelWrites';
+import { fitName, markerNameBox } from './nameRoom';
 import { type LayerHost, SURFACE_PRIORITY, type SurfaceLabel } from './layerHost';
 import { PLANET_NAMES, planetRadius } from './planetLook';
 import {
   apparentRadiusPixels,
-  clearOf,
   type Box,
   hiddenBehind,
   mergeMarkers,
@@ -115,6 +115,8 @@ export class ScreenLabels {
   readonly #motion: CameraMotion;
   /** Whether the camera moved lately: then fewer names are shown (#631). */
   #turning = false;
+  /** Where the bodies' names are this frame, for the names in space to keep clear of (#997). */
+  #markerBoxes: Box[] = [];
 
   constructor(world: ScreenLabelsWorld) {
     this.#world = world;
@@ -180,31 +182,21 @@ export class ScreenLabels {
     };
   };
 
-  /** Show each name, in order, where it is on screen, clear of the panels and of those shown. */
+  /** Show each name, in order, beside its dot: clear of the panels, the rail and every name
+   * shown, the bodies' first (#997); to the left where the right is taken. */
   readonly layOutNames: LayerHost['layOutNames'] = (names, layer) => {
-    const { camera } = this.#world;
     const insets = this.#world.insets();
-    const viewWidth = this.#width;
-    const viewHeight = this.#height;
-    const placed: Box[] = [];
+    const room = { width: this.#width, height: this.#height, ...insets };
+    const taken = [...this.#markerBoxes];
     let count = 0;
     for (const { scene: at, label } of names) {
       if (label === undefined) continue;
-      const projected = this.#projected.copy(at).project(camera);
-      const x = ((projected.x + 1) / 2) * viewWidth;
-      const y = ((1 - projected.y) / 2) * viewHeight;
-      const box = { x, y: y - label.height / 2, w: label.width, h: label.height };
-      const visible =
-        projected.z < 1 &&
-        box.x >= 0 &&
-        box.x + box.w <= viewWidth &&
-        // Clear of the panels above and below the view, where a name could not be tapped.
-        box.y >= insets.top &&
-        box.y + box.h <= viewHeight - insets.bottom &&
-        clearOf(box, placed);
-      placeLabel(label.element, visible ? translation(x, y, 'translate(0, -50%)') : null);
-      if (!visible) continue;
-      placed.push(box);
+      const projected = this.#projected.copy(at).project(this.#world.camera);
+      const [x, y] = [((projected.x + 1) / 2) * room.width, ((1 - projected.y) / 2) * room.height];
+      const fit = projected.z < 1 ? fitName(x, y, label, room, taken) : null;
+      placeLabel(label.element, fit && translation(fit.box.x, y + fit.lift, 'translate(0, -50%)'));
+      if (fit === null) continue;
+      label.element.classList.toggle('is-left', fit.left);
       count += 1;
     }
     layer.dataset['named'] = String(count);
@@ -249,10 +241,13 @@ export class ScreenLabels {
       onScreen.markers.filter(({ name }) => !behind.has(name)),
       MERGE_PIXELS,
     );
-    for (const { marker, name } of onScreen.markers) {
+    this.#markerBoxes = [];
+    for (const { marker, name, x, y, radius } of onScreen.markers) {
       const label = labels.get(name) ?? null;
       marker.hidden = label === null;
-      if (label !== null) setLabel(marker, label);
+      if (label === null) continue;
+      setLabel(marker, label);
+      this.#markerBoxes.push(markerNameBox(x, y, radius, label));
     }
   }
 
@@ -269,7 +264,7 @@ export class ScreenLabels {
 
   /** Each body in view: its disc on screen, and its marker placed unless the disc is large. */
   #markersOnScreen(): {
-    readonly markers: (ScreenMarker & { readonly marker: HTMLElement })[];
+    readonly markers: (ScreenMarker & { readonly marker: HTMLElement; readonly radius: number })[];
     readonly discs: ScreenDisc[];
   } {
     const { camera, meshes } = this.#world;
@@ -286,7 +281,8 @@ export class ScreenLabels {
         name: PLANET_NAMES[planet],
       })),
     ] as const;
-    const markers: (ScreenMarker & { readonly marker: HTMLElement })[] = [];
+    const markers: (ScreenMarker & { readonly marker: HTMLElement; readonly radius: number })[] =
+      [];
     const discs: ScreenDisc[] = [];
     for (const { body, radius, shown, name } of bodies) {
       const marker = this.#markers[body];
@@ -315,7 +311,7 @@ export class ScreenLabels {
       marker.classList.toggle('is-tiny', pixels < MARKER_RADIUS_PIXELS);
       marker.style.setProperty('--radius', `${String(Math.max(pixels, MARKER_RADIUS_PIXELS))}px`);
       marker.style.transform = `translate(${String(x)}px, ${String(y)}px)`;
-      markers.push({ marker, name, x, y });
+      markers.push({ marker, name, x, y, radius: Math.max(pixels, MARKER_RADIUS_PIXELS) });
     }
     return { markers, discs };
   }
