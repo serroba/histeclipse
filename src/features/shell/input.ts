@@ -6,7 +6,7 @@
 
 import { eclipseMomentAt, isSolar } from '../../eclipses/describe';
 import type { Globe } from '../../globe/globe';
-import { ECLIPSE_FOV, phoneLook } from '../../sky/aim';
+import { closeUp, phoneLook } from '../../sky/aim';
 import type { Store } from '../../state/store';
 import { DEFAULT_LOOK, tapClears } from '../../state/viewState';
 import type { GeoPoint, SkyLook, ViewState } from '../../state/viewState';
@@ -97,9 +97,7 @@ export function viewChosen(
   if (selected === undefined) return next;
   const solar = isSolar(selected);
   const look = entry.aimAt(next, solar ? 'sun' : 'moon');
-  if (look === null || look.altitude <= -1) return next;
-  // A solar eclipse close up, its Sun large enough to see what is left of it (#951).
-  return { ...next, look: solar ? { ...look, fov: Math.min(look.fov, ECLIPSE_FOV) } : look };
+  return look === null || look.altitude <= -1 ? next : { ...next, look: closeUp(look, solar) };
 }
 
 export interface InputContext {
