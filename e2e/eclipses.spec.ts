@@ -318,3 +318,32 @@ test('the card names the place an eclipse is seen from, or calls it your spot', 
   await globeRendered(page);
   await expect(page.locator('.eclipse-observer')).toHaveText(/^Your spot \(40\.7°N 74\.0°W\): /);
 });
+
+test('picking an eclipse with a place chosen turns the globe to frame the place too (#947) @acceptance', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  await test.step('Given 585 BCE with Anatolia chosen, the globe facing the Pacific', async () => {
+    await page.goto('./?t=-0584-05-01T12:00Z&cal=julian&loc=39,35&layers=eclipses&cam=0,-160,4.5');
+    await globeRendered(page);
+  });
+  await test.step('When they pick the year’s total solar eclipse', async () => {
+    await page.getByRole('button', { name: /28 May\s*Total solar/ }).click();
+    await expect(page).toHaveURL(/sel=solar:-0584-05-28/);
+  });
+  await test.step('Then the globe turns between greatest eclipse (mid-Atlantic) and Anatolia', async () => {
+    await expect
+      .poll(
+        async () => {
+          const [, lon = NaN] = ((await globe.getAttribute('data-target')) ?? '')
+            .split(',')
+            .map(Number);
+          return lon > -20 && lon < 10;
+        },
+        { timeout: 20_000 },
+      )
+      .toBe(true);
+  });
+  expect(problems).toEqual([]);
+});
