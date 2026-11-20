@@ -1,7 +1,7 @@
 import { PerspectiveCamera, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { fakeElement } from '../test/fakes';
-import { layOutSurface, placeLabel, roomFor, translation } from './labelWrites';
+import { earthDisc, layOutSurface, placeLabel, roomFor, translation } from './labelWrites';
 import type { Box } from './spaceFrame';
 
 /** An element whose writes are counted: its transform and its hidden flag. */
@@ -102,6 +102,12 @@ describe('roomFor', () => {
   it('places a name beside another, clear of it', () => {
     const placed: Box[] = [{ x: 0, y: 45, w: 40, h: 10 }];
     expect(roomFor(100, 50, 40, 10, placed)).toBe(50);
+  });
+
+  it('moves a name only where `over` allows, and hides it where it allows nowhere clear (#945)', () => {
+    const placed: Box[] = [{ x: 80, y: 45, w: 40, h: 10 }];
+    expect(roomFor(100, 50, 40, 10, placed, (y) => y > 50)).toBe(70);
+    expect(roomFor(100, 50, 40, 10, [{ x: 80, y: 45, w: 40, h: 10 }], () => false)).toBeNull();
   });
 });
 
@@ -217,5 +223,49 @@ describe('layOutSurface', () => {
     const front = name(1, 0, 0);
     layOutSurface([{ priority: 0, labels: [front] }], camera(), { ...view, near: false });
     expect(front.element.hidden).toBe(true);
+  });
+});
+
+describe('earthDisc', () => {
+  it('Given a camera 3 radii out, Then the disc is centred, as wide as the angle Earth fills', () => {
+    const looking = new PerspectiveCamera(40, 1, 0.1, 100);
+    looking.position.set(3, 0, 0);
+    looking.lookAt(0, 0, 0);
+    looking.updateMatrixWorld();
+    const disc = earthDisc(looking, 400, 400);
+    expect(disc.x).toBeCloseTo(200);
+    expect(disc.y).toBeCloseTo(200);
+    // Earth fills asin(1/3) of the half-angle; on screen, tan of that over tan(20°), of 200 px.
+    const expected = (Math.tan(Math.asin(1 / 3)) / Math.tan((20 * Math.PI) / 180)) * 200;
+    expect(disc.radius).toBeCloseTo(expected, 0);
+  });
+});
+
+describe('layOutSurface keeps moved names on Earth (#945)', () => {
+  it('Given crowded counts at the limb, Then none is moved off the disc', () => {
+    const looking = new PerspectiveCamera(40, 1, 0.1, 100);
+    looking.position.set(8, 0, 0);
+    looking.lookAt(0, 0, 0);
+    looking.updateMatrixWorld();
+    const view = { width: 400, height: 400, near: true, leftOut: Infinity, most: Infinity };
+    // Five counts at the same point near the north limb as seen from 8 radii.
+    const at = new Vector3(0.4, 0.9, 0).normalize();
+    const counts = Array.from({ length: 5 }, () => ({
+      element: fakeElement() as unknown as HTMLElement,
+      position: at.clone(),
+      width: 30,
+      height: 30,
+    }));
+    layOutSurface([{ priority: 0, labels: counts }], looking, view);
+    const disc = earthDisc(looking, 400, 400);
+    const shown = counts.filter(({ element }) => element.hidden !== true);
+    expect(shown.length).toBeGreaterThan(0);
+    expect(shown.length).toBeLessThan(5);
+    for (const { element } of shown) {
+      const [, y] =
+        /translate\((-?\d+)px, (-?\d+)px\)/.exec(element.style.transform)?.slice(1).map(Number) ??
+        [];
+      expect(Math.abs((y ?? Infinity) - disc.y)).toBeLessThanOrEqual(disc.radius + 1);
+    }
   });
 });
