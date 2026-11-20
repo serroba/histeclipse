@@ -13,6 +13,7 @@ import { approximatePath, type Geocentric } from './approximatePaths';
 import { circling, lapMoments } from './earthOrbit';
 import type { Eased } from './orbitEase';
 import type { Vec3 } from '../../astro/transfer';
+import { heldToSun } from './turningFrame';
 
 export interface CraftNow {
   readonly id: string;
@@ -46,6 +47,9 @@ export interface Followed {
   /** Never about the Sun: every point drawn about Earth as it was then, the Moon where it was
    * from Earth, rather than among the planets as seen from Earth now. */
   readonly aboutEarth: boolean;
+  /** To a Sun–Earth L point (#995): every point held to the Sun as it is at the moment shown, so
+   * the loops about the point show, not a ring about Earth. */
+  readonly turning?: boolean;
 }
 
 /** Points along a followed craft's route. */
@@ -122,6 +126,26 @@ export function fromEarth(
   return [fromSun[0] + sunNow[0], fromSun[1] + sunNow[1], fromSun[2] + sunNow[2]];
 }
 
+/**
+ * A followed craft's point at `then`, as drawn at `jdTT`: about Earth as it was then, held to
+ * the Sun as it is at `jdTT` for a mission to an L point (#995), else among the planets as seen
+ * from Earth at `jdTT`.
+ */
+function followedPoint(
+  where: CraftWhere,
+  then: number,
+  geocentric: Geocentric,
+  jdTT: number,
+  followed: Followed | null,
+): Vec3 | null {
+  const aboutEarth = followed?.aboutEarth === true;
+  const point = fromEarth(where, then, geocentric, aboutEarth ? then : jdTT);
+  if (point === null || followed?.turning !== true) return point;
+  const sunThen = geocentric('Sun', then);
+  const sunNow = geocentric('Sun', jdTT);
+  return sunThen === null || sunNow === null ? point : heldToSun(point, sunThen, sunNow);
+}
+
 /** Whether a craft's record has it in flight at a moment: launched, and not yet ended. */
 export function inFlight(craft: Craft, jdTT: number): boolean {
   const first = craft.phases[0];
@@ -173,7 +197,7 @@ export function craftRoutes(
   jdTT: number,
   followed: Followed,
 ): readonly CraftRoute[] {
-  const { from, to, aboutEarth } = followed;
+  const { from, to } = followed;
   return craft.map((each) => ({
     id: each.id,
     approximate: wheres.approximate(each),
@@ -181,7 +205,7 @@ export function craftRoutes(
       const then = from + ((to - from) * k) / ROUTE_POINTS;
       const where = wheres.where(each, then);
       if (where === null || ('at' in where && where.at === 'Earth')) return null;
-      return fromEarth(where, then, geocentric, aboutEarth ? then : jdTT);
+      return followedPoint(where, then, geocentric, jdTT, followed);
     }),
   }));
 }
@@ -194,7 +218,7 @@ function trailOf(
   wheres: CraftWheres,
   geocentric: Geocentric,
   jdTT: number,
-  aboutEarth: boolean,
+  followed: Followed | null,
 ): Vec3[] {
   // At a world (in orbit, landed) it is there: a trail would be the world's own path, placed
   // among the planets as seen from Earth now, a stray line across space close up (#716).
@@ -213,7 +237,7 @@ function trailOf(
     // Back into a stay at a world, it ends where it left: further back would trace the world's
     // own path, the stray line #716 left out, and cost the world's place at each point (#765).
     if (before === null || 'at' in before) break;
-    const point = fromEarth(before, then, geocentric, aboutEarth ? then : jdTT);
+    const point = followedPoint(before, then, geocentric, jdTT, followed);
     if (point === null) break;
     trail.push(point);
   }
@@ -247,14 +271,13 @@ export function craftNow(
   shownAt: Eased = (_, moment) => moment,
 ): readonly CraftNow[] {
   const out: CraftNow[] = [];
-  const aboutEarth = followed?.aboutEarth === true;
   for (const each of craft) {
     if (!inFlight(each, jdTT)) continue;
     const where = wheres.where(each, jdTT);
     if (where === null || ('at' in where && where.at === 'Earth')) continue;
     const km = fromEarth(dotWhere(each, where, wheres, jdTT, shownAt), jdTT, now);
     if (km === null) continue;
-    const trail = trailOf(each, where, wheres, geocentric, jdTT, aboutEarth);
+    const trail = trailOf(each, where, wheres, geocentric, jdTT, followed);
     out.push({
       id: each.id,
       name: each.mission ?? each.name,
