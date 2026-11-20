@@ -80,13 +80,16 @@ export function layOutSurface(
     readonly near: boolean;
     readonly leftOut: number;
     readonly most: number;
+    /** A point no name may cover, as the place's pin (#955). */
+    readonly reserved?: Vector3 | null;
   },
 ): NamesShown & { readonly leftOut: number } {
   const eye = camera.position.clone().normalize();
   // A name moved to make room stays over Earth (#945): a count pushed off the disc was read as
   // somewhere in space.
   const disc = earthDisc(camera, view.width, view.height);
-  const placed: Box[] = [];
+  const reserved = reservedBoxes(view.reserved ?? null, camera, view);
+  const placed: Box[] = [...reserved];
   let total = 0;
   let leftOut = 0;
   for (const { priority, labels } of [...slots].sort((a, b) => a.priority - b.priority)) {
@@ -113,8 +116,8 @@ export function layOutSurface(
       placeLabel(element, y === null ? null : translation(x, y, 'translate(-50%, -50%)'));
     }
   }
-  // Each name shown was given room once, so `placed` counts them without asking the page.
-  return { shown: placed.length, total, leftOut };
+  // Each name shown was given room once, so `placed` less what was reserved counts them.
+  return { shown: placed.length - reserved.length, total, leftOut };
 }
 
 /** Earth's disc on screen as `camera` sees it, in pixels: its centre and radius. */
@@ -139,4 +142,22 @@ export function earthDisc(
   const [x, y] = toScreen(new Vector3());
   const [limbX, limbY] = toScreen(limb);
   return { x, y, radius: Math.hypot(limbX - x, limbY - y) };
+}
+
+/** Pixels kept clear around a reserved point: the place's pin and a little round it. */
+const RESERVED_PIXELS = 24;
+
+/** The box a reserved point keeps clear on screen, if it is on the near side. */
+function reservedBoxes(
+  point: Vector3 | null,
+  camera: Camera,
+  view: { readonly width: number; readonly height: number },
+): Box[] {
+  // Behind Earth, it covers nothing.
+  if (point === null || point.dot(camera.position) <= point.lengthSq()) return [];
+  const at = point.clone().project(camera);
+  const x = ((at.x + 1) / 2) * view.width;
+  const y = ((1 - at.y) / 2) * view.height;
+  const half = RESERVED_PIXELS / 2;
+  return [{ x: x - half, y: y - half, w: RESERVED_PIXELS, h: RESERVED_PIXELS }];
 }

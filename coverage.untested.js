@@ -62,7 +62,6 @@ export const UNTESTED = [
   'src/features/shower/showerStage.ts',
   'src/features/shower/sunCore.ts',
   'src/features/shower/sunDiagram.ts',
-  'src/features/sky/aimSwitch.ts',
   'src/features/sky/cultureSwitch.ts',
   'src/features/sky/figureSwitch.ts',
   'src/features/sky/index.ts',

@@ -269,3 +269,37 @@ describe('layOutSurface keeps moved names on Earth (#945)', () => {
     }
   });
 });
+
+describe('layOutSurface keeps the place’s pin clear (#955)', () => {
+  const looking = new PerspectiveCamera(40, 1, 0.1, 100);
+  looking.position.set(3, 0, 0);
+  looking.lookAt(0, 0, 0);
+  looking.updateMatrixWorld();
+  const view = { width: 400, height: 400, near: true, leftOut: Infinity, most: Infinity };
+  const at = new Vector3(1, 0, 0);
+  const label = () => ({
+    element: fakeElement() as unknown as HTMLElement,
+    position: at.clone(),
+    width: 40,
+    height: 10,
+  });
+
+  it('Given the pin where a name would sit, Then the name moves aside, and the count leaves the pin out', () => {
+    const name = label();
+    const shown = layOutSurface([{ priority: 0, labels: [name] }], looking, {
+      ...view,
+      reserved: at.clone().multiplyScalar(1.01),
+    });
+    expect(name.element.style.transform).not.toBe('translate(200px, 200px) translate(-50%, -50%)');
+    expect(shown.shown).toBe(1);
+  });
+
+  it('Given the pin behind Earth, Then it keeps nothing clear', () => {
+    const name = label();
+    layOutSurface([{ priority: 0, labels: [name] }], looking, {
+      ...view,
+      reserved: new Vector3(-1.01, 0, 0),
+    });
+    expect(name.element.style.transform).toBe('translate(200px, 200px) translate(-50%, -50%)');
+  });
+});
