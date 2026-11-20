@@ -90,11 +90,15 @@ export interface LayerGroup {
   readonly layers: readonly LayerChoice[];
 }
 
-/** The Layers panel: one set for all of time, grouped by what they show, in its order. */
+/**
+ * The Layers panel: one set for all of time, grouped by what they show, in Explore's order of
+ * topics (space, earth, life, people, climate): eclipses, the site's own subject, first (#949).
+ */
 export const LAYER_GROUPS: readonly LayerGroup[] = [
-  { name: 'People', layers: [empires, ways, periods, dates, genomes, humans] },
+  { name: 'Space', layers: [eclipses, orbits, spacecraft, asteroids, telescopes] },
   { name: 'Earth', layers: [rocks, plates, impacts, volcanoes] },
   { name: 'Life', layers: [fossils] },
+  { name: 'People', layers: [empires, ways, periods, dates, genomes, humans] },
   {
     name: 'Climate',
     layers: [
@@ -112,5 +116,4 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
       carbonMade,
     ],
   },
-  { name: 'Space', layers: [eclipses, orbits, spacecraft, asteroids, telescopes] },
 ];
