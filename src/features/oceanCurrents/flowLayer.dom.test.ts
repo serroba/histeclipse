@@ -66,4 +66,28 @@ describe('the currents drawn as streaks (#927)', () => {
     frames.at(-1)?.(1048);
     expect(frames).toHaveLength(queued);
   });
+
+  it('Given a phone, Then a smaller canvas; and with no 2D canvas, Then nothing is drawn', () => {
+    vi.stubGlobal('innerWidth', 400);
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    const added: Mesh[] = [];
+    const requestRender = vi.fn();
+    const layer = flowLayer({
+      container: document.createElement('div'),
+      onEarth: { add: (mesh: Mesh) => added.push(mesh) },
+      requestRender,
+    } as unknown as LayerHost);
+    layer.update(still());
+    frames[0]?.(1000);
+    expect(requestRender).not.toHaveBeenCalled();
+    layer.update(null);
+    expect(requestRender).toHaveBeenCalledTimes(1);
+    const material = added[0]?.material as { map?: { image?: HTMLCanvasElement } } | undefined;
+    expect(material?.map?.image?.width).toBe(1024);
+  });
 });

@@ -86,6 +86,15 @@ describe('particles carried by the currents (#927)', () => {
     expect(flock.speed[0]).toBeCloseTo(0.25);
   });
 
+  it('Given still water, Then a particle stays put', () => {
+    const flock = particles(1);
+    step(field(0, 0), flock, 0.1, steady());
+    const before = flock.longitude[0] ?? 0;
+    step(field(0, 0), flock, 0.1, steady());
+    expect(flock.longitude[0]).toBeCloseTo(before);
+    expect(flock.speed[0]).toBe(0);
+  });
+
   it('Given the date line, the poles, old age or no current, Then wrapped, held, or started again', () => {
     const flock = particles(1);
     const east = field(1, 1);
