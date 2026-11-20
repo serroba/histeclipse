@@ -1,9 +1,10 @@
-/* The date panel's fold (#975): only on a short phone, where the panels would cover the globe. */
+/* The date panel's fold (#975): only on a short phone, upright or on its side (#976), where the
+   panels would cover the globe. */
 .hud-fold {
   display: none;
 }
 
-@media (max-width: 600px) and (max-height: 760px) {
+@media (max-width: 600px) and (max-height: 760px), (max-height: 500px) {
   .hud-fold {
     position: relative;
     display: flex;
@@ -43,5 +44,14 @@
 
   .hud[data-fold='folded'] :is(.hud-detail, .hud-actions, .viewpoints, .hud-more) {
     display: none;
+  }
+}
+
+/* A phone on its side (#976): the date panel keeps to a narrow column at the left, so the globe
+   has the height beside it (the layout moves it right of a panel that does not span the width,
+   #946), rather than a strip between the panel and the bar. */
+@media (max-height: 500px) {
+  .hud {
+    max-width: min(340px, 45%);
   }
 }
