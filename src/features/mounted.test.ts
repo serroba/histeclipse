@@ -114,9 +114,17 @@ describe("deep time's bar fields (#909)", () => {
       {} as FeatureCore,
       {} as Capabilities,
     );
-    expect(features.deepBar(base, { ma: 1, scale: 'ice' })).toEqual({
-      air: { on: false },
-      plateMotion: 'Moved 3 km.',
+    const fields = features.deepBar(base, { ma: 1, scale: 'ice' });
+    expect(fields).toMatchObject({ air: { on: false }, plateMotion: 'Moved 3 km.' });
+    // What no feature fills says it is off.
+    expect(fields).toMatchObject({
+      coastline: null,
+      ice: { drawn: false, oldestKa: null, standIn: null },
+      iceOutlines: null,
+      seaIce: null,
+      seaLevel: { on: false },
+      temperature: { on: false, wanted: base.temperatureModel, shown: null },
+      temperatureDrawn: false,
     });
   });
 });

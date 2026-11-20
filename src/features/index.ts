@@ -20,6 +20,7 @@ import { periodsFeature } from './periods';
 import { rocksFeature } from './rocks';
 import { warmingFeature } from './warming';
 import { telescopesFeature } from './telescopes';
+import { temperatureFeature } from './temperature';
 import { volcanoesFeature } from './volcanoes';
 import { waysFeature } from './ways';
 import type { Feature } from './feature';
@@ -50,4 +51,5 @@ export const FEATURES: readonly Feature[] = [
   platesFeature,
   airFeature,
   iceAgesFeature,
+  temperatureFeature,
 ];
