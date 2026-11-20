@@ -18,6 +18,7 @@ const CHAPTER_NAMES: Readonly<Record<WaveChapter, string>> = {
   journey: 'The journey',
   space: 'Space',
   detector: 'At Livingston',
+  kilonova: 'The kilonova',
 };
 
 export interface StageControls {
@@ -25,6 +26,8 @@ export interface StageControls {
   readonly restart: () => void;
   readonly close: () => void;
   readonly about: () => void;
+  /** Open the wave's second card, if it has one. */
+  readonly more: () => void;
   readonly chapter: (chapter: WaveChapter) => void;
   /** Step to the chapter before or after the one shown. */
   readonly step: (direction: -1 | 1) => void;
@@ -49,12 +52,16 @@ function button(label: string, run: () => void): HTMLButtonElement {
   return made;
 }
 
-/** What the stage says that is the wave's own: its title, scale, sound and card's button. */
-function eventWords(about: () => void): {
+/** What the stage says that is the wave's own: its title, scale, sound and cards' buttons. */
+function eventWords(
+  about: () => void,
+  more: () => void,
+): {
   readonly title: HTMLElement;
   readonly scale: HTMLElement;
   readonly soundNote: HTMLElement;
   readonly aboutButton: HTMLButtonElement;
+  readonly moreButton: HTMLButtonElement;
   readonly tell: (event: WaveEvent) => void;
 } {
   const words = {
@@ -62,15 +69,31 @@ function eventWords(about: () => void): {
     scale: element('p', { class: 'wave-scale', 'data-testid': 'wave-scale' }),
     soundNote: element('p', { class: 'wave-sound-note' }),
     aboutButton: button('About', about),
+    moreButton: Object.assign(button('', more), { hidden: true }),
     tell: (event: WaveEvent): void => {
       words.title.textContent = event.title;
       words.scale.textContent = event.scaleNote;
       const note = event.sound.note;
       words.soundNote.textContent = `“Hear it” plays the chirp ${note.charAt(0).toLowerCase()}${note.slice(1)}`;
       words.aboutButton.textContent = `About ${event.name}`;
+      words.moreButton.textContent = event.more?.label ?? '';
+      words.moreButton.hidden = true;
     },
   };
   return words;
+}
+
+/** A button for each chapter, in the story's order. */
+function chapterButtons(
+  choose: (chapter: WaveChapter) => void,
+): readonly { readonly chapter: WaveChapter; readonly made: HTMLButtonElement }[] {
+  return WAVE_CHAPTERS.map((chapter) => {
+    const made = button(CHAPTER_NAMES[chapter], () => {
+      choose(chapter);
+    });
+    made.classList.add('wave-chapter');
+    return { chapter, made };
+  });
 }
 
 export function createWaveStage(why: HTMLElement, controls: StageControls): WaveStage {
@@ -81,14 +104,9 @@ export function createWaveStage(why: HTMLElement, controls: StageControls): Wave
     play.set(playing);
     controls.onPlay(playing);
   });
-  const chapters = WAVE_CHAPTERS.map((chapter) => {
-    const made = button(CHAPTER_NAMES[chapter], () => {
-      controls.chapter(chapter);
-    });
-    made.classList.add('wave-chapter');
-    return { chapter, made };
-  });
-  const { title, scale, soundNote, aboutButton, tell } = eventWords(controls.about);
+  const chapters = chapterButtons(controls.chapter);
+  const words = eventWords(controls.about, controls.more);
+  const { title, scale, soundNote, aboutButton, moreButton, tell } = words;
   let told: WaveEvent | null = null;
   const root = element(
     'section',
@@ -116,6 +134,7 @@ export function createWaveStage(why: HTMLElement, controls: StageControls): Wave
       button('Start again', controls.restart),
       button('Hear it', controls.hear),
       aboutButton,
+      moreButton,
       why,
       button('Close', controls.close),
     ),
@@ -139,6 +158,9 @@ export function createWaveStage(why: HTMLElement, controls: StageControls): Wave
         made.setAttribute('aria-pressed', String(chapter === shown));
       }
       plotSlot.hidden = shown !== 'detector' || plotSlot.childElementCount === 0;
+      moreButton.hidden = told?.more?.chapter !== shown;
+      // The wave's stretch is no part of the kilonova, whose own scale its words give.
+      scale.hidden = shown === 'kilonova';
       root.dataset['chapter'] = shown;
     },
     setPlot(plot) {

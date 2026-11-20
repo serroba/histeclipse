@@ -117,6 +117,17 @@ test('GW170817 opens as two neutron stars, its own story, card and scale, with n
     await expect(card).toContainText('AT 2017gfo');
     await card.getByRole('button', { name: 'Close' }).click();
   });
+  await test.step('When they go to the kilonova, Then its glow is drawn, its clock runs in days, and its gold and platinum card keeps detected apart from inferred', async () => {
+    await stage.getByRole('button', { name: 'The kilonova' }).click();
+    await expect(view).toHaveAttribute('data-chapter', 'kilonova');
+    await expect(page).toHaveURL(/chapter=kilonova/);
+    await expect(stage.getByTestId('wave-moment')).toContainText(/after the merger|Day/);
+    await stage.getByRole('button', { name: 'Gold and platinum' }).click();
+    const card = page.getByTestId('marker-card');
+    await expect(card).toContainText('Strontium, the only element named directly');
+    await expect(card).toContainText('3 to 13 Earths’ mass of gold');
+    await card.getByRole('button', { name: 'Close' }).click();
+  });
   await test.step('When it is closed, Then the globe shows again', async () => {
     await stage.getByRole('button', { name: 'Close' }).click();
     await expect(view).toBeHidden();

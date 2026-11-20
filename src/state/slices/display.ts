@@ -25,7 +25,7 @@
  *   holes, or `gw170817` (#990), two neutron stars; its ring of test masses and the space about it
  *   stretched and squeezed. Absent shows none.
  * - `chapter` is the part of the wave's story shown (#833): `source` (absent), `journey`,
- *   `space` or `detector`. Only read with a wave; one its story does not have opens the source.
+ *   `space`, `detector` or `kilonova` (#992, GW170817's light). Only read with a wave; one its story does not have opens the source.
  * - `explore` names the destination the view was arrived at from (#726), such as
  *   `human-origins`; absent when the reader found their own way. A link with it and no view of
  *   its own (no `t`, `ma` or `cam`) opens that destination.
@@ -51,7 +51,7 @@ export type Wave = (typeof WAVES)[number];
 
 /** The wave's story, in order (#833): its source, its journey, what it does to space, and how
  * Livingston heard it. */
-export const WAVE_CHAPTERS = ['source', 'journey', 'space', 'detector'] as const;
+export const WAVE_CHAPTERS = ['source', 'journey', 'space', 'detector', 'kilonova'] as const;
 export type WaveChapter = (typeof WAVE_CHAPTERS)[number];
 
 /** What the camera is on, close enough to see it (#796, #864, #876): a craft or a telescope's site. */
