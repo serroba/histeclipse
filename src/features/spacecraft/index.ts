@@ -39,7 +39,7 @@ import { easedOrbits, type Eased } from './orbitEase';
 import { today } from './programs';
 import { bodyOfWorld, landedOn, landingSites } from './landingSites';
 import { missionRoutes } from './routeLines';
-import { lPointRoute } from './turningFrame';
+import { lPointRoute, sunHold } from './turningFrame';
 
 export { mountLaunches, type LaunchesContext, type LaunchesPart } from './launches';
 
@@ -252,7 +252,7 @@ function drawFlying(
     readonly jdTT: number;
     readonly only: ReadonlySet<string> | null;
   },
-): { readonly followed: string | null; readonly on: string | null } {
+): { readonly followed: string | null; readonly on: string | null; readonly held: boolean } {
   const { state, jdTT, only } = at;
   const mission =
     state.mission === null || only !== null ? null : missionNamed(loaded.missions, state.mission);
@@ -270,7 +270,11 @@ function drawFlying(
       ? { body: state.focus, sites: landedOn(mission?.craft ?? loaded.craft, state.focus, jdTT) }
       : null,
   );
-  return { followed: mission?.id ?? null, on: focused === null ? null : craftOn(state) };
+  return {
+    followed: mission?.id ?? null,
+    on: focused === null ? null : craftOn(state),
+    held: mission !== null && mission.aboutEarth && mission.lPoint !== null,
+  };
 }
 
 export const spacecraftFeature = feature({
@@ -291,6 +295,7 @@ export const spacecraftFeature = feature({
     const routes = context.globe.addLayer(missionRoutes);
     const sites = context.globe.addLayer(landingSites);
     const model = context.globe.addLayer(craftModel);
+    const held = context.globe.addLayer(sunHold);
     // Kept from frame to frame: the trails ask for the same places as the time plays (#702).
     const where = {
       then: remembered(geocentric(context)),
@@ -339,6 +344,7 @@ export const spacecraftFeature = feature({
         // With only the Telescopes layer on, only the space telescopes fly (#849).
         const only = state.layers.has('spacecraft') ? null : telescopes.ids(state);
         if (!offered || only === undefined) {
+          held.update(false);
           drawn.update(null);
           routes.update(null);
           sites.update(null);
@@ -358,6 +364,7 @@ export const spacecraftFeature = feature({
         });
         followed = flying.followed;
         on = flying.on;
+        held.update(flying.held);
       },
       pick: open,
     };

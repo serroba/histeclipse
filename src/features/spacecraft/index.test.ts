@@ -15,6 +15,7 @@ import { craftModel } from './craftModelLayer';
 import { circling } from './earthOrbit';
 import { landingSites } from './landingSites';
 import { missionRoutes } from './routeLines';
+import { sunHold } from './turningFrame';
 
 const AU = 149_597_870.7;
 // 2010: Voyagers, Cassini, New Horizons and others in flight.
@@ -33,6 +34,7 @@ function fakeContext(options: {
   const routes: unknown[] = [];
   const sites: unknown[] = [];
   const models: unknown[] = [];
+  const held: unknown[] = [];
   const cards: MarkerCardContent[] = [];
   const rail: [boolean, boolean][] = [];
   const planets = { position: () => [0, AU, 0] } as unknown as PlanetEphemeris;
@@ -64,7 +66,9 @@ function fakeContext(options: {
               ? sites
               : factory === craftModel
                 ? models
-                : drawn
+                : factory === sunHold
+                  ? held
+                  : drawn
           ).push(input),
       }),
     },
@@ -98,6 +102,7 @@ function fakeContext(options: {
     routes,
     sites,
     models,
+    held,
     cards,
     rail,
     refresh,
@@ -279,8 +284,25 @@ describe('the spacecraft as a feature', () => {
     });
   });
 
+  it('Given Webb followed, Then the camera is held to the Sun, and let go with every craft again (#998)', async () => {
+    const { context, held, refresh } = fakeContext({ planetsLoaded: true });
+    const craft = spacecraftFeature.mount(context, context);
+    const webb: ViewState = { ...on, mission: 'd01093' };
+    const july2022 = 2_459_790.5;
+    craft.show?.(webb, july2022);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    craft.show?.(webb, july2022);
+    expect(held.at(-1)).toBe(true);
+    craft.show?.(on, july2022);
+    expect(held.at(-1)).toBe(false);
+    craft.show?.(off, july2022);
+    expect(held.at(-1)).toBe(false);
+  });
+
   it('Given a mission named, Then only its craft are drawn, each with its whole route (#712)', async () => {
-    const { context, drawn, routes, refresh, cards, openAnchor } = fakeContext({
+    const { context, drawn, routes, held, refresh, cards, openAnchor } = fakeContext({
       planetsLoaded: true,
     });
     const craft = spacecraftFeature.mount(context, context);
@@ -299,6 +321,8 @@ describe('the spacecraft as a feature', () => {
     expect(flying.every(({ km }) => Math.abs(Math.hypot(...km) - 384_400) < 1)).toBe(true);
     const lines = routes.at(-1) as readonly { points: readonly (readonly number[] | null)[] }[];
     expect(lines).toHaveLength(2);
+    // To the Moon, not an L point: the camera keeps still among the stars (#998).
+    expect(held.at(-1)).toBe(false);
     expect(lines[0]?.points.filter((point) => point !== null).length).toBeGreaterThan(100);
 
     // Its own craft's card offers no way to the mission already followed (#731).

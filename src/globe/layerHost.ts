@@ -64,6 +64,8 @@ export interface LayerHost {
   requestBody(body: Body): void;
   /** Hold a craft where it is now for the camera to orbit (#796), or none. */
   holdCraft(craft: CraftFrame | null): void;
+  /** A far camera turning with the Sun–Earth line as time moves (#998), not still among the stars. */
+  holdToSun(on: boolean): void;
   /** J2000 km from Earth's centre to scene units, for the moment shown; null until there is one. */
   spaceToScene(): ((km: Triple) => Triple) | null;
   /** Draw a new frame soon. */
