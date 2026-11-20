@@ -1,16 +1,15 @@
 /**
- * GW150914 as a sound (#831), played only when asked: the wave's own pitch and loudness, from
- * 35 Hz rising to the merger and the ringing after, made into a tone. As it was, a fifth of a
- * second low in the bass, it is hard to hear; so it is slowed 10 times and raised two octaves
- * (four times the pitch), and the stage says so.
+ * A wave as a sound (#831), played only when asked: the wave's own pitch and loudness, rising to
+ * the merger and any ringing after, made into a tone. GW150914 as it was, a fifth of a second low
+ * in the bass, is hard to hear; so it is slowed 10 times and raised two octaves (four times the
+ * pitch). GW170817's last fifth of a second, from 250 Hz to over 1 kHz, is slowed and kept at
+ * its own pitch (#990). The stage says which.
  */
 
 import type { Waveform } from './strain';
 
-/** How many times slower, and how many times higher, it is played. */
+/** How many times slower it is played. */
 export const SOUND_SLOWED = 10;
-export const SOUND_RAISED = 4;
-export const SOUND_NOTE = 'Slowed 10 times and raised two octaves, to be heard.';
 /** Points a second in the tone's curves. */
 const STEPS_PER_SECOND = 200;
 
@@ -22,8 +21,8 @@ export interface ToneCurves {
   readonly loudness: Float32Array;
 }
 
-/** The tone's pitch and loudness through time, from the wave. */
-export function toneCurves(wave: Waveform): ToneCurves {
+/** The tone's pitch and loudness through time, from the wave, `raised` times higher. */
+export function toneCurves(wave: Waveform, raised: number): ToneCurves {
   const seconds = (wave.end - wave.start) * SOUND_SLOWED;
   const count = Math.max(2, Math.round(seconds * STEPS_PER_SECOND));
   const pitch = new Float32Array(count);
@@ -35,7 +34,7 @@ export function toneCurves(wave: Waveform): ToneCurves {
     const hertz = wave.frequency(t);
     // Where its pitch cannot be read, the last one heard holds, so the tone does not drop out.
     if (hertz > 0) heard = hertz;
-    pitch[index] = (heard > 0 ? heard : 35) * SOUND_RAISED;
+    pitch[index] = (heard > 0 ? heard : 35) * raised;
     loudness[index] = wave.peak > 0 ? Math.hypot(plus, cross) / wave.peak : 0;
   }
   return { seconds, pitch, loudness };

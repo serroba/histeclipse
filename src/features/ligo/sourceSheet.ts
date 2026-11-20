@@ -1,14 +1,17 @@
 /**
- * The source of GW150914 (#832), in three.js: the two black holes orbiting, at their true mass
- * ratio (36 and 29 Suns), in the middle of a sheet of space, the plane of their orbit, drawn as
- * rings and spokes. Each point of the sheet is raised by the wave there (`sourceWave.ts`): the
- * h₊ it carries, as it left the source r/c before, turned by twice the point's azimuth and
- * weakened as 1/r. The vertex shader does that for every point from a table of the wave as it
- * left, so the two-armed spiral is the physics', not a drawing. Raised for h₊ above, lowered
- * below; this is the strain's pattern, not a dent in space.
+ * The source of a gravitational wave (#832, #991), in three.js: the two bodies that made it
+ * orbiting at their true mass ratio in the middle of a sheet of space, the plane of their orbit,
+ * drawn as rings and spokes. GW150914's are black holes (36 and 29 Suns): dark spheres, faintly
+ * ringed. GW170817's are neutron stars (about 1.5 and 1.3 Suns, some 24 km across): small, white
+ * hot and glowing, drawn at their true size against their distance apart, and pulled out of round
+ * toward each other by their tides as they close in. Each point of the sheet is raised by the wave
+ * there (`sourceWave.ts`): the h₊ it carries, as it left the source r/c before, turned by twice the
+ * point's azimuth and weakened as 1/r. The vertex shader does that for every point from a table of
+ * the wave as it left, so the two-armed spiral is the physics', not a drawing. Raised for h₊
+ * above, lowered below; this is the strain's pattern, not a dent in space.
  *
- * Near the black holes the wave cannot be worked out this way (the field is strong there, and
- * the wave not yet formed): the sheet fades out within `NEAR`, and the stage says so.
+ * Near the bodies the wave cannot be worked out this way (the field is strong there, and the wave
+ * not yet formed): the sheet fades out within `NEAR`, and the stage says so.
  *
  * Builds objects only: the view draws them.
  */
@@ -18,6 +21,7 @@ import {
   BufferAttribute,
   BufferGeometry,
   Color,
+  AdditiveBlending,
   Group,
   LineSegments,
   Mesh,
@@ -26,6 +30,7 @@ import {
   SphereGeometry,
 } from 'three';
 
+import type { Bodies } from './events';
 import { orbitOf, radialTable, type Orbit } from './sourceWave';
 import type { Waveform } from './strain';
 
@@ -43,12 +48,13 @@ const RINGS = 80;
 const SPOKES = 64;
 const AROUND = 160;
 const ALONG = 80;
-/** The black holes' masses, Suns, and the one they made (Abbott et al. 2016). */
-export const MASSES = { first: 36, second: 29, final: 62 } as const;
-/** How far apart the two are drawn when the wave is first heard, and a black hole's size per
- * Sun: their horizons, as their masses, though not to the sheet's scale. */
+/** How far apart the two are drawn when the wave is first played, sheet units: their sizes are
+ * shares of it (`events.ts`). */
 const APART = 0.6;
-const PER_SUN = 0.0028;
+/** How far a neutron star is drawn pulled out of round by the other's tide: as (R/a)³, the
+ * tide's strength, at most a third longer. Its shape is not measured: this shows the pull. */
+const TIDE = 1.5;
+const MOST_STRETCHED = 1.35;
 
 const VERTEX = /* glsl */ `
   uniform vec2 table[BINS];
@@ -119,27 +125,37 @@ export function sheetSegments(): Float32Array {
 
 /** Where the two are about their centre of mass, `apart` from each other at orbital `angle`. */
 export function placesOf(
+  masses: Bodies['masses'],
   angle: number,
   apart: number,
 ): { first: [number, number]; second: [number, number] } {
-  const total = MASSES.first + MASSES.second;
+  const total = masses.first + masses.second;
   const out = (share: number, turn: number): [number, number] => [
     share * apart * Math.cos(angle + turn),
     share * apart * Math.sin(angle + turn),
   ];
-  return { first: out(MASSES.second / total, 0), second: out(MASSES.first / total, Math.PI) };
+  return { first: out(masses.second / total, 0), second: out(masses.first / total, Math.PI) };
+}
+
+/** How much longer than wide a neutron star of `radius` is drawn, `apart` from the other. */
+export function tidalStretch(radius: number, apart: number): number {
+  if (apart <= 0) return MOST_STRETCHED;
+  return Math.min(MOST_STRETCHED, 1 + TIDE * (radius / apart) ** 3);
 }
 
 export interface SourceSheet {
   readonly group: Group;
-  /** Move the sheet and the black holes for the wave at `t`, s from the merger. */
+  /** Move the sheet and the bodies for the wave at `t`, s from the merger. */
   set(wave: Waveform, t: number): void;
   dispose(): void;
 }
 
+type Own = <T extends { dispose(): void }>(item: T) => T;
+
 /** A black hole: a dark sphere its horizon's size, ringed faintly so it shows on the night. */
-function blackHole(suns: number, own: <T extends { dispose(): void }>(item: T) => T): Group {
+function blackHole(size: number, own: Own): Group {
   const hole = new Group();
+  hole.name = 'black hole';
   const geometry = own(new SphereGeometry(1, 32, 20));
   const dark = new Mesh(geometry, own(new MeshBasicMaterial({ color: 0x000000 })));
   const rim = new Mesh(
@@ -155,11 +171,71 @@ function blackHole(suns: number, own: <T extends { dispose(): void }>(item: T) =
   );
   rim.scale.setScalar(1.12);
   hole.add(dark, rim);
-  hole.scale.setScalar(suns * PER_SUN);
+  hole.scale.setScalar(size);
   return hole;
 }
 
-export function createSourceSheet(): SourceSheet {
+/**
+ * A neutron star: a small sphere, white hot (its surface is near a million degrees, and glows in
+ * X-rays more than in light), in a soft blue halo so it shows at its true small size. `hot` is
+ * the merged remnant's, hotter still, drawn yellower.
+ */
+function neutronStar(size: number, own: Own, hot = false): Group {
+  const star = new Group();
+  star.name = hot ? 'merged remnant' : 'neutron star';
+  const geometry = own(new SphereGeometry(1, 32, 20));
+  const body = new Mesh(
+    geometry,
+    own(new MeshBasicMaterial({ color: new Color(hot ? 0xfff1d6 : 0xeef4ff) })),
+  );
+  const halo = (scale: number, opacity: number): Mesh => {
+    const glow = new Mesh(
+      geometry,
+      own(
+        new MeshBasicMaterial({
+          color: new Color(hot ? 0xffb35c : 0x7fb2ff),
+          side: BackSide,
+          transparent: true,
+          opacity,
+          blending: AdditiveBlending,
+          depthWrite: false,
+        }),
+      ),
+    );
+    glow.scale.setScalar(scale);
+    return glow;
+  };
+  star.add(body, halo(1.5, 0.35), halo(2.4, 0.12));
+  star.scale.setScalar(size);
+  return star;
+}
+
+/** The two bodies and the one they make, drawn as what they are. */
+function bodiesOf(bodies: Bodies, own: Own): readonly [Group, Group, Group] {
+  const { first, second, final } = bodies.sizes;
+  if (bodies.kind === 'black holes') {
+    return [
+      blackHole(first * APART, own),
+      blackHole(second * APART, own),
+      blackHole(final * APART, own),
+    ];
+  }
+  return [
+    neutronStar(first * APART, own),
+    neutronStar(second * APART, own),
+    neutronStar(final * APART, own, true),
+  ];
+}
+
+/** Turn and stretch a neutron star toward the other, `apart` away at orbital `angle`. */
+function pull(star: Group, size: number, angle: number, apart: number): void {
+  const stretch = tidalStretch(size, apart);
+  // Its local x along the line between the two: a turn of −angle about y takes x to it.
+  star.rotation.set(0, -angle, 0);
+  star.scale.set(size * stretch, size / Math.sqrt(stretch), size / Math.sqrt(stretch));
+}
+
+export function createSourceSheet(bodies: Bodies): SourceSheet {
   const group = new Group();
   const owned: { dispose(): void }[] = [];
   const own = <T extends { dispose(): void }>(item: T): T => {
@@ -184,9 +260,7 @@ export function createSourceSheet(): SourceSheet {
   );
   const sheet = new LineSegments(geometry, material);
   sheet.frustumCulled = false;
-  const first = blackHole(MASSES.first, own);
-  const second = blackHole(MASSES.second, own);
-  const final = blackHole(MASSES.final, own);
+  const [first, second, final] = bodiesOf(bodies, own);
   group.add(sheet, first, second, final);
 
   let orbit: { readonly wave: Waveform; readonly of: Orbit } | null = null;
@@ -205,9 +279,15 @@ export function createSourceSheet(): SourceSheet {
       second.visible = two;
       final.visible = !two;
       if (!two) return;
-      const places = placesOf(orbit.of.angle(t), APART * orbit.of.separation(t));
+      const angle = orbit.of.angle(t);
+      const apart = APART * orbit.of.separation(t);
+      const places = placesOf(bodies.masses, angle, apart);
       first.position.set(places.first[0], 0, places.first[1]);
       second.position.set(places.second[0], 0, places.second[1]);
+      if (bodies.kind === 'neutron stars') {
+        pull(first, bodies.sizes.first * APART, angle, apart);
+        pull(second, bodies.sizes.second * APART, angle, apart);
+      }
     },
     dispose() {
       for (const item of owned) item.dispose();

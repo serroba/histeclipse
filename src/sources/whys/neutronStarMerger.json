@@ -1,0 +1,20 @@
+{
+  "title": "Two neutron stars merging",
+  "what": "GW170817, the first wave in space heard from two neutron stars, on 17 August 2017, and the first also seen in light: told as a story of its source, two neutron stars spiralling together and merging 130 million light-years away; what its wave does to space as it passes, a ring of free masses stretched and squeezed; and how LIGO Livingston heard it.",
+  "sources": [
+    "abbott2017Gw170817",
+    "abbott2017Multimessenger",
+    "abbott2018NeutronStarRadii",
+    "abbott2019Gwtc1",
+    "gwoscGw170817",
+    "lalDetectors"
+  ],
+  "how": "The wave is a model, not LIGO’s measured waveform: a Newtonian chirp for the chirp mass the detectors measured, 1.1977 Suns (1.188 at the source, its light stretched by its distance), seen face on from 40 Mpc. Two neutron stars are light and, until their last orbits, far apart for their size, so this simple model follows the true wave closely until they touch; its strain, about 5 × 10⁻²² at the end, is worked out from that formula, h = 4(G𝓜/c²)^⁵ᐟ³(πf/c)^²ᐟ³/D, not measured. The detectors heard the wave from 24 Hz for about 100 s, some 3,000 cycles; played here is its last fifth of a second, from 250 Hz to about 1.5 kHz, where two stars 11.9 km in radius touch. Nothing after the merger was heard: a black hole’s ringing would be near 6 kHz, beyond the detectors’ reach, and searches found no signal from a remnant. So the wave stops at the merger. It is drawn as GW150914 is, at the same stretch, 4 × 10²⁰, and slowed 100 times: it sways about half as much, ten times nearer but from stars some twenty-five times lighter. The source is drawn from above its orbit: the two stars at their masses’ ratio, 1.46 and 1.27 Suns (GWTC-1’s medians), going round at half the wave’s frequency, closing in as the pitch rises by Kepler’s third law, a³ = GM/ω². Their size is drawn true against their distance apart (11.9 km against 84 km when the wave is first played, 25 km when they touch), not against the sheet. As they close in, each is drawn pulled out of round toward the other, by an amount that grows as (R/a)³, the tide’s strength: that the tides shaped the wave is measured (it is how the radius was found); the shape drawn is not. What they made is drawn as one hot, glowing body, half again as wide: not measured. The sheet and its spiral are worked out as for GW150914. “Hear it” plays the chirp slowed 10 times at its own pitch, which, unlike GW150914’s, falls in the range we hear.",
+  "certainty": [
+    "Stretched 4 × 10²⁰ times and slowed 100 times, to be seen: over LIGO’s 4 km arms the real change, at its largest, was about 2 × 10⁻¹⁸ m, under a thousandth of a proton’s width.",
+    "The wave played is a Newtonian model fitted to the measured chirp mass, not the measured strain: in the last few orbits, where tides and the stars’ own fields matter most, the true wave runs a little ahead of it.",
+    "The masses are ranges: 1.36 to 1.60 and 1.17 to 1.36 Suns if the stars spun slowly, as known neutron-star pairs do, and 0.86 to 2.26 if they may have spun fast. The radius, 11.9 ± 1.4 km, assumes both stars are made of the same matter and that neutron stars can reach about two Suns.",
+    "The stars’ shapes as they are pulled, the glow drawn about them, and the size of what they made are drawn to show what happens, not measured."
+  ],
+  "others": "What the merger made is not settled. Its mass, about 2.7 Suns, is more than a neutron star is thought to hold for long, so most readings have it collapse into a black hole, within a second or so, after a brief life as a hot, spinning, overweight neutron star; others allow a neutron star that lived longer. The gravitational waves cannot tell: nothing after the merger was heard."
+}

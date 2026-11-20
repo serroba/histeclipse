@@ -60,6 +60,21 @@ export const DESTINATIONS: readonly Destination[] = [
     view: 'cam=30.5630,-90.7740,3.00&t=2015-09-14T09:50Z&wave=gw150914',
   },
   {
+    id: 'neutron-star-merger',
+    label: 'Two neutron stars merge',
+    topics: ['space'],
+    description:
+      'GW170817, 17 August 2017: two neutron stars spiral together and merge 130 million light-years away, heard by LIGO and Virgo and then seen in light.',
+    questions: [
+      'What happens when two neutron stars collide?',
+      'What was GW170817?',
+      'What did LIGO hear in 2017?',
+    ],
+    body: 'earth',
+    frame: { kind: 'years', from: 2017, to: 2018 },
+    view: 'cam=30.5630,-90.7740,3.00&t=2017-08-17T12:41Z&wave=gw170817',
+  },
+  {
     id: 'great-telescopes',
     label: 'Great telescopes',
     topics: ['space'],

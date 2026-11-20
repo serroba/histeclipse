@@ -108,6 +108,7 @@ const WHY_SHOWS: Readonly<Partial<Record<WhyId, string>>> = {
   'empires-ohm': 'layers=empires&borders=ohm',
   // The wave's story (#833), from its start, at the moment and over the place it was heard.
   gravitationalWaves: 'cam=30.5630,-90.7740,3.00&t=2015-09-14T09:50Z&wave=gw150914',
+  neutronStarMerger: 'cam=30.5630,-90.7740,3.00&t=2017-08-17T12:41Z&wave=gw170817',
   'ice-surface': SPAN_VIEWS.ice,
   'deep-surface': SPAN_VIEWS.all,
   'deep-evidence': SPAN_VIEWS.all,
@@ -143,7 +144,8 @@ export function whyPassages(
 
 /**
  * The stories the site plays, each a passage of its own so search finds the story itself, not
- * only how it is drawn (#842): GW150914, the first gravitational wave heard (#834).
+ * only how it is drawn (#842): GW150914, the first gravitational wave heard (#834), and
+ * GW170817, the first from two neutron stars (#990).
  */
 export function storyPassages(): Passage[] {
   return [
@@ -160,6 +162,22 @@ export function storyPassages(): Passage[] {
           when: [2015, 2015],
           label: 'GW150914, heard at LIGO Livingston and Hanford',
           view: 'cam=30.5630,-90.7740,3.00&t=2015-09-14T09:50Z&wave=gw150914&chapter=source',
+        },
+      ],
+    },
+    {
+      id: 'story:gw170817',
+      kind: 'story',
+      title: 'GW170817: two neutron stars merge, heard and then seen',
+      text: 'On 17 August 2017 at 12:41:04 UTC, LIGO and Virgo heard two neutron stars, about 1.5 and 1.3 times the Sun’s mass and each some 24 km across, spiral together for about 100 s and merge, 130 million light-years away in the galaxy NGC 4993. A burst of gamma rays followed 1.7 s later, and a new light, the kilonova, was found 10.9 hours after: the first such merger also seen in light. Played as a story: the two stars orbiting ever faster, pulled out of round, and merging as their wave spirals out through space; a ring of free masses showing what it does to space; and LIGO Livingston’s arms moved by it.',
+      sources: ['abbott2017Gw170817', 'abbott2017Multimessenger', 'gwoscGw170817'],
+      anchors: [
+        {
+          body: 'earth',
+          at: [30.563, -90.774],
+          when: [2017, 2017],
+          label: 'GW170817, heard at LIGO Livingston, Hanford and Virgo',
+          view: 'cam=30.5630,-90.7740,3.00&t=2017-08-17T12:41Z&wave=gw170817&chapter=source',
         },
       ],
     },

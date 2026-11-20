@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { WAVE_EVENTS } from './events';
 import { chirp, GW150914_STAND_IN } from './strain';
 import {
   drawnStrain,
@@ -7,7 +8,6 @@ import {
   loopMs,
   mergerMs,
   momentText,
-  SCALE_NOTE,
   sheets,
   SLOWED,
   strainOfSheets,
@@ -36,8 +36,10 @@ describe('the wave as played', () => {
   it('stretches the strain to be seen, and says by how much', () => {
     expect(drawnStrain(wave, 0).plus).toBeCloseTo(wave.at(0).plus * EXAGGERATION, 12);
     expect(Math.hypot(drawnStrain(wave, 0).plus, drawnStrain(wave, 0).cross)).toBeCloseTo(0.4, 6);
-    expect(SCALE_NOTE).toContain('4 × 10²⁰');
-    expect(SCALE_NOTE).toContain('100 times');
+    for (const event of Object.values(WAVE_EVENTS)) {
+      expect(event.scaleNote).toContain('4 × 10²⁰');
+      expect(event.scaleNote).toContain('100 times');
+    }
   });
 });
 

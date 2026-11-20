@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest';
 
+import { WAVE_EVENTS } from './events';
 import { chirp, GW150914_STAND_IN } from './strain';
 import { framing, mountWaveView, type WaveRenderer } from './waveView';
 
@@ -53,6 +54,7 @@ function mount(stillness: boolean): {
   const ends: boolean[] = [];
   const view = mountWaveView(host, {
     wave,
+    bodies: WAVE_EVENTS.gw150914.bodies,
     stillness,
     chapter: 'space',
     atLivingston: 0.41,

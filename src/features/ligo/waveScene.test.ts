@@ -2,6 +2,7 @@ import { Texture, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 
 import { WAVE_CHAPTERS } from '../../state/slices/display';
+import { WAVE_EVENTS } from './events';
 import { JOURNEY_MS } from './journey';
 import { chirp, GW150914_STAND_IN } from './strain';
 import { mergerMs } from './wavePlay';
@@ -11,7 +12,7 @@ const wave = chirp(GW150914_STAND_IN);
 
 describe('what the wave view draws, chapter by chapter (#831, #833)', () => {
   it('shows one chapter at a time, the source first', () => {
-    const drawn = createWaveScene();
+    const drawn = createWaveScene(WAVE_EVENTS.gw150914.bodies);
     const visible = (): boolean[] =>
       drawn.scene.children.filter((child) => child.type === 'Group').map((group) => group.visible);
     expect(visible()).toEqual([true, false, false, false]);
@@ -26,7 +27,7 @@ describe('what the wave view draws, chapter by chapter (#831, #833)', () => {
   });
 
   it('plays the wave in its chapters, and keeps the journey’s own clock in the journey', () => {
-    const drawn = createWaveScene();
+    const drawn = createWaveScene(WAVE_EVENTS.gw150914.bodies);
     drawn.show('space');
     expect(drawn.set(wave, mergerMs(wave), 0.41).t).toBeCloseTo(0, 9);
     expect(drawn.stillMs(wave)).toBe(mergerMs(wave));

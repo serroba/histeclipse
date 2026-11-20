@@ -21,10 +21,11 @@
  *   back to. Absent means a body is in focus. `site` (`url.ts`) names a telescope on the ground
  *   the camera is at instead (#864, #876), by its id in the record (`lovell`); links from before
  *   it say `craft=lovell`, and are still read so.
- * - `wave` opens a gravitational wave passing (#829): `gw150914`, the first one heard, its
- *   ring of test masses and the space about it stretched and squeezed. Absent shows none.
+ * - `wave` opens a gravitational wave passing (#829): `gw150914`, the first one heard, two black
+ *   holes, or `gw170817` (#990), two neutron stars; its ring of test masses and the space about it
+ *   stretched and squeezed. Absent shows none.
  * - `chapter` is the part of the wave's story shown (#833): `source` (absent), `journey`,
- *   `space` or `detector`. Only read with a wave.
+ *   `space` or `detector`. Only read with a wave; one its story does not have opens the source.
  * - `explore` names the destination the view was arrived at from (#726), such as
  *   `human-origins`; absent when the reader found their own way. A link with it and no view of
  *   its own (no `t`, `ma` or `cam`) opens that destination.
@@ -45,7 +46,7 @@ export const PLANET_LIGHTS = ['look', 'radar', 'minerals', 'recent', 'height', '
 export type PlanetLight = (typeof PLANET_LIGHTS)[number];
 
 /** The gravitational waves that can be shown passing (#829). */
-const WAVES = ['gw150914'] as const;
+const WAVES = ['gw150914', 'gw170817'] as const;
 export type Wave = (typeof WAVES)[number];
 
 /** The wave's story, in order (#833): its source, its journey, what it does to space, and how
