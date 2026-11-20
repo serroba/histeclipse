@@ -16,6 +16,7 @@ import { fossils } from './fossils';
 import { genomes } from './genomes';
 import { humans } from './humans';
 import { impacts } from './impacts';
+import { oceanCurrents } from './oceanCurrents';
 import { oceanHeat } from './oceanHeat';
 import { oceanTemp } from './oceanTemp';
 import { orbits } from './orbits';
@@ -57,6 +58,7 @@ const ALL = [
   oceanTemp,
   enso,
   amoc,
+  oceanCurrents,
   temperature,
   sealevel,
   plates,
@@ -102,6 +104,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
       oceanTemp,
       enso,
       amoc,
+      oceanCurrents,
       temperature,
       sealevel,
       air,

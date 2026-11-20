@@ -1,0 +1,34 @@
+/* Ocean currents' panel (#927), in the column beside the globe (ui/globePanels). */
+.ocean-currents-panel {
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgb(10 16 32 / 0.88);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.ocean-currents-panel[hidden] {
+  display: none;
+}
+
+.ocean-currents-title,
+.ocean-currents-said,
+.ocean-currents-note,
+.ocean-currents-credit {
+  margin: 0 0 4px;
+  line-height: 1.4;
+}
+
+.ocean-currents-title,
+.ocean-currents-note,
+.ocean-currents-credit {
+  color: var(--ink-muted);
+}
+
+.ocean-currents-pick {
+  width: 100%;
+  min-height: 32px;
+  margin-bottom: 6px;
+  font: inherit;
+}

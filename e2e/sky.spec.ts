@@ -391,3 +391,26 @@ test('tapping a planet in the sky goes to it up close, and the way back faces it
   });
   expect(problems).toEqual([]);
 });
+
+test('in the sky, the date panel stops short of the eclipse card (#943) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await page.goto(
+    './?mode=sky&t=-0584-05-28T16:01Z&cal=julian&loc=39,35&layers=eclipses&sel=solar:-0584-05-28',
+  );
+  await skyRendered(page);
+  const card = page.locator('.eclipse-card');
+  await expect(card).toBeVisible();
+  await openSkyOptions(page);
+  await expect
+    .poll(async () => {
+      const hud = await page.locator('.hud').boundingBox();
+      const below = await card.boundingBox();
+      if (hud === null || below === null) return 'unmeasured';
+      const sharesColumns = hud.x < below.x + below.width && below.x < hud.x + hud.width;
+      return sharesColumns && hud.y + hud.height > below.y ? 'overlapping' : 'clear';
+    })
+    .toBe('clear');
+  expect(problems).toEqual([]);
+});
