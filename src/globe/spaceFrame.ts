@@ -106,7 +106,14 @@ export function mergeMarkers(
   return labels;
 }
 
+/** Names a merged marker lists in full; of more, three are named and the rest counted, so a
+ * label fits a phone (#980). Four are all named: "and 1 more" would say no less in no less. */
+const MOST_NAMED = 3;
+
 function joinNames(names: readonly string[]): string {
+  if (names.length > MOST_NAMED + 1) {
+    return `${names.slice(0, MOST_NAMED).join(', ')} and ${String(names.length - MOST_NAMED)} more`;
+  }
   const last = names.at(-1) ?? '';
   return names.length < 2 ? last : `${names.slice(0, -1).join(', ')} and ${last}`;
 }

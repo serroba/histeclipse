@@ -13,6 +13,7 @@ import { BODY_RADIUS } from '../globe/bodyRadius';
 import { EARTH_RADIUS_KM } from '../globe/spaceFrame';
 import { CAMERA_DISTANCE_RANGE, nearestDistance, type Body } from '../state/viewState';
 import { element } from './dom';
+import { createZoomStops } from './zoomStops';
 import { railIcons } from './zoomRailIcons';
 import './zoomRail.css';
 
@@ -209,29 +210,15 @@ export function createZoomRail(handlers: {
     'aria-orientation': 'vertical',
   });
   const track = element('div', { class: 'zoom-track' }, slider);
-  let stops: { readonly stop: ZoomStop; readonly button: HTMLButtonElement }[] = [];
-  // The stops for the body in focus, drawn again when it changes.
-  function placeStops(): void {
-    for (const { button } of stops) button.remove();
-    stops = stopsFor(scale).map((stop) => {
-      const button = element(
-        'button',
-        {
-          type: 'button',
-          class: 'zoom-stop',
-          title: stop.title,
-          'aria-label': `Zoom to ${stop.title}`,
-        },
-        stop.label,
-      );
-      button.style.top = `${String(railPosition(stop.distance, scale) * 100)}%`;
-      button.addEventListener('click', () => {
-        handlers.onZoom(stop.distance);
-      });
-      track.append(button);
-      return { stop, button };
-    });
-  }
+  // The stops for the body in focus, drawn again when it changes, kept apart (#980).
+  const stops = createZoomStops(track, (distance) => {
+    handlers.onZoom(distance);
+  });
+  const placeStops = (): void => {
+    stops.place(
+      stopsFor(scale).map((stop) => ({ ...stop, at: railPosition(stop.distance, scale) })),
+    );
+  };
   placeStops();
   const readout = element('span', { class: 'zoom-readout', 'data-testid': 'zoom-readout' });
   const { orbits, spacecraft, asteroids, whyHere } = railIcons(handlers);
@@ -302,11 +289,7 @@ export function createZoomRail(handlers: {
       const words = distanceText(view.distance, scale);
       slider.setAttribute('aria-valuetext', words);
       readout.textContent = words.replace(` ${fromWords(view.body)}`, '');
-      // The stop the view is at, or has passed on the way out.
-      const reached = stops.filter(({ stop }) => view.distance >= stop.distance * 0.7).at(-1);
-      for (const entry of stops) {
-        entry.button.setAttribute('aria-pressed', String(entry === reached));
-      }
+      stops.mark(view.distance);
     },
   };
 }

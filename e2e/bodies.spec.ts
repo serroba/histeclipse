@@ -266,3 +266,26 @@ test('Back from Earth to the Moon lands where the link put the camera (#581)', a
   await expect(globe).toHaveAttribute('data-distance', '6.00', { timeout: 20_000 });
   expect(problems).toEqual([]);
 });
+
+test('on a short phone the zoom rail’s stops keep their names apart (#980) @mobile', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'a short phone');
+  const problems = collectProblems(page);
+  await page.setViewportSize({ width: 390, height: 664 });
+  await page.goto('./?t=2026-11-20T09:43Z');
+  await globeRendered(page);
+  const stops = page.locator('.zoom-stop');
+  await expect(stops).toHaveCount(4);
+  const boxes = await stops.evaluateAll((all) =>
+    all.map((each) => {
+      const box = each.getBoundingClientRect();
+      return { top: box.top, bottom: box.bottom };
+    }),
+  );
+  for (const [k, box] of boxes.entries()) {
+    const next = boxes[k + 1];
+    if (next !== undefined) expect(box.bottom).toBeLessThanOrEqual(next.top + 0.5);
+  }
+  expect(problems).toEqual([]);
+});
