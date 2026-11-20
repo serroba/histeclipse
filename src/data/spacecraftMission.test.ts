@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 
 import data from '../../public/data/spacecraft.json';
 import { gcatJd, loadSpacecraft } from './spacecraft';
-import { missionNamed, missions, missionView, type Mission } from './spacecraftMission';
+import { earthFixedToJ2000, sunPositionJ2000 } from '../astro/precession';
+import type { JulianDay } from '../time/julianDay';
+import {
+  besideTheSunLine,
+  missionNamed,
+  missions,
+  missionView,
+  type Mission,
+} from './spacecraftMission';
 
 const record = await loadSpacecraft('spacecraft.json', () =>
   Promise.resolve(new Response(JSON.stringify(data))),
@@ -37,6 +45,16 @@ describe('a mission as one journey (#712)', () => {
     ]);
     expect(apollo.chapters[2]?.jd).toBeCloseTo(gcatJd('1969-07-20T20:17'), 5);
     expect(apollo.aboutEarth).toBe(true);
+    expect(apollo.lPoint).toBeNull();
+  });
+
+  it('Given the James Webb Space Telescope, Then it goes to L2, and its route turns with the Sun (#995)', () => {
+    const webb = titled('James Webb Space Telescope');
+    expect(webb.lPoint).toBe('SEL2');
+    const arrives = webb.chapters.find(({ name }) => name === 'Reaches the Sun–Earth L2 point');
+    expect(arrives?.meaning).toContain('the Sun held still');
+    expect(webb.aboutEarth).toBe(true);
+    expect(titled('Voyager 2').lPoint).toBeNull();
   });
 
   it('Given Voyager 2, Then its chapters are the four giant planets, and it is followed a year past Neptune', () => {
@@ -74,8 +92,10 @@ describe('a mission as one journey (#712)', () => {
     expect(missionView(titled('Apollo 11'))).toBe(
       'focus=earth&cam=89.0000,0.0000,200.00&layers=spacecraft&mission=d00273&t=1969-07-17T16:41Z',
     );
-    expect(missionView(titled('James Webb Space Telescope'))).toMatch(
-      /^focus=earth&cam=89\.0000,0\.0000,700\.00&/,
+    // An L point: beside the Sun–Earth line, not above the pole, where its loops are edge on.
+    const webb = titled('James Webb Space Telescope');
+    expect(missionView(webb)).toBe(
+      `focus=earth&cam=${besideTheSunLine(webb.start)},1000.00&layers=spacecraft&mission=d01093&t=2021-12-26T02:23Z`,
     );
     // Mars: 1.52 AU, and a little more, in the Sun's radii, from above the planets.
     expect(missionView(titled('Mars 2020'))).toMatch(
@@ -83,5 +103,29 @@ describe('a mission as one journey (#712)', () => {
     );
     // Beyond Saturn, as far as the view reaches.
     expect(missionView(titled('Voyager 2'))).toMatch(/cam=66\.5607,-90\.0000,2747\.30&/);
+  });
+});
+
+describe('the view of a mission to a Sun–Earth L point (#995)', () => {
+  it('Given a moment, Then the camera looks from beside the Sun–Earth line, away from the Sun and a little above the ecliptic', () => {
+    const jd = gcatJd('2021-12-26T02:23') as JulianDay;
+    const [lat, lon] = besideTheSunLine(jd)
+      .split(',')
+      .map((each) => (Number(each) * Math.PI) / 180);
+    const fixed = [
+      Math.cos(lat ?? 0) * Math.cos(lon ?? 0),
+      Math.cos(lat ?? 0) * Math.sin(lon ?? 0),
+      Math.sin(lat ?? 0),
+    ] as const;
+    const m = earthFixedToJ2000(jd, jd);
+    const look = m.map((row) => row[0] * fixed[0] + row[1] * fixed[1] + row[2] * fixed[2]);
+    const sun = sunPositionJ2000(jd);
+    const r = Math.hypot(...sun);
+    const fromSun = look.reduce((sum, c, i) => sum + c * (sun[i] ?? 0), 0) / r;
+    // −0.75 along the Sun, of a direction 0.99 long: some 40° from the line, away from the Sun.
+    expect(fromSun).toBeCloseTo(-0.75 / Math.hypot(0.75, 0.55, 0.35), 3);
+    const obliquity = 0.409_092_6;
+    const above = -Math.sin(obliquity) * (look[1] ?? 0) + Math.cos(obliquity) * (look[2] ?? 0);
+    expect(above).toBeCloseTo(0.35 / Math.hypot(0.75, 0.55, 0.35), 3);
   });
 });

@@ -7,6 +7,7 @@ import { gcatJd } from '../../data/spacecraft';
 import type { Geocentric } from './approximatePaths';
 import {
   craftNow,
+  craftRoutes,
   craftWheres,
   fromEarth,
   inFlight,
@@ -246,5 +247,56 @@ describe('where the bodies are, for the craft (#702)', () => {
       const gap = Math.hypot(oldest[0] - here[0], oldest[1] - here[1], oldest[2] - here[2]);
       expect(gap).toBeLessThan(60);
     });
+  });
+});
+
+describe('a mission to L2, held to the Sun (#995)', () => {
+  const year = 365.25;
+  const start = gcatJd('2000-01-01');
+  const obliquity = (84_381.406 / 3600) * (Math.PI / 180);
+  /** `r` km along the ecliptic, at the angle the Sun has gone round by `jd`, J2000 equatorial. */
+  const along = (jd: number, r: number): [number, number, number] => {
+    const angle = (2 * Math.PI * (jd - start)) / year;
+    const y = r * Math.sin(angle);
+    return [r * Math.cos(angle), y * Math.cos(obliquity), y * Math.sin(obliquity)];
+  };
+  const turningSun: Geocentric = (body, jd) => (body === 'Sun' ? along(jd, AU) : null);
+  // A craft at L2 for a year, about Earth: 1.5 million km from Earth, away from the Sun, weekly.
+  const points = Array.from({ length: 53 }, (_, k): [number, number, number, number] => {
+    const jd = start + (k * year) / 52;
+    return [jd - 2_400_000, ...along(jd, -1.5e6)];
+  });
+  const webb = craft('W1', [['SEL2', '2000-01-01', null, 'O', '-']]);
+  const wheres = craftWheres({ W1: [{ centre: 'Earth', points }] }, turningSun);
+  const shown = start + 200;
+  const followed = { from: start, to: start + year, aboutEarth: true };
+  const apart = (a: readonly number[], b: readonly number[]): number =>
+    Math.hypot((a[0] ?? 0) - (b[0] ?? 0), (a[1] ?? 0) - (b[1] ?? 0), (a[2] ?? 0) - (b[2] ?? 0));
+
+  it('Given the route in a fixed frame, Then it is a ring about Earth', () => {
+    const [route] = craftRoutes([webb], wheres, turningSun, shown, followed);
+    const xs = (route?.points ?? []).flatMap((point) => (point === null ? [] : [point[0]]));
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(2.9e6);
+  });
+
+  it('Given the route turning with the Sun, Then every point is at L2 as it is now', () => {
+    const [route] = craftRoutes([webb], wheres, turningSun, shown, { ...followed, turning: true });
+    const l2 = along(shown, -1.5e6);
+    for (const point of route?.points ?? []) {
+      if (point !== null) expect(apart(point, l2)).toBeLessThan(10_000);
+    }
+  });
+
+  it('Given its trail turning too, Then the dot and the trail meet', () => {
+    const [now] = craftNow([webb], wheres, turningSun, shown, { ...followed, turning: true });
+    expect(now?.trail.length).toBeGreaterThan(0);
+    expect(apart(now?.km ?? [], now?.trail[0] ?? [])).toBeLessThan(10_000);
+  });
+
+  it('Given no place for the Sun yet, Then the route is drawn as it is, unturned', () => {
+    const noSun: Geocentric = () => null;
+    const [route] = craftRoutes([webb], wheres, noSun, shown, { ...followed, turning: true });
+    const [fixed] = craftRoutes([webb], wheres, noSun, shown, followed);
+    expect(route?.points).toEqual(fixed?.points);
   });
 });
