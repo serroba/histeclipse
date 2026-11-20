@@ -131,3 +131,43 @@ test('in the Holocene a tap on empty space still only brings the panels back', a
   await page.mouse.click(box.x + box.width - 4, box.y + box.height * 0.45);
   await expect(page.locator('.hud')).toBeVisible();
 });
+
+test('on a short phone the date panel folds, so the globe keeps over half the screen (#975) @mobile', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'a short phone');
+  const problems = collectProblems(page);
+  const hud = page.locator('.hud');
+  const more = hud.getByRole('button', { name: 'More controls' });
+  /** The share of the screen's height between the date panel and the bottom bar. */
+  const free = async (): Promise<number> =>
+    page.evaluate(() => {
+      const top = document.querySelector('.hud')?.getBoundingClientRect().bottom ?? 0;
+      const bottom = document.querySelector('.bottom')?.getBoundingClientRect().top ?? 0;
+      return (bottom - top) / window.innerHeight;
+    });
+  await test.step('Given today on a phone 390 by 664, as a browser leaves an iPhone 13', async () => {
+    await page.setViewportSize({ width: 390, height: 664 });
+    await page.goto('./?t=2026-01-01T12:00Z');
+    await globeRendered(page);
+  });
+  await test.step('Then the panel shows the date, folded, and the globe has over half', async () => {
+    await expect(more).toHaveAttribute('aria-expanded', 'false');
+    await expect(hud.getByRole('button', { name: 'Layers' })).toBeHidden();
+    expect(await free()).toBeGreaterThan(0.5);
+  });
+  await test.step('When they ask for more, Then the time spans, Layers and views are there', async () => {
+    await more.click();
+    await expect(hud.getByRole('button', { name: 'Fewer controls' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    await expect(hud.getByRole('button', { name: 'Layers' })).toBeVisible();
+    await expect(hud.getByRole('group', { name: 'Viewpoint' })).toBeVisible();
+  });
+  await test.step('When they fold it again, Then the globe has its room back', async () => {
+    await hud.getByRole('button', { name: 'Fewer controls' }).click();
+    expect(await free()).toBeGreaterThan(0.5);
+  });
+  expect(problems).toEqual([]);
+});

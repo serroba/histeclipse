@@ -39,3 +39,11 @@
 .ways-legend-note {
   font-style: italic;
 }
+
+/* On a short phone the key keeps to its line, so the globe keeps its room while the years play
+   (#985); the book beside its title says what the shading means. */
+@media (max-width: 600px) and (max-height: 760px) {
+  .ways-legend-note {
+    display: none;
+  }
+}

@@ -58,7 +58,7 @@ describe('the Holocene’s track', () => {
       '10 yr/s',
     ]);
     expect(track.root.querySelector<HTMLElement>('.history-notes')?.hidden).toBe(true);
-    expect(track.extras.querySelector<HTMLElement>('.history-about')?.hidden).toBe(true);
+    expect(track.root.querySelector<HTMLElement>('.history-about')?.hidden).toBe(true);
   });
 
   it('Given what the travel view says, Then its notes, its chip and what it shows', () => {
@@ -72,8 +72,18 @@ describe('the Holocene’s track', () => {
     });
     expect(track.root.textContent).toContain('By 2000 CE: new A');
     expect(track.root.querySelector<HTMLElement>('.travel-chip')?.hidden).toBe(false);
-    expect(track.extras.querySelector<HTMLElement>('.history-about')?.hidden).toBe(false);
-    expect(track.extras.textContent).toContain('Sea level…');
+    expect(track.root.querySelector<HTMLElement>('.history-about')?.hidden).toBe(false);
+    expect(track.root.textContent).toContain('Sea level…');
+  });
+
+  it('Given only what the view shows, Then its ⓘ keeps the notes row, beside no chip (#985)', () => {
+    const { track } = setUp();
+    track.render({ ...VIEW, blank: 'Land with no state…' });
+    const notes = track.root.querySelector<HTMLElement>('.history-notes');
+    expect(notes?.hidden).toBe(false);
+    expect(notes?.querySelector<HTMLElement>('.history-about')?.hidden).toBe(false);
+    expect(track.root.querySelector<HTMLElement>('.travel-chip')?.hidden).toBe(true);
+    expect(track.extras.querySelector('.history-about')).toBeNull();
   });
 
   it('Given the reader’s choices, Then each is heard', () => {

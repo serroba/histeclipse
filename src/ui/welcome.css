@@ -35,3 +35,25 @@
   font-size: 20px;
   cursor: pointer;
 }
+
+/* On a phone the close button sits in the line's top corner, rather than wrapping onto a row
+   of its own under the two ways in (#975). */
+@media (max-width: 600px) {
+  .welcome {
+    position: relative;
+    padding-right: 36px;
+  }
+
+  /* The two ways in keep to one row beside it. */
+  .welcome-start {
+    padding: 0 10px;
+  }
+
+  .welcome-close {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 44px;
+    height: 44px;
+  }
+}

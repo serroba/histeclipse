@@ -1,8 +1,11 @@
 /**
  * Keep the globe centred in the space the panels leave free (#451). The date panel counts when
  * it spans most of the width (on phones, and on wide screens once it fills with controls); a
- * narrow one sits beside the globe.
+ * narrow one sits beside the globe. On a short phone the date panel folds, so there is space to
+ * keep (#975).
  */
+
+import { foldHud } from './hudFold';
 
 /** Pixels the zoom rail needs between the panels: its buttons, a short track and its reading. */
 const ZOOM_RAIL_ROOM = 180;
@@ -10,7 +13,7 @@ const ZOOM_RAIL_ROOM = 180;
 export interface Layout {
   readonly root: HTMLElement;
   /** The date panel, and the panel at the bottom. */
-  readonly top: Element;
+  readonly top: HTMLElement;
   readonly bottom: HTMLElement;
   readonly zoomRail: HTMLElement;
   /** The space the panels leave free changed: top, bottom and left, px. */
@@ -18,6 +21,7 @@ export interface Layout {
 }
 
 export function keepCentred({ root, top, bottom, zoomRail, onInsets }: Layout): void {
+  foldHud(top);
   const update = (): void => {
     const box = top.getBoundingClientRect();
     const spans = box.width > window.innerWidth * 0.55;

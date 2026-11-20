@@ -330,7 +330,7 @@ body {
   }
 }
 
-/* On a phone the era keeps room for its name; the speed and the ⓘ take what is left. */
+/* On a phone the era keeps its name; the speed narrows so the years shown fit beside it (#975). */
 @media (max-width: 600px) {
   /* The era a fixed width, so it never squeezes to a letter; the year takes what is left. */
   .holocene-bar .era-select {
@@ -352,7 +352,7 @@ body {
 
   .holocene-bar .history-speed {
     flex: none;
-    width: 116px;
+    width: 96px;
     font-size: 14px;
   }
 }
@@ -360,7 +360,7 @@ body {
 /* The narrowest phones: the speed gives up a little more, so the year's row still fits. */
 @media (max-width: 380px) {
   .holocene-bar .history-speed {
-    width: 104px;
+    width: 96px;
     padding: 0 4px;
   }
 

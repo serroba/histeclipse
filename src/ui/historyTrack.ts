@@ -163,8 +163,10 @@ export function createHistoryTrack(
   travel.addEventListener('click', () => {
     handlers.onEndTravel();
   });
-  const notes = element('div', { class: 'history-notes' }, changes, travel);
-  const extras = element('span', { class: 'history-extras' }, range, speed, about);
+  // The ⓘ goes with the travel view's notes and chip, so it never takes a row of its own on a
+  // phone, where the years shown and the speed fill theirs (#985).
+  const notes = element('div', { class: 'history-notes' }, changes, about, travel);
+  const extras = element('span', { class: 'history-extras' }, range, speed);
   const root = element(
     'div',
     { class: 'history-track', role: 'group', 'aria-label': 'Holocene', id: 'history-track' },
@@ -214,13 +216,13 @@ export function createHistoryTrack(
       changes.textContent = view.changes;
       changes.hidden = view.changes === '';
       travel.hidden = !view.travelling;
-      // The row goes when it has nothing to say, so the bar is no taller than it needs.
-      notes.hidden = changes.hidden && travel.hidden;
       blank.hidden = view.blank === null;
       blank.textContent = view.blank ?? '';
       earth.hidden = view.earth === null;
       earth.textContent = view.earth ?? '';
       about.hidden = view.blank === null && view.earth === null;
+      // The row goes when it has nothing to say, so the bar is no taller than it needs.
+      notes.hidden = changes.hidden && travel.hidden && about.hidden;
     },
   };
 }
