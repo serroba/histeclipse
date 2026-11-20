@@ -10,7 +10,7 @@ import { hereFacts, placeText } from './here';
 import { PERIOD_EVIDENCE } from '../../sources/periodEvidence';
 import type { HereFact, WhyId } from '../../sources/registry';
 import { cliopatriaYear } from '../../state/layerCatalog';
-import type { Layer, ViewState } from '../../state/viewState';
+import { LAYERS, type Layer, type ViewState } from '../../state/viewState';
 import { PRESENT_YEAR } from '../../time/present';
 import { astronomicalYear, formatYear } from '../../time/year';
 import type { HereView, WhyMoment } from '../../ui/whySheet';
@@ -23,9 +23,6 @@ export interface HereData {
   readonly features: readonly (readonly [Layer, HereFact])[];
 }
 
-/** The layers whose facts come straight after the states', in this order, as they always have. */
-const PLACED_FIRST: readonly Layer[] = ['ways', 'rocks'];
-
 /** What each layer on the map has at the place picked: "Why here?". */
 export function hereView(state: ViewState, data: HereData): HereView | null {
   if (state.location === null || state.ma !== null) return null;
@@ -33,27 +30,28 @@ export function hereView(state: ViewState, data: HereData): HereView | null {
   const words = (y: number): string => formatYear(astronomicalYear(y));
   const shownYear = cliopatriaYear(year, PRESENT_YEAR);
   const { drawn } = data;
-  // The ways of life and the rock keep their place after the states; the others' follow.
-  const placed = PLACED_FIRST.flatMap((first) =>
-    data.features.flatMap(([layer, fact]) => (layer === first ? [fact] : [])),
-  );
-  const others = data.features.flatMap(([layer, fact]) =>
-    PLACED_FIRST.includes(layer) ? [] : [fact],
-  );
-  return {
-    place: placeText(state.location),
-    facts: hereFacts({
-      place: state.location,
-      yearText: words(year),
-      states: state.layers.has('empires')
-        ? {
-            source: state.borders,
-            territories: drawn?.year === year ? drawn.territories : null,
-            asOf: shownYear === year ? null : words(shownYear),
-          }
-        : null,
-    }).concat(placed, others),
-  };
+  const states = hereFacts({
+    place: state.location,
+    yearText: words(year),
+    states: state.layers.has('empires')
+      ? {
+          source: state.borders,
+          territories: drawn?.year === year ? drawn.territories : null,
+          asOf: shownYear === year ? null : words(shownYear),
+        }
+      : null,
+  });
+  // In the layers' own order (#909), as the Sources list is: the states' facts are the empires'.
+  const byLayer: readonly (readonly [Layer, HereFact])[] = [
+    ...states.map((fact) => ['empires', fact] as const),
+    ...data.features,
+  ];
+  const place = (layer: Layer): number => LAYERS.indexOf(layer);
+  const facts = byLayer
+    .map(([layer, fact], index) => ({ fact, at: place(layer), index }))
+    .sort((a, b) => a.at - b.at || a.index - b.index)
+    .map(({ fact }) => fact);
+  return { place: placeText(state.location), facts };
 }
 
 /** What "Here" depends on, so it is written again only when that changes. */

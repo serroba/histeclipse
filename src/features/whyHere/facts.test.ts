@@ -42,20 +42,23 @@ describe('hereView', () => {
     expect(hereVersion(here, withFact)).not.toBe(hereVersion(here, nothing));
   });
 
-  it('keeps the states, the ways of life and the rock first, the other features after (#909)', () => {
+  it('lists the facts in the layers’ own order, whatever order the features come in (#909)', () => {
     const on = { ...here, layers: withLayer(here.layers, 'empires', true) };
     const enso = { title: 'El Niño and La Niña', text: 'Wetter.', why: 'enso' } as const;
     const ways = { title: 'Ways of life', text: 'Farming.', why: 'ways' } as const;
     const rock = { title: 'Rocks', text: 'Limestone.', why: 'rocks' } as const;
+    const telescope = { title: 'Telescopes', text: 'One here.', why: 'telescopes' } as const;
     const view = hereView(on, {
       drawn: { year: 2026, territories: [] },
       features: [
         ['enso', enso],
         ['rocks', rock],
+        ['telescopes', telescope],
         ['ways', ways],
       ],
     });
     expect(view?.facts.map(({ title }) => title)).toEqual([
+      'Telescopes',
       'States',
       'Ways of life',
       'Rocks',
