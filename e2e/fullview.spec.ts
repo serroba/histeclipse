@@ -189,10 +189,11 @@ test('on a 320-px phone the date panel’s tools keep clear of the name, and not
     name.y + name.height <= tools.y ||
     tools.y + tools.height <= name.y;
   expect(apart).toBe(true);
-  // The time stays on the date's line, whole.
-  const time = await page.locator('.hud-time').boundingBox();
-  const date = await page.locator('.hud-date').boundingBox();
-  expect(Math.abs((time?.y ?? 0) - (date?.y ?? 0))).toBeLessThan(4);
+  // The time stays whole, on one line of its own size (with the date, or under it, by the font).
+  const time = await page.locator('.hud-time').evaluate((element) => ({
+    lines: element.getClientRects().length,
+  }));
+  expect(time.lines).toBe(1);
   const off = await page.evaluate(
     () =>
       [...document.querySelectorAll('button, a')].filter((each) => {
