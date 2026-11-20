@@ -18,6 +18,7 @@ import {
 import type { Moment } from '../../time/moment';
 import {
   byMonth,
+  defaultLevel,
   speedAt,
   speedsFor,
   type PlaySpeed,
@@ -52,8 +53,9 @@ export interface Windowing {
   fitNew(state: ViewState, playing: boolean): void;
   /** The windows the picker offers, and the one shown, as its value. */
   choices(state: ViewState): { readonly windows: WindowChoice[]; readonly window: string };
-  /** The speeds for the years shown (#915), and the one at the level picked. */
-  speeds(state: ViewState, level: SpeedLevel): { speeds: PlaySpeed[]; speed: PlaySpeed };
+  /** The speeds for the years shown (#915), and the one at the level picked, or, none picked,
+   * at the years' own default (#984). */
+  speeds(state: ViewState, level: SpeedLevel | null): { speeds: PlaySpeed[]; speed: PlaySpeed };
   /** Where playing starts: the window's start if the moment is at its end or outside it. */
   start(state: ViewState): Moment | null;
   /**
@@ -62,7 +64,7 @@ export interface Windowing {
    */
   step(
     state: ViewState,
-    level: SpeedLevel,
+    level: SpeedLevel | null,
     seconds: number,
     head: YearPlayhead,
   ): { readonly time: Moment | null; readonly done: boolean };
@@ -130,9 +132,9 @@ export function windowing(
       ? monthIndex(window.last, thisMonth())
       : monthIndex(window.last, 12);
   }
-  const speedOf = (state: ViewState, level: SpeedLevel): PlaySpeed => {
-    const window = shown(state);
-    return speedAt(window.last - window.first, level);
+  const speedOf = (state: ViewState, level: SpeedLevel | null): PlaySpeed => {
+    const years = shown(state).last - shown(state).first;
+    return speedAt(years, level ?? defaultLevel(years));
   };
   return {
     shown,

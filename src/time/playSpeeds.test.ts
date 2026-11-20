@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { byMonth, niceSpeed, speedAt, speedLabel, speedsFor } from './playSpeeds';
+import { byMonth, defaultLevel, niceSpeed, speedAt, speedLabel, speedsFor } from './playSpeeds';
 
 describe('the Years bar’s speeds (#915)', () => {
   it('Given a speed, Then rounded to read easily: months under a year, else 1, 2 or 5 × 10ⁿ', () => {
@@ -37,5 +37,19 @@ describe('the Years bar’s speeds (#915)', () => {
 
   it('Given a speed, Then month by month up to a year a second', () => {
     expect([1 / 12, 0.5, 1, 2, 20].map(byMonth)).toEqual([true, true, true, false, false]);
+  });
+});
+
+describe('the level play starts at (#984)', () => {
+  it('Given the Holocene, Then medium: a hundred years a second, the whole of it in two minutes', () => {
+    expect(defaultLevel(11_725)).toBe('medium');
+    expect(speedAt(11_725, defaultLevel(11_725)).label).toBe('100 yr/s');
+    expect(defaultLevel(1000)).toBe('medium');
+  });
+
+  it('Given El Niño’s years or a century, Then slow, so the months do not rush by (#919)', () => {
+    expect(defaultLevel(172)).toBe('slow');
+    expect(speedAt(172, defaultLevel(172)).label).toBe('2 months/s');
+    expect(defaultLevel(999)).toBe('slow');
   });
 });

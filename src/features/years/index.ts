@@ -1,9 +1,8 @@
 import { animationLoop } from '../../util/animationLoop';
 /**
- * The years as a part of the page (#446): the Holocene's track, from as far back as ΔT reaches
- * to the present, with its ages under the slider; playing the years by, and the travel view
- * that comes with it; and carbon-14 in the air under the slider, with the eruptions the ice
- * cores record, loaded once the layer is on.
+ * The years as a part of the page (#446): the Holocene's track, back as far as ΔT reaches, its
+ * ages under the slider; playing them by, with the travel view; and carbon-14 in the air under
+ * the slider, with the eruptions the ice cores record, loaded once the layer is on.
  */
 
 import type { Globe } from '../../globe/globe';
@@ -16,11 +15,12 @@ import { createRadiocarbonStrip } from './radiocarbonStrip';
 import { type Layer, type ViewState } from '../../state/viewState';
 import { astronomicalYear, formatYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
-import { blankText, createHistoryTrack, STATES_HINT, STATES_WAIT } from '../../ui/historyTrack';
+import { blankText, createHistoryTrack, trackNote } from '../../ui/historyTrack';
 import { yearPlayhead } from '../../time/yearPlay';
 import type { PlaySpeed, SpeedLevel } from '../../time/playSpeeds';
 import type { Moment } from '../../time/moment';
 import { windowOf } from '../../state/yearsWindow';
+import { travelTrip } from './travelTrip';
 import { travelBrings, windowing } from './windowing';
 import { yearOfMa } from '../../data/iceSheets';
 import { PRESENT_YEAR } from '../../time/present';
@@ -59,10 +59,11 @@ export interface YearsPart {
 
 export function mountYears(context: YearsContext): YearsPart {
   const { base, fetchJson, store } = context;
-  // The Holocene track: the years played by, from as far back as ΔT reaches to the present.
-  // Slow by default: on El Niño's years a year a second, month by month (#915).
-  let historySpeed: SpeedLevel = 'slow';
+  // The Holocene track, as far back as ΔT reaches; the speed picked, until then the years' own
+  // (#984); where Play went back to, said while it plays (#982).
+  let historySpeed: SpeedLevel | null = null;
   let historyPlaying = false;
+  let playedFrom: { first: number; last: number; present: number } | null = null;
   const historyFrames = animationLoop(tickHistory, 0.08);
   let historyHead = yearPlayhead();
   // The Holocene's ages under its slider; a tap goes to an age's start.
@@ -172,21 +173,14 @@ export function mountYears(context: YearsContext): YearsPart {
     context.globe.setEvenLight(open);
     // The trip is about peoples and states: their borders, and how people lived where no
     // state is drawn, come on with it, and go with it if it brought them.
-    const { layers } = store.get();
-    if (open) {
-      travelBrought = travelBrings(layers);
-      if (travelBrought.length > 0) {
-        store.set((state) => ({
-          ...state,
-          layers: new Set([...state.layers, ...travelBrought]),
-        }));
-      }
-    } else if (travelBrought.length > 0) {
-      const brought = new Set<Layer>(travelBrought);
-      travelBrought = [];
+    // Said the first time; one the reader turns off stays off (#983).
+    const { bring, note } = open ? trip.open(store.get().layers) : { bring: [], note: null };
+    const taken = new Set<Layer>(open ? [] : trip.close());
+    if (note !== null) context.notify(note);
+    if (bring.length > 0 || taken.size > 0) {
       store.set((state) => ({
         ...state,
-        layers: new Set([...state.layers].filter((layer) => !brought.has(layer))),
+        layers: new Set([...state.layers, ...bring].filter((layer) => !taken.has(layer))),
       }));
     }
     const now = store.get();
@@ -196,7 +190,7 @@ export function mountYears(context: YearsContext): YearsPart {
   // While the track is open, the globe is lit evenly and the markers of single finds and
   // events rest: at years a second they flicker past without meaning.
   let travelling = false;
-  let travelBrought: readonly Layer[] = [];
+  const trip = travelTrip();
 
   function historyFirst(): number {
     return Math.ceil(context.deltaT().firstYear) + 1;
@@ -210,7 +204,8 @@ export function mountYears(context: YearsContext): YearsPart {
   }
 
   function speedsShown(state: ViewState): { speeds: PlaySpeed[]; speed: SpeedLevel } {
-    return { speeds: window.speeds(state, historySpeed).speeds, speed: historySpeed };
+    const { speeds, speed } = window.speeds(state, historySpeed);
+    return { speeds, speed: speed.level };
   }
 
   function setYear(year: number): void {
@@ -223,6 +218,7 @@ export function mountYears(context: YearsContext): YearsPart {
 
   function startHistory(): void {
     const from = window.start(store.get());
+    playedFrom = from && { ...window.shown(store.get()), present: PRESENT_YEAR };
     if (from !== null) setTime(from);
     historyPlaying = true;
     setTravel(true);
@@ -246,6 +242,7 @@ export function mountYears(context: YearsContext): YearsPart {
   }
 
   function showHistory(state: ViewState): void {
+    if (travelling) trip.seen(state.layers);
     window.fitNew(state, historyPlaying);
     const shown = window.shown(state);
     showRadiocarbon(state);
@@ -265,15 +262,13 @@ export function mountYears(context: YearsContext): YearsPart {
       travelling,
       ...speedsShown(state),
       ...window.choices(state),
-      // What changed whenever states are on; while travelling, what to expect until then, but
-      // not with a subject of its own on (El Niño), which is not about borders.
-      changes: state.layers.has('empires')
-        ? context.statesSaid() === '' && travelling
-          ? STATES_WAIT
-          : context.statesSaid()
-        : travelling && travelBrings(state.layers).length > 0
-          ? STATES_HINT
-          : '',
+      changes: trackNote({
+        empires: state.layers.has('empires'),
+        said: context.statesSaid(),
+        travelling,
+        brings: travelBrings(state.layers).length > 0,
+        from: historyPlaying ? playedFrom : null,
+      }),
       blank: state.layers.has('empires') ? blankText(state.layers.has('ways')) : null,
       earth: context.holoceneText(),
     });

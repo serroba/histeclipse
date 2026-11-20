@@ -184,6 +184,7 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
     scrubber.render({
       offsetMinutes: Math.max(-SCRUB_RANGE_MINUTES, Math.min(SCRUB_RANGE_MINUTES, offset)),
       timeLabel: formatTimeOfDay(state.time),
+      key: String(greatestEclipseUT(selected)),
     });
 
     const showShadow = isSolar(selected) && state.layers.has('eclipses');

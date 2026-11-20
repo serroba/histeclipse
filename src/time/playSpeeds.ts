@@ -58,6 +58,19 @@ export function speedsFor(years: number): PlaySpeed[] {
   });
 }
 
+/** Years shown from which play starts at medium, not slow (#984). */
+const LONG_YEARS = 1000;
+
+/**
+ * The level play starts at, until the reader picks one (#984): slow on a few centuries or less,
+ * where El Niño's months must not rush by (#919); medium on the Holocene and other long spans,
+ * where slow is a quarter of an hour of nothing seeming to change (the first states, eleven
+ * minutes away from 9700 BCE).
+ */
+export function defaultLevel(years: number): SpeedLevel {
+  return years >= LONG_YEARS ? 'medium' : 'slow';
+}
+
 /** The speed at a level for a window, or the nearest level there is when two fell together. */
 export function speedAt(years: number, level: SpeedLevel): PlaySpeed {
   const speeds = speedsFor(years);
