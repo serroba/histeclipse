@@ -21,10 +21,21 @@ test('the ocean’s currents move near the surface for the month, and at 1,500 m
     await expect(panel).toContainText('The currents at 1,500 m, January 2010');
     await expect(panel).toContainText('to 0.2 m/s and beyond');
   });
-  await test.step('When the year is after IAP’s last, Then the same month of 2021, said so', async () => {
+  expect(problems).toEqual([]);
+});
+
+test('after IAP’s last year, the ocean’s currents show the same month of 2021, said so @acceptance', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  await test.step('Given January 2024, after IAP’s currents end, with Ocean currents on', async () => {
     await page.goto('./?t=2024-01-15T12:00Z&layers=oceanCurrents&cam=30,-50,2.6');
     await globeRendered(page);
-    await expect(panel).toContainText('showing January 2021');
+  });
+  await test.step('Then January 2021 streams, said so', async () => {
+    await expect(page.getByRole('region', { name: 'Ocean currents' })).toContainText(
+      'showing January 2021',
+    );
   });
   expect(problems).toEqual([]);
 });
