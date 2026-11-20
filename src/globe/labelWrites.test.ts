@@ -167,6 +167,25 @@ describe('layOutSurface', () => {
     expect(minor.element.style.transform).toBe('translate(200px, 180px) translate(-50%, -50%)');
   });
 
+  it('puts a label with its own pin there on its point, and never moves it for room (#1010)', () => {
+    // A dot 4 pixels in from the label's left edge.
+    const site = { ...name(1, 0, 0), anchor: 4 };
+    layOutSurface([{ priority: 10, labels: [site] }], camera(), view);
+    expect(site.element.hidden).toBe(false);
+    expect(site.element.style.transform).toBe('translate(196px, 200px) translate(0, -50%)');
+    // Its place taken, it is hidden rather than drawn a line away, its dot off its site.
+    const crowded = { ...name(1, 0, 0), anchor: 4 };
+    layOutSurface(
+      [
+        { priority: 0, labels: [name(1, 0, 0)] },
+        { priority: 10, labels: [crowded] },
+      ],
+      camera(),
+      view,
+    );
+    expect(crowded.element.hidden).toBe(true);
+  });
+
   it('hides the slots from leftOut on, and those only', () => {
     const major = name(1, 0.2, 0);
     const minor = name(1, -0.2, 0);

@@ -95,7 +95,8 @@ export function layOutSurface(
   for (const { priority, labels } of [...slots].sort((a, b) => a.priority - b.priority)) {
     let left = priority < view.leftOut ? view.most : 0;
     total += labels.length;
-    for (const { element, position, width, height } of labels) {
+    for (const label of labels) {
+      const { position } = label;
       projected.copy(position).project(camera);
       // Near Earth's side the camera faces, and above the horizon from where it is: close to the
       // ground (a telescope's site, #864) that is only a few degrees round.
@@ -106,18 +107,50 @@ export function layOutSurface(
         Math.abs(projected.x) < 1 &&
         Math.abs(projected.y) < 1;
       if (inView && left <= 0) leftOut += 1;
-      const shown = inView && left > 0;
       const x = ((projected.x + 1) / 2) * view.width;
-      // A name out of view is hidden without looking for room: most are, behind Earth.
       const centre = ((1 - projected.y) / 2) * view.height;
-      const over = (at: number): boolean => Math.hypot(x - disc.x, at - disc.y) <= disc.radius;
-      const y = shown ? roomFor(x, centre, width, height, placed, over) : null;
-      if (y !== null) left -= 1;
-      placeLabel(element, y === null ? null : translation(x, y, 'translate(-50%, -50%)'));
+      // A name out of view is hidden without looking for room: most are, behind Earth.
+      const at = inView && left > 0 ? { x, y: centre } : null;
+      if (placeSurfaceLabel(label, at, placed, disc)) left -= 1;
     }
   }
   // Each name shown was given room once, so `placed` less what was reserved counts them.
   return { shown: placed.length - reserved.length, total, leftOut };
+}
+
+/**
+ * Show `label` with its point at `at` on screen, or as near as there is room over Earth's
+ * `disc`, clear of the labels `placed`; hide it where there is none, or with `at` null. Returns
+ * whether it is shown.
+ */
+function placeSurfaceLabel(
+  { element, width, height, anchor }: SurfaceLabel,
+  at: { readonly x: number; readonly y: number } | null,
+  placed: Box[],
+  disc: { readonly x: number; readonly y: number; readonly radius: number },
+): boolean {
+  if (at === null) {
+    placeLabel(element, null);
+    return false;
+  }
+  // A label with a pin on its point (#1010) stays where it is, or its pin would mark somewhere
+  // else: it is shown there or not at all.
+  const pinned = anchor !== undefined;
+  const across = pinned ? at.x - anchor + width / 2 : at.x;
+  const over = (y: number): boolean =>
+    (!pinned || y === at.y) && Math.hypot(at.x - disc.x, y - disc.y) <= disc.radius;
+  const y = roomFor(across, at.y, width, height, placed, over);
+  if (y === null) {
+    placeLabel(element, null);
+    return false;
+  }
+  placeLabel(
+    element,
+    pinned
+      ? translation(at.x - anchor, y, 'translate(0, -50%)')
+      : translation(at.x, y, 'translate(-50%, -50%)'),
+  );
+  return true;
 }
 
 /** Earth's disc on screen as `camera` sees it, in pixels: its centre and radius. */

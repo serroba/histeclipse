@@ -7,13 +7,13 @@
 import { Vector3, type Object3D, type PerspectiveCamera } from 'three';
 
 import { PLANETS, type PlanetName } from '../astro/planets';
-import type { Body, GeoPoint } from '../state/viewState';
+import type { Body } from '../state/viewState';
 import { noteScreenNames } from '../util/screenNames';
 import { CameraMotion } from './cameraMotion';
 import { geoToVector } from './geo';
 import { layOutSurface, placeLabel, type SurfaceSlot, translation } from './labelWrites';
 import { fitName, markerNameBox } from './nameRoom';
-import { type LayerHost, SURFACE_PRIORITY, type SurfaceLabel } from './layerHost';
+import { type LayerHost, SURFACE_PRIORITY, type SurfaceLabel, type SurfacePin } from './layerHost';
 import { PLANET_NAMES, planetRadius } from './planetLook';
 import {
   apparentRadiusPixels,
@@ -89,14 +89,11 @@ export function settleSizes(labels: readonly SurfaceLabel[]): void {
 }
 
 /** Labels laid out once, unseen, so their real sizes are known for keeping them apart. */
-function measured(
-  layer: HTMLElement,
-  entries: readonly { readonly element: HTMLElement; readonly point: GeoPoint }[],
-): SurfaceLabel[] {
-  const labels = entries.map(({ element, point }) => {
-    element.style.visibility = 'hidden';
-    layer.append(element);
-    return { element, position: new Vector3(...geoToVector(point, 1.01)), width: 0, height: 0 };
+function measured(layer: HTMLElement, entries: readonly SurfacePin[]): SurfaceLabel[] {
+  const labels = entries.map(({ point, ...pin }) => {
+    pin.element.style.visibility = 'hidden';
+    layer.append(pin.element);
+    return { ...pin, position: new Vector3(...geoToVector(point, 1.01)), width: 0, height: 0 };
   });
   settleSizes(labels);
   return labels;

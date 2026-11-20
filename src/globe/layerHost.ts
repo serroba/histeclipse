@@ -161,13 +161,12 @@ export interface SurfaceLabel {
   /** Approximate size on screen, pixels, for keeping names apart. */
   width: number;
   height: number;
+  /** Pixels from its left edge to a pin of its own (a dot): kept on its point (#1010). */
+  readonly anchor?: number;
 }
 
 /** A marker or name pinned to Earth's surface. */
-interface SurfacePin {
-  readonly element: HTMLElement;
-  readonly point: GeoPoint;
-}
+export type SurfacePin = Pick<SurfaceLabel, 'element' | 'anchor'> & { readonly point: GeoPoint };
 
 interface SurfaceLabels {
   /** Replace this layer's pins (measured once, laid out from the next frame); null clears them. */
