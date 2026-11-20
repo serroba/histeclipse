@@ -9,6 +9,7 @@
 import * as v from 'valibot';
 
 import { elementAt } from '../util/arrays';
+import { between } from './pathCurve';
 import { getJson, type Fetch } from '../util/fetchJson';
 
 /** Days since JD 2400000 (TT), and km on each axis. */
@@ -58,8 +59,8 @@ export type CraftWhere =
   | { readonly at: string };
 
 /**
- * Where a craft's path puts it at `jdTT`: between the two kept points about that moment, at
- * the moment's share of the way; at a world during a long stay; null outside its path.
+ * Where a craft's path puts it at `jdTT`: between the two kept points about that moment, along
+ * the curve through them (`pathCurve.ts`); at a world during a long stay; null outside its path.
  */
 export function craftAt(pieces: readonly PathPiece[], jdTT: number): CraftWhere | null {
   const t = jdTT - JD_BASE;
@@ -80,13 +81,8 @@ export function craftAt(pieces: readonly PathPiece[], jdTT: number): CraftWhere 
       if (elementAt(points, middle)[0] <= t) low = middle;
       else high = middle;
     }
-    const [t0, x0, y0, z0] = elementAt(points, low);
-    const [t1, x1, y1, z1] = elementAt(points, high);
-    const share = t1 === t0 ? 0 : (t - t0) / (t1 - t0);
-    return {
-      centre: piece.centre,
-      km: [x0 + share * (x1 - x0), y0 + share * (y1 - y0), z0 + share * (z1 - z0)],
-    };
+    // Through gentle turns as a curve, sharp ones as the straight lines kept (#996).
+    return { centre: piece.centre, km: between(points, low, t) };
   }
   return null;
 }
