@@ -126,10 +126,11 @@ describe('the ways of life as a feature', () => {
     await vi.waitFor(() => {
       expect(fake.refresh).toHaveBeenCalledTimes(1);
     });
-    const fact = shown.here?.(there);
-    expect(fact?.title).toBe('Ways of life');
-    expect(fact?.text).toContain('4051 BCE');
-    expect(fact?.why).toBe('ways');
+    expect(shown.here?.(there)).toMatchObject({
+      title: 'Ways of life',
+      text: expect.stringContaining('4051 BCE') as string,
+      why: 'ways',
+    });
     expect(shown.here?.(ancient)).toBeNull();
     expect(shown.here?.({ ...there, ma: 66 })).toBeNull();
     expect(shown.here?.({ ...there, layers: off.layers })).toBeNull();

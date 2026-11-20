@@ -137,7 +137,7 @@ describe('the rocks as a feature', () => {
       expect(fake.refresh).toHaveBeenCalledTimes(1);
     });
     expect(shown.here?.(germany)).toMatchObject({ title: 'Rocks', why: 'rocks' });
-    expect(shown.here?.(ocean)?.text).toBe('No map unit of Macrostrat’s here.');
+    expect(shown.here?.(ocean)).toMatchObject({ text: 'No map unit of Macrostrat’s here.' });
     expect(shown.here?.(on)).toBeNull();
     expect(shown.here?.({ ...germany, ma: 66 })).toBeNull();
     expect(shown.here?.({ ...germany, layers: off.layers })).toBeNull();

@@ -15,6 +15,7 @@ import type { Fetch } from '../util/fetchJson';
 import type { Globe } from '../globe/globe';
 import type { LayerLoad } from '../state/activeLayers';
 import type { DeepScale, GeoPoint, Layer, ViewState } from '../state/viewState';
+import type { EmpireCentury, Territory } from '../data/empires';
 import type { LineageGroup } from '../data/lineages';
 import type { TreeOfLife } from '../data/treeOfLife';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
@@ -79,6 +80,15 @@ export interface Capabilities {
     /** On the whole span, with a layer on and the globe facing a place. */
     goTo(ma: number, layer: Layer, where: GeoPoint): void;
   };
+  /** Cliopatria's border files, loaded a century at a time and shared with the eclipses. */
+  readonly stateBorders: {
+    centuryFor(year: number): Promise<EmpireCentury | null>;
+    territoryOf(name: string, shown: number): Promise<Territory | null>;
+  };
+  /** The years' track: what it says of the states that came or went, or null to say it again. */
+  readonly yearsTrack: { states(said: string | null): void };
+  /** "Why here?": what a layer has at the place changed, so the panel is written again if open. */
+  readonly whyHere: { again(): void };
   /** A crater's strike: played on the globe turned to it, and written on `on` as it happens. */
   readonly strikes: Pick<Globe, 'playImpact' | 'flyTo' | 'zoomTo'> & { readonly on: HTMLElement };
   /** Radiocarbon's calibration curves, loaded once. */
@@ -131,7 +141,7 @@ export interface FeatureInstance {
   /** The step it offers from its row in the Layers panel (#909), if it has one now. */
   action?(): LayerAction | null;
   /** What it has at the place picked, for "Why here?" (#893), if anything. */
-  here?(state: ViewState): HereFact | null;
+  here?(state: ViewState): HereFact | readonly HereFact[] | null;
   /**
    * How its layer's load stands (#751), while loading or failed, else null; a failed load offers
    * to try again. It asks `refresh` when this changes, so the chips say it.
