@@ -6,7 +6,7 @@
 
 import { parseViewState, serializeViewState } from '../state/url';
 import type { Store } from '../state/store';
-import type { ViewState } from '../state/viewState';
+import type { GlobeCamera, ViewState } from '../state/viewState';
 import { anchorQuery } from '../text/anchors';
 import type { Anchor } from '../text/passages';
 
@@ -23,13 +23,20 @@ export function viewOpener(options: {
   readonly deepTime: { stopPlay(): void };
   /** The link's writer, once there is one: the change is a step of its own in history. */
   readonly sync: () => { step(): void };
+  /**
+   * The globe's camera, which follows the store only when told (#942): a view that names a
+   * camera of its own glides there, as Back and Forward do.
+   */
+  readonly globe: { setCamera(camera: GlobeCamera): void };
 }): ViewOpener {
-  const { store, deepTime, sync } = options;
+  const { store, deepTime, sync, globe } = options;
   const query = (change: (current: string) => string): void => {
+    const before = store.get().camera;
     const next = parseViewState(change(serializeViewState(store.get())), new Date());
     deepTime.stopPlay();
     sync().step();
     store.set(() => next.state);
+    if (!sameCamera(before, next.state.camera)) globe.setCamera(next.state.camera);
   };
   return {
     anchor: (anchor) => {
@@ -37,4 +44,12 @@ export function viewOpener(options: {
     },
     query,
   };
+}
+
+function sameCamera(a: GlobeCamera, b: GlobeCamera): boolean {
+  return (
+    a.distance === b.distance &&
+    a.target.latitude === b.target.latitude &&
+    a.target.longitude === b.target.longitude
+  );
 }
