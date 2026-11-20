@@ -31,7 +31,14 @@ type Gathered = Omit<
 export interface DeepTimeContext extends PartContext {
   readonly globe: Pick<
     Globe,
-    'addLayer' | 'setUncharted' | 'setSketch' | 'setDeepTime' | 'setTemperature' | 'prefetch'
+    | 'addLayer'
+    | 'setUncharted'
+    | 'setSketch'
+    | 'setDeepTime'
+    | 'setTemperature'
+    | 'prefetch'
+    | 'flyTo'
+    | 'zoomTo'
   >;
   /** The chips in the bar (#380, #605), in their order. */
   readonly chips: readonly DeepChip[];

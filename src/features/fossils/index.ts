@@ -10,6 +10,7 @@ import {
   fossilsAt,
   fossilsText,
   loadFossils,
+  nearestFinds,
   type FossilsAt,
   type Fossils,
 } from '../../data/fossils';
@@ -17,19 +18,26 @@ import { loadPictures, type Pictures } from '../../data/pictures';
 import type { DeepNotePart } from '../../ui/deepChips';
 import type { MarkerCardContent } from '../../ui/markerCard';
 import { fromAFossil } from '../../explore/related';
-import { layerTurned } from '../../state/viewState';
+import { layerTurned, roundMa } from '../../state/viewState';
+import { formatMa } from '../../time/format';
 import { errorMessage } from '../../util/errors';
 import { feature } from '../feature';
 import { fossilLayer } from './fossilLayer';
 import './fossils.css';
 
-/** The note under the bar: a key for each group found, what was found, and the source. */
-function note(at: FossilsAt): DeepNotePart[] {
+/**
+ * The note under the bar: a key for each group found, what was found, and the source; with none
+ * found, a jump to the nearest finds (#948).
+ */
+function note(at: FossilsAt, nearest: { ma: number; go: () => void } | null): DeepNotePart[] {
   return [
     ...at.totals.flatMap((total) =>
       total.count > 0 ? [{ key: `fossil-key is-${total.id}` }, ' '] : [],
     ),
     fossilsText(at),
+    ...(nearest === null || at.cells.length > 0
+      ? []
+      : [' ', { text: `Go to the nearest finds, ${formatMa(nearest.ma)}`, run: nearest.go }]),
     ' Source: ',
     { text: 'the Paleobiology Database', href: 'https://paleobiodb.org' },
     ' (CC BY 4.0).',
@@ -120,7 +128,11 @@ export const fossilsFeature = feature({
         }
         at = fossilsAt(fossils, moment.ma);
         cellsOnGlobe.update(at.cells);
-        return { offered, on: true, note: note(at) };
+        const ma = nearestFinds(fossils, moment.ma);
+        const go = (): void => {
+          if (ma !== null) context.change((state) => ({ ...state, ma: roundMa(ma) }));
+        };
+        return { offered, on: true, note: note(at, ma === null ? null : { ma, go }) };
       },
       pick(key) {
         const card = cardFor(key);

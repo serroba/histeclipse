@@ -5,7 +5,7 @@
  */
 
 import { changed } from './store';
-import type { ViewState } from './viewState';
+import { pinnedPlace, type GeoPoint, type ViewState } from './viewState';
 
 export type Watch = (state: ViewState) => readonly unknown[];
 
@@ -45,6 +45,8 @@ export const SKY_SHOWN: Watch = (s) => (s.mode === 'sky' ? SKY(s) : [s.mode]);
 export const FOCUS: Watch = (s) => [s.focus, s.on];
 export const VIEWPOINT: Watch = (s) => [s.view];
 export const LOCATION: Watch = (s) => [s.location];
+/** The place's pin: the place, and whether deep time hides it (#948). */
+const PLACE_PIN: Watch = (s) => [s.location, s.ma === null];
 
 /** The orbits drawn: they come and go as the view moves out and in, or turns elsewhere. */
 export const ORBITS: Watch = (s) => [s.layers, s.camera, s.focus, s.mode, s.ma];
@@ -116,6 +118,16 @@ export interface Drawn {
   /** When it is drawn again; every time, if left out. */
   readonly when?: When;
   draw(state: ViewState, previous: ViewState | null): void;
+}
+
+/** The place's pin on the globe, drawn when the place or deep time changes (#948). */
+export function placePin(globe: { setLocation(place: GeoPoint | null): void }): Drawn {
+  return {
+    when: on(PLACE_PIN),
+    draw: (state) => {
+      globe.setLocation(pinnedPlace(state));
+    },
+  };
 }
 
 /** Draw each in order, those whose `when` says so. */
