@@ -56,7 +56,7 @@ import { mountShower } from './features/shower';
 import { mountWave } from './features/ligo';
 import { mountTelescopeList } from './features/telescopes';
 import { mountIceAges } from './features/iceAges';
-import { mountDeepSurfaces, PLATES_CHIP } from './features/deepSurfaces';
+import { createCo2ArchiveFile, createPlateMasks } from './features/deepSurfaces';
 import { createBorderFiles, createStatesNote } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
 import { mountYears } from './features/years';
@@ -249,11 +249,17 @@ export async function startApp(root: HTMLElement): Promise<void> {
     notify,
     arrived: redraws.ask('deepTime'),
   });
+  // Two files deep time itself asks about, shared with the plates' and the air's features.
+  const plateMasks = createPlateMasks(base, fetchJson);
+  const co2Archive = createCo2ArchiveFile(base, fetchJson, {
+    notify,
+    arrived: redraws.ask('deepTime'),
+  });
 
   const deepTime = mountDeepTime({
     ...partContext,
     globe,
-    chips: [PLATES_CHIP, ...deepChipsOf(FEATURES)],
+    chips: deepChipsOf(FEATURES),
     step: () => {
       sync.step();
     },
@@ -265,20 +271,23 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     storyDate: boundaries.storyDate,
     bar: (state, moment) => {
-      const { plates, ...surfaced } = surfaces.bar(state, moment.ma);
-      const chips = new Map(features.deep(state, moment));
-      chips.set('plates', plates);
-      return { ...iceAges.bar(state, moment.ma), ...surfaced, chips };
+      const chips = features.deep(state, moment);
+      return {
+        ...iceAges.bar(state, moment.ma),
+        plateMotion: null,
+        air: { on: false },
+        ...features.deepBar(state, moment),
+        chips,
+      };
     },
     temperature: temperatureLayer,
     off: (state) => {
-      surfaces.off();
       iceAges.off(state);
       features.deepOff(state);
     },
-    platesReach: () => surfaces.platesReach(),
+    platesReach: () => plateMasks.reach(),
     loadArchive: () => {
-      surfaces.loadArchive();
+      co2Archive.load();
     },
   });
   // A passage's or a destination's view laid over the reader's, as a step back can undo.
@@ -466,13 +475,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   parsed.warnings.forEach(notify);
 
   // Drawn on the globe as layers of their own (#379).
-  // Deep time's climate and continents (#444): the temperature, the plates and how far they
-  // moved, and the air.
-  const surfaces = mountDeepSurfaces({
-    ...partContext,
-    globe,
-    redraw: redraws.ask('deepTime'),
-  });
   // The ice ages' Earth (#444): the sea's level and the land it left bare, the ice sheets and
   // their outlines, the sea ice, and the Holocene's while travelling through the years.
   const iceAges = mountIceAges({
@@ -542,6 +544,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
         if (store.get().why === 'here') whySheet.show('here', hereVersion(store.get(), hereData()));
       },
     },
+    plateOutlines: globe,
+    plateMasks,
+    co2Archive,
     waysKey: waysLegend,
   };
   const features = mountFeatures(FEATURES, featureCore, capabilities);

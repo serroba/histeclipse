@@ -103,6 +103,24 @@ describe('the facts of the place picked (#893)', () => {
   });
 });
 
+describe("deep time's bar fields (#909)", () => {
+  it('gathers the fields each feature has, none from those that have none', () => {
+    const air = fake('air', () => []);
+    const plates = fake('plates', () => []);
+    Object.assign(air.shown, { deepBar: () => ({ air: { on: false } }) });
+    Object.assign(plates.shown, { deepBar: () => ({ plateMotion: 'Moved 3 km.' }) });
+    const features = mountFeatures(
+      [air.feature, plates.feature, fake('fossils', () => []).feature],
+      {} as FeatureCore,
+      {} as Capabilities,
+    );
+    expect(features.deepBar(base, { ma: 1, scale: 'ice' })).toEqual({
+      air: { on: false },
+      plateMotion: 'Moved 3 km.',
+    });
+  });
+});
+
 describe("deep time's chips", () => {
   it('come from the features that have one, in their order', () => {
     const chip = { label: 'Fossils', why: 'fossils' } as const;
