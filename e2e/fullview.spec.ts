@@ -230,3 +230,60 @@ test('a phone on its side shows the globe beside a narrow date panel, not under 
   expect(bottom.y).toBeGreaterThan(390 * 0.6);
   expect(problems).toEqual([]);
 });
+
+test('on a phone every control is a finger wide, and the panels’ words 12 px at least (#979) @mobile', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'a touch screen');
+  const problems = collectProblems(page);
+  await page.goto('./?t=2026-11-20T09:43Z');
+  await globeRendered(page);
+  const found = await page.evaluate(() => {
+    const shown = (element: Element): boolean => {
+      const style = getComputedStyle(element);
+      const box = element.getBoundingClientRect();
+      return (
+        style.visibility !== 'hidden' && style.display !== 'none' && box.width > 1 && box.height > 1
+      );
+    };
+    const small: string[] = [];
+    for (const control of document.querySelectorAll(
+      'button, a, summary, select, input:not([type=range])',
+    )) {
+      if (!shown(control) || getComputedStyle(control).pointerEvents === 'none') continue;
+      // Allowed: links in a sentence (the sources, WCAG 2.5.8's inline exception), and the
+      // ages under the slider, a second way to a time the slider itself reaches.
+      if (control.closest('.credits') !== null && control.tagName === 'A') continue;
+      if (control.classList.contains('period-band')) continue;
+      const box = control.getBoundingClientRect();
+      const after = getComputedStyle(control, '::after');
+      const pad = (side: string): number =>
+        after.content !== 'none' && after.position === 'absolute'
+          ? -Math.min(0, parseFloat(side))
+          : 0;
+      const width = box.width + pad(after.left) + pad(after.right);
+      const height = box.height + pad(after.top) + pad(after.bottom);
+      if (width < 43.5 || height < 43.5) {
+        small.push(
+          `${(control.getAttribute('aria-label') ?? control.textContent).trim()} ${String(Math.round(width))}×${String(Math.round(height))}`,
+        );
+      }
+    }
+    const tiny = new Set<string>();
+    for (const element of document.querySelectorAll('.hud *, .bottom *, .zoom-rail *')) {
+      if (
+        !shown(element) ||
+        ![...element.childNodes].some(
+          (node) => node.nodeType === 3 && (node.textContent ?? '').trim() !== '',
+        )
+      )
+        continue;
+      const size = parseFloat(getComputedStyle(element).fontSize);
+      if (size < 12) tiny.add(`${element.tagName} ${String(size)}px`);
+    }
+    return { small, tiny: [...tiny] };
+  });
+  expect(found.small).toEqual([]);
+  expect(found.tiny).toEqual([]);
+  expect(problems).toEqual([]);
+});

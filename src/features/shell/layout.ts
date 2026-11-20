@@ -6,6 +6,7 @@
  */
 
 import { foldHud } from './hudFold';
+import './touch.css';
 
 /** Pixels the zoom rail needs between the panels: its buttons, a short track and its reading. */
 const ZOOM_RAIL_ROOM = 180;

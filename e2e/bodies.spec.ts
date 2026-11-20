@@ -81,8 +81,9 @@ test('clicking the Moon flies to it, and the camera then orbits and zooms around
 test('clicking the Sun flies to the side facing Earth, wherever the camera was', async ({
   page,
 }) => {
-  // Far out, a quarter turn round from the line between Earth and the Sun.
-  await page.goto('./?t=2024-05-08T12:00&cam=0,-91,80000');
+  // Far out, some way round from the line between Earth and the Sun: on a phone the Sun's marker
+  // lies in the middle of the view, clear of the zoom rail's finger-wide buttons (#979).
+  await page.goto('./?t=2024-05-08T12:00&cam=0,-115,80000');
   await globeRendered(page);
   await page.locator('.space-marker[data-body="sun"]').click();
   const globe = page.getByTestId('globe');
