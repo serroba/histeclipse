@@ -20,7 +20,8 @@ Each cell is three bytes, written as a lossless WebP's red, green and blue:
 
 - red and green: the height plus ``OFFSET`` metres, high byte then low, one metre a step;
 - blue: where water is. ``OCEAN`` is sea floor joined to the deep sea, which a falling sea lays
-  bare and a rising one covers. ``LAKE`` is a lake (Natural Earth's) or an inland sea: ground
+  bare and a rising one covers. ``LAKE`` is a natural lake (Natural Earth's lakes, less the
+  reservoirs, which the ice ages did not have) or an inland sea: ground
   below today's sea level that Natural Earth's land leaves out, as the Caspian. Elsewhere
   (``LAND``) the ground stays land even below today's sea level: the Caspian depression's
   shores, the Qattara Depression, Death Valley.
@@ -34,7 +35,7 @@ import numpy as np
 import numpy.typing as npt
 from PIL import Image, ImageDraw
 
-from histeclipse_pipeline.archaeoglobe import read_regions, rings_by_record
+from histeclipse_pipeline.archaeoglobe import dbf_rows, read_regions, rings_by_record
 from histeclipse_pipeline.earth_tiles import cached
 from histeclipse_pipeline.today_ice import signed_area
 
@@ -274,10 +275,19 @@ def write_manifest(folder: Path, levels: Iterable[int], tile_size: int = TILE_SI
     _ = (folder / MANIFEST).write_text(text, encoding="utf-8")
 
 
-def rasterised(archive: bytes, columns: int, rows: int) -> npt.NDArray[np.bool_]:
-    """Rasterise a Natural Earth polygon layer onto a grid of ``columns`` by ``rows`` cells."""
-    shp, _dbf = read_regions(archive)
-    return polygon_mask(rings_by_record(shp), columns, rows)
+def rasterised(
+    archive: bytes, columns: int, rows: int, *, leave_out: str | None = None
+) -> npt.NDArray[np.bool_]:
+    """Rasterise a Natural Earth polygon layer onto a grid of ``columns`` by ``rows`` cells.
+
+    ``leave_out`` names a feature class (``featurecla``) whose records are not drawn.
+    """
+    shp, dbf = read_regions(archive)
+    records = rings_by_record(shp)
+    if leave_out is not None:
+        kept = [row.get("featurecla", "").strip() != leave_out for row in dbf_rows(dbf, "utf-8")]
+        records = [rings for rings, keep in zip(records, kept, strict=True) if keep]
+    return polygon_mask(records, columns, rows)
 
 
 def read_etopo(path: Path) -> Heights:  # pragma: no cover - reads the 478 MB file
@@ -301,7 +311,7 @@ def write_relief_tiles(  # pragma: no cover - needs the downloaded files
     for z, factor in sorted(LEVELS.items()):
         heights = averaged(full, factor)
         rows, columns = map(int, heights.shape)
-        water = rasterised(lakes, columns, rows)
+        water = rasterised(lakes, columns, rows, leave_out="Reservoir")
         ground = rasterised(land, columns, rows)
         written += write_level(heights, water, ground, folder, z=z, tile_size=TILE_SIZE)
     write_manifest(folder, LEVELS)

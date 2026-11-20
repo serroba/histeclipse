@@ -1,3 +1,6 @@
+import io
+import struct
+import zipfile
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -25,7 +28,7 @@ from histeclipse_pipeline.relief_tiles import (
     write_manifest,
 )
 from tests.json_values import read_json
-from tests.test_today_ice import archive, square
+from tests.test_today_ice import archive, shapefile, square
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -151,6 +154,35 @@ def test_rasterises_polygons_with_their_holes() -> None:
     assert not mask[3, 4]  # 11° N, 79° W
     assert not mask[6, 9]  # 56° S
     assert flat(rasterised(archive([lake]), 16, 8)) == flat(mask)
+
+
+def lakes_archive(records: list[tuple[str, list[list[tuple[float, float]]]]]) -> bytes:
+    """Natural Earth's lakes as a zip: each record's feature class and rings."""
+    fields = [("featurecla", 12)]
+    header_length = 32 + 32 * len(fields) + 1
+    record_length = 1 + sum(length for _, length in fields)
+    header = struct.pack("<BBBBIHH", 3, 126, 1, 1, len(records), header_length, record_length)
+    header += bytes(20)
+    for name, length in fields:
+        header += name.encode().ljust(11, b"\0") + b"C" + bytes(4) + bytes([length, 0]) + bytes(14)
+    body = b"".join(b" " + kind.encode().ljust(12) for kind, _ in records)
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as zipped:
+        zipped.writestr("lakes.shp", shapefile([rings for _, rings in records]))
+        zipped.writestr("lakes.dbf", header + b"\r" + body)
+    return buffer.getvalue()
+
+
+def test_leaves_out_a_feature_class_the_ice_ages_did_not_have() -> None:
+    lake = [square(-170.0, 10.0, -100.0, 80.0)]
+    reservoir = [square(100.0, 10.0, 170.0, 80.0)]
+    both = lakes_archive([("Lake", lake), ("Reservoir", reservoir)])
+    # 8 by 4 cells of 45°: the lake over the north-west, the dam's over the north-east.
+    assert flat(rasterised(both, 8, 4)[:1, 1:2]) == [1]
+    assert flat(rasterised(both, 8, 4)[:1, 6:7]) == [1]
+    kept = rasterised(both, 8, 4, leave_out="Reservoir")
+    assert flat(kept[:1, 1:2]) == [1]
+    assert flat(kept[:1, 6:7]) == [0]
 
 
 def test_writes_lossless_tiles_that_read_back(tmp_path: Path) -> None:
