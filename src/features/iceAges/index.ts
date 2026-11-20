@@ -1,12 +1,11 @@
 /**
- * The ice ages' Earth as a part of the page (#444): on deep time's ice-age scale, the sea's
+ * The ice ages' Earth as a feature (#380, #444, #909): on deep time's ice-age scale, the sea's
  * level and the shelf it left bare (NOAA's present-day depths), the ice sheets and Batchelor et
  * al.'s outlines, and the sea ice; while travelling through the Holocene, the same over today's
  * Earth. Each map's index loads the first time it is needed.
  */
 
-import type { Globe } from '../../globe/globe';
-import type { PartContext } from '../part';
+import { feature, type FeatureContext, type FeatureInstance } from '../feature';
 import { iceOutlineLayer } from './iceOutlineLayer';
 import {
   ICE_AGES_MA,
@@ -50,34 +49,13 @@ import {
 } from '../../deepTime/coastline';
 import { errorMessage } from '../../util/errors';
 
-/** What the ice ages ask of the rest of the page. */
-export interface IceAgesContext extends Pick<
-  PartContext,
-  'base' | 'fetchJson' | 'notify' | 'timeline'
-> {
-  readonly globe: Pick<Globe, 'addLayer' | 'setShelf' | 'setIce' | 'setSeaIce'>;
-  /** Show deep time again: a map's index has arrived. */
-  redraw(): void;
-  /** The Holocene's Earth was drawn: the years' track says what it shows. */
-  holoceneShown(state: ViewState): void;
-}
+const NEEDS = ['timeline', 'deepTime', 'iceAgeEarth', 'holoceneNote'] as const;
+type IceAgesContext = FeatureContext<(typeof NEEDS)[number]>;
 
-export interface IceAgesPart {
-  /** What deep time's bar says of them, drawing them on the globe for the moment `ma`. */
-  readonly bar: (
-    state: ViewState,
-    ma: number,
-  ) => Pick<DeepTimeView, 'coastline' | 'ice' | 'iceOutlines' | 'seaIce' | 'seaLevel'>;
-  /** Out of deep time: the Holocene's Earth while travelling, or nothing. */
-  readonly off: (state: ViewState) => void;
-  readonly showHolocene: (state: ViewState) => void;
-  /** What the years' track says of the Holocene's Earth, while it shows. */
-  readonly holoceneText: () => string | null;
-}
-
-export function mountIceAges(context: IceAgesContext): IceAgesPart {
-  const { base, fetchJson, globe } = context;
-  const iceOutlinesOnGlobe = globe.addLayer(iceOutlineLayer);
+function mountIceAges(context: IceAgesContext): FeatureInstance {
+  const { base, fetchJson } = context;
+  const globe = context.iceAgeEarth;
+  const iceOutlinesOnGlobe = context.globe.addLayer(iceOutlineLayer);
   // Sea level, likewise: asked for once, drawn when it arrives.
   let seaLevelLoading: Promise<SeaLevelIndex> | null = null;
   let seaLevelIndex: SeaLevelIndex | null = null;
@@ -93,7 +71,7 @@ export function mountIceAges(context: IceAgesContext): IceAgesPart {
       seaLevelLoading.then(
         (index) => {
           seaLevelIndex = index;
-          context.redraw();
+          context.deepTime.again();
         },
         (error: unknown) => {
           seaLevelLoading = null;
@@ -115,7 +93,7 @@ export function mountIceAges(context: IceAgesContext): IceAgesPart {
       shelfLoading.then(
         (index) => {
           shelfIndex = index;
-          context.redraw();
+          context.deepTime.again();
         },
         (error: unknown) => {
           shelfLoading = null;
@@ -142,7 +120,7 @@ export function mountIceAges(context: IceAgesContext): IceAgesPart {
         iceOutlinesLoading.then(
           (index) => {
             iceOutlineIndex = index;
-            context.redraw();
+            context.deepTime.again();
           },
           (error: unknown) => {
             iceOutlinesLoading = null;
@@ -164,7 +142,7 @@ export function mountIceAges(context: IceAgesContext): IceAgesPart {
       iceLoading.then(
         (index) => {
           iceIndex = index;
-          context.redraw();
+          context.deepTime.again();
         },
         (error: unknown) => {
           iceLoading = null;
@@ -182,6 +160,7 @@ export function mountIceAges(context: IceAgesContext): IceAgesPart {
   function showHoloceneEarth(state: ViewState): void {
     if (!context.timeline.travelling() || state.mode !== 'globe') {
       holoceneSea = null;
+      context.holoceneNote.keep(null);
       showSeaIce(state, null);
       globe.setShelf(null);
       globe.setIce(null);
@@ -192,6 +171,7 @@ export function mountIceAges(context: IceAgesContext): IceAgesPart {
     const shelf = shelves();
     const coastline = levels === null ? null : coastlineAt(levels, state.coast, ka);
     holoceneSea = coastline;
+    context.holoceneNote.keep(coastline === null ? null : earthText(coastline));
     showSeaIce(state, null);
     globe.setShelf(
       coastline === null || shelf === null
@@ -208,7 +188,7 @@ export function mountIceAges(context: IceAgesContext): IceAgesPart {
     const ice = iceSheets();
     if (ice === null) {
       globe.setIce(null);
-      context.holoceneShown(state);
+      context.holoceneNote.shown();
       return;
     }
     const { younger, older, mix } = framesAround(iceFramesInMa(ice), ka / 1000);
@@ -220,7 +200,7 @@ export function mountIceAges(context: IceAgesContext): IceAgesPart {
       rows: ice.rows,
       metresPerStep: ice.metresPerStep,
     });
-    context.holoceneShown(state);
+    context.holoceneNote.shown();
   }
   let holoceneSea: Coastline | null = null;
 
@@ -280,7 +260,7 @@ export function mountIceAges(context: IceAgesContext): IceAgesPart {
         seaIceLoading.then(
           (index) => {
             seaIceIndex = index;
-            context.redraw();
+            context.deepTime.again();
           },
           (error: unknown) => {
             seaIceLoading = null;
@@ -357,18 +337,30 @@ export function mountIceAges(context: IceAgesContext): IceAgesPart {
   }
 
   return {
-    bar: (state, ma) => ({
+    // Out of deep time: the Holocene's Earth while travelling, or today's sea ice alone.
+    deep(state, moment) {
+      if (moment !== null) return null;
+      showHoloceneEarth(state);
+      iceOutlinesOnGlobe.update(null);
+      return null;
+    },
+    // What deep time's bar says of them, drawing them on the globe for the moment.
+    deepBar: (state, { ma }) => ({
       coastline: showCoastline(ma, state),
       ice: showIce(state, ma),
       iceOutlines: showIceOutlines(state, ma),
       seaIce: showSeaIce(state, ma),
       seaLevel: seaLevelView(state),
     }),
-    off(state) {
-      showHoloceneEarth(state);
-      iceOutlinesOnGlobe.update(null);
-    },
-    showHolocene: showHoloceneEarth,
-    holoceneText: () => (holoceneSea === null ? null : earthText(holoceneSea)),
   };
 }
+
+/** The ice ages' Earth, under the sea-level layer's name: the layer of its own it has. */
+export const iceAgesFeature = feature({
+  id: 'sealevel',
+  needs: NEEDS,
+  watches: (state) => [state.layers, state.ma, state.deepScale, state.coast, state.seaIce],
+  mount: mountIceAges,
+});
+
+export { createHoloceneNote } from './holoceneNote';

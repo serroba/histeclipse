@@ -4,7 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Globe } from '../../globe/globe';
 import { defaultViewState, type ViewState } from '../../state/viewState';
 import type { Fetch } from '../../util/fetchJson';
-import { mountIceAges, type IceAgesContext } from './index';
+import type { Capability, DeepBarFields, FeatureContext } from '../feature';
+import { createHoloceneNote, iceAgesFeature } from './index';
 
 // Tiny catalogs go through the real runtime validators and domain calculations.
 const credit = { schemaVersion: 1, credit: 'Test reconstruction', source: 'https://example.org' };
@@ -95,21 +96,36 @@ function harness() {
     setShelf: vi.fn<Globe['setShelf']>(),
     setSeaIce: vi.fn<Globe['setSeaIce']>(),
   };
-  const context = {
+  const redraw = vi.fn();
+  const holoceneShown = vi.fn();
+  const note = createHoloceneNote(holoceneShown);
+  const timeline = {
+    travelling: vi.fn(() => false),
+    playing: () => false,
+    oldest: () => 540,
+    earthFace: (jd: number) => jd,
+  };
+  const notify = vi.fn();
+  const lent = {
     base: '/assets/',
     fetchJson,
     globe,
-    notify: vi.fn(),
-    redraw: vi.fn(),
-    timeline: {
-      travelling: vi.fn(() => false),
-      playing: () => false,
-      oldest: () => 540,
-      earthFace: (jd) => jd,
-    },
-    holoceneShown: vi.fn(),
-  } satisfies IceAgesContext;
-  const part = mountIceAges(context);
+    iceAgeEarth: globe,
+    notify,
+    deepTime: { again: redraw },
+    timeline,
+    holoceneNote: note,
+  } as unknown as FeatureContext<Capability>;
+  const shown = iceAgesFeature.mount(lent, lent);
+  // What the tests ask of the feature, by the names the page knew it by.
+  const context = { notify, redraw, timeline, holoceneShown };
+  const part = {
+    bar: (state: ViewState, ma: number) =>
+      (shown.deepBar?.(state, { ma, scale: state.deepScale }) ?? {}) as Required<DeepBarFields>,
+    off: (state: ViewState) => shown.deep?.(state, null),
+    showHolocene: (state: ViewState) => shown.deep?.(state, null),
+    holoceneText: () => note.said(),
+  };
   // Drain the real loader/Response.json promise chain, without polling or wall-clock waits.
   const flush = () => setImmediate();
   async function resolve(file: string, body: unknown = catalogs[file]) {
@@ -290,7 +306,7 @@ describe('ice-age feature integration, without a DOM or WebGL', () => {
     h.context.timeline.travelling.mockReturnValue(true);
     const past = defaultViewState(new Date('-018050-03-16T12:00:00Z'));
     h.part.showHolocene(past);
-    expect(h.context.holoceneShown).toHaveBeenCalledWith(past);
+    expect(h.context.holoceneShown).toHaveBeenCalledTimes(1);
     await h.load();
     h.part.showHolocene(past);
     expect(h.globe.setShelf).toHaveBeenLastCalledWith(expect.objectContaining({ seaLevel: -120 }));

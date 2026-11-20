@@ -82,7 +82,13 @@ export interface Capabilities {
     enter(ma: number, scale: DeepScale): void;
     /** On the whole span, with a layer on and the globe facing a place. */
     goTo(ma: number, layer: Layer, where: GeoPoint): void;
+    /** Show deep time again, or what is drawn on leaving it: a map it draws from has arrived. */
+    again(): void;
   };
+  /** The ice ages' Earth on the globe: the shelf the sea left bare, the ice sheets, the sea ice. */
+  readonly iceAgeEarth: Pick<Globe, 'setShelf' | 'setIce' | 'setSeaIce'>;
+  /** What the years' track says of the Holocene's Earth: kept, and the track told it was drawn. */
+  readonly holoceneNote: { keep(said: string | null): void; shown(): void };
   /** Cliopatria's border files, loaded a century at a time and shared with the eclipses. */
   readonly stateBorders: {
     centuryFor(year: number): Promise<EmpireCentury | null>;
@@ -133,7 +139,12 @@ export interface DeepMoment {
  * What a feature may say in deep time's bar besides its chip (#909): the fields of the bar's
  * view that are a layer's own. The bar draws each; a feature that has none leaves it out.
  */
-export type DeepBarFields = Partial<Pick<DeepTimeView, 'air' | 'plateMotion'>>;
+export type DeepBarFields = Partial<
+  Pick<
+    DeepTimeView,
+    'air' | 'plateMotion' | 'coastline' | 'ice' | 'iceOutlines' | 'seaIce' | 'seaLevel'
+  >
+>;
 
 /** A step a layer offers from what it shows, on its row in the Layers panel. */
 export interface LayerAction {
