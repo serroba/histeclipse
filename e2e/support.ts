@@ -122,6 +122,24 @@ export async function skyRendered(page: Page): Promise<void> {
 }
 
 /** The middle of the space the panels leave free, at `x` (by default the middle). */
+/**
+ * Where the globe's centre is on screen: the middle of the space the panels leave free, as the
+ * page measures it (--free-top, --free-bottom, --free-left, #946).
+ */
+export async function globeCentre(page: Page): Promise<{ x: number; y: number }> {
+  return page.evaluate(() => {
+    // The page sets them on its root, the element that holds the panels.
+    const root = document.querySelector('[style*="--free-bottom"]') ?? document.documentElement;
+    const style = getComputedStyle(root);
+    const px = (name: string): number => Number.parseFloat(style.getPropertyValue(name)) || 0;
+    const [top, bottom, left] = [px('--free-top'), px('--free-bottom'), px('--free-left')];
+    return {
+      x: (left + window.innerWidth) / 2,
+      y: (top + window.innerHeight - bottom) / 2,
+    };
+  });
+}
+
 export async function freeSpot(page: Page, x?: number): Promise<{ x: number; y: number }> {
   const top = (await page.locator('.hud').boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
   const bottom = (await page.locator('.bottom').boundingBox()) ?? { y: 0 };

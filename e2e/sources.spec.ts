@@ -7,6 +7,7 @@
 import {
   collectProblems,
   expect,
+  globeCentre,
   globeRendered,
   openLayers,
   openSources,
@@ -289,11 +290,9 @@ test('"Why here?" on the rail asks for a tap, and a tap says what is there', asy
     await expect(page.getByRole('dialog', { name: 'Why here?' })).toContainText('Tap the globe');
   });
   await test.step('When they tap the globe', async () => {
-    const box = await page.getByTestId('globe').boundingBox();
-    const hud = await page.locator('.hud').boundingBox();
-    const bottom = await page.locator('.bottom').boundingBox();
-    if (box === null || hud === null || bottom === null) throw new Error('no layout');
-    await page.mouse.click(box.x + box.width * 0.45, (hud.y + hud.height + bottom.y) / 2);
+    // Just left of the globe's centre, in the space the panels leave (#946).
+    const centre = await globeCentre(page);
+    await page.mouse.click(centre.x - 30, centre.y);
   });
   await test.step('Then "Here" says what the states layer has at that place', async () => {
     const here = page.getByRole('dialog', { name: /^Here: / });

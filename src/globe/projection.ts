@@ -9,6 +9,8 @@ export interface Insets {
   readonly top: number;
   readonly bottom: number;
   readonly right: number;
+  /** The date panel beside the globe, when it reaches down past the middle (#946). */
+  readonly left: number;
 }
 
 export interface Projection {
@@ -32,7 +34,10 @@ export function verticalFov(
   free: boolean,
 ): number {
   const narrow = Math.max(Math.min(size.width, size.height), 1);
-  const room = Math.max(Math.min(size.width, size.height - insets.top - insets.bottom), narrow / 4);
+  const room = Math.max(
+    Math.min(size.width - insets.left - insets.right, size.height - insets.top - insets.bottom),
+    narrow / 4,
+  );
   const widen = free ? 1 : Math.max(1, narrow / room);
   const halfAngle = Math.atan(Math.tan((narrowFov / 2) * (Math.PI / 180)) * widen);
   const aspect = size.width / Math.max(size.height, 1);
@@ -46,7 +51,7 @@ export function createProjection(
   container: HTMLElement,
   invalidate: () => void,
 ): Projection {
-  let insets: Insets = { top: 0, bottom: 0, right: 0 };
+  let insets: Insets = { top: 0, bottom: 0, right: 0, left: 0 };
   let narrowFov = 40;
   // The field asked for last, free or not: the camera's pose sets it every frame, and reading
   // the container's size forces a layout, so an unchanged one is left as it is (#783).
@@ -63,7 +68,7 @@ export function createProjection(
     applied = { fov: narrowFov, free };
     const { clientWidth, clientHeight } = container;
     // Shift the projection so the globe sits centred in the space the panels leave free.
-    const [x, y] = [insets.right / 2, (insets.bottom - insets.top) / 2];
+    const [x, y] = [(insets.right - insets.left) / 2, (insets.bottom - insets.top) / 2];
     camera.setViewOffset(clientWidth, clientHeight, x, y, clientWidth, clientHeight);
     camera.aspect = clientWidth / Math.max(clientHeight, 1);
     // Fix the field of view on the narrower side, so a camera distance frames the globe the

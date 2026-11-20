@@ -13,22 +13,28 @@ export interface Layout {
   readonly top: Element;
   readonly bottom: HTMLElement;
   readonly zoomRail: HTMLElement;
-  /** The space the panels leave free changed: top and bottom, px. */
-  readonly onInsets: (top: number, bottom: number) => void;
+  /** The space the panels leave free changed: top, bottom and left, px. */
+  readonly onInsets: (top: number, bottom: number, left: number) => void;
 }
 
 export function keepCentred({ root, top, bottom, zoomRail, onInsets }: Layout): void {
   const update = (): void => {
-    const spans = top.getBoundingClientRect().width > window.innerWidth * 0.55;
+    const box = top.getBoundingClientRect();
+    const spans = box.width > window.innerWidth * 0.55;
     const insets = {
-      top: spans ? top.getBoundingClientRect().bottom : 0,
+      top: spans ? box.bottom : 0,
       bottom: bottom.getBoundingClientRect().height,
     };
-    onInsets(insets.top, insets.bottom);
+    // A narrow date panel that reaches down past the middle of the free height would cover the
+    // globe's left side: the globe moves over into the space to its right (#946).
+    const middle = (window.innerHeight - insets.bottom) / 2;
+    const left = !spans && box.bottom > middle ? box.right : 0;
+    onInsets(insets.top, insets.bottom, left);
     // The zoom rail sits at the right, between the panels that reach it: the date panel only
     // when it spans the width (a narrow one, beside the globe, leaves the right edge free).
     root.style.setProperty('--free-top', `${String(insets.top)}px`);
     root.style.setProperty('--free-bottom', `${String(insets.bottom)}px`);
+    root.style.setProperty('--free-left', `${String(left)}px`);
     const free = window.innerHeight - insets.top - insets.bottom;
     zoomRail.classList.toggle('is-cramped', free < ZOOM_RAIL_ROOM);
     // Deep time's sheet stops short of the date panel where the two share columns (#237).
