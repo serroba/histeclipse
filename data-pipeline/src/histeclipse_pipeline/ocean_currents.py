@@ -52,7 +52,7 @@ BASE_URL = "http://www.ocean.iap.ac.cn/ftp/cheng/IAP_Ocean_geostrophic_current_0
 SOURCE = "http://www.ocean.iap.ac.cn/pages/dataService/dataService.html"
 #: The SHA-256 of the manifest of all 984 files (January 1940 to December 2021), as served on
 #: 20 November 2026; IAP last changed them in May 2022.
-MANIFEST_SHA256 = ""
+MANIFEST_SHA256 = "f071a9ad7228af82bb3e270ca649ff8b2c9fb3cfaa76584f365ed04c8b4b49a4"
 FIRST = (1940, 1)
 LAST = (2021, 12)
 MONTHS = 12
