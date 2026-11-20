@@ -40,6 +40,7 @@ import {
   type IceOutlineIndex,
   type IceOutlines,
 } from '../../data/iceOutlines';
+import { loadReliefTiles } from '../../data/reliefTiles';
 import { loadShelf, type ShelfIndex } from '../../data/shelf';
 import {
   COAST_SOURCES,
@@ -308,6 +309,23 @@ function mountIceAges(context: IceAgesContext): FeatureInstance {
    * level of the moment, by the source chosen: the elevation maps' 8-bit heights cannot tell a
    * strait a few metres deep from land.
    */
+  let reliefAsked = false;
+  /** Close up, today's heights in tiles (#1016): asked for once, where the device takes tiles. */
+  function tileRelief(): void {
+    if (reliefAsked || globe.tileLimits === null) return;
+    reliefAsked = true;
+    const folder = `${base}textures/relief-tiles/`;
+    loadReliefTiles(`${folder}manifest.json`, fetchJson).then(
+      (tiles) => {
+        globe.setEarthTiles(tiles, folder);
+      },
+      // Not asked again: the globe's own map stays, as it would without tiles.
+      (error: unknown) => {
+        console.warn('Could not load the list of relief tiles:', error);
+      },
+    );
+  }
+
   function showCoastline(ma: number, state: ViewState): CoastlineView | null {
     if (ma > ICE_AGES_MA) {
       globe.setShelf(null);
@@ -328,6 +346,7 @@ function mountIceAges(context: IceAgesContext): FeatureInstance {
             seaLevel: coastline.seaLevel,
           },
     );
+    if (coastline !== null && shelf !== null) tileRelief();
     return {
       coast: state.coast,
       seaLevel: coastline?.seaLevel ?? null,

@@ -19,4 +19,12 @@
 .hud-time {
   color: var(--accent);
   font-weight: 500;
+  /* "09:43 UT" stays together: on a narrow phone it goes to the next line whole (#977). */
+  white-space: nowrap;
+}
+
+/* While the years go by, years a second, the time of day and the calendar and ΔT under the date
+   change faster than they can be read, and say nothing of the years: they wait (#987). */
+body:has(.history-track[data-playing='true']) :is(.hud-time, .hud-detail) {
+  display: none;
 }

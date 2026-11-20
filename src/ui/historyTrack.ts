@@ -223,6 +223,8 @@ export function createHistoryTrack(
       slider.min = String(view.first);
       slider.max = String(view.last);
       transport.render(view.playing, view.year);
+      // Marked, so the date panel can leave out the minute while years go by (#987).
+      root.dataset['playing'] = String(view.playing);
       slider.setAttribute('aria-valuetext', formatYear(astronomicalYear(view.year)));
       const speedsShown = view.speeds.map(({ level, label }) => `${level}=${label}`).join('|');
       if (speedsShown !== speedsListed) {

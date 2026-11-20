@@ -8,6 +8,7 @@ import type { MoonName, MoonOrbits } from '../astro/moonOrbits';
 import type { Orbiting, PlanetName } from '../astro/planets';
 import type { ArrivalGrid } from '../data/dispersal';
 import type { EarthTiles } from '../data/earthTiles';
+import type { ReliefTiles } from '../data/reliefTiles';
 import type { Body, GeoPoint, GlobeCamera, Viewpoint } from '../state/viewState';
 import type { Vector3Tuple } from './geo';
 import type { ImpactSpec } from './impactAnimation';
@@ -85,8 +86,11 @@ export interface Globe {
   readonly maxTextureSize: number;
   /** What the device takes on of Earth's tiles (#578); null for none, and no nearer than 1.05. */
   readonly tileLimits: TileLimits | null;
-  /** Close up, Earth's full-size map in tiles from now on, from their manifest (#568). */
-  setEarthTiles(tiles: EarthTiles, folder: string): void;
+  /**
+   * Close up, Earth's full-size map in tiles from now on, from their manifest (#568); or, given
+   * the relief tiles' manifest, today's heights on the ice-age globe (#1016).
+   */
+  setEarthTiles(tiles: EarthTiles | ReliefTiles, folder: string): void;
   /**
    * Shade where a dispersal model has people settled `ka` thousand years ago, under any ice
    * outlines; null hides it.

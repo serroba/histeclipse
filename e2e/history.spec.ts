@@ -77,6 +77,30 @@ test('playing from today goes back to the Holocene’s start, and says so (#982)
   expect(problems).toEqual([]);
 });
 
+test('while the years play, the date panel leaves out the minute, and the chapter stays on the bar (#987) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const bar = page.getByRole('group', { name: track });
+  await test.step('Given 9000 BCE, its time of day shown', async () => {
+    await page.goto('./?t=-8999-06-01T12:00&layers=');
+    await globeRendered(page);
+    await expect(page.locator('.hud-time')).toBeVisible();
+  });
+  await test.step('When the years play, Then the minute waits, and the chapter sits within the bar', async () => {
+    await bar.getByRole('button', { name: 'Travel through the years' }).click();
+    await expect(page.locator('.hud-time')).toBeHidden();
+    const chapter = await bar.getByTestId('scale-chapter').boundingBox();
+    const lane = await bar.locator('.history-lane').boundingBox();
+    expect(chapter?.x ?? -1).toBeGreaterThanOrEqual((lane?.x ?? 0) - 1);
+  });
+  await test.step('When they stop, Then the time of day is back', async () => {
+    await bar.getByRole('button', { name: 'Stop travelling' }).click();
+    await expect(page.locator('.hud-time')).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});
+
 test('playing history moves through the years and names the states that come and go @acceptance', async ({
   page,
 }) => {
