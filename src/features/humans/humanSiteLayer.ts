@@ -30,7 +30,8 @@ export const humanSiteLayer: LayerFactory<readonly HumanSite[] | null> = (host) 
           element.textContent = site.label;
           element.dataset['site'] = site.id;
           element.dataset['pick'] = `human:${site.id}`;
-          return { element, point: site.point };
+          // The middle of its 7-pixel dot (humanSites.css) goes on the site (#1010).
+          return { element, point: site.point, anchor: 3.5 };
         }) ?? null,
       );
       host.container.dataset['humans'] = sites === null ? 'off' : String(sites.length);
