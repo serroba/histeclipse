@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defaultViewState, DEFAULT_LOOK } from '../../state/viewState';
 import type { Eclipse } from '../../ui/timeline';
+import { ECLIPSE_FOV } from '../../sky/aim';
 import { emptyTap, keyAction, pickedPlace, placePicked, viewChosen, type SkyEntry } from './input';
 
 const base = defaultViewState(new Date(Date.UTC(2024, 3, 8)));
@@ -88,6 +89,9 @@ describe('a view chosen', () => {
     expect(aimAt).toHaveBeenLastCalledWith(expect.anything(), 'sun');
     viewChosen(base, 'sky', lunar, entry);
     expect(aimAt).toHaveBeenLastCalledWith(expect.anything(), 'moon');
+    // Close up on a solar eclipse's Sun (#951); a lunar eclipse's Moon keeps the aimed field.
+    expect(viewChosen(base, 'sky', solar, entry).look.fov).toBe(ECLIPSE_FOV);
+    expect(viewChosen(base, 'sky', lunar, entry).look.fov).toBe(60);
     const below = { ...entry, aimAt: () => ({ azimuth: 90, altitude: -5, fov: 60 }) };
     expect(viewChosen(base, 'sky', solar, below).look).toEqual(base.look);
     const unknown = { ...entry, aimAt: () => null };
