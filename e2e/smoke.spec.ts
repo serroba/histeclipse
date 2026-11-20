@@ -141,7 +141,8 @@ test('a one-finger swipe rotates the globe on touch screens @mobile', async ({
   context,
 }, info) => {
   test.skip(info.project.name !== 'mobile', 'touch gestures are tested on the phone profile');
-  await page.goto('./?cam=0,0,3');
+  // A fixed moment: at some hours the Moon's marker, behind Earth, sits where the swipe starts.
+  await page.goto('./?t=2026-01-01T12:00Z&cam=0,0,3');
   await globeRendered(page);
   const box = await page.getByTestId('globe').boundingBox();
   if (box === null) throw new Error('globe has no size');
