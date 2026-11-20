@@ -9,7 +9,14 @@ import type { LayerLoad } from '../state/activeLayers';
 import type { HereFact } from '../sources/registry';
 import type { Layer, ViewState } from '../state/viewState';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
-import type { Capabilities, DeepMoment, Feature, FeatureCore, LayerAction } from './feature';
+import type {
+  Capabilities,
+  DeepBarFields,
+  DeepMoment,
+  Feature,
+  FeatureCore,
+  LayerAction,
+} from './feature';
 
 export interface Features {
   /** The moment shown: `jdTT` in Terrestrial Time, or null before it is known. */
@@ -18,6 +25,8 @@ export interface Features {
   redraw(state: ViewState, previous: ViewState | null, jdTT: number | null): void;
   /** Deep time shown: the chips of those that have one, by layer. */
   deep(state: ViewState, moment: DeepMoment): Map<Layer, DeepChipView>;
+  /** Deep time shown: the fields of the bar's view the features have, together (#909). */
+  deepBar(state: ViewState, moment: DeepMoment): DeepBarFields;
   /** Deep time left. */
   deepOff(state: ViewState): void;
   /** A marker tapped: whether it was one of theirs, and if so, picked. */
@@ -73,6 +82,11 @@ export function mountFeatures(
         if (chip !== null) chips.set(feature.id, chip);
       }
       return chips;
+    },
+    deepBar(state, moment) {
+      const fields: DeepBarFields = {};
+      for (const { shown } of mounted) Object.assign(fields, shown.deepBar?.(state, moment));
+      return fields;
     },
     deepOff(state) {
       for (const { shown } of mounted) shown.deep?.(state, null);

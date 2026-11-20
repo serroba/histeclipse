@@ -17,6 +17,9 @@ import type { LayerLoad } from '../state/activeLayers';
 import type { DeepScale, GeoPoint, Layer, ViewState } from '../state/viewState';
 import type { EmpireCentury, Territory } from '../data/empires';
 import type { LineageGroup } from '../data/lineages';
+import type { Co2Archive } from '../data/co2Archive';
+import type { PlateMaskIndex } from '../data/plateMasks';
+import type { DeepTimeView } from '../ui/deepTimeBar';
 import type { TreeOfLife } from '../data/treeOfLife';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
 import type { MarkerCardContent } from '../ui/markerCard';
@@ -89,6 +92,15 @@ export interface Capabilities {
   readonly yearsTrack: { states(said: string | null): void };
   /** "Why here?": what a layer has at the place changed, so the panel is written again if open. */
   readonly whyHere: { again(): void };
+  /** A second reconstruction's continents, outlined on the globe in deep time. */
+  readonly plateOutlines: Pick<Globe, 'setPlates'>;
+  /** The index of those continents' outlines, loaded once and shared with deep time. */
+  readonly plateMasks: {
+    ask(): Promise<PlateMaskIndex>;
+    loaded(): PlateMaskIndex | null;
+  };
+  /** The Paleo-CO2 Data Archive, once the reader has asked deep time's bar for it. */
+  readonly co2Archive: { loaded(): Co2Archive | null };
   /** A crater's strike: played on the globe turned to it, and written on `on` as it happens. */
   readonly strikes: Pick<Globe, 'playImpact' | 'flyTo' | 'zoomTo'> & { readonly on: HTMLElement };
   /** Radiocarbon's calibration curves, loaded once. */
@@ -117,6 +129,12 @@ export interface DeepMoment {
   readonly scale: DeepScale;
 }
 
+/**
+ * What a feature may say in deep time's bar besides its chip (#909): the fields of the bar's
+ * view that are a layer's own. The bar draws each; a feature that has none leaves it out.
+ */
+export type DeepBarFields = Partial<Pick<DeepTimeView, 'air' | 'plateMotion'>>;
+
 /** A step a layer offers from what it shows, on its row in the Layers panel. */
 export interface LayerAction {
   readonly label: string;
@@ -132,6 +150,8 @@ export interface FeatureInstance {
    * leaving it. A feature with a chip in the bar says how it stands.
    */
   deep?(state: ViewState, moment: DeepMoment | null): DeepChipView | null;
+  /** Deep time shown (#909): its own fields of the bar's view, if it has any. */
+  deepBar?(state: ViewState, moment: DeepMoment): DeepBarFields;
   /** One of its markers was tapped: all that follows `<picks>:` in the marker's pick. */
   pick?(id: string): void;
   /** Another marker was tapped: a card of this feature's still loading should not open. */

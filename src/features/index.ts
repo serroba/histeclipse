@@ -4,6 +4,7 @@ import { amocFeature } from './amoc';
 import { asteroidsFeature } from './asteroids';
 import { carbonMadeFeature } from './carbonMade';
 import { datesFeature } from './dates';
+import { airFeature, platesFeature } from './deepSurfaces';
 import { fossilsFeature } from './fossils';
 import { genomesFeature } from './genomes';
 import { humansFeature } from './humans';
@@ -45,4 +46,6 @@ export const FEATURES: readonly Feature[] = [
   rocksFeature,
   datesFeature,
   carbonMadeFeature,
+  platesFeature,
+  airFeature,
 ];

@@ -96,7 +96,6 @@ export const FUNCTION_LIMITS = {
   'features/boundaries/index.ts': 1,
   'features/carbonMade/carbonMadeCard.ts': 1,
   'features/cycle/index.ts': 1,
-  'features/deepSurfaces/index.ts': 1,
   'features/deepTime/deepGlance.ts': 1,
   'features/deepTime/index.ts': 3,
   'features/eclipses/index.ts': 1,

@@ -4,7 +4,7 @@ import { PLATES_CHIP, platesChip } from './platesChip';
 
 describe('the plates’ chip', () => {
   it('turns the plates layer on, its book labelled Plates', () => {
-    expect(PLATES_CHIP).toMatchObject({ layer: 'plates', label: 'Plates', why: 'plates' });
+    expect(PLATES_CHIP).toMatchObject({ label: 'Plates', why: 'plates' });
     expect(PLATES_CHIP.whyLabel).toBeUndefined();
   });
 

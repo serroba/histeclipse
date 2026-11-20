@@ -6,8 +6,8 @@
 
 import type { DeepChip, DeepChipView } from '../../ui/deepChips';
 
-export const PLATES_CHIP: DeepChip = {
-  layer: 'plates',
+/** The chip as deep time's bar offers it; the feature gives it its layer. */
+export const PLATES_CHIP: Omit<DeepChip, 'layer'> = {
   label: 'Plates',
   why: 'plates',
 };
