@@ -20,6 +20,8 @@ import {
   Mesh,
   ShaderMaterial,
   SphereGeometry,
+  NearestFilter,
+  NoColorSpace,
   SRGBColorSpace,
   TextureLoader,
   Vector3,
@@ -29,18 +31,10 @@ import {
   type Texture,
 } from 'three';
 
-import { tilePath, type EarthTiles } from '../data/earthTiles';
-import {
-  levelFor,
-  parentTile,
-  tileId,
-  tileRect,
-  tilesInView,
-  type TileCamera,
-  type TileKey,
-  type TileLevel,
-} from './tileGrid';
+import { tilePath } from '../data/earthTiles';
+import { tileId, tileRect, type TileCamera, type TileKey, type TileLevel } from './tileGrid';
 import type { TileLimits } from './tileLimits';
+import { drawPlan, wantedTiles, type TilePyramid } from './tilePlan';
 
 const FADE_MS = 400;
 /**
@@ -49,8 +43,6 @@ const FADE_MS = 400;
  * between corners), and all under everything drawn over the ground (12 km and up).
  */
 const LIFT = 1e-5;
-/** A level is drawn until each of its pixels spans this many of the screen's. */
-const STRETCH = 4;
 /** Each patch's segments each way: four to each of the globe's own, so their corners meet. */
 const SEGMENTS = 16;
 
@@ -68,7 +60,7 @@ interface Tile {
 
 export interface EarthTileLayer {
   /** Draw tiles from now on, from the manifest, with the tiles' files under `folder`. */
-  enable(tiles: EarthTiles, folder: string): void;
+  enable(tiles: TilePyramid, folder: string): void;
   /**
    * Before each frame: show the tiles in view and fetch those missing, if `on` and close enough.
    * True while one is still fading in, so another frame is wanted.
@@ -89,6 +81,12 @@ export interface EarthTileOptions {
   readonly requestRender: () => void;
   /** How many tiles are drawn, were fetched and are kept, for whoever needs to know. */
   readonly report: (shown: number, fetched: number, kept: number) => void;
+  /**
+   * Tiles of data rather than colour (#1016): read as they are, not as sRGB, and each texel on
+   * its own (nearest, no mipmaps), since a texel's bytes are parts of one number. Their patches
+   * also take these uniforms, which tell the shader how to read them.
+   */
+  readonly data?: Readonly<Record<string, { readonly value: unknown }>>;
 }
 
 /** A patch of the unit sphere over one tile, its texture coordinates the globe's own. */
@@ -119,7 +117,13 @@ function patchGeometry(level: TileLevel, key: TileKey): SphereGeometry {
 }
 
 /** A tile's patch, in the Earth's shader with the tile for its day map. */
-function patchMesh(earth: EarthMesh, level: TileLevel, tile: Tile, map: Texture): EarthMesh {
+function patchMesh(
+  earth: EarthMesh,
+  level: TileLevel,
+  tile: Tile,
+  map: Texture,
+  data: EarthTileOptions['data'],
+): EarthMesh {
   const material = new ShaderMaterial({
     uniforms: {},
     vertexShader: earth.material.vertexShader,
@@ -127,6 +131,7 @@ function patchMesh(earth: EarthMesh, level: TileLevel, tile: Tile, map: Texture)
     transparent: true,
   });
   const own = {
+    ...data,
     dayMap: { value: map },
     dayRect: { value: new Vector4(...tileRect(level, tile.key)) },
     dayAlpha: tile.alpha,
@@ -171,68 +176,6 @@ function cameraOnEarth(earth: EarthMesh, camera: PerspectiveCamera): TileCamera 
   };
 }
 
-interface Wanted {
-  readonly level: TileLevel;
-  /** The tiles of `level` in view, nearest first. */
-  readonly keys: readonly TileKey[];
-  /** The next coarser level, whose tiles stand in for those of `level` not yet arrived. */
-  readonly coarser: TileLevel | null;
-}
-
-/** The tiles to draw, or null when the camera is too far for any or the device takes none. */
-export function wantedTiles(
-  tiles: EarthTiles,
-  view: TileCamera,
-  pixels: number,
-  limits: TileLimits | null,
-): Wanted | null {
-  const distance = Math.hypot(...view.eye);
-  if (limits === null || distance > limits.within) return null;
-  const pixelAngle = (view.verticalFovDegrees * Math.PI) / 180 / Math.max(pixels, 1);
-  const level = levelFor(tiles.levels, tiles.tileSize, distance - 1, pixelAngle, STRETCH);
-  if (level === null) return null;
-  const index = tiles.levels.indexOf(level);
-  return {
-    level,
-    keys: tilesInView(level, view, limits.shown),
-    coarser: index > 0 ? (tiles.levels[index - 1] ?? null) : null,
-  };
-}
-
-interface DrawPlan {
-  /** The coarser tiles to draw beneath those not yet arrived: kept ones only, never fetched. */
-  readonly beneath: readonly TileKey[];
-  /** The tiles wanted, each with whether a coarser one is (or was last frame) drawn beneath. */
-  readonly tiles: readonly { readonly key: TileKey; readonly over: boolean }[];
-}
-
-/**
- * What to draw this frame of what is `wanted`, given which tiles are `ready` (arrived) and which
- * were drawn the frame before: so no ground goes back to the globe's map while a finer tile is
- * on its way, and a finer tile replaces the coarser one at once rather than fading in.
- */
-export function drawPlan(
-  wanted: Wanted | null,
-  ready: (key: TileKey) => boolean,
-  drawnBefore: ReadonlySet<string>,
-): DrawPlan {
-  if (wanted === null) return { beneath: [], tiles: [] };
-  const { level, coarser, keys } = wanted;
-  const parentOf = (key: TileKey): TileKey | null =>
-    coarser === null ? null : parentTile(coarser, key, level);
-  const beneath = new Map<string, TileKey>();
-  for (const key of keys) {
-    const parent = parentOf(key);
-    if (parent !== null && !ready(key) && ready(parent)) beneath.set(tileId(parent), parent);
-  }
-  const tiles = keys.map((key) => {
-    const parent = parentOf(key);
-    const id = parent === null ? null : tileId(parent);
-    return { key, over: id !== null && (beneath.has(id) || drawnBefore.has(id)) };
-  });
-  return { beneath: [...beneath.values()], tiles };
-}
-
 /** Past `most` kept, let go those not seen for longest, other than those wanted now. */
 export function trim(kept: Map<string, Tile>, wanted: ReadonlySet<string>, most: number): void {
   if (kept.size <= most) return;
@@ -266,16 +209,29 @@ function reveal(tile: Tile, now: number, over: boolean): { shown: boolean; fadin
   return { shown: true, fading: tile.alpha.value < 1 };
 }
 
+/** Ready a tile's texture: colour as sRGB, or data as it is, each texel on its own (#1016). */
+function prepare(map: Texture, { data, anisotropy }: EarthTileOptions): void {
+  if (data === undefined) {
+    map.colorSpace = SRGBColorSpace;
+    map.anisotropy = anisotropy;
+    return;
+  }
+  map.colorSpace = NoColorSpace;
+  map.minFilter = NearestFilter;
+  map.magFilter = NearestFilter;
+  map.generateMipmaps = false;
+}
+
 export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions): EarthTileLayer {
   const { limits } = options;
   const atOnce = limits?.loading ?? 0;
-  let manifest: { readonly tiles: EarthTiles; readonly folder: string } | null = null;
+  let manifest: { readonly tiles: TilePyramid; readonly folder: string } | null = null;
   const kept = new Map<string, Tile>();
   let loading = 0;
   let fetched = 0;
   const loader = new TextureLoader();
 
-  function load(folder: string, tiles: EarthTiles, tile: Tile): void {
+  function load(folder: string, tiles: TilePyramid, tile: Tile): void {
     const { x, y, z } = tile.key;
     const level = tiles.levels.find((each) => each.z === z);
     if (level === undefined) return;
@@ -287,11 +243,10 @@ export function createEarthTileLayer(earth: EarthMesh, options: EarthTileOptions
     };
     loader.loadAsync(`${folder}${tilePath(tiles, z, x, y)}`).then(
       (map) => {
-        map.colorSpace = SRGBColorSpace;
-        map.anisotropy = options.anisotropy;
+        prepare(map, options);
         // Let go while on its way: not wanted now.
         if (kept.get(tileId(tile.key)) === tile) {
-          tile.mesh = patchMesh(earth, level, tile, map);
+          tile.mesh = patchMesh(earth, level, tile, map, options.data);
           earth.add(tile.mesh);
         } else map.dispose();
         settled();

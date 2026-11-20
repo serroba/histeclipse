@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "credit": "ETOPO 2022 (NOAA National Centers for Environmental Information 2022), surface heights at 60 arc-seconds averaged to 2 and 4 arc-minutes, public domain; lakes and land from Natural Earth 1:10m (public domain)",
+  "source": "https://doi.org/10.25921/fd45-gt74",
+  "tileSize": 675,
+  "border": 2,
+  "path": "{z}/{x}/{y}.webp",
+  "offset": 11000,
+  "water": {
+    "ocean": 255,
+    "lake": 128,
+    "land": 0
+  },
+  "levels": [
+    {
+      "z": 2,
+      "columns": 8,
+      "rows": 4
+    },
+    {
+      "z": 3,
+      "columns": 16,
+      "rows": 8
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://www.ngdc.noaa.gov/thredds/fileServer/global/ETOPO2022/60s/60s_surface_elev_netcdf/ETOPO_2022_v1_60s_N90W180_surface.nc",
+      "sha256": "74bbc5c23e85188d93f0beba8116babf69e1a8f160e8dc9f053bf8df01b197b6"
+    },
+    {
+      "url": "https://naciscdn.org/naturalearth/10m/physical/ne_10m_lakes.zip",
+      "sha256": "0803a06f9c3cb4671d89b68c48b142aad9366ba40f665245e12a913fbc61722a"
+    },
+    {
+      "url": "https://naciscdn.org/naturalearth/10m/physical/ne_10m_land.zip",
+      "sha256": "e547d749445eaa0964aba76738090ec88f5e63c4585122170f98c67a7ea922dc"
+    }
+  ]
+}

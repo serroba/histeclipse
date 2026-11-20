@@ -249,7 +249,7 @@ export function createPeriodBands(
       // With the chapters resting (away from Earth), the reading names the moment alone.
       const shown = row.getClientRects().length > 0 ? bands : [];
       reading.textContent = readingAt(fraction, span.oldest, span.youngest, shown, words);
-      reading.style.left = `${String(fraction * 100)}%`;
+      reading.style.setProperty('--at', String(fraction));
       reading.hidden = false;
     };
     lane.addEventListener('pointermove', show);
@@ -350,15 +350,15 @@ export function createPeriodBands(
           if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
             chapter.animate(
               [
-                { opacity: 0.3, transform: 'translate(-50%, 6px)' },
-                { opacity: 1, transform: 'translate(-50%, 0)' },
+                { opacity: 0.3, translate: '0 6px' },
+                { opacity: 1, translate: '0 0' },
               ],
               { duration: 350, easing: 'ease-out' },
             );
           }
         }
         const share = Math.min(1, Math.max(0, (oldest - ma) / (oldest - youngest)));
-        chapter.style.left = `${String(share * 100)}%`;
+        chapter.style.setProperty('--at', String(share));
       }
       // No label under the thumb: an end's name, or a mark's value, steps aside while it is near.
       const thumb = Math.min(1, Math.max(0, (oldest - ma) / (oldest - youngest))) * rowWidth;

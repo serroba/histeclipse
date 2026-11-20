@@ -85,8 +85,14 @@ export interface Capabilities {
     /** Show deep time again, or what is drawn on leaving it: a map it draws from has arrived. */
     again(): void;
   };
-  /** The ice ages' Earth on the globe: the shelf the sea left bare, the ice sheets, the sea ice. */
-  readonly iceAgeEarth: Pick<Globe, 'setShelf' | 'setIce' | 'setSeaIce'>;
+  /**
+   * The ice ages' Earth on the globe: the shelf the sea left bare, the ice sheets, the sea ice,
+   * and close up today's heights in tiles where the device takes tiles on (#1016).
+   */
+  readonly iceAgeEarth: Pick<
+    Globe,
+    'setShelf' | 'setIce' | 'setSeaIce' | 'setEarthTiles' | 'tileLimits'
+  >;
   /** What the years' track says of the Holocene's Earth: kept, and the track told it was drawn. */
   readonly holoceneNote: { keep(said: string | null): void; shown(): void };
   /** Cliopatria's border files, loaded a century at a time and shared with the eclipses. */

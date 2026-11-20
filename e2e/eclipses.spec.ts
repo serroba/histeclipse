@@ -351,6 +351,33 @@ test('picking an eclipse with a place chosen turns the globe to frame the place 
   expect(problems).toEqual([]);
 });
 
+test('opened at the reader’s deepest, Thales’s first ▶ plays it from its start, and a second goes on (#986) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const slider = page.getByRole('slider', { name: 'Time relative to greatest eclipse' });
+  const scrubber = page.locator('.scrubber');
+  await test.step('Given the eclipse of Thales as its Explore story opens it, at Anatolia’s deepest', async () => {
+    await page.goto(
+      './?t=-0584-05-28T16:01Z&cal=julian&loc=39.0000,35.0000&layers=eclipses&sel=solar:-0584-05-28&explore=eclipse-of-thales',
+    );
+    await expect(slider).toHaveValue('95');
+  });
+  await test.step('When they press ▶, Then it plays from three hours before the greatest', async () => {
+    await scrubber.getByRole('button', { name: 'Play' }).click();
+    await expect.poll(async () => Number(await slider.inputValue())).toBeLessThan(-100);
+  });
+  await test.step('When they pause and press ▶ again, Then it goes on from there', async () => {
+    await scrubber.getByRole('button', { name: 'Pause' }).click();
+    const paused = Number(await slider.inputValue());
+    await scrubber.getByRole('button', { name: 'Play' }).click();
+    await expect.poll(async () => Number(await slider.inputValue())).toBeGreaterThan(paused);
+    await scrubber.getByRole('button', { name: 'Pause' }).click();
+    expect(Number(await slider.inputValue())).toBeLessThan(0);
+  });
+  expect(problems).toEqual([]);
+});
+
 test('on a 320-px phone the eclipse’s slider keeps room to drag, its time and speed under it (#978) @mobile', async ({
   page,
 }, info) => {

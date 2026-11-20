@@ -98,6 +98,7 @@ from histeclipse_pipeline.planets import (
 from histeclipse_pipeline.polarity import fetch_polarity
 from histeclipse_pipeline.precipitation import fetch_precipitation
 from histeclipse_pipeline.radiocarbon import fetch_radiocarbon
+from histeclipse_pipeline.relief_tiles import fetch_relief_tiles
 from histeclipse_pipeline.saturn_rings import fetch_saturn_rings
 from histeclipse_pipeline.seaice import fetch_seaice
 from histeclipse_pipeline.sealevel import fetch_sealevel
@@ -367,6 +368,12 @@ def earth_tiles(args: Arguments) -> int:  # pragma: no cover - needs network acc
     """Cut Earth's Blue Marble, full size and at 500 m, into tiles for the closest views."""
     written = fetch_earth_tiles(args.out, Path(".cache/planet-maps"))
     return _say(f"wrote {written / 1e6:.1f} MB of tiles to {args.out}")
+
+
+def relief_tiles(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Cut today's heights (ETOPO 2022, 2' and 4') into tiles for the ice-age globe close up."""
+    written = fetch_relief_tiles(args.out, Path(".cache/relief"))
+    return _say(f"wrote {written / 1e6:.1f} MB of relief tiles to {args.out}")
 
 
 def moon_orbits(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -950,6 +957,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         earth_tiles,
         "cut Earth's Blue Marble (full size and 500 m) into tiles fetched only for the view",
         "output folder (public/textures/earth-tiles)",
+    ),
+    "relief-tiles": (
+        relief_tiles,
+        "cut today's heights (ETOPO 2022, 2' and 4') into tiles for the ice-age globe close up",
+        "output folder (public/textures/relief-tiles)",
     ),
     "moon-orbits": (
         moon_orbits,

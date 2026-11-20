@@ -81,7 +81,7 @@ function deferred() {
   return { promise, resolve, reject };
 }
 
-function harness() {
+function harness({ tiles = false } = {}) {
   const pending = new Map<string, ReturnType<typeof deferred>>();
   const fetchJson = vi.fn<Fetch>((url) => {
     const request = deferred();
@@ -95,6 +95,8 @@ function harness() {
     setIce: vi.fn<Globe['setIce']>(),
     setShelf: vi.fn<Globe['setShelf']>(),
     setSeaIce: vi.fn<Globe['setSeaIce']>(),
+    setEarthTiles: vi.fn<Globe['setEarthTiles']>(),
+    tileLimits: tiles ? { within: 1.5, shown: 32, kept: 48, loading: 6 } : null,
   };
   const redraw = vi.fn();
   const holoceneShown = vi.fn();
@@ -141,7 +143,41 @@ function harness() {
   return { part, context, globe, updateOutlines, fetchJson, pending, resolve, load, flush };
 }
 
+const reliefManifest = {
+  schemaVersion: 1,
+  credit: 'ETOPO 2022',
+  source: 'https://doi.org/10.25921/fd45-gt74',
+  tileSize: 675,
+  border: 2,
+  path: '{z}/{x}/{y}.webp',
+  offset: 11000,
+  water: { ocean: 255, lake: 128, land: 0 },
+  levels: [{ z: 2, columns: 8, rows: 4 }],
+  sources: [{ url: 'https://example.org/etopo.nc', sha256: 'a'.repeat(64) }],
+};
+
 describe('ice-age feature integration, without a DOM or WebGL', () => {
+  it('hands the globe the relief tiles once the shelf is drawn, where it takes tiles (#1016)', async () => {
+    const h = harness({ tiles: true });
+    h.part.bar(deep, 0.03);
+    await h.load();
+    h.part.bar(deep, 0.03);
+    h.part.bar(deep, 0.02);
+    const manifest = '/assets/textures/relief-tiles/manifest.json';
+    expect(h.fetchJson.mock.calls.filter(([url]) => url === manifest)).toHaveLength(1);
+    await h.resolve(manifest, reliefManifest);
+    expect(h.globe.setEarthTiles).toHaveBeenCalledWith(
+      expect.objectContaining({ tileSize: 675, border: 2 }),
+      '/assets/textures/relief-tiles/',
+    );
+    // A device without tiles never asks.
+    const none = harness();
+    none.part.bar(deep, 0.03);
+    await none.load();
+    none.part.bar(deep, 0.03);
+    expect(none.fetchJson.mock.calls.map(([url]) => url)).not.toContain(manifest);
+  });
+
   it('loads only on demand and shares in-flight and completed catalog requests', async () => {
     const h = harness();
     expect(h.fetchJson).not.toHaveBeenCalled();

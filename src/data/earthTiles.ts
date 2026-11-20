@@ -54,6 +54,11 @@ export async function loadEarthTiles(url: string, fetchJson: Fetch): Promise<Ear
 }
 
 /** The address of a tile's file under the manifest's folder. */
-export function tilePath(tiles: EarthTiles, z: number, x: number, y: number): string {
+export function tilePath(
+  tiles: { readonly path: string },
+  z: number,
+  x: number,
+  y: number,
+): string {
   return tiles.path.replace('{z}', String(z)).replace('{x}', String(x)).replace('{y}', String(y));
 }

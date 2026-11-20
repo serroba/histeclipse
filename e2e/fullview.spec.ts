@@ -171,3 +171,36 @@ test('on a short phone the date panel folds, so the globe keeps over half the sc
   });
   expect(problems).toEqual([]);
 });
+
+test('on a 320-px phone the date panel’s tools keep clear of the name, and nothing runs off the screen (#977) @mobile', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'a phone');
+  const problems = collectProblems(page);
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('./?t=2026-11-20T09:43Z');
+  await globeRendered(page);
+  const name = await page.locator('.hud h1 .home').boundingBox();
+  const tools = await page.locator('.hud-tools').boundingBox();
+  if (name === null || tools === null) throw new Error('no header');
+  const apart =
+    name.x + name.width <= tools.x ||
+    tools.x + tools.width <= name.x ||
+    name.y + name.height <= tools.y ||
+    tools.y + tools.height <= name.y;
+  expect(apart).toBe(true);
+  // The time stays whole, on one line of its own size (with the date, or under it, by the font).
+  const time = await page.locator('.hud-time').evaluate((element) => ({
+    lines: element.getClientRects().length,
+  }));
+  expect(time.lines).toBe(1);
+  const off = await page.evaluate(
+    () =>
+      [...document.querySelectorAll('button, a')].filter((each) => {
+        const box = each.getBoundingClientRect();
+        return box.width > 0 && box.right > window.innerWidth + 1;
+      }).length,
+  );
+  expect(off).toBe(0);
+  expect(problems).toEqual([]);
+});

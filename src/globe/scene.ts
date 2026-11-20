@@ -38,6 +38,7 @@ import { createPlanetMeshes } from './planetMeshes';
 import { EarthSurfaces } from './earthSurfaces';
 import { MOON_FRAGMENT, MOON_VERTEX } from './bodyShaders';
 import { createEarthTileLayer } from './earthTiles';
+import { createReliefTileLayer } from './reliefTileLayer';
 import { BodiesInSpace } from './bodiesInSpace';
 import { createSpinAxis, PlacePin } from './earthMarks';
 import { createEarthMeshes, MOON_RGB, plainTexture } from './earthMesh';
@@ -124,19 +125,23 @@ export function createGlobe(
       stage.invalidate();
     },
   });
-  // Close up, Earth's full-size map in tiles over its own (#568), as many as the device takes on
-  // (#578); how many are drawn, were fetched and are kept, for tests.
+  // Close up, Earth's full-size map in tiles over its own (#568), or today's heights (#1016), as
+  // many as the device takes on (#578); how many are drawn, were fetched and are kept, for tests.
   const { maxTextureSize } = renderer.capabilities;
   const limits = tileLimits(maxTextureSize, matchMedia('(pointer: coarse)').matches);
-  const earthTiles = createEarthTileLayer(earth, {
-    anisotropy: renderer.capabilities.getMaxAnisotropy(),
+  const tileOptions = (name: string) => ({
     limits,
     pixels: () => renderer.domElement.height,
     requestRender: () => {
       stage.invalidate();
     },
-    report: (...counts) => (container.dataset['earthTiles'] = counts.join('/')),
+    report: (...counts: number[]) => (container.dataset[name] = counts.join('/')),
   });
+  const earthTiles = createEarthTileLayer(earth, {
+    ...tileOptions('earthTiles'),
+    anisotropy: renderer.capabilities.getMaxAnisotropy(),
+  });
+  const reliefTiles = createReliefTileLayer(earth, tileOptions('reliefTiles'));
 
   // Deep time: Earth's spin axis, its ends marked as the poles of the time shown.
   const spinAxis = createSpinAxis();
@@ -297,7 +302,8 @@ export function createGlobe(
   stage.add({
     resize: labels.resize,
     beforeRender(now) {
-      const more = earthTiles.update(camera, !surfaces.deepTime && earth.visible, now);
+      const relief = reliefTiles.update(camera, surfaces.todaysGround && earth.visible, now);
+      const more = earthTiles.update(camera, !surfaces.deepTime && earth.visible, now) || relief;
       // 1 when the camera looks at the Sun from Earth's side, as SDO did; −1 from behind.
       container.dataset['sunFacing'] = sunMeshes.shade(camera).toFixed(3);
       // In deep time the Sun, Moon and planets are where they are today, which says nothing
@@ -411,7 +417,8 @@ export function createGlobe(
     maxTextureSize,
     tileLimits: limits,
     setEarthTiles: (tiles, folder) => {
-      earthTiles.enable(tiles, folder);
+      if ('offset' in tiles) reliefTiles.enable(tiles, folder);
+      else earthTiles.enable(tiles, folder);
     },
     setSunDirection([x, y, z]) {
       sunDirection.set(x, y, z).normalize();

@@ -71,6 +71,8 @@ const ICE_AGE_WORDS_MA = 3;
 export function formatMa(ma: number): string {
   if (ma === 0) return 'Today';
   if (ma < ICE_AGE_WORDS_MA) return `${Math.round(ma * 1e6).toLocaleString('en')} years ago`;
-  const amount = Number.isInteger(ma) ? ma.toLocaleString('en') : ma.toFixed(1);
+  // To a tenth: a moment played to 3,950.0000001 reads "3,950", not "3950.0" (#987).
+  const tenth = Math.round(ma * 10) / 10;
+  const amount = Number.isInteger(tenth) ? tenth.toLocaleString('en') : tenth.toFixed(1);
   return `${amount} million years ago`;
 }

@@ -62,7 +62,10 @@
   color: var(--ink);
   font-size: 12px;
   white-space: nowrap;
-  transform: translateX(-50%);
+  /* At the pointer (--at, its share of the way along), shifted by as much of its own width: flush
+     at the ends, centred in the middle, never off the bar (#987); its hairline at the pointer. */
+  left: calc(var(--at, 0.5) * 100%);
+  transform: translateX(calc(var(--at, 0.5) * -100%));
   backdrop-filter: blur(14px);
 }
 
@@ -70,7 +73,7 @@
   content: '';
   position: absolute;
   top: 100%;
-  left: 50%;
+  left: calc(var(--at, 0.5) * 100%);
   width: 1px;
   height: calc(var(--rise) + 10px);
   background: rgb(255 255 255 / 0.5);
@@ -112,7 +115,9 @@
   font-weight: 600;
   line-height: 14px;
   white-space: nowrap;
-  transform: translateX(-50%);
+  /* Over the thumb, kept on the bar at its ends as the reading is (#987). */
+  left: calc(var(--at, 0.5) * 100%);
+  transform: translateX(calc(var(--at, 0.5) * -100%));
   pointer-events: none;
 }
 
