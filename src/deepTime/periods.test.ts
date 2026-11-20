@@ -29,6 +29,9 @@ describe('geological periods', () => {
     expect(formatMa(3)).toBe('3 million years ago');
     expect(formatMa(252.5)).toBe('252.5 million years ago');
     expect(formatMa(4200)).toBe('4,200 million years ago');
+    // A moment played to a whole number, give or take a rounding (#987).
+    expect(formatMa(3950.000_000_1)).toBe('3,950 million years ago');
+    expect(formatMa(252.46)).toBe('252.5 million years ago');
   });
 });
 

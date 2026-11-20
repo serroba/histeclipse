@@ -58,6 +58,9 @@ describe('the Holocene’s track', () => {
       '10 yr/s',
     ]);
     expect(track.root.querySelector<HTMLElement>('.history-notes')?.hidden).toBe(true);
+    expect(track.root.dataset['playing']).toBe('false');
+    track.render({ ...VIEW, playing: true });
+    expect(track.root.dataset['playing']).toBe('true');
     expect(track.root.querySelector<HTMLElement>('.history-about')?.hidden).toBe(true);
   });
 
