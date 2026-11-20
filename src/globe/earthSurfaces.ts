@@ -66,6 +66,10 @@ export function surfaceUniforms(): Record<string, IUniform> {
     paleoGrid: { value: new Vector2(361, 181) },
     seaDepth: { value: 11_000 },
     landHeight: { value: 6_500 },
+    // A relief tile's patch sets these for itself (#1016); the globe has none.
+    reliefTile: { value: 0 },
+    reliefCells: { value: new Vector2(675, 2) },
+    reliefOffset: { value: 11_000 },
   };
 }
 
@@ -139,6 +143,16 @@ export class EarthSurfaces {
   /** True while deep time's elevation maps are shown instead of today's Earth. */
   get deepTime(): boolean {
     return this.#deepTime;
+  }
+
+  /**
+   * True while deep time draws today's ground under the sea of the moment (the ice ages), where
+   * the relief tiles serve close up (#1016): not over another age's elevation maps, nor a sketch.
+   */
+  get todaysGround(): boolean {
+    const { uniforms } = this.#host;
+    const on = (name: string): boolean => Number(uniforms[name]?.value) > 0.5;
+    return this.#deepTime && on('paleoActive') && on('shelfActive') && !on('uncharted');
   }
 
   /**
