@@ -19,4 +19,6 @@
 .hud-time {
   color: var(--accent);
   font-weight: 500;
+  /* "09:43 UT" stays together: on a narrow phone it goes to the next line whole (#977). */
+  white-space: nowrap;
 }

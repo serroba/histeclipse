@@ -45,3 +45,18 @@
     display: none;
   }
 }
+
+/* The narrowest phones (#977): the name and the four tools no longer fit on one row, and the
+   tools were drawn over the name. They take a row of their own, under it; the date is set a
+   little smaller, so its time stays on its line. */
+@media (max-width: 360px) {
+  .hud-tools {
+    position: static;
+    justify-content: flex-end;
+    margin: -4px 0 4px;
+  }
+
+  .hud-when {
+    font-size: 16px;
+  }
+}
