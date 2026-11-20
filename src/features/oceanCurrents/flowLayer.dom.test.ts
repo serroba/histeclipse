@@ -90,4 +90,35 @@ describe('the currents drawn as streaks (#927)', () => {
     const material = added[0]?.material as { map?: { image?: HTMLCanvasElement } } | undefined;
     expect(material?.map?.image?.width).toBe(1024);
   });
+
+  it('Given slow frames, Then the next waits as long as the last took; turned off meanwhile, none comes', () => {
+    vi.useFakeTimers();
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+    let clock = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => clock);
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    const layer = flowLayer({
+      container: document.createElement('div'),
+      onEarth: { add: () => undefined },
+      requestRender: vi.fn(),
+    } as unknown as LayerHost);
+    layer.update(still());
+    clock = 200; // the frame came 200 ms after it was asked for
+    frames[0]?.(200);
+    expect(frames).toHaveLength(1);
+    vi.advanceTimersByTime(199);
+    expect(frames).toHaveLength(1);
+    vi.advanceTimersByTime(1);
+    expect(frames).toHaveLength(2);
+    clock = 1000;
+    frames[1]?.(1000);
+    layer.update(null);
+    vi.advanceTimersByTime(1000);
+    expect(frames).toHaveLength(2);
+    vi.useRealTimers();
+  });
 });

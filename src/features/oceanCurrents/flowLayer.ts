@@ -19,8 +19,31 @@ const RADIUS = 1.003;
 const LONGEST_FRAME = 0.05;
 /** How much of the last frame's streaks stays each frame: their fading tails, a second or two. */
 const KEEP = 0.985;
+/**
+ * A frame slower than this, ms (under 20 a second), means the device is struggling (a phone, or
+ * software graphics): the next waits as long as this one took, so the streaks take at most half
+ * of the page's time and it stays responsive. A frame's cost is how long it took to come after
+ * it was asked for: the globe's rendering and the texture's upload included.
+ */
+const SLOW_FRAME = 50;
+/** The longest such wait, ms. */
+const LONGEST_WAIT = 500;
 /** Speed bands the streaks are drawn in, slowest first: fewer strokes than one a particle. */
 const BANDS = 4;
+
+/** Ask for the next frame now, or after a slow one, as long as it took (if still running). */
+function afterFrame(cost: number, ask: () => void, running: () => boolean): void {
+  if (cost <= SLOW_FRAME) {
+    ask();
+    return;
+  }
+  setTimeout(
+    () => {
+      if (running()) ask();
+    },
+    Math.min(LONGEST_WAIT, cost),
+  );
+}
 
 /** Whether the page is narrow: a smaller canvas and fewer particles, for a phone. */
 function narrow(): boolean {
@@ -83,6 +106,7 @@ export const flowLayer: LayerFactory<Field | null> = (host) => {
   let field: Field | null = null;
   let running = false;
   let then = 0;
+  let asked = 0;
 
   function draw(seconds: number): void {
     if (context === null || field === null) return;
@@ -99,12 +123,18 @@ export const flowLayer: LayerFactory<Field | null> = (host) => {
     host.requestRender();
   }
 
+  function ask(): void {
+    asked = performance.now();
+    requestAnimationFrame(frame);
+  }
+
   function frame(now: number): void {
     if (!running) return;
     const seconds = then === 0 ? 0 : Math.min(LONGEST_FRAME, (now - then) / 1000);
     then = now;
+    const cost = performance.now() - asked;
     draw(seconds);
-    requestAnimationFrame(frame);
+    afterFrame(cost, ask, () => running);
   }
 
   return {
@@ -123,7 +153,7 @@ export const flowLayer: LayerFactory<Field | null> = (host) => {
       if (!running) {
         running = true;
         then = 0;
-        requestAnimationFrame(frame);
+        ask();
       }
     },
   };
