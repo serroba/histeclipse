@@ -6,10 +6,10 @@ import { SolarCatalog } from './data/solarCatalog';
 import { createDatingCard } from './ui/datingCard';
 import { focusOf } from './globe/focus';
 import { createGlobe } from './globe/scene';
+import { loadImpacts } from './data/impacts';
 import {
   DEEP_TIME,
   drawAll,
-  EARTH_LAYERS,
   FOCUS,
   FOUND_THE_WAY_IN,
   HISTORY,
@@ -86,7 +86,6 @@ import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment
 import { createZoomRail } from './ui/zoomRail';
 import { railView } from './ui/railView';
 import { createWaysLegend } from './ui/waysLegend';
-import { IMPACTS_CHIP, mountImpacts } from './features/impacts';
 import { createTemperatureLayer } from './features/temperature';
 
 export async function startApp(root: HTMLElement): Promise<void> {
@@ -165,7 +164,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     async () => {
       const [loaded, periods] = await Promise.all([
-        impacts.load(),
+        loadImpacts(`${base}data/impacts.json`, fetchJson),
         loadNamedPeriods(`${base}data/periods.json`, fetchJson),
       ]);
       return { impacts: loaded, coasts: countryRings(periods) };
@@ -193,11 +192,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
     setScale: (scale) => {
       deepTime.setScale(scale);
     },
-    said: () => [['impacts', impacts.said()], ...features.said()],
+    said: () => features.said(),
     // How each layer's load stands (#751): the features on the contract report theirs.
     loads: () => features.loads(),
     actions: () => [
-      ['impacts', impacts.action()],
       // The features on the contract offer their own (#909).
       ...features.actions(),
     ],
@@ -255,7 +253,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const deepTime = mountDeepTime({
     ...partContext,
     globe,
-    chips: [PLATES_CHIP, ...deepChipsOf(FEATURES), IMPACTS_CHIP],
+    chips: [PLATES_CHIP, ...deepChipsOf(FEATURES)],
     step: () => {
       sync.step();
     },
@@ -270,7 +268,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       const { plates, ...surfaced } = surfaces.bar(state, moment.ma);
       const chips = new Map(features.deep(state, moment));
       chips.set('plates', plates);
-      chips.set('impacts', impacts.chip(state, moment.scale));
       return { ...iceAges.bar(state, moment.ma), ...surfaced, chips };
     },
     temperature: temperatureLayer,
@@ -374,7 +371,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     globe,
     datingCard,
     travelChanged: (now) => {
-      impacts.show(now);
       features.show(now, moment.terrestrial());
       showLayers(now);
       iceAges.showHolocene(now);
@@ -490,15 +486,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     redraw: redraws.ask('deepTime'),
     holoceneShown: redraws.askWith('years'),
   });
-  // Impact craters and deposits (#474): their layer is added here, in the globe's order.
-  const impacts = mountImpacts({
-    ...partContext,
-    globe,
-    strikesOn: globeContainer,
-    showCard: markerCard.show,
-    redrawDeep: redraws.askWith('deepTime'),
-    refreshLayers: redraws.askWith('layers'),
-  });
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.
   const featureCore: FeatureCore = {
     base,
@@ -526,7 +513,24 @@ export async function startApp(root: HTMLElement): Promise<void> {
     tree: { openLineages: treeOfLife.openLineagesAt, openTree: treeOfLife.openTreeAt },
     settledLand: globe,
     evenLight: globe,
-    deepTime: { enter: deepTime.enterDeepTime },
+    deepTime: {
+      enter: deepTime.enterDeepTime,
+      goTo: (ma, layer, where) => {
+        partContext.goToDeepTime(ma, layer, where);
+      },
+    },
+    strikes: {
+      playImpact: (spec) => {
+        globe.playImpact(spec);
+      },
+      flyTo: (place) => {
+        globe.flyTo(place);
+      },
+      zoomTo: (distance) => {
+        globe.zoomTo(distance);
+      },
+      on: globeContainer,
+    },
     radiocarbon: { curves: () => years.curves() },
     datingCard,
     carbonGlow: globe,
@@ -555,7 +559,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   // A marker tapped: a feature's, or a crater's.
   globe.onMarkerPick((key) => {
-    [features, impacts].some((part) => part.pick(key));
+    features.pick(key);
   });
 
   /** Away from Earth: Earth's own bits rest, and the body in view shows. */
@@ -629,7 +633,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
     },
     { draw: bodies.render },
-    { when: on(EARTH_LAYERS), draw: impacts.show },
     { when: on(LAYERS_PANEL), draw: showLayers },
     { draw: years.settle },
     {

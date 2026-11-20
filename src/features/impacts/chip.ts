@@ -8,8 +8,8 @@ import { IMPACTS_MODES, type ImpactsMode } from '../../data/impacts';
 import type { DeepScale } from '../../state/viewState';
 import type { DeepChip, DeepChipView, DeepNoteBlock } from '../../ui/deepChips';
 
-export const IMPACTS_CHIP: DeepChip = {
-  layer: 'impacts',
+/** The chip as deep time's bar offers it; the feature gives it its layer. */
+export const IMPACTS_CHIP: Omit<DeepChip, 'layer'> = {
   label: 'Impacts',
   why: 'impacts',
   whyLabel: 'Impact craters',

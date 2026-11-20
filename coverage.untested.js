@@ -47,7 +47,6 @@ export const UNTESTED = [
   'src/features/humans/humanSiteLayer.ts',
   'src/features/iceAges/iceOutlineLayer.ts',
   'src/features/impacts/impactLayer.ts',
-  'src/features/impacts/index.ts',
   'src/features/layersPanel/index.ts',
   'src/features/layersPanel/layersPanel.ts',
   'src/features/moment/index.ts',

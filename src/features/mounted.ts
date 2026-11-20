@@ -34,9 +34,16 @@ export interface Features {
 
 /** The chips in deep time's bar, of the features that have one, in their order. */
 export function deepChipsOf(features: readonly Feature[]): DeepChip[] {
-  return features.flatMap((feature) =>
-    feature.deepChip === undefined ? [] : [{ layer: feature.id, ...feature.deepChip }],
-  );
+  return features
+    .filter((feature) => feature.deepChip !== undefined)
+    .map((feature, index) => ({ feature, index }))
+    .sort(
+      (a, b) =>
+        (a.feature.deepChipOrder ?? 0) - (b.feature.deepChipOrder ?? 0) || a.index - b.index,
+    )
+    .flatMap(({ feature }) =>
+      feature.deepChip === undefined ? [] : [{ layer: feature.id, ...feature.deepChip }],
+    );
 }
 
 export function mountFeatures(

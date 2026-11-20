@@ -7,6 +7,7 @@ import { datesFeature } from './dates';
 import { fossilsFeature } from './fossils';
 import { genomesFeature } from './genomes';
 import { humansFeature } from './humans';
+import { impactsFeature } from './impacts';
 import { spacecraftFeature } from './spacecraft';
 import { oceanHeatFeature } from './oceanHeat';
 import { oceanTempFeature } from './oceanTemp';
@@ -21,6 +22,8 @@ import { waysFeature } from './ways';
 import type { Feature } from './feature';
 
 export const FEATURES: readonly Feature[] = [
+  // First: its markers' layer goes on the globe before the others', as it did.
+  impactsFeature,
   spacecraftFeature,
   asteroidsFeature,
   telescopesFeature,
