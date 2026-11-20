@@ -107,6 +107,8 @@ export interface Capabilities {
   };
   /** The Paleo-CO2 Data Archive, once the reader has asked deep time's bar for it. */
   readonly co2Archive: { loaded(): Co2Archive | null };
+  /** The globe coloured by temperature in deep time, and the maps ahead fetched as it plays. */
+  readonly temperatureMaps: Pick<Globe, 'setTemperature' | 'prefetch'>;
   /** A crater's strike: played on the globe turned to it, and written on `on` as it happens. */
   readonly strikes: Pick<Globe, 'playImpact' | 'flyTo' | 'zoomTo'> & { readonly on: HTMLElement };
   /** Radiocarbon's calibration curves, loaded once. */
@@ -133,6 +135,10 @@ export type FeatureContext<Needs extends Capability = never> = FeatureCore &
 export interface DeepMoment {
   readonly ma: number;
   readonly scale: DeepScale;
+  /** Whether the moment is before the elevation maps reach; not said, it is not. */
+  readonly uncharted?: boolean;
+  /** How fast deep time plays, millions of years a second; null or not said while it stands. */
+  readonly maPerSecond?: number | null;
 }
 
 /**
@@ -142,9 +148,19 @@ export interface DeepMoment {
 export type DeepBarFields = Partial<
   Pick<
     DeepTimeView,
-    'air' | 'plateMotion' | 'coastline' | 'ice' | 'iceOutlines' | 'seaIce' | 'seaLevel'
+    | 'air'
+    | 'plateMotion'
+    | 'coastline'
+    | 'ice'
+    | 'iceOutlines'
+    | 'seaIce'
+    | 'seaLevel'
+    | 'temperature'
   >
->;
+> & {
+  /** Whether the globe is coloured by temperature at the moment: deep time's glance says so. */
+  readonly temperatureDrawn?: boolean;
+};
 
 /** A step a layer offers from what it shows, on its row in the Layers panel. */
 export interface LayerAction {

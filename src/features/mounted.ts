@@ -26,7 +26,7 @@ export interface Features {
   /** Deep time shown: the chips of those that have one, by layer. */
   deep(state: ViewState, moment: DeepMoment): Map<Layer, DeepChipView>;
   /** Deep time shown: the fields of the bar's view the features have, together (#909). */
-  deepBar(state: ViewState, moment: DeepMoment): DeepBarFields;
+  deepBar(state: ViewState, moment: DeepMoment): Required<DeepBarFields>;
   /** Deep time left. */
   deepOff(state: ViewState): void;
   /** A marker tapped: whether it was one of theirs, and if so, picked. */
@@ -39,6 +39,29 @@ export interface Features {
   loads(): (readonly [Layer, LayerLoad | null])[];
   /** What the features have at the place picked, for "Why here?" (#893), each with its layer. */
   here(state: ViewState): (readonly [Layer, HereFact])[];
+}
+
+/** Deep time's bar with none of the layers' fields filled: what each says while off. */
+function deepBarOff(state: ViewState): Required<DeepBarFields> {
+  return {
+    air: { on: false },
+    plateMotion: null,
+    coastline: null,
+    ice: { drawn: false, oldestKa: null, standIn: null },
+    iceOutlines: null,
+    seaIce: null,
+    seaLevel: { on: false },
+    temperature: {
+      on: false,
+      wanted: state.temperatureModel,
+      shown: null,
+      show: state.temperatureShow,
+      changing: false,
+      readings: [],
+      note: null,
+    },
+    temperatureDrawn: false,
+  };
 }
 
 /** The chips in deep time's bar, of the features that have one, in their order. */
@@ -84,7 +107,7 @@ export function mountFeatures(
       return chips;
     },
     deepBar(state, moment) {
-      const fields: DeepBarFields = {};
+      const fields = deepBarOff(state);
       for (const { shown } of mounted) Object.assign(fields, shown.deepBar?.(state, moment));
       return fields;
     },

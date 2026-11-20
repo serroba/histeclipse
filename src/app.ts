@@ -86,7 +86,6 @@ import { bodiesSeen, namedPlace, observerOf, placeName } from './features/moment
 import { createZoomRail } from './ui/zoomRail';
 import { railView } from './ui/railView';
 import { createWaysLegend } from './ui/waysLegend';
-import { createTemperatureLayer } from './features/temperature';
 
 export async function startApp(root: HTMLElement): Promise<void> {
   const base = import.meta.env.BASE_URL;
@@ -241,14 +240,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const boundaries = mountBoundaries({ ...partContext, globe });
   // Deep time (#445): its span and moment, playing through it, its bar and glance, Earth's
   // surface from the elevation maps and magnetic north.
-  // The temperature maps in deep time (#457).
-  const temperatureLayer = createTemperatureLayer({
-    dataUrl: (path) => `${base}data/${path}`,
-    fetchJson,
-    globe,
-    notify,
-    arrived: redraws.ask('deepTime'),
-  });
   // Two files deep time itself asks about, shared with the plates' and the air's features.
   const plateMasks = createPlateMasks(base, fetchJson);
   const co2Archive = createCo2ArchiveFile(base, fetchJson, {
@@ -272,19 +263,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     storyDate: boundaries.storyDate,
     bar: (state, moment) => {
       const chips = features.deep(state, moment);
-      return {
-        coastline: null,
-        ice: { drawn: false, oldestKa: null, standIn: null },
-        iceOutlines: null,
-        seaIce: null,
-        seaLevel: { on: false },
-        plateMotion: null,
-        air: { on: false },
-        ...features.deepBar(state, moment),
-        chips,
-      };
+      return { ...features.deepBar(state, moment), chips };
     },
-    temperature: temperatureLayer,
     off: (state) => {
       features.deepOff(state);
     },
@@ -542,6 +522,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
     },
     iceAgeEarth: globe,
+    temperatureMaps: globe,
     holoceneNote,
     plateOutlines: globe,
     plateMasks,

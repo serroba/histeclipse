@@ -22,22 +22,10 @@ type Gathered = Omit<
   | 'speed'
   | 'scale'
   | 'sketch'
-  | 'temperature'
->;
-
-/** Where the moment is drawn: which scale, and whether before the elevation maps reach. */
-interface TemperatureMoment {
-  readonly ma: number;
-  readonly ice: boolean;
-  readonly uncharted: boolean;
-}
-
-/** The temperature layer (features/temperature), as deep time asks of it. */
-interface DeepTemperature {
-  view(state: ViewState, moment: TemperatureMoment): DeepTimeView['temperature'];
-  drawn(state: ViewState, moment: TemperatureMoment): boolean;
-  show(state: ViewState, moment: TemperatureMoment, maPerSecond: number | null): void;
-}
+> & {
+  /** Whether the globe is coloured by temperature at the moment, for the glance. */
+  readonly temperatureDrawn: boolean;
+};
 
 /** What deep time asks of the rest of the page. */
 export interface DeepTimeContext extends PartContext {
@@ -57,8 +45,6 @@ export interface DeepTimeContext extends PartContext {
   storyDate(): StoryDate | null;
   /** The layers' and surfaces' part of the bar for the moment, drawing them. */
   bar(state: ViewState, moment: DeepMoment): Gathered;
-  /** The temperature maps: what the bar says of them, and the globe coloured by them. */
-  readonly temperature: DeepTemperature;
   /** Out of deep time: what its layers and surfaces drew goes. */
   off(state: ViewState): void;
   /** How far back the plates reach, Ma, once known. */
