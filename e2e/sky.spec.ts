@@ -6,6 +6,7 @@ import {
   collectProblems,
   expect,
   freeSpot,
+  globeCentre,
   globeRendered,
   GPU,
   skyRendered,
@@ -138,16 +139,9 @@ test('tapping the globe picks where to stand, and the sky faces the eclipse from
 }) => {
   await page.goto('./?t=2024-04-08T18:17&cam=25.29,-104.14,4.5&sel=solar:2024-04-08');
   await globeRendered(page);
-  const box = await page.getByTestId('globe').boundingBox();
-  if (box === null) throw new Error('globe has no size');
-  // The globe sits in the middle of the space the panels leave (on phones, below the header).
-  const top = await page.evaluate(() =>
-    window.innerWidth <= 600
-      ? (document.querySelector('.hud')?.getBoundingClientRect().bottom ?? 0)
-      : 0,
-  );
-  const bottom = (await page.locator('.bottom').boundingBox())?.height ?? 0;
-  await page.mouse.click(box.x + box.width / 2, box.y + (top + box.height - bottom) / 2);
+  // The globe sits in the middle of the space the panels leave (#946).
+  const centre = await globeCentre(page);
+  await page.mouse.click(centre.x, centre.y);
   // Close to where the camera looks, in the path of totality.
   await expect(page).toHaveURL(/loc=2[0-9]\.\d{4},-10[0-9]\.\d{4}/);
   await expect(page.getByTestId('globe')).toHaveAttribute('data-location', /\d/);

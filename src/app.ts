@@ -678,8 +678,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     top: hud,
     bottom,
     zoomRail: zoomRail.root,
-    onInsets: (above, below) => {
-      globe.setInsets({ top: above, bottom: below });
+    onInsets: (above, below, left) => {
+      globe.setInsets({ top: above, bottom: below, left });
       sky.setInsets(above, below);
     },
   });

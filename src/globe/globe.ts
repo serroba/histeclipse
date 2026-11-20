@@ -136,7 +136,9 @@ export interface Globe {
    */
   setViewpoint(viewpoint: Viewpoint): void;
   /** Pixels panels cover at the top, the bottom and the right; the globe centres in the rest. */
-  setInsets(insets: Partial<Readonly<{ top: number; bottom: number; right: number }>>): void;
+  setInsets(
+    insets: Partial<Readonly<{ top: number; bottom: number; right: number; left: number }>>,
+  ): void;
   /** Turn the globe smoothly so `target` faces the camera, keeping the distance. */
   flyTo(target: GeoPoint): void;
   /** Glide to `camera`, relative to the body in focus, as Back and Forward ask (#581). */

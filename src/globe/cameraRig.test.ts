@@ -503,8 +503,12 @@ describe('the camera rig', () => {
     const { rig, camera, state } = setUp();
     rig.resize();
     rig.setInsets({ top: 40 });
-    expect(rig.insets).toEqual({ top: 40, bottom: 0, right: 0 });
+    expect(rig.insets).toEqual({ top: 40, bottom: 0, right: 0, left: 0 });
     expect(camera.view?.offsetY).toBe(-20);
+    // The date panel beside the globe moves it over to the right (#946).
+    rig.setInsets({ left: 300 });
+    expect(camera.view?.offsetX).toBe(-150);
+    rig.setInsets({ left: 0 });
     const renders = state.renders;
     rig.setInsets({ top: 40 });
     expect(state.renders).toBe(renders);
@@ -518,7 +522,7 @@ describe('the camera rig', () => {
 });
 
 describe('the field of view', () => {
-  const none = { top: 0, bottom: 0, right: 0 };
+  const none = { top: 0, bottom: 0, right: 0, left: 0 };
 
   it('Given a landscape screen, Then the narrower side, its height, gets the field of view', () => {
     expect(verticalFov(40, { width: 800, height: 600 }, none, true)).toBeCloseTo(40);
@@ -529,10 +533,17 @@ describe('the field of view', () => {
   });
 
   it('Given panels over an attached view, Then the lens widens to frame the body in the room left', () => {
-    const insets = { top: 100, bottom: 200, right: 0 };
+    const insets = { top: 100, bottom: 200, right: 0, left: 0 };
     const free = verticalFov(40, { width: 800, height: 600 }, insets, true);
     const attached = verticalFov(40, { width: 800, height: 600 }, insets, false);
     expect(free).toBeCloseTo(40);
     expect(attached).toBeGreaterThan(free);
+  });
+
+  it('Given the date panel beside an attached view, Then the lens widens for the narrower room (#946)', () => {
+    const size = { width: 800, height: 600 };
+    const open = verticalFov(40, size, { top: 0, bottom: 0, right: 0, left: 0 }, false);
+    const beside = verticalFov(40, size, { top: 0, bottom: 0, right: 0, left: 400 }, false);
+    expect(beside).toBeGreaterThan(open);
   });
 });
