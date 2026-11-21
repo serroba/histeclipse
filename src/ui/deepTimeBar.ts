@@ -42,14 +42,14 @@ import {
   createAirChip,
   createSeaLevelChip,
   createTemperatureChip,
-  layerDock,
   type SeaLevelView,
 } from './deepBarChips';
 import { createDeepIceNotes } from './deepIceNotes';
 import { createDeepSketchNote } from './deepSketchNote';
+import { layerDock, type DockView } from './layerDock';
 import './deepTimeBar.css';
 
-export interface DeepTimeView {
+export interface DeepTimeView extends DockView {
   readonly ma: number;
   /** A story's own date for the moment, while it has the globe (#492); null for the bar's. */
   readonly story: StoryDate | null;
@@ -236,6 +236,7 @@ export function createDeepTimeBar(
       handlers.onTemperatureShow(show);
     },
   });
+  const dock = layerDock(seaLevel.button, temperature.button, ...featureChips.buttons, air.button);
   const swatch = (background: string) => {
     const box = element('span', { class: 'colour-swatch', 'aria-hidden': 'true' });
     box.style.background = background;
@@ -340,7 +341,7 @@ export function createDeepTimeBar(
       // Beside the moment, not the slider: on a phone the slider needs the whole row.
       speed,
       evidenceButton,
-      layerDock(seaLevel.button, temperature.button, ...featureChips.buttons, air.button),
+      dock.root,
     ),
     details,
   );
@@ -413,6 +414,7 @@ export function createDeepTimeBar(
       // The maps of the 540 Myr and 4.6 Gyr spans are reconstructions; the ice ages', today's land.
       evidenceButton.hidden = view.scale === 'ice';
       featureChips.render(view.chips);
+      dock.render(view.active);
       air.render(view.air, view.scale, view.oldest, view.ma);
       seaLevel.render(view.seaLevel, view.ma, view.oldest);
       temperature.render(view.temperature, uncharted);

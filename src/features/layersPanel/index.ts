@@ -106,7 +106,7 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
     dialog: panel.dialog,
     chips: chips.root,
     show(state) {
-      const active = activeLayers(state, present(context.loads()));
+      const active = activeLayers(state, context.loads());
       chips.render(active);
       sheetChips.render(active);
       if (active.length === 0) delete panel.button.dataset['on'];

@@ -1,0 +1,82 @@
+/* The layers' dock (#1070) and its layers' states (#1071), beside layerDock.ts (#382). */
+
+.deep-dock {
+  display: flex;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.deep-dock .deep-layer {
+  margin-left: 0;
+}
+
+@media (max-width: 600px) {
+  /* On a phone each layer keeps its word, as the viewpoints do (#953): six icons alone could not
+     be told apart, and a long press is not found. Three to a row, the most there are being six. */
+  .deep-dock {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .deep-dock .deep-layer:has(> .icon-label) {
+    gap: 5px;
+    min-width: 0;
+    padding: 0 6px;
+    font-size: 12px;
+  }
+
+  .deep-dock .deep-layer .icon-label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 360px) {
+  /* The narrowest phones: the word under its icon, so Temperature fits its third of the row. */
+  .deep-dock .deep-layer:has(> .icon-label) {
+    flex-direction: column;
+    gap: 1px;
+    padding: 2px 4px;
+    border-radius: 14px;
+  }
+
+  .deep-dock .deep-layer .icon-label {
+    font-size: 10.5px;
+    line-height: 1.1;
+  }
+}
+
+/* On: filled as well as ringed, so it does not rest on colour alone. */
+.deep-dock .deep-layer[aria-pressed='true'] {
+  background: rgb(244 162 97 / 0.14);
+}
+
+/* On, but nothing drawn here (none at this moment, or its load failed): a dashed ring. */
+.deep-dock .deep-layer[data-coverage]:not([data-coverage='loading']) {
+  border-style: dashed;
+  background: transparent;
+}
+
+/* On and loading: its icon breathes, unless motion is turned down. */
+.deep-dock .deep-layer[data-coverage='loading'] .icon {
+  animation: dock-loading 1.2s ease-in-out infinite;
+}
+
+@keyframes dock-loading {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .deep-dock .deep-layer[data-coverage='loading'] .icon {
+    animation: none;
+    opacity: 0.5;
+  }
+}
