@@ -290,3 +290,46 @@ test('on a short phone the zoom rail’s stops keep their names apart (#980) @mo
   }
   expect(problems).toEqual([]);
 });
+
+test('on a short phone, playing the years, nothing on the zoom rail overlaps anything else (#979) @mobile', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'a touch screen');
+  const problems = collectProblems(page);
+  await page.setViewportSize({ width: 390, height: 664 });
+  await page.goto(`./?t=${new Date().toISOString().slice(0, 16)}Z`);
+  await globeRendered(page);
+  await page
+    .getByRole('group', { name: 'Holocene' })
+    .getByRole('button', { name: 'Travel through the years' })
+    .click();
+  await expect(
+    page.getByRole('group', { name: 'Holocene' }).getByRole('button', { name: 'Stop travelling' }),
+  ).toBeVisible();
+  const overlaps = await page.evaluate(() => {
+    const parts = [...document.querySelectorAll('.zoom-rail .zoom-step, .zoom-rail .zoom-stop')]
+      .filter((each) => {
+        const box = each.getBoundingClientRect();
+        const style = getComputedStyle(each);
+        return box.height > 0 && style.display !== 'none' && style.opacity !== '0';
+      })
+      .map((each) => ({
+        name: each.getAttribute('aria-label') ?? '',
+        box: each.getBoundingClientRect(),
+      }));
+    const found: string[] = [];
+    for (const [k, a] of parts.entries()) {
+      for (const b of parts.slice(k + 1)) {
+        const apart =
+          a.box.right <= b.box.left ||
+          b.box.right <= a.box.left ||
+          a.box.bottom <= b.box.top + 0.5 ||
+          b.box.bottom <= a.box.top + 0.5;
+        if (!apart) found.push(`${a.name} / ${b.name}`);
+      }
+    }
+    return found;
+  });
+  expect(overlaps).toEqual([]);
+  expect(problems).toEqual([]);
+});

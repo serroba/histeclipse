@@ -53,6 +53,9 @@ export function createZoomStops(track: HTMLElement, onZoom: (distance: number) =
             height,
           )
         : [];
+    // Too short a track for every name apart, or none at all: the names fade, still there for
+    // a screen reader (on a touch screen they are labels, not targets); the buttons stay.
+    track.toggleAttribute('data-crowded', height < LABEL_GAP * shown.length);
     for (const [k, { stop, button }] of shown.entries()) {
       const top = tops.at(k);
       button.style.top = top === undefined ? `${String(stop.at * 100)}%` : `${String(top)}px`;

@@ -36,9 +36,29 @@
   /* The rail's round buttons drawn a finger wide; it is 50 px from the edge, within the column
      the names in space keep clear of (#997). */
   body .zoom-step {
-    flex: none;
     width: 44px;
     height: 44px;
+  }
+
+  /* Where the rail is short (the bar taller while playing, a phone on its side), its track gives
+     up its room first, down to none, before the buttons shrink; + and − still zoom. Nothing on
+     it then spills over anything else. The stops' names keep left of the wider buttons. */
+  body .zoom-track {
+    min-height: 0;
+  }
+
+  body .zoom-parts {
+    flex-shrink: 1000;
+    /* + and −, 44 px each, and the gaps beside a track of none. */
+    min-height: 100px;
+  }
+
+  body .zoom-parts > .zoom-step {
+    flex: none;
+  }
+
+  body .zoom-stop {
+    right: 48px;
   }
 
   /* The name, a link in a line, holds its box as a block would. */

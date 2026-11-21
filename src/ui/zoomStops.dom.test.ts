@@ -63,4 +63,12 @@ describe('the zoom rail’s stops', () => {
     );
     expect(tops).toEqual(['10px', '90px', '172px', '200px']);
   });
+
+  it('Given a track too short for every name apart, Then it says so, and the names fade', () => {
+    const track = document.createElement('div');
+    Object.defineProperty(track, 'clientHeight', { value: 80 });
+    createZoomStops(track, vi.fn()).place(STOPS);
+    expect(track.hasAttribute('data-crowded')).toBe(true);
+    expect(track.querySelectorAll('.zoom-stop')).toHaveLength(4);
+  });
 });
