@@ -69,7 +69,7 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
   let mode: ImpactsMode = 'around';
   // Where deep time was in the frame before, while it plays.
   let strikeFrom: number | null = null;
-  // The craters' photos (#1063), loaded the first time a card opens; the crater last tapped.
+  // The craters' photos (#1088), loaded the first time a card opens; the crater last tapped.
   let pictures: Pictures | null = null;
   let picturesAsked = false;
   let picked: Impact | null = null;
@@ -134,7 +134,7 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
     }
   }
 
-  /** A crater's card, with its photo and Wikipedia page once they have come (#1063). */
+  /** A crater's card, with its photo and Wikipedia page once they have come (#1088). */
   function showCard(data: Impacts, impact: Impact): void {
     const shownMa = latest?.ma ?? null;
     const card = impactCard(data, impact, shownMa ?? 0, play);

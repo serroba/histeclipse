@@ -17,7 +17,7 @@ const JD = 2451545;
 const CHICXULUB = '26';
 
 /** A context that records what the feature asks of the app (#380): no globe, no page. */
-/** The craters' photos (#1063): Chicxulub's, by its id. */
+/** The craters' photos (#1088): Chicxulub's, by its id. */
 const PICTURES = {
   schemaVersion: 1,
   credit: 'Wikipedia and Wikimedia Commons',
@@ -214,7 +214,7 @@ describe('the impact craters as a feature', () => {
     expect(goTo).toHaveBeenCalledWith(expect.any(Number), 'impacts', expect.any(Object));
   });
 
-  it('shows a crater’s photo and its page once they come, on the card still open (#1063)', async () => {
+  it('shows a crater’s photo and its page once they come, on the card still open (#1088)', async () => {
     const { shown, show } = await loaded(on);
     shown.pick?.(CHICXULUB);
     await vi.waitFor(() => {
@@ -232,7 +232,7 @@ describe('the impact craters as a feature', () => {
     expect((show.mock.lastCall?.[0] as { image?: unknown }).image).toBeDefined();
   });
 
-  it('has photos only for craters there are, each with a free licence (#1063)', async () => {
+  it('has photos only for craters there are, each with a free licence (#1088)', async () => {
     const real = await loadPictures('x', () => Promise.resolve(Response.json(impactPictures)));
     const ids = new Set(impactsFile.impacts.map((impact) => String(impact.id)));
     const entries = Object.entries(real.pictures);
@@ -243,7 +243,7 @@ describe('the impact craters as a feature', () => {
     }
   });
 
-  it('opens no card again when it was closed, or let go, before the photos came (#1063)', async () => {
+  it('opens no card again when it was closed, or let go, before the photos came (#1088)', async () => {
     const closed = await loaded(on, { cardOpen: false });
     closed.shown.pick?.(CHICXULUB);
     await vi.waitFor(() => {
@@ -261,7 +261,7 @@ describe('the impact craters as a feature', () => {
     expect(letGo.show).toHaveBeenCalledTimes(1);
   });
 
-  it('says so when the photos do not load, and asks again with the next card (#1063)', async () => {
+  it('says so when the photos do not load, and asks again with the next card (#1088)', async () => {
     const { shown, notify, fetchJson } = await loaded(on, { noPictures: true });
     shown.pick?.(CHICXULUB);
     await vi.waitFor(() => {
