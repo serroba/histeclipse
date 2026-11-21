@@ -2,6 +2,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import impactsFile from '../../../public/data/impacts.json';
+import impactPictures from '../../../public/data/impact-pictures.json';
+import { loadPictures } from '../../data/pictures';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import type { DeepChipView } from '../../ui/deepChips';
 import { RESTING, type Capability, type FeatureContext, type FeatureInstance } from '../feature';
@@ -15,7 +17,34 @@ const JD = 2451545;
 const CHICXULUB = '26';
 
 /** A context that records what the feature asks of the app (#380): no globe, no page. */
-function fakeContext(options: { readonly failing?: boolean } = {}) {
+/** The craters' photos (#1063): Chicxulub's, by its id. */
+const PICTURES = {
+  schemaVersion: 1,
+  credit: 'Wikipedia and Wikimedia Commons',
+  made: '2026-11-22',
+  pictures: {
+    [CHICXULUB]: {
+      page: 'https://en.wikipedia.org/wiki/Chicxulub_crater',
+      image: {
+        src: 'https://upload.wikimedia.org/thumb/320px-Chicxulub.jpg',
+        width: 320,
+        height: 240,
+        artist: 'NASA',
+        licence: 'Public domain',
+        licenceUrl: null,
+        filePage: 'https://commons.wikimedia.org/wiki/File:Chicxulub.jpg',
+      },
+    },
+  },
+};
+
+function fakeContext(
+  options: {
+    readonly failing?: boolean;
+    readonly noPictures?: boolean;
+    readonly cardOpen?: boolean;
+  } = {},
+) {
   const refresh = vi.fn();
   const notify = vi.fn();
   const update = vi.fn();
@@ -36,11 +65,12 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
   const change = vi.fn((next: (state: ViewState) => ViewState) => {
     view = next(view);
   });
-  const fetchJson = vi.fn(() =>
-    options.failing === true
-      ? Promise.reject(new Error('offline'))
-      : Promise.resolve(new Response(JSON.stringify(impactsFile))),
-  );
+  const fetchJson = vi.fn((url: string) => {
+    const photos = url.endsWith('impact-pictures.json');
+    if (options.failing === true || (photos && options.noPictures === true))
+      return Promise.reject(new Error('offline'));
+    return Promise.resolve(new Response(JSON.stringify(photos ? PICTURES : impactsFile)));
+  });
   const context = {
     base: '/',
     fetchJson,
@@ -48,7 +78,7 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
     refresh,
     change,
     globe: { addLayer: () => ({ update }) },
-    cards: { show },
+    cards: { show, open: () => options.cardOpen ?? true },
     timeline,
     deepTime: { goTo },
     strikes,
@@ -72,8 +102,8 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
 }
 
 /** The feature mounted and shown `state`, the craters in. */
-async function loaded(state: ViewState) {
-  const fake = fakeContext();
+async function loaded(state: ViewState, options: Parameters<typeof fakeContext>[0] = {}) {
+  const fake = fakeContext(options);
   const shown = impactsFeature.mount(fake.context, fake.context);
   shown.show?.(state, JD);
   await vi.waitFor(() => {
@@ -182,6 +212,63 @@ describe('the impact craters as a feature', () => {
     expect(card.related).toHaveLength(1);
     card.related[0]?.run();
     expect(goTo).toHaveBeenCalledWith(expect.any(Number), 'impacts', expect.any(Object));
+  });
+
+  it('shows a crater’s photo and its page once they come, on the card still open (#1063)', async () => {
+    const { shown, show } = await loaded(on);
+    shown.pick?.(CHICXULUB);
+    await vi.waitFor(() => {
+      expect(show).toHaveBeenCalledTimes(2);
+    });
+    const card = show.mock.lastCall?.[0] as {
+      readonly image: { readonly credit: string };
+      readonly links: readonly { readonly label: string }[];
+    };
+    expect(card.image.credit).toBe('Picture: NASA, Public domain, via Wikimedia Commons.');
+    expect(card.links.map((link) => link.label)).toContain('Wikipedia');
+    // Loaded once: the next card has its photo at once.
+    shown.pick?.(CHICXULUB);
+    expect(show).toHaveBeenCalledTimes(3);
+    expect((show.mock.lastCall?.[0] as { image?: unknown }).image).toBeDefined();
+  });
+
+  it('has photos only for craters there are, each with a free licence (#1063)', async () => {
+    const real = await loadPictures('x', () => Promise.resolve(Response.json(impactPictures)));
+    const ids = new Set(impactsFile.impacts.map((impact) => String(impact.id)));
+    const entries = Object.entries(real.pictures);
+    expect(entries.filter(([, entry]) => entry.image !== null).length).toBeGreaterThan(80);
+    for (const [id, entry] of entries) {
+      expect(ids.has(id)).toBe(true);
+      if (entry.image !== null) expect(entry.image.licence).toMatch(/^(CC|Public domain)/);
+    }
+  });
+
+  it('opens no card again when it was closed, or let go, before the photos came (#1063)', async () => {
+    const closed = await loaded(on, { cardOpen: false });
+    closed.shown.pick?.(CHICXULUB);
+    await vi.waitFor(() => {
+      expect(closed.fetchJson).toHaveBeenCalledTimes(2);
+    });
+    await Promise.resolve();
+    expect(closed.show).toHaveBeenCalledTimes(1);
+    const letGo = await loaded(on);
+    letGo.shown.pick?.(CHICXULUB);
+    letGo.shown.unpick?.();
+    await vi.waitFor(() => {
+      expect(letGo.fetchJson).toHaveBeenCalledTimes(2);
+    });
+    await Promise.resolve();
+    expect(letGo.show).toHaveBeenCalledTimes(1);
+  });
+
+  it('says so when the photos do not load, and asks again with the next card (#1063)', async () => {
+    const { shown, notify, fetchJson } = await loaded(on, { noPictures: true });
+    shown.pick?.(CHICXULUB);
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledWith('Could not load the craters’ photos: offline');
+    });
+    shown.pick?.(CHICXULUB);
+    expect(fetchJson).toHaveBeenCalledTimes(3);
   });
 
   it('plays a crater from its card: back to Earth, turned to it, close, then the strike', async () => {

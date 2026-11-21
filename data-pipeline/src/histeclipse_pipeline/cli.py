@@ -49,6 +49,7 @@ from histeclipse_pipeline.holocene_temperature import fetch_holocene_temperature
 from histeclipse_pipeline.iceoutlines import fetch_outlines
 from histeclipse_pipeline.icesheets import fetch_icesheets
 from histeclipse_pipeline.ics import fetch_chart
+from histeclipse_pipeline.impact_pictures import fetch_impact_pictures
 from histeclipse_pipeline.impacts import fetch_impacts
 from histeclipse_pipeline.julian_day import Calendar, CalendarDate, julian_day
 from histeclipse_pipeline.krapp import fetch_krapp
@@ -83,7 +84,7 @@ from histeclipse_pipeline.passage_vectors import (
 from histeclipse_pipeline.periodo import fetch_periods
 from histeclipse_pipeline.permafrost import fetch_permafrost
 from histeclipse_pipeline.phanda import fetch_phanda
-from histeclipse_pipeline.pictures import fetch_pictures
+from histeclipse_pipeline.pictures import fetch_pictures, wikimedia_fetch
 from histeclipse_pipeline.planet_keys import fetch_planet_keys
 from histeclipse_pipeline.planet_maps import fetch_planet_maps
 from histeclipse_pipeline.planet_names import fetch_planet_names
@@ -510,6 +511,12 @@ def pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write the lead picture, author and licence of each Wikipedia page a data file names."""
     count = fetch_pictures(args.source, args.out, args.must_mention)
     return _say(f"wrote {count} pictures to {args.out}")
+
+
+def impact_pictures(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write each impact crater's Wikipedia page and photo, where Commons has a free one."""
+    count = fetch_impact_pictures(args.source, args.out, wikimedia_fetch)
+    return _say(f"wrote {count} crater photos to {args.out}")
 
 
 def deep_air(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -1063,6 +1070,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
         "write the lead picture, author and licence of each Wikipedia page a data file names",
         "output JSON file",
     ),
+    "impact-pictures": (
+        impact_pictures,
+        "write each impact crater's Wikipedia page and photo, where Commons has a free one",
+        "output JSON file",
+    ),
     "deep-air": (
         deep_air,
         "write CO2 and O2 over the last 540 million years (Foster 2017; Mills 2023)",
@@ -1362,6 +1374,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         if name == "tree-of-life":
             _ = command.add_argument(
                 "--source", type=Path, required=True, help="the fossils file naming genera"
+            )
+        if name == "impact-pictures":
+            _ = command.add_argument(
+                "--source", type=Path, required=True, help="the site's impact craters file"
             )
         if name == "pictures":
             _ = command.add_argument(
