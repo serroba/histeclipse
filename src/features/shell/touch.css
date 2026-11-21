@@ -66,15 +66,23 @@
     display: inline-block;
   }
 
-  /* Where the tools' boxes and the date's meet, the tools are found. */
-  .hud-tools {
-    z-index: 1;
+  /* The tools sit at the panel's top, the date and its time just under them: their boxes grow
+     upward only, into the panel's padding, so a tap on the time is the time's. */
+  .hud .hud-tools > button::after {
+    inset: auto 0 0;
+    top: calc(100% - 44px);
   }
 }
 
 /* On a phone the panels' own words are 12 px at least: the sources, what is written here, the
    rail's distance, the ages under the slider and its ends, the viewpoints' names. */
 @media (max-width: 600px) {
+  /* The 12-px words make the panel a little taller: the line under the views gives back its
+     room, so the panel still leaves three-quarters of a Pixel 7 to the globe (#979). */
+  body .hud-more {
+    margin-top: 3px;
+  }
+
   body :is(.credits, .here-text, .zoom-readout, .period-band, .period-scale) {
     font-size: 12px;
   }
