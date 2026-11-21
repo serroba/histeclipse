@@ -1,6 +1,11 @@
 """Tests for the dated ancient genomes from the Allen Ancient DNA Resource."""
 
+from dataclasses import replace
+
 from histeclipse_pipeline.aadr import Genome, cell_of, genomes_file, parse_anno, passes
+from histeclipse_pipeline.aadr_people import Person
+
+NOBODY = Person("I0", "Somewhere", *([None] * 13))
 
 COLUMNS = 49
 
@@ -52,13 +57,24 @@ def test_keeps_ancient_individuals_that_pass_once_each_by_cell() -> None:
             "too\tshort",
         ]
     )
-    genomes = parse_anno(text)
+    genomes = [replace(genome, person=NOBODY) for genome in parse_anno(text)]
+    assert [genome.person.individual for genome in parse_anno(text)] == ["I1829", "I5000"]
     assert genomes == [
         Genome(
-            (50, 86), 4880, "Russia_Altai_Afanasievo", "Narasimhan2019", "10.1126/science.aat7487"
+            (50, 86),
+            4880,
+            "Russia_Altai_Afanasievo",
+            "Narasimhan2019",
+            "10.1126/science.aat7487",
+            NOBODY,
         ),
         Genome(
-            (50, 86), 2340, "Russia_Altai_Afanasievo", "Narasimhan2019", "10.1126/science.aat7487"
+            (50, 86),
+            2340,
+            "Russia_Altai_Afanasievo",
+            "Narasimhan2019",
+            "10.1126/science.aat7487",
+            NOBODY,
         ),
     ]
 
@@ -78,8 +94,8 @@ def test_assessments_that_pass() -> None:
 
 def test_the_site_file_indexes_cells_labels_and_papers() -> None:
     genomes = [
-        Genome((50, 86), 4880, "B", "P2", "10.2/b"),
-        Genome((10, 20), 3000, "A", "P1", "10.1/a"),
+        Genome((50, 86), 4880, "B", "P2", "10.2/b", NOBODY),
+        Genome((10, 20), 3000, "A", "P1", "10.1/a", NOBODY),
     ]
     data = genomes_file(genomes)
     assert data["cells"] == [[10, 20], [50, 86]]
@@ -87,3 +103,4 @@ def test_the_site_file_indexes_cells_labels_and_papers() -> None:
     assert data["papers"] == [{"name": "P1", "doi": "10.1/a"}, {"name": "P2", "doi": "10.2/b"}]
     assert data["genomes"] == [[0, 3000, 0, 0], [1, 4880, 1, 1]]
     assert data["cellDegrees"] == 2
+    assert data["peopleChunk"] == 1000

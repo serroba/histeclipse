@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 import { describe, expect, it, vi } from 'vitest';
 
 import genomes from '../../../public/data/genomes/aadr.json';
@@ -15,17 +17,27 @@ const bronzeAge: ViewState = { ...on, time: moveToYear(on.time, astronomicalYear
 const JD = 2451545;
 
 /** A context that records what the feature asks of the app (#380): no globe, no page. */
-function fakeContext(options: { readonly failing?: boolean; readonly travelling?: boolean } = {}) {
+function fakeContext(
+  options: {
+    readonly failing?: boolean;
+    readonly travelling?: boolean;
+    readonly noPeople?: boolean;
+  } = {},
+) {
   const drawn: unknown[] = [];
   const cards: MarkerCardContent[] = [];
   const refresh = vi.fn();
   const notify = vi.fn();
   const context = {
     base: '/',
-    fetchJson: () =>
-      options.failing === true
-        ? Promise.reject(new Error('offline'))
-        : Promise.resolve(new Response(JSON.stringify(genomes))),
+    fetchJson: (url: string) => {
+      if (options.failing === true) return Promise.reject(new Error('offline'));
+      const people = /people\/(\d+)\.json$/.exec(url)?.[1];
+      if (people === undefined) return Promise.resolve(new Response(JSON.stringify(genomes)));
+      if (options.noPeople === true) return Promise.reject(new Error('offline'));
+      const file = new URL(`../../../public/data/genomes/people/${people}.json`, import.meta.url);
+      return Promise.resolve(new Response(readFileSync(file, 'utf8')));
+    },
     globe: { addLayer: () => ({ update: (input: unknown) => drawn.push(input) }) },
     notify,
     cards: { show: (card: MarkerCardContent) => cards.push(card) },
@@ -85,7 +97,38 @@ describe('the ancient genomes as a feature', () => {
     const first = cells[0];
     if (first === undefined) throw new Error('no cell');
     shown.pick?.(String(first.cell));
-    expect(cards).toHaveLength(1);
+    // The card waits for the people of the region, then lists them.
+    await vi.waitFor(() => {
+      expect(cards).toHaveLength(1);
+    });
+    expect(cards[0]?.facts.map(([label]) => label)).toContain('Genetic sex');
+    // Tapped twice at once, only the last opens; again later, from the files kept.
+    const second = cells[1];
+    if (second === undefined) throw new Error('no second cell');
+    shown.pick?.(String(first.cell));
+    shown.pick?.(String(second.cell));
+    await vi.waitFor(() => {
+      expect(cards).toHaveLength(2);
+    });
+    expect(cards[1]?.title).not.toBe(cards[0]?.title);
+    // A region with nothing near the year opens nothing.
+    shown.pick?.('99999');
+  });
+
+  it('opens a region’s card without its people when they cannot be had', async () => {
+    const { context, drawn, cards, refresh } = fakeContext({ noPeople: true });
+    const shown = genomesFeature.mount(context, context);
+    shown.show?.(bronzeAge, JD);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(1);
+    });
+    shown.show?.(bronzeAge, JD);
+    const cells = drawn[0] as readonly { cell: number }[];
+    shown.pick?.(String(cells[0]?.cell));
+    await vi.waitFor(() => {
+      expect(cards).toHaveLength(1);
+    });
+    expect(cards[0]?.facts.map(([label]) => label)).not.toContain('Genetic sex');
   });
 
   it('opens no card before the genomes load', () => {

@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import aadr from '../../public/data/genomes/aadr.json';
+import type { Person } from './genomePeople';
 import {
+  cellRows,
   genomeCellCard,
   genomesNear,
   genomesNote,
   loadAncientGenomes,
+  peopleFilesFor,
   yearSpanText,
   type AncientGenomes,
 } from './ancientGenomes';
@@ -18,6 +21,7 @@ const small: AncientGenomes = {
   source: 'https://doi.org/10.7910/DVN/FFIDCW',
   version: 'v66.p1',
   cellDegrees: 2,
+  peopleChunk: 2,
   cells: [
     [50, 86],
     [40, 10],
@@ -109,6 +113,45 @@ describe('genomeCellCard', () => {
       { label: 'Allen Ancient DNA Resource', href: 'https://doi.org/10.7910/DVN/FFIDCW' },
     ]);
     expect(card?.note).toContain('not how many people lived');
+  });
+
+  it('finds a region’s rows near the year, and the files of people they are in', () => {
+    expect(cellRows(small, 0, -2499)).toEqual([0, 1]);
+    expect(cellRows(small, 1, 950)).toEqual([3]);
+    expect(peopleFilesFor(small, [0, 1, 3])).toEqual([0, 1]);
+  });
+
+  it('lists each person whose file has come, oldest first, with their archive', () => {
+    const person = (id: string): Person => [
+      id,
+      'Chavín, Peru',
+      null,
+      null,
+      null,
+      'female',
+      null,
+      'B2',
+      null,
+      null,
+      null,
+      null,
+      null,
+      'PRJEB1',
+      null,
+    ];
+    const card = genomeCellCard(many, 0, 950, (row) =>
+      row < 2 ? person(`I${String(row)}`) : undefined,
+    );
+    expect(card?.facts.slice(4)).toEqual([
+      ['Genetic sex', '2 female, 0 male'],
+      ['mtDNA lines (mothers’ mothers)', 'B2 ×2'],
+      ['I1', 'female · mt B2 · Chavín, Peru'],
+      ['I0', 'female · mt B2 · Chavín, Peru'],
+    ]);
+    expect(card?.links).toContainEqual({
+      label: 'Reads: PRJEB1',
+      href: 'https://www.ebi.ac.uk/ena/browser/view/PRJEB1',
+    });
   });
 
   it('has no card for a region with no genomes near the year', () => {
