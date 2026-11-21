@@ -101,7 +101,7 @@ test('a dispersal model shades where it has people settled, scenario by scenario
     await expect(page).toHaveURL(/dispersal=a/);
     await expect(globe).toHaveAttribute('data-settled', 'a 60');
     await expect(words).toHaveText(
-      /^Shaded: where Timmermann & Friedrich’s \(2016\) model, early exit from Africa \(scenario A\), has people settled by then: \d+% of the land it ever reaches\. One model’s view, not evidence; its data is CC BY-NC 4\.0 \(non-commercial\)\.$/,
+      /^Shaded: where Timmermann & Friedrich’s \(2016\) model, early exit from Africa \(scenario A\), has people settled by then: \d+% of the land it ever reaches, brightest where they arrived in the last 3,000 years\. One model’s view, not evidence; its data is CC BY-NC 4\.0 \(non-commercial\)\.$/,
     );
   });
   await test.step('When they pick the late-exit model, it shades that one instead', async () => {

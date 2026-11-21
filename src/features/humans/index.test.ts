@@ -321,6 +321,19 @@ describe('the humans as a feature', () => {
     });
   });
 
+  it('leads a species the tree lacks to the genus Homo, or nowhere if the tree lacks that too', async () => {
+    const { context, cards, refresh, openTree } = fakeContext();
+    const shown = await loaded(context, refresh);
+    const erectus = claims.claims.find((each) => each.species === 'erectus');
+    if (erectus === undefined) throw new Error('no H. erectus find');
+    shown.pick?.(erectus.id);
+    cards.at(-1)?.action?.run();
+    const pick = openTree.mock.calls.at(-1)?.[0] as (tree: unknown) => number | undefined;
+    const tree = (names: string[]) => ({ name: names, ours: { humans: { sapiens: 9 } } });
+    expect(pick(tree(['Life', 'Homo']))).toBe(1);
+    expect(pick(tree(['Life']))).toBeUndefined();
+  });
+
   it('says so when the species cannot be loaded', async () => {
     const { context, refresh, notify } = fakeContext({ missing: 'species.json' });
     const shown = await loaded(context, refresh);
