@@ -343,6 +343,59 @@
   }
 }
 
+/* The layers' dock (#1070): its own row under the moment, packed from the start, one gap. */
+.deep-dock {
+  display: flex;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.deep-dock .deep-layer {
+  margin-left: 0;
+}
+
+@media (max-width: 600px) {
+  /* On a phone each layer keeps its word, as the viewpoints do (#953): six icons alone could not
+     be told apart, and a long press is not found. Three to a row, the most there are being six. */
+  .deep-dock {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .deep-dock .deep-layer:has(> .icon-label) {
+    gap: 5px;
+    min-width: 0;
+    padding: 0 6px;
+    font-size: 12px;
+  }
+
+  .deep-dock .icon-label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 360px) {
+  /* The narrowest phones: the word under its icon, so Temperature fits its third of the row. */
+  .deep-dock .deep-layer:has(> .icon-label) {
+    flex-direction: column;
+    gap: 1px;
+    padding: 2px 4px;
+    border-radius: 14px;
+  }
+
+  .deep-dock .icon-label {
+    font-size: 10.5px;
+    line-height: 1.1;
+  }
+}
+
 /* The milestones' ticks stay on the chapters' row, above the strip (20 px and its margin). */
 .deep-track:has(> .polarity-strip) > .deep-marks {
   bottom: 29px;
