@@ -10,6 +10,7 @@ import * as v from 'valibot';
 import { astronomicalYear, toHistoricalYear } from '../time/year';
 import { elementAt } from '../util/arrays';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { peopleFacts, type Person, type PersonAt } from './genomePeople';
 
 const index = v.pipe(v.number(), v.integer(), v.minValue(0));
 
@@ -19,6 +20,8 @@ const GenomesSchema = v.strictObject({
   source: v.pipe(v.string(), v.url()),
   version: v.pipe(v.string(), v.minLength(1)),
   cellDegrees: v.pipe(v.number(), v.gtValue(0)),
+  /** Row n's person is in `people/{n / peopleChunk}.json` (#1059). */
+  peopleChunk: v.pipe(v.number(), v.integer(), v.minValue(1)),
   /** South-west corners of the cells, degrees. */
   cells: v.array(v.tuple([v.number(), v.number()])),
   groups: v.array(v.string()),
@@ -118,31 +121,46 @@ export function genomesNote(near: GenomesNear): string {
 /** How many to list on a card, of labels and of papers, before saying how many more. */
 const LISTED = 8;
 
+/** The rows of the genomes file in a region near the year shown (astronomical). */
+export function cellRows(data: AncientGenomes, cell: number, year: number): readonly number[] {
+  const rows: number[] = [];
+  data.genomes.forEach(([at, bp], row) => {
+    const when = 1950 - bp;
+    if (at === cell && Math.abs(when - year) <= GENOME_WINDOW) rows.push(row);
+  });
+  return rows;
+}
+
+/** The files of people a region's card needs, by number (`people/{n}.json`). */
+export function peopleFilesFor(data: AncientGenomes, rows: readonly number[]): readonly number[] {
+  return [...new Set(rows.map((row) => Math.floor(row / data.peopleChunk)))];
+}
+
 /**
  * A region's card: its genomes near the year shown, by lab label and by paper, each paper
- * linked where it has a DOI. A region, never a site; labels are the lab's, not peoples.
+ * linked where it has a DOI; with each person, where their file is loaded (#1059). A region,
+ * never a site; labels are the lab's, not peoples.
  */
 export function genomeCellCard(
   data: AncientGenomes,
   cell: number,
   year: number,
+  personAt: PersonAt = () => undefined,
 ): {
   readonly title: string;
   readonly facts: readonly (readonly [string, string])[];
   readonly links: readonly { readonly label: string; readonly href: string }[];
   readonly note: string;
 } | null {
-  const from = year - GENOME_WINDOW;
-  const to = year + GENOME_WINDOW;
   const labels = new Map<number, number>();
   const papers = new Map<number, number>();
-  let count = 0;
+  const rows = cellRows(data, cell, year);
+  const count = rows.length;
   let oldest = Infinity;
   let youngest = -Infinity;
-  for (const [at, bp, group, paper] of data.genomes) {
+  for (const row of rows) {
+    const [, bp, group, paper] = elementAt(data.genomes, row);
     const when = 1950 - bp;
-    if (at !== cell || when < from || when > to) continue;
-    count += 1;
     oldest = Math.min(oldest, when);
     youngest = Math.max(youngest, when);
     labels.set(group, (labels.get(group) ?? 0) + 1);
@@ -157,6 +175,12 @@ export function genomeCellCard(
   const listed = (entries: readonly string[], all: number) =>
     entries.join(', ') + (all > entries.length ? `, and ${String(all - entries.length)} more` : '');
   const sortedPapers = most(papers);
+  // Oldest first: the file's rows run from the youngest.
+  const people = rows
+    .map(personAt)
+    .filter((person): person is Person => person !== undefined)
+    .reverse();
+  const known = people.length > 0 ? peopleFacts(people) : { facts: [], links: [] };
   return {
     title: `Ancient genomes, ${degrees(south, 'N', 'S')}–${degrees(south + size, 'N', 'S')}, ${degrees(west, 'E', 'W')}–${degrees(west + size, 'E', 'W')}`,
     facts: [
@@ -178,12 +202,14 @@ export function genomeCellCard(
           papers.size,
         ),
       ],
+      ...known.facts,
     ],
     links: [
       ...sortedPapers.slice(0, LISTED).flatMap(([paper]) => {
         const { name, doi } = elementAt(data.papers, paper);
         return doi.startsWith('https://') ? [{ label: name, href: doi }] : [];
       }),
+      ...known.links,
       { label: 'Allen Ancient DNA Resource', href: data.source },
     ],
     note: `Within ${String(GENOME_WINDOW)} years of the year shown, in a ${String(size)}° square: where genomes have been sequenced, not how many people lived. Labels are the lab’s, not peoples.`,

@@ -8,7 +8,8 @@ CC0 1.0. Only its annotation file is read, never the genotypes.
 Kept: ancient individuals (a date before 1950) whose assessment passes, each once. Each is
 given by a 2° cell, not its site, and its date; with the lab's group label (the lab's name for
 a sample set, not a people) and the paper that published it. Present-day individuals are left
-out.
+out. What a card lists of each person (`aadr_people`) goes in files of its own, read only when a
+card opens.
 """
 
 import csv
@@ -19,6 +20,7 @@ import urllib.request
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from histeclipse_pipeline.aadr_people import CHUNK, Person, people_files, person_of
 from histeclipse_pipeline.sky import Json, verified
 
 if TYPE_CHECKING:
@@ -50,13 +52,14 @@ _ASSESSMENT = 47
 
 @dataclass(frozen=True)
 class Genome:
-    """One ancient individual: its cell, date (years before 1950), lab label and paper."""
+    """One ancient individual: its cell, date (years before 1950), lab label, paper, person."""
 
     cell: tuple[int, int]
     bp: int
     group: str
     publication: str
     doi: str
+    person: Person
 
 
 def cell_of(latitude: float, longitude: float) -> tuple[int, int]:
@@ -106,9 +109,15 @@ def parse_anno(text: str) -> list[Genome]:
                 group=row[_GROUP].strip(),
                 publication=row[_PUBLICATION].strip(),
                 doi=row[_DOI].strip(),
+                person=person_of(row),
             )
         )
     return genomes
+
+
+def in_order(genomes: list[Genome]) -> list[Genome]:
+    """Put the genomes in the files' order: by cell, then oldest last."""
+    return sorted(genomes, key=lambda genome: (genome.cell, genome.bp))
 
 
 def genomes_file(genomes: list[Genome]) -> dict[str, Json]:
@@ -119,13 +128,15 @@ def genomes_file(genomes: list[Genome]) -> dict[str, Json]:
     cell_index = {cell: index for index, cell in enumerate(cells)}
     group_index = {group: index for index, group in enumerate(groups)}
     paper_index = {paper: index for index, paper in enumerate(papers)}
-    ordered = sorted(genomes, key=lambda genome: (genome.cell, genome.bp))
+    ordered = in_order(genomes)
     return {
         "schemaVersion": 1,
         "credit": CREDIT,
         "source": SOURCE,
         "version": VERSION,
         "cellDegrees": CELL,
+        # Row n's person is in people/{n // peopleChunk}.json.
+        "peopleChunk": CHUNK,
         "cells": [[latitude, longitude] for latitude, longitude in cells],
         "groups": list(groups),
         "papers": [{"name": name, "doi": doi} for name, doi in papers],
@@ -154,4 +165,11 @@ def fetch_genomes(path: Path) -> int:  # pragma: no cover - needs network access
     genomes = parse_anno(text)
     path.parent.mkdir(parents=True, exist_ok=True)
     _ = path.write_text(json.dumps(genomes_file(genomes), separators=(",", ":")) + "\n")
+    folder = path.parent / "people"
+    folder.mkdir(exist_ok=True)
+    people = [genome.person for genome in in_order(genomes)]
+    for index, chunk in enumerate(people_files(people)):
+        _ = (folder / f"{index}.json").write_text(
+            json.dumps(chunk, separators=(",", ":"), ensure_ascii=False) + "\n"
+        )
     return len(genomes)

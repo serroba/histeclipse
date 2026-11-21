@@ -5,6 +5,7 @@
  */
 
 import {
+  cellRows,
   genomeCellCard,
   genomesNear,
   genomesNote,
@@ -14,6 +15,7 @@ import {
 import { errorMessage } from '../../util/errors';
 import { feature, travelPace } from '../feature';
 import { genomeLayer } from './genomeLayer';
+import { peopleLoader } from './people';
 import './genomes.css';
 
 export const genomesFeature = feature({
@@ -34,6 +36,9 @@ export const genomesFeature = feature({
     const pace = travelPace(() => {
       context.refresh();
     });
+    const peopleFor = peopleLoader(context.base, context.fetchJson);
+    // Only the last region tapped opens, when its people have come.
+    let picked = 0;
 
     return {
       show(state) {
@@ -73,8 +78,16 @@ export const genomesFeature = feature({
       },
       pick(cell) {
         if (genomes === null) return;
-        const card = genomeCellCard(genomes, Number(cell), year);
-        if (card !== null) context.cards.show(card);
+        const data = genomes;
+        const at = year;
+        const rows = cellRows(data, Number(cell), at);
+        if (rows.length === 0) return;
+        picked += 1;
+        const ticket = picked;
+        void peopleFor(data, rows).then((personAt) => {
+          const card = genomeCellCard(data, Number(cell), at, personAt);
+          if (ticket === picked && card !== null) context.cards.show(card);
+        });
       },
       said: () => said,
     };
