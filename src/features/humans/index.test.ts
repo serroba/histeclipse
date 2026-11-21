@@ -46,6 +46,7 @@ function fakeContext(
   const openTree = vi.fn();
   const change = vi.fn();
   const openAnchor = vi.fn();
+  const play = vi.fn();
   const files: Record<string, unknown> = {
     'claims.json': claims,
     'pictures.json': pictures,
@@ -76,6 +77,7 @@ function fakeContext(
     settledLand: { setSettled: (input: unknown) => settled.push(input) },
     change,
     anchors: { open: openAnchor },
+    deepTime: { play },
     refresh,
   } as unknown as FeatureContext<Capability>;
   return {
@@ -89,6 +91,7 @@ function fakeContext(
     openTree,
     change,
     openAnchor,
+    play,
   };
 }
 
@@ -332,6 +335,25 @@ describe('the humans as a feature', () => {
     const tree = (names: string[]) => ({ name: names, ours: { humans: { sapiens: 9 } } });
     expect(pick(tree(['Life', 'Homo']))).toBe(1);
     expect(pick(tree(['Life']))).toBeUndefined();
+  });
+
+  it('plays the human story: Humans and a model on, facing Africa, from 315,000 years ago (#177)', async () => {
+    const { context, refresh, change, play } = fakeContext();
+    const shown = await loaded(context, refresh);
+    const first = shown.deep?.(on, ICE)?.note?.[0];
+    if (typeof first !== 'object' || !('paragraph' in first)) throw new Error('no story');
+    const button = first.paragraph[0];
+    if (typeof button !== 'object' || !('run' in button)) throw new Error('no button');
+    expect(button.text).toBe('▶ Play the human story');
+    button.run();
+    expect(play).toHaveBeenCalledWith(0.315, 'ice', 0.01);
+    const update = change.mock.calls.at(-1)?.[0] as (state: ViewState) => ViewState;
+    const after = update({ ...on, layers: base.layers });
+    expect(after.layers.has('humans')).toBe(true);
+    expect(after.dispersal).toBe('a');
+    expect(after.camera.target).toEqual({ latitude: 12, longitude: 40 });
+    // A model already picked is kept.
+    expect(update({ ...on, dispersal: 'b' }).dispersal).toBe('b');
   });
 
   it('says so when the species cannot be loaded', async () => {

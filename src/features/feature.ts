@@ -82,6 +82,8 @@ export interface Capabilities {
     enter(ma: number, scale: DeepScale): void;
     /** On the whole span, with a layer on and the globe facing a place. */
     goTo(ma: number, layer: Layer, where: GeoPoint): void;
+    /** Play from `ma` on a span, at one of its speeds, towards today (#177). */
+    play(ma: number, scale: DeepScale, maPerSecond: number): void;
     /** Show deep time again, or what is drawn on leaving it: a map it draws from has arrived. */
     again(): void;
   };

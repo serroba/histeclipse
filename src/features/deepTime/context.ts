@@ -72,6 +72,8 @@ export interface DeepTimePart {
   readonly goToSpan: (span: Span) => void;
   readonly setScale: (deepScale: DeepScale) => void;
   readonly stopPlay: () => void;
+  /** Play from `ma` on the span `deepScale`, at `maPerSecond` (one of its speeds), towards today. */
+  readonly playFrom: (ma: number, deepScale: DeepScale, maPerSecond: number) => void;
   readonly playing: () => boolean;
   /** How fast deep time plays now, millions of years a second. */
   readonly playSpeed: () => number;
