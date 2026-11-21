@@ -16,7 +16,7 @@ describe('the layers', () => {
       `Nothing here: drawn on the 540 Myr span. ${fossils.reach}`,
     );
     expect(elsewhereNote(temperature)).toMatch(
-      /^Nothing here: drawn on the 540 Myr and 4\.6 Gyr spans\. /,
+      /^Nothing here: drawn on the Ice ages, 540 Myr and 4\.6 Gyr spans\. /,
     );
     expect(elsewhereNote(impacts)).toMatch(/drawn on the Years, Ice ages and 540 Myr spans\./);
   });
