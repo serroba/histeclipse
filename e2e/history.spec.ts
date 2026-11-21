@@ -20,10 +20,13 @@ async function openTrack(page: Page): Promise<void> {
 
 test('the travel view says which layers it turned on, and one the reader turns off stays off (#983) @mobile', async ({
   page,
-}) => {
+}, info) => {
   const problems = collectProblems(page);
   const bar = page.getByRole('group', { name: track });
-  const notice = page.getByRole('status').getByText(/^Travel view turned on /);
+  // On a phone it is said in ⓘ, not over the globe (#1050).
+  const phone = info.project.name === 'mobile';
+  const over = page.getByRole('status').getByText(/^Travel view turned on /);
+  const notice = phone ? bar.getByTestId('history-brought') : over;
   const panel = page.getByRole('dialog', { name: 'Layers' });
   await test.step('Given 2000 BCE with no layers', async () => {
     await page.goto('./?t=-1999-06-01T12:00&layers=');
@@ -33,6 +36,10 @@ test('the travel view says which layers it turned on, and one the reader turns o
     await bar.getByRole('button', { name: 'Travel through the years' }).click();
     await bar.getByRole('button', { name: 'Stop travelling' }).click();
     await expect(page).toHaveURL(/layers=empires,ways/);
+    if (phone) {
+      await bar.getByLabel('About this view').click();
+      await expect(over).toHaveCount(0);
+    }
     await expect(notice).toHaveText(
       'Travel view turned on States and empires and Ways of life. Turn them off in Layers and they stay off.',
     );
@@ -48,7 +55,8 @@ test('the travel view says which layers it turned on, and one the reader turns o
   });
   await test.step('Then only States and empires come back, and it is not said again', async () => {
     await expect(page).toHaveURL(/layers=empires(&|$)/);
-    await expect(page.getByRole('status').getByText(/^Travel view turned on /)).toHaveCount(1);
+    if (phone) await expect(notice).toBeHidden();
+    else await expect(over).toHaveCount(1);
   });
   expect(problems).toEqual([]);
 });

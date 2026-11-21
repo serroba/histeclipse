@@ -176,7 +176,9 @@ export function mountYears(context: YearsContext): YearsPart {
     // Said the first time; one the reader turns off stays off (#983).
     const { bring, note } = open ? trip.open(store.get().layers) : { bring: [], note: null };
     const taken = new Set<Layer>(open ? [] : trip.close());
-    if (note !== null) context.notify(note);
+    // It stays in ⓘ for the trip; on a phone it is said only there, not over the globe (#1050).
+    tripNote = note;
+    if (note !== null && !globalThis.matchMedia('(max-width: 600px)').matches) context.notify(note);
     if (bring.length > 0 || taken.size > 0) {
       store.set((state) => ({
         ...state,
@@ -190,6 +192,7 @@ export function mountYears(context: YearsContext): YearsPart {
   // While the track is open, the globe is lit evenly and the markers of single finds and
   // events rest: at years a second they flicker past without meaning.
   let travelling = false;
+  let tripNote: string | null = null;
   const [trip, turn] = [travelTrip(), tripTurn(context.globe)];
 
   function historyFirst(): number {
@@ -272,6 +275,7 @@ export function mountYears(context: YearsContext): YearsPart {
       }),
       blank: state.layers.has('empires') ? blankText(state.layers.has('ways')) : null,
       earth: context.holoceneText(),
+      brought: travelling ? tripNote : null,
     });
   }
 

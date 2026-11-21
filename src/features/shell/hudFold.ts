@@ -15,7 +15,7 @@ function foldButton(
   className: string,
   words: { readonly folded: string; readonly open: string },
 ): HTMLButtonElement {
-  const label = element('span', {});
+  const label = element('span', { class: 'panel-fold-label' });
   const button = element(
     'button',
     { type: 'button', class: `panel-fold ${className}` },
