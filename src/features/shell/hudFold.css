@@ -1,11 +1,11 @@
 /* The date panel's fold (#975): only on a short phone, upright or on its side (#976), where the
-   panels would cover the globe. */
-.hud-fold {
+   panels would cover the globe. The year's bar folds too (#1049), on a short phone upright. */
+.panel-fold {
   display: none;
 }
 
 @media (max-width: 600px) and (max-height: 760px), (max-height: 500px) {
-  .hud-fold {
+  .panel-fold {
     position: relative;
     display: flex;
     align-items: center;
@@ -24,13 +24,13 @@
   }
 
   /* The pill is drawn 32 px tall; a finger finds it within 44. */
-  .hud-fold::after {
+  .panel-fold::after {
     position: absolute;
     inset: -6px 0;
     content: '';
   }
 
-  .hud-fold-chevron {
+  .panel-fold-chevron {
     width: 7px;
     height: 7px;
     border-right: 1.5px solid currentcolor;
@@ -38,11 +38,31 @@
     transform: translateY(-2px) rotate(45deg);
   }
 
-  .hud-fold[aria-expanded='true'] .hud-fold-chevron {
+  .panel-fold[aria-expanded='true'] .panel-fold-chevron {
     transform: translateY(2px) rotate(-135deg);
   }
 
   .hud[data-fold='folded'] :is(.hud-detail, .hud-actions, .viewpoints, .hud-more) {
+    display: none;
+  }
+}
+
+/* On a phone on its side the bar sits low and narrow beside the globe (#976): it keeps its rows. */
+@media (max-height: 500px) and (min-width: 601px) {
+  .bar-fold {
+    display: none;
+  }
+}
+
+/* Upright, the year's bar keeps its track and Play; the year, the years shown and the speed
+   take three rows on the narrowest phones, a third of the screen, so they wait behind the fold
+   (#1049). */
+@media (max-width: 600px) and (max-height: 760px) {
+  .bar-fold {
+    margin: 2px auto;
+  }
+
+  .holocene-bar[data-fold='folded'] > .timeline {
     display: none;
   }
 }

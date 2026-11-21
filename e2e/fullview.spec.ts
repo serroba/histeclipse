@@ -172,6 +172,45 @@ test('on a short phone the date panel folds, so the globe keeps over half the sc
   expect(problems).toEqual([]);
 });
 
+test('on a 320-px phone the year’s bar folds too, so the globe keeps over half the screen (#1049) @mobile', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'a short phone');
+  const problems = collectProblems(page);
+  const bar = page.locator('.holocene-bar');
+  const fold = bar.getByRole('button', { name: 'Year and speed' });
+  const year = page.getByRole('textbox', { name: 'Year' });
+  const free = async (): Promise<number> =>
+    page.evaluate(() => {
+      const top = document.querySelector('.hud')?.getBoundingClientRect().bottom ?? 0;
+      const bottom = document.querySelector('.bottom')?.getBoundingClientRect().top ?? 0;
+      return (bottom - top) / window.innerHeight;
+    });
+  await test.step('Given today on a phone 320 by 568, as an iPhone SE', async () => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto('./?t=2026-11-20T09:43Z');
+    await globeRendered(page);
+  });
+  await test.step('Then the bar keeps its track and Play, the year folded, and the globe has over half', async () => {
+    await expect(bar.getByRole('button', { name: 'Travel through the years' })).toBeVisible();
+    await expect(fold).toHaveAttribute('aria-expanded', 'false');
+    await expect(year).toBeHidden();
+    expect(await free()).toBeGreaterThan(0.5);
+  });
+  await test.step('When they open it, Then the year, the years shown and the speed are there', async () => {
+    await fold.click();
+    await expect(year).toBeVisible();
+    await expect(bar.getByRole('combobox', { name: 'Years shown' })).toBeVisible();
+    await expect(bar.getByRole('combobox', { name: 'Speed' })).toBeVisible();
+  });
+  await test.step('When they fold it again, Then the globe has its room back', async () => {
+    await bar.getByRole('button', { name: 'Hide year and speed' }).click();
+    await expect(year).toBeHidden();
+    expect(await free()).toBeGreaterThan(0.5);
+  });
+  expect(problems).toEqual([]);
+});
+
 test('on a 320-px phone the date panel’s tools keep clear of the name, and nothing runs off the screen (#977) @mobile', async ({
   page,
 }, info) => {
