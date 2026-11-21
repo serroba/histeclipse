@@ -25,7 +25,10 @@ export const humanSiteLayer: LayerFactory<readonly HumanSite[] | null> = (host) 
   return {
     update(sites) {
       // Laying labels out is slow: not again for the same finds, as time plays on.
-      const key = sites === null ? 'off' : sites.map((site) => site.id).join(' ');
+      const key =
+        sites === null
+          ? 'off'
+          : sites.map((site) => `${site.id}${site.hasDna === true ? '+' : ''}`).join(' ');
       if (key === shownKey) return;
       shownKey = key;
       const fresh = (id: string) => marked !== null && !marked.has(id);
@@ -37,6 +40,13 @@ export const humanSiteLayer: LayerFactory<readonly HumanSite[] | null> = (host) 
           element.type = 'button';
           element.className = `empire-label human-site is-${site.species}${site.disputed ? ' is-disputed' : ''}${site.dna === true ? ' is-dna' : ''}${pulse && fresh(site.id) ? ' is-new' : ''}`;
           element.textContent = site.label;
+          // A find whose DNA has been read (#1059): a small badge after its name.
+          if (site.hasDna === true) {
+            const badge = document.createElement('span');
+            badge.className = 'human-site-dna';
+            badge.textContent = 'DNA';
+            element.append(' ', badge);
+          }
           element.dataset['site'] = site.id;
           element.dataset['pick'] = `human:${site.id}`;
           // The middle of its 7-pixel dot (humanSites.css) goes on the site (#1010).

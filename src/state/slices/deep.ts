@@ -11,7 +11,7 @@
  * - `dispersal` shades Timmermann & Friedrich's dispersal model with Humans: `off` (absent),
  *   `a` or `b`.
  * - `species` shows only one Homo species' finds with Humans (#1047): `all` (absent), or a
- *   species, such as `neanderthal`.
+ *   species, such as `neanderthal`; or `dna`, only the finds and places with ancient DNA (#1059).
  * - `story=humans` plays the human story once on opening (#177): the link a reader shares, or
  *   Explore's, to watch it; it leaves the address as soon as it starts.
  * - `impact`, `land` and `snowball` pick the hypotheses the deep-time globe sketches before
@@ -63,8 +63,8 @@ export interface DeepState {
   readonly coast: CoastSource;
   /** Timmermann & Friedrich's dispersal model shaded with Humans: off, early or late exit. */
   readonly dispersal: DispersalScenario;
-  /** The one Homo species whose finds Humans shows, or all of them. */
-  readonly humanSpecies: HumanSpecies | 'all';
+  /** The one Homo species whose finds Humans shows, all of them, or those with DNA (#1059). */
+  readonly humanSpecies: HumanSpecies | 'all' | 'dna';
   /** A story to play on opening, asked for by a link; off once it starts. */
   readonly story: Story;
   /** Which climate model's ice-age sea ice the globe blends towards. */
@@ -104,7 +104,11 @@ export const DEEP_PARAMS: Params<DeepState> = {
   deepScale: choice('scale', DEEP_SCALES, DEEP_DEFAULTS.deepScale),
   coast: choice('coast', COAST_SOURCES, DEEP_DEFAULTS.coast),
   dispersal: choice('dispersal', DISPERSAL_SCENARIOS, DEEP_DEFAULTS.dispersal),
-  humanSpecies: choice('species', ['all', ...HUMAN_SPECIES] as const, DEEP_DEFAULTS.humanSpecies),
+  humanSpecies: choice(
+    'species',
+    ['all', 'dna', ...HUMAN_SPECIES] as const,
+    DEEP_DEFAULTS.humanSpecies,
+  ),
   story: choice('story', STORIES, DEEP_DEFAULTS.story),
   seaIce: choice('seaice', SEA_ICE_MODELS, DEEP_DEFAULTS.seaIce),
   temperatureModel: choice('temp', TEMPERATURE_MODELS, DEEP_DEFAULTS.temperatureModel),

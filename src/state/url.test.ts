@@ -246,6 +246,7 @@ describe('parseViewState', () => {
 
   it('reads one Homo species to show with Humans, writing it only when one is picked (#1047)', () => {
     expect(parseViewState('species=neanderthal', NOW).state.humanSpecies).toBe('neanderthal');
+    expect(parseViewState('species=dna', NOW).state.humanSpecies).toBe('dna');
     expect(serializeViewState(parseViewState('species=erectus', NOW).state)).toContain(
       'species=erectus',
     );
