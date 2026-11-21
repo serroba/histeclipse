@@ -6,6 +6,7 @@
  */
 
 import { layerEntry, type Layer } from '../../layers/layers';
+import type { GeoPoint } from '../../state/viewState';
 import { travelBrings } from './windowing';
 
 export interface TravelTrip {
@@ -48,6 +49,30 @@ export function travelTrip(): TravelTrip {
     seen(layers) {
       for (const layer of brought.filter((each) => !layers.has(each))) declined.add(layer);
       brought = brought.filter((layer) => layers.has(layer));
+    },
+  };
+}
+
+/**
+ * Where the Holocene's first change is to be seen (#984): the Fertile Crescent, where farming
+ * began as the Holocene did and the first towns and states followed. From the default view
+ * (Australia, for a reader there) a trip from 9700 BCE showed nothing changing for minutes.
+ */
+export const FIRST_FARMERS: GeoPoint = { latitude: 35, longitude: 40 };
+
+/**
+ * Turns the globe as a trip starts, once a visit (#984): to the first farmers, when Play goes
+ * back to the start of the whole Holocene. After that the reader's camera is theirs.
+ */
+export function tripTurn(globe: { flyTo(place: GeoPoint): void }): {
+  start(fromHolocene: boolean): void;
+} {
+  let turned = false;
+  return {
+    start(fromHolocene) {
+      if (turned || !fromHolocene) return;
+      turned = true;
+      globe.flyTo(FIRST_FARMERS);
     },
   };
 }
