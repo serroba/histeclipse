@@ -26,9 +26,21 @@
 }
 
 @media (max-width: 600px) {
-  .time-option {
-    padding: 0 8px;
+  /* The icon over its word, as the viewpoints do (#953), so four spans fit one row. */
+  .time-option:has(> .icon-label) {
+    flex-direction: column;
+    gap: 1px;
+    padding: 2px 8px;
+    font-size: 12px;
+    line-height: 1.1;
     white-space: nowrap;
+  }
+}
+
+@media (max-width: 360px) {
+  /* The narrowest phones (320 px): the four spans and Layers on one row, inside the panel. */
+  .time-option:has(> .icon-label) {
+    padding: 2px 5px;
   }
 }
 
