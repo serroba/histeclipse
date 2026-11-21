@@ -101,6 +101,31 @@ test('while the years play, the date panel leaves out the minute, and the chapte
   expect(problems).toEqual([]);
 });
 
+test('the first trip from today turns the globe to where farming began, once (#984)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const bar = page.getByRole('group', { name: track });
+  const globe = page.getByTestId('globe');
+  await test.step('Given today, over Australia, as a reader in Sydney opens it', async () => {
+    await page.goto(`./?t=${new Date().toISOString().slice(0, 16)}Z&cam=-33.9,151.2,4.50`);
+    await globeRendered(page);
+  });
+  await test.step('When they travel, Then the globe turns to the Fertile Crescent', async () => {
+    await bar.getByRole('button', { name: 'Travel through the years' }).click();
+    await expect(globe).toHaveAttribute('data-target', '35.0,40.0');
+    await bar.getByRole('button', { name: 'Stop travelling' }).click();
+  });
+  await test.step('When they look elsewhere and travel on, Then the globe is theirs', async () => {
+    await page.goto(`./?t=-8000-01-01T12:00&cam=-33.9,151.2,4.50`);
+    await globeRendered(page);
+    await bar.getByRole('button', { name: 'Travel through the years' }).click();
+    await bar.getByRole('button', { name: 'Stop travelling' }).click();
+    await expect(globe).toHaveAttribute('data-target', '-33.9,151.2');
+  });
+  expect(problems).toEqual([]);
+});
+
 test('playing history moves through the years and names the states that come and go @acceptance', async ({
   page,
 }) => {

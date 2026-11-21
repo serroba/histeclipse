@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { Layer } from '../../layers/layers';
-import { broughtNote, travelTrip } from './travelTrip';
+import { broughtNote, FIRST_FARMERS, travelTrip, tripTurn } from './travelTrip';
 
 const none = new Set<Layer>();
 const both = new Set<Layer>(['empires', 'ways']);
@@ -44,5 +44,24 @@ describe('the layers a trip through the years brings (#983)', () => {
     expect(broughtNote(['ways'])).toBe(
       'Travel view turned on Ways of life. Turn it off in Layers and it stays off.',
     );
+  });
+});
+
+describe('the globe’s turn as a trip starts (#984)', () => {
+  it('Given the first trip from the Holocene’s start, Then it turns to the first farmers, once', () => {
+    const flyTo = vi.fn();
+    const turn = tripTurn({ flyTo });
+    turn.start(true);
+    turn.start(true);
+    expect(flyTo).toHaveBeenCalledExactlyOnceWith(FIRST_FARMERS);
+  });
+
+  it('Given a trip from elsewhere (mid-way, or El Niño’s years), Then the camera is left be', () => {
+    const flyTo = vi.fn();
+    const turn = tripTurn({ flyTo });
+    turn.start(false);
+    expect(flyTo).not.toHaveBeenCalled();
+    turn.start(true);
+    expect(flyTo).toHaveBeenCalledOnce();
   });
 });

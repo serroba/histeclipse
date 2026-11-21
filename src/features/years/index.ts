@@ -20,7 +20,7 @@ import { yearPlayhead } from '../../time/yearPlay';
 import type { PlaySpeed, SpeedLevel } from '../../time/playSpeeds';
 import type { Moment } from '../../time/moment';
 import { windowOf } from '../../state/yearsWindow';
-import { travelTrip } from './travelTrip';
+import { travelTrip, tripTurn } from './travelTrip';
 import { travelBrings, windowing } from './windowing';
 import { yearOfMa } from '../../data/iceSheets';
 import { PRESENT_YEAR } from '../../time/present';
@@ -30,7 +30,7 @@ import { errorMessage } from '../../util/errors';
 
 /** What the years ask of the rest of the page. */
 export interface YearsContext extends PartContext {
-  readonly globe: Pick<Globe, 'setEvenLight'>;
+  readonly globe: Pick<Globe, 'setEvenLight' | 'flyTo'>;
   /** The card that carries a date across a curve. */
   readonly datingCard: Pick<DatingCard, 'open'>;
   /** The first year ΔT reaches. */
@@ -190,7 +190,7 @@ export function mountYears(context: YearsContext): YearsPart {
   // While the track is open, the globe is lit evenly and the markers of single finds and
   // events rest: at years a second they flicker past without meaning.
   let travelling = false;
-  const trip = travelTrip();
+  const [trip, turn] = [travelTrip(), tripTurn(context.globe)];
 
   function historyFirst(): number {
     return Math.ceil(context.deltaT().firstYear) + 1;
@@ -220,6 +220,7 @@ export function mountYears(context: YearsContext): YearsPart {
     const from = window.start(store.get());
     playedFrom = from && { ...window.shown(store.get()), present: PRESENT_YEAR };
     if (from !== null) setTime(from);
+    turn.start(playedFrom?.first === historyFirst());
     historyPlaying = true;
     setTravel(true);
     historyHead = yearPlayhead();
