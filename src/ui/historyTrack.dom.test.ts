@@ -20,6 +20,7 @@ const VIEW = {
   changes: '',
   blank: null,
   earth: null,
+  brought: null,
 };
 
 function setUp() {
@@ -77,6 +78,14 @@ describe('the Holocene’s track', () => {
     expect(track.root.querySelector<HTMLElement>('.travel-chip')?.hidden).toBe(false);
     expect(track.root.querySelector<HTMLElement>('.history-about')?.hidden).toBe(false);
     expect(track.root.textContent).toContain('Sea level…');
+  });
+
+  it('Given the layers a trip turned on, Then ⓘ says so, rather than a note over the globe (#1050)', () => {
+    const { track } = setUp();
+    track.render({ ...VIEW, travelling: true, brought: 'Travel view turned on Ways of life.' });
+    const about = track.root.querySelector<HTMLElement>('.history-about');
+    expect(about?.hidden).toBe(false);
+    expect(about?.textContent).toContain('Travel view turned on Ways of life.');
   });
 
   it('Given only what the view shows, Then its ⓘ keeps the notes row, beside no chip (#985)', () => {

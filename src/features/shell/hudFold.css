@@ -65,6 +65,51 @@
   .holocene-bar[data-fold='folded'] > .timeline {
     display: none;
   }
+
+  /* While the years play (#1050) the travel view's line (what changed, ⓘ, the chip) and the
+     fold share one row, so the bar is no taller than when they don't: the track's rows join the
+     bar's, the fold at the end of the line, a chevron alone. */
+  .holocene-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 8px;
+  }
+
+  .holocene-bar > *,
+  .holocene-bar .history-controls,
+  .holocene-bar .history-notes:has(.history-about[open]) {
+    grid-column: 1 / -1;
+  }
+
+  .holocene-bar > .history-track:not([hidden]) {
+    display: contents;
+  }
+
+  .holocene-bar .history-notes {
+    grid-column: 1;
+  }
+
+  .holocene-bar:has(.history-notes:not([hidden])) > .bar-fold {
+    grid-column: 2;
+    min-width: 44px;
+    margin: 0;
+    padding: 0;
+  }
+
+  .holocene-bar:has(.history-notes:not([hidden])) .panel-fold-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* What changed, cut short to a word or two here, and the ways of life's key wait in ⓘ. */
+  .holocene-bar:has(.history-about:where(:not([hidden], [open]))) .history-changes,
+  .holocene-bar:has(.history-about:where(:not([hidden], [open]))) > .ways-legend {
+    display: none;
+  }
 }
 
 /* A phone on its side (#976): the date panel keeps to a narrow column at the left, so the globe

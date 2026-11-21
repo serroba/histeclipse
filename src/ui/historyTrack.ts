@@ -33,6 +33,8 @@ interface HistoryView {
   readonly blank: string | null;
   /** The sea level and ice of the year; null until the maps are in. */
   readonly earth: string | null;
+  /** The layers the trip turned on, and how to keep them off (#983); null when none. */
+  readonly brought: string | null;
 }
 
 export interface HistoryTrack {
@@ -168,11 +170,13 @@ export function createHistoryTrack(
   const changes = element('p', { class: 'history-changes', 'data-testid': 'history-changes' });
   const blank = element('p', { class: 'history-blank', 'data-testid': 'history-blank' });
   const earth = element('p', { class: 'history-blank', 'data-testid': 'history-earth' });
+  const brought = element('p', { class: 'history-blank', 'data-testid': 'history-brought' });
   // What the travel view shows, and why: there when wanted, folded away otherwise.
   const about = element(
     'details',
     { class: 'history-about' },
     element('summary', { 'aria-label': 'About this view' }, 'ⓘ'),
+    brought,
     blank,
     earth,
   );
@@ -249,7 +253,9 @@ export function createHistoryTrack(
       blank.textContent = view.blank ?? '';
       earth.hidden = view.earth === null;
       earth.textContent = view.earth ?? '';
-      about.hidden = view.blank === null && view.earth === null;
+      brought.hidden = view.brought === null;
+      brought.textContent = view.brought ?? '';
+      about.hidden = view.blank === null && view.earth === null && view.brought === null;
       // The row goes when it has nothing to say, so the bar is no taller than it needs.
       notes.hidden = changes.hidden && travel.hidden && about.hidden;
     },
