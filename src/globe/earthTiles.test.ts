@@ -95,3 +95,30 @@ describe('what is drawn while level 5 arrives', () => {
     expect(drawPlan(null, () => true, new Set())).toEqual({ beneath: [], tiles: [] });
   });
 });
+
+describe('a level that leaves tiles out (#1030)', () => {
+  // Today's heights: levels 3 and 4, level 4 without the tile under the mid-Pacific.
+  const relief = {
+    tileSize: 675,
+    path: '{z}/{x}/{y}.webp',
+    levels: [
+      { z: 3, columns: 16, rows: 8 },
+      { z: 4, columns: 32, rows: 16, missing: ['1/7'] },
+    ],
+  };
+
+  it('draws the coarser tile where the finer is missing, once, with nothing beneath it', () => {
+    // 50 km over 5° N 168° W: level 4's tile 1 across, 7 down, which is missing.
+    const wanted = wantedTiles(relief, over(5, -168, 1.008), PIXELS, DESKTOP_TILES);
+    expect(wanted?.level.z).toBe(4);
+    expect(wanted?.keys.map(tileId)).toEqual(['3/0/3']);
+    const plan = drawPlan(wanted, () => false, new Set());
+    expect(plan.beneath).toEqual([]);
+    expect(plan.tiles).toEqual([{ key: { z: 3, x: 0, y: 3 }, over: false }]);
+  });
+
+  it('draws the finer tiles where they are', () => {
+    const wanted = wantedTiles(relief, over(45, 10, 1.008), PIXELS, DESKTOP_TILES);
+    expect(wanted?.keys.every((key: TileKey) => key.z === 4)).toBe(true);
+  });
+});
