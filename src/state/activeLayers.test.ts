@@ -23,6 +23,12 @@ describe('the layers on, and whether they have data now (#751)', () => {
     expect(chips[1]?.why).toBeNull();
   });
 
+  it('Given temperature on in the ice ages, Then it draws there, as the globe does (#457)', () => {
+    const [temperature] = activeLayers(at('ma=0.021&scale=ice&layers=temperature'));
+    expect(temperature?.draws).toBe(true);
+    expect(temperature?.goTo).toBeNull();
+  });
+
   it('Given a layer with a moment of its own off its span, Then going there lands on it', () => {
     const [humans] = activeLayers(at('t=2006-10-01T12:00Z&layers=humans'));
     expect(humans?.draws).toBe(false);
