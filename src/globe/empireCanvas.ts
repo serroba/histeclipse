@@ -6,7 +6,7 @@
  * `data/empires.ts` and `data/iceOutlines.ts`.
  */
 
-import { territoryHue, unwrapRing, type Territory } from '../data/empires';
+import { copiesOf, territoryHue, unwrappedRing, type Territory } from '../data/empires';
 import type { ArrivalGrid } from '../data/dispersal';
 import type { RockUnit } from '../data/rocks';
 import type { Shown, WayRegion } from '../data/waysOfLife';
@@ -14,6 +14,42 @@ import type { IceOutlines } from '../data/iceOutlines';
 import { heatLevel, type DateCell } from '../data/radiocarbonDates';
 
 const EMPIRE_MAP_WIDTH = 4096;
+
+type Ring = readonly (readonly [number, number])[];
+
+/**
+ * Traces rings into the context's current path at each shift they show at (#1045): most once,
+ * those across the date line twice, never the copies no one sees. `each` runs after each shift's
+ * path, to fill or stroke it; rings traced at one shift together share it, so their holes stay
+ * holes (a hole lies inside its ring, so it shows wherever its ring does).
+ */
+function traceRings(
+  context: CanvasRenderingContext2D,
+  rings: readonly Ring[],
+  close: boolean,
+  each: () => void,
+): void {
+  const { width, height } = context.canvas;
+  const shown = rings.map((ring) => {
+    const points = unwrappedRing(ring);
+    return { points, copies: copiesOf(points) };
+  });
+  for (const shift of [-360, 0, 360]) {
+    const here = shown.filter((ring) => ring.copies.includes(shift));
+    if (here.length === 0) continue;
+    context.beginPath();
+    for (const { points } of here) {
+      points.forEach(([lon, lat], index) => {
+        const x = ((lon + shift + 180) / 360) * width;
+        const y = ((90 - lat) / 180) * height;
+        if (index === 0) context.moveTo(x, y);
+        else context.lineTo(x, y);
+      });
+      if (close) context.closePath();
+    }
+    each();
+  }
+}
 
 export function createEmpireCanvas(): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
@@ -28,7 +64,6 @@ export function paintTerritories(
 ): void {
   const context = canvas.getContext('2d');
   if (context === null) return;
-  const { width, height } = canvas;
   context.lineJoin = 'round';
   // Round caps, so a state smaller than a pixel (Monaco, say) still shows as a dot.
   context.lineCap = 'round';
@@ -37,21 +72,12 @@ export function paintTerritories(
     const hue = territoryHue(territory.name);
     context.fillStyle = `hsla(${String(hue)}, 70%, 55%, 0.42)`;
     context.strokeStyle = `hsla(${String(hue)}, 85%, 78%, 0.95)`;
+    // Each ring on its own, filled and outlined, as before: a state's parts may overlap.
     for (const ring of territory.rings) {
-      const points = unwrapRing(ring);
-      // A ring that runs past ±180° is drawn again a world away, so both sides get it.
-      for (const offset of [-360, 0, 360]) {
-        context.beginPath();
-        points.forEach(([lon, lat], index) => {
-          const x = ((lon + offset + 180) / 360) * width;
-          const y = ((90 - lat) / 180) * height;
-          if (index === 0) context.moveTo(x, y);
-          else context.lineTo(x, y);
-        });
-        context.closePath();
+      traceRings(context, [ring], true, () => {
         context.fill();
         context.stroke();
-      }
+      });
     }
   }
 }
@@ -66,23 +92,14 @@ export function paintBorders(
 ): void {
   const context = canvas.getContext('2d');
   if (context === null) return;
-  const { width, height } = canvas;
   context.lineJoin = 'round';
   context.lineCap = 'round';
   context.lineWidth = 2.5;
   context.strokeStyle = 'rgba(255, 255, 255, 0.95)';
   for (const line of borders) {
-    const points = unwrapRing(line);
-    for (const offset of [-360, 0, 360]) {
-      context.beginPath();
-      points.forEach(([lon, lat], index) => {
-        const x = ((lon + offset + 180) / 360) * width;
-        const y = ((90 - lat) / 180) * height;
-        if (index === 0) context.moveTo(x, y);
-        else context.lineTo(x, y);
-      });
+    traceRings(context, [line], false, () => {
       context.stroke();
-    }
+    });
   }
 }
 
@@ -100,7 +117,6 @@ const HYPOTHESIS_STYLES = {
 export function paintIceOutlines(canvas: HTMLCanvasElement, outlines: IceOutlines): void {
   const context = canvas.getContext('2d');
   if (context === null) return;
-  const { width, height } = canvas;
   context.lineJoin = 'round';
   context.lineCap = 'round';
   for (const hypothesis of ['max', 'min', 'best'] as const) {
@@ -108,19 +124,9 @@ export function paintIceOutlines(canvas: HTMLCanvasElement, outlines: IceOutline
     context.strokeStyle = style.stroke;
     context.lineWidth = style.width;
     context.setLineDash(style.dash);
-    for (const offset of [-360, 0, 360]) {
-      context.beginPath();
-      for (const ring of outlines[hypothesis]) {
-        unwrapRing(ring).forEach(([lon, lat], index) => {
-          const x = ((lon + offset + 180) / 360) * width;
-          const y = ((90 - lat) / 180) * height;
-          if (index === 0) context.moveTo(x, y);
-          else context.lineTo(x, y);
-        });
-        context.closePath();
-      }
+    traceRings(context, outlines[hypothesis], true, () => {
       context.stroke();
-    }
+    });
   }
   context.setLineDash([]);
 }
@@ -191,23 +197,12 @@ export function paintWays(
 ): void {
   const context = canvas.getContext('2d');
   if (context === null) return;
-  const { width, height } = canvas;
   for (const region of regions) {
     const alpha = (0.12 + 0.14 * region.level) * strength;
     context.fillStyle = `rgba(${WAY_COLOURS[region.way]}, ${String(alpha)})`;
-    for (const offset of [-360, 0, 360]) {
-      context.beginPath();
-      for (const ring of region.rings) {
-        unwrapRing(ring).forEach(([lon, lat], index) => {
-          const x = ((lon + offset + 180) / 360) * width;
-          const y = ((90 - lat) / 180) * height;
-          if (index === 0) context.moveTo(x, y);
-          else context.lineTo(x, y);
-        });
-        context.closePath();
-      }
+    traceRings(context, region.rings, true, () => {
       context.fill('evenodd');
-    }
+    });
   }
 }
 
@@ -220,23 +215,12 @@ export function paintRocks(
 ): void {
   const context = canvas.getContext('2d');
   if (context === null) return;
-  const { width, height } = canvas;
   context.globalAlpha = 0.55 * strength;
   for (const unit of units) {
     context.fillStyle = unit.colour;
-    for (const offset of [-360, 0, 360]) {
-      context.beginPath();
-      for (const ring of unit.rings) {
-        unwrapRing(ring).forEach(([lon, lat], index) => {
-          const x = ((lon + offset + 180) / 360) * width;
-          const y = ((90 - lat) / 180) * height;
-          if (index === 0) context.moveTo(x, y);
-          else context.lineTo(x, y);
-        });
-        context.closePath();
-      }
+    traceRings(context, unit.rings, true, () => {
       context.fill('evenodd');
-    }
+    });
   }
   context.globalAlpha = 1;
 }

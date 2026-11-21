@@ -216,7 +216,7 @@ export const humansFeature = feature({
             : { offered: moment.scale === 'ice', on: false, note: null };
         }
         const offered = moment.scale === 'ice';
-        const model = dispersal.show(state.dispersal, moment.ma);
+        const model = dispersal.show(state.dispersal, moment.ma, moment.maPerSecond);
         if (claims === null) {
           if (!loading) {
             loading = true;

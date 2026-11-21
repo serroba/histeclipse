@@ -32,8 +32,29 @@ export function dispersalText(model: DispersalShown): string {
 }
 
 export interface Dispersal {
-  /** Shade `scenario` at `ma` (null shades nothing), and say how it stands. */
-  show(scenario: DispersalScenario | null, ma: number): DispersalShown;
+  /**
+   * Shade `scenario` at `ma` (null shades nothing), and say how it stands; while time plays at
+   * `maPerSecond`, in steps the map can be repainted at (#1045).
+   */
+  show(scenario: DispersalScenario | null, ma: number, maPerSecond?: number | null): DispersalShown;
+}
+
+/**
+ * How often the shading is repainted while time plays (#1045): each repaint paints and uploads
+ * the whole map, which a phone takes a tenth of a second or more to do.
+ */
+const REPAINTS_PER_SECOND = 4;
+
+/**
+ * The thousands of years to shade at: the moment itself when time stands, and while it plays, a
+ * step of so many thousand years that the map is repainted about REPAINTS_PER_SECOND times a
+ * second (the model's own step, a thousand years, at the slowest).
+ */
+export function shadedKa(ma: number, maPerSecond: number | null | undefined): number {
+  const ka = ma * 1000;
+  if (maPerSecond === null || maPerSecond === undefined || maPerSecond <= 0) return ka;
+  const step = Math.max(1, Math.ceil((maPerSecond * 1000) / REPAINTS_PER_SECOND));
+  return Math.round(ka / step) * step;
 }
 
 export function createDispersal(context: FeatureContext<'settledLand'>): Dispersal {
@@ -41,6 +62,8 @@ export function createDispersal(context: FeatureContext<'settledLand'>): Dispers
   /** Each scenario loaded: its arrival times and its name. */
   const grids = new Map<string, { readonly grid: ArrivalGrid; readonly name: string }>();
   const loading = new Set<string>();
+  // The last share worked out: the grid is scanned again only when what is shaded changes.
+  let lastShare: { readonly key: string; readonly share: number } | null = null;
 
   function load(scenario: DispersalScenario): void {
     if (loading.has(scenario)) return;
@@ -66,16 +89,19 @@ export function createDispersal(context: FeatureContext<'settledLand'>): Dispers
   }
 
   return {
-    show(scenario, ma) {
+    show(scenario, ma, maPerSecond) {
       const loaded = scenario === null || scenario === 'off' ? undefined : grids.get(scenario);
       if (scenario === null || scenario === 'off' || loaded === undefined) {
         context.settledLand.setSettled(null);
         if (scenario !== null && scenario !== 'off') load(scenario);
         return { scenario: scenario ?? 'off', name: null, share: null };
       }
-      const ka = ma * 1000;
+      const ka = shadedKa(ma, maPerSecond);
       context.settledLand.setSettled({ scenario, grid: loaded.grid, ka });
-      return { scenario, name: loaded.name, share: settledShare(loaded.grid, ka) };
+      const key = `${scenario} ${String(Math.round(ka))}`;
+      if (lastShare?.key !== key)
+        lastShare = { key, share: settledShare(loaded.grid, Math.round(ka)) };
+      return { scenario, name: loaded.name, share: lastShare.share };
     },
   };
 }

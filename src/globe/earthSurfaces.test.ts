@@ -22,6 +22,17 @@ function fakeLoads() {
       pending.get(url)?.resolve(texture);
       return texture;
     },
+    /** Every map asked for so far arrives; those let go say so. */
+    arriveAll(): Map<string, Texture> {
+      const all = new Map<string, Texture>();
+      for (const [url, { resolve }] of pending) {
+        const texture = new Texture();
+        texture.name = url;
+        resolve(texture);
+        all.set(url, texture);
+      }
+      return all;
+    },
     fail(url: string): void {
       pending.get(url)?.reject(new Error(`no ${url}`));
     },
@@ -68,6 +79,27 @@ describe('maps shown in the order asked', () => {
 });
 
 describe("Earth's surfaces", () => {
+  it('lets go of maps asked for long ago, never those shown, and loads them again if asked (#1045)', async () => {
+    const { host, loads } = surfaces();
+    // The shown pair, then many more maps passed as time plays.
+    host.setDeepTime({ ...pair('shown-a.png', 'shown-b.png'), seaDepth: 5000, landHeight: 3000 });
+    loads.arriveAll();
+    await settle();
+    host.prefetch(Array.from({ length: 40 }, (_, i) => `passed-${String(i)}.png`));
+    const textures = loads.arriveAll();
+    await settle();
+    const disposed: string[] = [];
+    for (const [url, texture] of textures)
+      texture.addEventListener('dispose', () => disposed.push(url));
+    host.prefetch(['one-more.png']);
+    await settle();
+    // The oldest passed was let go; the shown pair were not.
+    loads.asked.length = 0;
+    host.prefetch(['shown-a.png', 'passed-39.png', 'passed-0.png']);
+    expect(loads.asked).toEqual(['passed-0.png']);
+    expect(disposed).not.toContain('shown-a.png');
+  });
+
   it('starts with every surface off', () => {
     const uniforms = surfaceUniforms();
     for (const name of ['paleoActive', 'shelfActive', 'seaIceActive', 'iceActive', 'plateActive'])
