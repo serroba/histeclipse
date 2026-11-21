@@ -50,6 +50,8 @@ for (const { name, width, height, room } of [
     page,
   }, info) => {
     test.skip(info.project.name !== 'mobile', 'a phone');
+    // A whole first visit, four steps long: 20–33 s on CI's software GPU, against 30 s (#1086).
+    test.slow();
     const problems = collectProblems(page);
     const welcome = page.getByTestId('welcome');
     const bar = page.getByRole('group', { name: 'Holocene' });
