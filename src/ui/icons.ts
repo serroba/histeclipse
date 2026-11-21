@@ -4,6 +4,7 @@
  * words, or an accessible name.
  */
 
+import type { Span } from '../deepTime/scale';
 import { layerEntry, type Layer } from '../layers/layers';
 import type { SourceKind } from '../sources/registry';
 
@@ -137,6 +138,54 @@ export type UiIcon = keyof typeof UI_PATHS;
 /** A control's icon. */
 export function uiIcon(name: UiIcon, size = 18): SVGSVGElement {
   return icon(UI_PATHS[name], size);
+}
+
+/** How far back time reaches, each span by what it shows (#1068). */
+const SPAN_PATHS: Readonly<Record<Span, readonly string[]>> = {
+  // A calendar: the years, day by day.
+  years: [
+    'M4 6h16v14H4z',
+    'M4 10h16',
+    'M8 3.5v4',
+    'M16 3.5v4',
+    'M8 13.5h.01',
+    'M12 13.5h.01',
+    'M16 13.5h.01',
+    'M8 17h.01',
+    'M12 17h.01',
+  ],
+  // A snowflake: the ice ages.
+  ice: [
+    'M12 3v18',
+    'M4.2 7.5l15.6 9',
+    'M4.2 16.5l15.6-9',
+    'M9.5 4.5L12 7l2.5-2.5',
+    'M9.5 19.5L12 17l2.5 2.5',
+  ],
+  // A trilobite: the 540 million years since the Cambrian.
+  all: [
+    'M4 9c0-3.5 3.5-6 8-6s8 2.5 8 6z',
+    'M4 9l-.8 4.5',
+    'M20 9l.8 4.5',
+    'M6.5 9v5c0 3.5 2.5 6.5 5.5 7c3-.5 5.5-3.5 5.5-7V9',
+    'M10.5 9v10.5',
+    'M13.5 9v10.5',
+    'M6.5 12.5h4',
+    'M13.5 12.5h4',
+    'M6.8 16h3.7',
+    'M13.5 16h3.7',
+    'M9 6.3h.01',
+    'M15 6.3h.01',
+  ],
+  // The geologic time spiral: all of Earth's history, winding out from its start.
+  eons: [
+    'M12 12a1.5 1.5 0 0 1 3 0a3 3 0 0 1-6 0a4.5 4.5 0 0 1 9 0a6 6 0 0 1-12 0a7.5 7.5 0 0 1 15 0',
+  ],
+};
+
+/** A span's icon. */
+export function spanIcon(span: Span, size = 16): SVGSVGElement {
+  return icon(SPAN_PATHS[span], size);
 }
 
 /** A layer's icon, as its description in `src/layers` draws it (#904). */
