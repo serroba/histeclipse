@@ -8,6 +8,7 @@
 
 import { SPAN_LABELS, type Span } from '../state/viewState';
 import { element } from './dom';
+import { spanIcon } from './icons';
 import './spanSwitch.css';
 
 export type { Span };
@@ -29,7 +30,9 @@ export function createSpanSwitch(onSpan: (span: Span) => void): SpanSwitch {
     const button = element(
       'button',
       { type: 'button', class: 'time-option', 'aria-pressed': 'false', title },
-      SPAN_LABELS[span],
+      // The icon and the word, both kept on a phone: 540 Myr and 4.6 Gyr need their words (#1068).
+      spanIcon(span),
+      element('span', { class: 'icon-label icon-label-kept' }, SPAN_LABELS[span]),
     );
     button.addEventListener('click', () => {
       onSpan(span);
