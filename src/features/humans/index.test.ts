@@ -12,6 +12,7 @@ import type { DeepChoice, DeepChipView, DeepNoteBlock } from '../../ui/deepChips
 import type { MarkerCardContent } from '../../ui/markerCard';
 import type { Capability, FeatureContext } from '../feature';
 import { humansFeature } from '.';
+import { shadedKa } from './dispersal';
 
 // The arrival grids are images read through a canvas: a small grid stands in for them here.
 vi.mock('./arrivalGrid', () => ({
@@ -132,6 +133,20 @@ async function loaded(context: FeatureContext<Capability>, refresh: ReturnType<t
   });
   return shown;
 }
+
+describe('the dispersal shading while time plays (#1045)', () => {
+  it('shades the moment itself when time stands, and in steps of about a quarter second when it plays', () => {
+    expect(shadedKa(0.0604, null)).toBeCloseTo(60.4);
+    expect(shadedKa(0.0604, undefined)).toBeCloseTo(60.4);
+    // At 10,000 years a second, steps of 3,000 years: about 3 repaints a second.
+    expect(shadedKa(0.0604, 0.01)).toBe(60);
+    expect(shadedKa(0.0616, 0.01)).toBe(63);
+    // At 1,000 years a second, the model's own step.
+    expect(shadedKa(0.0604, 0.001)).toBe(60);
+    // At 200,000 years a second, steps of 50,000.
+    expect(shadedKa(0.08, 0.2)).toBe(100);
+  });
+});
 
 describe('the humans as a feature', () => {
   it('has its chip in the deep-time bar', () => {

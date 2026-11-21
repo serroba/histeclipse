@@ -16,6 +16,7 @@ import {
   type Texture,
 } from 'three';
 
+import { createMapCache, type MapCache } from './mapCache';
 import { LAND_NOISE_GRID, landNoise, levelForShare, shareAtOrAbove } from '../deepTime/landScheme';
 import type {
   DeepTimeSurface,
@@ -123,7 +124,7 @@ type Order = 'deepTime' | 'temperature' | 'ice' | 'seaIce' | 'plates';
 export class EarthSurfaces {
   readonly #host: SurfaceHost;
   // Deep time's maps, loaded once each. They hold data, not colour.
-  readonly #textures = new Map<string, Promise<Texture>>();
+  readonly #maps: MapCache;
   readonly #orders: Readonly<Record<Order, ReturnType<typeof inOrder>>> = {
     deepTime: inOrder(),
     temperature: inOrder(),
@@ -138,6 +139,7 @@ export class EarthSurfaces {
 
   constructor(host: SurfaceHost) {
     this.#host = host;
+    this.#maps = createMapCache((url) => host.load(url));
   }
 
   /** True while deep time's elevation maps are shown instead of today's Earth. */
@@ -168,9 +170,9 @@ export class EarthSurfaces {
   /** Start loading maps that will be wanted soon (as time plays), so they are there in time. */
   prefetch(urls: readonly string[]): void {
     for (const url of urls) {
-      this.#texture(url).catch(() => {
+      this.#maps.get(url).catch(() => {
         // Tried again when it is wanted.
-        this.#textures.delete(url);
+        this.#maps.forget(url);
       });
     }
   }
@@ -222,6 +224,7 @@ export class EarthSurfaces {
   setShelf(surface: ShelfSurface | null): void {
     const { uniforms, dataset } = this.#host;
     if (surface === null) {
+      this.#maps.shows('shelf', null);
       uniforms['shelfActive'] = { value: 0 };
       dataset['shelf'] = 'off';
       this.#host.invalidate();
@@ -229,7 +232,7 @@ export class EarthSurfaces {
     }
     uniforms['seaLevel'] = { value: surface.seaLevel };
     dataset['seaLevel'] = surface.seaLevel.toFixed(1);
-    this.#texture(surface.url).then(
+    this.#maps.get(surface.url).then(
       (map) => {
         this.#set({
           shelfMap: map,
@@ -238,10 +241,11 @@ export class EarthSurfaces {
           shelfActive: 1,
         });
         dataset['shelf'] = surface.url;
+        this.#maps.shows('shelf', [surface.url]);
         this.#host.invalidate();
       },
       () => {
-        this.#textures.delete(surface.url);
+        this.#maps.forget(surface.url);
       },
     );
     this.#host.invalidate();
@@ -336,15 +340,6 @@ export class EarthSurfaces {
     });
   }
 
-  #texture(url: string): Promise<Texture> {
-    let pending = this.#textures.get(url);
-    if (pending === undefined) {
-      pending = this.#host.load(url);
-      this.#textures.set(url, pending);
-    }
-    return pending;
-  }
-
   #showLight(): void {
     const even = this.#deepTime || this.#evenLit.size > 0;
     this.#host.evenLight.value = even ? 1 : 0;
@@ -359,6 +354,7 @@ export class EarthSurfaces {
   /** Take a surface away: what is still loading for it is dropped. */
   #off(order: Order, active: string, key: string): void {
     this.#orders[order].drop();
+    this.#maps.shows(order, null);
     this.#host.uniforms[active] = { value: 0 };
     this.#host.dataset[key] = 'off';
     this.#host.invalidate();
@@ -370,14 +366,15 @@ export class EarthSurfaces {
    */
   #showMaps(order: Order, urls: readonly string[], show: (maps: Texture[]) => void): void {
     const ticket = this.#orders[order].ask();
-    Promise.all(urls.map((url) => this.#texture(url))).then(
+    Promise.all(urls.map((url) => this.#maps.get(url))).then(
       (maps) => {
         if (!this.#orders[order].show(ticket)) return;
+        this.#maps.shows(order, urls);
         show(maps);
         this.#host.invalidate();
       },
       () => {
-        for (const url of urls) this.#textures.delete(url);
+        for (const url of urls) this.#maps.forget(url);
       },
     );
   }

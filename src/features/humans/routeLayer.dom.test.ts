@@ -43,11 +43,26 @@ describe('the routes painted on the deep-time map', () => {
   it('Given a route and a rival, Then each is a curve with an arrowhead, the rival dashed, on each copy of the map', () => {
     const { canvas, calls } = recording();
     paintRoutes(canvas, [route('a', false), route('b', true)]);
-    // Three copies of the map (either side of the date line), each a line and a head.
-    expect(calls.filter((call) => call === 'stroke')).toHaveLength(6);
-    expect(calls.filter((call) => call === 'fill')).toHaveLength(6);
+    // Once each, inside the map: no copies a world away (#1045).
+    expect(calls.filter((call) => call === 'stroke')).toHaveLength(2);
+    expect(calls.filter((call) => call === 'fill')).toHaveLength(2);
     expect(calls).toContain('quadraticCurveTo');
     expect(calls).toContain('dash [6,4]');
+  });
+
+  it('Given a route across the date line, Then it is drawn on both sides of the map', () => {
+    const { canvas, calls } = recording();
+    paintRoutes(canvas, [
+      {
+        ...route('a', false),
+        path: [
+          [170, 60],
+          [190, 62],
+          [200, 64],
+        ],
+      },
+    ]);
+    expect(calls.filter((call) => call === 'stroke')).toHaveLength(2);
   });
 
   it('Given a way with no points, or only one, Then no line or head is drawn for it', () => {

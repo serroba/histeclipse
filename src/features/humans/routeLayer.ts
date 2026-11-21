@@ -4,6 +4,7 @@
  * name at its middle to tap, `human:route-<id>`. A layer on the globe's host (#379).
  */
 
+import { copiesOf } from '../../data/empires';
 import type { RouteShown } from '../../data/humanRoutes';
 import { DEEP_PAINT_ORDER, SURFACE_PRIORITY, type LayerFactory } from '../../globe/layerHost';
 import './humanSites.css';
@@ -34,7 +35,8 @@ export function paintRoutes(canvas: HTMLCanvasElement, routes: readonly RouteSho
     context.strokeStyle = routeColour(route.colour);
     context.fillStyle = routeColour(route.colour);
     context.lineWidth = line;
-    for (const offset of [-360, 0, 360]) {
+    // Only where the route shows on the map: most once, one across the date line twice (#1045).
+    for (const offset of copiesOf(route.path)) {
       const points = route.path.map((point) => xy(point, offset));
       const [first, ...rest] = points;
       if (first === undefined) continue;

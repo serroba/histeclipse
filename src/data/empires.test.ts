@@ -17,6 +17,8 @@ import {
   territoriesIn,
   territoryHue,
   unwrapRing,
+  unwrappedRing,
+  copiesOf,
 } from './empires';
 
 const serve =
@@ -70,6 +72,53 @@ describe('empire borders', () => {
       polities: [{ name: 'A', wikipedia: '', from: 0, to: 1, rings: [[1, 2, 3]] }],
     };
     await expect(loadEmpireCentury('/x', serve(broken))).rejects.toThrow('lon/lat pairs');
+  });
+});
+
+describe('copiesOf (#1045)', () => {
+  it('draws a ring once where it lies inside the map, twice where it crosses the date line', () => {
+    expect(
+      copiesOf([
+        [10, 0],
+        [20, 5],
+        [15, 10],
+      ]),
+    ).toEqual([0]);
+    // Across 180° east, unwrapped past it: also a world to the west.
+    expect(
+      copiesOf([
+        [170, 0],
+        [190, 5],
+        [175, 10],
+      ]),
+    ).toEqual([-360, 0]);
+    // Across 180° west.
+    expect(
+      copiesOf([
+        [-170, 0],
+        [-190, 5],
+      ]),
+    ).toEqual([0, 360]);
+    // Touching the edge exactly needs no copy.
+    expect(
+      copiesOf([
+        [100, 0],
+        [180, 0],
+      ]),
+    ).toEqual([0]);
+    expect(copiesOf([])).toEqual([]);
+  });
+});
+
+describe('unwrappedRing (#1045)', () => {
+  it('unwraps a ring once, and gives the same points again', () => {
+    const ring: [number, number][] = [
+      [179, 0],
+      [-179, 1],
+    ];
+    const first = unwrappedRing(ring);
+    expect(first).toEqual(unwrapRing(ring));
+    expect(unwrappedRing(ring)).toBe(first);
   });
 });
 
