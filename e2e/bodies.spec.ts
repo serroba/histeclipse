@@ -333,3 +333,31 @@ test('on a short phone, playing the years, nothing on the zoom rail overlaps any
   expect(overlaps).toEqual([]);
   expect(problems).toEqual([]);
 });
+
+test('a first view of Earth leaves the Moon’s theory for later; a scroll on the globe brings it (#981)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const asked: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('elpMpp')) asked.push(request.url());
+  });
+  await test.step('Given today close up, a week from new Moon, no layers', async () => {
+    await page.goto('./?t=2026-11-17T12:00Z&cam=20,0,4.5&layers=');
+    await globeRendered(page);
+    await page.waitForLoadState('networkidle');
+  });
+  await test.step('Then the 570 KB lunar theory has not been fetched', () => {
+    expect(asked).toEqual([]);
+  });
+  await test.step('When the reader scrolls on the globe, Then it comes, and the Moon with it', async () => {
+    const globe = page.getByTestId('globe');
+    const box = await globe.boundingBox();
+    if (box === null) throw new Error('no globe');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.wheel(0, 300);
+    await expect.poll(() => asked.length).toBeGreaterThan(0);
+    await expect(page.locator('.space-marker[data-body="moon"]')).toBeAttached();
+  });
+  expect(problems).toEqual([]);
+});

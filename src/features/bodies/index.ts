@@ -72,6 +72,7 @@ export interface BodiesContext extends PartContext {
     | 'showPlanetView'
     | 'setSaturnRings'
     | 'setOrbits'
+    | 'canvas'
   >;
   readonly zoomRail: Pick<ZoomRail, 'setOrbits'>;
   /** The Moon's theory has arrived: show what needs it again. */
@@ -129,7 +130,7 @@ export function mountBodies(context: BodiesContext): BodiesPart {
     store.set((state) => ({ ...state, planetLight }));
   });
   const sun = createSunCloseUp(context);
-  const theMoon = createMoon(context);
+  const theMoon = createMoon(context, undefined, context.globe.canvas);
   const planets = createPlanets({
     base,
     globe,
@@ -363,6 +364,7 @@ export function mountBodies(context: BodiesContext): BodiesPart {
     show,
     sharpen: sharpenClose,
     render(state, previous) {
+      if (theMoon.wanted(state)) theMoon.load();
       // Asked once: a failed load is reported once rather than on every move of the camera.
       if (!planets.asked() && planets.wanted(state)) {
         planets.load().catch((error: unknown) => {
