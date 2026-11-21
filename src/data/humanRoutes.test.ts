@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import routes from '../../public/data/humans/routes.json';
-import { loadHumanRoutes, routeCard, routesAt, unwrapPath, type HumanRoutes } from './humanRoutes';
+import {
+  loadHumanRoutes,
+  middleOf,
+  routeCard,
+  routesAt,
+  unwrapPath,
+  type HumanRoutes,
+} from './humanRoutes';
 
 const serve = (body: unknown) => (): Promise<Response> => Promise.resolve(Response.json(body));
 
@@ -64,6 +71,23 @@ describe('the routes people are argued to have taken', () => {
     const beringia = routesAt(await load(), 20).find((route) => route.id === 'beringia');
     expect(beringia?.middle.longitude).toBeGreaterThan(100);
     expect(beringia?.middle.longitude).toBeLessThanOrEqual(180);
+  });
+
+  it('find the middle of a way, even one that does not move, or of one point', () => {
+    expect(
+      middleOf([
+        [0, 0],
+        [10, 0],
+      ]),
+    ).toEqual({ latitude: 0, longitude: 5 });
+    expect(
+      middleOf([
+        [3, 4],
+        [3, 4],
+      ]),
+    ).toEqual({ latitude: 4, longitude: 3 });
+    expect(middleOf([[3, 4]])).toEqual({ latitude: 4, longitude: 3 });
+    expect(middleOf([])).toEqual({ latitude: 0, longitude: 0 });
   });
 
   it('give a route its card: the question, whose argument, the way, when, the evidence each side, and its rivals', async () => {

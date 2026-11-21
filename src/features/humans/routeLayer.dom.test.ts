@@ -50,6 +50,15 @@ describe('the routes painted on the deep-time map', () => {
     expect(calls).toContain('dash [6,4]');
   });
 
+  it('Given a way with no points, or only one, Then no line or head is drawn for it', () => {
+    const { canvas, calls } = recording();
+    paintRoutes(canvas, [
+      { ...route('a', false), path: [] },
+      { ...route('b', false), path: [[10, 0]] },
+    ]);
+    expect(calls.filter((call) => call === 'fill')).toHaveLength(0);
+  });
+
   it('Given no 2D context, Then nothing is painted', () => {
     const canvas = document.createElement('canvas');
     vi.spyOn(canvas, 'getContext').mockReturnValue(null);

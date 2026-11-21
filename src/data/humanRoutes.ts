@@ -135,7 +135,7 @@ export function unwrapPath(
 }
 
 /** The point halfway along a way, by its length on the map. */
-function middleOf(path: readonly (readonly [number, number])[]): GeoPoint {
+export function middleOf(path: readonly (readonly [number, number])[]): GeoPoint {
   const lengths = path.slice(1).map((point, i) => {
     const before = path[i] ?? point;
     return Math.hypot(point[0] - before[0], point[1] - before[1]);
