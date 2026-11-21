@@ -20,6 +20,8 @@ export interface DockView {
 
 export interface LayerDock {
   readonly root: HTMLElement;
+  /** The layers whose buttons show (#1072), so the chips beside Layers need not repeat them. */
+  shown(): ReadonlySet<string>;
   render(active: readonly ActiveLayer[]): void;
 }
 
@@ -49,6 +51,12 @@ export function layerDock(...buttons: readonly HTMLElement[]): LayerDock {
   }
   return {
     root,
+    shown: () =>
+      new Set(
+        buttons.flatMap((button) =>
+          button.hidden === false ? [button.dataset['layer'] ?? ''] : [],
+        ),
+      ),
     render(active) {
       const on = new Map(active.map((each) => [each.layer as string, each]));
       for (const [button, words] of said) {

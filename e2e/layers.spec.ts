@@ -361,20 +361,30 @@ test('the layers on show as chips beside Layers: one off its span offers where i
   const problems = collectProblems(page);
   const phone = info.project.name === 'mobile';
   const on = page.getByRole('group', { name: 'Layers on' });
+  const dock = page.getByRole('group', { name: 'The time bar’s layers' });
   await test.step('Given 100 million years ago with plates and humans on', async () => {
     await page.goto('./?ma=100&scale=all&layers=plates,humans&cam=-46,122,3');
     await expect(page.locator('.hud-date')).toHaveText('100 million years ago');
   });
-  await test.step('Then the chips are beside Layers, or on a phone at the top of its sheet', async () => {
+  await test.step('Then the chips are beside Layers, or on a phone at the top of its sheet; one place per layer (#1072)', async () => {
     if (phone) {
       await expect(on).toBeHidden();
       await expect(page.locator('.layers-open')).toHaveAttribute('data-on', '2');
       await openLayers(page);
+      await expect(on.locator('.active-chip')).toHaveCount(2);
+    } else {
+      // Plates have their button in the bar's dock, so only humans, off their span, is a chip.
+      await expect(on.locator('.active-chip')).toHaveCount(1);
+      await expect(on.locator('[data-layer="humans"]')).toHaveCount(1);
+      await expect(dock.getByRole('button', { name: 'Plates', exact: true })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
     }
-    await expect(on.locator('.active-chip')).toHaveCount(2);
   });
   await test.step('When plates are taken off, Then time and camera stay', async () => {
-    await on.getByRole('button', { name: 'Turn off Plates' }).click();
+    if (phone) await on.getByRole('button', { name: 'Turn off Plates' }).click();
+    else await dock.getByRole('button', { name: 'Plates', exact: true }).click();
     await expect(on.locator('[data-layer="plates"]')).toHaveCount(0);
     await expect(page).toHaveURL(/ma=100/);
     await expect(page).toHaveURL(/cam=-46/);
@@ -382,7 +392,16 @@ test('the layers on show as chips beside Layers: one off its span offers where i
   await test.step('When they go to where humans draw, Then the ice ages open at the earliest Homo sapiens', async () => {
     await on.getByRole('button', { name: 'Humans: go to the earliest Homo sapiens' }).click();
     await expect(page.locator('.hud-date')).toHaveText('315,000 years ago');
-    await expect(on.locator('[data-layer="humans"]')).toHaveAttribute('data-draws', 'true');
+    if (phone) {
+      await expect(on.locator('[data-layer="humans"]')).toHaveAttribute('data-draws', 'true');
+    } else {
+      // There the dock has humans' button, pressed, and the chip steps aside.
+      await expect(on.locator('[data-layer="humans"]')).toHaveCount(0);
+      await expect(dock.getByRole('button', { name: 'Humans', exact: true })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+    }
   });
   expect(problems).toEqual([]);
 });

@@ -195,6 +195,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     said: () => features.said(),
     // How each layer's load stands (#751): the features on the contract report theirs.
     loads: () => features.loads(),
+    docked: () => deepTime.docked(),
     actions: () => [
       // The features on the contract offer their own (#909).
       ...features.actions(),

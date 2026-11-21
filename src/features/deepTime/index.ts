@@ -340,6 +340,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
 
   return {
     bar: deepBar.root,
+    docked: () => deepBar.docked(),
     glance: glance.root,
     spanSwitch: historySpan.root,
     show: showDeepTime,

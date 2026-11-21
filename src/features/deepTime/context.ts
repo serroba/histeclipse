@@ -61,6 +61,8 @@ export interface DeepTimeContext extends PartContext {
 
 export interface DeepTimePart {
   readonly bar: HTMLElement;
+  /** The layers whose buttons the bar's dock shows now (#1072); none outside deep time. */
+  readonly docked: () => ReadonlySet<string>;
   readonly glance: HTMLElement;
   /** How far back time reaches: the years, or one of deep time's spans. */
   readonly spanSwitch: HTMLElement;
