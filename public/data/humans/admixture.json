@@ -1,0 +1,832 @@
+{
+  "schemaVersion": 1,
+  "about": "Episodes of interbreeding among Neanderthals, Denisovans and our species that ancient and living genomes show, each with the competing estimates of when and how much, side by side, and the evidence for and against, each with its paper; and what living people carry from it. Compiled for histeclipse; every estimate is a model’s, not an observation.",
+  "episodes": [
+    {
+      "id": "neanderthals-into-non-africans",
+      "title": "Neanderthals into the ancestors of all non-Africans",
+      "from": "neanderthal",
+      "into": "sapiens",
+      "fromKa": 65,
+      "toKa": 43.5,
+      "where": "Probably the Middle East (Prüfer et al. 2021); not known from any site",
+      "summary": "Every non-African genome studied carries Neanderthal DNA from mixing after modern humans left Africa. Estimates of when have narrowed from 86,000–37,000 years ago to about 50,000–44,000. Papers differ on whether it was one pulse, one long period or several episodes.",
+      "estimates": [
+        {
+          "text": "Sankararaman et al. 2012, PLoS Genetics: from linkage in European genomes, last gene flow 86,000–37,000 years ago, most likely 65,000–47,000.",
+          "source": {
+            "citation": "Sankararaman et al. 2012, PLoS Genetics",
+            "doi": "10.1371/journal.pgen.1002947"
+          }
+        },
+        {
+          "text": "Fu et al. 2014, Nature: the 45,000-year-old Ust’-Ishim man’s longer Neanderthal segments put the gene flow 7,000–13,000 years before he lived.",
+          "source": {
+            "citation": "Fu et al. 2014, Nature",
+            "doi": "10.1038/nature13810"
+          }
+        },
+        {
+          "text": "Prüfer et al. 2021, Nature Ecology & Evolution, summarise earlier work: mixing between 50,000 and 60,000 years ago, probably in the Middle East.",
+          "source": {
+            "citation": "Prüfer et al. 2021, Nature Ecology & Evolution",
+            "doi": "10.1038/s41559-021-01443-x"
+          }
+        },
+        {
+          "text": "Iasi et al. 2024, Science: over 300 genomes point to a single shared, extended period of gene flow, 50,500 to 43,500 years ago.",
+          "source": {
+            "citation": "Iasi et al. 2024, Science",
+            "doi": "10.1126/science.adq3010"
+          }
+        },
+        {
+          "text": "Sümer et al. 2024, Nature: Ranis genomes carry segments from one admixture event shared with all non-Africans, about 49,000–45,000 years ago.",
+          "source": {
+            "citation": "Sümer et al. 2024, Nature",
+            "doi": "10.1038/s41586-024-08420-x"
+          }
+        },
+        {
+          "text": "Villanea & Schraiber 2018, Nature Ecology & Evolution: a single admixture did not fit; they favour several episodes into both Europeans and East Asians.",
+          "source": {
+            "citation": "Villanea & Schraiber 2018, Nature Ecology & Evolution",
+            "doi": "10.1038/s41559-018-0735-8"
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Green et al. found Neanderthals share more variants with Eurasians than with sub-Saharan Africans, pointing to gene flow before Eurasian groups split.",
+          "source": {
+            "citation": "Green et al. 2010, Science",
+            "doi": "10.1126/science.1188021"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Sankararaman et al. weighed old population structure in Africa as an alternative, but found the linkage pattern fits recent interbreeding.",
+          "source": {
+            "citation": "Sankararaman et al. 2012, PLoS Genetics",
+            "doi": "10.1371/journal.pgen.1002947"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Hajdinjak et al. traced most of the gene flow to Neanderthals who split from European late Neanderthals at least 70,000 years ago, but after the Siberian line.",
+          "source": {
+            "citation": "Hajdinjak et al. 2018, Nature",
+            "doi": "10.1038/nature26151"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Prüfer et al. found the Vindija Neanderthal closer than the Altai one to the Neanderthals who mixed with non-Africans’ ancestors.",
+          "source": {
+            "citation": "Prüfer et al. 2017, Science",
+            "doi": "10.1126/science.aao1887"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Moorjani et al. used the Neanderthal gene flow shared by all non-Africans as a clock, and it matched radiocarbon ages of five ancient genomes.",
+          "source": {
+            "citation": "Moorjani et al. 2016, PNAS",
+            "doi": "10.1073/pnas.1514696113"
+          }
+        }
+      ],
+      "individuals": [
+        "Ust’-Ishim",
+        "Zlatý kůň",
+        "Ranis (six individuals)"
+      ],
+      "finds": [
+        "ust-ishim",
+        "ranis"
+      ]
+    },
+    {
+      "id": "extra-neanderthal-ancestry-east-asia",
+      "title": "More Neanderthal ancestry in East Asians than in Europeans",
+      "from": "neanderthal",
+      "into": "sapiens",
+      "fromKa": null,
+      "toKa": null,
+      "where": null,
+      "summary": "East Asians carry somewhat more Neanderthal DNA than Europeans. The cause is debated: an extra pulse into East Asians’ ancestors, dilution of Europeans by a group with little Neanderthal ancestry, or differences in selection. No date is agreed.",
+      "estimates": [
+        {
+          "text": "Wall et al. 2013, Genetics: East Asians carry more Neanderthal DNA than Europeans, so some mixing must postdate the split of the two groups.",
+          "source": {
+            "citation": "Wall et al. 2013, Genetics",
+            "doi": "10.1534/genetics.112.148213"
+          }
+        },
+        {
+          "text": "Villanea & Schraiber 2018, Nature Ecology & Evolution: East Asians’ Neanderthal share is about 12–20% higher; they favour several episodes over dilution.",
+          "source": {
+            "citation": "Villanea & Schraiber 2018, Nature Ecology & Evolution",
+            "doi": "10.1038/s41559-018-0735-8"
+          }
+        },
+        {
+          "text": "Vernot & Akey 2015, AJHG: a one-pulse model is rejected; a second pulse into East Asians or dilution of Europeans both fit the data.",
+          "source": {
+            "citation": "Vernot & Akey 2015, American Journal of Human Genetics",
+            "doi": "10.1016/j.ajhg.2015.01.006"
+          }
+        },
+        {
+          "text": "Kim & Lohmueller 2015, AJHG: weaker selection in East Asians cannot explain the gap; most likely several pulses of Neanderthal admixture.",
+          "source": {
+            "citation": "Kim & Lohmueller 2015, American Journal of Human Genetics",
+            "doi": "10.1016/j.ajhg.2014.12.029"
+          }
+        },
+        {
+          "text": "Juric et al. 2016, PLOS Genetics: East Asians had somewhat higher starting levels of Neanderthal ancestry even after allowing for selection.",
+          "source": {
+            "citation": "Juric et al. 2016, PLOS Genetics",
+            "doi": "10.1371/journal.pgen.1006340"
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Lazaridis et al. found the earliest Near Easterners took about half their ancestry from a ‘Basal Eurasian’ line with little if any Neanderthal admixture.",
+          "source": {
+            "citation": "Lazaridis et al. 2016, Nature",
+            "doi": "10.1038/nature19310"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Vernot & Akey found admixture took place both before and after non-African populations split from each other.",
+          "source": {
+            "citation": "Vernot & Akey 2014, Science",
+            "doi": "10.1126/science.1245938"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Vernot et al. mapped archaic DNA in 1,523 people and concluded Neanderthal admixture happened several times in different non-African populations.",
+          "source": {
+            "citation": "Vernot et al. 2016, Science",
+            "doi": "10.1126/science.aad9416"
+          }
+        }
+      ],
+      "individuals": [],
+      "finds": []
+    },
+    {
+      "id": "recent-neanderthal-ancestors-early-europeans",
+      "title": "Recent Neanderthal ancestors in the first Europeans",
+      "from": "neanderthal",
+      "into": "sapiens",
+      "fromKa": 45.9,
+      "toKa": 37,
+      "where": "South-eastern Europe",
+      "summary": "Some of the earliest modern humans in Europe had Neanderthal ancestors only a few generations back, showing local mixing in Europe. Not every early group shows it: the Ranis and Zlatý kůň people carry only the older shared mixing.",
+      "estimates": [
+        {
+          "text": "Fu et al. 2015, Nature: Oase 1, 37,000–42,000 years old, is about 6–9% Neanderthal, with an ancestor four to six generations back.",
+          "source": {
+            "citation": "Fu et al. 2015, Nature",
+            "doi": "10.1038/nature14558"
+          }
+        },
+        {
+          "text": "Hajdinjak et al. 2021, Nature: all three Bacho Kiro people, 45,930–42,580 years old, had Neanderthal ancestors a few generations back.",
+          "source": {
+            "citation": "Hajdinjak et al. 2021, Nature",
+            "doi": "10.1038/s41586-021-03335-3"
+          }
+        },
+        {
+          "text": "Sümer et al. 2024, Nature: Ranis Neanderthal segments come from the single event shared with all non-Africans, about 49,000–45,000 years ago.",
+          "source": {
+            "citation": "Sümer et al. 2024, Nature",
+            "doi": "10.1038/s41586-024-08420-x"
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Hublin et al. identified the Bacho Kiro remains as Homo sapiens, with Initial Upper Palaeolithic tools, before 45,000 years ago.",
+          "source": {
+            "citation": "Hublin et al. 2020, Nature",
+            "doi": "10.1038/s41586-020-2259-z"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Prüfer et al. found the Zlatý kůň woman about 3% Neanderthal, like other Upper Palaeolithic hunter-gatherers, with longer segments than Ust’-Ishim.",
+          "source": {
+            "citation": "Prüfer et al. 2021, Nature Ecology & Evolution",
+            "doi": "10.1038/s41559-021-01443-x"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "genetic",
+          "text": "Mylopotamitaki et al. note that local mixing in Europe happened, but not on all occasions.",
+          "source": {
+            "citation": "Mylopotamitaki et al. 2024, Nature",
+            "doi": "10.1038/s41586-023-06923-7"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Fu et al. found Oase 1 shares no more alleles with later Europeans than with East Asians: his group left little trace.",
+          "source": {
+            "citation": "Fu et al. 2015, Nature",
+            "doi": "10.1038/nature14558"
+          }
+        }
+      ],
+      "individuals": [
+        "Oase 1",
+        "Bacho Kiro (three individuals)"
+      ],
+      "finds": [
+        "bacho-kiro",
+        "oase"
+      ]
+    },
+    {
+      "id": "early-modern-humans-into-neanderthals",
+      "title": "Early modern humans into Neanderthals",
+      "from": "sapiens",
+      "into": "neanderthal",
+      "fromKa": 370,
+      "toKa": 250,
+      "where": "Outside Africa, place unknown",
+      "summary": "Neanderthal Y chromosomes and mitochondrial DNA are closer to ours than to Denisovans’, though their nuclear genomes are not. Several teams read this as early gene flow from modern humans that replaced both. Dates range from about 370,000 to 250,000 years ago.",
+      "estimates": [
+        {
+          "text": "Petr et al. 2020, Science: Neanderthal and modern human Y chromosomes split about 370,000 years ago; both Y and mtDNA were replaced in late Neanderthals.",
+          "source": {
+            "citation": "Petr et al. 2020, Science",
+            "doi": "10.1126/science.abb6460"
+          }
+        },
+        {
+          "text": "Posth et al. 2017, Nature Communications: the Hohlenstein-Stadel mtDNA split from other Neanderthals about 270,000 years ago, a bound on the replacement.",
+          "source": {
+            "citation": "Posth et al. 2017, Nature Communications",
+            "doi": "10.1038/ncomms16046"
+          }
+        },
+        {
+          "text": "Harris et al. 2023, Current Biology: modern humans who left Africa about 250,000 years ago mixed with Neanderthals, giving them about 6% modern human ancestry.",
+          "source": {
+            "citation": "Harris et al. 2023, Current Biology",
+            "doi": "10.1016/j.cub.2023.09.066"
+          }
+        },
+        {
+          "text": "Li et al. 2024, Science: Neanderthals carry 2.5–3.7% modern human ancestry, from two distinct waves of gene flow.",
+          "source": {
+            "citation": "Li et al. 2024, Science",
+            "doi": "10.1126/science.adi1768"
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Meyer et al. found the 430,000-year-old Sima de los Huesos people related to Neanderthals but with Denisovan-like mtDNA, suggesting Neanderthal mtDNA turned over later.",
+          "source": {
+            "citation": "Meyer et al. 2016, Nature",
+            "doi": "10.1038/nature17405"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Posth et al. showed by modelling that a complete mtDNA replacement is possible even with very little interbreeding.",
+          "source": {
+            "citation": "Posth et al. 2017, Nature Communications",
+            "doi": "10.1038/ncomms16046"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Petr et al. suggest the replacement is plausible if Neanderthals’ small population carried a heavier genetic load than modern humans.",
+          "source": {
+            "citation": "Petr et al. 2020, Science",
+            "doi": "10.1126/science.abb6460"
+          }
+        }
+      ],
+      "individuals": [
+        "Hohlenstein-Stadel femur"
+      ],
+      "finds": []
+    },
+    {
+      "id": "modern-humans-into-altai-neanderthals",
+      "title": "Modern humans into the Altai Neanderthals’ ancestors",
+      "from": "sapiens",
+      "into": "neanderthal",
+      "fromKa": 100,
+      "toKa": 100,
+      "where": "Possibly the Near East",
+      "summary": "An early-splitting modern human group left DNA in the ancestors of the Altai Neanderthal roughly 100,000 years ago. The signal was not found in a Denisovan or in chromosome 21 of two European Neanderthals.",
+      "estimates": [
+        {
+          "text": "Kuhlwilm et al. 2016, Nature: a modern human population that split early in Africa contributed to the Altai Neanderthals’ ancestors roughly 100,000 years ago.",
+          "source": {
+            "citation": "Kuhlwilm et al. 2016, Nature",
+            "doi": "10.1038/nature16544"
+          }
+        },
+        {
+          "text": "Li et al. 2024, Science: two distinct waves of modern human gene flow into Neanderthals, over the past 200,000 years.",
+          "source": {
+            "citation": "Li et al. 2024, Science",
+            "doi": "10.1126/science.adi1768"
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Kuhlwilm et al. found no such contribution in the Altai Denisovan or in chromosome 21 from Neanderthals in Spain and Croatia.",
+          "source": {
+            "citation": "Kuhlwilm et al. 2016, Nature",
+            "doi": "10.1038/nature16544"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Prüfer et al. found several gene flow events among Neanderthals, Denisovans and early modern humans in the Altai Neanderthal genome.",
+          "source": {
+            "citation": "Prüfer et al. 2014, Nature",
+            "doi": "10.1038/nature12886"
+          }
+        }
+      ],
+      "individuals": [
+        "Altai Neanderthal"
+      ],
+      "finds": [
+        "denisova-cave"
+      ]
+    },
+    {
+      "id": "neanderthal-denisovan-denny",
+      "title": "A Neanderthal mother and a Denisovan father",
+      "from": "neanderthal",
+      "into": "denisovan",
+      "fromKa": 140,
+      "toKa": 80,
+      "where": "Denisova Cave, Altai",
+      "summary": "Denisova 11 (‘Denny’) was the daughter of a Neanderthal mother and a Denisovan father. The father himself carried traces of older Neanderthal ancestry. Finding a first-generation hybrid among so few genomes suggests the groups mixed when they met.",
+      "estimates": [
+        {
+          "text": "Slon et al. 2018, Nature: Denisova 11 had a Neanderthal mother and a Denisovan father; the groups had split more than 390,000 years ago.",
+          "source": {
+            "citation": "Slon et al. 2018, Nature",
+            "doi": "10.1038/s41586-018-0455-x"
+          }
+        },
+        {
+          "text": "Douka et al. 2019, Nature: all Neanderthal fossils at Denisova Cave, and Denisova 11, date to between 140,000 and 80,000 years ago.",
+          "source": {
+            "citation": "Douka et al. 2019, Nature",
+            "doi": "10.1038/s41586-018-0870-z"
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Slon et al. found the mother closer to later European Neanderthals than to an earlier Denisova Cave Neanderthal: a migration east after 120,000 years ago.",
+          "source": {
+            "citation": "Slon et al. 2018, Nature",
+            "doi": "10.1038/s41586-018-0455-x"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Prüfer et al. found several gene flow events among Neanderthals, Denisovans and early modern humans.",
+          "source": {
+            "citation": "Prüfer et al. 2014, Nature",
+            "doi": "10.1038/nature12886"
+          }
+        }
+      ],
+      "individuals": [
+        "Denisova 11"
+      ],
+      "finds": [
+        "denisova-11"
+      ]
+    },
+    {
+      "id": "neanderthals-into-denisovans-earlier",
+      "title": "Earlier Neanderthal ancestry in Denisovans",
+      "from": "neanderthal",
+      "into": "denisovan",
+      "fromKa": null,
+      "toKa": null,
+      "where": "Probably the Altai",
+      "summary": "Denny’s Denisovan father carried traces of Neanderthal ancestry from mixing some generations before her, so contact happened more than once. No date is given in the abstracts read.",
+      "estimates": [
+        {
+          "text": "Slon et al. 2018, Nature: the Denisovan father’s genome bears traces of Neanderthal ancestry; he came from a population related to a later Denisovan in the cave.",
+          "source": {
+            "citation": "Slon et al. 2018, Nature",
+            "doi": "10.1038/s41586-018-0455-x"
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Prüfer et al. reported that interbreeding of low magnitude occurred among many Late Pleistocene hominin groups.",
+          "source": {
+            "citation": "Prüfer et al. 2014, Nature",
+            "doi": "10.1038/nature12886"
+          }
+        }
+      ],
+      "individuals": [
+        "Denisova 11"
+      ],
+      "finds": [
+        "denisova-cave"
+      ]
+    },
+    {
+      "id": "thorin-isolated-lineage",
+      "title": "Thorin: a late Neanderthal line isolated for about 50,000 years",
+      "from": "neanderthal",
+      "into": "neanderthal",
+      "fromKa": 105,
+      "toKa": 42,
+      "where": "Mediterranean France",
+      "summary": "Thorin’s genome split from other late Neanderthals about 105,000 years ago. His small group shows no gene flow with other known late European Neanderthals for some 50,000 years, though they lived nearby. Not a mixing episode: evidence of its absence.",
+      "estimates": [
+        {
+          "text": "Slimak et al. 2024, Cell Genomics: Thorin’s lineage split from other late Neanderthals about 105,000 years ago, with some 50,000 years of genetic isolation.",
+          "source": {
+            "citation": "Slimak et al. 2024, Cell Genomics",
+            "doi": "10.1016/j.xgen.2024.100593"
+          }
+        },
+        {
+          "text": "Slimak et al. 2024, Cell Genomics: the fossils go with Neanderthal final traditions dated about 50,000–42,000 years ago.",
+          "source": {
+            "citation": "Slimak et al. 2024, Cell Genomics",
+            "doi": "10.1016/j.xgen.2024.100593"
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Hajdinjak et al. found no recent gene flow from early modern humans in four late Neanderthals who postdate modern humans’ arrival in Europe.",
+          "source": {
+            "citation": "Hajdinjak et al. 2018, Nature",
+            "doi": "10.1038/nature26151"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Mafessoni et al. found Siberian Neanderthals lived in isolated groups of fewer than 60 individuals.",
+          "source": {
+            "citation": "Mafessoni et al. 2020, PNAS",
+            "doi": "10.1073/pnas.2004944117"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "genetic",
+          "text": "Slimak et al. themselves note most earlier genomes show late European Neanderthals as one metapopulation without marked structure.",
+          "source": {
+            "citation": "Slimak et al. 2024, Cell Genomics",
+            "doi": "10.1016/j.xgen.2024.100593"
+          }
+        }
+      ],
+      "individuals": [
+        "Thorin"
+      ],
+      "finds": [
+        "mandrin"
+      ]
+    }
+  ],
+  "traits": [
+    {
+      "id": "share-today",
+      "title": "How much Neanderthal DNA people carry",
+      "summary": "Non-Africans carry about 1–3% Neanderthal DNA, most often given as about 2%. Whether the share fell over the past 45,000 years is disputed.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Fu et al. 2015 put the Neanderthal share in present-day Eurasians at 1–3%.",
+          "source": {
+            "citation": "Fu et al. 2015, Nature",
+            "doi": "10.1038/nature14558"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Sankararaman et al. 2016 give about 2% Neanderthal ancestry, against up to about 5% Denisovan in some people.",
+          "source": {
+            "citation": "Sankararaman et al. 2016, Current Biology",
+            "doi": "10.1016/j.cub.2016.03.037"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Fu et al. 2016 found the Neanderthal share in Europeans fell from 3–6% to about 2% between 45,000 and 7,000 years ago, and read it as selection.",
+          "source": {
+            "citation": "Fu et al. 2016, Nature",
+            "doi": "10.1038/nature17993"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "genetic",
+          "text": "Petr et al. 2019 argue that decline is an artefact of gene flow between modern groups and find no change in Europe over 45,000 years.",
+          "source": {
+            "citation": "Petr et al. 2019, PNAS",
+            "doi": "10.1073/pnas.1814338116"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Prüfer et al. 2017 showed the Vindija genome lets 10–20% more Neanderthal DNA be found in living people.",
+          "source": {
+            "citation": "Prüfer et al. 2017, Science",
+            "doi": "10.1126/science.aao1887"
+          }
+        }
+      ]
+    },
+    {
+      "id": "neanderthal-deserts",
+      "title": "Deserts with no Neanderthal ancestry",
+      "summary": "Long stretches of our genomes, especially near genes and on the X chromosome, carry little or no Neanderthal DNA. Some teams link this to reduced male fertility in hybrids; others to many weakly harmful Neanderthal variants.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Sankararaman et al. 2014 found Neanderthal ancestry reduced near genes, in testis-expressed genes and about fivefold on the X chromosome, pointing to male hybrid infertility.",
+          "source": {
+            "citation": "Sankararaman et al. 2014, Nature",
+            "doi": "10.1038/nature12961"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Sankararaman et al. 2016 found Denisovan ancestry depleted in the same way, and suggested reduced male fertility may follow mixtures of groups split over 500,000 years.",
+          "source": {
+            "citation": "Sankararaman et al. 2016, Current Biology",
+            "doi": "10.1016/j.cub.2016.03.037"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Vernot et al. 2016 identified genomic regions significantly depleted of both Neanderthal and Denisovan sequence.",
+          "source": {
+            "citation": "Vernot et al. 2016, Science",
+            "doi": "10.1126/science.aad9416"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "genetic",
+          "text": "Harris & Nielsen 2016 argue a heavier Neanderthal mutational load predicts the depletion near genes without needing harmful gene interactions.",
+          "source": {
+            "citation": "Harris & Nielsen 2016, Genetics",
+            "doi": "10.1534/genetics.116.186890"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "genetic",
+          "text": "Juric et al. 2016 find selection is best explained by many weakly harmful alleles that were neutral in small Neanderthal groups.",
+          "source": {
+            "citation": "Juric et al. 2016, PLOS Genetics",
+            "doi": "10.1371/journal.pgen.1006340"
+          }
+        }
+      ]
+    },
+    {
+      "id": "immunity",
+      "title": "Immunity genes",
+      "summary": "Innate immunity genes carry more Neanderthal DNA than other coding genes. A cluster of Toll-like receptors holds two Neanderthal-like and one Denisovan-like haplotype, linked to microbial resistance and allergy.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Dannemann et al. 2016 found three archaic haplotypes at TLR6-TLR1-TLR10, linked to more microbial resistance and more allergic disease.",
+          "source": {
+            "citation": "Dannemann et al. 2016, American Journal of Human Genetics",
+            "doi": "10.1016/j.ajhg.2015.11.015"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Deschamps et al. 2016 found innate immunity genes carry more Neanderthal introgression than the rest of the coding genome.",
+          "source": {
+            "citation": "Deschamps et al. 2016, American Journal of Human Genetics",
+            "doi": "10.1016/j.ajhg.2015.11.014"
+          }
+        }
+      ]
+    },
+    {
+      "id": "skin-and-hair",
+      "title": "Skin and hair",
+      "summary": "Neanderthal variants are common near genes for skin and hair. Some make skin and hair lighter and others darker, so Neanderthals themselves were probably varied.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Sankararaman et al. 2014 found regions rich in Neanderthal alleles enriched for genes affecting keratin filaments.",
+          "source": {
+            "citation": "Sankararaman et al. 2014, Nature",
+            "doi": "10.1038/nature12961"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Vernot & Akey 2014 concluded Neanderthals were a source of adaptive variation at loci involved in skin.",
+          "source": {
+            "citation": "Vernot & Akey 2014, Science",
+            "doi": "10.1126/science.1245938"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Dannemann & Kelso 2017, using UK Biobank, found Neanderthal alleles linked to both lighter and darker skin and hair.",
+          "source": {
+            "citation": "Dannemann & Kelso 2017, American Journal of Human Genetics",
+            "doi": "10.1016/j.ajhg.2017.09.010"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "McArthur et al. 2021 found Neanderthal regions depleted of heritability for over 400 traits except skin and hair.",
+          "source": {
+            "citation": "McArthur et al. 2021, Nature Communications",
+            "doi": "10.1038/s41467-021-24582-y"
+          }
+        }
+      ]
+    },
+    {
+      "id": "covid-19",
+      "title": "COVID-19 risk and protection",
+      "summary": "The main genetic risk factor for severe COVID-19, on chromosome 3, is a Neanderthal segment. A second Neanderthal haplotype, on chromosome 12, is mildly protective.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Zeberg & Pääbo 2020 found the chromosome 3 risk segment, about 50 kb, comes from Neanderthals; about 50% of south Asians and 16% of Europeans carry it.",
+          "source": {
+            "citation": "Zeberg & Pääbo 2020, Nature",
+            "doi": "10.1038/s41586-020-2818-3"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Zeberg & Pääbo 2021 found a protective Neanderthal haplotype on chromosome 12, common outside Africa, with a more moderate effect.",
+          "source": {
+            "citation": "Zeberg & Pääbo 2021, PNAS",
+            "doi": "10.1073/pnas.2026309118"
+          }
+        }
+      ]
+    },
+    {
+      "id": "depression-and-other-traits",
+      "title": "Depression and other traits",
+      "summary": "Neanderthal variants are linked to depression, sun-damaged skin, blood clotting, mood, sleep and smoking. Taken together, though, Neanderthal DNA contributes less than expected to most traits.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Simonti et al. 2016, using health records of about 28,000 people, linked Neanderthal alleles to depression, actinic keratosis, hypercoagulation and tobacco use.",
+          "source": {
+            "citation": "Simonti et al. 2016, Science",
+            "doi": "10.1126/science.aad2149"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Dannemann & Kelso 2017 found Neanderthal DNA affects height, sleep patterns, mood and smoking in present-day Europeans.",
+          "source": {
+            "citation": "Dannemann & Kelso 2017, American Journal of Human Genetics",
+            "doi": "10.1016/j.ajhg.2017.09.010"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Prüfer et al. 2017 identified Neanderthal variants involved in LDL cholesterol, schizophrenia and other diseases.",
+          "source": {
+            "citation": "Prüfer et al. 2017, Science",
+            "doi": "10.1126/science.aao1887"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "genetic",
+          "text": "McArthur et al. 2021 found introgressed variants depleted for heritability of most traits, with selection against them strongest for cognitive traits.",
+          "source": {
+            "citation": "McArthur et al. 2021, Nature Communications",
+            "doi": "10.1038/s41467-021-24582-y"
+          }
+        }
+      ]
+    },
+    {
+      "id": "neanderthal-ancestry-in-africans",
+      "title": "Neanderthal ancestry in Africans",
+      "summary": "African genomes carry more Neanderthal-like DNA than once thought. Studies trace it to back-migration into Africa and to older modern human DNA in Neanderthals that both groups share.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Chen et al. 2020 found a stronger Neanderthal signal in Africans, explained by back-migration, mainly of ancestral Europeans, and early gene flow into Neanderthals.",
+          "source": {
+            "citation": "Chen et al. 2020, Cell",
+            "doi": "10.1016/j.cell.2020.01.012"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Harris et al. 2023 found up to 1% Neanderthal sequence in some sub-Saharan groups from recent migration, but most from gene flow into Neanderthals 250,000 years ago.",
+          "source": {
+            "citation": "Harris et al. 2023, Current Biology",
+            "doi": "10.1016/j.cub.2023.09.066"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Wall et al. 2013 found a small but significant Neanderthal share in the Maasai of East Africa.",
+          "source": {
+            "citation": "Wall et al. 2013, Genetics",
+            "doi": "10.1534/genetics.112.148213"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Li et al. 2024 used modern human DNA in Neanderthals to revise estimates of Neanderthal ancestry in living people.",
+          "source": {
+            "citation": "Li et al. 2024, Science",
+            "doi": "10.1126/science.adi1768"
+          }
+        }
+      ]
+    }
+  ]
+}

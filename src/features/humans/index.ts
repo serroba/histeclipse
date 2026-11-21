@@ -16,6 +16,14 @@ import {
   type HumanSpecies,
 } from '../../data/humanClaims';
 import { loadHumanRoutes, routeCard, routesAt, type HumanRoutes } from '../../data/humanRoutes';
+import {
+  episodeCard,
+  episodesAt,
+  loadHumanAdmixture,
+  traitCard,
+  type HumanAdmixture,
+} from '../../data/humanAdmixture';
+import { genomeRows, loadHumanGenomes, type HumanGenomes } from '../../data/humanGenomes';
 import { loadHumanSpecies, speciesCard, type HumanSpeciesData } from '../../data/humanSpecies';
 import { loadPictures, type Pictures } from '../../data/pictures';
 import { DISPERSAL_SCENARIOS, withLayer } from '../../state/viewState';
@@ -30,6 +38,9 @@ import { routeLayer } from './routeLayer';
 
 /** A species' card is picked as `human:species-<id>`. */
 const SPECIES_PICK = 'species-';
+/** Interbreeding's episodes and traits are picked as `human:mix-<id>` and `human:trait-<id>`. */
+const MIX_PICK = 'mix-';
+const TRAIT_PICK = 'trait-';
 /** A route's card is picked as `human:route-<id>`. */
 const ROUTE_PICK = 'route-';
 
@@ -85,6 +96,10 @@ export const humansFeature = feature({
     }
 
     let species: HumanSpeciesData | null = null;
+    let genomes: HumanGenomes | null = null;
+    let admixture: HumanAdmixture | null = null;
+    let admixtureLoading = false;
+    let genomesLoading = false;
     let speciesLoading = false;
 
     /** Its place on the tree of life: the species where the tree has it, else the genus. */
@@ -102,6 +117,29 @@ export const humansFeature = feature({
 
     /** A card by what was picked: a find, or a species. */
     function cardFor(id: string): MarkerCardContent | null {
+      if (id.startsWith(MIX_PICK)) {
+        const card = admixture === null ? null : episodeCard(admixture, id.slice(MIX_PICK.length));
+        if (card === null) return null;
+        const { finds, ...content } = card;
+        // From the episode to the finds whose DNA shows it.
+        const related = finds.flatMap((find): RelatedStep[] => {
+          const claim = claims?.claims.find((each) => each.id === find);
+          return claim?.place == null
+            ? []
+            : [
+                {
+                  label: claim.place.name,
+                  explain: 'Its card: what was found there, and its DNA',
+                  run: () => {
+                    show(find);
+                  },
+                },
+              ];
+        });
+        return { ...content, related };
+      }
+      if (id.startsWith(TRAIT_PICK))
+        return admixture === null ? null : traitCard(admixture, id.slice(TRAIT_PICK.length));
       if (id.startsWith(ROUTE_PICK)) {
         return routes === null ? null : routeCard(routes, id.slice(ROUTE_PICK.length));
       }
@@ -114,8 +152,14 @@ export const humansFeature = feature({
       const find = claims?.claims.find((each) => each.id === id);
       const card = claims === null ? null : claimCard(claims, id, pictures);
       if (card === null || find === undefined) return null;
+      const dna = genomes === null ? { facts: [], links: [] } : genomeRows(genomes, id);
+      const links = [...card.links, ...dna.links].filter(
+        (link, index, all) => all.findIndex((each) => each.href === link.href) === index,
+      );
       return {
         ...card,
+        facts: [...card.facts, ...dna.facts],
+        links,
         action: onTheTree(find.species),
         related: [aboutSpecies(find.species), ...findSteps(find.place)],
       };
@@ -152,6 +196,19 @@ export const humansFeature = feature({
           (error: unknown) => {
             picturesLoading = false;
             context.notify(`Could not load the finds’ pictures: ${errorMessage(error)}`);
+          },
+        );
+      }
+      if (genomes === null && !genomesLoading && !id.startsWith(SPECIES_PICK)) {
+        genomesLoading = true;
+        loadHumanGenomes(`${context.base}data/humans/genomes.json`, context.fetchJson).then(
+          (loaded) => {
+            genomes = loaded;
+            again();
+          },
+          (error: unknown) => {
+            genomesLoading = false;
+            context.notify(`Could not load the ancient DNA: ${errorMessage(error)}`);
           },
         );
       }
@@ -257,6 +314,19 @@ export const humansFeature = feature({
             },
           );
         }
+        if (admixture === null && !admixtureLoading) {
+          admixtureLoading = true;
+          loadHumanAdmixture(`${context.base}data/humans/admixture.json`, context.fetchJson).then(
+            (loaded) => {
+              admixture = loaded;
+              context.refresh();
+            },
+            (error: unknown) => {
+              admixtureLoading = false;
+              context.notify(`Could not load the interbreeding: ${errorMessage(error)}`);
+            },
+          );
+        }
         const view = humansAt(claims, moment.ma * 1000);
         const routesNow = routes === null ? [] : routesAt(routes, moment.ma * 1000);
         // One species only, if the reader asked (#1047).
@@ -283,8 +353,19 @@ export const humansFeature = feature({
               only: (species) => {
                 context.change((now) => ({ ...now, humanSpecies: species }));
               },
+              pick: show,
             },
             only,
+            admixture === null
+              ? null
+              : {
+                  episodes: episodesAt(admixture, moment.ma * 1000).map((episode) => ({
+                    id: episode.id,
+                    title: episode.title,
+                    estimates: episode.estimates.length,
+                  })),
+                  traits: admixture.traits,
+                },
             playStory,
           ),
         };
