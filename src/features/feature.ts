@@ -31,6 +31,46 @@ import type { Radiocarbon } from '../data/radiocarbon';
 import type { WaysLegend } from '../ui/waysLegend';
 import type { ZoomRail } from '../ui/zoomRail';
 
+/** While the years play, a layer drawn from the year redraws at most this often, in ms. */
+export const TRAVEL_REDRAW_MS = 500;
+
+/**
+ * Whether a layer drawn from the year should draw now: whenever time stands, and while the years
+ * play at most every TRAVEL_REDRAW_MS, so it stays on the globe without redrawing every frame. A
+ * draw skipped asks `late` once, when it is due, so the year the years stop at is drawn too.
+ */
+export function travelPace(
+  late: () => void,
+  now: () => number = () => performance.now(),
+  after: (run: () => void, ms: number) => void = (run, ms) => {
+    setTimeout(run, ms);
+  },
+): { due(travelling: boolean): boolean } {
+  let last = -Infinity;
+  let waiting = false;
+  return {
+    due(travelling) {
+      if (!travelling) return true;
+      const at = now();
+      if (at - last >= TRAVEL_REDRAW_MS) {
+        last = at;
+        return true;
+      }
+      if (!waiting) {
+        waiting = true;
+        after(
+          () => {
+            waiting = false;
+            late();
+          },
+          TRAVEL_REDRAW_MS - (at - last),
+        );
+      }
+      return false;
+    },
+  };
+}
+
 /** Said in the Layers panel of a layer whose markers rest while the years play. */
 export const RESTING = 'Resting while you travel through the years; back when the track closes.';
 

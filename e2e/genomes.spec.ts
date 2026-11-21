@@ -58,3 +58,28 @@ test('a region of genomes opens its card: labels, papers and the source @accepta
   });
   expect(problems).toEqual([]);
 });
+
+test('ancient genomes and radiocarbon dates stay on the globe while the years play, not resting', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const bar = page.getByRole('group', { name: 'Holocene' });
+  await test.step('Given 2500 BCE with Ancient genomes and Radiocarbon dates on', async () => {
+    await page.goto('./?t=-2499-06-01T12:00&cam=48,15,3&layers=genomes,dates');
+    await globeRendered(page);
+    await expect(globe).toHaveAttribute('data-genomes', /^[1-9]\d*$/);
+  });
+  await test.step('When they travel through the years', async () => {
+    await bar.getByRole('button', { name: 'Travel through the years' }).click();
+  });
+  await test.step('Then the genomes stay marked as the years go by, and neither layer says it rests', async () => {
+    await expect(globe).toHaveAttribute('data-genomes', /^[1-9]\d*$/);
+    await bar.getByRole('button', { name: 'Stop travelling' }).click();
+    await expect(globe).toHaveAttribute('data-genomes', /^[1-9]\d*$/);
+    await openLayers(page);
+    await expect(page.getByTestId('layer-note-genomes')).not.toContainText('Resting');
+    await expect(page.getByTestId('layer-note-dates')).not.toContainText('Resting');
+  });
+  expect(problems).toEqual([]);
+});
