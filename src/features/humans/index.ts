@@ -15,25 +15,20 @@ import {
   type HumanClaims,
   type HumanSpecies,
 } from '../../data/humanClaims';
-import { loadHumanRoutes, routeCard, routesAt, type HumanRoutes } from '../../data/humanRoutes';
-import {
-  episodeCard,
-  episodesAt,
-  loadHumanAdmixture,
-  traitCard,
-  type HumanAdmixture,
-} from '../../data/humanAdmixture';
-import { genomeRows, loadHumanGenomes, type HumanGenomes } from '../../data/humanGenomes';
-import { loadHumanSpecies, speciesCard, type HumanSpeciesData } from '../../data/humanSpecies';
-import { loadPictures, type Pictures } from '../../data/pictures';
-import { DISPERSAL_SCENARIOS, withLayer } from '../../state/viewState';
+import { loadHumanRoutes, routeCard, routesAt } from '../../data/humanRoutes';
+import { episodeCard, episodesAt, loadHumanAdmixture, traitCard } from '../../data/humanAdmixture';
+import { genomeRows, loadHumanGenomes } from '../../data/humanGenomes';
+import { loadHumanSpecies, speciesCard } from '../../data/humanSpecies';
+import { loadPictures } from '../../data/pictures';
+import { DISPERSAL_SCENARIOS, withLayer, type ViewState } from '../../state/viewState';
 import type { MarkerCardContent, RelatedStep } from '../../ui/markerCard';
 import { destinationNear, fromAFind } from '../../explore/related';
 import { errorMessage } from '../../util/errors';
 import { feature } from '../feature';
-import { createDispersal } from './dispersal';
+import { createDispersal, type DispersalShown } from './dispersal';
 import { note } from './humansNote';
 import { humanSiteLayer } from './humanSiteLayer';
+import { lazy } from './lazy';
 import { routeLayer } from './routeLayer';
 
 /** A species' card is picked as `human:species-<id>`. */
@@ -65,19 +60,39 @@ export const humansFeature = feature({
   mount(context) {
     const sitesOnGlobe = context.globe.addLayer(humanSiteLayer);
     const routesOnGlobe = context.globe.addLayer(routeLayer);
-    let routes: HumanRoutes | null = null;
-    let routesLoading = false;
     const dispersal = createDispersal(context);
-    let claims: HumanClaims | null = null;
-    let loading = false;
-    let pictures: Pictures | null = null;
-    let picturesLoading = false;
     let shown: string | null = null;
+    // Whether what was picked had no card yet: shown once what it needs has loaded.
+    let waiting = false;
     let dispersalOn = false;
-
-    /** Plays the human story: Humans and a dispersal model on, facing Africa, from 315 ka. */
     let storyStarting = false;
 
+    /** A data file of the layer's, loaded once when first asked for (#1047). */
+    function data<T>(
+      file: string,
+      what: string,
+      load: (url: string, fetchJson: typeof context.fetchJson) => Promise<T>,
+      arrived: () => void,
+    ) {
+      return lazy(
+        () => load(`${context.base}data/humans/${file}`, context.fetchJson),
+        arrived,
+        (error) => {
+          context.notify(`Could not load ${what}: ${errorMessage(error)}`);
+        },
+      );
+    }
+    const refresh = () => {
+      context.refresh();
+    };
+    const claims = data('claims.json', 'the human finds', loadHumanClaims, refresh);
+    const routes = data('routes.json', 'the routes', loadHumanRoutes, refresh);
+    const admixture = data('admixture.json', 'the interbreeding', loadHumanAdmixture, refresh);
+    const pictures = data('pictures.json', 'the finds’ pictures', loadPictures, reshow);
+    const genomes = data('genomes.json', 'the ancient DNA', loadHumanGenomes, reshow);
+    const species = data('species.json', 'the human species', loadHumanSpecies, reshow);
+
+    /** Plays the human story: Humans and a dispersal model on, facing Africa, from 315 ka. */
     function playStory(): void {
       context.change((state) => ({
         ...state,
@@ -95,13 +110,6 @@ export const humansFeature = feature({
         context.change((state) => ({ ...state, dispersal: dispersalPicked }));
     }
 
-    let species: HumanSpeciesData | null = null;
-    let genomes: HumanGenomes | null = null;
-    let admixture: HumanAdmixture | null = null;
-    let admixtureLoading = false;
-    let genomesLoading = false;
-    let speciesLoading = false;
-
     /** Its place on the tree of life: the species where the tree has it, else the genus. */
     function onTheTree(id: HumanSpecies): { label: string; run: () => void } {
       return {
@@ -115,44 +123,41 @@ export const humansFeature = feature({
       };
     }
 
-    /** A card by what was picked: a find, or a species. */
-    function cardFor(id: string): MarkerCardContent | null {
-      if (id.startsWith(MIX_PICK)) {
-        const card = admixture === null ? null : episodeCard(admixture, id.slice(MIX_PICK.length));
-        if (card === null) return null;
-        const { finds, ...content } = card;
-        // From the episode to the finds whose DNA shows it.
-        const related = finds.flatMap((find): RelatedStep[] => {
-          const claim = claims?.claims.find((each) => each.id === find);
-          return claim?.place == null
-            ? []
-            : [
-                {
-                  label: claim.place.name,
-                  explain: 'Its card: what was found there, and its DNA',
-                  run: () => {
-                    show(find);
-                  },
-                },
-              ];
-        });
-        return { ...content, related };
-      }
-      if (id.startsWith(TRAIT_PICK))
-        return admixture === null ? null : traitCard(admixture, id.slice(TRAIT_PICK.length));
-      if (id.startsWith(ROUTE_PICK)) {
-        return routes === null ? null : routeCard(routes, id.slice(ROUTE_PICK.length));
-      }
-      if (id.startsWith(SPECIES_PICK)) {
-        const which = HUMAN_SPECIES.find((each) => `${SPECIES_PICK}${each}` === id);
-        const card =
-          which === undefined || species === null ? null : speciesCard(species, which, pictures);
-        return card === null || which === undefined ? null : { ...card, action: onTheTree(which) };
-      }
-      const find = claims?.claims.find((each) => each.id === id);
-      const card = claims === null ? null : claimCard(claims, id, pictures);
+    /** An interbreeding episode's card, leading to the finds whose DNA shows it. */
+    function mixCardFor(episode: string): MarkerCardContent | null {
+      const card = admixture.value === null ? null : episodeCard(admixture.value, episode);
+      if (card === null) return null;
+      const { finds, ...content } = card;
+      const related = finds.flatMap((find): RelatedStep[] => {
+        const claim = claims.value?.claims.find((each) => each.id === find);
+        if (claim === undefined || claim.place === null) return [];
+        return [
+          {
+            label: claim.place.name,
+            explain: 'Its card: what was found there, and its DNA',
+            run: () => {
+              show(find);
+            },
+          },
+        ];
+      });
+      return { ...content, related };
+    }
+
+    /** A species' card, with its place on the tree of life. */
+    function speciesCardFor(id: string): MarkerCardContent | null {
+      const which = HUMAN_SPECIES.find((each) => each === id);
+      if (which === undefined || species.value === null) return null;
+      const card = speciesCard(species.value, which, pictures.value);
+      return card === null ? null : { ...card, action: onTheTree(which) };
+    }
+
+    /** A find's card, with the DNA read there once it has loaded, and where to go next. */
+    function findCardFor(id: string): MarkerCardContent | null {
+      const find = claims.value?.claims.find((each) => each.id === id);
+      const card = claims.value === null ? null : claimCard(claims.value, id, pictures.value);
       if (card === null || find === undefined) return null;
-      const dna = genomes === null ? { facts: [], links: [] } : genomeRows(genomes, id);
+      const dna = genomes.value === null ? { facts: [], links: [] } : genomeRows(genomes.value, id);
       const links = [...card.links, ...dna.links].filter(
         (link, index, all) => all.findIndex((each) => each.href === link.href) === index,
       );
@@ -163,6 +168,20 @@ export const humansFeature = feature({
         action: onTheTree(find.species),
         related: [aboutSpecies(find.species), ...findSteps(find.place)],
       };
+    }
+
+    /** What each kind of pick opens, by its prefix; a find's id has none. */
+    const CARDS: readonly (readonly [string, (id: string) => MarkerCardContent | null])[] = [
+      [MIX_PICK, mixCardFor],
+      [TRAIT_PICK, (id) => (admixture.value === null ? null : traitCard(admixture.value, id))],
+      [ROUTE_PICK, (id) => (routes.value === null ? null : routeCard(routes.value, id))],
+      [SPECIES_PICK, speciesCardFor],
+    ];
+
+    /** A card by what was picked: a find, a species, a route, or interbreeding. */
+    function cardFor(id: string): MarkerCardContent | null {
+      const kind = CARDS.find(([prefix]) => id.startsWith(prefix));
+      return kind === undefined ? findCardFor(id) : kind[1](id.slice(kind[0].length));
     }
 
     /** From a find to its species' own card. */
@@ -176,55 +195,23 @@ export const humansFeature = feature({
       };
     }
 
+    /** The card shown again with what has loaded, if it is still open, or for the first time. */
+    function reshow(): void {
+      const now = shown === null ? null : cardFor(shown);
+      if (now === null || (!waiting && !context.cards.open())) return;
+      waiting = false;
+      context.cards.show(now);
+    }
+
     /** Shows what was picked, now if it can, or once what it needs has loaded. */
     function show(id: string): void {
       shown = id;
       const card = cardFor(id);
+      waiting = card === null;
       if (card !== null) context.cards.show(card);
-      const again = (): void => {
-        const now = shown === null ? null : cardFor(shown);
-        // Again with what loaded, if its card is still open, or for the first time.
-        if (now !== null && (card === null || context.cards.open())) context.cards.show(now);
-      };
-      if (pictures === null && !picturesLoading) {
-        picturesLoading = true;
-        loadPictures(`${context.base}data/humans/pictures.json`, context.fetchJson).then(
-          (loaded) => {
-            pictures = loaded;
-            again();
-          },
-          (error: unknown) => {
-            picturesLoading = false;
-            context.notify(`Could not load the finds’ pictures: ${errorMessage(error)}`);
-          },
-        );
-      }
-      if (genomes === null && !genomesLoading && !id.startsWith(SPECIES_PICK)) {
-        genomesLoading = true;
-        loadHumanGenomes(`${context.base}data/humans/genomes.json`, context.fetchJson).then(
-          (loaded) => {
-            genomes = loaded;
-            again();
-          },
-          (error: unknown) => {
-            genomesLoading = false;
-            context.notify(`Could not load the ancient DNA: ${errorMessage(error)}`);
-          },
-        );
-      }
-      if (species === null && !speciesLoading && id.startsWith(SPECIES_PICK)) {
-        speciesLoading = true;
-        loadHumanSpecies(`${context.base}data/humans/species.json`, context.fetchJson).then(
-          (loaded) => {
-            species = loaded;
-            again();
-          },
-          (error: unknown) => {
-            speciesLoading = false;
-            context.notify(`Could not load the human species: ${errorMessage(error)}`);
-          },
-        );
-      }
+      pictures.ask();
+      if (id.startsWith(SPECIES_PICK)) species.ask();
+      else genomes.ask();
     }
 
     /** From a find (#731): the dispersal models, and ancient DNA where it was found. */
@@ -255,6 +242,65 @@ export const humansFeature = feature({
       ];
     }
 
+    /** A link asked for the story (#177): play it once, after this drawing, which ends the ask. */
+    function storyAsked(state: ViewState): void {
+      if (state.story !== 'humans' || storyStarting) return;
+      storyStarting = true;
+      queueMicrotask(() => {
+        storyStarting = false;
+        playStory();
+      });
+    }
+
+    /** The note's interbreeding: the episodes reached, and what living people carry. */
+    function mixesAt(ka: number) {
+      const loaded = admixture.value;
+      if (loaded === null) return null;
+      return {
+        episodes: episodesAt(loaded, ka).map((episode) => ({
+          id: episode.id,
+          title: episode.title,
+          estimates: episode.estimates.length,
+        })),
+        traits: loaded.traits,
+      };
+    }
+
+    /** What the layer draws and says at `ka` thousand years ago, its finds loaded. */
+    function drawn(state: ViewState, ka: number, model: DispersalShown, finds: HumanClaims) {
+      routes.ask();
+      admixture.ask();
+      const view = humansAt(finds, ka);
+      const routesNow = routes.value === null ? [] : routesAt(routes.value, ka);
+      // One species only, if the reader asked (#1047).
+      const only = state.humanSpecies;
+      sitesOnGlobe.update(
+        only === 'all' ? view.sites : view.sites.filter((site) => site.species === only),
+      );
+      routesOnGlobe.update(routesNow);
+      return note(
+        view,
+        routesNow,
+        model,
+        pickModel,
+        {
+          species: (id) => {
+            show(`${SPECIES_PICK}${id}`);
+          },
+          route: (id) => {
+            show(`${ROUTE_PICK}${id}`);
+          },
+          only: (picked) => {
+            context.change((now) => ({ ...now, humanSpecies: picked }));
+          },
+          pick: show,
+        },
+        only,
+        mixesAt(ka),
+        playStory,
+      );
+    }
+
     return {
       // Our species on the tree of life, from the layer's row in the Layers panel.
       action: () => ({
@@ -264,14 +310,7 @@ export const humansFeature = feature({
         },
       }),
       deep(state, moment) {
-        // A link asked for the story (#177): play it once, after this drawing, which ends the ask.
-        if (state.story === 'humans' && !storyStarting) {
-          storyStarting = true;
-          queueMicrotask(() => {
-            storyStarting = false;
-            playStory();
-          });
-        }
+        storyAsked(state);
         dispersalOn = state.dispersal !== 'off';
         // People are a matter of the last few hundred thousand years: the ice-age scale's.
         const on = state.deepScale === 'ice' && state.layers.has('humans');
@@ -284,91 +323,11 @@ export const humansFeature = feature({
             : { offered: moment.scale === 'ice', on: false, note: null };
         }
         const offered = moment.scale === 'ice';
-        const model = dispersal.show(state.dispersal, moment.ma);
-        if (claims === null) {
-          if (!loading) {
-            loading = true;
-            loadHumanClaims(`${context.base}data/humans/claims.json`, context.fetchJson).then(
-              (loaded) => {
-                claims = loaded;
-                context.refresh();
-              },
-              (error: unknown) => {
-                loading = false;
-                context.notify(`Could not load the human finds: ${errorMessage(error)}`);
-              },
-            );
-          }
+        const model = dispersal.show(state.dispersal, moment.ma, moment.maPerSecond);
+        claims.ask();
+        if (claims.value === null)
           return { offered, on: true, note: [{ paragraph: ['Humans: loading…'] }] };
-        }
-        if (routes === null && !routesLoading) {
-          routesLoading = true;
-          loadHumanRoutes(`${context.base}data/humans/routes.json`, context.fetchJson).then(
-            (loaded) => {
-              routes = loaded;
-              context.refresh();
-            },
-            (error: unknown) => {
-              routesLoading = false;
-              context.notify(`Could not load the routes: ${errorMessage(error)}`);
-            },
-          );
-        }
-        if (admixture === null && !admixtureLoading) {
-          admixtureLoading = true;
-          loadHumanAdmixture(`${context.base}data/humans/admixture.json`, context.fetchJson).then(
-            (loaded) => {
-              admixture = loaded;
-              context.refresh();
-            },
-            (error: unknown) => {
-              admixtureLoading = false;
-              context.notify(`Could not load the interbreeding: ${errorMessage(error)}`);
-            },
-          );
-        }
-        const view = humansAt(claims, moment.ma * 1000);
-        const routesNow = routes === null ? [] : routesAt(routes, moment.ma * 1000);
-        // One species only, if the reader asked (#1047).
-        const only = state.humanSpecies;
-        sitesOnGlobe.update(
-          only === 'all' ? view.sites : view.sites.filter((site) => site.species === only),
-        );
-        routesOnGlobe.update(routesNow);
-        return {
-          offered,
-          on: true,
-          note: note(
-            view,
-            routesNow,
-            model,
-            pickModel,
-            {
-              species: (id) => {
-                show(`${SPECIES_PICK}${id}`);
-              },
-              route: (id) => {
-                show(`${ROUTE_PICK}${id}`);
-              },
-              only: (species) => {
-                context.change((now) => ({ ...now, humanSpecies: species }));
-              },
-              pick: show,
-            },
-            only,
-            admixture === null
-              ? null
-              : {
-                  episodes: episodesAt(admixture, moment.ma * 1000).map((episode) => ({
-                    id: episode.id,
-                    title: episode.title,
-                    estimates: episode.estimates.length,
-                  })),
-                  traits: admixture.traits,
-                },
-            playStory,
-          ),
-        };
+        return { offered, on: true, note: drawn(state, moment.ma * 1000, model, claims.value) };
       },
       pick(id) {
         if (id.startsWith(SPECIES_PICK) || cardFor(id) !== null) show(id);

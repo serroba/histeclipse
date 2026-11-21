@@ -109,7 +109,8 @@
       ],
       "finds": [
         "ust-ishim",
-        "ranis"
+        "ranis",
+        "zlaty-kun"
       ]
     },
     {
@@ -340,7 +341,9 @@
       "individuals": [
         "Hohlenstein-Stadel femur"
       ],
-      "finds": []
+      "finds": [
+        "hohlenstein-stadel"
+      ]
     },
     {
       "id": "modern-humans-into-altai-neanderthals",

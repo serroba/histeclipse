@@ -4,6 +4,7 @@ import claims from '../../../public/data/humans/claims.json';
 import index from '../../../public/data/dispersal/index.json';
 import pictures from '../../../public/data/humans/pictures.json';
 import admixture from '../../../public/data/humans/admixture.json';
+import genomes from '../../../public/data/humans/genomes.json';
 import routes from '../../../public/data/humans/routes.json';
 import species from '../../../public/data/humans/species.json';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
@@ -54,6 +55,7 @@ function fakeContext(
     'species.json': species,
     'routes.json': routes,
     'admixture.json': admixture,
+    'genomes.json': genomes,
     'index.json': index,
     ...options.files,
   };
@@ -196,13 +198,14 @@ describe('the humans as a feature', () => {
     if (id === undefined) throw new Error('no find with a species');
     shown.pick?.(id);
     expect(cards).toHaveLength(1);
+    // Again once its picture loads, and again with its ancient DNA.
     await vi.waitFor(() => {
-      expect(cards).toHaveLength(2);
+      expect(cards).toHaveLength(3);
     });
-    cards[1]?.action?.run();
+    cards.at(-1)?.action?.run();
     expect(openTree).toHaveBeenCalledTimes(1);
     shown.pick?.('no-such-find');
-    expect(cards).toHaveLength(2);
+    expect(cards).toHaveLength(3);
   });
 
   it('offers our species on the tree of life from its row in the Layers panel', () => {
@@ -449,6 +452,15 @@ describe('the humans as a feature', () => {
     shown.deep?.(on, ICE);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the interbreeding: offline');
+    });
+  });
+
+  it('gives a site’s card its ancient DNA once it loads (#1047)', async () => {
+    const { context, cards, refresh } = fakeContext({ cardOpen: true });
+    const shown = await loaded(context, refresh);
+    shown.pick?.('vindija');
+    await vi.waitFor(() => {
+      expect(cards.at(-1)?.facts.some(([label]) => label === 'Ancient DNA')).toBe(true);
     });
   });
 

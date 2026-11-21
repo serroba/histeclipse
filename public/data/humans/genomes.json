@@ -1,0 +1,2499 @@
+{
+  "schemaVersion": 1,
+  "about": "Ancient DNA of Neanderthals, Denisovans and the early modern humans who carry their ancestry: each individual, or each cave’s sediments, with what was read, how deeply, what it showed, its paper and where the data can be had. Most rows start from the Allen Ancient DNA Resource v66 (CC0); those it lacks come from their papers. Compiled for histeclipse.",
+  "genomes": [
+    {
+      "id": "zlaty-kun",
+      "label": "Zlatý kůň",
+      "species": "sapiens",
+      "site": "zlaty-kun",
+      "fromKa": 48,
+      "toKa": 45,
+      "dating": "No reliable direct date; Prüfer et al. give over 45,000 years, and Sümer et al. infer from kinship that she lived a few generations from Ranis13 (43,400–46,600 years).",
+      "data": [
+        "nuclear-high",
+        "mtDNA"
+      ],
+      "coverage": "20x (Sümer et al. 2024); 3.8x in Prüfer et al. 2021",
+      "sex": "female",
+      "mtHaplo": "N",
+      "yHaplo": null,
+      "showed": "A woman from a population that left no detectable descendants. About 3% of her genome is Neanderthal, in longer segments than in Ust’-Ishim, so her Neanderthal ancestors lived not long before her.",
+      "source": {
+        "citation": "Prüfer et al. 2021, Nature Ecology & Evolution",
+        "doi": "10.1038/s41559-021-01443-x"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB39040",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Sümer et al. found that she was a fifth- or sixth-degree relative of two Ranis individuals and belonged to the same small population.",
+          "source": {
+            "citation": "Sümer et al. 2024, Nature",
+            "doi": "10.1038/s41586-024-08420-x"
+          }
+        }
+      ]
+    },
+    {
+      "id": "denisova-11",
+      "label": "Denisova 11 (‘Denny’)",
+      "species": "denisovan",
+      "site": "denisova-11",
+      "fromKa": 118.1,
+      "toKa": 79.3,
+      "data": [
+        "nuclear-low",
+        "mtDNA"
+      ],
+      "coverage": "2.6x (paper); AADR lists 3.1x",
+      "sex": "female",
+      "mtHaplo": "Neanderthal type",
+      "yHaplo": null,
+      "showed": "The daughter of a Neanderthal mother and a Denisovan father. Her father’s genome also carried traces of Neanderthal ancestry. The mother’s population was closer to later European Neanderthals than to the earlier Altai Neanderthal.",
+      "note": "First-generation Neanderthal × Denisovan offspring; species set to match the existing denisova-11 claim.",
+      "source": {
+        "citation": "Slon et al. 2018, Nature",
+        "doi": "10.1038/s41586-018-0455-x"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB24663",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Douka et al. modelled her age at 79,300–118,100 years from radiocarbon, optical and genetic data.",
+          "source": {
+            "citation": "Douka et al. 2019, Nature",
+            "doi": "10.1038/s41586-018-0870-z"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Brown et al. first identified the bone as hominin by collagen fingerprinting and found Neanderthal-type mtDNA in it.",
+          "source": {
+            "citation": "Brown et al. 2016, Scientific Reports",
+            "doi": "10.1038/srep23559"
+          }
+        }
+      ]
+    },
+    {
+      "id": "goyet-q56-1",
+      "label": "Goyet Q56-1",
+      "species": "neanderthal",
+      "site": "goyet",
+      "fromKa": 42.7,
+      "toKa": 42.2,
+      "dating": "Radiocarbon 38,440 ± 340 BP (GrA-46170), calibrated to 42,700–42,200 years ago (AADR).",
+      "data": [
+        "nuclear-low",
+        "mtDNA"
+      ],
+      "coverage": "2.2x",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "One of five late Neanderthals sequenced by Hajdinjak et al.; late Neanderthals were genetically similar according to where they lived. Rougier et al. found Q56-1 shares an mtDNA lineage with two other Goyet bones.",
+      "source": {
+        "citation": "Hajdinjak et al. 2018, Nature",
+        "doi": "10.1038/nature26151"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB21870",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Rougier et al. sorted seven Goyet bones into three mtDNA lineages; Q56-1, Q305-7 and Q374a-1 share lineage 1.",
+          "source": {
+            "citation": "Rougier et al. 2016, Scientific Reports",
+            "doi": "10.1038/srep29005"
+          }
+        }
+      ]
+    },
+    {
+      "id": "les-cottes-z4-1514",
+      "label": "Les Cottés Z4-1514",
+      "species": "neanderthal",
+      "site": "les-cottes",
+      "fromKa": 43.2,
+      "toKa": 42.6,
+      "dating": "Radiocarbon 39,485 ± 271 BP (MAMS-26196), calibrated to 43,200–42,600 years ago (AADR).",
+      "data": [
+        "nuclear-low",
+        "mtDNA"
+      ],
+      "coverage": "2.5x",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A late Neanderthal genome. Like the other late Neanderthals in the study, she was more closely related to Neanderthals who lived near her than to those far away.",
+      "source": {
+        "citation": "Hajdinjak et al. 2018, Nature",
+        "doi": "10.1038/nature26151"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB21875",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Fotiadou et al. note that her mtDNA, with Thorin’s, falls outside the single lineage shared by almost all other late Neanderthals.",
+          "source": {
+            "citation": "Fotiadou et al. 2026, PNAS",
+            "doi": "10.1073/pnas.2520565123"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mezmaiskaya-2",
+      "label": "Mezmaiskaya 2",
+      "species": "neanderthal",
+      "site": "mezmaiskaya",
+      "fromKa": 45.0,
+      "toKa": 42.2,
+      "dating": "Radiocarbon 39,700 ± 1,100 BP (OxA-21839), calibrated to 45,000–42,200 years ago (AADR).",
+      "data": [
+        "nuclear-low",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": "1.7x",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A late Neanderthal from the Caucasus. Compared with the older Mezmaiskaya 1, his genome points to a population turnover near the end of Neanderthal history. His Y chromosome was later sequenced.",
+      "note": "AADR gives a present-day Y label (F3); not used, as Neanderthal Y lineages lie outside present-day variation (Petr et al. 2020).",
+      "source": {
+        "citation": "Hajdinjak et al. 2018, Nature",
+        "doi": "10.1038/nature26151"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB21881",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Petr et al. sequenced his Y chromosome; Neanderthal and modern human Y chromosomes were closer to each other than to the Denisovan Y.",
+          "source": {
+            "citation": "Petr et al. 2020, Science",
+            "doi": "10.1126/science.abb6460"
+          }
+        }
+      ]
+    },
+    {
+      "id": "spy-94a",
+      "label": "Spy 94a",
+      "species": "neanderthal",
+      "site": "spy",
+      "fromKa": 41.4,
+      "toKa": 40.5,
+      "dating": "Radiocarbon 35,810 ± 260 BP (GrA-32623), calibrated to 41,400–40,500 years ago (AADR); Devièse et al. 2021 argue earlier Spy dates were too young.",
+      "data": [
+        "nuclear-low",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": "0.9x",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A late Neanderthal genome from Belgium, used to show that late Neanderthals were related by geography. His Y chromosome was later sequenced by Petr et al.",
+      "source": {
+        "citation": "Hajdinjak et al. 2018, Nature",
+        "doi": "10.1038/nature26151"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB21883",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Devièse et al. found earlier dates on the Spy Neanderthals were too young by up to 10,000 years because of contamination.",
+          "source": {
+            "citation": "Devièse et al. 2021, PNAS",
+            "doi": "10.1073/pnas.2022466118"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Petr et al. sequenced his Y chromosome alongside Mezmaiskaya 2, El Sidrón 1253 and two Denisovans.",
+          "source": {
+            "citation": "Petr et al. 2020, Science",
+            "doi": "10.1126/science.abb6460"
+          }
+        }
+      ]
+    },
+    {
+      "id": "vindija-87",
+      "label": "Vindija 87 (Vindija G1)",
+      "species": "neanderthal",
+      "site": "vindija",
+      "fromKa": 50,
+      "toKa": 47,
+      "dating": "Older than about 47,000 years (AADR: >45,000 calBCE, OxA-X-2634-52).",
+      "data": [
+        "nuclear-low"
+      ],
+      "coverage": "1.2x",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "One of five late Neanderthals sequenced by Hajdinjak et al. The study found most Neanderthal DNA in people today came from groups that split from these late Neanderthals at least 70,000 years ago.",
+      "source": {
+        "citation": "Hajdinjak et al. 2018, Nature",
+        "doi": "10.1038/nature26151"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB21882"
+    },
+    {
+      "id": "mezmaiskaya-1",
+      "label": "Mezmaiskaya 1",
+      "species": "neanderthal",
+      "site": "mezmaiskaya",
+      "fromKa": 70,
+      "toKa": 60,
+      "dating": "60,000–70,000 years (Green et al. 2010; AADR). Ovchinnikov et al. 2000 reported about 29,000 radiocarbon years.",
+      "data": [
+        "mtDNA",
+        "nuclear-low"
+      ],
+      "coverage": "1.9x (0.5x in Prüfer et al. 2013 plus 1.4x in Prüfer et al. 2017)",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A Neanderthal infant. Its mtDNA was the second Neanderthal mtDNA read, and grouped with the Feldhofer type specimen apart from modern humans. Its genome is older than the late Neanderthals and fits a later turnover in the Caucasus.",
+      "source": {
+        "citation": "Ovchinnikov et al. 2000, Nature",
+        "doi": "10.1038/35006625"
+      },
+      "repository": "https://cdna.eva.mpg.de/neandertal/Mezmaiskaya1/",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Green et al. give the infant an age of 60,000–70,000 years, far older than the ~29,000 radiocarbon years Ovchinnikov et al. reported.",
+          "source": {
+            "citation": "Green et al. 2010, Science",
+            "doi": "10.1126/science.1188021"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Prüfer et al. sequenced its genome to 0.5-fold; Prüfer et al. 2017 added 1.4-fold.",
+          "source": {
+            "citation": "Prüfer et al. 2013, Nature",
+            "doi": "10.1038/nature12886"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Hajdinjak et al. found the late Caucasus Neanderthal Mezmaiskaya 2 differed from Mezmaiskaya 1, suggesting a population turnover.",
+          "source": {
+            "citation": "Hajdinjak et al. 2018, Nature",
+            "doi": "10.1038/nature26151"
+          }
+        }
+      ]
+    },
+    {
+      "id": "denisova-3",
+      "label": "Denisova 3",
+      "species": "denisovan",
+      "site": "denisova-cave",
+      "fromKa": 76.2,
+      "toKa": 51.6,
+      "data": [
+        "nuclear-high",
+        "mtDNA"
+      ],
+      "coverage": "30.7x",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "The finger bone that defined the Denisovans: a group sharing a common origin with Neanderthals that contributed 4–6% of the DNA of present-day Melanesians. Re-sequenced to high coverage, it showed low diversity, probably from small population size.",
+      "source": {
+        "citation": "Reich et al. 2010, Nature",
+        "doi": "10.1038/nature09710"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB3092",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Meyer et al. produced a high-coverage genome and found very low heterozygosity, attributed to small population size rather than recent inbreeding.",
+          "source": {
+            "citation": "Meyer et al. 2012, Science",
+            "doi": "10.1126/science.1224344"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Douka et al. modelled her age at 51,600–76,200 years.",
+          "source": {
+            "citation": "Douka et al. 2019, Nature",
+            "doi": "10.1038/s41586-018-0870-z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "denisova-5",
+      "label": "Denisova 5 (Altai Neanderthal)",
+      "species": "neanderthal",
+      "site": "denisova-cave",
+      "fromKa": 130,
+      "toKa": 90.9,
+      "data": [
+        "nuclear-high",
+        "mtDNA"
+      ],
+      "coverage": "52x",
+      "sex": "female",
+      "mtHaplo": "Neanderthal type",
+      "yHaplo": null,
+      "showed": "The first high-quality Neanderthal genome, from a toe bone. Her parents were related at the level of half-siblings, and mating among close relatives was common among her recent ancestors.",
+      "source": {
+        "citation": "Prüfer et al. 2013, Nature",
+        "doi": "10.1038/nature12886"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB1265",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Douka et al. modelled her age at 90,900–130,000 years.",
+          "source": {
+            "citation": "Douka et al. 2019, Nature",
+            "doi": "10.1038/s41586-018-0870-z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chagyrskaya-8",
+      "label": "Chagyrskaya 8 (and Chagyrskaya 12)",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 100,
+      "toKa": 60,
+      "dating": "AADR gives 100,000–60,000 years; Mafessoni et al. call her about 80,000 years old; Skov et al. date the occupation deposits to 59,000–51,000 years.",
+      "data": [
+        "nuclear-high",
+        "mtDNA"
+      ],
+      "coverage": "27.6x",
+      "sex": "female",
+      "mtHaplo": "NL (Andreeva et al. 2022 scheme)",
+      "yHaplo": null,
+      "showed": "A woman more related to western Eurasian Neanderthals than to the earlier Neanderthals of Denisova Cave. Long runs of homozygosity suggest isolated groups of fewer than 60.",
+      "note": "mtHaplo NL is the group-level assignment Andreeva et al. 2022 give for the Chagyrskaya samples then published; not checked against this individual.",
+      "source": {
+        "citation": "Mafessoni et al. 2020, PNAS",
+        "doi": "10.1073/pnas.2004944117"
+      },
+      "repository": "https://cdna.eva.mpg.de/neandertal/Chagyrskaya/",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Skov et al. found a tooth, Chagyrskaya 12, came from the same woman (their Chagyrskaya F).",
+          "source": {
+            "citation": "Skov et al. 2022, Nature",
+            "doi": "10.1038/s41586-022-05283-y"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ust-ishim",
+      "label": "Ust’-Ishim",
+      "species": "sapiens",
+      "site": "ust-ishim",
+      "fromKa": 45.9,
+      "toKa": 42.9,
+      "dating": "Radiocarbon about 41,400 BP (two dates combined), calibrated to 45,900–42,900 years ago (AADR).",
+      "data": [
+        "nuclear-high",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": "42x",
+      "sex": "male",
+      "mtHaplo": "R (root of)",
+      "yHaplo": "K(xLT)",
+      "showed": "A modern human man with about as much Neanderthal ancestry as present-day Eurasians, but in longer segments: the mixing happened 7,000–13,000 years before he lived.",
+      "source": {
+        "citation": "Fu et al. 2014, Nature",
+        "doi": "10.1038/nature13810"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB6622"
+    },
+    {
+      "id": "vindija-33-19",
+      "label": "Vindija 33.19",
+      "species": "neanderthal",
+      "site": "vindija",
+      "fromKa": 65,
+      "toKa": 45.5,
+      "dating": "Prüfer et al. give 50,000–65,000 years; the bone’s own radiocarbon date is >45,500 BP (OxA-32278).",
+      "data": [
+        "nuclear-high",
+        "mtDNA"
+      ],
+      "coverage": "30x",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A high-coverage genome of a Neanderthal woman. Low genetic diversity suggests small groups. It raised the count of Neanderthal variants known in people today.",
+      "source": {
+        "citation": "Prüfer et al. 2017, Science",
+        "doi": "10.1126/science.aao1887"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB21157"
+    },
+    {
+      "id": "bacho-kiro-f6-620",
+      "label": "Bacho Kiro F6-620 (and AA7-738)",
+      "species": "sapiens",
+      "site": "bacho-kiro",
+      "fromKa": 44.0,
+      "toKa": 42.6,
+      "data": [
+        "nuclear-low",
+        "Y"
+      ],
+      "coverage": "AADR 5.3x (1240k capture); Y 15.2x",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": "F (basal, F-M89)",
+      "showed": "3.8% Neanderthal DNA and seven segments over 5 cM: he had a Neanderthal ancestor less than six generations back. Bacho Kiro IUP individuals were more closely related to East Asians and Native Americans than to later west Eurasians.",
+      "note": "F6-620 (molar) and AA7-738 (bone) have identical genomes: one individual or identical twins.",
+      "source": {
+        "citation": "Hajdinjak et al. 2021, Nature",
+        "doi": "10.1038/s41586-021-03335-3"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB39134"
+    },
+    {
+      "id": "bacho-kiro-bb7-240",
+      "label": "Bacho Kiro BB7-240",
+      "species": "sapiens",
+      "site": "bacho-kiro",
+      "fromKa": 46.1,
+      "toKa": 44.6,
+      "dating": "Radiocarbon 42,850 ± 480 BP (ETH-86770), calibrated to 46,100–44,600 years ago (AADR).",
+      "data": [
+        "nuclear-low",
+        "Y"
+      ],
+      "coverage": "AADR 1.2x (1240k capture); Y 2.5x",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": "C1 (C-F3393)",
+      "showed": "3.0% Neanderthal DNA, with a Neanderthal ancestor about seven generations back. Bacho Kiro IUP individuals were more closely related to East Asians and Native Americans than to later west Eurasians.",
+      "source": {
+        "citation": "Hajdinjak et al. 2021, Nature",
+        "doi": "10.1038/s41586-021-03335-3"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB39134"
+    },
+    {
+      "id": "bacho-kiro-cc7-335",
+      "label": "Bacho Kiro CC7-335",
+      "species": "sapiens",
+      "site": "bacho-kiro",
+      "fromKa": 45.9,
+      "toKa": 44.4,
+      "dating": "Radiocarbon 42,450 ± 510 BP (ETH-86772), calibrated to 45,900–44,400 years ago (AADR).",
+      "data": [
+        "nuclear-low",
+        "Y"
+      ],
+      "coverage": "AADR 0.7x (1240k capture); Y 1.5x",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": "C1 (C-F3393)",
+      "showed": "3.4% Neanderthal DNA, with a Neanderthal ancestor about seven generations back. Bacho Kiro IUP individuals were more closely related to East Asians and Native Americans than to later west Eurasians.",
+      "source": {
+        "citation": "Hajdinjak et al. 2021, Nature",
+        "doi": "10.1038/s41586-021-03335-3"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB39134"
+    },
+    {
+      "id": "bacho-kiro-cc7-2289",
+      "label": "Bacho Kiro CC7-2289",
+      "species": "sapiens",
+      "site": "bacho-kiro",
+      "fromKa": 44.4,
+      "toKa": 43.0,
+      "dating": "Radiocarbon 40,600 ± 420 BP (ETH-86771), calibrated to 44,400–43,000 years ago (AADR).",
+      "data": [
+        "nuclear-low"
+      ],
+      "coverage": "0.0008x (AADR)",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A bone fragment from the Initial Upper Palaeolithic layer with very little DNA. Hajdinjak et al. call it female, tentatively; too little data to measure Neanderthal ancestry.",
+      "source": {
+        "citation": "Hajdinjak et al. 2021, Nature",
+        "doi": "10.1038/s41586-021-03335-3"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB39134"
+    },
+    {
+      "id": "bacho-kiro-bk1653",
+      "label": "Bacho Kiro BK1653",
+      "species": "sapiens",
+      "site": "bacho-kiro",
+      "fromKa": 35.3,
+      "toKa": 34.6,
+      "dating": "Radiocarbon 30,570 ± 120 BP, calibrated to 35,300–34,600 years ago (AADR).",
+      "data": [
+        "nuclear-low"
+      ],
+      "coverage": "AADR 3.4x (1240k capture)",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A later woman, about 35,000 years old. Her genome is closer to later Upper Palaeolithic Europeans; she carried 121.7 cM of Neanderthal DNA, with no segment longer than 2.5 cM, so no recent Neanderthal ancestor.",
+      "source": {
+        "citation": "Hajdinjak et al. 2021, Nature",
+        "doi": "10.1038/s41586-021-03335-3"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB39134"
+    },
+    {
+      "id": "oase-1",
+      "label": "Oase 1",
+      "species": "sapiens",
+      "site": "oase",
+      "fromKa": 41.9,
+      "toKa": 37.7,
+      "dating": "Combined radiocarbon about 34,950 BP, calibrated to 41,900–37,700 years ago (AADR).",
+      "data": [
+        "nuclear-low",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": "AADR 0.28x (1240k capture)",
+      "sex": "male",
+      "mtHaplo": "N",
+      "yHaplo": "F",
+      "showed": "About 6–9% of his genome came from Neanderthals, more than any other modern human sequenced. Three segments over 50 cM mean a Neanderthal ancestor four to six generations back. His group left no detectable trace in later Europeans.",
+      "note": "Fu et al. 2015 data are also in ENA PRJEB8987; AADR links PRJEB39134.",
+      "source": {
+        "citation": "Fu et al. 2015, Nature",
+        "doi": "10.1038/nature14558"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB39134",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Hajdinjak et al. generated further data from the Oase 1 mandible and compared it with the Bacho Kiro individuals.",
+          "source": {
+            "citation": "Hajdinjak et al. 2021, Nature",
+            "doi": "10.1038/s41586-021-03335-3"
+          }
+        }
+      ]
+    },
+    {
+      "id": "thorin",
+      "label": "Thorin (Grotte Mandrin)",
+      "species": "neanderthal",
+      "site": "mandrin",
+      "fromKa": 50,
+      "toKa": 42,
+      "dating": "Found with Neanderthal final traditions dated about 50,000–42,000 years ago (Slimak et al.). AADR gives 56,000–52,000 years. His mtDNA molecular age is about 100,000 years, which Slimak et al. treat as a known bias.",
+      "data": [
+        "nuclear-low",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": "1.3x (paper); AADR lists 1.6x",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A late Neanderthal whose lineage split from other late Neanderthals about 105,000 years ago and shows no mixing with them: some 50,000 years of genetic isolation in a small group.",
+      "note": "AADR gives a present-day Y label (P1~); not used.",
+      "source": {
+        "citation": "Slimak et al. 2024, Cell Genomics",
+        "doi": "10.1016/j.xgen.2024.100593"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB73284"
+    },
+    {
+      "id": "ranis-13",
+      "label": "Ranis13",
+      "species": "sapiens",
+      "site": "ranis",
+      "fromKa": 46.6,
+      "toKa": 43.4,
+      "dating": "Radiocarbon 43,400–46,580 cal BP (cited by Sümer et al.).",
+      "data": [
+        "nuclear-high",
+        "Y"
+      ],
+      "coverage": "24x",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": "NO (K2a)",
+      "showed": "2.9% Neanderthal ancestry in long segments. His small, isolated group was the deepest known split from the Out-of-Africa lineage. Ranis Neanderthal segments trace to one mixing shared by all non-Africans, 45,000–49,000 years ago (Sümer et al.).",
+      "source": {
+        "citation": "Sümer et al. 2024, Nature",
+        "doi": "10.1038/s41586-024-08420-x"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB78725"
+    },
+    {
+      "id": "ranis-12",
+      "label": "Ranis12 (four specimens)",
+      "species": "sapiens",
+      "site": "ranis",
+      "fromKa": 49.6,
+      "toKa": 42.2,
+      "dating": "Not directly dated here; AADR gives a placeholder range of 49,600–42,200 years.",
+      "data": [
+        "nuclear-low"
+      ],
+      "coverage": "AADR up to 1.6x per specimen (1240k capture)",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Four bones from one woman, a second- or third-degree relative of Ranis4 and distant kin of Zlatý kůň; 2.7–3.3% Neanderthal. Ranis Neanderthal segments trace to one mixing shared by all non-Africans, 45,000–49,000 years ago (Sümer et al.).",
+      "source": {
+        "citation": "Sümer et al. 2024, Nature",
+        "doi": "10.1038/s41586-024-08420-x"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB78725"
+    },
+    {
+      "id": "ranis-4",
+      "label": "Ranis4",
+      "species": "sapiens",
+      "site": "ranis",
+      "fromKa": 49.6,
+      "toKa": 42.2,
+      "dating": "AADR placeholder range 49,600–42,200 years.",
+      "data": [
+        "nuclear-low"
+      ],
+      "coverage": "0.28x (AADR)",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A woman who was the mother of the young child Ranis6, and a distant relative of Ranis12 and Zlatý kůň. Ranis Neanderthal segments trace to one mixing shared by all non-Africans, 45,000–49,000 years ago (Sümer et al.).",
+      "source": {
+        "citation": "Sümer et al. 2024, Nature",
+        "doi": "10.1038/s41586-024-08420-x"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB78725"
+    },
+    {
+      "id": "ranis-6",
+      "label": "Ranis6",
+      "species": "sapiens",
+      "site": "ranis",
+      "fromKa": 49.6,
+      "toKa": 42.2,
+      "dating": "AADR placeholder range 49,600–42,200 years.",
+      "data": [
+        "nuclear-low"
+      ],
+      "coverage": "0.02x (AADR)",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A child younger than five, the daughter of Ranis4; too little DNA to call Neanderthal segments. Ranis Neanderthal segments trace to one mixing shared by all non-Africans, 45,000–49,000 years ago (Sümer et al.).",
+      "source": {
+        "citation": "Sümer et al. 2024, Nature",
+        "doi": "10.1038/s41586-024-08420-x"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB78725"
+    },
+    {
+      "id": "ranis-10",
+      "label": "Ranis10",
+      "species": "sapiens",
+      "site": "ranis",
+      "fromKa": 49.6,
+      "toKa": 42.2,
+      "dating": "AADR placeholder range 49,600–42,200 years.",
+      "data": [
+        "nuclear-low",
+        "Y"
+      ],
+      "coverage": "0.03x (AADR)",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": "F (basal)",
+      "showed": "A man with the same mtDNA as Ranis12 but not a close relative. Ranis Neanderthal segments trace to one mixing shared by all non-Africans, 45,000–49,000 years ago (Sümer et al.).",
+      "source": {
+        "citation": "Sümer et al. 2024, Nature",
+        "doi": "10.1038/s41586-024-08420-x"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB78725"
+    },
+    {
+      "id": "ranis-87",
+      "label": "Ranis87",
+      "species": "sapiens",
+      "site": "ranis",
+      "fromKa": 49.6,
+      "toKa": 42.2,
+      "dating": "AADR placeholder range 49,600–42,200 years.",
+      "data": [
+        "nuclear-low",
+        "Y"
+      ],
+      "coverage": "0.03x (AADR)",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": "NO (K2a)",
+      "showed": "A man unrelated to the other two Ranis males; 2.7–3.3% Neanderthal ancestry. Ranis Neanderthal segments trace to one mixing shared by all non-Africans, 45,000–49,000 years ago (Sümer et al.).",
+      "source": {
+        "citation": "Sümer et al. 2024, Nature",
+        "doi": "10.1038/s41586-024-08420-x"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB78725"
+    },
+    {
+      "id": "denisova-25",
+      "label": "Denisova 25",
+      "species": "denisovan",
+      "site": "denisova-cave",
+      "fromKa": 215,
+      "toKa": 195,
+      "data": [
+        "nuclear-high"
+      ],
+      "coverage": "24x (Massilani et al. 2026, citing the preprint)",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A second high-quality Denisovan genome, from a molar of a man who lived about 200,000 years ago. His group mixed with early Neanderthals and was later replaced by Denisovans who had mixed with later Neanderthals.",
+      "note": "Main source is a preprint, not yet peer reviewed.",
+      "source": {
+        "citation": "Peyrégne et al. 2025, bioRxiv (preprint, not peer reviewed)",
+        "doi": "10.1101/2025.10.20.683404"
+      },
+      "repository": "https://cdna.eva.mpg.de/denisova/Den25/",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Massilani et al. list Denisova 25 as a male Denisovan of about 205,000 ± 10,000 years with a 24-fold genome.",
+          "source": {
+            "citation": "Massilani et al. 2026, PNAS",
+            "doi": "10.1073/pnas.2534576123"
+          }
+        }
+      ]
+    },
+    {
+      "id": "feldhofer-1",
+      "label": "Feldhofer 1 (Neanderthal 1)",
+      "species": "neanderthal",
+      "site": "feldhofer",
+      "fromKa": 44.3,
+      "toKa": 42.5,
+      "data": [
+        "mtDNA",
+        "nuclear-low"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "The type specimen gave the first Neanderthal DNA. Its mtDNA fell outside modern human variation, with a common ancestor about four times older than that of human mtDNAs. Later its complete mtDNA and some nuclear DNA were read.",
+      "source": {
+        "citation": "Krings et al. 1997, Cell",
+        "doi": "10.1016/s0092-8674(00)80310-4"
+      },
+      "repository": null,
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Krings et al. read a second mtDNA region and placed the divergence of Neanderthal and human mtDNA at about 465,000 years ago (317,000–741,000).",
+          "source": {
+            "citation": "Krings et al. 1999, PNAS",
+            "doi": "10.1073/pnas.96.10.5581"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Briggs et al. retrieved five complete Neanderthal mtDNA genomes, Feldhofer 1 among them, and inferred a small effective population size.",
+          "source": {
+            "citation": "Briggs et al. 2009, Science",
+            "doi": "10.1126/science.1174462"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Green et al. sequenced small amounts of the type specimen alongside the Vindija draft genome.",
+          "source": {
+            "citation": "Green et al. 2010, Science",
+            "doi": "10.1126/science.1188021"
+          }
+        }
+      ]
+    },
+    {
+      "id": "feldhofer-2",
+      "label": "Feldhofer 2",
+      "species": "neanderthal",
+      "site": "feldhofer",
+      "fromKa": 44.3,
+      "toKa": 42.5,
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A second individual from the type site, dated like Neanderthal 1 to about 40,000 radiocarbon years. Its mtDNA clusters with other Neanderthal sequences.",
+      "source": {
+        "citation": "Schmitz et al. 2002, PNAS",
+        "doi": "10.1073/pnas.192464099"
+      },
+      "repository": null,
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Briggs et al. reconstructed its complete mtDNA genome as one of five.",
+          "source": {
+            "citation": "Briggs et al. 2009, Science",
+            "doi": "10.1126/science.1174462"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Fotiadou et al. found its mtDNA groups with Goyet Q305-1 and Q305-4.",
+          "source": {
+            "citation": "Fotiadou et al. 2026, PNAS",
+            "doi": "10.1073/pnas.2520565123"
+          }
+        }
+      ]
+    },
+    {
+      "id": "el-sidron-1253",
+      "label": "El Sidrón 1253",
+      "species": "neanderthal",
+      "site": "el-sidron",
+      "fromKa": 49,
+      "toKa": 43,
+      "dating": "About 49,000 years (Green et al. 2010); Lalueza-Fox et al. 2005 give about 43,000 for the first El Sidrón sample.",
+      "data": [
+        "mtDNA",
+        "nuclear-low",
+        "Y"
+      ],
+      "coverage": "exome capture",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Its Y chromosome placed the Neanderthal lineage outside all modern human Y chromosomes, with a common ancestor about 588,000 years ago (447,000–806,000). Its exome pointed to small, isolated Neanderthal groups.",
+      "note": "Repository is the exome project (ENA PRJEB1762) named by title; El Sidrón exome BAM also at cdna.eva.mpg.de/neandertal/exomes/.",
+      "source": {
+        "citation": "Mendez et al. 2016, American Journal of Human Genetics",
+        "doi": "10.1016/j.ajhg.2016.02.023"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB1762",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Castellano et al. sequenced the exomes of El Sidrón and Vindija Neanderthals and found low diversity and small, isolated populations.",
+          "source": {
+            "citation": "Castellano et al. 2014, PNAS",
+            "doi": "10.1073/pnas.1405138111"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Briggs et al. reconstructed its complete mtDNA genome as one of five.",
+          "source": {
+            "citation": "Briggs et al. 2009, Science",
+            "doi": "10.1126/science.1174462"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Petr et al. analysed its Y chromosome with two other Neanderthals and two Denisovans; Neanderthal and human Y were closer to each other than to Denisovan Y.",
+          "source": {
+            "citation": "Petr et al. 2020, Science",
+            "doi": "10.1126/science.abb6460"
+          }
+        }
+      ]
+    },
+    {
+      "id": "el-sidron-group",
+      "label": "El Sidrón group (12 individuals)",
+      "species": "neanderthal",
+      "site": "el-sidron",
+      "fromKa": 49,
+      "toKa": 43,
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Twelve people who died about the same time fell into three maternal lineages. The three adult men shared one mtDNA lineage while the three adult women each had a different one; the authors read this as women moving between groups.",
+      "note": "One group entry: the 12 individuals are not separately labelled in the abstract. El Sidrón 1253 may be one of them; not checked.",
+      "source": {
+        "citation": "Lalueza-Fox et al. 2010, PNAS",
+        "doi": "10.1073/pnas.1011553108"
+      },
+      "repository": null,
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Lalueza-Fox et al. retrieved the first Iberian Neanderthal mtDNA here and found Iberian Neanderthals not genetically distinct from others.",
+          "source": {
+            "citation": "Lalueza-Fox et al. 2005, Molecular Biology and Evolution",
+            "doi": "10.1093/molbev/msi094"
+          }
+        }
+      ]
+    },
+    {
+      "id": "hohlenstein-stadel",
+      "label": "Hohlenstein-Stadel femur (HST)",
+      "species": "neanderthal",
+      "site": "hohlenstein-stadel",
+      "fromKa": 183,
+      "toKa": 62,
+      "dating": "mtDNA molecular age about 124,000 years (95% range 62,000–183,000; Posth et al.); Peyrégne et al. say it lived around 120,000 years ago.",
+      "data": [
+        "mtDNA",
+        "nuclear-low"
+      ],
+      "coverage": "mtDNA 35x (Posth); nuclear 51 Mbp (Peyrégne)",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "The deepest-diverging Neanderthal mtDNA, splitting from the others about 270,000 years ago. Yet its nuclear DNA is closer to later European Neanderthals than to the Altai Neanderthal.",
+      "source": {
+        "citation": "Posth et al. 2017, Nature Communications",
+        "doi": "10.1038/ncomms16046"
+      },
+      "repository": "https://cdna.eva.mpg.de/neandertal/Hohlenstein-Stadel/",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Peyrégne et al. recovered nuclear DNA and found HST closer to later European Neanderthals, suggesting continuity over 80,000 years.",
+          "source": {
+            "citation": "Peyrégne et al. 2019, Science Advances",
+            "doi": "10.1126/sciadv.aaw5873"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scladina-i-4a",
+      "label": "Scladina I-4A",
+      "species": "neanderthal",
+      "site": "scladina",
+      "fromKa": 168,
+      "toKa": 76,
+      "dating": "About 120,000 years from mtDNA branch length (95% range 76,000–168,000; Peyrégne et al.).",
+      "data": [
+        "mtDNA",
+        "nuclear-low"
+      ],
+      "coverage": "mtDNA 107x; nuclear 12 Mbp",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "An early Neanderthal whose complete mtDNA and some nuclear DNA were read. Like HST, she is closer to later European Neanderthals than to a Siberian one of similar age.",
+      "note": "Orlando et al. 2006 (Current Biology, 10.1016/j.cub.2006.05.019) first reported its mtDNA; title checked only, no abstract seen, so not cited as a source.",
+      "source": {
+        "citation": "Peyrégne et al. 2019, Science Advances",
+        "doi": "10.1126/sciadv.aaw5873"
+      },
+      "repository": "https://cdna.eva.mpg.de/neandertal/Scladina/",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Bokelmann et al. found the Forbes’ Quarry Neanderthal genetically more similar to Scladina, HST and Mezmaiskaya 1 than to later Neanderthals.",
+          "source": {
+            "citation": "Bokelmann et al. 2019, PNAS",
+            "doi": "10.1073/pnas.1903984116"
+          }
+        }
+      ]
+    },
+    {
+      "id": "okladnikov-2",
+      "label": "Okladnikov 2",
+      "species": "neanderthal",
+      "site": "okladnikov",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "Not dated in the papers checked; Skov et al. 2022 date other Okladnikov Neanderthals to at least 44,000 years.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Its mtDNA falls within European Neanderthal variation, extending the known Neanderthal range at least 2,000 km further east than assumed.",
+      "note": "Skov et al. 2022 list this specimen as Okladnikov 14 (SP1087). Repository is the Skoglund et al. 2014 ENA project.",
+      "source": {
+        "citation": "Krause et al. 2007, Nature",
+        "doi": "10.1038/nature06193"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB4951",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Skoglund et al. separated ancient from contaminating DNA in this bone and found its complete mtDNA basal to five of six known Neanderthal mtDNAs.",
+          "source": {
+            "citation": "Skoglund et al. 2014, PNAS",
+            "doi": "10.1073/pnas.1318934111"
+          }
+        }
+      ]
+    },
+    {
+      "id": "teshik-tash-1",
+      "label": "Teshik-Tash 1",
+      "species": "neanderthal",
+      "site": "teshik-tash",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "No date in the sources checked.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": "NA1 and NA2 variants (Andreeva et al. 2022)",
+      "yHaplo": null,
+      "showed": "Its mtDNA falls within European Neanderthal variation, part of the evidence that Neanderthals reached Central Asia.",
+      "source": {
+        "citation": "Krause et al. 2007, Nature",
+        "doi": "10.1038/nature06193"
+      },
+      "repository": null,
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "genetic",
+          "text": "Andreeva et al. note the Teshik-Tash control region carries variants of two different haplogroups and question whether the sequence is correct.",
+          "source": {
+            "citation": "Andreeva et al. 2022, Scientific Reports",
+            "doi": "10.1038/s41598-022-16164-9"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chagyrskaya-a",
+      "label": "Chagyrskaya A (Chagyrskaya 1)",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 59,
+      "toKa": 51,
+      "dating": "Occupation deposits dated 59,000–51,000 years ago (optical and radiocarbon dates cited by Skov et al.).",
+      "data": [
+        "nuclear-low",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": null,
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A boy whose deciduous canine was shed at 8–12; a second-degree relative of Chagyrskaya L. Part of a community of related Neanderthals; Y diversity far lower than mtDNA diversity, best explained by women moving between communities (Skov et al.).",
+      "note": "Repository also at https://cdna.eva.mpg.de/neandertal/ChagyrskayaOkladnikov/.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "chagyrskaya-b",
+      "label": "Chagyrskaya B (Chagyrskaya 2)",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 59,
+      "toKa": 51,
+      "dating": "Occupation deposits dated 59,000–51,000 years ago (optical and radiocarbon dates cited by Skov et al.).",
+      "data": [
+        "nuclear-low",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": null,
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A child of 3–5, known from an atlas vertebra. Part of a community of related Neanderthals; Y diversity far lower than mtDNA diversity, best explained by women moving between communities (Skov et al.).",
+      "note": "Repository also at https://cdna.eva.mpg.de/neandertal/ChagyrskayaOkladnikov/.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "chagyrskaya-c",
+      "label": "Chagyrskaya C (Chagyrskaya 6 and 14)",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 59,
+      "toKa": 51,
+      "dating": "Occupation deposits dated 59,000–51,000 years ago (optical and radiocarbon dates cited by Skov et al.).",
+      "data": [
+        "nuclear-low",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": null,
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "An adult man known from a mandible and an incisor that match genetically. Part of a community of related Neanderthals; Y diversity far lower than mtDNA diversity, best explained by women moving between communities (Skov et al.).",
+      "note": "Repository also at https://cdna.eva.mpg.de/neandertal/ChagyrskayaOkladnikov/.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "chagyrskaya-d",
+      "label": "Chagyrskaya D (Chagyrskaya 7)",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 59,
+      "toKa": 51,
+      "dating": "Occupation deposits dated 59,000–51,000 years ago (optical and radiocarbon dates cited by Skov et al.).",
+      "data": [
+        "nuclear-low",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": null,
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "An adult man, father of Chagyrskaya H; possibly the same person as Chagyrskaya E. Part of a community of related Neanderthals; Y diversity far lower than mtDNA diversity, best explained by women moving between communities (Skov et al.).",
+      "note": "Repository also at https://cdna.eva.mpg.de/neandertal/ChagyrskayaOkladnikov/.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "chagyrskaya-e",
+      "label": "Chagyrskaya E (Chagyrskaya 9)",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 59,
+      "toKa": 51,
+      "dating": "Occupation deposits dated 59,000–51,000 years ago (optical and radiocarbon dates cited by Skov et al.).",
+      "data": [
+        "nuclear-low",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": null,
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "An adult man; possibly a first-degree relative of, or the same person as, Chagyrskaya D. Part of a community of related Neanderthals; Y diversity far lower than mtDNA diversity, best explained by women moving between communities (Skov et al.).",
+      "note": "Repository also at https://cdna.eva.mpg.de/neandertal/ChagyrskayaOkladnikov/.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "chagyrskaya-g",
+      "label": "Chagyrskaya G (Chagyrskaya 13, 19 and 63)",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 59,
+      "toKa": 51,
+      "dating": "Occupation deposits dated 59,000–51,000 years ago (optical and radiocarbon dates cited by Skov et al.).",
+      "data": [
+        "nuclear-low",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": null,
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A boy known from a milk molar and two adult teeth; he probably died about when the milk tooth was shed. Part of a community of related Neanderthals; Y diversity far lower than mtDNA diversity, best explained by women moving between communities (Skov et al.).",
+      "note": "Repository also at https://cdna.eva.mpg.de/neandertal/ChagyrskayaOkladnikov/.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "chagyrskaya-h",
+      "label": "Chagyrskaya H (Chagyrskaya 17)",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 59,
+      "toKa": 51,
+      "dating": "Occupation deposits dated 59,000–51,000 years ago (optical and radiocarbon dates cited by Skov et al.).",
+      "data": [
+        "nuclear-low",
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A teenage girl, daughter of Chagyrskaya D. Part of a community of related Neanderthals; Y diversity far lower than mtDNA diversity, best explained by women moving between communities (Skov et al.).",
+      "note": "Repository also at https://cdna.eva.mpg.de/neandertal/ChagyrskayaOkladnikov/.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "chagyrskaya-i",
+      "label": "Chagyrskaya I (Chagyrskaya 18)",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 59,
+      "toKa": 51,
+      "dating": "Occupation deposits dated 59,000–51,000 years ago (optical and radiocarbon dates cited by Skov et al.).",
+      "data": [
+        "nuclear-low",
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A girl whose deciduous molar was shed at 9–11. Part of a community of related Neanderthals; Y diversity far lower than mtDNA diversity, best explained by women moving between communities (Skov et al.).",
+      "note": "Repository also at https://cdna.eva.mpg.de/neandertal/ChagyrskayaOkladnikov/.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "chagyrskaya-j",
+      "label": "Chagyrskaya J (Chagyrskaya 20)",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 59,
+      "toKa": 51,
+      "dating": "Occupation deposits dated 59,000–51,000 years ago (optical and radiocarbon dates cited by Skov et al.).",
+      "data": [
+        "nuclear-low",
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A girl whose deciduous canine was shed at 7–12. Part of a community of related Neanderthals; Y diversity far lower than mtDNA diversity, best explained by women moving between communities (Skov et al.).",
+      "note": "Repository also at https://cdna.eva.mpg.de/neandertal/ChagyrskayaOkladnikov/.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "chagyrskaya-k",
+      "label": "Chagyrskaya K (Chagyrskaya 41)",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 59,
+      "toKa": 51,
+      "dating": "Occupation deposits dated 59,000–51,000 years ago (optical and radiocarbon dates cited by Skov et al.).",
+      "data": [
+        "nuclear-low",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": null,
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "An adult man known from a premolar. Part of a community of related Neanderthals; Y diversity far lower than mtDNA diversity, best explained by women moving between communities (Skov et al.).",
+      "note": "Repository also at https://cdna.eva.mpg.de/neandertal/ChagyrskayaOkladnikov/.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "chagyrskaya-l",
+      "label": "Chagyrskaya L (Chagyrskaya 60)",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 59,
+      "toKa": 51,
+      "dating": "Occupation deposits dated 59,000–51,000 years ago (optical and radiocarbon dates cited by Skov et al.).",
+      "data": [
+        "nuclear-low",
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "An adult woman; a second-degree relative of Chagyrskaya A. Part of a community of related Neanderthals; Y diversity far lower than mtDNA diversity, best explained by women moving between communities (Skov et al.).",
+      "note": "Repository also at https://cdna.eva.mpg.de/neandertal/ChagyrskayaOkladnikov/.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "okladnikov-a",
+      "label": "Okladnikov A (Okladnikov 11)",
+      "species": "neanderthal",
+      "site": "okladnikov",
+      "fromKa": 44,
+      "toKa": 44,
+      "dating": "At least 44,000 years (hydroxyproline radiocarbon dates on three Okladnikov Neanderthals, Skov et al.); a minimum, not a range.",
+      "data": [
+        "nuclear-low",
+        "mtDNA",
+        "Y"
+      ],
+      "coverage": null,
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A boy of 7–11, known from half a femur. Skov et al. found two Chagyrskaya sediment samples closer to Okladnikov A than to any Chagyrskaya Neanderthal, a hint of contact between the caves.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "okladnikov-b",
+      "label": "Okladnikov B (Okladnikov 15)",
+      "species": "neanderthal",
+      "site": "okladnikov",
+      "fromKa": 44,
+      "toKa": 44,
+      "dating": "At least 44,000 years (hydroxyproline radiocarbon dates on three Okladnikov Neanderthals, Skov et al.); a minimum, not a range.",
+      "data": [
+        "nuclear-low",
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "An adult woman, known from a humerus fragment. Skov et al. found two Chagyrskaya sediment samples closer to Okladnikov A than to any Chagyrskaya Neanderthal, a hint of contact between the caves.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB55327"
+    },
+    {
+      "id": "vindija-33-16",
+      "label": "Vindija 33.16 (Vi-80)",
+      "species": "neanderthal",
+      "site": "vindija",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "Radiocarbon 38,310 ± 2,130 BP (Green et al. 2010), uncalibrated as the paper gives it; needs calibration.",
+      "data": [
+        "mtDNA",
+        "nuclear-low"
+      ],
+      "coverage": "part of the 1.3x pooled draft",
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Its complete mtDNA, the first Neanderthal mitogenome, falls outside modern human variation; the lineages split about 660,000 ± 140,000 years ago. It was one of three bones in the draft Neanderthal genome.",
+      "source": {
+        "citation": "Green et al. 2008, Cell",
+        "doi": "10.1016/j.cell.2008.06.021"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB2065",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Green et al. built the draft genome from Vi33.16, Vi33.25 and Vi33.26 and found Neanderthals shared more variants with non-Africans.",
+          "source": {
+            "citation": "Green et al. 2010, Science",
+            "doi": "10.1126/science.1188021"
+          }
+        }
+      ]
+    },
+    {
+      "id": "vindija-33-25",
+      "label": "Vindija 33.25",
+      "species": "neanderthal",
+      "site": "vindija",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "Not directly dated; from layer I, older than layer G (Green et al. 2010).",
+      "data": [
+        "mtDNA",
+        "nuclear-low"
+      ],
+      "coverage": "part of the 1.3x pooled draft",
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "One of five complete Neanderthal mtDNA genomes that showed a small effective population size; also one of three bones in the draft genome.",
+      "source": {
+        "citation": "Briggs et al. 2009, Science",
+        "doi": "10.1126/science.1174462"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB2065",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Green et al. used it in the draft genome; it comes from layer I, deeper than the other two and not directly dated.",
+          "source": {
+            "citation": "Green et al. 2010, Science",
+            "doi": "10.1126/science.1188021"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Fotiadou et al. found the Trou Magrite neonate’s mtDNA clusters with Vindija 33.25, Feldhofer 1 and Goyet Q57-2.",
+          "source": {
+            "citation": "Fotiadou et al. 2026, PNAS",
+            "doi": "10.1073/pnas.2520565123"
+          }
+        }
+      ]
+    },
+    {
+      "id": "vindija-33-26",
+      "label": "Vindija 33.26",
+      "species": "neanderthal",
+      "site": "vindija",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "Radiocarbon 44,450 ± 550 BP (OxA-V-2291-18), uncalibrated as the paper gives it; needs calibration.",
+      "data": [
+        "nuclear-low"
+      ],
+      "coverage": "part of the 1.3x pooled draft",
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "One of three bones in the draft Neanderthal genome, which found Neanderthals shared more variants with present-day people outside Africa than with sub-Saharan Africans.",
+      "source": {
+        "citation": "Green et al. 2010, Science",
+        "doi": "10.1126/science.1188021"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB2065"
+    },
+    {
+      "id": "denisova-15",
+      "label": "Denisova 15",
+      "species": "neanderthal",
+      "site": "denisova-cave",
+      "fromKa": 130,
+      "toKa": 90.9,
+      "dating": "Same modelled age as Denisova 5, 90,900–130,000 years (Douka et al.).",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": "Neanderthal type",
+      "yHaplo": null,
+      "showed": "A bone fragment identified by collagen fingerprinting. Its mtDNA is Neanderthal and differs from Denisova 5’s by a single mutation, so it is about the same age.",
+      "note": "Douka et al. 2019 abstract not available; checked against the accepted manuscript (Oxford ORA). mtDNA in GenBank MK033602.",
+      "source": {
+        "citation": "Douka et al. 2019, Nature",
+        "doi": "10.1038/s41586-018-0870-z"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB29061",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Brown et al. found Denisova 15 and Denisova 5 mtDNAs closely related, and Denisova 17 more distant.",
+          "source": {
+            "citation": "Brown et al. 2021, Nature Ecology & Evolution",
+            "doi": "10.1038/s41559-021-01581-2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "denisova-17",
+      "label": "Denisova 17",
+      "species": "neanderthal",
+      "site": "denisova-cave",
+      "fromKa": 120,
+      "toKa": 100,
+      "dating": "About 110,000 ± 10,000 years (Massilani et al.); mtDNA molecular age about 134,000 (Brown et al.).",
+      "data": [
+        "mtDNA",
+        "nuclear-high"
+      ],
+      "coverage": "37x",
+      "sex": "male",
+      "mtHaplo": "Neanderthal type",
+      "yHaplo": null,
+      "showed": "A Neanderthal man from about 110,000 years ago. His group was closer to the older Denisova 5 than to European Neanderthals or Chagyrskaya 8, and both Denisova Cave Neanderthals show gene flow from Denisovans.",
+      "note": "Massilani et al. 2026 has a published correction (10.1073/pnas.2618099123), not read. Also at https://cdna.eva.mpg.de/neandertal/Denisova17/.",
+      "source": {
+        "citation": "Massilani et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2534576123"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB108287",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Brown et al. found his bone by collagen fingerprinting and read Neanderthal mtDNA, with a molecular age of about 134,000 years (94,000–177,000).",
+          "source": {
+            "citation": "Brown et al. 2021, Nature Ecology & Evolution",
+            "doi": "10.1038/s41559-021-01581-2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "denisova-19",
+      "label": "Denisova 19",
+      "species": "denisovan",
+      "site": "denisova-cave",
+      "fromKa": 205,
+      "toKa": 192,
+      "dating": "Layer 15, about 200,000 years (205,000–192,000 at 68.2%; Brown et al.).",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": "Denisovan type; identical to Denisova 21",
+      "yHaplo": null,
+      "showed": "One of three bones from layer 15 with Denisovan mtDNA, the oldest securely dated Denisovans; their mtDNAs belong to a different lineage from Denisova 3’s.",
+      "note": "Denisova 19 and 21 may be one individual or maternal relatives.",
+      "source": {
+        "citation": "Brown et al. 2021, Nature Ecology & Evolution",
+        "doi": "10.1038/s41559-021-01581-2"
+      },
+      "repository": null
+    },
+    {
+      "id": "denisova-20",
+      "label": "Denisova 20",
+      "species": "denisovan",
+      "site": "denisova-cave",
+      "fromKa": 205,
+      "toKa": 192,
+      "dating": "Layer 15, about 200,000 years (205,000–192,000 at 68.2%; Brown et al.).",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": "Denisovan type",
+      "yHaplo": null,
+      "showed": "One of three bones from layer 15 with Denisovan mtDNA, the oldest securely dated Denisovans; their mtDNAs belong to a different lineage from Denisova 3’s.",
+      "source": {
+        "citation": "Brown et al. 2021, Nature Ecology & Evolution",
+        "doi": "10.1038/s41559-021-01581-2"
+      },
+      "repository": null
+    },
+    {
+      "id": "denisova-21",
+      "label": "Denisova 21",
+      "species": "denisovan",
+      "site": "denisova-cave",
+      "fromKa": 205,
+      "toKa": 192,
+      "dating": "Layer 15, about 200,000 years (205,000–192,000 at 68.2%; Brown et al.).",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": "Denisovan type; identical to Denisova 19",
+      "yHaplo": null,
+      "showed": "One of three bones from layer 15 with Denisovan mtDNA, the oldest securely dated Denisovans; their mtDNAs belong to a different lineage from Denisova 3’s.",
+      "note": "Denisova 19 and 21 may be one individual or maternal relatives.",
+      "source": {
+        "citation": "Brown et al. 2021, Nature Ecology & Evolution",
+        "doi": "10.1038/s41559-021-01581-2"
+      },
+      "repository": null
+    },
+    {
+      "id": "denisova-2",
+      "label": "Denisova 2",
+      "species": "denisovan",
+      "site": "denisova-cave",
+      "fromKa": 194.4,
+      "toKa": 122.7,
+      "data": [
+        "mtDNA",
+        "nuclear-low"
+      ],
+      "coverage": null,
+      "sex": "female",
+      "mtHaplo": "Denisovan type",
+      "yHaplo": null,
+      "showed": "A deciduous molar from deep in the cave, from a girl. Her mtDNA shows she is much older than two other Denisovans, so Denisovans were in the region over a long time.",
+      "source": {
+        "citation": "Slon et al. 2017, Science Advances",
+        "doi": "10.1126/sciadv.1700186"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB20653",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Douka et al. modelled Denisova 2, the oldest Denisovan fossil, at 122,700–194,400 years.",
+          "source": {
+            "citation": "Douka et al. 2019, Nature",
+            "doi": "10.1038/s41586-018-0870-z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "denisova-4",
+      "label": "Denisova 4",
+      "species": "denisovan",
+      "site": "denisova-cave",
+      "fromKa": 76.2,
+      "toKa": 51.6,
+      "data": [
+        "mtDNA",
+        "nuclear-low",
+        "Y"
+      ],
+      "coverage": null,
+      "sex": "male",
+      "mtHaplo": "Denisovan type, close to Denisova 3",
+      "yHaplo": null,
+      "showed": "A large molar with mtDNA similar to Denisova 3. Nuclear DNA from it forms a clade with Denisova 3. His Y chromosome was later sequenced.",
+      "source": {
+        "citation": "Sawyer et al. 2015, PNAS",
+        "doi": "10.1073/pnas.1519905112"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB10828",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Petr et al. sequenced his Y chromosome: Denisovan Y chromosomes are more distant from human and Neanderthal Y than those two are from each other.",
+          "source": {
+            "citation": "Petr et al. 2020, Science",
+            "doi": "10.1126/science.abb6460"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Douka et al. note his mtDNA differs by two mutations from Denisova 3, so he has a similar age (51,600–76,200).",
+          "source": {
+            "citation": "Douka et al. 2019, Nature",
+            "doi": "10.1038/s41586-018-0870-z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "denisova-8",
+      "label": "Denisova 8",
+      "species": "denisovan",
+      "site": "denisova-cave",
+      "fromKa": 136.4,
+      "toKa": 105.6,
+      "data": [
+        "mtDNA",
+        "nuclear-low",
+        "Y"
+      ],
+      "coverage": null,
+      "sex": "male",
+      "mtHaplo": "Denisovan type",
+      "yHaplo": null,
+      "showed": "A second large molar. Nuclear DNA forms a clade with Denisova 3; its mtDNA has fewer substitutions, so it is older, and Denisovans were present over several millennia.",
+      "source": {
+        "citation": "Sawyer et al. 2015, PNAS",
+        "doi": "10.1073/pnas.1519905112"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB10828",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Petr et al. sequenced his Y chromosome.",
+          "source": {
+            "citation": "Petr et al. 2020, Science",
+            "doi": "10.1126/science.abb6460"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Douka et al. modelled Denisova 8 at 105,600–136,400 years.",
+          "source": {
+            "citation": "Douka et al. 2019, Nature",
+            "doi": "10.1038/s41586-018-0870-z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "forbes-quarry",
+      "label": "Forbes’ Quarry (Gibraltar 1)",
+      "species": "neanderthal",
+      "site": "forbes-quarry",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "No absolute date; Bokelmann et al. infer from genetics that she predates later Neanderthals such as El Sidrón 1253 (about 49,000 years).",
+      "data": [
+        "nuclear-low",
+        "mtDNA"
+      ],
+      "coverage": "70 Mbp nuclear",
+      "sex": "female",
+      "mtHaplo": "NM1 (Andreeva et al. 2022 scheme)",
+      "yHaplo": null,
+      "showed": "One of the first Neanderthal finds. Small amounts of DNA survived. She is genetically closer to the 120,000-year-old Scladina and HST Neanderthals than to later ones, so the skull probably predates them.",
+      "source": {
+        "citation": "Bokelmann et al. 2019, PNAS",
+        "doi": "10.1073/pnas.1903984116"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB31410",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Slimak et al. found Thorin’s mtDNA most closely related to Forbes’ Quarry, in a clade with Galería de las Estatuas, Stajnia and Mezmaiskaya 1.",
+          "source": {
+            "citation": "Slimak et al. 2024, Cell Genomics",
+            "doi": "10.1016/j.xgen.2024.100593"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Andreeva et al. assign her mtDNA to haplogroup NM1, with Stajnia S5000.",
+          "source": {
+            "citation": "Andreeva et al. 2022, Scientific Reports",
+            "doi": "10.1038/s41598-022-16164-9"
+          }
+        }
+      ]
+    },
+    {
+      "id": "devils-tower",
+      "label": "Devil’s Tower (Gibraltar 2)",
+      "species": "neanderthal",
+      "site": "devils-tower",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "No date in the source.",
+      "data": [
+        "nuclear-low"
+      ],
+      "coverage": "0.4 Mbp nuclear",
+      "sex": "male",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A child’s partial skull from Gibraltar. Only 0.4 million base pairs of its DNA were read, enough to confirm a male Neanderthal.",
+      "source": {
+        "citation": "Bokelmann et al. 2019, PNAS",
+        "doi": "10.1073/pnas.1903984116"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB31410"
+    },
+    {
+      "id": "stajnia-s5000",
+      "label": "Stajnia S5000",
+      "species": "neanderthal",
+      "site": "stajnia",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "MIS 5a by mtDNA molecular dating (Picin et al.); no calendar range in the abstract.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": "mtDNA 363x",
+      "sex": null,
+      "mtHaplo": "NM1 (Andreeva et al. 2022 scheme)",
+      "yHaplo": null,
+      "showed": "A molar from a Micoquian layer. Its mtDNA dates to MIS 5a, the oldest Neanderthal from Central-Eastern Europe, and is closest to Mezmaiskaya 1 in the Caucasus.",
+      "source": {
+        "citation": "Picin et al. 2020, Scientific Reports",
+        "doi": "10.1038/s41598-020-71504-x"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB39529",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Andreeva et al. found the new Mezmaiskaya 3 mtDNA closest to Mezmaiskaya 1 and Stajnia S5000.",
+          "source": {
+            "citation": "Andreeva et al. 2022, Scientific Reports",
+            "doi": "10.1038/s41598-022-16164-9"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Slimak et al. note that molecular ages for Stajnia S5000, like Thorin and Chagyrskaya 8, disagree with the dates of their layers.",
+          "source": {
+            "citation": "Slimak et al. 2024, Cell Genomics",
+            "doi": "10.1016/j.xgen.2024.100593"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mezmaiskaya-3",
+      "label": "Mezmaiskaya 3",
+      "species": "neanderthal",
+      "site": "mezmaiskaya",
+      "fromKa": 134,
+      "toKa": 59,
+      "dating": "mtDNA molecular age 96,700 years (95% range 59,000–134,000; Andreeva et al.).",
+      "data": [
+        "mtDNA",
+        "nuclear-low"
+      ],
+      "coverage": "75 Mbp nuclear",
+      "sex": "female",
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A milk incisor from the same layer as Mezmaiskaya 1. Her mtDNA is closest to Mezmaiskaya 1 and Stajnia S5000; the authors suggest she was the last of an early Neanderthal branch later replaced.",
+      "source": {
+        "citation": "Andreeva et al. 2022, Scientific Reports",
+        "doi": "10.1038/s41598-022-16164-9"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJNA765125"
+    },
+    {
+      "id": "sima-de-los-huesos",
+      "label": "Sima de los Huesos hominins (five specimens)",
+      "species": "heidelbergensis",
+      "site": "sima-de-los-huesos",
+      "fromKa": 430,
+      "toKa": 430,
+      "dating": "About 430,000 years (Meyer et al. 2016).",
+      "data": [
+        "mtDNA",
+        "nuclear-low"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": "Closer to Denisovan mtDNA",
+      "yHaplo": null,
+      "showed": "Their mtDNA is closest to Denisovans’, but nuclear DNA from two specimens links them to Neanderthals: Neanderthals and Denisovans had split before 430,000 years ago.",
+      "note": "Group entry: ENA lists femur XIII, femur fragment AT-5431, incisor AT-5482, molar AT-5444 and scapula AT-6672; how many individuals they represent was not checked.",
+      "source": {
+        "citation": "Meyer et al. 2016, Nature",
+        "doi": "10.1038/nature17405"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB10597",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Meyer et al. first read an almost complete mtDNA from a Sima hominin and found it related to the Denisovan lineage.",
+          "source": {
+            "citation": "Meyer et al. 2013, Nature",
+            "doi": "10.1038/nature12788"
+          }
+        }
+      ]
+    },
+    {
+      "id": "goyet-q57",
+      "label": "Goyet Q57-1, Q57-2, Q57-3 (mtDNA lineage 2)",
+      "species": "neanderthal",
+      "site": "goyet",
+      "fromKa": 45.6,
+      "toKa": 40.6,
+      "dating": "Calibrated radiocarbon dates on these bones span 45,630–40,620 cal BP (Rougier et al.).",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Three bones sharing Goyet mtDNA lineage 2, from a site whose Neanderthal bones show butchery and use as retouchers. Fotiadou et al. found Q57-2’s mtDNA clusters with Feldhofer 1 and Vindija 33.25.",
+      "note": "May be one or more individuals; GenBank KX198082–KX198088 cover all seven Rougier et al. mtDNAs.",
+      "source": {
+        "citation": "Rougier et al. 2016, Scientific Reports",
+        "doi": "10.1038/srep29005"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/KX198082",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Fotiadou et al. place the Trou Magrite mtDNA with Goyet Q57-2, Feldhofer 1 and Vindija 33.25.",
+          "source": {
+            "citation": "Fotiadou et al. 2026, PNAS",
+            "doi": "10.1073/pnas.2520565123"
+          }
+        }
+      ]
+    },
+    {
+      "id": "goyet-q305-4",
+      "label": "Goyet Q305-4 (mtDNA lineage 3)",
+      "species": "neanderthal",
+      "site": "goyet",
+      "fromKa": 45.2,
+      "toKa": 43.4,
+      "dating": "Radiocarbon 40,690 BP (GrA-46176), calibrated to 45,150–43,430 cal BP (Rougier et al.).",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A tibia carrying Goyet’s third mtDNA lineage. Fotiadou et al. found it groups with Goyet Q305-1 and Feldhofer 2.",
+      "source": {
+        "citation": "Rougier et al. 2016, Scientific Reports",
+        "doi": "10.1038/srep29005"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/KX198082"
+    },
+    {
+      "id": "goyet-2878-2d",
+      "label": "Goyet 2878-2D",
+      "species": "neanderthal",
+      "site": "goyet",
+      "fromKa": 43,
+      "toKa": 42,
+      "dating": "Radiocarbon 37,000–36,000 cal BP, which the authors consider too young (varnish); identical mtDNA to Q56-1 suggests 43,000–42,000.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Its mtDNA is identical to Goyet Q56-1’s and close to Spy and Riparo Broion individuals. Nearly all late Neanderthals in Europe share one mtDNA lineage that diversified about 65,000 years ago (Fotiadou et al.).",
+      "source": {
+        "citation": "Fotiadou et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2520565123"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB90662"
+    },
+    {
+      "id": "goyet-q305-1",
+      "label": "Goyet Q305-1",
+      "species": "neanderthal",
+      "site": "goyet",
+      "fromKa": 45,
+      "toKa": 41,
+      "dating": "Radiocarbon 37,560–36,430 cal BP, which the authors think is too young (collagen contamination); the Goyet assemblage spans 45,000–41,000.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Its mtDNA groups with Goyet Q305-4 and Feldhofer 2. Nearly all late Neanderthals in Europe share one mtDNA lineage that diversified about 65,000 years ago (Fotiadou et al.).",
+      "source": {
+        "citation": "Fotiadou et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2520565123"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB90662"
+    },
+    {
+      "id": "goyet-d183-4",
+      "label": "Goyet D183-4",
+      "species": "neanderthal",
+      "site": "goyet",
+      "fromKa": 45,
+      "toKa": 41,
+      "dating": "Radiocarbon 38,880–37,030 cal BP, likely too young (collagen contamination); Goyet assemblage 45,000–41,000.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Poorly preserved; tentatively placed on the late Neanderthal lineage, on a branch with people from Belgium, Germany and Croatia. Nearly all late Neanderthals in Europe share one mtDNA lineage that diversified about 65,000 years ago (Fotiadou et al.).",
+      "note": "The paper’s text says D183-4 and a figure legend says D138-4.",
+      "source": {
+        "citation": "Fotiadou et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2520565123"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB90662"
+    },
+    {
+      "id": "saint-cesaire-rpb-117",
+      "label": "Saint-Césaire RPB_117",
+      "species": "neanderthal",
+      "site": "saint-cesaire",
+      "fromKa": 60,
+      "toKa": 55,
+      "dating": "About 60,000–55,000 years, from stratigraphy (cited by Fotiadou et al.).",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A neonate from Mousterian layers. Its mtDNA, tentatively placed, diverges from the base of the main late Neanderthal branch. Nearly all late Neanderthals in Europe share one mtDNA lineage that diversified about 65,000 years ago (Fotiadou et al.).",
+      "source": {
+        "citation": "Fotiadou et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2520565123"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB90662"
+    },
+    {
+      "id": "trou-magrite-2422-36",
+      "label": "Trou Magrite 2422-36",
+      "species": "neanderthal",
+      "site": "trou-magrite",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "Not directly dated; context uncertain.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A neonate, not directly dated. Its mtDNA clusters with Feldhofer 1, Goyet Q57-2 and Vindija 33.25, suggesting it belongs with the late Neanderthals.",
+      "source": {
+        "citation": "Fotiadou et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2520565123"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB90662"
+    },
+    {
+      "id": "sesselfelsgrotte-1",
+      "label": "Sesselfelsgrotte 1",
+      "species": "neanderthal",
+      "site": "sesselfelsgrotte",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "Not directly dated; thermoluminescence ages of 51,100 ± 10,300 and 57,500 ± 12,800 from sediment just above.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Fetal remains whose mtDNA falls on the older main MIS 5–4 branch, which with the stratigraphy could support an age before MIS 3.",
+      "source": {
+        "citation": "Fotiadou et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2520565123"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB90662"
+    },
+    {
+      "id": "tourtoirac-n1",
+      "label": "Tourtoirac N.1",
+      "species": "neanderthal",
+      "site": "tourtoirac",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "Pre-MIS 3 (Fotiadou et al.); no calendar range in the text read.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A pre-MIS 3 Neanderthal from a Quina Mousterian context; the three Tourtoirac individuals are thought to share one occupation phase but carry more mtDNA diversity than single late sites.",
+      "source": {
+        "citation": "Fotiadou et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2520565123"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB90662"
+    },
+    {
+      "id": "tourtoirac-n4",
+      "label": "Tourtoirac N.4",
+      "species": "neanderthal",
+      "site": "tourtoirac",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "Pre-MIS 3 (Fotiadou et al.); no calendar range in the text read.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A pre-MIS 3 Neanderthal from a Quina Mousterian context; the three Tourtoirac individuals are thought to share one occupation phase but carry more mtDNA diversity than single late sites.",
+      "source": {
+        "citation": "Fotiadou et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2520565123"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB90662"
+    },
+    {
+      "id": "tourtoirac-d14",
+      "label": "Tourtoirac D_14",
+      "species": "neanderthal",
+      "site": "tourtoirac",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "Pre-MIS 3 (Fotiadou et al.); no calendar range in the text read.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A pre-MIS 3 Neanderthal from a Quina Mousterian context; its mtDNA is on the branch with Mezmaiskaya 1 and 3 and Stajnia S5000.",
+      "source": {
+        "citation": "Fotiadou et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2520565123"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB90662"
+    },
+    {
+      "id": "pesturina-3",
+      "label": "Pešturina 3",
+      "species": "neanderthal",
+      "site": "pesturina",
+      "fromKa": 122,
+      "toKa": 100,
+      "dating": "Indirectly dated to 111,000 ± 11,000 years (cited by Fotiadou et al.).",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A tooth whose mtDNA falls on the older branch that gave rise to most pre-MIS 3 Neanderthal mtDNAs in the Altai and Europe.",
+      "source": {
+        "citation": "Fotiadou et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2520565123"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB90662"
+    },
+    {
+      "id": "spy-572a",
+      "label": "Spy 572a",
+      "species": "neanderthal",
+      "site": "spy",
+      "fromKa": 44.2,
+      "toKa": 40.6,
+      "dating": "Disappearance window 44,200–40,600 cal BP (Devièse et al.); individual date not taken from the abstract.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A scapula analysed with new dating and genetic methods; the study found earlier Spy dates were too young and that Neanderthals vanished from Northwest Europe 44,200–40,600 years ago.",
+      "source": {
+        "citation": "Devièse et al. 2021, PNAS",
+        "doi": "10.1073/pnas.2022466118"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB39136"
+    },
+    {
+      "id": "fonds-de-foret",
+      "label": "Fonds-de-Forêt femur",
+      "species": "neanderthal",
+      "site": "fonds-de-foret",
+      "fromKa": 44.2,
+      "toKa": 40.6,
+      "dating": "Disappearance window 44,200–40,600 cal BP (Devièse et al.); individual date not taken from the abstract.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A femur directly dated and genetically analysed in the study that placed the Neanderthal disappearance in Northwest Europe at 44,200–40,600 years ago.",
+      "source": {
+        "citation": "Devièse et al. 2021, PNAS",
+        "doi": "10.1073/pnas.2022466118"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB39136"
+    },
+    {
+      "id": "grotte-du-renne",
+      "label": "Grotte du Renne Châtelperronian specimens",
+      "species": "neanderthal",
+      "site": "grotte-du-renne",
+      "fromKa": null,
+      "toKa": null,
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Bone fragments found by protein screening gave Neanderthal mtDNA and date to the Châtelperronian, linking that industry’s layers to Neanderthals.",
+      "note": "Specimen labels not in the abstract; repository not checked.",
+      "source": {
+        "citation": "Welker et al. 2016, PNAS",
+        "doi": "10.1073/pnas.1605834113"
+      },
+      "repository": null,
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Hublin et al.’s 40 radiocarbon dates from the site were inconsistent with the idea that layers were mixed.",
+          "source": {
+            "citation": "Hublin et al. 2012, PNAS",
+            "doi": "10.1073/pnas.1212924109"
+          }
+        }
+      ]
+    },
+    {
+      "id": "rochers-de-villeneuve",
+      "label": "Les Rochers-de-Villeneuve femur",
+      "species": "neanderthal",
+      "site": "rochers-de-villeneuve",
+      "fromKa": null,
+      "toKa": null,
+      "dating": "About 40,700 radiocarbon years BP; the paper gives only uncalibrated years.",
+      "data": [
+        "mtDNA"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "A partial femur whose morphology and ancient DNA align it with Neanderthals, distinct from early modern humans.",
+      "source": {
+        "citation": "Beauval et al. 2005, PNAS",
+        "doi": "10.1073/pnas.0502656102"
+      },
+      "repository": null
+    },
+    {
+      "id": "sediment-el-sidron",
+      "label": "El Sidrón sediment",
+      "species": "neanderthal",
+      "site": "el-sidron",
+      "fromKa": null,
+      "toKa": null,
+      "data": [
+        "sediment"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Neanderthal mtDNA in a sediment sample, from at least two people. It was the only site in the study with hominin DNA detected before enrichment, and had no ancient animal DNA.",
+      "source": {
+        "citation": "Slon et al. 2017, Science",
+        "doi": "10.1126/science.aam9695"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB18629"
+    },
+    {
+      "id": "sediment-trou-al-wesse",
+      "label": "Trou Al’Wesse sediment",
+      "species": "neanderthal",
+      "site": "trou-al-wesse",
+      "fromKa": null,
+      "toKa": null,
+      "data": [
+        "sediment"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Neanderthal mtDNA from a cave with no hominin remains in its Pleistocene layers, only Late Mousterian artefacts and cut-marked bones.",
+      "source": {
+        "citation": "Slon et al. 2017, Science",
+        "doi": "10.1126/science.aam9695"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB18629"
+    },
+    {
+      "id": "sediment-chagyrskaya",
+      "label": "Chagyrskaya sediment",
+      "species": "neanderthal",
+      "site": "chagyrskaya",
+      "fromKa": 59,
+      "toKa": 51,
+      "data": [
+        "sediment"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Neanderthal mtDNA in sediments, matching the Neanderthal remains there. Nuclear DNA from sediments later fitted the skeletal record and a turnover around 100,000 years ago.",
+      "source": {
+        "citation": "Slon et al. 2017, Science",
+        "doi": "10.1126/science.aam9695"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB18629",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Vernot et al. recovered Neanderthal nuclear DNA from sediments at three caves, including this one.",
+          "source": {
+            "citation": "Vernot et al. 2021, Science",
+            "doi": "10.1126/science.abf1667"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Skov et al. note two of 38 Chagyrskaya sediment mtDNA samples were closer to Okladnikov A than to any Chagyrskaya Neanderthal.",
+          "source": {
+            "citation": "Skov et al. 2022, Nature",
+            "doi": "10.1038/s41586-022-05283-y"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sediment-denisova",
+      "label": "Denisova Cave sediments",
+      "species": "denisovan",
+      "site": "denisova-cave",
+      "fromKa": 250,
+      "toKa": 45,
+      "data": [
+        "sediment"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Hominin mtDNA in 175 of 728 samples: Denisovans first, about 250,000–170,000 years ago, then Neanderthals, repeated visits by both, and modern humans by at least 45,000 years ago.",
+      "note": "Both Neanderthal and Denisovan DNA; species set to denisovan to match the existing denisova-cave claim.",
+      "source": {
+        "citation": "Zavala et al. 2021, Nature",
+        "doi": "10.1038/s41586-021-03675-0"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB44036",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Slon et al. first found Neanderthal and Denisovan mtDNA in Denisova Cave sediments, Denisovan in a Middle Pleistocene layer.",
+          "source": {
+            "citation": "Slon et al. 2017, Science",
+            "doi": "10.1126/science.aam9695"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Vernot et al. recovered nuclear DNA from Denisova Cave sediments.",
+          "source": {
+            "citation": "Vernot et al. 2021, Science",
+            "doi": "10.1126/science.abf1667"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sediment-galeria-de-las-estatuas",
+      "label": "Galería de las Estatuas sediment",
+      "species": "neanderthal",
+      "site": "galeria-de-las-estatuas",
+      "fromKa": null,
+      "toKa": null,
+      "data": [
+        "sediment"
+      ],
+      "coverage": null,
+      "sex": null,
+      "mtHaplo": null,
+      "yHaplo": null,
+      "showed": "Neanderthal nuclear and mtDNA from layers without skeletons, pointing to a turnover of Neanderthal populations about 100,000 years ago.",
+      "source": {
+        "citation": "Vernot et al. 2021, Science",
+        "doi": "10.1126/science.abf1667"
+      },
+      "repository": "https://www.ebi.ac.uk/ena/browser/view/PRJEB42656",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Fotiadou et al. summarise the result as at least two Neanderthal radiations, about 135,000 and 105,000 years ago.",
+          "source": {
+            "citation": "Fotiadou et al. 2026, PNAS",
+            "doi": "10.1073/pnas.2520565123"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Slimak et al. place two Estatuas mtDNAs in a clade with Thorin and Forbes’ Quarry.",
+          "source": {
+            "citation": "Slimak et al. 2024, Cell Genomics",
+            "doi": "10.1016/j.xgen.2024.100593"
+          }
+        }
+      ]
+    }
+  ]
+}

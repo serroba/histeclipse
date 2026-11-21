@@ -214,7 +214,10 @@ test('the note lists the species marked, each opening its card', async ({ page }
     await showDeepDetails(page);
   });
   await test.step('When they tap Denisovans in the note', async () => {
-    await page.getByTestId('humans-note').getByRole('button', { name: 'Denisovans' }).click();
+    await page
+      .getByTestId('humans-note')
+      .getByRole('button', { name: 'Denisovans', exact: true })
+      .click();
   });
   await test.step('Then the Denisovans’ card opens', async () => {
     await expect(card.getByRole('heading', { name: 'Denisovans' })).toBeVisible();
@@ -345,6 +348,58 @@ test('the legend shows only one species, and all again, in a link that keeps it 
     await note.getByRole('button', { name: 'Show all species' }).click();
     await expect(page).not.toHaveURL(/species=/);
     await expect(page.locator('.human-site.is-sapiens').first()).toBeAttached();
+  });
+  expect(problems).toEqual([]);
+});
+
+test('a Neanderthal site’s card lists the DNA read there, each with its paper and its data (#1047)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const card = page.getByTestId('marker-card');
+  await page.route(/^https:\/\/(upload|thumb)\.wikimedia\.org\//, (route) =>
+    route.fulfill({ contentType: 'image/png', body: PIXEL }),
+  );
+  await test.step('Given Neanderthals only, 40,000 years ago, looking at Croatia', async () => {
+    await page.goto('./?ma=0.04&scale=ice&cam=46,16,1.6&layers=humans&species=neanderthal');
+    await globeRendered(page);
+  });
+  await test.step('When they tap Vindija Cave', async () => {
+    await page.locator('.human-site', { hasText: 'Vindija' }).first().click();
+  });
+  await test.step('Then its card lists the samples read there, with their papers and data', async () => {
+    await expect(card).toContainText('Ancient DNA');
+    await expect(card).toContainText('DNA: Vindija');
+    await expect(card.getByRole('link', { name: /: the data$/ }).first()).toHaveAttribute(
+      'href',
+      /^https:\/\//,
+    );
+  });
+  expect(problems).toEqual([]);
+});
+
+test('interbreeding is told episode by episode, each with its estimates, and leads to its finds (#1047)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const card = page.getByTestId('marker-card');
+  await test.step('Given the ice ages 30,000 years ago with Humans on', async () => {
+    await page.goto('./?ma=0.03&scale=ice&layers=humans');
+    await globeRendered(page);
+    await showDeepDetails(page);
+  });
+  await test.step('When they open the first Europeans’ Neanderthal ancestors', async () => {
+    await page
+      .getByTestId('humans-note')
+      .getByRole('button', { name: 'Recent Neanderthal ancestors in the first Europeans' })
+      .click();
+  });
+  await test.step('Then its card gives who, when, the estimates side by side, and a way to Oase', async () => {
+    await expect(card).toContainText('From Neanderthals into Homo sapiens');
+    await expect(card).toContainText('Estimate');
+    await expect(card).toContainText('Inferred from DNA');
+    await card.getByRole('button', { name: /Oase/ }).click();
+    await expect(card.getByRole('heading', { name: /Oase/ })).toBeVisible();
   });
   expect(problems).toEqual([]);
 });

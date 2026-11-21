@@ -33,6 +33,26 @@
     {
       "id": "east-asia",
       "title": "When did our species reach East and Southeast Asia?"
+    },
+    {
+      "id": "neanderthal-burial",
+      "title": "Did Neanderthals bury their dead?"
+    },
+    {
+      "id": "chatelperronian",
+      "title": "Did Neanderthals make the Châtelperronian?"
+    },
+    {
+      "id": "neanderthal-symbols",
+      "title": "Did Neanderthals make symbols, art, ornaments or music?"
+    },
+    {
+      "id": "tabun-age",
+      "title": "How old is the Tabun C1 Neanderthal?"
+    },
+    {
+      "id": "nesher-ramla-homo",
+      "title": "Who were the people of Nesher Ramla?"
     }
   ],
   "claims": [
@@ -902,6 +922,39 @@
       ]
     },
     {
+      "id": "velika-balanica",
+      "species": "neanderthal",
+      "place": {
+        "name": "Velika Balanica",
+        "region": "Sićevo Gorge, Serbia",
+        "latitude": 43.3,
+        "longitude": 22.1
+      },
+      "fromKa": 319,
+      "toKa": 251,
+      "claim": "Early Neanderthal teeth about 300,000 years old, the earliest Neanderthal evidence in the region according to Radović et al.",
+      "source": {
+        "citation": "Radović et al. 2025, American Journal of Biological Anthropology",
+        "doi": "10.1002/ajpa.70133"
+      },
+      "wikipedia": "Balanica",
+      "found": "Teeth from layers 3a and 3b; a third molar, BH-15, has a mid-trigonid crest, a trait seen as diagnostic of the Neanderthal lineage.",
+      "dating": "Layer 3a dated by thermoluminescence to 285,000 ± 34,000 and 295,000 ± 74,000 years.",
+      "discovered": null,
+      "matters": "Radović et al. say the finds reinforce early Neanderthal presence here around 300,000 years ago, while the nearby Mala Balanica jaw lacks Neanderthal traits.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Mihailović et al. dated layer 3 at Velika Balanica to MIS 9–7 with TL and ESR, and found tools resembling the Yabrudian of the Levant.",
+          "source": {
+            "citation": "Mihailović et al. 2022, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2021.103138"
+          }
+        }
+      ]
+    },
+    {
       "id": "harbin",
       "species": "longi",
       "place": {
@@ -1002,6 +1055,39 @@
       ]
     },
     {
+      "id": "cova-negra",
+      "species": "neanderthal",
+      "place": {
+        "name": "Cova Negra",
+        "region": "Valencia, Spain",
+        "latitude": 39.0,
+        "longitude": -0.5
+      },
+      "fromKa": 273,
+      "toKa": 146,
+      "claim": "Neanderthal remains, many from children, in layers dated to 273,000–146,000 years ago, among the earliest Neanderthals in Iberia.",
+      "source": {
+        "citation": "Richard et al. 2019, Quaternary Geochronology",
+        "doi": "10.1016/j.quageo.2018.05.004"
+      },
+      "wikipedia": "Cova Negra",
+      "found": "Cranial and skeletal remains of at least seven individuals, four of them children under ten, with Mousterian tools.",
+      "dating": "ESR/U-series on herbivore teeth from four layers: occupation in MIS 8 to 6, between 273 ± 26 ka and 146 ± 34 ka.",
+      "discovered": null,
+      "matters": "Richard et al. say the site is about 100,000 years older than earlier sediment TL dates suggested, which would make it one of the first Neanderthal sites in Iberia.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Arsuaga et al. described new remains and found diagnostic Neanderthal features, concluding all the Cova Negra humans are Neanderthals.",
+          "source": {
+            "citation": "Arsuaga et al. 2007, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2006.07.011"
+          }
+        }
+      ]
+    },
+    {
       "id": "omo-kibish",
       "species": "sapiens",
       "place": {
@@ -1044,6 +1130,61 @@
       ]
     },
     {
+      "id": "ehringsdorf",
+      "species": "neanderthal",
+      "place": {
+        "name": "Ehringsdorf, Weimar",
+        "region": "Thuringia, Germany",
+        "latitude": 51.0,
+        "longitude": 11.3
+      },
+      "fromKa": 230,
+      "toKa": 230,
+      "claim": "Early Neanderthal remains from the lower travertine at Ehringsdorf, which U-series dating puts at about 230,000 years old.",
+      "source": {
+        "citation": "Blackwell & Schwarcz 1986, Quaternary Research",
+        "doi": "10.1016/0033-5894(86)90058-x"
+      },
+      "wikipedia": "Ehringsdorf remains",
+      "found": "Hominin remains in the lower travertine, a limestone laid down in an interglacial.",
+      "dating": "U-series on travertine: apparent ages from over 350,000 to 200,000 years; the best estimate is about 230,000 years (MIS 7).",
+      "discovered": null,
+      "matters": "Blackwell & Schwarcz’s dates moved the lower travertine from the last interglacial to MIS 7. Urciuoli et al. call Ehringsdorf one of the earliest Neanderthals, whose affinities are still argued.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Urciuoli et al. found that the Ehringsdorf and Reilingen inner ears are almost fully like late Neanderthals, though both fossils’ affinities have been contentious.",
+          "source": {
+            "citation": "Urciuoli et al. 2025, The Anatomical Record",
+            "doi": "10.1002/ar.70081"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pontnewydd",
+      "species": "neanderthal",
+      "place": {
+        "name": "Pontnewydd Cave",
+        "region": "Denbighshire, Wales",
+        "latitude": 53.2,
+        "longitude": -3.5
+      },
+      "fromKa": 225,
+      "toKa": 225,
+      "claim": "Seventeen hominin teeth about 225,000 years old, closest to Sima de los Huesos and placed in an early stage of Neanderthal evolution.",
+      "source": {
+        "citation": "Compton & Stringer 2015, Journal of Quaternary Science",
+        "doi": "10.1002/jqs.2811"
+      },
+      "wikipedia": "Bontnewydd Palaeolithic site",
+      "found": "17 hominin teeth with handaxe and Levallois tools.",
+      "dating": "Probable age of about 225,000 years, as given by Compton & Stringer.",
+      "discovered": "Excavated between 1980 and 1995.",
+      "matters": "Compton & Stringer place the teeth in the pre-Neanderthal stage and reject assigning them to Homo heidelbergensis, a view others have held."
+    },
+    {
       "id": "apidima",
       "species": "sapiens",
       "question": "first-out-of-africa",
@@ -1079,6 +1220,15 @@
           "source": {
             "citation": "de Lumley et al. 2020, L’Anthropologie",
             "doi": "10.1016/j.anthro.2019.102743"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Bartsiokas et al. dated a fragment of Apidima 2 by U-series to at least 160,000 years and judged its face to belong to the Neanderthal clade.",
+          "source": {
+            "citation": "Bartsiokas et al. 2017, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2017.04.008"
           }
         }
       ]
@@ -1136,6 +1286,84 @@
           "source": {
             "citation": "Reich et al. 2010, Nature",
             "doi": "10.1038/nature09710"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Prüfer et al. sequenced a high-quality genome of a Neanderthal woman from the Altai, whose parents were related at about the level of half-siblings.",
+          "source": {
+            "citation": "Prüfer et al. 2013, Nature",
+            "doi": "10.1038/nature12886"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Mafessoni et al. found the Chagyrskaya Neanderthal closer to western Neanderthals than to the earlier Neanderthals of Denisova Cave, about 100 km away.",
+          "source": {
+            "citation": "Mafessoni et al. 2020, PNAS",
+            "doi": "10.1073/pnas.2004944117"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Kolobova et al. note earlier Neanderthals at other Altai sites without Micoquian-like tools, implying two or more Neanderthal arrivals in the region.",
+          "source": {
+            "citation": "Kolobova et al. 2020, PNAS",
+            "doi": "10.1073/pnas.1918047117"
+          }
+        }
+      ]
+    },
+    {
+      "id": "schoeningen",
+      "species": "neanderthal",
+      "place": {
+        "name": "Schöningen",
+        "region": "Lower Saxony, Germany",
+        "latitude": 52.1,
+        "longitude": 11.0
+      },
+      "fromKa": 200,
+      "toKa": 200,
+      "claim": "The most complete Palaeolithic wooden spears, which Hutson et al. redate to about 200,000 years and link to Neanderthals; earlier estimates were 400,000 and 300,000 years.",
+      "source": {
+        "citation": "Hutson et al. 2025, Science Advances",
+        "doi": "10.1126/sciadv.adv0752"
+      },
+      "wikipedia": "Schöningen spears",
+      "found": "Wooden throwing spears and double-pointed sticks, with stone tools and butchered horses, by an ancient lakeshore.",
+      "dating": "Amino acid dating of fossils from the Spear Horizon and a regional reassessment give about 200,000 years (Hutson et al.).",
+      "discovered": "The spears were found in 1995, as reported by Thieme 1997.",
+      "matters": "The age decides who made the spears. Thieme proposed about 400,000 years and Richter & Krbetschek 337,000–300,000; Hutson et al.’s 200,000 years places them among Middle Palaeolithic Neanderthals.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Thieme described the spears as about 400,000 years old and the oldest complete hunting weapons then known.",
+          "source": {
+            "citation": "Thieme 1997, Nature",
+            "doi": "10.1038/385807a0"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Richter & Krbetschek dated heated flint from a nearby Schöningen site to 321,000 ± 16,000 years and inferred 337,000–300,000 years for the spears.",
+          "source": {
+            "citation": "Richter & Krbetschek 2015, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2015.06.003"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Milks et al. analysed a double-pointed stick from the site, then dated to about 300,000 years, and found skilled woodworking for a hunting throwing stick.",
+          "source": {
+            "citation": "Milks et al. 2023, PLOS ONE",
+            "doi": "10.1371/journal.pone.0287719"
           }
         }
       ]
@@ -1203,6 +1431,114 @@
           "source": {
             "citation": "Chang et al. 2015, Nature Communications",
             "doi": "10.1038/ncomms7037"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bruniquel",
+      "species": "neanderthal",
+      "place": {
+        "name": "Bruniquel Cave",
+        "region": "Tarn-et-Garonne, France",
+        "latitude": 44.1,
+        "longitude": 1.7
+      },
+      "fromKa": 178.6,
+      "toKa": 174.4,
+      "claim": "Rings of broken stalagmites built 336 m inside Bruniquel Cave about 176,500 years ago, with traces of fire.",
+      "source": {
+        "citation": "Jaubert et al. 2016, Nature",
+        "doi": "10.1038/nature18291"
+      },
+      "wikipedia": "Bruniquel Cave",
+      "found": "Ring-shaped structures of broken stalagmites, with traces of fire and burnt bone, deep in the cave.",
+      "dating": "U-series dates on stalagmite regrowths and burnt bone, with the tips of the broken stalagmites: 176.5 ± 2.1 ka.",
+      "discovered": null,
+      "matters": "Jaubert et al. call these among the oldest well-dated human constructions and say their builders had mastered the underground world. Their purpose is unknown.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Aubert et al. list the Bruniquel structures among Neanderthal behaviours whose meaning divides scientific opinion.",
+          "source": {
+            "citation": "Aubert et al. 2018, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2018.08.004"
+          }
+        }
+      ]
+    },
+    {
+      "id": "altamura",
+      "species": "neanderthal",
+      "place": {
+        "name": "Lamalunga Cave, Altamura",
+        "region": "Apulia, Italy",
+        "latitude": 40.9,
+        "longitude": 16.6
+      },
+      "fromKa": 172,
+      "toKa": 130,
+      "claim": "A nearly complete Neanderthal skeleton encased in calcite, dated to between 172,000 and 130,000 years ago.",
+      "source": {
+        "citation": "Lari et al. 2015, Journal of Human Evolution",
+        "doi": "10.1016/j.jhevol.2015.02.007"
+      },
+      "wikipedia": "Altamura Man",
+      "found": "A whole skeleton stuck in calcite concretions; a shoulder blade fragment was removed for study.",
+      "dating": "First dating of the skeleton, from a retrieved bone fragment and its setting: 172 ± 15 ka to 130.1 ± 1.9 ka.",
+      "discovered": "Found in 1993 during a caving survey.",
+      "matters": "Lari et al. call it the oldest Neanderthal with endogenous DNA. Buzi et al. (2025) describe its nose, the first complete inner nasal cavity in the fossil record.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Buzi et al. describe the complete inner nasal structures of this early Neanderthal, testing traits once proposed as cold adaptations.",
+          "source": {
+            "citation": "Buzi et al. 2025, PNAS",
+            "doi": "10.1073/pnas.2426309122"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Riga et al. used a videoscope to describe the nearly complete teeth, with a retromolar space and other features consistent with Neanderthals.",
+          "source": {
+            "citation": "Riga et al. 2020, PLOS ONE",
+            "doi": "10.1371/journal.pone.0241713"
+          }
+        }
+      ]
+    },
+    {
+      "id": "scladina",
+      "species": "neanderthal",
+      "place": {
+        "name": "Scladina",
+        "region": "Belgium",
+        "latitude": 50.5,
+        "longitude": 5.0
+      },
+      "fromKa": 168,
+      "toKa": 76,
+      "claim": "A Neanderthal from Scladina, about 120,000 years old, gave mtDNA and some nuclear DNA.",
+      "source": {
+        "citation": "Peyrégne et al. 2019, Science Advances",
+        "doi": "10.1126/sciadv.aaw5873"
+      },
+      "wikipedia": "Scladina",
+      "found": "Scladina I-4A, a Neanderthal.",
+      "dating": "About 120,000 years from mtDNA branch length (95% range 76,000–168,000).",
+      "discovered": null,
+      "matters": "With HST, it suggests later Neanderthals descend at least partly from these early Europeans (Peyrégne et al.).",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Bokelmann et al. found the Forbes’ Quarry Neanderthal genetically closest to Scladina, HST and Mezmaiskaya 1.",
+          "source": {
+            "citation": "Bokelmann et al. 2019, PNAS",
+            "doi": "10.1073/pnas.1903984116"
           }
         }
       ]
@@ -1304,6 +1640,39 @@
       ]
     },
     {
+      "id": "bajondillo",
+      "species": "neanderthal",
+      "place": {
+        "name": "Bajondillo Cave",
+        "region": "Málaga, Spain",
+        "latitude": 36.6,
+        "longitude": -4.5
+      },
+      "fromKa": 160,
+      "toKa": 35,
+      "claim": "Shellfish, mainly mussels, collected through the Middle Palaeolithic levels of a sequence spanning about 160,000 to 35,000 years ago.",
+      "source": {
+        "citation": "Cortés-Sánchez et al. 2019, Quaternary Science Reviews",
+        "doi": "10.1016/j.quascirev.2019.02.007"
+      },
+      "wikipedia": "Bajondillo Cave",
+      "found": "Shellfish remains, mainly Mediterranean mussel, in Middle and early Upper Palaeolithic levels.",
+      "dating": "The sequence spans about 160–35 kyr cal BP, as given by Cortés-Sánchez et al.",
+      "discovered": null,
+      "matters": "Cortés-Sánchez et al. show shellfish collecting through MIS 4, a poorly known stage, and a long stable focus on mussels.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Zilhão et al. report large shell middens left by Last Interglacial Neanderthals at Figueira Brava, Portugal.",
+          "source": {
+            "citation": "Zilhão et al. 2020, Science",
+            "doi": "10.1126/science.aaz7943"
+          }
+        }
+      ]
+    },
+    {
       "id": "krapina",
       "species": "neanderthal",
       "place": {
@@ -1379,6 +1748,349 @@
       ]
     },
     {
+      "id": "nesher-ramla",
+      "species": "heidelbergensis",
+      "question": "nesher-ramla-homo",
+      "place": {
+        "name": "Nesher Ramla",
+        "region": "central Israel",
+        "latitude": 31.9,
+        "longitude": 34.9
+      },
+      "fromKa": 140,
+      "toKa": 120,
+      "claim": "Nesher Ramla Homo: a skull fragment and jaw 120,000–140,000 years old that Hershkovitz et al. read as a late Middle Pleistocene Homo group.",
+      "source": {
+        "citation": "Hershkovitz et al. 2021, Science",
+        "doi": "10.1126/science.abh3169"
+      },
+      "wikipedia": "Nesher Ramla Homo",
+      "found": "Part of a skull and a lower jaw, with stone tools and the bones of hunted animals.",
+      "dating": "Radiometric ages for the layers of 140,000 to 120,000 years, presented in the companion paper by Zaidner et al.",
+      "discovered": "Excavated in a quarry near Ramla by a team led by Yossi Zaidner; described in 2021.",
+      "matters": "The authors name no species; the site shows it under heidelbergensis as the nearest group. They see it as a source population for Neanderthals; Marom & Rak 2021 say it is simply a Neanderthal.",
+      "alsoRead": [
+        {
+          "species": "neanderthal",
+          "source": {
+            "citation": "Marom & Rak 2021, Science",
+            "doi": "10.1126/science.abl4336"
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Zaidner et al. report that these people hunted large and small game, kept fires, cooked meat and used tools once linked only to Homo sapiens or Neanderthals.",
+          "source": {
+            "citation": "Zaidner et al. 2021, Science",
+            "doi": "10.1126/science.abh3020"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "fossil",
+          "text": "Marom and Rak argue the jaw clearly shows the diagnostic features of a Neanderthal mandible, and that the fossils represent simply a Neanderthal.",
+          "source": {
+            "citation": "Marom & Rak 2021, Science",
+            "doi": "10.1126/science.abl4336"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "May et al. replied that Marom and Rak used only a few jaw features and could not get beyond a choice between Neanderthal and modern human.",
+          "source": {
+            "citation": "May et al. 2021, Science",
+            "doi": "10.1126/science.abl5789"
+          }
+        }
+      ]
+    },
+    {
+      "id": "nesher-ramla-neanderthal",
+      "species": "neanderthal",
+      "question": "nesher-ramla-homo",
+      "place": {
+        "name": "Nesher Ramla",
+        "region": "central Israel",
+        "latitude": 31.9,
+        "longitude": 34.9
+      },
+      "fromKa": 140,
+      "toKa": 120,
+      "claim": "The Nesher Ramla fossils read as a Neanderthal, 120,000–140,000 years old, by Marom and Rak.",
+      "source": {
+        "citation": "Marom & Rak 2021, Science",
+        "doi": "10.1126/science.abl4336"
+      },
+      "wikipedia": "Nesher Ramla Homo",
+      "found": "The same jaw and skull fragment, which Marom and Rak say show the key features of a Neanderthal lower jaw.",
+      "dating": "The same layers, dated to 140,000–120,000 years ago by Zaidner et al. 2021.",
+      "discovered": "Excavated in a quarry near Ramla; the original description is Hershkovitz et al. 2021.",
+      "matters": "If Neanderthal, the find places Neanderthals in the southern Levant by about 130,000 years ago. Hershkovitz’s team (May et al. 2021) rejects this reading.",
+      "alsoRead": [
+        {
+          "species": "heidelbergensis",
+          "source": {
+            "citation": "Hershkovitz et al. 2021, Science",
+            "doi": "10.1126/science.abh3169"
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "fossil",
+          "text": "Hershkovitz et al. describe the fossils as a previously unknown archaic Homo group, among the last of Middle Pleistocene Homo.",
+          "source": {
+            "citation": "Hershkovitz et al. 2021, Science",
+            "doi": "10.1126/science.abh3169"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "fossil",
+          "text": "May et al. say the comment lacks substance and was limited to a choice between Neanderthal and modern human.",
+          "source": {
+            "citation": "May et al. 2021, Science",
+            "doi": "10.1126/science.abl5789"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tabun-c1",
+      "species": "neanderthal",
+      "question": "tabun-age",
+      "place": {
+        "name": "Tabun Cave",
+        "region": "Mount Carmel, Israel",
+        "latitude": 32.7,
+        "longitude": 35.0
+      },
+      "fromKa": 138,
+      "toKa": 106,
+      "claim": "Tabun C1, a Neanderthal woman, about 122,000 years old if she belongs to layer C, as Grün and Stringer argue.",
+      "source": {
+        "citation": "Grün & Stringer 2000, Journal of Human Evolution",
+        "doi": "10.1006/jhev.2000.0443"
+      },
+      "wikipedia": "Tabun Cave",
+      "found": "A near-complete skeleton of an adult woman, Tabun C1.",
+      "dating": "Revised ESR and new ESR and uranium-series analyses of teeth; the age of 122 ± 16 ka is from a summary, not an abstract we could read.",
+      "discovered": "Found in the early 1930s in the excavations of Dorothy Garrod and Dorothea Bate.",
+      "matters": "If this date holds, Neanderthals were in the Levant about as early as the Skhul and Qafzeh modern humans. Simpson et al. 1998 instead dated the skeleton to about 34,000 years.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Simpson et al. dated the jaw by gamma-ray uranium-series to 34 ± 5 ka, younger than layer C, and argued the woman was not a contemporary of the earliest modern humans.",
+          "source": {
+            "citation": "Simpson et al. 1998, Journal of Human Evolution",
+            "doi": "10.1006/jhev.1998.0252"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Amos et al. note that the Tabun sequence holds both human types of the Levantine Middle Palaeolithic, usually read as Neanderthals and modern humans.",
+          "source": {
+            "citation": "Amos et al. 2025, Archaeological and Anthropological Sciences",
+            "doi": "10.1007/s12520-025-02197-4"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Jelinek described a long Tabun sequence from about 130,000 to 50,000 years and argued for continuity there from Neanderthals to modern humans.",
+          "source": {
+            "citation": "Jelinek 1982, Science",
+            "doi": "10.1126/science.216.4553.1369"
+          }
+        }
+      ]
+    },
+    {
+      "id": "grotta-dei-moscerini",
+      "species": "neanderthal",
+      "place": {
+        "name": "Grotta dei Moscerini",
+        "region": "Lazio, Italy",
+        "latitude": 41.2,
+        "longitude": 13.5
+      },
+      "fromKa": 130,
+      "toKa": 65,
+      "claim": "171 retouched clam-shell tools; about a quarter of the shells were gathered live from the sea floor by Neanderthals.",
+      "source": {
+        "citation": "Villa et al. 2020, PLOS ONE",
+        "doi": "10.1371/journal.pone.0226690"
+      },
+      "found": "171 retouched tools made on valves of the smooth clam, from 21 layers.",
+      "dating": "Dated to MIS 5 to early MIS 4; the 130–65 ka span uses standard MIS boundaries, not dates from the paper.",
+      "discovered": "Excavated in 1949.",
+      "matters": "Villa et al. infer skin diving and say shell fishing and freshwater fishing were common Neanderthal activities.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Zilhão et al. report large shell middens of Last Interglacial Neanderthals at Figueira Brava on Portugal’s Atlantic coast.",
+          "source": {
+            "citation": "Zilhão et al. 2020, Science",
+            "doi": "10.1126/science.aaz7943"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zeeland-ridges",
+      "species": "neanderthal",
+      "place": {
+        "name": "Zeeland Ridges, North Sea",
+        "region": "Off the Netherlands",
+        "latitude": 51.7,
+        "longitude": 3.3
+      },
+      "fromKa": 129,
+      "toKa": 40,
+      "claim": "A Neanderthal brow fragment dredged from the North Sea floor, with Late Pleistocene fauna and Middle Palaeolithic tools.",
+      "source": {
+        "citation": "Hublin et al. 2009, Journal of Human Evolution",
+        "doi": "10.1016/j.jhevol.2009.09.001"
+      },
+      "wikipedia": "Krijn",
+      "found": "Part of a frontal bone, with small handaxes and Levallois flakes, 15 km off the coast.",
+      "dating": "Not directly dated; the span reflects the Late Pleistocene fauna and Middle Palaeolithic tools in the same sediments.",
+      "discovered": "Found in 2001 in sediment dredged from the sea bottom.",
+      "matters": "Hublin et al. report the first Pleistocene hominin found under the sea and the first in the Netherlands, with isotopes showing a meat-rich diet.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Niekus et al. report a birch-tar-backed flint tool, about 50,000 years old, from the Dutch North Sea, linked to Middle Palaeolithic tools and a Neanderthal fossil.",
+          "source": {
+            "citation": "Niekus et al. 2019, PNAS",
+            "doi": "10.1073/pnas.1907828116"
+          }
+        }
+      ]
+    },
+    {
+      "id": "la-chaise",
+      "species": "neanderthal",
+      "place": {
+        "name": "Abri Bourgeois-Delaunay, La Chaise-de-Vouthon",
+        "region": "Charente, France",
+        "latitude": 45.6,
+        "longitude": 0.4
+      },
+      "fromKa": 127,
+      "toKa": 116,
+      "claim": "23 Neanderthal remains, including the BD 1 jaw with all 16 teeth, from a warm period 127,000 to 116,000 years ago.",
+      "source": {
+        "citation": "Zanolli et al. 2020, Paléo",
+        "doi": "10.4000/paleo.5847"
+      },
+      "found": "23 human remains, all attributed to Neanderthals, among them the well-preserved BD 1 mandible of a young adult.",
+      "dating": "Geochronological and palaeontological data place the remains in the last interglacial (OIS 5e), 127–116 ka.",
+      "discovered": null,
+      "matters": "Zanolli et al. found the inner structure of the teeth typically Neanderthal and clearly distinct from modern humans."
+    },
+    {
+      "id": "moula-guercy",
+      "species": "neanderthal",
+      "place": {
+        "name": "Baume Moula-Guercy",
+        "region": "Ardèche, France",
+        "latitude": 44.9,
+        "longitude": 4.9
+      },
+      "fromKa": 125,
+      "toKa": 95,
+      "claim": "Butchered bones of at least six Neanderthals, read as cannibalism, about 100,000 years old; later work places the layer in the Last Interglacial.",
+      "source": {
+        "citation": "Defleur et al. 1999, Science",
+        "doi": "10.1126/science.286.5437.128"
+      },
+      "wikipedia": "Moula-Guercy",
+      "found": "Parts of six Neanderthals with stone-tool marks, mixed with butchered animal bones in the same layer.",
+      "dating": "Defleur et al. put occupation at about 100,000 years ago; Richards et al. (2024) describe the layers as Last Interglacial (MIS 5e).",
+      "discovered": "Excavated from 1991.",
+      "matters": "Defleur et al. infer cannibalism from matching cut marks and bone treatment on humans and animals. The date of the layer is given differently in later work.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Richards et al. describe mandibles from MIS 5e deposits here and link them most closely with Sima de los Huesos and early Neanderthals.",
+          "source": {
+            "citation": "Richards et al. 2024, The Anatomical Record",
+            "doi": "10.1002/ar.25550"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Rougier et al. report butchered Neanderthal bones at Goyet, Belgium, as clear evidence of cannibalism in northern Europe too.",
+          "source": {
+            "citation": "Rougier et al. 2016, Scientific Reports",
+            "doi": "10.1038/srep29005"
+          }
+        }
+      ]
+    },
+    {
+      "id": "neumark-nord",
+      "species": "neanderthal",
+      "place": {
+        "name": "Neumark-Nord",
+        "region": "Geisel valley, Saxony-Anhalt, Germany",
+        "latitude": 51.3,
+        "longitude": 11.9
+      },
+      "fromKa": 125,
+      "toKa": 125,
+      "claim": "Lake deposits about 125,000 years old where Last Interglacial Neanderthals hunted and butchered straight-tusked elephants weighing up to 13 tonnes.",
+      "source": {
+        "citation": "Gaudzinski-Windheuser et al. 2023, Science Advances",
+        "doi": "10.1126/sciadv.add8186"
+      },
+      "found": "The largest known assemblage of straight-tusked elephants, with butchery marks, in ancient lake deposits.",
+      "dating": "Lake deposits of the Last Interglacial, about 125,000 years old.",
+      "discovered": null,
+      "matters": "Gaudzinski-Windheuser et al. argue that elephant hunting went on for over 2,000 years and that the meat yields imply Neanderthals were less mobile and lived in larger groups than usually thought.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Kindler et al. describe a ‘fat factory’ at Neumark-Nord where Neanderthals processed at least 172 large mammals for bone grease, a practice once thought to begin only in the Upper Palaeolithic.",
+          "source": {
+            "citation": "Kindler et al. 2025, Science Advances",
+            "doi": "10.1126/sciadv.adv1257"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "environmental",
+          "text": "Roebroeks et al. report that the Neumark-Nord lake sites suggest landscape modification by hunter-gatherers 125,000 years ago.",
+          "source": {
+            "citation": "Roebroeks et al. 2021, Science Advances",
+            "doi": "10.1126/sciadv.abj5567"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "environmental",
+          "text": "Armaroli et al. studied elephant teeth from the site, where over 70 individuals were gathered by Neanderthal hunting, and traced the elephants’ seasonal movements with strontium isotopes.",
+          "source": {
+            "citation": "Armaroli et al. 2026, Science Advances",
+            "doi": "10.1126/sciadv.adz0114"
+          }
+        }
+      ]
+    },
+    {
       "id": "fuyan-cave",
       "species": "sapiens",
       "question": "east-asia",
@@ -1408,6 +2120,48 @@
           "source": {
             "citation": "Sun et al. 2021, PNAS",
             "doi": "10.1073/pnas.2019158118"
+          }
+        }
+      ]
+    },
+    {
+      "id": "hohlenstein-stadel",
+      "species": "neanderthal",
+      "place": {
+        "name": "Hohlenstein-Stadel",
+        "region": "Lone valley, Baden-Württemberg, Germany",
+        "latitude": 48.5,
+        "longitude": 10.2
+      },
+      "fromKa": 120,
+      "toKa": 120,
+      "claim": "A Neanderthal femur, about 120,000 years old, whose mitochondrial DNA is the deepest-splitting Neanderthal lineage known.",
+      "source": {
+        "citation": "Posth et al. 2017, Nature Communications",
+        "doi": "10.1038/ncomms16046"
+      },
+      "wikipedia": "Hohlenstein-Stadel",
+      "found": "An archaic femur from the cave, from which the complete mitochondrial genome was sequenced.",
+      "dating": "Its age of about 120,000 years comes from genetic analysis, as reported by Peyrégne et al. 2019.",
+      "discovered": null,
+      "matters": "Posth et al. found that its mtDNA split from other Neanderthals about 270,000 years ago. They use it to set a lower time limit for a proposed gene flow from Africa into Neanderthals.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Peyrégne et al. recovered nuclear DNA from this femur and from Scladina, two individuals about 120,000 years old, and found 80,000 years of genetic continuity in European Neanderthals.",
+          "source": {
+            "citation": "Peyrégne et al. 2019, Science Advances",
+            "doi": "10.1126/sciadv.aaw5873"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Picin et al. found the Stajnia S5000 mtDNA from Poland more distant from the near-contemporary Hohlenstein-Stadel and Scladina Neanderthals than from Mezmaiskaya 1.",
+          "source": {
+            "citation": "Picin et al. 2020, Scientific Reports",
+            "doi": "10.1038/s41598-020-71504-x"
           }
         }
       ]
@@ -1488,6 +2242,195 @@
       ]
     },
     {
+      "id": "cueva-de-los-aviones",
+      "species": "neanderthal",
+      "question": "neanderthal-symbols",
+      "place": {
+        "name": "Cueva de los Aviones",
+        "region": "Murcia, Spain",
+        "latitude": 37.6,
+        "longitude": -1.0
+      },
+      "fromKa": 115,
+      "toKa": 115,
+      "claim": "Perforated and pigment-stained marine shells, U–Th dated to about 115,000 years ago, long before modern humans reached Europe.",
+      "source": {
+        "citation": "Hoffmann et al. 2018, Science Advances",
+        "doi": "10.1126/sciadv.aar5255"
+      },
+      "found": "Perforated cockle and dog-cockle shells, lumps of yellow and red colourant, and a Spondylus shell holding a red pigment mix.",
+      "dating": "U–Th dating of the archaeological deposits, as reported by Hoffmann et al. (2018).",
+      "discovered": null,
+      "matters": "Zilhão et al. and Hoffmann et al. read the shells as body ornaments and evidence of Neanderthal symbolism. Earlier work had dated them to about 50,000 years ago.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Zilhão et al. described the perforated valves and the pigment mix of lepidocrocite, hematite and pyrite inside a Spondylus shell, first dated to about 50,000 years ago.",
+          "source": {
+            "citation": "Zilhão et al. 2010, PNAS",
+            "doi": "10.1073/pnas.0914088107"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Peresani et al. report a fossil shell coated with hematite from Fumane Cave, Italy, which they suggest was hung as a pendant by Neanderthals.",
+          "source": {
+            "citation": "Peresani et al. 2013, PLOS ONE",
+            "doi": "10.1371/journal.pone.0068572"
+          }
+        }
+      ]
+    },
+    {
+      "id": "salzgitter-lebenstedt",
+      "species": "neanderthal",
+      "place": {
+        "name": "Salzgitter-Lebenstedt",
+        "region": "Lower Saxony, Germany",
+        "latitude": 52.2,
+        "longitude": 10.3
+      },
+      "fromKa": 115,
+      "toKa": 51,
+      "claim": "An open-air site in an arctic setting where Neanderthals hunted reindeer in autumn, with the northernmost Neanderthal remains, from the earlier last glacial.",
+      "source": {
+        "citation": "Gaudzinski & Roebroeks 2000, Journal of Human Evolution",
+        "doi": "10.1006/jhev.1999.0359"
+      },
+      "found": "Reindeer bones with butchery and marrow breakage, rare Middle Palaeolithic bone tools and Neanderthal remains.",
+      "dating": "Placed in the earlier last glacial (MIS 5–3) by Gaudzinski & Roebroeks; Ruebens et al.’s radiocarbon dates show it is older than 51,000 years.",
+      "discovered": "Excavated in 1952; more material was recovered in 1977.",
+      "matters": "Gaudzinski & Roebroeks read the bones as routine hunting that targeted prime adults. Munson & Marean questioned that ‘prime-dominated’ reading.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Ruebens et al. found that all radiocarbon dates on bone are at or beyond the method’s limit, older than 51,000 years, and that cut marks are common while carnivore marks are rare.",
+          "source": {
+            "citation": "Ruebens et al. 2023, Journal of Quaternary Science",
+            "doi": "10.1002/jqs.3499"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Munson & Marean reconsidered whether the Salzgitter-Lebenstedt reindeer show ‘prime-dominated’ hunting, as their title asks: ‘Adults only?’.",
+          "source": {
+            "citation": "Munson & Marean 2003, Journal of Human Evolution",
+            "doi": "10.1016/s0047-2484(02)00163-x"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sesselfelsgrotte",
+      "species": "neanderthal",
+      "place": {
+        "name": "Sesselfelsgrotte",
+        "region": "Altmühl valley, Bavaria, Germany",
+        "latitude": 48.9,
+        "longitude": 11.8
+      },
+      "fromKa": 115,
+      "toKa": 45,
+      "claim": "A long late Neanderthal sequence, from about 115,000 to 45,000 years ago, where fire use grew over time and flint was probably heat-treated.",
+      "source": {
+        "citation": "Agam et al. 2023, Quaternary",
+        "doi": "10.3390/quat6040052"
+      },
+      "found": "Over 2,000 flint artefacts studied for burning; possibly heat-treated pieces are commonest among side scrapers.",
+      "dating": "Lower Mousterian layers about 115,000–70,000 years old; the Micoquian G-layer complex about 60,000–45,000 years old, as reported by Agam et al.",
+      "discovered": null,
+      "matters": "Agam et al. suggest late Neanderthals here deliberately heated flint for some tools, a technique often linked with later humans; they mark the pieces as ‘possibly’ heated.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Delpiano & Uthmeier studied backed knives from the G-layer complex, which mixes Keilmesser and Mousterian traits, and linked them to mobile Neanderthal groups in cold stages.",
+          "source": {
+            "citation": "Delpiano & Uthmeier 2020, PLOS ONE",
+            "doi": "10.1371/journal.pone.0236548"
+          }
+        }
+      ]
+    },
+    {
+      "id": "figueira-brava",
+      "species": "neanderthal",
+      "place": {
+        "name": "Gruta da Figueira Brava",
+        "region": "Setúbal, Portugal",
+        "latitude": 38.5,
+        "longitude": -9.0
+      },
+      "fromKa": 106,
+      "toKa": 86,
+      "claim": "Shell middens of molluscs, crabs and fish left by Last Interglacial Neanderthals, who also gathered stone pine nuts.",
+      "source": {
+        "citation": "Zilhão et al. 2020, Science",
+        "doi": "10.1126/science.aaz7943"
+      },
+      "found": "Shell middens rich in molluscs, crabs and fish, with land animals and stone pine nuts.",
+      "dating": "Placed in the Last Interglacial by Zilhão et al.; the 106–86 ka span shown here is approximate.",
+      "discovered": null,
+      "matters": "Zilhão et al. say Atlantic Iberian Neanderthals used the sea on a scale like Middle Stone Age people in southern Africa.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Villa et al. found that Neanderthals at Grotta dei Moscerini, Italy, gathered some clam shells live from the sea floor, likely by diving.",
+          "source": {
+            "citation": "Villa et al. 2020, PLOS ONE",
+            "doi": "10.1371/journal.pone.0226690"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Cortés-Sánchez et al. report shellfish collecting at Bajondillo cave, Spain, across Middle Palaeolithic levels.",
+          "source": {
+            "citation": "Cortés-Sánchez et al. 2019, Quaternary Science Reviews",
+            "doi": "10.1016/j.quascirev.2019.02.007"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pesturina",
+      "species": "neanderthal",
+      "place": {
+        "name": "Pešturina Cave",
+        "region": "near Niš, Serbia",
+        "latitude": 43.3,
+        "longitude": 22.0
+      },
+      "fromKa": 105.6,
+      "toKa": 99.2,
+      "claim": "An upper first molar, Pes-3, about 102,000 years old: the first Neanderthal fossil from Serbia and the Central Balkans.",
+      "source": {
+        "citation": "Radović et al. 2019, Journal of Human Evolution",
+        "doi": "10.1016/j.jhevol.2019.03.018"
+      },
+      "wikipedia": "Pešturina",
+      "found": "A well-preserved right upper first molar with Mousterian tools in layer 4b.",
+      "dating": "Layer 4b has an estimated age of 102,400 ± 3,200 years, as reported by Radović et al.",
+      "discovered": null,
+      "matters": "Radović et al. note that Neanderthal fossils were known around the Central Balkans but not from it; the tooth’s crown, roots and enamel match Neanderthal patterns.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Majkić et al. studied a cave bear bone with sequential incisions from the Middle Palaeolithic of Pešturina.",
+          "source": {
+            "citation": "Majkić et al. 2017, Journal of Archaeological Method and Theory",
+            "doi": "10.1007/s10816-017-9331-5"
+          }
+        }
+      ]
+    },
+    {
       "id": "liang-bua",
       "species": "floresiensis",
       "place": {
@@ -1534,6 +2477,108 @@
           "source": {
             "citation": "Jacob et al. 2006, PNAS",
             "doi": "10.1073/pnas.0605563103"
+          }
+        }
+      ]
+    },
+    {
+      "id": "kalamakia",
+      "species": "neanderthal",
+      "place": {
+        "name": "Kalamakia Cave",
+        "region": "Mani peninsula, Greece",
+        "latitude": 36.7,
+        "longitude": 22.4
+      },
+      "fromKa": 100,
+      "toKa": 39,
+      "claim": "Neanderthal teeth and bones of at least eight individuals from a cave dated between about 100,000 and more than 39,000 years ago.",
+      "source": {
+        "citation": "Harvati et al. 2013, Journal of Human Evolution",
+        "doi": "10.1016/j.jhevol.2013.02.002"
+      },
+      "wikipedia": "Kalamakia Cave Site",
+      "found": "Ten isolated teeth, a skull fragment and three other bones, from at least eight people including two children, with Mousterian tools.",
+      "dating": "The site is dated to between about 100,000 and more than 39,000 years BP, as reported by Harvati et al.",
+      "discovered": "Excavated from 1993 to 2006 by a Greek–French team.",
+      "matters": "With Lakonis and Apidima, Harvati et al. see Kalamakia as evidence of a strong Neanderthal presence in the Mani during the Late Pleistocene. Some bones carry carnivore and human marks.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "environmental",
+          "text": "Kolendrianou et al. studied small mammals, teeth wear and lithics, and found Neanderthals came to the cave in short and longer stays, using poor local stone carefully.",
+          "source": {
+            "citation": "Kolendrianou et al. 2020, Heliyon",
+            "doi": "10.1016/j.heliyon.2020.e03958"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Bartsiokas et al. call the Lakonis and Kalamakia specimens nearby younger Neanderthals than Apidima 2.",
+          "source": {
+            "citation": "Bartsiokas et al. 2017, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2017.04.008"
+          }
+        }
+      ]
+    },
+    {
+      "id": "teshik-tash",
+      "species": "neanderthal",
+      "place": {
+        "name": "Teshik-Tash",
+        "region": "Surkhandarya, Uzbekistan",
+        "latitude": 38.0,
+        "longitude": 67.2
+      },
+      "fromKa": 100,
+      "toKa": 40,
+      "claim": "The Teshik-Tash child, found in 1938, long the easternmost Neanderthal; its status was argued until DNA and new shape analyses.",
+      "source": {
+        "citation": "Gunz & Bulygina 2012, American Journal of Physical Anthropology",
+        "doi": "10.1002/ajpa.22133"
+      },
+      "wikipedia": "Teshik-Tash 1",
+      "found": "The skull and other bones of a child, with Mousterian stone tools.",
+      "dating": "No reliable numerical age in the sources checked; it comes from Mousterian layers. The range shown is approximate.",
+      "discovered": "Excavated in 1938 by Alexey Okladnikov.",
+      "matters": "Gunz & Bulygina 2012 place it firmly among Neanderthals; Glantz et al. 2008 found its measurements equivocal.",
+      "alsoRead": [
+        {
+          "species": "sapiens",
+          "source": {
+            "citation": "Glantz et al. 2008, American Journal of Physical Anthropology",
+            "doi": "10.1002/ajpa.20897"
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "fossil",
+          "text": "Glantz et al. found problems with the old reconstruction; the skull grouped with Upper Palaeolithic modern humans and the jaw with recent humans in some analyses.",
+          "source": {
+            "citation": "Glantz et al. 2008, American Journal of Physical Anthropology",
+            "doi": "10.1002/ajpa.20897"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Krause et al. found that mitochondrial DNA from remains in Uzbekistan and the Altai falls within European Neanderthal variation, extending their range 2,000 km east.",
+          "source": {
+            "citation": "Krause et al. 2007, Nature",
+            "doi": "10.1038/nature06193"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "genetic",
+          "text": "Andreeva et al. note its control region carries variants of two haplogroups and question the sequence.",
+          "source": {
+            "citation": "Andreeva et al. 2022, Scientific Reports",
+            "doi": "10.1038/s41598-022-16164-9"
           }
         }
       ]
@@ -1624,6 +2669,139 @@
       ]
     },
     {
+      "id": "stajnia",
+      "species": "neanderthal",
+      "place": {
+        "name": "Stajnia Cave",
+        "region": "Kraków-Częstochowa Upland, Poland",
+        "latitude": 50.6,
+        "longitude": 19.5
+      },
+      "fromKa": 82,
+      "toKa": 71,
+      "claim": "A Neanderthal molar from a Micoquian layer whose mitochondrial DNA dates to MIS 5a, the oldest Neanderthal specimen from Central-Eastern Europe.",
+      "source": {
+        "citation": "Picin et al. 2020, Scientific Reports",
+        "doi": "10.1038/s41598-020-71504-x"
+      },
+      "found": "Neanderthal teeth from Micoquian layers, including molar S5000, which gave a mitochondrial genome.",
+      "dating": "The S5000 mtDNA dates to MIS 5a (roughly 82,000–71,000 years ago), per Picin et al.; layer dates from bone and teeth are older than 49,000.",
+      "discovered": "The teeth were found in 2008.",
+      "matters": "Picin et al. found the S5000 mtDNA closest to Mezmaiskaya 1 in the Caucasus. With shared Micoquian tools, they argue for Neanderthal movement between Poland and the North Caucasus.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Dąbrowski et al. identified a second tooth from the same layer, S4300, as a Neanderthal lower molar from another individual.",
+          "source": {
+            "citation": "Dąbrowski et al. 2013, HOMO",
+            "doi": "10.1016/j.jchb.2013.01.001"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Andreeva et al. found Mezmaiskaya 3 closest to Mezmaiskaya 1 and Stajnia S5000.",
+          "source": {
+            "citation": "Andreeva et al. 2022, Scientific Reports",
+            "doi": "10.1038/s41598-022-16164-9"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Slimak et al. note that molecular ages for Stajnia S5000 disagree with its layer dates.",
+          "source": {
+            "citation": "Slimak et al. 2024, Cell Genomics",
+            "doi": "10.1016/j.xgen.2024.100593"
+          }
+        }
+      ]
+    },
+    {
+      "id": "koenigsaue",
+      "species": "neanderthal",
+      "place": {
+        "name": "Königsaue",
+        "region": "Saxony-Anhalt, Germany",
+        "latitude": 51.8,
+        "longitude": 11.4
+      },
+      "fromKa": 80,
+      "toKa": 80,
+      "claim": "Two lumps of birch tar made by Neanderthals, from a layer the geology places at more than 80,000 years old.",
+      "source": {
+        "citation": "Koller et al. 2001, European Journal of Archaeology",
+        "doi": "10.1179/eja.2001.4.3.385"
+      },
+      "found": "Two pieces of birch pitch; one carries a fingerprint and the imprints of a flint tool and of wood, as if it fixed a haft.",
+      "dating": "From a lignite-mine layer whose geological age was put at older than 80,000 years.",
+      "discovered": "Found in 1963 in an opencast lignite mine north of the Harz.",
+      "matters": "Birch tar is the oldest known synthetic material. Whether making it needed advanced planning is argued: Kozowyk et al. showed simple methods work, while Schmidt et al. argue the Königsaue tar was made a harder way.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Schmidt et al. compared the Königsaue tar with experimental tars and concluded it was distilled in an underground, low-oxygen set-up, not by the simplest method, which they read as cumulative culture.",
+          "source": {
+            "citation": "Schmidt et al. 2023, Archaeological and Anthropological Sciences",
+            "doi": "10.1007/s12520-023-01789-2"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Kozowyk et al. made useful amounts of tar with simple methods and materials Neanderthals already used, and argue that precise temperature control was not needed.",
+          "source": {
+            "citation": "Kozowyk et al. 2017, Scientific Reports",
+            "doi": "10.1038/s41598-017-08106-7"
+          }
+        }
+      ]
+    },
+    {
+      "id": "obi-rakhmat",
+      "species": "neanderthal",
+      "place": {
+        "name": "Obi-Rakhmat Grotto",
+        "region": "Tashkent region, Uzbekistan",
+        "latitude": 41.6,
+        "longitude": 70.1
+      },
+      "fromKa": 80,
+      "toKa": 40,
+      "claim": "OR-1, a child’s teeth and skull fragments from Middle Palaeolithic layers, with teeth judged essentially Neanderthal.",
+      "source": {
+        "citation": "Bailey et al. 2008, Journal of Human Evolution",
+        "doi": "10.1016/j.jhevol.2008.03.004"
+      },
+      "wikipedia": "Obi-Rakhmat Grotto",
+      "found": "Part of the upper teeth and a fragmentary skull of one juvenile, OR-1.",
+      "dating": "Plisson et al. give about 80,000 years for the oldest layers, in 10 m of deposits covering 40,000 years; OR-1’s exact age is not given here.",
+      "discovered": "Recovered in 2003 by an Uzbek–American team.",
+      "matters": "Bailey et al. find the teeth Neanderthal; Glantz et al. 2008 call the skull more ambiguous, so its species is still debated.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "fossil",
+          "text": "Glantz et al. describe a fairly Neanderthal-like set of teeth but more ambiguous skull anatomy.",
+          "source": {
+            "citation": "Glantz et al. 2008, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2007.12.007"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Plisson et al. report possible light weapon tips in the oldest layers, about 80,000 years old, a trait so far known from modern human sites.",
+          "source": {
+            "citation": "Plisson et al. 2025, PLOS ONE",
+            "doi": "10.1371/journal.pone.0328390"
+          }
+        }
+      ]
+    },
+    {
       "id": "border-cave",
       "species": "sapiens",
       "place": {
@@ -1708,6 +2886,39 @@
       ]
     },
     {
+      "id": "axlor",
+      "species": "neanderthal",
+      "place": {
+        "name": "Axlor",
+        "region": "Bizkaia, Spain",
+        "latitude": 43.1,
+        "longitude": -2.7
+      },
+      "fromKa": 75,
+      "toKa": 67,
+      "claim": "Neanderthals hunted red deer, ibex and bison in warm seasons and cut meat from golden eagles, a raven, a wolf and a lynx.",
+      "source": {
+        "citation": "Uzunidis et al. 2025, Scientific Reports",
+        "doi": "10.1038/s41598-025-08314-6"
+      },
+      "wikipedia": "Axlor",
+      "found": "Animal bones from Mousterian levels, almost all herbivores, plus cut-marked bird and carnivore bones.",
+      "dating": "Level D sits at the MIS 5–4 transition (about 71 ka); the 75–67 ka span here is approximate, not a date from the paper.",
+      "discovered": null,
+      "matters": "Uzunidis et al. reconstruct a seasonal hunting round. Gómez-Olivencia et al. give the first evidence of bird and carnivore use in the Cantabrian region.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Gómez-Olivencia et al. found cut marks on two golden eagles, a raven, a wolf and a lynx from the Mousterian levels of Axlor.",
+          "source": {
+            "citation": "Gómez-Olivencia et al. 2018, Scientific Reports",
+            "doi": "10.1038/s41598-018-28377-y"
+          }
+        }
+      ]
+    },
+    {
       "id": "madjedbebe",
       "species": "sapiens",
       "question": "australia",
@@ -1757,6 +2968,39 @@
       ]
     },
     {
+      "id": "des-cubierta",
+      "species": "neanderthal",
+      "place": {
+        "name": "Cueva Des-Cubierta",
+        "region": "Madrid, Spain",
+        "latitude": 40.9,
+        "longitude": -3.8
+      },
+      "fromKa": 71,
+      "toKa": 43,
+      "claim": "A layer full of horned skulls of large herbivores, brought in by Neanderthals and read as a symbolic accumulation.",
+      "source": {
+        "citation": "Baquedano et al. 2023, Nature Human Behaviour",
+        "doi": "10.1038/s41562-022-01503-7"
+      },
+      "wikipedia": "Cueva Des-Cubierta",
+      "found": "Mostly crania of large ungulates with cut and percussion marks, small hearths and Mousterian tools in Level 3.",
+      "dating": "Biochronology and dating place Level 3 in MIS 4 or the first half of MIS 3; the 71–43 ka span is approximate.",
+      "discovered": null,
+      "matters": "Baquedano et al. see no food purpose for keeping the skulls and suggest symbolic intent. Villaescusa et al. (2026) studied how the layer formed.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Villaescusa et al. found limited movement of material after burial and distinct formation patterns for the crania and the rockfall that holds them.",
+          "source": {
+            "citation": "Villaescusa et al. 2026, Archaeological and Anthropological Sciences",
+            "doi": "10.1007/s12520-025-02382-5"
+          }
+        }
+      ]
+    },
+    {
       "id": "shanidar",
       "species": "neanderthal",
       "place": {
@@ -1795,6 +3039,242 @@
             "citation": "Hunt et al. 2023, Journal of Archaeological Science",
             "doi": "10.1016/j.jas.2023.105822"
           }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Sommer re-evaluated the Shanidar IV ‘flower burial’ as evidence of Neanderthal burial ritual (title seen only).",
+          "source": {
+            "citation": "Sommer 1999, Cambridge Archaeological Journal",
+            "doi": "10.1017/S0959774300015249"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "López-Polín et al. describe Shanidar Z as about 75,000 years old, older than the preliminary 60,000–70,000 years first reported.",
+          "source": {
+            "citation": "López-Polín et al. 2026, Antiquity",
+            "doi": "10.15184/aqy.2026.10355"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Pomeroy et al. found bones in 2015–16 beside the spot where Shanidar 5 lay in 1960 and assign them to that man, aged 40–50 at death.",
+          "source": {
+            "citation": "Pomeroy et al. 2017, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2017.07.001"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Henry et al. found plant remains in the tartar of Shanidar III’s teeth, including date palm, legumes and grass seeds, some of them cooked.",
+          "source": {
+            "citation": "Henry et al. 2010, PNAS",
+            "doi": "10.1073/pnas.1016868108"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Trinkaus and Villotte found bony growths in Shanidar 1’s ear canals that point to hearing loss, adding to his other injuries; they read his survival as a sign of social support.",
+          "source": {
+            "citation": "Trinkaus & Villotte 2017, PLOS ONE",
+            "doi": "10.1371/journal.pone.0186684"
+          }
+        }
+      ]
+    },
+    {
+      "id": "dederiyeh",
+      "species": "neanderthal",
+      "place": {
+        "name": "Dederiyeh Cave",
+        "region": "Afrin, Syria",
+        "latitude": 36.4,
+        "longitude": 36.9
+      },
+      "fromKa": 70,
+      "toKa": 48,
+      "claim": "Two Neanderthal children, each about two years old, buried in pits in the Mousterian layers of Dederiyeh Cave.",
+      "source": {
+        "citation": "Akazawa et al. 1995, Paléorient",
+        "doi": "10.3406/paleo.1995.4619"
+      },
+      "wikipedia": "Dederiyeh Cave",
+      "found": "Two child skeletons: one found in 1993 lying on its back, arms out and legs bent; a second in a dug pit, with the first facial bones from Syria.",
+      "dating": "No numerical age in the abstracts checked; the layers hold Tabun B-type Mousterian tools, of the late Middle Palaeolithic. The range shown is approximate.",
+      "discovered": "Found in 1993 and 1997–98 by a Japanese–Syrian team led by Takeru Akazawa and Sultan Muhesen.",
+      "matters": "Akazawa et al. read the posture of the first child as an intentional burial and link Neanderthals to the Tabun B-type industry.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Akazawa et al. found the second child in a pit dug into a Mousterian layer, sharing many traits with the first.",
+          "source": {
+            "citation": "Akazawa et al. 1999, Paléorient",
+            "doi": "10.3406/paleo.1999.4691"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Griggo found only humans built up the cave’s bones: Neanderthals hunted goats, deer and gazelle and carried them whole into the cave, and seem to have scavenged aurochs and rhino.",
+          "source": {
+            "citation": "Griggo 2004, Paléorient",
+            "doi": "10.3406/paleo.2004.4776"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Zollikofer et al. rebuilt the near-complete Dederiyeh pelvis and found Neanderthal and human pelves differ in shape from an early age.",
+          "source": {
+            "citation": "Zollikofer et al. 2026, PNAS",
+            "doi": "10.1073/pnas.2535303123"
+          }
+        }
+      ],
+      "question": "neanderthal-burial"
+    },
+    {
+      "id": "shukbah",
+      "species": "neanderthal",
+      "place": {
+        "name": "Shukbah Cave",
+        "region": "West Bank",
+        "latitude": 32.0,
+        "longitude": 35.0
+      },
+      "fromKa": 70,
+      "toKa": 50,
+      "claim": "A Neanderthal molar from Shukbah Cave, the southernmost known Neanderthal fossil, found with Nubian Levallois tools.",
+      "source": {
+        "citation": "Blinkhorn et al. 2021, Scientific Reports",
+        "doi": "10.1038/s41598-021-82257-6"
+      },
+      "wikipedia": "Shuqba Cave",
+      "found": "A lower first molar with clear Neanderthal traits, with Levallois stone tools including Nubian points and cores.",
+      "dating": "Not dated directly; Blinkhorn et al. place it in the period, about 70,000–50,000 years ago, when Neanderthals spread into the Levant. Range approximate.",
+      "discovered": "Dug by Dorothy Garrod in 1928; the tooth and tools were re-examined in 2021.",
+      "matters": "Blinkhorn et al. 2021 say Nubian Levallois tools are not a marker of Homo sapiens alone; Hallinan et al. 2022 dispute the link at Shukbah.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Hallinan et al. argue there is no direct evidence for Nubian Levallois technology, or for its link to Neanderthals, at Shukbah.",
+          "source": {
+            "citation": "Hallinan et al. 2022, Scientific Reports",
+            "doi": "10.1038/s41598-022-05072-7"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Blinkhorn et al. replied that treating Nubian Levallois as a unique marker of Homo sapiens rests on weak foundations.",
+          "source": {
+            "citation": "Blinkhorn et al. 2022, Scientific Reports",
+            "doi": "10.1038/s41598-022-05049-6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ein-qashish",
+      "species": "neanderthal",
+      "place": {
+        "name": "‘Ein Qashish",
+        "region": "northern Israel",
+        "latitude": 32.7,
+        "longitude": 35.1
+      },
+      "fromKa": 70,
+      "toKa": 60,
+      "claim": "The first Neanderthal remains from an open-air site in the Levant, visited repeatedly 60,000–70,000 years ago.",
+      "source": {
+        "citation": "Been et al. 2017, Scientific Reports",
+        "doi": "10.1038/s41598-017-03025-z"
+      },
+      "found": "A skull fragment, an upper third molar and the leg bones of a young Neanderthal man, from intact layers.",
+      "dating": "Optically stimulated luminescence (OSL) ages of 70,000–60,000 years.",
+      "discovered": "Excavated at an open-air site in northern Israel; reported by Been et al. in 2017.",
+      "matters": "Been et al. say Neanderthals also used open landscapes, not only caves, and were a resilient Levantine population shortly before Homo sapiens arrived.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Blinkhorn et al. say Neanderthals expanded south into the Levant between about 70,000 and 50,000 years ago, after earlier Homo sapiens.",
+          "source": {
+            "citation": "Blinkhorn et al. 2021, Scientific Reports",
+            "doi": "10.1038/s41598-021-82257-6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "wezmeh",
+      "species": "neanderthal",
+      "place": {
+        "name": "Wezmeh Cave",
+        "region": "Kermanshah, Iran",
+        "latitude": 34.1,
+        "longitude": 46.6
+      },
+      "fromKa": 70,
+      "toKa": 11,
+      "claim": "Wezmeh 1, the unerupted premolar of a child aged about eight, shown by its inner structure to be Neanderthal.",
+      "source": {
+        "citation": "Zanolli et al. 2019, Journal of Human Evolution",
+        "doi": "10.1016/j.jhevol.2019.102643"
+      },
+      "found": "One upper premolar from a child of about 8 ± 2 years, in a fauna rich in carnivores.",
+      "dating": "Uranium-series dating of the animal bones gives 70,000 to 11,000 years; the tooth itself is not dated.",
+      "discovered": "Reassessed with micro-CT by Zanolli et al. in 2019.",
+      "matters": "Zanolli et al. call it the first direct evidence of Neanderthals on the western edge of the Iranian Plateau.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Heydari-Guran et al. later reported a Neanderthal milk canine from Bawa Yawan, in the same region.",
+          "source": {
+            "citation": "Heydari-Guran et al. 2021, PLOS ONE",
+            "doi": "10.1371/journal.pone.0253708"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bisitun",
+      "species": "neanderthal",
+      "place": {
+        "name": "Bisitun Cave",
+        "region": "Kermanshah, Iran",
+        "latitude": 34.4,
+        "longitude": 47.4
+      },
+      "fromKa": 70,
+      "toKa": 40,
+      "claim": "A human forearm bone from the Mousterian levels of Bisitun Cave, closest in size to Neanderthals.",
+      "source": {
+        "citation": "Trinkaus & Biglari 2006, Paléorient",
+        "doi": "10.3406/paleo.2006.5192"
+      },
+      "wikipedia": "Bisitun Cave",
+      "found": "The upper shaft of a right radius; a second ‘human’ tooth turned out to be a bovid incisor.",
+      "dating": "No numerical age in the abstract; it comes from Mousterian levels. The range shown is approximate.",
+      "discovered": "Identified as human in 1949 by Carleton Coon; restudied by Trinkaus and Biglari in 2006.",
+      "matters": "Trinkaus & Biglari find it near Neanderthals and Upper Palaeolithic modern humans, but unlike other Middle Palaeolithic fossils of south-west Asia.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Heydari-Guran et al. report a Neanderthal milk canine with Zagros Mousterian tools at Bawa Yawan, also near Kermanshah.",
+          "source": {
+            "citation": "Heydari-Guran et al. 2021, PLOS ONE",
+            "doi": "10.1371/journal.pone.0253708"
+          }
         }
       ]
     },
@@ -1827,6 +3307,488 @@
           "source": {
             "citation": "Mijares et al. 2010, Journal of Human Evolution",
             "doi": "10.1016/j.jhevol.2010.04.008"
+          }
+        }
+      ]
+    },
+    {
+      "id": "grotta-guattari",
+      "species": "neanderthal",
+      "place": {
+        "name": "Grotta Guattari",
+        "region": "Lazio, Italy",
+        "latitude": 41.2,
+        "longitude": 13.1
+      },
+      "fromKa": 66,
+      "toKa": 65,
+      "claim": "Forty Neanderthal bones collected by hyenas, 66,000 to 65,000 years ago, in the cave that gave a famous skull in 1939.",
+      "source": {
+        "citation": "Rolfo et al. 2023, Quaternary Science Reviews",
+        "doi": "10.1016/j.quascirev.2023.108132"
+      },
+      "found": "Large mammal bones, 40 of them Neanderthal including large parts of skulls, in inner deposits.",
+      "dating": "U/Th dating of speleothems constrains the accumulation to 66–65 ka.",
+      "discovered": "The cave and its skull were found in 1939; new excavations began about eight decades later.",
+      "matters": "Rolfo et al. say spotted hyenas gathered the bones at a time when people rarely or never used the cave."
+    },
+    {
+      "id": "la-pasiega",
+      "species": "neanderthal",
+      "question": "neanderthal-symbols",
+      "place": {
+        "name": "Cave of La Pasiega",
+        "region": "Cantabria, Spain",
+        "latitude": 43.3,
+        "longitude": -4.0
+      },
+      "fromKa": 64,
+      "toKa": 64,
+      "claim": "Red paintings under carbonate crusts U–Th dated to more than 64,000 years ago, which would make them Neanderthal; disputed.",
+      "source": {
+        "citation": "Hoffmann et al. 2018, Science",
+        "doi": "10.1126/science.aap7778"
+      },
+      "wikipedia": "Cave of La Pasiega",
+      "found": "Red paintings, including linear signs, with carbonate crusts that formed on top of the paint.",
+      "dating": "U–Th dating of carbonate crusts over the paint gives minimum ages; Hoffmann et al. report over 64,000 years for the three caves.",
+      "discovered": null,
+      "matters": "Hoffmann et al. say the paintings predate modern humans in Europe by at least 20,000 years, so Neanderthals made them. Slimak et al. and Aubert et al. question the dates.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Slimak et al. re-read the geochronological data and say they better support an age of about 47,000 years for the paintings.",
+          "source": {
+            "citation": "Slimak et al. 2018, Science",
+            "doi": "10.1126/science.aau1371"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Hoffmann et al. replied that the criticisms of their oldest U–Th dates, on open-system behaviour and detrital thorium, are unfounded.",
+          "source": {
+            "citation": "Hoffmann et al. 2018, Science",
+            "doi": "10.1126/science.aau1736"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Aubert et al. argue that the early dates for ‘Neanderthal cave art’ in Spain may be wrong.",
+          "source": {
+            "citation": "Aubert et al. 2018, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2018.08.004"
+          }
+        }
+      ]
+    },
+    {
+      "id": "maltravieso",
+      "species": "neanderthal",
+      "question": "neanderthal-symbols",
+      "place": {
+        "name": "Cave of Maltravieso",
+        "region": "Cáceres, Spain",
+        "latitude": 39.5,
+        "longitude": -6.4
+      },
+      "fromKa": 64,
+      "toKa": 64,
+      "claim": "Paintings under carbonate crusts U–Th dated to more than 64,000 years ago, which would make them Neanderthal; disputed.",
+      "source": {
+        "citation": "Hoffmann et al. 2018, Science",
+        "doi": "10.1126/science.aap7778"
+      },
+      "wikipedia": "Cave of Maltravieso",
+      "found": "Paintings on the cave walls, partly covered by carbonate crusts; art in the three caves includes hand stencils, signs and animals.",
+      "dating": "U–Th dating of carbonate crusts over the paint; Hoffmann et al. report minimum ages older than 64,000 years for the three caves.",
+      "discovered": null,
+      "matters": "One of three Spanish caves Hoffmann et al. used to argue that Neanderthals made cave art. The dating method and its results are contested.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Slimak et al. re-read the geochronological data and say they better support an age of about 47,000 years for the paintings.",
+          "source": {
+            "citation": "Slimak et al. 2018, Science",
+            "doi": "10.1126/science.aau1371"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Hoffmann et al. replied that the criticisms of their oldest U–Th dates, on open-system behaviour and detrital thorium, are unfounded.",
+          "source": {
+            "citation": "Hoffmann et al. 2018, Science",
+            "doi": "10.1126/science.aau1736"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Aubert et al. argue that the early dates for ‘Neanderthal cave art’ in Spain may be wrong.",
+          "source": {
+            "citation": "Aubert et al. 2018, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2018.08.004"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ardales",
+      "species": "neanderthal",
+      "question": "neanderthal-symbols",
+      "place": {
+        "name": "Cueva de Ardales",
+        "region": "Málaga, Spain",
+        "latitude": 36.9,
+        "longitude": -4.8
+      },
+      "fromKa": 64,
+      "toKa": 64,
+      "claim": "Red paint on a large stalagmite curtain under crusts U–Th dated to more than 64,000 years ago, which would make it Neanderthal; disputed.",
+      "source": {
+        "citation": "Hoffmann et al. 2018, Science",
+        "doi": "10.1126/science.aap7778"
+      },
+      "wikipedia": "Ardales",
+      "found": "Red pigment on a large speleothem curtain, partly covered by carbonate crusts.",
+      "dating": "U–Th dating of crusts over the paint gives minimum ages older than 64,000 years (Hoffmann et al. 2018).",
+      "discovered": null,
+      "matters": "Pitarch Martí et al. (2021) confirmed the paint was applied by people and did not come from colourant sources inside the cave. The dates and their Neanderthal attribution are contested.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Pitarch Martí et al. found the Ardales paint human-made, not from colourant outcrops in the cave, and varying in make-up with age, suggesting use over a long time.",
+          "source": {
+            "citation": "Pitarch Martí et al. 2021, PNAS",
+            "doi": "10.1073/pnas.2021495118"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Slimak et al. re-read the geochronological data and say they better support an age of about 47,000 years for the paintings.",
+          "source": {
+            "citation": "Slimak et al. 2018, Science",
+            "doi": "10.1126/science.aau1371"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Hoffmann et al. replied that the criticisms of their oldest U–Th dates, on open-system behaviour and detrital thorium, are unfounded.",
+          "source": {
+            "citation": "Hoffmann et al. 2018, Science",
+            "doi": "10.1126/science.aau1736"
+          }
+        }
+      ]
+    },
+    {
+      "id": "la-roche-cotard",
+      "species": "neanderthal",
+      "question": "neanderthal-symbols",
+      "place": {
+        "name": "La Roche-Cotard",
+        "region": "Indre-et-Loire, France",
+        "latitude": 47.3,
+        "longitude": 0.4
+      },
+      "fromKa": 60,
+      "toKa": 54,
+      "claim": "Non-figurative finger marks on the cave wall, made before the cave was sealed more than 57,000 ± 3,000 years ago.",
+      "source": {
+        "citation": "Marquet et al. 2023, PLOS ONE",
+        "doi": "10.1371/journal.pone.0286568"
+      },
+      "found": "Spatially organised, non-figurative marks on the cave wall, with only Mousterian stone tools inside the cave.",
+      "dating": "50 OSL ages on sediment that sealed the cave give a minimum age of 57 ± 3 ka for the marks.",
+      "discovered": "Found in the 19th century; first dug in the early 20th century.",
+      "matters": "Marquet et al. call these the earliest unambiguous Neanderthal engravings, made before Homo sapiens reached the region. The same site gave a disputed stone ‘mask’.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Marquet & Lorblanchet argued that a worked stone from a Mousterian layer here, pierced by a bone splinter, was meant to look like a face.",
+          "source": {
+            "citation": "Marquet & Lorblanchet 2003, Antiquity",
+            "doi": "10.1017/s0003598x00061627"
+          }
+        }
+      ]
+    },
+    {
+      "id": "divje-babe",
+      "species": "neanderthal",
+      "question": "neanderthal-symbols",
+      "place": {
+        "name": "Divje Babe I",
+        "region": "Cerkno Hills, Slovenia",
+        "latitude": 46.1,
+        "longitude": 13.9
+      },
+      "fromKa": 60,
+      "toKa": 50,
+      "claim": "A perforated cave bear femur from Neanderthal levels that Turk et al. read as a musical instrument; others see holes made by carnivores.",
+      "source": {
+        "citation": "Turk et al. 2018, L’Anthropologie",
+        "doi": "10.1016/j.anthro.2018.10.001"
+      },
+      "wikipedia": "Divje Babe flute",
+      "found": "The femur of a young cave bear with several holes, from a Mousterian layer.",
+      "dating": "Placed in Mousterian levels; the often-quoted age of about 50,000–60,000 years is from ESR work not checked here.",
+      "discovered": "Found in 1995.",
+      "matters": "If made by people, Turk et al. argue it shows Neanderthal music. Morley and Diedrich see no need for human agency, putting the holes down to carnivores. Turk et al. 2020 say experts remain divided.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Morley reviewed the research and concluded there is no need to invoke hominin agency to explain the features of the bone.",
+          "source": {
+            "citation": "Morley 2006, Oxford Journal of Archaeology",
+            "doi": "10.1111/j.1468-0092.2006.00264.x"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Diedrich argued that punctured cave bear cub femora like this are not instruments but bones bitten by Ice Age spotted hyenas.",
+          "source": {
+            "citation": "Diedrich 2015, Royal Society Open Science",
+            "doi": "10.1098/rsos.140022"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Turk et al. reviewed the debate and say it splits experts, and could be settled only by similar finds in comparable, well-dated contexts.",
+          "source": {
+            "citation": "Turk et al. 2020, Applied Sciences",
+            "doi": "10.3390/app10041226"
+          }
+        }
+      ]
+    },
+    {
+      "id": "kebara",
+      "species": "neanderthal",
+      "place": {
+        "name": "Kebara Cave",
+        "region": "Mount Carmel, Israel",
+        "latitude": 32.6,
+        "longitude": 34.9
+      },
+      "fromKa": 60,
+      "toKa": 48,
+      "claim": "Kebara 2, a buried Neanderthal man, in deposits dated by thermoluminescence to about 48,000–60,000 years ago.",
+      "source": {
+        "citation": "Valladas et al. 1987, Nature",
+        "doi": "10.1038/330159a0"
+      },
+      "wikipedia": "Kebara Cave",
+      "found": "The buried Kebara 2 skeleton, with the most intact Neanderthal pelvis yet found and a rare hyoid (throat) bone.",
+      "dating": "Thermoluminescence of 38 burnt flints from 4 m of deposits: about 60,000 to 48,000 years.",
+      "discovered": "Found in the 1982–90 excavations led by Ofer Bar-Yosef and Bernard Vandermeersch.",
+      "matters": "Valladas et al. 1987 placed Neanderthals in the Levant late in the Middle Palaeolithic. Whether the hyoid shows Neanderthals could speak is still argued.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Arensburg et al. found the Kebara hyoid almost identical to ours and concluded the anatomy for speech was fully developed by the Middle Palaeolithic.",
+          "source": {
+            "citation": "Arensburg et al. 1989, Nature",
+            "doi": "10.1038/338758a0"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "D’Anastasio et al. found the inner structure of the hyoid also like ours, which they say is consistent with a capacity for speech; they note the question remains controversial.",
+          "source": {
+            "citation": "D’Anastasio et al. 2013, PLoS ONE",
+            "doi": "10.1371/journal.pone.0082261"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Rak and Arensburg dated the skeleton to about 50,000–55,000 years and found its pelvic inlet as large as a modern human’s, despite a very long pubic bone.",
+          "source": {
+            "citation": "Rak & Arensburg 1987, American Journal of Physical Anthropology",
+            "doi": "10.1002/ajpa.1330730209"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Bar-Yosef et al. summarised the 1982–90 dig: a complex stratigraphy, hearths, ash lenses and concentrations of bones and tools.",
+          "source": {
+            "citation": "Bar-Yosef et al. 1992, Current Anthropology",
+            "doi": "10.1086/204112"
+          }
+        }
+      ]
+    },
+    {
+      "id": "chagyrskaya",
+      "species": "neanderthal",
+      "place": {
+        "name": "Chagyrskaya Cave",
+        "region": "Altai, Siberia",
+        "latitude": 51.4,
+        "longitude": 83.2
+      },
+      "fromKa": 59,
+      "toKa": 49,
+      "claim": "Neanderthals at Chagyrskaya Cave 49,000–59,000 years ago: 74 remains, Micoquian-like tools and a high-coverage genome.",
+      "source": {
+        "citation": "Kolobova et al. 2020, PNAS",
+        "doi": "10.1073/pnas.1918047117"
+      },
+      "found": "74 Neanderthal remains and about 90,000 stone tools; the people hunted bison on a dry steppe.",
+      "dating": "Age range of 59,000 to 49,000 years at 95.4% probability, from the deposits.",
+      "discovered": "Excavated by Novosibirsk teams; Kolobova et al. reported the assemblage in 2020.",
+      "matters": "Kolobova et al. trace the tools to central and eastern Europe, 3,000 km west, and see two or more Neanderthal arrivals in the Altai.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Mafessoni et al. sequenced a female from the cave to 27-fold coverage; she was closer to western Neanderthals than to earlier ones at Denisova Cave.",
+          "source": {
+            "citation": "Mafessoni et al. 2020, PNAS",
+            "doi": "10.1073/pnas.2004944117"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Skov et al. found a father and daughter among 11 people from the cave, and low Y diversity best explained by women moving between communities.",
+          "source": {
+            "citation": "Skov et al. 2022, Nature",
+            "doi": "10.1038/s41586-022-05283-y"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Zubova et al. read a hollow drilled into a molar, Chagyrskaya 64, as treatment of tooth decay with a stone tool, about 59,000 years ago.",
+          "source": {
+            "citation": "Zubova et al. 2026, PLOS One",
+            "doi": "10.1371/journal.pone.0347662"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Slon et al. found Neanderthal mtDNA in Chagyrskaya sediments.",
+          "source": {
+            "citation": "Slon et al. 2017, Science",
+            "doi": "10.1126/science.aam9695"
+          }
+        }
+      ]
+    },
+    {
+      "id": "okladnikov",
+      "species": "neanderthal",
+      "place": {
+        "name": "Okladnikov Cave",
+        "region": "Altai, Siberia",
+        "latitude": 51.7,
+        "longitude": 84.3
+      },
+      "fromKa": 59,
+      "toKa": 44,
+      "claim": "Neanderthal remains at least 44,000 years old, with DNA from two people, close in time to the Chagyrskaya group.",
+      "source": {
+        "citation": "Skov et al. 2022, Nature",
+        "doi": "10.1038/s41586-022-05283-y"
+      },
+      "wikipedia": "Okladnikov Cave",
+      "found": "Neanderthal teeth and bones with Sibiryachikha-type stone tools; two people gave DNA.",
+      "dating": "Single-amino-acid radiocarbon on three Neanderthal bones: at least 44,000 years, as the paper gives them. Upper bound approximate.",
+      "discovered": "Mitochondrial DNA first reported by Krause et al. 2007; genome-wide data for two people by Skov et al. 2022.",
+      "matters": "Skov et al. find one Okladnikov person with mtDNA identical to a Chagyrskaya Neanderthal, so they lived within a few thousand years of each other.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Krause et al. found the mitochondrial DNA of remains from the Altai and Uzbekistan within European Neanderthal variation.",
+          "source": {
+            "citation": "Krause et al. 2007, Nature",
+            "doi": "10.1038/nature06193"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Kolobova et al. describe layer 3 as a camp where horse and rhino carcasses were butchered and eaten.",
+          "source": {
+            "citation": "Kolobova et al. 2025, Archaeology, Ethnology & Anthropology of Eurasia",
+            "doi": "10.17746/1563-0110.2024.52.4.050-058"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Skoglund et al. read the complete mtDNA of a contaminated Okladnikov bone.",
+          "source": {
+            "citation": "Skoglund et al. 2014, PNAS",
+            "doi": "10.1073/pnas.1318934111"
+          }
+        }
+      ]
+    },
+    {
+      "id": "gruta-da-oliveira",
+      "species": "neanderthal",
+      "place": {
+        "name": "Gruta da Oliveira",
+        "region": "Torres Novas, Portugal",
+        "latitude": 39.5,
+        "longitude": -8.6
+      },
+      "fromKa": 57,
+      "toKa": 43.5,
+      "claim": "Neanderthal hand, arm and leg bones and teeth, the youngest about 43,500 calendar years old and others earlier in MIS 3.",
+      "source": {
+        "citation": "Trinkaus et al. 2007, American Journal of Physical Anthropology",
+        "doi": "10.1002/ajpa.20669"
+      },
+      "found": "Fragmentary human bones and teeth (Oliveira 1–9); a tibia shows carnivore gnawing.",
+      "dating": "Oliveira 1–2 date to about 39,000 radiocarbon years BP (about 43,500 cal BP); others come from older MIS 3 layers.",
+      "discovered": null,
+      "matters": "Trinkaus et al. and Willman et al. align the remains with Neanderthals, documenting early MIS 3 Neanderthals in western Iberia.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Willman et al. described five more remains and found the humerus robust or stocky like other Iberian Neanderthals.",
+          "source": {
+            "citation": "Willman et al. 2012, American Journal of Physical Anthropology",
+            "doi": "10.1002/ajpa.22091"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Angelucci & Zilhão found the 35,000–70,000-year sequence had near-continuous occupation and intact layers in its richer part.",
+          "source": {
+            "citation": "Angelucci & Zilhão 2009, Geoarchaeology",
+            "doi": "10.1002/gea.20267"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Deschamps & Zilhão used tool refits to show little disturbance in the basal layers, which TL and U-series place in late MIS 5 or early MIS 4.",
+          "source": {
+            "citation": "Deschamps & Zilhão 2018, PLOS ONE",
+            "doi": "10.1371/journal.pone.0192423"
           }
         }
       ]
@@ -1870,6 +3832,82 @@
             "citation": "Dibble et al. 2015, Journal of Archaeological Science",
             "doi": "10.1016/j.jas.2014.04.019"
           }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Gargett argued that articulated skeletons are not by themselves proof of deliberate Middle Palaeolithic burial, as natural cave processes can explain them.",
+          "source": {
+            "citation": "Gargett 1999, Journal of Human Evolution",
+            "doi": "10.1006/jhev.1999.0301"
+          }
+        }
+      ],
+      "question": "neanderthal-burial"
+    },
+    {
+      "id": "amud",
+      "species": "neanderthal",
+      "place": {
+        "name": "Amud Cave",
+        "region": "Galilee, Israel",
+        "latitude": 32.9,
+        "longitude": 35.5
+      },
+      "fromKa": 56,
+      "toKa": 51,
+      "claim": "Amud 7, the most complete Neanderthal infant aged 6 to 14 months, from a cave with Neanderthal remains about 51,000–56,000 years old.",
+      "source": {
+        "citation": "Been et al. 2026, Current Biology",
+        "doi": "10.1016/j.cub.2026.03.054"
+      },
+      "wikipedia": "Amud Cave",
+      "found": "Several Neanderthal remains; Amud 7 is an articulated infant skeleton of about 111 pieces found in place.",
+      "dating": "Been et al. give about 51,000–56,000 years for the Middle Palaeolithic tool assemblages, citing earlier dating studies.",
+      "discovered": "The cave was dug in the 1960s and the 1990s; Amud 7 was first described in 1994 by Rak, Kimbel and Hovers.",
+      "matters": "Been et al. 2026 find the infant grew unusually fast, like other rare Neanderthal infants, and read this as a distinct Neanderthal way of growing up.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "environmental",
+          "text": "Hallin et al. used isotopes in goat and gazelle teeth to show Neanderthals at Amud (53–70 ka) lived in wetter conditions than modern humans at nearby Qafzeh (about 92 ka).",
+          "source": {
+            "citation": "Hallin et al. 2012, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2011.09.005"
+          }
+        }
+      ]
+    },
+    {
+      "id": "trou-de-l-abime",
+      "species": "neanderthal",
+      "place": {
+        "name": "Trou de l’Abîme, Couvin",
+        "region": "Namur, Belgium",
+        "latitude": 50.1,
+        "longitude": 4.5
+      },
+      "fromKa": 55,
+      "toKa": 43.2,
+      "claim": "A Neanderthal milk tooth with animal bones radiocarbon dated to 46,820 ± 3,290 BP: roughly 55,000–43,200 calendar years ago.",
+      "source": {
+        "citation": "Toussaint et al. 2010, Journal of Human Evolution",
+        "doi": "10.1016/j.jhevol.2009.09.006"
+      },
+      "wikipedia": "Trou de l'Abîme",
+      "found": "A child’s lower right second milk molar, with stone tools once seen as transitional.",
+      "dating": "Radiocarbon on associated animal bone, 46,820 ± 3,290 BP; calibrated with IntCal20 by this site (95%), the range reaching the curve’s limit.",
+      "discovered": "Found in 1984 at the cave entrance.",
+      "matters": "Toussaint et al. found the tooth’s shape and enamel consistent with a Neanderthal, settling a long uncertainty.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Devièse et al. date the disappearance of Neanderthals from Northwest Europe to 44,200–40,600 cal BP, after the age given for this tooth.",
+          "source": {
+            "citation": "Devièse et al. 2021, PNAS",
+            "doi": "10.1073/pnas.2022466118"
+          }
         }
       ]
     },
@@ -1895,6 +3933,141 @@
       "dating": "Luminescence and radiocarbon dating, with layers counted from soot films on the cave wall; the layer is about 56,800–51,700 years old",
       "discovered": "Excavated since 1990 by a team led by Ludovic Slimak",
       "matters": "Slimak et al. read it as a modern human incursion into Europe about 10,000 years before others known. The reading rests on one tooth and its link to the tools."
+    },
+    {
+      "id": "abri-du-maras",
+      "species": "neanderthal",
+      "place": {
+        "name": "Abri du Maras",
+        "region": "Ardèche, France",
+        "latitude": 44.3,
+        "longitude": 4.6
+      },
+      "fromKa": 52,
+      "toKa": 41,
+      "claim": "A fragment of three-ply cord made of inner bark, found on a stone tool, from a layer dated to about 52,000–41,000 years ago.",
+      "source": {
+        "citation": "Hardy et al. 2020, Scientific Reports",
+        "doi": "10.1038/s41598-020-61839-w"
+      },
+      "found": "A 3-ply cord fragment of inner bark fibres on a stone tool, found in place in level 4.2.",
+      "dating": "ESR and U-series dates for level 4.2 range from 41 ± 2 ka to 52 ± 2 ka, as reported by Hardy et al.",
+      "discovered": null,
+      "matters": "Hardy et al. say twisted cord implies complex multi-part technology and makes the idea of Neanderthal cognitive inferiority hard to hold.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Ruebens et al. found human cut marks across many species in layer 1 at the site, and a point-rich layer 4.1 of MIS 3 age.",
+          "source": {
+            "citation": "Ruebens et al. 2022, Journal of Paleolithic Archaeology",
+            "doi": "10.1007/s41982-022-00113-z"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Niekus et al. report a 50,000-year-old flint tool with birch tar from the Dutch North Sea, more evidence of Neanderthal multi-part technology.",
+          "source": {
+            "citation": "Niekus et al. 2019, PNAS",
+            "doi": "10.1073/pnas.1907828116"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pech-de-laze",
+      "species": "neanderthal",
+      "place": {
+        "name": "Pech-de-l’Azé I",
+        "region": "Dordogne, France",
+        "latitude": 44.9,
+        "longitude": 1.3
+      },
+      "fromKa": 51,
+      "toKa": 37,
+      "claim": "Late Neanderthals at Pech-de-l’Azé I chose manganese dioxide, which may have helped them make fire; the child’s layer dates to about 51,000–37,000 years ago.",
+      "source": {
+        "citation": "Heyes et al. 2016, Scientific Reports",
+        "doi": "10.1038/srep22159"
+      },
+      "wikipedia": "Pech-de-l'Azé caves",
+      "found": "Many small black blocks of manganese oxide in Mousterian layers, and the skull and jaw of a Neanderthal child.",
+      "dating": "Coupled ESR/U-series on 16 animal teeth: layer 6 at 37–51 ka, with radiocarbon on bone at about 41.7–43 ka (Soressi et al. 2007).",
+      "discovered": null,
+      "matters": "Heyes et al. argue manganese dioxide was used to light fires, not only as black pigment. Whether Neanderthals could make fire at will is debated (Dibble et al. 2017).",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Soressi et al. placed the Neanderthal child at the base of layer 6, an MTA type B layer, and say this confirms Neanderthals made that industry.",
+          "source": {
+            "citation": "Soressi et al. 2007, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2006.11.006"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Sorensen et al. found wear on late Mousterian bifaces from several French sites that matches striking pyrite to make fire.",
+          "source": {
+            "citation": "Sorensen et al. 2018, Scientific Reports",
+            "doi": "10.1038/s41598-018-28342-9"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Dibble et al. report that fire evidence in southwest France falls sharply in cold periods and suggest these Neanderthals may not have been able to make fire.",
+          "source": {
+            "citation": "Dibble et al. 2017, Current Anthropology",
+            "doi": "10.1086/692628"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Sandgathe et al. argue that habitual fire use came late and that earlier Neanderthal fire use was sporadic and opportunistic.",
+          "source": {
+            "citation": "Sandgathe et al. 2011, PNAS",
+            "doi": "10.1073/pnas.1106759108"
+          }
+        }
+      ]
+    },
+    {
+      "id": "einhornhoehle",
+      "species": "neanderthal",
+      "question": "neanderthal-symbols",
+      "place": {
+        "name": "Einhornhöhle (Unicorn Cave)",
+        "region": "Harz, Lower Saxony, Germany",
+        "latitude": 51.6,
+        "longitude": 10.4
+      },
+      "fromKa": 51,
+      "toKa": 51,
+      "claim": "A giant deer toe bone engraved with a pattern of lines, at least 51,000 years old, from a context linked to Neanderthals.",
+      "source": {
+        "citation": "Leder et al. 2021, Nature Ecology & Evolution",
+        "doi": "10.1038/s41559-021-01487-z"
+      },
+      "wikipedia": "Unicorn Cave",
+      "found": "An engraved phalanx of a giant deer at the former cave entrance.",
+      "dating": "At least 51,000 years old, as reported by Leder et al.",
+      "discovered": null,
+      "matters": "Leder et al. argue that composing lines into a design shows conceptual imagination, and that Neanderthals made symbolic expressions before Homo sapiens reached Central Europe. Claims of Neanderthal symbolism are often contested.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Russo et al. report cave lion toe bones at least 190,000 years old from Einhornhöhle, which they read as the earliest use of cave lion skin by Neanderthals in Central Europe.",
+          "source": {
+            "citation": "Russo et al. 2023, Scientific Reports",
+            "doi": "10.1038/s41598-023-42764-0"
+          }
+        }
+      ]
     },
     {
       "id": "admixture-iasi",
@@ -1994,6 +4167,265 @@
       ]
     },
     {
+      "id": "grotte-du-renne",
+      "species": "neanderthal",
+      "question": "chatelperronian",
+      "place": {
+        "name": "Grotte du Renne, Arcy-sur-Cure",
+        "region": "Yonne, France",
+        "latitude": 47.6,
+        "longitude": 3.8
+      },
+      "fromKa": 50,
+      "toKa": 40,
+      "claim": "Neanderthal bones, identified by ancient proteins and DNA, date to the Châtelperronian layers with their ornaments, within 50,000–40,000 years ago; the link is debated.",
+      "source": {
+        "citation": "Welker et al. 2016, PNAS",
+        "doi": "10.1073/pnas.1605834113"
+      },
+      "wikipedia": "Grotte du Renne",
+      "found": "Châtelperronian tools and body ornaments with Neanderthal remains, mainly teeth, plus bone fragments identified as hominin by ZooMS.",
+      "dating": "Radiocarbon dates on bone and the identified hominin fragments; Hublin et al. (2012) place the Châtelperronian in the 50,000–40,000-year window.",
+      "discovered": null,
+      "matters": "Welker et al. and Hublin et al. say Neanderthals made the Châtelperronian here. Higham et al. (2010) found dates varied enough to suggest mixing of layers, which makes the link uncertain.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Hublin et al. dated 40 bones from the Mousterian, Châtelperronian and Protoaurignacian layers and found the results inconsistent with layer admixture.",
+          "source": {
+            "citation": "Hublin et al. 2012, PNAS",
+            "doi": "10.1073/pnas.1212924109"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Higham et al. obtained 31 radiocarbon dates with an unexpected spread, suggesting some mixing that makes the association of ornaments and human remains hard to trust.",
+          "source": {
+            "citation": "Higham et al. 2010, PNAS",
+            "doi": "10.1073/pnas.1007963107"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Gravina et al. note that Neanderthal authorship of the Châtelperronian rests on only two sites, this one and Saint-Césaire, and found the Saint-Césaire link unreliable.",
+          "source": {
+            "citation": "Gravina et al. 2018, Scientific Reports",
+            "doi": "10.1038/s41598-018-33084-9"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zafarraya",
+      "species": "neanderthal",
+      "question": "neanderthal-extinction",
+      "place": {
+        "name": "Cueva del Boquete de Zafarraya",
+        "region": "Málaga, Spain",
+        "latitude": 37.0,
+        "longitude": -4.1
+      },
+      "fromKa": 50,
+      "toKa": 42,
+      "claim": "Neanderthal fossils once dated to under 42,000 years ago were re-dated to at least 10,000 radiocarbon years older; the late date was a key argument for a southern refuge.",
+      "source": {
+        "citation": "Wood et al. 2013, PNAS",
+        "doi": "10.1073/pnas.1207656110"
+      },
+      "wikipedia": "Zafarraya",
+      "found": "Neanderthal fossils with Mousterian tools.",
+      "dating": "Ultrafiltered radiocarbon on bone gave ages close to or beyond the method’s limit; earlier dates had been under 42 ka cal BP.",
+      "discovered": null,
+      "matters": "Wood et al. argue that the late southern Iberian dates are unreliable. Others, such as Zilhão et al. (2017), still see late Neanderthals in the south.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Zilhão et al. found a Mousterian layer at Cueva Antón no more than 37,100 years old, which they see as support for late Neanderthals in southern Iberia.",
+          "source": {
+            "citation": "Zilhão et al. 2017, Heliyon",
+            "doi": "10.1016/j.heliyon.2017.e00435"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cova-foradada",
+      "species": "neanderthal",
+      "question": "neanderthal-symbols",
+      "place": {
+        "name": "Cova Foradada",
+        "region": "Calafell, Catalonia, Spain",
+        "latitude": 41.2,
+        "longitude": 1.6
+      },
+      "fromKa": 50,
+      "toKa": 40,
+      "claim": "An eagle toe bone used as an ornament by Neanderthals in a Châtelperronian layer, the first such find in Iberia.",
+      "source": {
+        "citation": "Rodríguez-Hidalgo et al. 2019, Science Advances",
+        "doi": "10.1126/sciadv.aax1984"
+      },
+      "found": "An imperial eagle foot phalanx with marks, from the Châtelperronian layer.",
+      "dating": "Châtelperronian layer; the 50–40 ka span follows the date window Hublin et al. (2012) give for the Châtelperronian, not a site date.",
+      "discovered": null,
+      "matters": "Rodríguez-Hidalgo et al. see a long Neanderthal tradition of wearing eagle talons, lasting into the last Neanderthal populations.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Finlayson et al. found a link between Neanderthals, raptors and corvids across many Palaearctic sites and at Gibraltar caves, and wing feather removal.",
+          "source": {
+            "citation": "Finlayson et al. 2012, PLOS ONE",
+            "doi": "10.1371/journal.pone.0045927"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Peresani et al. found cut and scrape marks only on the wings of raptors and other birds at Fumane, Italy, and read this as removal of feathers.",
+          "source": {
+            "citation": "Peresani et al. 2011, PNAS",
+            "doi": "10.1073/pnas.1016212108"
+          }
+        }
+      ]
+    },
+    {
+      "id": "el-salt",
+      "species": "neanderthal",
+      "place": {
+        "name": "El Salt",
+        "region": "Alicante, Spain",
+        "latitude": 38.7,
+        "longitude": -0.5
+      },
+      "fromKa": 50,
+      "toKa": 50,
+      "claim": "Faecal biomarkers and gut-microbe DNA from Neanderthal occupation floors about 50,000 years old.",
+      "source": {
+        "citation": "Sistiaga et al. 2014, PLOS ONE",
+        "doi": "10.1371/journal.pone.0101045"
+      },
+      "wikipedia": "El Salt",
+      "found": "Sediments from occupation floors containing faecal biomarkers, and ancient microbial DNA.",
+      "dating": "The site’s unit X dates to about 50,000 years ago, as given by Sistiaga et al. and Rampelli et al.",
+      "discovered": null,
+      "matters": "Sistiaga et al. read the biomarkers as a mostly meat diet with real plant intake: the oldest identified human faeces.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Rampelli et al. found gut bacteria known from modern humans, such as Blautia and Bifidobacterium, only in the Neanderthal unit X samples.",
+          "source": {
+            "citation": "Rampelli et al. 2021, Communications Biology",
+            "doi": "10.1038/s42003-021-01689-y"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zandmotor",
+      "species": "neanderthal",
+      "place": {
+        "name": "Zandmotor",
+        "region": "South Holland, Netherlands",
+        "latitude": 52.0,
+        "longitude": 4.2
+      },
+      "fromKa": 50,
+      "toKa": 50,
+      "claim": "A flint flake partly covered in birch tar, about 50,000 years old, found off the present-day Dutch coast.",
+      "source": {
+        "citation": "Niekus et al. 2019, PNAS",
+        "doi": "10.1073/pnas.1907828116"
+      },
+      "found": "A piece of birch tar enclosing a third of a flint flake: a hafted tool.",
+      "dating": "Radiocarbon dating and the geological source tie it to Middle Palaeolithic tools; about 50,000 years old.",
+      "discovered": null,
+      "matters": "Niekus et al. see complex technology. Schmidt et al. (2020) argue tar can be made simply, so the find does not show a complex method.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Schmidt et al. argue the Zandmotor data do not show a complex tar-making method, since simple burning of bark near stones also yields tar.",
+          "source": {
+            "citation": "Schmidt et al. 2020, PNAS",
+            "doi": "10.1073/pnas.1919564117"
+          }
+        }
+      ]
+    },
+    {
+      "id": "kulna",
+      "species": "neanderthal",
+      "place": {
+        "name": "Kůlna Cave",
+        "region": "Moravian Karst, Czechia",
+        "latitude": 49.4,
+        "longitude": 16.7
+      },
+      "fromKa": 50,
+      "toKa": 50,
+      "claim": "A Neanderthal cave site whose Micoquian layer 7a is dated to about 50,000 years ago.",
+      "source": {
+        "citation": "Dermeková et al. 2026, Journal of Paleolithic Archaeology",
+        "doi": "10.1007/s41982-026-00270-5"
+      },
+      "wikipedia": "Kůlna Cave",
+      "found": "Micoquian stone tools from several occupation areas; the cave has also yielded Neanderthal remains.",
+      "dating": "Layer 7a is dated to about 50,000 BP, as reported by Dermeková et al.; Rink et al. 1996 applied ESR dating to the Micoquian and Neanderthal remains.",
+      "discovered": "The studied artefacts were excavated between 1955 and 1977.",
+      "matters": "Kůlna is one of the main Neanderthal sites of Central Europe. Dermeková et al. used use-wear analysis to test older ideas of separate activity zones in the cave.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Rink et al. applied ESR dating to the Micoquian industry and the Neanderthal remains at Kůlna Cave.",
+          "source": {
+            "citation": "Rink et al. 1996, Journal of Archaeological Science",
+            "doi": "10.1006/jasc.1996.0084"
+          }
+        }
+      ]
+    },
+    {
+      "id": "kabazi-ii",
+      "species": "neanderthal",
+      "question": "neanderthal-extinction",
+      "place": {
+        "name": "Kabazi II",
+        "region": "Crimea",
+        "latitude": 44.8,
+        "longitude": 34.0
+      },
+      "fromKa": 50,
+      "toKa": 50,
+      "claim": "Bones from Middle Palaeolithic layers once dated to 35,000–40,000 years ago, redated to more than 50,000 calendar years ago.",
+      "source": {
+        "citation": "Spindler et al. 2021, Journal of Human Evolution",
+        "doi": "10.1016/j.jhevol.2021.102996"
+      },
+      "found": "Bones from horizons of the Western Crimean Mousterian.",
+      "dating": "Single amino acid (hydroxyproline) radiocarbon dating gives ages over 50,000 cal BP, older than earlier bulk collagen dates.",
+      "discovered": null,
+      "matters": "Spindler et al. conclude there is little robust evidence of Neanderthals in Crimea after 40,000 years ago. Others give younger dates for sites such as Kiik-Koba and Zaskalnaya.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Majkić et al. give a date of about 35,000–37,000 cal BP for layer IV at Kiik-Koba, with a Neanderthal child burial.",
+          "source": {
+            "citation": "Majkić et al. 2018, PLOS ONE",
+            "doi": "10.1371/journal.pone.0195049"
+          }
+        }
+      ]
+    },
+    {
       "id": "admixture-sumer",
       "species": "neanderthal",
       "question": "neanderthal-admixture",
@@ -2042,6 +4474,177 @@
           "source": {
             "citation": "Fu et al. 2014, Nature",
             "doi": "10.1038/nature13810"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mujina-pecina",
+      "species": "neanderthal",
+      "place": {
+        "name": "Mujina Pećina",
+        "region": "Dalmatia, Croatia",
+        "latitude": 43.6,
+        "longitude": 16.3
+      },
+      "fromKa": 49,
+      "toKa": 39,
+      "claim": "A Dalmatian cave with Mousterian layers dated between about 49,000 and 39,000 calendar years ago, used by late Neanderthals.",
+      "source": {
+        "citation": "Boschian et al. 2017, Quaternary International",
+        "doi": "10.1016/j.quaint.2016.09.066"
+      },
+      "found": "Mousterian stone tools in a sequence studied for its sediments, soils and magnetic properties.",
+      "dating": "Radiocarbon, soil and magnetic data place the sequence between about 49,000 and 39,000 cal BP; some radiocarbon dates were judged biased.",
+      "discovered": null,
+      "matters": "Boschian et al. found Neanderthals used the cave most during the earlier part, near Heinrich event 5, and only now and then later, when they shared it with carnivores.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Rink et al. dated the Mousterian levels at Mujina Pećina with ESR and AMS radiocarbon.",
+          "source": {
+            "citation": "Rink et al. 2002, Journal of Archaeological Science",
+            "doi": "10.1006/jasc.2001.0789"
+          }
+        }
+      ]
+    },
+    {
+      "id": "la-cotte",
+      "species": "neanderthal",
+      "place": {
+        "name": "La Cotte de St Brelade",
+        "region": "Jersey",
+        "latitude": 49.2,
+        "longitude": -2.2
+      },
+      "fromKa": 48,
+      "toKa": 48,
+      "claim": "Thirteen teeth from at least two adults, under 48,000 years old, with Neanderthal and modern-human traits.",
+      "source": {
+        "citation": "Compton et al. 2021, Journal of Human Evolution",
+        "doi": "10.1016/j.jhevol.2020.102939"
+      },
+      "wikipedia": "La Cotte de St Brelade",
+      "found": "13 teeth on a ledge behind a hearth in a Mousterian level (one now lost, one not human), and a later occipital fragment.",
+      "dating": "Dating of nearby sediments gives a probable age of less than 48,000 years.",
+      "discovered": "Excavated in 1910 and 1911.",
+      "matters": "Compton et al. find the teeth consistent with Neanderthals but with some modern-human traits, possibly shared ancestry."
+    },
+    {
+      "id": "zlaty-kun",
+      "species": "sapiens",
+      "place": {
+        "name": "Zlatý kůň, Koněprusy Caves",
+        "region": "Czechia",
+        "latitude": 49.9,
+        "longitude": 14.1
+      },
+      "fromKa": 48,
+      "toKa": 45,
+      "claim": "A modern human woman’s skull over 45,000 years old, with about 3% Neanderthal ancestry.",
+      "source": {
+        "citation": "Prüfer et al. 2021, Nature Ecology & Evolution",
+        "doi": "10.1038/s41559-021-01443-x"
+      },
+      "wikipedia": "Koněprusy Caves",
+      "found": "The skull of a woman whose genome was sequenced.",
+      "dating": "No reliable direct date; over 45,000 years from genetics, and kinship to Ranis implies about the age of Ranis13.",
+      "discovered": null,
+      "matters": "One of the earliest modern humans in Europe; her population left no detectable descendants (Prüfer et al.).",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Sümer et al. found she was a distant relative of two Ranis individuals and belonged to the same small, isolated population.",
+          "source": {
+            "citation": "Sümer et al. 2024, Nature",
+            "doi": "10.1038/s41586-024-08420-x"
+          }
+        }
+      ]
+    },
+    {
+      "id": "fumane",
+      "species": "neanderthal",
+      "question": "neanderthal-symbols",
+      "place": {
+        "name": "Fumane Cave",
+        "region": "Veneto, Italy",
+        "latitude": 45.6,
+        "longitude": 10.9
+      },
+      "fromKa": 47.6,
+      "toKa": 45.0,
+      "claim": "A fossil shell coated with hematite, brought from far away, in a Mousterian layer at least 47,600–45,000 years old.",
+      "source": {
+        "citation": "Peresani et al. 2013, PLOS ONE",
+        "doi": "10.1371/journal.pone.0068572"
+      },
+      "wikipedia": "Fumane Cave",
+      "found": "A fossil Aspa marginata shell with red hematite and striations, from more than 100 km away.",
+      "dating": "The Discoid Mousterian layer is dated to at least 47.6–45.0 cal ky BP.",
+      "discovered": null,
+      "matters": "Peresani et al. favour its use as a coloured pendant, part of Neanderthal symbolic culture before modern humans arrived.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Peresani et al. found cut and scrape marks only on the wings of vultures, eagles and other birds in the final Mousterian here, and read them as feather removal.",
+          "source": {
+            "citation": "Peresani et al. 2011, PNAS",
+            "doi": "10.1073/pnas.1016212108"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Finlayson et al. found a link between Neanderthals and raptors and corvids across many sites, and wing feather removal at Gibraltar.",
+          "source": {
+            "citation": "Finlayson et al. 2012, PLOS ONE",
+            "doi": "10.1371/journal.pone.0045927"
+          }
+        }
+      ]
+    },
+    {
+      "id": "les-cottes",
+      "species": "neanderthal",
+      "place": {
+        "name": "Les Cottés",
+        "region": "Vienne, France",
+        "latitude": 46.7,
+        "longitude": 0.9
+      },
+      "fromKa": 47,
+      "toKa": 39,
+      "claim": "A late Neanderthal from Les Cottés is one of five whose genomes were sequenced, all living 47,000 to 39,000 years ago.",
+      "source": {
+        "citation": "Hajdinjak et al. 2018, Nature",
+        "doi": "10.1038/nature26151"
+      },
+      "found": "Neanderthal remains from a site with a complete Middle-to-Upper Palaeolithic transitional sequence (Talamo et al. 2012).",
+      "dating": "Hajdinjak et al. give 47,000–39,000 years for the five late Neanderthals; the site has its own radiocarbon sequence (Talamo et al. 2012).",
+      "discovered": null,
+      "matters": "Hajdinjak et al. found that genetic similarity among late Neanderthals follows geography. The site is one of the few with an unbroken Middle-to-Upper Palaeolithic sequence.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Devièse et al. place the disappearance of Neanderthals in Northwest Europe at 44,200–40,600 cal BP, within the range of the late Neanderthal genomes.",
+          "source": {
+            "citation": "Devièse et al. 2021, PNAS",
+            "doi": "10.1073/pnas.2022466118"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Fotiadou et al. note its mtDNA falls outside the lineage shared by nearly all other late Neanderthals.",
+          "source": {
+            "citation": "Fotiadou et al. 2026, PNAS",
+            "doi": "10.1073/pnas.2520565123"
           }
         }
       ]
@@ -2118,6 +4721,89 @@
           "source": {
             "citation": "Curnoe et al. 2016, Frontiers in Ecology and Evolution",
             "doi": "10.3389/fevo.2016.00075"
+          }
+        }
+      ]
+    },
+    {
+      "id": "starosele",
+      "species": "neanderthal",
+      "place": {
+        "name": "Starosele",
+        "region": "Crimea",
+        "latitude": 44.8,
+        "longitude": 33.9
+      },
+      "fromKa": 46,
+      "toKa": 45,
+      "claim": "A bone fragment found by protein screening, radiocarbon dated to 45,000–46,000 years ago, whose mitochondrial genome is Neanderthal.",
+      "source": {
+        "citation": "Pigott et al. 2025, PNAS",
+        "doi": "10.1073/pnas.2518974122"
+      },
+      "found": "One bone fragment about 5 cm long identified as human among 150 fragments by ZooMS; most bones were from hunted horses.",
+      "dating": "Radiocarbon dating of the fragment gave 46,000 to 45,000 years old, as reported by Pigott et al.",
+      "discovered": null,
+      "matters": "Pigott et al. report the first genetic data from a Crimean late Neanderthal and argue it shows long-distance connections across Eurasia.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Marks et al. reported earlier new excavations and results at Starosele, including on the Starosele child.",
+          "source": {
+            "citation": "Marks et al. 1997, Current Anthropology",
+            "doi": "10.1086/204591"
+          }
+        }
+      ]
+    },
+    {
+      "id": "goyet",
+      "species": "neanderthal",
+      "place": {
+        "name": "Goyet, Troisième caverne",
+        "region": "Namur, Belgium",
+        "latitude": 50.4,
+        "longitude": 5.0
+      },
+      "fromKa": 45.5,
+      "toKa": 40.5,
+      "claim": "99 Neanderthal bones dated to 45,500–40,500 years ago, with butchery marks; four were used to retouch stone tools.",
+      "source": {
+        "citation": "Rougier et al. 2016, Scientific Reports",
+        "doi": "10.1038/srep29005"
+      },
+      "wikipedia": "Goyet Caves",
+      "found": "99 newly identified Neanderthal remains with cut marks; four bones were used as retouchers.",
+      "dating": "Direct radiocarbon dates on the remains: 40,500–45,500 cal BP.",
+      "discovered": null,
+      "matters": "Rougier et al. call it the first clear evidence of Neanderthal cannibalism in northern Europe, and show varied treatment of the dead among late Neanderthals.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Defleur et al. inferred cannibalism at Moula-Guercy, France, from cut marks and bone treatment matching those on animals.",
+          "source": {
+            "citation": "Defleur et al. 1999, Science",
+            "doi": "10.1126/science.286.5437.128"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Hajdinjak et al. sequenced the Goyet Q56-1 genome, one of five late Neanderthals.",
+          "source": {
+            "citation": "Hajdinjak et al. 2018, Nature",
+            "doi": "10.1038/nature26151"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Fotiadou et al. added three more Goyet mtDNAs, all on the main late Neanderthal lineage.",
+          "source": {
+            "citation": "Fotiadou et al. 2026, PNAS",
+            "doi": "10.1073/pnas.2520565123"
           }
         }
       ]
@@ -2208,6 +4894,49 @@
       ]
     },
     {
+      "id": "grotta-del-cavallo",
+      "species": "sapiens",
+      "question": "europe",
+      "place": {
+        "name": "Grotta del Cavallo",
+        "region": "Apulia, Italy",
+        "latitude": 40.2,
+        "longitude": 18.0
+      },
+      "fromKa": 45,
+      "toKa": 43,
+      "claim": "Two milk teeth from Uluzzian layers, dated to about 45,000–43,000 years ago, attributed to modern humans; Zilhão et al. say Neanderthals.",
+      "source": {
+        "citation": "Benazzi et al. 2011, Nature",
+        "doi": "10.1038/nature10617"
+      },
+      "wikipedia": "Grotta del Cavallo",
+      "found": "Two deciduous molars from layers with the Uluzzian, an early Upper Palaeolithic industry with shell beads.",
+      "dating": "A Bayesian model of dates on shell beads puts the teeth at about 45,000–43,000 calendar years ago.",
+      "discovered": "Excavated in 1963–66; the teeth were found in 1963 or 1964.",
+      "matters": "Benazzi et al. say modern humans made the Uluzzian. Zilhão et al. (2015) found disturbance and mixing, so the teeth cannot settle who made it.",
+      "alsoRead": [
+        {
+          "species": "neanderthal",
+          "source": {
+            "citation": "Zilhão et al. 2015, PLOS ONE",
+            "doi": "10.1371/journal.pone.0131181"
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Zilhão et al. found later lithics mixed into the Uluzzian layers and an unrecognised disturbance, so Neanderthal authorship remains the simplest reading.",
+          "source": {
+            "citation": "Zilhão et al. 2015, PLOS ONE",
+            "doi": "10.1371/journal.pone.0131181"
+          }
+        }
+      ]
+    },
+    {
       "id": "feldhofer",
       "species": "neanderthal",
       "place": {
@@ -2245,6 +4974,381 @@
           "source": {
             "citation": "Richards & Schmitz 2008, Antiquity",
             "doi": "10.1017/s0003598x00097210"
+          }
+        }
+      ]
+    },
+    {
+      "id": "spy",
+      "species": "neanderthal",
+      "question": "neanderthal-extinction",
+      "place": {
+        "name": "Spy Cave",
+        "region": "Namur, Belgium",
+        "latitude": 50.5,
+        "longitude": 4.7
+      },
+      "fromKa": 44.2,
+      "toKa": 40.6,
+      "claim": "Re-dated Neanderthals from Spy, Engis and Fonds-de-Forêt suggest Neanderthals vanished from Northwest Europe 44,200–40,600 years ago.",
+      "source": {
+        "citation": "Devièse et al. 2021, PNAS",
+        "doi": "10.1073/pnas.2022466118"
+      },
+      "wikipedia": "Spy Cave",
+      "found": "Two adult Neanderthal skeletons and other remains, some found later on the slope below the cave.",
+      "dating": "Compound-specific radiocarbon dating with ancient DNA checks; earlier Spy dates were up to 10,000 years too young.",
+      "discovered": "The main fossils were found in 1885 and 1886.",
+      "matters": "Devièse et al. place the end earlier than before. Van Peer (2021) says the dated bones mostly come from old spoil, so the conclusion is premature.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Semal et al. had obtained four radiocarbon dates on the adult Spy Neanderthals suggesting survival to at least about 36,000 BP (uncalibrated).",
+          "source": {
+            "citation": "Semal et al. 2008, American Journal of Physical Anthropology",
+            "doi": "10.1002/ajpa.20954"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Van Peer argues that most dated bones come from waste of early digs on the slope, so the Spy stratigraphy makes the new end date premature.",
+          "source": {
+            "citation": "Van Peer 2021, PNAS",
+            "doi": "10.1073/pnas.2106335118"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Weyrich et al. found in Spy dental calculus a meat-heavy diet with woolly rhinoceros and wild sheep.",
+          "source": {
+            "citation": "Weyrich et al. 2017, Nature",
+            "doi": "10.1038/nature21674"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Hajdinjak et al. sequenced Spy 94a, a late Neanderthal genome.",
+          "source": {
+            "citation": "Hajdinjak et al. 2018, Nature",
+            "doi": "10.1038/nature26151"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Petr et al. sequenced the Spy 94a Y chromosome.",
+          "source": {
+            "citation": "Petr et al. 2020, Science",
+            "doi": "10.1126/science.abb6460"
+          }
+        }
+      ]
+    },
+    {
+      "id": "engis",
+      "species": "neanderthal",
+      "place": {
+        "name": "Schmerling Caves, Engis",
+        "region": "Liège, Belgium",
+        "latitude": 50.6,
+        "longitude": 5.4
+      },
+      "fromKa": 44.2,
+      "toKa": 40.6,
+      "claim": "The Engis Neanderthal was re-dated in a study that places the end of Neanderthals in Northwest Europe at 44,200–40,600 years ago.",
+      "source": {
+        "citation": "Devièse et al. 2021, PNAS",
+        "doi": "10.1073/pnas.2022466118"
+      },
+      "wikipedia": "Engis 2",
+      "found": "Neanderthal remains from the Engis caves, directly dated in this study.",
+      "dating": "Direct radiocarbon dating with a compound-specific method; the 44.2–40.6 ka range is for the regional disappearance, not this bone alone.",
+      "discovered": null,
+      "matters": "Devièse et al. dated the Engis, Spy and Fonds-de-Forêt Neanderthals together to narrow the time of their disappearance.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Van Peer argues that the Spy stratigraphy makes the new regional end date premature, as most dated Spy bones come from old excavation waste.",
+          "source": {
+            "citation": "Van Peer 2021, PNAS",
+            "doi": "10.1073/pnas.2106335118"
+          }
+        }
+      ]
+    },
+    {
+      "id": "fonds-de-foret",
+      "species": "neanderthal",
+      "place": {
+        "name": "Fonds-de-Forêt",
+        "region": "Liège, Belgium",
+        "latitude": 50.6,
+        "longitude": 5.7
+      },
+      "fromKa": 44.2,
+      "toKa": 40.6,
+      "claim": "A Neanderthal femur from Fonds-de-Forêt helps date the disappearance in Northwest Europe to 44,200–40,600 years ago.",
+      "source": {
+        "citation": "Devièse et al. 2021, PNAS",
+        "doi": "10.1073/pnas.2022466118"
+      },
+      "found": "A Neanderthal femur.",
+      "dating": "Compound-specific radiocarbon dating.",
+      "discovered": null,
+      "matters": "Part of a refined chronology for the end of Neanderthals in Northwest Europe (Devièse et al.)."
+    },
+    {
+      "id": "lakonis",
+      "species": "neanderthal",
+      "place": {
+        "name": "Lakonis I",
+        "region": "Mani peninsula, Greece",
+        "latitude": 36.6,
+        "longitude": 22.5
+      },
+      "fromKa": 44,
+      "toKa": 38,
+      "claim": "A Neanderthal lower third molar, the first Neanderthal remains reported from Greece, provisionally dated to about 38,000–44,000 years ago.",
+      "source": {
+        "citation": "Harvati et al. 2003, Journal of Human Evolution",
+        "doi": "10.1016/j.jhevol.2003.09.005"
+      },
+      "found": "A lower third molar, LKH 1, with an anterior fovea and mid-trigonid crest.",
+      "dating": "Provisionally dated to about 38,000–44,000 years; the date is from a summary of Harvati et al., not checked against the abstract.",
+      "discovered": null,
+      "matters": "The tooth was reported with an Initial Upper Palaeolithic layer, which bears on whether late Neanderthals made early Upper Palaeolithic tools in Greece.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Smith et al. found the Lakonis molar formed faster and had thinner enamel than modern human molars, consistent with other Neanderthals.",
+          "source": {
+            "citation": "Smith et al. 2008, American Journal of Physical Anthropology",
+            "doi": "10.1002/ajpa.20898"
+          }
+        }
+      ]
+    },
+    {
+      "id": "umm-el-tlel",
+      "species": "neanderthal",
+      "place": {
+        "name": "Umm el Tlel",
+        "region": "El Kowm basin, Syria",
+        "latitude": 35.1,
+        "longitude": 38.9
+      },
+      "fromKa": 44,
+      "toKa": 40,
+      "claim": "Stone tools hafted with bitumen in Mousterian levels about 42,000 years old, the first reported Middle Palaeolithic tools hafted with bitumen.",
+      "source": {
+        "citation": "Boëda et al. 1996, Nature",
+        "doi": "10.1038/380336a0"
+      },
+      "found": "A scraper and a Levallois flake with traces of black glue; no human remains.",
+      "dating": "Boëda et al. give the Mousterian levels as around 40,000 BC; the method is not stated in the abstract. Range approximate.",
+      "discovered": "Excavated in Syria’s El Kowm basin; the tools were analysed in 1996.",
+      "matters": "Chemistry shows the glue was heated bitumen used to fix handles. Boëda et al. speak of Middle Palaeolithic people; the link to Neanderthals rests on the Mousterian tools.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Griggo compared the animal bones of Dederiyeh, Umm el Tlel and Douara and read them as showing how well Neanderthals adapted to different environments.",
+          "source": {
+            "citation": "Griggo 2004, Paléorient",
+            "doi": "10.3406/paleo.2004.4776"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bawa-yawan",
+      "species": "neanderthal",
+      "question": "neanderthal-extinction",
+      "place": {
+        "name": "Bawa Yawan Rockshelter",
+        "region": "Kermanshah, Iran",
+        "latitude": 34.4,
+        "longitude": 47.1
+      },
+      "fromKa": 43.6,
+      "toKa": 41.5,
+      "claim": "A Neanderthal milk canine with Zagros Mousterian tools, preliminarily dated to about 41,500–43,600 years ago.",
+      "source": {
+        "citation": "Heydari-Guran et al. 2021, PLOS ONE",
+        "doi": "10.1371/journal.pone.0253708"
+      },
+      "found": "A deciduous (milk) canine of a Neanderthal child, found in place with Zagros Mousterian stone tools.",
+      "dating": "Preliminary dating of the layer to between about 43,600 and 41,500 years ago.",
+      "discovered": "Found in situ by a team led by Saman Heydari-Guran; reported in 2021.",
+      "matters": "Heydari-Guran et al. bring south-west Asia into the debate on Neanderthal extinction, until now based mostly on western Eurasia.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Zanolli et al. confirmed the Wezmeh 1 tooth, from the same region, as Neanderthal.",
+          "source": {
+            "citation": "Zanolli et al. 2019, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2019.102643"
+          }
+        }
+      ]
+    },
+    {
+      "id": "el-sidron",
+      "species": "neanderthal",
+      "place": {
+        "name": "El Sidrón",
+        "region": "Asturias, Spain",
+        "latitude": 43.4,
+        "longitude": -5.3
+      },
+      "fromKa": 43,
+      "toKa": 43,
+      "claim": "At least twelve Neanderthals, about 43,000 years old, from a group that died about the same time; some bones carry human-made marks.",
+      "source": {
+        "citation": "Rosas et al. 2006, PNAS",
+        "doi": "10.1073/pnas.0609662104"
+      },
+      "wikipedia": "Sidrón Cave",
+      "found": "Remains of 12 Neanderthals of all ages, some with cut marks, with Middle Palaeolithic stone tools.",
+      "dating": "Rosas et al. give about 43,000 years; a later ultrafiltered radiocarbon date gave 48,400 ± 3,200 radiocarbon years (uncalibrated).",
+      "discovered": "Systematically excavated since 2000.",
+      "matters": "A rare group sample. Lalueza-Fox et al. read its DNA as a sign that women moved between groups; Weyrich et al. found a plant-based diet in dental calculus.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Wood et al. obtained 48,400 ± 3,200 radiocarbon years BP (uncalibrated) on a bone, older than earlier inconsistent dates on the fossils.",
+          "source": {
+            "citation": "Wood et al. 2012, Archaeometry",
+            "doi": "10.1111/j.1475-4754.2012.00671.x"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Lalueza-Fox et al. found that the three adult males shared one mtDNA lineage while each adult female had a different one, suggesting patrilocality.",
+          "source": {
+            "citation": "Lalueza-Fox et al. 2010, PNAS",
+            "doi": "10.1073/pnas.1011553108"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Weyrich et al. found no meat in El Sidrón dental calculus, but mushrooms, pine nuts and moss, and possible self-medication in one individual.",
+          "source": {
+            "citation": "Weyrich et al. 2017, Nature",
+            "doi": "10.1038/nature21674"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Mendez et al. analysed the El Sidrón 1253 Y chromosome and placed it outside modern human Y variation.",
+          "source": {
+            "citation": "Mendez et al. 2016, American Journal of Human Genetics",
+            "doi": "10.1016/j.ajhg.2016.02.023"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Slon et al. found Neanderthal mtDNA in El Sidrón sediment.",
+          "source": {
+            "citation": "Slon et al. 2017, Science",
+            "doi": "10.1126/science.aam9695"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sima-de-las-palomas",
+      "species": "neanderthal",
+      "question": "neanderthal-extinction",
+      "place": {
+        "name": "Sima de las Palomas del Cabezo Gordo",
+        "region": "Murcia, Spain",
+        "latitude": 37.8,
+        "longitude": -0.9
+      },
+      "fromKa": 43,
+      "toKa": 40,
+      "claim": "Late Neanderthal remains, including several jaws, dated to 43,000–40,000 calendar years ago or less.",
+      "source": {
+        "citation": "Walker et al. 2008, PNAS",
+        "doi": "10.1073/pnas.0811213106"
+      },
+      "wikipedia": "Sima de las Palomas",
+      "found": "Mandibles, teeth and hand bones from Middle Palaeolithic levels; eight partial mandibles in all.",
+      "dating": "Dated to ≤43,000–40,000 cal BP; Palomas 1 is older, about 50,000–60,000 cal BP (Walker et al. 2009).",
+      "discovered": null,
+      "matters": "Walker et al. see late Neanderthals in southern Iberia, perhaps with contact with modern humans to the north. Wood et al. (2013) question late southern Iberian dates.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Walker et al. described eight partial mandibles with Neanderthal traits, some among the latest Neanderthals at about 40,000 cal BP.",
+          "source": {
+            "citation": "Walker et al. 2009, American Journal of Physical Anthropology",
+            "doi": "10.1002/ajpa.21223"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Wood et al. found that late radiocarbon dates in southern Iberia should be treated as inaccurate unless rigorously pre-treated.",
+          "source": {
+            "citation": "Wood et al. 2013, PNAS",
+            "doi": "10.1073/pnas.1207656110"
+          }
+        }
+      ]
+    },
+    {
+      "id": "zaskalnaya",
+      "species": "neanderthal",
+      "question": "neanderthal-symbols",
+      "place": {
+        "name": "Zaskalnaya V and VI",
+        "region": "Crimea",
+        "latitude": 45.1,
+        "longitude": 34.6
+      },
+      "fromKa": 43,
+      "toKa": 38,
+      "claim": "A raven bone with seven deliberate notches from a Micoquian Neanderthal level dated to 38,000–43,000 calendar years ago.",
+      "source": {
+        "citation": "Majkić et al. 2017, PLOS ONE",
+        "doi": "10.1371/journal.pone.0173435"
+      },
+      "found": "A raven radius with seven notches cut with a stone edge; two seem added to keep the spacing even.",
+      "dating": "The Micoquian level is dated to between 38,000 and 43,000 cal BP, as reported by Majkić et al.",
+      "discovered": null,
+      "matters": "Majkić et al. argue the notches were made to look regular, a sign of intent to make a pattern. d’Errico et al. report shaped ochre ‘crayons’ from Zaskalnaya V. Both read the finds as symbolic, which others may dispute.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "d’Errico et al. studied ochre from Zaskalnaya V, VI and other sites and found pieces shaped like crayons and an engraved piece, which they read as symbolic use by Neanderthals.",
+          "source": {
+            "citation": "d’Errico et al. 2025, Science Advances",
+            "doi": "10.1126/sciadv.adx4722"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Spindler et al. argue that, without reliable pretreatment, many Crimean radiocarbon dates should be taken as minimum ages.",
+          "source": {
+            "citation": "Spindler et al. 2021, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2021.102996"
           }
         }
       ]
@@ -2317,6 +5421,110 @@
       ]
     },
     {
+      "id": "ortvale-klde",
+      "species": "neanderthal",
+      "question": "neanderthal-extinction",
+      "place": {
+        "name": "Ortvale Klde",
+        "region": "Imereti, Georgia",
+        "latitude": 42.3,
+        "longitude": 43.3
+      },
+      "fromKa": 42,
+      "toKa": 39,
+      "claim": "A rock shelter with the most detailed Middle to Upper Palaeolithic sequence in the Caucasus, where Adler et al. date the Neanderthal end to 42,000–39,000 calendar years ago.",
+      "source": {
+        "citation": "Adler et al. 2008, Journal of Human Evolution",
+        "doi": "10.1016/j.jhevol.2008.08.010"
+      },
+      "wikipedia": "Ortvala Klde",
+      "found": "Late Middle Palaeolithic layers followed by early Upper Palaeolithic ones, with 76 dated samples.",
+      "dating": "After rejecting a quarter of the dates, modern humans appear about 38,000–34,000 radiocarbon years ago, 42,000–39,000 cal BP.",
+      "discovered": null,
+      "matters": "The site dates the turnover in the southern Caucasus, and the estimates differ: Adler et al. 42,000–39,000 cal BP, Pinhasi et al. 43,500–41,400, and Cullen et al. 47,500–44,200 for the end of the Middle Palaeolithic.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Pinhasi et al. modelled dates from western Georgia: the Middle Palaeolithic ended at Ortvala by 43,540–41,420 cal BP and at Sakajia 40,200–37,140 cal BP.",
+          "source": {
+            "citation": "Pinhasi et al. 2012, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2012.08.004"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Cullen et al. used a tephra from the Nemrut eruption and new dates to place the end of the Middle Palaeolithic at Ortvale Klde at about 47,500–44,200 cal BP.",
+          "source": {
+            "citation": "Cullen et al. 2021, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2020.102908"
+          }
+        }
+      ]
+    },
+    {
+      "id": "la-ferrassie",
+      "species": "neanderthal",
+      "question": "neanderthal-burial",
+      "place": {
+        "name": "La Ferrassie",
+        "region": "Dordogne, France",
+        "latitude": 45.0,
+        "longitude": 0.9
+      },
+      "fromKa": 41.7,
+      "toKa": 40.8,
+      "claim": "A Neanderthal child, La Ferrassie 8, laid in a pit; a bone from it is directly dated to 41,700–40,800 years ago.",
+      "source": {
+        "citation": "Balzeau et al. 2020, Scientific Reports",
+        "doi": "10.1038/s41598-020-77611-z"
+      },
+      "wikipedia": "La Ferrassie",
+      "found": "The skeleton of a two-year-old child in a pit dug into a sterile layer, in the great rock shelter that also held other Neanderthal skeletons.",
+      "dating": "Direct radiocarbon date (41.7–40.8 ka cal BP) on a bone identified by ZooMS and mtDNA, plus OSL dates on the sediment.",
+      "discovered": "First remains found in 1970 and most in 1973, in H. Delporte’s 1968–1973 excavations.",
+      "matters": "Balzeau et al. read the pit as a deliberate burial and the date as one of the latest for a Neanderthal. Critics such as Gargett argue articulated skeletons alone do not prove burial.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Gómez-Olivencia et al. found 47 new fragments of La Ferrassie 8 in museum collections and located the child in level M2 from the excavation notes.",
+          "source": {
+            "citation": "Gómez-Olivencia et al. 2015, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2015.02.008"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Gargett argued that articulated skeletons are not by themselves proof of deliberate Middle Palaeolithic burial, as natural cave processes can explain them.",
+          "source": {
+            "citation": "Gargett 1999, Journal of Human Evolution",
+            "doi": "10.1006/jhev.1999.0301"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Sandgathe et al. re-examined the Roc de Marsal child, another Dordogne case long accepted as a burial, and cast serious doubt on the pit being dug on purpose.",
+          "source": {
+            "citation": "Sandgathe et al. 2011, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2011.04.003"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Pelletier et al. found rabbits burrowed into the fill at nearby Regourdou, a possible oldest burial in western Europe, so bioturbation must be weighed at such sites.",
+          "source": {
+            "citation": "Pelletier et al. 2017, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2017.04.001"
+          }
+        }
+      ]
+    },
+    {
       "id": "neanderthal-end",
       "species": "neanderthal",
       "place": null,
@@ -2350,6 +5558,24 @@
           "source": {
             "citation": "Wood et al. 2013, PNAS",
             "doi": "10.1073/pnas.1207656110"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Spindler et al. redated Crimean bones to over 50,000 cal BP and conclude there is little robust evidence of Neanderthals in Crimea after 40,000 years ago.",
+          "source": {
+            "citation": "Spindler et al. 2021, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2021.102996"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Pinhasi et al. revised Middle Palaeolithic dates in the Caucasus and argue Neanderthals did not survive there after 39,000 cal BP.",
+          "source": {
+            "citation": "Pinhasi et al. 2012, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2012.08.004"
           }
         }
       ]
@@ -2393,6 +5619,280 @@
           "source": {
             "citation": "Higham et al. 2006, PNAS",
             "doi": "10.1073/pnas.0510005103"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Prüfer et al. sequenced a 30-fold genome from a Neanderthal woman at Vindija, from samples 50,000–65,000 years old.",
+          "source": {
+            "citation": "Prüfer et al. 2017, Science",
+            "doi": "10.1126/science.aao1887"
+          }
+        }
+      ]
+    },
+    {
+      "id": "subalyuk",
+      "species": "neanderthal",
+      "question": "neanderthal-extinction",
+      "place": {
+        "name": "Subalyuk Cave",
+        "region": "Bükk Mountains, Hungary",
+        "latitude": 47.9,
+        "longitude": 20.5
+      },
+      "fromKa": 39.7,
+      "toKa": 35.4,
+      "claim": "An adult and a child, both Neanderthals, directly radiocarbon dated to about 39,700–39,100 and 36,100–35,400 calendar years ago.",
+      "source": {
+        "citation": "Mester et al. 2024, Anthropologischer Anzeiger",
+        "doi": "10.1127/anthranz/2023/1716"
+      },
+      "found": "Remains of two Neanderthals, a young adult woman and a child of three to four, with a Late Mousterian industry.",
+      "dating": "Direct radiocarbon dates: 39,732–39,076 cal BP for the adult and 36,117–35,387 cal BP for the child, as quoted by Pálfi et al.",
+      "discovered": "Uncovered in 1932 near Cserépfalu, northern Hungary.",
+      "matters": "Mester et al. place these among the last Neanderthals of Central Europe. The child’s date is younger than the 39,000–41,000-year end that Higham et al. give for Neanderthals in Europe.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Pálfi et al. re-examined both skeletons and report signs of infection, including probable tuberculosis in the child, supported by lipid and DNA tests.",
+          "source": {
+            "citation": "Pálfi et al. 2023, Tuberculosis",
+            "doi": "10.1016/j.tube.2023.102419"
+          }
+        }
+      ]
+    },
+    {
+      "id": "saint-cesaire",
+      "species": "neanderthal",
+      "question": "chatelperronian",
+      "place": {
+        "name": "La Roche-à-Pierrot, Saint-Césaire",
+        "region": "Charente-Maritime, France",
+        "latitude": 45.8,
+        "longitude": -0.5
+      },
+      "fromKa": 39.0,
+      "toKa": 33.6,
+      "claim": "A late Neanderthal skeleton in a level with Châtelperronian tools, dated by thermoluminescence to about 36,300 ± 2,700 years ago; the link is disputed.",
+      "source": {
+        "citation": "Mercier et al. 1991, Nature",
+        "doi": "10.1038/351737a0"
+      },
+      "wikipedia": "Saint-Césaire",
+      "found": "A Neanderthal skeleton in level EJOP sup, which was attributed to the Châtelperronian, an early Upper Palaeolithic industry.",
+      "dating": "Thermoluminescence dates on 20 burnt flints; those near the skeleton gave 36,300 ± 2,700 years. Later directly radiocarbon dated (Hublin et al. 2012).",
+      "discovered": null,
+      "matters": "Mercier et al. and Hublin et al. see the Neanderthals as the makers of the Châtelperronian. Gravina et al. (2018) found no reliable association between the skeleton and those tools.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "dating",
+          "text": "Hublin et al. directly dated the Saint-Césaire skeleton and say the result supports assigning the Châtelperronian to the latest western European Neanderthals.",
+          "source": {
+            "citation": "Hublin et al. 2012, PNAS",
+            "doi": "10.1073/pnas.1212924109"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Gravina et al. re-studied the lithics, refits and spatial data of the skeleton’s level and found no reliable evidence for a Neanderthal–Châtelperronian association.",
+          "source": {
+            "citation": "Gravina et al. 2018, Scientific Reports",
+            "doi": "10.1038/s41598-018-33084-9"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "archaeological",
+          "text": "Gargett questioned the reading of Saint-Césaire and other post-1960s finds as deliberate burials, arguing articulation alone is not proof.",
+          "source": {
+            "citation": "Gargett 1999, Journal of Human Evolution",
+            "doi": "10.1006/jhev.1999.0301"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mezmaiskaya",
+      "species": "neanderthal",
+      "question": "neanderthal-extinction",
+      "place": {
+        "name": "Mezmaiskaya Cave",
+        "region": "Adygea, North Caucasus, Russia",
+        "latitude": 44.2,
+        "longitude": 40.0
+      },
+      "fromKa": 39,
+      "toKa": 39,
+      "claim": "A directly dated late Neanderthal and 16 dates showing Neanderthals did not survive at Mezmaiskaya after about 39,000 calendar years ago.",
+      "source": {
+        "citation": "Pinhasi et al. 2011, PNAS",
+        "doi": "10.1073/pnas.1018938108"
+      },
+      "wikipedia": "Mezmaiskaya Cave",
+      "found": "A late Neanderthal from a Late Middle Palaeolithic layer, in a cave with Middle and Upper Palaeolithic levels.",
+      "dating": "Direct date 39,700 ± 1,100 radiocarbon years (uncalibrated); Bayesian modelling puts the end of the Middle Palaeolithic before 39,000 cal BP.",
+      "discovered": null,
+      "matters": "Pinhasi et al. reject a late survival here. Ovchinnikov et al. once dated a Mezmaiskaya Neanderthal to about 29,000 radiocarbon years. Its DNA helped show a turnover among late Neanderthals.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Ovchinnikov et al. analysed mtDNA from a Mezmaiskaya Neanderthal, which radiocarbon dating then put at about 29,000 years old, making it seem one of the last.",
+          "source": {
+            "citation": "Ovchinnikov et al. 2000, Nature",
+            "doi": "10.1038/35006625"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Hajdinjak et al. sequenced late Neanderthals 39,000–47,000 years old and, comparing them with an older Caucasus Neanderthal, found signs of a population turnover.",
+          "source": {
+            "citation": "Hajdinjak et al. 2018, Nature",
+            "doi": "10.1038/nature26151"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Doronicheva et al. compared tools from Mezmaiskaya and Saradj-Chuko, from MIS 5 to MIS 3, and identify two culturally different Neanderthal populations in contact.",
+          "source": {
+            "citation": "Doronicheva et al. 2023, PLOS ONE",
+            "doi": "10.1371/journal.pone.0284093"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Andreeva et al. found Mezmaiskaya 3’s mtDNA closest to Mezmaiskaya 1 and Stajnia S5000.",
+          "source": {
+            "citation": "Andreeva et al. 2022, Scientific Reports",
+            "doi": "10.1038/s41598-022-16164-9"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tabun-c1-young",
+      "species": "neanderthal",
+      "question": "tabun-age",
+      "place": {
+        "name": "Tabun Cave",
+        "region": "Mount Carmel, Israel",
+        "latitude": 32.7,
+        "longitude": 35.0
+      },
+      "fromKa": 39,
+      "toKa": 29,
+      "claim": "The Tabun C1 woman dated directly by uranium-series to about 34,000 years, which would make her one of the last Neanderthals of the Levant.",
+      "source": {
+        "citation": "Simpson et al. 1998, Journal of Human Evolution",
+        "doi": "10.1006/jhev.1998.0252"
+      },
+      "wikipedia": "Tabun Cave",
+      "found": "The mandible and a femur of the Tabun C1 skeleton, sampled for dating.",
+      "dating": "Gamma-ray uranium-series: jaw 34 ± 5 ka with early uptake; femur 19 ± 2 ka, or 33 ± 4 ka with linear uptake.",
+      "discovered": "Garrod and Bate placed the skeleton in layer B or C of their sequence.",
+      "matters": "Simpson et al. say this would mean Neanderthals survived as late in the Levant as in Europe. The ages depend on how the bones took up uranium, and Grün & Stringer 2000 date her to about 122,000.",
+      "evidence": [
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Grün and Stringer revised the ESR chronology and analysed teeth of Tabun C1, giving an older age of about 122,000 years (from a summary; abstract not seen).",
+          "source": {
+            "citation": "Grün & Stringer 2000, Journal of Human Evolution",
+            "doi": "10.1006/jhev.2000.0443"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cueva-anton",
+      "species": "neanderthal",
+      "question": "neanderthal-extinction",
+      "place": {
+        "name": "Cueva Antón",
+        "region": "Murcia, Spain",
+        "latitude": 38.1,
+        "longitude": -1.5
+      },
+      "fromKa": 37.1,
+      "toKa": 37.1,
+      "claim": "A Mousterian layer no more than 37,100 years old, which Zilhão et al. read as late Neanderthal survival in southern Iberia; disputed.",
+      "source": {
+        "citation": "Zilhão et al. 2017, Heliyon",
+        "doi": "10.1016/j.heliyon.2017.e00435"
+      },
+      "wikipedia": "Cueva Antón",
+      "found": "Mousterian layers, and earlier a perforated scallop shell painted with an orange mix of goethite and hematite.",
+      "dating": "Radiocarbon and luminescence dating: Mousterian layer I-k can be no more than 37,100 years old.",
+      "discovered": null,
+      "matters": "Zilhão et al. see an ‘Ebro frontier’ that kept Neanderthals in the south 3,000 years longer. Wood et al. (2013) found most late southern Iberian dates unreliable.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Zilhão et al. reported a perforated Pecten shell painted on its outer side with goethite and hematite, abandoned after breaking.",
+          "source": {
+            "citation": "Zilhão et al. 2010, PNAS",
+            "doi": "10.1073/pnas.0914088107"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Wood et al. found most southern Iberian dates unreliable, leaving Cueva Antón as the only possible site for late Neanderthal survival there.",
+          "source": {
+            "citation": "Wood et al. 2013, PNAS",
+            "doi": "10.1073/pnas.1207656110"
+          }
+        }
+      ]
+    },
+    {
+      "id": "kiik-koba",
+      "species": "neanderthal",
+      "question": "neanderthal-extinction",
+      "place": {
+        "name": "Kiik-Koba",
+        "region": "Crimea",
+        "latitude": 45.0,
+        "longitude": 34.4
+      },
+      "fromKa": 37,
+      "toKa": 35,
+      "claim": "A Neanderthal child burial and an engraved flint, in a layer dated to about 35,000–37,000 calendar years ago, a date others treat as a minimum.",
+      "source": {
+        "citation": "Majkić et al. 2018, PLOS ONE",
+        "doi": "10.1371/journal.pone.0195049"
+      },
+      "found": "A Neanderthal child burial, the Kiik-Koba 1 adult and a flint flake with deliberate engraving on its cortex, in layer IV.",
+      "dating": "Layer IV, with a para-Micoquian industry, dated to about 35,000–37,000 cal BP, as reported by Majkić et al.",
+      "discovered": null,
+      "matters": "If right, the date makes Kiik-Koba one of the latest Neanderthal sites. Spindler et al. argue many Crimean dates should be read as minimum ages, with little robust evidence of Neanderthals there after 40,000 years ago.",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "fossil",
+          "text": "Trinkaus et al. describe the Kiik-Koba 1 Neanderthal, a man of about 40, with healed injuries and other lesions common among Neanderthals.",
+          "source": {
+            "citation": "Trinkaus et al. 2008, American Journal of Physical Anthropology",
+            "doi": "10.1002/ajpa.20833"
+          }
+        },
+        {
+          "stance": "challenges",
+          "kind": "dating",
+          "text": "Spindler et al. redated Kabazi II bones from 35,000–40,000 to over 50,000 cal BP, and advise treating other Crimean dates as minimum ages.",
+          "source": {
+            "citation": "Spindler et al. 2021, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2021.102996"
           }
         }
       ]
@@ -2445,6 +5945,33 @@
           "source": {
             "citation": "Zilhão et al. 2017, Heliyon",
             "doi": "10.1016/j.heliyon.2017.e00435"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Rodríguez-Vidal et al. report a deeply cut cross-hatched engraving in the bedrock, older than 39 cal kyr and sealed by Mousterian layer IV.",
+          "source": {
+            "citation": "Rodríguez-Vidal et al. 2014, PNAS",
+            "doi": "10.1073/pnas.1411529111"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Stringer et al. report seal, dolphin, fish and molluscs at nearby Vanguard Cave and marine mammals in Mousterian levels at Gorham’s Cave.",
+          "source": {
+            "citation": "Stringer et al. 2008, PNAS",
+            "doi": "10.1073/pnas.0805474105"
+          }
+        },
+        {
+          "stance": "supports",
+          "kind": "archaeological",
+          "text": "Finlayson et al. found a taphonomic link between Neanderthals and raptors and corvids at Gorham’s, Vanguard and Ibex Caves, with wing feathers removed.",
+          "source": {
+            "citation": "Finlayson et al. 2012, PLOS ONE",
+            "doi": "10.1371/journal.pone.0045927"
           }
         }
       ]
@@ -2666,6 +6193,177 @@
           }
         }
       ]
+    },
+    {
+      "id": "forbes-quarry",
+      "species": "neanderthal",
+      "place": {
+        "name": "Forbes’ Quarry",
+        "region": "Gibraltar",
+        "latitude": 36.2,
+        "longitude": -5.4
+      },
+      "fromKa": null,
+      "toKa": null,
+      "claim": "The Forbes’ Quarry skull from Gibraltar kept small amounts of Neanderthal DNA.",
+      "source": {
+        "citation": "Bokelmann et al. 2019, PNAS",
+        "doi": "10.1073/pnas.1903984116"
+      },
+      "wikipedia": "Forbes' Quarry",
+      "found": "A partial cranium (Gibraltar 1), one of the first Neanderthal remains found.",
+      "dating": "No absolute date; Bokelmann et al. infer from genetics that it predates late Neanderthals.",
+      "discovered": null,
+      "matters": "DNA survived in a warm coastal climate close to Africa (Bokelmann et al.).",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Slimak et al. found Thorin’s mtDNA most closely related to Forbes’ Quarry.",
+          "source": {
+            "citation": "Slimak et al. 2024, Cell Genomics",
+            "doi": "10.1016/j.xgen.2024.100593"
+          }
+        }
+      ]
+    },
+    {
+      "id": "devils-tower",
+      "species": "neanderthal",
+      "place": {
+        "name": "Devil’s Tower",
+        "region": "Gibraltar",
+        "latitude": 36.2,
+        "longitude": -5.3
+      },
+      "fromKa": null,
+      "toKa": null,
+      "claim": "The Devil’s Tower skull from Gibraltar yielded a little Neanderthal nuclear DNA from a male.",
+      "source": {
+        "citation": "Bokelmann et al. 2019, PNAS",
+        "doi": "10.1073/pnas.1903984116"
+      },
+      "wikipedia": "Gibraltar 2",
+      "found": "A partial cranium (Gibraltar 2).",
+      "dating": "No date in the source.",
+      "discovered": null,
+      "matters": "One of the first Neanderthal remains found, now with DNA (Bokelmann et al.)."
+    },
+    {
+      "id": "galeria-de-las-estatuas",
+      "species": "neanderthal",
+      "place": {
+        "name": "Galería de las Estatuas, Atapuerca",
+        "region": "Spain",
+        "latitude": 42.4,
+        "longitude": -3.5
+      },
+      "fromKa": null,
+      "toKa": null,
+      "claim": "Sediments at Galería de las Estatuas hold Neanderthal nuclear and mtDNA pointing to a turnover about 100,000 years ago.",
+      "source": {
+        "citation": "Vernot et al. 2021, Science",
+        "doi": "10.1126/science.abf1667"
+      },
+      "found": "Neanderthal DNA in cave sediments, without skeletons.",
+      "dating": "Not given in the abstract.",
+      "discovered": null,
+      "matters": "Shows population genetics from dirt alone (Vernot et al.).",
+      "evidence": [
+        {
+          "stance": "supports",
+          "kind": "genetic",
+          "text": "Slimak et al. place two Estatuas mtDNAs in a clade with Thorin and Forbes’ Quarry.",
+          "source": {
+            "citation": "Slimak et al. 2024, Cell Genomics",
+            "doi": "10.1016/j.xgen.2024.100593"
+          }
+        }
+      ]
+    },
+    {
+      "id": "trou-al-wesse",
+      "species": "neanderthal",
+      "place": {
+        "name": "Trou Al’Wesse",
+        "region": "Belgium",
+        "latitude": 50.4,
+        "longitude": 5.3
+      },
+      "fromKa": null,
+      "toKa": null,
+      "claim": "Sediments at Trou Al’Wesse contain Neanderthal mtDNA though no Neanderthal bones were found in its Pleistocene layers.",
+      "source": {
+        "citation": "Slon et al. 2017, Science",
+        "doi": "10.1126/science.aam9695"
+      },
+      "found": "Neanderthal mtDNA in sediment; Late Mousterian artefacts and cut-marked animal bones.",
+      "dating": "Not given in the source text read.",
+      "discovered": null,
+      "matters": "Sediment DNA can show who used a site without skeletons (Slon et al.)."
+    },
+    {
+      "id": "rochers-de-villeneuve",
+      "species": "neanderthal",
+      "place": {
+        "name": "Les Rochers-de-Villeneuve",
+        "region": "Vienne, France",
+        "latitude": 46.4,
+        "longitude": 0.7
+      },
+      "fromKa": null,
+      "toKa": null,
+      "claim": "A Neanderthal femur from Les Rochers-de-Villeneuve dates to about 40,700 radiocarbon years (uncalibrated).",
+      "source": {
+        "citation": "Beauval et al. 2005, PNAS",
+        "doi": "10.1073/pnas.0502656102"
+      },
+      "found": "A partial femur, found in 2002.",
+      "dating": "Radiocarbon about 40,700 BP; only uncalibrated years given.",
+      "discovered": "Discovered in 2002.",
+      "matters": "One of the most recent Middle Palaeolithic Neanderthals; level shows alternating human and hyena use (Beauval et al.)."
+    },
+    {
+      "id": "trou-magrite",
+      "species": "neanderthal",
+      "place": {
+        "name": "Trou Magrite",
+        "region": "Belgium",
+        "latitude": 50.2,
+        "longitude": 4.9
+      },
+      "fromKa": null,
+      "toKa": null,
+      "claim": "A Neanderthal neonate from Trou Magrite gave mtDNA of the late Neanderthal lineage.",
+      "source": {
+        "citation": "Fotiadou et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2520565123"
+      },
+      "found": "A neonate, one of two Neanderthal remains from the site.",
+      "dating": "Not directly dated; context uncertain.",
+      "discovered": null,
+      "matters": "Its mtDNA suggests it belongs with late Neanderthals (Fotiadou et al.)."
+    },
+    {
+      "id": "tourtoirac",
+      "species": "neanderthal",
+      "place": {
+        "name": "Tourtoirac",
+        "region": "Dordogne, France",
+        "latitude": 45.3,
+        "longitude": 1.1
+      },
+      "fromKa": null,
+      "toKa": null,
+      "claim": "Three pre-MIS 3 Neanderthals from a Quina Mousterian context at Tourtoirac gave mtDNA.",
+      "source": {
+        "citation": "Fotiadou et al. 2026, PNAS",
+        "doi": "10.1073/pnas.2520565123"
+      },
+      "found": "Remains of three Neanderthals.",
+      "dating": "Pre-MIS 3; no calendar range in the text read.",
+      "discovered": null,
+      "matters": "More mtDNA diversity than at single late sites (Fotiadou et al.)."
     }
   ]
 }

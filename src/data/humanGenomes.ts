@@ -19,7 +19,7 @@ const Source = v.strictObject({
 });
 
 /** What was read: a whole genome deeply or thinly, the mitochondria, the Y, or a cave's floor. */
-export const DNA_KINDS = ['nuclear-high', 'nuclear-low', 'mtDNA', 'Y', 'sediment'] as const;
+const DNA_KINDS = ['nuclear-high', 'nuclear-low', 'mtDNA', 'Y', 'sediment'] as const;
 type DnaKind = (typeof DNA_KINDS)[number];
 
 const DNA_NAMES: Readonly<Record<DnaKind, string>> = {
@@ -38,18 +38,23 @@ const GenomesSchema = v.pipe(
       v.pipe(
         v.strictObject({
           id: v.pipe(v.string(), v.regex(/^[a-z0-9-]+$/)),
-          label: words(80),
+          label: words(100),
           species: v.picklist(HUMAN_SPECIES),
           /** The site's find (claims.json), whose card lists it. */
           site: v.pipe(v.string(), v.regex(/^[a-z0-9-]+$/)),
-          fromKa: ka,
-          toKa: ka,
+          /** Null where the sample is not dated. */
+          fromKa: v.nullable(ka),
+          toKa: v.nullable(ka),
+          /** How it was dated, and any caveat, such as an uncalibrated radiocarbon age. */
+          dating: v.optional(words(400)),
           data: v.pipe(v.array(v.picklist(DNA_KINDS)), v.minLength(1)),
-          coverage: v.nullable(words(40)),
+          coverage: v.nullable(words(120)),
           sex: v.nullable(v.picklist(['female', 'male'])),
-          mtHaplo: v.nullable(words(60)),
-          yHaplo: v.nullable(words(60)),
+          mtHaplo: v.nullable(words(120)),
+          yHaplo: v.nullable(words(120)),
           showed: words(320),
+          /** Anything a reader should know besides: a preprint, a date in conflict, a merge. */
+          note: v.optional(words(400)),
           source: Source,
           /** Where the reads can be had: the AADR's archive, ENA or EBI, or the institute's page. */
           repository: v.nullable(v.pipe(v.string(), v.url(), v.startsWith('https://'))),
@@ -71,7 +76,12 @@ const GenomesSchema = v.pipe(
             ),
           ),
         }),
-        v.check((genome) => genome.fromKa >= genome.toKa, 'a date runs from oldest to youngest'),
+        v.check(
+          (genome) =>
+            (genome.fromKa === null) === (genome.toKa === null) &&
+            (genome.fromKa === null || genome.toKa === null || genome.fromKa >= genome.toKa),
+          'a date runs from oldest to youngest, or is not given at all',
+        ),
       ),
     ),
   }),
@@ -90,7 +100,9 @@ export async function loadHumanGenomes(url: string, fetchJson: Fetch): Promise<H
 
 /** The genomes read at a site, oldest first. */
 export function genomesAt(data: HumanGenomes, site: string): readonly Genome[] {
-  return data.genomes.filter((genome) => genome.site === site).sort((a, b) => b.fromKa - a.fromKa);
+  return data.genomes
+    .filter((genome) => genome.site === site)
+    .sort((a, b) => (b.fromKa ?? -1) - (a.fromKa ?? -1));
 }
 
 /** One genome as a line: what was read, how deeply, whose, and what it showed, with its paper. */
@@ -101,9 +113,13 @@ function genomeLine(genome: Genome): string {
     genome.sex,
     genome.mtHaplo === null ? null : `mtDNA ${genome.mtHaplo}`,
     genome.yHaplo === null ? null : `Y ${genome.yHaplo}`,
-    kaRange(genome.fromKa, genome.toKa),
+    genome.fromKa === null || genome.toKa === null
+      ? 'not dated'
+      : kaRange(genome.fromKa, genome.toKa),
   ].filter((part) => part !== null);
-  return `${read} (${details.join(', ')}). ${genome.showed} (${genome.source.citation})`;
+  const dating = genome.dating === undefined ? '' : ` Dated: ${genome.dating}`;
+  const note = genome.note === undefined ? '' : ` ${genome.note}`;
+  return `${read} (${details.join(', ')}). ${genome.showed} (${genome.source.citation})${dating}${note}`;
 }
 
 /** A site card's rows for its genomes, and their papers and data as links. */

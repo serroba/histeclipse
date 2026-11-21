@@ -61,8 +61,9 @@ const ClaimsSchema = v.pipe(
             }),
           ),
           /** The date's range, thousands of years ago: oldest, then youngest. */
-          fromKa: ka,
-          toKa: ka,
+          /** Null for a find not directly dated (#1047): shown while its species is attested. */
+          fromKa: v.nullable(ka),
+          toKa: v.nullable(ka),
           claim: v.pipe(v.string(), v.minLength(1)),
           /** The paper that dates it. */
           source: Source,
@@ -103,7 +104,12 @@ const ClaimsSchema = v.pipe(
           /** The English Wikipedia page about the find, for its card's picture and link. */
           wikipedia: v.optional(v.pipe(v.string(), v.minLength(1))),
         }),
-        v.check((claim) => claim.fromKa >= claim.toKa, 'a date runs from oldest to youngest'),
+        v.check(
+          (claim) =>
+            (claim.fromKa === null) === (claim.toKa === null) &&
+            (claim.fromKa === null || claim.toKa === null || claim.fromKa >= claim.toKa),
+          'a date runs from oldest to youngest, or is not given at all',
+        ),
       ),
     ),
   }),
@@ -161,40 +167,63 @@ export function kaRange(fromKa: number, toKa: number): string {
 }
 
 /**
- * The youngest date any claim gives each species, thousands of years ago: how long its finds stay
- * marked. Our own species is still here.
+ * The span each species' dated finds cover, thousands of years ago: from the oldest date any
+ * claim gives it to the youngest, so long-gone species leave the map. Our own species is still
+ * here.
  */
-function lastAttested(data: HumanClaims): ReadonlyMap<HumanSpecies, number> {
-  const last = new Map<HumanSpecies, number>([['sapiens', 0]]);
-  for (const claim of data.claims)
-    last.set(claim.species, Math.min(last.get(claim.species) ?? Infinity, claim.toKa));
-  return last;
+function attested(data: HumanClaims): ReadonlyMap<HumanSpecies, { first: number; last: number }> {
+  const spans = new Map<HumanSpecies, { first: number; last: number }>();
+  for (const claim of data.claims) {
+    if (claim.fromKa === null || claim.toKa === null) continue;
+    const known = spans.get(claim.species);
+    spans.set(claim.species, {
+      first: Math.max(known?.first ?? -Infinity, claim.fromKa),
+      last: claim.species === 'sapiens' ? 0 : Math.min(known?.last ?? Infinity, claim.toKa),
+    });
+  }
+  return spans;
+}
+
+/** When a find shows from: its oldest date, or for an undated one its species' oldest. */
+function startOf(
+  claim: Claim,
+  spans: ReadonlyMap<HumanSpecies, { first: number; last: number }>,
+): number {
+  return claim.fromKa ?? spans.get(claim.species)?.first ?? 0;
+}
+
+/** A find's date in words: its range, or that it is not directly dated. */
+function dateOf(claim: Claim): string {
+  return claim.fromKa === null || claim.toKa === null
+    ? 'undated'
+    : kaRange(claim.fromKa, claim.toKa);
 }
 
 /**
  * What to show `shownKa` thousand years ago: each find from its oldest date on, while its species
- * is still attested (to the youngest date any claim gives it), so long-gone species leave the map.
+ * is still attested (to the youngest date any claim gives it), so long-gone species leave the map;
+ * an undated find (#1047) for as long as its species is attested.
  */
 export function humansAt(data: HumanClaims, shownKa: number): HumansView {
-  const reached = (claim: Claim) => shownKa <= claim.fromKa;
-  const last = lastAttested(data);
-  const living = (claim: Claim) => shownKa >= (last.get(claim.species) ?? 0);
+  const spans = attested(data);
+  const reached = (claim: Claim) => shownKa <= startOf(claim, spans);
+  const living = (claim: Claim) => shownKa >= (spans.get(claim.species)?.last ?? 0);
   const line = (claim: Claim): ClaimLine => ({
-    text: `${kaRange(claim.fromKa, claim.toKa)}: ${claim.claim}`,
+    text: `${dateOf(claim)}: ${claim.claim}`,
     citation: claim.source.citation,
     doi: claim.source.doi,
     reached: reached(claim),
   });
   // The newest first: where names crowd, those placed first are kept, and the latest finds are
   // what the moment shown is about.
-  const newestFirst = [...data.claims].sort((a, b) => a.fromKa - b.fromKa);
+  const newestFirst = [...data.claims].sort((a, b) => startOf(a, spans) - startOf(b, spans));
   const sites = newestFirst.flatMap((claim): HumanSite[] =>
     claim.place === null || !reached(claim) || !living(claim)
       ? []
       : [
           {
             id: claim.id,
-            label: `${claim.place.name} ${kaRange(claim.fromKa, claim.toKa)}`,
+            label: `${claim.place.name} ${dateOf(claim)}`,
             species: claim.species,
             point: { latitude: claim.place.latitude, longitude: claim.place.longitude },
             disputed: claim.question !== undefined,
@@ -285,7 +314,12 @@ export function claimCard(
     facts: [
       ['Who', who(claim)],
       ...(claim.place === null ? [] : [['Where', claim.place.region] as const]),
-      ['When', `${kaRange(claim.fromKa, claim.toKa)} (thousands of years ago)`],
+      [
+        'When',
+        claim.fromKa === null || claim.toKa === null
+          ? 'Not directly dated: shown while its species is attested'
+          : `${kaRange(claim.fromKa, claim.toKa)} (thousands of years ago)`,
+      ],
       ['Claim', claim.claim],
       ['Found', claim.found],
       ['Dated by', claim.dating],
@@ -318,7 +352,7 @@ export function claimCard(
       ? {}
       : {
           note: `One answer to “${question.title}” Others: ${rivals
-            .map((rival) => `${kaRange(rival.fromKa, rival.toKa)}, ${rival.source.citation}`)
+            .map((rival) => `${dateOf(rival)}, ${rival.source.citation}`)
             .join('; ')}.`,
         }),
   };

@@ -1,6 +1,14 @@
 {
   "title": "Humans",
-  "what": "Dated finds of our species and its relatives, what each species was, the routes people are argued to have taken, and where a dispersal model has people settled.",
-  "sources": ["humanFinds", "humanSpecies", "humanRoutes", "timmermann"],
-  "how": "Each find is shown with the paper that dates it, what was found, how it was dated and why it matters, the other studies that support or challenge it, and rival dates side by side. Each species’ card gives every figure with its paper, and where papers disagree, each view. Each route is drawn approximately after one study, with its rivals in the same colour: an argument, not a measured path. The dispersal model is one model’s view, not evidence."
+  "what": "Dated finds of our species and its relatives, the ancient DNA read from them, the interbreeding it shows, what each species was, the routes people are argued to have taken, and where a dispersal model has people settled.",
+  "sources": [
+    "humanFinds",
+    "humanSpecies",
+    "aadr",
+    "humanAdmixture",
+    "humanGenomes",
+    "humanRoutes",
+    "timmermann"
+  ],
+  "how": "Each find is shown with the paper that dates it, what was found, how it was dated and why it matters, the other studies that support or challenge it, and rival dates side by side. A find’s card lists the DNA read there, each sample with its paper and where its data can be had (most from the Allen Ancient DNA Resource). Interbreeding is given episode by episode, each estimate a model’s, side by side. Finds not directly dated are shown while their species is attested, and say so. Each species’ card gives every figure with its paper, and where papers disagree, each view. Each route is drawn approximately after one study, with its rivals in the same colour: an argument, not a measured path. The dispersal model is one model’s view, not evidence."
 }
