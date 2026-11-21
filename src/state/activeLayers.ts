@@ -107,12 +107,15 @@ function withinMa(covers: Covers, ma: number, span: Span): Within {
 
 /**
  * The layers on, in the catalogue's order, each with whether it has data here: by its span and
- * record first (no load can bring data where there is none), then by how its load stands.
+ * record first (no load can bring data where there is none), then by how its load stands, as
+ * the features report it (null: neither loading nor failed).
  */
 export function activeLayers(
   state: Moment,
-  loads: ReadonlyMap<Layer, LayerLoad> = new Map(),
+  reported: Iterable<readonly [Layer, LayerLoad | null]> = [],
 ): ActiveLayer[] {
+  const loads = new Map<Layer, LayerLoad>();
+  for (const [layer, load] of reported) if (load !== null) loads.set(layer, load);
   const span = spanShown(state);
   return LAYERS.filter((layer) => state.layers.has(layer)).flatMap((layer): ActiveLayer[] => {
     const choice = CHOICES.get(layer);

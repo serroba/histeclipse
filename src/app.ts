@@ -24,6 +24,7 @@ import {
   VIEWPOINT,
   type Drawn,
 } from './state/redraws';
+import { activeLayers } from './state/activeLayers';
 import { createStore } from './state/store';
 import { parseViewState } from './state/url';
 import { createRedrawRequests } from './state/redrawRequests';
@@ -263,7 +264,12 @@ export async function startApp(root: HTMLElement): Promise<void> {
     storyDate: boundaries.storyDate,
     bar: (state, moment) => {
       const chips = features.deep(state, moment);
-      return { ...features.deepBar(state, moment), chips };
+      // The layers on and whether each draws here, for the dock (#1071), as the chips have them.
+      return {
+        ...features.deepBar(state, moment),
+        chips,
+        active: activeLayers(state, features.loads()),
+      };
     },
     off: (state) => {
       features.deepOff(state);

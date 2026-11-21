@@ -25,24 +25,13 @@ function chipButton(layer: Layer, label: string, hidden: boolean): HTMLButtonEle
     {
       type: 'button',
       class: 'deep-layer',
+      'data-layer': layer,
       'aria-pressed': 'false',
       title: label,
       ...(hidden ? { hidden: '' } : {}),
     },
     layerIcon(layer, 18),
     element('span', { class: 'icon-label' }, label),
-  );
-}
-
-/**
- * The layers' dock (#1070): the bar's chips and the features', in a row of their own under the
- * moment, packed from the start, in the order given. Named apart from the "Layers on" chips beside Layers.
- */
-export function layerDock(...buttons: readonly HTMLElement[]): HTMLElement {
-  return element(
-    'span',
-    { class: 'deep-dock', role: 'group', 'aria-label': 'The time bar’s layers' },
-    ...buttons,
   );
 }
 

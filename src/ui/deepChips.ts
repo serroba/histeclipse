@@ -143,6 +143,7 @@ export function createDeepChips(
       {
         type: 'button',
         class: 'deep-layer',
+        'data-layer': chip.layer,
         'aria-pressed': 'false',
         hidden: '',
         title: chip.label,
