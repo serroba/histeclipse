@@ -298,6 +298,13 @@ test('deep time narrows to the ice ages, in thousands of years', GPU, async ({ p
   await expect(page.getByLabel('Thousands of years ago')).toHaveValue('-21');
   // The ice ages have temperature maps of their own (#457).
   await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toBeEnabled();
+  // The layers sit in one dock, in a stable order, each named by its word (#1070).
+  await expect(
+    page
+      .getByRole('group', { name: 'The time bar’s layers' })
+      .getByRole('button')
+      .filter({ visible: true }),
+  ).toHaveText(['Sea level', 'Temperature', 'Plates', 'Humans', 'Impacts', 'Air']);
   // Both ice-age reconstructions read the glacial maximum.
   const legend = page.getByTestId('sea-legend');
   await expect(legend.locator('[data-series="bintanja-2008"]')).toContainText('−123 m');

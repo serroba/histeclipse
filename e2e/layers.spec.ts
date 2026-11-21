@@ -255,11 +255,10 @@ test('one set of layers for all of time: the panel and the bar’s chips switch 
   expect(problems).toEqual([]);
 });
 
-test('the viewpoints and deep time’s chips wear icons: icon and word, or on a phone the icon @mobile', async ({
+test('the viewpoints and deep time’s chips wear icons: icon and word, on a phone too @mobile', async ({
   page,
 }, info) => {
   test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
-  const phone = info.project.name === 'mobile';
   await test.step('Given deep time on the 540 Myr span', async () => {
     await page.goto('./?ma=250&scale=all');
     await globeRendered(page);
@@ -275,19 +274,14 @@ test('the viewpoints and deep time’s chips wear icons: icon and word, or on a 
       await expect(page.getByRole('button', { name, exact: true }).locator('svg')).toHaveCount(1);
     }
   });
-  await test.step(
-    phone
-      ? 'And on a phone the words step aside for the icons'
-      : 'And the words show beside the icons',
-    async () => {
-      const word = page
-        .getByRole('button', { name: 'Temperature', exact: true })
-        .locator('.icon-label');
-      const box = await word.boundingBox();
-      if (phone) expect(box?.width ?? 0).toBeLessThanOrEqual(1);
-      else expect(box?.width ?? 0).toBeGreaterThan(20);
-    },
-  );
+  await test.step('And the words show with the icons, on a phone too (#1070)', async () => {
+    // Six layer icons alone could not be told apart, as the viewpoints' could not (#953).
+    const word = page
+      .getByRole('button', { name: 'Temperature', exact: true })
+      .locator('.icon-label');
+    const box = await word.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThan(20);
+  });
 });
 
 test('the Layers rows, Layers, Explore, Full view and Famous eclipses wear icons too', async ({

@@ -42,6 +42,7 @@ import {
   createAirChip,
   createSeaLevelChip,
   createTemperatureChip,
+  layerDock,
   type SeaLevelView,
 } from './deepBarChips';
 import { createDeepIceNotes } from './deepIceNotes';
@@ -339,10 +340,7 @@ export function createDeepTimeBar(
       // Beside the moment, not the slider: on a phone the slider needs the whole row.
       speed,
       evidenceButton,
-      seaLevel.button,
-      temperature.button,
-      ...featureChips.buttons,
-      air.button,
+      layerDock(seaLevel.button, temperature.button, ...featureChips.buttons, air.button),
     ),
     details,
   );
