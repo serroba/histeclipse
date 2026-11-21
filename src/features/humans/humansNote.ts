@@ -8,6 +8,7 @@ import {
   SPECIES_NAMES,
   type ClaimLine,
   type HumanSpecies,
+  type HumansShown,
   type HumansView,
 } from '../../data/humanClaims';
 import type { RouteShown } from '../../data/humanRoutes';
@@ -33,9 +34,9 @@ function claim(line: ClaimLine): { class: string; parts: DeepNotePart[] } {
  */
 function legend(
   view: HumansView,
-  only: HumanSpecies | 'all',
+  only: HumansShown,
   about: (species: HumanSpecies) => void,
-  pickOnly: (species: HumanSpecies | 'all') => void,
+  pickOnly: (shown: HumansShown) => void,
 ): DeepNoteBlock[] {
   const shown = HUMAN_SPECIES.flatMap((species) => {
     const count = view.sites.filter((site) => site.species === species).length;
@@ -48,7 +49,9 @@ function legend(
           {
             class: 'humans-only',
             paragraph: [
-              `Showing only ${SPECIES_NAMES[only]}. `,
+              only === 'dna'
+                ? 'Showing only the finds and places with ancient DNA. '
+                : `Showing only ${SPECIES_NAMES[only]}. `,
               {
                 text: 'Show all species',
                 run: () => {
@@ -162,16 +165,48 @@ function mixing(
   ];
 }
 
-/** The ice-age DNA sites (#1059): how many places and people, by then. */
-function dnaLine(dna: { readonly places: number; readonly people: number }): DeepNoteBlock[] {
-  if (dna.places === 0) return [];
+const plural = (count: number, one: string, many: string) =>
+  `${String(count)} ${count === 1 ? one : many}`;
+
+/**
+ * Ancient DNA (#1059): the finds whose DNA has been read, the ice-age places of our species
+ * and their people by then, and a way to show only those, or all again.
+ */
+function dnaLine(
+  dna: { readonly places: number; readonly people: number },
+  finds: number,
+  only: HumansShown,
+  pickOnly: (shown: HumansShown) => void,
+): DeepNoteBlock[] {
+  if (dna.places === 0 && finds === 0) return [];
+  const told = [
+    ...(finds > 0 ? [`${plural(finds, 'find', 'finds')} with DNA read (marked DNA)`] : []),
+    ...(dna.places > 0
+      ? [
+          `${plural(dna.people, 'person', 'people')} of our species at ${plural(dna.places, 'place', 'places')} (◆, from the Allen Ancient DNA Resource)`,
+        ]
+      : []),
+  ];
   return [
     {
       list: [
         {
-          class: 'humans-legend is-dna',
+          class: `humans-legend is-dna${only === 'dna' ? ' is-only' : ''}`,
           parts: [
-            `Ancient DNA of our species: ${String(dna.people)} ${dna.people === 1 ? 'person' : 'people'} at ${String(dna.places)} ${dna.places === 1 ? 'place' : 'places'}, from the Allen Ancient DNA Resource. Tap one for who they were.`,
+            `Ancient DNA: ${told.join('; ')}. `,
+            only === 'dna'
+              ? {
+                  text: 'Show all',
+                  run: () => {
+                    pickOnly('all');
+                  },
+                }
+              : {
+                  text: 'Only these',
+                  run: () => {
+                    pickOnly('dna');
+                  },
+                },
           ],
         },
       ],
@@ -188,10 +223,10 @@ export function note(
   open: {
     species: (species: HumanSpecies) => void;
     route: (id: string) => void;
-    only: (species: HumanSpecies | 'all') => void;
+    only: (shown: HumansShown) => void;
     pick: (id: string) => void;
   },
-  only: HumanSpecies | 'all',
+  only: HumansShown,
   mixes: Parameters<typeof mixing>[0],
   story: () => void,
   dna: Parameters<typeof dnaLine>[0] = { places: 0, people: 0 },
@@ -222,11 +257,11 @@ export function note(
     },
     {
       paragraph: [
-        `Humans: ${String(only === 'all' ? view.sites.length : view.sites.filter((site) => site.species === only).length)} dated finds marked, each from its date on while its species is still found, as its source reports it; disputed ones in italics. Hand-picked, not complete. Tap a species for what it was.`,
+        `Humans: ${String(view.sites.filter((site) => only === 'all' || (only === 'dna' ? site.hasDna === true : site.species === only)).length)} dated finds marked, each from its date on while its species is still found, as its source reports it; disputed ones in italics. Hand-picked, not complete. Tap a species for what it was.`,
       ],
     },
     ...legend(view, only, open.species, open.only),
-    ...dnaLine(dna),
+    ...dnaLine(dna, view.sites.filter((site) => site.hasDna === true).length, only, open.only),
     ...routeList(routes, open.route),
     ...mixing(mixes, open.pick),
     ...view.questions.flatMap(({ title, claims }) => [

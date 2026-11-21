@@ -240,3 +240,15 @@
 .human-site.is-dna {
   font-weight: 500;
 }
+
+/* A find whose DNA has been read (#1059): a small badge after its name. */
+.human-site-dna {
+  padding: 0 3px;
+  border: 1px solid currentcolor;
+  border-radius: 3px;
+  font-size: 0.7em;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
+}

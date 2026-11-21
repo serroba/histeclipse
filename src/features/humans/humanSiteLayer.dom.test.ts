@@ -64,4 +64,18 @@ describe('the finds on the globe', () => {
     made.update([site('a'), site('z')]);
     expect(Object.values(classes()).some((name) => name.includes('is-new'))).toBe(false);
   });
+
+  it('Given a find whose DNA has been read, or a DNA place, Then the find has a badge and the place its mark; and either changing lays them out again', () => {
+    const { made, shown } = layer();
+    made.update([site('a'), { ...site('p'), dna: true }]);
+    made.update([
+      { ...site('a'), hasDna: true },
+      { ...site('p'), dna: true },
+    ]);
+    expect(shown).toHaveLength(2);
+    const [find, place] = shown.at(-1) ?? [];
+    expect(find?.element.querySelector('.human-site-dna')?.textContent).toBe('DNA');
+    expect(find?.element.textContent).toBe('a DNA');
+    expect(place?.element.className).toBe('empire-label human-site is-sapiens is-dna');
+  });
 });

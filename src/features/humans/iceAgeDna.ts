@@ -1,10 +1,10 @@
 /**
  * The ice-age DNA sites of the Humans layer (#1059): the AADR's people, gathered by place once
  * their file has come, marked from their oldest person's date on, and each place's card. Only
- * our own species: none while the reader shows only another.
+ * our own species: none while the reader shows only another; all while only DNA.
  */
 
-import type { HumanSite, HumanSpecies } from '../../data/humanClaims';
+import type { HumanSite, HumansShown } from '../../data/humanClaims';
 import {
   dnaCard,
   dnaPlaces,
@@ -16,7 +16,7 @@ import type { Lazy } from './lazy';
 
 export interface IceAgeDna {
   /** The DNA sites to mark `ka` thousand years ago, and how many people they hold by then. */
-  at(ka: number, only: HumanSpecies | 'all'): { sites: readonly HumanSite[]; people: number };
+  at(ka: number, only: HumansShown): { sites: readonly HumanSite[]; people: number };
   card(id: string): ReturnType<typeof dnaCard>;
 }
 
@@ -32,7 +32,8 @@ export function iceAgeDna(file: Lazy<IceAgeGenomes>): IceAgeDna {
     at(ka, only) {
       file.ask();
       const all = places();
-      if (all === null || (only !== 'all' && only !== 'sapiens')) return { sites: [], people: 0 };
+      const ours = only === 'all' || only === 'sapiens' || only === 'dna';
+      if (all === null || !ours) return { sites: [], people: 0 };
       const sites = dnaSitesAt(all, ka);
       const people = all
         .flatMap((place) => place.entries)

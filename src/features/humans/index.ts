@@ -13,7 +13,9 @@ import {
   loadHumanClaims,
   SPECIES_NAMES,
   type HumanClaims,
+  type HumanSite,
   type HumanSpecies,
+  type HumansShown,
 } from '../../data/humanClaims';
 import { loadHumanRoutes, routeCard, routesAt } from '../../data/humanRoutes';
 import { episodeCard, episodesAt, loadHumanAdmixture, traitCard } from '../../data/humanAdmixture';
@@ -32,6 +34,12 @@ import { note } from './humansNote';
 import { humanSiteLayer } from './humanSiteLayer';
 import { lazy } from './lazy';
 import { routeLayer } from './routeLayer';
+
+/** Whether a find shows, with every find, one species' or only those with DNA shown. */
+function shows(only: HumansShown, site: HumanSite): boolean {
+  if (only === 'all') return true;
+  return only === 'dna' ? site.hasDna === true : site.species === only;
+}
 
 /** A species' card is picked as `human:species-<id>`. */
 const SPECIES_PICK = 'species-';
@@ -93,7 +101,11 @@ export const humansFeature = feature({
     const routes = data('routes.json', 'the routes', loadHumanRoutes, refresh);
     const admixture = data('admixture.json', 'the interbreeding', loadHumanAdmixture, refresh);
     const pictures = data('pictures.json', 'the finds’ pictures', loadPictures, reshow);
-    const genomes = data('genomes.json', 'the ancient DNA', loadHumanGenomes, reshow);
+    // Its finds' DNA marks them on the globe (#1059) as well as on their cards.
+    const genomes = data('genomes.json', 'the ancient DNA', loadHumanGenomes, () => {
+      refresh();
+      reshow();
+    });
     const species = data('species.json', 'the human species', loadHumanSpecies, reshow);
     const dna = iceAgeDna(data('aadr-ice-age.json', 'the ice-age DNA', loadIceAgeGenomes, refresh));
 
@@ -272,6 +284,16 @@ export const humansFeature = feature({
       };
     }
 
+    /** The finds, those whose DNA has been read marked so (#1059), once it has loaded. */
+    function withDna(sites: readonly HumanSite[]): readonly HumanSite[] {
+      genomes.ask();
+      const read =
+        genomes.value === null ? null : new Set(genomes.value.genomes.map((g) => g.site));
+      return read === null
+        ? sites
+        : sites.map((site) => (read.has(site.id) ? { ...site, hasDna: true } : site));
+    }
+
     /** What the layer draws and says at `ka` thousand years ago, its finds loaded. */
     function drawn(state: ViewState, ka: number, model: DispersalShown, finds: HumanClaims) {
       routes.ask();
@@ -281,14 +303,15 @@ export const humansFeature = feature({
       // One species only, if the reader asked (#1047).
       const only = state.humanSpecies;
       const ancient = dna.at(ka, only);
+      const marked = withDna(view.sites);
       sitesOnGlobe.update([
-        ...(only === 'all' ? view.sites : view.sites.filter((site) => site.species === only)),
+        ...marked.filter((site) => shows(only, site)),
         // After the finds, so where names crowd the finds keep theirs.
         ...ancient.sites,
       ]);
       routesOnGlobe.update(routesNow);
       return note(
-        view,
+        { ...view, sites: marked },
         routesNow,
         model,
         pickModel,

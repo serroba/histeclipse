@@ -140,7 +140,12 @@ export interface HumanSite {
   readonly disputed: boolean;
   /** An ice-age DNA site of the AADR's (#1059), not a find. */
   readonly dna?: boolean;
+  /** A find whose ancient DNA has been read (#1059). */
+  readonly hasDna?: boolean;
 }
+
+/** What Humans shows (#1047, #1059): every find, one species', or those with ancient DNA. */
+export type HumansShown = HumanSpecies | 'all' | 'dna';
 
 /** A claim as the note gives it: what, when, and whose. */
 export interface ClaimLine {

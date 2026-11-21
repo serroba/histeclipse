@@ -128,10 +128,11 @@ async function loaded(context: FeatureContext<Capability>, refresh: ReturnType<t
   await vi.waitFor(() => {
     expect(refresh).toHaveBeenCalled();
   });
-  // Then the routes, the interbreeding and the ice-age DNA, asked for once the finds are in.
+  // Then the routes, the interbreeding, the finds' DNA and the ice-age DNA, asked for once the
+  // finds are in.
   shown.deep?.(on, ICE);
   await vi.waitFor(() => {
-    expect(refresh).toHaveBeenCalledTimes(4);
+    expect(refresh).toHaveBeenCalledTimes(5);
   });
   return shown;
 }
@@ -200,7 +201,7 @@ describe('the humans as a feature', () => {
     expect(withModel.dispersal).toBe('a');
     expect(words(shown.deep?.(withModel, ICE))).toMatch(/Loading the model…/);
     await vi.waitFor(() => {
-      expect(refresh).toHaveBeenCalledTimes(5);
+      expect(refresh).toHaveBeenCalledTimes(6);
     });
     expect(words(shown.deep?.(withModel, ICE))).toMatch(
       /model, early exit from Africa \(scenario A\), has people settled by then: 50% of the land/,
@@ -215,14 +216,14 @@ describe('the humans as a feature', () => {
     if (id === undefined) throw new Error('no find with a species');
     shown.pick?.(id);
     expect(cards).toHaveLength(1);
-    // Again once its picture loads, and again with its ancient DNA.
+    // Again once its picture loads (its DNA came with the layer, to mark the finds).
     await vi.waitFor(() => {
-      expect(cards).toHaveLength(3);
+      expect(cards).toHaveLength(2);
     });
     cards.at(-1)?.action?.run();
     expect(openTree).toHaveBeenCalledTimes(1);
     shown.pick?.('no-such-find');
-    expect(cards).toHaveLength(3);
+    expect(cards).toHaveLength(2);
   });
 
   it('offers our species on the tree of life from its row in the Layers panel', () => {
@@ -496,7 +497,9 @@ describe('the humans as a feature', () => {
     const view = shown.deep?.(at(30), moment(30));
     const sunghir = dnaSites().find((site) => site.id === 'dna-sunghir-russia');
     expect(sunghir?.label).toBe('Sunghir DNA 33.2–34.6 ka');
-    expect(words(view)).toMatch(/Ancient DNA of our species: \d+ people at \d+ places/);
+    expect(words(view)).toMatch(
+      /Ancient DNA: \d+ finds with DNA read \(marked DNA\); \d+ people of our species at \d+ places/,
+    );
     shown.pick?.('dna-sunghir-russia');
     const card = cards.at(-1);
     expect(card?.title).toBe('Ancient DNA: Sunghir, Russia');
@@ -511,6 +514,44 @@ describe('the humans as a feature', () => {
     const before = cards.length;
     shown.pick?.('dna-nowhere');
     expect(cards).toHaveLength(before);
+  });
+
+  it('marks the finds with DNA, and shows only those and the DNA places when asked (#1059)', async () => {
+    const { context, refresh, change, drawn } = fakeContext();
+    const shown = await loaded(context, refresh);
+    const at = { ...on, ma: 0.03 };
+    const moment = { ma: 0.03, scale: 'ice' } as const;
+    const view = shown.deep?.(at, moment);
+    interface Site {
+      id: string;
+      hasDna?: boolean;
+      dna?: boolean;
+    }
+    const sites = () => drawn.at(-1) as readonly Site[];
+    expect(sites().find((site) => site.id === 'vindija')?.hasDna).toBe(true);
+    expect(sites().some((site) => site.hasDna !== true && site.dna !== true)).toBe(true);
+    const row = (view?.note ?? [])
+      .flatMap((block) => (typeof block === 'object' && 'list' in block ? block.list : []))
+      .find((item) => item.class.startsWith('humans-legend is-dna'));
+    const onlyThese = row?.parts[1];
+    if (typeof onlyThese !== 'object' || !('run' in onlyThese)) throw new Error('no toggle');
+    expect(onlyThese.text).toBe('Only these');
+    onlyThese.run();
+    const update = change.mock.calls.at(-1)?.[0] as (state: ViewState) => ViewState;
+    const filtered = update(at);
+    expect(filtered.humanSpecies).toBe('dna');
+    const only = shown.deep?.(filtered, moment);
+    expect(sites().length).toBeGreaterThan(10);
+    expect(sites().every((site) => site.hasDna === true || site.dna === true)).toBe(true);
+    expect(words(only)).toMatch(/Showing only the finds and places with ancient DNA\./);
+    const back = (only?.note ?? [])
+      .flatMap((block) => (typeof block === 'object' && 'list' in block ? block.list : []))
+      .find((item) => item.class === 'humans-legend is-dna is-only')?.parts[1];
+    if (typeof back !== 'object' || !('run' in back)) throw new Error('no way back');
+    expect(back.text).toBe('Show all');
+    back.run();
+    const again = change.mock.calls.at(-1)?.[0] as (state: ViewState) => ViewState;
+    expect(again(filtered).humanSpecies).toBe('all');
   });
 
   it('says so when the species cannot be loaded', async () => {
