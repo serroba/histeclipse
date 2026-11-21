@@ -27,17 +27,43 @@ function claim(line: ClaimLine): { class: string; parts: DeepNotePart[] } {
   };
 }
 
-/** The species marked, in order of their arrival, each with its count and a way to its card. */
-function legend(view: HumansView, about: (species: HumanSpecies) => void): DeepNoteBlock[] {
+/**
+ * The species marked, in order of their arrival, each with its count, a way to its card, and a
+ * way to show only it (#1047), or all again.
+ */
+function legend(
+  view: HumansView,
+  only: HumanSpecies | 'all',
+  about: (species: HumanSpecies) => void,
+  pickOnly: (species: HumanSpecies | 'all') => void,
+): DeepNoteBlock[] {
   const shown = HUMAN_SPECIES.flatMap((species) => {
     const count = view.sites.filter((site) => site.species === species).length;
     return count === 0 ? [] : [{ species, count }];
   });
-  if (shown.length === 0) return [];
+  const showingOnly: DeepNoteBlock[] =
+    only === 'all'
+      ? []
+      : [
+          {
+            class: 'humans-only',
+            paragraph: [
+              `Showing only ${SPECIES_NAMES[only]}. `,
+              {
+                text: 'Show all species',
+                run: () => {
+                  pickOnly('all');
+                },
+              },
+            ],
+          },
+        ];
+  if (shown.length === 0) return showingOnly;
   return [
+    ...showingOnly,
     {
       list: shown.map(({ species, count }) => ({
-        class: `humans-legend is-${species}`,
+        class: `humans-legend is-${species}${only === species ? ' is-only' : ''}`,
         parts: [
           {
             text: SPECIES_NAMES[species],
@@ -45,7 +71,20 @@ function legend(view: HumansView, about: (species: HumanSpecies) => void): DeepN
               about(species);
             },
           },
-          ` ${String(count)} ${count === 1 ? 'find' : 'finds'}`,
+          ` ${String(count)} ${count === 1 ? 'find' : 'finds'} `,
+          only === species
+            ? {
+                text: 'Show all',
+                run: () => {
+                  pickOnly('all');
+                },
+              }
+            : {
+                text: 'Only these',
+                run: () => {
+                  pickOnly(species);
+                },
+              },
         ],
       })),
     },
@@ -84,7 +123,12 @@ export function note(
   routes: readonly RouteShown[],
   model: DispersalShown,
   pick: (value: string) => void,
-  open: { species: (species: HumanSpecies) => void; route: (id: string) => void },
+  open: {
+    species: (species: HumanSpecies) => void;
+    route: (id: string) => void;
+    only: (species: HumanSpecies | 'all') => void;
+  },
+  only: HumanSpecies | 'all',
   story: () => void,
 ): DeepNoteBlock[] {
   return [
@@ -113,10 +157,10 @@ export function note(
     },
     {
       paragraph: [
-        `Humans: ${String(view.sites.length)} dated finds marked, each from its date on while its species is still found, as its source reports it; disputed ones in italics. Hand-picked, not complete. Tap a species for what it was.`,
+        `Humans: ${String(only === 'all' ? view.sites.length : view.sites.filter((site) => site.species === only).length)} dated finds marked, each from its date on while its species is still found, as its source reports it; disputed ones in italics. Hand-picked, not complete. Tap a species for what it was.`,
       ],
     },
-    ...legend(view, open.species),
+    ...legend(view, only, open.species, open.only),
     ...routeList(routes, open.route),
     ...view.questions.flatMap(({ title, claims }) => [
       { class: 'humans-question', paragraph: [title] },

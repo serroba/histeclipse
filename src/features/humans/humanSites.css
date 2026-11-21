@@ -224,3 +224,8 @@
 .humans-story .deep-note-go:focus-visible {
   background: rgb(247 201 90 / 0.26);
 }
+
+/* The one species shown, when the reader asked for only it (#1047). */
+.humans-legend.is-only {
+  font-weight: 700;
+}

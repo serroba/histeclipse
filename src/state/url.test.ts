@@ -1,3 +1,4 @@
+import { HUMAN_SPECIES } from '../data/humanClaims';
 import { WHY_VIEWS } from '../sources/registry';
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
@@ -89,6 +90,7 @@ describe('parseViewState', () => {
       coast: 'bintanja-2008',
       dispersal: 'off',
       story: 'off',
+      humanSpecies: 'all',
       seaIce: 'mpi-esm1-2-lr',
       temperatureModel: 'krapp',
       temperatureShow: 'change',
@@ -240,6 +242,17 @@ describe('parseViewState', () => {
       'seaice=miroc-es2l',
     );
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('seaice');
+  });
+
+  it('reads one Homo species to show with Humans, writing it only when one is picked (#1047)', () => {
+    expect(parseViewState('species=neanderthal', NOW).state.humanSpecies).toBe('neanderthal');
+    expect(serializeViewState(parseViewState('species=erectus', NOW).state)).toContain(
+      'species=erectus',
+    );
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('species');
+    expect(parseViewState('species=martian', NOW).warnings[0]).toMatch(
+      /^Ignored species="martian"/,
+    );
   });
 
   it('reads a story to play on opening, writing it only while one is asked for (#177)', () => {
@@ -632,6 +645,7 @@ describe('serializeViewState', () => {
     coast: fc.constantFrom(...COAST_SOURCES),
     dispersal: fc.constantFrom(...DISPERSAL_SCENARIOS),
     story: fc.constantFrom('off' as const, 'humans' as const),
+    humanSpecies: fc.constantFrom('all' as const, ...HUMAN_SPECIES),
     seaIce: fc.constantFrom(...SEA_ICE_MODELS),
     temperatureModel: fc.constantFrom(...TEMPERATURE_MODELS),
     temperatureShow: fc.constantFrom(...TEMPERATURE_SHOWS),

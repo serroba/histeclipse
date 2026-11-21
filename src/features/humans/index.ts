@@ -259,7 +259,11 @@ export const humansFeature = feature({
         }
         const view = humansAt(claims, moment.ma * 1000);
         const routesNow = routes === null ? [] : routesAt(routes, moment.ma * 1000);
-        sitesOnGlobe.update(view.sites);
+        // One species only, if the reader asked (#1047).
+        const only = state.humanSpecies;
+        sitesOnGlobe.update(
+          only === 'all' ? view.sites : view.sites.filter((site) => site.species === only),
+        );
         routesOnGlobe.update(routesNow);
         return {
           offered,
@@ -276,7 +280,11 @@ export const humansFeature = feature({
               route: (id) => {
                 show(`${ROUTE_PICK}${id}`);
               },
+              only: (species) => {
+                context.change((now) => ({ ...now, humanSpecies: species }));
+              },
             },
+            only,
             playStory,
           ),
         };

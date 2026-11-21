@@ -373,6 +373,41 @@ describe('the humans as a feature', () => {
     });
   });
 
+  it('shows only one species when asked from the legend, and all again (#1047)', async () => {
+    const { context, refresh, change, drawn } = fakeContext();
+    const shown = await loaded(context, refresh);
+    const items = (view: ReturnType<NonNullable<typeof shown.deep>> | undefined) =>
+      (view?.note ?? []).flatMap((block) =>
+        typeof block === 'object' && 'list' in block
+          ? block.list.filter((item) => item.class.startsWith('humans-legend'))
+          : [],
+      );
+    const at = { ...on, ma: 0.045 };
+    const moment = { ma: 0.045, scale: 'ice' } as const;
+    const sapiens = items(shown.deep?.(at, moment)).find((item) =>
+      item.class.endsWith('is-sapiens'),
+    );
+    const onlyThese = sapiens?.parts[2];
+    if (typeof onlyThese !== 'object' || !('run' in onlyThese)) throw new Error('no toggle');
+    expect(onlyThese.text).toBe('Only these');
+    onlyThese.run();
+    const update = change.mock.calls.at(-1)?.[0] as (state: ViewState) => ViewState;
+    const filtered = update(at);
+    expect(filtered.humanSpecies).toBe('sapiens');
+    // Only that species is marked, and the note says so, with a way back.
+    const view = shown.deep?.(filtered, moment);
+    const sites = drawn.at(-1) as readonly { species: string }[];
+    expect(sites.length).toBeGreaterThan(0);
+    expect(sites.every((site) => site.species === 'sapiens')).toBe(true);
+    expect(words(view)).toMatch(/Showing only Homo sapiens\. Show all species/);
+    const back = items(view).find((item) => item.class.includes('is-only'))?.parts[2];
+    if (typeof back !== 'object' || !('run' in back)) throw new Error('no way back');
+    expect(back.text).toBe('Show all');
+    back.run();
+    const again = change.mock.calls.at(-1)?.[0] as (state: ViewState) => ViewState;
+    expect(again(filtered).humanSpecies).toBe('all');
+  });
+
   it('says so when the species cannot be loaded', async () => {
     const { context, refresh, notify } = fakeContext({ missing: 'species.json' });
     const shown = await loaded(context, refresh);

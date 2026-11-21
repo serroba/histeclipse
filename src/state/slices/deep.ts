@@ -10,6 +10,8 @@
  *   globe follows, and whether the temperature shows the change from today or °C.
  * - `dispersal` shades Timmermann & Friedrich's dispersal model with Humans: `off` (absent),
  *   `a` or `b`.
+ * - `species` shows only one Homo species' finds with Humans (#1047): `all` (absent), or a
+ *   species, such as `neanderthal`.
  * - `story=humans` plays the human story once on opening (#177): the link a reader shares, or
  *   Explore's, to watch it; it leaves the address as soon as it starts.
  * - `impact`, `land` and `snowball` pick the hypotheses the deep-time globe sketches before
@@ -39,6 +41,7 @@ import {
   type TemperatureModel,
   type TemperatureShow,
 } from '../../deepTime/temperatureModels';
+import { HUMAN_SPECIES, type HumanSpecies } from '../../data/humanClaims';
 import { choice, type Params } from '../slice';
 
 /** Timmermann & Friedrich's dispersal model: off, or the early or the late exit from Africa. */
@@ -60,6 +63,8 @@ export interface DeepState {
   readonly coast: CoastSource;
   /** Timmermann & Friedrich's dispersal model shaded with Humans: off, early or late exit. */
   readonly dispersal: DispersalScenario;
+  /** The one Homo species whose finds Humans shows, or all of them. */
+  readonly humanSpecies: HumanSpecies | 'all';
   /** A story to play on opening, asked for by a link; off once it starts. */
   readonly story: Story;
   /** Which climate model's ice-age sea ice the globe blends towards. */
@@ -79,6 +84,7 @@ export const DEEP_DEFAULTS: DeepState = {
   deepScale: 'all',
   coast: DEFAULT_COAST,
   dispersal: 'off',
+  humanSpecies: 'all',
   story: 'off',
   seaIce: DEFAULT_SEA_ICE_MODEL,
   temperatureModel: DEFAULT_TEMPERATURE_MODEL,
@@ -98,6 +104,7 @@ export const DEEP_PARAMS: Params<DeepState> = {
   deepScale: choice('scale', DEEP_SCALES, DEEP_DEFAULTS.deepScale),
   coast: choice('coast', COAST_SOURCES, DEEP_DEFAULTS.coast),
   dispersal: choice('dispersal', DISPERSAL_SCENARIOS, DEEP_DEFAULTS.dispersal),
+  humanSpecies: choice('species', ['all', ...HUMAN_SPECIES] as const, DEEP_DEFAULTS.humanSpecies),
   story: choice('story', STORIES, DEEP_DEFAULTS.story),
   seaIce: choice('seaice', SEA_ICE_MODELS, DEEP_DEFAULTS.seaIce),
   temperatureModel: choice('temp', TEMPERATURE_MODELS, DEEP_DEFAULTS.temperatureModel),
