@@ -10,6 +10,8 @@
  *   globe follows, and whether the temperature shows the change from today or °C.
  * - `dispersal` shades Timmermann & Friedrich's dispersal model with Humans: `off` (absent),
  *   `a` or `b`.
+ * - `story=humans` plays the human story once on opening (#177): the link a reader shares, or
+ *   Explore's, to watch it; it leaves the address as soon as it starts.
  * - `impact`, `land` and `snowball` pick the hypotheses the deep-time globe sketches before
  *   the reconstructions reach: when the Moon-forming impact struck, how much of the surface
  *   was land, and how far a snowball's ice reached. Absent means the first of each.
@@ -43,6 +45,10 @@ import { choice, type Params } from '../slice';
 export const DISPERSAL_SCENARIOS = ['off', 'a', 'b'] as const;
 export type DispersalScenario = (typeof DISPERSAL_SCENARIOS)[number];
 
+/** A story told by playing deep time, started by a link: none, or the human story (#177). */
+const STORIES = ['off', 'humans'] as const;
+type Story = (typeof STORIES)[number];
+
 const MA_RANGE = { min: 0, max: EARTH_AGE_MA } as const;
 
 export interface DeepState {
@@ -54,6 +60,8 @@ export interface DeepState {
   readonly coast: CoastSource;
   /** Timmermann & Friedrich's dispersal model shaded with Humans: off, early or late exit. */
   readonly dispersal: DispersalScenario;
+  /** A story to play on opening, asked for by a link; off once it starts. */
+  readonly story: Story;
   /** Which climate model's ice-age sea ice the globe blends towards. */
   readonly seaIce: SeaIceModel;
   /** Whose temperature maps colour the deep-time globe. */
@@ -71,6 +79,7 @@ export const DEEP_DEFAULTS: DeepState = {
   deepScale: 'all',
   coast: DEFAULT_COAST,
   dispersal: 'off',
+  story: 'off',
   seaIce: DEFAULT_SEA_ICE_MODEL,
   temperatureModel: DEFAULT_TEMPERATURE_MODEL,
   temperatureShow: DEFAULT_TEMPERATURE_SHOW,
@@ -89,6 +98,7 @@ export const DEEP_PARAMS: Params<DeepState> = {
   deepScale: choice('scale', DEEP_SCALES, DEEP_DEFAULTS.deepScale),
   coast: choice('coast', COAST_SOURCES, DEEP_DEFAULTS.coast),
   dispersal: choice('dispersal', DISPERSAL_SCENARIOS, DEEP_DEFAULTS.dispersal),
+  story: choice('story', STORIES, DEEP_DEFAULTS.story),
   seaIce: choice('seaice', SEA_ICE_MODELS, DEEP_DEFAULTS.seaIce),
   temperatureModel: choice('temp', TEMPERATURE_MODELS, DEEP_DEFAULTS.temperatureModel),
   temperatureShow: choice('tshow', TEMPERATURE_SHOWS, DEEP_DEFAULTS.temperatureShow),

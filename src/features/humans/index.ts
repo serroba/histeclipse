@@ -65,9 +65,12 @@ export const humansFeature = feature({
     let dispersalOn = false;
 
     /** Plays the human story: Humans and a dispersal model on, facing Africa, from 315 ka. */
+    let storyStarting = false;
+
     function playStory(): void {
       context.change((state) => ({
         ...state,
+        story: 'off',
         layers: withLayer(state.layers, 'humans', true),
         dispersal: state.dispersal === 'off' ? 'a' : state.dispersal,
         camera: STORY.camera,
@@ -204,6 +207,14 @@ export const humansFeature = feature({
         },
       }),
       deep(state, moment) {
+        // A link asked for the story (#177): play it once, after this drawing, which ends the ask.
+        if (state.story === 'humans' && !storyStarting) {
+          storyStarting = true;
+          queueMicrotask(() => {
+            storyStarting = false;
+            playStory();
+          });
+        }
         dispersalOn = state.dispersal !== 'off';
         // People are a matter of the last few hundred thousand years: the ice-age scale's.
         const on = state.deepScale === 'ice' && state.layers.has('humans');

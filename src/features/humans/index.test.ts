@@ -356,6 +356,23 @@ describe('the humans as a feature', () => {
     expect(update({ ...on, dispersal: 'b' }).dispersal).toBe('b');
   });
 
+  it('plays the human story once when a link asks for it, and the ask leaves the address', async () => {
+    const { context, change, play } = fakeContext();
+    const shown = humansFeature.mount(context, context);
+    shown.deep?.({ ...on, story: 'humans' }, ICE);
+    shown.deep?.({ ...on, story: 'humans' }, ICE);
+    await vi.waitFor(() => {
+      expect(play).toHaveBeenCalledTimes(1);
+    });
+    const update = change.mock.calls.at(-1)?.[0] as (state: ViewState) => ViewState;
+    expect(update({ ...on, story: 'humans' }).story).toBe('off');
+    // Asked from the years too, where nothing of deep time is shown yet.
+    shown.deep?.({ ...base, story: 'humans' }, null);
+    await vi.waitFor(() => {
+      expect(play).toHaveBeenCalledTimes(2);
+    });
+  });
+
   it('says so when the species cannot be loaded', async () => {
     const { context, refresh, notify } = fakeContext({ missing: 'species.json' });
     const shown = await loaded(context, refresh);

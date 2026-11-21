@@ -20,10 +20,13 @@
   margin: 0 0 4px;
 }
 
-/* A jump the note offers (#948): a link's look, a button's job. */
+/* A jump the note offers (#948): a link's look, a button's job; 44 px tall to tap on a phone. */
 .deep-note-go {
-  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   padding: 0 4px;
+  vertical-align: middle;
   border: 0;
   background: transparent;
   color: #9ec5ff;

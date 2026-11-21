@@ -270,6 +270,13 @@ test('one tap plays the human story from the earliest Homo sapiens (#177)', asyn
     await globeRendered(page);
     await showDeepDetails(page);
   });
+  await test.step('Then its button is big enough to tap on a phone', async () => {
+    const box = await page
+      .getByTestId('humans-note')
+      .getByRole('button', { name: '▶ Play the human story' })
+      .boundingBox();
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+  });
   await test.step('When they tap Play the human story', async () => {
     await page
       .getByTestId('humans-note')
@@ -285,6 +292,29 @@ test('one tap plays the human story from the earliest Homo sapiens (#177)', asyn
     await expect
       .poll(() => Number(new URL(page.url()).searchParams.get('ma')))
       .toBeGreaterThan(0.2);
+  });
+  expect(problems).toEqual([]);
+});
+
+test('Explore offers the human story, and its link plays it once (#177)', async ({ page }) => {
+  const problems = collectProblems(page);
+  await test.step('Given today on the globe', async () => {
+    await page.goto('./?t=2026-01-01T12:00Z&cam=0,0,3');
+    await globeRendered(page);
+  });
+  await test.step('When they open Explore, choose People and The human story', async () => {
+    await page.getByRole('button', { name: 'Explore' }).click();
+    const panel = page.getByRole('dialog', { name: 'Explore' });
+    await panel.getByRole('tab', { name: 'People' }).click();
+    await panel.getByRole('button', { name: 'The human story', exact: true }).click();
+  });
+  await test.step('Then the story plays from 315,000 years ago, and the ask leaves the address', async () => {
+    await expect(page).toHaveURL(/explore=human-story/);
+    await expect(page).toHaveURL(/dispersal=a/);
+    await expect
+      .poll(() => Number(new URL(page.url()).searchParams.get('ma')), { timeout: 15_000 })
+      .toBeLessThan(0.315);
+    await expect(page).not.toHaveURL(/story=humans/);
   });
   expect(problems).toEqual([]);
 });

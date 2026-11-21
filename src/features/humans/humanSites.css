@@ -205,3 +205,22 @@
 
   list-style: none;
 }
+
+/* The human story's button (#177): a pill of its own at the top of the note, easy to find and
+   to tap, with what it plays beside it. */
+.humans-story .deep-note-go {
+  min-width: 44px;
+  margin: 4px 8px 4px 0;
+  padding: 0 16px;
+  border: 1px solid rgb(247 201 90 / 0.8);
+  border-radius: 22px;
+  background: rgb(247 201 90 / 0.14);
+  color: rgb(255 226 150);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.humans-story .deep-note-go:hover,
+.humans-story .deep-note-go:focus-visible {
+  background: rgb(247 201 90 / 0.26);
+}
