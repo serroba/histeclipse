@@ -5,7 +5,7 @@ import { defaultViewState, withLayer, type ViewState } from '../../state/viewSta
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
 import type { MarkerCardContent } from '../../ui/markerCard';
-import { RESTING, type Capability, type FeatureContext } from '../feature';
+import type { Capability, FeatureContext } from '../feature';
 import { genomesFeature } from '.';
 
 const off = defaultViewState(new Date('2026-01-01T00:00:00Z'));
@@ -49,12 +49,21 @@ describe('the ancient genomes as a feature', () => {
     expect(shown.said?.()).toBeNull();
   });
 
-  it('rests while the reader travels through the years', () => {
-    const { context, drawn } = fakeContext({ travelling: true });
+  it('stays on the globe while the reader travels through the years, not resting', async () => {
+    const { context, drawn, refresh } = fakeContext({ travelling: true });
     const shown = genomesFeature.mount(context, context);
     shown.show?.(bronzeAge, JD);
-    expect(drawn).toEqual([null]);
-    expect(shown.said?.()).toBe(RESTING);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalledTimes(1);
+    });
+    shown.show?.(bronzeAge, JD);
+    const cells = drawn.at(-1) as readonly unknown[] | null;
+    expect(cells?.length).toBeGreaterThan(10);
+    expect(shown.said?.()).toMatch(/genomes dated/);
+    // The next year, at once, waits for its turn rather than drawing every frame.
+    const before = drawn.length;
+    shown.show?.({ ...bronzeAge, time: moveToYear(bronzeAge.time, astronomicalYear(-2400)) }, JD);
+    expect(drawn).toHaveLength(before);
   });
 
   it('loads once, then counts the genomes near the year by region, each to tap', async () => {

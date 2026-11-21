@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
-import { RESTING, type Capability, type FeatureContext } from '../feature';
+import type { Capability, FeatureContext } from '../feature';
 import { datesFeature } from '.';
 
 const start = defaultViewState(new Date('2026-01-01T00:00:00Z'));
@@ -74,14 +74,20 @@ describe('the radiocarbon dates as a feature', () => {
     expect(fetchJson).not.toHaveBeenCalled();
   });
 
-  it('rests while the reader travels through the years', () => {
-    const { context, travelling, update, fetchJson } = fakeContext();
+  it('stays on the globe while the reader travels through the years, asking for no place', async () => {
+    const { context, travelling, update, fetchJson, refresh } = fakeContext();
     travelling.mockReturnValue(true);
     const shown = datesFeature.mount(context, context);
-    shown.show?.(on, JD);
-    expect(shown.said?.()).toBe(RESTING);
-    expect(update).toHaveBeenLastCalledWith(null);
-    expect(fetchJson).not.toHaveBeenCalled();
+    shown.show?.(england, JD);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    shown.show?.(england, JD);
+    expect(update).toHaveBeenLastCalledWith(
+      expect.objectContaining({ cells: expect.any(Array) as unknown }),
+    );
+    // The heat map only: a place's own dates wait until the years stand.
+    expect(fetchJson).toHaveBeenCalledTimes(1);
   });
 
   it('says it is loading, once, then shades the squares of the step and asks for a place', async () => {

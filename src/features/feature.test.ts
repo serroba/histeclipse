@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { feature, type Capabilities, type FeatureCore } from './feature';
+import {
+  feature,
+  travelPace,
+  TRAVEL_REDRAW_MS,
+  type Capabilities,
+  type FeatureCore,
+} from './feature';
 
 const core = {
   base: '/',
@@ -60,5 +66,33 @@ describe('a feature and what it asks for', () => {
     const instance = { said: () => 'here' };
     const made = feature({ id: 'genomes', needs: [], watches: () => [], mount: () => instance });
     expect(made.mount(core, capabilities)).toBe(instance);
+  });
+});
+
+describe('a layer drawn from the year, while the years play', () => {
+  it('draws whenever time stands, and while it plays at most every TRAVEL_REDRAW_MS, then once more late', () => {
+    let at = 0;
+    const scheduled: { run: () => void; ms: number }[] = [];
+    const late = vi.fn();
+    const pace = travelPace(
+      late,
+      () => at,
+      (run, ms) => scheduled.push({ run, ms }),
+    );
+    expect(pace.due(false)).toBe(true);
+    expect(pace.due(true)).toBe(true);
+    at = 100;
+    expect(pace.due(true)).toBe(false);
+    at = 200;
+    expect(pace.due(true)).toBe(false);
+    // One late draw asked for, when the wait is over.
+    expect(scheduled.map((each) => each.ms)).toEqual([TRAVEL_REDRAW_MS - 100]);
+    scheduled[0]?.run();
+    expect(late).toHaveBeenCalledTimes(1);
+    at = TRAVEL_REDRAW_MS;
+    expect(pace.due(true)).toBe(true);
+    // Time standing draws at once, whatever the pace.
+    at = TRAVEL_REDRAW_MS + 1;
+    expect(pace.due(false)).toBe(true);
   });
 });

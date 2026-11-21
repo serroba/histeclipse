@@ -4,7 +4,7 @@
  * there was found. The counts load with the layer, a place's tile when it is picked.
  */
 
-import { feature, RESTING, type FeatureContext, type LayerAction } from '../feature';
+import { feature, travelPace, type FeatureContext, type LayerAction } from '../feature';
 import type { Fetch } from '../../util/fetchJson';
 import { dateCellsLayer } from '../../globe/historyPaintLayers';
 import {
@@ -83,6 +83,27 @@ function foundHere(
   };
 }
 
+/** The heat map of dated squares, loaded once when first asked for; null until it arrives. */
+function heatFrom(base: string, fetchJson: Fetch, context: FeatureContext): () => DatesHeat | null {
+  let heat: DatesHeat | null = null;
+  let loading = false;
+  return () => {
+    if (heat !== null || loading) return heat;
+    loading = true;
+    loadDatesHeat(`${base}data/radiocarbon-dates/heat.json`, fetchJson).then(
+      (loaded) => {
+        heat = loaded;
+        context.refresh();
+      },
+      (error: unknown) => {
+        loading = false;
+        context.notify(`Could not load the radiocarbon dates: ${errorMessage(error)}`);
+      },
+    );
+    return null;
+  };
+}
+
 export const datesFeature = feature({
   id: 'dates',
   needs: ['timeline', 'radiocarbon', 'datingCard'],
@@ -90,8 +111,7 @@ export const datesFeature = feature({
   mount(context) {
     const { base, fetchJson } = context;
     const datesOnGlobe = context.globe.addLayer(dateCellsLayer);
-    let datesHeat: DatesHeat | null = null;
-    let datesHeatLoading: Promise<DatesHeat> | null = null;
+    const heatNow = heatFrom(base, fetchJson, context);
     const datesTile = tilesFrom(base, fetchJson);
     let datesSaid: string | null = null;
     let datesAction: LayerAction | null = null;
@@ -100,46 +120,49 @@ export const datesFeature = feature({
     // The year whose squares are on the globe: painting them is slow.
     let near: { readonly year: number; readonly at: DatesNear | null } | null = null;
     let found: Found | null = null;
+    // While the years play, drawn a couple of times a second, not every frame (and not rested).
+    const pace = travelPace(() => {
+      context.refresh();
+    });
 
     /** In historical time with the layer on: the squares with dates, and the place's, if picked. */
     function showDates(state: ViewState): void {
       latest = state;
       const on = state.layers.has('dates') && state.ma === null;
       datesAction = null;
-      if (!on || context.timeline.travelling()) {
-        datesSaid = on ? RESTING : null;
+      if (!on) {
+        datesSaid = null;
         near = null;
         datesOnGlobe.update(null);
         return;
       }
-      if (datesHeat === null) {
+      const travelling = context.timeline.travelling();
+      const heat = heatNow();
+      if (heat === null) {
         datesSaid = 'Loading the radiocarbon dates…';
-        if (datesHeatLoading === null) {
-          datesHeatLoading = loadDatesHeat(`${base}data/radiocarbon-dates/heat.json`, fetchJson);
-          datesHeatLoading.then(
-            (loaded) => {
-              datesHeat = loaded;
-              context.refresh();
-            },
-            (error: unknown) => {
-              datesHeatLoading = null;
-              context.notify(`Could not load the radiocarbon dates: ${errorMessage(error)}`);
-            },
-          );
-        }
         return;
       }
-      const heat = datesHeat;
       const year = state.time.date.year;
-      if (near?.year !== year) {
+      if (near?.year !== year && pace.due(travelling)) {
         near = { year, at: datesNear(heat, year) };
         datesOnGlobe.update(
           near.at === null ? null : { cells: near.at.cells, cellDegrees: heat.cellDegrees },
         );
       }
+      if (near === null) return;
       const nearNow = near.at;
       datesSaid = datesNote(nearNow, null);
-      const place = state.location;
+      // A place's own dates are asked for once the years stand.
+      if (!travelling) showPlace(state.location, heat, year, nearNow);
+    }
+
+    /** The picked place's own dates for the year, found once and said again after. */
+    function showPlace(
+      place: ViewState['location'],
+      heat: DatesHeat,
+      year: number,
+      nearNow: DatesNear | null,
+    ): void {
       if (place === null || nearNow === null) return;
       // The place's dates already found for this year: said again, not asked for again.
       if (found?.place === place && found.year === year) {
