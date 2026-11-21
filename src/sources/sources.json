@@ -873,11 +873,23 @@
     "cite": "Hugonnet, R., McNabb, R., Berthier, E., Menounos, B., Nuth, C., Girod, L., Farinotti, D., Huss, M., Dussaillant, I., Brun, F., Kääb, A. (2021), Accelerated global glacier mass loss in the early twenty-first century, Nature 592, 726–731; its regional five-year elevation changes, 2000–2020, as submitted to GlaMBIE",
     "url": "https://doi.org/10.1038/s41586-021-03436-z"
   },
+  "humanAdmixture": {
+    "name": "The site’s interbreeding list",
+    "kind": "dataset",
+    "cite": "Episodes of interbreeding among Neanderthals, Denisovans and our species that genomes show, with competing estimates side by side and evidence for and against; and what living people carry from them; compiled for this site",
+    "url": "https://github.com/serroba/histeclipse/blob/main/public/data/humans/admixture.json"
+  },
   "humanFinds": {
     "name": "The site’s list of finds",
     "kind": "dataset",
     "cite": "Dated finds of our species and its relatives, each with the paper that dates it, and rival dates side by side; compiled for this site",
     "url": "https://github.com/serroba/histeclipse/blob/main/public/data/humans/claims.json"
+  },
+  "humanGenomes": {
+    "name": "The site’s ancient DNA list",
+    "kind": "dataset",
+    "cite": "Neanderthals, Denisovans and early modern humans whose DNA has been read: each sample with what was read, how deeply, what it showed, its paper and its data; from the Allen Ancient DNA Resource (CC0) and the papers it lacks; compiled for this site",
+    "url": "https://github.com/serroba/histeclipse/blob/main/public/data/humans/genomes.json"
   },
   "humanRoutes": {
     "name": "The site’s routes",

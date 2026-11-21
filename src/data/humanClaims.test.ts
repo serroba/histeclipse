@@ -83,6 +83,41 @@ describe('humansAt', () => {
   });
 });
 
+describe('undated finds (#1047)', () => {
+  it('shows a find not directly dated while its species is attested, so labelled, and its card says so', async () => {
+    const data = await load();
+    const undated = data.claims.find((claim) => claim.id === 'forbes-quarry');
+    expect(undated?.fromKa).toBeNull();
+    const marked = (ka: number) =>
+      humansAt(data, ka).sites.find((site) => site.id === 'forbes-quarry');
+    expect(marked(60)?.label).toBe(`${undated?.place?.name ?? ''} undated`);
+    // Not before the oldest dated Neanderthal find, nor after the youngest.
+    expect(marked(5)).toBeUndefined();
+    expect(new Map(claimCard(data, 'forbes-quarry', null)?.facts).get('When')).toMatch(
+      /^Not directly dated/,
+    );
+  });
+
+  it('shows an undated find of a species with no dated find only at today', async () => {
+    const data = await load();
+    const [first] = data.claims;
+    if (first === undefined) throw new Error('no claim');
+    const lone = {
+      ...data,
+      claims: [{ ...first, species: 'longi' as const, fromKa: null, toKa: null }],
+    };
+    expect(humansAt(lone, 0).sites).toHaveLength(1);
+    expect(humansAt(lone, 1).sites).toHaveLength(0);
+  });
+
+  it('refuses a date half given', async () => {
+    const [first] = claims.claims;
+    if (first === undefined) throw new Error('no claim');
+    const half = { ...claims, claims: [{ ...first, fromKa: 50, toKa: null }] };
+    await expect(loadHumanClaims('x', serve(half))).rejects.toThrow();
+  });
+});
+
 describe('kaRange', () => {
   it('reads as one date or a range, youngest first', () => {
     expect(kaRange(233, 233)).toBe('233 ka');
@@ -175,10 +210,14 @@ describe('claimCard', () => {
     );
   });
 
-  it('gives every find but a few at least one other study', async () => {
+  it('gives nine finds in ten at least one other study, and says so of the rest', async () => {
     const data = await load();
     const without = data.claims.filter((claim) => (claim.evidence ?? []).length === 0);
-    expect(without.length).toBeLessThanOrEqual(3);
+    expect(without.length / data.claims.length).toBeLessThanOrEqual(0.1);
+    for (const claim of without)
+      expect(new Map(claimCard(data, claim.id, null)?.facts).get('Other studies')).toMatch(
+        /^None found yet/,
+      );
   });
 
   it('names a disputed find’s question and its rivals; a page without a picture is a link', async () => {
@@ -199,6 +238,7 @@ describe('claimCard', () => {
     expect(card?.links.map((link) => link.label)).toEqual([
       'Harvati et al. 2019, Nature',
       'de Lumley et al. 2020, L’Anthropologie',
+      'Bartsiokas et al. 2017, Journal of Human Evolution',
     ]);
     const read = {
       ...data,

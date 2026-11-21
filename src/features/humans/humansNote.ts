@@ -117,6 +117,51 @@ function routeList(routes: readonly RouteShown[], open: (id: string) => void): D
   ];
 }
 
+/** Interbreeding (#1047): the episodes reached, and what living people carry, each to its card. */
+function mixing(
+  mixes: {
+    readonly episodes: readonly { id: string; title: string; estimates: number }[];
+    readonly traits: readonly { id: string; title: string }[];
+  } | null,
+  open: (pick: string) => void,
+): DeepNoteBlock[] {
+  if (mixes === null || (mixes.episodes.length === 0 && mixes.traits.length === 0)) return [];
+  const button = (pick: string, text: string) => ({
+    text,
+    run: () => {
+      open(pick);
+    },
+  });
+  return [
+    {
+      class: 'humans-question',
+      paragraph: ['Interbreeding, as DNA shows it (inferred, with each estimate’s paper):'],
+    },
+    {
+      list: mixes.episodes.map((episode) => ({
+        class: 'humans-mixing',
+        parts: [
+          button(`mix-${episode.id}`, episode.title),
+          ` ${String(episode.estimates)} ${episode.estimates === 1 ? 'estimate' : 'estimates'}`,
+        ],
+      })),
+    },
+    ...(mixes.traits.length === 0
+      ? []
+      : [
+          {
+            paragraph: [
+              'What it left in living people: ',
+              ...mixes.traits.flatMap((trait, index) => [
+                ...(index === 0 ? [] : [' · ']),
+                button(`trait-${trait.id}`, trait.title),
+              ]),
+            ],
+          },
+        ]),
+  ];
+}
+
 /** The note: the model to shade, then the finds marked by species, the routes and the claims. */
 export function note(
   view: HumansView,
@@ -127,8 +172,10 @@ export function note(
     species: (species: HumanSpecies) => void;
     route: (id: string) => void;
     only: (species: HumanSpecies | 'all') => void;
+    pick: (id: string) => void;
   },
   only: HumanSpecies | 'all',
+  mixes: Parameters<typeof mixing>[0],
   story: () => void,
 ): DeepNoteBlock[] {
   return [
@@ -162,6 +209,7 @@ export function note(
     },
     ...legend(view, only, open.species, open.only),
     ...routeList(routes, open.route),
+    ...mixing(mixes, open.pick),
     ...view.questions.flatMap(({ title, claims }) => [
       { class: 'humans-question', paragraph: [title] },
       { list: claims.map(claim) },

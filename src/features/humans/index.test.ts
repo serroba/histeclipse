@@ -3,6 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import claims from '../../../public/data/humans/claims.json';
 import index from '../../../public/data/dispersal/index.json';
 import pictures from '../../../public/data/humans/pictures.json';
+import admixture from '../../../public/data/humans/admixture.json';
+import genomes from '../../../public/data/humans/genomes.json';
 import routes from '../../../public/data/humans/routes.json';
 import species from '../../../public/data/humans/species.json';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
@@ -53,6 +55,8 @@ function fakeContext(
     'pictures.json': pictures,
     'species.json': species,
     'routes.json': routes,
+    'admixture.json': admixture,
+    'genomes.json': genomes,
     'index.json': index,
     ...options.files,
   };
@@ -122,10 +126,10 @@ async function loaded(context: FeatureContext<Capability>, refresh: ReturnType<t
   await vi.waitFor(() => {
     expect(refresh).toHaveBeenCalled();
   });
-  // Then the routes, asked for once the finds are in.
+  // Then the routes and the interbreeding, asked for once the finds are in.
   shown.deep?.(on, ICE);
   await vi.waitFor(() => {
-    expect(refresh).toHaveBeenCalledTimes(2);
+    expect(refresh).toHaveBeenCalledTimes(3);
   });
   return shown;
 }
@@ -194,7 +198,7 @@ describe('the humans as a feature', () => {
     expect(withModel.dispersal).toBe('a');
     expect(words(shown.deep?.(withModel, ICE))).toMatch(/Loading the model…/);
     await vi.waitFor(() => {
-      expect(refresh).toHaveBeenCalledTimes(3);
+      expect(refresh).toHaveBeenCalledTimes(4);
     });
     expect(words(shown.deep?.(withModel, ICE))).toMatch(
       /model, early exit from Africa \(scenario A\), has people settled by then: 50% of the land/,
@@ -209,13 +213,14 @@ describe('the humans as a feature', () => {
     if (id === undefined) throw new Error('no find with a species');
     shown.pick?.(id);
     expect(cards).toHaveLength(1);
+    // Again once its picture loads, and again with its ancient DNA.
     await vi.waitFor(() => {
-      expect(cards).toHaveLength(2);
+      expect(cards).toHaveLength(3);
     });
-    cards[1]?.action?.run();
+    cards.at(-1)?.action?.run();
     expect(openTree).toHaveBeenCalledTimes(1);
     shown.pick?.('no-such-find');
-    expect(cards).toHaveLength(2);
+    expect(cards).toHaveLength(3);
   });
 
   it('offers our species on the tree of life from its row in the Layers panel', () => {
@@ -421,6 +426,57 @@ describe('the humans as a feature', () => {
     back.run();
     const again = change.mock.calls.at(-1)?.[0] as (state: ViewState) => ViewState;
     expect(again(filtered).humanSpecies).toBe('all');
+  });
+
+  it('lists interbreeding in the note, each episode and trait to its card, and on to its finds (#1047)', async () => {
+    const { context, cards, refresh } = fakeContext();
+    const shown = await loaded(context, refresh);
+    const view = shown.deep?.({ ...on, ma: 0.03 }, { ma: 0.03, scale: 'ice' });
+    expect(words(view)).toMatch(/Interbreeding, as DNA shows it/);
+    const episodes = (view?.note ?? []).flatMap((block) =>
+      typeof block === 'object' && 'list' in block
+        ? block.list.filter((item) => item.class === 'humans-mixing')
+        : [],
+    );
+    const oase = episodes.find((item) => {
+      const first = item.parts[0];
+      return typeof first === 'object' && 'text' in first && first.text.includes('first Europeans');
+    })?.parts[0];
+    if (typeof oase !== 'object' || !('run' in oase)) throw new Error('no episode');
+    oase.run();
+    const card = cards.at(-1);
+    expect(card?.facts[0]).toEqual(['Who', 'From Neanderthals into Homo sapiens']);
+    const toOase = card?.related?.find((step) => step.label.includes('Oase'));
+    toOase?.run();
+    expect(cards.at(-1)?.title).toMatch(/Oase/);
+    // A trait, from the line on what living people carry.
+    shown.pick?.('trait-covid-19');
+    expect(cards.at(-1)?.title).toMatch(/COVID-19/);
+    const before = cards.length;
+    shown.pick?.('mix-nowhere');
+    expect(cards).toHaveLength(before);
+  });
+
+  it('says so when the interbreeding cannot be loaded', async () => {
+    const { context, refresh, notify } = fakeContext({ missing: 'admixture.json' });
+    const shown = humansFeature.mount(context, context);
+    shown.deep?.(on, ICE);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    shown.deep?.(on, ICE);
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledWith('Could not load the interbreeding: offline');
+    });
+  });
+
+  it('gives a site’s card its ancient DNA once it loads (#1047)', async () => {
+    const { context, cards, refresh } = fakeContext({ cardOpen: true });
+    const shown = await loaded(context, refresh);
+    shown.pick?.('vindija');
+    await vi.waitFor(() => {
+      expect(cards.at(-1)?.facts.some(([label]) => label === 'Ancient DNA')).toBe(true);
+    });
   });
 
   it('says so when the species cannot be loaded', async () => {
