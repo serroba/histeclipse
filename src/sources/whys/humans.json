@@ -2,5 +2,5 @@
   "title": "Humans",
   "what": "Dated finds of our species and its relatives, what each species was, the routes people are argued to have taken, and where a dispersal model has people settled.",
   "sources": ["humanFinds", "humanSpecies", "humanRoutes", "timmermann"],
-  "how": "Each find is shown with the paper that dates it, what was found, how it was dated and why it matters, and rival dates side by side. Each species’ card gives every figure with its paper, and where papers disagree, each view. Each route is drawn approximately after one study, with its rivals in the same colour: an argument, not a measured path. The dispersal model is one model’s view, not evidence."
+  "how": "Each find is shown with the paper that dates it, what was found, how it was dated and why it matters, the other studies that support or challenge it, and rival dates side by side. Each species’ card gives every figure with its paper, and where papers disagree, each view. Each route is drawn approximately after one study, with its rivals in the same colour: an argument, not a measured path. The dispersal model is one model’s view, not evidence."
 }
