@@ -17,6 +17,13 @@ import {
   type HumanSpecies,
   type HumansView,
 } from '../../data/humanClaims';
+import {
+  loadHumanRoutes,
+  routeCard,
+  routesAt,
+  type HumanRoutes,
+  type RouteShown,
+} from '../../data/humanRoutes';
 import { loadHumanSpecies, speciesCard, type HumanSpeciesData } from '../../data/humanSpecies';
 import { loadPictures, type Pictures } from '../../data/pictures';
 import { DISPERSAL_SCENARIOS } from '../../state/viewState';
@@ -27,9 +34,12 @@ import { errorMessage } from '../../util/errors';
 import { feature } from '../feature';
 import { createDispersal, dispersalText, type DispersalShown } from './dispersal';
 import { humanSiteLayer } from './humanSiteLayer';
+import { routeLayer } from './routeLayer';
 
 /** A species' card is picked as `human:species-<id>`. */
 const SPECIES_PICK = 'species-';
+/** A route's card is picked as `human:route-<id>`. */
+const ROUTE_PICK = 'route-';
 
 const MODELS = [
   { value: 'off', label: 'Off' },
@@ -69,12 +79,39 @@ function legend(view: HumansView, about: (species: HumanSpecies) => void): DeepN
   ];
 }
 
-/** The note: the model to shade, then the finds marked by species and the claims reached. */
+/** The routes argued for at the moment, each a way to its card, with whose argument it is. */
+function routeList(routes: readonly RouteShown[], open: (id: string) => void): DeepNoteBlock[] {
+  if (routes.length === 0) return [];
+  return [
+    {
+      paragraph: [
+        'Routes argued for then, each after one study, drawn approximately; rivals share a colour:',
+      ],
+    },
+    {
+      list: routes.map((route) => ({
+        class: `humans-route is-route-${String(route.colour % 4)}${route.dashed ? ' is-dashed' : ''}`,
+        parts: [
+          {
+            text: route.label,
+            run: () => {
+              open(route.id);
+            },
+          },
+          ` ${route.citation}; ${String(route.weighed.for)} studies for, ${String(route.weighed.against)} against`,
+        ],
+      })),
+    },
+  ];
+}
+
+/** The note: the model to shade, then the finds marked by species, the routes and the claims. */
 function note(
   view: HumansView,
+  routes: readonly RouteShown[],
   model: DispersalShown,
   pick: (value: string) => void,
-  about: (species: HumanSpecies) => void,
+  open: { species: (species: HumanSpecies) => void; route: (id: string) => void },
 ): DeepNoteBlock[] {
   return [
     {
@@ -98,7 +135,8 @@ function note(
         `Humans: ${String(view.sites.length)} dated finds marked, each from its date on while its species is still found, as its source reports it; disputed ones in italics. Hand-picked, not complete. Tap a species for what it was.`,
       ],
     },
-    ...legend(view, about),
+    ...legend(view, open.species),
+    ...routeList(routes, open.route),
     ...view.questions.flatMap(({ title, claims }) => [
       { class: 'humans-question', paragraph: [title] },
       { list: claims.map(claim) },
@@ -116,6 +154,9 @@ export const humansFeature = feature({
   watches: () => [],
   mount(context) {
     const sitesOnGlobe = context.globe.addLayer(humanSiteLayer);
+    const routesOnGlobe = context.globe.addLayer(routeLayer);
+    let routes: HumanRoutes | null = null;
+    let routesLoading = false;
     const dispersal = createDispersal(context);
     let claims: HumanClaims | null = null;
     let loading = false;
@@ -148,6 +189,9 @@ export const humansFeature = feature({
 
     /** A card by what was picked: a find, or a species. */
     function cardFor(id: string): MarkerCardContent | null {
+      if (id.startsWith(ROUTE_PICK)) {
+        return routes === null ? null : routeCard(routes, id.slice(ROUTE_PICK.length));
+      }
       if (id.startsWith(SPECIES_PICK)) {
         const which = HUMAN_SPECIES.find((each) => `${SPECIES_PICK}${each}` === id);
         const card =
@@ -255,6 +299,7 @@ export const humansFeature = feature({
         const on = state.deepScale === 'ice' && state.layers.has('humans');
         if (moment === null || !on) {
           sitesOnGlobe.update(null);
+          routesOnGlobe.update(null);
           dispersal.show(null, 0);
           return moment === null
             ? null
@@ -278,13 +323,33 @@ export const humansFeature = feature({
           }
           return { offered, on: true, note: [{ paragraph: ['Humans: loading…'] }] };
         }
+        if (routes === null && !routesLoading) {
+          routesLoading = true;
+          loadHumanRoutes(`${context.base}data/humans/routes.json`, context.fetchJson).then(
+            (loaded) => {
+              routes = loaded;
+              context.refresh();
+            },
+            (error: unknown) => {
+              routesLoading = false;
+              context.notify(`Could not load the routes: ${errorMessage(error)}`);
+            },
+          );
+        }
         const view = humansAt(claims, moment.ma * 1000);
+        const routesNow = routes === null ? [] : routesAt(routes, moment.ma * 1000);
         sitesOnGlobe.update(view.sites);
+        routesOnGlobe.update(routesNow);
         return {
           offered,
           on: true,
-          note: note(view, model, pickModel, (id) => {
-            show(`${SPECIES_PICK}${id}`);
+          note: note(view, routesNow, model, pickModel, {
+            species: (id) => {
+              show(`${SPECIES_PICK}${id}`);
+            },
+            route: (id) => {
+              show(`${ROUTE_PICK}${id}`);
+            },
           }),
         };
       },

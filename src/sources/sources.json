@@ -879,6 +879,12 @@
     "cite": "Dated finds of our species and its relatives, each with the paper that dates it, and rival dates side by side; compiled for this site",
     "url": "https://github.com/serroba/histeclipse/blob/main/public/data/humans/claims.json"
   },
+  "humanRoutes": {
+    "name": "The site’s routes",
+    "kind": "dataset",
+    "cite": "Routes people are argued to have taken out of Africa, to Australia and into the Americas, each drawn approximately after one study, rivals side by side; compiled for this site",
+    "url": "https://github.com/serroba/histeclipse/blob/main/public/data/humans/routes.json"
+  },
   "humanSpecies": {
     "name": "The site’s species profiles",
     "kind": "dataset",

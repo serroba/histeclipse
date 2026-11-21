@@ -220,6 +220,47 @@ test('the note lists the species marked, each opening its card', async ({ page }
   expect(problems).toEqual([]);
 });
 
+test('routes argued for are drawn side by side, each opening its card with its source (#177)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const card = page.getByTestId('marker-card');
+  await test.step('Given the ice ages 60,000 years ago, looking at the Indian Ocean', async () => {
+    await page.goto('./?ma=0.06&scale=ice&cam=15,60,3&layers=humans');
+    await globeRendered(page);
+  });
+  await test.step('Then both ways out of Africa are drawn, as questions, not facts', async () => {
+    await expect(globe).toHaveAttribute('data-human-routes', /southern-route/);
+    await expect(globe).toHaveAttribute('data-human-routes', /northern-route/);
+    await expect(page.locator('.human-route', { hasText: 'Southern route?' })).toBeVisible();
+  });
+  await test.step('When they tap the southern route', async () => {
+    await page.locator('.human-route', { hasText: 'Southern route?' }).click();
+  });
+  await test.step('Then its card gives whose argument it is, and the other answer', async () => {
+    await expect(card.getByRole('heading', { name: 'Southern route' })).toBeVisible();
+    await expect(card.getByRole('link', { name: 'Macaulay et al. 2005, Science' })).toHaveAttribute(
+      'href',
+      'https://doi.org/10.1126/science.1109792',
+    );
+    await expect(card).toContainText('Northern route (Pagani et al. 2015, AJHG)');
+    await expect(card).toContainText('Drawn approximately');
+  });
+  await test.step('And it gives the studies for it, by kind, and those against it', async () => {
+    await expect(card).toContainText('Genetic evidence');
+    await expect(card).toContainText('Archaeology');
+    await expect(card).toContainText('Against');
+    await expect(card.getByRole('link', { name: 'Malaspinas et al. 2016, Nature' })).toBeVisible();
+  });
+  await test.step('When they go to 5,000 years ago, no route is drawn', async () => {
+    await page.goto('./?ma=0.005&scale=ice&layers=humans');
+    await globeRendered(page);
+    await expect(globe).toHaveAttribute('data-human-routes', 'none');
+  });
+  expect(problems).toEqual([]);
+});
+
 test('from the years, one tap on Humans goes to the earliest Homo sapiens', async ({ page }) => {
   const problems = collectProblems(page);
   await test.step('Given the years, with the Layers panel open', async () => {

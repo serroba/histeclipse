@@ -107,3 +107,61 @@
 .human-site.is-disputed {
   font-style: italic;
 }
+
+/* Routes people are argued to have taken (#177): the name at each route's middle, in its colour,
+   with a short stroke like its line, solid or dashed. */
+.empire-label.human-route {
+  --route: rgb(255 236 170);
+
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--route);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.human-route.is-route-1,
+.humans-route.is-route-1 {
+  --route: rgb(150 230 255);
+}
+
+.human-route.is-route-2,
+.humans-route.is-route-2 {
+  --route: rgb(200 255 190);
+}
+
+.human-route.is-route-3,
+.humans-route.is-route-3 {
+  --route: rgb(255 190 235);
+}
+
+.human-route::before,
+.humans-route::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  margin-right: 5px;
+  border-top: 3px solid var(--route);
+  vertical-align: middle;
+}
+
+.human-route.is-dashed::before,
+.humans-route.is-dashed::before {
+  border-top-style: dashed;
+}
+
+.empire-label.human-route:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* The routes in the note, each a button to its card. */
+.humans-route {
+  --route: rgb(255 236 170);
+
+  list-style: none;
+}

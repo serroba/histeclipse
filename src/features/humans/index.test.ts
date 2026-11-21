@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import claims from '../../../public/data/humans/claims.json';
 import index from '../../../public/data/dispersal/index.json';
 import pictures from '../../../public/data/humans/pictures.json';
+import routes from '../../../public/data/humans/routes.json';
 import species from '../../../public/data/humans/species.json';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import type { DeepChoice, DeepChipView, DeepNoteBlock } from '../../ui/deepChips';
@@ -36,6 +37,8 @@ function fakeContext(
   } = {},
 ) {
   const drawn: unknown[] = [];
+  const routed: unknown[] = [];
+  let layers = 0;
   const settled: unknown[] = [];
   const cards: MarkerCardContent[] = [];
   const refresh = vi.fn();
@@ -47,6 +50,7 @@ function fakeContext(
     'claims.json': claims,
     'pictures.json': pictures,
     'species.json': species,
+    'routes.json': routes,
     'index.json': index,
     ...options.files,
   };
@@ -57,7 +61,11 @@ function fakeContext(
         ? Promise.reject(new Error('offline'))
         : Promise.resolve(new Response(JSON.stringify(files[url.split('/').at(-1) ?? '']))),
     globe: {
-      addLayer: () => ({ update: (input: unknown) => drawn.push(input) }),
+      // The finds' layer first, then the routes'.
+      addLayer: () => {
+        const into = layers++ === 0 ? drawn : routed;
+        return { update: (input: unknown) => into.push(input) };
+      },
     },
     notify,
     cards: {
@@ -70,7 +78,18 @@ function fakeContext(
     anchors: { open: openAnchor },
     refresh,
   } as unknown as FeatureContext<Capability>;
-  return { context, drawn, settled, cards, refresh, notify, openTree, change, openAnchor };
+  return {
+    context,
+    drawn,
+    routed,
+    settled,
+    cards,
+    refresh,
+    notify,
+    openTree,
+    change,
+    openAnchor,
+  };
 }
 
 /** The note's words, picker and lists aside. */
@@ -98,6 +117,11 @@ async function loaded(context: FeatureContext<Capability>, refresh: ReturnType<t
   shown.deep?.(on, ICE);
   await vi.waitFor(() => {
     expect(refresh).toHaveBeenCalled();
+  });
+  // Then the routes, asked for once the finds are in.
+  shown.deep?.(on, ICE);
+  await vi.waitFor(() => {
+    expect(refresh).toHaveBeenCalledTimes(2);
   });
   return shown;
 }
@@ -152,7 +176,7 @@ describe('the humans as a feature', () => {
     expect(withModel.dispersal).toBe('a');
     expect(words(shown.deep?.(withModel, ICE))).toMatch(/Loading the model…/);
     await vi.waitFor(() => {
-      expect(refresh).toHaveBeenCalledTimes(2);
+      expect(refresh).toHaveBeenCalledTimes(3);
     });
     expect(words(shown.deep?.(withModel, ICE))).toMatch(
       /model, early exit from Africa \(scenario A\), has people settled by then: 50% of the land/,
@@ -250,6 +274,51 @@ describe('the humans as a feature', () => {
     const before = cards.length;
     shown.pick?.('species-martian');
     expect(cards).toHaveLength(before);
+  });
+
+  it('draws the routes argued for, each opening its card, and lists them in the note (#177)', async () => {
+    const { context, cards, refresh, routed } = fakeContext();
+    const shown = await loaded(context, refresh);
+    const chip = shown.deep?.(on, ICE);
+    const drawnRoutes = routed.at(-1) as readonly { id: string }[];
+    expect(drawnRoutes.map((route) => route.id)).toContain('southern-route');
+    const listed = (chip?.note ?? []).flatMap((block) =>
+      typeof block === 'object' && 'list' in block
+        ? block.list.filter((item) => item.class.startsWith('humans-route'))
+        : [],
+    );
+    const southern = listed.find((item) =>
+      (() => {
+        const last = item.parts.at(-1);
+        return typeof last === 'string' && last.startsWith(' Macaulay et al. 2005, Science; ');
+      })(),
+    );
+    const button = southern?.parts[0];
+    if (typeof button !== 'object' || !('run' in button)) throw new Error('no button');
+    expect(southern?.parts.at(-1)).toMatch(/; \d+ studies for, \d+ against$/);
+    button.run();
+    expect(cards.at(-1)?.title).toBe('Southern route');
+    shown.pick?.('route-ice-free-corridor');
+    expect(cards.at(-1)?.title).toBe('Ice-free corridor');
+    const before = cards.length;
+    shown.pick?.('route-nowhere');
+    expect(cards).toHaveLength(before);
+    // Off the layer, the routes go too.
+    shown.deep?.({ ...on, layers: base.layers }, ICE);
+    expect(routed.at(-1)).toBeNull();
+  });
+
+  it('says so when the routes cannot be loaded', async () => {
+    const { context, refresh, notify } = fakeContext({ missing: 'routes.json' });
+    const shown = humansFeature.mount(context, context);
+    shown.deep?.(on, ICE);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    shown.deep?.(on, ICE);
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledWith('Could not load the routes: offline');
+    });
   });
 
   it('says so when the species cannot be loaded', async () => {
