@@ -18,6 +18,7 @@ import {
 import { loadHumanRoutes, routeCard, routesAt } from '../../data/humanRoutes';
 import { episodeCard, episodesAt, loadHumanAdmixture, traitCard } from '../../data/humanAdmixture';
 import { genomeRows, loadHumanGenomes } from '../../data/humanGenomes';
+import { loadIceAgeGenomes } from '../../data/iceAgeGenomes';
 import { loadHumanSpecies, speciesCard } from '../../data/humanSpecies';
 import { loadPictures } from '../../data/pictures';
 import { DISPERSAL_SCENARIOS, withLayer, type ViewState } from '../../state/viewState';
@@ -26,6 +27,7 @@ import { destinationNear, fromAFind } from '../../explore/related';
 import { errorMessage } from '../../util/errors';
 import { feature } from '../feature';
 import { createDispersal, type DispersalShown } from './dispersal';
+import { iceAgeDna } from './iceAgeDna';
 import { note } from './humansNote';
 import { humanSiteLayer } from './humanSiteLayer';
 import { lazy } from './lazy';
@@ -38,6 +40,8 @@ const MIX_PICK = 'mix-';
 const TRAIT_PICK = 'trait-';
 /** A route's card is picked as `human:route-<id>`. */
 const ROUTE_PICK = 'route-';
+/** An ice-age DNA site's card (#1059) is picked as `human:dna-<place>`. */
+const DNA_PICK = 'dna-';
 
 /**
  * The human story (#177): from the earliest Homo sapiens (Jebel Irhoud, about 315,000 years ago)
@@ -91,6 +95,7 @@ export const humansFeature = feature({
     const pictures = data('pictures.json', 'the finds’ pictures', loadPictures, reshow);
     const genomes = data('genomes.json', 'the ancient DNA', loadHumanGenomes, reshow);
     const species = data('species.json', 'the human species', loadHumanSpecies, reshow);
+    const dna = iceAgeDna(data('aadr-ice-age.json', 'the ice-age DNA', loadIceAgeGenomes, refresh));
 
     /** Plays the human story: Humans and a dispersal model on, facing Africa, from 315 ka. */
     function playStory(): void {
@@ -176,6 +181,7 @@ export const humansFeature = feature({
       [TRAIT_PICK, (id) => (admixture.value === null ? null : traitCard(admixture.value, id))],
       [ROUTE_PICK, (id) => (routes.value === null ? null : routeCard(routes.value, id))],
       [SPECIES_PICK, speciesCardFor],
+      [DNA_PICK, (id) => dna.card(id)],
     ];
 
     /** A card by what was picked: a find, a species, a route, or interbreeding. */
@@ -274,9 +280,12 @@ export const humansFeature = feature({
       const routesNow = routes.value === null ? [] : routesAt(routes.value, ka);
       // One species only, if the reader asked (#1047).
       const only = state.humanSpecies;
-      sitesOnGlobe.update(
-        only === 'all' ? view.sites : view.sites.filter((site) => site.species === only),
-      );
+      const ancient = dna.at(ka, only);
+      sitesOnGlobe.update([
+        ...(only === 'all' ? view.sites : view.sites.filter((site) => site.species === only)),
+        // After the finds, so where names crowd the finds keep theirs.
+        ...ancient.sites,
+      ]);
       routesOnGlobe.update(routesNow);
       return note(
         view,
@@ -298,6 +307,7 @@ export const humansFeature = feature({
         only,
         mixesAt(ka),
         playStory,
+        { places: ancient.sites.length, people: ancient.people },
       );
     }
 

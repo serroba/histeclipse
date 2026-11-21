@@ -10,6 +10,11 @@ given by a 2° cell, not its site, and its date; with the lab's group label (the
 a sample set, not a people) and the paper that published it. Present-day individuals are left
 out. What a card lists of each person (`aadr_people`) goes in files of its own, read only when a
 card opens.
+
+The ice-age people (#1059) also go to the Humans layer, as the Ancient genomes layer shows only
+the years from 9700 BCE on; less the archaic and earliest modern humans already on the Humans
+list (`public/data/humans/genomes.json`, from their papers), left out by their lab group so none
+is shown twice.
 """
 
 import csv
@@ -20,7 +25,7 @@ import urllib.request
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from histeclipse_pipeline.aadr_people import CHUNK, Person, people_files, person_of
+from histeclipse_pipeline.aadr_people import CHUNK, Person, people_files, person_of, person_row
 from histeclipse_pipeline.sky import Json, verified
 
 if TYPE_CHECKING:
@@ -50,11 +55,36 @@ _LONGITUDE = 18
 _ASSESSMENT = 47
 
 
+#: The Holocene began 11,700 years before 2000: 11,650 years before 1950, the AADR's count.
+HOLOCENE_BP = 11650
+
+#: Lab groups whose individuals the Humans list already has, each from its paper.
+COVERED_GROUPS = frozenset(
+    {
+        "Altai_Neanderthal",
+        "Bulgaria_BachoKiroCave_IUP",
+        "ChagyrskayaCave_Neanderthal",
+        "Czechia_Zlatykun_IUP",
+        "France_GrotteMandrin_Neanderthal",
+        "Germany_Ranis_IUP",
+        "Mezmaiskayacave_Neanderthal",
+        "Romania_IUP",
+        "Russia_Denisova",
+        "Russia_DenisovaCave_MPleistocene",
+        "Russia_Denisova_Neanderthal_Mix",
+        "Russia_UstIshim_IUP",
+        "VindijaCave_Neanderthal",
+    }
+)
+
+
 @dataclass(frozen=True)
 class Genome:
     """One ancient individual: its cell, date (years before 1950), lab label, paper, person."""
 
     cell: tuple[int, int]
+    #: Its site's latitude and longitude, to 0.01°, as the AADR gives it.
+    point: tuple[float, float]
     bp: int
     group: str
     publication: str
@@ -105,6 +135,7 @@ def parse_anno(text: str) -> list[Genome]:
         genomes.append(
             Genome(
                 cell=cell_of(latitude, longitude),
+                point=(round(latitude, 2), round(longitude, 2)),
                 bp=round(bp / DATE_STEP) * DATE_STEP,
                 group=row[_GROUP].strip(),
                 publication=row[_PUBLICATION].strip(),
@@ -153,6 +184,34 @@ def genomes_file(genomes: list[Genome]) -> dict[str, Json]:
     }
 
 
+def ice_age_file(genomes: list[Genome], credit: str, source: str) -> dict[str, Json]:
+    """Build the Humans layer's file: the ice-age people not already on its list, oldest first."""
+    kept = sorted(
+        (
+            genome
+            for genome in genomes
+            if genome.bp > HOLOCENE_BP and genome.group not in COVERED_GROUPS
+        ),
+        key=lambda genome: (-genome.bp, genome.person.individual),
+    )
+    return {
+        "schemaVersion": 1,
+        "credit": credit,
+        "source": source,
+        "people": [
+            {
+                "bp": genome.bp,
+                "latitude": genome.point[0],
+                "longitude": genome.point[1],
+                "group": genome.group,
+                "paper": {"name": genome.publication, "doi": genome.doi},
+                "person": person_row(genome.person),
+            }
+            for genome in kept
+        ],
+    }
+
+
 def fetch_genomes(path: Path) -> int:  # pragma: no cover - needs network access
     """Download the annotation file (checked against its checksum) and write the site's file."""
     request = urllib.request.Request(ANNO_URL, headers={"User-Agent": "histeclipse-pipeline"})
@@ -172,4 +231,10 @@ def fetch_genomes(path: Path) -> int:  # pragma: no cover - needs network access
         _ = (folder / f"{index}.json").write_text(
             json.dumps(chunk, separators=(",", ":"), ensure_ascii=False) + "\n"
         )
+    # The ice-age people go to the Humans layer's folder, beside this one.
+    humans = path.parent.parent / "humans" / "aadr-ice-age.json"
+    humans.parent.mkdir(parents=True, exist_ok=True)
+    _ = humans.write_text(
+        json.dumps(ice_age_file(genomes, CREDIT, SOURCE), ensure_ascii=False, indent=1) + "\n"
+    )
     return len(genomes)

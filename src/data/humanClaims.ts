@@ -138,6 +138,8 @@ export interface HumanSite {
   readonly point: GeoPoint;
   /** Whether other claims compete with it. */
   readonly disputed: boolean;
+  /** An ice-age DNA site of the AADR's (#1059), not a find. */
+  readonly dna?: boolean;
 }
 
 /** A claim as the note gives it: what, when, and whose. */

@@ -229,3 +229,14 @@
 .humans-legend.is-only {
   font-weight: 700;
 }
+
+/* An ice-age DNA site of the AADR's (#1059): a small diamond in our species' gold, not a dot. */
+.human-site.is-dna::before,
+.humans-legend.is-dna::before {
+  border-radius: 1px;
+  rotate: 45deg;
+}
+
+.human-site.is-dna {
+  font-weight: 500;
+}

@@ -35,7 +35,7 @@ export const humanSiteLayer: LayerFactory<readonly HumanSite[] | null> = (host) 
         sites?.map((site) => {
           const element = document.createElement('button');
           element.type = 'button';
-          element.className = `empire-label human-site is-${site.species}${site.disputed ? ' is-disputed' : ''}${pulse && fresh(site.id) ? ' is-new' : ''}`;
+          element.className = `empire-label human-site is-${site.species}${site.disputed ? ' is-disputed' : ''}${site.dna === true ? ' is-dna' : ''}${pulse && fresh(site.id) ? ' is-new' : ''}`;
           element.textContent = site.label;
           element.dataset['site'] = site.id;
           element.dataset['pick'] = `human:${site.id}`;

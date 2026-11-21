@@ -1,0 +1,2626 @@
+{
+ "schemaVersion": 1,
+ "credit": "Allen Ancient DNA Resource v66.p1 (Mallick et al. 2024, Scientific Data 11, 182; Reich lab), CC0 1.0; ancient individuals that pass its assessment, by 2° cell",
+ "source": "https://doi.org/10.7910/DVN/FFIDCW",
+ "people": [
+  {
+   "bp": 39560,
+   "latitude": 39.39,
+   "longitude": 115.52,
+   "group": "China_TianyuanCave_UP",
+   "paper": {
+    "name": "YangFuCurrBiol2017",
+    "doi": "https://doi.org/10.1016/j.cub.2017.09.030"
+   },
+   "person": [
+    "Tianyuan",
+    "Tianyuan Cave, China",
+    "bone",
+    "38896-36130 calBCE (34430±510 BP, BA-03222)",
+    "radiocarbon on the remains",
+    "male",
+    "K2b",
+    "B",
+    "1240k capture",
+    5.2,
+    892297,
+    null,
+    null,
+    "PRJEB20217",
+    null
+   ]
+  },
+  {
+   "bp": 38050,
+   "latitude": 51.23,
+   "longitude": 39.3,
+   "group": "Russia_Kostenki_UP",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "Kostenki14",
+    "Kostenki, Russia",
+    "long bone",
+    "37426-34726 calBCE (33250±500 BP, OxA-X-2395-15)",
+    "radiocarbon on the remains",
+    "male",
+    "CF",
+    null,
+    "1240k capture",
+    27.0,
+    1101846,
+    null,
+    null,
+    "PRJEB13123",
+    null
+   ]
+  },
+  {
+   "bp": 36790,
+   "latitude": 44.98,
+   "longitude": 34.41,
+   "group": "Crimea_BuranKayaIII_EarlyUP",
+   "paper": {
+    "name": "BennettGeiglNatEcolEvol2023",
+    "doi": "https://doi.org/10.1038/s41559-023-02211-9"
+   },
+   "person": [
+    "BK3C",
+    "Buran-Kaya III, Crimea",
+    "cranial bone",
+    "35466-34296 calBCE (32450±250 BP, GrA-50457)",
+    "archaeological context",
+    "male",
+    "F",
+    "U",
+    "shotgun",
+    0.047,
+    50578,
+    null,
+    null,
+    "PRJEB64496",
+    null
+   ]
+  },
+  {
+   "bp": 36260,
+   "latitude": 44.98,
+   "longitude": 34.41,
+   "group": "Crimea_BuranKayaIII_EarlyUP",
+   "paper": {
+    "name": "BennettGeiglNatEcolEvol2023",
+    "doi": "https://doi.org/10.1038/s41559-023-02211-9"
+   },
+   "person": [
+    "BK3A",
+    "Buran-Kaya III, Crimea",
+    "cranial bone",
+    "34890-33735 calBCE (31900±240 BP, GrA-37938)",
+    "archaeological context",
+    "male",
+    "C",
+    "N1",
+    "shotgun",
+    0.023,
+    24987,
+    null,
+    null,
+    "PRJEB64496",
+    null
+   ]
+  },
+  {
+   "bp": 35210,
+   "latitude": 50.45,
+   "longitude": 5.01,
+   "group": "Belgium_UP",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "GoyetQ116-1",
+    "Goyet Cave, Belgium",
+    null,
+    "33678-32771 calBCE (30880±170 BP, GrA-46175)",
+    "radiocarbon on the remains",
+    "male",
+    "C1a2",
+    "M",
+    "1240k capture",
+    0.93,
+    582427,
+    null,
+    null,
+    "PRJEB13123",
+    null
+   ]
+  },
+  {
+   "bp": 34870,
+   "latitude": 48.27,
+   "longitude": 112.36,
+   "group": "Mongolia_Salkhit_UP",
+   "paper": {
+    "name": "MassilaniPääboScience2020",
+    "doi": "https://doi.org/10.1126/science.abc1166"
+   },
+   "person": [
+    "salkhit1",
+    "Salkhit, Mongolia",
+    "cranial bone",
+    "33458-32389 calBCE (30430±300, OxA-X-2717-25)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    null,
+    "1240k capture",
+    0.48,
+    162813,
+    null,
+    null,
+    "PRJEB37670",
+    null
+   ]
+  },
+  {
+   "bp": 34840,
+   "latitude": 50.45,
+   "longitude": 5.01,
+   "group": "Belgium_Aurignacian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "GoyetQ376-3",
+    "Goyet Cave, Belgium",
+    "long bone (humerus)",
+    "35170-34519 calBCE (ETH-99101.1.1/MAMS-42268(R-EVA-3335)",
+    "radiocarbon on the remains",
+    "male",
+    "CT",
+    null,
+    "1240k capture",
+    0.042,
+    46458,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 34630,
+   "latitude": 56.18,
+   "longitude": 40.5,
+   "group": "Russia_Sunghir_UP",
+   "paper": {
+    "name": "SikoraWillerslevScience2017",
+    "doi": "https://doi.org/10.1126/science.aao1807"
+   },
+   "person": [
+    "Sunghir2",
+    "Sunghir, Russia",
+    "multiple elements (premolar; long bone)",
+    "33833-31486 calBCE (30100±550 BP, OxA-X-2395-6)",
+    "radiocarbon on the remains",
+    "male",
+    "C1a2",
+    "U2",
+    "shotgun",
+    5.2,
+    1139793,
+    null,
+    51.2,
+    "PRJEB22592",
+    null
+   ]
+  },
+  {
+   "bp": 34520,
+   "latitude": 56.18,
+   "longitude": 40.5,
+   "group": "Russia_Sunghir_UP",
+   "paper": {
+    "name": "SikoraWillerslevScience2017",
+    "doi": "https://doi.org/10.1126/science.aao1807"
+   },
+   "person": [
+    "Sunghir3",
+    "Sunghir, Russia",
+    "multiple elements (molar; long bone)",
+    "33685-31328 calBCE (30000±550 BP, OxA-X-2395-7)",
+    "radiocarbon on the remains",
+    "male",
+    "C1a2",
+    "U2",
+    "shotgun",
+    14.0,
+    1149850,
+    null,
+    null,
+    "PRJEB22592",
+    null
+   ]
+  },
+  {
+   "bp": 34420,
+   "latitude": 45.19,
+   "longitude": 23.75,
+   "group": "Romania_UP",
+   "paper": {
+    "name": "SvenssonJakobssonCurrBiol2021",
+    "doi": "https://doi.org/10.1016/j.cub.2021.04.045"
+   },
+   "person": [
+    "Muierii2",
+    "Peştera-Muierilor, Romania",
+    "tooth",
+    "32735-32181 calBCE (29940±167 BP) [R_Combine: (30150±800 BP, LuA-5228), (29930±170 BP, OxA-15529)]",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    "U6",
+    "shotgun",
+    15.0,
+    1149640,
+    null,
+    null,
+    "PRJEB33172",
+    null
+   ]
+  },
+  {
+   "bp": 34320,
+   "latitude": 56.18,
+   "longitude": 40.5,
+   "group": "Russia_Sunghir_UP",
+   "paper": {
+    "name": "SikoraWillerslevScience2017",
+    "doi": "https://doi.org/10.1126/science.aao1807"
+   },
+   "person": [
+    "Sunghir4",
+    "Sunghir, Russia",
+    "long bone",
+    "32898-31771 calBCE (29820±280 BP, OxA-X-2462-52)",
+    "radiocarbon on the remains",
+    "male",
+    "C1a2",
+    "U2",
+    "shotgun",
+    5.0,
+    1137433,
+    null,
+    47.4,
+    "PRJEB22592",
+    null
+   ]
+  },
+  {
+   "bp": 33590,
+   "latitude": 45.4,
+   "longitude": 127.03,
+   "group": "China_AmurRiverBasin_UP",
+   "paper": {
+    "name": "MaoFuCell2021",
+    "doi": "https://doi.org/10.1016/j.cell.2021.04.040"
+   },
+   "person": [
+    "NE20",
+    "Southern bank of Songhua River, China",
+    null,
+    "32159-31169 calBCE (29060±170 BP, BA-10197)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    "B",
+    "1240k capture",
+    18.0,
+    982706,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 33210,
+   "latitude": 56.18,
+   "longitude": 40.5,
+   "group": "Russia_Sunghir_UP",
+   "paper": {
+    "name": "SikoraWillerslevScience2017",
+    "doi": "https://doi.org/10.1126/science.aao1807"
+   },
+   "person": [
+    "Sunghir1",
+    "Sunghir, Russia",
+    "multiple elements (molar; long bone)",
+    "32326-30080 calBCE (28890±430 BP, OxA-X-2464-12)",
+    "radiocarbon on the remains",
+    "male",
+    "C1a",
+    "U8c",
+    "shotgun",
+    1.5,
+    831679,
+    null,
+    20.8,
+    "PRJEB22592",
+    null
+   ]
+  },
+  {
+   "bp": 32890,
+   "latitude": 41.65,
+   "longitude": 15.61,
+   "group": "Italy_Apulia_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "Paglicci133",
+    "Paglicci, Italy",
+    "tooth",
+    "31906-29974 calBCE (28634±314 BP) [R_Combine: (28100±400 BP, UTC-1414), (29300±500 BP, UTC-1789)]",
+    "radiocarbon on the remains",
+    "male",
+    "C",
+    null,
+    "1240k capture",
+    0.024,
+    26522,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 32670,
+   "latitude": 45.35,
+   "longitude": 23.84,
+   "group": "Romania_UP",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "CIO001",
+    "Cioclovina, Romania",
+    "cranial bone",
+    "31343-30064 calBCE (28510±170 BP, OxA-15527)",
+    "radiocarbon on the remains",
+    "male",
+    "I2a1a2b",
+    null,
+    "1240k capture",
+    0.012,
+    13519,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 32650,
+   "latitude": 51.23,
+   "longitude": 39.3,
+   "group": "Russia_Kostenki_UP",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "Kostenki12",
+    "Kostenki, Russia",
+    "cranial bone",
+    "31300-30100 BCE",
+    "archaeological context",
+    "male",
+    "C1a2",
+    "U2",
+    "1240k capture",
+    0.045,
+    48950,
+    null,
+    null,
+    "PRJEB13123",
+    null
+   ]
+  },
+  {
+   "bp": 31850,
+   "latitude": 70.72,
+   "longitude": 135.42,
+   "group": "Russia_YanaRiver_UP",
+   "paper": {
+    "name": "SikoraWillerslevNature2019",
+    "doi": "https://doi.org/10.1038/s41586-019-1279-z"
+   },
+   "person": [
+    "Yana2",
+    "Yana-River, Russia",
+    "tooth",
+    "30250-29550 BCE",
+    "archaeological context",
+    "male",
+    "P1~",
+    "U2'3'4'7'8'9",
+    "shotgun",
+    8.3,
+    1146978,
+    null,
+    null,
+    "PRJEB29700",
+    null
+   ]
+  },
+  {
+   "bp": 31020,
+   "latitude": 48.88,
+   "longitude": 16.65,
+   "group": "Czechia_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "Vestonice14",
+    "Dolní Věstonice-2, Czechia",
+    "petrous (cochlea)",
+    "29196-28917 calBCE (26760±100 BP, Aix-12028)",
+    "radiocarbon on the remains",
+    "male",
+    "IJ",
+    "U5",
+    "1240k capture",
+    1.5,
+    754802,
+    null,
+    47.9,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 30980,
+   "latitude": 48.88,
+   "longitude": 16.65,
+   "group": "Czechia_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "Vestonice15",
+    "Dolní Věstonice-2, Czechia",
+    "petrous (cochlea)",
+    "29158-28897 calBCE (26680±70 BP, Aix-12029)",
+    "radiocarbon on the remains",
+    "male",
+    "C",
+    null,
+    "1240k capture",
+    0.018,
+    20152,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 30900,
+   "latitude": 48.24,
+   "longitude": 2.65,
+   "group": "France_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "ORM001",
+    "Ormesson, France",
+    "tooth (molar)",
+    "29900-28000 BCE",
+    "archaeological context",
+    "female",
+    null,
+    "U5",
+    "1240k capture",
+    0.48,
+    411402,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 30800,
+   "latitude": 48.88,
+   "longitude": 16.65,
+   "group": "Czechia_Gravettian",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "Vestonice13",
+    "Dolní Věstonice-2, Czechia",
+    "long bone",
+    "29200-28500 BCE",
+    "archaeological context",
+    "male",
+    null,
+    null,
+    "1240k capture",
+    0.1,
+    103845,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 30350,
+   "latitude": 48.88,
+   "longitude": 16.65,
+   "group": "Czechia_Gravettian",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "Pavlov1",
+    "Dolní Věstonice, Czechia",
+    "long bone",
+    "29300-27500 BCE",
+    "archaeological context",
+    "male",
+    null,
+    null,
+    "1240k capture",
+    0.041,
+    45173,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 30250,
+   "latitude": 48.41,
+   "longitude": 15.59,
+   "group": "Austria_Gravettian",
+   "paper": {
+    "name": "Teschler-NicolaPinhasiCommunBiol2020",
+    "doi": "https://doi.org/10.1038/s42003-020-01372-8"
+   },
+   "person": [
+    "I2483",
+    "Krems-Wachtberg, Austria",
+    "petrous (cochlea)",
+    "29094-27342 calBCE (25950±450 BP, PSUAMS-14476)",
+    "radiocarbon on the remains",
+    "male",
+    "IJ",
+    "U5",
+    "1240k capture",
+    0.46,
+    343813,
+    null,
+    20.9,
+    "PRJEB40336",
+    null
+   ]
+  },
+  {
+   "bp": 30200,
+   "latitude": 48.41,
+   "longitude": 15.59,
+   "group": "Austria_Gravettian",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "I1577",
+    "Krems-Wachtberg, Austria",
+    "cranial bone",
+    "29200-27300 BCE",
+    "archaeological context",
+    "male",
+    "F",
+    "U5",
+    "1240k capture",
+    0.25,
+    229810,
+    null,
+    null,
+    "PRJEB13123",
+    null
+   ]
+  },
+  {
+   "bp": 29800,
+   "latitude": 48.88,
+   "longitude": 16.65,
+   "group": "Czechia_Gravettian",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "Vestonice16",
+    "Dolní Věstonice-2, Czechia",
+    "long bone",
+    "28500-27200 BCE",
+    "archaeological context",
+    "male",
+    "C1a2",
+    null,
+    "1240k capture",
+    2.1,
+    735905,
+    null,
+    44.4,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 29800,
+   "latitude": 48.88,
+   "longitude": 16.65,
+   "group": "Czechia_Gravettian",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "Vestonice43",
+    "Dolní Věstonice-2, Czechia",
+    "long bone",
+    "28500-27200 BCE",
+    "archaeological context",
+    "male",
+    null,
+    null,
+    "1240k capture",
+    0.12,
+    121018,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 29120,
+   "latitude": 40.73,
+   "longitude": 17.58,
+   "group": "Italy_Apulia_Gravettian",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "Ostuni2",
+    "Ostuni, Italy",
+    "long bone",
+    "27546-26837 calBCE (24910±125 BP, MAMS-11450)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    null,
+    "1240k capture",
+    0.01,
+    11678,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 28890,
+   "latitude": 41.65,
+   "longitude": 15.61,
+   "group": "Italy_Apulia_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "PA12",
+    "Paglicci, Italy",
+    "petrous (cochlea)",
+    "29104-28678 calBCE (24600±90 BP, MAMS-19075(S-EVA 28202))",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    "U8c",
+    "1240k capture",
+    3.4,
+    959506,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 28720,
+   "latitude": 44.53,
+   "longitude": 1.0,
+   "group": "France_Occitanie_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "FRL006",
+    "Fournol, France",
+    "petrous (cochlea)",
+    "27074-26501 calBCE (24460±100 BP, MAMS-48704)",
+    "radiocarbon on the remains",
+    "male",
+    "C1a2",
+    null,
+    "1240k capture",
+    0.22,
+    215957,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 28080,
+   "latitude": 50.45,
+   "longitude": 5.01,
+   "group": "Belgium_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "GoyetQ53-1",
+    "Goyet Cave, Belgium",
+    "long bone (fibula)",
+    "28390-27773 calBCE (23920±100 BP, GrA-46169)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    "U2",
+    "1240k capture",
+    0.0093,
+    10589,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 27930,
+   "latitude": 50.45,
+   "longitude": 5.01,
+   "group": "Belgium_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "GOY014",
+    "Goyet Cave, Belgium",
+    "long bone (humerus)",
+    "26307-25753 calBCE (23780±120 BP, GrA-66437)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    null,
+    "1240k capture",
+    0.0047,
+    5392,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 27790,
+   "latitude": 50.45,
+   "longitude": 5.01,
+   "group": "Belgium_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "GOY007",
+    "Goyet Cave, Belgium",
+    "bone (clavicle)",
+    "26062-25676 calBCE (23650±105 BP, GrA-54030)",
+    "radiocarbon on the remains",
+    "male",
+    "H1a",
+    null,
+    "1240k capture",
+    0.013,
+    14919,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 27670,
+   "latitude": 45.0,
+   "longitude": 1.08,
+   "group": "France_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "LRO001",
+    "La Rochette, France",
+    "long bone (ulna)",
+    "25884-25490 calBCE (23498±84 BP, OxA11053/OxA23413)",
+    "radiocarbon on the remains",
+    "male",
+    "E1a",
+    null,
+    "1240k capture",
+    0.0072,
+    8149,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 27610,
+   "latitude": 40.73,
+   "longitude": 17.58,
+   "group": "Italy_Apulia_Gravettian",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "Ostuni1",
+    "Ostuni, Italy",
+    "long bone",
+    "25860-25426 calBCE (23446±107 BP, MAMS-11449)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    null,
+    "1240k capture",
+    0.35,
+    285337,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 27510,
+   "latitude": 50.45,
+   "longitude": 5.01,
+   "group": "Belgium_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "GoyetQ376-19",
+    "Goyet Cave, Belgium",
+    "long bone (humerus)",
+    "27717-27301 calBCE (23260±105 BP, GrA-54026)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    null,
+    "1240k capture",
+    0.086,
+    92546,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 27440,
+   "latitude": 50.45,
+   "longitude": 5.01,
+   "group": "Belgium_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "GOY001",
+    "Goyet Cave, Belgium",
+    "bone (rib)",
+    "25728-25296 calBCE (23150±110 BP, GrM-13861)",
+    "radiocarbon on the remains",
+    "male",
+    "R",
+    null,
+    "1240k capture",
+    0.0045,
+    5185,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 27200,
+   "latitude": 42.17,
+   "longitude": 2.74,
+   "group": "Spain_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "GER003",
+    "Mollet III, Spain",
+    "long bone (tibia)",
+    "25372-25126 calBCE (22860±80 BP, ETH-66710)",
+    "radiocarbon on the remains",
+    "male",
+    "C",
+    null,
+    "1240k capture",
+    0.051,
+    56200,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 26350,
+   "latitude": 42.31,
+   "longitude": 43.32,
+   "group": "Georgia_DzudzuanaCave_UP",
+   "paper": {
+    "name": "RohlandReichGenomeRes2022",
+    "doi": "https://doi.org/10.1101/gr.276728.122"
+   },
+   "person": [
+    "I11857",
+    "Dzudzuana Cave, Georgia",
+    "tooth",
+    "25550-23250 BCE",
+    "archaeological context",
+    "male",
+    "CT",
+    "N",
+    "shotgun",
+    0.035,
+    39181,
+    null,
+    null,
+    "PRJEB30575",
+    null
+   ]
+  },
+  {
+   "bp": 26300,
+   "latitude": 50.45,
+   "longitude": 5.01,
+   "group": "Belgium_Gravettian",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "GoyetQ56-16",
+    "Goyet Cave, Belgium",
+    "long bone",
+    "24847-24025 calBCE (22100±100 BP, GrA-59991)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    "U2",
+    "1240k capture",
+    0.0068,
+    7786,
+    null,
+    null,
+    "PRJEB13123",
+    null
+   ]
+  },
+  {
+   "bp": 26150,
+   "latitude": 50.45,
+   "longitude": 5.01,
+   "group": "Belgium_Gravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "GOY009",
+    "Goyet Cave, Belgium",
+    "long bone (tibia)",
+    "24410-23994 calBCE (21910±70 BP, GrM-13122)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    null,
+    "1240k capture",
+    0.0073,
+    8386,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 25590,
+   "latitude": 42.28,
+   "longitude": 43.28,
+   "group": "Georgia_KotiasKlde_UP",
+   "paper": {
+    "name": "AllentoftWillerslevNature2024",
+    "doi": "https://doi.org/10.1038/s41586-023-06865-0"
+   },
+   "person": [
+    "NEO283",
+    "Kotias Klde, Georgia",
+    "tooth",
+    "24059-23311 calBCE (21412±194 BP, UBA-40025)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    "U4'9",
+    "shotgun",
+    0.8,
+    622371,
+    null,
+    23.5,
+    "PRJEB64656",
+    null
+   ]
+  },
+  {
+   "bp": 24450,
+   "latitude": 37.44,
+   "longitude": -3.44,
+   "group": "Spain_UP_HG",
+   "paper": {
+    "name": "OlaldeReichScience2019",
+    "doi": "https://doi.org/10.1126/science.aav4040"
+   },
+   "person": [
+    "I10899",
+    "Cueva de la Carigüela, Spain",
+    "tooth",
+    "40000-5000 BCE",
+    "archaeological context",
+    "male",
+    "I",
+    "U5b1",
+    "1240k capture",
+    0.62,
+    474941,
+    null,
+    null,
+    "PRJEB30874",
+    null
+   ]
+  },
+  {
+   "bp": 24000,
+   "latitude": 51.4,
+   "longitude": 84.67,
+   "group": "Russia_DenisovaCave",
+   "paper": {
+    "name": "EsselMeyerNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-06035-2"
+   },
+   "person": [
+    "DCP1",
+    "Denisova Cave, Russia",
+    "tooth",
+    "22244-21884 calBCE (19990±61 BP, OxA-X-3089-11)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    null,
+    "AA204",
+    0.066,
+    66486,
+    null,
+    null,
+    "PRJEB56213",
+    "adult (young); female"
+   ]
+  },
+  {
+   "bp": 23480,
+   "latitude": 44.8,
+   "longitude": 1.4,
+   "group": "France_Occitanie_Solutrean",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "LPI002",
+    "Le Piage, France",
+    "tooth",
+    "21807-21243 calBCE (19458±71 BP) [R_Combine: (19330±100 BP, OxA-22552), (19580±100 BP, OxA-30083)]",
+    "radiocarbon on the remains",
+    "male",
+    "I1",
+    null,
+    "1240k capture",
+    0.019,
+    21591,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 20870,
+   "latitude": 43.42,
+   "longitude": -4.86,
+   "group": "Spain_Solutrean",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "RIE002",
+    "La Riera, Spain",
+    "cranial bone",
+    "19061-18775 calBCE (17300±50 BP, MAMS-51979)",
+    "radiocarbon on the remains",
+    "male",
+    "J1a2a1a2c~",
+    null,
+    "1240k capture",
+    0.0045,
+    5192,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 19430,
+   "latitude": 45.96,
+   "longitude": 125.78,
+   "group": "China_AmurRiverBasin_LatePaleolithic",
+   "paper": {
+    "name": "MaoFuCell2021",
+    "doi": "https://doi.org/10.1016/j.cell.2021.04.040"
+   },
+   "person": [
+    "NE56",
+    "Zhaodong on the northern bank of the Songhua River, China",
+    null,
+    "17605-17301 calBCE (16090±45 BP, BA-152200)",
+    "radiocarbon on the remains",
+    "male",
+    "C",
+    "G2",
+    "1240k capture",
+    1.9,
+    751559,
+    null,
+    28.3,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 18780,
+   "latitude": 43.25,
+   "longitude": -3.45,
+   "group": "Spain_Magdalenian",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "ElMiron",
+    "El Mirón Cave, Spain",
+    "bone (phalanx)",
+    "16898-16747 calBCE (15460±40 BP, MAMS-14585)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    null,
+    "1240k capture",
+    1.6,
+    633664,
+    null,
+    109.2,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 18080,
+   "latitude": 46.41,
+   "longitude": 0.66,
+   "group": "France_Magdalenian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "LMA001",
+    "La Marche, France",
+    "tooth",
+    "16273-15958 calBCE (14750±50 BP, MAMS-51338)",
+    "radiocarbon on the remains",
+    "male",
+    "C1a2",
+    null,
+    "1240k capture",
+    0.021,
+    23863,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 18040,
+   "latitude": 56.05,
+   "longitude": 92.87,
+   "group": "Russia_AfontovaGora_UP",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "AfontovaGora3",
+    "Afontova-Gora, Russia",
+    "tooth",
+    "16257-15905 calBCE (14710±60 BP, MAMS-27186)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    null,
+    "1240k capture",
+    0.24,
+    224369,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 17040,
+   "latitude": 40.88,
+   "longitude": 17.25,
+   "group": "Italy_Apulia_UP",
+   "paper": {
+    "name": "HigginsCaramelliNatComm2024",
+    "doi": "https://doi.org/10.1038/s41467-024-51150-x"
+   },
+   "person": [
+    "Mura",
+    "Grotta delle Mura, Italy",
+    "petrous (cochlea)",
+    "15362-14962 calBCE (14005±36 BP) [R_Combine: (14050±50 BP, MAMS-42397), (13960±50 BP, MAMS-42398)]",
+    "radiocarbon on the remains",
+    "male",
+    "I2a1a1",
+    "U2'3'4'7'8'9",
+    "shotgun",
+    10.0,
+    1067439,
+    null,
+    212.5,
+    "PRJEB66279",
+    "subadult (infant)"
+   ]
+  },
+  {
+   "bp": 16770,
+   "latitude": 56.05,
+   "longitude": 92.87,
+   "group": "Russia_AfontovaGora_UP",
+   "paper": {
+    "name": "RaghavanWillerslevNature2013",
+    "doi": "https://doi.org/10.1038/nature12736"
+   },
+   "person": [
+    "AfontovaGora2",
+    "Afontova-Gora, Russia",
+    "long bone",
+    "15001-14640 calBCE (13810±35 BP, UCIAMS-79661)",
+    "radiocarbon on the remains",
+    "male",
+    "R1b",
+    null,
+    "shotgun",
+    0.083,
+    88178,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 15950,
+   "latitude": 36.65,
+   "longitude": 5.37,
+   "group": "Algeria_Afalou_Paleolithic",
+   "paper": {
+    "name": "LipsonReichNature2025",
+    "doi": "https://doi.org/10.1038/s41586-025-08699-4"
+   },
+   "person": [
+    "I13901",
+    "Afalou, Algeria",
+    "petrous (cochlea)",
+    "22000-6000 BCE",
+    "archaeological context",
+    "male",
+    "E1b1b1a",
+    null,
+    "1240k capture",
+    null,
+    378208,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 15610,
+   "latitude": 48.22,
+   "longitude": 9.45,
+   "group": "Germany_HohleFelsAchValley_Magdalenian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "HohleFels49",
+    "Hohle-Fels-Ach-Valley, Germany",
+    "long bone (femur)",
+    "13928-13361 calBCE (13038±88 BP) [R_Combine: (12770±220 BP, H5312-4907), (13085±95 BP, H5119-4601)]",
+    "radiocarbon on the remains",
+    "male",
+    "I2a1",
+    "U8a",
+    "1240k capture",
+    0.35,
+    316444,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 15570,
+   "latitude": 49.98,
+   "longitude": 20.28,
+   "group": "Poland_Magdalenian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "MAZ003",
+    "Maszycka, Poland",
+    "bone (mandible)",
+    "13804-13407 calBCE (13010±50 BP, MAMS-50924)",
+    "radiocarbon on the remains",
+    "male",
+    "H3b",
+    null,
+    "1240k capture",
+    0.034,
+    38216,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 15500,
+   "latitude": -11.66,
+   "longitude": 33.64,
+   "group": "Malawi_LSA_15500BP",
+   "paper": {
+    "name": "LipsonPrendergastNature2022",
+    "doi": "https://doi.org/10.1038/s41586-022-04430-9"
+   },
+   "person": [
+    "I19528",
+    "Hora, Malawi",
+    "petrous (cochlea)",
+    "15050-12050 BCE",
+    "archaeological context",
+    "male",
+    "B2b1a2~",
+    "L0d3",
+    "1240k capture",
+    0.2,
+    183547,
+    null,
+    null,
+    "PRJEB49291",
+    null
+   ]
+  },
+  {
+   "bp": 15500,
+   "latitude": -11.66,
+   "longitude": 33.64,
+   "group": "Malawi_LSA_15500BP",
+   "paper": {
+    "name": "LipsonPrendergastNature2022",
+    "doi": "https://doi.org/10.1038/s41586-022-04430-9"
+   },
+   "person": [
+    "I19529",
+    "Hora, Malawi",
+    "petrous (cochlea)",
+    "15050-12050 BCE",
+    "archaeological context",
+    "male",
+    "B2b",
+    "L5b",
+    "1240k capture",
+    0.038,
+    39976,
+    null,
+    null,
+    "PRJEB49291",
+    null
+   ]
+  },
+  {
+   "bp": 15460,
+   "latitude": 47.23,
+   "longitude": 6.1,
+   "group": "France_Magdalenian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "Rigney1",
+    "Rigney, France",
+    "bone (mandible)",
+    "15646-15271 calBCE (12930±55 BP, Ly-6515)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    null,
+    "1240k capture",
+    0.15,
+    156932,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 15410,
+   "latitude": 37.48,
+   "longitude": 33.03,
+   "group": "Turkey_Epipaleolithic",
+   "paper": {
+    "name": "FeldmanKrauseNatComm2019",
+    "doi": "https://doi.org/10.1038/s41467-019-09209-7"
+   },
+   "person": [
+    "ZBC",
+    "Pınarbaşı, Turkey",
+    "bone (phalanx)",
+    "13629-13308 calBCE (12890±40 BP, MAMS-30693)",
+    "radiocarbon on the remains",
+    "male",
+    "C1a2",
+    "K2b",
+    "1240k capture",
+    2.9,
+    891783,
+    null,
+    null,
+    "PRJEB24794",
+    null
+   ]
+  },
+  {
+   "bp": 15210,
+   "latitude": 48.37,
+   "longitude": 2.89,
+   "group": "France_Magdalenian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "PIN004",
+    "Pincevent, France",
+    "long bone (femur)",
+    "13410-13091 calBCE (12750±45 BP, ECHo-4520)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    null,
+    "1240k capture",
+    0.061,
+    44444,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 15080,
+   "latitude": 50.45,
+   "longitude": 5.01,
+   "group": "Belgium_Magdalenian",
+   "paper": {
+    "name": "Villalba-MoucoHaakCurrBiol2019",
+    "doi": "https://doi.org/10.1016/j.cub.2019.02.006"
+   },
+   "person": [
+    "GoyetQ-2",
+    "Goyet Cave, Belgium",
+    "long bone",
+    "13305-12976 calBCE (12650±50 BP, GrA-46168)",
+    "radiocarbon on the remains",
+    "male",
+    "I2a1a1b1~",
+    null,
+    "1240k capture",
+    0.11,
+    95052,
+    null,
+    null,
+    "PRJEB13123",
+    null
+   ]
+  },
+  {
+   "bp": 14820,
+   "latitude": 48.24,
+   "longitude": 9.46,
+   "group": "Germany_BrillenhohleAchValley_Magdalenian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "Brillenhohle",
+    "Brillenhöhle-Ach-Valley, Germany",
+    "cranial bone",
+    "13167-12525 calBCE (12535±50 BP, OxA-23414)",
+    "radiocarbon on the remains",
+    "male",
+    "I2a1",
+    null,
+    "1240k capture",
+    0.021,
+    22816,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 14690,
+   "latitude": 48.22,
+   "longitude": 9.45,
+   "group": "Germany_HohleFelsAchValley_Magdalenian",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "HohleFels79",
+    "Hohle-Fels-Ach-Valley, Germany",
+    "cranial bone",
+    "13101-12356 calBCE (12490±70 BP, MAMS-25564)",
+    "radiocarbon on the remains",
+    "male",
+    null,
+    null,
+    "1240k capture",
+    0.0081,
+    9107,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 14650,
+   "latitude": 34.81,
+   "longitude": -2.4,
+   "group": "Morocco_Iberomaurusian",
+   "paper": {
+    "name": "VanDeLoosdrechtKrauseScience2018",
+    "doi": "https://doi.org/10.1126/science.aar8380"
+   },
+   "person": [
+    "TAF010",
+    "Taforalt Cave, Morocco",
+    "petrous (cochlea)",
+    "13137-12252 calBCE (12470±100 BP, OxA-16663)",
+    "radiocarbon on the remains",
+    "male",
+    "E1b",
+    null,
+    "1240k capture",
+    0.65,
+    410381,
+    null,
+    144.3,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 14620,
+   "latitude": 48.32,
+   "longitude": 9.35,
+   "group": "Germany_Westerheim_Magdalenian-oWHG",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "Burkhardtshohle",
+    "Westerheim, Germany",
+    "cranial bone",
+    "13127-12211 calBCE (12450±110 BP, ETH-7613)",
+    "radiocarbon on the remains",
+    "male",
+    "I2a1a1b",
+    null,
+    "1240k capture",
+    0.029,
+    32846,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 14520,
+   "latitude": 45.96,
+   "longitude": 125.78,
+   "group": "China_AmurRiverBasin_LatePaleolithic",
+   "paper": {
+    "name": "MaoFuCell2021",
+    "doi": "https://doi.org/10.1016/j.cell.2021.04.040"
+   },
+   "person": [
+    "NE34",
+    "Zhaodong on the northern bank of the Songhua River, China",
+    null,
+    "12896-12285 calBCE (12395±35 BP, BA-152178)",
+    "radiocarbon on the remains",
+    "male",
+    "A00",
+    "D4h3",
+    "1240k capture",
+    2.7,
+    558137,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 14500,
+   "latitude": 34.81,
+   "longitude": -2.4,
+   "group": "Morocco_Iberomaurusian",
+   "paper": {
+    "name": "VanDeLoosdrechtKrauseScience2018",
+    "doi": "https://doi.org/10.1126/science.aar8380"
+   },
+   "person": [
+    "TAF014",
+    "Taforalt Cave, Morocco",
+    "petrous (cochlea)",
+    "13200-11900 BCE",
+    "archaeological context",
+    "male",
+    "E1b1b",
+    "M1b",
+    "1240k capture",
+    3.8,
+    872214,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 14500,
+   "latitude": 34.81,
+   "longitude": -2.4,
+   "group": "Morocco_Iberomaurusian",
+   "paper": {
+    "name": "VanDeLoosdrechtKrauseScience2018",
+    "doi": "https://doi.org/10.1126/science.aar8380"
+   },
+   "person": [
+    "TAF015",
+    "Taforalt Cave, Morocco",
+    "petrous (cochlea)",
+    "13200-11900 BCE",
+    "archaeological context",
+    "male",
+    "E1b1b1a1",
+    "U6a1b",
+    "1240k capture",
+    0.095,
+    68607,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 14460,
+   "latitude": 34.81,
+   "longitude": -2.4,
+   "group": "Morocco_Iberomaurusian",
+   "paper": {
+    "name": "VanDeLoosdrechtKrauseScience2018",
+    "doi": "https://doi.org/10.1126/science.aar8380"
+   },
+   "person": [
+    "TAF012",
+    "Taforalt Cave, Morocco",
+    "petrous (cochlea)",
+    "12888-12175 calBCE (12355±50 BP, OxA-23780)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    "U6a7",
+    "1240k capture",
+    0.51,
+    297180,
+    "siblings TAF011",
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 14220,
+   "latitude": 34.81,
+   "longitude": -2.4,
+   "group": "Morocco_Iberomaurusian",
+   "paper": {
+    "name": "VanDeLoosdrechtKrauseScience2018",
+    "doi": "https://doi.org/10.1126/science.aar8380"
+   },
+   "person": [
+    "TAF009",
+    "Taforalt Cave, Morocco",
+    "petrous (cochlea)",
+    "12849-12097 calBCE (12255±50 BP, OxA-23779)",
+    "radiocarbon on the remains",
+    "male",
+    "E1b1b1a1",
+    "U6a6b",
+    "1240k capture",
+    0.32,
+    264753,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 14170,
+   "latitude": 45.96,
+   "longitude": 125.78,
+   "group": "China_AmurRiverBasin_LatePaleolithic",
+   "paper": {
+    "name": "MaoFuCell2021",
+    "doi": "https://doi.org/10.1016/j.cell.2021.04.040"
+   },
+   "person": [
+    "NE5_AmurRiver",
+    "Zhaodong on the northern bank of the Songhua River, China",
+    null,
+    "12371-12101 calBCE (12240±40 BP, BA-090397)",
+    "radiocarbon on the remains",
+    "male",
+    "C2a1a",
+    "D4h3a+@152",
+    "1240k capture",
+    2.7,
+    522227,
+    null,
+    null,
+    null,
+    "adult (middle); 23-29 yrs"
+   ]
+  },
+  {
+   "bp": 14020,
+   "latitude": 46.15,
+   "longitude": 12.21,
+   "group": "Italy_NordEst_Epigravettian",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "Villabruna",
+    "Villabruna, Italy",
+    "long bone",
+    "12268-11851 calBCE (12140±70 BP, KIA-27004)",
+    "radiocarbon on the remains",
+    "male",
+    "R1b",
+    null,
+    "1240k capture",
+    4.3,
+    862590,
+    null,
+    74.9,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 13960,
+   "latitude": 50.71,
+   "longitude": 7.17,
+   "group": "Germany_Oberkassel_Federmesser_LMagdalenian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "OKL001",
+    "Oberkassel, Germany",
+    "petrous (cochlea)",
+    "12131-11859 calBCE (12100±49 BP) [R_Combine: (12180±100 BP, OxA-4792), (12075±55 BP, OxA-29868)]",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    "U5b1",
+    "1240k capture",
+    1.9,
+    859396,
+    null,
+    41.1,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 13700,
+   "latitude": 47.1,
+   "longitude": 6.87,
+   "group": "Switzerland_Epipaleolithic",
+   "paper": {
+    "name": "JonesBradleyNatComm2015",
+    "doi": "https://doi.org/10.1038/ncomms9912"
+   },
+   "person": [
+    "Bichon",
+    "Grotte du Bichon, Switzerland",
+    "petrous (cochlea)",
+    "11850-11579 calBCE (11855±50 BP, OxA-27763)",
+    "radiocarbon on the remains",
+    "male",
+    "I2a1a1b1b~",
+    "U5b1h",
+    "shotgun",
+    9.5,
+    1146174,
+    null,
+    null,
+    "PRJEB11364",
+    null
+   ]
+  },
+  {
+   "bp": 13450,
+   "latitude": 37.85,
+   "longitude": 14.7,
+   "group": "Italy_Sicily_Epigravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "STO001",
+    "San Teodoro, Italy",
+    "ossicle",
+    "11627-11397 calBCE (11590±40 BP, Beta-541772)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    "U2'3'4'7'8'9",
+    "1240k capture",
+    2.4,
+    943897,
+    null,
+    48.7,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 13430,
+   "latitude": 50.71,
+   "longitude": 7.17,
+   "group": "Germany_Oberkassel_Federmesser_LMagdalenian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "OKL002",
+    "Oberkassel, Germany",
+    "petrous (cochlea)",
+    "11779-11236 calBCE (11570±100 BP, OxA-4790)",
+    "radiocarbon on the remains",
+    "male",
+    "I2a1a2",
+    "U5b1",
+    "1240k capture",
+    1.1,
+    658892,
+    null,
+    27.4,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 13290,
+   "latitude": 32.65,
+   "longitude": 35.07,
+   "group": "Israel_Natufian",
+   "paper": {
+    "name": "LazaridisReichNature2016",
+    "doi": "https://doi.org/10.1038/nature19310"
+   },
+   "person": [
+    "I1687",
+    "Raqefet Cave, Israel",
+    "petrous (cochlea)",
+    "11541-11150 calBCE (11405±120 BP, RTK-6607)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    "R0a2'3",
+    "1240k capture",
+    0.096,
+    93139,
+    null,
+    null,
+    "PRJEB14455",
+    null
+   ]
+  },
+  {
+   "bp": 13280,
+   "latitude": 42.41,
+   "longitude": 42.58,
+   "group": "Georgia_Satsurblia_LateUP",
+   "paper": {
+    "name": "JonesBradleyNatComm2015",
+    "doi": "https://doi.org/10.1038/ncomms9912"
+   },
+   "person": [
+    "SATP",
+    "Satsurblia, Georgia",
+    "petrous (cochlea)",
+    "11461-11225 calBCE (11415±50 BP, OxA-34632)",
+    "radiocarbon on the remains",
+    "male",
+    "J1",
+    "K3",
+    "shotgun",
+    1.4,
+    809757,
+    null,
+    null,
+    "PRJEB11364",
+    null
+   ]
+  },
+  {
+   "bp": 13030,
+   "latitude": 47.21,
+   "longitude": 6.45,
+   "group": "France_Mesolithic",
+   "paper": {
+    "name": "MathiesonReichNature2018",
+    "doi": "https://doi.org/10.1038/nature25778"
+   },
+   "person": [
+    "Rochedane",
+    "Rochedane, France",
+    "bone",
+    "11207-10955 calBCE (11120±50 BP, GrA-41739)",
+    "radiocarbon on the remains",
+    "male",
+    "I",
+    "U5b2b",
+    "1240k capture",
+    0.24,
+    150604,
+    null,
+    null,
+    "PRJEB22652",
+    null
+   ]
+  },
+  {
+   "bp": 12990,
+   "latitude": 48.37,
+   "longitude": 2.89,
+   "group": "Italy_FriuliVeneziaGiulia_Epigravettian",
+   "paper": {
+    "name": "PosthKrauseNature2023",
+    "doi": "https://doi.org/10.1038/s41586-023-05726-0"
+   },
+   "person": [
+    "PRD001",
+    "Grotte di Pradis, Italy",
+    "tooth",
+    "11139-10948 calBCE (11057±31 BP, MAMS-38332(AIX-12033.1.1))",
+    "radiocarbon on the remains",
+    "male",
+    "I2a1",
+    null,
+    "1240k capture",
+    0.022,
+    24786,
+    null,
+    null,
+    "PRJEB51862",
+    null
+   ]
+  },
+  {
+   "bp": 12710,
+   "latitude": 61.23,
+   "longitude": 38.91,
+   "group": "Russia_Peschanitsa_Mesolithic",
+   "paper": {
+    "name": "AllentoftWillerslevNature2024",
+    "doi": "https://doi.org/10.1038/s41586-023-06865-0"
+   },
+   "person": [
+    "PES001",
+    "Peschanitsa, Russia",
+    "tooth",
+    "10813-10672 calBCE (10728±59 BP, UBA-41633)",
+    "radiocarbon on the remains",
+    "male",
+    "R1a",
+    "U4a1",
+    "shotgun",
+    2.4,
+    1029091,
+    null,
+    null,
+    "PRJEB64656",
+    "adult (mature); 40-50 yrs"
+   ]
+  },
+  {
+   "bp": 12700,
+   "latitude": 32.65,
+   "longitude": 35.07,
+   "group": "Israel_Natufian",
+   "paper": {
+    "name": "LazaridisReichNature2016",
+    "doi": "https://doi.org/10.1038/nature19310"
+   },
+   "person": [
+    "I0861",
+    "Raqefet Cave, Israel",
+    "petrous (cochlea)",
+    "12000-9500 BCE",
+    "archaeological context",
+    "male",
+    "E",
+    "JT",
+    "1240k capture",
+    0.12,
+    116215,
+    null,
+    null,
+    "PRJEB14455",
+    null
+   ]
+  },
+  {
+   "bp": 12700,
+   "latitude": 32.65,
+   "longitude": 35.07,
+   "group": "Israel_Natufian",
+   "paper": {
+    "name": "LazaridisReichNature2016",
+    "doi": "https://doi.org/10.1038/nature19310"
+   },
+   "person": [
+    "I1069",
+    "Raqefet Cave, Israel",
+    "petrous (cochlea)",
+    "12000-9500 BCE",
+    "archaeological context",
+    "male",
+    "E1b1b",
+    "HV",
+    "1240k capture",
+    0.027,
+    27653,
+    null,
+    null,
+    "PRJEB14455",
+    null
+   ]
+  },
+  {
+   "bp": 12700,
+   "latitude": 32.65,
+   "longitude": 35.07,
+   "group": "Israel_Natufian",
+   "paper": {
+    "name": "LazaridisReichScience2022",
+    "doi": "https://doi.org/10.1126/science.abm4247"
+   },
+   "person": [
+    "I1072",
+    "Raqefet Cave, Israel",
+    "petrous (cochlea)",
+    "12000-9500 BCE",
+    "archaeological context",
+    "male",
+    "E1b1b1b2a",
+    null,
+    "1240k capture",
+    null,
+    583516,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 12700,
+   "latitude": 32.65,
+   "longitude": 35.07,
+   "group": "Israel_Natufian",
+   "paper": {
+    "name": "LazaridisReichNature2025",
+    "doi": "https://doi.org/10.1038/s41586-024-08531-5"
+   },
+   "person": [
+    "I1685",
+    "Raqefet Cave, Israel",
+    "petrous (cochlea)",
+    "12000-9500 BCE",
+    "archaeological context",
+    "male",
+    "E1",
+    null,
+    "1240k and Twist capture",
+    0.037,
+    38706,
+    null,
+    null,
+    "PRJEB81467",
+    null
+   ]
+  },
+  {
+   "bp": 12700,
+   "latitude": 32.65,
+   "longitude": 35.07,
+   "group": "Israel_Natufian",
+   "paper": {
+    "name": "LazaridisReichNature2016",
+    "doi": "https://doi.org/10.1038/nature19310"
+   },
+   "person": [
+    "I1690",
+    "Raqefet Cave, Israel",
+    "petrous (cochlea)",
+    "12000-9500 BCE",
+    "archaeological context",
+    "male",
+    "E1b1b",
+    null,
+    "1240k capture",
+    0.03,
+    30183,
+    null,
+    null,
+    "PRJEB14455",
+    null
+   ]
+  },
+  {
+   "bp": 12650,
+   "latitude": 45.96,
+   "longitude": 125.78,
+   "group": "China_AmurRiverBasin_LatePaleolithic",
+   "paper": {
+    "name": "MaoFuCell2021",
+    "doi": "https://doi.org/10.1016/j.cell.2021.04.040"
+   },
+   "person": [
+    "NE1_AmurRiver",
+    "Zhaodong on the northern bank of the Songhua River, China",
+    null,
+    "10774-10550 calBCE (10625±40 BP, BA-090406)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    "D4g",
+    "1240k capture",
+    0.1,
+    89426,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 12200,
+   "latitude": 37.85,
+   "longitude": 14.7,
+   "group": "Italy_Sicily_Epigravettian",
+   "paper": {
+    "name": "ScorranoSikoraCommunBiol2022",
+    "doi": "https://doi.org/10.1038/s42003-022-04190-2"
+   },
+   "person": [
+    "MA1863",
+    "San Teodoro, Italy",
+    null,
+    "12000-8500 BCE",
+    "archaeological context",
+    "male",
+    "I2a1b",
+    "U5b2b",
+    "shotgun",
+    null,
+    418262,
+    null,
+    null,
+    "PRJEB55789",
+    null
+   ]
+  },
+  {
+   "bp": 12200,
+   "latitude": 37.85,
+   "longitude": 14.7,
+   "group": "Italy_Sicily_Epigravettian",
+   "paper": {
+    "name": "ScorranoSikoraCommunBiol2022",
+    "doi": "https://doi.org/10.1038/s42003-022-04190-2"
+   },
+   "person": [
+    "MA1864",
+    "San Teodoro, Italy",
+    null,
+    "12000-8500 BCE",
+    "archaeological context",
+    "female",
+    null,
+    "U5b2b",
+    "shotgun",
+    null,
+    88404,
+    null,
+    null,
+    "PRJEB55789",
+    null
+   ]
+  },
+  {
+   "bp": 12000,
+   "latitude": 37.93,
+   "longitude": 12.33,
+   "group": "Italy_Sicily_Epigravettian_HG",
+   "paper": {
+    "name": "MathiesonReichNature2018",
+    "doi": "https://doi.org/10.1038/nature25778"
+   },
+   "person": [
+    "I2158",
+    "Grotta d’Oriente, Italy",
+    "long bone",
+    "12350-7750 BCE",
+    "archaeological context",
+    "female",
+    null,
+    "U2'3'4'7'8'9",
+    "1240k capture",
+    0.06,
+    61406,
+    null,
+    null,
+    "PRJEB22652",
+    null
+   ]
+  },
+  {
+   "bp": 11950,
+   "latitude": 35.59,
+   "longitude": 53.5,
+   "group": "Iran_BeltCave_Mesolithic",
+   "paper": {
+    "name": "NarasimhanReichScience2019",
+    "doi": "https://doi.org/10.1126/science.aat7487"
+   },
+   "person": [
+    "I2312",
+    "Belt Cave, Iran",
+    "bone (phalanx)",
+    "12000-8000 BCE",
+    "archaeological context",
+    "male",
+    null,
+    "HV2a",
+    "1240k capture",
+    0.037,
+    41244,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 11910,
+   "latitude": 42.09,
+   "longitude": 1.6,
+   "group": "Spain_Azilian",
+   "paper": {
+    "name": "Villalba-MoucoHaakCurrBiol2019",
+    "doi": "https://doi.org/10.1016/j.cub.2019.02.006"
+   },
+   "person": [
+    "BAL003",
+    "Balma Guilanyà, Spain",
+    "tooth (molar)",
+    "10727-9272 calBCE (10195±255 BP, Ua-34298)",
+    "radiocarbon on the remains",
+    "male",
+    "IJ",
+    "U2'3'4'7'8'9",
+    "1240k capture",
+    0.023,
+    20551,
+    null,
+    null,
+    "PRJEB30985",
+    null
+   ]
+  },
+  {
+   "bp": 11890,
+   "latitude": 48.22,
+   "longitude": 35.4,
+   "group": "Ukraine_Mesolithic",
+   "paper": {
+    "name": "AllentoftWillerslevNature2024",
+    "doi": "https://doi.org/10.1038/s41586-023-06865-0"
+   },
+   "person": [
+    "NEO550",
+    "Vasylivka-Dnieperpetrovsk-1, Ukraine",
+    "petrous (cochlea)",
+    "10509-9452 calBCE (10197±96 BP, OxA-X-3072-31)",
+    "radiocarbon on the remains",
+    "female",
+    null,
+    "H2a2a1",
+    "shotgun",
+    0.036,
+    36817,
+    null,
+    null,
+    "PRJEB64656",
+    null
+   ]
+  },
+  {
+   "bp": 11880,
+   "latitude": -31.92,
+   "longitude": -71.5,
+   "group": "Chile_LosRieles_12000BP",
+   "paper": {
+    "name": "PosthReichCell2018",
+    "doi": "https://doi.org/10.1016/j.cell.2018.10.027"
+   },
+   "person": [
+    "I11974",
+    "Los Rieles, Chile",
+    "petrous (cochlea)",
+    "10420-9450 calBCE (10415±40 BP, PSUAMS-5282)",
+    "radiocarbon on the remains",
+    "male",
+    "Q1b1a1a",
+    "C1b",
+    "1240k capture",
+    3.3,
+    825391,
+    null,
+    null,
+    "PRJEB28961",
+    "adult (mature); 40-45 yrs"
+   ]
+  },
+  {
+   "bp": 11780,
+   "latitude": 41.96,
+   "longitude": 13.54,
+   "group": "Italy_Abruzzo_Epigravettian",
+   "paper": {
+    "name": "AntonioPritchardScience2019",
+    "doi": "https://doi.org/10.1126/science.aay6826"
+   },
+   "person": [
+    "R11",
+    "Grotta Continenza, Italy",
+    "petrous (cochlea)",
+    "9979-9700 calBCE (10148±22 BP) [R_Combine: (10200±30 BP, UCIAMS-198583), (10087±32 BP, OxA-41199)]",
+    "radiocarbon on the remains",
+    "male",
+    "I2a1b2",
+    "U5b1+16189+@16192",
+    "shotgun",
+    1.2,
+    773176,
+    null,
+    null,
+    "PRJEB32566",
+    null
+   ]
+  },
+  {
+   "bp": 11740,
+   "latitude": 44.29,
+   "longitude": 4.46,
+   "group": "France_Occitanie_Gard_Mesolithic",
+   "paper": {
+    "name": "FuReichNature2016",
+    "doi": "https://doi.org/10.1038/nature17993"
+   },
+   "person": [
+    "Iboussieres39",
+    "Iboussières, France",
+    "long bone",
+    "9992-9456 calBCE (10140±50 BP, GrA-43700)",
+    "radiocarbon on the remains",
+    "male",
+    null,
+    null,
+    "1240k capture",
+    0.0066,
+    7403,
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  {
+   "bp": 11680,
+   "latitude": 44.29,
+   "longitude": 4.46,
+   "group": "France_Occitanie_Gard_Mesolithic",
+   "paper": {
+    "name": "MathiesonReichNature2018",
+    "doi": "https://doi.org/10.1038/nature25778"
+   },
+   "person": [
+    "Iboussieres25-1",
+    "Iboussières, France",
+    null,
+    "10050-9400 BCE",
+    "archaeological context",
+    "male",
+    "F",
+    "U5b2a",
+    "1240k capture",
+    0.14,
+    71196,
+    null,
+    null,
+    "PRJEB22652",
+    null
+   ]
+  },
+  {
+   "bp": 11680,
+   "latitude": 44.29,
+   "longitude": 4.46,
+   "group": "France_Occitanie_Gard_Mesolithic",
+   "paper": {
+    "name": "MathiesonReichNature2018",
+    "doi": "https://doi.org/10.1038/nature25778"
+   },
+   "person": [
+    "Iboussieres31-2",
+    "Iboussières, France",
+    null,
+    "10050-9400 BCE",
+    "archaeological context",
+    "male",
+    "CT",
+    "U5b1",
+    "1240k capture",
+    0.095,
+    72425,
+    null,
+    null,
+    "PRJEB22652",
+    null
+   ]
+  }
+ ]
+}

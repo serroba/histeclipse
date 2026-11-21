@@ -13,7 +13,7 @@ const text = v.nullable(v.pipe(v.string(), v.minLength(1), v.maxLength(200)));
 const positive = v.nullable(v.pipe(v.number(), v.gtValue(0)));
 
 /** Each: ID, place, element, date, how dated, sex, Y, mtDNA, data, coverage, SNPs, kin, ROH, archive, age. */
-const PersonSchema = v.tuple([
+export const PersonSchema = v.tuple([
   v.pipe(v.string(), v.minLength(1)),
   v.pipe(v.string(), v.minLength(1)),
   text,

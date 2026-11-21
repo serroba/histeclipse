@@ -162,6 +162,23 @@ function mixing(
   ];
 }
 
+/** The ice-age DNA sites (#1059): how many places and people, by then. */
+function dnaLine(dna: { readonly places: number; readonly people: number }): DeepNoteBlock[] {
+  if (dna.places === 0) return [];
+  return [
+    {
+      list: [
+        {
+          class: 'humans-legend is-dna',
+          parts: [
+            `Ancient DNA of our species: ${String(dna.people)} ${dna.people === 1 ? 'person' : 'people'} at ${String(dna.places)} ${dna.places === 1 ? 'place' : 'places'}, from the Allen Ancient DNA Resource. Tap one for who they were.`,
+          ],
+        },
+      ],
+    },
+  ];
+}
+
 /** The note: the model to shade, then the finds marked by species, the routes and the claims. */
 export function note(
   view: HumansView,
@@ -177,6 +194,7 @@ export function note(
   only: HumanSpecies | 'all',
   mixes: Parameters<typeof mixing>[0],
   story: () => void,
+  dna: Parameters<typeof dnaLine>[0] = { places: 0, people: 0 },
 ): DeepNoteBlock[] {
   return [
     {
@@ -208,6 +226,7 @@ export function note(
       ],
     },
     ...legend(view, only, open.species, open.only),
+    ...dnaLine(dna),
     ...routeList(routes, open.route),
     ...mixing(mixes, open.pick),
     ...view.questions.flatMap(({ title, claims }) => [
