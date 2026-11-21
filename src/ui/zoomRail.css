@@ -134,6 +134,13 @@
   }
 }
 
+/* A track too short for its stops' names apart (#979, #980): they fade, still there to be read
+   out, the buttons around them keeping their room. */
+.zoom-track[data-crowded] .zoom-stop {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .zoom-stop:hover,
 .zoom-stop[aria-pressed='true'] {
   background: var(--panel);
