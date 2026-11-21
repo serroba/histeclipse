@@ -68,6 +68,32 @@ describe('interbreeding (#1047)', () => {
     );
   });
 
+  it('names a study challenging a trait as such', async () => {
+    const data = await load();
+    const [trait] = data.traits;
+    if (trait === undefined) throw new Error('no trait');
+    const challenged = {
+      ...data,
+      traits: [
+        {
+          ...trait,
+          evidence: [
+            {
+              stance: 'challenges' as const,
+              kind: 'genetic' as const,
+              text: 'Not so.',
+              source: { citation: 'B 2021', doi: '10.1/b' },
+            },
+          ],
+        },
+      ],
+    };
+    expect(traitCard(challenged, trait.id)?.facts[1]).toEqual([
+      'Challenges (genetic)',
+      'Not so. (B 2021)',
+    ]);
+  });
+
   it('gives a trait its card, with the studies of it', async () => {
     const data = await load();
     const card = traitCard(data, 'covid-19');

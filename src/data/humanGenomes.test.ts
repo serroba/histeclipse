@@ -58,4 +58,76 @@ describe('ancient DNA (#1047)', () => {
     );
     expect(row?.[1]).toMatch(/not dated/);
   });
+
+  it('writes each sample’s details where known, and leaves out what is not', () => {
+    const source = { citation: 'A et al. 2020, Nature', doi: '10.1/a' };
+    const base = {
+      id: 'one',
+      label: 'One',
+      species: 'neanderthal' as const,
+      site: 'here',
+      fromKa: 50,
+      toKa: 40,
+      data: ['mtDNA' as const, 'Y' as const],
+      coverage: null,
+      sex: null,
+      mtHaplo: null,
+      yHaplo: null,
+      showed: 'It showed something.',
+      source,
+      repository: null,
+    };
+    const data = {
+      schemaVersion: 1 as const,
+      about: 'Test',
+      genomes: [
+        base,
+        {
+          ...base,
+          id: 'two',
+          label: 'Two',
+          fromKa: 60,
+          toKa: 55,
+          coverage: '30x',
+          sex: 'male' as const,
+          mtHaplo: 'NL',
+          yHaplo: 'A00',
+          dating: 'Radiocarbon.',
+          note: 'A preprint.',
+          repository: 'https://example.org/two',
+          evidence: [
+            {
+              stance: 'challenges' as const,
+              kind: 'genetic' as const,
+              text: 'Not so.',
+              source: { citation: 'B 2021', doi: '10.1/b' },
+            },
+          ],
+        },
+      ],
+    };
+    const rows = genomeRows(data, 'here');
+    expect(rows.facts).toEqual([
+      ['Ancient DNA', '2 samples read here.'],
+      [
+        'DNA: Two',
+        'mitochondrial DNA, Y chromosome (30x coverage, male, mtDNA NL, Y A00, 55–60 ka). It showed something. (A et al. 2020, Nature) Dated: Radiocarbon. A preprint.',
+      ],
+      ['Challenges (Two)', 'Not so. (B 2021)'],
+      [
+        'DNA: One',
+        'mitochondrial DNA, Y chromosome (40–50 ka). It showed something. (A et al. 2020, Nature)',
+      ],
+    ]);
+    expect(rows.links.map((link) => link.label)).toEqual([
+      'A et al. 2020, Nature',
+      'B 2021',
+      'Two: the data',
+      'A et al. 2020, Nature',
+    ]);
+    expect(genomeRows({ ...data, genomes: [base] }, 'here').facts[0]).toEqual([
+      'Ancient DNA',
+      '1 sample read here.',
+    ]);
+  });
 });

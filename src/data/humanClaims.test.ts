@@ -98,6 +98,18 @@ describe('undated finds (#1047)', () => {
     );
   });
 
+  it('shows an undated find of a species with no dated find only at today', async () => {
+    const data = await load();
+    const [first] = data.claims;
+    if (first === undefined) throw new Error('no claim');
+    const lone = {
+      ...data,
+      claims: [{ ...first, species: 'longi' as const, fromKa: null, toKa: null }],
+    };
+    expect(humansAt(lone, 0).sites).toHaveLength(1);
+    expect(humansAt(lone, 1).sites).toHaveLength(0);
+  });
+
   it('refuses a date half given', async () => {
     const [first] = claims.claims;
     if (first === undefined) throw new Error('no claim');
