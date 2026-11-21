@@ -95,7 +95,7 @@ function note(
     },
     {
       paragraph: [
-        `Humans: ${String(view.sites.length)} dated finds marked, each from its date on, as its source reports it; disputed ones in italics. Hand-picked, not complete. Tap a species for what it was.`,
+        `Humans: ${String(view.sites.length)} dated finds marked, each from its date on while its species is still found, as its source reports it; disputed ones in italics. Hand-picked, not complete. Tap a species for what it was.`,
       ],
     },
     ...legend(view, about),

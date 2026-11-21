@@ -133,21 +133,43 @@ export interface HumansView {
 
 /** A date range in thousands of years, as "59–71 ka" or "233 ka". */
 export function kaRange(fromKa: number, toKa: number): string {
-  const each = (value: number) => value.toLocaleString('en', { maximumFractionDigits: 2 });
-  return fromKa === toKa ? `${each(fromKa)} ka` : `${each(toKa)}–${each(fromKa)} ka`;
+  // A million years and more read in millions: "1.8–1.85 Ma", not "1,800–1,850 ka".
+  const [unit, scale] = fromKa >= 1000 ? (['Ma', 1000] as const) : (['ka', 1] as const);
+  const each = (value: number) =>
+    (value / scale).toLocaleString('en', { maximumFractionDigits: 2 });
+  return fromKa === toKa ? `${each(fromKa)} ${unit}` : `${each(toKa)}–${each(fromKa)} ${unit}`;
 }
 
-/** What to show `shownKa` thousand years ago: each find from its oldest date onwards. */
+/**
+ * The youngest date any claim gives each species, thousands of years ago: how long its finds stay
+ * marked. Our own species is still here.
+ */
+function lastAttested(data: HumanClaims): ReadonlyMap<HumanSpecies, number> {
+  const last = new Map<HumanSpecies, number>([['sapiens', 0]]);
+  for (const claim of data.claims)
+    last.set(claim.species, Math.min(last.get(claim.species) ?? Infinity, claim.toKa));
+  return last;
+}
+
+/**
+ * What to show `shownKa` thousand years ago: each find from its oldest date on, while its species
+ * is still attested (to the youngest date any claim gives it), so long-gone species leave the map.
+ */
 export function humansAt(data: HumanClaims, shownKa: number): HumansView {
   const reached = (claim: Claim) => shownKa <= claim.fromKa;
+  const last = lastAttested(data);
+  const living = (claim: Claim) => shownKa >= (last.get(claim.species) ?? 0);
   const line = (claim: Claim): ClaimLine => ({
     text: `${kaRange(claim.fromKa, claim.toKa)}: ${claim.claim}`,
     citation: claim.source.citation,
     doi: claim.source.doi,
     reached: reached(claim),
   });
-  const sites = data.claims.flatMap((claim): HumanSite[] =>
-    claim.place === null || !reached(claim)
+  // The newest first: where names crowd, those placed first are kept, and the latest finds are
+  // what the moment shown is about.
+  const newestFirst = [...data.claims].sort((a, b) => a.fromKa - b.fromKa);
+  const sites = newestFirst.flatMap((claim): HumanSite[] =>
+    claim.place === null || !reached(claim) || !living(claim)
       ? []
       : [
           {

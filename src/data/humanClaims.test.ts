@@ -64,10 +64,22 @@ describe('humansAt', () => {
 
   it('lists placeless claims without rivals once reached', async () => {
     const data = await load();
-    expect(humansAt(data, 30).others.map((claim) => claim.citation)).toContain(
+    const end = data.claims.find((claim) => claim.id === 'neanderthal-end');
+    if (end === undefined) throw new Error('no claim');
+    const one = { ...data, claims: [{ ...end, question: undefined }] };
+    expect(humansAt(one, 30).others.map((claim) => claim.citation)).toEqual([
+      'Higham et al. 2014, Nature',
+    ]);
+    expect(humansAt(one, 50).others).toEqual([]);
+  });
+
+  it('puts the end of the Neanderthals among its rival claims', async () => {
+    const extinction = humansAt(await load(), 30).questions.find((q) =>
+      q.title.includes('Neanderthals die out'),
+    );
+    expect(extinction?.claims.map((claim) => claim.citation)).toContain(
       'Higham et al. 2014, Nature',
     );
-    expect(humansAt(data, 50).others).toEqual([]);
   });
 });
 
@@ -75,6 +87,23 @@ describe('kaRange', () => {
   it('reads as one date or a range, youngest first', () => {
     expect(kaRange(233, 233)).toBe('233 ka');
     expect(kaRange(13.05, 12.75)).toBe('12.75–13.05 ka');
+  });
+
+  it('reads a million years and more in millions', () => {
+    expect(kaRange(1850, 1800)).toBe('1.8–1.85 Ma');
+    expect(kaRange(2800, 2800)).toBe('2.8 Ma');
+  });
+});
+
+describe('a species’ finds on the map', () => {
+  it('stay while it is still found, and leave once its youngest date has passed', async () => {
+    const data = await load();
+    const marked = (ka: number) => new Set(humansAt(data, ka).sites.map((site) => site.species));
+    expect(marked(1700).has('erectus')).toBe(true);
+    expect(marked(60).has('erectus')).toBe(false);
+    expect(marked(60).has('early-homo')).toBe(false);
+    // Our own species stays to today.
+    expect(marked(0).has('sapiens')).toBe(true);
   });
 });
 
