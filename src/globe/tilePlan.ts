@@ -17,16 +17,19 @@ import type { TileLimits } from './tileLimits';
 
 /** A level is drawn until each of its pixels spans this many of the screen's. */
 const STRETCH = 4;
-/** A pyramid of tiles: the Blue Marble's (#568), or today's heights (#1016). */
+/**
+ * A pyramid of tiles: the Blue Marble's (#568), or today's heights (#1016). A level may leave
+ * some tiles out (`missing`, as `x/y`): the next coarser level's tile is drawn there (#1030).
+ */
 export interface TilePyramid {
   readonly tileSize: number;
   readonly path: string;
-  readonly levels: readonly TileLevel[];
+  readonly levels: readonly (TileLevel & { readonly missing?: readonly string[] | undefined })[];
 }
 
 export interface Wanted {
   readonly level: TileLevel;
-  /** The tiles of `level` in view, nearest first. */
+  /** The tiles of `level` in view, nearest first; where `level` has none, `coarser`'s. */
   readonly keys: readonly TileKey[];
   /** The next coarser level, whose tiles stand in for those of `level` not yet arrived. */
   readonly coarser: TileLevel | null;
@@ -45,11 +48,16 @@ export function wantedTiles(
   const level = levelFor(tiles.levels, tiles.tileSize, distance - 1, pixelAngle, STRETCH);
   if (level === null) return null;
   const index = tiles.levels.indexOf(level);
-  return {
-    level,
-    keys: tilesInView(level, view, limits.shown),
-    coarser: index > 0 ? (tiles.levels[index - 1] ?? null) : null,
-  };
+  const coarser = index > 0 ? (tiles.levels[index - 1] ?? null) : null;
+  const missing = new Set(level.missing);
+  const keys = new Map<string, TileKey>();
+  for (const key of tilesInView(level, view, limits.shown)) {
+    const shown = missing.has(`${String(key.x)}/${String(key.y)}`)
+      ? coarser && parentTile(coarser, key, level)
+      : key;
+    if (shown) keys.set(tileId(shown), shown);
+  }
+  return { level, keys: [...keys.values()], coarser };
 }
 
 interface DrawPlan {
@@ -71,8 +79,9 @@ export function drawPlan(
 ): DrawPlan {
   if (wanted === null) return { beneath: [], tiles: [] };
   const { level, coarser, keys } = wanted;
+  // A coarser tile standing in for a missing one has none beneath it.
   const parentOf = (key: TileKey): TileKey | null =>
-    coarser === null ? null : parentTile(coarser, key, level);
+    coarser === null || key.z !== level.z ? null : parentTile(coarser, key, level);
   const beneath = new Map<string, TileKey>();
   for (const key of keys) {
     const parent = parentOf(key);

@@ -7,8 +7,11 @@ metre, and the site fetches only those for the ground in view, as it does the Bl
 
 The source is ETOPO 2022 (NOAA National Centers for Environmental Information 2022,
 doi:10.25921/fd45-gt74), its surface heights at 60" (the top of the ice sheets and of the sea
-floor), in the public domain. Each 2' cell is the mean of the four 60" cells in it; level 2 halves
-that again, to 4'. Lakes and land come from Natural Earth's 1:10m maps (public domain).
+floor), in the public domain. Level 4 is its 60" cells as they are (about 1.85 km); each 2' cell
+of level 3 is the mean of four of them, and level 2 halves that again, to 4'. Level 4 holds only
+the tiles that reach above ``SPARSE[4]`` (land, and the shelves the ice ages laid bare, #1030):
+the manifest lists the rest as missing, and the site draws level 3 there. Lakes and land come
+from Natural Earth's 1:10m maps (public domain).
 
 The tiles form the Blue Marble's pyramid (``earth_tiles.py``): level ``z`` is ``2**(z + 1)`` tiles
 across and ``2**z`` down, ``x`` east from 180° W and ``y`` south from the north pole, each with
@@ -28,6 +31,7 @@ Each cell is three bytes, written as a lossless WebP's red, green and blue:
 """
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -40,7 +44,7 @@ from histeclipse_pipeline.earth_tiles import cached
 from histeclipse_pipeline.today_ice import signed_area
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
+    from collections.abc import Iterable, Iterator, Mapping
     from pathlib import Path
 
 type Heights = npt.NDArray[np.float32]
@@ -74,7 +78,12 @@ LAND = 0
 #: Sea floor this deep is the open ocean, from which joined sea floor is traced (as shelf.py).
 DEEP_SEA = -3000.0
 #: Levels written, and how many 60" cells a side each one's cell averages.
-LEVELS = {2: 4, 3: 2}
+LEVELS = {2: 4, 3: 2, 4: 1}
+#: Levels written only where a tile has a cell higher than this, metres (#1030): the open ocean's
+#: floor gains little from the finest level, and would add a fifth to its size.
+SPARSE = {4: -200.0}
+#: Tiles encoded at once.
+WORKERS = 8
 MANIFEST = "manifest.json"
 SCHEMA_VERSION = 1
 
@@ -98,6 +107,8 @@ class Level:
 
 def averaged(heights: Heights, factor: int) -> Heights:
     """Average square blocks of ``factor`` cells a side into one."""
+    if factor == 1:
+        return heights
     rows, columns = map(int, heights.shape)
     if rows % factor or columns % factor:
         msg = f"a {rows} by {columns} grid does not divide into blocks of {factor}"
@@ -222,14 +233,23 @@ def cut(
 def save_tiles(
     tiles: Iterable[tuple[int, int, npt.NDArray[np.uint8]]], folder: Path, z: int
 ) -> int:
-    """Write tiles as lossless ``folder/z/x/y.webp``; return their bytes."""
-    written = 0
-    for x, y, tile in tiles:
+    """Write tiles as lossless ``folder/z/x/y.webp``, several at once; return their bytes."""
+
+    def save(tile: tuple[int, int, npt.NDArray[np.uint8]]) -> int:
+        x, y, cells = tile
         path = folder / str(z) / str(x) / f"{y}.webp"
         path.parent.mkdir(parents=True, exist_ok=True)
-        Image.fromarray(tile, mode="RGB").save(path, "WEBP", lossless=True, quality=100, method=6)
-        written += path.stat().st_size
-    return written
+        Image.fromarray(cells, mode="RGB").save(path, "WEBP", lossless=True, quality=100, method=6)
+        return path.stat().st_size
+
+    with ThreadPoolExecutor(WORKERS) as pool:
+        return sum(pool.map(save, tiles))
+
+
+def highest(heights: Heights, level: Level, tile_size: int) -> npt.NDArray[np.float32]:
+    """Each tile's highest cell, metres: rows of tiles north to south, columns west to east."""
+    blocks = heights.reshape(level.rows, tile_size, level.columns, tile_size)
+    return np.asarray(blocks.max(axis=(1, 3)), dtype=np.float32)
 
 
 def write_level(  # noqa: PLR0913 - a level's grids, where it goes, and how it is cut
@@ -240,14 +260,38 @@ def write_level(  # noqa: PLR0913 - a level's grids, where it goes, and how it i
     *,
     z: int,
     tile_size: int,
-) -> int:
-    """Write one level from its heights (north at the top), lakes and land; return its bytes."""
+    above: float | None = None,
+) -> tuple[int, list[str]]:
+    """Write one level from its heights (north at the top), lakes and land.
+
+    With ``above``, only the tiles with a cell higher than that are written. Returns the bytes
+    written and the tiles left out, as ``x/y``.
+    """
+    level = Level(z)
+    tops = highest(heights, level, tile_size)
+    wanted = np.ones(tops.shape, dtype=np.bool_) if above is None else np.greater(tops, above)
+    missing = [
+        f"{x}/{y}" for x in range(level.columns) for y in range(level.rows) if not wanted[y, x]
+    ]
     cells = bordered(encode(heights, classes(heights, lakes, land)), BORDER)
-    return save_tiles(cut(cells, Level(z), tile_size, BORDER), folder, z)
+    tiles = (tile for tile in cut(cells, level, tile_size, BORDER) if wanted[tile[1], tile[0]])
+    return save_tiles(tiles, folder, z), missing
 
 
-def manifest(levels: Iterable[int], tile_size: int) -> dict[str, object]:
+def level_entry(z: int, missing: list[str]) -> dict[str, object]:
+    """List a level as the manifest does, with the tiles it leaves out, if any."""
+    level = Level(z)
+    entry: dict[str, object] = {"z": z, "columns": level.columns, "rows": level.rows}
+    if missing:
+        entry["missing"] = missing
+    return entry
+
+
+def manifest(
+    levels: Iterable[int], tile_size: int, missing: Mapping[int, list[str]] | None = None
+) -> dict[str, object]:
     """Describe how tiles are cut and read, the levels there are, and where they came from."""
+    left_out = missing or {}
     return {
         "schemaVersion": SCHEMA_VERSION,
         "credit": CREDIT,
@@ -257,9 +301,7 @@ def manifest(levels: Iterable[int], tile_size: int) -> dict[str, object]:
         "path": "{z}/{x}/{y}.webp",
         "offset": OFFSET,
         "water": {"ocean": OCEAN, "lake": LAKE, "land": LAND},
-        "levels": [
-            {"z": z, "columns": Level(z).columns, "rows": Level(z).rows} for z in sorted(levels)
-        ],
+        "levels": [level_entry(z, left_out.get(z, [])) for z in sorted(levels)],
         "sources": [
             {"url": ETOPO_URL, "sha256": ETOPO_SHA256},
             {"url": LAKES_URL, "sha256": LAKES_SHA256},
@@ -268,10 +310,15 @@ def manifest(levels: Iterable[int], tile_size: int) -> dict[str, object]:
     }
 
 
-def write_manifest(folder: Path, levels: Iterable[int], tile_size: int = TILE_SIZE) -> None:
+def write_manifest(
+    folder: Path,
+    levels: Iterable[int],
+    tile_size: int = TILE_SIZE,
+    missing: Mapping[int, list[str]] | None = None,
+) -> None:
     """Write ``manifest.json``."""
     folder.mkdir(parents=True, exist_ok=True)
-    text = json.dumps(manifest(levels, tile_size), indent=2) + "\n"
+    text = json.dumps(manifest(levels, tile_size, missing), indent=2) + "\n"
     _ = (folder / MANIFEST).write_text(text, encoding="utf-8")
 
 
@@ -308,13 +355,17 @@ def write_relief_tiles(  # pragma: no cover - needs the downloaded files
     """Write every level and the manifest from ETOPO's file and the lakes' and land's archives."""
     full = read_etopo(etopo)
     written = 0
+    missing: dict[int, list[str]] = {}
     for z, factor in sorted(LEVELS.items()):
         heights = averaged(full, factor)
         rows, columns = map(int, heights.shape)
         water = rasterised(lakes, columns, rows, leave_out="Reservoir")
         ground = rasterised(land, columns, rows)
-        written += write_level(heights, water, ground, folder, z=z, tile_size=TILE_SIZE)
-    write_manifest(folder, LEVELS)
+        size, missing[z] = write_level(
+            heights, water, ground, folder, z=z, tile_size=TILE_SIZE, above=SPARSE.get(z)
+        )
+        written += size
+    write_manifest(folder, LEVELS, missing=missing)
     return written
 
 

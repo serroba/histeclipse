@@ -48,6 +48,8 @@ def grid(rows: list[str]) -> np.typing.NDArray[np.float32]:
 def test_averages_blocks_of_cells() -> None:
     heights = np.arange(16, dtype=np.float32).reshape(4, 4)
     assert as_floats(np.ravel(averaged(heights, 2)).astype(np.float64)) == [2.5, 4.5, 10.5, 12.5]
+    # The finest level is the cells as they are.
+    assert averaged(heights, 1) is heights
     with pytest.raises(ValueError, match="does not divide"):
         _ = averaged(np.zeros((3, 4), dtype=np.float32), 2)
 
@@ -190,8 +192,9 @@ def test_writes_lossless_tiles_that_read_back(tmp_path: Path) -> None:
     heights = np.full((rows, columns), -4000.0, dtype=np.float32)
     heights[:, 4:] = 123.0
     none = np.zeros((rows, columns), dtype=np.bool_)
-    written = write_level(heights, none, ~none, tmp_path, z=0, tile_size=4)
+    written, missing = write_level(heights, none, ~none, tmp_path, z=0, tile_size=4)
     assert written > 0
+    assert missing == []
     with Image.open(tmp_path / "0" / "1" / "0.webp") as image:
         east = np.asarray(image.convert("RGB"), dtype=np.uint8)
     assert east.shape == (4 + 2 * BORDER, 4 + 2 * BORDER, 3)
@@ -200,6 +203,28 @@ def test_writes_lossless_tiles_that_read_back(tmp_path: Path) -> None:
     # Its east border wraps to the west tile's sea.
     assert flat(back[BORDER : BORDER + 1, -1:]) == [-4000]
     assert flat(water[BORDER : BORDER + 1, -1:]) == [OCEAN]
+
+
+def test_leaves_out_the_tiles_no_higher_than_asked(tmp_path: Path) -> None:
+    rows, columns = 4, 8
+    # The west tile all deep sea; the east one reaching above -200 m in one cell.
+    heights = np.full((rows, columns), -4000.0, dtype=np.float32)
+    heights[2, 6] = -150.0
+    none = np.zeros((rows, columns), dtype=np.bool_)
+    _, missing = write_level(heights, none, ~none, tmp_path, z=0, tile_size=4, above=-200.0)
+    assert missing == ["0/0"]
+    assert not (tmp_path / "0" / "0" / "0.webp").exists()
+    assert (tmp_path / "0" / "1" / "0.webp").exists()
+
+
+def test_the_manifest_lists_a_level_s_missing_tiles(tmp_path: Path) -> None:
+    write_manifest(tmp_path, [3, 4], tile_size=675, missing={3: [], 4: ["0/0", "5/3"]})
+    manifest = read_json(tmp_path / "manifest.json")
+    assert isinstance(manifest, dict)
+    assert manifest["levels"] == [
+        {"z": 3, "columns": 16, "rows": 8},
+        {"z": 4, "columns": 32, "rows": 16, "missing": ["0/0", "5/3"]},
+    ]
 
 
 def test_writes_the_manifest(tmp_path: Path) -> None:

@@ -1,8 +1,9 @@
 /**
  * The manifest of today's heights in tiles (`public/textures/relief-tiles/manifest.json`), written
- * by the pipeline's `relief-tiles` command (#1015): ETOPO 2022 at 4′ (level 2) and 2′ (level 3),
- * for the ice-age globe close up (#1016). The tiles are addressed as the Blue Marble's (#568);
- * each has `tileSize` cells a side and `border` of its neighbours' round them.
+ * by the pipeline's `relief-tiles` command (#1015): ETOPO 2022 at 4′ (level 2), 2′ (level 3) and
+ * 1′ (level 4, only where there is land or shelf, #1030), for the ice-age globe close up (#1016).
+ * The tiles are addressed as the Blue Marble's (#568); each has `tileSize` cells a side and
+ * `border` of its neighbours' round them.
  *
  * A cell is three bytes: the height plus `offset` metres, high byte (red) then low (green), and
  * where water is (blue): 255 the ocean, 128 a lake or inland sea, 0 land.
@@ -20,6 +21,8 @@ const LevelSchema = v.pipe(
     z: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(10)),
     columns: count,
     rows: count,
+    // The tiles a level leaves out, as `x/y` (#1030): the next coarser level is drawn there.
+    missing: v.optional(v.array(v.pipe(v.string(), v.regex(/^\d+\/\d+$/)))),
   }),
   v.check(
     ({ z, columns, rows }) => columns === 2 ** (z + 1) && rows === 2 ** z,
