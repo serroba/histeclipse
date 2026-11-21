@@ -18,6 +18,7 @@ import type { ViewState } from '../../state/viewState';
 import { IMPACTS_CHIP, impactsChip, type ImpactsView } from './chip';
 import type { RelatedStep } from '../../ui/markerCard';
 import { whenItStruck } from '../../explore/related';
+import { loadPictures, pictureFor, type Pictures } from '../../data/pictures';
 import { errorMessage } from '../../util/errors';
 import { feature, RESTING, type FeatureContext, type FeatureInstance } from '../feature';
 import {
@@ -68,6 +69,10 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
   let mode: ImpactsMode = 'around';
   // Where deep time was in the frame before, while it plays.
   let strikeFrom: number | null = null;
+  // The craters' photos (#1088), loaded the first time a card opens; the crater last tapped.
+  let pictures: Pictures | null = null;
+  let picturesAsked = false;
+  let picked: Impact | null = null;
 
   // Whether the layer waits on the craters, to draw once they arrive.
   let waiting = false;
@@ -129,6 +134,35 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
     }
   }
 
+  /** A crater's card, with its photo and Wikipedia page once they have come (#1088). */
+  function showCard(data: Impacts, impact: Impact): void {
+    const shownMa = latest?.ma ?? null;
+    const card = impactCard(data, impact, shownMa ?? 0, play);
+    const photo = pictureFor(pictures, String(impact.id), `The ${impact.name} impact structure`);
+    context.cards.show({
+      ...card,
+      ...(photo.image === undefined ? {} : { image: photo.image }),
+      links: [...card.links, ...photo.links],
+      related: struckFrom(data, impact, shownMa, context.deepTime),
+    });
+  }
+
+  /** Load the photos once; the card still open shows its photo when they come. */
+  function askPictures(): void {
+    if (picturesAsked) return;
+    picturesAsked = true;
+    loadPictures(`${context.base}data/impact-pictures.json`, context.fetchJson).then(
+      (loaded) => {
+        pictures = loaded;
+        if (impacts !== null && picked !== null && context.cards.open()) showCard(impacts, picked);
+      },
+      (error: unknown) => {
+        picturesAsked = false;
+        context.notify(`Could not load the craters’ photos: ${errorMessage(error)}`);
+      },
+    );
+  }
+
   /** Play an impact at its place: turn the globe to it, come in close, and let it fall. */
   function play(spec: ImpactPlay): void {
     context.change((state) =>
@@ -164,12 +198,12 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
     pick(id) {
       const impact = pickedImpact(impacts, `impact:${id}`);
       if (impacts === null || impact === undefined) return;
-      const shownMa = latest?.ma ?? null;
-      const card = impactCard(impacts, impact, shownMa ?? 0, play);
-      context.cards.show({
-        ...card,
-        related: struckFrom(impacts, impact, shownMa, context.deepTime),
-      });
+      picked = impact;
+      showCard(impacts, impact);
+      askPictures();
+    },
+    unpick() {
+      picked = null;
     },
     // What the Layers panel offers under the layer: the craters' paths through time, in 3D.
     action: () => ({

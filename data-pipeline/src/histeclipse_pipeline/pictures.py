@@ -195,6 +195,11 @@ def _fetch(url: str) -> object:  # pragma: no cover - needs network access
     return cast("object", json.loads(body))
 
 
+def wikimedia_fetch(url: str) -> object:  # pragma: no cover - needs network access
+    """Ask a Wikimedia API, gently, as the pictures commands do; a missing page is empty."""
+    return _fetch(url)
+
+
 def fetch_pictures(
     source: Path, path: Path, must_mention: str | None = None
 ) -> int:  # pragma: no cover - needs network access
