@@ -109,6 +109,13 @@ describe('claimCard', () => {
         ['Where', 'Morocco'],
         ['When', '281–349 ka (thousands of years ago)'],
         ['Claim', 'The oldest known fossils of our species, about 315,000 years old.'],
+        ['Found', expect.stringMatching(/^Skull, face, jaws/) as unknown as string],
+        [
+          'Dated by',
+          expect.stringMatching(/^Thermoluminescence of heated flints/) as unknown as string,
+        ],
+        ['Discovered', expect.stringMatching(/barite miners in 1961/) as unknown as string],
+        ['Why it matters', expect.stringMatching(/^The oldest fossils/) as unknown as string],
         ['Source', 'Hublin et al. 2017, Nature'],
       ],
       links: [
@@ -137,6 +144,38 @@ describe('claimCard', () => {
     expect(card?.note).toMatch(
       /^One answer to “When did our species first leave Africa\?” Others: .*Hershkovitz et al\. 2018, Science/,
     );
+  });
+
+  it('gives the other side of a dispute as a link, and other species it was read as', async () => {
+    const data = await load();
+    const card = claimCard(data, 'apidima', null);
+    expect(card?.links.map((link) => link.label)).toEqual([
+      'Harvati et al. 2019, Nature',
+      'de Lumley et al. 2020, L’Anthropologie',
+    ]);
+    const read = {
+      ...data,
+      claims: data.claims.map((each) =>
+        each.id === 'apidima'
+          ? {
+              ...each,
+              alsoRead: [
+                { species: 'neanderthal' as const, source: { citation: 'X 2020', doi: '10.1/x' } },
+              ],
+            }
+          : each,
+      ),
+    };
+    expect(claimCard(read, 'apidima', null)?.facts[0]).toEqual([
+      'Who',
+      'Homo sapiens; also read as Neanderthals (X 2020)',
+    ]);
+    expect(claimCard(read, 'apidima', null)?.links.map((link) => link.label)).toContain('X 2020');
+  });
+
+  it('leaves out who found it when that is not known', async () => {
+    const card = claimCard(await load(), 'sahul-50', null);
+    expect(card?.facts.map(([label]) => label)).not.toContain('Discovered');
   });
 
   it('has no picture or page before the pictures load, and no card for an unknown find', async () => {

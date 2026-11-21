@@ -18,24 +18,90 @@
   outline-offset: 2px;
 }
 
+/* One colour per species (#1034): warm for the earliest Homo and H. erectus, greens for the
+   Middle Pleistocene, pinks for the island and small-brained species, then Denisovans and
+   Neanderthals, and gold for our own. The legend in the note uses the same. */
+.human-site,
+.humans-legend {
+  --species: rgb(247 201 90);
+}
+
+.human-site.is-early-homo,
+.humans-legend.is-early-homo {
+  --species: rgb(200 160 120);
+}
+
+.human-site.is-habilis,
+.humans-legend.is-habilis {
+  --species: rgb(235 150 80);
+}
+
+.human-site.is-rudolfensis,
+.humans-legend.is-rudolfensis {
+  --species: rgb(215 115 95);
+}
+
+.human-site.is-erectus,
+.humans-legend.is-erectus {
+  --species: rgb(255 110 70);
+}
+
+.human-site.is-antecessor,
+.humans-legend.is-antecessor {
+  --species: rgb(160 225 120);
+}
+
+.human-site.is-heidelbergensis,
+.humans-legend.is-heidelbergensis {
+  --species: rgb(80 200 150);
+}
+
+.human-site.is-naledi,
+.humans-legend.is-naledi {
+  --species: rgb(255 160 205);
+}
+
+.human-site.is-floresiensis,
+.humans-legend.is-floresiensis {
+  --species: rgb(250 115 160);
+}
+
+.human-site.is-luzonensis,
+.humans-legend.is-luzonensis {
+  --species: rgb(235 175 250);
+}
+
+.human-site.is-longi,
+.humans-legend.is-longi {
+  --species: rgb(160 120 235);
+}
+
+.human-site.is-neanderthal,
+.humans-legend.is-neanderthal {
+  --species: rgb(120 200 255);
+}
+
+.human-site.is-denisovan,
+.humans-legend.is-denisovan {
+  --species: rgb(220 140 255);
+}
+
 /* Dated finds of humans and their relatives: a dot and the date; disputed ones in italics. */
-.human-site::before {
+.human-site::before,
+.humans-legend::before {
   content: '';
   display: inline-block;
   width: 7px;
   height: 7px;
   margin-right: 5px;
   border-radius: 50%;
-  background: rgb(247 201 90);
+  background: var(--species);
   vertical-align: middle;
 }
 
-.human-site.is-neanderthal::before {
-  background: rgb(120 200 255);
-}
-
-.human-site.is-denisovan::before {
-  background: rgb(220 140 255);
+/* The legend's species, each a button to its card. */
+.humans-legend {
+  list-style: none;
 }
 
 .human-site.is-disputed {

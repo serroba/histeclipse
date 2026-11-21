@@ -1,0 +1,1686 @@
+{
+  "schemaVersion": 1,
+  "species": [
+    {
+      "id": "sapiens",
+      "name": "Homo sapiens",
+      "called": "Modern humans",
+      "aka": [
+        "Homo sapiens idaltu"
+      ],
+      "summary": "Our own species. It arose in Africa about 300,000 years ago and later spread across every continent. It is the only human species alive today.",
+      "firstKa": 315,
+      "lastKa": 0,
+      "facts": {
+        "span": [
+          {
+            "text": "Richter et al. 2017 dated the Jebel Irhoud fossils in Morocco to about 315,000 years ago, the oldest assigned to our species.",
+            "source": {
+              "citation": "Richter et al. 2017, Nature",
+              "doi": "10.1038/nature22335"
+            }
+          },
+          {
+            "text": "Omo I from Kibish, Ethiopia, lies below a volcanic ash dated to about 233,000 years ago, so it is at least that old.",
+            "source": {
+              "citation": "Vidal et al. 2022, Nature",
+              "doi": "10.1038/s41586-021-04275-8"
+            }
+          },
+          {
+            "text": "McDougall et al. 2005 had dated the Omo Kibish fossils to about 195,000 years ago.",
+            "source": {
+              "citation": "McDougall et al. 2005, Nature",
+              "doi": "10.1038/nature03258"
+            }
+          },
+          {
+            "text": "The Herto skulls from Ethiopia, about 160,000 years old, are close to living people in form.",
+            "source": {
+              "citation": "White et al. 2003, Nature",
+              "doi": "10.1038/nature01669"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "Brain size reached today’s range by about 300,000 years ago; the rounder brain shape of living people arose gradually, reaching today’s range by 100,000–35,000 years ago.",
+            "source": {
+              "citation": "Neubauer et al. 2018, Science Advances",
+              "doi": "10.1126/sciadv.aao5961"
+            }
+          },
+          {
+            "text": "The Jebel Irhoud people had modern-looking faces but longer, lower braincases than people today.",
+            "source": {
+              "citation": "Hublin et al. 2017, Nature",
+              "doi": "10.1038/nature22336"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "text": "Middle Stone Age tools lie with the Jebel Irhoud fossils, about 315,000 years ago.",
+            "source": {
+              "citation": "Richter et al. 2017, Nature",
+              "doi": "10.1038/nature22335"
+            }
+          },
+          {
+            "text": "Pieces of ochre engraved with cross-hatched lines at Blombos Cave, South Africa, are about 77,000 years old.",
+            "source": {
+              "citation": "Henshilwood et al. 2002, Science",
+              "doi": "10.1126/science.1067575"
+            }
+          }
+        ],
+        "range": [
+          {
+            "text": "Hublin et al. 2017 argue that early Homo sapiens was spread across Africa, from Morocco to the south and east, by about 300,000 years ago.",
+            "source": {
+              "citation": "Hublin et al. 2017, Nature",
+              "doi": "10.1038/nature22336"
+            }
+          },
+          {
+            "text": "A modern human jaw from Misliya Cave, Israel, is 177,000 to 194,000 years old.",
+            "source": {
+              "citation": "Hershkovitz et al. 2018, Science",
+              "doi": "10.1126/science.aap8369"
+            }
+          },
+          {
+            "text": "Early modern humans lived at Qafzeh, Israel, about 92,000 years ago, by thermoluminescence dating.",
+            "source": {
+              "citation": "Valladas et al. 1988, Nature",
+              "doi": "10.1038/331614a0"
+            }
+          },
+          {
+            "text": "Bacho Kiro Cave, Bulgaria, holds the oldest securely dated Homo sapiens remains in Europe, about 44,000 to 46,000 years old.",
+            "source": {
+              "citation": "Hublin et al. 2020, Nature",
+              "doi": "10.1038/s41586-020-2259-z"
+            }
+          }
+        ],
+        "dna": [
+          {
+            "text": "People living outside Africa today carry roughly 1–4% Neanderthal DNA, Green et al. 2010 estimate.",
+            "source": {
+              "citation": "Green et al. 2010, Science",
+              "doi": "10.1126/science.1188021"
+            }
+          },
+          {
+            "text": "A 45,000-year-old man from Ust’-Ishim, Siberia, already carried Neanderthal DNA from mixing not long before.",
+            "source": {
+              "citation": "Fu et al. 2014, Nature",
+              "doi": "10.1038/nature13810"
+            }
+          },
+          {
+            "text": "Reich et al. 2010 found that people in Melanesia carry about 4–6% DNA from Denisovans.",
+            "source": {
+              "citation": "Reich et al. 2010, Nature",
+              "doi": "10.1038/nature09710"
+            }
+          },
+          {
+            "text": "Ragsdale et al. 2023 model our ancestry as coming from several weakly linked African populations, rather than one source.",
+            "source": {
+              "citation": "Ragsdale et al. 2023, Nature",
+              "doi": "10.1038/s41586-023-06055-y"
+            }
+          }
+        ]
+      },
+      "debates": [
+        {
+          "question": "Did our species arise in one region of Africa or across the continent?",
+          "views": [
+            {
+              "text": "Hublin et al. 2017 read the Jebel Irhoud fossils as evidence of a pan-African origin of our species.",
+              "source": {
+                "citation": "Hublin et al. 2017, Nature",
+                "doi": "10.1038/nature22336"
+              }
+            },
+            {
+              "text": "Scerri et al. 2018 argue our species evolved in subdivided populations across Africa, linked by gene flow.",
+              "source": {
+                "citation": "Scerri et al. 2018, Trends in Ecology & Evolution",
+                "doi": "10.1016/j.tree.2018.05.005"
+              }
+            },
+            {
+              "text": "Ragsdale et al. 2023 favour a weakly structured stem of African populations, over a single source with mixing from an unknown archaic group.",
+              "source": {
+                "citation": "Ragsdale et al. 2023, Nature",
+                "doi": "10.1038/s41586-023-06055-y"
+              }
+            }
+          ]
+        },
+        {
+          "question": "When did our species first leave Africa?",
+          "views": [
+            {
+              "text": "Hershkovitz et al. 2018 report a modern human jaw at Misliya, Israel, 177,000 to 194,000 years old.",
+              "source": {
+                "citation": "Hershkovitz et al. 2018, Science",
+                "doi": "10.1126/science.aap8369"
+              }
+            },
+            {
+              "text": "Harvati et al. 2019 read the Apidima 1 skull fragment from Greece, over 210,000 years old, as Homo sapiens; the reading is disputed.",
+              "source": {
+                "citation": "Harvati et al. 2019, Nature",
+                "doi": "10.1038/s41586-019-1376-z"
+              }
+            }
+          ]
+        },
+        {
+          "question": "When did people first reach Australia?",
+          "views": [
+            {
+              "text": "Clarkson et al. 2017 date tools and pigments at Madjedbebe to about 65,000 years ago.",
+              "source": {
+                "citation": "Clarkson et al. 2017, Nature",
+                "doi": "10.1038/nature22968"
+              }
+            },
+            {
+              "text": "O’Connell et al. 2018 review the sites and place first arrival about 47,000 to 50,000 years ago.",
+              "source": {
+                "citation": "O’Connell et al. 2018, PNAS",
+                "doi": "10.1073/pnas.1808385115"
+              }
+            }
+          ]
+        }
+      ],
+      "typeFossil": "None; Carl Linnaeus, who named the species in 1758, was later designated its type specimen",
+      "wikipedia": "Homo sapiens"
+    },
+    {
+      "id": "neanderthal",
+      "name": "Homo neanderthalensis",
+      "called": "Neanderthals",
+      "aka": [
+        "Homo sapiens neanderthalensis"
+      ],
+      "summary": "Close relatives of our species who lived in Europe and western and central Asia. Their lineage goes back over 400,000 years and they vanished about 40,000 years ago. They interbred with our species.",
+      "firstKa": 430,
+      "lastKa": 40,
+      "facts": {
+        "span": [
+          {
+            "text": "The Sima de los Huesos fossils from Spain, about 430,000 years old, already show Neanderthal traits, Arsuaga et al. 2014 report.",
+            "source": {
+              "citation": "Arsuaga et al. 2014, Science",
+              "doi": "10.1126/science.1253958"
+            }
+          },
+          {
+            "text": "Higham et al. 2014 find that Neanderthals disappeared across Europe between about 41,000 and 39,000 years ago.",
+            "source": {
+              "citation": "Higham et al. 2014, Nature",
+              "doi": "10.1038/nature13621"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "Neanderthal brains were as large as ours but longer and lower in shape, Neubauer et al. 2018 find.",
+            "source": {
+              "citation": "Neubauer et al. 2018, Science Advances",
+              "doi": "10.1126/sciadv.aao5961"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "text": "Their Mousterian stone tool industry ended across Europe about 41,000 to 39,000 years ago.",
+            "source": {
+              "citation": "Higham et al. 2014, Nature",
+              "doi": "10.1038/nature13621"
+            }
+          },
+          {
+            "text": "Rendu et al. 2014 argue that the La Chapelle-aux-Saints Neanderthal in France was deliberately buried.",
+            "source": {
+              "citation": "Rendu et al. 2014, PNAS",
+              "doi": "10.1073/pnas.1316780110"
+            }
+          },
+          {
+            "text": "Cut-marked eagle talons from Krapina, Croatia, about 130,000 years old, are read as jewellery by Radovčić et al. 2015.",
+            "source": {
+              "citation": "Radovčić et al. 2015, PLOS ONE",
+              "doi": "10.1371/journal.pone.0119802"
+            }
+          },
+          {
+            "text": "A cross-hatched engraving in Gorham’s Cave, Gibraltar, over 39,000 years old, was made by Neanderthals, Rodríguez-Vidal et al. 2014 argue.",
+            "source": {
+              "citation": "Rodríguez-Vidal et al. 2014, PNAS",
+              "doi": "10.1073/pnas.1411529111"
+            }
+          }
+        ],
+        "range": [
+          {
+            "text": "Neanderthal DNA from Uzbekistan and the Altai shows their range reached about 2,000 km further east than once thought.",
+            "source": {
+              "citation": "Krause et al. 2007, Nature",
+              "doi": "10.1038/nature06193"
+            }
+          },
+          {
+            "text": "A toe bone from Denisova Cave in the Altai Mountains, Siberia, yielded a high-quality Neanderthal genome.",
+            "source": {
+              "citation": "Prüfer et al. 2014, Nature",
+              "doi": "10.1038/nature12886"
+            }
+          }
+        ],
+        "dna": [
+          {
+            "text": "Green et al. 2010 published a draft Neanderthal genome and found that Neanderthals mixed with the ancestors of non-Africans.",
+            "source": {
+              "citation": "Green et al. 2010, Science",
+              "doi": "10.1126/science.1188021"
+            }
+          },
+          {
+            "text": "The Altai Neanderthal’s parents were closely related, Prüfer et al. 2014 found.",
+            "source": {
+              "citation": "Prüfer et al. 2014, Nature",
+              "doi": "10.1038/nature12886"
+            }
+          },
+          {
+            "text": "Nuclear DNA from Sima de los Huesos, about 430,000 years old, falls on the Neanderthal side of the Neanderthal–Denisovan split.",
+            "source": {
+              "citation": "Meyer et al. 2016, Nature",
+              "doi": "10.1038/nature17405"
+            }
+          },
+          {
+            "text": "A girl from Denisova Cave had a Neanderthal mother and a Denisovan father.",
+            "source": {
+              "citation": "Slon et al. 2018, Nature",
+              "doi": "10.1038/s41586-018-0455-x"
+            }
+          },
+          {
+            "text": "Iasi et al. 2024 find one long period of mixing with our species, about 50,500 to 43,500 years ago.",
+            "source": {
+              "citation": "Iasi et al. 2024, Science",
+              "doi": "10.1126/science.adq3010"
+            }
+          }
+        ]
+      },
+      "debates": [
+        {
+          "question": "When did the last Neanderthals live in southern Iberia?",
+          "views": [
+            {
+              "text": "Zilhão et al. 2017 date Mousterian layers in Murcia, Spain, to about 37,000 years ago, supporting late survival in the south.",
+              "source": {
+                "citation": "Zilhão et al. 2017, Heliyon",
+                "doi": "10.1016/j.heliyon.2017.e00435"
+              }
+            },
+            {
+              "text": "Wood et al. 2013 found no reliable southern Iberian Neanderthal dates younger than about 45,000–50,000 years.",
+              "source": {
+                "citation": "Wood et al. 2013, PNAS",
+                "doi": "10.1073/pnas.1207656110"
+              }
+            }
+          ]
+        },
+        {
+          "question": "Did Neanderthals make cave art?",
+          "views": [
+            {
+              "text": "Hoffmann et al. 2018 date crusts over red markings in three Spanish caves to over 64,000 years, before our species arrived.",
+              "source": {
+                "citation": "Hoffmann et al. 2018, Science",
+                "doi": "10.1126/science.aap7778"
+              }
+            },
+            {
+              "text": "White et al. 2020 argue the dates and markings do not show that Neanderthals made the art.",
+              "source": {
+                "citation": "White et al. 2020, Journal of Human Evolution",
+                "doi": "10.1016/j.jhevol.2019.102640"
+              }
+            }
+          ]
+        }
+      ],
+      "typeFossil": "Feldhofer 1, a skeleton found in the Neander Valley, Germany, in 1856",
+      "wikipedia": "Neanderthal"
+    },
+    {
+      "id": "denisovan",
+      "name": "Denisovans",
+      "called": null,
+      "aka": [],
+      "summary": "An extinct group of humans first known from DNA in a finger bone from Denisova Cave, Siberia. Fossils and proteins now place them across Asia, from Siberia and Tibet to Laos and Taiwan. They were sister to the Neanderthals and interbred with our species.",
+      "firstKa": 200,
+      "lastKa": 50,
+      "facts": {
+        "span": [
+          {
+            "text": "Douka et al. 2019 date Denisovans at Denisova Cave from at least 200,000 years ago to about 50,000 years ago.",
+            "source": {
+              "citation": "Douka et al. 2019, Nature",
+              "doi": "10.1038/s41586-018-0870-z"
+            }
+          },
+          {
+            "text": "A Denisovan jaw from Baishiya Karst Cave, Tibet, is at least 160,000 years old.",
+            "source": {
+              "citation": "Chen et al. 2019, Nature",
+              "doi": "10.1038/s41586-019-1139-x"
+            }
+          },
+          {
+            "text": "A Denisovan jaw from the Penghu Channel, Taiwan, is dated to 10,000–70,000 or 130,000–190,000 years ago.",
+            "source": {
+              "citation": "Tsutaya et al. 2025, Science",
+              "doi": "10.1126/science.ads3888"
+            }
+          },
+          {
+            "text": "The Harbin cranium, which Fu et al. 2025 identify as Denisovan from its proteins, is over 146,000 years old.",
+            "source": {
+              "citation": "Fu et al. 2025, Science",
+              "doi": "10.1126/science.adu9677"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "The Xiahe jaw is robust, with large molars, Chen et al. 2019 report.",
+            "source": {
+              "citation": "Chen et al. 2019, Nature",
+              "doi": "10.1038/s41586-019-1139-x"
+            }
+          },
+          {
+            "text": "Tsutaya et al. 2025 find Denisovan jaws and teeth robust, in marked contrast to Neanderthals.",
+            "source": {
+              "citation": "Tsutaya et al. 2025, Science",
+              "doi": "10.1126/science.ads3888"
+            }
+          },
+          {
+            "text": "The Harbin cranium, which Fu et al. 2025 identify as Denisovan, held a brain of about 1,420 cm³.",
+            "source": {
+              "citation": "Ni et al. 2021, The Innovation",
+              "doi": "10.1016/j.xinn.2021.100130"
+            }
+          }
+        ],
+        "tools": [],
+        "range": [
+          {
+            "text": "The first Denisovan was found in Denisova Cave, in the Altai Mountains of southern Siberia.",
+            "source": {
+              "citation": "Krause et al. 2010, Nature",
+              "doi": "10.1038/nature08976"
+            }
+          },
+          {
+            "text": "A jaw from Baishiya Karst Cave, Tibet, at 3,280 m, shows Denisovans lived high on the Tibetan Plateau.",
+            "source": {
+              "citation": "Chen et al. 2019, Nature",
+              "doi": "10.1038/s41586-019-1139-x"
+            }
+          },
+          {
+            "text": "Denisovan DNA in Baishiya Karst Cave sediments shows they were there about 100,000 and 60,000 years ago.",
+            "source": {
+              "citation": "Zhang et al. 2020, Science",
+              "doi": "10.1126/science.abb6320"
+            }
+          },
+          {
+            "text": "A molar from Tam Ngu Hao 2, Laos, 131,000 to 164,000 years old, is most likely Denisovan.",
+            "source": {
+              "citation": "Demeter et al. 2022, Nature Communications",
+              "doi": "10.1038/s41467-022-29923-z"
+            }
+          },
+          {
+            "text": "A jaw dredged from the sea off Taiwan is Denisovan, showing they also lived in warm, humid regions.",
+            "source": {
+              "citation": "Tsutaya et al. 2025, Science",
+              "doi": "10.1126/science.ads3888"
+            }
+          }
+        ],
+        "dna": [
+          {
+            "text": "Mitochondrial DNA from a Denisova Cave finger bone revealed a previously unknown human group.",
+            "source": {
+              "citation": "Krause et al. 2010, Nature",
+              "doi": "10.1038/nature08976"
+            }
+          },
+          {
+            "text": "Reich et al. 2010 found Denisovans were a sister group to Neanderthals, and that Melanesians carry about 4–6% Denisovan DNA.",
+            "source": {
+              "citation": "Reich et al. 2010, Nature",
+              "doi": "10.1038/nature09710"
+            }
+          },
+          {
+            "text": "A high-coverage genome from the Denisova Cave girl allowed a detailed comparison with Neanderthals and living people.",
+            "source": {
+              "citation": "Meyer et al. 2012, Science",
+              "doi": "10.1126/science.1224344"
+            }
+          },
+          {
+            "text": "A gene variant that helps Tibetans live at high altitude, in EPAS1, came from Denisovans or their relatives.",
+            "source": {
+              "citation": "Huerta-Sánchez et al. 2014, Nature",
+              "doi": "10.1038/nature13408"
+            }
+          },
+          {
+            "text": "Papuans carry DNA from at least two deeply divergent Denisovan populations, Jacobs et al. 2019 find.",
+            "source": {
+              "citation": "Jacobs et al. 2019, Cell",
+              "doi": "10.1016/j.cell.2019.02.035"
+            }
+          },
+          {
+            "text": "Mitochondrial DNA from dental calculus on the Harbin cranium falls within Denisovan variation.",
+            "source": {
+              "citation": "Fu et al. 2025, Cell",
+              "doi": "10.1016/j.cell.2025.05.040"
+            }
+          }
+        ]
+      },
+      "debates": [
+        {
+          "question": "Are the Denisovans the same group as Homo longi?",
+          "views": [
+            {
+              "text": "Ji et al. 2021 named the Harbin cranium as a new species, Homo longi.",
+              "source": {
+                "citation": "Ji et al. 2021, The Innovation",
+                "doi": "10.1016/j.xinn.2021.100132"
+              }
+            },
+            {
+              "text": "Fu et al. 2025 found Denisovan protein variants in the Harbin cranium, which clusters with Denisova 3.",
+              "source": {
+                "citation": "Fu et al. 2025, Science",
+                "doi": "10.1126/science.adu9677"
+              }
+            },
+            {
+              "text": "Fu et al. 2025 recovered Denisovan mitochondrial DNA from the Harbin cranium’s dental calculus.",
+              "source": {
+                "citation": "Fu et al. 2025, Cell",
+                "doi": "10.1016/j.cell.2025.05.040"
+              }
+            },
+            {
+              "text": "Feng et al. 2025 place the Denisovans within an Asian Homo longi clade, sister to our own.",
+              "source": {
+                "citation": "Feng et al. 2025, Science",
+                "doi": "10.1126/science.ado9202"
+              }
+            }
+          ]
+        }
+      ],
+      "typeFossil": null,
+      "wikipedia": "Denisovan"
+    },
+    {
+      "id": "erectus",
+      "name": "Homo erectus",
+      "called": null,
+      "aka": [
+        "Homo ergaster",
+        "Pithecanthropus erectus",
+        "Sinanthropus pekinensis"
+      ],
+      "summary": "A long-lived human species with a body much like ours and a smaller brain. It appeared in Africa about 2 million years ago and spread across Asia as far as Java. Some researchers call the early African form Homo ergaster.",
+      "firstKa": 2040,
+      "lastKa": 108,
+      "facts": {
+        "span": [
+          {
+            "text": "A skull from Drimolen, South Africa, 2.04 to 1.95 million years old, is the oldest definite Homo erectus.",
+            "source": {
+              "citation": "Herries et al. 2020, Science",
+              "doi": "10.1126/science.aaw7293"
+            }
+          },
+          {
+            "text": "The last known Homo erectus lived at Ngandong, Java, 117,000 to 108,000 years ago.",
+            "source": {
+              "citation": "Rizal et al. 2020, Nature",
+              "doi": "10.1038/s41586-019-1863-2"
+            }
+          },
+          {
+            "text": "Swisher et al. 1994 dated Homo erectus fossils in Java to about 1.8 and 1.6 million years ago.",
+            "source": {
+              "citation": "Swisher et al. 1994, Science",
+              "doi": "10.1126/science.8108729"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "Skull 5 from Dmanisi, Georgia, held a brain of only about 546 cm³, Lordkipanidze et al. 2013 report.",
+            "source": {
+              "citation": "Lordkipanidze et al. 2013, Science",
+              "doi": "10.1126/science.1238484"
+            }
+          },
+          {
+            "text": "The Nariokotome boy, a near-complete skeleton about 1.6 million years old, shows a tall body with long legs.",
+            "source": {
+              "citation": "Brown et al. 1985, Nature",
+              "doi": "10.1038/316788a0"
+            }
+          },
+          {
+            "text": "Antón 2003 reviews the species as larger in body and brain than earlier Homo, with wide variation across its range.",
+            "source": {
+              "citation": "Antón 2003, American Journal of Physical Anthropology",
+              "doi": "10.1002/ajpa.10399"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "text": "The Acheulean handaxe industry appears in Kenya by about 1.76 million years ago, Lepre et al. 2011 report.",
+            "source": {
+              "citation": "Lepre et al. 2011, Nature",
+              "doi": "10.1038/nature10372"
+            }
+          },
+          {
+            "text": "Burnt bone and ash in Acheulean layers at Wonderwerk Cave, South Africa, show fire about 1 million years ago.",
+            "source": {
+              "citation": "Berna et al. 2012, PNAS",
+              "doi": "10.1073/pnas.1117620109"
+            }
+          }
+        ],
+        "range": [
+          {
+            "text": "People reached Dmanisi, Georgia, between 1.85 and 1.78 million years ago.",
+            "source": {
+              "citation": "Ferring et al. 2011, PNAS",
+              "doi": "10.1073/pnas.1106638108"
+            }
+          },
+          {
+            "text": "Stone tools on the Chinese Loess Plateau date back about 2.1 million years, though no fossils show who made them.",
+            "source": {
+              "citation": "Zhu et al. 2018, Nature",
+              "doi": "10.1038/s41586-018-0299-4"
+            }
+          },
+          {
+            "text": "Homo erectus lived on Java from about 1.8 million to about 110,000 years ago.",
+            "source": {
+              "citation": "Rizal et al. 2020, Nature",
+              "doi": "10.1038/s41586-019-1863-2"
+            }
+          }
+        ],
+        "dna": []
+      },
+      "debates": [
+        {
+          "question": "Is Homo ergaster a separate species from Homo erectus?",
+          "views": [
+            {
+              "text": "Wood 1992 separated the early African fossils as Homo ergaster.",
+              "source": {
+                "citation": "Wood 1992, Nature",
+                "doi": "10.1038/355783a0"
+              }
+            },
+            {
+              "text": "Lordkipanidze et al. 2013 argue the variation at Dmanisi means early Homo forms, ergaster included, belong to one evolving lineage.",
+              "source": {
+                "citation": "Lordkipanidze et al. 2013, Science",
+                "doi": "10.1126/science.1238484"
+              }
+            },
+            {
+              "text": "Spoor et al. 2007 find Homo erectus varied widely in size and lived alongside Homo habilis for nearly half a million years.",
+              "source": {
+                "citation": "Spoor et al. 2007, Nature",
+                "doi": "10.1038/nature05986"
+              }
+            }
+          ]
+        }
+      ],
+      "typeFossil": "Trinil 2, a skull cap found by Eugène Dubois’s team in Java in 1891",
+      "wikipedia": "Homo erectus"
+    },
+    {
+      "id": "habilis",
+      "name": "Homo habilis",
+      "called": null,
+      "aka": [
+        "Australopithecus habilis"
+      ],
+      "summary": "An early human species from eastern Africa, named in 1964 from fossils at Olduvai Gorge. It lived from about 2.3 to 1.4 million years ago. It had a small body and a brain larger than the australopiths’.",
+      "firstKa": 2330,
+      "lastKa": 1440,
+      "facts": {
+        "span": [
+          {
+            "text": "Leakey et al. 1964 named Homo habilis from fossils at Olduvai Gorge, Tanzania.",
+            "source": {
+              "citation": "Leakey et al. 1964, Nature",
+              "doi": "10.1038/202007a0"
+            }
+          },
+          {
+            "text": "The type fossil, OH 7, is about 1.8 million years old.",
+            "source": {
+              "citation": "Spoor et al. 2015, Nature",
+              "doi": "10.1038/nature14224"
+            }
+          },
+          {
+            "text": "Kimbel et al. 1996 assign a 2.33-million-year-old jaw from Hadar, Ethiopia, to Homo close to H. habilis.",
+            "source": {
+              "citation": "Kimbel et al. 1996, Journal of Human Evolution",
+              "doi": "10.1006/jhev.1996.0079"
+            }
+          },
+          {
+            "text": "A 1.44-million-year-old jaw from Ileret, Kenya, shows Homo habilis lived alongside Homo erectus.",
+            "source": {
+              "citation": "Spoor et al. 2007, Nature",
+              "doi": "10.1038/nature05986"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "Spoor et al. 2015 estimate the OH 7 brain at about 729–824 cm³, larger than earlier estimates.",
+            "source": {
+              "citation": "Spoor et al. 2015, Nature",
+              "doi": "10.1038/nature14224"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "text": "Leakey et al. 1964 linked the species to the Oldowan stone tools found at Olduvai.",
+            "source": {
+              "citation": "Leakey et al. 1964, Nature",
+              "doi": "10.1038/202007a0"
+            }
+          },
+          {
+            "text": "Oldowan tools lie with the 2.33-million-year-old Homo jaw at Hadar, Ethiopia.",
+            "source": {
+              "citation": "Kimbel et al. 1996, Journal of Human Evolution",
+              "doi": "10.1006/jhev.1996.0079"
+            }
+          }
+        ],
+        "range": [
+          {
+            "text": "Fossils come from Olduvai Gorge in Tanzania.",
+            "source": {
+              "citation": "Leakey et al. 1964, Nature",
+              "doi": "10.1038/202007a0"
+            }
+          },
+          {
+            "text": "Others come from Ileret, east of Lake Turkana, Kenya.",
+            "source": {
+              "citation": "Spoor et al. 2007, Nature",
+              "doi": "10.1038/nature05986"
+            }
+          }
+        ],
+        "dna": []
+      },
+      "debates": [
+        {
+          "question": "Does Homo habilis belong in the genus Homo?",
+          "views": [
+            {
+              "text": "Leakey et al. 1964 placed the new species in Homo.",
+              "source": {
+                "citation": "Leakey et al. 1964, Nature",
+                "doi": "10.1038/202007a0"
+              }
+            },
+            {
+              "text": "Wood & Collard 1999 argue H. habilis and H. rudolfensis fit Australopithecus better than Homo.",
+              "source": {
+                "citation": "Wood & Collard 1999, Science",
+                "doi": "10.1126/science.284.5411.65"
+              }
+            }
+          ]
+        },
+        {
+          "question": "Was early Homo one variable species or several?",
+          "views": [
+            {
+              "text": "Spoor et al. 2015 find the reconstructed OH 7 jaw too different from others for a single species of early Homo.",
+              "source": {
+                "citation": "Spoor et al. 2015, Nature",
+                "doi": "10.1038/nature14224"
+              }
+            },
+            {
+              "text": "Lordkipanidze et al. 2013 argue the variation at Dmanisi means habilis, rudolfensis and erectus forms may be one lineage.",
+              "source": {
+                "citation": "Lordkipanidze et al. 2013, Science",
+                "doi": "10.1126/science.1238484"
+              }
+            }
+          ]
+        }
+      ],
+      "typeFossil": "OH 7, a jaw, skull and hand bones found at Olduvai Gorge by Jonathan Leakey in 1960",
+      "wikipedia": "Homo habilis"
+    },
+    {
+      "id": "rudolfensis",
+      "name": "Homo rudolfensis",
+      "called": null,
+      "aka": [
+        "Pithecanthropus rudolfensis",
+        "Australopithecus rudolfensis"
+      ],
+      "summary": "An early human species from eastern Africa, best known from the skull KNM-ER 1470 found near Lake Turkana. It lived about 2.4 to 1.8 million years ago. It had a larger skull and a flatter face than Homo habilis.",
+      "firstKa": 2400,
+      "lastKa": 1780,
+      "facts": {
+        "span": [
+          {
+            "text": "A jaw from Uraha, Malawi, about 2.4 million years old, is assigned to Homo rudolfensis.",
+            "source": {
+              "citation": "Schrenk et al. 1993, Nature",
+              "doi": "10.1038/365833a0"
+            }
+          },
+          {
+            "text": "New fossils from Koobi Fora, Kenya, that match KNM-ER 1470 are 1.78 to 1.95 million years old.",
+            "source": {
+              "citation": "Leakey et al. 2012, Nature",
+              "doi": "10.1038/nature11322"
+            }
+          },
+          {
+            "text": "Wood & Collard 1999 argue it fits Australopithecus better than Homo.",
+            "source": {
+              "citation": "Wood & Collard 1999, Science",
+              "doi": "10.1126/science.284.5411.65"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "KNM-ER 1470 stands out among early Homo for its large size and flat face, Leakey et al. 2012 note.",
+            "source": {
+              "citation": "Leakey et al. 2012, Nature",
+              "doi": "10.1038/nature11322"
+            }
+          },
+          {
+            "text": "KNM-ER 62000, a juvenile face, closely resembles KNM-ER 1470 but is smaller.",
+            "source": {
+              "citation": "Leakey et al. 2012, Nature",
+              "doi": "10.1038/nature11322"
+            }
+          }
+        ],
+        "tools": [],
+        "range": [
+          {
+            "text": "Fossils come from Koobi Fora, east of Lake Turkana, Kenya.",
+            "source": {
+              "citation": "Leakey et al. 2012, Nature",
+              "doi": "10.1038/nature11322"
+            }
+          },
+          {
+            "text": "A jaw comes from Uraha in the Malawi Rift, far to the south.",
+            "source": {
+              "citation": "Schrenk et al. 1993, Nature",
+              "doi": "10.1038/365833a0"
+            }
+          }
+        ],
+        "dna": []
+      },
+      "debates": [
+        {
+          "question": "Is Homo rudolfensis a separate species?",
+          "views": [
+            {
+              "text": "Wood 1992 recognised H. rudolfensis as distinct from H. habilis.",
+              "source": {
+                "citation": "Wood 1992, Nature",
+                "doi": "10.1038/355783a0"
+              }
+            },
+            {
+              "text": "Leakey et al. 2012 say new Koobi Fora fossils confirm two species of early Homo besides H. erectus.",
+              "source": {
+                "citation": "Leakey et al. 2012, Nature",
+                "doi": "10.1038/nature11322"
+              }
+            },
+            {
+              "text": "Lordkipanidze et al. 2013 argue the variation at Dmanisi means early Homo forms may be one lineage.",
+              "source": {
+                "citation": "Lordkipanidze et al. 2013, Science",
+                "doi": "10.1126/science.1238484"
+              }
+            }
+          ]
+        }
+      ],
+      "typeFossil": "KNM-ER 1470, a skull found at Koobi Fora, Kenya, by Bernard Ngeneo in 1972",
+      "wikipedia": "Homo rudolfensis"
+    },
+    {
+      "id": "antecessor",
+      "name": "Homo antecessor",
+      "called": null,
+      "aka": [],
+      "summary": "An early human species known from the Gran Dolina cave at Atapuerca, Spain. It lived about 900,000 to 800,000 years ago. Its face looked surprisingly modern.",
+      "firstKa": 900,
+      "lastKa": 800,
+      "facts": {
+        "span": [
+          {
+            "text": "Bermúdez de Castro et al. 1997 named Homo antecessor from fossils in level TD6 of Gran Dolina, Atapuerca.",
+            "source": {
+              "citation": "Bermúdez de Castro et al. 1997, Science",
+              "doi": "10.1126/science.276.5317.1392"
+            }
+          },
+          {
+            "text": "Parés & Pérez-González 1995 found the TD6 fossils to be older than about 780,000 years, from palaeomagnetism.",
+            "source": {
+              "citation": "Parés & Pérez-González 1995, Science",
+              "doi": "10.1126/science.7638599"
+            }
+          },
+          {
+            "text": "Direct ESR dating of a tooth supports the great age of the TD6 fossils.",
+            "source": {
+              "citation": "Duval et al. 2018, Quaternary Geochronology",
+              "doi": "10.1016/j.quageo.2018.05.001"
+            }
+          },
+          {
+            "text": "Huguet et al. 2025 give the Gran Dolina fossils an age of 900,000 to 800,000 years.",
+            "source": {
+              "citation": "Huguet et al. 2025, Nature",
+              "doi": "10.1038/s41586-025-08681-0"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "Its midface is fully modern in form, about 650,000 years before other evidence of this feature.",
+            "source": {
+              "citation": "Bermúdez de Castro et al. 1997, Science",
+              "doi": "10.1126/science.276.5317.1392"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "text": "Cut marks on the TD6 bones show people butchered other people, the earliest known cannibalism in Europe.",
+            "source": {
+              "citation": "Fernández-Jalvo et al. 1999, Journal of Human Evolution",
+              "doi": "10.1006/jhev.1999.0324"
+            }
+          }
+        ],
+        "range": [
+          {
+            "text": "Fossils come from Gran Dolina, Sierra de Atapuerca, northern Spain.",
+            "source": {
+              "citation": "Bermúdez de Castro et al. 1997, Science",
+              "doi": "10.1126/science.276.5317.1392"
+            }
+          },
+          {
+            "text": "Footprints at Happisburgh, England, over 780,000 years old, may have been made by H. antecessor, Ashton et al. 2014 suggest.",
+            "source": {
+              "citation": "Ashton et al. 2014, PLOS ONE",
+              "doi": "10.1371/journal.pone.0088329"
+            }
+          },
+          {
+            "text": "Stone tools show people at Happisburgh at the edge of the boreal zone by about 0.8 to 1 million years ago.",
+            "source": {
+              "citation": "Parfitt et al. 2010, Nature",
+              "doi": "10.1038/nature09117"
+            }
+          }
+        ],
+        "dna": [
+          {
+            "text": "Proteins from tooth enamel show H. antecessor as a close sister lineage to Neanderthals, Denisovans and us, Welker et al. 2020 find.",
+            "source": {
+              "citation": "Welker et al. 2020, Nature",
+              "doi": "10.1038/s41586-020-2153-8"
+            }
+          }
+        ]
+      },
+      "debates": [
+        {
+          "question": "Was Homo antecessor ancestral to Neanderthals and our species?",
+          "views": [
+            {
+              "text": "Bermúdez de Castro et al. 1997 proposed it may be the last common ancestor of Neanderthals and modern humans.",
+              "source": {
+                "citation": "Bermúdez de Castro et al. 1997, Science",
+                "doi": "10.1126/science.276.5317.1392"
+              }
+            },
+            {
+              "text": "Welker et al. 2020 place it as a close sister lineage to that common ancestor, from enamel proteins.",
+              "source": {
+                "citation": "Welker et al. 2020, Nature",
+                "doi": "10.1038/s41586-020-2153-8"
+              }
+            }
+          ]
+        },
+        {
+          "question": "Who were the first people in western Europe?",
+          "views": [
+            {
+              "text": "Carbonell et al. 2008 report a jaw from Sima del Elefante, about 1.2–1.1 million years old, and link it to the Atapuerca lineage that led to H. antecessor.",
+              "source": {
+                "citation": "Carbonell et al. 2008, Nature",
+                "doi": "10.1038/nature06815"
+              }
+            },
+            {
+              "text": "Huguet et al. 2025 assign a face from Sima del Elefante, 1.4–1.1 million years old, to Homo aff. erectus, not H. antecessor.",
+              "source": {
+                "citation": "Huguet et al. 2025, Nature",
+                "doi": "10.1038/s41586-025-08681-0"
+              }
+            }
+          ]
+        }
+      ],
+      "typeFossil": "ATD6-5, a jaw from Gran Dolina, Atapuerca, Spain, found in 1994",
+      "wikipedia": "Homo antecessor"
+    },
+    {
+      "id": "heidelbergensis",
+      "name": "Homo heidelbergensis",
+      "called": null,
+      "aka": [
+        "Homo rhodesiensis",
+        "Homo bodoensis"
+      ],
+      "summary": "A Middle Pleistocene human known from Africa and Europe between about 600,000 and 300,000 years ago. It is named after a jaw found near Heidelberg, Germany. Which fossils belong to it, and what to call it, are argued over.",
+      "firstKa": 610,
+      "lastKa": 300,
+      "facts": {
+        "span": [
+          {
+            "text": "The Mauer jaw, type of the species, is about 609,000 years old.",
+            "source": {
+              "citation": "Wagner et al. 2010, PNAS",
+              "doi": "10.1073/pnas.1012722107"
+            }
+          },
+          {
+            "text": "The Bodo cranium from Ethiopia comes from deposits about 600,000 years old, Clark et al. 1994 report.",
+            "source": {
+              "citation": "Clark et al. 1994, Science",
+              "doi": "10.1126/science.8009220"
+            }
+          },
+          {
+            "text": "The Kabwe (Broken Hill) skull from Zambia is about 299,000 years old, much younger than once thought.",
+            "source": {
+              "citation": "Grün et al. 2020, Nature",
+              "doi": "10.1038/s41586-020-2165-4"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "Mounier et al. 2009 find the Mauer jaw distinct enough to support H. heidelbergensis as a species.",
+            "source": {
+              "citation": "Mounier et al. 2009, Journal of Human Evolution",
+              "doi": "10.1016/j.jhevol.2008.12.006"
+            }
+          }
+        ],
+        "tools": [],
+        "range": [
+          {
+            "text": "The type jaw comes from Mauer, near Heidelberg, Germany.",
+            "source": {
+              "citation": "Wagner et al. 2010, PNAS",
+              "doi": "10.1073/pnas.1012722107"
+            }
+          },
+          {
+            "text": "The Kabwe skull, first named Homo rhodesiensis, comes from Zambia.",
+            "source": {
+              "citation": "Grün et al. 2020, Nature",
+              "doi": "10.1038/s41586-020-2165-4"
+            }
+          },
+          {
+            "text": "Roksandic et al. 2022 place the Bodo cranium in a population spread across Africa into the eastern Mediterranean.",
+            "source": {
+              "citation": "Roksandic et al. 2022, Evolutionary Anthropology",
+              "doi": "10.1002/evan.21929"
+            }
+          }
+        ],
+        "dna": [
+          {
+            "text": "Sima de los Huesos fossils, often once placed in H. heidelbergensis, carry DNA on the Neanderthal side of the split.",
+            "source": {
+              "citation": "Meyer et al. 2016, Nature",
+              "doi": "10.1038/nature17405"
+            }
+          }
+        ]
+      },
+      "debates": [
+        {
+          "question": "Is Homo heidelbergensis a valid species, and what should it be called?",
+          "views": [
+            {
+              "text": "Stringer 2012 keeps H. heidelbergensis for fossils such as Mauer and Kabwe, apart from the early Neanderthals.",
+              "source": {
+                "citation": "Stringer 2012, Evolutionary Anthropology",
+                "doi": "10.1002/evan.21311"
+              }
+            },
+            {
+              "text": "Arsuaga et al. 2014 exclude the Sima de los Huesos fossils from H. heidelbergensis, as early Neanderthals.",
+              "source": {
+                "citation": "Arsuaga et al. 2014, Science",
+                "doi": "10.1126/science.1253958"
+              }
+            },
+            {
+              "text": "Roksandic et al. 2022 propose dropping H. heidelbergensis and H. rhodesiensis and naming a new species, H. bodoensis.",
+              "source": {
+                "citation": "Roksandic et al. 2022, Evolutionary Anthropology",
+                "doi": "10.1002/evan.21929"
+              }
+            },
+            {
+              "text": "Delson & Stringer 2022 argue the name H. bodoensis does not resolve the problems of Middle Pleistocene taxonomy.",
+              "source": {
+                "citation": "Delson & Stringer 2022, Evolutionary Anthropology",
+                "doi": "10.1002/evan.21950"
+              }
+            }
+          ]
+        },
+        {
+          "question": "Was it the ancestor of our species?",
+          "views": [
+            {
+              "text": "Grün et al. 2020 say the young age of Kabwe raises the question of whether H. heidelbergensis/rhodesiensis was our direct ancestor.",
+              "source": {
+                "citation": "Grün et al. 2020, Nature",
+                "doi": "10.1038/s41586-020-2165-4"
+              }
+            },
+            {
+              "text": "Roksandic et al. 2022 propose H. bodoensis as an early ancestor of the Homo sapiens lineage.",
+              "source": {
+                "citation": "Roksandic et al. 2022, Evolutionary Anthropology",
+                "doi": "10.1002/evan.21929"
+              }
+            }
+          ]
+        }
+      ],
+      "typeFossil": "Mauer 1, a jaw found near Heidelberg, Germany, in 1907",
+      "wikipedia": "Homo heidelbergensis"
+    },
+    {
+      "id": "naledi",
+      "name": "Homo naledi",
+      "called": null,
+      "aka": [],
+      "summary": "A small-brained human species found deep in the Rising Star cave system, South Africa. It lived about 335,000 to 236,000 years ago, alongside early members of our own species in Africa. Whether it buried its dead is disputed.",
+      "firstKa": 335,
+      "lastKa": 236,
+      "facts": {
+        "span": [
+          {
+            "text": "Dirks et al. 2017 date the Dinaledi Chamber fossils to between 335,000 and 236,000 years ago.",
+            "source": {
+              "citation": "Dirks et al. 2017, eLife",
+              "doi": "10.7554/eLife.24231"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "Its body size was like small-bodied people today, but its brain was as small as an australopith’s.",
+            "source": {
+              "citation": "Berger et al. 2015, eLife",
+              "doi": "10.7554/eLife.09560"
+            }
+          },
+          {
+            "text": "A skull from the Lesedi Chamber held a brain of about 610 cm³, Hawks et al. 2017 report.",
+            "source": {
+              "citation": "Hawks et al. 2017, eLife",
+              "doi": "10.7554/eLife.24232"
+            }
+          },
+          {
+            "text": "Its small brain shares some features of organisation with other Homo, Holloway et al. 2018 find.",
+            "source": {
+              "citation": "Holloway et al. 2018, PNAS",
+              "doi": "10.1073/pnas.1720842115"
+            }
+          }
+        ],
+        "tools": [],
+        "range": [
+          {
+            "text": "Fossils come from the Dinaledi Chamber of the Rising Star cave system, Cradle of Humankind, South Africa.",
+            "source": {
+              "citation": "Berger et al. 2015, eLife",
+              "doi": "10.7554/eLife.09560"
+            }
+          },
+          {
+            "text": "More fossils come from the Lesedi Chamber of the same cave system.",
+            "source": {
+              "citation": "Hawks et al. 2017, eLife",
+              "doi": "10.7554/eLife.24232"
+            }
+          }
+        ],
+        "dna": []
+      },
+      "debates": [
+        {
+          "question": "Did Homo naledi bury its dead?",
+          "views": [
+            {
+              "text": "Berger et al. 2025 argue that bodies in the Rising Star caves were deliberately buried.",
+              "source": {
+                "citation": "Berger et al. 2025, eLife",
+                "doi": "10.7554/eLife.89106"
+              }
+            },
+            {
+              "text": "Martinón-Torres et al. 2024 argue there is no scientific evidence that H. naledi buried its dead.",
+              "source": {
+                "citation": "Martinón-Torres et al. 2024, Journal of Human Evolution",
+                "doi": "10.1016/j.jhevol.2023.103464"
+              }
+            }
+          ]
+        }
+      ],
+      "typeFossil": "DH1, a partial skull from the Dinaledi Chamber, found in 2013",
+      "wikipedia": "Homo naledi"
+    },
+    {
+      "id": "floresiensis",
+      "name": "Homo floresiensis",
+      "called": null,
+      "aka": [],
+      "summary": "A very small human species found on the island of Flores, Indonesia. Its skeletons are 100,000 to 60,000 years old, and similar fossils go back about 700,000 years. Adults stood about a metre tall.",
+      "firstKa": 700,
+      "lastKa": 60,
+      "facts": {
+        "span": [
+          {
+            "text": "Sutikna et al. 2016 date the skeletal remains at Liang Bua to between about 100,000 and 60,000 years ago.",
+            "source": {
+              "citation": "Sutikna et al. 2016, Nature",
+              "doi": "10.1038/nature17179"
+            }
+          },
+          {
+            "text": "Jaw and teeth from Mata Menge, Flores, about 700,000 years old, resemble H. floresiensis.",
+            "source": {
+              "citation": "van den Bergh et al. 2016, Nature",
+              "doi": "10.1038/nature17999"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "The LB1 skeleton stood about 1 m tall, Brown et al. 2004 report.",
+            "source": {
+              "citation": "Brown et al. 2004, Nature",
+              "doi": "10.1038/nature02999"
+            }
+          },
+          {
+            "text": "Kubo et al. 2013 measured LB1’s brain at about 426 cm³ by micro-CT, larger than the often-cited 400 cm³.",
+            "source": {
+              "citation": "Kubo et al. 2013, Proceedings of the Royal Society B",
+              "doi": "10.1098/rspb.2013.0338"
+            }
+          },
+          {
+            "text": "Its feet were long and primitive in several ways, Jungers et al. 2009 find.",
+            "source": {
+              "citation": "Jungers et al. 2009, Nature",
+              "doi": "10.1038/nature07989"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "text": "Stone tools at Liang Bua that can be linked to H. floresiensis are about 190,000 to 50,000 years old.",
+            "source": {
+              "citation": "Sutikna et al. 2016, Nature",
+              "doi": "10.1038/nature17179"
+            }
+          }
+        ],
+        "range": [
+          {
+            "text": "Known only from Flores: Liang Bua cave and Mata Menge in the So’a Basin.",
+            "source": {
+              "citation": "van den Bergh et al. 2016, Nature",
+              "doi": "10.1038/nature17999"
+            }
+          }
+        ],
+        "dna": []
+      },
+      "debates": [
+        {
+          "question": "Where did Homo floresiensis come from?",
+          "views": [
+            {
+              "text": "van den Bergh et al. 2016 find the Mata Menge fossils fit a dwarfed descendant of early Asian H. erectus.",
+              "source": {
+                "citation": "van den Bergh et al. 2016, Nature",
+                "doi": "10.1038/nature17999"
+              }
+            },
+            {
+              "text": "Kubo et al. 2013 find its brain could have shrunk from H. erectus size with body dwarfing on the island.",
+              "source": {
+                "citation": "Kubo et al. 2013, Proceedings of the Royal Society B",
+                "doi": "10.1098/rspb.2013.0338"
+              }
+            },
+            {
+              "text": "Argue et al. 2017 find it descends from an early Homo lineage, close to H. habilis, not from H. erectus.",
+              "source": {
+                "citation": "Argue et al. 2017, Journal of Human Evolution",
+                "doi": "10.1016/j.jhevol.2017.02.006"
+              }
+            }
+          ]
+        },
+        {
+          "question": "Was LB1 a distinct species or a diseased modern human?",
+          "views": [
+            {
+              "text": "Henneberg et al. 2014 argue LB1 was a modern human with Down syndrome.",
+              "source": {
+                "citation": "Henneberg et al. 2014, PNAS",
+                "doi": "10.1073/pnas.1407382111"
+              }
+            },
+            {
+              "text": "Falk et al. 2005 find LB1’s brain unlike those of microcephalic humans.",
+              "source": {
+                "citation": "Falk et al. 2005, Science",
+                "doi": "10.1126/science.1109727"
+              }
+            },
+            {
+              "text": "Jungers et al. 2009 find its feet primitive, unlike those of modern humans.",
+              "source": {
+                "citation": "Jungers et al. 2009, Nature",
+                "doi": "10.1038/nature07989"
+              }
+            }
+          ]
+        }
+      ],
+      "typeFossil": "LB1, a partial skeleton found at Liang Bua, Flores, in 2003",
+      "wikipedia": "Homo floresiensis"
+    },
+    {
+      "id": "luzonensis",
+      "name": "Homo luzonensis",
+      "called": null,
+      "aka": [],
+      "summary": "A human species known from a few bones and teeth from Callao Cave, on Luzon in the Philippines. They are at least 50,000 to 67,000 years old. It mixes primitive and modern traits.",
+      "firstKa": 67,
+      "lastKa": 50,
+      "facts": {
+        "span": [
+          {
+            "text": "A foot bone from Callao Cave is at least 67,000 years old.",
+            "source": {
+              "citation": "Mijares et al. 2010, Journal of Human Evolution",
+              "doi": "10.1016/j.jhevol.2010.04.008"
+            }
+          },
+          {
+            "text": "Détroit et al. 2019 report twelve more bones and teeth from the same layer, from at least three individuals.",
+            "source": {
+              "citation": "Détroit et al. 2019, Nature",
+              "doi": "10.1038/s41586-019-1067-9"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "Its bones and teeth mix primitive and derived traits in a way unlike any other Homo species.",
+            "source": {
+              "citation": "Détroit et al. 2019, Nature",
+              "doi": "10.1038/s41586-019-1067-9"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "text": "Butchered rhinoceros bones and stone tools at Kalinga, Luzon, are about 709,000 years old; their makers are unknown.",
+            "source": {
+              "citation": "Ingicco et al. 2018, Nature",
+              "doi": "10.1038/s41586-018-0072-8"
+            }
+          }
+        ],
+        "range": [
+          {
+            "text": "Known only from Callao Cave, northern Luzon, the Philippines, east of the Wallace Line.",
+            "source": {
+              "citation": "Détroit et al. 2019, Nature",
+              "doi": "10.1038/s41586-019-1067-9"
+            }
+          }
+        ],
+        "dna": []
+      },
+      "debates": [],
+      "typeFossil": "CCH6, upper teeth of one individual from Callao Cave, Luzon",
+      "wikipedia": "Homo luzonensis"
+    },
+    {
+      "id": "longi",
+      "name": "Homo longi",
+      "called": null,
+      "aka": [],
+      "summary": "A species named in 2021 from a large, nearly complete skull found in Harbin, north-east China. The skull is over 146,000 years old. Proteins and DNA from it now link it to the Denisovans.",
+      "firstKa": 309,
+      "lastKa": 146,
+      "facts": {
+        "span": [
+          {
+            "text": "Uranium-series dating shows the Harbin cranium is older than 146,000 years; the layer it likely came from is 309,000 to 138,000 years old.",
+            "source": {
+              "citation": "Shao et al. 2021, The Innovation",
+              "doi": "10.1016/j.xinn.2021.100131"
+            }
+          },
+          {
+            "text": "Feng et al. 2025 read the Yunxian 2 skull from China, about 1 million years old, as an early member of the H. longi clade.",
+            "source": {
+              "citation": "Feng et al. 2025, Science",
+              "doi": "10.1126/science.ado9202"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "The Harbin cranium held a brain of about 1,420 cm³, within the range of people today.",
+            "source": {
+              "citation": "Ni et al. 2021, The Innovation",
+              "doi": "10.1016/j.xinn.2021.100130"
+            }
+          },
+          {
+            "text": "It has a long, low braincase, a wide, low face and very large molars.",
+            "source": {
+              "citation": "Ni et al. 2021, The Innovation",
+              "doi": "10.1016/j.xinn.2021.100130"
+            }
+          }
+        ],
+        "tools": [],
+        "range": [
+          {
+            "text": "The Harbin cranium comes from Harbin, Heilongjiang, north-east China.",
+            "source": {
+              "citation": "Shao et al. 2021, The Innovation",
+              "doi": "10.1016/j.xinn.2021.100131"
+            }
+          },
+          {
+            "text": "Ni et al. 2021 group it with other Chinese fossils, such as Dali and Xiahe, in a third East Asian lineage.",
+            "source": {
+              "citation": "Ni et al. 2021, The Innovation",
+              "doi": "10.1016/j.xinn.2021.100130"
+            }
+          }
+        ],
+        "dna": [
+          {
+            "text": "Proteins from the Harbin cranium carry three Denisovan variants and cluster with Denisova 3.",
+            "source": {
+              "citation": "Fu et al. 2025, Science",
+              "doi": "10.1126/science.adu9677"
+            }
+          },
+          {
+            "text": "Mitochondrial DNA from its dental calculus falls within Denisovan variation.",
+            "source": {
+              "citation": "Fu et al. 2025, Cell",
+              "doi": "10.1016/j.cell.2025.05.040"
+            }
+          }
+        ]
+      },
+      "debates": [
+        {
+          "question": "Is Homo longi its own species, or the Denisovans?",
+          "views": [
+            {
+              "text": "Ji et al. 2021 named the Harbin cranium as a new species, Homo longi.",
+              "source": {
+                "citation": "Ji et al. 2021, The Innovation",
+                "doi": "10.1016/j.xinn.2021.100132"
+              }
+            },
+            {
+              "text": "Ni et al. 2021 place it in a lineage that is part of the sister group to Homo sapiens.",
+              "source": {
+                "citation": "Ni et al. 2021, The Innovation",
+                "doi": "10.1016/j.xinn.2021.100130"
+              }
+            },
+            {
+              "text": "Fu et al. 2025 identify the Harbin individual as Denisovan from its proteins.",
+              "source": {
+                "citation": "Fu et al. 2025, Science",
+                "doi": "10.1126/science.adu9677"
+              }
+            },
+            {
+              "text": "Fu et al. 2025 identify Denisovan mitochondrial DNA in the Harbin individual’s dental calculus.",
+              "source": {
+                "citation": "Fu et al. 2025, Cell",
+                "doi": "10.1016/j.cell.2025.05.040"
+              }
+            },
+            {
+              "text": "Feng et al. 2025 treat H. longi as a clade that includes the Denisovans.",
+              "source": {
+                "citation": "Feng et al. 2025, Science",
+                "doi": "10.1126/science.ado9202"
+              }
+            }
+          ]
+        }
+      ],
+      "typeFossil": "The Harbin cranium, found in Harbin in 1933 and described in 2021",
+      "wikipedia": "Homo longi"
+    },
+    {
+      "id": "early-homo",
+      "name": "Early Homo, species uncertain",
+      "called": null,
+      "aka": [],
+      "summary": "The earliest fossils of our genus, from the Afar region of Ethiopia, about 2.8 to 2.6 million years old. They are too incomplete to name a species. They lived alongside australopiths, near the time of the first Oldowan tools.",
+      "firstKa": 2800,
+      "lastKa": 2590,
+      "facts": {
+        "span": [
+          {
+            "text": "The LD 350-1 jaw from Ledi-Geraru, Ethiopia, is about 2.80 to 2.75 million years old.",
+            "source": {
+              "citation": "Villmoare et al. 2015, Science",
+              "doi": "10.1126/science.aaa1343"
+            }
+          },
+          {
+            "text": "Villmoare et al. 2025 report Homo teeth at Ledi-Geraru 2.78 and 2.59 million years old, and Australopithecus at 2.63.",
+            "source": {
+              "citation": "Villmoare et al. 2025, Nature",
+              "doi": "10.1038/s41586-025-09390-4"
+            }
+          }
+        ],
+        "body": [
+          {
+            "text": "LD 350-1 mixes primitive Australopithecus traits with derived traits of later Homo, Villmoare et al. 2015 report.",
+            "source": {
+              "citation": "Villmoare et al. 2015, Science",
+              "doi": "10.1126/science.aaa1343"
+            }
+          }
+        ],
+        "tools": [
+          {
+            "text": "Oldowan tools at Ledi-Geraru are over 2.58 million years old, the earliest known, Braun et al. 2019 report.",
+            "source": {
+              "citation": "Braun et al. 2019, PNAS",
+              "doi": "10.1073/pnas.1820177116"
+            }
+          },
+          {
+            "text": "Stone tools at Gona, Ethiopia, are about 2.5 to 2.6 million years old.",
+            "source": {
+              "citation": "Semaw et al. 1997, Nature",
+              "doi": "10.1038/385333a0"
+            }
+          }
+        ],
+        "range": [
+          {
+            "text": "Finds come from the Ledi-Geraru area of the Afar Region, Ethiopia.",
+            "source": {
+              "citation": "Villmoare et al. 2025, Nature",
+              "doi": "10.1038/s41586-025-09390-4"
+            }
+          },
+          {
+            "text": "The area was open and dry around 2.8 million years ago, DiMaggio et al. 2015 find.",
+            "source": {
+              "citation": "DiMaggio et al. 2015, Science",
+              "doi": "10.1126/science.aaa1415"
+            }
+          }
+        ],
+        "dna": []
+      },
+      "debates": [
+        {
+          "question": "Is LD 350-1 a member of Homo?",
+          "views": [
+            {
+              "text": "Villmoare et al. 2015 assign the jaw to Homo.",
+              "source": {
+                "citation": "Villmoare et al. 2015, Science",
+                "doi": "10.1126/science.aaa1343"
+              }
+            },
+            {
+              "text": "Hawks et al. 2015 argue its traits do not clearly set it apart from Australopithecus.",
+              "source": {
+                "citation": "Hawks et al. 2015, Science",
+                "doi": "10.1126/science.aab0591"
+              }
+            },
+            {
+              "text": "Villmoare et al. 2015 reply that its traits support placing it in Homo.",
+              "source": {
+                "citation": "Villmoare et al. 2015, Science",
+                "doi": "10.1126/science.aab1122"
+              }
+            }
+          ]
+        },
+        {
+          "question": "Did the first stone tools come before Homo?",
+          "views": [
+            {
+              "text": "Harmand et al. 2015 report stone tools at Lomekwi, Kenya, 3.3 million years old, older than any known Homo.",
+              "source": {
+                "citation": "Harmand et al. 2015, Nature",
+                "doi": "10.1038/nature14464"
+              }
+            },
+            {
+              "text": "Braun et al. 2019 date the earliest Oldowan tools to over 2.58 million years ago, soon after the first Homo.",
+              "source": {
+                "citation": "Braun et al. 2019, PNAS",
+                "doi": "10.1073/pnas.1820177116"
+              }
+            }
+          ]
+        }
+      ],
+      "typeFossil": null,
+      "wikipedia": "LD 350-1"
+    }
+  ]
+}

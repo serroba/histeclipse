@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import claims from '../../../public/data/humans/claims.json';
 import index from '../../../public/data/dispersal/index.json';
 import pictures from '../../../public/data/humans/pictures.json';
+import species from '../../../public/data/humans/species.json';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import type { DeepChoice, DeepChipView, DeepNoteBlock } from '../../ui/deepChips';
 import type { MarkerCardContent } from '../../ui/markerCard';
@@ -45,6 +46,7 @@ function fakeContext(
   const files: Record<string, unknown> = {
     'claims.json': claims,
     'pictures.json': pictures,
+    'species.json': species,
     'index.json': index,
     ...options.files,
   };
@@ -190,26 +192,73 @@ describe('the humans as a feature', () => {
     shown.pick?.(find.id);
     const related = cards[0]?.related ?? [];
     expect(related.map((step) => step.label)).toEqual([
+      expect.stringMatching(/^About /),
       'People spreading out of Africa',
       'Ancient DNA near here',
     ]);
-    related[0]?.run();
+    related[1]?.run();
     const update = change.mock.calls[0]?.[0] as (state: ViewState) => ViewState;
     expect(update(on).dispersal).toBe('a');
-    related[1]?.run();
+    related[2]?.run();
     expect(openAnchor).toHaveBeenCalledWith(
       expect.objectContaining({ view: expect.stringContaining('explore=ancient-dna') as unknown }),
     );
     // With a model drawn, the dispersal is not offered again.
     shown.deep?.({ ...on, dispersal: 'b' }, ICE);
     shown.pick?.(find.id);
-    expect(cards.at(-1)?.related?.map((step) => step.label)).toEqual(['Ancient DNA near here']);
+    expect(cards.at(-1)?.related?.map((step) => step.label)).toEqual([
+      expect.stringMatching(/^About /),
+      'Ancient DNA near here',
+    ]);
     // A claim with no one place leads nowhere near.
     const unplaced = claims.claims.find((each) => each.place === null);
     if (unplaced === undefined) throw new Error('no unplaced claim');
     const before = cards.length;
     shown.pick?.(unplaced.id);
-    expect(cards.slice(before).flatMap((card) => card.related ?? [])).toEqual([]);
+    expect(
+      cards
+        .slice(before)
+        .flatMap((card) => card.related ?? [])
+        .map((s) => s.label),
+    ).toEqual([expect.stringMatching(/^About /)]);
+  });
+
+  it('lists the species marked, each opening its own card, as a find’s card does (#1034)', async () => {
+    const { context, cards, refresh, openTree } = fakeContext();
+    const shown = await loaded(context, refresh);
+    const blocks = shown.deep?.(on, ICE)?.note ?? [];
+    const legend = blocks.flatMap((block) =>
+      typeof block === 'object' && 'list' in block
+        ? block.list.filter((item) => item.class.startsWith('humans-legend'))
+        : [],
+    );
+    expect(legend.map((item) => item.class)).toContain('humans-legend is-sapiens');
+    const name = legend.find((item) => item.class.endsWith('is-sapiens'))?.parts[0];
+    if (typeof name !== 'object' || !('run' in name)) throw new Error('no button');
+    expect(name.text).toBe('Homo sapiens');
+    name.run();
+    await vi.waitFor(() => {
+      expect(cards.at(-1)?.title).toBe('Modern humans (Homo sapiens)');
+    });
+    cards.at(-1)?.action?.run();
+    expect(openTree).toHaveBeenCalledTimes(1);
+    // From a find, the step to its species opens the same card.
+    shown.pick?.('jebel-irhoud');
+    cards.at(-1)?.related?.[0]?.run();
+    expect(cards.at(-1)?.title).toBe('Modern humans (Homo sapiens)');
+    // An unknown species opens nothing.
+    const before = cards.length;
+    shown.pick?.('species-martian');
+    expect(cards).toHaveLength(before);
+  });
+
+  it('says so when the species cannot be loaded', async () => {
+    const { context, refresh, notify } = fakeContext({ missing: 'species.json' });
+    const shown = await loaded(context, refresh);
+    shown.pick?.('species-erectus');
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledWith('Could not load the human species: offline');
+    });
   });
 
   it('says so when the pictures cannot be loaded, and opens no card for a find let go', async () => {

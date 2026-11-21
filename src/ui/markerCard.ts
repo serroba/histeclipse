@@ -201,6 +201,8 @@ export function createMarkerCard(): MarkerCard {
   return {
     dialog,
     show({ title: text, facts, links, image, pictures, model, note, action, related }) {
+      // Another card starts at its top; the same one again (its picture loaded) stays put.
+      const another = title.textContent !== text;
       title.textContent = text;
       body.replaceChildren(
         ...(image === undefined || !safeLink(image.src) ? [] : [picture(image)]),
@@ -231,6 +233,10 @@ export function createMarkerCard(): MarkerCard {
             ]),
         ...readMore(links.filter((link) => safeLink(link.href))),
       );
+      if (another) {
+        dialog.scrollTop = 0;
+        body.scrollTop = 0;
+      }
       if (!dialog.open) dialog.showModal();
       models.draw();
     },
