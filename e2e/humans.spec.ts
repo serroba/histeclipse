@@ -261,6 +261,32 @@ test('routes argued for are drawn side by side, each opening its card with its s
   expect(problems).toEqual([]);
 });
 
+test('one tap plays the human story from the earliest Homo sapiens (#177)', async ({ page }) => {
+  const problems = collectProblems(page);
+  await test.step('Given the ice ages 60,000 years ago with Humans on', async () => {
+    await page.goto('./?ma=0.06&scale=ice&layers=humans');
+    await globeRendered(page);
+    await showDeepDetails(page);
+  });
+  await test.step('When they tap Play the human story', async () => {
+    await page
+      .getByTestId('humans-note')
+      .getByRole('button', { name: '▶ Play the human story' })
+      .click();
+  });
+  await test.step('Then time goes back to 315,000 years ago, with a dispersal model, and plays on', async () => {
+    await expect(page).toHaveURL(/dispersal=a/);
+    await expect(page).toHaveURL(/layers=[a-z,]*humans/);
+    await expect
+      .poll(() => Number(new URL(page.url()).searchParams.get('ma')), { timeout: 15_000 })
+      .toBeLessThan(0.315);
+    await expect
+      .poll(() => Number(new URL(page.url()).searchParams.get('ma')))
+      .toBeGreaterThan(0.2);
+  });
+  expect(problems).toEqual([]);
+});
+
 test('from the years, one tap on Humans goes to the earliest Homo sapiens', async ({ page }) => {
   const problems = collectProblems(page);
   await test.step('Given the years, with the Layers panel open', async () => {

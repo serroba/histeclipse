@@ -323,6 +323,14 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     }
   }
 
+  /** Play from a moment, at one of its span's speeds: a story told by playing (#177). */
+  function playFrom(ma: number, deepScale: DeepScale, maPerSecond: number): void {
+    stopPlay();
+    enterDeepTime(ma, deepScale);
+    deepSpeeds = { ...deepSpeeds, [deepScale]: deepSpeedFor(deepScale, maPerSecond) };
+    startPlay();
+  }
+
   function stopPlay(): void {
     if (!playing) return;
     playing = false;
@@ -336,6 +344,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     spanSwitch: historySpan.root,
     show: showDeepTime,
     enterDeepTime,
+    playFrom,
     goToSpan,
     setScale,
     stopPlay,

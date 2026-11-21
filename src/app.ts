@@ -497,6 +497,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       goTo: (ma, layer, where) => {
         partContext.goToDeepTime(ma, layer, where);
       },
+      play: (ma, scale, maPerSecond) => {
+        deepTime.playFrom(ma, scale, maPerSecond);
+      },
     },
     strikes: {
       playImpact: (spec) => {
