@@ -543,9 +543,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
   clock.bind(deltaT);
   const sync = createUrlSync(browserUrlWriter(window.location, window.history));
 
-  // The Moon's theory is a separate chunk; until it arrives the space view shows only the Sun.
-  bodies.loadMoon();
-
   // The famous list is a convenience: if it fails to load, everything else still works.
   famous.load();
 
@@ -586,9 +583,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     whySheet.show(state.why, whyVersion(state, hereData));
   }
 
-  /** The views offered: the Moon's own once its theory has arrived. */
+  /** The views offered, the Moon's own too: picking one asks for its theory (#981). */
   function showViewSwitch(state: ViewState): void {
-    viewSwitch.render(state.mode, state.view, bodies.moon() !== null, state.focus);
+    viewSwitch.render(state.mode, state.view, true, state.focus);
   }
 
   /** The Layers panel, and Explore's view of the layers. */
