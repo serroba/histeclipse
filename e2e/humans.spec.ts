@@ -319,6 +319,36 @@ test('Explore offers the human story, and its link plays it once (#177)', async 
   expect(problems).toEqual([]);
 });
 
+test('the legend shows only one species, and all again, in a link that keeps it (#1047)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const note = page.getByTestId('humans-note');
+  await test.step('Given the ice ages 50,000 years ago with Humans on', async () => {
+    await page.goto('./?ma=0.05&scale=ice&cam=40,20,3&layers=humans');
+    await globeRendered(page);
+    await showDeepDetails(page);
+  });
+  await test.step('When they ask for only the Neanderthals', async () => {
+    await note
+      .locator('li.humans-legend.is-neanderthal')
+      .getByRole('button', { name: 'Only these' })
+      .click();
+  });
+  await test.step('Then only Neanderthal finds are marked, and the link says so', async () => {
+    await expect(page).toHaveURL(/species=neanderthal/);
+    await expect(note).toContainText('Showing only Neanderthals.');
+    await expect(page.locator('.human-site.is-neanderthal').first()).toBeAttached();
+    await expect(page.locator('.human-site.is-sapiens')).toHaveCount(0);
+  });
+  await test.step('When they show all species again, the others come back', async () => {
+    await note.getByRole('button', { name: 'Show all species' }).click();
+    await expect(page).not.toHaveURL(/species=/);
+    await expect(page.locator('.human-site.is-sapiens').first()).toBeAttached();
+  });
+  expect(problems).toEqual([]);
+});
+
 test('from the years, one tap on Humans goes to the earliest Homo sapiens', async ({ page }) => {
   const problems = collectProblems(page);
   await test.step('Given the years, with the Layers panel open', async () => {

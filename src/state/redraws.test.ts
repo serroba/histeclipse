@@ -61,6 +61,7 @@ const WATCHES: Record<string, { watch: Watch; fields: readonly (keyof ViewState)
       'temperatureModel',
       'temperatureShow',
       'dispersal',
+      'humanSpecies',
       'impact',
       'land',
       'snowball',
