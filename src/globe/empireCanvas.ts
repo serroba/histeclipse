@@ -129,34 +129,43 @@ export function clearOverlay(canvas: HTMLCanvasElement): void {
   canvas.getContext('2d')?.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+/** How far back the front reaches: land reached in the last few thousand years (#177). */
+const FRONT_KA = 3;
+
 /**
  * Shades the cells a dispersal model has people settled in `ka` thousand years ago, a run of
- * cells at a time along each row.
+ * cells at a time along each row; and, brighter, its front: the land reached in the last
+ * FRONT_KA thousand years, so the spreading shows as time plays.
  */
 export function paintSettled(canvas: HTMLCanvasElement, grid: ArrivalGrid, ka: number): void {
   const context = canvas.getContext('2d');
   if (context === null) return;
   const cellWidth = canvas.width / grid.columns;
   const cellHeight = canvas.height / grid.rows;
-  // Magenta: apart from the sand of bared shelves and the ice, and lighter than the plates' lines.
-  context.fillStyle = 'rgba(214, 70, 170, 0.36)';
-  for (let row = 0; row < grid.rows; row += 1) {
-    let start = -1;
-    for (let column = 0; column <= grid.columns; column += 1) {
-      const arrival = column < grid.columns ? (grid.arrival[row * grid.columns + column] ?? 0) : 0;
-      const settled = arrival !== 0 && arrival >= ka;
-      if (settled && start < 0) start = column;
-      if (!settled && start >= 0) {
-        context.fillRect(
-          start * cellWidth,
-          row * cellHeight,
-          (column - start) * cellWidth,
-          cellHeight,
-        );
-        start = -1;
+  const runs = (fill: string, included: (arrival: number) => boolean) => {
+    context.fillStyle = fill;
+    for (let row = 0; row < grid.rows; row += 1) {
+      let start = -1;
+      for (let column = 0; column <= grid.columns; column += 1) {
+        const arrival =
+          column < grid.columns ? (grid.arrival[row * grid.columns + column] ?? 0) : 0;
+        const inside = arrival !== 0 && included(arrival);
+        if (inside && start < 0) start = column;
+        if (!inside && start >= 0) {
+          context.fillRect(
+            start * cellWidth,
+            row * cellHeight,
+            (column - start) * cellWidth,
+            cellHeight,
+          );
+          start = -1;
+        }
       }
     }
-  }
+  };
+  // Magenta: apart from the sand of bared shelves and the ice, and lighter than the plates' lines.
+  runs('rgba(214, 70, 170, 0.36)', (arrival) => arrival >= ka);
+  runs('rgba(255, 120, 215, 0.5)', (arrival) => arrival >= ka && arrival < ka + FRONT_KA);
 }
 
 /** Fixed per way of life, never by rank. */

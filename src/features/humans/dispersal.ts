@@ -28,7 +28,7 @@ export function dispersalText(model: DispersalShown): string {
     return 'Shade where a dispersal model has people settled by then (Timmermann & Friedrich 2016).';
   }
   if (model.share === null || model.name === null) return 'Loading the model…';
-  return `Shaded: where Timmermann & Friedrich’s (2016) model, ${model.name}, has people settled by then: ${String(Math.round(model.share * 100))}% of the land it ever reaches. One model’s view, not evidence; its data is CC BY-NC 4.0 (non-commercial).`;
+  return `Shaded: where Timmermann & Friedrich’s (2016) model, ${model.name}, has people settled by then: ${String(Math.round(model.share * 100))}% of the land it ever reaches, brightest where they arrived in the last 3,000 years. One model’s view, not evidence; its data is CC BY-NC 4.0 (non-commercial).`;
 }
 
 export interface Dispersal {

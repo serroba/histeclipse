@@ -108,6 +108,46 @@
   font-style: italic;
 }
 
+/* A disputed find: a dashed ring, not a dot (#177). */
+.human-site.is-disputed::before {
+  border: 2px dashed var(--species);
+  background: none;
+}
+
+/* A find just come into view as time plays: a ring swells from its dot and fades (#177). */
+.human-site.is-new::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 3.5px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid var(--species);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: human-site-pulse 1.6s ease-out 2;
+  translate: -50% -50%;
+}
+
+@keyframes human-site-pulse {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+
+  to {
+    opacity: 0;
+    scale: 5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .human-site.is-new::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
 /* Routes people are argued to have taken (#177): the name at each route's middle, in its colour,
    with a short stroke like its line, solid or dashed. */
 .empire-label.human-route {
