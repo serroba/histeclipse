@@ -66,15 +66,9 @@ export interface DeepTimeView extends DockView {
   /** How far back the elevation maps reach, Ma; before it the globe is blank. */
   readonly mapsReach: number;
   readonly temperature: TemperatureView;
-  /**
-   * The air: off, or on with the ice-core gases (on the ice-age scale) or the gases of the last
-   * 540 million years (on that scale), each null while it loads.
-   */
+  /** The air: off, or on with the ice-core (ice ages) or 540 Myr gases, null while loading. */
   readonly air: AirView;
-  /**
-   * The chips (#380, #605), by layer: the features', the plates' and the impacts'; whether each
-   * is offered and on, and its note.
-   */
+  /** The features' chips (#380, #605), by layer: offered here or not, on or not, and a note. */
   readonly chips: ReadonlyMap<Layer, DeepChipView>;
   /** The ice-age coastline; null before the ice ages. */
   readonly coastline: CoastlineView | null;
@@ -94,6 +88,8 @@ export interface DeepTimeView extends DockView {
 
 export interface DeepTimeBar {
   readonly root: HTMLElement;
+  /** The layers whose buttons the dock shows now (#1072), drawn first: none while it is hidden. */
+  docked(): ReadonlySet<string>;
   render(view: DeepTimeView | null): void;
 }
 
@@ -367,6 +363,7 @@ export function createDeepTimeBar(
 
   const bar: DeepTimeBar = {
     root,
+    docked: () => (root.hidden === false ? dock.shown() : new Set()),
     render(view) {
       current = view;
       root.hidden = view === null;

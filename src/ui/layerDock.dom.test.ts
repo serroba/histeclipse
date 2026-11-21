@@ -62,6 +62,13 @@ describe('the dock wears each layer’s state (#1071)', () => {
     expect(sealevel.title).toBe('Sea level');
   });
 
+  it('Given some buttons hidden, Then the dock says which layers it shows (#1072)', () => {
+    const { dock, humans } = make();
+    expect(dock.shown()).toEqual(new Set(['sealevel', 'humans']));
+    humans.hidden = true;
+    expect(dock.shown()).toEqual(new Set(['sealevel']));
+  });
+
   it('Given layers off, Then nothing is marked', () => {
     const { dock, humans, sealevel } = make();
     dock.render([]);
