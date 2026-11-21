@@ -151,12 +151,17 @@ export interface HumansView {
   readonly others: readonly ClaimLine[];
 }
 
+/**
+ * One formatter for every date (#1045): `toLocaleString` makes a new one each call, and the
+ * finds' dates are written for every find on every frame while time plays.
+ */
+const TWO_PLACES = new Intl.NumberFormat('en', { maximumFractionDigits: 2 });
+
 /** A date range in thousands of years, as "59–71 ka" or "233 ka". */
 export function kaRange(fromKa: number, toKa: number): string {
   // A million years and more read in millions: "1.8–1.85 Ma", not "1,800–1,850 ka".
   const [unit, scale] = fromKa >= 1000 ? (['Ma', 1000] as const) : (['ka', 1] as const);
-  const each = (value: number) =>
-    (value / scale).toLocaleString('en', { maximumFractionDigits: 2 });
+  const each = (value: number) => TWO_PLACES.format(value / scale);
   return fromKa === toKa ? `${each(fromKa)} ${unit}` : `${each(toKa)}–${each(fromKa)} ${unit}`;
 }
 

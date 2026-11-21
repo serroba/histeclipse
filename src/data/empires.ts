@@ -105,6 +105,38 @@ export function unwrapRing(ring: readonly (readonly [number, number])[]): [numbe
   return out;
 }
 
+/** Rings already unwrapped, by the ring: the maps repaint them often, and they do not change. */
+const unwrapped = new WeakMap<
+  readonly (readonly [number, number])[],
+  readonly [number, number][]
+>();
+
+/** `unwrapRing`, remembered for each ring (#1045): repainting a map does not redo it. */
+export function unwrappedRing(
+  ring: readonly (readonly [number, number])[],
+): readonly [number, number][] {
+  const known = unwrapped.get(ring);
+  if (known !== undefined) return known;
+  const points = unwrapRing(ring);
+  unwrapped.set(ring, points);
+  return points;
+}
+
+/**
+ * The shifts, of −360°, 0° and 360°, at which an unwrapped ring shows on a map running from
+ * −180° to 180° (#1045): one for most, two for a ring across the date line. Drawing only these,
+ * not all three, saves the map two copies no one sees.
+ */
+export function copiesOf(points: readonly (readonly [number, number])[]): readonly number[] {
+  let west = Infinity;
+  let east = -Infinity;
+  for (const [lon] of points) {
+    if (lon < west) west = lon;
+    if (lon > east) east = lon;
+  }
+  return [-360, 0, 360].filter((shift) => west + shift < 180 && east + shift > -180);
+}
+
 /** Shoelace area of a ring, square degrees (planar; for ranking only). */
 export function ringArea(ring: readonly (readonly [number, number])[]): number {
   let total = 0;
