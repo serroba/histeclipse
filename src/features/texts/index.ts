@@ -8,6 +8,7 @@
 import type { PartContext } from '../part';
 import { type ViewState } from '../../state/viewState';
 import { element } from '../../ui/dom';
+import { uiIcon } from '../../ui/icons';
 import { createSearchPanel } from './searchPanel';
 import { anchorLabel } from '../../text/anchors';
 import { loadMeaningSearch } from '../../text/meaningLoader';
@@ -55,7 +56,7 @@ export function mountTexts(context: TextsContext): TextsPart {
   const hereText = element(
     'details',
     { class: 'here-text' },
-    element('summary', {}, 'About here'),
+    element('summary', {}, uiIcon('place', 14), 'About here'),
     hereList,
   );
   let herePassages: readonly Passage[] | null = null;

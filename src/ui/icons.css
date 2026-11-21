@@ -1,0 +1,5 @@
+/* The icons' place in a line (#1069): in a disclosure's summary, beside its word. */
+summary > .icon {
+  margin-right: 5px;
+  vertical-align: -2px;
+}

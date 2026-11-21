@@ -4,6 +4,7 @@
  */
 
 import { element } from './dom';
+import { bookIcon } from './icons';
 
 /** The header: the name, the tools, the moment, and the switches between views. */
 interface HeaderParts {
@@ -82,7 +83,12 @@ function header(parts: HeaderParts, hudActions: HTMLElement): HTMLElement {
     element(
       'div',
       { class: 'hud-more' },
-      element('details', { class: 'credits' }, element('summary', {}, 'Sources'), parts.sources),
+      element(
+        'details',
+        { class: 'credits' },
+        element('summary', {}, bookIcon(14), 'Sources'),
+        parts.sources,
+      ),
       parts.textsHere,
     ),
   );

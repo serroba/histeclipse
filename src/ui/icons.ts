@@ -7,6 +7,7 @@
 import type { Span } from '../deepTime/scale';
 import { layerEntry, type Layer } from '../layers/layers';
 import type { SourceKind } from '../sources/registry';
+import './icons.css';
 
 const NS = 'http://www.w3.org/2000/svg';
 
@@ -120,6 +121,11 @@ const UI_PATHS = {
     'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z',
     'M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z',
     'M12 3v6M12 15v6M3 12h6M15 12h6',
+  ],
+  // A map pin: what is written about the place looked at (#1069).
+  place: [
+    'M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z',
+    'M12 7.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 1 0 0-5z',
   ],
   // Four corners pushed out.
   fullView: ['M4 9V4h5', 'M15 4h5v5', 'M20 15v5h-5', 'M9 20H4v-5'],
