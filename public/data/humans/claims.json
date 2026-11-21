@@ -1,76 +1,175 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "about": "Dated finds of Homo sapiens and its relatives, each as its source reports it, hand-curated for histeclipse. Dates are thousands of years ago; places are rounded to 0.1°. Where finds are argued over, competing claims share a question.",
   "questions": [
-    { "id": "first-out-of-africa", "title": "When did our species first leave Africa?" },
-    { "id": "europe", "title": "When did our species reach Europe?" },
-    { "id": "australia", "title": "When did people first reach Australia?" },
-    { "id": "americas", "title": "When did people first reach the Americas?" },
-    { "id": "neanderthal-admixture", "title": "When did Neanderthals and our species interbreed?" }
+    {
+      "id": "first-out-of-africa",
+      "title": "When did our species first leave Africa?"
+    },
+    {
+      "id": "europe",
+      "title": "When did our species reach Europe?"
+    },
+    {
+      "id": "australia",
+      "title": "When did people first reach Australia?"
+    },
+    {
+      "id": "americas",
+      "title": "When did people first reach the Americas?"
+    },
+    {
+      "id": "neanderthal-admixture",
+      "title": "When did Neanderthals and our species interbreed?"
+    }
   ],
   "claims": [
     {
       "id": "jebel-irhoud",
       "species": "sapiens",
-      "place": { "name": "Jebel Irhoud", "region": "Morocco", "latitude": 31.9, "longitude": -8.9 },
+      "place": {
+        "name": "Jebel Irhoud",
+        "region": "Morocco",
+        "latitude": 31.9,
+        "longitude": -8.9
+      },
       "fromKa": 349,
       "toKa": 281,
       "claim": "The oldest known fossils of our species, about 315,000 years old.",
-      "source": { "citation": "Hublin et al. 2017, Nature", "doi": "10.1038/nature22336" },
-      "wikipedia": "Jebel Irhoud"
+      "source": {
+        "citation": "Hublin et al. 2017, Nature",
+        "doi": "10.1038/nature22336"
+      },
+      "wikipedia": "Jebel Irhoud",
+      "found": "Skull, face, jaws, teeth and some limb bones of at least five people, with Middle Stone Age stone tools",
+      "dating": "Thermoluminescence of heated flints (about 315,000 years), and uranium-series and electron spin resonance dating of a tooth",
+      "discovered": "Found by barite miners in 1961; re-excavated from 2004 by a team led by Jean-Jacques Hublin and Abdelouahed Ben-Ncer",
+      "matters": "The oldest fossils assigned to Homo sapiens. Faces and teeth are like ours, but braincases are long and low, so Hublin et al. read our species as older, and its origin as spread across Africa."
     },
     {
       "id": "omo-kibish",
       "species": "sapiens",
-      "place": { "name": "Omo Kibish", "region": "Ethiopia", "latitude": 5.4, "longitude": 35.9 },
+      "place": {
+        "name": "Omo Kibish",
+        "region": "Ethiopia",
+        "latitude": 5.4,
+        "longitude": 35.9
+      },
       "fromKa": 233,
       "toKa": 233,
       "claim": "Omo I, the oldest Homo sapiens known from eastern Africa: at least 233,000 years old.",
-      "source": { "citation": "Vidal et al. 2022, Nature", "doi": "10.1038/s41586-021-04275-8" },
-      "wikipedia": "Omo remains"
+      "source": {
+        "citation": "Vidal et al. 2022, Nature",
+        "doi": "10.1038/s41586-021-04275-8"
+      },
+      "wikipedia": "Omo remains",
+      "found": "Omo I: parts of a skull, jaw and skeleton of one person, from the Kibish Formation by the Omo River",
+      "dating": "Chemical match of a volcanic ash above the fossil to an eruption of Shala volcano, dated by argon-argon to about 233,000 years",
+      "discovered": "Found in 1967 by a team led by Richard Leakey; the site was re-studied by Céline Vidal and colleagues",
+      "matters": "Gives a minimum age, older than the earlier estimate of about 195,000 years, for one of the first fossils with a fully modern skull shape."
     },
     {
       "id": "apidima",
       "species": "sapiens",
       "question": "first-out-of-africa",
-      "place": { "name": "Apidima Cave", "region": "Greece", "latitude": 36.4, "longitude": 22.4 },
+      "place": {
+        "name": "Apidima Cave",
+        "region": "Greece",
+        "latitude": 36.4,
+        "longitude": 22.4
+      },
       "fromKa": 210,
       "toKa": 210,
       "claim": "A skull fragment read as Homo sapiens, over 210,000 years old; the reading is disputed.",
-      "source": { "citation": "Harvati et al. 2019, Nature", "doi": "10.1038/s41586-019-1376-z" },
-      "wikipedia": "Apidima Cave"
+      "source": {
+        "citation": "Harvati et al. 2019, Nature",
+        "doi": "10.1038/s41586-019-1376-z"
+      },
+      "wikipedia": "Apidima Cave",
+      "found": "Apidima 1, the back of a skull, found in one block of breccia with Apidima 2, a more complete skull with a face",
+      "dating": "Uranium-series dating of the skull bone itself: Apidima 1 over 210,000 years, Apidima 2 over 170,000 years",
+      "discovered": "Found in 1978 by a University of Athens team led by Theodoros Pitsios; studied by Katerina Harvati’s team with CT scans",
+      "matters": "Harvati et al. read Apidima 1 as Homo sapiens, the oldest outside Africa. Others, e.g. de Lumley et al. 2020, read both skulls as pre-Neanderthal and question the dating.",
+      "extraSources": [
+        {
+          "citation": "de Lumley et al. 2020, L’Anthropologie",
+          "doi": "10.1016/j.anthro.2019.102743"
+        }
+      ]
     },
     {
       "id": "misliya",
       "species": "sapiens",
       "question": "first-out-of-africa",
-      "place": { "name": "Misliya Cave", "region": "Israel", "latitude": 32.7, "longitude": 35.0 },
+      "place": {
+        "name": "Misliya Cave",
+        "region": "Israel",
+        "latitude": 32.7,
+        "longitude": 35.0
+      },
       "fromKa": 194,
       "toKa": 177,
       "claim": "A modern human jaw, 177,000 to 194,000 years old.",
-      "source": { "citation": "Hershkovitz et al. 2018, Science", "doi": "10.1126/science.aap8369" },
-      "wikipedia": "Misliya cave"
+      "source": {
+        "citation": "Hershkovitz et al. 2018, Science",
+        "doi": "10.1126/science.aap8369"
+      },
+      "wikipedia": "Misliya cave",
+      "found": "Misliya-1, an adult’s left upper jaw with most of its teeth, with Levallois stone tools",
+      "dating": "Uranium-series and electron spin resonance of the teeth, uranium-series of crusts on the jaw, and thermoluminescence of burnt flints",
+      "discovered": "Found in 2002 during excavations led by Mina Weinstein-Evron (University of Haifa); described by Israel Hershkovitz and colleagues",
+      "matters": "Hershkovitz et al. read it as the oldest modern human fossil outside Africa, putting our species in the Levant 50,000 years earlier than thought. Its age is older than Qafzeh; the Apidima claim is older still."
     },
     {
       "id": "qafzeh",
       "species": "sapiens",
-      "place": { "name": "Qafzeh Cave", "region": "Israel", "latitude": 32.7, "longitude": 35.3 },
+      "place": {
+        "name": "Qafzeh Cave",
+        "region": "Israel",
+        "latitude": 32.7,
+        "longitude": 35.3
+      },
       "fromKa": 97,
       "toKa": 87,
       "claim": "Burials of early modern humans, about 92,000 years old.",
-      "source": { "citation": "Valladas et al. 1988, Nature", "doi": "10.1038/331614a0" },
-      "wikipedia": "Qafzeh Cave"
+      "source": {
+        "citation": "Valladas et al. 1988, Nature",
+        "doi": "10.1038/331614a0"
+      },
+      "wikipedia": "Qafzeh Cave",
+      "found": "Skeletons of more than a dozen early modern humans, several buried, one child with deer antlers, with Middle Palaeolithic tools",
+      "dating": "Thermoluminescence of burnt flints from the burial layers, about 92,000 years",
+      "discovered": "First dug in the 1930s by René Neuville and Moshe Stekelis; most burials found 1965–1979 by Bernard Vandermeersch",
+      "matters": "Among the oldest known burials. The date showed modern humans in the Levant before many Neanderthals there, overturning the view that Neanderthals were their ancestors."
     },
     {
       "id": "madjedbebe",
       "species": "sapiens",
       "question": "australia",
-      "place": { "name": "Madjedbebe", "region": "northern Australia", "latitude": -12.5, "longitude": 132.9 },
+      "place": {
+        "name": "Madjedbebe",
+        "region": "northern Australia",
+        "latitude": -12.5,
+        "longitude": 132.9
+      },
       "fromKa": 71,
       "toKa": 59,
       "claim": "Stone tools and pigments of people in northern Australia by about 65,000 years ago.",
-      "source": { "citation": "Clarkson et al. 2017, Nature", "doi": "10.1038/nature22968" },
-      "wikipedia": "Madjedbebe"
+      "source": {
+        "citation": "Clarkson et al. 2017, Nature",
+        "doi": "10.1038/nature22968"
+      },
+      "wikipedia": "Madjedbebe",
+      "found": "Stone tools, ground-edge axe heads, grindstones and ground ochre in the lowest dense layer of a rock shelter",
+      "dating": "Optically stimulated luminescence of single sand grains, with radiocarbon of charcoal in the upper layers",
+      "discovered": "Dug in 1973 and 1989; re-excavated 2012 and 2015 by a team led by Chris Clarkson, with the Mirarr traditional owners",
+      "matters": "Clarkson et al. read it as people in Australia by about 65,000 years ago. Others, e.g. O’Connell et al. 2018, argue the tools may have moved down in the sand and favour arrival 47,000–50,000 years ago.",
+      "extraSources": [
+        {
+          "citation": "O’Connell et al. 2018, PNAS",
+          "doi": "10.1073/pnas.1808385115"
+        }
+      ]
     },
     {
       "id": "sahul-50",
@@ -80,73 +179,168 @@
       "fromKa": 50,
       "toKa": 47,
       "claim": "A review of the sites finds people reached Sahul (Australia and New Guinea joined by low seas) about 47,000 to 50,000 years ago, not earlier.",
-      "source": { "citation": "O’Connell et al. 2018, PNAS", "doi": "10.1073/pnas.1808385115" },
-      "wikipedia": "Sahul"
+      "source": {
+        "citation": "O’Connell et al. 2018, PNAS",
+        "doi": "10.1073/pnas.1808385115"
+      },
+      "wikipedia": "Sahul",
+      "found": "No single find: a review of dated archaeological sites in Southeast Asia, Australia and New Guinea",
+      "dating": "Re-assesses published radiocarbon and luminescence ages, keeping only those the authors judge reliable",
+      "discovered": null,
+      "matters": "O’Connell et al. argue for arrival about 47,000–50,000 years ago and doubt the older ages, chiefly Madjedbebe’s; Clarkson et al. stand by 65,000 years. The two readings are both shown.",
+      "extraSources": [
+        {
+          "citation": "Clarkson et al. 2017, Nature",
+          "doi": "10.1038/nature22968"
+        }
+      ]
     },
     {
       "id": "mandrin",
       "species": "sapiens",
       "question": "europe",
-      "place": { "name": "Grotte Mandrin", "region": "France", "latitude": 44.4, "longitude": 4.8 },
+      "place": {
+        "name": "Grotte Mandrin",
+        "region": "France",
+        "latitude": 44.4,
+        "longitude": 4.8
+      },
       "fromKa": 54,
       "toKa": 54,
       "claim": "A child’s tooth and tools read as our species, about 54,000 years ago, between Neanderthal layers.",
-      "source": { "citation": "Slimak et al. 2022, Science Advances", "doi": "10.1126/sciadv.abj9496" },
-      "wikipedia": "Grotte Mandrin"
+      "source": {
+        "citation": "Slimak et al. 2022, Science Advances",
+        "doi": "10.1126/sciadv.abj9496"
+      },
+      "wikipedia": "Grotte Mandrin",
+      "found": "A child’s milk tooth read as Homo sapiens, in a layer with small ‘Neronian’ points, between layers with Neanderthal teeth and tools",
+      "dating": "Luminescence and radiocarbon dating, with layers counted from soot films on the cave wall; the layer is about 56,800–51,700 years old",
+      "discovered": "Excavated since 1990 by a team led by Ludovic Slimak",
+      "matters": "Slimak et al. read it as a modern human incursion into Europe about 10,000 years before others known. The reading rests on one tooth and its link to the tools."
     },
     {
       "id": "bacho-kiro",
       "species": "sapiens",
       "question": "europe",
-      "place": { "name": "Bacho Kiro Cave", "region": "Bulgaria", "latitude": 43.0, "longitude": 25.4 },
+      "place": {
+        "name": "Bacho Kiro Cave",
+        "region": "Bulgaria",
+        "latitude": 43.0,
+        "longitude": 25.4
+      },
       "fromKa": 46,
       "toKa": 44,
       "claim": "The oldest securely dated Homo sapiens remains in Europe, about 44,000 to 46,000 years old.",
-      "source": { "citation": "Hublin et al. 2020, Nature", "doi": "10.1038/s41586-020-2259-z" },
-      "wikipedia": "Bacho Kiro cave"
+      "source": {
+        "citation": "Hublin et al. 2020, Nature",
+        "doi": "10.1038/s41586-020-2259-z"
+      },
+      "wikipedia": "Bacho Kiro cave",
+      "found": "A tooth and bone fragments of Homo sapiens, identified by ancient proteins and DNA, with Initial Upper Palaeolithic tools and pendants",
+      "dating": "Radiocarbon of the human bones and of cut-marked animal bones, combined in a statistical model",
+      "discovered": "Dug in 1938 and 1971–1975; new excavations 2015–2017 by a Bulgarian–German team incl. Nikolay Sirakov, Tsenka Tsanova and Jean-Jacques Hublin",
+      "matters": "Directly dated human remains that put our species in Europe about 45,000 years ago, overlapping with Neanderthals there."
     },
     {
       "id": "ust-ishim",
       "species": "sapiens",
-      "place": { "name": "Ust’-Ishim", "region": "western Siberia", "latitude": 57.7, "longitude": 71.2 },
+      "place": {
+        "name": "Ust’-Ishim",
+        "region": "western Siberia",
+        "latitude": 57.7,
+        "longitude": 71.2
+      },
       "fromKa": 45,
       "toKa": 45,
       "claim": "The genome of a man who lived about 45,000 years ago, with Neanderthal ancestry from an admixture not long before.",
-      "source": { "citation": "Fu et al. 2014, Nature", "doi": "10.1038/nature13810" },
-      "wikipedia": "Ust'-Ishim man"
+      "source": {
+        "citation": "Fu et al. 2014, Nature",
+        "doi": "10.1038/nature13810"
+      },
+      "wikipedia": "Ust'-Ishim man",
+      "found": "The left thigh bone of a man, from which a full, high-quality genome was read",
+      "dating": "Direct radiocarbon of the bone, about 45,000 years; the genome’s missing mutations give a similar age",
+      "discovered": "Found in 2008 by Nikolai Peristov, a carver, on the bank of the Irtysh River near Ust’-Ishim",
+      "matters": "The oldest modern human genome of its time. Its long Neanderthal segments put the mixing about 7,000–13,000 years before he lived, i.e. roughly 50,000–60,000 years ago."
     },
     {
       "id": "white-sands",
       "species": "sapiens",
       "question": "americas",
-      "place": { "name": "White Sands", "region": "New Mexico", "latitude": 32.8, "longitude": -106.3 },
+      "place": {
+        "name": "White Sands",
+        "region": "New Mexico",
+        "latitude": 32.8,
+        "longitude": -106.3
+      },
       "fromKa": 23,
       "toKa": 21,
       "claim": "Human footprints dated to 21,000 to 23,000 years ago, during the Last Glacial Maximum; later dated again by other methods, with the same result.",
-      "source": { "citation": "Bennett et al. 2021, Science; Pigati et al. 2023, Science", "doi": "10.1126/science.abg7586" },
-      "wikipedia": "White Sands fossil footprints"
+      "source": {
+        "citation": "Bennett et al. 2021, Science; Pigati et al. 2023, Science",
+        "doi": "10.1126/science.abg7586"
+      },
+      "wikipedia": "White Sands fossil footprints",
+      "found": "Human footprints, many of teenagers and children, in layers of an old lakeshore with mammoth and ground sloth tracks",
+      "dating": "Radiocarbon of seeds of the water plant Ruppia above and below the prints; later radiocarbon of conifer pollen and luminescence of quartz",
+      "discovered": "Found by park staff, including David Bustos; excavated by teams led by Matthew Bennett and Bustos",
+      "matters": "If right, people were in North America during the Last Glacial Maximum. Madsen et al. 2022 argued the seed ages could be too old; Pigati et al. 2023 found other methods agree.",
+      "extraSources": [
+        {
+          "citation": "Madsen et al. 2022, Science",
+          "doi": "10.1126/science.abm4678"
+        },
+        {
+          "citation": "Pigati et al. 2023, Science",
+          "doi": "10.1126/science.adh5007"
+        }
+      ]
     },
     {
       "id": "monte-verde",
       "species": "sapiens",
       "question": "americas",
-      "place": { "name": "Monte Verde", "region": "Chile", "latitude": -41.5, "longitude": -73.2 },
+      "place": {
+        "name": "Monte Verde",
+        "region": "Chile",
+        "latitude": -41.5,
+        "longitude": -73.2
+      },
       "fromKa": 14.5,
       "toKa": 14.5,
       "claim": "A camp about 14,500 years old, far south, before Clovis.",
-      "source": { "citation": "Dillehay et al. 2015, PLOS ONE", "doi": "10.1371/journal.pone.0141923" },
-      "wikipedia": "Monte Verde"
+      "source": {
+        "citation": "Dillehay et al. 2015, PLOS ONE",
+        "doi": "10.1371/journal.pone.0141923"
+      },
+      "wikipedia": "Monte Verde",
+      "found": "Monte Verde II: remains of a camp with hearths, wooden posts, stone tools, plants and gomphothere bones, kept by peat",
+      "dating": "Radiocarbon of wood, charcoal, bone and plant remains",
+      "discovered": "Found in 1975 after logging cut a creek bank; excavated from 1977 by a team led by Tom Dillehay",
+      "matters": "Accepted by many after 1997 as evidence of people in South America before Clovis. Dillehay et al. 2015 also report older traces, about 18,500 years, which are debated."
     },
     {
       "id": "clovis",
       "species": "sapiens",
       "question": "americas",
-      "place": { "name": "Clovis", "region": "New Mexico", "latitude": 34.3, "longitude": -103.3 },
+      "place": {
+        "name": "Clovis",
+        "region": "New Mexico",
+        "latitude": 34.3,
+        "longitude": -103.3
+      },
       "fromKa": 13.05,
       "toKa": 12.75,
       "claim": "The Clovis culture, about 12,750 to 13,050 years ago; long held to be the first people in the Americas.",
-      "source": { "citation": "Waters & Stafford 2007, Science", "doi": "10.1126/science.1137166" },
-      "wikipedia": "Clovis culture"
+      "source": {
+        "citation": "Waters & Stafford 2007, Science",
+        "doi": "10.1126/science.1137166"
+      },
+      "wikipedia": "Clovis culture",
+      "found": "Fluted spear points (Clovis points) and other tools, at Blackwater Draw with mammoth bones; similar sites across North America",
+      "dating": "Re-dated radiocarbon of bone, charcoal and seeds from Clovis sites, calibrated to calendar years",
+      "discovered": "Blackwater Draw finds reported by Ridgely Whiteman in 1929; excavated from 1932 by Edgar B. Howard and others",
+      "matters": "Waters and Stafford found Clovis lasted only a few centuries, too short to have spread from one first group; with sites like Monte Verde, this weighs against ‘Clovis first’."
     },
     {
       "id": "neanderthal-end",
@@ -155,8 +349,15 @@
       "fromKa": 41,
       "toKa": 39,
       "claim": "Neanderthals disappear from Europe about 39,000 to 41,000 years ago.",
-      "source": { "citation": "Higham et al. 2014, Nature", "doi": "10.1038/nature13621" },
-      "wikipedia": "Neanderthal extinction"
+      "source": {
+        "citation": "Higham et al. 2014, Nature",
+        "doi": "10.1038/nature13621"
+      },
+      "wikipedia": "Neanderthal extinction",
+      "found": "No single find: the last Mousterian and related tool layers at about 40 sites from Spain to Russia",
+      "dating": "New radiocarbon dates on bone and charcoal, with cleaner pre-treatment, combined in statistical models",
+      "discovered": null,
+      "matters": "Higham et al. find Neanderthals gone by about 39,000–41,000 years ago, after a few thousand years of overlap with modern humans."
     },
     {
       "id": "admixture-iasi",
@@ -166,8 +367,21 @@
       "fromKa": 50.5,
       "toKa": 43.5,
       "claim": "From ancient and present-day genomes, one long period of mixing, about 43,500 to 50,500 years ago.",
-      "source": { "citation": "Iasi et al. 2024, Science", "doi": "10.1126/science.adq3010" },
-      "wikipedia": "Interbreeding between archaic and modern humans"
+      "source": {
+        "citation": "Iasi et al. 2024, Science",
+        "doi": "10.1126/science.adq3010"
+      },
+      "wikipedia": "Interbreeding between archaic and modern humans",
+      "found": "No single find: Neanderthal DNA segments in more than 300 genomes, ancient and present-day, spanning the past 50,000 years",
+      "dating": "Lengths of Neanderthal DNA segments, which shorten each generation, anchored on radiocarbon ages of the ancient people",
+      "discovered": null,
+      "matters": "Iasi et al. find one long period of mixing, about 7,000 years, centred about 47,000 years ago. Sümer et al. 2024 give a close but narrower date; the papers differ on how long it lasted.",
+      "extraSources": [
+        {
+          "citation": "Sümer et al. 2024, Nature",
+          "doi": "10.1038/s41586-024-08420-x"
+        }
+      ]
     },
     {
       "id": "admixture-sumer",
@@ -177,37 +391,92 @@
       "fromKa": 49,
       "toKa": 45,
       "claim": "From the earliest modern human genomes, from Ranis and Zlatý kůň, about 45,000 to 49,000 years ago.",
-      "source": { "citation": "Sümer et al. 2024, Nature", "doi": "10.1038/s41586-024-08420-x" },
-      "wikipedia": "Interbreeding between archaic and modern humans"
+      "source": {
+        "citation": "Sümer et al. 2024, Nature",
+        "doi": "10.1038/s41586-024-08420-x"
+      },
+      "wikipedia": "Interbreeding between archaic and modern humans",
+      "found": "Genomes of six people from Ranis (Germany) and the woman from Zlatý kůň (Czechia), from one small, related group",
+      "dating": "Lengths of Neanderthal DNA segments, with radiocarbon dates of the Ranis bones, about 45,000 years",
+      "discovered": "Zlatý kůň skull found in 1950; Ranis bones dug in the 1930s and again 2016–2022",
+      "matters": "The oldest modern human genomes yet. Sümer et al. date mixing to about 45,000–49,000 years ago, shared by later non-Africans; Iasi et al. 2024 model a longer period.",
+      "extraSources": [
+        {
+          "citation": "Iasi et al. 2024, Science",
+          "doi": "10.1126/science.adq3010"
+        }
+      ]
     },
     {
       "id": "denisova-cave",
       "species": "denisovan",
-      "place": { "name": "Denisova Cave", "region": "Altai, Siberia", "latitude": 51.4, "longitude": 84.7 },
+      "place": {
+        "name": "Denisova Cave",
+        "region": "Altai, Siberia",
+        "latitude": 51.4,
+        "longitude": 84.7
+      },
       "fromKa": 200,
       "toKa": 200,
       "claim": "Denisovans at the cave by about 200,000 years ago; the group is known mainly from its genome.",
-      "source": { "citation": "Douka et al. 2019, Nature", "doi": "10.1038/s41586-018-0870-z" },
-      "wikipedia": "Denisova Cave"
+      "source": {
+        "citation": "Douka et al. 2019, Nature",
+        "doi": "10.1038/s41586-018-0870-z"
+      },
+      "wikipedia": "Denisova Cave",
+      "found": "Bone fragments and teeth of Denisovans and Neanderthals, and a child of both, with stone tools, and ancient DNA in the sediment",
+      "dating": "Radiocarbon, optical dating of sediments and genetic ages, combined in a statistical model",
+      "discovered": "Dug since the late 1970s by Novosibirsk teams led by Anatoly Derevianko and Michael Shunkov; the Denisovan finger bone was found in 2008",
+      "matters": "Denisovans were named from the DNA of a finger bone here in 2010. Douka et al. and Jacobs et al. 2019 date them at the cave from about 200,000 to about 50,000 years ago.",
+      "extraSources": [
+        {
+          "citation": "Jacobs et al. 2019, Nature",
+          "doi": "10.1038/s41586-018-0843-2"
+        }
+      ]
     },
     {
       "id": "baishiya",
       "species": "denisovan",
-      "place": { "name": "Baishiya Karst Cave", "region": "Tibetan Plateau", "latitude": 35.4, "longitude": 102.6 },
+      "place": {
+        "name": "Baishiya Karst Cave",
+        "region": "Tibetan Plateau",
+        "latitude": 35.4,
+        "longitude": 102.6
+      },
       "fromKa": 160,
       "toKa": 160,
       "claim": "A Denisovan jaw at 3,280 m, at least 160,000 years old.",
-      "source": { "citation": "Chen et al. 2019, Nature", "doi": "10.1038/s41586-019-1139-x" },
-      "wikipedia": "Baishiya Karst Cave"
+      "source": {
+        "citation": "Chen et al. 2019, Nature",
+        "doi": "10.1038/s41586-019-1139-x"
+      },
+      "wikipedia": "Baishiya Karst Cave",
+      "found": "The right half of a lower jaw with two molars (the Xiahe mandible)",
+      "dating": "Uranium-series dating of a carbonate crust on the jaw, at least 160,000 years; identified as Denisovan from ancient proteins in a molar",
+      "discovered": "Found in 1980 by a Buddhist monk in the cave; studied by Fahu Chen, Frido Welker, Jean-Jacques Hublin and colleagues",
+      "matters": "The first Denisovan fossil found outside Denisova Cave. It shows they lived at high altitude long before modern humans, which may explain a high-altitude gene Tibetans inherited from them."
     },
     {
       "id": "tam-ngu-hao",
       "species": "denisovan",
-      "place": { "name": "Tam Ngu Hao 2", "region": "northern Laos", "latitude": 20.2, "longitude": 103.4 },
+      "place": {
+        "name": "Tam Ngu Hao 2",
+        "region": "northern Laos",
+        "latitude": 20.2,
+        "longitude": 103.4
+      },
       "fromKa": 164,
       "toKa": 131,
       "claim": "A molar most likely Denisovan, 131,000 to 164,000 years old.",
-      "source": { "citation": "Demeter et al. 2022, Nature Communications", "doi": "10.1038/s41467-022-29923-z" }
+      "source": {
+        "citation": "Demeter et al. 2022, Nature Communications",
+        "doi": "10.1038/s41467-022-29923-z"
+      },
+      "found": "One lower molar of a child, likely a girl, in cave breccia with animal teeth",
+      "dating": "Luminescence of the sediment, uranium-series of an overlying flowstone, and uranium-series–ESR of animal teeth",
+      "discovered": "Found in 2018 in Cobra Cave by a Lao–French–international team incl. Fabrice Demeter and Laura Shackelford",
+      "matters": "Demeter et al. read it as most likely Denisovan from its likeness to the Xiahe jaw; enamel proteins confirm only the genus Homo. If so, Denisovans lived in tropical Southeast Asia."
     }
   ]
 }

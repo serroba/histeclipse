@@ -879,6 +879,12 @@
     "cite": "Dated finds of our species and its relatives, each with the paper that dates it, and rival dates side by side; compiled for this site",
     "url": "https://github.com/serroba/histeclipse/blob/main/public/data/humans/claims.json"
   },
+  "humanSpecies": {
+    "name": "The site’s species profiles",
+    "kind": "dataset",
+    "cite": "The Homo species the finds are of: when and where each lived, its body, tools and DNA, each figure with its paper, and disputes side by side; compiled for this site",
+    "url": "https://github.com/serroba/histeclipse/blob/main/public/data/humans/species.json"
+  },
   "iacGtc": {
     "name": "IAC: the Gran Telescopio Canarias",
     "kind": "reference",

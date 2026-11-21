@@ -3,17 +3,21 @@
  * relatives, each from its date on, a name to tap on the globe; their chip and note in the
  * deep-time bar, with the claims about them side by side where they are disputed, and a dispersal
  * model to shade; each find's card, with its picture once it loads and its species' place on the
- * tree of life.
+ * tree of life; and each species' own card (#1034), from a find's.
  */
 
 import {
   claimCard,
+  HUMAN_SPECIES,
   humansAt,
   loadHumanClaims,
+  SPECIES_NAMES,
   type ClaimLine,
   type HumanClaims,
+  type HumanSpecies,
   type HumansView,
 } from '../../data/humanClaims';
+import { loadHumanSpecies, speciesCard, type HumanSpeciesData } from '../../data/humanSpecies';
 import { loadPictures, type Pictures } from '../../data/pictures';
 import { DISPERSAL_SCENARIOS } from '../../state/viewState';
 import type { DeepNoteBlock, DeepNotePart } from '../../ui/deepChips';
@@ -23,6 +27,9 @@ import { errorMessage } from '../../util/errors';
 import { feature } from '../feature';
 import { createDispersal, dispersalText, type DispersalShown } from './dispersal';
 import { humanSiteLayer } from './humanSiteLayer';
+
+/** A species' card is picked as `human:species-<id>`. */
+const SPECIES_PICK = 'species-';
 
 const MODELS = [
   { value: 'off', label: 'Off' },
@@ -37,11 +44,37 @@ function claim(line: ClaimLine): { class: string; parts: DeepNotePart[] } {
   };
 }
 
-/** The note: the model to shade, then the finds marked and the claims reached. */
+/** The species marked, in order of their arrival, each with its count and a way to its card. */
+function legend(view: HumansView, about: (species: HumanSpecies) => void): DeepNoteBlock[] {
+  const shown = HUMAN_SPECIES.flatMap((species) => {
+    const count = view.sites.filter((site) => site.species === species).length;
+    return count === 0 ? [] : [{ species, count }];
+  });
+  if (shown.length === 0) return [];
+  return [
+    {
+      list: shown.map(({ species, count }) => ({
+        class: `humans-legend is-${species}`,
+        parts: [
+          {
+            text: SPECIES_NAMES[species],
+            run: () => {
+              about(species);
+            },
+          },
+          ` ${String(count)} ${count === 1 ? 'find' : 'finds'}`,
+        ],
+      })),
+    },
+  ];
+}
+
+/** The note: the model to shade, then the finds marked by species and the claims reached. */
 function note(
   view: HumansView,
   model: DispersalShown,
   pick: (value: string) => void,
+  about: (species: HumanSpecies) => void,
 ): DeepNoteBlock[] {
   return [
     {
@@ -62,9 +95,10 @@ function note(
     },
     {
       paragraph: [
-        `Humans: ${String(view.sites.length)} dated finds marked, each from its date on, as its source reports it; disputed ones in italics. Hand-picked, not complete.`,
+        `Humans: ${String(view.sites.length)} dated finds marked, each from its date on, as its source reports it; disputed ones in italics. Hand-picked, not complete. Tap a species for what it was.`,
       ],
     },
+    ...legend(view, about),
     ...view.questions.flatMap(({ title, claims }) => [
       { class: 'humans-question', paragraph: [title] },
       { list: claims.map(claim) },
@@ -96,21 +130,87 @@ export const humansFeature = feature({
         context.change((state) => ({ ...state, dispersal: dispersalPicked }));
     }
 
-    /** A find's card, with a way to its species' place on the tree of life. */
+    let species: HumanSpeciesData | null = null;
+    let speciesLoading = false;
+
+    /** Its place on the tree of life: the species where the tree has it, else the genus. */
+    function onTheTree(id: HumanSpecies): { label: string; run: () => void } {
+      return {
+        label: 'Its species on the tree of life',
+        run: () => {
+          context.tree.openTree((tree) => {
+            const genus = tree.name.indexOf('Homo');
+            return tree.ours.humans[id] ?? (genus < 0 ? undefined : genus);
+          });
+        },
+      };
+    }
+
+    /** A card by what was picked: a find, or a species. */
     function cardFor(id: string): MarkerCardContent | null {
-      const species = claims?.claims.find((each) => each.id === id)?.species;
+      if (id.startsWith(SPECIES_PICK)) {
+        const which = HUMAN_SPECIES.find((each) => `${SPECIES_PICK}${each}` === id);
+        const card =
+          which === undefined || species === null ? null : speciesCard(species, which, pictures);
+        return card === null || which === undefined ? null : { ...card, action: onTheTree(which) };
+      }
+      const find = claims?.claims.find((each) => each.id === id);
       const card = claims === null ? null : claimCard(claims, id, pictures);
-      if (card === null || species === undefined) return null;
+      if (card === null || find === undefined) return null;
       return {
         ...card,
-        action: {
-          label: 'Its species on the tree of life',
-          run: () => {
-            context.tree.openTree((tree) => tree.ours.humans[species]);
-          },
-        },
-        related: findSteps(claims?.claims.find((each) => each.id === id)?.place ?? null),
+        action: onTheTree(find.species),
+        related: [aboutSpecies(find.species), ...findSteps(find.place)],
       };
+    }
+
+    /** From a find to its species' own card. */
+    function aboutSpecies(id: HumanSpecies): RelatedStep {
+      return {
+        label: `About ${SPECIES_NAMES[id]}`,
+        explain: 'When and where it lived, its body and tools, and what is argued over',
+        run: () => {
+          show(`${SPECIES_PICK}${id}`);
+        },
+      };
+    }
+
+    /** Shows what was picked, now if it can, or once what it needs has loaded. */
+    function show(id: string): void {
+      shown = id;
+      const card = cardFor(id);
+      if (card !== null) context.cards.show(card);
+      const again = (): void => {
+        const now = shown === null ? null : cardFor(shown);
+        // Again with what loaded, if its card is still open, or for the first time.
+        if (now !== null && (card === null || context.cards.open())) context.cards.show(now);
+      };
+      if (pictures === null && !picturesLoading) {
+        picturesLoading = true;
+        loadPictures(`${context.base}data/humans/pictures.json`, context.fetchJson).then(
+          (loaded) => {
+            pictures = loaded;
+            again();
+          },
+          (error: unknown) => {
+            picturesLoading = false;
+            context.notify(`Could not load the finds’ pictures: ${errorMessage(error)}`);
+          },
+        );
+      }
+      if (species === null && !speciesLoading && id.startsWith(SPECIES_PICK)) {
+        speciesLoading = true;
+        loadHumanSpecies(`${context.base}data/humans/species.json`, context.fetchJson).then(
+          (loaded) => {
+            species = loaded;
+            again();
+          },
+          (error: unknown) => {
+            speciesLoading = false;
+            context.notify(`Could not load the human species: ${errorMessage(error)}`);
+          },
+        );
+      }
     }
 
     /** From a find (#731): the dispersal models, and ancient DNA where it was found. */
@@ -180,27 +280,16 @@ export const humansFeature = feature({
         }
         const view = humansAt(claims, moment.ma * 1000);
         sitesOnGlobe.update(view.sites);
-        return { offered, on: true, note: note(view, model, pickModel) };
+        return {
+          offered,
+          on: true,
+          note: note(view, model, pickModel, (id) => {
+            show(`${SPECIES_PICK}${id}`);
+          }),
+        };
       },
       pick(id) {
-        const card = cardFor(id);
-        if (card === null) return;
-        shown = id;
-        context.cards.show(card);
-        if (pictures !== null || picturesLoading) return;
-        picturesLoading = true;
-        loadPictures(`${context.base}data/humans/pictures.json`, context.fetchJson).then(
-          (loaded) => {
-            pictures = loaded;
-            // Its picture, if its card is still the one open.
-            const again = shown === null ? null : cardFor(shown);
-            if (context.cards.open() && again !== null) context.cards.show(again);
-          },
-          (error: unknown) => {
-            picturesLoading = false;
-            context.notify(`Could not load the finds’ pictures: ${errorMessage(error)}`);
-          },
-        );
+        if (id.startsWith(SPECIES_PICK) || cardFor(id) !== null) show(id);
       },
       unpick() {
         shown = null;

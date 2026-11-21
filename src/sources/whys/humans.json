@@ -1,6 +1,6 @@
 {
   "title": "Humans",
-  "what": "Dated finds of our species and its relatives, and where a dispersal model has people settled.",
-  "sources": ["humanFinds", "timmermann"],
-  "how": "Each find is shown with the paper that dates it, and rival dates side by side. The dispersal model is one model’s view, not evidence."
+  "what": "Dated finds of our species and its relatives, what each species was, and where a dispersal model has people settled.",
+  "sources": ["humanFinds", "humanSpecies", "timmermann"],
+  "how": "Each find is shown with the paper that dates it, what was found, how it was dated and why it matters, and rival dates side by side. Each species’ card gives every figure with its paper, and where papers disagree, each view. The dispersal model is one model’s view, not evidence."
 }

@@ -11,10 +11,34 @@ import { getJson, type Fetch } from '../util/fetchJson';
 import { pictureFor, type Pictures } from './pictures';
 
 const ka = v.pipe(v.number(), v.minValue(0));
+const words = (most: number) => v.pipe(v.string(), v.minLength(1), v.maxLength(most));
+
+/** The Homo species the finds are of, from the earliest Homo on. */
+export const HUMAN_SPECIES = [
+  'early-homo',
+  'habilis',
+  'rudolfensis',
+  'erectus',
+  'antecessor',
+  'heidelbergensis',
+  'naledi',
+  'floresiensis',
+  'luzonensis',
+  'longi',
+  'neanderthal',
+  'denisovan',
+  'sapiens',
+] as const;
+export type HumanSpecies = (typeof HUMAN_SPECIES)[number];
+
+const Source = v.strictObject({
+  citation: v.pipe(v.string(), v.minLength(1)),
+  doi: v.pipe(v.string(), v.regex(/^10\.\d{4,9}\/\S+$/)),
+});
 
 const ClaimsSchema = v.pipe(
   v.strictObject({
-    schemaVersion: v.literal(1),
+    schemaVersion: v.literal(2),
     about: v.pipe(v.string(), v.minLength(1)),
     questions: v.array(
       v.strictObject({
@@ -26,7 +50,7 @@ const ClaimsSchema = v.pipe(
       v.pipe(
         v.strictObject({
           id: v.pipe(v.string(), v.regex(/^[a-z0-9-]+$/)),
-          species: v.picklist(['sapiens', 'neanderthal', 'denisovan']),
+          species: v.picklist(HUMAN_SPECIES),
           question: v.optional(v.pipe(v.string(), v.minLength(1))),
           place: v.nullable(
             v.strictObject({
@@ -40,10 +64,22 @@ const ClaimsSchema = v.pipe(
           fromKa: ka,
           toKa: ka,
           claim: v.pipe(v.string(), v.minLength(1)),
-          source: v.strictObject({
-            citation: v.pipe(v.string(), v.minLength(1)),
-            doi: v.pipe(v.string(), v.regex(/^10\.\d{4,9}\/\S+$/)),
-          }),
+          /** The paper that dates it. */
+          source: Source,
+          /** What was found: bones, teeth, tools, DNA. */
+          found: words(200),
+          /** How it was dated: the method, and on what. */
+          dating: words(200),
+          /** When it was found, and by whom, where known. */
+          discovered: v.nullable(words(200)),
+          /** Why it matters, with any dispute attributed. */
+          matters: words(320),
+          /** Other species it has been read as, and by whom (#1034). */
+          alsoRead: v.optional(
+            v.array(v.strictObject({ species: v.picklist(HUMAN_SPECIES), source: Source })),
+          ),
+          /** Other papers the card's words rest on, such as a dispute's other side. */
+          extraSources: v.optional(v.array(Source)),
           /** The English Wikipedia page about the find, for its card's picture and link. */
           wikipedia: v.optional(v.pipe(v.string(), v.minLength(1))),
         }),
@@ -133,13 +169,38 @@ export function humansAt(data: HumanClaims, shownKa: number): HumansView {
   return { sites, questions, others };
 }
 
-const SPECIES: Readonly<Record<Claim['species'], string>> = {
-  sapiens: 'Homo sapiens',
+/** Each species by the name a reader knows it by. */
+export const SPECIES_NAMES: Readonly<Record<HumanSpecies, string>> = {
+  'early-homo': 'Early Homo',
+  habilis: 'Homo habilis',
+  rudolfensis: 'Homo rudolfensis',
+  erectus: 'Homo erectus',
+  antecessor: 'Homo antecessor',
+  heidelbergensis: 'Homo heidelbergensis',
+  naledi: 'Homo naledi',
+  floresiensis: 'Homo floresiensis',
+  luzonensis: 'Homo luzonensis',
+  longi: 'Homo longi',
   neanderthal: 'Neanderthals',
   denisovan: 'Denisovans',
+  sapiens: 'Homo sapiens',
 };
 
-/** A find's card: its claim and source, the question it belongs to with its rivals, a picture. */
+/** Who it was, and who else it has been read as. */
+function who(claim: Claim): string {
+  const others = (claim.alsoRead ?? []).map(
+    (reading) => `${SPECIES_NAMES[reading.species]} (${reading.source.citation})`,
+  );
+  const name = SPECIES_NAMES[claim.species];
+  return others.length === 0 ? name : `${name}; also read as ${others.join('; ')}`;
+}
+
+/** A paper as a link to its DOI. */
+const doiLink = (source: { citation: string; doi: string }) => ({
+  label: source.citation,
+  href: `https://doi.org/${source.doi}`,
+});
+
 export function claimCard(
   data: HumanClaims,
   id: string,
@@ -162,14 +223,22 @@ export function claimCard(
   return {
     title: name,
     facts: [
-      ['Who', SPECIES[claim.species]],
+      ['Who', who(claim)],
       ...(claim.place === null ? [] : [['Where', claim.place.region] as const]),
       ['When', `${kaRange(claim.fromKa, claim.toKa)} (thousands of years ago)`],
       ['Claim', claim.claim],
+      ['Found', claim.found],
+      ['Dated by', claim.dating],
+      ...(claim.discovered === null ? [] : [['Discovered', claim.discovered] as const]),
+      ['Why it matters', claim.matters],
       ['Source', claim.source.citation],
     ],
     links: [
-      { label: claim.source.citation, href: `https://doi.org/${claim.source.doi}` },
+      doiLink(claim.source),
+      ...[...(claim.alsoRead ?? []).map((reading) => reading.source), ...(claim.extraSources ?? [])]
+        .filter((source, index, all) => all.findIndex((each) => each.doi === source.doi) === index)
+        .filter((source) => source.doi !== claim.source.doi)
+        .map(doiLink),
       ...links,
     ],
     ...(image === undefined ? {} : { image }),

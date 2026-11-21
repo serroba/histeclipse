@@ -165,6 +165,61 @@ test('a find opens its card: its claim, its source, its rivals and a picture @ac
   expect(problems).toEqual([]);
 });
 
+test('a find tells what was found, how it was dated and why it matters, and leads to its species', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const card = page.getByTestId('marker-card');
+  await page.route(/^https:\/\/(upload|thumb)\.wikimedia\.org\//, (route) =>
+    route.fulfill({ contentType: 'image/png', body: PIXEL }),
+  );
+  await test.step('Given the finds 300,000 years ago, looking at Morocco', async () => {
+    await page.goto('./?ma=0.3&scale=ice&cam=30,-5,3&layers=humans');
+    await globeRendered(page);
+  });
+  await test.step('When they tap Jebel Irhoud', async () => {
+    await page.locator('.human-site', { hasText: 'Jebel Irhoud' }).click();
+  });
+  await test.step('Then its card says what was found, how it was dated, and why it matters', async () => {
+    await expect(card).toContainText('Found');
+    await expect(card).toContainText('Thermoluminescence of heated flints');
+    await expect(card).toContainText('Why it matters');
+  });
+  await test.step('When they go to its species', async () => {
+    await card.getByRole('button', { name: 'About Homo sapiens' }).click();
+  });
+  await test.step('Then the species’ card gives its span, body and tools, with their papers', async () => {
+    await expect(card.getByRole('heading', { name: 'Modern humans (Homo sapiens)' })).toBeVisible();
+    await expect(card).toContainText('315,000 years ago to today');
+    await expect(card).toContainText('Tools and ways');
+    await expect(card.getByRole('link', { name: /et al\. \d{4}/ }).first()).toHaveAttribute(
+      'href',
+      /^https:\/\/doi\.org\/10\./,
+    );
+  });
+  expect(problems).toEqual([]);
+});
+
+test('the note lists the species marked, each opening its card', async ({ page }) => {
+  const problems = collectProblems(page);
+  const card = page.getByTestId('marker-card');
+  await page.route(/^https:\/\/(upload|thumb)\.wikimedia\.org\//, (route) =>
+    route.fulfill({ contentType: 'image/png', body: PIXEL }),
+  );
+  await test.step('Given the ice ages 60,000 years ago with Humans on', async () => {
+    await page.goto('./?ma=0.06&scale=ice&layers=humans');
+    await globeRendered(page);
+    await showDeepDetails(page);
+  });
+  await test.step('When they tap Denisovans in the note', async () => {
+    await page.getByTestId('humans-note').getByRole('button', { name: 'Denisovans' }).click();
+  });
+  await test.step('Then the Denisovans’ card opens', async () => {
+    await expect(card.getByRole('heading', { name: 'Denisovans' })).toBeVisible();
+  });
+  expect(problems).toEqual([]);
+});
+
 test('from the years, one tap on Humans goes to the earliest Homo sapiens', async ({ page }) => {
   const problems = collectProblems(page);
   await test.step('Given the years, with the Layers panel open', async () => {

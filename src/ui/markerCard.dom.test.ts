@@ -89,6 +89,16 @@ describe('a marker’s card', () => {
     );
   });
 
+  it('Given another card after a scrolled one, Then it starts at its top; the same card again stays put', () => {
+    const shown = opened();
+    shown.show(card);
+    shown.dialog.scrollTop = 120;
+    shown.show(card);
+    expect(shown.dialog.scrollTop).toBe(120);
+    shown.show({ ...card, title: 'Hubble' });
+    expect(shown.dialog.scrollTop).toBe(0);
+  });
+
   it('Given a picture its host will not serve, Then it is gone without a trace', () => {
     const shown = opened();
     shown.show({
