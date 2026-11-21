@@ -134,6 +134,17 @@ export const DESTINATIONS: readonly Destination[] = [
     view: 'ma=0.315&scale=ice&layers=humans&cam=10.0000,5.0000,3.00',
   },
   {
+    id: 'human-story',
+    label: 'The human story',
+    topics: ['people', 'life'],
+    description:
+      'Our species from its earliest finds, 315,000 years ago, to the end of the ice age, played in half a minute: finds appear as they are dated, and routes as they are argued for, each with the studies for and against it.',
+    questions: ['How did people spread across the world?', 'Which way did people leave Africa?'],
+    body: 'earth',
+    frame: { kind: 'ma', from: 0.315, to: 0 },
+    view: 'ma=0.315&scale=ice&layers=humans&dispersal=a&story=humans&cam=12.0000,40.0000,3.40',
+  },
+  {
     id: 'ancient-dna',
     label: 'Ancient DNA',
     topics: ['people'],

@@ -88,6 +88,7 @@ describe('parseViewState', () => {
       deepScale: 'all',
       coast: 'bintanja-2008',
       dispersal: 'off',
+      story: 'off',
       seaIce: 'mpi-esm1-2-lr',
       temperatureModel: 'krapp',
       temperatureShow: 'change',
@@ -239,6 +240,15 @@ describe('parseViewState', () => {
       'seaice=miroc-es2l',
     );
     expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('seaice');
+  });
+
+  it('reads a story to play on opening, writing it only while one is asked for (#177)', () => {
+    expect(parseViewState('story=humans', NOW).state.story).toBe('humans');
+    expect(serializeViewState(parseViewState('story=humans', NOW).state)).toContain('story=humans');
+    expect(serializeViewState(parseViewState('', NOW).state)).not.toContain('story');
+    expect(parseViewState('story=dinosaurs', NOW).warnings).toEqual([
+      'Ignored story="dinosaurs": unknown story; expected one of off, humans',
+    ]);
   });
 
   it('reads which dispersal scenario is shaded, writing it only when one is', () => {
@@ -621,6 +631,7 @@ describe('serializeViewState', () => {
     deepScale: fc.constantFrom(...DEEP_SCALES),
     coast: fc.constantFrom(...COAST_SOURCES),
     dispersal: fc.constantFrom(...DISPERSAL_SCENARIOS),
+    story: fc.constantFrom('off' as const, 'humans' as const),
     seaIce: fc.constantFrom(...SEA_ICE_MODELS),
     temperatureModel: fc.constantFrom(...TEMPERATURE_MODELS),
     temperatureShow: fc.constantFrom(...TEMPERATURE_SHOWS),
