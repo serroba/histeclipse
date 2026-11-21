@@ -5,6 +5,7 @@ import index from '../../../public/data/dispersal/index.json';
 import pictures from '../../../public/data/humans/pictures.json';
 import admixture from '../../../public/data/humans/admixture.json';
 import genomes from '../../../public/data/humans/genomes.json';
+import iceAge from '../../../public/data/humans/aadr-ice-age.json';
 import routes from '../../../public/data/humans/routes.json';
 import species from '../../../public/data/humans/species.json';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
@@ -57,6 +58,7 @@ function fakeContext(
     'routes.json': routes,
     'admixture.json': admixture,
     'genomes.json': genomes,
+    'aadr-ice-age.json': iceAge,
     'index.json': index,
     ...options.files,
   };
@@ -126,10 +128,10 @@ async function loaded(context: FeatureContext<Capability>, refresh: ReturnType<t
   await vi.waitFor(() => {
     expect(refresh).toHaveBeenCalled();
   });
-  // Then the routes and the interbreeding, asked for once the finds are in.
+  // Then the routes, the interbreeding and the ice-age DNA, asked for once the finds are in.
   shown.deep?.(on, ICE);
   await vi.waitFor(() => {
-    expect(refresh).toHaveBeenCalledTimes(3);
+    expect(refresh).toHaveBeenCalledTimes(4);
   });
   return shown;
 }
@@ -198,7 +200,7 @@ describe('the humans as a feature', () => {
     expect(withModel.dispersal).toBe('a');
     expect(words(shown.deep?.(withModel, ICE))).toMatch(/Loading the model…/);
     await vi.waitFor(() => {
-      expect(refresh).toHaveBeenCalledTimes(4);
+      expect(refresh).toHaveBeenCalledTimes(5);
     });
     expect(words(shown.deep?.(withModel, ICE))).toMatch(
       /model, early exit from Africa \(scenario A\), has people settled by then: 50% of the land/,
@@ -477,6 +479,38 @@ describe('the humans as a feature', () => {
     await vi.waitFor(() => {
       expect(cards.at(-1)?.facts.some(([label]) => label === 'Ancient DNA')).toBe(true);
     });
+  });
+
+  it('marks the ice-age DNA of our species from each place’s oldest date, each to its card (#1059)', async () => {
+    const { context, cards, refresh, change, drawn } = fakeContext();
+    const shown = await loaded(context, refresh);
+    const at = (ka: number) => ({ ...on, ma: ka / 1000 });
+    const moment = (ka: number) => ({ ma: ka / 1000, scale: 'ice' }) as const;
+    const dnaSites = () =>
+      (drawn.at(-1) as readonly { id: string; dna?: boolean; label: string }[]).filter(
+        (site) => site.dna === true,
+      );
+    // 60,000 years ago, none yet; by 30,000, Sunghir and others, after the finds.
+    shown.deep?.(at(60), moment(60));
+    expect(dnaSites()).toEqual([]);
+    const view = shown.deep?.(at(30), moment(30));
+    const sunghir = dnaSites().find((site) => site.id === 'dna-sunghir-russia');
+    expect(sunghir?.label).toBe('Sunghir DNA 33.2–34.6 ka');
+    expect(words(view)).toMatch(/Ancient DNA of our species: \d+ people at \d+ places/);
+    shown.pick?.('dna-sunghir-russia');
+    const card = cards.at(-1);
+    expect(card?.title).toBe('Ancient DNA: Sunghir, Russia');
+    expect(card?.facts).toContainEqual(['Genomes', '4 people']);
+    expect(card?.facts.some(([label]) => label === 'Sunghir1')).toBe(true);
+    // None while only another species is shown; still there for ours.
+    shown.deep?.({ ...at(30), humanSpecies: 'neanderthal' }, moment(30));
+    expect(dnaSites()).toEqual([]);
+    shown.deep?.({ ...at(30), humanSpecies: 'sapiens' }, moment(30));
+    expect(dnaSites().length).toBeGreaterThan(5);
+    expect(change).not.toHaveBeenCalled();
+    const before = cards.length;
+    shown.pick?.('dna-nowhere');
+    expect(cards).toHaveLength(before);
   });
 
   it('says so when the species cannot be loaded', async () => {

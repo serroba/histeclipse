@@ -62,6 +62,7 @@ def test_keeps_ancient_individuals_that_pass_once_each_by_cell() -> None:
     assert genomes == [
         Genome(
             (50, 86),
+            (50.55, 86.59),
             4880,
             "Russia_Altai_Afanasievo",
             "Narasimhan2019",
@@ -70,6 +71,7 @@ def test_keeps_ancient_individuals_that_pass_once_each_by_cell() -> None:
         ),
         Genome(
             (50, 86),
+            (50.55, 86.59),
             2340,
             "Russia_Altai_Afanasievo",
             "Narasimhan2019",
@@ -94,8 +96,8 @@ def test_assessments_that_pass() -> None:
 
 def test_the_site_file_indexes_cells_labels_and_papers() -> None:
     genomes = [
-        Genome((50, 86), 4880, "B", "P2", "10.2/b", NOBODY),
-        Genome((10, 20), 3000, "A", "P1", "10.1/a", NOBODY),
+        Genome((50, 86), (51.0, 87.0), 4880, "B", "P2", "10.2/b", NOBODY),
+        Genome((10, 20), (11.0, 21.0), 3000, "A", "P1", "10.1/a", NOBODY),
     ]
     data = genomes_file(genomes)
     assert data["cells"] == [[10, 20], [50, 86]]
