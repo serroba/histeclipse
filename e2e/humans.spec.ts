@@ -184,6 +184,8 @@ test('a find tells what was found, how it was dated and why it matters, and lead
     await expect(card).toContainText('Found');
     await expect(card).toContainText('Thermoluminescence of heated flints');
     await expect(card).toContainText('Why it matters');
+    await expect(card).toContainText('Other studies');
+    await expect(card).toContainText(/Supports \((dating|fossil|genetic|archaeological)\)/);
   });
   await test.step('When they go to its species', async () => {
     await card.getByRole('button', { name: 'About Homo sapiens' }).click();

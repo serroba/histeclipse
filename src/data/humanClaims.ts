@@ -80,6 +80,26 @@ const ClaimsSchema = v.pipe(
           ),
           /** Other papers the card's words rest on, such as a dispute's other side. */
           extraSources: v.optional(v.array(Source)),
+          /**
+           * Other studies of it than the one that dates it (#177): each bears it out or challenges
+           * it, by its kind of evidence, with what it found.
+           */
+          evidence: v.optional(
+            v.array(
+              v.strictObject({
+                stance: v.picklist(['supports', 'challenges']),
+                kind: v.picklist([
+                  'dating',
+                  'fossil',
+                  'genetic',
+                  'archaeological',
+                  'environmental',
+                ]),
+                text: words(260),
+                source: Source,
+              }),
+            ),
+          ),
           /** The English Wikipedia page about the find, for its card's picture and link. */
           wikipedia: v.optional(v.pipe(v.string(), v.minLength(1))),
         }),
@@ -217,6 +237,24 @@ function who(claim: Claim): string {
   return others.length === 0 ? name : `${name}; also read as ${others.join('; ')}`;
 }
 
+/** How many other studies bear a find out, and how many challenge it, or that none is known. */
+function weighed(claim: Claim): string {
+  const items = claim.evidence ?? [];
+  if (items.length === 0)
+    return 'None found yet beyond the paper that dates it: one study’s reading, to weigh as such.';
+  const count = (stance: string) => items.filter((item) => item.stance === stance).length;
+  const studies = (n: number) => `${String(n)} ${n === 1 ? 'study' : 'studies'}`;
+  const [support, challenge] = [count('supports'), count('challenges')];
+  return (
+    [
+      ...(support > 0 ? [`${studies(support)} ${support === 1 ? 'supports' : 'support'} it`] : []),
+      ...(challenge > 0
+        ? [`${studies(challenge)} ${challenge === 1 ? 'challenges' : 'challenge'} it`]
+        : []),
+    ].join('; ') + '.'
+  );
+}
+
 /** A paper as a link to its DOI. */
 const doiLink = (source: { citation: string; doi: string }) => ({
   label: source.citation,
@@ -254,10 +292,22 @@ export function claimCard(
       ...(claim.discovered === null ? [] : [['Discovered', claim.discovered] as const]),
       ['Why it matters', claim.matters],
       ['Source', claim.source.citation],
+      ['Other studies', weighed(claim)],
+      ...(claim.evidence ?? []).map(
+        (item) =>
+          [
+            `${item.stance === 'supports' ? 'Supports' : 'Challenges'} (${item.kind})`,
+            `${item.text} (${item.source.citation})`,
+          ] as const,
+      ),
     ],
     links: [
       doiLink(claim.source),
-      ...[...(claim.alsoRead ?? []).map((reading) => reading.source), ...(claim.extraSources ?? [])]
+      ...[
+        ...(claim.alsoRead ?? []).map((reading) => reading.source),
+        ...(claim.extraSources ?? []),
+        ...(claim.evidence ?? []).map((item) => item.source),
+      ]
         .filter((source, index, all) => all.findIndex((each) => each.doi === source.doi) === index)
         .filter((source) => source.doi !== claim.source.doi)
         .map(doiLink),

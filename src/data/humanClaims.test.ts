@@ -131,36 +131,54 @@ const fewPictures: Pictures = {
 describe('claimCard', () => {
   it('gives a find its claim, source, picture with credit, and Wikipedia', async () => {
     const card = claimCard(await load(), 'jebel-irhoud', fewPictures);
-    expect(card).toEqual({
-      title: 'Jebel Irhoud',
-      facts: [
-        ['Who', 'Homo sapiens'],
-        ['Where', 'Morocco'],
-        ['When', '281–349 ka (thousands of years ago)'],
-        ['Claim', 'The oldest known fossils of our species, about 315,000 years old.'],
-        ['Found', expect.stringMatching(/^Skull, face, jaws/) as unknown as string],
-        [
-          'Dated by',
-          expect.stringMatching(/^Thermoluminescence of heated flints/) as unknown as string,
-        ],
-        ['Discovered', expect.stringMatching(/barite miners in 1961/) as unknown as string],
-        ['Why it matters', expect.stringMatching(/^The oldest fossils/) as unknown as string],
-        ['Source', 'Hublin et al. 2017, Nature'],
-      ],
-      links: [
-        { label: 'Hublin et al. 2017, Nature', href: 'https://doi.org/10.1038/nature22336' },
-        { label: 'Wikipedia', href: 'https://en.wikipedia.org/wiki/Jebel_Irhoud' },
-        {
-          label: 'The picture and its licence',
-          href: 'https://commons.wikimedia.org/wiki/File:H.jpg',
-        },
-      ],
-      image: {
-        src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/H.jpg/320px-H.jpg',
-        alt: 'Jebel Irhoud',
-        credit: 'Picture: Shannon McPherron, CC BY-SA 2.0, via Wikimedia Commons.',
-      },
+    expect(card?.title).toBe('Jebel Irhoud');
+    expect(card?.facts.slice(0, 4)).toEqual([
+      ['Who', 'Homo sapiens'],
+      ['Where', 'Morocco'],
+      ['When', '281–349 ka (thousands of years ago)'],
+      ['Claim', 'The oldest known fossils of our species, about 315,000 years old.'],
+    ]);
+    const labels = card?.facts.map(([label]) => label) ?? [];
+    expect(labels).toEqual(
+      expect.arrayContaining(['Found', 'Dated by', 'Discovered', 'Why it matters', 'Source']),
+    );
+    expect(card?.links[0]).toEqual({
+      label: 'Hublin et al. 2017, Nature',
+      href: 'https://doi.org/10.1038/nature22336',
     });
+    expect(card?.links.slice(-2)).toEqual([
+      { label: 'Wikipedia', href: 'https://en.wikipedia.org/wiki/Jebel_Irhoud' },
+      {
+        label: 'The picture and its licence',
+        href: 'https://commons.wikimedia.org/wiki/File:H.jpg',
+      },
+    ]);
+    expect(card?.image).toEqual({
+      src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/H.jpg/320px-H.jpg',
+      alt: 'Jebel Irhoud',
+      credit: 'Picture: Shannon McPherron, CC BY-SA 2.0, via Wikimedia Commons.',
+    });
+  });
+
+  it('weighs a find by the other studies of it, each with its stance, kind and paper', async () => {
+    const data = await load();
+    const card = claimCard(data, 'sima-de-los-huesos', null);
+    const facts = new Map(card?.facts.map(([label, text]) => [label, text]));
+    expect(facts.get('Other studies')).toMatch(
+      /^\d+ stud(y|ies) supports? it; 1 study challenges it\.$/,
+    );
+    expect(facts.get('Challenges (dating)')).toMatch(/\(Bischoff et al\. 2007, .+\)$/);
+    expect(card?.links.map((link) => link.label)).toContain('Meyer et al. 2016, Nature');
+    // A find no other study has weighed says so.
+    expect(new Map(claimCard(data, 'mandrin', null)?.facts).get('Other studies')).toMatch(
+      /^None found yet beyond the paper that dates it/,
+    );
+  });
+
+  it('gives every find but a few at least one other study', async () => {
+    const data = await load();
+    const without = data.claims.filter((claim) => (claim.evidence ?? []).length === 0);
+    expect(without.length).toBeLessThanOrEqual(3);
   });
 
   it('names a disputed find’s question and its rivals; a page without a picture is a link', async () => {
@@ -209,7 +227,9 @@ describe('claimCard', () => {
 
   it('has no picture or page before the pictures load, and no card for an unknown find', async () => {
     const data = await load();
-    expect(claimCard(data, 'jebel-irhoud', null)?.links).toHaveLength(1);
+    expect(claimCard(data, 'jebel-irhoud', null)?.links.map((link) => link.label)).not.toContain(
+      'Wikipedia',
+    );
     expect(claimCard(data, 'no-such-find', null)).toBeNull();
     expect(pictureFor(fewPictures, undefined, 'x')).toEqual({ links: [] });
     // A claim with no place is titled by what it says.
