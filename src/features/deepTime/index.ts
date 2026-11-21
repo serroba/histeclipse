@@ -39,9 +39,8 @@ import { PLATES_REACH_MA, sketchAt } from '../../deepTime/sketch';
 import { createSpanSwitch, type Span } from '../../ui/spanSwitch';
 import type { DeepTimeContext, DeepTimePart } from './context';
 import { errorMessage } from '../../util/errors';
-
-/** The elevation maps reach back this far (their index says for certain once loaded). */
-const MAPS_REACH_MA = 540;
+// The elevation maps reach back this far; their index says for certain once loaded.
+import { MAPS_REACH_MA } from '../../state/timeAxis';
 
 export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
   const { base, fetchJson, store, globe } = context;
