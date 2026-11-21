@@ -1,0 +1,887 @@
+{
+  "schemaVersion": 1,
+  "about": "Routes people are argued to have taken, each as one published study argues it, drawn approximately after its text and figures for histeclipse: not measured paths. Where routes compete, they share a question. Points are longitude, latitude; ages are thousands of years ago.",
+  "questions": [
+    {
+      "id": "out-of-africa",
+      "title": "Which way did our species leave Africa?"
+    },
+    {
+      "id": "into-sahul",
+      "title": "Which way did people cross to Australia and New Guinea?"
+    },
+    {
+      "id": "into-the-americas",
+      "title": "Which way did people first go south into the Americas?"
+    }
+  ],
+  "routes": [
+    {
+      "id": "southern-route",
+      "question": "out-of-africa",
+      "label": "Southern route",
+      "fromKa": 75,
+      "toKa": 45,
+      "path": [
+        [
+          39,
+          9
+        ],
+        [
+          43.4,
+          12.6
+        ],
+        [
+          47,
+          13.6
+        ],
+        [
+          51,
+          15.2
+        ],
+        [
+          54.5,
+          16.8
+        ],
+        [
+          57,
+          18.8
+        ],
+        [
+          58.8,
+          21
+        ],
+        [
+          59.8,
+          22.6
+        ],
+        [
+          58,
+          24
+        ],
+        [
+          56.5,
+          26.3
+        ],
+        [
+          58.5,
+          25.4
+        ],
+        [
+          62,
+          25.1
+        ],
+        [
+          66,
+          24.8
+        ],
+        [
+          68,
+          23.5
+        ],
+        [
+          69.5,
+          22
+        ],
+        [
+          72,
+          19.5
+        ],
+        [
+          73.3,
+          16
+        ],
+        [
+          74.6,
+          13
+        ],
+        [
+          76,
+          9.8
+        ],
+        [
+          77.6,
+          7.9
+        ],
+        [
+          80,
+          9.5
+        ],
+        [
+          80.3,
+          13.5
+        ],
+        [
+          82.5,
+          17
+        ],
+        [
+          86.5,
+          20
+        ],
+        [
+          89,
+          21.6
+        ],
+        [
+          91.8,
+          21.5
+        ],
+        [
+          93.8,
+          18
+        ],
+        [
+          96.5,
+          15.5
+        ],
+        [
+          98,
+          12
+        ],
+        [
+          98.5,
+          8
+        ],
+        [
+          100.3,
+          4
+        ],
+        [
+          102,
+          1.8
+        ],
+        [
+          104,
+          -0.5
+        ],
+        [
+          105.5,
+          -3
+        ]
+      ],
+      "says": "Across the mouth of the Red Sea and along the coasts of Arabia and India: one quick move along the shore, about 65,000 years ago, read from complete mitochondrial genomes.",
+      "source": {
+        "citation": "Macaulay et al. 2005, Science",
+        "doi": "10.1126/science.1109792"
+      },
+      "evidence": [
+        {
+          "kind": "genetic",
+          "text": "Macaulay et al. find that mitochondrial DNA in isolated groups in South-east Asia fits a single, rapid dispersal from Africa along a southern coastal route, reaching Australia about 65,000 years ago.",
+          "source": {
+            "citation": "Macaulay et al. 2005, Science",
+            "doi": "10.1126/science.1109792"
+          }
+        },
+        {
+          "kind": "archaeological",
+          "text": "Armitage et al. report stone tools at Jebel Faya, United Arab Emirates, from the last interglacial, with links to north-east Africa, and argue low sea level and more rain let people into Arabia.",
+          "source": {
+            "citation": "Armitage et al. 2011, Science",
+            "doi": "10.1126/science.1199113"
+          }
+        },
+        {
+          "kind": "genetic",
+          "text": "Rasmussen et al. find, from a century-old lock of hair, that Aboriginal Australians descend from an early dispersal into eastern Asia, possibly 62,000–75,000 years ago, separate from the ancestors of Asians.",
+          "source": {
+            "citation": "Rasmussen et al. 2011, Science",
+            "doi": "10.1126/science.1211177"
+          }
+        },
+        {
+          "kind": "environmental",
+          "text": "Beyer et al. model past rainfall and find the southern route had a long, wet enough window from about 65,000 to 30,000 years ago, if the Bab el-Mandeb strait could be crossed.",
+          "source": {
+            "citation": "Beyer et al. 2021, Nature Communications",
+            "doi": "10.1038/s41467-021-24779-1"
+          }
+        },
+        {
+          "kind": "archaeological",
+          "text": "Mellars et al. combine genetic and South Asian archaeological evidence to argue for a coast-oriented dispersal from eastern Africa to southern Asia about 60,000–50,000 years ago.",
+          "source": {
+            "citation": "Mellars et al. 2013, PNAS",
+            "doi": "10.1073/pnas.1306043110"
+          }
+        },
+        {
+          "kind": "dating",
+          "text": "Petraglia et al. find similar Middle Palaeolithic tools at Jwalapuram, India, below and above the 74,000-year-old Toba ash, and argue the toolmakers, whose identity is debated, lived there across the eruption.",
+          "source": {
+            "citation": "Petraglia et al. 2007, Science",
+            "doi": "10.1126/science.1141564"
+          }
+        }
+      ],
+      "against": [
+        {
+          "kind": "genetic",
+          "text": "Pagani et al. compare Egyptian and Ethiopian genomes and find Egyptian haplotypes closer to non-Africans’, which points to Egypt and Sinai, not the Bab el-Mandeb, as the more likely way out.",
+          "source": {
+            "citation": "Pagani et al. 2015, AJHG",
+            "doi": "10.1016/j.ajhg.2015.04.019"
+          }
+        },
+        {
+          "kind": "genetic",
+          "text": "Malaspinas et al. find Aboriginal Australians and Papuans split from Eurasians 51,000–72,000 years ago after a single out-of-Africa dispersal, not a separate earlier wave.",
+          "source": {
+            "citation": "Malaspinas et al. 2016, Nature",
+            "doi": "10.1038/nature18299"
+          }
+        },
+        {
+          "kind": "environmental",
+          "text": "Breeze et al. map ancient lakes and rivers and find a ‘Tabuk Corridor’ joining the Levant to inner Arabia in wet phases, so Arabia could also be reached from the north.",
+          "source": {
+            "citation": "Breeze et al. 2016, Quaternary Science Reviews",
+            "doi": "10.1016/j.quascirev.2016.05.012"
+          }
+        }
+      ]
+    },
+    {
+      "id": "northern-route",
+      "question": "out-of-africa",
+      "label": "Northern route",
+      "fromKa": 75,
+      "toKa": 45,
+      "path": [
+        [
+          39,
+          9
+        ],
+        [
+          34,
+          15.5
+        ],
+        [
+          32.5,
+          21
+        ],
+        [
+          31.5,
+          26
+        ],
+        [
+          31.5,
+          29.5
+        ],
+        [
+          33.5,
+          30.5
+        ],
+        [
+          35.5,
+          32.5
+        ]
+      ],
+      "says": "Down the Nile, through Egypt and Sinai into the Levant: present-day Egyptians’ genomes are closer to non-Africans’ than Ethiopians’ are, which favours this way out.",
+      "source": {
+        "citation": "Pagani et al. 2015, AJHG",
+        "doi": "10.1016/j.ajhg.2015.04.019"
+      },
+      "evidence": [
+        {
+          "kind": "genetic",
+          "text": "Pagani et al. sequence 225 Egyptian and Ethiopian genomes and find Egyptian haplotypes closer to non-Africans’, pointing to Egypt and Sinai as the more likely gateway out of Africa.",
+          "source": {
+            "citation": "Pagani et al. 2015, AJHG",
+            "doi": "10.1016/j.ajhg.2015.04.019"
+          }
+        },
+        {
+          "kind": "fossil",
+          "text": "Hershkovitz et al. date a modern human skull from Manot Cave, Israel, to about 55,000 years ago and find it resembles the first modern Europeans, placing their likely relatives in the Levant.",
+          "source": {
+            "citation": "Hershkovitz et al. 2015, Nature",
+            "doi": "10.1038/nature14134"
+          }
+        },
+        {
+          "kind": "fossil",
+          "text": "Hershkovitz et al. report a modern human upper jaw from Misliya Cave, Israel, at least 177,000 years old, showing people reached the Levant far earlier than once thought.",
+          "source": {
+            "citation": "Hershkovitz et al. 2018, Science",
+            "doi": "10.1126/science.aap8369"
+          }
+        }
+      ],
+      "against": [
+        {
+          "kind": "genetic",
+          "text": "Macaulay et al. read complete mitochondrial genomes as a single, rapid dispersal along a southern coastal route through India to Australia about 65,000 years ago.",
+          "source": {
+            "citation": "Macaulay et al. 2005, Science",
+            "doi": "10.1126/science.1109792"
+          }
+        },
+        {
+          "kind": "environmental",
+          "text": "Beyer et al. model rainfall and find the northern route last open shortly after about 65,000 years ago, then too dry for some 40,000 years, while the southern route stayed open longer.",
+          "source": {
+            "citation": "Beyer et al. 2021, Nature Communications",
+            "doi": "10.1038/s41467-021-24779-1"
+          }
+        },
+        {
+          "kind": "archaeological",
+          "text": "Groucutt et al. review fossil, genetic, archaeological and climate data and find the dispersal too complex for simple narratives, calling for hybrid models rather than one route.",
+          "source": {
+            "citation": "Groucutt et al. 2015, Evolutionary Anthropology",
+            "doi": "10.1002/evan.21455"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sahul-north",
+      "question": "into-sahul",
+      "label": "Through Sulawesi",
+      "fromKa": 70,
+      "toKa": 45,
+      "path": [
+        [
+          114,
+          -1
+        ],
+        [
+          117.5,
+          -1
+        ],
+        [
+          120,
+          -2
+        ],
+        [
+          124,
+          -1.5
+        ],
+        [
+          127.5,
+          -3
+        ],
+        [
+          131,
+          -2
+        ],
+        [
+          134,
+          -3
+        ],
+        [
+          138,
+          -5
+        ]
+      ],
+      "says": "From Borneo through Sulawesi and the Moluccas to New Guinea: least-cost models, with islands in sight of each other, find this northern way the easier one.",
+      "source": {
+        "citation": "Kealy et al. 2018, Journal of Human Evolution",
+        "doi": "10.1016/j.jhevol.2018.10.003"
+      },
+      "evidence": [
+        {
+          "kind": "model",
+          "text": "Kealy et al. build least-cost models from Sunda to Sahul at 65,000 and 70,000 years ago and find overwhelming support for a northern route through Sulawesi, landing near Misool Island.",
+          "source": {
+            "citation": "Kealy et al. 2018, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2018.10.003"
+          }
+        },
+        {
+          "kind": "model",
+          "text": "Bird et al. combine coastal viewsheds and ocean drift models and find arrival via New Guinea more likely than via north-west Australia, and that voyages were probably planned.",
+          "source": {
+            "citation": "Bird et al. 2019, Scientific Reports",
+            "doi": "10.1038/s41598-019-42946-9"
+          }
+        },
+        {
+          "kind": "dating",
+          "text": "Oktaviana et al. date a cave painting of people and a pig in Sulawesi to at least 51,200 years ago, so people were on the northern island chain by then.",
+          "source": {
+            "citation": "Oktaviana et al. 2024, Nature",
+            "doi": "10.1038/s41586-024-07541-7"
+          }
+        },
+        {
+          "kind": "archaeological",
+          "text": "Summerhayes et al. find people using Pandanus nuts and yams in the New Guinea highlands 49,000–36,000 years ago, among the oldest sites in the region.",
+          "source": {
+            "citation": "Summerhayes et al. 2010, Science",
+            "doi": "10.1126/science.1193130"
+          }
+        }
+      ],
+      "against": [
+        {
+          "kind": "model",
+          "text": "Bird et al. use bathymetry and drift models to find a chain of islands, now drowned, off north-west Australia, and purposeful summer voyages from Timor–Roti very likely to succeed.",
+          "source": {
+            "citation": "Bird et al. 2018, Quaternary Science Reviews",
+            "doi": "10.1016/j.quascirev.2018.04.027"
+          }
+        },
+        {
+          "kind": "archaeological",
+          "text": "Kealy et al. review Wallacea and find no archaeological evidence there older than Sahul’s, so the record cannot yet pick the first landfall.",
+          "source": {
+            "citation": "Kealy et al. 2015, Journal of Island and Coastal Archaeology",
+            "doi": "10.1080/15564894.2015.1119218"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sahul-south",
+      "question": "into-sahul",
+      "label": "Through Timor",
+      "fromKa": 70,
+      "toKa": 45,
+      "path": [
+        [
+          110,
+          -7.5
+        ],
+        [
+          115,
+          -8.5
+        ],
+        [
+          119,
+          -8.7
+        ],
+        [
+          123,
+          -9.3
+        ],
+        [
+          123.5,
+          -10.8
+        ],
+        [
+          125,
+          -12.5
+        ],
+        [
+          127,
+          -14.5
+        ]
+      ],
+      "says": "Along the Lesser Sunda islands to Timor and Roti, then over open sea to the dry shelf of north-west Australia: voyage models find a landing there likely.",
+      "source": {
+        "citation": "Bird et al. 2018, Quaternary Science Reviews",
+        "doi": "10.1016/j.quascirev.2018.04.027"
+      },
+      "evidence": [
+        {
+          "kind": "model",
+          "text": "Bird et al. find, from new bathymetry and drift models, that islands off north-west Australia were visible from Timor–Roti and that purposeful summer voyages of 4–7 days were very likely to succeed.",
+          "source": {
+            "citation": "Bird et al. 2018, Quaternary Science Reviews",
+            "doi": "10.1016/j.quascirev.2018.04.027"
+          }
+        },
+        {
+          "kind": "archaeological",
+          "text": "O’Connor et al. find deep-sea fish such as tuna and early fish-hooks at Jerimalai, East Timor, about 42,000 years ago, showing strong sea skills on the southern island chain.",
+          "source": {
+            "citation": "O’Connor et al. 2011, Science",
+            "doi": "10.1126/science.1207703"
+          }
+        },
+        {
+          "kind": "dating",
+          "text": "Clarkson et al. date the start of occupation at Madjedbebe rock shelter in northern Australia to about 65,000 years ago, a minimum age for arrival in Sahul.",
+          "source": {
+            "citation": "Clarkson et al. 2017, Nature",
+            "doi": "10.1038/nature22968"
+          }
+        }
+      ],
+      "against": [
+        {
+          "kind": "model",
+          "text": "Kealy et al. find overwhelming least-cost support for a northern route, only minimal support for a southern crossing from Timor, and no early dates yet on the better-studied southern islands.",
+          "source": {
+            "citation": "Kealy et al. 2018, Journal of Human Evolution",
+            "doi": "10.1016/j.jhevol.2018.10.003"
+          }
+        },
+        {
+          "kind": "model",
+          "text": "Bird et al. combine viewsheds, drift models and population projections and find arrival via New Guinea more likely than via north-west Australia.",
+          "source": {
+            "citation": "Bird et al. 2019, Scientific Reports",
+            "doi": "10.1038/s41598-019-42946-9"
+          }
+        },
+        {
+          "kind": "dating",
+          "text": "O’Connell et al. review the region and find an age above 50,000 years for Madjedbebe unlikely to be valid, which challenges the early date for arrival.",
+          "source": {
+            "citation": "O’Connell et al. 2018, PNAS",
+            "doi": "10.1073/pnas.1808385115"
+          }
+        }
+      ]
+    },
+    {
+      "id": "beringia",
+      "label": "Across Beringia",
+      "fromKa": 30,
+      "toKa": 15,
+      "path": [
+        [
+          104,
+          52
+        ],
+        [
+          125,
+          62
+        ],
+        [
+          150,
+          67
+        ],
+        [
+          172,
+          66
+        ],
+        [
+          -172,
+          65
+        ],
+        [
+          -160,
+          64
+        ]
+      ],
+      "says": "From Siberia onto the land bridge the low sea laid bare, where people may have lived for thousands of years, cut off by ice, before going on into the Americas.",
+      "source": {
+        "citation": "Hoffecker et al. 2014, Science",
+        "doi": "10.1126/science.1250768"
+      },
+      "evidence": [
+        {
+          "kind": "genetic",
+          "text": "Tamm et al. analyse 623 complete mitochondrial genomes and find Native American founder lineages formed during a pause in Beringia, followed by a swift spread south.",
+          "source": {
+            "citation": "Tamm et al. 2007, PLoS ONE",
+            "doi": "10.1371/journal.pone.0000829"
+          }
+        },
+        {
+          "kind": "genetic",
+          "text": "Moreno-Mayar et al. sequence an 11,500-year-old infant from Upward Sun River, Alaska, and find long-term structure in ancestral Native Americans, consistent with the Beringian standstill model.",
+          "source": {
+            "citation": "Moreno-Mayar et al. 2018, Nature",
+            "doi": "10.1038/nature25173"
+          }
+        },
+        {
+          "kind": "genetic",
+          "text": "Llamas et al. date ancient South American mitochondrial genomes and infer a small population isolated in eastern Beringia for about 2,400–9,000 years before entering the Americas.",
+          "source": {
+            "citation": "Llamas et al. 2016, Science Advances",
+            "doi": "10.1126/sciadv.1501385"
+          }
+        },
+        {
+          "kind": "archaeological",
+          "text": "Bourgeon et al. radiocarbon-date cut-marked bones at Bluefish Caves, Yukon, to about 24,000 years ago, and read them as support for people living in Beringia during the ice age.",
+          "source": {
+            "citation": "Bourgeon et al. 2017, PLoS ONE",
+            "doi": "10.1371/journal.pone.0169486"
+          }
+        },
+        {
+          "kind": "genetic",
+          "text": "Sikora et al. sequence 34 ancient genomes from north-east Siberia and find ‘Ancient Palaeo-Siberians’ closely related to Native Americans, tying their ancestry to this region.",
+          "source": {
+            "citation": "Sikora et al. 2019, Nature",
+            "doi": "10.1038/s41586-019-1279-z"
+          }
+        }
+      ],
+      "against": [
+        {
+          "kind": "archaeological",
+          "text": "Graf and Buvit review the Siberian and Beringian Upper Palaeolithic and find that not every expectation of the Beringian standstill model is met by the archaeology so far.",
+          "source": {
+            "citation": "Graf & Buvit 2017, Current Anthropology",
+            "doi": "10.1086/693388"
+          }
+        },
+        {
+          "kind": "dating",
+          "text": "Bennett et al. date human footprints at White Sands, New Mexico, to about 23,000–21,000 years ago, so some people were already south of the ice during the Last Glacial Maximum.",
+          "source": {
+            "citation": "Bennett et al. 2021, Science",
+            "doi": "10.1126/science.abg7586"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pacific-coast",
+      "question": "into-the-americas",
+      "label": "Pacific coast",
+      "fromKa": 20,
+      "toKa": 13,
+      "path": [
+        [
+          -162,
+          58
+        ],
+        [
+          -155,
+          57
+        ],
+        [
+          -146,
+          59.5
+        ],
+        [
+          -136,
+          57
+        ],
+        [
+          -131.5,
+          52
+        ],
+        [
+          -126,
+          48.5
+        ],
+        [
+          -124.3,
+          43
+        ],
+        [
+          -121.5,
+          36
+        ],
+        [
+          -115,
+          29
+        ],
+        [
+          -106,
+          21
+        ],
+        [
+          -92,
+          15
+        ],
+        [
+          -83,
+          8
+        ],
+        [
+          -80,
+          -2
+        ],
+        [
+          -77.5,
+          -11
+        ],
+        [
+          -71.5,
+          -29
+        ],
+        [
+          -73.2,
+          -41.5
+        ]
+      ],
+      "says": "By boat down the Pacific coast while the interior was still under ice, living off the sea: the way that best fits sites older than the ice-free corridor, such as Monte Verde.",
+      "source": {
+        "citation": "Braje et al. 2017, Science",
+        "doi": "10.1126/science.aao5473"
+      },
+      "evidence": [
+        {
+          "kind": "environmental",
+          "text": "Lesnek et al. date the ice maximum in south-east Alaska to about 20,000–17,000 years ago and find a coastal path open and rich in food soon after 17,000 years ago.",
+          "source": {
+            "citation": "Lesnek et al. 2018, Science Advances",
+            "doi": "10.1126/sciadv.aar5040"
+          }
+        },
+        {
+          "kind": "archaeological",
+          "text": "Davis et al. date the first occupation at Cooper’s Ferry, Idaho, to 16,560–15,280 years ago, before the ice-free corridor opened, and read it as support for a Pacific coastal route.",
+          "source": {
+            "citation": "Davis et al. 2019, Science",
+            "doi": "10.1126/science.aax9830"
+          }
+        },
+        {
+          "kind": "genetic",
+          "text": "Llamas et al. use ancient South American mitochondrial genomes to infer that a small population entered the Americas by a coastal route around 16,000 years ago.",
+          "source": {
+            "citation": "Llamas et al. 2016, Science Advances",
+            "doi": "10.1126/sciadv.1501385"
+          }
+        },
+        {
+          "kind": "dating",
+          "text": "Clark et al. use cosmogenic exposure ages to show the ice-free corridor finally opened well after the first pre-Clovis occupation, which leaves the coast as the likelier first route.",
+          "source": {
+            "citation": "Clark et al. 2022, PNAS",
+            "doi": "10.1073/pnas.2118558119"
+          }
+        },
+        {
+          "kind": "archaeological",
+          "text": "Dillehay et al. report stone tools, animal remains and burned areas near Monte Verde, Chile, dated between at least about 18,500 and 14,500 years ago.",
+          "source": {
+            "citation": "Dillehay et al. 2015, PLoS ONE",
+            "doi": "10.1371/journal.pone.0141923"
+          }
+        }
+      ],
+      "against": [
+        {
+          "kind": "archaeological",
+          "text": "Potter et al. review genetic, archaeological and ecological evidence and find it largely consistent with either the coast or the ice-free corridor, or both; neither can yet be rejected.",
+          "source": {
+            "citation": "Potter et al. 2018, Science Advances",
+            "doi": "10.1126/sciadv.aat5473"
+          }
+        },
+        {
+          "kind": "environmental",
+          "text": "Steffen finds gaps in animal records on the north Pacific coast around the ice maxima, times of low potential for human settlement along a key part of the proposed coastal route.",
+          "source": {
+            "citation": "Steffen 2024, Scientific Reports",
+            "doi": "10.1038/s41598-024-54592-x"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ice-free-corridor",
+      "question": "into-the-americas",
+      "label": "Ice-free corridor",
+      "fromKa": 13.5,
+      "toKa": 12.5,
+      "path": [
+        [
+          -150,
+          65
+        ],
+        [
+          -138,
+          63
+        ],
+        [
+          -126,
+          60
+        ],
+        [
+          -118,
+          56
+        ],
+        [
+          -113,
+          51
+        ],
+        [
+          -108,
+          45
+        ],
+        [
+          -104.5,
+          38.5
+        ],
+        [
+          -103.3,
+          34.3
+        ]
+      ],
+      "says": "Down the gap between the two ice sheets to the Plains, once it opened: bison DNA dates the opening to about 13,000 years ago, which Heintzman et al. read as in time for Clovis but too late for the first people south of the ice.",
+      "source": {
+        "citation": "Heintzman et al. 2016, PNAS",
+        "doi": "10.1073/pnas.1601077113"
+      },
+      "extraSources": [
+        {
+          "citation": "Pedersen et al. 2016, Nature",
+          "doi": "10.1038/nature19085"
+        }
+      ],
+      "evidence": [
+        {
+          "kind": "genetic",
+          "text": "Heintzman et al. date bison fossils and their DNA and find the corridor closed from about 23,000 to 13,400 years ago, then passable by 13,000 years ago, just before Clovis appears.",
+          "source": {
+            "citation": "Heintzman et al. 2016, PNAS",
+            "doi": "10.1073/pnas.1601077113"
+          }
+        },
+        {
+          "kind": "environmental",
+          "text": "Pedersen et al. find steppe plants, bison and mammoth in a bottleneck of the corridor by about 12,600 years ago, and suggest later groups may have used this passage.",
+          "source": {
+            "citation": "Pedersen et al. 2016, Nature",
+            "doi": "10.1038/nature19085"
+          }
+        },
+        {
+          "kind": "archaeological",
+          "text": "Smith and Goebel compare fluted points and link Clovis, western Canadian and northern forms, suggesting the technology spread through the corridor, northwards, from early peoples further south.",
+          "source": {
+            "citation": "Smith & Goebel 2018, PNAS",
+            "doi": "10.1073/pnas.1800312115"
+          }
+        },
+        {
+          "kind": "archaeological",
+          "text": "Potter et al. review genetic, archaeological and ecological evidence and find it largely consistent with an inland corridor, the coast, or both; neither can yet be rejected.",
+          "source": {
+            "citation": "Potter et al. 2018, Science Advances",
+            "doi": "10.1126/sciadv.aat5473"
+          }
+        }
+      ],
+      "against": [
+        {
+          "kind": "environmental",
+          "text": "Pedersen et al. find the corridor biologically viable only from about 12,600 years ago, so the first Americans, Clovis or earlier, are unlikely to have come this way.",
+          "source": {
+            "citation": "Pedersen et al. 2016, Nature",
+            "doi": "10.1038/nature19085"
+          }
+        },
+        {
+          "kind": "dating",
+          "text": "Clark et al. use cosmogenic exposure ages to show the corridor finally opened well after the first pre-Clovis occupation of the Americas.",
+          "source": {
+            "citation": "Clark et al. 2022, PNAS",
+            "doi": "10.1073/pnas.2118558119"
+          }
+        },
+        {
+          "kind": "archaeological",
+          "text": "Davis et al. date occupation at Cooper’s Ferry, Idaho, to 16,560–15,280 years ago, before the corridor opened.",
+          "source": {
+            "citation": "Davis et al. 2019, Science",
+            "doi": "10.1126/science.aax9830"
+          }
+        },
+        {
+          "kind": "dating",
+          "text": "Bennett et al. date human footprints at White Sands, New Mexico, to about 23,000–21,000 years ago, long before the corridor opened.",
+          "source": {
+            "citation": "Bennett et al. 2021, Science",
+            "doi": "10.1126/science.abg7586"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -130,6 +130,7 @@ export type DeepPainter = (canvas: HTMLCanvasElement) => void;
 export const DEEP_PAINT_ORDER = {
   settled: 0,
   iceOutlines: 10,
+  routes: 20,
 } as const;
 
 /**
@@ -186,6 +187,7 @@ interface SurfaceLabels {
 export const SURFACE_PRIORITY = {
   majorStates: 0,
   humans: 10,
+  humanRoutes: 15,
   genomes: 20,
   volcanoes: 30,
   telescopes: 35,
