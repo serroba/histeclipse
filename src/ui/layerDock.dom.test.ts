@@ -110,4 +110,18 @@ describe('the dock holds only the layers on (#752)', () => {
     expect(document.activeElement).toBe(sealevel);
     dock.root.remove();
   });
+
+  it('Given the page drawn again within the press itself, Then the focus still goes to Add', () => {
+    const humans = button('humans', 'Humans');
+    const dock = layerDock(() => undefined, humans);
+    document.body.append(dock.root);
+    dock.render(activeLayers(at('ma=0.315&scale=ice&layers=humans')));
+    humans.addEventListener('click', () => {
+      dock.render(activeLayers(at('ma=0.315&scale=ice')));
+    });
+    humans.focus();
+    humans.click();
+    expect(document.activeElement).toBe(dock.root.querySelector('.deep-add'));
+    dock.root.remove();
+  });
 });
