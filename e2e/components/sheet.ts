@@ -20,6 +20,7 @@ const bar = createDeepTimeBar({
   onTemperature: nothing,
   onSeaLevel: nothing,
   onLayer: nothing,
+  onAddLayer: nothing,
   onAir: nothing,
   onCo2Archive: nothing,
   onCoast: nothing,

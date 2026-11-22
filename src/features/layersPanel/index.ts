@@ -46,6 +46,8 @@ export interface LayersPanelPart {
   readonly dialog: HTMLDialogElement;
   /** The layers on, as chips beside Layers (#728). */
   readonly chips: HTMLElement;
+  /** Open the panel from `opener` (#752), which has the focus back when it closes. */
+  readonly open: (opener: HTMLElement) => void;
   readonly show: (state: ViewState) => void;
 }
 
@@ -112,6 +114,7 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
     button: panel.button,
     dialog: panel.dialog,
     chips: chips.root,
+    open: panel.open,
     show(state) {
       const active = activeLayers(state, context.loads());
       // One place per layer (#1072): beside Layers, only those the dock does not show.

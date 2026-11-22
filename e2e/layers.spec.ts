@@ -259,8 +259,8 @@ test('the viewpoints and deep time’s chips wear icons: icon and word, on a pho
   page,
 }, info) => {
   test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
-  await test.step('Given deep time on the 540 Myr span', async () => {
-    await page.goto('./?ma=250&scale=all');
+  await test.step('Given deep time on the 540 Myr span, with Temperature and Fossils on', async () => {
+    await page.goto('./?ma=250&scale=all&layers=temperature,fossils');
     await globeRendered(page);
   });
   await test.step('Then each has its icon and keeps its name', async () => {
@@ -270,7 +270,8 @@ test('the viewpoints and deep time’s chips wear icons: icon and word, on a pho
         .getByRole('button', { name, exact: true });
       await expect(button.locator('svg')).toHaveCount(1);
     }
-    for (const name of ['Sea level', 'Temperature', 'Plates', 'Fossils', 'Impacts', 'Air']) {
+    // The dock holds the layers on, and Add a layer (#752).
+    for (const name of ['Temperature', 'Fossils', 'Add a layer']) {
       await expect(page.getByRole('button', { name, exact: true }).locator('svg')).toHaveCount(1);
     }
   });

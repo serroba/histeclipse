@@ -10,6 +10,7 @@ import {
   openLayers,
   pickSpan,
   showDeepDetails,
+  turnOnLayer,
   test,
 } from './support';
 
@@ -25,7 +26,7 @@ test('the Humans layer marks dated finds, and gives competing dates side by side
     await showDeepDetails(page);
   });
   await test.step('When they turn on Humans', async () => {
-    await page.getByRole('button', { name: 'Humans', exact: true }).click();
+    await turnOnLayer(page, 'Humans');
   });
   await test.step('Then the finds of that time are marked, with their dates', async () => {
     await expect(page).toHaveURL(/layers=[a-z,]*humans/);

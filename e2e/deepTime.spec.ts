@@ -10,6 +10,7 @@ import {
   openSources,
   pickSpan,
   showDeepDetails,
+  turnOnLayer,
   test,
 } from './support';
 
@@ -35,7 +36,7 @@ test('Back steps through deep time: milestones and layers, and its layers stay o
   await expect(page).toHaveURL(/&ma=250(&|$)/);
   await page.getByRole('button', { name: 'Later milestone' }).click();
   await expect(page).not.toHaveURL(/&ma=250(&|$)/);
-  await page.getByRole('button', { name: 'Temperature', exact: true }).click();
+  await turnOnLayer(page, 'Temperature');
   await expect(page).toHaveURL(/layers=[^&]*temperature/);
   // Back undoes the layer, then the milestone, and stays in deep time.
   await page.goBack();
@@ -189,8 +190,9 @@ test(
     await showDeepDetails(page);
     const globe = page.getByTestId('globe');
     const toggle = page.getByRole('button', { name: 'Temperature', exact: true });
-    await expect(toggle).toHaveAttribute('aria-pressed', 'false');
-    await toggle.click();
+    // Off, it is not in the dock (#752): Layers switches it on, and the dock then has it.
+    await expect(toggle).toBeHidden();
+    await turnOnLayer(page, 'Temperature');
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
     await expect(page).toHaveURL(/layers=[^&]*temperature/);
     await expect(globe).toHaveAttribute(
@@ -248,7 +250,7 @@ test('deep time charts sea level by four reconstructions, side by side', async (
   await globeRendered(page);
   await showDeepDetails(page);
   const toggle = page.getByRole('button', { name: 'Sea level', exact: true });
-  await toggle.click();
+  await turnOnLayer(page, 'Sea level');
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page).toHaveURL(/layers=[^&]*sealevel/);
   await expect(page.locator('.sea-line')).toHaveCount(4);
@@ -386,14 +388,16 @@ test('deep time narrows to the ice ages, in thousands of years', GPU, async ({ p
   await expect(page.getByTestId('ice-note')).toBeVisible();
   await expect(page.getByLabel('Thousands of years ago')).toHaveValue('-21');
   // The ice ages have temperature maps of their own (#457).
+  await turnOnLayer(page, 'Temperature');
   await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toBeEnabled();
-  // The layers sit in one dock, in a stable order, each named by its word (#1070).
+  // The layers on sit in one dock, in a stable order, each named by its word (#1070), and
+  // Add a layer after them (#752).
   await expect(
     page
       .getByRole('group', { name: 'The time bar’s layers' })
       .getByRole('button')
       .filter({ visible: true }),
-  ).toHaveText(['Sea level', 'Temperature', 'Plates', 'Humans', 'Impacts', 'Air']);
+  ).toHaveText(['Sea level', 'Temperature', 'Add']);
   // Both ice-age reconstructions read the glacial maximum.
   const legend = page.getByTestId('sea-legend');
   await expect(legend.locator('[data-series="bintanja-2008"]')).toContainText('−123 m');
@@ -464,7 +468,7 @@ test('deep time outlines a second reconstruction’s continents', GPU, async ({ 
   await globeRendered(page);
   const globe = page.getByTestId('globe');
   const toggle = page.getByRole('button', { name: 'Plates', exact: true });
-  await toggle.click();
+  await turnOnLayer(page, 'Plates');
   await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   await expect(page).toHaveURL(/layers=[^&]*plates/);
   await expect(globe).toHaveAttribute('data-plates', /plates\/250\.png .*plates\/255\.png$/);
@@ -532,7 +536,7 @@ test(
     await expect(page.getByTestId('uncharted-note')).toBeHidden();
 
     // Before the elevation maps reach, no map: a sketch of a hypothesis, which says so.
-    await page.goto('./?ma=3000&scale=eons');
+    await page.goto('./?ma=3000&scale=eons&layers=temperature');
     await globeRendered(page);
     await showDeepDetails(page);
     await expect(page.locator('.hud-date')).toHaveText('3,000 million years ago');

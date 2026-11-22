@@ -65,6 +65,8 @@ export interface DeepTimeContext extends PartContext {
   /** How far back the plates reach, Ma, once known. */
   platesReach(): number | undefined;
   loadArchive(): void;
+  /** Open the Layers panel from the dock's Add (#752), the focus to come back to `opener`. */
+  openLayers(opener: HTMLElement): void;
 }
 
 export interface DeepTimePart {

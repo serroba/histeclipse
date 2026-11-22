@@ -42,6 +42,8 @@ interface LayersView {
 export interface LayersPanel {
   readonly button: HTMLButtonElement;
   readonly dialog: HTMLDialogElement;
+  /** Open the panel from `opener` (#752): the focus goes back to it when the panel closes. */
+  open: (opener: HTMLElement) => void;
   render(view: LayersView): void;
 }
 
@@ -189,19 +191,27 @@ export function createLayersPanel(
   function shut(): void {
     if (dialog.open) dialog.close();
   }
-  button.addEventListener('click', () => {
+  // Who opened the panel: Layers, or the dock's Add (#752); the focus goes back to it.
+  let opener: HTMLElement = button;
+  function open(from: HTMLElement): void {
     // Not modal: the globe and the date stay in reach while layers are chosen.
+    // Explore takes the same side (#727): one of them at a time.
+    document.querySelector<HTMLDialogElement>('dialog.explore-dialog[open]')?.close();
+    opener = from;
+    dialog.show();
+    button.setAttribute('aria-expanded', 'true');
+  }
+  button.addEventListener('click', () => {
     if (dialog.open) shut();
-    else {
-      // Explore takes the same side (#727): one of them at a time.
-      document.querySelector<HTMLDialogElement>('dialog.explore-dialog[open]')?.close();
-      dialog.show();
-    }
-    button.setAttribute('aria-expanded', String(dialog.open));
+    else open(button);
   });
   close.addEventListener('click', shut);
   dialog.addEventListener('close', () => {
     button.setAttribute('aria-expanded', 'false');
+    // Back to the opener, unless the reader has gone on elsewhere.
+    const at = document.activeElement;
+    if (at === null || at === document.body || dialog.contains(at)) opener.focus();
+    opener = button;
   });
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') shut();
@@ -210,6 +220,7 @@ export function createLayersPanel(
   return {
     button,
     dialog,
+    open,
     render({ layers, borders, year, present, span, visible, said, actions, travelling }) {
       runs.clear();
       travelNote.hidden = travelling !== true;
