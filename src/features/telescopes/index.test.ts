@@ -97,16 +97,24 @@ describe('the Telescopes layer as a feature (#848)', () => {
     expect(cards).toHaveLength(2);
   });
 
-  it('tells the reader when the telescopes cannot load, and tries again', async () => {
+  it('tells the reader when the telescopes cannot load, waits on its chip, and tries again from there (#762)', async () => {
     const { context, notify, drawn } = fakeContext(true);
     const shown = telescopesFeature.mount(context, context);
     shown.show?.(inYear(2000), JD);
+    expect(shown.load?.()).toEqual({ state: 'loading' });
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the telescopes: offline');
     });
-    expect(shown.said?.()).toBe('Loading the telescopes…');
-    shown.show?.(inYear(2000), JD);
+    shown.show?.(inYear(2001), JD);
+    expect(shown.said?.()).toBe('Could not load the telescopes.');
     expect(drawn).toHaveLength(0);
+    expect(notify).toHaveBeenCalledOnce();
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledTimes(2);
+    });
   });
 
   it('Given the view at Keck, Then Keck stands there with Subaru beside it; its card goes there (#864)', async () => {

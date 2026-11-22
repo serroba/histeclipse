@@ -21,6 +21,7 @@ import { fromAFossil } from '../../explore/related';
 import { layerTurned, roundMa } from '../../state/viewState';
 import { formatMa } from '../../time/format';
 import { errorMessage } from '../../util/errors';
+import { loadOnce } from '../layerLoad';
 import { feature } from '../feature';
 import { fossilLayer } from './fossilLayer';
 import './fossils.css';
@@ -53,8 +54,12 @@ export const fossilsFeature = feature({
   watches: () => [],
   mount(context) {
     const cellsOnGlobe = context.globe.addLayer(fossilLayer);
-    let fossils: Fossils | null = null;
-    let loading = false;
+    const load = loadOnce<Fossils>({
+      fetch: () => loadFossils(`${context.base}data/fossils.json`, context.fetchJson),
+      what: 'the fossils',
+      context,
+    });
+    let loadOn = false;
     let at: FossilsAt | null = null;
     let pictures: Pictures | null = null;
     let picturesLoading = false;
@@ -62,6 +67,7 @@ export const fossilsFeature = feature({
     let temperatureOn = false;
 
     function cardFor(key: string): MarkerCardContent | null {
+      const fossils = load.value();
       if (fossils === null || at === null) return null;
       const cell = at.cells.find(
         (each) => `${each.group}:${String(each.latitude)}:${String(each.longitude)}` === key,
@@ -91,6 +97,7 @@ export const fossilsFeature = feature({
     }
 
     return {
+      load: () => load.report(loadOn),
       // The dinosaurs' lines through time, from the layer's row in the Layers panel.
       action: () => ({
         label: 'Their tree through time',
@@ -102,6 +109,7 @@ export const fossilsFeature = feature({
         temperatureOn = state.layers.has('temperature');
         // Fossils are counted by 5 million years: a matter of the 540 Myr span.
         const on = state.deepScale === 'all' && state.layers.has('fossils');
+        loadOn = on && moment !== null;
         if (moment === null || !on) {
           at = null;
           cellsOnGlobe.update(null);
@@ -110,21 +118,15 @@ export const fossilsFeature = feature({
             : { offered: moment.scale === 'all', on: false, note: null };
         }
         const offered = moment.scale === 'all';
+        const fossils = load.value();
         if (fossils === null) {
-          if (!loading) {
-            loading = true;
-            loadFossils(`${context.base}data/fossils.json`, context.fetchJson).then(
-              (loaded) => {
-                fossils = loaded;
-                context.refresh();
-              },
-              (error: unknown) => {
-                loading = false;
-                context.notify(`Could not load the fossils: ${errorMessage(error)}`);
-              },
-            );
-          }
-          return { offered, on: true, note: ['Fossils: loading…'] };
+          load.want();
+          const failed = load.status() === 'failed';
+          return {
+            offered,
+            on: true,
+            note: [failed ? 'Fossils: could not load.' : 'Fossils: loading…'],
+          };
         }
         at = fossilsAt(fossils, moment.ma);
         cellsOnGlobe.update(at.cells);

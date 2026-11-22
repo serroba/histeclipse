@@ -91,15 +91,20 @@ describe('the asteroid belt as a feature', () => {
     expect(drawn).toEqual([]);
   });
 
-  it('says so when the orbits cannot be loaded, and tries again next time', async () => {
+  it('says so when the orbits cannot be loaded, waits on its chip, and tries again from there (#762)', async () => {
     const { context, notify } = fakeContext(true);
     const failing = { ...context, fetchJson: () => Promise.reject(new Error('offline')) };
     const belt = asteroidsFeature.mount(failing, failing);
     belt.show?.(on, J2000);
+    expect(belt.load?.()).toEqual({ state: 'loading' });
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the asteroids: offline');
     });
-    belt.show?.(on, J2000);
+    belt.show?.(on, J2000 + 1);
+    expect(notify).toHaveBeenCalledOnce();
+    const failed = belt.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledTimes(2);
     });

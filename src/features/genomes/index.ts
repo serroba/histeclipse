@@ -12,7 +12,7 @@ import {
   loadAncientGenomes,
   type AncientGenomes,
 } from '../../data/ancientGenomes';
-import { errorMessage } from '../../util/errors';
+import { loadOnce } from '../layerLoad';
 import { feature, travelPace } from '../feature';
 import { genomeLayer } from './genomeLayer';
 import { peopleLoader } from './people';
@@ -26,8 +26,12 @@ export const genomesFeature = feature({
   watches: (state) => [state.layers, state.ma],
   mount(context) {
     const cellsOnGlobe = context.globe.addLayer(genomeLayer);
-    let genomes: AncientGenomes | null = null;
-    let loading = false;
+    const genomesLoad = loadOnce<AncientGenomes>({
+      fetch: () => loadAncientGenomes(`${context.base}data/genomes/aadr.json`, context.fetchJson),
+      what: 'the ancient genomes',
+      context,
+    });
+    let loadOn = false;
     let said: string | null = null;
     let year = 0;
     // What was last drawn, so the moments of one year (many a second as time plays) cost nothing.
@@ -43,9 +47,10 @@ export const genomesFeature = feature({
     return {
       show(state) {
         const on = state.layers.has('genomes') && state.ma === null;
+        loadOn = on;
         const travelling = context.timeline.travelling();
         year = state.time.date.year;
-        const key = `${String(on)}:${String(travelling)}:${String(genomes !== null)}:${String(year)}`;
+        const key = `${String(on)}:${String(travelling)}:${genomesLoad.status()}:${String(year)}`;
         if (key === drawnFor) return;
         if (!on) {
           drawnFor = key;
@@ -53,21 +58,13 @@ export const genomesFeature = feature({
           cellsOnGlobe.update(null);
           return;
         }
+        const genomes = genomesLoad.value();
         if (genomes === null) {
-          said = 'Loading the ancient genomes…';
-          if (loading) return;
-          loading = true;
-          loadAncientGenomes(`${context.base}data/genomes/aadr.json`, context.fetchJson).then(
-            (loaded) => {
-              genomes = loaded;
-              context.refresh();
-            },
-            (error: unknown) => {
-              loading = false;
-              drawnFor = '';
-              context.notify(`Could not load the ancient genomes: ${errorMessage(error)}`);
-            },
-          );
+          genomesLoad.want();
+          said =
+            genomesLoad.status() === 'failed'
+              ? 'Could not load the ancient genomes.'
+              : 'Loading the ancient genomes…';
           return;
         }
         if (!pace.due(travelling)) return;
@@ -77,8 +74,8 @@ export const genomesFeature = feature({
         cellsOnGlobe.update(near.cells);
       },
       pick(cell) {
-        if (genomes === null) return;
-        const data = genomes;
+        const data = genomesLoad.value();
+        if (data === null) return;
         const at = year;
         const rows = cellRows(data, Number(cell), at);
         if (rows.length === 0) return;
@@ -90,6 +87,7 @@ export const genomesFeature = feature({
         });
       },
       said: () => said,
+      load: () => genomesLoad.report(loadOn),
     };
   },
 });

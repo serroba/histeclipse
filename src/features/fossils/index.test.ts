@@ -62,6 +62,27 @@ describe('the fossils as a feature', () => {
     expect(drawn).toEqual([null, null, null]);
   });
 
+  it('Given the fossils do not load, Then its chip says so, deep time playing does not fetch them again, and Try again does (#762)', async () => {
+    const { context, notify } = fakeContext({ failing: true });
+    const shown = fossilsFeature.mount(context, context);
+    expect(shown.load?.()).toBeNull();
+    shown.deep?.(on, JURASSIC);
+    expect(shown.load?.()).toEqual({ state: 'loading' });
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledWith('Could not load the fossils: offline');
+    });
+    expect(shown.deep?.(on, { ma: 149, scale: 'all' })?.note).toEqual(['Fossils: could not load.']);
+    expect(notify).toHaveBeenCalledOnce();
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledTimes(2);
+    });
+    shown.deep?.(on, null);
+    expect(shown.load?.()).toBeNull();
+  });
+
   it('says it is loading, then marks the finds of the moment, with a key and the source', async () => {
     const { context, drawn, refresh } = fakeContext();
     const shown = fossilsFeature.mount(context, context);

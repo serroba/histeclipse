@@ -6,8 +6,8 @@
  */
 
 import { loadTelescopes, type Telescope, type Telescopes } from '../../data/telescopes';
-import { errorMessage } from '../../util/errors';
 import { siteOn } from '../../state/viewState';
+import { loadOnce } from '../layerLoad';
 import { feature, type FeatureContext } from '../feature';
 import { groundModel } from './groundModelLayer';
 import { goToSite, heldSite } from './groundSites';
@@ -46,8 +46,12 @@ export const telescopesFeature = feature({
   mount(context) {
     const marksOnGlobe = context.globe.addLayer(telescopeLayer);
     const modelOnGlobe = context.globe.addLayer(groundModel);
-    let record: Telescopes | null = null;
-    let loading = false;
+    const recordLoad = loadOnce<Telescopes>({
+      fetch: () => loadTelescopes(`${context.base}data/telescopes.json`, context.fetchJson),
+      what: 'the telescopes',
+      context,
+    });
+    let loadOn = false;
     let said: string | null = null;
     let marks: readonly TelescopeMark[] = [];
     // What was last drawn, so the moments of one year cost nothing.
@@ -56,9 +60,11 @@ export const telescopesFeature = feature({
     return {
       show(state) {
         const on = state.layers.has('telescopes') && state.mode === 'globe' && state.ma === null;
-        modelOnGlobe.update(on && record !== null ? heldSite(record, siteOn(state)) : null);
+        loadOn = on;
+        const loaded = recordLoad.value();
+        modelOnGlobe.update(on && loaded !== null ? heldSite(loaded, siteOn(state)) : null);
         const year = state.time.date.year;
-        const key = `${String(on)}:${String(record !== null)}:${String(year)}`;
+        const key = `${String(on)}:${recordLoad.status()}:${String(year)}`;
         if (key === drawnFor) return;
         drawnFor = key;
         if (!on) {
@@ -67,21 +73,13 @@ export const telescopesFeature = feature({
           marksOnGlobe.update(null);
           return;
         }
+        const record = recordLoad.value();
         if (record === null) {
-          said = 'Loading the telescopes…';
-          if (loading) return;
-          loading = true;
-          loadTelescopes(`${context.base}data/telescopes.json`, context.fetchJson).then(
-            (loaded) => {
-              record = loaded;
-              context.refresh();
-            },
-            (error: unknown) => {
-              loading = false;
-              drawnFor = '';
-              context.notify(`Could not load the telescopes: ${errorMessage(error)}`);
-            },
-          );
+          recordLoad.want();
+          said =
+            recordLoad.status() === 'failed'
+              ? 'Could not load the telescopes.'
+              : 'Loading the telescopes…';
           return;
         }
         marks = groundMarks(record, year);
@@ -95,6 +93,7 @@ export const telescopesFeature = feature({
         showTelescope(context, first, mark.telescopes);
       },
       said: () => said,
+      load: () => recordLoad.report(loadOn),
     };
   },
 });

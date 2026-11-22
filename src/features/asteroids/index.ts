@@ -4,7 +4,7 @@
  * largest named, a tap on a name opening its card.
  */
 
-import { errorMessage } from '../../util/errors';
+import { loadOnce } from '../layerLoad';
 import { feature } from '../feature';
 import { asteroidBelt } from './beltLayer';
 import { asteroidCard } from './card';
@@ -19,8 +19,12 @@ export const asteroidsFeature = feature({
   watches: (state) => [state.layers],
   mount(context) {
     const belt = context.globe.addLayer(asteroidBelt);
-    let asteroids: Asteroids | null = null;
-    let asked = false;
+    const load = loadOnce<Asteroids>({
+      fetch: () => loadAsteroids(`${context.base}data/asteroids.json`, context.fetchJson),
+      what: 'the asteroids',
+      context,
+    });
+    let on = false;
     let shownAt: number | null = null;
 
     return {
@@ -28,25 +32,16 @@ export const asteroidsFeature = feature({
         shownAt = jdTT;
         const offered = state.mode === 'globe' && state.ma === null;
         context.zoomRail.setAsteroids(offered, state.layers.has('asteroids'));
-        if (!offered || !state.layers.has('asteroids')) {
+        on = offered && state.layers.has('asteroids');
+        if (!on) {
           belt.update(null);
           return;
         }
         const planets = context.ephemerides.planets();
         if (planets === null) void context.ephemerides.loadPlanets();
+        const asteroids = load.value();
         if (asteroids === null) {
-          if (asked) return;
-          asked = true;
-          loadAsteroids(`${context.base}data/asteroids.json`, context.fetchJson).then(
-            (loaded) => {
-              asteroids = loaded;
-              context.refresh();
-            },
-            (error: unknown) => {
-              asked = false;
-              context.notify(`Could not load the asteroids: ${errorMessage(error)}`);
-            },
-          );
+          load.want();
           return;
         }
         // From Earth's centre, as the scene places everything.
@@ -65,7 +60,9 @@ export const asteroidsFeature = feature({
           }),
         );
       },
+      load: () => load.report(on),
       pick(id) {
+        const asteroids = load.value();
         const asteroid = asteroids?.asteroids.find((each) => each.number === id);
         if (asteroid !== undefined && asteroids !== null && shownAt !== null) {
           context.cards.show(asteroidCard(asteroid, asteroids.fitted, shownAt));

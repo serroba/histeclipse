@@ -121,7 +121,7 @@ describe('the volcanoes as a feature', () => {
     expect(cards).toHaveLength(1);
   });
 
-  it('says so when the eruptions cannot be loaded, and tries again next time', async () => {
+  it('says so when the eruptions cannot be loaded, waits on its chip, and tries again from there (#762)', async () => {
     const { context, notify } = fakeContext({ failing: true });
     const shown = volcanoesFeature.mount(context, context);
     shown.show?.(in1815, JD);
@@ -129,6 +129,11 @@ describe('the volcanoes as a feature', () => {
       expect(notify).toHaveBeenCalledWith('Could not load the eruptions: offline');
     });
     shown.show?.(in1815, JD);
+    expect(shown.said?.()).toBe('Could not load the eruptions.');
+    expect(notify).toHaveBeenCalledOnce();
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledTimes(2);
     });

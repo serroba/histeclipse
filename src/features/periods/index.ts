@@ -12,8 +12,8 @@ import {
   periodsText,
   type NamedPeriods,
 } from '../../data/namedPeriods';
-import { errorMessage } from '../../util/errors';
 import { feature } from '../feature';
+import { loadOnce } from '../layerLoad';
 
 export const periodsFeature = feature({
   id: 'periods',
@@ -21,34 +21,35 @@ export const periodsFeature = feature({
   // On or off with its layer, in historical time, for the place picked; the year is the moment's.
   watches: (state) => [state.layers, state.ma, state.location],
   mount(context) {
-    let named: {
+    const load = loadOnce<{
       readonly data: NamedPeriods;
       readonly rings: ReturnType<typeof countryRings>;
-    } | null = null;
-    let loading = false;
+    }>({
+      fetch: () =>
+        loadNamedPeriods(`${context.base}data/periods.json`, context.fetchJson).then((data) => ({
+          data,
+          rings: countryRings(data),
+        })),
+      what: 'the named periods',
+      context,
+    });
+    let on = false;
     let said: string | null = null;
 
     return {
       show(state) {
-        const on = state.layers.has('periods') && state.ma === null;
+        on = state.layers.has('periods') && state.ma === null;
         if (!on) {
           said = null;
           return;
         }
+        const named = load.value();
         if (named === null) {
-          said = 'Loading the named periods…';
-          if (loading) return;
-          loading = true;
-          loadNamedPeriods(`${context.base}data/periods.json`, context.fetchJson).then(
-            (data) => {
-              named = { data, rings: countryRings(data) };
-              context.refresh();
-            },
-            (error: unknown) => {
-              loading = false;
-              context.notify(`Could not load the named periods: ${errorMessage(error)}`);
-            },
-          );
+          load.want();
+          said =
+            load.status() === 'failed'
+              ? 'Could not load the named periods.'
+              : 'Loading the named periods…';
           return;
         }
         const year = state.time.date.year;
@@ -59,6 +60,7 @@ export const periodsFeature = feature({
         said = periodsText(here, formatYear(astronomicalYear(year)));
       },
       said: () => said,
+      load: () => load.report(on),
     };
   },
 });
