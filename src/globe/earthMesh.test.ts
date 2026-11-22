@@ -32,11 +32,10 @@ describe('plainTexture', () => {
 });
 
 describe('the atmosphere’s shader', () => {
-  it('thins smoothly outward and warms at the terminator, no hard blue band (#1098)', () => {
+  it('thins smoothly outward, a pale blue with no hard band and no amber smear (#1098)', () => {
     expect(ATMOSPHERE_FRAGMENT).not.toContain('vec3(0.3, 0.55, 1.0)');
-    expect(ATMOSPHERE_FRAGMENT).toContain('1.0), 2.5)');
-    expect(ATMOSPHERE_FRAGMENT).toContain('terminator');
-    expect(ATMOSPHERE_FRAGMENT).toContain('1.0 - evenLight');
+    expect(ATMOSPHERE_FRAGMENT).toContain('1.0), 3.0)');
+    expect(ATMOSPHERE_FRAGMENT).not.toContain('vec3(1.0, 0.55, 0.25)');
   });
 });
 
