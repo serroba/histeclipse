@@ -4,19 +4,12 @@
  * Their file loads the first time the layer is turned on.
  */
 
+import { loadOnce } from '../layerLoad';
 import { feature, RESTING, type LayerAction } from '../feature';
 import { rocksLayer } from '../../globe/historyPaintLayers';
 import { type DeepScale, type GeoPoint, ICE_AGES_MA, type ViewState } from '../../state/viewState';
 import { formatMa } from '../../time/format';
-import {
-  loadRocks,
-  rockAt,
-  rockText,
-  rockUnits,
-  type RockUnit,
-  type Rocks,
-} from '../../data/rocks';
-import { errorMessage } from '../../util/errors';
+import { loadRocks, rockAt, rockText, rockUnits, type RockUnit } from '../../data/rocks';
 import { rockFact } from './here';
 
 export const rocksFeature = feature({
@@ -26,8 +19,12 @@ export const rocksFeature = feature({
   mount(context) {
     const { base, fetchJson } = context;
     const rocksOnGlobe = context.globe.addLayer(rocksLayer);
-    let rocks: readonly RockUnit[] | null = null;
-    let rocksLoading: Promise<Rocks> | null = null;
+    const load = loadOnce<readonly RockUnit[]>({
+      fetch: () => loadRocks(`${base}data/rocks.json`, fetchJson).then(rockUnits),
+      what: 'the rocks',
+      context,
+    });
+    let loadOn = false;
     let rocksSaid: string | null = null;
     let rocksAction: LayerAction | null = null;
     // The rock last looked up, and where: finding it among the units is slow.
@@ -42,6 +39,7 @@ export const rocksFeature = feature({
     /** In historical time with the layer on, the rocks by age, and the rock at the place picked. */
     function showRocks(state: ViewState): void {
       const on = state.layers.has('rocks') && state.ma === null;
+      loadOn = on;
       rocksAction = null;
       // Today's rocks say nothing of the year a trip shows: they rest with the markers.
       if (!on || context.timeline.travelling()) {
@@ -49,21 +47,10 @@ export const rocksFeature = feature({
         rocksOnGlobe.update(null);
         return;
       }
+      const rocks = load.value();
       if (rocks === null) {
-        rocksSaid = 'Loading the rocks…';
-        if (rocksLoading === null) {
-          rocksLoading = loadRocks(`${base}data/rocks.json`, fetchJson);
-          rocksLoading.then(
-            (data) => {
-              rocks = rockUnits(data);
-              context.refresh();
-            },
-            (error: unknown) => {
-              rocksLoading = null;
-              context.notify(`Could not load the rocks: ${errorMessage(error)}`);
-            },
-          );
-        }
+        load.want();
+        rocksSaid = load.status() === 'failed' ? 'Could not load the rocks.' : 'Loading the rocks…';
         return;
       }
       rocksOnGlobe.update(rocks);
@@ -89,9 +76,11 @@ export const rocksFeature = feature({
     return {
       show: showRocks,
       said: () => rocksSaid,
+      load: () => load.report(loadOn),
       action: () => rocksAction,
       here(state) {
         if (state.location === null || state.ma !== null) return null;
+        const rocks = load.value();
         if (!state.layers.has('rocks') || rocks === null) return null;
         return rockFact(rockHere(rocks, state.location));
       },

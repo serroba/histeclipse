@@ -117,7 +117,7 @@ describe('the rocks as a feature', () => {
     expect(shown.action?.()).toBeNull();
   });
 
-  it('tells the reader when its file does not load, and tries again the next time', async () => {
+  it('tells the reader when its file does not load, waits on its chip, and tries again from there (#762)', async () => {
     const { context, notify, fetchJson } = fakeContext({ failing: true });
     const shown = rocksFeature.mount(context, context);
     shown.show?.(on, JD);
@@ -125,6 +125,11 @@ describe('the rocks as a feature', () => {
       expect(notify).toHaveBeenCalledWith('Could not load the rocks: offline');
     });
     shown.show?.(on, JD);
+    expect(fetchJson).toHaveBeenCalledTimes(1);
+    expect(shown.said?.()).toBe('Could not load the rocks.');
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     expect(fetchJson).toHaveBeenCalledTimes(2);
   });
 

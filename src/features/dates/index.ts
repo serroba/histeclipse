@@ -4,6 +4,7 @@
  * there was found. The counts load with the layer, a place's tile when it is picked.
  */
 
+import { loadOnce, type LoadOnce } from '../layerLoad';
 import { feature, travelPace, type FeatureContext, type LayerAction } from '../feature';
 import type { Fetch } from '../../util/fetchJson';
 import { dateCellsLayer } from '../../globe/historyPaintLayers';
@@ -19,7 +20,6 @@ import {
   type DatesTile,
 } from '../../data/radiocarbonDates';
 import { type GeoPoint, type ViewState } from '../../state/viewState';
-import { errorMessage } from '../../util/errors';
 import { carried } from './carried';
 
 /** What the dates near a place and a year say, once the place's tile is in. */
@@ -83,25 +83,14 @@ function foundHere(
   };
 }
 
-/** The heat map of dated squares, loaded once when first asked for; null until it arrives. */
-function heatFrom(base: string, fetchJson: Fetch, context: FeatureContext): () => DatesHeat | null {
-  let heat: DatesHeat | null = null;
-  let loading = false;
-  return () => {
-    if (heat !== null || loading) return heat;
-    loading = true;
-    loadDatesHeat(`${base}data/radiocarbon-dates/heat.json`, fetchJson).then(
-      (loaded) => {
-        heat = loaded;
-        context.refresh();
-      },
-      (error: unknown) => {
-        loading = false;
-        context.notify(`Could not load the radiocarbon dates: ${errorMessage(error)}`);
-      },
-    );
-    return null;
-  };
+/** The heat map of dated squares, loaded once when first asked for (#762). */
+function heatFrom(context: FeatureContext): LoadOnce<DatesHeat> {
+  return loadOnce<DatesHeat>({
+    fetch: () =>
+      loadDatesHeat(`${context.base}data/radiocarbon-dates/heat.json`, context.fetchJson),
+    what: 'the radiocarbon dates',
+    context,
+  });
 }
 
 export const datesFeature = feature({
@@ -111,7 +100,8 @@ export const datesFeature = feature({
   mount(context) {
     const { base, fetchJson } = context;
     const datesOnGlobe = context.globe.addLayer(dateCellsLayer);
-    const heatNow = heatFrom(base, fetchJson, context);
+    const heatLoad = heatFrom(context);
+    let loadOn = false;
     const datesTile = tilesFrom(base, fetchJson);
     let datesSaid: string | null = null;
     let datesAction: LayerAction | null = null;
@@ -129,6 +119,7 @@ export const datesFeature = feature({
     function showDates(state: ViewState): void {
       latest = state;
       const on = state.layers.has('dates') && state.ma === null;
+      loadOn = on;
       datesAction = null;
       if (!on) {
         datesSaid = null;
@@ -137,9 +128,13 @@ export const datesFeature = feature({
         return;
       }
       const travelling = context.timeline.travelling();
-      const heat = heatNow();
+      const heat = heatLoad.value();
       if (heat === null) {
-        datesSaid = 'Loading the radiocarbon dates…';
+        heatLoad.want();
+        datesSaid =
+          heatLoad.status() === 'failed'
+            ? 'Could not load the radiocarbon dates.'
+            : 'Loading the radiocarbon dates…';
         return;
       }
       const year = state.time.date.year;
@@ -188,6 +183,7 @@ export const datesFeature = feature({
     return {
       show: showDates,
       said: () => datesSaid,
+      load: () => heatLoad.report(loadOn),
       action: () => datesAction,
     };
   },
