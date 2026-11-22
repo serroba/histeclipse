@@ -70,3 +70,27 @@ export function loadOnce<T>(options: LoadOnceOptions<T>): LoadOnce<T> {
     },
   };
 }
+
+/**
+ * One chip's load for a layer with several files: failed if any failed (Try again retries
+ * those), else loading if any is on its way, else null.
+ */
+export function reportAll(
+  on: boolean,
+  loads: readonly Pick<LoadOnce<unknown>, 'report'>[],
+): LayerLoad | null {
+  const reports = loads.flatMap((load) => {
+    const report = load.report(on);
+    return report === null ? [] : [report];
+  });
+  const failed = reports.flatMap((report) => (report.state === 'failed' ? [report] : []));
+  if (failed.length > 0) {
+    return {
+      state: 'failed',
+      retry: () => {
+        for (const each of failed) each.retry();
+      },
+    };
+  }
+  return reports.length > 0 ? { state: 'loading' } : null;
+}

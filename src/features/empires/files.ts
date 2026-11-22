@@ -44,7 +44,14 @@ export function createBorderFiles(base: string, fetchJson: Fetch): BorderFiles {
   const centuries = new Map<number, Promise<EmpireCentury>>();
 
   function fileFor(year: number): Promise<EmpireCentury | null> {
-    index ??= loadEmpireIndex(`${base}data/empires/index.json`, fetchJson);
+    if (index === null) {
+      const asked = loadEmpireIndex(`${base}data/empires/index.json`, fetchJson);
+      // A failed index is asked for again next time, not kept (#762).
+      asked.catch(() => {
+        if (index === asked) index = null;
+      });
+      index = asked;
+    }
     return index.then((loaded) => {
       const century = centuryFor(loaded, cliopatriaYear(year, PRESENT_YEAR));
       if (century === null) return null;

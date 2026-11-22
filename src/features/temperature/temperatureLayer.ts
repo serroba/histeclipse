@@ -10,13 +10,14 @@
  * maps ahead.
  */
 
+import type { LayerLoad } from '../../state/activeLayers';
+import { loadOnce, reportAll, type LoadOnce } from '../../state/loadOnce';
 import { framesAhead, framesAround } from '../../data/paleoDem';
 import type { Fetch } from '../../util/fetchJson';
 import { loadPaleoTempIndex, type PaleoTempIndex } from '../../data/paleoTemp';
 import type { Globe } from '../../globe/globe';
 import type { ViewState } from '../../state/viewState';
 import type { TemperatureView } from '../../ui/temperatureLegend';
-import { errorMessage } from '../../util/errors';
 import {
   mapModel,
   meanAt,
@@ -54,6 +55,8 @@ export interface TemperatureLayer {
   drawn(state: ViewState, moment: TemperatureMoment): boolean;
   /** Colour the globe, or not; while playing at `maPerSecond`, the maps ahead are fetched. */
   show(state: ViewState, moment: TemperatureMoment, maPerSecond: number | null): void;
+  /** How the models' maps load, for the layer's chip, while it is on (#762). */
+  load(on: boolean): LayerLoad | null;
 }
 
 /** A moment shown, and when. */
@@ -87,36 +90,27 @@ export function createTemperatureLayer(context: TemperatureLayerContext): Temper
   // first, so the globe says it is off), so a story's own surface (the boundaries' measured
   // warming, #492) stays while deep time draws again.
   let colouring = true;
-  let loading: Readonly<Record<TemperatureModel, Promise<PaleoTempIndex> | null>> = {
-    krapp: null,
-    scotese: null,
-    cesm: null,
-  };
-  let loaded: TemperatureIndexes = { krapp: null, scotese: null, cesm: null };
+  // Each model's index, asked for once, the first time the layer is shown (#762).
+  const loads = Object.fromEntries(
+    TEMPERATURE_MODELS.map((model) => [
+      model,
+      loadOnce<PaleoTempIndex>({
+        fetch: () =>
+          loadPaleoTempIndex(dataUrl(`${TEMPERATURE_MODEL_FOLDERS[model]}/index.json`), fetchJson),
+        what: `the ${TEMPERATURE_MODEL_LABELS[model]} temperature maps`,
+        context: { notify, refresh: arrived },
+      }),
+    ]),
+  ) as Readonly<Record<TemperatureModel, LoadOnce<PaleoTempIndex>>>;
 
   /** Every model's maps, each asked for once, the first time the layer is shown. */
   function indexes(): TemperatureIndexes {
-    for (const model of TEMPERATURE_MODELS) {
-      if (loaded[model] !== null || loading[model] !== null) continue;
-      const asked = loadPaleoTempIndex(
-        dataUrl(`${TEMPERATURE_MODEL_FOLDERS[model]}/index.json`),
-        fetchJson,
-      );
-      loading = { ...loading, [model]: asked };
-      asked.then(
-        (index) => {
-          loaded = { ...loaded, [model]: index };
-          arrived();
-        },
-        (error: unknown) => {
-          loading = { ...loading, [model]: null };
-          notify(
-            `Could not load the ${TEMPERATURE_MODEL_LABELS[model]} temperature maps: ${errorMessage(error)}`,
-          );
-        },
-      );
-    }
-    return loaded;
+    for (const model of TEMPERATURE_MODELS) loads[model].want();
+    return {
+      krapp: loads.krapp.value(),
+      scotese: loads.scotese.value(),
+      cesm: loads.cesm.value(),
+    };
   }
 
   /** The model colouring the globe, if any: on the ice-age scale, only the ice ages' own. */
@@ -135,6 +129,7 @@ export function createTemperatureLayer(context: TemperatureLayerContext): Temper
   }
 
   return {
+    load: (on) => reportAll(on, Object.values(loads)),
     view(state, moment) {
       const { temperatureModel: wanted, temperatureShow: show } = state;
       if (!state.layers.has('temperature')) {

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { loadOnce } from './loadOnce';
+import { loadOnce, reportAll } from './loadOnce';
 
 function setUp() {
   const fetches: { resolve: (value: string) => void; reject: (error: Error) => void }[] = [];
@@ -79,5 +79,35 @@ describe("a layer's data, loaded once (#762)", () => {
     failed.retry();
     failed.retry();
     expect(fetch).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('one chip for several files (#762)', () => {
+  const quiet = { notify: vi.fn(), refresh: vi.fn() };
+  const pending = () => new Promise<string>(() => undefined);
+  const settle = async (): Promise<void> => {
+    for (let turn = 0; turn < 3; turn++) await Promise.resolve();
+  };
+
+  it('Given none asked for, Then nothing; one loading, Then loading', () => {
+    const a = loadOnce({ fetch: pending, what: 'a', context: quiet });
+    const b = loadOnce({ fetch: pending, what: 'b', context: quiet });
+    expect(reportAll(true, [a, b])).toBeNull();
+    a.want();
+    expect(reportAll(true, [a, b])).toEqual({ state: 'loading' });
+    expect(reportAll(false, [a, b])).toBeNull();
+  });
+
+  it('Given one failed and one loading, Then failed, and Try again retries the failed one', async () => {
+    const failing = vi.fn(() => Promise.reject(new Error('offline')));
+    const a = loadOnce({ fetch: failing, what: 'a', context: quiet });
+    const b = loadOnce({ fetch: pending, what: 'b', context: quiet });
+    a.want();
+    b.want();
+    await settle();
+    const report = reportAll(true, [a, b]);
+    if (report?.state !== 'failed') throw new Error('expected a failed load');
+    report.retry();
+    expect(failing).toHaveBeenCalledTimes(2);
   });
 });

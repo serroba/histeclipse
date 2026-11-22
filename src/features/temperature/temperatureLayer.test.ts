@@ -94,7 +94,8 @@ async function loaded(failing: readonly string[] = [], clock?: () => number) {
   const set = setUp(failing, clock);
   set.layer.view(on, deep);
   await vi.waitFor(() => {
-    expect(set.arrived).toHaveBeenCalledTimes(3 - failing.length);
+    // Each model's load asks to draw again when it ends, either way (#762).
+    expect(set.arrived).toHaveBeenCalledTimes(3);
   });
   return set;
 }
@@ -189,10 +190,19 @@ describe('the temperature layer', () => {
     expect(layer.view(on, { ...deep, ma: 0.5 }).note).toBeNull();
   });
 
-  it('says when a model’s maps cannot be had, and asks again later', async () => {
+  it('says when a model’s maps cannot be had, its chip offers Try again, and the moments do not ask again (#762)', async () => {
     const { layer, notices } = await loaded(['cesm']);
     expect(notices).toEqual(['Could not load the CESM, Li et al. 2023 temperature maps: gone']);
     expect(layer.view(on, deep).readings.map((each) => each.model)).toEqual(['krapp', 'scotese']);
+    layer.view(on, ice);
+    expect(notices).toHaveLength(1);
+    expect(layer.load(false)).toBeNull();
+    const failed = layer.load(true);
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
+    await vi.waitFor(() => {
+      expect(notices).toHaveLength(2);
+    });
   });
 
   it('draws nothing while no map has arrived', () => {
