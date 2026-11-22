@@ -5,17 +5,21 @@
  *
  * Each button wears its layer's state at the moment shown (#1071), as the chips beside Layers
  * have it (#751): pressed while on, and, while on, whether it draws here, is loading, or failed.
- * Marked by shape as well as colour (a fill, a dashed ring, a pulse), and said in words to screen
- * readers and in the tooltip.
+ * Marked by shape as well as colour (a fill, a dashed ring, a pulse), and said in words: to
+ * screen readers with its button, and, for a layer on with nothing here, in a line under the dock
+ * a phone shows too, with the step its chip offers (#751): going to where its data is, or trying
+ * its load again.
  *
  * Only the layers on (#752): the Layers panel is the one place to switch one on, so the dock does
  * not repeat its switches. "Add a layer" at its end opens that panel; a layer turned off here
  * leaves the focus on it rather than on nothing.
  */
 
-import type { ActiveLayer } from '../state/activeLayers';
+import { absentSteps, type ActiveLayer, type GoTo } from '../state/activeLayers';
 import { element } from './dom';
 import { uiIcon } from './icons';
+
+export type { GoTo };
 import './layerDock.css';
 
 /** What the dock draws: the layers on, as the chips beside Layers have them. */
@@ -42,12 +46,53 @@ function notDrawn(active: ActiveLayer): string {
   return `Not drawn here: ${active.why ?? active.reach}.`;
 }
 
+/** What the dock asks of the page. */
+export interface DockHandlers {
+  /** Open the Layers panel, given the button that asked so the focus can come back to it. */
+  readonly onAddLayer: (opener: HTMLElement) => void;
+  /** Go to where a layer's data is (#751). */
+  readonly onGoTo: (to: GoTo) => void;
+}
+
 /**
- * The dock of `buttons`, each carrying its layer as `data-layer`; `onAdd` opens the Layers panel,
- * given the button that asked so the focus can come back to it.
+ * The line under the dock (#751): each layer on with nothing here, why, and the step its chip
+ * offers. Drawn again only when what it says changes, as the bar draws every frame it plays.
  */
+function dockNotes(onGoTo: (to: GoTo) => void): {
+  readonly root: HTMLElement;
+  render(active: readonly ActiveLayer[]): void;
+} {
+  const root = element('span', { class: 'deep-dock-notes', 'aria-live': 'polite' });
+  let noted = '';
+  return {
+    root,
+    render(active) {
+      const steps = absentSteps(active, onGoTo);
+      const labels = new Map(active.map((each) => [each.layer, each.label]));
+      const lines = [...steps].map(([layer, { why, step }]) => ({
+        words: `${labels.get(layer) ?? layer}: ${why}`,
+        step,
+      }));
+      const key = lines.map(({ words, step }) => `${words}:${step?.label ?? ''}`).join('|');
+      if (key === noted) return;
+      noted = key;
+      root.replaceChildren(
+        ...lines.map(({ words, step }) => {
+          const line = element('span', { class: 'deep-dock-why' }, words);
+          if (step === null) return line;
+          const go = element('button', { type: 'button', class: 'deep-note-go' }, step.label);
+          go.addEventListener('click', step.run);
+          line.append(' ', go);
+          return line;
+        }),
+      );
+    },
+  };
+}
+
+/** The dock of `buttons`, each carrying its layer as `data-layer`. */
 export function layerDock(
-  onAdd: (opener: HTMLElement) => void,
+  { onAddLayer: onAdd, onGoTo }: DockHandlers,
   ...buttons: readonly HTMLElement[]
 ): LayerDock {
   const add = element(
@@ -65,6 +110,10 @@ export function layerDock(
     ...buttons,
     add,
   );
+  const docked = (): Set<string> =>
+    new Set(buttons.flatMap((button) => (shows(button) ? [button.dataset['layer'] ?? ''] : [])));
+  const notes = dockNotes(onGoTo);
+  root.append(notes.root);
   // The button last pressed, so that if it goes (its layer turned off) the focus goes to Add.
   let pressed: HTMLElement | null = null;
   // Caught on the way down, before the button's own handler: the page may draw again within it.
@@ -88,8 +137,7 @@ export function layerDock(
   }
   return {
     root,
-    shown: () =>
-      new Set(buttons.flatMap((button) => (shows(button) ? [button.dataset['layer'] ?? ''] : []))),
+    shown: docked,
     render(active) {
       const on = new Map(active.map((each) => [each.layer as string, each]));
       for (const [button, words] of said) {
@@ -110,6 +158,8 @@ export function layerDock(
         words.textContent = notDrawn(state);
         button.title = `${label}: ${notDrawn(state)}`;
       }
+      const here = docked();
+      notes.render(active.filter((each) => here.has(each.layer)));
       if (pressed !== null && !shows(pressed)) add.focus();
       pressed = null;
     },

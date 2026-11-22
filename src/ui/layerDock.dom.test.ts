@@ -21,7 +21,11 @@ describe('the dock wears each layer’s state (#1071)', () => {
   const make = () => {
     const humans = button('humans', 'Humans');
     const sealevel = button('sealevel', 'Sea level');
-    const dock = layerDock(() => undefined, sealevel, humans);
+    const dock = layerDock(
+      { onAddLayer: () => undefined, onGoTo: () => undefined },
+      sealevel,
+      humans,
+    );
     return { dock, humans, sealevel };
   };
 
@@ -35,7 +39,7 @@ describe('the dock wears each layer’s state (#1071)', () => {
 
   it('Given a layer on with nothing here, Then it is marked and says why in words', () => {
     const fossils = button('fossils', 'Fossils');
-    const dock = layerDock(() => undefined, fossils);
+    const dock = layerDock({ onAddLayer: () => undefined, onGoTo: () => undefined }, fossils);
     // Fossils are drawn on the 540 Myr span, not the ice ages.
     dock.render(activeLayers(at('ma=0.021&scale=ice&layers=fossils')));
     expect(fossils.dataset['coverage']).toBe('other-span');
@@ -85,7 +89,10 @@ describe('the dock wears each layer’s state (#1071)', () => {
 describe('the dock holds only the layers on (#752)', () => {
   it('Given Add pressed, Then the Layers panel is asked for, from Add', () => {
     const onAdd = vi.fn();
-    const dock = layerDock(onAdd, button('humans', 'Humans'));
+    const dock = layerDock(
+      { onAddLayer: onAdd, onGoTo: () => undefined },
+      button('humans', 'Humans'),
+    );
     const add = dock.root.querySelector<HTMLButtonElement>('.deep-add');
     expect(add?.getAttribute('aria-label')).toBe('Add a layer');
     add?.click();
@@ -95,7 +102,11 @@ describe('the dock holds only the layers on (#752)', () => {
   it('Given a layer turned off from the dock, Then the focus goes to Add, not to nothing', () => {
     const humans = button('humans', 'Humans');
     const sealevel = button('sealevel', 'Sea level');
-    const dock = layerDock(() => undefined, sealevel, humans);
+    const dock = layerDock(
+      { onAddLayer: () => undefined, onGoTo: () => undefined },
+      sealevel,
+      humans,
+    );
     document.body.append(dock.root);
     dock.render(activeLayers(at('ma=0.315&scale=ice&layers=humans,sealevel')));
     expect(humans.hasAttribute('data-off')).toBe(false);
@@ -113,7 +124,7 @@ describe('the dock holds only the layers on (#752)', () => {
 
   it('Given the page drawn again within the press itself, Then the focus still goes to Add', () => {
     const humans = button('humans', 'Humans');
-    const dock = layerDock(() => undefined, humans);
+    const dock = layerDock({ onAddLayer: () => undefined, onGoTo: () => undefined }, humans);
     document.body.append(dock.root);
     dock.render(activeLayers(at('ma=0.315&scale=ice&layers=humans')));
     humans.addEventListener('click', () => {
@@ -123,5 +134,35 @@ describe('the dock holds only the layers on (#752)', () => {
     humans.click();
     expect(document.activeElement).toBe(dock.root.querySelector('.deep-add'));
     dock.root.remove();
+  });
+});
+
+describe('the dock says in words a phone shows why a layer on draws nothing (#751)', () => {
+  it('Given plates on before their record, Then a line says so and goes to their oldest; it is kept while unchanged', () => {
+    const plates = button('plates', 'Plates');
+    const went: string[] = [];
+    const dock = layerDock(
+      { onAddLayer: () => undefined, onGoTo: (to) => went.push(to.label) },
+      plates,
+    );
+    const state = at('ma=2000&scale=eons&layers=plates');
+    dock.render(activeLayers(state));
+    const line = dock.root.querySelector('.deep-dock-why');
+    expect(line?.textContent).toMatch(/^Plates: none before 1,800 million years ago Go to /);
+    line?.querySelector('button')?.click();
+    expect(went).toHaveLength(1);
+    dock.render(activeLayers(state));
+    expect(dock.root.querySelector('.deep-dock-why')).toBe(line);
+  });
+
+  it('Given a layer loading, Then it says so with no step; once it draws, the line goes', () => {
+    const sealevel = button('sealevel', 'Sea level');
+    const dock = layerDock({ onAddLayer: () => undefined, onGoTo: () => undefined }, sealevel);
+    const state = at('ma=0.315&scale=ice&layers=sealevel');
+    dock.render(activeLayers(state, [['sealevel', { state: 'loading' }]]));
+    expect(dock.root.querySelector('.deep-dock-why')?.textContent).toBe('Sea level: loading…');
+    expect(dock.root.querySelector('.deep-dock-why button')).toBeNull();
+    dock.render(activeLayers(state));
+    expect(dock.root.querySelector('.deep-dock-why')).toBeNull();
   });
 });

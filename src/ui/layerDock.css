@@ -85,3 +85,18 @@
     opacity: 0.5;
   }
 }
+
+/* Why a layer on draws nothing here, under the dock, in words a phone shows (#751). */
+.deep-dock-notes {
+  display: flex;
+  flex: 1 0 100%;
+  flex-direction: column;
+  grid-column: 1 / -1;
+  gap: 4px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.deep-dock-notes:empty {
+  display: none;
+}
