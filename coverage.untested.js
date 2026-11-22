@@ -50,7 +50,6 @@ export const UNTESTED = [
   'src/features/records/index.ts',
   'src/features/records/tabletPanel.ts',
   'src/features/shell/firstView.ts',
-  'src/features/shell/index.ts',
   'src/features/shell/input.ts',
   'src/features/shell/panels.ts',
   'src/features/shower/airShower.ts',

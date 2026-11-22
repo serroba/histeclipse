@@ -1,0 +1,34 @@
+/* The years bar's single days (#837): a chip for each, under the year's eclipses. */
+.day-events {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.day-events[hidden] {
+  display: none;
+}
+
+.day-event-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgb(150 190 255 / 0.55);
+  border-radius: 22px;
+  background: rgb(120 160 255 / 0.1);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  text-align: start;
+  cursor: pointer;
+}
+
+.day-event-chip:hover,
+.day-event-chip:focus-visible {
+  background: rgb(120 160 255 / 0.2);
+}

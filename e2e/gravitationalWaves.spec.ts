@@ -154,3 +154,34 @@ test('GW170817 opens as two neutron stars, its own story, card and scale, with n
   });
   expect(problems).toEqual([]);
 });
+
+test('stepping the years bar to 2015 shows GW150914, and its chip opens the wave (#837) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const days = page.getByRole('list', { name: 'Events this year' });
+  const chip = days.getByRole('button', { name: /GW150914: first gravitational wave/ });
+  await test.step('Given 2014, with no single day marked', async () => {
+    await page.goto('./?t=2014-06-01T12:00Z&cam=30,-90,3');
+    await expect(page.getByTestId('globe')).toBeVisible();
+    await expect(days).toBeHidden();
+  });
+  await test.step('When they step to 2015, Then its chip shows', async () => {
+    await page.getByRole('button', { name: 'Next year' }).click();
+    await expect(page).toHaveURL(/t=2015-/);
+    await expect(chip).toBeVisible();
+    await expect(chip).toContainText('14 Sep');
+  });
+  await test.step('When they tap it, Then the wave opens on its day', async () => {
+    await chip.click();
+    await expect(page).toHaveURL(/wave=gw150914/);
+    await expect(page).toHaveURL(/t=2015-09-14T09:50Z/);
+    await expect(page.getByRole('region', { name: 'A gravitational wave passing' })).toBeVisible();
+  });
+  await test.step('When they step on to 2016, Then it is gone', async () => {
+    await page.goto('./?t=2016-06-01T12:00Z&cam=30,-90,3');
+    await expect(page.getByTestId('globe')).toBeVisible();
+    await expect(days).toBeHidden();
+  });
+  expect(problems).toEqual([]);
+});
