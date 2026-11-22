@@ -1,7 +1,7 @@
 import { installVirtualDisplay } from './virtualDisplay';
 /** Steps shared by the end-to-end features, and the test they run in. */
 
-import { expect, test as base, type Page } from '@playwright/test';
+import { expect, test as base, type Locator, type Page } from '@playwright/test';
 
 export { expect };
 
@@ -120,12 +120,29 @@ export async function showDeepDetails(page: Page): Promise<void> {
   await expect(page.getByTestId('deep-details')).toBeVisible();
 }
 
-/** Pick how far back time reaches, in the switch at the top: Years, Ice ages, 540 Myr, 4.6 Gyr. */
+/**
+ * Pick how far back time reaches, in the time bar's scale row (#1116): Years, Ice ages, 540 Myr,
+ * 4.6 Gyr. On a phone a chip opens them first.
+ */
 export async function pickSpan(page: Page, span: string): Promise<void> {
+  const chip = page.locator('.time-scale-chip').filter({ visible: true });
+  if ((await chip.count()) > 0) await chip.click();
   await page
     .getByRole('group', { name: 'Time range presets' })
+    .filter({ visible: true })
     .getByRole('button', { name: span, exact: true })
     .click();
+}
+
+/**
+ * A preset in the time bar shown (#1116), to check whether it is picked: found even while a
+ * phone's chip has the presets folded away.
+ */
+export function spanPreset(page: Page, span: string): Locator {
+  return page
+    .locator('.time-scale')
+    .filter({ visible: true })
+    .getByRole('button', { name: span, exact: true, includeHidden: true });
 }
 
 /** Wait until the sky view has drawn. */

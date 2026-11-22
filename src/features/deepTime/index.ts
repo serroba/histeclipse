@@ -144,6 +144,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       store.set((state) => ({ ...state, ma }));
     },
   });
+  // How far back time reaches, in each bar's scale row (#1116): going deeper is zooming out.
+  const [historySpan, yearsSpan] = [createSpanSwitch(goToSpan), createSpanSwitch(goToSpan)];
   const deepBar = createDeepTimeBar(
     {
       onZoom: zoom,
@@ -179,6 +181,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     },
     // The chips (#380, #605): the plates', the features', the impacts'.
     context.chips,
+    historySpan.root,
   );
   const glance = createDeepGlance(
     (play) => {
@@ -190,10 +193,6 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       store.set((state) => ({ ...state, ma: roundMa(ma) }));
     },
   );
-  // How far back time reaches, one choice for all of it: going deeper is zooming out.
-  const historySpan = createSpanSwitch((span) => {
-    goToSpan(span);
-  });
   const magneticNorthOnGlobe = globe.addLayer(magneticNorthLayer);
 
   // Deep time: Earth's surface from the elevation maps, which load a few at a time as needed.
@@ -236,7 +235,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     magneticNorthOnGlobe.update(ma === null ? null : magneticNorthAt(ma, polarity));
     if (ma !== null) wantPolarity();
     if (ma === null) {
-      historySpan.render('years', state.yearsWindow === null);
+      yearsSpan.render('years', state.yearsWindow === null);
       stopPlay();
       deepBar.render(null);
       glance.render(null);
@@ -363,7 +362,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     bar: deepBar.root,
     docked: () => deepBar.docked(),
     glance: glance.root,
-    spanSwitch: historySpan.root,
+    yearsScale: yearsSpan.root,
     show: showDeepTime,
     enterDeepTime,
     playFrom,

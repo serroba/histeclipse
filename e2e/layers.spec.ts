@@ -330,7 +330,7 @@ test('the Layers rows, Layers, Explore, Full view and Famous eclipses wear icons
   });
 });
 
-test('the date panel’s rows line up on both edges, and on a phone it spans the screen @mobile', async ({
+test('the date panel holds the tools, the time bar the presets, and on a phone the panel spans the screen @mobile', async ({
   page,
 }, info) => {
   test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
@@ -339,13 +339,10 @@ test('the date panel’s rows line up on both edges, and on a phone it spans the
     await page.goto('./?t=2026-01-10T12:00');
     await globeRendered(page);
   });
-  await test.step('Then the time switch with Layers, and the viewpoints, meet the same edges', async () => {
-    const spans = await page.getByRole('group', { name: 'Time range presets' }).boundingBox();
-    const layers = await page.getByRole('button', { name: 'Layers', exact: true }).boundingBox();
-    const views = await page.getByRole('group', { name: 'Viewpoint' }).boundingBox();
-    if (spans === null || layers === null || views === null) throw new Error('not laid out');
-    expect(Math.abs(spans.x - views.x)).toBeLessThanOrEqual(1);
-    expect(Math.abs(layers.x + layers.width - (views.x + views.width))).toBeLessThanOrEqual(1);
+  await test.step('Then Layers is among the header’s tools, and the presets are in the time bar (#1116)', async () => {
+    await expect(page.locator('.hud-tools').getByRole('button', { name: 'Layers' })).toBeVisible();
+    await expect(page.locator('.hud .time-scale')).toHaveCount(0);
+    await expect(page.locator('.bottom .time-scale').filter({ visible: true })).toHaveCount(1);
   });
   if (phone) {
     await test.step('And on a phone the panel leaves the same margin on both sides', async () => {

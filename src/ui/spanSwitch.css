@@ -57,3 +57,110 @@
 .time-switch .time-option {
   flex: 1 1 auto;
 }
+
+/* The scale row over a time bar's track (#1116): the presets, then, zoomed in, the period
+   crumbs. Compact where a mouse points; a finger keeps its 44 px. */
+.time-scale-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  min-width: 0;
+}
+
+.time-scale {
+  position: relative;
+  flex: none;
+}
+
+.time-scale-chip {
+  display: none;
+}
+
+@media (pointer: fine) {
+  .time-scale .time-option {
+    min-height: 32px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  .time-scale-row .period-crumb {
+    min-height: 32px;
+  }
+}
+
+/* On a phone, upright or on its side, one chip names the preset shown and opens the four. */
+@media (max-width: 600px), (max-height: 500px) {
+  .time-scale-row {
+    flex-wrap: nowrap;
+  }
+
+  .time-scale-row .period-crumbs {
+    min-width: 0;
+  }
+
+  .time-scale-chip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid rgb(120 200 150 / 0.45);
+    border-radius: 16px;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  /* Drawn 32 px tall; a finger finds it within 44. */
+  .time-scale-chip::after {
+    position: absolute;
+    inset: -6px 0;
+    content: '';
+  }
+
+  .time-scale-chip .panel-fold-chevron {
+    width: 7px;
+    height: 7px;
+    border-right: 1.5px solid currentcolor;
+    border-bottom: 1.5px solid currentcolor;
+    transform: translateY(-2px) rotate(45deg);
+  }
+
+  .time-scale-chip[aria-expanded='true'] .panel-fold-chevron {
+    transform: translateY(2px) rotate(-135deg);
+  }
+
+  .time-scale:not([data-open]) > .time-switch {
+    display: none;
+  }
+
+  .time-scale[data-open] > .time-switch {
+    position: absolute;
+    z-index: 5;
+    bottom: calc(100% + 6px);
+    left: 0;
+    border: 1px solid var(--panel-border);
+    background: rgb(10 16 32 / 0.96);
+  }
+}
+
+/* Away from Earth, its spans rest, as its year's track does. */
+.bottom[data-away='true'] .time-scale {
+  display: none;
+}
+
+/* In the years' bar, at its start, as wide as its words. */
+.holocene-bar > .time-scale {
+  align-self: flex-start;
+  justify-self: start;
+}
+
+/* Open, the presets rise over the panels beside the globe (z-index 2), as a menu does. */
+.bottom[data-scale-open] {
+  z-index: 3;
+}

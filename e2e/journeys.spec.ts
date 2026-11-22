@@ -13,6 +13,7 @@ import {
   openSources,
   pickSpan,
   test,
+  spanPreset,
 } from './support';
 
 test('a newcomer starts exploring, picks a famous eclipse and looks at the sky that day @acceptance @mobile', async ({
@@ -360,11 +361,7 @@ test('links made before one time bar still open what they showed', async ({ page
   });
   await test.step('Then it opens on its span and moment, with its layer, the retired ones dropped', async () => {
     await expect(page.locator('.hud-date')).toHaveText('66 million years ago');
-    await expect(
-      page
-        .getByRole('group', { name: 'Time range presets' })
-        .getByRole('button', { name: '540 Myr' }),
-    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(spanPreset(page, '540 Myr')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -377,11 +374,7 @@ test('links made before one time bar still open what they showed', async ({ page
   });
   await test.step('Then it opens there too', async () => {
     await expect(page.locator('.hud-date')).toHaveText('21,000 years ago');
-    await expect(
-      page
-        .getByRole('group', { name: 'Time range presets' })
-        .getByRole('button', { name: 'Ice ages' }),
-    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(spanPreset(page, 'Ice ages')).toHaveAttribute('aria-pressed', 'true');
   });
   expect(problems).toEqual([]);
 });

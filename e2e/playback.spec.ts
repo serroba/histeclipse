@@ -3,7 +3,7 @@
  * as the years play by, the globe shows each one as it arrives, and loads the next ones ahead.
  */
 
-import { collectProblems, expect, globeRendered, showDeepDetails, test } from './support';
+import { collectProblems, expect, globeRendered, showDeepDetails, test, pickSpan } from './support';
 
 test('on a slow connection, the globe keeps changing as deep time plays', async ({ page }) => {
   const problems = collectProblems(page);
@@ -67,7 +67,7 @@ test('deep time plays at a pace, its speed following the part of time shown (#10
     await deep.getByRole('button', { name: 'Pause', exact: true }).click();
   });
   await test.step('When they turn to the ice ages, the pace is kept, the speed thousands of years', async () => {
-    await page.getByRole('button', { name: 'Ice ages' }).click();
+    await pickSpan(page, 'Ice ages');
     await expect(pace).toHaveValue('fast');
     await expect(rate).toHaveText('≈ 500 kyr/s');
   });

@@ -52,6 +52,28 @@
   .bar-fold {
     display: none;
   }
+
+  /* The presets' chip (#1116) sits left of Play, on the track's row, so the bar is no taller. */
+  .holocene-bar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 8px;
+  }
+
+  .holocene-bar > * {
+    grid-column: 1 / -1;
+  }
+
+  .holocene-bar > .time-scale {
+    grid-row: 1;
+    grid-column: 1;
+    align-self: center;
+  }
+
+  .holocene-bar > .history-track:not([hidden]) {
+    grid-row: 1;
+    grid-column: 2;
+  }
 }
 
 /* Upright, the year's bar keeps its track and Play; the year, the years shown and the speed
@@ -89,7 +111,25 @@
     grid-column: 1;
   }
 
+  /* The presets' chip (#1116) shares the fold's row, so the bar is no taller for it; while the
+     years play that row is the travel view's line, and the chip waits for them to stop. */
+  .holocene-bar > .time-scale {
+    order: 1;
+    grid-column: 1;
+  }
+
+  .holocene-bar > .bar-fold {
+    order: 1;
+    grid-column: 2;
+    margin: 0;
+  }
+
+  .holocene-bar:has(.history-notes:not([hidden])) > .time-scale {
+    display: none;
+  }
+
   .holocene-bar:has(.history-notes:not([hidden])) > .bar-fold {
+    order: 0;
     grid-column: 2;
     min-width: 44px;
     margin: 0;

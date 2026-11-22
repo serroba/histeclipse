@@ -4,23 +4,25 @@
  * history. Going deeper is zooming out, to the same moment; famous eclipses belong to the years.
  */
 
-import { collectProblems, globeRendered, expect, pickSpan, test } from './support';
+import { collectProblems, globeRendered, expect, pickSpan, test, spanPreset } from './support';
 
 test('the top row picks how far back time reaches; famous eclipses sit with the years', async ({
   page,
 }) => {
   const problems = collectProblems(page);
-  const spans = page.getByRole('group', { name: 'Time range presets' });
   await test.step('Given a reader in 2024', async () => {
     await page.goto('./?t=2024-04-08T18:17&layers=eclipses');
     await globeRendered(page);
   });
-  await test.step('Then the top row offers four spans, with Years on', async () => {
-    await expect(spans.getByRole('button')).toHaveText(['Years', 'Ice ages', '540 Myr', '4.6 Gyr']);
-    await expect(spans.getByRole('button', { name: 'Years' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+  await test.step('Then the time bar’s scale row offers four spans, with Years on (#1116)', async () => {
+    const shown = page.locator('.time-scale').filter({ visible: true });
+    await expect(shown.locator('.time-option')).toHaveText([
+      'Years',
+      'Ice ages',
+      '540 Myr',
+      '4.6 Gyr',
+    ]);
+    await expect(spanPreset(page, 'Years')).toHaveAttribute('aria-pressed', 'true');
   });
   await test.step('And Famous eclipses is in the year bar, not the top row', async () => {
     const bar = page.getByRole('navigation', { name: 'Year and eclipses' });
@@ -41,7 +43,6 @@ test('a deeper span opens at its oldest moment, and coming back returns to the d
   page,
 }) => {
   const problems = collectProblems(page);
-  const spans = page.getByRole('group', { name: 'Time range presets' });
   await test.step('Given a reader at the 2024 eclipse', async () => {
     await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08');
     await globeRendered(page);
@@ -52,10 +53,7 @@ test('a deeper span opens at its oldest moment, and coming back returns to the d
   await test.step('Then deep time opens 540 million years ago, ready to play forward, with no famous eclipses', async () => {
     await expect(page).toHaveURL(/&ma=540(&|$)/);
     await expect(page.locator('.hud-date')).toHaveText('540 million years ago');
-    await expect(spans.getByRole('button', { name: '540 Myr' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    await expect(spanPreset(page, '540 Myr')).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('button', { name: 'Famous eclipses' })).toBeHidden();
   });
   await test.step('When they pick Years', async () => {
@@ -110,15 +108,8 @@ test('a link to deep time opens with its span picked', async ({ page }) => {
     await globeRendered(page);
   });
   await test.step('Then Ice ages is the span shown', async () => {
-    const spans = page.getByRole('group', { name: 'Time range presets' });
-    await expect(spans.getByRole('button', { name: 'Ice ages' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    await expect(spans.getByRole('button', { name: 'Years' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    );
+    await expect(spanPreset(page, 'Ice ages')).toHaveAttribute('aria-pressed', 'true');
+    await expect(spanPreset(page, 'Years')).toHaveAttribute('aria-pressed', 'false');
   });
 });
 

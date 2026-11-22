@@ -77,8 +77,8 @@ export interface DeepTimePart {
   /** The layers whose buttons the bar's dock shows now (#1072); none outside deep time. */
   readonly docked: () => ReadonlySet<string>;
   readonly glance: HTMLElement;
-  /** How far back time reaches: the years, or one of deep time's spans. */
-  readonly spanSwitch: HTMLElement;
+  /** The years' bar's scale row (#1116): how far back time reaches. */
+  readonly yearsScale: HTMLElement;
   /** Deep time as the view has it, or the years. */
   readonly show: (state: ViewState) => void;
   /** Go into deep time at `ma`, on the span that reaches it. */

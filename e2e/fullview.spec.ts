@@ -4,7 +4,7 @@
  * keeps saying when it is.
  */
 
-import { collectProblems, expect, globeRendered, test } from './support';
+import { collectProblems, expect, globeCentre, globeRendered, test } from './support';
 
 test('in deep time a tap on the globe clears the panels, and the strip says when @mobile', async ({
   page,
@@ -18,7 +18,9 @@ test('in deep time a tap on the globe clears the panels, and the strip says when
     await expect(glance).toBeHidden();
   });
   await test.step('When they tap the globe', async () => {
-    await globe.click();
+    // Where it is drawn: in the middle of the room the panels leave (#946).
+    const centre = await globeCentre(page);
+    await page.mouse.click(centre.x, centre.y);
   });
   await test.step('Then the panels go, and a strip shows the time and how far through', async () => {
     await expect(page.locator('.hud')).toBeHidden();
@@ -153,7 +155,8 @@ test('on a short phone the date panel folds, so the globe keeps over half the sc
   });
   await test.step('Then the panel shows the date, folded, and the globe has over half', async () => {
     await expect(more).toHaveAttribute('aria-expanded', 'false');
-    await expect(hud.getByRole('button', { name: 'Layers' })).toBeHidden();
+    // Layers is a tool now (#1116), in reach while the panel is folded.
+    await expect(hud.locator('.hud-tools').getByRole('button', { name: 'Layers' })).toBeVisible();
     expect(await free()).toBeGreaterThan(0.5);
   });
   await test.step('When they ask for more, Then the time spans, Layers and views are there', async () => {

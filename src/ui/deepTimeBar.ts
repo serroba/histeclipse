@@ -142,9 +142,9 @@ export function createDeepTimeBar(
     onSketch(choice: Partial<SketchChoices>): void;
   },
   chips: readonly DeepChip[] = [],
+  scale?: HTMLElement, // The presets, first in the scale row over the track (#1116).
 ): DeepTimeBar {
-  // The slider's value is minus the time ago, so dragging right moves towards the present: in
-  // millions of years, or thousands on the ice-age scale. Its keys are all players' (`transport.ts`).
+  // The slider's value is minus the time ago (Ma, or ka on the ice ages): right is towards now.
   const transport = createTransport(
     {
       play: { className: 'step deep-play' },
@@ -312,7 +312,7 @@ export function createDeepTimeBar(
     },
     easingRow,
   );
-  // Notes, legends, milestones, folds: folded on a phone until asked for; open, they scroll.
+  // Notes, legends, milestones, folds: folded on a phone until asked; open, they scroll.
   const details = element(
     'div',
     { class: 'deep-details', id: 'deep-details', 'data-testid': 'deep-details' },
@@ -337,7 +337,7 @@ export function createDeepTimeBar(
     'nav',
     { class: 'deep-time', 'aria-label': 'Deep time', hidden: '' },
     handle,
-    crumbs.root,
+    element('div', { class: 'time-scale-row' }, ...(scale ? [scale] : []), crumbs.root),
     element('div', { class: 'deep-controls' }, play, older, track, younger),
     element(
       'p',

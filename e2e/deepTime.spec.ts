@@ -12,6 +12,7 @@ import {
   showDeepDetails,
   turnOnLayer,
   test,
+  spanPreset,
 } from './support';
 
 /** The period bands' names, as their labels say them: on a phone the bands show symbols. */
@@ -309,11 +310,7 @@ test('a link to a part of deep time shows that part, and a span picked shows it 
     await expect(bar.getByTestId('scale-start')).toHaveText('124 Ma');
     await expect(bar.getByTestId('scale-end')).toHaveText('76 Ma');
     await expect.poll(() => bandNames(bar)).toEqual(['Lower Cretaceous', 'Upper Cretaceous']);
-    await expect(
-      page
-        .getByRole('group', { name: 'Time range presets' })
-        .getByRole('button', { name: '540 Myr' }),
-    ).toHaveAttribute('aria-pressed', 'false');
+    await expect(spanPreset(page, '540 Myr')).toHaveAttribute('aria-pressed', 'false');
   });
   await test.step('When they zoom out, Then the bar shows twice the time about the moment, 148 to 52 Ma', async () => {
     await bar.getByRole('button', { name: 'Show more time' }).click();
@@ -365,11 +362,7 @@ test('a tap on a period fits the bar to it, and the crumbs above zoom back out a
     await expect(page).toHaveURL(/scale=eons/);
     await expect(page).not.toHaveURL(/dw=/);
     await expect(crumbs).toBeHidden();
-    await expect(
-      page
-        .getByRole('group', { name: 'Time range presets' })
-        .getByRole('button', { name: '4.6 Gyr' }),
-    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(spanPreset(page, '4.6 Gyr')).toHaveAttribute('aria-pressed', 'true');
   });
   expect(problems).toEqual([]);
 });
@@ -379,7 +372,7 @@ test('deep time narrows to the ice ages, in thousands of years', GPU, async ({ p
   await page.goto('./?ma=250&layers=sealevel');
   await globeRendered(page);
   await showDeepDetails(page);
-  await page.getByRole('button', { name: 'Ice ages' }).click();
+  await pickSpan(page, 'Ice ages');
   // The ice ages open at their oldest moment; then on to the last glacial maximum.
   await expect(page).toHaveURL(/&ma=2\.6&scale=ice/);
   await page.getByLabel('Thousands of years ago').fill('-21');
@@ -434,7 +427,7 @@ test('deep time narrows to the ice ages, in thousands of years', GPU, async ({ p
   await expect(page.getByTestId('ice-sheets')).toContainText('when sea level was similar');
   await expect(globe).toHaveAttribute('data-ice', /icesheets\/(\d+)\.png .*icesheets\/\1\.png$/);
 
-  await page.getByRole('button', { name: '540 Myr' }).click();
+  await pickSpan(page, '540 Myr');
   await expect(page).not.toHaveURL(/scale=/);
   await expect(page.getByLabel('Millions of years ago')).toBeVisible();
   await expect(page.getByTestId('ice-note')).toBeHidden();
@@ -531,7 +524,7 @@ test(
     await globeRendered(page);
     await showDeepDetails(page);
     const globe = page.getByTestId('globe');
-    await page.getByRole('button', { name: '4.6 Gyr' }).click();
+    await pickSpan(page, '4.6 Gyr');
     await expect(page).toHaveURL(/scale=eons/);
     await expect(page.getByTestId('uncharted-note')).toBeHidden();
 
@@ -568,7 +561,7 @@ test(
     await expect(globe).toHaveAttribute('data-plates', 'off');
     await expect(page.getByTestId('plates-note')).toContainText('reach back 1,800 million years');
 
-    await page.getByRole('button', { name: '540 Myr' }).click();
+    await pickSpan(page, '540 Myr');
     await expect(page).toHaveURL(/&ma=540(&|$)/);
     await expect(globe).toHaveAttribute('data-uncharted', 'false');
     expect(problems).toEqual([]);

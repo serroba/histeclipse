@@ -127,9 +127,9 @@ describe('isolated span switch', () => {
   it('names all spans, reports each selection and presses only the active span', () => {
     const pick = vi.fn();
     const ui = createSpanSwitch(pick);
-    expect(ui.root.getAttribute('role')).toBe('group');
-    expect(ui.root.getAttribute('aria-label')).toBe('Time range presets');
-    const buttons = [...ui.root.querySelectorAll('button')];
+    expect(ui.group.getAttribute('role')).toBe('group');
+    expect(ui.group.getAttribute('aria-label')).toBe('Time range presets');
+    const buttons = [...ui.group.querySelectorAll('button')];
     expect(buttons.map((button) => button.textContent)).toEqual([
       'Years',
       'Ice ages',
@@ -147,6 +147,33 @@ describe('isolated span switch', () => {
         1,
       );
     }
+  });
+
+  it('Given the phone’s chip (#1116), Then it names the span, opens the presets, and a pick, Escape or a tap elsewhere closes them', () => {
+    const ui = createSpanSwitch(vi.fn());
+    document.body.append(ui.root);
+    const chip = ui.root.querySelector<HTMLButtonElement>('.time-scale-chip');
+    ui.render('all', false);
+    expect(chip?.textContent).toBe('540 Myr');
+    expect(chip?.getAttribute('aria-label')).toBe('Time range: 540 Myr, part of it');
+    expect(chip?.getAttribute('aria-controls')).toBe(ui.group.id);
+    chip?.click();
+    expect(ui.root.hasAttribute('data-open')).toBe(true);
+    expect(chip?.getAttribute('aria-expanded')).toBe('true');
+    ui.group.querySelector('button')?.click();
+    expect(ui.root.hasAttribute('data-open')).toBe(false);
+    chip?.click();
+    ui.group
+      .querySelector('button')
+      ?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(ui.root.hasAttribute('data-open')).toBe(false);
+    expect(document.activeElement).toBe(chip);
+    chip?.click();
+    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    expect(ui.root.hasAttribute('data-open')).toBe(false);
+    ui.render('years');
+    expect(chip?.getAttribute('aria-label')).toBe('Time range: Years');
+    ui.root.remove();
   });
 });
 
