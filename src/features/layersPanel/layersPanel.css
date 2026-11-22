@@ -345,3 +345,8 @@
 .hud-tools .layers-open[hidden] {
   display: none;
 }
+
+/* Five tools reach further left, over the date's line (#1116): they take taps there, not it. */
+.hud-tools {
+  z-index: 1;
+}
