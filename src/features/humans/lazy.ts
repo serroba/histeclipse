@@ -1,39 +1,30 @@
 /**
  * A data file loaded once, the first time it is asked for (#1047): its value once it has arrived,
- * null until then; asked again after a failure, it tries again.
+ * null until then. A failed load waits for Try again from the layer's chip (#762), rather than
+ * being asked for again at every moment.
  */
+
+import type { LayerLoad } from '../../state/activeLayers';
+import { loadOnce, type LoadOnceOptions } from '../../state/loadOnce';
 
 export interface Lazy<T> {
   /** The data, once it has arrived. */
   readonly value: T | null;
-  /** Start loading it, unless it has arrived or is on its way. */
+  /** Start loading it, unless it has arrived, is on its way, or failed. */
   ask(): void;
+  /** How its load stands while the layer is on, for the chip. */
+  report(on: boolean): LayerLoad | null;
 }
 
-export function lazy<T>(
-  load: () => Promise<T>,
-  arrived: () => void,
-  failed: (error: unknown) => void,
-): Lazy<T> {
-  let value: T | null = null;
-  let loading = false;
+export function lazy<T>(options: LoadOnceOptions<T>): Lazy<T> {
+  const load = loadOnce(options);
   return {
     get value() {
-      return value;
+      return load.value();
     },
-    ask() {
-      if (value !== null || loading) return;
-      loading = true;
-      load().then(
-        (loaded) => {
-          value = loaded;
-          arrived();
-        },
-        (error: unknown) => {
-          loading = false;
-          failed(error);
-        },
-      );
+    ask: () => {
+      load.want();
     },
+    report: (on) => load.report(on),
   };
 }

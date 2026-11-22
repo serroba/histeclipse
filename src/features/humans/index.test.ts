@@ -643,11 +643,45 @@ describe('the humans as a feature', () => {
     });
   });
 
-  it('says so when the finds cannot be loaded', async () => {
+  it('says so when the finds cannot be loaded, on its chip and in the bar, waits as deep time plays, and tries again from there (#762)', async () => {
     const { context, notify } = fakeContext({ failing: true });
-    humansFeature.mount(context, context).deep?.(on, ICE);
+    const shown = humansFeature.mount(context, context);
+    shown.deep?.(on, ICE);
+    expect(shown.load?.()).toEqual({ state: 'loading' });
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the human finds: offline');
+    });
+    const said = (): number =>
+      notify.mock.calls.filter(([message]) => message === 'Could not load the human finds: offline')
+        .length;
+    expect(shown.deep?.(on, { ...ICE, ma: ICE.ma + 0.001 })?.note).toEqual([
+      { paragraph: ['Humans: could not load.'] },
+    ]);
+    expect(said()).toBe(1);
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
+    await vi.waitFor(() => {
+      expect(said()).toBe(2);
+    });
+  });
+
+  it('waits for Try again after the dispersal model failed, rather than asking each frame (#762)', async () => {
+    const { context, refresh, notify } = fakeContext({ missing: 'index.json' });
+    const shown = await loaded(context, refresh);
+    shown.deep?.({ ...on, dispersal: 'b' }, ICE);
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledWith('Could not load the dispersal model: offline');
+    });
+    shown.deep?.({ ...on, dispersal: 'b' }, ICE);
+    shown.deep?.({ ...on, dispersal: 'b' }, ICE);
+    expect(notify).toHaveBeenCalledOnce();
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
+    shown.deep?.({ ...on, dispersal: 'b' }, ICE);
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledTimes(2);
     });
   });
 });

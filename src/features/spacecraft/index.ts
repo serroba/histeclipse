@@ -20,7 +20,7 @@ import { loadSpacecraftPaths } from '../../data/spacecraftPaths';
 import { craftOn, type ViewState } from '../../state/viewState';
 import type { JulianDay } from '../../time/julianDay';
 import { loadTelescopes } from '../../data/telescopes';
-import { errorMessage } from '../../util/errors';
+import { loadOnce, type LoadOnce } from '../../state/loadOnce';
 import { feature, type FeatureContext } from '../feature';
 import type { Geocentric } from './approximatePaths';
 import { craftInFlight } from './craftLayer';
@@ -164,32 +164,26 @@ function drawnIn(
 function telescopeCraft(context: SpacecraftContext): {
   ids(state: ViewState): ReadonlySet<string> | 'loading' | undefined;
 } {
-  let ids: ReadonlySet<string> | null = null;
-  let asked = false;
+  const record = loadOnce({
+    fetch: () =>
+      loadTelescopes(`${context.base}data/telescopes.json`, context.fetchJson).then(
+        (loaded) =>
+          new Set(
+            loaded.telescopes.flatMap((telescope) =>
+              telescope.kind === 'space' && telescope.craft !== null
+                ? [telescope.craft.toUpperCase()]
+                : [],
+            ),
+          ) as ReadonlySet<string>,
+      ),
+    what: 'the telescopes',
+    context,
+  });
   return {
     ids(state) {
       if (!state.layers.has('telescopes')) return undefined;
-      if (ids !== null) return ids;
-      if (!asked) {
-        asked = true;
-        loadTelescopes(`${context.base}data/telescopes.json`, context.fetchJson).then(
-          (record) => {
-            ids = new Set(
-              record.telescopes.flatMap((telescope) =>
-                telescope.kind === 'space' && telescope.craft !== null
-                  ? [telescope.craft.toUpperCase()]
-                  : [],
-              ),
-            );
-            context.refresh();
-          },
-          (error: unknown) => {
-            asked = false;
-            context.notify(`Could not load the telescopes: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return 'loading';
+      record.want();
+      return record.value() ?? 'loading';
     },
   };
 }
@@ -202,36 +196,23 @@ interface Loaded {
 }
 
 /**
- * Asks for the record and the paths, once; again only after a failure. `done` has them, and the
- * moment is shown again.
+ * The record and the paths, asked for once the first time the layer is on; a failed load waits
+ * for Try again from the chip (#762).
  */
-function loader(
-  context: SpacecraftContext,
-  then: Geocentric,
-  done: (loaded: Loaded) => void,
-): () => void {
-  let asked = false;
-  return () => {
-    if (asked) return;
-    asked = true;
-    Promise.all([
-      loadSpacecraft(`${context.base}data/spacecraft.json`, context.fetchJson),
-      loadSpacecraftPaths(`${context.base}data/spacecraft-paths.json`, context.fetchJson),
-    ]).then(
-      ([record, paths]) => {
-        done({
-          craft: [...record.craft, ...record.aboutEarth],
-          missions: missions(record.craft, today()),
-          wheres: craftWheres(paths, then),
-        });
-        context.refresh();
-      },
-      (error: unknown) => {
-        asked = false;
-        context.notify(`Could not load the spacecraft: ${errorMessage(error)}`);
-      },
-    );
-  };
+function loader(context: SpacecraftContext, then: Geocentric): LoadOnce<Loaded> {
+  return loadOnce({
+    fetch: () =>
+      Promise.all([
+        loadSpacecraft(`${context.base}data/spacecraft.json`, context.fetchJson),
+        loadSpacecraftPaths(`${context.base}data/spacecraft-paths.json`, context.fetchJson),
+      ]).then(([record, paths]) => ({
+        craft: [...record.craft, ...record.aboutEarth],
+        missions: missions(record.craft, today()),
+        wheres: craftWheres(paths, then),
+      })),
+    what: 'the spacecraft',
+    context,
+  });
 }
 
 /**
@@ -304,10 +285,8 @@ export const spacecraftFeature = feature({
     };
     /** The mission followed, by its id, as last shown. */
     let followed: string | null = null;
-    let loaded: Loaded | null = null;
-    const load = loader(context, where.then, (all) => {
-      loaded = all;
-    });
+    const load = loader(context, where.then);
+    let shown = false;
     const telescopes = telescopeCraft(context);
     /** The craft the camera is on (#796), as last shown. */
     let on: string | null = null;
@@ -325,6 +304,7 @@ export const spacecraftFeature = feature({
 
     /** A craft's card (#350), a telescope's with its pictures once they have come (#798). */
     const open = craftCards(context, (id) => {
+      const loaded = load.value();
       const craft = loaded?.craft.find((each) => each.id === id);
       if (craft === undefined || loaded === null) return null;
       const card = withGoTo(
@@ -343,6 +323,7 @@ export const spacecraftFeature = feature({
         context.zoomRail.setSpacecraft(offered, state.layers.has('spacecraft'));
         // With only the Telescopes layer on, only the space telescopes fly (#849).
         const only = state.layers.has('spacecraft') ? null : telescopes.ids(state);
+        shown = offered && only !== undefined;
         if (!offered || only === undefined) {
           held.update(false);
           drawn.update(null);
@@ -352,8 +333,9 @@ export const spacecraftFeature = feature({
           return;
         }
         if (context.ephemerides.planets() === null) void context.ephemerides.loadPlanets();
+        const loaded = load.value();
         if (loaded === null) {
-          load();
+          load.want();
           return;
         }
         if (only === 'loading') return;
@@ -367,6 +349,7 @@ export const spacecraftFeature = feature({
         held.update(flying.held);
       },
       pick: open,
+      load: () => load.report(shown),
     };
   },
 });

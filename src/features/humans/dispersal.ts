@@ -4,6 +4,7 @@
  * index and each scenario load the first time they are picked.
  */
 
+import type { LayerLoad } from '../../state/activeLayers';
 import {
   loadDispersalIndex,
   settledShare,
@@ -37,6 +38,8 @@ export interface Dispersal {
    * `maPerSecond`, in steps the map can be repainted at (#1045).
    */
   show(scenario: DispersalScenario | null, ma: number, maPerSecond?: number | null): DispersalShown;
+  /** How its model loads while the layer is on, for the chip (#762). */
+  report(on: boolean): LayerLoad | null;
 }
 
 /**
@@ -62,11 +65,13 @@ export function createDispersal(context: FeatureContext<'settledLand'>): Dispers
   /** Each scenario loaded: its arrival times and its name. */
   const grids = new Map<string, { readonly grid: ArrivalGrid; readonly name: string }>();
   const loading = new Set<string>();
+  // A failed load waits for Try again from the chip, not asked for again each frame (#762).
+  let failed = false;
   // The last share worked out: the grid is scanned again only when what is shaded changes.
   let lastShare: { readonly key: string; readonly share: number } | null = null;
 
   function load(scenario: DispersalScenario): void {
-    if (loading.has(scenario)) return;
+    if (failed || loading.has(scenario)) return;
     loading.add(scenario);
     index ??= loadDispersalIndex(`${context.base}data/dispersal/index.json`, context.fetchJson);
     index
@@ -78,17 +83,33 @@ export function createDispersal(context: FeatureContext<'settledLand'>): Dispers
           context.fetchJson,
         );
         grids.set(scenario, { grid, name: entry.name });
+        loading.delete(scenario);
         context.refresh();
       })
       .catch((error: unknown) => {
         // The index too, should it have been what failed.
         index = null;
         loading.delete(scenario);
+        failed = true;
         context.notify(`Could not load the dispersal model: ${errorMessage(error)}`);
+        context.refresh();
       });
   }
 
   return {
+    report(on) {
+      if (!on) return null;
+      if (failed) {
+        return {
+          state: 'failed',
+          retry: () => {
+            failed = false;
+            context.refresh();
+          },
+        };
+      }
+      return loading.size > 0 ? { state: 'loading' } : null;
+    },
     show(scenario, ma, maPerSecond) {
       const loaded = scenario === null || scenario === 'off' ? undefined : grids.get(scenario);
       if (scenario === null || scenario === 'off' || loaded === undefined) {
