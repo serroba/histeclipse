@@ -25,6 +25,12 @@
   color: var(--ink);
 }
 
+/* Zoomed into part of a span (#1074): no preset picked, the span it is in ringed. */
+.time-option.is-within {
+  box-shadow: inset 0 0 0 1px rgb(120 200 150 / 0.6);
+  color: var(--ink);
+}
+
 @media (max-width: 600px) {
   /* The icon over its word, as the viewpoints do (#953), so four spans fit one row. */
   .time-option:has(> .icon-label) {

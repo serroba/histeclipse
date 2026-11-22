@@ -297,6 +297,11 @@ test('a link to a part of deep time shows that part, and a span picked shows it 
     await expect(bar.getByTestId('scale-end')).toHaveText('76 Ma');
     await expect(bar.locator('.period-band')).toHaveCount(1);
     await expect(bar.locator('.period-band')).toHaveAttribute('aria-label', /^Cretaceous, /);
+    await expect(
+      page
+        .getByRole('group', { name: 'Time range presets' })
+        .getByRole('button', { name: '540 Myr' }),
+    ).toHaveAttribute('aria-pressed', 'false');
   });
   await test.step('When they zoom out, Then the bar shows twice the time about the moment, 148 to 52 Ma', async () => {
     await bar.getByRole('button', { name: 'Show more time' }).click();

@@ -17,6 +17,8 @@ export const DEEP_TIME: Watch = (s) => [
   s.layers,
   s.deepScale,
   s.deepWindow,
+  // The span presets (#1074): the Years preset is picked only over the whole track.
+  s.yearsWindow,
   s.coast,
   s.seaIce,
   s.temperatureModel,

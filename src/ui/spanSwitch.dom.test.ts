@@ -35,4 +35,25 @@ describe('the span switch’s icons (#1068)', () => {
     buttons[3]?.click();
     expect(onSpan).toHaveBeenCalledWith('eons');
   });
+
+  it('Given part of the ice ages shown (#1074), Then no preset is picked, the ice ages ringed', () => {
+    const spans = createSpanSwitch(vi.fn());
+    const buttons = [...spans.root.querySelectorAll('button')];
+    spans.render('ice', false);
+    expect(buttons.map((button) => button.getAttribute('aria-pressed'))).toEqual([
+      'false',
+      'false',
+      'false',
+      'false',
+    ]);
+    expect(buttons.map((button) => button.classList.contains('is-within'))).toEqual([
+      false,
+      true,
+      false,
+      false,
+    ]);
+    spans.render('ice');
+    expect(buttons[1]?.getAttribute('aria-pressed')).toBe('true');
+    expect(buttons[1]?.classList.contains('is-within')).toBe(false);
+  });
 });
