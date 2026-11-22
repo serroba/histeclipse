@@ -161,6 +161,6 @@
 }
 
 /* Open, the presets rise over the panels beside the globe (z-index 2), as a menu does. */
-.bottom:has(.time-scale[data-open]) {
+.bottom[data-scale-open] {
   z-index: 3;
 }

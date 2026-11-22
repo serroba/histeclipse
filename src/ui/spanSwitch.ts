@@ -77,6 +77,8 @@ export function createSpanSwitch(onSpan: (span: Span) => void): SpanSwitch {
   const root = element('div', { class: 'time-scale' }, chip, group);
   function show(open: boolean): void {
     root.toggleAttribute('data-open', open);
+    // The bar's area, marked so it rises over the globe's panels while the presets are open.
+    root.closest('.bottom')?.toggleAttribute('data-scale-open', open);
     chip.setAttribute('aria-expanded', String(open));
   }
   chip.addEventListener('click', () => {
