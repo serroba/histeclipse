@@ -60,6 +60,11 @@ describe('the features as mounted together', () => {
     expect(asteroids.shown.deep).toHaveBeenLastCalledWith(base, null);
   });
 
+  it('gathers the finds play eases near, none from those that have none (#1077)', () => {
+    Object.assign(fossils.shown, { finds: () => [66, 252] });
+    expect(features.finds(base)).toEqual([66, 252]);
+  });
+
   it('gathers the step each offers from its row in the Layers panel, or none', () => {
     const actions = new Map(features.actions());
     expect(actions.get('fossils')?.label).toBe('Go');

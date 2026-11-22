@@ -227,6 +227,8 @@ export interface FeatureInstance {
   deep?(state: ViewState, moment: DeepMoment | null): DeepChipView | null;
   /** Deep time shown (#909): its own fields of the bar's view, if it has any. */
   deepBar?(state: ViewState, moment: DeepMoment): DeepBarFields;
+  /** Deep time (#1077): the moments, Ma, of the finds its layer shows, that play eases near. */
+  finds?(state: ViewState): readonly number[];
   /** One of its markers was tapped: all that follows `<picks>:` in the marker's pick. */
   pick?(id: string): void;
   /** Another marker was tapped: a card of this feature's still loading should not open. */

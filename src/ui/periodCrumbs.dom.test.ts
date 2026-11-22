@@ -35,4 +35,12 @@ describe('where the bar is in Earth’s history (#1075)', () => {
     expect(crumbs.root.hidden).toBe(true);
     expect(names(crumbs.root)).toEqual([]);
   });
+
+  it('Given the same part twice, Then its crumbs are not drawn again', () => {
+    const crumbs = createPeriodCrumbs(vi.fn());
+    crumbs.render(124, 76, true);
+    const first = crumbs.root.querySelector('button');
+    crumbs.render(124, 76, true);
+    expect(crumbs.root.querySelector('button')).toBe(first);
+  });
 });

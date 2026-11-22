@@ -73,6 +73,8 @@ export interface DeepTimeView extends DockView {
   /** The pace picked (#1076), and the speed it makes of the bar shown, Ma a second. */
   readonly pace: Pace;
   readonly speed: number;
+  /** Whether play eases near milestones and finds (#1077). */
+  readonly easing: boolean;
   /** Whether there is room to zoom in and out (#1074). */
   readonly zoom: { readonly in: boolean; readonly out: boolean };
   /** The span shown; `oldest` is its start. */
@@ -118,6 +120,7 @@ export function createDeepTimeBar(
     onPlay(playing: boolean): void;
     /** A pace picked (#1076): Slow, Normal or Fast, whatever the bar shows. */
     onPace(pace: Pace): void;
+    onEasing(on: boolean): void;
     onZoom: (factor: number) => void;
     /** Fit the bar to `oldest`–`youngest` Ma (#1075): a band or a crumb tapped. */
     onFit: (oldest: number, youngest: number) => void;
@@ -281,6 +284,17 @@ export function createDeepTimeBar(
     polarityStrip.root,
   );
   zoom.attach(track);
+  // Easing near milestones and finds as it plays (#1077), on unless less motion is asked for.
+  const easing = element('input', { type: 'checkbox', 'data-testid': 'deep-easing' });
+  easing.addEventListener('change', () => {
+    handlers.onEasing(easing.checked);
+  });
+  const easingRow = element(
+    'label',
+    { class: 'deep-easing' },
+    easing,
+    'Slow down near milestones and finds while playing',
+  );
   const milestones = createMilestonePanel({
     onMa(ma) {
       handlers.onMa(ma, true);
@@ -300,6 +314,7 @@ export function createDeepTimeBar(
     ...featureChips.notes,
     air.note,
     milestones.root,
+    easingRow,
     // One open at a time (they share a name), so the bar doesn't grow over the globe.
     element('div', { class: 'deep-folds' }, colourKey, sketch.sources, factsPanel),
   );
@@ -399,6 +414,7 @@ export function createDeepTimeBar(
       temperature.render(view.temperature, uncharted);
       speed.value = view.pace;
       zoom.render(view.zoom);
+      easing.checked = view.easing;
       rate.textContent = `≈ ${deepSpeedText(view.speed)}`;
       rate.title = deepSpeedWords(view.speed);
       speed.title = `${PACE_LABELS[view.pace]}: ${deepSpeedWords(view.speed)}`;

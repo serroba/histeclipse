@@ -106,4 +106,12 @@ describe('fitting deep time’s bar to a unit (#1075)', () => {
     zoom(0.5);
     expect(store.get().ma).toBeNull();
   });
+
+  it('Given a zoom that lands on the whole track of years, Then no window of years is kept', () => {
+    const { store, land } = setUp({ ma: 0.005, yearsWindow: { first: 1854, last: 2026 } });
+    land({ model: 'years', window: { first: -9699, last: PRESENT } });
+    expect(store.get()).toMatchObject({ ma: null, yearsWindow: null });
+    land({ model: 'years', window: { first: 1900, last: PRESENT } });
+    expect(store.get().yearsWindow).toEqual({ first: 1900, last: PRESENT });
+  });
 });

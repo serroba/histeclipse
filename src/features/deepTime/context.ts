@@ -23,6 +23,7 @@ type Gathered = Omit<
   | 'polarity'
   | 'playing'
   | 'pace'
+  | 'easing'
   | 'speed'
   | 'zoom'
   | 'scale'
@@ -57,6 +58,8 @@ export interface DeepTimeContext extends PartContext {
   storyDate(): StoryDate | null;
   /** The layers' and surfaces' part of the bar for the moment, drawing them. */
   bar(state: ViewState, moment: DeepMoment): Gathered;
+  /** The finds of the layers on, Ma, that play eases near (#1077). */
+  finds(state: ViewState): readonly number[];
   /** Out of deep time: what its layers and surfaces drew goes. */
   off(state: ViewState): void;
   /** How far back the plates reach, Ma, once known. */
