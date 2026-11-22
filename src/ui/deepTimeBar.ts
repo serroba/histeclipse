@@ -284,7 +284,8 @@ export function createDeepTimeBar(
     polarityStrip.root,
   );
   zoom.attach(track);
-  // Easing near milestones and finds as it plays (#1077), on unless less motion is asked for.
+  // Easing near milestones and finds as it plays (#1077), on unless less motion is asked for:
+  // a switch in the milestones' fold, so the bar is no taller.
   const easing = element('input', { type: 'checkbox', 'data-testid': 'deep-easing' });
   easing.addEventListener('change', () => {
     handlers.onEasing(easing.checked);
@@ -295,11 +296,14 @@ export function createDeepTimeBar(
     easing,
     'Slow down near milestones and finds while playing',
   );
-  const milestones = createMilestonePanel({
-    onMa(ma) {
-      handlers.onMa(ma, true);
+  const milestones = createMilestonePanel(
+    {
+      onMa(ma) {
+        handlers.onMa(ma, true);
+      },
     },
-  });
+    easingRow,
+  );
   // The notes, legends, milestones and folds: on a phone folded away until asked for, so the
   // globe stays in view; open, they scroll inside the bar rather than the page.
   const details = element(
@@ -314,7 +318,6 @@ export function createDeepTimeBar(
     ...featureChips.notes,
     air.note,
     milestones.root,
-    easingRow,
     // One open at a time (they share a name), so the bar doesn't grow over the globe.
     element('div', { class: 'deep-folds' }, colourKey, sketch.sources, factsPanel),
   );

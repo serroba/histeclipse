@@ -90,6 +90,8 @@ test('deep time slows near milestones as it plays, unless turned off or less mot
   });
   await test.step('When they turn it off, Then it stays off as they play', async () => {
     await showDeepDetails(page);
+    // With the milestones, in their fold.
+    await page.getByTestId('deep-milestones').locator('summary').click();
     await easing.uncheck();
     await expect(easing).not.toBeChecked();
   });
