@@ -48,7 +48,7 @@ import {
   type Coastline,
   type CoastSource,
 } from '../../deepTime/coastline';
-import { errorMessage } from '../../util/errors';
+import { loadOnce, reportAll } from '../../state/loadOnce';
 
 const NEEDS = ['timeline', 'deepTime', 'iceAgeEarth', 'holoceneNote'] as const;
 type IceAgesContext = FeatureContext<(typeof NEEDS)[number]>;
@@ -57,30 +57,41 @@ function mountIceAges(context: IceAgesContext): FeatureInstance {
   const { base, fetchJson } = context;
   const globe = context.iceAgeEarth;
   const iceOutlinesOnGlobe = context.globe.addLayer(iceOutlineLayer);
-  // Sea level, likewise: asked for once, drawn when it arrives.
-  let seaLevelLoading: Promise<SeaLevelIndex> | null = null;
-  let seaLevelIndex: SeaLevelIndex | null = null;
-  let shelfLoading: Promise<ShelfIndex> | null = null;
-  let shelfIndex: ShelfIndex | null = null;
-  let iceLoading: Promise<IceSheetIndex> | null = null;
-  let iceIndex: IceSheetIndex | null = null;
+  // Each file asked for once, the first time it is needed, and drawn when it arrives (#762).
+  const loads = {
+    notify: (message: string) => {
+      context.notify(message);
+    },
+    refresh: () => {
+      context.deepTime.again();
+    },
+  };
+  const seaLevel = loadOnce<SeaLevelIndex>({
+    fetch: () => loadSeaLevel(`${base}data/sealevel/index.json`, fetchJson),
+    what: 'the sea-level reconstructions',
+    context: loads,
+  });
+  const shelf = loadOnce<ShelfIndex>({
+    fetch: () => loadShelf(`${base}data/shelf/index.json`, fetchJson),
+    what: "today's coasts and shelves",
+    context: loads,
+  });
+  const iceMaps = loadOnce<IceSheetIndex>({
+    fetch: () => loadIceSheets(`${base}data/icesheets/index.json`, fetchJson),
+    what: 'the ice-sheet maps',
+    context: loads,
+  });
+  const outlines = loadOnce<IceOutlineIndex>({
+    fetch: () => loadIceOutlines(`${base}data/icesheets/batchelor.json`, fetchJson),
+    what: 'the ice-sheet outlines',
+    context: loads,
+  });
+  let layerOn = false;
 
   /** The sea-level reconstructions, asked for once; null until they arrive. */
   function seaLevels(): SeaLevelIndex | null {
-    if (seaLevelIndex === null && seaLevelLoading === null) {
-      seaLevelLoading = loadSeaLevel(`${base}data/sealevel/index.json`, fetchJson);
-      seaLevelLoading.then(
-        (index) => {
-          seaLevelIndex = index;
-          context.deepTime.again();
-        },
-        (error: unknown) => {
-          seaLevelLoading = null;
-          context.notify(`Could not load the sea-level reconstructions: ${errorMessage(error)}`);
-        },
-      );
-    }
-    return seaLevelIndex;
+    seaLevel.want();
+    return seaLevel.value();
   }
 
   function seaLevelView(state: ViewState): DeepTimeView['seaLevel'] {
@@ -89,25 +100,11 @@ function mountIceAges(context: IceAgesContext): FeatureInstance {
 
   /** Today's shelves, asked for once; null until they arrive. */
   function shelves(): ShelfIndex | null {
-    if (shelfIndex === null && shelfLoading === null) {
-      shelfLoading = loadShelf(`${base}data/shelf/index.json`, fetchJson);
-      shelfLoading.then(
-        (index) => {
-          shelfIndex = index;
-          context.deepTime.again();
-        },
-        (error: unknown) => {
-          shelfLoading = null;
-          context.notify(`Could not load today's coasts and shelves: ${errorMessage(error)}`);
-        },
-      );
-    }
-    return shelfIndex;
+    shelf.want();
+    return shelf.value();
   }
 
   // Batchelor et al.'s outlines: their file loads the first time the ice-age scale is shown.
-  let iceOutlineIndex: IceOutlineIndex | null = null;
-  let iceOutlinesLoading: Promise<IceOutlineIndex> | null = null;
 
   /** On the ice-age scale, Batchelor et al.'s outlines of the time slice shown, if any. */
   function showIceOutlines(state: ViewState, ma: number): IceOutlines | null {
@@ -115,43 +112,18 @@ function mountIceAges(context: IceAgesContext): FeatureInstance {
       iceOutlinesOnGlobe.update(null);
       return null;
     }
-    if (iceOutlineIndex === null) {
-      if (iceOutlinesLoading === null) {
-        iceOutlinesLoading = loadIceOutlines(`${base}data/icesheets/batchelor.json`, fetchJson);
-        iceOutlinesLoading.then(
-          (index) => {
-            iceOutlineIndex = index;
-            context.deepTime.again();
-          },
-          (error: unknown) => {
-            iceOutlinesLoading = null;
-            context.notify(`Could not load the ice-sheet outlines: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return null;
-    }
-    const outlines = iceOutlinesAt(iceOutlineIndex, ma * 1000);
-    iceOutlinesOnGlobe.update(outlines);
-    return outlines;
+    outlines.want();
+    const iceOutlineIndex = outlines.value();
+    if (iceOutlineIndex === null) return null;
+    const shown = iceOutlinesAt(iceOutlineIndex, ma * 1000);
+    iceOutlinesOnGlobe.update(shown);
+    return shown;
   }
 
   /** The ice-sheet maps' index, asked for once; null until it arrives. */
   function iceSheets(): IceSheetIndex | null {
-    if (iceIndex === null && iceLoading === null) {
-      iceLoading = loadIceSheets(`${base}data/icesheets/index.json`, fetchJson);
-      iceLoading.then(
-        (index) => {
-          iceIndex = index;
-          context.deepTime.again();
-        },
-        (error: unknown) => {
-          iceLoading = null;
-          context.notify(`Could not load the ice-sheet maps: ${errorMessage(error)}`);
-        },
-      );
-    }
-    return iceIndex;
+    iceMaps.want();
+    return iceMaps.value();
   }
 
   /**
@@ -243,8 +215,11 @@ function mountIceAges(context: IceAgesContext): FeatureInstance {
   }
 
   // Sea ice: its index loads the first time a globe of Earth is shown.
-  let seaIceIndex: SeaIceIndex | null = null;
-  let seaIceLoading: Promise<SeaIceIndex> | null = null;
+  const seaIce = loadOnce<SeaIceIndex>({
+    fetch: () => loadSeaIce(`${base}data/seaice/index.json`, fetchJson),
+    what: 'the sea-ice maps',
+    context: loads,
+  });
 
   /**
    * Sea ice blended from today's towards the chosen model's: on the ice-age scale, and in the
@@ -255,22 +230,9 @@ function mountIceAges(context: IceAgesContext): FeatureInstance {
       globe.setSeaIce(null);
       return null;
     }
-    if (seaIceIndex === null) {
-      if (seaIceLoading === null) {
-        seaIceLoading = loadSeaIce(`${base}data/seaice/index.json`, fetchJson);
-        seaIceLoading.then(
-          (index) => {
-            seaIceIndex = index;
-            context.deepTime.again();
-          },
-          (error: unknown) => {
-            seaIceLoading = null;
-            context.notify(`Could not load the sea-ice maps: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return { model: state.seaIce, mix: null };
-    }
+    seaIce.want();
+    const seaIceIndex = seaIce.value();
+    if (seaIceIndex === null) return { model: state.seaIce, mix: null };
     const maps = seaIceMaps(seaIceIndex, state.seaIce, `${base}data/seaice/`);
     const levels = seaLevels();
     const ago = ma === null || levels === null ? null : coastlineAt(levels, state.coast, ma * 1000);
@@ -364,13 +326,17 @@ function mountIceAges(context: IceAgesContext): FeatureInstance {
       return null;
     },
     // What deep time's bar says of them, drawing them on the globe for the moment.
-    deepBar: (state, { ma }) => ({
-      coastline: showCoastline(ma, state),
-      ice: showIce(state, ma),
-      iceOutlines: showIceOutlines(state, ma),
-      seaIce: showSeaIce(state, ma),
-      seaLevel: seaLevelView(state),
-    }),
+    load: () => reportAll(layerOn, [seaLevel, shelf, iceMaps, outlines, seaIce]),
+    deepBar(state, { ma }) {
+      layerOn = state.layers.has('sealevel');
+      return {
+        coastline: showCoastline(ma, state),
+        ice: showIce(state, ma),
+        iceOutlines: showIceOutlines(state, ma),
+        seaIce: showSeaIce(state, ma),
+        seaLevel: seaLevelView(state),
+      };
+    },
   };
 }
 

@@ -21,6 +21,18 @@ describe('Cliopatria’s border files', () => {
     expect(fetchJson).toHaveBeenCalledWith('/data/empires/index.json');
   });
 
+  it('asks for the index again after it failed, rather than keeping the failure (#762)', async () => {
+    const real = served();
+    let down = true;
+    const fetchJson = vi.fn((url: string) =>
+      down ? Promise.reject(new Error('offline')) : real(url),
+    );
+    const files = createBorderFiles('/', fetchJson);
+    await expect(files.centuryFor(-500)).rejects.toThrow('offline');
+    down = false;
+    expect(await files.centuryFor(-500)).not.toBeNull();
+  });
+
   it('gives a state’s territory in a year, prepared once, and none for a state not there', async () => {
     const files = createBorderFiles('/', served());
     const file = await files.centuryFor(-500);

@@ -127,6 +127,7 @@ function harness({ tiles = false } = {}) {
     off: (state: ViewState) => shown.deep?.(state, null),
     showHolocene: (state: ViewState) => shown.deep?.(state, null),
     holoceneText: () => note.said(),
+    load: () => shown.load?.() ?? null,
   };
   // Drain the real loader/Response.json promise chain, without polling or wall-clock waits.
   const flush = () => setImmediate();
@@ -293,21 +294,30 @@ describe('ice-age feature integration, without a DOM or WebGL', () => {
   });
 
   it.each(Object.keys(catalogs))(
-    'reports and retries a failed %s load without duplicate pending requests',
+    'reports a failed %s load on the chip, waits for Try again, and retries once (#762)',
     async (file) => {
       const h = harness();
-      h.part.bar(deep, 0.03);
+      const withLayer = { ...deep, layers: new Set(['sealevel' as const]) };
+      h.part.bar(withLayer, 0.03);
       const request = h.pending.get(file);
       if (request === undefined) throw new Error(file);
       request.reject(new Error('offline'));
       await h.flush();
       expect(h.context.notify).toHaveBeenCalledTimes(1);
       expect(h.context.notify).toHaveBeenCalledWith(expect.stringContaining('offline'));
-      h.part.bar(deep, 0.03);
-      h.part.bar(deep, 0.03);
+      // Deep time plays on: the moments ask, and nothing is fetched again.
+      h.part.bar(withLayer, 0.03);
+      h.part.bar(withLayer, 0.031);
+      expect(h.fetchJson.mock.calls.filter(([url]) => url.endsWith(file))).toHaveLength(1);
+      const failed = h.part.load();
+      if (failed?.state !== 'failed') throw new Error('expected a failed load');
+      failed.retry();
+      failed.retry();
       expect(h.fetchJson.mock.calls.filter(([url]) => url.endsWith(file))).toHaveLength(2);
+      h.context.redraw.mockClear();
       await h.resolve(file);
       expect(h.context.redraw).toHaveBeenCalledTimes(1);
+      expect(h.part.load()).not.toEqual(failed);
     },
   );
 
@@ -316,7 +326,11 @@ describe('ice-age feature integration, without a DOM or WebGL', () => {
     h.part.bar(deep, 0.03);
     await h.resolve('icesheets/index.json', { broken: true });
     expect(h.context.notify).toHaveBeenCalledWith(expect.stringContaining('catalog schema'));
-    h.part.bar(deep, 0.03);
+    const withLayer = { ...deep, layers: new Set(['sealevel' as const]) };
+    h.part.bar(withLayer, 0.03);
+    const failed = h.part.load();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     await h.resolve('icesheets/index.json');
     expect(h.part.bar(deep, 0.03).ice.drawn).toBe(true);
   });

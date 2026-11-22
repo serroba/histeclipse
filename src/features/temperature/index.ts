@@ -28,8 +28,11 @@ export const temperatureFeature = feature({
         context.deepTime.again();
       },
     });
+    let on = false;
     return {
+      load: () => layer.load(on),
       deepBar(state, moment) {
+        on = state.layers.has('temperature');
         const at = {
           ma: moment.ma,
           ice: moment.scale === 'ice',

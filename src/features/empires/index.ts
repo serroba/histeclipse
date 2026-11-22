@@ -76,6 +76,10 @@ function mountEmpires(context: EmpiresContext): FeatureInstance {
 
   // OpenHistoricalMap's borders load a century at a time, the first time the layer is on.
   let empiresShown: string | null = null;
+  // Whether the borders are on, a load is on its way, or one failed and waits for Try again (#762).
+  let bordersOn = false;
+  let pending: string | null = null;
+  let failed = false;
   const ohmCenturies = new Map<number, Promise<OhmCentury>>();
   let ohmIndex: Promise<OhmIndex> | null = null;
   const empireCenturyFor = (
@@ -94,13 +98,21 @@ function mountEmpires(context: EmpiresContext): FeatureInstance {
     const source = state.borders;
     const year = state.time.date.year;
     const key = on ? `${source}:${String(year)}` : null;
-    if (key === empiresShown) return;
+    bordersOn = on;
+    if (key === empiresShown || (on && failed)) return;
     empiresShown = key;
     if (!on) {
       statesOnGlobe.update(null);
       return;
     }
-    ohmIndex ??= loadOhmIndex(`${base}data/ohm/index.json`, fetchJson);
+    if (ohmIndex === null) {
+      const asked = loadOhmIndex(`${base}data/ohm/index.json`, fetchJson);
+      asked.catch(() => {
+        if (ohmIndex === asked) ohmIndex = null;
+      });
+      ohmIndex = asked;
+    }
+    pending = key;
     // What the map will show, from each source's file: the layer repaints only when it changes.
     const paints = { cliopatria: '', ohm: '' };
     const territories =
@@ -125,6 +137,7 @@ function mountEmpires(context: EmpiresContext): FeatureInstance {
           });
     Promise.all([territories, ohm]).then(
       ([drawn, lines]) => {
+        if (pending === key) pending = null;
         // The year or source may have moved on while the files loaded.
         if (empiresShown !== key) return;
         statesDrawn = { year, territories: drawn };
@@ -137,14 +150,29 @@ function mountEmpires(context: EmpiresContext): FeatureInstance {
         statesOnGlobe.update({ territories: drawn, ohm: lines, changes, paintKey });
       },
       (error: unknown) => {
-        empiresShown = null;
+        if (pending === key) pending = null;
+        failed = true;
         context.notify(`Could not load the borders of past states: ${errorMessage(error)}`);
+        context.refresh();
       },
     );
   }
 
+  /** Try the borders again, as the reader asks from the chip. */
+  function retry(): void {
+    if (!failed) return;
+    failed = false;
+    empiresShown = null;
+    context.refresh();
+  }
+
   return {
     show,
+    load() {
+      if (!bordersOn) return null;
+      if (failed) return { state: 'failed', retry };
+      return pending === null ? null : { state: 'loading' };
+    },
     here(state) {
       if (state.location === null || state.ma !== null || !state.layers.has('empires')) return null;
       const year = state.time.date.year;

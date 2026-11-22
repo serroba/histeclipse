@@ -41,6 +41,7 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
     base: '/',
     fetchJson,
     notify,
+    refresh: vi.fn(),
     globe: { addLayer: () => ({ update }) },
     stateBorders: createBorderFiles('/', fetchJson),
     yearsTrack: { states },
@@ -155,17 +156,28 @@ describe('the borders of past states as a feature', () => {
     ]);
   });
 
-  it('tells the reader when the borders do not load, and tries again the next time', async () => {
+  it('tells the reader when the borders do not load, waits on its chip as the years go by, and tries again from there (#762)', async () => {
     const { context, notify, fetchJson } = fakeContext({ failing: true });
     const shown = empiresFeature.mount(context, context);
     shown.show?.(on, JD);
+    expect(shown.load?.()).toEqual({ state: 'loading' });
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the borders of past states: offline');
     });
     const asked = fetchJson.mock.calls.length;
+    // Time plays on: other years ask nothing of the server until Try again.
+    shown.show?.(at(on, -498), JD);
+    shown.show?.(on, JD);
+    expect(fetchJson.mock.calls.length).toBe(asked);
+    expect(notify).toHaveBeenCalledOnce();
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     shown.show?.(on, JD);
     await vi.waitFor(() => {
       expect(fetchJson.mock.calls.length).toBeGreaterThan(asked);
     });
+    shown.show?.({ ...on, layers: new Set() }, JD);
+    expect(shown.load?.()).toBeNull();
   });
 });
