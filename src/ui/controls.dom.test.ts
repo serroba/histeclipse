@@ -175,6 +175,20 @@ describe('isolated span switch', () => {
     expect(chip?.getAttribute('aria-label')).toBe('Time range: Years');
     ui.root.remove();
   });
+
+  it('Given two bars’ switches, When one is open, Then a tap inside it leaves the bar raised', () => {
+    const bottom = document.createElement('div');
+    bottom.className = 'bottom';
+    const [open, closed] = [createSpanSwitch(vi.fn()), createSpanSwitch(vi.fn())];
+    bottom.append(open.root, closed.root);
+    document.body.append(bottom);
+    open.root.querySelector<HTMLButtonElement>('.time-scale-chip')?.click();
+    expect(bottom.hasAttribute('data-scale-open')).toBe(true);
+    open.group.querySelector('button')?.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    expect(bottom.hasAttribute('data-scale-open')).toBe(true);
+    expect(open.root.hasAttribute('data-open')).toBe(true);
+    bottom.remove();
+  });
 });
 
 const gas: Gas = {
