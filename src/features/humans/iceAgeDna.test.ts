@@ -15,7 +15,10 @@ describe('the ice-age DNA sites', () => {
   });
 
   it('counts the people reached, gathering places once for the same file', () => {
-    const file: Lazy<IceAgeGenomes> = { value: real as IceAgeGenomes, ask: () => undefined };
+    const file: Pick<Lazy<IceAgeGenomes>, 'value' | 'ask'> = {
+      value: real as IceAgeGenomes,
+      ask: () => undefined,
+    };
     const dna = iceAgeDna(file);
     const early = dna.at(34, 'all');
     const late = dna.at(11.6, 'sapiens');

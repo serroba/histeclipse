@@ -271,14 +271,20 @@ describe('the spacecraft as a feature', () => {
     expect(cards).toHaveLength(1);
   });
 
-  it('says so when the record cannot be loaded, and tries again next time', async () => {
+  it('says so when the record cannot be loaded, waits on its chip as time plays, and tries again from there (#762)', async () => {
     const { context, notify } = fakeContext({ planetsLoaded: true, failing: true });
     const craft = spacecraftFeature.mount(context, context);
     craft.show?.(on, JD_2010);
+    expect(craft.load?.()).toEqual({ state: 'loading' });
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the spacecraft: offline');
     });
-    craft.show?.(on, JD_2010);
+    craft.show?.(on, JD_2010 + 1);
+    craft.show?.(on, JD_2010 + 2);
+    expect(notify).toHaveBeenCalledOnce();
+    const failed = craft.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledTimes(2);
     });

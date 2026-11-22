@@ -20,7 +20,7 @@ export interface IceAgeDna {
   card(id: string): ReturnType<typeof dnaCard>;
 }
 
-export function iceAgeDna(file: Lazy<IceAgeGenomes>): IceAgeDna {
+export function iceAgeDna(file: Pick<Lazy<IceAgeGenomes>, 'value' | 'ask'>): IceAgeDna {
   let gathered: { from: IceAgeGenomes; places: readonly DnaPlace[] } | null = null;
   const places = (): readonly DnaPlace[] | null => {
     const data = file.value;

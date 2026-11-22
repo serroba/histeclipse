@@ -26,7 +26,7 @@ import { loadPictures } from '../../data/pictures';
 import { DISPERSAL_SCENARIOS, withLayer, type ViewState } from '../../state/viewState';
 import type { MarkerCardContent, RelatedStep } from '../../ui/markerCard';
 import { destinationNear, fromAFind } from '../../explore/related';
-import { errorMessage } from '../../util/errors';
+import { reportAll } from '../../state/loadOnce';
 import { feature } from '../feature';
 import { createDispersal, type DispersalShown } from './dispersal';
 import { iceAgeDna } from './iceAgeDna';
@@ -78,6 +78,7 @@ export const humansFeature = feature({
     let waiting = false;
     let dispersalOn = false;
     let storyStarting = false;
+    let layerOn = false;
 
     /** A data file of the layer's, loaded once when first asked for (#1047). */
     function data<T>(
@@ -86,13 +87,16 @@ export const humansFeature = feature({
       load: (url: string, fetchJson: typeof context.fetchJson) => Promise<T>,
       arrived: () => void,
     ) {
-      return lazy(
-        () => load(`${context.base}data/humans/${file}`, context.fetchJson),
-        arrived,
-        (error) => {
-          context.notify(`Could not load ${what}: ${errorMessage(error)}`);
+      return lazy({
+        fetch: () => load(`${context.base}data/humans/${file}`, context.fetchJson),
+        what,
+        context: {
+          notify: (message) => {
+            context.notify(message);
+          },
+          refresh: arrived,
         },
-      );
+      });
     }
     const refresh = () => {
       context.refresh();
@@ -342,11 +346,13 @@ export const humansFeature = feature({
           context.tree.openTree((tree) => tree.ours.humans['sapiens']);
         },
       }),
+      load: () => reportAll(layerOn, [claims, routes, admixture, genomes, dispersal]),
       deep(state, moment) {
         storyAsked(state);
         dispersalOn = state.dispersal !== 'off';
         // People are a matter of the last few hundred thousand years: the ice-age scale's.
         const on = state.deepScale === 'ice' && state.layers.has('humans');
+        layerOn = on && moment !== null;
         if (moment === null || !on) {
           sitesOnGlobe.update(null);
           routesOnGlobe.update(null);
@@ -358,8 +364,14 @@ export const humansFeature = feature({
         const offered = moment.scale === 'ice';
         const model = dispersal.show(state.dispersal, moment.ma, moment.maPerSecond);
         claims.ask();
-        if (claims.value === null)
-          return { offered, on: true, note: [{ paragraph: ['Humans: loading…'] }] };
+        if (claims.value === null) {
+          const failed = claims.report(true)?.state === 'failed';
+          return {
+            offered,
+            on: true,
+            note: [{ paragraph: [failed ? 'Humans: could not load.' : 'Humans: loading…'] }],
+          };
+        }
         return { offered, on: true, note: drawn(state, moment.ma * 1000, model, claims.value) };
       },
       pick(id) {
