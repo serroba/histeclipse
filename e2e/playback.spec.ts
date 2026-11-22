@@ -38,24 +38,27 @@ test('on a slow connection, the globe keeps changing as deep time plays', async 
   expect(problems).toEqual([]);
 });
 
-test('deep time has speeds in the units of its span, and plays at the one picked', async ({
+test('deep time plays at a pace, its speed following the part of time shown (#1076)', async ({
   page,
 }) => {
   // Plays for some seconds on purpose: slow machines need the room.
   test.setTimeout(60_000);
   const problems = collectProblems(page);
   const deep = page.getByRole('navigation', { name: 'Deep time' });
-  const speed = deep.getByLabel('Speed');
+  const pace = deep.getByLabel('Pace');
+  const rate = deep.getByTestId('deep-rate');
   await test.step('Given deep time, 250 million years ago', async () => {
     await page.goto('./?ma=250');
     await globeRendered(page);
   });
-  await test.step('Then the 540-million-year span offers millions of years a second', async () => {
-    await expect(speed).toHaveValue('20');
-    await expect(speed.locator('option')).toHaveText(['5 Myr/s', '20 Myr/s', '50 Myr/s']);
+  await test.step('Then it plays at Normal, the 540 million years in about 20 seconds', async () => {
+    await expect(pace).toHaveValue('normal');
+    await expect(pace.locator('option')).toHaveText(['Slow', 'Normal', 'Fast']);
+    await expect(rate).toHaveText('≈ 20 Myr/s');
   });
-  await test.step('When they pick 50 Myr/s and play, it sweeps towards today', async () => {
-    await speed.selectOption('50');
+  await test.step('When they pick Fast and play, it sweeps towards today', async () => {
+    await pace.selectOption('fast');
+    await expect(rate).toHaveText('≈ 100 Myr/s');
     await deep.getByRole('button', { name: 'Play', exact: true }).click();
     // Browser assurance is that the selected control advances the mounted scene. Exact pace
     // is tested with explicit frame timestamps; software rendering can deliver very few frames.
@@ -63,15 +66,14 @@ test('deep time has speeds in the units of its span, and plays at the one picked
     await expect.poll(ma, { timeout: 15_000 }).toBeLessThan(250);
     await deep.getByRole('button', { name: 'Pause', exact: true }).click();
   });
-  await test.step('When they turn to the ice ages, the speeds are thousands of years', async () => {
+  await test.step('When they turn to the ice ages, the pace is kept, the speed thousands of years', async () => {
     await page.getByRole('button', { name: 'Ice ages' }).click();
-    await expect(speed.locator('option')).toHaveText([
-      '1 kyr/s',
-      '10 kyr/s',
-      '50 kyr/s',
-      '200 kyr/s',
-    ]);
-    await expect(speed).toHaveValue('0.05');
+    await expect(pace).toHaveValue('fast');
+    await expect(rate).toHaveText('≈ 500 kyr/s');
+  });
+  await test.step('When they zoom in, the same pace plays slower', async () => {
+    await deep.getByRole('button', { name: 'Show less time' }).click();
+    await expect(rate).toHaveText('≈ 200 kyr/s');
   });
   expect(problems).toEqual([]);
 });

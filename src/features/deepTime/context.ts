@@ -22,6 +22,7 @@ type Gathered = Omit<
   | 'period'
   | 'polarity'
   | 'playing'
+  | 'pace'
   | 'speed'
   | 'zoom'
   | 'scale'

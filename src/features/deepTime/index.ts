@@ -32,7 +32,7 @@ import {
   type PaleoDemIndex,
 } from '../../data/paleoDem';
 import { HOLOCENE_MA, maOfYear, yearOfMa } from '../../data/iceSheets';
-import { deepSpeedFor, prefetchFrames } from '../../deepTime/playSpeed';
+import { DEFAULT_PACE, paceSpeed, prefetchFrames, type Pace } from '../../deepTime/playSpeed';
 import { animationLoop } from '../../util/animationLoop';
 import { playhead } from '../../deepTime/playhead';
 import { PLATES_REACH_MA, sketchAt } from '../../deepTime/sketch';
@@ -163,8 +163,9 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
         if (play) startPlay();
         else stopPlay();
       },
-      onSpeed(maPerSecond) {
-        deepSpeeds = { ...deepSpeeds, [store.get().deepScale]: maPerSecond };
+      onPace(picked) {
+        pace = picked;
+        storySpeed = null;
         showDeepTime(store.get());
       },
       ...deepChoices(store),
@@ -185,8 +186,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       store.set((state) => ({ ...state, ma: roundMa(ma) }));
     },
   );
-  // How far back time reaches, one choice for all of it: going deeper is zooming out, to the
-  // same moment.
+  // How far back time reaches, one choice for all of it: going deeper is zooming out.
   const historySpan = createSpanSwitch((span) => {
     goToSpan(span);
   });
@@ -244,7 +244,6 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     const whole = part.youngest === 0 && part.oldest === spanOf(scale);
     historySpan.render(scale, whole);
     const ice = scale === 'ice';
-    // Before the elevation maps reach, no map: a sketch of the chosen hypotheses instead.
     const uncharted = ma > oldest;
     globe.setUncharted(uncharted);
     // Before the maps, a sketch of the hypotheses chosen; invented land only beyond the plates.
@@ -269,7 +268,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       period,
       polarity,
       playing,
-      speed: deepSpeedFor(state.deepScale, deepSpeeds[state.deepScale]),
+      pace,
+      speed: playSpeed(),
       zoom: zoomRoom(deepAxisWindow(shown(state), PRESENT_YEAR), PRESENT_YEAR),
       scale,
       ...fields,
@@ -325,12 +325,13 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     return scale === 'eons' ? EARTH_AGE_MA : oldest;
   }
 
-  // The speed picked for each span, this visit; each starts at its own default.
-  let deepSpeeds: Partial<Record<DeepScale, number>> = {};
-  /** How fast deep time plays now, millions of years a second, by the span shown. */
+  // The pace picked (#1076), one for all of deep time; a story's own speed until it stops.
+  let pace: Pace = DEFAULT_PACE;
+  let storySpeed: number | null = null;
+  /** How fast deep time plays now, Ma a second: a story's speed, or the pace over the bar shown. */
   function playSpeed(): number {
-    const { deepScale } = store.get();
-    return deepSpeedFor(deepScale, deepSpeeds[deepScale]);
+    const { oldest: from, youngest } = shown(store.get());
+    return storySpeed ?? paceSpeed(from - youngest, pace);
   }
 
   /** The part of the span the bar shows (#1074), as played: from its oldest to its youngest. */
@@ -368,13 +369,14 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
   function playFrom(ma: number, deepScale: DeepScale, maPerSecond: number): void {
     stopPlay();
     enterDeepTime(ma, deepScale);
-    deepSpeeds = { ...deepSpeeds, [deepScale]: deepSpeedFor(deepScale, maPerSecond) };
+    storySpeed = maPerSecond;
     startPlay();
   }
 
   function stopPlay(): void {
     if (!playing) return;
     playing = false;
+    storySpeed = null;
     playFrames.stop();
     showDeepTime(store.get());
   }
