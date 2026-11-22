@@ -61,6 +61,8 @@ describe('ocean heat as a feature', () => {
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalled();
     });
+    // The app shows the moment again once data arrives.
+    shown.show?.(on, JD);
     await vi.waitFor(() => {
       expect(painted.at(-1)).toMatchObject({ bound: 3 });
     });
@@ -76,15 +78,33 @@ describe('ocean heat as a feature', () => {
     expect(painted.at(-1)).toMatchObject({ bound: 3 });
   });
 
-  it('Given the index or a map does not load, Then it says so', async () => {
+  it('Given the index or a map does not load, Then it says so, and the index waits on its chip for Try again (#762)', async () => {
     const failing = fakeContext({ failing: true });
-    oceanHeatFeature.mount(failing.context, failing.context).show?.(on, JD);
+    const broken = oceanHeatFeature.mount(failing.context, failing.context);
+    broken.show?.(on, JD);
+    expect(broken.load?.()).toEqual({ state: 'loading' });
+    // Shown again while it loads, as the moments go by: still one fetch.
+    broken.show?.(on, JD);
     await vi.waitFor(() => {
       expect(failing.notify).toHaveBeenCalledWith('Could not load the ocean heat maps: offline');
     });
+    broken.show?.(on, JD);
+    expect(broken.said?.()).toBe('Could not load the ocean heat maps.');
+    expect(failing.notify).toHaveBeenCalledOnce();
+    const failed = broken.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
+    await vi.waitFor(() => {
+      expect(failing.notify).toHaveBeenCalledTimes(2);
+    });
     loaded.fail = true;
-    const { context, notify } = fakeContext();
-    oceanHeatFeature.mount(context, context).show?.(on, JD);
+    const { context, notify, refresh } = fakeContext();
+    const shown = oceanHeatFeature.mount(context, context);
+    shown.show?.(on, JD);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    shown.show?.(on, JD);
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the ocean heat map: offline');
     });

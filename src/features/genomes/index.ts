@@ -12,7 +12,7 @@ import {
   loadAncientGenomes,
   type AncientGenomes,
 } from '../../data/ancientGenomes';
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { feature, travelPace } from '../feature';
 import { genomeLayer } from './genomeLayer';
 import { peopleLoader } from './people';

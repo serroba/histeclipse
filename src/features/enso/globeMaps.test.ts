@@ -86,8 +86,9 @@ describe('what the globe shows of El Niño and La Niña', () => {
     const january = 2025 * 12;
     expect(maps.here(place, january)).toBeNull();
     maps.show(true, january);
+    // The sea's index and the composites' arrive (a failed load asks to be shown again too).
     await vi.waitFor(() => {
-      expect(refresh).toHaveBeenCalledTimes(2);
+      expect(refresh.mock.calls.length).toBeGreaterThanOrEqual(2);
     });
     maps.show(true, january);
     expect(maps.here(place, january)).toBeNull();

@@ -110,16 +110,15 @@ describe('the sea temperature maps behind El Niño', () => {
     expect(painted).toEqual([null]);
   });
 
-  it('Given the index or a map does not load, Then it says so and tries again', async () => {
+  it('Given the index or a map does not load, Then it says so, and the index is not fetched again at the next month (#762)', async () => {
     const { sea, notify } = setUp({ failing: true });
     sea.show(true, month(2000, 1));
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the sea temperature maps: offline');
     });
-    sea.show(true, month(2000, 1));
-    await vi.waitFor(() => {
-      expect(notify).toHaveBeenCalledTimes(2);
-    });
+    sea.show(true, month(2000, 2));
+    sea.show(true, month(2000, 3));
+    expect(notify).toHaveBeenCalledOnce();
     const other = setUp();
     other.sea.show(true, month(2000, 1));
     await vi.waitFor(() => {

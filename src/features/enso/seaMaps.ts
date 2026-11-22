@@ -6,6 +6,7 @@
 import { loadEnsoSst, mapFile, type EnsoSst } from '../../data/ensoSst';
 import type { Fetch } from '../../util/fetchJson';
 import { monthlyMaps, type MonthlyMaps } from '../../globe/monthlyMaps';
+import { loadOnce } from '../../state/loadOnce';
 import type { PackedMonth } from '../../globe/packedMaps';
 
 export interface SeaMapsContext {
@@ -22,9 +23,13 @@ export type SeaMaps = MonthlyMaps<EnsoSst>;
 export function seaMaps(context: SeaMapsContext): SeaMaps {
   return monthlyMaps({
     ...context,
-    load: () => loadEnsoSst(`${context.folder}index.json`, context.fetchJson),
+    index: loadOnce({
+      fetch: () => loadEnsoSst(`${context.folder}index.json`, context.fetchJson),
+      what: 'the sea temperature maps',
+      context,
+    }),
     file: mapFile,
     look: (maps) => ({ bound: maps.bound }),
-    names: { map: 'the sea temperature map', maps: 'the sea temperature maps' },
+    map: 'the sea temperature map',
   });
 }

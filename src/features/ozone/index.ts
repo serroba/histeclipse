@@ -21,7 +21,7 @@ import {
 import { loadOzoneMaps, mapOf, mapText, omittedText, type OzoneMaps } from '../../data/ozoneMaps';
 import type { ViewState } from '../../state/viewState';
 import { feature, type FeatureContext } from '../feature';
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { ozoneCharts } from './chartModel';
 import {
   HEIGHTS_DRAWN,

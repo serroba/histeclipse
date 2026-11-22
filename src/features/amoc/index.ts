@@ -8,7 +8,7 @@
 import { amocText, loadAmoc, seriesSpan, type Amoc } from '../../data/amoc';
 import type { ViewState } from '../../state/viewState';
 import { feature } from '../feature';
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { amocChart } from './chartModel';
 import { amocPanel } from './amocPanel';
 import { rapidLine } from './rapidLine';

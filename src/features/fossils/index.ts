@@ -21,7 +21,7 @@ import { fromAFossil } from '../../explore/related';
 import { layerTurned, roundMa } from '../../state/viewState';
 import { formatMa } from '../../time/format';
 import { errorMessage } from '../../util/errors';
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { feature } from '../feature';
 import { fossilLayer } from './fossilLayer';
 import './fossils.css';

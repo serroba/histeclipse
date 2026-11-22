@@ -15,7 +15,7 @@ import {
   type Volcanoes,
 } from '../../data/volcanoes';
 import { errorMessage } from '../../util/errors';
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { feature, RESTING } from '../feature';
 import { volcanoLayer } from './volcanoLayer';
 import './volcanoes.css';

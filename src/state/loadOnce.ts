@@ -4,8 +4,7 @@
  * every moment shown, as time plays.
  */
 
-import type { LayerLoad } from '../state/activeLayers';
-import type { FeatureCore } from './feature';
+import type { LayerLoad } from './activeLayers';
 import { errorMessage } from '../util/errors';
 
 type LoadStatus = 'idle' | 'loading' | 'failed' | 'loaded';
@@ -28,7 +27,7 @@ export interface LoadOnceOptions<T> {
    * Told when it failed; asked to refresh when the load ends, either way, and on Try again, so
    * the moment and the chips say so.
    */
-  readonly context: Pick<FeatureCore, 'notify' | 'refresh'>;
+  readonly context: { notify(message: string): void; refresh(): void };
 }
 
 export function loadOnce<T>(options: LoadOnceOptions<T>): LoadOnce<T> {

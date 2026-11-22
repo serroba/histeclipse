@@ -7,7 +7,7 @@
 
 import { loadTelescopes, type Telescope, type Telescopes } from '../../data/telescopes';
 import { siteOn } from '../../state/viewState';
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { feature, type FeatureContext } from '../feature';
 import { groundModel } from './groundModelLayer';
 import { goToSite, heldSite } from './groundSites';

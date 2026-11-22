@@ -14,6 +14,7 @@ import {
 } from '../../data/oceanCurrents';
 import { monthlyMaps } from '../../globe/monthlyMaps';
 import type { ViewState } from '../../state/viewState';
+import { loadOnce } from '../../state/loadOnce';
 import { feature } from '../feature';
 import { fieldFromImage } from './fieldImage';
 import { flowLayer } from './flowLayer';
@@ -54,27 +55,37 @@ export const oceanCurrentsFeature = feature({
     );
     const boundOf = (index: OceanCurrents): number =>
       index.depths.find(({ id }) => id === depth)?.bound ?? 1;
+    const indexLoad = loadOnce<OceanCurrents>({
+      fetch: () =>
+        loadOceanCurrents(`${context.base}data/ocean-currents/index.json`, context.fetchJson),
+      what: 'the ocean currents',
+      context: {
+        notify: (message) => {
+          context.notify(message);
+        },
+        refresh: again,
+      },
+    });
+    let on = false;
     const maps = monthlyMaps<OceanCurrents>({
       folder: `${context.base}data/ocean-currents/`,
-      load: () =>
-        loadOceanCurrents(`${context.base}data/ocean-currents/index.json`, context.fetchJson),
+      index: indexLoad,
       file: (index, at) => currentsFile(index, depth, at),
       look: (index) => ({ bound: boundOf(index) }),
-      names: { map: 'the ocean currents map', maps: 'the ocean currents' },
+      map: 'the ocean currents map',
       paint: (packed) => {
         flow.update(packed === null ? null : fieldFromImage(packed.image, packed.bound));
       },
       notify: (message) => {
         context.notify(message);
       },
-      refresh: again,
     });
 
     return {
       show(state) {
-        const on = shownOn(state);
+        on = shownOn(state);
         const at = monthOf(state);
-        const key = `${String(on)}:${String(maps.index() !== null)}:${depth}:${String(at)}`;
+        const key = `${String(on)}:${indexLoad.status()}:${depth}:${String(at)}`;
         if (key === shownFor) return;
         shownFor = key;
         maps.show(on, at);
@@ -86,7 +97,10 @@ export const oceanCurrentsFeature = feature({
         const index = maps.index();
         const chosen = index?.depths.find(({ id }) => id === depth) ?? index?.depths[0];
         if (index === null || chosen === undefined) {
-          said = 'Loading the ocean currents…';
+          said =
+            indexLoad.status() === 'failed'
+              ? 'Could not load the ocean currents.'
+              : 'Loading the ocean currents…';
           panel.update(null);
           return;
         }
@@ -98,6 +112,7 @@ export const oceanCurrentsFeature = feature({
         });
       },
       said: () => said,
+      load: () => indexLoad.report(on),
     };
   },
 });
