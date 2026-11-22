@@ -203,7 +203,7 @@ export function createHistoryTrack(
   // phone, where the years shown and the speed fill theirs (#985).
   const notes = element('div', { class: 'history-notes' }, changes, about, travel);
   const zoom = createTimeZoom(handlers.onZoom);
-  const extras = element('span', { class: 'history-extras' }, range, speed, zoom.root);
+  const extras = element('span', { class: 'history-extras' }, range, speed);
   const lane = element(
     'div',
     { class: 'history-lane' },
@@ -215,7 +215,7 @@ export function createHistoryTrack(
   const root = element(
     'div',
     { class: 'history-track', role: 'group', 'aria-label': 'Holocene', id: 'history-track' },
-    element('div', { class: 'history-controls' }, play, lane),
+    element('div', { class: 'history-controls' }, play, lane, zoom.root),
     notes,
   );
   transport.join(root);

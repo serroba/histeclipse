@@ -17,7 +17,6 @@ import {
   MAPS_REACH_MA,
   maOfYear,
   modelOf,
-  momentAt,
   NARROWEST_DEEP,
   NARROWEST_YEARS,
   presetWindow,
@@ -67,8 +66,8 @@ export function targetOf(
   const oldest = roundMa(maOfYear(next.first));
   const youngest = next.last >= yearOfMa(0) ? 0 : roundMa(maOfYear(next.last));
   const whole = presetWindow(scale, present, mapsReach).first >= next.first && youngest === 0;
-  const moment = momentAt(around, next);
-  const ma = moment.model === 'deep' ? moment.ma : 0;
+  // The moment as deep time keeps it, to a thousand years (`momentAt`).
+  const ma = Math.max(0, roundMa(maOfYear(around)));
   return { model: 'deep', scale, window: whole ? null : { oldest, youngest }, ma };
 }
 

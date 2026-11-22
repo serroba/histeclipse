@@ -130,7 +130,7 @@ describe('the Holocene’s track', () => {
   it('Given the zoom (#1074), When − is pressed, Then it asks for more time; with no room to zoom in, + is off', () => {
     const { track, handlers } = setUp();
     track.render({ ...VIEW, zoom: { in: false, out: true } });
-    const [out, into] = [...track.extras.querySelectorAll<HTMLButtonElement>('.time-zoom button')];
+    const [out, into] = [...track.root.querySelectorAll<HTMLButtonElement>('.time-zoom button')];
     out?.click();
     expect(handlers.onZoom).toHaveBeenCalledWith(2);
     expect(into?.disabled).toBe(true);

@@ -73,4 +73,38 @@ describe('zooming a time bar (#1074)', () => {
     expect(wheelFactor({ deltaY: 5, deltaMode: 2 })).toBeCloseTo(Math.E, 9);
     expect(wheelFactor({ deltaY: -100, deltaMode: 0 })).toBeLessThan(1);
   });
+
+  it('Given two fingers on the track, When they pinch together, Then it shows more time; one finger does nothing', () => {
+    const { zooms, track, frame } = zoomControl();
+    const touch = (type: string, ...xs: number[]) => {
+      const event = new Event(type, { cancelable: true });
+      Object.defineProperty(event, 'touches', {
+        value: xs.map((clientX) => ({ clientX, clientY: 0 })),
+      });
+      track.dispatchEvent(event);
+      return event;
+    };
+    touch('touchstart', 100);
+    touch('touchmove', 120);
+    frame();
+    expect(zooms).toEqual([]);
+    touch('touchstart', 100, 300);
+    const pinch = touch('touchmove', 150, 250);
+    expect(pinch.defaultPrevented).toBe(true);
+    frame();
+    expect(zooms).toHaveLength(1);
+    expect(zooms[0]).toBeCloseTo(2, 9);
+  });
+
+  it('Given the page’s own frames, Then a wheel zooms on the next one', async () => {
+    const zooms: number[] = [];
+    const zoom = createTimeZoom((factor) => zooms.push(factor));
+    const track = document.createElement('div');
+    zoom.attach(track);
+    track.dispatchEvent(new WheelEvent('wheel', { deltaY: -40, cancelable: true }));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    expect(zooms).toHaveLength(1);
+    expect(zooms[0]).toBeLessThan(1);
+  });
 });
