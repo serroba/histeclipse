@@ -138,18 +138,25 @@ describe('El Niño and La Niña as a feature', () => {
     expect(painted.at(-1)).toBeNull();
   });
 
-  it('Given the indices do not load, Then it says so and tries again', async () => {
+  it('Given the indices do not load, Then its chip says so, time playing does not fetch them again, and Try again does (#762)', async () => {
     const { context, notify } = fakeContext({ failing: true });
     const shown = ensoFeature.mount(context, context);
     shown.show?.(inYear(1998), JD);
+    expect(shown.load?.()).toEqual({ state: 'loading' });
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the El Niño indices: offline');
     });
-    shown.show?.(inYear(1998), JD);
+    shown.show?.(inYear(1999), JD);
+    shown.show?.(inYear(2000), JD);
+    expect(shown.said?.()).toBe('Could not load the El Niño indices.');
     const said = (): number =>
       notify.mock.calls.filter(
         ([message]) => message === 'Could not load the El Niño indices: offline',
       ).length;
+    expect(said()).toBe(1);
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     await vi.waitFor(() => {
       expect(said()).toBe(2);
     });

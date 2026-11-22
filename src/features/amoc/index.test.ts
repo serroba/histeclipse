@@ -62,16 +62,26 @@ describe('the AMOC as a feature (#925)', () => {
     expect(shown.said?.()).toBeNull();
   });
 
-  it('Given the file does not load, Then it says so and tries again', async () => {
+  it('Given the file does not load, Then its chip says so, time playing does not fetch it again, and Try again does (#762)', async () => {
     const { context, notify } = fakeContext({ failing: true });
     const shown = amocFeature.mount(context, context);
+    expect(shown.load?.()).toBeNull();
     shown.show?.(inYear(2010), JD);
+    expect(shown.load?.()).toEqual({ state: 'loading' });
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the AMOC records: offline');
     });
-    shown.show?.(inYear(2010), JD);
+    shown.show?.(inYear(2011), JD);
+    shown.show?.(inYear(2012), JD);
+    expect(shown.said?.()).toBe('Could not load the AMOC records.');
+    expect(notify).toHaveBeenCalledOnce();
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledTimes(2);
     });
+    shown.show?.({ ...inYear(2012), ma: 1 }, JD);
+    expect(shown.load?.()).toBeNull();
   });
 });
