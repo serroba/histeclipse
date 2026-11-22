@@ -15,7 +15,7 @@ import {
 } from '../../data/temperatureRecords';
 import { errorMessage } from '../../util/errors';
 import { feature } from '../feature';
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { recordsChart } from './chartModel';
 import { recordsPanel } from './recordsPanel';
 

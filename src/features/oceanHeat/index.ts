@@ -7,6 +7,7 @@
 
 import { loadOceanHeat, mapText, type OceanHeat } from '../../data/oceanHeat';
 import { errorMessage } from '../../util/errors';
+import { loadOnce } from '../../state/loadOnce';
 import { feature } from '../feature';
 import { loadImage } from '../../util/loadImage';
 import { oceanHeatLayer, type PackedMap } from './oceanHeatLayer';
@@ -21,7 +22,15 @@ export const oceanHeatFeature = feature({
   watches: (state) => [state.layers, state.mode, state.ma, state.focus],
   mount(context) {
     const painted = context.globe.addLayer(oceanHeatLayer);
+    const indexLoad = loadOnce<OceanHeat>({
+      fetch: () =>
+        loadOceanHeat(`${context.base}data/ocean-heat-map/index.json`, context.fetchJson),
+      what: 'the ocean heat maps',
+      context,
+    });
     let index: OceanHeat | null = null;
+    /** How the index's load stood when last shown: shown again when it changes. */
+    let shownStatus = indexLoad.status();
     let chosen = FIRST_MAP;
     const packed = new Map<string, PackedMap>();
     const asked = new Set<string>();
@@ -34,10 +43,6 @@ export const oceanHeatFeature = feature({
       }),
     );
 
-    function fail(what: string, error: unknown): void {
-      context.notify(`Could not load ${what}: ${errorMessage(error)}`);
-    }
-
     function loadMap(data: OceanHeat, id: string): void {
       const map = data.maps.find((each) => each.id === id);
       if (map === undefined || asked.has(id)) return;
@@ -49,7 +54,7 @@ export const oceanHeatFeature = feature({
         },
         (error: unknown) => {
           asked.delete(id);
-          fail('the ocean heat map', error);
+          context.notify(`Could not load the ocean heat map: ${errorMessage(error)}`);
         },
       );
     }
@@ -77,26 +82,25 @@ export const oceanHeatFeature = feature({
           state.mode === 'globe' &&
           state.ma === null &&
           state.focus === 'earth';
-        if (now === on && (index !== null || !now)) return;
+        const status = indexLoad.status();
+        if (now === on && status === shownStatus) return;
         on = now;
+        shownStatus = status;
         if (!on) said = null;
+        index = indexLoad.value();
         if (on && index === null) {
-          said = 'Loading the ocean heat maps…';
-          loadOceanHeat(`${context.base}data/ocean-heat-map/index.json`, context.fetchJson).then(
-            (loaded) => {
-              index = loaded;
-              draw();
-              context.refresh();
-            },
-            (error: unknown) => {
-              fail('the ocean heat maps', error);
-            },
-          );
+          indexLoad.want();
+          shownStatus = indexLoad.status();
+          said =
+            shownStatus === 'failed'
+              ? 'Could not load the ocean heat maps.'
+              : 'Loading the ocean heat maps…';
           return;
         }
         draw();
       },
       said: () => said,
+      load: () => indexLoad.report(on),
     };
   },
 });

@@ -11,6 +11,7 @@ import {
   type OceanTemperature,
 } from '../../data/oceanTemperature';
 import { monthlyMaps } from '../../globe/monthlyMaps';
+import { loadOnce } from '../../state/loadOnce';
 import type { PackedMonth } from '../../globe/packedMaps';
 import type { Fetch } from '../../util/fetchJson';
 
@@ -41,17 +42,20 @@ export function sectionMaps(context: {
   let drawn: PackedMonth | null = null;
   const maps = monthlyMaps<OceanTemperature>({
     folder,
-    load: () => loadOceanTemperature(`${folder}index.json`, context.fetchJson),
+    index: loadOnce({
+      fetch: () => loadOceanTemperature(`${folder}index.json`, context.fetchJson),
+      what: 'the equatorial sections',
+      context,
+    }),
     file: sectionFile,
     look: (index) => ({ bound: index.section.bound }),
-    names: { map: 'the equatorial section', maps: 'the equatorial sections' },
+    map: 'the equatorial section',
     paint: (packed) => {
       if (packed === drawn) return;
       drawn = packed;
       context.refresh();
     },
     notify: context.notify,
-    refresh: context.refresh,
   });
   return {
     show: (on, at) => {

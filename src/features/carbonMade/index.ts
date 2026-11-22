@@ -8,7 +8,7 @@ import { dipoleAt, loadDipole, type DipoleSeries } from '../../data/dipoleMoment
 import { DATABLE_YEARS } from '../../data/radiocarbonProduction';
 import { CARBON_LIMIT } from '../../state/layerCatalog';
 import type { ViewState } from '../../state/viewState';
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { feature, type LayerAction } from '../feature';
 import { createCarbonMadeCard, glowOf, thenField } from './carbonMadeCard';
 import { carbonMadeNote } from './said';

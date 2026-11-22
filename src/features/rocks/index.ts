@@ -4,7 +4,7 @@
  * Their file loads the first time the layer is turned on.
  */
 
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { feature, RESTING, type LayerAction } from '../feature';
 import { rocksLayer } from '../../globe/historyPaintLayers';
 import { type DeepScale, type GeoPoint, ICE_AGES_MA, type ViewState } from '../../state/viewState';

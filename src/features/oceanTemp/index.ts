@@ -21,7 +21,8 @@ import { HISTORY_PAINT_ORDER } from '../../globe/layerHost';
 import { monthlyMaps } from '../../globe/monthlyMaps';
 import { packedMapLayer } from '../../globe/packedMaps';
 import type { ViewState } from '../../state/viewState';
-import { feature } from '../feature';
+import { loadOnce, type LoadOnce } from '../../state/loadOnce';
+import { feature, type FeatureContext } from '../feature';
 import { oceanTempPanel } from './oceanTempPanel';
 
 /** The depth shown first: 100 m, where El Niño shows best. */
@@ -56,6 +57,30 @@ const isDeep = (maps: OceanMaps, id: string): boolean =>
 /** Months since January of year 0. */
 const monthOf = (state: ViewState): number => state.time.date.year * 12 + state.time.date.month - 1;
 
+/** The monthly maps' index and the deep ones', fetched together the first time (#762). */
+function oceanMapsLoad(
+  folder: string,
+  context: FeatureContext,
+  again: () => void,
+): LoadOnce<OceanMaps> {
+  return loadOnce<OceanMaps>({
+    fetch: async () => {
+      const [upper, deep] = await Promise.all([
+        loadOceanTemperature(`${folder}index.json`, context.fetchJson),
+        loadOceanDeep(`${folder}deep.json`, context.fetchJson),
+      ]);
+      return { upper, deep };
+    },
+    what: 'the ocean temperature maps',
+    context: {
+      notify: (message) => {
+        context.notify(message);
+      },
+      refresh: again,
+    },
+  });
+}
+
 export const oceanTempFeature = feature({
   id: 'oceanTemp',
   needs: [],
@@ -80,33 +105,28 @@ export const oceanTempFeature = feature({
     const folder = `${context.base}data/ocean-temperature/`;
     const boundOf = (index: OceanMaps): number =>
       allDepths(index).find(({ id }) => id === depth)?.bound ?? 1;
+    const indexLoad = oceanMapsLoad(folder, context, again);
+    let on = false;
     const maps = monthlyMaps<OceanMaps>({
       folder,
-      load: async () => {
-        const [upper, deep] = await Promise.all([
-          loadOceanTemperature(`${folder}index.json`, context.fetchJson),
-          loadOceanDeep(`${folder}deep.json`, context.fetchJson),
-        ]);
-        return { upper, deep };
-      },
+      index: indexLoad,
       file: (index, at) =>
         isDeep(index, depth) ? deepFile(index.deep, depth, at) : depthFile(index.upper, depth, at),
       look: (index) => ({ bound: boundOf(index) }),
-      names: { map: 'the ocean temperature map', maps: 'the ocean temperature maps' },
+      map: 'the ocean temperature map',
       paint: (packed) => {
         painted.update(packed);
       },
       notify: (message) => {
         context.notify(message);
       },
-      refresh: again,
     });
 
     return {
       show(state) {
-        const on = shownOn(state);
+        on = shownOn(state);
         const at = monthOf(state);
-        const key = `${String(on)}:${String(maps.index() !== null)}:${depth}:${String(at)}`;
+        const key = `${String(on)}:${indexLoad.status()}:${depth}:${String(at)}`;
         if (key === shownFor) return;
         shownFor = key;
         maps.show(on, at);
@@ -119,7 +139,10 @@ export const oceanTempFeature = feature({
         const depths = index === null ? [] : allDepths(index);
         const chosen = depths.find(({ id }) => id === depth) ?? depths[0];
         if (index === null || chosen === undefined) {
-          said = 'Loading the ocean temperature maps…';
+          said =
+            indexLoad.status() === 'failed'
+              ? 'Could not load the ocean temperature maps.'
+              : 'Loading the ocean temperature maps…';
           panel.update(null);
           return;
         }
@@ -137,6 +160,7 @@ export const oceanTempFeature = feature({
         });
       },
       said: () => said,
+      load: () => indexLoad.report(on),
     };
   },
 });

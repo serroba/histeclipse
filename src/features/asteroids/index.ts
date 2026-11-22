@@ -4,7 +4,7 @@
  * largest named, a tap on a name opening its card.
  */
 
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { feature } from '../feature';
 import { asteroidBelt } from './beltLayer';
 import { asteroidCard } from './card';

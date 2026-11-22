@@ -4,7 +4,7 @@
  * there was found. The counts load with the layer, a place's tile when it is picked.
  */
 
-import { loadOnce, type LoadOnce } from '../layerLoad';
+import { loadOnce, type LoadOnce } from '../../state/loadOnce';
 import { feature, travelPace, type FeatureContext, type LayerAction } from '../feature';
 import type { Fetch } from '../../util/fetchJson';
 import { dateCellsLayer } from '../../globe/historyPaintLayers';

@@ -13,7 +13,7 @@ import {
   type NamedPeriods,
 } from '../../data/namedPeriods';
 import { feature } from '../feature';
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 
 export const periodsFeature = feature({
   id: 'periods',

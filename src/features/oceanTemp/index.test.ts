@@ -111,12 +111,23 @@ describe('Ocean temperature as a feature (#590)', () => {
     expect(container.querySelector<HTMLElement>('.ocean-temp-panel')?.hidden).toBe(true);
   });
 
-  it('Given the index does not load, Then it says so', async () => {
+  it('Given the index does not load, Then it says so on its chip, the next years do not fetch it again, and Try again does (#762)', async () => {
     const { context, notify } = fakeContext({ failing: true });
     const shown = oceanTempFeature.mount(context, context);
     shown.show?.(inYear(1998), JD);
+    expect(shown.load?.()).toEqual({ state: 'loading' });
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the ocean temperature maps: offline');
+    });
+    shown.show?.(inYear(1999), JD);
+    shown.show?.(inYear(2000), JD);
+    expect(shown.said?.()).toBe('Could not load the ocean temperature maps.');
+    expect(notify).toHaveBeenCalledOnce();
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
+    await vi.waitFor(() => {
+      expect(notify).toHaveBeenCalledTimes(2);
     });
   });
 });

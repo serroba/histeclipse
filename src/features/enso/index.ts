@@ -11,7 +11,7 @@ import { ensoText, loadEnso, monthName, monthOf, spanned, type Enso } from '../.
 import { latestFor } from '../../data/ensoSst';
 import type { ViewState } from '../../state/viewState';
 import { feature } from '../feature';
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { ensoChart } from './chartModel';
 import { ensoMapLayer } from './ensoMapLayer';
 import { ensoPanel } from './ensoPanel';

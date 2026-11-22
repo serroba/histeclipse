@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { loadOnce } from './layerLoad';
+import { loadOnce } from './loadOnce';
 
 function setUp() {
   const fetches: { resolve: (value: string) => void; reject: (error: Error) => void }[] = [];

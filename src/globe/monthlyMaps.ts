@@ -6,6 +6,7 @@
  * month, nothing is.
  */
 
+import type { LoadOnce } from '../state/loadOnce';
 import { errorMessage } from '../util/errors';
 import { loadImage } from '../util/loadImage';
 import type { PackedMonth } from './packedMaps';
@@ -17,18 +18,19 @@ const AHEAD = 3;
 
 export interface MonthlyMapsContext<Index> {
   readonly folder: string;
-  /** Loads the maps' index. */
-  readonly load: () => Promise<Index>;
+  /**
+   * The maps' index, fetched the first time the maps are shown: its feature reports its load on
+   * the layer's chip (#762), and a failed load waits for Try again there.
+   */
+  readonly index: Pick<LoadOnce<Index>, 'value' | 'want'>;
   /** A month's file under `folder` (months since January of year 0), or null where none. */
   readonly file: (index: Index, at: number) => string | null;
   /** How a map is drawn: its bound, and its colours if not the sea's. */
   readonly look: (index: Index) => Omit<PackedMonth, 'image'>;
-  /** What failed, in words: `the sea temperature map`, and its plural. */
-  readonly names: { readonly map: string; readonly maps: string };
+  /** What failed, in words: `the sea temperature map`. */
+  readonly map: string;
   readonly paint: (packed: PackedMonth | null) => void;
   readonly notify: (message: string) => void;
-  /** Asks for the feature to be shown again: the index has loaded. */
-  readonly refresh: () => void;
 }
 
 export interface MonthlyMaps<Index> {
@@ -41,8 +43,6 @@ export interface MonthlyMaps<Index> {
 }
 
 export function monthlyMaps<Index>(context: MonthlyMapsContext<Index>): MonthlyMaps<Index> {
-  let index: Index | null = null;
-  let asked = false;
   const kept = new Map<string, PackedMonth>();
   const loading = new Set<string>();
   let wanted: string | null = null;
@@ -68,7 +68,7 @@ export function monthlyMaps<Index>(context: MonthlyMapsContext<Index>): MonthlyM
       },
       (error: unknown) => {
         loading.delete(file);
-        context.notify(`Could not load ${context.names.map}: ${errorMessage(error)}`);
+        context.notify(`Could not load ${context.map}: ${errorMessage(error)}`);
       },
     );
   }
@@ -80,20 +80,9 @@ export function monthlyMaps<Index>(context: MonthlyMapsContext<Index>): MonthlyM
         context.paint(null);
         return;
       }
+      const index = context.index.value();
       if (index === null) {
-        if (!asked) {
-          asked = true;
-          context.load().then(
-            (loaded) => {
-              index = loaded;
-              context.refresh();
-            },
-            (error: unknown) => {
-              asked = false;
-              context.notify(`Could not load ${context.names.maps}: ${errorMessage(error)}`);
-            },
-          );
-        }
+        context.index.want();
         return;
       }
       wanted = context.file(index, at);
@@ -109,7 +98,7 @@ export function monthlyMaps<Index>(context: MonthlyMapsContext<Index>): MonthlyM
         if (next !== null && next !== wanted && !kept.has(next)) fetchMonth(index, next);
       }
     },
-    index: () => index,
+    index: () => context.index.value(),
     current: () => (wanted === null ? null : (kept.get(wanted) ?? null)),
   };
 }

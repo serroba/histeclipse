@@ -21,7 +21,7 @@ import type { RelatedStep } from '../../ui/markerCard';
 import { whenItStruck } from '../../explore/related';
 import { loadPictures, pictureFor, type Pictures } from '../../data/pictures';
 import { errorMessage } from '../../util/errors';
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { feature, RESTING, type FeatureContext, type FeatureInstance } from '../feature';
 import {
   impactCard,
