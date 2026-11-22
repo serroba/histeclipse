@@ -19,6 +19,12 @@ describe("the Moon's shadow, a part of the Earth shader", () => {
     expect(samplerCount(shader)).toBeLessThanOrEqual(MAX_SAMPLERS);
   });
 
+  it('Given the shadow GLSL, Then both paths ease into the umbra, with no hard step (#1096)', () => {
+    expect(MOON_SHADOW_PART.glsl).not.toContain('step(sunlight');
+    expect(MOON_SHADOW_PART.glsl).toContain('smoothstep(0.0, 0.03, sunlight)');
+    expect(MOON_SHADOW_PART.glsl).toContain('fwidth(axisDistance)');
+  });
+
   it('Given a selected eclipse, Then its shadow is drawn from the catalog, in radians', () => {
     const uniforms = MOON_SHADOW_PART.uniforms();
     const dataset: Record<string, string> = {};

@@ -51,8 +51,10 @@ export const MOON_SHADOW_PART: EarthPart<MoonShadowUniforms> = {
     // linear dimming that looks dark on paper looks faint on screen.
     float perceived = 1.0 - 0.9 * pow(magnitude, 0.6);
     vec3 shaded = max(color * pow(perceived, 2.2), night);
-    // The umbra itself is full night.
-    float core = 1.0 - smoothstep(abs(umbra) * 0.6, abs(umbra) * 1.15, axisDistance);
+    // The umbra's edge is narrow and smooth, about a screen pixel at any zoom (#1096): the
+    // penumbra deepens into full night without a crease, not smeared over the umbra itself.
+    float blur = max(fwidth(axisDistance), abs(umbra) * 0.02);
+    float core = 1.0 - smoothstep(abs(umbra) - blur, abs(umbra) + blur, axisDistance);
     return mix(shaded, night, core);
   }
 
@@ -66,7 +68,9 @@ export const MOON_SHADOW_PART: EarthPart<MoonShadowUniforms> = {
     float sunlight = sunlightAt(f.normal, sunPosition, sunRadius, moonPosition, moonRadius);
     float perceived = 1.0 - 0.9 * pow(1.0 - sunlight, 0.6);
     vec3 shaded = max(color * pow(perceived, 2.2), f.night);
-    return mix(shaded, f.night, step(sunlight, 0.0));
+    // Ease into totality over the last sliver of sunlight (#1096), not a hard step: the edge
+    // between penumbra and umbra stays continuous.
+    return mix(shaded, f.night, 1.0 - smoothstep(0.0, 0.03, sunlight));
   }
 `,
 };
