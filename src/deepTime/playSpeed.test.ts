@@ -20,8 +20,9 @@ describe('deep time play speeds', () => {
         expect(slow).toBeLessThanOrEqual(normal ?? 0);
         expect(normal).toBeLessThanOrEqual(fast ?? 0);
         const seconds = windowMa / (normal ?? 1);
-        expect(seconds).toBeGreaterThan(20 / 1.6);
-        expect(seconds).toBeLessThan(20 * 1.6);
+        // Rounded to 1, 2 or 5 × 10ⁿ, a sweep takes from 0.7 to 1.75 times its time.
+        expect(seconds).toBeGreaterThanOrEqual(20 * 0.7 - 1e-9);
+        expect(seconds).toBeLessThanOrEqual(20 * 1.75 + 1e-9);
       }),
     );
     expect(paceSpeed(0.001, 'slow')).toBe(0.0001);
