@@ -17,6 +17,7 @@ const VIEW = {
     { value: '1854,2026', label: 'El Niño and La Niña, 1854–2026' },
   ],
   window: '1854,2026',
+  zoom: { in: true, out: true },
   changes: '',
   blank: null,
   earth: null,
@@ -30,6 +31,7 @@ function setUp() {
     onSpeed: vi.fn(),
     onEndTravel: vi.fn(),
     onWindow: vi.fn(),
+    onZoom: vi.fn(),
   };
   const track = createHistoryTrack(
     handlers,
@@ -123,5 +125,14 @@ describe('the Holocene’s track', () => {
     slider.dispatchEvent(new Event('input'));
     slider.dispatchEvent(new Event('change'));
     expect(handlers.onYear).toHaveBeenCalledWith(1950);
+  });
+
+  it('Given the zoom (#1074), When − is pressed, Then it asks for more time; with no room to zoom in, + is off', () => {
+    const { track, handlers } = setUp();
+    track.render({ ...VIEW, zoom: { in: false, out: true } });
+    const [out, into] = [...track.extras.querySelectorAll<HTMLButtonElement>('.time-zoom button')];
+    out?.click();
+    expect(handlers.onZoom).toHaveBeenCalledWith(2);
+    expect(into?.disabled).toBe(true);
   });
 });

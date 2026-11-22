@@ -54,3 +54,36 @@ test('turning on El Niño fits the Years bar to its years, and the range can be 
   });
   expect(problems).toEqual([]);
 });
+
+test('zooming out of the years goes on into deep time at the same moment, and zooming in comes back (#1074) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const years = page.getByRole('slider', { name: 'Year in the Holocene' });
+  const deep = page.getByRole('navigation', { name: 'Deep time' });
+  await test.step('Given the years since 1854, in 2026', async () => {
+    await page.goto('./?t=2026-06-15T12:00Z&cam=0,-150,3&yw=1854,2026');
+    await globeRendered(page);
+  });
+  await test.step('When they zoom in, Then the bar shows fewer years, ending in 2026', async () => {
+    await page.getByRole('button', { name: 'Show less time' }).click();
+    await expect(years).toHaveAttribute('min', '1940');
+    await expect(page).toHaveURL(/yw=1940,2026/);
+  });
+  await test.step('When they zoom out past the Holocene, Then deep time shows the ice ages’ last part, the moment today', async () => {
+    const out = page.getByRole('button', { name: 'Show more time' });
+    for (let press = 0; press < 12 && !(await deep.isVisible()); press += 1) await out.click();
+    await expect(page).toHaveURL(/ma=0&scale=ice&dw=0\.\d+(,|%2C)0$/);
+    await expect(deep).toBeVisible();
+    await expect(page).not.toHaveURL(/yw=/);
+  });
+  await test.step('When they zoom in again, Then the years come back, in 2026', async () => {
+    const into = deep.getByRole('button', { name: 'Show less time' });
+    for (let press = 0; press < 12 && (await deep.isVisible()); press += 1) await into.click();
+    await expect(page).not.toHaveURL(/ma=/);
+    await expect(page).toHaveURL(/t=2026-06-15/);
+    await expect(years).toBeVisible();
+    await expect(years).toHaveAttribute('max', '2026');
+  });
+  expect(problems).toEqual([]);
+});

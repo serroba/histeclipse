@@ -8,6 +8,7 @@ import type { DeepScale, ViewState } from '../../state/viewState';
 import type { DeepTimeView } from '../../ui/deepTimeBar';
 import type { Span } from '../../ui/spanSwitch';
 import type { StoryDate } from '../../deepTime/storyDate';
+import type { ZoomTarget } from '../../state/timeZoom';
 
 /** What deep time's own fields of the bar leave to the layers and surfaces. */
 type Gathered = Omit<
@@ -21,6 +22,7 @@ type Gathered = Omit<
   | 'polarity'
   | 'playing'
   | 'speed'
+  | 'zoom'
   | 'scale'
   | 'sketch'
 > & {
@@ -73,6 +75,8 @@ export interface DeepTimePart {
   readonly enterDeepTime: (ma: number, deepScale?: DeepScale) => void;
   /** Go to a span, a fresh start. */
   readonly goToSpan: (span: Span) => void;
+  /** Show where a zoom of the years landed (#1074), in deep time or still in the years. */
+  readonly land: (target: ZoomTarget) => void;
   readonly setScale: (deepScale: DeepScale) => void;
   readonly stopPlay: () => void;
   /** Play from `ma` on the span `deepScale`, at `maPerSecond` (one of its speeds), towards today. */

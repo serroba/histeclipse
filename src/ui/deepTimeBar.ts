@@ -47,6 +47,7 @@ import {
 import { createDeepIceNotes } from './deepIceNotes';
 import { createDeepSketchNote } from './deepSketchNote';
 import { layerDock, type DockView } from './layerDock';
+import { createTimeZoom } from './timeZoom';
 import './deepTimeBar.css';
 
 export interface DeepTimeView extends DockView {
@@ -62,6 +63,8 @@ export interface DeepTimeView extends DockView {
   readonly playing: boolean;
   /** How fast it plays, millions of years a second: one of the span's own speeds. */
   readonly speed: number;
+  /** Whether there is room to zoom in and out (#1074). */
+  readonly zoom: { readonly in: boolean; readonly out: boolean };
   /** The span shown; `oldest` is its start. */
   readonly scale: DeepScale;
   /** How far back the elevation maps reach, Ma; before it the globe is blank. */
@@ -105,6 +108,7 @@ export function createDeepTimeBar(
     onPlay(playing: boolean): void;
     /** A speed picked, millions of years a second, for the span shown. */
     onSpeed(maPerSecond: number): void;
+    onZoom: (factor: number) => void;
     onTemperature(on: boolean): void;
     onSeaLevel(on: boolean): void;
     /** A chip pressed: its layer on or off. */
@@ -288,6 +292,7 @@ export function createDeepTimeBar(
     handlers.onMa(ma, true);
   });
   const polarityStrip = createPolarityStrip();
+  const zoom = createTimeZoom(handlers.onZoom);
   const track = element(
     'div',
     { class: 'deep-track' },
@@ -297,6 +302,7 @@ export function createDeepTimeBar(
     bands.root,
     polarityStrip.root,
   );
+  zoom.attach(track);
   const milestones = createMilestonePanel({
     onMa(ma) {
       handlers.onMa(ma, true);
@@ -337,6 +343,7 @@ export function createDeepTimeBar(
       period,
       // Beside the moment, not the slider: on a phone the slider needs the whole row.
       speed,
+      zoom.root,
       evidenceButton,
       dock.root,
     ),
@@ -351,21 +358,16 @@ export function createDeepTimeBar(
   });
 
   transport.join(root);
-  // The span the ticks were placed for.
-  older.addEventListener('click', () => {
-    if (current !== null)
-      handlers.onMa(
-        stepped(current.ma, current.oldest, current.scale, true, current.youngest),
-        true,
-      );
-  });
-  younger.addEventListener('click', () => {
-    if (current !== null)
-      handlers.onMa(
-        stepped(current.ma, current.oldest, current.scale, false, current.youngest),
-        true,
-      );
-  });
+  for (const [button, back] of [
+    [older, true],
+    [younger, false],
+  ] as const) {
+    button.addEventListener('click', () => {
+      if (current === null) return;
+      const { ma, oldest, scale, youngest } = current;
+      handlers.onMa(stepped(ma, oldest, scale, back, youngest), true);
+    });
+  }
 
   const bar: DeepTimeBar = {
     root,
@@ -423,6 +425,7 @@ export function createDeepTimeBar(
         );
       }
       speed.value = String(view.speed);
+      zoom.render(view.zoom);
       speed.title = `Speed: ${deepSpeedWords(view.speed)}`;
     },
   };

@@ -1,0 +1,36 @@
+/* Zooming a time bar (#1074): − and + side by side, beside the speed. */
+
+.time-zoom {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.04);
+}
+
+.time-zoom-step:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.time-zoom-step:disabled:hover {
+  background: transparent;
+}
+
+/* The year's row, with − and + in it, shrinks and wraps rather than running off the screen:
+   it does not shrink otherwise. On a phone on its side (664 px wide) it keeps to one line, the
+   years shown cut short and − and + as narrow as the row's other steps. */
+.holocene-bar .year-controls:has(.time-zoom) {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+@media (min-width: 601px) and (max-width: 760px) {
+  .holocene-bar .history-range {
+    max-width: 9em;
+  }
+
+  .holocene-bar .time-zoom-step {
+    width: 36px;
+  }
+}
