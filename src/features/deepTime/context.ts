@@ -9,6 +9,7 @@ import type { DeepTimeView } from '../../ui/deepTimeBar';
 import type { Span } from '../../ui/spanSwitch';
 import type { StoryDate } from '../../deepTime/storyDate';
 import type { ZoomTarget } from '../../state/timeZoom';
+import type { GoTo } from '../../state/activeLayers';
 
 /** What deep time's own fields of the bar leave to the layers and surfaces. */
 type Gathered = Omit<
@@ -66,7 +67,9 @@ export interface DeepTimeContext extends PartContext {
   platesReach(): number | undefined;
   loadArchive(): void;
   /** Open the Layers panel from the dock's Add (#752), the focus to come back to `opener`. */
-  openLayers(opener: HTMLElement): void;
+  readonly openLayers: (opener: HTMLElement) => void;
+  /** Go to where a layer's data is (#751), as its chip does. */
+  readonly goTo: (to: GoTo) => void;
 }
 
 export interface DeepTimePart {

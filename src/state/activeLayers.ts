@@ -153,3 +153,60 @@ export function activeLayers(
     return [{ ...base, ...load, goTo: null, draws: load.coverage === 'available' }];
   });
 }
+
+/** A layer on that draws on this span but has nothing here: why, and its step, as its chip has. */
+export interface Absent {
+  readonly why: string;
+  readonly goTo: GoTo | null;
+  readonly retry: (() => void) | null;
+}
+
+/**
+ * The layers on with nothing here on a span they draw on (#751): outside their record, a gap in
+ * it, loading or failed. The Layers panel's rows say the same as the chips from these; a layer
+ * on another span says so in its own way, and one that draws has nothing to say here.
+ */
+export function absentLayers(active: readonly ActiveLayer[]): ReadonlyMap<Layer, Absent> {
+  return new Map(
+    active.flatMap((each): (readonly [Layer, Absent])[] =>
+      each.draws || each.coverage === 'other-span' || each.why === null
+        ? []
+        : [[each.layer, { why: each.why, goTo: each.goTo, retry: each.retry }]],
+    ),
+  );
+}
+
+/** A step a row offers: its words, and what it does. */
+interface Step {
+  readonly label: string;
+  readonly run: () => void;
+}
+
+/**
+ * The layers on with nothing here (`absentLayers`), each with its step as a row's button: Go to
+ * where its data is, or Try again.
+ */
+/** A layer with nothing here, as a row or the dock says it: why, and its step, if any. */
+export interface AbsentStep {
+  readonly why: string;
+  readonly step: Step | null;
+}
+
+export function absentSteps(
+  active: readonly ActiveLayer[],
+  onGoTo: (to: GoTo) => void,
+): Map<Layer, AbsentStep> {
+  return new Map(
+    [...absentLayers(active)].map(([layer, { why, goTo, retry }]) => {
+      const go = (to: GoTo): Step => ({
+        label: `Go to ${to.label}`,
+        run: () => {
+          onGoTo(to);
+        },
+      });
+      const step =
+        goTo !== null ? go(goTo) : retry === null ? null : { label: 'Try again', run: retry };
+      return [layer, { why, step }] as const;
+    }),
+  );
+}

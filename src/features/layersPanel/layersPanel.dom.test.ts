@@ -42,3 +42,36 @@ describe('the Layers panel opened from elsewhere (#752)', () => {
     for (const each of [panel.button, panel.dialog, add, elsewhere]) each.remove();
   });
 });
+
+describe('a row with nothing here says what its chip says (#751)', () => {
+  it('Given ozone on in 1977, a gap in its record, Then its row is greyed, says so, and goes to 1979', () => {
+    const panel = createLayersPanel(nothing, nothing, nothing);
+    const went: string[] = [];
+    panel.render({
+      layers: new Set(['ozone']),
+      borders: 'cliopatria',
+      year: 1977,
+      present: 2026,
+      span: 'years',
+      visible: true,
+      absent: new Map([
+        [
+          'ozone',
+          {
+            why: 'none in 1977 CE',
+            step: { label: 'Go to 1979 CE', run: () => went.push('1979') },
+          },
+        ],
+      ]),
+    });
+    const note = panel.dialog.querySelector('[data-testid="layer-note-ozone"]');
+    expect(note?.textContent).toBe('Nothing here: none in 1977 CE.');
+    const item = note?.closest('.layer-item');
+    expect(item?.classList.contains('is-elsewhere')).toBe(true);
+    const go = item?.querySelector<HTMLButtonElement>('.layer-action');
+    expect(go?.hidden).toBe(false);
+    expect(go?.textContent).toBe('Go to 1979 CE');
+    go?.click();
+    expect(went).toEqual(['1979']);
+  });
+});

@@ -8,7 +8,7 @@ import { layerWhy } from '../../state/whysOnScreen';
 import type { DeepScale, Layer, ViewState } from '../../state/viewState';
 import { awayFromEarth, layerTurned, roundMa } from '../../state/viewState';
 import { PRESENT_YEAR } from '../../time/present';
-import { activeLayers, type GoTo, type LayerLoad } from '../../state/activeLayers';
+import { absentSteps, activeLayers, type GoTo, type LayerLoad } from '../../state/activeLayers';
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
 import { LISTS } from '../../state/slices/sheets';
@@ -48,6 +48,8 @@ export interface LayersPanelPart {
   readonly chips: HTMLElement;
   /** Open the panel from `opener` (#752), which has the focus back when it closes. */
   readonly open: (opener: HTMLElement) => void;
+  /** Go to where a layer's data is (#751), as its chip does. */
+  readonly goTo: (to: GoTo) => void;
   readonly show: (state: ViewState) => void;
 }
 
@@ -115,6 +117,7 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
     dialog: panel.dialog,
     chips: chips.root,
     open: panel.open,
+    goTo: chipActions.onGoTo,
     show(state) {
       const active = activeLayers(state, context.loads());
       // One place per layer (#1072): beside Layers, only those the dock does not show.
@@ -133,6 +136,7 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
         said: present(context.said()),
         actions: present(context.actions()),
         travelling: context.timeline.travelling(),
+        absent: absentSteps(active, chipActions.onGoTo),
       });
     },
   };
