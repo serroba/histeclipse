@@ -398,6 +398,7 @@ export function createDeepTimeBar(
       seaLevel.render(view.seaLevel, view.ma, oldest, youngest);
       temperature.render(view.temperature, uncharted);
       speed.value = view.pace;
+      zoom.render(view.zoom);
       rate.textContent = `≈ ${deepSpeedText(view.speed)}`;
       rate.title = deepSpeedWords(view.speed);
       speed.title = `${PACE_LABELS[view.pace]}: ${deepSpeedWords(view.speed)}`;
