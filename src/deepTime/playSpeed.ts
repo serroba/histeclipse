@@ -1,30 +1,42 @@
 /**
- * How fast deep time plays, chosen per span: each span has its own few speeds, in the units that
- * suit it, from a slow look to a quick sweep.
+ * How fast deep time plays (#1076): at a pace, not a speed. Each pace sweeps the bar in about the
+ * same time whatever part of time it shows, so zooming in plays slower and out faster: Normal
+ * in about 20 seconds, Slow in two minutes, Fast in six seconds. The speed follows, rounded to
+ * one easy to read (1, 2 or 5 × 10ⁿ years a second), and is said beside the pace.
  */
 
-import type { DeepScale } from './scale';
+export const PACES = ['slow', 'normal', 'fast'] as const;
+export type Pace = (typeof PACES)[number];
 
-/** Millions of years a second each span can play at, slowest first. */
-export const DEEP_SPEEDS: Readonly<Record<DeepScale, readonly number[]>> = {
-  // The ice ages: 1,000 to 200,000 years a second (a glacial cycle in 100 s; 2.6 million
-  // years in 13 s at the fastest).
-  ice: [0.001, 0.01, 0.05, 0.2],
-  // 540 million years: 5 to 50 million years a second (in 2 minutes to 11 s).
-  all: [5, 20, 50],
-  // All of Earth's 4.6 billion years: 25 to 250 million years a second (3 minutes to 18 s).
-  eons: [25, 100, 250],
+/** The pace play starts at. */
+export const DEFAULT_PACE: Pace = 'normal';
+
+/** The pace's name, as offered. */
+export const PACE_LABELS: Readonly<Record<Pace, string>> = {
+  slow: 'Slow',
+  normal: 'Normal',
+  fast: 'Fast',
 };
 
-/** The speed each span starts at: the middle one. */
-export const DEFAULT_DEEP_SPEED: Readonly<Record<DeepScale, number>> = {
-  ice: 0.05,
-  all: 20,
-  eons: 100,
-};
+/** Seconds a sweep of the bar takes at each pace. */
+const SWEEP_SECONDS: Readonly<Record<Pace, number>> = { slow: 120, normal: 20, fast: 6 };
 
-/** The speed, short, in geology's units: "50 kyr/s", "20 Myr/s". */
+/** The slowest deep time plays: a hundred years a second. */
+const SLOWEST = 0.0001;
+
+/** The speed, Ma a second, that sweeps a bar `windowMa` long at `pace`, rounded to read. */
+export function paceSpeed(windowMa: number, pace: Pace): number {
+  const raw = Math.max(SLOWEST, windowMa / SWEEP_SECONDS[pace]);
+  const power = 10 ** Math.floor(Math.log10(raw));
+  const mantissa = raw / power;
+  const step = mantissa < 1.5 ? 1 : mantissa < 3.5 ? 2 : mantissa < 7.5 ? 5 : 10;
+  // To six figures, so 0.1 × 3 does not show as 0.30000000000000004.
+  return Number((step * power).toPrecision(6));
+}
+
+/** The speed, short, in geology's units: "≈ 50 kyr/s", "20 Myr/s", "500 yr/s". */
 export function deepSpeedText(maPerSecond: number): string {
+  if (maPerSecond < 0.001) return `${Math.round(maPerSecond * 1e6).toLocaleString('en')} yr/s`;
   if (maPerSecond < 1) return `${String(Math.round(maPerSecond * 1000))} kyr/s`;
   return `${maPerSecond.toLocaleString('en')} Myr/s`;
 }
@@ -34,13 +46,6 @@ export function deepSpeedWords(maPerSecond: number): string {
   return maPerSecond < 1
     ? `${Math.round(maPerSecond * 1e6).toLocaleString('en')} years a second`
     : `${maPerSecond.toLocaleString('en')} million years a second`;
-}
-
-/** The speed asked for, if the span offers it; else the span's own. */
-export function deepSpeedFor(scale: DeepScale, wanted: number | undefined): number {
-  return wanted !== undefined && DEEP_SPEEDS[scale].includes(wanted)
-    ? wanted
-    : DEFAULT_DEEP_SPEED[scale];
 }
 
 /**

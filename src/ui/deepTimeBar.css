@@ -347,3 +347,11 @@
 .deep-track:has(> .polarity-strip) > .deep-marks {
   bottom: 29px;
 }
+
+/* The speed the pace makes of the bar shown (#1076), for those who want the number. */
+.deep-rate {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+}

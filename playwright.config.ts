@@ -54,7 +54,7 @@ export default defineConfig<DisplayOptions>({
     {
       name: 'desktop-120hz',
       testMatch: /(history|playback)\.spec\.ts$/,
-      grep: /playing history moves through the years and names the states that come and go|deep time has speeds in the units of its span, and plays at the one picked/,
+      grep: /playing history moves through the years and names the states that come and go|deep time plays at a pace, its speed following the part of time shown/,
       use: { ...device('Desktop Chrome'), refreshRate: 120 },
     },
   ],

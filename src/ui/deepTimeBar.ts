@@ -21,7 +21,13 @@ import {
 } from './deepBarModel';
 import type { TemperatureModel, TemperatureShow } from '../deepTime/temperatureModels';
 import type { Sketch, SketchChoices } from '../deepTime/sketch';
-import { DEEP_SPEEDS, deepSpeedText, deepSpeedWords } from '../deepTime/playSpeed';
+import {
+  deepSpeedText,
+  deepSpeedWords,
+  PACE_LABELS,
+  PACES,
+  type Pace,
+} from '../deepTime/playSpeed';
 import type { DeepScale, Layer } from '../state/viewState';
 import type { WhyId } from '../sources/registry';
 import { element } from './dom';
@@ -64,7 +70,8 @@ export interface DeepTimeView extends DockView {
   /** Every reversal of the last 83 Ma, once loaded (null until then). */
   readonly polarity: PolarityScale | null;
   readonly playing: boolean;
-  /** How fast it plays, millions of years a second: one of the span's own speeds. */
+  /** The pace picked (#1076), and the speed it makes of the bar shown, Ma a second. */
+  readonly pace: Pace;
   readonly speed: number;
   /** Whether there is room to zoom in and out (#1074). */
   readonly zoom: { readonly in: boolean; readonly out: boolean };
@@ -109,8 +116,8 @@ export function createDeepTimeBar(
     /** A new moment: `jump` when it is a step to go back from (a milestone, a click), not a drag. */
     onMa(ma: number, jump: boolean): void;
     onPlay(playing: boolean): void;
-    /** A speed picked, millions of years a second, for the span shown. */
-    onSpeed(maPerSecond: number): void;
+    /** A pace picked (#1076): Slow, Normal or Fast, whatever the bar shows. */
+    onPace(pace: Pace): void;
     onZoom: (factor: number) => void;
     /** Fit the bar to `oldest`–`youngest` Ma (#1075): a band or a crumb tapped. */
     onFit: (oldest: number, youngest: number) => void;
@@ -151,11 +158,16 @@ export function createDeepTimeBar(
   );
   const { play, slider } = transport;
   let current: DeepTimeView | null = null;
-  // The span's own speeds, in its own units; offered anew when the span changes.
-  const speed = element('select', { class: 'deep-speed', 'aria-label': 'Speed' });
-  let speedsOf: DeepScale | null = null;
+  // The pace (#1076), and the speed it makes, said beside it for those who want the number.
+  const speed = element(
+    'select',
+    { class: 'deep-speed', 'aria-label': 'Pace' },
+    ...PACES.map((each) => element('option', { value: each }, PACE_LABELS[each])),
+  );
+  const rate = element('span', { class: 'deep-rate', 'data-testid': 'deep-rate' });
   speed.addEventListener('change', () => {
-    handlers.onSpeed(Number(speed.value));
+    const picked = PACES.find((each) => each === speed.value);
+    if (picked !== undefined) handlers.onPace(picked);
   });
   const older = element(
     'button',
@@ -310,6 +322,7 @@ export function createDeepTimeBar(
       period,
       // Beside the moment, not the slider: on a phone the slider needs the whole row.
       speed,
+      rate,
       zoom.root,
       evidenceButton,
       dock.root,
@@ -384,17 +397,11 @@ export function createDeepTimeBar(
       air.render(view.air, view.scale, oldest, view.ma, youngest);
       seaLevel.render(view.seaLevel, view.ma, oldest, youngest);
       temperature.render(view.temperature, uncharted);
-      if (speedsOf !== view.scale) {
-        speedsOf = view.scale;
-        speed.replaceChildren(
-          ...DEEP_SPEEDS[view.scale].map((each) =>
-            element('option', { value: String(each) }, deepSpeedText(each)),
-          ),
-        );
-      }
-      speed.value = String(view.speed);
+      speed.value = view.pace;
       zoom.render(view.zoom);
-      speed.title = `Speed: ${deepSpeedWords(view.speed)}`;
+      rate.textContent = `≈ ${deepSpeedText(view.speed)}`;
+      rate.title = deepSpeedWords(view.speed);
+      speed.title = `${PACE_LABELS[view.pace]}: ${deepSpeedWords(view.speed)}`;
     },
   };
   return bar;
