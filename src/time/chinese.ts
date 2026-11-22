@@ -143,14 +143,65 @@ const ORDINALS = [
   '12th',
 ];
 
+/**
+ * The months by name (#1102), as the Babylonian calendar's are already named: 正月 zhēngyuè
+ * to 十月 shíyuè, then the folk names 冬月 dōngyuè and 腊月 làyuè for the last two.
+ */
+const MONTH_NAMES = [
+  ['正月', 'zhēngyuè'],
+  ['二月', 'èryuè'],
+  ['三月', 'sānyuè'],
+  ['四月', 'sìyuè'],
+  ['五月', 'wǔyuè'],
+  ['六月', 'liùyuè'],
+  ['七月', 'qīyuè'],
+  ['八月', 'bāyuè'],
+  ['九月', 'jiǔyuè'],
+  ['十月', 'shíyuè'],
+  ['冬月', 'dōngyuè'],
+  ['腊月', 'làyuè'],
+] as const;
+
+const NUMERALS = [
+  ['一', 'yī'],
+  ['二', 'èr'],
+  ['三', 'sān'],
+  ['四', 'sì'],
+  ['五', 'wǔ'],
+  ['六', 'liù'],
+  ['七', 'qī'],
+  ['八', 'bā'],
+  ['九', 'jiǔ'],
+] as const;
+
+/**
+ * A day of the month by name (#1102): 初一 chūyī to 初十, 十一 to 十九, 二十 èrshí,
+ * 廿一 niànyī to 廿九, 三十 sānshí.
+ */
+function dayName(day: number): readonly [characters: string, pinyin: string] {
+  if (day === 10) return ['初十', 'chūshí'];
+  if (day === 20) return ['二十', 'èrshí'];
+  if (day === 30) return ['三十', 'sānshí'];
+  const numeral = elementAt(NUMERALS, (day - 1) % 10);
+  if (day < 10) return [`初${numeral[0]}`, `chū${numeral[1]}`];
+  if (day < 20) return [`十${numeral[0]}`, `shí${numeral[1]}`];
+  return [`廿${numeral[0]}`, `niàn${numeral[1]}`];
+}
+
 export interface ChineseDate {
   readonly year: number;
   /** 1–12; a leap month repeats the number of the month before it. */
   readonly month: number;
   readonly leap: boolean;
   readonly day: number;
-  /** "3rd month", "leap 4th month". */
+  /** "三月 sānyuè", "闰四月 rùn sìyuè" (a leap month). */
   readonly monthName: string;
+  /** The characters only, for short dates in a list: "三月", "闰四月". */
+  readonly monthShort: string;
+  /** The month's number in English: "3rd month", "leap 4th month". */
+  readonly monthEnglish: string;
+  /** The day of the month by name: "初五 chūwǔ". */
+  readonly dayName: string;
 }
 
 /** The Chinese date of a fixed day, or null outside the computed months. */
@@ -165,8 +216,19 @@ export function chineseDate(rd: number): ChineseDate | null {
     if (!leap) number++;
     const length = monthLength(entry, position);
     if (left < length) {
-      const name = `${elementAt(ORDINALS, number - 1)} month`;
-      return { year, month: number, leap, day: left + 1, monthName: leap ? `leap ${name}` : name };
+      const english = `${elementAt(ORDINALS, number - 1)} month`;
+      const named = elementAt(MONTH_NAMES, number - 1);
+      const day = dayName(left + 1);
+      return {
+        year,
+        month: number,
+        leap,
+        day: left + 1,
+        monthName: leap ? `闰${named[0]} rùn ${named[1]}` : `${named[0]} ${named[1]}`,
+        monthShort: leap ? `闰${named[0]}` : named[0],
+        monthEnglish: leap ? `leap ${english}` : english,
+        dayName: `${day[0]} ${day[1]}`,
+      };
     }
     left -= length;
   }

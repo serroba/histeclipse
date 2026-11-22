@@ -26,7 +26,8 @@ describe('Chinese calendar', () => {
       month: 2,
       leap: true,
       day: 1,
-      monthName: 'leap 2nd month',
+      monthName: '闰二月 rùn èryuè',
+      monthEnglish: 'leap 2nd month',
     });
     expect(chineseDate(rdOf(2023, 3, 21, 'gregorian'))).toMatchObject({ month: 2, leap: false });
     expect(chineseDate(rdOf(2025, 7, 25, 'gregorian'))).toMatchObject({ month: 6, leap: true });
@@ -54,11 +55,29 @@ describe('Chinese calendar', () => {
     expect(dayCycle(day + 1).index).toBe((dayCycle(day).index + 1) % 60);
   });
 
+  it('names months and days of the month, in characters and pinyin (#1102)', () => {
+    expect(chineseDate(rdOf(2024, 2, 10, 'gregorian'))).toMatchObject({
+      monthName: '正月 zhēngyuè',
+      monthShort: '正月',
+      monthEnglish: '1st month',
+      dayName: '初一 chūyī',
+    });
+    expect(chineseDate(rdOf(2024, 12, 31, 'gregorian'))).toMatchObject({
+      monthName: '腊月 làyuè',
+      dayName: '初一 chūyī',
+    });
+    // The days: 初一 to 初十, 十一 to 十九, 二十, 廿一 to 廿九, 三十.
+    expect(chineseDate(rdOf(2024, 2, 19, 'gregorian'))).toMatchObject({ dayName: '初十 chūshí' });
+    expect(chineseDate(rdOf(2024, 2, 20, 'gregorian'))).toMatchObject({ dayName: '十一 shíyī' });
+    expect(chineseDate(rdOf(2024, 2, 29, 'gregorian'))).toMatchObject({ dayName: '二十 èrshí' });
+    expect(chineseDate(rdOf(2024, 3, 1, 'gregorian'))).toMatchObject({ dayName: '廿一 niànyī' });
+  });
+
   it('writes a date with its year and day names', () => {
     expect(formatInCalendar('chinese', on(2024, 2, 10, 'gregorian'))).toBe(
-      '1st month, day 1, 4721 HE (甲辰 jiǎchén, Wood Dragon) · day 甲辰 jiǎchén',
+      '正月 zhēngyuè (1st month), day 1 (初一 chūyī), 4721 HE (甲辰 jiǎchén, Wood Dragon) · day 甲辰 jiǎchén',
     );
-    expect(shortDate('chinese', on(2024, 2, 11, 'gregorian'))).toBe('1st month 2');
+    expect(shortDate('chinese', on(2024, 2, 11, 'gregorian'))).toBe('正月 2');
   });
 
   it('gives only the cycle names outside the computed months', () => {

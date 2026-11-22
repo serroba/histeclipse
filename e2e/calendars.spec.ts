@@ -54,9 +54,9 @@ test('years can be counted in the Chinese calendar, with the cycle names', async
   await expect(page.getByLabel('Year', { exact: true })).toHaveValue('4721');
   // The new moon fell after midnight in Beijing: the eclipse is on the last day of the month.
   await expect(page.locator('.hud-detail')).toContainText(
-    '2nd month, day 30, 4721 HE (甲辰 jiǎchén, Wood Dragon)',
+    '二月 èryuè (2nd month), day 30 (三十 sānshí), 4721 HE (甲辰 jiǎchén, Wood Dragon)',
   );
-  await expect(page.getByRole('button', { name: /2nd month 30\s*Total solar/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /二月 30\s*Total solar/ })).toBeVisible();
 });
 
 test('the Babylonian calendar dates Jerusalem’s capture to 2 Addaru, 16 March 597 BCE', async ({

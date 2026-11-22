@@ -401,29 +401,27 @@ export function shortDate(calendar: YearCalendar, jd: JulianDay): string {
     const date = chineseDate(fixedDay(jd));
     return date === null
       ? dayCycle(fixedDay(jd)).characters
-      : `${date.monthName} ${String(date.day)}`;
+      : `${date.monthShort} ${String(date.day)}`;
   }
   const date = otherDate(calendar, jd);
   if (calendar === 'egyptian' && date.month === 13) return `extra day ${String(date.day)}`;
   return `${String(date.day)} ${date.monthName}`;
 }
 
-/**
- * "3rd month, day 5, 4721 HE (甲辰 jiǎchén, Wood Dragon) · day 戊午 wùwǔ". Outside the computed
- * months, the year's and the day's names only.
- */
+/** "三月 sānyuè (3rd month), day 5 (初五 chūwǔ), 4721 HE (甲辰 jiǎchén, Wood Dragon)" (#1102). */
 function formatChinese(jd: JulianDay): string {
   const rd = fixedDay(jd);
   const day = dayCycle(rd);
-  const dayName = `day ${day.characters} ${day.pinyin}`;
+  const cycleDay = `day ${day.characters} ${day.pinyin}`;
   const date = chineseDate(rd);
   if (date === null) {
     const western = calendarDate(jd, historicalCalendar(jd)).year;
     const year = yearCycle(western + HUANGDI_OFFSET);
-    return `${year.characters} ${year.pinyin} year (by 1 January; months not computed) · ${dayName}`;
+    return `${year.characters} ${year.pinyin} year (by 1 January; months not computed) · ${cycleDay}`;
   }
   const year = yearCycle(date.year);
-  return `${date.monthName}, day ${String(date.day)}, ${formatCalendarYear('chinese', date.year)} (${year.characters} ${year.pinyin}, ${year.sign}) · ${dayName}`;
+  const yearText = `${formatCalendarYear('chinese', date.year)} (${year.characters} ${year.pinyin}, ${year.sign})`;
+  return `${date.monthName} (${date.monthEnglish}), day ${String(date.day)} (${date.dayName}), ${yearText} · ${cycleDay}`;
 }
 
 /** "Ululu II", or "Addaru (Viyaxna)" with its Old Persian name under the Persian kings. */
