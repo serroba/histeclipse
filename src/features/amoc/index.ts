@@ -7,8 +7,8 @@
 
 import { amocText, loadAmoc, seriesSpan, type Amoc } from '../../data/amoc';
 import type { ViewState } from '../../state/viewState';
-import { errorMessage } from '../../util/errors';
 import { feature } from '../feature';
+import { loadOnce } from '../layerLoad';
 import { amocChart } from './chartModel';
 import { amocPanel } from './amocPanel';
 import { rapidLine } from './rapidLine';
@@ -40,33 +40,22 @@ export const amocFeature = feature({
   mount(context) {
     const panel = context.globe.addLayer(amocPanel);
     const line = context.globe.addLayer(rapidLine);
-    let amoc: Amoc | null = null;
-    let loading = false;
+    const records = loadOnce<Amoc>({
+      fetch: () => loadAmoc(`${context.base}data/amoc/index.json`, context.fetchJson),
+      what: 'the AMOC records',
+      context,
+    });
+    let on = false;
     let said: string | null = null;
     let shownFor = '';
 
-    function load(): void {
-      if (loading) return;
-      loading = true;
-      loadAmoc(`${context.base}data/amoc/index.json`, context.fetchJson).then(
-        (loaded) => {
-          amoc = loaded;
-          context.refresh();
-        },
-        (error: unknown) => {
-          loading = false;
-          shownFor = '';
-          context.notify(`Could not load the AMOC records: ${errorMessage(error)}`);
-        },
-      );
-    }
-
     return {
       show(state) {
-        const on = shownOn(state);
+        on = shownOn(state);
         const year = state.time.date.year;
         const window = state.yearsWindow;
-        const key = `${String(on)}:${String(amoc !== null)}:${String(year)}:${String(window?.first)}:${String(window?.last)}`;
+        const amoc = records.value();
+        const key = `${String(on)}:${records.status()}:${String(year)}:${String(window?.first)}:${String(window?.last)}`;
         if (key === shownFor) return;
         shownFor = key;
         line.update(on);
@@ -76,8 +65,11 @@ export const amocFeature = feature({
           return;
         }
         if (amoc === null) {
-          said = 'Loading the AMOC records…';
-          load();
+          records.want();
+          said =
+            records.status() === 'failed'
+              ? 'Could not load the AMOC records.'
+              : 'Loading the AMOC records…';
           return;
         }
         said = amocText(amoc, year);
@@ -87,6 +79,7 @@ export const amocFeature = feature({
         });
       },
       said: () => said,
+      load: () => records.report(on),
     };
   },
 });

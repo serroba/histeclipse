@@ -9,9 +9,9 @@
 
 import { ensoText, loadEnso, monthName, monthOf, spanned, type Enso } from '../../data/enso';
 import { latestFor } from '../../data/ensoSst';
-import { errorMessage } from '../../util/errors';
 import type { ViewState } from '../../state/viewState';
 import { feature } from '../feature';
+import { loadOnce } from '../layerLoad';
 import { ensoChart } from './chartModel';
 import { ensoMapLayer } from './ensoMapLayer';
 import { ensoPanel } from './ensoPanel';
@@ -75,34 +75,24 @@ export const ensoFeature = feature({
       }),
     );
     // NOAA's indices from 1950, and ours from two reconstructions before (#894).
-    let enso: { readonly now: Enso; readonly early: Enso } | null = null;
-    let loading = false;
+    const load = loadOnce({
+      fetch: () =>
+        Promise.all([
+          loadEnso(`${context.base}data/enso/index.json`, context.fetchJson),
+          loadEnso(`${context.base}data/enso/early.json`, context.fetchJson),
+        ]).then(([now, early]) => ({ now, early })),
+      what: 'the El Niño indices',
+      context,
+    });
+    let on = false;
     let said: string | null = null;
-
-    function load(): void {
-      if (loading) return;
-      loading = true;
-      Promise.all([
-        loadEnso(`${context.base}data/enso/index.json`, context.fetchJson),
-        loadEnso(`${context.base}data/enso/early.json`, context.fetchJson),
-      ]).then(
-        ([now, early]) => {
-          enso = { now, early };
-          context.refresh();
-        },
-        (error: unknown) => {
-          loading = false;
-          shownFor = '';
-          context.notify(`Could not load the El Niño indices: ${errorMessage(error)}`);
-        },
-      );
-    }
 
     return {
       show(state) {
-        const on = shownOn(state);
+        on = shownOn(state);
         const at = monthOf(state.time.date.year, state.time.date.month);
-        const key = `${String(on)}:${String(enso !== null)}:${String(at)}`;
+        const enso = load.value();
+        const key = `${String(on)}:${load.status()}:${String(at)}`;
         if (key === shownFor) return;
         shownFor = key;
         maps.show(on, at);
@@ -112,8 +102,11 @@ export const ensoFeature = feature({
           return;
         }
         if (enso === null) {
-          said = 'Loading the El Niño indices…';
-          load();
+          load.want();
+          said =
+            load.status() === 'failed'
+              ? 'Could not load the El Niño indices.'
+              : 'Loading the El Niño indices…';
           return;
         }
         const { shown, month, text } = sayMonth(enso, at);
@@ -126,6 +119,7 @@ export const ensoFeature = feature({
         });
       },
       said: () => said,
+      load: () => load.report(on),
       here(state) {
         if (!shownOn(state) || state.location === null) return null;
         const at = monthOf(state.time.date.year, state.time.date.month);

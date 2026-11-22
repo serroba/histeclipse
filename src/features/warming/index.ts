@@ -15,6 +15,7 @@ import {
 } from '../../data/temperatureRecords';
 import { errorMessage } from '../../util/errors';
 import { feature } from '../feature';
+import { loadOnce } from '../layerLoad';
 import { recordsChart } from './chartModel';
 import { recordsPanel } from './recordsPanel';
 
@@ -24,32 +25,21 @@ export const warmingFeature = feature({
   watches: (state) => [state.layers, state.mode, state.ma, state.focus],
   mount(context) {
     const panel = context.globe.addLayer(recordsPanel);
-    let records: TemperatureRecords | null = null;
+    const load = loadOnce<TemperatureRecords>({
+      fetch: () =>
+        loadTemperatureRecords(
+          `${context.base}data/temperature-records/index.json`,
+          context.fetchJson,
+        ),
+      what: 'the temperature records',
+      context,
+    });
     let enso: Enso | null = null;
-    let loading = false;
     let ensoLoading = false;
+    let on = false;
     let said: string | null = null;
     // What was last shown, so the moments of one year cost nothing.
     let shownFor = '';
-
-    function load(): void {
-      if (loading) return;
-      loading = true;
-      loadTemperatureRecords(
-        `${context.base}data/temperature-records/index.json`,
-        context.fetchJson,
-      ).then(
-        (loaded) => {
-          records = loaded;
-          context.refresh();
-        },
-        (error: unknown) => {
-          loading = false;
-          shownFor = '';
-          context.notify(`Could not load the temperature records: ${errorMessage(error)}`);
-        },
-      );
-    }
 
     function loadIndices(): void {
       if (ensoLoading) return;
@@ -68,13 +58,14 @@ export const warmingFeature = feature({
 
     return {
       show(state) {
-        const on =
+        on =
           state.layers.has('warming') &&
           state.mode === 'globe' &&
           state.ma === null &&
           state.focus === 'earth';
         const year = state.time.date.year;
-        const key = `${String(on)}:${String(records !== null)}:${String(enso !== null)}:${String(year)}`;
+        const records = load.value();
+        const key = `${String(on)}:${load.status()}:${String(enso !== null)}:${String(year)}`;
         if (key === shownFor) return;
         shownFor = key;
         if (!on) {
@@ -84,8 +75,11 @@ export const warmingFeature = feature({
         }
         loadIndices();
         if (records === null) {
-          said = 'Loading the temperature records…';
-          load();
+          load.want();
+          said =
+            load.status() === 'failed'
+              ? 'Could not load the temperature records.'
+              : 'Loading the temperature records…';
           return;
         }
         const ensoSaid = enso === null ? null : ensoYearText(enso, year);
@@ -101,6 +95,7 @@ export const warmingFeature = feature({
         });
       },
       said: () => said,
+      load: () => load.report(on),
     };
   },
 });

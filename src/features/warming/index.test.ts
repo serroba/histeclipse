@@ -65,16 +65,27 @@ describe('temperature records as a feature', () => {
     expect(panels.at(-1)).toBeNull();
   });
 
-  it('Given the records do not load, Then it says so and tries again', async () => {
+  it('Given the records do not load, Then its chip says so, time playing does not fetch them again, and Try again does (#762)', async () => {
     const { context, notify } = fakeContext({ failing: 'records' });
     const shown = warmingFeature.mount(context, context);
     shown.show?.(inYear(2020), JD);
+    expect(shown.load?.()).toEqual({ state: 'loading' });
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the temperature records: offline');
     });
-    shown.show?.(inYear(2020), JD);
+    shown.show?.(inYear(2021), JD);
+    shown.show?.(inYear(2022), JD);
+    expect(shown.said?.()).toBe('Could not load the temperature records.');
+    const said = (): number =>
+      notify.mock.calls.filter(
+        ([message]) => message === 'Could not load the temperature records: offline',
+      ).length;
+    expect(said()).toBe(1);
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     await vi.waitFor(() => {
-      expect(notify).toHaveBeenCalledTimes(2);
+      expect(said()).toBe(2);
     });
   });
 

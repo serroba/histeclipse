@@ -20,8 +20,8 @@ import {
 } from '../../data/ozone';
 import { loadOzoneMaps, mapOf, mapText, omittedText, type OzoneMaps } from '../../data/ozoneMaps';
 import type { ViewState } from '../../state/viewState';
-import { errorMessage } from '../../util/errors';
 import { feature, type FeatureContext } from '../feature';
+import { loadOnce } from '../layerLoad';
 import { ozoneCharts } from './chartModel';
 import {
   HEIGHTS_DRAWN,
@@ -121,46 +121,23 @@ export const ozoneFeature = feature({
     const cap = context.globe.addLayer(ozoneLayer);
     const surface = context.globe.addLayer(ozoneShellLayer);
     const panel = context.globe.addLayer(ozonePanel);
-    let record: OzoneRecord | null = null;
+    const load = loadOnce<OzoneRecord>({
+      fetch: () => loadRecord(context),
+      what: 'the ozone record',
+      context,
+    });
     const again = (): void => {
       shownFor = '';
       context.refresh();
     };
     const mapImage = ozoneImages(context.base, again);
     const shellDay = ozoneSeasons(context.base, again);
-    let loading = false;
-    let failed = false;
     let on = false;
     /** Whether the globe has been asked to light evenly. */
     let lit = false;
     let said: string | null = null;
     // What was last shown, so the moments of one year (many a second as time plays) cost nothing.
     let shownFor = '';
-
-    function load(): void {
-      if (loading) return;
-      loading = true;
-      failed = false;
-      loadRecord(context).then(
-        (loaded) => {
-          record = loaded;
-          loading = false;
-          context.refresh();
-        },
-        (error: unknown) => {
-          loading = false;
-          failed = true;
-          context.notify(`Could not load the ozone record: ${errorMessage(error)}`);
-          context.refresh();
-        },
-      );
-    }
-
-    /** Try the load again, as the reader asks from its chip. */
-    function retry(): void {
-      load();
-      context.refresh();
-    }
 
     return {
       show(state) {
@@ -172,9 +149,10 @@ export const ozoneFeature = feature({
           context.evenLight.setEvenLight(on, 'ozone');
         }
         const { date } = state.time;
+        const record = load.value();
         // A day of a season has its own surface; any other moment, its year's map.
         const day = record === null ? null : shellDayOf(record.shell, date);
-        const key = `${String(on)}:${String(record !== null)}:${String(failed)}:${String(date.year)}/${String(day?.day)}`;
+        const key = `${String(on)}:${load.status()}:${String(date.year)}/${String(day?.day)}`;
         if (key === shownFor) return;
         shownFor = key;
         if (!on) {
@@ -185,8 +163,11 @@ export const ozoneFeature = feature({
           return;
         }
         if (record === null) {
-          said = failed ? 'Could not load the ozone record.' : 'Loading the ozone record…';
-          if (!failed) load();
+          load.want();
+          said =
+            load.status() === 'failed'
+              ? 'Could not load the ozone record.'
+              : 'Loading the ozone record…';
           return;
         }
         const shell = shellDay(record.shell, date);
@@ -200,10 +181,7 @@ export const ozoneFeature = feature({
         panel.update(shown.view);
       },
       said: () => said,
-      load: () => {
-        if (!on || record !== null) return null;
-        return failed ? { state: 'failed', retry } : { state: 'loading' };
-      },
+      load: () => load.report(on),
     };
   },
 });
