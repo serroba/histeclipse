@@ -31,12 +31,15 @@ export const CHART_HEIGHT = 80;
 export interface ChartFrame {
   /** The span shown, thousands of years: the slider's oldest moment on the left, today right. */
   readonly oldestKa: number;
+  /** Its young end, thousands of years: 0 (today) unless the bar shows a part (#1074). */
+  readonly youngestKa?: number;
   readonly minMetres: number;
   readonly maxMetres: number;
 }
 
 export function xOf(ka: number, frame: ChartFrame): number {
-  return (1 - ka / frame.oldestKa) * CHART_WIDTH;
+  const youngest = frame.youngestKa ?? 0;
+  return ((frame.oldestKa - ka) / (frame.oldestKa - youngest)) * CHART_WIDTH;
 }
 
 export function yOf(metres: number, frame: ChartFrame): number {
@@ -45,7 +48,9 @@ export function yOf(metres: number, frame: ChartFrame): number {
 
 /** The moment under a point on the chart, thousands of years, clamped to its span. */
 export function kaAt(x: number, frame: ChartFrame): number {
-  return Math.min(frame.oldestKa, Math.max(0, (1 - x / CHART_WIDTH) * frame.oldestKa));
+  const youngest = frame.youngestKa ?? 0;
+  const ka = frame.oldestKa - (x / CHART_WIDTH) * (frame.oldestKa - youngest);
+  return Math.min(frame.oldestKa, Math.max(youngest, ka));
 }
 
 /**
@@ -70,7 +75,7 @@ export function columnPoints(
   for (let index = ages.length - 1; index >= 0; index -= 1) {
     const ka = ages[index] ?? 0;
     const metres = values[index] ?? 0;
-    if (ka > frame.oldestKa) continue;
+    if (ka > frame.oldestKa || ka < (frame.youngestKa ?? 0)) continue;
     const point: [number, number] = [xOf(ka, frame), yOf(metres, frame)];
     const here = Math.floor(point[0]);
     if (here !== column) {
@@ -103,20 +108,21 @@ export function bandPath(series: SeaLevelSeries, frame: ChartFrame): string | nu
 }
 
 /** The vertical span to draw: every value and range within the span, and today's level. */
-export function chartFrame(index: SeaLevelIndex, oldestKa: number): ChartFrame {
+export function chartFrame(index: SeaLevelIndex, oldestKa: number, youngestKa = 0): ChartFrame {
   let minMetres = 0;
   let maxMetres = 0;
   for (const series of index.series) {
     for (const column of [series.level, series.low ?? [], series.high ?? []]) {
       for (const [position, metres] of column.entries()) {
-        if ((series.ages[position] ?? Infinity) > oldestKa) continue;
+        const ka = series.ages[position] ?? Infinity;
+        if (ka > oldestKa || ka < youngestKa) continue;
         minMetres = Math.min(minMetres, metres);
         maxMetres = Math.max(maxMetres, metres);
       }
     }
   }
   const pad = (maxMetres - minMetres) * 0.08 || 10;
-  return { oldestKa, minMetres: minMetres - pad, maxMetres: maxMetres + pad };
+  return { oldestKa, youngestKa, minMetres: minMetres - pad, maxMetres: maxMetres + pad };
 }
 
 /** "+202 m", "−116 m (−127 to −105)", or null where the series does not reach. */
@@ -144,7 +150,7 @@ export interface SeaLevelChart {
   readonly chart: HTMLElement;
   /** The legend with each source's value, under the bar's label. */
   readonly legend: HTMLElement;
-  render(index: SeaLevelIndex | null, ka: number, oldestKa: number): void;
+  render(index: SeaLevelIndex | null, ka: number, oldestKa: number, youngestKa?: number): void;
 }
 
 function svg<K extends keyof SVGElementTagNameMap>(
@@ -179,7 +185,7 @@ export function createSeaLevelChart(handlers: { onKa(ka: number): void }): SeaLe
 
   let shown: SeaLevelIndex | null = null;
   let frame: ChartFrame | null = null;
-  let drawnFor: { readonly index: SeaLevelIndex; readonly oldestKa: number } | null = null;
+  let drawnFor: { readonly index: SeaLevelIndex; readonly span: string } | null = null;
 
   const kaUnder = (event: PointerEvent): number | null => {
     if (frame === null) return null;
@@ -216,14 +222,15 @@ export function createSeaLevelChart(handlers: { onKa(ka: number): void }): SeaLe
   return {
     chart,
     legend,
-    render(index, ka, oldestKa) {
+    render(index, ka, oldestKa, youngestKa = 0) {
       shown = index;
       chart.hidden = index === null;
       legend.hidden = index === null;
       if (index === null) return;
-      if (drawnFor?.index !== index || drawnFor.oldestKa !== oldestKa) {
-        drawnFor = { index, oldestKa };
-        frame = chartFrame(index, oldestKa);
+      const span = `${String(oldestKa)}:${String(youngestKa)}`;
+      if (drawnFor?.index !== index || drawnFor.span !== span) {
+        drawnFor = { index, span };
+        frame = chartFrame(index, oldestKa, youngestKa);
         const at = frame;
         bands.replaceChildren(
           ...index.series.flatMap((series) => {

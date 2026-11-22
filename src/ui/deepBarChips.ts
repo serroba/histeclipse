@@ -45,7 +45,8 @@ export interface SeaLevelChip {
   readonly chart: HTMLElement;
   /** The legend, among the bar's notes. */
   readonly legend: HTMLElement;
-  render(view: SeaLevelView, ma: number, oldest: number): void;
+  /** The bar shows `oldest` to `youngest` Ma: today unless a part of its span (#1074). */
+  render(view: SeaLevelView, ma: number, oldest: number, youngest?: number): void;
 }
 
 export function createSeaLevelChip(handlers: {
@@ -67,10 +68,10 @@ export function createSeaLevelChip(handlers: {
     button,
     chart: chart.chart,
     legend: chart.legend,
-    render(view, ma, oldest) {
+    render(view, ma, oldest, youngest = 0) {
       on = view.on;
       button.setAttribute('aria-pressed', String(view.on));
-      chart.render(view.on ? view.index : null, ma * 1000, oldest * 1000);
+      chart.render(view.on ? view.index : null, ma * 1000, oldest * 1000, youngest * 1000);
     },
   };
 }
@@ -129,7 +130,7 @@ export type AirView =
 export interface AirChip {
   readonly button: HTMLButtonElement;
   readonly note: HTMLElement;
-  render(view: AirView, scale: DeepScale, oldest: number, ma: number): void;
+  render(view: AirView, scale: DeepScale, oldest: number, ma: number, youngest?: number): void;
 }
 
 export function createAirChip(
@@ -153,12 +154,12 @@ export function createAirChip(
   return {
     button,
     note: note.root,
-    render(view, scale, oldest, ma) {
+    render(view, scale, oldest, ma, youngest = 0) {
       on = view.on;
       // The ice cores on the ice-age scale; the proxies' 540 million years on that one.
       button.hidden = scale === 'eons';
       button.setAttribute('aria-pressed', String(view.on));
-      note.render(view, scale, oldest, ma);
+      note.render(view, scale, oldest, ma, youngest);
     },
   };
 }

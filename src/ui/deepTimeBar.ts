@@ -13,7 +13,6 @@ import type { CoastSource } from '../deepTime/coastline';
 import {
   type CoastlineView,
   type IceView,
-  milestoneTicks,
   notesShown,
   type SeaIceView,
   sliderUnit,
@@ -33,6 +32,7 @@ import type { StoryDate } from '../deepTime/storyDate';
 import type { TemperatureView } from './temperatureLegend';
 import { createDeepChips, type DeepChip, type DeepChipView } from './deepChips';
 import { bookIcon } from './icons';
+import { createMilestoneMarks } from './milestoneMarks';
 import { createMilestonePanel } from './milestonePanel';
 import { createPeriodBands } from './periodBands';
 import { createPolarityStrip } from './polarityStrip';
@@ -53,8 +53,9 @@ export interface DeepTimeView extends DockView {
   readonly ma: number;
   /** A story's own date for the moment, while it has the globe (#492); null for the bar's. */
   readonly story: StoryDate | null;
-  /** The oldest moment the maps reach, Ma. */
+  /** The bar's oldest and youngest moments, Ma: the span's, or a part of it (#1074). */
   readonly oldest: number;
+  readonly youngest: number;
   readonly period: Period | null;
   /** Every reversal of the last 83 Ma, once loaded (null until then). */
   readonly polarity: PolarityScale | null;
@@ -282,7 +283,7 @@ export function createDeepTimeBar(
     ),
   );
   // A tick on the track for each milestone, placed when the time line's span is known.
-  const marks = element('div', { class: 'deep-marks', 'aria-hidden': 'true' });
+  const marks = createMilestoneMarks();
   const bands = createPeriodBands((ma) => {
     handlers.onMa(ma, true);
   });
@@ -292,7 +293,7 @@ export function createDeepTimeBar(
     { class: 'deep-track' },
     seaLevel.chart,
     slider,
-    marks,
+    marks.root,
     bands.root,
     polarityStrip.root,
   );
@@ -351,14 +352,19 @@ export function createDeepTimeBar(
 
   transport.join(root);
   // The span the ticks were placed for.
-  let marksSpan = 0;
   older.addEventListener('click', () => {
     if (current !== null)
-      handlers.onMa(stepped(current.ma, current.oldest, current.scale, true), true);
+      handlers.onMa(
+        stepped(current.ma, current.oldest, current.scale, true, current.youngest),
+        true,
+      );
   });
   younger.addEventListener('click', () => {
     if (current !== null)
-      handlers.onMa(stepped(current.ma, current.oldest, current.scale, false), true);
+      handlers.onMa(
+        stepped(current.ma, current.oldest, current.scale, false, current.youngest),
+        true,
+      );
   });
 
   const bar: DeepTimeBar = {
@@ -368,18 +374,10 @@ export function createDeepTimeBar(
       current = view;
       root.hidden = view === null;
       if (view === null) return;
-      if (marksSpan !== view.oldest) {
-        marksSpan = view.oldest;
-        marks.replaceChildren(
-          ...milestoneTicks(view.oldest).map(({ kind, title, left }) => {
-            const mark = element('span', { class: `deep-mark milestone-${kind}`, title });
-            mark.style.left = `${String(left)}%`;
-            return mark;
-          }),
-        );
-      }
-      bands.render({ oldest: view.oldest, ma: view.ma, playing: view.playing });
-      polarityStrip.render(view.polarity, view.oldest);
+      marks.render(view.oldest, view.youngest);
+      const { oldest, youngest } = view;
+      bands.render({ oldest, youngest, ma: view.ma, playing: view.playing });
+      polarityStrip.render(view.polarity, oldest, youngest);
       const shown = notesShown({
         ma: view.ma,
         mapsReach: view.mapsReach,
@@ -391,7 +389,8 @@ export function createDeepTimeBar(
       unchartedNote.hidden = !shown.noMap;
       sketch.render(shown.sketch, view.sketch, view.ma);
       iceNotes.render(ice, view);
-      slider.min = String(-view.oldest * perMa);
+      slider.min = String(-oldest * perMa);
+      slider.max = String(-youngest * perMa);
       slider.setAttribute('aria-label', ice ? 'Thousands of years ago' : 'Millions of years ago');
       transport.render(view.playing, -view.ma * perMa);
       const step = stepWords(view.scale);
@@ -407,13 +406,13 @@ export function createDeepTimeBar(
           element('dd', {}, text),
         ]),
       );
-      milestones.render(view.ma, view.oldest);
+      milestones.render(view.ma, oldest, youngest);
       // The maps of the 540 Myr and 4.6 Gyr spans are reconstructions; the ice ages', today's land.
       evidenceButton.hidden = view.scale === 'ice';
       featureChips.render(view.chips);
       dock.render(view.active);
-      air.render(view.air, view.scale, view.oldest, view.ma);
-      seaLevel.render(view.seaLevel, view.ma, view.oldest);
+      air.render(view.air, view.scale, oldest, view.ma, youngest);
+      seaLevel.render(view.seaLevel, view.ma, oldest, youngest);
       temperature.render(view.temperature, uncharted);
       if (speedsOf !== view.scale) {
         speedsOf = view.scale;

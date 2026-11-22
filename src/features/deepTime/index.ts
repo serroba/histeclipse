@@ -36,6 +36,7 @@ import { deepSpeedFor, prefetchFrames } from '../../deepTime/playSpeed';
 import { animationLoop } from '../../util/animationLoop';
 import { playhead } from '../../deepTime/playhead';
 import { PLATES_REACH_MA, sketchAt } from '../../deepTime/sketch';
+import { barWindow } from '../../ui/deepBarModel';
 import { createSpanSwitch, type Span } from '../../ui/spanSwitch';
 import type { DeepTimeContext, DeepTimePart } from './context';
 import { errorMessage } from '../../util/errors';
@@ -76,7 +77,12 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     } else {
       stopPlay();
       context.step();
-      store.set((state) => ({ ...state, deepScale: span, ma: roundMa(spanOf(span)) }));
+      store.set((state) => ({
+        ...state,
+        deepScale: span,
+        deepWindow: null,
+        ma: roundMa(spanOf(span)),
+      }));
     }
   }
   /** Go into deep time at `ma`, on the span that reaches it. */
@@ -88,6 +94,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       ...state,
       ma: roundMa(ma),
       ...(deepScale === undefined ? {} : { deepScale }),
+      // A preset or a jump in from the years shows the whole span (#1074).
+      deepWindow: null,
       mode: 'globe',
       view: 'free',
       // The Sun, Moon and planets are left out of deep time, so the view centres on Earth.
@@ -103,6 +111,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       return {
         ...state,
         deepScale,
+        deepWindow: null,
         // From further back than the ice ages, open them at the last glacial maximum; from
         // before the elevation maps, the 540 Myr scale opens at their oldest.
         ma:
@@ -228,7 +237,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     deepBar.render({
       ma,
       story,
-      oldest: spanOf(scale),
+      // The part of the span asked for (#1074), while the moment is within it.
+      ...barWindow(state.deepWindow, spanOf(scale), ma),
       mapsReach: oldest,
       period,
       polarity,
@@ -296,13 +306,17 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     return deepSpeedFor(deepScale, deepSpeeds[deepScale]);
   }
 
-  /** Play towards the present; from today, start again at the oldest map. */
+  /** The part of the span the bar shows (#1074), as played: from its oldest to its youngest. */
+  function shown(state: ViewState): { readonly oldest: number; readonly youngest: number } {
+    return barWindow(state.deepWindow, spanOf(state.deepScale), state.ma ?? 0);
+  }
+
+  /** Play towards the bar's young end; from there, start again at its oldest. */
   function startPlay(): void {
     if (playing) return;
     playing = true;
-    if ((store.get().ma ?? 0) <= 0) {
-      store.set((state) => ({ ...state, ma: spanOf(state.deepScale) }));
-    }
+    const { oldest, youngest } = shown(store.get());
+    if ((store.get().ma ?? 0) <= youngest) store.set((state) => ({ ...state, ma: oldest }));
     head = playhead();
     playFrames.start();
     showDeepTime(store.get());
@@ -314,9 +328,10 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       stopPlay();
       return;
     }
-    const next = head.step(ma, playSpeed(), seconds);
+    const { youngest } = shown(store.get());
+    const next = Math.max(youngest, head.step(ma, playSpeed(), seconds));
     store.set((state) => ({ ...state, ma: next }));
-    if (next <= 0) {
+    if (next <= youngest) {
       stopPlay();
       return;
     }

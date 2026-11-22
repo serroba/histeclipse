@@ -24,7 +24,8 @@ import { createGasChart } from './gasChart';
 export interface DeepAirNote {
   readonly root: HTMLElement;
   /** Say what the air was at `ma`, on the scale shown; hidden while the air is off. */
-  render(air: AirView, scale: DeepScale, oldest: number, ma: number): void;
+  /** The bar shows `oldest` to `youngest` Ma: today unless a part of its span (#1074). */
+  render(air: AirView, scale: DeepScale, oldest: number, ma: number, youngest?: number): void;
 }
 
 /** Dots for the CO2 chart: their points, and a key that changes when they do. */
@@ -129,7 +130,13 @@ function archiveWords(
 type DeepCharts = Readonly<Record<'co2' | 'o2', ReturnType<typeof createBandChart>>>;
 
 /** CO2 with its two ranges and the dots picked, and O2 with its range, over the span shown. */
-function drawDeepCharts(charts: DeepCharts, deep: DeepAir, dots: Dots, oldest: number, ma: number) {
+function drawDeepCharts(
+  charts: DeepCharts,
+  deep: DeepAir,
+  dots: Dots,
+  span: { readonly oldest: number; readonly youngest: number },
+  ma: number,
+) {
   charts.co2.render(
     {
       bands: [
@@ -141,8 +148,9 @@ function drawDeepCharts(charts: DeepCharts, deep: DeepAir, dots: Dots, oldest: n
       key: dots.key,
       reference: PREINDUSTRIAL_CO2,
     },
-    oldest,
+    span.oldest,
     ma,
+    span.youngest,
   );
   charts.o2.render(
     {
@@ -151,8 +159,9 @@ function drawDeepCharts(charts: DeepCharts, deep: DeepAir, dots: Dots, oldest: n
       dots: [],
       reference: O2_TODAY,
     },
-    oldest,
+    span.oldest,
     ma,
+    span.youngest,
   );
 }
 
@@ -216,14 +225,14 @@ export function createDeepAirNote(parts: {
   function renderDeepAir(
     deep: DeepAir | null,
     archive: Co2Archive | null,
-    oldest: number,
+    span: { readonly oldest: number; readonly youngest: number },
     ma: number,
   ): void {
     if (deep === null) {
       airNote.replaceChildren(parts.why, ' ', element('p', {}, 'Air: loading…'));
       return;
     }
-    drawDeepCharts(deepCharts, deep, co2Dots.dots(deep, archive, ma), oldest, ma);
+    drawDeepCharts(deepCharts, deep, co2Dots.dots(deep, archive, ma), span, ma);
     airNote.replaceChildren(
       parts.why,
       ' ',
@@ -239,7 +248,11 @@ export function createDeepAirNote(parts: {
   }
 
   /** On the ice-age scale: the gases in Antarctic ice, each with its chart. */
-  function renderIceAir(atmosphere: Atmosphere | null, oldest: number, ma: number): void {
+  function renderIceAir(
+    atmosphere: Atmosphere | null,
+    span: { readonly oldest: number; readonly youngest: number },
+    ma: number,
+  ): void {
     if (atmosphere === null) {
       airNote.replaceChildren(parts.why, ' ', element('p', {}, 'Air: loading…'));
       return;
@@ -250,7 +263,7 @@ export function createDeepAirNote(parts: {
       ' ',
       ...atmosphere.gases.flatMap((gas) => {
         const chart = gasCharts[gas.id];
-        chart.render(gas, oldest * 1000, ka);
+        chart.render(gas, span.oldest * 1000, ka, span.youngest * 1000);
         return [
           element(
             'p',
@@ -267,11 +280,12 @@ export function createDeepAirNote(parts: {
 
   return {
     root: airNote,
-    render(air, scale, oldest, ma) {
+    render(air, scale, oldest, ma, youngest = 0) {
       airNote.hidden = !air.on;
       if (!air.on) return;
-      if (scale === 'ice') renderIceAir(air.atmosphere, oldest, ma);
-      else renderDeepAir(air.deep, air.archive, oldest, ma);
+      const span = { oldest, youngest };
+      if (scale === 'ice') renderIceAir(air.atmosphere, span, ma);
+      else renderDeepAir(air.deep, air.archive, span, ma);
     },
   };
 }

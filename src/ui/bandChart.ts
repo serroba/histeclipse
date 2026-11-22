@@ -39,8 +39,11 @@ interface BandSeries {
 
 export interface BandChart {
   readonly root: HTMLElement;
-  /** Draw the series across a span back to `oldest` Ma, with the cursor at `ma`. */
-  render(series: BandSeries, oldest: number, ma: number): void;
+  /**
+   * Draw the series from `oldest` to `youngest` Ma (today unless the bar shows a part, #1074),
+   * with the cursor at `ma`.
+   */
+  render(series: BandSeries, oldest: number, ma: number, youngest?: number): void;
 }
 
 /** A chart with its value axis from `low` to `high`, on a log scale if `log`. */
@@ -75,11 +78,14 @@ export function createBandChart(options: {
   let drawn = '';
   return {
     root,
-    render(series, oldest, ma) {
-      const x = (at: number) => ((1 - at / oldest) * WIDTH).toFixed(1);
+    render(series, oldest, ma, youngest = 0) {
+      const x = (at: number) => (((oldest - at) / (oldest - youngest)) * WIDTH).toFixed(1);
       const within = <R extends readonly number[]>(rows: readonly R[]) =>
-        rows.filter((row) => (row[0] ?? Infinity) <= oldest);
-      const key = `${String(oldest)} ${series.key ?? ''} ${String(series.line.length)} ${String(series.dots.length)}`;
+        rows.filter((row) => {
+          const at = row[0] ?? Infinity;
+          return at <= oldest && at >= youngest;
+        });
+      const key = `${String(oldest)} ${String(youngest)} ${series.key ?? ''} ${String(series.line.length)} ${String(series.dots.length)}`;
       if (key !== drawn) {
         drawn = key;
         bands.replaceChildren(
@@ -109,7 +115,7 @@ export function createBandChart(options: {
         reference.setAttribute('y1', level);
         reference.setAttribute('y2', level);
       }
-      const at = x(Math.min(Math.max(ma, 0), oldest));
+      const at = x(Math.min(Math.max(ma, youngest), oldest));
       cursor.setAttribute('x1', at);
       cursor.setAttribute('x2', at);
     },

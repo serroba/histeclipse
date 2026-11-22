@@ -114,19 +114,35 @@ export function stepWords(scale: DeepScale): string {
   return scale === 'ice' ? '5,000 years' : `${String(stepMa(scale))} million years`;
 }
 
-/** A step back in time from `ma`, no further than `oldest`; or forward, no later than today. */
-export function stepped(ma: number, oldest: number, scale: DeepScale, older: boolean): number {
-  return older ? Math.min(oldest, ma + stepMa(scale)) : Math.max(0, ma - stepMa(scale));
+/**
+ * A step back in time from `ma`, no further than `oldest`; or forward, no later than `youngest`
+ * (today, unless the bar shows a part of its span, #1074).
+ */
+export function stepped(
+  ma: number,
+  oldest: number,
+  scale: DeepScale,
+  older: boolean,
+  youngest = 0,
+): number {
+  return older ? Math.min(oldest, ma + stepMa(scale)) : Math.max(youngest, ma - stepMa(scale));
 }
 
-/** A tick on the time line for each milestone within `oldest`: where along it, as a percentage. */
+/**
+ * A tick on the time line for each milestone from `oldest` to `youngest` Ma: where along it, as
+ * a percentage.
+ */
 export function milestoneTicks(
   oldest: number,
+  youngest = 0,
 ): { readonly kind: string; readonly title: string; readonly left: number }[] {
-  return MILESTONES.filter((milestone) => anchorMa(milestone) <= oldest).map((milestone) => ({
+  return MILESTONES.filter((milestone) => {
+    const at = anchorMa(milestone);
+    return at <= oldest && at >= youngest;
+  }).map((milestone) => ({
     kind: milestone.kind,
     title: milestone.title,
-    left: (1 - anchorMa(milestone) / oldest) * 100,
+    left: ((oldest - anchorMa(milestone)) / (oldest - youngest)) * 100,
   }));
 }
 
@@ -148,4 +164,22 @@ export function notesShown(view: {
   const uncharted = view.ma > view.mapsReach;
   const sketch = view.sketchQuestions !== null && view.sketchQuestions > 0;
   return { uncharted, noMap: uncharted && !sketch, sketch, ice: view.scale === 'ice' };
+}
+
+/**
+ * The part of a span the bar shows (#1074): the window asked for (`dw`), held to the span
+ * (`spanOldest` Ma to today), while the moment `ma` is within it; else the whole span, so a jump
+ * elsewhere (a milestone, Go to) never leaves the moment off the bar.
+ */
+export function barWindow(
+  window: { readonly oldest: number; readonly youngest: number } | null,
+  spanOldest: number,
+  ma: number,
+): { readonly oldest: number; readonly youngest: number } {
+  const whole = { oldest: spanOldest, youngest: 0 };
+  if (window === null) return whole;
+  const oldest = Math.min(window.oldest, spanOldest);
+  const youngest = Math.max(window.youngest, 0);
+  if (youngest >= oldest || ma > oldest || ma < youngest) return whole;
+  return { oldest, youngest };
 }

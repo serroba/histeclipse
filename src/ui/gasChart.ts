@@ -25,7 +25,8 @@ function svg<K extends keyof SVGElementTagNameMap>(
 
 export interface GasChart {
   readonly root: HTMLElement;
-  render(gas: Gas, oldestKa: number, ka: number): void;
+  /** Across `oldestKa` to `youngestKa` (today unless the bar shows a part, #1074). */
+  render(gas: Gas, oldestKa: number, ka: number, youngestKa?: number): void;
 }
 
 export function createGasChart(): GasChart {
@@ -44,20 +45,20 @@ export function createGasChart(): GasChart {
   let drawn = '';
   return {
     root,
-    render(gas, oldestKa, ka) {
+    render(gas, oldestKa, ka, youngestKa = 0) {
       const values = gas.points
-        .filter(([at]) => at >= 0 && at <= oldestKa)
+        .filter(([at]) => at >= youngestKa && at <= oldestKa)
         .map(([, value]) => value);
       const low = Math.min(...values, gas.preindustrial);
       const high = Math.max(...values, gas.preindustrial);
-      const x = (at: number) => (1 - at / oldestKa) * WIDTH;
+      const x = (at: number) => ((oldestKa - at) / (oldestKa - youngestKa)) * WIDTH;
       const y = (value: number) =>
         high === low ? HEIGHT / 2 : ((high - value) / (high - low)) * (HEIGHT - 4) + 2;
-      const key = `${gas.id} ${String(oldestKa)}`;
+      const key = `${gas.id} ${String(oldestKa)} ${String(youngestKa)}`;
       if (key !== drawn) {
         drawn = key;
         const path = gas.points
-          .filter(([at]) => at >= 0 && at <= oldestKa)
+          .filter(([at]) => at >= youngestKa && at <= oldestKa)
           .map(
             ([at, value], index) =>
               `${index === 0 ? 'M' : 'L'}${x(at).toFixed(1)},${y(value).toFixed(1)}`,
@@ -68,7 +69,7 @@ export function createGasChart(): GasChart {
         preindustrial.setAttribute('y1', level);
         preindustrial.setAttribute('y2', level);
       }
-      const at = x(Math.min(Math.max(ka, 0), oldestKa)).toFixed(1);
+      const at = x(Math.min(Math.max(ka, youngestKa), oldestKa)).toFixed(1);
       cursor.setAttribute('x1', at);
       cursor.setAttribute('x2', at);
     },
