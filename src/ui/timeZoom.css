@@ -1,4 +1,4 @@
-/* Zooming a time bar (#1074): − and + side by side, beside the speed. */
+/* Zooming a time bar (#1074): − and + side by side, beside the slider or the speed. */
 
 .time-zoom {
   display: inline-flex;
@@ -17,20 +17,17 @@
   background: transparent;
 }
 
-/* The year's row, with − and + in it, shrinks and wraps rather than running off the screen:
-   it does not shrink otherwise. On a phone on its side (664 px wide) it keeps to one line, the
-   years shown cut short and − and + as narrow as the row's other steps. */
-.holocene-bar .year-controls:has(.time-zoom) {
-  flex-shrink: 1;
-  min-width: 0;
-}
-
-@media (min-width: 601px) and (max-width: 760px) {
-  .holocene-bar .history-range {
-    max-width: 9em;
+/* On a phone, beside the Years bar's slider, as narrow as the bar's other steps and, as they
+   are, a finger wide to tap (touch.css). */
+@media (max-width: 600px) {
+  .history-controls .time-zoom-step {
+    position: relative;
+    width: 36px;
   }
 
-  .holocene-bar .time-zoom-step {
-    width: 36px;
+  .history-controls .time-zoom-step::after {
+    position: absolute;
+    inset: calc(50% - 22px);
+    content: '';
   }
 }
