@@ -10,6 +10,7 @@ import { astronomicalYear, formatYear } from '../time/year';
 import type { Coastline } from '../deepTime/coastline';
 import { SPEED_LEVELS, type PlaySpeed, type SpeedLevel } from '../time/playSpeeds';
 import { element } from './dom';
+import { createTimeZoom } from './timeZoom';
 import { createTransport } from './transport';
 import './historyTrack.css';
 
@@ -27,6 +28,8 @@ interface HistoryView {
   /** The windows of years offered (#749), and the one shown, as their values. */
   readonly windows: readonly { readonly value: string; readonly label: string }[];
   readonly window: string;
+  /** Whether there is room to zoom in and out (#1074). */
+  readonly zoom: { readonly in: boolean; readonly out: boolean };
   /** What the track says about states; a hint when the layer is off. */
   readonly changes: string;
   /** Why land may have no state drawn on it; null with the states off. */
@@ -135,6 +138,8 @@ export function createHistoryTrack(
     onEndTravel(): void;
     /** A window of years picked, by its value. */
     onWindow(value: string): void;
+    /** Zoom by `factor` about the year (#1074): over 1 shows more time. */
+    onZoom: (factor: number) => void;
   },
   /** The ages along the slider, as deep time draws its periods. */
   bands: HTMLElement,
@@ -197,22 +202,20 @@ export function createHistoryTrack(
   // The ⓘ goes with the travel view's notes and chip, so it never takes a row of its own on a
   // phone, where the years shown and the speed fill theirs (#985).
   const notes = element('div', { class: 'history-notes' }, changes, about, travel);
+  const zoom = createTimeZoom(handlers.onZoom);
   const extras = element('span', { class: 'history-extras' }, range, speed);
+  const lane = element(
+    'div',
+    { class: 'history-lane' },
+    slider,
+    bands,
+    ...(strip === undefined ? [] : [strip]),
+  );
+  zoom.attach(lane);
   const root = element(
     'div',
     { class: 'history-track', role: 'group', 'aria-label': 'Holocene', id: 'history-track' },
-    element(
-      'div',
-      { class: 'history-controls' },
-      play,
-      element(
-        'div',
-        { class: 'history-lane' },
-        slider,
-        bands,
-        ...(strip === undefined ? [] : [strip]),
-      ),
-    ),
+    element('div', { class: 'history-controls' }, play, lane, zoom.root),
     notes,
   );
   transport.join(root);
@@ -246,6 +249,7 @@ export function createHistoryTrack(
         );
       }
       range.value = view.window;
+      zoom.render(view.zoom);
       changes.textContent = view.changes;
       changes.hidden = view.changes === '';
       travel.hidden = !view.travelling;

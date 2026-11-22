@@ -16,6 +16,7 @@ export const DEEP_TIME: Watch = (s) => [
   s.years,
   s.layers,
   s.deepScale,
+  s.deepWindow,
   s.coast,
   s.seaIce,
   s.temperatureModel,

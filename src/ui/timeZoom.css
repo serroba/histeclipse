@@ -1,0 +1,33 @@
+/* Zooming a time bar (#1074): − and + side by side, beside the slider or the speed. */
+
+.time-zoom {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 0.04);
+}
+
+.time-zoom-step:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.time-zoom-step:disabled:hover {
+  background: transparent;
+}
+
+/* On a phone, beside the Years bar's slider, as narrow as the bar's other steps and, as they
+   are, a finger wide to tap (touch.css). */
+@media (max-width: 600px) {
+  .history-controls .time-zoom-step {
+    position: relative;
+    width: 36px;
+  }
+
+  .history-controls .time-zoom-step::after {
+    position: absolute;
+    inset: calc(50% - 22px);
+    content: '';
+  }
+}

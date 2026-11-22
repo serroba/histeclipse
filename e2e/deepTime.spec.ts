@@ -298,6 +298,13 @@ test('a link to a part of deep time shows that part, and a span picked shows it 
     await expect(bar.locator('.period-band')).toHaveCount(1);
     await expect(bar.locator('.period-band')).toHaveAttribute('aria-label', /^Cretaceous, /);
   });
+  await test.step('When they zoom out, Then the bar shows twice the time about the moment, 148 to 52 Ma', async () => {
+    await bar.getByRole('button', { name: 'Show more time' }).click();
+    await expect(bar.getByTestId('scale-start')).toHaveText('148 Ma');
+    await expect(bar.getByTestId('scale-end')).toHaveText('52 Ma');
+    await expect(page).toHaveURL(/dw=148(,|%2C)52/);
+    await expect(page.locator('.hud-date')).toHaveText('100 million years ago');
+  });
   await test.step('When the 540 Myr span is picked, Then the bar shows it whole, and the link drops the part', async () => {
     await pickSpan(page, '4.6 Gyr');
     await pickSpan(page, '540 Myr');

@@ -20,6 +20,7 @@ import { yearPlayhead } from '../../time/yearPlay';
 import type { PlaySpeed, SpeedLevel } from '../../time/playSpeeds';
 import type { Moment } from '../../time/moment';
 import { windowOf } from '../../state/yearsWindow';
+import { zoomRoom, zoomTarget, type ZoomTarget } from '../../state/timeZoom';
 import { travelTrip, tripTurn } from './travelTrip';
 import { travelBrings, windowing } from './windowing';
 import { yearOfMa } from '../../data/iceSheets';
@@ -40,6 +41,8 @@ export interface YearsContext extends PartContext {
   statesSaid(): string;
   /** What the Holocene's Earth shows, while it shows. */
   holoceneText(): string | null;
+  /** Zoomed out of the Holocene into deep time (#1074): show where it landed. */
+  land(target: ZoomTarget): void;
 }
 
 export interface YearsPart {
@@ -106,6 +109,12 @@ export function mountYears(context: YearsContext): YearsPart {
       },
       onWindow(value) {
         window.set(windowOf(value));
+      },
+      onZoom(factor) {
+        const state = store.get();
+        const to = zoomTarget(window.shown(state), state.time.date.year, factor, PRESENT_YEAR);
+        if (to.model === 'years') window.set(to.window);
+        else context.land(to);
       },
     },
     historyBands.root,
@@ -266,6 +275,7 @@ export function mountYears(context: YearsContext): YearsPart {
       travelling,
       ...speedsShown(state),
       ...window.choices(state),
+      zoom: zoomRoom(shown, PRESENT_YEAR),
       changes: trackNote({
         empires: state.layers.has('empires'),
         said: context.statesSaid(),

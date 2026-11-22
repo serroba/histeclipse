@@ -386,6 +386,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     statesSaid: () => statesNote.said(),
     holoceneText: () => holoceneNote.said(),
+    land: deepTime.land,
   });
   // Away from Earth and the Moon, the bar's time is the body's own cycle as Earth sees it (#447);
   // with the spacecraft on, it is their launches, the first to today (#702).
