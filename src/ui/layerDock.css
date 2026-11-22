@@ -11,6 +11,11 @@
   margin-left: 0;
 }
 
+/* A layer off is not in the dock (#752): Layers switches it on. */
+.deep-dock .deep-layer[data-off] {
+  display: none;
+}
+
 @media (max-width: 600px) {
   /* On a phone each layer keeps its word, as the viewpoints do (#953): six icons alone could not
      be told apart, and a long press is not found. Three to a row, the most there are being six. */

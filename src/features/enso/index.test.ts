@@ -75,7 +75,7 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
           ),
     globe: {
       addLayer: (factory: LayerFactory<unknown>) => {
-        if (factory === (ensoMapLayer as LayerFactory<unknown>)) {
+        if (factory === ensoMapLayer) {
           return { update: (input: unknown) => painted.push(input) };
         }
         const layer = factory({ container } as unknown as LayerHost);

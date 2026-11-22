@@ -6,6 +6,7 @@
  */
 
 import { foldBar, foldHud } from './hudFold';
+import './sheetStrip.css';
 import './touch.css';
 
 /** Pixels the zoom rail needs between the panels: its buttons, a short track and its reading. */

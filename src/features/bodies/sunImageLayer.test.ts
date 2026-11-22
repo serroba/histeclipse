@@ -49,7 +49,7 @@ function setUp() {
     container: { dataset },
     maxAnisotropy: 8,
     showSunImage: (image: SunImageTextures | null) => shown.push(image),
-  } as unknown as LayerHost;
+  } as unknown as LayerHost<'showSunImage'>;
   return { layer: sunImageLayerWith(load)(host), loads, finish, fail, shown, dataset };
 }
 

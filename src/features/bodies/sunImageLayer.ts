@@ -10,6 +10,7 @@ import { RepeatWrapping, SRGBColorSpace, type Texture } from 'three';
 import { loadPicture } from '../../globe/pictureTexture';
 
 import type { LayerFactory, LayerHost } from '../../globe/layerHost';
+import { needing } from '../../globe/layerCapabilities';
 
 interface ImagePair {
   readonly small: string;
@@ -37,8 +38,10 @@ type LoadTexture = (url: string) => Promise<Texture>;
 const loadWithThree: LoadTexture = (url) => loadPicture(url);
 
 /** The Sun's images, loaded with `load` (three's loader in the page; a fake in tests). */
-export function sunImageLayerWith(load: LoadTexture): LayerFactory<SunImageRequest | null> {
-  return (host: LayerHost) => {
+export function sunImageLayerWith(
+  load: LoadTexture,
+): LayerFactory<SunImageRequest | null, 'showSunImage'> {
+  return needing(['showSunImage'], (host: LayerHost<'showSunImage'>) => {
     // Maps and frames already loaded, by URL, and the channel asked for last.
     const textures = new Map<string, Texture>();
     let wanted: SunImageRequest | null = null;
@@ -108,7 +111,7 @@ export function sunImageLayerWith(load: LoadTexture): LayerFactory<SunImageReque
         for (const loaded of textures.values()) loaded.dispose();
       },
     };
-  };
+  });
 }
 
 /** The Sun's images, loaded by three in the page. */

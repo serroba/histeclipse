@@ -75,7 +75,7 @@ export interface MetrePassOptions {
  * frame while `drawn` names what it draws. Where it is and how it is turned is the layer's: a
  * craft's place in space, turned from the Sun; a site on Earth, standing up from it.
  */
-export function metrePass(host: LayerHost, options: MetrePassOptions): MetrePass {
+export function metrePass(host: LayerHost<'holdCraft'>, options: MetrePassOptions): MetrePass {
   const scene = new Scene();
   const group = new Group();
   group.name = options.name;

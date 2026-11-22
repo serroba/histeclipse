@@ -4,7 +4,6 @@
  * New things drawn on the globe are layers; the globe's own `set…` methods only shrink.
  */
 
-import type { CraftFrame } from './focus';
 import type {
   Camera,
   Group,
@@ -21,7 +20,7 @@ import type { MoonName, MoonPlanet } from '../astro/moonOrbits';
 import type { GeoPoint } from '../core/geo';
 import type { PaintSlot } from './paintSlots';
 import type { EarthPart, PartUniforms } from './earthParts';
-import type { SunImageTextures } from './surfaces';
+import type { LayerCapabilities, LayerCapability } from './layerCapabilities';
 import type { NamedBody } from '../data/planetNames';
 import type { Body } from '../state/viewState';
 
@@ -34,7 +33,8 @@ interface NameLabel {
   readonly height: number;
 }
 
-export interface LayerHost {
+/** What the globe lends every layer; one or two layers' needs are `LayerCapabilities`. */
+export interface LayerCore {
   readonly scene: Scene;
   /** The camera the globe draws with; read it, the globe moves it. */
   readonly camera: PerspectiveCamera;
@@ -62,8 +62,6 @@ export interface LayerHost {
   moonPosition(moon: MoonName, target: Vector3): Vector3;
   /** Ask to fly to a body, as a tap on it does. */
   requestBody(body: Body): void;
-  /** Hold a craft where it is now for the camera to orbit (#796), or none. */
-  holdCraft(craft: CraftFrame | null): void;
   /** A far camera turning with the Sun–Earth line as time moves (#998), not still among the stars. */
   holdToSun(on: boolean): void;
   /** J2000 km from Earth's centre to scene units, for the moment shown; null until there is one. */
@@ -109,8 +107,6 @@ export interface LayerHost {
   renderToTexture(target: WebGLRenderTarget, scene: Scene, camera: Camera): void;
   /** The most anisotropic filtering the GPU offers, for textures a layer loads. */
   readonly maxAnisotropy: number;
-  /** Show these images on the Sun, and the corona from its newest frame; null shows it plain. */
-  showSunImage(image: SunImageTextures | null): void;
   /**
    * A place on the history map painted over Earth's surface, under the states, painted in
    * `order` (see HISTORY_PAINT_ORDER) whenever any part of the map changes.
@@ -202,7 +198,15 @@ export interface GlobeLayer<Input> {
   dispose?(): void;
 }
 
-export type LayerFactory<Input> = (host: LayerHost) => GlobeLayer<Input>;
+/** What a layer asking for `Needs` is made with: the core, and those capabilities (#938). */
+export type LayerHost<Needs extends LayerCapability = never> = LayerCore &
+  Pick<LayerCapabilities, Needs>;
+
+/** Makes a layer; one that asks for capabilities names them in `needs` (see `needing`). */
+export type LayerFactory<Input, Needs extends LayerCapability = never> = ((
+  host: LayerHost<Needs>,
+) => GlobeLayer<Input>) &
+  ([Needs] extends [never] ? unknown : { readonly needs: readonly Needs[] });
 
 /** A name to show for a thing drawn: its key, its text, what a tap picks, and where it is. */
 interface Named {

@@ -1,0 +1,25 @@
+/* A sheet over the globe on a phone (#752): Layers, Explore or Go to a time. The time bar
+   narrows to its strip (the track and Play, and in the years the year), and the sheet sits on it rather than over it, so
+   the two do not compete for the screen and time stays in reach. Closed, the bar is as it was,
+   its own sheet open or folded as the reader left it. */
+@media (max-width: 600px) {
+  :where(:root:has(:is(.layers-dialog, .explore-dialog, .time-dialog)[open]))
+    .deep-time
+    > :not(.deep-controls) {
+    display: none;
+  }
+
+  :where(:root:has(:is(.layers-dialog, .explore-dialog, .time-dialog)[open]))
+    :is(
+      .holocene-bar > :not(.history-track, .timeline),
+      .history-track > :not(.history-controls),
+      .timeline > :not(.year-controls)
+    ) {
+    display: none;
+  }
+
+  .famous-dialog:is(.layers-dialog, .explore-dialog, .time-dialog)[open] {
+    bottom: var(--free-bottom, 0px);
+    max-height: min(88vh, calc(100vh - var(--free-bottom, 0px) - var(--free-top, 0px) - 8px));
+  }
+}

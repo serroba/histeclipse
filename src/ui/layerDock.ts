@@ -7,10 +7,15 @@
  * have it (#751): pressed while on, and, while on, whether it draws here, is loading, or failed.
  * Marked by shape as well as colour (a fill, a dashed ring, a pulse), and said in words to screen
  * readers and in the tooltip.
+ *
+ * Only the layers on (#752): the Layers panel is the one place to switch one on, so the dock does
+ * not repeat its switches. "Add a layer" at its end opens that panel; a layer turned off here
+ * leaves the focus on it rather than on nothing.
  */
 
 import type { ActiveLayer } from '../state/activeLayers';
 import { element } from './dom';
+import { uiIcon } from './icons';
 import './layerDock.css';
 
 /** What the dock draws: the layers on, as the chips beside Layers have them. */
@@ -25,6 +30,11 @@ export interface LayerDock {
   render(active: readonly ActiveLayer[]): void;
 }
 
+/** Whether a button shows: offered here by the bar, and its layer on. */
+function shows(button: HTMLElement): boolean {
+  return button.hidden === false && !button.hasAttribute('data-off');
+}
+
 /** The words for a layer on that does not draw here. */
 function notDrawn(active: ActiveLayer): string {
   if (active.coverage === 'loading') return 'Loading.';
@@ -32,12 +42,39 @@ function notDrawn(active: ActiveLayer): string {
   return `Not drawn here: ${active.why ?? active.reach}.`;
 }
 
-/** The dock of `buttons`, each carrying its layer as `data-layer`. */
-export function layerDock(...buttons: readonly HTMLElement[]): LayerDock {
+/**
+ * The dock of `buttons`, each carrying its layer as `data-layer`; `onAdd` opens the Layers panel,
+ * given the button that asked so the focus can come back to it.
+ */
+export function layerDock(
+  onAdd: (opener: HTMLElement) => void,
+  ...buttons: readonly HTMLElement[]
+): LayerDock {
+  const add = element(
+    'button',
+    { type: 'button', class: 'deep-layer deep-add', 'aria-label': 'Add a layer' },
+    uiIcon('layers'),
+    element('span', { class: 'icon-label', 'aria-hidden': 'true' }, 'Add'),
+  );
+  add.addEventListener('click', () => {
+    onAdd(add);
+  });
   const root = element(
     'span',
     { class: 'deep-dock', role: 'group', 'aria-label': 'The time bar’s layers' },
     ...buttons,
+    add,
+  );
+  // The button last pressed, so that if it goes (its layer turned off) the focus goes to Add.
+  let pressed: HTMLElement | null = null;
+  // Caught on the way down, before the button's own handler: the page may draw again within it.
+  root.addEventListener(
+    'click',
+    (event) => {
+      const target = event.target instanceof Element ? event.target.closest('button') : null;
+      pressed = target === add ? null : target;
+    },
+    { capture: true },
   );
   // A line of words for each, read with its button, its name kept as it is.
   const said = new Map<HTMLElement, HTMLElement>();
@@ -52,15 +89,13 @@ export function layerDock(...buttons: readonly HTMLElement[]): LayerDock {
   return {
     root,
     shown: () =>
-      new Set(
-        buttons.flatMap((button) =>
-          button.hidden === false ? [button.dataset['layer'] ?? ''] : [],
-        ),
-      ),
+      new Set(buttons.flatMap((button) => (shows(button) ? [button.dataset['layer'] ?? ''] : []))),
     render(active) {
       const on = new Map(active.map((each) => [each.layer as string, each]));
       for (const [button, words] of said) {
         const state = on.get(button.dataset['layer'] ?? '');
+        // Off: out of the dock, by a mark of its own, as the chips' `hidden` is the bar's (#752).
+        button.toggleAttribute('data-off', state === undefined);
         const label = button.textContent;
         if (state === undefined || state.draws) {
           delete button.dataset['coverage'];
@@ -75,6 +110,8 @@ export function layerDock(...buttons: readonly HTMLElement[]): LayerDock {
         words.textContent = notDrawn(state);
         button.title = `${label}: ${notDrawn(state)}`;
       }
+      if (pressed !== null && !shows(pressed)) add.focus();
+      pressed = null;
     },
   };
 }

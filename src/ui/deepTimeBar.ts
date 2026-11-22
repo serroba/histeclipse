@@ -128,6 +128,8 @@ export function createDeepTimeBar(
     onSeaLevel(on: boolean): void;
     /** A chip pressed: its layer on or off. */
     onLayer(layer: Layer, on: boolean): void;
+    /** Open the Layers panel from the dock's Add (#752), the focus to come back to `opener`. */
+    onAddLayer: (opener: HTMLElement) => void;
     onAir(on: boolean): void;
     /** The reader asked for the Paleo-CO2 Data Archive's estimates: load them. */
     onCo2Archive(): void;
@@ -218,7 +220,6 @@ export function createDeepTimeBar(
   });
   const when = element('strong', { class: 'deep-when', 'data-testid': 'deep-when' });
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
-  // The bar's own chips (#605): each a button and a live note, made in deepBarChips.ts.
   const air = createAirChip(airWhy, {
     onAir: (on) => {
       handlers.onAir(on);
@@ -230,7 +231,7 @@ export function createDeepTimeBar(
       if (current !== null) bar.render(current);
     },
   });
-  // The chips (#380, #605): the plates', the features', the impacts'; each a button and a note.
+  // The chips (#380, #605): the bar's own (deepBarChips.ts) and the features'; a button and a note.
   const featureChips = createDeepChips(
     chips,
     (id, label) => handlers.why(id, label),
@@ -257,7 +258,13 @@ export function createDeepTimeBar(
       handlers.onTemperatureShow(show);
     },
   });
-  const dock = layerDock(seaLevel.button, temperature.button, ...featureChips.buttons, air.button);
+  const dock = layerDock(
+    handlers.onAddLayer,
+    seaLevel.button,
+    temperature.button,
+    ...featureChips.buttons,
+    air.button,
+  );
   // Poles, field, tilt and day: folded away, so the bar stays small on a phone.
   const facts = element('dl', { class: 'deep-facts-list' });
   const factsPanel = element(
@@ -411,10 +418,10 @@ export function createDeepTimeBar(
       // The maps of the 540 Myr and 4.6 Gyr spans are reconstructions; the ice ages', today's land.
       evidenceButton.hidden = view.scale === 'ice';
       featureChips.render(view.chips);
-      dock.render(view.active);
       air.render(view.air, view.scale, oldest, view.ma, youngest);
       seaLevel.render(view.seaLevel, view.ma, oldest, youngest);
       temperature.render(view.temperature, uncharted);
+      dock.render(view.active); // Last: it hides the chips of the layers off (#752).
       speed.value = view.pace;
       zoom.render(view.zoom);
       easing.checked = view.easing;

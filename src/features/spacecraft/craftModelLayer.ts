@@ -12,7 +12,8 @@
  */
 
 import { Vector3, type Object3D } from 'three';
-import type { LayerFactory, Triple } from '../../globe/layerHost';
+import type { GlobeLayer, Triple } from '../../globe/layerHost';
+import { needing } from '../../globe/layerCapabilities';
 import { metrePass } from '../../globe/metreView';
 import { awayFromSun } from './craftAttitude';
 import type { SceneCraft } from './craftLayer';
@@ -89,7 +90,7 @@ export function pointsBeside<Craft extends Pick<SceneCraft, 'id' | 'km'>>(
   ];
 }
 
-export const craftModel: LayerFactory<FocusedCraft | null> = (host) => {
+export const craftModel = needing(['holdCraft'], (host): GlobeLayer<FocusedCraft | null> => {
   /** The model built, and whose. */
   let built: { readonly id: string; readonly object: Object3D } | null = null;
   /** The craft asked for: a model that comes in for another is not drawn. */
@@ -147,4 +148,4 @@ export const craftModel: LayerFactory<FocusedCraft | null> = (host) => {
       if (built !== null) releaseModel(built.object);
     },
   };
-};
+});
