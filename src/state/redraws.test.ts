@@ -57,6 +57,7 @@ const WATCHES: Record<string, { watch: Watch; fields: readonly (keyof ViewState)
       'layers',
       'deepScale',
       'deepWindow',
+      'yearsWindow',
       'coast',
       'seaIce',
       'temperatureModel',

@@ -73,6 +73,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     const { ma } = store.get();
     if (span === 'years') {
       if (ma !== null) leaveDeepTime();
+      // The preset is the whole track (#1074).
+      if (store.get().yearsWindow !== null) store.set((state) => ({ ...state, yearsWindow: null }));
     } else if (ma === null) {
       enterDeepTime(spanOf(span), span);
       if (span !== 'ice') frameDeepEarth(globe, store.get().camera.distance);
@@ -189,8 +191,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       store.set((state) => ({ ...state, ma: roundMa(ma) }));
     },
   );
-  // How far back time reaches, one choice for all of it: going deeper is zooming out, to the
-  // same moment.
+  // How far back time reaches, one choice for all of it: going deeper is zooming out.
   const historySpan = createSpanSwitch((span) => {
     goToSpan(span);
   });
@@ -228,7 +229,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     magneticNorthOnGlobe.update(ma === null ? null : magneticNorthAt(ma, polarity));
     if (ma !== null) wantPolarity();
     if (ma === null) {
-      historySpan.render('years');
+      historySpan.render('years', state.yearsWindow === null);
       stopPlay();
       deepBar.render(null);
       glance.render(null);
@@ -244,9 +245,9 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     context.header(ma, story);
     // A link to before the elevation maps opens on the scale that reaches it.
     const scale = state.deepScale === 'all' && ma > oldest ? 'eons' : state.deepScale;
-    historySpan.render(scale);
+    const part = barWindow(state.deepWindow, spanOf(scale), ma);
+    historySpan.render(scale, part.youngest === 0 && part.oldest === spanOf(scale));
     const ice = scale === 'ice';
-    // Before the elevation maps reach, no map: a sketch of the chosen hypotheses instead.
     const uncharted = ma > oldest;
     globe.setUncharted(uncharted);
     // Before the maps, a sketch of the hypotheses chosen; invented land only beyond the plates.
@@ -265,7 +266,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       ma,
       story,
       // The part of the span asked for (#1074), while the moment is within it.
-      ...barWindow(state.deepWindow, spanOf(scale), ma),
+      ...part,
       mapsReach: oldest,
       period,
       polarity,

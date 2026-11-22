@@ -22,7 +22,11 @@ const SPANS: readonly (readonly [Span, string])[] = [
 
 export interface SpanSwitch {
   readonly root: HTMLElement;
-  render(span: Span): void;
+  /**
+   * The span the bar shows, `within`, picked only while the bar shows all of it (`whole`): a
+   * zoom into part of it (#1074) leaves no preset picked, that span marked as the one it is in.
+   */
+  render(within: Span, whole?: boolean): void;
 }
 
 export function createSpanSwitch(onSpan: (span: Span) => void): SpanSwitch {
@@ -46,9 +50,10 @@ export function createSpanSwitch(onSpan: (span: Span) => void): SpanSwitch {
   );
   return {
     root,
-    render(span) {
+    render(within, whole = true) {
       for (const [each, button] of buttons) {
-        button.setAttribute('aria-pressed', String(each === span));
+        button.setAttribute('aria-pressed', String(whole && each === within));
+        button.classList.toggle('is-within', !whole && each === within);
       }
     },
   };
