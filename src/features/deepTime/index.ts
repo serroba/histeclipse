@@ -185,8 +185,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       store.set((state) => ({ ...state, ma: roundMa(ma) }));
     },
   );
-  // How far back time reaches, one choice for all of it: going deeper is zooming out, to the
-  // same moment.
+  // How far back time reaches, one choice for all of it: going deeper is zooming out.
   const historySpan = createSpanSwitch((span) => {
     goToSpan(span);
   });
@@ -244,7 +243,6 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     const whole = part.youngest === 0 && part.oldest === spanOf(scale);
     historySpan.render(scale, whole);
     const ice = scale === 'ice';
-    // Before the elevation maps reach, no map: a sketch of the chosen hypotheses instead.
     const uncharted = ma > oldest;
     globe.setUncharted(uncharted);
     // Before the maps, a sketch of the hypotheses chosen; invented land only beyond the plates.
