@@ -122,6 +122,7 @@ export function createDeepTimeBar(
     onPace(pace: Pace): void;
     onEasing(on: boolean): void;
     onZoom: (factor: number) => void;
+    onPan: (share: number) => void;
     /** Fit the bar to `oldest`–`youngest` Ma (#1075): a band or a crumb tapped. */
     onFit: (oldest: number, youngest: number) => void;
     onTemperature(on: boolean): void;
@@ -290,9 +291,8 @@ export function createDeepTimeBar(
     bands.root,
     polarityStrip.root,
   );
-  zoom.attach(track);
-  // Easing near milestones and finds as it plays (#1077), on unless less motion is asked for:
-  // a switch in the milestones' fold, so the bar is no taller.
+  zoom.attach(track, handlers.onPan);
+  // Easing near milestones and finds as it plays (#1077), unless less motion is asked for.
   const easing = element('input', { type: 'checkbox', 'data-testid': 'deep-easing' });
   easing.addEventListener('change', () => {
     handlers.onEasing(easing.checked);

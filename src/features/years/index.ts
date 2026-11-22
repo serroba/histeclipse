@@ -117,6 +117,9 @@ export function mountYears(context: YearsContext): YearsPart {
         if (to.model === 'years') window.set(to.window);
         else context.land(to);
       },
+      onPan(share) {
+        window.pan(share);
+      },
     },
     historyBands.root,
     radiocarbonStrip.root,

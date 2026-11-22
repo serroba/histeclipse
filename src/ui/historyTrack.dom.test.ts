@@ -32,6 +32,7 @@ function setUp() {
     onEndTravel: vi.fn(),
     onWindow: vi.fn(),
     onZoom: vi.fn(),
+    onPan: vi.fn(),
   };
   const track = createHistoryTrack(
     handlers,

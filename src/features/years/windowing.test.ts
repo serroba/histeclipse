@@ -171,3 +171,42 @@ describe('the Years bar’s window (#749)', () => {
     expect(travelBrings(new Set(['rocks', 'warming'] as const))).toEqual([]);
   });
 });
+
+describe('sliding the Years bar’s window (#749)', () => {
+  it('Given a window, When slid, Then it moves along the track, its width kept, the year kept', () => {
+    const store = createStore<ViewState>({
+      ...start(1500),
+      yearsWindow: { first: 1400, last: 1600 },
+    });
+    const bar = windowing(store, () => WHOLE);
+    bar.pan(0.25);
+    expect(store.get().yearsWindow).toEqual({ first: 1450, last: 1650 });
+    expect(store.get().time.date.year).toBe(1500);
+    // Past the track's end it stops there.
+    bar.pan(10);
+    expect(store.get().yearsWindow).toEqual({ first: 1826, last: 2026 });
+  });
+
+  it('Given a window slid past the year, Then the year is carried at the nearer end', () => {
+    const store = createStore<ViewState>({
+      ...start(1450),
+      yearsWindow: { first: 1400, last: 1600 },
+    });
+    const bar = windowing(store, () => WHOLE);
+    bar.pan(0.5);
+    expect(store.get().yearsWindow).toEqual({ first: 1500, last: 1700 });
+    expect(store.get().time.date.year).toBe(1500);
+  });
+
+  it('Given nudges too small to move a decade a whole year, Then they add up until it moves', () => {
+    const store = createStore<ViewState>({
+      ...start(1505),
+      yearsWindow: { first: 1500, last: 1510 },
+    });
+    const bar = windowing(store, () => WHOLE);
+    bar.pan(0.03);
+    expect(store.get().yearsWindow).toEqual({ first: 1500, last: 1510 });
+    bar.pan(0.03);
+    expect(store.get().yearsWindow).toEqual({ first: 1501, last: 1511 });
+  });
+});

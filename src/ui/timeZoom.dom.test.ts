@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ZOOM_STEP } from '../state/timeZoom';
-import { createTimeZoom, wheelFactor } from './timeZoom';
+import { createTimeZoom, sideways, wheelFactor } from './timeZoom';
 
 /** A zoom control whose frames run when told, and the zooms it asked for. */
 function zoomControl() {
@@ -106,5 +106,64 @@ describe('zooming a time bar (#1074)', () => {
     await new Promise((resolve) => requestAnimationFrame(resolve));
     expect(zooms).toHaveLength(1);
     expect(zooms[0]).toBeLessThan(1);
+  });
+});
+
+describe('panning a time bar (#749)', () => {
+  /** A track 400 px wide, panning and zooming, its frames run when told. */
+  function panControl() {
+    const zooms: number[] = [];
+    const pans: number[] = [];
+    const frames: (() => void)[] = [];
+    const zoom = createTimeZoom(
+      (factor) => zooms.push(factor),
+      (run) => frames.push(run),
+    );
+    const track = document.createElement('div');
+    Object.defineProperty(track, 'clientWidth', { value: 400 });
+    zoom.attach(track, (share) => pans.push(share));
+    const frame = (): void => {
+      for (const run of frames.splice(0)) run();
+    };
+    return { zooms, pans, track, frame };
+  }
+
+  it('Given a sideways scroll, or Shift and the wheel, Then the window slides by its share, once a frame', () => {
+    expect(sideways({ deltaX: 30, deltaY: 4, shiftKey: false })).toBe(30);
+    expect(sideways({ deltaX: 0, deltaY: 40, shiftKey: true })).toBe(40);
+    expect(sideways({ deltaX: 0, deltaY: 40, shiftKey: false })).toBe(0);
+    const { zooms, pans, track, frame } = panControl();
+    const swipe = new WheelEvent('wheel', { deltaX: 40, deltaY: 2, cancelable: true });
+    track.dispatchEvent(swipe);
+    const shifted = new WheelEvent('wheel', { deltaY: -20, cancelable: true });
+    Object.defineProperty(shifted, 'shiftKey', { value: true });
+    track.dispatchEvent(shifted);
+    expect(swipe.defaultPrevented).toBe(true);
+    frame();
+    expect(zooms).toEqual([]);
+    expect(pans).toHaveLength(1);
+    // A tenth later, then a twentieth earlier: gathered into one.
+    expect(pans[0]).toBeCloseTo(0.05, 9);
+    track.dispatchEvent(new WheelEvent('wheel', { deltaX: -100, cancelable: true }));
+    frame();
+    expect(pans[1]).toBeCloseTo(-0.25, 9);
+  });
+
+  it('Given two fingers moved together along the track, Then the window is dragged with them', () => {
+    const { zooms, pans, track, frame } = panControl();
+    const touch = (type: string, ...xs: number[]) => {
+      const event = new Event(type, { cancelable: true });
+      Object.defineProperty(event, 'touches', {
+        value: xs.map((clientX) => ({ clientX, clientY: 0 })),
+      });
+      track.dispatchEvent(event);
+    };
+    touch('touchstart', 100, 200);
+    touch('touchmove', 200, 300);
+    frame();
+    // Moved right a quarter of the track, the same apart: earlier by a quarter, no zoom.
+    expect(zooms).toEqual([]);
+    expect(pans).toHaveLength(1);
+    expect(pans[0]).toBeCloseTo(-0.25, 9);
   });
 });

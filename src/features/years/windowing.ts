@@ -9,6 +9,7 @@ import type { ViewState } from '../../state/viewState';
 import {
   clampWindow,
   fitFor,
+  panned,
   layerSpan,
   windowChoices,
   windowValue,
@@ -43,8 +44,17 @@ export function travelBrings(layers: ReadonlySet<Layer>): Layer[] {
 export interface Windowing {
   /** The years the bar shows: the window picked, held to the track, or the whole track. */
   shown(state: ViewState): YearsWindow;
-  /** Shows a window (null for the whole track); a year outside it moves to its last. */
-  set(window: YearsWindow | null): void;
+  /**
+   * Shows a window (null for the whole track); a year outside it moves to its last, or, when
+   * the window was slid (#749), to its nearer end.
+   */
+  set(window: YearsWindow | null, nearer?: boolean): void;
+  /**
+   * Slides the window by `share` of it (#749), positive towards today, along the years' track
+   * (earlier than its start is deep time's, by zooming out). A year left behind is carried at
+   * the nearer end; a swipe too small to move a whole year is kept until the swipes add up.
+   */
+  pan(share: number): void;
   /**
    * Fits the bar to the layers turned on since last seen, and the year shown, so turning a
    * layer on never moves the reader in time. Not while playing (the travel view's own layers),
@@ -104,6 +114,12 @@ function playStep(
   return { time, done: next >= window.last };
 }
 
+/** The window slid by `share` of it along `whole`; null where that moves no whole year. */
+function slidBy(window: YearsWindow, share: number, whole: YearsWindow): YearsWindow | null {
+  const next = panned(window, share * (window.last - window.first), whole);
+  return next !== null && (next.first !== window.first || next.last !== window.last) ? next : null;
+}
+
 export function windowing(
   store: Pick<Store<ViewState>, 'get' | 'set'>,
   whole: () => YearsWindow,
@@ -111,19 +127,18 @@ export function windowing(
   thisMonth: () => number = () => new Date().getUTCMonth() + 1,
 ): Windowing {
   let before: ReadonlySet<Layer> | null = null;
+  let owed = 0;
   const shown = (state: ViewState): YearsWindow =>
     state.yearsWindow === null ? whole() : (clampWindow(state.yearsWindow, whole()) ?? whole());
-  function set(window: YearsWindow | null): void {
+  function set(window: YearsWindow | null, nearer = false): void {
     const held = window === null ? null : clampWindow(window, whole());
     const range = held ?? whole();
     store.set((state) => {
       const year = state.time.date.year;
       const inside = year >= range.first && year <= range.last;
-      return {
-        ...state,
-        yearsWindow: held,
-        ...(inside ? {} : { time: moveToYear(state.time, astronomicalYear(range.last)) }),
-      };
+      const to = nearer && year < range.first ? range.first : range.last;
+      const time = inside ? state.time : moveToYear(state.time, astronomicalYear(to));
+      return { ...state, yearsWindow: held, time };
     });
   }
   /** The last month the window plays to: today's if it ends in the present. */
@@ -139,6 +154,12 @@ export function windowing(
   return {
     shown,
     set,
+    pan(share) {
+      const next = slidBy(shown(store.get()), (owed += share), whole());
+      if (next === null) return;
+      owed = 0;
+      set(next, true);
+    },
     speeds(state, level) {
       const window = shown(state);
       return { speeds: speedsFor(window.last - window.first), speed: speedOf(state, level) };
@@ -162,8 +183,7 @@ export function windowing(
       if (fit === null) return;
       const year = state.time.date.year;
       const around = { first: Math.min(fit.first, year), last: Math.max(fit.last, year) };
-      // After the change being shown has reached every listener: a change made inside it would
-      // reach the listeners after this one as the state before it.
+      // After every listener has the change shown: one made inside it would reach later ones first.
       queueMicrotask(() => {
         set(around);
       });

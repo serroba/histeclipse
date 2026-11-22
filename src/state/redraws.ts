@@ -70,7 +70,13 @@ export const EARTH_LAYERS: Watch = (s) => [
 ];
 
 /** The Layers panel and the borders: Earth's layers, and it shuts on going to another body. */
-export const LAYERS_PANEL: Watch = (s) => [...EARTH_LAYERS(s), s.focus];
+// With Explore's Fit, offered once the bar's window leaves the topic's (#749).
+export const LAYERS_PANEL: Watch = (s) => [
+  ...EARTH_LAYERS(s),
+  s.focus,
+  s.deepWindow,
+  s.yearsWindow,
+];
 
 /** The history track: its year, the layers on it, and (for radiocarbon) the hemisphere. */
 export const HISTORY: Watch = (s) => [s.time.date.year, s.layers, s.location, s.yearsWindow];
