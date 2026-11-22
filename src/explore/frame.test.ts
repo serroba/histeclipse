@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { parseViewState } from '../state/url';
-import { fitQuery, frameSpan, frameWords, showsFrame, type TimeFrame } from './frame';
+import { fitQuery, frameSpan, frameWindow, frameWords, showsFrame, type TimeFrame } from './frame';
 
 const NOW = new Date('2026-11-15T00:00:00Z');
 const at = (query: string) => parseViewState(query, NOW).state;
@@ -49,5 +49,23 @@ describe('a subject’s time', () => {
     expect(fitQuery('ma=0.315&scale=ice&cam=10,5,3', reader)).toBe(
       'cam=1,2,3&layers=empires&focus=moon&ma=0.315&scale=ice',
     );
+  });
+
+  it('Given Ancient Australia, When fitted, Then the bar shows 120 to 80 Ma and a tenth more each side (#749, #1078)', () => {
+    const reader = 'cam=1,2,3&yw=1854,2026';
+    expect(
+      fitQuery('ma=100&scale=all&layers=plates', reader, { kind: 'ma', from: 120, to: 80 }, 2026),
+    ).toBe('cam=1,2,3&ma=100&scale=all&dw=124,76');
+  });
+
+  it('Given other frames, Then their windows: the finds’ on the ice ages, the missions a decade, a single eclipse a decade about it', () => {
+    expect(frameWindow({ kind: 'ma', from: 0.32, to: 0.04 }, 2026)).toEqual({
+      scale: 'ice',
+      dw: '0.348,0.012',
+    });
+    expect(frameWindow(MISSIONS, 2026)).toEqual({ yw: '1966,1976' });
+    expect(frameWindow({ kind: 'years', from: -584, to: -584 }, 2026)).toEqual({ yw: '-589,-579' });
+    expect(frameWindow({ kind: 'years', from: -9699, to: 2026 }, 2026)).toEqual({});
+    expect(frameWindow({ kind: 'ma', from: 4568, to: 0 }, 2026)).toEqual({ scale: 'eons' });
   });
 });

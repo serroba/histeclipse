@@ -29,7 +29,7 @@ describe('Explore on the page', () => {
     expect(open).toHaveBeenCalledOnce();
   });
 
-  it('Given a reader who arrived at Human origins and then went to today, When they fit the topic, Then only its time comes back', () => {
+  it('Given a reader who arrived at Human origins and then went to today, When they fit the topic, Then only its time comes back, the bar over it', () => {
     const query = vi.fn<(change: (current: string) => string) => void>();
     const part = mountExplore({
       opener: { anchor: vi.fn(), query },
@@ -44,7 +44,8 @@ describe('Explore on the page', () => {
     fit?.click();
     const change = query.mock.calls[0]?.[0] ?? ((current: string) => current);
     expect(change('t=2026-01-01T12:00Z&cal=gregorian&cam=1,2,3&layers=empires')).toBe(
-      'cam=1,2,3&layers=empires&ma=0.315&scale=ice',
+      // And the bar over its finds' time (#1078).
+      'cam=1,2,3&layers=empires&ma=0.315&scale=ice&dw=0.348,0.012',
     );
   });
 

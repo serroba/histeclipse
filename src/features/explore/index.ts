@@ -80,7 +80,7 @@ export function mountExplore(context: ExploreContext): ExplorePart {
     ],
   });
   const fit = createFitLine((destination) => {
-    context.opener.query((current) => fitQuery(destination.view, current));
+    context.opener.query((current) => fitQuery(destination.view, current, destination.frame));
   });
   const time = createTimeDialog((entry) => {
     context.opener.query((current) => jumpQuery(entry, current, PRESENT_YEAR));

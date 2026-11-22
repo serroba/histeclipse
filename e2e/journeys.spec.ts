@@ -77,7 +77,7 @@ test('a visitor explores human origins by topic, without choosing a span, and Ba
   expect(problems).toEqual([]);
 });
 
-test('a visitor who wandered from Ancient Australia fits the topic and is back at its age (#729)', async ({
+test('a visitor who wandered from Ancient Australia fits the topic and is back at its age, the bar over its time (#729, #1078)', async ({
   page,
 }) => {
   const problems = collectProblems(page);
@@ -92,6 +92,12 @@ test('a visitor who wandered from Ancient Australia fits the topic and is back a
     await expect(page.locator('.hud-date')).toHaveText('100 million years ago');
     await expect(page.getByRole('button', { name: /^Fit this topic/ })).toBeHidden();
     await expect(page.locator('.explore-context')).toContainText('Ancient Australia');
+  });
+  await test.step('And the bar shows its 120 to 80 million years, and a tenth more each side', async () => {
+    await expect(page).toHaveURL(/dw=124(,|%2C)76/);
+    const bar = page.getByRole('navigation', { name: 'Deep time' });
+    await expect(bar.getByTestId('scale-start')).toHaveText('124 Ma');
+    await expect(bar.getByTestId('scale-end')).toHaveText('76 Ma');
   });
   expect(problems).toEqual([]);
 });

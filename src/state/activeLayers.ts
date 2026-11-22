@@ -24,6 +24,8 @@ export interface GoTo {
   readonly span: Span;
   readonly ma?: number;
   readonly year?: number;
+  /** The years its record covers, for the bar to show (#1078), where the year lies outside them. */
+  readonly years?: { readonly first: number; readonly last: number };
   readonly label: string;
 }
 
@@ -80,7 +82,12 @@ function withinYears(covers: Covers, year: number): Within {
     return {
       coverage: 'outside',
       why,
-      goTo: { span: 'years', year: nearest, label: yearWords(nearest) },
+      goTo: {
+        span: 'years',
+        year: nearest,
+        years: { first: from, last: to },
+        label: yearWords(nearest),
+      },
     };
   }
   if (covers.gaps?.includes(year) !== true) return AVAILABLE;

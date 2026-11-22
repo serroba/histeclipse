@@ -45,4 +45,14 @@ describe('going to a moment typed', () => {
     expect(state.ma).toBe(ma);
     expect(state.deepScale).toBe(scale);
   });
+
+  it('Given the bar zoomed, When they go to a time, Then its span shows whole (#1078)', () => {
+    const query = jumpQuery(
+      { kind: 'ma', ma: 250 },
+      'ma=100&scale=all&dw=124,76&yw=1854,2026',
+      2026,
+    );
+    expect(query).not.toMatch(/dw=|yw=/);
+    expect(query).toMatch(/ma=250/);
+  });
 });

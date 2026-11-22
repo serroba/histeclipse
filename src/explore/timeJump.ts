@@ -12,7 +12,8 @@ import { frameSpan } from './frame';
 const OLDEST_YEAR = -9699;
 
 /** What going to a moment replaces in a link: when, and on which range. */
-const TIMED = ['t', 'cal', 'ma', 'scale', 'mission'];
+// The bar's windows too (#1078): a jump shows its span whole, as a preset does.
+const TIMED = ['t', 'cal', 'ma', 'scale', 'mission', 'dw', 'yw'];
 
 const pad = (value: number, width: number): string => String(Math.abs(value)).padStart(width, '0');
 
