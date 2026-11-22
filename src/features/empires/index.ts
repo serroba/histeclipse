@@ -140,7 +140,10 @@ function mountEmpires(context: EmpiresContext): FeatureInstance {
         if (pending === key) pending = null;
         // The year or source may have moved on while the files loaded.
         if (empiresShown !== key) return;
+        // The chip said "loading" only until the first states were drawn: say they are.
+        const first = statesDrawn === null;
         statesDrawn = { year, territories: drawn };
+        if (first) context.refresh();
         context.whyHere.again();
         const changes = noteStates(source, year, [
           ...drawn.map((territory) => ({ ...labelPoint(territory), name: territory.name })),
@@ -171,7 +174,8 @@ function mountEmpires(context: EmpiresContext): FeatureInstance {
     load() {
       if (!bordersOn) return null;
       if (failed) return { state: 'failed', retry };
-      return pending === null ? null : { state: 'loading' };
+      // Loading until the first states are drawn; later years' files need no word on the chip.
+      return pending === null || statesDrawn !== null ? null : { state: 'loading' };
     },
     here(state) {
       if (state.location === null || state.ma !== null || !state.layers.has('empires')) return null;
