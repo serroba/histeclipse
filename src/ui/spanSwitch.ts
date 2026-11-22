@@ -89,7 +89,10 @@ export function createSpanSwitch(onSpan: (span: Span) => void): SpanSwitch {
     show(false);
     chip.focus();
   });
+  // A tap elsewhere closes them; a switch already closed (the other bar's) leaves all be, or it
+  // would take the bar's raised mark from the one open.
   document.addEventListener('pointerdown', (event) => {
+    if (!root.hasAttribute('data-open')) return;
     if (event.target instanceof Node && !root.contains(event.target)) show(false);
   });
   return {

@@ -25,9 +25,6 @@ interface HistoryView {
   /** The speeds offered for the years shown (#915), and the level picked. */
   readonly speeds: readonly PlaySpeed[];
   readonly speed: SpeedLevel;
-  /** The windows of years offered (#749), and the one shown, as their values. */
-  readonly windows: readonly { readonly value: string; readonly label: string }[];
-  readonly window: string;
   /** Whether there is room to zoom in and out (#1074). */
   readonly zoom: { readonly in: boolean; readonly out: boolean };
   /** What the track says about states; a hint when the layer is off. */
@@ -136,8 +133,6 @@ export function createHistoryTrack(
     onSpeed(speed: SpeedLevel): void;
     /** Leave the travel view for today's Earth, day and night. */
     onEndTravel(): void;
-    /** A window of years picked, by its value. */
-    onWindow(value: string): void;
     /** Zoom by `factor` about the year (#1074): over 1 shows more time. */
     onZoom: (factor: number) => void;
     /** Slide the window by `share` of it (#749), positive towards today. */
@@ -169,11 +164,6 @@ export function createHistoryTrack(
   const { play, slider } = transport;
   const speed = element('select', { class: 'history-speed', 'aria-label': 'Speed' });
   let speedsListed = '';
-  const range = element('select', { class: 'history-range', 'aria-label': 'Years shown' });
-  range.addEventListener('change', () => {
-    handlers.onWindow(range.value);
-  });
-  let rangeListed = '';
   const changes = element('p', { class: 'history-changes', 'data-testid': 'history-changes' });
   const blank = element('p', { class: 'history-blank', 'data-testid': 'history-blank' });
   const earth = element('p', { class: 'history-blank', 'data-testid': 'history-earth' });
@@ -205,7 +195,7 @@ export function createHistoryTrack(
   // phone, where the years shown and the speed fill theirs (#985).
   const notes = element('div', { class: 'history-notes' }, changes, about, travel);
   const zoom = createTimeZoom(handlers.onZoom);
-  const extras = element('span', { class: 'history-extras' }, range, speed);
+  const extras = element('span', { class: 'history-extras' }, speed);
   const lane = element(
     'div',
     { class: 'history-lane' },
@@ -243,14 +233,6 @@ export function createHistoryTrack(
         );
       }
       speed.value = view.speed;
-      const listed = view.windows.map(({ value, label }) => `${value}=${label}`).join('|');
-      if (listed !== rangeListed) {
-        rangeListed = listed;
-        range.replaceChildren(
-          ...view.windows.map(({ value, label }) => element('option', { value }, label)),
-        );
-      }
-      range.value = view.window;
       zoom.render(view.zoom);
       changes.textContent = view.changes;
       changes.hidden = view.changes === '';

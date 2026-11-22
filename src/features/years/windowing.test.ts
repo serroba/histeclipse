@@ -72,17 +72,6 @@ describe('the Years bar’s window (#749)', () => {
     expect(store.get().yearsWindow).toBeNull();
   });
 
-  it('Given the layers on, Then the windows offered and the one shown', () => {
-    const store = createStore<ViewState>({
-      ...start(2000),
-      yearsWindow: { first: 1854, last: 2026 },
-      layers: new Set(['enso'] as const),
-    });
-    const { windows, window } = windowing(store, () => WHOLE).choices(store.get());
-    expect(window).toBe('1854,2026');
-    expect(windows.at(-1)).toEqual({ value: '1854,2026', label: 'El Niño and La Niña, 1854–2026' });
-  });
-
   it('Given a window, Then its speeds by level, and where playing starts', () => {
     const store = createStore<ViewState>({
       ...start(2026),
