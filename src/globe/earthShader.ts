@@ -356,8 +356,10 @@ const EARTH_BODY = /* glsl */ `
     vec3 lit = surface * (0.45 + 0.75 * clamp(sunAltitude, 0.0, 1.0));
     vec3 night = surface * vec3(0.035, 0.05, 0.09) + vec3(0.004, 0.008, 0.02);
     vec3 color = mix(night, lit, daylight);
-    float terminator = exp(-pow(sunAltitude / 0.05, 2.0));
-    color += vec3(1.0, 0.5, 0.18) * terminator * 0.12;
+    // The warm glow along the terminator: faint and narrow, so it tints the dusk line without
+    // reading as an orange smear where dusk meets the limb (#1098).
+    float terminator = exp(-pow(sunAltitude / 0.03, 2.0));
+    color += vec3(1.0, 0.5, 0.18) * terminator * 0.05;
     color = empiresLayer(color, daylight);
     float latitude = asin(clamp(normal.y, -1.0, 1.0));
     float longitude = atan(-normal.z, normal.x);

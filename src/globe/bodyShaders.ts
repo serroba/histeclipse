@@ -67,18 +67,15 @@ export const ATMOSPHERE_FRAGMENT = /* glsl */ `
   varying vec3 vWorldNormal;
   void main() {
     #include <logdepthbuf_fragment>
-    // A wide band thinning smoothly outward (#1098), not a ribbon: the lower power and offset
-    // keep the glow falling off the whole way, so no edge shows where it ends.
-    float rim = pow(clamp(0.90 + dot(vViewNormal, vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 2.5);
-    float sunAltitude = dot(normalize(vWorldNormal), sunDirection);
-    float sunlit = smoothstep(-0.35, 0.35, sunAltitude);
+    // A band thinning smoothly outward (#1098), tight enough to stay a thin rim seen up
+    // close, where the camera sits almost inside the shell.
+    float rim = pow(clamp(0.93 + dot(vViewNormal, vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 3.0);
+    float sunlit = smoothstep(-0.35, 0.35, dot(normalize(vWorldNormal), sunDirection));
     sunlit = mix(sunlit, 0.75, evenLight);
-    // The day limb a pale blue-white, the night a whisper of blue, and the terminator warmed
-    // to amber, the glow sunsets paint the limb with; deep time's even light has no Sun side,
-    // so no warmth there.
-    vec3 blue = mix(vec3(0.25, 0.45, 0.95), vec3(0.6, 0.75, 1.0), sunlit);
-    float terminator = exp(-pow(sunAltitude / 0.15, 2.0)) * (1.0 - evenLight);
-    vec3 color = mix(blue, vec3(1.0, 0.55, 0.25), terminator * 0.6);
-    gl_FragColor = vec4(color * rim * (0.05 + 0.5 * sunlit), 1.0);
+    // The day limb a pale blue-white, the night a whisper of blue: no hard band, and no
+    // amber at the terminator — the shell is thick enough that the dusk arc grazes its limb
+    // the whole way round up close, and the warmth smeared (#1098).
+    vec3 color = mix(vec3(0.25, 0.45, 0.95), vec3(0.6, 0.75, 1.0), sunlit);
+    gl_FragColor = vec4(color * rim * (0.04 + 0.4 * sunlit), 1.0);
   }
 `;
