@@ -84,7 +84,12 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
       }
       const year = astronomicalYear(to.year);
       context.step();
-      store.set((state) => ({ ...state, time: moveToYear(state.time, year) }));
+      // Outside its record, the bar shows the years it covers (#1078).
+      store.set((state) => ({
+        ...state,
+        time: moveToYear(state.time, year),
+        ...(to.years === undefined ? {} : { yearsWindow: to.years }),
+      }));
     },
   };
   // Beside Layers on wide screens; on a phone, where the date panel has no room for them, at the

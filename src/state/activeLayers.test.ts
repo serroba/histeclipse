@@ -45,7 +45,13 @@ describe('the layers on, and whether they have data now (#751)', () => {
   it('Given the ozone hole before 1970 or after 2025, Then it is outside, going to its nearest year', () => {
     const [before] = activeLayers(at('t=1900-10-01T12:00Z&layers=ozone'));
     expect(before).toMatchObject({ coverage: 'outside', why: 'none before 1970 CE' });
-    expect(before?.goTo).toEqual({ span: 'years', year: 1970, label: '1970 CE' });
+    // With its years, for the bar to show them (#1078).
+    expect(before?.goTo).toEqual({
+      span: 'years',
+      year: 1970,
+      years: { first: 1970, last: 2025 },
+      label: '1970 CE',
+    });
     const [after] = activeLayers(at('t=2026-10-01T12:00Z&layers=ozone'));
     expect(after).toMatchObject({ coverage: 'outside', why: 'none after 2025 CE' });
     const [inside] = activeLayers(at('t=2006-10-01T12:00Z&layers=ozone'));
