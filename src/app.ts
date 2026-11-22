@@ -62,6 +62,7 @@ import { createBorderFiles, createStatesNote } from './features/empires';
 import { mountDeepTime } from './features/deepTime';
 import { mountYears } from './features/years';
 import { ECLIPSE_EARTH_PARTS, mountEclipses } from './features/eclipses';
+import { createDayEvents } from './ui/dayEvents';
 import { mountTexts } from './features/texts';
 import {
   createAsking,
@@ -403,6 +404,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
 
   // The borders of past states (#446), a century's file at a time, and what changed.
   // The eclipses (#447): the year's on the bar, picking one, and the moment shown of it.
+  const days = createDayEvents(openAnchor);
   const eclipses = mountEclipses({
     ...partContext,
     globe,
@@ -414,6 +416,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     timelineButtons: [famous.button, records.button],
     timelineExtras: [years.track.extras, cycle.extras, launches.extras],
   });
+  eclipses.timeline.append(days.root);
 
   // The page's frame (#442): each part's elements, where they go.
   const { hud, hudActions, bottom } = layOutPage(root, {
@@ -572,6 +575,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     bottom.dataset['away'] = String(away);
     cycle.show(state);
     launches.show(state);
+    days.render(state.time.date.year);
     // The Moon keeps the year's eclipses; Earth's other timelines rest there too (#329).
     bottom.dataset['body'] = state.focus;
     hudActions.hidden = away;

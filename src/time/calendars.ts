@@ -371,7 +371,7 @@ export function formatInCalendar(calendar: YearCalendar, jd: JulianDay): string 
   return `${String(date.day)} ${date.monthName} ${formatCalendarYear(calendar, date.year)}`;
 }
 
-const MONTH_NAMES = [
+export const MONTH_NAMES = [
   'January',
   'February',
   'March',
