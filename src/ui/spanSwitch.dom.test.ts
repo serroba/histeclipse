@@ -7,8 +7,7 @@ describe('the span switch’s icons (#1068)', () => {
   it('Given the switch, Then each span carries its own icon beside its word, and the word names it', () => {
     const onSpan = vi.fn();
     const spans = createSpanSwitch(onSpan);
-    const { root } = spans;
-    const buttons = [...root.querySelectorAll('button')];
+    const buttons = [...spans.group.querySelectorAll('button')];
     expect(buttons.map((button) => button.textContent)).toEqual([
       'Years',
       'Ice ages',
@@ -38,7 +37,7 @@ describe('the span switch’s icons (#1068)', () => {
 
   it('Given part of the ice ages shown (#1074), Then no preset is picked, the ice ages ringed', () => {
     const spans = createSpanSwitch(vi.fn());
-    const buttons = [...spans.root.querySelectorAll('button')];
+    const buttons = [...spans.group.querySelectorAll('button')];
     spans.render('ice', false);
     expect(buttons.map((button) => button.getAttribute('aria-pressed'))).toEqual([
       'false',

@@ -1,6 +1,14 @@
 /** The Years bar's range (#749): fitted to a layer turned on, picked, and kept in the link. */
 
-import { collectProblems, expect, globeRendered, openLayers, test } from './support';
+import {
+  collectProblems,
+  expect,
+  globeRendered,
+  openLayers,
+  test,
+  pickSpan,
+  spanPreset,
+} from './support';
 
 test('turning on El Niño fits the Years bar to its years, and the range can be picked back @acceptance @mobile', async ({
   page,
@@ -86,11 +94,10 @@ test('zooming out of the years goes on into deep time at the same moment, and zo
     await expect(years).toHaveAttribute('max', '2026');
   });
   await test.step('And no preset is picked while part of the years shows; Years shows them all again', async () => {
-    const presets = page.getByRole('group', { name: 'Time range presets' });
-    const preset = presets.getByRole('button', { name: 'Years', exact: true });
+    const preset = spanPreset(page, 'Years');
     await expect(page).toHaveURL(/yw=/);
     await expect(preset).toHaveAttribute('aria-pressed', 'false');
-    await preset.click();
+    await pickSpan(page, 'Years');
     await expect(page).not.toHaveURL(/yw=/);
     await expect(preset).toHaveAttribute('aria-pressed', 'true');
     await expect(page).toHaveURL(/t=2026-06-15/);

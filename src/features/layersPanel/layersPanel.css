@@ -303,3 +303,45 @@
   font: inherit;
   font-size: 14px;
 }
+
+/* In the header's tools (#1116), Layers is a tool like Explore and Search, a little brighter. */
+.hud-tools .layers-open {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 16px;
+  font-size: 12px;
+}
+
+@media (max-width: 600px) {
+  /* Its count, a badge at its corner: its ::after is a finger's room there (touch.css). */
+  .hud-tools .layers-open[data-on]::after {
+    min-width: 0;
+    height: auto;
+    margin: 0;
+    background: none;
+    content: '';
+  }
+
+  .hud-tools .layers-open[data-on]::before {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    background: rgb(150 180 255 / 0.6);
+    color: var(--ink);
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
+    content: attr(data-on) / '';
+  }
+}
+
+.hud-tools .layers-open[hidden] {
+  display: none;
+}

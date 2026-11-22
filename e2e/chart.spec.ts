@@ -3,7 +3,7 @@
  * divisions) sit under the deep-time slider in the chart's colours; a tap goes to one.
  */
 
-import { collectProblems, expect, globeRendered, test } from './support';
+import { collectProblems, expect, globeRendered, test, pickSpan } from './support';
 
 test('the slider names the periods in the chart’s colours, and a tap goes to one', async ({
   page,
@@ -28,7 +28,7 @@ test('the slider names the periods in the chart’s colours, and a tap goes to o
     await expect(page.getByTestId('deep-period')).toHaveText('Jurassic · Mesozoic');
   });
   await test.step('And on the ice-age scale, the Pleistocene’s ages line it instead', async () => {
-    await page.getByRole('button', { name: 'Ice ages' }).click();
+    await pickSpan(page, 'Ice ages');
     await expect(bands.getByRole('button', { name: /^Chibanian, / })).toBeVisible();
     await expect(bands.getByRole('button', { name: /^Holocene, / })).toBeAttached();
   });

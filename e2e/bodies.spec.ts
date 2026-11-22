@@ -239,8 +239,8 @@ test(
   GPU,
   async ({ page }) => {
     const problems = collectProblems(page);
-    // Two and a half AU out, over the north side of the Solar System.
-    await page.goto('./?t=2020-12-21T18:00&cam=60,0,60000');
+    // Two and a half AU out, over the north side of the Solar System, Mars clear of the bar.
+    await page.goto('./?t=2020-12-21T18:00&cam=45,0,60000');
     await globeRendered(page);
     const globe = page.getByTestId('globe');
     await expect(globe).toHaveAttribute('data-planets', 'on');

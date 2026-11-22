@@ -229,8 +229,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const asking = createAsking({ store, zoomRail, root });
   const waysLegend = createWaysLegend(whySheet.mark('ways', 'Ways of life'));
   const globeContainer = element('div', { class: 'globe', 'data-testid': 'globe' });
-  // The globe draws at once and takes its maps as they arrive; nothing below waits on them.
-  // It sizes itself once its container is on the page.
+  // The globe draws at once, takes its maps as they arrive, and sizes itself once on the page.
   const globe = createGlobe(globeContainer, {
     camera: store.get().camera,
     textureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
@@ -418,6 +417,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   eclipses.timeline.append(days.root);
 
   // The page's frame (#442): each part's elements, where they go.
+  const headerTools = [boundaries.button, texts.search.button, panels.fullView];
   const { hud, hudActions, bottom } = layOutPage(root, {
     under: [
       globeContainer,
@@ -430,14 +430,14 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ],
     header: {
       home: base,
-      tools: [explore.button, boundaries.button, texts.search.button, panels.fullView],
+      tools: [explore.button, layersPanel.button, ...headerTools],
       date: explore.timeTrigger(moment.dateText),
       time: moment.timeText,
       context: explore.context,
       detail: moment.detailText,
       termNote: moment.termNote,
       welcome: welcome.root,
-      actions: [deepTime.spanSwitch, layersPanel.button, layersPanel.chips],
+      actions: [layersPanel.chips],
       viewSwitch: viewSwitch.root,
       skyControls: sky.controls,
       bodySwitches: bodies.switches,
@@ -451,6 +451,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       eclipseCard: eclipses.card,
       eclipseScrubber: eclipses.scrubber,
       holocene: [
+        deepTime.yearsScale,
         bodies.bar,
         waysLegend.root,
         years.track.root,
