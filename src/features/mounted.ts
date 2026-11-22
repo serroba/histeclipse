@@ -27,6 +27,8 @@ export interface Features {
   deep(state: ViewState, moment: DeepMoment): Map<Layer, DeepChipView>;
   /** Deep time shown: the fields of the bar's view the features have, together (#909). */
   deepBar(state: ViewState, moment: DeepMoment): Required<DeepBarFields>;
+  /** Deep time (#1077): the finds of all the features, Ma, that play eases near. */
+  finds(state: ViewState): number[];
   /** Deep time left. */
   deepOff(state: ViewState): void;
   /** A marker tapped: whether it was one of theirs, and if so, picked. */
@@ -110,6 +112,9 @@ export function mountFeatures(
       const fields = deepBarOff(state);
       for (const { shown } of mounted) Object.assign(fields, shown.deepBar?.(state, moment));
       return fields;
+    },
+    finds(state) {
+      return mounted.flatMap(({ shown }) => shown.finds?.(state) ?? []);
     },
     deepOff(state) {
       for (const { shown } of mounted) shown.deep?.(state, null);

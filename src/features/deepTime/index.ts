@@ -32,9 +32,9 @@ import {
   type PaleoDemIndex,
 } from '../../data/paleoDem';
 import { HOLOCENE_MA, maOfYear, yearOfMa } from '../../data/iceSheets';
-import { DEFAULT_PACE, paceSpeed, prefetchFrames, type Pace } from '../../deepTime/playSpeed';
+import { prefetchFrames } from '../../deepTime/playSpeed';
+import { deepPlaying } from './playing';
 import { animationLoop } from '../../util/animationLoop';
-import { playhead } from '../../deepTime/playhead';
 import { PLATES_REACH_MA, sketchAt } from '../../deepTime/sketch';
 import { barWindow } from '../../ui/deepBarModel';
 import { createSpanSwitch, type Span } from '../../ui/spanSwitch';
@@ -163,10 +163,11 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
         if (play) startPlay();
         else stopPlay();
       },
-      onPace(picked) {
-        pace = picked;
-        storySpeed = null;
-        showDeepTime(store.get());
+      onPace: (picked) => {
+        play.setPace(picked);
+      },
+      onEasing: (on) => {
+        play.setEasing(on);
       },
       ...deepChoices(store),
       onCo2Archive() {
@@ -196,9 +197,17 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
   let paleoIndex: Promise<PaleoDemIndex> | null = null;
   // How far back the elevation maps reach, until their index says.
   let oldest = MAPS_REACH_MA;
-  let playing = false;
-  const playFrames = animationLoop(tick);
-  let head = playhead();
+  // Playing towards today, at a pace (#1076), easing near milestones and finds (#1077).
+  const play = deepPlaying({
+    store,
+    shown: (state) => shown(state),
+    finds: (state) => context.finds(state),
+    loop: (tick) => animationLoop(tick),
+    changed: () => {
+      showDeepTime(store.get());
+    },
+    lessMotion: globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  });
 
   // Every reversal of the last 83 Ma: small, loaded the first time deep time shows.
   let polarity: PolarityScale | null = null;
@@ -256,7 +265,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       ma,
       scale,
       uncharted,
-      maPerSecond: playing ? playSpeed() : null,
+      maPerSecond: play.playing() ? play.speed() : null,
     });
     deepBar.render({
       ma,
@@ -267,9 +276,10 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       mapsReach: oldest,
       period,
       polarity,
-      playing,
-      pace,
-      speed: playSpeed(),
+      playing: play.playing(),
+      pace: play.pace(),
+      speed: play.speed(),
+      easing: play.easing(),
       zoom: zoomRoom(deepAxisWindow(shown(state), PRESENT_YEAR), PRESENT_YEAR),
       scale,
       ...fields,
@@ -280,7 +290,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       period: story?.what ?? (period === null ? 'Deep time' : periodWords(period)),
       ma,
       oldest: spanOf(scale),
-      playing,
+      playing: play.playing(),
       temperature: temperatureDrawn,
     });
     paleoIndex ??= loadPaleoDemIndex(`${base}data/paleodem/index.json`, fetchJson);
@@ -295,9 +305,9 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
         // On the ice-age scale, today's map: the next is 5 million years back.
         const { younger, older, mix } = framesAround(index.frames, ice ? 0 : ma);
         // Playing, the next maps load ahead, so the globe keeps up with the years.
-        if (playing && !ice) {
+        if (play.playing() && !ice) {
           globe.prefetch(
-            framesAhead(index.frames, ma, prefetchFrames(playSpeed())).map(
+            framesAhead(index.frames, ma, prefetchFrames(play.speed())).map(
               (frame) => `${base}data/paleodem/${frame.file}`,
             ),
           );
@@ -325,60 +335,25 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     return scale === 'eons' ? EARTH_AGE_MA : oldest;
   }
 
-  // The pace picked (#1076), one for all of deep time; a story's own speed until it stops.
-  let pace: Pace = DEFAULT_PACE;
-  let storySpeed: number | null = null;
-  /** How fast deep time plays now, Ma a second: a story's speed, or the pace over the bar shown. */
-  function playSpeed(): number {
-    const { oldest: from, youngest } = shown(store.get());
-    return storySpeed ?? paceSpeed(from - youngest, pace);
-  }
-
   /** The part of the span the bar shows (#1074), as played: from its oldest to its youngest. */
   function shown(state: ViewState): { readonly oldest: number; readonly youngest: number } {
     return barWindow(state.deepWindow, spanOf(state.deepScale), state.ma ?? 0);
   }
 
-  /** Play towards the bar's young end; from there, start again at its oldest. */
   function startPlay(): void {
-    if (playing) return;
-    playing = true;
-    const { oldest, youngest } = shown(store.get());
-    if ((store.get().ma ?? 0) <= youngest) store.set((state) => ({ ...state, ma: oldest }));
-    head = playhead();
-    playFrames.start();
-    showDeepTime(store.get());
-  }
-
-  function tick(seconds: number): void {
-    const ma = store.get().ma;
-    if (ma === null) {
-      stopPlay();
-      return;
-    }
-    const { youngest } = shown(store.get());
-    const next = Math.max(youngest, head.step(ma, playSpeed(), seconds));
-    store.set((state) => ({ ...state, ma: next }));
-    if (next <= youngest) {
-      stopPlay();
-      return;
-    }
+    play.start();
   }
 
   /** Play from a moment, at one of its span's speeds: a story told by playing (#177). */
   function playFrom(ma: number, deepScale: DeepScale, maPerSecond: number): void {
     stopPlay();
     enterDeepTime(ma, deepScale);
-    storySpeed = maPerSecond;
+    play.story(maPerSecond);
     startPlay();
   }
 
   function stopPlay(): void {
-    if (!playing) return;
-    playing = false;
-    storySpeed = null;
-    playFrames.stop();
-    showDeepTime(store.get());
+    play.stop();
   }
 
   return {
@@ -393,8 +368,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     land,
     setScale,
     stopPlay,
-    playing: () => playing,
-    playSpeed,
+    playing: play.playing,
+    playSpeed: play.speed,
     oldest: () => oldest,
   };
 }

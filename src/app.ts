@@ -275,6 +275,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     off: (state) => {
       features.deepOff(state);
     },
+    finds: (state) => features.finds(state),
     platesReach: () => plateMasks.reach(),
     loadArchive: () => {
       co2Archive.load();

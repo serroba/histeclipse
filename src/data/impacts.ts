@@ -50,6 +50,23 @@ export async function loadImpacts(url: string, fetchJson: Fetch): Promise<Impact
   return getJson(fetchJson, url, ImpactsSchema);
 }
 
+/** The impacts play eases near (#1077): the great ones, 100 km across or more, closely dated. */
+const GREAT_KM = 100;
+const CLOSELY_MA = 10;
+
+/** When the great impacts struck, Ma: the middle of each one's dated span. */
+export function greatImpacts(data: Impacts): number[] {
+  return data.impacts.flatMap(({ diameterKm, olderMa, youngerMa }) =>
+    diameterKm !== null &&
+    diameterKm >= GREAT_KM &&
+    olderMa !== null &&
+    youngerMa !== null &&
+    olderMa - youngerMa <= CLOSELY_MA
+      ? [(olderMa + youngerMa) / 2]
+      : [],
+  );
+}
+
 /** An impact as marked at a moment: where it lay then, and whether it had surely struck. */
 export interface ImpactMark {
   readonly impact: Impact;

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import data from '../../public/data/impacts.json';
 import {
   AROUND_MA,
+  greatImpacts,
   impactDetails,
   impactsAt,
   impactsText,
@@ -246,5 +247,12 @@ describe('strikes as time plays', () => {
       'Popigai',
       'Chesapeake Bay',
     ]);
+  });
+});
+
+describe('the great impacts play eases near (#1077)', () => {
+  it('Given the craters, Then Chicxulub, Popigai, Manicouagan, Sudbury and Vredefort, the large ones closely dated', () => {
+    const struck = greatImpacts(data as Impacts).map((ma) => Math.round(ma));
+    expect(struck.toSorted((a, b) => a - b)).toEqual([37, 66, 215, 1850, 2023]);
   });
 });

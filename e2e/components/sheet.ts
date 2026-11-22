@@ -14,6 +14,7 @@ const bar = createDeepTimeBar({
   onMa: nothing,
   onPlay: nothing,
   onPace: nothing,
+  onEasing: nothing,
   onZoom: nothing,
   onFit: nothing,
   onTemperature: nothing,

@@ -355,3 +355,14 @@
   font-weight: 400;
   white-space: nowrap;
 }
+
+/* Whether play slows near milestones and finds (#1077): a switch with the milestones. */
+.deep-easing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--ink-muted);
+  font-size: 13px;
+  cursor: pointer;
+}

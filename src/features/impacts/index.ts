@@ -5,6 +5,7 @@
  */
 
 import {
+  greatImpacts,
   loadImpacts,
   impactsAt,
   impactsText,
@@ -195,6 +196,9 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
             context.refresh();
           }),
     said: () => said,
+    // Play eases near the great impacts while the layer is on (#1077).
+    finds: (state) =>
+      impacts === null || !state.layers.has('impacts') ? [] : greatImpacts(impacts),
     pick(id) {
       const impact = pickedImpact(impacts, `impact:${id}`);
       if (impacts === null || impact === undefined) return;

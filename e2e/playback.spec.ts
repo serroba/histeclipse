@@ -3,7 +3,7 @@
  * as the years play by, the globe shows each one as it arrives, and loads the next ones ahead.
  */
 
-import { collectProblems, expect, globeRendered, test } from './support';
+import { collectProblems, expect, globeRendered, showDeepDetails, test } from './support';
 
 test('on a slow connection, the globe keeps changing as deep time plays', async ({ page }) => {
   const problems = collectProblems(page);
@@ -74,6 +74,32 @@ test('deep time plays at a pace, its speed following the part of time shown (#10
   await test.step('When they zoom in, the same pace plays slower', async () => {
     await deep.getByRole('button', { name: 'Show less time' }).click();
     await expect(rate).toHaveText('≈ 200 kyr/s');
+  });
+  expect(problems).toEqual([]);
+});
+
+test('deep time slows near milestones as it plays, unless turned off or less motion is asked for (#1077)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const easing = page.getByTestId('deep-easing');
+  await test.step('Given deep time, Then playing slows near milestones and finds', async () => {
+    await page.goto('./?ma=100');
+    await globeRendered(page);
+    await expect(easing).toBeChecked();
+  });
+  await test.step('When they turn it off, Then it stays off as they play', async () => {
+    await showDeepDetails(page);
+    // With the milestones, in their fold.
+    await page.getByTestId('deep-milestones').locator('summary').click();
+    await easing.uncheck();
+    await expect(easing).not.toBeChecked();
+  });
+  await test.step('Given a reader who asks for less motion, Then it starts off', async () => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('./?ma=100');
+    await globeRendered(page);
+    await expect(easing).not.toBeChecked();
   });
   expect(problems).toEqual([]);
 });

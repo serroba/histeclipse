@@ -49,7 +49,11 @@ function card(milestone: Milestone): HTMLElement {
   );
 }
 
-export function createMilestonePanel(handlers: { onMa(ma: number): void }): MilestonePanel {
+export function createMilestonePanel(
+  handlers: { onMa(ma: number): void },
+  /** Under the cards, open with them: how playing treats milestones (#1077). */
+  ...after: HTMLElement[]
+): MilestonePanel {
   const earlier = element(
     'button',
     { type: 'button', class: 'step milestone-step', 'aria-label': 'Earlier milestone' },
@@ -67,6 +71,7 @@ export function createMilestonePanel(handlers: { onMa(ma: number): void }): Mile
     { class: 'deep-milestones', 'data-testid': 'deep-milestones' },
     summary,
     cards,
+    ...after,
   );
   const root = element('div', { class: 'deep-milestone-row' }, earlier, panel, later);
 
