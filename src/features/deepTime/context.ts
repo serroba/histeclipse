@@ -17,6 +17,7 @@ type Gathered = Omit<
   | 'story'
   | 'oldest'
   | 'youngest'
+  | 'part'
   | 'mapsReach'
   | 'period'
   | 'polarity'

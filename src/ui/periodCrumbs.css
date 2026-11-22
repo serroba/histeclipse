@@ -1,0 +1,53 @@
+/* Where the bar is in Earth's history (#1075): a row of the units that hold it, over the track. */
+
+.period-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 2px;
+  font-size: 13px;
+}
+
+.period-crumbs[hidden] {
+  display: none;
+}
+
+.period-crumb {
+  min-height: 44px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.period-crumb:hover {
+  background: rgb(255 255 255 / 0.06);
+  color: var(--ink);
+}
+
+.period-crumb[aria-current='location'] {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.period-crumb-gap {
+  color: var(--ink-muted);
+}
+
+@media (max-width: 600px) {
+  /* On a phone one line, scrolled sideways if it must be, the narrowest unit in view (#1075). */
+  .period-crumbs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    white-space: nowrap;
+  }
+
+  .period-crumb,
+  .period-crumb-gap {
+    flex: none;
+  }
+}
