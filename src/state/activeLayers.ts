@@ -177,7 +177,7 @@ export function absentLayers(active: readonly ActiveLayer[]): ReadonlyMap<Layer,
 }
 
 /** A step a row offers: its words, and what it does. */
-export interface Step {
+interface Step {
   readonly label: string;
   readonly run: () => void;
 }
