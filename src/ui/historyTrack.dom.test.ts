@@ -12,11 +12,6 @@ const VIEW = {
   travelling: false,
   speeds: speedsFor(172),
   speed: 'medium' as const,
-  windows: [
-    { value: 'all', label: 'The Holocene, 9700 BCE–2026' },
-    { value: '1854,2026', label: 'El Niño and La Niña, 1854–2026' },
-  ],
-  window: '1854,2026',
   zoom: { in: true, out: true },
   changes: '',
   blank: null,
@@ -30,7 +25,6 @@ function setUp() {
     onPlay: vi.fn(),
     onSpeed: vi.fn(),
     onEndTravel: vi.fn(),
-    onWindow: vi.fn(),
     onZoom: vi.fn(),
     onPan: vi.fn(),
   };
@@ -44,16 +38,14 @@ function setUp() {
 }
 
 describe('the Holocene’s track', () => {
-  it('Given a view, Then the slider over its window, the year, the speed and the range picked', () => {
+  it('Given a view, Then the slider over its window, the year and the speed; no years-shown picker (#1116)', () => {
     const { track } = setUp();
     track.render(VIEW);
     track.render(VIEW);
     const slider = track.root.querySelector<HTMLInputElement>('.history-slider');
     expect([slider?.min, slider?.max]).toEqual(['1854', '2026']);
     expect(slider?.getAttribute('aria-valuetext')).toBe('2000 CE');
-    const range = track.extras.querySelector<HTMLSelectElement>('.history-range');
-    expect(range?.options).toHaveLength(2);
-    expect(range?.value).toBe('1854,2026');
+    expect(track.extras.querySelector('.history-range')).toBeNull();
     const speed = track.extras.querySelector<HTMLSelectElement>('.history-speed');
     expect(speed?.value).toBe('medium');
     expect([...(speed?.options ?? [])].map((option) => option.textContent)).toEqual([
@@ -104,12 +96,8 @@ describe('the Holocene’s track', () => {
   it('Given the reader’s choices, Then each is heard', () => {
     const { track, handlers } = setUp();
     track.render(VIEW);
-    const range = track.extras.querySelector<HTMLSelectElement>('.history-range');
     const speed = track.extras.querySelector<HTMLSelectElement>('.history-speed');
-    if (range === null || speed === null) return;
-    range.value = 'all';
-    range.dispatchEvent(new Event('change'));
-    expect(handlers.onWindow).toHaveBeenCalledWith('all');
+    if (speed === null) return;
     speed.value = 'fast';
     speed.dispatchEvent(new Event('change'));
     expect(handlers.onSpeed).toHaveBeenCalledWith('fast');

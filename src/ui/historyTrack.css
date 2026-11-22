@@ -109,37 +109,6 @@
   display: none;
 }
 
-/* The years shown (#749): as the speed beside it, its label cut short where room is tight. */
-.history-range {
-  flex: 0 1 auto;
-  max-width: 240px;
-  min-height: 44px;
-  padding: 0 8px;
-  overflow: hidden;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: rgb(255 255 255 / 0.05);
-  color: var(--ink);
-  font: inherit;
-  font-size: 13px;
-  text-overflow: ellipsis;
-}
-
-.history-range option {
-  background: #10162a;
-}
-
-@media (max-width: 600px) {
-  /* It takes the room left beside the speed, so its name is not cut short (#953); its padding
-     slim, so the two share a row on a 390-px phone (#975). */
-  .holocene-bar .history-range {
-    flex: 1 1 auto;
-    max-width: none;
-    padding: 0 4px;
-    font-size: 14px;
-  }
-}
-
 /* A range within one Holocene age (since 1850, all Meghalayan): its band says nothing, so the
    track shows the years alone (#749). */
 .history-lane .period-axis.is-one-chapter .period-bands,

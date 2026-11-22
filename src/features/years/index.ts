@@ -19,7 +19,6 @@ import { blankText, createHistoryTrack, trackNote } from '../../ui/historyTrack'
 import { yearPlayhead } from '../../time/yearPlay';
 import type { PlaySpeed, SpeedLevel } from '../../time/playSpeeds';
 import type { Moment } from '../../time/moment';
-import { windowOf } from '../../state/yearsWindow';
 import { zoomRoom, zoomTarget, type ZoomTarget } from '../../state/timeZoom';
 import { travelTrip, tripTurn } from './travelTrip';
 import { travelBrings, windowing } from './windowing';
@@ -107,9 +106,6 @@ export function mountYears(context: YearsContext): YearsPart {
       onEndTravel() {
         stopHistory();
         setTravel(false);
-      },
-      onWindow(value) {
-        window.set(windowOf(value));
       },
       onZoom(factor) {
         const state = store.get();
@@ -278,7 +274,6 @@ export function mountYears(context: YearsContext): YearsPart {
       playing: historyPlaying,
       travelling,
       ...speedsShown(state),
-      ...window.choices(state),
       zoom: zoomRoom(shown, PRESENT_YEAR),
       changes: trackNote({
         empires: state.layers.has('empires'),

@@ -200,10 +200,9 @@ test('on a 320-px phone the year’s bar folds too, so the globe keeps over half
     await expect(year).toBeHidden();
     expect(await free()).toBeGreaterThan(0.5);
   });
-  await test.step('When they open it, Then the year, the years shown and the speed are there', async () => {
+  await test.step('When they open it, Then the year and the speed are there', async () => {
     await fold.click();
     await expect(year).toBeVisible();
-    await expect(bar.getByRole('combobox', { name: 'Years shown' })).toBeVisible();
     await expect(bar.getByRole('combobox', { name: 'Speed' })).toBeVisible();
   });
   await test.step('When they fold it again, Then the globe has its room back', async () => {

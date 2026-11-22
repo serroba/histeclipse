@@ -3,19 +3,10 @@
  * and the fit when the reader turns on a layer with a span of years.
  */
 
-import { layerEntry, type Layer } from '../../layers/layers';
+import type { Layer } from '../../layers/layers';
 import type { Store } from '../../state/store';
 import type { ViewState } from '../../state/viewState';
-import {
-  clampWindow,
-  fitFor,
-  panned,
-  layerSpan,
-  windowChoices,
-  windowValue,
-  type WindowChoice,
-  type YearsWindow,
-} from '../../state/yearsWindow';
+import { clampWindow, fitFor, panned, layerSpan, type YearsWindow } from '../../state/yearsWindow';
 import type { Moment } from '../../time/moment';
 import {
   byMonth,
@@ -61,8 +52,6 @@ export interface Windowing {
    * in deep time, or on the first showing (a link's layers).
    */
   fitNew(state: ViewState, playing: boolean): void;
-  /** The windows the picker offers, and the one shown, as its value. */
-  choices(state: ViewState): { readonly windows: WindowChoice[]; readonly window: string };
   /** The speeds for the years shown (#915), and the one at the level picked, or, none picked,
    * at the years' own default (#984). */
   speeds(state: ViewState, level: SpeedLevel | null): { speeds: PlaySpeed[]; speed: PlaySpeed };
@@ -187,17 +176,6 @@ export function windowing(
       queueMicrotask(() => {
         set(around);
       });
-    },
-    choices(state) {
-      return {
-        windows: windowChoices(
-          state.layers,
-          state.yearsWindow,
-          whole(),
-          (layer) => layerEntry(layer).label,
-        ),
-        window: windowValue(state.yearsWindow),
-      };
     },
   };
 }
