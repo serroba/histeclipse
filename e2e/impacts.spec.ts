@@ -12,6 +12,7 @@ import {
   GPU,
   openLayers,
   showDeepDetails,
+  turnOnLayer,
   test,
 } from './support';
 
@@ -61,7 +62,7 @@ test('in deep time, impacts show around their time, or all that had struck by th
     await showDeepDetails(page);
   });
   await test.step('When they turn on Impacts', async () => {
-    await page.getByRole('button', { name: 'Impacts', exact: true }).click();
+    await turnOnLayer(page, 'Impact craters');
   });
   await test.step('Then the impacts of about then are marked, Chicxulub among them', async () => {
     await expect(page.getByTestId('globe')).toHaveAttribute('data-impacts', /^[1-9]\d*$/);

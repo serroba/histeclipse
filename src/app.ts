@@ -263,6 +263,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
       moment.deepHeader(ma, story);
     },
     storyDate: boundaries.storyDate,
+    openLayers: (opener) => {
+      layersPanel.open(opener);
+    },
     bar: (state, moment) => {
       const chips = features.deep(state, moment);
       // The layers on and whether each draws here, for the dock (#1071), as the chips have them.

@@ -3,7 +3,14 @@
  * its level at the moment shown against 1750's, and a small chart along the slider.
  */
 
-import { collectProblems, expect, globeRendered, showDeepDetails, test } from './support';
+import {
+  collectProblems,
+  expect,
+  globeRendered,
+  showDeepDetails,
+  turnOnLayer,
+  test,
+} from './support';
 
 test('the Air layer gives carbon dioxide and methane at the moment, against 1750 @acceptance @mobile', async ({
   page,
@@ -15,7 +22,7 @@ test('the Air layer gives carbon dioxide and methane at the moment, against 1750
     await showDeepDetails(page);
   });
   await test.step('When they turn on Air', async () => {
-    await page.getByRole('button', { name: 'Air', exact: true }).click();
+    await turnOnLayer(page, 'Air');
   });
   await test.step('Then each gas says its level then and how it compares, with its source', async () => {
     await expect(page).toHaveURL(/layers=[a-z,]*air/);
@@ -48,7 +55,7 @@ test('over 540 million years, Air gives CO₂ and O₂ with their ranges, and ni
     await showDeepDetails(page);
   });
   await test.step('When they turn on Air', async () => {
-    await page.getByRole('button', { name: 'Air', exact: true }).click();
+    await turnOnLayer(page, 'Air');
   });
   await test.step('Then CO₂ is given with its ranges and the estimates near then', async () => {
     await expect(page.getByTestId('deep-co2')).toContainText(

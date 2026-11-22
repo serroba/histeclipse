@@ -3,7 +3,15 @@
  * by 5 million years, where they lay at the time: on the continents of their own age.
  */
 
-import { collectProblems, expect, globeRendered, pickSpan, showDeepDetails, test } from './support';
+import {
+  collectProblems,
+  expect,
+  globeRendered,
+  pickSpan,
+  showDeepDetails,
+  turnOnLayer,
+  test,
+} from './support';
 
 test('the Fossils layer marks finds of the moment on the land of their time', async ({ page }) => {
   const problems = collectProblems(page);
@@ -15,7 +23,7 @@ test('the Fossils layer marks finds of the moment on the land of their time', as
     await showDeepDetails(page);
   });
   await test.step('When they turn on Fossils', async () => {
-    await page.getByRole('button', { name: 'Fossils', exact: true }).click();
+    await turnOnLayer(page, 'Fossils');
   });
   await test.step('Then dinosaurs and others are marked, counted, with the source', async () => {
     await expect(page).toHaveURL(/layers=[a-z,]*fossils/);

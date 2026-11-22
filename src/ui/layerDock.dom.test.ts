@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { activeLayers } from '../state/activeLayers';
 import { parseViewState } from '../state/url';
@@ -21,7 +21,7 @@ describe('the dock wears each layer’s state (#1071)', () => {
   const make = () => {
     const humans = button('humans', 'Humans');
     const sealevel = button('sealevel', 'Sea level');
-    const dock = layerDock(sealevel, humans);
+    const dock = layerDock(() => undefined, sealevel, humans);
     return { dock, humans, sealevel };
   };
 
@@ -35,7 +35,7 @@ describe('the dock wears each layer’s state (#1071)', () => {
 
   it('Given a layer on with nothing here, Then it is marked and says why in words', () => {
     const fossils = button('fossils', 'Fossils');
-    const dock = layerDock(fossils);
+    const dock = layerDock(() => undefined, fossils);
     // Fossils are drawn on the 540 Myr span, not the ice ages.
     dock.render(activeLayers(at('ma=0.021&scale=ice&layers=fossils')));
     expect(fossils.dataset['coverage']).toBe('other-span');
@@ -69,13 +69,45 @@ describe('the dock wears each layer’s state (#1071)', () => {
     expect(dock.shown()).toEqual(new Set(['sealevel']));
   });
 
-  it('Given layers off, Then nothing is marked', () => {
+  it('Given layers off, Then nothing is marked, and they are hidden: Layers switches them on (#752)', () => {
     const { dock, humans, sealevel } = make();
     dock.render([]);
     for (const each of [humans, sealevel]) {
       expect(each.dataset['coverage']).toBeUndefined();
       expect(each.hasAttribute('aria-busy')).toBe(false);
+      expect(each.hasAttribute('data-off')).toBe(true);
     }
+    expect(dock.shown()).toEqual(new Set());
     expect(dock.root.getAttribute('aria-label')).toBe('The time bar’s layers');
+  });
+});
+
+describe('the dock holds only the layers on (#752)', () => {
+  it('Given Add pressed, Then the Layers panel is asked for, from Add', () => {
+    const onAdd = vi.fn();
+    const dock = layerDock(onAdd, button('humans', 'Humans'));
+    const add = dock.root.querySelector<HTMLButtonElement>('.deep-add');
+    expect(add?.getAttribute('aria-label')).toBe('Add a layer');
+    add?.click();
+    expect(onAdd).toHaveBeenCalledWith(add);
+  });
+
+  it('Given a layer turned off from the dock, Then the focus goes to Add, not to nothing', () => {
+    const humans = button('humans', 'Humans');
+    const sealevel = button('sealevel', 'Sea level');
+    const dock = layerDock(() => undefined, sealevel, humans);
+    document.body.append(dock.root);
+    dock.render(activeLayers(at('ma=0.315&scale=ice&layers=humans,sealevel')));
+    expect(humans.hasAttribute('data-off')).toBe(false);
+    humans.focus();
+    humans.click();
+    dock.render(activeLayers(at('ma=0.315&scale=ice&layers=sealevel')));
+    expect(humans.hasAttribute('data-off')).toBe(true);
+    expect(document.activeElement).toBe(dock.root.querySelector('.deep-add'));
+    // A render with no press moves nothing.
+    sealevel.focus();
+    dock.render(activeLayers(at('ma=0.315&scale=ice&layers=sealevel')));
+    expect(document.activeElement).toBe(sealevel);
+    dock.root.remove();
   });
 });
