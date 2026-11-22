@@ -10,7 +10,8 @@ import { Box3, Group, Matrix4, Quaternion, Vector3, type Object3D } from 'three'
 
 import type { GeoPoint } from '../../core/geo';
 import { geoToVector } from '../../globe/geo';
-import type { LayerFactory } from '../../globe/layerHost';
+import type { GlobeLayer } from '../../globe/layerHost';
+import { needing } from '../../globe/layerCapabilities';
 import { METRES_PER_SCENE, metrePass } from '../../globe/metreView';
 import { GROUND } from '../../models/kit';
 import { releaseModel } from '../../models/releaseModel';
@@ -104,7 +105,7 @@ function siteModels(group: Group, done: (id: string, half: number) => void) {
   };
 }
 
-export const groundModel: LayerFactory<HeldSite | null> = (host) => {
+export const groundModel = needing(['holdCraft'], (host): GlobeLayer<HeldSite | null> => {
   // Where the site is on Earth, turning with it: its place and turn read from it each frame.
   const anchor = new Group();
   host.onEarth.add(anchor);
@@ -162,4 +163,4 @@ export const groundModel: LayerFactory<HeldSite | null> = (host) => {
       host.requestRender();
     },
   };
-};
+});

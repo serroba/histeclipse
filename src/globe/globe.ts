@@ -13,6 +13,7 @@ import type { Body, GeoPoint, GlobeCamera, Viewpoint } from '../state/viewState'
 import type { Vector3Tuple } from './geo';
 import type { ImpactSpec } from './impactAnimation';
 import type { GlobeLayer, LayerFactory } from './layerHost';
+import type { LayerCapability } from './layerCapabilities';
 import type { ShowerControl } from './playback';
 import type { ShowerSpec } from './showerAnimation';
 import type {
@@ -106,7 +107,9 @@ export interface Globe {
    * Draw something more on the globe (#379): the layer gets the scene and the globe's services,
    * and is updated through what this returns. New things drawn are layers, not methods here.
    */
-  addLayer<Input>(factory: LayerFactory<Input>): GlobeLayer<Input>;
+  addLayer<Input, Needs extends LayerCapability = never>(
+    factory: LayerFactory<Input, Needs>,
+  ): GlobeLayer<Input>;
   /** Called when someone taps a marker that has a card, with its key (such as `impact:47`). */
   onMarkerPick(listener: (key: string) => void): () => void;
   /**

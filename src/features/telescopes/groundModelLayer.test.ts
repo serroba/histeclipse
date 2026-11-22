@@ -74,7 +74,7 @@ function fakeHost() {
     },
     drawOver: (scene: Scene, seen: PerspectiveCamera) => over.push({ scene, camera: seen }),
     requestRender: vi.fn(),
-  } as unknown as LayerHost;
+  } as unknown as LayerHost<'holdCraft'>;
   return {
     host,
     held,

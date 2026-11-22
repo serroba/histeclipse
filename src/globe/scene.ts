@@ -26,7 +26,8 @@ import { MOON_RADIUS_EARTH_RADII, SUN_RADIUS_EARTH_RADII } from './spaceFrame';
 import { EARTH_SHADOW_ENLARGEMENT } from '../astro/occultation';
 import { ORBITING } from '../astro/planets';
 import { isMoonBody, moonsInView } from './moonLook';
-import type { GlobeLayer, LayerHost } from './layerHost';
+import type { GlobeLayer, LayerCore } from './layerHost';
+import { type LayerCapabilities, lend, needsOf } from './layerCapabilities';
 import { createMoonMeshes } from './moonMeshes';
 import { createOrbitLoops } from './orbitLoops';
 import { Picking } from './picking';
@@ -333,8 +334,7 @@ export function createGlobe(
   rig.place(options.camera);
   stage.start(true);
 
-  // What layers get (#379): the scene, the container and a few services.
-  const host: LayerHost = {
+  const host: LayerCore & LayerCapabilities = {
     scene,
     camera,
     container,
@@ -450,7 +450,7 @@ export function createGlobe(
       stage.invalidate();
     },
     addLayer(factory) {
-      const layer = factory(host);
+      const layer = factory(lend(host, needsOf(factory)));
       layers.push(layer);
       return layer;
     },
