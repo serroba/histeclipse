@@ -240,6 +240,39 @@ describe('approximate paths, for craft whose trajectory nobody published', () =>
     expect(Math.hypot(...km(short))).toBeLessThan(450_000);
   });
 
+  it('Given a craft that flies past the Moon and on out about the Sun, Then the leg is not drawn as a fall back to Earth (#793)', () => {
+    const phases = (next: CraftPhase): CraftPhase[] => [
+      ['Earth', '2000-01-01', '2000-01-03', 'EO', 'Luna'],
+      ['Luna', '2000-01-03', '2000-01-04', 'EN', 'Earth'],
+      ['Earth', '2000-01-04', '2000-01-10', 'EO', next[0] === 'Sun' ? 'HCO' : 'Earth'],
+      next,
+    ];
+    const escaped = approximatePath(
+      craft(phases(['Sun', '2000-01-10', null, 'O', 'HCO'])),
+      geocentric,
+    );
+    expect(escaped(gcatJd('2000-01-07'))).toEqual({ at: 'Earth' });
+    // A return from the Moon is still drawn, falling back to Earth.
+    const back = approximatePath(
+      craft(phases(['Earth', '2000-01-10', null, 'L', '-'])),
+      geocentric,
+    )(gcatJd('2000-01-07'));
+    expect('km' in (back ?? {})).toBe(true);
+  });
+
+  it('Given a cruise to Mars far longer than one transfer, Then it is not drawn as one that swings out past Mars (#793)', () => {
+    const cruise = (arrive: string): CraftPhase[] => [
+      ['Earth', '2000-01-01', '2000-01-03', 'EO', 'HCO'],
+      ['Sun', '2000-01-03', arrive, 'EO', 'Mars'],
+      ['Mars', arrive, null, 'O', 'Mars'],
+    ];
+    // Seven months is a transfer; two and a half years at once would loop out past Mars.
+    const direct = approximatePath(craft(cruise('2000-08-01')), geocentric)(gcatJd('2000-05-01'));
+    expect(Math.hypot(...km(direct))).toBeLessThan(1.6 * AU);
+    const long = approximatePath(craft(cruise('2002-07-01')), geocentric)(gcatJd('2001-04-01'));
+    expect(long).toBeNull();
+  });
+
   it('Given a craft that leaves the Moon for L1 with no Sun to place it by, Then it is not drawn', () => {
     const moonOnly: Geocentric = (body, jd) => (body === 'Moon' ? geocentric(body, jd) : null);
     const at = approximatePath(
@@ -293,6 +326,7 @@ describe('every craft the site draws an approximate path for', () => {
         // A phase GCAT gives no length to (an impact on the day of arrival) has no flight.
         if (step <= 0) return;
         let before: Vec3 | null = null;
+        const reach: number[] = [];
         for (let k = 0; k < MOMENTS; k += 1) {
           const where = at(start + (k + 0.5) * step);
           if (where === null || 'at' in where) {
@@ -301,11 +335,24 @@ describe('every craft the site draws an approximate path for', () => {
           }
           drawn += 1;
           const from = Math.hypot(...where.km);
+          reach.push(from);
           const speed = before === null ? 0 : apart(where.km, before) / (step * 86_400);
           if (!(from < FURTHEST[where.centre]) || !(speed < 100)) {
             wrong.push(`${each.id} ${each.name}, phase ${String(index)}`);
           }
           before = where.km;
+        }
+        // A transfer, about Earth or the Sun, stays within half as far again as the farther of
+        // its ends; past that it is laps one orbit cannot follow (#791, #793).
+        const ends = Math.max(reach[0] ?? 0, reach.at(-1) ?? 0);
+        if (reach.length === MOMENTS && Math.max(...reach) > 1.5 * ends) {
+          wrong.push(`${each.id} ${each.name}, phase ${String(index)}: swings out`);
+        }
+        // Past the Moon and on out about the Sun is not a fall back to Earth (#793).
+        const leaving =
+          each.phases[index - 1]?.[0] === 'Luna' && each.phases[index + 1]?.[0] === 'Sun';
+        if (leaving && reach.length > 0) {
+          wrong.push(`${each.id} ${each.name}, phase ${String(index)}: falls back to Earth`);
         }
       });
     }
