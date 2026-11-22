@@ -303,7 +303,7 @@ describe('the impact craters as a feature', () => {
     expect(view().craters).toBe('all');
   });
 
-  it('tells the reader when the craters do not load, and tries again the next time', async () => {
+  it('tells the reader when the craters do not load, waits on its chip, and tries again from there (#762)', async () => {
     const { context, notify, fetchJson } = fakeContext({ failing: true });
     const shown = impactsFeature.mount(context, context);
     shown.show?.(on, JD);
@@ -311,6 +311,11 @@ describe('the impact craters as a feature', () => {
       expect(notify).toHaveBeenCalledWith('Could not load the impact craters: offline');
     });
     shown.show?.(on, JD);
+    expect(fetchJson).toHaveBeenCalledTimes(1);
+    expect(shown.said?.()).toBe('Could not load the impact craters.');
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     expect(fetchJson).toHaveBeenCalledTimes(2);
   });
 });

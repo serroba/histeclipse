@@ -105,7 +105,7 @@ describe('the ways of life as a feature', () => {
     expect(shown.said?.()).toBeNull();
   });
 
-  it('tells the reader when its file does not load, and tries again the next time', async () => {
+  it('tells the reader when its file does not load, waits on its chip, and tries again from there (#762)', async () => {
     const { context, notify, fetchJson } = fakeContext({ failing: true });
     const shown = waysFeature.mount(context, context);
     shown.show?.(ancient, JD);
@@ -113,6 +113,11 @@ describe('the ways of life as a feature', () => {
       expect(notify).toHaveBeenCalledWith('Could not load the ways of life: offline');
     });
     shown.show?.(ancient, JD);
+    expect(fetchJson).toHaveBeenCalledTimes(1);
+    expect(shown.said?.()).toBe('Could not load the ways of life.');
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     expect(fetchJson).toHaveBeenCalledTimes(2);
   });
 

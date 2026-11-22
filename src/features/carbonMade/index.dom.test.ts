@@ -146,14 +146,19 @@ describe('where carbon-14 is made, as a feature', () => {
     expect(watch.mock.calls[0]?.[0]).toBeGreaterThan(0);
   });
 
-  it('tells the reader when the field’s strength does not load, and tries again the next time', async () => {
+  it('tells the reader when the field’s strength does not load, waits on its chip, and tries again from there (#762)', async () => {
     const { context, notify, fetchJson } = fakeContext({ failing: true });
     const shown = carbonMadeFeature.mount(context, context);
     shown.show?.(on, JD);
+    expect(shown.load?.()).toEqual({ state: 'loading' });
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith("Could not load the field's strength: offline");
     });
     shown.show?.(on, JD);
+    expect(fetchJson).toHaveBeenCalledTimes(1);
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     expect(fetchJson).toHaveBeenCalledTimes(2);
   });
 });

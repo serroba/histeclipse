@@ -8,7 +8,7 @@ import { dipoleAt, loadDipole, type DipoleSeries } from '../../data/dipoleMoment
 import { DATABLE_YEARS } from '../../data/radiocarbonProduction';
 import { CARBON_LIMIT } from '../../state/layerCatalog';
 import type { ViewState } from '../../state/viewState';
-import { errorMessage } from '../../util/errors';
+import { loadOnce } from '../layerLoad';
 import { feature, type LayerAction } from '../feature';
 import { createCarbonMadeCard, glowOf, thenField } from './carbonMadeCard';
 import { carbonMadeNote } from './said';
@@ -52,25 +52,18 @@ export const carbonMadeFeature = feature({
     let offered: LayerAction | null = null;
 
     // The dipole's strength through the years radiocarbon reaches (GGF100k), loaded with the layer.
-    let dipole: DipoleSeries | null = null;
-    let dipoleAsked = false;
+    const dipoleLoad = loadOnce<DipoleSeries>({
+      fetch: () => loadDipole(`${base}data/dipole.json`, fetchJson),
+      what: "the field's strength",
+      context,
+    });
+    let here = false;
 
     /** The field at the moment shown, or null until it loads or beyond its reach. */
     function fieldThen(state: ViewState): ReturnType<typeof thenField> | null {
+      const dipole = dipoleLoad.value();
       if (dipole === null) {
-        if (!dipoleAsked) {
-          dipoleAsked = true;
-          loadDipole(`${base}data/dipole.json`, fetchJson).then(
-            (loaded) => {
-              dipole = loaded;
-              again();
-            },
-            (error: unknown) => {
-              dipoleAsked = false;
-              context.notify(`Could not load the field's strength: ${errorMessage(error)}`);
-            },
-          );
-        }
+        dipoleLoad.want();
         return null;
       }
       const strength = dipoleAt(dipole, kaOf(state));
@@ -80,7 +73,7 @@ export const carbonMadeFeature = feature({
     return {
       /** The glow, on the spans and years radiocarbon reaches; what the layer says, and its card. */
       show(state) {
-        const here = drawnHere(state);
+        here = drawnHere(state);
         const reached = state.ma === null || state.ma * 1e6 <= DATABLE_YEARS;
         offered = here ? action : null;
         if (!here || !reached) {
@@ -97,10 +90,11 @@ export const carbonMadeFeature = feature({
         context.carbonGlow.setC14Glow(glowOf(made));
         said = carbonMadeNote(made, state.ma !== null);
         // Still loading: the field of the moment has yet to be drawn.
-        drawnFor = dipole === null ? null : now;
+        drawnFor = dipoleLoad.value() === null ? null : now;
       },
       said: () => said,
       action: () => offered,
+      load: () => dipoleLoad.report(here),
     };
   },
 });
