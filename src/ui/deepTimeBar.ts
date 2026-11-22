@@ -3,7 +3,6 @@
  * left to right), step 5 million years at a time, or play towards the present; 44 px targets.
  */
 
-import { MAP_KEY, MILESTONE_KEY } from '../deepTime/colourKey';
 import { earthFacts } from '../deepTime/earthFacts';
 import { type Period, periodShort } from '../deepTime/periods';
 import { formatMa } from '../time/format';
@@ -31,10 +30,12 @@ import type { IceOutlines } from '../data/iceOutlines';
 import type { StoryDate } from '../deepTime/storyDate';
 import type { TemperatureView } from './temperatureLegend';
 import { createDeepChips, type DeepChip, type DeepChipView } from './deepChips';
+import { deepColourKey } from './deepColourKey';
 import { bookIcon } from './icons';
 import { createMilestoneMarks } from './milestoneMarks';
 import { createMilestonePanel } from './milestonePanel';
 import { createPeriodBands } from './periodBands';
+import { createPeriodCrumbs } from './periodCrumbs';
 import { createPolarityStrip } from './polarityStrip';
 import { attachFoldingSheet } from './foldingSheet';
 import {
@@ -57,6 +58,8 @@ export interface DeepTimeView extends DockView {
   /** The bar's oldest and youngest moments, Ma: the span's, or a part of it (#1074). */
   readonly oldest: number;
   readonly youngest: number;
+  /** Whether that is a part of the span, zoomed into (#1074), with the crumbs over it (#1075). */
+  readonly part: boolean;
   readonly period: Period | null;
   /** Every reversal of the last 83 Ma, once loaded (null until then). */
   readonly polarity: PolarityScale | null;
@@ -109,6 +112,8 @@ export function createDeepTimeBar(
     /** A speed picked, millions of years a second, for the span shown. */
     onSpeed(maPerSecond: number): void;
     onZoom: (factor: number) => void;
+    /** Fit the bar to `oldest`–`youngest` Ma (#1075): a band or a crumb tapped. */
+    onFit: (oldest: number, youngest: number) => void;
     onTemperature(on: boolean): void;
     onSeaLevel(on: boolean): void;
     /** A chip pressed: its layer on or off. */
@@ -238,11 +243,6 @@ export function createDeepTimeBar(
     },
   });
   const dock = layerDock(seaLevel.button, temperature.button, ...featureChips.buttons, air.button);
-  const swatch = (background: string) => {
-    const box = element('span', { class: 'colour-swatch', 'aria-hidden': 'true' });
-    box.style.background = background;
-    return box;
-  };
   // Poles, field, tilt and day: folded away, so the bar stays small on a phone.
   const facts = element('dl', { class: 'deep-facts-list' });
   const factsPanel = element(
@@ -252,45 +252,11 @@ export function createDeepTimeBar(
     facts,
   );
   // What the colours mean: the map's and the ticks'. Folded away like the facts.
-  const colourKey = element(
-    'details',
-    { class: 'deep-facts deep-key', 'data-testid': 'deep-key', name: 'deep-fold' },
-    element('summary', {}, 'What the colours mean'),
-    element(
-      'div',
-      { class: 'colour-key-body' },
-      element(
-        'ul',
-        { class: 'colour-key' },
-        ...MAP_KEY.map(({ label, swatch: background }) =>
-          element('li', {}, swatch(background), label),
-        ),
-      ),
-      element('p', { class: 'colour-key-heading' }, 'Ticks on the time line: milestones'),
-      element(
-        'ul',
-        { class: 'colour-key' },
-        ...MILESTONE_KEY.map(({ kind, label }) =>
-          element(
-            'li',
-            {},
-            element('span', { class: `colour-tick milestone-${kind}`, 'aria-hidden': 'true' }),
-            label,
-          ),
-        ),
-      ),
-      element(
-        'p',
-        { class: 'colour-key-heading' },
-        'With Temperature on, the map shows °C instead, on the scale above.',
-      ),
-    ),
-  );
+  const colourKey = deepColourKey('deep-fold');
   // A tick on the track for each milestone, placed when the time line's span is known.
   const marks = createMilestoneMarks();
-  const bands = createPeriodBands((ma) => {
-    handlers.onMa(ma, true);
-  });
+  const bands = createPeriodBands(handlers.onFit);
+  const crumbs = createPeriodCrumbs(handlers.onFit);
   const polarityStrip = createPolarityStrip();
   const zoom = createTimeZoom(handlers.onZoom);
   const track = element(
@@ -334,6 +300,7 @@ export function createDeepTimeBar(
     'nav',
     { class: 'deep-time', 'aria-label': 'Deep time', hidden: '' },
     handle,
+    crumbs.root,
     element('div', { class: 'deep-controls' }, play, older, track, younger),
     element(
       'p',
@@ -379,6 +346,7 @@ export function createDeepTimeBar(
       marks.render(view.oldest, view.youngest);
       const { oldest, youngest } = view;
       bands.render({ oldest, youngest, ma: view.ma, playing: view.playing });
+      crumbs.render(oldest, youngest, view.part);
       polarityStrip.render(view.polarity, oldest, youngest);
       const shown = notesShown({
         ma: view.ma,

@@ -1,5 +1,7 @@
 // Deep time: Pangaea, milestones, temperature, sea level, the ice ages and the sketched eons.
 
+import type { Locator } from '@playwright/test';
+
 import {
   collectProblems,
   expect,
@@ -10,6 +12,15 @@ import {
   showDeepDetails,
   test,
 } from './support';
+
+/** The period bands' names, as their labels say them: on a phone the bands show symbols. */
+async function bandNames(bar: Locator): Promise<string[]> {
+  return bar
+    .locator('.period-band')
+    .evaluateAll((bands) =>
+      bands.map((band) => (band.getAttribute('aria-label') ?? '').split(',')[0] ?? ''),
+    );
+}
 
 test('Back steps through deep time: milestones and layers, and its layers stay on in the years', async ({
   page,
@@ -292,11 +303,10 @@ test('a link to a part of deep time shows that part, and a span picked shows it 
     await page.goto('./?ma=100&scale=all&dw=124,76');
     await expect(page.locator('.hud-date')).toHaveText('100 million years ago');
   });
-  await test.step('Then the bar runs from 124 to 76 Ma, all of it the Cretaceous', async () => {
+  await test.step('Then the bar runs from 124 to 76 Ma, all of it the Cretaceous, in its two epochs (#1075)', async () => {
     await expect(bar.getByTestId('scale-start')).toHaveText('124 Ma');
     await expect(bar.getByTestId('scale-end')).toHaveText('76 Ma');
-    await expect(bar.locator('.period-band')).toHaveCount(1);
-    await expect(bar.locator('.period-band')).toHaveAttribute('aria-label', /^Cretaceous, /);
+    await expect.poll(() => bandNames(bar)).toEqual(['Lower Cretaceous', 'Upper Cretaceous']);
     await expect(
       page
         .getByRole('group', { name: 'Time range presets' })
@@ -314,7 +324,50 @@ test('a link to a part of deep time shows that part, and a span picked shows it 
     await pickSpan(page, '4.6 Gyr');
     await pickSpan(page, '540 Myr');
     await expect(page).not.toHaveURL(/dw=/);
-    await expect(bar.locator('.period-band')).not.toHaveCount(1);
+    await expect.poll(() => bandNames(bar)).toContain('Jurassic');
+  });
+  expect(problems).toEqual([]);
+});
+
+test('a tap on a period fits the bar to it, and the crumbs above zoom back out a level at a time (#1075) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const bar = page.getByRole('navigation', { name: 'Deep time' });
+  const crumbs = bar.getByRole('navigation', { name: 'Where in Earth’s history' });
+  await test.step('Given part of the Cretaceous, Then the crumbs say where it lies', async () => {
+    await page.goto('./?ma=90&scale=all&dw=124,76');
+    await expect(crumbs.getByRole('button')).toHaveText([
+      'Earth',
+      'Phanerozoic',
+      'Mesozoic',
+      'Cretaceous',
+    ]);
+  });
+  await test.step('When the Late Cretaceous is tapped, Then the bar shows all of it, in its ages, the moment kept', async () => {
+    await bar.getByRole('button', { name: /^Upper Cretaceous, / }).click();
+    await expect(page).toHaveURL(/dw=100\.5(,|%2C)66/);
+    await expect.poll(() => bandNames(bar)).toContain('Turonian');
+    await expect(page.locator('.hud-date')).toHaveText('90 million years ago');
+    await expect(crumbs.getByRole('button', { name: 'Upper Cretaceous' })).toHaveAttribute(
+      'aria-current',
+      'location',
+    );
+  });
+  await test.step('When the Mesozoic crumb is tapped, Then its three periods', async () => {
+    await crumbs.getByRole('button', { name: 'Mesozoic' }).click();
+    await expect.poll(() => bandNames(bar)).toEqual(['Triassic', 'Jurassic', 'Cretaceous']);
+  });
+  await test.step('When Earth is tapped, Then all of its history, as the 4.6 Gyr preset, and no crumbs', async () => {
+    await crumbs.getByRole('button', { name: 'Earth' }).click();
+    await expect(page).toHaveURL(/scale=eons/);
+    await expect(page).not.toHaveURL(/dw=/);
+    await expect(crumbs).toBeHidden();
+    await expect(
+      page
+        .getByRole('group', { name: 'Time range presets' })
+        .getByRole('button', { name: '4.6 Gyr' }),
+    ).toHaveAttribute('aria-pressed', 'true');
   });
   expect(problems).toEqual([]);
 });

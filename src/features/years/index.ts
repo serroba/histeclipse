@@ -73,7 +73,8 @@ export function mountYears(context: YearsContext): YearsPart {
   const historyBands = createPeriodBands(
     (ma) => {
       stopHistory();
-      setYear(Math.max(historyFirst(), yearOfMa(ma)));
+      // To the age's start, or the years shown's first where it starts before them.
+      setYear(Math.max(window.shown(store.get()).first, yearOfMa(ma)));
     },
     // In the years, a moment is its year (the ends without the CE everyone assumes); the
     // round marks are every other millennium.

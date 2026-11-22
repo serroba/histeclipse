@@ -153,7 +153,8 @@ export interface AxisWords {
 const THUMB_ROOM = 14;
 
 export function createPeriodBands(
-  onMa: (ma: number) => void,
+  /** A band tapped: its unit's start and end, Ma (the start may lie before the bar's). */
+  onBand: (base: number, top: number) => void,
   /** Deep time's wording, short ends and marks by default. */
   { words = deepWords, short = deepShort, marks = deepTicks }: AxisWords = {},
 ): PeriodBands {
@@ -293,7 +294,7 @@ export function createPeriodBands(
           button.style.width = `${String(width * 100)}%`;
           button.style.background = unit.colour;
           button.addEventListener('click', () => {
-            onMa(from);
+            onBand(unit.base, unit.top);
           });
           return { button, name: unit.name, base: unit.base, top: unit.top, left, width };
         });

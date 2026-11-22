@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { bandsFor, CHART } from './chart';
+import { bandsFor, crumbsFor, CHART } from './chart';
 
 describe('the chronostratigraphic chart', () => {
   it('holds the chart’s units with their colours', () => {
@@ -41,11 +41,11 @@ describe('the chronostratigraphic chart', () => {
 });
 
 describe('the bands of a part of a span (#1074)', () => {
-  it('Given 124 to 76 Ma, Then the Cretaceous alone fills the bar', () => {
+  it('Given 124 to 76 Ma, all of it the Cretaceous, Then its two epochs share the bar (#1075)', () => {
     const bands = bandsFor(124, undefined, 76);
-    expect(bands.map(({ unit }) => unit.name)).toEqual(['Cretaceous']);
+    expect(bands.map(({ unit }) => unit.name)).toEqual(['Lower Cretaceous', 'Upper Cretaceous']);
     expect(bands[0]?.left).toBe(0);
-    expect(bands[0]?.width).toBeCloseTo(1, 9);
+    expect(bands.reduce((sum, { width }) => sum + width, 0)).toBeCloseTo(1, 9);
   });
 
   it('Given 80 to 50 Ma, Then the Cretaceous and the Paleogene share it at 66 Ma', () => {
@@ -54,5 +54,43 @@ describe('the bands of a part of a span (#1074)', () => {
     expect(paleogene?.unit.name).toBe('Paleogene');
     expect(paleogene?.left).toBeCloseTo((80 - 66) / 30, 2);
     expect((paleogene?.left ?? 0) + (paleogene?.width ?? 0)).toBeCloseTo(1, 9);
+  });
+});
+
+describe('the ladder of units, zoomed in (#1075)', () => {
+  it('Given the Late Cretaceous, Then its ages; given a part of the Archean, its eras', () => {
+    expect(bandsFor(100.5, undefined, 66).map(({ unit }) => unit.name)).toEqual([
+      'Cenomanian',
+      'Turonian',
+      'Coniacian',
+      'Santonian',
+      'Campanian',
+      'Maastrichtian',
+    ]);
+    expect(bandsFor(3300, undefined, 2900).map(({ unit }) => unit.name)).toEqual([
+      'Paleoarchean',
+      'Mesoarchean',
+    ]);
+  });
+
+  it('Given the whole spans, Then the same units as before: periods over 540 Myr, eras over all', () => {
+    expect(bandsFor(540).every(({ unit }) => unit.rank === 'Period')).toBe(true);
+    expect(bandsFor(4567).some(({ unit }) => unit.rank === 'Era')).toBe(true);
+  });
+
+  it('Given 124 to 76 Ma, Then it lies in the Phanerozoic, the Mesozoic and the Cretaceous', () => {
+    expect(crumbsFor(124, 76).map(({ name }) => name)).toEqual([
+      'Phanerozoic',
+      'Mesozoic',
+      'Cretaceous',
+    ]);
+    expect(crumbsFor(0.5, 0.2).map(({ name }) => name)).toEqual([
+      'Phanerozoic',
+      'Cenozoic',
+      'Quaternary',
+      'Pleistocene',
+      'Chibanian',
+    ]);
+    expect(crumbsFor(540, 0)).toEqual([]);
   });
 });

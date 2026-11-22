@@ -41,8 +41,9 @@ import { createSpanSwitch, type Span } from '../../ui/spanSwitch';
 import type { DeepTimeContext, DeepTimePart } from './context';
 import { errorMessage } from '../../util/errors';
 // The elevation maps reach back this far; their index says for certain once loaded.
-import { MAPS_REACH_MA, YEARS_FIRST } from '../../state/timeAxis';
-import { deepAxisWindow, zoomRoom, zoomTarget, type ZoomTarget } from '../../state/timeZoom';
+import { MAPS_REACH_MA } from '../../state/timeAxis';
+import { deepAxisWindow, zoomRoom } from '../../state/timeZoom';
+import { deepZooming } from './zooming';
 import { PRESENT_YEAR } from '../../time/present';
 
 export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
@@ -127,33 +128,26 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       };
     });
   }
-  /** One zoom of the bar about the moment (#1074): within deep time, or back to the years. */
-  function zoom(factor: number): void {
-    const state = store.get();
-    if (state.ma === null) return;
-    // About the date the years left, while it is the same moment (today, not 1950, at 0 Ma).
-    const { year } = state.time.date;
-    const around = roundMa(maOfYear(year)) === state.ma ? year : yearOfMa(state.ma);
-    const window = deepAxisWindow(shown(state), PRESENT_YEAR);
-    land(zoomTarget(window, around, factor, PRESENT_YEAR, oldest));
-  }
-  /** Shows where a zoom landed, the moment kept: a span of deep time and part of it, or years. */
-  function land(target: ZoomTarget): void {
-    if (target.model === 'years') {
-      const { first, last } = target.window;
-      const whole = first <= YEARS_FIRST && last >= PRESENT_YEAR;
-      leaveDeepTime();
-      store.set((state) => ({ ...state, yearsWindow: whole ? null : target.window }));
-      return;
-    }
-    if (store.get().ma === null) enterDeepTime(target.ma);
-    // The years' window is left behind: the bar's window is deep time's now.
-    const { scale: deepScale, window: deepWindow } = target;
-    store.set((state) => ({ ...state, deepScale, deepWindow, yearsWindow: null }));
-  }
+  // Zooming the bar (#1074) and fitting it to a unit (#1075), into and out of the years.
+  const { zoom, land, fit } = deepZooming({
+    store,
+    present: PRESENT_YEAR,
+    mapsReach: () => oldest,
+    shown: (state) => shown(state),
+    enter: (ma) => {
+      enterDeepTime(ma);
+    },
+    leave: leaveDeepTime,
+    jump: (ma) => {
+      stopPlay();
+      context.step();
+      store.set((state) => ({ ...state, ma }));
+    },
+  });
   const deepBar = createDeepTimeBar(
     {
       onZoom: zoom,
+      onFit: fit,
       why(id, label) {
         return context.why(id, label);
       },
@@ -247,7 +241,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     // A link to before the elevation maps opens on the scale that reaches it.
     const scale = state.deepScale === 'all' && ma > oldest ? 'eons' : state.deepScale;
     const part = barWindow(state.deepWindow, spanOf(scale), ma);
-    historySpan.render(scale, part.youngest === 0 && part.oldest === spanOf(scale));
+    const whole = part.youngest === 0 && part.oldest === spanOf(scale);
+    historySpan.render(scale, whole);
     const ice = scale === 'ice';
     // Before the elevation maps reach, no map: a sketch of the chosen hypotheses instead.
     const uncharted = ma > oldest;
@@ -269,6 +264,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       story,
       // The part of the span asked for (#1074), while the moment is within it.
       ...part,
+      part: !whole,
       mapsReach: oldest,
       period,
       polarity,
