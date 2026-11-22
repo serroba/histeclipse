@@ -225,14 +225,13 @@ export class ScreenLabels {
   /** Ring and name each body small on screen; one name for those that line up. */
   placeMarkers(): void {
     const onScreen = this.#markersOnScreen();
-    // Planets behind a nearer body's disc get no marker. Earth, Moon and Sun always keep
-    // theirs: they are how you click your way back. From far out bodies line up on screen,
-    // and one marker for them reads better than several.
-    const planetNames = new Set<string>(Object.values(PLANET_NAMES));
+    // Bodies behind a nearer body's disc get no marker (#972): the Moon's shown over the
+    // globe while hidden behind Earth took taps a swipe should have turned it. Only Earth
+    // always keeps its marker: it is how you click your way back, and only the Moon's small
+    // disc could cover it. From far out bodies line up on screen, and one marker for them
+    // reads better than several.
     const behind = new Set(
-      [...hiddenBehind(onScreen.discs, OCCLUDING_RADIUS_PIXELS)].filter((name) =>
-        planetNames.has(name),
-      ),
+      [...hiddenBehind(onScreen.discs, OCCLUDING_RADIUS_PIXELS)].filter((name) => name !== 'Earth'),
     );
     const labels = mergeMarkers(
       onScreen.markers.filter(({ name }) => !behind.has(name)),

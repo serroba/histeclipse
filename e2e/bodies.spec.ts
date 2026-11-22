@@ -61,6 +61,20 @@ test('a link can stand on the Moon looking at Earth', async ({ page }) => {
   await expect(page.getByTestId('globe')).toHaveAttribute('data-solar-shadow', 'on');
 });
 
+test('the Moon behind Earth gets no marker, so a swipe there turns the globe (#972)', async ({
+  page,
+}) => {
+  // The Moon is behind Earth from this camera, over West Africa. Its marker must not show
+  // over the globe, where it would take taps a swipe should have turned the globe with.
+  await page.goto('./?t=2026-11-20T07:50&cam=0,0,3');
+  await globeRendered(page);
+  await expect(page.locator('.space-marker[data-body="moon"]')).toBeHidden();
+  // And with the Moon in view beside the globe, its marker shows as ever.
+  await page.goto('./?t=2024-04-08T18:17&cam=0,-5,150');
+  await globeRendered(page);
+  await expect(page.locator('.space-marker[data-body="moon"]')).toBeVisible();
+});
+
 test('clicking the Moon flies to it, and the camera then orbits and zooms around it @acceptance', async ({
   page,
 }) => {
