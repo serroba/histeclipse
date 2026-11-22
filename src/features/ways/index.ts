@@ -14,7 +14,7 @@ import {
   type WaysAt,
   type WaysOfLife,
 } from '../../data/waysOfLife';
-import { loadOnce } from '../layerLoad';
+import { loadOnce } from '../../state/loadOnce';
 import { feature } from '../feature';
 import { waysFact } from './here';
 
