@@ -275,7 +275,7 @@ export function createPeriodBands(
       if (key !== drawnFor) {
         drawnFor = key;
         span = { oldest, youngest };
-        bands = bandsFor(oldest);
+        bands = bandsFor(oldest, undefined, youngest);
         buttons = bands.map(({ unit, left, width }) => {
           const from = Math.min(unit.base, oldest);
           const text = `${formatMa(from)} to ${unit.top === 0 ? 'today' : formatMa(unit.top)}`;

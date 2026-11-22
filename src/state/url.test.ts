@@ -87,6 +87,7 @@ describe('parseViewState', () => {
       yearsWindow: null,
       ma: null,
       deepScale: 'all',
+      deepWindow: null,
       coast: 'bintanja-2008',
       dispersal: 'off',
       story: 'off',
@@ -287,6 +288,13 @@ describe('parseViewState', () => {
 
   it('reads the ice-age scale, writing it only when it is not the whole span', () => {
     expect(parseViewState('ma=0.021&scale=ice', NOW).state.deepScale).toBe('ice');
+    // A part of the span (#1074): kept to a thousand years, the oldest first, else ignored.
+    expect(parseViewState('ma=100&dw=124,76', NOW).state.deepWindow).toEqual({
+      oldest: 124,
+      youngest: 76,
+    });
+    expect(parseViewState('ma=100&dw=76,124', NOW).state.deepWindow).toBeNull();
+    expect(parseViewState('ma=100&dw=124', NOW).state.deepWindow).toBeNull();
     expect(serializeViewState(parseViewState('ma=0.021&scale=ice', NOW).state)).toContain(
       '&scale=ice',
     );
@@ -643,6 +651,14 @@ describe('serializeViewState', () => {
       { nil: null },
     ),
     deepScale: fc.constantFrom(...DEEP_SCALES),
+    // Kept to a thousand years, the oldest first.
+    deepWindow: fc.option(
+      fc
+        .tuple(fc.integer({ min: 1, max: 4_568_000 }), fc.integer({ min: 0, max: 4_567_999 }))
+        .filter(([oldest, youngest]) => youngest < oldest)
+        .map(([oldest, youngest]) => ({ oldest: oldest / 1000, youngest: youngest / 1000 })),
+      { nil: null },
+    ),
     coast: fc.constantFrom(...COAST_SOURCES),
     dispersal: fc.constantFrom(...DISPERSAL_SCENARIOS),
     story: fc.constantFrom('off' as const, 'humans' as const),

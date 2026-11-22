@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { anchorMa, MILESTONES } from '../deepTime/milestones';
-import { milestoneTicks, notesShown, sliderUnit, stepped, stepWords } from './deepBarModel';
+import {
+  barWindow,
+  milestoneTicks,
+  notesShown,
+  sliderUnit,
+  stepped,
+  stepWords,
+} from './deepBarModel';
 
 describe('the slider and the steps', () => {
   it('counts the slider in thousands of years on the ice-age scale, else in millions', () => {
@@ -64,5 +71,42 @@ describe('notesShown', () => {
 
   it('shows the ice ages’ notes on their scale', () => {
     expect(notesShown({ ...at, ma: 0.02, scale: 'ice' }).ice).toBe(true);
+  });
+});
+
+describe('the part of a span the bar shows (#1074)', () => {
+  it('Given no window, Then the whole span to today', () => {
+    expect(barWindow(null, 540, 100)).toEqual({ oldest: 540, youngest: 0 });
+  });
+
+  it('Given a window around the moment, Then that window, held to the span', () => {
+    expect(barWindow({ oldest: 124, youngest: 76 }, 540, 100)).toEqual({
+      oldest: 124,
+      youngest: 76,
+    });
+    expect(barWindow({ oldest: 900, youngest: 76 }, 540, 100)).toEqual({
+      oldest: 540,
+      youngest: 76,
+    });
+  });
+
+  it('Given the moment outside the window, Then the whole span, so the moment stays on the bar', () => {
+    expect(barWindow({ oldest: 124, youngest: 76 }, 540, 66)).toEqual({ oldest: 540, youngest: 0 });
+    expect(barWindow({ oldest: 124, youngest: 76 }, 540, 200)).toEqual({
+      oldest: 540,
+      youngest: 0,
+    });
+  });
+});
+
+describe('steps and ticks within a part of the span (#1074)', () => {
+  it('Given a window ending 76 Ma ago, Then a step later stops there, and ticks fall within it', () => {
+    expect(stepped(78, 124, 'all', false, 76)).toBe(76);
+    const ticks = milestoneTicks(124, 76);
+    for (const { left } of ticks) {
+      expect(left).toBeGreaterThanOrEqual(0);
+      expect(left).toBeLessThanOrEqual(100);
+    }
+    expect(ticks.length).toBeLessThan(milestoneTicks(540).length);
   });
 });

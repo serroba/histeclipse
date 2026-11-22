@@ -58,9 +58,10 @@ const QUATERNARY_PARTS = new Set([
 /**
  * The units to draw along a slider from `oldest` million years ago to the present: the
  * Holocene's ages over its own years, the Quaternary's divisions over the ice ages, the periods over the Phanerozoic, the eras over
- * Earth's whole history. Oldest first, clipped to the span.
+ * Earth's whole history. Oldest first, clipped to the span, or to `youngest` where the bar
+ * shows only a part of it (#1074).
  */
-export function bandsFor(oldest: number, chart: Chart = CHART): readonly Band[] {
+export function bandsFor(oldest: number, chart: Chart = CHART, youngest = 0): readonly Band[] {
   const units = chart.units.filter((unit) =>
     oldest <= 0.012
       ? HOLOCENE_AGES.has(unit.id)
@@ -70,11 +71,14 @@ export function bandsFor(oldest: number, chart: Chart = CHART): readonly Band[] 
           ? unit.rank === 'Period'
           : unit.rank === 'Era' || (unit.rank === 'Eon' && unit.id === 'Hadean'),
   );
+  // Cut to the part of time the bar shows, `oldest` to `youngest` (#1074).
+  const length = oldest - youngest;
   return units
-    .filter((unit) => unit.top < oldest)
+    .filter((unit) => unit.top < oldest && unit.base > youngest)
     .map((unit) => {
       const base = Math.min(unit.base, oldest);
-      return { unit, left: 1 - base / oldest, width: (base - unit.top) / oldest };
+      const top = Math.max(unit.top, youngest);
+      return { unit, left: (oldest - base) / length, width: (base - top) / length };
     })
     .sort((a, b) => a.left - b.left);
 }

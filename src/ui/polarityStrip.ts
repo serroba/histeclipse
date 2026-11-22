@@ -16,8 +16,11 @@ import './polarityStrip.css';
 
 export interface PolarityStrip {
   readonly root: HTMLElement;
-  /** Draw the field's spans, from `scale` where it has loaded, from `oldest` Ma to today. */
-  render(scale: PolarityScale | null, oldest: number): void;
+  /**
+   * Draw the field's spans, from `scale` where it has loaded, from `oldest` Ma to `youngest`
+   * (today, unless the bar shows a part of its span, #1074).
+   */
+  render(scale: PolarityScale | null, oldest: number, youngest?: number): void;
 }
 
 const WORDS: Readonly<Record<PolaritySpan['polarity'], string>> = {
@@ -48,22 +51,24 @@ export function createPolarityStrip(): PolarityStrip {
   );
   // The scale and span last drawn.
   let drawnScale: PolarityScale | null = null;
-  let drawnSpan = Number.NaN;
+  let drawnSpan = '';
   return {
     root,
-    render(scale, oldest) {
-      if (scale === drawnScale && oldest === drawnSpan) return;
+    render(scale, oldest, youngest = 0) {
+      const key = `${String(oldest)}:${String(youngest)}`;
+      if (scale === drawnScale && key === drawnSpan) return;
       drawnScale = scale;
-      drawnSpan = oldest;
-      const spans = polaritySpans(scale, oldest);
+      drawnSpan = key;
+      const length = oldest - youngest;
+      const spans = polaritySpans(scale, oldest, youngest);
       bar.replaceChildren(
         ...spans.map(({ young, old, polarity }) => {
           const span = element('span', {
             class: `polarity-span is-${polarity}`,
             'data-polarity': polarity,
           });
-          span.style.left = `${String((1 - old / oldest) * 100)}%`;
-          span.style.width = `${String(((old - young) / oldest) * 100)}%`;
+          span.style.left = `${String(((oldest - old) / length) * 100)}%`;
+          span.style.width = `${String(((old - young) / length) * 100)}%`;
           return span;
         }),
       );
@@ -71,7 +76,7 @@ export function createPolarityStrip(): PolarityStrip {
       root.setAttribute(
         'aria-label',
         `Magnetic polarity over the span: ${spans
-          .filter(({ old, young }) => (old - young) / oldest > 0.05)
+          .filter(({ old, young }) => (old - young) / length > 0.05)
           .map(({ polarity }) => WORDS[polarity])
           .join(', then ')} from today back; ${String(reversals)} reversed spells drawn.`,
       );

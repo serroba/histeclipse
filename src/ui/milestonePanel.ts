@@ -15,8 +15,8 @@ const NEAR_SHARE = 2.5 / 540;
 
 export interface MilestonePanel {
   readonly root: HTMLElement;
-  /** `oldest` is the span the bar shows, Ma; nearness scales with it. */
-  render(ma: number, oldest: number): void;
+  /** The bar shows `oldest` to `youngest` Ma (#1074); nearness scales with its length. */
+  render(ma: number, oldest: number, youngest?: number): void;
 }
 
 function card(milestone: Milestone): HTMLElement {
@@ -85,12 +85,12 @@ export function createMilestonePanel(handlers: { onMa(ma: number): void }): Mile
 
   return {
     root,
-    render(now, span) {
+    render(now, span, youngest = 0) {
       ma = now;
       oldest = span;
       earlier.disabled = nextMilestone(ma, 1, oldest) === null;
       later.disabled = nextMilestone(ma, -1, oldest) === null;
-      const near = milestonesNear(ma, NEAR_SHARE * oldest);
+      const near = milestonesNear(ma, NEAR_SHARE * (oldest - youngest));
       // As deep time plays the same milestones stay near for many frames: build their cards
       // only when the set changes (#670).
       const ids = near.map(({ id }) => id).join(' ');

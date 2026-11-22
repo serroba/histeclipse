@@ -39,3 +39,20 @@ describe('the chronostratigraphic chart', () => {
     expect(eras).toContain('Mesozoic');
   });
 });
+
+describe('the bands of a part of a span (#1074)', () => {
+  it('Given 124 to 76 Ma, Then the Cretaceous alone fills the bar', () => {
+    const bands = bandsFor(124, undefined, 76);
+    expect(bands.map(({ unit }) => unit.name)).toEqual(['Cretaceous']);
+    expect(bands[0]?.left).toBe(0);
+    expect(bands[0]?.width).toBeCloseTo(1, 9);
+  });
+
+  it('Given 80 to 50 Ma, Then the Cretaceous and the Paleogene share it at 66 Ma', () => {
+    const [cretaceous, paleogene] = bandsFor(80, undefined, 50);
+    expect(cretaceous?.unit.name).toBe('Cretaceous');
+    expect(paleogene?.unit.name).toBe('Paleogene');
+    expect(paleogene?.left).toBeCloseTo((80 - 66) / 30, 2);
+    expect((paleogene?.left ?? 0) + (paleogene?.width ?? 0)).toBeCloseTo(1, 9);
+  });
+});

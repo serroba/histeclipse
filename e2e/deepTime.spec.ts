@@ -283,6 +283,30 @@ for (const rate of [60, 120]) {
   });
 }
 
+test('a link to a part of deep time shows that part, and a span picked shows it whole (#1074)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const bar = page.getByRole('navigation', { name: 'Deep time' });
+  await test.step('Given a link to 124–76 million years ago, at 100', async () => {
+    await page.goto('./?ma=100&scale=all&dw=124,76');
+    await expect(page.locator('.hud-date')).toHaveText('100 million years ago');
+  });
+  await test.step('Then the bar runs from 124 to 76 Ma, all of it the Cretaceous', async () => {
+    await expect(bar.getByTestId('scale-start')).toHaveText('124 Ma');
+    await expect(bar.getByTestId('scale-end')).toHaveText('76 Ma');
+    await expect(bar.locator('.period-band')).toHaveCount(1);
+    await expect(bar.locator('.period-band')).toHaveAttribute('aria-label', /^Cretaceous, /);
+  });
+  await test.step('When the 540 Myr span is picked, Then the bar shows it whole, and the link drops the part', async () => {
+    await pickSpan(page, '4.6 Gyr');
+    await pickSpan(page, '540 Myr');
+    await expect(page).not.toHaveURL(/dw=/);
+    await expect(bar.locator('.period-band')).not.toHaveCount(1);
+  });
+  expect(problems).toEqual([]);
+});
+
 test('deep time narrows to the ice ages, in thousands of years', GPU, async ({ page }) => {
   const problems = collectProblems(page);
   await page.goto('./?ma=250&layers=sealevel');

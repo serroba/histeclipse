@@ -6,6 +6,8 @@
  * - `ma` switches the globe to deep time: Earth's surface that many million years ago (0 to
  *   4,568, to a thousandth). Absent means historical time, given by `t`.
  * - `scale` is the span the bar runs over: `all` (absent), `ice` or `eons`.
+ * - `dw` is the part of it the bar shows (#1074), `oldest,youngest` in Ma to a thousandth
+ *   (`124,76`). Absent means the whole span.
  * - `coast`, `seaice`, `temp` and `tshow` pick whose sea level, sea ice and temperature maps the
  *   globe follows, and whether the temperature shows the change from today or °C.
  * - `dispersal` shades Timmermann & Friedrich's dispersal model with Humans: `off` (absent),
@@ -48,6 +50,12 @@ import { choice, type Params } from '../slice';
 export const DISPERSAL_SCENARIOS = ['off', 'a', 'b'] as const;
 export type DispersalScenario = (typeof DISPERSAL_SCENARIOS)[number];
 
+/** A part of deep time's span the bar shows (#1074), in Ma: `oldest` before `youngest`. */
+interface DeepWindow {
+  readonly oldest: number;
+  readonly youngest: number;
+}
+
 /** A story told by playing deep time, started by a link: none, or the human story (#177). */
 const STORIES = ['off', 'humans'] as const;
 type Story = (typeof STORIES)[number];
@@ -59,6 +67,8 @@ export interface DeepState {
   readonly ma: number | null;
   /** Which span the deep-time bar runs over. */
   readonly deepScale: DeepScale;
+  /** The part of it the bar shows, oldest and youngest Ma (#1074); null for the whole span. */
+  readonly deepWindow: DeepWindow | null;
   /** Whose sea level the ice-age coastlines follow. */
   readonly coast: CoastSource;
   /** Timmermann & Friedrich's dispersal model shaded with Humans: off, early or late exit. */
@@ -82,6 +92,7 @@ export interface DeepState {
 export const DEEP_DEFAULTS: DeepState = {
   ma: null,
   deepScale: 'all',
+  deepWindow: null,
   coast: DEFAULT_COAST,
   dispersal: 'off',
   humanSpecies: 'all',
@@ -102,6 +113,21 @@ export const DEEP_PARAMS: Params<DeepState> = {
     format: (ma) => (ma === null ? null : String(roundMa(ma))),
   },
   deepScale: choice('scale', DEEP_SCALES, DEEP_DEFAULTS.deepScale),
+  deepWindow: {
+    key: 'dw',
+    parse: (raw) => {
+      const [oldest, youngest, extra] = raw.split(',').map((part) => parseMa(part));
+      if (extra !== undefined || oldest === undefined || youngest === undefined) {
+        throw new Error('expected two moments in Ma, the oldest first');
+      }
+      if (oldest <= youngest) throw new Error('expected the oldest moment first');
+      return { oldest, youngest };
+    },
+    format: (window) =>
+      window === null
+        ? null
+        : `${String(roundMa(window.oldest))},${String(roundMa(window.youngest))}`,
+  },
   coast: choice('coast', COAST_SOURCES, DEEP_DEFAULTS.coast),
   dispersal: choice('dispersal', DISPERSAL_SCENARIOS, DEEP_DEFAULTS.dispersal),
   humanSpecies: choice(
