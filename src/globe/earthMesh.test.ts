@@ -1,5 +1,6 @@
 import { BackSide, type ShaderMaterial, Texture, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
+import { ATMOSPHERE_FRAGMENT } from './bodyShaders';
 import type { EarthPart } from './earthParts';
 import { createEarthMeshes, MOON_RGB, plainTexture } from './earthMesh';
 
@@ -27,6 +28,15 @@ describe('plainTexture', () => {
     const texture = plainTexture(MOON_RGB);
     expect([...(texture.image.data as Uint8Array)]).toEqual([128, 126, 122, 255]);
     expect(texture.image.width).toBe(1);
+  });
+});
+
+describe('the atmosphere’s shader', () => {
+  it('thins smoothly outward and warms at the terminator, no hard blue band (#1098)', () => {
+    expect(ATMOSPHERE_FRAGMENT).not.toContain('vec3(0.3, 0.55, 1.0)');
+    expect(ATMOSPHERE_FRAGMENT).toContain('1.0), 2.5)');
+    expect(ATMOSPHERE_FRAGMENT).toContain('terminator');
+    expect(ATMOSPHERE_FRAGMENT).toContain('1.0 - evenLight');
   });
 });
 

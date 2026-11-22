@@ -67,10 +67,18 @@ export const ATMOSPHERE_FRAGMENT = /* glsl */ `
   varying vec3 vWorldNormal;
   void main() {
     #include <logdepthbuf_fragment>
-    float rim = pow(clamp(0.92 + dot(vViewNormal, vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 4.0);
-    float sunlit = smoothstep(-0.35, 0.35, dot(normalize(vWorldNormal), sunDirection));
+    // A wide band thinning smoothly outward (#1098), not a ribbon: the lower power and offset
+    // keep the glow falling off the whole way, so no edge shows where it ends.
+    float rim = pow(clamp(0.90 + dot(vViewNormal, vec3(0.0, 0.0, 1.0)), 0.0, 1.0), 2.5);
+    float sunAltitude = dot(normalize(vWorldNormal), sunDirection);
+    float sunlit = smoothstep(-0.35, 0.35, sunAltitude);
     sunlit = mix(sunlit, 0.75, evenLight);
-    vec3 color = vec3(0.3, 0.55, 1.0) * rim * (0.08 + 0.62 * sunlit);
-    gl_FragColor = vec4(color, 1.0);
+    // The day limb a pale blue-white, the night a whisper of blue, and the terminator warmed
+    // to amber, the glow sunsets paint the limb with; deep time's even light has no Sun side,
+    // so no warmth there.
+    vec3 blue = mix(vec3(0.25, 0.45, 0.95), vec3(0.6, 0.75, 1.0), sunlit);
+    float terminator = exp(-pow(sunAltitude / 0.15, 2.0)) * (1.0 - evenLight);
+    vec3 color = mix(blue, vec3(1.0, 0.55, 0.25), terminator * 0.6);
+    gl_FragColor = vec4(color * rim * (0.05 + 0.5 * sunlit), 1.0);
   }
 `;
