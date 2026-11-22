@@ -237,7 +237,8 @@ test('one set of layers for all of time: the panel and the bar’s chips switch 
     await panel.getByRole('checkbox', { name: /^Temperature/ }).check();
   });
   await test.step('Then the bar’s Temperature chip is on too, and the link keeps it', async () => {
-    await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toHaveAttribute(
+    // On a phone the bar is a strip under the sheet (#752), its dock out of sight till it closes.
+    await expect(page.locator('.deep-dock [data-layer="temperature"]')).toHaveAttribute(
       'aria-pressed',
       'true',
     );

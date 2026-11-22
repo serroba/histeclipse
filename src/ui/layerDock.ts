@@ -67,10 +67,15 @@ export function layerDock(
   );
   // The button last pressed, so that if it goes (its layer turned off) the focus goes to Add.
   let pressed: HTMLElement | null = null;
-  root.addEventListener('click', (event) => {
-    const target = event.target instanceof Element ? event.target.closest('button') : null;
-    pressed = target === add ? null : target;
-  });
+  // Caught on the way down, before the button's own handler: the page may draw again within it.
+  root.addEventListener(
+    'click',
+    (event) => {
+      const target = event.target instanceof Element ? event.target.closest('button') : null;
+      pressed = target === add ? null : target;
+    },
+    { capture: true },
+  );
   // A line of words for each, read with its button, its name kept as it is.
   const said = new Map<HTMLElement, HTMLElement>();
   for (const button of buttons) {
