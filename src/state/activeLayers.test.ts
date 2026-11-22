@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { activeLayers, spanShown } from './activeLayers';
+import { absentLayers, absentSteps, activeLayers, spanShown } from './activeLayers';
 import { parseViewState } from './url';
 
 const at = (query: string) => parseViewState(query, new Date('2026-11-15T00:00:00Z')).state;
@@ -88,5 +88,39 @@ describe('the layers on, and whether they have data now (#751)', () => {
   it('Given the span shown, Then the years or the deep scale', () => {
     expect(spanShown({ ma: null, deepScale: 'eons' })).toBe('years');
     expect(spanShown({ ma: 3, deepScale: 'eons' })).toBe('eons');
+  });
+});
+
+describe('the Layers panel’s rows say what the chips say (#751)', () => {
+  it('Given layers on with nothing here, drawing, or on another span, Then only those with nothing here, with their step', () => {
+    const retry = (): void => undefined;
+    const active = activeLayers(at('t=1977-06-01T12:00Z&layers=ozone,empires,humans,enso'), [
+      ['enso', { state: 'failed', retry }],
+    ]);
+    const absent = absentLayers(active);
+    expect([...absent.keys()]).toEqual(['ozone', 'enso']);
+    expect(absent.get('ozone')).toEqual({
+      why: 'none in 1977 CE',
+      goTo: { span: 'years', year: 1979, label: '1979 CE' },
+      retry: null,
+    });
+    expect(absent.get('enso')).toEqual({ why: 'could not load', goTo: null, retry });
+  });
+
+  it('Given them, Then each row’s step: Go to where its data is, or Try again, or none', () => {
+    const retry = (): void => undefined;
+    const gone: string[] = [];
+    const steps = absentSteps(
+      activeLayers(at('t=1977-06-01T12:00Z&layers=ozone,enso,amoc'), [
+        ['enso', { state: 'failed', retry }],
+        ['amoc', { state: 'loading' }],
+      ]),
+      (to) => gone.push(to.label),
+    );
+    expect(steps.get('ozone')?.step?.label).toBe('Go to 1979 CE');
+    steps.get('ozone')?.step?.run();
+    expect(gone).toEqual(['1979 CE']);
+    expect(steps.get('enso')?.step).toEqual({ label: 'Try again', run: retry });
+    expect(steps.get('amoc')).toEqual({ why: 'loading…', step: null });
   });
 });

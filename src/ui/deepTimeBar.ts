@@ -53,7 +53,7 @@ import {
 } from './deepBarChips';
 import { createDeepIceNotes } from './deepIceNotes';
 import { createDeepSketchNote } from './deepSketchNote';
-import { layerDock, type DockView } from './layerDock';
+import { layerDock, type DockView, type GoTo } from './layerDock';
 import { createTimeZoom } from './timeZoom';
 import './deepTimeBar.css';
 
@@ -131,6 +131,7 @@ export function createDeepTimeBar(
     onLayer(layer: Layer, on: boolean): void;
     /** Open the Layers panel from the dock's Add (#752), the focus to come back to `opener`. */
     onAddLayer: (opener: HTMLElement) => void;
+    onGoTo: (to: GoTo) => void; // Where a docked layer's data is (#751).
     onAir(on: boolean): void;
     /** The reader asked for the Paleo-CO2 Data Archive's estimates: load them. */
     onCo2Archive(): void;
@@ -260,7 +261,7 @@ export function createDeepTimeBar(
     },
   });
   const dock = layerDock(
-    handlers.onAddLayer,
+    handlers,
     seaLevel.button,
     temperature.button,
     ...featureChips.buttons,
@@ -311,8 +312,7 @@ export function createDeepTimeBar(
     },
     easingRow,
   );
-  // The notes, legends, milestones and folds: on a phone folded away until asked for, so the
-  // globe stays in view; open, they scroll inside the bar rather than the page.
+  // Notes, legends, milestones, folds: folded on a phone until asked for; open, they scroll.
   const details = element(
     'div',
     { class: 'deep-details', id: 'deep-details', 'data-testid': 'deep-details' },

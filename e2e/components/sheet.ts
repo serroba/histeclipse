@@ -22,6 +22,7 @@ const bar = createDeepTimeBar({
   onSeaLevel: nothing,
   onLayer: nothing,
   onAddLayer: nothing,
+  onGoTo: nothing,
   onAir: nothing,
   onCo2Archive: nothing,
   onCoast: nothing,

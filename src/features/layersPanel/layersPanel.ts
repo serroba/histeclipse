@@ -6,6 +6,7 @@
  * reader can change the date with it open and watch the layers change.
  */
 
+import type { AbsentStep } from '../../state/activeLayers';
 import { layerAbout, layerFilter } from './layerRows';
 import { TRAVEL_ADDS } from '../../ui/historyTrack';
 import { elsewhereNote, LAYER_GROUPS, layerNote } from '../../state/layerCatalog';
@@ -37,6 +38,8 @@ interface LayersView {
   readonly actions?: ReadonlyMap<Layer, { readonly label: string; readonly run: () => void }>;
   /** Whether the travel view is on, which draws the year's ice and sea whatever the layers. */
   readonly travelling?: boolean;
+  /** The layers on with nothing here (#751), as their chips say: why, and their step. */
+  readonly absent?: ReadonlyMap<Layer, AbsentStep>;
 }
 
 export interface LayersPanel {
@@ -221,7 +224,7 @@ export function createLayersPanel(
     button,
     dialog,
     open,
-    render({ layers, borders, year, present, span, visible, said, actions, travelling }) {
+    render({ layers, borders, year, present, span, visible, said, actions, travelling, absent }) {
       runs.clear();
       travelNote.hidden = travelling !== true;
       const here = (layer: Layer): boolean => choices.get(layer)?.spans.includes(span) ?? true;
@@ -232,7 +235,7 @@ export function createLayersPanel(
         const offered = !layers.has(layer)
           ? undefined
           : here(layer) || to === undefined
-            ? actions?.get(layer)
+            ? (absent?.get(layer)?.step ?? actions?.get(layer))
             : {
                 label: `Go to ${choice?.arrive?.label ?? SPAN_LABELS[to]}`,
                 run: () => {
@@ -248,7 +251,8 @@ export function createLayersPanel(
       for (const [layer, box] of boxes) {
         box.checked = layers.has(layer);
         const elsewhere = !here(layer);
-        items.get(layer)?.classList.toggle('is-elsewhere', elsewhere);
+        const gone = absent?.get(layer);
+        items.get(layer)?.classList.toggle('is-elsewhere', elsewhere || gone !== undefined);
         const where = wheres.get(layer);
         if (where !== undefined) where.hidden = !elsewhere;
         const note = notes.get(layer);
@@ -258,7 +262,9 @@ export function createLayersPanel(
           ? null
           : elsewhere
             ? elsewhereNote(choice)
-            : (said?.get(layer) ?? layerNote(layer, year, borders, present));
+            : (said?.get(layer) ??
+              layerNote(layer, year, borders, present) ??
+              (gone === undefined ? null : `Nothing here: ${gone.why}.`));
         note.hidden = text === null;
         note.textContent = text ?? '';
       }
