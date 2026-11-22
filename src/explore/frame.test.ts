@@ -21,17 +21,34 @@ describe('a subject’s time', () => {
   });
 
   it('Given views in and out of a frame, Then only those inside it, on its span, show it', () => {
-    expect(showsFrame(at('t=1969-07-20T20:17Z'), MISSIONS)).toBe(true);
-    expect(showsFrame(at('t=1972-12-11T00:00Z'), MISSIONS)).toBe(true);
-    expect(showsFrame(at('t=1973-01-01T00:00Z'), MISSIONS)).toBe(false);
+    expect(showsFrame(at('t=1969-07-20T20:17Z&yw=1966,1976'), MISSIONS)).toBe(true);
+    expect(showsFrame(at('t=1972-12-11T00:00Z&yw=1966,1976'), MISSIONS)).toBe(true);
+    expect(showsFrame(at('t=1973-01-01T00:00Z&yw=1966,1976'), MISSIONS)).toBe(false);
     // The same years seen from deep time are not the years.
     expect(showsFrame(at('t=1969-07-20T20:17Z&ma=0.1&scale=ice'), MISSIONS)).toBe(false);
-    expect(showsFrame(at('ma=0.315&scale=ice'), FINDS)).toBe(true);
+    expect(showsFrame(at('ma=0.315&scale=ice&dw=0.348,0.012'), FINDS)).toBe(true);
     expect(showsFrame(at('ma=0.315&scale=all'), FINDS)).toBe(false);
     expect(showsFrame(at('ma=0.5&scale=ice'), FINDS)).toBe(false);
-    expect(showsFrame(at('ma=0.021&scale=ice'), FINDS)).toBe(false);
+    expect(showsFrame(at('ma=0.021&scale=ice&dw=0.348,0.012'), FINDS)).toBe(false);
     expect(showsFrame(at(''), FINDS)).toBe(false);
-    expect(showsFrame(at('ma=100'), AGE)).toBe(true);
+    expect(showsFrame(at('ma=100&dw=124,76'), AGE)).toBe(true);
+  });
+
+  it('Given the moment inside a frame but the bar not fitted to it (#749), Then Fit is offered', () => {
+    // The whole 540 million years: Ancient Australia's 40 sit in a sliver of it.
+    expect(showsFrame(at('ma=100'), AGE)).toBe(false);
+    // Zoomed out to more than twice the fit, or slid so the frame's end is off the bar.
+    expect(showsFrame(at('ma=100&dw=160,40'), AGE)).toBe(false);
+    expect(showsFrame(at('ma=100&dw=110,62'), AGE)).toBe(false);
+    // Zoomed in a little, or out a little, it still frames it.
+    expect(showsFrame(at('ma=100&dw=130,70'), AGE)).toBe(true);
+    expect(showsFrame(at('t=1969-07-20T20:17Z'), MISSIONS)).toBe(false);
+    expect(showsFrame(at('t=1969-07-20T20:17Z&yw=1960,1980'), MISSIONS)).toBe(true);
+    // A frame that is a whole span is shown by the whole span.
+    const all: TimeFrame = { kind: 'ma', from: 4568, to: 0 };
+    expect(showsFrame(at('ma=3000&scale=eons'), all)).toBe(true);
+    const years: TimeFrame = { kind: 'years', from: -9699, to: 2026 };
+    expect(showsFrame(at('t=1500-06-01T12:00Z'), years)).toBe(true);
   });
 
   it('Given frames, Then they read in words, a single moment once', () => {

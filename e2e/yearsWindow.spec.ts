@@ -97,3 +97,27 @@ test('zooming out of the years goes on into deep time at the same moment, and zo
   });
   expect(problems).toEqual([]);
 });
+
+test('a sideways swipe slides the Years bar’s window, the year kept, and the link keeps it (#749)', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'desktop', 'a trackpad’s swipe');
+  const problems = collectProblems(page);
+  await test.step('Given 1500 CE, the bar over 1400 to 1600', async () => {
+    await page.goto('./?t=1500-06-01T12:00Z&yw=1400,1600');
+    await globeRendered(page);
+  });
+  await test.step('When they swipe the track sideways, towards today', async () => {
+    await page.getByRole('group', { name: 'Holocene' }).locator('.history-lane').hover();
+    await page.mouse.wheel(60, 0);
+  });
+  await test.step('Then the window slides later, as long as before, and 1500 stays', async () => {
+    await expect(page).not.toHaveURL(/yw=1400,1600/);
+    const shown = new URL(page.url()).searchParams.get('yw') ?? '';
+    const [first = 0, last = 0] = shown.split(',').map(Number);
+    expect(first).toBeGreaterThan(1400);
+    expect(last - first).toBe(200);
+    await expect(page.locator('.hud-date')).toContainText('1500');
+  });
+  expect(problems).toEqual([]);
+});

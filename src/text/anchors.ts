@@ -76,10 +76,10 @@ export function anchorQuery(anchor: Anchor, current: string): string {
   const params = new URLSearchParams(current);
   const anchored = new URLSearchParams(anchor.view);
   for (const key of PLACED) params.delete(key);
-  // A moment of the anchor's own replaces the reader's, and its calendar with it.
+  // A moment of the anchor's own replaces the reader's, and its calendar with it, and the bar's
+  // window the reader had (#749): it framed their moment, not this one.
   if (anchored.has('t') || anchored.has('ma')) {
-    params.delete('t');
-    params.delete('cal');
+    for (const key of ['t', 'cal', 'dw', 'yw']) params.delete(key);
   }
   for (const [key, value] of anchored) {
     if (key === 'layers') {

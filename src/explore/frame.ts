@@ -11,7 +11,7 @@ import { formatMa } from '../time/format';
 import { astronomicalYear, formatYear } from '../time/year';
 import type { DeepScale, Span, ViewState } from '../state/viewState';
 import { ICE_AGES_MA } from '../state/viewState';
-import { fitAxis, YEARS_FIRST } from '../state/timeAxis';
+import { type AxisWindow, fitAxis, presetWindow, YEARS_FIRST } from '../state/timeAxis';
 import { deepAxisWindow, targetOf } from '../state/timeZoom';
 import { PRESENT_YEAR } from '../time/present';
 
@@ -30,17 +30,59 @@ export function frameSpan(frame: TimeFrame): Span {
   return scale;
 }
 
-/** Whether the view shows a moment inside the frame, on the span that draws it. */
-export function showsFrame(state: ViewState, frame: TimeFrame): boolean {
-  if (frame.kind === 'years') {
-    const year = state.time.date.year;
-    return state.ma === null && year >= frame.from && year <= frame.to;
-  }
+/**
+ * Whether the view shows the frame: a moment inside it, on the span that draws it, and the bar
+ * fitted to it (#749), its window holding the fitted one and no more than twice as long, so a
+ * bar zoomed or slid away from the frame offers Fit again.
+ */
+export function showsFrame(state: ViewState, frame: TimeFrame, present = PRESENT_YEAR): boolean {
+  const year = state.time.date.year;
+  const within =
+    frame.kind === 'years'
+      ? state.ma === null && year >= frame.from && year <= frame.to
+      : state.ma !== null &&
+        state.deepScale === frameSpan(frame) &&
+        state.ma <= frame.from &&
+        state.ma >= frame.to;
+  if (!within) return false;
+  const bar = barAxis(state, present);
+  const fit = fittedAxis(frame, present);
+  // A thousand years' give in deep time, where windows are kept to the thousand.
+  const give = state.ma === null ? 0 : 1000;
   return (
-    state.ma !== null &&
-    state.deepScale === frameSpan(frame) &&
-    state.ma <= frame.from &&
-    state.ma >= frame.to
+    bar.first <= fit.first + give &&
+    bar.last >= fit.last - give &&
+    bar.last - bar.first <= 2 * (fit.last - fit.first) + give
+  );
+}
+
+/** The bar's window on the axis, as the view holds it: its own, or its span's whole. */
+function barAxis(state: ViewState, present: number): AxisWindow {
+  if (state.ma === null) return state.yearsWindow ?? presetWindow('years', present);
+  return state.deepWindow === null
+    ? presetWindow(state.deepScale, present)
+    : deepAxisWindow(state.deepWindow, present);
+}
+
+/** The window fitting gives the frame, on the axis. */
+function fittedAxis(frame: TimeFrame, present: number): AxisWindow {
+  const fitted = frameWindow(frame, present);
+  const pair = (value: string): [number, number] => {
+    const [a = 0, b = 0] = value.split(',').map(Number);
+    return [a, b];
+  };
+  if (fitted['yw'] !== undefined) {
+    const [first, last] = pair(fitted['yw']);
+    return { first, last };
+  }
+  if (fitted['dw'] !== undefined) {
+    const [oldest, youngest] = pair(fitted['dw']);
+    return deepAxisWindow({ oldest, youngest }, present);
+  }
+  const scale = fitted['scale'];
+  return presetWindow(
+    scale === 'ice' || scale === 'all' || scale === 'eons' ? scale : 'years',
+    present,
   );
 }
 

@@ -140,6 +140,8 @@ export function createHistoryTrack(
     onWindow(value: string): void;
     /** Zoom by `factor` about the year (#1074): over 1 shows more time. */
     onZoom: (factor: number) => void;
+    /** Slide the window by `share` of it (#749), positive towards today. */
+    onPan: (share: number) => void;
   },
   /** The ages along the slider, as deep time draws its periods. */
   bands: HTMLElement,
@@ -211,7 +213,7 @@ export function createHistoryTrack(
     bands,
     ...(strip === undefined ? [] : [strip]),
   );
-  zoom.attach(lane);
+  zoom.attach(lane, handlers.onPan);
   const root = element(
     'div',
     { class: 'history-track', role: 'group', 'aria-label': 'Holocene', id: 'history-track' },

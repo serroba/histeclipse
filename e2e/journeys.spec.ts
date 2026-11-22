@@ -102,6 +102,46 @@ test('a visitor who wandered from Ancient Australia fits the topic and is back a
   expect(problems).toEqual([]);
 });
 
+test('arriving at Ancient Australia fits the bar to its time; a swipe slides it, and Fit brings it back (#749)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const bar = page.getByRole('navigation', { name: 'Deep time' });
+  const fit = page.getByRole('button', { name: /^Fit this topic/ });
+  await test.step('Given a link naming only Ancient Australia', async () => {
+    await page.goto('./?explore=ancient-australia');
+    await expect(page.locator('.hud-date')).toHaveText('100 million years ago');
+  });
+  await test.step('Then the bar is fitted to its 120 to 80 million years on arrival, and Fit is not offered', async () => {
+    await expect(page).toHaveURL(/dw=124,76/);
+    await expect(bar.getByTestId('scale-start')).toHaveText('124 Ma');
+    await expect(fit).toBeHidden();
+  });
+  await test.step('When they swipe the bar sideways, towards today', async () => {
+    const track = bar.locator('.deep-track');
+    await track.hover();
+    for (let swipe = 0; swipe < 2; swipe += 1) await page.mouse.wheel(60, 0);
+  });
+  await test.step('Then the window slides, its width kept, the moment kept, and Fit is offered', async () => {
+    await expect(page).not.toHaveURL(/dw=124,76/);
+    await expect(page.locator('.hud-date')).toHaveText('100 million years ago');
+    const shown = new URL(page.url()).searchParams.get('dw') ?? '';
+    const [oldest = 0, youngest = 0] = shown.split(',').map(Number);
+    expect(oldest).toBeLessThan(124);
+    expect(oldest - youngest).toBeCloseTo(48, 0);
+    await expect(fit).toBeVisible();
+  });
+  await test.step('When they fit the topic, Then the window is back; Back returns the slid one', async () => {
+    const slid = new URL(page.url()).searchParams.get('dw');
+    await fit.click();
+    await expect(page).toHaveURL(/dw=124,76/);
+    await expect(fit).toBeHidden();
+    await page.goBack();
+    await expect(page).toHaveURL(new RegExp(`dw=${String(slid)}`));
+  });
+  expect(problems).toEqual([]);
+});
+
 test('from a crater’s card, a related discovery goes to the Earth when it struck, and Back returns (#731)', async ({
   page,
 }) => {

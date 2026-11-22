@@ -129,7 +129,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     });
   }
   // Zooming the bar (#1074) and fitting it to a unit (#1075), into and out of the years.
-  const { zoom, land, fit } = deepZooming({
+  const { zoom, land, fit, pan } = deepZooming({
     store,
     present: PRESENT_YEAR,
     mapsReach: () => oldest,
@@ -147,6 +147,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
   const deepBar = createDeepTimeBar(
     {
       onZoom: zoom,
+      onPan: pan,
       onFit: fit,
       why(id, label) {
         return context.why(id, label);

@@ -15,14 +15,17 @@ describe('the line under the date', () => {
     expect(line.root.hidden).toBe(true);
   });
 
-  it('Given a destination, Then it is named; Fit shows only once its time is left, saying which', () => {
+  it('Given a destination, Then it is named; Fit shows once its time or its window is left, saying which', () => {
     const onFit = vi.fn();
     const line = createFitLine(onFit);
     const fit = line.root.querySelector<HTMLButtonElement>('.explore-fit');
-    line.render(at('explore=ancient-australia&ma=100'));
+    line.render(at('explore=ancient-australia&ma=100&dw=124,76'));
     expect(line.root.hidden).toBe(false);
     expect(line.root.textContent).toContain('Ancient Australia');
     expect(fit?.hidden).toBe(true);
+    // Its moment, but the whole 540 million years on the bar (#749): Fit is offered.
+    line.render(at('explore=ancient-australia&ma=100'));
+    expect(fit?.hidden).toBe(false);
     line.render(at('explore=ancient-australia&ma=250'));
     expect(fit?.hidden).toBe(false);
     expect(fit?.getAttribute('aria-label')).toBe(

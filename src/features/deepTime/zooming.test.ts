@@ -115,3 +115,51 @@ describe('fitting deep time’s bar to a unit (#1075)', () => {
     expect(store.get().yearsWindow).toEqual({ first: 1900, last: PRESENT });
   });
 });
+
+describe('panning deep time’s bar (#749)', () => {
+  it('Given part of the Cretaceous, When slid towards today, Then the window moves, its width and the moment kept', () => {
+    const { store, pan } = setUp({
+      ma: 100,
+      deepScale: 'all',
+      deepWindow: { oldest: 124, youngest: 76 },
+    });
+    pan(0.25);
+    expect(store.get()).toMatchObject({
+      ma: 100,
+      deepScale: 'all',
+      deepWindow: { oldest: 112, youngest: 64 },
+    });
+  });
+
+  it('Given a window slid past the moment, Then the moment is carried at its nearer end', () => {
+    const { store, pan } = setUp({
+      ma: 120,
+      deepScale: 'all',
+      deepWindow: { oldest: 124, youngest: 76 },
+    });
+    pan(0.5);
+    expect(store.get()).toMatchObject({ ma: 100, deepWindow: { oldest: 100, youngest: 52 } });
+  });
+
+  it('Given a nudge too small to move the window, Then nudges add up until it moves', () => {
+    const { store, pan } = setUp({
+      ma: 0.02,
+      deepScale: 'ice',
+      deepWindow: { oldest: 0.05, youngest: 0.01 },
+    });
+    pan(-0.01);
+    expect(store.get().deepWindow).toEqual({ oldest: 0.05, youngest: 0.01 });
+    pan(-0.01);
+    pan(-0.01);
+    expect(store.get().deepWindow).toEqual({ oldest: 0.051, youngest: 0.011 });
+  });
+
+  it('Given the whole span, When slid towards today, Then nothing moves; outside deep time, nothing', () => {
+    const { store, pan } = setUp({ ma: 100, deepScale: 'all', deepWindow: null });
+    pan(0.3);
+    expect(store.get()).toMatchObject({ ma: 100, deepScale: 'all', deepWindow: null });
+    const years = setUp({ ma: null });
+    years.pan(0.3);
+    expect(years.store.get().ma).toBeNull();
+  });
+});

@@ -41,7 +41,7 @@ describe('related discoveries', () => {
 
   it('Given a find’s place, Then Ancient DNA opens there; an unknown destination gives nothing', () => {
     expect(destinationNear('ancient-dna', { latitude: 31.85, longitude: -8.87 })?.view).toBe(
-      't=-2999-06-01T12:00Z&layers=genomes&cam=31.8500,-8.8700,3.00&explore=ancient-dna',
+      't=-2999-06-01T12:00Z&layers=genomes&cam=31.8500,-8.8700,3.00&yw=-5399,-599&explore=ancient-dna',
     );
     expect(destinationNear('atlantis', { latitude: 0, longitude: 0 })).toBeNull();
   });

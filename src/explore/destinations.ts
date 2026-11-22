@@ -9,7 +9,7 @@
 import type { Body } from '../state/viewState';
 import { PRESENT_YEAR } from '../time/present';
 import { anchorQuery } from '../text/anchors';
-import type { TimeFrame } from './frame';
+import { frameWindow, type TimeFrame } from './frame';
 import type { Anchor } from '../text/passages';
 
 /** What Explore groups destinations by; a destination may sit under several. */
@@ -235,11 +235,17 @@ export function destinationsIn(topic: Topic): Destination[] {
 }
 
 /** A destination as an anchor to open: its view, saying which destination it is. */
+/** A destination as an anchor: its view, the bar fitted to its time (#749), and its name. */
 export function destinationAnchor(destination: Destination): Anchor {
+  const view = new URLSearchParams(destination.view);
+  for (const [key, value] of Object.entries(frameWindow(destination.frame, PRESENT_YEAR))) {
+    view.set(key, value);
+  }
+  view.set('explore', destination.id);
   return {
     body: destination.body,
     label: destination.label,
-    view: `${destination.view}&explore=${destination.id}`,
+    view: view.toString().replaceAll('%2C', ',').replaceAll('%3A', ':'),
   };
 }
 
