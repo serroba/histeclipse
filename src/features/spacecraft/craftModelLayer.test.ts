@@ -41,7 +41,7 @@ function fakeHost(sun = new Vector3(0, 0, -23_455)) {
     },
     drawOver: (scene: Scene, seen: PerspectiveCamera) => over.push({ scene, camera: seen }),
     requestRender,
-  } as unknown as LayerHost;
+  } as unknown as LayerHost<'holdCraft'>;
   return {
     host,
     container,

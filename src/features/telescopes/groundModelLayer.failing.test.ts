@@ -23,7 +23,7 @@ describe('the ground model layer, its model not loaded (#864)', () => {
       afterRender: () => undefined,
       drawOver: vi.fn(),
       requestRender,
-    } as unknown as LayerHost;
+    } as unknown as LayerHost<'holdCraft'>;
     const site = { id: 'lovell', latitude: 53.2369, longitude: -2.3075 };
     groundModel(host).update({ held: site, near: [site] });
     await vi.waitFor(() => {
