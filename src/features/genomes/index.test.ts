@@ -137,7 +137,7 @@ describe('the ancient genomes as a feature', () => {
     expect(cards).toEqual([]);
   });
 
-  it('says so when the genomes cannot be loaded, and tries again next time', async () => {
+  it('says so when the genomes cannot be loaded, waits on its chip, and tries again from there (#762)', async () => {
     const { context, notify } = fakeContext({ failing: true });
     const shown = genomesFeature.mount(context, context);
     shown.show?.(bronzeAge, JD);
@@ -145,6 +145,11 @@ describe('the ancient genomes as a feature', () => {
       expect(notify).toHaveBeenCalledWith('Could not load the ancient genomes: offline');
     });
     shown.show?.(bronzeAge, JD);
+    expect(shown.said?.()).toBe('Could not load the ancient genomes.');
+    expect(notify).toHaveBeenCalledOnce();
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledTimes(2);
     });

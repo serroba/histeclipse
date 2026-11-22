@@ -15,6 +15,7 @@ import {
   type Volcanoes,
 } from '../../data/volcanoes';
 import { errorMessage } from '../../util/errors';
+import { loadOnce } from '../layerLoad';
 import { feature, RESTING } from '../feature';
 import { volcanoLayer } from './volcanoLayer';
 import './volcanoes.css';
@@ -27,8 +28,12 @@ export const volcanoesFeature = feature({
   watches: (state) => [state.layers, state.mode, state.ma],
   mount(context) {
     const marksOnGlobe = context.globe.addLayer(volcanoLayer);
-    let volcanoes: Volcanoes | null = null;
-    let loading = false;
+    const volcanoesLoad = loadOnce<Volcanoes>({
+      fetch: () => loadVolcanoes(`${context.base}data/volcanoes.json`, context.fetchJson),
+      what: 'the eruptions',
+      context,
+    });
+    let loadOn = false;
     let said: string | null = null;
     let marks: readonly VolcanoMark[] = [];
     let details: VolcanoDetails | null = null;
@@ -40,9 +45,10 @@ export const volcanoesFeature = feature({
     return {
       show(state) {
         const on = state.layers.has('volcanoes') && state.mode === 'globe' && state.ma === null;
+        loadOn = on;
         const resting = context.timeline.travelling();
         const year = state.time.date.year;
-        const key = `${String(on)}:${String(resting)}:${String(volcanoes !== null)}:${String(year)}`;
+        const key = `${String(on)}:${String(resting)}:${volcanoesLoad.status()}:${String(year)}`;
         if (key === drawnFor) return;
         drawnFor = key;
         if (!on || resting) {
@@ -51,21 +57,13 @@ export const volcanoesFeature = feature({
           marksOnGlobe.update(null);
           return;
         }
+        const volcanoes = volcanoesLoad.value();
         if (volcanoes === null) {
-          said = 'Loading the eruptions…';
-          if (loading) return;
-          loading = true;
-          loadVolcanoes(`${context.base}data/volcanoes.json`, context.fetchJson).then(
-            (loaded) => {
-              volcanoes = loaded;
-              context.refresh();
-            },
-            (error: unknown) => {
-              loading = false;
-              drawnFor = '';
-              context.notify(`Could not load the eruptions: ${errorMessage(error)}`);
-            },
-          );
+          volcanoesLoad.want();
+          said =
+            volcanoesLoad.status() === 'failed'
+              ? 'Could not load the eruptions.'
+              : 'Loading the eruptions…';
           return;
         }
         marks = eruptionsNear(volcanoes, year);
@@ -96,6 +94,7 @@ export const volcanoesFeature = feature({
         shown = null;
       },
       said: () => said,
+      load: () => volcanoesLoad.report(loadOn),
     };
   },
 });

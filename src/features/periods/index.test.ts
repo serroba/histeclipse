@@ -76,14 +76,20 @@ describe('the named periods as a feature', () => {
     expect(shown.said?.()).toBe('Pick a place on land to see the periods named there.');
   });
 
-  it('says so when the periods cannot be loaded, and tries again when shown next', async () => {
+  it('says so when the periods cannot be loaded, waits on its chip, and tries again from there (#762)', async () => {
     const { context, notify, fetchJson } = fakeContext({ failing: true });
     const shown = periodsFeature.mount(context, context);
     shown.show?.(athens, JD);
+    expect(shown.load?.()).toEqual({ state: 'loading' });
     await vi.waitFor(() => {
       expect(notify).toHaveBeenCalledWith('Could not load the named periods: offline');
     });
     shown.show?.(athens, JD);
+    expect(fetchJson).toHaveBeenCalledTimes(1);
+    expect(shown.said?.()).toBe('Could not load the named periods.');
+    const failed = shown.load?.();
+    if (failed?.state !== 'failed') throw new Error('expected a failed load');
+    failed.retry();
     expect(fetchJson).toHaveBeenCalledTimes(2);
   });
 });
