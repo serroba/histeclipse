@@ -14,7 +14,7 @@ import {
   type WaysAt,
   type WaysOfLife,
 } from '../../data/waysOfLife';
-import { errorMessage } from '../../util/errors';
+import { loadOnce } from '../layerLoad';
 import { feature } from '../feature';
 import { waysFact } from './here';
 
@@ -27,8 +27,12 @@ export const waysFeature = feature({
   mount(context) {
     const { base, fetchJson } = context;
     const waysOnGlobe = context.globe.addLayer(waysLayer);
-    let waysOfLife: WaysOfLife | null = null;
-    let waysLoading: Promise<WaysOfLife> | null = null;
+    const load = loadOnce<WaysOfLife>({
+      fetch: () => loadWaysOfLife(`${base}data/ways-of-life.json`, fetchJson),
+      what: 'the ways of life',
+      context,
+    });
+    let loadOn = false;
     let waysSaid: string | null = null;
     // The year last worked out, and the moment rated nearest it: working it out is slow.
     let worked: { readonly year: number; readonly at: WaysAt } | null = null;
@@ -43,6 +47,7 @@ export const waysFeature = feature({
     /** In historical time with the layer on, the regions by their most widespread way of life. */
     function showWays(state: ViewState): void {
       const on = state.layers.has('ways') && state.ma === null;
+      loadOn = on;
       if (!on) {
         waysSaid = null;
         waysShownYear = null;
@@ -50,21 +55,13 @@ export const waysFeature = feature({
         context.waysKey.render(null);
         return;
       }
+      const waysOfLife = load.value();
       if (waysOfLife === null) {
-        waysSaid = 'Loading the ways of life…';
-        if (waysLoading === null) {
-          waysLoading = loadWaysOfLife(`${base}data/ways-of-life.json`, fetchJson);
-          waysLoading.then(
-            (data) => {
-              waysOfLife = data;
-              context.refresh();
-            },
-            (error: unknown) => {
-              waysLoading = null;
-              context.notify(`Could not load the ways of life: ${errorMessage(error)}`);
-            },
-          );
-        }
+        load.want();
+        waysSaid =
+          load.status() === 'failed'
+            ? 'Could not load the ways of life.'
+            : 'Loading the ways of life…';
         return;
       }
       const at = atYear(waysOfLife, state.time.date.year);
@@ -79,8 +76,10 @@ export const waysFeature = feature({
     return {
       show: showWays,
       said: () => waysSaid,
+      load: () => load.report(loadOn),
       here(state) {
         if (state.location === null || state.ma !== null) return null;
+        const waysOfLife = load.value();
         if (!state.layers.has('ways') || waysOfLife === null) return null;
         const at = atYear(waysOfLife, state.time.date.year);
         return waysFact(at, state.location, words(at.year));

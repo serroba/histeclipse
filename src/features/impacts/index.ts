@@ -21,6 +21,7 @@ import type { RelatedStep } from '../../ui/markerCard';
 import { whenItStruck } from '../../explore/related';
 import { loadPictures, pictureFor, type Pictures } from '../../data/pictures';
 import { errorMessage } from '../../util/errors';
+import { loadOnce } from '../layerLoad';
 import { feature, RESTING, type FeatureContext, type FeatureInstance } from '../feature';
 import {
   impactCard,
@@ -75,37 +76,32 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
   let picturesAsked = false;
   let picked: Impact | null = null;
 
-  // Whether the layer waits on the craters, to draw once they arrive.
-  let waiting = false;
-  function loadThenDraw(): void {
-    if (waiting) return;
-    waiting = true;
-    loadImpacts(`${context.base}data/impacts.json`, context.fetchJson).then(
-      (loaded) => {
-        waiting = false;
-        impacts = loaded;
-        context.refresh();
-      },
-      (error: unknown) => {
-        waiting = false;
-        context.notify(`Could not load the impact craters: ${errorMessage(error)}`);
-      },
-    );
-  }
+  // The craters, loaded the first time the layer is on (#762).
+  const load = loadOnce<Impacts>({
+    fetch: () => loadImpacts(`${context.base}data/impacts.json`, context.fetchJson),
+    what: 'the impact craters',
+    context,
+  });
+  let loadOn = false;
 
   function show(state: ViewState): ImpactsView {
     latest = state;
     const { ma } = state;
     const scale = impactsScale(state, context.timeline.oldest());
     const on = impactsOn(state, scale);
+    loadOn = on;
     if (!on || (context.timeline.travelling() && ma === null)) {
       said = on ? RESTING : null;
       onGlobe.update(null);
       return { on: false };
     }
+    impacts = load.value();
     if (impacts === null) {
-      said = 'Loading the impact craters…';
-      loadThenDraw();
+      load.want();
+      said =
+        load.status() === 'failed'
+          ? 'Could not load the impact craters.'
+          : 'Loading the impact craters…';
       return { on: true, text: null, mode };
     }
     if (ma === null) {
@@ -196,6 +192,7 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
             context.refresh();
           }),
     said: () => said,
+    load: () => load.report(loadOn),
     // Play eases near the great impacts while the layer is on (#1077).
     finds: (state) =>
       impacts === null || !state.layers.has('impacts') ? [] : greatImpacts(impacts),
