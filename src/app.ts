@@ -476,7 +476,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
     ],
   });
 
-  parsed.warnings.forEach(notify);
+  parsed.warnings.forEach((warning) => {
+    notify(warning);
+  });
 
   // Drawn on the globe as layers of their own (#379).
   // The features on the contract (#380): mounted once, shown with each moment, picked by kind.

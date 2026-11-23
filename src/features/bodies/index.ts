@@ -7,12 +7,7 @@
 
 import { moonForFrames } from '../../astro/moonFrames';
 import { type MoonEphemeris } from '../../astro/moon';
-import {
-  loadMoonOrbits,
-  moonPosition,
-  type MoonName,
-  type MoonOrbits,
-} from '../../astro/moonOrbits';
+import { loadMoonOrbits, moonPosition, type MoonName } from '../../astro/moonOrbits';
 import { PLANETS, type PlanetEphemeris, type PlanetName } from '../../astro/planets';
 import type { Vector3 } from '../../astro/matrix';
 import { sunPositionJ2000 } from '../../astro/precession';
@@ -27,7 +22,7 @@ import {
   sunText,
 } from '../../astro/bodyFacts';
 import { loadColourKeys } from '../../data/planetKeys';
-import { isNamedBody, loadPlaceNames, type PlaceNames } from '../../data/planetNames';
+import { isNamedBody, loadPlaceNames } from '../../data/planetNames';
 import { isMoonBody, MOON_MAPS, MOON_NAMES, MOON_VIEWS, moonPlanet } from '../../globe/moonLook';
 import { moonNameLayer } from './moonNameLayer';
 import { placeNameLayer } from './placeNameLayer';
@@ -41,6 +36,7 @@ import {
 import type { Globe } from '../../globe/globe';
 import type { SkyPlanet } from '../../sky/skyScene';
 import { ORBITS, redraws, SUN } from '../../state/redraws';
+import { loadOnce, type LoadOnce } from '../../state/loadOnce';
 import type { ViewState } from '../../state/viewState';
 import { moonAbout, moonLine } from '../../text/moonFacts';
 import type { JulianDay } from '../../time/julianDay';
@@ -52,7 +48,7 @@ import { errorMessage } from '../../util/errors';
 import type { PartContext } from '../part';
 import { createMoon } from './moon';
 import { createPlanets } from './planets';
-import { viewKey, type LoadedKeys } from './seen';
+import { viewKey } from './seen';
 import { createSharpener, SHARP_WITHIN } from './sharpen';
 import { createSunCloseUp } from './sun';
 
@@ -150,47 +146,46 @@ export function mountBodies(context: BodiesContext): BodiesPart {
 
   const sharpenClose = createSharpener(context);
 
+  // What the bodies load the first time they are wanted. A failed load waits for the reader's
+  // Try again in its notice, not asked again at every move of the camera (#1130).
+  const once = <T>(what: string, fetch: () => Promise<T>): LoadOnce<T> =>
+    loadOnce({
+      fetch,
+      what,
+      context: {
+        notify: (message, retry) => {
+          context.notify(message, retry);
+        },
+        refresh: () => {
+          show(store.get());
+        },
+      },
+      retryInNotice: true,
+    });
+
   // The moons of Mars, Jupiter and Saturn (#335), loaded the first time one of them is in view.
-  let moonOrbitsAsked = false;
-  let moonOrbits: MoonOrbits | null = null;
+  const moonOrbitsLoad = once('the moons’ orbits', () =>
+    loadMoonOrbits(`${base}data/moon-orbits.json`, fetchJson).then((orbits) => {
+      globe.setMoonOrbits(orbits);
+      moonNamesOnGlobe.update(true);
+      return orbits;
+    }),
+  );
   /** Load the moons' orbits once a planet with moons is in view, or the orbits are drawn. */
   function showMoons(body: string, orbitsShown = false): void {
     const near = body === 'mars' || body === 'jupiter' || body === 'saturn' || isMoonBody(body);
-    if (moonOrbitsAsked || !(near || orbitsShown)) return;
-    moonOrbitsAsked = true;
-    loadMoonOrbits(`${base}data/moon-orbits.json`, fetchJson).then(
-      (orbits) => {
-        moonOrbits = orbits;
-        globe.setMoonOrbits(orbits);
-        moonNamesOnGlobe.update(true);
-        show(store.get());
-      },
-      (error: unknown) => {
-        moonOrbitsAsked = false;
-        context.notify(`Could not load the moons’ orbits: ${errorMessage(error)}`);
-      },
-    );
+    if (near || orbitsShown) moonOrbitsLoad.want();
   }
 
   // The IAU's place names on the rocky bodies (#334), loaded the first time one is in view.
-  let placeNames: PlaceNames | null = null;
-  let placeNamesAsked = false;
+  const placeNamesLoad = once('the place names', () =>
+    loadPlaceNames(`${base}data/planet-names.json`, fetchJson),
+  );
   /** Name the features of the body in view, if it has names; take away any others. */
   function showPlaceNames(body: string | null): void {
     const named = body !== null && isNamedBody(body) ? body : null;
-    if (named !== null && placeNames === null && !placeNamesAsked) {
-      placeNamesAsked = true;
-      loadPlaceNames(`${base}data/planet-names.json`, fetchJson).then(
-        (loaded) => {
-          placeNames = loaded;
-          show(store.get());
-        },
-        (error: unknown) => {
-          placeNamesAsked = false;
-          context.notify(`Could not load the place names: ${errorMessage(error)}`);
-        },
-      );
-    }
+    if (named !== null) placeNamesLoad.want();
+    const placeNames = placeNamesLoad.value();
     placeNamesOnGlobe.update(
       named !== null && placeNames !== null ? { body: named, names: placeNames[named] } : null,
     );
@@ -198,27 +193,15 @@ export function mountBodies(context: BodiesContext): BodiesPart {
 
   // The colour keys (#334): the height views', and the enhanced-colour views' swatches,
   // loaded the first time one shows.
-  let colourKeys: LoadedKeys | null = null;
-  let colourKeysAsked = false;
+  const colourKeysLoad = once('the colour keys', () =>
+    loadColourKeys(`${base}data/planet-keys.json`, fetchJson),
+  );
   /** A view's colour key for the bar, if it has one and the keys are in; else nothing. */
   function keyFor(view: PlanetView): { key?: BodyKey } {
     if (view.colourKey === undefined && view.rockKey === undefined) return {};
-    if (colourKeys === null) {
-      if (!colourKeysAsked) {
-        colourKeysAsked = true;
-        loadColourKeys(`${base}data/planet-keys.json`, fetchJson).then(
-          (loaded) => {
-            colourKeys = loaded;
-            show(store.get());
-          },
-          (error: unknown) => {
-            colourKeysAsked = false;
-            context.notify(`Could not load the colour keys: ${errorMessage(error)}`);
-          },
-        );
-      }
-      return {};
-    }
+    colourKeysLoad.want();
+    const colourKeys = colourKeysLoad.value();
+    if (colourKeys === null) return {};
     return viewKey(colourKeys, view);
   }
 
@@ -287,6 +270,7 @@ export function mountBodies(context: BodiesContext): BodiesPart {
         const url = sharp ?? look.map;
         globe.setMoonMap(focus, url === null ? null : `${base}${url}`);
       }
+      const moonOrbits = moonOrbitsLoad.value();
       bodyBar.render(
         at === null || moonOrbits === null
           ? null
@@ -348,6 +332,7 @@ export function mountBodies(context: BodiesContext): BodiesPart {
   /** Where a planet's moon is from Earth's centre, J2000 km; null until both are known. */
   function moonFromEarth(moon: MoonName, jdTT: JulianDay): [number, number, number] | null {
     const planet = planets.theory()?.position(moonPlanet(moon), jdTT);
+    const moonOrbits = moonOrbitsLoad.value();
     if (planet === undefined || moonOrbits === null) return null;
     const [x, y, z] = moonPosition(moonOrbits[moon], jdTT);
     return [planet[0] + x, planet[1] + y, planet[2] + z];

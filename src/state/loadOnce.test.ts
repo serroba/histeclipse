@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { loadOnce, reportAll } from './loadOnce';
 
-function setUp() {
+function setUp(retryInNotice?: boolean) {
   const fetches: { resolve: (value: string) => void; reject: (error: Error) => void }[] = [];
   const fetch = vi.fn(
     () =>
@@ -12,7 +12,12 @@ function setUp() {
   );
   const notify = vi.fn();
   const refresh = vi.fn();
-  const load = loadOnce({ fetch, what: 'the records', context: { notify, refresh } });
+  const load = loadOnce({
+    fetch,
+    what: 'the records',
+    context: { notify, refresh },
+    ...(retryInNotice !== undefined && { retryInNotice }),
+  });
   const settle = async (): Promise<void> => {
     for (let turn = 0; turn < 3; turn++) await Promise.resolve();
   };
@@ -79,6 +84,33 @@ describe("a layer's data, loaded once (#762)", () => {
     failed.retry();
     failed.retry();
     expect(fetch).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('a part with no chip (#1130)', () => {
+  it('Given the fetch fails, Then the notice offers Try again, which fetches it again', async () => {
+    const { load, fetch, fetches, notify, settle } = setUp(true);
+    load.want();
+    fetches[0]?.reject(new Error('HTTP 503'));
+    await settle();
+    expect(notify).toHaveBeenCalledWith(
+      'Could not load the records: HTTP 503',
+      expect.any(Function),
+    );
+    load.want();
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const retry = notify.mock.calls[0]?.[1] as () => void;
+    retry();
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(load.status()).toBe('loading');
+  });
+
+  it('Given a layer with a chip, Then its notice offers none: the chip does', async () => {
+    const { load, fetches, notify, settle } = setUp();
+    load.want();
+    fetches[0]?.reject(new Error('HTTP 503'));
+    await settle();
+    expect(notify.mock.calls[0]).toHaveLength(1);
   });
 });
 

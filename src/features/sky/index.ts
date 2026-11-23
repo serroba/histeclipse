@@ -28,6 +28,7 @@ import { createCultureSwitch } from './cultureSwitch';
 import { element } from '../../ui/dom';
 import { createFigureSwitch } from './figureSwitch';
 import { errorMessage } from '../../util/errors';
+import { loadOnce } from '../../state/loadOnce';
 import type { MountedPart, PartContext } from '../part';
 import './sky.css';
 
@@ -99,43 +100,52 @@ export function mountSky(context: SkyContext): SkyPart {
   options.open = !window.matchMedia('(max-width: 600px)').matches;
 
   let scene: SkyScene | null = null;
-  let loading = false;
   let insets = { top: 0, bottom: 0 };
+  // The scene's code and the stars, loaded the first time the sky opens. A failed load waits for
+  // Try again in its notice, not asked again at every moment shown (#1130).
+  const skyLoad = loadOnce({
+    fetch: () =>
+      Promise.all([
+        import('../../sky/skyScene'),
+        loadSky(`${base}data/sky.json`, fetchJson),
+        loadHipStars(`${base}data/hip-stars.json`, fetchJson),
+        context.ephemerides.loadPlanets(),
+      ]),
+    what: 'the stars',
+    context: {
+      notify: (message, retry) => {
+        context.notify(message, retry);
+      },
+      refresh: () => {
+        render(store.get());
+      },
+    },
+    retryInNotice: true,
+  });
   function open(): void {
-    if (scene !== null || loading) return;
-    loading = true;
-    Promise.all([
-      import('../../sky/skyScene'),
-      loadSky(`${base}data/sky.json`, fetchJson),
-      loadHipStars(`${base}data/hip-stars.json`, fetchJson),
-      context.ephemerides.loadPlanets(),
-    ]).then(
-      ([{ createSkyScene }, plainSky, hipStars]) => {
-        const state = store.get();
-        // Other cultures' figures use a few faint stars beyond the catalogue; add them.
-        const { sky, index } = withFigureStars(plainSky, hipStars);
-        hipIndex = index;
-        scene = createSkyScene(container, {
-          sky,
-          look: state.look,
-          figures: state.figures,
-          moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
-        });
-        scene.setInsets(insets.top, insets.bottom);
-        scene.onTap((tapped) => {
-          if (tapped === null) context.togglePanels();
-          else zoomToBody(tapped);
-        });
-        scene.onLookChange((look) => {
-          store.set((current) => ({ ...current, look }));
-        });
-        render(state);
-      },
-      (error: unknown) => {
-        loading = false;
-        context.notify(`Could not load the stars: ${errorMessage(error)}`);
-      },
-    );
+    if (scene !== null) return;
+    skyLoad.want();
+    const loaded = skyLoad.value();
+    if (loaded === null) return;
+    const [{ createSkyScene }, plainSky, hipStars] = loaded;
+    const state = store.get();
+    // Other cultures' figures use a few faint stars beyond the catalogue; add them.
+    const { sky, index } = withFigureStars(plainSky, hipStars);
+    hipIndex = index;
+    scene = createSkyScene(container, {
+      sky,
+      look: state.look,
+      figures: state.figures,
+      moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
+    });
+    scene.setInsets(insets.top, insets.bottom);
+    scene.onTap((tapped) => {
+      if (tapped === null) context.togglePanels();
+      else zoomToBody(tapped);
+    });
+    scene.onLookChange((look) => {
+      store.set((current) => ({ ...current, look }));
+    });
   }
 
   // A body tapped in the sky: the view turns to it and closes in, then goes to it up close. The

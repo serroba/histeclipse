@@ -25,8 +25,8 @@ export interface PartContext {
   readonly fetchJson: Fetch;
   /** The view: read it, or change it. */
   readonly store: Pick<Store<ViewState>, 'get' | 'set'>;
-  /** Tell the reader something went wrong. */
-  notify(message: string): void;
+  /** Tell the reader something went wrong; with `retry`, the notice offers Try again (#1130). */
+  notify(message: string, retry?: () => void): void;
   /** A button that opens the "why" sheet at a source. */
   why(id: WhyId | (() => WhyId), label: string): HTMLElement;
   /** Go to deep time at a moment, on the whole span, with a layer on and the globe facing a place. */

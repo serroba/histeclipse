@@ -5,15 +5,18 @@ import './notices.css';
 
 export interface Notices {
   readonly list: HTMLElement;
-  /** Tell the reader something went wrong; a failure asked again says so once. */
-  readonly notify: (message: string) => void;
+  /**
+   * Tell the reader something went wrong; a failure asked again says so once. With `retry`, the
+   * notice offers Try again, which closes it and asks again (#1130).
+   */
+  readonly notify: (message: string, retry?: () => void) => void;
 }
 
 export function createNotices(): Notices {
   const list = element('ul', { class: 'notices', role: 'status', 'aria-live': 'polite' });
   return {
     list,
-    notify: (message) => {
+    notify: (message, retry) => {
       const told = [...list.querySelectorAll('.notice-text')];
       if (told.some((text) => text.textContent === message)) return;
       const close = element(
@@ -25,6 +28,14 @@ export function createNotices(): Notices {
       close.addEventListener('click', () => {
         notice.remove();
       });
+      if (retry !== undefined) {
+        const again = element('button', { type: 'button', class: 'notice-retry' }, 'Try again');
+        again.addEventListener('click', () => {
+          notice.remove();
+          retry();
+        });
+        close.before(again);
+      }
       list.append(notice);
     },
   };

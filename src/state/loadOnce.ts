@@ -27,7 +27,12 @@ export interface LoadOnceOptions<T> {
    * Told when it failed; asked to refresh when the load ends, either way, and on Try again, so
    * the moment and the chips say so.
    */
-  readonly context: { notify(message: string): void; refresh(): void };
+  readonly context: { notify(message: string, retry?: () => void): void; refresh(): void };
+  /**
+   * A part with no chip (#1130): the notice that it failed offers Try again instead, so a failed
+   * load still waits for the reader rather than being asked again at every moment.
+   */
+  readonly retryInNotice?: boolean;
 }
 
 export function loadOnce<T>(options: LoadOnceOptions<T>): LoadOnce<T> {
@@ -45,7 +50,9 @@ export function loadOnce<T>(options: LoadOnceOptions<T>): LoadOnce<T> {
       },
       (error: unknown) => {
         status = 'failed';
-        options.context.notify(`Could not load ${options.what}: ${errorMessage(error)}`);
+        const message = `Could not load ${options.what}: ${errorMessage(error)}`;
+        if (options.retryInNotice === true) options.context.notify(message, retry);
+        else options.context.notify(message);
         options.context.refresh();
       },
     );
