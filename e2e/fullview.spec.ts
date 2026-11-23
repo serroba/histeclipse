@@ -156,7 +156,7 @@ test('on a short phone the date panel folds, so the globe keeps over half the sc
   await test.step('Then the panel shows the date, folded, and the globe has over half', async () => {
     await expect(more).toHaveAttribute('aria-expanded', 'false');
     // Layers is a tool now (#1116), in reach while the panel is folded.
-    await expect(hud.locator('.hud-tools').getByRole('button', { name: 'Layers' })).toBeVisible();
+    await expect(hud.locator('.hud-tools').getByRole('button', { name: 'Layers', exact: true })).toBeVisible();
     expect(await free()).toBeGreaterThan(0.5);
   });
   await test.step('When they ask for more, Then the time spans, Layers and views are there', async () => {
@@ -165,7 +165,7 @@ test('on a short phone the date panel folds, so the globe keeps over half the sc
       'aria-expanded',
       'true',
     );
-    await expect(hud.getByRole('button', { name: 'Layers' })).toBeVisible();
+    await expect(hud.getByRole('button', { name: 'Layers', exact: true })).toBeVisible();
     await expect(hud.getByRole('group', { name: 'Viewpoint' })).toBeVisible();
   });
   await test.step('When they fold it again, Then the globe has its room back', async () => {

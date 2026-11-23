@@ -29,7 +29,7 @@ test('the Sky button stands you where the globe is looking, and back again @acce
   const altitude = info.project.name === 'mobile' ? '12' : '30';
   await page.goto('./?t=2025-03-20T19:00Z&cam=32.5,44.4,3');
   await globeRendered(page);
-  await page.getByRole('button', { name: 'Sky' }).click();
+  await page.getByRole('button', { name: 'Sky', exact: true }).click();
   await skyRendered(page);
   await expect(page.getByTestId('globe')).toBeHidden();
   await expect(page).toHaveURL(/mode=sky/);

@@ -8,11 +8,18 @@ import { layerWhy } from '../../state/whysOnScreen';
 import type { DeepScale, Layer, ViewState } from '../../state/viewState';
 import { awayFromEarth, layerTurned, roundMa } from '../../state/viewState';
 import { PRESENT_YEAR } from '../../time/present';
-import { absentSteps, activeLayers, type GoTo, type LayerLoad } from '../../state/activeLayers';
+import {
+  absentSteps,
+  activeLayers,
+  spanShown,
+  type GoTo,
+  type LayerLoad,
+} from '../../state/activeLayers';
 import { astronomicalYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
 import { LISTS } from '../../state/slices/sheets';
 import { createActiveChips } from './activeChips';
+import { createLayerRail } from './layerRail';
 import { createLayersPanel } from './layersPanel';
 import type { Span } from '../../ui/spanSwitch';
 import type { PartContext } from '../part';
@@ -44,6 +51,9 @@ export interface LayersPanelPart {
   readonly dialog: HTMLDialogElement;
   /** The layers on, as chips beside Layers (#728). */
   readonly chips: HTMLElement;
+  /** The layers the span offers, for the zoom rail (#1156), and whether it has any now. */
+  readonly rail: HTMLElement;
+  readonly railOffered: () => boolean;
   /** Open the panel from `opener` (#752), which has the focus back when it closes. */
   readonly open: (opener: HTMLElement) => void;
   /** Go to where a layer's data is (#751), as its chip does. */
@@ -98,28 +108,36 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
   // top of the Layers sheet, with their number on its button.
   const chips = createActiveChips(chipActions);
   const sheetChips = createActiveChips(chipActions);
+  // A layer turned on or off, from the panel or the rail: time and the camera stay.
+  const turn = (layer: Layer, on: boolean): void => {
+    store.set((state) => layerTurned(state, layer, on));
+  };
   const panel = createLayersPanel(
-    (layer, on) => {
-      store.set((state) => layerTurned(state, layer, on));
-    },
+    turn,
     (borders) => {
       store.set((state) => ({ ...state, borders }));
     },
     goTo,
     (layer, label) => context.why(() => layerWhy(layer, store.get().borders), label),
   );
+  // The layers the span offers, on the zoom rail (#1156): a tap turns one on or off.
+  const rail = createLayerRail({ onLayer: turn, onAll: panel.open });
   sheetChips.root.classList.add('active-layers-sheet');
   panel.dialog.querySelector('header')?.after(sheetChips.root);
   return {
     button: panel.button,
     dialog: panel.dialog,
     chips: chips.root,
+    rail: rail.root,
+    railOffered: rail.offered,
     open: panel.open,
     goTo: chipActions.onGoTo,
     show(state) {
       const active = activeLayers(state, context.loads());
       chips.render(active);
       sheetChips.render(active);
+      const visible = state.mode === 'globe' && !awayFromEarth(state);
+      rail.render(spanShown(state), state.layers, active, visible);
       if (active.length === 0) delete panel.button.dataset['on'];
       else panel.button.dataset['on'] = String(active.length);
       panel.render({
@@ -128,7 +146,7 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
         year: state.time.date.year,
         present: PRESENT_YEAR,
         span: state.ma === null ? 'years' : state.deepScale,
-        visible: state.mode === 'globe' && !awayFromEarth(state),
+        visible,
         said: present(context.said()),
         actions: present(context.actions()),
         travelling: context.timeline.travelling(),

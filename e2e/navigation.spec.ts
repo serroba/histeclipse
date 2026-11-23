@@ -143,7 +143,7 @@ test('a visitor finds an eclipse first: Explore starts with Thales’, and Layer
     await expect(page.locator('.eclipse-card')).toContainText('The eclipse of Thales');
   });
   await test.step('And in Layers, Space comes first, with Eclipses at its head', async () => {
-    await page.getByRole('button', { name: 'Layers' }).first().click();
+    await page.getByRole('button', { name: 'Layers', exact: true }).first().click();
     const layers = page.getByRole('dialog', { name: 'Layers' });
     await expect(layers.getByRole('checkbox').first()).toHaveAccessibleName(/Eclipses/);
   });

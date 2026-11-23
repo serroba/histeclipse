@@ -11,6 +11,8 @@ import './touch.css';
 
 /** Pixels the zoom rail needs between the panels: its buttons, a short track and its reading. */
 const ZOOM_RAIL_ROOM = 180;
+/** Below this, while it zooms, the rail leaves the span's layers to Layers (#1156): zoom first. */
+const RAIL_LAYERS_ROOM = 470;
 
 export interface Layout {
   readonly root: HTMLElement;
@@ -44,6 +46,7 @@ export function keepCentred({ root, top, bottom, zoomRail, onInsets }: Layout): 
     root.style.setProperty('--free-left', `${String(left)}px`);
     const free = window.innerHeight - insets.top - insets.bottom;
     zoomRail.classList.toggle('is-cramped', free < ZOOM_RAIL_ROOM);
+    zoomRail.classList.toggle('is-short', free < RAIL_LAYERS_ROOM);
     // Deep time's sheet stops short of the date panel where the two share columns (#237).
     const panel = top.getBoundingClientRect();
     const sheet = bottom.querySelector('.deep-time')?.getBoundingClientRect();

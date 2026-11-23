@@ -23,7 +23,7 @@ test('on a phone, Layers counts the layers on and adds one, and a sheet leaves t
   test.skip(info.project.name !== 'mobile', 'a phone’s journey');
   const problems = collectProblems(page);
   const bar = page.getByRole('navigation', { name: 'Deep time' });
-  const layers = page.getByRole('button', { name: 'Layers' });
+  const layers = page.getByRole('button', { name: 'Layers', exact: true });
   const panel = page.getByRole('dialog', { name: 'Layers' });
   const on = panel.getByRole('group', { name: 'Layers on' });
   await test.step('Given 100 million years ago with Temperature on, the bar’s details open', async () => {

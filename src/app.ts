@@ -203,26 +203,29 @@ export async function startApp(root: HTMLElement): Promise<void> {
   const markerCard = createMarkerCard();
   // How far out the view is, and that zooming out reaches the planets: from whichever body is
   // in focus, in the years (deep time leaves the Sun, Moon and planets out).
-  const zoomRail = createZoomRail({
-    onZoom(distance) {
-      globe.zoomTo(distance);
+  const zoomRail = createZoomRail(
+    {
+      onZoom(distance) {
+        globe.zoomTo(distance);
+      },
+      onWhyHere() {
+        asking.toggle();
+      },
+      onOrbits() {
+        store.set((state) => toggledLayer(state, 'orbits'));
+      },
+      onSpacecraft() {
+        store.set((state) => toggledLayer(state, 'spacecraft'));
+      },
+      onAsteroids() {
+        store.set((state) => toggledLayer(state, 'asteroids'));
+      },
+      onEarth() {
+        store.set((state) => ({ ...state, focus: 'earth', on: null, view: 'free' }));
+      },
     },
-    onWhyHere() {
-      asking.toggle();
-    },
-    onOrbits() {
-      store.set((state) => toggledLayer(state, 'orbits'));
-    },
-    onSpacecraft() {
-      store.set((state) => toggledLayer(state, 'spacecraft'));
-    },
-    onAsteroids() {
-      store.set((state) => toggledLayer(state, 'asteroids'));
-    },
-    onEarth() {
-      store.set((state) => ({ ...state, focus: 'earth', on: null, view: 'free' }));
-    },
-  });
+    layersPanel.rail,
+  );
   // "Why here?": while on, a tap on the globe says what each layer has there.
   const asking = createAsking({ store, zoomRail, root });
   const waysLegend = createWaysLegend(whySheet.mark('ways', 'Ways of life'));
@@ -604,6 +607,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   /** The Layers panel, and Explore's view of the layers. */
   function showLayers(state: ViewState): void {
     layersPanel.show(state);
+    zoomRail.setLayers(layersPanel.railOffered());
     explore.show(state);
   }
 
