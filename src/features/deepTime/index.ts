@@ -9,7 +9,7 @@ import { deepChoices } from './choices';
 import { frameDeepEarth } from './frame';
 import { magneticNorthLayer } from './magneticNorthLayer';
 import { loadPolarity, type PolarityScale } from '../../data/polarity';
-import { magneticNorthAt } from '../../deepTime/earthState';
+import { magneticNorthPlaying } from '../../deepTime/earthState';
 import {
   type DeepScale,
   EARTH_AGE_MA,
@@ -232,7 +232,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
   function showDeepTime(state: ViewState): void {
     const { ma } = state;
     context.marked(ma !== null);
-    magneticNorthOnGlobe.update(ma === null ? null : magneticNorthAt(ma, polarity));
+    const pace = play.playing() ? play.speed() : null;
+    magneticNorthOnGlobe.update(ma === null ? null : magneticNorthPlaying(ma, polarity, pace));
     if (ma !== null) wantPolarity();
     if (ma === null) {
       yearsSpan.render('years', state.yearsWindow === null);

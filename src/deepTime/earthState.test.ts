@@ -10,6 +10,7 @@ import {
   fieldAt,
   LAST_REVERSAL_MA,
   magneticNorthAt,
+  magneticNorthPlaying,
   POLARITY_RECORD_MA,
   polaritySpans,
   SEA_FLOOR_RECORD_MA,
@@ -164,5 +165,31 @@ describe('magneticNorthAt', () => {
 
   it('Given a time before the record, Then nothing is marked', () => {
     expect(magneticNorthAt(POLARITY_RECORD_MA + 1, scale)).toBeNull();
+  });
+});
+
+describe('magneticNorthPlaying', () => {
+  const scale = polarity as PolarityScale;
+
+  it('Given the years paused, Then the pole of the moment', () => {
+    expect(magneticNorthPlaying(0, scale, null)).toBe('north');
+    expect(magneticNorthPlaying(290, null, null)).toBe('south');
+  });
+
+  it('Given play fast through frequent reversals, Then either pole, not a flashing one', () => {
+    expect(magneticNorthPlaying(0, scale, 20)).toBe('either');
+  });
+
+  it('Given play inside a superchron, Then its pole holds', () => {
+    expect(magneticNorthPlaying(100, scale, 20)).toBe('north');
+    expect(magneticNorthPlaying(290, null, 20)).toBe('south');
+  });
+
+  it('Given play slow since the last reversal, Then north', () => {
+    expect(magneticNorthPlaying(0.1, scale, 0.05)).toBe('north');
+  });
+
+  it('Given before the record, Then nothing, playing or not', () => {
+    expect(magneticNorthPlaying(POLARITY_RECORD_MA + 1, scale, 20)).toBeNull();
   });
 });

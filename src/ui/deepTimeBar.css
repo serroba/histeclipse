@@ -102,7 +102,8 @@
 /*
  * While the years play, the date changes every frame and "397" is narrower than "396.9": room
  * kept for the widest ("4,540.9 million years ago") and for a Phanerozoic period, so the controls
- * beside them hold still and the row never re-wraps.
+ * beside them hold still and the row never re-wraps. The room is that text itself, laid out
+ * invisibly with no height, so it fits whatever font the reader has (#1132).
  */
 .deep-when,
 .deep-rate {
@@ -110,14 +111,22 @@
 }
 
 @media (min-width: 601px) {
-  .deep-label .deep-when {
-    display: inline-block;
-    min-width: 20.5ch;
+  .deep-label .deep-when,
+  .deep-label .deep-period {
+    display: inline-flex;
+    flex-direction: column;
   }
 
-  .deep-label .deep-period {
-    display: inline-block;
-    min-width: 19ch;
+  .deep-label .deep-when::before,
+  .deep-label .deep-period::before {
+    height: 0;
+    overflow: hidden;
+    visibility: hidden;
+    content: '4,540.9 million years ago';
+  }
+
+  .deep-label .deep-period::before {
+    content: 'Carboniferous · Paleozoic';
   }
 }
 
