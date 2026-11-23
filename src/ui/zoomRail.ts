@@ -158,22 +158,28 @@ export interface ZoomRail {
   setAsteroids(offered: boolean, on: boolean): void;
   /** Whether "Why here?" is offered, and on: a tap on the globe then says what is there. */
   setWhyHere(offered: boolean, on: boolean): void;
+  /** Whether the span offers layers on the rail (#1156). */
+  setLayers(offered: boolean): void;
 }
 
-export function createZoomRail(handlers: {
-  /** Glide to a distance, in the radii of the body in focus. */
-  onZoom(distance: number): void;
-  /** Turn the planets' orbits on or off. */
-  onOrbits(): void;
-  /** Turn the craft beyond Earth orbit on or off. */
-  onSpacecraft(): void;
-  /** Turn the asteroid belt on or off. */
-  onAsteroids(): void;
-  /** Turn "Why here?" on or off. */
-  onWhyHere(): void;
-  /** Centre on Earth again. */
-  onEarth(): void;
-}): ZoomRail {
+export function createZoomRail(
+  handlers: {
+    /** Glide to a distance, in the radii of the body in focus. */
+    onZoom(distance: number): void;
+    /** Turn the planets' orbits on or off. */
+    onOrbits(): void;
+    /** Turn the craft beyond Earth orbit on or off. */
+    onSpacecraft(): void;
+    /** Turn the asteroid belt on or off. */
+    onAsteroids(): void;
+    /** Turn "Why here?" on or off. */
+    onWhyHere(): void;
+    /** Centre on Earth again. */
+    onEarth(): void;
+  },
+  /** The layers the span offers (#1156), under the rail's own icons. */
+  layers: HTMLElement | null = null,
+): ZoomRail {
   let scale = railScale('earth', nearestDistance('earth', true));
   let shown = 3;
   const home = element(
@@ -231,15 +237,17 @@ export function createZoomRail(handlers: {
     spacecraft,
     asteroids,
     whyHere,
+    ...(layers === null ? [] : [layers]),
     readout,
   );
   // Zooming, or on a craft (#796), with only the way back; shown while either part offers some.
-  let [zooming, onCraft] = [false, false];
+  let [zooming, onCraft, layered] = [false, false, false];
   function sync(): void {
     zoom.hidden = !zooming;
+    root.toggleAttribute('data-zooming', zooming);
     readout.hidden = !zooming || onCraft;
     for (const part of [zoomIn, track, zoomOut]) part.hidden = onCraft;
-    root.hidden = !zooming && orbits.hidden === true && whyHere.hidden === true;
+    root.hidden = !zooming && orbits.hidden === true && whyHere.hidden === true && !layered;
   }
   zoomIn.addEventListener('click', () => {
     handlers.onZoom(distanceAt(railPosition(shown, scale) - STEP, scale));
@@ -252,6 +260,10 @@ export function createZoomRail(handlers: {
   });
   return {
     root,
+    setLayers(offered) {
+      layered = offered;
+      sync();
+    },
     setWhyHere(offered, on) {
       whyHere.hidden = !offered;
       whyHere.setAttribute('aria-pressed', String(on));

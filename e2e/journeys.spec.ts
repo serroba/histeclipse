@@ -41,7 +41,7 @@ test('a newcomer starts exploring, picks a famous eclipse and looks at the sky t
     await expect(page.locator('.famous-card-debate')).toContainText('Debated');
   });
   await test.step('When they look at the sky from there', async () => {
-    await page.getByRole('button', { name: 'Sky' }).click();
+    await page.getByRole('button', { name: 'Sky', exact: true }).click();
   });
   await test.step('Then the sky draws, and Orbit brings the globe back', async () => {
     await expect(page.getByTestId('sky')).toHaveAttribute('data-rendered', 'true');
@@ -423,9 +423,10 @@ test('a rail at the side shows how far out the view is, and that the planets are
       })
       .toBeLessThan(20_000);
   });
-  await test.step('And in deep time, where the planets are left out, the rail goes', async () => {
+  await test.step('And in deep time, where the planets are left out, the zoom goes, the span’s layers staying (#1156)', async () => {
     await pickSpan(page, '540 Myr');
-    await expect(rail).toBeHidden();
+    await expect(rail.getByRole('button', { name: 'Zoom in' })).toBeHidden();
+    await expect(page.getByRole('group', { name: 'Layers here' })).toBeVisible();
   });
   expect(problems).toEqual([]);
 });

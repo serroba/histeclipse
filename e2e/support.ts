@@ -95,7 +95,7 @@ export async function openSources(page: Page): Promise<void> {
 
 /** Open the Layers panel, unless it is open already. */
 export async function openLayers(page: Page): Promise<void> {
-  const button = page.getByRole('button', { name: 'Layers' });
+  const button = page.getByRole('button', { name: 'Layers', exact: true });
   if ((await button.getAttribute('aria-expanded')) !== 'true') await button.click();
   await expect(page.getByRole('dialog', { name: 'Layers' })).toBeVisible();
 }

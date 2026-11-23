@@ -36,7 +36,7 @@ test('the ozone hole shows each spring on the globe, with its record beside it, 
   });
   await test.step('Then its chip says so in words, and takes them to the next year measured (#751)', async () => {
     const phone = (page.viewportSize()?.width ?? 1000) < 600;
-    if (phone) await page.getByRole('button', { name: 'Layers' }).click();
+    if (phone) await page.getByRole('button', { name: 'Layers', exact: true }).click();
     const chip = page.getByRole('group', { name: 'Layers on' }).locator('[data-layer="ozone"]');
     await expect(chip).toHaveAttribute('data-coverage', 'gap');
     await expect(chip).toContainText('none in 1977 CE');
@@ -59,7 +59,7 @@ test('when the ozone record does not load, its chip says so, and Try again draws
     await globeRendered(page);
   });
   const phone = (page.viewportSize()?.width ?? 1000) < 600;
-  if (phone) await page.getByRole('button', { name: 'Layers' }).click();
+  if (phone) await page.getByRole('button', { name: 'Layers', exact: true }).click();
   const chip = page.getByRole('group', { name: 'Layers on' }).locator('[data-layer="ozone"]');
   await test.step('Then its chip says it could not load, in words', async () => {
     await expect(chip).toHaveAttribute('data-coverage', 'failed');
@@ -116,7 +116,7 @@ test('the ozone layer is drawn in 3D on a day of its season, and ozone’s own b
   });
   await test.step('When the layer goes off, Then the years’ own bar is back', async () => {
     const phone = (page.viewportSize()?.width ?? 1000) < 600;
-    if (phone) await page.getByRole('button', { name: 'Layers' }).click();
+    if (phone) await page.getByRole('button', { name: 'Layers', exact: true }).click();
     await page
       .getByRole('group', { name: 'Layers on' })
       .getByRole('button', { name: 'Turn off The ozone hole' })
