@@ -28,7 +28,9 @@ turned half a turn.
 Venus's map is Magellan's radar of the ground beneath its clouds (1990-94, the colourised
 topographic mosaic at 6.6 km, USGS Astrogeology): the site shows it only when asked, as from
 space Venus shows only cloud.
-Earth's first map (2048 wide) and the Moon's (1024) were made before this command and are kept.
+Earth's first map, the one every visit loads, is also written 2048 wide as WebP (#221): about a
+third of the JPEG's bytes at the same size. The Moon's first (1024) was made before this command
+and is kept.
 """
 
 import hashlib
@@ -53,6 +55,8 @@ WIDTH = 2048
 #: low sunlight leaves glare and gaps.
 STRETCH_QUANTILE = 0.995
 JPEG_QUALITY = 85
+#: WebP's quality for a first map: at 80 the coasts and clouds read as in the JPEG at 85.
+WEBP_QUALITY = 80
 USER_AGENT = "histeclipse-pipeline (https://github.com/serroba/histeclipse)"
 
 
@@ -72,6 +76,8 @@ class MapSource:
     #: Whether the map starts at 0° on its left edge (180° in the middle) and is turned half a
     #: turn to the site's layout, 0° in the middle.
     half_turn: bool = False
+    #: Widths also written as WebP, for a map every visit loads (#221).
+    webp_widths: tuple[int, ...] = ()
 
 
 PHOTOJOURNAL = "https://assets.science.nasa.gov/content/dam/science/psd/photojournal/pia"
@@ -278,6 +284,8 @@ MAPS = (
         sha256="7d3a8c58de56782a68156c67dd171074e210a7feec9283987622e569fa338f6a",
         # Phones load the 4096; screens whose graphics allow it, the 8192.
         widths=(4096, 8192),
+        # The globe's first map, before any close up.
+        webp_widths=(2048,),
     ),
     MapSource(
         stem="moon-lroc",
@@ -399,6 +407,12 @@ def write_map(image: Image.Image, path: Path) -> None:
     image.save(path, "JPEG", quality=JPEG_QUALITY, progressive=True, optimize=True)
 
 
+def write_webp(image: Image.Image, path: Path) -> None:
+    """Write a map as WebP, for one every visit loads (#221)."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    image.save(path, "WEBP", quality=WEBP_QUALITY, method=6)
+
+
 def download(url: str, path: Path) -> None:  # pragma: no cover - needs network access
     """Download ``url`` to ``path``, through a partial file so a broken one is never kept."""
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})  # noqa: S310
@@ -437,5 +451,11 @@ def fetch_planet_maps(  # pragma: no cover - needs network access
                     image, stretch=source.stretch, width=width, half_turn=source.half_turn
                 )
                 write_map(made, folder / f"{source.stem}-{width}.jpg")
+                written += 1
+            for width in source.webp_widths:
+                made = web_map(
+                    image, stretch=source.stretch, width=width, half_turn=source.half_turn
+                )
+                write_webp(made, folder / f"{source.stem}-{width}.webp")
                 written += 1
     return written

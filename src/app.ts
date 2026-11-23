@@ -230,7 +230,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The globe draws at once, takes its maps as they arrive, and sizes itself once on the page.
   const globe = createGlobe(globeContainer, {
     camera: store.get().camera,
-    textureUrl: `${base}textures/earth-blue-marble-2048.jpg`,
+    textureUrl: `${base}textures/earth-blue-marble-2048.webp`,
     moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
     focus: focusOf(store.get()),
     // The features' parts of the Earth shader (#379).
