@@ -525,6 +525,9 @@ test('in the Hadean the reader picks where the water came from, and delivered wa
     await globeRendered(page);
     await showDeepDetails(page);
   });
+  await test.step('Then no viewpoints are offered, deep time’s sky and Moon not being drawn (#1154)', async () => {
+    await expect(page.getByRole('group', { name: 'Viewpoint' })).toBeHidden();
+  });
   await test.step('Then Earth’s own rock is the first answer, on its sources’ say-so', async () => {
     const picker = page.getByLabel('Where the water came from');
     await expect(picker).toHaveValue('inherited');
