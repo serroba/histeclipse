@@ -21,6 +21,9 @@ async function openTrack(page: Page): Promise<void> {
 test('the travel view says which layers it turned on, and one the reader turns off stays off (#983) @mobile', async ({
   page,
 }, info) => {
+  // Two trips, each stopped while it plays: on CI's software WebGL a phone's click during play
+  // waits seconds for the frame, which ran past the default 30 s (#1125).
+  test.slow();
   const problems = collectProblems(page);
   const bar = page.getByRole('group', { name: track });
   // On a phone it is said in ⓘ, not over the globe (#1050).
