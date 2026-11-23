@@ -610,3 +610,27 @@ test(
     expect(problems).toEqual([]);
   },
 );
+
+test('with Plates on, the plates’ boundaries show in the open ocean, turned as the continents are, with a key (#1160)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  // Today the Pacific is all plate: its boundaries are drawn, its continents only at its edge.
+  await page.goto('./?ma=0&scale=all&layers=plates');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute('data-plate-boundaries', /^0:/);
+  await showDeepDetails(page);
+  const note = page.getByTestId('plates-note');
+  await expect(note).toContainText('Subduction zones: one sinks under another');
+  await expect(note.locator('.boundary-swatch.is-ridge')).toBeAttached();
+  // In the Silurian, turned east as the continents are to line up with the surface map.
+  await page.goto('./?ma=440&scale=all&layers=plates');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute('data-plate-boundaries', /^440:[1-9]/);
+  // Off with the layer.
+  await page.goto('./?ma=440&scale=all');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute('data-plate-boundaries', 'off');
+  expect(problems).toEqual([]);
+});

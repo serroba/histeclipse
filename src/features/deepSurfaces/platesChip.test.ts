@@ -24,4 +24,28 @@ describe('the plates’ chip', () => {
       'Cao et al. 2024',
     ]);
   });
+
+  it('keys the plate boundaries’ kinds while they are drawn (#1160)', () => {
+    const note = platesChip(true, 'Cao et al. 2024', true).note ?? [];
+    expect(note.slice(0, 3)).toEqual([{ key: 'plates-swatch' }, ' ', 'Cao et al. 2024']);
+    const key = note[3];
+    expect(key !== undefined && typeof key !== 'string' && 'list' in key ? key.list : []).toEqual([
+      expect.objectContaining({
+        parts: [{ key: 'boundary-swatch is-ridge' }, ' ', 'Ridges and rifts: plates part'],
+      }),
+      expect.objectContaining({
+        parts: [
+          { key: 'boundary-swatch is-subduction' },
+          ' ',
+          'Subduction zones: one sinks under another',
+        ],
+      }),
+      expect.objectContaining({
+        parts: [{ key: 'boundary-swatch is-transform' }, ' ', 'Transforms: plates slide past'],
+      }),
+      expect.objectContaining({
+        parts: [{ key: 'boundary-swatch is-other' }, ' ', 'Other boundaries'],
+      }),
+    ]);
+  });
 });

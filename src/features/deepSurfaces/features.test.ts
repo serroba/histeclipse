@@ -24,6 +24,7 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
   const refresh = vi.fn();
   const notify = vi.fn();
   const setPlates = vi.fn();
+  const boundaries = vi.fn();
   const archive = { loaded: vi.fn((): unknown => null) };
   const fetchJson = vi.fn(async (url: string) => {
     if (options.failing === true) throw new Error('offline');
@@ -35,10 +36,11 @@ function fakeContext(options: { readonly failing?: boolean } = {}) {
     notify,
     refresh,
     plateOutlines: { setPlates },
+    globe: { addLayer: () => ({ update: boundaries }) },
     plateMasks: createPlateMasks('/', fetchJson),
     co2Archive: archive,
   } as unknown as FeatureContext<Capability>;
-  return { context, refresh, notify, fetchJson, setPlates, archive };
+  return { context, refresh, notify, fetchJson, setPlates, boundaries, archive };
 }
 
 describe('the plates as a feature', () => {
@@ -78,6 +80,26 @@ describe('the plates as a feature', () => {
     expect(setPlates).toHaveBeenLastCalledWith(
       expect.objectContaining({ younger: expect.stringMatching(/^\/data\/plates\//) as string }),
     );
+  });
+
+  it('draws where its plates met at the moment, turned as its continents are (#1160)', async () => {
+    const { context, refresh, boundaries } = fakeContext();
+    const shown = platesFeature.mount(context, context);
+    const silurian = deep('plates', 440, 'all');
+    shown.deep?.(silurian, moment(silurian));
+    // The masks' index, then the boundaries' index, then the frame of 440 Ma.
+    for (const times of [1, 2, 3]) {
+      await vi.waitFor(() => {
+        expect(refresh).toHaveBeenCalledTimes(times);
+      });
+      shown.deep?.(silurian, moment(silurian));
+    }
+    expect(boundaries).toHaveBeenLastCalledWith(
+      expect.objectContaining({ key: expect.stringMatching(/^440:\d/) as string }),
+    );
+    const off = { ...silurian, layers: new Set<never>() };
+    shown.deep?.(off, moment(off));
+    expect(boundaries).toHaveBeenLastCalledWith(null);
   });
 
   it('outlines nothing beyond the plates’ reach, and says how far they reach', async () => {

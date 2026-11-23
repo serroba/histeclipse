@@ -1,11 +1,12 @@
 import { layer } from './layer';
 
-/** Deep time: a second reconstruction's continents, outlined. */
+/** Deep time: a second reconstruction's continents, outlined, and where its plates met (#1160). */
 export const plates = layer({
   id: 'plates',
   label: 'Plates',
-  summary: 'A second reconstruction’s continents, to compare with the first.',
-  about: 'A second reconstruction’s continents, outlined over the first.',
+  summary: 'A second reconstruction’s continents and plate boundaries, to compare with the first.',
+  about:
+    'A second reconstruction’s continents, outlined over the first, and where its plates met: ridges, subduction zones and transforms.',
   spans: ['ice', 'all', 'eons'],
   reach: 'Back to 1,800 million years ago.',
   covers: { oldestMa: 1800 },

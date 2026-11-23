@@ -1,6 +1,6 @@
 {
   "title": "Plates",
-  "what": "A second reconstruction’s continents, outlined over the first.",
+  "what": "A second reconstruction’s continents, outlined over the first, and where its plates met: ridges where they part, subduction zones where one sinks under another, transforms where they slide past.",
   "sources": ["cao2024"],
-  "how": "Continent outlines reconstructed with pyGPlates in the model’s paleomagnetic frame, drawn as 0.25° masks."
+  "how": "Continent outlines and plate boundaries reconstructed with pyGPlates in the model’s paleomagnetic frame: the outlines drawn as 0.25° masks, the boundaries as lines every 5 million years, each turned about the axis to line up with the surface map."
 }
