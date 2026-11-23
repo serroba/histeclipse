@@ -16,6 +16,7 @@ import {
   type Texture,
 } from 'three';
 
+import { createFade, type Fade } from './fade';
 import { createMapCache, type MapCache } from './mapCache';
 import { LAND_NOISE_GRID, landNoise, levelForShare, shareAtOrAbove } from '../deepTime/landScheme';
 import type {
@@ -62,6 +63,8 @@ export function surfaceUniforms(): Record<string, IUniform> {
     plateTurn: { value: new Vector2(0, 0) },
     uncharted: { value: 0 },
     sketchKind: { value: 0 },
+    // How molten the sketch is drawn, 1 to 0, eased so the Hadean's change cross-fades (#1140).
+    sketchMolten: { value: 0 },
     sketchLevel: { value: 2 },
     sketchIceEdge: { value: 90 },
     paleoGrid: { value: new Vector2(361, 181) },
@@ -136,6 +139,7 @@ export class EarthSurfaces {
   // Lit evenly outside deep time too, while something asks: the Holocene's track, the ozone layer.
   readonly #evenLit = new Set<string>();
   #sketchField: ReturnType<typeof sketchTexture> | null = null;
+  #molten: Fade | null = null;
 
   constructor(host: SurfaceHost) {
     this.#host = host;
@@ -327,6 +331,7 @@ export class EarthSurfaces {
         ? 'off'
         : `${sketch.kind} ${sketch.land.toFixed(3)} ${String(sketch.iceEdge)}`;
     this.#host.invalidate();
+    const shown = this.#host.uniforms['sketchKind']?.value !== 0;
     if (sketch === null) {
       this.#host.uniforms['sketchKind'] = { value: 0 };
       return;
@@ -338,6 +343,12 @@ export class EarthSurfaces {
       sketchLevel: levelForShare(this.#sketchField.shares, sketch.land),
       sketchIceEdge: sketch.iceEdge,
     });
+    this.#molten ??= createFade((value) => {
+      this.#host.uniforms['sketchMolten'] = { value };
+      this.#host.invalidate();
+    });
+    // Eased only from one sketch to the next: arriving at one, it is drawn as it is.
+    this.#molten.set(sketch.kind === 'magma' ? 1 : 0, !shown);
   }
 
   #showLight(): void {
