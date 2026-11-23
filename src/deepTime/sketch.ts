@@ -219,7 +219,8 @@ export function snowballAt(ma: number): SnowballEpisode | null {
 
 export const WATER_MODELS = ['inherited', 'delivered'] as const;
 export type WaterModel = (typeof WATER_MODELS)[number];
-export const DEFAULT_WATER_MODEL: WaterModel = 'inherited';
+// Delivered by default, so a first visit sees the water arriving (#1158).
+export const DEFAULT_WATER_MODEL: WaterModel = 'delivered';
 
 export const WATER_CHOICES: Readonly<
   Record<WaterModel, Choice<WaterModel> & { readonly note: string }>

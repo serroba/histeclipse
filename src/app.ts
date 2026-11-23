@@ -441,7 +441,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       textsHere: texts.here,
       evidence: deepTime.evidence,
     },
-    between: [notices.list, deepTime.glance, panels.showControls],
+    between: [notices.list, deepTime.glance, deepTime.hypotheses, panels.showControls],
     bottom: {
       eclipseCard: eclipses.card,
       eclipseScrubber: eclipses.scrubber,

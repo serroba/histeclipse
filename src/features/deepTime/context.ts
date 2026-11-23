@@ -72,6 +72,8 @@ export interface DeepTimePart {
   readonly bar: HTMLElement;
   /** "How do we know?", for the date panel (#1137): shown on the reconstructions' spans. */
   readonly evidence: HTMLElement;
+  /** The sketch's questions at the globe's left, before the surface maps. */
+  readonly hypotheses: HTMLElement;
   readonly glance: HTMLElement;
   /** The years' bar's scale row (#1116): how far back time reaches. */
   readonly yearsScale: HTMLElement;

@@ -85,13 +85,13 @@ describe("deep time's slice", () => {
     impact: DEEP_DEFAULTS.impact,
     land: DEEP_DEFAULTS.land,
     snowball: DEEP_DEFAULTS.snowball,
-    water: 'delivered',
+    water: 'inherited',
   };
 
   it('reads back what it writes', () => {
     const query = written(DEEP_PARAMS, away);
     expect(query).toBe(
-      'ma=66.04&scale=eons&dw=124%2C76&dispersal=b&species=neanderthal&story=humans&water=delivered',
+      'ma=66.04&scale=eons&dw=124%2C76&dispersal=b&species=neanderthal&story=humans&water=inherited',
     );
     expect(readSlice(DEEP_PARAMS, DEEP_DEFAULTS, readerOf(query))).toEqual(away);
   });
