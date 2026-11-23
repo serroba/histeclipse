@@ -3,12 +3,12 @@
  * switch between them.
  */
 
-import { loadSunImages, type SunImages } from '../../data/sunImages';
+import { loadSunImages } from '../../data/sunImages';
 import type { Globe } from '../../globe/globe';
+import { loadOnce } from '../../state/loadOnce';
 import type { ViewState } from '../../state/viewState';
 import { createSunSwitch } from './sunSwitch';
 import { sunImageLayer } from './sunImageLayer';
-import { errorMessage } from '../../util/errors';
 import type { PartContext } from '../part';
 
 export interface SunCloseUp {
@@ -28,9 +28,25 @@ export function createSunCloseUp(
     },
     context.why('sun', 'The Sun close up'),
   );
-  // SDO's images of the Sun load the first time someone looks at it close up.
-  let sunImages: SunImages | null = null;
-  let sunImagesLoading = false;
+  // SDO's images of the Sun load the first time someone looks at it close up. A failed load
+  // waits for Try again in its notice (#1130).
+  const sunImagesLoad = loadOnce({
+    fetch: () =>
+      loadSunImages(`${base}data/sun-images.json`, fetchJson).then((images) => {
+        sunSwitch.setLayers(images.layers, images.credit);
+        return images;
+      }),
+    what: 'the images of the Sun',
+    context: {
+      notify: (message, retry) => {
+        context.notify(message, retry);
+      },
+      refresh: () => {
+        showSun(store.get());
+      },
+    },
+    retryInNotice: true,
+  });
   function showSun(state: ViewState): void {
     const close = state.mode === 'globe' && state.focus === 'sun';
     sunSwitch.render(state.sunLayer, close);
@@ -38,22 +54,9 @@ export function createSunCloseUp(
       sunImage.update(null);
       return;
     }
-    if (sunImages === null) {
-      if (sunImagesLoading) return;
-      sunImagesLoading = true;
-      loadSunImages(`${base}data/sun-images.json`, fetchJson).then(
-        (images) => {
-          sunImages = images;
-          sunSwitch.setLayers(images.layers, images.credit);
-          showSun(store.get());
-        },
-        (error: unknown) => {
-          sunImagesLoading = false;
-          context.notify(`Could not load the images of the Sun: ${errorMessage(error)}`);
-        },
-      );
-      return;
-    }
+    sunImagesLoad.want();
+    const sunImages = sunImagesLoad.value();
+    if (sunImages === null) return;
     const image = sunImages.layers.find(({ key }) => key === state.sunLayer);
     if (image === undefined) return;
     sunImage.update({

@@ -21,4 +21,24 @@ describe('the notices (#474, #944)', () => {
     notify('Ignored view="sky": unknown view');
     expect(list.children).toHaveLength(1);
   });
+
+  it('Given a failure with a way to ask again, When the reader picks Try again, Then the notice goes and it is asked again (#1130)', () => {
+    const { list, notify } = createNotices();
+    let asked = 0;
+    notify('Could not load the eruptions: 503', () => {
+      asked += 1;
+    });
+    expect(list.querySelector('.notice-text')?.textContent).toBe(
+      'Could not load the eruptions: 503',
+    );
+    list.querySelector<HTMLButtonElement>('.notice-retry')?.click();
+    expect(asked).toBe(1);
+    expect(list.children).toHaveLength(0);
+  });
+
+  it('Given a failure without one, Then it offers no Try again', () => {
+    const { list, notify } = createNotices();
+    notify('The map could not load.');
+    expect(list.querySelector('.notice-retry')).toBeNull();
+  });
 });

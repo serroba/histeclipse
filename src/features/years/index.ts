@@ -9,9 +9,10 @@ import type { Globe } from '../../globe/globe';
 import type { DatingCard } from '../../ui/datingCard';
 import type { PartContext } from '../part';
 import { loadRadiocarbon, type Radiocarbon } from '../../data/radiocarbon';
-import { eruptionsBetween, loadEruptions, type Eruptions } from '../../data/eruptions';
+import { eruptionsBetween, loadEruptions } from '../../data/eruptions';
 import { RADIOCARBON_EVENTS } from '../../data/radiocarbonEvents';
 import { createRadiocarbonStrip } from './radiocarbonStrip';
+import { loadOnce, type LoadOnce } from '../../state/loadOnce';
 import { type Layer, type ViewState } from '../../state/viewState';
 import { astronomicalYear, formatYear } from '../../time/year';
 import { moveToYear } from '../../time/yearInput';
@@ -26,7 +27,6 @@ import { yearOfMa } from '../../data/iceSheets';
 import { PRESENT_YEAR } from '../../time/present';
 import { createPeriodBands } from '../../ui/periodBands';
 import { yearTicks } from './yearTicks';
-import { errorMessage } from '../../util/errors';
 
 /** What the years ask of the rest of the page. */
 export interface YearsContext extends PartContext {
@@ -120,11 +120,29 @@ export function mountYears(context: YearsContext): YearsPart {
     historyBands.root,
     radiocarbonStrip.root,
   );
-  let radiocarbon: Radiocarbon | null = null;
-  let radiocarbonAsked = false;
-  // The eruptions the ice cores record (HolVol), under the curve; loaded with it.
-  let eruptions: Eruptions | null = null;
-  let eruptionsAsked = false;
+  // The curves and the eruptions the ice cores record (HolVol), under the curve, loaded when the
+  // layer is first on. A failed load waits for Try again in its notice, not asked again as the
+  // years play (#1130).
+  const once = <T>(what: string, fetch: () => Promise<T>): LoadOnce<T> =>
+    loadOnce({
+      fetch,
+      what,
+      context: {
+        notify: (message, retry) => {
+          context.notify(message, retry);
+        },
+        refresh: () => {
+          showRadiocarbon(store.get());
+        },
+      },
+      retryInNotice: true,
+    });
+  const radiocarbonLoad = once('the radiocarbon curves', () =>
+    loadRadiocarbon(`${base}data/radiocarbon.json`, fetchJson),
+  );
+  const eruptionsLoad = once('the eruptions', () =>
+    loadEruptions(`${base}data/eruptions.json`, fetchJson),
+  );
   /** The strip, for the years shown, from the curve of the hemisphere one stands in. */
   function showRadiocarbon(state: ViewState): void {
     const on = state.layers.has('radiocarbon') && state.mode === 'globe' && state.ma === null;
@@ -132,35 +150,14 @@ export function mountYears(context: YearsContext): YearsPart {
       radiocarbonStrip.render(null);
       return;
     }
+    radiocarbonLoad.want();
+    const radiocarbon = radiocarbonLoad.value();
     if (radiocarbon === null) {
       radiocarbonStrip.render(null);
-      if (radiocarbonAsked) return;
-      radiocarbonAsked = true;
-      loadRadiocarbon(`${base}data/radiocarbon.json`, fetchJson).then(
-        (loaded) => {
-          radiocarbon = loaded;
-          showRadiocarbon(store.get());
-        },
-        (error: unknown) => {
-          radiocarbonAsked = false;
-          context.notify(`Could not load the radiocarbon curves: ${errorMessage(error)}`);
-        },
-      );
       return;
     }
-    if (eruptions === null && !eruptionsAsked) {
-      eruptionsAsked = true;
-      loadEruptions(`${base}data/eruptions.json`, fetchJson).then(
-        (loaded) => {
-          eruptions = loaded;
-          showRadiocarbon(store.get());
-        },
-        (error: unknown) => {
-          eruptionsAsked = false;
-          context.notify(`Could not load the eruptions: ${errorMessage(error)}`);
-        },
-      );
-    }
+    eruptionsLoad.want();
+    const eruptions = eruptionsLoad.value();
     const south = (state.location?.latitude ?? 1) < 0;
     const { first, last } = window.shown(state);
     radiocarbonStrip.render({
@@ -290,11 +287,9 @@ export function mountYears(context: YearsContext): YearsPart {
 
   /** The curves, for carrying a date across one: loaded once, with or without their layer. */
   function radiocarbonCurves(): Promise<Radiocarbon> {
+    const radiocarbon = radiocarbonLoad.value();
     return radiocarbon === null
-      ? loadRadiocarbon(`${base}data/radiocarbon.json`, fetchJson).then((loaded) => {
-          radiocarbon = loaded;
-          return loaded;
-        })
+      ? loadRadiocarbon(`${base}data/radiocarbon.json`, fetchJson)
       : Promise.resolve(radiocarbon);
   }
 

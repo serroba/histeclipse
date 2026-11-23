@@ -28,18 +28,25 @@ describe("the Moon's theory", () => {
     expect(notify).not.toHaveBeenCalled();
   });
 
-  it('tells the reader when it cannot load, and tries again when asked', async () => {
+  it('tells the reader when it cannot load, and tries again only when they ask (#1130)', async () => {
     const arrived = vi.fn();
     const notify = vi.fn();
     const loader = vi.fn(() => Promise.reject(new Error('offline')));
     const moon = createMoon({ moonArrived: arrived, notify }, loader, new EventTarget());
     moon.load();
     await vi.waitFor(() => {
-      expect(notify).toHaveBeenCalledWith("Could not load the Moon's orbit: offline");
+      expect(notify).toHaveBeenCalledWith(
+        "Could not load the Moon's orbit: offline",
+        expect.any(Function),
+      );
     });
     expect(moon.ephemeris()).toBeNull();
     expect(arrived).not.toHaveBeenCalled();
+    // Each view that wants it asks again; none fetches it until the reader does.
     moon.load();
+    expect(loader).toHaveBeenCalledTimes(1);
+    const retry = notify.mock.calls[0]?.[1] as () => void;
+    retry();
     expect(loader).toHaveBeenCalledTimes(2);
   });
 

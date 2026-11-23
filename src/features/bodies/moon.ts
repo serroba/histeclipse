@@ -12,11 +12,11 @@
 
 import { keptMoon } from '../../astro/keptMoments';
 import { loadMoonEphemeris, type MoonEphemeris } from '../../astro/moon';
+import { loadOnce } from '../../state/loadOnce';
 import { momentJulianDay, type ViewState } from '../../state/viewState';
-import { errorMessage } from '../../util/errors';
 
 export interface MoonContext {
-  notify(message: string): void;
+  notify(message: string, retry?: () => void): void;
   /** The theory has arrived: show what needs it again. */
   moonArrived(): void;
 }
@@ -24,7 +24,7 @@ export interface MoonContext {
 export interface Moon {
   /** The Moon's ephemeris, once loaded. */
   readonly ephemeris: () => MoonEphemeris | null;
-  /** Load it, once: again only after a failure. */
+  /** Load it, once: after a failure, only when the reader asks to try again (#1130). */
   readonly load: () => void;
   /** Whether a view needs it. */
   readonly wanted: (state: ViewState) => boolean;
@@ -65,25 +65,25 @@ export function createMoon(
   /** Where a touch or a scroll moves the view: the globe. */
   touched: EventTarget = window,
 ): Moon {
-  let ephemeris: MoonEphemeris | null = null;
-  let asked = false;
+  const theory = loadOnce({
+    // Its last few moments kept: the moment and the craft at the Moon ask alike (#766).
+    fetch: () => loader().then(keptMoon),
+    what: "the Moon's orbit",
+    context: {
+      notify: (message, retry) => {
+        context.notify(message, retry);
+      },
+      refresh: () => {
+        if (theory.status() === 'loaded') context.moonArrived();
+      },
+    },
+    retryInNotice: true,
+  });
   function load(): void {
-    if (asked) return;
-    asked = true;
-    loader().then(
-      (loaded) => {
-        // Its last few moments kept: the moment and the craft at the Moon ask alike (#766).
-        ephemeris = keptMoon(loaded);
-        context.moonArrived();
-      },
-      (error: unknown) => {
-        asked = false;
-        context.notify(`Could not load the Moon's orbit: ${errorMessage(error)}`);
-      },
-    );
+    theory.want();
   }
   for (const kind of ['pointerdown', 'wheel']) {
     touched.addEventListener(kind, load, { once: true, passive: true });
   }
-  return { ephemeris: () => ephemeris, load, wanted: moonWanted };
+  return { ephemeris: () => theory.value(), load, wanted: moonWanted };
 }
