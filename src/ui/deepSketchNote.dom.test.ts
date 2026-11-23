@@ -4,7 +4,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { sketchAt, type SketchChoices } from '../deepTime/sketch';
 import { createDeepSketchNote } from './deepSketchNote';
 
-const CHOICES: SketchChoices = { impact: 'early', land: 'dhuime', snowball: 'hard' };
+const CHOICES: SketchChoices = {
+  impact: 'early',
+  land: 'dhuime',
+  snowball: 'hard',
+  water: 'inherited',
+};
 
 describe('deep time’s sketch note', () => {
   it('Given a moment before the maps, Then its headline, the pickers its questions ask, and the sources', () => {
@@ -22,9 +27,12 @@ describe('deep time’s sketch note', () => {
     expect(shown.map((select) => select.getAttribute('aria-label'))).toEqual(
       sketch.questions.map(
         (question) =>
-          ({ impact: 'Moon-forming impact', land: 'How much land', snowball: 'Snowball ice' })[
-            question
-          ],
+          ({
+            impact: 'Moon-forming impact',
+            water: 'Where the water came from',
+            land: 'How much land',
+            snowball: 'Snowball ice',
+          })[question],
       ),
     );
   });
@@ -32,9 +40,10 @@ describe('deep time’s sketch note', () => {
   it('Given each picker changed, Then the choice is reported; an unknown value is not', () => {
     const onSketch = vi.fn();
     const note = createDeepSketchNote(onSketch);
-    const [impact, land, snowball] = [...note.note.querySelectorAll('select')];
+    const [impact, water, land, snowball] = [...note.note.querySelectorAll('select')];
     for (const [select, value] of [
       [impact, 'late'],
+      [water, 'comets'],
       [land, 'early'],
       [snowball, 'slushball'],
     ] as const) {
@@ -42,7 +51,8 @@ describe('deep time’s sketch note', () => {
       select.value = select.options[1]?.value ?? value;
       select.dispatchEvent(new Event('change'));
     }
-    expect(onSketch).toHaveBeenCalledTimes(3);
+    expect(onSketch).toHaveBeenCalledTimes(4);
+    expect(onSketch).toHaveBeenCalledWith({ water: 'delivered' });
     const lone = document.createElement('option');
     lone.value = 'nonsense';
     impact?.append(lone);
@@ -54,7 +64,10 @@ describe('deep time’s sketch note', () => {
     snowball?.append(lone.cloneNode());
     if (snowball !== undefined) snowball.value = 'nonsense';
     snowball?.dispatchEvent(new Event('change'));
-    expect(onSketch).toHaveBeenCalledTimes(3);
+    water?.append(lone.cloneNode());
+    if (water !== undefined) water.value = 'nonsense';
+    water?.dispatchEvent(new Event('change'));
+    expect(onSketch).toHaveBeenCalledTimes(4);
   });
 
   it('Given no sketch, Then it is hidden', () => {

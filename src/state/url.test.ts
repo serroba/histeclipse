@@ -7,7 +7,7 @@ import { LINEAGE_GROUPS } from '../data/lineages';
 import { SEA_ICE_MODELS } from '../data/seaIce';
 import { COAST_SOURCES } from '../deepTime/coastline';
 import { TEMPERATURE_MODELS, TEMPERATURE_SHOWS } from '../deepTime/temperatureModels';
-import { IMPACT_MODELS, LAND_MODELS, SNOWBALL_MODELS } from '../deepTime/sketch';
+import { IMPACT_MODELS, LAND_MODELS, SNOWBALL_MODELS, WATER_MODELS } from '../deepTime/sketch';
 
 import { calendarDateOf, daysInMonth, type Calendar } from '../time/julianDay';
 import { SKY_CULTURES } from '../data/skyCultures';
@@ -98,6 +98,7 @@ describe('parseViewState', () => {
       impact: 'early',
       land: 'dhuime',
       snowball: 'hard',
+      water: 'inherited',
       why: null,
       tree: null,
       craters: null,
@@ -183,8 +184,16 @@ describe('parseViewState', () => {
     expect(parseViewState('temp=cesm', NOW).state.temperatureModel).toBe('cesm');
     expect(parseViewState('tshow=actual', NOW).state.temperatureShow).toBe('actual');
     expect(parseViewState('tshow=nowhere', NOW).state.temperatureShow).toBe('change');
-    const sketch = parseViewState('impact=young&land=flooded&snowball=slush', NOW).state;
-    expect([sketch.impact, sketch.land, sketch.snowball]).toEqual(['young', 'flooded', 'slush']);
+    const sketch = parseViewState(
+      'impact=young&land=flooded&snowball=slush&water=delivered',
+      NOW,
+    ).state;
+    expect([sketch.impact, sketch.land, sketch.snowball, sketch.water]).toEqual([
+      'young',
+      'flooded',
+      'slush',
+      'delivered',
+    ]);
   });
 
   it('opens the tree of life from the link, whole or at a taxon, and ignores a bad one', () => {
@@ -669,6 +678,7 @@ describe('serializeViewState', () => {
     impact: fc.constantFrom(...IMPACT_MODELS),
     land: fc.constantFrom(...LAND_MODELS),
     snowball: fc.constantFrom(...SNOWBALL_MODELS),
+    water: fc.constantFrom(...WATER_MODELS),
     why: fc.constantFrom(null, ...WHY_VIEWS),
     tree: fc.oneof(
       fc.constant(null),

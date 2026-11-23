@@ -500,6 +500,40 @@ test('before the reconstructions, the reader picks whose hypotheses the globe sk
   expect(problems).toEqual([]);
 });
 
+test('in the Hadean the reader picks where the water came from, and delivered water lands as icy impactors (#1142) @acceptance', async ({
+  page,
+}) => {
+  // Deep time plays and impacts play out: slow on a phone drawn in software.
+  test.slow();
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  await test.step('Given 4,540 million years ago, its sketch in view', async () => {
+    await page.goto('./?ma=4540&scale=eons');
+    await globeRendered(page);
+    await showDeepDetails(page);
+  });
+  await test.step('Then Earth’s own rock is the first answer, on its sources’ say-so', async () => {
+    const picker = page.getByLabel('Where the water came from');
+    await expect(picker).toHaveValue('inherited');
+    const sources = page.getByTestId('sketch-sources');
+    await sources.locator('summary').click();
+    await expect(sources).toContainText('Piani et al. 2020');
+  });
+  await test.step('When they pick delivered water and play', async () => {
+    await page.getByLabel('Where the water came from').selectOption('delivered');
+    await expect(page).toHaveURL(/water=delivered/);
+    await expect(page.getByTestId('sketch-sources')).toContainText('Alexander et al. 2012');
+    await page
+      .getByRole('navigation', { name: 'Deep time' })
+      .getByRole('button', { name: 'Play', exact: true })
+      .click();
+  });
+  await test.step('Then icy impactors strike as the time passes them', async () => {
+    await expect(globe).toHaveAttribute('data-impacts-played', /^[1-9]/, { timeout: 60_000 });
+  });
+  expect(problems).toEqual([]);
+});
+
 test(
   'deep time reaches back 4.6 billion years, sketching hypotheses before the maps',
   GPU,

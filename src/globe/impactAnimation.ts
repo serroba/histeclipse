@@ -41,7 +41,13 @@ export interface ImpactSpec {
   /** Where the impactor came from: degrees clockwise from north, and above the horizon. */
   readonly fromAzimuth: number;
   readonly angleDegrees: number;
+  /** An icy body, drawn pale blue rather than fiery: early Earth's water arriving (#1142). */
+  readonly icy?: boolean;
 }
+
+/** An impact's colours: its trail, its spreading blast and its crater's rim. */
+const FIERY = [new Color(1, 0.7, 0.35), new Color(1, 0.62, 0.3), new Color(1, 0.85, 0.6)] as const;
+const ICY = [new Color(0.6, 0.85, 1), new Color(0.5, 0.78, 1), new Color(0.78, 0.92, 1)] as const;
 
 export interface ImpactAnimation {
   readonly group: Group;
@@ -91,8 +97,8 @@ export function impactSizes(craterKm: number): ImpactSizes {
   };
 }
 
-/** A soft round glow, white at the heart and orange at the edge. */
-function glowTexture(): CanvasTexture {
+/** A soft round glow, white at the heart and orange at the edge, or pale blue for ice. */
+function glowTexture(icy: boolean): CanvasTexture {
   const size = 64;
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -101,8 +107,8 @@ function glowTexture(): CanvasTexture {
   if (context !== null) {
     const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
     gradient.addColorStop(0, 'rgba(255,255,255,1)');
-    gradient.addColorStop(0.3, 'rgba(255,214,140,0.9)');
-    gradient.addColorStop(1, 'rgba(255,120,40,0)');
+    gradient.addColorStop(0.3, icy ? 'rgba(170,215,255,0.9)' : 'rgba(255,214,140,0.9)');
+    gradient.addColorStop(1, icy ? 'rgba(80,150,255,0)' : 'rgba(255,120,40,0)');
     context.fillStyle = gradient;
     context.fillRect(0, 0, size, size);
   }
@@ -134,7 +140,9 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
   const from = approachDirection(spec.place, spec.fromAzimuth, spec.angleDegrees);
   const origin = ground.clone().add(from.clone().multiplyScalar(0.7));
 
-  const glow = glowTexture();
+  const icy = spec.icy === true;
+  const glow = glowTexture(icy);
+  const [trailColor, blastColor, rimColor] = icy ? ICY : FIERY;
   const glowMaterial = (opacity: number): SpriteMaterial =>
     new SpriteMaterial({
       map: glow,
@@ -150,7 +158,7 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
   const trailGeometry = new BufferGeometry();
   trailGeometry.setAttribute('position', new Float32BufferAttribute(new Float32Array(6), 3));
   const trailMaterial = new LineBasicMaterial({
-    color: new Color(1, 0.7, 0.35),
+    color: trailColor,
     transparent: true,
     opacity: 0.85,
     depthWrite: false,
@@ -182,8 +190,8 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
     return mesh;
   };
   const { craterRadius, blastRadius } = sizes;
-  const blast = ring(0.82, new Color(1, 0.62, 0.3));
-  const crater = ring(0.88, new Color(1, 0.85, 0.6));
+  const blast = ring(0.82, blastColor);
+  const crater = ring(0.88, rimColor);
   crater.scale.setScalar(craterRadius);
 
   group.add(trail, head, flash, blast, crater);

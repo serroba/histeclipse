@@ -6,6 +6,7 @@
  */
 
 import { deepChoices } from './choices';
+import { createWaterStrikes } from './waterStrikes';
 import { frameDeepEarth } from './frame';
 import { magneticNorthLayer } from './magneticNorthLayer';
 import { loadPolarity, type PolarityScale } from '../../data/polarity';
@@ -208,6 +209,10 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     },
     lessMotion: globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches,
   });
+  // The delivered water's icy impactors, as play passes them (#1142).
+  const waterStrikes = createWaterStrikes((spec) => {
+    globe.playImpact(spec);
+  }, globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   // Every reversal of the last 83 Ma: small, loaded the first time deep time shows.
   let polarity: PolarityScale | null = null;
@@ -233,6 +238,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     const pace = play.playing() ? play.speed() : null;
     magneticNorthOnGlobe.update(ma === null ? null : magneticNorthPlaying(ma, polarity, pace));
     if (ma !== null) wantPolarity();
+    waterStrikes.show(state, ma, play.playing());
     if (ma === null) {
       yearsSpan.render('years', state.yearsWindow === null);
       stopPlay();
@@ -257,7 +263,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     const uncharted = ma > oldest;
     globe.setUncharted(uncharted);
     // Before the maps, a sketch of the hypotheses chosen; invented land only beyond the plates.
-    const choices = { impact: state.impact, land: state.land, snowball: state.snowball };
+    const { impact, land, snowball, water } = state;
+    const choices = { impact, land, snowball, water };
     const reconstructed = ma <= (context.platesReach() ?? PLATES_REACH_MA);
     const sketch = uncharted ? sketchAt(ma, choices, reconstructed) : null;
     globe.setSketch(sketch);

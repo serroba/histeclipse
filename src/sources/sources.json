@@ -48,6 +48,12 @@
     "url": "https://doi.org/10.1103/PhysRevX.9.031040",
     "licence": "CC BY 4.0"
   },
+  "alexander2012": {
+    "name": "Alexander et al. 2012",
+    "kind": "paper",
+    "cite": "Alexander, Bowden, Fogel, Howard, Herd & Nittler (2012), The provenances of asteroids, and their contributions to the volatile inventories of the terrestrial planets, Science 337, 721–723",
+    "url": "https://doi.org/10.1126/science.1223474"
+  },
   "allwood2006": {
     "name": "Allwood et al. 2006",
     "kind": "paper",
@@ -59,6 +65,12 @@
     "kind": "reference",
     "cite": "The Joint ALMA Observatory’s and the ALMA Science Portal’s pages: its antennas, baselines and early science",
     "url": "https://www.almaobservatory.org/en/about-alma/"
+  },
+  "altwegg2015": {
+    "name": "Altwegg et al. 2015",
+    "kind": "paper",
+    "cite": "Altwegg et al. (2015), 67P/Churyumov-Gerasimenko, a Jupiter family comet with a high D/H ratio, Science 347, 1261952",
+    "url": "https://doi.org/10.1126/science.1261952"
   },
   "ar6AnnexIII": {
     "name": "IPCC AR6 WG1 Annex III extended data",
@@ -802,6 +814,12 @@
     "kind": "paper",
     "cite": "Harrison, F. A., Craig, W. W., Christensen, F. E., et al. (2013), The Nuclear Spectroscopic Telescope Array (NuSTAR) High-energy X-Ray Mission, The Astrophysical Journal 770, 103 (doi:10.1088/0004-637X/770/2/103), with Caltech’s page on its mast and the NASA/JPL press kit: its optics 10.14 m from its detectors on a 10 m mast of 57 bays. The mission and its first results",
     "url": "https://doi.org/10.1088/0004-637X/770/2/103"
+  },
+  "hartogh2011": {
+    "name": "Hartogh et al. 2011",
+    "kind": "paper",
+    "cite": "Hartogh et al. (2011), Ocean-like water in the Jupiter-family comet 103P/Hartley 2, Nature 478, 218–220",
+    "url": "https://doi.org/10.1038/nature10519"
   },
   "haywood2020": {
     "name": "PlioMIP2, Haywood et al. 2020",
@@ -1773,6 +1791,12 @@
     "url": "https://doi.org/10.5285/d235665772ec4b558e9a89ac85595e71",
     "licence": "ESA CCI data policy: free and open for any use, crediting the ESA Climate Change Initiative, the Permafrost_cci project and the dataset"
   },
+  "piani2020": {
+    "name": "Piani et al. 2020",
+    "kind": "paper",
+    "cite": "Piani, Marrocchi, Rigaudier, Vacher, Thomassin & Marty (2020), Earth’s water may have been inherited from material similar to enstatite chondrite meteorites, Science 369, 1110–1113",
+    "url": "https://doi.org/10.1126/science.aba1948"
+  },
   "pilbratt2010Herschel": {
     "name": "Pilbratt et al. (2010), Herschel Space Observatory",
     "kind": "paper",
@@ -2188,6 +2212,12 @@
     "kind": "paper",
     "cite": "Williams (2000), Geological constraints on the Precambrian history of Earth’s rotation and the Moon’s orbit, Reviews of Geophysics 38, 37–59",
     "url": "https://doi.org/10.1029/1999RG900016"
+  },
+  "young2023": {
+    "name": "Young, Shahar & Schlichting 2023",
+    "kind": "paper",
+    "cite": "Young, Shahar & Schlichting (2023), Earth shaped by primordial H2 atmospheres, Nature 616, 306–311",
+    "url": "https://doi.org/10.1038/s41586-023-05823-0"
   },
   "zachos2001": {
     "name": "Zachos et al. 2001",

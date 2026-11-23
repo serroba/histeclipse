@@ -3,13 +3,20 @@ import { describe, expect, it } from 'vitest';
 import { sketchAt } from './sketch';
 import { sketchHeadline, sketchLines } from './sketchText';
 
-const choices = { impact: 'early', land: 'dhuime', snowball: 'hard' } as const;
+const choices = { impact: 'early', land: 'dhuime', snowball: 'hard', water: 'inherited' } as const;
 
 describe('the sketch’s wording', () => {
   it('says the molten surface follows the chosen impact, and flags a clash with the zircon', () => {
     const early = sketchLines(sketchAt(4520, choices, false), choices, 4520);
-    expect(early).toHaveLength(1);
+    expect(early).toHaveLength(2);
     expect(early[0]).toContain('4,510 Ma');
+    // And, while it arrives, where the water came from, on the choice's say-so (#1142).
+    expect(early[1]).toContain('Where the water came from');
+    expect(early[1]).toContain('Piani et al. 2020');
+    const delivered = { ...choices, water: 'delivered' } as const;
+    expect(sketchLines(sketchAt(4520, delivered, false), delivered, 4520)[1]).toContain(
+      'Alexander et al. 2012',
+    );
     const young = { ...choices, impact: 'young' } as const;
     const lines = sketchLines(sketchAt(4380, young, false), young, 4380);
     expect(lines[1]).toContain('4,404-million-year-old zircon');

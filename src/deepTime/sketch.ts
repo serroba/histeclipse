@@ -213,14 +213,84 @@ export function snowballAt(ma: number): SnowballEpisode | null {
   return SNOWBALL_EPISODES.find(({ young, old }) => ma >= young && ma <= old) ?? null;
 }
 
+// Where the oceans' water came from (#1142), argued over: from Earth's own building blocks, or
+// brought by water-rich asteroids and comets as it grew. The globe draws the second as icy
+// impactors landing; their number, sizes and places are invented.
+
+export const WATER_MODELS = ['inherited', 'delivered'] as const;
+export type WaterModel = (typeof WATER_MODELS)[number];
+export const DEFAULT_WATER_MODEL: WaterModel = 'inherited';
+
+export const WATER_CHOICES: Readonly<
+  Record<WaterModel, Choice<WaterModel> & { readonly note: string }>
+> = {
+  inherited: {
+    id: 'inherited',
+    label: 'From Earth’s own building blocks',
+    note: 'Rock like the enstatite chondrites, which formed near the Sun, held enough hydrogen for several oceans, with Earth’s own isotopes (Piani et al. 2020); a hydrogen atmosphere over the magma ocean could have made water too (Young et al. 2023). The oceans condense from the steam as the surface cools.',
+    source: 'Piani et al. 2020, Science 369',
+    url: 'https://doi.org/10.1126/science.aba1948',
+  },
+  delivered: {
+    id: 'delivered',
+    label: 'Delivered by icy asteroids and comets',
+    note: 'Water-rich asteroids like the carbonaceous chondrites, whose hydrogen and nitrogen best match Earth’s (Alexander et al. 2012), with comets a small share at most: most carry more deuterium than the oceans (Altwegg et al. 2015), though Hartley 2 matches them (Hartogh et al. 2011). Drawn as icy impactors landing while Earth grew, until the oldest sign of liquid water; how many, how large and where are invented.',
+    source: 'Alexander et al. 2012, Science 337',
+    url: 'https://doi.org/10.1126/science.1223474',
+  },
+};
+
+/** While the water question is asked: from Earth's start to the oldest water zircon, Ma. */
+export const WATER_OLDEST_MA = 4568;
+
+/** How many icy impactors the delivered water is drawn as: a sketch, not a count. */
+const WATER_STRIKES = 48;
+
+/** An icy impactor drawn for the delivered water: when, where, and from which way it came. */
+export interface WaterStrike {
+  readonly ma: number;
+  readonly lat: number;
+  readonly lon: number;
+  readonly fromAzimuth: number;
+  readonly angleDegrees: number;
+}
+
+/** A number in [0, 1) from `n`, the same every time: the strikes are invented, but stay put. */
+function scatter(n: number): number {
+  const x = Math.sin(n * 12.9898) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+/** The icy impactors, oldest first, spread over the water question's span. */
+export const WATER_STRIKE_LIST: readonly WaterStrike[] = Array.from(
+  { length: WATER_STRIKES },
+  (_, i) => {
+    const span = WATER_OLDEST_MA - OLDEST_WATER_ZIRCON_MA;
+    return {
+      ma: WATER_OLDEST_MA - ((i + scatter(i + 0.5)) / WATER_STRIKES) * span,
+      // Spread evenly over the sphere: the sine of the latitude uniform.
+      lat: (Math.asin(2 * scatter(i + 1.25) - 1) * 180) / Math.PI,
+      lon: scatter(i + 2.75) * 360 - 180,
+      fromAzimuth: scatter(i + 3.5) * 360,
+      angleDegrees: 30 + scatter(i + 4.25) * 45,
+    };
+  },
+);
+
+/** The strikes played going from `from` towards `to`, Ma, `from` the older: those passed. */
+export function waterStrikesPassed(from: number, to: number): readonly WaterStrike[] {
+  return WATER_STRIKE_LIST.filter((strike) => strike.ma <= from && strike.ma > to);
+}
+
 export interface SketchChoices {
   readonly impact: ImpactModel;
   readonly land: LandModel;
   readonly snowball: SnowballModel;
+  readonly water: WaterModel;
 }
 
 /** Which question the sketch at a moment answers, so only its choice is offered. */
-export type SketchQuestion = 'impact' | 'land' | 'snowball';
+export type SketchQuestion = 'impact' | 'land' | 'snowball' | 'water';
 
 export interface Sketch {
   readonly kind: 'magma' | 'ocean';
@@ -240,12 +310,21 @@ export interface Sketch {
 export function sketchAt(ma: number, choices: SketchChoices, continentsDrawn: boolean): Sketch {
   const episode = snowballAt(ma);
   const iceEdge = episode === null ? 90 : SNOWBALL_CHOICES[choices.snowball].iceEdge;
+  // Where the water came from, while it is arriving.
+  const water: SketchQuestion[] = ma >= OLDEST_WATER_ZIRCON_MA ? ['water'] : [];
   if (ma > IMPACTS[choices.impact].ma - MAGMA_AFTER_IMPACT_MA) {
-    return { kind: 'magma', land: 0, iceEdge: 90, questions: ['impact'], episode: null };
+    return {
+      kind: 'magma',
+      land: 0,
+      iceEdge: 90,
+      questions: ['impact', ...water],
+      episode: null,
+    };
   }
   // While any camp's impact is still to come, which camp is a question here too.
   const youngest = Math.min(...IMPACT_MODELS.map((model) => IMPACTS[model].ma));
   const questions: SketchQuestion[] = ma > youngest - MAGMA_AFTER_IMPACT_MA ? ['impact'] : [];
+  questions.push(...water);
   if (!continentsDrawn) questions.push('land');
   if (episode !== null) questions.push('snowball');
   return {
