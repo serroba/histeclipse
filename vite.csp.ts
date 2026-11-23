@@ -19,12 +19,14 @@ export function inlineScriptHashes(html: string): string[] {
 
 /**
  * The `<style>` elements phoria2 (pinned, see package.json) adds to the page for its charts,
- * tooltips and labels, by hash. A new version that changes them fails the charts' tests.
+ * tooltips and labels, and the words it reads to a screen reader as the keyboard steps through
+ * a view (#309), by hash. A new version that changes them fails the charts' tests.
  */
 const PHORIA_STYLES = [
   "'sha256-eH7lkNfVWkAJh/3jBhOc8V44p7OapCt1N3xJZ+z4Vtw='",
   "'sha256-6pEzLQ0CbJcgi21pTrRPpxCkuHwfi1rLmPCnvUCrgPc='",
   "'sha256-WPerxgaSYkDXZQaLKQDB+4ewBM5lj6r2v/Zl7rwoRQw='",
+  "'sha256-4ibXjdU4htRWhFFkN+5jyggUOONkZjH19sd1Sewyslg='",
 ];
 
 /** The policy, for the page `html` (index.html as written, or as built: the same scripts). */
@@ -39,7 +41,7 @@ export function contentSecurityPolicy(html: string): string {
       "'wasm-unsafe-eval'",
       'https://static.cloudflareinsights.com',
     ],
-    // The site's stylesheets and phoria2's three; no style attributes (styles are set
+    // The site's stylesheets and phoria2's four; no style attributes (styles are set
     // through the style object, which a policy does not govern).
     'style-src': ["'self'", ...PHORIA_STYLES],
     // Maps and textures are the site's own; pictures are Wikimedia Commons thumbnails, and the

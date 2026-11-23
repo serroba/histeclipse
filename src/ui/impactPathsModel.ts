@@ -101,6 +101,28 @@ export function tooltipFor(datum: unknown): Phoria2.TooltipContent {
   return { title: row.name, rows: { Age: row.age, Width: row.width, Travelled: row.travelled } };
 }
 
+/** What a screen reader says of a crater the keyboard steps to (#309); a line, as such. */
+export function spokenCrater(datum: unknown): string {
+  if (typeof datum !== 'object' || datum === null || !('name' in datum))
+    return 'a coast or a track';
+  const row = datum as StrikeRow;
+  return `${row.name}: age ${row.age}, width ${row.width}, travelled ${row.travelled}`;
+}
+
+/**
+ * A crater view's keyboard (#309): the arrow keys step through the craters, each said by
+ * `spokenCrater`, and Enter follows one; the view keeps its canvas's own words.
+ */
+export function keyboardFor(canvas: Pick<HTMLCanvasElement, 'getAttribute'>): {
+  keyboard: { label: (hit: { datum?: unknown }) => string };
+  description: string;
+} {
+  return {
+    keyboard: { label: (hit) => spokenCrater(hit.datum) },
+    description: canvas.getAttribute('aria-label') ?? '',
+  };
+}
+
 /** The crater a tap landed on, if any. */
 export function idOf(datum: unknown): number | undefined {
   return typeof datum === 'object' &&

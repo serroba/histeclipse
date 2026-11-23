@@ -108,3 +108,16 @@ export function nodeOfOtt(tree: TreeOfLife, ott: number): number | null {
   const node = tree.ott.indexOf(ott);
   return node === -1 ? null : node;
 }
+
+/**
+ * What a screen reader says of a taxon the keyboard steps to on the tree (#309): its name, rank,
+ * whether it lives and its group; a branch between two, as such.
+ */
+export function spokenTaxon(datum: unknown): string {
+  if (typeof datum !== 'object' || datum === null || !('name' in datum)) return 'a branch';
+  const taxon: Record<string, unknown> = { ...datum };
+  return ['name', 'rank', 'status', 'group']
+    .map((field) => taxon[field])
+    .filter((word): word is string => typeof word === 'string' && word !== '')
+    .join(', ');
+}
