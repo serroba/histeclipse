@@ -262,12 +262,11 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     const ice = scale === 'ice';
     const uncharted = ma > oldest;
     globe.setUncharted(uncharted);
-    // Before the maps, a sketch of the hypotheses chosen; invented land only where Plates does
-    // not draw a reconstruction's continents: beyond its reach, or with the layer off (#1144).
+    // Before the maps, a sketch of the hypotheses chosen: where the plates reach, their
+    // continents are the land, Plates on or not (#1149); beyond, land of invented shape.
     const { impact, land, snowball, water } = state;
     const choices = { impact, land, snowball, water };
-    const reconstructed =
-      state.layers.has('plates') && ma <= (context.platesReach() ?? PLATES_REACH_MA);
+    const reconstructed = ma <= (context.platesReach() ?? PLATES_REACH_MA);
     const sketch = uncharted ? sketchAt(ma, choices, reconstructed) : null;
     globe.setSketch(sketch);
     // The layers' fields of the bar, drawing them: the temperature maps ahead as it plays.

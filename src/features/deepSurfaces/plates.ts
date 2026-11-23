@@ -1,16 +1,30 @@
 /**
  * Deep time's plates as a feature (#380, #444, #909): a second reconstruction's continents
  * outlined, by its chip in the bar, and how far the plates have moved since the moment shown.
- * Each file loads the first time it is asked for.
+ * Before the elevation maps, where they reach, their continents are the sketch's land too,
+ * Plates on or not (#1149). Each file loads the first time it is asked for.
  */
 
-import { framesAround } from '../../data/paleoDem';
+import { framesAhead, framesAround } from '../../data/paleoDem';
+import { prefetchFrames } from '../../deepTime/playSpeed';
 import { loadPlateMotion, motionText, type PlateMotion } from '../../data/plateMotion';
-import { platesBeyondText, plateText } from '../../data/plateMasks';
+import { platesBeyondText, plateText, type PlateMaskIndex } from '../../data/plateMasks';
 import type { ViewState } from '../../state/viewState';
 import { errorMessage } from '../../util/errors';
 import { feature } from '../feature';
 import { PLATES_CHIP, platesChip } from './platesChip';
+
+/** The masks that playing at `maPerSecond` from `ma` comes to next: to load before they are needed. */
+function masksAhead(
+  index: PlateMaskIndex,
+  ma: number,
+  maPerSecond: number,
+  base: string,
+): readonly string[] {
+  return framesAhead(index.frames, ma, prefetchFrames(maPerSecond)).map(
+    (frame) => `${base}data/plates/${frame.file}`,
+  );
+}
 
 export const platesFeature = feature({
   id: 'plates',
@@ -24,8 +38,11 @@ export const platesFeature = feature({
     const globe = context.plateOutlines;
     let waiting = false;
 
-    /** A second reconstruction's continents, outlined, while the layer is on: what to say. */
-    function showPlates(ma: number): string | null {
+    /**
+     * A second reconstruction's continents, outlined or only as land: what to say. Playing at
+     * `maPerSecond`, the masks ahead load before they are needed (#1149).
+     */
+    function showPlates(ma: number, outlined: boolean, maPerSecond: number | null): string | null {
       const index = context.plateMasks.loaded();
       if (index === null) {
         if (!waiting) {
@@ -48,6 +65,7 @@ export const platesFeature = feature({
         globe.setPlates(null);
         return platesBeyondText(reach);
       }
+      if (maPerSecond !== null) globe.prefetch(masksAhead(index, ma, maPerSecond, base));
       const { younger, older, mix } = framesAround(index.frames, ma);
       globe.setPlates({
         younger: `${base}data/plates/${younger.file}`,
@@ -57,6 +75,7 @@ export const platesFeature = feature({
         rows: index.rows,
         turnYounger: younger.turn ?? 0,
         turnOlder: older.turn ?? 0,
+        outlined,
       });
       return plateText(mix < 0.5 ? younger : older);
     }
@@ -88,11 +107,13 @@ export const platesFeature = feature({
 
     return {
       deep(state, moment) {
-        if (moment === null || !state.layers.has('plates')) {
+        const on = state.layers.has('plates');
+        if (moment === null || (!on && moment.uncharted !== true)) {
           globe.setPlates(null);
           return moment === null ? null : platesChip(false, null);
         }
-        return platesChip(true, showPlates(moment.ma));
+        const said = showPlates(moment.ma, on, moment.maPerSecond ?? null);
+        return platesChip(on, on ? said : null);
       },
       deepBar: (state, moment) => ({ plateMotion: plateMotionText(state, moment.ma) }),
     };

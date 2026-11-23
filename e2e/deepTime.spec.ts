@@ -478,17 +478,21 @@ test('before the reconstructions, the reader picks whose hypotheses the globe sk
   await sources.locator('summary').click();
   await expect(sources).toContainText('Flament, Coltice & Rey 2008');
 
-  // Where Plates could outline a reconstruction's continents, land is sketched until it is on (#1144).
+  // Where the plates reach, their continents are the sketch's, Plates on or not (#1149): as
+  // shallow sea, flooded or not; the layer adds its outlines.
   await page.goto('./?ma=1596&scale=eons');
   await globeRendered(page);
-  await expect(globe).toHaveAttribute('data-sketch', /^ocean 0\.(?!000)\d{3} 90$/);
-  await expect(page.getByLabel('How much land')).toBeVisible();
+  await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.000 90');
+  await expect(globe).toHaveAttribute('data-plate-land', /plates\/.+\.png .*plates\/.+\.png$/);
+  await expect(globe).toHaveAttribute('data-plates', 'off');
+  await expect(page.getByTestId('sketch-headline')).toContainText('Cao et al. 2024');
+  await expect(page.getByLabel('How much land')).toBeHidden();
   await page.goto('./?ma=1596&scale=eons&layers=plates');
   await globeRendered(page);
-  await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.000 90');
+  await expect(globe).toHaveAttribute('data-plates', /plates\/.+\.png .*plates\/.+\.png$/);
 
   // A snowball: frozen over by default, open tropics in the slushball.
-  await page.goto('./?ma=700&scale=eons&layers=plates');
+  await page.goto('./?ma=700&scale=eons');
   await globeRendered(page);
   await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.000 -1');
   await expect(page.getByLabel('How much land')).toBeHidden();

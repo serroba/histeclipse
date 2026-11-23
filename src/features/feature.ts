@@ -147,7 +147,7 @@ export interface Capabilities {
   /** "Why here?": what a layer has at the place changed, so the panel is written again if open. */
   readonly whyHere: { again(): void };
   /** A second reconstruction's continents, outlined on the globe in deep time. */
-  readonly plateOutlines: Pick<Globe, 'setPlates'>;
+  readonly plateOutlines: Pick<Globe, 'setPlates' | 'prefetch'>;
   /** The index of those continents' outlines, loaded once and shared with deep time. */
   readonly plateMasks: {
     ask(): Promise<PlateMaskIndex>;

@@ -298,13 +298,15 @@ export interface Sketch {
   readonly land: number;
   /** Ice poleward of this latitude, degrees; 90 draws none. */
   readonly iceEdge: number;
+  /** Whether the land is a reconstruction's continents (#1149) rather than invented. */
+  readonly reconstructed: boolean;
   readonly questions: readonly SketchQuestion[];
   readonly episode: SnowballEpisode | null;
 }
 
 /**
- * The sketch at `ma`. Where a reconstruction draws the continents (`continentsDrawn`), no
- * invented land is added. Ice is drawn only in the snowball episodes: polar ice at other times
+ * The sketch at `ma`. Where a reconstruction reaches (`continentsDrawn`), its continents are the
+ * land (#1149), and none is invented. Ice is drawn only in the snowball episodes: polar ice at other times
  * is not known well enough to draw.
  */
 export function sketchAt(ma: number, choices: SketchChoices, continentsDrawn: boolean): Sketch {
@@ -317,6 +319,7 @@ export function sketchAt(ma: number, choices: SketchChoices, continentsDrawn: bo
       kind: 'magma',
       land: 0,
       iceEdge: 90,
+      reconstructed: false,
       questions: ['impact', ...water],
       episode: null,
     };
@@ -331,6 +334,7 @@ export function sketchAt(ma: number, choices: SketchChoices, continentsDrawn: bo
     kind: 'ocean',
     land: continentsDrawn ? 0 : landShare(choices.land, ma),
     iceEdge,
+    reconstructed: continentsDrawn,
     questions,
     episode,
   };
