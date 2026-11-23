@@ -116,7 +116,8 @@ test('a fossil’s card leads to its genus through time', async ({ page }) => {
     route.fulfill({ contentType: 'image/png', body: PIXEL }),
   );
   await test.step('Given a cell of fossils from the late Cretaceous, its card open', async () => {
-    await page.goto('./?ma=68&layers=fossils');
+    // Over North America, so the cell with the most finds is clear of the date panel.
+    await page.goto('./?ma=68&layers=fossils&cam=50,-80,3');
     await globeRendered(page);
     await expect(page.getByTestId('globe')).toHaveAttribute('data-fossils', /^[1-9]\d*$/);
     await page.locator('.fossil-cell:visible').first().click();

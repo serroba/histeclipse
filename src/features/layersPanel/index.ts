@@ -37,8 +37,6 @@ export interface LayersPanelContext extends PartContext {
   actions(): Iterable<readonly [Layer, LayerAction | null]>;
   /** How each layer's load stands, where loading or failed (#751). */
   loads(): Iterable<readonly [Layer, LayerLoad | null]>;
-  /** The layers with a button in deep time's dock now (#1072): their chips stay in the dock. */
-  docked(): ReadonlySet<string>;
 }
 
 export interface LayersPanelPart {
@@ -120,9 +118,7 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
     goTo: chipActions.onGoTo,
     show(state) {
       const active = activeLayers(state, context.loads());
-      // One place per layer (#1072): beside Layers, only those the dock does not show.
-      const docked = context.docked();
-      chips.render(active.filter((each) => !docked.has(each.layer)));
+      chips.render(active);
       sheetChips.render(active);
       if (active.length === 0) delete panel.button.dataset['on'];
       else panel.button.dataset['on'] = String(active.length);

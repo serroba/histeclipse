@@ -101,18 +101,18 @@ export async function openLayers(page: Page): Promise<void> {
 }
 
 /**
- * Turn a layer on in deep time (#752): from the dock's Add a layer, ticked in the Layers panel
- * by its name there (`Impact craters`), which then closes.
+ * Turn a layer on (#1137): from Layers, ticked in its panel by its name there (`Impact craters`),
+ * which then closes.
  */
-export async function turnOnLayer(page: Page, name: string): Promise<void> {
-  await page.getByRole('button', { name: 'Add a layer' }).click();
+export async function turnOnLayer(page: Page, name: string, on = true): Promise<void> {
+  await openLayers(page);
   const panel = page.getByRole('dialog', { name: 'Layers' });
-  await panel.getByRole('checkbox', { name, exact: true }).check();
+  await panel.getByRole('checkbox', { name, exact: true }).setChecked(on);
   await panel.getByRole('button', { name: 'Close' }).click();
   await expect(panel).toBeHidden();
 }
 
-/** Open the deep-time bar's details (folded on phones), unless they are open already. */
+/** Open the deep-time bar's details (folded until opened), unless they are open already. */
 export async function showDeepDetails(page: Page): Promise<void> {
   const handle = page.getByRole('navigation', { name: 'Deep time' }).locator('.deep-handle');
   await expect(handle).toBeVisible();

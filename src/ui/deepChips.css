@@ -1,9 +1,4 @@
-/* The features' chips in deep time: a button each, and the note it opens. */
-
-.deep-layer:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+/* The layers' notes in deep time's details, shown while each is on (#1137). */
 
 .deep-note {
   margin: 0;
@@ -33,22 +28,4 @@
   font: inherit;
   text-decoration: underline;
   cursor: pointer;
-}
-
-.deep-layer {
-  min-height: 44px;
-  margin-left: auto;
-  padding: 0 14px;
-  border: 1px solid var(--panel-border);
-  border-radius: 22px;
-  background: transparent;
-  color: var(--ink-muted);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.deep-layer[aria-pressed='true'] {
-  border-color: #f4a261;
-  color: var(--ink);
 }

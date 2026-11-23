@@ -28,6 +28,8 @@ interface HeaderParts {
   /** What is on screen now, each with the book that says why, and its sources' links. */
   readonly sources: Node;
   readonly textsHere: Node;
+  /** "How do we know?" of deep time's maps (#1137), beside them on the reconstructions' spans. */
+  readonly evidence: Node;
 }
 
 /** The bar along the bottom: the eclipse's card, the Holocene's bar, and deep time's. */
@@ -90,6 +92,7 @@ function header(parts: HeaderParts, hudActions: HTMLElement): HTMLElement {
         parts.sources,
       ),
       parts.textsHere,
+      parts.evidence,
     ),
   );
 }

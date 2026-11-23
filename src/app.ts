@@ -24,7 +24,6 @@ import {
   VIEWPOINT,
   type Drawn,
 } from './state/redraws';
-import { activeLayers } from './state/activeLayers';
 import { createStore } from './state/store';
 import { parseViewState } from './state/url';
 import { createRedrawRequests } from './state/redrawRequests';
@@ -196,7 +195,6 @@ export async function startApp(root: HTMLElement): Promise<void> {
     said: () => features.said(),
     // How each layer's load stands (#751): the features on the contract report theirs.
     loads: () => features.loads(),
-    docked: () => deepTime.docked(),
     actions: () => [
       // The features on the contract offer their own (#909).
       ...features.actions(),
@@ -263,17 +261,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       moment.deepHeader(ma, story);
     },
     storyDate: boundaries.storyDate,
-    openLayers: layersPanel.open,
-    goTo: layersPanel.goTo,
-    bar: (state, moment) => {
-      const chips = features.deep(state, moment);
-      // The layers on and whether each draws here, for the dock (#1071), as the chips have them.
-      return {
-        ...features.deepBar(state, moment),
-        chips,
-        active: activeLayers(state, features.loads()),
-      };
-    },
+    bar: (state, moment) => ({
+      ...features.deepBar(state, moment),
+      chips: features.deep(state, moment),
+    }),
     off: (state) => {
       features.deepOff(state);
     },
@@ -445,6 +436,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       recordsBanner: records.banner,
       sources: sources.list,
       textsHere: texts.here,
+      evidence: deepTime.evidence,
     },
     between: [notices.list, deepTime.glance, panels.showControls],
     bottom: {

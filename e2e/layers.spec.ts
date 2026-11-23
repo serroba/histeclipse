@@ -223,7 +223,7 @@ test('with Ways of life on, a key names each colour on the map', async ({ page }
   expect(problems).toEqual([]);
 });
 
-test('one set of layers for all of time: the panel and the bar’s chips switch the same ones @acceptance', async ({
+test('one set of layers for all of time: the panel and its chips switch the same ones @acceptance', async ({
   page,
 }) => {
   const problems = collectProblems(page);
@@ -236,12 +236,11 @@ test('one set of layers for all of time: the panel and the bar’s chips switch 
   await test.step('When they turn on Temperature in the panel', async () => {
     await panel.getByRole('checkbox', { name: /^Temperature/ }).check();
   });
-  await test.step('Then the bar’s Temperature chip is on too, and the link keeps it', async () => {
-    // On a phone the bar is a strip under the sheet (#752), its dock out of sight till it closes.
-    await expect(page.locator('.deep-dock [data-layer="temperature"]')).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+  await test.step('Then Temperature is among the layers on, and the link keeps it', async () => {
+    // Beside Layers, or on a phone at the top of its sheet (#1137): the one in view.
+    await expect(
+      page.getByRole('group', { name: 'Layers on' }).locator('[data-layer="temperature"]'),
+    ).toHaveCount(1);
     await expect(page).toHaveURL(/layers=[a-z,]*temperature/);
   });
   await test.step('And the years’ layers are greyed, saying where they draw', async () => {
@@ -256,12 +255,10 @@ test('one set of layers for all of time: the panel and the bar’s chips switch 
   expect(problems).toEqual([]);
 });
 
-test('the viewpoints and deep time’s chips wear icons: icon and word, on a phone too @mobile', async ({
-  page,
-}, info) => {
+test('the viewpoints wear icons: icon and word, on a phone too @mobile', async ({ page }, info) => {
   test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
-  await test.step('Given deep time on the 540 Myr span, with Temperature and Fossils on', async () => {
-    await page.goto('./?ma=250&scale=all&layers=temperature,fossils');
+  await test.step('Given deep time on the 540 Myr span', async () => {
+    await page.goto('./?ma=250&scale=all');
     await globeRendered(page);
   });
   await test.step('Then each has its icon and keeps its name', async () => {
@@ -271,18 +268,6 @@ test('the viewpoints and deep time’s chips wear icons: icon and word, on a pho
         .getByRole('button', { name, exact: true });
       await expect(button.locator('svg')).toHaveCount(1);
     }
-    // The dock holds the layers on, and Add a layer (#752).
-    for (const name of ['Temperature', 'Fossils', 'Add a layer']) {
-      await expect(page.getByRole('button', { name, exact: true }).locator('svg')).toHaveCount(1);
-    }
-  });
-  await test.step('And the words show with the icons, on a phone too (#1070)', async () => {
-    // Six layer icons alone could not be told apart, as the viewpoints' could not (#953).
-    const word = page
-      .getByRole('button', { name: 'Temperature', exact: true })
-      .locator('.icon-label');
-    const box = await word.boundingBox();
-    expect(box?.width ?? 0).toBeGreaterThan(20);
   });
 });
 
@@ -360,30 +345,20 @@ test('the layers on show as chips beside Layers: one off its span offers where i
   const problems = collectProblems(page);
   const phone = info.project.name === 'mobile';
   const on = page.getByRole('group', { name: 'Layers on' });
-  const dock = page.getByRole('group', { name: 'The time bar’s layers' });
   await test.step('Given 100 million years ago with plates and humans on', async () => {
     await page.goto('./?ma=100&scale=all&layers=plates,humans&cam=-46,122,3');
     await expect(page.locator('.hud-date')).toHaveText('100 million years ago');
   });
-  await test.step('Then the chips are beside Layers, or on a phone at the top of its sheet; one place per layer (#1072)', async () => {
+  await test.step('Then the chips are beside Layers, or on a phone at the top of its sheet: every layer on, in deep time too (#1137)', async () => {
     if (phone) {
       await expect(on).toBeHidden();
       await expect(page.locator('.layers-open')).toHaveAttribute('data-on', '2');
       await openLayers(page);
-      await expect(on.locator('.active-chip')).toHaveCount(2);
-    } else {
-      // Plates have their button in the bar's dock, so only humans, off their span, is a chip.
-      await expect(on.locator('.active-chip')).toHaveCount(1);
-      await expect(on.locator('[data-layer="humans"]')).toHaveCount(1);
-      await expect(dock.getByRole('button', { name: 'Plates', exact: true })).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      );
     }
+    await expect(on.locator('.active-chip')).toHaveCount(2);
   });
   await test.step('When plates are taken off, Then time and camera stay', async () => {
-    if (phone) await on.getByRole('button', { name: 'Turn off Plates' }).click();
-    else await dock.getByRole('button', { name: 'Plates', exact: true }).click();
+    await on.getByRole('button', { name: 'Turn off Plates' }).click();
     await expect(on.locator('[data-layer="plates"]')).toHaveCount(0);
     await expect(page).toHaveURL(/ma=100/);
     await expect(page).toHaveURL(/cam=-46/);
@@ -391,16 +366,7 @@ test('the layers on show as chips beside Layers: one off its span offers where i
   await test.step('When they go to where humans draw, Then the ice ages open at the earliest Homo sapiens', async () => {
     await on.getByRole('button', { name: 'Humans: go to the earliest Homo sapiens' }).click();
     await expect(page.locator('.hud-date')).toHaveText('315,000 years ago');
-    if (phone) {
-      await expect(on.locator('[data-layer="humans"]')).toHaveAttribute('data-draws', 'true');
-    } else {
-      // There the dock has humans' button, pressed, and the chip steps aside.
-      await expect(on.locator('[data-layer="humans"]')).toHaveCount(0);
-      await expect(dock.getByRole('button', { name: 'Humans', exact: true })).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      );
-    }
+    await expect(on.locator('[data-layer="humans"]')).toHaveAttribute('data-draws', 'true');
   });
   expect(problems).toEqual([]);
 });
