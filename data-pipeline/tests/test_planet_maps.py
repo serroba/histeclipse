@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
-from PIL import Image
+from PIL import Image, ImageFilter
 
 from histeclipse_pipeline.arrays import dims
 from histeclipse_pipeline.planet_maps import (
@@ -19,6 +19,7 @@ from histeclipse_pipeline.planet_maps import (
     stretched,
     web_map,
     write_map,
+    write_webp,
 )
 
 if TYPE_CHECKING:
@@ -74,6 +75,9 @@ def test_each_map_comes_in_the_sizes_the_site_loads_never_enlarged() -> None:
     assert sizes["moons/titan"] == (2048, 4040)
     assert sizes["planets/mars"] == (2048, 4096)
     assert sizes["earth-blue-marble"] == (4096, 8192)
+    # Earth's first map, the one every visit loads, also as WebP (#221); no other's.
+    webps = {source.stem: source.webp_widths for source in MAPS if source.webp_widths}
+    assert webps == {"earth-blue-marble": (2048,)}
     # Cassini's map is 3601 wide: its sharp size is its own.
     assert max(sizes["planets/jupiter"]) <= 3601
 
@@ -120,6 +124,19 @@ def test_the_map_is_written_as_a_jpeg(tmp_path: Path) -> None:
     with Image.open(path) as image:
         assert image.format == "JPEG"
         assert image.size == (64, 32)
+
+
+def test_a_first_map_is_written_as_webp_smaller_than_its_jpeg(tmp_path: Path) -> None:
+    rng = np.random.default_rng(1)
+    noise = rng.integers(0, 255, (256, 512, 3), dtype=np.uint8)
+    image = Image.fromarray(noise).resize((512, 256)).filter(ImageFilter.GaussianBlur(3))
+    jpeg, webp = tmp_path / "earth-512.jpg", tmp_path / "earth-512.webp"
+    write_map(image, jpeg)
+    write_webp(image, webp)
+    with Image.open(webp) as written:
+        assert written.format == "WEBP"
+        assert written.size == (512, 256)
+    assert webp.stat().st_size < jpeg.stat().st_size
 
 
 def fits(bands: np.typing.NDArray[np.float32], bitpix: int = -32) -> bytes:

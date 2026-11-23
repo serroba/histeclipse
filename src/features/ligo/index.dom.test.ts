@@ -278,7 +278,7 @@ describe('a gravitational wave passing, as a part of the page (#829)', () => {
     click('Next');
     expect(store.get().waveChapter).toBe('detector');
     expect(views[0]?.options.atLivingston).toBeGreaterThan(0.4);
-    expect(views[0]?.options.earthMap).toBe('/textures/earth-blue-marble-2048.jpg');
+    expect(views[0]?.options.earthMap).toBe('/textures/earth-blue-marble-2048.webp');
   });
 
   it('Given a link to a chapter, Then the story opens there', async () => {

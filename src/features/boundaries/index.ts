@@ -53,7 +53,7 @@ export function mountBoundaries(context: BoundariesContext): BoundariesPart {
     },
     (file) => `${base}data/${file}`,
     context.fetchJson,
-    `${base}textures/earth-blue-marble-2048.jpg`,
+    `${base}textures/earth-blue-marble-2048.webp`,
     context.why('boundaries', 'Planetary boundaries'),
     // The chart speaks as the sheet is drawn, too: change the view once that is done.
     (year) => {

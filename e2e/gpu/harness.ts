@@ -11,7 +11,7 @@ const navigation = document.querySelector<HTMLElement>('#chapters');
 if (container === null || navigation === null) throw new Error('Missing probe mount');
 const scene = container;
 const buttons = navigation;
-const earthTextureUrl = '/textures/earth-blue-marble-2048.jpg';
+const earthTextureUrl = '/textures/earth-blue-marble-2048.webp';
 
 function chapters<Chapter extends string>(
   story: StoryScene<Chapter>,

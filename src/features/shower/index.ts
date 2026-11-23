@@ -106,7 +106,7 @@ export function mountShower(context: ShowerContext): ShowerPart {
   /** Load a scene's code and make it, if the story still wants it once it has loaded. */
   function loadStory3d(kind: 'sun' | 'air' | 'leaf'): void {
     story3dLoading = kind;
-    const earthTextureUrl = `${base}textures/earth-blue-marble-2048.jpg`;
+    const earthTextureUrl = `${base}textures/earth-blue-marble-2048.webp`;
     const wanted = (): boolean =>
       story3dLoading === kind &&
       showerStage.isOpen &&

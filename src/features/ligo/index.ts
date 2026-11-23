@@ -98,7 +98,7 @@ function cover(
 }
 
 /** Earth's map, for the journey: the one the globe's story scenes use. */
-const EARTH_MAP = 'textures/earth-blue-marble-2048.jpg';
+const EARTH_MAP = 'textures/earth-blue-marble-2048.webp';
 
 /** How the view is told to draw the measured wave, and tells the stage where it is; at the
  * end of each chapter the story goes on by itself, unless the reader asked for less motion. */
