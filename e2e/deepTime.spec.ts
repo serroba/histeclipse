@@ -470,7 +470,7 @@ test('before the reconstructions, the reader picks whose hypotheses the globe sk
   // Land of invented shape, its share from a crust-growth curve, with the choice in view.
   await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.184 90');
   await expect(page.getByTestId('sketch-headline')).toContainText('18% of the surface land');
-  await page.getByLabel('How much land').selectOption('flooded');
+  await page.getByRole('combobox', { name: 'How much land' }).selectOption('flooded');
   await expect(page).toHaveURL(/land=flooded/);
   await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.025 90');
   // What it rests on is folded away, with its sources.
@@ -486,7 +486,7 @@ test('before the reconstructions, the reader picks whose hypotheses the globe sk
   await expect(globe).toHaveAttribute('data-plate-land', /plates\/.+\.png .*plates\/.+\.png$/);
   await expect(globe).toHaveAttribute('data-plates', 'off');
   await expect(page.getByTestId('sketch-headline')).toContainText('Cao et al. 2024');
-  await expect(page.getByLabel('How much land')).toBeHidden();
+  await expect(page.getByRole('combobox', { name: 'How much land' })).toBeHidden();
   await page.goto('./?ma=1596&scale=eons&layers=plates');
   await globeRendered(page);
   await expect(globe).toHaveAttribute('data-plates', /plates\/.+\.png .*plates\/.+\.png$/);
@@ -495,8 +495,8 @@ test('before the reconstructions, the reader picks whose hypotheses the globe sk
   await page.goto('./?ma=700&scale=eons');
   await globeRendered(page);
   await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.000 -1');
-  await expect(page.getByLabel('How much land')).toBeHidden();
-  await page.getByLabel('Snowball ice').selectOption('slush');
+  await expect(page.getByRole('combobox', { name: 'How much land' })).toBeHidden();
+  await page.getByRole('combobox', { name: 'Snowball ice' }).selectOption('slush');
   await expect(page).toHaveURL(/snowball=slush/);
   await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.000 25');
 
@@ -504,7 +504,7 @@ test('before the reconstructions, the reader picks whose hypotheses the globe sk
   await page.goto('./?ma=4450&scale=eons');
   await globeRendered(page);
   await expect(globe).toHaveAttribute('data-sketch', /^ocean/);
-  await page.getByLabel('Moon-forming impact').selectOption('young');
+  await page.getByRole('combobox', { name: 'Moon-forming impact' }).selectOption('young');
   await expect(page).toHaveURL(/impact=young/);
   await expect(globe).toHaveAttribute('data-sketch', /^magma/);
   await expect(page.getByTestId('sketch-headline')).toHaveText(
@@ -513,32 +513,28 @@ test('before the reconstructions, the reader picks whose hypotheses the globe sk
   expect(problems).toEqual([]);
 });
 
-test('in the Hadean the reader picks where the water came from, and delivered water lands as icy impactors (#1142) @acceptance', async ({
+test('in the Hadean the water arrives as icy impactors by default, and the hypotheses’ rail picks another answer (#1142, #1158) @acceptance', async ({
   page,
 }) => {
   // Deep time plays and impacts play out: slow on a phone drawn in software.
   test.slow();
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');
+  const rail = page.getByRole('group', { name: 'Hypotheses' });
   await test.step('Given 4,540 million years ago, its sketch in view', async () => {
     await page.goto('./?ma=4540&scale=eons');
     await globeRendered(page);
-    await showDeepDetails(page);
   });
   await test.step('Then no viewpoints are offered, deep time’s sky and Moon not being drawn (#1154)', async () => {
     await expect(page.getByRole('group', { name: 'Viewpoint' })).toBeHidden();
   });
-  await test.step('Then Earth’s own rock is the first answer, on its sources’ say-so', async () => {
-    const picker = page.getByLabel('Where the water came from');
-    await expect(picker).toHaveValue('inherited');
-    const sources = page.getByTestId('sketch-sources');
-    await sources.locator('summary').click();
-    await expect(sources).toContainText('Piani et al. 2020');
+  await test.step('Then the rail at the left asks the moment’s questions, delivered water the answer', async () => {
+    await expect(rail.getByRole('button', { name: /^Moon-forming impact: Early/ })).toBeVisible();
+    await expect(
+      rail.getByRole('button', { name: /^Where the water came from: Delivered/ }),
+    ).toBeVisible();
   });
-  await test.step('When they pick delivered water and play', async () => {
-    await page.getByLabel('Where the water came from').selectOption('delivered');
-    await expect(page).toHaveURL(/water=delivered/);
-    await expect(page.getByTestId('sketch-sources')).toContainText('Alexander et al. 2012');
+  await test.step('When they play', async () => {
     await page
       .getByRole('navigation', { name: 'Deep time' })
       .getByRole('button', { name: 'Play', exact: true })
@@ -546,6 +542,19 @@ test('in the Hadean the reader picks where the water came from, and delivered wa
   });
   await test.step('Then icy impactors strike as the time passes them', async () => {
     await expect(globe).toHaveAttribute('data-impacts-played', /^[1-9]/, { timeout: 60_000 });
+  });
+  await test.step('When they pick Earth’s own rock on the rail, Then the link keeps it, on its source', async () => {
+    await page.goto('./?ma=4540&scale=eons');
+    await globeRendered(page);
+    await rail.getByRole('button', { name: /^Where the water came from/ }).click();
+    const sheet = page.getByRole('dialog', { name: 'Where the water came from' });
+    await expect(sheet).toContainText('Piani et al. 2020');
+    await sheet.getByRole('button', { name: /^From Earth’s own building blocks/ }).click();
+    await expect(sheet).toBeHidden();
+    await expect(page).toHaveURL(/water=inherited/);
+    await expect(
+      rail.getByRole('button', { name: /^Where the water came from: From Earth’s own/ }),
+    ).toBeVisible();
   });
   expect(problems).toEqual([]);
 });
