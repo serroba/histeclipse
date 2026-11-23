@@ -76,6 +76,9 @@ test('when the ozone record does not load, its chip says so, and Try again draws
 test('the ozone layer is drawn in 3D on a day of its season, and ozone’s own bar plays its years and days (#804, #805) @mobile', async ({
   page,
 }) => {
+  // Plays the 3D shell, then draws another day of it: on CI's software WebGL a phone took the
+  // usual 30 s, timing out at whichever step it reached (#1117).
+  test.slow();
   const problems = collectProblems(page);
   const globe = page.getByTestId('globe');
   const panel = page.getByRole('region', { name: 'The ozone hole and the gases' });
