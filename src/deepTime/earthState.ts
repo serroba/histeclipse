@@ -94,6 +94,25 @@ export function magneticNorthAt(ma: number, scale: PolarityScale | null): Magnet
   return polarity === 'normal' ? 'north' : polarity === 'reversed' ? 'south' : 'either';
 }
 
+/** How long, in seconds of play either side of the moment, a pole must hold to be marked. */
+const POLE_HOLD_SECONDS = 0.5;
+
+/**
+ * As the globe marks it while the years play at `maPerSecond` (null when paused): a pole held
+ * for less than a moment on screen would flash from end to end, so there it reads "either".
+ */
+export function magneticNorthPlaying(
+  ma: number,
+  scale: PolarityScale | null,
+  maPerSecond: number | null,
+): MagneticNorth | null {
+  const here = magneticNorthAt(ma, scale);
+  if (here === null || here === 'either' || maPerSecond === null) return here;
+  const reach = maPerSecond * POLE_HOLD_SECONDS;
+  const oldest = Math.min(POLARITY_RECORD_MA, ma + reach);
+  return polaritySpans(scale, oldest, Math.max(0, ma - reach)).length > 1 ? 'either' : here;
+}
+
 /**
  * The field's polarity across `youngest` to `oldest` Ma, youngest first: every reversal the
  * scale records, the superchrons, reversing often between them, and unknown before the record.
