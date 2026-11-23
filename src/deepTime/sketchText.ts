@@ -10,6 +10,7 @@ import {
   type Sketch,
   type SketchChoices,
   SNOWBALL_CHOICES,
+  WATER_CHOICES,
 } from './sketch';
 
 function percent(share: number): string {
@@ -27,6 +28,13 @@ export function sketchHeadline(sketch: Sketch): string {
   return `Sketch, not a map: ${parts.join(' · ')}.`;
 }
 
+/** Where the water came from, while it is arriving (#1142): the choice and its sources. */
+function waterLines(sketch: Sketch, choices: SketchChoices): readonly string[] {
+  if (!sketch.questions.includes('water')) return [];
+  const choice = WATER_CHOICES[choices.water];
+  return [`Where the water came from, argued over: ${choice.note} (${choice.source})`];
+}
+
 /** What the globe shows at this moment, a sentence or two per question it answers. */
 export function sketchLines(sketch: Sketch, choices: SketchChoices, ma: number): readonly string[] {
   if (sketch.kind === 'magma') {
@@ -39,9 +47,9 @@ export function sketchLines(sketch: Sketch, choices: SketchChoices, ma: number):
         `This impact comes after the ${OLDEST_WATER_ZIRCON_MA.toLocaleString('en')}-million-year-old zircon that already shows liquid water (Wilde et al. 2001): the camps disagree on what the dates measure.`,
       );
     }
-    return lines;
+    return [...lines, ...waterLines(sketch, choices)];
   }
-  const lines: string[] = [];
+  const lines: string[] = [...waterLines(sketch, choices)];
   if (sketch.questions.includes('impact')) {
     const impact = IMPACTS[choices.impact];
     lines.push(

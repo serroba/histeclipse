@@ -45,6 +45,7 @@ export interface DeepTimeContext extends PartContext {
     | 'prefetch'
     | 'flyTo'
     | 'zoomTo'
+    | 'playImpact'
   >;
   /** The chips in the bar (#380, #605), in their order. */
   readonly chips: readonly DeepChip[];

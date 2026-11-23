@@ -26,8 +26,16 @@ export const PERIOD_EVIDENCE: Readonly<Record<string, PeriodEvidence>> = {
   Hadean: {
     map: `Earth forms, and the Moon with it; no rocks of this time survive. ${SKETCHED}`,
     evidence:
-      'Grains of zircon about 4.4 billion years old, from the Jack Hills of Australia, carry hints of continental crust and liquid water; magnetism in such grains has been read as an early magnetic field, a reading that is argued over.',
-    sources: ['wilde2001', 'tarduno2015'],
+      'Grains of zircon about 4.4 billion years old, from the Jack Hills of Australia, carry hints of continental crust and liquid water; magnetism in such grains has been read as an early magnetic field, a reading that is argued over. Where the water came from is argued too: Earth’s own building blocks, or water-rich asteroids and comets, weighed by their hydrogen’s isotopes.',
+    sources: [
+      'wilde2001',
+      'tarduno2015',
+      'piani2020',
+      'young2023',
+      'alexander2012',
+      'altwegg2015',
+      'hartogh2011',
+    ],
   },
   Eoarchean: {
     map: `The oldest surviving rocks; how much crust there was is not known. ${SKETCHED}`,

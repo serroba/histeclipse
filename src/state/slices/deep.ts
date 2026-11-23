@@ -16,9 +16,10 @@
  *   species, such as `neanderthal`; or `dna`, only the finds and places with ancient DNA (#1059).
  * - `story=humans` plays the human story once on opening (#177): the link a reader shares, or
  *   Explore's, to watch it; it leaves the address as soon as it starts.
- * - `impact`, `land` and `snowball` pick the hypotheses the deep-time globe sketches before
- *   the reconstructions reach: when the Moon-forming impact struck, how much of the surface
- *   was land, and how far a snowball's ice reached. Absent means the first of each.
+ * - `impact`, `water`, `land` and `snowball` pick the hypotheses the deep-time globe sketches
+ *   before the reconstructions reach: when the Moon-forming impact struck, where the oceans'
+ *   water came from (#1142), how much of the surface was land, and how far a snowball's ice
+ *   reached. Absent means the first of each.
  */
 
 import { COAST_SOURCES, DEFAULT_COAST, type CoastSource } from '../../deepTime/coastline';
@@ -28,12 +29,15 @@ import {
   DEFAULT_IMPACT_MODEL,
   DEFAULT_LAND_MODEL,
   DEFAULT_SNOWBALL_MODEL,
+  DEFAULT_WATER_MODEL,
   IMPACT_MODELS,
   LAND_MODELS,
   SNOWBALL_MODELS,
+  WATER_MODELS,
   type ImpactModel,
   type LandModel,
   type SnowballModel,
+  type WaterModel,
 } from '../../deepTime/sketch';
 import {
   DEFAULT_TEMPERATURE_MODEL,
@@ -87,6 +91,7 @@ export interface DeepState {
   readonly impact: ImpactModel;
   readonly land: LandModel;
   readonly snowball: SnowballModel;
+  readonly water: WaterModel;
 }
 
 export const DEEP_DEFAULTS: DeepState = {
@@ -103,6 +108,7 @@ export const DEEP_DEFAULTS: DeepState = {
   impact: DEFAULT_IMPACT_MODEL,
   land: DEFAULT_LAND_MODEL,
   snowball: DEFAULT_SNOWBALL_MODEL,
+  water: DEFAULT_WATER_MODEL,
 };
 
 export const DEEP_PARAMS: Params<DeepState> = {
@@ -142,6 +148,7 @@ export const DEEP_PARAMS: Params<DeepState> = {
   impact: choice('impact', IMPACT_MODELS, DEEP_DEFAULTS.impact),
   land: choice('land', LAND_MODELS, DEEP_DEFAULTS.land),
   snowball: choice('snowball', SNOWBALL_MODELS, DEEP_DEFAULTS.snowball),
+  water: choice('water', WATER_MODELS, DEEP_DEFAULTS.water),
 };
 
 function parseMa(raw: string): number {

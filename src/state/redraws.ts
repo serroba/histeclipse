@@ -28,6 +28,7 @@ export const DEEP_TIME: Watch = (s) => [
   s.impact,
   s.land,
   s.snowball,
+  s.water,
 ];
 
 /** The sky view: where and when it is seen from, and what is drawn on it. */

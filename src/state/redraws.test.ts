@@ -67,6 +67,7 @@ const WATCHES: Record<string, { watch: Watch; fields: readonly (keyof ViewState)
       'impact',
       'land',
       'snowball',
+      'water',
     ],
   },
   sky: {

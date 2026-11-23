@@ -17,12 +17,18 @@ import {
   SNOWBALL_EPISODES,
   snowballAt,
   sunBrightness,
+  DEFAULT_WATER_MODEL,
+  OLDEST_WATER_ZIRCON_MA,
+  WATER_OLDEST_MA,
+  WATER_STRIKE_LIST,
+  waterStrikesPassed,
 } from './sketch';
 
 const choices = {
   impact: DEFAULT_IMPACT_MODEL,
   land: DEFAULT_LAND_MODEL,
   snowball: DEFAULT_SNOWBALL_MODEL,
+  water: DEFAULT_WATER_MODEL,
 } as const;
 
 describe('crust growth', () => {
@@ -58,17 +64,45 @@ describe('the sketch', () => {
   it('is molten until shortly after the chosen impact', () => {
     for (const impact of ['early', 'intermediate', 'young'] as const) {
       const after = IMPACTS[impact].ma - MAGMA_AFTER_IMPACT_MA;
-      expect(sketchAt(after + 0.1, { ...choices, impact }, false)).toMatchObject({
-        kind: 'magma',
-        questions: ['impact'],
-      });
+      const molten = sketchAt(after + 0.1, { ...choices, impact }, false);
+      expect(molten.kind).toBe('magma');
+      expect(molten.questions[0]).toBe('impact');
       expect(sketchAt(after - 0.1, { ...choices, impact }, false).kind).toBe('ocean');
     }
   });
 
   it('keeps the impact question open until the youngest camp’s impact is past', () => {
-    expect(sketchAt(4450, choices, false).questions).toEqual(['impact', 'land']);
+    expect(sketchAt(4450, choices, false).questions).toEqual(['impact', 'water', 'land']);
     expect(sketchAt(4300, choices, false).questions).toEqual(['land']);
+  });
+
+  it('asks where the water came from from Earth’s start to the oldest water zircon (#1142)', () => {
+    expect(sketchAt(4560, choices, false).questions).toEqual(['impact', 'water']);
+    expect(sketchAt(OLDEST_WATER_ZIRCON_MA, choices, false).questions).toContain('water');
+    expect(sketchAt(OLDEST_WATER_ZIRCON_MA - 1, choices, false).questions).not.toContain('water');
+  });
+
+  it('draws the delivered water as icy impactors spread over that span and the globe', () => {
+    const strikes = WATER_STRIKE_LIST;
+    expect(strikes.length).toBeGreaterThan(20);
+    for (const strike of strikes) {
+      expect(strike.ma).toBeLessThanOrEqual(WATER_OLDEST_MA);
+      expect(strike.ma).toBeGreaterThan(OLDEST_WATER_ZIRCON_MA);
+      expect(Math.abs(strike.lat)).toBeLessThanOrEqual(90);
+      expect(Math.abs(strike.lon)).toBeLessThanOrEqual(180);
+    }
+    // Oldest first, and both hemispheres struck.
+    expect(strikes.map((strike) => strike.ma)).toEqual(
+      [...strikes.map((strike) => strike.ma)].sort((a, b) => b - a),
+    );
+    expect(
+      strikes.some((strike) => strike.lat > 0) && strikes.some((strike) => strike.lat < 0),
+    ).toBe(true);
+    // Played as time passes them, going towards the present; none twice across two frames.
+    const first = waterStrikesPassed(WATER_OLDEST_MA, 4500);
+    const second = waterStrikesPassed(4500, 4400);
+    expect(first.length + second.length).toBe(strikes.length);
+    expect(first.filter((strike) => second.includes(strike))).toEqual([]);
   });
 
   it('offers the land question only where no reconstruction draws the continents', () => {

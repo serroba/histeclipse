@@ -15,11 +15,13 @@ import {
   type SketchQuestion,
   SNOWBALL_CHOICES,
   SNOWBALL_MODELS,
+  WATER_CHOICES,
+  WATER_MODELS,
 } from '../deepTime/sketch';
 import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import { element } from './dom';
 
-const SKETCH_QUESTIONS: readonly SketchQuestion[] = ['impact', 'land', 'snowball'];
+const SKETCH_QUESTIONS: readonly SketchQuestion[] = ['impact', 'water', 'land', 'snowball'];
 
 export interface DeepSketchNote {
   /** The note in view: the headline and the pickers. */
@@ -46,6 +48,13 @@ function sketchPickers(): Readonly<Record<SketchQuestion, HTMLSelectElement>> {
       { class: 'deep-coast', 'aria-label': 'How much land' },
       ...LAND_MODELS.map((model) => element('option', { value: model }, LAND_CHOICES[model].label)),
     ),
+    water: element(
+      'select',
+      { class: 'deep-coast', 'aria-label': 'Where the water came from' },
+      ...WATER_MODELS.map((model) =>
+        element('option', { value: model }, WATER_CHOICES[model].label),
+      ),
+    ),
     snowball: element(
       'select',
       { class: 'deep-coast', 'aria-label': 'Snowball ice' },
@@ -64,6 +73,7 @@ export function createDeepSketchNote(
     element('p', { hidden: '' }, element('label', {}, label, pickers[question]));
   const rows: Readonly<Record<SketchQuestion, HTMLElement>> = {
     impact: row('impact', 'Moon-forming impact '),
+    water: row('water', 'Where the water came from '),
     land: row('land', 'How much land '),
     snowball: row('snowball', 'Snowball ice '),
   };
@@ -98,6 +108,10 @@ export function createDeepSketchNote(
   pickers.land.addEventListener('change', () => {
     const land = LAND_MODELS.find((option) => option === pickers.land.value);
     if (land !== undefined) onSketch({ land });
+  });
+  pickers.water.addEventListener('change', () => {
+    const water = WATER_MODELS.find((option) => option === pickers.water.value);
+    if (water !== undefined) onSketch({ water });
   });
   pickers.snowball.addEventListener('change', () => {
     const snowball = SNOWBALL_MODELS.find((option) => option === pickers.snowball.value);
