@@ -161,6 +161,22 @@
     padding: 0;
   }
 
+  /* Drawn as short as the chip they replace (32 px), so the bar is no taller; a finger still
+     finds each within 44. */
+  .holocene-bar > .time-scale .time-option {
+    position: relative;
+    gap: 0;
+    min-height: 32px;
+    padding-block: 0;
+    line-height: 1;
+  }
+
+  .holocene-bar > .time-scale .time-option::after {
+    position: absolute;
+    inset: -6px 0;
+    content: '';
+  }
+
   .holocene-bar > .bar-fold .panel-fold-label {
     position: absolute;
     width: 1px;
