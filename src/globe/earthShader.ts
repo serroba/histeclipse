@@ -58,6 +58,7 @@ const EARTH_HEAD = /* glsl */ `
   uniform vec2 plateTurn;
   uniform float uncharted;
   uniform float sketchKind;
+  uniform float sketchMolten;
   uniform float sketchLevel;
   uniform float sketchIceEdge;
   uniform vec2 paleoGrid;
@@ -164,27 +165,25 @@ const EARTH_BODY = /* glsl */ `
     if (sketchKind < 0.5) return 0.0;
     float latitude = abs(uv.y - 0.5) * 180.0;
     float blur = max(fwidth(latitude), 0.3);
-    return smoothstep(sketchIceEdge - blur, sketchIceEdge + blur, latitude);
+    return smoothstep(sketchIceEdge - blur, sketchIceEdge + blur, latitude) * (1.0 - sketchMolten);
   }
 
   vec3 sketchSurface(vec2 uv) {
     if (sketchKind < 0.5) return unchartedSurface(uv);
     float noise = texture2D(overlayMap, uv).r;
-    vec3 color;
-    if (sketchKind < 1.5) {
-      // Chilled crust, darker where thicker, split by thin seams of glowing melt.
-      // Held below 1, so the highest values don't wrap to a dark patch.
-      float band = fract(min(noise, 0.99) * 4.0);
-      float seam = abs(band - 0.5);
-      float glow = 1.0 - smoothstep(0.0, 0.035 + fwidth(noise) * 4.0, seam);
-      vec3 crust = mix(srgb(vec3(0.16, 0.05, 0.03)), srgb(vec3(0.42, 0.12, 0.04)), band);
-      color = mix(crust, srgb(vec3(1.0, 0.62, 0.2)), glow);
-    } else {
-      float blur = max(fwidth(noise), 1e-3);
-      float land = smoothstep(sketchLevel - blur, sketchLevel + blur, noise);
-      // Bare rock: there were no plants on land.
-      color = mix(srgb(vec3(0.12, 0.25, 0.36)), srgb(vec3(0.50, 0.45, 0.38)), land);
-    }
+    // Chilled crust, darker where thicker, split by thin seams of glowing melt.
+    // Held below 1, so the highest values don't wrap to a dark patch.
+    float band = fract(min(noise, 0.99) * 4.0);
+    float seam = abs(band - 0.5);
+    float glow = 1.0 - smoothstep(0.0, 0.035 + fwidth(noise) * 4.0, seam);
+    vec3 crust = mix(srgb(vec3(0.16, 0.05, 0.03)), srgb(vec3(0.42, 0.12, 0.04)), band);
+    vec3 molten = mix(crust, srgb(vec3(1.0, 0.62, 0.2)), glow);
+    float blur = max(fwidth(noise), 1e-3);
+    float land = smoothstep(sketchLevel - blur, sketchLevel + blur, noise);
+    // Bare rock: there were no plants on land.
+    vec3 ocean = mix(srgb(vec3(0.12, 0.25, 0.36)), srgb(vec3(0.50, 0.45, 0.38)), land);
+    // The one cross-faded into the other (#1140): the change itself is within a frame of play.
+    vec3 color = mix(ocean, molten, sketchMolten);
     color = mix(color, srgb(vec3(0.92, 0.95, 0.99)), sketchIce(uv));
     return mix(color, srgb(vec3(0.42, 0.50, 0.62)), 0.35 * gridLine(uv));
   }

@@ -242,11 +242,14 @@ describe("Earth's surfaces", () => {
     expect(uniforms['uncharted']?.value).toBe(1);
     host.setSketch({ kind: 'magma', land: 0.3, iceEdge: 60 });
     expect(uniforms['sketchKind']?.value).toBe(1);
+    // Arriving at a sketch, it is drawn as it is: molten at once.
+    expect(uniforms['sketchMolten']?.value).toBe(1);
     expect(dataset['sketch']).toBe('magma 0.300 60');
     host.setSketch(null);
     expect(uniforms['sketchKind']?.value).toBe(0);
     expect(dataset['sketch']).toBe('off');
-    expect(drawn()).toBe(3);
+    // Each change, and the molten value set with the first.
+    expect(drawn()).toBe(4);
   });
 
   it('outlines the plates once their masks arrive, and takes the ice sheets away', async () => {
