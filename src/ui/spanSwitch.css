@@ -44,9 +44,11 @@
 }
 
 @media (max-width: 360px) {
-  /* The narrowest phones (320 px): the four spans and Layers on one row, inside the panel. */
+  /* The narrowest phones (320 px): the four spans and the bar's fold on one row (#1152), with
+     room to spare for a wider font than ours. */
   .time-option:has(> .icon-label) {
-    padding: 2px 5px;
+    padding: 2px 3px;
+    font-size: 11px;
   }
 }
 
