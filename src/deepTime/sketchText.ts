@@ -24,6 +24,7 @@ export function sketchHeadline(sketch: Sketch): string {
   if (sketch.questions.includes('land')) {
     parts.push(`${percent(sketch.land)} of the surface land, its shapes and places invented`);
   }
+  if (sketch.reconstructed) parts.push('the continents from Cao et al. 2024, flooded or not');
   if (sketch.episode !== null) parts.push(`${sketch.episode.name} snowball`);
   return `Sketch, not a map: ${parts.join(' · ')}.`;
 }
@@ -64,6 +65,11 @@ export function sketchLines(sketch: Sketch, choices: SketchChoices, ma: number):
         ? `A sketch, not a map: land’s shapes and places are invented. ${percent(sketch.land)} of the surface is drawn as land, the crust above the sea in ${choice.source}.`
         : `A sketch, not a map: land’s shapes and places are invented. ${percent(sketch.land)} of the surface is drawn as land: ${percent(crustShare(choices.land, ma))} of today’s crust (${choice.source}), as if it stood as high above the sea as today’s.`,
       choice.note,
+    );
+  }
+  if (sketch.reconstructed) {
+    lines.push(
+      'The continents are Cao et al. 2024’s reconstruction: where continental crust lay, drawn as shallow sea, since how much of it stood above the sea is not known. The elevation maps from 540 million years ago show most of it flooded.',
     );
   }
   if (sketch.episode !== null) {

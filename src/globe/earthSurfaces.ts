@@ -5,20 +5,13 @@
  * loaded once each.
  */
 
-import {
-  DataTexture,
-  LinearFilter,
-  RedFormat,
-  RepeatWrapping,
-  UnsignedByteType,
-  Vector2,
-  type IUniform,
-  type Texture,
-} from 'three';
+import { Vector2, type IUniform, type Texture } from 'three';
 
 import { createFade, type Fade } from './fade';
+import { inOrder } from './loadOrder';
 import { createMapCache, type MapCache } from './mapCache';
-import { LAND_NOISE_GRID, landNoise, levelForShare, shareAtOrAbove } from '../deepTime/landScheme';
+import { sketchTexture } from './sketchShader';
+import { levelForShare } from '../deepTime/landScheme';
 import type {
   DeepTimeSurface,
   IceSurface,
@@ -59,12 +52,16 @@ export function surfaceUniforms(): Record<string, IUniform> {
     plateOlder: { value: null as Texture | null },
     plateMix: { value: 0 },
     plateActive: { value: 0 },
+    // Whether the masks are outlined (the Plates layer) or only the sketch's land (#1149).
+    plateOutline: { value: 0 },
     plateGrid: { value: new Vector2(1441, 721) },
     plateTurn: { value: new Vector2(0, 0) },
     uncharted: { value: 0 },
     sketchKind: { value: 0 },
     // How molten the sketch is drawn, 1 to 0, eased so the Hadean's change cross-fades (#1140).
     sketchMolten: { value: 0 },
+    // The sketch's land from the plates' masks rather than invented (#1149).
+    sketchPlates: { value: 0 },
     sketchLevel: { value: 2 },
     sketchIceEdge: { value: 90 },
     paleoGrid: { value: new Vector2(361, 181) },
@@ -75,39 +72,6 @@ export function surfaceUniforms(): Record<string, IUniform> {
     reliefCells: { value: new Vector2(675, 2) },
     reliefOffset: { value: 11_000 },
   };
-}
-
-/**
- * Maps loaded in the order they were asked for: a newer one is shown as soon as it arrives,
- * even if a later one is still loading (as time plays, the latest is often not there yet);
- * an older one arriving late is not. Turning a layer off drops what is still loading.
- */
-export function inOrder(): { ask(): number; show(ticket: number): boolean; drop(): void } {
-  let asked = 0;
-  let shown = 0;
-  return {
-    ask: () => ++asked,
-    show(ticket) {
-      if (ticket <= shown) return false;
-      shown = ticket;
-      return true;
-    },
-    drop() {
-      shown = ++asked;
-    },
-  };
-}
-
-/** The sketch's noise field as a texture, made once, wrapping east–west. */
-function sketchTexture(): { readonly texture: DataTexture; readonly shares: Float64Array } {
-  const { columns, rows } = LAND_NOISE_GRID;
-  const field = landNoise(columns, rows);
-  const texture = new DataTexture(field, columns, rows, RedFormat, UnsignedByteType);
-  texture.wrapS = RepeatWrapping;
-  texture.minFilter = LinearFilter;
-  texture.magFilter = LinearFilter;
-  texture.needsUpdate = true;
-  return { texture, shares: shareAtOrAbove(field, columns, rows) };
 }
 
 export interface SurfaceHost {
@@ -140,6 +104,10 @@ export class EarthSurfaces {
   readonly #evenLit = new Set<string>();
   #sketchField: ReturnType<typeof sketchTexture> | null = null;
   #molten: Fade | null = null;
+  // The sketch giving way to the elevation maps, 1 to 0, eased so it cross-fades (#1149).
+  #unchartedFade: Fade | null = null;
+  #uncharted = false;
+  #sketchShown = false;
 
   constructor(host: SurfaceHost) {
     this.#host = host;
@@ -158,7 +126,7 @@ export class EarthSurfaces {
   get todaysGround(): boolean {
     const { uniforms } = this.#host;
     const on = (name: string): boolean => Number(uniforms[name]?.value) > 0.5;
-    return this.#deepTime && on('paleoActive') && on('shelfActive') && !on('uncharted');
+    return this.#deepTime && on('paleoActive') && on('shelfActive') && !this.#uncharted;
   }
 
   /**
@@ -298,12 +266,21 @@ export class EarthSurfaces {
     });
   }
 
-  /** Outline a second reconstruction's continents; null draws none. */
+  /**
+   * A second reconstruction's continents: outlined (the Plates layer), or only as the sketch's
+   * land (#1149); null outlines none. The last masks stay bound, unseen, so a sketch fading into
+   * the elevation maps keeps its land as it goes.
+   */
   setPlates(surface: PlateSurface | null): void {
     if (surface === null) {
-      this.#off('plates', 'plateActive', 'plates');
+      this.#orders.plates.drop();
+      this.#host.uniforms['plateOutline'] = { value: 0 };
+      this.#host.dataset['plates'] = 'off';
+      this.#host.invalidate();
       return;
     }
+    const outlined = surface.outlined ?? true;
+    this.#host.uniforms['plateOutline'] = { value: outlined ? 1 : 0 };
     this.#showMaps('plates', [surface.younger, surface.older], ([younger, older]) => {
       this.#set({
         plateYounger: younger,
@@ -313,14 +290,23 @@ export class EarthSurfaces {
         plateTurn: new Vector2(surface.turnYounger, surface.turnOlder),
         plateActive: 1,
       });
-      this.#host.dataset['plates'] = `${surface.younger} ${surface.older}`;
+      this.#host.dataset['plates'] = outlined ? `${surface.younger} ${surface.older}` : 'off';
+      this.#host.dataset['plateLand'] = `${surface.younger} ${surface.older}`;
     });
   }
 
-  /** Before the elevation maps reach: a plain globe with a faint grid, not a made-up map. */
+  /**
+   * Before the elevation maps reach: a plain globe with a faint grid, not a made-up map. Within
+   * deep time the change cross-fades (#1149); coming into it, it is drawn as it is.
+   */
   setUncharted(blank: boolean): void {
-    this.#host.uniforms['uncharted'] = { value: blank ? 1 : 0 };
+    this.#uncharted = blank;
     this.#host.dataset['uncharted'] = String(blank);
+    this.#unchartedFade ??= createFade((value) => {
+      this.#host.uniforms['uncharted'] = { value };
+      this.#host.invalidate();
+    });
+    this.#unchartedFade.set(blank ? 1 : 0, !this.#deepTime);
     this.#host.invalidate();
   }
 
@@ -331,17 +317,17 @@ export class EarthSurfaces {
         ? 'off'
         : `${sketch.kind} ${sketch.land.toFixed(3)} ${String(sketch.iceEdge)}`;
     this.#host.invalidate();
-    const shown = this.#host.uniforms['sketchKind']?.value !== 0;
-    if (sketch === null) {
-      this.#host.uniforms['sketchKind'] = { value: 0 };
-      return;
-    }
+    const shown = this.#sketchShown;
+    this.#sketchShown = sketch !== null;
+    // Gone, the last sketch is kept, unseen once the maps have faded in over it (#1149).
+    if (sketch === null) return;
     this.#sketchField ??= sketchTexture();
     this.#set({
       overlayMap: this.#sketchField.texture,
       sketchKind: sketch.kind === 'magma' ? 1 : 2,
       sketchLevel: levelForShare(this.#sketchField.shares, sketch.land),
       sketchIceEdge: sketch.iceEdge,
+      sketchPlates: sketch.reconstructed === true ? 1 : 0,
     });
     this.#molten ??= createFade((value) => {
       this.#host.uniforms['sketchMolten'] = { value };
