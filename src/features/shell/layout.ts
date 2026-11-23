@@ -28,6 +28,7 @@ export function keepCentred({ root, top, bottom, zoomRail, onInsets }: Layout): 
   foldHud(top);
   foldBar(bottom);
   const update = (): void => {
+    keepNameClear(top);
     const box = top.getBoundingClientRect();
     const spans = box.width > window.innerWidth * 0.55;
     const insets = {
@@ -70,6 +71,23 @@ export function keepCentred({ root, top, bottom, zoomRail, onInsets }: Layout): 
   observer.observe(top);
   observer.observe(bottom);
   window.addEventListener('resize', update);
+}
+
+/**
+ * Where the tools sit over the date panel's top right, the panel is never narrower than the name
+ * and them (#1154): with less in it (deep time has no viewpoints) it would shrink under them.
+ * Never wider than the screen leaves it.
+ */
+function keepNameClear(top: HTMLElement): void {
+  const tools = top.querySelector<HTMLElement>('.hud-tools');
+  const name = top.querySelector<HTMLElement>('h1 > a');
+  if (tools === null || name === null || getComputedStyle(tools).position !== 'absolute') {
+    top.style.minWidth = '';
+    return;
+  }
+  // The panel's padding at the left (18) and the tools' inset at the right (10), and a gap.
+  const wanted = name.getBoundingClientRect().width + tools.getBoundingClientRect().width + 44;
+  top.style.minWidth = `${String(Math.ceil(Math.min(wanted, window.innerWidth - 32)))}px`;
 }
 
 /** The date panel's room: down to the highest card below it in its columns, if any. */

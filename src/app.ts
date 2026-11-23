@@ -311,7 +311,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     moonArrived: () => {
       const now = store.get();
       moment.show(now);
-      viewSwitch.render(now.mode, now.view, true, now.focus);
+      showViewSwitch(now);
       sky.render(now);
     },
   });
@@ -599,9 +599,13 @@ export async function startApp(root: HTMLElement): Promise<void> {
     whySheet.show(state.why, whyVersion(state, hereData));
   }
 
-  /** The views offered, the Moon's own too: picking one asks for its theory (#981). */
+  /**
+   * The views offered, the Moon's own too: picking one asks for its theory (#981). Not in deep
+   * time, whose sky and Moon are not drawn: there the globe is the view (#1154).
+   */
   function showViewSwitch(state: ViewState): void {
     viewSwitch.render(state.mode, state.view, true, state.focus);
+    viewSwitch.root.hidden = state.ma !== null;
   }
 
   /** The Layers panel, and Explore's view of the layers. */

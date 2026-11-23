@@ -265,8 +265,8 @@ test('one set of layers for all of time: the panel and its chips switch the same
 
 test('the viewpoints wear icons: icon and word, on a phone too @mobile', async ({ page }, info) => {
   test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
-  await test.step('Given deep time on the 540 Myr span', async () => {
-    await page.goto('./?ma=250&scale=all');
+  await test.step('Given a day in the years, where the viewpoints are offered (#1154)', async () => {
+    await page.goto('./?t=2026-01-10T12:00');
     await globeRendered(page);
   });
   await test.step('Then each has its icon and keeps its name', async () => {
