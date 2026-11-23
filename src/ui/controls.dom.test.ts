@@ -15,7 +15,6 @@ const view = (note: readonly DeepNoteBlock[] | null = ['Shown']): DeepChipView =
 });
 
 function chips() {
-  const change = vi.fn();
   const why = vi.fn((id: string, label: string) => element('button', { title: id }, label));
   const ui = createDeepChips(
     [
@@ -23,37 +22,23 @@ function chips() {
       { layer: 'fossils', label: 'Fossils', why: 'fossils', whyLabel: 'Finds' },
     ],
     why,
-    change,
   );
-  const host = element('div', {}, ...ui.buttons, ...ui.notes);
-  return { ui, host, change, why };
+  const host = element('div', {}, ...ui.notes);
+  return { ui, host, why };
 }
 
 describe('isolated layer controls', () => {
-  it('renders availability, pressed state, accessible labels and source actions', () => {
-    const { ui, host, why, change } = chips();
+  it('shows a layer’s note, with its book, while the layer is on', () => {
+    const { ui, host, why } = chips();
     ui.render(new Map());
-    expect(
-      [...host.querySelectorAll('button.deep-layer')].every((button) =>
-        button.hasAttribute('hidden'),
-      ),
-    ).toBe(true);
-    host.querySelector<HTMLButtonElement>('button.deep-layer')?.click();
-    expect(change).toHaveBeenLastCalledWith('humans', true);
+    expect(host.querySelector<HTMLElement>('[data-testid="humans-note"]')?.hidden).toBe(true);
     const states = new Map<Layer, DeepChipView>([
       ['humans', view()],
       ['fossils', { offered: false, on: false, note: null }],
     ]);
     ui.render(states);
-    const button = host.querySelector<HTMLButtonElement>('button.deep-layer');
-    expect(button?.hidden).toBe(false);
-    expect(button?.textContent).toBe('Humans');
-    expect(button?.getAttribute('aria-pressed')).toBe('true');
-    expect(button?.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
     expect(host.querySelector<HTMLElement>('[data-testid="humans-note"]')?.hidden).toBe(false);
     expect(why).toHaveBeenCalledWith('fossils', 'Finds');
-    button?.click();
-    expect(change).toHaveBeenLastCalledWith('humans', false);
     ui.render(new Map([['humans', view(null)]]));
     expect(host.querySelector<HTMLElement>('[data-testid="humans-note"]')?.hidden).toBe(true);
   });

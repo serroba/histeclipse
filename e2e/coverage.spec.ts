@@ -40,23 +40,25 @@ test('in 1977, a gap in the ozone record: the chip and the Layers row agree, and
   expect(problems).toEqual([]);
 });
 
-test('before the plates’ record, deep time’s dock says so in words and goes to their oldest @mobile', async ({
+test('before the plates’ record, their chip says so in words and goes to their oldest @mobile', async ({
   page,
-}) => {
+}, info) => {
   const problems = collectProblems(page);
-  const line = page.locator('.deep-dock-why');
+  const chip = page.getByRole('group', { name: 'Layers on' }).locator('[data-layer="plates"]');
   await test.step('Given 2,000 million years ago with Plates on', async () => {
     await page.goto('./?ma=2000&scale=eons&layers=plates');
     await globeRendered(page);
+    // On a phone the chips are at the top of the Layers sheet (#1137).
+    if (info.project.name === 'mobile') await openLayers(page);
   });
-  await test.step('Then under the dock, in words, why nothing is drawn, not in a tooltip only', async () => {
-    await expect(line).toBeVisible();
-    await expect(line).toContainText('Plates: none before 1,800 million years ago');
+  await test.step('Then its chip says, in words, why nothing is drawn, not in a tooltip only', async () => {
+    await expect(chip).toBeVisible();
+    await expect(chip).toContainText('none before 1,800 million years ago');
   });
-  await test.step('When they take its step, Then deep time goes to the plates’ oldest, and the line goes', async () => {
-    await line.getByRole('button', { name: /^Go to / }).click();
+  await test.step('When they take its step, Then deep time goes to the plates’ oldest, and it draws', async () => {
+    await chip.getByRole('button', { name: /^Plates: go to / }).click();
     await expect(page).toHaveURL(/ma=1800/);
-    await expect(line).toHaveCount(0);
+    await expect(chip).toHaveAttribute('data-draws', 'true');
   });
   expect(problems).toEqual([]);
 });

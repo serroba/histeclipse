@@ -176,8 +176,6 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       onCo2Archive() {
         context.loadArchive();
       },
-      onAddLayer: context.openLayers,
-      onGoTo: context.goTo,
     },
     // The chips (#380, #605): the plates', the features', the impacts'.
     context.chips,
@@ -361,7 +359,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
 
   return {
     bar: deepBar.root,
-    docked: () => deepBar.docked(),
+    evidence: deepBar.evidence,
     glance: glance.root,
     yearsScale: yearsSpan.root,
     show: showDeepTime,

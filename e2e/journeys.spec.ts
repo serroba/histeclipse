@@ -212,7 +212,7 @@ test('a link to a destination opens its view, and the link keeps naming it (#726
   });
   await test.step('Then it opens the ice ages at the first Homo sapiens, the finds on', async () => {
     await expect(page.locator('.hud-date')).toHaveText('315,000 years ago');
-    await expect(page.getByRole('button', { name: 'Humans', pressed: true })).toBeVisible();
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-humans', /^[1-9]\d*$/);
     await expect(page).toHaveURL(/ma=0\.315/);
     await expect(page).toHaveURL(/explore=human-origins/);
   });
@@ -362,10 +362,7 @@ test('links made before one time bar still open what they showed', async ({ page
   await test.step('Then it opens on its span and moment, with its layer, the retired ones dropped', async () => {
     await expect(page.locator('.hud-date')).toHaveText('66 million years ago');
     await expect(spanPreset(page, '540 Myr')).toHaveAttribute('aria-pressed', 'true');
-    await expect(page.getByRole('button', { name: 'Temperature', exact: true })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    await expect(page).toHaveURL(/layers=[a-z,]*temperature/);
     await expect(page).not.toHaveURL(/terminator|places/);
   });
   await test.step('When a link to the ice ages is opened', async () => {

@@ -53,11 +53,10 @@ import {
 } from './deepBarChips';
 import { createDeepIceNotes } from './deepIceNotes';
 import { createDeepSketchNote } from './deepSketchNote';
-import { layerDock, type DockView, type GoTo } from './layerDock';
 import { createTimeZoom } from './timeZoom';
 import './deepTimeBar.css';
 
-export interface DeepTimeView extends DockView {
+export interface DeepTimeView {
   readonly ma: number;
   /** A story's own date for the moment, while it has the globe (#492); null for the bar's. */
   readonly story: StoryDate | null;
@@ -104,8 +103,8 @@ export interface DeepTimeView extends DockView {
 
 export interface DeepTimeBar {
   readonly root: HTMLElement;
-  /** The layers whose buttons the dock shows now (#1072), drawn first: none while it is hidden. */
-  docked(): ReadonlySet<string>;
+  /** "How do we know?", for the date panel (#1137): shown on the reconstructions' spans. */
+  readonly evidence: HTMLElement;
   render(view: DeepTimeView | null): void;
 }
 
@@ -125,14 +124,6 @@ export function createDeepTimeBar(
     onPan: (share: number) => void;
     /** Fit the bar to `oldest`–`youngest` Ma (#1075): a band or a crumb tapped. */
     onFit: (oldest: number, youngest: number) => void;
-    onTemperature(on: boolean): void;
-    onSeaLevel(on: boolean): void;
-    /** A chip pressed: its layer on or off. */
-    onLayer(layer: Layer, on: boolean): void;
-    /** Open the Layers panel from the dock's Add (#752), the focus to come back to `opener`. */
-    onAddLayer: (opener: HTMLElement) => void;
-    onGoTo: (to: GoTo) => void; // Where a docked layer's data is (#751).
-    onAir(on: boolean): void;
     /** The reader asked for the Paleo-CO2 Data Archive's estimates: load them. */
     onCo2Archive(): void;
     onCoast(coast: CoastSource): void;
@@ -200,11 +191,11 @@ export function createDeepTimeBar(
   const temperatureWhy = handlers.why('temperature', 'Temperature');
   const factsWhy = handlers.why('earth-facts', 'Poles, magnetic field, tilt, day and Sun');
   const airWhy = handlers.why('air', 'Air');
-  // What the map rests on, asked plainly, first among the chips: a reconstruction should say so.
+  // What the map rests on, asked plainly: a reconstruction should say so. In the date panel (#1137).
   const evidenceButton = element(
     'button',
-    { type: 'button', class: 'deep-layer deep-evidence', hidden: '' },
-    bookIcon(),
+    { type: 'button', class: 'deep-evidence', hidden: '' },
+    bookIcon(14),
     'How do we know?',
   );
   evidenceButton.addEventListener('click', () => {
@@ -223,9 +214,6 @@ export function createDeepTimeBar(
   const when = element('strong', { class: 'deep-when', 'data-testid': 'deep-when' });
   const period = element('span', { class: 'deep-period', 'data-testid': 'deep-period' });
   const air = createAirChip(airWhy, {
-    onAir: (on) => {
-      handlers.onAir(on);
-    },
     onCo2Archive: () => {
       handlers.onCo2Archive();
     },
@@ -233,26 +221,14 @@ export function createDeepTimeBar(
       if (current !== null) bar.render(current);
     },
   });
-  // The chips (#380, #605): the bar's own (deepBarChips.ts) and the features'; a button and a note.
-  const featureChips = createDeepChips(
-    chips,
-    (id, label) => handlers.why(id, label),
-    (layer, on) => {
-      handlers.onLayer(layer, on);
-    },
-  );
+  // The layers' notes (#380, #605): the bar's own (deepBarChips.ts) and the features'.
+  const featureChips = createDeepChips(chips, (id, label) => handlers.why(id, label));
   const seaLevel = createSeaLevelChip({
-    onSeaLevel: (on) => {
-      handlers.onSeaLevel(on);
-    },
     onKa: (ka) => {
       handlers.onMa(ka / 1000, true);
     },
   });
   const temperature = createTemperatureChip(temperatureWhy, {
-    onTemperature: (on) => {
-      handlers.onTemperature(on);
-    },
     onModel: (model) => {
       handlers.onTemperatureModel(model);
     },
@@ -260,13 +236,6 @@ export function createDeepTimeBar(
       handlers.onTemperatureShow(show);
     },
   });
-  const dock = layerDock(
-    handlers,
-    seaLevel.button,
-    temperature.button,
-    ...featureChips.buttons,
-    air.button,
-  );
   // Poles, field, tilt and day: folded away, so the bar stays small on a phone.
   const facts = element('dl', { class: 'deep-facts-list' });
   const factsPanel = element(
@@ -349,8 +318,6 @@ export function createDeepTimeBar(
       speed,
       rate,
       zoom.root,
-      evidenceButton,
-      dock.root,
     ),
     details,
   );
@@ -376,10 +343,12 @@ export function createDeepTimeBar(
 
   const bar: DeepTimeBar = {
     root,
-    docked: () => (root.hidden === false ? dock.shown() : new Set()),
+    evidence: evidenceButton,
     render(view) {
       current = view;
       root.hidden = view === null;
+      // The maps of the 540 Myr and 4.6 Gyr spans are reconstructions; the ice ages', today's land.
+      evidenceButton.hidden = view === null || view.scale === 'ice';
       if (view === null) return;
       marks.render(view.oldest, view.youngest);
       const { oldest, youngest } = view;
@@ -392,7 +361,7 @@ export function createDeepTimeBar(
         scale: view.scale,
         sketchQuestions: view.sketch?.sketch.questions.length ?? null,
       });
-      const { ice, uncharted } = shown;
+      const { ice } = shown;
       const perMa = sliderUnit(view.scale);
       unchartedNote.hidden = !shown.noMap;
       sketch.render(shown.sketch, view.sketch, view.ma);
@@ -415,13 +384,10 @@ export function createDeepTimeBar(
         ]),
       );
       milestones.render(view.ma, oldest, youngest);
-      // The maps of the 540 Myr and 4.6 Gyr spans are reconstructions; the ice ages', today's land.
-      evidenceButton.hidden = view.scale === 'ice';
       featureChips.render(view.chips);
       air.render(view.air, view.scale, oldest, view.ma, youngest);
       seaLevel.render(view.seaLevel, view.ma, oldest, youngest);
-      temperature.render(view.temperature, uncharted);
-      dock.render(view.active); // Last: it hides the chips of the layers off (#752).
+      temperature.render(view.temperature);
       speed.value = view.pace;
       zoom.render(view.zoom);
       easing.checked = view.easing;

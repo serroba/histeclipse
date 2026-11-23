@@ -1,13 +1,12 @@
 /**
- * The features' chips in the deep-time bar (#380): for each, a button that turns its layer on,
- * and a note under the bar with its book. Made once, from the features; shown from what each
- * feature says of the moment.
+ * The features' notes in the deep-time bar (#380): for each, a note in the bar's details with its
+ * book, shown while its layer is on. Made once, from the features; shown from what each feature
+ * says of the moment. Their layers are switched where every layer is: Layers and its chips (#1137).
  */
 
 import type { WhyId } from '../sources/registry';
 import type { Layer } from '../state/viewState';
 import { element } from './dom';
-import { layerIcon } from './icons';
 import './deepChips.css';
 
 /** A feature's chip, as the features declare it. */
@@ -64,8 +63,6 @@ export interface DeepChipView {
 }
 
 export interface DeepChips {
-  /** The buttons, for the bar's row of chips. */
-  readonly buttons: readonly HTMLElement[];
   /** The notes, for the bar's details. */
   readonly notes: readonly HTMLElement[];
   render(views: ReadonlyMap<Layer, DeepChipView>): void;
@@ -98,9 +95,7 @@ function createPicker(choice: DeepChoice): Picker {
 export function createDeepChips(
   chips: readonly DeepChip[],
   why: (id: WhyId, label: string) => HTMLElement,
-  onLayer: (layer: Layer, on: boolean) => void,
 ): DeepChips {
-  let current: ReadonlyMap<Layer, DeepChipView> = new Map();
   const pickers = new Map<string, Picker>();
 
   function part(layer: Layer, shown: DeepNotePart): Node | string {
@@ -138,38 +133,18 @@ export function createDeepChips(
   }
 
   const parts = chips.map((chip) => {
-    const button = element(
-      'button',
-      {
-        type: 'button',
-        class: 'deep-layer',
-        'data-layer': chip.layer,
-        'aria-pressed': 'false',
-        hidden: '',
-        title: chip.label,
-      },
-      layerIcon(chip.layer, 18),
-      element('span', { class: 'icon-label' }, chip.label),
-    );
-    button.addEventListener('click', () => {
-      onLayer(chip.layer, !(current.get(chip.layer)?.on ?? false));
-    });
     const note = element('div', {
       class: `deep-note ${chip.layer}-note`,
       hidden: '',
       'data-testid': `${chip.layer}-note`,
     });
-    return { chip, button, note, book: why(chip.why, chip.whyLabel ?? chip.label) };
+    return { chip, note, book: why(chip.why, chip.whyLabel ?? chip.label) };
   });
   return {
-    buttons: parts.map(({ button }) => button),
     notes: parts.map(({ note }) => note),
     render(views) {
-      current = views;
-      for (const { chip, button, note, book } of parts) {
+      for (const { chip, note, book } of parts) {
         const shown = views.get(chip.layer);
-        button.hidden = shown?.offered !== true;
-        button.setAttribute('aria-pressed', String(shown?.on === true));
         note.hidden = shown?.on !== true || shown.note === null;
         if (shown?.on === true && shown.note !== null)
           note.replaceChildren(book, ' ', ...shown.note.map((each) => block(chip.layer, each)));

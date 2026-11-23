@@ -164,3 +164,16 @@
 .bottom[data-scale-open] {
   z-index: 3;
 }
+
+/*
+ * Switching spans moves nothing (#1137): the years' bar is as tall as deep time's folded one
+ * (its presets, track and moment rows), with its presets as far below its top, as deep time's
+ * handle puts them. Only on tall windows: on a laptop's 720 or 800 px the 64 px would push the
+ * globe aside, so there the years' bar stays compact. Phones keep their own folds.
+ */
+@media (min-width: 601px) and (min-height: 860px) {
+  .bottom > .holocene-bar {
+    min-height: 218px;
+    padding-top: 28px;
+  }
+}

@@ -10,30 +10,6 @@ function fresh() {
 }
 
 describe('deepChoices', () => {
-  it('turns each of deep time’s layers on and off', () => {
-    const { store, choices } = fresh();
-    choices.onLayer('plates', true);
-    choices.onAir(true);
-    choices.onLayer('impacts', true);
-    choices.onSeaLevel(true);
-    choices.onTemperature(true);
-    choices.onLayer('fossils', true);
-    for (const layer of [
-      'plates',
-      'air',
-      'impacts',
-      'sealevel',
-      'temperature',
-      'fossils',
-    ] as const) {
-      expect(store.get().layers.has(layer)).toBe(true);
-    }
-    choices.onSeaLevel(false);
-    choices.onLayer('plates', false);
-    expect(store.get().layers.has('sealevel')).toBe(false);
-    expect(store.get().layers.has('plates')).toBe(false);
-  });
-
   it('picks the coast’s and the sea ice’s source, the temperature model and how it shows, and the sketch', () => {
     const { store, choices } = fresh();
     choices.onCoast('spratt-2016');

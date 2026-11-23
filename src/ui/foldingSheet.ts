@@ -104,9 +104,8 @@ interface Gestures {
 /** Fold and open the details by their handle, and by dragging the bar. */
 export function attachFoldingSheet(parts: FoldingSheetParts): void {
   const { root, handle, details, storageKey } = parts;
-  let open =
-    (remembered(storageKey) ??
-      (window.matchMedia('(max-width: 600px)').matches ? 'folded' : 'open')) === 'open';
+  // Folded until opened, on any screen: the time panel keeps one height across its spans (#1137).
+  let open = remembered(storageKey) === 'open';
   function setOpen(value: boolean, kept = true): void {
     if (kept) keep(storageKey, value);
     open = value;

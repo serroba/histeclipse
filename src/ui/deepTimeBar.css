@@ -352,10 +352,21 @@
 }
 
 /* The deep bar's "How do we know?": the book and the question, among the chips. */
+/* "How do we know?" (#1137), in the date panel beside Sources and About here, as they look. */
 .deep-evidence {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  /* A taller tap target than the line it sits on, without making the panel taller. */
+  margin: -10px 0;
+  padding: 10px 12px 10px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 .deep-evidence[hidden] {
@@ -363,14 +374,9 @@
 }
 
 @media (max-width: 600px) {
-  /* The chips packed from the start, so as many as fit share a line. */
   .deep-label {
     justify-content: flex-start;
     gap: 6px;
-  }
-
-  .deep-label .deep-layer {
-    margin-left: 0;
   }
 }
 
