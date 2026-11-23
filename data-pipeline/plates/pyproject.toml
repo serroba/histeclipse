@@ -15,6 +15,7 @@ dependencies = [
 [project.scripts]
 histeclipse-plates = "histeclipse_plates.masks:main"
 histeclipse-plate-motion = "histeclipse_plates.motion:main"
+histeclipse-plate-boundaries = "histeclipse_plates.boundaries:main"
 
 [dependency-groups]
 dev = [

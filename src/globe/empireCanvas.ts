@@ -23,7 +23,7 @@ type Ring = readonly (readonly [number, number])[];
  * path, to fill or stroke it; rings traced at one shift together share it, so their holes stay
  * holes (a hole lies inside its ring, so it shows wherever its ring does).
  */
-function traceRings(
+export function traceRings(
   context: CanvasRenderingContext2D,
   rings: readonly Ring[],
   close: boolean,

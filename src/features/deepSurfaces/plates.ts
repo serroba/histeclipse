@@ -1,13 +1,13 @@
 /**
  * Deep time's plates as a feature (#380, #444, #909): a second reconstruction's continents
- * outlined, by its chip in the bar, and how far the plates have moved since the moment shown.
+ * outlined, by its chip in the bar, with where its plates met (#1160), and how far the plates
+ * have moved since the moment shown.
  * Before the elevation maps, where they reach, their continents are the sketch's land too,
  * Plates on or not (#1149). Each file loads the first time it is asked for.
  */
 
 import { framesAhead, framesAround } from '../../data/paleoDem';
 import { prefetchFrames } from '../../deepTime/playSpeed';
-import { loadPlateMotion, motionText, type PlateMotion } from '../../data/plateMotion';
 import {
   plateBrief,
   platesBeyondText,
@@ -15,9 +15,11 @@ import {
   type PlateMaskIndex,
 } from '../../data/plateMasks';
 import type { Brief } from '../../state/activeLayers';
-import type { ViewState } from '../../state/viewState';
 import { errorMessage } from '../../util/errors';
 import { feature } from '../feature';
+import { createPlateBoundaries } from './plateBoundaries';
+import { plateBoundaryLayer } from './plateBoundaryLayer';
+import { createPlateMotionNote } from './plateMotionNote';
 import { PLATES_CHIP, platesChip } from './platesChip';
 
 /** The masks that playing at `maPerSecond` from `ma` comes to next: to load before they are needed. */
@@ -43,6 +45,13 @@ export const platesFeature = feature({
     const { base, fetchJson } = context;
     const globe = context.plateOutlines;
     let waiting = false;
+    // Where the plates met, at the frame outlined (#1160).
+    const boundaries = createPlateBoundaries({
+      base,
+      fetchJson,
+      layer: context.globe.addLayer(plateBoundaryLayer),
+      page: context,
+    });
     // How well the two agree at the frame outlined now, beside the chip's name (#1159).
     let brief: Brief | null = null;
 
@@ -71,6 +80,7 @@ export const platesFeature = feature({
       const reach = index.frames.at(-1)?.ma ?? 0;
       if (ma > reach) {
         globe.setPlates(null);
+        boundaries.show(null);
         return platesBeyondText(reach);
       }
       if (maPerSecond !== null) globe.prefetch(masksAhead(index, ma, maPerSecond, base));
@@ -85,34 +95,13 @@ export const platesFeature = feature({
         turnOlder: older.turn ?? 0,
         outlined,
       });
-      brief = plateBrief(mix < 0.5 ? younger : older);
-      return plateText(mix < 0.5 ? younger : older);
+      const frame = mix < 0.5 ? younger : older;
+      brief = plateBrief(frame);
+      boundaries.show(outlined ? { ma: frame.ma, turn: frame.turn ?? 0 } : null);
+      return plateText(frame);
     }
 
-    // How far the plates have moved: the file loads the first time the ice-age scale is shown.
-    let plateMotion: PlateMotion | null = null;
-    let plateMotionLoading: Promise<PlateMotion> | null = null;
-
-    function plateMotionText(state: ViewState, ma: number): string | null {
-      if (state.deepScale !== 'ice') return null;
-      if (plateMotion === null) {
-        if (plateMotionLoading === null) {
-          plateMotionLoading = loadPlateMotion(`${base}data/plates-motion.json`, fetchJson);
-          plateMotionLoading.then(
-            (loaded) => {
-              plateMotion = loaded;
-              context.refresh();
-            },
-            (error: unknown) => {
-              plateMotionLoading = null;
-              context.notify(`Could not load how far the plates moved: ${errorMessage(error)}`);
-            },
-          );
-        }
-        return null;
-      }
-      return motionText(plateMotion, ma);
-    }
+    const plateMotionText = createPlateMotionNote({ base, fetchJson, page: context });
 
     return {
       deep(state, moment) {
@@ -120,10 +109,11 @@ export const platesFeature = feature({
         brief = null;
         if (moment === null || (!on && moment.uncharted !== true)) {
           globe.setPlates(null);
+          boundaries.show(null);
           return moment === null ? null : platesChip(false, null);
         }
         const said = showPlates(moment.ma, on, moment.maPerSecond ?? null);
-        return platesChip(on, on ? said : null);
+        return platesChip(on, on ? said : null, boundaries.drawn());
       },
       brief: () => brief,
       deepBar: (state, moment) => ({ plateMotion: plateMotionText(state, moment.ma) }),
