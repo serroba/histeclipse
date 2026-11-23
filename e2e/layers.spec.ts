@@ -333,7 +333,9 @@ test('the date panel holds the tools, the time bar the presets, and on a phone t
     await globeRendered(page);
   });
   await test.step('Then Layers is among the header’s tools, and the presets are in the time bar (#1116)', async () => {
-    await expect(page.locator('.hud-tools').getByRole('button', { name: 'Layers', exact: true })).toBeVisible();
+    await expect(
+      page.locator('.hud-tools').getByRole('button', { name: 'Layers', exact: true }),
+    ).toBeVisible();
     await expect(page.locator('.hud .time-scale')).toHaveCount(0);
     await expect(page.locator('.bottom .time-scale').filter({ visible: true })).toHaveCount(1);
   });
