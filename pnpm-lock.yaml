@@ -21,8 +21,8 @@ importers:
         specifier: 0.65.0
         version: 0.65.0(@opentelemetry/api@1.9.1)(zone.js@0.16.3)
       astronomia:
-        specifier: 4.2.0
-        version: 4.2.0
+        specifier: 4.3.0
+        version: 4.3.0
       onnxruntime-web:
         specifier: 1.31.1
         version: 1.31.1
@@ -961,8 +961,8 @@ packages:
   ast-v8-to-istanbul@1.0.7:
     resolution: {integrity: sha512-kFL68AG6ajd8fg248zwM9GQrUWEp79gsmjum34OEXjs4yHuUMZfYKwOLW9GMmB4oNvVrj+EAGxsP7ye2UR9UlA==}
 
-  astronomia@4.2.0:
-    resolution: {integrity: sha512-mTvpBGyXB80aSsDhAAiuwza5VqAyqmj5yzhjBrFhRy17DcWDzJrb8Vdl4Sm+g276S+mY7bk/5hi6akZ5RQFeHg==}
+  astronomia@4.3.0:
+    resolution: {integrity: sha512-kD87oezczQTJYp6SW07l9X/fyssEg4/GSFmxBN1Xk8TRN7h4tkQddRK/VJnlHkbzmK1w16s/7dUtUO4EUKLDpA==}
     engines: {node: '>=12.0.0'}
 
   balanced-match@4.0.4:
@@ -2494,7 +2494,7 @@ snapshots:
       estree-walker: 3.0.3
       js-tokens: 10.0.0
 
-  astronomia@4.2.0: {}
+  astronomia@4.3.0: {}
 
   balanced-match@4.0.4: {}
 
