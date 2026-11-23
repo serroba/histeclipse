@@ -41,7 +41,7 @@ test('on a phone the deep-time bar folds to its controls, and swipes open and sh
     expect(box.y).toBeGreaterThan(viewport.height * 0.2);
     // It stops short of the date panel, and its scale row stays in view (#1116).
     await expect(page.locator('.hud-date')).toBeInViewport();
-    await expect(bar.locator('.time-scale-chip')).toBeInViewport();
+    await expect(bar.getByRole('group', { name: 'Time range presets' })).toBeInViewport();
   });
   await test.step('When they swipe the bar down, it folds again', async () => {
     const label = await bar.locator('.deep-label').boundingBox();

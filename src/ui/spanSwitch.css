@@ -89,8 +89,9 @@
   }
 }
 
-/* On a phone, upright or on its side, one chip names the preset shown and opens the four. */
-@media (max-width: 600px), (max-height: 500px) {
+/* On a phone on its side, where height is short, one chip names the preset shown and opens the
+   four; upright, the four show in a row, icon over word (#1152). */
+@media (max-height: 500px) {
   .time-scale-row {
     flex-wrap: nowrap;
   }
