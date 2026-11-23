@@ -478,8 +478,17 @@ test('before the reconstructions, the reader picks whose hypotheses the globe sk
   await sources.locator('summary').click();
   await expect(sources).toContainText('Flament, Coltice & Rey 2008');
 
+  // Where Plates could outline a reconstruction's continents, land is sketched until it is on (#1144).
+  await page.goto('./?ma=1596&scale=eons');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute('data-sketch', /^ocean 0\.(?!000)\d{3} 90$/);
+  await expect(page.getByLabel('How much land')).toBeVisible();
+  await page.goto('./?ma=1596&scale=eons&layers=plates');
+  await globeRendered(page);
+  await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.000 90');
+
   // A snowball: frozen over by default, open tropics in the slushball.
-  await page.goto('./?ma=700&scale=eons');
+  await page.goto('./?ma=700&scale=eons&layers=plates');
   await globeRendered(page);
   await expect(globe).toHaveAttribute('data-sketch', 'ocean 0.000 -1');
   await expect(page.getByLabel('How much land')).toBeHidden();
