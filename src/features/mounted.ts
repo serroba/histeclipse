@@ -5,7 +5,7 @@
  */
 
 import { changed } from '../state/store';
-import type { LayerLoad } from '../state/activeLayers';
+import type { Brief, LayerLoad } from '../state/activeLayers';
 import type { HereFact } from '../sources/registry';
 import type { Layer, ViewState } from '../state/viewState';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
@@ -39,6 +39,8 @@ export interface Features {
   actions(): (readonly [Layer, LayerAction | null])[];
   /** How each feature's layer's load stands, where it is loading or failed (#751). */
   loads(): (readonly [Layer, LayerLoad | null])[];
+  /** What each feature's chip says beside its name (#1159). */
+  briefs(): (readonly [Layer, Brief | null])[];
   /** What the features have at the place picked, for "Why here?" (#893), each with its layer. */
   here(state: ViewState): (readonly [Layer, HereFact])[];
 }
@@ -130,6 +132,8 @@ export function mountFeatures(
     actions: () =>
       mounted.map(({ feature, shown }) => [feature.id, shown.action?.() ?? null] as const),
     loads: () => mounted.map(({ feature, shown }) => [feature.id, shown.load?.() ?? null] as const),
+    briefs: () =>
+      mounted.map(({ feature, shown }) => [feature.id, shown.brief?.() ?? null] as const),
     here: (state) =>
       mounted.flatMap(({ feature, shown }) => {
         const facts = [shown.here?.(state) ?? []].flat();

@@ -37,6 +37,15 @@ describe('the chips of the layers on', () => {
     expect(onRemove).toHaveBeenCalledWith('plates');
   });
 
+  it('Given Plates saying how well the two maps agree, Then its chip says it in a few words, and in full on hover (#1159)', () => {
+    const chips = createActiveChips({ onRemove: vi.fn(), onGoTo: vi.fn(), onList: vi.fn() });
+    const brief = { short: '82% agree', full: 'Turned 59° east; 82% of the land lies inside.' };
+    chips.render(activeLayers(deep, [], [['plates', brief]]));
+    const plates = chips.root.querySelector('[data-layer="plates"]');
+    expect(plates?.querySelector('.active-brief')?.textContent).toBe('82% agree');
+    expect(plates?.getAttribute('title')).toBe(`Plates: ${brief.full}`);
+  });
+
   it('Given the ozone hole in 1977, Then its chip says so in words, and goes to 1979, past the next year without', () => {
     const onGoTo = vi.fn();
     const chips = createActiveChips({ onRemove: vi.fn(), onGoTo, onList: vi.fn() });

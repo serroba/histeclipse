@@ -193,12 +193,10 @@ export async function startApp(root: HTMLElement): Promise<void> {
       deepTime.setScale(scale);
     },
     said: () => features.said(),
-    // How each layer's load stands (#751): the features on the contract report theirs.
+    // Each layer's load (#751), step (#909) and chip's words (#1159), as its feature has them.
     loads: () => features.loads(),
-    actions: () => [
-      // The features on the contract offer their own (#909).
-      ...features.actions(),
-    ],
+    briefs: () => features.briefs(),
+    actions: () => features.actions(),
   });
   const markerCard = createMarkerCard();
   // How far out the view is, and that zooming out reaches the planets: from whichever body is

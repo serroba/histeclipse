@@ -12,6 +12,7 @@ import {
   absentSteps,
   activeLayers,
   spanShown,
+  type Brief,
   type GoTo,
   type LayerLoad,
 } from '../../state/activeLayers';
@@ -44,6 +45,8 @@ export interface LayersPanelContext extends PartContext {
   actions(): Iterable<readonly [Layer, LayerAction | null]>;
   /** How each layer's load stands, where loading or failed (#751). */
   loads(): Iterable<readonly [Layer, LayerLoad | null]>;
+  /** What each layer's chip says beside its name (#1159). */
+  briefs(): Iterable<readonly [Layer, Brief | null]>;
 }
 
 export interface LayersPanelPart {
@@ -133,7 +136,7 @@ export function mountLayersPanel(context: LayersPanelContext): LayersPanelPart {
     open: panel.open,
     goTo: chipActions.onGoTo,
     show(state) {
-      const active = activeLayers(state, context.loads());
+      const active = activeLayers(state, context.loads(), context.briefs());
       chips.render(active);
       sheetChips.render(active);
       const visible = state.mode === 'globe' && !awayFromEarth(state);

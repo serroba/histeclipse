@@ -76,6 +76,7 @@ describe('the layers on the zoom rail (#1156)', () => {
       goTo: null,
       retry: null,
       list: false,
+      brief: null,
     };
     rail.render('eons', new Set<Layer>(['temperature']), [loading]);
     const button = rail.root.querySelector<HTMLButtonElement>('[data-layer="temperature"]');

@@ -52,12 +52,12 @@ export async function loadPlateMasks(url: string, fetchJson: Fetch): Promise<Pla
 
 export type PlateFrame = PlateMaskIndex['frames'][number];
 
-/** What the bar says about the outlines at a frame: how they were lined up, and how well. */
 /** Beyond the oldest mask: nothing is outlined, and the bar says how far the masks reach. */
 export function platesBeyondText(reachMa: number): string {
   return `The continent outlines (Cao et al. 2024) reach back ${reachMa.toLocaleString('en')} million years; none are drawn before.`;
 }
 
+/** What the bar says about the outlines at a frame: how they were lined up, and how well. */
 export function plateText(frame: PlateFrame): string {
   const credit =
     'Outlined: the continents in a second reconstruction, Cao et al. 2024 (CC BY 4.0).';
@@ -72,4 +72,14 @@ export function plateText(frame: PlateFrame): string {
       : `Turned ${degrees.toFixed(0)}° ${way} to line up with the surface map: rock magnetism fixes latitude, not longitude, so each reconstruction picks its own.`;
   const percent = (share: number): string => `${String(Math.round(share * 100))}%`;
   return `${credit} ${turned} ${percent(frame.landInside.turned)} of the surface map’s land lies inside them (${percent(frame.landInside.asPublished)} as published); where outline and coast part, the two disagree.`;
+}
+
+/**
+ * How well the outlines and the surface map agree at a frame, in the few words the Plates chip
+ * shows (#1159), or null where no surface map reaches to compare with.
+ */
+export function plateBrief(frame: PlateFrame): { short: string; full: string } | null {
+  if (frame.landInside === undefined) return null;
+  const short = `${String(Math.round(frame.landInside.turned * 100))}% agree`;
+  return { short, full: plateText(frame) };
 }
