@@ -99,6 +99,28 @@
   color: var(--ink-muted);
 }
 
+/*
+ * While the years play, the date changes every frame and "397" is narrower than "396.9": room
+ * kept for the widest ("4,540.9 million years ago") and for a Phanerozoic period, so the controls
+ * beside them hold still and the row never re-wraps.
+ */
+.deep-when,
+.deep-rate {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 601px) {
+  .deep-label .deep-when {
+    display: inline-block;
+    min-width: 20.5ch;
+  }
+
+  .deep-label .deep-period {
+    display: inline-block;
+    min-width: 19ch;
+  }
+}
+
 /* Small beside the date: the speed is chosen now and then, the slider used all the time. */
 .deep-label .deep-speed {
   min-height: 36px;
