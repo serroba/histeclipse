@@ -13,7 +13,7 @@
 
 import type { Fetch } from '../util/fetchJson';
 import type { Globe } from '../globe/globe';
-import type { LayerLoad } from '../state/activeLayers';
+import type { Brief, LayerLoad } from '../state/activeLayers';
 import type { DeepScale, GeoPoint, Layer, ViewState } from '../state/viewState';
 import type { EmpireCentury, Territory } from '../data/empires';
 import type { LineageGroup } from '../data/lineages';
@@ -235,6 +235,8 @@ export interface FeatureInstance {
   unpick?(): void;
   /** What the Layers panel says under its layer, if anything. */
   said?(): string | null;
+  /** What its chip says beside its name while it draws (#1159), if anything. */
+  brief?(): Brief | null;
   /** The step it offers from its row in the Layers panel (#909), if it has one now. */
   action?(): LayerAction | null;
   /** What it has at the place picked, for "Why here?" (#893), if anything. */

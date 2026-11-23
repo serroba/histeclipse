@@ -43,9 +43,12 @@ describe('what the site serves (#221)', () => {
   it(`sends no file over ${String(SERVED_BUDGET / 1024 / 1024)} MB: split it, round it or shrink it first`, () => {
     const served = tracked().filter(({ path }) => path.startsWith('public/'));
     expect(served.length, 'git listed the public files').toBeGreaterThan(100);
+    // Only a file already over as stored is compressed to check: compressing never grows one,
+    // and compressing them all took seconds, past the test's time on a busy machine.
     const sent = served.map(({ path }) => {
       const bytes = readFileSync(join(ROOT, path));
-      return { path, size: COMPRESSED.test(path) ? gzipSync(bytes).length : bytes.length };
+      const over = bytes.length > SERVED_BUDGET && COMPRESSED.test(path);
+      return { path, size: over ? gzipSync(bytes).length : bytes.length };
     });
     expect(sent.filter(({ size }) => size > SERVED_BUDGET)).toEqual([]);
   });

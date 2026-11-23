@@ -234,8 +234,10 @@
   flex-wrap: wrap;
 }
 
-/* Why a layer has no data now, in words a phone shows (#751). */
-.active-why {
+/* Why a layer has no data now, in words a phone shows (#751); or, where it draws, what it
+   says beside its name (#1159). */
+.active-why,
+.active-brief {
   color: var(--ink-muted);
   font-size: 12px;
 }

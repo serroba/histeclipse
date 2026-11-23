@@ -33,6 +33,8 @@ function chip(active: ActiveLayer, actions: ActiveChipActions): HTMLElement {
   });
   const parts: HTMLElement[] = [element('span', { class: 'active-name' }, active.label)];
   if (active.why !== null) parts.push(element('span', { class: 'active-why' }, active.why));
+  if (active.brief !== null)
+    parts.push(element('span', { class: 'active-brief' }, active.brief.short));
   const { goTo, retry } = active;
   if (retry !== null) {
     const again = element(
@@ -79,7 +81,11 @@ function chip(active: ActiveLayer, actions: ActiveChipActions): HTMLElement {
       'data-draws': String(active.draws),
       'data-coverage': active.coverage,
       ...(active.coverage === 'loading' && { 'aria-busy': 'true' }),
-      title: active.draws ? active.label : `${active.label}: not drawn here. ${active.reach}`,
+      title: active.draws
+        ? active.brief === null
+          ? active.label
+          : `${active.label}: ${active.brief.full}`
+        : `${active.label}: not drawn here. ${active.reach}`,
     },
     ...parts,
     remove,

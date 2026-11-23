@@ -46,6 +46,14 @@ export interface ActiveLayer {
   readonly retry: (() => void) | null;
   /** Whether it has a list to find its things in (#850). */
   readonly list: boolean;
+  /** What it says beside its name where it draws (#1159), in a few words, and in full. */
+  readonly brief: Brief | null;
+}
+
+/** A layer's few words beside its name on its chip, and the whole of what they stand for. */
+export interface Brief {
+  readonly short: string;
+  readonly full: string;
 }
 
 const CHOICES: ReadonlyMap<Layer, LayerChoice> = new Map(
@@ -115,19 +123,28 @@ function withinMa(covers: Covers, ma: number, span: Span): Within {
 /**
  * The layers on, in the catalogue's order, each with whether it has data here: by its span and
  * record first (no load can bring data where there is none), then by how its load stands, as
- * the features report it (null: neither loading nor failed).
+ * the features report it (null: neither loading nor failed); and, where one draws, what its
+ * feature says beside its name (#1159).
  */
 export function activeLayers(
   state: Moment,
   reported: Iterable<readonly [Layer, LayerLoad | null]> = [],
+  briefs: Iterable<readonly [Layer, Brief | null]> = [],
 ): ActiveLayer[] {
   const loads = new Map<Layer, LayerLoad>();
   for (const [layer, load] of reported) if (load !== null) loads.set(layer, load);
+  const said = new Map(briefs);
   const span = spanShown(state);
   return LAYERS.filter((layer) => state.layers.has(layer)).flatMap((layer): ActiveLayer[] => {
     const choice = CHOICES.get(layer);
     if (choice === undefined) return [];
-    const base = { layer, label: choice.label, reach: choice.reach, list: choice.list === true };
+    const base = {
+      layer,
+      label: choice.label,
+      reach: choice.reach,
+      list: choice.list === true,
+      brief: null,
+    };
     const to = choice.spans[0];
     if (!choice.spans.includes(span) && to !== undefined) {
       const goTo: GoTo = {
@@ -150,7 +167,9 @@ export function activeLayers(
           : withinMa(covers, state.ma, span);
     if (within.coverage !== 'available') return [{ ...base, ...within, draws: false, retry: null }];
     const load = loaded(loads.get(layer));
-    return [{ ...base, ...load, goTo: null, draws: load.coverage === 'available' }];
+    const draws = load.coverage === 'available';
+    const brief = draws ? (said.get(layer) ?? null) : null;
+    return [{ ...base, ...load, goTo: null, draws, brief }];
   });
 }
 

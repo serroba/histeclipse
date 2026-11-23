@@ -8,7 +8,13 @@
 import { framesAhead, framesAround } from '../../data/paleoDem';
 import { prefetchFrames } from '../../deepTime/playSpeed';
 import { loadPlateMotion, motionText, type PlateMotion } from '../../data/plateMotion';
-import { platesBeyondText, plateText, type PlateMaskIndex } from '../../data/plateMasks';
+import {
+  plateBrief,
+  platesBeyondText,
+  plateText,
+  type PlateMaskIndex,
+} from '../../data/plateMasks';
+import type { Brief } from '../../state/activeLayers';
 import type { ViewState } from '../../state/viewState';
 import { errorMessage } from '../../util/errors';
 import { feature } from '../feature';
@@ -37,6 +43,8 @@ export const platesFeature = feature({
     const { base, fetchJson } = context;
     const globe = context.plateOutlines;
     let waiting = false;
+    // How well the two agree at the frame outlined now, beside the chip's name (#1159).
+    let brief: Brief | null = null;
 
     /**
      * A second reconstruction's continents, outlined or only as land: what to say. Playing at
@@ -77,6 +85,7 @@ export const platesFeature = feature({
         turnOlder: older.turn ?? 0,
         outlined,
       });
+      brief = plateBrief(mix < 0.5 ? younger : older);
       return plateText(mix < 0.5 ? younger : older);
     }
 
@@ -108,6 +117,7 @@ export const platesFeature = feature({
     return {
       deep(state, moment) {
         const on = state.layers.has('plates');
+        brief = null;
         if (moment === null || (!on && moment.uncharted !== true)) {
           globe.setPlates(null);
           return moment === null ? null : platesChip(false, null);
@@ -115,6 +125,7 @@ export const platesFeature = feature({
         const said = showPlates(moment.ma, on, moment.maPerSecond ?? null);
         return platesChip(on, on ? said : null);
       },
+      brief: () => brief,
       deepBar: (state, moment) => ({ plateMotion: plateMotionText(state, moment.ma) }),
     };
   },
