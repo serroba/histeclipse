@@ -62,6 +62,7 @@ export class Playback implements StagePart {
       this.#impactsPlayed += 1;
       dataset['impactsPlayed'] = String(this.#impactsPlayed);
       dataset['impactPlaying'] = String(this.#impacts.size > 0);
+      dataset['impactWorldwide'] = String(this.#worldwidePlaying());
     }
     if (this.#shower !== null) {
       const size = this.#world.resolution();
@@ -74,17 +75,25 @@ export class Playback implements StagePart {
 
   /** Play an impact at its place: the approach, the flash, the ring, the crater. */
   playImpact(spec: ImpactSpec): void {
-    // Beyond a handful at once, the oldest makes way.
-    const [oldest] = this.#impacts;
-    if (oldest !== undefined && this.#impacts.size >= MAX_IMPACTS) {
-      oldest.dispose();
-      this.#impacts.delete(oldest);
+    // Beyond a handful at once, the oldest makes way: a regional one first, so the smaller
+    // strikes that follow a worldwide one do not cut its long play short.
+    if (this.#impacts.size >= MAX_IMPACTS) {
+      const playing = [...this.#impacts];
+      const leaving = playing.find((impact) => !impact.worldwide) ?? playing[0];
+      leaving?.dispose();
+      if (leaving !== undefined) this.#impacts.delete(leaving);
     }
     const impact = createImpactAnimation(spec);
     this.#impacts.add(impact);
     this.#world.earth.add(impact.group);
     this.#world.dataset['impactPlaying'] = 'true';
+    this.#world.dataset['impactWorldwide'] = String(this.#worldwidePlaying());
     this.#world.invalidate();
+  }
+
+  /** Whether an impact reaching the whole globe is playing. */
+  #worldwidePlaying(): boolean {
+    return [...this.#impacts].some((impact) => impact.worldwide);
   }
 
   /** Play a cosmic-ray shower, reporting its state through `onState`. */

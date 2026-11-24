@@ -3,7 +3,7 @@
  * which map, which strikes to play as deep time runs past them, and a crater's card.
  */
 
-import { approachOf, impactorText } from '../../data/impactScaling';
+import { approachOf, impactorText, worldwideReach } from '../../data/impactScaling';
 import {
   impactDetails,
   placeThen,
@@ -85,18 +85,20 @@ export function pickedImpact(data: Impacts | null, key: string): Impact | undefi
   return data?.impacts.find((each) => String(each.id) === id);
 }
 
-/** What a play of an impact needs: where it lies, how big, and from where it came. */
+/** What a play of an impact needs: where it lies, how big, from where it came, how far it reached. */
 export interface ImpactPlay {
   readonly place: GeoPoint;
   readonly craterKm: number;
   readonly fromAzimuth: number;
   readonly angleDegrees: number;
+  /** How far its effects reached around the Earth, 0 to 1 (#1167). */
+  readonly worldwide: number;
 }
 
 /** A play of the impact: the approach is a study's where one exists, else the most likely. */
 export function impactPlay(name: string, place: GeoPoint, craterKm: number): ImpactPlay {
   const { fromAzimuth, angleDegrees } = approachOf(name);
-  return { place, craterKm, fromAzimuth, angleDegrees };
+  return { place, craterKm, fromAzimuth, angleDegrees, worldwide: worldwideReach(craterKm) };
 }
 
 /**
