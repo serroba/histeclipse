@@ -207,14 +207,27 @@ export function centreLinePoint(
   const squared = 1 - x * x - y * y;
   if (squared <= 0) return null;
   const zeta = Math.sqrt(squared);
+  const umbra = geometry.l2 - zeta * geometry.tanF2;
+  return { point: groundPoint(geometry, x, y, zeta), phase: umbra < 0 ? 'total' : 'annular' };
+}
+
+/** The place on Earth at (x, y, zeta) on the fundamental plane, for the shadow's d and mu. */
+function groundPoint(geometry: ShadowGeometry, x: number, y: number, zeta: number): GeoPoint {
   const d = geometry.d * RADIANS;
   const latitude = Math.asin(y * Math.cos(d) + zeta * Math.sin(d)) / RADIANS;
   const hourAngle = Math.atan2(x, zeta * Math.cos(d) - y * Math.sin(d)) / RADIANS;
-  const umbra = geometry.l2 - zeta * geometry.tanF2;
-  return {
-    point: { latitude, longitude: normalLongitude(hourAngle - geometry.mu) },
-    phase: umbra < 0 ? 'total' : 'annular',
-  };
+  return { latitude, longitude: normalLongitude(hourAngle - geometry.mu) };
+}
+
+/**
+ * Where the view holds while it follows a solar eclipse (#208): the umbra's centre on the
+ * ground; or, where the axis misses Earth (a partial eclipse), Earth's edge nearest the axis.
+ */
+export function shadowFollowPoint(geometry: ShadowGeometry): GeoPoint {
+  const centre = centreLinePoint(geometry);
+  if (centre !== null) return centre.point;
+  const off = Math.hypot(geometry.x, geometry.y);
+  return groundPoint(geometry, geometry.x / off, geometry.y / off, 0);
 }
 
 /** Where `eclipse` was seen in `region`, with ΔT uncertain by ±`uncertaintySeconds`. */
