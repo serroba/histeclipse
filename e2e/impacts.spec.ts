@@ -182,6 +182,35 @@ test('a crater’s card estimates its impactor, and Chicxulub plays in its own t
   expect(problems).toEqual([]);
 });
 
+test('the card’s illustration answers the shared keys: Space holds it, the arrows step it (#807)', async ({
+  page,
+}) => {
+  test.slow();
+  const problems = collectProblems(page);
+  const card = page.getByTestId('marker-card');
+  const globe = page.getByTestId('globe');
+  // Popigai's: Chicxulub's card opens its strike clock instead (#1173), whose keys are its own.
+  await test.step('Given Popigai’s impact playing from its card', async () => {
+    await page.goto('./?t=2024-04-08T18:17&layers=impacts&cam=71,111,3');
+    await globeRendered(page);
+    await page.locator('[data-pick="impact:125"]').first().click({ force: true });
+    await card.getByRole('button', { name: 'Play the impact (an illustration)' }).click();
+    await expect(globe).toHaveAttribute('data-impact-playing', 'true', { timeout: 20_000 });
+  });
+  await test.step('When they press Space, it holds: still playing a while on', async () => {
+    await page.keyboard.press('Space');
+    await page.waitForTimeout(3000);
+    await expect(globe).toHaveAttribute('data-impact-playing', 'true');
+    await expect(globe).not.toHaveAttribute('data-impacts-played', '1');
+  });
+  await test.step('And stepping on past its end plays it out', async () => {
+    for (let leap = 0; leap < 12; leap += 1) await page.keyboard.press('Shift+ArrowRight');
+    await expect(globe).toHaveAttribute('data-impacts-played', '1', { timeout: 20_000 });
+    await expect(globe).toHaveAttribute('data-impact-playing', 'false');
+  });
+  expect(problems).toEqual([]);
+});
+
 test.describe('as deep time plays, the great impacts strike', () => {
   const deep = (page: Page) => page.getByRole('navigation', { name: 'Deep time' });
   const play = async (page: Page, link: string): Promise<void> => {
