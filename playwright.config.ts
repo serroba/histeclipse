@@ -23,7 +23,8 @@ function device(name: string): (typeof devices)[string] {
 
 export default defineConfig<DisplayOptions>({
   testDir: 'e2e',
-  testIgnore: '**/gpu/**',
+  // The GPU checks, and the views compared between two builds (#628), have configs of their own.
+  testIgnore: ['**/gpu/**', '**/views/**'],
   // Tests, not files, are shared out among workers and CI's shards: one long file (the smoke
   // tests) would otherwise keep a shard going long after the others.
   fullyParallel: true,
