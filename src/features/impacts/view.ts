@@ -93,12 +93,27 @@ export interface ImpactPlay {
   readonly angleDegrees: number;
   /** How far its effects reached around the Earth, 0 to 1 (#1167). */
   readonly worldwide: number;
+  /** The crater's name: the strike is moved by it as the plates carry the crater. */
+  readonly key: string;
 }
 
 /** A play of the impact: the approach is a study's where one exists, else the most likely. */
 export function impactPlay(name: string, place: GeoPoint, craterKm: number): ImpactPlay {
   const { fromAzimuth, angleDegrees } = approachOf(name);
-  return { place, craterKm, fromAzimuth, angleDegrees, worldwide: worldwideReach(craterKm) };
+  const worldwide = worldwideReach(craterKm);
+  return { place, craterKm, fromAzimuth, angleDegrees, worldwide, key: name };
+}
+
+/**
+ * Where the plates have each named crater at `placeMa`, for its strike still playing to follow
+ * as time runs on: a strike lasts seconds, deep time may pass millions of years in them.
+ */
+export function strikePlaces(data: Impacts, names: Iterable<string>, placeMa: number): Strike[] {
+  const wanted = new Set(names);
+  return data.impacts
+    .filter((impact) => wanted.has(impact.name))
+    .map((impact) => ({ impact, place: placeThen(data, impact, placeMa) }))
+    .filter((each): each is Strike => each.place !== null);
 }
 
 /**

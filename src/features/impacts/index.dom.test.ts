@@ -50,8 +50,9 @@ function fakeContext(
   const update = vi.fn();
   const show = vi.fn();
   const goTo = vi.fn();
+  const playing = { moveTo: vi.fn() };
   const strikes = {
-    playImpact: vi.fn(),
+    playImpact: vi.fn(() => playing),
     flyTo: vi.fn(),
     zoomTo: vi.fn(),
     on: document.createElement('div'),
@@ -197,6 +198,12 @@ describe('the impact craters as a feature', () => {
     shown.show?.({ ...facing, ma: 65.5 }, JD);
     expect(strikes.playImpact).toHaveBeenCalled();
     expect(strikes.on.dataset['strikes']).toContain('Chicxulub');
+    // As time runs on while it plays, the strike follows its crater on the plates.
+    shown.show?.({ ...facing, ma: 40 }, JD);
+    const struck = strikes.playImpact.mock.results.at(-1)?.value as {
+      readonly moveTo: ReturnType<typeof vi.fn>;
+    };
+    expect(struck.moveTo).toHaveBeenCalled();
   });
 
   it('opens a crater’s card when its marker is tapped, with the way to when it struck', async () => {

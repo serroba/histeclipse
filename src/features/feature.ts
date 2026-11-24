@@ -158,7 +158,9 @@ export interface Capabilities {
   /** The globe coloured by temperature in deep time, and the maps ahead fetched as it plays. */
   readonly temperatureMaps: Pick<Globe, 'setTemperature' | 'prefetch'>;
   /** A crater's strike: played on the globe turned to it, and written on `on` as it happens. */
-  readonly strikes: Pick<Globe, 'playImpact' | 'flyTo' | 'zoomTo'> & { readonly on: HTMLElement };
+  readonly strikes: Pick<Globe, 'playImpact' | 'flyTo' | 'zoomTo'> & {
+    readonly on: HTMLElement;
+  };
   /** Radiocarbon's calibration curves, loaded once. */
   readonly radiocarbon: { curves(): Promise<Radiocarbon> };
   /** The card that carries a radiocarbon date across a curve. */

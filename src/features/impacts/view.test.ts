@@ -7,6 +7,7 @@ import { astronomicalYear } from '../../time/year';
 import {
   impactCard,
   impactPlay,
+  strikePlaces,
   impactsOn,
   impactsScale,
   pickedImpact,
@@ -110,6 +111,15 @@ describe('a crater tapped', () => {
     const card = impactCard(impacts, named('Barringer'), 0, vi.fn());
     expect(card.facts.map(([label]) => label)).not.toContain('Impactor');
     expect(card.action).toBeUndefined();
+  });
+  it('follows its crater on the plates as time runs on while it plays', () => {
+    const [then] = strikePlaces(impacts, ['Chicxulub', 'Nowhere'], 66);
+    const [now] = strikePlaces(impacts, new Set(['Chicxulub']), 0);
+    expect(strikePlaces(impacts, ['Nowhere'], 0)).toEqual([]);
+    expect(then?.place).toEqual(placeThen(impacts, named('Chicxulub'), 66));
+    expect(now?.place).toEqual(placeThen(impacts, named('Chicxulub'), 0));
+    expect(now?.place).not.toEqual(then?.place);
+    expect(impactPlay('Chicxulub', { latitude: 0, longitude: 0 }, 180).key).toBe('Chicxulub');
   });
   it('is played from its approach', () => {
     const spec = impactPlay('Chicxulub', { latitude: 21, longitude: -89 }, 180);

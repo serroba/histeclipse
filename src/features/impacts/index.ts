@@ -15,6 +15,7 @@ import {
   type ImpactsMode,
 } from '../../data/impacts';
 import { impactLayer } from './impactLayer';
+import type { PlayingImpact } from '../../globe/impactAnimation';
 import type { ViewState } from '../../state/viewState';
 import { IMPACTS_CHIP, impactsChip, type ImpactsView } from './chip';
 import type { RelatedStep } from '../../ui/markerCard';
@@ -31,12 +32,15 @@ import {
   pickedImpact,
   placeMaFor,
   sinceYear,
+  strikePlaces,
   strikesToPlay,
   struckList,
   type ImpactPlay,
 } from './view';
 
 const NEEDS = ['cards', 'timeline', 'deepTime', 'strikes'] as const;
+/** How long a strike is followed, ms: longer than the longest plays, on a slow device too. */
+const FOLLOW_MS = 30_000;
 type ImpactsContext = FeatureContext<(typeof NEEDS)[number]>;
 
 /** From a crater (#731): the Earth when it struck, facing where the plates had it. */
@@ -75,6 +79,12 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
   let pictures: Pictures | null = null;
   let picturesAsked = false;
   let picked: Impact | null = null;
+  // The strikes still playing, by crater, and until when (ms): they follow their crater as the
+  // plates carry it, deep time running on while they play.
+  const following = new Map<string, { readonly playing: PlayingImpact; readonly until: number }>();
+  function follow(name: string, playing: PlayingImpact): void {
+    following.set(name, { playing, until: performance.now() + FOLLOW_MS });
+  }
 
   // The craters, loaded the first time the layer is on (#762).
   const load = loadOnce<Impacts>({
@@ -114,6 +124,7 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
     const marks = impactsAt(impacts, ma, false, placeMa, mode);
     onGlobe.update(marks);
     strikeAsItPasses(state, impacts, ma, placeMa);
+    followStrikes(impacts, placeMa);
     said = null;
     return { on: true, text: impactsText(impacts, marks, ma, mode), mode };
   }
@@ -127,7 +138,17 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
     if (from === null || !playing || lessMotion.matches || state.focus !== 'earth') return;
     for (const { impact, place } of strikesToPlay(data, from, ma, placeMa, state.camera.target)) {
       globe.on.dataset['strikes'] = struckList(globe.on.dataset['strikes'], impact.name);
-      globe.playImpact(impactPlay(impact.name, place, impact.diameterKm ?? 0));
+      follow(impact.name, globe.playImpact(impactPlay(impact.name, place, impact.diameterKm ?? 0)));
+    }
+  }
+
+  /** Carry each strike still playing to where the plates have its crater now. */
+  function followStrikes(data: Impacts, placeMa: number): void {
+    const now = performance.now();
+    for (const [name, { until }] of following) if (now > until) following.delete(name);
+    if (following.size === 0) return;
+    for (const { impact, place } of strikePlaces(data, following.keys(), placeMa)) {
+      following.get(impact.name)?.playing.moveTo(place);
     }
   }
 
@@ -176,7 +197,7 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
     globe.zoomTo(distance);
     // Once the globe has turned to it.
     window.setTimeout(() => {
-      globe.playImpact(spec);
+      follow(spec.key, globe.playImpact(spec));
     }, 1000);
   }
 
