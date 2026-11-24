@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CLOCK_END, positionAt } from '../../deepTime/strikeClock';
 import { createStrikeClock, createStrikeOffer, OFFER_MS } from './strikeClock';
-import type { StrikePhase } from './strikePhases';
+import type { EventPhase } from './phases';
 
-const PHASES: readonly StrikePhase[] = [
+const PHASES: readonly EventPhase[] = [
   { id: 'approach', from: -100, title: 'Coming in', text: 'It comes in.', sources: [] },
   {
     id: 'fireball',

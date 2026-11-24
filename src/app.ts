@@ -34,7 +34,7 @@ import { element } from './ui/dom';
 import { layOutPage } from './ui/pageLayout';
 import { FEATURE_EARTH_PARTS, FEATURES } from './features';
 import { deepChipsOf, mountFeatures } from './features/mounted';
-import type { Capabilities, FeatureCore } from './features/feature';
+import type { AppCapabilities, FeatureCore } from './features/feature';
 import { arrivalSearch, welcomeAnchor } from './explore/destinations';
 import { viewOpener } from './explore/open';
 import { createWelcome } from './ui/welcome';
@@ -492,7 +492,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
   };
   // What a feature may ask for by name (#909): each is lent only those in its `needs`.
-  const capabilities: Capabilities = {
+  const capabilities: AppCapabilities = {
     cards: { show: markerCard.show, open: () => markerCard.dialog.open },
     anchors: { open: openAnchor },
     ephemerides: ephemerides.ephemerides,

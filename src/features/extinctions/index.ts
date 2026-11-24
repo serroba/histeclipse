@@ -8,11 +8,13 @@ import { loadExtinctionSites, type ExtinctionSites } from '../../data/extinction
 import { loadOnce } from '../../state/loadOnce';
 import { feature } from '../feature';
 import { extinctionLayer } from './extinctionLayer';
+import { ownTimeOf } from './ownTimeEvents';
 import {
   extinctionCard,
   extinctionMarks,
   extinctionMoments,
   extinctionsOn,
+  extinctionsPassed,
   extinctionsText,
   pickedMark,
   type ExtinctionMark,
@@ -20,7 +22,7 @@ import {
 
 export const extinctionsFeature = feature({
   id: 'extinctions',
-  needs: ['cards'],
+  needs: ['cards', 'timeline', 'ownTime'],
   picks: 'extinction',
   watches: (state) => [state.layers, state.mode, state.ma, state.deepScale],
   mount(context) {
@@ -33,12 +35,32 @@ export const extinctionsFeature = feature({
     let loadOn = false;
     let said: string | null = null;
     let marks: readonly ExtinctionMark[] = [];
+    let latest: number | null = null;
+    // Where deep time was in the frame before, while it plays.
+    let from: number | null = null;
+    const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    /**
+     * As deep time plays past an extinction that can be watched in its own time, it hands over to
+     * its clock at Slow and offers it faster (#1191), once though Impacts reaches it too.
+     */
+    function handOver(data: ExtinctionSites, ma: number): void {
+      const before = from;
+      from = context.timeline.playing() ? ma : null;
+      if (before === null || from === null || lessMotion.matches) return;
+      for (const extinction of extinctionsPassed(before, ma)) {
+        const event = ownTimeOf(data, extinction.id, ma);
+        if (event !== null) context.ownTime.arrive(event, ma);
+      }
+    }
 
     return {
       show(state) {
         const on = extinctionsOn(state);
         loadOn = on;
+        latest = state.ma;
         if (!on || state.ma === null) {
+          from = null;
           said = null;
           marks = [];
           onGlobe.update(null);
@@ -56,10 +78,21 @@ export const extinctionsFeature = feature({
         marks = extinctionMarks(data, state.ma);
         onGlobe.update(marks);
         said = extinctionsText(marks);
+        handOver(data, state.ma);
       },
       pick(id) {
         const mark = pickedMark(marks, id);
-        if (mark !== undefined) context.cards.show(extinctionCard(mark));
+        const data = load.value();
+        if (mark === undefined || data === null || latest === null) return;
+        const ma = latest;
+        const event = ownTimeOf(data, mark.extinction.id, ma);
+        const watch =
+          event === null
+            ? null
+            : () => {
+                context.ownTime.watch(event, ma);
+              };
+        context.cards.show(extinctionCard(mark, watch));
       },
       said: () => said,
       load: () => load.report(loadOn),

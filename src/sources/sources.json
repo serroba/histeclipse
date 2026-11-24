@@ -207,6 +207,12 @@
     "url": "https://doi.org/10.1594/PANGAEA.884711",
     "licence": "CC BY 3.0"
   },
+  "black2012": {
+    "name": "Black et al. 2012",
+    "kind": "paper",
+    "cite": "Black, B. A., Elkins-Tanton, L. T., Rowe, M. C., et al. (2012), Magnitude and consequences of volatile release from the Siberian Traps, Earth and Planetary Science Letters 317–318, 363–373. Our summary: melt inclusions in the Siberian Traps’ rocks measure the sulfur, chlorine and fluorine their magmas carried; released with the eruptions and from the rocks the magma heated, in amounts they estimate could have brought acid rain and loss of ozone",
+    "url": "https://doi.org/10.1016/j.epsl.2011.12.001"
+  },
   "blackburn2013": {
     "name": "Blackburn et al. 2013",
     "kind": "paper",
@@ -400,6 +406,18 @@
     "kind": "reference",
     "cite": "Chandra X-ray Center (Smithsonian Astrophysical Observatory, for NASA), Chandra specifications and spacecraft: 13.8 m long and 19.5 m across its solar arrays, its 10 m optical bench and focal length, its mirror assembly 1.2 m across of four nested pairs 0.833 m long, its sunshade door",
     "url": "https://chandra.harvard.edu/about/specs.html"
+  },
+  "chenBenton2012": {
+    "name": "Chen & Benton 2012",
+    "kind": "paper",
+    "cite": "Chen, Z.-Q. & Benton, M. J. (2012), The timing and pattern of biotic recovery following the end-Permian mass extinction, Nature Geoscience 5, 375–383. Our summary: a review of the Early Triassic record finding that life recovered slowly and in steps, held back by repeated environmental crises, complex marine and land ecosystems returning only some five million years after the extinction, in the Middle Triassic",
+    "url": "https://doi.org/10.1038/ngeo1475"
+  },
+  "clarkson2015": {
+    "name": "Clarkson et al. 2015",
+    "kind": "paper",
+    "cite": "Clarkson, M. O., Kasemann, S. A., Wood, R. A., et al. (2015), Ocean acidification and the Permo-Triassic mass extinction, Science 348, 229–232. Our summary: a boron-isotope record of seawater pH across the extinction: its first pulse came with a slow release of carbon and stable pH; in the second, a rapid, large release acidified the ocean abruptly, killing heavily calcified life above all",
+    "url": "https://doi.org/10.1126/science.aaa0193"
   },
   "clementineMoon": {
     "name": "Clementine colour-ratio map of the Moon",
@@ -661,6 +679,12 @@
     "cite": "The FAST All Sky HI Survey DR2: the FASHI Catalog and the HI Mass Function, arXiv:2606.31539 (2026): FAST’s position, 106°51′24″ E",
     "url": "https://arxiv.org/abs/2606.31539"
   },
+  "fielding2019": {
+    "name": "Fielding et al. 2019",
+    "kind": "paper",
+    "cite": "Fielding, C. R., Frank, T. D., McLoughlin, S., et al. (2019), Age and pattern of the southern high-latitude continental end-Permian extinction constrained by multiproxy analysis, Nature Communications 10, 385. Our summary: pollen and uranium–lead dates from Australia’s Sydney Basin show the Glossopteris flora collapsed before 252.3 million years ago, some 370,000 years before the main marine extinction",
+    "url": "https://doi.org/10.1038/s41467-018-07934-z"
+  },
   "finnegan2011": {
     "name": "Finnegan et al. 2011",
     "kind": "paper",
@@ -708,6 +732,12 @@
     "cite": "Garner, G. G., Hermans, T., Kopp, R. E., Slangen, A. B. A., Edwards, T. L., Levermann, A., Nowicki, S., Palmer, M. D., Smith, C., Fox-Kemper, B., Hewitt, H. T., Xiao, C., et al. (2021), IPCC AR6 Sea Level Projections, version 20210809, Zenodo; the projections assessed in Fox-Kemper, B., Hewitt, H. T., Xiao, C., et al. (2021), Ocean, Cryosphere and Sea Level Change, Climate Change 2021: The Physical Science Basis, IPCC AR6 WGI chapter 9, doi:10.1017/9781009157896.011; made with FACTS v1.0 (Kopp, R. E., Garner, G. G., Hermans, T. H. J., et al. (2023), Geoscientific Model Development 16, 7461–7489, doi:10.5194/gmd-16-7461-2023). Global and regional (1° grid) sea-level change to 2150 against 1995–2014, for each SSP scenario at medium confidence (the likely range) and low confidence (adding poorly understood ice-sheet processes)",
     "url": "https://doi.org/10.5281/zenodo.5914709",
     "licence": "CC BY 4.0"
+  },
+  "gastaldo2020": {
+    "name": "Gastaldo et al. 2020",
+    "kind": "paper",
+    "cite": "Gastaldo, R. A., Kamo, S. L., Neveling, J., et al. (2020), The base of the Lystrosaurus Assemblage Zone, Karoo Basin, predates the end-Permian marine extinction, Nature Communications 11, 1428. Our summary: an ash dated to 252.24 ± 0.11 million years ago in the Karoo’s Lystrosaurus zone shows the turnover of animals held to mark the land’s extinction came over 300,000 years before the marine one, against the usual view that they were at the same time",
+    "url": "https://doi.org/10.1038/s41467-020-15243-7"
   },
   "gcat": {
     "name": "GCAT (General Catalog of Artificial Space Objects)",
@@ -1101,6 +1131,12 @@
     "kind": "paper",
     "cite": "Jiang, P., Yue, Y., Gan, H., et al. (2019), Commissioning progress of the FAST, Science China Physics, Mechanics & Astronomy 62, 959502 (doi:10.1007/s11433-018-9376-1), from the National Astronomical Observatories of China: the reflector 500 m across, curved to a 315 m radius, its feed cabin some 140 m above it on six cables. A review of how the telescope was built and brought into use",
     "url": "https://doi.org/10.1007/s11433-018-9376-1"
+  },
+  "joachimski2012": {
+    "name": "Joachimski, Lai & Shen 2012",
+    "kind": "paper",
+    "cite": "Joachimski, M. M., Lai, X., Shen, S., et al. (2012), Climate warming in the latest Permian and the Permian–Triassic mass extinction, Geology 40, 195–198. Our summary: oxygen isotopes in conodonts from Meishan and Shangsi, South China, show low-latitude surface waters warming by about 8 °C, beginning just before the main extinction, with the carbon isotope shift that points to the Siberian Traps",
+    "url": "https://doi.org/10.1130/G32707.1"
   },
   "joachimskiBuggisch2002": {
     "name": "Joachimski & Buggisch 2002",
@@ -1915,6 +1951,12 @@
     "url": "https://paleobiodb.org",
     "licence": "CC BY 4.0"
   },
+  "penn2018": {
+    "name": "Penn, Deutsch & Payne 2018",
+    "kind": "paper",
+    "cite": "Penn, J. L., Deutsch, C., Payne, J. L., et al. (2018), Temperature-dependent hypoxia explains biogeography and severity of end-Permian marine mass extinction, Science 362, eaat1327. Our summary: an Earth system model of the warming, with animals’ known needs for oxygen at temperature, finds that warmer water holding less oxygen explains most of the marine losses and where they fell hardest",
+    "url": "https://doi.org/10.1126/science.aat1327"
+  },
   "periodo": {
     "name": "PeriodO",
     "kind": "dataset",
@@ -2248,6 +2290,12 @@
     "cite": "Stuiver, M. & Polach, H. A. (1977). Discussion: reporting of 14C data. Radiocarbon 19, 355–363",
     "url": "https://doi.org/10.1017/S0033822200003672"
   },
+  "sun2012": {
+    "name": "Sun et al. 2012",
+    "kind": "paper",
+    "cite": "Sun, Y., Joachimski, M. M., Wignall, P. B., et al. (2012), Lethally hot temperatures during the Early Triassic greenhouse, Science 338, 366–370. Our summary: conodont oxygen isotopes show tropical sea surfaces near 40 °C in the Early Triassic, when fish, marine reptiles and calcareous algae are all but absent from the equator; the land there was likely hotter still",
+    "url": "https://doi.org/10.1126/science.1224126"
+  },
   "sunyaev2021Srg": {
     "name": "Sunyaev et al. (2021), SRG X-ray orbital observatory",
     "kind": "paper",
@@ -2428,6 +2476,12 @@
     "kind": "paper",
     "cite": "Williams (2000), Geological constraints on the Precambrian history of Earth’s rotation and the Moon’s orbit, Reviews of Geophysics 38, 37–59",
     "url": "https://doi.org/10.1029/1999RG900016"
+  },
+  "wu2021": {
+    "name": "Wu et al. 2021",
+    "kind": "paper",
+    "cite": "Wu, Y., Chu, D., Tong, J., et al. (2021), Six-fold increase of atmospheric pCO2 during the Permian–Triassic mass extinction, Nature Communications 12, 2137. Our summary: carbon isotopes of plants from southwest China show carbon dioxide rising from about 426 ppm to about 2,507 ppm within some 75,000 years; volcanic CO₂ alone was probably not enough, and carbon from organic matter and methane, released as the Siberian Traps heated them, was likely needed",
+    "url": "https://doi.org/10.1038/s41467-021-22298-7"
   },
   "young2023": {
     "name": "Young, Shahar & Schlichting 2023",

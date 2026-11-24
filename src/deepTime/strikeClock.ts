@@ -7,6 +7,7 @@
  * Pure.
  */
 
+import type { ClockScale } from './clockScale';
 import type { Pace } from './playSpeed';
 
 const YEAR = 365.25 * 86_400;
@@ -83,3 +84,29 @@ export function clockText(seconds: number): string {
 export function maAfter(strikeMa: number, seconds: number): number {
   return strikeMa - Math.max(0, seconds) / (1e6 * YEAR);
 }
+
+/**
+ * The marks under the slider: where some of the tenfolds begin. Not the minute: on a phone it
+ * would sit on the strike's mark.
+ */
+const MARKS: readonly (readonly [number, string])[] = [
+  [0, 'Strike'],
+  [3600, 'Hour'],
+  [86_400, 'Day'],
+  [YEAR, 'Year'],
+  [1000 * YEAR, '1,000 years'],
+  [1e6 * YEAR, '1 Myr'],
+];
+
+/** Chicxulub's clock (#1173, #1191): log time from the strike. */
+export const STRIKE_SCALE: ClockScale = {
+  end: CLOCK_END,
+  secondsAt,
+  positionAt,
+  advance: clockStep,
+  // A fifth of a tenfold.
+  step: 0.2,
+  marks: MARKS,
+  text: clockText,
+  label: 'Time since the strike, each step on a tenfold more',
+};

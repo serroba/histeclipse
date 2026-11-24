@@ -8,7 +8,6 @@ import {
   impactCard,
   impactPlay,
   strikePlaces,
-  handover,
   impactsOn,
   impactsScale,
   pickedImpact,
@@ -112,11 +111,6 @@ describe('a crater tapped', () => {
     const card = impactCard(impacts, named('Barringer'), 0, vi.fn());
     expect(card.facts.map(([label]) => label)).not.toContain('Impactor');
     expect(card.action).toBeUndefined();
-  });
-  it('hands deep time over to the clock at Slow, and offers it faster (#1174)', () => {
-    expect(handover('slow')).toBe('clock');
-    expect(handover('normal')).toBe('offer');
-    expect(handover('fast')).toBe('offer');
   });
   it('follows its crater on the plates as time runs on while it plays', () => {
     const [then] = strikePlaces(impacts, ['Chicxulub', 'Nowhere'], 66);

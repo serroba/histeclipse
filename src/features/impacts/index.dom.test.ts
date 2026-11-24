@@ -7,6 +7,7 @@ import { loadPictures } from '../../data/pictures';
 import { defaultViewState, withLayer, type ViewState } from '../../state/viewState';
 import type { DeepChipView } from '../../ui/deepChips';
 import { RESTING, type Capability, type FeatureContext, type FeatureInstance } from '../feature';
+import { createOwnTime } from '../ownTime';
 import { impactsFeature } from '.';
 
 const off = defaultViewState(new Date('2026-01-01T00:00:00Z'));
@@ -90,7 +91,7 @@ function fakeContext(
       return Promise.reject(new Error('offline'));
     return Promise.resolve(new Response(JSON.stringify(photos ? PICTURES : impactsFile)));
   });
-  const context = {
+  const lent = {
     base: '/',
     fetchJson,
     notify,
@@ -107,6 +108,8 @@ function fakeContext(
       },
     },
   } as unknown as FeatureContext<Capability>;
+  // The clock is the shared one, as `mountFeatures` makes it (#1191).
+  const context = { ...lent, ownTime: createOwnTime(lent, lent) };
   return {
     context,
     refresh,
@@ -151,7 +154,7 @@ function chipOf(shown: FeatureInstance, state: ViewState): DeepChipView {
 
 describe('the impact craters as a feature', () => {
   it('names what it asks for, picks craters, and puts its chip after the others', () => {
-    expect(impactsFeature.needs).toEqual(['cards', 'timeline', 'deepTime', 'strikes', 'overPage']);
+    expect(impactsFeature.needs).toEqual(['cards', 'timeline', 'deepTime', 'strikes', 'ownTime']);
     expect(impactsFeature.picks).toBe('impact');
     expect(impactsFeature.deepChip).toMatchObject({ label: 'Impacts', why: 'impacts' });
     expect(impactsFeature.deepChipOrder).toBe(1);

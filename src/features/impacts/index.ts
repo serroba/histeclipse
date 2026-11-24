@@ -20,10 +20,9 @@ import { playKeys } from '../../ui/playKeys';
 import { illustrationKeys } from './illustrationKeys';
 import { heldStrikes } from '../../globe/heldStrikes';
 import type { EarthPart } from '../../globe/earthParts';
-import { strikeGroundLayer } from './strikeGroundLayer';
 import { STRIKE_GROUND_PART } from './strikeGroundPart';
-import { createStrikeClock, createStrikeOffer, type StrikeClock } from './strikeClock';
-import { strikePhasesOf, type StrikePhase } from './strikePhases';
+import { strikeEvent } from './strikeEvent';
+import { strikePhasesOf } from './strikePhases';
 import type { ViewState } from '../../state/viewState';
 import { IMPACTS_CHIP, impactsChip, type ImpactsView } from './chip';
 import type { RelatedStep } from '../../ui/markerCard';
@@ -43,14 +42,18 @@ import {
   strikePlaces,
   strikesToPlay,
   struckList,
-  handover,
   type ImpactPlay,
 } from './view';
+
+// What Extinctions watches the end-Cretaceous with (#1191).
+export { strikeEvent } from './strikeEvent';
+export { strikePhasesOf } from './strikePhases';
+export { impactPlay } from './view';
 
 /** The impacts' parts of the Earth shader: the ground round a strike watched in its own time. */
 export const IMPACT_EARTH_PARTS: readonly EarthPart[] = [STRIKE_GROUND_PART];
 
-const NEEDS = ['cards', 'timeline', 'deepTime', 'strikes', 'overPage'] as const;
+const NEEDS = ['cards', 'timeline', 'deepTime', 'strikes', 'ownTime'] as const;
 /** How long a strike is followed, ms: longer than the longest plays, on a slow device too. */
 const FOLLOW_MS = 30_000;
 type ImpactsContext = FeatureContext<(typeof NEEDS)[number]>;
@@ -79,7 +82,6 @@ function struckFrom(
 function mountImpacts(context: ImpactsContext): FeatureInstance {
   const globe = context.strikes;
   const onGlobe = context.globe.addLayer(impactLayer);
-  const ground = context.globe.addLayer(strikeGroundLayer);
   // The view last shown: what a crater tapped is read against.
   let latest: ViewState | null = null;
   const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -164,35 +166,13 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
       globe.on.dataset['strikes'] = struckList(globe.on.dataset['strikes'], impact.name);
       const spec = impactPlay(impact.name, place, impact.diameterKm ?? 0);
       const phases = strikePhasesOf(impact.name);
-      // One watched in its own time (#1174): at Slow, deep time hands over to its clock; faster,
-      // it strikes as the others do, and the clock is offered for a while.
-      const handing = phases === null ? null : handover(context.deepTime.pace());
-      if (phases !== null && handing === 'clock') {
-        watch(spec, phases, ma);
-        continue;
-      }
+      // One watched in its own time (#1174, #1191): at Slow, deep time hands over to its clock;
+      // faster, it strikes as the others do, and the clock is offered for a while. Once open or
+      // offered by another layer (Extinctions), it is left to that.
+      const handed = phases === null ? null : context.ownTime.arrive(strikeEvent(spec, phases), ma);
+      if (handed === 'clock' || handed === 'already') continue;
       follow(impact.name, struck.add(globe.playImpact(spec)));
-      if (phases !== null) {
-        offer.show(`Watch ${impact.name} in its own time`, () => {
-          watch(spec, phases, ma);
-        });
-      }
     }
-  }
-
-  // The offer to watch a strike in its own time, made the first time one is offered.
-  const offer = createStrikeOffer((element) => {
-    context.overPage.add(element);
-  });
-
-  /** Watch a strike in its own time, deep time held at `ma`, the moment it struck, until closed. */
-  function watch(spec: ImpactPlay, phases: readonly StrikePhase[], ma: number): void {
-    offer.hide();
-    const held = context.deepTime.hold();
-    context.change((state) => (state.ma === null ? state : { ...state, ma }));
-    openClock(spec, phases, () => {
-      if (held) context.deepTime.resume();
-    });
   }
 
   /** Carry each strike still playing to where the plates have its crater now. */
@@ -256,40 +236,8 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
         follow(spec.key, illustration);
         return;
       }
-      openClock(spec, phases);
+      context.ownTime.watch(strikeEvent(spec, phases), latest?.ma ?? null);
     }, 1000);
-  }
-
-  // The strike clock (#1173), made the first time a strike is watched in its own time, and the
-  // strike it drives.
-  let clock: StrikeClock | null = null;
-  function openClock(
-    spec: ImpactPlay,
-    phases: readonly StrikePhase[],
-    closed: () => void = () => undefined,
-  ): void {
-    // One at a time: closing the last ends its strike.
-    clock?.close();
-    clock?.root.remove();
-    const playing = globe.playImpact({ ...spec, driven: true });
-    follow(spec.key, playing);
-    globe.on.dataset['strikeClock'] = spec.key;
-    clock = createStrikeClock({
-      title: `${spec.key}, in its own time`,
-      phases,
-      onMoment(seconds) {
-        playing.at(seconds);
-        ground.update({ place: spec.place, seconds, worldwide: spec.worldwide });
-      },
-      onClose() {
-        playing.end();
-        ground.update(null);
-        delete globe.on.dataset['strikeClock'];
-        closed();
-      },
-    });
-    context.overPage.add(clock.root);
-    clock.open();
   }
 
   return {
