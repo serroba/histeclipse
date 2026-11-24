@@ -31,6 +31,7 @@ import type { DatingCard } from '../ui/datingCard';
 import type { Radiocarbon } from '../data/radiocarbon';
 import type { WaysLegend } from '../ui/waysLegend';
 import type { ZoomRail } from '../ui/zoomRail';
+import type { OwnTime } from './ownTime';
 
 /** While the years play, a layer drawn from the year redraws at most this often, in ms. */
 export const TRAVEL_REDRAW_MS = 500;
@@ -176,6 +177,11 @@ export interface Capabilities {
   readonly carbonGlow: Pick<Globe, 'setC14Glow'>;
   /** The air shower: play it under a field's dipole, from the Sun's core if `fromSun`. */
   readonly shower: { watch(dipole: number, fromSun: boolean): void };
+  /**
+   * Events watched in their own time (#1191): one clock over the page at a time, deep time held
+   * while it is open. Made from the others in `mountFeatures`, not by the app.
+   */
+  readonly ownTime: OwnTime;
   /** What lies over the whole page: a feature's own dialog is added there. */
   readonly overPage: { add(element: HTMLElement): void };
   /** The key to the ways of life's shading, under the years. */
@@ -183,6 +189,9 @@ export interface Capabilities {
 }
 
 export type Capability = keyof Capabilities;
+
+/** What the app lends: the capabilities but those made from the others in `mountFeatures`. */
+export type AppCapabilities = Omit<Capabilities, 'ownTime'>;
 
 /** What a feature asking for `Needs` is mounted with: the core, and those capabilities. */
 export type FeatureContext<Needs extends Capability = never> = FeatureCore &

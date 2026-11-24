@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { CLOCK_END, secondsAt } from '../../deepTime/strikeClock';
-import { phaseAt, strikePhasesOf } from './strikePhases';
+import { phaseAt } from '../ownTime';
+import { strikePhasesOf } from './strikePhases';
 
 describe('what the strike clock says happened (#1173)', () => {
   const chicxulub = strikePhasesOf('Chicxulub') ?? [];

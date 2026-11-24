@@ -3,7 +3,6 @@
  * which map, which strikes to play as deep time runs past them, and a crater's card.
  */
 
-import type { Pace } from '../../deepTime/playSpeed';
 import { approachOf, impactorText, worldwideReach } from '../../data/impactScaling';
 import {
   impactDetails,
@@ -71,14 +70,6 @@ export function strikesToPlay(
     .sort((a, b) => (b.impact.diameterKm ?? 0) - (a.impact.diameterKm ?? 0))
     .slice(0, STRIKES_AT_ONCE)
     .reverse();
-}
-
-/**
- * How deep time hands a strike watched in its own time over to its clock (#1174): at Slow, on
- * its own; faster, a reader skimming the ages is not stopped, and is offered the clock instead.
- */
-export function handover(pace: Pace): 'clock' | 'offer' {
-  return pace === 'slow' ? 'clock' : 'offer';
 }
 
 /** The latest few struck, for whoever needs to know one did: they follow fast as time runs. */

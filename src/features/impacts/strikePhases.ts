@@ -6,40 +6,7 @@
  * Pure.
  */
 
-import { SOURCES, type SourceId } from '../../sources/registry';
-
-export interface StrikePhase {
-  readonly id: string;
-  /** Seconds after the strike it begins (negative: before). */
-  readonly from: number;
-  readonly title: string;
-  readonly text: string;
-  readonly sources: readonly { readonly name: string; readonly url: string }[];
-}
-
-/** The phase showing at `seconds` since the strike: the last to have begun by then. */
-export function phaseAt(phases: readonly StrikePhase[], seconds: number): StrikePhase | undefined {
-  let found: StrikePhase | undefined;
-  for (const phase of phases) if (phase.from <= seconds) found = phase;
-  return found;
-}
-
-/** A phase, its sources looked up in the registry. */
-function phase(
-  id: string,
-  from: number,
-  title: string,
-  text: string,
-  sources: readonly SourceId[],
-): StrikePhase {
-  return {
-    id,
-    from,
-    title,
-    text,
-    sources: sources.map((source) => ({ name: SOURCES[source].name, url: SOURCES[source].url })),
-  };
-}
+import { phase, type EventPhase } from '../ownTime';
 
 const MINUTE = 60;
 const HOUR = 3600;
@@ -50,7 +17,7 @@ const YEAR = 365.25 * DAY;
  * Chicxulub, 66 million years ago (#1173): what its studies say happened, from the impactor
  * coming in to life's recovery a million years on. The disputed say so, with each side.
  */
-const CHICXULUB: readonly StrikePhase[] = [
+const CHICXULUB: readonly EventPhase[] = [
   phase(
     'approach',
     -10,
@@ -152,9 +119,9 @@ const CHICXULUB: readonly StrikePhase[] = [
 ];
 
 /** The craters watched in their own time, by name: their phases. */
-const PHASES: Readonly<Record<string, readonly StrikePhase[]>> = { Chicxulub: CHICXULUB };
+const PHASES: Readonly<Record<string, readonly EventPhase[]>> = { Chicxulub: CHICXULUB };
 
 /** The phases of the crater named `name`, if it is watched in its own time. */
-export function strikePhasesOf(name: string): readonly StrikePhase[] | null {
+export function strikePhasesOf(name: string): readonly EventPhase[] | null {
   return PHASES[name] ?? null;
 }

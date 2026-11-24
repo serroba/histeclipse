@@ -10,6 +10,7 @@ import type { HereFact } from '../sources/registry';
 import type { Layer, ViewState } from '../state/viewState';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
 import type {
+  AppCapabilities,
   Capabilities,
   DeepBarFields,
   DeepMoment,
@@ -17,6 +18,7 @@ import type {
   FeatureCore,
   LayerAction,
 } from './feature';
+import { createOwnTime } from './ownTime';
 
 export interface Features {
   /** The moment shown: `jdTT` in Terrestrial Time, or null before it is known. */
@@ -85,8 +87,10 @@ export function deepChipsOf(features: readonly Feature[]): DeepChip[] {
 export function mountFeatures(
   features: readonly Feature[],
   core: FeatureCore,
-  capabilities: Capabilities,
+  lent: AppCapabilities,
 ): Features {
+  // Made from the others, here rather than in the app: one clock shared by the layers (#1191).
+  const capabilities: Capabilities = { ...lent, ownTime: createOwnTime(core, lent) };
   const mounted = features.map((feature) => ({
     feature,
     shown: feature.mount(core, capabilities),

@@ -6,19 +6,22 @@
  * seconds since the strike, each frame it plays and each time it is moved.
  */
 
-import { clockStep, clockText, CLOCK_END, positionAt, secondsAt } from '../../deepTime/strikeClock';
+import type { ClockScale } from '../../deepTime/clockScale';
+import { STRIKE_SCALE } from '../../deepTime/strikeClock';
 import { DEFAULT_PACE, PACE_LABELS, PACES, type Pace } from '../../deepTime/playSpeed';
 import { element } from '../../ui/dom';
 import { setText } from '../../util/pageWrites';
 import { createTransport, type Transport } from '../../ui/transport';
-import { phaseAt, type StrikePhase } from './strikePhases';
+import { phaseAt, type EventPhase } from './phases';
 import './strikeClock.css';
 
 export interface StrikeClockOptions {
   /** What it is called: "Chicxulub, in its own time". */
   readonly title: string;
-  readonly phases: readonly StrikePhase[];
-  /** The moment changed: `seconds` since the strike. */
+  readonly phases: readonly EventPhase[];
+  /** How its slider runs: Chicxulub's log seconds unless said (#1191). */
+  readonly scale?: ClockScale;
+  /** The moment changed: `seconds` since the event. */
   onMoment(seconds: number): void;
   /** The reader closed it. */
   onClose(): void;
@@ -33,22 +36,6 @@ export interface StrikeClock {
   readonly isOpen: () => boolean;
 }
 
-/**
- * The marks under the slider: where some of the tenfolds begin. Not the minute: on a phone it
- * would sit on the strike's mark.
- */
-const MARKS: readonly (readonly [number, string])[] = [
-  [0, 'Strike'],
-  [3600, 'Hour'],
-  [86_400, 'Day'],
-  [365.25 * 86_400, 'Year'],
-  [1000 * 365.25 * 86_400, '1,000 years'],
-  [1e6 * 365.25 * 86_400, '1 Myr'],
-];
-
-/** Moving one step of the slider by a key: a fifth of a tenfold. */
-const STEP = 0.2;
-
 /** The panel's parts: what it says, and its controls about the transport's. */
 interface ClockView {
   readonly root: HTMLElement;
@@ -60,8 +47,8 @@ interface ClockView {
   readonly closeButton: HTMLButtonElement;
 }
 
-/** The panel round `transport`, called `title`, its marks under the slider. */
-function clockView(title: string, transport: Transport): ClockView {
+/** The panel round `transport`, called `title`, the marks of `scale` under the slider. */
+function clockView(title: string, scale: ClockScale, transport: Transport): ClockView {
   const speed = element(
     'select',
     { class: 'strike-clock-speed', 'aria-label': 'Speed' },
@@ -71,9 +58,9 @@ function clockView(title: string, transport: Transport): ClockView {
   const marks = element(
     'ol',
     { class: 'strike-clock-marks', 'aria-hidden': 'true' },
-    ...MARKS.map(([seconds, label]) => {
+    ...scale.marks.map(([seconds, label]) => {
       const mark = element('li', {}, label);
-      mark.style.left = `${String((100 * positionAt(seconds)) / CLOCK_END)}%`;
+      mark.style.left = `${String((100 * scale.positionAt(seconds)) / scale.end)}%`;
       return mark;
     }),
   );
@@ -107,8 +94,13 @@ function clockView(title: string, transport: Transport): ClockView {
  * frame while it plays: the phase's words and links are written only when the phase changes,
  * and the moment only when its words do (#1187).
  */
-function showMoment(view: ClockView, seconds: number, phase: StrikePhase | undefined): void {
-  setText(view.when, clockText(seconds));
+function showMoment(
+  view: ClockView,
+  scale: ClockScale,
+  seconds: number,
+  phase: EventPhase | undefined,
+): void {
+  setText(view.when, scale.text(seconds));
   const shown = String(Math.round(seconds));
   if (view.root.dataset['seconds'] !== shown) view.root.dataset['seconds'] = shown;
   const id = phase?.id ?? '';
@@ -125,6 +117,7 @@ function showMoment(view: ClockView, seconds: number, phase: StrikePhase | undef
 }
 
 export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
+  const scale = options.scale ?? STRIKE_SCALE;
   let position = 0;
   let frame: number | null = null;
   let last: number | null = null;
@@ -135,9 +128,9 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
       slider: {
         class: 'strike-clock-range',
         min: '0',
-        max: String(CLOCK_END),
-        step: String(STEP),
-        'aria-label': 'Time since the strike, each step on a tenfold more',
+        max: String(scale.end),
+        step: String(scale.step),
+        'aria-label': scale.label,
       },
       over: true,
     },
@@ -152,16 +145,16 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
       },
     },
   );
-  const view = clockView(options.title, transport);
+  const view = clockView(options.title, scale, transport);
   const { root, speed } = view;
   view.closeButton.addEventListener('click', close);
   transport.join(root);
 
   /** Show the moment at `next` on the slider, and tell whoever draws it. */
   function moveTo(next: number): void {
-    position = Math.min(CLOCK_END, Math.max(0, next));
-    const seconds = secondsAt(position);
-    showMoment(view, seconds, phaseAt(options.phases, seconds));
+    position = Math.min(scale.end, Math.max(0, next));
+    const seconds = scale.secondsAt(position);
+    showMoment(view, scale, seconds, phaseAt(options.phases, seconds));
     transport.render(frame !== null, position);
     options.onMoment(seconds);
   }
@@ -170,9 +163,10 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
     // A late frame moves it on by at most a fifth of a second: a hitch pauses it, never skips.
     const seconds = last === null ? 0 : Math.min(0.2, (now - last) / 1000);
     last = now;
-    // Slower over the approach, faster once the sky has cleared (#1187).
-    moveTo(position + clockStep(speed.value as Pace, seconds, position));
-    if (position >= CLOCK_END) {
+    // At the scale's own pace there: Chicxulub's slower over the approach, faster once the sky
+    // has cleared (#1187).
+    moveTo(position + scale.advance(speed.value as Pace, seconds, position));
+    if (position >= scale.end) {
       stop();
       return;
     }
@@ -181,7 +175,7 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
 
   function start(): void {
     if (frame !== null) return;
-    if (position >= CLOCK_END) position = 0;
+    if (position >= scale.end) position = 0;
     last = null;
     frame = requestAnimationFrame(tick);
     root.dataset['playing'] = 'true';

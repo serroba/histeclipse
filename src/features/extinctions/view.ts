@@ -43,6 +43,11 @@ export function extinctionMoments(): number[] {
   return EXTINCTIONS.map((each) => each.ma);
 }
 
+/** The extinctions deep time passed playing from `from` towards today to `to`, oldest first. */
+export function extinctionsPassed(from: number, to: number): Extinction[] {
+  return EXTINCTIONS.filter((each) => from > each.ma && each.ma >= to);
+}
+
 /** What the layer says at `ma`: the extinction near, if any. */
 export function extinctionsText(marks: readonly ExtinctionMark[]): string {
   const near = [...new Set(marks.map((mark) => mark.extinction.title))];
@@ -54,11 +59,18 @@ const ROLE: Readonly<Record<ExtinctionSite['role'], string>> = {
   record: 'Where it is dated',
 };
 
-/** A place's card: the extinction, what it took and what caused it, and what this place is. */
-export function extinctionCard(mark: ExtinctionMark): MarkerCardContent {
+/**
+ * A place's card: the extinction, what it took and what caused it, and what this place is; and
+ * `watch`, where the extinction can be watched in its own time (#1191).
+ */
+export function extinctionCard(
+  mark: ExtinctionMark,
+  watch: (() => void) | null = null,
+): MarkerCardContent {
   const { site, extinction } = mark;
   const when = estimatesOf(extinction);
   return {
+    ...(watch === null ? {} : { action: { label: 'Watch it in its own time', run: watch } }),
     title: extinction.title,
     facts: [
       ['Here', `${site.name}: ${ROLE[site.role].toLowerCase()}`],

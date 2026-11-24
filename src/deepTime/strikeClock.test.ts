@@ -11,6 +11,7 @@ import {
   QUIET_AT,
   secondsAt,
   STRIKE_AT,
+  STRIKE_SCALE,
 } from './strikeClock';
 
 const YEAR = 365.25 * 86_400;
@@ -66,5 +67,16 @@ describe('the strike clock: time from a strike on a log scale (#1173)', () => {
   it('moves deep time on by the seconds since the strike, never back', () => {
     expect(maAfter(66, -5)).toBe(66);
     expect(maAfter(66, 1e6 * YEAR)).toBeCloseTo(65, 9);
+  });
+});
+
+describe('Chicxulub’s clock as a scale (#1191)', () => {
+  it('is the strike clock’s own functions, marks and readout', () => {
+    expect(STRIKE_SCALE.end).toBe(CLOCK_END);
+    expect(STRIKE_SCALE.secondsAt(STRIKE_AT)).toBe(0);
+    expect(STRIKE_SCALE.positionAt(0)).toBe(STRIKE_AT);
+    expect(STRIKE_SCALE.advance('normal', 1, 0)).toBe(clockStep('normal', 1, 0));
+    expect(STRIKE_SCALE.text(0)).toBe('The strike');
+    expect(STRIKE_SCALE.marks[0]).toEqual([0, 'Strike']);
   });
 });
