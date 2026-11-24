@@ -40,6 +40,11 @@ export interface OwnTimeEvent {
   readonly scale: ClockScale;
   /** Its offer's words: "Watch Chicxulub in its own time". */
   readonly offer: string;
+  /**
+   * How much it draws (#1206): of two ways to draw one event, reached at once by two layers, the
+   * one with more takes the clock over. Chicxulub with the Deccan Traps fuming outranks it alone.
+   */
+  readonly rank?: number;
   /** Start drawing it, to be moved by its clock. */
   play(tools: OwnTimeTools): OwnTimePlay;
 }
@@ -49,7 +54,8 @@ export interface OwnTime {
   watch(event: OwnTimeEvent, ma: number | null): void;
   /**
    * Deep time has played past `event` at `ma`: at Slow its clock opens; faster, it is offered
-   * for a while. An event already open or offered is left as it is. Says which it did.
+   * for a while. An event already open or offered is left as it is, unless this draws more of it
+   * (`rank`). Says which it did.
    */
   arrive(event: OwnTimeEvent, ma: number): 'clock' | 'offer' | 'already';
 }
@@ -78,9 +84,10 @@ export function createOwnTime(core: Pick<FeatureCore, 'globe' | 'change'>, lent:
     lent.overPage.add(element);
   });
   let clock: StrikeClock | null = null;
-  let open: string | null = null;
-  // The event offered last, and until when (ms): the offer goes by itself after a while.
-  let offered: { readonly key: string; readonly until: number } | null = null;
+  // The event open, and the event offered last and until when (ms): it goes after a while.
+  let open: { readonly key: string; readonly rank: number } | null = null;
+  let offered: { readonly key: string; readonly rank: number; readonly until: number } | null =
+    null;
 
   function watch(event: OwnTimeEvent, ma: number | null): void {
     offer.hide();
@@ -91,7 +98,7 @@ export function createOwnTime(core: Pick<FeatureCore, 'globe' | 'change'>, lent:
     const held = ma !== null && lent.deepTime.hold();
     if (ma !== null) core.change((state) => (state.ma === null ? state : { ...state, ma }));
     const playing = event.play(tools);
-    open = event.key;
+    open = { key: event.key, rank: event.rank ?? 0 };
     clock = createStrikeClock({
       title: event.title,
       phases: event.phases,
@@ -113,14 +120,17 @@ export function createOwnTime(core: Pick<FeatureCore, 'globe' | 'change'>, lent:
     watch,
     arrive(event, ma) {
       const now = performance.now();
-      if (open === event.key || (offered?.key === event.key && now < offered.until))
+      const rank = event.rank ?? 0;
+      const live = offered !== null && now < offered.until ? offered : null;
+      // Open or offered already, as fully drawn: left as it is.
+      if ([open, live].some((each) => each?.key === event.key && each.rank >= rank))
         return 'already';
       const handing = handover(lent.deepTime.pace());
       if (handing === 'clock') {
         watch(event, ma);
         return 'clock';
       }
-      offered = { key: event.key, until: now + OFFER_MS };
+      offered = { key: event.key, rank, until: now + OFFER_MS };
       offer.show(event.offer, () => {
         watch(event, ma);
       });

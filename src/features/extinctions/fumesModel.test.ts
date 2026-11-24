@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { angularDistance } from '../../eclipses/visibility';
-import { campFuming, emeishanFuming, puffAt, siberianFuming, ventsAround } from './fumesModel';
+import {
+  campFuming,
+  deccanFuming,
+  emeishanFuming,
+  puffAt,
+  siberianFuming,
+  ventsAround,
+} from './fumesModel';
 
 const KYR = 1000 * 365.25 * 86_400;
 
@@ -69,5 +76,11 @@ describe('the other provinces’ fumes (#1201)', () => {
     expect(emeishanFuming(1000 * KYR).lava).toBeGreaterThan(0);
     expect(emeishanFuming(1000 * KYR).gas).toBe(0);
     expect(emeishanFuming(3000 * KYR).lava).toBe(0);
+  });
+
+  it('the Deccan Traps: erupting steadily through Chicxulub’s million years, pale (#1206)', () => {
+    expect(deccanFuming(-100)).toEqual({ lava: 0, gas: 0, haze: 0 });
+    expect(deccanFuming(0)).toEqual({ lava: 0.7, gas: 0, haze: 0.105 });
+    expect(deccanFuming(3e13).lava).toBe(0.7);
   });
 });

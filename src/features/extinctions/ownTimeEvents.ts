@@ -12,7 +12,13 @@ import type { GeoPoint } from '../../core/geo';
 import { impactPlay, strikeEvent, strikePhasesOf } from '../impacts';
 import type { EventPhase, OwnTimeEvent } from '../ownTime';
 import { fumesLayer } from './fumesLayer';
-import { campFuming, emeishanFuming, siberianFuming, type Fuming } from './fumesModel';
+import {
+  campFuming,
+  deccanFuming,
+  emeishanFuming,
+  siberianFuming,
+  type Fuming,
+} from './fumesModel';
 import { END_ORDOVICIAN, LATE_DEVONIAN } from './coldPhases';
 import { END_GUADALUPIAN } from './guadalupianPhases';
 import { END_PERMIAN } from './permianPhases';
@@ -209,5 +215,35 @@ export function ownTimeOf(data: ExtinctionSites, id: string, ma: number): OwnTim
   const place = placeOf(data, 'chicxulub', ma);
   if (place === null) return null;
   const strike = strikeEvent(impactPlay('Chicxulub', place, CHICXULUB_KM), phases);
-  return facing(strike, place, STRIKE_DISTANCE);
+  const deccan = placeOf(data, 'deccan-traps', ma);
+  return facing(deccan === null ? strike : withDeccan(strike, deccan), place, STRIKE_DISTANCE);
+}
+
+/** How far the Deccan Traps' vents spread, degrees: drawn to cover the province, not measured. */
+const DECCAN_SPREAD = 7;
+
+/**
+ * Chicxulub's strike with the Deccan Traps fuming beside it (#1206), the end-Cretaceous's two
+ * causes on one clock: it outranks the strike alone, so it takes the clock over when Impacts and
+ * Extinctions reach it at once.
+ */
+function withDeccan(strike: OwnTimeEvent, deccan: GeoPoint): OwnTimeEvent {
+  return {
+    ...strike,
+    rank: 1,
+    play(tools) {
+      const struck = strike.play(tools);
+      const fumes = tools.layer(fumesLayer);
+      return {
+        at(seconds) {
+          struck.at(seconds);
+          fumes.update({ center: deccan, spread: DECCAN_SPREAD, fuming: deccanFuming(seconds) });
+        },
+        end() {
+          struck.end();
+          fumes.update(null);
+        },
+      };
+    },
+  };
 }
