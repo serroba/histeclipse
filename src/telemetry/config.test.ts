@@ -28,13 +28,17 @@ describe('telemetryConfig', () => {
     });
   });
 
-  it('falls back to a dev version and never traces its own export', () => {
+  it('falls back to a dev version and never traces its own export, nor the host’s beacon', () => {
     const config = telemetryConfig({
       VITE_HONEYCOMB_INGEST_KEY: 'k',
       VITE_COMMIT_SHA: '%VITE_COMMIT_SHA%',
     });
     expect(config?.serviceVersion).toBe('dev');
     expect(config?.ignoreUrls.some((re) => re.test(`${HONEYCOMB_US}/v1/traces`))).toBe(true);
+    // Nor the host's analytics beacon (#1196).
+    expect(
+      config?.ignoreUrls.some((re) => re.test('https://histeclipse.limits.world/cdn-cgi/rum?')),
+    ).toBe(true);
     expect(
       config?.ignoreUrls.some((re) =>
         re.test('https://serroba.github.io/histeclipse/data/sky.json'),
