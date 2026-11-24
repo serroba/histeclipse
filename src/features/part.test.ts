@@ -17,7 +17,7 @@ describe('the timeline the parts ask of', () => {
     const late = lateTimeline(540);
     late.bind({
       years: { travelling: () => true },
-      deepTime: { playing: () => true, oldest: () => 1800 },
+      deepTime: { playing: () => true, paused: () => false, oldest: () => 1800 },
       launches: { earthFace: (jd) => Math.round(jd) },
     });
     expect([
