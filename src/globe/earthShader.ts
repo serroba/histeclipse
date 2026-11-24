@@ -307,20 +307,24 @@ const EARTH_BODY = /* glsl */ `
     EarthFragment f = EarthFragment(surface, night, normal, vUv, daylight, latitude, longitude);
 `;
 
-// After the parts: deep time's even light, and what goes over it.
-const EARTH_TAIL = /* glsl */ `    // Deep time: no one can say what hour it was, and days were shorter, so there is no night
+// After the parts: deep time's even light, then the parts that go over it, then the rest.
+const EARTH_EVEN_LIGHT = /* glsl */ `    // Deep time: no one can say what hour it was, and days were shorter, so there is no night
     // side. A soft light from the viewer keeps the globe round.
     float facing = max(dot(normal, normalize(cameraPosition)), 0.0);
     color = mix(color, surface * (0.6 + 0.45 * facing), evenLight);
     // The Holocene's track lights evenly too: its states, ways of life and rocks go back over
     // the evenly lit ground (in deep time none of them is on).
     color = mix(color, empiresLayer(color, 1.0), evenLight);
-    color = iceOutlinesLayer(color);
+`;
+
+const EARTH_TAIL = /* glsl */ `    color = iceOutlinesLayer(color);
     gl_FragColor = vec4(color, dayAlpha);
     #include <colorspace_fragment>
   }
 `;
 
-export function earthFragment(parts: Pick<AssembledParts, 'glsl' | 'calls'>): string {
-  return `${EARTH_HEAD}${EARTH_FRAGMENT_STRUCT}\n${parts.glsl}\n${EARTH_BODY}    ${parts.calls}\n${EARTH_TAIL}`;
+export function earthFragment(parts: Pick<AssembledParts, 'glsl' | 'calls' | 'overCalls'>): string {
+  // Deep time's heights, declared for the parts and defined in the body (see earthParts.ts).
+  const heights = 'float paleoHeight(vec2 uv);';
+  return `${EARTH_HEAD}${EARTH_FRAGMENT_STRUCT}\n${heights}\n${parts.glsl}\n${EARTH_BODY}    ${parts.calls}\n${EARTH_EVEN_LIGHT}    ${parts.overCalls}\n${EARTH_TAIL}`;
 }

@@ -32,7 +32,7 @@ import { awayFromEarth, toggledLayer, withLayer, type ViewState } from './state/
 import { DeltaT } from './time/deltaT';
 import { element } from './ui/dom';
 import { layOutPage } from './ui/pageLayout';
-import { FEATURES } from './features';
+import { FEATURE_EARTH_PARTS, FEATURES } from './features';
 import { deepChipsOf, mountFeatures } from './features/mounted';
 import type { Capabilities, FeatureCore } from './features/feature';
 import { arrivalSearch, welcomeAnchor } from './explore/destinations';
@@ -235,7 +235,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     moonTextureUrl: `${base}textures/moon-lroc-1k.jpg`,
     focus: focusOf(store.get()),
     // The features' parts of the Earth shader (#379).
-    earthParts: ECLIPSE_EARTH_PARTS,
+    earthParts: [...ECLIPSE_EARTH_PARTS, ...FEATURE_EARTH_PARTS],
   });
   // The planetary boundaries' story (#434), and the globe that follows its chart (#475).
   const boundaries = mountBoundaries({ ...partContext, globe });

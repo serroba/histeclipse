@@ -6,7 +6,8 @@
  *
  * A part's GLSL declares its uniforms and one function, `vec3 <name>(vec3 color, EarthFragment
  * f)`, which returns the new colour. `EarthFragment` is what the shader has worked out at that
- * point of the ground.
+ * point of the ground. In deep time a part may also read the ground's height there, metres,
+ * with `paleoHeight(f.uv)` where `paleoActive` is set: declared before the parts, defined after.
  */
 
 import type { IUniform } from 'three';
@@ -21,6 +22,11 @@ export interface EarthPart<Uniforms extends PartUniforms = PartUniforms> {
   readonly order: number;
   /** Its uniforms' declarations and its function. */
   readonly glsl: string;
+  /**
+   * Called after deep time's even light rather than before it, so it shows in deep time too: the
+   * even light repaints the ground and would wash out what was drawn before it (#1175).
+   */
+  readonly overEvenLight?: boolean;
   /** Its uniforms, made once for the globe that draws it. */
   uniforms(): Uniforms;
 }
@@ -30,6 +36,7 @@ export const EARTH_PART_ORDER = {
   lunarOverlay: 30,
   eclipsePath: 40,
   moonShadow: 50,
+  strikeGround: 60,
 } as const;
 
 /**
@@ -76,9 +83,16 @@ export interface AssembledParts {
   readonly glsl: string;
   /** Statements that pass `color` through each part in turn, given `f`. */
   readonly calls: string;
+  /** The same, for the parts called after deep time's even light. */
+  readonly overCalls: string;
   readonly uniforms: Readonly<Record<string, IUniform>>;
   /** Each part's uniforms, the same objects as in `uniforms`. */
   readonly byPart: ReadonlyMap<EarthPart, PartUniforms>;
+}
+
+/** The statements that pass `color` through `parts` in turn. */
+function callsOf(parts: readonly EarthPart[]): string {
+  return parts.map(({ name }) => `color = ${name}(color, f);`).join('\n    ');
 }
 
 /**
@@ -126,7 +140,8 @@ export function assembleEarthParts(
   }
   return {
     glsl: ordered.map(({ glsl }) => glsl).join('\n'),
-    calls: ordered.map(({ name }) => `color = ${name}(color, f);`).join('\n    '),
+    calls: callsOf(ordered.filter((part) => part.overEvenLight !== true)),
+    overCalls: callsOf(ordered.filter((part) => part.overEvenLight === true)),
     uniforms,
     byPart,
   };
