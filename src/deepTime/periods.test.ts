@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatMa } from '../time/format';
+import { formatMa, formatMaPlaying } from '../time/format';
 import { PERIODS, periodAt, periodShort, periodWords } from './periods';
 
 describe('geological periods', () => {
@@ -32,6 +32,22 @@ describe('geological periods', () => {
     // A moment played to a whole number, give or take a rounding (#987).
     expect(formatMa(3950.000_000_1)).toBe('3,950 million years ago');
     expect(formatMa(252.46)).toBe('252.5 million years ago');
+    // Playing, a moment keeps its width: grouped, and to a tenth even where the tenth is 0.
+    expect(formatMa(2408.5)).toBe('2,408.5 million years ago');
+    expect(formatMa(2468.03)).toBe('2,468.0 million years ago');
+  });
+
+  it('round a playing moment so it changes a few times a second (#1166)', () => {
+    // 20 Myr a second: a step of 5 Myr.
+    expect(formatMaPlaying(258.7, 20)).toBe('260 million years ago');
+    expect(formatMaPlaying(257.4, 20)).toBe('255 million years ago');
+    // 2 Myr a second: half a million, shown to a tenth even where whole.
+    expect(formatMaPlaying(258.7, 2)).toBe('258.5 million years ago');
+    expect(formatMaPlaying(258.9, 2)).toBe('259.0 million years ago');
+    // In the ice ages, in years: 20 kyr a second, a step of 5,000 years.
+    expect(formatMaPlaying(0.0213, 0.02)).toBe('20,000 years ago');
+    expect(formatMaPlaying(1, 20)).toBe('Today');
+    expect(formatMaPlaying(250, 0)).toBe('250 million years ago');
   });
 });
 

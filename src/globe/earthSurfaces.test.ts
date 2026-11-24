@@ -1,7 +1,8 @@
 import { Texture, type IUniform } from 'three';
 import { describe, expect, it } from 'vitest';
 
-import { EarthSurfaces, inOrder, surfaceUniforms } from './earthSurfaces';
+import { EarthSurfaces, surfaceUniforms } from './earthSurfaces';
+import { inOrder } from './loadOrder';
 
 /** A loader whose maps arrive, or fail, when the test says. */
 function fakeLoads() {
@@ -150,6 +151,7 @@ describe("Earth's surfaces", () => {
     loads.arrive('p2');
     await settle();
     expect(uniforms['plateActive']?.value).toBe(0);
+    expect(uniforms['plateOutline']?.value).toBe(0);
     expect(dataset['plates']).toBe('off');
   });
 
@@ -246,10 +248,26 @@ describe("Earth's surfaces", () => {
     expect(uniforms['sketchMolten']?.value).toBe(1);
     expect(dataset['sketch']).toBe('magma 0.300 60');
     host.setSketch(null);
-    expect(uniforms['sketchKind']?.value).toBe(0);
+    // Kept, unseen once the maps have faded in over it (#1149).
+    expect(uniforms['sketchKind']?.value).toBe(1);
     expect(dataset['sketch']).toBe('off');
-    // Each change, and the molten value set with the first.
-    expect(drawn()).toBe(4);
+    // Each change, and the uncharted and molten values set with the first of each.
+    expect(drawn()).toBe(5);
+  });
+
+  it('takes the sketch’s land from the plates where they reach, unoutlined without the layer (#1149)', async () => {
+    const { host, loads, uniforms, dataset } = surfaces();
+    host.setUncharted(true);
+    host.setSketch({ kind: 'ocean', land: 0, iceEdge: 90, reconstructed: true });
+    expect(uniforms['sketchPlates']?.value).toBe(1);
+    host.setPlates({ ...pair('p1', 'p2'), turnYounger: 0, turnOlder: 0, outlined: false });
+    loads.arrive('p1');
+    loads.arrive('p2');
+    await settle();
+    expect(uniforms['plateActive']?.value).toBe(1);
+    expect(uniforms['plateOutline']?.value).toBe(0);
+    expect(dataset['plates']).toBe('off');
+    expect(dataset['plateLand']).toBe('p1 p2');
   });
 
   it('outlines the plates once their masks arrive, and takes the ice sheets away', async () => {
@@ -259,6 +277,7 @@ describe("Earth's surfaces", () => {
     loads.arrive('p2');
     await settle();
     expect(uniforms['plateActive']?.value).toBe(1);
+    expect(uniforms['plateOutline']?.value).toBe(1);
     expect(dataset['plates']).toBe('p1 p2');
     host.setIce({ ...pair('i1', 'i2'), metresPerStep: 16 });
     loads.arrive('i1');

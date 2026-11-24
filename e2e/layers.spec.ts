@@ -3,7 +3,15 @@
  * them as they travel through time.
  */
 
-import { collectProblems, globeRendered, openLayers, openSources, expect, test } from './support';
+import {
+  collectProblems,
+  expect,
+  globeRendered,
+  openLayers,
+  openSources,
+  pickSpan,
+  test,
+} from './support';
 
 test('the reader finds every layer in one panel, grouped by what it shows', async ({ page }) => {
   const problems = collectProblems(page);
@@ -29,7 +37,7 @@ test('the reader finds every layer in one panel, grouped by what it shows', asyn
       .getByRole('button', { name: 'Close' })
       .click();
     await expect(page.getByRole('dialog', { name: 'Layers' })).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Layers' })).toHaveAttribute(
+    await expect(page.getByRole('button', { name: 'Layers', exact: true })).toHaveAttribute(
       'aria-expanded',
       'false',
     );
@@ -257,8 +265,8 @@ test('one set of layers for all of time: the panel and its chips switch the same
 
 test('the viewpoints wear icons: icon and word, on a phone too @mobile', async ({ page }, info) => {
   test.skip(info.project.name === 'desktop-120hz', 'about layout, not frames');
-  await test.step('Given deep time on the 540 Myr span', async () => {
-    await page.goto('./?ma=250&scale=all');
+  await test.step('Given a day in the years, where the viewpoints are offered (#1154)', async () => {
+    await page.goto('./?t=2026-01-10T12:00');
     await globeRendered(page);
   });
   await test.step('Then each has its icon and keeps its name', async () => {
@@ -325,7 +333,9 @@ test('the date panel holds the tools, the time bar the presets, and on a phone t
     await globeRendered(page);
   });
   await test.step('Then Layers is among the header’s tools, and the presets are in the time bar (#1116)', async () => {
-    await expect(page.locator('.hud-tools').getByRole('button', { name: 'Layers' })).toBeVisible();
+    await expect(
+      page.locator('.hud-tools').getByRole('button', { name: 'Layers', exact: true }),
+    ).toBeVisible();
     await expect(page.locator('.hud .time-scale')).toHaveCount(0);
     await expect(page.locator('.bottom .time-scale').filter({ visible: true })).toHaveCount(1);
   });
@@ -389,5 +399,37 @@ test('the Layers panel reads in plain lines, the sources one tap away, and narro
   await panel.getByRole('searchbox', { name: 'Find a layer' }).fill('ozone');
   await expect(panel.locator('.layer-item:visible')).toHaveCount(1);
   await expect(panel.locator('.layer-item:visible')).toContainText('The ozone hole');
+  expect(problems).toEqual([]);
+});
+
+test('the zoom rail offers the layers the span has data in, a tap turning one on (#1156) @mobile', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const rail = page.getByRole('group', { name: 'Layers here' });
+  await test.step('Given 250 million years ago', async () => {
+    await page.goto('./?ma=250&scale=all');
+    await globeRendered(page);
+  });
+  await test.step('Then the rail offers the 540 Myr span’s layers, fossils among them, humans not', async () => {
+    await expect(rail.getByRole('button', { name: 'Fossils', exact: true })).toBeVisible();
+    await expect(rail.getByRole('button', { name: 'Humans', exact: true })).toHaveCount(0);
+  });
+  await test.step('When they tap Temperature, Then it is on, and the link keeps it', async () => {
+    const temperature = rail.getByRole('button', { name: /^Temperature/ });
+    await temperature.click();
+    await expect(temperature).toHaveAttribute('aria-pressed', 'true');
+    await expect(page).toHaveURL(/layers=[a-z,]*temperature/);
+    await expect(page).toHaveURL(/ma=250/);
+  });
+  await test.step('When they go to the ice ages, Then the rail offers theirs: humans, not fossils', async () => {
+    await pickSpan(page, 'Ice ages');
+    await expect(rail.getByRole('button', { name: 'Humans', exact: true })).toBeVisible();
+    await expect(rail.getByRole('button', { name: 'Fossils', exact: true })).toHaveCount(0);
+  });
+  await test.step('When they ask for all layers, Then the Layers panel opens', async () => {
+    await rail.getByRole('button', { name: 'All layers' }).click();
+    await expect(page.getByRole('dialog', { name: 'Layers' })).toBeVisible();
+  });
   expect(problems).toEqual([]);
 });

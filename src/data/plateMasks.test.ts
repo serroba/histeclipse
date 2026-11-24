@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import index from '../../public/data/plates/index.json';
 import type { Fetch } from '../util/fetchJson';
 import { framesAround } from './paleoDem';
-import { loadPlateMasks, platesBeyondText, plateText } from './plateMasks';
+import { loadPlateMasks, plateBrief, platesBeyondText, plateText } from './plateMasks';
 
 const serve =
   (body: unknown): Fetch =>
@@ -38,6 +38,15 @@ describe('the continent masks', () => {
     const old = loaded.frames.find(({ ma }) => ma === 1000);
     expect(old?.turn).toBeUndefined();
     expect(old && plateText(old)).toContain('No surface map reaches this far');
+  });
+
+  it('say in a few words how well they agree, where the surface map reaches (#1159)', async () => {
+    const loaded = await loadPlateMasks('/x', serve(index));
+    const at100 = loaded.frames.find(({ ma }) => ma === 100);
+    expect(at100 && plateBrief(at100)?.short).toBe('87% agree');
+    expect(at100 && plateBrief(at100)?.full).toBe(at100 && plateText(at100));
+    const old = loaded.frames.find(({ ma }) => ma === 1000);
+    expect(old && plateBrief(old)).toBeNull();
   });
 
   it('say how far back they reach, beyond the oldest', () => {

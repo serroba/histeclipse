@@ -211,7 +211,7 @@ const SCENARIOS: Record<string, Scenario> = {
       await rendered(page, 'globe');
     },
     action: async (page) => {
-      await page.getByRole('button', { name: 'Sky' }).click();
+      await page.getByRole('button', { name: 'Sky', exact: true }).click();
       await rendered(page, 'sky');
       await page.waitForTimeout(2000);
       await page.getByRole('button', { name: 'Orbit' }).click();
@@ -244,7 +244,7 @@ const SCENARIOS: Record<string, Scenario> = {
     setup: async (page) => {
       await page.goto('./?t=1500-06-01T12:00&loc=48,10&layers=carbonMade');
       await rendered(page, 'globe');
-      const layers = page.getByRole('button', { name: 'Layers' });
+      const layers = page.getByRole('button', { name: 'Layers', exact: true });
       if ((await layers.getAttribute('aria-expanded')) !== 'true') await layers.click();
       await page.getByRole('button', { name: 'How is it made?' }).click();
       await page

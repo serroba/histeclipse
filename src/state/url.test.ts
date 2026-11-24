@@ -98,7 +98,7 @@ describe('parseViewState', () => {
       impact: 'early',
       land: 'dhuime',
       snowball: 'hard',
-      water: 'inherited',
+      water: 'delivered',
       why: null,
       tree: null,
       craters: null,

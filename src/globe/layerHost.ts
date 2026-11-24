@@ -125,6 +125,7 @@ export type DeepPainter = (canvas: HTMLCanvasElement) => void;
 /** The order the deep-time map's parts are painted in, lower first. */
 export const DEEP_PAINT_ORDER = {
   settled: 0,
+  plateBoundaries: 5,
   iceOutlines: 10,
   routes: 20,
 } as const;

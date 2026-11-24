@@ -1,0 +1,84 @@
+/* The layers the span offers, on the zoom rail (#1156): a column of round icons under the
+   rail's own, in the Layers panel's groups, scrolling where a span offers more than fit. */
+.rail-layers {
+  display: flex;
+  /* It gives way first, scrolling, so the zoom keeps its track: before the zoom's own parts,
+     which give way first on a touch screen (touch.css, 1000). */
+  flex: 0 100000 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  /* All layers stays, whatever the room: the list above it gives way, down to none. */
+  min-height: 36px;
+}
+
+.rail-layers[hidden] {
+  display: none;
+}
+
+.rail-layer-list {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  /* Room for the rings and a finger's reach beside them while it scrolls. */
+  padding: 2px 4px 14px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  /* Its foot fades, so a list cut short reads as one that scrolls. */
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent);
+}
+
+.rail-layer-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Where the rail is short (layout.ts) and zooming, the zoom keeps the room: the layers wait in
+   Layers at the top. In deep time, with no zoom, they keep the rail. */
+.zoom-rail.is-short[data-zooming] .rail-layers {
+  display: none;
+}
+
+/* Each group set off from the next by a short rule. */
+.rail-layer-group + .rail-layer-group {
+  padding-top: 10px;
+  border-top: 1px solid var(--panel-border);
+}
+
+.rail-layer {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--ink-muted);
+}
+
+.rail-layer[aria-pressed='true'] {
+  border-color: rgb(143 180 255 / 0.6);
+  background: rgb(143 180 255 / 0.2);
+  color: var(--ink);
+}
+
+/* On, but nothing drawn here: a dashed ring, as the chips beside Layers mark it (#751). */
+.rail-layer[aria-pressed='true'][data-coverage] {
+  border-style: dashed;
+  background: var(--panel);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rail-layer[data-coverage='loading'] svg {
+    animation: rail-layer-loading 1.2s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes rail-layer-loading {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0.35;
+  }
+}

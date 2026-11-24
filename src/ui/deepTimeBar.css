@@ -160,6 +160,35 @@
   vertical-align: middle;
 }
 
+/* The plate boundaries' key (#1160): each kind's colour, as boundaryCanvas.ts paints it. */
+.boundary-key {
+  list-style: none;
+}
+
+.boundary-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  vertical-align: middle;
+}
+
+.boundary-swatch.is-ridge {
+  background: rgb(255 150 70);
+}
+
+.boundary-swatch.is-subduction {
+  background: rgb(90 190 255);
+}
+
+.boundary-swatch.is-transform {
+  background: rgb(170 225 110);
+}
+
+.boundary-swatch.is-other {
+  background: repeating-linear-gradient(90deg, rgb(255 255 255 / 0.6) 0 4px, transparent 4px 7px);
+}
+
 .deep-coast {
   min-height: 32px;
   border: 1px solid var(--panel-border);

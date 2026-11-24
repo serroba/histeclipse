@@ -193,36 +193,37 @@ export async function startApp(root: HTMLElement): Promise<void> {
       deepTime.setScale(scale);
     },
     said: () => features.said(),
-    // How each layer's load stands (#751): the features on the contract report theirs.
+    // Each layer's load (#751), step (#909) and chip's words (#1159), as its feature has them.
     loads: () => features.loads(),
-    actions: () => [
-      // The features on the contract offer their own (#909).
-      ...features.actions(),
-    ],
+    briefs: () => features.briefs(),
+    actions: () => features.actions(),
   });
   const markerCard = createMarkerCard();
   // How far out the view is, and that zooming out reaches the planets: from whichever body is
   // in focus, in the years (deep time leaves the Sun, Moon and planets out).
-  const zoomRail = createZoomRail({
-    onZoom(distance) {
-      globe.zoomTo(distance);
+  const zoomRail = createZoomRail(
+    {
+      onZoom(distance) {
+        globe.zoomTo(distance);
+      },
+      onWhyHere() {
+        asking.toggle();
+      },
+      onOrbits() {
+        store.set((state) => toggledLayer(state, 'orbits'));
+      },
+      onSpacecraft() {
+        store.set((state) => toggledLayer(state, 'spacecraft'));
+      },
+      onAsteroids() {
+        store.set((state) => toggledLayer(state, 'asteroids'));
+      },
+      onEarth() {
+        store.set((state) => ({ ...state, focus: 'earth', on: null, view: 'free' }));
+      },
     },
-    onWhyHere() {
-      asking.toggle();
-    },
-    onOrbits() {
-      store.set((state) => toggledLayer(state, 'orbits'));
-    },
-    onSpacecraft() {
-      store.set((state) => toggledLayer(state, 'spacecraft'));
-    },
-    onAsteroids() {
-      store.set((state) => toggledLayer(state, 'asteroids'));
-    },
-    onEarth() {
-      store.set((state) => ({ ...state, focus: 'earth', on: null, view: 'free' }));
-    },
-  });
+    layersPanel.rail,
+  );
   // "Why here?": while on, a tap on the globe says what each layer has there.
   const asking = createAsking({ store, zoomRail, root });
   const waysLegend = createWaysLegend(whySheet.mark('ways', 'Ways of life'));
@@ -257,8 +258,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     marked: (on) => {
       bottom.dataset['deep'] = on ? 'on' : 'off';
     },
-    header: (ma, story) => {
-      moment.deepHeader(ma, story);
+    header: (ma, story, when) => {
+      moment.deepHeader(ma, story, when);
     },
     storyDate: boundaries.storyDate,
     bar: (state, moment) => ({
@@ -308,7 +309,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     moonArrived: () => {
       const now = store.get();
       moment.show(now);
-      viewSwitch.render(now.mode, now.view, true, now.focus);
+      showViewSwitch(now);
       sky.render(now);
     },
   });
@@ -438,7 +439,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       textsHere: texts.here,
       evidence: deepTime.evidence,
     },
-    between: [notices.list, deepTime.glance, panels.showControls],
+    between: [notices.list, deepTime.glance, deepTime.hypotheses, panels.showControls],
     bottom: {
       eclipseCard: eclipses.card,
       eclipseScrubber: eclipses.scrubber,
@@ -596,14 +597,19 @@ export async function startApp(root: HTMLElement): Promise<void> {
     whySheet.show(state.why, whyVersion(state, hereData));
   }
 
-  /** The views offered, the Moon's own too: picking one asks for its theory (#981). */
+  /**
+   * The views offered, the Moon's own too: picking one asks for its theory (#981). Not in deep
+   * time, whose sky and Moon are not drawn: there the globe is the view (#1154).
+   */
   function showViewSwitch(state: ViewState): void {
     viewSwitch.render(state.mode, state.view, true, state.focus);
+    viewSwitch.root.hidden = state.ma !== null;
   }
 
   /** The Layers panel, and Explore's view of the layers. */
   function showLayers(state: ViewState): void {
     layersPanel.show(state);
+    zoomRail.setLayers(layersPanel.railOffered());
     explore.show(state);
   }
 

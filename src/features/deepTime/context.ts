@@ -54,7 +54,7 @@ export interface DeepTimeContext extends PartContext {
   /** The page is in deep time, or not. */
   marked(on: boolean): void;
   /** The header says the moment: how long ago, and the period; or the date a story lends. */
-  header(ma: number, story: StoryDate | null): void;
+  header(ma: number, story: StoryDate | null, when: string): void;
   /** The date a story lends deep time while it has the globe (#492), if any. */
   storyDate(): StoryDate | null;
   /** The layers' and surfaces' part of the bar for the moment, drawing them. */
@@ -72,6 +72,8 @@ export interface DeepTimePart {
   readonly bar: HTMLElement;
   /** "How do we know?", for the date panel (#1137): shown on the reconstructions' spans. */
   readonly evidence: HTMLElement;
+  /** The sketch's questions at the globe's left, before the surface maps. */
+  readonly hypotheses: HTMLElement;
   readonly glance: HTMLElement;
   /** The years' bar's scale row (#1116): how far back time reaches. */
   readonly yearsScale: HTMLElement;

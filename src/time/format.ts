@@ -65,14 +65,35 @@ export function formatDuration(seconds: number): string {
 const ICE_AGE_WORDS_MA = 3;
 
 /**
- * "250 million years ago", "252.5 million years ago", or, within the ice ages, in years:
+ * "250 million years ago", "252.5 million years ago", "2,408.0 million years ago", or, within the ice ages, in years:
  * "21,000 years ago", "2,581,000 years ago"; or "Today".
  */
 export function formatMa(ma: number): string {
   if (ma === 0) return 'Today';
   if (ma < ICE_AGE_WORDS_MA) return `${Math.round(ma * 1e6).toLocaleString('en')} years ago`;
-  // To a tenth: a moment played to 3,950.0000001 reads "3,950", not "3950.0" (#987).
-  const tenth = Math.round(ma * 10) / 10;
-  const amount = Number.isInteger(tenth) ? tenth.toLocaleString('en') : tenth.toFixed(1);
-  return `${amount} million years ago`;
+  // Whole where the moment is (3,950.0000001 reads "3,950", #987); otherwise always to a tenth,
+  // grouped, so a moment playing keeps its width: "2,468.0", not "2,468" then "2408.5".
+  const whole = Math.abs(ma - Math.round(ma)) < 1e-6;
+  return whole ? `${Math.round(ma).toLocaleString('en')} million years ago` : tenths(ma);
+}
+
+const tenths = (ma: number): string =>
+  `${ma.toLocaleString('en', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} million years ago`;
+
+/** How many times a second a playing date may change: slow enough to read (#1166). */
+const READS_A_SECOND = 4;
+
+/**
+ * The moment while it plays at `maPerSecond`: rounded to a step of 1, 2 or 5 times a power of
+ * ten, so the date changes a few times a second and not every frame: "255 million years ago",
+ * then "250", at 20 Myr a second; to a tenth, always shown, when slower.
+ */
+export function formatMaPlaying(ma: number, maPerSecond: number): string {
+  const rough = maPerSecond / READS_A_SECOND;
+  if (!(rough > 0)) return formatMa(ma);
+  const power = 10 ** Math.floor(Math.log10(rough));
+  const step = ([1, 2, 5, 10].find((each) => each * power >= rough) ?? 10) * power;
+  const shown = Math.round(ma / step) * step;
+  if (shown === 0 || shown < ICE_AGE_WORDS_MA) return formatMa(shown);
+  return step >= 1 ? formatMa(Math.round(shown)) : tenths(shown);
 }

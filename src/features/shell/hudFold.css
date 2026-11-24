@@ -152,6 +152,41 @@
   }
 }
 
+/* On the narrowest short phones the four presets (#1152) and the fold share a row only if the
+   fold is its chevron alone: its words stay for screen readers. */
+@media (max-width: 400px) and (max-height: 760px) {
+  .holocene-bar > .bar-fold {
+    min-width: 44px;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Drawn as short as the chip they replace (32 px), so the bar is no taller; a finger still
+     finds each within 44. */
+  .holocene-bar > .time-scale .time-option {
+    position: relative;
+    gap: 0;
+    min-height: 32px;
+    padding-block: 0;
+    line-height: 1;
+  }
+
+  .holocene-bar > .time-scale .time-option::after {
+    position: absolute;
+    inset: -6px 0;
+    content: '';
+  }
+
+  .holocene-bar > .bar-fold .panel-fold-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
 /* A phone on its side (#976): the date panel keeps to a narrow column at the left, so the globe
    has the height beside it (the layout moves it right of a panel that does not span the width,
    #946), rather than a strip between the panel and the bar. */

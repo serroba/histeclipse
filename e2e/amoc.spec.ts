@@ -47,7 +47,7 @@ test('when the AMOC records do not load, they are not fetched again as the years
     expect(asked).toBe(2);
   });
   const phone = (page.viewportSize()?.width ?? 1000) < 600;
-  if (phone) await page.getByRole('button', { name: 'Layers' }).click();
+  if (phone) await page.getByRole('button', { name: 'Layers', exact: true }).click();
   const chip = page.getByRole('group', { name: 'Layers on' }).locator('[data-layer="amoc"]');
   await test.step('Then its chip says it could not load', async () => {
     await expect(chip).toHaveAttribute('data-coverage', 'failed');

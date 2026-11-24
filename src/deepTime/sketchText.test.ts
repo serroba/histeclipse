@@ -40,9 +40,9 @@ describe('the sketch’s wording', () => {
   it('names the glaciation and how far the chosen model takes the ice', () => {
     const slush = { ...choices, snowball: 'slush' } as const;
     const lines = sketchLines(sketchAt(700, slush, true), slush, 700);
-    expect(lines).toHaveLength(1);
-    expect(lines[0]).toContain('Sturtian glaciation, 658.5–717.5 Ma');
-    expect(lines[0]).toContain('25°');
+    expect(lines).toHaveLength(2);
+    expect(lines[1]).toContain('Sturtian glaciation, 658.5–717.5 Ma');
+    expect(lines[1]).toContain('25°');
   });
 
   it('sums the sketch up in a line', () => {
@@ -53,11 +53,14 @@ describe('the sketch’s wording', () => {
       'Sketch, not a map: 22% of the surface land, its shapes and places invented · Makganyene snowball.',
     );
     expect(sketchHeadline(sketchAt(700, choices, true))).toBe(
-      'Sketch, not a map: Sturtian snowball.',
+      'Sketch, not a map: the continents from Cao et al. 2024, flooded or not · Sturtian snowball.',
     );
   });
 
-  it('says nothing where a reconstruction draws the land and no snowball is on', () => {
-    expect(sketchLines(sketchAt(1000, choices, true), choices, 1000)).toEqual([]);
+  it('says where a reconstruction draws the continents that they are its, flooded or not (#1149)', () => {
+    const lines = sketchLines(sketchAt(1000, choices, true), choices, 1000);
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain('Cao et al. 2024');
+    expect(lines[0]).toContain('shallow sea');
   });
 });

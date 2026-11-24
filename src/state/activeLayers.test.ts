@@ -124,3 +124,27 @@ describe('the Layers panel’s rows say what the chips say (#751)', () => {
     expect(steps.get('amoc')).toEqual({ why: 'loading…', step: null });
   });
 });
+
+describe('what a layer says beside its name (#1159)', () => {
+  const brief = { short: '82% agree', full: 'Cao et al. 2024 and PALEOMAP agree on 82%.' };
+
+  it('is said where the layer draws', () => {
+    const [plates] = activeLayers(at('ma=440&scale=all&layers=plates'), [], [['plates', brief]]);
+    expect(plates?.brief).toEqual(brief);
+  });
+
+  it('gives way to why where the layer has nothing here', () => {
+    const [plates] = activeLayers(
+      at('ma=440&scale=all&layers=plates'),
+      [['plates', { state: 'loading' }]],
+      [['plates', brief]],
+    );
+    expect(plates?.why).toBe('loading…');
+    expect(plates?.brief).toBeNull();
+  });
+
+  it('is nothing for a layer that says nothing', () => {
+    const [plates] = activeLayers(at('ma=440&scale=all&layers=plates'), [], [['plates', null]]);
+    expect(plates?.brief).toBeNull();
+  });
+});

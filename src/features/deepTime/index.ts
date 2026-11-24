@@ -6,7 +6,7 @@
  */
 
 import { deepChoices } from './choices';
-import { createWaterStrikes } from './waterStrikes';
+import { createSketchView } from './sketchView';
 import { frameDeepEarth } from './frame';
 import { magneticNorthLayer } from './magneticNorthLayer';
 import { loadPolarity, type PolarityScale } from '../../data/polarity';
@@ -24,7 +24,7 @@ import { moveToYear } from '../../time/yearInput';
 import { createDeepGlance } from './deepGlance';
 import { createDeepTimeBar } from '../../ui/deepTimeBar';
 import { periodAt, periodWords } from '../../deepTime/periods';
-import { formatMa } from '../../time/format';
+import { formatMa, formatMaPlaying } from '../../time/format';
 import {
   framesAhead,
   framesAround,
@@ -36,7 +36,7 @@ import { HOLOCENE_MA, maOfYear, yearOfMa } from '../../data/iceSheets';
 import { prefetchFrames } from '../../deepTime/playSpeed';
 import { deepPlaying } from './playing';
 import { animationLoop } from '../../util/animationLoop';
-import { PLATES_REACH_MA, sketchAt } from '../../deepTime/sketch';
+import { PLATES_REACH_MA } from '../../deepTime/sketch';
 import { barWindow } from '../../ui/deepBarModel';
 import { createSpanSwitch, type Span } from '../../ui/spanSwitch';
 import type { DeepTimeContext, DeepTimePart } from './context';
@@ -198,6 +198,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
   let paleoIndex: Promise<PaleoDemIndex> | null = null;
   // How far back the elevation maps reach, until their index says.
   let oldest = MAPS_REACH_MA;
+  const lessMotion = globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches;
   // Playing towards today, at a pace (#1076), easing near milestones and finds (#1077).
   const play = deepPlaying({
     store,
@@ -207,12 +208,10 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     changed: () => {
       showDeepTime(store.get());
     },
-    lessMotion: globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    lessMotion,
   });
-  // The delivered water's icy impactors, as play passes them (#1142).
-  const waterStrikes = createWaterStrikes((spec) => {
-    globe.playImpact(spec);
-  }, globalThis.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // The sketch before the maps, its questions at the globe's left, the icy impactors (#1158).
+  const sketchView = createSketchView(globe, deepChoices(store).onSketch, lessMotion);
 
   // Every reversal of the last 83 Ma: small, loaded the first time deep time shows.
   let polarity: PolarityScale | null = null;
@@ -238,14 +237,13 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     const pace = play.playing() ? play.speed() : null;
     magneticNorthOnGlobe.update(ma === null ? null : magneticNorthPlaying(ma, polarity, pace));
     if (ma !== null) wantPolarity();
-    waterStrikes.show(state, ma, play.playing());
     if (ma === null) {
       yearsSpan.render('years', state.yearsWindow === null);
       stopPlay();
       deepBar.render(null);
       glance.render(null);
       globe.setUncharted(false);
-      globe.setSketch(null);
+      sketchView.show(state, null, play.playing());
       globe.setDeepTime(null);
       globe.setTemperature(null);
       context.off(state);
@@ -253,7 +251,9 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     }
     const period = periodAt(ma);
     const story = context.storyDate();
-    context.header(ma, story);
+    // Playing, the date rounds to what can be read as it goes by (#1166).
+    const when = story?.when ?? (pace === null ? formatMa(ma) : formatMaPlaying(ma, pace));
+    context.header(ma, story, when);
     // A link to before the elevation maps opens on the scale that reaches it.
     const scale = state.deepScale === 'all' && ma > oldest ? 'eons' : state.deepScale;
     const part = barWindow(state.deepWindow, spanOf(scale), ma);
@@ -262,14 +262,8 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     const ice = scale === 'ice';
     const uncharted = ma > oldest;
     globe.setUncharted(uncharted);
-    // Before the maps, a sketch of the hypotheses chosen; invented land only where Plates does
-    // not draw a reconstruction's continents: beyond its reach, or with the layer off (#1144).
-    const { impact, land, snowball, water } = state;
-    const choices = { impact, land, snowball, water };
-    const reconstructed =
-      state.layers.has('plates') && ma <= (context.platesReach() ?? PLATES_REACH_MA);
-    const sketch = uncharted ? sketchAt(ma, choices, reconstructed) : null;
-    globe.setSketch(sketch);
+    const reconstructed = ma <= (context.platesReach() ?? PLATES_REACH_MA);
+    const sketch = sketchView.show(state, { ma, uncharted, reconstructed }, play.playing());
     // The layers' fields of the bar, drawing them: the temperature maps ahead as it plays.
     const { temperatureDrawn, ...fields } = context.bar(state, {
       ma,
@@ -280,6 +274,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     deepBar.render({
       ma,
       story,
+      when,
       // The part of the span asked for (#1074), while the moment is within it.
       ...part,
       part: !whole,
@@ -293,10 +288,10 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       zoom: zoomRoom(deepAxisWindow(shown(state), PRESENT_YEAR), PRESENT_YEAR),
       scale,
       ...fields,
-      sketch: sketch === null ? null : { sketch, choices },
+      sketch,
     });
     glance.render({
-      when: story?.when ?? formatMa(ma),
+      when,
       period: story?.what ?? (period === null ? 'Deep time' : periodWords(period)),
       ma,
       oldest: spanOf(scale),
@@ -369,6 +364,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
   return {
     bar: deepBar.root,
     evidence: deepBar.evidence,
+    hypotheses: sketchView.root,
     glance: glance.root,
     yearsScale: yearsSpan.root,
     show: showDeepTime,

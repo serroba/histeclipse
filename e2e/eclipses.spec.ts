@@ -230,7 +230,7 @@ test('a famous solar eclipse opens at its deepest where it was seen, and every v
   // Dallas is in totality from 18:40 to 18:44 UT, not at greatest eclipse (18:17) in Mexico.
   await expect(page).toHaveURL(/t=2024-04-08T18:4[1-4]/);
   await expect(page.locator('.eclipse-observer')).toContainText('total');
-  await page.getByRole('button', { name: 'Sky' }).click();
+  await page.getByRole('button', { name: 'Sky', exact: true }).click();
   await skyRendered(page);
   await expect(page.getByTestId('sky-eclipse')).toHaveText(
     'Totality: the Moon hides the whole Sun.',

@@ -112,6 +112,11 @@ export interface PlateSurface {
   /** How far each mask is turned east about the axis, degrees, to line up with the surface. */
   readonly turnYounger: number;
   readonly turnOlder: number;
+  /**
+   * Outlined, as the Plates layer draws them; or not, only the land under a sketch (#1149).
+   * Not said, outlined.
+   */
+  readonly outlined?: boolean;
 }
 
 /**
@@ -125,4 +130,6 @@ export interface SurfaceSketch {
   readonly land: number;
   /** Ice covers everything poleward of this latitude, degrees; 90 or more draws none. */
   readonly iceEdge: number;
+  /** The land is the plates' continents, as their masks draw them (#1149), not invented. */
+  readonly reconstructed?: boolean;
 }

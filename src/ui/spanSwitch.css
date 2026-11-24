@@ -44,9 +44,11 @@
 }
 
 @media (max-width: 360px) {
-  /* The narrowest phones (320 px): the four spans and Layers on one row, inside the panel. */
+  /* The narrowest phones (320 px): the four spans and the bar's fold on one row (#1152), with
+     room to spare for a wider font than ours. */
   .time-option:has(> .icon-label) {
-    padding: 2px 5px;
+    padding: 2px 3px;
+    font-size: 11px;
   }
 }
 
@@ -89,8 +91,9 @@
   }
 }
 
-/* On a phone, upright or on its side, one chip names the preset shown and opens the four. */
-@media (max-width: 600px), (max-height: 500px) {
+/* On a phone on its side, where height is short, one chip names the preset shown and opens the
+   four; upright, the four show in a row, icon over word (#1152). */
+@media (max-height: 500px) {
   .time-scale-row {
     flex-wrap: nowrap;
   }

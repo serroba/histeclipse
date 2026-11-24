@@ -28,3 +28,8 @@
 body:has(.history-track[data-playing='true']) :is(.hud-time, .hud-detail) {
   display: none;
 }
+
+/* The date's digits keep one width, so a moment playing does not shake the words after it. */
+.hud-date {
+  font-variant-numeric: tabular-nums;
+}
