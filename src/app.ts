@@ -258,8 +258,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     marked: (on) => {
       bottom.dataset['deep'] = on ? 'on' : 'off';
     },
-    header: (ma, story) => {
-      moment.deepHeader(ma, story);
+    header: (ma, story, when) => {
+      moment.deepHeader(ma, story, when);
     },
     storyDate: boundaries.storyDate,
     bar: (state, moment) => ({

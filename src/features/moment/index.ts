@@ -43,7 +43,7 @@ export interface MomentPart {
   /** Show the moment, the header and what is placed by it. */
   readonly show: (state: ViewState) => void;
   /** The header in deep time, with the date a story lends, if any. */
-  readonly deepHeader: (ma: number, story?: StoryDate | null) => void;
+  readonly deepHeader: (ma: number, story?: StoryDate | null, when?: string) => void;
   /** The moment last shown, in Terrestrial Time; null before the first. */
   readonly terrestrial: () => JulianDay | null;
 }
@@ -145,11 +145,11 @@ export function mountMoment(context: MomentContext): MomentPart {
 
   /**
    * The header in deep time: how long ago, and the period by the ICS chart; or, while a story
-   * has the globe, the date it lends (#492).
+   * has the globe, the date it lends (#492); `when`, the moment as it reads playing (#1166).
    */
-  function showDeepTimeText(ma: number, story: StoryDate | null = null): void {
+  function showDeepTimeText(ma: number, story: StoryDate | null = null, when?: string): void {
     const period = periodAt(ma);
-    dateText.textContent = story?.when ?? formatMa(ma);
+    dateText.textContent = story?.when ?? when ?? formatMa(ma);
     timeText.textContent = '';
     detailText.textContent = story?.what ?? (period === null ? 'Deep time' : periodWords(period));
   }
