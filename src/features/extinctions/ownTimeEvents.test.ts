@@ -63,4 +63,32 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     played?.end();
     expect(update).toHaveBeenLastCalledWith(null);
   });
+
+  it('draw the Deccan Traps fuming beside Chicxulub’s strike, outranking the strike alone (#1206)', () => {
+    const event = ownTimeOf(DATA, 'k-pg-extinction', 66);
+    expect(event?.rank).toBe(1);
+    const strike = { at: vi.fn(), end: vi.fn(), moveTo: vi.fn(), held: () => false, hold: vi.fn() };
+    const update = vi.fn();
+    const played = event?.play({
+      strikes: {
+        flyTo: vi.fn(),
+        zoomTo: vi.fn(),
+        playImpact: () => strike,
+        on: { dataset: {} },
+      },
+      layer: () => ({ update }),
+    } as unknown as Parameters<NonNullable<typeof event>['play']>[0]);
+    played?.at(5);
+    expect(strike.at).toHaveBeenCalledWith(5);
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ spread: 7 }));
+    played?.end();
+    expect(strike.end).toHaveBeenCalled();
+    expect(update).toHaveBeenLastCalledWith(null);
+    // Without the Deccan's place, the strike alone.
+    const bare: ExtinctionSites = {
+      ...DATA,
+      sites: DATA.sites.filter((site) => site.id !== 'deccan-traps'),
+    };
+    expect(ownTimeOf(bare, 'k-pg-extinction', 66)?.rank).toBeUndefined();
+  });
 });

@@ -88,6 +88,17 @@ export function emeishanFuming(seconds: number): Fuming {
 }
 
 /**
+ * The Deccan Traps through Chicxulub's clock (#1206), seconds since the strike: erupting across
+ * its million years in both readings, whether most of the lava came before the impact (Schoene
+ * et al. 2019; Hull et al. 2020) or some three quarters after it (Sprain et al. 2019). Drawn
+ * steady and pale, lava without the sills' dark gas: when its pulses fell is what is argued.
+ */
+export function deccanFuming(seconds: number): Fuming {
+  const lava = seconds > -60 ? 0.7 : 0;
+  return { lava, gas: 0, haze: 0.15 * lava };
+}
+
+/**
  * Where `count` vents lie within `spread` degrees of `center`: scattered over a disc by the
  * golden angle, so they fill it evenly without a pattern, the same each time.
  */

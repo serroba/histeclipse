@@ -125,4 +125,23 @@ describe('events in their own time (#1191)', () => {
     expect(hold).not.toHaveBeenCalled();
     expect(view().ma).toBe(70);
   });
+
+  it('lets a fuller drawing of the same event take its clock or its offer over (#1206)', () => {
+    const { own } = service('slow');
+    const alone = event('Chicxulub', layer);
+    const fuller = event('Chicxulub', layer);
+    expect(own.arrive(alone.made, 66)).toBe('clock');
+    expect(own.arrive({ ...fuller.made, rank: 1 }, 66)).toBe('clock');
+    expect(alone.end).toHaveBeenCalledTimes(1);
+    expect(document.querySelectorAll('.strike-clock')).toHaveLength(1);
+    // The fuller open, the plainer is left out.
+    expect(own.arrive(alone.made, 66)).toBe('already');
+  });
+
+  it('offers the fuller drawing in place of the plainer one', () => {
+    const { own } = service('normal');
+    expect(own.arrive(event('Chicxulub', layer).made, 66)).toBe('offer');
+    expect(own.arrive({ ...event('Chicxulub', layer).made, rank: 1 }, 66)).toBe('offer');
+    expect(document.querySelectorAll('.strike-offer')).toHaveLength(1);
+  });
 });
