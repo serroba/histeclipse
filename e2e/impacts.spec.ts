@@ -112,15 +112,16 @@ test(
   },
 );
 
-test('a crater’s card estimates its impactor, and plays the impact as an illustration', async ({
+test('a crater’s card estimates its impactor, and Chicxulub plays in its own time (#1173)', async ({
   page,
 }) => {
-  // Two impacts, each a turn of the globe and ten seconds of animation: more than the usual
-  // budget on a slow runner.
+  // Two impacts, each a turn of the globe and its clock: more than the usual budget on a slow
+  // runner.
   test.slow();
   const problems = collectProblems(page);
   const card = page.getByTestId('marker-card');
   const globe = page.getByTestId('globe');
+  const clock = page.getByRole('dialog', { name: 'Chicxulub, in its own time' });
   for (const [where, link] of [
     ['today', './?t=2024-04-08T18:17&layers=impacts&cam=20,-90,3'],
     [
@@ -145,17 +146,37 @@ test('a crater’s card estimates its impactor, and plays the impact as an illus
     await test.step('When they play the impact', async () => {
       await card.getByRole('button', { name: 'Play the impact (an illustration)' }).click();
     });
-    await test.step('Then the card makes way, and the strike reaches the whole globe', async () => {
+    await test.step('Then the card makes way, and its clock opens and plays past the strike', async () => {
       await expect(card).toBeHidden();
-      // Set as it starts and held for its ten seconds or more: the veil over the globe (#1167).
-      await expect(globe).toHaveAttribute('data-impact-worldwide', 'true', { timeout: 20_000 });
+      await expect(clock).toBeVisible({ timeout: 20_000 });
+      await expect(globe).toHaveAttribute('data-impact-worldwide', 'true');
+      await expect(globe).toHaveAttribute('data-strike-clock', 'Chicxulub');
+      await expect(clock).toHaveAttribute('data-seconds', /^[1-9]/, { timeout: 30_000 });
     });
-    await test.step('And the impact plays out, and ends', async () => {
-      // Its outcome, not the moment it shows: on a slow runner that moment can slip by unseen,
-      // and a phone drawn in software takes a while to play it out.
-      await expect(globe).toHaveAttribute('data-impacts-played', '1', { timeout: 60_000 });
+    await test.step('When they pause it with Space and step it on with an arrow', async () => {
+      await page.keyboard.press('Space');
+      await expect(clock).toHaveAttribute('data-playing', 'false');
+      const before = Number(await clock.getAttribute('data-seconds'));
+      await page.keyboard.press('ArrowRight');
+      await expect
+        .poll(async () => Number(await clock.getAttribute('data-seconds')))
+        .toBeGreaterThan(before);
+    });
+    await test.step('Then it says the moment, what was happening and whose studies say so', async () => {
+      await expect(clock.locator('.strike-clock-when')).toHaveText(/ after$/);
+      await expect(clock.locator('.strike-clock-phase')).not.toBeEmpty();
+      await expect(clock.locator('.strike-clock-sources a').first()).toHaveAttribute(
+        'href',
+        /^https:\/\/doi\.org\/10\./,
+      );
+    });
+    await test.step('When they close it, the strike ends', async () => {
+      await clock.getByRole('button', { name: 'Close' }).click();
+      await expect(clock).toBeHidden();
+      await expect(globe).toHaveAttribute('data-impacts-played', '1', { timeout: 30_000 });
       await expect(globe).toHaveAttribute('data-impact-playing', 'false');
       await expect(globe).toHaveAttribute('data-impact-worldwide', 'false');
+      await expect(globe).not.toHaveAttribute('data-strike-clock');
     });
   }
   expect(problems).toEqual([]);

@@ -101,6 +101,15 @@ export class Playback implements StagePart {
         impact.moveTo(place);
         this.#world.invalidate();
       },
+      at: (seconds) => {
+        if (!this.#impacts.has(impact)) return;
+        impact.at(seconds);
+        this.#world.invalidate();
+      },
+      end: () => {
+        impact.end();
+        this.#world.invalidate();
+      },
     };
   }
 

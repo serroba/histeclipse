@@ -16,6 +16,8 @@ import {
 } from '../../data/impacts';
 import { impactLayer } from './impactLayer';
 import type { PlayingImpact } from '../../globe/impactAnimation';
+import { createStrikeClock, type StrikeClock } from './strikeClock';
+import { strikePhasesOf, type StrikePhase } from './strikePhases';
 import type { ViewState } from '../../state/viewState';
 import { IMPACTS_CHIP, impactsChip, type ImpactsView } from './chip';
 import type { RelatedStep } from '../../ui/markerCard';
@@ -38,7 +40,7 @@ import {
   type ImpactPlay,
 } from './view';
 
-const NEEDS = ['cards', 'timeline', 'deepTime', 'strikes'] as const;
+const NEEDS = ['cards', 'timeline', 'deepTime', 'strikes', 'overPage'] as const;
 /** How long a strike is followed, ms: longer than the longest plays, on a slow device too. */
 const FOLLOW_MS = 30_000;
 type ImpactsContext = FeatureContext<(typeof NEEDS)[number]>;
@@ -195,10 +197,40 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
       return state;
     });
     globe.zoomTo(distance);
-    // Once the globe has turned to it.
+    const phases = strikePhasesOf(spec.key);
+    // Once the globe has turned to it: in its own time, where the clock tells it (#1173).
     window.setTimeout(() => {
-      follow(spec.key, globe.playImpact(spec));
+      if (phases === null) {
+        follow(spec.key, globe.playImpact(spec));
+        return;
+      }
+      openClock(spec, phases);
     }, 1000);
+  }
+
+  // The strike clock (#1173), made the first time a strike is watched in its own time, and the
+  // strike it drives.
+  let clock: StrikeClock | null = null;
+  function openClock(spec: ImpactPlay, phases: readonly StrikePhase[]): void {
+    // One at a time: closing the last ends its strike.
+    clock?.close();
+    clock?.root.remove();
+    const playing = globe.playImpact({ ...spec, driven: true });
+    follow(spec.key, playing);
+    globe.on.dataset['strikeClock'] = spec.key;
+    clock = createStrikeClock({
+      title: `${spec.key}, in its own time`,
+      phases,
+      onMoment(seconds) {
+        playing.at(seconds);
+      },
+      onClose() {
+        playing.end();
+        delete globe.on.dataset['strikeClock'];
+      },
+    });
+    context.overPage.add(clock.root);
+    clock.open();
   }
 
   return {

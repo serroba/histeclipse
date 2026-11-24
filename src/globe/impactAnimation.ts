@@ -33,11 +33,19 @@ import {
 
 import type { GeoPoint } from '../state/viewState';
 import { frameClock } from '../util/frameClock';
-import { clamp01, easeOut } from '../util/timing';
+import { easeOut } from '../util/timing';
 import { geoToVector } from './geo';
 import { createImpactShell } from './impactShell';
-import { APPROACH, impactSizes, RING } from './impactSizes';
-import { localFrame } from './motion';
+import { APPROACH_SECONDS } from '../deepTime/strikeClock';
+import {
+  illustratedEnd,
+  illustratedLook,
+  illustratedPace,
+  strikeLook,
+  type ImpactLook,
+} from './impactLook';
+import { impactSizes } from './impactSizes';
+import { approachDirection } from './motion';
 
 export interface ImpactSpec {
   readonly place: GeoPoint;
@@ -50,6 +58,8 @@ export interface ImpactSpec {
   readonly icy?: boolean;
   /** How far its effects reached around the Earth, 0 to 1 (`worldwideReach`); 0 if left out. */
   readonly worldwide?: number;
+  /** Driven by the strike clock (#1173), shown at the moments it is given, not played. */
+  readonly driven?: boolean;
 }
 
 /** An impact's colours: its trail, its spreading blast and its crater's rim. */
@@ -60,6 +70,10 @@ const ICY = [new Color(0.6, 0.85, 1), new Color(0.5, 0.78, 1), new Color(0.78, 0
 export interface PlayingImpact {
   /** Carry it, crater and all, to `place`: where the plates have the crater as time runs on. */
   moveTo(place: GeoPoint): void;
+  /** Driven by the strike clock (#1173): show it `seconds` after the strike. */
+  at(seconds: number): void;
+  /** Take it away. */
+  end(): void;
 }
 
 export interface ImpactAnimation extends PlayingImpact {
@@ -89,18 +103,6 @@ function glowTexture(icy: boolean): CanvasTexture {
   return new CanvasTexture(canvas);
 }
 
-/** The direction the impactor came from, as a unit vector in Earth-fixed coordinates. */
-function approachDirection(place: GeoPoint, fromAzimuth: number, angleDegrees: number): Vector3 {
-  const { up, east, north } = localFrame(place);
-  const azimuth = (fromAzimuth * Math.PI) / 180;
-  const elevation = (angleDegrees * Math.PI) / 180;
-  const level = north
-    .clone()
-    .multiplyScalar(Math.cos(azimuth))
-    .add(east.clone().multiplyScalar(Math.sin(azimuth)));
-  return level.multiplyScalar(Math.cos(elevation)).add(up.multiplyScalar(Math.sin(elevation)));
-}
-
 export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
   // Timed by the frames' own clock, from the first frame it is drawn in; a frame that comes very
   // late (a large map loading) pauses it rather than skipping to the end.
@@ -108,7 +110,7 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
   const sizes = impactSizes(spec.craterKm, spec.worldwide);
   const { worldwide } = sizes;
   // A smaller impact plays the same story quicker; a worldwide one's veil takes longer to clear.
-  const pace = 0.5 + 0.5 * Math.min(sizes.strength, 1);
+  const pace = illustratedPace(sizes);
   const group = new Group();
   const ground = new Vector3(...geoToVector(spec.place, 1.002));
   const up = ground.clone().normalize();
@@ -172,7 +174,7 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
   group.add(trail, head, flash, blast, crater);
 
   // For a worldwide impact, a shell over the whole globe: the ejecta's front and the veil.
-  const shell = worldwide > 0 ? createImpactShell(up, worldwide, icy) : null;
+  const shell = worldwide > 0 ? createImpactShell(up, icy) : null;
   if (shell !== null) group.add(shell.mesh);
   group.name = 'impact';
 
@@ -183,6 +185,28 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
     trailPositions.setXYZ(1, tail.x, tail.y, tail.z);
     trailPositions.needsUpdate = true;
   }
+
+  /** Draw it as `look` has it. */
+  function render(look: ImpactLook): void {
+    const at = origin.clone().lerp(ground, look.falling ** 1.6);
+    head.position.copy(at);
+    head.visible = look.falling < 1;
+    trail.visible = look.falling < 1;
+    setTrail(at, sizes.trail * (1 - look.falling * 0.5));
+    const { flashing, spreading } = look;
+    flash.visible = flashing !== null;
+    flash.scale.setScalar(sizes.flash * (0.07 + 0.93 * easeOut(flashing ?? 0)));
+    flash.material.opacity = 1 - (flashing ?? 1);
+    blast.visible = spreading !== null;
+    blast.scale.setScalar(Math.max(0.001, blastRadius * easeOut(spreading ?? 0)));
+    blast.material.opacity = 0.9 * (1 - (spreading ?? 1));
+    crater.material.opacity = 0.95 * look.crater;
+    shell?.show(look.shell);
+  }
+  // Driven by the strike clock, it shows the moment it is given, until it is ended.
+  const driven = spec.driven === true;
+  let ended = false;
+  if (driven) render(strikeLook(-APPROACH_SECONDS, worldwide));
 
   // Built at its place; moved by turning the whole about the Earth's centre, from there to here.
   const struckAt = up.clone();
@@ -196,32 +220,17 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
       group.quaternion.setFromUnitVectors(struckAt, toward);
     },
     update(now) {
+      if (driven) return !ended;
       // Time as for an impact Chicxulub's size: a smaller one runs through it faster.
       const t = clock.tick(now) / pace;
-      // The approach, quickening as it falls.
-      const falling = clamp01(t / APPROACH);
-      const at = origin.clone().lerp(ground, falling ** 1.6);
-      head.position.copy(at);
-      head.visible = falling < 1;
-      trail.visible = falling < 1;
-      setTrail(at, sizes.trail * (1 - falling * 0.5));
-      // The flash.
-      const flashing = clamp01((t - APPROACH) / sizes.flashMs);
-      flash.visible = t >= APPROACH && flashing < 1;
-      flash.scale.setScalar(sizes.flash * (0.07 + 0.93 * easeOut(flashing)));
-      flash.material.opacity = 1 - flashing;
-      // The ring spreading and fading.
-      const spreading = clamp01((t - APPROACH) / RING);
-      blast.visible = t >= APPROACH && spreading < 1;
-      blast.scale.setScalar(Math.max(0.001, blastRadius * easeOut(spreading)));
-      blast.material.opacity = 0.9 * (1 - spreading);
-      // The crater, settling in after the flash and fading at the end.
-      const end = sizes.totalMs / pace;
-      const settled = clamp01((t - APPROACH - sizes.flashMs) / 600);
-      const leaving = clamp01((t - (end - 800)) / 800);
-      crater.material.opacity = 0.95 * settled * (1 - leaving);
-      shell?.update(t - APPROACH, end - APPROACH);
-      return t < end;
+      render(illustratedLook(t, sizes));
+      return !ended && t < illustratedEnd(sizes);
+    },
+    at(seconds) {
+      if (driven) render(strikeLook(seconds, worldwide));
+    },
+    end() {
+      ended = true;
     },
     dispose() {
       group.removeFromParent();

@@ -8,7 +8,26 @@
     "collins2005",
     "collins2020",
     "schulte2010",
+    "gulick2019",
+    "morgan2016",
+    "kringDurda2002",
+    "range2022",
+    "robertson2013",
+    "goldinMelosh2009",
+    "belcher2015",
+    "morgan2013",
+    "ohno2014",
+    "bardeen2017",
+    "tabor2020",
+    "brugger2017",
+    "senel2023",
+    "henehan2019",
+    "lowery2018",
+    "lyson2019",
+    "hull2020",
+    "schoene2019",
+    "sprain2019",
     "naturalEarth"
   ],
-  "how": "Places when they struck reconstructed on the PALEOMAP model by the GPlates Web Service. A crater’s card estimates the impactor’s size from the crater by Collins et al.’s scaling laws, under assumptions it states; “Play the impact” is an illustration, with Chicxulub’s approach from Collins et al. 2020 and the others assumed; for the largest, Chicxulub’s size and up, it spreads hot ejecta over the whole globe and darkens the sky, as the worldwide boundary layer and the impact winter after Chicxulub show (Schulte et al. 2010), compressed into seconds. “Impacts through time” draws each crater’s place every 5 million years from its strike to today: as a track on a map of today’s coasts (Natural Earth), a picked crater followed by a dot along it, or as a line through a 3D box of longitude, latitude and time. The reconstruction reaches 540 million years back, so older craters start there; craters dated only loosely are drawn faint from the middle of their span. A crater’s card shows the lead photograph of its Wikipedia page (found through Wikidata) where Wikimedia Commons has it under a free licence, credited on the card; maps and diagrams are left out."
+  "how": "Places when they struck reconstructed on the PALEOMAP model by the GPlates Web Service. A crater’s card estimates the impactor’s size from the crater by Collins et al.’s scaling laws, under assumptions it states; “Play the impact” is an illustration, with Chicxulub’s approach from Collins et al. 2020 and the others assumed; for the largest, Chicxulub’s size and up, it spreads hot ejecta over the whole globe and darkens the sky, as the worldwide boundary layer and the impact winter after Chicxulub show (Schulte et al. 2010), compressed into seconds. “Impacts through time” draws each crater’s place every 5 million years from its strike to today: as a track on a map of today’s coasts (Natural Earth), a picked crater followed by a dot along it, or as a line through a 3D box of longitude, latitude and time. The reconstruction reaches 540 million years back, so older craters start there; craters dated only loosely are drawn faint from the middle of their span. A crater’s card shows the lead photograph of its Wikipedia page (found through Wikidata) where Wikimedia Commons has it under a free licence, credited on the card; maps and diagrams are left out. Chicxulub can be watched in its own time: a clock from the strike on a log scale, from the impactor coming in to life’s recovery a million years on, each phase from the studies that place it, and where they disagree, each side."
 }
