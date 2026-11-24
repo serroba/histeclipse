@@ -13,6 +13,7 @@ import { astronomicalYear, toAstronomicalYear, toHistoricalYear } from '../time/
 import { parseYearNumber } from '../time/yearInput';
 import { yearRange } from '../time/yearRange';
 import { errorMessage } from '../util/errors';
+import { createChipRow } from './chipRow';
 import { element } from './dom';
 import { createYearWheel } from './yearWheel';
 import './timeline.css';
@@ -152,13 +153,8 @@ export function createTimeline(
     wheel.panel,
   );
   const list = element('ul', { class: 'eclipse-list', 'aria-label': 'Eclipses this year' });
-  // A fade at the end that cuts off tells the row scrolls; it goes once the end is reached.
-  function markOverflow(): void {
-    const more = list.scrollLeft + list.clientWidth < list.scrollWidth - 2;
-    list.dataset['more'] = String(more);
-  }
-  list.addEventListener('scroll', markOverflow, { passive: true });
-  new ResizeObserver(markOverflow).observe(list);
+  // A fade at the end that cuts off tells the row scrolls; built again only when it changes.
+  const row = createChipRow(list);
   const ANYWHERE = '';
   const seenSelect = element('select', {
     id: 'seen-select',
@@ -302,20 +298,20 @@ export function createTimeline(
       if (!view.on) seenRow.hidden = true;
       const marks = view.seen.view.status === 'ready' ? view.seen.view.marks : null;
       const listing = view.eclipses;
-      if (listing.status === 'loading') {
-        list.replaceChildren(element('li', { class: 'eclipse-empty' }, 'Loading…'));
-        return;
-      }
-      if (listing.status === 'error') {
-        list.replaceChildren(element('li', { class: 'eclipse-empty' }, listing.message));
+      const empty = (text: string): HTMLElement[] => [
+        element('li', { class: 'eclipse-empty' }, text),
+      ];
+      if (listing.status !== 'ready') {
+        const text = listing.status === 'loading' ? 'Loading…' : listing.message;
+        row.show([listing.status, text], () => empty(text), false);
         return;
       }
       if (listing.eclipses.length === 0) {
-        list.replaceChildren(element('li', { class: 'eclipse-empty' }, 'No eclipses this year'));
+        row.show([listing.eclipses], () => empty('No eclipses this year'), false);
         return;
       }
-      list.replaceChildren(
-        ...listing.eclipses.map((eclipse) => {
+      row.show([listing.eclipses, marks, view.selected, view.calendar], () =>
+        listing.eclipses.map((eclipse) => {
           const body = isSolar(eclipse) ? 'solar' : 'lunar';
           const kind = `${eclipse.kind[0]?.toUpperCase() ?? ''}${eclipse.kind.slice(1)} ${body}`;
           const mark = marks?.get(eclipse);
@@ -343,7 +339,6 @@ export function createTimeline(
           return element('li', {}, chip);
         }),
       );
-      markOverflow();
     },
   };
 }
