@@ -5,7 +5,9 @@
  */
 
 import { loadExtinctionSites, type ExtinctionSites } from '../../data/extinctions';
+import type { EarthPart } from '../../globe/earthParts';
 import { loadOnce } from '../../state/loadOnce';
+import { ANOXIC_SEAS_PART } from './anoxicSeasPart';
 import { feature } from '../feature';
 import { extinctionLayer } from './extinctionLayer';
 import { ownTimeOf } from './ownTimeEvents';
@@ -19,6 +21,9 @@ import {
   pickedMark,
   type ExtinctionMark,
 } from './view';
+
+/** The extinctions' parts of the Earth shader: the oxygen-poor seas (#1202). */
+export const EXTINCTION_EARTH_PARTS: readonly EarthPart[] = [ANOXIC_SEAS_PART];
 
 export const extinctionsFeature = feature({
   id: 'extinctions',

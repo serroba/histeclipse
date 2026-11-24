@@ -1,8 +1,9 @@
 /**
- * The cold and the suffocating seas on the globe (#1202): a white ice sheet at its centre,
- * reaching as far as the moment says, and dark patches of oxygen-poor water spreading round
- * another place, as strongly as it says (`seasModel.ts`). An illustration. A layer on the
- * globe's host: `globe.addLayer(seasLayer)`.
+ * The cold and the suffocating seas on the globe (#1202, #1208): a white ice sheet at its
+ * centre, reaching as far as the moment says, and patches of oxygen-poor water spreading round
+ * another place, as strongly as it says (`seasModel.ts`), over the sea only, by the Earth
+ * shader's part (`anoxicSeasPart.ts`). An illustration. A layer on the globe's host:
+ * `globe.addLayer(seasLayer)`.
  *
  * Three.js glue, covered by the Playwright suite.
  */
@@ -21,6 +22,7 @@ import {
 import type { GeoPoint } from '../../core/geo';
 import { geoToVector } from '../../globe/geo';
 import type { LayerFactory } from '../../globe/layerHost';
+import { ANOXIA_PATCHES, ANOXIC_SEAS_PART } from './anoxicSeasPart';
 import { ventsAround } from './fumesModel';
 import type { Seas } from './seasModel';
 
@@ -33,10 +35,8 @@ export interface SeasMoment {
   readonly seas: Seas;
 }
 
-const PATCHES = 9;
 const UP = new Vector3(0, 1, 0);
 const ICE = new Color(0.94, 0.97, 1);
-const ANOXIC = new Color(0.22, 0.1, 0.3);
 
 /** A cap `degrees` across from its pole, its pole on +Y, made once a degree. */
 function capGeometry(cache: Map<number, SphereGeometry>, degrees: number): SphereGeometry {
@@ -97,42 +97,40 @@ export const seasLayer: LayerFactory<SeasMoment | null> = (host) => {
   const group = new Group();
   group.visible = false;
   const ice = cap(ICE, edge, cache);
-  const patches = Array.from({ length: PATCHES }, () => cap(ANOXIC, edge, cache));
-  group.add(ice, ...patches);
+  group.add(ice);
   host.onEarth.add(group);
+  const anoxia = host.earthPart(ANOXIC_SEAS_PART);
   let placed = '';
 
   return {
     update(moment) {
       host.container.dataset['seas'] = moment === null ? 'off' : 'on';
       group.visible = moment !== null;
+      if (moment === null) anoxia.anoxiaStrength.value = 0;
       if (moment !== null) {
         const key = JSON.stringify([moment.ice, moment.anoxia, moment.spread]);
         if (key !== placed) {
           placed = key;
           if (moment.ice !== null) point(ice, moment.ice);
-          ventsAround(moment.anoxia, PATCHES, moment.spread).forEach((place, index) => {
-            const patch = patches[index];
-            if (patch !== undefined) point(patch, place);
+          ventsAround(moment.anoxia, ANOXIA_PATCHES, moment.spread).forEach((place, index) => {
+            // Each patch a little wider than the last, so they do not look stamped.
+            const reach = ((5 + (index % 3) * 2) * Math.PI) / 180;
+            const centre = new Vector3(...geoToVector(place, 1)).normalize();
+            anoxia.anoxiaPatches.value[index]?.set(centre.x, centre.y, centre.z, reach);
           });
         }
         const { seas } = moment;
         ice.visible = moment.ice !== null && seas.ice > 0;
         ice.geometry = capGeometry(cache, seas.ice);
         ice.material.opacity = 0.85;
-        patches.forEach((patch, index) => {
-          // Each patch a little larger than the last, so they do not look stamped.
-          patch.geometry = capGeometry(cache, (4 + (index % 3) * 1.5) * (0.5 + 0.5 * seas.anoxia));
-          patch.material.opacity = 0.55 * seas.anoxia;
-          patch.visible = seas.anoxia > 0;
-        });
+        anoxia.anoxiaStrength.value = seas.anoxia;
       }
       host.requestRender();
     },
     dispose() {
       for (const geometry of cache.values()) geometry.dispose();
       edge.dispose();
-      for (const mesh of [ice, ...patches]) mesh.material.dispose();
+      ice.material.dispose();
       group.removeFromParent();
     },
   };
