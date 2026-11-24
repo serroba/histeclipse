@@ -45,8 +45,10 @@ function createPlayButton(options: PlayButtonOptions, onPlay: (play: boolean) =>
     class: options.className,
     ...options.attributes,
   });
-  let playing = false;
+  let playing: boolean | null = null;
   function set(next: boolean): void {
+    // Rendered every frame while playing: write only what changed (#1187).
+    if (next === playing) return;
     playing = next;
     const name = next ? words.pause : words.play;
     if (glyph) {
@@ -56,12 +58,12 @@ function createPlayButton(options: PlayButtonOptions, onPlay: (play: boolean) =>
   }
   set(options.playing);
   button.addEventListener('click', () => {
-    onPlay(!playing);
+    onPlay(playing !== true);
   });
   return {
     button,
     get playing() {
-      return playing;
+      return playing === true;
     },
     set,
   };

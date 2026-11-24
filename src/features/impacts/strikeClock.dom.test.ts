@@ -97,6 +97,27 @@ describe('the strike clock’s panel (#1173)', () => {
     expect(onMoment.mock.lastCall?.[0]).toBeCloseTo(120, 0);
   });
 
+  it('rewrites a phase only when it changes, not each frame (#1187)', () => {
+    const { made, slider } = clock();
+    made.open();
+    const move = (seconds: number): void => {
+      slider.value = String(positionAt(seconds));
+      slider.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    move(120);
+    const first = made.root.querySelector('.strike-clock-sources a');
+    const when = made.root.querySelector('.strike-clock-when')?.firstChild;
+    move(600);
+    // The same phase: its links and the moment's text node kept, the words changed.
+    expect(made.root.querySelector('.strike-clock-sources a')).toBe(first);
+    expect(made.root.querySelector('.strike-clock-when')?.firstChild).toBe(when);
+    expect(made.root.dataset['seconds']).toBe('600');
+    move(7200);
+    expect(made.root.dataset['phase']).toBe('veil');
+    expect(made.root.querySelector('.strike-clock-phase')?.textContent).toBe('The veil');
+    expect(made.root.querySelectorAll('.strike-clock-sources a')).toHaveLength(0);
+  });
+
   it('plays again from the start once it has ended, at the speed picked', () => {
     const { made, slider, play } = clock();
     made.open();
