@@ -121,3 +121,9 @@ export function spokenTaxon(datum: unknown): string {
     .filter((word): word is string => typeof word === 'string' && word !== '')
     .join(', ');
 }
+
+/** The tree's options for phoria2 without a pointer (#309): arrows step the taxa, Enter lights one. */
+export const TREE_KEYS = {
+  keyboard: { label: (hit: { datum?: unknown }): string => spokenTaxon(hit.datum) },
+  description: 'The tree of life in 3D: every taxon a bead, from the first cells outward.',
+};

@@ -14,13 +14,8 @@ import type * as Phoria2Charts from 'phoria2/charts';
 
 import type { TreeOfLife } from '../../data/treeOfLife';
 import { hasFlag, lineage } from '../../data/treeOfLife';
-import {
-  nodeOfOtt,
-  spokenTaxon,
-  TREE_CLADES,
-  treeLayout,
-  type TreeLayout,
-} from '../../data/treeLayout';
+import type { TreeLayout } from '../../data/treeLayout';
+import { nodeOfOtt, TREE_CLADES, TREE_KEYS, treeLayout } from '../../data/treeLayout';
 import type { TreeView } from '../../state/viewState';
 import { elementAt, valueAt } from '../../util/arrays';
 import { errorMessage } from '../../util/errors';
@@ -167,9 +162,7 @@ export function createTreeSheet(
       orbit: { minDistance: 2, maxDistance: 40 },
       camera: { position: [0, 9, 9], target: [0, 0, 0] },
       framing: 'both',
-      // Without a pointer (#309): the arrow keys step through the taxa, Enter lights one's line.
-      keyboard: { label: (hit) => spokenTaxon(hit.datum) },
-      description: 'The tree of life in 3D: every taxon a bead, from the first cells outward.',
+      ...TREE_KEYS,
     });
     const nodes = data.name.map((name, node) => ({
       id: node,

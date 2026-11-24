@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import data from '../../public/data/tree-of-life.json';
-import { treeLayout, nodeOfOtt, spokenTaxon, TREE_CLADES } from './treeLayout';
+import { treeLayout, nodeOfOtt, spokenTaxon, TREE_CLADES, TREE_KEYS } from './treeLayout';
 import type { TreeOfLife } from './treeOfLife';
 
 const real = data as TreeOfLife;
@@ -101,5 +101,12 @@ describe('spokenTaxon (#309)', () => {
   it('says a branch between two as such', () => {
     expect(spokenTaxon({ source: 1, target: 2, group: 'mammals' })).toBe('a branch');
     expect(spokenTaxon(null)).toBe('a branch');
+  });
+
+  it('labels what the keyboard steps to on the tree, and describes the view', () => {
+    expect(TREE_KEYS.keyboard.label({ datum: { name: 'Aves', group: 'birds' } })).toBe(
+      'Aves, birds',
+    );
+    expect(TREE_KEYS.description).toMatch(/^The tree of life in 3D/);
   });
 });
