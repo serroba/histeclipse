@@ -281,14 +281,15 @@ describe('the impact craters as a feature', () => {
       card.action.run();
       expect(view().focus).toBe('earth');
       expect(strikes.flyTo).toHaveBeenCalledTimes(1);
-      expect(strikes.zoomTo).toHaveBeenCalledWith(2.2);
+      // Chicxulub reached the whole globe: watched from far enough out to see it cross (#1167).
+      expect(strikes.zoomTo).toHaveBeenCalledWith(3.4);
       expect(strikes.playImpact).not.toHaveBeenCalled();
       vi.advanceTimersByTime(1000);
       expect(strikes.playImpact).toHaveBeenCalledTimes(1);
-      // Already nearer than that, the view stays as near as it is.
+      // Nearer than that, it still goes out to see the whole of it.
       setView({ ...on, camera: { ...on.camera, distance: 1.5 } });
       card.action.run();
-      expect(strikes.zoomTo).toHaveBeenLastCalledWith(1.5);
+      expect(strikes.zoomTo).toHaveBeenLastCalledWith(3.4);
     } finally {
       vi.useRealTimers();
     }

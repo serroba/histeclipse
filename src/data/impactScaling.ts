@@ -51,6 +51,22 @@ export function impactorDiameterKm(
   return (transientM / factor) ** (1 / 0.78) / 1000;
 }
 
+/** Below this final diameter (km) an impact's effects stay regional, in the illustration. */
+const REGIONAL_KM = 100;
+/** From this final diameter (km) up, they reach the whole globe: Chicxulub's size. */
+const WORLDWIDE_KM = 180;
+
+/**
+ * How far an impact's effects reached around the Earth, from 0 (a regional event) to 1 (the
+ * whole globe), for the illustration: Chicxulub's ejecta fell worldwide within hours, leaving the
+ * spherule layer found on every continent, and its dust and soot darkened the sky (Schulte et
+ * al. 2010). A ramp between Popigai's size and
+ * Chicxulub's, an assumption: Sudbury's and Vredefort's ejecta also reached far, Popigai's less.
+ */
+export function worldwideReach(finalKm: number): number {
+  return Math.min(1, Math.max(0, (finalKm - REGIONAL_KM) / (WORLDWIDE_KM - REGIONAL_KM)));
+}
+
 /** Where an impact came in from, for the animation: what a study gives, or an assumption. */
 export interface Approach {
   /** Degrees clockwise from north that the impactor came from. */

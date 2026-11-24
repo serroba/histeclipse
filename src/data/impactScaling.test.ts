@@ -6,6 +6,7 @@ import {
   impactorText,
   transientDiameterKm,
   TYPICAL_IMPACT,
+  worldwideReach,
 } from './impactScaling';
 
 describe('the impactor a crater speaks of', () => {
@@ -44,5 +45,15 @@ describe('the impactor a crater speaks of', () => {
     expect(impactorText('Meteor Crater', 1.2)).toMatch(
       /^About \d+ m across.*assuming the most likely angle, 45°/,
     );
+  });
+});
+
+describe('how far an impact reached around the Earth (#1167)', () => {
+  it('is the whole globe from Chicxulub’s size up, regional below Popigai’s, and a ramp between', () => {
+    expect(worldwideReach(180)).toBe(1);
+    expect(worldwideReach(300)).toBe(1);
+    expect(worldwideReach(100)).toBe(0);
+    expect(worldwideReach(24)).toBe(0);
+    expect(worldwideReach(140)).toBeCloseTo(0.5, 6);
   });
 });

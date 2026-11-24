@@ -117,4 +117,9 @@ describe('a crater tapped', () => {
     expect(Number.isFinite(spec.fromAzimuth)).toBe(true);
     expect(Number.isFinite(spec.angleDegrees)).toBe(true);
   });
+  it('reaches the whole globe for Chicxulub, and stays regional for a smaller crater (#1167)', () => {
+    const place = { latitude: 21, longitude: -89 };
+    expect(impactPlay('Chicxulub', place, 180).worldwide).toBe(1);
+    expect(impactPlay('Ries', place, 24).worldwide).toBe(0);
+  });
 });

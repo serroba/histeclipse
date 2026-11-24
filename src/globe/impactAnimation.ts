@@ -4,7 +4,10 @@
  * to the crater: the flash, the impactor, its trail, the ring and how long it lasts all grow
  * with the crater's width, Chicxulub's the yardstick, a small crater kept large enough to see
  * (#314). The approach is a study's where one exists and an assumption otherwise, and the
- * ring's reach is illustrative. Built in Earth-fixed coordinates, to hang on the globe.
+ * ring's reach is illustrative. An impact that reached the whole Earth, Chicxulub's size and up,
+ * plays longer and goes further (#1167): a fireball, a front of hot ejecta running over the globe
+ * to the far side, the sky glowing behind it, then a veil of dust and soot that slowly clears.
+ * Built in Earth-fixed coordinates, to hang on the globe.
  *
  * Three.js glue, covered by the Playwright suite.
  */
@@ -32,6 +35,8 @@ import type { GeoPoint } from '../state/viewState';
 import { frameClock } from '../util/frameClock';
 import { clamp01, easeOut } from '../util/timing';
 import { geoToVector } from './geo';
+import { createImpactShell } from './impactShell';
+import { APPROACH, impactSizes, RING } from './impactSizes';
 import { localFrame } from './motion';
 
 export interface ImpactSpec {
@@ -43,6 +48,8 @@ export interface ImpactSpec {
   readonly angleDegrees: number;
   /** An icy body, drawn pale blue rather than fiery: early Earth's water arriving (#1142). */
   readonly icy?: boolean;
+  /** How far its effects reached around the Earth, 0 to 1 (`worldwideReach`); 0 if left out. */
+  readonly worldwide?: number;
 }
 
 /** An impact's colours: its trail, its spreading blast and its crater's rim. */
@@ -51,50 +58,11 @@ const ICY = [new Color(0.6, 0.85, 1), new Color(0.5, 0.78, 1), new Color(0.78, 0
 
 export interface ImpactAnimation {
   readonly group: Group;
+  /** Whether it reaches the whole globe: a long play, which shorter ones should not push out. */
+  readonly worldwide: boolean;
   /** Advance to `now` (ms); false once it has played out. */
   update(now: number): boolean;
   dispose(): void;
-}
-
-const EARTH_KM = 6371;
-/** Milliseconds, for an impact Chicxulub's size: the approach, the flash, the ring, the whole. */
-const APPROACH = 1400;
-const FLASH = 700;
-const RING = 2800;
-const TOTAL = 5200;
-/** Chicxulub's crater, km: the yardstick the others are drawn against. */
-const YARDSTICK_KM = 180;
-
-/** How large an impact is drawn, in Earth radii, and how long it lasts, ms. */
-export interface ImpactSizes {
-  /** Its crater's width against Chicxulub's: 1 for Chicxulub, capped for the very largest. */
-  readonly strength: number;
-  readonly head: number;
-  readonly trail: number;
-  readonly flash: number;
-  readonly craterRadius: number;
-  readonly blastRadius: number;
-  readonly totalMs: number;
-}
-
-/**
- * An impact's sizes, in proportion to its crater: the flash, impactor and trail grow with the
- * crater's width, so Chicxulub's flash is eighteen times a 10 km crater's; each has a floor,
- * so the smallest still show. A smaller one plays out sooner.
- */
-export function impactSizes(craterKm: number): ImpactSizes {
-  const strength = Math.min(Math.max(craterKm, 0) / YARDSTICK_KM, 1.7);
-  const craterRadius = Math.max(craterKm / 2 / EARTH_KM, 0.002);
-  return {
-    strength,
-    head: Math.max(0.012, 0.05 * strength),
-    trail: Math.max(0.04, 0.12 * strength),
-    flash: Math.max(0.02, 0.3 * strength),
-    craterRadius,
-    // The blast's reach is illustrative: four crater radii, and never too small to see.
-    blastRadius: Math.max(craterRadius * 4, 0.015),
-    totalMs: TOTAL * (0.5 + 0.5 * Math.min(strength, 1)),
-  };
 }
 
 /** A soft round glow, white at the heart and orange at the edge, or pale blue for ice. */
@@ -131,9 +99,10 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
   // Timed by the frames' own clock, from the first frame it is drawn in; a frame that comes very
   // late (a large map loading) pauses it rather than skipping to the end.
   const clock = frameClock();
-  const sizes = impactSizes(spec.craterKm);
-  // A smaller impact plays the same story quicker.
-  const pace = sizes.totalMs / TOTAL;
+  const sizes = impactSizes(spec.craterKm, spec.worldwide);
+  const { worldwide } = sizes;
+  // A smaller impact plays the same story quicker; a worldwide one's veil takes longer to clear.
+  const pace = 0.5 + 0.5 * Math.min(sizes.strength, 1);
   const group = new Group();
   const ground = new Vector3(...geoToVector(spec.place, 1.002));
   const up = ground.clone().normalize();
@@ -195,6 +164,10 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
   crater.scale.setScalar(craterRadius);
 
   group.add(trail, head, flash, blast, crater);
+
+  // For a worldwide impact, a shell over the whole globe: the ejecta's front and the veil.
+  const shell = worldwide > 0 ? createImpactShell(up, worldwide, icy) : null;
+  if (shell !== null) group.add(shell.mesh);
   group.name = 'impact';
 
   const trailPositions = trailGeometry.getAttribute('position');
@@ -207,6 +180,7 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
 
   return {
     group,
+    worldwide: worldwide > 0,
     update(now) {
       // Time as for an impact Chicxulub's size: a smaller one runs through it faster.
       const t = clock.tick(now) / pace;
@@ -218,7 +192,7 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
       trail.visible = falling < 1;
       setTrail(at, sizes.trail * (1 - falling * 0.5));
       // The flash.
-      const flashing = clamp01((t - APPROACH) / FLASH);
+      const flashing = clamp01((t - APPROACH) / sizes.flashMs);
       flash.visible = t >= APPROACH && flashing < 1;
       flash.scale.setScalar(sizes.flash * (0.07 + 0.93 * easeOut(flashing)));
       flash.material.opacity = 1 - flashing;
@@ -228,10 +202,12 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
       blast.scale.setScalar(Math.max(0.001, blastRadius * easeOut(spreading)));
       blast.material.opacity = 0.9 * (1 - spreading);
       // The crater, settling in after the flash and fading at the end.
-      const settled = clamp01((t - APPROACH - FLASH) / 600);
-      const leaving = clamp01((t - (TOTAL - 800)) / 800);
+      const end = sizes.totalMs / pace;
+      const settled = clamp01((t - APPROACH - sizes.flashMs) / 600);
+      const leaving = clamp01((t - (end - 800)) / 800);
       crater.material.opacity = 0.95 * settled * (1 - leaving);
-      return t < TOTAL;
+      shell?.update(t - APPROACH, end - APPROACH);
+      return t < end;
     },
     dispose() {
       group.removeFromParent();
@@ -244,6 +220,7 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
       }
       head.material.dispose();
       flash.material.dispose();
+      shell?.dispose();
     },
   };
 }

@@ -166,10 +166,11 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
       state.focus === 'earth' ? state : { ...state, focus: 'earth', on: null, view: 'free' },
     );
     globe.flyTo(spec.place);
-    // How far out the view is now, read as the view is: no nearer than it already is.
-    let distance = 2.2;
+    // How far out the view is now, read as the view is: no nearer than it already is. One that
+    // reached the whole globe is watched from further out, its front crossing the globe (#1167).
+    let distance = spec.worldwide > 0.5 ? 3.4 : 2.2;
     context.change((state) => {
-      distance = Math.min(state.camera.distance, distance);
+      distance = spec.worldwide > 0.5 ? distance : Math.min(state.camera.distance, distance);
       return state;
     });
     globe.zoomTo(distance);

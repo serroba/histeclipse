@@ -115,7 +115,7 @@ test(
 test('a crater’s card estimates its impactor, and plays the impact as an illustration', async ({
   page,
 }) => {
-  // Two impacts, each a turn of the globe and five seconds of animation: more than the usual
+  // Two impacts, each a turn of the globe and ten seconds of animation: more than the usual
   // budget on a slow runner.
   test.slow();
   const problems = collectProblems(page);
@@ -145,12 +145,17 @@ test('a crater’s card estimates its impactor, and plays the impact as an illus
     await test.step('When they play the impact', async () => {
       await card.getByRole('button', { name: 'Play the impact (an illustration)' }).click();
     });
-    await test.step('Then the card makes way, the impact plays out, and ends', async () => {
+    await test.step('Then the card makes way, and the strike reaches the whole globe', async () => {
       await expect(card).toBeHidden();
+      // Set as it starts and held for its ten seconds or more: the veil over the globe (#1167).
+      await expect(globe).toHaveAttribute('data-impact-worldwide', 'true', { timeout: 20_000 });
+    });
+    await test.step('And the impact plays out, and ends', async () => {
       // Its outcome, not the moment it shows: on a slow runner that moment can slip by unseen,
       // and a phone drawn in software takes a while to play it out.
       await expect(globe).toHaveAttribute('data-impacts-played', '1', { timeout: 60_000 });
       await expect(globe).toHaveAttribute('data-impact-playing', 'false');
+      await expect(globe).toHaveAttribute('data-impact-worldwide', 'false');
     });
   }
   expect(problems).toEqual([]);
