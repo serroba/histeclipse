@@ -8,6 +8,8 @@ export const extinctions = layer({
   about:
     'The great mass extinctions, marked where their causes and records lay then; play slows as it passes each. Tap one for what it took and what the studies say caused it.',
   spans: ['all'],
+  // The most severe, rather than the start of the span, where there is none.
+  arrive: { ma: 251.9, label: 'the end-Permian' },
   reach: 'Six extinctions over the last 450 million years.',
   // A skull and crossbones.
   icon: [

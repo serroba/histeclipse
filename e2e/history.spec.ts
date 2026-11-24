@@ -67,6 +67,8 @@ test('the travel view says which layers it turned on, and one the reader turns o
 test('playing from today goes back to the Holocene’s start, and says so (#982) @mobile', async ({
   page,
 }) => {
+  // 16–25 s on CI's passing runs, mobile: a busy runner took it past 30 s (#1216).
+  test.slow();
   const problems = collectProblems(page);
   const bar = page.getByRole('group', { name: track });
   const note = bar.getByTestId('history-changes');
@@ -91,6 +93,8 @@ test('playing from today goes back to the Holocene’s start, and says so (#982)
 test('while the years play, the date panel leaves out the minute, and the chapter stays on the bar (#987) @mobile', async ({
   page,
 }) => {
+  // 16–25 s on CI's passing runs, mobile: a busy runner took it past 30 s (#1216).
+  test.slow();
   const problems = collectProblems(page);
   const bar = page.getByRole('group', { name: track });
   await test.step('Given 9000 BCE, its time of day shown', async () => {

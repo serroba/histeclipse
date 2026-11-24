@@ -65,19 +65,23 @@ function fit(anchor: Anchor, here: Here): number {
 
 /** The passages anchored here, best first, each by its best-fitting anchor. */
 export function nearby(passages: readonly Passage[], here: Here, limit = 6): Near[] {
-  return passages
-    .filter((passage) => passage.kind !== 'why')
-    .flatMap((passage) => {
-      const anchors =
-        passage.kind === 'mission'
-          ? passage.anchors.filter((anchor) => anchor.at !== undefined)
-          : passage.anchors;
-      const [best] = anchors
-        .map((anchor) => ({ anchor, score: fit(anchor, here) }))
-        .filter(({ score }) => score >= LEAST_FIT)
-        .sort((a, b) => b.score - a.score);
-      return best === undefined ? [] : [{ passage, ...best }];
-    })
-    .sort((a, b) => b.score - a.score || a.passage.id.localeCompare(b.passage.id))
-    .slice(0, limit);
+  return (
+    passages
+      // Nor the extinctions: their places are where the plates had them millions of years ago,
+      // and this knows only years (#1210).
+      .filter((passage) => passage.kind !== 'why' && passage.kind !== 'extinction')
+      .flatMap((passage) => {
+        const anchors =
+          passage.kind === 'mission'
+            ? passage.anchors.filter((anchor) => anchor.at !== undefined)
+            : passage.anchors;
+        const [best] = anchors
+          .map((anchor) => ({ anchor, score: fit(anchor, here) }))
+          .filter(({ score }) => score >= LEAST_FIT)
+          .sort((a, b) => b.score - a.score);
+        return best === undefined ? [] : [{ passage, ...best }];
+      })
+      .sort((a, b) => b.score - a.score || a.passage.id.localeCompare(b.passage.id))
+      .slice(0, limit)
+  );
 }
