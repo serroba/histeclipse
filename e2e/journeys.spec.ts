@@ -170,6 +170,8 @@ test('from a crater’s card, a related discovery goes to the Earth when it stru
 test('a reader goes to a time by typing it: a year, then an age, each in its range, and Back returns (#730) @mobile', async ({
   page,
 }) => {
+  // 16–25 s on CI's passing runs, mobile: a busy runner took it past 30 s (#1216).
+  test.slow();
   const problems = collectProblems(page);
   const go = async (text: string): Promise<void> => {
     await page.locator('.hud-date-button').click();

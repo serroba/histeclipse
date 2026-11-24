@@ -352,6 +352,8 @@ test('the date panel holds the tools, the time bar the presets, and on a phone t
 test('the layers on show as chips beside Layers: one off its span offers where it draws, and taking one off moves nothing (#728) @mobile', async ({
   page,
 }, info) => {
+  // 16–25 s on CI's passing runs, mobile: a busy runner took it past 30 s (#1216).
+  test.slow();
   const problems = collectProblems(page);
   const phone = info.project.name === 'mobile';
   const on = page.getByRole('group', { name: 'Layers on' });
