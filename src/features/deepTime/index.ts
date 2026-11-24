@@ -24,7 +24,7 @@ import { moveToYear } from '../../time/yearInput';
 import { createDeepGlance } from './deepGlance';
 import { createDeepTimeBar } from '../../ui/deepTimeBar';
 import { periodAt, periodWords } from '../../deepTime/periods';
-import { formatMa } from '../../time/format';
+import { formatMa, formatMaPlaying } from '../../time/format';
 import {
   framesAhead,
   framesAround,
@@ -251,7 +251,9 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     }
     const period = periodAt(ma);
     const story = context.storyDate();
-    context.header(ma, story);
+    // Playing, the date rounds to what can be read as it goes by (#1166).
+    const when = story?.when ?? (pace === null ? formatMa(ma) : formatMaPlaying(ma, pace));
+    context.header(ma, story, when);
     // A link to before the elevation maps opens on the scale that reaches it.
     const scale = state.deepScale === 'all' && ma > oldest ? 'eons' : state.deepScale;
     const part = barWindow(state.deepWindow, spanOf(scale), ma);
@@ -272,6 +274,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     deepBar.render({
       ma,
       story,
+      when,
       // The part of the span asked for (#1074), while the moment is within it.
       ...part,
       part: !whole,
@@ -288,7 +291,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       sketch,
     });
     glance.render({
-      when: story?.when ?? formatMa(ma),
+      when,
       period: story?.what ?? (period === null ? 'Deep time' : periodWords(period)),
       ma,
       oldest: spanOf(scale),

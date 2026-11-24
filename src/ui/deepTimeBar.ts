@@ -60,6 +60,8 @@ export interface DeepTimeView {
   readonly ma: number;
   /** A story's own date for the moment, while it has the globe (#492); null for the bar's. */
   readonly story: StoryDate | null;
+  /** The moment in words, rounded while it plays (#1166). */
+  readonly when?: string;
   /** The bar's oldest and youngest moments, Ma: the span's, or a part of it (#1074). */
   readonly oldest: number;
   readonly youngest: number;
@@ -370,13 +372,11 @@ export function createDeepTimeBar(
       slider.max = String(-youngest * perMa);
       slider.setAttribute('aria-label', ice ? 'Thousands of years ago' : 'Millions of years ago');
       transport.render(view.playing, -view.ma * perMa);
-      const step = stepWords(view.scale);
-      older.setAttribute('aria-label', `${step} earlier`);
-      younger.setAttribute('aria-label', `${step} later`);
+      older.setAttribute('aria-label', `${stepWords(view.scale)} earlier`);
+      younger.setAttribute('aria-label', `${stepWords(view.scale)} later`);
       slider.setAttribute('aria-valuetext', formatMa(view.ma));
-      when.textContent = view.story?.when ?? formatMa(view.ma);
-      const named = view.period === null ? '' : periodShort(view.period);
-      period.textContent = view.story?.what ?? named;
+      when.textContent = view.story?.when ?? view.when ?? formatMa(view.ma);
+      period.textContent = view.story?.what ?? (view.period && periodShort(view.period)) ?? '';
       facts.replaceChildren(
         ...earthFacts(view.ma, view.polarity).flatMap(({ label, text }) => [
           element('dt', {}, label),
