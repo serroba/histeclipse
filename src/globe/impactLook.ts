@@ -89,10 +89,14 @@ export function strikeLook(seconds: number, worldwide: number): ImpactLook {
       frontGlow: out > 0 && out < 1 ? worldwide * (1 - 0.5 * out) * Math.min(1, out * 10) : 0,
       // The sky glows as they come in, most within three days.
       ember: logThrough(t, 5 * MINUTE, 30 * MINUTE) * (1 - logThrough(t, 8 * HOUR, 3 * DAY)),
-      // Then soot, dust and sulfate darken it for over a year, clearing from about five years
-      // and gone in decades (Bardeen et al. 2017; Brugger et al. 2017).
+      // Then soot, dust and sulfate darken it within two weeks: little or no sunlight for over a
+      // year, photosynthesis stopped for one to two, the soot gone after about five (Bardeen et
+      // al. 2017). The colder climate lasts decades, but the dark does not (#1187).
       veil:
-        0.8 * worldwide * logThrough(t, DAY, 30 * DAY) * (1 - logThrough(t, 5 * YEAR, 40 * YEAR)),
+        0.8 *
+        worldwide *
+        logThrough(t, DAY, 2 * 7 * DAY) *
+        (1 - logThrough(t, 1.5 * YEAR, 6 * YEAR)),
     },
   };
 }

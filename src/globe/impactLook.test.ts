@@ -49,15 +49,18 @@ describe('the strike in its own time, from the strike clock (#1173)', () => {
     expect(strikeLook(1e6 * YEAR, 1).crater).toBe(1);
   });
 
-  it('sends the ejecta round the globe in hours, glowing, then veils it for years and clears', () => {
+  it('sends the ejecta round the globe in hours, glowing, then veils it for over a year and clears by six', () => {
     expect(strikeLook(30 * 60, 1).shell.front).toBeGreaterThan(0);
     expect(strikeLook(8 * HOUR, 1).shell.front).toBeCloseTo(Math.PI, 6);
     expect(strikeLook(8 * HOUR, 1).shell.frontGlow).toBe(0);
     expect(strikeLook(2 * HOUR, 1).shell.ember).toBe(1);
     expect(strikeLook(10 * 86_400, 1).shell.ember).toBe(0);
     expect(strikeLook(YEAR, 1).shell.veil).toBeCloseTo(0.8, 6);
-    expect(strikeLook(10 * YEAR, 1).shell.veil).toBeGreaterThan(0);
-    expect(strikeLook(100 * YEAR, 1).shell.veil).toBe(0);
+    // Dark for over a year, little of it left at five, gone by six (#1187).
+    expect(strikeLook(2 * 7 * 86_400, 1).shell.veil).toBeCloseTo(0.8, 6);
+    expect(strikeLook(5 * YEAR, 1).shell.veil).toBeGreaterThan(0);
+    expect(strikeLook(5 * YEAR, 1).shell.veil).toBeLessThan(0.15);
+    expect(strikeLook(6 * YEAR, 1).shell.veil).toBe(0);
   });
 
   it('reaches only part of the way round for a smaller impact, and shows no shell for a regional one', () => {

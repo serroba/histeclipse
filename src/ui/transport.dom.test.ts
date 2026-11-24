@@ -38,6 +38,19 @@ describe('a transport’s Play button', () => {
     expect(made.play.getAttribute('aria-label')).toBe('Pause');
   });
 
+  it('is not written again each frame it stays the same (#1187)', () => {
+    const { made } = transport();
+    made.render(true, 10);
+    const glyph = made.play.firstChild;
+    const observer = new MutationObserver(() => undefined);
+    observer.observe(made.play, { attributes: true, childList: true, subtree: true });
+    made.render(true, 11);
+    made.render(true, 12);
+    expect(observer.takeRecords()).toEqual([]);
+    observer.disconnect();
+    expect(made.play.firstChild).toBe(glyph);
+  });
+
   it('takes the words of what it plays, and any more attributes', () => {
     const made = createTransport(
       {
