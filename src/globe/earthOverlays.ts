@@ -14,6 +14,7 @@ import {
   HISTORY_PAINT_ORDER,
   type HistoryPainter,
 } from './layerHost';
+import { HistoryLayers } from './historyLayers';
 import { createPaintSlots, type PaintSlot, type PaintSlots } from './paintSlots';
 
 export class EarthOverlays {
@@ -24,6 +25,8 @@ export class EarthOverlays {
   /** Deep time's map, on the same canvas: history is never shown then. */
   readonly deep: PaintSlots<DeepPainter>;
   readonly #canvas = createEmpireCanvas();
+  /** History's layers, the sea's maps kept from repainting the land's (#1045). */
+  readonly #historyLayers = new HistoryLayers({ make: createEmpireCanvas, clear: clearOverlay });
   /** A dispersal model's settled land, the first of deep time's parts. */
   readonly #settled: PaintSlot<DeepPainter>;
   readonly #dataset: DOMStringMap;
@@ -44,15 +47,24 @@ export class EarthOverlays {
     this.texture.colorSpace = SRGBColorSpace;
     this.history = createPaintSlots<HistoryPainter>(() => {
       const statesOver = this.history.shows(HISTORY_PAINT_ORDER.states);
-      this.#paint(
-        'empiresActive',
-        this.history.painters().map((paint) => (canvas: HTMLCanvasElement) => {
-          paint(canvas, statesOver);
-        }),
-      );
+      const layers = this.history.shown().map(({ order, painter }) => ({
+        order,
+        paint: (canvas: HTMLCanvasElement) => {
+          painter(canvas, statesOver);
+        },
+        key: painter,
+      }));
+      this.#paint('empiresActive', layers.length > 0, (canvas) => {
+        // Whether the states go over them changes how the layers paint.
+        this.#historyLayers.paint(canvas, layers, statesOver);
+      });
     });
     this.deep = createPaintSlots<DeepPainter>(() => {
-      this.#paint('iceOutlinesActive', this.deep.painters());
+      const painters = this.deep.painters();
+      this.#paint('iceOutlinesActive', painters.length > 0, (canvas) => {
+        clearOverlay(canvas);
+        for (const paint of painters) paint(canvas);
+      });
     });
     this.#settled = this.deep.add(DEEP_PAINT_ORDER.settled);
   }
@@ -77,15 +89,13 @@ export class EarthOverlays {
     );
   }
 
-  /** Paint the map from `painters`, in order, and say whether it is on through `flag`. */
-  #paint(flag: string, painters: readonly DeepPainter[]): void {
+  /** Paint the map with `paint` when `on`, and say whether it is on through `flag`. */
+  #paint(flag: string, on: boolean, paint: (canvas: HTMLCanvasElement) => void): void {
     const uniforms = this.#uniforms();
-    const on = painters.length > 0;
     uniforms[flag] = { value: on ? 1 : 0 };
     this.#invalidate();
     if (!on) return;
-    clearOverlay(this.#canvas);
-    for (const paint of painters) paint(this.#canvas);
+    paint(this.#canvas);
     this.texture.needsUpdate = true;
     uniforms['overlayMap'] = { value: this.texture };
   }

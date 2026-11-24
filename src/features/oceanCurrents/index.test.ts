@@ -82,6 +82,10 @@ describe('Ocean currents as a feature (#927)', () => {
     picker.dispatchEvent(new Event('change'));
     shown.show?.(inYear(1998), JD);
     expect(shown.said?.()).toMatch(/^The currents at 1,500 m, January 1998/);
+    // Its map drawn first: off, it is taken away (only what was drawn is, #1045).
+    await vi.waitFor(() => {
+      expect(drawn.length).toBeGreaterThan(0);
+    });
     shown.show?.({ ...on, ma: 1 }, JD);
     expect(shown.said?.()).toBeNull();
     expect(drawn.at(-1)).toBeNull();

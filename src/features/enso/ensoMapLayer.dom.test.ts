@@ -40,4 +40,17 @@ describe('the painted sea temperature', () => {
     expect(shown).toEqual([null]);
     spy.mockRestore();
   });
+
+  it('Given a month coloured, Then it is coloured once, read back from memory (#1045)', () => {
+    const image = Object.assign(document.createElement('canvas'), { width: 2, height: 1 });
+    const packed = { image, bound: 4 };
+    const spy = vi.spyOn(HTMLCanvasElement.prototype, 'getContext');
+    // happy-dom draws nothing, so the map comes out null here: kept as such all the same.
+    const first = coloured(packed);
+    expect(coloured(packed)).toBe(first);
+    expect(spy.mock.calls.filter(([, options]) => options !== undefined)).toEqual([
+      ['2d', { willReadFrequently: true }],
+    ]);
+    spy.mockRestore();
+  });
 });

@@ -46,6 +46,17 @@ export function monthlyMaps<Index>(context: MonthlyMapsContext<Index>): MonthlyM
   const kept = new Map<string, PackedMonth>();
   const loading = new Set<string>();
   let wanted: string | null = null;
+  // Whether a map of these is painted. Two sets of maps can share a painter (ERSST's months and
+  // OISST's, #894): the one not in use takes nothing away when it is not the one painted, else
+  // each month would take the other's map away and paint it again, two repaints of the whole
+  // history map for one month (#1045).
+  let painting = false;
+
+  function paint(packed: PackedMonth | null): void {
+    if (packed === null && !painting) return;
+    painting = packed !== null;
+    context.paint(packed);
+  }
 
   function keep(file: string, packed: PackedMonth): void {
     kept.delete(file);
@@ -64,7 +75,7 @@ export function monthlyMaps<Index>(context: MonthlyMapsContext<Index>): MonthlyM
         loading.delete(file);
         const packed = { ...context.look(maps), image };
         keep(file, packed);
-        if (wanted === file) context.paint(packed);
+        if (wanted === file) paint(packed);
       },
       (error: unknown) => {
         loading.delete(file);
@@ -77,7 +88,7 @@ export function monthlyMaps<Index>(context: MonthlyMapsContext<Index>): MonthlyM
     show(on, at) {
       if (!on) {
         wanted = null;
-        context.paint(null);
+        paint(null);
         return;
       }
       const index = context.index.value();
@@ -87,12 +98,12 @@ export function monthlyMaps<Index>(context: MonthlyMapsContext<Index>): MonthlyM
       }
       wanted = context.file(index, at);
       if (wanted === null) {
-        context.paint(null);
+        paint(null);
         return;
       }
       const packed = kept.get(wanted);
       if (packed === undefined) fetchMonth(index, wanted);
-      else context.paint(packed);
+      else paint(packed);
       for (let ahead = 1; ahead <= AHEAD; ahead += 1) {
         const next = context.file(index, at + ahead);
         if (next !== null && next !== wanted && !kept.has(next)) fetchMonth(index, next);

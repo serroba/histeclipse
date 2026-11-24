@@ -79,6 +79,29 @@ describe('what the globe shows of El Niño and La Niña', () => {
     expect(maps.view(0).sea).toMatch(/^On the globe: Rain in La Niña’s June–August, by ONI/);
   });
 
+  it('Given the months playing, Then the record not in use takes nothing away (#1045)', async () => {
+    const { maps, painted, refresh } = setUp(true);
+    const at = 2000 * 12;
+    maps.show(true, at);
+    await vi.waitFor(() => {
+      expect(refresh).toHaveBeenCalled();
+    });
+    // The index loaded: shown again, as the feature is when refreshed.
+    await vi.waitFor(() => {
+      maps.show(true, at);
+      expect(painted.some((packed) => packed !== null)).toBe(true);
+    });
+    for (let month = 1; month <= 3; month += 1) maps.show(true, at + month);
+    await vi.waitFor(() => {
+      expect(painted.filter((packed) => packed !== null).length).toBeGreaterThanOrEqual(4);
+    });
+    // ERSST's maps, not in use after 1981, never took OISST's month away to paint it again.
+    expect(painted).not.toContain(null);
+    // Turned off, the one painted takes its map away, once.
+    maps.show(false, at);
+    expect(painted.filter((packed) => packed === null)).toHaveLength(1);
+  });
+
   it('Given a place, Then the sea there this month and what El Niño and La Niña usually bring, once loaded (#893)', async () => {
     reading.canvas = true;
     const { maps, refresh } = setUp(true);
