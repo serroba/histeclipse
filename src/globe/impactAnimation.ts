@@ -33,6 +33,7 @@ import {
 
 import type { GeoPoint } from '../state/viewState';
 import { frameClock } from '../util/frameClock';
+import type { PlayingImpact } from './heldStrikes';
 import { clamp01, easeOut } from '../util/timing';
 import { geoToVector } from './geo';
 import { createImpactShell } from './impactShell';
@@ -55,12 +56,6 @@ export interface ImpactSpec {
 /** An impact's colours: its trail, its spreading blast and its crater's rim. */
 const FIERY = [new Color(1, 0.7, 0.35), new Color(1, 0.62, 0.3), new Color(1, 0.85, 0.6)] as const;
 const ICY = [new Color(0.6, 0.85, 1), new Color(0.5, 0.78, 1), new Color(0.78, 0.92, 1)] as const;
-
-/** An impact playing, as whoever played it holds it: to carry it where its crater goes. */
-export interface PlayingImpact {
-  /** Carry it, crater and all, to `place`: where the plates have the crater as time runs on. */
-  moveTo(place: GeoPoint): void;
-}
 
 export interface ImpactAnimation extends PlayingImpact {
   readonly group: Group;
@@ -194,6 +189,11 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
     moveTo(place) {
       toward.set(...geoToVector(place, 1)).normalize();
       group.quaternion.setFromUnitVectors(struckAt, toward);
+    },
+    held: clock.held,
+    hold: clock.hold,
+    step: (ms) => {
+      clock.nudge(ms * pace);
     },
     update(now) {
       // Time as for an impact Chicxulub's size: a smaller one runs through it faster.

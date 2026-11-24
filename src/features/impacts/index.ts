@@ -15,7 +15,10 @@ import {
   type ImpactsMode,
 } from '../../data/impacts';
 import { impactLayer } from './impactLayer';
-import type { PlayingImpact } from '../../globe/impactAnimation';
+import type { PlayedImpact, PlayingImpact } from '../../globe/heldStrikes';
+import { playKeys } from '../../ui/playKeys';
+import { illustrationKeys } from './illustrationKeys';
+import { heldStrikes } from '../../globe/heldStrikes';
 import type { ViewState } from '../../state/viewState';
 import { IMPACTS_CHIP, impactsChip, type ImpactsView } from './chip';
 import type { RelatedStep } from '../../ui/markerCard';
@@ -85,6 +88,16 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
   function follow(name: string, playing: PlayingImpact): void {
     following.set(name, { playing, until: performance.now() + FOLLOW_MS });
   }
+  // The strikes as deep time runs, held with it as the reader pauses; and the card's
+  // illustration last played, which the shared keys pause and step (#807).
+  const struck = heldStrikes();
+  let illustration: PlayedImpact | null = null;
+  playKeys.add(
+    illustrationKeys(
+      () => illustration,
+      () => context.timeline.playing(),
+    ),
+  );
 
   // The craters, loaded the first time the layer is on (#762).
   const load = loadOnce<Impacts>({
@@ -134,11 +147,13 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
   function strikeAsItPasses(state: ViewState, data: Impacts, ma: number, placeMa: number): void {
     const from = strikeFrom;
     const playing = context.timeline.playing();
+    struck.sync(context.timeline.paused());
     strikeFrom = playing ? ma : null;
     if (from === null || !playing || lessMotion.matches || state.focus !== 'earth') return;
     for (const { impact, place } of strikesToPlay(data, from, ma, placeMa, state.camera.target)) {
       globe.on.dataset['strikes'] = struckList(globe.on.dataset['strikes'], impact.name);
-      follow(impact.name, globe.playImpact(impactPlay(impact.name, place, impact.diameterKm ?? 0)));
+      const spec = impactPlay(impact.name, place, impact.diameterKm ?? 0);
+      follow(impact.name, struck.add(globe.playImpact(spec)));
     }
   }
 
@@ -197,7 +212,8 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
     globe.zoomTo(distance);
     // Once the globe has turned to it.
     window.setTimeout(() => {
-      follow(spec.key, globe.playImpact(spec));
+      illustration = globe.playImpact(spec);
+      follow(spec.key, illustration);
     }, 1000);
   }
 

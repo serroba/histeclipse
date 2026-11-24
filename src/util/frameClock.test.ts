@@ -31,4 +31,24 @@ describe('frameClock', () => {
     clock.tick(100);
     expect(clock.tick(50)).toBe(0);
   });
+
+  it('stands still while held, frames passing, and runs on from there (#807)', () => {
+    const clock = frameClock();
+    clock.tick(0);
+    clock.tick(100);
+    clock.hold(true);
+    expect(clock.held()).toBe(true);
+    expect(clock.tick(900)).toBe(100);
+    clock.hold(false);
+    expect(clock.tick(950)).toBe(150);
+  });
+
+  it('is nudged on and back by a step, never to before it began', () => {
+    const clock = frameClock();
+    clock.tick(0);
+    clock.nudge(250);
+    expect(clock.tick(0)).toBe(250);
+    clock.nudge(-1000);
+    expect(clock.tick(0)).toBe(0);
+  });
 });

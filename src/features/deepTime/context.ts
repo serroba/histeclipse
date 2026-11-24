@@ -90,6 +90,8 @@ export interface DeepTimePart {
   /** Play from `ma` on the span `deepScale`, at `maPerSecond` (one of its speeds), towards today. */
   readonly playFrom: (ma: number, deepScale: DeepScale, maPerSecond: number) => void;
   readonly playing: () => boolean;
+  /** Whether the reader paused it as it played (#807). */
+  readonly paused: () => boolean;
   /** How fast deep time plays now, millions of years a second. */
   readonly playSpeed: () => number;
   /** How far back the elevation maps reach, Ma. */

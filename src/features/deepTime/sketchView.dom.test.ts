@@ -175,8 +175,16 @@ describe('deep time’s sketch', () => {
   it('plays the delivered water’s impactors as play passes them, delivered being the default', () => {
     const [strike] = WATER_STRIKE_LIST;
     if (strike === undefined) throw new Error('no strikes');
-    const globe = { setSketch: vi.fn(), playImpact: vi.fn() };
-    const view = createSketchView(globe, vi.fn(), false);
+    const falling = {
+      moveTo: vi.fn(),
+      held: () => false,
+      hold: vi.fn(),
+      step: vi.fn(),
+      playing: () => true,
+    };
+    const globe = { setSketch: vi.fn(), playImpact: vi.fn(() => falling) };
+    let paused = false;
+    const view = createSketchView(globe, vi.fn(), false, () => paused);
     const looking: ViewState = {
       ...BASE,
       camera: { ...BASE.camera, target: { latitude: strike.lat, longitude: strike.lon } },
@@ -184,5 +192,9 @@ describe('deep time’s sketch', () => {
     view.show(looking, { ma: strike.ma + 0.01, uncharted: true, reconstructed: false }, true);
     view.show(looking, { ma: strike.ma - 0.01, uncharted: true, reconstructed: false }, true);
     expect(globe.playImpact).toHaveBeenCalledTimes(1);
+    // The reader pauses: the one falling holds still (#807).
+    paused = true;
+    view.show(looking, { ma: strike.ma - 0.01, uncharted: true, reconstructed: false }, false);
+    expect(falling.hold).toHaveBeenCalledWith(true);
   });
 });
