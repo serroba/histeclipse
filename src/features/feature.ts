@@ -11,6 +11,7 @@
  * styles a `.css` file in its folder (#382).
  */
 
+import type { Pace } from '../deepTime/playSpeed';
 import type { Fetch } from '../util/fetchJson';
 import type { Globe } from '../globe/globe';
 import type { Brief, LayerLoad } from '../state/activeLayers';
@@ -126,6 +127,12 @@ export interface Capabilities {
     play(ma: number, scale: DeepScale, maPerSecond: number): void;
     /** Show deep time again, or what is drawn on leaving it: a map it draws from has arrived. */
     again(): void;
+    /** Pause play for a while (#1174): whether it was playing, to resume it after. */
+    hold(): boolean;
+    /** Play on from where it was held. */
+    resume(): void;
+    /** The pace deep time plays at. */
+    pace(): Pace;
   };
   /**
    * The ice ages' Earth on the globe: the shelf the sea left bare, the ice sheets, the sea ice,

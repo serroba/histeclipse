@@ -133,3 +133,20 @@
 .strike-clock-speed {
   height: 44px;
 }
+
+/* The offer to watch a strike in its own time (#1174), while deep time plays on. */
+.strike-offer {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 30;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}

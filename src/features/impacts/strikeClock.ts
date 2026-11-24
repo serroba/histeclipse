@@ -211,3 +211,38 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
     isOpen: () => root.hidden !== true,
   };
 }
+
+/** How long the offer to watch a strike in its own time stays, ms. */
+export const OFFER_MS = 20_000;
+
+export interface StrikeOffer {
+  /** Offer `label`, taken with `accept`, for `OFFER_MS`. */
+  show(label: string, accept: () => void): void;
+  hide(): void;
+}
+
+/** The offer to watch a strike in its own time (#1174): a button that waits a while, then goes. */
+export function createStrikeOffer(place: (element: HTMLElement) => void): StrikeOffer {
+  let button: HTMLButtonElement | null = null;
+  let timer: number | null = null;
+  function hide(): void {
+    if (timer !== null) window.clearTimeout(timer);
+    timer = null;
+    button?.remove();
+    button = null;
+  }
+  return {
+    show(label, accept) {
+      hide();
+      const made = element('button', { type: 'button', class: 'strike-offer' }, label);
+      made.addEventListener('click', () => {
+        hide();
+        accept();
+      });
+      button = made;
+      place(made);
+      timer = window.setTimeout(hide, OFFER_MS);
+    },
+    hide,
+  };
+}

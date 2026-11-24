@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CLOCK_END, positionAt } from '../../deepTime/strikeClock';
-import { createStrikeClock } from './strikeClock';
+import { createStrikeClock, createStrikeOffer, OFFER_MS } from './strikeClock';
 import type { StrikePhase } from './strikePhases';
 
 const PHASES: readonly StrikePhase[] = [
@@ -122,5 +122,28 @@ describe('the strike clock’s panel (#1173)', () => {
     expect(made.isOpen()).toBe(false);
     made.close();
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('the offer to watch a strike in its own time (#1174)', () => {
+  it('waits a while to be taken, then goes', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const offer = createStrikeOffer((element) => {
+        document.body.append(element);
+      });
+      const accept = vi.fn();
+      offer.show('Watch Chicxulub in its own time', accept);
+      offer.show('Watch Chicxulub in its own time', accept);
+      expect(document.querySelectorAll('.strike-offer')).toHaveLength(1);
+      vi.advanceTimersByTime(OFFER_MS);
+      expect(document.querySelector('.strike-offer')).toBeNull();
+      offer.show('Watch Chicxulub in its own time', accept);
+      document.querySelector<HTMLButtonElement>('.strike-offer')?.click();
+      expect(accept).toHaveBeenCalledTimes(1);
+      expect(document.querySelector('.strike-offer')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

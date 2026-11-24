@@ -1,5 +1,6 @@
 /** What deep time asks of the rest of the page, and what it gives it (#445). */
 
+import type { HeldPlay } from './playing';
 import type { Globe } from '../../globe/globe';
 import type { PartContext } from '../part';
 import type { DeepMoment } from '../feature';
@@ -87,6 +88,8 @@ export interface DeepTimePart {
   readonly land: (target: ZoomTarget) => void;
   readonly setScale: (deepScale: DeepScale) => void;
   readonly stopPlay: () => void;
+  /** Held for a while by a feature, and resumed (#1174). */
+  readonly held: HeldPlay;
   /** Play from `ma` on the span `deepScale`, at `maPerSecond` (one of its speeds), towards today. */
   readonly playFrom: (ma: number, deepScale: DeepScale, maPerSecond: number) => void;
   readonly playing: () => boolean;

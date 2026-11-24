@@ -510,6 +510,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       play: (ma, scale, maPerSecond) => {
         deepTime.playFrom(ma, scale, maPerSecond);
       },
+      ...deepTime.held,
     },
     strikes: {
       playImpact: (spec) => globe.playImpact(spec),

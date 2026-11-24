@@ -109,3 +109,31 @@ export function deepPlaying(parts: PlayingParts): Playing {
     },
   };
 }
+
+/** What deep time plays with, as `heldPlay` needs it. */
+type DeepPlay = Pick<Playing, 'playing' | 'start' | 'stop' | 'pace'>;
+
+/** Deep time held for a while and resumed, as features are lent it. */
+export interface HeldPlay {
+  hold(): boolean;
+  resume(): void;
+  pace(): Pace;
+}
+
+/**
+ * Deep time held for a while and resumed (#1174), as a feature is lent it: holding says whether
+ * it was playing, so it is resumed only if it was.
+ */
+export function heldPlay(deep: DeepPlay): HeldPlay {
+  return {
+    hold() {
+      const was = deep.playing();
+      deep.stop();
+      return was;
+    },
+    resume() {
+      deep.start();
+    },
+    pace: () => deep.pace(),
+  };
+}

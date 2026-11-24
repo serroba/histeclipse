@@ -204,12 +204,41 @@ test.describe('as deep time plays, the great impacts strike', () => {
       });
       await expect(globe).toHaveAttribute('data-impacts-played', /^[1-9]/, { timeout: 60_000 });
     });
+    await test.step('And its clock is offered for a while, deep time playing on (#1174)', async () => {
+      await expect(
+        page.getByRole('button', { name: 'Watch Chicxulub in its own time' }),
+      ).toBeVisible();
+    });
     await test.step('And smaller craters in view strike too, as their times pass', async () => {
       await expect(page).toHaveURL(/[?&]ma=0(&|$)/, { timeout: 60_000 });
       await expect(globe).toHaveAttribute('data-strikes', /Chesapeake Bay/);
       await expect(globe).toHaveAttribute('data-impacts-played', /^([3-9]|\d\d)/, {
         timeout: 60_000,
       });
+    });
+    expect(problems).toEqual([]);
+  });
+
+  test('at Slow, deep time hands over to Chicxulub’s clock, and plays on once it is closed (#1174)', async ({
+    page,
+  }) => {
+    test.slow();
+    const problems = collectProblems(page);
+    const clock = page.getByRole('dialog', { name: 'Chicxulub, in its own time' });
+    await test.step('Given 70 million years ago, Impacts on, facing the Gulf, playing at Slow', async () => {
+      await page.goto('./?ma=70&scale=all&layers=impacts&cam=20,-80,3');
+      await globeRendered(page);
+      await deep(page).getByLabel('Pace').selectOption('slow');
+      await deep(page).getByRole('button', { name: 'Play', exact: true }).click();
+    });
+    await test.step('Then deep time stops at the strike, and its clock opens', async () => {
+      await expect(clock).toBeVisible({ timeout: 30_000 });
+      await expect(deep(page).getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+    });
+    await test.step('When the clock is closed, deep time plays on', async () => {
+      await clock.getByRole('button', { name: 'Close' }).click();
+      await expect(clock).toBeHidden();
+      await expect(deep(page).getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
     });
     expect(problems).toEqual([]);
   });
