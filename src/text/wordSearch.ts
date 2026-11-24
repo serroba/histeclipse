@@ -40,7 +40,7 @@ export function words(text: string): string[] {
 const TITLE_WEIGHT = 3;
 /** A story to play outranks the passages explaining how it is drawn (#842): it is what a reader
  * searching for it wants first. */
-const STORY_WEIGHT = 1.4;
+const STORY_WEIGHT = 1.5;
 const K1 = 1.2;
 const B = 0.75;
 
