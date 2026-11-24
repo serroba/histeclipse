@@ -132,3 +132,37 @@ test('a reader opens a searched eclipse and the globe turns to its place (#942) 
   });
   expect(problems).toEqual([]);
 });
+
+test('a reader searches for the Great Dying and lands on the end-Permian, the extinctions on (#1210)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const dialog = page.getByRole('dialog', { name: 'Search' });
+  await test.step('Given the globe today', async () => {
+    await page.goto('./?cam=0,0,3');
+    await globeRendered(page);
+  });
+  await test.step('When they search for the Great Dying', async () => {
+    await page.getByRole('button', { name: 'Search the texts' }).click();
+    await dialog.getByRole('searchbox').fill('great dying');
+  });
+  await test.step('Then the end-Permian comes first, a mass extinction, with its places then', async () => {
+    const first = dialog.locator('li').first();
+    await expect(first).toHaveAttribute('data-passage', 'extinction:end-permian-extinction');
+    await expect(first).toContainText('Mass extinction');
+    await expect(first.getByRole('button').first()).toContainText(
+      'Siberian Traps, Putorana, 251.9 million years ago',
+    );
+    await expect(first.getByRole('button').first()).toContainText('The Great Dying.');
+  });
+  await test.step('When they open the Siberian Traps', async () => {
+    await dialog.locator('li').first().getByRole('button').first().click();
+  });
+  await test.step('Then deep time is at the extinction, the layer on, its places marked', async () => {
+    await expect(dialog).toBeHidden();
+    await expect(page).toHaveURL(/ma=251\.9/);
+    await expect(page).toHaveURL(/layers=[^&]*extinctions/);
+    await expect(page.locator('[data-pick="extinction:meishan"]')).toBeAttached();
+  });
+  expect(problems).toEqual([]);
+});

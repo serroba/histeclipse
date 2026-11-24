@@ -42,6 +42,15 @@ describe('what is written about here', () => {
     ).not.toContain('eclipse:ugarit-1223-bce');
   });
 
+  it('Given Siberia, in the years or in deep time, Then no extinction is said to be here (#1210)', () => {
+    const siberia = { latitude: 56, longitude: 36 };
+    for (const year of [2026, null]) {
+      expect(ids({ body: 'earth', target: siberia, distance: 2.6, year }, 50)).not.toContain(
+        'extinction:end-permian-extinction',
+      );
+    }
+  });
+
   it('Given deep time, Then passages tied to a year are not there', () => {
     expect(
       ids({ body: 'earth', target: { latitude: 35, longitude: 36 }, distance: 3, year: null }),
