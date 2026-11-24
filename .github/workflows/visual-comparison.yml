@@ -1,0 +1,78 @@
+name: Visual comparison
+
+# The site's views (e2e/views), captured from the pull request's base and from the pull request,
+# and compared (#628): a change to what is drawn fails here, with the expected, actual and diff
+# images in the artifact. Not part of the required CI gate: a change meant to be seen is expected
+# to fail it, and the images say whether it is the one intended.
+on:
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - 'data-pipeline/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: visual-comparison-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compare:
+    name: Compare the views with the base
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
+        working-directory: base
+      # The search model (#393), as CI keeps it; each build checks it against its pins.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: public/models/*/onnx
+          key: models-${{ hashFiles('models.lock.json') }}
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: base/public/models/*/onnx
+          key: models-${{ hashFiles('base/models.lock.json') }}
+      - run: pnpm build
+      - run: pnpm build
+        working-directory: base
+      - id: playwright
+        run: echo "version=$(pnpm exec playwright --version | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"
+      - id: browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install chromium
+      # Each build served on its own port; the pull request's captures run against both.
+      - run: |
+          (cd base && pnpm exec vite preview --port 4481 --strictPort > /tmp/base.log 2>&1 &)
+          pnpm exec vite preview --port 4482 --strictPort > /tmp/branch.log 2>&1 &
+          for port in 4481 4482; do
+            for _ in $(seq 60); do curl -sf "http://localhost:$port/" > /dev/null && break; sleep 1; done
+          done
+          pnpm compare:views http://localhost:4481/ http://localhost:4482/
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: visual-comparison
+          path: |
+            test-results/views/
+            test-results/views-report/
+          retention-days: 14

@@ -121,3 +121,28 @@ scene; do not use real-time E2E waits to enumerate speeds or refresh rates.
 CI uses the explicit selection in [ACCEPTANCE.md](ACCEPTANCE.md), with two Linux shards.
 `pnpm test:e2e` still runs the full suite locally; `E2E_SCOPE=acceptance pnpm test:e2e` runs
 what blocks a PR. Nightly live and macOS workflows keep the broader regression suite.
+
+## Views compared between two builds
+
+`e2e/views` captures 19 of the site's views (the globe today, eclipses, history's layers, the
+ice ages, deep time, the Moon, the sky) and the globe's data attributes, and compares them
+between two builds (#628). It has a config of its own (`playwright.views.config.ts`) and is not
+part of the e2e suite.
+
+```sh
+pnpm build && pnpm preview --port 4482        # the branch
+# …and the base, built from main, on another port (4481)
+pnpm compare:views http://localhost:4481/ http://localhost:4482/
+```
+
+The first pass writes the base's captures to a folder (`VIEWS_DIR`, a temporary one by
+default); the second compares the branch's with them and fails on a difference, with the
+expected, actual and diff images in `test-results/views` and a report in
+`test-results/views-report`. Every pull request runs it in the "Visual comparison" workflow,
+outside the required gate: a change meant to be seen fails it, and its images say whether the
+change is the one intended.
+
+A capture waits until two screenshots in a row match, so maps that arrive in any order are all
+in. The panels' frosted glass is turned off for captures (`capture.css`), and up to 20 pixels may
+differ by a shade (text's antialiasing on a busy machine); a real change moves hundreds or more.
+Views that never settle (anything playing, the ocean currents' particles) are left out.
