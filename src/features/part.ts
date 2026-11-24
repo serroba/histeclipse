@@ -109,6 +109,8 @@ export interface Timeline {
   travelling(): boolean;
   /** Whether deep time is playing. */
   playing(): boolean;
+  /** Whether the reader paused deep time as it played: strikes falling hold with it (#807). */
+  paused(): boolean;
   /** The oldest elevation map, in millions of years. */
   oldest(): number;
   /** The moment (UT JD) Earth's face is shown turned to at `jd`: while the launches play fast,
@@ -119,7 +121,7 @@ export interface Timeline {
 /** The parts that keep time's playing. */
 interface TimeKeepers {
   readonly years: { travelling(): boolean };
-  readonly deepTime: { playing(): boolean; oldest(): number };
+  readonly deepTime: { playing(): boolean; paused(): boolean; oldest(): number };
   readonly launches: { earthFace(jd: number): number };
 }
 
@@ -136,6 +138,7 @@ export function lateTimeline(defaultOldest: number): {
     timeline: {
       travelling: () => keepers?.years.travelling() ?? false,
       playing: () => keepers?.deepTime.playing() ?? false,
+      paused: () => keepers?.deepTime.paused() ?? false,
       oldest: () => keepers?.deepTime.oldest() ?? defaultOldest,
       earthFace: (jd) => keepers?.launches.earthFace(jd) ?? jd,
     },

@@ -165,7 +165,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       },
       onPlay(play) {
         if (play) startPlay();
-        else stopPlay();
+        else pausePlay();
       },
       onPace: (picked) => {
         play.setPace(picked);
@@ -185,7 +185,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
   const glance = createDeepGlance(
     (play) => {
       if (play) startPlay();
-      else stopPlay();
+      else pausePlay();
     },
     (ma) => {
       stopPlay();
@@ -210,8 +210,10 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     },
     lessMotion,
   });
+  // Whether the reader paused it as it played, holding the strikes falling (#807).
+  let paused = false;
   // The sketch before the maps, its questions at the globe's left, the icy impactors (#1158).
-  const sketchView = createSketchView(globe, deepChoices(store).onSketch, lessMotion);
+  const sketchView = createSketchView(globe, deepChoices(store).onSketch, lessMotion, () => paused);
 
   // Every reversal of the last 83 Ma: small, loaded the first time deep time shows.
   let polarity: PolarityScale | null = null;
@@ -346,7 +348,14 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
   }
 
   function startPlay(): void {
+    paused = false;
     play.start();
+  }
+
+  /** The reader pauses: a strike falling holds still with the years, until they play on (#807). */
+  function pausePlay(): void {
+    paused ||= play.playing();
+    play.stop();
   }
 
   /** Play from a moment, at one of its span's speeds: a story told by playing (#177). */
@@ -376,6 +385,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     stopPlay,
     held: heldPlay(play),
     playing: play.playing,
+    paused: () => paused,
     playSpeed: play.speed,
     oldest: () => oldest,
   };

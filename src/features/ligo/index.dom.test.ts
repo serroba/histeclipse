@@ -53,6 +53,7 @@ function mount(fails: 'view' | 'data' | null = null): Mounted {
     timeline: {
       travelling: () => false,
       playing: () => false,
+      paused: () => false,
       oldest: () => 540,
       earthFace: (jd) => jd,
     },
