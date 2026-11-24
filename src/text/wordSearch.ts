@@ -85,6 +85,38 @@ export interface Hit {
   readonly matched: readonly string[];
 }
 
+/** Up to how many words typed are taken for a name being looked up (#1210). */
+const LOOKUP_WORDS = 3;
+
+/**
+ * How much a passage's score counts when a name is being looked up (#1210): by the share of the
+ * words typed it holds, squared, so one holding them all outranks one holding one strongly; and
+ * more where its title holds them, most where its title is little else: "Permian extinction"
+ * is the end-Permian's, not one that mentions the Permian in passing, and "mass extinction" the
+ * layer's, not each extinction's.
+ */
+function lookupWeight(
+  index: WordIndex,
+  asked: readonly string[],
+  at: number,
+  covered: ReadonlyMap<number, ReadonlySet<number>>,
+  typing: boolean,
+): number {
+  const share = (covered.get(at)?.size ?? 0) / Math.max(1, asked.length);
+  const title = index.titles[at] ?? new Set<string>();
+  const named = asked.filter(
+    (word, position) =>
+      title.has(word) ||
+      (typing && position === asked.length - 1 && [...title].some((t) => t.startsWith(word))),
+  ).length;
+  // A title that is little else than the words typed counts most; a story's title is its name
+  // and a caption, by design (#842), so it counts in full.
+  const story = index.passages[at]?.kind === 'story';
+  const precision = story ? 1 : named / Math.max(1, title.size);
+  const titled = 1 + (named / Math.max(1, asked.length)) * (0.5 + 0.5 * precision);
+  return share * share * titled;
+}
+
 /** The passages that best match the words typed, best first. */
 export function searchWords(index: WordIndex, query: string, limit = 20): Hit[] {
   const asked = words(query);
@@ -119,19 +151,12 @@ export function searchWords(index: WordIndex, query: string, limit = 20): Hit[] 
       }
     }
   });
+  // A few words are a name, looked up: weigh how many of them a passage holds, and its title. A
+  // longer question is in the reader's own words, left to plain ranking and search by meaning.
+  const looking = asked.length <= LOOKUP_WORDS;
   for (const [at, score] of scores) {
-    const share = (covered.get(at)?.size ?? 0) / Math.max(1, asked.length);
     const story = index.passages[at]?.kind === 'story' ? STORY_WEIGHT : 1;
-    // A title holding the words typed is most likely what was meant: "Permian extinction" is
-    // the end-Permian's, not one that mentions the Permian in passing (#1210).
-    const title = index.titles[at] ?? new Set<string>();
-    const named = asked.filter(
-      (word, position) =>
-        title.has(word) ||
-        (typing && position === asked.length - 1 && [...title].some((t) => t.startsWith(word))),
-    ).length;
-    const titled = 1 + named / Math.max(1, asked.length);
-    scores.set(at, score * story * share * share * titled);
+    scores.set(at, score * story * (looking ? lookupWeight(index, asked, at, covered, typing) : 1));
   }
   return [...scores]
     .sort(([a, one], [b, other]) => other - one || a - b)
