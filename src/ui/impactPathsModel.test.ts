@@ -18,6 +18,8 @@ import {
   shownKey,
   strikeRows,
   TIGHT,
+  keyboardFor,
+  spokenCrater,
   tooltipFor,
   tracks,
   travelSeconds,
@@ -107,6 +109,21 @@ describe('tooltipFor and idOf', () => {
     expect(tooltipFor({ id: 7 })).toBe('');
     expect(idOf({ id: '7' })).toBeUndefined();
     expect(idOf(undefined)).toBeUndefined();
+  });
+});
+
+describe('spokenCrater (#309)', () => {
+  it('says a crater’s name and rows, and a line as such', () => {
+    const [row] = strikeRows([path([[point(0, 0)]], { id: 7 })]);
+    expect(spokenCrater(row)).toBe('Chicxulub: age 66.0 Ma, width 150 km, travelled 0 km');
+    expect(spokenCrater({ source: 1, target: 2 })).toBe('a coast or a track');
+  });
+
+  it('gives a view its keyboard, keeping the canvas’s own words', () => {
+    const options = keyboardFor({ getAttribute: () => 'Impact craters in 3D' });
+    expect(options.description).toBe('Impact craters in 3D');
+    expect(options.keyboard.label({ datum: null })).toBe('a coast or a track');
+    expect(keyboardFor({ getAttribute: () => null }).description).toBe('');
   });
 });
 

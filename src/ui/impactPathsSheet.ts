@@ -3,10 +3,9 @@
  * from above, with each crater's track drawn like a ship's route from where it struck to where it
  * lies today. Picking a crater makes its track bold and sends a dot along it, strike to today,
  * with the date it has reached. Behind a switch, the same tracks in a 3D box with time as depth,
- * today on top, and a plane at the slider's moment. phoria2 draws both, loaded only when the
- * sheet first opens; each view is built the first time it is shown. DOM and WebGL glue, covered
- * by the Playwright suite; what is drawn is worked out in `impactPathsModel.ts` (#607), the paths
- * in `data/impactPaths.ts`, the dot's places from `placeThen`, as the globe draws them.
+ * today on top, and a plane at the slider's moment. phoria2 draws both, loaded when the sheet
+ * first opens, each view built when first shown. DOM and WebGL glue, covered by the Playwright
+ * suite; what is drawn is in `impactPathsModel.ts` (#607), the dot's places from `placeThen`.
  */
 
 import type * as Phoria2 from 'phoria2';
@@ -29,6 +28,7 @@ import {
   idOf,
   journeyFrame,
   journeyStep,
+  keyboardFor,
   LOOSE,
   MAP,
   mapOpacities,
@@ -49,10 +49,8 @@ import './stageSheet.css';
 
 export interface ImpactPathsSheet {
   readonly dialog: HTMLDialogElement;
-  /**
-   * Open at all the paths or one crater's, drawn on the map or in the box, at the slider's moment
-   * (Ma; 0 in the years); or close.
-   */
+  /** Open at all the paths or one crater's, on the map or in the box, at the slider's moment
+   * (Ma; 0 in the years); or close. */
   show(view: CratersView | null, ma: number, shape: CratersShape): void;
 }
 
@@ -305,6 +303,7 @@ function drawMap(data: Loaded, onPick: Pick): Scene {
     orbit: { mode: 'map', minDistance: 0.6, maxDistance: 8 },
     framing: 'both',
     tooltip: (hit) => tooltipFor(hit.datum),
+    ...keyboardFor(canvas),
   });
   const world = mapWorld(data, view);
   const journey = mapJourney(data, view);
@@ -469,6 +468,7 @@ function drawBox(data: Loaded, frame: HTMLElement, onPick: Pick): Scene {
     canvas,
     orbit: { minDistance: 3, maxDistance: 60 },
     framing: 'both',
+    ...keyboardFor(canvas),
   });
   const strikes = strikeRows(data.paths);
   const chart = view.scene.add(

@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
 import data from '../../public/data/tree-of-life.json';
-import { treeLayout, nodeOfOtt, TREE_CLADES } from './treeLayout';
+import { treeLayout, nodeOfOtt, spokenTaxon, TREE_CLADES, TREE_KEYS } from './treeLayout';
 import type { TreeOfLife } from './treeOfLife';
 
 const real = data as TreeOfLife;
@@ -85,5 +85,28 @@ describe('the tree of life laid out on a disc', () => {
     const tree = treeOf([-1, 0, 0]);
     expect(nodeOfOtt(tree, 102)).toBe(2);
     expect(nodeOfOtt(tree, 7)).toBeNull();
+  });
+});
+
+describe('spokenTaxon (#309)', () => {
+  it('says a taxon’s name, rank, whether it lives and its group, skipping what is blank', () => {
+    expect(
+      spokenTaxon({ name: 'Homo sapiens', rank: 'species', status: 'living', group: 'mammals' }),
+    ).toBe('Homo sapiens, species, living, mammals');
+    expect(spokenTaxon({ name: 'Theropoda', rank: '', status: 'extinct', group: 'reptiles' })).toBe(
+      'Theropoda, extinct, reptiles',
+    );
+  });
+
+  it('says a branch between two as such', () => {
+    expect(spokenTaxon({ source: 1, target: 2, group: 'mammals' })).toBe('a branch');
+    expect(spokenTaxon(null)).toBe('a branch');
+  });
+
+  it('labels what the keyboard steps to on the tree, and describes the view', () => {
+    expect(TREE_KEYS.keyboard.label({ datum: { name: 'Aves', group: 'birds' } })).toBe(
+      'Aves, birds',
+    );
+    expect(TREE_KEYS.description).toMatch(/^The tree of life in 3D/);
   });
 });

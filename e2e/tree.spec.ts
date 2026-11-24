@@ -99,3 +99,39 @@ test('a link opens the tree at a taxon, and its book says where the tree comes f
   });
   expect(problems).toEqual([]);
 });
+
+test(
+  'without a pointer, the arrow keys step through the taxa and Enter opens one (#309)',
+  GPU,
+  async ({ page }) => {
+    // A small real subtree: stepping is the same through eighty taxa as through eight thousand.
+    await page.route('**/data/tree-of-life.json', (route) => route.fulfill({ json: treeFixture }));
+    const problems = collectProblems(page);
+    const canvas = page.getByTestId('tree-canvas');
+    await test.step('Given the whole tree, drawn', async () => {
+      await page.goto('./?tree=all');
+      await globeRendered(page);
+      await expect(canvas).toHaveAttribute('data-nodes', String(treeFixture.parent.length), DRAWN);
+    });
+    await test.step('When they come to it by the keyboard and step once', async () => {
+      await canvas.focus();
+      await page.keyboard.press('ArrowRight');
+    });
+    await test.step('Then a screen reader hears the first taxon, and how many there are', async () => {
+      await expect(canvas).toHaveAttribute('role', 'application');
+      const heard = page.locator('.phoria-sr-only[aria-live]');
+      await expect(heard).toContainText('cellular organisms');
+      await expect(heard).toContainText(/\b1 of \d+/);
+    });
+    await test.step('When they press Enter', async () => {
+      await page.keyboard.press('Enter');
+    });
+    await test.step('Then the tree opens at that taxon, its line listed', async () => {
+      await expect(page).toHaveURL(/tree=ott\d+/, DRAWN);
+      await expect(page.getByTestId('tree-focus').getByRole('heading')).toHaveText(
+        'cellular organisms',
+      );
+    });
+    expect(problems).toEqual([]);
+  },
+);
