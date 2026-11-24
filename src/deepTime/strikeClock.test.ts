@@ -8,6 +8,7 @@ import {
   durationText,
   maAfter,
   positionAt,
+  QUIET_AT,
   secondsAt,
   STRIKE_AT,
 } from './strikeClock';
@@ -36,8 +37,18 @@ describe('the strike clock: time from a strike on a log scale (#1173)', () => {
     expect(clockStep('slow', 1)).toBeLessThan(clockStep('normal', 1));
     expect(clockStep('normal', 1)).toBeLessThan(clockStep('fast', 1));
     // The whole clock at Normal in about twenty seconds.
-    expect(CLOCK_END / clockStep('normal', 1)).toBeGreaterThan(15);
-    expect(CLOCK_END / clockStep('normal', 1)).toBeLessThan(25);
+    let played = 0;
+    for (let at = 0; at < CLOCK_END; played += 0.01) at += clockStep('normal', 0.01, at);
+    expect(played).toBeGreaterThan(15);
+    expect(played).toBeLessThan(25);
+  });
+
+  it('plays the approach at a third, and the quiet after the sky clears at twice (#1187)', () => {
+    const strike = clockStep('normal', 1);
+    expect(clockStep('normal', 1, 0)).toBeCloseTo(strike / 3, 9);
+    expect(clockStep('normal', 1, QUIET_AT - 0.01)).toBe(strike);
+    expect(clockStep('normal', 1, QUIET_AT)).toBe(2 * strike);
+    expect(secondsAt(QUIET_AT)).toBeCloseTo(10 * YEAR, -3);
   });
 
   it('says the moment in words, in the largest unit that holds it', () => {
