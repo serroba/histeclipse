@@ -10,6 +10,7 @@ import * as v from 'valibot';
 import { formatMa } from '../time/format';
 import type { GeoPoint } from '../core/geo';
 import { getJson, type Fetch } from '../util/fetchJson';
+import { pointThen } from './placesThen';
 
 const Ma = v.nullable(v.pipe(v.number(), v.minValue(0)));
 const integer = v.pipe(v.number(), v.integer());
@@ -75,25 +76,9 @@ export interface ImpactMark {
   readonly uncertain: boolean;
 }
 
-function between(a: number, b: number, mix: number): number {
-  return a + (b - a) * mix;
-}
-
 /** Where an impact lay `ma` million years ago, between the steps around it; null on no plate. */
 export function placeThen(data: Impacts, impact: Impact, ma: number): GeoPoint | null {
-  const at = ma / data.stepMa;
-  const index = Math.floor(at);
-  const younger = impact.then[index];
-  if (younger === undefined || younger === null) return null;
-  const older = impact.then[index + 1] ?? younger;
-  const mix = at - index;
-  // Across the antimeridian, the older longitude is taken the short way round.
-  const turn = older[1] - younger[1] > 18000 ? -36000 : older[1] - younger[1] < -18000 ? 36000 : 0;
-  const longitude = between(younger[1], older[1] + turn, mix) / data.scale;
-  return {
-    latitude: between(younger[0], older[0], mix) / data.scale,
-    longitude: ((((longitude + 180) % 360) + 360) % 360) - 180,
-  };
+  return pointThen(impact.then, data, ma);
 }
 
 /**

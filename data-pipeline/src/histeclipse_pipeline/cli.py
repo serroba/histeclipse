@@ -40,6 +40,7 @@ from histeclipse_pipeline.enso_early import fetch_enso_early
 from histeclipse_pipeline.enso_sst import fetch_enso_sst
 from histeclipse_pipeline.ephemeris import Ephemeris, fetch_de441
 from histeclipse_pipeline.eruptions import fetch_eruptions
+from histeclipse_pipeline.extinctions import fetch_extinctions
 from histeclipse_pipeline.extremes import fetch_extremes
 from histeclipse_pipeline.fossils import fetch_fossils
 from histeclipse_pipeline.gw150914 import fetch_gw150914
@@ -345,6 +346,12 @@ def impacts(args: Arguments) -> int:  # pragma: no cover - needs network access
     """Write impact craters and deposits, and their places when they struck (Impact Earth)."""
     count = fetch_impacts(args.out)
     return _say(f"wrote {count} impact craters and deposits to {args.out}")
+
+
+def extinctions(args: Arguments) -> int:  # pragma: no cover - needs network access
+    """Write the great extinctions' places, and where each lay at its time (PALEOMAP)."""
+    count = fetch_extinctions(args.out)
+    return _say(f"wrote {count} extinction places to {args.out}")
 
 
 def volcanoes(args: Arguments) -> int:  # pragma: no cover - needs network access
@@ -943,6 +950,11 @@ COMMANDS: dict[str, tuple[Callable[[Arguments], int], str, str | None]] = {
     "impacts": (
         impacts,
         "write impact craters and deposits, and their places when they struck (Impact Earth)",
+        "output JSON file",
+    ),
+    "extinctions": (
+        extinctions,
+        "write the great extinctions' places, and where each lay at its time (PALEOMAP)",
         "output JSON file",
     ),
     "timezones": (

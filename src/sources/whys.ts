@@ -29,6 +29,7 @@ import genomes from './whys/genomes.json' with { type: 'json' };
 import gravitationalWaves from './whys/gravitationalWaves.json' with { type: 'json' };
 import humans from './whys/humans.json' with { type: 'json' };
 import iceSurface from './whys/ice-surface.json' with { type: 'json' };
+import extinctions from './whys/extinctions.json' with { type: 'json' };
 import impacts from './whys/impacts.json' with { type: 'json' };
 import lineages from './whys/lineages.json' with { type: 'json' };
 import moons from './whys/moons.json' with { type: 'json' };
@@ -101,4 +102,5 @@ export const WHYS_CONTENT = {
   gravitationalWaves,
   telescopes,
   neutronStarMerger,
+  extinctions,
 };

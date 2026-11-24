@@ -189,6 +189,7 @@ export const SURFACE_PRIORITY = {
   volcanoes: 30,
   telescopes: 35,
   impacts: 40,
+  extinctions: 45,
   fossils: 50,
   minorStates: 60,
 } as const;
