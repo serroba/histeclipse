@@ -40,7 +40,7 @@ export function words(text: string): string[] {
 const TITLE_WEIGHT = 3;
 /** A story to play outranks the passages explaining how it is drawn (#842): it is what a reader
  * searching for it wants first. */
-const STORY_WEIGHT = 1.4;
+const STORY_WEIGHT = 1.5;
 const K1 = 1.2;
 const B = 0.75;
 
@@ -50,6 +50,8 @@ export interface WordIndex {
   readonly postings: ReadonlyMap<string, ReadonlyMap<number, number>>;
   readonly lengths: readonly number[];
   readonly meanLength: number;
+  /** Each passage's title's words. */
+  readonly titles: readonly ReadonlySet<string>[];
 }
 
 export function indexPassages(passages: readonly Passage[]): WordIndex {
@@ -67,7 +69,13 @@ export function indexPassages(passages: readonly Passage[]): WordIndex {
     return counted.reduce((sum, [, weight]) => sum + weight, 0);
   });
   const total = lengths.reduce((sum, length) => sum + length, 0);
-  return { passages, postings, lengths, meanLength: total / Math.max(1, lengths.length) };
+  return {
+    passages,
+    postings,
+    lengths,
+    meanLength: total / Math.max(1, lengths.length),
+    titles: passages.map((passage) => new Set(words(passage.title))),
+  };
 }
 
 export interface Hit {
@@ -75,6 +83,38 @@ export interface Hit {
   readonly score: number;
   /** The words of the passage the query matched, to pick a snippet by. */
   readonly matched: readonly string[];
+}
+
+/** Up to how many words typed are taken for a name being looked up (#1210). */
+const LOOKUP_WORDS = 3;
+
+/**
+ * How much a passage's score counts when a name is being looked up (#1210): by the share of the
+ * words typed it holds, squared, so one holding them all outranks one holding one strongly; and
+ * more where its title holds them, most where its title is little else: "Permian extinction"
+ * is the end-Permian's, not one that mentions the Permian in passing, and "mass extinction" the
+ * layer's, not each extinction's.
+ */
+function lookupWeight(
+  index: WordIndex,
+  asked: readonly string[],
+  at: number,
+  covered: ReadonlyMap<number, ReadonlySet<number>>,
+  typing: boolean,
+): number {
+  const share = (covered.get(at)?.size ?? 0) / Math.max(1, asked.length);
+  const title = index.titles[at] ?? new Set<string>();
+  const named = asked.filter(
+    (word, position) =>
+      title.has(word) ||
+      (typing && position === asked.length - 1 && [...title].some((t) => t.startsWith(word))),
+  ).length;
+  // A title that is little else than the words typed counts most; a story's title is its name
+  // and a caption, by design (#842), so it counts in full.
+  const story = index.passages[at]?.kind === 'story';
+  const precision = story ? 1 : named / Math.max(1, title.size);
+  const titled = 1 + (named / Math.max(1, asked.length)) * (0.5 + 0.5 * precision);
+  return share * share * titled;
 }
 
 /** The passages that best match the words typed, best first. */
@@ -86,6 +126,9 @@ export function searchWords(index: WordIndex, query: string, limit = 20): Hit[] 
   const typing = last !== undefined && last.length > 1 && /[\p{L}\p{N}]$/u.test(query);
   const scores = new Map<number, number>();
   const matched = new Map<number, Set<string>>();
+  // Which of the words typed each passage matched, by position: one matching them all outranks
+  // one matching a single word of them strongly (#1210).
+  const covered = new Map<number, Set<number>>();
   const count = index.passages.length;
   asked.forEach((word, position) => {
     const terms =
@@ -104,11 +147,16 @@ export function searchWords(index: WordIndex, query: string, limit = 20): Hit[] 
         const exact = term === word ? 1 : 0.6;
         scores.set(at, (scores.get(at) ?? 0) + (exact * idf * frequency * (K1 + 1)) / norm);
         matched.set(at, (matched.get(at) ?? new Set<string>()).add(term));
+        covered.set(at, (covered.get(at) ?? new Set<number>()).add(position));
       }
     }
   });
+  // A few words are a name, looked up: weigh how many of them a passage holds, and its title. A
+  // longer question is in the reader's own words, left to plain ranking and search by meaning.
+  const looking = asked.length <= LOOKUP_WORDS;
   for (const [at, score] of scores) {
-    if (index.passages[at]?.kind === 'story') scores.set(at, score * STORY_WEIGHT);
+    const story = index.passages[at]?.kind === 'story' ? STORY_WEIGHT : 1;
+    scores.set(at, score * story * (looking ? lookupWeight(index, asked, at, covered, typing) : 1));
   }
   return [...scores]
     .sort(([a, one], [b, other]) => other - one || a - b)
@@ -121,12 +169,22 @@ export function searchWords(index: WordIndex, query: string, limit = 20): Hit[] 
     });
 }
 
-/** The sentence of a passage where the query first matched, or its first, cut to `most`. */
+/**
+ * The sentence of a passage holding the most of the words matched, the first of those that tie,
+ * or its first, cut to `most`: "The Great Dying.", not an earlier sentence with "dying" alone.
+ */
 export function snippet(passage: Passage, matched: readonly string[], most = 200): string {
   const sentences = passage.text.match(/[^.!?]+[.!?]*/g) ?? [passage.text];
-  const hit =
-    sentences.find((sentence) => words(sentence).some((word) => matched.includes(word))) ??
-    sentences[0];
+  const held = (sentence: string) => new Set(words(sentence).filter((w) => matched.includes(w)));
+  let hit = sentences[0];
+  let best = 0;
+  for (const sentence of sentences) {
+    const count = held(sentence).size;
+    if (count > best) {
+      best = count;
+      hit = sentence;
+    }
+  }
   const trimmed = hit.trim();
   return trimmed.length <= most ? trimmed : `${trimmed.slice(0, most - 1).trimEnd()}…`;
 }

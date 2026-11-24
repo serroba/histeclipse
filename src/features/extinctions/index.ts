@@ -22,6 +22,9 @@ import {
   type ExtinctionMark,
 } from './view';
 
+// The extinctions as passages for search (#1210).
+export { extinctionPassages } from './passages';
+
 /** The extinctions' parts of the Earth shader: the oxygen-poor seas (#1202). */
 export const EXTINCTION_EARTH_PARTS: readonly EarthPart[] = [ANOXIC_SEAS_PART];
 

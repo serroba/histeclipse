@@ -20,6 +20,8 @@ export interface Extinction {
   /** Its milestone's id where it has one (`end-permian-extinction`). */
   readonly id: string;
   readonly title: string;
+  /** What it is also called, where it has a common name: "the Great Dying" (#1210). */
+  readonly known?: string;
   /** When it is marked and play eases near it, Ma. */
   readonly ma: number;
   /** Whether it is one of the usual five or put forward beside them. */
@@ -80,6 +82,7 @@ export const EXTINCTIONS: readonly Extinction[] = [
   {
     id: 'end-permian-extinction',
     title: 'End-Permian mass extinction',
+    known: 'the Great Dying',
     ma: 251.9,
     counted: 'five',
     lost: {
@@ -108,6 +111,7 @@ export const EXTINCTIONS: readonly Extinction[] = [
   {
     id: 'k-pg-extinction',
     title: 'End-Cretaceous extinction',
+    known: 'the end of the dinosaurs',
     ma: 66,
     counted: 'five',
     lost: {

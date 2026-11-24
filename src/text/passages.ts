@@ -8,7 +8,8 @@
  * link, read by the same parser as every other (`state/url.ts`). A passage may have many anchors:
  * a record naming an eclipse and a city, a reading disputed between two dates.
  *
- * The passages are written once into `public/data/passages.json` (`passages.build.test.ts`), the
+ * The passages are written once into `public/data/passages.json` (the texts feature's
+ * `passages.build.test.ts`, which also gathers the features' own, #1210), the
  * one file every reader of them loads, and the one the pipeline embeds for search by meaning.
  */
 
@@ -26,7 +27,15 @@ import type { MoonFacts } from './moonFacts';
 import type { Why, WhyId } from '../sources/registry';
 import { getJson, type Fetch } from '../util/fetchJson';
 
-const PASSAGE_KINDS = ['why', 'moon', 'eclipse', 'mission', 'story', 'telescope'] as const;
+const PASSAGE_KINDS = [
+  'why',
+  'moon',
+  'eclipse',
+  'mission',
+  'story',
+  'telescope',
+  'extinction',
+] as const;
 export type PassageKind = (typeof PASSAGE_KINDS)[number];
 
 const AnchorSchema = v.strictObject({

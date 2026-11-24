@@ -20,6 +20,7 @@ const KINDS: Readonly<Record<PassageKind, string>> = {
   mission: 'Mission',
   story: 'A story to play',
   telescope: 'Telescope',
+  extinction: 'Mass extinction',
 };
 
 /** Where the reader's choice to search by meaning is remembered, in this browser only. */
