@@ -37,6 +37,7 @@ export const EARTH_PART_ORDER = {
   eclipsePath: 40,
   moonShadow: 50,
   strikeGround: 60,
+  anoxicSeas: 65,
 } as const;
 
 /**

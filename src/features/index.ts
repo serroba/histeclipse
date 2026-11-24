@@ -4,7 +4,7 @@ import { amocFeature } from './amoc';
 import { asteroidsFeature } from './asteroids';
 import { carbonMadeFeature } from './carbonMade';
 import { datesFeature } from './dates';
-import { extinctionsFeature } from './extinctions';
+import { EXTINCTION_EARTH_PARTS, extinctionsFeature } from './extinctions';
 import { airFeature, platesFeature } from './deepSurfaces';
 import { fossilsFeature } from './fossils';
 import { genomesFeature } from './genomes';
@@ -29,7 +29,10 @@ import { waysFeature } from './ways';
 import type { Feature } from './feature';
 
 /** The features' parts of the Earth shader (#379), built into the globe when it is made. */
-export const FEATURE_EARTH_PARTS: readonly EarthPart[] = [...IMPACT_EARTH_PARTS];
+export const FEATURE_EARTH_PARTS: readonly EarthPart[] = [
+  ...IMPACT_EARTH_PARTS,
+  ...EXTINCTION_EARTH_PARTS,
+];
 
 export const FEATURES: readonly Feature[] = [
   // First, in this order: their names and markers go on the globe before the others', as they did.
