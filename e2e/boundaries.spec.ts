@@ -160,6 +160,9 @@ test('on a phone the boundaries story lets the reader choose the chart or the gl
   page,
 }, info) => {
   test.skip(info.project.name !== 'mobile', 'a phone, where the sheet hides the globe');
+  // On a runner drawing the phone in software a tap that redraws the globe can take ten
+  // seconds: it took 20 of its 30 on passing runs, and a busy shard ran it out of time (#1178).
+  test.slow();
   const problems = collectProblems(page);
   const sheet = page.getByTestId('boundaries-sheet');
   await test.step('Given the story open on the Holocene', async () => {
