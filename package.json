@@ -23,7 +23,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "coverage": "vitest run --coverage",
-    "check": "pnpm format:check && pnpm lint && pnpm lint:css && pnpm knip && pnpm typecheck && pnpm coverage && pnpm build"
+    "check": "pnpm format:check && pnpm lint && pnpm lint:css && pnpm knip && pnpm typecheck && pnpm coverage && pnpm build",
+    "compare:views": "node --experimental-strip-types --no-warnings e2e/views/compare.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

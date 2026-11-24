@@ -13,6 +13,8 @@ import {
 test('turning on El Niño fits the Years bar to its years, and the Years preset shows them all again @acceptance @mobile', async ({
   page,
 }) => {
+  // 16–25 s on CI's passing runs, mobile: a busy runner took it past 30 s (#1216).
+  test.slow();
   const problems = collectProblems(page);
   await test.step('Given today, the bar over the whole Holocene', async () => {
     await page.goto('./?t=2026-06-15T12:00Z&cam=0,-150,3');
@@ -65,6 +67,8 @@ test('turning on El Niño fits the Years bar to its years, and the Years preset 
 test('zooming out of the years goes on into deep time at the same moment, and zooming in comes back (#1074) @mobile', async ({
   page,
 }) => {
+  // 16–25 s on CI's passing runs, mobile: a busy runner took it past 30 s (#1216).
+  test.slow();
   const problems = collectProblems(page);
   const years = page.getByRole('slider', { name: 'Year in the Holocene' });
   const deep = page.getByRole('navigation', { name: 'Deep time' });
