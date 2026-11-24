@@ -50,3 +50,23 @@ describe('the cold and the suffocating seas on the globe (#1202)', () => {
     expect(() => made.dispose?.()).not.toThrow();
   });
 });
+
+describe('the seas’ soft edge (#1202)', () => {
+  it('fades the caps out to their rim where the page can draw it', () => {
+    const stops: string[] = [];
+    const context = {
+      createLinearGradient: () => ({
+        addColorStop: (_: number, colour: string) => stops.push(colour),
+      }),
+      fillRect: vi.fn(),
+      fillStyle: '',
+    };
+    const getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockReturnValue(context as unknown as CanvasRenderingContext2D);
+    layer();
+    expect(stops).toEqual(['#fff', '#fff', '#000']);
+    expect(context.fillRect).toHaveBeenCalledWith(0, 0, 1, 64);
+    getContext.mockRestore();
+  });
+});

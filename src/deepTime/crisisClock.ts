@@ -57,13 +57,15 @@ function crisisScale(options: CrisisOptions): ClockScale {
     if (seconds <= tailFrom) return Math.max(0, (seconds + before) / unit);
     return Math.min(end, tailAt + TAIL_UNITS * Math.log10(seconds / tailFrom));
   };
-  const slower = (options.slower ?? [0, 0]).map(positionAt);
+  const [slowFrom, slowTo] = options.slower ?? [0, 0];
+  const slowStart = positionAt(slowFrom);
+  const slowEnd = positionAt(slowTo);
   return {
     end,
     secondsAt,
     positionAt,
     advance(pace, seconds, position) {
-      const half = position >= (slower[0] ?? 0) && position < (slower[1] ?? 0) ? 0.5 : 1;
+      const half = position >= slowStart && position < slowEnd ? 0.5 : 1;
       return options.unitsPerSecond[pace] * half * seconds;
     },
     // A tenth of a unit.
