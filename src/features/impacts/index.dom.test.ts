@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import impactsFile from '../../../public/data/impacts.json';
 import impactPictures from '../../../public/data/impact-pictures.json';
@@ -14,6 +14,11 @@ const on: ViewState = { ...off, layers: withLayer(off.layers, 'impacts', true) }
 /** Just after Chicxulub (66.04 Ma), on the span of the elevation maps. */
 const cretaceous: ViewState = { ...on, ma: 66, deepScale: 'all' };
 const JD = 2451545;
+
+// Whatever a test laid over the page, the clock or the offer, goes with it.
+afterEach(() => {
+  document.body.replaceChildren();
+});
 const CHICXULUB = '26';
 
 /** A context that records what the feature asks of the app (#380): no globe, no page. */
@@ -43,6 +48,7 @@ function fakeContext(
     readonly failing?: boolean;
     readonly noPictures?: boolean;
     readonly cardOpen?: boolean;
+    readonly pace?: 'slow' | 'normal' | 'fast';
   } = {},
 ) {
   const refresh = vi.fn();
@@ -50,6 +56,9 @@ function fakeContext(
   const update = vi.fn();
   const show = vi.fn();
   const goTo = vi.fn();
+  const hold = vi.fn(() => true);
+  const resume = vi.fn();
+  const pace = options.pace ?? 'normal';
   const playing = {
     moveTo: vi.fn(),
     held: () => false,
@@ -90,7 +99,7 @@ function fakeContext(
     globe: { addLayer: () => ({ update }) },
     cards: { show, open: () => options.cardOpen ?? true },
     timeline,
-    deepTime: { goTo },
+    deepTime: { goTo, hold, resume, pace: () => pace },
     strikes,
     overPage: {
       add: (element: HTMLElement) => {
@@ -106,6 +115,8 @@ function fakeContext(
     update,
     show,
     goTo,
+    hold,
+    resume,
     strikes,
     playing,
     timeline,
@@ -225,6 +236,49 @@ describe('the impact craters as a feature', () => {
     timeline.paused.mockReturnValue(true);
     shown.show?.({ ...facing, ma: 40 }, JD);
     expect(struck.hold).toHaveBeenCalledWith(true);
+  });
+
+  it('at Slow, holds deep time at Chicxulub and opens its clock, resuming when closed (#1174)', async () => {
+    const { shown, timeline, strikes, hold, resume, view, setView } = await loaded(
+      { ...cretaceous, ma: 67 },
+      { pace: 'slow' },
+    );
+    timeline.playing.mockReturnValue(true);
+    const facing: ViewState = {
+      ...cretaceous,
+      camera: { ...cretaceous.camera, target: { latitude: 21, longitude: -89 } },
+    };
+    shown.show?.({ ...facing, ma: 67 }, JD);
+    // Deep time has moved on a frame since it struck: it is held at the strike.
+    setView({ ...facing, ma: 65.4 });
+    shown.show?.({ ...facing, ma: 65.5 }, JD);
+    expect(hold).toHaveBeenCalledTimes(1);
+    expect(view().ma).toBe(65.5);
+    expect(strikes.playImpact).toHaveBeenCalledWith(expect.objectContaining({ driven: true }));
+    expect(document.querySelector<HTMLElement>('.strike-clock')?.hidden).toBe(false);
+    document.querySelector<HTMLButtonElement>('.strike-clock-close')?.click();
+    expect(resume).toHaveBeenCalledTimes(1);
+    document.body.replaceChildren();
+  });
+
+  it('faster, strikes Chicxulub as the others, and offers its clock for a while (#1174)', async () => {
+    const { shown, timeline, strikes, hold } = await loaded({ ...cretaceous, ma: 67 });
+    timeline.playing.mockReturnValue(true);
+    const facing: ViewState = {
+      ...cretaceous,
+      camera: { ...cretaceous.camera, target: { latitude: 21, longitude: -89 } },
+    };
+    shown.show?.({ ...facing, ma: 67 }, JD);
+    shown.show?.({ ...facing, ma: 65.5 }, JD);
+    expect(hold).not.toHaveBeenCalled();
+    expect(strikes.playImpact).toHaveBeenCalledWith(expect.not.objectContaining({ driven: true }));
+    const offer = document.querySelector<HTMLButtonElement>('.strike-offer');
+    expect(offer?.textContent).toBe('Watch Chicxulub in its own time');
+    offer?.click();
+    expect(hold).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('.strike-offer')).toBeNull();
+    expect(document.querySelector<HTMLElement>('.strike-clock')?.hidden).toBe(false);
+    document.body.replaceChildren();
   });
 
   it('opens a crater’s card when its marker is tapped, with the way to when it struck', async () => {

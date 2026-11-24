@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createStore } from '../../state/store';
 import { defaultViewState, type ViewState } from '../../state/viewState';
-import { deepPlaying } from './playing';
+import { deepPlaying, heldPlay } from './playing';
 
 /** Deep time on the 540 Myr bar, playing by frames the test runs; and how often the bar showed it. */
 function setUp(state: Partial<ViewState>, lessMotion = false, finds: readonly number[] = []) {
@@ -124,5 +124,37 @@ describe('playing deep time (#1076, #1077)', () => {
     play.start();
     play.start();
     expect(changes()).toBe(1);
+  });
+});
+
+describe('deep time held for a while, and resumed (#1174)', () => {
+  function deep(playing: boolean) {
+    const calls: string[] = [];
+    let on = playing;
+    const play = heldPlay({
+      playing: () => on,
+      stop: () => {
+        on = false;
+        calls.push('stop');
+      },
+      start: () => {
+        on = true;
+        calls.push('start');
+      },
+      pace: () => 'slow',
+    });
+    return { play, calls };
+  }
+
+  it('says it was playing when held, and plays on when resumed', () => {
+    const { play, calls } = deep(true);
+    expect(play.hold()).toBe(true);
+    play.resume();
+    expect(calls).toEqual(['stop', 'start']);
+    expect(play.pace()).toBe('slow');
+  });
+
+  it('says it was not, standing still', () => {
+    expect(deep(false).play.hold()).toBe(false);
   });
 });

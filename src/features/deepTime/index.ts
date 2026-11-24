@@ -34,7 +34,7 @@ import {
 } from '../../data/paleoDem';
 import { HOLOCENE_MA, maOfYear, yearOfMa } from '../../data/iceSheets';
 import { prefetchFrames } from '../../deepTime/playSpeed';
-import { deepPlaying } from './playing';
+import { deepPlaying, heldPlay } from './playing';
 import { animationLoop } from '../../util/animationLoop';
 import { PLATES_REACH_MA } from '../../deepTime/sketch';
 import { barWindow } from '../../ui/deepBarModel';
@@ -383,6 +383,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
     land,
     setScale,
     stopPlay,
+    held: heldPlay(play),
     playing: play.playing,
     paused: () => paused,
     playSpeed: play.speed,
