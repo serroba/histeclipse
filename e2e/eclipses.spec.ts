@@ -399,3 +399,36 @@ test('on a 320-px phone the eclipse’s slider keeps room to drag, its time and 
   );
   expect(problems).toEqual([]);
 });
+
+test('Follow the shadow keeps the Moon’s shadow in view as the eclipse runs, until a drag (#208)', async ({
+  page,
+}) => {
+  const camera = (): { latitude: number; longitude: number } => {
+    const [latitude = NaN, longitude = NaN] = (new URL(page.url()).searchParams.get('cam') ?? '')
+      .split(',')
+      .map(Number);
+    return { latitude, longitude };
+  };
+  await test.step('Given the 2024 eclipse, the globe turned away from its shadow', async () => {
+    await page.goto('./?t=2024-04-08T18:17&sel=solar:2024-04-08&cam=0,60,3');
+    await globeRendered(page);
+  });
+  await test.step('When they follow the shadow, the globe turns to it, over Mexico', async () => {
+    const follow = page.getByRole('button', { name: 'Follow the shadow' });
+    await follow.click();
+    await expect(follow).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(() => camera().longitude, { timeout: 15_000 }).toBeLessThan(-90);
+  });
+  await test.step('And as the eclipse runs an hour on, the view goes with it, north-east over the United States', async () => {
+    await page.getByRole('slider', { name: 'Time relative to greatest eclipse' }).fill('60');
+    await expect.poll(() => camera().longitude, { timeout: 15_000 }).toBeGreaterThan(-88);
+    expect(camera().latitude).toBeGreaterThan(30);
+  });
+  await test.step('Then a drag on the globe lets go', async () => {
+    await page.getByTestId('globe').locator('canvas').first().dispatchEvent('pointerdown');
+    await expect(page.getByRole('button', { name: 'Follow the shadow' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+});
