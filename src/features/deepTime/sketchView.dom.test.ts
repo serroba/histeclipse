@@ -180,6 +180,8 @@ describe('deep time’s sketch', () => {
       held: () => false,
       hold: vi.fn(),
       step: vi.fn(),
+      at: vi.fn(),
+      end: vi.fn(),
       playing: () => true,
     };
     const globe = { setSketch: vi.fn(), playImpact: vi.fn(() => falling) };

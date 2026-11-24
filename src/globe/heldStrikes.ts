@@ -14,6 +14,10 @@ export interface PlayingImpact {
   readonly hold: (held: boolean) => void;
   /** Move it on by `ms`, or back if negative, as a step of the arrow keys. */
   step(ms: number): void;
+  /** Driven by the strike clock (#1173): show it `seconds` after the strike. */
+  at(seconds: number): void;
+  /** Take it away, played out or not. */
+  end(): void;
 }
 
 /** An impact played on the globe, to whoever played it: whether it is still playing, too. */
@@ -47,6 +51,16 @@ export function playedImpact(
     step: (ms) => {
       drawn(() => {
         impact.step(ms);
+      });
+    },
+    at: (seconds) => {
+      drawn(() => {
+        impact.at(seconds);
+      });
+    },
+    end: () => {
+      drawn(() => {
+        impact.end();
       });
     },
     playing,

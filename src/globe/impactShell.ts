@@ -1,8 +1,9 @@
 /**
  * A worldwide impact's shell over the whole globe (#1167): a front of hot ejecta running from the
  * crater to the far side, the sky glowing red behind it as the ejecta fall back in, then a veil
- * of dust and soot that slowly clears. An illustration, the hours and years compressed into
- * seconds; `shellAt` says what it shows at each moment, `createImpactShell` draws it.
+ * of dust and soot that slowly clears. `shellAt` says what the short illustration shows at
+ * each moment (the hours and years compressed into seconds), the strike clock says it from real
+ * time (`impactLook.ts`), and `createImpactShell` draws either.
  */
 
 import { Color, Mesh, ShaderMaterial, SphereGeometry, type Vector3 } from 'three';
@@ -91,13 +92,13 @@ const ICY = [new Color(0.75, 0.9, 1), new Color(0.45, 0.7, 1), new Color(0.55, 0
 
 export interface ImpactShell {
   readonly mesh: Mesh<SphereGeometry, ShaderMaterial>;
-  /** Show it `since` ms after the strike, its play ending at `until`. */
-  update(since: number, until: number): void;
+  /** Show it as `moment` has it. */
+  show(moment: ShellMoment): void;
   dispose(): void;
 }
 
 /** The shell for an impact at `center` (a unit vector, Earth-fixed), fiery or icy. */
-export function createImpactShell(center: Vector3, worldwide: number, icy: boolean): ImpactShell {
+export function createImpactShell(center: Vector3, icy: boolean): ImpactShell {
   const [frontColor, emberColor, sootColor] = icy ? ICY : FIERY;
   const uniforms = {
     center: { value: center.clone().normalize() },
@@ -124,8 +125,7 @@ export function createImpactShell(center: Vector3, worldwide: number, icy: boole
   mesh.visible = false;
   return {
     mesh,
-    update(since, until) {
-      const moment = shellAt(since, until, worldwide);
+    show(moment) {
       mesh.visible = moment.visible;
       uniforms.front.value = moment.front;
       uniforms.frontGlow.value = moment.frontGlow;

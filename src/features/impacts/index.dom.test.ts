@@ -56,6 +56,8 @@ function fakeContext(
     hold: vi.fn(),
     step: vi.fn(),
     playing: () => true,
+    at: vi.fn(),
+    end: vi.fn(),
   };
   const strikes = {
     playImpact: vi.fn(() => playing),
@@ -90,6 +92,11 @@ function fakeContext(
     timeline,
     deepTime: { goTo },
     strikes,
+    overPage: {
+      add: (element: HTMLElement) => {
+        document.body.append(element);
+      },
+    },
   } as unknown as FeatureContext<Capability>;
   return {
     context,
@@ -100,6 +107,7 @@ function fakeContext(
     show,
     goTo,
     strikes,
+    playing,
     timeline,
     change,
     view: () => view,
@@ -132,7 +140,7 @@ function chipOf(shown: FeatureInstance, state: ViewState): DeepChipView {
 
 describe('the impact craters as a feature', () => {
   it('names what it asks for, picks craters, and puts its chip after the others', () => {
-    expect(impactsFeature.needs).toEqual(['cards', 'timeline', 'deepTime', 'strikes']);
+    expect(impactsFeature.needs).toEqual(['cards', 'timeline', 'deepTime', 'strikes', 'overPage']);
     expect(impactsFeature.picks).toBe('impact');
     expect(impactsFeature.deepChip).toMatchObject({ label: 'Impacts', why: 'impacts' });
     expect(impactsFeature.deepChipOrder).toBe(1);
@@ -310,6 +318,53 @@ describe('the impact craters as a feature', () => {
       setView({ ...on, camera: { ...on.camera, distance: 1.5 } });
       card.action.run();
       expect(strikes.zoomTo).toHaveBeenLastCalledWith(3.4);
+    } finally {
+      document.body.replaceChildren();
+      vi.useRealTimers();
+    }
+  });
+
+  it('watches Chicxulub in its own time from its card: the clock drives the strike, and closing ends it (#1173)', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    try {
+      const { shown, show, strikes, playing } = await loaded(on);
+      shown.pick?.(CHICXULUB);
+      const card = show.mock.lastCall?.[0] as { readonly action: { readonly run: () => void } };
+      card.action.run();
+      vi.advanceTimersByTime(1000);
+      expect(strikes.playImpact).toHaveBeenCalledWith(expect.objectContaining({ driven: true }));
+      const panel = document.querySelector<HTMLElement>('.strike-clock');
+      expect(panel?.hidden).toBe(false);
+      expect(panel?.getAttribute('aria-label')).toBe('Chicxulub, in its own time');
+      expect(strikes.on.dataset['strikeClock']).toBe('Chicxulub');
+      expect(playing.at).toHaveBeenCalledWith(-10);
+      // Played again, the first clock gives way to the next, and its strike ends.
+      card.action.run();
+      vi.advanceTimersByTime(1000);
+      expect(playing.end).toHaveBeenCalledTimes(1);
+      expect(document.querySelectorAll('.strike-clock')).toHaveLength(1);
+      document.querySelector<HTMLButtonElement>('.strike-clock-close')?.click();
+      expect(playing.end).toHaveBeenCalledTimes(2);
+      expect(strikes.on.dataset['strikeClock']).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+      document.body.replaceChildren();
+    }
+  });
+
+  it('plays a regional crater as the short illustration, with no clock', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    try {
+      const { shown, show, strikes } = await loaded(on);
+      shown.pick?.('131');
+      const card = show.mock.lastCall?.[0] as { readonly action: { readonly run: () => void } };
+      card.action.run();
+      expect(strikes.zoomTo).toHaveBeenCalledWith(2.2);
+      vi.advanceTimersByTime(1000);
+      expect(strikes.playImpact).toHaveBeenCalledWith(
+        expect.not.objectContaining({ driven: true }),
+      );
+      expect(document.querySelector('.strike-clock')).toBeNull();
     } finally {
       vi.useRealTimers();
     }

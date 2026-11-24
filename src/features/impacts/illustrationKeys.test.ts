@@ -16,6 +16,8 @@ function fakeImpact(): PlayedImpact & { steps: number[] } {
     step(ms) {
       steps.push(ms);
     },
+    at: () => undefined,
+    end: () => undefined,
     playing: () => true,
   };
 }

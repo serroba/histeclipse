@@ -14,6 +14,8 @@ function strike(): PlayedImpact & { over: boolean; holds: number } {
       this.holds += 1;
     },
     step: () => undefined,
+    at: () => undefined,
+    end: () => undefined,
     playing() {
       return !this.over;
     },

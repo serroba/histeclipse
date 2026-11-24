@@ -1,6 +1,6 @@
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
-import { curve, localFrame } from './motion';
+import { approachDirection, curve, localFrame } from './motion';
 
 describe('curve', () => {
   const a = new Vector3(0, 0, 0);
@@ -33,5 +33,22 @@ describe('localFrame', () => {
     const { up, east } = localFrame({ latitude: 90, longitude: 0 });
     expect(up.y).toBeCloseTo(1);
     expect(east.toArray()).toEqual([1, 0, 0]);
+  });
+});
+
+describe('approachDirection', () => {
+  const place = { latitude: 0, longitude: 0 };
+  const { up, east, north } = localFrame(place);
+
+  it('points straight up for a vertical approach, and level from where it came for a grazing one', () => {
+    expect(approachDirection(place, 0, 90).distanceTo(up)).toBeLessThan(1e-9);
+    expect(approachDirection(place, 0, 0).distanceTo(north)).toBeLessThan(1e-9);
+    expect(approachDirection(place, 90, 0).distanceTo(east)).toBeLessThan(1e-9);
+  });
+
+  it('is a unit vector, between up and the horizon at 45°', () => {
+    const from = approachDirection(place, 45, 45);
+    expect(from.length()).toBeCloseTo(1, 9);
+    expect(from.dot(up)).toBeCloseTo(Math.SQRT1_2, 9);
   });
 });

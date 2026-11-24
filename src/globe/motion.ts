@@ -26,3 +26,19 @@ export function localFrame(place: GeoPoint): { up: Vector3; east: Vector3; north
   const north = new Vector3().crossVectors(up, east).normalize();
   return { up, east, north };
 }
+
+/** The direction the impactor came from, as a unit vector in Earth-fixed coordinates. */
+export function approachDirection(
+  place: GeoPoint,
+  fromAzimuth: number,
+  angleDegrees: number,
+): Vector3 {
+  const { up, east, north } = localFrame(place);
+  const azimuth = (fromAzimuth * Math.PI) / 180;
+  const elevation = (angleDegrees * Math.PI) / 180;
+  const level = north
+    .clone()
+    .multiplyScalar(Math.cos(azimuth))
+    .add(east.clone().multiplyScalar(Math.sin(azimuth)));
+  return level.multiplyScalar(Math.cos(elevation)).add(up.multiplyScalar(Math.sin(elevation)));
+}

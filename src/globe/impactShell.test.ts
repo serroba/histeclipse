@@ -29,9 +29,9 @@ describe('a worldwide impact’s shell over the globe (#1167)', () => {
 
   it('draws it, moving with the moment, and lets it go', () => {
     for (const icy of [false, true]) {
-      const shell = createImpactShell(new Vector3(0, 2, 0), 1, icy);
+      const shell = createImpactShell(new Vector3(0, 2, 0), icy);
       expect(shell.mesh.visible).toBe(false);
-      shell.update(FRONT_MS / 2, 8800);
+      shell.show(shellAt(FRONT_MS / 2, 8800, 1));
       expect(shell.mesh.visible).toBe(true);
       expect(shell.mesh.material.uniforms['front']?.value).toBeGreaterThan(0);
       expect((shell.mesh.material.uniforms['center']?.value as Vector3).y).toBe(1);
