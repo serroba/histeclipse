@@ -33,6 +33,7 @@ import { createOrbitLoops } from './orbitLoops';
 import { Picking } from './picking';
 import { createSunMeshes } from './sunMeshes';
 import { BodyMaps } from './bodyMaps';
+import { setUpRenderer } from './rendererSetup';
 import { ScreenLabels, settleSizes } from './screenLabels';
 import type { EarthPart } from './earthParts';
 import { createPlanetMeshes } from './planetMeshes';
@@ -63,7 +64,6 @@ export function createGlobe(
     readonly earthParts?: readonly EarthPart[];
   },
 ): Globe {
-  // preserveDrawingBuffer lets the page (and tests) read the rendered image back.
   // Transparent, so the page's space gradient shows behind the globe. No preserveDrawingBuffer:
   // it forces a buffer copy every frame, which stalls slow and mobile GPUs.
   const renderer = new WebGLRenderer({
@@ -71,8 +71,7 @@ export function createGlobe(
     alpha: true,
     logarithmicDepthBuffer: true,
   });
-  renderer.setClearColor(0x000000, 0);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  setUpRenderer(renderer, window.devicePixelRatio, import.meta.env.DEV || navigator.webdriver);
   const stage = new Stage(container, {
     renderer,
     // With a logarithmic depth buffer one camera spans metres above the ground to past the Sun.

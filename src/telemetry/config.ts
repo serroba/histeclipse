@@ -33,7 +33,8 @@ export function telemetryConfig(env: TelemetryEnv): TelemetryConfig | null {
     endpoint: HONEYCOMB_US,
     serviceName: SERVICE_NAME,
     serviceVersion: present(env.VITE_COMMIT_SHA) ?? 'dev',
-    // Never trace the exporter's own requests to Honeycomb.
-    ignoreUrls: [/^https:\/\/api\.honeycomb\.io\//],
+    // Never trace the exporter's own requests to Honeycomb, nor the host's own analytics
+    // beacon (Cloudflare's /cdn-cgi/rum): four or five spans for each, a thousand a day (#1196).
+    ignoreUrls: [/^https:\/\/api\.honeycomb\.io\//, /\/cdn-cgi\//],
   };
 }
