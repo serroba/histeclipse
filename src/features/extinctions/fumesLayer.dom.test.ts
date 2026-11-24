@@ -47,7 +47,7 @@ describe('the Siberian Traps fuming on the globe (#1192)', () => {
     expect(container.dataset['fumes']).toBe('on');
     expect(sprites.some((sprite) => sprite.material.opacity > 0.3)).toBe(true);
     expect(sprites[0]?.material.color.r).toBeLessThan(0.3);
-    expect((haze?.material as MeshBasicMaterial).opacity).toBeCloseTo(0.22);
+    expect((haze?.material as MeshBasicMaterial).opacity).toBeCloseTo(0.35);
   });
 
   it('rises with the time between moments while it plays, and stands still for less motion', () => {

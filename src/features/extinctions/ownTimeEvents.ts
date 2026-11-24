@@ -15,7 +15,7 @@ import { END_PERMIAN } from './permianPhases';
 /** Chicxulub's final crater, km, as the Impact Earth Database gives it. */
 const CHICXULUB_KM = 180;
 /** How far out the end-Permian is watched from: the traps and the haze over the globe. */
-const PERMIAN_DISTANCE = 2.8;
+const PERMIAN_DISTANCE = 2.3;
 /** How far out Chicxulub is watched from: far enough to see its front cross the globe (#1167). */
 const STRIKE_DISTANCE = 3.4;
 
@@ -63,7 +63,10 @@ function placeOf(data: ExtinctionSites, site: string, ma: number): GeoPoint | nu
 export function ownTimeOf(data: ExtinctionSites, id: string, ma: number): OwnTimeEvent | null {
   if (id === 'end-permian-extinction') {
     const center = placeOf(data, 'siberian-traps', ma);
-    return center === null ? null : facing(permianEvent(center), center, PERMIAN_DISTANCE);
+    if (center === null) return null;
+    // Seen from the south, at a slant, so the plumes are seen rising.
+    const from = { latitude: center.latitude - 4, longitude: center.longitude };
+    return facing(permianEvent(center), from, PERMIAN_DISTANCE);
   }
   const phases = strikePhasesOf('Chicxulub');
   if (id !== 'k-pg-extinction' || phases === null) return null;

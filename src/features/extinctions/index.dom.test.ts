@@ -126,7 +126,7 @@ describe('the extinctions as a feature', () => {
     shown.pick?.('norilsk');
     cards.at(-1)?.action?.run();
     expect(clockTitle()).toBe('The end-Permian, in its own time');
-    expect(strikes.zoomTo).toHaveBeenCalledWith(2.8);
+    expect(strikes.zoomTo).toHaveBeenCalledWith(2.3);
     expect(drawn.at(-1)).toMatchObject({ seconds: -400 * 1000 * 365.25 * 86_400 });
     const late = await loaded({ ...on, ma: 444 });
     late.shown.pick?.('dobs-linn');

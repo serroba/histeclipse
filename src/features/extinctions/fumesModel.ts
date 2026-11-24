@@ -74,9 +74,9 @@ export interface Puff {
 }
 
 /** How high a plume rises, Earth radii: drawn to be seen from orbit, not to scale. */
-const RISE = 0.05;
-/** How far east it drifts as it rises, Earth radii. */
-const DRIFT = 0.03;
+const RISE = 0.08;
+/** How far east it drifts as it rises, Earth radii: the wind carries the ash downwind. */
+const DRIFT = 0.12;
 
 /**
  * Puff `index` of `count` on a plume whose cycle is at `cycle` (0 to 1, going round), fuming
@@ -87,7 +87,7 @@ export function puffAt(index: number, count: number, cycle: number, strength: nu
   return {
     height: 0.004 + RISE * age,
     east: DRIFT * age * age,
-    size: 0.012 + 0.05 * age,
-    opacity: strength * Math.sin(Math.PI * age) * (1 - 0.4 * age),
+    size: 0.03 + 0.13 * age,
+    opacity: 0.85 * strength * Math.sin(Math.PI * Math.min(1, 1.6 * age + 0.1)) ** 0.6 * (1 - age),
   };
 }

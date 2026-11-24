@@ -10,6 +10,7 @@
  */
 
 import {
+  AdditiveBlending,
   CanvasTexture,
   Color,
   Group,
@@ -23,6 +24,7 @@ import {
 
 import type { GeoPoint } from '../../core/geo';
 import { geoToVector } from '../../globe/geo';
+import { glowTexture } from '../../globe/glowTexture';
 import type { LayerFactory } from '../../globe/layerHost';
 import { fumingAt, puffAt, ventsAround } from './fumesModel';
 
@@ -32,12 +34,15 @@ export interface FumesMoment {
   readonly seconds: number;
 }
 
-const VENTS = 14;
-const PUFFS = 7;
+const VENTS = 18;
+const PUFFS = 9;
 /** Plume cycles a second of play: each puff takes about two seconds to rise. */
 const CYCLES_PER_SECOND = 0.5;
-const PALE = new Color(0.86, 0.82, 0.76);
-const DARK = new Color(0.25, 0.22, 0.2);
+const PALE = new Color(0.8, 0.77, 0.72);
+const DARK = new Color(0.16, 0.13, 0.11);
+/** The lava's glow at a vent, at its brightest, Earth radii across. */
+const GLOW_SIZE = 0.014;
+const LAVA = new Color(1, 0.42, 0.12);
 
 /** A soft round puff of smoke: a grey radial gradient on a small canvas. */
 function puffTexture(): CanvasTexture {
@@ -71,28 +76,76 @@ function ventFrame(point: GeoPoint): VentFrame {
   return { base, up, east };
 }
 
-export const fumesLayer: LayerFactory<FumesMoment | null> = (host) => {
-  const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const texture = puffTexture();
-  const group = new Group();
-  group.visible = false;
-  const sprites = Array.from({ length: VENTS * PUFFS }, () => {
-    const sprite = new Sprite(
-      new SpriteMaterial({ map: texture, transparent: true, depthWrite: false, opacity: 0 }),
-    );
+/** The plumes' parts: a puff sprite each, the lava's glow at each vent, and the haze. */
+interface Plumes {
+  readonly group: Group;
+  readonly sprites: readonly Sprite[];
+  readonly glows: readonly Sprite[];
+  readonly haze: Mesh<SphereGeometry, MeshBasicMaterial>;
+  readonly dispose: () => void;
+}
+
+function sprites(count: number, material: () => SpriteMaterial, group: Group): Sprite[] {
+  return Array.from({ length: count }, () => {
+    const sprite = new Sprite(material());
     group.add(sprite);
     return sprite;
   });
+}
+
+function makePlumes(): Plumes {
+  const texture = puffTexture();
+  const glowMap = glowTexture(false);
+  const group = new Group();
+  group.visible = false;
+  const puffs = sprites(
+    VENTS * PUFFS,
+    () => new SpriteMaterial({ map: texture, transparent: true, depthWrite: false, opacity: 0 }),
+    group,
+  );
+  const glows = sprites(
+    VENTS,
+    () =>
+      new SpriteMaterial({
+        map: glowMap,
+        transparent: true,
+        depthWrite: false,
+        blending: AdditiveBlending,
+        color: LAVA,
+        opacity: 0,
+      }),
+    group,
+  );
   const haze = new Mesh(
     new SphereGeometry(1.012, 48, 32),
     new MeshBasicMaterial({
-      color: new Color(0.55, 0.42, 0.3),
+      color: new Color(0.62, 0.5, 0.3),
       transparent: true,
       depthWrite: false,
       opacity: 0,
     }),
   );
   group.add(haze);
+  return {
+    group,
+    sprites: puffs,
+    glows,
+    haze,
+    dispose() {
+      texture.dispose();
+      glowMap.dispose();
+      for (const sprite of [...puffs, ...glows]) sprite.material.dispose();
+      haze.geometry.dispose();
+      haze.material.dispose();
+      group.removeFromParent();
+    },
+  };
+}
+
+export const fumesLayer: LayerFactory<FumesMoment | null> = (host) => {
+  const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const plumes = makePlumes();
+  const { group, sprites: puffs, glows, haze } = plumes;
   host.onEarth.add(group);
   let frames: readonly VentFrame[] = [];
   let centerKey = '';
@@ -124,8 +177,14 @@ export const fumesLayer: LayerFactory<FumesMoment | null> = (host) => {
       const strength = Math.max(fuming.lava, fuming.gas);
       colour.copy(PALE).lerp(DARK, fuming.gas);
       frames.forEach((frame, vent) => {
+        const glow = glows[vent];
+        if (glow !== undefined) {
+          glow.position.copy(frame.base).addScaledVector(frame.up, 0.003);
+          glow.scale.setScalar(GLOW_SIZE * (0.6 + 0.4 * fuming.lava));
+          glow.material.opacity = 0.8 * fuming.lava;
+        }
         for (let index = 0; index < PUFFS; index += 1) {
-          const sprite = sprites[vent * PUFFS + index];
+          const sprite = puffs[vent * PUFFS + index];
           if (sprite === undefined) continue;
           // Each vent a little out of step with the next, so they do not puff together.
           const puff = puffAt(index, PUFFS, cycle + vent * 0.37, strength);
@@ -138,16 +197,10 @@ export const fumesLayer: LayerFactory<FumesMoment | null> = (host) => {
           sprite.material.color.copy(colour);
         }
       });
-      haze.material.opacity = 0.22 * fuming.haze;
+      haze.material.opacity = 0.35 * fuming.haze;
       group.visible = strength > 0 || fuming.haze > 0;
       host.requestRender();
     },
-    dispose() {
-      texture.dispose();
-      for (const sprite of sprites) sprite.material.dispose();
-      haze.geometry.dispose();
-      haze.material.dispose();
-      group.removeFromParent();
-    },
+    dispose: plumes.dispose,
   };
 };
