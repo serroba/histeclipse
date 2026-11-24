@@ -13,9 +13,13 @@ import { impactPlay, strikeEvent, strikePhasesOf } from '../impacts';
 import type { EventPhase, OwnTimeEvent } from '../ownTime';
 import { fumesLayer } from './fumesLayer';
 import {
+  campCover,
   campFuming,
+  deccanCover,
   deccanFuming,
+  emeishanCover,
   emeishanFuming,
+  siberianCover,
   siberianFuming,
   type Fuming,
 } from './fumesModel';
@@ -58,6 +62,8 @@ interface Province {
   /** The first mark under its clock: when its story begins, seconds since the extinction. */
   readonly start: readonly [number, string];
   fuming(seconds: number): Fuming;
+  /** How much of its lava has flowed by `seconds` (#1212). */
+  cover(seconds: number): number;
 }
 
 const KYR = 1000 * 365.25 * 86_400;
@@ -72,6 +78,7 @@ const PROVINCES: readonly Province[] = [
     spread: 9,
     start: [-300 * KYR, 'Lavas'],
     fuming: siberianFuming,
+    cover: siberianCover,
   },
   {
     key: 'end-triassic-extinction',
@@ -80,8 +87,10 @@ const PROVINCES: readonly Province[] = [
     // Its lavas, now on four continents, lay together in the middle of Pangaea.
     sites: ['camp-palisades', 'camp-morocco'],
     spread: 14,
-    start: [-100 * KYR, 'Intrusions'],
+    // Not the intrusions, 100,000 years before: their mark would sit on the extinction's.
+    start: [-400 * KYR, 'Rifting'],
     fuming: campFuming,
+    cover: campCover,
   },
   {
     key: 'end-guadalupian-extinction',
@@ -91,6 +100,7 @@ const PROVINCES: readonly Province[] = [
     spread: 4,
     start: [-400 * KYR, 'Before'],
     fuming: emeishanFuming,
+    cover: emeishanCover,
   },
 ];
 
@@ -106,7 +116,12 @@ function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
       const fumes = tools.layer(fumesLayer);
       return {
         at(seconds) {
-          fumes.update({ center, spread: province.spread, fuming: province.fuming(seconds) });
+          fumes.update({
+            center,
+            spread: province.spread,
+            fuming: province.fuming(seconds),
+            cover: province.cover(seconds),
+          });
         },
         end() {
           fumes.update(null);
@@ -237,7 +252,12 @@ function withDeccan(strike: OwnTimeEvent, deccan: GeoPoint): OwnTimeEvent {
       return {
         at(seconds) {
           struck.at(seconds);
-          fumes.update({ center: deccan, spread: DECCAN_SPREAD, fuming: deccanFuming(seconds) });
+          fumes.update({
+            center: deccan,
+            spread: DECCAN_SPREAD,
+            fuming: deccanFuming(seconds),
+            cover: deccanCover(),
+          });
         },
         end() {
           struck.end();

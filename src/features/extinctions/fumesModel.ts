@@ -99,6 +99,40 @@ export function deccanFuming(seconds: number): Fuming {
 }
 
 /**
+ * How much of the Siberian Traps' lava has flowed by `seconds` (#1212), 0 to 1: about two thirds
+ * over the 300,000 years before and during the extinction, the rest over 500,000 after (Burgess &
+ * Bowring 2015).
+ */
+export function siberianCover(seconds: number): number {
+  return (2 / 3) * ramp(seconds, -300 * KYR, 0) + (1 / 3) * ramp(seconds, 0, 500 * KYR);
+}
+
+/** The Central Atlantic province's (#1212): a quarter with each of its four pulses. */
+export function campCover(seconds: number): number {
+  return [0, 200, 400, 600].reduce(
+    (sum, at) => sum + 0.25 * ramp(seconds, at * KYR, (at + 20) * KYR),
+    0,
+  );
+}
+
+/**
+ * The Emeishan Traps' (#1212): most in their first million years, all within three; how it was
+ * spread over them is drawn, not measured.
+ */
+export function emeishanCover(seconds: number): number {
+  return 0.7 * ramp(seconds, 0, 1000 * KYR) + 0.3 * ramp(seconds, 1000 * KYR, 3000 * KYR);
+}
+
+/**
+ * The Deccan Traps' through Chicxulub's clock (#1212): held at half, since whether most had
+ * flowed before the impact (Schoene et al. 2019) or most came after it (Sprain et al. 2019) is
+ * what is argued.
+ */
+export function deccanCover(): number {
+  return 0.5;
+}
+
+/**
  * Where `count` vents lie within `spread` degrees of `center`: scattered over a disc by the
  * golden angle, so they fill it evenly without a pattern, the same each time.
  */
@@ -139,5 +173,28 @@ export function puffAt(index: number, count: number, cycle: number, strength: nu
     east: DRIFT * age * age,
     size: 0.03 + 0.13 * age,
     opacity: 0.85 * strength * Math.sin(Math.PI * Math.min(1, 1.6 * age + 0.1)) ** 0.6 * (1 - age),
+  };
+}
+
+/** A drop of a lava fountain: how high, how wide (Earth radii) and how bright. */
+export interface Spatter {
+  readonly height: number;
+  readonly size: number;
+  readonly opacity: number;
+}
+
+/** How high a fountain throws its lava, Earth radii: drawn to be seen, not to scale. */
+const FOUNTAIN = 0.016;
+
+/**
+ * Drop `index` of `count` of a lava fountain whose cycle is at `cycle`, erupting `strength`
+ * (#1212): thrown up and falling back, three times as fast as the plumes rise, fading as it cools.
+ */
+export function spatterAt(index: number, count: number, cycle: number, strength: number): Spatter {
+  const age = (((3 * cycle + index / count) % 1) + 1) % 1;
+  return {
+    height: 0.002 + FOUNTAIN * 4 * age * (1 - age),
+    size: 0.007 * (1 - 0.5 * age),
+    opacity: 0.95 * strength * (1 - age),
   };
 }
