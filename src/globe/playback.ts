@@ -5,7 +5,12 @@
 
 import type { Material, Object3D } from 'three';
 
-import { createImpactAnimation, type ImpactAnimation, type ImpactSpec } from './impactAnimation';
+import {
+  createImpactAnimation,
+  type ImpactAnimation,
+  type ImpactSpec,
+  type PlayingImpact,
+} from './impactAnimation';
 import {
   createShowerAnimation,
   type ShowerAnimation,
@@ -74,7 +79,7 @@ export class Playback implements StagePart {
   }
 
   /** Play an impact at its place: the approach, the flash, the ring, the crater. */
-  playImpact(spec: ImpactSpec): void {
+  playImpact(spec: ImpactSpec): PlayingImpact {
     // Beyond a handful at once, the oldest makes way: a regional one first, so the smaller
     // strikes that follow a worldwide one do not cut its long play short.
     if (this.#impacts.size >= MAX_IMPACTS) {
@@ -89,6 +94,14 @@ export class Playback implements StagePart {
     this.#world.dataset['impactPlaying'] = 'true';
     this.#world.dataset['impactWorldwide'] = String(this.#worldwidePlaying());
     this.#world.invalidate();
+    // Moved while it still plays, as the plates carry its crater; once gone, nothing to move.
+    return {
+      moveTo: (place) => {
+        if (!this.#impacts.has(impact)) return;
+        impact.moveTo(place);
+        this.#world.invalidate();
+      },
+    };
   }
 
   /** Whether an impact reaching the whole globe is playing. */

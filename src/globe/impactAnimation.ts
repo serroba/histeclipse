@@ -56,7 +56,13 @@ export interface ImpactSpec {
 const FIERY = [new Color(1, 0.7, 0.35), new Color(1, 0.62, 0.3), new Color(1, 0.85, 0.6)] as const;
 const ICY = [new Color(0.6, 0.85, 1), new Color(0.5, 0.78, 1), new Color(0.78, 0.92, 1)] as const;
 
-export interface ImpactAnimation {
+/** An impact playing, as whoever played it holds it: to carry it where its crater goes. */
+export interface PlayingImpact {
+  /** Carry it, crater and all, to `place`: where the plates have the crater as time runs on. */
+  moveTo(place: GeoPoint): void;
+}
+
+export interface ImpactAnimation extends PlayingImpact {
   readonly group: Group;
   /** Whether it reaches the whole globe: a long play, which shorter ones should not push out. */
   readonly worldwide: boolean;
@@ -178,9 +184,17 @@ export function createImpactAnimation(spec: ImpactSpec): ImpactAnimation {
     trailPositions.needsUpdate = true;
   }
 
+  // Built at its place; moved by turning the whole about the Earth's centre, from there to here.
+  const struckAt = up.clone();
+  const toward = new Vector3();
+
   return {
     group,
     worldwide: worldwide > 0,
+    moveTo(place) {
+      toward.set(...geoToVector(place, 1)).normalize();
+      group.quaternion.setFromUnitVectors(struckAt, toward);
+    },
     update(now) {
       // Time as for an impact Chicxulub's size: a smaller one runs through it faster.
       const t = clock.tick(now) / pace;

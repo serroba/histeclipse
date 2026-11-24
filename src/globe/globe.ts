@@ -11,7 +11,7 @@ import type { EarthTiles } from '../data/earthTiles';
 import type { ReliefTiles } from '../data/reliefTiles';
 import type { Body, GeoPoint, GlobeCamera, Viewpoint } from '../state/viewState';
 import type { Vector3Tuple } from './geo';
-import type { ImpactSpec } from './impactAnimation';
+import type { ImpactSpec, PlayingImpact } from './impactAnimation';
 import type { GlobeLayer, LayerFactory } from './layerHost';
 import type { LayerCapability } from './layerCapabilities';
 import type { ShowerControl } from './playback';
@@ -153,7 +153,7 @@ export interface Globe {
   /** Glide to `distance` from the body in focus, in its radii, keeping the direction. */
   zoomTo(distance: number): void;
   /** Play an impact at its place: the approach, the flash, the ring, the crater. */
-  playImpact(spec: ImpactSpec): void;
+  playImpact(spec: ImpactSpec): PlayingImpact;
   /** Called while the user moves the camera, relative to the body in focus. Returns an unsubscribe function. */
   onCameraChange(listener: (camera: GlobeCamera) => void): () => void;
   readonly canvas: HTMLCanvasElement;

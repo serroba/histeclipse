@@ -6,7 +6,7 @@ import { Playback } from './playback';
 import type { ShowerSpec, ShowerState } from './showerAnimation';
 
 /** Each impact plays until the moment the test gives it. */
-const impacts: { group: Group; ends: number; disposed: boolean }[] = [];
+const impacts: { group: Group; ends: number; disposed: boolean; moves: unknown[] }[] = [];
 const showers: {
   group: Group;
   spec: ShowerSpec;
@@ -18,10 +18,11 @@ const showers: {
 
 vi.mock('./impactAnimation', () => ({
   createImpactAnimation: (spec: { readonly ends: number }) => {
-    const impact = { group: new Group(), ends: spec.ends, disposed: false };
+    const impact = { group: new Group(), ends: spec.ends, disposed: false, moves: [] as unknown[] };
     impacts.push(impact);
     return {
       group: impact.group,
+      moveTo: (place: unknown) => impact.moves.push(place),
       update: (now: number) => now < impact.ends,
       dispose: () => {
         impact.disposed = true;
@@ -102,6 +103,21 @@ describe('impacts playing on Earth', () => {
     expect(dataset['impactsPlayed']).toBe('2');
     expect(dataset['impactPlaying']).toBe('false');
     expect(play.step(30)).toBe(false);
+  });
+
+  it('moves one while it plays, drawing it there, and not once it has played out', () => {
+    const { play, drawn } = playback();
+    const chicxulub = play.playImpact(impact(100));
+    play.playImpact(impact(100));
+    const before = drawn();
+    const place = { latitude: 21, longitude: -89 };
+    chicxulub.moveTo(place);
+    expect(impacts[0]?.moves).toEqual([place]);
+    expect(impacts[1]?.moves).toEqual([]);
+    expect(drawn()).toBe(before + 1);
+    play.step(200);
+    chicxulub.moveTo(place);
+    expect(impacts[0]?.moves).toHaveLength(1);
   });
 
   it('lets the oldest make way beyond eight at once', () => {

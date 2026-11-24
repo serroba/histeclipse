@@ -512,9 +512,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
       },
     },
     strikes: {
-      playImpact: (spec) => {
-        globe.playImpact(spec);
-      },
+      playImpact: (spec) => globe.playImpact(spec),
       flyTo: (place) => {
         globe.flyTo(place);
       },
