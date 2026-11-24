@@ -18,6 +18,11 @@ import {
 
 /** Frames shorter than this are not sent: Chrome reports from 50 ms, and those are common. */
 export const MIN_MS = 100;
+/**
+ * Frames longer than this are not frames the reader sat through: a tab put to sleep reports the
+ * whole sleep as one frame (one came in at 89 minutes, #1196). Not sent, nor named for an INP.
+ */
+export const MAX_MS = 60_000;
 /** One frame, the longest, from each stretch this long that has any. */
 export const WINDOW_MS = 5000;
 /** At most this many frame spans a page load. */
@@ -95,7 +100,7 @@ export class LongFrames {
       };
       this.#notes.set(frame.startTime, note);
       if (this.#notes.size > NOTES) this.#notes.delete(this.#notes.keys().next().value ?? 0);
-      if (frame.duration < MIN_MS || this.#sent >= MOST) continue;
+      if (frame.duration < MIN_MS || frame.duration > MAX_MS || this.#sent >= MOST) continue;
       if (this.#worst === null) this.#options.later(this.#send, WINDOW_MS);
       if (this.#worst === null || frame.duration > this.#worst.frame.duration) {
         this.#worst = { frame, note };
@@ -105,7 +110,7 @@ export class LongFrames {
 
   /** For the INP span: its longest frame, and what was on screen then. */
   inpAttributes(frames: readonly LongFrame[]): Attributes {
-    const worst = longest(frames);
+    const worst = longest(frames.filter(({ duration }) => duration <= MAX_MS));
     const noted = worst === undefined ? undefined : this.#notes.get(worst.startTime);
     return {
       'inp.loaf.count': frames.length,

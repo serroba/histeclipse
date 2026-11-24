@@ -6,6 +6,7 @@ import type { Attributes } from './attributes';
 import {
   inpFrames,
   LongFrames,
+  MAX_MS,
   MIN_MS,
   MOST,
   type ObserverClass,
@@ -106,6 +107,16 @@ describe('LongFrames', () => {
       'loaf.part.1.ms': 10,
       'loaf.parts_ms': 160,
     });
+  });
+
+  it('sends no frame over MAX_MS: a tab put to sleep, not a frame sat through (#1196)', () => {
+    const { frames, sent, tick } = harness();
+    frames.observed([frame(100, MAX_MS + 1), frame(70_000, 150)]);
+    tick();
+    expect(sent).toHaveLength(1);
+    expect(sent[0]?.attributes['loaf.duration']).toBe(150);
+    expect(frames.inpAttributes([frame(100, MAX_MS + 1)])).toMatchObject({ 'inp.loaf.count': 1 });
+    expect(frames.inpAttributes([frame(100, MAX_MS + 1)])['inp.loaf.duration']).toBeUndefined();
   });
 
   it('sends no frame under MIN_MS', () => {
