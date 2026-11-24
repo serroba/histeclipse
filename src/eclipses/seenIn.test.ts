@@ -10,7 +10,14 @@ import type { LunarEclipse } from '../data/lunarCatalog';
 import type { SolarEclipse } from '../data/solarCatalog';
 import { eclipseMoment } from './describe';
 import { shadowAtHours } from './solar';
-import { centreLinePoint, inRegion, lunarSeenIn, regionOf, solarSeenIn } from './seenIn';
+import {
+  centreLinePoint,
+  inRegion,
+  shadowFollowPoint,
+  lunarSeenIn,
+  regionOf,
+  solarSeenIn,
+} from './seenIn';
 
 // Catalog and border files as the site serves them; their schemas are tested with the loaders.
 const solar = [...solarBce800, ...solarBce600] as unknown as SolarEclipse[];
@@ -157,6 +164,19 @@ describe('the centre line', () => {
     expect(
       centreLinePoint({ x: 0, y: 0, d: 0, mu: 0, l1: 0.5, l2: 0.01, tanF1: 0, tanF2: 0 })?.phase,
     ).toBe('annular');
+  });
+});
+
+describe('following a solar eclipse (#208)', () => {
+  it('holds on the umbra’s centre, or on Earth’s edge nearest an axis that misses', () => {
+    const assyrian = solarIn(-762, 6);
+    const held = shadowFollowPoint(shadowAtHours(assyrian.elements, 0, assyrian.deltaT));
+    expect(held.latitude).toBeCloseTo(assyrian.greatest[0], 0);
+    // Greatest eclipse is near, not at, the elements' reference time: a few degrees along.
+    expect(Math.abs(held.longitude - assyrian.greatest[1])).toBeLessThan(6);
+    const edge = shadowFollowPoint({ x: 1, y: 1, d: 0, mu: 0, l1: 0.5, l2: 0, tanF1: 0, tanF2: 0 });
+    expect(edge.latitude).toBeCloseTo(45, 6);
+    expect(edge.longitude).toBeCloseTo(90, 6);
   });
 });
 

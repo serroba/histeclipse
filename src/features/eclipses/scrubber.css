@@ -63,3 +63,23 @@
     text-align: left;
   }
 }
+
+/* Follow the event (#208): pressed, the globe keeps the eclipse in the middle. */
+.scrubber-follow {
+  flex: none;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: none;
+  color: var(--ink-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.scrubber-follow[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: rgb(255 255 255 / 0.08);
+  color: var(--ink);
+}

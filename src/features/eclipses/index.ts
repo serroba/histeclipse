@@ -37,8 +37,7 @@ import {
   isSolar,
   momentAt,
 } from '../../eclipses/describe';
-import { lunarPhaseAt, SUBLUNAR_DRIFT_DEGREES_PER_HOUR } from '../../eclipses/lunarPhases';
-import { shadowAt } from '../../eclipses/solar';
+import { lunarPhaseAt } from '../../eclipses/lunarPhases';
 import { longitudeUncertainty, shiftLongitude } from '../../eclipses/visibility';
 import { geoToVector } from '../../globe/geo';
 import { momentJulianDay, withEclipse, type GeoPoint, type ViewState } from '../../state/viewState';
@@ -49,6 +48,7 @@ import { astronomicalYear, formatYear } from '../../time/year';
 import { createEclipseCard } from './eclipseCard';
 import { eclipseFraming } from './framing';
 import { createScrubber, SCRUB_RANGE_MINUTES } from './scrubber';
+import { createFollowToggle, shadowNow, sublunarAt } from './followToggle';
 import { labelPoint } from '../../data/empires';
 import { createTimeline, type Eclipse, type YearEclipses } from '../../ui/timeline';
 import { errorMessage } from '../../util/errors';
@@ -57,7 +57,7 @@ const MINUTES_PER_DAY = 1440;
 
 /** What the eclipses ask of the rest of the page. */
 export interface EclipsesContext extends PartContext {
-  readonly globe: Pick<Globe, 'flyTo' | 'addLayer'>;
+  readonly globe: Pick<Globe, 'flyTo' | 'addLayer' | 'canvas'>;
   /** The catalogues and ΔT, which load before the page shows a moment. */
   readonly catalogs: () => { readonly lunar: LunarCatalog; readonly solar: SolarCatalog };
   readonly famous: () => readonly FamousEclipse[];
@@ -155,6 +155,11 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
     const jd = greatestEclipseUT(selected) + offsetMinutes / MINUTES_PER_DAY;
     store.set((state) => ({ ...state, time: momentAt(julianDayNumber(jd)) }));
   });
+  // Follow the event (#208): turned on, the globe turns to it at once; a drag lets go.
+  const follow = createFollowToggle(globe, () => {
+    renderMoment(store.get());
+  });
+  scrubber.root.append(follow.root);
 
   // Eclipses of the year on screen. Loads are tagged with their year so a slow response for a
   // year the user already left is ignored.
@@ -186,27 +191,16 @@ export function mountEclipses(context: EclipsesContext): EclipsesPart {
       timeLabel: formatTimeOfDay(state.time),
       key: String(greatestEclipseUT(selected)),
     });
+    follow.show(selected, universal, offset);
 
-    const showShadow = isSolar(selected) && state.layers.has('eclipses');
-    moonShadow.update(
-      showShadow
-        ? shadowAt(
-            selected.elements,
-            julianDayNumber(universal + selected.deltaT / 86_400),
-            selected.deltaT,
-          )
-        : null,
-    );
+    const solar = isSolar(selected) && state.layers.has('eclipses');
+    moonShadow.update(solar ? shadowNow(selected, universal) : null);
 
     // Where the eclipsed Moon is up now: the point under the Moon drifts west as Earth turns,
     // and the region only shows while the eclipse is actually happening.
     const phase = isSolar(selected) ? 'none' : lunarPhaseAt(selected, offset);
     if (!isSolar(selected) && phase !== 'none' && state.layers.has('eclipses')) {
-      const [latitude, longitude] = selected.sublunar;
-      const now = shiftLongitude(
-        { latitude, longitude },
-        -(offset / 60) * SUBLUNAR_DRIFT_DEGREES_PER_HOUR,
-      );
+      const now = sublunarAt(selected, offset);
       const shift = longitudeUncertainty(uncertainty);
       lunarOverlay.update({
         sublunar: geoToVector(now),
