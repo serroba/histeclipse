@@ -8,6 +8,7 @@ import { Vector3, type Object3D, type PerspectiveCamera } from 'three';
 
 import { PLANETS, type PlanetName } from '../astro/planets';
 import type { Body } from '../state/viewState';
+import { setHidden } from '../util/pageWrites';
 import { noteScreenNames } from '../util/screenNames';
 import { CameraMotion } from './cameraMotion';
 import { geoToVector } from './geo';
@@ -238,13 +239,18 @@ export class ScreenLabels {
       MERGE_PIXELS,
     );
     this.#markerBoxes = [];
+    const shown = new Set<HTMLElement>();
     for (const { marker, name, x, y, radius } of onScreen.markers) {
       const label = labels.get(name) ?? null;
-      marker.hidden = label === null;
       if (label === null) continue;
+      shown.add(marker);
       setLabel(marker, label);
       this.#markerBoxes.push(markerNameBox(x, y, radius, label));
     }
+    // Each marker's `hidden` written once a frame, and only when it changes: each write makes
+    // the browser check the page's `:has()` rules up to the root, restyling the whole page
+    // every frame (#1187).
+    for (const marker of Object.values(this.#markers)) setHidden(marker, !shown.has(marker));
   }
 
   /** The view's new size, CSS pixels. */
@@ -288,7 +294,6 @@ export class ScreenLabels {
       // Only bodies in front of the camera get a marker.
       const visible =
         shown && projected.z < 1 && Math.abs(projected.x) < 1.2 && Math.abs(projected.y) < 1.2;
-      marker.hidden = !visible;
       if (!visible) continue;
       const pixels = apparentRadiusPixels({
         radius,
@@ -300,10 +305,7 @@ export class ScreenLabels {
       const y = ((1 - projected.y) / 2) * height;
       discs.push({ name, x, y, distance, radius: pixels });
       // A body that fills much of the view needs no label.
-      if (pixels > LABEL_MAX_RADIUS_PIXELS) {
-        marker.hidden = true;
-        continue;
-      }
+      if (pixels > LABEL_MAX_RADIUS_PIXELS) continue;
       marker.classList.toggle('is-tiny', pixels < MARKER_RADIUS_PIXELS);
       marker.style.setProperty('--radius', `${String(Math.max(pixels, MARKER_RADIUS_PIXELS))}px`);
       marker.style.transform = `translate(${String(x)}px, ${String(y)}px)`;

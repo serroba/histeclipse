@@ -16,6 +16,7 @@ import {
 } from '../../deepTime/strikeClock';
 import { DEFAULT_PACE, PACE_LABELS, PACES, type Pace } from '../../deepTime/playSpeed';
 import { element } from '../../ui/dom';
+import { setText } from '../../util/pageWrites';
 import { createTransport, type Transport } from '../../ui/transport';
 import { phaseAt, type StrikePhase } from './strikePhases';
 import './strikeClock.css';
@@ -108,13 +109,20 @@ function clockView(title: string, transport: Transport): ClockView {
   return { root, speed, closeButton, ...view };
 }
 
-/** Say the moment `seconds` since the strike, and the phase then, with its sources. */
+/**
+ * Say the moment `seconds` since the strike, and the phase then, with its sources. Called every
+ * frame while it plays: the phase's words and links are written only when the phase changes,
+ * and the moment only when its words do (#1187).
+ */
 function showMoment(view: ClockView, seconds: number, phase: StrikePhase | undefined): void {
-  view.when.textContent = clockText(seconds);
-  view.root.dataset['phase'] = phase?.id ?? '';
-  view.root.dataset['seconds'] = String(Math.round(seconds));
-  view.phaseTitle.textContent = phase?.title ?? '';
-  view.phaseText.textContent = phase?.text ?? '';
+  setText(view.when, clockText(seconds));
+  const shown = String(Math.round(seconds));
+  if (view.root.dataset['seconds'] !== shown) view.root.dataset['seconds'] = shown;
+  const id = phase?.id ?? '';
+  if (view.root.dataset['phase'] === id) return;
+  view.root.dataset['phase'] = id;
+  setText(view.phaseTitle, phase?.title ?? '');
+  setText(view.phaseText, phase?.text ?? '');
   view.sources.replaceChildren(
     ...(phase?.sources ?? []).flatMap((source, index) => [
       ...(index > 0 ? [' · '] : []),
