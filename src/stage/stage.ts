@@ -8,8 +8,12 @@
 import { Scene } from 'three';
 import type { Camera, WebGLRenderer } from 'three';
 
+import { begin, end } from '../util/frameLedger';
+
 /** Something a view shows or keeps up to date, joining in at the moments of each frame. */
 export interface StagePart {
+  /** What it is called in the frame ledger (#1196), unless `add` is given a name. */
+  readonly name?: string;
   /** While awake, before drawing: true while moving, to draw and request another frame. */
   step?(now: number): boolean;
   /** Before a drawing: true when the frame after needs drawing too (a map still arriving). */
@@ -34,13 +38,21 @@ export interface StageOptions<C extends Camera = Camera> {
   readonly styleSize: boolean;
 }
 
+/** A part, with its names in the frame ledger (#1196), made once. */
+interface Added {
+  readonly part: StagePart;
+  readonly step: string;
+  readonly before: string;
+  readonly after: string;
+}
+
 export class Stage<C extends Camera = Camera> {
   readonly scene = new Scene();
   readonly renderer: StageRenderer;
   readonly camera: C;
   readonly #container: HTMLElement;
   readonly #styleSize: boolean;
-  readonly #parts: StagePart[] = [];
+  readonly #parts: Added[] = [];
   #observer: ResizeObserver | null = null;
   /** The size last given to the renderer, if any. */
   #size: { width: number; height: number } | null = null;
@@ -57,9 +69,10 @@ export class Stage<C extends Camera = Camera> {
     container.append(options.renderer.domElement);
   }
 
-  /** Join `part` in, after the parts already added; returns it. */
-  add<T extends StagePart>(part: T): T {
-    this.#parts.push(part);
+  /** Join `part` in, after the parts already added, called `name` in the frame ledger (#1196). */
+  add<T extends StagePart>(part: T, name = part.name ?? 'part'): T {
+    const timed = `stage.${name}`;
+    this.#parts.push({ part, step: timed, before: `${timed}.before`, after: `${timed}.after` });
     return part;
   }
 
@@ -80,7 +93,7 @@ export class Stage<C extends Camera = Camera> {
       this.renderer.setSize(width, height, this.#styleSize);
       this.#size = { width, height };
     }
-    for (const part of this.#parts) part.resize?.(width, height);
+    for (const { part } of this.#parts) part.resize?.(width, height);
     this.invalidate();
   }
 
@@ -121,7 +134,7 @@ export class Stage<C extends Camera = Camera> {
   dispose(): void {
     this.stop();
     this.#observer?.disconnect();
-    for (const part of this.#parts) part.dispose?.();
+    for (const { part } of this.#parts) part.dispose?.();
     this.renderer.dispose();
   }
 
@@ -135,8 +148,13 @@ export class Stage<C extends Camera = Camera> {
     this.#frame = null;
     if (!this.#running || this.#container.hidden !== false) return;
     let moving = false;
-    for (const part of this.#parts) {
-      if (part.step?.(now) === true) {
+    for (const { part, step } of this.#parts) {
+      if (part.step === undefined) continue;
+      // Each part timed on its own, so a long frame says which made it long (#1196).
+      begin();
+      const moved = part.step(now);
+      end(step);
+      if (moved) {
         this.#dirty = true;
         moving = true;
       }
@@ -147,8 +165,20 @@ export class Stage<C extends Camera = Camera> {
 
   #draw(now: number): void {
     this.#dirty = false;
-    for (const part of this.#parts) if (part.beforeRender?.(now) === true) this.#dirty = true;
+    for (const { part, before } of this.#parts) {
+      if (part.beforeRender === undefined) continue;
+      begin();
+      if (part.beforeRender(now) === true) this.#dirty = true;
+      end(before);
+    }
+    begin();
     this.renderer.render(this.scene, this.camera);
-    for (const part of this.#parts) part.afterRender?.();
+    end('stage.render');
+    for (const { part, after } of this.#parts) {
+      if (part.afterRender === undefined) continue;
+      begin();
+      part.afterRender();
+      end(after);
+    }
   }
 }

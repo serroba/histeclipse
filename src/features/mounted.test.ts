@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { defaultViewState, type ViewState } from '../state/viewState';
 import type { Capabilities, Feature, FeatureCore, FeatureInstance } from './feature';
+import { clearLedger, partsWithin } from '../util/frameLedger';
 import { deepChipsOf, mountFeatures } from './mounted';
 
 const base = defaultViewState(new Date(Date.UTC(2024, 3, 8)));
@@ -51,6 +52,24 @@ describe('the features as mounted together', () => {
     features.redraw(moved, null, 2);
     features.show(base, null);
     expect(asteroids.shown.show).not.toHaveBeenCalled();
+  });
+
+  it('times each feature by its id in the frame ledger, its deep chip apart (#1196)', () => {
+    clearLedger();
+    let clock = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => (clock += 1));
+    features.show(base, 1);
+    features.redraw({ ...base, camera: { ...base.camera } }, base, 2);
+    features.deep(base, { ma: 66, scale: 'all' });
+    vi.restoreAllMocks();
+    expect(
+      Object.fromEntries(partsWithin(-Infinity, Infinity, 10).map((p) => [p.name, p.ms])),
+    ).toEqual({
+      'feature.fossils': 1,
+      'feature.asteroids': 2,
+      'feature.fossils.deep': 1,
+      'feature.asteroids.deep': 1,
+    });
   });
 
   it('gathers deep chips by layer, and tells each when deep time is left', () => {

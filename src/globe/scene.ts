@@ -64,8 +64,7 @@ export function createGlobe(
     readonly earthParts?: readonly EarthPart[];
   },
 ): Globe {
-  // Transparent, so the page's space gradient shows behind the globe. No preserveDrawingBuffer:
-  // it forces a buffer copy every frame, which stalls slow and mobile GPUs.
+  // No preserveDrawingBuffer: a buffer copy every frame, which stalls slow and mobile GPUs.
   const renderer = new WebGLRenderer({
     antialias: true,
     alpha: true,
@@ -296,10 +295,11 @@ export function createGlobe(
   });
 
   // Each frame: what plays, the camera; around each drawing: tiles, shade, what is placed over it.
-  stage.add(playback);
-  stage.add(rig);
+  stage.add(playback, 'playback');
+  stage.add(rig, 'camera');
   let hidden: Object3D[] = [];
   stage.add({
+    name: 'globe',
     resize: labels.resize,
     beforeRender(now) {
       const relief = reliefTiles.update(camera, surfaces.todaysGround && earth.visible, now);

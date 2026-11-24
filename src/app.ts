@@ -622,58 +622,64 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // What is drawn as the view changes, in this order (#474): each when what it watches changes.
   const drawn: readonly Drawn[] = [
     // The moment worked out again shows every feature; kept, those whose watches changed.
-    { when: momentChanged, draw: moment.show },
+    { name: 'moment', when: momentChanged, draw: moment.show },
     {
+      name: 'features',
       when: momentKept,
       draw: (state, was) => {
         features.redraw(state, was, moment.terrestrial());
       },
     },
-    { when: on(DEEP_TIME), draw: deepTime.show },
-    { when: on(SKY_SHOWN), draw: showSky },
+    { name: 'deepTime', when: on(DEEP_TIME), draw: deepTime.show },
+    { name: 'sky', when: on(SKY_SHOWN), draw: showSky },
     {
+      name: 'focus',
       when: onChange(FOCUS),
       draw: (state) => {
         globe.setFocus(focusOf(state));
       },
     },
-    { draw: bodies.render },
-    { when: on(LAYERS_PANEL), draw: showLayers },
-    { draw: years.settle },
+    { name: 'bodies', draw: bodies.render },
+    { name: 'layers', when: on(LAYERS_PANEL), draw: showLayers },
+    { name: 'yearsSettle', draw: years.settle },
     {
+      name: 'zoomRail',
       draw: (state) => {
         zoomRail.render(railView(state, globe.tileLimits !== null));
       },
     },
-    { draw: sources.show },
-    { draw: texts.show },
-    { draw: showBody },
-    { draw: bodies.sharpen },
-    { draw: asking.render },
-    { when: on(wave.watches), draw: wave.render },
-    { when: on(telescopeList.watches), draw: telescopeList.render },
-    { when: on(treeOfLife.watches), draw: treeOfLife.render },
-    { draw: showSheets },
+    { name: 'sources', draw: sources.show },
+    { name: 'texts', draw: texts.show },
+    { name: 'body', draw: showBody },
+    { name: 'sharpen', draw: bodies.sharpen },
+    { name: 'asking', draw: asking.render },
+    { name: 'wave', when: on(wave.watches), draw: wave.render },
+    { name: 'telescopes', when: on(telescopeList.watches), draw: telescopeList.render },
+    { name: 'tree', when: on(treeOfLife.watches), draw: treeOfLife.render },
+    { name: 'sheets', draw: showSheets },
     // The time changed elsewhere (the year typed, the slider) ends the cycle's play.
-    { draw: cycle.render },
-    { draw: launches.render },
-    { when: on(HISTORY), draw: years.show },
+    { name: 'cycle', draw: cycle.render },
+    { name: 'launches', draw: launches.render },
+    { name: 'years', when: on(HISTORY), draw: years.show },
     placePin(globe),
     {
+      name: 'viewpoint',
       when: on(VIEWPOINT),
       draw: (state) => {
         globe.setViewpoint(state.view);
       },
     },
-    { when: on(VIEW_SWITCH), draw: showViewSwitch },
-    { draw: records.render },
-    { draw: eclipses.render },
+    { name: 'viewSwitch', when: on(VIEW_SWITCH), draw: showViewSwitch },
+    { name: 'records', draw: records.render },
+    { name: 'eclipses', draw: eclipses.render },
     {
+      name: 'url',
       draw: (state) => {
         sync.update(state);
       },
     },
     {
+      name: 'welcome',
       when: onChange(FOUND_THE_WAY_IN),
       draw: () => {
         welcome.dismiss();

@@ -5,6 +5,7 @@
  */
 
 import { changed } from '../state/store';
+import { begin, end } from '../util/frameLedger';
 import type { Brief, LayerLoad } from '../state/activeLayers';
 import type { HereFact } from '../sources/registry';
 import type { Layer, ViewState } from '../state/viewState';
@@ -90,22 +91,37 @@ export function mountFeatures(
   const mounted = features.map((feature) => ({
     feature,
     shown: feature.mount(core, capabilities),
+    // Its names in the frame ledger (#1196), made once.
+    ledger: { show: `feature.${feature.id}`, deep: `feature.${feature.id}.deep` },
   }));
   return {
     show(state, jdTT) {
       if (jdTT === null) return;
-      for (const { shown } of mounted) shown.show?.(state, jdTT);
+      for (const { shown, ledger } of mounted) {
+        if (shown.show === undefined) continue;
+        // Each feature timed on its own, so a long frame says which made it long (#1196).
+        begin();
+        shown.show(state, jdTT);
+        end(ledger.show);
+      }
     },
     redraw(state, previous, jdTT) {
       if (previous === null || jdTT === null) return;
-      for (const { feature, shown } of mounted) {
-        if (changed(feature.watches(previous), feature.watches(state))) shown.show?.(state, jdTT);
+      for (const { feature, shown, ledger } of mounted) {
+        if (shown.show === undefined) continue;
+        if (!changed(feature.watches(previous), feature.watches(state))) continue;
+        begin();
+        shown.show(state, jdTT);
+        end(ledger.show);
       }
     },
     deep(state, moment) {
       const chips = new Map<Layer, DeepChipView>();
-      for (const { feature, shown } of mounted) {
-        const chip = shown.deep?.(state, moment) ?? null;
+      for (const { feature, shown, ledger } of mounted) {
+        if (shown.deep === undefined) continue;
+        begin();
+        const chip = shown.deep(state, moment);
+        end(ledger.deep);
         if (chip !== null) chips.set(feature.id, chip);
       }
       return chips;
