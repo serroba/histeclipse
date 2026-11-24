@@ -50,7 +50,15 @@ function fakeContext(
   const update = vi.fn();
   const show = vi.fn();
   const goTo = vi.fn();
-  const playing = { moveTo: vi.fn(), at: vi.fn(), end: vi.fn() };
+  const playing = {
+    moveTo: vi.fn(),
+    held: () => false,
+    hold: vi.fn(),
+    step: vi.fn(),
+    playing: () => true,
+    at: vi.fn(),
+    end: vi.fn(),
+  };
   const strikes = {
     playImpact: vi.fn(() => playing),
     flyTo: vi.fn(),
@@ -60,6 +68,7 @@ function fakeContext(
   const timeline = {
     travelling: vi.fn(() => false),
     playing: vi.fn(() => false),
+    paused: vi.fn(() => false),
     oldest: () => 540,
   };
   let view: ViewState = on;
@@ -208,8 +217,14 @@ describe('the impact craters as a feature', () => {
     shown.show?.({ ...facing, ma: 40 }, JD);
     const struck = strikes.playImpact.mock.results.at(-1)?.value as {
       readonly moveTo: ReturnType<typeof vi.fn>;
+      readonly hold: ReturnType<typeof vi.fn>;
     };
     expect(struck.moveTo).toHaveBeenCalled();
+    // The reader pauses deep time: the strike holds still with it (#807).
+    timeline.playing.mockReturnValue(false);
+    timeline.paused.mockReturnValue(true);
+    shown.show?.({ ...facing, ma: 40 }, JD);
+    expect(struck.hold).toHaveBeenCalledWith(true);
   });
 
   it('opens a crater’s card when its marker is tapped, with the way to when it struck', async () => {

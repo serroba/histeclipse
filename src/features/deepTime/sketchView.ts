@@ -7,6 +7,7 @@
 
 import { sketchAt, type Sketch, type SketchChoices } from '../../deepTime/sketch';
 import type { Globe } from '../../globe/globe';
+import { heldStrikes } from '../../globe/heldStrikes';
 import type { ViewState } from '../../state/viewState';
 import { createHypothesisRail } from './hypothesisRail';
 import { createWaterStrikes } from './waterStrikes';
@@ -34,15 +35,19 @@ export function createSketchView(
   globe: Pick<Globe, 'setSketch' | 'playImpact'>,
   onSketch: (choice: Partial<SketchChoices>) => void,
   lessMotion: boolean,
+  paused: () => boolean = () => false,
 ): SketchView {
   const rail = createHypothesisRail(onSketch);
+  // Those falling hold still while the reader has deep time paused (#807).
+  const falling = heldStrikes();
   const strikes = createWaterStrikes((spec) => {
-    globe.playImpact(spec);
+    falling.add(globe.playImpact(spec));
   }, lessMotion);
   return {
     root: rail.root,
     show(state, moment, playing) {
       strikes.show(state, moment?.ma ?? null, playing);
+      falling.sync(paused());
       const { impact, land, snowball, water } = state;
       const choices = { impact, land, snowball, water };
       const sketch =

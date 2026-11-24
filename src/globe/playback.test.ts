@@ -23,6 +23,7 @@ vi.mock('./impactAnimation', () => ({
     return {
       group: impact.group,
       moveTo: (place: unknown) => impact.moves.push(place),
+      held: () => false,
       update: (now: number) => now < impact.ends,
       dispose: () => {
         impact.disposed = true;
