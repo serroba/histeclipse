@@ -65,14 +65,17 @@ export function formatDuration(seconds: number): string {
 const ICE_AGE_WORDS_MA = 3;
 
 /**
- * "250 million years ago", "252.5 million years ago", or, within the ice ages, in years:
+ * "250 million years ago", "252.5 million years ago", "2,408.0 million years ago", or, within the ice ages, in years:
  * "21,000 years ago", "2,581,000 years ago"; or "Today".
  */
 export function formatMa(ma: number): string {
   if (ma === 0) return 'Today';
   if (ma < ICE_AGE_WORDS_MA) return `${Math.round(ma * 1e6).toLocaleString('en')} years ago`;
-  // To a tenth: a moment played to 3,950.0000001 reads "3,950", not "3950.0" (#987).
-  const tenth = Math.round(ma * 10) / 10;
-  const amount = Number.isInteger(tenth) ? tenth.toLocaleString('en') : tenth.toFixed(1);
+  // Whole where the moment is (3,950.0000001 reads "3,950", #987); otherwise always to a tenth,
+  // grouped, so a moment playing keeps its width: "2,468.0", not "2,468" then "2408.5".
+  const whole = Math.abs(ma - Math.round(ma)) < 1e-6;
+  const amount = whole
+    ? Math.round(ma).toLocaleString('en')
+    : ma.toLocaleString('en', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   return `${amount} million years ago`;
 }
