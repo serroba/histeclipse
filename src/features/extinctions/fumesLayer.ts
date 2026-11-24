@@ -1,5 +1,5 @@
 /**
- * The Siberian Traps fuming (#1192), on the globe: a plume over each vent, its puffs rising,
+ * A volcanic province fuming (#1192, #1201), on the globe: a plume over each vent, its puffs rising,
  * widening and drifting east, pale over the flood lavas and dark with the sills' gas, and a thin
  * haze over the whole globe; how strongly, the crisis clock's moment says (`fumesModel.ts`).
  * The puffs move on with the time that passes between the clock's moments, so they rise while
@@ -26,12 +26,14 @@ import type { GeoPoint } from '../../core/geo';
 import { geoToVector } from '../../globe/geo';
 import { glowTexture } from '../../globe/glowTexture';
 import type { LayerFactory } from '../../globe/layerHost';
-import { fumingAt, puffAt, ventsAround } from './fumesModel';
+import { puffAt, ventsAround, type Fuming } from './fumesModel';
 
-/** The traps fuming at a moment: their centre then, and seconds since the extinction began. */
+/** A province fuming at a moment: its centre then, how far it spreads, and how strongly. */
 export interface FumesMoment {
   readonly center: GeoPoint;
-  readonly seconds: number;
+  /** Degrees from its centre its vents spread over. */
+  readonly spread: number;
+  readonly fuming: Fuming;
 }
 
 const VENTS = 18;
@@ -163,17 +165,17 @@ export const fumesLayer: LayerFactory<FumesMoment | null> = (host) => {
         host.requestRender();
         return;
       }
-      const key = `${String(moment.center.latitude)},${String(moment.center.longitude)}`;
+      const { center, spread, fuming } = moment;
+      const key = `${String(center.latitude)},${String(center.longitude)},${String(spread)}`;
       if (key !== centerKey) {
         centerKey = key;
-        frames = ventsAround(moment.center, VENTS).map(ventFrame);
+        frames = ventsAround(center, VENTS, spread).map(ventFrame);
       }
       // The puffs rise with the time between moments, a late frame counting a fifth of a second.
       const now = performance.now();
       if (last !== null && !lessMotion.matches)
         cycle += CYCLES_PER_SECOND * Math.min(0.2, (now - last) / 1000);
       last = now;
-      const fuming = fumingAt(moment.seconds);
       const strength = Math.max(fuming.lava, fuming.gas);
       colour.copy(PALE).lerp(DARK, fuming.gas);
       frames.forEach((frame, vent) => {

@@ -334,6 +334,12 @@
     "url": "https://doi.org/10.5281/zenodo.13628813",
     "licence": "CC BY 4.0"
   },
+  "capriolo2020": {
+    "name": "Capriolo et al. 2020",
+    "kind": "paper",
+    "cite": "Capriolo, M., Marzoli, A., Aradi, L. E., et al. (2020), Deep CO2 in the end-Triassic Central Atlantic Magmatic Province, Nature Communications 11, 1670. Our summary: gas bubbles in melt inclusions show the province’s basalts were rich in carbon dioxide, part of it from the mantle or deep crust; it favoured eruptions in rapid pulses of a few centuries, each releasing about as much CO₂ as projected human emissions this century",
+    "url": "https://doi.org/10.1038/s41467-020-15325-6"
+  },
   "carnegieMtWilson": {
     "name": "Carnegie Science and Mount Wilson Observatory",
     "kind": "reference",
@@ -497,6 +503,12 @@
     "kind": "reference",
     "cite": "CSIRO Australia Telescope National Facility, Parkes Radio Telescope Users Guide, Table 1.3, antenna properties of Murriyang: its 64 m dish of focal ratio 0.41, its centre 27.4 m up on a 10.7 m concrete tower, its focus 26 m above",
     "url": "https://www.parkes.atnf.csiro.au/observing/documentation/users_guide/pkug.html"
+  },
+  "davies2017": {
+    "name": "Davies et al. 2017",
+    "kind": "paper",
+    "cite": "Davies, J. H. F. L., Marzoli, A., Bertrand, H., et al. (2017), End-Triassic mass extinction started by intrusive CAMP activity, Nature Communications 8, 15596. Our summary: uranium–lead dates show the province’s intrusions began some 100,000 years before its earliest lavas, with the first changes in climate and life; sills into organic-rich rocks in Brazil were emplaced as the extinction began",
+    "url": "https://doi.org/10.1038/ncomms15596"
   },
   "dayEarthSmiled": {
     "name": "Cassini: The Day the Earth Smiled",
@@ -2126,6 +2138,12 @@
     "cite": "NSF–DOE Vera C. Rubin Observatory, Rubin 101, its telescopes: the 8.4 m primary and tertiary in one glass, the 3.4 m secondary",
     "url": "https://rubinobservatory.org/for-scientists/rubin-101/telescopes"
   },
+  "ruhl2011": {
+    "name": "Ruhl et al. 2011",
+    "kind": "paper",
+    "cite": "Ruhl, M., Bonis, N. R., Reichart, G.-J., et al. (2011), Atmospheric carbon injection linked to end-Triassic mass extinction, Science 333, 430–434. Our summary: leaf waxes show the air’s carbon shifting by about 8.5 per mil within 10,000 to 20,000 years at the extinction, explained by at least 12,000 gigatonnes of carbon released as methane; plants record strong warming and heavier rains, and the sea lost up to about half its species",
+    "url": "https://doi.org/10.1126/science.1204255"
+  },
   "rutgersSnow": {
     "name": "Rutgers Global Snow Lab",
     "kind": "dataset",
@@ -2207,6 +2225,12 @@
     "cite": "Hogg, A. G., et al. (2020). SHCal20 Southern Hemisphere calibration, 0–55,000 years cal BP. Radiocarbon 62, 759–778",
     "url": "https://doi.org/10.1017/RDC.2020.59",
     "licence": "CC BY 4.0"
+  },
+  "shellnutt2014": {
+    "name": "Shellnutt 2014",
+    "kind": "paper",
+    "cite": "Shellnutt, J. G. (2014), The Emeishan large igneous province: A synthesis, Geoscience Frontiers 5, 369–394. Our summary: a review of the province, some 300,000 km² on the western Yangtze Block and in Tibet and Vietnam, contemporaneous with the late Capitanian extinction about 260 million years ago, its eruptions within three million years at most",
+    "url": "https://doi.org/10.1016/j.gsf.2013.07.003"
   },
   "siegel2019": {
     "name": "Siegel et al. 2019, collapsars as a source of r-process elements",
