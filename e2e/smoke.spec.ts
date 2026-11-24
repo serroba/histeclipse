@@ -141,6 +141,9 @@ test('a one-finger swipe rotates the globe on touch screens @mobile', async ({
   context,
 }, info) => {
   test.skip(info.project.name !== 'mobile', 'touch gestures are tested on the phone profile');
+  // On a runner drawing the phone in software each touch waits about two seconds for a frame:
+  // eight moves took 20 of the 30 seconds, and a busy shard ran it out of time (#1178).
+  test.slow();
   // A fixed moment: at some hours the Moon's marker, behind Earth, sits where the swipe starts.
   await page.goto('./?t=2026-01-01T12:00Z&cam=0,0,3');
   await globeRendered(page);
@@ -155,8 +158,9 @@ test('a one-finger swipe rotates the globe on touch screens @mobile', async ({
     points: { x: number; y: number }[],
   ) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points });
   await touch('touchStart', [{ x, y }]);
-  for (let step = 1; step <= 8; step += 1) {
-    await touch('touchMove', [{ x: x - step * 15, y }]);
+  // The same 120 px swipe in four moves rather than eight.
+  for (let step = 1; step <= 4; step += 1) {
+    await touch('touchMove', [{ x: x - step * 30, y }]);
   }
   await touch('touchEnd', []);
   await expect(page).not.toHaveURL(/cam=0\.0000,0\.0000,3\.00/);
