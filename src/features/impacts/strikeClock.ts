@@ -39,10 +39,12 @@ export interface StrikeClock {
   readonly isOpen: () => boolean;
 }
 
-/** The marks under the slider: where each tenfold of time begins that has a name. */
+/**
+ * The marks under the slider: where some of the tenfolds begin. Not the minute: on a phone it
+ * would sit on the strike's mark.
+ */
 const MARKS: readonly (readonly [number, string])[] = [
   [0, 'Strike'],
-  [60, 'Minute'],
   [3600, 'Hour'],
   [86_400, 'Day'],
   [365.25 * 86_400, 'Year'],
