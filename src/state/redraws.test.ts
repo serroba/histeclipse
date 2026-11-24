@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { clearLedger, partsWithin } from '../util/frameLedger';
+
 import {
   DEEP_TIME,
   drawAll,
@@ -184,6 +186,22 @@ describe('drawing in order', () => {
     order.length = 0;
     drawAll(drawn, { ...base, focus: 'moon' }, base);
     expect(order).toEqual(['always', 'focus', 'focus changed']);
+  });
+});
+
+describe('drawing, timed (#1196)', () => {
+  it('times each drawn by its name in the frame ledger, those with none as other', () => {
+    clearLedger();
+    let clock = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => (clock += 1));
+    const drawn: Drawn[] = [{ name: 'eclipses', draw: () => undefined }, { draw: () => undefined }];
+    drawAll(drawn, base, null);
+    drawAll(drawn, base, null);
+    vi.restoreAllMocks();
+    expect(partsWithin(-Infinity, Infinity)).toEqual([
+      { name: 'draw.eclipses', ms: 2 },
+      { name: 'draw.other', ms: 2 },
+    ]);
   });
 });
 

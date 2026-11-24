@@ -1,6 +1,7 @@
 import { PerspectiveCamera } from 'three';
 import { describe, expect, it, vi } from 'vitest';
 import { fakeContainer, fakeRenderer, useManualFrames } from '../test/fakes';
+import { clearLedger, partsWithin } from '../util/frameLedger';
 import { Stage } from './stage';
 
 const frames = useManualFrames();
@@ -55,6 +56,29 @@ describe('Stage', () => {
     made.invalidate();
     next(3);
     expect(renderer.render).toHaveBeenCalledTimes(2);
+  });
+
+  it('times each part by its name in the frame ledger, and the render (#1196)', () => {
+    clearLedger();
+    let clock = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => (clock += 1));
+    const { made } = stage();
+    made.add({ step: () => false }, 'camera');
+    made.add({ name: 'globe', step: () => false });
+    made.add({ beforeRender: () => undefined, afterRender: () => undefined });
+    made.start(true);
+    vi.restoreAllMocks();
+    expect(
+      partsWithin(-Infinity, Infinity, 10)
+        .map(({ name }) => name)
+        .sort(),
+    ).toEqual([
+      'stage.camera',
+      'stage.globe',
+      'stage.part.after',
+      'stage.part.before',
+      'stage.render',
+    ]);
   });
 
   it('draws again next frame when a part asks before a drawing', () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { clearLedger, timed } from '../util/frameLedger';
 import { noteScreenNames, type ScreenNames } from '../util/screenNames';
 import type { Attributes } from './attributes';
 import {
@@ -54,6 +55,14 @@ function harness() {
     },
     origin: ORIGIN,
     names: () => names,
+    // Each frame's parts: a feature that took most of it, and the render (#1196).
+    parts: (from, to) => ({
+      parts: [
+        { name: `feature.at${String(from)}`, ms: (to - from) * 0.6 },
+        { name: 'stage.render', ms: 10 },
+      ],
+      timed: (to - from) * 0.6 + 10,
+    }),
     later: (run, ms) => {
       expect(ms).toBe(WINDOW_MS);
       timers.push(run);
@@ -90,6 +99,12 @@ describe('LongFrames', () => {
       'app.turning': true,
       'app.names.when': 'frame',
       'loaf.sent': 1,
+      // Where its time went: its parts, and how much of it they account for (#1196).
+      'loaf.part.0.name': 'feature.at200',
+      'loaf.part.0.ms': 150,
+      'loaf.part.1.name': 'stage.render',
+      'loaf.part.1.ms': 10,
+      'loaf.parts_ms': 160,
     });
   });
 
@@ -120,6 +135,9 @@ describe('LongFrames', () => {
       'inp.loaf.count': 2,
       'inp.loaf.duration': 140,
       'inp.loaf.start_time': 1060,
+      'inp.loaf.part.0.name': 'feature.at1060',
+      'inp.loaf.part.0.ms': 84,
+      'inp.loaf.parts_ms': 94,
       'app.names.shown': 25,
       'app.turning': true,
       'app.names.when': 'frame',
@@ -203,8 +221,12 @@ describe('watchLongFrames', () => {
     expect(sent).toHaveLength(1);
   });
 
-  it('starts from the page: its origin, its observer, its timers and the globe names', () => {
+  it('starts from the page: its origin, its observer, its timers, the globe names, the ledger', () => {
     noteScreenNames({ shown: 7, total: 90 }, true);
+    clearLedger();
+    vi.spyOn(performance, 'now').mockReturnValueOnce(10).mockReturnValueOnce(250);
+    timed('feature.empires', () => undefined);
+    vi.restoreAllMocks();
     const fake = fakeObserver(['long-animation-frame']);
     const sent: Attributes[] = [];
     const timers: (() => void)[] = [];
@@ -224,7 +246,14 @@ describe('watchLongFrames', () => {
     fake.emit([frame(0, 300)]);
     for (const run of timers) run();
     expect(sent).toEqual([
-      expect.objectContaining({ 'app.names.shown': 7, 'app.names.total': 90, 'app.turning': true }),
+      expect.objectContaining({
+        'app.names.shown': 7,
+        'app.names.total': 90,
+        'app.turning': true,
+        'loaf.part.0.name': 'feature.empires',
+        'loaf.part.0.ms': 240,
+        'loaf.parts_ms': 240,
+      }),
     ]);
   });
 

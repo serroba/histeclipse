@@ -5,9 +5,16 @@
  * frame of its interaction as `inp.loaf.*`, at no extra span.
  */
 
+import { partsWithin, timedWithin } from '../util/frameLedger';
 import { type ScreenNames, screenNames } from '../util/screenNames';
 import type { Attributes } from './attributes';
-import { frameAttributes, type LongFrame, namesAttributes } from './longFrames';
+import {
+  frameAttributes,
+  type FrameParts,
+  type LongFrame,
+  namesAttributes,
+  partsAttributes,
+} from './longFrames';
 
 /** Frames shorter than this are not sent: Chrome reports from 50 ms, and those are common. */
 export const MIN_MS = 100;
@@ -32,6 +39,8 @@ export interface LongFramesOptions {
   readonly origin: string;
   /** What is on screen now. */
   readonly names: () => ScreenNames;
+  /** Where the time from `from` to `to` went, by the parts timed in the frame ledger (#1196). */
+  readonly parts: (from: number, to: number) => FrameParts;
   /** Run `run` in `ms`: `setTimeout`, in the page. */
   readonly later: (run: () => void, ms: number) => void;
 }
@@ -59,11 +68,17 @@ export function inpFrames(vital: unknown): LongFrame[] {
   return Array.isArray(entries) ? entries.filter(isLongFrame) : [];
 }
 
+/** What was noted of a long frame as it was reported. */
+interface Note {
+  readonly names: ScreenNames;
+  readonly parts: FrameParts;
+}
+
 export class LongFrames {
   readonly #options: LongFramesOptions;
-  /** What was on screen in each recent long frame, by its start time. */
-  readonly #notes = new Map<number, ScreenNames>();
-  #worst: { readonly frame: LongFrame; readonly names: ScreenNames } | null = null;
+  /** What was on screen in each recent long frame, and where its time went, by its start. */
+  readonly #notes = new Map<number, Note>();
+  #worst: { readonly frame: LongFrame; readonly note: Note } | null = null;
   #sent = 0;
 
   constructor(options: LongFramesOptions) {
@@ -73,13 +88,17 @@ export class LongFrames {
   /** Frames the observer reports, soon after each ends: the screen is as it was then. */
   readonly observed = (frames: readonly LongFrame[]): void => {
     for (const frame of frames) {
-      const names = this.#options.names();
-      this.#notes.set(frame.startTime, names);
+      const note = {
+        names: this.#options.names(),
+        // Read now, while the ledger still holds the frame: it keeps only the last seconds.
+        parts: this.#options.parts(frame.startTime, frame.startTime + frame.duration),
+      };
+      this.#notes.set(frame.startTime, note);
       if (this.#notes.size > NOTES) this.#notes.delete(this.#notes.keys().next().value ?? 0);
       if (frame.duration < MIN_MS || this.#sent >= MOST) continue;
       if (this.#worst === null) this.#options.later(this.#send, WINDOW_MS);
       if (this.#worst === null || frame.duration > this.#worst.frame.duration) {
-        this.#worst = { frame, names };
+        this.#worst = { frame, note };
       }
     }
   };
@@ -91,7 +110,8 @@ export class LongFrames {
     return {
       'inp.loaf.count': frames.length,
       ...(worst === undefined ? {} : frameAttributes(worst, this.#options.origin, 'inp.loaf', 1)),
-      ...namesAttributes(noted ?? this.#options.names()),
+      ...namesAttributes(noted?.names ?? this.#options.names()),
+      ...(noted === undefined ? {} : partsAttributes(noted.parts, 'inp.loaf')),
       // Web-vitals reports INP late, often as the page is hidden: say whether the names are
       // those of the interaction's frame or only those of the moment it was reported.
       'app.names.when': noted === undefined ? 'report' : 'frame',
@@ -111,10 +131,11 @@ export class LongFrames {
     this.#worst = null;
     if (worst === null) return;
     this.#sent += 1;
-    const { frame, names } = worst;
+    const { frame, note } = worst;
     const attributes = {
       ...frameAttributes(frame, this.#options.origin),
-      ...namesAttributes(names),
+      ...namesAttributes(note.names),
+      ...partsAttributes(note.parts),
       'app.names.when': 'frame',
       'loaf.sent': this.#sent,
     };
@@ -154,6 +175,7 @@ export function startLongFrames(tracer: SpanStarter, page: FramePage): LongFrame
     tracer,
     origin: page.location.origin,
     names: screenNames,
+    parts: (from, to) => ({ parts: partsWithin(from, to), timed: timedWithin(from, to) }),
     later: (run, ms) => {
       page.setTimeout(run, ms);
     },

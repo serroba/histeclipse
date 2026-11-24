@@ -4,6 +4,7 @@
  * comparisons in `app.ts`'s render, where a field left out is a part that goes stale.
  */
 
+import { begin, end } from '../util/frameLedger';
 import { changed } from './store';
 import { pinnedPlace, type GeoPoint, type ViewState } from './viewState';
 
@@ -126,6 +127,8 @@ export function onChange(watch: Watch): When {
 
 /** Something on the page, drawn in its turn (#474). */
 export interface Drawn {
+  /** What it is called in the frame ledger (#1196): `draw.<name>`. */
+  readonly name?: string;
   /** When it is drawn again; every time, if left out. */
   readonly when?: When;
   draw(state: ViewState, previous: ViewState | null): void;
@@ -134,6 +137,7 @@ export interface Drawn {
 /** The place's pin on the globe, drawn when the place or deep time changes (#948). */
 export function placePin(globe: { setLocation(place: GeoPoint | null): void }): Drawn {
   return {
+    name: 'placePin',
     when: on(PLACE_PIN),
     draw: (state) => {
       globe.setLocation(pinnedPlace(state));
@@ -141,13 +145,28 @@ export function placePin(globe: { setLocation(place: GeoPoint | null): void }): 
   };
 }
 
-/** Draw each in order, those whose `when` says so. */
+/** Each drawn's name in the frame ledger, made once. */
+const ledgerNames = new WeakMap<Drawn, string>();
+
+function ledgerName(drawn: Drawn): string {
+  let name = ledgerNames.get(drawn);
+  if (name === undefined) {
+    name = `draw.${drawn.name ?? 'other'}`;
+    ledgerNames.set(drawn, name);
+  }
+  return name;
+}
+
+/** Draw each in order, those whose `when` says so, each timed in the frame ledger (#1196). */
 export function drawAll(
   drawn: readonly Drawn[],
   state: ViewState,
   previous: ViewState | null,
 ): void {
   for (const each of drawn) {
-    if (each.when?.(state, previous) ?? true) each.draw(state, previous);
+    if (!(each.when?.(state, previous) ?? true)) continue;
+    begin();
+    each.draw(state, previous);
+    end(ledgerName(each));
   }
 }

@@ -7,6 +7,7 @@
  * hash); any other is sent as `extension` or `other`. Invokers that hold a URL get the same.
  */
 
+import type { PartTime } from '../util/frameLedger';
 import type { ScreenNames } from '../util/screenNames';
 import type { Attributes, AttributeValue } from './attributes';
 
@@ -125,4 +126,24 @@ export function namesAttributes(names: ScreenNames): Attributes {
     'app.names.total': names.total,
     'app.turning': names.turning,
   };
+}
+
+/** Where a frame's time went (#1196): its timed parts, longest first, and their time in all. */
+export interface FrameParts {
+  readonly parts: readonly PartTime[];
+  readonly timed: number;
+}
+
+/**
+ * The frame's parts as attributes under `prefix`: `part.0.name` and `part.0.ms` for the longest,
+ * and `parts_ms`, all its timed parts together, beside the frame's duration to say how much of
+ * it the parts account for.
+ */
+export function partsAttributes(frame: FrameParts, prefix = 'loaf'): Attributes {
+  const attributes: Record<string, AttributeValue> = { [`${prefix}.parts_ms`]: ms(frame.timed) };
+  frame.parts.forEach((part, index) => {
+    attributes[`${prefix}.part.${String(index)}.name`] = part.name.slice(0, MAX_TEXT);
+    attributes[`${prefix}.part.${String(index)}.ms`] = ms(part.ms);
+  });
+  return attributes;
 }
