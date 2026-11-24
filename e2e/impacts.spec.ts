@@ -151,6 +151,8 @@ test('a crater’s card estimates its impactor, and Chicxulub plays in its own t
       await expect(clock).toBeVisible({ timeout: 20_000 });
       await expect(globe).toHaveAttribute('data-impact-worldwide', 'true');
       await expect(globe).toHaveAttribute('data-strike-clock', 'Chicxulub');
+      // The ground round it too: the crater, the blanket, the tsunami (#1175, #1176).
+      await expect(globe).toHaveAttribute('data-strike-ground', 'on');
       await expect(clock).toHaveAttribute('data-seconds', /^[1-9]/, { timeout: 30_000 });
     });
     await test.step('When they pause it with Space and step it on with an arrow', async () => {
@@ -177,6 +179,7 @@ test('a crater’s card estimates its impactor, and Chicxulub plays in its own t
       await expect(globe).toHaveAttribute('data-impact-playing', 'false');
       await expect(globe).toHaveAttribute('data-impact-worldwide', 'false');
       await expect(globe).not.toHaveAttribute('data-strike-clock');
+      await expect(globe).toHaveAttribute('data-strike-ground', 'off');
     });
   }
   expect(problems).toEqual([]);

@@ -19,6 +19,9 @@ import type { PlayedImpact, PlayingImpact } from '../../globe/heldStrikes';
 import { playKeys } from '../../ui/playKeys';
 import { illustrationKeys } from './illustrationKeys';
 import { heldStrikes } from '../../globe/heldStrikes';
+import type { EarthPart } from '../../globe/earthParts';
+import { strikeGroundLayer } from './strikeGroundLayer';
+import { STRIKE_GROUND_PART } from './strikeGroundPart';
 import { createStrikeClock, createStrikeOffer, type StrikeClock } from './strikeClock';
 import { strikePhasesOf, type StrikePhase } from './strikePhases';
 import type { ViewState } from '../../state/viewState';
@@ -43,6 +46,9 @@ import {
   handover,
   type ImpactPlay,
 } from './view';
+
+/** The impacts' parts of the Earth shader: the ground round a strike watched in its own time. */
+export const IMPACT_EARTH_PARTS: readonly EarthPart[] = [STRIKE_GROUND_PART];
 
 const NEEDS = ['cards', 'timeline', 'deepTime', 'strikes', 'overPage'] as const;
 /** How long a strike is followed, ms: longer than the longest plays, on a slow device too. */
@@ -73,6 +79,7 @@ function struckFrom(
 function mountImpacts(context: ImpactsContext): FeatureInstance {
   const globe = context.strikes;
   const onGlobe = context.globe.addLayer(impactLayer);
+  const ground = context.globe.addLayer(strikeGroundLayer);
   // The view last shown: what a crater tapped is read against.
   let latest: ViewState | null = null;
   const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -272,9 +279,11 @@ function mountImpacts(context: ImpactsContext): FeatureInstance {
       phases,
       onMoment(seconds) {
         playing.at(seconds);
+        ground.update({ place: spec.place, seconds, worldwide: spec.worldwide });
       },
       onClose() {
         playing.end();
+        ground.update(null);
         delete globe.on.dataset['strikeClock'];
         closed();
       },

@@ -42,8 +42,23 @@ describe('the parts of the Earth shader', () => {
     expect(assembled.byPart.get(lunar)).toEqual({ lunarActive: active });
   });
 
+  it('Given a part over deep time’s even light, Then it is called after it, the others before (#1175)', () => {
+    const assembled = assembleEarthParts([
+      { ...part('strike', 60), overEvenLight: true },
+      part('lunar', 30),
+    ]);
+    expect(assembled.calls).toBe('color = lunar(color, f);');
+    expect(assembled.overCalls).toBe('color = strike(color, f);');
+    expect(assembled.glsl).toContain('vec3 strike(');
+  });
+
   it('Given no parts, Then nothing is called', () => {
-    expect(assembleEarthParts([])).toMatchObject({ glsl: '', calls: '', uniforms: {} });
+    expect(assembleEarthParts([])).toMatchObject({
+      glsl: '',
+      calls: '',
+      overCalls: '',
+      uniforms: {},
+    });
   });
 
   it('Given a name that is no GLSL function, Then it is refused', () => {

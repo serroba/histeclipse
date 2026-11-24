@@ -80,6 +80,8 @@ const SHELL_FRAGMENT = /* glsl */ `
     float sky = behind * near;
     vec3 tint = mix(sootColor, emberColor, ember);
     float skyAlpha = sky * max(veil, 0.55 * ember);
+    // Zoomed in, the sky thins, so the ground beneath it shows (#1175).
+    skyAlpha *= mix(0.3, 1.0, smoothstep(1.6, 3.8, length(cameraPosition)));
     float alpha = clamp(bright + skyAlpha * (1.0 - bright), 0.0, 1.0);
     vec3 color = mix(tint, frontColor, bright / max(alpha, 0.0001));
     gl_FragColor = vec4(color, alpha);

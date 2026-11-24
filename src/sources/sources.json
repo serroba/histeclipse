@@ -1357,6 +1357,12 @@
     "url": "https://doi.org/10.5194/gmd-10-2247-2017",
     "licence": "CC BY-SA 4.0 (as the data file states); our annual means derived from it are shared under the same licence"
   },
+  "mcgetchin1973": {
+    "name": "McGetchin, Settle & Head 1973",
+    "kind": "paper",
+    "cite": "McGetchin, T. R., Settle, M., Head, J. W. (1973), Radial thickness variation in impact crater ejecta: implications for lunar basin deposits, Earth and Planetary Science Letters 20(2), 226–236. Our summary: from craters, explosion experiments and the Moon's basins, an ejecta blanket thins as about the inverse cube of distance from the crater's centre, its thickness at the rim set by the crater's size",
+    "url": "https://doi.org/10.1016/0012-821X(73)90162-3"
+  },
   "meeus": {
     "name": "Meeus, Astronomical Algorithms",
     "kind": "paper",

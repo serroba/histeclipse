@@ -85,7 +85,8 @@ export function strikeLook(seconds: number, worldwide: number): ImpactLook {
       visible: struck && worldwide > 0,
       // The ejecta fall back in round the whole globe within the first hours.
       front: Math.PI * worldwide * out,
-      frontGlow: struck && out < 1 ? worldwide * (1 - 0.5 * out) : 0,
+      // Bright only while it travels: not before it leaves the crater, nor once round.
+      frontGlow: out > 0 && out < 1 ? worldwide * (1 - 0.5 * out) * Math.min(1, out * 10) : 0,
       // The sky glows as they come in, most within three days.
       ember: logThrough(t, 5 * MINUTE, 30 * MINUTE) * (1 - logThrough(t, 8 * HOUR, 3 * DAY)),
       // Then soot, dust and sulfate darken it for over a year, clearing from about five years
