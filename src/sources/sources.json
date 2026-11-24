@@ -245,6 +245,12 @@
     "cite": "Bond, D. P. G. & Grasby, S. E. (2017), On the causes of mass extinctions, Palaeogeography, Palaeoclimatology, Palaeoecology 478, 3–29. Our summary: a review of almost twenty crises from the Cambrian to the end-Cretaceous; the timing of large igneous provinces and at least half of the major extinctions makes large-scale volcanism the main driver, most crises coming with warming and oxygen-poor seas",
     "url": "https://doi.org/10.1016/j.palaeo.2016.11.005"
   },
+  "bondGrasby2020": {
+    "name": "Bond & Grasby 2020",
+    "kind": "paper",
+    "cite": "Bond, D. P. G. & Grasby, S. E. (2020), Late Ordovician mass extinction caused by volcanism, warming, and anoxia, not cooling and glaciation, Geology 48, 777–781. Our summary: at Dob’s Linn, the Ordovician–Silurian boundary’s reference section, mercury, molybdenum and uranium anomalies match both pulses of the extinction, which took some 85% of species a million years apart; volcanic greenhouse gases, warming and spreading oxygen-poor water are held to blame, not the cold",
+    "url": "https://doi.org/10.1130/G47377.1"
+  },
   "bondWignall2008": {
     "name": "Bond & Wignall 2008",
     "kind": "paper",
@@ -524,6 +530,12 @@
     "url": "https://doi.org/10.3847/1538-3881/abd414",
     "licence": "NASA/JPL, public domain"
   },
+  "deVleeschouwer2017": {
+    "name": "De Vleeschouwer et al. 2017",
+    "kind": "paper",
+    "cite": "De Vleeschouwer, D., Da Silva, A.-C., Sinnesael, M., et al. (2017), Timing and pacing of the Late Devonian mass extinction event regulated by eccentricity and obliquity, Nature Communications 8, 2268. Our summary: an orbitally calibrated timescale across the Frasnian–Famennian puts 600,000 years between the lower and upper Kellwasser carbon-isotope excursions; the upper is paced by obliquity, at a minimum of the 2.4-million-year eccentricity cycle",
+    "url": "https://doi.org/10.1038/s41467-017-02407-1"
+  },
   "deWinter2020": {
     "name": "de Winter et al. 2020",
     "kind": "paper",
@@ -702,6 +714,12 @@
     "kind": "paper",
     "cite": "Finnegan et al. (2011), The magnitude and duration of Late Ordovician–Early Silurian glaciation, Science 331, 903–906",
     "url": "https://doi.org/10.1126/science.1200803"
+  },
+  "finnegan2012": {
+    "name": "Finnegan et al. 2012",
+    "kind": "paper",
+    "cite": "Finnegan, S., Heim, N. A., Peters, S. E. & Fischer, W. W. (2012), Climate change and the selective signature of the Late Ordovician mass extinction, PNAS 109, 6829–6834. Our summary: North American fossils show genera whose ranges were cut by the environmental shifts at the end of the Katian were hit hardest: the extinction pulse was in part habitat loss, not only a gap in the rocks, and extinction risk also followed climate",
+    "url": "https://doi.org/10.1073/pnas.1117039109"
   },
   "foster": {
     "name": "Foster, Royer & Lunt 2017",
@@ -2041,6 +2059,12 @@
     "cite": "Gaia Collaboration, Prusti, T., de Bruijne, J. H. J., et al. (2016), The Gaia mission, Astronomy & Astrophysics 595, A1 (doi:10.1051/0004-6361/201629272): its 10.2 m sunshield, its two telescopes of 1.45 m by 0.50 m on their 3 m optical bench, the Sun 45° off its spin axis. The mission, its craft and how it scans the sky",
     "url": "https://doi.org/10.1051/0004-6361/201629272",
     "licence": "CC BY 4.0"
+  },
+  "racki2020": {
+    "name": "Racki 2020",
+    "kind": "paper",
+    "cite": "Racki, G. (2020), A volcanic scenario for the Frasnian–Famennian major biotic crisis and other Late Devonian global changes: More answers than questions?, Global and Planetary Change 189, 103174. Our summary: anoxia and rapid climate swings are accepted causes of the Late Devonian crisis; worldwide mercury enrichments support volcanism and tectonism as their trigger, the Viluy province in Siberia the usual focus, with arc volcanism and feedbacks besides",
+    "url": "https://doi.org/10.1016/j.gloplacha.2020.103174"
   },
   "rahmstorf2015": {
     "name": "Rahmstorf et al. 2015",

@@ -121,16 +121,13 @@ describe('the extinctions as a feature', () => {
     expect(strikes.zoomTo).toHaveBeenCalledWith(3.4);
   });
 
-  it('watches the end-Permian from a card, the traps fuming; one with no clock offers none', async () => {
+  it('watches the end-Permian from a card, the traps fuming', async () => {
     const { shown, cards, drawn, strikes } = await loaded({ ...on, ma: 252 });
     shown.pick?.('norilsk');
     cards.at(-1)?.action?.run();
     expect(clockTitle()).toBe('The end-Permian, in its own time');
     expect(strikes.zoomTo).toHaveBeenCalledWith(2.3);
     expect(drawn.at(-1)).toMatchObject({ spread: 9, fuming: { lava: 0, gas: 0, haze: 0 } });
-    const late = await loaded({ ...on, ma: 444 });
-    late.shown.pick?.('dobs-linn');
-    expect(late.cards.at(-1)?.action).toBeUndefined();
   });
 
   it('watches the end-Triassic and the end-Guadalupian from their cards, each province fuming (#1201)', async () => {
@@ -149,6 +146,20 @@ describe('the extinctions as a feature', () => {
     guadalupian.cards.at(-1)?.action?.run();
     expect(clockTitle()).toBe('The end-Guadalupian, in its own time');
     expect(guadalupian.drawn.at(-1)).toMatchObject({ spread: 4 });
+  });
+
+  it('watches the end-Ordovician’s ice and the Late Devonian’s seas from their cards (#1202)', async () => {
+    const ordovician = await loaded({ ...on, ma: 444 });
+    ordovician.shown.pick?.('dobs-linn');
+    ordovician.cards.at(-1)?.action?.run();
+    expect(clockTitle()).toBe('The end-Ordovician, in its own time');
+    expect(ordovician.drawn.at(-1)).toMatchObject({ spread: 22, seas: { ice: 14, anoxia: 0 } });
+    document.body.replaceChildren();
+    const devonian = await loaded({ ...on, ma: 372.2 });
+    devonian.shown.pick?.('viluy-traps');
+    devonian.cards.at(-1)?.action?.run();
+    expect(clockTitle()).toBe('The Late Devonian, in its own time');
+    expect(devonian.drawn.at(-1)).toMatchObject({ ice: null });
   });
 
   it('at Slow, hands over to the end-Permian’s clock as deep time plays past it, once', async () => {

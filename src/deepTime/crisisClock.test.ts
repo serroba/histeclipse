@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { CRISIS_SCALE } from './crisisClock';
+import { CRISIS_SCALE, LONG_CRISIS_SCALE } from './crisisClock';
 
 const YEAR = 365.25 * 86_400;
 const KYR = 1000 * YEAR;
@@ -54,5 +54,23 @@ describe('the crisis clock (#1191)', () => {
     const at = CRISIS_SCALE.marks.map(([seconds]) => positionAt(seconds));
     expect(at).toEqual([...at].sort((a, b) => a - b));
     expect(at.at(-1)).toBeCloseTo(end);
+  });
+});
+
+describe('the long crisis clock (#1202)', () => {
+  const long = LONG_CRISIS_SCALE;
+  it('runs from a million years before to ten million after, 250,000 years a unit across', () => {
+    expect(long.secondsAt(0)).toBeCloseTo(-1000 * KYR, -3);
+    expect(long.positionAt(0)).toBeCloseTo(4);
+    expect(long.positionAt(2000 * KYR)).toBeCloseTo(12);
+    expect(long.secondsAt(long.end)).toBeCloseTo(10_000 * KYR, -6);
+  });
+
+  it('plays at one pace throughout, the whole in about a minute and a half at Slow', () => {
+    expect(long.advance('slow', 1, long.positionAt(0))).toBe(long.advance('slow', 1, 0));
+    let played = 0;
+    for (let at = 0; at < long.end; played += 0.01) at += long.advance('slow', 0.01, at);
+    expect(played).toBeGreaterThan(80);
+    expect(played).toBeLessThan(120);
   });
 });

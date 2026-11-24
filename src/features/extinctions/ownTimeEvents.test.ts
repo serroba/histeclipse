@@ -7,7 +7,7 @@ import { ownTimeOf } from './ownTimeEvents';
 const DATA = sites as ExtinctionSites;
 
 describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
-  it('are the end-Cretaceous and the three volcanic provinces, none for the others', () => {
+  it('are all six: the end-Cretaceous, the three volcanic provinces and the two of the seas', () => {
     expect(ownTimeOf(DATA, 'k-pg-extinction', 66)?.key).toBe('Chicxulub');
     for (const [id, ma] of [
       ['end-permian-extinction', 251.9],
@@ -15,13 +15,20 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
       ['end-guadalupian-extinction', 259.8],
     ] as const)
       expect(ownTimeOf(DATA, id, ma)?.key).toBe(id);
-    expect(ownTimeOf(DATA, 'late-devonian-extinction', 372)).toBeNull();
+    expect(ownTimeOf(DATA, 'late-devonian-extinction', 372.2)?.scale.marks[1]?.[1]).toBe(
+      'First pulse',
+    );
+    expect(ownTimeOf(DATA, 'end-ordovician-extinction', 444)?.title).toBe(
+      'The end-Ordovician, in its own time',
+    );
+    expect(ownTimeOf(DATA, 'no-such-extinction', 100)).toBeNull();
   });
 
   it('are none where their places are missing from the data', () => {
     const empty: ExtinctionSites = { ...DATA, sites: [] };
     expect(ownTimeOf(empty, 'end-triassic-extinction', 201.5)).toBeNull();
     expect(ownTimeOf(empty, 'k-pg-extinction', 66)).toBeNull();
+    expect(ownTimeOf(empty, 'late-devonian-extinction', 372.2)).toBeNull();
   });
 
   it('turn the globe to the province, fume with the clock, and stop when closed', () => {
@@ -42,5 +49,18 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     expect(ownTimeOf(DATA, 'end-triassic-extinction', 201.5)?.scale.marks[0]?.[1]).toBe(
       'Intrusions',
     );
+  });
+
+  it('draw a crisis of the seas with the clock, and take it away when closed', () => {
+    const event = ownTimeOf(DATA, 'end-ordovician-extinction', 444);
+    const update = vi.fn();
+    const played = event?.play({
+      strikes: { flyTo: vi.fn(), zoomTo: vi.fn() },
+      layer: () => ({ update }),
+    } as unknown as Parameters<NonNullable<typeof event>['play']>[0]);
+    played?.at(0);
+    expect(update).toHaveBeenLastCalledWith(expect.objectContaining({ spread: 22 }));
+    played?.end();
+    expect(update).toHaveBeenLastCalledWith(null);
   });
 });

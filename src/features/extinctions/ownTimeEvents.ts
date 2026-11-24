@@ -1,23 +1,29 @@
 /**
  * The extinctions that can be watched in their own time (#1191, #1192, #1201): the
  * end-Cretaceous as Chicxulub's strike on its log clock; the end-Permian, end-Triassic and
- * end-Guadalupian as their volcanic provinces fuming on the crisis clock; each where the plates
- * had its place at the moment shown.
+ * end-Guadalupian as their volcanic provinces fuming on the crisis clock; the end-Ordovician
+ * and the Late Devonian as their ice and oxygen-poor seas on the long one (#1202); each where
+ * the plates had its place at the moment shown.
  */
 
-import { CRISIS_SCALE } from '../../deepTime/crisisClock';
+import { CRISIS_SCALE, LONG_CRISIS_SCALE } from '../../deepTime/crisisClock';
 import { siteThen, type ExtinctionSites } from '../../data/extinctions';
 import type { GeoPoint } from '../../core/geo';
 import { impactPlay, strikeEvent, strikePhasesOf } from '../impacts';
 import type { EventPhase, OwnTimeEvent } from '../ownTime';
 import { fumesLayer } from './fumesLayer';
 import { campFuming, emeishanFuming, siberianFuming, type Fuming } from './fumesModel';
+import { END_ORDOVICIAN, LATE_DEVONIAN } from './coldPhases';
 import { END_GUADALUPIAN } from './guadalupianPhases';
 import { END_PERMIAN } from './permianPhases';
+import { seasLayer } from './seasLayer';
+import { devonianSeas, ordovicianSeas, type Seas } from './seasModel';
 import { END_TRIASSIC } from './triassicPhases';
 
 /** Chicxulub's final crater, km, as the Impact Earth Database gives it. */
 const CHICXULUB_KM = 180;
+/** How far out the crises of the seas are watched from: the ice sheet or the seas whole. */
+const COLD_DISTANCE = 3;
 /** How far out a province is watched from: its plumes and the haze over the globe. */
 const PROVINCE_DISTANCE = 2.3;
 /** How far out Chicxulub is watched from: far enough to see its front cross the globe (#1167). */
@@ -84,10 +90,9 @@ const PROVINCES: readonly Province[] = [
 
 /** A province fuming at `center` on the crisis clock. */
 function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
-  const title = province.name.charAt(0).toUpperCase() + province.name.slice(1);
   return {
     key: province.key,
-    title: `${title}, in its own time`,
+    title: `${capitalised(province.name)}, in its own time`,
     phases: province.phases,
     scale: { ...CRISIS_SCALE, marks: [province.start, ...CRISIS_SCALE.marks.slice(1)] },
     offer: `Watch ${province.name} in its own time`,
@@ -103,6 +108,68 @@ function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
       };
     },
   };
+}
+
+/** A crisis of the seas watched in its own time: where its ice and its anoxia were, its timeline. */
+interface ColdCrisis {
+  readonly key: string;
+  readonly name: string;
+  readonly phases: readonly EventPhase[];
+  /** The site its ice sheet is centred on, if it had one. */
+  readonly ice: string | null;
+  /** The site its oxygen-poor water spreads round. */
+  readonly anoxia: string;
+  seas(seconds: number): Seas;
+}
+
+/** The crises of the seas, by the extinction each is watched for (#1202). */
+const COLD: readonly ColdCrisis[] = [
+  {
+    key: 'end-ordovician-extinction',
+    name: 'the end-Ordovician',
+    phases: END_ORDOVICIAN,
+    ice: 'hirnantian-ice',
+    anoxia: 'dobs-linn',
+    seas: ordovicianSeas,
+  },
+  {
+    key: 'late-devonian-extinction',
+    name: 'the Late Devonian',
+    phases: LATE_DEVONIAN,
+    ice: null,
+    anoxia: 'coumiac',
+    seas: devonianSeas,
+  },
+];
+
+/** Degrees round its record the oxygen-poor water's patches spread over. */
+const ANOXIA_SPREAD = 22;
+
+/** A crisis of the seas on the long crisis clock: its ice at `ice`, its anoxia round `anoxia`. */
+function coldEvent(crisis: ColdCrisis, ice: GeoPoint | null, anoxia: GeoPoint): OwnTimeEvent {
+  return {
+    key: crisis.key,
+    title: `${capitalised(crisis.name)}, in its own time`,
+    phases: crisis.phases,
+    scale: LONG_CRISIS_SCALE,
+    offer: `Watch ${crisis.name} in its own time`,
+    play(tools) {
+      const seas = tools.layer(seasLayer);
+      return {
+        at(seconds) {
+          seas.update({ ice, anoxia, spread: ANOXIA_SPREAD, seas: crisis.seas(seconds) });
+        },
+        end() {
+          seas.update(null);
+        },
+      };
+    },
+  };
+}
+
+/** `text` with a capital first letter: "the end-Permian" as a title. */
+function capitalised(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /** The middle of some places, near enough for places a few thousand kilometres apart. */
@@ -121,6 +188,13 @@ function placeOf(data: ExtinctionSites, site: string, ma: number): GeoPoint | nu
 
 /** The extinction `id`'s own time at `ma`, if it has one. */
 export function ownTimeOf(data: ExtinctionSites, id: string, ma: number): OwnTimeEvent | null {
+  const cold = COLD.find((each) => each.key === id);
+  if (cold !== undefined) {
+    const anoxia = placeOf(data, cold.anoxia, ma);
+    if (anoxia === null) return null;
+    const ice = cold.ice === null ? null : placeOf(data, cold.ice, ma);
+    return facing(coldEvent(cold, ice, anoxia), ice ?? anoxia, COLD_DISTANCE);
+  }
   const province = PROVINCES.find((each) => each.key === id);
   if (province !== undefined) {
     const places = province.sites.flatMap((site) => placeOf(data, site, ma) ?? []);
