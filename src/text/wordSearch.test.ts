@@ -46,6 +46,48 @@ describe('word search', () => {
     expect(first('volcanoes Io')).toBe('moon:io');
   });
 
+  it('Given an extinction by its name, its common name, its cause or its evidence, Then that extinction comes first (#1210)', () => {
+    expect(first('permian extinction')).toBe('extinction:end-permian-extinction');
+    expect(first('great dying')).toBe('extinction:end-permian-extinction');
+    expect(first('siberian traps')).toBe('extinction:end-permian-extinction');
+    expect(first('dinosaurs extinction')).toBe('extinction:k-pg-extinction');
+    expect(first('end-triassic')).toBe('extinction:end-triassic-extinction');
+    expect(first('kellwasser')).toBe('extinction:late-devonian-extinction');
+    expect(first('ordovician ice age')).toBe('extinction:end-ordovician-extinction');
+    expect(first('emeishan')).toBe('extinction:end-guadalupian-extinction');
+    expect(first('mass extinction')).toBe('why:extinctions');
+  });
+
+  it('Given several words, Then a passage matching all of them outranks one matching one strongly, and a title holding them most (#1210)', () => {
+    const made = (id: string, title: string, text: string): Passage => ({
+      id: `story:${id}`,
+      kind: 'why',
+      title,
+      text,
+      sources: [],
+      anchors: [],
+    });
+    const small = indexPassages([
+      made('one', 'Great great great', 'great great great great'),
+      made('both', 'Other', 'the great dying, long ago, and much else besides'),
+      made('titled', 'The Great Dying', 'long ago, and much else besides, and more'),
+    ]);
+    expect(searchWords(small, 'great dying').map((hit) => hit.passage.id)).toEqual([
+      'story:titled',
+      'story:both',
+      'story:one',
+    ]);
+    // Its snippet is the sentence holding the most of the words matched.
+    const [both] = searchWords(small, 'great dying').filter(
+      (hit) => hit.passage.id === 'story:both',
+    );
+    expect(both === undefined ? '' : snippet(both.passage, both.matched)).toBe(
+      'the great dying, long ago, and much else besides',
+    );
+    // The last word still being typed counts in the title too.
+    expect(searchWords(small, 'great dyi')[0]?.passage.id).toBe('story:titled');
+  });
+
   it('Given nothing, or only common words, Then nothing is found', () => {
     expect(searchWords(index, '')).toEqual([]);
     expect(searchWords(index, 'the of and ')).toEqual([]);

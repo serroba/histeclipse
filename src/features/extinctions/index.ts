@@ -23,7 +23,13 @@ import {
   type ExtinctionMark,
 } from './view';
 
-/** The extinctions' parts of the Earth shader: the flood lavas (#1212), the oxygen-poor seas (#1202). */
+// The extinctions as passages for search (#1210).
+export { extinctionPassages } from './passages';
+
+/**
+ * The extinctions' parts of the Earth shader: the flood lavas (#1212), the oxygen-poor seas
+ * (#1202).
+ */
 export const EXTINCTION_EARTH_PARTS: readonly EarthPart[] = [LAVA_FLOWS_PART, ANOXIC_SEAS_PART];
 
 export const extinctionsFeature = feature({
