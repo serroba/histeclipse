@@ -46,9 +46,7 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     expect(update).toHaveBeenLastCalledWith(null);
     expect(event?.offer).toBe('Watch the end-Guadalupian in its own time');
     expect(event?.scale.marks[0]?.[1]).toBe('Before');
-    expect(ownTimeOf(DATA, 'end-triassic-extinction', 201.5)?.scale.marks[0]?.[1]).toBe(
-      'Intrusions',
-    );
+    expect(ownTimeOf(DATA, 'end-triassic-extinction', 201.5)?.scale.marks[0]?.[1]).toBe('Rifting');
   });
 
   it('draw a crisis of the seas with the clock, and take it away when closed', () => {

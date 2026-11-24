@@ -2,11 +2,16 @@ import { describe, expect, it } from 'vitest';
 
 import { angularDistance } from '../../eclipses/visibility';
 import {
+  campCover,
   campFuming,
+  deccanCover,
   deccanFuming,
+  emeishanCover,
   emeishanFuming,
   puffAt,
+  siberianCover,
   siberianFuming,
+  spatterAt,
   ventsAround,
 } from './fumesModel';
 
@@ -82,5 +87,33 @@ describe('the other provinces’ fumes (#1201)', () => {
     expect(deccanFuming(-100)).toEqual({ lava: 0, gas: 0, haze: 0 });
     expect(deccanFuming(0)).toEqual({ lava: 0.7, gas: 0, haze: 0.105 });
     expect(deccanFuming(3e13).lava).toBe(0.7);
+  });
+});
+
+describe('the lava, flowing and fountaining (#1212)', () => {
+  it('the Siberian Traps: two thirds before and during the extinction, the rest after', () => {
+    expect(siberianCover(-400 * KYR)).toBe(0);
+    expect(siberianCover(0)).toBeCloseTo(2 / 3);
+    expect(siberianCover(600 * KYR)).toBeCloseTo(1);
+  });
+
+  it('the Central Atlantic in four quarters, the Emeishan mostly in its first million years', () => {
+    expect(campCover(-10 * KYR)).toBe(0);
+    expect(campCover(30 * KYR)).toBeCloseTo(0.25);
+    expect(campCover(250 * KYR)).toBeCloseTo(0.5);
+    expect(campCover(700 * KYR)).toBeCloseTo(1);
+    expect(emeishanCover(1000 * KYR)).toBeCloseTo(0.7);
+    expect(emeishanCover(3000 * KYR)).toBeCloseTo(1);
+    expect(deccanCover()).toBe(0.5);
+  });
+
+  it('throws each drop up and lets it fall back, fading, none when the lava is still', () => {
+    const rising = spatterAt(0, 3, 0.05, 1);
+    const top = spatterAt(0, 3, 1 / 6, 1);
+    expect(top.height).toBeGreaterThan(rising.height);
+    expect(spatterAt(0, 3, 0.3, 1).height).toBeLessThan(top.height);
+    expect(spatterAt(0, 3, 0.3, 1).opacity).toBeLessThan(rising.opacity);
+    expect(spatterAt(1, 3, 0.2, 0).opacity).toBe(0);
+    expect(spatterAt(0, 3, -1 / 3, 1)).toEqual(spatterAt(0, 3, 0, 1));
   });
 });
