@@ -36,7 +36,8 @@ describe('moonBetween', () => {
       }),
       { numRuns: 300 },
     );
-  });
+    // 300 runs of the full ELP/MPP02 series: two seconds alone, past five under CI's coverage.
+  }, 20_000);
 
   it('gives the exact position on the grid', () => {
     const at = julianDayNumber(2_460_409 + 7 * STEP_DAYS);
