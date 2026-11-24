@@ -1,11 +1,8 @@
 /**
- * The Siberian Traps' fumes (#1192), as an illustration, not a model: vents scattered over the
- * traps, each puffing gas that rises, spreads and drifts east as it thins, and a haze over the
- * globe. How strongly they fume follows the studies' timeline on the crisis clock, seconds since
- * the extinction began: the flood lavas from some 300,000 years before (Burgess & Bowring 2015),
- * the sills baking coal and evaporites from its start, the deadliest gas (Burgess, Muirhead &
- * Bowring 2017; Svensen et al. 2009), and the eruptions going on, waning, for some 500,000 years
- * after. The heights, sizes and haze are drawn to be seen, not to scale.
+ * A volcanic province's fumes (#1192, #1201), as an illustration, not a model: vents scattered
+ * over it, each puffing gas that rises, spreads and drifts east as it thins, and a haze over the
+ * globe. How strongly it fumes follows each province's studies on the crisis clock, seconds since
+ * the extinction began. The heights, sizes and haze are drawn to be seen, not to scale.
  *
  * Pure.
  */
@@ -31,8 +28,13 @@ function ramp(seconds: number, from: number, to: number): number {
   return clamp01((seconds - from) / (to - from));
 }
 
-/** How strongly the traps fume `seconds` after the extinction began. */
-export function fumingAt(seconds: number): Fuming {
+/**
+ * The Siberian Traps (#1192): the flood lavas from some 300,000 years before (Burgess & Bowring
+ * 2015), the sills baking coal and evaporites from its start, the deadliest gas (Burgess,
+ * Muirhead & Bowring 2017; Svensen et al. 2009), and the eruptions going on, waning, for some
+ * 500,000 years after.
+ */
+export function siberianFuming(seconds: number): Fuming {
   // The lavas: from 300 kyr before, on through the extinction, waning to none 600 kyr after.
   const lava = ramp(seconds, -300 * KYR, -290 * KYR) * ramp(seconds, 600 * KYR, 100 * KYR);
   // The sills: from just before its start, through the 60 kyr it took, gone by 200 kyr.
@@ -45,18 +47,55 @@ export function fumingAt(seconds: number): Fuming {
   return { lava, gas, haze };
 }
 
-/** Degrees of the traps' spread from their centre: they cover millions of square kilometres. */
-const SPREAD_DEGREES = 9;
+/** A pulse of eruption at `at`: up over 2,000 years, on for `length`, gone 60,000 years later. */
+function pulse(seconds: number, at: number, length: number): number {
+  return ramp(seconds, at - 2 * KYR, at) * ramp(seconds, at + length + 60 * KYR, at + length);
+}
 
 /**
- * Where `count` vents lie round `center`: scattered over a disc by the golden angle, so they fill
- * it evenly without a pattern, the same each time.
+ * The Central Atlantic Magmatic Province (#1201): sills and intrusions from some 100,000 years
+ * before the first lavas, those into organic-rich rock as the extinction began (Davies et al.
+ * 2017); then the lavas, with the extinction, in four pulses over about 600,000 years (Blackburn
+ * et al. 2013), each eruption of a few centuries carrying deep carbon dioxide (Capriolo et al.
+ * 2020). Where in those 600,000 years the pulses fell is drawn evenly: an assumption.
  */
-export function ventsAround(center: GeoPoint, count: number): GeoPoint[] {
+export function campFuming(seconds: number): Fuming {
+  const lava = Math.max(...[0, 200, 400, 600].map((at) => pulse(seconds, at * KYR, 20 * KYR)));
+  const gas = Math.max(
+    0.45 * ramp(seconds, -100 * KYR, -95 * KYR) * ramp(seconds, 0, -5 * KYR),
+    pulse(seconds, 0, 20 * KYR),
+  );
+  const haze = Math.max(
+    0.3 * lava,
+    ramp(seconds, -5 * KYR, 10 * KYR) * ramp(seconds, 300 * KYR, 60 * KYR),
+  );
+  return { lava, gas, haze };
+}
+
+/**
+ * The Emeishan Traps (#1201): eruptions into the sea, violent with steam, beginning as the
+ * end-Guadalupian extinction did (Wignall et al. 2009), the flood basalts going on, waning, for
+ * up to three million years (Shellnutt 2014).
+ */
+export function emeishanFuming(seconds: number): Fuming {
+  const lava = ramp(seconds, -5 * KYR, 0) * ramp(seconds, 3000 * KYR, 500 * KYR);
+  const gas = ramp(seconds, -5 * KYR, 0) * ramp(seconds, 150 * KYR, 50 * KYR);
+  const haze = Math.max(
+    0.25 * lava,
+    ramp(seconds, 0, 20 * KYR) * ramp(seconds, 300 * KYR, 100 * KYR),
+  );
+  return { lava, gas, haze };
+}
+
+/**
+ * Where `count` vents lie within `spread` degrees of `center`: scattered over a disc by the
+ * golden angle, so they fill it evenly without a pattern, the same each time.
+ */
+export function ventsAround(center: GeoPoint, count: number, spread: number): GeoPoint[] {
   const golden = Math.PI * (3 - Math.sqrt(5));
   const cos = Math.cos((center.latitude * Math.PI) / 180);
   return Array.from({ length: count }, (_, index) => {
-    const out = SPREAD_DEGREES * Math.sqrt((index + 0.5) / count);
+    const out = spread * Math.sqrt((index + 0.5) / count);
     const turn = index * golden;
     return {
       latitude: center.latitude + out * Math.sin(turn),
