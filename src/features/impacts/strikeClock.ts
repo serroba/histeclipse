@@ -6,14 +6,7 @@
  * seconds since the strike, each frame it plays and each time it is moved.
  */
 
-import {
-  clockStep,
-  clockText,
-  CLOCK_END,
-  positionAt,
-  secondsAt,
-  STRIKE_AT,
-} from '../../deepTime/strikeClock';
+import { clockStep, clockText, CLOCK_END, positionAt, secondsAt } from '../../deepTime/strikeClock';
 import { DEFAULT_PACE, PACE_LABELS, PACES, type Pace } from '../../deepTime/playSpeed';
 import { element } from '../../ui/dom';
 import { createTransport, type Transport } from '../../ui/transport';
@@ -169,9 +162,8 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
     // A late frame moves it on by at most a fifth of a second: a hitch pauses it, never skips.
     const seconds = last === null ? 0 : Math.min(0.2, (now - last) / 1000);
     last = now;
-    // The approach plays at a third of the pace, so the strike can be seen coming.
-    const step = clockStep(speed.value as Pace, seconds);
-    moveTo(position + step * (position < STRIKE_AT ? 1 / 3 : 1));
+    // Slower over the approach, faster once the sky has cleared (#1187).
+    moveTo(position + clockStep(speed.value as Pace, seconds, position));
     if (position >= CLOCK_END) {
       stop();
       return;

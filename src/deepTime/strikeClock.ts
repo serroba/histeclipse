@@ -33,9 +33,23 @@ export function positionAt(seconds: number): number {
 /** Slider units a second at each pace: the whole clock in about a minute, 20 s or 7 s. */
 const UNITS_PER_SECOND: Readonly<Record<Pace, number>> = { slow: 0.25, normal: 0.75, fast: 2 };
 
-/** How far along the slider play moves in `seconds` of play at `pace`. */
-export function clockStep(pace: Pace, seconds: number): number {
-  return UNITS_PER_SECOND[pace] * seconds;
+/**
+ * Where the quiet stretch begins: ten years after the strike, once the sky has cleared. From
+ * there to the end the globe barely changes and only the phases' words do, so the clock runs
+ * twice as fast (#1187): Space pauses it to read one.
+ */
+export const QUIET_AT = positionAt(10 * YEAR);
+
+/** How much faster the clock runs over the approach, the strike's own time and the quiet. */
+function paceAt(position: number): number {
+  // The approach at a third, so the strike can be seen coming.
+  if (position < STRIKE_AT) return 1 / 3;
+  return position >= QUIET_AT ? 2 : 1;
+}
+
+/** How far along the slider play moves from `position` in `seconds` of play at `pace`. */
+export function clockStep(pace: Pace, seconds: number, position = STRIKE_AT): number {
+  return UNITS_PER_SECOND[pace] * paceAt(position) * seconds;
 }
 
 const UNITS: readonly (readonly [number, string])[] = [
