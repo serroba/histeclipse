@@ -17,12 +17,25 @@ export interface PackedMonth {
   readonly colours?: (packed: Uint8ClampedArray, bound: number) => Uint8ClampedArray;
 }
 
+/** Each map coloured, kept while its month is (#1045): going back to it costs nothing. */
+const colouredMaps = new WeakMap<PackedMonth, HTMLCanvasElement | null>();
+
 /** The image coloured once, at its own size, ready to stretch over Earth's. */
 export function coloured(packed: PackedMonth): HTMLCanvasElement | null {
+  const kept = colouredMaps.get(packed);
+  if (kept !== undefined) return kept;
+  const made = colour(packed);
+  colouredMaps.set(packed, made);
+  return made;
+}
+
+function colour(packed: PackedMonth): HTMLCanvasElement | null {
   const canvas = document.createElement('canvas');
   canvas.width = packed.image.width;
   canvas.height = packed.image.height;
-  const context = canvas.getContext('2d');
+  // Read back once it is drawn: kept in memory, not on the GPU, whose read-back stalled a
+  // phone's frame for each month played (#1045).
+  const context = canvas.getContext('2d', { willReadFrequently: true });
   if (context === null) return null;
   context.drawImage(packed.image, 0, 0);
   const pixels = context.getImageData(0, 0, canvas.width, canvas.height);

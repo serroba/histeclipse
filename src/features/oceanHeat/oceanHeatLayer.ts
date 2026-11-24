@@ -18,7 +18,8 @@ export function colouredMap(packed: PackedMap): HTMLCanvasElement | null {
   const canvas = document.createElement('canvas');
   canvas.width = packed.image.width;
   canvas.height = packed.image.height;
-  const context = canvas.getContext('2d');
+  // Read back once it is drawn: kept in memory, not on the GPU (#1045).
+  const context = canvas.getContext('2d', { willReadFrequently: true });
   if (context === null) return null;
   context.drawImage(packed.image, 0, 0);
   const pixels = context.getImageData(0, 0, canvas.width, canvas.height);

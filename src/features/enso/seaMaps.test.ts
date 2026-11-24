@@ -56,7 +56,8 @@ describe('the sea temperature maps behind El Niño', () => {
   it('Given it off, Then nothing is painted or loaded', () => {
     const { sea, painted } = setUp();
     sea.show(false, month(1997, 12));
-    expect(painted).toEqual([null]);
+    // Nothing of these was painted, so nothing is taken away (#1045).
+    expect(painted).toEqual([]);
     expect(sea.index()).toBeNull();
   });
 
@@ -87,14 +88,21 @@ describe('the sea temperature maps behind El Niño', () => {
     ]);
   });
 
-  it('Given a month before the maps, Then nothing is painted', async () => {
+  it('Given a month before the maps, Then nothing is painted, and a map painted is taken away', async () => {
     const { sea, painted, refresh } = setUp();
     sea.show(true, month(1970, 1));
     await vi.waitFor(() => {
       expect(refresh).toHaveBeenCalledOnce();
     });
     sea.show(true, month(1970, 1));
-    expect(painted).toEqual([null]);
+    expect(painted).toEqual([]);
+    sea.show(true, month(1997, 12));
+    await vi.waitFor(() => {
+      expect(painted).toEqual(['/data/enso-sst/1997-12.png']);
+    });
+    sea.show(true, month(1970, 1));
+    sea.show(true, month(1970, 1));
+    expect(painted).toEqual(['/data/enso-sst/1997-12.png', null]);
   });
 
   it('Given a month moved past before its map loads, Then that map is kept but not painted', async () => {
@@ -107,7 +115,7 @@ describe('the sea temperature maps behind El Niño', () => {
     sea.show(true, month(1960, 1));
     await Promise.resolve();
     await Promise.resolve();
-    expect(painted).toEqual([null]);
+    expect(painted).toEqual([]);
   });
 
   it('Given the index or a map does not load, Then it says so, and the index is not fetched again at the next month (#762)', async () => {

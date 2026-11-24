@@ -12,6 +12,11 @@ describe('places on a painted map', () => {
     rocks.show('rocks');
     ways.show('ways');
     expect(slots.painters()).toEqual(['rocks', 'ways', 'dates']);
+    expect(slots.shown()).toEqual([
+      { order: 0, painter: 'rocks' },
+      { order: 10, painter: 'ways' },
+      { order: 20, painter: 'dates' },
+    ]);
   });
 
   it('Given a part taken away, Then the rest still paint', () => {
@@ -21,6 +26,7 @@ describe('places on a painted map', () => {
     rocks.show('rocks');
     rocks.show(null);
     expect(slots.painters()).toEqual(['ways']);
+    expect(slots.shown()).toEqual([{ order: 10, painter: 'ways' }]);
   });
 
   it('Given the states shown, then taken away, Then the map says whether they paint', () => {
