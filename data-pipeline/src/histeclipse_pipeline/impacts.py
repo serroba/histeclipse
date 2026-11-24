@@ -238,9 +238,10 @@ def _post(url: str, fields: dict[str, str]) -> bytes:  # pragma: no cover - need
     return body
 
 
-def _reconstruct(
+def reconstruct_points(
     points: list[tuple[float, float]], ma: int
 ) -> list[Position]:  # pragma: no cover - needs network access
+    """Where each point (latitude, longitude) lay `ma` million years ago on PALEOMAP."""
     coordinates = ",".join(f"{lon},{lat}" for lat, lon in points)
     body = _post(
         GWS_URL,
@@ -260,7 +261,7 @@ def fetch_impacts(path: Path) -> int:  # pragma: no cover - needs network access
         time.sleep(1)
     kept = [impact for impact in impacts if not misplaced(impact)]
     left_out = [impact for impact in impacts if misplaced(impact)]
-    then = positions_then(kept, _reconstruct)
+    then = positions_then(kept, reconstruct_points)
     accessed = dt.datetime.now(tz=dt.UTC).date().isoformat()
     data = impacts_file(kept, then, left_out, accessed)
     path.parent.mkdir(parents=True, exist_ok=True)

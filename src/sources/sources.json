@@ -54,6 +54,12 @@
     "cite": "Alexander, Bowden, Fogel, Howard, Herd & Nittler (2012), The provenances of asteroids, and their contributions to the volatile inventories of the terrestrial planets, Science 337, 721–723",
     "url": "https://doi.org/10.1126/science.1223474"
   },
+  "algeoScheckler1998": {
+    "name": "Algeo & Scheckler 1998",
+    "kind": "paper",
+    "cite": "Algeo, T. J. & Scheckler, S. E. (1998), Terrestrial-marine teleconnections in the Devonian: links between the evolution of land plants, weathering processes, and marine anoxic events, Philosophical Transactions of the Royal Society B 353, 113–130. Our summary: as trees and seed plants spread through the Devonian, deeper roots and soils sped weathering, washing nutrients into the seas; the authors link this to the oxygen-poor seas of the long Devonian crisis that decimated tropical reefs",
+    "url": "https://doi.org/10.1098/rstb.1998.0195"
+  },
   "allwood2006": {
     "name": "Allwood et al. 2006",
     "kind": "paper",
@@ -124,6 +130,12 @@
     "kind": "paper",
     "cite": "Bahcall, J. N., Serenelli, A. M. & Basu, S. (2005). New solar opacities, abundances, helioseismology, and neutrino fluxes. The Astrophysical Journal 621, L85–L88",
     "url": "https://doi.org/10.1086/428929"
+  },
+  "bambach2006": {
+    "name": "Bambach 2006",
+    "kind": "paper",
+    "cite": "Bambach, R. K. (2006), Phanerozoic biodiversity mass extinctions, Annual Review of Earth and Planetary Sciences 34, 127–155. Our summary: in Sepkoski’s compendium of genera only three events stand apart as a separate class of high extinction, yet 18 intervals fit the definition of a mass extinction, and they differ widely in timing and effect; no consensus has been reached on the kill mechanism of any marine mass extinction",
+    "url": "https://doi.org/10.1146/annurev.earth.33.092203.122654"
   },
   "barber2003": {
     "name": "Barber 2003",
@@ -221,6 +233,18 @@
     "url": "https://www.bom.gov.au/climate/history/enso/",
     "licence": "© Commonwealth of Australia, Bureau of Meteorology; no licence stated on the page"
   },
+  "bondGrasby2017": {
+    "name": "Bond & Grasby 2017",
+    "kind": "paper",
+    "cite": "Bond, D. P. G. & Grasby, S. E. (2017), On the causes of mass extinctions, Palaeogeography, Palaeoclimatology, Palaeoecology 478, 3–29. Our summary: a review of almost twenty crises from the Cambrian to the end-Cretaceous; the timing of large igneous provinces and at least half of the major extinctions makes large-scale volcanism the main driver, most crises coming with warming and oxygen-poor seas",
+    "url": "https://doi.org/10.1016/j.palaeo.2016.11.005"
+  },
+  "bondWignall2008": {
+    "name": "Bond & Wignall 2008",
+    "kind": "paper",
+    "cite": "Bond, D. P. G. & Wignall, P. B. (2008), The role of sea-level change and marine anoxia in the Frasnian–Famennian (Late Devonian) mass extinction, Palaeogeography, Palaeoclimatology, Palaeoecology 263, 107–118. Our summary: the Late Devonian extinction’s sections record pulses of sea-level rise and oxygen-poor water, the Kellwasser horizons, which the authors hold central to it",
+    "url": "https://doi.org/10.1016/j.palaeo.2008.02.015"
+  },
   "boucot2013": {
     "name": "Boucot, Chen & Scotese 2013",
     "kind": "paper",
@@ -257,6 +281,18 @@
     "kind": "paper",
     "cite": "Burgess, Bowring & Shen (2014), High-precision timeline for Earth’s most severe extinction, PNAS 111, 3316–3321",
     "url": "https://doi.org/10.1073/pnas.1317692111"
+  },
+  "burgess2017": {
+    "name": "Burgess, Muirhead & Bowring 2017",
+    "kind": "paper",
+    "cite": "Burgess, S. D., Muirhead, J. D. & Bowring, S. A. (2017), Initial pulse of Siberian Traps sills as the trigger of the end-Permian mass extinction, Nature Communications 8, 164. Our summary: the extinction’s onset coincides with a change in the Siberian Traps from flood lavas to sills spreading through the sediments; their heat baked volatile-rich rocks, releasing greenhouse gases, and the authors name this first pulse of sills the deadly interval",
+    "url": "https://doi.org/10.1038/s41467-017-00083-9"
+  },
+  "burgessBowring2015": {
+    "name": "Burgess & Bowring 2015",
+    "kind": "paper",
+    "cite": "Burgess, S. D. & Bowring, S. A. (2015), High-precision geochronology confirms voluminous magmatism before, during, and after Earth’s most severe extinction, Science Advances 1, e1500470. Our summary: the end-Permian extinction took more than 90% of marine and 75% of land species in at most 61 ± 48 thousand years; uranium–lead dates show about two thirds of the Siberian Traps’ lavas erupted before and during it, and more after",
+    "url": "https://doi.org/10.1126/sciadv.1500470"
   },
   "caesar2018": {
     "name": "Caesar et al. 2018",
@@ -839,6 +875,12 @@
     "cite": "Hale, G. E. (1897), The Yerkes Observatory of the University of Chicago, The Astrophysical Journal 6, 37 (doi:10.1086/140373): the 40-inch refractor’s tube 60 ft long, its column 43 ft tall, its axes and gears, its 90 ft dome and rising floor, as its first director described them",
     "url": "https://doi.org/10.1086/140373"
   },
+  "harper2014": {
+    "name": "Harper, Hammarlund & Rasmussen 2014",
+    "kind": "paper",
+    "cite": "Harper, D. A. T., Hammarlund, E. U. & Rasmussen, C. M. Ø. (2014), End Ordovician extinctions: A coincidence of causes, Gondwana Research 25, 1294–1307. Our summary: the end-Ordovician extinction came in two pulses with the Hirnantian glaciation, the first as the ice grew and the seas cooled and fell, the second as it melted and oxygen-poor water spread; no single cause, but several together",
+    "url": "https://doi.org/10.1016/j.gr.2012.12.021"
+  },
   "harrison2013Nustar": {
     "name": "Harrison et al. (2013), The Nuclear Spectroscopic Telescope Array (NuSTAR)",
     "kind": "paper",
@@ -1059,6 +1101,12 @@
     "kind": "paper",
     "cite": "Jiang, P., Yue, Y., Gan, H., et al. (2019), Commissioning progress of the FAST, Science China Physics, Mechanics & Astronomy 62, 959502 (doi:10.1007/s11433-018-9376-1), from the National Astronomical Observatories of China: the reflector 500 m across, curved to a 315 m radius, its feed cabin some 140 m above it on six cables. A review of how the telescope was built and brought into use",
     "url": "https://doi.org/10.1007/s11433-018-9376-1"
+  },
+  "joachimskiBuggisch2002": {
+    "name": "Joachimski & Buggisch 2002",
+    "kind": "paper",
+    "cite": "Joachimski, M. M. & Buggisch, W. (2002), Conodont apatite δ18O signatures indicate climatic cooling as a trigger of the Late Devonian mass extinction, Geology 30, 711–714. Our summary: oxygen isotopes in conodonts show two coolings of low-latitude surface waters by 5–7 °C during the late Frasnian crisis, after carbon burial drew down CO₂; tropical shallow-water faunas adapted to warmth were hit hardest",
+    "url": "https://doi.org/10.1130/0091-7613(2002)030<0711:CAOSIC>2.0.CO;2"
   },
   "jodrellBank": {
     "name": "Jodrell Bank (University of Manchester)",
@@ -1349,6 +1397,12 @@
     "cite": "Heaton, T. J., et al. (2020). Marine20—the marine radiocarbon age calibration curve (0–55,000 cal BP). Radiocarbon 62, 779–820",
     "url": "https://doi.org/10.1017/RDC.2020.68",
     "licence": "CC BY 4.0"
+  },
+  "marzoli1999": {
+    "name": "Marzoli et al. 1999",
+    "kind": "paper",
+    "cite": "Marzoli, A., Renne, P. R., Piccirillo, E. M., et al. (1999), Extensive 200-million-year-old continental flood basalts of the Central Atlantic Magmatic Province, Science 284, 616–618. Our summary: basalts in once-joined North America, Europe, Africa and South America form one province, over 7 million km², erupted in a few million years with a peak 200 million years ago as Pangaea broke up, close in time to the Triassic–Jurassic extinction",
+    "url": "https://doi.org/10.1126/science.284.5414.616"
   },
   "matthes2017": {
     "name": "CMIP6 solar forcing (Matthes et al. 2017)",
@@ -1941,6 +1995,12 @@
     "url": "https://doi.org/10.1038/nclimate2554",
     "licence": "None stated"
   },
+  "rampinoShen2019": {
+    "name": "Rampino & Shen 2019",
+    "kind": "paper",
+    "cite": "Rampino, M. R. & Shen, S.-Z. (2019), The end-Guadalupian (259.8 Ma) biodiversity crisis: the sixth major mass extinction?, Historical Biology 33, 716–722. Our summary: by the genera lost, and above all by its ecological effect, the end-Guadalupian (end-Capitanian) extinction belongs with the five usually counted, making six",
+    "url": "https://doi.org/10.1080/08912963.2019.1658096"
+  },
   "range2022": {
     "name": "Range et al. 2022",
     "kind": "paper",
@@ -1953,6 +2013,12 @@
     "cite": "Moat, B. I., Smeed, D. A., Rayner, D., Johns, W. E., Smith, R. H., Volkov, D. L., Elipot, S., Petit, T., Kajtar, J. B., Baringer, M. O., Collins, J. (2026), Atlantic meridional overturning circulation observed by the RAPID-MOCHA-WBTS array at 26N from 2004 to 2024 (v2024.1a), British Oceanographic Data Centre. The overturning measured continuously since April 2004 by moored instruments from the Bahamas to Africa, with Florida Strait cable transports and ERA5 Ekman transport. Data from the RAPID AMOC monitoring project are funded by the Natural Environment Research Council, the National Science Foundation and NOAA, and are freely available from rapid.ac.uk",
     "url": "https://doi.org/10.5285/48d0bf43-0598-ceb2-e063-7086abc062f1",
     "licence": "Open Government Licence v3.0"
+  },
+  "raupSepkoski1982": {
+    "name": "Raup & Sepkoski 1982",
+    "kind": "paper",
+    "cite": "Raup, D. M. & Sepkoski, J. J. (1982), Mass extinctions in the marine fossil record, Science 215, 1501–1503. Our summary: in a compilation of marine families, four mass extinctions stand apart from the background, late in the Ordovician, Permian, Triassic and Cretaceous; a fifth, in the Devonian, stands out but not significantly: the origin of “the Big Five”",
+    "url": "https://doi.org/10.1126/science.215.4539.1501"
   },
   "rayner2003hadisst": {
     "name": "HadISST 1.1 (Rayner et al.)",
@@ -1973,6 +2039,12 @@
     "kind": "paper",
     "cite": "Riahi, K., van Vuuren, D. P., Kriegler, E., Edmonds, J., et al. (2017), The Shared Socioeconomic Pathways and their energy, land use, and greenhouse gas emissions implications: An overview, Global Environmental Change 42, 153–168. Abstract: the five SSP narratives of how society might develop, and the energy, land-use and emissions scenarios that integrated assessment models built from them",
     "url": "https://doi.org/10.1016/j.gloenvcha.2016.05.009"
+  },
+  "ricci2013": {
+    "name": "Ricci et al. 2013",
+    "kind": "paper",
+    "cite": "Ricci, J., Quidelleur, X., Pavlov, V., et al. (2013), New 40Ar/39Ar and K–Ar ages of the Viluy traps (Eastern Siberia): Further evidence for a relationship with the Frasnian–Famennian mass extinction, Palaeogeography, Palaeoclimatology, Palaeoecology 386, 531–540. Our summary: new argon dates place eruptions of the Viluy Traps near the Frasnian–Famennian boundary, supporting a link between them and the Late Devonian extinction",
+    "url": "https://doi.org/10.1016/j.palaeo.2013.06.020"
   },
   "richardson2023": {
     "name": "Richardson et al. 2023",
@@ -2036,6 +2108,12 @@
     "kind": "paper",
     "cite": "Saur, J. et al. (2015). The search for a subsurface ocean in Ganymede with Hubble Space Telescope observations of its auroral ovals. Journal of Geophysical Research: Space Physics 120, 1715–1737",
     "url": "https://doi.org/10.1002/2014JA020778"
+  },
+  "schaller2011": {
+    "name": "Schaller, Wright & Kent 2011",
+    "kind": "paper",
+    "cite": "Schaller, M. F., Wright, J. D. & Kent, D. V. (2011), Atmospheric Pco2 perturbations associated with the Central Atlantic Magmatic Province, Science 331, 1404–1409. Our summary: soil carbonates between the province’s lavas in the Newark Basin show CO₂ rising from about 2,000 to about 4,400 ppm after the first lavas, then falling back over 300,000 years, a pattern repeated after the next two",
+    "url": "https://doi.org/10.1126/science.1199011"
   },
   "schoene2019": {
     "name": "Schoene et al. 2019",
@@ -2176,6 +2254,12 @@
     "cite": "Sunyaev, R., Arefiev, V., Babyshkin, V., et al. (2021), SRG X-ray orbital observatory, Astronomy & Astrophysics 656, A132 (doi:10.1051/0004-6361/202141179), with Predehl et al. (2021, A&A 647, A1, doi:10.1051/0004-6361/202039313) on eROSITA and Pavlinsky et al. (2021, A&A 650, A42, doi:10.1051/0004-6361/202040265) on ART-XC: eROSITA 1.9 m across and 3.2 m tall, ART-XC 0.9 m across and 3.5 m tall, side by side on the Navigator platform. The observatory and its telescopes",
     "url": "https://doi.org/10.1051/0004-6361/202141179",
     "licence": "CC BY 4.0"
+  },
+  "svensen2009": {
+    "name": "Svensen et al. 2009",
+    "kind": "paper",
+    "cite": "Svensen, H., Planke, S., Polozov, A. G., et al. (2009), Siberian gas venting and the end-Permian environmental crisis, Earth and Planetary Science Letters 277, 490–500. Our summary: sills of the Siberian Traps intruded the Tunguska Basin’s evaporites, coal and other organic-rich rocks, and hundreds of pipes vented the greenhouse gases and halocarbons this made into the air",
+    "url": "https://doi.org/10.1016/j.epsl.2008.11.015"
   },
   "tabor2020": {
     "name": "Tabor et al. 2020",
@@ -2326,6 +2410,12 @@
     "cite": "Westerhold, Marwan, Drury, Liebrand, Agnini, Anagnostou, Barnet, Bohaty, De Vleeschouwer, Florindo, Frederichs, Hodell, Holbourn, Kroon, Lauretano, Littler, Lourens, Lyle, Pälike, Röhl, Tian, Wilkens, Wilson & Zachos (2020), An astronomically dated record of Earth's climate and its predictability over the last 66 million years, Science 369, 1383–1387, doi:10.1126/science.aba6853; data: Westerhold (2020), S34. Binned and LOESS smoothed Cenozoic deep-sea benthic foraminifer stable carbon and oxygen isotope reference splice, PANGAEA, in the CENOGRID series doi:10.1594/PANGAEA.917503",
     "url": "https://doi.org/10.1594/PANGAEA.917717",
     "licence": "CC BY 4.0"
+  },
+  "wignall2009": {
+    "name": "Wignall et al. 2009",
+    "kind": "paper",
+    "cite": "Wignall, P. B., Sun, Y., Bond, D. P. G., et al. (2009), Volcanism, mass extinction, and carbon isotope fluctuations in the Middle Permian of China, Science 324, 1179–1182. Our summary: in southwest China the Emeishan lavas lie among the Middle Permian limestones, so their timing can be read in one place: the eruptions began with the end-Guadalupian extinction of foraminifers and algae",
+    "url": "https://doi.org/10.1126/science.1171956"
   },
   "wilde2001": {
     "name": "Wilde et al. 2001",

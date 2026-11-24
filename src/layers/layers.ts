@@ -10,6 +10,7 @@ import { asteroids } from './asteroids';
 import { carbonMade } from './carbonMade';
 import { dates } from './dates';
 import { eclipses } from './eclipses';
+import { extinctions } from './extinctions';
 import { empires } from './empires';
 import { enso } from './enso';
 import { fossils } from './fossils';
@@ -51,6 +52,7 @@ const ALL = [
   periods,
   dates,
   impacts,
+  extinctions,
   volcanoes,
   ozone,
   warming,
@@ -97,7 +99,7 @@ export interface LayerGroup {
 export const LAYER_GROUPS: readonly LayerGroup[] = [
   { name: 'Space', layers: [eclipses, orbits, spacecraft, asteroids, telescopes] },
   { name: 'Earth', layers: [rocks, plates, impacts, volcanoes] },
-  { name: 'Life', layers: [fossils] },
+  { name: 'Life', layers: [fossils, extinctions] },
   { name: 'People', layers: [empires, ways, periods, dates, genomes, humans] },
   {
     name: 'Climate',

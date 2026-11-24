@@ -1,0 +1,30 @@
+{
+  "title": "Mass extinctions",
+  "what": "The great mass extinctions, where their causes and records lay at the time, and what the studies say caused each.",
+  "sources": [
+    "raupSepkoski1982",
+    "bambach2006",
+    "rampinoShen2019",
+    "bondGrasby2017",
+    "finnegan2011",
+    "harper2014",
+    "bondWignall2008",
+    "joachimskiBuggisch2002",
+    "algeoScheckler1998",
+    "ricci2013",
+    "wignall2009",
+    "burgess2014",
+    "burgessBowring2015",
+    "burgess2017",
+    "svensen2009",
+    "marzoli1999",
+    "blackburn2013",
+    "schaller2011",
+    "schulte2010",
+    "hull2020",
+    "schoene2019",
+    "sprain2019",
+    "gplates"
+  ],
+  "how": "Each extinction is marked within 5 million years of its time: where its cause lay, or a cause held or argued (the Siberian, Emeishan, Deccan and Viluy Traps, the Central Atlantic Magmatic Province, Chicxulub, the Hirnantian ice sheet’s deposits in the Sahara), and where it is dated (the boundary’s reference section). The places are approximate, compiled for this site, and carried back on the PALEOMAP model by the GPlates Web Service. Dates are the milestones’, with their sources. The list itself is argued: the usual five are Raup & Sepkoski’s, Bambach finds only three stand apart, and Rampino & Shen put the end-Guadalupian forward as a sixth, shown here as argued. Where the causes are argued, the card gives each side. Bond & Grasby’s review ties most great extinctions to large igneous provinces."
+}
