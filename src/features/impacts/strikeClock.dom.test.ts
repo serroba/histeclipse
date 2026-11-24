@@ -115,6 +115,33 @@ describe('the strike clock’s panel (#1173)', () => {
     expect(made.root.dataset['playing']).toBe('false');
   });
 
+  it('says nothing of a phase before the first, and takes a second open or pause in its stride', () => {
+    const onMoment = vi.fn();
+    const made = createStrikeClock({
+      title: 'Chicxulub, in its own time',
+      phases: [{ id: 'late', from: 60, title: 'Late', text: 'Later.', sources: [] }],
+      onMoment,
+      onClose: vi.fn(),
+    });
+    document.body.append(made.root);
+    made.open();
+    made.open();
+    expect(frames).toHaveLength(1);
+    expect(made.root.dataset['phase']).toBe('');
+    expect(made.root.querySelector('.strike-clock-phase')?.textContent).toBe('');
+    expect(made.root.querySelector('.strike-clock-sources')?.childNodes).toHaveLength(0);
+    const play = made.root.querySelector<HTMLButtonElement>('.strike-clock-play');
+    play?.click();
+    expect(made.root.dataset['playing']).toBe('false');
+    // Moved while paused: it stays paused.
+    const slider = made.root.querySelector<HTMLInputElement>('.strike-clock-range');
+    if (slider === null) throw new Error('no slider');
+    slider.value = String(positionAt(120));
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(made.root.dataset['playing']).toBe('false');
+    expect(made.root.dataset['phase']).toBe('late');
+  });
+
   it('closes, once, telling whoever opened it', () => {
     const { made, onClose } = clock();
     made.open();
