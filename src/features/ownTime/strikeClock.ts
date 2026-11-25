@@ -84,6 +84,7 @@ function clockView(title: string, scale: ClockScale, transport: Transport): Cloc
     view.phaseText,
     view.sources,
     element('div', { class: 'strike-clock-track' }, transport.slider, marks),
+    element('p', { class: 'strike-clock-hint' }, scale.hint),
     element('div', { class: 'strike-clock-controls' }, transport.play, speed),
   );
   return { root, speed, closeButton, ...view };
