@@ -10,6 +10,8 @@
  */
 
 import type { ClockScale } from '../../deepTime/clockScale';
+import type { StoryDate } from '../../deepTime/storyDate';
+import { formatMa } from '../../time/format';
 import type { Pace } from '../../deepTime/playSpeed';
 import type { GlobeLayer, LayerFactory } from '../../globe/layerHost';
 import type { Capabilities, FeatureCore } from '../feature';
@@ -45,6 +47,11 @@ export interface OwnTimeEvent {
    * one with more takes the clock over. Chicxulub with the Deccan Traps fuming outranks it alone.
    */
   readonly rank?: number;
+  /**
+   * When its clock's zero is, Ma, where dated more closely than the moment it is watched from
+   * (#1222): the end-Permian's start at Meishan, 251.941 Ma, not the 251.9 its card is at.
+   */
+  readonly ma?: number;
   /** Start drawing it, to be moved by its clock. */
   play(tools: OwnTimeTools): OwnTimePlay;
 }
@@ -58,7 +65,17 @@ export interface OwnTime {
    * (`rank`). Says which it did.
    */
   arrive(event: OwnTimeEvent, ma: number): 'clock' | 'offer' | 'already';
+  /**
+   * The moment the open clock is at, lent deep time's header and bar (#1222), so they say the
+   * age and period it shows, not the one deep time is held at; null with none open.
+   */
+  lent(): StoryDate | null;
 }
+
+/** Seconds in a million years. */
+const MYR = 1e6 * 365.25 * 86_400;
+/** How often the header may be written again as a clock plays, ms: four times a second. */
+const LEND_MS = 250;
 
 /**
  * How deep time hands an event over to its clock (#1174): at Slow, on its own; faster, a reader
@@ -70,7 +87,39 @@ export function handover(pace: Pace): 'clock' | 'offer' {
 
 type Lent = Pick<Capabilities, 'strikes' | 'deepTime' | 'overPage'>;
 
-export function createOwnTime(core: Pick<FeatureCore, 'globe' | 'change'>, lent: Lent): OwnTime {
+/**
+ * The moment lent deep time's header (#1222): the header is written again only when its words
+ * change, and at most every `LEND_MS` as a clock plays; at once when the clock closes.
+ */
+function createLender(core: Pick<FeatureCore, 'refresh'>): {
+  lend(next: StoryDate | null): void;
+  readonly lent: () => StoryDate | null;
+} {
+  let lending: StoryDate | null = null;
+  let writing: ReturnType<typeof setTimeout> | null = null;
+  return {
+    lend(next) {
+      if (next?.when === lending?.when) return;
+      lending = next;
+      if (next === null) {
+        if (writing !== null) clearTimeout(writing);
+        writing = null;
+        core.refresh();
+        return;
+      }
+      writing ??= setTimeout(() => {
+        writing = null;
+        core.refresh();
+      }, LEND_MS);
+    },
+    lent: () => lending,
+  };
+}
+
+export function createOwnTime(
+  core: Pick<FeatureCore, 'globe' | 'change' | 'refresh'>,
+  lent: Lent,
+): OwnTime {
   const layers = new Map<LayerFactory<never>, GlobeLayer<never>>();
   const tools: OwnTimeTools = {
     strikes: lent.strikes,
@@ -88,6 +137,7 @@ export function createOwnTime(core: Pick<FeatureCore, 'globe' | 'change'>, lent:
   let open: { readonly key: string; readonly rank: number } | null = null;
   let offered: { readonly key: string; readonly rank: number; readonly until: number } | null =
     null;
+  const lender = createLender(core);
 
   function watch(event: OwnTimeEvent, ma: number | null): void {
     offer.hide();
@@ -99,16 +149,23 @@ export function createOwnTime(core: Pick<FeatureCore, 'globe' | 'change'>, lent:
     if (ma !== null) core.change((state) => (state.ma === null ? state : { ...state, ma }));
     const playing = event.play(tools);
     open = { key: event.key, rank: event.rank ?? 0 };
+    const zero = event.ma ?? ma;
+    document.documentElement.toggleAttribute('data-own-time', true);
     clock = createStrikeClock({
       title: event.title,
       phases: event.phases,
       scale: event.scale,
       onMoment: (seconds) => {
         playing.at(seconds);
+        if (zero === null) return;
+        const at = zero - seconds / MYR;
+        lender.lend({ when: formatMa(at), what: null, ma: at });
       },
       onClose: () => {
         playing.end();
         open = null;
+        document.documentElement.toggleAttribute('data-own-time', false);
+        lender.lend(null);
         if (held) lent.deepTime.resume();
       },
     });
@@ -136,5 +193,6 @@ export function createOwnTime(core: Pick<FeatureCore, 'globe' | 'change'>, lent:
       });
       return 'offer';
     },
+    lent: lender.lent,
   };
 }

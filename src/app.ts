@@ -261,7 +261,8 @@ export async function startApp(root: HTMLElement): Promise<void> {
     header: (ma, story, when) => {
       moment.deepHeader(ma, story, when);
     },
-    storyDate: boundaries.storyDate,
+    // A story's date, or an own-time clock's moment (#1222).
+    storyDate: () => boundaries.storyDate() ?? features.storyDate(),
     bar: (state, moment) => ({
       ...features.deepBar(state, moment),
       chips: features.deep(state, moment),

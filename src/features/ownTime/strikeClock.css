@@ -174,3 +174,11 @@
   font: inherit;
   cursor: pointer;
 }
+
+/* While a clock is open deep time is held: the bar's play and pace give way to the clock's, so
+   one speed is offered at a time (#1222). */
+:root[data-own-time] .deep-play,
+:root[data-own-time] .deep-speed,
+:root[data-own-time] .deep-rate {
+  visibility: hidden;
+}
