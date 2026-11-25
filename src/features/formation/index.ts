@@ -12,6 +12,7 @@
 
 import {
   APPROACH,
+  FIRST_SOLIDS_MA,
   formationMa,
   formationScale,
   formationSeconds,
@@ -20,6 +21,8 @@ import { IMPACTS, type ImpactModel } from '../../deepTime/sketch';
 import type { ViewState } from '../../state/viewState';
 import type { Capabilities } from '../feature';
 import type { OwnTimeEvent } from '../ownTime';
+import { DEFAULT_GROWTH_MODEL, earthRadius, type GrowthModel } from '../../deepTime/growth';
+import { growthLayer } from './growthLayer';
 import { impactLayer } from './impactLayer';
 import { IMPACT_DISTANCE, IMPACT_VIEW } from './impactModel';
 import { formationPhases } from './phases';
@@ -27,9 +30,23 @@ import { formationPhases } from './phases';
 /** The formation clock's key, the one it is watched by. */
 const FORMATION_KEY = 'formation';
 
-/** Earth and the Moon forming, for an impact as `model` dates it. */
-export function formationEvent(model: ImpactModel): OwnTimeEvent {
+/** How far out the camera stands while Earth grows, Earth radii: room for it to fill. */
+const GROWTH_DISTANCE = 7;
+
+/** Seconds in a million years. */
+const MYR = 1e6 * 365.25 * 86_400;
+
+/**
+ * Earth and the Moon forming, for an impact as `model` dates it, Earth growing before it as
+ * `growth` has it (#1219).
+ */
+export function formationEvent(
+  model: ImpactModel,
+  growth: GrowthModel = DEFAULT_GROWTH_MODEL,
+): OwnTimeEvent {
   const impactMa = IMPACTS[model].ma;
+  // Millions of years from the first solids to the impact.
+  const before = FIRST_SOLIDS_MA - impactMa;
   return {
     key: FORMATION_KEY,
     title: 'Earth and the Moon forming, in their own time',
@@ -37,7 +54,7 @@ export function formationEvent(model: ImpactModel): OwnTimeEvent {
     scale: formationScale(impactMa),
     offer: 'Watch Earth and the Moon form',
     drawn:
-      'From Theia’s approach, the canonical impact is drawn as an illustration: sizes, speed and distances follow the papers; the paths of single pieces, the glow, and the turning, which follows the time played rather than the years, do not. Hot is white, cooling to red; the Moon grey once crusted.',
+      'Illustration: Earth grows as the model on the rail has it; the impact is the canonical case, its sizes, speed and distances from the papers, the pieces’ paths, glow and turning invented. White is hottest; the Moon greys as it crusts.',
     // Its zero, the impact: the header counts from it, not from where play started.
     ma: impactMa,
     deep: {
@@ -47,11 +64,17 @@ export function formationEvent(model: ImpactModel): OwnTimeEvent {
     play(tools) {
       const on = tools.strikes.on;
       on.dataset['formationClock'] = model;
+      on.dataset['formationGrowth'] = growth;
       const impact = tools.layer(impactLayer);
+      const size = tools.layer(growthLayer);
       // Drawn back once, as Theia comes in, to see the Moon's orbit whole.
       let framed = false;
+      // Opened before it, stood back so Earth is seen to grow against a still frame (#1219).
+      let opened = false;
       return {
         at(seconds) {
+          if (!opened && seconds < -APPROACH) tools.strikes.zoomTo(GROWTH_DISTANCE);
+          opened = true;
           const drawn = seconds >= -APPROACH;
           if (drawn && !framed) {
             tools.strikes.flyTo(IMPACT_VIEW);
@@ -59,10 +82,14 @@ export function formationEvent(model: ImpactModel): OwnTimeEvent {
           }
           framed ||= drawn;
           impact.update(drawn ? seconds : null);
+          // The proto-Earth's size until Theia strikes; whole after.
+          size.update(seconds < 0 ? earthRadius(growth, before + seconds / MYR) : null);
         },
         end() {
           impact.update(null);
+          size.update(null);
           delete on.dataset['formationClock'];
+          delete on.dataset['formationGrowth'];
         },
       };
     },
@@ -102,7 +129,8 @@ export function createFormation(
       const opens =
         !was && playing && opensFormation(was, playing, state.ma, state.impact, lessMotion());
       was = playing;
-      if (opens && state.ma !== null) lent.ownTime.watch(formationEvent(state.impact), state.ma);
+      if (opens && state.ma !== null)
+        lent.ownTime.watch(formationEvent(state.impact, state.growth), state.ma);
     },
   };
 }

@@ -1,6 +1,7 @@
 /**
  * The hypotheses' rail (#1158): at the globe's left, mirroring the layers' rail at its right, a
- * round button for each question the sketch asks at the moment (the Moon-forming impact, where
+ * round button for each question the sketch asks at the moment (how fast Earth grew (#1219), the
+ * Moon-forming impact, where
  * the water came from, how much land, how far a snowball's ice reached), each tagged with the
  * answer chosen. A tap opens a small sheet beside it with every answer and its source; picking
  * one closes it, as Escape or a tap elsewhere do, the focus back on its button. The sketch's
@@ -20,6 +21,7 @@ import {
   WATER_CHOICES,
   WATER_MODELS,
 } from '../../deepTime/sketch';
+import { GROWTH_CHOICES, GROWTH_MODELS } from '../../deepTime/growth';
 import { element } from '../../ui/dom';
 import { layerIcon, spanIcon } from '../../ui/icons';
 import './hypothesisRail.css';
@@ -45,6 +47,16 @@ const after = (label: string): string => label.replace(/^[^:]*:\s*/, '').replace
 
 /** Each question's answers, in the sketch's order. */
 export const QUESTIONS: Readonly<Record<SketchQuestion, Question>> = {
+  growth: {
+    title: 'How fast Earth grew',
+    icon: () => layerIcon('rocks', 20),
+    options: GROWTH_MODELS.map((model) => ({
+      value: model,
+      label: GROWTH_CHOICES[model].label,
+      tag: before(GROWTH_CHOICES[model].label),
+      source: GROWTH_CHOICES[model].source,
+    })),
+  },
   impact: {
     title: 'Moon-forming impact',
     icon: () => layerIcon('impacts', 20),
@@ -87,7 +99,7 @@ export const QUESTIONS: Readonly<Record<SketchQuestion, Question>> = {
   },
 };
 
-const ORDER: readonly SketchQuestion[] = ['impact', 'water', 'land', 'snowball'];
+const ORDER: readonly SketchQuestion[] = ['growth', 'impact', 'water', 'land', 'snowball'];
 
 export interface HypothesisRail {
   readonly root: HTMLElement;

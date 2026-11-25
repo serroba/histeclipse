@@ -5,6 +5,7 @@ import { sketchAt, type SketchChoices } from '../deepTime/sketch';
 import { createDeepSketchNote } from './deepSketchNote';
 
 const CHOICES: SketchChoices = {
+  growth: 'slow',
   impact: 'early',
   land: 'dhuime',
   snowball: 'hard',
@@ -28,6 +29,7 @@ describe('deep time’s sketch note', () => {
       sketch.questions.map(
         (question) =>
           ({
+            growth: 'How fast Earth grew',
             impact: 'Moon-forming impact',
             water: 'Where the water came from',
             land: 'How much land',
@@ -40,8 +42,9 @@ describe('deep time’s sketch note', () => {
   it('Given each picker changed, Then the choice is reported; an unknown value is not', () => {
     const onSketch = vi.fn();
     const note = createDeepSketchNote(onSketch);
-    const [impact, water, land, snowball] = [...note.note.querySelectorAll('select')];
+    const [growth, impact, water, land, snowball] = [...note.note.querySelectorAll('select')];
     for (const [select, value] of [
+      [growth, 'fast'],
       [impact, 'late'],
       [water, 'comets'],
       [land, 'early'],
@@ -51,8 +54,9 @@ describe('deep time’s sketch note', () => {
       select.value = select.options[1]?.value ?? value;
       select.dispatchEvent(new Event('change'));
     }
-    expect(onSketch).toHaveBeenCalledTimes(4);
+    expect(onSketch).toHaveBeenCalledTimes(5);
     expect(onSketch).toHaveBeenCalledWith({ water: 'delivered' });
+    expect(onSketch).toHaveBeenCalledWith({ growth: 'fast' });
     const lone = document.createElement('option');
     lone.value = 'nonsense';
     impact?.append(lone);
@@ -67,7 +71,10 @@ describe('deep time’s sketch note', () => {
     water?.append(lone.cloneNode());
     if (water !== undefined) water.value = 'nonsense';
     water?.dispatchEvent(new Event('change'));
-    expect(onSketch).toHaveBeenCalledTimes(4);
+    growth?.append(lone.cloneNode());
+    if (growth !== undefined) growth.value = 'nonsense';
+    growth?.dispatchEvent(new Event('change'));
+    expect(onSketch).toHaveBeenCalledTimes(5);
   });
 
   it('Given no sketch, Then it is hidden', () => {

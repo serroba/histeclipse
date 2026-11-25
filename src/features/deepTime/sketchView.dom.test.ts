@@ -28,6 +28,7 @@ describe('the hypotheses’ rail (#1158)', () => {
     const rail = createHypothesisRail(onSketch);
     document.body.append(rail.root);
     const choices = {
+      growth: 'slow',
       impact: 'early',
       land: 'dhuime',
       snowball: 'hard',
@@ -74,6 +75,7 @@ describe('the hypotheses’ rail (#1158)', () => {
     const rail = createHypothesisRail(vi.fn());
     document.body.append(rail.root);
     const choices = {
+      growth: 'slow',
       impact: 'early',
       land: 'dhuime',
       snowball: 'hard',
@@ -103,6 +105,7 @@ describe('the hypotheses’ rail (#1158)', () => {
 
 describe('the hypotheses’ rail, its edges', () => {
   const choices = {
+    growth: 'slow',
     impact: 'early',
     land: 'dhuime',
     snowball: 'hard',

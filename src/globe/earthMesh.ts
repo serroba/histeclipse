@@ -9,6 +9,7 @@ import {
   BackSide,
   DataTexture,
   Mesh,
+  type Object3D,
   ShaderMaterial,
   SphereGeometry,
   SRGBColorSpace,
@@ -107,4 +108,18 @@ export function createEarthMeshes(
     }),
   );
   return { earth, atmosphere, plainMap, parts };
+}
+
+/**
+ * Earth drawn at a share of its radius, its air with it (#1219): the layer capability
+ * `earthSize`, for Earth growing before the Moon-forming impact.
+ */
+export function earthSizer(
+  meshes: readonly Object3D[],
+  stage: { invalidate(): void },
+): (share: number) => void {
+  return (share) => {
+    for (const mesh of meshes) mesh.scale.setScalar(share);
+    stage.invalidate();
+  };
 }

@@ -6,6 +6,7 @@
  */
 
 import { elementAt } from '../util/arrays';
+import type { GrowthModel } from './growth';
 
 /** How far back the continent reconstruction (Cao et al. 2024) reaches, Ma. */
 export const PLATES_REACH_MA = 1800;
@@ -284,6 +285,8 @@ export function waterStrikesPassed(from: number, to: number): readonly WaterStri
 }
 
 export interface SketchChoices {
+  /** How fast Earth grew before the impact (#1219), drawn on the formation clock. */
+  readonly growth: GrowthModel;
   readonly impact: ImpactModel;
   readonly land: LandModel;
   readonly snowball: SnowballModel;
@@ -291,7 +294,7 @@ export interface SketchChoices {
 }
 
 /** Which question the sketch at a moment answers, so only its choice is offered. */
-export type SketchQuestion = 'impact' | 'land' | 'snowball' | 'water';
+export type SketchQuestion = 'growth' | 'impact' | 'land' | 'snowball' | 'water';
 
 export interface Sketch {
   readonly kind: 'magma' | 'ocean';
@@ -321,7 +324,12 @@ export function sketchAt(ma: number, choices: SketchChoices, continentsDrawn: bo
       land: 0,
       iceEdge: 90,
       reconstructed: false,
-      questions: ['impact', ...water],
+      // Before the impact, how fast Earth grew (#1219).
+      questions: [
+        ...(ma > IMPACTS[choices.impact].ma ? (['growth'] as const) : []),
+        'impact',
+        ...water,
+      ],
       episode: null,
     };
   }
