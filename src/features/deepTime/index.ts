@@ -251,8 +251,9 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       context.off(state);
       return;
     }
-    const period = periodAt(ma);
     const story = context.storyDate();
+    // The period of the moment shown: an own-time clock's, where one lends it (#1222).
+    const period = periodAt(story?.ma ?? ma);
     // Playing, the date rounds to what can be read as it goes by (#1166).
     const when = story?.when ?? (pace === null ? formatMa(ma) : formatMaPlaying(ma, pace));
     context.header(ma, story, when);

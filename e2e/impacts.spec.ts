@@ -265,7 +265,9 @@ test.describe('as deep time plays, the great impacts strike', () => {
     });
     await test.step('Then deep time stops at the strike, and its clock opens', async () => {
       await expect(clock).toBeVisible({ timeout: 30_000 });
-      await expect(deep(page).getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+      // The bar's own play gives way to the clock's while it is open (#1222).
+      await expect(deep(page).locator('.deep-play')).toHaveAttribute('aria-label', 'Play');
+      await expect(deep(page).locator('.deep-play')).toBeHidden();
     });
     await test.step('When the clock is closed, deep time plays on', async () => {
       await clock.getByRole('button', { name: 'Close' }).click();

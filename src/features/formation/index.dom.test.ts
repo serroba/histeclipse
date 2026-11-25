@@ -27,7 +27,7 @@ describe('the aeons begin with Earth and the Moon forming (#1218)', () => {
     const watch = vi.fn();
     const formation = createFormation(
       {
-        ownTime: { watch, arrive: vi.fn() },
+        ownTime: { watch, arrive: vi.fn(), lent: vi.fn() },
         timeline: { playing: () => playing } as unknown as Capabilities['timeline'],
       },
       () => false,

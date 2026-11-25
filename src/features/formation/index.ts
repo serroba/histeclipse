@@ -28,6 +28,8 @@ export function formationEvent(model: ImpactModel): OwnTimeEvent {
     phases: formationPhases(impactMa),
     scale: formationScale(impactMa),
     offer: 'Watch Earth and the Moon form',
+    // Its zero, the impact: the header counts from it, not from where play started.
+    ma: impactMa,
     deep: {
       maAt: (seconds) => formationMa(impactMa, seconds),
       secondsAt: (ma) => formationSeconds(impactMa, ma),

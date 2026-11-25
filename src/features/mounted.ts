@@ -8,6 +8,7 @@ import { changed } from '../state/store';
 import { begin, end } from '../util/frameLedger';
 import type { Brief, LayerLoad } from '../state/activeLayers';
 import type { HereFact } from '../sources/registry';
+import type { StoryDate } from '../deepTime/storyDate';
 import type { Layer, ViewState } from '../state/viewState';
 import type { DeepChip, DeepChipView } from '../ui/deepChips';
 import type {
@@ -47,6 +48,8 @@ export interface Features {
   briefs(): (readonly [Layer, Brief | null])[];
   /** What the features have at the place picked, for "Why here?" (#893), each with its layer. */
   here(state: ViewState): (readonly [Layer, HereFact])[];
+  /** The moment an event's own clock is at, lent deep time's header and bar (#1222). */
+  readonly storyDate: () => StoryDate | null;
 }
 
 /** Deep time's bar with none of the layers' fields filled: what each says while off. */
@@ -92,7 +95,8 @@ export function mountFeatures(
   lent: AppCapabilities,
 ): Features {
   // Made from the others, here rather than in the app: one clock shared by the layers (#1191).
-  const capabilities: Capabilities = { ...lent, ownTime: createOwnTime(core, lent) };
+  const ownTime = createOwnTime(core, lent);
+  const capabilities: Capabilities = { ...lent, ownTime };
   // The aeons begin with Earth and the Moon forming (#1218), on that clock.
   const formation = createFormation(
     capabilities,
@@ -167,5 +171,6 @@ export function mountFeatures(
         const facts = [shown.here?.(state) ?? []].flat();
         return facts.map((fact) => [feature.id, fact] as const);
       }),
+    storyDate: () => ownTime.lent(),
   };
 }

@@ -15,12 +15,27 @@ import { createTransport, type Transport } from '../../ui/transport';
 import { phaseAt, type EventPhase } from './phases';
 import './strikeClock.css';
 
+/**
+ * An extinction's dated window (#1228): when it began and ended, seconds since the clock's zero,
+ * each end's uncertainty, and what dates it, in words.
+ */
+export interface DatedWindow {
+  readonly from: number;
+  readonly to: number;
+  /** The uncertainty of each end, seconds: drawn fading out from the window. */
+  readonly plusMinus: readonly [number, number];
+  /** What it is and whose dates: "The extinction as dated at Meishan: …". */
+  readonly says: string;
+}
+
 export interface StrikeClockOptions {
   /** What it is called: "Chicxulub, in its own time". */
   readonly title: string;
   readonly phases: readonly EventPhase[];
   /** How its slider runs: Chicxulub's log seconds unless said (#1191). */
   readonly scale?: ClockScale;
+  /** Its extinction's dated window, drawn as a band on the slider, where one is dated (#1228). */
+  readonly dated?: DatedWindow;
   /** The moment changed: `seconds` since the event. */
   onMoment(seconds: number): void;
   /** The reader closed it. */
@@ -49,8 +64,33 @@ interface ClockView {
   readonly closeButton: HTMLButtonElement;
 }
 
+/** The band on the slider where `dated` is, fading out over each end's uncertainty, and its words. */
+function datedBand(scale: ClockScale, dated: DatedWindow | undefined): HTMLElement[] {
+  if (dated === undefined) return [];
+  const at = (seconds: number) => scale.positionAt(seconds) / scale.end;
+  const [early, late] = dated.plusMinus;
+  const from = at(dated.from - early);
+  const to = at(dated.to + late);
+  const span = Math.max(to - from, 1e-6);
+  const band = element('span', { class: 'strike-clock-dated', title: dated.says });
+  band.style.left = `${String(100 * from)}%`;
+  band.style.width = `${String(100 * span)}%`;
+  band.style.setProperty('--in', String((at(dated.from) - from) / span));
+  band.style.setProperty('--out', String((at(dated.to) - from) / span));
+  return [
+    element('div', { class: 'strike-clock-band', 'aria-hidden': 'true' }, band),
+    element('p', { class: 'strike-clock-dated-says' }, dated.says),
+  ];
+}
+
 /** The panel round `transport`, called `title`, the marks of `scale` under the slider. */
-function clockView(title: string, scale: ClockScale, transport: Transport): ClockView {
+function clockView(
+  title: string,
+  scale: ClockScale,
+  transport: Transport,
+  dated: DatedWindow | undefined,
+): ClockView {
+  const [band, says] = datedBand(scale, dated);
   const speed = element(
     'select',
     { class: 'strike-clock-speed', 'aria-label': 'Speed' },
@@ -85,7 +125,14 @@ function clockView(title: string, scale: ClockScale, transport: Transport): Cloc
     view.phaseTitle,
     view.phaseText,
     view.sources,
-    element('div', { class: 'strike-clock-track' }, transport.slider, marks),
+    element(
+      'div',
+      { class: 'strike-clock-track' },
+      ...(band === undefined ? [] : [band]),
+      transport.slider,
+      marks,
+    ),
+    ...(says === undefined ? [] : [says]),
     element('p', { class: 'strike-clock-hint' }, scale.hint),
     element('div', { class: 'strike-clock-controls' }, transport.play, speed),
   );
@@ -147,7 +194,7 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
       },
     },
   );
-  const view = clockView(options.title, scale, transport);
+  const view = clockView(options.title, scale, transport, options.dated);
   const { root, speed } = view;
   view.closeButton.addEventListener('click', close);
   transport.join(root);
