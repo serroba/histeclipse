@@ -61,6 +61,8 @@ interface Province {
   readonly spread: number;
   /** The first mark under its clock: when its story begins, seconds since the extinction. */
   readonly start: readonly [number, string];
+  /** When the extinction began, Ma: its clock's zero, lent deep time's header (#1222). */
+  readonly zero: number;
   fuming(seconds: number): Fuming;
   /** How much of its lava has flowed by `seconds` (#1212). */
   cover(seconds: number): number;
@@ -77,6 +79,8 @@ const PROVINCES: readonly Province[] = [
     sites: ['siberian-traps'],
     spread: 9,
     start: [-300 * KYR, 'Lavas'],
+    // Its start at Meishan (Burgess, Bowring & Shen 2014), before the boundary at 251.902.
+    zero: 251.941,
     fuming: siberianFuming,
     cover: siberianCover,
   },
@@ -89,6 +93,8 @@ const PROVINCES: readonly Province[] = [
     spread: 14,
     // Not the intrusions, 100,000 years before: their mark would sit on the extinction's.
     start: [-400 * KYR, 'Rifting'],
+    // Its start with the earliest lavas (Blackburn et al. 2013).
+    zero: 201.564,
     fuming: campFuming,
     cover: campCover,
   },
@@ -99,6 +105,7 @@ const PROVINCES: readonly Province[] = [
     sites: ['emeishan-traps'],
     spread: 4,
     start: [-400 * KYR, 'Before'],
+    zero: 259.8,
     fuming: emeishanFuming,
     cover: emeishanCover,
   },
@@ -112,6 +119,7 @@ function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
     phases: province.phases,
     scale: { ...CRISIS_SCALE, marks: [province.start, ...CRISIS_SCALE.marks.slice(1)] },
     offer: `Watch ${province.name} in its own time`,
+    ma: province.zero,
     play(tools) {
       const fumes = tools.layer(fumesLayer);
       return {
@@ -140,6 +148,8 @@ interface ColdCrisis {
   readonly ice: string | null;
   /** The site its oxygen-poor water spreads round. */
   readonly anoxia: string;
+  /** Its first pulse, Ma: its clock's zero, lent deep time's header (#1222). */
+  readonly zero: number;
   seas(seconds: number): Seas;
 }
 
@@ -151,6 +161,8 @@ const COLD: readonly ColdCrisis[] = [
     phases: END_ORDOVICIAN,
     ice: 'hirnantian-ice',
     anoxia: 'dobs-linn',
+    // The first pulse, at the Hirnantian's base (ICS chart); the Silurian begins 1.4 Myr on.
+    zero: 445.2,
     seas: ordovicianSeas,
   },
   {
@@ -159,6 +171,8 @@ const COLD: readonly ColdCrisis[] = [
     phases: LATE_DEVONIAN,
     ice: null,
     anoxia: 'coumiac',
+    // The lower Kellwasser, 600,000 years before the upper at the Frasnian–Famennian, 372.2.
+    zero: 372.8,
     seas: devonianSeas,
   },
 ];
@@ -174,6 +188,7 @@ function coldEvent(crisis: ColdCrisis, ice: GeoPoint | null, anoxia: GeoPoint): 
     phases: crisis.phases,
     scale: LONG_CRISIS_SCALE,
     offer: `Watch ${crisis.name} in its own time`,
+    ma: crisis.zero,
     play(tools) {
       const seas = tools.layer(seasLayer);
       return {

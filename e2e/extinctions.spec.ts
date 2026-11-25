@@ -36,6 +36,11 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     await expect(globe).toHaveAttribute('data-fumes', 'on');
     await expect(clock.locator('.strike-clock-when')).toHaveText(/before the extinction$/);
   });
+  await test.step('And the header says the clock’s age, in the Permian, the bar’s own pace set aside (#1222)', async () => {
+    await expect(page.locator('.hud-date')).toHaveText(/^252\.\d million years ago$/);
+    await expect(page.locator('.hud-detail')).toContainText('Permian');
+    await expect(page.locator('.deep-speed')).toBeHidden();
+  });
   await test.step('When they move the slider to the extinction, Then it says the phase and its sources', async () => {
     await clock.getByRole('button', { name: 'Pause' }).click();
     const slider = clock.getByRole('slider');
@@ -46,10 +51,17 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
       /^https:\/\/doi\.org\/10\./,
     );
   });
+  await test.step('When they move it 200,000 years on, Then the header is in the Triassic', async () => {
+    await clock.getByRole('slider').fill('6');
+    await expect(page.locator('.hud-date')).toHaveText('251.7 million years ago');
+    await expect(page.locator('.hud-detail')).toContainText('Triassic');
+  });
   await test.step('When they close it, the fumes go', async () => {
     await clock.getByRole('button', { name: 'Close' }).click();
     await expect(clock).toBeHidden();
     await expect(globe).toHaveAttribute('data-fumes', 'off');
+    await expect(page.locator('.hud-date')).toHaveText('252 million years ago');
+    await expect(page.locator('.deep-speed')).toBeVisible();
   });
   expect(problems).toEqual([]);
 });
