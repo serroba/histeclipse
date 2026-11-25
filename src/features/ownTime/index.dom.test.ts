@@ -176,3 +176,79 @@ describe('events in their own time (#1191)', () => {
     expect(document.querySelectorAll('.strike-offer')).toHaveLength(1);
   });
 });
+
+describe('deep time’s own story (#1218)', () => {
+  /** Frames run by hand: each call runs those asked for, at `step` ms after the last. */
+  function frames() {
+    let asked: FrameRequestCallback[] = [];
+    let now = 0;
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => {
+      asked.push(callback);
+      return asked.length;
+    });
+    return (count: number, step = 200) => {
+      for (let index = 0; index < count; index += 1) {
+        const run = asked;
+        asked = [];
+        now += step;
+        for (const callback of run) callback(now);
+      }
+    };
+  }
+
+  const MYR = 1e6 * 365.25 * 86_400;
+
+  /** A story whose clock carries deep time's moment, its event at 4,500 Ma. */
+  function story(key: string) {
+    const { made, at, end } = event(key, layer);
+    const deep = {
+      maAt: (seconds: number) => 4500 - seconds / MYR,
+      secondsAt: (ma: number) => (4500 - ma) * MYR,
+    };
+    return { made: { ...made, deep }, at, end };
+  }
+
+  it('opens at the moment deep time was at, and carries deep time along', () => {
+    const { own, view } = service('normal');
+    const { made, at } = story('formation');
+    own.watch(made, 4499.9);
+    expect(at).toHaveBeenLastCalledWith(expect.closeTo(0.1 * MYR, -3));
+    expect(view().ma).toBe(4499.9);
+    const slider = document.querySelector<HTMLInputElement>('.strike-clock-range');
+    if (slider === null) throw new Error('no slider');
+    slider.value = String(STRIKE_SCALE.positionAt(0.5 * MYR));
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(view().ma).toBe(4499.5);
+  });
+
+  it('hands back to deep time from its end, playing on, when it ends', () => {
+    const run = frames();
+    const { own, resume, view } = service('normal');
+    const { made, end } = story('formation');
+    own.watch(made, 4600);
+    run(400);
+    expect(end).toHaveBeenCalledTimes(1);
+    expect(resume).toHaveBeenCalledTimes(1);
+    // The strike scale ends a million years on.
+    expect(view().ma).toBe(4499);
+    expect(document.querySelector<HTMLElement>('.strike-clock')?.hidden).toBe(true);
+  });
+
+  it('skips to its end when closed', () => {
+    const { own, resume, view } = service('normal');
+    own.watch(story('formation').made, 4600);
+    close();
+    expect(resume).toHaveBeenCalledTimes(1);
+    expect(view().ma).toBe(4499);
+  });
+
+  it('leaves an event that is not deep time’s own waiting at its end', () => {
+    const run = frames();
+    const { own, resume } = service('slow');
+    const chicxulub = event('Chicxulub', layer);
+    own.watch(chicxulub.made, 66);
+    run(400);
+    expect(chicxulub.end).not.toHaveBeenCalled();
+    expect(resume).not.toHaveBeenCalled();
+  });
+});

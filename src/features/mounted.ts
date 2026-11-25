@@ -20,6 +20,7 @@ import type {
   FeatureCore,
   LayerAction,
 } from './feature';
+import { createFormation } from './formation';
 import { createOwnTime } from './ownTime';
 
 export interface Features {
@@ -88,6 +89,9 @@ export function deepChipsOf(features: readonly Feature[]): DeepChip[] {
     );
 }
 
+/** Whether the reader asks for less motion. */
+const lessMotion = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 export function mountFeatures(
   features: readonly Feature[],
   core: FeatureCore,
@@ -96,6 +100,8 @@ export function mountFeatures(
   // Made from the others, here rather than in the app: one clock shared by the layers (#1191).
   const ownTime = createOwnTime(core, lent);
   const capabilities: Capabilities = { ...lent, ownTime };
+  // The aeons begin with Earth and the Moon forming (#1218), on that clock.
+  const formation = createFormation(capabilities, lessMotion);
   const mounted = features.map((feature) => ({
     feature,
     shown: feature.mount(core, capabilities),
@@ -105,6 +111,7 @@ export function mountFeatures(
   return {
     show(state, jdTT) {
       if (jdTT === null) return;
+      formation.show(state);
       for (const { shown, ledger } of mounted) {
         if (shown.show === undefined) continue;
         // Each feature timed on its own, so a long frame says which made it long (#1196).
@@ -115,6 +122,7 @@ export function mountFeatures(
     },
     redraw(state, previous, jdTT) {
       if (previous === null || jdTT === null) return;
+      formation.show(state);
       for (const { feature, shown, ledger } of mounted) {
         if (shown.show === undefined) continue;
         if (!changed(feature.watches(previous), feature.watches(state))) continue;
