@@ -87,15 +87,14 @@ export function maAfter(strikeMa: number, seconds: number): number {
 
 /**
  * The marks under the slider: where some of the tenfolds begin. Not the minute: on a phone it
- * would sit on the strike's mark.
+ * would sit on the strike's mark; nor 1,000 years, which would run into the million (#1224).
  */
 const MARKS: readonly (readonly [number, string])[] = [
   [0, 'Strike'],
   [3600, 'Hour'],
   [86_400, 'Day'],
   [YEAR, 'Year'],
-  [1000 * YEAR, '1,000 years'],
-  [1e6 * YEAR, '1 Myr'],
+  [1e6 * YEAR, '1 million yr'],
 ];
 
 /** Chicxulub's clock (#1173, #1191): log time from the strike. */
@@ -108,5 +107,6 @@ export const STRIKE_SCALE: ClockScale = {
   step: 0.2,
   marks: MARKS,
   text: clockText,
-  label: 'Time since the strike, each step on a tenfold more',
+  label: 'Time since the strike, each step ten times longer than the one before',
+  hint: 'Each step is ten times longer than the one before: seconds, then hours, years, ages.',
 };

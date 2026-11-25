@@ -26,4 +26,6 @@ export interface ClockScale {
   readonly text: (seconds: number) => string;
   /** What the slider is, to a screen reader. */
   readonly label: string;
+  /** How the slider runs, in a line under it: its steps are not all alike (#1224). */
+  readonly hint: string;
 }
