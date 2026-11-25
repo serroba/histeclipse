@@ -25,6 +25,7 @@ import {
 } from './fumesModel';
 import { END_ORDOVICIAN, LATE_DEVONIAN } from './coldPhases';
 import { END_GUADALUPIAN } from './guadalupianPhases';
+import { LOSSES } from './losses';
 import { END_PERMIAN } from './permianPhases';
 import { seasLayer } from './seasLayer';
 import { devonianSeas, ordovicianSeas, type Seas } from './seasModel';
@@ -248,8 +249,15 @@ function placeOf(data: ExtinctionSites, site: string, ma: number): GeoPoint | nu
   return found === undefined ? null : siteThen(data, found, ma);
 }
 
-/** The extinction `id`'s own time at `ma`, if it has one. */
+/** The extinction `id`'s own time at `ma`, if it has one, with what it took (#1223). */
 export function ownTimeOf(data: ExtinctionSites, id: string, ma: number): OwnTimeEvent | null {
+  const event = drawnOf(data, id, ma);
+  const loss = LOSSES[id];
+  return event === null || loss === undefined ? event : { ...event, loss };
+}
+
+/** The extinction `id`'s own time at `ma`, as it is drawn, if it has one. */
+function drawnOf(data: ExtinctionSites, id: string, ma: number): OwnTimeEvent | null {
   const cold = COLD.find((each) => each.key === id);
   if (cold !== undefined) {
     const anoxia = placeOf(data, cold.anoxia, ma);

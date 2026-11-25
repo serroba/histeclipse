@@ -35,6 +35,8 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     await expect(clock).toBeVisible();
     await expect(globe).toHaveAttribute('data-fumes', 'on');
     await expect(clock.locator('.strike-clock-when')).toHaveText(/before the extinction$/);
+    // Nothing lost yet (#1223).
+    await expect(clock.locator('.loss-gauge-label')).toHaveText('Marine genera left: 100%');
   });
   await test.step('And the header says the clock’s age, in the Permian, the bar’s own pace set aside (#1222)', async () => {
     await expect(page.locator('.hud-date')).toHaveText(/^252\.\d million years ago$/);
@@ -57,6 +59,8 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     await clock.getByRole('slider').fill('6');
     await expect(page.locator('.hud-date')).toHaveText('251.7 million years ago');
     await expect(page.locator('.hud-detail')).toContainText('Triassic');
+    // And the gauge has fallen by what Stanley (2016) estimates was lost (#1223).
+    await expect(clock.locator('.loss-gauge-label')).toHaveText('Marine genera left: 38%');
   });
   await test.step('When they close it, the fumes go', async () => {
     await clock.getByRole('button', { name: 'Close' }).click();

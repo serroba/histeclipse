@@ -12,6 +12,7 @@ import { DEFAULT_PACE, PACE_LABELS, PACES, type Pace } from '../../deepTime/play
 import { element } from '../../ui/dom';
 import { setText } from '../../util/pageWrites';
 import { createTransport, type Transport } from '../../ui/transport';
+import { lossView, type LossGauge, type LossView } from './lossGauge';
 import { phaseAt, type EventPhase } from './phases';
 import './strikeClock.css';
 
@@ -38,6 +39,8 @@ export interface StrikeClockOptions {
   readonly dated?: DatedWindow;
   /** What on the globe is drawn to illustrate, not measured, and what its colours are (#1226). */
   readonly drawn?: string;
+  /** What its extinction took, as a gauge of the life left (#1223). */
+  readonly loss?: LossGauge;
   /** The moment changed: `seconds` since the event. */
   onMoment(seconds: number): void;
   /** The reader closed it. */
@@ -64,6 +67,7 @@ interface ClockView {
   readonly sources: HTMLElement;
   readonly speed: HTMLSelectElement;
   readonly closeButton: HTMLButtonElement;
+  readonly loss: LossView | null;
 }
 
 /** The band on the slider where `dated` is, fading out over each end's uncertainty, and its words. */
@@ -87,13 +91,17 @@ function datedBand(scale: ClockScale, dated: DatedWindow | undefined): HTMLEleme
 
 /** The panel round `transport`, called `title`, the marks of `scale` under the slider. */
 function clockView(
-  title: string,
+  {
+    title,
+    dated,
+    drawn,
+    loss: gauge,
+  }: Pick<StrikeClockOptions, 'title' | 'dated' | 'drawn' | 'loss'>,
   scale: ClockScale,
   transport: Transport,
-  dated: DatedWindow | undefined,
-  drawn: string | undefined,
 ): ClockView {
   const [band, says] = datedBand(scale, dated);
+  const loss = gauge === undefined ? null : lossView(gauge);
   const speed = element(
     'select',
     { class: 'strike-clock-speed', 'aria-label': 'Speed' },
@@ -128,6 +136,7 @@ function clockView(
     view.phaseTitle,
     view.phaseText,
     view.sources,
+    ...(loss === null ? [] : [loss.root]),
     element(
       'div',
       { class: 'strike-clock-track' },
@@ -140,11 +149,12 @@ function clockView(
     ...(drawn === undefined ? [] : [element('p', { class: 'strike-clock-drawn' }, drawn)]),
     element('div', { class: 'strike-clock-controls' }, transport.play, speed),
   );
-  return { root, speed, closeButton, ...view };
+  return { root, speed, closeButton, loss, ...view };
 }
 
 /**
- * Say the moment `seconds` since the strike, and the phase then, with its sources. Called every
+ * Say the moment `seconds` since the strike, what was lost by then, and the phase then, with its
+ * sources. Called every
  * frame while it plays: the phase's words and links are written only when the phase changes,
  * and the moment only when its words do (#1187).
  */
@@ -155,6 +165,7 @@ function showMoment(
   phase: EventPhase | undefined,
 ): void {
   setText(view.when, scale.text(seconds));
+  view.loss?.at(seconds);
   const shown = String(Math.round(seconds));
   if (view.root.dataset['seconds'] !== shown) view.root.dataset['seconds'] = shown;
   const id = phase?.id ?? '';
@@ -198,7 +209,7 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
       },
     },
   );
-  const view = clockView(options.title, scale, transport, options.dated, options.drawn);
+  const view = clockView(options, scale, transport);
   const { root, speed } = view;
   view.closeButton.addEventListener('click', close);
   transport.join(root);

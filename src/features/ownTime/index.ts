@@ -21,6 +21,7 @@ import type { Pace } from '../../deepTime/playSpeed';
 import type { LayerCapability } from '../../globe/layerCapabilities';
 import type { GlobeLayer, LayerFactory } from '../../globe/layerHost';
 import type { Capabilities, FeatureCore } from '../feature';
+import type { LossGauge } from './lossGauge';
 import type { EventPhase } from './phases';
 import {
   createStrikeClock,
@@ -47,6 +48,7 @@ interface OwnTimePlay {
 
 export { phase, phaseAt, type EventPhase } from './phases';
 export type { DatedWindow } from './strikeClock';
+export type { LossGauge } from './lossGauge';
 
 export interface OwnTimeEvent {
   /** Which event: the same one reached by two layers is watched once. */
@@ -74,6 +76,8 @@ export interface OwnTimeEvent {
   readonly dated?: DatedWindow;
   /** What it draws to illustrate, not measure, said under its clock (#1226). */
   readonly drawn?: string;
+  /** What its extinction took, as a gauge of the life left on its clock (#1223). */
+  readonly loss?: LossGauge;
   /**
    * When its clock's zero is, Ma, where dated more closely than the moment it is watched from
    * (#1222): the end-Permian's start at Meishan, 251.941 Ma, not the 251.9 its card is at.
@@ -168,11 +172,15 @@ function carried(
   };
 }
 
-/** An event's dated window and what it draws to illustrate, for its clock, where it has them. */
-function marked(event: OwnTimeEvent): { dated?: DatedWindow; drawn?: string } {
+/**
+ * An event's dated window, what it draws to illustrate and what it took, for its clock, where it
+ * has them.
+ */
+function marked(event: OwnTimeEvent): { dated?: DatedWindow; drawn?: string; loss?: LossGauge } {
   return {
     ...(event.dated === undefined ? {} : { dated: event.dated }),
     ...(event.drawn === undefined ? {} : { drawn: event.drawn }),
+    ...(event.loss === undefined ? {} : { loss: event.loss }),
   };
 }
 
