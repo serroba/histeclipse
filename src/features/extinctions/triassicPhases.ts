@@ -52,8 +52,8 @@ export const END_TRIASSIC: readonly EventPhase[] = [
     'pulses',
     150 * KYR,
     'Four pulses',
-    'The province erupts in four pulses over about 600,000 years, still erupting as life recovers. Its lavas, over more than 7 million km², are found today on four continents.',
-    ['blackburn2013', 'marzoli1999'],
+    'The province erupts in four pulses over about 600,000 years, still erupting as life recovers. Its rocks are found today on four continents, over more than 7 million km² as first mapped (Marzoli et al.), over more than 10 million as known now (Lindström et al.).',
+    ['blackburn2013', 'marzoli1999', 'lindstrom2021'],
   ),
   phase(
     'jurassic',
