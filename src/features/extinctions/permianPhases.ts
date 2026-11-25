@@ -46,8 +46,8 @@ export const END_PERMIAN: readonly EventPhase[] = [
     'dying',
     2 * KYR,
     'The Great Dying',
-    'More than 90% of the sea’s species and 75% of the land’s are lost in at most 61,000 ± 48,000 years. In the sea, heat and loss of oxygen together explain most of the losses, and where they fell hardest.',
-    ['burgessBowring2015', 'burgess2014', 'penn2018'],
+    'In at most 61,000 ± 48,000 years, more than 90% of the sea’s species and 75% of the land’s are lost, as usually quoted; some 81% of the sea’s once the extinction already under way is counted apart (Stanley). In the sea, heat and loss of oxygen together explain most of the losses, and where they fell hardest.',
+    ['burgessBowring2015', 'stanley2016', 'burgess2014', 'penn2018'],
   ),
   phase(
     'acid',

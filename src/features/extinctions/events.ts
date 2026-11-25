@@ -86,8 +86,8 @@ export const EXTINCTIONS: readonly Extinction[] = [
     ma: 251.9,
     counted: 'five',
     lost: {
-      text: 'The most severe known: more than 90% of the sea’s species and 75% of the land’s, in at most 61,000 ± 48,000 years.',
-      sources: ['burgessBowring2015', 'burgess2014'],
+      text: 'The most severe known, in at most 61,000 ± 48,000 years: more than 90% of the sea’s species and 75% of the land’s, as usually quoted (Burgess & Bowring); some 81% of the sea’s once the extinction already under way before it is counted apart (Stanley).',
+      sources: ['burgessBowring2015', 'stanley2016', 'burgess2014'],
     },
     causes: {
       text: 'The Siberian Traps, erupting before, during and after it. As it began, their sills spread through coal and evaporites, and the heat released greenhouse gases and halocarbons through hundreds of vents.',
