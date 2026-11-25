@@ -239,13 +239,13 @@ def _post(url: str, fields: dict[str, str]) -> bytes:  # pragma: no cover - need
 
 
 def reconstruct_points(
-    points: list[tuple[float, float]], ma: int
+    points: list[tuple[float, float]], ma: float, model: str = "PALEOMAP"
 ) -> list[Position]:  # pragma: no cover - needs network access
-    """Where each point (latitude, longitude) lay `ma` million years ago on PALEOMAP."""
+    """Where each point (latitude, longitude) lay `ma` million years ago on `model`."""
     coordinates = ",".join(f"{lon},{lat}" for lat, lon in points)
     body = _post(
         GWS_URL,
-        {"points": coordinates, "time": str(ma), "model": "PALEOMAP", "return_null_points": ""},
+        {"points": coordinates, "time": str(ma), "model": model, "return_null_points": ""},
     )
     placed = cast("dict[str, list[list[float] | None]]", json.loads(body))["coordinates"]
     time.sleep(1)  # One request a second: a shared, free service.

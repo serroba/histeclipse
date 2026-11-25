@@ -34,12 +34,13 @@ describe('the extinctions on the globe', () => {
       ['Chicxulub', 'empire-label extinction-mark is-cause'],
       ['Deccan Traps, Western Ghats', 'empire-label extinction-mark is-cause'],
       ['El Kef, Tunisia', 'empire-label extinction-mark is-record'],
+      ['Bottaccione Gorge, Gubbio', 'empire-label extinction-mark is-record'],
     ]);
     expect(pins[0]?.element.dataset['pick']).toBe('extinction:chicxulub');
     expect(pins[0]?.element.getAttribute('aria-label')).toBe(
       'Chicxulub, End-Cretaceous extinction: details',
     );
-    expect(container.dataset['extinctions']).toBe('3');
+    expect(container.dataset['extinctions']).toBe('4');
   });
 
   it('Given the same places as time plays on, Then they are moved with their plates, not laid out again', () => {

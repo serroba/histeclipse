@@ -78,6 +78,12 @@
     "cite": "Altwegg et al. (2015), 67P/Churyumov-Gerasimenko, a Jupiter family comet with a high D/H ratio, Science 347, 1261952",
     "url": "https://doi.org/10.1126/science.1261952"
   },
+  "alvarez1980": {
+    "name": "Alvarez et al. 1980",
+    "kind": "paper",
+    "cite": "Alvarez, L. W., Alvarez, W., Asaro, F. & Michel, H. V. (1980), Extraterrestrial cause for the Cretaceous-Tertiary extinction, Science 208, 1095–1108. Our summary: the clay at the Cretaceous–Tertiary boundary in the Bottaccione Gorge at Gubbio, Italy, and in Denmark and New Zealand, holds far more iridium than the rocks around it, an element rare in Earth's crust and common in meteorites; the authors propose an asteroid some 10 km across struck, and its dust darkened the sky",
+    "url": "https://doi.org/10.1126/science.208.4448.1095"
+  },
   "ar6AnnexIII": {
     "name": "IPCC AR6 WG1 Annex III extended data",
     "kind": "dataset",
@@ -454,6 +460,12 @@
     "kind": "reference",
     "cite": "Chandra X-ray Center (Smithsonian Astrophysical Observatory, for NASA), Chandra specifications and spacecraft: 13.8 m long and 19.5 m across its solar arrays, its 10 m optical bench and focal length, its mirror assembly 1.2 m across of four nested pairs 0.833 m long, its sunshade door",
     "url": "https://chandra.harvard.edu/about/specs.html"
+  },
+  "chen2006": {
+    "name": "Chen et al. 2006",
+    "kind": "paper",
+    "cite": "Chen, X., Rong, J., Fan, J., et al. (2006), The Global Boundary Stratotype Section and Point (GSSP) for the base of the Hirnantian Stage (the uppermost of the Ordovician System), Episodes 29, 183–196. Our summary: the base of the Ordovician's last stage is set in the Wangjiawan North section near Yichang, China, at the first appearance of the graptolite Normalograptus extraordinarius, just below the Kuanyinchiao Bed",
+    "url": "https://doi.org/10.18814/epiiugs/2006/v29i3/004"
   },
   "chenBenton2012": {
     "name": "Chen & Benton 2012",
@@ -1037,6 +1049,12 @@
     "kind": "paper",
     "cite": "Henehan, M. J., Ridgwell, A., Thomas, E., et al. (2019), Rapid ocean acidification and protracted Earth system recovery followed the end-Cretaceous Chicxulub impact, PNAS 116(45), 22500–22504. Our summary: boron isotopes in foraminifera show the surface ocean acidified geologically rapidly after the impact, then rebounded sharply; productivity came back within a few tens of thousands of years, the export of carbon to the deep sea much later",
     "url": "https://doi.org/10.1073/pnas.1905989116"
+  },
+  "hesselbo2002": {
+    "name": "Hesselbo et al. 2002",
+    "kind": "paper",
+    "cite": "Hesselbo, S. P., Robinson, S. A., Surlyk, F. & Piasecki, S. (2002), Terrestrial and marine extinction at the Triassic-Jurassic boundary synchronized with major carbon-cycle perturbation: A link to initiation of massive volcanism?, Geology 30, 251–254. Our summary: at St Audrie's Bay, England, and in East Greenland, a sharp drop in carbon isotopes comes with the extinction in the sea and the change of land plants alike, so the two were at the same time; the authors link it to the start of the Central Atlantic Magmatic Province's eruptions",
+    "url": "https://doi.org/10.1130/0091-7613(2002)030<0251:TAMEAT>2.0.CO;2"
   },
   "hipparcos": {
     "name": "Hipparcos",

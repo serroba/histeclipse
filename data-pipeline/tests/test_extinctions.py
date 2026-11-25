@@ -4,6 +4,7 @@ from histeclipse_pipeline.extinctions import (
     SITES,
     Site,
     extinctions_file,
+    positions_compared,
     positions_then,
     steps_needed,
 )
@@ -38,9 +39,10 @@ def test_each_site_is_carried_back_step_by_step_until_it_is_not_wanted() -> None
 
 def test_the_file_keeps_each_site_with_its_places_in_hundredths() -> None:
     then = {"chicxulub": [(21.4, -89.52), None, (20.123, -80.0)]}
-    data = extinctions_file((CHICXULUB,), then, "2026-11-24")
+    data = extinctions_file((CHICXULUB,), then, {"chicxulub": (22.5, -85.0)}, "2026-11-24")
     assert data["stepMa"] == 5
     assert data["scale"] == 100
+    assert data["compared"] == {"model": "MERDITH2021", "name": "Merdith et al. 2021"}
     assert data["sites"] == [
         {
             "id": "chicxulub",
@@ -48,8 +50,24 @@ def test_the_file_keeps_each_site_with_its_places_in_hundredths() -> None:
             "name": "Chicxulub",
             "role": "cause",
             "then": [[2140, -8952], None, [2012, -8000]],
+            "other": [2250, -8500],
         }
     ]
+
+
+def test_each_site_is_placed_on_the_second_model_at_its_extinction_once_an_age() -> None:
+    asked: list[tuple[float, int]] = []
+    el_kef = Site("el-kef", "k-pg-extinction", "El Kef", "record", 36.15, 8.65, 66.0)
+
+    def reconstruct(
+        points: list[tuple[float, float]], ma: float
+    ) -> list[tuple[float, float] | None]:
+        asked.append((ma, len(points)))
+        return [None if lat > 30 and ma > 200 else (lat + 1, lon) for lat, lon in points]
+
+    placed = positions_compared((MEISHAN, CHICXULUB, el_kef), reconstruct)
+    assert asked == [(66.0, 2), (251.9, 1)]
+    assert placed == {"chicxulub": (22.4, -89.52), "el-kef": (37.15, 8.65), "meishan": None}
 
 
 def test_every_site_names_its_role_and_a_unique_id() -> None:
