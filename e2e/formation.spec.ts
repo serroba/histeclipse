@@ -41,9 +41,14 @@ test('playing the aeons from their oldest moment opens on Earth and the Moon for
     await clock.getByLabel('Speed').selectOption('fast');
     await expect.poll(() => maOf(page.url()), { timeout: 30_000 }).toBeLessThan(4510);
   });
+  await test.step('Then the globe draws the impact, and the Moon gathering from its debris (#180)', async () => {
+    await expect(globe).toHaveAttribute('data-formation-impact', 'moon', { timeout: 30_000 });
+    await expect(clock.locator('.strike-clock-drawn')).toContainText('an illustration');
+  });
   await test.step('Then at its end it hands back to deep time, which plays on through the aeons', async () => {
     await expect(clock).toBeHidden({ timeout: 30_000 });
     await expect(globe).not.toHaveAttribute('data-formation-clock');
+    await expect(globe).toHaveAttribute('data-formation-impact', 'off');
     await expect(bar.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
     await expect.poll(() => maOf(page.url()), { timeout: 30_000 }).toBeLessThan(4500);
   });
@@ -62,6 +67,10 @@ test('closing the formation clock skips to after it, and deep time plays on (#12
     await bar.getByRole('button', { name: 'Play', exact: true }).click();
     await expect(clock).toBeVisible();
     await expect(page.getByTestId('globe')).toHaveAttribute('data-formation-clock', 'young');
+  });
+  await test.step('When Theia comes in, Then the globe draws it before the strike (#180)', async () => {
+    await expect(clock).toHaveAttribute('data-phase', 'theia', { timeout: 20_000 });
+    await expect(page.getByTestId('globe')).toHaveAttribute('data-formation-impact', 'theia');
   });
   await test.step('When they close the clock, Then deep time plays on from 10 million years after the impact', async () => {
     await clock.getByRole('button', { name: 'Close' }).click();

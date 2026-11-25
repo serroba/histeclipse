@@ -58,15 +58,28 @@ describe('the aeons begin with Earth and the Moon forming (#1218)', () => {
     expect(early.deep?.secondsAt(4511)).toBeCloseTo(-MYR, -3);
   });
 
-  it('marks the globe while it plays', () => {
+  it('marks the globe while it plays, drawing the impact from Theia’s approach (#180)', () => {
     const on = document.createElement('div');
-    const tools = { strikes: { on }, layer: vi.fn() } as unknown as Parameters<
-      ReturnType<typeof formationEvent>['play']
-    >[0];
+    const update = vi.fn();
+    const zoomTo = vi.fn();
+    const flyTo = vi.fn();
+    const tools = {
+      strikes: { on, zoomTo, flyTo },
+      layer: () => ({ update }),
+    } as unknown as Parameters<ReturnType<typeof formationEvent>['play']>[0];
     const played = formationEvent('intermediate').play(tools);
     expect(on.dataset['formationClock']).toBe('intermediate');
+    played.at(-MYR);
+    expect(update).toHaveBeenLastCalledWith(null);
+    expect(zoomTo).not.toHaveBeenCalled();
+    played.at(-3600);
     played.at(0);
+    expect(update).toHaveBeenLastCalledWith(0);
+    // Drawn back once, not each moment.
+    expect(zoomTo).toHaveBeenCalledTimes(1);
+    expect(flyTo).toHaveBeenCalledTimes(1);
     played.end();
+    expect(update).toHaveBeenLastCalledWith(null);
     expect(on.dataset['formationClock']).toBeUndefined();
   });
 });

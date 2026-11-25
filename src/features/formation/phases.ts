@@ -10,7 +10,7 @@
  * Pure.
  */
 
-import { FIRST_SOLIDS_MA } from '../../deepTime/formationClock';
+import { APPROACH, FIRST_SOLIDS_MA } from '../../deepTime/formationClock';
 import { phase, type EventPhase } from '../ownTime';
 
 const HOUR = 3600;
@@ -64,7 +64,7 @@ function beforeImpact(fromSolids: (myr: number) => number): readonly EventPhase[
 const FROM_IMPACT: readonly EventPhase[] = [
   phase(
     'theia',
-    -6 * HOUR,
+    -APPROACH,
     'Theia comes in',
     'A body about the size of Mars, Theia, comes in on a grazing path. When is argued: 4,510 million years ago, from the Moon’s oldest zircons (Barboni et al.), or nearer 4,350 million, from many lunar rocks (Borg & Carlson). The clock follows the date chosen on the rail.',
     ['canup2001', 'barboni2017', 'borg2023'],

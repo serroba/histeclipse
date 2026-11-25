@@ -165,8 +165,8 @@ function carried(
   };
 }
 
-/** What an event adds to its clock, where it has it: its dated window, what it draws (#1228, #1226). */
-function clockExtras(event: OwnTimeEvent): { dated?: DatedWindow; drawn?: string } {
+/** An event's dated window and what it draws to illustrate, for its clock, where it has them. */
+function marked(event: OwnTimeEvent): { dated?: DatedWindow; drawn?: string } {
   return {
     ...(event.dated === undefined ? {} : { dated: event.dated }),
     ...(event.drawn === undefined ? {} : { drawn: event.drawn }),
@@ -213,7 +213,7 @@ export function createOwnTime(
       title: event.title,
       phases: event.phases,
       scale: event.scale,
-      ...clockExtras(event),
+      ...marked(event),
       onMoment: (seconds) => {
         playing.at(seconds);
         deep.at(seconds);

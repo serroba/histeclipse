@@ -3,7 +3,8 @@
  * three parts:
  * - log time since the Solar System's first solids, a unit each tenfold, from 10,000 years to
  *   the giant impact;
- * - Theia coming in, the last hours before it, a unit;
+ * - Theia coming in, the last two hours before it, a unit, played at half pace with the
+ *   first day after;
  * - log time since the impact, a unit each tenfold, from an hour to 10 million years, by when the
  *   first ocean has formed and the Moon's magma ocean is mostly crust.
  *
@@ -26,8 +27,10 @@ const MYR = 1e6 * YEAR;
 export const FIRST_SOLIDS_MA = 4567.3;
 /** Where the clock starts, after the first solids: 10,000 years. */
 const FIRST = 1e4 * YEAR;
-/** Theia coming in: how long before the impact the approach starts. */
-export const APPROACH = 6 * HOUR;
+/** Theia coming in: how long before the impact the approach starts (#180). */
+export const APPROACH = 2 * HOUR;
+/** Played at half pace, from the approach to a day after: Theia, the strike and the debris. */
+const SLOWER_UNTIL = 86_400;
 /** The clock's end, after the impact. */
 export const AFTER = 10 * MYR;
 
@@ -73,16 +76,19 @@ export function formationScale(impactMa: number): ClockScale {
     const since = seconds + before;
     return since <= FIRST ? 0 : Math.log10(since / FIRST);
   };
+  const slowEnd = positionAt(SLOWER_UNTIL);
   return {
     end,
     secondsAt,
     positionAt,
-    advance: (pace, seconds) => UNITS_PER_SECOND[pace] * seconds,
+    advance(pace, seconds, position) {
+      const half = position >= approachAt && position < slowEnd ? 0.5 : 1;
+      return UNITS_PER_SECOND[pace] * half * seconds;
+    },
     // A tenth of a tenfold.
     step: 0.1,
     marks: [
       [secondsAt(0), 'First solids'],
-      [1 * MYR - before, '1 Myr'],
       [0, 'Impact'],
       [1000 * YEAR, '1,000 years'],
       [AFTER, '10 Myr'],
