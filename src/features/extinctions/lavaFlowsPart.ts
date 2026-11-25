@@ -55,27 +55,32 @@ export const LAVA_FLOWS_PART: EarthPart<LavaFlowsUniforms> = {
       vec4 vent = lavaVents[i];
       if (vent.w <= 0.0) continue;
       float angle = acos(clamp(dot(f.normal, vent.xyz), -1.0, 1.0));
-      // Lobed fronts: the reach wavers gently round the vent, differently for each.
+      // Lobed, uneven fronts (#1226): the reach wavers round the vent on three scales,
+      // differently for each, so the flood's edge is ragged rather than a ring of scallops.
       vec3 side = normalize(f.normal - vent.xyz * dot(f.normal, vent.xyz) + 1e-6);
       float seed = float(i) * 1.7;
-      float lobes = 0.88
-        + 0.08 * sin(5.0 * side.x + 4.0 * side.y + 3.0 * side.z + seed)
-        + 0.04 * sin(9.0 * side.y - 7.0 * side.z + 6.0 * side.x + 2.3 * seed);
+      float lobes = 0.8
+        + 0.12 * sin(3.0 * side.x + 5.0 * side.y + 2.0 * side.z + seed)
+        + 0.06 * sin(11.0 * side.y - 7.0 * side.z + 6.0 * side.x + 2.3 * seed)
+        + 0.03 * sin(29.0 * side.z + 23.0 * side.x - 17.0 * side.y + 4.1 * seed);
       float reach = vent.w * sqrt(lavaCover) * lobes;
       float inside = 1.0 - smoothstep(0.85 * reach, reach, angle);
       flow = max(flow, inside);
       // Well inside this flow: another's front there is under it, not glowing.
       deep = max(deep, 1.0 - smoothstep(0.7 * reach, 0.8 * reach, angle));
-      front = max(front, inside * exp(-pow((angle - 0.92 * reach) / (0.08 * vent.w + 1e-4), 2.0)));
+      front = max(front, inside * exp(-pow((angle - 0.95 * reach) / (0.04 * vent.w + 1e-4), 2.0)));
       source = max(source, exp(-pow(angle / (0.12 * vent.w + 1e-4), 2.0)));
     }
     // Hot at the flood's outer front, still moving, and by the vents.
     float hot = max(front * (1.0 - deep), source);
-    vec3 basalt = vec3(0.09, 0.08, 0.08);
+    // Basalt, a little uneven from flow to flow, as fresh and older lavas are.
+    float grain = 0.5 + 0.5 * sin(f.normal.x * 83.0 + f.normal.y * 61.0 - f.normal.z * 47.0);
+    vec3 basalt = mix(vec3(0.08, 0.075, 0.07), vec3(0.15, 0.13, 0.12), grain);
     color = mix(color, basalt, 0.85 * flow * land);
     float flicker = 0.8 + 0.2 * sin(lavaTime * 9.0 + f.normal.x * 40.0 + f.normal.z * 31.0);
-    vec3 glow = mix(vec3(0.85, 0.12, 0.02), vec3(1.0, 0.62, 0.12), hot);
-    return mix(color, glow, clamp(hot * lavaHeat * flicker * land, 0.0, 1.0));
+    // A dull red where it crusts, orange only where hottest.
+    vec3 glow = mix(vec3(0.6, 0.1, 0.03), vec3(0.95, 0.5, 0.12), hot * hot);
+    return mix(color, glow, clamp(0.75 * hot * lavaHeat * flicker * land, 0.0, 1.0));
   }
 `,
 };

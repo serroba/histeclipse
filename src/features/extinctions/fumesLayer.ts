@@ -55,7 +55,19 @@ const DARK = new Color(0.16, 0.13, 0.11);
 const GLOW_SIZE = 0.014;
 const LAVA = new Color(1, 0.42, 0.12);
 
-/** A soft round puff of smoke: a grey radial gradient on a small canvas. */
+/**
+ * A puff of smoke: lumps of grey overlapping, so it billows rather than sits as a ball (#1226).
+ * Each lump a soft radial gradient; none opaque, so the puffs read as smoke over one another.
+ */
+const LUMPS: readonly (readonly [number, number, number])[] = [
+  [32, 34, 20],
+  [22, 30, 13],
+  [42, 28, 14],
+  [30, 22, 12],
+  [38, 40, 12],
+  [24, 41, 10],
+];
+
 function puffTexture(): CanvasTexture {
   const size = 64;
   const canvas = document.createElement('canvas');
@@ -63,12 +75,14 @@ function puffTexture(): CanvasTexture {
   canvas.height = size;
   const context = canvas.getContext('2d');
   if (context !== null) {
-    const gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
-    gradient.addColorStop(0, 'rgba(255,255,255,0.9)');
-    gradient.addColorStop(0.5, 'rgba(255,255,255,0.45)');
-    gradient.addColorStop(1, 'rgba(255,255,255,0)');
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, size, size);
+    for (const [x, y, radius] of LUMPS) {
+      const gradient = context.createRadialGradient(x, y, 0, x, y, radius);
+      gradient.addColorStop(0, 'rgba(255,255,255,0.32)');
+      gradient.addColorStop(0.6, 'rgba(255,255,255,0.14)');
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, size, size);
+    }
   }
   return new CanvasTexture(canvas);
 }

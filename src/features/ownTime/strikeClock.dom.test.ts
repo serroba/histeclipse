@@ -147,11 +147,13 @@ describe('the strike clock’s panel (#1173)', () => {
     });
     expect(plain.root.querySelector('.strike-clock-dated')).toBeNull();
     expect(plain.root.querySelector('.strike-clock-dated-says')).toBeNull();
+    expect(plain.root.querySelector('.strike-clock-drawn')).toBeNull();
     const dated = createStrikeClock({
       title: 'The end-Permian, in its own time',
       phases: PHASES,
       scale: CRISIS_SCALE,
       dated: { from: 0, to: 60 * KYR, plusMinus: [20 * KYR, 20 * KYR], says: 'Dated at Meishan.' },
+      drawn: 'Drawn to illustrate.',
       onMoment: vi.fn(),
       onClose: vi.fn(),
     });
@@ -164,6 +166,10 @@ describe('the strike clock’s panel (#1173)', () => {
     expect(band?.title).toBe('Dated at Meishan.');
     expect(dated.root.querySelector('.strike-clock-dated-says')?.textContent).toBe(
       'Dated at Meishan.',
+    );
+    // And what is drawn to illustrate, under it (#1226).
+    expect(dated.root.querySelector('.strike-clock-drawn')?.textContent).toBe(
+      'Drawn to illustrate.',
     );
   });
 
