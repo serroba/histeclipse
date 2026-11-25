@@ -197,6 +197,39 @@ describe('the strike clock’s panel (#1173)', () => {
     expect(label()).toBe('Marine genera left: 50%');
   });
 
+  it('draws a measured record above its slider, its cursor at the moment (#1229)', () => {
+    expect(clock().made.root.querySelector('.proxy-chart')).toBeNull();
+    const made = createStrikeClock({
+      title: 'The end-Permian, in its own time',
+      phases: PHASES,
+      scale: CRISIS_SCALE,
+      proxy: {
+        title: 'Temperature',
+        low: 20,
+        high: 30,
+        series: ['A'],
+        readings: [
+          { seconds: 0, value: 25, series: 0 },
+          { seconds: 0, value: 40, series: 0, between: [0, 1e12] },
+        ],
+        says: 'Measured.',
+      },
+      onMoment: vi.fn(),
+      onClose: vi.fn(),
+    });
+    made.open(0);
+    const [dot, span] = [...made.root.querySelectorAll<HTMLElement>('.proxy-dot')];
+    const at = (100 * CRISIS_SCALE.positionAt(0)) / CRISIS_SCALE.end;
+    expect(Number.parseFloat(dot?.style.left ?? '')).toBeCloseTo(at, 6);
+    expect(dot?.style.bottom).toBe('50%');
+    // Past its top, kept within it; known only between two moments, drawn across them.
+    expect(span?.style.bottom).toBe('100%');
+    expect(span?.classList.contains('proxy-span')).toBe(true);
+    const cursor = made.root.querySelector<HTMLElement>('.proxy-cursor');
+    expect(Number.parseFloat(cursor?.style.left ?? '')).toBeCloseTo(at, 6);
+    expect(made.root.querySelector('.proxy-key')?.textContent).toBe('A');
+  });
+
   it('says nothing of a phase before the first, and takes a second open or pause in its stride', () => {
     const onMoment = vi.fn();
     const made = createStrikeClock({

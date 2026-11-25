@@ -270,3 +270,100 @@
   font-size: 11px;
   line-height: 1.35;
 }
+
+/* A measured record above the slider (#1229): inset as the slider's marks are, so each reading
+   sits over its moment and the thumb is its cursor. */
+.proxy-chart {
+  margin: 0;
+}
+
+.proxy-title {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.proxy-plot {
+  position: relative;
+  height: 64px;
+  margin: 0 8px;
+  border-bottom: 1px solid rgb(255 255 255 / 0.15);
+  border-left: 1px solid rgb(255 255 255 / 0.15);
+}
+
+.proxy-axis {
+  position: absolute;
+  left: 3px;
+  color: var(--ink-muted);
+  font-size: 9px;
+  line-height: 1;
+}
+
+.proxy-axis-high {
+  top: 0;
+}
+
+.proxy-axis-low {
+  bottom: 2px;
+}
+
+.proxy-dot {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  margin: 0 0 -2.5px -2.5px;
+  border-radius: 50%;
+  background: var(--series);
+}
+
+.proxy-span {
+  width: auto;
+  height: 3px;
+  margin: 0 0 -1.5px;
+  border-radius: 2px;
+}
+
+.proxy-series-0 {
+  --series: rgb(150 190 230);
+}
+
+.proxy-series-1 {
+  --series: rgb(240 150 90);
+}
+
+.proxy-series-2 {
+  --series: rgb(200 200 200);
+}
+
+.proxy-cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--accent);
+}
+
+.proxy-key {
+  display: flex;
+  gap: 10px;
+  margin: 4px 0 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.proxy-key-item::before {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--series);
+  content: '';
+}
+
+.proxy-says {
+  margin: 2px 0 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
