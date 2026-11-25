@@ -16,6 +16,7 @@
  *   species, such as `neanderthal`; or `dna`, only the finds and places with ancient DNA (#1059).
  * - `story=humans` plays the human story once on opening (#177): the link a reader shares, or
  *   Explore's, to watch it; it leaves the address as soon as it starts.
+ * - `growth` picks how fast Earth grew before the Moon-forming impact (#1219).
  * - `impact`, `water`, `land` and `snowball` pick the hypotheses the deep-time globe sketches
  *   before the reconstructions reach: when the Moon-forming impact struck, where the oceans'
  *   water came from (#1142), how much of the surface was land, and how far a snowball's ice
@@ -25,6 +26,7 @@
 import { COAST_SOURCES, DEFAULT_COAST, type CoastSource } from '../../deepTime/coastline';
 import { DEFAULT_SEA_ICE_MODEL, SEA_ICE_MODELS, type SeaIceModel } from '../../data/seaIce';
 import { DEEP_SCALES, EARTH_AGE_MA, roundMa, type DeepScale } from '../../deepTime/scale';
+import { DEFAULT_GROWTH_MODEL, GROWTH_MODELS, type GrowthModel } from '../../deepTime/growth';
 import {
   DEFAULT_IMPACT_MODEL,
   DEFAULT_LAND_MODEL,
@@ -89,6 +91,8 @@ export interface DeepState {
   readonly temperatureShow: TemperatureShow;
   /** Before the reconstructions: which hypotheses the sketched surface follows. */
   readonly impact: ImpactModel;
+  /** How fast Earth grew before the impact (#1219). */
+  readonly growth: GrowthModel;
   readonly land: LandModel;
   readonly snowball: SnowballModel;
   readonly water: WaterModel;
@@ -106,6 +110,7 @@ export const DEEP_DEFAULTS: DeepState = {
   temperatureModel: DEFAULT_TEMPERATURE_MODEL,
   temperatureShow: DEFAULT_TEMPERATURE_SHOW,
   impact: DEFAULT_IMPACT_MODEL,
+  growth: DEFAULT_GROWTH_MODEL,
   land: DEFAULT_LAND_MODEL,
   snowball: DEFAULT_SNOWBALL_MODEL,
   water: DEFAULT_WATER_MODEL,
@@ -146,6 +151,7 @@ export const DEEP_PARAMS: Params<DeepState> = {
   temperatureModel: choice('temp', TEMPERATURE_MODELS, DEEP_DEFAULTS.temperatureModel),
   temperatureShow: choice('tshow', TEMPERATURE_SHOWS, DEEP_DEFAULTS.temperatureShow),
   impact: choice('impact', IMPACT_MODELS, DEEP_DEFAULTS.impact),
+  growth: choice('growth', GROWTH_MODELS, DEEP_DEFAULTS.growth),
   land: choice('land', LAND_MODELS, DEEP_DEFAULTS.land),
   snowball: choice('snowball', SNOWBALL_MODELS, DEEP_DEFAULTS.snowball),
   water: choice('water', WATER_MODELS, DEEP_DEFAULTS.water),

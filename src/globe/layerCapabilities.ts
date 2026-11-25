@@ -13,6 +13,8 @@ export interface LayerCapabilities {
   holdCraft(craft: CraftFrame | null): void;
   /** Show these images on the Sun, and the corona from its newest frame; null shows it plain. */
   showSunImage(image: SunImageTextures | null): void;
+  /** Draw Earth at `share` of its radius, its air with it: 1 as it is (#1219, Earth growing). */
+  earthSize(share: number): void;
 }
 
 export type LayerCapability = keyof LayerCapabilities;
@@ -21,6 +23,7 @@ export type LayerCapability = keyof LayerCapabilities;
 const CAPABILITIES: Readonly<Record<LayerCapability, true>> = {
   holdCraft: true,
   showSunImage: true,
+  earthSize: true,
 };
 
 /**

@@ -48,8 +48,8 @@ export function createSketchView(
     show(state, moment, playing) {
       strikes.show(state, moment?.ma ?? null, playing);
       falling.sync(paused());
-      const { impact, land, snowball, water } = state;
-      const choices = { impact, land, snowball, water };
+      const { growth, impact, land, snowball, water } = state;
+      const choices = { growth, impact, land, snowball, water };
       const sketch =
         moment?.uncharted === true ? sketchAt(moment.ma, choices, moment.reconstructed) : null;
       globe.setSketch(sketch);

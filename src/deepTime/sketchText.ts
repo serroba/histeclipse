@@ -1,5 +1,6 @@
 /** Wording for the sketched surface: what is drawn, on whose say-so, and what is invented. */
 
+import { GROWTH_CHOICES } from './growth';
 import { formatRange } from './milestoneText';
 import {
   crustShare,
@@ -36,6 +37,13 @@ function waterLines(sketch: Sketch, choices: SketchChoices): readonly string[] {
   return [`Where the water came from, argued over: ${choice.note} (${choice.source})`];
 }
 
+/** How fast Earth grew, before the impact (#1219): the choice and its sources. */
+function growthLines(sketch: Sketch, choices: SketchChoices): readonly string[] {
+  if (!sketch.questions.includes('growth')) return [];
+  const choice = GROWTH_CHOICES[choices.growth];
+  return [`How fast Earth grew, argued over: ${choice.note} (${choice.source})`];
+}
+
 /** What the globe shows at this moment, a sentence or two per question it answers. */
 export function sketchLines(sketch: Sketch, choices: SketchChoices, ma: number): readonly string[] {
   if (sketch.kind === 'magma') {
@@ -48,7 +56,7 @@ export function sketchLines(sketch: Sketch, choices: SketchChoices, ma: number):
         `This impact comes after the ${OLDEST_WATER_ZIRCON_MA.toLocaleString('en')}-million-year-old zircon that already shows liquid water (Wilde et al. 2001): the camps disagree on what the dates measure.`,
       );
     }
-    return [...lines, ...waterLines(sketch, choices)];
+    return [...growthLines(sketch, choices), ...lines, ...waterLines(sketch, choices)];
   }
   const lines: string[] = [...waterLines(sketch, choices)];
   if (sketch.questions.includes('impact')) {

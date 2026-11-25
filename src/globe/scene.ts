@@ -43,7 +43,7 @@ import { createEarthTileLayer } from './earthTiles';
 import { createReliefTileLayer } from './reliefTileLayer';
 import { BodiesInSpace } from './bodiesInSpace';
 import { createSpinAxis, PlacePin } from './earthMarks';
-import { createEarthMeshes, MOON_RGB, plainTexture } from './earthMesh';
+import { createEarthMeshes, earthSizer, MOON_RGB, plainTexture } from './earthMesh';
 import { EarthOverlays } from './earthOverlays';
 import { CameraRig } from './cameraRig';
 import { delegate } from './delegate';
@@ -367,6 +367,7 @@ export function createGlobe(
       sunMeshes.showImage(image);
       stage.invalidate();
     },
+    earthSize: earthSizer([earth, atmosphere], stage),
     drawOver(drawn, seenBy) {
       renderer.autoClear = false;
       renderer.clearDepth();

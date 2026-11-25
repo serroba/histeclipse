@@ -43,7 +43,7 @@ test('playing the aeons from their oldest moment opens on Earth and the Moon for
   });
   await test.step('Then the globe draws the impact, and the Moon gathering from its debris (#180)', async () => {
     await expect(globe).toHaveAttribute('data-formation-impact', 'moon', { timeout: 30_000 });
-    await expect(clock.locator('.strike-clock-drawn')).toContainText('an illustration');
+    await expect(clock.locator('.strike-clock-drawn')).toContainText('Illustration:');
   });
   await test.step('Then at its end it hands back to deep time, which plays on through the aeons', async () => {
     await expect(clock).toBeHidden({ timeout: 30_000 });
@@ -93,4 +93,36 @@ test('for a reader who asks for less motion, the aeons play without the formatio
   await expect(
     page.getByRole('dialog', { name: 'Earth and the Moon forming, in their own time' }),
   ).toBeHidden();
+});
+
+test('how fast Earth grew is the reader’s choice, and the formation clock follows it (#1219)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const clock = page.getByRole('dialog', { name: 'Earth and the Moon forming, in their own time' });
+  await test.step('Given the aeons before the impact, Then the rail asks how fast Earth grew, slowly by default', async () => {
+    await page.goto('./?ma=4540&scale=eons');
+    await globeRendered(page);
+    await expect(page.getByRole('button', { name: /^How fast Earth grew: Slow/ })).toBeVisible();
+  });
+  await test.step('When they pick the pebbles, Then the link keeps it', async () => {
+    await page.getByRole('button', { name: /^How fast Earth grew/ }).click();
+    await page.getByRole('button', { name: /^Fast: pebbles/ }).click();
+    await expect(page).toHaveURL(/growth=fast/);
+  });
+  await test.step('When they play, Then the clock draws Earth growing as the pebbles have it', async () => {
+    await page
+      .getByRole('navigation', { name: 'Deep time' })
+      .getByRole('button', { name: 'Play', exact: true })
+      .click();
+    await expect(clock).toBeVisible();
+    await expect(globe).toHaveAttribute('data-formation-growth', 'fast');
+  });
+  await test.step('After the impact the rail no longer asks', async () => {
+    await page.goto('./?ma=4500&scale=eons&growth=fast');
+    await globeRendered(page);
+    await expect(page.getByRole('button', { name: /^How fast Earth grew/ })).toBeHidden();
+  });
+  expect(problems).toEqual([]);
 });

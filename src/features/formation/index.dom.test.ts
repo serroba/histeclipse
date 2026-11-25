@@ -61,25 +61,50 @@ describe('the aeons begin with Earth and the Moon forming (#1218)', () => {
   it('marks the globe while it plays, drawing the impact from Theia’s approach (#180)', () => {
     const on = document.createElement('div');
     const update = vi.fn();
+    const sized = vi.fn();
     const zoomTo = vi.fn();
     const flyTo = vi.fn();
     const tools = {
       strikes: { on, zoomTo, flyTo },
-      layer: () => ({ update }),
+      layer: (factory: object) => ({ update: 'needs' in factory ? sized : update }),
     } as unknown as Parameters<ReturnType<typeof formationEvent>['play']>[0];
     const played = formationEvent('intermediate').play(tools);
     expect(on.dataset['formationClock']).toBe('intermediate');
+    expect(on.dataset['formationGrowth']).toBe('slow');
     played.at(-MYR);
     expect(update).toHaveBeenLastCalledWith(null);
-    expect(zoomTo).not.toHaveBeenCalled();
+    // Stood back as it opens, while Earth grows.
+    expect(zoomTo).toHaveBeenLastCalledWith(7);
+    played.at(-2 * MYR);
     played.at(-3600);
     played.at(0);
     expect(update).toHaveBeenLastCalledWith(0);
-    // Drawn back once, not each moment.
-    expect(zoomTo).toHaveBeenCalledTimes(1);
+    // Drawn back once more as Theia comes in, not each moment.
+    expect(zoomTo).toHaveBeenCalledTimes(2);
     expect(flyTo).toHaveBeenCalledTimes(1);
     played.end();
     expect(update).toHaveBeenLastCalledWith(null);
     expect(on.dataset['formationClock']).toBeUndefined();
+    expect(on.dataset['formationGrowth']).toBeUndefined();
+  });
+
+  it('draws Earth growing as the model chosen has it, whole from the impact (#1219)', () => {
+    const sized = vi.fn();
+    const tools = {
+      strikes: { on: document.createElement('div'), zoomTo: vi.fn(), flyTo: vi.fn() },
+      layer: (factory: object) => ({ update: 'needs' in factory ? sized : vi.fn() }),
+    } as unknown as Parameters<ReturnType<typeof formationEvent>['play']>[0];
+    const fast = formationEvent('early', 'fast').play(tools);
+    const slow = formationEvent('early', 'slow').play(tools);
+    // Two million years after the first solids: 55.3 Myr before an impact at 4,510 Ma.
+    const at = -55.3 * MYR;
+    fast.at(at);
+    const fastSize = sized.mock.lastCall?.[0] as number;
+    slow.at(at);
+    const slowSize = sized.mock.lastCall?.[0] as number;
+    expect(fastSize).toBeLessThan(slowSize);
+    expect(slowSize).toBeLessThan(1);
+    slow.at(0);
+    expect(sized).toHaveBeenLastCalledWith(null);
   });
 });

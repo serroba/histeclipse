@@ -18,10 +18,17 @@ import {
   WATER_CHOICES,
   WATER_MODELS,
 } from '../deepTime/sketch';
+import { GROWTH_CHOICES, GROWTH_MODELS } from '../deepTime/growth';
 import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import { element } from './dom';
 
-const SKETCH_QUESTIONS: readonly SketchQuestion[] = ['impact', 'water', 'land', 'snowball'];
+const SKETCH_QUESTIONS: readonly SketchQuestion[] = [
+  'growth',
+  'impact',
+  'water',
+  'land',
+  'snowball',
+];
 
 export interface DeepSketchNote {
   /** The note in view: the headline and the pickers. */
@@ -38,6 +45,13 @@ export interface DeepSketchNote {
 /** One picker per question a sketch can answer; only those the moment asks are shown. */
 function sketchPickers(): Readonly<Record<SketchQuestion, HTMLSelectElement>> {
   return {
+    growth: element(
+      'select',
+      { class: 'deep-coast', 'aria-label': 'How fast Earth grew' },
+      ...GROWTH_MODELS.map((model) =>
+        element('option', { value: model }, GROWTH_CHOICES[model].label),
+      ),
+    ),
     impact: element(
       'select',
       { class: 'deep-coast', 'aria-label': 'Moon-forming impact' },
@@ -72,6 +86,7 @@ export function createDeepSketchNote(
   const row = (question: SketchQuestion, label: string): HTMLElement =>
     element('p', { hidden: '' }, element('label', {}, label, pickers[question]));
   const rows: Readonly<Record<SketchQuestion, HTMLElement>> = {
+    growth: row('growth', 'How fast Earth grew '),
     impact: row('impact', 'Moon-forming impact '),
     water: row('water', 'Where the water came from '),
     land: row('land', 'How much land '),
@@ -101,6 +116,10 @@ export function createDeepSketchNote(
       words,
     ),
   );
+  pickers.growth.addEventListener('change', () => {
+    const growth = GROWTH_MODELS.find((option) => option === pickers.growth.value);
+    if (growth !== undefined) onSketch({ growth });
+  });
   pickers.impact.addEventListener('change', () => {
     const impact = IMPACT_MODELS.find((option) => option === pickers.impact.value);
     if (impact !== undefined) onSketch({ impact });

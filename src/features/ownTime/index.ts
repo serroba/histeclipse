@@ -18,6 +18,7 @@ import { roundMa } from '../../deepTime/scale';
 import type { StoryDate } from '../../deepTime/storyDate';
 import { formatMa } from '../../time/format';
 import type { Pace } from '../../deepTime/playSpeed';
+import type { LayerCapability } from '../../globe/layerCapabilities';
 import type { GlobeLayer, LayerFactory } from '../../globe/layerHost';
 import type { Capabilities, FeatureCore } from '../feature';
 import type { EventPhase } from './phases';
@@ -33,7 +34,9 @@ import {
 interface OwnTimeTools {
   readonly strikes: Capabilities['strikes'];
   /** A layer on the globe, added the first time it is asked for and kept for the next. */
-  layer<Input>(factory: LayerFactory<Input>): GlobeLayer<Input>;
+  layer<Input, Needs extends LayerCapability = never>(
+    factory: LayerFactory<Input, Needs>,
+  ): GlobeLayer<Input>;
 }
 
 /** An event drawing on its clock: shown at a moment, and taken away. */
@@ -173,19 +176,27 @@ function marked(event: OwnTimeEvent): { dated?: DatedWindow; drawn?: string } {
   };
 }
 
-export function createOwnTime(
-  core: Pick<FeatureCore, 'globe' | 'change' | 'refresh'>,
-  lent: Lent,
-): OwnTime {
-  const layers = new Map<LayerFactory<never>, GlobeLayer<never>>();
-  const tools: OwnTimeTools = {
+/** What an event's drawing is lent: the strikes, and its layers, each added once and kept. */
+function drawingTools(core: Pick<FeatureCore, 'globe'>, lent: Lent): OwnTimeTools {
+  const layers = new Map<object, GlobeLayer<never>>();
+  return {
     strikes: lent.strikes,
-    layer<Input>(factory: LayerFactory<Input>): GlobeLayer<Input> {
-      const made = layers.get(factory) ?? core.globe.addLayer(factory);
+    layer<Input, Needs extends LayerCapability = never>(
+      factory: LayerFactory<Input, Needs>,
+    ): GlobeLayer<Input> {
+      const made =
+        (layers.get(factory) as GlobeLayer<Input> | undefined) ?? core.globe.addLayer(factory);
       layers.set(factory, made);
       return made;
     },
   };
+}
+
+export function createOwnTime(
+  core: Pick<FeatureCore, 'globe' | 'change' | 'refresh'>,
+  lent: Lent,
+): OwnTime {
+  const tools = drawingTools(core, lent);
   const offer = createStrikeOffer((element) => {
     lent.overPage.add(element);
   });

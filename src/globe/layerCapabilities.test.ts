@@ -7,6 +7,7 @@ function host(): { requestRender: () => void } & LayerCapabilities {
     requestRender: () => undefined,
     holdCraft: () => undefined,
     showSunImage: () => undefined,
+    earthSize: () => undefined,
   };
 }
 

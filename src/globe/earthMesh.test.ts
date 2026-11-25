@@ -1,8 +1,8 @@
-import { BackSide, type ShaderMaterial, Texture, Vector3 } from 'three';
-import { describe, expect, it } from 'vitest';
+import { BackSide, Object3D, type ShaderMaterial, Texture, Vector3 } from 'three';
+import { describe, expect, it, vi } from 'vitest';
 import { ATMOSPHERE_FRAGMENT } from './bodyShaders';
 import type { EarthPart } from './earthParts';
-import { createEarthMeshes, MOON_RGB, plainTexture } from './earthMesh';
+import { createEarthMeshes, earthSizer, MOON_RGB, plainTexture } from './earthMesh';
 
 function light() {
   return {
@@ -70,5 +70,17 @@ describe('createEarthMeshes', () => {
   it('refuses a part whose uniform clashes with Earth’s own', () => {
     const clash: EarthPart = { ...GLOW, name: 'clash', uniforms: () => ({ dayMap: { value: 0 } }) };
     expect(() => createEarthMeshes(light(), new Texture(), [clash])).toThrow();
+  });
+});
+
+describe('Earth drawn at a share of its size (#1219)', () => {
+  it('scales Earth and its air together, and asks for a frame', () => {
+    const earth = new Object3D();
+    const air = new Object3D();
+    const invalidate = vi.fn();
+    earthSizer([earth, air], { invalidate })(0.4);
+    expect(earth.scale.x).toBeCloseTo(0.4);
+    expect(air.scale.z).toBeCloseTo(0.4);
+    expect(invalidate).toHaveBeenCalledTimes(1);
   });
 });
