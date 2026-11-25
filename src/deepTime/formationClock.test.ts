@@ -51,14 +51,14 @@ describe('the formation clock (#1218)', () => {
     expect(EARLY.text(1 * MYR - (FIRST_SOLIDS_MA - 4510) * MYR)).toBe(
       '1 million years after the first solids',
     );
-    expect(EARLY.text(-3 * 3600)).toBe('3 hours before the impact');
+    expect(EARLY.text(-1.5 * 3600)).toBe('1.5 hours before the impact');
     expect(EARLY.text(0)).toBe('The impact');
     expect(EARLY.text(1.5 * MYR)).toBe('1.5 million years after the impact');
   });
 
   it('marks the first solids, the impact and the end', () => {
     const labels = EARLY.marks.map(([, label]) => label);
-    expect(labels).toEqual(['First solids', '1 Myr', 'Impact', '1,000 years', '10 Myr']);
+    expect(labels).toEqual(['First solids', 'Impact', '1,000 years', '10 Myr']);
     expect(EARLY.positionAt(EARLY.marks[0]?.[0] ?? NaN)).toBeCloseTo(0);
   });
 
@@ -66,6 +66,13 @@ describe('the formation clock (#1218)', () => {
     expect(EARLY.end / EARLY.advance('slow', 1, 0)).toBeGreaterThan(50);
     expect(EARLY.end / EARLY.advance('slow', 1, 0)).toBeLessThan(80);
     expect(EARLY.advance('normal', 1, 0)).toBeLessThan(EARLY.advance('fast', 1, 0));
+  });
+
+  it('plays at half pace from Theia coming in to a day after the impact (#180)', () => {
+    const full = EARLY.advance('normal', 1, 0);
+    expect(EARLY.advance('normal', 1, EARLY.positionAt(-APPROACH))).toBeCloseTo(full / 2);
+    expect(EARLY.advance('normal', 1, EARLY.positionAt(3600))).toBeCloseTo(full / 2);
+    expect(EARLY.advance('normal', 1, EARLY.positionAt(2 * 86_400))).toBe(full);
   });
 
   it('turns seconds since the impact into deep time’s moment and back', () => {
