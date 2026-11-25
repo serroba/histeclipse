@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { CRISIS_SCALE } from '../../deepTime/crisisClock';
 import { CLOCK_END, positionAt } from '../../deepTime/strikeClock';
 import { createStrikeClock, createStrikeOffer, OFFER_MS } from './strikeClock';
 import type { EventPhase } from './phases';
@@ -134,6 +135,34 @@ describe('the strike clock’s panel (#1173)', () => {
     expect(Number(made.root.dataset['seconds'])).toBeLessThan(0);
     play.click();
     expect(made.root.dataset['playing']).toBe('false');
+  });
+
+  it('draws its extinction’s dated window as a band, fading over each end’s uncertainty, with its words (#1228)', () => {
+    const KYR = 1000 * 365.25 * 86_400;
+    const plain = createStrikeClock({
+      title: 'Chicxulub, in its own time',
+      phases: PHASES,
+      onMoment: vi.fn(),
+      onClose: vi.fn(),
+    });
+    expect(plain.root.querySelector('.strike-clock-dated')).toBeNull();
+    expect(plain.root.querySelector('.strike-clock-dated-says')).toBeNull();
+    const dated = createStrikeClock({
+      title: 'The end-Permian, in its own time',
+      phases: PHASES,
+      scale: CRISIS_SCALE,
+      dated: { from: 0, to: 60 * KYR, plusMinus: [20 * KYR, 20 * KYR], says: 'Dated at Meishan.' },
+      onMoment: vi.fn(),
+      onClose: vi.fn(),
+    });
+    const band = dated.root.querySelector<HTMLElement>('.strike-clock-dated');
+    const at = (seconds: number) => (100 * CRISIS_SCALE.positionAt(seconds)) / CRISIS_SCALE.end;
+    expect(Number.parseFloat(band?.style.left ?? '')).toBeCloseTo(at(-20 * KYR), 6);
+    expect(Number.parseFloat(band?.style.width ?? '')).toBeCloseTo(at(80 * KYR) - at(-20 * KYR), 6);
+    expect(Number(band?.style.getPropertyValue('--in'))).toBeCloseTo(0.2, 6);
+    expect(Number(band?.style.getPropertyValue('--out'))).toBeCloseTo(0.8, 6);
+    expect(band?.title).toBe('Dated at Meishan.');
+    expect(dated.root.querySelector('.strike-clock-dated-says')?.textContent).toBe('Dated at Meishan.');
   });
 
   it('says nothing of a phase before the first, and takes a second open or pause in its stride', () => {

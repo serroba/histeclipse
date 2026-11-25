@@ -14,7 +14,13 @@ import type { Pace } from '../../deepTime/playSpeed';
 import type { GlobeLayer, LayerFactory } from '../../globe/layerHost';
 import type { Capabilities, FeatureCore } from '../feature';
 import type { EventPhase } from './phases';
-import { createStrikeClock, createStrikeOffer, OFFER_MS, type StrikeClock } from './strikeClock';
+import {
+  createStrikeClock,
+  createStrikeOffer,
+  OFFER_MS,
+  type DatedWindow,
+  type StrikeClock,
+} from './strikeClock';
 
 /** What an event playing on its clock is given to draw with. */
 interface OwnTimeTools {
@@ -30,6 +36,7 @@ interface OwnTimePlay {
 }
 
 export { phase, phaseAt, type EventPhase } from './phases';
+export type { DatedWindow } from './strikeClock';
 
 export interface OwnTimeEvent {
   /** Which event: the same one reached by two layers is watched once. */
@@ -45,6 +52,8 @@ export interface OwnTimeEvent {
    * one with more takes the clock over. Chicxulub with the Deccan Traps fuming outranks it alone.
    */
   readonly rank?: number;
+  /** Its extinction's dated window, where one is dated (#1228). */
+  readonly dated?: DatedWindow;
   /** Start drawing it, to be moved by its clock. */
   play(tools: OwnTimeTools): OwnTimePlay;
 }
@@ -103,6 +112,7 @@ export function createOwnTime(core: Pick<FeatureCore, 'globe' | 'change'>, lent:
       title: event.title,
       phases: event.phases,
       scale: event.scale,
+      ...(event.dated === undefined ? {} : { dated: event.dated }),
       onMoment: (seconds) => {
         playing.at(seconds);
       },
