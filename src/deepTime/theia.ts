@@ -5,14 +5,21 @@
  * are ways to make a Moon mostly of Earth's own mantle.
  *
  * Each hit's numbers are those its papers give, rounded; how the debris moves after it is drawn
- * as illustration. The synestia and the many smaller hits come in a second part.
+ * as illustration.
  *
  * Pure.
  */
 
 import type { Choice } from './sketch';
 
-export const THEIA_MODELS = ['canonical', 'fastSpin', 'halfEarths', 'immediate'] as const;
+export const THEIA_MODELS = [
+  'canonical',
+  'fastSpin',
+  'halfEarths',
+  'synestia',
+  'manyHits',
+  'immediate',
+] as const;
 export type TheiaModel = (typeof THEIA_MODELS)[number];
 export const DEFAULT_THEIA_MODEL: TheiaModel = 'canonical';
 
@@ -26,8 +33,11 @@ export interface Hit {
   readonly graze: number;
   /** The proto-Earth's share of today's mass just before it. */
   readonly protoEarth: number;
-  /** A disc the Moon gathers from, or a Moon thrown straight into orbit within hours. */
-  readonly outcome: 'disc' | 'immediate';
+  /**
+   * A disc the Moon gathers from; a Moon thrown straight into orbit within hours; a synestia, a
+   * vaporised doughnut the Moon condenses in; or moonlets from many hits, merging.
+   */
+  readonly outcome: 'disc' | 'immediate' | 'synestia' | 'moonlets';
 }
 
 export interface TheiaChoice extends Choice<TheiaModel> {
@@ -59,6 +69,22 @@ export const THEIA_CHOICES: Readonly<Record<TheiaModel, TheiaChoice>> = {
     note: 'Two bodies of about half Earth’s mass each collide slowly and mix so well that the Moon and Earth come out alike in composition.',
     source: 'Canup 2012, Science 338',
     url: 'https://doi.org/10.1126/science.1226073',
+  },
+  synestia: {
+    id: 'synestia',
+    label: 'Synestia: Earth vaporised into a doughnut',
+    hit: { radius: 0.5, speedKm: 15, graze: 0.6, protoEarth: 0.9, outcome: 'synestia' },
+    note: 'A high-energy, high-angular-momentum impact leaves Earth a synestia, a doughnut of rock vapour larger than the planet. Moonlets condense inside it, take on its isotopes and grow into the Moon, until the cooling synestia shrinks back inside the Moon’s orbit. How long that takes is drawn as a guess: about a decade.',
+    source: 'Lock et al. 2018, Journal of Geophysical Research: Planets 123',
+    url: 'https://doi.org/10.1002/2017JE005333',
+  },
+  manyHits: {
+    id: 'manyHits',
+    label: 'Many hits: moonlets merging',
+    hit: { radius: 0.3, speedKm: 15, graze: 0.5, protoEarth: 0.95, outcome: 'moonlets' },
+    note: 'A series of smaller impacts, some twenty in their simulations, each throws out a disc that gathers into a moonlet; the moonlets move outward and merge into the Moon, made mostly of Earth’s own rock. Drawn as six hits, the Moon growing with each; their spacing is invented.',
+    source: 'Rufu, Aharonson & Perets 2017, Nature Geoscience 10',
+    url: 'https://doi.org/10.1038/ngeo2866',
   },
   immediate: {
     id: 'immediate',

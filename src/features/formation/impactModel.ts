@@ -90,9 +90,43 @@ const smooth = (s: number): number => s * s * (3 - 2 * s);
 
 /** When the Moon gathers, and when the rest of the debris clears, seconds after the impact. */
 function timing(hit: Hit): { gather: readonly [number, number]; clear: readonly [number, number] } {
-  return hit.outcome === 'immediate'
-    ? { gather: [3 * HOUR, 12 * HOUR], clear: [DAY, YEAR] }
-    : { gather: [DAY, YEAR], clear: [DAY, 100 * YEAR] };
+  switch (hit.outcome) {
+    case 'immediate':
+      return { gather: [3 * HOUR, 12 * HOUR], clear: [DAY, YEAR] };
+    case 'synestia':
+      return { gather: [DAY, 10 * YEAR], clear: [DAY, 10 * YEAR] };
+    case 'moonlets':
+      return { gather: [DAY, YEAR], clear: [DAY, 10 * YEAR] };
+    case 'disc':
+      return { gather: [DAY, YEAR], clear: [DAY, 100 * YEAR] };
+  }
+}
+
+/**
+ * The later hits of the many-hits case (#1220), seconds after the first: drawn as five more, the
+ * spacing invented, each flashing on Earth and adding a moonlet to the Moon.
+ */
+export const LATER_HITS: readonly number[] = [
+  100 * YEAR,
+  1e4 * YEAR,
+  3e5 * YEAR,
+  2e6 * YEAR,
+  6e6 * YEAR,
+];
+
+/** A later hit's flash, if one is showing at `seconds`: it lasts half as long again as its time. */
+function laterFlash(
+  seconds: number,
+  angle: number,
+): { place: Triple; size: number; glow: number } | null {
+  const index = LATER_HITS.findIndex((at) => seconds >= at && seconds < 1.5 * at);
+  const at = LATER_HITS[index];
+  if (at === undefined) return null;
+  return {
+    place: onDisc(1, angle + 1.3 * (index + 1)),
+    size: 0.6,
+    glow: 1 - logShare(seconds, at, 1.5 * at),
+  };
 }
 
 export interface TheiaMoment {
@@ -128,6 +162,8 @@ export function flashAt(
   seconds: number,
   hit: Hit = CANONICAL,
 ): { place: Triple; size: number; glow: number } | null {
+  if (hit.outcome === 'moonlets' && seconds > 12 * HOUR)
+    return laterFlash(seconds, strikeAngle(hit));
   if (seconds < 0 || seconds > 12 * HOUR) return null;
   const rising = Math.min(1, seconds / (5 * MINUTE));
   const fading = 1 - logShare(seconds, 5 * MINUTE, 12 * HOUR);
@@ -182,6 +218,24 @@ export function turned(r: number, played: number): number {
   return 0.5 * (r / 1.5) ** -1.5 * played;
 }
 
+/** The Moon's share of its mass at `seconds` since the impact, at least a day, as `hit` builds it. */
+function moonMass(seconds: number, hit: Hit): number {
+  switch (hit.outcome) {
+    // Condensing inside the synestia over its decade.
+    case 'synestia':
+      return logShare(seconds, DAY, 10 * YEAR);
+    // A moonlet from each hit: the first within a year, one more with each later hit.
+    case 'moonlets': {
+      const later = LATER_HITS.filter((at) => seconds >= at).length;
+      return (logShare(seconds, DAY, YEAR) + later) / (LATER_HITS.length + 1);
+    }
+    // Most of it within a year from the outer disc; the rest over a century from the inner.
+    case 'disc':
+    case 'immediate':
+      return 0.6 * logShare(seconds, DAY, YEAR) + 0.4 * logShare(seconds, YEAR, 100 * YEAR);
+  }
+}
+
 /** The Moon at `seconds` since the impact, `played` seconds of play: its place, size and heat. */
 export function moonAt(
   seconds: number,
@@ -201,8 +255,7 @@ export function moonAt(
     };
   }
   if (seconds < DAY) return null;
-  // Most of its mass within a year from the outer disc; the rest over a century from the inner.
-  const mass = 0.6 * logShare(seconds, DAY, YEAR) + 0.4 * logShare(seconds, YEAR, 100 * YEAR);
+  const mass = moonMass(seconds, hit);
   return {
     place: onDisc(MOON_ORBIT, angle + Math.PI + turned(MOON_ORBIT, played)),
     radius: MOON_RADIUS * Math.cbrt(Math.max(0.05, mass)),
@@ -216,6 +269,25 @@ export interface PieceMoment {
   readonly place: Triple;
   readonly heat: number;
   readonly opacity: number;
+}
+
+/**
+ * A piece of a synestia (#1220): the debris swollen into a thick doughnut of hot vapour, out
+ * past where the Moon forms, shrinking back as it cools over its decade.
+ */
+function inSynestia(
+  piece: Piece,
+  seconds: number,
+  at: { readonly r: number; readonly angle: number; readonly s: number; readonly heat: number },
+): PieceMoment | null {
+  const g = smooth(logShare(seconds, DAY, 10 * YEAR));
+  if (g >= 1) return null;
+  const r = (1.02 + (1.6 * piece.r - 1.02) * at.s) * (1 - 0.6 * g);
+  return {
+    place: onDisc(r, at.angle, 4 * piece.y * at.s * (1 - g)),
+    heat: Math.max(at.heat, 0.8 * (1 - g)),
+    opacity: 1 - g,
+  };
 }
 
 /** Where `piece` is at `seconds` since the impact, after `played` seconds of play. */
@@ -235,6 +307,7 @@ export function pieceAt(
   const angle = struck + span * lag + (seconds > DAY ? turned(piece.r, played) : 0);
   const r = 1.02 + (piece.r - 1.02) * s + piece.fling * piece.r * Math.sin(Math.PI * s);
   const heat = 1 - 0.75 * logShare(seconds, HOUR, 100 * YEAR);
+  if (hit.outcome === 'synestia') return inSynestia(piece, seconds, { r, angle, s, heat });
   const settled: Triple = onDisc(r, angle, piece.y * s);
   if (piece.fate === 'moon') {
     // Gathered into the Moon: over the year after the first day, or within hours.

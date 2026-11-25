@@ -4,6 +4,7 @@ import { THEIA_CHOICES } from '../../deepTime/theia';
 import {
   flashAt,
   IMMEDIATE_ORBIT,
+  LATER_HITS,
   strikeAngle,
   glowColour,
   MOON_ORBIT,
@@ -151,5 +152,42 @@ describe('the canonical giant impact, drawn (#180)', () => {
       made.filter((piece) => pieceAt(piece, seconds, 0, hit) !== null).length;
     expect(shown(13 * HOUR)).toBe(20);
     expect(shown(2 * YEAR)).toBe(0);
+  });
+
+  it('swells a synestia past the Moon’s orbit, the Moon condensing in it as it shrinks over a decade (#1220)', () => {
+    const hit = THEIA_CHOICES.synestia.hit;
+    const made = pieces(60);
+    const reach = (seconds: number): number =>
+      Math.max(
+        ...made.map((piece) => {
+          const at = pieceAt(piece, seconds, 0, hit);
+          return at === null ? 0 : Math.hypot(at.place[0], at.place[2]);
+        }),
+      );
+    expect(reach(DAY)).toBeGreaterThan(MOON_ORBIT);
+    expect(reach(3 * YEAR)).toBeLessThan(reach(DAY));
+    expect(made.every((piece) => pieceAt(piece, 11 * YEAR, 0, hit) === null)).toBe(true);
+    // Thick, not a thin disc: well off the plane.
+    const off = Math.max(
+      ...made.map((piece) => Math.abs(pieceAt(piece, DAY, 0, hit)?.place[1] ?? 0)),
+    );
+    expect(off).toBeGreaterThan(0.3);
+    expect(moonAt(YEAR, 0, hit)?.radius).toBeLessThan(MOON_RADIUS);
+    expect(moonAt(10 * YEAR, 0, hit)?.radius).toBeCloseTo(MOON_RADIUS);
+  });
+
+  it('grows the Moon with each of many hits, each flashing on Earth (#1220)', () => {
+    const hit = THEIA_CHOICES.manyHits.hit;
+    const radius = (seconds: number): number => moonAt(seconds, 0, hit)?.radius ?? 0;
+    const steps = [YEAR, ...LATER_HITS.map((at) => at * 1.01)].map(radius);
+    for (let index = 1; index < steps.length; index += 1) {
+      expect(steps[index]).toBeGreaterThan(steps[index - 1] ?? Infinity);
+    }
+    expect(steps.at(-1)).toBeCloseTo(MOON_RADIUS);
+    const second = LATER_HITS[0] ?? 0;
+    expect(flashAt(second * 1.1, hit)?.glow).toBeGreaterThan(0.5);
+    expect(length(flashAt(second * 1.1, hit)?.place ?? [0, 0, 0])).toBeCloseTo(1);
+    expect(flashAt(second * 2, hit)).toBeNull();
+    expect(flashAt(DAY, hit)).toBeNull();
   });
 });
