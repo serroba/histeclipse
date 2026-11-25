@@ -8,7 +8,7 @@
  * within a day into a disc, part inside the distance where Earth's tides pull a moon apart (the
  * Roche limit, about 2.9 Earth radii) and part beyond; the Moon gathers just outside it, about
  * 3.8 Earth radii out, most of it within a year and the rest from the inner disc over about a
- * century. Everything else is illustration: the paths of single pieces, the glow, and the Moon's
+ * century; then it draws away as its tides slow Earth's spin (`moonOrbit`). Everything else is illustration: the paths of single pieces, the glow, and the Moon's
  * and the disc's turning, which follows the time played, not the years, so they do not blur.
  *
  * In Earth radii, in the frame of Earth's spin axis: y along the axis, the equator the x–z plane,
@@ -37,8 +37,23 @@ export const MOON_ORBIT = 3.8;
 /** The Roche limit, inside which Earth's tides keep debris from gathering. */
 export const ROCHE = 2.9;
 /** Where the Moon is thrown straight into orbit, when it forms within hours: far outside the
- * Roche limit (Kegerreis et al. 2022), drawn at 8 Earth radii. */
-export const IMMEDIATE_ORBIT = 8;
+ * Roche limit, a nearly circular orbit with its periapsis 7.1 Earth radii out in Kegerreis et
+ * al. 2022's example, drawn at 7. */
+export const IMMEDIATE_ORBIT = 7;
+
+/**
+ * When the Moon starts drawing away, seconds after the impact: from then its distance grows as
+ * the 2/13 power of time, as tides of a constant strength give, to about 15 Earth radii at ten
+ * million years. How far it went in that time is argued, from 7–9 Earth radii (Korenaga 2023) to
+ * 30–40 (Zahnle et al. 2015; Farhat et al. 2025): drawn between them.
+ */
+const RECEDES_FROM = 1300 * YEAR;
+
+/** How far out the Moon is, `seconds` after the impact, having formed `start` Earth radii out. */
+export function moonOrbit(seconds: number, start = MOON_ORBIT): number {
+  if (seconds <= RECEDES_FROM) return start;
+  return Math.max(start, MOON_ORBIT * (seconds / RECEDES_FROM) ** (2 / 13));
+}
 
 /** The canonical hit, drawn unless another is chosen. */
 export const CANONICAL: Hit = THEIA_CHOICES.canonical.hit;
@@ -247,7 +262,7 @@ export function moonAt(
     // Thrown out of the arm whole within hours, out to a wide orbit; little to gather after.
     if (seconds < 3 * HOUR) return null;
     const out = smooth(logShare(seconds, 3 * HOUR, 12 * HOUR));
-    const r = 2 + (IMMEDIATE_ORBIT - 2) * out;
+    const r = moonOrbit(seconds, 2 + (IMMEDIATE_ORBIT - 2) * out);
     return {
       place: onDisc(r, angle + 2 + turned(r, played)),
       radius: MOON_RADIUS * Math.cbrt(0.85 + 0.15 * out),
@@ -256,8 +271,9 @@ export function moonAt(
   }
   if (seconds < DAY) return null;
   const mass = moonMass(seconds, hit);
+  const r = moonOrbit(seconds);
   return {
-    place: onDisc(MOON_ORBIT, angle + Math.PI + turned(MOON_ORBIT, played)),
+    place: onDisc(r, angle + Math.PI + turned(r, played)),
     radius: MOON_RADIUS * Math.cbrt(Math.max(0.05, mass)),
     // Molten, then crusting over in its first ten million years.
     heat: 1 - logShare(seconds, 1000 * YEAR, 1e7 * YEAR),
@@ -346,5 +362,8 @@ export function moonColour(heat: number): Triple {
 
 /** How far out the camera stands to see it all: past the Moon's orbit, with room. */
 export const IMPACT_DISTANCE = 22;
+/** How far it stands once the Moon has drawn away, from `RECEDED` seconds on: its orbit in view. */
+export const RECEDED_DISTANCE = 64;
+export const RECEDED = 1e5 * YEAR;
 /** Where it looks from: above the equator, so the disc shows as a ring, not edge on. */
 export const IMPACT_VIEW = { latitude: 30, longitude: 0 } as const;

@@ -93,6 +93,13 @@ const FROM_IMPACT: readonly EventPhase[] = [
     ['zahnle2007', 'lebrun2013'],
   ),
   phase(
+    'moon-recedes',
+    1e4 * YEAR,
+    'The Moon draws away: how fast is argued',
+    'The tides the Moon raises on Earth slow Earth’s spin and push the Moon outward. With Earth’s mantle molten, the tides were strong: some put the Moon 30 to 40 Earth radii out within millions of years (Zahnle et al.; Farhat et al.), others only 7 to 9 by the time the magma ocean froze (Korenaga). Drawn between them, about 15 by ten million years; today it is 60.',
+    ['zahnle2015', 'farhat2025', 'korenaga2023'],
+  ),
+  phase(
     'first-ocean',
     1.5 * MYR,
     'The first ocean',

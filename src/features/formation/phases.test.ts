@@ -49,6 +49,7 @@ describe('the formation clock’s phases (#1218)', () => {
       'earth-grows',
       'impact',
       'moon-gathers',
+      'moon-recedes',
       'moon-crust',
     ]);
     for (const each of argued) expect(each.sources.length).toBeGreaterThan(1);

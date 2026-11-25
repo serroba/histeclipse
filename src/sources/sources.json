@@ -770,6 +770,12 @@
     "url": "https://doi.org/10.1594/PANGAEA.971968",
     "licence": "CC BY 4.0"
   },
+  "farhat2025": {
+    "name": "Farhat et al. 2025",
+    "kind": "paper",
+    "cite": "Farhat, M., Auclair-Desrotour, P., Boué, G., Lichtenberg, T., Laskar, J. (2025), Tides on Lava Worlds: Application to Close-in Exoplanets and the Early Earth–Moon System, The Astrophysical Journal 979(2), 133. Licence CC BY 4.0. Our summary: tides in a molten Earth's magma ocean push the young Moon outward fast, to at least about 14 Earth radii by the time the magma ocean solidifies, between earlier low and high estimates",
+    "url": "https://doi.org/10.3847/1538-4357/ad9b93"
+  },
   "farquhar2000": {
     "name": "Farquhar, Bao & Thiemens 2000",
     "kind": "paper",
@@ -1412,6 +1418,12 @@
     "cite": "Kopp, R. E., Kemp, A. C., Bittermann, K., Horton, B. P., Donnelly, J. P., Gehrels, W. R., Hay, C. C., Mitrovica, J. X., Morrow, E. D., Rahmstorf, S. (2016), Temperature-driven global sea-level variability in the Common Era, Proceedings of the National Academy of Sciences 113, E1434–E1441: global sea level from 1000 BCE to 2010 CE with its 1-sigma uncertainty, from a Gaussian-process model of proxy relative sea-level records and tide gauges (model ML2,1); the series as published with the authors’ SESL code, github.com/bobkopp/SESL (Data/GLMW-1ts.mat)",
     "url": "https://doi.org/10.1073/pnas.1517056113",
     "licence": "GPL-3.0 (the SESL repository’s licence); our series derived from it is shared under the same licence"
+  },
+  "korenaga2023": {
+    "name": "Korenaga 2023",
+    "kind": "paper",
+    "cite": "Korenaga, J. (2023), Rapid solidification of Earth’s magma ocean limits early lunar recession, Icarus 400, 115564. Our summary: Earth's magma ocean froze too fast to drive the young Moon far, leaving it only about 7–9 Earth radii out when it had solidified",
+    "url": "https://doi.org/10.1016/j.icarus.2023.115564"
   },
   "korte2011": {
     "name": "Korte et al. 2011",
@@ -2724,6 +2736,12 @@
     "kind": "paper",
     "cite": "Zahnle, K., Arndt, N., Cockell, C., et al. (2007), Emergence of a Habitable Planet, Space Science Reviews 129(1-3), 35–78. Our summary: a review of how Earth became habitable after the Moon-forming impact: a magma ocean under a steam atmosphere for a few million years at most, then a hot water ocean under thick carbon dioxide",
     "url": "https://doi.org/10.1007/s11214-007-9225-z"
+  },
+  "zahnle2015": {
+    "name": "Zahnle et al. 2015",
+    "kind": "paper",
+    "cite": "Zahnle, K. J., Lupu, R., Dobrovolskis, A., Sleep, N. H. (2015), The tethered Moon, Earth and Planetary Science Letters 427, 74–82. Our summary: tides raised in a partly molten Earth tie the young Moon's recession to how fast Earth cools, so the Moon moves out quickly over Earth's first millions of years",
+    "url": "https://doi.org/10.1016/j.epsl.2015.06.058"
   },
   "zhang2012": {
     "name": "Zhang et al. 2012",
