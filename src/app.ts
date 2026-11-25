@@ -272,6 +272,7 @@ export async function startApp(root: HTMLElement): Promise<void> {
     },
     finds: (state) => features.finds(state),
     platesReach: () => plateMasks.reach(),
+    watchFormation: () => features.watchFormation(store.get()),
     loadArchive: () => {
       co2Archive.load();
     },

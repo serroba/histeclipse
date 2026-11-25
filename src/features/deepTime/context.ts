@@ -67,6 +67,8 @@ export interface DeepTimeContext extends PartContext {
   /** How far back the plates reach, Ma, once known. */
   platesReach(): number | undefined;
   loadArchive(): void;
+  /** Watch Earth and the Moon form, in their own time, as a milestone's card asks (#1218). */
+  readonly watchFormation: () => boolean;
 }
 
 export interface DeepTimePart {

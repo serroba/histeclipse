@@ -24,6 +24,7 @@ const bar = createDeepTimeBar({
   onTemperatureModel: nothing,
   onTemperatureShow: nothing,
   onSketch: nothing,
+  onWatchFormation: nothing,
 });
 const period = bar.root.querySelector<HTMLElement>('.deep-period');
 if (period === null) throw new Error('The production bar has no period label');

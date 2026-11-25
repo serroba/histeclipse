@@ -10,7 +10,10 @@ const at = anchorMa(first);
 
 describe('the milestone panel', () => {
   it('keeps its cards while the same milestones stay near, as deep time plays', () => {
-    const panel = createMilestonePanel({ onMa: () => undefined });
+    const panel = createMilestonePanel({
+      onMa: () => undefined,
+      onWatchFormation: () => undefined,
+    });
     panel.render(at, 540);
     const cards = [...panel.root.querySelectorAll('article')];
     expect(cards.length).toBeGreaterThan(0);
@@ -21,7 +24,10 @@ describe('the milestone panel', () => {
   });
 
   it('builds new cards once other milestones are near', () => {
-    const panel = createMilestonePanel({ onMa: () => undefined });
+    const panel = createMilestonePanel({
+      onMa: () => undefined,
+      onWatchFormation: () => undefined,
+    });
     panel.render(at, 540);
     const before = panel.root.querySelector('article');
     // Far from any milestone the panel says so.
@@ -42,7 +48,7 @@ describe('the milestone panel', () => {
     if (middle === undefined) throw new Error('no milestone between two others');
     const ma = anchorMa(middle);
     const onMa = vi.fn();
-    const panel = createMilestonePanel({ onMa });
+    const panel = createMilestonePanel({ onMa, onWatchFormation: vi.fn() });
     panel.render(ma, 540);
     const [earlier, later] = panel.root.querySelectorAll('button');
     earlier?.click();
@@ -58,8 +64,26 @@ describe('the milestone panel', () => {
       estimates.some(({ basis }) => basis === 'stage'),
     );
     if (quoted === undefined) throw new Error('no milestone dated by a stage');
-    const panel = createMilestonePanel({ onMa: () => undefined });
+    const panel = createMilestonePanel({
+      onMa: () => undefined,
+      onWatchFormation: () => undefined,
+    });
     panel.render(anchorMa(quoted), 540);
     expect(panel.root.textContent).toContain('the source names a geological stage');
+  });
+
+  it('offers to watch Earth and the Moon form on their two cards, and on no other (#1218)', () => {
+    const onWatchFormation = vi.fn();
+    const panel = createMilestonePanel({ onMa: vi.fn(), onWatchFormation });
+    panel.render(4510, 4568, 0);
+    const watch = [...panel.root.querySelectorAll<HTMLButtonElement>('.milestone-watch')];
+    expect(watch.length).toBeGreaterThan(0);
+    expect(watch[0]?.closest('[data-milestone]')?.getAttribute('data-milestone')).toMatch(
+      /^(solar-system-formation|moon-forming-impact)$/,
+    );
+    watch[0]?.click();
+    expect(onWatchFormation).toHaveBeenCalledTimes(1);
+    panel.render(66, 540);
+    expect(panel.root.querySelector('.milestone-watch')).toBeNull();
   });
 });

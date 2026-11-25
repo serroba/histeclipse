@@ -36,6 +36,8 @@ export interface Features {
   finds(state: ViewState): number[];
   /** Deep time left. */
   deepOff(state: ViewState): void;
+  /** Watch Earth and the Moon form now, as a milestone's card asks (#1218): whether it opened. */
+  readonly watchFormation: (state: ViewState) => boolean;
   /** A marker tapped, or named by an anchor: whether it was one of theirs, and if so, picked. */
   readonly pick: (key: string) => boolean;
   /** What the Layers panel says under each feature's layer. */
@@ -153,6 +155,7 @@ export function mountFeatures(
     deepOff(state) {
       for (const { shown } of mounted) shown.deep?.(state, null);
     },
+    watchFormation: (state) => formation.watch(state),
     pick(key) {
       const [kind] = key.split(':');
       for (const { shown } of mounted) shown.unpick?.();

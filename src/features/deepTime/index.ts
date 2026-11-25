@@ -177,6 +177,7 @@ export function mountDeepTime(context: DeepTimeContext): DeepTimePart {
       onCo2Archive() {
         context.loadArchive();
       },
+      onWatchFormation: context.watchFormation,
     },
     // The chips (#380, #605): the plates', the features', the impacts'.
     context.chips,

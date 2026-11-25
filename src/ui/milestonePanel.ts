@@ -19,7 +19,20 @@ export interface MilestonePanel {
   render(ma: number, oldest: number, youngest?: number): void;
 }
 
-function card(milestone: Milestone): HTMLElement {
+/** The milestones whose card offers the formation clock (#1218): the start, and the Moon. */
+const FORMATION_MILESTONES: ReadonlySet<string> = new Set([
+  'solar-system-formation',
+  'moon-forming-impact',
+]);
+
+/** A milestone's card; Earth's and the Moon's formation offer their clock with `onWatch`. */
+function card(milestone: Milestone, onWatch: () => void): HTMLElement {
+  const watch = element(
+    'button',
+    { type: 'button', class: 'milestone-watch' },
+    'Watch Earth and the Moon form',
+  );
+  watch.addEventListener('click', onWatch);
   const estimates = element(
     'ul',
     { class: 'milestone-estimates' },
@@ -46,11 +59,16 @@ function card(milestone: Milestone): HTMLElement {
     element('p', {}, milestone.description),
     milestone.note === undefined ? '' : element('p', { class: 'milestone-note' }, milestone.note),
     estimates,
+    FORMATION_MILESTONES.has(milestone.id) ? watch : '',
   );
 }
 
 export function createMilestonePanel(
-  handlers: { onMa(ma: number): void },
+  handlers: {
+    onMa(ma: number): void;
+    /** Watch Earth and the Moon form, in their own time (#1218). */
+    readonly onWatchFormation: () => void;
+  },
   /** Under the cards, open with them: how playing treats milestones (#1077). */
   ...after: HTMLElement[]
 ): MilestonePanel {
@@ -106,7 +124,13 @@ export function createMilestonePanel(
           ? 'Milestones: none near here'
           : `Milestones: ${near.map(({ title }) => title).join(' · ')}`;
       panel.classList.toggle('is-empty', near.length === 0);
-      cards.replaceChildren(...near.map(card));
+      cards.replaceChildren(
+        ...near.map((milestone) =>
+          card(milestone, () => {
+            handlers.onWatchFormation();
+          }),
+        ),
+      );
     },
   };
 }
