@@ -2433,6 +2433,12 @@
     "cite": "Spratt & Lisiecki (2016), A Late Pleistocene sea level stack, Climate of the Past 12; NOAA World Data Service",
     "url": "https://doi.org/10.5194/cp-12-1079-2016"
   },
+  "stanley2016": {
+    "name": "Stanley 2016",
+    "kind": "paper",
+    "cite": "Stanley, S. M. (2016), Estimates of the magnitudes of major marine mass extinctions in earth history, PNAS 113, E6325–E6334. Our summary: extinction was already running before each mass extinction; subtracting that background extinction, correcting for losses smeared backward from the extinction interval, and allowing for losses clustered among related species, the end-Permian crisis removed about 81% of marine species, not the 90–96% often quoted",
+    "url": "https://doi.org/10.1073/pnas.1613094113"
+  },
   "steinberger2008": {
     "name": "Steinberger & Torsvik 2008",
     "kind": "paper",

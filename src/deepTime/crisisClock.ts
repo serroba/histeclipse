@@ -34,13 +34,14 @@ interface CrisisOptions {
   readonly slower?: readonly [number, number];
   readonly marks: readonly (readonly [number, string])[];
   readonly label: string;
+  readonly hint: string;
 }
 
 function text(seconds: number): string {
   if (Math.abs(seconds) < 500 * YEAR) return 'The extinction begins';
   return seconds < 0
     ? `${durationText(seconds)} before the extinction`
-    : `${durationText(seconds)} after it began`;
+    : `${durationText(seconds)} after the extinction began`;
 }
 
 /** A crisis clock: linear over `before` to `tailFrom`, then by tenfolds to 10 million years. */
@@ -73,6 +74,7 @@ function crisisScale(options: CrisisOptions): ClockScale {
     marks: options.marks,
     text,
     label: options.label,
+    hint: options.hint,
   };
 }
 
@@ -90,11 +92,12 @@ export const CRISIS_SCALE: ClockScale = crisisScale({
   marks: [
     [-300 * KYR, 'Lavas'],
     [0, 'Extinction'],
-    [200 * KYR, '200,000 years'],
-    [1000 * KYR, '1 Myr'],
-    [AFTER, '10 Myr'],
+    [200 * KYR, '+200,000 yr'],
+    [AFTER, '10 million yr'],
   ],
-  label: 'Time since the extinction began: 100,000 years a step across the crisis, then tenfolds',
+  label:
+    'Time since the extinction began: 100,000 years a step across the crisis, then each step ten times longer',
+  hint: 'Steady through the crisis, slower over the extinction; from 200,000 years after, each step is ten times longer.',
 });
 
 /**
@@ -110,8 +113,10 @@ export const LONG_CRISIS_SCALE: ClockScale = crisisScale({
   marks: [
     [-1000 * KYR, 'Before'],
     [0, 'First pulse'],
-    [1000 * KYR, '1 Myr'],
-    [AFTER, '10 Myr'],
+    [1000 * KYR, '1 million yr'],
+    [AFTER, '10 million yr'],
   ],
-  label: 'Time since the extinction began: 250,000 years a step across the crisis, then tenfolds',
+  label:
+    'Time since the extinction began: 250,000 years a step across the crisis, then each step ten times longer',
+  hint: 'Steady through the crisis; from 2 million years after, each step is ten times longer.',
 });

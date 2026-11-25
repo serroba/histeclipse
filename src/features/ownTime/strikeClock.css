@@ -122,6 +122,13 @@
   transform: translateX(-100%);
 }
 
+.strike-clock-hint {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 .strike-clock-controls {
   display: flex;
   gap: 8px;

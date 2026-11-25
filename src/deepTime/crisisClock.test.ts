@@ -46,8 +46,8 @@ describe('the crisis clock (#1191)', () => {
   it('says how long before or after the extinction began', () => {
     expect(text(0)).toBe('The extinction begins');
     expect(text(-300 * KYR)).toBe('300 thousand years before the extinction');
-    expect(text(61 * KYR)).toBe('61 thousand years after it began');
-    expect(text(2500 * KYR)).toBe('2.5 million years after it began');
+    expect(text(61 * KYR)).toBe('61 thousand years after the extinction began');
+    expect(text(2500 * KYR)).toBe('2.5 million years after the extinction began');
   });
 
   it('marks the lavas, the extinction and the tail, in order along the slider', () => {
