@@ -51,6 +51,25 @@ export const extinctionsFeature = feature({
     // Where deep time was in the frame before, while it plays.
     let from: number | null = null;
     const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    // A place a passage opened before its mark was drawn (#1233): its card opens once it is.
+    let pending: string | null = null;
+
+    /** A place's card, with its own time to watch where it has one: whether it opened. */
+    function openCard(id: string): boolean {
+      const mark = pickedMark(marks, id);
+      const data = load.value();
+      if (mark === undefined || data === null || latest === null) return false;
+      const ma = latest;
+      const event = ownTimeOf(data, mark.extinction.id, ma);
+      const watch =
+        event === null
+          ? null
+          : () => {
+              context.ownTime.watch(event, ma);
+            };
+      context.cards.show(extinctionCard(mark, watch));
+      return true;
+    }
 
     /**
      * As deep time plays past an extinction that can be watched in its own time, it hands over to
@@ -73,6 +92,7 @@ export const extinctionsFeature = feature({
         latest = state.ma;
         if (!on || state.ma === null) {
           from = null;
+          pending = null;
           said = null;
           marks = [];
           onGlobe.update(null);
@@ -91,20 +111,13 @@ export const extinctionsFeature = feature({
         onGlobe.update(marks);
         said = extinctionsText(marks);
         handOver(data, state.ma);
+        if (pending !== null && openCard(pending)) pending = null;
       },
       pick(id) {
-        const mark = pickedMark(marks, id);
-        const data = load.value();
-        if (mark === undefined || data === null || latest === null) return;
-        const ma = latest;
-        const event = ownTimeOf(data, mark.extinction.id, ma);
-        const watch =
-          event === null
-            ? null
-            : () => {
-                context.ownTime.watch(event, ma);
-              };
-        context.cards.show(extinctionCard(mark, watch));
+        pending = openCard(id) ? null : id;
+      },
+      unpick() {
+        pending = null;
       },
       said: () => said,
       load: () => load.report(loadOn),
