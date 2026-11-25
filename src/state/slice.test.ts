@@ -79,6 +79,7 @@ describe("deep time's slice", () => {
     dispersal: 'b',
     story: 'humans',
     growth: 'fast',
+    theia: 'immediate',
     humanSpecies: 'neanderthal',
     seaIce: DEEP_DEFAULTS.seaIce,
     temperatureModel: DEEP_DEFAULTS.temperatureModel,
@@ -92,7 +93,7 @@ describe("deep time's slice", () => {
   it('reads back what it writes', () => {
     const query = written(DEEP_PARAMS, away);
     expect(query).toBe(
-      'ma=66.04&scale=eons&dw=124%2C76&dispersal=b&species=neanderthal&story=humans&growth=fast&water=inherited',
+      'ma=66.04&scale=eons&dw=124%2C76&dispersal=b&species=neanderthal&story=humans&growth=fast&theia=immediate&water=inherited',
     );
     expect(readSlice(DEEP_PARAMS, DEEP_DEFAULTS, readerOf(query))).toEqual(away);
   });

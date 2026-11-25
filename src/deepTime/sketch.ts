@@ -7,6 +7,7 @@
 
 import { elementAt } from '../util/arrays';
 import type { GrowthModel } from './growth';
+import type { TheiaModel } from './theia';
 
 /** How far back the continent reconstruction (Cao et al. 2024) reaches, Ma. */
 export const PLATES_REACH_MA = 1800;
@@ -288,13 +289,15 @@ export interface SketchChoices {
   /** How fast Earth grew before the impact (#1219), drawn on the formation clock. */
   readonly growth: GrowthModel;
   readonly impact: ImpactModel;
+  /** How the impact went (#1220), drawn on the formation clock. */
+  readonly theia: TheiaModel;
   readonly land: LandModel;
   readonly snowball: SnowballModel;
   readonly water: WaterModel;
 }
 
 /** Which question the sketch at a moment answers, so only its choice is offered. */
-export type SketchQuestion = 'growth' | 'impact' | 'land' | 'snowball' | 'water';
+export type SketchQuestion = 'growth' | 'impact' | 'theia' | 'land' | 'snowball' | 'water';
 
 export interface Sketch {
   readonly kind: 'magma' | 'ocean';
@@ -328,6 +331,7 @@ export function sketchAt(ma: number, choices: SketchChoices, continentsDrawn: bo
       questions: [
         ...(ma > IMPACTS[choices.impact].ma ? (['growth'] as const) : []),
         'impact',
+        'theia',
         ...water,
       ],
       episode: null,
@@ -335,7 +339,8 @@ export function sketchAt(ma: number, choices: SketchChoices, continentsDrawn: bo
   }
   // While any camp's impact is still to come, which camp is a question here too.
   const youngest = Math.min(...IMPACT_MODELS.map((model) => IMPACTS[model].ma));
-  const questions: SketchQuestion[] = ma > youngest - MAGMA_AFTER_IMPACT_MA ? ['impact'] : [];
+  const questions: SketchQuestion[] =
+    ma > youngest - MAGMA_AFTER_IMPACT_MA ? ['impact', 'theia'] : [];
   questions.push(...water);
   if (!continentsDrawn) questions.push('land');
   if (episode !== null) questions.push('snowball');

@@ -5,6 +5,10 @@ import { Group, PerspectiveCamera, type BufferGeometry } from 'three';
 
 import type { LayerHost } from '../../globe/layerHost';
 import { impactLayer } from './impactLayer';
+import { CANONICAL } from './impactModel';
+
+/** The canonical hit at `seconds` since it. */
+const at = (seconds: number) => ({ seconds, hit: CANONICAL });
 
 const HOUR = 3600;
 const DAY = 86_400;
@@ -52,13 +56,13 @@ describe('the giant impact on the globe (#180)', () => {
 
   it('brings Theia in alone, then the flash and the debris as it strikes', () => {
     const { made, group, theia, flash, debris, moon, container, lit } = layer();
-    made.update(-HOUR);
+    made.update(at(-HOUR));
     expect(group.visible).toBe(true);
     expect(container.dataset['formationImpact']).toBe('theia');
     expect(theia.visible).toBe(true);
     expect(flash.visible).toBe(false);
     expect(debris.visible).toBe(false);
-    made.update(10 * 60);
+    made.update(at(10 * 60));
     expect(container.dataset['formationImpact']).toBe('debris');
     expect(flash.visible).toBe(true);
     expect(flash.material.opacity).toBeGreaterThan(0.5);
@@ -68,47 +72,47 @@ describe('the giant impact on the globe (#180)', () => {
 
   it('gathers the Moon, molten, and clears the disc within a century', () => {
     const { made, theia, moon, moonGlow, debris, container, lit } = layer();
-    made.update(YEAR);
+    made.update(at(YEAR));
     expect(container.dataset['formationImpact']).toBe('moon');
     expect(theia.visible).toBe(false);
     expect(moon.visible).toBe(true);
     expect(moonGlow.visible).toBe(true);
     expect(lit()).toBeGreaterThan(0);
-    made.update(200 * YEAR);
+    made.update(at(200 * YEAR));
     expect(debris.visible).toBe(false);
     expect(moon.scale.x).toBeCloseTo(0.273);
-    made.update(2e7 * YEAR);
+    made.update(at(2e7 * YEAR));
     expect(moonGlow.visible).toBe(false);
   });
 
   it('draws fewer pieces on a phone', () => {
     const { made, lit } = layer({ phone: true });
-    made.update(HOUR);
+    made.update(at(HOUR));
     expect(lit()).toBe(300);
   });
 
   it('turns the Moon while it plays, and holds it still for less motion', () => {
     vi.useFakeTimers({ toFake: ['performance'] });
     const playing = layer();
-    playing.made.update(YEAR);
+    playing.made.update(at(YEAR));
     const before = playing.moon.position.clone();
     vi.advanceTimersByTime(150);
-    playing.made.update(YEAR);
+    playing.made.update(at(YEAR));
     expect(playing.moon.position.distanceTo(before)).toBeGreaterThan(0);
 
     const still = layer({ lessMotion: true });
-    still.made.update(YEAR);
+    still.made.update(at(YEAR));
     const resting = still.moon.position.clone();
     vi.advanceTimersByTime(150);
-    still.made.update(YEAR);
+    still.made.update(at(YEAR));
     expect(still.moon.position.distanceTo(resting)).toBe(0);
   });
 
   it('turns the strike to face the reader when it opens, and lets go of what it made', () => {
     const { made, group } = layer();
-    made.update(0);
+    made.update(at(0));
     const turned = group.rotation.y;
-    made.update(HOUR);
+    made.update(at(HOUR));
     expect(group.rotation.y).toBe(turned);
     made.dispose?.();
     expect(group.parent).toBeNull();

@@ -6,6 +6,7 @@ import { sketchHeadline, sketchLines } from './sketchText';
 const choices = {
   growth: 'slow',
   impact: 'early',
+  theia: 'canonical',
   land: 'dhuime',
   snowball: 'hard',
   water: 'inherited',
@@ -14,19 +15,29 @@ const choices = {
 describe('the sketch’s wording', () => {
   it('says the molten surface follows the chosen impact, and flags a clash with the zircon', () => {
     const early = sketchLines(sketchAt(4509, choices, false), choices, 4509);
-    expect(early).toHaveLength(2);
+    expect(early).toHaveLength(3);
     expect(early[0]).toContain('4,510 Ma');
+    // How the impact went, on the scenario's say-so (#1220).
+    expect(early[1]).toContain('How the impact went, argued over');
+    expect(early[1]).toContain('Canup & Asphaug 2001');
     // And, while it arrives, where the water came from, on the choice's say-so (#1142).
-    expect(early[1]).toContain('Where the water came from');
-    expect(early[1]).toContain('Piani et al. 2020');
+    expect(early[2]).toContain('Where the water came from');
+    expect(early[2]).toContain('Piani et al. 2020');
     const delivered = { ...choices, water: 'delivered' } as const;
-    expect(sketchLines(sketchAt(4509, delivered, false), delivered, 4509)[1]).toContain(
+    expect(sketchLines(sketchAt(4509, delivered, false), delivered, 4509)[2]).toContain(
       'Alexander et al. 2012',
     );
     const young = { ...choices, impact: 'young' } as const;
     const lines = sketchLines(sketchAt(4380, young, false), young, 4380);
     // Before this impact, how fast Earth grew comes first.
     expect(lines[2]).toContain('4,404-million-year-old zircon');
+  });
+
+  it('says how the impact went as the scenario chosen has it, after the molten years too (#1220)', () => {
+    const spin = { ...choices, theia: 'fastSpin' } as const;
+    expect(sketchLines(sketchAt(4509, spin, false), spin, 4509)[1]).toContain('Ćuk & Stewart 2012');
+    const ocean = sketchLines(sketchAt(4450, spin, false), spin, 4450);
+    expect(ocean.some((line) => line.includes('How the impact went'))).toBe(true);
   });
 
   it('says, before the impact, how fast Earth grew on the choice’s say-so (#1219)', () => {

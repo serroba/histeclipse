@@ -30,6 +30,7 @@ describe('the hypotheses’ rail (#1158)', () => {
     const choices = {
       growth: 'slow',
       impact: 'early',
+      theia: 'canonical',
       land: 'dhuime',
       snowball: 'hard',
       water: 'delivered',
@@ -77,6 +78,7 @@ describe('the hypotheses’ rail (#1158)', () => {
     const choices = {
       growth: 'slow',
       impact: 'early',
+      theia: 'canonical',
       land: 'dhuime',
       snowball: 'hard',
       water: 'delivered',
@@ -107,6 +109,7 @@ describe('the hypotheses’ rail, its edges', () => {
   const choices = {
     growth: 'slow',
     impact: 'early',
+    theia: 'canonical',
     land: 'dhuime',
     snowball: 'hard',
     water: 'delivered',

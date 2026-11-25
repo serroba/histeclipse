@@ -1,6 +1,7 @@
 /** Wording for the sketched surface: what is drawn, on whose say-so, and what is invented. */
 
 import { GROWTH_CHOICES } from './growth';
+import { THEIA_CHOICES } from './theia';
 import { formatRange } from './milestoneText';
 import {
   crustShare,
@@ -44,6 +45,13 @@ function growthLines(sketch: Sketch, choices: SketchChoices): readonly string[] 
   return [`How fast Earth grew, argued over: ${choice.note} (${choice.source})`];
 }
 
+/** How the impact went (#1220): the scenario chosen and its source. */
+function theiaLines(sketch: Sketch, choices: SketchChoices): readonly string[] {
+  if (!sketch.questions.includes('theia')) return [];
+  const choice = THEIA_CHOICES[choices.theia];
+  return [`How the impact went, argued over: ${choice.note} (${choice.source})`];
+}
+
 /** What the globe shows at this moment, a sentence or two per question it answers. */
 export function sketchLines(sketch: Sketch, choices: SketchChoices, ma: number): readonly string[] {
   if (sketch.kind === 'magma') {
@@ -56,7 +64,12 @@ export function sketchLines(sketch: Sketch, choices: SketchChoices, ma: number):
         `This impact comes after the ${OLDEST_WATER_ZIRCON_MA.toLocaleString('en')}-million-year-old zircon that already shows liquid water (Wilde et al. 2001): the camps disagree on what the dates measure.`,
       );
     }
-    return [...growthLines(sketch, choices), ...lines, ...waterLines(sketch, choices)];
+    return [
+      ...growthLines(sketch, choices),
+      ...lines,
+      ...theiaLines(sketch, choices),
+      ...waterLines(sketch, choices),
+    ];
   }
   const lines: string[] = [...waterLines(sketch, choices)];
   if (sketch.questions.includes('impact')) {
@@ -65,6 +78,7 @@ export function sketchLines(sketch: Sketch, choices: SketchChoices, ma: number):
       `Past the Moon-forming impact as ${impact.source} dates it, ${formatRange(impact.ma, impact.ma)}: an ocean has formed. Other camps date the impact later.`,
     );
   }
+  lines.push(...theiaLines(sketch, choices));
   if (sketch.questions.includes('land')) {
     const choice = LAND_CHOICES[choices.land];
     const flooded = choices.land === 'flooded' && ma > EMERGENCE_MA;
