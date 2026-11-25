@@ -5,15 +5,23 @@
  * first ocean as the clock passes it, and at its end, or closed, hands back to deep time playing
  * on through the aeons. The impact's date is the reader's choice of model (`impact=`).
  *
- * Not a layer: made beside the own-time service, as the start of deep time itself. What the clock
- * draws comes with the disc and Earth growing (#1219) and the impact (#180).
+ * Not a layer: made beside the own-time service, as the start of deep time itself. From Theia's
+ * approach the clock draws the impact and the Moon gathering (#180); the disc and Earth growing
+ * before it come with #1219.
  */
 
-import { formationMa, formationScale, formationSeconds } from '../../deepTime/formationClock';
+import {
+  APPROACH,
+  formationMa,
+  formationScale,
+  formationSeconds,
+} from '../../deepTime/formationClock';
 import { IMPACTS, type ImpactModel } from '../../deepTime/sketch';
 import type { ViewState } from '../../state/viewState';
 import type { Capabilities } from '../feature';
 import type { OwnTimeEvent } from '../ownTime';
+import { impactLayer } from './impactLayer';
+import { IMPACT_DISTANCE, IMPACT_VIEW } from './impactModel';
 import { formationPhases } from './phases';
 
 /** The formation clock's key, the one it is watched by. */
@@ -28,6 +36,8 @@ export function formationEvent(model: ImpactModel): OwnTimeEvent {
     phases: formationPhases(impactMa),
     scale: formationScale(impactMa),
     offer: 'Watch Earth and the Moon form',
+    drawn:
+      'From Theia’s approach, the canonical impact is drawn as an illustration: sizes, speed and distances follow the papers; the paths of single pieces, the glow, and the turning, which follows the time played rather than the years, do not. Hot is white, cooling to red; the Moon grey once crusted.',
     // Its zero, the impact: the header counts from it, not from where play started.
     ma: impactMa,
     deep: {
@@ -37,11 +47,21 @@ export function formationEvent(model: ImpactModel): OwnTimeEvent {
     play(tools) {
       const on = tools.strikes.on;
       on.dataset['formationClock'] = model;
+      const impact = tools.layer(impactLayer);
+      // Drawn back once, as Theia comes in, to see the Moon's orbit whole.
+      let framed = false;
       return {
-        at() {
-          // Drawn in #1219 and #180; for now the sketched globe follows deep time's moment.
+        at(seconds) {
+          const drawn = seconds >= -APPROACH;
+          if (drawn && !framed) {
+            tools.strikes.flyTo(IMPACT_VIEW);
+            tools.strikes.zoomTo(IMPACT_DISTANCE);
+          }
+          framed ||= drawn;
+          impact.update(drawn ? seconds : null);
         },
         end() {
+          impact.update(null);
           delete on.dataset['formationClock'];
         },
       };
