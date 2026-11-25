@@ -10,6 +10,7 @@ import {
   extinctionsOn,
   extinctionsText,
   pickedMark,
+  platesFact,
 } from './view';
 
 const DATA = sites as ExtinctionSites;
@@ -41,6 +42,25 @@ describe('the extinctions’ view', () => {
       'End-Guadalupian extinction · End-Permian mass extinction',
     );
     expect(extinctionsText([])).toBe('No great extinction near this moment.');
+  });
+
+  it('says where the two plate models put a place at its extinction, and how far apart (#1231)', () => {
+    const [siberia] = extinctionMarks(DATA, 252);
+    if (siberia === undefined) throw new Error('no Siberian Traps');
+    const fact = platesFact(DATA, siberia.site, siberia.extinction);
+    expect(fact).toMatch(/^PALEOMAP \(Scotese\), the deep-time maps’ model, puts it at 55\.\d°N/);
+    expect(fact).toContain('Merdith et al. 2021 at 64.1°N 36.4°E');
+    expect(fact).toMatch(/, 9\d0 km away and 8\.\d° apart in latitude\./);
+    const card = extinctionCard(siberia, null, fact);
+    expect(card.facts.at(-1)).toEqual(['Plates', fact]);
+    expect(card.links.map((link) => link.label)).toContain('Merdith et al. 2021');
+    expect(extinctionCard(siberia).facts.map(([label]) => label)).not.toContain('Plates');
+    // No plate under it on the second model: nothing to compare.
+    const offPlate = { ...siberia.site, other: null };
+    expect(platesFact(DATA, offPlate, siberia.extinction)).toBeNull();
+    // Nor where the maps' model has none then.
+    const unplaced = { ...siberia.site, then: siberia.site.then.map(() => null) };
+    expect(platesFact(DATA, unplaced, siberia.extinction)).toBeNull();
   });
 
   it('eases play near every extinction', () => {

@@ -20,6 +20,7 @@ import {
   extinctionsPassed,
   extinctionsText,
   pickedMark,
+  platesFact,
   type ExtinctionMark,
 } from './view';
 
@@ -67,7 +68,7 @@ export const extinctionsFeature = feature({
           : () => {
               context.ownTime.watch(event, ma);
             };
-      context.cards.show(extinctionCard(mark, watch));
+      context.cards.show(extinctionCard(mark, watch, platesFact(data, mark.site, mark.extinction)));
       return true;
     }
 
