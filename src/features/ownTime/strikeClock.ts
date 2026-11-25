@@ -40,8 +40,8 @@ export interface StrikeClockOptions {
   onMoment(seconds: number): void;
   /** The reader closed it. */
   onClose(): void;
-  /** It played to its end (#1218); left out, it waits there to be played again or closed. */
-  onEnd?(): void;
+  /** Whether it closes as it plays to its end (#1218); else it waits there, to play again. */
+  readonly closeAtEnd?: boolean;
 }
 
 export interface StrikeClock {
@@ -217,7 +217,7 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
     moveTo(position + scale.advance(speed.value as Pace, seconds, position));
     if (position >= scale.end) {
       stop();
-      options.onEnd?.();
+      if (options.closeAtEnd === true) close();
       return;
     }
     frame = requestAnimationFrame(tick);

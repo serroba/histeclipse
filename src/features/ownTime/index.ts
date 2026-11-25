@@ -138,6 +138,31 @@ function createLender(core: Pick<FeatureCore, 'refresh'>): {
   };
 }
 
+/**
+ * Deep time carried along by the clock of its own story (#1218): moved to the clock's moment, and
+ * handed back at its end. For any other event, nothing.
+ */
+function carried(
+  core: Pick<FeatureCore, 'change'>,
+  event: OwnTimeEvent,
+): { at(seconds: number): void; handBack(): void; from(ma: number | null): number | undefined } {
+  const { deep } = event;
+  const move = (ma: number): void => {
+    const to = roundMa(ma);
+    core.change((state) => (state.ma === null || state.ma === to ? state : { ...state, ma: to }));
+  };
+  return {
+    at(seconds) {
+      if (deep !== undefined) move(deep.maAt(seconds));
+    },
+    // Whether played to its end or skipped, from its end.
+    handBack() {
+      if (deep !== undefined) move(deep.maAt(event.scale.secondsAt(event.scale.end)));
+    },
+    from: (ma) => (deep === undefined || ma === null ? undefined : deep.secondsAt(ma)),
+  };
+}
+
 export function createOwnTime(
   core: Pick<FeatureCore, 'globe' | 'change' | 'refresh'>,
   lent: Lent,
@@ -161,12 +186,6 @@ export function createOwnTime(
     null;
   const lender = createLender(core);
 
-  /** Deep time's moment set to `ma`, if it is in deep time. */
-  function moveDeep(ma: number): void {
-    const to = roundMa(ma);
-    core.change((state) => (state.ma === null || state.ma === to ? state : { ...state, ma: to }));
-  }
-
   function watch(event: OwnTimeEvent, ma: number | null): void {
     offer.hide();
     offered = null;
@@ -176,18 +195,18 @@ export function createOwnTime(
     const held = ma !== null && lent.deepTime.hold();
     if (ma !== null) core.change((state) => (state.ma === null ? state : { ...state, ma }));
     const playing = event.play(tools);
-    const { deep } = event;
+    const deep = carried(core, event);
     open = { key: event.key, rank: event.rank ?? 0 };
     const zero = event.ma ?? ma;
     document.documentElement.toggleAttribute('data-own-time', true);
-    const made = createStrikeClock({
+    clock = createStrikeClock({
       title: event.title,
       phases: event.phases,
       scale: event.scale,
       ...(event.dated === undefined ? {} : { dated: event.dated }),
       onMoment: (seconds) => {
         playing.at(seconds);
-        if (deep !== undefined) moveDeep(deep.maAt(seconds));
+        deep.at(seconds);
         if (zero === null) return;
         const at = zero - seconds / MYR;
         lender.lend({ when: formatMa(at), what: null, ma: at });
@@ -197,21 +216,13 @@ export function createOwnTime(
         open = null;
         document.documentElement.toggleAttribute('data-own-time', false);
         lender.lend(null);
-        // Deep time's own story hands back from its end, whether played there or skipped.
-        if (deep !== undefined) moveDeep(deep.maAt(event.scale.secondsAt(event.scale.end)));
+        deep.handBack();
         if (held) lent.deepTime.resume();
       },
-      ...(deep === undefined
-        ? {}
-        : {
-            onEnd: () => {
-              made.close();
-            },
-          }),
+      closeAtEnd: event.deep !== undefined,
     });
-    clock = made;
-    lent.overPage.add(made.root);
-    made.open(deep === undefined || ma === null ? undefined : deep.secondsAt(ma));
+    lent.overPage.add(clock.root);
+    clock.open(deep.from(ma));
   }
 
   return {

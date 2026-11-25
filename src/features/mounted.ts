@@ -89,6 +89,9 @@ export function deepChipsOf(features: readonly Feature[]): DeepChip[] {
     );
 }
 
+/** Whether the reader asks for less motion. */
+const lessMotion = (): boolean => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 export function mountFeatures(
   features: readonly Feature[],
   core: FeatureCore,
@@ -98,10 +101,7 @@ export function mountFeatures(
   const ownTime = createOwnTime(core, lent);
   const capabilities: Capabilities = { ...lent, ownTime };
   // The aeons begin with Earth and the Moon forming (#1218), on that clock.
-  const formation = createFormation(
-    capabilities,
-    () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-  );
+  const formation = createFormation(capabilities, lessMotion);
   const mounted = features.map((feature) => ({
     feature,
     shown: feature.mount(core, capabilities),
