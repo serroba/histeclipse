@@ -23,6 +23,15 @@
   display: none;
 }
 
+/* Where the clock and the bar (760 px, centred) cannot sit side by side, the clock sits above the
+   bar rather than over its end (#1225). On a phone it still covers the bar, held while it runs. */
+@media (min-width: 700px) and (max-width: 1727px) {
+  .strike-clock {
+    bottom: calc(var(--free-bottom, 0px) + 8px);
+    max-height: calc(100dvh - var(--free-bottom, 0px) - var(--free-top, 0px) - 24px);
+  }
+}
+
 .strike-clock header {
   display: flex;
   align-items: center;

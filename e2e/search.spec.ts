@@ -164,5 +164,11 @@ test('a reader searches for the Great Dying and lands on the end-Permian, the ex
     await expect(page).toHaveURL(/layers=[^&]*extinctions/);
     await expect(page.locator('[data-pick="extinction:meishan"]')).toBeAttached();
   });
+  await test.step('And its card is open, its own time a tap away (#1233)', async () => {
+    const card = page.getByTestId('marker-card');
+    await expect(card).toContainText('End-Permian mass extinction');
+    await expect(card).toContainText('Siberian Traps, Putorana');
+    await expect(card.getByRole('button', { name: 'Watch it in its own time' })).toBeVisible();
+  });
   expect(problems).toEqual([]);
 });

@@ -15,6 +15,8 @@ export interface ViewOpener {
   readonly anchor: (anchor: Anchor) => void;
   /** Open the link `change` makes of the reader's. */
   readonly query: (change: (current: string) => string) => void;
+  /** Hear the marker an opened anchor names, to open its card (#1233). */
+  readonly onPick: (listener: (key: string) => void) => void;
 }
 
 export function viewOpener(options: {
@@ -38,11 +40,17 @@ export function viewOpener(options: {
     store.set(() => next.state);
     if (!sameCamera(before, next.state.camera)) globe.setCamera(next.state.camera);
   };
+  const picks: ((key: string) => void)[] = [];
   return {
     anchor: (anchor) => {
       query((current) => anchorQuery(anchor, current));
+      const { pick } = anchor;
+      if (pick !== undefined) for (const listener of picks) listener(pick);
     },
     query,
+    onPick: (listener) => {
+      picks.push(listener);
+    },
   };
 }
 
