@@ -5,6 +5,8 @@ import { collectProblems, expect, globeRendered, test } from './support';
 test('the ocean’s currents move near the surface for the month, and at 1,500 m when picked @acceptance @mobile', async ({
   page,
 }) => {
+  // Two months of streaks, the deep one loaded after: past 30 s on CI's phone runner (#1247).
+  test.slow();
   const problems = collectProblems(page);
   const panel = page.getByRole('region', { name: 'Ocean currents' });
   await test.step('Given January 2010 over the Atlantic, with Ocean currents on', async () => {
