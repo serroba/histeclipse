@@ -40,6 +40,8 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     await expect(page.locator('.hud-date')).toHaveText(/^252\.\d million years ago$/);
     await expect(page.locator('.hud-detail')).toContainText('Permian');
     await expect(page.locator('.deep-speed')).toBeHidden();
+    // What is drawn to illustrate is said so (#1226).
+    await expect(clock.locator('.strike-clock-drawn')).toContainText('Drawn to illustrate');
   });
   await test.step('When they move the slider to the extinction, Then it says the phase and its sources', async () => {
     await clock.getByRole('button', { name: 'Pause' }).click();

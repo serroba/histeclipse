@@ -63,6 +63,8 @@ interface Province {
   readonly start: readonly [number, string];
   /** The extinction's dated window, where one is dated closely enough to draw (#1228). */
   readonly dated?: DatedWindow;
+  /** What its drawing shows and assumes, said under its clock (#1226). */
+  readonly drawn: string;
   /** When the extinction began, Ma: its clock's zero, lent deep time's header (#1222). */
   readonly zero: number;
   fuming(seconds: number): Fuming;
@@ -71,6 +73,10 @@ interface Province {
 }
 
 const KYR = 1000 * 365.25 * 86_400;
+
+/** What every volcanic province's drawing is, before what it assumes (#1226). */
+const SMOKE =
+  'Drawn to illustrate, not measured: smoke over vents spread across the province, and the lava, glowing red at its front and dark basalt behind,';
 
 /** The provinces, by the extinction each is watched for (#1192, #1201). */
 const PROVINCES: readonly Province[] = [
@@ -89,6 +95,7 @@ const PROVINCES: readonly Province[] = [
     },
     // Its start at Meishan (Burgess, Bowring & Shen 2014), before the boundary at 251.902.
     zero: 251.941,
+    drawn: `${SMOKE} as far as the share erupted by then: two thirds before and during the extinction.`,
     fuming: siberianFuming,
     cover: siberianCover,
   },
@@ -103,6 +110,7 @@ const PROVINCES: readonly Province[] = [
     start: [-400 * KYR, 'Rifting'],
     // Its start with the earliest lavas (Blackburn et al. 2013).
     zero: 201.564,
+    drawn: `${SMOKE} a quarter more with each of its four pulses, spaced evenly over 600,000 years: an assumption.`,
     fuming: campFuming,
     cover: campCover,
   },
@@ -114,6 +122,7 @@ const PROVINCES: readonly Province[] = [
     spread: 4,
     start: [-400 * KYR, 'Before'],
     zero: 259.8,
+    drawn: `${SMOKE} mostly in its first million years; how it spread is drawn, not measured.`,
     fuming: emeishanFuming,
     cover: emeishanCover,
   },
@@ -128,6 +137,7 @@ function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
     scale: { ...CRISIS_SCALE, marks: [province.start, ...CRISIS_SCALE.marks.slice(1)] },
     offer: `Watch ${province.name} in its own time`,
     ...(province.dated === undefined ? {} : { dated: province.dated }),
+    drawn: province.drawn,
     ma: province.zero,
     play(tools) {
       const fumes = tools.layer(fumesLayer);
@@ -159,6 +169,8 @@ interface ColdCrisis {
   readonly anoxia: string;
   /** Its first pulse, Ma: its clock's zero, lent deep time's header (#1222). */
   readonly zero: number;
+  /** What its drawing shows and assumes, said under its clock (#1226). */
+  readonly drawn: string;
   seas(seconds: number): Seas;
 }
 
@@ -172,6 +184,8 @@ const COLD: readonly ColdCrisis[] = [
     anoxia: 'dobs-linn',
     // The first pulse, at the Hirnantian's base (ICS chart); the Silurian begins 1.4 Myr on.
     zero: 445.2,
+    drawn:
+      'Drawn to illustrate, not measured: white, the ice sheet’s reach; murky olive, oxygen-poor water round the record’s place, over the sea. Their timing follows the studies; their sizes are drawn to be seen.',
     seas: ordovicianSeas,
   },
   {
@@ -182,6 +196,8 @@ const COLD: readonly ColdCrisis[] = [
     anoxia: 'coumiac',
     // The lower Kellwasser, 600,000 years before the upper at the Frasnian–Famennian, 372.2.
     zero: 372.8,
+    drawn:
+      'Drawn to illustrate, not measured: murky olive, oxygen-poor water round the record’s place, over the sea, darkest on the shelves; each Kellwasser pulse drawn 150,000 years long, an assumption.',
     seas: devonianSeas,
   },
 ];
@@ -198,6 +214,7 @@ function coldEvent(crisis: ColdCrisis, ice: GeoPoint | null, anoxia: GeoPoint): 
     scale: LONG_CRISIS_SCALE,
     offer: `Watch ${crisis.name} in its own time`,
     ma: crisis.zero,
+    drawn: crisis.drawn,
     play(tools) {
       const seas = tools.layer(seasLayer);
       return {
@@ -270,6 +287,8 @@ function withDeccan(strike: OwnTimeEvent, deccan: GeoPoint): OwnTimeEvent {
   return {
     ...strike,
     rank: 1,
+    drawn:
+      'The Deccan Traps’ smoke and lava are drawn to illustrate, not measured, and held steady through the million years: whether most erupted before or after the impact is argued.',
     play(tools) {
       const struck = strike.play(tools);
       const fumes = tools.layer(fumesLayer);

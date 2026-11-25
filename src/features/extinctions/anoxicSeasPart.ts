@@ -47,7 +47,8 @@ export const ANOXIC_SEAS_PART: EarthPart<AnoxicSeasUniforms> = {
     }
     // Darkest over the shelves, where the black shales were laid; fainter over the deep sea.
     float shelf = mix(0.55, 1.0, smoothstep(-2000.0, -200.0, height));
-    return mix(color, vec3(0.2, 0.08, 0.28), 0.75 * anoxiaStrength * cover * sea * shelf);
+    // A murky olive, the sulfidic water's, set apart from the sea's blues (#1226).
+    return mix(color, vec3(0.22, 0.21, 0.07), 0.85 * anoxiaStrength * cover * sea * shelf);
   }
 `,
 };
