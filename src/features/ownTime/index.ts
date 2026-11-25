@@ -69,6 +69,8 @@ export interface OwnTimeEvent {
   };
   /** Its extinction's dated window, where one is dated (#1228). */
   readonly dated?: DatedWindow;
+  /** What it draws to illustrate, not measure, said under its clock (#1226). */
+  readonly drawn?: string;
   /**
    * When its clock's zero is, Ma, where dated more closely than the moment it is watched from
    * (#1222): the end-Permian's start at Meishan, 251.941 Ma, not the 251.9 its card is at.
@@ -204,6 +206,7 @@ export function createOwnTime(
       phases: event.phases,
       scale: event.scale,
       ...(event.dated === undefined ? {} : { dated: event.dated }),
+      ...(event.drawn === undefined ? {} : { drawn: event.drawn }),
       onMoment: (seconds) => {
         playing.at(seconds);
         deep.at(seconds);

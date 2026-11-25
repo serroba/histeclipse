@@ -36,6 +36,8 @@ export interface StrikeClockOptions {
   readonly scale?: ClockScale;
   /** Its extinction's dated window, drawn as a band on the slider, where one is dated (#1228). */
   readonly dated?: DatedWindow;
+  /** What on the globe is drawn to illustrate, not measured, and what its colours are (#1226). */
+  readonly drawn?: string;
   /** The moment changed: `seconds` since the event. */
   onMoment(seconds: number): void;
   /** The reader closed it. */
@@ -89,6 +91,7 @@ function clockView(
   scale: ClockScale,
   transport: Transport,
   dated: DatedWindow | undefined,
+  drawn: string | undefined,
 ): ClockView {
   const [band, says] = datedBand(scale, dated);
   const speed = element(
@@ -134,6 +137,7 @@ function clockView(
     ),
     ...(says === undefined ? [] : [says]),
     element('p', { class: 'strike-clock-hint' }, scale.hint),
+    ...(drawn === undefined ? [] : [element('p', { class: 'strike-clock-drawn' }, drawn)]),
     element('div', { class: 'strike-clock-controls' }, transport.play, speed),
   );
   return { root, speed, closeButton, ...view };
@@ -194,7 +198,7 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
       },
     },
   );
-  const view = clockView(options.title, scale, transport, options.dated);
+  const view = clockView(options.title, scale, transport, options.dated, options.drawn);
   const { root, speed } = view;
   view.closeButton.addEventListener('click', close);
   transport.join(root);
