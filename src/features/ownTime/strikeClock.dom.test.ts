@@ -173,6 +173,30 @@ describe('the strike clock’s panel (#1173)', () => {
     );
   });
 
+  it('shows what its extinction took falling as it plays, where it has a gauge (#1223)', () => {
+    const plain = clock().made;
+    expect(plain.root.querySelector('.loss-gauge')).toBeNull();
+    const made = createStrikeClock({
+      title: 'The end-Permian, in its own time',
+      phases: PHASES,
+      loss: {
+        what: 'Marine genera',
+        lost: [0.5, 0.5],
+        pulses: [{ from: 0, to: 100, share: 1 }],
+        says: 'Lost: half.',
+      },
+      onMoment: vi.fn(),
+      onClose: vi.fn(),
+    });
+    made.open(-50);
+    const label = () => made.root.querySelector('.loss-gauge-label')?.textContent;
+    expect(label()).toBe('Marine genera left: 100%');
+    made.open(50);
+    expect(label()).toBe('Marine genera left: 75%');
+    made.open(1e9);
+    expect(label()).toBe('Marine genera left: 50%');
+  });
+
   it('says nothing of a phase before the first, and takes a second open or pause in its stride', () => {
     const onMoment = vi.fn();
     const made = createStrikeClock({

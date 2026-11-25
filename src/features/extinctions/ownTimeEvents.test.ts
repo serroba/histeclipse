@@ -24,6 +24,11 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     expect(ownTimeOf(DATA, 'no-such-extinction', 100)).toBeNull();
   });
 
+  it('carry what each took, for the gauge on its clock (#1223)', () => {
+    expect(ownTimeOf(DATA, 'k-pg-extinction', 66)?.loss?.lost).toEqual([0.38, 0.4]);
+    expect(ownTimeOf(DATA, 'end-triassic-extinction', 201.5)?.loss?.lost).toEqual([0.33, 0.73]);
+  });
+
   it('are none where their places are missing from the data', () => {
     const empty: ExtinctionSites = { ...DATA, sites: [] };
     expect(ownTimeOf(empty, 'end-triassic-extinction', 201.5)).toBeNull();
