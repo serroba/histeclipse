@@ -3,7 +3,13 @@
  * places are marked at a moment and where the plates had them, and a place's card.
  */
 
-import { siteThen, type ExtinctionSite, type ExtinctionSites } from '../../data/extinctions';
+import {
+  siteOnOther,
+  siteThen,
+  type ExtinctionSite,
+  type ExtinctionSites,
+} from '../../data/extinctions';
+import { angularDistance } from '../../eclipses/visibility';
 import type { GeoPoint, ViewState } from '../../state/viewState';
 import type { MarkerCardContent } from '../../ui/markerCard';
 import { ABOUT_THE_LIST, claimLinks, estimatesOf, EXTINCTIONS, type Extinction } from './events';
@@ -63,9 +69,40 @@ const ROLE: Readonly<Record<ExtinctionSite['role'], string>> = {
  * A place's card: the extinction, what it took and what caused it, and what this place is; and
  * `watch`, where the extinction can be watched in its own time (#1191).
  */
+/** Kilometres in a degree of a great circle on the mean Earth. */
+const KM_PER_DEGREE = (6371 * Math.PI) / 180;
+
+/** A place in words: "64.1°N 36.4°E". */
+function placeWords({ latitude, longitude }: GeoPoint): string {
+  const ns = latitude < 0 ? 'S' : 'N';
+  const ew = longitude < 0 ? 'W' : 'E';
+  return `${Math.abs(latitude).toFixed(1)}°${ns} ${Math.abs(longitude).toFixed(1)}°${ew}`;
+}
+
+/**
+ * Where the plate models put a place at its extinction, and how far they disagree (#1231): the
+ * deep-time maps' PALEOMAP, and the second model. Null where either has no plate there.
+ */
+export function platesFact(
+  data: ExtinctionSites,
+  site: ExtinctionSite,
+  extinction: Extinction,
+): string | null {
+  const here = siteThen(data, site, extinction.ma);
+  const other = siteOnOther(data, site);
+  if (here === null || other === null) return null;
+  const km = Math.round((angularDistance(here, other) * KM_PER_DEGREE) / 10) * 10;
+  const latitude = Math.abs(here.latitude - other.latitude).toFixed(1);
+  return `PALEOMAP (Scotese), the deep-time maps’ model, puts it at ${placeWords(here)}; ${data.compared.name} at ${placeWords(other)}, ${km.toLocaleString('en')} km away and ${latitude}° apart in latitude. The rocks’ magnetism fixes ancient latitudes, not longitudes, so the models differ most in those.`;
+}
+
+/** The plate models' sources, for a card that compares them (#1231). */
+const PLATES_SOURCES = ['paleodem', 'merdith2021', 'gplates'] as const;
+
 export function extinctionCard(
   mark: ExtinctionMark,
   watch: (() => void) | null = null,
+  plates: string | null = null,
 ): MarkerCardContent {
   const { site, extinction } = mark;
   const when = estimatesOf(extinction);
@@ -80,8 +117,14 @@ export function extinctionCard(
       ],
       ['Lost', extinction.lost.text],
       ['Causes', extinction.causes.text],
+      ...(plates === null ? [] : [['Plates', plates] as const]),
     ],
-    links: claimLinks([extinction.lost, extinction.causes, ABOUT_THE_LIST]),
+    links: claimLinks([
+      extinction.lost,
+      extinction.causes,
+      ABOUT_THE_LIST,
+      ...(plates === null ? [] : [{ text: plates, sources: PLATES_SOURCES }]),
+    ]),
     note:
       extinction.counted === 'argued'
         ? `Not one of the usual five. ${ABOUT_THE_LIST.text}`
