@@ -32,6 +32,8 @@ test('playing the aeons from their oldest moment opens on Earth and the Moon for
     await expect(globe).toHaveAttribute('data-formation-clock', 'early');
     await expect(clock.locator('.strike-clock-when')).toHaveText(/after the first solids$/);
     await expect(clock.locator('.strike-clock-phase')).not.toBeEmpty();
+    // The gas and dust round the growing Earth (#1219).
+    await expect(globe).toHaveAttribute('data-formation-disc', 'gas');
     await expect(clock.locator('.strike-clock-sources a').first()).toHaveAttribute(
       'href',
       /^https:\/\/doi\.org\/10\./,
@@ -49,6 +51,7 @@ test('playing the aeons from their oldest moment opens on Earth and the Moon for
     await expect(clock).toBeHidden({ timeout: 30_000 });
     await expect(globe).not.toHaveAttribute('data-formation-clock');
     await expect(globe).toHaveAttribute('data-formation-impact', 'off');
+    await expect(globe).toHaveAttribute('data-formation-disc', 'off');
     await expect(bar.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
     await expect.poll(() => maOf(page.url()), { timeout: 30_000 }).toBeLessThan(4500);
   });
