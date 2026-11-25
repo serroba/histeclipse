@@ -12,7 +12,14 @@ import {
 import { angularDistance } from '../../eclipses/visibility';
 import type { GeoPoint, ViewState } from '../../state/viewState';
 import type { MarkerCardContent } from '../../ui/markerCard';
-import { ABOUT_THE_LIST, claimLinks, estimatesOf, EXTINCTIONS, type Extinction } from './events';
+import {
+  ABOUT_THE_LIST,
+  claimLinks,
+  estimatesOf,
+  EXTINCTIONS,
+  SITE_NOTES,
+  type Extinction,
+} from './events';
 
 /** How far either side of its extinction a place is marked, Ma. */
 const AROUND_MA = 5;
@@ -106,11 +113,13 @@ export function extinctionCard(
 ): MarkerCardContent {
   const { site, extinction } = mark;
   const when = estimatesOf(extinction);
+  const note = SITE_NOTES[site.id];
   return {
     ...(watch === null ? {} : { action: { label: 'Watch it in its own time', run: watch } }),
     title: extinction.title,
     facts: [
       ['Here', `${site.name}: ${ROLE[site.role].toLowerCase()}`],
+      ...(note === undefined ? [] : [['Shows', note.text] as const]),
       [
         'When',
         when.length > 0 ? when.join('; ') : `About ${String(extinction.ma)} million years ago`,
@@ -120,6 +129,7 @@ export function extinctionCard(
       ...(plates === null ? [] : [['Plates', plates] as const]),
     ],
     links: claimLinks([
+      ...(note === undefined ? [] : [note]),
       extinction.lost,
       extinction.causes,
       ABOUT_THE_LIST,

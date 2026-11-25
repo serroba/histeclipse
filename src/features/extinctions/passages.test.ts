@@ -45,6 +45,8 @@ describe('the extinctions as passages for search (#1210)', () => {
       'Siberian Traps, Putorana, 251.9 million years ago',
       'Siberian Traps, Norilsk, 251.9 million years ago',
       'Meishan, China, 251.9 million years ago',
+      'Old Lootsberg Pass, Karoo Basin, 251.9 million years ago',
+      'Frazer Beach, Sydney Basin, 251.9 million years ago',
     ]);
     const [first] = permian?.anchors ?? [];
     expect(first?.view).toMatch(

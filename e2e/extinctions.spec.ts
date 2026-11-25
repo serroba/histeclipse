@@ -19,7 +19,7 @@ test('the Mass extinctions layer marks the end-Permian’s places, and plays it 
     await globeRendered(page);
   });
   await test.step('Then the Siberian Traps and Meishan are marked', async () => {
-    await expect(globe).toHaveAttribute('data-extinctions', '3');
+    await expect(globe).toHaveAttribute('data-extinctions', '5');
     await expect(page.locator('[data-pick="extinction:meishan"]')).toBeAttached();
   });
   await test.step('When they open the Siberian Traps’ card, Then it says what was lost and what caused it', async () => {

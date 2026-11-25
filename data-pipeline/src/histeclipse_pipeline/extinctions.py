@@ -74,6 +74,16 @@ SITES: tuple[Site, ...] = (
         -3.27,
         444.0,
     ),
+    # The Hirnantian's base, the Ordovician's last stage, its GSSP (Chen et al. 2006).
+    Site(
+        "wangjiawan",
+        "end-ordovician-extinction",
+        "Wangjiawan, China",
+        "record",
+        30.98,
+        111.42,
+        444.0,
+    ),
     Site(
         "viluy-traps",
         "late-devonian-extinction",
@@ -114,6 +124,26 @@ SITES: tuple[Site, ...] = (
         259.8,
     ),
     Site("meishan", "end-permian-extinction", "Meishan, China", "record", 31.08, 119.71, 251.9),
+    # The extinction on land, in the south: Old Lootsberg Pass (Gastaldo et al. 2020, samples
+    # near 31°47.7'S 24°48.3'E), and Frazer Beach (Fielding et al. 2019; McLoughlin et al. 2021).
+    Site(
+        "lootsberg",
+        "end-permian-extinction",
+        "Old Lootsberg Pass, Karoo Basin",
+        "record",
+        -31.8,
+        24.81,
+        251.9,
+    ),
+    Site(
+        "frazer-beach",
+        "end-permian-extinction",
+        "Frazer Beach, Sydney Basin",
+        "record",
+        -33.19,
+        151.62,
+        251.9,
+    ),
     Site(
         "camp-palisades",
         "end-triassic-extinction",
@@ -133,6 +163,16 @@ SITES: tuple[Site, ...] = (
         201.5,
     ),
     Site("kuhjoch", "end-triassic-extinction", "Kuhjoch, Austria", "record", 47.48, 11.53, 201.5),
+    # Its sea and land together, the headland at St Audrie's Bay (Hesselbo et al. 2002).
+    Site(
+        "st-audries-bay",
+        "end-triassic-extinction",
+        "St Audrie\u2019s Bay, England",
+        "record",
+        51.18,
+        -3.28,
+        201.5,
+    ),
     Site("chicxulub", "k-pg-extinction", "Chicxulub", "cause", 21.4, -89.52, 66.0),
     Site(
         "deccan-traps",
@@ -144,6 +184,16 @@ SITES: tuple[Site, ...] = (
         66.0,
     ),
     Site("el-kef", "k-pg-extinction", "El Kef, Tunisia", "record", 36.15, 8.65, 66.0),
+    # Where the boundary clay's iridium was first found (Alvarez et al. 1980).
+    Site(
+        "gubbio",
+        "k-pg-extinction",
+        "Bottaccione Gorge, Gubbio",
+        "record",
+        43.36,
+        12.58,
+        66.0,
+    ),
 )
 
 #: How far either side of its extinction a site is marked, Ma: its positions reach the step past.

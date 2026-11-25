@@ -28,7 +28,13 @@ describe('the extinctions’ view', () => {
 
   it('marks the places of the extinctions near the moment, where the plates had them', () => {
     const marks = extinctionMarks(DATA, 252);
-    expect(marks.map((mark) => mark.site.id)).toEqual(['siberian-traps', 'norilsk', 'meishan']);
+    expect(marks.map((mark) => mark.site.id)).toEqual([
+      'siberian-traps',
+      'norilsk',
+      'meishan',
+      'lootsberg',
+      'frazer-beach',
+    ]);
     const siberia = marks.find((mark) => mark.site.id === 'siberian-traps');
     // Siberia lay further south then, short of the Arctic Circle.
     expect(siberia?.point.latitude).toBeGreaterThan(50);
@@ -61,6 +67,17 @@ describe('the extinctions’ view', () => {
     // Nor where the maps' model has none then.
     const unplaced = { ...siberia.site, then: siberia.site.then.map(() => null) };
     expect(platesFact(DATA, unplaced, siberia.extinction)).toBeNull();
+  });
+
+  it('says what a record site shows, with its source, where there is more to say (#1232)', () => {
+    const karoo = pickedMark(extinctionMarks(DATA, 252), 'lootsberg');
+    if (karoo === undefined) throw new Error('no Karoo');
+    const card = extinctionCard(karoo);
+    expect(card.facts[1]?.[0]).toBe('Shows');
+    expect(card.facts[1]?.[1]).toContain('more than 300,000 years before the sea’s');
+    expect(card.links[0]?.label).toBe('Gastaldo et al. 2020');
+    const meishan = pickedMark(extinctionMarks(DATA, 252), 'meishan');
+    expect(meishan && extinctionCard(meishan).facts.map(([label]) => label)).not.toContain('Shows');
   });
 
   it('eases play near every extinction', () => {
