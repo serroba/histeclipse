@@ -254,7 +254,7 @@
   "bondGrasby2017": {
     "name": "Bond & Grasby 2017",
     "kind": "paper",
-    "cite": "Bond, D. P. G. & Grasby, S. E. (2017), On the causes of mass extinctions, Palaeogeography, Palaeoclimatology, Palaeoecology 478, 3–29. Our summary: a review of almost twenty crises from the Cambrian to the end-Cretaceous; the timing of large igneous provinces and at least half of the major extinctions makes large-scale volcanism the main driver, most crises coming with warming and oxygen-poor seas",
+    "cite": "Bond, D. P. G. & Grasby, S. E. (2017), On the causes of mass extinctions, Palaeogeography, Palaeoclimatology, Palaeoecology 478, 3–29. Our summary: a review of almost twenty crises from the Cambrian to the end-Cretaceous; the timing of large igneous provinces and at least half of the major extinctions makes large-scale volcanism the main driver, most crises coming with warming and oxygen-poor seas. Its Table 2 sets four counts of marine genera lost in the largest crises side by side, Sepkoski (1996), Bambach et al. (2004), McGhee et al. (2013) and Stanley (2016)",
     "url": "https://doi.org/10.1016/j.palaeo.2016.11.005"
   },
   "bondGrasby2020": {
@@ -2454,7 +2454,7 @@
   "stanley2016": {
     "name": "Stanley 2016",
     "kind": "paper",
-    "cite": "Stanley, S. M. (2016), Estimates of the magnitudes of major marine mass extinctions in earth history, PNAS 113, E6325–E6334. Our summary: extinction was already running before each mass extinction; subtracting that background extinction, correcting for losses smeared backward from the extinction interval, and allowing for losses clustered among related species, the end-Permian crisis removed about 81% of marine species, not the 90–96% often quoted",
+    "cite": "Stanley, S. M. (2016), Estimates of the magnitudes of major marine mass extinctions in earth history, PNAS 113, E6325–E6334. Our summary: extinction was already running before each mass extinction; subtracting that background extinction, correcting for losses smeared backward from the extinction interval, and allowing for losses clustered among related species, the end-Permian crisis removed about 81% of marine species, not the 90–96% often quoted. Its Fig. 4 estimates the marine genera lost in each crisis this way: about 62% in the end-Permian, 45–46% in the end-Ordovician, 38–40% in the end-Cretaceous, 33–35% in the end-Guadalupian and 16–20% in the Late Devonian’s Frasnian crisis; the end-Triassic is left out, its timing and marine victims too controversial",
     "url": "https://doi.org/10.1073/pnas.1613094113"
   },
   "steinberger2008": {
