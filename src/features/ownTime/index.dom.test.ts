@@ -48,8 +48,10 @@ function service(pace: 'slow' | 'normal' = 'slow', playing = true) {
   const addLayer = vi.fn(() => ({ update: vi.fn() }));
   const hold = vi.fn(() => playing);
   const resume = vi.fn();
+  const refresh = vi.fn();
   const context = {
     globe: { addLayer },
+    refresh,
     change: (next: (state: ViewState) => ViewState) => {
       view = next(view);
     },
@@ -61,7 +63,14 @@ function service(pace: 'slow' | 'normal' = 'slow', playing = true) {
       },
     },
   } as unknown as FeatureContext<'strikes' | 'deepTime' | 'overPage'>;
-  return { own: createOwnTime(context, context), addLayer, hold, resume, view: () => view };
+  return {
+    own: createOwnTime(context, context),
+    addLayer,
+    hold,
+    resume,
+    refresh,
+    view: () => view,
+  };
 }
 
 const layer: LayerFactory<number> = () => ({ update: () => undefined });
@@ -88,6 +97,28 @@ describe('events in their own time (#1191)', () => {
     expect(resume).toHaveBeenCalledTimes(1);
     // Closed, it can be reached again.
     expect(own.arrive(chicxulub.made, 66)).toBe('clock');
+  });
+
+  it('lends the header the moment its clock is at, from its own zero, while it is open (#1222)', () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    const { own, refresh } = service('slow');
+    const permian = event('end-Permian', layer);
+    own.watch({ ...permian.made, ma: 251.941 }, 251.9);
+    expect(own.lent()).toMatchObject({ when: '251.9 million years ago', what: null });
+    expect(own.lent()?.ma).toBeCloseTo(251.941, 6);
+    expect(document.documentElement.hasAttribute('data-own-time')).toBe(true);
+    // Written again once, a moment later, however often the clock moves meanwhile.
+    expect(refresh).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(250);
+    expect(refresh).toHaveBeenCalledTimes(1);
+    close();
+    expect(own.lent()).toBeNull();
+    expect(document.documentElement.hasAttribute('data-own-time')).toBe(false);
+    expect(refresh).toHaveBeenCalledTimes(2);
+    // Outside deep time, with no zero of its own, nothing is lent.
+    own.watch(permian.made, null);
+    expect(own.lent()).toBeNull();
+    close();
   });
 
   it('faster, offers the clock once for a while, then again after the offer has gone', () => {
