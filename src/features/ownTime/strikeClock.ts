@@ -67,7 +67,30 @@ interface ClockView {
   readonly sources: HTMLElement;
   readonly speed: HTMLSelectElement;
   readonly closeButton: HTMLButtonElement;
+  readonly foldButton: HTMLButtonElement;
   readonly loss: LossView | null;
+}
+
+/** Where the panel opens folded (#1243): a phone, where its words would cover the globe. */
+const FOLDED_WIDTH = '(max-width: 600px)';
+
+/**
+ * Fold the panel's words away, or show them (#1243): folded, it keeps the moment, the phase's
+ * title, the slider and the controls, so the globe it draws shows above it.
+ */
+function setFolded(view: ClockView, folded: boolean): void {
+  if (folded) view.root.dataset['folded'] = '';
+  else delete view.root.dataset['folded'];
+  view.foldButton.setAttribute('aria-expanded', String(!folded));
+  view.foldButton.textContent = folded ? 'More' : 'Less';
+}
+
+/** Open `view` folded on a phone, and fold or unfold it at a tap of its button (#1243). */
+function foldable(view: ClockView): void {
+  setFolded(view, matchMedia(FOLDED_WIDTH).matches);
+  view.foldButton.addEventListener('click', () => {
+    setFolded(view, !('folded' in view.root.dataset));
+  });
 }
 
 /** The band on the slider where `dated` is, fading out over each end's uncertainty, and its words. */
@@ -122,6 +145,7 @@ function clockView(
     { type: 'button', class: 'strike-clock-close', 'aria-label': 'Close' },
     '×',
   );
+  const foldButton = element('button', { type: 'button', class: 'strike-clock-fold' }, 'Less');
   const view = {
     when: element('p', { class: 'strike-clock-when', 'aria-live': 'polite' }),
     phaseTitle: element('h3', { class: 'strike-clock-phase' }),
@@ -131,7 +155,7 @@ function clockView(
   const root = element(
     'section',
     { class: 'strike-clock', role: 'dialog', 'aria-label': title, hidden: '' },
-    element('header', {}, element('h2', {}, title), closeButton),
+    element('header', {}, element('h2', {}, title), foldButton, closeButton),
     view.when,
     view.phaseTitle,
     view.phaseText,
@@ -149,7 +173,9 @@ function clockView(
     ...(drawn === undefined ? [] : [element('p', { class: 'strike-clock-drawn' }, drawn)]),
     element('div', { class: 'strike-clock-controls' }, transport.play, speed),
   );
-  return { root, speed, closeButton, loss, ...view };
+  const made = { root, speed, closeButton, foldButton, loss, ...view };
+  foldable(made);
+  return made;
 }
 
 /**
