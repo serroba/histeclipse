@@ -185,3 +185,40 @@ test('a reader who asks for less motion watches Earth and the Moon form from the
   await expect(clock).toBeHidden();
   expect(problems).toEqual([]);
 });
+
+test('on a phone the formation clock opens folded, the globe showing above it, its words a tap away (#1243) @mobile', async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== 'mobile', 'a phone, where the words would cover the globe');
+  const problems = collectProblems(page);
+  const clock = page.getByRole('dialog', { name: 'Earth and the Moon forming, in their own time' });
+  await test.step('Given the aeons at their oldest moment, on a phone', async () => {
+    await page.goto('./?ma=4568&scale=eons');
+    await globeRendered(page);
+  });
+  await test.step('When they play', async () => {
+    await page
+      .getByRole('navigation', { name: 'Deep time' })
+      .getByRole('button', { name: 'Play', exact: true })
+      .click();
+  });
+  await test.step('Then the clock opens folded: the moment, the slider and Play, low on the screen', async () => {
+    await expect(clock).toBeVisible();
+    await expect(clock.locator('.strike-clock-when')).toBeVisible();
+    await expect(clock.locator('.strike-clock-range')).toBeVisible();
+    await expect(clock.locator('.strike-clock-text')).toBeHidden();
+    const box = await clock.boundingBox();
+    const height = page.viewportSize()?.height ?? 0;
+    expect(box?.y ?? 0).toBeGreaterThan(height * 0.55);
+  });
+  await test.step('When the reader taps More, Then the phase’s words and sources show', async () => {
+    await clock.getByRole('button', { name: 'More' }).click();
+    await expect(clock.locator('.strike-clock-text')).toBeVisible();
+    await expect(clock.locator('.strike-clock-sources a').first()).toBeVisible();
+    await expect(clock.getByRole('button', { name: 'Less' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+  });
+  expect(problems).toEqual([]);
+});
