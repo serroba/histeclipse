@@ -47,6 +47,8 @@ function extinctionPassage(data: ExtinctionSites, extinction: Extinction): Passa
         at: [Number(lat), Number(lon)] as [number, number],
         label: `${site.name}, ${formatMa(ma)}`,
         view: `layers=extinctions&ma=${String(ma)}&scale=all&cam=${lat},${lon},${DISTANCE.toFixed(2)}`,
+        // Its card opens there, so watching it in its own time is a tap away (#1233).
+        pick: `extinction:${site.id}`,
       },
     ];
   });

@@ -35,8 +35,8 @@ export interface Features {
   finds(state: ViewState): number[];
   /** Deep time left. */
   deepOff(state: ViewState): void;
-  /** A marker tapped: whether it was one of theirs, and if so, picked. */
-  pick(key: string): boolean;
+  /** A marker tapped, or named by an anchor: whether it was one of theirs, and if so, picked. */
+  readonly pick: (key: string) => boolean;
   /** What the Layers panel says under each feature's layer. */
   said(): (readonly [Layer, string | null])[];
   /** The step each feature offers from its row in the Layers panel (#909). */
