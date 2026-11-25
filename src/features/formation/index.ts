@@ -22,6 +22,7 @@ import type { ViewState } from '../../state/viewState';
 import type { Capabilities } from '../feature';
 import type { OwnTimeEvent } from '../ownTime';
 import { DEFAULT_GROWTH_MODEL, earthRadius, type GrowthModel } from '../../deepTime/growth';
+import { discLayer } from './discLayer';
 import { growthLayer } from './growthLayer';
 import { impactLayer } from './impactLayer';
 import { IMPACT_DISTANCE, IMPACT_VIEW } from './impactModel';
@@ -54,7 +55,7 @@ export function formationEvent(
     scale: formationScale(impactMa),
     offer: 'Watch Earth and the Moon form',
     drawn:
-      'Illustration: Earth grows as the model on the rail has it; the impact is the canonical case, its sizes, speed and distances from the papers, the pieces’ paths, glow and turning invented. White is hottest; the Moon greys as it crusts.',
+      'Illustration: Earth grows as the model on the rail has it, thinning the swarm round it, whose pieces are drawn far larger than they were; the impact is the canonical case, its sizes, speed and distances from the papers, the paths, glow and turning invented. White is hottest; the Moon greys as it crusts.',
     // Its zero, the impact: the header counts from it, not from where play started.
     ma: impactMa,
     deep: {
@@ -67,6 +68,7 @@ export function formationEvent(
       on.dataset['formationGrowth'] = growth;
       const impact = tools.layer(impactLayer);
       const size = tools.layer(growthLayer);
+      const disc = tools.layer(discLayer);
       // Drawn back once, as Theia comes in, to see the Moon's orbit whole.
       let framed = false;
       // Opened before it, stood back so Earth is seen to grow against a still frame (#1219).
@@ -83,11 +85,15 @@ export function formationEvent(
           framed ||= drawn;
           impact.update(drawn ? seconds : null);
           // The proto-Earth's size until Theia strikes; whole after.
-          size.update(seconds < 0 ? earthRadius(growth, before + seconds / MYR) : null);
+          const myr = before + seconds / MYR;
+          size.update(seconds < 0 ? earthRadius(growth, myr) : null);
+          // The disc round it until Theia comes in.
+          disc.update(drawn ? null : { myr, growth });
         },
         end() {
           impact.update(null);
           size.update(null);
+          disc.update(null);
           delete on.dataset['formationClock'];
           delete on.dataset['formationGrowth'];
         },

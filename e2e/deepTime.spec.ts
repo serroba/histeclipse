@@ -462,6 +462,8 @@ test('deep time outlines a second reconstruction’s continents', GPU, async ({ 
 test('before the reconstructions, the reader picks whose hypotheses the globe sketches @acceptance', async ({
   page,
 }) => {
+  // Five moments loaded in turn: near 30 s on CI's busier runners (#1247's kind).
+  test.slow();
   const problems = collectProblems(page);
   await page.goto('./?ma=3000&scale=eons');
   await globeRendered(page);

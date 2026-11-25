@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { defaultViewState, type ViewState } from '../../state/viewState';
 import type { Capabilities } from '../feature';
 import { createFormation, formationEvent, opensFormation } from '.';
+import { discLayer } from './discLayer';
 
 const YEAR = 365.25 * 86_400;
 const MYR = 1e6 * YEAR;
@@ -62,23 +63,31 @@ describe('the aeons begin with Earth and the Moon forming (#1218)', () => {
     const on = document.createElement('div');
     const update = vi.fn();
     const sized = vi.fn();
+    const disc = vi.fn();
     const zoomTo = vi.fn();
     const flyTo = vi.fn();
     const tools = {
       strikes: { on, zoomTo, flyTo },
-      layer: (factory: object) => ({ update: 'needs' in factory ? sized : update }),
+      layer: (factory: object) => ({
+        update: factory === discLayer ? disc : 'needs' in factory ? sized : update,
+      }),
     } as unknown as Parameters<ReturnType<typeof formationEvent>['play']>[0];
     const played = formationEvent('intermediate').play(tools);
     expect(on.dataset['formationClock']).toBe('intermediate');
     expect(on.dataset['formationGrowth']).toBe('slow');
     played.at(-MYR);
     expect(update).toHaveBeenLastCalledWith(null);
+    // The disc round the growing Earth, until Theia comes in (#1219).
+    const [shown] = disc.mock.lastCall as [{ myr: number; growth: string }];
+    expect(shown.myr).toBeCloseTo(141.3, 3);
+    expect(shown.growth).toBe('slow');
     // Stood back as it opens, while Earth grows.
     expect(zoomTo).toHaveBeenLastCalledWith(7);
     played.at(-2 * MYR);
     played.at(-3600);
     played.at(0);
     expect(update).toHaveBeenLastCalledWith(0);
+    expect(disc).toHaveBeenLastCalledWith(null);
     // Drawn back once more as Theia comes in, not each moment.
     expect(zoomTo).toHaveBeenCalledTimes(2);
     expect(flyTo).toHaveBeenCalledTimes(1);

@@ -37,8 +37,15 @@ test('playing the aeons from their oldest moment opens on Earth and the Moon for
       /^https:\/\/doi\.org\/10\./,
     );
   });
+  await test.step('When they move it back to a million years in, Then the gas and dust ring the growing Earth (#1219)', async () => {
+    // Moving the slider holds the clock there, however slowly the runner plays.
+    await clock.locator('.strike-clock-range').fill('2');
+    await expect(clock.locator('.strike-clock-when')).toHaveText(/^1 million years after/);
+    await expect(globe).toHaveAttribute('data-formation-disc', 'gas');
+  });
   await test.step('When it plays fast, Then deep time’s moment moves with it, past the impact', async () => {
     await clock.getByLabel('Speed').selectOption('fast');
+    await clock.getByRole('button', { name: 'Play', exact: true }).click();
     await expect.poll(() => maOf(page.url()), { timeout: 30_000 }).toBeLessThan(4510);
   });
   await test.step('Then the globe draws the impact, and the Moon gathering from its debris (#180)', async () => {
@@ -49,6 +56,7 @@ test('playing the aeons from their oldest moment opens on Earth and the Moon for
     await expect(clock).toBeHidden({ timeout: 30_000 });
     await expect(globe).not.toHaveAttribute('data-formation-clock');
     await expect(globe).toHaveAttribute('data-formation-impact', 'off');
+    await expect(globe).toHaveAttribute('data-formation-disc', 'off');
     await expect(bar.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
     await expect.poll(() => maOf(page.url()), { timeout: 30_000 }).toBeLessThan(4500);
   });
