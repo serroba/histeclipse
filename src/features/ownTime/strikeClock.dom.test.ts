@@ -162,7 +162,9 @@ describe('the strike clock’s panel (#1173)', () => {
     expect(Number(band?.style.getPropertyValue('--in'))).toBeCloseTo(0.2, 6);
     expect(Number(band?.style.getPropertyValue('--out'))).toBeCloseTo(0.8, 6);
     expect(band?.title).toBe('Dated at Meishan.');
-    expect(dated.root.querySelector('.strike-clock-dated-says')?.textContent).toBe('Dated at Meishan.');
+    expect(dated.root.querySelector('.strike-clock-dated-says')?.textContent).toBe(
+      'Dated at Meishan.',
+    );
   });
 
   it('says nothing of a phase before the first, and takes a second open or pause in its stride', () => {
