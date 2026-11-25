@@ -51,6 +51,26 @@ describe('the aeons begin with Earth and the Moon forming (#1218)', () => {
     expect(watch).toHaveBeenCalledTimes(1);
   });
 
+  it('opens from the moment shown before the impact, else from the start, when a card asks (#1218)', () => {
+    const watch = vi.fn();
+    const formation = createFormation(
+      {
+        ownTime: { watch, arrive: vi.fn(), lent: vi.fn() },
+        timeline: { playing: () => false } as unknown as Capabilities['timeline'],
+      },
+      () => true,
+    );
+    const at = (ma: number | null): ViewState => ({
+      ...defaultViewState(new Date('2026-01-01T00:00:00Z')),
+      ma,
+    });
+    expect(formation.watch(at(4530))).toBe(true);
+    formation.watch(at(4400));
+    // Outside deep time, not at all.
+    expect(formation.watch(at(null))).toBe(false);
+    expect(watch.mock.calls.map((call) => call[1] as number)).toEqual([4530, 4568]);
+  });
+
   it('dates the clock by the impact model, and maps its moments onto deep time', () => {
     const early = formationEvent('early');
     const young = formationEvent('young');

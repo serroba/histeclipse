@@ -5,7 +5,7 @@
 
 import { expect, test } from '@playwright/test';
 
-import { collectProblems, globeRendered } from './support';
+import { collectProblems, globeRendered, showDeepDetails } from './support';
 
 /** Deep time's moment, Ma, as the link has it. */
 function maOf(url: string): number {
@@ -164,5 +164,24 @@ test('how the impact went is the reader’s choice, and the formation clock draw
     await expect(clock.locator('.strike-clock-text')).toContainText('as large as the proto-Earth');
     await expect(clock.locator('.strike-clock-sources')).toContainText('Canup 2012');
   });
+  expect(problems).toEqual([]);
+});
+
+test('a reader who asks for less motion watches Earth and the Moon form from the milestone’s card (#1218)', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const problems = collectProblems(page);
+  const clock = page.getByRole('dialog', { name: 'Earth and the Moon forming, in their own time' });
+  await page.goto('./?ma=4510&scale=eons');
+  await globeRendered(page);
+  await showDeepDetails(page);
+  await page.getByTestId('deep-milestones').locator('summary').click();
+  await page.getByRole('button', { name: 'Watch Earth and the Moon form' }).first().click();
+  await expect(clock).toBeVisible();
+  // From the start, the moment shown being past the impact.
+  await expect(page.getByTestId('globe')).toHaveAttribute('data-formation-clock', 'early');
+  await clock.getByRole('button', { name: 'Close' }).click();
+  await expect(clock).toBeHidden();
   expect(problems).toEqual([]);
 });

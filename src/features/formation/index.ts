@@ -18,7 +18,7 @@ import {
   formationSeconds,
 } from '../../deepTime/formationClock';
 import { IMPACTS, type ImpactModel } from '../../deepTime/sketch';
-import type { ViewState } from '../../state/viewState';
+import { EARTH_AGE_MA, type ViewState } from '../../state/viewState';
 import type { Capabilities } from '../feature';
 import type { OwnTimeEvent } from '../ownTime';
 import { DEFAULT_THEIA_MODEL, THEIA_CHOICES, type TheiaModel } from '../../deepTime/theia';
@@ -125,6 +125,11 @@ export function opensFormation(
 export interface Formation {
   /** Deep time's moment and playing, seen each time the features are shown. */
   show(state: ViewState): void;
+  /**
+   * Open the clock now, as a milestone's card asks (#1218): from the moment shown if it is before
+   * the impact, else from the start, the first solids. Whether it opened: not outside deep time.
+   */
+  watch(state: ViewState): boolean;
 }
 
 export function createFormation(
@@ -142,6 +147,12 @@ export function createFormation(
       was = playing;
       if (opens && state.ma !== null)
         lent.ownTime.watch(formationEvent(state.impact, state.growth, state.theia), state.ma);
+    },
+    watch(state) {
+      if (state.ma === null) return false;
+      const ma = state.ma > IMPACTS[state.impact].ma ? state.ma : EARTH_AGE_MA;
+      lent.ownTime.watch(formationEvent(state.impact, state.growth, state.theia), ma);
+      return true;
     },
   };
 }

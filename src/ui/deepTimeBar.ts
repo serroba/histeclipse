@@ -39,6 +39,7 @@ import { createDeepChips, type DeepChip, type DeepChipView } from './deepChips';
 import { deepColourKey } from './deepColourKey';
 import { bookIcon } from './icons';
 import { createMilestoneMarks } from './milestoneMarks';
+import { createEasingRow } from './easingRow';
 import { createMilestonePanel } from './milestonePanel';
 import { createPeriodBands } from './periodBands';
 import { createPeriodCrumbs } from './periodCrumbs';
@@ -118,6 +119,8 @@ export function createDeepTimeBar(
     explain(id: WhyId): void;
     /** A new moment: `jump` when it is a step to go back from (a milestone, a click), not a drag. */
     onMa(ma: number, jump: boolean): void;
+    /** A milestone's card asks to watch Earth and the Moon form (#1218). */
+    readonly onWatchFormation: () => void;
     onPlay(playing: boolean): void;
     /** A pace picked (#1076): Slow, Normal or Fast, whatever the bar shows. */
     onPace(pace: Pace): void;
@@ -264,24 +267,17 @@ export function createDeepTimeBar(
     polarityStrip.root,
   );
   zoom.attach(track, handlers.onPan);
-  // Easing near milestones and finds as it plays (#1077), unless less motion is asked for.
-  const easing = element('input', { type: 'checkbox', 'data-testid': 'deep-easing' });
-  easing.addEventListener('change', () => {
-    handlers.onEasing(easing.checked);
+  const easing = createEasingRow((on) => {
+    handlers.onEasing(on);
   });
-  const easingRow = element(
-    'label',
-    { class: 'deep-easing' },
-    easing,
-    'Slow down near milestones and finds while playing',
-  );
   const milestones = createMilestonePanel(
     {
       onMa(ma) {
         handlers.onMa(ma, true);
       },
+      onWatchFormation: handlers.onWatchFormation,
     },
-    easingRow,
+    easing.row,
   );
   // Notes, legends, milestones, folds: folded on a phone until asked; open, they scroll.
   const details = element(
@@ -390,7 +386,7 @@ export function createDeepTimeBar(
       temperature.render(view.temperature);
       speed.value = view.pace;
       zoom.render(view.zoom);
-      easing.checked = view.easing;
+      easing.set(view.easing);
       rate.textContent = `≈ ${deepSpeedText(view.speed)}`;
       rate.title = deepSpeedWords(view.speed);
       speed.title = `${PACE_LABELS[view.pace]}: ${deepSpeedWords(view.speed)}`;
