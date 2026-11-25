@@ -30,6 +30,33 @@ export interface Extinction {
   readonly causes: Claim;
 }
 
+/**
+ * What a record site shows, where its card says more than that it is dated there (#1232): the
+ * sections beyond each boundary's reference, the end-Permian's on land among them.
+ */
+export const SITE_NOTES: Readonly<Record<string, Claim>> = {
+  wangjiawan: {
+    text: 'Where the Hirnantian, the Ordovician’s last stage, is defined to begin: at the first graptolite Normalograptus extraordinarius, as the ice sheet grew and the first pulse struck.',
+    sources: ['chen2006'],
+  },
+  lootsberg: {
+    text: 'Rivers and floodplains of the Karoo, where the change of animals long held to mark the extinction on land is dated more than 300,000 years before the sea’s.',
+    sources: ['gastaldo2020'],
+  },
+  'frazer-beach': {
+    text: 'Coal swamps of the southern high latitudes, where the Glossopteris forests collapsed before 252.3 million years ago, some 370,000 years before the sea’s extinction.',
+    sources: ['fielding2019'],
+  },
+  'st-audries-bay': {
+    text: 'Cliffs where losses in the sea and the change of land plants come together with one sharp drop in carbon isotopes: on land and at sea, the extinction was at the same time.',
+    sources: ['hesselbo2002'],
+  },
+  gubbio: {
+    text: 'The limestones of the Bottaccione Gorge, whose boundary clay was found rich in iridium, rare in Earth’s crust and common in meteorites: the first trace of an impact.',
+    sources: ['alvarez1980'],
+  },
+};
+
 /** What every card says of the list itself. */
 export const ABOUT_THE_LIST: Claim = {
   text: 'The usual “Big Five” come from Raup & Sepkoski (1982), who found the Devonian’s stands out but not significantly. Bambach (2006) finds only three stand apart from the rest; Rampino & Shen (2019) add the end-Guadalupian as a sixth.',
