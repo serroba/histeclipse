@@ -5,6 +5,7 @@ import { defaultViewState, type ViewState } from '../../state/viewState';
 import type { Capabilities } from '../feature';
 import { createFormation, formationEvent, opensFormation } from '.';
 import { discLayer } from './discLayer';
+import { THEIA_CHOICES } from '../../deepTime/theia';
 
 const YEAR = 365.25 * 86_400;
 const MYR = 1e6 * YEAR;
@@ -86,7 +87,7 @@ describe('the aeons begin with Earth and the Moon forming (#1218)', () => {
     played.at(-2 * MYR);
     played.at(-3600);
     played.at(0);
-    expect(update).toHaveBeenLastCalledWith(0);
+    expect(update).toHaveBeenLastCalledWith({ seconds: 0, hit: THEIA_CHOICES.canonical.hit });
     expect(disc).toHaveBeenLastCalledWith(null);
     // Drawn back once more as Theia comes in, not each moment.
     expect(zoomTo).toHaveBeenCalledTimes(2);

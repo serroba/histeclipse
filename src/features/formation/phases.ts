@@ -11,6 +11,8 @@
  */
 
 import { APPROACH, FIRST_SOLIDS_MA } from '../../deepTime/formationClock';
+import { DEFAULT_THEIA_MODEL, type TheiaModel } from '../../deepTime/theia';
+import type { SourceId } from '../../sources/registry';
 import { phase, type EventPhase } from '../ownTime';
 
 const HOUR = 3600;
@@ -63,13 +65,6 @@ function beforeImpact(fromSolids: (myr: number) => number): readonly EventPhase[
 /** Theia coming in, the impact, and after: timed from the impact. */
 const FROM_IMPACT: readonly EventPhase[] = [
   phase(
-    'theia',
-    -APPROACH,
-    'Theia comes in',
-    'A body about the size of Mars, Theia, comes in on a grazing path. When is argued: 4,510 million years ago, from the Moon’s oldest zircons (Barboni et al.), or nearer 4,350 million, from many lunar rocks (Borg & Carlson). The clock follows the date chosen on the rail.',
-    ['canup2001', 'barboni2017', 'borg2023'],
-  ),
-  phase(
     'impact',
     0,
     'The giant impact: how it went is argued',
@@ -114,7 +109,45 @@ const FROM_IMPACT: readonly EventPhase[] = [
 ];
 
 /** The phases for an impact at `impactMa`; those before it are timed from the first solids. */
-export function formationPhases(impactMa: number): readonly EventPhase[] {
+export function formationPhases(
+  impactMa: number,
+  theia: TheiaModel = DEFAULT_THEIA_MODEL,
+): readonly EventPhase[] {
   const before = FIRST_SOLIDS_MA - impactMa;
-  return [...beforeImpact((myr) => (myr - before) * MYR), ...FROM_IMPACT];
+  return [...beforeImpact((myr) => (myr - before) * MYR), coming(theia), ...FROM_IMPACT];
+}
+
+/** How Theia comes in, in the scenario chosen (#1220). */
+const COMING: Readonly<Record<TheiaModel, { readonly words: string; readonly source: SourceId }>> =
+  {
+    canonical: {
+      words: 'A body about the size of Mars, Theia, comes in on a grazing path.',
+      source: 'canup2001',
+    },
+    fastSpin: {
+      words:
+        'A smaller body, a few hundredths of Earth’s mass, comes in fast at an Earth spinning in two to three hours.',
+      source: 'cuk2012',
+    },
+    halfEarths: {
+      words:
+        'A body about as large as the proto-Earth itself, each about half Earth’s mass, comes in slowly.',
+      source: 'canup2012',
+    },
+    immediate: {
+      words: 'A body about the size of Mars, Theia, comes in on a grazing path.',
+      source: 'kegerreis2022',
+    },
+  };
+
+/** Theia coming in, as the scenario chosen has it, and when, as argued. */
+function coming(theia: TheiaModel): EventPhase {
+  const { words, source } = COMING[theia];
+  return phase(
+    'theia',
+    -APPROACH,
+    'Theia comes in',
+    `${words} When is argued: 4,510 million years ago, from the Moon’s oldest zircons (Barboni et al.), or nearer 4,350 million, from many lunar rocks (Borg & Carlson). The clock follows the date and the scenario chosen on the rail.`,
+    [source, 'barboni2017', 'borg2023'],
+  );
 }

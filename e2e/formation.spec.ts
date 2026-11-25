@@ -134,3 +134,35 @@ test('how fast Earth grew is the reader’s choice, and the formation clock foll
   });
   expect(problems).toEqual([]);
 });
+
+test('how the impact went is the reader’s choice, and the formation clock draws it (#1220)', async ({
+  page,
+}) => {
+  const problems = collectProblems(page);
+  const globe = page.getByTestId('globe');
+  const clock = page.getByRole('dialog', { name: 'Earth and the Moon forming, in their own time' });
+  await test.step('Given the aeons before the impact, Then the rail asks how it went, canonical by default', async () => {
+    await page.goto('./?ma=4520&scale=eons');
+    await globeRendered(page);
+    await expect(
+      page.getByRole('button', { name: /^How the impact went: Canonical/ }),
+    ).toBeVisible();
+  });
+  await test.step('When they pick two half-Earths, Then the link keeps it', async () => {
+    await page.getByRole('button', { name: /^How the impact went/ }).click();
+    await page.getByRole('button', { name: /^Half-Earths/ }).click();
+    await expect(page).toHaveURL(/theia=halfEarths/);
+  });
+  await test.step('When they play to Theia coming in, Then the clock tells and draws that hit, on its paper’s say-so', async () => {
+    await page
+      .getByRole('navigation', { name: 'Deep time' })
+      .getByRole('button', { name: 'Play', exact: true })
+      .click();
+    await expect(clock).toBeVisible();
+    await expect(globe).toHaveAttribute('data-formation-theia', 'halfEarths');
+    await expect(clock).toHaveAttribute('data-phase', 'theia', { timeout: 30_000 });
+    await expect(clock.locator('.strike-clock-text')).toContainText('as large as the proto-Earth');
+    await expect(clock.locator('.strike-clock-sources')).toContainText('Canup 2012');
+  });
+  expect(problems).toEqual([]);
+});

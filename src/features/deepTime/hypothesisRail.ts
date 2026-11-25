@@ -22,8 +22,9 @@ import {
   WATER_MODELS,
 } from '../../deepTime/sketch';
 import { GROWTH_CHOICES, GROWTH_MODELS } from '../../deepTime/growth';
+import { THEIA_CHOICES, THEIA_MODELS } from '../../deepTime/theia';
 import { element } from '../../ui/dom';
-import { layerIcon, spanIcon } from '../../ui/icons';
+import { layerIcon, spanIcon, uiIcon } from '../../ui/icons';
 import './hypothesisRail.css';
 
 /** An answer to a question, as the rail offers it: its words, a short tag and its source. */
@@ -67,6 +68,16 @@ export const QUESTIONS: Readonly<Record<SketchQuestion, Question>> = {
       source: IMPACTS[model].source,
     })),
   },
+  theia: {
+    title: 'How the impact went',
+    icon: () => uiIcon('lunar', 20),
+    options: THEIA_MODELS.map((model) => ({
+      value: model,
+      label: THEIA_CHOICES[model].label,
+      tag: before(THEIA_CHOICES[model].label),
+      source: THEIA_CHOICES[model].source,
+    })),
+  },
   water: {
     title: 'Where the water came from',
     icon: () => layerIcon('sealevel', 20),
@@ -99,7 +110,7 @@ export const QUESTIONS: Readonly<Record<SketchQuestion, Question>> = {
   },
 };
 
-const ORDER: readonly SketchQuestion[] = ['growth', 'impact', 'water', 'land', 'snowball'];
+const ORDER: readonly SketchQuestion[] = ['growth', 'impact', 'theia', 'water', 'land', 'snowball'];
 
 export interface HypothesisRail {
   readonly root: HTMLElement;

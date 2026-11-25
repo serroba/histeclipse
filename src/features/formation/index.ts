@@ -21,6 +21,7 @@ import { IMPACTS, type ImpactModel } from '../../deepTime/sketch';
 import type { ViewState } from '../../state/viewState';
 import type { Capabilities } from '../feature';
 import type { OwnTimeEvent } from '../ownTime';
+import { DEFAULT_THEIA_MODEL, THEIA_CHOICES, type TheiaModel } from '../../deepTime/theia';
 import { DEFAULT_GROWTH_MODEL, earthRadius, type GrowthModel } from '../../deepTime/growth';
 import { discLayer } from './discLayer';
 import { growthLayer } from './growthLayer';
@@ -44,18 +45,20 @@ const MYR = 1e6 * 365.25 * 86_400;
 export function formationEvent(
   model: ImpactModel,
   growth: GrowthModel = DEFAULT_GROWTH_MODEL,
+  theia: TheiaModel = DEFAULT_THEIA_MODEL,
 ): OwnTimeEvent {
   const impactMa = IMPACTS[model].ma;
+  const { hit } = THEIA_CHOICES[theia];
   // Millions of years from the first solids to the impact.
   const before = FIRST_SOLIDS_MA - impactMa;
   return {
     key: FORMATION_KEY,
     title: 'Earth and the Moon forming, in their own time',
-    phases: formationPhases(impactMa),
+    phases: formationPhases(impactMa, theia),
     scale: formationScale(impactMa),
     offer: 'Watch Earth and the Moon form',
     drawn:
-      'Illustration: Earth grows as the model on the rail has it, thinning the swarm round it, whose pieces are drawn far larger than they were; the impact is the canonical case, its sizes, speed and distances from the papers, the paths, glow and turning invented. White is hottest; the Moon greys as it crusts.',
+      'Illustration: Earth grows as the model on the rail has it, thinning the swarm round it, whose pieces are drawn far larger than they were; the impact goes as the scenario on the rail has it, its sizes, speed and distances from the papers, the paths, glow and turning invented. White is hottest; the Moon greys as it crusts.',
     // Its zero, the impact: the header counts from it, not from where play started.
     ma: impactMa,
     deep: {
@@ -66,6 +69,7 @@ export function formationEvent(
       const on = tools.strikes.on;
       on.dataset['formationClock'] = model;
       on.dataset['formationGrowth'] = growth;
+      on.dataset['formationTheia'] = theia;
       const impact = tools.layer(impactLayer);
       const size = tools.layer(growthLayer);
       const disc = tools.layer(discLayer);
@@ -83,10 +87,10 @@ export function formationEvent(
             tools.strikes.zoomTo(IMPACT_DISTANCE);
           }
           framed ||= drawn;
-          impact.update(drawn ? seconds : null);
+          impact.update(drawn ? { seconds, hit } : null);
           // The proto-Earth's size until Theia strikes; whole after.
           const myr = before + seconds / MYR;
-          size.update(seconds < 0 ? earthRadius(growth, myr) : null);
+          size.update(seconds < 0 ? earthRadius(growth, myr, hit.protoEarth) : null);
           // The disc round it until Theia comes in.
           disc.update(drawn ? null : { myr, growth });
         },
@@ -96,6 +100,7 @@ export function formationEvent(
           disc.update(null);
           delete on.dataset['formationClock'];
           delete on.dataset['formationGrowth'];
+          delete on.dataset['formationTheia'];
         },
       };
     },
@@ -136,7 +141,7 @@ export function createFormation(
         !was && playing && opensFormation(was, playing, state.ma, state.impact, lessMotion());
       was = playing;
       if (opens && state.ma !== null)
-        lent.ownTime.watch(formationEvent(state.impact, state.growth), state.ma);
+        lent.ownTime.watch(formationEvent(state.impact, state.growth, state.theia), state.ma);
     },
   };
 }

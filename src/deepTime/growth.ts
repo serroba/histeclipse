@@ -63,8 +63,9 @@ export function earthMass(model: GrowthModel, myr: number): number {
 
 /**
  * Earth's radius, as a share of today's, `myr` after the first solids, in `model`: as the cube
- * root of its mass (its rock as dense as today's), never smaller than an embryo drawn.
+ * root of its mass (its rock as dense as today's), never smaller than an embryo drawn. A hit that
+ * leaves a different share for the proto-Earth (#1220: two half-Earths) scales it to `proto`.
  */
-export function earthRadius(model: GrowthModel, myr: number): number {
-  return Math.max(SMALLEST, Math.cbrt(earthMass(model, myr)));
+export function earthRadius(model: GrowthModel, myr: number, proto = PROTO_EARTH): number {
+  return Math.max(SMALLEST, Math.cbrt((earthMass(model, myr) * proto) / PROTO_EARTH));
 }

@@ -1,4 +1,5 @@
 import { GROWTH_MODELS } from '../deepTime/growth';
+import { THEIA_MODELS } from '../deepTime/theia';
 import { HUMAN_SPECIES } from '../data/humanClaims';
 import { WHY_VIEWS } from '../sources/registry';
 import fc from 'fast-check';
@@ -98,6 +99,7 @@ describe('parseViewState', () => {
       temperatureShow: 'change',
       impact: 'early',
       growth: 'slow',
+      theia: 'canonical',
       land: 'dhuime',
       snowball: 'hard',
       water: 'delivered',
@@ -679,6 +681,7 @@ describe('serializeViewState', () => {
     temperatureShow: fc.constantFrom(...TEMPERATURE_SHOWS),
     impact: fc.constantFrom(...IMPACT_MODELS),
     growth: fc.constantFrom(...GROWTH_MODELS),
+    theia: fc.constantFrom(...THEIA_MODELS),
     land: fc.constantFrom(...LAND_MODELS),
     snowball: fc.constantFrom(...SNOWBALL_MODELS),
     water: fc.constantFrom(...WATER_MODELS),

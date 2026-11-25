@@ -7,6 +7,7 @@ import { createDeepSketchNote } from './deepSketchNote';
 const CHOICES: SketchChoices = {
   growth: 'slow',
   impact: 'early',
+  theia: 'canonical',
   land: 'dhuime',
   snowball: 'hard',
   water: 'inherited',
@@ -31,6 +32,7 @@ describe('deep time’s sketch note', () => {
           ({
             growth: 'How fast Earth grew',
             impact: 'Moon-forming impact',
+            theia: 'How the impact went',
             water: 'Where the water came from',
             land: 'How much land',
             snowball: 'Snowball ice',
@@ -42,10 +44,13 @@ describe('deep time’s sketch note', () => {
   it('Given each picker changed, Then the choice is reported; an unknown value is not', () => {
     const onSketch = vi.fn();
     const note = createDeepSketchNote(onSketch);
-    const [growth, impact, water, land, snowball] = [...note.note.querySelectorAll('select')];
+    const [growth, impact, theia, water, land, snowball] = [
+      ...note.note.querySelectorAll('select'),
+    ];
     for (const [select, value] of [
       [growth, 'fast'],
       [impact, 'late'],
+      [theia, 'synestia'],
       [water, 'comets'],
       [land, 'early'],
       [snowball, 'slushball'],
@@ -54,8 +59,9 @@ describe('deep time’s sketch note', () => {
       select.value = select.options[1]?.value ?? value;
       select.dispatchEvent(new Event('change'));
     }
-    expect(onSketch).toHaveBeenCalledTimes(5);
+    expect(onSketch).toHaveBeenCalledTimes(6);
     expect(onSketch).toHaveBeenCalledWith({ water: 'delivered' });
+    expect(onSketch).toHaveBeenCalledWith({ theia: 'fastSpin' });
     expect(onSketch).toHaveBeenCalledWith({ growth: 'fast' });
     const lone = document.createElement('option');
     lone.value = 'nonsense';
@@ -74,7 +80,10 @@ describe('deep time’s sketch note', () => {
     growth?.append(lone.cloneNode());
     if (growth !== undefined) growth.value = 'nonsense';
     growth?.dispatchEvent(new Event('change'));
-    expect(onSketch).toHaveBeenCalledTimes(5);
+    theia?.append(lone.cloneNode());
+    if (theia !== undefined) theia.value = 'nonsense';
+    theia?.dispatchEvent(new Event('change'));
+    expect(onSketch).toHaveBeenCalledTimes(6);
   });
 
   it('Given no sketch, Then it is hidden', () => {

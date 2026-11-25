@@ -17,6 +17,8 @@
  * Pure.
  */
 
+import { THEIA_CHOICES, type Hit } from '../../deepTime/theia';
+
 const MINUTE = 60;
 const HOUR = 3600;
 const DAY = 86_400;
@@ -34,18 +36,43 @@ export const MOON_RADIUS = 0.273;
 export const MOON_ORBIT = 3.8;
 /** The Roche limit, inside which Earth's tides keep debris from gathering. */
 export const ROCHE = 2.9;
-/** Theia's speed, km/s: about Earth's escape speed. */
-const SPEED_KM = 9.3;
-/** How grazing the hit is: the offset of Theia's path, as a share of the sum of the radii. */
-const GRAZE = 0.75;
+/** Where the Moon is thrown straight into orbit, when it forms within hours: far outside the
+ * Roche limit (Kegerreis et al. 2022), drawn at 8 Earth radii. */
+export const IMMEDIATE_ORBIT = 8;
 
-const SPAN = 1 + THEIA_RADIUS;
-const OFFSET = GRAZE * SPAN;
-/** Theia's centre at contact, and the point on Earth it strikes. */
-const CONTACT: Triple = [OFFSET, 0, Math.sqrt(SPAN ** 2 - OFFSET ** 2)];
-const STRIKE: Triple = [CONTACT[0] / SPAN, 0, CONTACT[2] / SPAN];
-/** The angle of the point struck. */
-export const STRIKE_ANGLE = Math.atan2(-STRIKE[2], STRIKE[0]);
+/** The canonical hit, drawn unless another is chosen. */
+export const CANONICAL: Hit = THEIA_CHOICES.canonical.hit;
+
+/** Where a hit touches: Theia's centre at contact, the point struck, and that point's angle. */
+interface Contact {
+  readonly center: Triple;
+  readonly strike: Triple;
+  readonly angle: number;
+}
+
+const contacts = new WeakMap<Hit, Contact>();
+
+/** Where `hit` touches the proto-Earth, at its size then. */
+function contactOf(hit: Hit): Contact {
+  const known = contacts.get(hit);
+  if (known !== undefined) return known;
+  const earth = Math.cbrt(hit.protoEarth);
+  const span = earth + hit.radius;
+  const offset = hit.graze * span;
+  const center: Triple = [offset, 0, Math.sqrt(span ** 2 - offset ** 2)];
+  const strike: Triple = [(center[0] * earth) / span, 0, (center[2] * earth) / span];
+  const made = { center, strike, angle: Math.atan2(-strike[2], strike[0]) };
+  contacts.set(hit, made);
+  return made;
+}
+
+/** The angle of the point `hit` strikes. */
+export function strikeAngle(hit: Hit = CANONICAL): number {
+  return contactOf(hit).angle;
+}
+
+/** The angle of the point the canonical hit strikes. */
+export const STRIKE_ANGLE = strikeAngle();
 
 /** A point at radius `r` and angle `φ` on the equator, `y` off it. */
 export function onDisc(r: number, angle: number, y = 0): Triple {
@@ -61,6 +88,13 @@ function logShare(t: number, from: number, to: number): number {
 
 const smooth = (s: number): number => s * s * (3 - 2 * s);
 
+/** When the Moon gathers, and when the rest of the debris clears, seconds after the impact. */
+function timing(hit: Hit): { gather: readonly [number, number]; clear: readonly [number, number] } {
+  return hit.outcome === 'immediate'
+    ? { gather: [3 * HOUR, 12 * HOUR], clear: [DAY, YEAR] }
+    : { gather: [DAY, YEAR], clear: [DAY, 100 * YEAR] };
+}
+
 export interface TheiaMoment {
   readonly center: Triple;
   /** Its size, 1 whole; and how much is seen, 0 to 1. */
@@ -72,27 +106,33 @@ export interface TheiaMoment {
  * Theia at `seconds` since the impact: coming in along its grazing path, then sheared and gone
  * into the debris within the hour. Null when it is not drawn.
  */
-export function theiaAt(seconds: number): TheiaMoment | null {
+export function theiaAt(seconds: number, hit: Hit = CANONICAL): TheiaMoment | null {
   if (seconds >= HOUR) return null;
-  const travelled = (SPEED_KM / EARTH_KM) * seconds;
+  const { center } = contactOf(hit);
+  const travelled = (hit.speedKm / EARTH_KM) * seconds;
+  // Its size, against the canonical Theia's the mesh is made at.
+  const size = hit.radius / THEIA_RADIUS;
   if (seconds <= 0)
-    return { center: [CONTACT[0], 0, CONTACT[2] - travelled], scale: 1, opacity: 1 };
+    return { center: [center[0], 0, center[2] - travelled], scale: size, opacity: 1 };
   // After contact it slows into Earth and comes apart.
   const gone = smooth(seconds / HOUR);
   return {
-    center: [CONTACT[0] * (1 - 0.4 * gone), 0, CONTACT[2] - 0.5 * travelled],
-    scale: 1 - 0.5 * gone,
+    center: [center[0] * (1 - 0.4 * gone), 0, center[2] - 0.5 * travelled],
+    scale: size * (1 - 0.5 * gone),
     opacity: 1 - gone,
   };
 }
 
 /** The flash where Theia strikes: its place, size (Earth radii) and brightness, or null. */
-export function flashAt(seconds: number): { place: Triple; size: number; glow: number } | null {
+export function flashAt(
+  seconds: number,
+  hit: Hit = CANONICAL,
+): { place: Triple; size: number; glow: number } | null {
   if (seconds < 0 || seconds > 12 * HOUR) return null;
   const rising = Math.min(1, seconds / (5 * MINUTE));
   const fading = 1 - logShare(seconds, 5 * MINUTE, 12 * HOUR);
   return {
-    place: STRIKE,
+    place: contactOf(hit).strike,
     size: 0.4 + 1.4 * logShare(seconds, 10, 30 * MINUTE),
     glow: rising * fading,
   };
@@ -146,12 +186,25 @@ export function turned(r: number, played: number): number {
 export function moonAt(
   seconds: number,
   played: number,
+  hit: Hit = CANONICAL,
 ): { place: Triple; radius: number; heat: number } | null {
+  const angle = strikeAngle(hit);
+  if (hit.outcome === 'immediate') {
+    // Thrown out of the arm whole within hours, out to a wide orbit; little to gather after.
+    if (seconds < 3 * HOUR) return null;
+    const out = smooth(logShare(seconds, 3 * HOUR, 12 * HOUR));
+    const r = 2 + (IMMEDIATE_ORBIT - 2) * out;
+    return {
+      place: onDisc(r, angle + 2 + turned(r, played)),
+      radius: MOON_RADIUS * Math.cbrt(0.85 + 0.15 * out),
+      heat: 1 - logShare(seconds, 1000 * YEAR, 1e7 * YEAR),
+    };
+  }
   if (seconds < DAY) return null;
   // Most of its mass within a year from the outer disc; the rest over a century from the inner.
   const mass = 0.6 * logShare(seconds, DAY, YEAR) + 0.4 * logShare(seconds, YEAR, 100 * YEAR);
   return {
-    place: onDisc(MOON_ORBIT, STRIKE_ANGLE + Math.PI + turned(MOON_ORBIT, played)),
+    place: onDisc(MOON_ORBIT, angle + Math.PI + turned(MOON_ORBIT, played)),
     radius: MOON_RADIUS * Math.cbrt(Math.max(0.05, mass)),
     // Molten, then crusting over in its first ten million years.
     heat: 1 - logShare(seconds, 1000 * YEAR, 1e7 * YEAR),
@@ -166,20 +219,27 @@ export interface PieceMoment {
 }
 
 /** Where `piece` is at `seconds` since the impact, after `played` seconds of play. */
-export function pieceAt(piece: Piece, seconds: number, played: number): PieceMoment | null {
+export function pieceAt(
+  piece: Piece,
+  seconds: number,
+  played: number,
+  hit: Hit = CANONICAL,
+): PieceMoment | null {
   if (seconds <= 0) return null;
+  const struck = strikeAngle(hit);
+  const { gather, clear } = timing(hit);
   // Thrown out into an arm that wraps round, the further out the later, settled within a day.
   const s = smooth(logShare(seconds, 2 * MINUTE, DAY));
   const lag = s ** (1 + piece.r / 3);
-  const span = (((piece.angle - STRIKE_ANGLE) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-  const angle = STRIKE_ANGLE + span * lag + (seconds > DAY ? turned(piece.r, played) : 0);
+  const span = (((piece.angle - struck) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+  const angle = struck + span * lag + (seconds > DAY ? turned(piece.r, played) : 0);
   const r = 1.02 + (piece.r - 1.02) * s + piece.fling * piece.r * Math.sin(Math.PI * s);
   const heat = 1 - 0.75 * logShare(seconds, HOUR, 100 * YEAR);
   const settled: Triple = onDisc(r, angle, piece.y * s);
   if (piece.fate === 'moon') {
-    // Gathered into the Moon over the year after the first day.
-    const moon = moonAt(seconds, played);
-    const g = smooth(logShare(seconds, DAY, YEAR));
+    // Gathered into the Moon: over the year after the first day, or within hours.
+    const moon = moonAt(seconds, played, hit);
+    const g = smooth(logShare(seconds, ...gather));
     if (moon === null || g === 0) return { place: settled, heat, opacity: 1 };
     const place: Triple = [
       settled[0] + (moon.place[0] - settled[0]) * g,
@@ -189,7 +249,7 @@ export function pieceAt(piece: Piece, seconds: number, played: number): PieceMom
     return g >= 1 ? null : { place, heat, opacity: 1 - g * g };
   }
   // The inner disc over a century: part falls back onto Earth, part spreads out to the Moon.
-  const g = smooth(logShare(seconds, DAY, 100 * YEAR));
+  const g = smooth(logShare(seconds, ...clear));
   if (g >= 1) return null;
   const to = piece.fate === 'falls' ? 1 : ROCHE;
   return {

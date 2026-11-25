@@ -53,4 +53,12 @@ describe('the formation clock’s phases (#1218)', () => {
     ]);
     for (const each of argued) expect(each.sources.length).toBeGreaterThan(1);
   });
+
+  it('says how Theia comes in as the scenario chosen has it, on its paper’s say-so (#1220)', () => {
+    const theia = (model: 'canonical' | 'halfEarths' | 'fastSpin') =>
+      formationPhases(4510, model).find((each) => each.id === 'theia');
+    expect(theia('canonical')?.text).toContain('size of Mars');
+    expect(theia('halfEarths')?.text).toContain('as large as the proto-Earth');
+    expect(theia('fastSpin')?.sources[0]?.name).toBe('Ćuk & Stewart 2012');
+  });
 });

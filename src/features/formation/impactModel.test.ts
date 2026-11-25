@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { THEIA_CHOICES } from '../../deepTime/theia';
 import {
   flashAt,
+  IMMEDIATE_ORBIT,
+  strikeAngle,
   glowColour,
   MOON_ORBIT,
   MOON_RADIUS,
@@ -27,7 +30,8 @@ describe('the canonical giant impact, drawn (#180)', () => {
   it('brings Theia in on a grazing path at about escape speed, touching Earth at the impact', () => {
     const contact = theiaAt(0);
     expect(contact?.opacity).toBe(1);
-    expect(length(contact?.center ?? [0, 0, 0])).toBeCloseTo(1 + THEIA_RADIUS);
+    // At the proto-Earth's size then, nine tenths of today's mass.
+    expect(length(contact?.center ?? [0, 0, 0])).toBeCloseTo(Math.cbrt(0.89) + THEIA_RADIUS);
     // Two hours out, some ten Earth radii away: 9.3 km/s.
     const coming = theiaAt(-2 * HOUR);
     expect(length(coming?.center ?? [0, 0, 0])).toBeGreaterThan(9);
@@ -48,7 +52,7 @@ describe('the canonical giant impact, drawn (#180)', () => {
     expect(flashAt(-1)).toBeNull();
     const early = flashAt(5 * 60);
     expect(early?.glow).toBeCloseTo(1);
-    expect(length(early?.place ?? [0, 0, 0])).toBeCloseTo(1);
+    expect(length(early?.place ?? [0, 0, 0])).toBeCloseTo(Math.cbrt(0.89));
     expect(flashAt(6 * HOUR)?.glow).toBeLessThan(0.5);
     expect(flashAt(13 * HOUR)).toBeNull();
     expect(flashAt(30 * 60)?.size).toBeGreaterThan(flashAt(60)?.size ?? Infinity);
@@ -118,5 +122,34 @@ describe('the canonical giant impact, drawn (#180)', () => {
     expect(mr).toBeCloseTo(mg);
     expect(mg).toBeCloseTo(mb);
     expect(moonColour(1)[0]).toBeGreaterThan(moonColour(1)[2]);
+  });
+
+  it('draws each scenario’s hit: the half-Earths larger and slower, the fast spinner small and fast (#1220)', () => {
+    const half = THEIA_CHOICES.halfEarths.hit;
+    const spin = THEIA_CHOICES.fastSpin.hit;
+    expect(theiaAt(0, half)?.scale).toBeGreaterThan(theiaAt(0)?.scale ?? Infinity);
+    expect(theiaAt(0, spin)?.scale).toBeLessThan(1);
+    // Contact at the sum of the two bodies' radii, the proto-Earth half of today's.
+    expect(length(theiaAt(0, half)?.center ?? [0, 0, 0])).toBeCloseTo(
+      Math.cbrt(half.protoEarth) + half.radius,
+    );
+    const out = (hit: typeof spin): number => length(theiaAt(-HOUR, hit)?.center ?? [0, 0, 0]);
+    expect(out(spin)).toBeGreaterThan(out(THEIA_CHOICES.canonical.hit));
+    expect(strikeAngle(spin)).not.toBeCloseTo(strikeAngle());
+    expect(length(flashAt(60, half)?.place ?? [0, 0, 0])).toBeCloseTo(Math.cbrt(half.protoEarth));
+  });
+
+  it('throws the Moon straight into a wide orbit within hours when it forms at once (#1220)', () => {
+    const hit = THEIA_CHOICES.immediate.hit;
+    expect(moonAt(2 * HOUR, 0, hit)).toBeNull();
+    const formed = moonAt(DAY, 0, hit);
+    expect(length(formed?.place ?? [0, 0, 0])).toBeCloseTo(IMMEDIATE_ORBIT);
+    expect(formed?.radius).toBeGreaterThan(0.95 * MOON_RADIUS);
+    // The outer debris is in it within half a day; the rest clears within a year.
+    const made = pieces(40);
+    const shown = (seconds: number): number =>
+      made.filter((piece) => pieceAt(piece, seconds, 0, hit) !== null).length;
+    expect(shown(13 * HOUR)).toBe(20);
+    expect(shown(2 * YEAR)).toBe(0);
   });
 });

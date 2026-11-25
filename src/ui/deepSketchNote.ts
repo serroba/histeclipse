@@ -19,12 +19,14 @@ import {
   WATER_MODELS,
 } from '../deepTime/sketch';
 import { GROWTH_CHOICES, GROWTH_MODELS } from '../deepTime/growth';
+import { THEIA_CHOICES, THEIA_MODELS } from '../deepTime/theia';
 import { sketchHeadline, sketchLines } from '../deepTime/sketchText';
 import { element } from './dom';
 
 const SKETCH_QUESTIONS: readonly SketchQuestion[] = [
   'growth',
   'impact',
+  'theia',
   'water',
   'land',
   'snowball',
@@ -57,6 +59,13 @@ function sketchPickers(): Readonly<Record<SketchQuestion, HTMLSelectElement>> {
       { class: 'deep-coast', 'aria-label': 'Moon-forming impact' },
       ...IMPACT_MODELS.map((model) => element('option', { value: model }, IMPACTS[model].label)),
     ),
+    theia: element(
+      'select',
+      { class: 'deep-coast', 'aria-label': 'How the impact went' },
+      ...THEIA_MODELS.map((model) =>
+        element('option', { value: model }, THEIA_CHOICES[model].label),
+      ),
+    ),
     land: element(
       'select',
       { class: 'deep-coast', 'aria-label': 'How much land' },
@@ -88,6 +97,7 @@ export function createDeepSketchNote(
   const rows: Readonly<Record<SketchQuestion, HTMLElement>> = {
     growth: row('growth', 'How fast Earth grew '),
     impact: row('impact', 'Moon-forming impact '),
+    theia: row('theia', 'How the impact went '),
     water: row('water', 'Where the water came from '),
     land: row('land', 'How much land '),
     snowball: row('snowball', 'Snowball ice '),
@@ -123,6 +133,10 @@ export function createDeepSketchNote(
   pickers.impact.addEventListener('change', () => {
     const impact = IMPACT_MODELS.find((option) => option === pickers.impact.value);
     if (impact !== undefined) onSketch({ impact });
+  });
+  pickers.theia.addEventListener('change', () => {
+    const theia = THEIA_MODELS.find((option) => option === pickers.theia.value);
+    if (theia !== undefined) onSketch({ theia });
   });
   pickers.land.addEventListener('change', () => {
     const land = LAND_MODELS.find((option) => option === pickers.land.value);

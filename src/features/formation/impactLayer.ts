@@ -37,11 +37,12 @@ import {
   moonColour,
   pieceAt,
   pieces,
-  STRIKE_ANGLE,
+  strikeAngle,
   THEIA_RADIUS,
   theiaAt,
   type Piece,
 } from './impactModel';
+import type { Hit } from '../../deepTime/theia';
 
 /** Pieces of debris drawn: fewer on a phone. */
 const PIECES = 800;
@@ -148,14 +149,14 @@ function makeDrawing(count: number): Drawing {
 function placeDebris(
   debris: Drawing['debris'],
   made: readonly Piece[],
-  seconds: number,
+  { seconds, hit }: ImpactMoment,
   played: number,
 ): number {
   const positions = debris.geometry.getAttribute('position') as BufferAttribute;
   const colours = debris.geometry.getAttribute('color') as BufferAttribute;
   let shown = 0;
   made.forEach((piece, index) => {
-    const at = pieceAt(piece, seconds, played);
+    const at = pieceAt(piece, seconds, played, hit);
     if (at === null) {
       // Out of sight, at the centre inside Earth.
       positions.setXYZ(index, 0, 0, 0);
@@ -178,7 +179,13 @@ function stage(seconds: number): string {
   return seconds < 86_400 ? 'debris' : 'moon';
 }
 
-export const impactLayer: LayerFactory<number | null> = (host) => {
+/** The impact at a moment: seconds since it, and the hit chosen (#1220). */
+export interface ImpactMoment {
+  readonly seconds: number;
+  readonly hit: Hit;
+}
+
+export const impactLayer: LayerFactory<ImpactMoment | null> = (host) => {
   const lessMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const phone = window.matchMedia('(pointer: coarse)').matches;
   const made = pieces(phone ? PHONE_PIECES : PIECES);
@@ -190,32 +197,33 @@ export const impactLayer: LayerFactory<number | null> = (host) => {
   let last: number | null = null;
   const camera = new Vector3();
 
-  /** Turn the scene so the strike faces the reader, towards the limb. */
-  function face(): void {
+  /** Turn the scene so `hit`'s strike faces the reader, towards the limb. */
+  function face(hit: Hit): void {
     host.spinAxis.updateMatrixWorld();
     camera.copy(host.camera.position);
     host.spinAxis.worldToLocal(camera);
-    group.rotation.y = Math.atan2(-camera.z, camera.x) + STRIKE_TURN - STRIKE_ANGLE;
+    group.rotation.y = Math.atan2(-camera.z, camera.x) + STRIKE_TURN - strikeAngle(hit);
   }
 
   return {
-    update(seconds) {
-      host.container.dataset['formationImpact'] = seconds === null ? 'off' : stage(seconds);
-      if (seconds === null) {
+    update(moment) {
+      host.container.dataset['formationImpact'] = moment === null ? 'off' : stage(moment.seconds);
+      if (moment === null) {
         group.visible = false;
         last = null;
         host.requestRender();
         return;
       }
       // Turned to the reader until it strikes, while the camera settles; then held.
-      if (seconds < 0 || !group.visible) face();
+      const { seconds, hit } = moment;
+      if (seconds < 0 || !group.visible) face(hit);
       group.visible = true;
       // The disc turns with the time between moments, a late frame counting a fifth of a second.
       const now = performance.now();
       if (last !== null && !lessMotion.matches) played += Math.min(0.2, (now - last) / 1000);
       last = now;
 
-      const body = theiaAt(seconds);
+      const body = theiaAt(seconds, hit);
       theia.visible = body !== null;
       if (body !== null) {
         theia.position.set(...body.center);
@@ -224,7 +232,7 @@ export const impactLayer: LayerFactory<number | null> = (host) => {
           theia.material.uniforms['opacity'].value = body.opacity;
       }
 
-      const light = flashAt(seconds);
+      const light = flashAt(seconds, hit);
       flash.visible = light !== null;
       if (light !== null) {
         flash.position.set(...light.place);
@@ -232,10 +240,10 @@ export const impactLayer: LayerFactory<number | null> = (host) => {
         flash.material.opacity = light.glow;
       }
 
-      const shown = placeDebris(debris, made, seconds, played);
+      const shown = placeDebris(debris, made, moment, played);
       debris.visible = shown > 0;
 
-      const gathered = moonAt(seconds, played);
+      const gathered = moonAt(seconds, played, hit);
       moon.visible = gathered !== null;
       moonGlow.visible = gathered !== null && gathered.heat > 0;
       if (gathered !== null) {

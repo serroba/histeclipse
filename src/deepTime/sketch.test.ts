@@ -27,6 +27,7 @@ import {
 const choices = {
   growth: 'slow',
   impact: DEFAULT_IMPACT_MODEL,
+  theia: 'canonical',
   land: DEFAULT_LAND_MODEL,
   snowball: DEFAULT_SNOWBALL_MODEL,
   water: DEFAULT_WATER_MODEL,
@@ -73,17 +74,28 @@ describe('the sketch', () => {
   });
 
   it('asks how fast Earth grew only before the impact (#1219)', () => {
-    expect(sketchAt(4520, choices, false).questions).toEqual(['growth', 'impact', 'water']);
-    expect(sketchAt(4509.5, choices, false).questions).toEqual(['impact', 'water']);
+    expect(sketchAt(4520, choices, false).questions).toEqual([
+      'growth',
+      'impact',
+      'theia',
+      'water',
+    ]);
+    expect(sketchAt(4509.5, choices, false).questions).toEqual(['impact', 'theia', 'water']);
   });
 
   it('keeps the impact question open until the youngest camp’s impact is past', () => {
-    expect(sketchAt(4450, choices, false).questions).toEqual(['impact', 'water', 'land']);
+    // How the impact went is asked with when (#1220).
+    expect(sketchAt(4450, choices, false).questions).toEqual(['impact', 'theia', 'water', 'land']);
     expect(sketchAt(4300, choices, false).questions).toEqual(['land']);
   });
 
   it('asks where the water came from from Earth’s start to the oldest water zircon (#1142)', () => {
-    expect(sketchAt(4560, choices, false).questions).toEqual(['growth', 'impact', 'water']);
+    expect(sketchAt(4560, choices, false).questions).toEqual([
+      'growth',
+      'impact',
+      'theia',
+      'water',
+    ]);
     expect(sketchAt(OLDEST_WATER_ZIRCON_MA, choices, false).questions).toContain('water');
     expect(sketchAt(OLDEST_WATER_ZIRCON_MA - 1, choices, false).questions).not.toContain('water');
   });
