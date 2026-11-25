@@ -175,6 +175,49 @@
   cursor: pointer;
 }
 
+/* An extinction's dated window on the slider (#1228): solid where dated, fading over each end's
+   uncertainty. Over the track, as the marks are inset, and never in the way of the thumb. */
+.strike-clock-band {
+  position: absolute;
+  inset: 0 8px auto;
+  height: 44px;
+  pointer-events: none;
+}
+
+.strike-clock-dated {
+  --band: rgb(232 96 72 / 0.6);
+
+  position: absolute;
+  top: 50%;
+  height: 12px;
+  border-radius: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--band) calc(var(--in) * 100%),
+    var(--band) calc(var(--out) * 100%),
+    transparent
+  );
+  transform: translateY(-50%);
+}
+
+.strike-clock-dated-says {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.strike-clock-dated-says::before {
+  display: inline-block;
+  width: 10px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 2px;
+  background: rgb(232 96 72 / 0.6);
+  content: '';
+}
+
 /* While a clock is open deep time is held: the bar's play and pace give way to the clock's, so
    one speed is offered at a time (#1222). */
 :root[data-own-time] .deep-play,

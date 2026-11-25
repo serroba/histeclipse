@@ -10,7 +10,7 @@ import { CRISIS_SCALE, LONG_CRISIS_SCALE } from '../../deepTime/crisisClock';
 import { siteThen, type ExtinctionSites } from '../../data/extinctions';
 import type { GeoPoint } from '../../core/geo';
 import { impactPlay, strikeEvent, strikePhasesOf } from '../impacts';
-import type { EventPhase, OwnTimeEvent } from '../ownTime';
+import type { DatedWindow, EventPhase, OwnTimeEvent } from '../ownTime';
 import { fumesLayer } from './fumesLayer';
 import {
   campCover,
@@ -61,6 +61,8 @@ interface Province {
   readonly spread: number;
   /** The first mark under its clock: when its story begins, seconds since the extinction. */
   readonly start: readonly [number, string];
+  /** The extinction's dated window, where one is dated closely enough to draw (#1228). */
+  readonly dated?: DatedWindow;
   /** When the extinction began, Ma: its clock's zero, lent deep time's header (#1222). */
   readonly zero: number;
   fuming(seconds: number): Fuming;
@@ -79,6 +81,12 @@ const PROVINCES: readonly Province[] = [
     sites: ['siberian-traps'],
     spread: 9,
     start: [-300 * KYR, 'Lavas'],
+    dated: {
+      from: 0,
+      to: 61 * KYR,
+      plusMinus: [37 * KYR, 31 * KYR],
+      says: 'The extinction as dated at Meishan: 251.941 ± 0.037 to 251.880 ± 0.031 million years ago (Burgess, Bowring & Shen 2014).',
+    },
     // Its start at Meishan (Burgess, Bowring & Shen 2014), before the boundary at 251.902.
     zero: 251.941,
     fuming: siberianFuming,
@@ -119,6 +127,7 @@ function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
     phases: province.phases,
     scale: { ...CRISIS_SCALE, marks: [province.start, ...CRISIS_SCALE.marks.slice(1)] },
     offer: `Watch ${province.name} in its own time`,
+    ...(province.dated === undefined ? {} : { dated: province.dated }),
     ma: province.zero,
     play(tools) {
       const fumes = tools.layer(fumesLayer);

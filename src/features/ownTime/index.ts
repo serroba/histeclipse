@@ -16,7 +16,13 @@ import type { Pace } from '../../deepTime/playSpeed';
 import type { GlobeLayer, LayerFactory } from '../../globe/layerHost';
 import type { Capabilities, FeatureCore } from '../feature';
 import type { EventPhase } from './phases';
-import { createStrikeClock, createStrikeOffer, OFFER_MS, type StrikeClock } from './strikeClock';
+import {
+  createStrikeClock,
+  createStrikeOffer,
+  OFFER_MS,
+  type DatedWindow,
+  type StrikeClock,
+} from './strikeClock';
 
 /** What an event playing on its clock is given to draw with. */
 interface OwnTimeTools {
@@ -32,6 +38,7 @@ interface OwnTimePlay {
 }
 
 export { phase, phaseAt, type EventPhase } from './phases';
+export type { DatedWindow } from './strikeClock';
 
 export interface OwnTimeEvent {
   /** Which event: the same one reached by two layers is watched once. */
@@ -47,6 +54,8 @@ export interface OwnTimeEvent {
    * one with more takes the clock over. Chicxulub with the Deccan Traps fuming outranks it alone.
    */
   readonly rank?: number;
+  /** Its extinction's dated window, where one is dated (#1228). */
+  readonly dated?: DatedWindow;
   /**
    * When its clock's zero is, Ma, where dated more closely than the moment it is watched from
    * (#1222): the end-Permian's start at Meishan, 251.941 Ma, not the 251.9 its card is at.
@@ -155,6 +164,7 @@ export function createOwnTime(
       title: event.title,
       phases: event.phases,
       scale: event.scale,
+      ...(event.dated === undefined ? {} : { dated: event.dated }),
       onMoment: (seconds) => {
         playing.at(seconds);
         if (zero === null) return;
