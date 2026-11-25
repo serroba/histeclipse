@@ -26,7 +26,7 @@ import { DEFAULT_GROWTH_MODEL, earthRadius, type GrowthModel } from '../../deepT
 import { discLayer } from './discLayer';
 import { growthLayer } from './growthLayer';
 import { impactLayer } from './impactLayer';
-import { IMPACT_DISTANCE, IMPACT_VIEW } from './impactModel';
+import { IMPACT_DISTANCE, IMPACT_VIEW, RECEDED, RECEDED_DISTANCE } from './impactModel';
 import { formationPhases } from './phases';
 
 /** The formation clock's key, the one it is watched by. */
@@ -75,6 +75,7 @@ export function formationEvent(
       const disc = tools.layer(discLayer);
       // Drawn back once, as Theia comes in, to see the Moon's orbit whole.
       let framed = false;
+      let standing: number | null = null;
       // Opened before it, stood back so Earth is seen to grow against a still frame (#1219).
       let opened = false;
       return {
@@ -82,11 +83,12 @@ export function formationEvent(
           if (!opened && seconds < -APPROACH) tools.strikes.zoomTo(GROWTH_DISTANCE);
           opened = true;
           const drawn = seconds >= -APPROACH;
-          if (drawn && !framed) {
-            tools.strikes.flyTo(IMPACT_VIEW);
-            tools.strikes.zoomTo(IMPACT_DISTANCE);
-          }
+          if (drawn && !framed) tools.strikes.flyTo(IMPACT_VIEW);
           framed ||= drawn;
+          // Close enough to see the Moon gather; back again once it has drawn away.
+          const distance = seconds < RECEDED ? IMPACT_DISTANCE : RECEDED_DISTANCE;
+          if (drawn && distance !== standing) tools.strikes.zoomTo(distance);
+          if (drawn) standing = distance;
           impact.update(drawn ? { seconds, hit } : null);
           // The proto-Earth's size until Theia strikes; whole after.
           const myr = before + seconds / MYR;
