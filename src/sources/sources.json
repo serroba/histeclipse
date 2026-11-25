@@ -564,6 +564,13 @@
     "cite": "CSIRO Australia Telescope National Facility, Parkes Radio Telescope Users Guide, Table 1.3, antenna properties of Murriyang: its 64 m dish of focal ratio 0.41, its centre 27.4 m up on a 10.7 m concrete tower, its focus 26 m above",
     "url": "https://www.parkes.atnf.csiro.au/observing/documentation/users_guide/pkug.html"
   },
+  "cui2021": {
+    "name": "Cui et al. 2021",
+    "kind": "paper",
+    "cite": "Cui, Y., Li, M., van Soelen, E. E., Peterse, F. & Kürschner, W. M. (2021), Massive and rapid predominantly volcanic CO2 emission during the end-Permian mass extinction, PNAS 118, e2014701118. Our summary: carbon isotopes of plant waxes and algae from Norway's Finnmark Platform, astronomically dated, fed to an Earth-system model with ocean pH and temperatures: some 36,000 billion tonnes of mostly volcanic carbon, up to 5 billion tonnes a year, raised CO2 from some 440 to some 7,390 ppm and warmed the surface from about 25 to 40 °C",
+    "url": "https://doi.org/10.1073/pnas.2014701118",
+    "licence": "CC BY 4.0"
+  },
   "cuk2012": {
     "name": "Ćuk & Stewart 2012",
     "kind": "paper",
@@ -1512,6 +1519,13 @@
     "kind": "paper",
     "cite": "Li et al. (2008), Assembly, configuration, and break-up history of Rodinia: a synthesis, Precambrian Research 160, 179–210",
     "url": "https://doi.org/10.1016/j.precamres.2007.04.021"
+  },
+  "lindstrom2021": {
+    "name": "Lindström et al. 2021",
+    "kind": "paper",
+    "cite": "Lindström, S., Callegaro, S., Davies, J., et al. (2021), Tracing volcanic emissions from the Central Atlantic Magmatic Province in the sedimentary record, Earth-Science Reviews 212, 103444. Our summary: a review placing the Central Atlantic Magmatic Province's traces in the rocks (carbon isotopes, CO2, mercury, iridium, soot) in one dated framework; its rocks are found over more than 10 million km²; the marine extinction lies between ash beds dated 201.51 ± 0.15 and 201.36 ± 0.17 million years ago, lasting 20,000–40,000 years on land by cyclostratigraphy or 100,000 ± 40,000 by uranium–lead dating",
+    "url": "https://doi.org/10.1016/j.earscirev.2020.103444",
+    "licence": "CC BY-NC-ND 4.0"
   },
   "lock2018": {
     "name": "Lock et al. 2018",

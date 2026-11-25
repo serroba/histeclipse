@@ -111,6 +111,13 @@ const PROVINCES: readonly Province[] = [
     start: [-400 * KYR, 'Rifting'],
     // Its start with the earliest lavas (Blackburn et al. 2013).
     zero: 201.564,
+    dated: {
+      from: 0,
+      to: 100 * KYR,
+      // Its start is the clock's zero; the uncertainty is of how long it lasted.
+      plusMinus: [0, 40 * KYR],
+      says: 'The extinction as Blackburn et al. (2013) date it: 100,000 ± 40,000 years from 201.564 million years ago. On land, cyclostratigraphy gives it 20,000 to 40,000 years (Deenen et al. 2010); in the sea, ash beds date it between 201.51 ± 0.15 and 201.36 ± 0.17 million years ago (as Lindström et al. 2021 review).',
+    },
     drawn: `${SMOKE} a quarter more with each of its four pulses, spaced evenly over 600,000 years: an assumption.`,
     fuming: campFuming,
     cover: campCover,

@@ -59,9 +59,9 @@ export const END_PERMIAN: readonly EventPhase[] = [
   phase(
     'carbon',
     75 * KYR,
-    'Six times the carbon dioxide',
-    'Within about 75,000 years, carbon dioxide rises from some 430 to some 2,500 ppm. The volcanoes’ own gas was probably not enough: carbon from organic matter and methane, which the Siberian Traps released, was likely needed too.',
-    ['wu2021'],
+    'Six times the carbon dioxide, or thirteen? It is argued',
+    'From fossil plants, carbon dioxide rises from some 430 to some 2,500 ppm within about 75,000 years, and the volcanoes’ own gas was probably not enough: carbon from organic matter and methane, which the Siberian Traps released, was likely needed too (Wu et al.). From an Earth-system model fitted to carbon isotopes, ocean pH and temperatures, it rises from some 440 to some 7,390 ppm, about 36,000 billion tonnes of carbon, mostly the volcanoes’ own (Cui et al.).',
+    ['wu2021', 'cui2021'],
   ),
   phase(
     'hothouse',
