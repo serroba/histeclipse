@@ -30,6 +30,7 @@ import gravitationalWaves from './whys/gravitationalWaves.json' with { type: 'js
 import humans from './whys/humans.json' with { type: 'json' };
 import iceSurface from './whys/ice-surface.json' with { type: 'json' };
 import extinctions from './whys/extinctions.json' with { type: 'json' };
+import formation from './whys/formation.json' with { type: 'json' };
 import impacts from './whys/impacts.json' with { type: 'json' };
 import lineages from './whys/lineages.json' with { type: 'json' };
 import moons from './whys/moons.json' with { type: 'json' };
@@ -81,6 +82,7 @@ export const WHYS_CONTENT = {
   orbits,
   'deep-surface': deepSurface,
   'deep-evidence': deepEvidence,
+  formation,
   'ice-surface': iceSurface,
   temperature,
   sealevel,

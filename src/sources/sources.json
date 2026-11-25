@@ -143,6 +143,12 @@
     "cite": "Barber, J. (2003). Photosystem II: the engine of life. Quarterly Reviews of Biophysics 36, 71–89",
     "url": "https://doi.org/10.1017/S0033583502003839"
   },
+  "barboni2017": {
+    "name": "Barboni et al. 2017",
+    "kind": "paper",
+    "cite": "Barboni, M., Boehnke, P., Keller, B., et al. (2017), Early formation of the Moon 4.51 billion years ago, Science Advances 3(1), e1602365. Our summary: zircons from the Apollo 14 site, dated by uranium–lead and hafnium isotopes, put the Moon’s formation at 4.51 billion years ago, about 60 million years after the Solar System began",
+    "url": "https://doi.org/10.1126/sciadv.1602365"
+  },
   "bardeen2017": {
     "name": "Bardeen et al. 2017",
     "kind": "paper",
@@ -257,6 +263,12 @@
     "cite": "Bond, D. P. G. & Wignall, P. B. (2008), The role of sea-level change and marine anoxia in the Frasnian–Famennian (Late Devonian) mass extinction, Palaeogeography, Palaeoclimatology, Palaeoecology 263, 107–118. Our summary: the Late Devonian extinction’s sections record pulses of sea-level rise and oxygen-poor water, the Kellwasser horizons, which the authors hold central to it",
     "url": "https://doi.org/10.1016/j.palaeo.2008.02.015"
   },
+  "borg2023": {
+    "name": "Borg & Carlson 2023",
+    "kind": "paper",
+    "cite": "Borg, L. E., Carlson, R. W. (2023), The Evolving Chronology of Moon Formation, Annual Review of Earth and Planetary Sciences 51(1), 25–52. Our summary: a review of the Moon’s ages: many lunar samples point to about 4.35 billion years ago, younger than the zircon ages, and the authors weigh what each age dates",
+    "url": "https://doi.org/10.1146/annurev-earth-031621-060538"
+  },
   "boucot2013": {
     "name": "Boucot, Chen & Scotese 2013",
     "kind": "paper",
@@ -333,6 +345,24 @@
     "url": "https://doi.org/10.24381/d58bbf47",
     "licence": "CC BY 4.0"
   },
+  "canup2001": {
+    "name": "Canup & Asphaug 2001",
+    "kind": "paper",
+    "cite": "Canup, R. M., Asphaug, E. (2001), Origin of the Moon in a giant impact near the end of the Earth's formation, Nature 412(6848), 708–712. Our summary: simulations of an oblique impact of a Mars-sized body late in Earth’s growth leave a disc of iron-poor debris massive enough to make the Moon, and the Earth–Moon system’s angular momentum: the canonical giant impact",
+    "url": "https://doi.org/10.1038/35089010"
+  },
+  "canup2004": {
+    "name": "Canup 2004",
+    "kind": "paper",
+    "cite": "Canup, R. M. (2004), Dynamics of Lunar Formation, Annual Review of Astronomy and Astrophysics 42(1), 441–475. Our summary: a review of how the Moon formed: a giant impact leaves a disc inside a few Earth radii, the Moon gathers from it just beyond the Roche limit, then moves outward as tides slow Earth’s spin",
+    "url": "https://doi.org/10.1146/annurev.astro.41.082201.113457"
+  },
+  "canup2012": {
+    "name": "Canup 2012",
+    "kind": "paper",
+    "cite": "Canup, R. M. (2012), Forming a Moon with an Earth-like Composition via a Giant Impact, Science 338(6110), 1052–1055. Our summary: a collision of two bodies of about half Earth’s mass each mixes them so well that the Moon and Earth come out alike in composition, as their isotopes say",
+    "url": "https://doi.org/10.1126/science.1226073"
+  },
   "cao2024": {
     "name": "Cao et al. 2024",
     "kind": "model",
@@ -407,6 +437,12 @@
     "url": "https://doi.org/10.5281/zenodo.7322003",
     "licence": "CC BY 4.0"
   },
+  "chambersWetherill1998": {
+    "name": "Chambers & Wetherill 1998",
+    "kind": "paper",
+    "cite": "Chambers, J., Wetherill, G. (1998), Making the Terrestrial Planets: N-Body Integrations of Planetary Embryos in Three Dimensions, Icarus 136(2), 304–327. Our summary: N-body simulations of planetary embryos in the inner Solar System: they collide over tens to a hundred million years and leave a few terrestrial planets, the last growth by giant impacts",
+    "url": "https://doi.org/10.1006/icar.1998.6007"
+  },
   "chandraCxc": {
     "name": "Chandra X-ray Center (Smithsonian Astrophysical Observatory)",
     "kind": "reference",
@@ -464,6 +500,12 @@
     "cite": "Collins et al. (2020), A steeply-inclined trajectory for the Chicxulub impact, Nature Communications 11. Our summary: 3D simulations compared with the crater’s buried structure show Chicxulub was struck steeply, 45–60° from the horizontal, from the north-east, ruling out a shallow impact; a steep strike released more climate-changing gas per mass of impactor",
     "url": "https://doi.org/10.1038/s41467-020-15269-x"
   },
+  "connelly2012": {
+    "name": "Connelly et al. 2012",
+    "kind": "paper",
+    "cite": "Connelly, J. N., Bizzarro, M., Krot, A. N., et al. (2012), The Absolute Chronology and Thermal Processing of Solids in the Solar Protoplanetary Disk, Science 338(6107), 651–655. Our summary: lead–lead ages of calcium–aluminium-rich inclusions in meteorites, allowing for their uranium isotopes, put the Solar System’s first solids at 4,567.30 ± 0.16 million years ago, and chondrules forming over the next three million years",
+    "url": "https://doi.org/10.1126/science.1226919"
+  },
   "cornellArecibo": {
     "name": "Cornell Chronicle: the Arecibo telescope",
     "kind": "reference",
@@ -509,6 +551,18 @@
     "kind": "reference",
     "cite": "CSIRO Australia Telescope National Facility, Parkes Radio Telescope Users Guide, Table 1.3, antenna properties of Murriyang: its 64 m dish of focal ratio 0.41, its centre 27.4 m up on a 10.7 m concrete tower, its focus 26 m above",
     "url": "https://www.parkes.atnf.csiro.au/observing/documentation/users_guide/pkug.html"
+  },
+  "cuk2012": {
+    "name": "Ćuk & Stewart 2012",
+    "kind": "paper",
+    "cite": "Ćuk, M., Stewart, S. T. (2012), Making the Moon from a Fast-Spinning Earth: A Giant Impact Followed by Resonant Despinning, Science 338(6110), 1047–1052. Our summary: a smaller impactor striking an Earth that spun in two to three hours throws out a disc made mostly of Earth’s mantle; a resonance with the Sun then slows the spin to today’s angular momentum",
+    "url": "https://doi.org/10.1126/science.1225542"
+  },
+  "dauphas2011": {
+    "name": "Dauphas & Pourmand 2011",
+    "kind": "paper",
+    "cite": "Dauphas, N., Pourmand, A. (2011), Hf–W–Th evidence for rapid growth of Mars and its status as a planetary embryo, Nature 473(7348), 489–492. Our summary: hafnium–tungsten and thorium isotopes of martian meteorites say Mars reached half its size within about two million years: a planetary embryo that never grew into a full planet",
+    "url": "https://doi.org/10.1038/nature10077"
   },
   "davies2017": {
     "name": "Davies et al. 2017",
@@ -572,6 +626,12 @@
     "kind": "paper",
     "cite": "Dutton, A., Carlson, A. E., Long, A. J., Milne, G. A., Clark, P. U., DeConto, R., Horton, B. P., Rahmstorf, S. & Raymo, M. E. (2015), Sea-level rise due to polar ice-sheet mass loss during past warm periods, Science 349, aaa4019: peak global mean sea level 6–9 m above present in marine isotope stage 5e (the Last Interglacial); no precise Pliocene estimate, because of dynamic topography",
     "url": "https://doi.org/10.1126/science.aaa4019"
+  },
+  "elkinsTanton2011": {
+    "name": "Elkins-Tanton et al. 2011",
+    "kind": "paper",
+    "cite": "Elkins-Tanton, L. T., Burgess, S., Yin, Q. Z. (2011), The lunar magma ocean: Reconciling the solidification process with lunar petrology and geochronology, Earth and Planetary Science Letters 304(3-4), 326–336. Our summary: a model of the Moon’s magma ocean: as it cooled, light anorthosite floated up into a crust, and the ocean was mostly solid within about ten million years",
+    "url": "https://doi.org/10.1016/j.epsl.2011.02.004"
   },
   "elpmpp02": {
     "name": "ELP/MPP02",
@@ -1099,6 +1159,12 @@
     "url": "https://stratigraphy.org/chart",
     "licence": "CC BY 4.0"
   },
+  "ida1997": {
+    "name": "Ida et al. 1997",
+    "kind": "paper",
+    "cite": "Ida, S., Canup, R. M., Stewart, G. R. (1997), Lunar accretion from an impact-generated disk, Nature 389(6649), 353–357. Our summary: N-body simulations of a debris disc round Earth: the Moon gathers from it in about a month to a year, close in, some three to five Earth radii away",
+    "url": "https://doi.org/10.1038/38669"
+  },
   "iers": {
     "name": "IERS",
     "kind": "dataset",
@@ -1186,6 +1252,12 @@
     "cite": "Jodrell Bank Centre for Astrophysics, University of Manchester, The Lovell Telescope: facts and figures, and its anatomy: its 76.2 m bowl of focal ratio 0.30, its elevation axis 50.5 m up, 89.0 m at its highest, on a railway track 107.5 m across, between two towers",
     "url": "https://www.jb.man.ac.uk/aboutus/lovell/facts.html"
   },
+  "johansen2021": {
+    "name": "Johansen et al. 2021",
+    "kind": "paper",
+    "cite": "Johansen, A., Ronnet, T., Bizzarro, M., et al. (2021), A pebble accretion model for the formation of the terrestrial planets in the Solar System, Science Advances 7(8), eabc0444. Our summary: a model in which the terrestrial planets grow mostly by sweeping up pebbles drifting through the gas disc, Earth reaching most of its mass within the disc’s few-million-year life",
+    "url": "https://doi.org/10.1126/sciadv.abc0444"
+  },
   "jones2023": {
     "name": "Jones et al. 2023",
     "kind": "dataset",
@@ -1267,6 +1339,12 @@
     "cite": "The W. M. Keck Observatory’s pages on Keck I and Keck II: their segmented mirrors, first light and discoveries",
     "url": "https://keckobservatory.org/telescopes/"
   },
+  "kegerreis2022": {
+    "name": "Kegerreis et al. 2022",
+    "kind": "paper",
+    "cite": "Kegerreis, J. A., Ruiz-Bonilla, S., Eke, V. R., et al. (2022), Immediate Origin of the Moon as a Post-impact Satellite, The Astrophysical Journal Letters 937(2), L40. Our summary: high-resolution impact simulations can throw a Moon-sized body straight into a wide orbit within hours, rather than gathering it from a disc over months or years",
+    "url": "https://doi.org/10.3847/2041-8213/ac8d96"
+  },
   "kent2015": {
     "name": "Kent et al. 2015",
     "kind": "paper",
@@ -1296,6 +1374,12 @@
     "kind": "paper",
     "cite": "Kivelson, M. G., Khurana, K. K., Russell, C. T., Volwerk, M., Walker, R. J. & Zimmer, C. (2000). Galileo magnetometer measurements: a stronger case for a subsurface ocean at Europa. Science 289, 1340–1343",
     "url": "https://doi.org/10.1126/science.289.5483.1340"
+  },
+  "kleine2009": {
+    "name": "Kleine et al. 2009",
+    "kind": "paper",
+    "cite": "Kleine, T., Touboul, M., Bourdon, B., et al. (2009), Hf–W chronology of the accretion and early evolution of asteroids and terrestrial planets, Geochimica et Cosmochimica Acta 73(17), 5150–5188. Our summary: a review of hafnium–tungsten ages: asteroids’ cores formed within a few million years, while Earth’s core formation, and so its growth, ended some 30 million years or more after the Solar System began",
+    "url": "https://doi.org/10.1016/j.gca.2008.11.047"
   },
   "kopp2016": {
     "name": "Kopp et al. 2016",
@@ -1336,6 +1420,12 @@
     "cite": "Kring, D. A., Durda, D. D. (2002), Trajectories and distribution of material ejected from the Chicxulub impact crater: implications for postimpact wildfires, Journal of Geophysical Research: Planets 107(E8). Our summary: modelled the ejecta's flight round the Earth: about a quarter fell back within 2 hours, over half within 8 and most within 3 days, heating the upper atmosphere as it came in",
     "url": "https://doi.org/10.1029/2001JE001532"
   },
+  "kruijer2017": {
+    "name": "Kruijer et al. 2017",
+    "kind": "paper",
+    "cite": "Kruijer, T. S., Burkhardt, C., Budde, G., et al. (2017), Age of Jupiter inferred from the distinct genetics and formation times of meteorites, Proceedings of the National Academy of Sciences 114(26), 6712–6716. Our summary: meteorites fall into two groups by their isotopes that stayed apart from within a million years to three or four: Jupiter’s core, grown by then, kept the inner and outer parts of the disc apart",
+    "url": "https://doi.org/10.1073/pnas.1704461114"
+  },
   "kuitems2022": {
     "name": "Kuitems et al. 2022",
     "kind": "paper",
@@ -1373,6 +1463,12 @@
     "cite": "Lavigne, F., et al. (2013). Source of the great A.D. 1257 mystery eruption unveiled, Samalas volcano, Rinjani Volcanic Complex, Indonesia. PNAS 110, 16742–16747",
     "url": "https://doi.org/10.1073/pnas.1307520110"
   },
+  "lebrun2013": {
+    "name": "Lebrun et al. 2013",
+    "kind": "paper",
+    "cite": "Lebrun, T., Massol, H., Chassefière, E., et al. (2013), Thermal evolution of an early magma ocean in interaction with the atmosphere, Journal of Geophysical Research: Planets 118(6), 1155–1176. Our summary: a model of a magma ocean under a steam and carbon dioxide atmosphere: on Earth it solidifies and the water condenses into an ocean within about 1.5 million years",
+    "url": "https://doi.org/10.1002/jgre.20068"
+  },
   "lee2021": {
     "name": "Lee et al. 2021 (IPCC AR6 WGI Chapter 4)",
     "kind": "paper",
@@ -1398,6 +1494,12 @@
     "kind": "paper",
     "cite": "Li et al. (2008), Assembly, configuration, and break-up history of Rodinia: a synthesis, Precambrian Research 160, 179–210",
     "url": "https://doi.org/10.1016/j.precamres.2007.04.021"
+  },
+  "lock2018": {
+    "name": "Lock et al. 2018",
+    "kind": "paper",
+    "cite": "Lock, S. J., Stewart, S. T., Petaev, M. I., et al. (2018), The Origin of the Moon Within a Terrestrial Synestia, Journal of Geophysical Research: Planets 123(4), 910–951. Our summary: a high-energy giant impact leaves Earth as a synestia, a vaporised, doughnut-shaped body larger than the planet; the Moon condenses inside it, sharing its isotopes",
+    "url": "https://doi.org/10.1002/2017JE005333"
   },
   "lolaHeights": {
     "name": "LOLA heights of the Moon (LDEM)",
@@ -1476,6 +1578,12 @@
     "cite": "Matthes, K., Funke, B., Andersson, M. E., Barnard, L., Beer, J., Charbonneau, P., Clilverd, M. A., Dudok de Wit, T., Haberreiter, M., Hendry, A., Jackman, C. H., Kretzschmar, M., Kruschke, T., Kunze, M., Langematz, U., Marsh, D. R., Maycock, A. C., Misios, S., Rodger, C. J., Scaife, A. A., Seppälä, A., Shangguan, M., Sinnhuber, M., Tourpali, K., Usoskin, I., van de Kamp, M., Verronen, P. T. & Versick, S. (2017), Solar forcing for CMIP6 (v3.2), Geoscientific Model Development 10, 2247–2302; data: SOLARIS-HEPPA CMIP6 solar forcing v3.2, monthly reference scenario (input4MIPs SOLARIS-HEPPA-CMIP-3-2), https://www.solarisheppa.kit.edu/85.php, accessed 12 November 2026",
     "url": "https://doi.org/10.5194/gmd-10-2247-2017",
     "licence": "CC BY-SA 4.0 (as the data file states); our annual means derived from it are shared under the same licence"
+  },
+  "maurice2020": {
+    "name": "Maurice et al. 2020",
+    "kind": "paper",
+    "cite": "Maurice, M., Tosi, N., Schwinger, S., et al. (2020), A long-lived magma ocean on a young Moon, Science Advances 6(28), eaba8949. Our summary: a model of the Moon’s magma ocean in which its insulating crust slows the cooling, so it lasts about 200 million years: the youngest crust ages then date its end, not the impact",
+    "url": "https://doi.org/10.1126/sciadv.aba8949"
   },
   "mcgetchin1973": {
     "name": "McGetchin, Settle & Head 1973",
@@ -2162,6 +2270,12 @@
     "cite": "NSF–DOE Vera C. Rubin Observatory, Rubin 101, its telescopes: the 8.4 m primary and tertiary in one glass, the 3.4 m secondary",
     "url": "https://rubinobservatory.org/for-scientists/rubin-101/telescopes"
   },
+  "rufu2017": {
+    "name": "Rufu et al. 2017",
+    "kind": "paper",
+    "cite": "Rufu, R., Aharonson, O., Perets, H. B. (2017), A multiple-impact origin for the Moon, Nature Geoscience 10(2), 89–94. Our summary: a series of smaller impacts each throws out a disc that gathers into a moonlet, and the moonlets merge into the Moon, made mostly of Earth’s own material",
+    "url": "https://doi.org/10.1038/ngeo2866"
+  },
   "ruhl2011": {
     "name": "Ruhl et al. 2011",
     "kind": "paper",
@@ -2187,6 +2301,12 @@
     "cite": "Sager, W. W. & Koppers, A. A. P. (2000). Late Cretaceous polar wander of the Pacific plate: evidence of a rapid true polar wander event. Science 287, 455–459",
     "url": "https://doi.org/10.1126/science.287.5452.455"
   },
+  "salmon2012": {
+    "name": "Salmon & Canup 2012",
+    "kind": "paper",
+    "cite": "Salmon, J., Canup, R. M. (2012), Lunar accretion from a roche-interior fluid disk, The Astrophysical Journal 760(1), 83. Our summary: a model of a disc that starts inside the Roche limit: the Moon gathers in two stages over about a hundred years, much of its mass from the inner disc as it spreads out",
+    "url": "https://doi.org/10.1088/0004-637X/760/1/83"
+  },
   "saur2015": {
     "name": "Saur et al. 2015",
     "kind": "paper",
@@ -2198,6 +2318,12 @@
     "kind": "paper",
     "cite": "Schaller, M. F., Wright, J. D. & Kent, D. V. (2011), Atmospheric Pco2 perturbations associated with the Central Atlantic Magmatic Province, Science 331, 1404–1409. Our summary: soil carbonates between the province’s lavas in the Newark Basin show CO₂ rising from about 2,000 to about 4,400 ppm after the first lavas, then falling back over 300,000 years, a pattern repeated after the next two",
     "url": "https://doi.org/10.1126/science.1199011"
+  },
+  "schiller2018": {
+    "name": "Schiller et al. 2018",
+    "kind": "paper",
+    "cite": "Schiller, M., Bizzarro, M., Fernandes, V. A. (2018), Isotopic evolution of the protoplanetary disk and the building blocks of Earth and the Moon, Nature 555(7697), 507–510. Our summary: calcium isotopes in meteorites change with their age: Earth and the Moon match the early disc’s, which suggests Earth grew fast, by accreting dust and pebbles, while the gas lasted",
+    "url": "https://doi.org/10.1038/nature25990"
   },
   "schoene2019": {
     "name": "Schoene et al. 2019",
@@ -2481,6 +2607,12 @@
     "cite": "Waite, J. H. et al. (2017). Cassini finds molecular hydrogen in the Enceladus plume: evidence for hydrothermal processes. Science 356, 155–159",
     "url": "https://doi.org/10.1126/science.aai8703"
   },
+  "wang2017": {
+    "name": "Wang et al. 2017",
+    "kind": "paper",
+    "cite": "Wang, H., Weiss, B. P., Bai, X. N., et al. (2017), Lifetime of the solar nebula constrained by meteorite paleomagnetism, Science 355(6325), 623–627. Our summary: the magnetism recorded in angrite meteorites says the solar nebula’s gas, and its field, had gone within about four million years of the first solids",
+    "url": "https://doi.org/10.1126/science.aaf5043"
+  },
   "watson2019Strontium": {
     "name": "Watson et al. 2019, strontium in AT 2017gfo",
     "kind": "paper",
@@ -2537,11 +2669,29 @@
     "cite": "Young, Shahar & Schlichting (2023), Earth shaped by primordial H2 atmospheres, Nature 616, 306–311",
     "url": "https://doi.org/10.1038/s41586-023-05823-0"
   },
+  "yuan2023": {
+    "name": "Yuan et al. 2023",
+    "kind": "paper",
+    "cite": "Yuan, Q., Li, M., Desch, S. J., et al. (2023), Moon-forming impactor as a source of Earth’s basal mantle anomalies, Nature 623(7985), 95–99. Our summary: impact simulations leave part of Theia’s mantle inside Earth’s, where it may survive as the two large low-velocity provinces at the base of the mantle",
+    "url": "https://doi.org/10.1038/s41586-023-06589-1"
+  },
   "zachos2001": {
     "name": "Zachos et al. 2001",
     "kind": "paper",
     "cite": "Zachos et al. (2001), Trends, rhythms, and aberrations in global climate 65 Ma to present, Science 292, 686–693",
     "url": "https://doi.org/10.1126/science.1059412"
+  },
+  "zahnle2007": {
+    "name": "Zahnle et al. 2007",
+    "kind": "paper",
+    "cite": "Zahnle, K., Arndt, N., Cockell, C., et al. (2007), Emergence of a Habitable Planet, Space Science Reviews 129(1-3), 35–78. Our summary: a review of how Earth became habitable after the Moon-forming impact: a magma ocean under a steam atmosphere for a few million years at most, then a hot water ocean under thick carbon dioxide",
+    "url": "https://doi.org/10.1007/s11214-007-9225-z"
+  },
+  "zhang2012": {
+    "name": "Zhang et al. 2012",
+    "kind": "paper",
+    "cite": "Zhang, J., Dauphas, N., Davis, A. M., et al. (2012), The proto-Earth as a significant source of lunar material, Nature Geoscience 5(4), 251–255. Our summary: titanium isotopes in lunar rocks match Earth’s to within a few parts per million, though the canonical impactor’s would differ: the Moon is made largely of Earth’s material, or the two mixed",
+    "url": "https://doi.org/10.1038/ngeo1429"
   },
   "zhao2002": {
     "name": "Zhao et al. 2002",

@@ -121,6 +121,8 @@ const WHY_SHOWS: Readonly<Partial<Record<WhyId, string>>> = {
   'ice-surface': SPAN_VIEWS.ice,
   'deep-surface': SPAN_VIEWS.all,
   'deep-evidence': SPAN_VIEWS.all,
+  // At the aeons' oldest moment, to be played from (#1218).
+  formation: 'ma=4568&scale=eons',
 };
 
 /** The whys as passages: what each shows and how, anchored to the view that shows it. */

@@ -5,11 +5,16 @@
  * open, and resumes when it is closed. As deep time plays past an event it hands over to the
  * clock at Slow, and offers it faster, once however many layers reach it.
  *
+ * An event that is deep time's own story, Earth and the Moon forming as the aeons begin (#1218),
+ * carries deep time's moment along with its clock, opens at the moment deep time was at, and
+ * when it ends or is closed hands back to deep time from the clock's end, playing on.
+ *
  * What an event draws is its own (`OwnTimeEvent.play`): Chicxulub's strike and the ground round
  * it, or the Siberian Traps' fumes; the layers it draws on are added the first time it plays.
  */
 
 import type { ClockScale } from '../../deepTime/clockScale';
+import { roundMa } from '../../deepTime/scale';
 import type { Pace } from '../../deepTime/playSpeed';
 import type { GlobeLayer, LayerFactory } from '../../globe/layerHost';
 import type { Capabilities, FeatureCore } from '../feature';
@@ -45,6 +50,14 @@ export interface OwnTimeEvent {
    * one with more takes the clock over. Chicxulub with the Deccan Traps fuming outranks it alone.
    */
   readonly rank?: number;
+  /**
+   * Deep time's moment, Ma, at `seconds` since the event, and the seconds at a moment: given, its
+   * clock carries deep time along and hands back to it at its end (#1218).
+   */
+  readonly deep?: {
+    maAt(seconds: number): number;
+    secondsAt(ma: number): number;
+  };
   /** Start drawing it, to be moved by its clock. */
   play(tools: OwnTimeTools): OwnTimePlay;
 }
@@ -89,6 +102,12 @@ export function createOwnTime(core: Pick<FeatureCore, 'globe' | 'change'>, lent:
   let offered: { readonly key: string; readonly rank: number; readonly until: number } | null =
     null;
 
+  /** Deep time's moment set to `ma`, if it is in deep time. */
+  function moveDeep(ma: number): void {
+    const to = roundMa(ma);
+    core.change((state) => (state.ma === null || state.ma === to ? state : { ...state, ma: to }));
+  }
+
   function watch(event: OwnTimeEvent, ma: number | null): void {
     offer.hide();
     offered = null;
@@ -98,22 +117,34 @@ export function createOwnTime(core: Pick<FeatureCore, 'globe' | 'change'>, lent:
     const held = ma !== null && lent.deepTime.hold();
     if (ma !== null) core.change((state) => (state.ma === null ? state : { ...state, ma }));
     const playing = event.play(tools);
+    const { deep } = event;
     open = { key: event.key, rank: event.rank ?? 0 };
-    clock = createStrikeClock({
+    const made = createStrikeClock({
       title: event.title,
       phases: event.phases,
       scale: event.scale,
       onMoment: (seconds) => {
         playing.at(seconds);
+        if (deep !== undefined) moveDeep(deep.maAt(seconds));
       },
       onClose: () => {
         playing.end();
         open = null;
+        // Deep time's own story hands back from its end, whether played there or skipped.
+        if (deep !== undefined) moveDeep(deep.maAt(event.scale.secondsAt(event.scale.end)));
         if (held) lent.deepTime.resume();
       },
+      ...(deep === undefined
+        ? {}
+        : {
+            onEnd: () => {
+              made.close();
+            },
+          }),
     });
-    lent.overPage.add(clock.root);
-    clock.open();
+    clock = made;
+    lent.overPage.add(made.root);
+    made.open(deep === undefined || ma === null ? undefined : deep.secondsAt(ma));
   }
 
   return {

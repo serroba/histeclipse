@@ -35,7 +35,8 @@ describe('the features as mounted together', () => {
   const features = mountFeatures(
     [fossils.feature, asteroids.feature],
     {} as FeatureCore,
-    {} as Capabilities,
+    // Deep time not playing: the aeons' start (#1218) stays shut.
+    { timeline: { playing: () => false } } as unknown as Capabilities,
   );
 
   it('shows each at the moment, and again only those whose watches changed', () => {

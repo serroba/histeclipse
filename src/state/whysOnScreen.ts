@@ -35,7 +35,10 @@ export function onScreen(scene: Scene): WhyId[] {
           ? ['earth', 'bodies']
           : scene.span === 'ice'
             ? ['ice-surface']
-            : ['deep-surface', 'deep-evidence'];
+            : scene.span === 'eons'
+              ? // The aeons begin with Earth and the Moon forming (#1218).
+                ['deep-surface', 'deep-evidence', 'formation']
+              : ['deep-surface', 'deep-evidence'];
   const drawn = LAYERS.filter(
     (layer) => scene.layers.has(layer) && scene.drawsOn(layer, scene.span),
   );

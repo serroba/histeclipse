@@ -25,12 +25,14 @@ export interface StrikeClockOptions {
   onMoment(seconds: number): void;
   /** The reader closed it. */
   onClose(): void;
+  /** It played to its end (#1218); left out, it waits there to be played again or closed. */
+  onEnd?(): void;
 }
 
 export interface StrikeClock {
   readonly root: HTMLElement;
-  /** Open it at the approach, playing. */
-  open(): void;
+  /** Open it playing, at the approach or at `seconds` since the event (#1218). */
+  open(seconds?: number): void;
   /** Close it, as the reader does. */
   close(): void;
   readonly isOpen: () => boolean;
@@ -136,8 +138,7 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
     },
     {
       onPlay(play) {
-        if (play) start();
-        else stop();
+        (play ? start : stop)();
       },
       onSlide(value) {
         stop();
@@ -168,6 +169,7 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
     moveTo(position + scale.advance(speed.value as Pace, seconds, position));
     if (position >= scale.end) {
       stop();
+      options.onEnd?.();
       return;
     }
     frame = requestAnimationFrame(tick);
@@ -198,9 +200,9 @@ export function createStrikeClock(options: StrikeClockOptions): StrikeClock {
 
   return {
     root,
-    open() {
+    open(seconds) {
       root.hidden = false;
-      moveTo(0);
+      moveTo(seconds === undefined ? 0 : scale.positionAt(seconds));
       start();
     },
     close,
