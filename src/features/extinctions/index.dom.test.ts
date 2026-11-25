@@ -104,7 +104,12 @@ describe('the extinctions as a feature', () => {
     shown.show?.(on, JD);
     expect(shown.said?.()).toBe('End-Cretaceous extinction');
     const marks = fake.drawn.at(-1) as readonly { site: { id: string } }[];
-    expect(marks.map((mark) => mark.site.id)).toEqual(['chicxulub', 'deccan-traps', 'el-kef']);
+    expect(marks.map((mark) => mark.site.id)).toEqual([
+      'chicxulub',
+      'deccan-traps',
+      'el-kef',
+      'gubbio',
+    ]);
     // Loaded: nothing to report.
     expect(shown.load?.()).toBeNull();
   });
