@@ -134,6 +134,16 @@ const COMING: Readonly<Record<TheiaModel, { readonly words: string; readonly sou
         'A body about as large as the proto-Earth itself, each about half Earth’s mass, comes in slowly.',
       source: 'canup2012',
     },
+    synestia: {
+      words:
+        'A body comes in hard and fast, with energy and spin enough to vaporise much of Earth.',
+      source: 'lock2018',
+    },
+    manyHits: {
+      words:
+        'The first of a series of smaller bodies, each a few hundredths of Earth’s mass, comes in.',
+      source: 'rufu2017',
+    },
     immediate: {
       words: 'A body about the size of Mars, Theia, comes in on a grazing path.',
       source: 'kegerreis2022',
