@@ -43,6 +43,7 @@ test('playing the aeons from their oldest moment opens on Earth and the Moon for
   });
   await test.step('Then the globe draws the impact, and the Moon gathering from its debris (#180)', async () => {
     await expect(globe).toHaveAttribute('data-formation-impact', 'moon', { timeout: 30_000 });
+    await expect(clock.locator('.strike-clock-drawn')).toContainText('an illustration');
   });
   await test.step('Then at its end it hands back to deep time, which plays on through the aeons', async () => {
     await expect(clock).toBeHidden({ timeout: 30_000 });

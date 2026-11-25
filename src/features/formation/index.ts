@@ -36,6 +36,8 @@ export function formationEvent(model: ImpactModel): OwnTimeEvent {
     phases: formationPhases(impactMa),
     scale: formationScale(impactMa),
     offer: 'Watch Earth and the Moon form',
+    drawn:
+      'From Theia’s approach, the canonical impact is drawn as an illustration: sizes, speed and distances follow the papers; the paths of single pieces, the glow, and the turning, which follows the time played rather than the years, do not. Hot is white, cooling to red; the Moon grey once crusted.',
     // Its zero, the impact: the header counts from it, not from where play started.
     ma: impactMa,
     deep: {

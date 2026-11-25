@@ -66,7 +66,7 @@ const FROM_IMPACT: readonly EventPhase[] = [
     'theia',
     -APPROACH,
     'Theia comes in',
-    'A body about the size of Mars, Theia, comes in on a grazing path. When is argued: 4,510 million years ago, from the Moon’s oldest zircons (Barboni et al.), or nearer 4,350 million, from many lunar rocks (Borg & Carlson). The clock follows the date chosen on the rail. Drawn as the canonical case, an illustration: sizes, speed and distances follow the papers; the paths of the pieces, the glow and the turning do not.',
+    'A body about the size of Mars, Theia, comes in on a grazing path. When is argued: 4,510 million years ago, from the Moon’s oldest zircons (Barboni et al.), or nearer 4,350 million, from many lunar rocks (Borg & Carlson). The clock follows the date chosen on the rail.',
     ['canup2001', 'barboni2017', 'borg2023'],
   ),
   phase(

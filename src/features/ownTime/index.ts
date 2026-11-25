@@ -165,6 +165,14 @@ function carried(
   };
 }
 
+/** An event's dated window and what it draws to illustrate, for its clock, where it has them. */
+function marked(event: OwnTimeEvent): { dated?: DatedWindow; drawn?: string } {
+  return {
+    ...(event.dated === undefined ? {} : { dated: event.dated }),
+    ...(event.drawn === undefined ? {} : { drawn: event.drawn }),
+  };
+}
+
 export function createOwnTime(
   core: Pick<FeatureCore, 'globe' | 'change' | 'refresh'>,
   lent: Lent,
@@ -205,8 +213,7 @@ export function createOwnTime(
       title: event.title,
       phases: event.phases,
       scale: event.scale,
-      ...(event.dated === undefined ? {} : { dated: event.dated }),
-      ...(event.drawn === undefined ? {} : { drawn: event.drawn }),
+      ...marked(event),
       onMoment: (seconds) => {
         playing.at(seconds);
         deep.at(seconds);
