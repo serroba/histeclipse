@@ -89,5 +89,6 @@ export function formationScale(impactMa: number): ClockScale {
     ],
     text: (seconds) => text(seconds, seconds + before),
     label: 'Time since the first solids, then since the giant impact: tenfolds',
+    hint: 'Each step is ten times longer than the one before: up to the impact counted from the first solids, then from the impact, hours to millions of years.',
   };
 }
