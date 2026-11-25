@@ -95,7 +95,7 @@ describe('the extinctions as a feature', () => {
     const shown = extinctionsFeature.mount(fake.context, fake.context);
     shown.show?.(on, JD);
     expect(shown.said?.()).toBe('Loading the extinctions’ places…');
-    // Tapped before they are in: nothing to open.
+    // Named before they are in: nothing to open yet.
     shown.pick?.('chicxulub');
     expect(fake.cards).toEqual([]);
     await vi.waitFor(() => {
@@ -107,6 +107,33 @@ describe('the extinctions as a feature', () => {
     expect(marks.map((mark) => mark.site.id)).toEqual(['chicxulub', 'deccan-traps', 'el-kef']);
     // Loaded: nothing to report.
     expect(shown.load?.()).toBeNull();
+  });
+
+  it('opens a place a passage named once its mark is drawn, and forgets it if another is tapped or the layer goes (#1233)', async () => {
+    const fake = fakeContext();
+    const shown = extinctionsFeature.mount(fake.context, fake.context);
+    shown.show?.(on, JD);
+    shown.pick?.('el-kef');
+    await vi.waitFor(() => {
+      expect(fake.refresh).toHaveBeenCalled();
+    });
+    shown.show?.(on, JD);
+    expect(fake.cards.map((card) => card.title)).toEqual(['End-Cretaceous extinction']);
+    // Shown again: the card is not opened twice.
+    shown.show?.(on, JD);
+    expect(fake.cards).toHaveLength(1);
+    // Named, then another marker tapped: it is forgotten.
+    shown.show?.({ ...on, ma: 100 }, JD);
+    shown.pick?.('chicxulub');
+    shown.unpick?.();
+    shown.show?.(on, JD);
+    expect(fake.cards).toHaveLength(1);
+    // Named, then the layer off: forgotten too.
+    shown.show?.({ ...on, ma: 100 }, JD);
+    shown.pick?.('chicxulub');
+    shown.show?.(off, JD);
+    shown.show?.(on, JD);
+    expect(fake.cards).toHaveLength(1);
   });
 
   it('watches the end-Cretaceous from a card as Chicxulub’s strike, on its clock', async () => {

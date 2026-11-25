@@ -18,7 +18,7 @@ import { createTimeDialog } from './timeDialog';
 /** What Explore asks of the rest of the page. */
 export interface ExploreContext {
   /** Open a view laid over the reader's, or the reader's changed, as a step. */
-  readonly opener: ViewOpener;
+  readonly opener: Pick<ViewOpener, 'anchor' | 'query'>;
   /** Search, for a named thing. */
   readonly search: { open(): void };
   /** The famous eclipses' button: Explore lists them under Space (#724). */

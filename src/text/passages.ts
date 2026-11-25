@@ -53,6 +53,8 @@ const AnchorSchema = v.strictObject({
   label: v.optional(v.pipe(v.string(), v.minLength(1))),
   /** The view that shows it: part of a link's query, laid over the view the reader has. */
   view: v.string(),
+  /** The marker whose card opens there, as the globe picks it: `extinction:meishan` (#1233). */
+  pick: v.optional(v.pipe(v.string(), v.regex(/^[a-z]+:[A-Za-z0-9-]+$/))),
 });
 export type Anchor = v.InferOutput<typeof AnchorSchema>;
 

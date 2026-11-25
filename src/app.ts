@@ -558,10 +558,9 @@ export async function startApp(root: HTMLElement): Promise<void> {
   // The famous list is a convenience: if it fails to load, everything else still works.
   famous.load();
 
-  // A marker tapped: a feature's, or a crater's.
-  globe.onMarkerPick((key) => {
-    features.pick(key);
-  });
+  // A marker tapped, or named by a passage opened (#1233): a feature's, or a crater's.
+  globe.onMarkerPick(features.pick);
+  opener.onPick(features.pick);
 
   /** Away from Earth: Earth's own bits rest, and the body in view shows. */
   function showBody(state: ViewState): void {

@@ -57,4 +57,19 @@ describe('opening an anchor', () => {
     });
     expect(setCamera).not.toHaveBeenCalled();
   });
+
+  it('Given an anchor that names a marker, When it opens, Then those listening hear it after the view is set (#1233)', () => {
+    const store = createStore<ViewState>(defaultViewState(new Date('2026-11-15T00:00:00Z')));
+    const opener = viewOpener({
+      store,
+      deepTime: { stopPlay: vi.fn() },
+      sync: () => ({ step: vi.fn() }),
+      globe: { setCamera: vi.fn() },
+    });
+    const heard: [string, number | null][] = [];
+    opener.onPick((key) => heard.push([key, store.get().ma]));
+    opener.anchor({ body: 'earth', view: 'ma=100' });
+    opener.anchor({ body: 'earth', view: 'ma=251.9', pick: 'extinction:meishan' });
+    expect(heard).toEqual([['extinction:meishan', 251.9]]);
+  });
 });
