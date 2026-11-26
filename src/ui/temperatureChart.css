@@ -15,7 +15,8 @@
 
 .temperature-chart-stage {
   position: relative;
-  height: 260px;
+  /* Room for the globe above the bar on a short screen; the story's size on a tall one. */
+  height: clamp(140px, 25vh, 260px);
 }
 
 /* On a phone the bar shares the screen with the globe: the chart alone, its words in the layer's Why. */

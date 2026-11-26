@@ -43,7 +43,7 @@ export function createTemperatureChart(onMa: (ma: number) => void): TemperatureC
     element(
       'figcaption',
       {},
-      'Global temperature over 800,000 years, against 1850–1900: drag along it to go to a moment; the globe is coloured by how much warmer or colder each place was than today, as the Temperature key says.',
+      'Global temperature over 800,000 years, against 1850–1900. Drag along it to go there: the globe shows how much warmer or colder each place was than today.',
     ),
     stage,
   );

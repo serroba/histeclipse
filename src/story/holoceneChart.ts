@@ -229,10 +229,12 @@ export function createHoloceneChart(
     defs.append(clipPath);
     plot.append(defs, lines, cursor, now);
 
-    // The key, low on the right: after the ice ages no line comes down that far.
+    // The key, low on the right: after the ice ages no line comes down that far. On a short
+    // chart (the one in deep time's bar) it is lifted to stay clear of the axis' years.
+    const keyTop = Math.min(y(-6), h - (data.series.length - 1) * 14 - 8);
     const legend = svg('g', {
       class: 'legend',
-      transform: `translate(${String(w)} ${String(y(-6))})`,
+      transform: `translate(${String(w)} ${String(keyTop)})`,
     });
     data.series.forEach((series, index) => {
       const { colour, label } = STYLE[series.id];
