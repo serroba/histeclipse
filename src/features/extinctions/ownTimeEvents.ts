@@ -10,7 +10,7 @@ import { CRISIS_SCALE, LONG_CRISIS_SCALE } from '../../deepTime/crisisClock';
 import { siteThen, type ExtinctionSites } from '../../data/extinctions';
 import type { GeoPoint } from '../../core/geo';
 import { impactPlay, strikeEvent, strikePhasesOf } from '../impacts';
-import type { DatedWindow, EventPhase, OwnTimeEvent } from '../ownTime';
+import type { DatedWindow, EventPhase, OwnTimeEvent, ProxyChart } from '../ownTime';
 import { fumesLayer } from './fumesLayer';
 import {
   campCover,
@@ -26,6 +26,7 @@ import {
 import { END_ORDOVICIAN, LATE_DEVONIAN } from './coldPhases';
 import { END_GUADALUPIAN } from './guadalupianPhases';
 import { LOSSES } from './losses';
+import { MEISHAN_TEMPERATURES } from './meishanTemperatures';
 import { END_PERMIAN } from './permianPhases';
 import { seasLayer } from './seasLayer';
 import { devonianSeas, ordovicianSeas, type Seas } from './seasModel';
@@ -68,6 +69,8 @@ interface Province {
   readonly drawn: string;
   /** When the extinction began, Ma: its clock's zero, lent deep time's header (#1222). */
   readonly zero: number;
+  /** A measured record through it, drawn above its clock's slider (#1229). */
+  readonly proxy?: ProxyChart;
   fuming(seconds: number): Fuming;
   /** How much of its lava has flowed by `seconds` (#1212). */
   cover(seconds: number): number;
@@ -96,6 +99,7 @@ const PROVINCES: readonly Province[] = [
     },
     // Its start at Meishan (Burgess, Bowring & Shen 2014), before the boundary at 251.902.
     zero: 251.941,
+    proxy: MEISHAN_TEMPERATURES,
     drawn: `${SMOKE} as far as the share erupted by then: two thirds before and during the extinction.`,
     fuming: siberianFuming,
     cover: siberianCover,
@@ -145,6 +149,7 @@ function provinceEvent(province: Province, center: GeoPoint): OwnTimeEvent {
     scale: { ...CRISIS_SCALE, marks: [province.start, ...CRISIS_SCALE.marks.slice(1)] },
     offer: `Watch ${province.name} in its own time`,
     ...(province.dated === undefined ? {} : { dated: province.dated }),
+    ...(province.proxy === undefined ? {} : { proxy: province.proxy }),
     drawn: province.drawn,
     ma: province.zero,
     play(tools) {
