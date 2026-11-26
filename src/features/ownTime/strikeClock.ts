@@ -14,6 +14,7 @@ import { setText } from '../../util/pageWrites';
 import { createTransport, type Transport } from '../../ui/transport';
 import { lossView, type LossGauge, type LossView } from './lossGauge';
 import { phaseAt, type EventPhase } from './phases';
+import { proxyView, type ProxyChart, type ProxyView } from './proxyChart';
 import './strikeClock.css';
 
 /**
@@ -41,6 +42,8 @@ export interface StrikeClockOptions {
   readonly drawn?: string;
   /** What its extinction took, as a gauge of the life left (#1223). */
   readonly loss?: LossGauge;
+  /** A measured record, drawn above the slider on its scale (#1229). */
+  readonly proxy?: ProxyChart;
   /** The moment changed: `seconds` since the event. */
   onMoment(seconds: number): void;
   /** The reader closed it. */
@@ -69,6 +72,7 @@ interface ClockView {
   readonly closeButton: HTMLButtonElement;
   readonly foldButton: HTMLButtonElement;
   readonly loss: LossView | null;
+  readonly proxy: ProxyView | null;
 }
 
 /** Where the panel opens folded (#1243): a phone, where its words would cover the globe. */
@@ -119,12 +123,14 @@ function clockView(
     dated,
     drawn,
     loss: gauge,
-  }: Pick<StrikeClockOptions, 'title' | 'dated' | 'drawn' | 'loss'>,
+    proxy: record,
+  }: Pick<StrikeClockOptions, 'title' | 'dated' | 'drawn' | 'loss' | 'proxy'>,
   scale: ClockScale,
   transport: Transport,
 ): ClockView {
   const [band, says] = datedBand(scale, dated);
   const loss = gauge === undefined ? null : lossView(gauge);
+  const proxy = record === undefined ? null : proxyView(record, scale);
   const speed = element(
     'select',
     { class: 'strike-clock-speed', 'aria-label': 'Speed' },
@@ -161,6 +167,7 @@ function clockView(
     view.phaseText,
     view.sources,
     ...(loss === null ? [] : [loss.root]),
+    ...(proxy === null ? [] : [proxy.root]),
     element(
       'div',
       { class: 'strike-clock-track' },
@@ -173,7 +180,7 @@ function clockView(
     ...(drawn === undefined ? [] : [element('p', { class: 'strike-clock-drawn' }, drawn)]),
     element('div', { class: 'strike-clock-controls' }, transport.play, speed),
   );
-  const made = { root, speed, closeButton, foldButton, loss, ...view };
+  const made = { root, speed, closeButton, foldButton, loss, proxy, ...view };
   foldable(made);
   return made;
 }
@@ -192,6 +199,7 @@ function showMoment(
 ): void {
   setText(view.when, scale.text(seconds));
   view.loss?.at(seconds);
+  view.proxy?.at(scale.positionAt(seconds) / scale.end);
   const shown = String(Math.round(seconds));
   if (view.root.dataset['seconds'] !== shown) view.root.dataset['seconds'] = shown;
   const id = phase?.id ?? '';
