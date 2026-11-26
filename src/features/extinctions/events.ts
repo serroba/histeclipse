@@ -131,8 +131,8 @@ export const EXTINCTIONS: readonly Extinction[] = [
       sources: ['raupSepkoski1982'],
     },
     causes: {
-      text: 'The Central Atlantic Magmatic Province: lavas over more than 7 million km² as Pangaea broke up, dated to the extinction. CO₂ about doubled after each of its first pulses, to some 4,400 ppm.',
-      sources: ['marzoli1999', 'blackburn2013', 'schaller2011'],
+      text: 'The Central Atlantic Magmatic Province: lavas and sills over more than 7 million km² as first mapped, more than 10 million as known now, as Pangaea broke up, dated to the extinction. CO₂ about doubled after each of its first pulses, to some 4,400 ppm.',
+      sources: ['marzoli1999', 'lindstrom2021', 'blackburn2013', 'schaller2011'],
     },
   },
   {

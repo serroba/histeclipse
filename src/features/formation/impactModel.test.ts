@@ -11,6 +11,7 @@ import {
   MOON_RADIUS,
   moonAt,
   moonColour,
+  moonOrbit,
   onDisc,
   pieceAt,
   pieces,
@@ -189,5 +190,19 @@ describe('the canonical giant impact, drawn (#180)', () => {
     expect(length(flashAt(second * 1.1, hit)?.place ?? [0, 0, 0])).toBeCloseTo(1);
     expect(flashAt(second * 2, hit)).toBeNull();
     expect(flashAt(DAY, hit)).toBeNull();
+  });
+});
+
+describe('the Moon drawing away (#180)', () => {
+  const YEAR = 365.25 * 86_400;
+  it('stays where it gathered for its first centuries, then draws out to about 15 Earth radii by ten million years', () => {
+    expect(moonOrbit(100 * YEAR)).toBe(MOON_ORBIT);
+    expect(moonOrbit(1e5 * YEAR)).toBeGreaterThan(6);
+    expect(moonOrbit(1e7 * YEAR)).toBeCloseTo(15, 0);
+    expect(moonAt(1e7 * YEAR, 0)?.place[0] ?? 0).not.toBe(0);
+  });
+  it('thrown out whole, it starts at its wider orbit and draws away from there', () => {
+    expect(moonOrbit(YEAR, IMMEDIATE_ORBIT)).toBe(IMMEDIATE_ORBIT);
+    expect(moonOrbit(1e7 * YEAR, IMMEDIATE_ORBIT)).toBeCloseTo(15, 0);
   });
 });

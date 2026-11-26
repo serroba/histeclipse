@@ -29,6 +29,13 @@ describe('the extinctions in their own time (#1191, #1192, #1201)', () => {
     expect(ownTimeOf(DATA, 'end-triassic-extinction', 201.5)?.loss?.lost).toEqual([0.33, 0.73]);
   });
 
+  it('draw the end-Triassic’s dated window, its length the uncertain end (#1228)', () => {
+    const dated = ownTimeOf(DATA, 'end-triassic-extinction', 201.5)?.dated;
+    expect(dated?.from).toBe(0);
+    expect(dated?.plusMinus[0]).toBe(0);
+    expect(dated?.says).toMatch(/Blackburn.*Deenen.*Lindström/);
+  });
+
   it('are none where their places are missing from the data', () => {
     const empty: ExtinctionSites = { ...DATA, sites: [] };
     expect(ownTimeOf(empty, 'end-triassic-extinction', 201.5)).toBeNull();

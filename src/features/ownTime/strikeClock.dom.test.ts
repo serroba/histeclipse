@@ -265,6 +265,28 @@ describe('the strike clock’s panel (#1173)', () => {
     made.close();
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it('shows its words where there is room, and folds them away at a tap (#1243)', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: false }));
+    const { made } = clock();
+    const fold = made.root.querySelector<HTMLButtonElement>('.strike-clock-fold');
+    expect(made.root.dataset['folded']).toBeUndefined();
+    expect(fold?.getAttribute('aria-expanded')).toBe('true');
+    fold?.click();
+    expect(made.root.dataset['folded']).toBe('');
+    expect(fold?.getAttribute('aria-expanded')).toBe('false');
+    expect(fold?.textContent).toBe('More');
+  });
+
+  it('opens folded on a phone, its words a tap away (#1243)', () => {
+    vi.stubGlobal('matchMedia', () => ({ matches: true }));
+    const { made } = clock();
+    const fold = made.root.querySelector<HTMLButtonElement>('.strike-clock-fold');
+    expect(made.root.dataset['folded']).toBe('');
+    fold?.click();
+    expect(made.root.dataset['folded']).toBeUndefined();
+    expect(fold?.textContent).toBe('Less');
+  });
 });
 
 describe('the offer to watch a strike in its own time (#1174)', () => {

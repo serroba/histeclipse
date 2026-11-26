@@ -4,8 +4,10 @@
  * match Earth's too closely for the canonical impactor's debris (Zhang et al. 2012), so the others
  * are ways to make a Moon mostly of Earth's own mantle.
  *
- * Each hit's numbers are those its papers give, rounded; how the debris moves after it is drawn
- * as illustration.
+ * Each hit's numbers are those its papers give, rounded, or, where a paper gives a range or no
+ * one hit (the synestia), a hit inside what it allows; how the debris moves after it is drawn as
+ * illustration. Speeds are at contact, where the two bodies' mutual escape speed is about 9 km/s
+ * for a Mars-sized Theia and some 11 km/s for a small one.
  *
  * Pure.
  */
@@ -50,7 +52,7 @@ export const THEIA_CHOICES: Readonly<Record<TheiaModel, TheiaChoice>> = {
     id: 'canonical',
     label: 'Canonical: a Mars-sized body, grazing',
     hit: { radius: 0.53, speedKm: 9.3, graze: 0.75, protoEarth: 0.89, outcome: 'disc' },
-    note: 'A body about Mars’s size strikes a glancing blow at about Earth’s escape speed, late in Earth’s growth; the Moon gathers from the disc of debris. It gives the Earth–Moon system its angular momentum, but makes the Moon mostly of Theia.',
+    note: 'A body about Mars’s size strikes a glancing blow, at about 45°, barely faster than the two bodies’ escape speed, some 9 km/s, late in Earth’s growth; the Moon gathers from the disc of debris. It gives the Earth–Moon system its angular momentum, but makes the Moon mostly of Theia.',
     source: 'Canup & Asphaug 2001, Nature 412',
     url: 'https://doi.org/10.1038/35089010',
   },
@@ -74,15 +76,15 @@ export const THEIA_CHOICES: Readonly<Record<TheiaModel, TheiaChoice>> = {
     id: 'synestia',
     label: 'Synestia: Earth vaporised into a doughnut',
     hit: { radius: 0.5, speedKm: 15, graze: 0.6, protoEarth: 0.9, outcome: 'synestia' },
-    note: 'A high-energy, high-angular-momentum impact leaves Earth a synestia, a doughnut of rock vapour larger than the planet. Moonlets condense inside it, take on its isotopes and grow into the Moon, until the cooling synestia shrinks back inside the Moon’s orbit. How long that takes is drawn as a guess: about a decade.',
+    note: 'A high-energy, high-angular-momentum impact leaves Earth a synestia, a doughnut of rock vapour larger than the planet; many impacts could make one, so the hit drawn is one of them, not the paper’s. Moonlets condense inside it, take on its isotopes and grow into the Moon, most of it in the first year of cooling, until the synestia shrinks back inside the Moon’s orbit, drawn over about a decade.',
     source: 'Lock et al. 2018, Journal of Geophysical Research: Planets 123',
     url: 'https://doi.org/10.1002/2017JE005333',
   },
   manyHits: {
     id: 'manyHits',
     label: 'Many hits: moonlets merging',
-    hit: { radius: 0.3, speedKm: 15, graze: 0.5, protoEarth: 0.95, outcome: 'moonlets' },
-    note: 'A series of smaller impacts, some twenty in their simulations, each throws out a disc that gathers into a moonlet; the moonlets move outward and merge into the Moon, made mostly of Earth’s own rock. Drawn as six hits, the Moon growing with each; their spacing is invented.',
+    hit: { radius: 0.3, speedKm: 22, graze: 0.4, protoEarth: 0.95, outcome: 'moonlets' },
+    note: 'A series of smaller impacts, of one to ten hundredths of Earth’s mass, fast and near head on, some twenty in their simulations, each throws out a disc that gathers into a moonlet; the moonlets move outward and merge into the Moon, made mostly of Earth’s own rock. Drawn as six hits, the Moon growing with each; their spacing is invented.',
     source: 'Rufu, Aharonson & Perets 2017, Nature Geoscience 10',
     url: 'https://doi.org/10.1038/ngeo2866',
   },
@@ -90,7 +92,7 @@ export const THEIA_CHOICES: Readonly<Record<TheiaModel, TheiaChoice>> = {
     id: 'immediate',
     label: 'Immediate: the Moon thrown straight into orbit, in hours',
     hit: { radius: 0.53, speedKm: 9.3, graze: 0.75, protoEarth: 0.89, outcome: 'immediate' },
-    note: 'Simulations fine enough show the impact throwing a Moon-sized body, its outer layers molten and about 60% proto-Earth, straight into an orbit far outside the Roche limit within hours, with no disc to gather from.',
+    note: 'Simulations fine enough show the impact throwing a body of most of the Moon’s mass, its outer layers up to about 60% proto-Earth, straight into a nearly circular orbit about seven Earth radii out, far outside the Roche limit, within hours, with no disc to gather from.',
     source: 'Kegerreis et al. 2022, The Astrophysical Journal Letters 937',
     url: 'https://doi.org/10.3847/2041-8213/ac8d96',
   },
