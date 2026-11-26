@@ -233,14 +233,7 @@ export function createDeepTimeBar(
       handlers.onMa(ka / 1000, true);
     },
   });
-  const temperature = createTemperatureChip(temperatureWhy, {
-    onModel: (model) => {
-      handlers.onTemperatureModel(model);
-    },
-    onShow: (show) => {
-      handlers.onTemperatureShow(show);
-    },
-  });
+  const temperature = createTemperatureChip(temperatureWhy, handlers);
   // Poles, field, tilt and day: folded away, so the bar stays small on a phone.
   const facts = element('dl', { class: 'deep-facts-list' });
   const factsPanel = element(
@@ -305,6 +298,7 @@ export function createDeepTimeBar(
     { class: 'deep-time', 'aria-label': 'Deep time', hidden: '' },
     handle,
     element('div', { class: 'time-scale-row' }, ...(scale ? [scale] : []), crumbs.root),
+    temperature.chart,
     element('div', { class: 'deep-controls' }, play, older, track, younger),
     element(
       'p',
@@ -324,7 +318,7 @@ export function createDeepTimeBar(
     handle,
     details,
     storageKey: 'histeclipse.deepSheet',
-    ignore: 'input, select, .deep-controls',
+    ignore: 'input, select, .deep-controls, .temperature-chart',
   });
 
   transport.join(root);

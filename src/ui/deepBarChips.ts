@@ -13,6 +13,7 @@ import type { SeaLevelIndex } from '../data/seaLevel';
 import type { TemperatureModel, TemperatureShow } from '../deepTime/temperatureModels';
 import { createDeepAirNote } from './deepAirNote';
 import { createSeaLevelChart } from './seaLevelChart';
+import { createTemperatureChart } from './temperatureChart';
 import { createTemperatureLegend, type TemperatureView } from './temperatureLegend';
 
 /** Sea level: off, on while the reconstructions load (null), or on with them. */
@@ -47,29 +48,39 @@ export function createSeaLevelChip(handlers: {
 }
 
 export interface TemperatureChip {
+  /** Temperature over 800,000 years, over the ice ages (#434): shown above the slider. */
+  readonly chart: HTMLElement;
   readonly legend: HTMLElement;
   render(view: TemperatureView): void;
 }
 
 export function createTemperatureChip(
   why: HTMLElement,
+  /** The bar's own: a model or what the colours show picked, and a moment dragged to (#434). */
   handlers: {
-    onModel(model: TemperatureModel): void;
-    onShow(show: TemperatureShow): void;
+    onTemperatureModel(model: TemperatureModel): void;
+    onTemperatureShow(show: TemperatureShow): void;
+    onMa(ma: number, jump: boolean): void;
   },
 ): TemperatureChip {
   const legend = createTemperatureLegend(why, {
     onModel: (model) => {
-      handlers.onModel(model);
+      handlers.onTemperatureModel(model);
     },
     onShow: (show) => {
-      handlers.onShow(show);
+      handlers.onTemperatureShow(show);
     },
   });
+  const chart = createTemperatureChart((ma) => {
+    // Dragged along the chart, not a step to go back from.
+    handlers.onMa(ma, false);
+  });
   return {
+    chart: chart.root,
     legend: legend.root,
     render(view) {
       legend.render(view);
+      chart.render(view.on ? (view.chart ?? null) : null);
     },
   };
 }

@@ -216,7 +216,7 @@ export const DESTINATIONS: readonly Destination[] = [
     label: 'The Holocene corridor',
     topics: ['climate', 'earth'],
     description:
-      'Temperature over 800,000 years beside the globe: the ice ages’ swings, then 10,000 years kept within about a degree, the stable band in which farming and cities arose and the planetary boundaries are set to keep us. Opens at the last ice age’s depth; play on towards today.',
+      'Temperature over 800,000 years over the time bar, the globe coloured as it was: the ice ages’ swings, then 10,000 years kept within about a degree, the stable band in which farming and cities arose and the planetary boundaries are set to keep us. Opens at the last ice age’s depth; drag along the chart, or play on towards today.',
     questions: [
       'Why are the planetary boundaries set where they are?',
       'How stable was the climate before industry?',

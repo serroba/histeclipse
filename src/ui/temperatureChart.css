@@ -1,0 +1,31 @@
+/* Temperature over 800,000 years in deep time's bar (#434), over the colour scale. */
+.temperature-chart {
+  margin: 4px 0 8px;
+}
+
+.temperature-chart[hidden] {
+  display: none;
+}
+
+.temperature-chart figcaption {
+  margin-bottom: 4px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.temperature-chart-stage {
+  position: relative;
+  height: 260px;
+}
+
+/* On a phone the bar shares the screen with the globe: the chart alone, its words in the layer's Why. */
+@media (max-width: 600px) {
+  .temperature-chart figcaption,
+  .temperature-chart .holocene-chart .legend {
+    display: none;
+  }
+
+  .temperature-chart-stage {
+    height: 150px;
+  }
+}

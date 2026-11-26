@@ -1,23 +1,20 @@
 /**
  * The temperature maps in deep time as a feature (#380, #457, #909): what the bar says of them,
  * and the globe coloured by them. Outside this folder, import from here only (#487). Over the
- * ice ages, beside the globe, global temperature over 800,000 years with the moment marked: the
- * chart the planetary boundaries' story opens on (#434), as part of the layer.
+ * ice ages, the bar shows temperature over 800,000 years above the colour scale: the chart the
+ * planetary boundaries' story opens on (#434), as part of the layer. While the story has the
+ * globe on its Holocene chapter, its own chart shows it, and the bar's does not.
  */
 
 import { loadHoloceneTemperature, type HoloceneTemperature } from '../../data/holoceneTemperature';
-import { maOfYear, yearOfMa } from '../../data/iceSheets';
-import { roundMa } from '../../deepTime/scale';
+import { yearOfMa } from '../../data/iceSheets';
 import { loadOnce } from '../../state/loadOnce';
 import type { ViewState } from '../../state/viewState';
+import { CHART_REACHES_MA } from '../../ui/temperatureChart';
 import { feature } from '../feature';
-import { holocenePanel } from './holocenePanel';
 import { createTemperatureLayer } from './temperatureLayer';
 
-/** The oldest moment the chart reaches, Ma: beyond, over the ice ages, it is not shown. */
-const CHART_REACHES_MA = 0.8;
-
-/** Whether the chart shows beside the globe: Temperature on, over the ice ages it covers. */
+/** Whether the bar shows the chart: Temperature on, over the ice ages it covers, no story open. */
 export function chartShown(state: ViewState): boolean {
   return (
     state.layers.has('temperature') &&
@@ -25,13 +22,9 @@ export function chartShown(state: ViewState): boolean {
     state.focus === 'earth' &&
     state.deepScale === 'ice' &&
     state.ma !== null &&
-    state.ma <= CHART_REACHES_MA
+    state.ma <= CHART_REACHES_MA &&
+    state.boundaries !== 'holocene'
   );
-}
-
-/** The moment a year on the chart is, as deep time keeps it: to the thousand years. */
-export function maOfChart(year: number): number {
-  return Math.min(CHART_REACHES_MA, roundMa(maOfYear(year)));
 }
 
 export const temperatureFeature = feature({
@@ -43,22 +36,23 @@ export const temperatureFeature = feature({
     state.deepScale,
     state.temperatureModel,
     state.temperatureShow,
-    state.mode,
-    state.focus,
+    state.boundaries,
   ],
   mount(context) {
-    const chart = loadOnce<HoloceneTemperature>({
+    const again = (): void => {
+      context.deepTime.again();
+    };
+    const records = loadOnce<HoloceneTemperature>({
       fetch: () =>
         loadHoloceneTemperature(`${context.base}data/holocene-temperature.json`, context.fetchJson),
       what: 'the temperature over 800,000 years',
-      context,
+      context: {
+        notify: (message) => {
+          context.notify(message);
+        },
+        refresh: again,
+      },
     });
-    const panel = context.globe.addLayer(
-      holocenePanel((year) => {
-        const ma = maOfChart(year);
-        context.change((state) => (state.ma === ma ? state : { ...state, ma }));
-      }),
-    );
     const layer = createTemperatureLayer({
       dataUrl: (path) => `${context.base}data/${path}`,
       fetchJson: context.fetchJson,
@@ -66,24 +60,20 @@ export const temperatureFeature = feature({
       notify: (message) => {
         context.notify(message);
       },
-      arrived: () => {
-        context.deepTime.again();
-      },
+      arrived: again,
     });
     let on = false;
-    let shownAt: number | null = null;
-    let shownData: HoloceneTemperature | null = null;
+
+    /** The chart for the bar at `ma`, once its records are in; asked for the first time shown. */
+    function chartAt(state: ViewState, ma: number) {
+      if (!chartShown(state)) return null;
+      const data = records.value();
+      if (data === null) records.want();
+      return data === null ? null : { data, year: yearOfMa(ma) };
+    }
+
     return {
       load: () => layer.load(on),
-      show(state) {
-        const data = chartShown(state) ? chart.value() : null;
-        if (chartShown(state) && data === null) chart.want();
-        const ma = data === null ? null : state.ma;
-        if (ma === shownAt && data === shownData) return;
-        shownAt = ma;
-        shownData = data;
-        panel.update(data === null || ma === null ? null : { data, year: yearOfMa(ma) });
-      },
       deepBar(state, moment) {
         on = state.layers.has('temperature');
         const at = {
@@ -92,7 +82,7 @@ export const temperatureFeature = feature({
           uncharted: moment.uncharted ?? false,
         };
         const fields = {
-          temperature: layer.view(state, at),
+          temperature: { ...layer.view(state, at), chart: chartAt(state, moment.ma) },
           temperatureDrawn: layer.drawn(state, at),
         };
         layer.show(state, at, moment.maPerSecond ?? null);
