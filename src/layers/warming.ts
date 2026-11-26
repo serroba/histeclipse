@@ -12,5 +12,6 @@ export const warming = layer({
   reach: 'From 1850 to 2025, on the 1850–1900 baseline; each record from its own start.',
   covers: { years: [1850, 2025] },
   icon: temperature.icon,
+  boundary: 'climate',
   why: 'warming',
 });

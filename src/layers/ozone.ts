@@ -13,5 +13,6 @@ export const ozone = layer({
   covers: { years: [1970, 2025], gaps: [1977, 1978] },
   // A globe with a hole round its pole (#722).
   icon: ['M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18z', 'M7 17.5c1.5-1.5 8.5-1.5 10 0', 'M5 12h14'],
+  boundary: 'ozone',
   why: 'ozone',
 });

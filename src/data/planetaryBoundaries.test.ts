@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import json from '../../public/data/planetary-boundaries.json';
 import {
+  BOUNDARY_NAMES,
   loadPlanetaryBoundaries,
   MAX_REACH,
   reachOf,
@@ -28,6 +29,12 @@ describe('the planetary boundaries', () => {
     expect(data.boundaries).toHaveLength(9);
     // Thirteen assessed, the proposed regional aerosol boundary besides, and novel entities.
     expect(data.boundaries.flatMap((each) => each.variables)).toHaveLength(15);
+  });
+
+  it('are named in the file as they are in the code, in the same order', () => {
+    expect(data.boundaries.map(({ id, name }) => [id, name])).toEqual(
+      Object.entries(BOUNDARY_NAMES),
+    );
   });
 
   it('place the reference at 0, the boundary at 1 and the high-risk line at 2', () => {

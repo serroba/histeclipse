@@ -2,6 +2,7 @@
 
 import { amocFeature } from './amoc';
 import { asteroidsFeature } from './asteroids';
+import { boundariesFeature } from './boundaries';
 import { carbonMadeFeature } from './carbonMade';
 import { datesFeature } from './dates';
 import { EXTINCTION_EARTH_PARTS, extinctionsFeature } from './extinctions';
@@ -43,6 +44,7 @@ export const FEATURES: readonly Feature[] = [
   asteroidsFeature,
   telescopesFeature,
   volcanoesFeature,
+  boundariesFeature,
   ozoneFeature,
   warmingFeature,
   oceanHeatFeature,

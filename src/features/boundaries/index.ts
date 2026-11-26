@@ -15,6 +15,8 @@ import type { BoundaryChapter } from '../../state/viewState';
 import { storyDateAt } from './holoceneGlobe';
 import { createStoryGlobe } from './storyGlobe';
 
+export { boundariesFeature } from './boundariesLayer';
+
 export interface BoundariesContext extends PartContext {
   readonly globe: Pick<Globe, 'flyTo' | 'zoomTo' | 'setInsets' | 'setTemperature'>;
 }

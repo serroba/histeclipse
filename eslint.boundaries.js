@@ -91,7 +91,7 @@ export const FUNCTION_LIMITS = {
   'features/bodies/planets.ts': 1,
   'features/boundaries/boundariesSheet.ts': 1,
   'features/boundaries/boundaryWheel.ts': 1,
-  'features/boundaries/holoceneChart.ts': 2,
+  'story/holoceneChart.ts': 2,
   'features/boundaries/index.ts': 1,
   'features/carbonMade/carbonMadeCard.ts': 1,
   'features/cycle/index.ts': 1,

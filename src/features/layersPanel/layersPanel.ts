@@ -7,7 +7,7 @@
  */
 
 import type { AbsentStep } from '../../state/activeLayers';
-import { layerAbout, layerFilter } from './layerRows';
+import { boundaryLink, layerAbout, layerFilter } from './layerRows';
 import { TRAVEL_ADDS } from '../../ui/historyTrack';
 import { elsewhereNote, LAYER_GROUPS, layerNote } from '../../state/layerCatalog';
 import {
@@ -162,6 +162,9 @@ export function createLayersPanel(
             where,
           ),
           ...layerAbout(layer),
+          ...boundaryLink(layer.boundary, () => {
+            onLayer('boundaries', true);
+          }),
           ...(layer.id === 'empires' ? [source] : []),
           note,
           action,

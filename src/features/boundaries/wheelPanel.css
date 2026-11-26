@@ -1,0 +1,170 @@
+/* The planetary boundaries' panel (#434), in the column beside the globe (ui/globePanels). */
+.boundaries-panel {
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgb(10 16 32 / 0.88);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.boundaries-panel[hidden],
+.boundaries-compare[hidden] {
+  display: none;
+}
+
+.boundaries-heading,
+.boundaries-credit,
+.boundaries-detail p {
+  margin: 0 0 6px;
+  line-height: 1.4;
+}
+
+.boundaries-credit {
+  margin: 6px 0 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+}
+
+.boundaries-wheel {
+  display: block;
+  width: min(200px, 100%);
+  height: auto;
+  margin: 0 auto 6px;
+}
+
+.boundaries-sector {
+  cursor: pointer;
+}
+
+.boundaries-hit {
+  fill: transparent;
+}
+
+.boundaries-sector:hover .boundaries-hit,
+.boundaries-sector.is-picked .boundaries-hit {
+  fill: rgb(150 180 255 / 0.12);
+}
+
+.boundaries-part.is-safe {
+  fill: #3fae6a;
+}
+
+.boundaries-part.is-increasing {
+  fill: #f2b134;
+}
+
+.boundaries-part.is-high {
+  fill: #d9433b;
+}
+
+.boundaries-part.is-faded {
+  opacity: 0.35;
+}
+
+.boundaries-bar {
+  fill: rgb(235 240 255 / 0.6);
+}
+
+.boundaries-ring {
+  fill: none;
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.boundaries-ring.is-safe-area {
+  fill: rgb(63 174 106 / 0.1);
+  stroke: none;
+}
+
+.boundaries-ring.is-reference {
+  stroke: rgb(150 180 255 / 0.3);
+}
+
+.boundaries-ring.is-boundary {
+  stroke: #1d6b3e;
+  stroke-width: 1.5;
+}
+
+.boundaries-ring.is-high-risk {
+  stroke: #ff7a1a;
+  stroke-dasharray: 3 3;
+}
+
+.boundaries-compare {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.boundaries-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.boundaries-name,
+.boundaries-layer {
+  padding: 2px 8px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.boundaries-name::before {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--ink-muted);
+  content: '';
+}
+
+.boundaries-name.is-within::before {
+  background: #3fae6a;
+}
+
+.boundaries-name.is-transgressed::before {
+  background: #f2b134;
+}
+
+.boundaries-name.is-strongly::before {
+  background: #d9433b;
+}
+
+.boundaries-name[aria-pressed='true'] {
+  border-color: var(--ink-muted);
+  background: rgb(150 180 255 / 0.14);
+}
+
+.boundaries-layer:disabled {
+  color: var(--ink-muted);
+  cursor: default;
+}
+
+.boundaries-values {
+  margin: 0 0 6px;
+  padding-left: 16px;
+}
+
+.boundaries-detail-name {
+  font-weight: 600;
+}
+
+.boundaries-offers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.boundaries-none {
+  color: var(--ink-muted);
+}

@@ -30,8 +30,8 @@ import {
   yOf,
   type HoloceneTemperature,
   type SeriesId,
-} from '../../data/holoceneTemperature';
-import type { StoryScene } from '../../story/storyScene';
+} from '../data/holoceneTemperature';
+import type { StoryScene } from './storyScene';
 import { makeScrubbable, type ScrubStep } from './chartScrubber';
 import './holoceneChart.css';
 

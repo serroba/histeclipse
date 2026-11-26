@@ -212,6 +212,31 @@ export const DESTINATIONS: readonly Destination[] = [
     view: 'ma=0.021&scale=ice&layers=sealevel&cam=55.0000,-40.0000,3.00',
   },
   {
+    id: 'holocene-corridor',
+    label: 'The Holocene corridor',
+    topics: ['climate', 'earth'],
+    description:
+      'Temperature over 800,000 years beside the globe: the ice ages’ swings, then 10,000 years kept within about a degree, the stable band in which farming and cities arose and the planetary boundaries are set to keep us. Opens at the last ice age’s depth; play on towards today.',
+    questions: [
+      'Why are the planetary boundaries set where they are?',
+      'How stable was the climate before industry?',
+    ],
+    body: 'earth',
+    frame: { kind: 'ma', from: 0.8, to: 0 },
+    view: 'ma=0.021&scale=ice&layers=temperature,sealevel&temp=krapp&tshow=change&cam=40.0000,-35.0000,4.00',
+  },
+  {
+    id: 'planetary-boundaries',
+    label: 'Planetary boundaries',
+    topics: ['climate'],
+    description:
+      'The nine Earth-system processes that keep the planet in a Holocene-like state, as a wheel beside the globe: seven of nine crossed in the Planetary Health Check 2026, six in Richardson et al. (2023). Pick one to see its values and the layers that draw it.',
+    questions: ['How many planetary boundaries have we crossed?', 'Is the ozone layer recovering?'],
+    body: 'earth',
+    frame: { kind: 'years', from: 2023, to: 2026 },
+    view: 'layers=boundaries&t=2026-06-01T12:00Z',
+  },
+  {
     id: 'hothouse-earth',
     label: 'A hothouse Earth',
     topics: ['climate'],

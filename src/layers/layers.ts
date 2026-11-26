@@ -7,6 +7,7 @@
 import { air } from './air';
 import { amoc } from './amoc';
 import { asteroids } from './asteroids';
+import { boundaries } from './boundaries';
 import { carbonMade } from './carbonMade';
 import { dates } from './dates';
 import { eclipses } from './eclipses';
@@ -54,6 +55,7 @@ const ALL = [
   impacts,
   extinctions,
   volcanoes,
+  boundaries,
   ozone,
   warming,
   oceanHeat,
@@ -104,6 +106,7 @@ export const LAYER_GROUPS: readonly LayerGroup[] = [
   {
     name: 'Climate',
     layers: [
+      boundaries,
       ozone,
       warming,
       oceanHeat,

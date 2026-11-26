@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { element } from '../../ui/dom';
-import { layerAbout, layerFilter } from './layerRows';
+import { boundaryLink, layerAbout, layerFilter } from './layerRows';
 
 function group(name: string, ...rows: string[]): HTMLElement {
   return element(
@@ -42,5 +42,14 @@ describe('the Layers panel’s rows (#950)', () => {
     type('');
     expect(shown(space)).toHaveLength(2);
     expect(earth.hidden).toBe(false);
+  });
+
+  it('Given a layer that draws a planetary boundary, Then its row names it and turns the wheel on (#434)', () => {
+    const turnOn = vi.fn();
+    expect(boundaryLink(undefined, turnOn)).toEqual([]);
+    const [line] = boundaryLink('ozone', turnOn);
+    expect(line?.textContent).toBe('Planetary boundary: Stratospheric ozone. Show the boundaries');
+    line?.querySelector('button')?.click();
+    expect(turnOn).toHaveBeenCalledOnce();
   });
 });
