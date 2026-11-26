@@ -1,0 +1,32 @@
+/* Temperature over 800,000 years beside the globe on the ice ages (#434), in the column of panels. */
+.holocene-panel {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: rgb(10 16 32 / 0.88);
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.holocene-panel[hidden] {
+  display: none;
+}
+
+.holocene-panel-chart {
+  position: relative;
+  height: 190px;
+}
+
+.holocene-panel-credit {
+  margin: 6px 0 0;
+  color: var(--ink-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* Too small for the chart's own key, low on the right: the caption names the lines instead. */
+.holocene-panel .holocene-chart .legend {
+  display: none;
+}

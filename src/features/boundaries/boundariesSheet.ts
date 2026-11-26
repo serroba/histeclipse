@@ -30,7 +30,7 @@ import { BOUNDARY_CHAPTERS, type BoundaryChapter } from '../../state/viewState';
 import { createSheetViewSwitch } from './sheetView';
 import { boundaryCredits } from './boundaryCredits';
 import type { BoundaryWheel, createBoundaryWheel } from './boundaryWheel';
-import type { createHoloceneChart } from './holoceneChart';
+import type { createHoloceneChart } from '../../story/holoceneChart';
 import type { StoryScene } from '../../story/storyScene';
 import { errorMessage } from '../../util/errors';
 import { element } from '../../ui/dom';
@@ -309,7 +309,7 @@ export function createBoundariesSheet(
         loadPlanetaryBoundaries(dataUrl('planetary-boundaries.json'), fetchJson),
         loadHoloceneTemperature(dataUrl('holocene-temperature.json'), fetchJson),
         import('./boundaryWheel'),
-        import('./holoceneChart'),
+        import('../../story/holoceneChart'),
       ]);
     table.replaceChildren(valuesTable(boundaries));
     status.hidden = true;
