@@ -5,6 +5,7 @@
  * drawn is its feature's, in `src/features`.
  */
 
+import type { BoundaryId } from '../data/planetaryBoundaries';
 import type { Span } from '../deepTime/scale';
 import type { WhyId } from '../sources/registry';
 
@@ -40,6 +41,11 @@ export interface LayerEntry<Id extends string = string> {
    * (see `ui/icons`).
    */
   readonly icon: readonly string[];
+  /**
+   * The planetary boundary (#434) whose pressure or effects it draws, if any: its row in the
+   * Layers panel names the boundary, and the boundary's wedge offers this layer.
+   */
+  readonly boundary?: BoundaryId;
   /** Where it comes from: its why in the sources registry. */
   readonly why: WhyId;
 }

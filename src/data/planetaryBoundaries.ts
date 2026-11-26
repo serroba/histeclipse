@@ -38,6 +38,24 @@ const ValuesSchema = v.union([
 
 const AssessmentId = v.picklist(['phc2026', 'richardson2023']);
 
+/**
+ * The nine boundaries, in the report's order, by the names the data file gives them: named here
+ * too, so a layer can say which boundary it shows without loading the file (#434).
+ */
+export const BOUNDARY_NAMES = {
+  climate: 'Climate change',
+  biosphere: 'Biosphere integrity',
+  land: 'Land system change',
+  freshwater: 'Freshwater change',
+  nutrients: 'Nitrogen and phosphorus',
+  ocean: 'Ocean acidification',
+  aerosols: 'Aerosol loading',
+  ozone: 'Stratospheric ozone',
+  novel: 'Novel entities',
+} as const;
+export type BoundaryId = keyof typeof BOUNDARY_NAMES;
+const BOUNDARY_IDS = Object.keys(BOUNDARY_NAMES) as BoundaryId[];
+
 const BoundariesSchema = v.strictObject({
   schemaVersion: v.literal(1),
   about: v.pipe(v.string(), v.minLength(1)),
@@ -52,7 +70,7 @@ const BoundariesSchema = v.strictObject({
   boundaries: v.pipe(
     v.array(
       v.strictObject({
-        id: v.pipe(v.string(), v.regex(/^[a-z]+$/)),
+        id: v.picklist(BOUNDARY_IDS),
         name: v.pipe(v.string(), v.minLength(1)),
         /** The report's own word for its 2026 status. */
         stated: v.picklist(['within', 'transgressed', 'strongly']),

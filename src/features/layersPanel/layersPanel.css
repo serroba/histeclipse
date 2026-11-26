@@ -85,6 +85,23 @@
   opacity: 0.55;
 }
 
+/* The planetary boundary a layer draws (#434), and the way to the boundaries' wheel. */
+.layer-boundary {
+  margin: 0 0 6px 30px;
+  color: var(--ink-muted);
+  font-size: 12px;
+}
+
+.layer-boundary-show {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 /* A step a layer offers: going to the time a rock formed, or to a span where the layer draws. */
 .layer-action {
   min-height: 36px;
